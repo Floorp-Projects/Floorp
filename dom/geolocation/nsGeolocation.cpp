@@ -826,18 +826,11 @@ nsresult Geolocation::Init(nsPIDOMWindowInner* aContentDom) {
     }
 
     mPrincipal = doc->NodePrincipal();
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = mPrincipal->GetURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (uri) {
-      // Store the protocol to send via telemetry later.
-      if (uri->SchemeIs("http")) {
-        mProtocolType = ProtocolType::HTTP;
-      } else if (uri->SchemeIs("https")) {
-        mProtocolType = ProtocolType::HTTPS;
-      }
+    // Store the protocol to send via telemetry later.
+    if (mPrincipal->SchemeIs("http")) {
+      mProtocolType = ProtocolType::HTTP;
+    } else if (mPrincipal->SchemeIs("https")) {
+      mProtocolType = ProtocolType::HTTPS;
     }
   }
 
