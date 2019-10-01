@@ -141,51 +141,6 @@ for (let name of COMMANDS) {
   };
 }
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-function autoCloseIfNeeded(aCrash) {
-  if (!gArgs.autoclose) {
-    return;
-  }
-  setTimeout(function() {
-    if (aCrash) {
-      let browser = document.createElementNS(XUL_NS, "browser");
-      // FIXME(emilio): we could use gBrowser if we bothered get the process switches right.
-      //
-      // Doesn't seem worth for this particular case.
-      document.documentElement.appendChild(browser);
-      browser.loadURI("about:crashparent", {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
-      return;
-    }
-    if (gArgs.profile && Services.profiler) {
-      dumpProfile();
-    } else {
-      Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
-    }
-  }, gArgs.delay * 1000);
-}
-
-const TabCrashedObserver = {
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "ipc:content-shutdown":
-        subject.QueryInterface(Ci.nsIPropertyBag2);
-        if (!subject.get("abnormal")) {
-          return;
-        }
-        break;
-      case "oop-frameloader-crashed":
-        break;
-    }
-    autoCloseIfNeeded(true);
-  },
-};
-
-Services.obs.addObserver(TabCrashedObserver, "ipc:content-shutdown");
-Services.obs.addObserver(TabCrashedObserver, "oop-frameloader-crashed");
-
 function nsLDBBrowserContentListener() {
   this.init();
 }
@@ -219,14 +174,19 @@ nsLDBBrowserContentListener.prototype = {
       this.setButtonEnabled(this.mStopButton, false);
       this.mStatusText.value = gURLBar.value + " loaded";
       this.mLoading = false;
-
-      if (gBrowser.currentURI.spec != "about:blank") {
+      if (gArgs.autoclose && gBrowser.currentURI.spec != "about:blank") {
         // We check for about:blank just to avoid one or two STATE_STOP
         // notifications that occur before the loadURI() call completes.
         // This does mean that --autoclose doesn't work when the URL on
         // the command line is about:blank (or not specified), but that's
         // not a big deal.
-        autoCloseIfNeeded(false);
+        setTimeout(function() {
+          if (gArgs.profile && Services.profiler) {
+            dumpProfile();
+          } else {
+            Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
+          }
+        }, gArgs.delay * 1000);
       }
     }
   },
