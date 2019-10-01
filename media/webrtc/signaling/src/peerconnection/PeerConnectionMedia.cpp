@@ -41,7 +41,28 @@ static const char* pcmLogTag = "PeerConnectionMedia";
 #define LOGTAG pcmLogTag
 
 void PeerConnectionMedia::StunAddrsHandler::OnMDNSQueryComplete(
-    const nsCString& hostname, const nsCString& address) {}
+    const nsCString& hostname, const nsCString& address) {
+  ASSERT_ON_THREAD(pcm_->mMainThread);
+  auto itor = pcm_->mQueriedMDNSHostnames.find(hostname.BeginReading());
+  if (itor != pcm_->mQueriedMDNSHostnames.end()) {
+    for (auto& cand : itor->second) {
+      // Replace obfuscated address with actual address
+      std::string obfuscatedAddr = cand.mTokenizedCandidate[4];
+      cand.mTokenizedCandidate[4] = address.BeginReading();
+      std::ostringstream o;
+      for (size_t i = 0; i < cand.mTokenizedCandidate.size(); ++i) {
+        o << cand.mTokenizedCandidate[i];
+        if (i + 1 != cand.mTokenizedCandidate.size()) {
+          o << " ";
+        }
+      }
+      std::string mungedCandidate = o.str();
+      pcm_->mTransportHandler->AddIceCandidate(
+          cand.mTransportId, mungedCandidate, cand.mUfrag, obfuscatedAddr);
+    }
+    pcm_->mQueriedMDNSHostnames.erase(itor);
+  }
+}
 
 void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     const mozilla::net::NrIceStunAddrArray& addrs) {
@@ -56,8 +77,6 @@ void PeerConnectionMedia::StunAddrsHandler::OnStunAddrsAvailable(
     if (!pcm_->mStunAddrs.Length()) {
       pcm_->IceConnectionStateChange_m(dom::RTCIceConnectionState::Failed);
     }
-
-    pcm_ = nullptr;
   }
 }
 
@@ -317,8 +336,52 @@ void PeerConnectionMedia::ConnectSignals() {
 void PeerConnectionMedia::AddIceCandidate(const std::string& aCandidate,
                                           const std::string& aTransportId,
                                           const std::string& aUfrag) {
+  ASSERT_ON_THREAD(mMainThread);
   MOZ_ASSERT(!aTransportId.empty());
-  mTransportHandler->AddIceCandidate(aTransportId, aCandidate, aUfrag);
+
+  bool obfuscate_host_addresses = Preferences::GetBool(
+      "media.peerconnection.ice.obfuscate_host_addresses", false);
+
+  if (obfuscate_host_addresses) {
+    std::vector<std::string> tokens;
+    TokenizeCandidate(aCandidate, tokens);
+
+    if (tokens.size() > 4) {
+      std::string addr = tokens[4];
+
+      // Check for address ending with .local
+      size_t nPeriods = std::count(addr.begin(), addr.end(), '.');
+      size_t dotLocalLength = 6;  // length of ".local"
+
+      if (nPeriods == 1 &&
+          addr.rfind(".local") + dotLocalLength == addr.length()) {
+        if (mStunAddrsRequest) {
+          PendingIceCandidate cand;
+          cand.mTokenizedCandidate = std::move(tokens);
+          cand.mTransportId = aTransportId;
+          cand.mUfrag = aUfrag;
+          mQueriedMDNSHostnames[addr].push_back(cand);
+
+          mMainThread->Dispatch(NS_NewRunnableFunction(
+              "PeerConnectionMedia::SendQueryMDNSHostname",
+              [self = RefPtr<PeerConnectionMedia>(this), addr]() mutable {
+                if (self->mStunAddrsRequest) {
+                  self->mStunAddrsRequest->SendQueryMDNSHostname(
+                      nsCString(nsAutoCString(addr.c_str())));
+                }
+                NS_ReleaseOnMainThreadSystemGroup(
+                    "PeerConnectionMedia::SendQueryMDNSHostname",
+                    self.forget());
+              }));
+        }
+        // TODO: Bug 1535690, we don't want to tell the ICE context that remote
+        // trickle is done if we are waiting to resolve a mDNS candidate.
+        return;
+      }
+    }
+  }
+
+  mTransportHandler->AddIceCandidate(aTransportId, aCandidate, aUfrag, "");
 }
 
 void PeerConnectionMedia::UpdateNetworkState(bool online) {

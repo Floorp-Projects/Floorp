@@ -81,7 +81,8 @@ parent:
 
   async AddIceCandidate(string transportId,
                         string candidate,
-                        string ufrag);
+                        string ufrag,
+                        string obfuscatedAddr);
 
   async UpdateNetworkState(bool online);
 

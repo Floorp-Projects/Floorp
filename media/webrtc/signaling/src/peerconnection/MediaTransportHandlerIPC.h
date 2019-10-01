@@ -66,8 +66,8 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
                   MediaPacket&& aPacket) override;
 
   void AddIceCandidate(const std::string& aTransportId,
-                       const std::string& aCandidate,
-                       const std::string& aUfrag) override;
+                       const std::string& aCandidate, const std::string& aUfrag,
+                       const std::string& aObfuscatedAddress) override;
 
   void UpdateNetworkState(bool aOnline) override;
 

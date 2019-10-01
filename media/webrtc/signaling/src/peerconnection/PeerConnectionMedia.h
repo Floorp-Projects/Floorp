@@ -232,6 +232,14 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // Used to store the mDNS hostnames that we have registered
   std::set<std::string> mRegisteredMDNSHostnames;
 
+  // Used to store the mDNS hostnames that we have queried
+  struct PendingIceCandidate {
+    std::vector<std::string> mTokenizedCandidate;
+    std::string mTransportId;
+    std::string mUfrag;
+  };
+  std::map<std::string, std::list<PendingIceCandidate>> mQueriedMDNSHostnames;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };
 
