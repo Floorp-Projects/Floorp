@@ -15,13 +15,11 @@ const {
 } = require("devtools/client/webconsole/utils/object-inspector");
 const actions = require("devtools/client/webconsole/actions/index");
 
-loader.lazyGetter(this, "objectInspector", function() {
-  return require("devtools/client/shared/components/reps/reps").objectInspector;
-});
-
-loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
-});
+const reps = require("devtools/client/shared/components/reps/reps");
+const {
+  MODE,
+  objectInspector: { utils },
+} = reps;
 
 GripMessageBody.displayName = "GripMessageBody";
 
@@ -72,7 +70,7 @@ function GripMessageBody(props) {
     mode,
     maybeScrollToBottom,
     onCmdCtrlClick: (node, { depth, event, focused, expanded }) => {
-      const value = objectInspector.utils.node.getValue(node);
+      const value = utils.node.getValue(node);
       if (value) {
         dispatch(actions.showObjectInSidebar(value));
       }

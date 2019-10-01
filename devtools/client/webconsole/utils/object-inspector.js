@@ -9,17 +9,10 @@ const {
   createElement,
 } = require("devtools/client/shared/vendor/react");
 
-loader.lazyGetter(this, "REPS", function() {
-  return require("devtools/client/shared/components/reps/reps").REPS;
-});
-loader.lazyGetter(this, "MODE", function() {
-  return require("devtools/client/shared/components/reps/reps").MODE;
-});
-loader.lazyGetter(this, "ObjectInspector", function() {
-  const reps = require("devtools/client/shared/components/reps/reps");
-  return createFactory(reps.objectInspector.ObjectInspector);
-});
-
+const reps = require("devtools/client/shared/components/reps/reps");
+const { REPS, MODE, objectInspector } = reps;
+const ObjectInspector = createFactory(objectInspector.ObjectInspector);
+const { Grip } = REPS;
 loader.lazyRequireGetter(
   this,
   "SmartTrace",
@@ -94,7 +87,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
       onDOMNodeMouseOver,
       onDOMNodeMouseOut,
       onInspectIconClick,
-      defaultRep: REPS.Grip,
+      defaultRep: Grip,
     });
   }
 
