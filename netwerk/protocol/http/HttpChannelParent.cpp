@@ -859,7 +859,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvSetCacheTokenCachedCharset(
 
 mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const nsresult& aResult, const RequestHeaderTuples& changedHeaders,
-    const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
+    const uint32_t& aSourceRequestBlockingReason,
+    const ChildLoadInfoForwarderArgs& aTargetLoadInfoForwarder,
     const uint32_t& loadFlags, nsIReferrerInfo* aReferrerInfo,
     const Maybe<URIParams>& aAPIRedirectURI,
     const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
@@ -928,10 +929,19 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
       }
 
       nsCOMPtr<nsILoadInfo> newLoadInfo = newHttpChannel->LoadInfo();
-      rv = MergeChildLoadInfoForwarder(aLoadInfoForwarder, newLoadInfo);
+      rv = MergeChildLoadInfoForwarder(aTargetLoadInfoForwarder, newLoadInfo);
       if (NS_FAILED(rv) && NS_SUCCEEDED(result)) {
         result = rv;
       }
+    }
+  }
+
+  // If the redirect is vetoed, reason is set on the source (current) channel's
+  // load info, so we must carry iver the change.
+  if (aSourceRequestBlockingReason) {
+    nsCOMPtr<nsILoadInfo> sourceLoadInfo = mChannel->LoadInfo();
+    if (sourceLoadInfo) {
+      sourceLoadInfo->SetRequestBlockingReason(aSourceRequestBlockingReason);
     }
   }
 
