@@ -788,7 +788,12 @@
           if (this.oneOffButtons) {
             width = Math.max(width, this.oneOffButtons.buttonWidth * 3);
           }
+
+          // The CSS minWidth is necessary for the searchbar to be the correct
+          // width in the overflow menu. The width attribute is necessary for
+          // _invalidate().
           popup.style.minWidth = width + "px";
+          popup.setAttribute("width", width);
 
           popup._invalidate();
 
