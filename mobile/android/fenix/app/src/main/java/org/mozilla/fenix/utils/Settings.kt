@@ -32,7 +32,7 @@ import java.security.InvalidParameterException
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "TooManyFunctions")
 class Settings private constructor(
     context: Context,
     private val isCrashReportEnabledInBuild: Boolean
@@ -107,10 +107,10 @@ class Settings private constructor(
 
     val isCrashReportingEnabled: Boolean
         get() = isCrashReportEnabledInBuild &&
-            preferences.getBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
-                true
-            )
+                preferences.getBoolean(
+                    appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
+                    true
+                )
 
     val isRemoteDebuggingEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_remote_debugging),
@@ -136,7 +136,7 @@ class Settings private constructor(
 
     val shouldShowTrackingProtectionOnboarding: Boolean
         get() = trackingProtectionOnboardingCount < trackingProtectionOnboardingMaximumCount &&
-            !trackingProtectionOnboardingShownThisSession
+                !trackingProtectionOnboardingShownThisSession
 
     val shouldAutoBounceQuickActionSheet: Boolean
         get() = autoBounceQuickActionSheetCount < autoBounceMaximumCount
@@ -200,6 +200,32 @@ class Settings private constructor(
         appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
         true
     )
+
+    fun setUseStrictTrackingProtection() {
+        preferences.edit()
+            .putBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_standard),
+                false
+            )
+            .putBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
+                true
+            )
+            .apply()
+    }
+
+    fun setUseStandardTrackingProtection() {
+        preferences.edit()
+            .putBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_standard),
+                true
+            )
+            .putBoolean(
+                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
+                false
+            )
+            .apply()
+    }
 
     var shouldDeleteBrowsingDataOnQuit by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_delete_browsing_data_on_quit),
@@ -334,7 +360,7 @@ class Settings private constructor(
 
             val showCondition =
                 (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_INSTALLED && focusInstalled) ||
-                    (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED && !focusInstalled)
+                        (numTimesPrivateModeOpened == CFR_COUNT_CONDITION_FOCUS_NOT_INSTALLED && !focusInstalled)
 
             if (showCondition && !showedPrivateModeContextualFeatureRecommender) {
                 showedPrivateModeContextualFeatureRecommender = true
