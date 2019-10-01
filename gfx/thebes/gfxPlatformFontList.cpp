@@ -446,6 +446,9 @@ nsresult gfxPlatformFontList::InitFontList() {
   if (StaticPrefs::gfx_e10s_font_list_shared_AtStartup() &&
       !gfxPlatform::InSafeMode()) {
     for (auto i = mFontEntries.Iter(); !i.Done(); i.Next()) {
+      if (!i.Data()) {
+        continue;
+      }
       i.Data()->mShmemCharacterMap = nullptr;
       i.Data()->mShmemFace = nullptr;
       i.Data()->mFamilyName = NS_LITERAL_CSTRING("");
