@@ -73,7 +73,6 @@ struct IndexKeyCursorResponse
   Key objectKey;
 };
 
-// TODO: All cursor responses must be arrays!
 union CursorResponse
 {
   void_t;
