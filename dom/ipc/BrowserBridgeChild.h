@@ -68,12 +68,12 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   static BrowserBridgeChild* GetFrom(nsIContent* aContent);
 
+  BrowserBridgeChild(nsFrameLoader* aFrameLoader,
+                     BrowsingContext* aBrowsingContext, TabId aId);
+
  protected:
   friend class ContentChild;
   friend class PBrowserBridgeChild;
-
-  BrowserBridgeChild(nsFrameLoader* aFrameLoader,
-                     BrowsingContext* aBrowsingContext, TabId aId);
 
   mozilla::ipc::IPCResult RecvSetLayersId(
       const mozilla::layers::LayersId& aLayersId);
