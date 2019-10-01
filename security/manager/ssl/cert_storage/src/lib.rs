@@ -18,7 +18,6 @@ extern crate time;
 #[macro_use]
 extern crate xpcom;
 extern crate storage_variant;
-extern crate style;
 extern crate tempfile;
 
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
