@@ -993,7 +993,7 @@ description#identity-popup-content-verifier,
   box-sizing: border-box;
   min-width: 26px;
   border-radius: 10px;
-  background-color: #f9f9fa;
+  background-color: #F9F9FA;
   border: 1px solid var(--panel-separator-color);
   margin-top: 4px;
   margin-bottom: 4px;
@@ -1001,10 +1001,6 @@ description#identity-popup-content-verifier,
   padding: 2px;
   padding-inline-end: 0;
   transition: padding .2s ease;
-}
-
-:root[lwt-popup-brighttext] .protections-popup-tp-switch:not([enabled]) {
-  background-color: #737373;
 }
 
 .protections-popup-tp-switch::before {
@@ -1020,20 +1016,37 @@ description#identity-popup-content-verifier,
 }
 
 .protections-popup-tp-switch[enabled] {
-  background-color: #0a84ff;
-  border: 1px solid #0a84ff;
+  background-color: #0060DF;
   /* Push the toggle to the right. */
   padding-inline-start: 12px;
 }
 
-.protections-popup-tp-switch:hover,
-.protections-popup-tp-switch:-moz-focusring {
-  border: 1px solid var(--panel-separator-color);
+.protections-popup-tp-switch[enabled]:hover {
+  background-color: #003EAA;
 }
 
-.protections-popup-tp-switch[enabled=true]:hover,
-.protections-popup-tp-switch[enabled=true]:-moz-focusring {
-  background-color: #45a1ff;
+.protections-popup-tp-switch[enabled]:hover:active {
+  background-color: #002275;
+}
+
+.protections-popup-tp-switch:not([enabled]):hover {
+  background-color: #C9C9CA;
+}
+
+.protections-popup-tp-switch:not([enabled]):hover:active {
+  background-color: #B1B1B2;
+}
+
+:root[lwt-popup-brighttext] .protections-popup-tp-switch:not([enabled]) {
+  background-color: #5C5C61;
+}
+
+:root[lwt-popup-brighttext] .protections-popup-tp-switch:not([enabled]):hover {
+  background-color: #6D6D71;
+}
+
+:root[lwt-popup-brighttext] .protections-popup-tp-switch:not([enabled]):hover:active {
+  background-color: #737379;
 }
 
 #protections-popup-siteNotWorkingView-body-issue-list {
