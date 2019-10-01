@@ -739,12 +739,9 @@ already_AddRefed<IDBRequest> IDBCursor::Delete(JSContext* aCx,
   MOZ_ASSERT(mType == Type_ObjectStore || mType == Type_Index);
   MOZ_ASSERT(!mKey.IsUnset());
 
-  IDBObjectStore* objectStore;
-  if (mType == Type_ObjectStore) {
-    objectStore = mSourceObjectStore;
-  } else {
-    objectStore = mSourceIndex->ObjectStore();
-  }
+  IDBObjectStore* const objectStore = mType == Type_ObjectStore
+                                          ? mSourceObjectStore.get()
+                                          : mSourceIndex->ObjectStore();
 
   MOZ_ASSERT(objectStore);
 

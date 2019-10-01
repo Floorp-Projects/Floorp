@@ -561,8 +561,8 @@ struct IndexDataValue final {
  * SQLite functions
  ******************************************************************************/
 
-int32_t MakeSchemaVersion(uint32_t aMajorSchemaVersion,
-                          uint32_t aMinorSchemaVersion) {
+constexpr int32_t MakeSchemaVersion(uint32_t aMajorSchemaVersion,
+                                    uint32_t aMinorSchemaVersion) {
   return int32_t((aMajorSchemaVersion << 4) + aMinorSchemaVersion);
 }
 
@@ -671,7 +671,7 @@ void WriteCompressedNumber(uint64_t aNumber, uint8_t** aIterator) {
   uint8_t*& buffer = *aIterator;
 
 #ifdef DEBUG
-  const uint8_t* bufferStart = buffer;
+  const uint8_t* const bufferStart = buffer;
   const uint64_t originalNumber = aNumber;
 #endif
 
@@ -857,7 +857,7 @@ nsresult ReadCompressedIndexDataValuesFromBlob(
   }
 
   const uint8_t* blobDataIter = aBlobData;
-  const uint8_t* blobDataEnd = aBlobData + aBlobDataLength;
+  const uint8_t* const blobDataEnd = aBlobData + aBlobDataLength;
 
   while (blobDataIter < blobDataEnd) {
     int64_t indexId;
@@ -3579,7 +3579,7 @@ nsresult UpgradeIndexDataValuesFunction::ReadOldCompressedIDVFromBlob(
   MOZ_ASSERT(aIndexValues.IsEmpty());
 
   const uint8_t* blobDataIter = aBlobData;
-  const uint8_t* blobDataEnd = aBlobData + aBlobDataLength;
+  const uint8_t* const blobDataEnd = aBlobData + aBlobDataLength;
 
   int64_t indexId;
   bool unique;
@@ -4151,7 +4151,7 @@ nsresult OpenDatabaseAndHandleBusy(mozIStorageService* aStorageService,
 
     // Another thread must be checkpointing the WAL. Wait up to 10 seconds for
     // that to complete.
-    TimeStamp start = TimeStamp::NowLoRes();
+    const TimeStamp start = TimeStamp::NowLoRes();
 
     while (true) {
       PR_Sleep(PR_MillisecondsToInterval(100));
@@ -4371,57 +4371,80 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
-        if (schemaVersion == 4) {
-          rv = UpgradeSchemaFrom4To5(connection);
-        } else if (schemaVersion == 5) {
-          rv = UpgradeSchemaFrom5To6(connection);
-        } else if (schemaVersion == 6) {
-          rv = UpgradeSchemaFrom6To7(connection);
-        } else if (schemaVersion == 7) {
-          rv = UpgradeSchemaFrom7To8(connection);
-        } else if (schemaVersion == 8) {
-          rv = UpgradeSchemaFrom8To9_0(connection);
-          vacuumNeeded = true;
-        } else if (schemaVersion == MakeSchemaVersion(9, 0)) {
-          rv = UpgradeSchemaFrom9_0To10_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(10, 0)) {
-          rv = UpgradeSchemaFrom10_0To11_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(11, 0)) {
-          rv = UpgradeSchemaFrom11_0To12_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(12, 0)) {
-          rv = UpgradeSchemaFrom12_0To13_0(connection, &vacuumNeeded);
-        } else if (schemaVersion == MakeSchemaVersion(13, 0)) {
-          rv = UpgradeSchemaFrom13_0To14_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(14, 0)) {
-          rv = UpgradeSchemaFrom14_0To15_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(15, 0)) {
-          rv = UpgradeSchemaFrom15_0To16_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(16, 0)) {
-          rv = UpgradeSchemaFrom16_0To17_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(17, 0)) {
-          rv = UpgradeSchemaFrom17_0To18_0(connection, aOrigin);
-          vacuumNeeded = true;
-        } else if (schemaVersion == MakeSchemaVersion(18, 0)) {
-          rv = UpgradeSchemaFrom18_0To19_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(19, 0)) {
-          rv = UpgradeSchemaFrom19_0To20_0(aFMDirectory, connection);
-        } else if (schemaVersion == MakeSchemaVersion(20, 0)) {
-          rv = UpgradeSchemaFrom20_0To21_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(21, 0)) {
-          rv = UpgradeSchemaFrom21_0To22_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(22, 0)) {
-          rv = UpgradeSchemaFrom22_0To23_0(connection, aOrigin);
-        } else if (schemaVersion == MakeSchemaVersion(23, 0)) {
-          rv = UpgradeSchemaFrom23_0To24_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(24, 0)) {
-          rv = UpgradeSchemaFrom24_0To25_0(connection);
-        } else if (schemaVersion == MakeSchemaVersion(25, 0)) {
-          rv = UpgradeSchemaFrom25_0To26_0(connection);
-        } else {
-          IDB_WARNING(
-              "Unable to open IndexedDB database, no upgrade path is "
-              "available!");
-          return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+        switch (schemaVersion) {
+          case 4:
+            rv = UpgradeSchemaFrom4To5(connection);
+            break;
+          case 5:
+            rv = UpgradeSchemaFrom5To6(connection);
+            break;
+          case 6:
+            rv = UpgradeSchemaFrom6To7(connection);
+            break;
+          case 7:
+            rv = UpgradeSchemaFrom7To8(connection);
+            break;
+          case 8:
+            rv = UpgradeSchemaFrom8To9_0(connection);
+            vacuumNeeded = true;
+            break;
+          case MakeSchemaVersion(9, 0):
+            rv = UpgradeSchemaFrom9_0To10_0(connection);
+            break;
+          case MakeSchemaVersion(10, 0):
+            rv = UpgradeSchemaFrom10_0To11_0(connection);
+            break;
+          case MakeSchemaVersion(11, 0):
+            rv = UpgradeSchemaFrom11_0To12_0(connection);
+            break;
+          case MakeSchemaVersion(12, 0):
+            rv = UpgradeSchemaFrom12_0To13_0(connection, &vacuumNeeded);
+            break;
+          case MakeSchemaVersion(13, 0):
+            rv = UpgradeSchemaFrom13_0To14_0(connection);
+            break;
+          case MakeSchemaVersion(14, 0):
+            rv = UpgradeSchemaFrom14_0To15_0(connection);
+            break;
+          case MakeSchemaVersion(15, 0):
+            rv = UpgradeSchemaFrom15_0To16_0(connection);
+            break;
+          case MakeSchemaVersion(16, 0):
+            rv = UpgradeSchemaFrom16_0To17_0(connection);
+            break;
+          case MakeSchemaVersion(17, 0):
+            rv = UpgradeSchemaFrom17_0To18_0(connection, aOrigin);
+            vacuumNeeded = true;
+            break;
+          case MakeSchemaVersion(18, 0):
+            rv = UpgradeSchemaFrom18_0To19_0(connection);
+            break;
+          case MakeSchemaVersion(19, 0):
+            rv = UpgradeSchemaFrom19_0To20_0(aFMDirectory, connection);
+            break;
+          case MakeSchemaVersion(20, 0):
+            rv = UpgradeSchemaFrom20_0To21_0(connection);
+            break;
+          case MakeSchemaVersion(21, 0):
+            rv = UpgradeSchemaFrom21_0To22_0(connection);
+            break;
+          case MakeSchemaVersion(22, 0):
+            rv = UpgradeSchemaFrom22_0To23_0(connection, aOrigin);
+            break;
+          case MakeSchemaVersion(23, 0):
+            rv = UpgradeSchemaFrom23_0To24_0(connection);
+            break;
+          case MakeSchemaVersion(24, 0):
+            rv = UpgradeSchemaFrom24_0To25_0(connection);
+            break;
+          case MakeSchemaVersion(25, 0):
+            rv = UpgradeSchemaFrom25_0To26_0(connection);
+            break;
+          default:
+            IDB_WARNING(
+                "Unable to open IndexedDB database, no upgrade path is "
+                "available!");
+            return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
         }
 
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -9261,6 +9284,23 @@ const CommonOpenCursorParams& GetCommonOpenCursorParams(
   }
 }
 
+// TODO: Using nsCString as a return type here seems to lead to a dependency on
+// some temporaries, which I did not expect. Is it a good idea that the default
+// operator+ behaviour constructs such strings? It is certainly useful as an
+// optimization, but this should be better done via an appropriately named
+// function rather than an operator.
+nsAutoCString MakeColumnPairSelectionList(
+    const nsLiteralCString& aPlainColumnName,
+    const nsLiteralCString& aLocaleAwareColumnName,
+    const nsLiteralCString& aSortColumnAlias, const bool aIsLocaleAware) {
+  return aPlainColumnName +
+         (aIsLocaleAware ? EmptyCString()
+                         : NS_LITERAL_CSTRING(" as ") + aSortColumnAlias) +
+         NS_LITERAL_CSTRING(", ") + aLocaleAwareColumnName +
+         (aIsLocaleAware ? NS_LITERAL_CSTRING(" as ") + aSortColumnAlias
+                         : EmptyCString());
+}
+
 constexpr bool IsIncreasingOrder(const IDBCursor::Direction aDirection) {
   MOZ_ASSERT(
       aDirection == IDBCursor::NEXT || aDirection == IDBCursor::NEXT_UNIQUE ||
@@ -9578,7 +9618,7 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
 
     // Another thread must be using the database. Wait up to 10 seconds for
     // that to complete.
-    TimeStamp start = TimeStamp::NowLoRes();
+    const TimeStamp start = TimeStamp::NowLoRes();
 
     while (true) {
       PR_Sleep(PR_MillisecondsToInterval(100));
@@ -10420,7 +10460,7 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
       }
 
       if (aFileManager->EnforcingQuota()) {
-        QuotaManager* quotaManager = QuotaManager::Get();
+        QuotaManager* const quotaManager = QuotaManager::Get();
         MOZ_ASSERT(quotaManager);
 
         quotaManager->DecreaseUsageForOrigin(
@@ -14084,12 +14124,13 @@ bool TransactionBase::StartRequest(PBackgroundIDBRequestParent* aActor) {
   return true;
 }
 
-bool TransactionBase::DeallocRequest(PBackgroundIDBRequestParent* aActor) {
+bool TransactionBase::DeallocRequest(
+    PBackgroundIDBRequestParent* const aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<NormalTransactionOp> actor =
+  const RefPtr<NormalTransactionOp> actor =
       dont_AddRef(static_cast<NormalTransactionOp*>(aActor));
   return true;
 }
@@ -14104,7 +14145,7 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
   aTrustParams = false;
 #endif
 
-  OpenCursorParams::Type type = aParams.type();
+  const OpenCursorParams::Type type = aParams.type();
   RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
   RefPtr<FullIndexMetadata> indexMetadata;
   Cursor::Direction direction;
@@ -14148,13 +14189,13 @@ PBackgroundIDBCursorParent* TransactionBase::AllocCursor(
       .take();
 }
 
-bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* aActor,
+bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* const aActor,
                                   const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  auto* op = static_cast<Cursor*>(aActor);
+  auto* const op = static_cast<Cursor*>(aActor);
 
   if (NS_WARN_IF(!op->Start(aParams))) {
     return false;
@@ -14163,12 +14204,12 @@ bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* aActor,
   return true;
 }
 
-bool TransactionBase::DeallocCursor(PBackgroundIDBCursorParent* aActor) {
+bool TransactionBase::DeallocCursor(PBackgroundIDBCursorParent* const aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<Cursor> actor = dont_AddRef(static_cast<Cursor*>(aActor));
+  const RefPtr<Cursor> actor = dont_AddRef(static_cast<Cursor*>(aActor));
   return true;
 }
 
@@ -14189,7 +14230,7 @@ NormalTransaction::NormalTransaction(
 bool NormalTransaction::IsSameProcessActor() {
   AssertIsOnBackgroundThread();
 
-  PBackgroundParent* actor = Manager()->Manager()->Manager();
+  PBackgroundParent* const actor = Manager()->Manager()->Manager();
   MOZ_ASSERT(actor);
 
   return !BackgroundParent::IsOtherProcessActor(actor);
@@ -14224,7 +14265,7 @@ mozilla::ipc::IPCResult NormalTransaction::RecvDeleteMe() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!IsActorDestroyed());
 
-  IProtocol* mgr = Manager();
+  IProtocol* const mgr = Manager();
   if (!PBackgroundIDBTransactionParent::Send__delete__(this)) {
     return IPC_FAIL_NO_REASON(mgr);
   }
@@ -14260,7 +14301,7 @@ NormalTransaction::AllocPBackgroundIDBRequestParent(
 }
 
 mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBRequestConstructor(
-    PBackgroundIDBRequestParent* aActor, const RequestParams& aParams) {
+    PBackgroundIDBRequestParent* const aActor, const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
@@ -14272,7 +14313,7 @@ mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBRequestConstructor(
 }
 
 bool NormalTransaction::DeallocPBackgroundIDBRequestParent(
-    PBackgroundIDBRequestParent* aActor) {
+    PBackgroundIDBRequestParent* const aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
@@ -14287,7 +14328,7 @@ PBackgroundIDBCursorParent* NormalTransaction::AllocPBackgroundIDBCursorParent(
 }
 
 mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBCursorConstructor(
-    PBackgroundIDBCursorParent* aActor, const OpenCursorParams& aParams) {
+    PBackgroundIDBCursorParent* const aActor, const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
@@ -14299,7 +14340,7 @@ mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBCursorConstructor(
 }
 
 bool NormalTransaction::DeallocPBackgroundIDBCursorParent(
-    PBackgroundIDBCursorParent* aActor) {
+    PBackgroundIDBCursorParent* const aActor) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
@@ -14953,10 +14994,11 @@ bool VersionChangeTransaction::DeallocPBackgroundIDBCursorParent(
  * Cursor
  ******************************************************************************/
 
-Cursor::Cursor(RefPtr<TransactionBase> aTransaction, Type aType,
+Cursor::Cursor(RefPtr<TransactionBase> aTransaction, const Type aType,
                RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
-               RefPtr<FullIndexMetadata> aIndexMetadata, Direction aDirection,
-               ConstructFromTransactionBase /*aConstructionTag*/)
+               RefPtr<FullIndexMetadata> aIndexMetadata,
+               const Direction aDirection,
+               const ConstructFromTransactionBase /*aConstructionTag*/)
     : mTransaction(std::move(aTransaction)),
       mDatabase(!IsKeyCursor(aType) ? mTransaction->GetDatabase() : nullptr),
       mFileManager(!IsKeyCursor(aType) ? mDatabase->GetFileManager() : nullptr),
@@ -15005,7 +15047,7 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const {
 
 #ifdef DEBUG
   {
-    RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+    const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
         mTransaction->GetMetadataForObjectStoreId(mObjectStoreId);
     if (objectStoreMetadata) {
       MOZ_ASSERT(objectStoreMetadata == mObjectStoreMetadata);
@@ -15016,7 +15058,7 @@ bool Cursor::VerifyRequestParams(const CursorRequestParams& aParams) const {
     if (objectStoreMetadata &&
         (mType == OpenCursorParams::TIndexOpenCursorParams ||
          mType == OpenCursorParams::TIndexOpenKeyCursorParams)) {
-      RefPtr<FullIndexMetadata> indexMetadata =
+      const RefPtr<FullIndexMetadata> indexMetadata =
           mTransaction->GetMetadataForIndexId(objectStoreMetadata, mIndexId);
       if (indexMetadata) {
         MOZ_ASSERT(indexMetadata == mIndexMetadata);
@@ -15121,7 +15163,7 @@ bool Cursor::Start(const OpenCursorParams& aParams) {
   const Maybe<SerializedKeyRange>& optionalKeyRange =
       GetCommonOpenCursorParams(aParams).optionalKeyRange();
 
-  RefPtr<OpenOp> openOp = new OpenOp(this, optionalKeyRange);
+  const RefPtr<OpenOp> openOp = new OpenOp(this, optionalKeyRange);
 
   if (NS_WARN_IF(!openOp->Init(mTransaction))) {
     openOp->Cleanup();
@@ -15203,7 +15245,7 @@ void Cursor::SendResponseInternal(
   }
 
   // Work around the deleted function by casting to the base class.
-  auto* base = static_cast<PBackgroundIDBCursorParent*>(this);
+  auto* const base = static_cast<PBackgroundIDBCursorParent*>(this);
   if (!base->SendResponse(aResponse)) {
     NS_WARNING("Failed to send response!");
   }
@@ -15281,7 +15323,7 @@ mozilla::ipc::IPCResult Cursor::RecvContinue(const CursorRequestParams& aParams,
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams);
+  const RefPtr<ContinueOp> continueOp = new ContinueOp(this, aParams);
   if (NS_WARN_IF(!continueOp->Init(mTransaction))) {
     continueOp->Cleanup();
     return IPC_FAIL_NO_REASON(this);
@@ -16433,7 +16475,8 @@ void QuotaClient::ShutdownTimedOut() {
 
       NS_NAMED_LITERAL_CSTRING(delimiter, "*");
 
-      nsCString id = persistenceType + delimiter + origin + delimiter + state;
+      const nsCString id =
+          persistenceType + delimiter + origin + delimiter + state;
 
       ids.PutEntry(id);
     }
@@ -16476,7 +16519,7 @@ void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTimer);
 
-  auto* self = static_cast<QuotaClient*>(aClosure);
+  auto* const self = static_cast<QuotaClient*>(aClosure);
   MOZ_ASSERT(self);
   MOZ_ASSERT(self->mDeleteTimer);
   MOZ_ASSERT(SameCOMIdentity(self->mDeleteTimer, aTimer));
@@ -16501,7 +16544,7 @@ void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
 nsresult QuotaClient::GetDirectory(PersistenceType aPersistenceType,
                                    const nsACString& aOrigin,
                                    nsIFile** aDirectory) {
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "This should never fail!");
 
   nsCOMPtr<nsIFile> directory;
@@ -16597,9 +16640,10 @@ nsresult QuotaClient::GetDatabaseFilenames(
       MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
       MOZ_ASSERT(!path.IsEmpty());
 
-      nsPrintfCString warning(R"(An unexpected file exists in the storage )"
-                              R"(area: "%s")",
-                              NS_ConvertUTF16toUTF8(path).get());
+      const nsPrintfCString warning(
+          R"(An unexpected file exists in the storage )"
+          R"(area: "%s")",
+          NS_ConvertUTF16toUTF8(path).get());
       NS_WARNING(warning.get());
       if (!aForUpgrade) {
         return NS_ERROR_UNEXPECTED;
@@ -16752,7 +16796,7 @@ nsresult DeleteFilesRunnable::Open() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_Initial);
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   if (NS_WARN_IF(!quotaManager)) {
     return NS_ERROR_FAILURE;
   }
@@ -16785,7 +16829,7 @@ nsresult DeleteFilesRunnable::DeleteFile(int64_t aFileId) {
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   if (mFileManager->EnforcingQuota()) {
-    QuotaManager* quotaManager = QuotaManager::Get();
+    QuotaManager* const quotaManager = QuotaManager::Get();
     NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
     quotaManager->DecreaseUsageForOrigin(
@@ -16884,7 +16928,7 @@ void DeleteFilesRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
 
   mDirectoryLock = aLock;
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   // Must set this before dispatching otherwise we will race with the IO thread
@@ -16965,7 +17009,7 @@ nsresult Maintenance::CreateIndexedDatabaseManager() {
     return NS_ERROR_ABORT;
   }
 
-  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
+  IndexedDatabaseManager* const mgr = IndexedDatabaseManager::GetOrCreate();
   if (NS_WARN_IF(!mgr)) {
     return NS_ERROR_FAILURE;
   }
@@ -17010,7 +17054,7 @@ nsresult Maintenance::DirectoryOpen() {
     return NS_ERROR_ABORT;
   }
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   mState = State::DirectoryWorkOpen;
@@ -17039,7 +17083,7 @@ nsresult Maintenance::DirectoryWork() {
     return NS_ERROR_ABORT;
   }
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   nsresult rv = quotaManager->EnsureStorageIsInitialized();
@@ -17047,7 +17091,8 @@ nsresult Maintenance::DirectoryWork() {
     return rv;
   }
 
-  nsCOMPtr<nsIFile> storageDir = GetFileForPath(quotaManager->GetStoragePath());
+  const nsCOMPtr<nsIFile> storageDir =
+      GetFileForPath(quotaManager->GetStoragePath());
   if (NS_WARN_IF(!storageDir)) {
     return NS_ERROR_FAILURE;
   }
@@ -17353,10 +17398,9 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
   for (DirectoryInfo& directoryInfo : mDirectoryInfos) {
     for (const nsString& databasePath : directoryInfo.mDatabasePaths) {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
-        RefPtr<DatabaseMaintenance> databaseMaintenance =
-            new DatabaseMaintenance(this, directoryInfo.mPersistenceType,
-                                    directoryInfo.mGroup, directoryInfo.mOrigin,
-                                    databasePath);
+        const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
+            this, directoryInfo.mPersistenceType, directoryInfo.mGroup,
+            directoryInfo.mOrigin, databasePath);
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
@@ -17398,7 +17442,7 @@ void Maintenance::Finish() {
 
   // It can happen that we are only referenced by mCurrentMaintenance which is
   // cleared in NoteFinishedMaintenance()
-  RefPtr<Maintenance> kungFuDeathGrip = this;
+  const RefPtr<Maintenance> kungFuDeathGrip = this;
 
   mQuotaClient->NoteFinishedMaintenance(this);
 
@@ -17525,7 +17569,7 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
     return;
   }
 
-  nsCOMPtr<nsIFile> databaseFile = GetFileForPath(mDatabasePath);
+  const nsCOMPtr<nsIFile> databaseFile = GetFileForPath(mDatabasePath);
   MOZ_ASSERT(databaseFile);
 
   nsCOMPtr<mozIStorageConnection> connection;
@@ -17761,7 +17805,7 @@ nsresult DatabaseMaintenance::DetermineMaintenanceAction(
                "Thy last vacuum size shall be greater than zero, less than "
                "zero shall thy last vacuum size not be. Zero is right out.");
 
-  PRTime startTime = mMaintenance->StartTime();
+  const PRTime startTime = mMaintenance->StartTime();
 
   // This shouldn't really be possible...
   if (NS_WARN_IF(startTime <= lastVacuumTime)) {
@@ -18083,9 +18127,9 @@ nsresult UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
                                       mozIStorageConnection* aConnection) {
   // This file manager doesn't need real origin info, etc. The only purpose is
   // to store file ids without adding more complexity or code duplication.
-  RefPtr<FileManager> fileManager =
-      new FileManager(PERSISTENCE_TYPE_INVALID, EmptyCString(), EmptyCString(),
-                      EmptyString(), false);
+  auto fileManager =
+      MakeRefPtr<FileManager>(PERSISTENCE_TYPE_INVALID, EmptyCString(),
+                              EmptyCString(), EmptyString(), false);
 
   nsresult rv = fileManager->Init(aFMDirectory, aConnection);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18266,8 +18310,8 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
   AUTO_PROFILER_LABEL(
       "DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob", DOM);
 
-  const char* compressed = reinterpret_cast<const char*>(aBlobData);
-  size_t compressedLength = size_t(aBlobDataLength);
+  const char* const compressed = reinterpret_cast<const char*>(aBlobData);
+  const size_t compressedLength = size_t(aBlobDataLength);
 
   size_t uncompressedLength;
   if (NS_WARN_IF(!snappy::GetUncompressedLength(compressed, compressedLength,
@@ -18280,7 +18324,8 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char* uncompressedBuffer = reinterpret_cast<char*>(uncompressed.Elements());
+  char* const uncompressedBuffer =
+      reinterpret_cast<char*>(uncompressed.Elements());
 
   if (NS_WARN_IF(!snappy::RawUncompress(compressed, compressedLength,
                                         uncompressedBuffer))) {
@@ -18324,7 +18369,7 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
 
   // Higher and lower 32 bits described
   // in ObjectStoreAddOrPutRequestOp::DoDatabaseWork.
-  uint32_t index = uint32_t(aIntData & 0xFFFFFFFF);
+  const uint32_t index = uint32_t(aIntData & 0xFFFFFFFF);
 
   if (index >= aInfo->mFiles.Length()) {
     MOZ_ASSERT(false, "Bad index value!");
@@ -18340,7 +18385,8 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   MOZ_ASSERT(file.mFileInfo);
   MOZ_ASSERT(file.mType == StructuredCloneFile::eStructuredClone);
 
-  nsCOMPtr<nsIFile> nativeFile = FileInfo::GetFileForFileInfo(file.mFileInfo);
+  const nsCOMPtr<nsIFile> nativeFile =
+      FileInfo::GetFileForFileInfo(file.mFileInfo);
   if (NS_WARN_IF(!nativeFile)) {
     return NS_ERROR_FAILURE;
   }
@@ -18351,8 +18397,8 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
     return rv;
   }
 
-  RefPtr<SnappyUncompressInputStream> snappyInputStream =
-      new SnappyUncompressInputStream(fileInputStream);
+  const auto snappyInputStream =
+      MakeRefPtr<SnappyUncompressInputStream>(fileInputStream);
 
   do {
     char buffer[kFileCopyBufferSize];
@@ -18495,12 +18541,12 @@ nsresult DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
   MOZ_ASSERT(indexCount > 0);
 
   aMaybeUniqueIndexTable.emplace();
-  UniqueIndexTable* uniqueIndexTable = aMaybeUniqueIndexTable.ptr();
+  UniqueIndexTable* const uniqueIndexTable = aMaybeUniqueIndexTable.ptr();
   MOZ_ASSERT(uniqueIndexTable);
 
   for (auto iter = objectStoreMetadata->mIndexes.Iter(); !iter.Done();
        iter.Next()) {
-    FullIndexMetadata* value = iter.UserData();
+    FullIndexMetadata* const value = iter.UserData();
     MOZ_ASSERT(!uniqueIndexTable->Get(value->mCommonMetadata.id()));
 
     if (NS_WARN_IF(!uniqueIndexTable->Put(value->mCommonMetadata.id(),
@@ -19488,7 +19534,7 @@ nsresult FactoryOp::SendToIOThread() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   // Must set this before dispatching otherwise we will race with the IO thread.
@@ -19803,7 +19849,7 @@ nsresult FactoryOp::OpenDirectory() {
   const nsString& databaseName = mCommonParams.metadata().name();
   PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   nsCOMPtr<nsIFile> dbFile;
@@ -20079,7 +20125,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   const nsString& databaseName = mCommonParams.metadata().name();
   PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   nsCOMPtr<nsIFile> dbDirectory;
@@ -21416,7 +21462,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   const nsString& databaseName = mCommonParams.metadata().name();
   PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   nsCOMPtr<nsIFile> directory;
@@ -21536,7 +21582,7 @@ nsresult DeleteDatabaseOp::DispatchToWorkThread() {
 
   RefPtr<VersionChangeOp> versionChangeOp = new VersionChangeOp(this);
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   nsresult rv = quotaManager->IOThread()->Dispatch(versionChangeOp.forget(),
@@ -22330,7 +22376,7 @@ nsresult DatabaseOp::SendToIOThread() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   if (NS_WARN_IF(!quotaManager)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -25608,7 +25654,8 @@ void Cursor::CursorOpBase::Cleanup() {
 }
 
 nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
-    DatabaseConnection::CachedStatement& aStmt, bool aInitializeResponse) {
+    DatabaseConnection::CachedStatement& aStmt,
+    const bool aInitializeResponse) {
   Transaction()->AssertIsOnConnectionThread();
   MOZ_ASSERT(mResponse.type() == CursorResponse::T__None);
   MOZ_ASSERT_IF(mFiles.IsEmpty(), aInitializeResponse);
@@ -25935,11 +25982,11 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + kColumnNameKey +
-                         NS_LITERAL_CSTRING(
-                             " FROM object_data "
-                             "WHERE object_store_id = :") +
-                         kStmtParamNameId;
+  const nsCString queryStart = NS_LITERAL_CSTRING("SELECT ") + kColumnNameKey +
+                               NS_LITERAL_CSTRING(
+                                   " FROM object_data "
+                                   "WHERE object_store_id = :") +
+                               kStmtParamNameId;
 
   const auto keyRangeClause =
       MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, kColumnNameKey);
@@ -25948,8 +25995,8 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
-  nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                         kOpenLimit + NS_LITERAL_CSTRING("1");
+  const nsCString firstQuery = queryStart + keyRangeClause + directionClause +
+                               kOpenLimit + NS_LITERAL_CSTRING("1");
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -26003,22 +26050,19 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString indexTable = mCursor->mUniqueIndex
-                             ? NS_LITERAL_CSTRING("unique_index_data")
-                             : NS_LITERAL_CSTRING("index_data");
+  const auto& indexTable = mCursor->mUniqueIndex
+                               ? NS_LITERAL_CSTRING("unique_index_data")
+                               : NS_LITERAL_CSTRING("index_data");
 
   NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
 
-  nsAutoCString sortColumnAlias;
-  if (mCursor->IsLocaleAware()) {
-    sortColumnAlias =
-        "SELECT index_table.value, "
-        "index_table.value_locale as sort_column, ";
-  } else {
-    sortColumnAlias =
-        "SELECT index_table.value as sort_column, "
-        "index_table.value_locale, ";
-  }
+  const nsCString sortColumnAlias =
+      NS_LITERAL_CSTRING("SELECT ") +
+      MakeColumnPairSelectionList(
+          NS_LITERAL_CSTRING("index_table.value"),
+          NS_LITERAL_CSTRING("index_table.value_locale"), sortColumn,
+          mCursor->IsLocaleAware()) +
+      NS_LITERAL_CSTRING(", ");
 
   nsAutoCString queryStart = sortColumnAlias +
                              NS_LITERAL_CSTRING(
@@ -26062,8 +26106,8 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
-  nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                         kOpenLimit + NS_LITERAL_CSTRING("1");
+  const nsCString firstQuery = queryStart + keyRangeClause + directionClause +
+                               kOpenLimit + NS_LITERAL_CSTRING("1");
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -26125,22 +26169,18 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
 
   const bool usingKeyRange = mOptionalKeyRange.isSome();
 
-  nsCString table = mCursor->mUniqueIndex
-                        ? NS_LITERAL_CSTRING("unique_index_data")
-                        : NS_LITERAL_CSTRING("index_data");
+  const auto& table = mCursor->mUniqueIndex
+                          ? NS_LITERAL_CSTRING("unique_index_data")
+                          : NS_LITERAL_CSTRING("index_data");
 
   NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
 
-  nsAutoCString sortColumnAlias;
-  if (mCursor->IsLocaleAware()) {
-    sortColumnAlias =
-        "SELECT value, "
-        "value_locale as sort_column, ";
-  } else {
-    sortColumnAlias =
-        "SELECT value as sort_column, "
-        "value_locale, ";
-  }
+  const nsCString sortColumnAlias =
+      NS_LITERAL_CSTRING("SELECT ") +
+      MakeColumnPairSelectionList(NS_LITERAL_CSTRING("value"),
+                                  NS_LITERAL_CSTRING("value_locale"),
+                                  sortColumn, mCursor->IsLocaleAware()) +
+      NS_LITERAL_CSTRING(", ");
 
   nsAutoCString queryStart = sortColumnAlias +
                              NS_LITERAL_CSTRING(
@@ -26174,8 +26214,8 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
 
   // Note: Changing the number or order of SELECT columns in the query will
   // require changes to CursorOpBase::PopulateResponseFromStatement.
-  nsCString firstQuery = queryStart + keyRangeClause + directionClause +
-                         kOpenLimit + NS_LITERAL_CSTRING("1");
+  const nsCString firstQuery = queryStart + keyRangeClause + directionClause +
+                               kOpenLimit + NS_LITERAL_CSTRING("1");
 
   DatabaseConnection::CachedStatement stmt;
   nsresult rv = aConnection->GetCachedStatement(firstQuery, &stmt);
@@ -26558,7 +26598,7 @@ nsresult GetFileReferencesHelper::DispatchAndReturnFileReferences(
   MOZ_ASSERT(aSliceRefCnt);
   MOZ_ASSERT(aResult);
 
-  QuotaManager* quotaManager = QuotaManager::Get();
+  QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
@@ -26818,7 +26858,7 @@ nsresult FileHelper::RemoveFile(nsIFile* aFile, nsIFile* aJournalFile) {
   }
 
   if (mFileManager->EnforcingQuota()) {
-    QuotaManager* quotaManager = QuotaManager::Get();
+    QuotaManager* const quotaManager = QuotaManager::Get();
     MOZ_ASSERT(quotaManager);
 
     quotaManager->DecreaseUsageForOrigin(

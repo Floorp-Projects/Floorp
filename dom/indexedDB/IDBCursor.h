@@ -66,7 +66,7 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
   RefPtr<IDBIndex> mSourceIndex;
 
   // mSourceObjectStore or mSourceIndex will hold this alive.
-  IDBTransaction* mTransaction;
+  IDBTransaction* const mTransaction;
 
   // These are cycle-collected!
   JS::Heap<JS::Value> mCachedKey;
