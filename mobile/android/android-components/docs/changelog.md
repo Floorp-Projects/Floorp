@@ -22,6 +22,9 @@ permalink: /changelog/
 * **feature-customtabs**
   * Added `CustomTabWindowFeature` to handle windows inside custom tabs, PWAs, and TWAs.
 
+* **feature-tab-collections**
+
+  * Behavior change: In a collection List<TabEntity> is now ordered descending by creation date (newest tab in a collection on top)
 * **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
   * Added api to manage the tracking protection exception list, any session added to the list will be ignored and the the current tracking policy will not be applied.
   ```kotlin
