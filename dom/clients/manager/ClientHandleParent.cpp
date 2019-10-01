@@ -77,7 +77,9 @@ RefPtr<SourcePromise> ClientHandleParent::EnsureSource() {
     return SourcePromise::CreateAndResolve(mSource, __func__);
   }
 
-  mSourcePromise = new SourcePromise::Private(__func__);
+  if (!mSourcePromise) {
+    mSourcePromise = new SourcePromise::Private(__func__);
+  }
   return mSourcePromise;
 }
 
