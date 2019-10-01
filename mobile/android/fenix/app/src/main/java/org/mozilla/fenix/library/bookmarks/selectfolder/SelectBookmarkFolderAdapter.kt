@@ -7,6 +7,8 @@ package org.mozilla.fenix.library.bookmarks.selectfolder
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.storage.BookmarkNode
@@ -16,15 +18,18 @@ import org.jetbrains.anko.image
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
+import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderAdapter.BookmarkFolderViewHolder
+import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderAdapter.BookmarkNodeWithDepth
 
 class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedViewModel) :
-    RecyclerView.Adapter<SelectBookmarkFolderAdapter.BookmarkFolderViewHolder>() {
-
-    private var tree: List<BookmarkNodeWithDepth> = listOf()
+    ListAdapter<BookmarkNodeWithDepth, BookmarkFolderViewHolder>(DiffCallback) {
 
     fun updateData(tree: BookmarkNode?) {
-        this.tree = tree!!.convertToFolderDepthTree().drop(1)
-        notifyDataSetChanged()
+        val updatedData = tree
+            ?.convertToFolderDepthTree()
+            ?.drop(1)
+            .orEmpty()
+        submitList(updatedData)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkFolderViewHolder {
@@ -38,27 +43,24 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
         return BookmarkFolderViewHolder(view)
     }
 
-    override fun getItemCount(): Int = tree.size
-
     override fun onBindViewHolder(holder: BookmarkFolderViewHolder, position: Int) {
-        holder.bind(
-            tree[position],
-            tree[position].node == sharedViewModel.selectedFolder
-        ) { node ->
-            sharedViewModel.apply {
-                when (selectedFolder) {
-                    node -> selectedFolder = null
-                    else -> selectedFolder = node
-                }
-            }
-            notifyDataSetChanged()
+        val item = getItem(position)
+
+        holder.bind(item, selected = item.node.isSelected()) { node ->
+            val lastSelectedItemPosition = getSelectedItemIndex()
+
+            sharedViewModel.toggleSelection(node)
+
+            notifyItemChanged(position)
+            lastSelectedItemPosition
+                ?.takeIf { it != position }
+                ?.let { notifyItemChanged(it) }
         }
     }
 
     class BookmarkFolderViewHolder(
         val view: LibrarySiteItemView
-    ) :
-        RecyclerView.ViewHolder(view), LayoutContainer {
+    ) : RecyclerView.ViewHolder(view), LayoutContainer {
 
         override val containerView get() = view
 
@@ -96,8 +98,36 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
             .orEmpty()
     }
 
+    private fun getSelectedItemIndex(): Int? {
+        val selectedNode = sharedViewModel.selectedFolder
+        val selectedNodeIndex = currentList.indexOfFirst { it.node == selectedNode }
+
+        return selectedNodeIndex.takeIf { it != -1 }
+    }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun BookmarkNode.isSelected(): Boolean =
+        this == sharedViewModel.selectedFolder
+
     companion object {
         private const val maxDepth = 10
         private const val dpsToIndent = 10
     }
+}
+
+private object DiffCallback : DiffUtil.ItemCallback<BookmarkNodeWithDepth>() {
+
+    override fun areItemsTheSame(
+        oldItem: BookmarkNodeWithDepth,
+        newItem: BookmarkNodeWithDepth
+    ) = oldItem.node.guid == newItem.node.guid
+
+    override fun areContentsTheSame(
+        oldItem: BookmarkNodeWithDepth,
+        newItem: BookmarkNodeWithDepth
+    ) = oldItem == newItem
+}
+
+private fun BookmarksSharedViewModel.toggleSelection(node: BookmarkNode?) {
+    selectedFolder = if (selectedFolder == node) null else node
 }
