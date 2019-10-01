@@ -25,7 +25,7 @@ StunAddrsRequestChild::StunAddrsRequestChild(
 }
 
 mozilla::ipc::IPCResult StunAddrsRequestChild::RecvOnMDNSQueryComplete(
-    const nsCString& hostname, const nsCString& address) {
+    const nsCString& hostname, const Maybe<nsCString>& address) {
   if (mListener) {
     mListener->OnMDNSQueryComplete(hostname, address);
   }

@@ -21,6 +21,7 @@ extern crate log;
 struct Callback {
     data: *const c_void,
     resolved: extern "C" fn(*const c_void, *const c_char, *const c_char),
+    timedout: extern "C" fn(*const c_void, *const c_char),
 }
 
 unsafe impl Send for Callback {}
@@ -30,6 +31,12 @@ fn hostname_resolved(callback: &Callback, hostname: &str, addr: &str) {
         if let Ok(addr) = CString::new(addr) {
             (callback.resolved)(callback.data, hostname.as_ptr(), addr.as_ptr());
         }
+    }
+}
+
+fn hostname_timedout(callback: &Callback, hostname: &str) {
+    if let Ok(hostname) = CString::new(hostname) {
+        (callback.timedout)(callback.data, hostname.as_ptr());
     }
 }
 
@@ -366,7 +373,7 @@ impl MDNSService {
                             query.timestamp = now;
                             unsent_queries.push_back(query);
                         } else {
-                            hostname_resolved(&query.callback, &hostname, "");
+                            hostname_timedout(&query.callback, &hostname);
                         }
                     }
                 }
@@ -552,6 +559,7 @@ pub extern "C" fn mdns_service_query_hostname(
     serv: *mut MDNSService,
     data: *const c_void,
     resolved: extern "C" fn(*const c_void, *const c_char, *const c_char),
+    timedout: extern "C" fn(*const c_void, *const c_char),
     hostname: *const c_char,
 ) {
     assert!(!serv.is_null());
@@ -562,6 +570,7 @@ pub extern "C" fn mdns_service_query_hostname(
         let callback = Callback {
             data: data,
             resolved: resolved,
+            timedout: timedout,
         };
         (*serv).query_hostname(callback, &hostname);
     }
@@ -620,6 +629,9 @@ mod tests {
         _: *const c_char,
     ) -> () {
     }
+
+    #[no_mangle]
+    pub extern "C" fn mdns_service_timedout(_: *const c_void, _: *const c_char) -> () {}
 
     fn listen_until(addr: &std::net::Ipv4Addr, stop: u64) -> thread::JoinHandle<Vec<String>> {
         let port = 5353;
@@ -723,6 +735,7 @@ mod tests {
         let callback = Callback {
             data: 0 as *const c_void,
             resolved: mdns_service_resolved,
+            timedout: mdns_service_timedout,
         };
         let hostname = Uuid::new_v4().to_hyphenated().to_string() + ".local";
         service.query_hostname(callback, &hostname);
@@ -744,6 +757,7 @@ mod tests {
             let callback = Callback {
                 data: 0 as *const c_void,
                 resolved: mdns_service_resolved,
+                timedout: mdns_service_timedout,
             };
             let hostname = Uuid::new_v4().to_hyphenated().to_string() + ".local";
             service.query_hostname(callback, &hostname);
@@ -767,6 +781,7 @@ mod tests {
         let callback = Callback {
             data: 0 as *const c_void,
             resolved: mdns_service_resolved,
+            timedout: mdns_service_timedout,
         };
         service.query_hostname(callback, &hostname);
         thread::sleep(time::Duration::from_secs(4));
@@ -790,11 +805,13 @@ mod tests {
             hostnames.push(hostname);
         }
 
-        let q = create_query(42, &hostnames);
-        match dns_parser::Packet::parse(&q) {
-            Ok(parsed) => {
-                assert_eq!(parsed.questions.len(), 100);
-            }
+        match create_query(42, &hostnames) {
+            Ok(q) => match dns_parser::Packet::parse(&q) {
+                Ok(parsed) => {
+                    assert_eq!(parsed.questions.len(), 100);
+                }
+                Err(_) => assert!(false),
+            },
             Err(_) => assert!(false),
         }
     }
