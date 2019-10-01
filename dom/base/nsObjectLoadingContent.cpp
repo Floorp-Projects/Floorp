@@ -107,7 +107,6 @@
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 static const char kPrefYoutubeRewrite[] = "plugins.rewrite_youtube_embeds";
-static const char kPrefBlockURIs[] = "browser.safebrowsing.blockedURIs.enabled";
 static const char kPrefFavorFallbackMode[] = "plugins.favorfallback.mode";
 static const char kPrefFavorFallbackRules[] = "plugins.favorfallback.rules";
 
@@ -2941,32 +2940,9 @@ uint32_t nsObjectLoadingContent::GetRunID(SystemCallerGuarantee,
   return mRunID;
 }
 
-static bool sPrefsInitialized;
-static uint32_t sSessionTimeoutMinutes;
-static uint32_t sPersistentTimeoutDays;
-static bool sBlockURIs;
-
-static void initializeObjectLoadingContentPrefs() {
-  if (!sPrefsInitialized) {
-    Preferences::AddUintVarCache(
-        &sSessionTimeoutMinutes,
-        "plugin.sessionPermissionNow.intervalInMinutes", 60);
-    Preferences::AddUintVarCache(
-        &sPersistentTimeoutDays,
-        "plugin.persistentPermissionAlways.intervalInDays", 90);
-
-    Preferences::AddBoolVarCache(&sBlockURIs, kPrefBlockURIs, false);
-    sPrefsInitialized = true;
-  }
-}
-
 bool nsObjectLoadingContent::ShouldBlockContent() {
-  if (!sPrefsInitialized) {
-    initializeObjectLoadingContentPrefs();
-  }
-
   if (mContentBlockingEnabled && mURI && IsFlashMIME(mContentType) &&
-      sBlockURIs) {
+      StaticPrefs::browser_safebrowsing_blockedURIs_enabled()) {
     return true;
   }
 
@@ -2975,10 +2951,6 @@ bool nsObjectLoadingContent::ShouldBlockContent() {
 
 bool nsObjectLoadingContent::ShouldPlay(FallbackType& aReason) {
   nsresult rv;
-
-  if (!sPrefsInitialized) {
-    initializeObjectLoadingContentPrefs();
-  }
 
   if (BrowserTabsRemoteAutostart()) {
     bool shouldLoadInParent =
@@ -3082,14 +3054,6 @@ bool nsObjectLoadingContent::ShouldPlay(FallbackType& aReason) {
     rv = permissionManager->TestPermissionFromPrincipal(
         topDoc->NodePrincipal(), permissionString, &permission);
     NS_ENSURE_SUCCESS(rv, false);
-    if (permission != nsIPermissionManager::UNKNOWN_ACTION) {
-      uint64_t nowms = PR_Now() / 1000;
-      permissionManager->UpdateExpireTime(
-          topDoc->NodePrincipal(), permissionString, false,
-          nowms + sSessionTimeoutMinutes * 60 * 1000,
-          nowms / 1000 +
-              uint64_t(sPersistentTimeoutDays) * 24 * 60 * 60 * 1000);
-    }
     switch (permission) {
       case nsIPermissionManager::ALLOW_ACTION:
         if (PreferFallback(false /* isPluginClickToPlay */)) {
