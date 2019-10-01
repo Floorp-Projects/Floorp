@@ -2419,9 +2419,7 @@ bool jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-MethodStatus jit::Recompile(JSContext* cx, HandleScript script,
-                            BaselineFrame* osrFrame, jsbytecode* osrPc,
-                            bool force) {
+MethodStatus jit::Recompile(JSContext* cx, HandleScript script, bool force) {
   MOZ_ASSERT(script->hasIonScript());
   if (script->ionScript()->isRecompiling()) {
     return Method_Compiled;
@@ -2429,7 +2427,8 @@ MethodStatus jit::Recompile(JSContext* cx, HandleScript script,
 
   MOZ_ASSERT(!script->baselineScript()->hasPendingIonBuilder());
 
-  MethodStatus status = Compile(cx, script, osrFrame, osrPc, force);
+  MethodStatus status = Compile(cx, script, /* osrFrame = */ nullptr,
+                                /* osrPc = */ nullptr, force);
   if (status != Method_Compiled) {
     if (status == Method_CantCompile) {
       ForbidCompilation(cx, script);
