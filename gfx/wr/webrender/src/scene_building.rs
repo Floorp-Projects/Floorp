@@ -487,13 +487,11 @@ impl<'a> SceneBuilder<'a> {
             return;
         }
 
-        // If no explicit tile cache was enabled, insert a marker that will result in the
-        // entire display list being cached.
-        if !self.found_explicit_tile_cache {
-            if let Some(cluster) = main_prim_list.clusters.first_mut() {
-                cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
-                cluster.cache_scroll_root = Some(ROOT_SPATIAL_NODE_INDEX);
-            }
+        // Unconditionally insert a marker to create a picture cache slice on the
+        // first cluster. This handles implicit picture caches, and also the common
+        // case, by allowing the root / background primitives to be cached in a slice.
+        if let Some(cluster) = main_prim_list.clusters.first_mut() {
+            cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
         }
 
         // List of slices that have been found
@@ -623,36 +621,35 @@ impl<'a> SceneBuilder<'a> {
 
         // Step through the slices, creating picture cache wrapper instances.
         for (slice_index, slice) in slices.drain(..).enumerate() {
-            match slice.cache_scroll_root {
-                Some(scroll_root) => {
-                    let background_color = if slice_index == 0 {
-                        self.config.background_color
-                    } else {
-                        None
-                    };
+            let background_color = if slice_index == 0 {
+                self.config.background_color
+            } else {
+                None
+            };
 
-                    let instance = create_tile_cache(
-                        slice_index,
-                        scroll_root,
-                        slice.prim_list,
-                        background_color,
-                        slice.shared_clips.unwrap_or(Vec::new()),
-                        &mut self.interners,
-                        &mut self.prim_store,
-                        &mut self.clip_store,
-                    );
+            // If the cluster specifies a scroll root, use it. Otherwise,
+            // just cache assuming no scrolling takes place. Even if that's
+            // not true, we still get caching benefits for any changes that
+            // occur while not scrolling (such as animation, video etc);
+            let scroll_root = slice.cache_scroll_root.unwrap_or(ROOT_SPATIAL_NODE_INDEX);
 
-                    main_prim_list.add_prim(
-                        instance,
-                        LayoutSize::zero(),
-                        scroll_root,
-                        PrimitiveFlags::IS_BACKFACE_VISIBLE,
-                    );
-                }
-                None => {
-                    main_prim_list.extend(slice.prim_list);
-                }
-            }
+            let instance = create_tile_cache(
+                slice_index,
+                scroll_root,
+                slice.prim_list,
+                background_color,
+                slice.shared_clips.unwrap_or(Vec::new()),
+                &mut self.interners,
+                &mut self.prim_store,
+                &mut self.clip_store,
+            );
+
+            main_prim_list.add_prim(
+                instance,
+                LayoutSize::zero(),
+                scroll_root,
+                PrimitiveFlags::IS_BACKFACE_VISIBLE,
+            );
         }
     }
 
@@ -3521,51 +3518,71 @@ impl FlattenedStackingContext {
         &mut self,
         clip_scroll_tree: &ClipScrollTree,
     ) {
-        let mut selected_cluster_and_scroll_root = None;
+        struct SliceInfo {
+            cluster_index: usize,
+            scroll_roots: Vec<SpatialNodeIndex>,
+        }
 
-        // There's probably a tidier way to express the logic below, but we will be
-        // removing this shortly anyway, as we create slices for more than just the
-        // main scroll root.
+        let mut slices: Vec<SliceInfo> = Vec::new();
+
+        // Step through each cluster, and work out where the slice boundaries should be.
         for (cluster_index, cluster) in self.prim_list.clusters.iter().enumerate() {
             let scroll_root = clip_scroll_tree.find_scroll_root(
                 cluster.spatial_node_index,
             );
+
+            // We want to create a slice in the following conditions:
+            // (1) This cluster is a scrollbar
+            // (2) This cluster begins a 'real' scroll root, where we don't currently have a real scroll root
+            // (3) No slice exists yet
+            let create_new_slice =
+                cluster.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) ||
+                slices.last().map(|slice| {
+                    scroll_root != ROOT_SPATIAL_NODE_INDEX &&
+                    slice.scroll_roots.is_empty()
+                }).unwrap_or(true);
+
+            // Create a new slice if required
+            if create_new_slice {
+                slices.push(SliceInfo {
+                    cluster_index,
+                    scroll_roots: Vec::new(),
+                });
+            }
+
+            // If this is a 'real' scroll root, include that in the list of scroll roots
+            // that have been found for this slice.
             if scroll_root != ROOT_SPATIAL_NODE_INDEX {
-                match selected_cluster_and_scroll_root {
-                    Some((_, selected_scroll_root)) => {
-                        if selected_scroll_root != scroll_root {
-                            // Found multiple scroll roots - bail out and just cache fixed position
-                            selected_cluster_and_scroll_root = None;
-                            break;
-                        }
-                    }
-                    None => {
-                        selected_cluster_and_scroll_root = Some((cluster_index, scroll_root));
-                    }
+                let slice = slices.last_mut().unwrap();
+                if !slice.scroll_roots.contains(&scroll_root) {
+                    slice.scroll_roots.push(scroll_root);
                 }
             }
         }
 
-        // Either set up a fixed root cache, or a scrolling one if there was only
-        // a single scroll root found (the common case).
-        match selected_cluster_and_scroll_root {
-            Some((cluster_index, scroll_root)) => {
-                let cluster = &mut self.prim_list.clusters[cluster_index];
-                cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
-                cluster.cache_scroll_root = Some(scroll_root);
-            }
-            None => {
-                if let Some(cluster) = self.prim_list.clusters.first_mut() {
-                    cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
-                    cluster.cache_scroll_root = Some(ROOT_SPATIAL_NODE_INDEX);
-                }
+        // Walk the list of slices, setting appropriate flags on the clusters which are
+        // later used during setup_picture_caching.
+        for slice in slices.drain(..) {
+            let cluster = &mut self.prim_list.clusters[slice.cluster_index];
+            // Mark that this cluster creates a picture cache slice
+            cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+            assert!(!slice.scroll_roots.contains(&ROOT_SPATIAL_NODE_INDEX));
+            // Only select a scroll root for this slice if there's a single 'real' scroll
+            // root. If there are no scroll roots (doesn't scroll) or there are multiple
+            // scroll roots, then cache as a fixed slice. In the case of multiple scroll
+            // roots, this means we'll do some extra rasterization work (but only in dirty
+            // regions) as parts of the slice scroll. However, it does mean that we
+            // reduce number of tiles / GPU memory, and keep subpixel AA. In future, we
+            // might decide to create extra slices in some cases where there are multiple
+            // scroll roots (specifically, non-overlapping sibling scroll roots might be
+            // useful to support).
+            if slice.scroll_roots.len() == 1 {
+                cluster.cache_scroll_root = Some(slice.scroll_roots.first().cloned().unwrap());
             }
         }
 
-        // For now, always end the cache slice at the end of the stacking context.
-        // This preserves existing behavior, but breaks in some cases on platforms
-        // that use overlay scroll bars. We can fix this as a follow up once this
-        // patch lands.
+        // Always end the cache at the end of the stacking context, so that we don't
+        // cache anything from primitives outside this pipeline in the same slice.
         if let Some(cluster) = self.prim_list.clusters.last_mut() {
             cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_POST);
         }
@@ -3610,6 +3627,11 @@ impl FlattenedStackingContext {
 
         // If need to isolate in surface due to clipping / mix-blend-mode
         if !self.blit_reason.is_empty() {
+            return false;
+        }
+
+        // If this stacking context is a scrollbar, retain it so it can form a picture cache slice
+        if self.prim_flags.contains(PrimitiveFlags::IS_SCROLLBAR_CONTAINER) {
             return false;
         }
 
