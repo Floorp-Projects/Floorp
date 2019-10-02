@@ -153,7 +153,6 @@ class AudioNodeStream : public ProcessedMediaStream {
 
   // Any thread
   AudioNodeEngine* Engine() { return mEngine; }
-  TrackRate SampleRate() const { return mSampleRate; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;

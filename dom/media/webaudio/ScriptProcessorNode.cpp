@@ -244,7 +244,7 @@ class ScriptProcessorNodeEngine final : public AudioNodeEngine {
                             uint32_t aNumberOfInputChannels)
       : AudioNodeEngine(aNode),
         mDestination(aDestination->Stream()),
-        mSharedBuffers(new SharedBuffers(mDestination->SampleRate())),
+        mSharedBuffers(new SharedBuffers(mDestination->mSampleRate)),
         mBufferSize(aBufferSize),
         mInputChannelCount(aNumberOfInputChannels),
         mInputWriteIndex(0) {}

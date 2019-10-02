@@ -65,7 +65,7 @@ class DelayNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    MOZ_ASSERT(aStream->SampleRate() == mDestination->SampleRate());
+    MOZ_ASSERT(aStream->mSampleRate == mDestination->mSampleRate);
 
     if (!aInput.IsSilentOrSubnormal()) {
       if (mLeftOverData <= 0) {
@@ -106,7 +106,7 @@ class DelayNodeEngine final : public AudioNodeEngine {
   void UpdateOutputBlock(AudioNodeStream* aStream, GraphTime aFrom,
                          AudioBlock* aOutput, float minDelay) {
     float maxDelay = mMaxDelay;
-    float sampleRate = aStream->SampleRate();
+    float sampleRate = aStream->mSampleRate;
     ChannelInterpretation channelInterpretation =
         aStream->GetChannelInterpretation();
     if (mDelay.HasSimpleValue()) {

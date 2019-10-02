@@ -188,8 +188,8 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
           input = alignedInputBuffer;
         }
       }
-      SetParamsOnBiquad(mBiquads[i], aStream->SampleRate(), mType, freq, q,
-                        gain, detune);
+      SetParamsOnBiquad(mBiquads[i], aStream->mSampleRate, mType, freq, q, gain,
+                        detune);
 
       mBiquads[i].process(input, aOutput->ChannelFloatsForWrite(i),
                           aInput.GetDuration());

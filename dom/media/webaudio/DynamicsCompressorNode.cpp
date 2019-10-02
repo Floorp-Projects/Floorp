@@ -41,7 +41,7 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
         mRatio(12.f),
         mAttack(0.003f),
         mRelease(0.25f),
-        mCompressor(new DynamicsCompressor(mDestination->SampleRate(), 2)) {}
+        mCompressor(new DynamicsCompressor(mDestination->mSampleRate, 2)) {}
 
   enum Parameters { THRESHOLD, KNEE, RATIO, ATTACK, RELEASE };
   void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
@@ -82,7 +82,7 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
     const uint32_t channelCount = aInput.ChannelCount();
     if (mCompressor->numberOfChannels() != channelCount) {
       // Create a new compressor object with a new channel count
-      mCompressor = new WebCore::DynamicsCompressor(aStream->SampleRate(),
+      mCompressor = new WebCore::DynamicsCompressor(aStream->mSampleRate,
                                                     aInput.ChannelCount());
     }
 
