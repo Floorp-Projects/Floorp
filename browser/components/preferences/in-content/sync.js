@@ -526,7 +526,7 @@ var gSyncPane = {
 
     fxAccounts
       .resendVerificationEmail()
-      .then(fxAccounts.getSignedInUser, onError)
+      .then(() => fxAccounts.getSignedInUser(), onError)
       .then(onSuccess, onError);
   },
 
