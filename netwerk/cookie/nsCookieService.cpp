@@ -2545,8 +2545,10 @@ nsresult nsCookieService::Remove(const nsACString& aHost,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString baseDomain;
-  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!host.IsEmpty()) {
+    rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsListIter matchIter;
   RefPtr<nsCookie> cookie;
