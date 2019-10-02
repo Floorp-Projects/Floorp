@@ -6,14 +6,14 @@
 #include "ComputePipeline.h"
 
 #include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
 ComputePipeline::~ComputePipeline() = default;
 
-WEBGPU_IMPL_GOOP_0(ComputePipeline)
+GPU_IMPL_CYCLE_COLLECTION(ComputePipeline, mParent)
+GPU_IMPL_JS_WRAP(ComputePipeline)
 
 }  // namespace webgpu
 }  // namespace mozilla

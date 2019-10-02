@@ -3,28 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/WebGPUBinding.h"
 #include "Adapter.h"
 
 #include "Instance.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
+GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent)
+GPU_IMPL_JS_WRAP(Adapter)
+
 Adapter::~Adapter() = default;
-
-void Adapter::Extensions(dom::WebGPUExtensions& out) const {
-  MOZ_CRASH("todo");
-}
-
-void Adapter::Features(dom::WebGPUFeatures& out) const { MOZ_CRASH("todo"); }
-
-already_AddRefed<Device> Adapter::CreateDevice(
-    const dom::WebGPUDeviceDescriptor& desc) const {
-  MOZ_CRASH("todo");
-}
-
-WEBGPU_IMPL_GOOP_0(Adapter)
 
 }  // namespace webgpu
 }  // namespace mozilla

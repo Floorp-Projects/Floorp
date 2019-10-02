@@ -3,27 +3,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGPU_BlendState_H_
-#define WEBGPU_BlendState_H_
+#ifndef GPU_OutOfMemoryError_H_
+#define GPU_OutOfMemoryError_H_
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
 namespace mozilla {
+namespace dom {
+class GlobalObject;
+}  // namespace dom
 namespace webgpu {
-
 class Device;
 
-class BlendState final : public ChildOf<Device> {
+class OutOfMemoryError final : public nsWrapperCache, public ChildOf<Device> {
  public:
-  WEBGPU_DECL_GOOP(BlendState)
+  GPU_DECL_CYCLE_COLLECTION(OutOfMemoryError)
+  GPU_DECL_JS_WRAP(OutOfMemoryError)
+  OutOfMemoryError() = delete;
 
  private:
-  BlendState() = delete;
-  virtual ~BlendState();
+  virtual ~OutOfMemoryError();
+
+ public:
 };
 
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // WEBGPU_BlendState_H_
+#endif  // GPU_OutOfMemoryError_H_

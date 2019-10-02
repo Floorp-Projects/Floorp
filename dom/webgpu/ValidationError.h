@@ -3,27 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGPU_AttachmentState_H_
-#define WEBGPU_AttachmentState_H_
+#ifndef GPU_ValidationError_H_
+#define GPU_ValidationError_H_
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
 namespace mozilla {
 namespace webgpu {
-
 class Device;
 
-class AttachmentState final : public ChildOf<Device> {
+class ValidationError final : public nsWrapperCache, public ChildOf<Device> {
  public:
-  WEBGPU_DECL_GOOP(AttachmentState)
+  GPU_DECL_CYCLE_COLLECTION(ValidationError)
+  GPU_DECL_JS_WRAP(ValidationError)
+  ValidationError() = delete;
 
  private:
-  AttachmentState() = delete;
-  virtual ~AttachmentState();
+  virtual ~ValidationError();
 };
 
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // WEBGPU_AttachmentState_H_
+#endif  // GPU_ValidationError_H_

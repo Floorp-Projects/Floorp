@@ -3,27 +3,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGPU_InputState_H_
-#define WEBGPU_InputState_H_
+#ifndef GPU_DeviceLostInfo_H_
+#define GPU_DeviceLostInfo_H_
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
 namespace mozilla {
 namespace webgpu {
-
 class Device;
 
-class InputState final : public ChildOf<Device> {
+class DeviceLostInfo final : public nsWrapperCache, public ChildOf<Device> {
  public:
-  WEBGPU_DECL_GOOP(InputState)
+  GPU_DECL_CYCLE_COLLECTION(DeviceLostInfo)
+  GPU_DECL_JS_WRAP(DeviceLostInfo)
 
  private:
-  InputState() = delete;
-  virtual ~InputState();
+  DeviceLostInfo() = delete;
+  virtual ~DeviceLostInfo();
+
+ public:
+  void GetMessage(nsAString& aValue) const {}
 };
 
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // WEBGPU_InputState_H_
+#endif  // GPU_DeviceLostInfo_H_

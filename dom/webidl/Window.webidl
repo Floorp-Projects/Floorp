@@ -602,8 +602,6 @@ partial interface Window {
   readonly attribute IntlUtils intlUtils;
 };
 
-Window includes WebGPUProvider;
-
 partial interface Window {
   [SameObject, Pref="dom.visualviewport.enabled", Replaceable]
   readonly attribute VisualViewport visualViewport;
