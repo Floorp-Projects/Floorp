@@ -35,7 +35,11 @@ pref("devtools.webconsole.input.editorOnboarding", true);
 
 global.loader = {
   lazyServiceGetter: () => {},
-  lazyGetter: (context, name, fn) => {},
+  lazyGetter: (context, name, fn) => {
+    try {
+      global[name] = fn();
+    } catch (_) {}
+  },
   lazyRequireGetter: (context, name, path, destruct) => {
     if (path === "devtools/shared/async-storage") {
       global[
