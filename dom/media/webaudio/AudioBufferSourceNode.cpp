@@ -591,7 +591,7 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   AudioBufferSourceNodeEngine* engine =
       new AudioBufferSourceNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NEED_MAIN_THREAD_FINISHED,
+                                    AudioNodeStream::NEED_MAIN_THREAD_ENDED,
                                     aContext->Graph());
   engine->SetSourceStream(mStream);
   mStream->AddMainThreadListener(this);
@@ -777,8 +777,8 @@ void AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv) {
   ns->SetStreamTimeParameter(STOP, Context(), std::max(0.0, aWhen));
 }
 
-void AudioBufferSourceNode::NotifyMainThreadStreamFinished() {
-  MOZ_ASSERT(mStream->IsFinished());
+void AudioBufferSourceNode::NotifyMainThreadTrackEnded() {
+  MOZ_ASSERT(mStream->IsEnded());
 
   class EndedEventDispatcher final : public Runnable {
    public:

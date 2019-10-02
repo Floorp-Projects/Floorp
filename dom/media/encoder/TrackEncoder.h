@@ -9,7 +9,6 @@
 #include "AudioSegment.h"
 #include "EncodedFrame.h"
 #include "MediaStreamGraph.h"
-#include "StreamTracks.h"
 #include "TrackMetadataBase.h"
 #include "VideoSegment.h"
 

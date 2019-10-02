@@ -8,7 +8,6 @@
 
 #include "MediaStreamGraph.h"
 #include "AudioMixer.h"
-#include "StreamTracks.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -22,7 +21,7 @@ class DOMMediaStream;
 class AudioCaptureStream : public ProcessedMediaStream,
                            public MixerCallbackReceiver {
  public:
-  explicit AudioCaptureStream(TrackID aTrackId);
+  explicit AudioCaptureStream(TrackRate aRate);
   virtual ~AudioCaptureStream();
 
   void Start();
@@ -34,7 +33,6 @@ class AudioCaptureStream : public ProcessedMediaStream,
                      uint32_t aChannels, uint32_t aFrames,
                      uint32_t aSampleRate) override;
   AudioMixer mMixer;
-  TrackID mTrackId;
   bool mStarted;
   bool mTrackCreated;
 };

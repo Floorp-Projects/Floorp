@@ -55,7 +55,7 @@ class FakeMediaStreamTrackSource : public mozilla::dom::MediaStreamTrackSource {
 class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
  public:
   FakeAudioStreamTrack()
-      : AudioStreamTrack(nullptr, nullptr, 0, new FakeMediaStreamTrackSource(),
+      : AudioStreamTrack(nullptr, nullptr, new FakeMediaStreamTrackSource(),
                          mozilla::dom::MediaStreamTrackState::Ended),
         mMutex("Fake AudioStreamTrack"),
         mStop(false),

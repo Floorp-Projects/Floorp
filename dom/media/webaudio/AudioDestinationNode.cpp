@@ -313,8 +313,7 @@ NS_IMPL_RELEASE_INHERITED(AudioDestinationNode, AudioNode)
 
 const AudioNodeStream::Flags kStreamFlags =
     AudioNodeStream::NEED_MAIN_THREAD_CURRENT_TIME |
-    AudioNodeStream::NEED_MAIN_THREAD_FINISHED |
-    AudioNodeStream::EXTERNAL_OUTPUT;
+    AudioNodeStream::NEED_MAIN_THREAD_ENDED | AudioNodeStream::EXTERNAL_OUTPUT;
 
 AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                            bool aIsOffline,
@@ -416,9 +415,9 @@ void AudioDestinationNode::DestroyMediaStream() {
   AudioNode::DestroyMediaStream();
 }
 
-void AudioDestinationNode::NotifyMainThreadStreamFinished() {
+void AudioDestinationNode::NotifyMainThreadTrackEnded() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mStream->IsFinished());
+  MOZ_ASSERT(mStream->IsEnded());
 
   if (mIsOffline && GetAbstractMainThread()) {
     GetAbstractMainThread()->Dispatch(NewRunnableMethod(
@@ -539,7 +538,7 @@ AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
 
   DisabledTrackMode disabledMode =
       suspended ? DisabledTrackMode::SILENCE_BLACK : DisabledTrackMode::ENABLED;
-  mStream->SetTrackEnabled(AudioNodeStream::AUDIO_TRACK, disabledMode);
+  mStream->SetEnabled(disabledMode);
 
   AudioChannelService::AudibleState audible =
       aSuspend == nsISuspendedTypes::NONE_SUSPENDED
