@@ -104,9 +104,9 @@ class AppLinksUseCases(
 
             val webUrl = webUrls.firstOrNull { it != url } ?: webUrls.firstOrNull()
 
-            val appInfo = resolveInfos?.firstOrNull()?.let { it.labelRes to it.iconResource }
+            val appInfo = resolveInfos?.firstOrNull()
 
-            return AppLinkRedirect(appIntent, webUrl, webUrl != url, appInfo?.first, appInfo?.second)
+            return AppLinkRedirect(appIntent, webUrl, webUrl != url, appInfo)
         }
 
         private fun getNonBrowserActivities(intent: Intent): List<ResolveInfo> {
