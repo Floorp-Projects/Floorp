@@ -227,18 +227,18 @@ static XDRResult AtomTableCheck(XDRState<mode>* xdr) {
   if (mode == XDR_DECODE) {
     if (atomHeader) {
       MOZ_TRY(xdr->codeUint32(&atomCount));
-      MOZ_ASSERT(!xdr->hasAtomTable);
+      MOZ_ASSERT(!xdr->hasAtomTable());
 
       for (uint32_t i = 0; i < atomCount; i++) {
         RootedAtom atom(xdr->cx());
         MOZ_TRY(XDRAtom(xdr, &atom));
-        if (!xdr->atomTable.append(atom)) {
+        if (!xdr->atomTable().append(atom)) {
           ReportOutOfMemory(xdr->cx());
           return xdr->fail(JS::TranscodeResult_Throw);
         }
       }
 
-      xdr->hasAtomTable = true;
+      xdr->finishAtomTable();
     }
   }
 

@@ -29,6 +29,7 @@ enum XDRMode { XDR_ENCODE, XDR_DECODE };
 
 using XDRResult = mozilla::Result<mozilla::Ok, JS::TranscodeResult>;
 
+using XDRAtomTable = JS::GCVector<JSAtom*>;
 using XDRAtomMap = JS::GCHashMap<JSAtom*, uint32_t>;
 
 class XDRBufferBase {
@@ -211,11 +212,16 @@ class XDRState : public XDRCoderBase {
 
  public:
   XDRState(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
-      : mainBuf(cx, buffer, cursor), buf(&mainBuf), atomTable(cx) {}
+      : mainBuf(cx, buffer, cursor), buf(&mainBuf) {}
 
   template <typename RangeType>
   XDRState(JSContext* cx, const RangeType& range)
-      : mainBuf(cx, range), buf(&mainBuf), atomTable(cx) {}
+      : mainBuf(cx, range), buf(&mainBuf) {}
+
+  // No default copy constructor or copying assignment, because |buf|
+  // is an internal pointer.
+  XDRState(const XDRState&) = delete;
+  XDRState& operator=(const XDRState&) = delete;
 
   virtual ~XDRState(){};
 
@@ -234,8 +240,9 @@ class XDRState : public XDRCoderBase {
   virtual XDRAtomMap& atomMap() { MOZ_CRASH("does not have atomMap"); }
   virtual uint32_t& natoms() { MOZ_CRASH("does not have atomMap."); }
 
-  js::GCVector<JSAtom*> atomTable;
-  bool hasAtomTable = false;
+  virtual bool hasAtomTable() const { return false; }
+  virtual XDRAtomTable& atomTable() { MOZ_CRASH("does not have atomTable"); }
+  virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
 
   virtual void switchToAtomBuf() { MOZ_CRASH("cannot switch to atom buffer."); }
   virtual void switchToMainBuf() { MOZ_CRASH("cannot switch to main buffer."); }
@@ -419,7 +426,25 @@ class XDRState : public XDRCoderBase {
 };
 
 using XDREncoder = XDRState<XDR_ENCODE>;
-using XDRDecoder = XDRState<XDR_DECODE>;
+using XDRDecoderBase = XDRState<XDR_DECODE>;
+
+class XDRDecoder : public XDRDecoderBase {
+ public:
+  XDRDecoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : XDRDecoderBase(cx, buffer, cursor), atomTable_(cx) {}
+
+  template <typename RangeType>
+  XDRDecoder(JSContext* cx, const RangeType& range)
+      : XDRDecoderBase(cx, range), atomTable_(cx) {}
+
+  bool hasAtomTable() const override { return hasFinishedAtomTable_; }
+  XDRAtomTable& atomTable() override { return atomTable_; }
+  void finishAtomTable() override { hasFinishedAtomTable_ = true; }
+
+ private:
+  XDRAtomTable atomTable_;
+  bool hasFinishedAtomTable_ = false;
+};
 
 class XDROffThreadDecoder : public XDRDecoder {
   const JS::ReadOnlyCompileOptions* options_;
