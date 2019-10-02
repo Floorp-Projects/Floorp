@@ -11,7 +11,9 @@ const processDescriptorSpec = generateActorSpec({
   methods: {
     getTarget: {
       request: {},
-      response: { process: RetVal("json") },
+      response: {
+        process: RetVal("json"),
+      },
     },
   },
 });

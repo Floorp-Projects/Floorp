@@ -20,6 +20,9 @@ types.addDictType("root.listServiceWorkerRegistrations", {
 types.addDictType("root.listProcesses", {
   processes: "array:json",
 });
+types.addDictType("root.listRemoteFrames", {
+  frames: "array:frameDescriptor",
+});
 types.addDictType("root.listTabs", {
   tabs: "array:browsingContextTarget",
   selected: "number",
@@ -85,6 +88,20 @@ const rootSpecPrototype = {
     },
 
     getProcess: {
+      request: {
+        id: Arg(0, "number"),
+      },
+      response: RetVal("json"),
+    },
+
+    listRemoteFrames: {
+      request: {
+        id: Arg(0, "number"),
+      },
+      response: RetVal("root.listRemoteFrames"),
+    },
+
+    getBrowsingContextDescriptor: {
       request: {
         id: Arg(0, "number"),
       },
