@@ -14,7 +14,6 @@
 #ifdef XP_WIN
 #  include <windows.h>
 #  include <shlobj.h>
-#  include "mozilla/PolicyChecks.h"
 #endif
 #ifdef XP_UNIX
 #  include <unistd.h>
@@ -1798,12 +1797,9 @@ bool nsToolkitProfileService::IsSnapEnvironment() {
  * application versions to different locations, some application sandboxing
  * systems as well as enterprise deployments. This environment variable provides
  * a way to opt out of dedicated profiles for these cases.
- *
- * For Windows, we provide a policy to accomplish the same thing.
  */
 bool nsToolkitProfileService::UseLegacyProfiles() {
-  return !!PR_GetEnv("MOZ_LEGACY_PROFILES") ||
-         PolicyCheckBoolean(L"LegacyProfiles");
+  return !!PR_GetEnv("MOZ_LEGACY_PROFILES");
 }
 
 struct FindInstallsClosure {
