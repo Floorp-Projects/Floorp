@@ -357,6 +357,9 @@ class BaselineCodeGen {
   // Load script atom |index| into |dest|.
   void loadScriptAtom(Register index, Register dest);
 
+  // Computes the frame size. See BaselineFrame::debugFrameSize_.
+  void computeFrameSize(Register dest);
+
   void prepareVMCall();
 
   void storeFrameSizeAndPushDescriptor(uint32_t frameBaseSize, uint32_t argSize,
