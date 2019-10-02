@@ -419,6 +419,17 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             getSettings().mAboutConfig.set(flag);
             return this;
         }
+
+        /**
+         * Sets whether or not pinch-zooming should be enabled when <code>user-scalable=no</code> is set on the viewport.
+         *
+         * @param flag True if force user scalable zooming should be enabled, false otherwise.
+         * @return This Builder instance.
+         */
+        public @NonNull Builder forceUserScalableEnabled(final boolean flag) {
+            getSettings().mForceUserScalable.set(flag);
+            return this;
+        }
     }
 
     private GeckoRuntime mRuntime;
@@ -465,6 +476,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             "devtools.console.stdout.chrome", true);
     /* package */ final Pref<Boolean> mAboutConfig = new Pref<>(
             "general.aboutConfig.enable", false);
+    /* package */ final Pref<Boolean> mForceUserScalable = new Pref<>(
+            "browser.ui.zoom.force-user-scalable", false);
 
     /* package */ boolean mDebugPause;
     /* package */ boolean mUseMaxScreenDepth;
@@ -1059,6 +1072,26 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      */
     public @NonNull GeckoRuntimeSettings setAboutConfigEnabled(final boolean flag) {
         mAboutConfig.commit(flag);
+        return this;
+    }
+
+    /**
+     * Gets whether or not force user scalable zooming should be enabled or not.
+     *
+     * @return True if force user scalable zooming should be enabled, false otherwise.
+     */
+    public boolean getForceUserScalableEnabled() {
+        return mForceUserScalable.get();
+    }
+
+    /**
+     * Sets whether or not pinch-zooming should be enabled when <code>user-scalable=no</code> is set on the viewport.
+     *
+     * @param flag True if force user scalable zooming should be enabled, false otherwise.
+     * @return This GeckoRuntimeSettings instance.
+     */
+    public @NonNull GeckoRuntimeSettings setForceUserScalableEnabled(final boolean flag) {
+        mForceUserScalable.commit(flag);
         return this;
     }
 
