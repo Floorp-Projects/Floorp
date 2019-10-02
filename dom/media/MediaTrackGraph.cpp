@@ -43,8 +43,6 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::media;
 
-mozilla::AsyncLogger gMTGTraceLogger("MTGTracing");
-
 namespace mozilla {
 
 LazyLogModule gMediaTrackGraphLog("MediaTrackGraph");
@@ -66,10 +64,6 @@ MediaTrackGraphImpl::~MediaTrackGraphImpl() {
              "thread");
   LOG(LogLevel::Debug, ("MediaTrackGraph %p destroyed", this));
   LOG(LogLevel::Debug, ("MediaTrackGraphImpl::~MediaTrackGraphImpl"));
-
-#ifdef TRACING
-  gMTGTraceLogger.Stop();
-#endif
 }
 
 void MediaTrackGraphImpl::AddTrackGraphThread(MediaTrack* aTrack) {
@@ -2849,17 +2843,13 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(GraphDriverType aDriverRequested,
     } else {
       mDriver = new SystemClockDriver(this);
     }
-
-#ifdef TRACING
-    // This is a noop if the logger has not been enabled.
-    gMTGTraceLogger.Start();
-    gMTGTraceLogger.Log("[");
-#endif
   } else {
     mDriver = new OfflineClockDriver(this, MEDIA_GRAPH_TARGET_PERIOD_MS);
   }
 
   mLastMainThreadUpdate = TimeStamp::Now();
+
+  StartAudioCallbackTracing();
 
   RegisterWeakAsyncMemoryReporter(this);
 }
