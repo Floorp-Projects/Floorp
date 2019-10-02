@@ -1191,6 +1191,31 @@ nsresult nsXREDirProvider::GetLegacyInstallHash(nsAString& aPathHash) {
   rv = installDir->GetPath(installPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef XP_WIN
+#  if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  // Convert a 64-bit install path to what would have been the 32-bit install
+  // path to allow users to migrate their profiles from one to the other.
+  PWSTR pathX86 = nullptr;
+  HRESULT hres =
+      SHGetKnownFolderPath(FOLDERID_ProgramFilesX86, 0, nullptr, &pathX86);
+  if (SUCCEEDED(hres)) {
+    nsDependentString strPathX86(pathX86);
+    if (!StringBeginsWith(installPath, strPathX86,
+                          nsCaseInsensitiveStringComparator())) {
+      PWSTR path = nullptr;
+      hres = SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, nullptr, &path);
+      if (SUCCEEDED(hres)) {
+        if (StringBeginsWith(installPath, nsDependentString(path),
+                             nsCaseInsensitiveStringComparator())) {
+          installPath.Replace(0, wcslen(path), strPathX86);
+        }
+      }
+      CoTaskMemFree(path);
+    }
+  }
+  CoTaskMemFree(pathX86);
+#  endif
+#endif
   return HashInstallPath(installPath, aPathHash);
 }
 
