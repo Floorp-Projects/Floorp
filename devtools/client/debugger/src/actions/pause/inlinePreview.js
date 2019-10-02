@@ -4,7 +4,11 @@
 
 // @flow
 import { sortBy } from "lodash";
-import { getOriginalFrameScope, getGeneratedFrameScope } from "../../selectors";
+import {
+  getOriginalFrameScope,
+  getGeneratedFrameScope,
+  getInlinePreviews,
+} from "../../selectors";
 import { features } from "../../utils/prefs";
 import { validateThreadContext } from "../../utils/context";
 
@@ -32,6 +36,12 @@ export function generateInlinePreview(cx: ThreadContext, frame: ?Frame) {
     }
 
     const { thread } = cx;
+
+    // Avoid regenerating inline previews when we already have preview data
+    if (getInlinePreviews(getState(), thread, frame.id)) {
+      return;
+    }
+
     const originalFrameScopes = getOriginalFrameScope(
       getState(),
       thread,
