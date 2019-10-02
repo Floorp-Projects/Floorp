@@ -10,36 +10,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingTop="@dimen/radio_button_preference_vertical"
-        android:paddingStart="@dimen/radio_button_preference_horizontal"
-        android:paddingEnd="@dimen/radio_button_preference_horizontal"
-        android:paddingBottom="@dimen/radio_button_preference_vertical"
         android:baselineAligned="false">
 
     <RadioButton
             android:id="@+id/radio_button"
-            android:layout_width="wrap_content"
+            android:layout_width="@dimen/radio_button_preference_height"
             android:layout_height="@dimen/radio_button_preference_height"
             android:background="@android:color/transparent"
             android:layout_gravity="start"
             android:button="@null"
             android:clickable="false"
             android:focusable="false"
+            android:layout_marginStart="@dimen/radio_button_preference_horizontal"
             tools:drawableStart="?android:attr/listChoiceIndicatorSingle"
-            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
             android:id="@+id/title"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:gravity="center|start"
-            android:layout_height="@dimen/radio_button_preference_height"
+            android:layout_marginEnd="@dimen/radio_button_preference_horizontal"
             tools:text="Use recommended settings"
             android:textAppearance="?android:attr/textAppearanceListItem"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/radio_button"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/radio_button"/>
+            app:layout_constraintStart_toEndOf="@+id/radio_button"
+            app:layout_constraintBottom_toBottomOf="@id/radio_button"/>
 
     <TextView
             android:id="@+id/widget_summary"
@@ -49,8 +47,8 @@
             android:textColor="?android:attr/textColorSecondary"
             tools:text="@string/preference_recommended_settings_summary"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/radio_button"
-            app:layout_constraintStart_toStartOf="@+id/title" />
+            app:layout_constraintEnd_toEndOf="@id/title"
+            app:layout_constraintTop_toBottomOf="@id/radio_button"
+            app:layout_constraintStart_toStartOf="@id/title" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
