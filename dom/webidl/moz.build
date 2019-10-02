@@ -1048,6 +1048,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'GamepadAxisMoveEvent.webidl',
     'GamepadButtonEvent.webidl',
     'GamepadEvent.webidl',
+    'GPUUncapturedErrorEvent.webidl',
     'HashChangeEvent.webidl',
     'HiddenPluginEvent.webidl',
     'ImageCaptureErrorEvent.webidl',

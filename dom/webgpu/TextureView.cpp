@@ -6,14 +6,14 @@
 #include "TextureView.h"
 
 #include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
 TextureView::~TextureView() = default;
 
-WEBGPU_IMPL_GOOP_0(TextureView)
+GPU_IMPL_CYCLE_COLLECTION(TextureView, mParent)
+GPU_IMPL_JS_WRAP(TextureView)
 
 }  // namespace webgpu
 }  // namespace mozilla

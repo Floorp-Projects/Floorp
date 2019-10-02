@@ -3,17 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/WebGPUBinding.h"
 #include "BindGroup.h"
 
 #include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
 BindGroup::~BindGroup() = default;
 
-WEBGPU_IMPL_GOOP_0(BindGroup)
+GPU_IMPL_CYCLE_COLLECTION(BindGroup, mParent)
+GPU_IMPL_JS_WRAP(BindGroup)
 
 }  // namespace webgpu
 }  // namespace mozilla
