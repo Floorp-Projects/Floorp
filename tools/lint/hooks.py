@@ -27,7 +27,11 @@ def run_process(cmd):
 
 def run_mozlint(hooktype, args):
     # --quiet prevents warnings on eslint, it will be ignored by other linters
-    python = find_executable('python2.7') or find_executable('python')
+    python = find_executable('python3')
+    if not python:
+        print("error: Python 3 not detected on your system! Please install it.")
+        sys.exit(1)
+
     cmd = [python, os.path.join(topsrcdir, 'mach'), 'lint', '--quiet']
 
     if 'commit' in hooktype:
