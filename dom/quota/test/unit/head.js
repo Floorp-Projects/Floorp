@@ -203,10 +203,8 @@ function persisted(principal, callback) {
   return request;
 }
 
-function listInitializedOrigins(callback) {
-  let request = SpecialPowers._getQuotaManager().listInitializedOrigins(
-    callback
-  );
+function listOrigins(callback) {
+  let request = SpecialPowers._getQuotaManager().listOrigins(callback);
   request.callback = callback;
 
   return request;

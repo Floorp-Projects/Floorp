@@ -67,7 +67,7 @@ async function testSteps() {
   info("Getting origins after initializing the storage");
 
   await new Promise(resolve => {
-    listInitializedOrigins(req => {
+    listOrigins(req => {
       verifyResult(req.result, origins);
       resolve();
     });
