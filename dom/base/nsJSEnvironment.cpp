@@ -172,11 +172,6 @@ static uint32_t sCCollectedWaitingForGC;
 static uint32_t sCCollectedZonesWaitingForGC;
 static uint32_t sLikelyShortLivingObjectsNeedingGC;
 static int32_t sCCRunnerFireCount = 0;
-static TimeDuration sMinForgetSkippableTime;
-static TimeDuration sMaxForgetSkippableTime;
-static TimeDuration sTotalForgetSkippableTime;
-static uint32_t sRemovedPurples = 0;
-static uint32_t sForgetSkippableBeforeCC = 0;
 static uint32_t sPreviousSuspectedCount = 0;
 static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
@@ -207,6 +202,9 @@ struct CycleCollectorStats {
   void PrepareForCycleCollectionSlice(TimeStamp aDeadline = TimeStamp());
   void FinishCycleCollectionSlice();
   void RunForgetSkippable();
+  void UpdateAfterForgetSkippable(TimeDuration duration,
+                                  uint32_t aRemovedPurples);
+  void UpdateAfterCycleCollection();
 
   // Time the current slice began, including any GC finishing.
   TimeStamp mBeginSliceTime;
@@ -248,6 +246,13 @@ struct CycleCollectorStats {
   // In case CC slice was triggered during idle time, set to the end of the idle
   // period.
   TimeStamp mIdleDeadline;
+
+  TimeDuration mMinForgetSkippableTime;
+  TimeDuration mMaxForgetSkippableTime;
+  TimeDuration mTotalForgetSkippableTime;
+  uint32_t mForgetSkippableBeforeCC = 0;
+
+  uint32_t mRemovedPurples = 0;
 };
 
 static CycleCollectorStats sCCStats;
@@ -1253,15 +1258,8 @@ static void FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless,
 
   TimeDuration duration = now - startTimeStamp;
 
-  if (!sMinForgetSkippableTime || sMinForgetSkippableTime > duration) {
-    sMinForgetSkippableTime = duration;
-  }
-  if (!sMaxForgetSkippableTime || sMaxForgetSkippableTime < duration) {
-    sMaxForgetSkippableTime = duration;
-  }
-  sTotalForgetSkippableTime += duration;
-  sRemovedPurples += (aSuspected - sPreviousSuspectedCount);
-  ++sForgetSkippableBeforeCC;
+  uint32_t removedPurples = aSuspected - sPreviousSuspectedCount;
+  sCCStats.UpdateAfterForgetSkippable(duration, removedPurples);
 
   if (duration.ToSeconds()) {
     TimeDuration idleDuration;
@@ -1385,6 +1383,20 @@ void CycleCollectorStats::RunForgetSkippable() {
         std::max(mMaxSkippableDuration, TimeUntilNow(beginForgetSkippable));
     mRanSyncForgetSkippable = true;
   }
+}
+
+void CycleCollectorStats::UpdateAfterForgetSkippable(TimeDuration duration,
+                                                     uint32_t aRemovedPurples) {
+  if (!mMinForgetSkippableTime || mMinForgetSkippableTime > duration) {
+    mMinForgetSkippableTime = duration;
+  }
+  if (!mMaxForgetSkippableTime || mMaxForgetSkippableTime < duration) {
+    mMaxForgetSkippableTime = duration;
+  }
+  mTotalForgetSkippableTime += duration;
+  ++mForgetSkippableBeforeCC;
+
+  mRemovedPurples += aRemovedPurples;
 }
 
 // static
@@ -1582,11 +1594,11 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   sLastCCEndTime = endCCTimeStamp;
 
   Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
-                        sMaxForgetSkippableTime.ToMilliseconds());
+                        sCCStats.mMaxForgetSkippableTime.ToMilliseconds());
 
   TimeDuration delta = GetCollectionTimeDelta();
 
-  uint32_t cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
+  uint32_t cleanups = std::max(sCCStats.mForgetSkippableBeforeCC, 1u);
 
   if (StaticPrefs::javascript_options_mem_log() || sCCStats.mFile) {
     nsCString mergeMsg;
@@ -1615,11 +1627,13 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
         mergeMsg.get(), aResults.mFreedRefCounted, aResults.mFreedGCed,
         sCCollectedWaitingForGC, sCCollectedZonesWaitingForGC,
         sLikelyShortLivingObjectsNeedingGC, gcMsg.get(),
-        sForgetSkippableBeforeCC, sMinForgetSkippableTime.ToMilliseconds(),
-        sMaxForgetSkippableTime.ToMilliseconds(),
-        sTotalForgetSkippableTime.ToMilliseconds() / cleanups,
-        sTotalForgetSkippableTime.ToMilliseconds(),
-        sCCStats.mMaxSkippableDuration.ToMilliseconds(), sRemovedPurples);
+        sCCStats.mForgetSkippableBeforeCC,
+        sCCStats.mMinForgetSkippableTime.ToMilliseconds(),
+        sCCStats.mMaxForgetSkippableTime.ToMilliseconds(),
+        sCCStats.mTotalForgetSkippableTime.ToMilliseconds() / cleanups,
+        sCCStats.mTotalForgetSkippableTime.ToMilliseconds(),
+        sCCStats.mMaxSkippableDuration.ToMilliseconds(),
+        sCCStats.mRemovedPurples);
     if (StaticPrefs::javascript_options_mem_log()) {
       nsCOMPtr<nsIConsoleService> cs =
           do_GetService(NS_CONSOLESERVICE_CONTRACTID);
@@ -1670,11 +1684,12 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
         aResults.mVisitedRefCounted, aResults.mVisitedGCed,
         aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
         sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
-        aResults.mForcedGC, sForgetSkippableBeforeCC,
-        sMinForgetSkippableTime.ToMilliseconds(),
-        sMaxForgetSkippableTime.ToMilliseconds(),
-        sTotalForgetSkippableTime.ToMilliseconds() / cleanups,
-        sTotalForgetSkippableTime.ToMilliseconds(), sRemovedPurples);
+        aResults.mForcedGC, sCCStats.mForgetSkippableBeforeCC,
+        sCCStats.mMinForgetSkippableTime.ToMilliseconds(),
+        sCCStats.mMaxForgetSkippableTime.ToMilliseconds(),
+        sCCStats.mTotalForgetSkippableTime.ToMilliseconds() / cleanups,
+        sCCStats.mTotalForgetSkippableTime.ToMilliseconds(),
+        sCCStats.mRemovedPurples);
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (observerService) {
@@ -1684,11 +1699,6 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   }
 
   // Update global state to indicate we have just run a cycle collection.
-  sMinForgetSkippableTime = TimeDuration();
-  sMaxForgetSkippableTime = TimeDuration();
-  sTotalForgetSkippableTime = TimeDuration();
-  sRemovedPurples = 0;
-  sForgetSkippableBeforeCC = 0;
   sNeedsFullCC = false;
   sNeedsGCAfterCC = false;
   sCCStats.Clear();
