@@ -2203,6 +2203,13 @@ var BlocklistXML = {
           return;
         }
         let doc = request.responseXML;
+
+        if (!doc) {
+          LOG("_loadFile: aborting due to empty XML file.");
+          reject(new BlocklistError("Local blocklist file is empty"));
+          return;
+        }
+
         if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
           LOG(
             "_loadFile: aborting due to incorrect XML Namespace.\n" +
