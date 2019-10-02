@@ -2321,10 +2321,6 @@ WebRenderCommandBuilder::GenerateFallbackData(
         if (!fallbackData->GetBlobImageKey().isSome()) {
           return nullptr;
         }
-        aResources.SetBlobImageVisibleArea(
-            fallbackData->GetBlobImageKey().value(),
-            ViewAs<ImagePixel>(visibleRect,
-                               PixelCastJustification::LayerIsImage));
       }
     } else {
       WebRenderImageData* imageData = fallbackData->PaintIntoImage();
@@ -2380,6 +2376,13 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
     fallbackData->mScale = scale;
     fallbackData->SetInvalid(false);
+  }
+
+  if (useBlobImage) {
+      aResources.SetBlobImageVisibleArea(
+            fallbackData->GetBlobImageKey().value(),
+            ViewAs<ImagePixel>(visibleRect,
+                               PixelCastJustification::LayerIsImage));
   }
 
   // Update current bounds to fallback data
