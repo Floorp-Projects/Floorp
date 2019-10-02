@@ -113,7 +113,9 @@ const proto = {
     if (this._originalDescriptors.has(property)) {
       return;
     }
-    const desc = this.obj.getOwnPropertyDescriptor(property);
+
+    const obj = this.rawValue();
+    const desc = Object.getOwnPropertyDescriptor(obj, property);
 
     if (desc.set || desc.get || !desc.configurable) {
       return;
@@ -151,7 +153,7 @@ const proto = {
           pauseAndRespond("setWatchpoint");
           desc.value = v;
         }),
-        get: this.obj.makeDebuggeeValue(v => {
+        get: this.obj.makeDebuggeeValue(() => {
           return desc.value;
         }),
       });
@@ -794,7 +796,9 @@ const proto = {
     } else if (this._originalDescriptors.has(name)) {
       const watchpointType = this._originalDescriptors.get(name).watchpointType;
       desc = this._originalDescriptors.get(name).desc;
-      retval.value = this.hooks.createValueGrip(desc.value);
+      retval.value = this.hooks.createValueGrip(
+        this.obj.makeDebuggeeValue(desc.value)
+      );
       retval.watchpoint = watchpointType;
     } else {
       if ("get" in desc) {
