@@ -3,17 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "InputState.h"
-
+#include "ValidationError.h"
 #include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
-InputState::~InputState() = default;
+GPU_IMPL_CYCLE_COLLECTION(ValidationError, mParent)
+GPU_IMPL_JS_WRAP(ValidationError)
 
-WEBGPU_IMPL_GOOP_0(InputState)
+ValidationError::~ValidationError() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla

@@ -42,6 +42,9 @@ class DOMRequest;
 class CredentialsContainer;
 class Clipboard;
 }  // namespace dom
+namespace webgpu {
+class Instance;
+}  // namespace webgpu
 }  // namespace mozilla
 
 //*****************************************************************************
@@ -199,6 +202,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
 
   mozilla::dom::CredentialsContainer* Credentials();
   dom::Clipboard* Clipboard();
+  webgpu::Instance* Gpu();
 
   static bool Webdriver();
 
@@ -271,6 +275,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   RefPtr<StorageManager> mStorageManager;
   RefPtr<dom::MediaCapabilities> mMediaCapabilities;
   RefPtr<AddonManager> mAddonManager;
+  RefPtr<webgpu::Instance> mWebGpu;
 };
 
 }  // namespace dom

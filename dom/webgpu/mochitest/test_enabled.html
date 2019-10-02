@@ -9,8 +9,7 @@
 <script>
 
 ok(SpecialPowers.getBoolPref('dom.webgpu.enable'), 'Pref should be enabled.');
-ok(window.WebGPU !== undefined, 'window.WebGPU !== undefined');
-ok(window.webgpu !== undefined, 'window.webgpu !== undefined');
+ok(navigator.gpu !== undefined, 'navigator.gpu !== undefined');
 
 </script>
 </body>
