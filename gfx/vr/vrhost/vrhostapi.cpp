@@ -204,6 +204,8 @@ void SendUIMessageToVRWindow(uint32_t nVRWindowID, uint32_t msg,
       case WM_LBUTTONUP:
       case WM_MOUSEWHEEL:
       case WM_CHAR:
+      case WM_KEYDOWN:
+      case WM_KEYUP:
         ::PostMessage(hwnd, msg, wparam, lparam);
         break;
 
