@@ -6,19 +6,23 @@ requestLongerTimeout(2);
 ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
 
+EXPECTED_BREACH = {
+  AddedDate: "2018-12-20T23:56:26Z",
+  BreachDate: "2018-12-16",
+  Domain: "breached.example.com",
+  Name: "Breached",
+  PwnCount: 1643100,
+  DataClasses: ["Email addresses", "Usernames", "Passwords", "IP addresses"],
+  _status: "synced",
+  id: "047940fe-d2fd-4314-b636-b4a952ee0043",
+  last_modified: "1541615610052",
+  schema: "1541615609018",
+};
+
 add_task(async function setup() {
-  let storageChangedPromised = TestUtils.topicObserved(
-    "passwordmgr-storage-changed",
-    (_, data) => data == "addLogin"
-  );
-  TEST_LOGIN1 = Services.logins.addLogin(TEST_LOGIN1);
-  await storageChangedPromised;
-  storageChangedPromised = TestUtils.topicObserved(
-    "passwordmgr-storage-changed",
-    (_, data) => data == "addLogin"
-  );
-  TEST_LOGIN2 = Services.logins.addLogin(TEST_LOGIN2);
-  await storageChangedPromised;
+  TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
+  TEST_LOGIN2 = await addLogin(TEST_LOGIN2);
+  TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
@@ -68,7 +72,7 @@ add_task(async function test_telemetry_events() {
 
   let promiseNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    TEST_LOGIN2.origin + "/"
+    TEST_LOGIN3.origin + "/"
   );
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -76,7 +80,7 @@ add_task(async function test_telemetry_events() {
     originInput.click();
   });
   let newTab = await promiseNewTab;
-  ok(true, "New tab opened to " + TEST_LOGIN2.origin);
+  ok(true, "New tab opened to " + TEST_LOGIN3.origin);
   BrowserTestUtils.removeTab(newTab);
   await LoginTestUtils.telemetry.waitForEventCount(5);
 
