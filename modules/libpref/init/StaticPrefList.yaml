@@ -5266,7 +5266,7 @@
 # internal-for-now aspect-ratio property?
 - name: layout.css.width-and-height-map-to-aspect-ratio.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # The fraction of the scrollport we allow to horizontally scroll by before we
