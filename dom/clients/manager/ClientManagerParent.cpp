@@ -10,7 +10,6 @@
 #include "ClientManagerOpParent.h"
 #include "ClientManagerService.h"
 #include "ClientSourceParent.h"
-#include "ClientValidation.h"
 #include "mozilla/dom/PClientNavigateOpParent.h"
 #include "mozilla/Unused.h"
 
@@ -97,25 +96,6 @@ IPCResult ClientManagerParent::RecvPClientSourceConstructor(
     PClientSourceParent* aActor, const ClientSourceConstructorArgs& aArgs) {
   ClientSourceParent* actor = static_cast<ClientSourceParent*>(aActor);
   actor->Init();
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-ClientManagerParent::RecvExpectOrForgetFutureClientSource(
-    const bool& aExpect, const IPCClientInfo& aClientInfo) {
-  if (NS_WARN_IF(!ClientIsValidPrincipalInfo(aClientInfo.principalInfo()))) {
-    return IPC_FAIL(this, "Invalid PrincipalInfo.");
-  }
-
-  RefPtr<ClientManagerService> svc =
-      ClientManagerService::GetOrCreateInstance();
-
-  if (aExpect) {
-    svc->ExpectFutureSource(aClientInfo);
-  } else {
-    svc->ForgetFutureSource(aClientInfo);
-  }
-
   return IPC_OK();
 }
 

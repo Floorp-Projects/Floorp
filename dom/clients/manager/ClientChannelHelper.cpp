@@ -9,8 +9,6 @@
 #include "ClientManager.h"
 #include "ClientSource.h"
 #include "MainThreadUtils.h"
-#include "mozilla/Result.h"
-#include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsContentUtils.h"
@@ -141,17 +139,10 @@ class ClientChannelHelper final : public nsIInterfaceRequestor,
       // create a ClientSource when the final channel propagates back
       // to the child.
       if (mMode == Mode::Mode_Parent) {
-        const Maybe<ClientInfo>& oldReservedInfo =
-            oldLoadInfo->GetReservedClientInfo();
-        if (oldReservedInfo) {
-          MOZ_TRY(ClientManager::ForgetFutureClientSource(*oldReservedInfo));
-        }
-
-        Maybe<ClientInfo> newReservedInfo =
+        Maybe<ClientInfo> reservedInfo =
             ClientManager::CreateInfo(ClientType::Window, principal);
-        if (newReservedInfo) {
-          MOZ_TRY(ClientManager::ExpectFutureClientSource(*newReservedInfo));
-          newLoadInfo->SetReservedClientInfo(*newReservedInfo);
+        if (reservedInfo) {
+          newLoadInfo->SetReservedClientInfo(*reservedInfo);
         }
       } else {
         reservedClient.reset();

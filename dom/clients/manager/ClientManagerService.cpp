@@ -12,7 +12,6 @@
 #include "ClientOpenWindowUtils.h"
 #include "ClientPrincipalUtils.h"
 #include "ClientSourceParent.h"
-#include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
@@ -138,7 +137,7 @@ ClientManagerService::ClientManagerService() : mShutdown(false) {
 
 ClientManagerService::~ClientManagerService() {
   AssertIsOnBackgroundThread();
-  MOZ_DIAGNOSTIC_ASSERT(mSourceTable.count() == 0);
+  MOZ_DIAGNOSTIC_ASSERT(mSourceTable.Count() == 0);
   MOZ_DIAGNOSTIC_ASSERT(mManagerList.IsEmpty());
 
   MOZ_DIAGNOSTIC_ASSERT(sClientManagerServiceInstance == this);
@@ -189,161 +188,72 @@ already_AddRefed<ClientManagerService> ClientManagerService::GetInstance() {
   return ref.forget();
 }
 
-ClientManagerService::FutureClientSourceParent::FutureClientSourceParent(
-    const IPCClientInfo& aClientInfo)
-    : mPrincipalInfo(aClientInfo.principalInfo()) {}
-
-// static
 bool ClientManagerService::AddSource(ClientSourceParent* aSource) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aSource);
-
-  const nsID& id = aSource->Info().Id();
-  auto entryPtr = mSourceTable.lookupForAdd(id);
-
-  if (entryPtr) {
-    SourceTableEntry& entry = entryPtr->value();
-
-    // Do not permit overwriting an existing ClientSource with the same
-    // UUID.  This would allow a spoofed ClientParentSource actor to
-    // intercept postMessage() intended for the real actor.
-    if (NS_WARN_IF(entry.is<ClientSourceParent*>())) {
-      return false;
-    }
-
-    {
-      FutureClientSourceParent& placeHolder =
-          entry.as<FutureClientSourceParent>();
-
-      if (NS_WARN_IF(!ClientMatchPrincipalInfo(
-              placeHolder.PrincipalInfo(), aSource->Info().PrincipalInfo()))) {
-        return false;
-      }
-
-      placeHolder.ResolvePromiseIfExists(aSource);
-    }
-
-    entry = AsVariant(aSource);
-    return true;
+  auto entry = mSourceTable.LookupForAdd(aSource->Info().Id());
+  // Do not permit overwriting an existing ClientSource with the same
+  // UUID.  This would allow a spoofed ClientParentSource actor to
+  // intercept postMessage() intended for the real actor.
+  if (NS_WARN_IF(!!entry)) {
+    return false;
   }
+  entry.OrInsert([&] { return aSource; });
 
-  return mSourceTable.add(entryPtr, id, AsVariant(aSource));
+  // Now that we've been created, notify any handles that were
+  // waiting on us.
+  auto* handles = mPendingHandles.GetValue(aSource->Info().Id());
+  if (handles) {
+    for (auto handle : *handles) {
+      handle->FoundSource(aSource);
+    }
+  }
+  mPendingHandles.Remove(aSource->Info().Id());
+  return true;
 }
 
 bool ClientManagerService::RemoveSource(ClientSourceParent* aSource) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aSource);
-
-  auto entryPtr = mSourceTable.lookup(aSource->Info().Id());
-
-  if (NS_WARN_IF(!entryPtr) ||
-      NS_WARN_IF(entryPtr->value().is<FutureClientSourceParent>())) {
+  auto entry = mSourceTable.Lookup(aSource->Info().Id());
+  if (NS_WARN_IF(!entry)) {
     return false;
   }
-
-  mSourceTable.remove(entryPtr);
+  entry.Remove();
   return true;
 }
 
-bool ClientManagerService::ExpectFutureSource(
-    const IPCClientInfo& aClientInfo) {
+ClientSourceParent* ClientManagerService::FindSource(
+    const nsID& aID, const PrincipalInfo& aPrincipalInfo) {
   AssertIsOnBackgroundThread();
 
-  const nsID& id = aClientInfo.id();
-  auto entryPtr = mSourceTable.lookupForAdd(id);
-
-  // Prevent overwrites.
-  if (NS_WARN_IF(static_cast<bool>(entryPtr))) {
-    return false;
+  auto entry = mSourceTable.Lookup(aID);
+  if (!entry) {
+    return nullptr;
   }
 
-  return mSourceTable.add(
-      entryPtr, id,
-      SourceTableEntry(VariantIndex<0>(),
-                       FutureClientSourceParent(aClientInfo)));
-}
-
-bool ClientManagerService::ForgetFutureSource(
-    const IPCClientInfo& aClientInfo) {
-  AssertIsOnBackgroundThread();
-
-  auto entryPtr = mSourceTable.lookup(aClientInfo.id());
-
-  if (entryPtr) {
-    SourceTableEntry& entry = entryPtr->value();
-
-    if (NS_WARN_IF(entry.is<ClientSourceParent*>())) {
-      return false;
-    }
-
-    entry.as<FutureClientSourceParent>().RejectPromiseIfExists(
-        NS_ERROR_NOT_AVAILABLE);
-  }
-
-  mSourceTable.remove(entryPtr);
-  return true;
-}
-
-RefPtr<SourcePromise> ClientManagerService::FindSource(
-    const nsID& aID, const PrincipalInfo& aPrincipalInfo) const {
-  AssertIsOnBackgroundThread();
-
-  auto entryPtr = mSourceTable.lookup(aID);
-
-  if (!entryPtr) {
-    return SourcePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
-  }
-
-  SourceTableEntry& entry = entryPtr->value();
-
-  if (entry.is<FutureClientSourceParent>()) {
-    return entry.as<FutureClientSourceParent>().Promise();
-  }
-
-  ClientSourceParent* source = entry.as<ClientSourceParent*>();
-  MOZ_DIAGNOSTIC_ASSERT(source);
-
+  ClientSourceParent* source = entry.Data();
   if (source->IsFrozen() ||
-      NS_WARN_IF(!ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
-                                           aPrincipalInfo))) {
-    return SourcePromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                          __func__);
-  }
-
-  return SourcePromise::CreateAndResolve(source, __func__);
-}
-
-inline ClientSourceParent* MaybeUnwrapAsExistingSource(
-    const ClientManagerService::SourceTableEntry& aEntry) {
-  AssertIsOnBackgroundThread();
-
-  if (aEntry.is<ClientManagerService::FutureClientSourceParent>()) {
-    return nullptr;
-  }
-
-  MOZ_DIAGNOSTIC_ASSERT(aEntry.as<ClientSourceParent*>());
-  return aEntry.as<ClientSourceParent*>();
-}
-
-ClientSourceParent* ClientManagerService::FindExistingSource(
-    const nsID& aID, const PrincipalInfo& aPrincipalInfo) const {
-  AssertIsOnBackgroundThread();
-
-  auto entryPtr = mSourceTable.lookup(aID);
-
-  if (!entryPtr) {
-    return nullptr;
-  }
-
-  ClientSourceParent* source = MaybeUnwrapAsExistingSource(entryPtr->value());
-
-  if (!source || source->IsFrozen() ||
       !ClientMatchPrincipalInfo(source->Info().PrincipalInfo(),
                                 aPrincipalInfo)) {
     return nullptr;
   }
 
   return source;
+}
+
+void ClientManagerService::WaitForSource(ClientHandleParent* aHandle,
+                                         const nsID& aID) {
+  auto& entry = mPendingHandles.GetOrInsert(aID);
+  entry.AppendElement(aHandle);
+}
+
+void ClientManagerService::StopWaitingForSource(ClientHandleParent* aHandle,
+                                                const nsID& aID) {
+  auto* entry = mPendingHandles.GetValue(aID);
+  if (entry) {
+    entry->RemoveElement(aHandle);
+  }
 }
 
 void ClientManagerService::AddManager(ClientManagerParent* aManager) {
@@ -368,7 +278,7 @@ void ClientManagerService::RemoveManager(ClientManagerParent* aManager) {
 RefPtr<ClientOpPromise> ClientManagerService::Navigate(
     const ClientNavigateArgs& aArgs) {
   ClientSourceParent* source =
-      FindExistingSource(aArgs.target().id(), aArgs.target().principalInfo());
+      FindSource(aArgs.target().id(), aArgs.target().principalInfo());
   if (!source) {
     return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
@@ -475,11 +385,11 @@ RefPtr<ClientOpPromise> ClientManagerService::MatchAll(
 
   RefPtr<PromiseListHolder> promiseList = new PromiseListHolder();
 
-  for (auto iter = mSourceTable.iter(); !iter.done(); iter.next()) {
-    ClientSourceParent* source =
-        MaybeUnwrapAsExistingSource(iter.get().value());
+  for (auto iter = mSourceTable.Iter(); !iter.Done(); iter.Next()) {
+    ClientSourceParent* source = iter.UserData();
+    MOZ_DIAGNOSTIC_ASSERT(source);
 
-    if (!source || source->IsFrozen() || !source->ExecutionReady()) {
+    if (source->IsFrozen() || !source->ExecutionReady()) {
       continue;
     }
 
@@ -557,11 +467,11 @@ RefPtr<ClientOpPromise> ClientManagerService::Claim(
 
   RefPtr<PromiseListHolder> promiseList = new PromiseListHolder();
 
-  for (auto iter = mSourceTable.iter(); !iter.done(); iter.next()) {
-    ClientSourceParent* source =
-        MaybeUnwrapAsExistingSource(iter.get().value());
+  for (auto iter = mSourceTable.Iter(); !iter.Done(); iter.Next()) {
+    ClientSourceParent* source = iter.UserData();
+    MOZ_DIAGNOSTIC_ASSERT(source);
 
-    if (!source || source->IsFrozen()) {
+    if (source->IsFrozen()) {
       continue;
     }
 
@@ -603,8 +513,7 @@ RefPtr<ClientOpPromise> ClientManagerService::Claim(
 
 RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
     const ClientGetInfoAndStateArgs& aArgs) {
-  ClientSourceParent* source =
-      FindExistingSource(aArgs.id(), aArgs.principalInfo());
+  ClientSourceParent* source = FindSource(aArgs.id(), aArgs.principalInfo());
 
   if (!source) {
     return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -616,10 +525,9 @@ RefPtr<ClientOpPromise> ClientManagerService::GetInfoAndState(
     // rejection ultimately converted to `undefined` in Clients::Get
     return source->ExecutionReadyPromise()->Then(
         GetCurrentThreadSerialEventTarget(), __func__,
-        [self = std::move(self), aArgs] {
-          // Execution ready implies the source had registered itself.
+        [self, aArgs]() -> RefPtr<ClientOpPromise> {
           ClientSourceParent* source =
-              self->FindExistingSource(aArgs.id(), aArgs.principalInfo());
+              self->FindSource(aArgs.id(), aArgs.principalInfo());
 
           if (!source) {
             return ClientOpPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
@@ -732,7 +640,7 @@ bool ClientManagerService::HasWindow(
     const PrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
   AssertIsOnBackgroundThread();
 
-  ClientSourceParent* source = FindExistingSource(aClientId, aPrincipalInfo);
+  ClientSourceParent* source = FindSource(aClientId, aPrincipalInfo);
   if (!source) {
     return false;
   }
