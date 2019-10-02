@@ -22,6 +22,7 @@
 #if defined(XP_WIN)
 #  include "nsXULAppAPI.h"
 #endif
+#include "Tracing.h"
 
 namespace mozilla {
 
@@ -174,6 +175,7 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked() {
 }
 
 nsresult AudioStream::SetPlaybackRate(double aPlaybackRate) {
+  TRACE();
   // MUST lock since the rate transposer is used from the cubeb callback,
   // and rate changes can cause the buffer to be reallocated
   MonitorAutoLock mon(mMonitor);
@@ -204,6 +206,7 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate) {
 }
 
 nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch) {
+  TRACE();
   // MUST lock since the rate transposer is used from the cubeb callback,
   // and rate changes can cause the buffer to be reallocated
   MonitorAutoLock mon(mMonitor);
@@ -249,7 +252,10 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
 nsresult AudioStream::Init(uint32_t aNumChannels,
                            AudioConfig::ChannelLayout::ChannelMap aChannelMap,
                            uint32_t aRate, AudioDeviceInfo* aSinkInfo) {
+  StartAudioCallbackTracing();
+
   auto startTime = TimeStamp::Now();
+  TRACE();
 
   LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
   mChannels = aNumChannels;
@@ -286,6 +292,7 @@ nsresult AudioStream::Init(uint32_t aNumChannels,
 
 nsresult AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
                                 TimeStamp aStartTime, bool aIsFirst) {
+  TRACE();
   MOZ_ASSERT(aContext);
 
   cubeb_stream* stream = nullptr;
@@ -315,6 +322,7 @@ nsresult AudioStream::OpenCubeb(cubeb* aContext, cubeb_stream_params& aParams,
 }
 
 void AudioStream::SetVolume(double aVolume) {
+  TRACE();
   MOZ_ASSERT(aVolume >= 0.0 && aVolume <= 1.0, "Invalid volume");
 
   {
@@ -333,6 +341,7 @@ void AudioStream::SetVolume(double aVolume) {
 }
 
 nsresult AudioStream::Start() {
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState == INITIALIZED);
   mState = STARTED;
@@ -350,6 +359,7 @@ nsresult AudioStream::Start() {
 }
 
 void AudioStream::Pause() {
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
   MOZ_ASSERT(mState != STOPPED, "Already Pause()ed.");
@@ -370,6 +380,7 @@ void AudioStream::Pause() {
 }
 
 void AudioStream::Resume() {
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
   MOZ_ASSERT(mState != STARTED, "Already Start()ed.");
@@ -390,6 +401,7 @@ void AudioStream::Resume() {
 }
 
 void AudioStream::Shutdown() {
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   LOG("Shutdown, state %d", mState);
 
@@ -407,6 +419,7 @@ void AudioStream::Shutdown() {
 
 #if defined(XP_WIN)
 void AudioStream::ResetDefaultDevice() {
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   if (mState != STARTED && mState != STOPPED) {
     return;
@@ -421,12 +434,14 @@ void AudioStream::ResetDefaultDevice() {
 #endif
 
 int64_t AudioStream::GetPosition() {
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   int64_t frames = GetPositionInFramesUnlocked();
   return frames >= 0 ? mAudioClock.GetPosition(frames) : -1;
 }
 
 int64_t AudioStream::GetPositionInFrames() {
+  TRACE();
   MonitorAutoLock mon(mMonitor);
   int64_t frames = GetPositionInFramesUnlocked();
   return frames >= 0 ? mAudioClock.GetPositionInFrames(frames) : -1;
@@ -461,6 +476,7 @@ bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
 }
 
 void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
+  TRACE_AUDIO_CALLBACK();
   mMonitor.AssertCurrentThreadOwns();
 
   // Flush the timestretcher pipeline, if we were playing using a playback rate
@@ -496,6 +512,7 @@ void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
 }
 
 void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
+  TRACE_AUDIO_CALLBACK();
   mMonitor.AssertCurrentThreadOwns();
 
   // We need to call the non-locking version, because we already have the lock.
@@ -544,6 +561,8 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
 }
 
 long AudioStream::DataCallback(void* aBuffer, long aFrames) {
+  TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
+  TRACE_AUDIO_CALLBACK();
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
 
