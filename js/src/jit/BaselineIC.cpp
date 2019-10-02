@@ -869,10 +869,6 @@ bool FallbackICCodeCompiler::emit_WarmUpCounter() {
   Label noCompiledCode;
   // Call DoWarmUpCounterFallbackOSR to compile/check-for Ion-compiled function
   {
-    // Push IonOsrTempData pointer storage
-    masm.subFromStackPtr(Imm32(sizeof(void*)));
-    masm.push(masm.getStackPointer());
-
     // Push stub pointer, frame size, frame pointer.
     masm.push(ICStubReg);
     masm.push(R0.scratchReg());
@@ -884,19 +880,15 @@ bool FallbackICCodeCompiler::emit_WarmUpCounter() {
       return false;
     }
 
-    // Pop IonOsrTempData pointer.
-    masm.pop(R0.scratchReg());
-
     leaveStubFrame(masm);
 
     // If no JitCode was found, then skip just exit the IC.
-    masm.branchPtr(Assembler::Equal, R0.scratchReg(), ImmPtr(nullptr),
-                   &noCompiledCode);
+    masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, &noCompiledCode);
   }
 
   // Get a scratch register.
   AllocatableGeneralRegisterSet regs(availableGeneralRegs(0));
-  Register osrDataReg = R0.scratchReg();
+  Register osrDataReg = ReturnReg;
   regs.take(osrDataReg);
   regs.takeUnchecked(OsrFrameReg);
 
