@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1524573 -->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1583660</title>
+  <style>
+    input::-moz-range-thumb {
+      visibility:hidden;
+    }
+  </style>
+</head>
+<body>
+
+<input type=range>
+<input type=range orient=vertical>
+
+</body>
+</html>
