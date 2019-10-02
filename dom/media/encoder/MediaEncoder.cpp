@@ -522,8 +522,8 @@ void MediaEncoder::ConnectAudioNode(AudioNode* aNode, uint32_t aOutput) {
     mPipeStream = AudioNodeStream::Create(ctx, engine, flags, ctx->Graph());
     AudioNodeStream* ns = aNode->GetStream();
     if (ns) {
-      mInputPort = mPipeStream->AllocateInputPort(aNode->GetStream(), TRACK_ANY,
-                                                  TRACK_ANY, 0, aOutput);
+      mInputPort =
+          mPipeStream->AllocateInputPort(aNode->GetStream(), 0, aOutput);
     }
   }
 
