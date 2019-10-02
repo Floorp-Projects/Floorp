@@ -7,6 +7,7 @@
 
 #include "Adapter.h"
 #include "Device.h"
+#include "CommandEncoder.h"
 #include "Instance.h"
 
 namespace mozilla {
@@ -23,7 +24,11 @@ nsIGlobalObject* ChildOf<T>::GetParentObject() const {
   return mParent->GetParentObject();
 }
 
+void ObjectBase::GetLabel(nsAString& aValue) const { aValue = mLabel; }
+void ObjectBase::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
+
 template class ChildOf<Adapter>;
+template class ChildOf<CommandEncoder>;
 template class ChildOf<Device>;
 template class ChildOf<Instance>;
 

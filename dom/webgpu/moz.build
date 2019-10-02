@@ -14,36 +14,37 @@ MOCHITEST_MANIFESTS += [
 
 h_and_cpp = [
     'Adapter',
-    'AttachmentState',
     'BindGroup',
     'BindGroupLayout',
-    'BlendState',
     'Buffer',
+    'CanvasContext',
     'CommandBuffer',
     'CommandEncoder',
+    'ComputePassEncoder',
     'ComputePipeline',
-    'DepthStencilState',
     'Device',
+    'DeviceLostInfo',
     'Fence',
-    'InputState',
     'Instance',
     'InstanceProvider',
-    'LogEntry',
     'ObjectModel',
+    'OutOfMemoryError',
     'PipelineLayout',
+    'ProgrammablePassEncoder',
     'Queue',
+    'RenderBundle',
+    'RenderBundleEncoder',
+    'RenderEncoderBase',
+    'RenderPassEncoder',
     'RenderPipeline',
     'Sampler',
     'ShaderModule',
     'SwapChain',
     'Texture',
     'TextureView',
+    'ValidationError',
 ]
 EXPORTS.mozilla.webgpu += [x + '.h' for x in h_and_cpp]
 UNIFIED_SOURCES += [x + '.cpp' for x in h_and_cpp]
-
-EXPORTS.mozilla.webgpu += [
-#    'ObjectModel.h',
-]
 
 FINAL_LIBRARY = 'xul'

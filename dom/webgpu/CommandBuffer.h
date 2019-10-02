@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGPU_CommandBuffer_H_
-#define WEBGPU_CommandBuffer_H_
+#ifndef GPU_CommandBuffer_H_
+#define GPU_CommandBuffer_H_
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
@@ -14,9 +14,10 @@ namespace webgpu {
 
 class Device;
 
-class CommandBuffer final : public ChildOf<Device> {
+class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
  public:
-  WEBGPU_DECL_GOOP(CommandBuffer)
+  GPU_DECL_CYCLE_COLLECTION(CommandBuffer)
+  GPU_DECL_JS_WRAP(CommandBuffer)
 
  private:
   CommandBuffer() = delete;
@@ -26,4 +27,4 @@ class CommandBuffer final : public ChildOf<Device> {
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // WEBGPU_CommandBuffer_H_
+#endif  // GPU_CommandBuffer_H_

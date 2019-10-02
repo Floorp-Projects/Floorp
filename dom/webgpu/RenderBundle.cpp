@@ -3,17 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AttachmentState.h"
+#include "mozilla/dom/WebGPUBinding.h"
+#include "RenderBundle.h"
 
 #include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
-AttachmentState::~AttachmentState() = default;
+RenderBundle::~RenderBundle() = default;
 
-WEBGPU_IMPL_GOOP_0(AttachmentState)
+GPU_IMPL_CYCLE_COLLECTION(RenderBundle, mParent)
+GPU_IMPL_JS_WRAP(RenderBundle)
 
 }  // namespace webgpu
 }  // namespace mozilla

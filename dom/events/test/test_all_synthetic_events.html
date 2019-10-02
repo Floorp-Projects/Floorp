@@ -148,6 +148,8 @@ const kEventConstructors = {
                                                          return new GamepadButtonEvent(aName, aProps);
                                                        },
                                              },
+  GPUUncapturedErrorEvent:                   { create: null, //TODO: constructor test
+                                             },
   HashChangeEvent:                           { create (aName, aProps) {
                                                          return new HashChangeEvent(aName, aProps);
                                                        },

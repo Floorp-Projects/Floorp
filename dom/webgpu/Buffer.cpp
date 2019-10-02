@@ -3,50 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/WebGPUBinding.h"
 #include "Buffer.h"
 
+#include "nsWrapperCache.h"
 #include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
-Buffer::Buffer(Device* const parent) : ChildOf(parent) {
-  mozilla::HoldJSObjects(this);  // Mimed from PushSubscriptionOptions
-}
+GPU_IMPL_CYCLE_COLLECTION(Buffer, mParent)
+GPU_IMPL_JS_WRAP(Buffer)
 
-Buffer::~Buffer() {
-  mMapping = nullptr;
-  mozilla::DropJSObjects(this);
-}
+Buffer::Buffer(Device* const parent) : ChildOf(parent) {}
 
-void Buffer::GetMapping(JSContext*, JS::MutableHandle<JSObject*> out) const {
-  out.set(mMapping);
-}
-
-void Buffer::Unmap() const { MOZ_CRASH("todo"); }
-
-JSObject* webgpu::Buffer::WrapObject(JSContext* cx,
-                                     JS::Handle<JSObject*> givenProto) {
-  return dom::WebGPUBuffer_Binding::Wrap(cx, this, givenProto);
-}
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(Buffer)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Buffer)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-  tmp->mMapping = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Buffer)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Buffer)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mMapping)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Buffer, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Buffer, Release)
+Buffer::~Buffer() = default;
 
 }  // namespace webgpu
 }  // namespace mozilla
