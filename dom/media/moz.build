@@ -165,6 +165,7 @@ EXPORTS += [
     'MemoryBlockCache.h',
     'nsIDocumentActivity.h',
     'PrincipalChangeObserver.h',
+    'PrincipalHandle.h',
     'QueueObject.h',
     'SeekJob.h',
     'SeekTarget.h',
