@@ -7,7 +7,6 @@
 
 #include "AudioSegment.h"
 #include "VideoSegment.h"
-#include "StreamTracks.h"
 
 namespace mozilla {
 

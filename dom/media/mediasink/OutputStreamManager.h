@@ -9,8 +9,8 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/StateMirroring.h"
+#include "mozilla/WeakPtr.h"
 #include "nsTArray.h"
-#include "TrackID.h"
 
 namespace mozilla {
 
@@ -95,8 +95,6 @@ class OutputStreamManager {
     MOZ_ASSERT(NS_IsMainThread());
     return mStreams.IsEmpty();
   }
-
-  static const TrackID sTrackID = 1;
 
   const RefPtr<AbstractThread> mAbstractMainThread;
 

@@ -69,7 +69,7 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
     mLoopEnd = aEnd;
     SendLoopParametersToStream();
   }
-  void NotifyMainThreadStreamFinished() override;
+  void NotifyMainThreadTrackEnded() override;
 
   const char* NodeType() const override { return "AudioBufferSourceNode"; }
 

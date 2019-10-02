@@ -7,9 +7,8 @@
 #ifndef MOZILLA_MEDIASTREAMLISTENER_h_
 #define MOZILLA_MEDIASTREAMLISTENER_h_
 
-#include "StreamTracks.h"
-
 #include "MediaStreamGraph.h"
+#include "PrincipalHandle.h"
 
 namespace mozilla {
 
@@ -143,23 +142,17 @@ class DirectMediaStreamTrackListener : public MediaStreamTrackListener {
    * When a direct listener is processed for installation by the
    * MediaStreamGraph it will be notified with whether the installation was
    * successful or not. The results of this installation are the following:
-   * TRACK_NOT_FOUND_AT_SOURCE
-   *    We found the source stream of media data for this track, but the track
-   *    didn't exist. This should only happen if you try to install the listener
-   *    directly to a SourceMediaStream that doesn't contain the given TrackID.
    * STREAM_NOT_SUPPORTED
    *    While looking for the data source of this track, we found a MediaStream
    *    that is not a SourceMediaStream or a TrackUnionStream.
-   * ALREADY_EXIST
+   * ALREADY_EXISTS
    *    This DirectMediaStreamTrackListener already exists in the
    *    SourceMediaStream.
    * SUCCESS
    *    Installation was successful and this listener will start receiving
-   *    NotifyRealtimeData on the next AppendToTrack().
+   *    NotifyRealtimeData on the next AppendData().
    */
   enum class InstallationResult {
-    TRACK_NOT_FOUND_AT_SOURCE,
-    TRACK_TYPE_NOT_SUPPORTED,
     STREAM_NOT_SUPPORTED,
     ALREADY_EXISTS,
     SUCCESS

@@ -8,7 +8,7 @@
 
 #include "MediaTrackConstraints.h"
 #include "PrincipalChangeObserver.h"
-#include "StreamTracks.h"
+#include "PrincipalHandle.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/MediaTrackSettingsBinding.h"
@@ -410,11 +410,8 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   class TrackSink;
 
  public:
-  /**
-   * aTrackID is the MediaStreamGraph track ID for the track in aInputStream.
-   */
   MediaStreamTrack(
-      nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
+      nsPIDOMWindowInner* aWindow, MediaStream* aInputStream,
       MediaStreamTrackSource* aSource,
       MediaStreamTrackState aReadyState = MediaStreamTrackState::Live,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
@@ -548,8 +545,6 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   already_AddRefed<MediaInputPort> ForwardTrackContentsTo(
       ProcessedMediaStream* aStream);
 
-  TrackID GetTrackID() const { return mTrackID; }
-
  protected:
   virtual ~MediaStreamTrack();
 
@@ -627,8 +622,6 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   // if mInputStream is non-destroyed and we're live. Valid until we end. Owned
   // by us.
   RefPtr<MediaInputPort> mPort;
-  // The TrackID of this track in mInputStream and mStream.
-  const TrackID mTrackID;
   RefPtr<MediaStreamTrackSource> mSource;
   const UniquePtr<TrackSink> mSink;
   nsCOMPtr<nsIPrincipal> mPrincipal;

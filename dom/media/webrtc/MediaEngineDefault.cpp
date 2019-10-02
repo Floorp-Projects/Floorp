@@ -183,10 +183,9 @@ nsresult MediaEngineDefaultVideoSource::Deallocate() {
   MOZ_ASSERT(!mImage);
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
-  if (mStream && IsTrackIDExplicit(mTrackID)) {
-    mStream->EndTrack(mTrackID);
+  if (mStream) {
+    mStream->End();
     mStream = nullptr;
-    mTrackID = TRACK_NONE;
     mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
   }
   mState = kReleased;
@@ -227,18 +226,15 @@ static void ReleaseFrame(layers::PlanarYCbCrData& aData) {
 }
 
 void MediaEngineDefaultVideoSource::SetTrack(
-    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+    const RefPtr<SourceMediaStream>& aStream,
     const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated);
   MOZ_ASSERT(!mStream);
-  MOZ_ASSERT(mTrackID == TRACK_NONE);
 
   mStream = aStream;
-  mTrackID = aTrackID;
   mPrincipalHandle = aPrincipal;
-  aStream->AddTrack(aTrackID, new VideoSegment());
 }
 
 nsresult MediaEngineDefaultVideoSource::Start() {
@@ -246,8 +242,6 @@ nsresult MediaEngineDefaultVideoSource::Start() {
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
   MOZ_ASSERT(mStream, "SetTrack() must happen before Start()");
-  MOZ_ASSERT(IsTrackIDExplicit(mTrackID),
-             "SetTrack() must happen before Start()");
 
   mTimer = NS_NewTimer();
   if (!mTimer) {
@@ -291,7 +285,6 @@ nsresult MediaEngineDefaultVideoSource::Stop() {
   MOZ_ASSERT(mState == kStarted);
   MOZ_ASSERT(mTimer);
   MOZ_ASSERT(mStream);
-  MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
   mTimer->Cancel();
   mTimer = nullptr;
@@ -360,21 +353,20 @@ void MediaEngineDefaultVideoSource::GenerateFrame() {
   segment.AppendFrame(ycbcr_image.forget(),
                       gfx::IntSize(mOpts.mWidth, mOpts.mHeight),
                       mPrincipalHandle);
-  mStream->AppendToTrack(mTrackID, &segment);
+  mStream->AppendData(&segment);
 }
 
 // This class is created on the media thread, as part of Start(), then entirely
 // self-sustained until destruction, just forwarding calls to Pull().
 class AudioSourcePullListener : public MediaStreamTrackListener {
  public:
-  AudioSourcePullListener(RefPtr<SourceMediaStream> aStream, TrackID aTrackID,
+  AudioSourcePullListener(RefPtr<SourceMediaStream> aStream,
                           const PrincipalHandle& aPrincipalHandle,
                           uint32_t aFrequency)
       : mStream(std::move(aStream)),
-        mTrackID(aTrackID),
         mPrincipalHandle(aPrincipalHandle),
         mSineGenerator(
-            MakeUnique<SineWaveGenerator>(mStream->GraphRate(), aFrequency)) {
+            MakeUnique<SineWaveGenerator>(mStream->mSampleRate, aFrequency)) {
     MOZ_COUNT_CTOR(AudioSourcePullListener);
   }
 
@@ -384,7 +376,6 @@ class AudioSourcePullListener : public MediaStreamTrackListener {
                   StreamTime aDesiredTime) override;
 
   const RefPtr<SourceMediaStream> mStream;
-  const TrackID mTrackID;
   const PrincipalHandle mPrincipalHandle;
   const UniquePtr<SineWaveGenerator> mSineGenerator;
 };
@@ -437,10 +428,9 @@ nsresult MediaEngineDefaultAudioSource::Deallocate() {
 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
-  if (mStream && IsTrackIDExplicit(mTrackID)) {
-    mStream->EndTrack(mTrackID);
+  if (mStream) {
+    mStream->End();
     mStream = nullptr;
-    mTrackID = TRACK_NONE;
     mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
   }
   mState = kReleased;
@@ -448,19 +438,15 @@ nsresult MediaEngineDefaultAudioSource::Deallocate() {
 }
 
 void MediaEngineDefaultAudioSource::SetTrack(
-    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+    const RefPtr<SourceMediaStream>& aStream,
     const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated);
   MOZ_ASSERT(!mStream);
-  MOZ_ASSERT(mTrackID == TRACK_NONE);
 
-  // AddAudioTrack will take ownership of segment
   mStream = aStream;
-  mTrackID = aTrackID;
   mPrincipalHandle = aPrincipal;
-  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), new AudioSegment());
 }
 
 nsresult MediaEngineDefaultAudioSource::Start() {
@@ -468,24 +454,21 @@ nsresult MediaEngineDefaultAudioSource::Start() {
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
   MOZ_ASSERT(mStream, "SetTrack() must happen before Start()");
-  MOZ_ASSERT(IsTrackIDExplicit(mTrackID),
-             "SetTrack() must happen before Start()");
 
   if (!mPullListener) {
     mPullListener = MakeAndAddRef<AudioSourcePullListener>(
-        mStream, mTrackID, mPrincipalHandle, mFrequency);
+        mStream, mPrincipalHandle, mFrequency);
   }
 
   mState = kStarted;
 
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__,
-      [stream = mStream, track = mTrackID, listener = mPullListener]() {
+      __func__, [stream = mStream, listener = mPullListener]() {
         if (stream->IsDestroyed()) {
           return;
         }
-        stream->AddTrackListener(listener, track);
-        stream->SetPullingEnabled(track, true);
+        stream->AddListener(listener);
+        stream->SetPullingEnabled(true);
       }));
 
   return NS_OK;
@@ -500,14 +483,13 @@ nsresult MediaEngineDefaultAudioSource::Stop() {
   MOZ_ASSERT(mState == kStarted);
   mState = kStopped;
 
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [stream = mStream, track = mTrackID,
-                                        listener = std::move(mPullListener)]() {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [stream = mStream, listener = std::move(mPullListener)]() {
         if (stream->IsDestroyed()) {
           return;
         }
-        stream->RemoveTrackListener(listener, track);
-        stream->SetPullingEnabled(track, false);
+        stream->RemoveListener(listener);
+        stream->SetPullingEnabled(false);
       }));
   return NS_OK;
 }
@@ -521,8 +503,7 @@ nsresult MediaEngineDefaultAudioSource::Reconfigure(
 void AudioSourcePullListener::NotifyPull(MediaStreamGraph* aGraph,
                                          StreamTime aEndOfAppendedData,
                                          StreamTime aDesiredTime) {
-  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p track %i", mStream.get(),
-                               mTrackID);
+  TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p", mStream.get());
   AudioSegment segment;
   TrackTicks delta = aDesiredTime - aEndOfAppendedData;
   RefPtr<SharedBuffer> buffer = SharedBuffer::Create(delta * sizeof(int16_t));
@@ -531,7 +512,7 @@ void AudioSourcePullListener::NotifyPull(MediaStreamGraph* aGraph,
   AutoTArray<const int16_t*, 1> channels;
   channels.AppendElement(dest);
   segment.AppendFrames(buffer.forget(), channels, delta, mPrincipalHandle);
-  mStream->AppendToTrack(mTrackID, &segment);
+  mStream->AppendData(&segment);
 }
 
 void MediaEngineDefault::EnumerateDevices(

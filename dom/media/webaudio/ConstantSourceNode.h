@@ -41,7 +41,7 @@ class ConstantSourceNode final : public AudioScheduledSourceNode,
   void Start(double aWhen, ErrorResult& rv) override;
   void Stop(double aWhen, ErrorResult& rv) override;
 
-  void NotifyMainThreadStreamFinished() override;
+  void NotifyMainThreadTrackEnded() override;
 
   const char* NodeType() const override { return "ConstantSourceNode"; }
 

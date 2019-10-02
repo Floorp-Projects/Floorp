@@ -53,11 +53,6 @@ LazyLogModule gMediaStreamGraphLog("MediaStreamGraph");
 #endif  // LOG
 #define LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
-enum SourceMediaStream::TrackCommands : uint32_t {
-  TRACK_CREATE = TrackEventCommand::TRACK_EVENT_CREATED,
-  TRACK_END = TrackEventCommand::TRACK_EVENT_ENDED,
-};
-
 /**
  * A hash table containing the graph instances, one per document.
  *
@@ -79,7 +74,7 @@ MediaStreamGraphImpl::~MediaStreamGraphImpl() {
 
 void MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
-  aStream->mTracksStartTime = mProcessedTime;
+  aStream->mStartTime = mProcessedTime;
 
   if (aStream->IsSuspended()) {
     mSuspendedStreams.AppendElement(aStream);
@@ -130,7 +125,7 @@ StreamTime MediaStreamGraphImpl::GraphTimeToStreamTimeWithBlocking(
       aTime <= mStateComputedTime,
       "Don't ask about times where we haven't made blocking decisions yet");
   return std::max<StreamTime>(
-      0, std::min(aTime, aStream->mStartBlocking) - aStream->mTracksStartTime);
+      0, std::min(aTime, aStream->mStartBlocking) - aStream->mStartTime);
 }
 
 GraphTime MediaStreamGraphImpl::IterationEnd() const {
@@ -142,9 +137,9 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
     GraphTime aPrevCurrentTime) {
   MOZ_ASSERT(OnGraphThread());
   for (MediaStream* stream : AllStreams()) {
-    // Shouldn't have already notified of finish *and* have output!
+    // Shouldn't have already notified of ended *and* have output!
     MOZ_ASSERT_IF(stream->mStartBlocking > aPrevCurrentTime,
-                  !stream->mNotifiedFinished);
+                  !stream->mNotifiedEnded);
 
     // Calculate blocked time and fire Blocked/Unblocked events
     GraphTime blockedTime = mStateComputedTime - stream->mStartBlocking;
@@ -153,57 +148,38 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
                                                   blockedTime);
     LOG(LogLevel::Verbose,
         ("%p: MediaStream %p bufferStartTime=%f blockedTime=%f", this, stream,
-         MediaTimeToSeconds(stream->mTracksStartTime),
+         MediaTimeToSeconds(stream->mStartTime),
          MediaTimeToSeconds(blockedTime)));
     stream->mStartBlocking = mStateComputedTime;
 
-    for (StreamTracks::TrackIter track(stream->mTracks); !track.IsEnded();
-         track.Next()) {
-      StreamTime streamCurrentTime =
-          stream->GraphTimeToStreamTime(mStateComputedTime);
-      if (track->IsEnded() && track->GetEnd() <= streamCurrentTime) {
-        if (!track->NotifiedEnded()) {
-          // Playout of this track ended and listeners have not been notified.
-          track->NotifyEnded();
-          for (const TrackBound<MediaStreamTrackListener>& listener :
-               stream->mTrackListeners) {
-            if (listener.mTrackID == track->GetID()) {
-              listener.mListener->NotifyOutput(
-                  this, track->GetEnd() - track->GetStart());
-              listener.mListener->NotifyEnded(this);
-            }
-          }
-        }
-      } else {
-        for (const TrackBound<MediaStreamTrackListener>& listener :
-             stream->mTrackListeners) {
-          if (listener.mTrackID == track->GetID()) {
-            listener.mListener->NotifyOutput(
-                this, streamCurrentTime - track->GetStart());
-          }
+    StreamTime streamCurrentTime =
+        stream->GraphTimeToStreamTime(mStateComputedTime);
+    if (stream->mEnded) {
+      MOZ_ASSERT(stream->GetEnd() <= streamCurrentTime);
+      if (!stream->mNotifiedEnded) {
+        // Playout of this track ended and listeners have not been notified.
+        stream->mNotifiedEnded = true;
+        SetStreamOrderDirty();
+        for (const auto& listener : stream->mTrackListeners) {
+          listener->NotifyOutput(this, stream->GetEnd());
+          listener->NotifyEnded(this);
         }
       }
-    }
-
-    // The stream is fully finished when all of its track data has been played
-    // out.
-    if (stream->mFinished && !stream->mNotifiedFinished &&
-        mProcessedTime >= stream->StreamTimeToGraphTime(
-                              stream->GetStreamTracks().GetLatestTrackEnd())) {
-      stream->mNotifiedFinished = true;
+    } else {
+      for (const auto& listener : stream->mTrackListeners) {
+        listener->NotifyOutput(this, streamCurrentTime);
+      }
     }
   }
 }
 
 template <typename C, typename Chunk>
 void MediaStreamGraphImpl::ProcessChunkMetadataForInterval(MediaStream* aStream,
-                                                           TrackID aTrackID,
                                                            C& aSegment,
                                                            StreamTime aStart,
                                                            StreamTime aEnd) {
   MOZ_ASSERT(OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aStream);
-  MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
 
   StreamTime offset = 0;
   for (typename C::ConstChunkIterator chunk(aSegment); !chunk.IsEnded();
@@ -219,17 +195,13 @@ void MediaStreamGraphImpl::ProcessChunkMetadataForInterval(MediaStream* aStream,
     if (principalHandle != aSegment.GetLastPrincipalHandle()) {
       aSegment.SetLastPrincipalHandle(principalHandle);
       LOG(LogLevel::Debug,
-          ("%p: MediaStream %p track %d, principalHandle "
+          ("%p: MediaStream %p, principalHandle "
            "changed in %sChunk with duration %lld",
-           this, aStream, aTrackID,
+           this, aStream,
            aSegment.GetType() == MediaSegment::AUDIO ? "Audio" : "Video",
            (long long)chunk->GetDuration()));
-      for (const TrackBound<MediaStreamTrackListener>& listener :
-           aStream->mTrackListeners) {
-        if (listener.mTrackID == aTrackID) {
-          listener.mListener->NotifyPrincipalHandleChanged(this,
-                                                           principalHandle);
-        }
+      for (const auto& listener : aStream->mTrackListeners) {
+        listener->NotifyPrincipalHandleChanged(this, principalHandle);
       }
     }
   }
@@ -240,39 +212,35 @@ void MediaStreamGraphImpl::ProcessChunkMetadata(GraphTime aPrevCurrentTime) {
   for (MediaStream* stream : AllStreams()) {
     StreamTime iterationStart = stream->GraphTimeToStreamTime(aPrevCurrentTime);
     StreamTime iterationEnd = stream->GraphTimeToStreamTime(mProcessedTime);
-    for (StreamTracks::TrackIter tracks(stream->mTracks); !tracks.IsEnded();
-         tracks.Next()) {
-      MediaSegment* segment = tracks->GetSegment();
-      if (!segment) {
-        continue;
-      }
-      if (tracks->GetType() == MediaSegment::AUDIO) {
-        AudioSegment* audio = static_cast<AudioSegment*>(segment);
-        ProcessChunkMetadataForInterval<AudioSegment, AudioChunk>(
-            stream, tracks->GetID(), *audio, iterationStart, iterationEnd);
-      } else if (tracks->GetType() == MediaSegment::VIDEO) {
-        VideoSegment* video = static_cast<VideoSegment*>(segment);
-        ProcessChunkMetadataForInterval<VideoSegment, VideoChunk>(
-            stream, tracks->GetID(), *video, iterationStart, iterationEnd);
-      } else {
-        MOZ_CRASH("Unknown track type");
-      }
+    if (!stream->mSegment) {
+      continue;
+    }
+    if (stream->mType == MediaSegment::AUDIO) {
+      ProcessChunkMetadataForInterval<AudioSegment, AudioChunk>(
+          stream, *stream->GetData<AudioSegment>(), iterationStart,
+          iterationEnd);
+    } else if (stream->mType == MediaSegment::VIDEO) {
+      ProcessChunkMetadataForInterval<VideoSegment, VideoChunk>(
+          stream, *stream->GetData<VideoSegment>(), iterationStart,
+          iterationEnd);
+    } else {
+      MOZ_CRASH("Unknown track type");
     }
   }
 }
 
 GraphTime MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream,
                                              GraphTime aEndBlockingDecisions) {
-  // Finished streams can't underrun. ProcessedMediaStreams also can't cause
+  // Ended tracks can't underrun. ProcessedMediaStreams also can't cause
   // underrun currently, since we'll always be able to produce data for them
   // unless they block on some other stream.
-  if (aStream->mFinished || aStream->AsProcessedStream()) {
+  if (aStream->mEnded || aStream->AsProcessedStream()) {
     return aEndBlockingDecisions;
   }
-  // This stream isn't finished or suspended. We don't need to call
+  // This stream isn't ended or suspended. We don't need to call
   // StreamTimeToGraphTime since an underrun is the only thing that can block
   // it.
-  GraphTime bufferEnd = aStream->GetTracksEnd() + aStream->mTracksStartTime;
+  GraphTime bufferEnd = aStream->GetEnd() + aStream->mStartTime;
 #ifdef DEBUG
   if (bufferEnd < mProcessedTime) {
     LOG(LogLevel::Error, ("%p: MediaStream %p underrun, "
@@ -280,8 +248,7 @@ GraphTime MediaStreamGraphImpl::WillUnderrun(MediaStream* aStream,
                           " < %" PRId64 "), Streamtime %" PRId64,
                           this, aStream, MediaTimeToSeconds(bufferEnd),
                           MediaTimeToSeconds(mProcessedTime), bufferEnd,
-                          mProcessedTime, aStream->GetTracksEnd()));
-    aStream->DumpTrackInfo();
+                          mProcessedTime, aStream->GetEnd()));
     NS_ASSERTION(bufferEnd >= mProcessedTime, "Buffer underran");
   }
 #endif
@@ -305,25 +272,8 @@ bool MediaStreamGraphImpl::AudioTrackPresent() {
       break;
     }
 
-    for (StreamTracks::TrackIter it(stream->GetStreamTracks()); !it.IsEnded();
-         it.Next()) {
-      if (it->GetType() == MediaSegment::AUDIO && !it->NotifiedEnded()) {
-        audioTrackPresent = true;
-        break;
-      }
-    }
-
-    if (audioTrackPresent) {
-      break;
-    }
-
-    if (SourceMediaStream* source = stream->AsSourceStream()) {
-      if (source->HasPendingAudioTrack()) {
-        audioTrackPresent = true;
-      }
-    }
-
-    if (audioTrackPresent) {
+    if (stream->mType == MediaSegment::AUDIO && !stream->mNotifiedEnded) {
+      audioTrackPresent = true;
       break;
     }
   }
@@ -567,63 +517,34 @@ void MediaStreamGraphImpl::CreateOrDestroyAudioStreams(MediaStream* aStream) {
              "Should only attempt to create audio streams in real-time mode");
 
   if (aStream->mAudioOutputs.IsEmpty()) {
-    aStream->mAudioOutputStreams.Clear();
+    aStream->mAudioOutputStream = nullptr;
     return;
   }
 
-  if (!aStream->GetStreamTracks().GetAndResetTracksDirty() &&
-      !aStream->mAudioOutputStreams.IsEmpty()) {
+  if (aStream->mAudioOutputStream) {
     return;
   }
 
   LOG(LogLevel::Debug,
-      ("%p: Updating AudioOutputStreams for MediaStream %p", this, aStream));
+      ("%p: Updating AudioOutputStream for MediaStream %p", this, aStream));
 
-  AutoTArray<bool, 2> audioOutputStreamsFound;
-  for (uint32_t i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
-    audioOutputStreamsFound.AppendElement(false);
+  aStream->mAudioOutputStream = MakeUnique<MediaStream::AudioOutputStream>();
+  aStream->mAudioOutputStream->mAudioPlaybackStartTime = mProcessedTime;
+  aStream->mAudioOutputStream->mBlockedAudioTime = 0;
+  aStream->mAudioOutputStream->mLastTickWritten = 0;
+
+  bool switching = false;
+  {
+    MonitorAutoLock lock(mMonitor);
+    switching = CurrentDriver()->Switching();
   }
 
-  for (StreamTracks::TrackIter tracks(aStream->GetStreamTracks(),
-                                      MediaSegment::AUDIO);
-       !tracks.IsEnded(); tracks.Next()) {
-    uint32_t i;
-    for (i = 0; i < audioOutputStreamsFound.Length(); ++i) {
-      if (aStream->mAudioOutputStreams[i].mTrackID == tracks->GetID()) {
-        break;
-      }
-    }
-    if (i < audioOutputStreamsFound.Length()) {
-      audioOutputStreamsFound[i] = true;
-    } else {
-      MediaStream::AudioOutputStream* audioOutputStream =
-          aStream->mAudioOutputStreams.AppendElement();
-      audioOutputStream->mAudioPlaybackStartTime = mProcessedTime;
-      audioOutputStream->mBlockedAudioTime = 0;
-      audioOutputStream->mLastTickWritten = 0;
-      audioOutputStream->mTrackID = tracks->GetID();
-
-      bool switching = false;
-
-      {
-        MonitorAutoLock lock(mMonitor);
-        switching = CurrentDriver()->Switching();
-      }
-
-      if (!CurrentDriver()->AsAudioCallbackDriver() && !switching) {
-        MonitorAutoLock mon(mMonitor);
-        if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
-          AudioCallbackDriver* driver = new AudioCallbackDriver(
-              this, AudioInputChannelCount(), AudioInputDevicePreference());
-          CurrentDriver()->SwitchAtNextIteration(driver);
-        }
-      }
-    }
-  }
-
-  for (int32_t i = audioOutputStreamsFound.Length() - 1; i >= 0; --i) {
-    if (!audioOutputStreamsFound[i]) {
-      aStream->mAudioOutputStreams.RemoveElementAt(i);
+  if (!CurrentDriver()->AsAudioCallbackDriver() && !switching) {
+    MonitorAutoLock mon(mMonitor);
+    if (LifecycleStateRef() == LIFECYCLE_RUNNING) {
+      AudioCallbackDriver* driver = new AudioCallbackDriver(
+          this, AudioInputChannelCount(), AudioInputDevicePreference());
+      CurrentDriver()->SwitchAtNextIteration(driver);
     }
   }
 }
@@ -639,14 +560,11 @@ StreamTime MediaStreamGraphImpl::PlayAudio(MediaStream* aStream) {
 
   StreamTime ticksWritten = 0;
 
-  for (uint32_t i = 0; i < aStream->mAudioOutputStreams.Length(); ++i) {
+  if (aStream->mAudioOutputStream) {
     ticksWritten = 0;
 
-    MediaStream::AudioOutputStream& audioOutput =
-        aStream->mAudioOutputStreams[i];
-    StreamTracks::Track* track =
-        aStream->mTracks.FindTrack(audioOutput.mTrackID);
-    AudioSegment* audio = track->Get<AudioSegment>();
+    MediaStream::AudioOutputStream& audioOutput = *aStream->mAudioOutputStream;
+    AudioSegment* audio = aStream->GetData<AudioSegment>();
     AudioSegment output;
 
     StreamTime offset = aStream->GraphTimeToStreamTime(mProcessedTime);
@@ -1078,7 +996,7 @@ void MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate) {
       // UpdateCurrentTimeForStreams.
       update->mNextMainThreadCurrentTime =
           stream->GraphTimeToStreamTime(mProcessedTime);
-      update->mNextMainThreadFinished = stream->mNotifiedFinished;
+      update->mNextMainThreadEnded = stream->mNotifiedEnded;
     }
     mNextMainThreadGraphTime = mProcessedTime;
     if (!mPendingUpdateRunnables.IsEmpty()) {
@@ -1127,10 +1045,9 @@ void MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(
     for (uint32_t i = aStreamIndex; i < mStreams.Length(); ++i) {
       ProcessedMediaStream* ps = mStreams[i]->AsProcessedStream();
       if (ps) {
-        ps->ProcessInput(t, next,
-                         (next == mStateComputedTime)
-                             ? ProcessedMediaStream::ALLOW_FINISH
-                             : 0);
+        ps->ProcessInput(
+            t, next,
+            (next == mStateComputedTime) ? ProcessedMediaStream::ALLOW_END : 0);
       }
     }
     t = next;
@@ -1187,63 +1104,57 @@ void MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions) {
       ensureNextIteration |= is->PullNewData(aEndBlockingDecisions);
       is->ExtractPendingInput(mStateComputedTime, aEndBlockingDecisions);
     }
-    if (stream->mFinished) {
-      // The stream's not suspended, and since it's finished, underruns won't
+    if (stream->mEnded) {
+      // The stream's not suspended, and since it's ended, underruns won't
       // stop it playing out. So there's no blocking other than what we impose
       // here.
-      GraphTime endTime = stream->GetStreamTracks().GetLatestTrackEnd() +
-                          stream->mTracksStartTime;
+      GraphTime endTime = stream->GetEnd() + stream->mStartTime;
       if (endTime <= mStateComputedTime) {
         LOG(LogLevel::Verbose,
-            ("%p: MediaStream %p is blocked due to being finished", this,
-             stream));
+            ("%p: MediaStream %p is blocked due to being ended", this, stream));
         stream->mStartBlocking = mStateComputedTime;
       } else {
         LOG(LogLevel::Verbose,
-            ("%p: MediaStream %p is finished, but not blocked yet (end at %f, "
-             "with "
-             "blocking at %f)",
-             this, stream, MediaTimeToSeconds(stream->GetTracksEnd()),
+            ("%p: MediaStream %p has ended, but is not blocked yet (current "
+             "time %f, end at %f)",
+             this, stream, MediaTimeToSeconds(mStateComputedTime),
              MediaTimeToSeconds(endTime)));
-        // Data can't be added to a finished stream, so underruns are
-        // irrelevant.
-        stream->mStartBlocking = std::min(endTime, aEndBlockingDecisions);
+        // Data can't be added to a ended stream, so underruns are irrelevant.
+        MOZ_ASSERT(endTime <= aEndBlockingDecisions);
+        stream->mStartBlocking = endTime;
       }
     } else {
       stream->mStartBlocking = WillUnderrun(stream, aEndBlockingDecisions);
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       if (SourceMediaStream* s = stream->AsSourceStream()) {
-        for (StreamTracks::TrackIter i(s->mTracks); !i.IsEnded(); i.Next()) {
-          if (i->IsEnded()) {
+        if (s->Ended()) {
+          continue;
+        }
+        {
+          MutexAutoLock lock(s->mMutex);
+          if (!s->mUpdateTrack->mPullingEnabled) {
+            // The invariant that data must be provided is only enforced when
+            // pulling.
             continue;
           }
-          SourceMediaStream::TrackData* data;
-          {
-            MutexAutoLock lock(s->mMutex);
-            data = s->FindDataForTrack(i->GetID());
-          }
-          MOZ_ASSERT(data);
-          if (!data->mPullingEnabled) {
-            continue;
-          }
-          if (i->GetEnd() <
-              stream->GraphTimeToStreamTime(aEndBlockingDecisions)) {
-            LOG(LogLevel::Error,
-                ("%p: SourceMediaStream %p track %u (%s) is live and pulled, "
-                 "but wasn't fed "
-                 "enough data. TrackListeners=%zu. Track-end=%f, "
-                 "Iteration-end=%f",
-                 this, stream, i->GetID(),
-                 (i->GetType() == MediaSegment::AUDIO ? "audio" : "video"),
-                 stream->mTrackListeners.Length(),
-                 MediaTimeToSeconds(i->GetEnd()),
-                 MediaTimeToSeconds(
-                     stream->GraphTimeToStreamTime(aEndBlockingDecisions))));
-            MOZ_DIAGNOSTIC_ASSERT(false,
-                                  "A non-finished SourceMediaStream wasn't fed "
-                                  "enough data by NotifyPull");
-          }
+        }
+        if (stream->GetEnd() <
+            stream->GraphTimeToStreamTime(aEndBlockingDecisions)) {
+          LOG(LogLevel::Error,
+              ("%p: SourceMediaStream %p (%s) is live and pulled, "
+               "but wasn't fed "
+               "enough data. TrackListeners=%zu. Track-end=%f, "
+               "Iteration-end=%f",
+               this, stream,
+               (stream->mType == MediaSegment::AUDIO ? "audio" : "video"),
+               stream->mTrackListeners.Length(),
+               MediaTimeToSeconds(stream->GetEnd()),
+               MediaTimeToSeconds(
+                   stream->GraphTimeToStreamTime(aEndBlockingDecisions))));
+          MOZ_DIAGNOSTIC_ASSERT(false,
+                                "A non-ended SourceMediaStream wasn't fed "
+                                "enough data by NotifyPull");
         }
       }
 #endif /* MOZ_DIAGNOSTIC_ASSERT_ENABLED */
@@ -1306,11 +1217,11 @@ void MediaStreamGraphImpl::Process() {
           doneAllProducing = true;
         } else {
           ps->ProcessInput(mProcessedTime, mStateComputedTime,
-                           ProcessedMediaStream::ALLOW_FINISH);
-          NS_ASSERTION(
-              stream->mTracks.GetEarliestTrackEnd() >=
-                  GraphTimeToStreamTimeWithBlocking(stream, mStateComputedTime),
-              "Stream did not produce enough data");
+                           ProcessedMediaStream::ALLOW_END);
+          // Assert that a live stream produced enough data
+          MOZ_ASSERT_IF(!stream->mEnded,
+                        stream->GetEnd() >= GraphTimeToStreamTimeWithBlocking(
+                                                stream, mStateComputedTime));
         }
       }
     }
@@ -1426,9 +1337,9 @@ void MediaStreamGraphImpl::ApplyStreamUpdate(StreamUpdate* aUpdate) {
   MediaStream* stream = aUpdate->mStream;
   if (!stream) return;
   stream->mMainThreadCurrentTime = aUpdate->mNextMainThreadCurrentTime;
-  stream->mMainThreadFinished = aUpdate->mNextMainThreadFinished;
+  stream->mMainThreadEnded = aUpdate->mNextMainThreadEnded;
 
-  if (stream->ShouldNotifyStreamFinished()) {
+  if (stream->ShouldNotifyTrackEnded()) {
     stream->NotifyMainThreadListeners();
   }
 }
@@ -1579,12 +1490,7 @@ class MediaStreamGraphShutDownRunnable : public Runnable {
       // Clean up all MediaSegments since we cannot release Images too
       // late during shutdown. Also notify listeners that they were removed
       // so they can clean up any gfx resources.
-      if (SourceMediaStream* source = stream->AsSourceStream()) {
-        // Finishing a SourceStream prevents new data from being appended.
-        source->FinishOnGraphThread();
-      }
-      stream->GetStreamTracks().Clear();
-      stream->RemoveAllListenersImpl();
+      stream->RemoveAllResourcesAndListenersImpl();
     }
 
     MOZ_ASSERT(mGraph->mUpdateRunnables.IsEmpty());
@@ -1858,18 +1764,25 @@ void MediaStreamGraphImpl::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
   mAbstractMainThread->Dispatch(std::move(aRunnable));
 }
 
-MediaStream::MediaStream()
-    : mTracksStartTime(0),
+MediaStream::MediaStream(TrackRate aSampleRate, MediaSegment::Type aType,
+                         MediaSegment* aSegment)
+    : mSampleRate(aSampleRate),
+      mType(aType),
+      mSegment(aSegment),
+      mStartTime(0),
+      mForgottenTime(0),
+      mEnded(false),
+      mNotifiedEnded(false),
+      mDisabledMode(DisabledTrackMode::ENABLED),
       mStartBlocking(GRAPH_TIME_MAX),
       mSuspendedCount(0),
-      mFinished(false),
-      mNotifiedFinished(false),
       mMainThreadCurrentTime(0),
-      mMainThreadFinished(false),
-      mFinishedNotificationSent(false),
+      mMainThreadEnded(false),
+      mEndedNotificationSent(false),
       mMainThreadDestroyed(false),
       mGraph(nullptr) {
   MOZ_COUNT_CTOR(MediaStream);
+  MOZ_ASSERT_IF(mSegment, mSegment->GetType() == aType);
 }
 
 MediaStream::~MediaStream() {
@@ -1890,12 +1803,11 @@ size_t MediaStream::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   // - mTrackListeners - elements
   // - mAudioOutputStream - elements
 
-  amount += mTracks.SizeOfExcludingThis(aMallocSizeOf);
   amount += mAudioOutputs.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mTrackListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mMainThreadListeners.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mDisabledTracks.ShallowSizeOfExcludingThis(aMallocSizeOf);
   amount += mConsumers.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  amount += aMallocSizeOf(mAudioOutputStream.get());
 
   return amount;
 }
@@ -1929,10 +1841,12 @@ const MediaStreamGraphImpl* MediaStream::GraphImpl() const { return mGraph; }
 
 MediaStreamGraph* MediaStream::Graph() { return mGraph; }
 
+const MediaStreamGraph* MediaStream::Graph() const { return mGraph; }
+
 void MediaStream::SetGraphImpl(MediaStreamGraphImpl* aGraph) {
   MOZ_ASSERT(!mGraph, "Should only be called once");
+  MOZ_ASSERT(mSampleRate == aGraph->GraphRate());
   mGraph = aGraph;
-  mTracks.InitGraphRate(aGraph->GraphRate());
 }
 
 void MediaStream::SetGraphImpl(MediaStreamGraph* aGraph) {
@@ -1944,14 +1858,14 @@ StreamTime MediaStream::GraphTimeToStreamTime(GraphTime aTime) const {
   NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime ||
                    aTime <= mStartBlocking,
                "Incorrectly ignoring blocking!");
-  return aTime - mTracksStartTime;
+  return aTime - mStartTime;
 }
 
 GraphTime MediaStream::StreamTimeToGraphTime(StreamTime aTime) const {
   NS_ASSERTION(mStartBlocking == GraphImpl()->mStateComputedTime ||
-                   aTime + mTracksStartTime <= mStartBlocking,
+                   aTime + mStartTime <= mStartBlocking,
                "Incorrectly ignoring blocking!");
-  return aTime + mTracksStartTime;
+  return aTime + mStartTime;
 }
 
 StreamTime MediaStream::GraphTimeToStreamTimeWithBlocking(
@@ -1959,58 +1873,29 @@ StreamTime MediaStream::GraphTimeToStreamTimeWithBlocking(
   return GraphImpl()->GraphTimeToStreamTimeWithBlocking(this, aTime);
 }
 
-void MediaStream::FinishOnGraphThread() {
-  if (mFinished) {
-    return;
-  }
-  LOG(LogLevel::Debug, ("MediaStream %p will finish", this));
-#ifdef DEBUG
-  if (!mGraph->mForceShutDown) {
-    // All tracks must be ended by the source before the stream finishes.
-    // The exception is in forced shutdown, where we finish all streams as is.
-    for (StreamTracks::TrackIter track(mTracks); !track.IsEnded();
-         track.Next()) {
-      if (!track->IsEnded()) {
-        LOG(LogLevel::Error,
-            ("MediaStream %p will finish, but track %d has not ended.", this,
-             track->GetID()));
-        NS_ASSERTION(false, "Finished stream cannot contain live track");
-      }
-    }
-  }
-#endif
-  mFinished = true;
-}
-
-StreamTracks::Track* MediaStream::FindTrack(TrackID aID) const {
-  return mTracks.FindTrack(aID);
-}
-
-StreamTracks::Track* MediaStream::EnsureTrack(TrackID aTrackId) {
-  StreamTracks::Track* track = mTracks.FindTrack(aTrackId);
-  if (!track) {
-    track = &mTracks.AddTrack(aTrackId, 0, new AudioSegment());
-  }
-  return track;
-}
-
-void MediaStream::RemoveAllListenersImpl() {
+void MediaStream::RemoveAllResourcesAndListenersImpl() {
   GraphImpl()->AssertOnGraphThreadOrNotRunning();
 
   auto trackListeners(mTrackListeners);
   for (auto& l : trackListeners) {
-    l.mListener->NotifyRemoved(Graph());
+    l->NotifyRemoved(Graph());
   }
   mTrackListeners.Clear();
 
   RemoveAllDirectListenersImpl();
+
+  if (mSegment) {
+    mSegment->Clear();
+  }
 }
 
 void MediaStream::DestroyImpl() {
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
     mConsumers[i]->Disconnect();
   }
-  mTracks.Clear();
+  if (mSegment) {
+    mSegment->Clear();
+  }
   mGraph = nullptr;
 }
 
@@ -2022,7 +1907,7 @@ void MediaStream::Destroy() {
    public:
     explicit Message(MediaStream* aStream) : ControlMessage(aStream) {}
     void Run() override {
-      mStream->RemoveAllListenersImpl();
+      mStream->RemoveAllResourcesAndListenersImpl();
       auto graph = mStream->GraphImpl();
       mStream->DestroyImpl();
       graph->RemoveStreamGraphThread(mStream);
@@ -2038,6 +1923,10 @@ void MediaStream::Destroy() {
   // but our kungFuDeathGrip above will have kept this stream alive if
   // necessary.
   mMainThreadDestroyed = true;
+}
+
+StreamTime MediaStream::GetEnd() const {
+  return mSegment ? mSegment->GetDuration() : 0;
 }
 
 void MediaStream::AddAudioOutput(void* aKey) {
@@ -2136,119 +2025,91 @@ void MediaStream::Resume() {
   GraphImpl()->AppendMessage(MakeUnique<Message>(this));
 }
 
-void MediaStream::AddTrackListenerImpl(
-    already_AddRefed<MediaStreamTrackListener> aListener, TrackID aTrackID) {
-  TrackBound<MediaStreamTrackListener>* l = mTrackListeners.AppendElement();
-  l->mListener = aListener;
-  l->mTrackID = aTrackID;
+void MediaStream::AddListenerImpl(
+    already_AddRefed<MediaStreamTrackListener> aListener) {
+  RefPtr<MediaStreamTrackListener> l(aListener);
+  mTrackListeners.AppendElement(std::move(l));
 
-  StreamTracks::Track* track = FindTrack(aTrackID);
-  if (!track) {
-    return;
+  PrincipalHandle lastPrincipalHandle = mSegment->GetLastPrincipalHandle();
+  mTrackListeners.LastElement()->NotifyPrincipalHandleChanged(
+      Graph(), lastPrincipalHandle);
+  if (mNotifiedEnded) {
+    mTrackListeners.LastElement()->NotifyEnded(Graph());
   }
-  PrincipalHandle lastPrincipalHandle =
-      track->GetSegment()->GetLastPrincipalHandle();
-  l->mListener->NotifyPrincipalHandleChanged(Graph(), lastPrincipalHandle);
-  if (track->IsEnded() &&
-      track->GetEnd() <=
-          GraphTimeToStreamTime(GraphImpl()->mStateComputedTime)) {
-    l->mListener->NotifyEnded(Graph());
-  }
-  if (GetDisabledTrackMode(aTrackID) == DisabledTrackMode::SILENCE_BLACK) {
-    l->mListener->NotifyEnabledStateChanged(Graph(), false);
+  if (mDisabledMode == DisabledTrackMode::SILENCE_BLACK) {
+    mTrackListeners.LastElement()->NotifyEnabledStateChanged(Graph(), false);
   }
 }
 
-void MediaStream::AddTrackListener(MediaStreamTrackListener* aListener,
-                                   TrackID aTrackID) {
+void MediaStream::AddListener(MediaStreamTrackListener* aListener) {
   class Message : public ControlMessage {
    public:
-    Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
-            TrackID aTrackID)
-        : ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    void Run() override {
-      mStream->AddTrackListenerImpl(mListener.forget(), mTrackID);
-    }
+    Message(MediaStream* aStream, MediaStreamTrackListener* aListener)
+        : ControlMessage(aStream), mListener(aListener) {}
+    void Run() override { mStream->AddListenerImpl(mListener.forget()); }
     RefPtr<MediaStreamTrackListener> mListener;
-    TrackID mTrackID;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
+  MOZ_ASSERT(mSegment, "Segment-less tracks do not support listeners");
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
 }
 
-void MediaStream::RemoveTrackListenerImpl(MediaStreamTrackListener* aListener,
-                                          TrackID aTrackID) {
+void MediaStream::RemoveListenerImpl(MediaStreamTrackListener* aListener) {
   for (size_t i = 0; i < mTrackListeners.Length(); ++i) {
-    if (mTrackListeners[i].mListener == aListener &&
-        mTrackListeners[i].mTrackID == aTrackID) {
-      mTrackListeners[i].mListener->NotifyRemoved(Graph());
+    if (mTrackListeners[i] == aListener) {
+      mTrackListeners[i]->NotifyRemoved(Graph());
       mTrackListeners.RemoveElementAt(i);
       return;
     }
   }
 }
 
-void MediaStream::RemoveTrackListener(MediaStreamTrackListener* aListener,
-                                      TrackID aTrackID) {
+void MediaStream::RemoveListener(MediaStreamTrackListener* aListener) {
   class Message : public ControlMessage {
    public:
-    Message(MediaStream* aStream, MediaStreamTrackListener* aListener,
-            TrackID aTrackID)
-        : ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    void Run() override {
-      mStream->RemoveTrackListenerImpl(mListener, mTrackID);
-    }
+    Message(MediaStream* aStream, MediaStreamTrackListener* aListener)
+        : ControlMessage(aStream), mListener(aListener) {}
+    void Run() override { mStream->RemoveListenerImpl(mListener); }
     void RunDuringShutdown() override {
       // During shutdown we still want the listener's NotifyRemoved to be
       // called, since not doing that might block shutdown of other modules.
       Run();
     }
     RefPtr<MediaStreamTrackListener> mListener;
-    TrackID mTrackID;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
 }
 
-void MediaStream::AddDirectTrackListenerImpl(
-    already_AddRefed<DirectMediaStreamTrackListener> aListener,
-    TrackID aTrackID) {
+void MediaStream::AddDirectListenerImpl(
+    already_AddRefed<DirectMediaStreamTrackListener> aListener) {
   // Base implementation, for streams that don't support direct track listeners.
   RefPtr<DirectMediaStreamTrackListener> listener = aListener;
   listener->NotifyDirectListenerInstalled(
       DirectMediaStreamTrackListener::InstallationResult::STREAM_NOT_SUPPORTED);
 }
 
-void MediaStream::AddDirectTrackListener(
-    DirectMediaStreamTrackListener* aListener, TrackID aTrackID) {
+void MediaStream::AddDirectListener(DirectMediaStreamTrackListener* aListener) {
   class Message : public ControlMessage {
    public:
-    Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
-            TrackID aTrackID)
-        : ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    void Run() override {
-      mStream->AddDirectTrackListenerImpl(mListener.forget(), mTrackID);
-    }
+    Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener)
+        : ControlMessage(aStream), mListener(aListener) {}
+    void Run() override { mStream->AddDirectListenerImpl(mListener.forget()); }
     RefPtr<DirectMediaStreamTrackListener> mListener;
-    TrackID mTrackID;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
 }
 
-void MediaStream::RemoveDirectTrackListenerImpl(
-    DirectMediaStreamTrackListener* aListener, TrackID aTrackID) {
+void MediaStream::RemoveDirectListenerImpl(
+    DirectMediaStreamTrackListener* aListener) {
   // Base implementation, the listener was never added so nothing to do.
-  RefPtr<DirectMediaStreamTrackListener> listener = aListener;
 }
 
-void MediaStream::RemoveDirectTrackListener(
-    DirectMediaStreamTrackListener* aListener, TrackID aTrackID) {
+void MediaStream::RemoveDirectListener(
+    DirectMediaStreamTrackListener* aListener) {
   class Message : public ControlMessage {
    public:
-    Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener,
-            TrackID aTrackID)
-        : ControlMessage(aStream), mListener(aListener), mTrackID(aTrackID) {}
-    void Run() override {
-      mStream->RemoveDirectTrackListenerImpl(mListener, mTrackID);
-    }
+    Message(MediaStream* aStream, DirectMediaStreamTrackListener* aListener)
+        : ControlMessage(aStream), mListener(aListener) {}
+    void Run() override { mStream->RemoveDirectListenerImpl(mListener); }
     void RunDuringShutdown() override {
       // During shutdown we still want the listener's
       // NotifyDirectListenerUninstalled to be called, since not doing that
@@ -2256,9 +2117,8 @@ void MediaStream::RemoveDirectTrackListener(
       Run();
     }
     RefPtr<DirectMediaStreamTrackListener> mListener;
-    TrackID mTrackID;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener, aTrackID));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aListener));
 }
 
 void MediaStream::RunAfterPendingUpdates(
@@ -2288,71 +2148,47 @@ void MediaStream::RunAfterPendingUpdates(
   graph->AppendMessage(MakeUnique<Message>(this, runnable.forget()));
 }
 
-void MediaStream::SetTrackEnabledImpl(TrackID aTrackID,
-                                      DisabledTrackMode aMode) {
+void MediaStream::SetEnabledImpl(DisabledTrackMode aMode) {
   if (aMode == DisabledTrackMode::ENABLED) {
-    for (int32_t i = mDisabledTracks.Length() - 1; i >= 0; --i) {
-      if (aTrackID == mDisabledTracks[i].mTrackID) {
-        mDisabledTracks.RemoveElementAt(i);
-        for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
-          if (l.mTrackID == aTrackID) {
-            l.mListener->NotifyEnabledStateChanged(Graph(), true);
-          }
-        }
-        return;
-      }
+    mDisabledMode = DisabledTrackMode::ENABLED;
+    for (const auto& l : mTrackListeners) {
+      l->NotifyEnabledStateChanged(Graph(), true);
     }
   } else {
-    for (const DisabledTrack& t : mDisabledTracks) {
-      if (aTrackID == t.mTrackID) {
-        NS_ERROR("Changing disabled track mode for a track is not allowed");
-        return;
-      }
-    }
-    mDisabledTracks.AppendElement(DisabledTrack(aTrackID, aMode));
+    MOZ_DIAGNOSTIC_ASSERT(
+        mDisabledMode == DisabledTrackMode::ENABLED,
+        "Changing disabled track mode for a track is not allowed");
+    mDisabledMode = aMode;
     if (aMode == DisabledTrackMode::SILENCE_BLACK) {
-      for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
-        if (l.mTrackID == aTrackID) {
-          l.mListener->NotifyEnabledStateChanged(Graph(), false);
-        }
+      for (const auto& l : mTrackListeners) {
+        l->NotifyEnabledStateChanged(Graph(), false);
       }
     }
   }
 }
 
-DisabledTrackMode MediaStream::GetDisabledTrackMode(TrackID aTrackID) {
-  for (const DisabledTrack& t : mDisabledTracks) {
-    if (t.mTrackID == aTrackID) {
-      return t.mMode;
-    }
-  }
-  return DisabledTrackMode::ENABLED;
-}
-
-void MediaStream::SetTrackEnabled(TrackID aTrackID, DisabledTrackMode aMode) {
+void MediaStream::SetEnabled(DisabledTrackMode aMode) {
   class Message : public ControlMessage {
    public:
-    Message(MediaStream* aStream, TrackID aTrackID, DisabledTrackMode aMode)
-        : ControlMessage(aStream), mTrackID(aTrackID), mMode(aMode) {}
-    void Run() override { mStream->SetTrackEnabledImpl(mTrackID, mMode); }
-    TrackID mTrackID;
+    Message(MediaStream* aStream, DisabledTrackMode aMode)
+        : ControlMessage(aStream), mMode(aMode) {}
+    void Run() override { mStream->SetEnabledImpl(mMode); }
     DisabledTrackMode mMode;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackID, aMode));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aMode));
 }
 
-void MediaStream::ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment,
+void MediaStream::ApplyTrackDisabling(MediaSegment* aSegment,
                                       MediaSegment* aRawSegment) {
-  DisabledTrackMode mode = GetDisabledTrackMode(aTrackID);
-  if (mode == DisabledTrackMode::ENABLED) {
+  if (mDisabledMode == DisabledTrackMode::ENABLED) {
     return;
   }
-  if (mode == DisabledTrackMode::SILENCE_BLACK) {
+  if (mDisabledMode == DisabledTrackMode::SILENCE_BLACK) {
     aSegment->ReplaceWithDisabled();
     if (aRawSegment) {
       aRawSegment->ReplaceWithDisabled();
     }
-  } else if (mode == DisabledTrackMode::SILENCE_FREEZE) {
+  } else if (mDisabledMode == DisabledTrackMode::SILENCE_FREEZE) {
     aSegment->ReplaceWithNull();
     if (aRawSegment) {
       aRawSegment->ReplaceWithNull();
@@ -2370,8 +2206,8 @@ void MediaStream::AddMainThreadListener(
 
   mMainThreadListeners.AppendElement(aListener);
 
-  // If it is not yet time to send the notification, then finish here.
-  if (!mFinishedNotificationSent) {
+  // If it is not yet time to send the notification, then exit here.
+  if (!mEndedNotificationSent) {
     return;
   }
 
@@ -2396,10 +2232,41 @@ void MediaStream::AddMainThreadListener(
   GraphImpl()->Dispatch(runnable.forget());
 }
 
-SourceMediaStream::SourceMediaStream()
-    : MediaStream(),
-      mMutex("mozilla::media::SourceMediaStream"),
-      mFinishPending(false) {}
+void MediaStream::AdvanceTimeVaryingValuesToCurrentTime(
+    GraphTime aCurrentTime, GraphTime aBlockedTime) {
+  mStartTime += aBlockedTime;
+
+  if (!mSegment) {
+    // No data to be forgotten.
+    return;
+  }
+
+  StreamTime time = aCurrentTime - mStartTime;
+  // Only prune if there is a reasonable chunk (50ms @ 48kHz) to forget, so we
+  // don't spend too much time pruning segments.
+  const StreamTime minChunkSize = 2400;
+  if (time < mForgottenTime + minChunkSize) {
+    return;
+  }
+
+  mForgottenTime = std::min(GetEnd() - 1, time);
+  mSegment->ForgetUpTo(mForgottenTime);
+}
+
+SourceMediaStream::SourceMediaStream(MediaSegment::Type aType,
+                                     TrackRate aSampleRate)
+    : MediaStream(aSampleRate, aType,
+                  aType == MediaSegment::AUDIO
+                      ? static_cast<MediaSegment*>(new AudioSegment())
+                      : static_cast<MediaSegment*>(new VideoSegment())),
+      mMutex("mozilla::media::SourceMediaStream") {
+  mUpdateTrack = MakeUnique<TrackData>();
+  mUpdateTrack->mInputRate = aSampleRate;
+  mUpdateTrack->mResamplerChannelCount = 0;
+  mUpdateTrack->mData = UniquePtr<MediaSegment>(mSegment->CreateEmptyClone());
+  mUpdateTrack->mEnded = false;
+  mUpdateTrack->mPullingEnabled = false;
+}
 
 nsresult SourceMediaStream::OpenAudioInput(CubebUtils::AudioDeviceID aID,
                                            AudioDataListener* aListener) {
@@ -2432,104 +2299,70 @@ void SourceMediaStream::DestroyImpl() {
   GraphImpl()->AssertOnGraphThreadOrNotRunning();
   for (int32_t i = mConsumers.Length() - 1; i >= 0; --i) {
     // Disconnect before we come under mMutex's lock since it can call back
-    // through RemoveDirectTrackListenerImpl() and deadlock.
+    // through RemoveDirectListenerImpl() and deadlock.
     mConsumers[i]->Disconnect();
   }
 
   // Hold mMutex while mGraph is reset so that other threads holding mMutex
   // can null-check know that the graph will not destroyed.
   MutexAutoLock lock(mMutex);
-  mUpdateTracks.Clear();
+  mUpdateTrack = nullptr;
   MediaStream::DestroyImpl();
 }
 
-void SourceMediaStream::SetPullingEnabled(TrackID aTrackID, bool aEnabled) {
+void SourceMediaStream::SetPullingEnabled(bool aEnabled) {
   class Message : public ControlMessage {
    public:
-    Message(SourceMediaStream* aStream, TrackID aTrackID, bool aEnabled)
-        : ControlMessage(nullptr),
-          mStream(aStream),
-          mTrackID(aTrackID),
-          mEnabled(aEnabled) {}
+    Message(SourceMediaStream* aStream, bool aEnabled)
+        : ControlMessage(nullptr), mStream(aStream), mEnabled(aEnabled) {}
     void Run() override {
       MutexAutoLock lock(mStream->mMutex);
-      TrackData* data = mStream->FindDataForTrack(mTrackID);
-      if (!data) {
-        // We can't enable pulling for a track that was never added. We ignore
+      if (!mStream->mUpdateTrack) {
+        // We can't enable pulling for a stream that has ended. We ignore
         // this if we're disabling pulling, since shutdown sequences are
         // complex. If there's truly an issue we'll have issues enabling anyway.
-        MOZ_ASSERT_IF(mEnabled,
-                      mStream->mTracks.FindTrack(mTrackID) &&
-                          mStream->mTracks.FindTrack(mTrackID)->IsEnded());
+        MOZ_ASSERT_IF(mEnabled, mStream->mEnded);
         return;
       }
-      MOZ_ASSERT(data->mData->GetType() == MediaSegment::AUDIO,
+      MOZ_ASSERT(mStream->mType == MediaSegment::AUDIO,
                  "Pulling is not allowed for video");
-      data->mPullingEnabled = mEnabled;
+      mStream->mUpdateTrack->mPullingEnabled = mEnabled;
     }
     SourceMediaStream* mStream;
-    TrackID mTrackID;
     bool mEnabled;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackID, aEnabled));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aEnabled));
 }
 
 bool SourceMediaStream::PullNewData(GraphTime aDesiredUpToTime) {
   TRACE_AUDIO_CALLBACK_COMMENT("SourceMediaStream %p", this);
-  MutexAutoLock lock(mMutex);
-  if (mFinished) {
+  StreamTime t;
+  StreamTime current;
+  {
+    if (mEnded) {
+      return false;
+    }
+    MutexAutoLock lock(mMutex);
+    if (mUpdateTrack->mEnded) {
+      return false;
+    }
+    if (!mUpdateTrack->mPullingEnabled) {
+      return false;
+    }
+    // Compute how much stream time we'll need assuming we don't block
+    // the stream at all.
+    t = GraphTimeToStreamTime(aDesiredUpToTime);
+    current = GetEnd() + mUpdateTrack->mData->GetDuration();
+  }
+  if (t <= current) {
     return false;
   }
-  bool streamPullingEnabled = false;
-  for (const TrackData& track : mUpdateTracks) {
-    if (!(track.mCommands & TrackEventCommand::TRACK_EVENT_ENDED) &&
-        track.mPullingEnabled) {
-      // At least one track in this stream is pulled. We want to consume it in
-      // real-time (i.e., not block the stream).
-      streamPullingEnabled = true;
-      break;
-    }
-  }
-  // Compute how much stream time we'll need assuming we don't block
-  // the stream at all.
-  StreamTime t = GraphTimeToStreamTime(aDesiredUpToTime);
-  for (const TrackData& track : mUpdateTracks) {
-    if (track.mCommands & TRACK_END) {
-      continue;
-    }
-    StreamTime current;
-    if (track.mCommands & TRACK_CREATE) {
-      // This track hasn't been created yet. Use the stream's current time
-      // (which the track will get as its start time later).
-      current = GraphTimeToStreamTime(GraphImpl()->mStateComputedTime);
-    } else {
-      current = track.mEndOfFlushedData + track.mData->GetDuration();
-    }
-    if (t <= current) {
-      continue;
-    }
-    if (!track.mPullingEnabled &&
-        track.mData->GetType() == MediaSegment::AUDIO) {
-      if (streamPullingEnabled) {
-        LOG(LogLevel::Verbose,
-            ("%p: Pulling disabled for track but enabled for stream, append "
-             "null data; stream=%p track=%d t=%f current end=%f",
-             GraphImpl(), this, track.mID, GraphImpl()->MediaTimeToSeconds(t),
-             GraphImpl()->MediaTimeToSeconds(current)));
-        track.mData->AppendNullData(t - current);
-      }
-      continue;
-    }
-    LOG(LogLevel::Verbose,
-        ("%p: Calling NotifyPull stream=%p track=%d t=%f current end=%f",
-         GraphImpl(), this, track.mID, GraphImpl()->MediaTimeToSeconds(t),
-         GraphImpl()->MediaTimeToSeconds(current)));
-    MutexAutoUnlock unlock(mMutex);
-    for (TrackBound<MediaStreamTrackListener>& l : mTrackListeners) {
-      if (l.mTrackID == track.mID) {
-        l.mListener->NotifyPull(Graph(), current, t);
-      }
-    }
+  LOG(LogLevel::Verbose,
+      ("%p: Calling NotifyPull stream=%p t=%f current end=%f", GraphImpl(),
+       this, GraphImpl()->MediaTimeToSeconds(t),
+       GraphImpl()->MediaTimeToSeconds(current)));
+  for (auto& l : mTrackListeners) {
+    l->NotifyPull(Graph(), current, t);
   }
   return true;
 }
@@ -2599,238 +2432,163 @@ void SourceMediaStream::ExtractPendingInput(GraphTime aCurrentTime,
                                             GraphTime aDesiredUpToTime) {
   MutexAutoLock lock(mMutex);
 
-  bool finished = mFinishPending;
+  if (!mUpdateTrack) {
+    MOZ_ASSERT(mEnded);
+    return;
+  }
+
   StreamTime streamCurrentTime = GraphTimeToStreamTime(aCurrentTime);
+
+  ApplyTrackDisabling(mUpdateTrack->mData.get());
+
+  if (!mUpdateTrack->mData->IsEmpty()) {
+    for (const auto& l : mTrackListeners) {
+      l->NotifyQueuedChanges(GraphImpl(), GetEnd(), *mUpdateTrack->mData);
+    }
+  }
   StreamTime streamDesiredUpToTime = GraphTimeToStreamTime(aDesiredUpToTime);
-
-  for (int32_t i = mUpdateTracks.Length() - 1; i >= 0; --i) {
-    SourceMediaStream::TrackData* data = &mUpdateTracks[i];
-    ApplyTrackDisabling(data->mID, data->mData);
-    // Dealing with NotifyQueuedTrackChanges and NotifyQueuedAudioData part.
-
-    // The logic is different from the manipulating of aStream->mTracks part.
-    // So it is not combined with the manipulating of aStream->mTracks part.
-    StreamTime offset =
-        (data->mCommands & SourceMediaStream::TRACK_CREATE)
-            ? streamCurrentTime
-            : mTracks.FindTrack(data->mID)->GetSegment()->GetDuration();
-
-    for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
-      if (b.mTrackID != data->mID) {
-        continue;
-      }
-      b.mListener->NotifyQueuedChanges(GraphImpl(), offset, *data->mData);
-    }
-    if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
-      MediaSegment* segment = data->mData->CreateEmptyClone();
-      LOG(LogLevel::Debug,
-          ("%p: SourceMediaStream %p creating track %d, start %" PRId64
-           ", initial end %" PRId64,
-           GraphImpl(), this, data->mID, int64_t(streamCurrentTime),
-           int64_t(segment->GetDuration())));
-
-      segment->AppendNullData(streamCurrentTime);
-      MoveToSegment(this, data->mData, segment, streamCurrentTime,
-                    streamDesiredUpToTime);
-      data->mEndOfFlushedData += segment->GetDuration();
-      mTracks.AddTrack(data->mID, streamCurrentTime, segment);
-      data->mCommands &= ~SourceMediaStream::TRACK_CREATE;
-    } else {
-      StreamTracks::Track* track = mTracks.FindTrack(data->mID);
-      MediaSegment* dest = track->GetSegment();
-      LOG(LogLevel::Verbose,
-          ("%p: SourceMediaStream %p track %d, advancing end from %" PRId64
-           " to %" PRId64,
-           GraphImpl(), this, data->mID, int64_t(dest->GetDuration()),
-           int64_t(dest->GetDuration() + data->mData->GetDuration())));
-      data->mEndOfFlushedData += data->mData->GetDuration();
-      MoveToSegment(this, data->mData, dest, streamCurrentTime,
-                    streamDesiredUpToTime);
-    }
-    if (data->mCommands & SourceMediaStream::TRACK_END) {
-      mTracks.FindTrack(data->mID)->SetEnded();
-      mUpdateTracks.RemoveElementAt(i);
-    }
+  StreamTime endTime = streamDesiredUpToTime;
+  if (mUpdateTrack->mEnded) {
+    endTime = std::min(streamDesiredUpToTime,
+                       GetEnd() + mUpdateTrack->mData->GetDuration());
   }
-
-  if (finished) {
-    FinishOnGraphThread();
+  LOG(LogLevel::Verbose,
+      ("%p: SourceMediaStream %p advancing end from %" PRId64 " to %" PRId64,
+       GraphImpl(), this, int64_t(streamCurrentTime), int64_t(endTime)));
+  MoveToSegment(this, mUpdateTrack->mData.get(), mSegment.get(),
+                streamCurrentTime, endTime);
+  if (mUpdateTrack->mEnded && GetEnd() < streamDesiredUpToTime) {
+    mEnded = true;
+    mUpdateTrack = nullptr;
   }
 }
 
-void SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate,
-                                         MediaSegment* aSegment,
-                                         uint32_t aFlags) {
-  MutexAutoLock lock(mMutex);
-  nsTArray<TrackData>* track_data =
-      (aFlags & ADDTRACK_QUEUED) ? &mPendingTracks : &mUpdateTracks;
-  TrackData* data = track_data->AppendElement();
-  LOG(LogLevel::Debug,
-      ("%p: AddTrackInternal: %lu/%lu", GraphImpl(),
-       (long)mPendingTracks.Length(), (long)mUpdateTracks.Length()));
-  data->mID = aID;
-  data->mInputRate = aRate;
-  data->mResamplerChannelCount = 0;
-  data->mEndOfFlushedData = 0;
-  data->mCommands = TRACK_CREATE;
-  data->mData = aSegment;
-  data->mPullingEnabled = false;
-  ResampleAudioToGraphSampleRate(data, aSegment);
-  if (!(aFlags & ADDTRACK_QUEUED) && GraphImpl()) {
-    GraphImpl()->EnsureNextIteration();
-  }
-}
-
-void SourceMediaStream::AddAudioTrack(TrackID aID, TrackRate aRate,
-                                      AudioSegment* aSegment, uint32_t aFlags) {
-  AddTrackInternal(aID, aRate, aSegment, aFlags);
-}
-
-void SourceMediaStream::FinishAddTracks() {
-  MutexAutoLock lock(mMutex);
-  mUpdateTracks.AppendElements(std::move(mPendingTracks));
-  LOG(LogLevel::Debug,
-      ("%p: FinishAddTracks: %lu/%lu", GraphImpl(),
-       (long)mPendingTracks.Length(), (long)mUpdateTracks.Length()));
-  if (GraphImpl()) {
-    GraphImpl()->EnsureNextIteration();
-  }
-}
-
-void SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData,
-                                                       MediaSegment* aSegment) {
+void SourceMediaStream::ResampleAudioToGraphSampleRate(MediaSegment* aSegment) {
+  mMutex.AssertCurrentThreadOwns();
   if (aSegment->GetType() != MediaSegment::AUDIO ||
-      aTrackData->mInputRate == GraphImpl()->GraphRate()) {
+      mUpdateTrack->mInputRate == GraphImpl()->GraphRate()) {
     return;
   }
   AudioSegment* segment = static_cast<AudioSegment*>(aSegment);
   int channels = segment->ChannelCount();
 
   // If this segment is just silence, we delay instanciating the resampler. We
-  // also need to recreate the resampler if the channel count changes.
-  if (channels && aTrackData->mResamplerChannelCount != channels) {
+  // also need to recreate the resampler if the channel count or input rate
+  // changes.
+  if (channels && mUpdateTrack->mResamplerChannelCount != channels) {
     SpeexResamplerState* state = speex_resampler_init(
-        channels, aTrackData->mInputRate, GraphImpl()->GraphRate(),
+        channels, mUpdateTrack->mInputRate, GraphImpl()->GraphRate(),
         SPEEX_RESAMPLER_QUALITY_MIN, nullptr);
     if (!state) {
       return;
     }
-    aTrackData->mResampler.own(state);
-    aTrackData->mResamplerChannelCount = channels;
+    mUpdateTrack->mResampler.own(state);
+    mUpdateTrack->mResamplerChannelCount = channels;
   }
-  segment->ResampleChunks(aTrackData->mResampler, aTrackData->mInputRate,
+  segment->ResampleChunks(mUpdateTrack->mResampler, mUpdateTrack->mInputRate,
                           GraphImpl()->GraphRate());
 }
 
 void SourceMediaStream::AdvanceTimeVaryingValuesToCurrentTime(
     GraphTime aCurrentTime, GraphTime aBlockedTime) {
   MutexAutoLock lock(mMutex);
-  mTracksStartTime += aBlockedTime;
-  mTracks.ForgetUpTo(aCurrentTime - mTracksStartTime);
+  MediaStream::AdvanceTimeVaryingValuesToCurrentTime(aCurrentTime,
+                                                     aBlockedTime);
 }
 
-StreamTime SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment,
-                                            MediaSegment* aRawSegment) {
+void SourceMediaStream::SetAppendDataSourceRate(TrackRate aRate) {
   MutexAutoLock lock(mMutex);
-  // ::EndAllTrackAndFinished() can end these before the sources notice
+  if (!mUpdateTrack) {
+    return;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(mSegment->GetType() == MediaSegment::AUDIO);
+  // Set the new input rate and reset the resampler.
+  mUpdateTrack->mInputRate = aRate;
+  mUpdateTrack->mResampler.own(nullptr);
+  mUpdateTrack->mResamplerChannelCount = 0;
+}
+
+StreamTime SourceMediaStream::AppendData(MediaSegment* aSegment,
+                                         MediaSegment* aRawSegment) {
+  MutexAutoLock lock(mMutex);
+  MOZ_DIAGNOSTIC_ASSERT(aSegment->GetType() == mType);
   StreamTime appended = 0;
   auto graph = GraphImpl();
-  if (!mFinished && graph) {
-    TrackData* track = FindDataForTrack(aID);
-    if (track) {
-      // Data goes into mData, and on the next iteration of the MSG moves
-      // into the track's segment after NotifyQueuedTrackChanges().  This adds
-      // 0-10ms of delay before data gets to direct listeners.
-      // Indirect listeners (via subsequent TrackUnion nodes) are synced to
-      // playout time, and so can be delayed by buffering.
-
-      // Apply track disabling before notifying any consumers directly
-      // or inserting into the graph
-      ApplyTrackDisabling(aID, aSegment, aRawSegment);
-
-      ResampleAudioToGraphSampleRate(track, aSegment);
-
-      // Must notify first, since AppendFrom() will empty out aSegment
-      NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
-      appended = aSegment->GetDuration();
-      track->mData->AppendFrom(aSegment);  // note: aSegment is now dead
-      GraphImpl()->EnsureNextIteration();
-    } else {
-      aSegment->Clear();
-    }
+  if (!mUpdateTrack || mUpdateTrack->mEnded || !graph) {
+    aSegment->Clear();
+    return appended;
   }
+
+  // Data goes into mData, and on the next iteration of the MSG moves
+  // into the track's segment after NotifyQueuedTrackChanges().  This adds
+  // 0-10ms of delay before data gets to direct listeners.
+  // Indirect listeners (via subsequent TrackUnion nodes) are synced to
+  // playout time, and so can be delayed by buffering.
+
+  // Apply track disabling before notifying any consumers directly
+  // or inserting into the graph
+  ApplyTrackDisabling(aSegment, aRawSegment);
+
+  ResampleAudioToGraphSampleRate(aSegment);
+
+  // Must notify first, since AppendFrom() will empty out aSegment
+  NotifyDirectConsumers(aRawSegment ? aRawSegment : aSegment);
+  appended = aSegment->GetDuration();
+  mUpdateTrack->mData->AppendFrom(aSegment);  // note: aSegment is now dead
+  graph->EnsureNextIteration();
+
   return appended;
 }
 
-void SourceMediaStream::NotifyDirectConsumers(TrackData* aTrack,
-                                              MediaSegment* aSegment) {
+void SourceMediaStream::NotifyDirectConsumers(MediaSegment* aSegment) {
   mMutex.AssertCurrentThreadOwns();
-  MOZ_ASSERT(aTrack);
 
-  for (const TrackBound<DirectMediaStreamTrackListener>& source :
-       mDirectTrackListeners) {
-    if (aTrack->mID != source.mTrackID) {
-      continue;
-    }
+  for (const auto& l : mDirectTrackListeners) {
     StreamTime offset = 0;  // FIX! need a separate StreamTime.... or the end of
                             // the internal buffer
-    source.mListener->NotifyRealtimeTrackDataAndApplyTrackDisabling(
-        Graph(), offset, *aSegment);
+    l->NotifyRealtimeTrackDataAndApplyTrackDisabling(Graph(), offset,
+                                                     *aSegment);
   }
 }
 
-void SourceMediaStream::AddDirectTrackListenerImpl(
-    already_AddRefed<DirectMediaStreamTrackListener> aListener,
-    TrackID aTrackID) {
-  MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
+void SourceMediaStream::AddDirectListenerImpl(
+    already_AddRefed<DirectMediaStreamTrackListener> aListener) {
   MutexAutoLock lock(mMutex);
 
   RefPtr<DirectMediaStreamTrackListener> listener = aListener;
-  LOG(LogLevel::Debug, ("%p: Adding direct track listener %p bound to track %d "
-                        "to source stream %p",
-                        GraphImpl(), listener.get(), aTrackID, this));
+  LOG(LogLevel::Debug,
+      ("%p: Adding direct track listener %p to source stream %p", GraphImpl(),
+       listener.get(), this));
 
-  StreamTracks::Track* track = FindTrack(aTrackID);
-
-  if (!track) {
-    LOG(LogLevel::Warning,
-        ("%p: Couldn't find source track for direct track listener %p",
-         GraphImpl(), listener.get()));
-    listener->NotifyDirectListenerInstalled(
-        DirectMediaStreamTrackListener::InstallationResult::
-            TRACK_NOT_FOUND_AT_SOURCE);
-    return;
-  }
-
-  MOZ_ASSERT(track->GetType() == MediaSegment::VIDEO);
-  for (auto entry : mDirectTrackListeners) {
-    if (entry.mListener == listener &&
-        (entry.mTrackID == TRACK_ANY || entry.mTrackID == aTrackID)) {
+  MOZ_ASSERT(mType == MediaSegment::VIDEO);
+  for (const auto& l : mDirectTrackListeners) {
+    if (l == listener) {
       listener->NotifyDirectListenerInstalled(
           DirectMediaStreamTrackListener::InstallationResult::ALREADY_EXISTS);
       return;
     }
   }
 
-  TrackBound<DirectMediaStreamTrackListener>* sourceListener =
-      mDirectTrackListeners.AppendElement();
-  sourceListener->mListener = listener;
-  sourceListener->mTrackID = aTrackID;
+  mDirectTrackListeners.AppendElement(listener);
 
   LOG(LogLevel::Debug,
       ("%p: Added direct track listener %p", GraphImpl(), listener.get()));
   listener->NotifyDirectListenerInstalled(
       DirectMediaStreamTrackListener::InstallationResult::SUCCESS);
 
+  if (mEnded) {
+    return;
+  }
+
   // Pass buffered data to the listener
   VideoSegment bufferedData;
   size_t videoFrames = 0;
-  VideoSegment& trackSegment = static_cast<VideoSegment&>(*track->GetSegment());
-  for (VideoSegment::ConstChunkIterator iter(trackSegment); !iter.IsEnded();
+  VideoSegment& segment = *GetData<VideoSegment>();
+  for (VideoSegment::ConstChunkIterator iter(segment); !iter.IsEnded();
        iter.Next()) {
     if (iter->mTimeStamp.IsNull()) {
       // No timestamp means this is only for the graph's internal book-keeping,
-      // denoting a late start of the track.
+      // denoting a late start of the stream.
       continue;
     }
     ++videoFrames;
@@ -2840,17 +2598,15 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
                              iter->mFrame.GetForceBlack(), iter->mTimeStamp);
   }
 
-  if (TrackData* updateData = FindDataForTrack(aTrackID)) {
-    VideoSegment& video = static_cast<VideoSegment&>(*updateData->mData);
-    for (VideoSegment::ConstChunkIterator iter(video); !iter.IsEnded();
-         iter.Next()) {
-      ++videoFrames;
-      MOZ_ASSERT(!iter->mTimeStamp.IsNull());
-      bufferedData.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
-                               iter->mFrame.GetIntrinsicSize(),
-                               iter->mFrame.GetPrincipalHandle(),
-                               iter->mFrame.GetForceBlack(), iter->mTimeStamp);
-    }
+  VideoSegment& video = static_cast<VideoSegment&>(*mUpdateTrack->mData);
+  for (VideoSegment::ConstChunkIterator iter(video); !iter.IsEnded();
+       iter.Next()) {
+    ++videoFrames;
+    MOZ_ASSERT(!iter->mTimeStamp.IsNull());
+    bufferedData.AppendFrame(do_AddRef(iter->mFrame.GetImage()),
+                             iter->mFrame.GetIntrinsicSize(),
+                             iter->mFrame.GetPrincipalHandle(),
+                             iter->mFrame.GetForceBlack(), iter->mTimeStamp);
   }
 
   LOG(LogLevel::Info,
@@ -2860,74 +2616,50 @@ void SourceMediaStream::AddDirectTrackListenerImpl(
   listener->NotifyRealtimeTrackData(Graph(), 0, bufferedData);
 }
 
-void SourceMediaStream::RemoveDirectTrackListenerImpl(
-    DirectMediaStreamTrackListener* aListener, TrackID aTrackID) {
+void SourceMediaStream::RemoveDirectListenerImpl(
+    DirectMediaStreamTrackListener* aListener) {
   MutexAutoLock lock(mMutex);
   for (int32_t i = mDirectTrackListeners.Length() - 1; i >= 0; --i) {
-    const TrackBound<DirectMediaStreamTrackListener>& source =
-        mDirectTrackListeners[i];
-    if (source.mListener == aListener && source.mTrackID == aTrackID) {
+    const RefPtr<DirectMediaStreamTrackListener>& l = mDirectTrackListeners[i];
+    if (l == aListener) {
       aListener->NotifyDirectListenerUninstalled();
       mDirectTrackListeners.RemoveElementAt(i);
     }
   }
 }
 
-void SourceMediaStream::EndTrack(TrackID aID) {
+void SourceMediaStream::End() {
   MutexAutoLock lock(mMutex);
-  TrackData* track = FindDataForTrack(aID);
-  if (track) {
-    track->mCommands |= TrackEventCommand::TRACK_EVENT_ENDED;
+  if (!mUpdateTrack) {
+    // Already ended
+    return;
   }
+  mUpdateTrack->mEnded = true;
   if (auto graph = GraphImpl()) {
     graph->EnsureNextIteration();
   }
 }
 
-void SourceMediaStream::FinishPendingWithLockHeld() {
-  mMutex.AssertCurrentThreadOwns();
-  mFinishPending = true;
-  if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
-  }
-}
-
-void SourceMediaStream::SetTrackEnabledImpl(TrackID aTrackID,
-                                            DisabledTrackMode aMode) {
+void SourceMediaStream::SetEnabledImpl(DisabledTrackMode aMode) {
   {
     MutexAutoLock lock(mMutex);
-    for (TrackBound<DirectMediaStreamTrackListener>& l :
-         mDirectTrackListeners) {
-      if (l.mTrackID != aTrackID) {
-        continue;
-      }
-      DisabledTrackMode oldMode = GetDisabledTrackMode(aTrackID);
+    for (const auto& l : mDirectTrackListeners) {
+      DisabledTrackMode oldMode = mDisabledMode;
       bool oldEnabled = oldMode == DisabledTrackMode::ENABLED;
       if (!oldEnabled && aMode == DisabledTrackMode::ENABLED) {
-        LOG(LogLevel::Debug, ("%p: SourceMediaStream %p track %d setting "
+        LOG(LogLevel::Debug, ("%p: SourceMediaStream %p setting "
                               "direct listener enabled",
-                              GraphImpl(), this, aTrackID));
-        l.mListener->DecreaseDisabled(oldMode);
+                              GraphImpl(), this));
+        l->DecreaseDisabled(oldMode);
       } else if (oldEnabled && aMode != DisabledTrackMode::ENABLED) {
-        LOG(LogLevel::Debug, ("%p: SourceMediaStream %p track %d setting "
+        LOG(LogLevel::Debug, ("%p: SourceMediaStream %p setting "
                               "direct listener disabled",
-                              GraphImpl(), this, aTrackID));
-        l.mListener->IncreaseDisabled(aMode);
+                              GraphImpl(), this));
+        l->IncreaseDisabled(aMode);
       }
     }
   }
-  MediaStream::SetTrackEnabledImpl(aTrackID, aMode);
-}
-
-void SourceMediaStream::EndAllTrackAndFinish() {
-  MutexAutoLock lock(mMutex);
-  for (uint32_t i = 0; i < mUpdateTracks.Length(); ++i) {
-    SourceMediaStream::TrackData* data = &mUpdateTracks[i];
-    data->mCommands |= TrackEventCommand::TRACK_EVENT_ENDED;
-  }
-  mPendingTracks.Clear();
-  FinishPendingWithLockHeld();
-  // we will call NotifyEvent() to let GetUserMedia know
+  MediaStream::SetEnabledImpl(aMode);
 }
 
 void SourceMediaStream::RemoveAllDirectListenersImpl() {
@@ -2935,26 +2667,12 @@ void SourceMediaStream::RemoveAllDirectListenersImpl() {
 
   auto directListeners(mDirectTrackListeners);
   for (auto& l : directListeners) {
-    l.mListener->NotifyDirectListenerUninstalled();
+    l->NotifyDirectListenerUninstalled();
   }
   mDirectTrackListeners.Clear();
 }
 
 SourceMediaStream::~SourceMediaStream() {}
-
-bool SourceMediaStream::HasPendingAudioTrack() {
-  MutexAutoLock lock(mMutex);
-  bool audioTrackPresent = false;
-
-  for (auto& data : mPendingTracks) {
-    if (data.mData->GetType() == MediaSegment::AUDIO) {
-      audioTrackPresent = true;
-      break;
-    }
-  }
-
-  return audioTrackPresent;
-}
 
 void MediaInputPort::Init() {
   LOG(LogLevel::Debug, ("%p: Adding MediaInputPort %p (from %p to %p)",
@@ -2983,16 +2701,21 @@ void MediaInputPort::Disconnect() {
 }
 
 MediaInputPort::InputInterval MediaInputPort::GetNextInputInterval(
-    GraphTime aTime) const {
+    MediaInputPort const* aPort, GraphTime aTime) {
   InputInterval result = {GRAPH_TIME_MAX, GRAPH_TIME_MAX, false};
-  if (aTime >= mDest->mStartBlocking) {
+  if (!aPort) {
+    result.mStart = aTime;
+    result.mInputIsBlocked = true;
+    return result;
+  }
+  if (aTime >= aPort->mDest->mStartBlocking) {
     return result;
   }
   result.mStart = aTime;
-  result.mEnd = mDest->mStartBlocking;
-  result.mInputIsBlocked = aTime >= mSource->mStartBlocking;
+  result.mEnd = aPort->mDest->mStartBlocking;
+  result.mInputIsBlocked = aTime >= aPort->mSource->mStartBlocking;
   if (!result.mInputIsBlocked) {
-    result.mEnd = std::min(result.mEnd, mSource->mStartBlocking);
+    result.mEnd = std::min(result.mEnd, aPort->mSource->mStartBlocking);
   }
   return result;
 }
@@ -3049,6 +2772,7 @@ already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(
     RefPtr<MediaInputPort> mPort;
   };
 
+  MOZ_DIAGNOSTIC_ASSERT(aStream->mType == mType);
   RefPtr<MediaInputPort> port;
   if (aStream->IsDestroyed()) {
     // Create a port that's disconnected, which is what it'd be after its source
@@ -3065,18 +2789,17 @@ already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(
   return port.forget();
 }
 
-void ProcessedMediaStream::QueueSetAutofinish(bool aAutofinish) {
+void ProcessedMediaStream::QueueSetAutoend(bool aAutoend) {
   class Message : public ControlMessage {
    public:
-    Message(ProcessedMediaStream* aStream, bool aAutofinish)
-        : ControlMessage(aStream), mAutofinish(aAutofinish) {}
+    Message(ProcessedMediaStream* aStream, bool aAutoend)
+        : ControlMessage(aStream), mAutoend(aAutoend) {}
     void Run() override {
-      static_cast<ProcessedMediaStream*>(mStream)->SetAutofinishImpl(
-          mAutofinish);
+      static_cast<ProcessedMediaStream*>(mStream)->SetAutoendImpl(mAutoend);
     }
-    bool mAutofinish;
+    bool mAutoend;
   };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aAutofinish));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aAutoend));
 }
 
 void ProcessedMediaStream::DestroyImpl() {
@@ -3409,21 +3132,22 @@ void MediaStreamGraphImpl::FinishCollectReports(
   manager->EndReport();
 }
 
-SourceMediaStream* MediaStreamGraph::CreateSourceStream() {
-  SourceMediaStream* stream = new SourceMediaStream();
+SourceMediaStream* MediaStreamGraph::CreateSourceStream(
+    MediaSegment::Type aType) {
+  SourceMediaStream* stream = new SourceMediaStream(aType, GraphRate());
   AddStream(stream);
   return stream;
 }
 
-ProcessedMediaStream* MediaStreamGraph::CreateTrackUnionStream() {
-  TrackUnionStream* stream = new TrackUnionStream();
+ProcessedMediaStream* MediaStreamGraph::CreateTrackUnionStream(
+    MediaSegment::Type aType) {
+  TrackUnionStream* stream = new TrackUnionStream(GraphRate(), aType);
   AddStream(stream);
   return stream;
 }
 
-AudioCaptureStream* MediaStreamGraph::CreateAudioCaptureStream(
-    TrackID aTrackId) {
-  AudioCaptureStream* stream = new AudioCaptureStream(aTrackId);
+AudioCaptureStream* MediaStreamGraph::CreateAudioCaptureStream() {
+  AudioCaptureStream* stream = new AudioCaptureStream(GraphRate());
   AddStream(stream);
   return stream;
 }

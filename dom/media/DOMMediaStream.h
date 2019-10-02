@@ -11,7 +11,6 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "StreamTracks.h"
 #include "nsIPrincipal.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/DOMEventTargetHelper.h"

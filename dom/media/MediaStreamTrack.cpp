@@ -6,6 +6,7 @@
 #include "MediaStreamTrack.h"
 
 #include "DOMMediaStream.h"
+#include "MediaSegment.h"
 #include "MediaStreamError.h"
 #include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
@@ -182,13 +183,12 @@ class MediaStreamTrack::TrackSink : public MediaStreamTrackSource::Sink {
 };
 
 MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
-                                   MediaStream* aInputStream, TrackID aTrackID,
+                                   MediaStream* aInputStream,
                                    MediaStreamTrackSource* aSource,
                                    MediaStreamTrackState aReadyState,
                                    const MediaTrackConstraints& aConstraints)
     : mWindow(aWindow),
       mInputStream(aInputStream),
-      mTrackID(aTrackID),
       mSource(aSource),
       mSink(MakeUnique<TrackSink>(this)),
       mPrincipal(aSource->GetPrincipal()),
@@ -205,14 +205,14 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
     // MediaStreamTrackSource soon enough.
     auto graph = mInputStream->IsDestroyed()
                      ? MediaStreamGraph::GetInstanceIfExists(
-                           mWindow, mInputStream->GraphRate())
+                           mWindow, mInputStream->mSampleRate)
                      : mInputStream->Graph();
     MOZ_DIAGNOSTIC_ASSERT(graph,
                           "A destroyed input stream is only expected when "
                           "cloning, but since we're live there must be another "
                           "live track that is keeping the graph alive");
 
-    mStream = graph->CreateTrackUnionStream();
+    mStream = graph->CreateTrackUnionStream(mInputStream->mType);
     mPort = mStream->AllocateInputPort(mInputStream);
     mMSGListener = new MSGListener(this);
     AddListener(mMSGListener);
@@ -296,9 +296,8 @@ void MediaStreamTrack::SetEnabled(bool aEnabled) {
     return;
   }
 
-  mStream->SetTrackEnabled(mTrackID, mEnabled
-                                         ? DisabledTrackMode::ENABLED
-                                         : DisabledTrackMode::SILENCE_BLACK);
+  mStream->SetEnabled(mEnabled ? DisabledTrackMode::ENABLED
+                               : DisabledTrackMode::SILENCE_BLACK);
   GetSource().SinkEnabledStateChanged();
 }
 
@@ -572,7 +571,7 @@ void MediaStreamTrack::AddListener(MediaStreamTrackListener* aListener) {
   if (Ended()) {
     return;
   }
-  mStream->AddTrackListener(aListener, mTrackID);
+  mStream->AddListener(aListener);
 }
 
 void MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener) {
@@ -583,21 +582,21 @@ void MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener) {
   if (Ended()) {
     return;
   }
-  mStream->RemoveTrackListener(aListener, mTrackID);
+  mStream->RemoveListener(aListener);
 }
 
 void MediaStreamTrack::AddDirectListener(
     DirectMediaStreamTrackListener* aListener) {
   LOG(LogLevel::Debug, ("MediaStreamTrack %p (%s) adding direct listener %p to "
-                        "stream %p, track %d",
+                        "stream %p",
                         this, AsAudioStreamTrack() ? "audio" : "video",
-                        aListener, mStream.get(), mTrackID));
+                        aListener, mStream.get()));
   mDirectTrackListeners.AppendElement(aListener);
 
   if (Ended()) {
     return;
   }
-  mStream->AddDirectTrackListener(aListener, mTrackID);
+  mStream->AddDirectListener(aListener);
 }
 
 void MediaStreamTrack::RemoveDirectListener(
@@ -610,7 +609,7 @@ void MediaStreamTrack::RemoveDirectListener(
   if (Ended()) {
     return;
   }
-  mStream->RemoveDirectTrackListener(aListener, mTrackID);
+  mStream->RemoveDirectListener(aListener);
 }
 
 already_AddRefed<MediaInputPort> MediaStreamTrack::ForwardTrackContentsTo(

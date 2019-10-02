@@ -236,15 +236,14 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
-  if (mStream && IsTrackIDExplicit(mTrackID)) {
-    mStream->EndTrack(mTrackID);
+  if (mStream) {
+    mStream->End();
   }
 
   {
     MutexAutoLock lock(mMutex);
 
     mStream = nullptr;
-    mTrackID = TRACK_NONE;
     mPrincipal = PRINCIPAL_HANDLE_NONE;
     mState = kReleased;
   }
@@ -265,16 +264,14 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
 }
 
 void MediaEngineRemoteVideoSource::SetTrack(
-    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+    const RefPtr<SourceMediaStream>& aStream,
     const PrincipalHandle& aPrincipal) {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated);
   MOZ_ASSERT(!mStream);
-  MOZ_ASSERT(mTrackID == TRACK_NONE);
   MOZ_ASSERT(aStream);
-  MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
 
   if (!mImageContainer) {
     mImageContainer = layers::LayerManager::CreateImageContainer(
@@ -284,10 +281,8 @@ void MediaEngineRemoteVideoSource::SetTrack(
   {
     MutexAutoLock lock(mMutex);
     mStream = aStream;
-    mTrackID = aTrackID;
     mPrincipal = aPrincipal;
   }
-  aStream->AddTrack(aTrackID, new VideoSegment());
 }
 
 nsresult MediaEngineRemoteVideoSource::Start() {
@@ -297,7 +292,6 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
   MOZ_ASSERT(mInitDone);
   MOZ_ASSERT(mStream);
-  MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
   {
     MutexAutoLock lock(mMutex);
@@ -620,7 +614,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
     VideoSegment segment;
     mImageSize = image->GetSize();
     segment.AppendFrame(image.forget(), mImageSize, mPrincipal);
-    mStream->AppendToTrack(mTrackID, &segment);
+    mStream->AppendData(&segment);
   }
 
   return 0;
