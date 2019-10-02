@@ -14,6 +14,7 @@
 #  include "AudioConfig.h"
 #  include "ImageTypes.h"
 #  include "MediaData.h"
+#  include "TrackID.h"  // for TrackID
 #  include "TimeUnits.h"
 #  include "mozilla/gfx/Point.h"  // for gfx::IntSize
 #  include "mozilla/gfx/Rect.h"   // for gfx::IntRect
@@ -43,7 +44,7 @@ class TrackInfo {
   enum TrackType { kUndefinedTrack, kAudioTrack, kVideoTrack, kTextTrack };
   TrackInfo(TrackType aType, const nsAString& aId, const nsAString& aKind,
             const nsAString& aLabel, const nsAString& aLanguage, bool aEnabled,
-            uint32_t aTrackId)
+            TrackID aTrackId)
       : mId(aId),
         mKind(aKind),
         mLabel(aLabel),
@@ -73,7 +74,7 @@ class TrackInfo {
   nsString mLanguage;
   bool mEnabled;
 
-  uint32_t mTrackId;
+  TrackID mTrackId;
 
   nsCString mMimeType;
   media::TimeUnit mDuration;
@@ -398,6 +399,16 @@ class MediaInfo {
   }
 
   bool HasValidMedia() const { return HasVideo() || HasAudio(); }
+
+  void AssertValid() const {
+    NS_ASSERTION(!HasAudio() || mAudio.mTrackId != TRACK_INVALID,
+                 "Audio track ID must be valid");
+    NS_ASSERTION(!HasVideo() || mVideo.mTrackId != TRACK_INVALID,
+                 "Audio track ID must be valid");
+    NS_ASSERTION(
+        !HasAudio() || !HasVideo() || mAudio.mTrackId != mVideo.mTrackId,
+        "Duplicate track IDs");
+  }
 
   // TODO: Store VideoInfo and AudioIndo in arrays to support multi-tracks.
   VideoInfo mVideo;

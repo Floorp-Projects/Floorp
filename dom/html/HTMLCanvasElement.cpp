@@ -10,7 +10,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "Layers.h"
-#include "MediaTrackGraph.h"
+#include "MediaStreamGraph.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
@@ -682,15 +682,16 @@ already_AddRefed<CanvasCaptureMediaStream> HTMLCanvasElement::CaptureStream(
 
   auto stream = MakeRefPtr<CanvasCaptureMediaStream>(window, this);
 
+  const TrackID videoTrackId = 1;
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-  nsresult rv = stream->Init(aFrameRate, principal);
+  nsresult rv = stream->Init(aFrameRate, videoTrackId, principal);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
   }
 
   RefPtr<MediaStreamTrack> track =
-      new VideoStreamTrack(window, stream->GetSourceStream(),
+      new VideoStreamTrack(window, stream->GetSourceStream(), videoTrackId,
                            new CanvasCaptureTrackSource(principal, stream));
   stream->AddTrackInternal(track);
 

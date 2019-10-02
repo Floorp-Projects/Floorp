@@ -63,17 +63,17 @@ class VideoFrame {
 };
 
 struct VideoChunk {
-  void SliceTo(TrackTime aStart, TrackTime aEnd) {
+  void SliceTo(StreamTime aStart, StreamTime aEnd) {
     NS_ASSERTION(aStart >= 0 && aStart < aEnd && aEnd <= mDuration,
                  "Slice out of bounds");
     mDuration = aEnd - aStart;
   }
-  TrackTime GetDuration() const { return mDuration; }
+  StreamTime GetDuration() const { return mDuration; }
   bool CanCombineWithFollowing(const VideoChunk& aOther) const {
     return aOther.mFrame == mFrame;
   }
   bool IsNull() const { return !mFrame.GetImage(); }
-  void SetNull(TrackTime aDuration) {
+  void SetNull(StreamTime aDuration) {
     mDuration = aDuration;
     mFrame.SetNull();
     mTimeStamp = TimeStamp();
@@ -90,7 +90,7 @@ struct VideoChunk {
     return mFrame.GetPrincipalHandle();
   }
 
-  TrackTime mDuration;
+  StreamTime mDuration;
   VideoFrame mFrame;
   TimeStamp mTimeStamp;
 };
@@ -113,7 +113,7 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
                    const PrincipalHandle& aPrincipalHandle,
                    bool aForceBlack = false,
                    TimeStamp aTimeStamp = TimeStamp::Now());
-  void ExtendLastFrameBy(TrackTime aDuration) {
+  void ExtendLastFrameBy(StreamTime aDuration) {
     if (aDuration <= 0) {
       return;
     }
@@ -124,7 +124,7 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
     }
     mDuration += aDuration;
   }
-  const VideoFrame* GetLastFrame(TrackTime* aStart = nullptr) {
+  const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr) {
     VideoChunk* c = GetLastChunk();
     if (!c) {
       return nullptr;
@@ -152,7 +152,7 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
     if (!chunk) {
       return;
     }
-    TrackTime duration = 0;
+    StreamTime duration = 0;
     size_t chunksToRemove = 0;
     for (const VideoChunk& c : mChunks) {
       if (c.mTimeStamp >= chunk->mTimeStamp) {
@@ -180,6 +180,8 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
+
+  bool IsEmpty() const { return mChunks.IsEmpty(); }
 };
 
 }  // namespace mozilla

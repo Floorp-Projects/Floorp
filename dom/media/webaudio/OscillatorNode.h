@@ -19,7 +19,7 @@ class AudioContext;
 struct OscillatorOptions;
 
 class OscillatorNode final : public AudioScheduledSourceNode,
-                             public MainThreadMediaTrackListener {
+                             public MainThreadMediaStreamListener {
  public:
   static already_AddRefed<OscillatorNode> Create(
       AudioContext& aAudioContext, const OscillatorOptions& aOptions,
@@ -38,7 +38,7 @@ class OscillatorNode final : public AudioScheduledSourceNode,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  void DestroyMediaTrack() override;
+  void DestroyMediaStream() override;
 
   uint16_t NumberOfInputs() const final { return 0; }
 
@@ -51,7 +51,7 @@ class OscillatorNode final : public AudioScheduledSourceNode,
       return;
     }
     mType = aType;
-    SendTypeToTrack();
+    SendTypeToStream();
   }
 
   AudioParam* Frequency() const { return mFrequency; }
@@ -62,12 +62,12 @@ class OscillatorNode final : public AudioScheduledSourceNode,
 
   void SetPeriodicWave(PeriodicWave& aPeriodicWave) {
     mPeriodicWave = &aPeriodicWave;
-    // SendTypeToTrack will call SendPeriodicWaveToTrack for us.
+    // SendTypeToStream will call SendPeriodicWaveToStream for us.
     mType = OscillatorType::Custom;
-    SendTypeToTrack();
+    SendTypeToStream();
   }
 
-  void NotifyMainThreadTrackEnded() override;
+  void NotifyMainThreadStreamFinished() override;
 
   const char* NodeType() const override { return "OscillatorNode"; }
 
@@ -78,8 +78,8 @@ class OscillatorNode final : public AudioScheduledSourceNode,
   explicit OscillatorNode(AudioContext* aContext);
   ~OscillatorNode() = default;
 
-  void SendTypeToTrack();
-  void SendPeriodicWaveToTrack();
+  void SendTypeToStream();
+  void SendPeriodicWaveToStream();
 
   OscillatorType mType;
   RefPtr<PeriodicWave> mPeriodicWave;

@@ -9,8 +9,8 @@
 #include "ContainerWriter.h"
 #include "CubebUtils.h"
 #include "MediaQueue.h"
-#include "MediaTrackGraph.h"
-#include "MediaTrackListener.h"
+#include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
@@ -51,11 +51,11 @@ class MediaEncoderListener {
  * procedures between ContainerWriter and TrackEncoder. ContainerWriter packs
  * the encoded track data with a specific container (e.g. ogg, webm).
  * AudioTrackEncoder and VideoTrackEncoder are subclasses of TrackEncoder, and
- * are responsible for encoding raw data coming from MediaTrackGraph.
+ * are responsible for encoding raw data coming from MediaStreamGraph.
  *
  * MediaEncoder solves threading issues by doing message passing to a TaskQueue
  * (the "encoder thread") as passed in to the constructor. Each
- * MediaStreamTrack to be recorded is set up with a MediaTrackListener.
+ * MediaStreamTrack to be recorded is set up with a MediaStreamTrackListener.
  * Typically there are a non-direct track listeners for audio, direct listeners
  * for video, and there is always a non-direct listener on each track for
  * time-keeping. The listeners forward data to their corresponding TrackEncoders
@@ -227,10 +227,10 @@ class MediaEncoder {
 
  private:
   /**
-   * Sets mGraphTrack if not already set, using a new stream from aTrack's
+   * Sets mGraphStream if not already set, using a new stream from aStream's
    * graph.
    */
-  void EnsureGraphTrackFrom(MediaTrack* aTrack);
+  void EnsureGraphStreamFrom(MediaStream* aStream);
 
   /**
    * Takes a regular runnable and dispatches it to the graph wrapped in a
@@ -264,10 +264,10 @@ class MediaEncoder {
   // The AudioNode we are encoding.
   // Will be null when input is media stream or destination node.
   RefPtr<dom::AudioNode> mAudioNode;
-  // Pipe-track for allowing a track listener on a non-destination AudioNode.
+  // Pipe-stream for allowing a track listener on a non-destination AudioNode.
   // Will be null when input is media stream or destination node.
-  RefPtr<AudioNodeTrack> mPipeTrack;
-  // Input port that connect mAudioNode to mPipeTrack.
+  RefPtr<AudioNodeStream> mPipeStream;
+  // Input port that connect mAudioNode to mPipeStream.
   // Will be null when input is media stream or destination node.
   RefPtr<MediaInputPort> mInputPort;
   // An audio track that we are encoding. Will be null if the input stream
@@ -277,8 +277,8 @@ class MediaEncoder {
   // doesn't contain video on start() or if the input is an AudioNode.
   RefPtr<dom::VideoStreamTrack> mVideoTrack;
 
-  // A stream to keep the MediaTrackGraph alive while we're recording.
-  RefPtr<SharedDummyTrack> mGraphTrack;
+  // A stream to keep the MediaStreamGraph alive while we're recording.
+  RefPtr<SharedDummyStream> mGraphStream;
 
   TimeStamp mStartTime;
   const nsString mMIMEType;

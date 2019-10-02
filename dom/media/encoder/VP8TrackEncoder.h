@@ -43,7 +43,7 @@ class VP8TrackEncoder : public VideoTrackEncoder {
  private:
   // Get the EncodeOperation for next target frame.
   EncodeOperation GetNextEncodeOperation(TimeDuration aTimeElapsed,
-                                         TrackTime aProcessedDuration);
+                                         StreamTime aProcessedDuration);
 
   // Get the encoded data from encoder to aData.
   // Return value: NS_ERROR_NOT_AVAILABABLE if the vpx_codec_get_cx_data returns
@@ -68,7 +68,7 @@ class VP8TrackEncoder : public VideoTrackEncoder {
                                   vpx_codec_enc_cfg_t& config);
 
   // Encoded timestamp.
-  TrackTime mEncodedTimestamp = 0;
+  StreamTime mEncodedTimestamp = 0;
 
   // Total duration in mTrackRate extracted by GetEncodedPartitions().
   CheckedInt64 mExtractedDuration;
@@ -86,7 +86,7 @@ class VP8TrackEncoder : public VideoTrackEncoder {
   /**
    * A duration of non-key frames in milliseconds.
    */
-  TrackTime mDurationSinceLastKeyframe = 0;
+  StreamTime mDurationSinceLastKeyframe = 0;
 
   /**
    * A local segment queue which takes the raw data out from mRawSegment in the

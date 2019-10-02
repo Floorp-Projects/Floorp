@@ -7,12 +7,12 @@
 
 #include <algorithm>
 #include "AudioNodeEngine.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 #include "DriftCompensation.h"
 #include "GeckoProfiler.h"
 #include "MediaDecoder.h"
-#include "MediaTrackGraphImpl.h"
-#include "MediaTrackListener.h"
+#include "MediaStreamGraphImpl.h"
+#include "MediaStreamListener.h"
 #include "mozilla/dom/AudioNode.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/MediaStreamTrack.h"
@@ -47,7 +47,7 @@ namespace mozilla {
 using namespace dom;
 using namespace media;
 
-class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
+class MediaEncoder::AudioTrackListener : public DirectMediaStreamTrackListener {
  public:
   AudioTrackListener(DriftCompensator* aDriftCompensator,
                      AudioTrackEncoder* aEncoder, TaskQueue* aEncoderThread)
@@ -82,7 +82,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
     }
   }
 
-  void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
+  void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override {
     TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
@@ -112,7 +112,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
     Unused << rv;
   }
 
-  void NotifyEnded(MediaTrackGraph* aGraph) override {
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -127,7 +127,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
     Unused << rv;
   }
 
-  void NotifyRemoved(MediaTrackGraph* aGraph) override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     if (!mShutdown) {
       nsresult rv = mEncoderThread->Dispatch(
           NewRunnableMethod("mozilla::AudioTrackEncoder::NotifyEndOfStream",
@@ -155,7 +155,7 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
   RefPtr<TaskQueue> mEncoderThread;
 };
 
-class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
+class MediaEncoder::VideoTrackListener : public DirectMediaStreamTrackListener {
  public:
   VideoTrackListener(VideoTrackEncoder* aEncoder, TaskQueue* aEncoderThread)
       : mDirectConnected(false),
@@ -189,7 +189,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     }
   }
 
-  void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
+  void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override {
     TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
@@ -216,7 +216,8 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     Unused << rv;
   }
 
-  void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
+  void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
+                               StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override {
     TRACE_COMMENT("Encoder %p", mEncoder.get());
     MOZ_ASSERT(mEncoder);
@@ -245,7 +246,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     Unused << rv;
   }
 
-  void NotifyEnabledStateChanged(MediaTrackGraph* aGraph,
+  void NotifyEnabledStateChanged(MediaStreamGraph* aGraph,
                                  bool aEnabled) override {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
@@ -268,7 +269,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     Unused << rv;
   }
 
-  void NotifyEnded(MediaTrackGraph* aGraph) override {
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
@@ -283,7 +284,7 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     Unused << rv;
   }
 
-  void NotifyRemoved(MediaTrackGraph* aGraph) override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     if (!mShutdown) {
       nsresult rv = mEncoderThread->Dispatch(
           NewRunnableMethod("mozilla::VideoTrackEncoder::NotifyEndOfStream",
@@ -434,20 +435,20 @@ MediaEncoder::~MediaEncoder() {
   MOZ_ASSERT(!mVideoTrack);
   MOZ_ASSERT(!mAudioNode);
   MOZ_ASSERT(!mInputPort);
-  MOZ_ASSERT(!mPipeTrack);
+  MOZ_ASSERT(!mPipeStream);
 }
 
-void MediaEncoder::EnsureGraphTrackFrom(MediaTrack* aTrack) {
-  if (mGraphTrack) {
+void MediaEncoder::EnsureGraphStreamFrom(MediaStream* aStream) {
+  if (mGraphStream) {
     return;
   }
-  MOZ_DIAGNOSTIC_ASSERT(!aTrack->IsDestroyed());
-  mGraphTrack = MakeAndAddRef<SharedDummyTrack>(
-      aTrack->GraphImpl()->CreateSourceTrack(MediaSegment::VIDEO));
+  MOZ_DIAGNOSTIC_ASSERT(!aStream->IsDestroyed());
+  mGraphStream = MakeAndAddRef<SharedDummyStream>(
+      aStream->GraphImpl()->CreateSourceStream());
 }
 
 void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
-  MOZ_ASSERT(mGraphTrack);
+  MOZ_ASSERT(mGraphStream);
   class Message : public ControlMessage {
    public:
     explicit Message(already_AddRefed<Runnable> aRunnable)
@@ -455,7 +456,7 @@ void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
     void Run() override { mRunnable->Run(); }
     const RefPtr<Runnable> mRunnable;
   };
-  mGraphTrack->mTrack->GraphImpl()->AppendMessage(
+  mGraphStream->mStream->GraphImpl()->AppendMessage(
       MakeUnique<Message>(std::move(aRunnable)));
 }
 
@@ -509,30 +510,32 @@ void MediaEncoder::ConnectAudioNode(AudioNode* aNode, uint32_t aOutput) {
     return;
   }
 
-  // Only AudioNodeTrack of kind EXTERNAL_OUTPUT stores output audio data in
-  // the track (see AudioNodeTrack::AdvanceOutputSegment()). That means
-  // forwarding input track in recorder session won't be able to copy data from
-  // the track of non-destination node. Create a pipe track in this case.
+  // Only AudioNodeStream of kind EXTERNAL_OUTPUT stores output audio data in
+  // the track (see AudioNodeStream::AdvanceOutputSegment()). That means track
+  // union stream in recorder session won't be able to copy data from the
+  // stream of non-destination node. Create a pipe stream in this case.
   if (aNode->NumberOfOutputs() > 0) {
     AudioContext* ctx = aNode->Context();
     AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
-    AudioNodeTrack::Flags flags = AudioNodeTrack::EXTERNAL_OUTPUT |
-                                  AudioNodeTrack::NEED_MAIN_THREAD_ENDED;
-    mPipeTrack = AudioNodeTrack::Create(ctx, engine, flags, ctx->Graph());
-    AudioNodeTrack* ns = aNode->GetTrack();
+    AudioNodeStream::Flags flags = AudioNodeStream::EXTERNAL_OUTPUT |
+                                   AudioNodeStream::NEED_MAIN_THREAD_FINISHED;
+    mPipeStream = AudioNodeStream::Create(ctx, engine, flags, ctx->Graph());
+    AudioNodeStream* ns = aNode->GetStream();
     if (ns) {
-      mInputPort = mPipeTrack->AllocateInputPort(aNode->GetTrack(), 0, aOutput);
+      mInputPort = mPipeStream->AllocateInputPort(aNode->GetStream(), TRACK_ANY,
+                                                  TRACK_ANY, 0, aOutput);
     }
   }
 
   mAudioNode = aNode;
 
-  if (mPipeTrack) {
-    mPipeTrack->AddListener(mAudioListener);
-    EnsureGraphTrackFrom(mPipeTrack);
+  if (mPipeStream) {
+    mPipeStream->AddTrackListener(mAudioListener, AudioNodeStream::AUDIO_TRACK);
+    EnsureGraphStreamFrom(mPipeStream);
   } else {
-    mAudioNode->GetTrack()->AddListener(mAudioListener);
-    EnsureGraphTrackFrom(mAudioNode->GetTrack());
+    mAudioNode->GetStream()->AddTrackListener(mAudioListener,
+                                              AudioNodeStream::AUDIO_TRACK);
+    EnsureGraphStreamFrom(mAudioNode->GetStream());
   }
 }
 
@@ -544,7 +547,7 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
     return;
   }
 
-  EnsureGraphTrackFrom(aTrack->GetTrack());
+  EnsureGraphStreamFrom(aTrack->GetStream());
 
   if (AudioStreamTrack* audio = aTrack->AsAudioStreamTrack()) {
     if (!mAudioEncoder) {
@@ -563,7 +566,7 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
 
     LOG(LogLevel::Info, ("Connected to audio track %p", aTrack));
     mAudioTrack = audio;
-    // With full duplex we don't risk having audio come in late to the MTG
+    // With full duplex we don't risk having audio come in late to the MSG
     // so we won't need a direct listener.
     const bool enableDirectListener =
         !Preferences::GetBool("media.navigator.audio.full_duplex", false);
@@ -922,15 +925,17 @@ void MediaEncoder::Stop() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mAudioNode) {
-    mAudioNode->GetTrack()->RemoveListener(mAudioListener);
+    mAudioNode->GetStream()->RemoveTrackListener(mAudioListener,
+                                                 AudioNodeStream::AUDIO_TRACK);
     if (mInputPort) {
       mInputPort->Destroy();
       mInputPort = nullptr;
     }
-    if (mPipeTrack) {
-      mPipeTrack->RemoveListener(mAudioListener);
-      mPipeTrack->Destroy();
-      mPipeTrack = nullptr;
+    if (mPipeStream) {
+      mPipeStream->RemoveTrackListener(mAudioListener,
+                                       AudioNodeStream::AUDIO_TRACK);
+      mPipeStream->Destroy();
+      mPipeStream = nullptr;
     }
     mAudioNode = nullptr;
   }

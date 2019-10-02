@@ -7,8 +7,8 @@
 
 #include "AudioChannelFormat.h"
 #include "GeckoProfiler.h"
-#include "MediaTrackGraph.h"
-#include "MediaTrackListener.h"
+#include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
@@ -162,7 +162,7 @@ void AudioTrackEncoder::TakeTrackData(AudioSegment& aSegment) {
 }
 
 void AudioTrackEncoder::TryInit(const AudioSegment& aSegment,
-                                TrackTime aDuration) {
+                                StreamTime aDuration) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
 
   if (mInitialized) {

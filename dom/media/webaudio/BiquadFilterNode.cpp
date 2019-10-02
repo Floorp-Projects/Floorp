@@ -7,7 +7,7 @@
 #include "BiquadFilterNode.h"
 #include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
 #include "PlayingRefChangeHandler.h"
 #include "WebAudioUtils.h"
@@ -74,7 +74,7 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
   BiquadFilterNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination,
                          uint64_t aWindowID)
       : AudioNodeEngine(aNode),
-        mDestination(aDestination->Track())
+        mDestination(aDestination->Stream())
         // Keep the default values in sync with the default values in
         // BiquadFilterNode::BiquadFilterNode
         ,
@@ -118,7 +118,7 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     float inputBuffer[WEBAUDIO_BLOCK_SIZE + 4];
@@ -136,12 +136,13 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
       if (!hasTail) {
         if (!mBiquads.IsEmpty()) {
           mBiquads.Clear();
-          aTrack->ScheduleCheckForInactive();
+          aStream->ScheduleCheckForInactive();
 
           RefPtr<PlayingRefChangeHandler> refchanged =
-              new PlayingRefChangeHandler(aTrack,
+              new PlayingRefChangeHandler(aStream,
                                           PlayingRefChangeHandler::RELEASE);
-          aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
+          aStream->Graph()->DispatchToMainThreadStableState(
+              refchanged.forget());
         }
 
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -153,9 +154,9 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
     } else if (mBiquads.Length() != aInput.ChannelCount()) {
       if (mBiquads.IsEmpty()) {
         RefPtr<PlayingRefChangeHandler> refchanged =
-            new PlayingRefChangeHandler(aTrack,
+            new PlayingRefChangeHandler(aStream,
                                         PlayingRefChangeHandler::ADDREF);
-        aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
+        aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
       } else {  // Help people diagnose bug 924718
         WebAudioUtils::LogToDeveloperConsole(
             mWindowID, "BiquadFilterChannelCountChangeWarning");
@@ -168,7 +169,7 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
     uint32_t numberOfChannels = mBiquads.Length();
     aOutput->AllocateChannels(numberOfChannels);
 
-    TrackTime pos = mDestination->GraphTimeToTrackTime(aFrom);
+    StreamTime pos = mDestination->GraphTimeToStreamTime(aFrom);
 
     double freq = mFrequency.GetValueAtTime(pos);
     double q = mQ.GetValueAtTime(pos);
@@ -187,8 +188,8 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
           input = alignedInputBuffer;
         }
       }
-      SetParamsOnBiquad(mBiquads[i], aTrack->mSampleRate, mType, freq, q, gain,
-                        detune);
+      SetParamsOnBiquad(mBiquads[i], aStream->SampleRate(), mType, freq, q,
+                        gain, detune);
 
       mBiquads[i].process(input, aOutput->ChannelFloatsForWrite(i),
                           aInput.GetDuration());
@@ -211,7 +212,7 @@ class BiquadFilterNodeEngine final : public AudioNodeEngine {
   }
 
  private:
-  RefPtr<AudioNodeTrack> mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   BiquadFilterType mType;
   AudioParamTimeline mFrequency;
   AudioParamTimeline mDetune;
@@ -238,8 +239,8 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
   }
   BiquadFilterNodeEngine* engine =
       new BiquadFilterNodeEngine(this, aContext->Destination(), windowID);
-  mTrack = AudioNodeTrack::Create(
-      aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
+  mStream = AudioNodeStream::Create(
+      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
 /* static */
@@ -295,8 +296,8 @@ JSObject* BiquadFilterNode::WrapObject(JSContext* aCx,
 
 void BiquadFilterNode::SetType(BiquadFilterType aType) {
   mType = aType;
-  SendInt32ParameterToTrack(BiquadFilterNodeEngine::TYPE,
-                            static_cast<int32_t>(aType));
+  SendInt32ParameterToStream(BiquadFilterNodeEngine::TYPE,
+                             static_cast<int32_t>(aType));
 }
 
 void BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,

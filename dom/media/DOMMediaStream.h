@@ -11,6 +11,7 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "StreamTracks.h"
 #include "nsIPrincipal.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -20,6 +21,9 @@ namespace mozilla {
 
 class AbstractThread;
 class DOMMediaStream;
+class MediaStream;
+class MediaInputPort;
+class ProcessedMediaStream;
 
 enum class BlockingMode;
 

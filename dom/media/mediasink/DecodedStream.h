@@ -24,9 +24,10 @@ namespace mozilla {
 class DecodedStreamData;
 class AudioData;
 class VideoData;
+class MediaStream;
 class OutputStreamManager;
 struct PlaybackInfoInit;
-class ProcessedMediaTrack;
+class ProcessedMediaStream;
 class TimeStamp;
 
 template <class T>

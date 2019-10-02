@@ -15,11 +15,11 @@ namespace dom {
 class AudioStreamTrack : public MediaStreamTrack {
  public:
   AudioStreamTrack(
-      nsPIDOMWindowInner* aWindow, mozilla::MediaTrack* aInputTrack,
+      nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
       MediaStreamTrackSource* aSource,
       MediaStreamTrackState aReadyState = MediaStreamTrackState::Live,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints())
-      : MediaStreamTrack(aWindow, aInputTrack, aSource, aReadyState,
+      : MediaStreamTrack(aWindow, aInputStream, aTrackID, aSource, aReadyState,
                          aConstraints) {}
 
   AudioStreamTrack* AsAudioStreamTrack() override { return this; }

@@ -19,7 +19,7 @@ namespace dom {
 class VideoStreamTrack : public MediaStreamTrack {
  public:
   VideoStreamTrack(
-      nsPIDOMWindowInner* aWindow, mozilla::MediaTrack* aInputTrack,
+      nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
       MediaStreamTrackSource* aSource,
       MediaStreamTrackState aState = MediaStreamTrackState::Live,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints());

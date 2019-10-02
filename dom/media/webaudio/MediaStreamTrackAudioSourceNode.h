@@ -62,7 +62,7 @@ class MediaStreamTrackAudioSourceNode
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  void DestroyMediaTrack() override;
+  void DestroyMediaStream() override;
 
   uint16_t NumberOfInputs() const override { return 0; }
 
@@ -94,7 +94,7 @@ class MediaStreamTrackAudioSourceNode
     void NotifyEnded(MediaStreamTrack* aTrack) override {
       if (mNode) {
         mNode->MarkInactive();
-        mNode->DestroyMediaTrack();
+        mNode->DestroyMediaStream();
         mNode = nullptr;
       }
     }

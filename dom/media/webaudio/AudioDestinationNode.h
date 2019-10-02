@@ -19,15 +19,15 @@ class AudioContext;
 
 class AudioDestinationNode final : public AudioNode,
                                    public nsIAudioChannelAgentCallback,
-                                   public MainThreadMediaTrackListener {
+                                   public MainThreadMediaStreamListener {
  public:
-  // This node type knows what MediaTrackGraph to use based on
+  // This node type knows what MediaStreamGraph to use based on
   // whether it's in offline mode.
   AudioDestinationNode(AudioContext* aContext, bool aIsOffline,
                        bool aAllowedToStart, uint32_t aNumberOfChannels,
                        uint32_t aLength);
 
-  void DestroyMediaTrack() override;
+  void DestroyMediaStream() override;
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioDestinationNode, AudioNode)
@@ -41,8 +41,8 @@ class AudioDestinationNode final : public AudioNode,
   uint32_t MaxChannelCount() const;
   void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override;
 
-  // Returns the track or null after unlink.
-  AudioNodeTrack* Track();
+  // Returns the stream or null after unlink.
+  AudioNodeStream* Stream();
 
   void Mute();
   void Unmute();
@@ -54,7 +54,7 @@ class AudioDestinationNode final : public AudioNode,
 
   void OfflineShutdown();
 
-  void NotifyMainThreadTrackEnded() override;
+  void NotifyMainThreadStreamFinished() override;
   void FireOfflineCompletionEvent();
 
   nsresult CreateAudioChannelAgent();
@@ -82,14 +82,14 @@ class AudioDestinationNode final : public AudioNode,
   // capturing explicitly when we don't need to capture audio any more, because
   // we have to release the resource we allocated before.
   bool IsCapturingAudio() const;
-  void StartAudioCapturingTrack();
-  void StopAudioCapturingTrack();
+  void StartAudioCapturingStream();
+  void StopAudioCapturingStream();
 
   SelfReference<AudioDestinationNode> mOfflineRenderingRef;
   uint32_t mFramesToProduce;
 
   RefPtr<AudioChannelAgent> mAudioChannelAgent;
-  RefPtr<MediaInputPort> mCaptureTrackPort;
+  RefPtr<MediaInputPort> mCaptureStreamPort;
 
   RefPtr<Promise> mOfflineRenderingPromise;
 

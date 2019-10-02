@@ -216,8 +216,8 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
     case MediaThreadType::PLATFORM_DECODER:
       name = "MediaPDecoder";
       break;
-    case MediaThreadType::MTG_CONTROL:
-      name = "MTGControl";
+    case MediaThreadType::MSG_CONTROL:
+      name = "MSGControl";
       break;
     case MediaThreadType::WEBRTC_DECODER:
       name = "WebRTCPD";

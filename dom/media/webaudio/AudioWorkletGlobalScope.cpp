@@ -7,7 +7,7 @@
 #include "AudioWorkletGlobalScope.h"
 
 #include "AudioNodeEngine.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 #include "AudioWorkletImpl.h"
 #include "jsapi.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
@@ -192,7 +192,7 @@ void AudioWorkletGlobalScope::RegisterProcessor(
       "AudioWorkletGlobalScope: parameter descriptors",
       [impl = mImpl, name = nsString(aName), map = std::move(map)]() mutable {
         AudioNode* destinationNode =
-            impl->DestinationTrack()->Engine()->NodeMainThread();
+            impl->DestinationStream()->Engine()->NodeMainThread();
         if (!destinationNode) {
           return;
         }

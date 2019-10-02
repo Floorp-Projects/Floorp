@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_AUDIONODEEXTERNALINPUTTRACK_H_
-#define MOZILLA_AUDIONODEEXTERNALINPUTTRACK_H_
+#ifndef MOZILLA_AUDIONODEEXTERNALINPUTSTREAM_H_
+#define MOZILLA_AUDIONODEEXTERNALINPUTSTREAM_H_
 
-#include "MediaTrackGraph.h"
-#include "AudioNodeTrack.h"
+#include "MediaStreamGraph.h"
+#include "AudioNodeStream.h"
 #include "mozilla/Atomics.h"
 
 namespace mozilla {
@@ -15,19 +15,19 @@ namespace mozilla {
 class AbstractThread;
 
 /**
- * This is a MediaTrack implementation that acts for a Web Audio node but
- * unlike other AudioNodeTracks, supports any kind of MediaTrack as an
+ * This is a MediaStream implementation that acts for a Web Audio node but
+ * unlike other AudioNodeStreams, supports any kind of MediaStream as an
  * input --- handling any number of audio tracks and handling blocking of
- * the input MediaTrack.
+ * the input MediaStream.
  */
-class AudioNodeExternalInputTrack final : public AudioNodeTrack {
+class AudioNodeExternalInputStream final : public AudioNodeStream {
  public:
-  static already_AddRefed<AudioNodeExternalInputTrack> Create(
-      MediaTrackGraph* aGraph, AudioNodeEngine* aEngine);
+  static already_AddRefed<AudioNodeExternalInputStream> Create(
+      MediaStreamGraph* aGraph, AudioNodeEngine* aEngine);
 
  protected:
-  AudioNodeExternalInputTrack(AudioNodeEngine* aEngine, TrackRate aSampleRate);
-  ~AudioNodeExternalInputTrack();
+  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
+  ~AudioNodeExternalInputStream();
 
  public:
   void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
@@ -43,4 +43,4 @@ class AudioNodeExternalInputTrack final : public AudioNodeTrack {
 
 }  // namespace mozilla
 
-#endif /* MOZILLA_AUDIONODEEXTERNALINPUTTRACK_H_ */
+#endif /* MOZILLA_AUDIONODESTREAM_H_ */

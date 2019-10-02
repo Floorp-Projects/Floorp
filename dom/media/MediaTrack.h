@@ -37,8 +37,7 @@ class MediaTrack : public DOMEventTargetHelper {
              const nsAString& aLanguage);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(dom::MediaTrack,
-                                           DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaTrack, DOMEventTargetHelper)
 
   enum {
     DEFAULT = 0,

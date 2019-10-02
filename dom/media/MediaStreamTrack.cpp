@@ -6,10 +6,9 @@
 #include "MediaStreamTrack.h"
 
 #include "DOMMediaStream.h"
-#include "MediaSegment.h"
 #include "MediaStreamError.h"
-#include "MediaTrackGraphImpl.h"
-#include "MediaTrackListener.h"
+#include "MediaStreamGraphImpl.h"
+#include "MediaStreamListener.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Promise.h"
 #include "nsContentUtils.h"
@@ -57,8 +56,8 @@ auto MediaStreamTrackSource::ApplyConstraints(
 }
 
 /**
- * MTGListener monitors state changes of the media flowing through the
- * MediaTrackGraph.
+ * MSGListener monitors state changes of the media flowing through the
+ * MediaStreamGraph.
  *
  *
  * For changes to PrincipalHandle the following applies:
@@ -66,9 +65,9 @@ auto MediaStreamTrackSource::ApplyConstraints(
  * When the main thread principal for a MediaStreamTrack changes, its principal
  * will be set to the combination of the previous principal and the new one.
  *
- * As a PrincipalHandle change later happens on the MediaTrackGraph thread, we
+ * As a PrincipalHandle change later happens on the MediaStreamGraph thread, we
  * will be notified. If the latest principal on main thread matches the
- * PrincipalHandle we just saw on MTG thread, we will set the track's principal
+ * PrincipalHandle we just saw on MSG thread, we will set the track's principal
  * to the new one.
  *
  * We know at this point that the old principal has been flushed out and data
@@ -76,11 +75,11 @@ auto MediaStreamTrackSource::ApplyConstraints(
  *
  * In case of multiple changes to the main thread state, the track's principal
  * will be a combination of its old principal and all the new ones until the
- * latest main thread principal matches the PrincipalHandle on the MTG thread.
+ * latest main thread principal matches the PrincipalHandle on the MSG thread.
  */
-class MediaStreamTrack::MTGListener : public MediaTrackListener {
+class MediaStreamTrack::MSGListener : public MediaStreamTrackListener {
  public:
-  explicit MTGListener(MediaStreamTrack* aTrack) : mTrack(aTrack) {}
+  explicit MSGListener(MediaStreamTrack* aTrack) : mTrack(aTrack) {}
 
   void DoNotifyPrincipalHandleChanged(
       const PrincipalHandle& aNewPrincipalHandle) {
@@ -94,23 +93,23 @@ class MediaStreamTrack::MTGListener : public MediaTrackListener {
   }
 
   void NotifyPrincipalHandleChanged(
-      MediaTrackGraph* aGraph,
+      MediaStreamGraph* aGraph,
       const PrincipalHandle& aNewPrincipalHandle) override {
     aGraph->DispatchToMainThreadStableState(
         NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
-            "dom::MediaStreamTrack::MTGListener::"
+            "dom::MediaStreamTrack::MSGListener::"
             "DoNotifyPrincipalHandleChanged",
-            this, &MTGListener::DoNotifyPrincipalHandleChanged,
+            this, &MSGListener::DoNotifyPrincipalHandleChanged,
             aNewPrincipalHandle));
   }
 
-  void NotifyRemoved(MediaTrackGraph* aGraph) override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     // `mTrack` is a WeakPtr and must be destroyed on main thread.
-    // We dispatch ourselves to main thread here in case the MediaTrackGraph
+    // We dispatch ourselves to main thread here in case the MediaStreamGraph
     // is holding the last reference to us.
     aGraph->DispatchToMainThreadStableState(
-        NS_NewRunnableFunction("MediaStreamTrack::MTGListener::mTrackReleaser",
-                               [self = RefPtr<MTGListener>(this)]() {}));
+        NS_NewRunnableFunction("MediaStreamTrack::MSGListener::mTrackReleaser",
+                               [self = RefPtr<MSGListener>(this)]() {}));
   }
 
   void DoNotifyEnded() {
@@ -132,10 +131,10 @@ class MediaStreamTrack::MTGListener : public MediaTrackListener {
                                            &MediaStreamTrack::OverrideEnded));
   }
 
-  void NotifyEnded(MediaTrackGraph* aGraph) override {
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
     aGraph->DispatchToMainThreadStableState(
-        NewRunnableMethod("MediaStreamTrack::MTGListener::DoNotifyEnded", this,
-                          &MTGListener::DoNotifyEnded));
+        NewRunnableMethod("MediaStreamTrack::MSGListener::DoNotifyEnded", this,
+                          &MSGListener::DoNotifyEnded));
   }
 
  protected:
@@ -183,12 +182,13 @@ class MediaStreamTrack::TrackSink : public MediaStreamTrackSource::Sink {
 };
 
 MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
-                                   mozilla::MediaTrack* aInputTrack,
+                                   MediaStream* aInputStream, TrackID aTrackID,
                                    MediaStreamTrackSource* aSource,
                                    MediaStreamTrackState aReadyState,
                                    const MediaTrackConstraints& aConstraints)
     : mWindow(aWindow),
-      mInputTrack(aInputTrack),
+      mInputStream(aInputStream),
+      mTrackID(aTrackID),
       mSource(aSource),
       mSink(MakeUnique<TrackSink>(this)),
       mPrincipal(aSource->GetPrincipal()),
@@ -199,23 +199,23 @@ MediaStreamTrack::MediaStreamTrack(nsPIDOMWindowInner* aWindow,
   if (!Ended()) {
     GetSource().RegisterSink(mSink.get());
 
-    // Even if the input track is destroyed we need mTrack so that methods
+    // Even if the input stream is destroyed we need mStream so that methods
     // like AddListener still work. Keeping the number of paths to a minimum
     // also helps prevent bugs elsewhere. We'll be ended through the
     // MediaStreamTrackSource soon enough.
-    auto graph = mInputTrack->IsDestroyed()
-                     ? MediaTrackGraph::GetInstanceIfExists(
-                           mWindow, mInputTrack->mSampleRate)
-                     : mInputTrack->Graph();
+    auto graph = mInputStream->IsDestroyed()
+                     ? MediaStreamGraph::GetInstanceIfExists(
+                           mWindow, mInputStream->GraphRate())
+                     : mInputStream->Graph();
     MOZ_DIAGNOSTIC_ASSERT(graph,
-                          "A destroyed input track is only expected when "
+                          "A destroyed input stream is only expected when "
                           "cloning, but since we're live there must be another "
                           "live track that is keeping the graph alive");
 
-    mTrack = graph->CreateForwardedInputTrack(mInputTrack->mType);
-    mPort = mTrack->AllocateInputPort(mInputTrack);
-    mMTGListener = new MTGListener(this);
-    AddListener(mMTGListener);
+    mStream = graph->CreateTrackUnionStream();
+    mPort = mStream->AllocateInputPort(mInputStream);
+    mMSGListener = new MSGListener(this);
+    AddListener(mMSGListener);
   }
 
   nsresult rv;
@@ -238,12 +238,13 @@ MediaStreamTrack::~MediaStreamTrack() { Destroy(); }
 void MediaStreamTrack::Destroy() {
   SetReadyState(MediaStreamTrackState::Ended);
   // Remove all listeners -- avoid iterating over the list we're removing from
-  const nsTArray<RefPtr<MediaTrackListener>> trackListeners(mTrackListeners);
+  const nsTArray<RefPtr<MediaStreamTrackListener>> trackListeners(
+      mTrackListeners);
   for (auto listener : trackListeners) {
     RemoveListener(listener);
   }
   // Do the same as above for direct listeners
-  const nsTArray<RefPtr<DirectMediaTrackListener>> directTrackListeners(
+  const nsTArray<RefPtr<DirectMediaStreamTrackListener>> directTrackListeners(
       mDirectTrackListeners);
   for (auto listener : directTrackListeners) {
     RemoveDirectListener(listener);
@@ -295,8 +296,9 @@ void MediaStreamTrack::SetEnabled(bool aEnabled) {
     return;
   }
 
-  mTrack->SetEnabled(mEnabled ? DisabledTrackMode::ENABLED
-                              : DisabledTrackMode::SILENCE_BLACK);
+  mStream->SetTrackEnabled(mTrackID, mEnabled
+                                         ? DisabledTrackMode::ENABLED
+                                         : DisabledTrackMode::SILENCE_BLACK);
   GetSource().SinkEnabledStateChanged();
 }
 
@@ -380,19 +382,19 @@ already_AddRefed<Promise> MediaStreamTrack::ApplyConstraints(
   return promise.forget();
 }
 
-ProcessedMediaTrack* MediaStreamTrack::GetTrack() const {
+ProcessedMediaStream* MediaStreamTrack::GetStream() const {
   MOZ_DIAGNOSTIC_ASSERT(!Ended());
-  return mTrack;
+  return mStream;
 }
 
-MediaTrackGraph* MediaStreamTrack::Graph() const {
+MediaStreamGraph* MediaStreamTrack::Graph() const {
   MOZ_DIAGNOSTIC_ASSERT(!Ended());
-  return mTrack->Graph();
+  return mStream->Graph();
 }
 
-MediaTrackGraphImpl* MediaStreamTrack::GraphImpl() const {
+MediaStreamGraphImpl* MediaStreamTrack::GraphImpl() const {
   MOZ_DIAGNOSTIC_ASSERT(!Ended());
-  return mTrack->GraphImpl();
+  return mStream->GraphImpl();
 }
 
 void MediaStreamTrack::SetPrincipal(nsIPrincipal* aPrincipal) {
@@ -429,7 +431,7 @@ void MediaStreamTrack::NotifyPrincipalHandleChanged(
     const PrincipalHandle& aNewPrincipalHandle) {
   PrincipalHandle handle(aNewPrincipalHandle);
   LOG(LogLevel::Info, ("MediaStreamTrack %p principalHandle changed on "
-                       "MediaTrackGraph thread to %p. Current principal: %p, "
+                       "MediaStreamGraph thread to %p. Current principal: %p, "
                        "pending: %p",
                        this, GetPrincipalFromHandle(handle), mPrincipal.get(),
                        mPendingPrincipal.get()));
@@ -529,18 +531,18 @@ void MediaStreamTrack::SetReadyState(MediaStreamTrackState aState) {
     if (mSource) {
       mSource->UnregisterSink(mSink.get());
     }
-    if (mMTGListener) {
-      RemoveListener(mMTGListener);
+    if (mMSGListener) {
+      RemoveListener(mMSGListener);
     }
     if (mPort) {
       mPort->Destroy();
     }
-    if (mTrack) {
-      mTrack->Destroy();
+    if (mStream) {
+      mStream->Destroy();
     }
     mPort = nullptr;
-    mTrack = nullptr;
-    mMTGListener = nullptr;
+    mStream = nullptr;
+    mMSGListener = nullptr;
   }
 
   mReadyState = aState;
@@ -562,7 +564,7 @@ void MediaStreamTrack::OverrideEnded() {
   DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
 }
 
-void MediaStreamTrack::AddListener(MediaTrackListener* aListener) {
+void MediaStreamTrack::AddListener(MediaStreamTrackListener* aListener) {
   LOG(LogLevel::Debug,
       ("MediaStreamTrack %p adding listener %p", this, aListener));
   mTrackListeners.AppendElement(aListener);
@@ -570,10 +572,10 @@ void MediaStreamTrack::AddListener(MediaTrackListener* aListener) {
   if (Ended()) {
     return;
   }
-  mTrack->AddListener(aListener);
+  mStream->AddTrackListener(aListener, mTrackID);
 }
 
-void MediaStreamTrack::RemoveListener(MediaTrackListener* aListener) {
+void MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener) {
   LOG(LogLevel::Debug,
       ("MediaStreamTrack %p removing listener %p", this, aListener));
   mTrackListeners.RemoveElement(aListener);
@@ -581,40 +583,41 @@ void MediaStreamTrack::RemoveListener(MediaTrackListener* aListener) {
   if (Ended()) {
     return;
   }
-  mTrack->RemoveListener(aListener);
+  mStream->RemoveTrackListener(aListener, mTrackID);
 }
 
-void MediaStreamTrack::AddDirectListener(DirectMediaTrackListener* aListener) {
+void MediaStreamTrack::AddDirectListener(
+    DirectMediaStreamTrackListener* aListener) {
   LOG(LogLevel::Debug, ("MediaStreamTrack %p (%s) adding direct listener %p to "
-                        "track %p",
+                        "stream %p, track %d",
                         this, AsAudioStreamTrack() ? "audio" : "video",
-                        aListener, mTrack.get()));
+                        aListener, mStream.get(), mTrackID));
   mDirectTrackListeners.AppendElement(aListener);
 
   if (Ended()) {
     return;
   }
-  mTrack->AddDirectListener(aListener);
+  mStream->AddDirectTrackListener(aListener, mTrackID);
 }
 
 void MediaStreamTrack::RemoveDirectListener(
-    DirectMediaTrackListener* aListener) {
+    DirectMediaStreamTrackListener* aListener) {
   LOG(LogLevel::Debug,
-      ("MediaStreamTrack %p removing direct listener %p from track %p", this,
-       aListener, mTrack.get()));
+      ("MediaStreamTrack %p removing direct listener %p from stream %p", this,
+       aListener, mStream.get()));
   mDirectTrackListeners.RemoveElement(aListener);
 
   if (Ended()) {
     return;
   }
-  mTrack->RemoveDirectListener(aListener);
+  mStream->RemoveDirectTrackListener(aListener, mTrackID);
 }
 
 already_AddRefed<MediaInputPort> MediaStreamTrack::ForwardTrackContentsTo(
-    ProcessedMediaTrack* aTrack) {
+    ProcessedMediaStream* aStream) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_RELEASE_ASSERT(aTrack);
-  return aTrack->AllocateInputPort(mTrack);
+  MOZ_RELEASE_ASSERT(aStream);
+  return aStream->AllocateInputPort(mStream, mTrackID, mTrackID);
 }
 
 }  // namespace dom

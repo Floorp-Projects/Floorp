@@ -236,14 +236,15 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
-  if (mTrack) {
-    mTrack->End();
+  if (mStream && IsTrackIDExplicit(mTrackID)) {
+    mStream->EndTrack(mTrackID);
   }
 
   {
     MutexAutoLock lock(mMutex);
 
-    mTrack = nullptr;
+    mStream = nullptr;
+    mTrackID = TRACK_NONE;
     mPrincipal = PRINCIPAL_HANDLE_NONE;
     mState = kReleased;
   }
@@ -264,13 +265,16 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
 }
 
 void MediaEngineRemoteVideoSource::SetTrack(
-    const RefPtr<SourceMediaTrack>& aTrack, const PrincipalHandle& aPrincipal) {
+    const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+    const PrincipalHandle& aPrincipal) {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated);
-  MOZ_ASSERT(!mTrack);
-  MOZ_ASSERT(aTrack);
+  MOZ_ASSERT(!mStream);
+  MOZ_ASSERT(mTrackID == TRACK_NONE);
+  MOZ_ASSERT(aStream);
+  MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
 
   if (!mImageContainer) {
     mImageContainer = layers::LayerManager::CreateImageContainer(
@@ -279,9 +283,11 @@ void MediaEngineRemoteVideoSource::SetTrack(
 
   {
     MutexAutoLock lock(mMutex);
-    mTrack = aTrack;
+    mStream = aStream;
+    mTrackID = aTrackID;
     mPrincipal = aPrincipal;
   }
+  aStream->AddTrack(aTrackID, new VideoSegment());
 }
 
 nsresult MediaEngineRemoteVideoSource::Start() {
@@ -290,7 +296,8 @@ nsresult MediaEngineRemoteVideoSource::Start() {
 
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
   MOZ_ASSERT(mInitDone);
-  MOZ_ASSERT(mTrack);
+  MOZ_ASSERT(mStream);
+  MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
   {
     MutexAutoLock lock(mMutex);
@@ -613,7 +620,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
     VideoSegment segment;
     mImageSize = image->GetSize();
     segment.AppendFrame(image.forget(), mImageSize, mPrincipal);
-    mTrack->AppendData(&segment);
+    mStream->AppendToTrack(mTrackID, &segment);
   }
 
   return 0;

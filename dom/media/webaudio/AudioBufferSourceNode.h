@@ -17,13 +17,13 @@ struct AudioBufferSourceOptions;
 class AudioParam;
 
 class AudioBufferSourceNode final : public AudioScheduledSourceNode,
-                                    public MainThreadMediaTrackListener {
+                                    public MainThreadMediaStreamListener {
  public:
   static already_AddRefed<AudioBufferSourceNode> Create(
       JSContext* aCx, AudioContext& aAudioContext,
       const AudioBufferSourceOptions& aOptions);
 
-  void DestroyMediaTrack() override;
+  void DestroyMediaStream() override;
 
   uint16_t NumberOfInputs() const final { return 0; }
   AudioBufferSourceNode* AsAudioBufferSourceNode() override { return this; }
@@ -49,27 +49,27 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
   AudioBuffer* GetBuffer(JSContext* aCx) const { return mBuffer; }
   void SetBuffer(JSContext* aCx, AudioBuffer* aBuffer) {
     mBuffer = aBuffer;
-    SendBufferParameterToTrack(aCx);
-    SendLoopParametersToTrack();
+    SendBufferParameterToStream(aCx);
+    SendLoopParametersToStream();
   }
   AudioParam* PlaybackRate() const { return mPlaybackRate; }
   AudioParam* Detune() const { return mDetune; }
   bool Loop() const { return mLoop; }
   void SetLoop(bool aLoop) {
     mLoop = aLoop;
-    SendLoopParametersToTrack();
+    SendLoopParametersToStream();
   }
   double LoopStart() const { return mLoopStart; }
   void SetLoopStart(double aStart) {
     mLoopStart = aStart;
-    SendLoopParametersToTrack();
+    SendLoopParametersToStream();
   }
   double LoopEnd() const { return mLoopEnd; }
   void SetLoopEnd(double aEnd) {
     mLoopEnd = aEnd;
-    SendLoopParametersToTrack();
+    SendLoopParametersToStream();
   }
-  void NotifyMainThreadTrackEnded() override;
+  void NotifyMainThreadStreamFinished() override;
 
   const char* NodeType() const override { return "AudioBufferSourceNode"; }
 
@@ -102,9 +102,9 @@ class AudioBufferSourceNode final : public AudioScheduledSourceNode,
     DETUNE
   };
 
-  void SendLoopParametersToTrack();
-  void SendBufferParameterToTrack(JSContext* aCx);
-  void SendOffsetAndDurationParametersToTrack(AudioNodeTrack* aTrack);
+  void SendLoopParametersToStream();
+  void SendBufferParameterToStream(JSContext* aCx);
+  void SendOffsetAndDurationParametersToStream(AudioNodeStream* aStream);
 
   double mLoopStart;
   double mLoopEnd;

@@ -804,7 +804,7 @@ MediaConduitErrorCode WebrtcAudioConduit::StartReceivingLocked() {
 }
 
 // WebRTC::RTP Callback Implementation
-// Called on AudioGUM or MTG thread
+// Called on AudioGUM or MSG thread
 bool WebrtcAudioConduit::SendRtp(const uint8_t* data, size_t len,
                                  const webrtc::PacketOptions& options) {
   CSFLogDebug(LOGTAG, "%s: len %lu", __FUNCTION__, (unsigned long)len);

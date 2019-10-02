@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_AUDIONODETRACK_H_
-#define MOZILLA_AUDIONODETRACK_H_
+#ifndef MOZILLA_AUDIONODESTREAM_H_
+#define MOZILLA_AUDIONODESTREAM_H_
 
-#include "MediaTrackGraph.h"
+#include "MediaStreamGraph.h"
 #include "mozilla/dom/AudioNodeBinding.h"
 #include "nsAutoPtr.h"
 #include "AlignedTArray.h"
@@ -33,16 +33,16 @@ typedef AlignedAutoTArray<float, GUESS_AUDIO_CHANNELS * WEBAUDIO_BLOCK_SIZE, 16>
     DownmixBufferType;
 
 /**
- * An AudioNodeTrack produces one audio track with ID AUDIO_TRACK.
+ * An AudioNodeStream produces one audio track with ID AUDIO_TRACK.
  * The start time of the AudioTrack is aligned to the start time of the
- * AudioContext's destination node track, plus some multiple of BLOCK_SIZE
+ * AudioContext's destination node stream, plus some multiple of BLOCK_SIZE
  * samples.
  *
- * An AudioNodeTrack has an AudioNodeEngine plugged into it that does the
- * actual audio processing. AudioNodeTrack contains the glue code that
- * integrates audio processing with the MediaTrackGraph.
+ * An AudioNodeStream has an AudioNodeEngine plugged into it that does the
+ * actual audio processing. AudioNodeStream contains the glue code that
+ * integrates audio processing with the MediaStreamGraph.
  */
-class AudioNodeTrack : public ProcessedMediaTrack {
+class AudioNodeStream : public ProcessedMediaStream {
   typedef dom::ChannelCountMode ChannelCountMode;
   typedef dom::ChannelInterpretation ChannelInterpretation;
 
@@ -53,50 +53,51 @@ class AudioNodeTrack : public ProcessedMediaTrack {
 
   typedef AutoTArray<AudioBlock, 1> OutputChunks;
 
-  // Flags re main thread updates and track output.
+  // Flags re main thread updates and stream output.
   typedef unsigned Flags;
   enum : Flags {
-    NO_TRACK_FLAGS = 0U,
-    NEED_MAIN_THREAD_ENDED = 1U << 0,
+    NO_STREAM_FLAGS = 0U,
+    NEED_MAIN_THREAD_FINISHED = 1U << 0,
     NEED_MAIN_THREAD_CURRENT_TIME = 1U << 1,
-    // Internal AudioNodeTracks can only pass their output to another
-    // AudioNode, whereas external AudioNodeTracks can pass their output
-    // to other ProcessedMediaTracks or hardware audio output.
+    // Internal AudioNodeStreams can only pass their output to another
+    // AudioNode, whereas external AudioNodeStreams can pass their output
+    // to other ProcessedMediaStreams or hardware audio output.
     EXTERNAL_OUTPUT = 1U << 2,
   };
   /**
-   * Create a track that will process audio for an AudioNode.
+   * Create a stream that will process audio for an AudioNode.
    * Takes ownership of aEngine.
    * aGraph is required and equals the graph of aCtx in most cases. An exception
    * is AudioDestinationNode where the context's graph hasn't been set up yet.
    */
-  static already_AddRefed<AudioNodeTrack> Create(AudioContext* aCtx,
-                                                 AudioNodeEngine* aEngine,
-                                                 Flags aKind,
-                                                 MediaTrackGraph* aGraph);
+  static already_AddRefed<AudioNodeStream> Create(AudioContext* aCtx,
+                                                  AudioNodeEngine* aEngine,
+                                                  Flags aKind,
+                                                  MediaStreamGraph* aGraph);
 
  protected:
   /**
-   * Transfers ownership of aEngine to the new AudioNodeTrack.
+   * Transfers ownership of aEngine to the new AudioNodeStream.
    */
-  AudioNodeTrack(AudioNodeEngine* aEngine, Flags aFlags, TrackRate aSampleRate);
+  AudioNodeStream(AudioNodeEngine* aEngine, Flags aFlags,
+                  TrackRate aSampleRate);
 
-  ~AudioNodeTrack();
+  ~AudioNodeStream();
 
  public:
   // Control API
   /**
-   * Sets a parameter that's a time relative to some track's played time.
-   * This time is converted to a time relative to this track when it's set.
+   * Sets a parameter that's a time relative to some stream's played time.
+   * This time is converted to a time relative to this stream when it's set.
    */
-  void SetTrackTimeParameter(uint32_t aIndex, AudioContext* aContext,
-                             double aTrackTime);
+  void SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
+                              double aStreamTime);
   void SetDoubleParameter(uint32_t aIndex, double aValue);
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue);
   void SetThreeDPointParameter(uint32_t aIndex, const dom::ThreeDPoint& aValue);
   void SetBuffer(AudioChunk&& aBuffer);
   void SetReverb(WebCore::Reverb* aReverb, uint32_t aImpulseChannelCount);
-  // This sends a single event to the timeline on the MTG thread side.
+  // This sends a single event to the timeline on the MSG thread side.
   void SendTimelineEvent(uint32_t aIndex,
                          const dom::AudioTimelineEvent& aEvent);
   // This consumes the contents of aData.  aData will be emptied after this
@@ -111,26 +112,27 @@ class AudioNodeTrack : public ProcessedMediaTrack {
     return mChannelInterpretation;
   }
 
-  void SetAudioParamHelperTrack() {
-    MOZ_ASSERT(!mAudioParamTrack, "Can only do this once");
-    mAudioParamTrack = true;
+  void SetAudioParamHelperStream() {
+    MOZ_ASSERT(!mAudioParamStream, "Can only do this once");
+    mAudioParamStream = true;
   }
 
   /*
-   * Resume track after updating its concept of current time by aAdvance.
-   * Main thread.  Used only from AudioDestinationNode when resuming a track
-   * suspended to save running the MediaTrackGraph when there are no other
+   * Resume stream after updating its concept of current time by aAdvance.
+   * Main thread.  Used only from AudioDestinationNode when resuming a stream
+   * suspended to save running the MediaStreamGraph when there are no other
    * nodes in the AudioContext.
    */
-  void AdvanceAndResume(TrackTime aAdvance);
+  void AdvanceAndResume(StreamTime aAdvance);
 
-  AudioNodeTrack* AsAudioNodeTrack() override { return this; }
+  AudioNodeStream* AsAudioNodeStream() override { return this; }
   void AddInput(MediaInputPort* aPort) override;
   void RemoveInput(MediaInputPort* aPort) override;
 
   // Graph thread only
-  void SetTrackTimeParameterImpl(uint32_t aIndex, MediaTrack* aRelativeToTrack,
-                                 double aTrackTime);
+  void SetStreamTimeParameterImpl(uint32_t aIndex,
+                                  MediaStream* aRelativeToStream,
+                                  double aStreamTime);
   void SetChannelMixingParametersImpl(
       uint32_t aNumberOfChannels, ChannelCountMode aChannelCountMoe,
       ChannelInterpretation aChannelInterpretation);
@@ -141,16 +143,17 @@ class AudioNodeTrack : public ProcessedMediaTrack {
    * the output.  This is used only for DelayNodeEngine in a feedback loop.
    */
   void ProduceOutputBeforeInput(GraphTime aFrom);
-  bool IsAudioParamTrack() const { return mAudioParamTrack; }
+  bool IsAudioParamStream() const { return mAudioParamStream; }
 
   const OutputChunks& LastChunks() const { return mLastChunks; }
   bool MainThreadNeedsUpdates() const override {
-    return ((mFlags & NEED_MAIN_THREAD_ENDED) && mEnded) ||
+    return ((mFlags & NEED_MAIN_THREAD_FINISHED) && mFinished) ||
            (mFlags & NEED_MAIN_THREAD_CURRENT_TIME);
   }
 
   // Any thread
   AudioNodeEngine* Engine() { return mEngine; }
+  TrackRate SampleRate() const { return mSampleRate; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
@@ -162,14 +165,14 @@ class AudioNodeTrack : public ProcessedMediaTrack {
    * SetActive() is called when either an active input is added or the engine
    * for a source node transitions from inactive to active.  This is not
    * called from engines for processing nodes because they only become active
-   * when there are active input tracks, in which case this track is already
+   * when there are active input streams, in which case this stream is already
    * active.
    */
   void SetActive();
   /*
-   * ScheduleCheckForInactive() is called during track processing when the
-   * engine transitions from active to inactive, or the track finishes.  It
-   * schedules a call to CheckForInactive() after track processing.
+   * ScheduleCheckForInactive() is called during stream processing when the
+   * engine transitions from active to inactive, or the stream finishes.  It
+   * schedules a call to CheckForInactive() after stream processing.
    */
   void ScheduleCheckForInactive();
 
@@ -182,8 +185,8 @@ class AudioNodeTrack : public ProcessedMediaTrack {
 
   /*
    * CheckForInactive() is called when the engine transitions from active to
-   * inactive, or an active input is removed, or the track finishes.  If the
-   * track is now inactive, then mInputChunks will be cleared and mLastChunks
+   * inactive, or an active input is removed, or the stream finishes.  If the
+   * stream is now inactive, then mInputChunks will be cleared and mLastChunks
    * will be set to null.  ProcessBlock() will not be called on the engine
    * again until SetActive() is called.
    */
@@ -210,27 +213,29 @@ class AudioNodeTrack : public ProcessedMediaTrack {
   OutputChunks mInputChunks;
   // The last block produced by this node.
   OutputChunks mLastChunks;
-  // Whether this is an internal or external track
+  // The stream's sampling rate
+  const TrackRate mSampleRate;
+  // Whether this is an internal or external stream
   const Flags mFlags;
-  // The number of input tracks that may provide non-silent input.
+  // The number of input streams that may provide non-silent input.
   uint32_t mActiveInputCount = 0;
-  // The number of input channels that this track requires. 0 means don't care.
+  // The number of input channels that this stream requires. 0 means don't care.
   uint32_t mNumberOfInputChannels;
   // The mixing modes
   ChannelCountMode mChannelCountMode;
   ChannelInterpretation mChannelInterpretation;
-  // Tracks are considered active if the track has not finished and either
-  // the engine is active or there are active input tracks.
+  // Streams are considered active if the stream has not finished and either
+  // the engine is active or there are active input streams.
   bool mIsActive;
-  // Whether the track should be marked as ended as soon
+  // Whether the stream should be marked as finished as soon
   // as the current time range has been computed block by block.
-  bool mMarkAsEndedAfterThisBlock;
-  // Whether the track is an AudioParamHelper track.
-  bool mAudioParamTrack;
-  // Whether the track just passes its input through.
+  bool mMarkAsFinishedAfterThisBlock;
+  // Whether the stream is an AudioParamHelper stream.
+  bool mAudioParamStream;
+  // Whether the stream just passes its input through.
   bool mPassThrough;
 };
 
 }  // namespace mozilla
 
-#endif /* MOZILLA_AUDIONODETRACK_H_ */
+#endif /* MOZILLA_AUDIONODESTREAM_H_ */

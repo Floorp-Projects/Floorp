@@ -7,7 +7,7 @@
 #include "mozilla/dom/ChannelSplitterNode.h"
 #include "mozilla/dom/ChannelSplitterNodeBinding.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +19,7 @@ class ChannelSplitterNodeEngine final : public AudioNodeEngine {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
+  void ProcessBlocksOnPorts(AudioNodeStream* aStream,
                             Span<const AudioBlock> aInput,
                             Span<AudioBlock> aOutput,
                             bool* aFinished) override {
@@ -50,9 +50,9 @@ ChannelSplitterNode::ChannelSplitterNode(AudioContext* aContext,
     : AudioNode(aContext, aOutputCount, ChannelCountMode::Explicit,
                 ChannelInterpretation::Discrete),
       mOutputCount(aOutputCount) {
-  mTrack =
-      AudioNodeTrack::Create(aContext, new ChannelSplitterNodeEngine(this),
-                             AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
+  mStream = AudioNodeStream::Create(
+      aContext, new ChannelSplitterNodeEngine(this),
+      AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
 }
 
 /* static */

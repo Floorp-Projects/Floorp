@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_SpeechStreamListener_h
 #define mozilla_dom_SpeechStreamListener_h
 
-#include "MediaTrackGraph.h"
-#include "MediaTrackListener.h"
+#include "MediaStreamGraph.h"
+#include "MediaStreamListener.h"
 #include "AudioSegment.h"
 #include "mozilla/MozPromise.h"
 
@@ -20,17 +20,17 @@ namespace dom {
 
 class SpeechRecognition;
 
-class SpeechTrackListener : public MediaTrackListener {
+class SpeechTrackListener : public MediaStreamTrackListener {
  public:
   explicit SpeechTrackListener(SpeechRecognition* aRecognition);
   ~SpeechTrackListener() = default;
 
-  void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
+  void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override;
 
-  void NotifyEnded(MediaTrackGraph* aGraph) override;
+  void NotifyEnded(MediaStreamGraph* aGraph) override;
 
-  void NotifyRemoved(MediaTrackGraph* aGraph) override;
+  void NotifyRemoved(MediaStreamGraph* aGraph) override;
 
  private:
   template <typename SampleFormatType>
