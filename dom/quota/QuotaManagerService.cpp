@@ -768,14 +768,14 @@ QuotaManagerService::Estimate(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
-QuotaManagerService::ListInitializedOrigins(nsIQuotaCallback* aCallback,
-                                            nsIQuotaRequest** _retval) {
+QuotaManagerService::ListOrigins(nsIQuotaCallback* aCallback,
+                                 nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCallback);
 
   RefPtr<Request> request = new Request(aCallback);
 
-  ListInitializedOriginsParams params;
+  ListOriginsParams params;
 
   nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 
