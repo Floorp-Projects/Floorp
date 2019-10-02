@@ -585,6 +585,21 @@ bool BaselineInterpreterCodeGen::emitNextIC() {
   return true;
 }
 
+template <>
+void BaselineCompilerCodeGen::computeFrameSize(Register dest) {
+  MOZ_ASSERT(!inCall_, "must not be called in the middle of a VM call");
+  masm.move32(Imm32(frame.frameSize()), dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::computeFrameSize(Register dest) {
+  // dest = FramePointer + BaselineFrame::FramePointerOffset - StackPointer.
+  MOZ_ASSERT(!inCall_, "must not be called in the middle of a VM call");
+  masm.computeEffectiveAddress(
+      Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), dest);
+  masm.subStackPtrFrom(dest);
+}
+
 template <typename Handler>
 void BaselineCodeGen<Handler>::prepareVMCall() {
   pushedBeforeCall_ = masm.framePushed();
@@ -5810,13 +5825,16 @@ bool BaselineCodeGen<Handler>::emit_JSOP_YIELD() {
     masm.bind(&skipBarrier);
   } else {
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+    computeFrameSize(R0.scratchReg());
 
     prepareVMCall();
     pushBytecodePCArg();
+    pushArg(R0.scratchReg());
     pushArg(R1.scratchReg());
     pushArg(genObj);
 
-    using Fn = bool (*)(JSContext*, HandleObject, BaselineFrame*, jsbytecode*);
+    using Fn = bool (*)(JSContext*, HandleObject, BaselineFrame*, uint32_t,
+                        jsbytecode*);
     if (!callVM<Fn, jit::NormalSuspend>()) {
       return false;
     }

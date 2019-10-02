@@ -337,6 +337,10 @@ class CompilerFrameInfo : public FrameInfo {
   void storeStackValue(int32_t depth, const Address& dest,
                        const ValueOperand& scratch);
 
+  uint32_t frameSize() const {
+    return BaselineFrame::frameSizeForNumValueSlots(nlocals() + stackDepth());
+  }
+
 #ifdef DEBUG
   // Assert the state is valid before excuting "pc".
   void assertValidState(const BytecodeInfo& info);
