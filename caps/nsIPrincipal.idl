@@ -150,6 +150,24 @@ interface nsIPrincipal : nsISerializable
                       in boolean allowIfInheritsPrincipal);
 
     /**
+    * Checks if the provided URI is concidered third-party to the
+    * URI of the principal.
+    * Returns true if the URI is third-party.
+    *
+    * @param uri - The URI to check
+    */
+    boolean isThirdPartyURI(in nsIURI uri);
+
+    /**
+    * Checks if the provided principal is concidered third-party to the
+    * URI of the Principal.
+    * Returns true if the principal is third-party.
+    *
+    * @param principal - The principal to check
+    */
+    boolean isThirdPartyPrincipal(in nsIPrincipal principal);
+
+    /**
      * A dictionary of the non-default origin attributes associated with this
      * nsIPrincipal.
      *
