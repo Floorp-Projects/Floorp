@@ -289,15 +289,6 @@ NetworkConnectivityService::OnStopRequest(nsIRequest* aRequest,
       LOG(("networkId.IsEmpty() : %d\n", networkId.IsEmpty()));
     }
   } else if (aRequest == mIPv6Channel) {
-#ifdef DEBUG
-    // Verify that the check was performed over IPv6
-    nsCOMPtr<nsIHttpChannelInternal> v6Internal = do_QueryInterface(aRequest);
-    MOZ_ASSERT(v6Internal);
-    nsAutoCString peerAddr;
-    Unused << v6Internal->GetRemoteAddress(peerAddr);
-    MOZ_ASSERT(peerAddr.Contains(':') || NS_FAILED(aStatusCode));
-#endif
-
     mIPv6 = status;
     mIPv6Channel = nullptr;
   } else {
