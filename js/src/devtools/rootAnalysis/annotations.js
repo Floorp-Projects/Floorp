@@ -71,6 +71,12 @@ function indirectCallCannotGC(fullCaller, fullVariable)
     if (name == "f" && caller.includes("js::MathCache::lookup"))
         return true;
 
+    // It would probably be better to somehow rewrite PR_CallOnce(foo) into a
+    // call of foo, but for now just assume that nobody is crazy enough to use
+    // PR_CallOnce with a function that can GC.
+    if (name == "func" && caller == "PR_CallOnce")
+        return true;
+
     return false;
 }
 
@@ -85,6 +91,8 @@ var ignoreClasses = {
     "_MD_IOVector" : true,
     "malloc_table_t": true, // replace_malloc
     "malloc_hook_table_t": true, // replace_malloc
+    "mozilla::MallocSizeOf": true,
+    "MozMallocSizeOf": true,
 };
 
 // Ignore calls through TYPE.FIELD, where TYPE is the class or struct name containing
@@ -99,6 +107,7 @@ var ignoreCallees = {
     "mozilla::CycleCollectedJSRuntime.DescribeCustomObjects" : true, // During tracing, cannot GC.
     "mozilla::CycleCollectedJSRuntime.NoteCustomGCThingXPCOMChildren" : true, // During tracing, cannot GC.
     "PLDHashTableOps.hashKey" : true,
+    "PLDHashTableOps.clearEntry" : true,
     "z_stream_s.zfree" : true,
     "z_stream_s.zalloc" : true,
     "GrGLInterface.fCallback" : true,
@@ -106,6 +115,7 @@ var ignoreCallees = {
     "std::strstreambuf._M_free_fun" : true,
     "struct js::gc::Callback<void (*)(JSContext*, void*)>.op" : true,
     "mozilla::ThreadSharedFloatArrayBufferList::Storage.mFree" : true,
+    "mozilla::SizeOfState.mMallocSizeOf": true,
 };
 
 function fieldCallCannotGC(csu, fullfield)
@@ -252,6 +262,9 @@ var ignoreFunctions = {
     "PR_GetCurrentThread" : true,
     "calloc" : true,
 
+    // This will happen early enough in initialization to not matter.
+    "_PR_UnixInit" : true,
+
     "uint8 nsContentUtils::IsExpandedPrincipal(nsIPrincipal*)" : true,
 
     "void mozilla::AutoProfilerLabel::~AutoProfilerLabel(int32)" : true,
@@ -259,6 +272,26 @@ var ignoreFunctions = {
     // Stores a function pointer in an AutoProfilerLabelData struct and calls it.
     // And it's in mozglue, which doesn't have access to the attributes yet.
     "void mozilla::ProfilerLabelEnd(mozilla::Tuple<void*, unsigned int>*)" : true,
+
+    // This gets into PLDHashTable function pointer territory, and should get
+    // set up early enough to not do anything when it matters anyway.
+    "mozilla::LogModule* mozilla::LogModule::Get(int8*)": true,
+
+    // This annotation is correct, but the reasoning is still being hashed out
+    // in bug 1582326 comment 8 and on.
+    "nsCycleCollector.cpp:nsISupports* CanonicalizeXPCOMParticipant(nsISupports*)": true,
+
+    // PLDHashTable again
+    "void mozilla::DeadlockDetector<T>::Add(const T*) [with T = mozilla::BlockingResourceBase]": true,
+
+    // OOM handling during logging
+    "void mozilla::detail::log_print(mozilla::LogModule*, int32, int8*)": true,
+
+    // This would need to know that the nsCOMPtr refcount will not go to zero.
+    "uint8 XPCJSRuntime::DescribeCustomObjects(JSObject*, JSClass*, int8[72]*)[72]) const": true,
+
+    // As the comment says "Refcount isn't zero, so Suspect won't delete anything."
+    "uint64 nsCycleCollectingAutoRefCnt::incr(void*, nsCycleCollectionParticipant*) [with void (* suspect)(void*, nsCycleCollectionParticipant*, nsCycleCollectingAutoRefCnt*, bool*) = NS_CycleCollectorSuspect3; uintptr_t = long unsigned int]": true,
 };
 
 function extraGCFunctions() {
@@ -314,6 +347,11 @@ function ignoreGCFunction(mangled)
     if (fun.includes("void nsCOMPtr<T>::Assert_NoQueryNeeded()"))
         return true;
 
+    // Bug 1577915 - Sixgill is ignoring a template param that makes its CFG
+    // impossible.
+    if (fun.includes("UnwrapObjectInternal") && fun.includes("mayBeWrapper = false"))
+        return true;
+
     // These call through an 'op' function pointer.
     if (fun.includes("js::WeakMap<Key, Value, HashPolicy>::getDelegate("))
         return true;
@@ -321,7 +359,7 @@ function ignoreGCFunction(mangled)
     // TODO: modify refillFreeList<NoGC> to not need data flow analysis to
     // understand it cannot GC. As of gcc 6, the same problem occurs with
     // tryNewTenuredThing, tryNewNurseryObject, and others.
-    if (/refillFreeList|tryNew/.test(fun) && /\(js::AllowGC\)0u/.test(fun))
+    if (/refillFreeList|tryNew/.test(fun) && /\(js::AllowGC\)0/.test(fun))
         return true;
 
     return false;
@@ -426,6 +464,27 @@ function isOverridableField(staticCSU, csu, field)
         return false;
     if (field == "ConstructUbiNode")
         return false;
+
+    // Fields on the [builtinclass] nsIPrincipal
+    if (field == "GetSiteOrigin")
+        return false;
+    if (field == "GetDomain")
+        return false;
+    if (field == "GetBaseDomain")
+        return false;
+    if (field == "GetOriginNoSuffix")
+        return false;
+
+    // Fields on nsIURI
+    if (field == "GetScheme")
+        return false;
+    if (field == "GetAsciiHostPort")
+        return false;
+    if (field == "GetAsciiSpec")
+        return false;
+    if (field == "SchemeIs")
+        return false;
+
     if (staticCSU == 'nsIXPCScriptable' && field == "GetScriptableFlags")
         return false;
     if (staticCSU == 'nsIXPConnectJSObjectHolder' && field == 'GetJSObject')
