@@ -397,7 +397,6 @@ class Browsertime(Perftest):
         return ['--browser', 'firefox', '--firefox.binaryPath', binary_path]
 
     def run_test(self, test, timeout):
-
         self.run_test_setup(test)
 
         browsertime_script = [os.path.join(os.path.dirname(__file__), "..",
@@ -405,21 +404,30 @@ class Browsertime(Perftest):
 
         browsertime_script.extend(self.browsertime_args)
 
-        # timeout is a single page-load timeout value in ms from the test INI
-        # convert timeout to seconds and account for browser cycles
-        timeout = int(timeout / 1000) * int(test.get('browser_cycles', 1))
+        # timeout is a single page-load timeout value (ms) from the test INI
+        # this will be used for btime --timeouts.pageLoad
+
+        # bt_timeout will be the overall browsertime cmd/session timeout (seconds)
+        # browsertime deals with page cycles internally, so we need to give it a timeout
+        # value that includes all page cycles
+        bt_timeout = int(timeout / 1000) * int(test.get("page_cycles", 1))
+
+        # the post-startup-delay is a delay after the browser has started, to let it settle
+        # it's handled within browsertime itself by loading a 'preUrl' (about:blank) and having a
+        # delay after that ('preURLDelay') as the post-startup-delay, so we must add that in sec
+        bt_timeout += int(self.post_startup_delay / 1000)
 
         # add some time for browser startup, time for the browsertime measurement code
         # to be injected/invoked, and for exceptions to bubble up; be generous
-        timeout += (20 * int(test.get('browser_cycles', 1)))
+        bt_timeout += 20
+
+        # browsertime also handles restarting the browser/running all of the browser cycles;
+        # so we need to multiply our bt_timeout by the number of browser cycles
+        bt_timeout = bt_timeout * int(test.get('browser_cycles', 1))
 
         # if geckoProfile enabled, give browser more time for profiling
         if self.config['gecko_profile'] is True:
-            timeout += 5 * 60
-
-        # browsertime deals with page cycles internally, so we
-        # need to give it a timeout value that includes all cycles
-        timeout = timeout * int(test.get("page_cycles", 1))
+            bt_timeout += 5 * 60
 
         # pass a few extra options to the browsertime script
         # XXX maybe these should be in the browsertime_args() func
@@ -432,6 +440,10 @@ class Browsertime(Perftest):
         # Raptor's `foregroundDelay` delay (ms) for foregrounding app
         browsertime_script.extend(["--browsertime.foreground_delay", "5000"])
 
+        # Raptor's `post startup delay` is settle time after the browser has started
+        browsertime_script.extend(["--browsertime.post_startup_delay",
+                                  str(self.post_startup_delay)])
+
         # the browser time script cannot restart the browser itself,
         # so we have to keep -n option here.
         cmd = ([self.browsertime_node, self.browsertime_browsertimejs] +
@@ -440,6 +452,7 @@ class Browsertime(Perftest):
                ['--skipHar',
                 '--video', 'false',
                 '--visualMetrics', 'false',
+                '--timeouts.pageLoad', str(timeout),
                 '-vv',
                 '--resultDir', self.results_handler.result_dir_for_test(test),
                 '-n', str(test.get('browser_cycles', 1))])
@@ -465,7 +478,7 @@ class Browsertime(Perftest):
 
         try:
             proc = mozprocess.ProcessHandler(cmd, env=env)
-            proc.run(timeout=timeout,
+            proc.run(timeout=bt_timeout,
                      outputTimeout=2*60)
             proc.wait()
 
