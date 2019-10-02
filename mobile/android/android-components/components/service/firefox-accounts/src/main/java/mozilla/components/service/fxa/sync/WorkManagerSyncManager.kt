@@ -60,8 +60,8 @@ private const val SYNC_WORKER_BACKOFF_DELAY_MINUTES = 3L
  * Must be initialized on the main thread.
  */
 internal class WorkManagerSyncManager(
-    syncConfig: SyncConfig,
-    private val context: Context
+    private val context: Context,
+    syncConfig: SyncConfig
 ) : SyncManager(syncConfig) {
     override val logger = Logger("BgSyncManager")
 

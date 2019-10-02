@@ -453,7 +453,7 @@ class EventsStorageEngineTest {
         event.record(extra = mapOf(SomeExtraKeys.SomeExtra to "post-init"))
 
         // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         var request = server.takeRequest(20L, TimeUnit.SECONDS)
         var pingJsonData = request.body.readUtf8()
@@ -474,7 +474,7 @@ class EventsStorageEngineTest {
         Glean.sendPingsByName(listOf("events"))
 
         // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         request = server.takeRequest(20L, TimeUnit.SECONDS)
         pingJsonData = request.body.readUtf8()
