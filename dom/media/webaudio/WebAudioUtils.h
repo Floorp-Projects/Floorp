@@ -18,7 +18,7 @@ typedef struct SpeexResamplerState_ SpeexResamplerState;
 
 namespace mozilla {
 
-class AudioNodeStream;
+class AudioNodeTrack;
 
 extern LazyLogModule gWebAudioAPILog;
 #define WEB_AUDIO_API_LOG(...) \
@@ -43,15 +43,15 @@ inline bool FuzzyEqual(double v1, double v2) { return fabs(v1 - v2) < 1e-7; }
 
 /**
  * Converts an AudioTimelineEvent's floating point time values to tick values
- * with respect to a destination AudioNodeStream.
+ * with respect to a destination AudioNodeTrack.
  *
  * This needs to be called for each AudioTimelineEvent that gets sent to an
  * AudioNodeEngine, on the engine side where the AudioTimlineEvent is
  * received.  This means that such engines need to be aware of their
- * destination streams as well.
+ * destination tracks as well.
  */
 void ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
-                                      AudioNodeStream* aDest);
+                                      AudioNodeTrack* aDest);
 
 /**
  * Converts a linear value to decibels.  Returns aMinDecibels if the linear

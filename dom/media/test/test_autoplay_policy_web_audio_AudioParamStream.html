@@ -132,7 +132,7 @@ function connectAudioScheduledSourceNodeToAudioParams() {
   let audioParamsArr = createAllAudioParamsFromDifferentAudioNode();
   for (let audioParam of audioParamsArr) {
     osc.connect(audioParam);
-    ok(SpecialPowers.wrap(audioParam).isStreamSuspended,
+    ok(SpecialPowers.wrap(audioParam).isTrackSuspended,
       `(${audioParam.name}) audioParam's stream has been suspended.`);
   }
 
@@ -146,7 +146,7 @@ async function audioContextAndAudioParamStreamsShouldBeResumed(audioParamsArr) {
   await ac.allowedToStart;
   is(ac.state, "running", `AudioContext is allowed to start.`);
   for (let audioParam of audioParamsArr) {
-    ok(!SpecialPowers.wrap(audioParam).isStreamSuspended,
+    ok(!SpecialPowers.wrap(audioParam).isTrackSuspended,
        `(${audioParam.name}) audioParam's stream has been resumed.`);;
   }
 }
@@ -155,7 +155,7 @@ async function suspendAudioContextAndAudioParamStreams(audioParamsArr) {
   await ac.suspend();
   is(ac.state, "suspended", `AudioContext is suspended.`);
   for (let audioParam of audioParamsArr) {
-    ok(SpecialPowers.wrap(audioParam).isStreamSuspended,
+    ok(SpecialPowers.wrap(audioParam).isTrackSuspended,
        `(${audioParam.name}) audioParam's stream has been suspended.`);;
   }
 }

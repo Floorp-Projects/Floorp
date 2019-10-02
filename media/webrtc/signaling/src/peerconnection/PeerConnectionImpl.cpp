@@ -35,7 +35,7 @@
 
 #include "AudioConduit.h"
 #include "VideoConduit.h"
-#include "MediaStreamGraph.h"
+#include "MediaTrackGraph.h"
 #include "runnable_utils.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
@@ -98,7 +98,7 @@
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
 #include "nsIScriptGlobalObject.h"
-#include "MediaStreamGraph.h"
+#include "MediaTrackGraph.h"
 #include "DOMMediaStream.h"
 #include "WebrtcGlobalInformation.h"
 #include "mozilla/dom/Event.h"
@@ -106,7 +106,7 @@
 #include "mozilla/net/DataChannelProtocol.h"
 #include "MediaManager.h"
 
-#include "MediaStreamGraphImpl.h"
+#include "MediaTrackGraphImpl.h"
 
 #ifdef XP_WIN
 // We need to undef the MS macro again in case the windows include file
@@ -1811,29 +1811,29 @@ OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
         NullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
   }
 
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
-      audio ? MediaStreamGraph::AUDIO_THREAD_DRIVER
-            : MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-      GetWindow(), MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      audio ? MediaTrackGraph::AUDIO_THREAD_DRIVER
+            : MediaTrackGraph::SYSTEM_THREAD_DRIVER,
+      GetWindow(), MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
 
   RefPtr<MediaStreamTrack> track;
   RefPtr<RemoteTrackSource> trackSource;
   if (audio) {
-    RefPtr<SourceMediaStream> source =
-        graph->CreateSourceStream(MediaSegment::AUDIO);
+    RefPtr<SourceMediaTrack> source =
+        graph->CreateSourceTrack(MediaSegment::AUDIO);
     trackSource = new RemoteTrackSource(source, principal,
                                         NS_ConvertASCIItoUTF16("remote audio"));
     track = new AudioStreamTrack(GetWindow(), source, trackSource);
   } else {
-    RefPtr<SourceMediaStream> source =
-        graph->CreateSourceStream(MediaSegment::VIDEO);
+    RefPtr<SourceMediaTrack> source =
+        graph->CreateSourceTrack(MediaSegment::VIDEO);
     trackSource = new RemoteTrackSource(source, principal,
                                         NS_ConvertASCIItoUTF16("remote video"));
     track = new VideoStreamTrack(GetWindow(), source, trackSource);
   }
 
   CSFLogDebug(LOGTAG, "Created %s track %p, inner: %p",
-              audio ? "audio" : "video", track.get(), track->GetStream());
+              audio ? "audio" : "video", track.get(), track->GetTrack());
 
   // Spec says remote tracks start out muted.
   trackSource->SetMuted(true);

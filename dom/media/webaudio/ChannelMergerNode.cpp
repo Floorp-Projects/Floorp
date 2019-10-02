@@ -7,7 +7,7 @@
 #include "mozilla/dom/ChannelMergerNode.h"
 #include "mozilla/dom/ChannelMergerNodeBinding.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,7 +19,7 @@ class ChannelMergerNodeEngine final : public AudioNodeEngine {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  void ProcessBlocksOnPorts(AudioNodeStream* aStream,
+  void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                             Span<const AudioBlock> aInput,
                             Span<AudioBlock> aOutput,
                             bool* aFinished) override {
@@ -61,9 +61,9 @@ ChannelMergerNode::ChannelMergerNode(AudioContext* aContext,
     : AudioNode(aContext, 1, ChannelCountMode::Explicit,
                 ChannelInterpretation::Speakers),
       mInputCount(aInputCount) {
-  mStream = AudioNodeStream::Create(aContext, new ChannelMergerNodeEngine(this),
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
+  mTrack =
+      AudioNodeTrack::Create(aContext, new ChannelMergerNodeEngine(this),
+                             AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
 /* static */

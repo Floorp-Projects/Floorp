@@ -15,8 +15,8 @@
 #include "mozilla/RefPtr.h"
 #include "MediaPipeline.h"
 #include "MediaPipelineFilter.h"
-#include "MediaStreamGraph.h"
-#include "MediaStreamListener.h"
+#include "MediaTrackGraph.h"
+#include "MediaTrackListener.h"
 #include "MediaStreamTrack.h"
 #include "transportflow.h"
 #include "transportlayerloopback.h"
@@ -73,13 +73,13 @@ class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
     mTimer->Cancel();
   }
 
-  virtual void AddListener(MediaStreamTrackListener* aListener) override {
+  virtual void AddListener(MediaTrackListener* aListener) override {
     mozilla::MutexAutoLock lock(mMutex);
     mListeners.push_back(aListener);
   }
 
  private:
-  std::vector<MediaStreamTrackListener*> mListeners;
+  std::vector<MediaTrackListener*> mListeners;
   mozilla::Mutex mMutex;
   bool mStop;
   nsCOMPtr<nsITimer> mTimer;
