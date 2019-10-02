@@ -206,5 +206,28 @@ ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ScreenManager::GetTotalScreenPixels(int64_t* aTotalScreenPixels) {
+  MOZ_ASSERT(aTotalScreenPixels);
+
+  if (mScreenList.IsEmpty()) {
+    MOZ_LOG(sScreenLog, LogLevel::Warning,
+            ("No screen available. This can happen in xpcshell."));
+    *aTotalScreenPixels = 0;
+    return NS_OK;
+  }
+
+  int64_t pixels = 0;
+  for (auto& screen : mScreenList) {
+    int32_t x, y, width, height;
+    x = y = width = height = 0;
+    screen->GetRect(&x, &y, &width, &height);
+    pixels += width * height;
+  }
+
+  *aTotalScreenPixels = pixels;
+  return NS_OK;
+}
+
 }  // namespace widget
 }  // namespace mozilla

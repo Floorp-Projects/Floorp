@@ -473,7 +473,8 @@ gfxPlatform::gfxPlatform()
       mFrameStatsCollector(this, &gfxPlatform::GetFrameStats),
       mCMSInfoCollector(this, &gfxPlatform::GetCMSSupportInfo),
       mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
-      mScreenDepth(0) {
+      mScreenDepth(0),
+      mScreenPixels(0) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
   mFallbackUsesCmaps = UNINITIALIZED_VALUE;
 
@@ -1591,6 +1592,8 @@ void gfxPlatform::PopulateScreenInfo() {
       do_GetService("@mozilla.org/gfx/screenmanager;1");
   MOZ_ASSERT(manager, "failed to get nsIScreenManager");
 
+  manager->GetTotalScreenPixels(&mScreenPixels);
+
   nsCOMPtr<nsIScreen> screen;
   manager->GetPrimaryScreen(getter_AddRefs(screen));
   if (!screen) {
@@ -2701,7 +2704,7 @@ static void UpdateWRQualificationForAMD(FeatureState& aFeature,
 
 static void UpdateWRQualificationForIntel(FeatureState& aFeature,
                                           int32_t aDeviceId,
-                                          int32_t aScreenPixels,
+                                          int64_t aScreenPixels,
                                           bool* aOutGuardedByQualifiedPref) {
   const uint16_t supportedDevices[] = {
       // skylake gt2+
@@ -2810,10 +2813,10 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
   // Linux we allow medium size screens as well (anything sub-4k).
 #  if defined(XP_WIN)
   // Allow up to WUXGA on Windows release
-  const int32_t kMaxPixels = 1920 * 1200;  // WUXGA
+  const int64_t kMaxPixels = 1920 * 1200;  // WUXGA
 #  else
   // Allow up to 4k on Linux
-  const int32_t kMaxPixels = 3440 * 1440;  // UWQHD
+  const int64_t kMaxPixels = 3440 * 1440;  // UWQHD
 #  endif
   if (aScreenPixels > kMaxPixels) {
     aFeature.Disable(
@@ -2842,8 +2845,7 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
 }
 
 static FeatureState& WebRenderHardwareQualificationStatus(
-    const IntSize& aScreenSize, bool aHasBattery,
-    bool* aOutGuardedByQualifiedPref) {
+    int64_t aScreenPixels, bool aHasBattery, bool* aOutGuardedByQualifiedPref) {
   FeatureState& featureWebRenderQualified =
       gfxConfig::GetFeature(Feature::WEBRENDER_QUALIFIED);
   featureWebRenderQualified.EnableByDefault();
@@ -2889,8 +2891,6 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     return featureWebRenderQualified;
   }
 
-  const int32_t screenPixels = aScreenSize.width * aScreenSize.height;
-
   if (adapterVendorID == u"0x10de") {  // Nvidia
     UpdateWRQualificationForNvidia(featureWebRenderQualified, deviceID,
                                    aOutGuardedByQualifiedPref);
@@ -2899,7 +2899,7 @@ static FeatureState& WebRenderHardwareQualificationStatus(
                                 aOutGuardedByQualifiedPref);
   } else if (adapterVendorID == u"0x8086") {  // Intel
     UpdateWRQualificationForIntel(featureWebRenderQualified, deviceID,
-                                  screenPixels, aOutGuardedByQualifiedPref);
+                                  aScreenPixels, aOutGuardedByQualifiedPref);
   } else {
     featureWebRenderQualified.Disable(
         FeatureStatus::BlockedVendorUnsupported, "Unsupported vendor",
@@ -2927,8 +2927,8 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     *aOutGuardedByQualifiedPref = true;
 
     // if we have a battery, ignore it if the screen is small enough.
-    const int32_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
-    if (screenPixels > 0 && screenPixels <= kMaxPixelsBattery) {
+    const int64_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
+    if (aScreenPixels > 0 && aScreenPixels <= kMaxPixelsBattery) {
 #ifndef NIGHTLY_BUILD
       featureWebRenderQualified.Disable(
           FeatureStatus::BlockedReleaseChannelBattery,
@@ -2975,7 +2975,7 @@ void gfxPlatform::InitWebRenderConfig() {
 
   bool guardedByQualifiedPref = true;
   FeatureState& featureWebRenderQualified =
-      WebRenderHardwareQualificationStatus(GetScreenSize(), HasBattery(),
+      WebRenderHardwareQualificationStatus(mScreenPixels, HasBattery(),
                                            &guardedByQualifiedPref);
   FeatureState& featureWebRender = gfxConfig::GetFeature(Feature::WEBRENDER);
 
