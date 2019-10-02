@@ -55,7 +55,7 @@
   margin: 0 !important; /* override autocomplete.css */
 }
 
-#urlbar:hover,
+#urlbar:hover:not([open]),
 #searchbar:hover {
   border-color: @fieldHoverBorderColor@;
   box-shadow: 0 1px 6px rgba(0,0,0,.1);
@@ -123,14 +123,18 @@
   }
 }
 
-#urlbar[breakout][breakout-extend] {
+#urlbar[breakout][breakout-extend],
+#urlbar[breakout][breakout-extend-disabled][open] {
   /* The z-index needs to be big enough to trump other positioned UI pieces
      that we want to overlay. 3 is used in the tab bar. */
   z-index: 3;
+  height: auto;
+}
+
+#urlbar[breakout][breakout-extend] {
   top: -@urlbarBreakoutVerticalExtend@;
   left: -@urlbarBreakoutHorizontalExtend@;
   width: calc(100% + 2 * @urlbarBreakoutHorizontalExtend@);
-  height: auto;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
