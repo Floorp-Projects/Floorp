@@ -1588,18 +1588,18 @@ class EstimateOp final : public QuotaRequestBase {
   void GetResponse(RequestResponse& aResponse) override;
 };
 
-class ListOriginsOp final : public QuotaRequestBase,
-                            public TraverseRepositoryHelper {
+class ListInitializedOriginsOp final : public QuotaRequestBase,
+                                       public TraverseRepositoryHelper {
   // XXX Bug 1521541 will make each origin has it's own state.
   nsTArray<nsCString> mOrigins;
 
  public:
-  ListOriginsOp();
+  ListInitializedOriginsOp();
 
   bool Init(Quota* aQuota) override;
 
  private:
-  ~ListOriginsOp() = default;
+  ~ListInitializedOriginsOp() = default;
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
 
@@ -8288,7 +8288,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TClearAllParams:
     case RequestParams::TResetAllParams:
-    case RequestParams::TListOriginsParams:
+    case RequestParams::TListInitializedOriginsParams:
       break;
 
     case RequestParams::TPersistedParams: {
@@ -8467,8 +8467,8 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
       actor = new EstimateOp(aParams);
       break;
 
-    case RequestParams::TListOriginsParams:
-      actor = new ListOriginsOp();
+    case RequestParams::TListInitializedOriginsParams:
+      actor = new ListInitializedOriginsOp();
       break;
 
     default:
@@ -9773,12 +9773,12 @@ void EstimateOp::GetResponse(RequestResponse& aResponse) {
   aResponse = estimateResponse;
 }
 
-ListOriginsOp::ListOriginsOp()
+ListInitializedOriginsOp::ListInitializedOriginsOp()
     : QuotaRequestBase(/* aExclusive */ false), TraverseRepositoryHelper() {
   AssertIsOnOwningThread();
 }
 
-bool ListOriginsOp::Init(Quota* aQuota) {
+bool ListInitializedOriginsOp::Init(Quota* aQuota) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aQuota);
 
@@ -9787,13 +9787,17 @@ bool ListOriginsOp::Init(Quota* aQuota) {
   return true;
 }
 
-nsresult ListOriginsOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
+nsresult ListInitializedOriginsOp::DoDirectoryWork(
+    QuotaManager* aQuotaManager) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
 
-  AUTO_PROFILER_LABEL("ListOriginsOp::DoDirectoryWork", OTHER);
+  AUTO_PROFILER_LABEL("ListInitializedOriginsOp::DoDirectoryWork", OTHER);
 
   nsresult rv;
+  if (!aQuotaManager->IsTemporaryStorageInitialized()) {
+    return NS_OK;
+  }
 
   for (const PersistenceType type : kAllPersistenceTypes) {
     rv = TraverseRepository(aQuotaManager, type);
@@ -9813,16 +9817,15 @@ nsresult ListOriginsOp::DoDirectoryWork(QuotaManager* aQuotaManager) {
   return NS_OK;
 }
 
-bool ListOriginsOp::IsCanceled() {
+bool ListInitializedOriginsOp::IsCanceled() {
   AssertIsOnIOThread();
 
   return mCanceled;
 }
 
-nsresult ListOriginsOp::ProcessOrigin(QuotaManager* aQuotaManager,
-                                      nsIFile* aOriginDir,
-                                      const bool aPersistent,
-                                      const PersistenceType aPersistenceType) {
+nsresult ListInitializedOriginsOp::ProcessOrigin(
+    QuotaManager* aQuotaManager, nsIFile* aOriginDir, const bool aPersistent,
+    const PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
   MOZ_ASSERT(aOriginDir);
@@ -9847,15 +9850,16 @@ nsresult ListOriginsOp::ProcessOrigin(QuotaManager* aQuotaManager,
   return NS_OK;
 }
 
-void ListOriginsOp::GetResponse(RequestResponse& aResponse) {
+void ListInitializedOriginsOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
-  aResponse = ListOriginsResponse();
+  aResponse = ListInitializedOriginsResponse();
   if (mOrigins.IsEmpty()) {
     return;
   }
 
-  nsTArray<nsCString>& origins = aResponse.get_ListOriginsResponse().origins();
+  nsTArray<nsCString>& origins =
+      aResponse.get_ListInitializedOriginsResponse().origins();
   mOrigins.SwapElements(origins);
 }
 
