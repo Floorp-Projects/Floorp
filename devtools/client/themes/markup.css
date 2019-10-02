@@ -347,33 +347,6 @@ ul.children + .tag-line::before {
   color: var(--theme-text-color-strong);
 }
 
-/* Whitespace only text nodes are sometimes shown in the markup-view, and when they do
-   they get a greyed-out whitespace symbol so users know what they are */
-.editor.text .whitespace {
-  padding: 0 .5em;
-}
-
-.editor.text .whitespace::before {
-  /* black circle (full) character */
-  content: "\25cf";
-  display: inline-block;
-  width: 12px;
-  height: 8px;
-  margin: 0 2px;
-  line-height: 7px;
-  font-size: 0.6em;
-  color: var(--theme-text-color-inactive);
-  border-radius: 3px;
-  border-style: solid;
-  border-width: 1px;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.tag-line[selected] .editor.text .whitespace::before {
-  color: white;
-}
-
 .more-nodes {
   padding-left: 16px;
 }

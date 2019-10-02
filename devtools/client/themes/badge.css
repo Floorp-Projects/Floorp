@@ -25,7 +25,8 @@
 }
 
 /* Inspector badge */
-.inspector-badge {
+.inspector-badge,
+.editor.text .whitespace::before {
   display: inline-block;
   /* 9px text is too blurry on low-resolution screens */
   font-size: 10px;
@@ -44,8 +45,13 @@
   box-sizing: border-box;
 }
 
+.editor.text .whitespace::before {
+  content: attr(data-label);
+}
+
 @media (min-resolution: 1.1dppx) {
-  .inspector-badge {
+  .inspector-badge,
+  .editor.text .whitespace::before {
     font-size: 9px;
   }
 }
