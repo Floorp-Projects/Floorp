@@ -6,20 +6,26 @@
 #ifndef _mozilla_dom_ClientHandleParent_h
 #define _mozilla_dom_ClientHandleParent_h
 
+#include "ClientManagerService.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/dom/PClientHandleOpParent.h"
 #include "mozilla/dom/PClientHandleParent.h"
 
 namespace mozilla {
 namespace dom {
 
-class ClientManagerService;
 class ClientSourceParent;
-
-typedef MozPromise<ClientSourceParent*, nsresult, /* IsExclusive = */ false>
-    SourcePromise;
 
 class ClientHandleParent final : public PClientHandleParent {
   RefPtr<ClientManagerService> mService;
+
+  // `mSource` and (`mSourcePromiseHolder`, `mSourcePromiseRequestHolder`) are
+  // mutually exclusive, so they could be combined in a `mozilla::Variant`.
   ClientSourceParent* mSource;
+  MozPromiseHolder<SourcePromise> mSourcePromiseHolder;
+
+  MozPromiseRequestHolder<SourcePromise> mSourcePromiseRequestHolder;
 
   nsID mClientId;
   PrincipalInfo mPrincipalInfo;
