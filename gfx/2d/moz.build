@@ -145,7 +145,9 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'FilterProcessingSSE2.cpp',
         'ImageScalingSSE2.cpp',
         'ssse3-scaler.c',
+        'SwizzleAVX2.cpp',
         'SwizzleSSE2.cpp',
+        'SwizzleSSSE3.cpp',
     ]
     DEFINES['USE_SSE2'] = True
     # The file uses SSE2 intrinsics, so it needs special compile flags on some
@@ -153,7 +155,9 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['SwizzleAVX2.cpp'].flags += ['-mavx2']
     SOURCES['SwizzleSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['SwizzleSSSE3.cpp'].flags += CONFIG['SSSE3_FLAGS']
     SOURCES['ssse3-scaler.c'].flags += CONFIG['SSSE3_FLAGS']
 elif CONFIG['CPU_ARCH'].startswith('mips'):
     SOURCES += [
