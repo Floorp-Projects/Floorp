@@ -74,16 +74,14 @@ class DecodedStreamGraphListener {
         mAbstractMainThread(aMainThread) {
     MOZ_ASSERT(NS_IsMainThread());
     if (mAudioTrackListener) {
-      mAudioStream->AddTrackListener(mAudioTrackListener,
-                                     OutputStreamManager::sTrackID);
+      mAudioStream->AddListener(mAudioTrackListener);
     } else {
       mAudioEnded = true;
       mAudioEndedHolder.ResolveIfExists(true, __func__);
     }
 
     if (mVideoTrackListener) {
-      mVideoStream->AddTrackListener(mVideoTrackListener,
-                                     OutputStreamManager::sTrackID);
+      mVideoStream->AddListener(mVideoTrackListener);
     } else {
       mVideoEnded = true;
       mVideoEndedHolder.ResolveIfExists(true, __func__);
@@ -93,11 +91,11 @@ class DecodedStreamGraphListener {
   void NotifyOutput(SourceMediaStream* aStream, StreamTime aCurrentTrackTime) {
     if (aStream == mAudioStream) {
       if (aCurrentTrackTime >= mAudioEnd) {
-        mAudioStream->EndTrack(OutputStreamManager::sTrackID);
+        mAudioStream->End();
       }
     } else if (aStream == mVideoStream) {
       if (aCurrentTrackTime >= mVideoEnd) {
-        mVideoStream->EndTrack(OutputStreamManager::sTrackID);
+        mVideoStream->End();
       }
     } else {
       MOZ_CRASH("Unexpected source stream");
@@ -171,17 +169,15 @@ class DecodedStreamGraphListener {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (mAudioTrackListener && !mAudioStream->IsDestroyed()) {
-      mAudioStream->EndTrack(OutputStreamManager::sTrackID);
-      mAudioStream->RemoveTrackListener(mAudioTrackListener,
-                                        OutputStreamManager::sTrackID);
+      mAudioStream->End();
+      mAudioStream->RemoveListener(mAudioTrackListener);
     }
     mAudioTrackListener = nullptr;
     mAudioEndedHolder.ResolveIfExists(false, __func__);
 
     if (mVideoTrackListener && !mVideoStream->IsDestroyed()) {
-      mVideoStream->EndTrack(OutputStreamManager::sTrackID);
-      mVideoStream->RemoveTrackListener(mVideoTrackListener,
-                                        OutputStreamManager::sTrackID);
+      mVideoStream->End();
+      mVideoStream->RemoveListener(mVideoTrackListener);
     }
     mVideoTrackListener = nullptr;
     mVideoEndedHolder.ResolveIfExists(false, __func__);
@@ -320,13 +316,6 @@ DecodedStreamData::DecodedStreamData(
   MOZ_DIAGNOSTIC_ASSERT(
       mOutputStreamManager->HasTracks(mAudioStream, mVideoStream),
       "Tracks must be pre-created on main thread");
-  if (mAudioStream) {
-    mAudioStream->AddAudioTrack(OutputStreamManager::sTrackID,
-                                aInit.mInfo.mAudio.mRate, new AudioSegment());
-  }
-  if (mVideoStream) {
-    mVideoStream->AddTrack(OutputStreamManager::sTrackID, new VideoSegment());
-  }
 }
 
 DecodedStreamData::~DecodedStreamData() { MOZ_ASSERT(NS_IsMainThread()); }
@@ -441,6 +430,9 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
         MOZ_DIAGNOSTIC_ASSERT(
             !mOutputStreamManager->HasTrackType(MediaSegment::AUDIO));
         audioStream = mOutputStreamManager->AddTrack(MediaSegment::AUDIO);
+      }
+      if (audioStream) {
+        audioStream->SetAppendDataSourceRate(mInit.mInfo.mAudio.mRate);
       }
       RefPtr<SourceMediaStream> videoStream =
           mOutputStreamManager->GetPrecreatedTrackOfType(MediaSegment::VIDEO);
@@ -636,8 +628,7 @@ void DecodedStream::SendAudio(double aVolume,
   // |mNextAudioTime| is updated as we process each audio sample in
   // SendStreamAudio().
   if (output.GetDuration() > 0) {
-    mData->mAudioStreamWritten += mData->mAudioStream->AppendToTrack(
-        OutputStreamManager::sTrackID, &output);
+    mData->mAudioStreamWritten += mData->mAudioStream->AppendData(&output);
   }
 
   if (mAudioQueue.IsFinished() && !mData->mHaveSentFinishAudio) {
@@ -701,7 +692,7 @@ void DecodedStream::ResetVideo(const PrincipalHandle& aPrincipalHandle) {
   // for video tracks as part of bug 1493618.
   resetter.AppendFrame(nullptr, mData->mLastVideoImageDisplaySize,
                        aPrincipalHandle, false, currentTime);
-  mData->mVideoStream->AppendToTrack(OutputStreamManager::sTrackID, &resetter);
+  mData->mVideoStream->AppendData(&resetter);
 
   // Consumer buffers have been reset. We now set the next time to the start
   // time of the current frame, so that it can be displayed again on resuming.
@@ -797,8 +788,7 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
   }
 
   if (output.GetDuration() > 0) {
-    mData->mVideoStreamWritten += mData->mVideoStream->AppendToTrack(
-        OutputStreamManager::sTrackID, &output);
+    mData->mVideoStreamWritten += mData->mVideoStream->AppendData(&output);
   }
 
   if (mVideoQueue.IsFinished() && !mData->mHaveSentFinishVideo) {
@@ -831,8 +821,8 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
       if (forceBlack) {
         endSegment.ReplaceWithDisabled();
       }
-      mData->mVideoStreamWritten += mData->mVideoStream->AppendToTrack(
-          OutputStreamManager::sTrackID, &endSegment);
+      mData->mVideoStreamWritten +=
+          mData->mVideoStream->AppendData(&endSegment);
     }
     mData->mListener->EndTrackAt(mData->mVideoStream,
                                  mData->mVideoStreamWritten);

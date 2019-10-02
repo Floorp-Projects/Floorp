@@ -57,7 +57,7 @@ class AudioNodeStream : public ProcessedMediaStream {
   typedef unsigned Flags;
   enum : Flags {
     NO_STREAM_FLAGS = 0U,
-    NEED_MAIN_THREAD_FINISHED = 1U << 0,
+    NEED_MAIN_THREAD_ENDED = 1U << 0,
     NEED_MAIN_THREAD_CURRENT_TIME = 1U << 1,
     // Internal AudioNodeStreams can only pass their output to another
     // AudioNode, whereas external AudioNodeStreams can pass their output
@@ -147,7 +147,7 @@ class AudioNodeStream : public ProcessedMediaStream {
 
   const OutputChunks& LastChunks() const { return mLastChunks; }
   bool MainThreadNeedsUpdates() const override {
-    return ((mFlags & NEED_MAIN_THREAD_FINISHED) && mFinished) ||
+    return ((mFlags & NEED_MAIN_THREAD_ENDED) && mEnded) ||
            (mFlags & NEED_MAIN_THREAD_CURRENT_TIME);
   }
 
@@ -213,8 +213,6 @@ class AudioNodeStream : public ProcessedMediaStream {
   OutputChunks mInputChunks;
   // The last block produced by this node.
   OutputChunks mLastChunks;
-  // The stream's sampling rate
-  const TrackRate mSampleRate;
   // Whether this is an internal or external stream
   const Flags mFlags;
   // The number of input streams that may provide non-silent input.
@@ -227,9 +225,9 @@ class AudioNodeStream : public ProcessedMediaStream {
   // Streams are considered active if the stream has not finished and either
   // the engine is active or there are active input streams.
   bool mIsActive;
-  // Whether the stream should be marked as finished as soon
+  // Whether the stream should be marked as ended as soon
   // as the current time range has been computed block by block.
-  bool mMarkAsFinishedAfterThisBlock;
+  bool mMarkAsEndedAfterThisBlock;
   // Whether the stream is an AudioParamHelper stream.
   bool mAudioParamStream;
   // Whether the stream just passes its input through.

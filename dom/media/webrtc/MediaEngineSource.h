@@ -14,7 +14,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsStringFwd.h"
-#include "TrackID.h"
 
 namespace mozilla {
 
@@ -115,13 +114,12 @@ class MediaEngineSourceInterface {
                             const char** aOutBadConstraint) = 0;
 
   /**
-   * Called by MediaEngine when a SourceMediaStream and TrackID have been
-   * provided for the source to feed data to.
+   * Called by MediaEngine when a SourceMediaStream has been provided for the
+   * source to feed data to.
    *
    * This must be called before Start.
    */
   virtual void SetTrack(const RefPtr<SourceMediaStream>& aStream,
-                        TrackID aTrackID,
                         const PrincipalHandle& aPrincipal) = 0;
 
   /**

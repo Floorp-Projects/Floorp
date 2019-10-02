@@ -180,8 +180,6 @@ class VideoSegment : public MediaSegmentBase<VideoSegment, VideoChunk> {
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
-
-  bool IsEmpty() const { return mChunks.IsEmpty(); }
 };
 
 }  // namespace mozilla

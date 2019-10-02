@@ -16,7 +16,6 @@
 #include "MediaEngineWrapper.h"
 #include "MediaStreamGraph.h"
 #include "NullTransport.h"
-#include "StreamTracks.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
 #include "CubebDeviceEnumerator.h"

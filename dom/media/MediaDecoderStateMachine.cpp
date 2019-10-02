@@ -25,6 +25,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
+#include "AudioSegment.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
 #include "MediaDecoder.h"
@@ -33,6 +34,7 @@
 #include "MediaTimer.h"
 #include "ReaderProxy.h"
 #include "TimeUnits.h"
+#include "VideoSegment.h"
 #include "VideoUtils.h"
 
 namespace mozilla {

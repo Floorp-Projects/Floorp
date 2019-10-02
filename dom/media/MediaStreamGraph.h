@@ -8,9 +8,7 @@
 
 #include "AudioStream.h"
 #include "MainThreadUtils.h"
-#include "MediaStreamTypes.h"
-#include "StreamTracks.h"
-#include "VideoSegment.h"
+#include "MediaSegment.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
@@ -50,6 +48,22 @@ namespace dom {
 enum class AudioContextOperation;
 enum class AudioContextOperationFlags;
 }  // namespace dom
+
+inline TrackTicks RateConvertTicksRoundDown(TrackRate aOutRate,
+                                            TrackRate aInRate,
+                                            TrackTicks aTicks) {
+  MOZ_ASSERT(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
+  MOZ_ASSERT(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
+  MOZ_ASSERT(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return (aTicks * aOutRate) / aInRate;
+}
+inline TrackTicks RateConvertTicksRoundUp(TrackRate aOutRate, TrackRate aInRate,
+                                          TrackTicks aTicks) {
+  MOZ_ASSERT(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
+  MOZ_ASSERT(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
+  MOZ_ASSERT(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return (aTicks * aOutRate + aInRate - 1) / aInRate;
+}
 
 /*
  * MediaStreamGraph is a framework for synchronized audio/video processing
@@ -98,7 +112,7 @@ class SourceMediaStream;
 class AudioDataListenerInterface {
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~AudioDataListenerInterface() {}
+  virtual ~AudioDataListenerInterface() = default;
 
  public:
   /* These are for cubeb audio input & output streams: */
@@ -141,7 +155,7 @@ class AudioDataListenerInterface {
 class AudioDataListener : public AudioDataListenerInterface {
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~AudioDataListener() {}
+  virtual ~AudioDataListener() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioDataListener)
@@ -161,7 +175,7 @@ class AudioDataListener : public AudioDataListenerInterface {
  */
 class MainThreadMediaStreamListener {
  public:
-  virtual void NotifyMainThreadStreamFinished() = 0;
+  virtual void NotifyMainThreadTrackEnded() = 0;
 };
 
 /**
@@ -174,10 +188,20 @@ struct AudioNodeSizes {
   const char* mNodeType;
 };
 
+/**
+ * Describes how a track should be disabled.
+ *
+ * ENABLED        Not disabled.
+ * SILENCE_BLACK  Audio data is turned into silence, video frames are made
+ *                black.
+ * SILENCE_FREEZE Audio data is turned into silence, video freezes at
+ *                last frame.
+ */
+enum class DisabledTrackMode { ENABLED, SILENCE_BLACK, SILENCE_FREEZE };
+
 class AudioNodeEngine;
 class AudioNodeExternalInputStream;
 class AudioNodeStream;
-class AudioSegment;
 class DirectMediaStreamTrackListener;
 class MediaInputPort;
 class MediaStreamGraphImpl;
@@ -187,49 +211,42 @@ class SourceMediaStream;
 class TrackUnionStream;
 
 /**
- * Helper struct for binding a track listener to a specific TrackID.
- */
-template <typename Listener>
-struct TrackBound {
-  RefPtr<Listener> mListener;
-  TrackID mTrackID;
-};
-
-/**
- * A stream of synchronized audio and video data. All (not blocked) streams
- * progress at the same rate --- "real time". Streams cannot seek. The only
- * operation readers can perform on a stream is to read the next data.
+ * A stream of audio or video data. The media type must be known at construction
+ * and cannot change. All streams progress at the same rate --- "real time".
+ * Streams cannot seek. The only operation readers can perform on a stream is to
+ * read the next data.
  *
  * Consumers of a stream can be reading from it at different offsets, but that
  * should only happen due to the order in which consumers are being run.
  * Those offsets must not diverge in the long term, otherwise we would require
  * unbounded buffering.
  *
+ * (DEPRECATED to be removed in bug 1581074)
  * Streams can be in a "blocked" state. While blocked, a stream does not
  * produce data. A stream can be explicitly blocked via the control API,
  * or implicitly blocked by whatever's generating it (e.g. an underrun in the
  * source resource), or implicitly blocked because something consuming it
- * blocks, or implicitly because it has finished.
+ * blocks, or implicitly because it has ended.
  *
- * A stream can be in a "finished" state. "Finished" streams are permanently
- * blocked.
+ * A stream can be in an "ended" state. "Ended" streams are permanently blocked.
+ * The "ended" state is terminal.
  *
- * Transitions into and out of the "blocked" and "finished" states are managed
+ * Transitions into and out of the "blocked" and "ended" states are managed
  * by the MediaStreamGraph on the media graph thread.
  *
  * We buffer media data ahead of the consumers' reading offsets. It is possible
  * to have buffered data but still be blocked.
  *
- * Any stream can have its audio and video playing when requested. The media
+ * Any stream can have its audio or video playing when requested. The media
  * stream graph plays audio by constructing audio output streams as necessary.
  * Video is played through a DirectMediaStreamTrackListener managed by
  * VideoStreamTrack.
  *
- * The data in a stream is managed by StreamTracks. It consists of a set of
- * tracks of various types that can start and end over time.
+ * The data in a stream is managed by mSegment. The segment starts at GraphTime
+ * mStartTime and encodes its own StreamTime duration.
  *
  * Streams are explicitly managed. The client creates them via
- * MediaStreamGraph::CreateInput/ProcessedMediaStream, and releases them by
+ * MediaStreamGraph::Create{Source|TrackUnion}Stream, and releases them by
  * calling Destroy() when no longer needed (actual destruction will be
  * deferred). The actual object is owned by the MediaStreamGraph. The basic idea
  * is that main thread objects will keep Streams alive as long as necessary
@@ -243,26 +260,29 @@ struct TrackBound {
  * wrapper; the DOM wrappers own their associated MediaStreams. When a DOM
  * wrapper is destroyed, it sends a Destroy message for the associated
  * MediaStream and clears its reference (the last main-thread reference to
- * the object). When the Destroy message is processed on the graph manager
- * thread we immediately release the affected objects (disentangling them
- * from other objects as necessary).
+ * the object). When the Destroy message is processed on the graph thread we
+ * immediately release the affected objects (disentangling them from other
+ * objects as necessary).
  *
- * This could cause problems for media processing if a MediaStream is
- * destroyed while a downstream MediaStream is still using it. Therefore
- * the DOM wrappers must keep upstream MediaStreams alive as long as they
- * could be being used in the media graph.
+ * This could cause problems for media processing if a MediaStream is destroyed
+ * while a downstream MediaStream is still using it. Therefore the DOM wrappers
+ * must keep upstream MediaStreams alive as long as they could be used in the
+ * media graph.
  *
- * At any time, however, a set of MediaStream wrappers could be
- * collected via cycle collection. Destroy messages will be sent
- * for those objects in arbitrary order and the MediaStreamGraph has to be able
- * to handle this.
+ * At any time, however, a set of MediaStream wrappers could be collected via
+ * cycle collection. Destroy messages will be sent for those objects in
+ * arbitrary order and the MediaStreamGraph has to be able to handle this.
  */
-
 class MediaStream : public mozilla::LinkedListElement<MediaStream> {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
-  explicit MediaStream();
+  MediaStream(TrackRate aSampleRate, MediaSegment::Type aType,
+              MediaSegment* aSegment);
+
+  // The sample rate of the graph.
+  const TrackRate mSampleRate;
+  const MediaSegment::Type mType;
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -275,16 +295,12 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   MediaStreamGraphImpl* GraphImpl();
   const MediaStreamGraphImpl* GraphImpl() const;
   MediaStreamGraph* Graph();
+  const MediaStreamGraph* Graph() const;
   /**
    * Sets the graph that owns this stream.  Should only be called once.
    */
   void SetGraphImpl(MediaStreamGraphImpl* aGraph);
   void SetGraphImpl(MediaStreamGraph* aGraph);
-
-  /**
-   * Returns sample rate of the graph.
-   */
-  TrackRate GraphRate() const { return mTracks.GraphRate(); }
 
   // Control API.
   // Since a stream can be played multiple ways, we need to combine independent
@@ -304,38 +320,32 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   virtual void Suspend();
   virtual void Resume();
   // Events will be dispatched by calling methods of aListener.
-  virtual void AddTrackListener(MediaStreamTrackListener* aListener,
-                                TrackID aTrackID);
-  virtual void RemoveTrackListener(MediaStreamTrackListener* aListener,
-                                   TrackID aTrackID);
+  virtual void AddListener(MediaStreamTrackListener* aListener);
+  virtual void RemoveListener(MediaStreamTrackListener* aListener);
 
   /**
-   * Adds aListener to the source stream of track aTrackID in this stream.
+   * Adds aListener to the source stream of this stream.
    * When the MediaStreamGraph processes the added listener, it will traverse
-   * the graph and add it to the track's source stream (remapping the TrackID
-   * along the way).
+   * the graph and add it to the track's source stream.
    * Note that the listener will be notified on the MediaStreamGraph thread
    * with whether the installation of it at the source was successful or not.
    */
-  virtual void AddDirectTrackListener(DirectMediaStreamTrackListener* aListener,
-                                      TrackID aTrackID);
+  virtual void AddDirectListener(DirectMediaStreamTrackListener* aListener);
 
   /**
-   * Removes aListener from the source stream of track aTrackID in this stream.
+   * Removes aListener from the source stream of this stream.
    * Note that the listener has already been removed if the link between the
-   * source of track aTrackID and this stream has been broken (and made track
-   * aTrackID end). The caller doesn't have to care about this, removing when
-   * the source cannot be found, or when the listener had already been removed
-   * does nothing.
+   * source and this stream has been broken. The caller doesn't have to care
+   * about this, removing when the source cannot be found, or when the listener
+   * had already been removed does nothing.
    */
-  virtual void RemoveDirectTrackListener(
-      DirectMediaStreamTrackListener* aListener, TrackID aTrackID);
+  virtual void RemoveDirectListener(DirectMediaStreamTrackListener* aListener);
 
   // A disabled track has video replaced by black, and audio replaced by
   // silence.
-  void SetTrackEnabled(TrackID aTrackID, DisabledTrackMode aMode);
+  void SetEnabled(DisabledTrackMode aMode);
 
-  // Finish event will be notified by calling methods of aListener. It is the
+  // End event will be notified by calling methods of aListener. It is the
   // responsibility of the caller to remove aListener before it is destroyed.
   void AddMainThreadListener(MainThreadMediaStreamListener* aListener);
   // It's safe to call this even if aListener is not currently a listener;
@@ -369,10 +379,10 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
     return mMainThreadCurrentTime;
   }
-  // Return the main thread's view of whether this stream has finished.
-  bool IsFinished() const {
+  // Return the main thread's view of whether this stream has ended.
+  bool IsEnded() const {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
-    return mMainThreadFinished;
+    return mMainThreadEnded;
   }
 
   bool IsDestroyed() const {
@@ -396,10 +406,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    * This must be idempotent.
    */
   virtual void DestroyImpl();
-  StreamTime GetTracksEnd() const { return mTracks.GetEarliestTrackEnd(); }
-#ifdef DEBUG
-  void DumpTrackInfo() const { return mTracks.DumpTrackInfo(); }
-#endif
+  StreamTime GetEnd() const;
   void SetAudioOutputVolumeImpl(void* aKey, float aVolume);
   void AddAudioOutputImpl(void* aKey);
   void RemoveAudioOutputImpl(void* aKey);
@@ -409,48 +416,61 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    * uninstalled.
    */
   virtual void RemoveAllDirectListenersImpl() {}
-  void RemoveAllListenersImpl();
-  virtual void AddTrackListenerImpl(
-      already_AddRefed<MediaStreamTrackListener> aListener, TrackID aTrackID);
-  virtual void RemoveTrackListenerImpl(MediaStreamTrackListener* aListener,
-                                       TrackID aTrackID);
-  virtual void AddDirectTrackListenerImpl(
-      already_AddRefed<DirectMediaStreamTrackListener> aListener,
-      TrackID aTrackID);
-  virtual void RemoveDirectTrackListenerImpl(
-      DirectMediaStreamTrackListener* aListener, TrackID aTrackID);
-  virtual void SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode);
-  DisabledTrackMode GetDisabledTrackMode(TrackID aTrackID);
+  void RemoveAllResourcesAndListenersImpl();
+
+  virtual void AddListenerImpl(
+      already_AddRefed<MediaStreamTrackListener> aListener);
+  virtual void RemoveListenerImpl(MediaStreamTrackListener* aListener);
+  virtual void AddDirectListenerImpl(
+      already_AddRefed<DirectMediaStreamTrackListener> aListener);
+  virtual void RemoveDirectListenerImpl(
+      DirectMediaStreamTrackListener* aListener);
+  virtual void SetEnabledImpl(DisabledTrackMode aMode);
 
   void AddConsumer(MediaInputPort* aPort) { mConsumers.AppendElement(aPort); }
   void RemoveConsumer(MediaInputPort* aPort) {
     mConsumers.RemoveElement(aPort);
   }
-  StreamTracks& GetStreamTracks() { return mTracks; }
-  GraphTime GetStreamTracksStartTime() const { return mTracksStartTime; }
+  GraphTime StartTime() const { return mStartTime; }
+  bool Ended() const { return mEnded; }
+
+  template <class SegmentType>
+  SegmentType* GetData() const {
+    if (!mSegment) {
+      return nullptr;
+    }
+    if (mSegment->GetType() != SegmentType::StaticType()) {
+      return nullptr;
+    }
+    return static_cast<SegmentType*>(mSegment.get());
+  }
+  template <>
+  MediaSegment* GetData<MediaSegment>() const {
+    return mSegment.get();
+  }
 
   double StreamTimeToSeconds(StreamTime aTime) const {
     NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
-    return static_cast<double>(aTime) / mTracks.GraphRate();
+    return static_cast<double>(aTime) / mSampleRate;
   }
   int64_t StreamTimeToMicroseconds(StreamTime aTime) const {
     NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
-    return (aTime * 1000000) / mTracks.GraphRate();
+    return (aTime * 1000000) / mSampleRate;
   }
   StreamTime SecondsToNearestStreamTime(double aSeconds) const {
     NS_ASSERTION(0 <= aSeconds && aSeconds <= TRACK_TICKS_MAX / TRACK_RATE_MAX,
                  "Bad seconds");
-    return mTracks.GraphRate() * aSeconds + 0.5;
+    return mSampleRate * aSeconds + 0.5;
   }
   StreamTime MicrosecondsToStreamTimeRoundDown(int64_t aMicroseconds) const {
-    return (aMicroseconds * mTracks.GraphRate()) / 1000000;
+    return (aMicroseconds * mSampleRate) / 1000000;
   }
 
   TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aTime) const {
-    return RateConvertTicksRoundUp(aRate, mTracks.GraphRate(), aTime);
+    return RateConvertTicksRoundUp(aRate, mSampleRate, aTime);
   }
   StreamTime TicksToTimeRoundDown(TrackRate aRate, TrackTicks aTicks) const {
-    return RateConvertTicksRoundDown(mTracks.GraphRate(), aRate, aTicks);
+    return RateConvertTicksRoundDown(mSampleRate, aRate, aTicks);
   }
   /**
    * Convert graph time to stream time. aTime must be <= mStateComputedTime
@@ -473,17 +493,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    */
   GraphTime StreamTimeToGraphTime(StreamTime aTime) const;
 
-  bool IsFinishedOnGraphThread() const { return mFinished; }
-  virtual void FinishOnGraphThread();
-
-  /**
-   * Find track by track id.
-   */
-  StreamTracks::Track* FindTrack(TrackID aID) const;
-
-  StreamTracks::Track* EnsureTrack(TrackID aTrack);
-
-  virtual void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment,
+  virtual void ApplyTrackDisabling(MediaSegment* aSegment,
                                    MediaSegment* aRawSegment = nullptr);
 
   // Return true if the main thread needs to observe updates from this stream.
@@ -504,41 +514,52 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   // |AdvanceTimeVaryingValuesToCurrentTime| will be override in
   // SourceMediaStream.
   virtual void AdvanceTimeVaryingValuesToCurrentTime(GraphTime aCurrentTime,
-                                                     GraphTime aBlockedTime) {
-    mTracksStartTime += aBlockedTime;
-    mTracks.ForgetUpTo(aCurrentTime - mTracksStartTime);
-  }
+                                                     GraphTime aBlockedTime);
 
   void NotifyMainThreadListeners() {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
 
     for (int32_t i = mMainThreadListeners.Length() - 1; i >= 0; --i) {
-      mMainThreadListeners[i]->NotifyMainThreadStreamFinished();
+      mMainThreadListeners[i]->NotifyMainThreadTrackEnded();
     }
     mMainThreadListeners.Clear();
   }
 
-  bool ShouldNotifyStreamFinished() {
+  bool ShouldNotifyTrackEnded() {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
-    if (!mMainThreadFinished || mFinishedNotificationSent) {
+    if (!mMainThreadEnded || mEndedNotificationSent) {
       return false;
     }
 
-    mFinishedNotificationSent = true;
+    mEndedNotificationSent = true;
     return true;
   }
 
   // This state is all initialized on the main thread but
   // otherwise modified only on the media graph thread.
 
-  // Buffered data. The start of the buffer corresponds to mTracksStartTime.
+  // Buffered data. The start of the buffer corresponds to mStartTime.
   // Conceptually the buffer contains everything this stream has ever played,
   // but we forget some prefix of the buffered data to bound the space usage.
-  StreamTracks mTracks;
+  // Note that this may be null for tracks that never contain data, like
+  // non-external AudioNodeTracks.
+  const UniquePtr<MediaSegment> mSegment;
+
   // The time when the buffered data could be considered to have started
   // playing. This increases over time to account for time the stream was
   // blocked before mCurrentTime.
-  GraphTime mTracksStartTime;
+  GraphTime mStartTime;
+
+  // The time until which we last called mSegment->ForgetUpTo().
+  StreamTime mForgottenTime;
+
+  // True once we've processed mSegment until the end and no more data will be
+  // added. Note that mSegment might still contain data for the current
+  // iteration.
+  bool mEnded;
+
+  // True after track listeners have been notified that this track has ended.
+  bool mNotifiedEnded;
 
   // Client-set volume of this stream
   struct AudioOutput {
@@ -547,19 +568,15 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
     float mVolume;
   };
   nsTArray<AudioOutput> mAudioOutputs;
-  // We record the last played video frame to avoid playing the frame again
-  // with a different frame id.
-  VideoFrame mLastPlayedVideoFrame;
-  nsTArray<TrackBound<MediaStreamTrackListener>> mTrackListeners;
+  nsTArray<RefPtr<MediaStreamTrackListener>> mTrackListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
-  // List of disabled TrackIDs and their associated disabled mode.
-  // They can either by disabled by frames being replaced by black, or by
-  // retaining the previous frame.
-  nsTArray<DisabledTrack> mDisabledTracks;
+  // This track's associated disabled mode. It can either by disabled by frames
+  // being replaced by black, or by retaining the previous frame.
+  DisabledTrackMode mDisabledMode;
 
   // GraphTime at which this stream starts blocking.
   // This is only valid up to mStateComputedTime. The stream is considered to
-  // have not been blocked before mCurrentTime (its mTracksStartTime is
+  // have not been blocked before mCurrentTime (its mStartTime is
   // increased as necessary to account for that time instead).
   GraphTime mStartBlocking;
 
@@ -567,7 +584,7 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   nsTArray<MediaInputPort*> mConsumers;
 
   // Where audio output is going. There is one AudioOutputStream per
-  // audio track.
+  // Type::AUDIO MediaStream.
   struct AudioOutputStream {
     // When we started audio playback for this track.
     // Add mStream->GetPosition() to find the current audio playback position.
@@ -577,9 +594,8 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
     MediaTime mBlockedAudioTime;
     // Last tick written to the audio output.
     StreamTime mLastTickWritten;
-    TrackID mTrackID;
   };
-  nsTArray<AudioOutputStream> mAudioOutputStreams;
+  UniquePtr<AudioOutputStream> mAudioOutputStream;
 
   /**
    * Number of outstanding suspend operations on this stream. Stream is
@@ -587,22 +603,10 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
    */
   int32_t mSuspendedCount;
 
-  /**
-   * When true, this means the stream will be finished once all
-   * buffered data has been consumed.
-   * Only accessed on the graph thread
-   */
-  bool mFinished;
-  /**
-   * When true, mFinished is true and we've played all the data in this stream
-   * and fired NotifyFinished notifications.
-   */
-  bool mNotifiedFinished;
-
   // Main-thread views of state
   StreamTime mMainThreadCurrentTime;
-  bool mMainThreadFinished;
-  bool mFinishedNotificationSent;
+  bool mMainThreadEnded;
+  bool mEndedNotificationSent;
   bool mMainThreadDestroyed;
 
   // Our media stream graph.  null if destroyed on the graph thread.
@@ -610,28 +614,32 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
 };
 
 /**
- * This is a stream into which a decoder can write audio and video.
+ * This is a stream into which a decoder can write audio or video.
  *
- * Audio and video can be written on any thread, but you probably want to
+ * Audio or video can be written on any thread, but you probably want to
  * always write from the same thread to avoid unexpected interleavings.
+ *
+ * For audio the sample rate of the written data can differ from the sample rate
+ * of the graph itself. Use SetAppendDataSourceRate to inform the stream what
+ * rate written audio data will be sampled in.
  */
 class SourceMediaStream : public MediaStream {
  public:
-  explicit SourceMediaStream();
+  SourceMediaStream(MediaSegment::Type aType, TrackRate aSampleRate);
 
   SourceMediaStream* AsSourceStream() override { return this; }
 
   // Main thread only
 
   /**
-   * Enable or disable pulling for a specific track.
-   * When pulling is enabled, NotifyPull gets called on the corresponding
-   * MediaStreamTrackListeners for this stream during the MediaStreamGraph
-   * control loop. Pulling is initially disabled for all tracks. Due to
-   * unavoidable race conditions, after a call to SetPullingEnabled(false)
-   * it is still possible for a NotifyPull to occur.
+   * Enable or disable pulling.
+   * When pulling is enabled, NotifyPull gets called on the
+   * MediaStreamTrackListeners for this track during the MediaStreamGraph
+   * control loop. Pulling is initially disabled. Due to unavoidable race
+   * conditions, after a call to SetPullingEnabled(false) it is still possible
+   * for a NotifyPull to occur.
    */
-  void SetPullingEnabled(TrackID aTrackID, bool aEnabled);
+  void SetPullingEnabled(bool aEnabled);
 
   // Users of audio inputs go through the stream so it can track when the
   // last stream referencing an input goes away, so it can close the cubeb
@@ -661,82 +669,41 @@ class SourceMediaStream : public MediaStream {
    */
   void ExtractPendingInput(GraphTime aCurrentTime, GraphTime aDesiredUpToTime);
 
-  enum {
-    ADDTRACK_QUEUED = 0x01  // Queue track add until FinishAddTracks()
-  };
   /**
-   * Add a new track to the stream starting at the stream's current time.
-   * Takes ownership of aSegment.
+   * All data appended with AppendData() from this point on will be resampled
+   * from aRate to the graph rate.
+   *
+   * Resampling for video does not make sense and is forbidden.
    */
-  void AddTrack(TrackID aID, MediaSegment* aSegment, uint32_t aFlags = 0) {
-    AddTrackInternal(aID, GraphRate(), aSegment, aFlags);
-  }
+  void SetAppendDataSourceRate(TrackRate aRate);
 
   /**
-   * Like AddTrack, but resamples audio from aRate to the graph rate.
-   */
-  void AddAudioTrack(TrackID aID, TrackRate aRate, AudioSegment* aSegment,
-                     uint32_t aFlags = 0);
-
-  /**
-   * Call after a series of AddTrack or AddAudioTrack calls to implement
-   * any pending track adds.
-   */
-  void FinishAddTracks();
-
-  /**
-   * Append media data to a track. Ownership of aSegment remains with the
+   * Append media data to this stream. Ownership of aSegment remains with the
    * caller, but aSegment is emptied. Returns 0 if the data was not appended
-   * because no such track exists or the stream was already finished. Returns
-   * the duration of the appended data in the graph's track rate otherwise.
+   * because the stream has ended. Returns the duration of the appended data in
+   * the graph's track rate otherwise.
    */
-  virtual StreamTime AppendToTrack(TrackID aID, MediaSegment* aSegment,
-                                   MediaSegment* aRawSegment = nullptr);
+  virtual StreamTime AppendData(MediaSegment* aSegment,
+                                MediaSegment* aRawSegment = nullptr);
   /**
-   * Indicate that a track has ended. Do not do any more API calls
-   * affecting this track.
-   * Ignored if the track does not exist.
+   * Indicate that this stream has ended. Do not do any more API calls affecting
+   * this stream.
    */
-  void EndTrack(TrackID aID);
-  /**
-   * Indicate that this stream should enter the "finished" state. All tracks
-   * must have been ended via EndTrack. The finish time of the stream is
-   * when all tracks have ended.
-   */
-  void FinishPendingWithLockHeld();
-  void FinishPending() {
-    MutexAutoLock lock(mMutex);
-    FinishPendingWithLockHeld();
-  }
+  void End();
 
   // Overriding allows us to hold the mMutex lock while changing the track
   // enable status
-  void SetTrackEnabledImpl(TrackID aTrackID, DisabledTrackMode aMode) override;
+  void SetEnabledImpl(DisabledTrackMode aMode) override;
 
   // Overriding allows us to ensure mMutex is locked while changing the track
   // enable status
-  void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment,
+  void ApplyTrackDisabling(MediaSegment* aSegment,
                            MediaSegment* aRawSegment = nullptr) override {
     mMutex.AssertCurrentThreadOwns();
-    MediaStream::ApplyTrackDisabling(aTrackID, aSegment, aRawSegment);
+    MediaStream::ApplyTrackDisabling(aSegment, aRawSegment);
   }
 
   void RemoveAllDirectListenersImpl() override;
-
-  /**
-   * End all tracks and Finish() this stream. Used to voluntarily revoke access
-   * to a MediaStream.
-   */
-  void EndAllTrackAndFinish();
-
-  /**
-   * Returns true if this SourceMediaStream contains at least one audio track
-   * that is in pending state.
-   * This is thread safe, and takes the SourceMediaStream mutex.
-   */
-  bool HasPendingAudioTrack();
-
-  // XXX need a Reset API
 
   friend class MediaStreamGraphImpl;
 
@@ -746,59 +713,40 @@ class SourceMediaStream : public MediaStream {
   virtual ~SourceMediaStream();
 
   /**
-   * Data for each track that hasn't ended.
+   * Data to cater for appending media data to this stream.
    */
   struct TrackData {
-    TrackID mID;
     // Sample rate of the input data.
     TrackRate mInputRate;
     // Resampler if the rate of the input track does not match the
     // MediaStreamGraph's.
     nsAutoRef<SpeexResamplerState> mResampler;
     int mResamplerChannelCount;
-    // End-time of data already flushed to the track (excluding mData)
-    StreamTime mEndOfFlushedData;
     // Each time the track updates are flushed to the media graph thread,
     // the segment buffer is emptied.
-    nsAutoPtr<MediaSegment> mData;
-    // Each time the track updates are flushed to the media graph thread,
-    // this is cleared.
-    uint32_t mCommands;
+    UniquePtr<MediaSegment> mData;
+    // True once the producer has signaled that no more data is coming.
+    bool mEnded;
     // True if the producer of this track is having data pulled by the graph.
     bool mPullingEnabled;
   };
 
   bool NeedsMixing();
 
-  void ResampleAudioToGraphSampleRate(TrackData* aTrackData,
-                                      MediaSegment* aSegment);
+  void ResampleAudioToGraphSampleRate(MediaSegment* aSegment);
 
-  void AddDirectTrackListenerImpl(
-      already_AddRefed<DirectMediaStreamTrackListener> aListener,
-      TrackID aTrackID) override;
-  void RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
-                                     TrackID aTrackID) override;
-
-  void AddTrackInternal(TrackID aID, TrackRate aRate, MediaSegment* aSegment,
-                        uint32_t aFlags);
-
-  TrackData* FindDataForTrack(TrackID aID) {
-    mMutex.AssertCurrentThreadOwns();
-    for (uint32_t i = 0; i < mUpdateTracks.Length(); ++i) {
-      if (mUpdateTracks[i].mID == aID) {
-        return &mUpdateTracks[i];
-      }
-    }
-    return nullptr;
-  }
+  void AddDirectListenerImpl(
+      already_AddRefed<DirectMediaStreamTrackListener> aListener) override;
+  void RemoveDirectListenerImpl(
+      DirectMediaStreamTrackListener* aListener) override;
 
   /**
-   * Notify direct consumers of new data to one of the stream tracks.
+   * Notify direct consumers of new data to this stream.
    * The data doesn't have to be resampled (though it may be).  This is called
-   * from AppendToTrack on the thread providing the data, and will call
+   * from AppendData on the thread providing the data, and will call
    * the Listeners on this thread.
    */
-  void NotifyDirectConsumers(TrackData* aTrack, MediaSegment* aSegment);
+  void NotifyDirectConsumers(MediaSegment* aSegment);
 
   virtual void AdvanceTimeVaryingValuesToCurrentTime(
       GraphTime aCurrentTime, GraphTime aBlockedTime) override;
@@ -813,10 +761,8 @@ class SourceMediaStream : public MediaStream {
   // held together.
   Mutex mMutex;
   // protected by mMutex
-  nsTArray<TrackData> mUpdateTracks;
-  nsTArray<TrackData> mPendingTracks;
-  nsTArray<TrackBound<DirectMediaStreamTrackListener>> mDirectTrackListeners;
-  bool mFinishPending;
+  UniquePtr<TrackData> mUpdateTrack;
+  nsTArray<RefPtr<DirectMediaStreamTrackListener>> mDirectTrackListeners;
 };
 
 /**
@@ -902,8 +848,10 @@ class MediaInputPort final {
     bool mInputIsBlocked;
   };
   // Find the next time interval starting at or after aTime during which
-  // mDest is not blocked and mSource's blocking status does not change.
-  InputInterval GetNextInputInterval(GraphTime aTime) const;
+  // aPort->mDest is not blocked and aPort->mSource's blocking status does not
+  // change. A null aPort returns a blocked interval starting at aTime.
+  static InputInterval GetNextInputInterval(MediaInputPort const* aPort,
+                                            GraphTime aTime);
 
   /**
    * Returns the graph that owns this port.
@@ -963,24 +911,27 @@ class MediaInputPort final {
  */
 class ProcessedMediaStream : public MediaStream {
  public:
-  explicit ProcessedMediaStream()
-      : MediaStream(), mAutofinish(false), mCycleMarker(0) {}
+  ProcessedMediaStream(TrackRate aSampleRate, MediaSegment::Type aType,
+                       MediaSegment* aSegment)
+      : MediaStream(aSampleRate, aType, aSegment),
+        mAutoend(true),
+        mCycleMarker(0) {}
 
   // Control API.
   /**
    * Allocates a new input port attached to source aStream.
-   * This stream can be removed by calling MediaInputPort::Remove().
+   * This port can be removed by calling MediaInputPort::Destroy().
    */
   already_AddRefed<MediaInputPort> AllocateInputPort(
       MediaStream* aStream, uint16_t aInputNumber = 0,
       uint16_t aOutputNumber = 0);
   /**
-   * Queue a message to set the autofinish flag on this stream (defaults to
-   * false). When this flag is set, and all input streams are in the finished
-   * state (including if there are no input streams), this stream automatically
-   * enters the finished state.
+   * Queue a message to set the autoend flag on this stream (defaults to
+   * true). When this flag is set, and the input stream has ended playout
+   * (including if there is no input stream), this stream automatically
+   * enters the ended state.
    */
-  void QueueSetAutofinish(bool aAutofinish);
+  void QueueSetAutoend(bool aAutoend);
 
   ProcessedMediaStream* AsProcessedStream() override { return this; }
 
@@ -999,8 +950,6 @@ class ProcessedMediaStream : public MediaStream {
   }
   void InputSuspended(MediaInputPort* aPort);
   void InputResumed(MediaInputPort* aPort);
-  virtual MediaStream* GetInputStreamFor(TrackID aTrackID) { return nullptr; }
-  virtual TrackID GetInputTrackIDFor(TrackID aTrackID) { return TRACK_NONE; }
   void DestroyImpl() override;
   /**
    * This gets called after we've computed the blocking states for all
@@ -1008,21 +957,20 @@ class ProcessedMediaStream : public MediaStream {
    * Also, we've produced output for all streams up to this one. If this stream
    * is not in a cycle, then all its source streams have produced data.
    * Generate output from aFrom to aTo.
-   * This will be called on streams that have finished. Most stream types should
-   * just return immediately if IsFinishedOnGraphThread(), but some may wish to
-   * update internal state (see AudioNodeStream).
-   * ProcessInput is allowed to call FinishOnGraphThread only if ALLOW_FINISH
-   * is in aFlags. (This flag will be set when aTo >= mStateComputedTime, i.e.
-   * when we've producing the last block of data we need to produce.) Otherwise
-   * we can get into a situation where we've determined the stream should not
-   * block before mStateComputedTime, but the stream finishes before
-   * mStateComputedTime, violating the invariant that finished streams are
-   * blocked.
+   * This will be called on streams that have ended. Most stream types should
+   * just return immediately if they're ended, but some may wish to update
+   * internal state (see AudioNodeStream).
+   * ProcessInput is allowed to set mEnded only if ALLOW_END is in aFlags. (This
+   * flag will be set when aTo >= mStateComputedTime, i.e. when we've produced
+   * the last block of data we need to produce.) Otherwise we can get into a
+   * situation where we've determined the track should not block before
+   * mStateComputedTime, but the track ends before mStateComputedTime, violating
+   * the invariant that ended tracks are blocked.
    */
-  enum { ALLOW_FINISH = 0x01 };
+  enum { ALLOW_END = 0x01 };
   virtual void ProcessInput(GraphTime aFrom, GraphTime aTo,
                             uint32_t aFlags) = 0;
-  void SetAutofinishImpl(bool aAutofinish) { mAutofinish = aAutofinish; }
+  void SetAutoendImpl(bool aAutoend) { mAutoend = aAutoend; }
 
   // Only valid after MediaStreamGraphImpl::UpdateStreamOrder() has run.
   // A DelayNode is considered to break a cycle and so this will not return
@@ -1050,7 +998,7 @@ class ProcessedMediaStream : public MediaStream {
   nsTArray<MediaInputPort*> mInputs;
   // The list of all inputs that are currently suspended.
   nsTArray<MediaInputPort*> mSuspendedInputs;
-  bool mAutofinish;
+  bool mAutoend;
   // After UpdateStreamOrder(), mCycleMarker is either 0 or 1 to indicate
   // whether this stream is in a muted cycle.  During ordering it can contain
   // other marker values - see MediaStreamGraphImpl::UpdateStreamOrder().
@@ -1060,16 +1008,16 @@ class ProcessedMediaStream : public MediaStream {
 /**
  * There is a single MediaStreamGraph per window.
  * Additionaly, each OfflineAudioContext object creates its own MediaStreamGraph
- * object too..
+ * object too.
  */
 class MediaStreamGraph {
  public:
   // We ensure that the graph current time advances in multiples of
   // IdealAudioBlockSize()/AudioStream::PreferredSampleRate(). A stream that
-  // never blocks and has a track with the ideal audio rate will produce audio
-  // in multiples of the block size.
+  // never blocks and has the ideal audio rate will produce audio in multiples
+  // of the block size.
 
-  // Initializing an graph that outputs audio can be quite long on some
+  // Initializing a graph that outputs audio can take quite long on some
   // platforms. Code that want to output audio at some point can express the
   // fact that they will need an audio stream at some point by passing
   // AUDIO_THREAD_DRIVER when getting an instance of MediaStreamGraph, so that
@@ -1115,25 +1063,23 @@ class MediaStreamGraph {
    * Create a stream that a media decoder (or some other source of
    * media data, such as a camera) can write to.
    */
-  SourceMediaStream* CreateSourceStream();
+  SourceMediaStream* CreateSourceStream(MediaSegment::Type aType);
   /**
-   * Create a stream that will form the union of the tracks of its input
-   * streams.
-   * A TrackUnionStream contains all the tracks of all its input streams.
-   * Adding a new input stream makes that stream's tracks immediately appear as
-   * new tracks starting at the time the input stream was added. Removing an
-   * input stream makes the output tracks corresponding to the removed tracks
-   * immediately end. For each added track, the track ID of the output track is
-   * the track ID of the input track or one plus the maximum ID of all
-   * previously added tracks, whichever is greater.
-   * TODO at some point we will probably need to add API to select
-   * particular tracks of each input stream.
+   * Create a stream that will forward data from its input stream.
+   *
+   * A TrackUnionStream can have 0 or 1 input streams. Adding more than that is
+   * an error.
+   *
+   * A TrackUnionStream will end when autoending is enabled (default) and there
+   * is no input, or the input's source is ended. If there is no input and
+   * autoending is disabled, TrackUnionStream will continue to produce silence
+   * for audio or the last video frame for video.
    */
-  ProcessedMediaStream* CreateTrackUnionStream();
+  ProcessedMediaStream* CreateTrackUnionStream(MediaSegment::Type aType);
   /**
-   * Create a stream that will mix all its audio input.
+   * Create a stream that will mix all its audio inputs.
    */
-  AudioCaptureStream* CreateAudioCaptureStream(TrackID aTrackId);
+  AudioCaptureStream* CreateAudioCaptureStream();
 
   /**
    * Add a new stream to the graph.  Main thread.
@@ -1220,7 +1166,7 @@ class MediaStreamGraph {
    * the rate of the audio mixer. For offline graphs, this is the rate specified
    * at construction.
    */
-  TrackRate mSampleRate;
+  const TrackRate mSampleRate;
 };
 
 }  // namespace mozilla
