@@ -25,9 +25,11 @@ function test() {
 
   BrowserTestUtils.openNewForegroundTab(gBrowser).then(tab => {
     ourTab = tab;
-    BrowserTestUtils.waitForContentEvent(
+    BrowserTestUtils.browserLoaded(
       ourTab.linkedBrowser,
-      "DOMContentLoaded"
+      false,
+      null,
+      true
     ).then(errorListener);
     BrowserTestUtils.loadURI(ourTab.linkedBrowser, kUniqueURI.spec);
   });
@@ -73,10 +75,9 @@ function errorAsyncListener(aURI, aIsVisited) {
   // Now press the "Try Again" button, with offline mode off.
   Services.io.offline = false;
 
-  BrowserTestUtils.waitForContentEvent(
-    ourTab.linkedBrowser,
-    "DOMContentLoaded"
-  ).then(reloadListener);
+  BrowserTestUtils.browserLoaded(ourTab.linkedBrowser, false, null, true).then(
+    reloadListener
+  );
 
   ContentTask.spawn(ourTab.linkedBrowser, null, function() {
     Assert.ok(
