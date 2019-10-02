@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+export CFLAGS="$CFLAGS -Wno-attributes -Wno-ignored-attributes"
+export CXXFLAGS="$CXXFLAGS -Wno-attributes -Wno-ignored-attributes"
+
 cd $SOURCE
 TOP=$(cd ..; pwd)
 export MOZBUILD_STATE_PATH=$TOP/mozbuild-state

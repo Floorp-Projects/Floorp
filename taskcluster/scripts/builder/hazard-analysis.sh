@@ -17,6 +17,9 @@ export LD_LIBRARY_PATH="$GCCDIR/lib64"
 export RUSTC="$MOZ_FETCHES_DIR/rustc/bin/rustc"
 export CARGO="$MOZ_FETCHES_DIR/rustc/bin/cargo"
 
+export CFLAGS="$CFLAGS -Wno-attributes -Wno-ignored-attributes"
+export CPPFLAGS="$CPPFLAGS -Wno-attributes -Wno-ignored-attributes"
+
 PYTHON=python3
 
 function check_commit_msg () {
