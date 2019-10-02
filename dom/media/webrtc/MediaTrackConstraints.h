@@ -13,7 +13,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
-#include "mozilla/dom/MediaTrackConstraintSetBinding.h"
 #include "mozilla/dom/MediaTrackSupportedConstraintsBinding.h"
 
 namespace mozilla {
