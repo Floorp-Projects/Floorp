@@ -193,8 +193,8 @@ nsresult nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
   }
 
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
-      this, Size(), OutputSize(), aFrameRect, format, animParams, mTransform,
-      pipeFlags);
+      this, Size(), OutputSize(), aFrameRect, format, format, animParams,
+      mTransform, pipeFlags);
   mCurrentFrameIndex = mGIFStruct.images_decoded;
 
   if (!pipe) {
