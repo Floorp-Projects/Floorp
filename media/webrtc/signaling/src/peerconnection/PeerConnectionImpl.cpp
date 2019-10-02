@@ -1818,21 +1818,18 @@ OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
 
   RefPtr<MediaStreamTrack> track;
   RefPtr<RemoteTrackSource> trackSource;
-  RefPtr<SourceMediaStream> source = graph->CreateSourceStream();
   if (audio) {
+    RefPtr<SourceMediaStream> source =
+        graph->CreateSourceStream(MediaSegment::AUDIO);
     trackSource = new RemoteTrackSource(source, principal,
                                         NS_ConvertASCIItoUTF16("remote audio"));
-    track = new AudioStreamTrack(GetWindow(), source,
-                                 333,  // Use a constant TrackID. Dependents
-                                       // read this from the DOM track.
-                                 trackSource);
+    track = new AudioStreamTrack(GetWindow(), source, trackSource);
   } else {
+    RefPtr<SourceMediaStream> source =
+        graph->CreateSourceStream(MediaSegment::VIDEO);
     trackSource = new RemoteTrackSource(source, principal,
                                         NS_ConvertASCIItoUTF16("remote video"));
-    track = new VideoStreamTrack(GetWindow(), source,
-                                 666,  // Use a constant TrackID. Dependents
-                                       // read this from the DOM track.
-                                 trackSource);
+    track = new VideoStreamTrack(GetWindow(), source, trackSource);
   }
 
   CSFLogDebug(LOGTAG, "Created %s track %p, inner: %p",

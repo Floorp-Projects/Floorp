@@ -20,7 +20,7 @@
 #include "mediapacket.h"
 #include "mtransport/runnable_utils.h"
 #include "AudioPacketizer.h"
-#include "StreamTracks.h"
+#include "MediaSegment.h"
 #include "signaling/src/peerconnection/PacketDumper.h"
 
 #include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"

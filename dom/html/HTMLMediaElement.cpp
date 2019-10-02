@@ -607,8 +607,8 @@ class HTMLMediaElement::MediaStreamRenderer
     }
 
     // This dummy keeps `graph` alive and ensures access to it.
-    mGraphTimeDummy =
-        MakeRefPtr<SharedDummyStream>(graph->CreateSourceStream());
+    mGraphTimeDummy = MakeRefPtr<SharedDummyStream>(
+        graph->CreateSourceStream(MediaSegment::AUDIO));
 
     if (mRendering) {
       mGraphTimeOffset = Some(graph->CurrentTime() - mGraphTime);
@@ -657,18 +657,15 @@ class HTMLMediaElement::StreamCaptureTrackSource
                                            MediaStreamTrackSource)
 
   StreamCaptureTrackSource(MediaStreamTrackSource* aCapturedTrackSource,
-                           ProcessedMediaStream* aStream, MediaInputPort* aPort,
-                           TrackID aTrackID)
+                           ProcessedMediaStream* aStream, MediaInputPort* aPort)
       : MediaStreamTrackSource(aCapturedTrackSource->GetPrincipal(),
                                nsString()),
         mCapturedTrackSource(aCapturedTrackSource),
         mStream(aStream),
-        mPort(aPort),
-        mTrackID(aTrackID) {
+        mPort(aPort) {
     MOZ_ASSERT(mCapturedTrackSource);
     MOZ_ASSERT(mStream);
     MOZ_ASSERT(mPort);
-    MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
     mCapturedTrackSource->RegisterSink(this);
   }
@@ -677,9 +674,8 @@ class HTMLMediaElement::StreamCaptureTrackSource
     if (!mStream) {
       return;
     }
-    mStream->SetTrackEnabled(mTrackID, aEnabled
-                                           ? DisabledTrackMode::ENABLED
-                                           : DisabledTrackMode::SILENCE_FREEZE);
+    mStream->SetEnabled(aEnabled ? DisabledTrackMode::ENABLED
+                                 : DisabledTrackMode::SILENCE_FREEZE);
   }
 
   void Destroy() override {
@@ -757,7 +753,6 @@ class HTMLMediaElement::StreamCaptureTrackSource
   RefPtr<MediaStreamTrackSource> mCapturedTrackSource;
   RefPtr<ProcessedMediaStream> mStream;
   RefPtr<MediaInputPort> mPort;
-  const TrackID mTrackID;
 };
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::StreamCaptureTrackSource,
@@ -3197,10 +3192,14 @@ void HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
     return;
   }
 
-  ProcessedMediaStream* stream = inputTrack->Graph()->CreateTrackUnionStream();
+  MediaSegment::Type type = inputTrack->AsAudioStreamTrack()
+                                ? MediaSegment::AUDIO
+                                : MediaSegment::VIDEO;
+  ProcessedMediaStream* stream =
+      inputTrack->Graph()->CreateTrackUnionStream(type);
   RefPtr<MediaInputPort> port = inputTrack->ForwardTrackContentsTo(stream);
-  auto source = MakeRefPtr<StreamCaptureTrackSource>(
-      &inputTrack->GetSource(), stream, port, inputTrack->GetTrackID());
+  auto source = MakeRefPtr<StreamCaptureTrackSource>(&inputTrack->GetSource(),
+                                                     stream, port);
 
   // Track is muted initially, so we don't leak data if it's added while paused
   // and an MSG iteration passes before the mute comes into effect.
@@ -3208,11 +3207,9 @@ void HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
 
   RefPtr<MediaStreamTrack> track;
   if (inputTrack->AsAudioStreamTrack()) {
-    track =
-        new AudioStreamTrack(window, stream, inputTrack->GetTrackID(), source);
+    track = new AudioStreamTrack(window, stream, source);
   } else {
-    track =
-        new VideoStreamTrack(window, stream, inputTrack->GetTrackID(), source);
+    track = new VideoStreamTrack(window, stream, source);
   }
 
   aOutputStream.mTracks.AppendElement(
@@ -3286,7 +3283,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   out->mGraphKeepAliveDummyStream =
       mOutputStreams.Length() == 1
-          ? MakeRefPtr<SharedDummyStream>(aGraph->CreateSourceStream())
+          ? MakeRefPtr<SharedDummyStream>(
+                aGraph->CreateSourceStream(MediaSegment::AUDIO))
           : mOutputStreams[0].mGraphKeepAliveDummyStream;
   out->mStream = MakeAndAddRef<DOMMediaStream>(window);
   out->mStream->SetFinishedOnInactive(false);

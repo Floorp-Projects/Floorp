@@ -161,7 +161,7 @@ ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
   ConstantSourceNodeEngine* engine =
       new ConstantSourceNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NEED_MAIN_THREAD_FINISHED,
+                                    AudioNodeStream::NEED_MAIN_THREAD_ENDED,
                                     aContext->Graph());
   engine->SetSourceStream(mStream);
   mStream->AddMainThreadListener(this);
@@ -245,8 +245,8 @@ void ConstantSourceNode::Stop(double aWhen, ErrorResult& aRv) {
                                   std::max(0.0, aWhen));
 }
 
-void ConstantSourceNode::NotifyMainThreadStreamFinished() {
-  MOZ_ASSERT(mStream->IsFinished());
+void ConstantSourceNode::NotifyMainThreadTrackEnded() {
+  MOZ_ASSERT(mStream->IsEnded());
 
   class EndedEventDispatcher final : public Runnable {
    public:

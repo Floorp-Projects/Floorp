@@ -147,28 +147,22 @@ void AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   MediaStream* source = mInputs[0]->GetSource();
   AutoTArray<AudioSegment, 1> audioSegments;
   uint32_t inputChannels = 0;
-  for (StreamTracks::TrackIter tracks(source->mTracks); !tracks.IsEnded();
-       tracks.Next()) {
-    const StreamTracks::Track& inputTrack = *tracks;
-    if (inputTrack.GetSegment()->GetType() == MediaSegment::VIDEO) {
-      MOZ_ASSERT(false,
-                 "AudioNodeExternalInputStream shouldn't have video tracks");
-      continue;
-    }
 
-    const AudioSegment& inputSegment =
-        *static_cast<AudioSegment*>(inputTrack.GetSegment());
-    if (inputSegment.IsNull()) {
-      continue;
-    }
+  MOZ_ASSERT(source->GetData<MediaSegment>()->GetType() == MediaSegment::AUDIO,
+             "AudioNodeExternalInputStream shouldn't have a video input");
 
+  const AudioSegment& inputSegment =
+      *mInputs[0]->GetSource()->GetData<AudioSegment>();
+  if (!inputSegment.IsNull()) {
     AudioSegment& segment = *audioSegments.AppendElement();
     GraphTime next;
     for (GraphTime t = aFrom; t < aTo; t = next) {
       MediaInputPort::InputInterval interval =
-          mInputs[0]->GetNextInputInterval(t);
+          MediaInputPort::GetNextInputInterval(mInputs[0], t);
       interval.mEnd = std::min(interval.mEnd, aTo);
-      if (interval.mStart >= interval.mEnd) break;
+      if (interval.mStart >= interval.mEnd) {
+        break;
+      }
       next = interval.mEnd;
 
       // We know this stream does not block during the processing interval ---
@@ -206,9 +200,9 @@ void AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   if (inputChannels) {
     DownmixBufferType downmixBuffer;
     ASSERT_ALIGNED16(downmixBuffer.Elements());
-    for (uint32_t i = 0; i < audioSegments.Length(); ++i) {
+    for (auto& audioSegment : audioSegments) {
       AudioBlock tmpChunk;
-      ConvertSegmentToAudioBlock(&audioSegments[i], &tmpChunk, inputChannels);
+      ConvertSegmentToAudioBlock(&audioSegment, &tmpChunk, inputChannels);
       if (!tmpChunk.IsNull()) {
         if (accumulateIndex == 0) {
           mLastChunks[0].AllocateChannels(inputChannels);

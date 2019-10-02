@@ -54,7 +54,7 @@ class AudioDestinationNode final : public AudioNode,
 
   void OfflineShutdown();
 
-  void NotifyMainThreadStreamFinished() override;
+  void NotifyMainThreadTrackEnded() override;
   void FireOfflineCompletionEvent();
 
   nsresult CreateAudioChannelAgent();

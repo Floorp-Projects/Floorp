@@ -27,7 +27,8 @@ class DecodedStreamTrackSource : public dom::MediaStreamTrackSource {
   explicit DecodedStreamTrackSource(SourceMediaStream* aSourceStream,
                                     nsIPrincipal* aPrincipal)
       : dom::MediaStreamTrackSource(aPrincipal, nsString()),
-        mStream(aSourceStream->Graph()->CreateTrackUnionStream()),
+        mStream(aSourceStream->Graph()->CreateTrackUnionStream(
+            aSourceStream->mType)),
         mPort(mStream->AllocateInputPort(aSourceStream)) {
     MOZ_ASSERT(NS_IsMainThread());
   }
@@ -105,13 +106,11 @@ void OutputStreamData::AddTrack(SourceMediaStream* aStream,
   RefPtr<dom::MediaStreamTrack> track;
   if (aType == MediaSegment::AUDIO) {
     track = new dom::AudioStreamTrack(mDOMStream->GetParentObject(),
-                                      source->mStream,
-                                      OutputStreamManager::sTrackID, source);
+                                      source->mStream, source);
   } else {
     MOZ_ASSERT(aType == MediaSegment::VIDEO);
     track = new dom::VideoStreamTrack(mDOMStream->GetParentObject(),
-                                      source->mStream,
-                                      OutputStreamManager::sTrackID, source);
+                                      source->mStream, source);
   }
   mTracks.AppendElement(track.get());
   if (aAsyncAddTrack) {
@@ -249,7 +248,7 @@ already_AddRefed<SourceMediaStream> OutputStreamManager::AddTrack(
              "Cannot have two tracks of the same type at the same time");
 
   RefPtr<SourceMediaStream> stream =
-      mDummyStream->mStream->Graph()->CreateSourceStream();
+      mDummyStream->mStream->Graph()->CreateSourceStream(aType);
   if (!mPlaying) {
     stream->Suspend();
   }

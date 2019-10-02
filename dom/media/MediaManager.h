@@ -85,7 +85,7 @@ class MediaDevice : public nsIMediaDevice {
                     const MediaEnginePrefs& aPrefs,
                     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint);
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
                 const PrincipalHandle& aPrincipal);
   nsresult Start();
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,

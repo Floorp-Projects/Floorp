@@ -67,7 +67,7 @@ class OscillatorNode final : public AudioScheduledSourceNode,
     SendTypeToStream();
   }
 
-  void NotifyMainThreadStreamFinished() override;
+  void NotifyMainThreadTrackEnded() override;
 
   const char* NodeType() const override { return "OscillatorNode"; }
 

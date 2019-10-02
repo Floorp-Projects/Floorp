@@ -25,7 +25,6 @@
 #include "MediaEngineSource.h"
 #include "VideoSegment.h"
 #include "AudioSegment.h"
-#include "StreamTracks.h"
 #include "MediaStreamGraph.h"
 
 #include "MediaEngineWrapper.h"
@@ -116,7 +115,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate() override;
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
                 const PrincipalHandle& aPrincipal) override;
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
@@ -184,10 +183,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   // The source stream that we feed video data to.
   // Set under mMutex on the owning thread. Accessed under one of the two.
   RefPtr<SourceMediaStream> mStream;
-
-  // The TrackID in mStream that we feed video data to.
-  // Set under mMutex on the owning thread. Accessed under one of the two.
-  TrackID mTrackID = TRACK_NONE;
 
   // The PrincipalHandle that gets attached to the frames we feed to mStream.
   // Set under mMutex on the owning thread. Accessed under one of the two.
