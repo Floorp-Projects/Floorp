@@ -1247,7 +1247,6 @@ Document::Document(const char* aContentType)
       mHasMixedActiveContentBlocked(false),
       mHasMixedDisplayContentLoaded(false),
       mHasMixedDisplayContentBlocked(false),
-      mHasMixedContentObjectSubrequest(false),
       mHasCSP(false),
       mHasUnsafeEvalCSP(false),
       mHasUnsafeInlineCSP(false),
@@ -1750,15 +1749,6 @@ Document::~Document() {
         mixedContentLevel = MIXED_DISPLAY_CONTENT;
       }
       Accumulate(Telemetry::MIXED_CONTENT_PAGE_LOAD, mixedContentLevel);
-
-      // record mixed object subrequest telemetry
-      if (mHasMixedContentObjectSubrequest) {
-        /* mixed object subrequest loaded on page*/
-        Accumulate(Telemetry::MIXED_CONTENT_OBJECT_SUBREQUEST, 1);
-      } else {
-        /* no mixed object subrequests loaded on page*/
-        Accumulate(Telemetry::MIXED_CONTENT_OBJECT_SUBREQUEST, 0);
-      }
 
       // record CSP telemetry on this document
       if (mHasCSP) {
