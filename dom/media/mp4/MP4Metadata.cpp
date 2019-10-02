@@ -426,28 +426,27 @@ MP4Metadata::ResultAndCryptoFile MP4Metadata::Crypto() const {
   return {NS_OK, &mCrypto};
 }
 
-MP4Metadata::ResultAndIndice MP4Metadata::GetTrackIndice(
-    mozilla::TrackID aTrackID) {
+MP4Metadata::ResultAndIndice MP4Metadata::GetTrackIndice(uint32_t aTrackId) {
   Mp4parseByteData indiceRawData = {};
 
   uint8_t fragmented = false;
-  auto rv = mp4parse_is_fragmented(mParser.get(), aTrackID, &fragmented);
+  auto rv = mp4parse_is_fragmented(mParser.get(), aTrackId, &fragmented);
   if (rv != MP4PARSE_STATUS_OK) {
     return {MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
-                        RESULT_DETAIL("Cannot parse whether track id %d is "
+                        RESULT_DETAIL("Cannot parse whether track id %u is "
                                       "fragmented, mp4parse_error=%d",
-                                      int(aTrackID), int(rv))),
+                                      aTrackId, int(rv))),
             nullptr};
   }
 
   if (!fragmented) {
-    rv = mp4parse_get_indice_table(mParser.get(), aTrackID, &indiceRawData);
+    rv = mp4parse_get_indice_table(mParser.get(), aTrackId, &indiceRawData);
     if (rv != MP4PARSE_STATUS_OK) {
       return {
           MediaResult(NS_ERROR_DOM_MEDIA_METADATA_ERR,
-                      RESULT_DETAIL("Cannot parse index table in track id %d, "
+                      RESULT_DETAIL("Cannot parse index table in track id %u, "
                                     "mp4parse_error=%d",
-                                    int(aTrackID), int(rv))),
+                                    aTrackId, int(rv))),
           nullptr};
     }
   }
