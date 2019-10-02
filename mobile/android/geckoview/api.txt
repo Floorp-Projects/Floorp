@@ -423,6 +423,7 @@ package org.mozilla.geckoview {
     method @NonNull public Bundle getExtras();
     method public boolean getFontInflationEnabled();
     method public float getFontSizeFactor();
+    method public boolean getForceUserScalableEnabled();
     method public int getGlMsaaLevel();
     method public boolean getInputAutoZoomEnabled();
     method public boolean getJavaScriptEnabled();
@@ -443,6 +444,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setDoubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontInflationEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontSizeFactor(float);
+    method @NonNull public GeckoRuntimeSettings setForceUserScalableEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setGlMsaaLevel(int);
     method @NonNull public GeckoRuntimeSettings setInputAutoZoomEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setJavaScriptEnabled(boolean);
@@ -475,6 +477,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder extras(@NonNull Bundle);
     method @NonNull public GeckoRuntimeSettings.Builder fontInflation(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder fontSizeFactor(float);
+    method @NonNull public GeckoRuntimeSettings.Builder forceUserScalableEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder glMsaaLevel(int);
     method @NonNull public GeckoRuntimeSettings.Builder inputAutoZoomEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder javaScriptEnabled(boolean);
