@@ -7,11 +7,12 @@
 
 #include "Adapter.h"
 #include "InstanceProvider.h"
-#include "mozilla/dom/WebGPUBinding.h"
 #include "nsIGlobalObject.h"
 
 namespace mozilla {
 namespace webgpu {
+
+GPU_IMPL_CYCLE_COLLECTION(Instance, mParent)
 
 /*static*/
 RefPtr<Instance> Instance::Create(nsIGlobalObject* parent) {
@@ -22,32 +23,10 @@ Instance::Instance(nsIGlobalObject* parent) : mParent(parent) {}
 
 Instance::~Instance() = default;
 
-already_AddRefed<Adapter> Instance::GetAdapter(
-    const dom::WebGPUAdapterDescriptor& desc) const {
-  MOZ_CRASH("todo");
-}
-
-template <typename T>
-void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
-                                 const nsCOMPtr<T>& field, const char* name,
-                                 uint32_t flags) {
-  CycleCollectionNoteChild(callback, field.get(), name, flags);
-}
-
-template <typename T>
-void ImplCycleCollectionUnlink(const nsCOMPtr<T>& field) {
-  const auto mut = const_cast<nsCOMPtr<T>*>(&field);
-  *mut = nullptr;
-}
-
 JSObject* Instance::WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> givenProto) {
-  return dom::WebGPU_Binding::Wrap(cx, this, givenProto);
+  return dom::GPU_Binding::Wrap(cx, this, givenProto);
 }
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Instance, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Instance, Release)
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Instance, mParent)
 
 }  // namespace webgpu
 }  // namespace mozilla

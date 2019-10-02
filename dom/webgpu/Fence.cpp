@@ -5,7 +5,6 @@
 
 #include "Fence.h"
 
-#include "Device.h"
 #include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
@@ -13,11 +12,8 @@ namespace webgpu {
 
 Fence::~Fence() = default;
 
-bool Fence::Wait(const double milliseconds) const { MOZ_CRASH("todo"); }
-
-already_AddRefed<dom::Promise> Fence::Promise() const { MOZ_CRASH("todo"); }
-
-WEBGPU_IMPL_GOOP_0(Fence)
+GPU_IMPL_CYCLE_COLLECTION(Fence, mParent)
+GPU_IMPL_JS_WRAP(Fence)
 
 }  // namespace webgpu
 }  // namespace mozilla
