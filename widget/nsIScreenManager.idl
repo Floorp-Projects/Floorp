@@ -21,4 +21,7 @@ interface nsIScreenManager : nsISupports
     // The screen with the menubar/taskbar. This shouldn't be needed very
     // often.
   readonly attribute nsIScreen primaryScreen;
+
+    // The total number of pixels across all monitors.
+  readonly attribute int64_t totalScreenPixels;
 };
