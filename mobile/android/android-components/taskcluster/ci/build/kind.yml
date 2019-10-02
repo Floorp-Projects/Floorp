@@ -1,0 +1,87 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: ac_taskgraph.loader.build_config:loader
+
+transforms:
+    - ac_taskgraph.transforms.build:transforms
+    - taskgraph.transforms.code_review:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        code-review: true
+    description: Execute Gradle tasks for component "{component}"
+    # XXX Cannot use run.gradlew because the loader concatenates lists
+    include-default-gradle-commands: true
+    include-coverage: true
+    lint-release: true
+    run:
+        post-gradlew:
+            - ['automation/taskcluster/action/upload_coverage_report.sh']
+        secrets:
+            - name: project/mobile/android-components/public-tokens
+              key: codecov
+              path: .cc_token
+        using: gradlew
+        use-caches: false
+    run-on-tasks-for: [github-pull-request, github-push]
+    treeherder:
+        kind: build
+        symbol: '{component}(B)'
+        platform: android-all/opt
+        tier: 1
+    worker-type: b-android
+    worker:
+        chain-of-trust: true
+        docker-image: {in-tree: base}
+        max-run-time: 7200
+
+
+overriden-jobs:
+    browser-engine-gecko-nightly:
+        treeherder:
+            # Too long to fit in 25 chars
+            symbol: 'browser-engine-gecko-nigh(B)'
+
+    lib-fetch-httpurlconnection:
+        treeherder:
+            # Too long to fit in 25 chars
+            symbol: 'lib-fetch-httpurlconnect(B)'
+
+    samples-browser:
+        include-default-gradle-commands: false
+        run:
+            gradlew:
+                - ':{component}:assembleGeckoNightly'
+                - ':{component}:testGeckoNightlyDebugUnitTest'
+                - ':{component}:lintGeckoNightly'
+
+    support-test:
+        lint-release: false
+
+    tooling-lint:
+        lint-release: false
+
+
+additional-jobs:
+    samples-browser-beta:
+        include-default-gradle-commands: false
+        run:
+            gradlew:
+                - ':samples-browser:assembleGeckoBeta'
+                - ':samples-browser:testGeckoBetaDebugUnitTest'
+
+    samples-browser-release:
+        include-default-gradle-commands: false
+        run:
+            gradlew:
+                - ':samples-browser:assembleGeckoRelease'
+                - ':samples-browser:testGeckoReleaseDebugUnitTest'
+
+    samples-browser-system:
+        include-default-gradle-commands: false
+        run:
+            gradlew: [':samples-browser:assembleSystem']

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import print_function, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import sys
@@ -11,7 +11,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 project_dir = os.path.realpath(os.path.join(current_dir, '..', '..', '..'))
 sys.path.append(project_dir)
 
-from automation.taskcluster.decision_task import pr, push, release
+from automation.taskcluster.decision_task import release
 from automation.taskcluster.lib.tasks import TaskBuilder
 from automation.taskcluster.lib.build_config import components
 
@@ -49,10 +49,8 @@ def loader(kind, path, config, params, loaded_tasks):
 
     is_staging = trust_level != 3
 
-    if tasks_for == 'github-pull-request':
-        ordered_groups_of_tasks = pr(builder, artifacts_info)
-    elif tasks_for == 'github-push':
-        ordered_groups_of_tasks = push(builder, artifacts_info)
+    if tasks_for in ('github-pull-request', 'github-push'):
+        ordered_groups_of_tasks = []
     elif tasks_for == 'github-release':
         ordered_groups_of_tasks = release(builder, artifacts_info, is_snapshot=False, is_staging=is_staging)
     elif tasks_for == 'cron':
