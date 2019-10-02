@@ -36,6 +36,7 @@ browser.jar:
 *       content/browser/browser.css                   (content/browser.css)
         content/browser/browser.js                    (content/browser.js)
 *       content/browser/browser.xhtml                 (content/browser.xhtml)
+        content/browser/browser-a11yUtils.js          (content/browser-a11yUtils.js)
         content/browser/browser-addons.js             (content/browser-addons.js)
         content/browser/browser-allTabsMenu.js        (content/browser-allTabsMenu.js)
         content/browser/browser-captivePortal.js      (content/browser-captivePortal.js)
