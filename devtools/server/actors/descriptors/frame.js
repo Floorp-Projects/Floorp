@@ -67,17 +67,30 @@ const FrameDescriptorActor = ActorClassWithSpec(frameDescriptorSpec, {
     return form;
   },
 
+  getParentID() {
+    if (this._browsingContext.parent) {
+      return this._browsingContext.parent.id;
+    }
+    // if we are at the top level document for this frame, but
+    // we need to access the browser element, then we will not
+    // be able to get the parent id from the browsing context.
+    // instead, we can get it from the embedderWindowGlobal.
+    if (this._browsingContext.embedderWindowGlobal) {
+      return this._browsingContext.embedderWindowGlobal.browsingContext.id;
+    }
+    return null;
+  },
+
   form() {
     const url = this._browsingContext.currentWindowGlobal
       ? this._browsingContext.currentWindowGlobal.documentURI.displaySpec
       : null;
+    const parentID = this.getParentID();
     return {
       actor: this.actorID,
       id: this.id,
       url,
-      parentID: this._browsingContext.parent
-        ? this._browsingContext.parent.id
-        : null,
+      parentID,
     };
   },
 

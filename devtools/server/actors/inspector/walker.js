@@ -2773,6 +2773,22 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
 
     return acc && acc.indexInParent > -1;
   },
+
+  getEmbedderElement(browsingContextID) {
+    const browsingContext = BrowsingContext.get(browsingContextID);
+    let rawNode = browsingContext.embedderElement;
+    if (!this._isInDOMTree(rawNode)) {
+      return null;
+    }
+
+    // This is a special case for the document object whereby it is considered
+    // as document.documentElement (the <html> node)
+    if (rawNode.defaultView && rawNode === rawNode.defaultView.document) {
+      rawNode = rawNode.documentElement;
+    }
+
+    return this.attachElement(rawNode);
+  },
 });
 
 exports.WalkerActor = WalkerActor;
