@@ -42,6 +42,7 @@ let TEST_LOGIN3 = new nsLoginInfo(
   "breachedLogin",
   "password"
 );
+TEST_LOGIN3.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged = 123456;
 
 async function addLogin(login) {
   let storageChangedPromised = TestUtils.topicObserved(

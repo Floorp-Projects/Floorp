@@ -15,7 +15,6 @@ EXPECTED_BREACH = {
 };
 
 add_task(async function setup() {
-  TEST_LOGIN3.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged = 123456;
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
