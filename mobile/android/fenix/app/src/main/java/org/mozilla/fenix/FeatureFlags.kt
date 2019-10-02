@@ -46,17 +46,6 @@ object FeatureFlags {
     val etpCategories = nightly or debug
 
     /**
-     * Granular data deletion provides additional choices on the Delete Browsing Data
-     * setting screen for cookies, cached images and files, and site permissions.
-     */
-    val granularDataDeletion = nightly or debug
-
-    /**
-     * Gives option in Settings to Delete Browsing Data on new menu option Quit
-     */
-    val deleteDataOnQuit = nightly or debug
-
-    /**
      * Gives option in Settings to disable auto play media
      */
     val autoPlayMedia = nightly or debug

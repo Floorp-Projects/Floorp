@@ -22,7 +22,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.tab.collections.TabCollection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -61,16 +60,7 @@ class DeleteBrowsingDataFragment : Fragment() {
             })
         }
 
-        if (!FeatureFlags.granularDataDeletion) {
-            // Disabling the disabled state until we have APIs to decide
-            // if there is data to delete for all categories
-            getCheckboxes().forEach {
-                it.onCheckListener = { _ -> updateCheckboxState() }
-            }
-        } else {
-            // Otherwise, all checkboxes should default to checked state
-            getCheckboxes().forEach { it.isChecked = true }
-        }
+        getCheckboxes().forEach { it.isChecked = true }
 
         view.delete_data?.setOnClickListener {
             askToDelete()
@@ -161,7 +151,7 @@ class DeleteBrowsingDataFragment : Fragment() {
             .setText(resources.getString(R.string.preferences_delete_browsing_data_snackbar))
             .show()
 
-        if (popAfter || FeatureFlags.granularDataDeletion) viewLifecycleOwner.lifecycleScope.launch(
+        if (popAfter) viewLifecycleOwner.lifecycleScope.launch(
             Dispatchers.Main
         ) {
             findNavController().popBackStack(R.id.homeFragment, false)
@@ -177,13 +167,6 @@ class DeleteBrowsingDataFragment : Fragment() {
         updateSitePermissions()
     }
 
-    private fun updateCheckboxState() {
-        val enabled = getCheckboxes().any { it.isChecked }
-
-        view?.delete_data?.isEnabled = enabled
-        view?.delete_data?.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
-    }
-
     private fun updateTabCount() {
         view?.open_tabs_item?.apply {
             val openTabs = requireComponents.core.sessionManager.sessions.size
@@ -191,7 +174,6 @@ class DeleteBrowsingDataFragment : Fragment() {
                 R.string.preferences_delete_browsing_data_tabs_subtitle,
                 openTabs
             )
-            if (!FeatureFlags.granularDataDeletion) isEnabled = openTabs > 0
         }
     }
 
@@ -207,7 +189,6 @@ class DeleteBrowsingDataFragment : Fragment() {
                             R.string.preferences_delete_browsing_data_browsing_data_subtitle,
                             historyCount
                         )
-                    if (!FeatureFlags.granularDataDeletion) isEnabled = historyCount > 0
                 }
             }
         }
@@ -226,7 +207,6 @@ class DeleteBrowsingDataFragment : Fragment() {
                             R.string.preferences_delete_browsing_data_collections_subtitle,
                             collectionsCount
                         )
-                    if (!FeatureFlags.granularDataDeletion) isEnabled = collectionsCount > 0
                 }
             }
         }
@@ -246,18 +226,14 @@ class DeleteBrowsingDataFragment : Fragment() {
 
     private fun getCheckboxes(): List<DeleteBrowsingDataItem> {
         val fragmentView = view!!
-        val originalList = listOf(
+        return listOf(
             fragmentView.open_tabs_item,
             fragmentView.browsing_data_item,
-            fragmentView.collections_item
-        )
-        @Suppress("ConstantConditionIf")
-        val granularList = if (FeatureFlags.granularDataDeletion) listOf(
+            fragmentView.collections_item,
             fragmentView.cookies_item,
             fragmentView.cached_files_item,
             fragmentView.site_permissions_item
-        ) else emptyList()
-        return originalList + granularList
+        )
     }
 
     companion object {

@@ -75,7 +75,6 @@
             android:key="@string/pref_key_delete_browsing_data"
             android:title="@string/preferences_delete_browsing_data" />
         <androidx.preference.Preference
-            app:isPreferenceVisible="false"
             android:icon="@drawable/ic_exit"
             android:key="@string/pref_key_delete_browsing_data_on_quit_preference"
             android:title="@string/preferences_delete_browsing_data_on_quit" />
