@@ -137,6 +137,11 @@ class JitRuntime {
 
   MainThreadData<uint64_t> nextCompilationId_;
 
+  // Buffer for OSR from baseline to Ion. To avoid holding on to this for too
+  // long it's also freed in EnterBaseline and EnterJit (after returning from
+  // JIT code).
+  MainThreadData<js::UniquePtr<uint8_t>> ionOsrTempData_;
+
   // Shared exception-handler tail.
   WriteOnceData<uint32_t> exceptionTailOffset_;
 
@@ -310,6 +315,9 @@ class JitRuntime {
   IonCompilationId nextCompilationId() {
     return IonCompilationId(nextCompilationId_++);
   }
+
+  uint8_t* allocateIonOsrTempData(size_t size);
+  void freeIonOsrTempData();
 
   TrampolinePtr getVMWrapper(const VMFunction& f) const;
 
