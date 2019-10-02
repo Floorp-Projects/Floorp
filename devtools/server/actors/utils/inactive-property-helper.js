@@ -615,11 +615,7 @@ class InactivePropertyHelper {
       }
       const position = this.style ? this.style.position : null;
       const cssFloat = this.style ? this.style.cssFloat : null;
-      if (
-        position === "absolute" ||
-        position === "fixed" ||
-        cssFloat !== "none"
-      ) {
+      if (position === "fixed" || cssFloat !== "none") {
         // Out of flow, not a grid item.
         return null;
       }
