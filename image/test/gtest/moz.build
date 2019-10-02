@@ -19,6 +19,7 @@ UNIFIED_SOURCES = [
     'TestRemoveFrameRectFilter.cpp',
     'TestStreamingLexer.cpp',
     'TestSurfaceSink.cpp',
+    'TestSwizzleFilter.cpp',
 ]
 
 # skip the test on windows10-aarch64, aarch64 due to 1544961
