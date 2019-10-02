@@ -23,8 +23,8 @@ void WebAudioUtils::ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
                                                      AudioNodeStream* aDest) {
   aEvent.SetTimeInTicks(
       aDest->SecondsToNearestStreamTime(aEvent.Time<double>()));
-  aEvent.mTimeConstant *= aDest->SampleRate();
-  aEvent.mDuration *= aDest->SampleRate();
+  aEvent.mTimeConstant *= aDest->mSampleRate;
+  aEvent.mDuration *= aDest->mSampleRate;
 }
 
 void WebAudioUtils::Shutdown() { WebCore::HRTFDatabaseLoader::shutdown(); }
