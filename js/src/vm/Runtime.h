@@ -849,7 +849,7 @@ struct JSRuntime {
   // to JSContext remains valid. The final GC triggered here depends on this.
   void destroyRuntime();
 
-  bool init(JSContext* cx, uint32_t maxbytes, uint32_t maxNurseryBytes);
+  bool init(JSContext* cx, uint32_t maxbytes);
 
   JSRuntime* thisFromCtor() { return this; }
 

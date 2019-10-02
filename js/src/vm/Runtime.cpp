@@ -193,8 +193,7 @@ JSRuntime::~JSRuntime() {
   MOZ_ASSERT(numDebuggeeRealmsObservingCoverage_ == 0);
 }
 
-bool JSRuntime::init(JSContext* cx, uint32_t maxbytes,
-                     uint32_t maxNurseryBytes) {
+bool JSRuntime::init(JSContext* cx, uint32_t maxbytes) {
 #ifdef DEBUG
   MOZ_ASSERT(!initialized_);
   initialized_ = true;
@@ -208,7 +207,7 @@ bool JSRuntime::init(JSContext* cx, uint32_t maxbytes,
 
   defaultFreeOp_ = cx->defaultFreeOp();
 
-  if (!gc.init(maxbytes, maxNurseryBytes)) {
+  if (!gc.init(maxbytes)) {
     return false;
   }
 
