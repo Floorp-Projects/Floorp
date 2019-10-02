@@ -26,14 +26,17 @@ ScaledFontFreeType::ScaledFontFreeType(
       mFace(std::move(aFace)),
       mApplySyntheticBold(aApplySyntheticBold) {}
 
+bool ScaledFontFreeType::UseSubpixelPosition() const {
+  return FT_IS_SCALABLE(mFace->GetFace());
+}
+
 #ifdef USE_SKIA
 SkTypeface* ScaledFontFreeType::CreateSkTypeface() {
   return SkCreateTypefaceFromCairoFTFont(mFace->GetFace(), mFace.get());
 }
 
 void ScaledFontFreeType::SetupSkFontDrawOptions(SkFont& aFont) {
-  // SkFontHost_cairo does not support subpixel text positioning
-  aFont.setSubpixel(false);
+  aFont.setSubpixel(UseSubpixelPosition());
 
   if (mApplySyntheticBold) {
     aFont.setEmbolden(true);
@@ -83,9 +86,10 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
     std::vector<FontVariation>* aOutVariations) {
   wr::FontInstanceOptions options;
   options.render_mode = wr::FontRenderMode::Alpha;
-  // FIXME: Cairo-FT metrics are not compatible with subpixel positioning.
-  // options.flags = wr::FontInstanceFlags_SUBPIXEL_POSITION;
   options.flags = wr::FontInstanceFlags{0};
+  if (UseSubpixelPosition()) {
+    options.flags |= wr::FontInstanceFlags_SUBPIXEL_POSITION;
+  }
   options.flags |= wr::FontInstanceFlags_EMBEDDED_BITMAPS;
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics =

@@ -15,9 +15,8 @@
 #include "nsHashKeys.h"
 
 class gfxFT2FontEntryBase : public gfxFontEntry {
-public:
-  explicit gfxFT2FontEntryBase(const nsACString& aName)
-      : gfxFontEntry(aName) {}
+ public:
+  explicit gfxFT2FontEntryBase(const nsACString& aName) : gfxFontEntry(aName) {}
 
   struct CmapCacheSlot {
     CmapCacheSlot() : mCharCode(0), mGlyphIndex(0) {}
@@ -52,6 +51,8 @@ class gfxFT2FontBase : public gfxFont {
   bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
   FontType GetType() const override { return FONT_TYPE_FT2; }
+
+  bool ShouldRoundXOffset(cairo_t* aCairo) const override;
 
   static void SetupVarCoords(FT_MM_Var* aMMVar,
                              const nsTArray<gfxFontVariation>& aVariations,
