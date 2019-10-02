@@ -21,6 +21,7 @@ taskgraph:
         mobile:
             name: "Fenix"
     cached-task-prefix: project.mobile.fenix
+    decision-parameters: 'fenix_taskgraph:get_decision_parameters'
 
 workers:
     aliases:

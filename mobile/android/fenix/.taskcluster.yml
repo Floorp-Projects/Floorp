@@ -199,7 +199,7 @@ tasks:
                                         ACTION_CALLBACK: '${action.cb_name}'
                                   - $if: 'tasks_for == "github-release"'
                                     then:
-                                        GIT_TAG: '${event.release.tag_name}'
+                                        MOBILE_HEAD_TAG: '${event.release.tag_name}'
                           features:
                               taskclusterProxy: true
                               chainOfTrust: true
