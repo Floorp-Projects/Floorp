@@ -17,20 +17,23 @@ import android.net.Uri
 import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -49,34 +52,35 @@ class FilePickerTest {
         onDismiss = {}
     )
 
-    private lateinit var mockFragment: Fragment
-    private lateinit var mockSessionManager: SessionManager
+    private lateinit var fragment: Fragment
+    private lateinit var store: BrowserStore
+    private lateinit var state: BrowserState
     private lateinit var filePicker: FilePicker
 
     @Before
     fun setup() {
-        mockFragment = mock()
-        mockSessionManager = spy(SessionManager(mock()))
-        filePicker = FilePicker(mockFragment, mockSessionManager) { }
+        fragment = mock()
+        state = mock()
+        store = mock()
+        whenever(store.state).thenReturn(state)
+        filePicker = FilePicker(fragment, store) { }
     }
 
     @Test
-    fun `FilePicker acts on a given session or the selected session`() {
-        val session = Session("custom-tab")
-        `when`(mockSessionManager.findSessionById(session.id)).thenReturn(session)
+    fun `FilePicker acts on a given (custom tab) session or the selected session`() {
+        val customTabContent: ContentState = mock()
+        whenever(customTabContent.promptRequest).thenReturn(request)
+        val customTab = CustomTabSessionState("custom-tab", customTabContent, mock(), mock())
 
-        filePicker = FilePicker(mockFragment, mockSessionManager, session.id) { }
+        whenever(state.customTabs).thenReturn(listOf(customTab))
+        filePicker = FilePicker(fragment, store, customTab.id) { }
         filePicker.onActivityResult(FilePicker.FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(customTab.id))
 
-        verify(mockSessionManager).findSessionById(session.id)
-
-        val selected = Session("browser-tab")
-        `when`(mockSessionManager.selectedSession).thenReturn(selected)
-
-        filePicker = FilePicker(mockFragment, mockSessionManager) { }
+        val selected = prepareSelectedSession(request)
+        filePicker = FilePicker(fragment, store) { }
         filePicker.onActivityResult(FilePicker.FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
-
-        verify(mockSessionManager).selectedSession
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
     }
 
     @Test
@@ -86,13 +90,11 @@ class FilePickerTest {
         val intent = Intent()
         val code = 1
 
-        filePicker = FilePicker(mockActivity, mockSessionManager) { }
-
+        filePicker = FilePicker(mockActivity, store) { }
         filePicker.startActivityForResult(intent, code)
         verify(mockActivity).startActivityForResult(intent, code)
 
-        filePicker = FilePicker(mockFragment, mockSessionManager) { }
-
+        filePicker = FilePicker(mockFragment, store) { }
         filePicker.startActivityForResult(intent, code)
         verify(mockFragment).startActivityForResult(intent, code)
     }
@@ -102,16 +104,16 @@ class FilePickerTest {
         var onRequestPermissionWasCalled = false
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        filePicker = FilePicker(mockFragment, mockSessionManager) {
+        filePicker = FilePicker(fragment, store) {
             onRequestPermissionWasCalled = true
         }
 
-        doReturn(context).`when`(mockFragment).requireContext()
+        doReturn(context).`when`(fragment).requireContext()
 
         filePicker.handleFileRequest(request)
 
         assertTrue(onRequestPermissionWasCalled)
-        verify(mockFragment, never()).startActivityForResult(Intent(), 1)
+        verify(fragment, never()).startActivityForResult(Intent(), 1)
     }
 
     @Test
@@ -120,7 +122,7 @@ class FilePickerTest {
         var onRequestPermissionWasCalled = false
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        filePicker = FilePicker(mockFragment, mockSessionManager) {
+        filePicker = FilePicker(mockFragment, store) {
             onRequestPermissionWasCalled = true
         }
 
@@ -135,20 +137,14 @@ class FilePickerTest {
     }
 
     @Test
-    fun `onPermissionsGranted will forward its call to filePickerRequest`() {
-        val session = getSelectedSession()
-
-        session.promptRequest = Consumable.from(request)
-
+    fun `onPermissionsGranted will forward call to filePickerRequest`() {
+        val selected = prepareSelectedSession(request)
         stubContext()
-
         filePicker = spy(filePicker)
-
         filePicker.onPermissionsGranted()
 
-        verify(mockSessionManager).selectedSession
         verify(filePicker).handleFileRequest(any(), eq(false))
-        assertFalse(session.promptRequest.isConsumed())
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
     }
 
     @Test
@@ -158,22 +154,18 @@ class FilePickerTest {
             onDismissWasCalled = true
         }
 
-        val session = getSelectedSession()
+        val selected = prepareSelectedSession(filePickerRequest)
 
         stubContext()
 
-        session.promptRequest = Consumable.from(filePickerRequest)
-
         filePicker.onPermissionsDenied()
 
-        verify(mockSessionManager).selectedSession
         assertTrue(onDismissWasCalled)
-        assertTrue(session.promptRequest.isConsumed())
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
     }
 
     @Test
     fun `onActivityResult with RESULT_OK and isMultipleFilesSelection false will consume PromptRequest of the actual session`() {
-
         var onSingleFileSelectionWasCalled = false
 
         val onSingleFileSelection: (Context, Uri) -> Unit = { _, _ ->
@@ -182,24 +174,21 @@ class FilePickerTest {
 
         val filePickerRequest = request.copy(onSingleFileSelected = onSingleFileSelection)
 
-        val session = getSelectedSession()
+        val selected = prepareSelectedSession(filePickerRequest)
         val intent = Intent()
 
         intent.data = mock()
-        session.promptRequest = Consumable.from(filePickerRequest)
 
         stubContext()
 
         filePicker.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
-        verify(mockSessionManager).selectedSession
         assertTrue(onSingleFileSelectionWasCalled)
-        assertTrue(session.promptRequest.isConsumed())
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
     }
 
     @Test
     fun `onActivityResult with RESULT_OK and isMultipleFilesSelection true will consume PromptRequest of the actual session`() {
-
         var onMultipleFileSelectionWasCalled = false
 
         val onMultipleFileSelection: (Context, Array<Uri>) -> Unit = { _, _ ->
@@ -211,7 +200,7 @@ class FilePickerTest {
             onMultipleFilesSelected = onMultipleFileSelection
         )
 
-        val session = getSelectedSession()
+        val selected = prepareSelectedSession(filePickerRequest)
         val intent = Intent()
 
         intent.clipData = mock()
@@ -224,43 +213,34 @@ class FilePickerTest {
             doReturn(item).`when`(this).getItemAt(0)
         }
 
-        session.promptRequest = Consumable.from(filePickerRequest)
-
         stubContext()
 
         filePicker.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
-        verify(mockSessionManager).selectedSession
         assertTrue(onMultipleFileSelectionWasCalled)
-        assertTrue(session.promptRequest.isConsumed())
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
     }
 
     @Test
     fun `onActivityResult with not RESULT_OK will consume PromptRequest of the actual session and call onDismiss `() {
-
         var onDismissWasCalled = false
 
         val filePickerRequest = request.copy(isMultipleFilesSelection = true) {
             onDismissWasCalled = true
         }
 
-        val session = getSelectedSession()
+        val selected = prepareSelectedSession(filePickerRequest)
         val intent = Intent()
-
-        session.promptRequest = Consumable.from(filePickerRequest)
 
         filePicker.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
 
-        verify(mockSessionManager).selectedSession
         assertTrue(onDismissWasCalled)
-        assertTrue(session.promptRequest.isConsumed())
+        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
     }
 
     @Test
     fun `onRequestPermissionsResult with FILE_PICKER_REQUEST and PERMISSION_GRANTED will call onPermissionsGranted`() {
-
         filePicker = spy(filePicker)
-
         filePicker.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_GRANTED })
 
         verify(filePicker).onPermissionsGranted()
@@ -268,23 +248,26 @@ class FilePickerTest {
 
     @Test
     fun `onRequestPermissionsResult with FILE_PICKER_REQUEST and PERMISSION_DENIED will call onPermissionsDeny`() {
-
         filePicker = spy(filePicker)
-
         filePicker.onPermissionsResult(emptyArray(), IntArray(1) { PERMISSION_DENIED })
 
         verify(filePicker).onPermissionsDenied()
     }
 
-    private fun getSelectedSession() = Session("").also {
-        mockSessionManager.add(it, selected = true)
+    private fun prepareSelectedSession(request: PromptRequest? = null): TabSessionState {
+        val promptRequest: PromptRequest = request ?: mock()
+        val content: ContentState = mock()
+        whenever(content.promptRequest).thenReturn(promptRequest)
+
+        val selected = TabSessionState("browser-tab", content, mock(), mock())
+        whenever(state.selectedTabId).thenReturn(selected.id)
+        whenever(state.tabs).thenReturn(listOf(selected))
+        return selected
     }
 
     private fun stubContext() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-
-        doReturn(context).`when`(mockFragment).requireContext()
-
-        filePicker = FilePicker(mockFragment, mockSessionManager) {}
+        doReturn(context).`when`(fragment).requireContext()
+        filePicker = FilePicker(fragment, store) {}
     }
 }

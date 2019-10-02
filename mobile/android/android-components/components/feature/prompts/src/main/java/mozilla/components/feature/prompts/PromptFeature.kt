@@ -10,10 +10,16 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import mozilla.components.browser.session.SelectionAwareSessionObserver
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.session.runWithSessionIdOrSelected
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
@@ -28,9 +34,11 @@ import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import java.security.InvalidParameterException
 import java.util.Date
 
@@ -60,8 +68,10 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * [Activity], this parameter can be ignored. Note that an
  * [IllegalStateException] will be thrown if neither an active nor a fragment
  * is specified.
- * @property sessionManager The [SessionManager] instance in order to subscribe
- * to the selected [Session].
+ * @property store The [BrowserStore] this feature should subscribe to.
+ * @property customTabId Optional id of a custom tab. Instead of showing context
+ * menus for the currently selected tab this feature will show only context menus
+ * for this custom tab if an id is provided.
  * @property fragmentManager The [FragmentManager] to be used when displaying
  * a dialog (fragment).
  * @property onNeedToRequestPermissions a callback invoked when permissions
@@ -72,30 +82,33 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
 class PromptFeature(
     private val activity: Activity? = null,
     private val fragment: Fragment? = null,
-    private val sessionManager: SessionManager,
-    private var sessionId: String? = null,
+    private val store: BrowserStore,
+    private var customTabId: String? = null,
     private val fragmentManager: FragmentManager,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature {
+    private var scope: CoroutineScope? = null
+    private var activePromptRequest: PromptRequest? = null
+
     internal val promptAbuserDetector = PromptAbuserDetector()
 
     constructor(
         activity: Activity,
-        sessionManager: SessionManager,
+        store: BrowserStore,
         sessionId: String? = null,
         fragmentManager: FragmentManager,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
-        activity, null, sessionManager, sessionId, fragmentManager, onNeedToRequestPermissions
+        activity, null, store, sessionId, fragmentManager, onNeedToRequestPermissions
     )
     constructor(
         fragment: Fragment,
-        sessionManager: SessionManager,
+        store: BrowserStore,
         sessionId: String? = null,
         fragmentManager: FragmentManager,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
-        null, fragment, sessionManager, sessionId, fragmentManager, onNeedToRequestPermissions
+        null, fragment, store, sessionId, fragmentManager, onNeedToRequestPermissions
     )
 
     init {
@@ -107,14 +120,12 @@ class PromptFeature(
         }
     }
 
-    private val observer = PromptRequestObserver(sessionManager, feature = this)
-
     private val context get() = activity ?: requireNotNull(fragment).requireContext()
 
     private val filePicker = if (activity != null) {
-        FilePicker(activity, sessionManager, sessionId, onNeedToRequestPermissions)
+        FilePicker(activity, store, customTabId, onNeedToRequestPermissions)
     } else {
-        FilePicker(requireNotNull(fragment), sessionManager, sessionId, onNeedToRequestPermissions)
+        FilePicker(requireNotNull(fragment), store, customTabId, onNeedToRequestPermissions)
     }
 
     override val onNeedToRequestPermissions
@@ -126,7 +137,23 @@ class PromptFeature(
      */
     override fun start() {
         promptAbuserDetector.resetJSAlertAbuseState()
-        observer.observeIdOrSelected(sessionId)
+
+        scope = store.flowScoped { flow ->
+            flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
+                .ifAnyChanged {
+                    arrayOf(it?.content?.promptRequest, it?.content?.loading)
+                }
+                .collect { state ->
+                    state?.content?.let {
+                        if (it.promptRequest != activePromptRequest) {
+                            onPromptRequested(state)
+                        } else if (!it.loading) {
+                            promptAbuserDetector.resetJSAlertAbuseState()
+                        }
+                        activePromptRequest = it.promptRequest
+                    }
+                }
+        }
 
         fragmentManager.findFragmentByTag(FRAGMENT_TAG)?.let { fragment ->
             // There's still a [PromptDialogFragment] visible from the last time. Re-attach this feature so that the
@@ -140,7 +167,7 @@ class PromptFeature(
      * Stops observing the selected session for incoming prompt requests.
      */
     override fun stop() {
-        observer.stop()
+        scope?.cancel()
     }
 
     /**
@@ -168,33 +195,32 @@ class PromptFeature(
 
     /**
      * Invoked when a native dialog needs to be shown.
-     * Displays a suitable dialog for the pending [promptRequest].
      *
      * @param session The session which requested the dialog.
-     * @param promptRequest The session the request the dialog.
      */
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun onPromptRequested(session: Session, promptRequest: PromptRequest) {
+    internal fun onPromptRequested(session: SessionState) {
         // Some requests are handle with intents
-        when (promptRequest) {
-            is File -> filePicker.handleFileRequest(promptRequest)
-            else -> handleDialogsRequest(promptRequest, session)
+        session.content.promptRequest?.let { promptRequest ->
+            when (promptRequest) {
+                is File -> filePicker.handleFileRequest(promptRequest)
+                else -> handleDialogsRequest(promptRequest, session)
+            }
         }
     }
 
     /**
      * Invoked when a dialog is dismissed. This consumes the [PromptFeature]
-     * value from the [Session] indicated by [sessionId].
+     * value from the session indicated by [sessionId].
      *
      * @param sessionId this is the id of the session which requested the prompt.
      */
     internal fun onCancel(sessionId: String) {
-        sessionManager.consumePromptFrom(sessionId) {
+        store.consumePromptFrom(sessionId) {
             when (it) {
                 is PromptRequest.Dismissible -> it.onDismiss()
                 is PromptRequest.Popup -> it.onDeny()
             }
-            true
         }
     }
 
@@ -207,7 +233,7 @@ class PromptFeature(
      */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
     internal fun onConfirm(sessionId: String, value: Any? = null) {
-        sessionManager.consumePromptFrom(sessionId) {
+        store.consumePromptFrom(sessionId) {
             when (it) {
                 is TimeSelection -> it.onConfirm(value as Date)
                 is Color -> it.onConfirm(value as String)
@@ -248,7 +274,6 @@ class PromptFeature(
                     }
                 }
             }
-            true
         }
     }
 
@@ -259,11 +284,10 @@ class PromptFeature(
      * @param sessionId that requested to show the dialog.
      */
     internal fun onClear(sessionId: String) {
-        sessionManager.consumePromptFrom(sessionId) {
+        store.consumePromptFrom(sessionId) {
             when (it) {
                 is TimeSelection -> it.onClear()
             }
-            true
         }
     }
 
@@ -271,8 +295,8 @@ class PromptFeature(
      * Re-attaches a fragment that is still visible but not linked to this feature anymore.
      */
     private fun reattachFragment(fragment: PromptDialogFragment) {
-        val session = sessionManager.findSessionById(fragment.sessionId)
-        if (session == null || session.promptRequest.isConsumed()) {
+        val session = store.state.findTabOrCustomTab(fragment.sessionId)
+        if (session?.content?.promptRequest == null) {
             fragmentManager.beginTransaction()
                 .remove(fragment)
                 .commitAllowingStateLoss()
@@ -283,11 +307,11 @@ class PromptFeature(
         fragment.feature = this
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun handleDialogsRequest(
         promptRequest: PromptRequest,
-        session: Session
+        session: SessionState
     ) {
         // Requests that are handled with dialogs
         val dialog = when (promptRequest) {
@@ -415,6 +439,7 @@ class PromptFeature(
             dialog.show(fragmentManager, FRAGMENT_TAG)
         } else {
             (promptRequest as PromptRequest.Dismissible).onDismiss()
+            store.dispatch(ContentAction.ConsumePromptRequestAction(session.id))
         }
         promptAbuserDetector.updateJSDialogAbusedState()
     }
@@ -433,37 +458,23 @@ class PromptFeature(
         }
     }
 
-    /**
-     * Observes [Session.Observer.onPromptRequested] of the selected session
-     * and notifies the feature whenever a prompt needs to be shown.
-     */
-    internal class PromptRequestObserver(
-        sessionManager: SessionManager,
-        private val feature: PromptFeature
-    ) : SelectionAwareSessionObserver(sessionManager) {
-
-        override fun onPromptRequested(session: Session, promptRequest: PromptRequest): Boolean {
-            feature.onPromptRequested(session, promptRequest)
-            return false
-        }
-
-        override fun onLoadingStateChanged(session: Session, loading: Boolean) {
-            if (!loading) {
-                feature.promptAbuserDetector.resetJSAlertAbuseState()
-            }
-        }
-    }
-
     companion object {
         const val FILE_PICKER_ACTIVITY_REQUEST_CODE = 1234
     }
 }
 
-internal fun SessionManager.consumePromptFrom(
+internal fun BrowserStore.consumePromptFrom(
     sessionId: String?,
-    consumer: (PromptRequest) -> Boolean
+    consume: (PromptRequest) -> Unit
 ) {
-    runWithSessionIdOrSelected(sessionId) {
-        it.promptRequest.consume(consumer)
+    if (sessionId == null) {
+        state.selectedTab
+    } else {
+        state.findTabOrCustomTab(sessionId)
+    }?.let { tab ->
+        tab.content.promptRequest?.let {
+            consume(it)
+            dispatch(ContentAction.ConsumePromptRequestAction(tab.id))
+        }
     }
 }

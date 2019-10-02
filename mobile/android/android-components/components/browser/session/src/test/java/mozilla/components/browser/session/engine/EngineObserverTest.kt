@@ -8,6 +8,8 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LoadRequestOption
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
@@ -20,7 +22,6 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.mock
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -76,13 +77,13 @@ class EngineObserverTest {
 
         engineSession.loadUrl("http://mozilla.org")
         engineSession.toggleDesktopMode(true)
-        Assert.assertEquals("http://mozilla.org", session.url)
-        Assert.assertEquals("", session.searchTerms)
-        Assert.assertEquals(100, session.progress)
-        Assert.assertEquals(true, session.loading)
-        Assert.assertEquals(true, session.canGoForward)
-        Assert.assertEquals(true, session.canGoBack)
-        Assert.assertEquals(true, session.desktopMode)
+        assertEquals("http://mozilla.org", session.url)
+        assertEquals("", session.searchTerms)
+        assertEquals(100, session.progress)
+        assertEquals(true, session.loading)
+        assertEquals(true, session.canGoForward)
+        assertEquals(true, session.canGoBack)
+        assertEquals(true, session.desktopMode)
     }
 
     @Test
@@ -118,10 +119,10 @@ class EngineObserverTest {
         engineSession.register(EngineObserver(session))
 
         engineSession.loadUrl("http://mozilla.org")
-        Assert.assertEquals(Session.SecurityInfo(false), session.securityInfo)
+        assertEquals(Session.SecurityInfo(false), session.securityInfo)
 
         engineSession.loadUrl("https://mozilla.org")
-        Assert.assertEquals(Session.SecurityInfo(true, "host", "issuer"), session.securityInfo)
+        assertEquals(Session.SecurityInfo(true, "host", "issuer"), session.securityInfo)
     }
 
     @Test
@@ -364,15 +365,17 @@ class EngineObserverTest {
     }
 
     @Test
-    fun engineSessionObserverWithOnPromptRequest() {
-
+    fun engineObserverHandlesPromptRequest() {
         val promptRequest = mock(PromptRequest::class.java)
-        val session = Session("")
-        val observer = EngineObserver(session)
+        val session = Session(id = "test-session", initialUrl = "")
+        val store = mock(BrowserStore::class.java)
+        val observer = EngineObserver(session, store)
 
-        assertTrue(session.promptRequest.isConsumed())
         observer.onPromptRequest(promptRequest)
-        assertFalse(session.promptRequest.isConsumed())
+        verify(store).dispatch(ContentAction.UpdatePromptRequestAction(
+            session.id,
+            promptRequest
+        ))
     }
 
     @Test
