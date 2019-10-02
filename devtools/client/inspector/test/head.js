@@ -86,6 +86,16 @@ var startPicker = async function(toolbox, skipFocus) {
 };
 
 /**
+ * Start the eye dropper tool.
+ * @param {Toolbox} toolbox
+ */
+var startEyeDropper = async function(toolbox) {
+  info("Start the eye dropper tool");
+  toolbox.win.focus();
+  await toolbox.getPanel("inspector").showEyeDropper();
+};
+
+/**
  * Pick an element from the content page using the element picker.
  *
  * @param {Inspector} inspector
