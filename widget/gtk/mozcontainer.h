@@ -105,8 +105,6 @@ void moz_container_scale_changed(MozContainer* container,
                                  GtkAllocation* aAllocation);
 void moz_container_set_initial_draw_callback(
     MozContainer* container, std::function<void(void)> inital_draw_cb);
-void moz_container_set_opaque_region(MozContainer* container,
-                                     cairo_region_t* region);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */
