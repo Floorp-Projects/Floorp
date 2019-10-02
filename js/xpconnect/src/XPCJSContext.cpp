@@ -1100,7 +1100,7 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
     rv = CycleCollectedJSContext::InitializeNonPrimary(aPrimaryContext);
   } else {
     rv = CycleCollectedJSContext::Initialize(nullptr, JS::DefaultHeapMaxBytes,
-                                             JS::DefaultNurseryMaxBytes);
+                                             JS::DefaultNurseryBytes);
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

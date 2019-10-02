@@ -155,12 +155,10 @@ nsresult CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
   MOZ_ASSERT(!mJSContext);
 
   mozilla::dom::InitScriptSettings();
-  mJSContext = JS_NewContext(aMaxBytes, aParentRuntime);
+  mJSContext = JS_NewContext(aMaxBytes, aMaxNurseryBytes, aParentRuntime);
   if (!mJSContext) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  JS_SetGCParameter(mJSContext, JSGC_MAX_NURSERY_BYTES, aMaxNurseryBytes);
 
   mRuntime = CreateRuntime(mJSContext);
 

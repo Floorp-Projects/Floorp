@@ -38,7 +38,7 @@ static constexpr float MinHeapGrowthFactor =
 GCSchedulingTunables::GCSchedulingTunables()
     : gcMaxBytes_(0),
       gcMinNurseryBytes_(TuningDefaults::GCMinNurseryBytes),
-      gcMaxNurseryBytes_(JS::DefaultNurseryMaxBytes),
+      gcMaxNurseryBytes_(0),
       gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
       nonIncrementalFactor_(TuningDefaults::NonIncrementalFactor),
       avoidInterruptFactor_(TuningDefaults::AvoidInterruptFactor),
@@ -277,7 +277,7 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_MAX_NURSERY_BYTES:
       // Reset these togeather to maintain their min <= max invariant.
       gcMinNurseryBytes_ = TuningDefaults::GCMinNurseryBytes;
-      gcMaxNurseryBytes_ = JS::DefaultNurseryMaxBytes;
+      gcMaxNurseryBytes_ = JS::DefaultNurseryBytes;
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ =
