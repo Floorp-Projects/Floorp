@@ -78,7 +78,7 @@ var snapshotFormatters = {
     if (data.updateChannel) {
       $("updatechannel-box").textContent = data.updateChannel;
     }
-    if (AppConstants.MOZ_UPDATER) {
+    if (AppConstants.MOZ_UPDATER && AppConstants.platform != "android") {
       $("update-dir-box").textContent = Services.dirsvc.get(
         "UpdRootD",
         Ci.nsIFile
