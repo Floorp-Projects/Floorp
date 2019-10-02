@@ -15,14 +15,12 @@ import mozilla.components.browser.session.ext.toTabSessionState
 import mozilla.components.browser.state.action.ContentAction.AddFindResultAction
 import mozilla.components.browser.state.action.ContentAction.ClearFindResultsAction
 import mozilla.components.browser.state.action.ContentAction.ConsumeHitResultAction
-import mozilla.components.browser.state.action.ContentAction.ConsumePromptRequestAction
 import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
 import mozilla.components.browser.state.action.ContentAction.UpdateHitResultAction
 import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
-import mozilla.components.browser.state.action.ContentAction.UpdatePromptRequestAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSearchTermsAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfoAction
 import mozilla.components.browser.state.action.ContentAction.UpdateThumbnailAction
@@ -39,7 +37,6 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.base.observer.Observable
@@ -103,7 +100,6 @@ class Session(
         fun onThumbnailChanged(session: Session, bitmap: Bitmap?) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
-        fun onPromptRequested(session: Session, promptRequest: PromptRequest): Boolean = false
         fun onOpenWindowRequested(session: Session, windowRequest: WindowRequest): Boolean = false
         fun onCloseWindowRequested(session: Session, windowRequest: WindowRequest): Boolean = false
         fun onMediaRemoved(session: Session, media: List<Media>, removed: Media) = Unit
@@ -447,24 +443,6 @@ class Session(
         _, _, request ->
             val consumers = wrapConsumers<PermissionRequest> { onAppPermissionRequested(this@Session, it) }
             !request.consumeBy(consumers)
-    }
-
-    /**
-     * [Consumable] State for a prompt request from web content.
-     */
-    var promptRequest: Consumable<PromptRequest> by Delegates.vetoable(Consumable.empty()) { _, _, request ->
-        store?.let {
-            val promptRequest = request.peek()
-            if (promptRequest == null) {
-                it.syncDispatch(ConsumePromptRequestAction(id))
-            } else {
-                it.syncDispatch(UpdatePromptRequestAction(id, promptRequest))
-                request.onConsume { it.syncDispatch(ConsumePromptRequestAction(id)) }
-            }
-        }
-
-        val consumers = wrapConsumers<PromptRequest> { onPromptRequested(this@Session, it) }
-        !request.consumeBy(consumers)
     }
 
     /**

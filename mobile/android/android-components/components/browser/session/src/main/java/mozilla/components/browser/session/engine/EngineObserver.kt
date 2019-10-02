@@ -178,7 +178,10 @@ internal class EngineObserver(
     }
 
     override fun onPromptRequest(promptRequest: PromptRequest) {
-        session.promptRequest = Consumable.from(promptRequest)
+        store?.dispatch(ContentAction.UpdatePromptRequestAction(
+            session.id,
+            promptRequest
+        ))
     }
 
     override fun onOpenWindowRequest(windowRequest: WindowRequest) {

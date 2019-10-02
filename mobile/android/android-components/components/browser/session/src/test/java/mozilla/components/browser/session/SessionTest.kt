@@ -27,7 +27,6 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
@@ -685,7 +684,6 @@ class SessionTest {
         val defaultObserver = object : Session.Observer {}
         val contentPermissionRequest: PermissionRequest = mock()
         val appPermissionRequest: PermissionRequest = mock()
-        val promptRequest: PromptRequest = mock()
         val windowRequest: WindowRequest = mock()
 
         defaultObserver.onUrlChanged(session, "")
@@ -705,7 +703,6 @@ class SessionTest {
         defaultObserver.onThumbnailChanged(session, spy(Bitmap::class.java))
         defaultObserver.onContentPermissionRequested(session, contentPermissionRequest)
         defaultObserver.onAppPermissionRequested(session, appPermissionRequest)
-        defaultObserver.onPromptRequested(session, promptRequest)
         defaultObserver.onOpenWindowRequested(session, windowRequest)
         defaultObserver.onCloseWindowRequested(session, windowRequest)
         defaultObserver.onWebAppManifestChanged(session, mock())
@@ -769,61 +766,6 @@ class SessionTest {
 
         assertTrue(appPermissionCallbackExecuted)
         assertTrue(session.appPermissionRequest.isConsumed())
-    }
-
-    @Test
-    fun `prompt requests will be set on session if no observer consumes it`() {
-        val promptRequest: PromptRequest = mock()
-
-        val session = Session("https://www.mozilla.org")
-        session.promptRequest = Consumable.from(promptRequest)
-        assertFalse(session.promptRequest.isConsumed())
-
-        var promptRequestRequestIsSet = false
-        session.promptRequest.consume {
-            promptRequestRequestIsSet = true
-            true
-        }
-
-        assertTrue(promptRequestRequestIsSet)
-    }
-
-    @Test
-    fun `prompt requests will not be set on session if consumed by observer`() {
-        var promptCallbackExecuted = false
-
-        val session = Session("https://www.mozilla.org")
-        session.register(object : Session.Observer {
-            override fun onPromptRequested(session: Session, promptRequest: PromptRequest): Boolean {
-                promptCallbackExecuted = true
-                return true
-            }
-        })
-
-        val promptRequest: PromptRequest = mock()
-        session.promptRequest = Consumable.from(promptRequest)
-
-        assertTrue(promptCallbackExecuted)
-        assertTrue(session.contentPermissionRequest.isConsumed())
-    }
-
-    @Test
-    fun `action is dispatched when prompt request changes`() {
-        val store: BrowserStore = mock()
-        `when`(store.dispatch(any())).thenReturn(mock())
-
-        val session = Session("https://www.mozilla.org")
-        session.store = store
-
-        session.promptRequest = Consumable.empty()
-        verify(store).dispatch(ContentAction.ConsumePromptRequestAction(session.id))
-
-        val promptRequest: PromptRequest = mock()
-        session.promptRequest = Consumable.from(promptRequest)
-        verify(store).dispatch(ContentAction.UpdatePromptRequestAction(session.id, promptRequest))
-
-        session.promptRequest.consume { true }
-        verify(store, times(2)).dispatch(ContentAction.ConsumePromptRequestAction(session.id))
     }
 
     @Test
