@@ -172,7 +172,6 @@ struct BlobReader<'a> {
     reader: BufReader<'a>,
     /// Where the buffer head is.
     begin: usize,
-    origin: IntPoint,
 }
 
 #[derive(PartialEq, Debug, Eq, Clone, Copy)]
@@ -203,9 +202,8 @@ impl<'a> BlobReader<'a> {
         let index_offset_pos = buf.len()-(mem::size_of::<usize>() + mem::size_of::<IntPoint>());
         assert!(index_offset_pos < buf.len());
         let index_offset = unsafe { convert_from_bytes::<usize>(&buf[index_offset_pos..]) };
-        let origin = unsafe { convert_from_bytes(&buf[(index_offset_pos + mem::size_of::<usize>())..]) };
 
-        BlobReader { reader: BufReader::new(&buf[index_offset..index_offset_pos]), begin: 0, origin }
+        BlobReader { reader: BufReader::new(&buf[index_offset..index_offset_pos]), begin: 0}
     }
 
     /// Reads the next display item's metadata.
@@ -251,13 +249,12 @@ impl BlobWriter {
     }
 
     /// Completes the blob image, producing a single buffer containing it.
-    fn finish(mut self, origin: IntPoint) -> Vec<u8> {
+    fn finish(mut self) -> Vec<u8> {
         // Append the index to the end of the buffer
         // and then append the offset to the beginning of the index.
         let index_begin = self.data.len();
         self.data.extend_from_slice(&self.index);
         self.data.extend_from_slice(convert_to_bytes(&index_begin));
-        self.data.extend_from_slice(convert_to_bytes(&origin));
         self.data
     }
 }
@@ -461,7 +458,7 @@ fn merge_blob_images(old_buf: &[u8], new_buf: &[u8], dirty_rect: Box2d, old_visi
 
     //assert!(old_reader.cache.is_empty());
 
-    let result = result.finish(new_reader.origin);
+    let result = result.finish();
     dump_index(&result);
     result
 }
