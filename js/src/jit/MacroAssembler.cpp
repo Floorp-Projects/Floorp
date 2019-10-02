@@ -1561,9 +1561,9 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     }
 
     // Enter exit frame for the FinishBailoutToBaseline call.
-    load32(Address(bailoutInfo,
-                   offsetof(BaselineBailoutInfo, frameSizeOfInnerMostFrame)),
-           temp);
+    loadPtr(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)),
+            temp);
+    load32(Address(temp, BaselineFrame::reverseOffsetOfFrameSize()), temp);
     makeFrameDescriptor(temp, FrameType::BaselineJS, ExitFrameLayout::Size());
     push(temp);
     push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
