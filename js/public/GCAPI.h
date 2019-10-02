@@ -84,7 +84,7 @@ typedef enum JSGCParamKey {
    * This will be rounded to the nearest gc::ChunkSize.
    *
    * Pref: javascript.options.mem.nursery.max_kb
-   * Default: JS::DefaultNurseryMaxBytes
+   * Default: JS::DefaultNurseryBytes
    */
   JSGC_MAX_NURSERY_BYTES = 2,
 

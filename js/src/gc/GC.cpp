@@ -1202,13 +1202,15 @@ void js::gc::DumpArenaInfo() {
 
 #endif  // JS_GC_ZEAL
 
-bool GCRuntime::init(uint32_t maxbytes) {
+bool GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes) {
   MOZ_ASSERT(SystemPageSize());
 
   {
     AutoLockGCBgAlloc lock(rt);
 
     MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
+    MOZ_ALWAYS_TRUE(
+        tunables.setParameter(JSGC_MAX_NURSERY_BYTES, maxNurseryBytes, lock));
 
     const char* size = getenv("JSGC_MARK_STACK_LIMIT");
     if (size) {
