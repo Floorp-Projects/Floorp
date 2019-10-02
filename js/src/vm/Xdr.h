@@ -29,8 +29,8 @@ enum XDRMode { XDR_ENCODE, XDR_DECODE };
 
 using XDRResult = mozilla::Result<mozilla::Ok, JS::TranscodeResult>;
 
-using XDRAtomTable = JS::GCVector<JSAtom*>;
-using XDRAtomMap = JS::GCHashMap<JSAtom*, uint32_t>;
+using XDRAtomTable = JS::GCVector<HeapPtr<JSAtom*>>;
+using XDRAtomMap = JS::GCHashMap<HeapPtr<JSAtom*>, uint32_t>;
 
 class XDRBufferBase {
  public:
