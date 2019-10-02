@@ -33,7 +33,7 @@ class RtpSourcesTest : public ::testing::Test {
     const int64_t times[] = {100, 120, 140, 160, 180, 200, 220};
     const size_t numEntries = sizeof(times) / sizeof(times[0]);
     for (auto i : times) {
-      history.Insert(i, i + jitter, hasAudioLevel, audioLevel);
+      history.Insert(i, i + jitter, i, hasAudioLevel, audioLevel);
     }
     ASSERT_EQ(history.mDetailedHistory.size(), numEntries);
     for (auto i : times) {
@@ -66,25 +66,25 @@ class RtpSourcesTest : public ::testing::Test {
     constexpr int64_t pruneTime1 = time2 + (10 * 1000) + 1;
 
     // time0
-    history.Insert(timeNow, time0, true, 0);
+    history.Insert(timeNow, time0, 0, true, 0);
     EXPECT_TRUE(history.Empty());
     EXPECT_FALSE(history.mHasEvictedEntry);
 
     // time1
-    history.Insert(timeNow, time1, true, 0);
+    history.Insert(timeNow, time1, 1, true, 0);
     // Check that the jitter window buffer hasn't been used
     EXPECT_TRUE(history.Empty());
     ASSERT_EQ(history.mLatestEviction.jitterAdjustedTimestamp, time1);
     EXPECT_TRUE(history.mHasEvictedEntry);
 
     // time2
-    history.Insert(timeNow, time2, true, 0);
+    history.Insert(timeNow, time2, 2, true, 0);
     EXPECT_TRUE(history.Empty());
     ASSERT_EQ(history.mLatestEviction.jitterAdjustedTimestamp, time2);
     EXPECT_TRUE(history.mHasEvictedEntry);
 
     // time3
-    history.Insert(timeNow, time3, true, 0);
+    history.Insert(timeNow, time3, 3, true, 0);
     EXPECT_TRUE(history.Empty());
     ASSERT_EQ(history.mLatestEviction.jitterAdjustedTimestamp, time2);
     EXPECT_TRUE(history.mHasEvictedEntry);
@@ -116,7 +116,7 @@ class RtpSourcesTest : public ::testing::Test {
     constexpr int64_t timeNow2 = time1 + jitterWindow + 1;
 
     // time0
-    history.Insert(timeNow0, time0, false, 1);
+    history.Insert(timeNow0, time0, 0, false, 1);
     EXPECT_FALSE(history.Empty());
     // Jitter window should not have grown
     ASSERT_EQ(history.mMaxJitterWindow, jitterWindow);
@@ -124,7 +124,7 @@ class RtpSourcesTest : public ::testing::Test {
     EXPECT_FALSE(history.mHasEvictedEntry);
 
     // time1
-    history.Insert(timeNow0, time1, true, 2);
+    history.Insert(timeNow0, time1, 1, true, 2);
     ASSERT_EQ(history.mMaxJitterWindow, jitterWindow);
     EXPECT_EQ(history.mDetailedHistory.size(), static_cast<size_t>(2));
     EXPECT_FALSE(history.mHasEvictedEntry);
@@ -153,6 +153,7 @@ class RtpSourcesTest : public ::testing::Test {
     RtpSourceHistory history;
     constexpr int64_t timeNow = 0;
     const int64_t jitterAdjusted = timeNow + 10;
+    const uint32_t ntpTimestamp = 0;
     const bool hasAudioLevel = true;
     const uint8_t audioLevel0 = 127;
     // should result in in hasAudioLevel = false
@@ -161,7 +162,8 @@ class RtpSourcesTest : public ::testing::Test {
     const uint8_t audioLevel2 = 128;
 
     // audio level 0
-    history.Insert(timeNow, jitterAdjusted, hasAudioLevel, audioLevel0);
+    history.Insert(timeNow, jitterAdjusted, ntpTimestamp, hasAudioLevel,
+                   audioLevel0);
     ASSERT_FALSE(history.mHasEvictedEntry);
     EXPECT_EQ(history.mDetailedHistory.size(), static_cast<size_t>(1));
     {
@@ -171,7 +173,8 @@ class RtpSourcesTest : public ::testing::Test {
       EXPECT_EQ(entry->audioLevel, audioLevel0);
     }
     // audio level 1
-    history.Insert(timeNow, jitterAdjusted, hasAudioLevel, audioLevel1);
+    history.Insert(timeNow, jitterAdjusted, ntpTimestamp, hasAudioLevel,
+                   audioLevel1);
     ASSERT_FALSE(history.mHasEvictedEntry);
     EXPECT_EQ(history.mDetailedHistory.size(), static_cast<size_t>(1));
     {
@@ -181,7 +184,8 @@ class RtpSourcesTest : public ::testing::Test {
       EXPECT_EQ(entry->audioLevel, audioLevel1);
     }
     // audio level 2
-    history.Insert(timeNow, jitterAdjusted, hasAudioLevel, audioLevel2);
+    history.Insert(timeNow, jitterAdjusted, ntpTimestamp, hasAudioLevel,
+                   audioLevel2);
     ASSERT_FALSE(history.mHasEvictedEntry);
     EXPECT_EQ(history.mDetailedHistory.size(), static_cast<size_t>(1));
     {
@@ -207,8 +211,9 @@ class RtpSourcesTest : public ::testing::Test {
     constexpr int64_t timeNow = 10000;
     constexpr int64_t jitter = RtpSourceHistory::kMinJitterWindow / 2;
     const int64_t jitterAdjusted = timeNow + jitter;
+    const uint32_t ntpTimestamp = 0;
 
-    history.Insert(timeNow, jitterAdjusted, 0, false);
+    history.Insert(timeNow, jitterAdjusted, ntpTimestamp, false, 0);
     history.Prune(timeNow + (jitter * 3) + 1);
     EXPECT_EQ(history.mDetailedHistory.size(), static_cast<size_t>(0));
     EXPECT_TRUE(history.mHasEvictedEntry);
