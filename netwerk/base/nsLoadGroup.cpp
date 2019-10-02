@@ -212,6 +212,9 @@ nsLoadGroup::Cancel(nsresult status) {
            nameStr.get()));
     }
 
+    // Cancel the request...
+    rv = request->Cancel(status);
+
     //
     // Remove the request from the load group...  This may cause
     // the OnStopRequest notification to fire...
@@ -219,9 +222,6 @@ nsLoadGroup::Cancel(nsresult status) {
     // XXX: What should the context be?
     //
     (void)RemoveRequest(request, nullptr, status);
-
-    // Cancel the request...
-    rv = request->Cancel(status);
 
     // Remember the first failure and return it...
     if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) firstError = rv;
