@@ -19,6 +19,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "FrameDescriptorFront",
+  "devtools/shared/fronts/descriptors/frame",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "BrowsingContextTargetFront",
   "devtools/shared/fronts/targets/browsing-context",
   true
@@ -257,6 +263,26 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   }
 
   /**
+   * This exists as a polyfill for now for tabTargets, which do not have descriptors.
+   * The mainRoot fills the role of the descriptor
+   */
+
+  /**
+   *  Get the previous frame descriptor front if it exists, create a new one if not
+   */
+  _getFrameDescriptorFront(form) {
+    let front = this.actor(form.actor);
+    if (front) {
+      return front;
+    }
+    front = new FrameDescriptorFront(this._client, null, this);
+    front.form(form);
+    front.actorID = form.actor;
+    this.manage(front);
+    return front;
+  }
+
+  /**
    * Get the previous process descriptor front if it exists, create a new one if not.
    *
    * If we are using a modern server, we will get a form for a processDescriptorFront.
@@ -273,6 +299,14 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     front.actorID = form.actor;
     this.manage(front);
     return front;
+  }
+
+  async getBrowsingContextDescriptor(id) {
+    const form = await super.getBrowsingContextDescriptor(id);
+    if (form.actor && form.actor.includes("processDescriptor")) {
+      return this._getProcessDescriptorFront(form);
+    }
+    return this._getFrameDescriptorFront(form);
   }
 
   /**

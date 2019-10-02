@@ -74,6 +74,16 @@ class FrameDescriptorFront extends FrontClassWithSpec(frameDescriptorSpec) {
     return this._targetFrontPromise;
   }
 
+  async getParentTarget() {
+    if (!this.parentID) {
+      return null;
+    }
+    const parentDescriptor = await this._client.mainRoot.getBrowsingContextDescriptor(
+      this.parentID
+    );
+    return parentDescriptor.getTarget();
+  }
+
   destroy() {
     this._frameTargetFront = null;
     this._targetFrontPromise = null;
