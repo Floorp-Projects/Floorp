@@ -11065,16 +11065,6 @@
     "n_values": 8,
     "description": "When we record an upgrade due to HSTS, record the source of that HSTS entry. (0: HSTS preload list, 1: HSTS Header seen naturally, 2: HSTS priming)"
   },
-  "MIXED_CONTENT_OBJECT_SUBREQUEST": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
-    "bug_numbers": [1244116],
-    "expires_in_version": "67",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "How often objects load insecure content on secure pages (counting pages, not objects). 0=pages with no mixed object subrequests, 1=pages with mixed object subrequests"
-  },
   "COOKIE_SCHEME_SECURITY": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
