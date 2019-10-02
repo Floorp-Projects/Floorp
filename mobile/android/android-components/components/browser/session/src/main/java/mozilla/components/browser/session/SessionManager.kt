@@ -131,9 +131,6 @@ class SessionManager(
     ) {
         // Add store to Session so that it can dispatch actions whenever it changes.
         session.store = store
-
-        delegate.add(session, selected, engineSession, parent)
-
         if (session.isCustomTabSession()) {
             store?.syncDispatch(
                 CustomTabListAction.AddCustomTabAction(
@@ -148,6 +145,8 @@ class SessionManager(
                 )
             )
         }
+
+        delegate.add(session, selected, engineSession, parent)
     }
 
     /**

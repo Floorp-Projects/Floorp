@@ -24,7 +24,6 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.`when`
 
 /**
  * This test suite validates that calls on [SessionManager] update [BrowserStore] to create a matching state.
@@ -762,6 +761,30 @@ class SessionManagerMigrationTest {
         assertEquals(engineSession2, sessionManager.getOrCreateEngineSession(session))
         store.state.findTab("session")!!.also { tab ->
             assertEquals(engineSession2, tab.engineState.engineSession)
+        }
+    }
+
+    @Test
+    fun `Session is added to store before engine session can be created and linked`() {
+        val store = BrowserStore()
+        val engine: Engine = mock()
+
+        val engineSession1: EngineSession = mock()
+        doReturn(engineSession1).`when`(engine).createSession(false)
+
+        val sessionManager = SessionManager(engine, store)
+        sessionManager.register(object : SessionManager.Observer {
+            override fun onSessionAdded(session: Session) {
+                sessionManager.getOrCreateEngineSession(session)
+            }
+        })
+
+        val session = Session(id = "session", initialUrl = "https://www.mozilla.org")
+        sessionManager.add(session)
+
+        assertEquals(engineSession1, sessionManager.getOrCreateEngineSession(session))
+        store.state.findTab("session")!!.also { tab ->
+            assertEquals(engineSession1, tab.engineState.engineSession)
         }
     }
 
