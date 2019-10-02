@@ -32,6 +32,8 @@ class ScaledFontFontconfig : public ScaledFontBase {
 
   AntialiasMode GetDefaultAAMode() override;
 
+  bool UseSubpixelPosition() const;
+
   bool CanSerialize() override { return true; }
 
   bool GetFontInstanceData(FontInstanceDataOutput aCb, void* aBaton) override;

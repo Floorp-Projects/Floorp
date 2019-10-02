@@ -37,6 +37,11 @@ ScaledFontFontconfig::ScaledFontFontconfig(
       mFace(std::move(aFace)),
       mInstanceData(aInstanceData) {}
 
+bool ScaledFontFontconfig::UseSubpixelPosition() const {
+  return mInstanceData.mAntialias != AntialiasMode::NONE &&
+         FT_IS_SCALABLE(mFace->GetFace());
+}
+
 #ifdef USE_SKIA
 SkTypeface* ScaledFontFontconfig::CreateSkTypeface() {
   SkPixelGeometry geo = mInstanceData.mFlags & InstanceData::SUBPIXEL_BGR
@@ -51,8 +56,7 @@ SkTypeface* ScaledFontFontconfig::CreateSkTypeface() {
 }
 
 void ScaledFontFontconfig::SetupSkFontDrawOptions(SkFont& aFont) {
-  // SkFontHost_cairo does not support subpixel text positioning
-  aFont.setSubpixel(false);
+  aFont.setSubpixel(UseSubpixelPosition());
 
   if (mInstanceData.mFlags & InstanceData::AUTOHINT) {
     aFont.setForceAutoHinting(true);
@@ -180,7 +184,7 @@ ScaledFontFontconfig::InstanceData::InstanceData(FcPattern* aPattern)
     int filter;
     if (mAntialias == AntialiasMode::SUBPIXEL &&
         FcPatternGetInteger(aPattern, FC_LCD_FILTER, 0, &filter) ==
-        FcResultMatch) {
+            FcResultMatch) {
       switch (filter) {
         case FC_LCD_NONE:
           mLcdFilter = FT_LCD_FILTER_NONE;
@@ -263,7 +267,9 @@ void ScaledFontFontconfig::InstanceData::SetupFontOptions(
     unsigned int* aOutSynthFlags) const {
   // For regular (non-printer) fonts, enable hint metrics as well as hinting
   // and (possibly subpixel) antialiasing.
-  cairo_font_options_set_hint_metrics(aFontOptions, mFlags & HINT_METRICS ? CAIRO_HINT_METRICS_ON : CAIRO_HINT_METRICS_OFF);
+  cairo_font_options_set_hint_metrics(
+      aFontOptions,
+      mFlags & HINT_METRICS ? CAIRO_HINT_METRICS_ON : CAIRO_HINT_METRICS_OFF);
 
   cairo_hint_style_t hinting;
   switch (mHinting) {
@@ -291,8 +297,7 @@ void ScaledFontFontconfig::InstanceData::SetupFontOptions(
       cairo_font_options_set_antialias(aFontOptions, CAIRO_ANTIALIAS_GRAY);
       break;
     case AntialiasMode::SUBPIXEL: {
-      cairo_font_options_set_antialias(aFontOptions,
-                                       CAIRO_ANTIALIAS_SUBPIXEL);
+      cairo_font_options_set_antialias(aFontOptions, CAIRO_ANTIALIAS_SUBPIXEL);
       cairo_font_options_set_subpixel_order(
           aFontOptions,
           mFlags & SUBPIXEL_BGR
@@ -302,16 +307,16 @@ void ScaledFontFontconfig::InstanceData::SetupFontOptions(
                                        : CAIRO_SUBPIXEL_ORDER_RGB));
       cairo_lcd_filter_t lcdFilter = CAIRO_LCD_FILTER_DEFAULT;
       switch (mLcdFilter) {
-      case FT_LCD_FILTER_NONE:
+        case FT_LCD_FILTER_NONE:
           lcdFilter = CAIRO_LCD_FILTER_NONE;
           break;
-      case FT_LCD_FILTER_DEFAULT:
+        case FT_LCD_FILTER_DEFAULT:
           lcdFilter = CAIRO_LCD_FILTER_FIR5;
           break;
-      case FT_LCD_FILTER_LIGHT:
+        case FT_LCD_FILTER_LIGHT:
           lcdFilter = CAIRO_LCD_FILTER_FIR3;
           break;
-      case FT_LCD_FILTER_LEGACY:
+        case FT_LCD_FILTER_LEGACY:
           lcdFilter = CAIRO_LCD_FILTER_INTRA_PIXEL;
           break;
       }
@@ -358,9 +363,10 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
     std::vector<FontVariation>* aOutVariations) {
   wr::FontInstanceOptions options;
   options.render_mode = wr::FontRenderMode::Alpha;
-  // FIXME: Cairo-FT metrics are not compatible with subpixel positioning.
-  // options.flags = wr::FontInstanceFlags_SUBPIXEL_POSITION;
   options.flags = wr::FontInstanceFlags{0};
+  if (UseSubpixelPosition()) {
+    options.flags |= wr::FontInstanceFlags_SUBPIXEL_POSITION;
+  }
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
