@@ -9801,9 +9801,6 @@ nsresult ListInitializedOriginsOp::DoDirectoryWork(
   AUTO_PROFILER_LABEL("ListInitializedOriginsOp::DoDirectoryWork", OTHER);
 
   nsresult rv;
-  if (!aQuotaManager->IsTemporaryStorageInitialized()) {
-    return NS_OK;
-  }
 
   for (const PersistenceType type : kAllPersistenceTypes) {
     rv = TraverseRepository(aQuotaManager, type);
