@@ -59,8 +59,10 @@ private const val SYNC_WORKER_BACKOFF_DELAY_MINUTES = 3L
  *
  * Must be initialized on the main thread.
  */
-internal class WorkManagerSyncManager(syncConfig: SyncConfig,
-                                      private val context: Context) : SyncManager(syncConfig) {
+internal class WorkManagerSyncManager(
+    syncConfig: SyncConfig,
+    private val context: Context
+) : SyncManager(syncConfig) {
     override val logger = Logger("BgSyncManager")
 
     init {
@@ -90,7 +92,7 @@ internal class WorkManagerSyncManager(syncConfig: SyncConfig,
  */
 internal object WorkersLiveDataObserver {
     private lateinit var workManager: WorkManager
-    private val workersLiveData  by lazy {
+    private val workersLiveData by lazy {
         workManager.getWorkInfosByTagLiveData(SyncWorkerTag.Common.name)
     }
 
