@@ -18,6 +18,23 @@ interface nsIClearDataCallback;
 interface nsIClearDataService : nsISupports
 {
   /**
+   * Delete data owned by local files or other hostless schemes.
+   * @param aIsUserRequest true if this request comes from a user interaction.
+   *        This information is important because if true, it's probably better
+   *        to remove more than less, for privacy reason. If false (e.g.
+   *        Clear-Site-Data header), we don't want to delete more than what is
+   *        strictly required.
+   * @param aFlags List of flags. See below the accepted values.
+                   Note that not all flags will make sense (e.g. we can't clear
+                   certificates for local files). Nonsensical flags will be
+                   ignored.
+   * @param aCallback this callback will be executed when the operation is
+   *                  completed.
+   */
+  void deleteDataFromLocalFiles(in bool aIsUserRequest,
+                                in uint32_t aFlags,
+                                in nsIClearDataCallback aCallback);
+  /**
    * Delete data owned by a host. For instance: mozilla.org. Data from any
    * possible originAttributes will be deleted.
    * @param aHost the host to be used.

@@ -14,24 +14,20 @@ let gSiteDataRemoveSelected = {
     for (let host of hosts) {
       let listItem = document.createXULElement("richlistitem");
       let label = document.createXULElement("label");
-      label.setAttribute("value", host);
+      if (host) {
+        label.setAttribute("value", host);
+      } else {
+        document.l10n.setAttributes(label, "site-data-local-file-host");
+      }
       listItem.appendChild(label);
       fragment.appendChild(listItem);
     }
     list.appendChild(fragment);
     document.addEventListener("dialogaccept", function() {
-      gSiteDataRemoveSelected.ondialogaccept();
+      window.arguments[0].allowed = true;
     });
     document.addEventListener("dialogcancel", function() {
-      gSiteDataRemoveSelected.ondialogcancel();
+      window.arguments[0].allowed = false;
     });
-  },
-
-  ondialogaccept() {
-    window.arguments[0].allowed = true;
-  },
-
-  ondialogcancel() {
-    window.arguments[0].allowed = false;
   },
 };
