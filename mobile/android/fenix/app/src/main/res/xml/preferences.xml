@@ -60,7 +60,7 @@
             android:title="@string/preference_enhanced_tracking_protection" />
         <androidx.preference.SwitchPreference
             android:defaultValue="false"
-            android:key="@string/pref_key_launch_links_in_private_mode"
+            android:key="@string/pref_key_launch_links_in_private_tab"
             android:title="@string/preferences_launch_links_in_private_mode" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"

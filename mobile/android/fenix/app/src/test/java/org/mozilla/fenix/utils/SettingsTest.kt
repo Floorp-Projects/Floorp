@@ -19,8 +19,8 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.robolectric.annotation.Config
 
 @ObsoleteCoroutinesApi
@@ -55,19 +55,19 @@ class SettingsTest {
     }
 
     @Test
-    fun alwaysOpenInPrivateMode() {
+    fun launchLinksInPrivateTab() {
         // When just created
         // Then
-        assertFalse(settings.alwaysOpenInPrivateMode)
+        assertFalse(settings.launchLinksInPrivateTab)
 
         // When
-        settings.alwaysOpenInPrivateMode = true
+        settings.launchLinksInPrivateTab = true
 
         // Then
-        assertTrue(settings.alwaysOpenInPrivateMode)
+        assertTrue(settings.launchLinksInPrivateTab)
 
         // When
-        settings.alwaysOpenInPrivateMode = false
+        settings.launchLinksInPrivateTab = false
 
         // Then
         assertFalse(settings.usePrivateMode)

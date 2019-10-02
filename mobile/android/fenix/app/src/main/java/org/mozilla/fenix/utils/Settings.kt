@@ -87,8 +87,8 @@ class Settings private constructor(
         default = false
     )
 
-    var alwaysOpenInPrivateMode by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_launch_links_in_private_mode),
+    var launchLinksInPrivateTab by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_launch_links_in_private_tab),
         default = false
     )
 

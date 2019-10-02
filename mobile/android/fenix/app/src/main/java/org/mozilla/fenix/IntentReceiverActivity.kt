@@ -37,7 +37,7 @@ class IntentReceiverActivity : Activity() {
     }
 
     suspend fun processIntent(intent: Intent) {
-        val tabIntentProcessor = if (settings().alwaysOpenInPrivateMode) {
+        val tabIntentProcessor = if (settings().launchLinksInPrivateTab) {
             components.intentProcessors.privateIntentProcessor
         } else {
             components.intentProcessors.intentProcessor

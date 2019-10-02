@@ -27,9 +27,9 @@ import org.robolectric.annotation.Config
 class IntentReceiverActivityTest {
 
     @Test
-    fun `process intent with alwaysOpenInPrivateMode set to true`() {
+    fun `process intent with launchLinksInPrivateTab set to true`() {
         runBlockingTest {
-            testContext.settings().alwaysOpenInPrivateMode = true
+            testContext.settings().launchLinksInPrivateTab = true
 
             val intent = Intent()
             `when`(testContext.components.intentProcessors.privateIntentProcessor.process(intent)).thenReturn(true)
@@ -44,9 +44,9 @@ class IntentReceiverActivityTest {
     }
 
     @Test
-    fun `process intent with alwaysOpenInPrivateMode set to false`() {
+    fun `process intent with launchLinksInPrivateTab set to false`() {
         runBlockingTest {
-            testContext.settings().alwaysOpenInPrivateMode = false
+            testContext.settings().launchLinksInPrivateTab = false
 
             val intent = Intent()
             `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)
