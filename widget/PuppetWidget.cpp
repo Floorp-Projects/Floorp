@@ -1225,6 +1225,20 @@ PuppetScreenManager::GetPrimaryScreen(nsIScreen** outScreen) {
 }
 
 NS_IMETHODIMP
+PuppetScreenManager::GetTotalScreenPixels(int64_t* aTotalScreenPixels) {
+  MOZ_ASSERT(aTotalScreenPixels);
+  if (mOneScreen) {
+    int32_t x, y, width, height;
+    x = y = width = height = 0;
+    mOneScreen->GetRect(&x, &y, &width, &height);
+    *aTotalScreenPixels = width * height;
+  } else {
+    *aTotalScreenPixels = 0;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PuppetScreenManager::ScreenForRect(int32_t inLeft, int32_t inTop,
                                    int32_t inWidth, int32_t inHeight,
                                    nsIScreen** outScreen) {
