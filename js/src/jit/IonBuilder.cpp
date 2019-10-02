@@ -67,8 +67,7 @@ class jit::BaselineFrameInspector {
 };
 
 BaselineFrameInspector* jit::NewBaselineFrameInspector(TempAllocator* temp,
-                                                       BaselineFrame* frame,
-                                                       uint32_t frameSize) {
+                                                       BaselineFrame* frame) {
   MOZ_ASSERT(frame);
 
   BaselineFrameInspector* inspector =
@@ -113,11 +112,10 @@ BaselineFrameInspector* jit::NewBaselineFrameInspector(TempAllocator* temp,
     }
   }
 
-  uint32_t numValueSlots = frame->numValueSlots(frameSize);
-  if (!inspector->varTypes.reserve(numValueSlots)) {
+  if (!inspector->varTypes.reserve(frame->numValueSlots())) {
     return nullptr;
   }
-  for (size_t i = 0; i < numValueSlots; i++) {
+  for (size_t i = 0; i < frame->numValueSlots(); i++) {
     TypeSet::Type type =
         TypeSet::GetMaybeUntrackedValueType(*frame->valueSlot(i));
     inspector->varTypes.infallibleAppend(type);
