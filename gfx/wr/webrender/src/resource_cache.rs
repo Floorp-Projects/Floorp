@@ -671,18 +671,17 @@ impl ResourceCache {
                     );
                 }
                 ResourceUpdate::UpdateBlobImage(ref img) => {
+                    debug_assert_eq!(img.visible_rect.size, img.descriptor.size);
                     self.update_blob_image(
                         img.key,
-                        &img.descriptor,
-                        &img.dirty_rect,
-                        Arc::clone(&img.data),
+                        Some(&img.descriptor),
+                        Some(&img.dirty_rect),
+                        Some(Arc::clone(&img.data)),
                         &img.visible_rect,
                     );
                 }
                 ResourceUpdate::SetBlobImageVisibleArea(ref key, ref area) => {
-                    if let Some(template) = self.blob_image_templates.get_mut(&key) {
-                        template.visible_rect = *area;
-                    }
+                    self.update_blob_image(*key, None, None, None, area);
                 }
                 _ => {}
             }
@@ -990,7 +989,7 @@ impl ResourceCache {
         visible_rect: &DeviceIntRect,
     ) {
         let max_texture_size = self.max_texture_size();
-        tiling = get_blob_tiling(tiling, descriptor, max_texture_size);
+        tiling = get_blob_tiling(tiling, visible_rect.size, max_texture_size);
 
         self.blob_image_handler.as_mut().unwrap().add(key, data, visible_rect, tiling);
 
@@ -1010,20 +1009,21 @@ impl ResourceCache {
     pub fn update_blob_image(
         &mut self,
         key: BlobImageKey,
-        descriptor: &ImageDescriptor,
-        dirty_rect: &BlobDirtyRect,
-        data: Arc<BlobImageData>,
+        descriptor: Option<&ImageDescriptor>,
+        dirty_rect: Option<&BlobDirtyRect>,
+        data: Option<Arc<BlobImageData>>,
         visible_rect: &DeviceIntRect,
     ) {
-        self.blob_image_handler.as_mut().unwrap().update(key, data, visible_rect, dirty_rect);
+        if let Some(data) = data {
+            let dirty_rect = dirty_rect.unwrap();
+            self.blob_image_handler.as_mut().unwrap().update(key, data, visible_rect, dirty_rect);
+        }
 
         let max_texture_size = self.max_texture_size();
 
         let image = self.blob_image_templates
             .get_mut(&key)
             .expect("Attempt to update non-existent blob image");
-
-        let tiling = get_blob_tiling(image.tiling, descriptor, max_texture_size);
 
         let mut valid_tiles_after_bounds_change = None;
 
@@ -1045,13 +1045,23 @@ impl ResourceCache {
             _ => {}
         }
 
-        *image = BlobImageTemplate {
-            descriptor: *descriptor,
-            tiling,
-            dirty_rect: dirty_rect.union(&image.dirty_rect),
-            valid_tiles_after_bounds_change,
-            visible_rect: *visible_rect,
-        };
+        let blob_size = visible_rect.size;
+
+        if let Some(descriptor) = descriptor {
+            image.descriptor = *descriptor;
+        } else {
+            // make sure the descriptor size matches the visible rect.
+            // This might not be necessary but let's stay on the safe side.
+            image.descriptor.size = blob_size;
+        }
+
+        if let Some(dirty_rect) = dirty_rect {
+            image.dirty_rect = image.dirty_rect.union(dirty_rect);
+        }
+
+        image.tiling = get_blob_tiling(image.tiling, blob_size, max_texture_size);;
+        image.valid_tiles_after_bounds_change = valid_tiles_after_bounds_change;
+        image.visible_rect = *visible_rect;
     }
 
     pub fn delete_image_template(&mut self, image_key: ImageKey) {
@@ -1226,7 +1236,7 @@ impl ResourceCache {
                                 tile,
                             ))
                         }
-                        None => blob_size(template.descriptor.size).into(),
+                        None => blob_size(template.visible_rect.size).into(),
                     },
                     format: template.descriptor.format,
                 };
@@ -1401,7 +1411,7 @@ impl ResourceCache {
                     template.dirty_rect
                 };
 
-                assert!(template.descriptor.size.width > 0 && template.descriptor.size.height > 0);
+                assert!(template.visible_rect.size.width > 0 && template.visible_rect.size.height > 0);
                 blob_request_params.push(
                     BlobImageParams {
                         request: BlobImageRequest {
@@ -1409,7 +1419,7 @@ impl ResourceCache {
                             tile: None,
                         },
                         descriptor: BlobImageDescriptor {
-                            rect: blob_size(template.descriptor.size).into(),
+                            rect: blob_size(template.visible_rect.size).into(),
                             format: template.descriptor.format,
                         },
                         dirty_rect,
@@ -1474,7 +1484,8 @@ impl ResourceCache {
 
     fn set_image_visible_rect(&mut self, key: ImageKey, rect: &DeviceIntRect) {
         if let Some(image) = self.resources.image_templates.get_mut(key) {
-            image.visible_rect = * rect;
+            image.visible_rect = *rect;
+            image.descriptor.size = rect.size;
         }
     }
 
@@ -1962,12 +1973,12 @@ impl Drop for ResourceCache {
 
 pub fn get_blob_tiling(
     tiling: Option<TileSize>,
-    descriptor: &ImageDescriptor,
+    size: DeviceIntSize,
     max_texture_size: i32,
 ) -> Option<TileSize> {
     if tiling.is_none() &&
-        (descriptor.size.width > max_texture_size ||
-         descriptor.size.height > max_texture_size) {
+        (size.width > max_texture_size ||
+         size.height > max_texture_size) {
         return Some(DEFAULT_TILE_SIZE);
     }
 
