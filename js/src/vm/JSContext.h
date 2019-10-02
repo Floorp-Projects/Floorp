@@ -1049,7 +1049,8 @@ struct MOZ_RAII AutoResolving {
  * Create and destroy functions for JSContext, which is manually allocated
  * and exclusively owned.
  */
-extern JSContext* NewContext(uint32_t maxBytes, JSRuntime* parentRuntime);
+extern JSContext* NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes,
+                             JSRuntime* parentRuntime);
 
 extern void DestroyContext(JSContext* cx);
 

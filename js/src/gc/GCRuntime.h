@@ -240,7 +240,7 @@ class GCRuntime {
 
  public:
   explicit GCRuntime(JSRuntime* rt);
-  MOZ_MUST_USE bool init(uint32_t maxbytes);
+  MOZ_MUST_USE bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
   void finishRoots();
   void finish();
 

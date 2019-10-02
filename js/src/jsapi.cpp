@@ -365,6 +365,7 @@ JS_PUBLIC_API JSObject* JS_GetBoundFunctionTarget(JSFunction* fun) {
 /************************************************************************/
 
 JS_PUBLIC_API JSContext* JS_NewContext(uint32_t maxbytes,
+                                       uint32_t maxNurseryBytes,
                                        JSRuntime* parentRuntime) {
   MOZ_ASSERT(JS::detail::libraryInitState == JS::detail::InitState::Running,
              "must call JS_Init prior to creating any JSContexts");
@@ -374,7 +375,7 @@ JS_PUBLIC_API JSContext* JS_NewContext(uint32_t maxbytes,
     parentRuntime = parentRuntime->parentRuntime;
   }
 
-  return NewContext(maxbytes, parentRuntime);
+  return NewContext(maxbytes, maxNurseryBytes, parentRuntime);
 }
 
 JS_PUBLIC_API JSContext* JS_NewCooperativeContext(JSContext* siblingContext) {
