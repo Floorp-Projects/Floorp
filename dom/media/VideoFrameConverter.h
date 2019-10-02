@@ -46,7 +46,7 @@ class VideoConverterListener {
 
 // An async video frame format converter.
 //
-// Input is typically a MediaStreamTrackListener driven by MediaStreamGraph.
+// Input is typically a MediaTrackListener driven by MediaTrackGraph.
 //
 // Output is passed through to all added VideoConverterListeners on a TaskQueue
 // thread whenever a frame is converted.
@@ -391,7 +391,7 @@ class VideoFrameConverter {
   // Used to pace future frames close to their rendering-time. Thread-safe.
   const RefPtr<MediaTimer> mPacingTimer;
 
-  // Written and read from the queueing thread (normally MSG).
+  // Written and read from the queueing thread (normally MTG).
   // Last time we queued a frame in the pacer
   TimeStamp mLastFrameQueuedForPacing;
 

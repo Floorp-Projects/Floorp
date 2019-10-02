@@ -14,9 +14,11 @@ class AudioStreamTrack;
 class MediaStreamTrack;
 }  // namespace dom
 
+class MediaInputPort;
+
 /**
  * Given a DOMMediaStream and a window id, this class will pipe the audio from
- * all live audio tracks in the stream to the MediaStreamGraph's window capture
+ * all live audio tracks in the stream to the MediaTrackGraph's window capture
  * mechanism.
  */
 class MediaStreamWindowCapturer : public DOMMediaStream::TrackListener {

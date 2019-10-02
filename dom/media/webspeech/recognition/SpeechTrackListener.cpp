@@ -24,7 +24,7 @@ SpeechTrackListener::SpeechTrackListener(SpeechRecognition* aRecognition)
 }
 
 void SpeechTrackListener::NotifyQueuedChanges(
-    MediaStreamGraph* aGraph, StreamTime aTrackOffset,
+    MediaTrackGraph* aGraph, TrackTime aTrackOffset,
     const MediaSegment& aQueuedMedia) {
   AudioSegment* audio = const_cast<AudioSegment*>(
       static_cast<const AudioSegment*>(&aQueuedMedia));
@@ -78,11 +78,11 @@ void SpeechTrackListener::ConvertAndDispatchAudioChunk(int aDuration,
   mRecognition->FeedAudioData(samples.forget(), aDuration, this, aTrackRate);
 }
 
-void SpeechTrackListener::NotifyEnded(MediaStreamGraph* aGraph) {
+void SpeechTrackListener::NotifyEnded(MediaTrackGraph* aGraph) {
   // TODO dispatch SpeechEnd event so services can be informed
 }
 
-void SpeechTrackListener::NotifyRemoved(MediaStreamGraph* aGraph) {
+void SpeechTrackListener::NotifyRemoved(MediaTrackGraph* aGraph) {
   mRemovedHolder.ResolveIfExists(true, __func__);
 }
 

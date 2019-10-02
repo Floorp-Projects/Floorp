@@ -34,9 +34,10 @@
 #include "MediaShutdownManager.h"
 #include "MediaSourceDecoder.h"
 #include "MediaStreamError.h"
-#include "MediaStreamGraphImpl.h"
-#include "MediaStreamListener.h"
+#include "MediaTrackGraphImpl.h"
+#include "MediaTrackListener.h"
 #include "MediaStreamWindowCapturer.h"
+#include "MediaTrack.h"
 #include "MediaTrackList.h"
 #include "SVGObserverUtils.h"
 #include "TimeRanges.h"
@@ -389,8 +390,7 @@ class HTMLMediaElement::FirstFrameListener : public VideoOutput {
   // NB that this overrides VideoOutput::NotifyRealtimeTrackData, so we can
   // filter out all frames but the first one with a real size. This allows us to
   // later re-use the logic in VideoOutput for rendering that frame.
-  void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
-                               StreamTime aTrackOffset,
+  void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
                                const MediaSegment& aMedia) override {
     MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
 
@@ -417,7 +417,7 @@ class HTMLMediaElement::FirstFrameListener : public VideoOutput {
 
  private:
   // Whether a frame with a concrete size has been received. May only be
-  // accessed on the MSG's appending thread. (this is a direct listener so we
+  // accessed on the MTG's appending thread. (this is a direct listener so we
   // get called by whoever is producing this track's data)
   bool mInitialSizeFound = false;
 };
@@ -441,7 +441,7 @@ class HTMLMediaElement::MediaStreamRenderer
 
   void UpdateGraphTime() {
     mGraphTime =
-        mGraphTimeDummy->mStream->Graph()->CurrentTime() - *mGraphTimeOffset;
+        mGraphTimeDummy->mTrack->Graph()->CurrentTime() - *mGraphTimeOffset;
   }
 
   void Start() {
@@ -455,7 +455,7 @@ class HTMLMediaElement::MediaStreamRenderer
       return;
     }
 
-    MediaStreamGraph* graph = mGraphTimeDummy->mStream->Graph();
+    MediaTrackGraph* graph = mGraphTimeDummy->mTrack->Graph();
     mGraphTimeOffset = Some(graph->CurrentTime().Ref() - mGraphTime);
     mWatchManager.Watch(graph->CurrentTime(),
                         &MediaStreamRenderer::UpdateGraphTime);
@@ -484,7 +484,7 @@ class HTMLMediaElement::MediaStreamRenderer
       return;
     }
 
-    mWatchManager.Unwatch(mGraphTimeDummy->mStream->Graph()->CurrentTime(),
+    mWatchManager.Unwatch(mGraphTimeDummy->mTrack->Graph()->CurrentTime(),
                           &MediaStreamRenderer::UpdateGraphTime);
 
     for (const auto& t : mAudioTracks) {
@@ -558,8 +558,7 @@ class HTMLMediaElement::MediaStreamRenderer
       return 0.0;
     }
 
-    return mGraphTimeDummy->mStream->GraphImpl()->MediaTimeToSeconds(
-        mGraphTime);
+    return mGraphTimeDummy->mTrack->GraphImpl()->MediaTimeToSeconds(mGraphTime);
   }
 
   Watchable<GraphTime>& CurrentGraphTime() { return mGraphTime; }
@@ -590,7 +589,7 @@ class HTMLMediaElement::MediaStreamRenderer
       return;
     }
 
-    MediaStreamGraph* graph = nullptr;
+    MediaTrackGraph* graph = nullptr;
     for (const auto& t : mAudioTracks) {
       if (t && !t->Ended()) {
         graph = t->Graph();
@@ -607,8 +606,8 @@ class HTMLMediaElement::MediaStreamRenderer
     }
 
     // This dummy keeps `graph` alive and ensures access to it.
-    mGraphTimeDummy = MakeRefPtr<SharedDummyStream>(
-        graph->CreateSourceStream(MediaSegment::AUDIO));
+    mGraphTimeDummy = MakeRefPtr<SharedDummyTrack>(
+        graph->CreateSourceTrack(MediaSegment::AUDIO));
 
     if (mRendering) {
       mGraphTimeOffset = Some(graph->CurrentTime() - mGraphTime);
@@ -627,10 +626,10 @@ class HTMLMediaElement::MediaStreamRenderer
   // WatchManager for mGraphTime.
   WatchManager<MediaStreamRenderer> mWatchManager;
 
-  // A dummy MediaStream to guarantee a MediaStreamGraph is kept alive while
+  // A dummy MediaTrack to guarantee a MediaTrackGraph is kept alive while
   // we're actively rendering, so we can track the graph's current time. Set
   // when the first track is added, never unset.
-  RefPtr<SharedDummyStream> mGraphTimeDummy;
+  RefPtr<SharedDummyTrack> mGraphTimeDummy;
 
   // Watchable that relays the graph's currentTime updates to the media element
   // only while we're rendering. This is the current time of the rendering in
@@ -657,25 +656,25 @@ class HTMLMediaElement::StreamCaptureTrackSource
                                            MediaStreamTrackSource)
 
   StreamCaptureTrackSource(MediaStreamTrackSource* aCapturedTrackSource,
-                           ProcessedMediaStream* aStream, MediaInputPort* aPort)
+                           ProcessedMediaTrack* aStream, MediaInputPort* aPort)
       : MediaStreamTrackSource(aCapturedTrackSource->GetPrincipal(),
                                nsString()),
         mCapturedTrackSource(aCapturedTrackSource),
-        mStream(aStream),
+        mTrack(aStream),
         mPort(aPort) {
     MOZ_ASSERT(mCapturedTrackSource);
-    MOZ_ASSERT(mStream);
+    MOZ_ASSERT(mTrack);
     MOZ_ASSERT(mPort);
 
     mCapturedTrackSource->RegisterSink(this);
   }
 
   void SetEnabled(bool aEnabled) {
-    if (!mStream) {
+    if (!mTrack) {
       return;
     }
-    mStream->SetEnabled(aEnabled ? DisabledTrackMode::ENABLED
-                                 : DisabledTrackMode::SILENCE_FREEZE);
+    mTrack->SetEnabled(aEnabled ? DisabledTrackMode::ENABLED
+                                : DisabledTrackMode::SILENCE_FREEZE);
   }
 
   void Destroy() override {
@@ -683,9 +682,9 @@ class HTMLMediaElement::StreamCaptureTrackSource
       mCapturedTrackSource->UnregisterSink(this);
       mCapturedTrackSource = nullptr;
     }
-    if (mStream) {
-      mStream->Destroy();
-      mStream = nullptr;
+    if (mTrack) {
+      mTrack->Destroy();
+      mTrack = nullptr;
     }
     if (mPort) {
       mPort->Destroy();
@@ -746,12 +745,12 @@ class HTMLMediaElement::StreamCaptureTrackSource
  private:
   virtual ~StreamCaptureTrackSource() {
     MOZ_ASSERT(!mCapturedTrackSource);
-    MOZ_ASSERT(!mStream);
+    MOZ_ASSERT(!mTrack);
     MOZ_ASSERT(!mPort);
   };
 
   RefPtr<MediaStreamTrackSource> mCapturedTrackSource;
-  RefPtr<ProcessedMediaStream> mStream;
+  RefPtr<ProcessedMediaTrack> mTrack;
   RefPtr<MediaInputPort> mPort;
 };
 
@@ -1081,11 +1080,11 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
   NS_IMETHODIMP WindowAudioCaptureChanged(bool aCapture) override {
     MOZ_ASSERT(mAudioChannelAgent);
-    AudioCaptureStreamChangeIfNeeded();
+    AudioCaptureTrackChangeIfNeeded();
     return NS_OK;
   }
 
-  void AudioCaptureStreamChangeIfNeeded() {
+  void AudioCaptureTrackChangeIfNeeded() {
     MOZ_ASSERT(!mIsShutDown);
     if (!IsPlayingStarted()) {
       return;
@@ -1093,7 +1092,7 @@ class HTMLMediaElement::AudioChannelAgentCallback final
 
     MOZ_ASSERT(mAudioChannelAgent);
     bool isCapturing = mAudioChannelAgent->IsWindowAudioCapturingEnabled();
-    mOwner->AudioCaptureStreamChange(isCapturing);
+    mOwner->AudioCaptureTrackChange(isCapturing);
   }
 
   void NotifyAudioPlaybackChanged(AudibleChangedReasons aReason) {
@@ -1175,8 +1174,8 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     mAudioChannelAgent->NotifyStoppedPlaying();
     NotifyMediaStopped(mAudioChannelAgent->WindowID());
     // If we have started audio capturing before, we have to tell media element
-    // to clear the output capturing stream.
-    mOwner->AudioCaptureStreamChange(false);
+    // to clear the output capturing track.
+    mOwner->AudioCaptureTrackChange(false);
   }
 
   void SetSuspended(SuspendTypes aSuspend) {
@@ -1904,7 +1903,7 @@ void HTMLMediaElement::AbortExistingLoads() {
 
   // When aborting the existing loads, empty the objects in audio track list and
   // video track list, no events (in particular, no removetrack events) are
-  // fired as part of this. Ending MediaStream sends track ended notifications,
+  // fired as part of this. Ending MediaTrack sends track ended notifications,
   // so we empty the track lists prior.
   if (AudioTracks()) {
     AudioTracks()->EmptyTracks();
@@ -2265,7 +2264,7 @@ void HTMLMediaElement::NotifyLoadError(const nsACString& aErrorDetails) {
   }
 }
 
-void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack) {
+void HTMLMediaElement::NotifyMediaTrackEnabled(dom::MediaTrack* aTrack) {
   MOZ_ASSERT(aTrack);
   if (!aTrack) {
     return;
@@ -2337,7 +2336,7 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack) {
   }
 }
 
-void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack) {
+void HTMLMediaElement::NotifyMediaTrackDisabled(dom::MediaTrack* aTrack) {
   MOZ_ASSERT(aTrack);
   if (!aTrack) {
     return;
@@ -2407,7 +2406,7 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack) {
         continue;
       }
       // The source of this track just ended. Force-notify that it ended.
-      // If we bounce it to the MediaStreamGraph it might not be picked up,
+      // If we bounce it to the MediaTrackGraph it might not be picked up,
       // for instance if the MediaInputPort was destroyed in the same
       // iteration as it was added.
       mMainThreadEventTarget->Dispatch(NewRunnableMethod(
@@ -3161,7 +3160,8 @@ void HTMLMediaElement::SetCapturedOutputStreamsEnabled(bool aEnabled) {
 }
 
 void HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
-    MediaTrack* aTrack, OutputMediaStream& aOutputStream, bool aAsyncAddtrack) {
+    dom::MediaTrack* aTrack, OutputMediaStream& aOutputStream,
+    bool aAsyncAddtrack) {
   if (aOutputStream.mCapturingDecoder) {
     MOZ_ASSERT(!aOutputStream.mCapturingMediaStream);
     return;
@@ -3195,21 +3195,21 @@ void HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
   MediaSegment::Type type = inputTrack->AsAudioStreamTrack()
                                 ? MediaSegment::AUDIO
                                 : MediaSegment::VIDEO;
-  ProcessedMediaStream* stream =
-      inputTrack->Graph()->CreateTrackUnionStream(type);
-  RefPtr<MediaInputPort> port = inputTrack->ForwardTrackContentsTo(stream);
+  ProcessedMediaTrack* track =
+      inputTrack->Graph()->CreateForwardedInputTrack(type);
+  RefPtr<MediaInputPort> port = inputTrack->ForwardTrackContentsTo(track);
   auto source = MakeRefPtr<StreamCaptureTrackSource>(&inputTrack->GetSource(),
-                                                     stream, port);
+                                                     track, port);
 
   // Track is muted initially, so we don't leak data if it's added while paused
-  // and an MSG iteration passes before the mute comes into effect.
+  // and an MTG iteration passes before the mute comes into effect.
   source->SetEnabled(mSrcStreamIsPlaying);
 
-  RefPtr<MediaStreamTrack> track;
+  RefPtr<MediaStreamTrack> domTrack;
   if (inputTrack->AsAudioStreamTrack()) {
-    track = new AudioStreamTrack(window, stream, source);
+    domTrack = new AudioStreamTrack(window, track, source);
   } else {
-    track = new VideoStreamTrack(window, stream, source);
+    domTrack = new VideoStreamTrack(window, track, source);
   }
 
   aOutputStream.mTracks.AppendElement(
@@ -3220,14 +3220,14 @@ void HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
     mMainThreadEventTarget->Dispatch(
         NewRunnableMethod<StoreRefPtrPassByPtr<MediaStreamTrack>>(
             "DOMMediaStream::AddTrackInternal", aOutputStream.mStream,
-            &DOMMediaStream::AddTrackInternal, track));
+            &DOMMediaStream::AddTrackInternal, domTrack));
   } else {
-    aOutputStream.mStream->AddTrackInternal(track);
+    aOutputStream.mStream->AddTrackInternal(domTrack);
   }
 
   LOG(LogLevel::Debug,
       ("Created %s track %p from track %p through MediaInputPort %p",
-       inputTrack->AsAudioStreamTrack() ? "audio" : "video", track.get(),
+       inputTrack->AsAudioStreamTrack() ? "audio" : "video", domTrack.get(),
        inputTrack, port.get()));
 }
 
@@ -3265,7 +3265,7 @@ bool HTMLMediaElement::CanBeCaptured(StreamCaptureType aCaptureType) {
 
 already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
     StreamCaptureBehavior aFinishBehavior, StreamCaptureType aStreamCaptureType,
-    MediaStreamGraph* aGraph) {
+    MediaTrackGraph* aGraph) {
   MOZ_RELEASE_ASSERT(aGraph);
   MOZ_ASSERT(CanBeCaptured(aStreamCaptureType));
 
@@ -3274,8 +3274,7 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
 
   // We don't support routing to a different graph.
   if (!mOutputStreams.IsEmpty() &&
-      aGraph !=
-          mOutputStreams[0].mGraphKeepAliveDummyStream->mStream->Graph()) {
+      aGraph != mOutputStreams[0].mGraphKeepAliveDummyStream->mTrack->Graph()) {
     return nullptr;
   }
 
@@ -3283,8 +3282,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   out->mGraphKeepAliveDummyStream =
       mOutputStreams.Length() == 1
-          ? MakeRefPtr<SharedDummyStream>(
-                aGraph->CreateSourceStream(MediaSegment::AUDIO))
+          ? MakeRefPtr<SharedDummyTrack>(
+                aGraph->CreateSourceTrack(MediaSegment::AUDIO))
           : mOutputStreams[0].mGraphKeepAliveDummyStream;
   out->mStream = MakeAndAddRef<DOMMediaStream>(window);
   out->mStream->SetFinishedOnInactive(false);
@@ -3345,7 +3344,7 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
 }
 
 already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureAudio(
-    ErrorResult& aRv, MediaStreamGraph* aGraph) {
+    ErrorResult& aRv, MediaTrackGraph* aGraph) {
   MOZ_RELEASE_ASSERT(aGraph);
 
   if (!CanBeCaptured(StreamCaptureType::CAPTURE_AUDIO)) {
@@ -3378,9 +3377,9 @@ RefPtr<GenericNonExclusivePromise> HTMLMediaElement::GetAllowedToPlayPromise() {
 
 already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStream(
     ErrorResult& aRv) {
-  MediaStreamGraph::GraphDriverType graphDriverType =
-      HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
-                 : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+  MediaTrackGraph::GraphDriverType graphDriverType =
+      HasAudio() ? MediaTrackGraph::AUDIO_THREAD_DRIVER
+                 : MediaTrackGraph::SYSTEM_THREAD_DRIVER;
 
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
@@ -3393,8 +3392,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStream(
     return nullptr;
   }
 
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
-      graphDriverType, window, MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      graphDriverType, window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
 
   RefPtr<DOMMediaStream> stream =
       CaptureStreamInternal(StreamCaptureBehavior::CONTINUE_WHEN_ENDED,
@@ -3409,9 +3408,9 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStream(
 
 already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStreamUntilEnded(
     ErrorResult& aRv) {
-  MediaStreamGraph::GraphDriverType graphDriverType =
-      HasAudio() ? MediaStreamGraph::AUDIO_THREAD_DRIVER
-                 : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
+  MediaTrackGraph::GraphDriverType graphDriverType =
+      HasAudio() ? MediaTrackGraph::AUDIO_THREAD_DRIVER
+                 : MediaTrackGraph::SYSTEM_THREAD_DRIVER;
 
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
@@ -3424,8 +3423,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::MozCaptureStreamUntilEnded(
     return nullptr;
   }
 
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
-      graphDriverType, window, MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      graphDriverType, window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
 
   RefPtr<DOMMediaStream> stream =
       CaptureStreamInternal(StreamCaptureBehavior::FINISH_WHEN_ENDED,
@@ -4852,7 +4851,7 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
   }
 }
 
-void HTMLMediaElement::UpdateSrcStreamTime() {
+void HTMLMediaElement::UpdateSrcTrackTime() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mSrcStreamPlaybackEnded) {
@@ -4877,7 +4876,7 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
   mMediaStreamRenderer = MakeAndAddRef<MediaStreamRenderer>(
       mAbstractMainThread, GetVideoFrameContainer(), this);
   mWatchManager.Watch(mMediaStreamRenderer->CurrentGraphTime(),
-                      &HTMLMediaElement::UpdateSrcStreamTime);
+                      &HTMLMediaElement::UpdateSrcTrackTime);
   SetVolumeInternal();
 
   UpdateSrcMediaStreamPlaying();
@@ -4917,7 +4916,7 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
 
   if (mMediaStreamRenderer) {
     mWatchManager.Unwatch(mMediaStreamRenderer->CurrentGraphTime(),
-                          &HTMLMediaElement::UpdateSrcStreamTime);
+                          &HTMLMediaElement::UpdateSrcTrackTime);
     mMediaStreamRenderer = nullptr;
   }
 
@@ -4996,7 +4995,7 @@ void HTMLMediaElement::NotifyMediaStreamTrackAdded(
     // video track when there is no selected track.
     if (VideoTracks()->SelectedIndex() == -1) {
       MOZ_ASSERT(!mSelectedVideoStreamTrack);
-      videoTrack->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
+      videoTrack->SetEnabledInternal(true, dom::MediaTrack::FIRE_NO_EVENTS);
     }
   }
 
@@ -5034,9 +5033,9 @@ void HTMLMediaElement::NotifyMediaStreamTrackRemoved(
 
   MOZ_DIAGNOSTIC_ASSERT(AudioTracks() && VideoTracks(),
                         "Element can't have been unlinked");
-  if (MediaTrack* t = AudioTracks()->GetTrackById(id)) {
+  if (dom::MediaTrack* t = AudioTracks()->GetTrackById(id)) {
     AudioTracks()->RemoveTrack(t);
-  } else if (MediaTrack* t = VideoTracks()->GetTrackById(id)) {
+  } else if (dom::MediaTrack* t = VideoTracks()->GetTrackById(id)) {
     VideoTracks()->RemoveTrack(t);
   } else {
     NS_ASSERTION(aTrack->AsVideoStreamTrack() && !IsVideo(),
@@ -7028,12 +7027,12 @@ void HTMLMediaElement::SetMediaInfo(const MediaInfo& aInfo) {
     mResumeDelayedPlaybackAgent->UpdateAudibleState(this, IsAudible());
   }
   if (mAudioChannelWrapper) {
-    mAudioChannelWrapper->AudioCaptureStreamChangeIfNeeded();
+    mAudioChannelWrapper->AudioCaptureTrackChangeIfNeeded();
   }
   UpdateWakeLock();
 }
 
-void HTMLMediaElement::AudioCaptureStreamChange(bool aCapture) {
+void HTMLMediaElement::AudioCaptureTrackChange(bool aCapture) {
   // No need to capture a silent media element.
   if (!HasAudio()) {
     return;
@@ -7045,12 +7044,12 @@ void HTMLMediaElement::AudioCaptureStreamChange(bool aCapture) {
       return;
     }
 
-    MediaStreamGraph* msg = MediaStreamGraph::GetInstance(
-        MediaStreamGraph::AUDIO_THREAD_DRIVER, window,
-        MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+    MediaTrackGraph* mtg = MediaTrackGraph::GetInstance(
+        MediaTrackGraph::AUDIO_THREAD_DRIVER, window,
+        MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
     RefPtr<DOMMediaStream> stream =
         CaptureStreamInternal(StreamCaptureBehavior::CONTINUE_WHEN_ENDED,
-                              StreamCaptureType::CAPTURE_AUDIO, msg);
+                              StreamCaptureType::CAPTURE_AUDIO, mtg);
     mStreamWindowCapturer =
         MakeUnique<MediaStreamWindowCapturer>(stream, window->WindowID());
   } else if (!aCapture && mStreamWindowCapturer) {
@@ -7355,7 +7354,7 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
               return p;
             }
             if (self->mSrcAttrStream) {
-              // Set Sink Id through MSG is not supported yet.
+              // Set Sink Id through MTG is not supported yet.
               return SinkInfoPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
             }
             // No media attached to the element save it for later.

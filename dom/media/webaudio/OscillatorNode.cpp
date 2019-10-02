@@ -6,7 +6,7 @@
 
 #include "OscillatorNode.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "AudioDestinationNode.h"
 #include "nsContentUtils.h"
 #include "WebAudioUtils.h"
@@ -29,9 +29,9 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
   OscillatorNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
       : AudioNodeEngine(aNode),
         mSource(nullptr),
-        mDestination(aDestination->Stream()),
+        mDestination(aDestination->Track()),
         mStart(-1),
-        mStop(STREAM_TIME_MAX)
+        mStop(TRACK_TIME_MAX)
         // Keep the default values in sync with OscillatorNode::OscillatorNode.
         ,
         mFrequency(440.f),
@@ -46,7 +46,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     mBasicWaveFormCache = aDestination->Context()->GetBasicWaveFormCache();
   }
 
-  void SetSourceStream(AudioNodeStream* aSource) { mSource = aSource; }
+  void SetSourceTrack(AudioNodeTrack* aSource) { mSource = aSource; }
 
   enum Parameters {
     FREQUENCY,
@@ -75,7 +75,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override {
+  void SetTrackTimeParameter(uint32_t aIndex, TrackTime aParam) override {
     switch (aIndex) {
       case START:
         mStart = aParam;
@@ -85,7 +85,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
         mStop = aParam;
         break;
       default:
-        NS_ERROR("Bad OscillatorNodeEngine StreamTimeParameter");
+        NS_ERROR("Bad OscillatorNodeEngine TrackTimeParameter");
     }
   }
 
@@ -148,7 +148,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
 
   // Returns true if the final frequency (and thus the phase increment) changed,
   // false otherwise. This allow some optimizations at callsite.
-  bool UpdateParametersIfNeeded(StreamTime ticks, size_t count) {
+  bool UpdateParametersIfNeeded(TrackTime ticks, size_t count) {
     double frequency, detune;
 
     // Shortcut if frequency-related AudioParam are not automated, and we
@@ -184,10 +184,10 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     return false;
   }
 
-  void FillBounds(float* output, StreamTime ticks, uint32_t& start,
+  void FillBounds(float* output, TrackTime ticks, uint32_t& start,
                   uint32_t& end) {
     MOZ_ASSERT(output);
-    static_assert(StreamTime(WEBAUDIO_BLOCK_SIZE) < UINT_MAX,
+    static_assert(TrackTime(WEBAUDIO_BLOCK_SIZE) < UINT_MAX,
                   "WEBAUDIO_BLOCK_SIZE overflows interator bounds.");
     start = 0;
     if (ticks < mStart) {
@@ -205,7 +205,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void ComputeSine(float* aOutput, StreamTime ticks, uint32_t aStart,
+  void ComputeSine(float* aOutput, TrackTime ticks, uint32_t aStart,
                    uint32_t aEnd) {
     for (uint32_t i = aStart; i < aEnd; ++i) {
       // We ignore the return value, changing the frequency has no impact on
@@ -223,7 +223,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
            mRecomputeParameters;
   }
 
-  void ComputeCustom(float* aOutput, StreamTime ticks, uint32_t aStart,
+  void ComputeCustom(float* aOutput, TrackTime ticks, uint32_t aStart,
                      uint32_t aEnd) {
     MOZ_ASSERT(mPeriodicWave, "No custom waveform data");
 
@@ -282,12 +282,12 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
   }
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    MOZ_ASSERT(mSource == aStream, "Invalid source stream");
+    MOZ_ASSERT(mSource == aTrack, "Invalid source track");
 
-    StreamTime ticks = mDestination->GraphTimeToStreamTime(aFrom);
+    TrackTime ticks = mDestination->GraphTimeToTrackTime(aFrom);
     if (mStart == -1) {
       ComputeSilence(aOutput);
       return;
@@ -351,10 +351,10 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
   }
 
   // mSource deletes this engine in its destructor
-  AudioNodeStream* MOZ_NON_OWNING_REF mSource;
-  RefPtr<AudioNodeStream> mDestination;
-  StreamTime mStart;
-  StreamTime mStop;
+  AudioNodeTrack* MOZ_NON_OWNING_REF mSource;
+  RefPtr<AudioNodeTrack> mDestination;
+  TrackTime mStart;
+  TrackTime mStop;
   AudioParamTimeline mFrequency;
   AudioParamTimeline mDetune;
   OscillatorType mType;
@@ -378,11 +378,11 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
   CreateAudioParam(mDetune, OscillatorNodeEngine::DETUNE, "detune", 0.0f);
   OscillatorNodeEngine* engine =
       new OscillatorNodeEngine(this, aContext->Destination());
-  mStream = AudioNodeStream::Create(aContext, engine,
-                                    AudioNodeStream::NEED_MAIN_THREAD_ENDED,
-                                    aContext->Graph());
-  engine->SetSourceStream(mStream);
-  mStream->AddMainThreadListener(this);
+  mTrack = AudioNodeTrack::Create(aContext, engine,
+                                  AudioNodeTrack::NEED_MAIN_THREAD_ENDED,
+                                  aContext->Graph());
+  engine->SetSourceTrack(mTrack);
+  mTrack->AddMainThreadListener(this);
 }
 
 /* static */
@@ -432,34 +432,34 @@ JSObject* OscillatorNode::WrapObject(JSContext* aCx,
   return OscillatorNode_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void OscillatorNode::DestroyMediaStream() {
-  if (mStream) {
-    mStream->RemoveMainThreadListener(this);
+void OscillatorNode::DestroyMediaTrack() {
+  if (mTrack) {
+    mTrack->RemoveMainThreadListener(this);
   }
-  AudioNode::DestroyMediaStream();
+  AudioNode::DestroyMediaTrack();
 }
 
-void OscillatorNode::SendTypeToStream() {
-  if (!mStream) {
+void OscillatorNode::SendTypeToTrack() {
+  if (!mTrack) {
     return;
   }
   if (mType == OscillatorType::Custom) {
     // The engine assumes we'll send the custom data before updating the type.
-    SendPeriodicWaveToStream();
+    SendPeriodicWaveToTrack();
   }
-  SendInt32ParameterToStream(OscillatorNodeEngine::TYPE,
-                             static_cast<int32_t>(mType));
+  SendInt32ParameterToTrack(OscillatorNodeEngine::TYPE,
+                            static_cast<int32_t>(mType));
 }
 
-void OscillatorNode::SendPeriodicWaveToStream() {
+void OscillatorNode::SendPeriodicWaveToTrack() {
   NS_ASSERTION(mType == OscillatorType::Custom,
                "Sending custom waveform to engine thread with non-custom type");
-  MOZ_ASSERT(mStream, "Missing node stream.");
+  MOZ_ASSERT(mTrack, "Missing node track.");
   MOZ_ASSERT(mPeriodicWave, "Send called without PeriodicWave object.");
-  SendInt32ParameterToStream(OscillatorNodeEngine::DISABLE_NORMALIZATION,
-                             mPeriodicWave->DisableNormalization());
+  SendInt32ParameterToTrack(OscillatorNodeEngine::DISABLE_NORMALIZATION,
+                            mPeriodicWave->DisableNormalization());
   AudioChunk data = mPeriodicWave->GetThreadSharedBuffer();
-  mStream->SetBuffer(std::move(data));
+  mTrack->SetBuffer(std::move(data));
 }
 
 void OscillatorNode::Start(double aWhen, ErrorResult& aRv) {
@@ -474,14 +474,13 @@ void OscillatorNode::Start(double aWhen, ErrorResult& aRv) {
   }
   mStartCalled = true;
 
-  if (!mStream) {
+  if (!mTrack) {
     // Nothing to play, or we're already dead for some reason
     return;
   }
 
   // TODO: Perhaps we need to do more here.
-  mStream->SetStreamTimeParameter(OscillatorNodeEngine::START, Context(),
-                                  aWhen);
+  mTrack->SetTrackTimeParameter(OscillatorNodeEngine::START, Context(), aWhen);
 
   MarkActive();
   Context()->StartBlockedAudioContextIfAllowed();
@@ -498,18 +497,18 @@ void OscillatorNode::Stop(double aWhen, ErrorResult& aRv) {
     return;
   }
 
-  if (!mStream || !Context()) {
-    // We've already stopped and had our stream shut down
+  if (!mTrack || !Context()) {
+    // We've already stopped and had our track shut down
     return;
   }
 
   // TODO: Perhaps we need to do more here.
-  mStream->SetStreamTimeParameter(OscillatorNodeEngine::STOP, Context(),
-                                  std::max(0.0, aWhen));
+  mTrack->SetTrackTimeParameter(OscillatorNodeEngine::STOP, Context(),
+                                std::max(0.0, aWhen));
 }
 
 void OscillatorNode::NotifyMainThreadTrackEnded() {
-  MOZ_ASSERT(mStream->IsEnded());
+  MOZ_ASSERT(mTrack->IsEnded());
 
   class EndedEventDispatcher final : public Runnable {
    public:
@@ -523,8 +522,8 @@ void OscillatorNode::NotifyMainThreadTrackEnded() {
       }
 
       mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
-      // Release stream resources.
-      mNode->DestroyMediaStream();
+      // Release track resources.
+      mNode->DestroyMediaTrack();
       return NS_OK;
     }
 

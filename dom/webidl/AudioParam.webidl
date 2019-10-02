@@ -60,5 +60,5 @@ partial interface AudioParam {
 partial interface AudioParam {
   // This attribute is used for mochitest only.
   [ChromeOnly]
-  readonly attribute boolean isStreamSuspended;
+  readonly attribute boolean isTrackSuspended;
 };

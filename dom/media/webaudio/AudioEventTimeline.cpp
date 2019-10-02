@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioEventTimeline.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 
 #include "mozilla/ErrorResult.h"
 
@@ -76,10 +76,10 @@ AudioTimelineEvent::AudioTimelineEvent(Type aType, double aTime, float aValue,
   }
 }
 
-AudioTimelineEvent::AudioTimelineEvent(AudioNodeStream* aStream)
-    : mType(Stream),
+AudioTimelineEvent::AudioTimelineEvent(AudioNodeTrack* aTrack)
+    : mType(Track),
       mCurve(nullptr),
-      mStream(aStream),
+      mTrack(aTrack),
       mTimeConstant(0.0),
       mDuration(0.0)
 #ifdef DEBUG
@@ -95,8 +95,8 @@ AudioTimelineEvent::AudioTimelineEvent(const AudioTimelineEvent& rhs) {
 
   if (rhs.mType == AudioTimelineEvent::SetValueCurve) {
     SetCurveParams(rhs.mCurve, rhs.mCurveLength);
-  } else if (rhs.mType == AudioTimelineEvent::Stream) {
-    new (&mStream) decltype(mStream)(rhs.mStream);
+  } else if (rhs.mType == AudioTimelineEvent::Track) {
+    new (&mTrack) decltype(mTrack)(rhs.mTrack);
   }
 }
 
@@ -267,7 +267,7 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
         MOZ_FALLTHROUGH_ASSERT("AudioTimelineEvent::SetTarget");
       case AudioTimelineEvent::SetValue:
       case AudioTimelineEvent::Cancel:
-      case AudioTimelineEvent::Stream:
+      case AudioTimelineEvent::Track:
         MOZ_ASSERT(false, "Should have been handled earlier.");
     }
     MOZ_ASSERT(false, "unreached");
@@ -291,7 +291,7 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
       break;
     case AudioTimelineEvent::SetValue:
     case AudioTimelineEvent::Cancel:
-    case AudioTimelineEvent::Stream:
+    case AudioTimelineEvent::Track:
       MOZ_ASSERT(false, "Should have been handled earlier.");
   }
 
@@ -311,7 +311,7 @@ float AudioEventTimeline::GetValuesAtTimeHelperInternal(
       MOZ_FALLTHROUGH_ASSERT("AudioTimelineEvent::SetTarget");
     case AudioTimelineEvent::SetValue:
     case AudioTimelineEvent::Cancel:
-    case AudioTimelineEvent::Stream:
+    case AudioTimelineEvent::Track:
       MOZ_ASSERT(false, "Should have been handled earlier.");
   }
 

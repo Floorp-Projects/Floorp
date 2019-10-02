@@ -112,7 +112,7 @@ function trackTest(track) {
 }
 
 async function init() {
-  // use loopback camera if available, otherwise fake, MediaStreamGraph will be the backend of ImageCapture.
+  // use loopback camera if available, otherwise fake, MediaTrackGraph will be the backend of ImageCapture.
   await setupGetUserMediaTestPrefs();
   let stream = await navigator.mediaDevices.getUserMedia({video: true});
   return stream.getVideoTracks()[0];

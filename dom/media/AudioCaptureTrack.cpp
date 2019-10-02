@@ -3,19 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaStreamGraphImpl.h"
-#include "MediaStreamListener.h"
+#include "MediaTrackGraphImpl.h"
+#include "MediaTrackListener.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Unused.h"
 
 #include "AudioSegment.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Attributes.h"
-#include "AudioCaptureStream.h"
+#include "AudioCaptureTrack.h"
 #include "ImageContainer.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
-#include "AudioNodeExternalInputStream.h"
+#include "AudioNodeTrack.h"
+#include "AudioNodeExternalInputTrack.h"
 #include "webaudio/MediaStreamAudioDestinationNode.h"
 #include <algorithm>
 #include "DOMMediaStream.h"
@@ -29,35 +29,35 @@ namespace mozilla {
 // We are mixing to mono until PeerConnection can accept stereo
 static const uint32_t MONO = 1;
 
-AudioCaptureStream::AudioCaptureStream(TrackRate aRate)
-    : ProcessedMediaStream(aRate, MediaSegment::AUDIO, new AudioSegment()),
+AudioCaptureTrack::AudioCaptureTrack(TrackRate aRate)
+    : ProcessedMediaTrack(aRate, MediaSegment::AUDIO, new AudioSegment()),
       mStarted(false) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_COUNT_CTOR(AudioCaptureStream);
+  MOZ_COUNT_CTOR(AudioCaptureTrack);
   mMixer.AddCallback(this);
 }
 
-AudioCaptureStream::~AudioCaptureStream() {
-  MOZ_COUNT_DTOR(AudioCaptureStream);
+AudioCaptureTrack::~AudioCaptureTrack() {
+  MOZ_COUNT_DTOR(AudioCaptureTrack);
   mMixer.RemoveCallback(this);
 }
 
-void AudioCaptureStream::Start() {
+void AudioCaptureTrack::Start() {
   class Message : public ControlMessage {
    public:
-    explicit Message(AudioCaptureStream* aStream)
-        : ControlMessage(aStream), mStream(aStream) {}
+    explicit Message(AudioCaptureTrack* aTrack)
+        : ControlMessage(aTrack), mTrack(aTrack) {}
 
-    virtual void Run() { mStream->mStarted = true; }
+    virtual void Run() { mTrack->mStarted = true; }
 
    protected:
-    AudioCaptureStream* mStream;
+    AudioCaptureTrack* mTrack;
   };
   GraphImpl()->AppendMessage(MakeUnique<Message>(this));
 }
 
-void AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
-                                      uint32_t aFlags) {
+void AudioCaptureTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
+                                     uint32_t aFlags) {
   if (!mStarted) {
     return;
   }
@@ -68,10 +68,10 @@ void AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     return;
   }
 
-  // If the captured stream is connected back to a object on the page (be it an
-  // HTMLMediaElement with a stream as source, or an AudioContext), a cycle
+  // If the captured track is connected back to a object on the page (be it an
+  // HTMLMediaElement with a track as source, or an AudioContext), a cycle
   // situation occur. This can work if it's an AudioContext with at least one
-  // DelayNode, but the MSG will mute the whole cycle otherwise.
+  // DelayNode, but the MTG will mute the whole cycle otherwise.
   if (InMutedCycle() || inputCount == 0) {
     GetData<AudioSegment>()->AppendNullData(aTo - aFrom);
   } else {
@@ -80,16 +80,16 @@ void AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     mMixer.StartMixing();
     AudioSegment output;
     for (uint32_t i = 0; i < inputCount; i++) {
-      MediaStream* s = mInputs[i]->GetSource();
+      MediaTrack* s = mInputs[i]->GetSource();
       AudioSegment* inputSegment = s->GetData<AudioSegment>();
-      StreamTime inputStart = s->GraphTimeToStreamTimeWithBlocking(aFrom);
-      StreamTime inputEnd = s->GraphTimeToStreamTimeWithBlocking(aTo);
+      TrackTime inputStart = s->GraphTimeToTrackTimeWithBlocking(aFrom);
+      TrackTime inputEnd = s->GraphTimeToTrackTimeWithBlocking(aTo);
       AudioSegment toMix;
       if (s->Ended() && inputSegment->GetDuration() <= inputStart) {
         toMix.AppendNullData(aTo - aFrom);
       } else {
         toMix.AppendSlice(*inputSegment, inputStart, inputEnd);
-        // Care for streams blocked in the [aTo, aFrom] range.
+        // Care for tracks blocked in the [aTo, aFrom] range.
         if (inputEnd - inputStart < aTo - aFrom) {
           toMix.AppendNullData((aTo - aFrom) - (inputEnd - inputStart));
         }
@@ -101,10 +101,10 @@ void AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 }
 
-void AudioCaptureStream::MixerCallback(AudioDataValue* aMixedBuffer,
-                                       AudioSampleFormat aFormat,
-                                       uint32_t aChannels, uint32_t aFrames,
-                                       uint32_t aSampleRate) {
+void AudioCaptureTrack::MixerCallback(AudioDataValue* aMixedBuffer,
+                                      AudioSampleFormat aFormat,
+                                      uint32_t aChannels, uint32_t aFrames,
+                                      uint32_t aSampleRate) {
   AutoTArray<nsTArray<AudioDataValue>, MONO> output;
   AutoTArray<const AudioDataValue*, MONO> bufferPtrs;
   output.SetLength(MONO);

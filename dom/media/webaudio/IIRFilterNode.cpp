@@ -22,12 +22,12 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
                       const AudioDoubleArray& aFeedforward,
                       const AudioDoubleArray& aFeedback, uint64_t aWindowID)
       : AudioNodeEngine(aNode),
-        mDestination(aDestination->Stream()),
+        mDestination(aDestination->Track()),
         mFeedforward(aFeedforward),
         mFeedback(aFeedback),
         mWindowID(aWindowID) {}
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     float inputBuffer[WEBAUDIO_BLOCK_SIZE + 4];
@@ -45,13 +45,12 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
         // as well.
         if (allZero) {
           mIIRFilters.Clear();
-          aStream->ScheduleCheckForInactive();
+          aTrack->ScheduleCheckForInactive();
 
           RefPtr<PlayingRefChangeHandler> refchanged =
-              new PlayingRefChangeHandler(aStream,
+              new PlayingRefChangeHandler(aTrack,
                                           PlayingRefChangeHandler::RELEASE);
-          aStream->Graph()->DispatchToMainThreadStableState(
-              refchanged.forget());
+          aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
 
           aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
           return;
@@ -62,9 +61,9 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
     } else if (mIIRFilters.Length() != aInput.ChannelCount()) {
       if (mIIRFilters.IsEmpty()) {
         RefPtr<PlayingRefChangeHandler> refchanged =
-            new PlayingRefChangeHandler(aStream,
+            new PlayingRefChangeHandler(aTrack,
                                         PlayingRefChangeHandler::ADDREF);
-        aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
+        aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
       } else {
         WebAudioUtils::LogToDeveloperConsole(
             mWindowID, "IIRFilterChannelCountChangeWarning");
@@ -114,7 +113,7 @@ class IIRFilterNodeEngine final : public AudioNodeEngine {
   }
 
  private:
-  RefPtr<AudioNodeStream> mDestination;
+  RefPtr<AudioNodeTrack> mDestination;
   nsTArray<nsAutoPtr<blink::IIRFilter>> mIIRFilters;
   AudioDoubleArray mFeedforward;
   AudioDoubleArray mFeedback;
@@ -154,8 +153,8 @@ IIRFilterNode::IIRFilterNode(AudioContext* aContext,
   }
   IIRFilterNodeEngine* engine = new IIRFilterNodeEngine(
       this, aContext->Destination(), mFeedforward, mFeedback, windowID);
-  mStream = AudioNodeStream::Create(
-      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
+  mTrack = AudioNodeTrack::Create(
+      aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
 /* static */

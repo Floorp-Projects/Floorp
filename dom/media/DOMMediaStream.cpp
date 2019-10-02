@@ -5,13 +5,13 @@
 
 #include "DOMMediaStream.h"
 
-#include "AudioCaptureStream.h"
+#include "AudioCaptureTrack.h"
 #include "AudioChannelAgent.h"
 #include "AudioStreamTrack.h"
 #include "Layers.h"
-#include "MediaStreamGraph.h"
-#include "MediaStreamGraphImpl.h"
-#include "MediaStreamListener.h"
+#include "MediaTrackGraph.h"
+#include "MediaTrackGraphImpl.h"
+#include "MediaTrackListener.h"
 #include "VideoStreamTrack.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
@@ -232,25 +232,25 @@ already_AddRefed<Promise> DOMMediaStream::CountUnderlyingStreams(
     return nullptr;
   }
 
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstanceIfExists(
-      window, MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstanceIfExists(
+      window, MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
   if (!graph) {
     p->MaybeResolve(0);
     return p.forget();
   }
 
-  auto* graphImpl = static_cast<MediaStreamGraphImpl*>(graph);
+  auto* graphImpl = static_cast<MediaTrackGraphImpl*>(graph);
 
   class Counter : public ControlMessage {
    public:
-    Counter(MediaStreamGraphImpl* aGraph, const RefPtr<Promise>& aPromise)
+    Counter(MediaTrackGraphImpl* aGraph, const RefPtr<Promise>& aPromise)
         : ControlMessage(nullptr), mGraph(aGraph), mPromise(aPromise) {
       MOZ_ASSERT(NS_IsMainThread());
     }
 
     void Run() override {
       uint32_t streams =
-          mGraph->mStreams.Length() + mGraph->mSuspendedStreams.Length();
+          mGraph->mTracks.Length() + mGraph->mSuspendedTracks.Length();
       mGraph->DispatchToMainThreadStableState(NS_NewRunnableFunction(
           "DOMMediaStream::CountUnderlyingStreams (stable state)",
           [promise = std::move(mPromise), streams]() mutable {
@@ -273,7 +273,7 @@ already_AddRefed<Promise> DOMMediaStream::CountUnderlyingStreams(
 
    private:
     // mGraph owns this Counter instance and decides its lifetime.
-    MediaStreamGraphImpl* mGraph;
+    MediaTrackGraphImpl* mGraph;
     RefPtr<Promise> mPromise;
   };
   graphImpl->AppendMessage(MakeUnique<Counter>(graphImpl, p));
@@ -327,8 +327,8 @@ void DOMMediaStream::GetTracks(
 }
 
 void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
-  LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from stream %p)",
-                       this, &aTrack, aTrack.GetStream()));
+  LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from track %p)",
+                       this, &aTrack, aTrack.GetTrack()));
 
   if (HasTrack(aTrack)) {
     LOG(LogLevel::Debug,
@@ -341,8 +341,8 @@ void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
 }
 
 void DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack) {
-  LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from stream %p)",
-                       this, &aTrack, aTrack.GetStream()));
+  LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from track %p)",
+                       this, &aTrack, aTrack.GetTrack()));
 
   if (!mTracks.RemoveElement(&aTrack)) {
     LOG(LogLevel::Debug,
