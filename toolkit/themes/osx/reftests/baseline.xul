@@ -45,7 +45,7 @@
         onload="loaded()">
 
 <html:style><![CDATA[
-window {
+:root {
   -moz-appearance: none;
   background-color: white;
 }

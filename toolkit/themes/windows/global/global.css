@@ -10,13 +10,13 @@
 @import url("chrome://global/locale/intl.css");
 @import url("chrome://global/content/widgets.css");
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../../shared/global.inc.css
 
-/* ::::: Variables ::::: */
 :root {
+  /* ::::: Variables ::::: */
   --arrowpanel-padding: 10px;
   --default-arrowpanel-background: -moz-field;
   --default-arrowpanel-color: -moz-fieldText;
@@ -25,22 +25,16 @@
   --arrowpanel-color: var(--default-arrowpanel-color);
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
   --panel-disabled-color: GrayText;
+  /* ::::: Styles ::::: */
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  font: message-box;
 }
 
 @media (-moz-windows-default-theme) {
   :root {
     --arrowpanel-border-color: hsla(210,4%,10%,.2);
   }
-}
-
-/* ::::: root elements ::::: */
-
-window,
-dialog,
-wizard {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  font: message-box;
 }
 
 /* ::::: alert icons :::::*/
@@ -74,7 +68,7 @@ wizard {
 
 /* ::::: iframe ::::: */
 
-iframe {
+xul|iframe {
   border: none;
   width: 100px;
   height: 100px;
@@ -84,7 +78,7 @@ iframe {
 
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   /* In emulation, <iframe> is block instead of inline, so reset the width/height */
-  iframe {
+  xul|iframe {
     width: auto;
     height: auto;
   }
@@ -92,16 +86,16 @@ iframe {
 
 /* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
 
-sidebarheader {
+xul|sidebarheader {
   min-height: 25px;
   text-shadow: none;
 }
 
-sidebarheader > label {
+xul|sidebarheader > xul|label {
   padding-inline-start: 4px;
 }
 
-toolbar[mode="text"] .toolbarbutton-text {
+xul|toolbar[mode="text"] .toolbarbutton-text {
   padding: 0 !important;
   margin: 3px 5px !important;
 }
@@ -148,28 +142,28 @@ html|*#print-preview-pageNumber {
 }
 
 /* separators */
-separator:not([orient="vertical"]) {
+xul|separator:not([orient="vertical"]) {
   height: 1.5em;
 }
-separator[orient="vertical"] {
+xul|separator[orient="vertical"] {
   width: 1.5em;
 }
 
-separator.thin:not([orient="vertical"]) {
+xul|separator.thin:not([orient="vertical"]) {
   height: 0.5em;
 }
-separator.thin[orient="vertical"] {
+xul|separator.thin[orient="vertical"] {
   width: 0.5em;
 }
 
-separator.groove:not([orient="vertical"]) {
+xul|separator.groove:not([orient="vertical"]) {
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
   height: 0;
   margin-top: 0.4em;
   margin-bottom: 0.4em;
 }
-separator.groove[orient="vertical"] {
+xul|separator.groove[orient="vertical"] {
   border-left: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
   width: 0;
@@ -177,8 +171,8 @@ separator.groove[orient="vertical"] {
   margin-right: 0.4em;
 }
 
-description,
-label {
+xul|description,
+xul|label {
   cursor: default;
   margin-top: 1px;
   margin-bottom: 2px;
@@ -186,16 +180,16 @@ label {
   margin-inline-end: 5px;
 }
 
-description {
+xul|description {
   margin-bottom: 4px;
 }
 
-label[disabled="true"] {
+xul|label[disabled="true"] {
   color: GrayText;
 }
 
 @media (-moz-windows-classic) {
-  label[disabled="true"] {
+  xul|label[disabled="true"] {
     color: ThreeDShadow;
     text-shadow: 1px 1px ThreeDHighlight;
   }
@@ -234,7 +228,7 @@ html|input {
   margin: 2px 4px; /* matches xul <textbox> default margin */
 }
 
-popupnotificationcontent {
+xul|popupnotificationcontent {
   margin-top: .5em;
 }
 

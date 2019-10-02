@@ -7,13 +7,13 @@
 @import url("chrome://global/content/widgets.css");
 
 %include shared.inc
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../../shared/global.inc.css
 
-/* ::::: Variables ::::: */
 :root {
+  /* ::::: Variables ::::: */
   --arrowpanel-padding: 16px;
   --default-arrowpanel-background: #fff;
   --default-arrowpanel-color: hsl(0,0%,10%);
@@ -25,13 +25,7 @@
   --panel-disabled-color: GrayText;
 
   --focus-ring-box-shadow: @focusRingShadow@;
-}
-
-/* ::::: root elements ::::: */
-
-window,
-dialog,
-wizard {
+  /* ::::: Styles ::::: */
   -moz-appearance: dialog;
   background-color: #FFFFFF;
   color: -moz-DialogText;
@@ -69,7 +63,7 @@ wizard {
 
 /* ::::: iframe ::::: */
 
-iframe {
+xul|iframe {
   border: none;
   width: 100px;
   height: 100px;
@@ -79,7 +73,7 @@ iframe {
 
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   /* In emulation, <iframe> is block instead of inline, so reset the width/height */
-  iframe {
+  xul|iframe {
     width: auto;
     height: auto;
   }
@@ -87,7 +81,7 @@ iframe {
 
 /* ::::: miscellaneous formatting ::::: */
 
-sidebarheader {
+xul|sidebarheader {
   background-color: -moz-Dialog;
   color: -moz-dialogText;
   text-shadow: none;
@@ -105,35 +99,35 @@ sidebarheader {
   text-shadow: 1px 1px 1.5px black;
 }
 
-separator:not([orient="vertical"]) {
+xul|separator:not([orient="vertical"]) {
   height: 1.5em;
 }
-separator[orient="vertical"] {
+xul|separator[orient="vertical"] {
   width: 1.5em;
 }
 
-separator.thin:not([orient="vertical"]) {
+xul|separator.thin:not([orient="vertical"]) {
   height: 0.5em;
 }
-separator.thin[orient="vertical"] {
+xul|separator.thin[orient="vertical"] {
   width: 0.5em;
 }
 
-separator.groove:not([orient="vertical"]) {
+xul|separator.groove:not([orient="vertical"]) {
   border-top: 1px solid #A3A3A3;
   height: 0;
   margin-top: 0.4em;
   margin-bottom: 0.4em;
 }
-separator.groove[orient="vertical"] {
+xul|separator.groove[orient="vertical"] {
   border-left: 1px solid #A3A3A3;
   width: 0;
   margin-left: 0.4em;
   margin-right: 0.4em;
 }
 
-description,
-label {
+xul|description,
+xul|label {
   cursor: default;
   margin-top: 1px;
   margin-bottom: 2px;
@@ -141,11 +135,11 @@ label {
   margin-inline-end: 5px;
 }
 
-description {
+xul|description {
   margin-bottom: 4px;
 }
 
-label[disabled="true"] {
+xul|label[disabled="true"] {
   color: GrayText;
 }
 
@@ -182,7 +176,7 @@ html|input {
   margin: 4px; /* matches xul <textbox> default margin */
 }
 
-notification > hbox > button {
+xul|notification > xul|hbox > xul|button {
   margin: 0 3px;
   padding: 1px 10px;
   min-width: 60px;
@@ -196,25 +190,25 @@ notification > hbox > button {
   box-shadow: @roundButtonShadow@;
 }
 
-notification > hbox > button:active:hover {
+xul|notification > xul|hbox > xul|button:active:hover {
   color: @roundButtonColor@;
   background: @roundButtonPressedBackgroundImage@;
   box-shadow: @roundButtonPressedShadow@;
 }
 
-notification > hbox > button:-moz-focusring {
+xul|notification > xul|hbox > xul|button:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow), @roundButtonShadow@;
 }
 
-notification > hbox > button:active:hover:-moz-focusring {
+xul|notification > xul|hbox > xul|button:active:hover:-moz-focusring {
   box-shadow: var(--focus-ring-box-shadow), @roundButtonPressedShadow@;
 }
 
-notification > hbox > button > .button-box > .button-text {
+xul|notification > xul|hbox > xul|button > .button-box > .button-text {
   margin: 0 !important;
 }
 
-popupnotificationcontent {
+xul|popupnotificationcontent {
   margin-top: .5em;
 }
 
