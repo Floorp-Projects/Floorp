@@ -97,6 +97,7 @@ async function initToolbox(url, host) {
     if (url.searchParams.has("target")) {
       // Attach toolbox to a given browser iframe (<xul:browser> or <html:iframe
       // mozbrowser>) whose reference is set on the host iframe.
+      // Note that so far, this is no real usage of it. It is only used by a test.
 
       // `iframe` is the targeted document to debug
       let iframe = host.wrappedJSObject
@@ -121,6 +122,8 @@ async function initToolbox(url, host) {
       await client.connect();
       // Creates a target for a given browser iframe.
       target = await client.mainRoot.getTab({ tab });
+      // Instruct the Target to automatically close the client on destruction.
+      target.shouldCloseClient = true;
     } else {
       target = await targetFromURL(url);
       const toolbox = gDevTools.getToolbox(target);

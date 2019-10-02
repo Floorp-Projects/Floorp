@@ -453,10 +453,13 @@ function TargetMixin(parentClass) {
 
         this.threadFront = null;
 
-        if (this.isLocalTab) {
-          // We started with a local tab and created the client ourselves, so we
-          // should close it. Ignore any errors while closing, since there is
-          // not much that can be done at this point.
+        if (this.isLocalTab || this.shouldCloseClient) {
+          // Local tab targets are typically instantiated from TargetFactory.
+          // And we ought to destroy their client at some point. We do it from here.
+          // There is also the clients created by about:debugging toolboxes opened
+          // for local Firefox's targets, which sets the `shouldCloseClient` attribute.
+          // Ignore any errors while closing, since there is not much that can be done
+          // at this point.
           try {
             await this._client.close();
           } catch (e) {
