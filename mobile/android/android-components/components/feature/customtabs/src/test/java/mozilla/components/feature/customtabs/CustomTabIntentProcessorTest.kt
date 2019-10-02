@@ -23,6 +23,8 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -70,6 +72,36 @@ class CustomTabIntentProcessorTest {
         assertEquals("http://mozilla.org", customTabSession.url)
         assertEquals(Source.CUSTOM_TAB, customTabSession.source)
         assertNotNull(customTabSession.customTabConfig)
+        assertFalse(customTabSession.private)
+    }
+
+    @Test
+    fun processPrivateCustomTabIntentWithDefaultHandlers() = runBlockingTest {
+        val engine = mock<Engine>()
+        val sessionManager = spy(SessionManager(engine))
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+        val useCases = SessionUseCases(sessionManager)
+
+        val handler =
+                CustomTabIntentProcessor(sessionManager, useCases.loadUrl, testContext.resources, true)
+
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
+        whenever(intent.hasExtra(CustomTabsIntent.EXTRA_SESSION)).thenReturn(true)
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        whenever(intent.putExtra(any<String>(), any<String>())).thenReturn(intent)
+
+        handler.process(intent)
+        verify(sessionManager).add(anySession(), eq(false), eq(null), eq(null))
+        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(intent).putExtra(eq(EXTRA_SESSION_ID), any<String>())
+
+        val customTabSession = sessionManager.all[0]
+        assertNotNull(customTabSession)
+        assertEquals("http://mozilla.org", customTabSession.url)
+        assertEquals(Source.CUSTOM_TAB, customTabSession.source)
+        assertNotNull(customTabSession.customTabConfig)
+        assertTrue(customTabSession.private)
     }
 
     @Suppress("UNCHECKED_CAST")
