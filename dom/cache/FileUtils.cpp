@@ -389,7 +389,9 @@ nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
       fileDeleted = false;
       return NS_OK;
     };
-    rv = BodyTraverseFiles(aQuotaInfo, bodyDir, removeFileForId);
+    rv = BodyTraverseFiles(aQuotaInfo, bodyDir, removeFileForId,
+                           /* aCanRemoveFiles */ false,
+                           /* aTrackQuota */ true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -559,7 +561,9 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
           fileDeleted = false;
           return NS_OK;
         };
-    rv = BodyTraverseFiles(aQuotaInfo, subdir, removeOrphanedFiles);
+    rv = BodyTraverseFiles(aQuotaInfo, subdir, removeOrphanedFiles,
+                           /* aCanRemoveFiles */ true,
+                           /* aTrackQuota */ true);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -574,7 +578,7 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
 template <typename Func>
 nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
                            const Func& aHandleFileFunc,
-                           const bool aTrackQuota) {
+                           const bool aCanRemoveFiles, const bool aTrackQuota) {
   MOZ_DIAGNOSTIC_ASSERT(aBodyDir);
 
   nsresult rv;
@@ -625,17 +629,16 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
     // Delete all tmp files regardless of known bodies. These are all
     // considered orphans.
     if (StringEndsWith(leafName, NS_LITERAL_CSTRING(".tmp"))) {
-      DebugOnly<nsresult> result = RemoveNsIFile(aQuotaInfo, file, aTrackQuota);
-      MOZ_ASSERT(NS_SUCCEEDED(result));
-      continue;
-    }
-
-    nsCString suffix(NS_LITERAL_CSTRING(".final"));
-
-    // Otherwise, it must be a .final file.  If its not, then try to remove it
-    // and move on
-    if (NS_WARN_IF(!StringEndsWith(leafName, suffix) ||
-                   leafName.Length() != NSID_LENGTH - 1 + suffix.Length())) {
+      if (aCanRemoveFiles) {
+        DebugOnly<nsresult> result =
+            RemoveNsIFile(aQuotaInfo, file, aTrackQuota);
+        MOZ_ASSERT(NS_SUCCEEDED(result));
+        continue;
+      }
+    } else if (NS_WARN_IF(
+                   !StringEndsWith(leafName, NS_LITERAL_CSTRING(".final")))) {
+      // Otherwise, it must be a .final file.  If its not, then try to remove it
+      // and move on
       DebugOnly<nsresult> result =
           RemoveNsIFile(aQuotaInfo, file, /* aTrackQuota */ false);
       MOZ_ASSERT(NS_SUCCEEDED(result));
@@ -657,7 +660,7 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBodyDir,
     return rv;
   }
 
-  if (isEmpty) {
+  if (isEmpty && aCanRemoveFiles) {
     DebugOnly<nsresult> result =
         RemoveNsIFileRecursively(aQuotaInfo, aBodyDir, /* aTrackQuota */ false);
     MOZ_ASSERT(NS_SUCCEEDED(result));
