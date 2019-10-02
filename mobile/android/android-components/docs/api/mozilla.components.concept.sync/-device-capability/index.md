@@ -2,7 +2,7 @@
 
 # DeviceCapability
 
-`enum class DeviceCapability` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L132)
+`enum class DeviceCapability` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Devices.kt#L134)
 
 Capabilities that a [Device](../-device/index.md) may have.
 

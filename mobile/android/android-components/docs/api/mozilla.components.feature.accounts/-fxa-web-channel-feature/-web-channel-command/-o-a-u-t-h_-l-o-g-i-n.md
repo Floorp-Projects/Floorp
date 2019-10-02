@@ -2,4 +2,4 @@
 
 # OAUTH_LOGIN
 
-`OAUTH_LOGIN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L159)
+`OAUTH_LOGIN` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FxaWebChannelFeature.kt#L160)

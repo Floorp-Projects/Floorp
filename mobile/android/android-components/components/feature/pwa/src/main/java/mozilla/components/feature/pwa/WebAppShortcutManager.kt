@@ -22,18 +22,14 @@ import mozilla.components.browser.icons.decoder.ICOIconDecoder
 import mozilla.components.browser.icons.extension.toIconRequest
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.loader.DataUriIconLoader
-import mozilla.components.browser.icons.loader.DiskIconLoader
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.MemoryIconLoader
-import mozilla.components.browser.icons.preparer.DiskIconPreparer
 import mozilla.components.browser.icons.preparer.MemoryIconPreparer
 import mozilla.components.browser.icons.preparer.TippyTopIconPreparer
 import mozilla.components.browser.icons.processor.AdaptiveIconProcessor
 import mozilla.components.browser.icons.processor.ColorProcessor
-import mozilla.components.browser.icons.processor.DiskIconProcessor
 import mozilla.components.browser.icons.processor.MemoryIconProcessor
 import mozilla.components.browser.icons.processor.ResizingProcessor
-import mozilla.components.browser.icons.utils.IconDiskCache
 import mozilla.components.browser.icons.utils.IconMemoryCache
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifest
@@ -42,7 +38,6 @@ import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PW
 import mozilla.components.feature.pwa.ext.installableManifest
 
 private val pwaIconMemoryCache = IconMemoryCache()
-private val pwaIconDiskCache = IconDiskCache()
 
 class WebAppShortcutManager(
     context: Context,
@@ -197,12 +192,10 @@ private fun webAppIcons(
     generator = DefaultIconGenerator(cornerRadiusDimen = null),
     preparers = listOf(
         TippyTopIconPreparer(context.assets),
-        MemoryIconPreparer(pwaIconMemoryCache),
-        DiskIconPreparer(pwaIconDiskCache)
+        MemoryIconPreparer(pwaIconMemoryCache)
     ),
     loaders = listOf(
         MemoryIconLoader(pwaIconMemoryCache),
-        DiskIconLoader(pwaIconDiskCache),
         HttpIconLoader(httpClient),
         DataUriIconLoader()
     ),
@@ -213,7 +206,6 @@ private fun webAppIcons(
     processors = listOf(
         MemoryIconProcessor(pwaIconMemoryCache),
         ResizingProcessor(),
-        DiskIconProcessor(pwaIconDiskCache),
         ColorProcessor(),
         AdaptiveIconProcessor()
     )

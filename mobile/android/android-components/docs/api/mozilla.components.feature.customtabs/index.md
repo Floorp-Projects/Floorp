@@ -8,6 +8,7 @@
 |---|---|
 | [AbstractCustomTabsService](-abstract-custom-tabs-service/index.md) | `abstract class AbstractCustomTabsService : CustomTabsService`<br>[Service](#) providing Custom Tabs related functionality. |
 | [CustomTabIntentProcessor](-custom-tab-intent-processor/index.md) | `class CustomTabIntentProcessor : `[`IntentProcessor`](../mozilla.components.feature.intent.processing/-intent-processor/index.md)<br>Processor for intents which trigger actions related to custom tabs. |
+| [CustomTabWindowFeature](-custom-tab-window-feature/index.md) | `class CustomTabWindowFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)<br>Feature implementation for handling window requests by opening custom tabs. |
 | [CustomTabsFacts](-custom-tabs-facts/index.md) | `class CustomTabsFacts`<br>Facts emitted for telemetry related to [CustomTabsToolbarFeature](-custom-tabs-toolbar-feature/index.md) |
 | [CustomTabsToolbarFeature](-custom-tabs-toolbar-feature/index.md) | `class CustomTabsToolbarFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`BackHandler`](../mozilla.components.support.base.feature/-back-handler/index.md)<br>Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig. |
 

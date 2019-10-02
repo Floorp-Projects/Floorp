@@ -22,7 +22,7 @@ internal class TabCollectionAdapter(
     override val tabs: List<Tab> by lazy {
         entity
             .tabs
-            .sortedBy { it.createdAt }
+            .sortedByDescending { it.createdAt }
             .map { TabAdapter(it) }
     }
 

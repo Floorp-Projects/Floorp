@@ -4,5 +4,11 @@ codecov:
 
 coverage:
   precision: 2
-  round: down 
+  round: down
   range: 60..80
+
+ignore:
+  - "**/*.py"
+  - "**/*.sh"
+  - "**/*.toml"
+  - "**/*.yml"

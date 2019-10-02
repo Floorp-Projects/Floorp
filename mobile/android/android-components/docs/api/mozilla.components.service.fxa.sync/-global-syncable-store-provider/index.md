@@ -2,7 +2,7 @@
 
 # GlobalSyncableStoreProvider
 
-`object GlobalSyncableStoreProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L45)
+`object GlobalSyncableStoreProvider` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/SyncManager.kt#L78)
 
 A singleton registry of [SyncableStore](../../mozilla.components.concept.sync/-syncable-store/index.md) objects. [WorkManagerSyncDispatcher](../-work-manager-sync-dispatcher/index.md) will use this to
 access configured [SyncableStore](../../mozilla.components.concept.sync/-syncable-store/index.md) instances.
