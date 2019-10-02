@@ -276,7 +276,7 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
   fprintf(stderr, "\n    this:");
   thisTypes(sweep, script)->print();
 
-  for (unsigned i = 0; script->functionNonDelazifying() &&
+  for (uint32_t i = 0; script->functionNonDelazifying() &&
                        i < script->functionNonDelazifying()->nargs();
        i++) {
     fprintf(stderr, "\n    arg%u:", i);
@@ -284,21 +284,21 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
   }
   fprintf(stderr, "\n");
 
-  for (jsbytecode* pc = script->code(); pc < script->codeEnd();
-       pc += GetBytecodeLength(pc)) {
+  for (BytecodeLocation it : AllBytecodesIterable(script)) {
     {
       fprintf(stderr, "%p:", script.get());
       Sprinter sprinter(cx);
       if (!sprinter.init()) {
         return;
       }
-      Disassemble1(cx, script, pc, script->pcToOffset(pc), true, &sprinter);
+      Disassemble1(cx, script, it.toRawBytecode(), it.bytecodeToOffset(script),
+                   true, &sprinter);
       fprintf(stderr, "%s", sprinter.string());
     }
 
-    if (BytecodeOpHasTypeSet(JSOp(*pc))) {
-      StackTypeSet* types = bytecodeTypes(sweep, script, pc);
-      fprintf(stderr, "  typeset %u:", unsigned(types - typeArray(sweep)));
+    if (it.opHasTypeSet()) {
+      StackTypeSet* types = bytecodeTypes(sweep, script, it.toRawBytecode());
+      fprintf(stderr, "  typeset %u:", uint32_t(types - typeArray(sweep)));
       types->print();
       fprintf(stderr, "\n");
     }
