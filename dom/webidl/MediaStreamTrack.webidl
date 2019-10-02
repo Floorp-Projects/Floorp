@@ -33,6 +33,30 @@ enum MediaSourceEnum {
     // If values are added, adjust n_values in Histograms.json (2 places)
 };
 
+dictionary ConstrainLongRange {
+    long min;
+    long max;
+    long exact;
+    long ideal;
+};
+
+dictionary ConstrainDoubleRange {
+    double min;
+    double max;
+    double exact;
+    double ideal;
+};
+
+dictionary ConstrainBooleanParameters {
+    boolean exact;
+    boolean ideal;
+};
+
+dictionary ConstrainDOMStringParameters {
+    (DOMString or sequence<DOMString>) exact;
+    (DOMString or sequence<DOMString>) ideal;
+};
+
 typedef (long or ConstrainLongRange) ConstrainLong;
 typedef (double or ConstrainDoubleRange) ConstrainDouble;
 typedef (boolean or ConstrainBooleanParameters) ConstrainBoolean;
