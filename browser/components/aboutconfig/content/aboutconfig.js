@@ -71,12 +71,13 @@ let gFilterPattern = null;
 let gFilterShowAll = false;
 
 class PrefRow {
-  constructor(name) {
+  constructor(name, opts) {
     this.name = name;
     this.value = true;
     this.hidden = false;
     this.odd = false;
     this.editing = false;
+    this.isAddRow = opts && opts.isAddRow;
     this.refreshValue();
   }
 
@@ -336,6 +337,7 @@ class PrefRow {
         (this.hasUserValue ? "has-user-value " : "") +
         (this.isLocked ? "locked " : "") +
         (this.exists ? "" : "deleted ") +
+        (this.isAddRow ? "add " : "") +
         (this.odd ? "odd " : "");
     }
 
@@ -516,8 +518,11 @@ function loadPrefs() {
     let button = event.target.closest("button");
 
     if (button.classList.contains("button-add")) {
+      pref.isAddRow = false;
       Preferences.set(pref.name, pref.value);
-      if (pref.type != "Boolean") {
+      if (pref.type == "Boolean") {
+        pref.refreshClass();
+      } else {
         pref.edit();
       }
     } else if (
@@ -583,6 +588,7 @@ function filterPrefs(options = {}) {
   let indexInArray = 0;
   let elementInTable = gPrefsTable.firstElementChild;
   let odd = false;
+  let hasVisiblePrefs = false;
   while (indexInArray < prefArray.length || elementInTable) {
     // For efficiency, filter the array while we are iterating.
     let prefInArray = prefArray[indexInArray];
@@ -630,14 +636,17 @@ function filterPrefs(options = {}) {
     prefInArray.refreshClass();
     odd = !odd;
     indexInArray++;
+    hasVisiblePrefs = true;
   }
 
   if (fragment) {
     gPrefsTable.appendChild(fragment);
   }
 
+  gPrefsTable.toggleAttribute("has-visible-prefs", hasVisiblePrefs);
+
   if (searchName && !gExistingPrefs.has(searchName)) {
-    let addPrefRow = new PrefRow(searchName);
+    let addPrefRow = new PrefRow(searchName, { isAddRow: true });
     addPrefRow.odd = odd;
     gPrefsTable.appendChild(addPrefRow.getElement());
   }
