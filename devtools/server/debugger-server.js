@@ -136,7 +136,7 @@ var DebuggerServer = {
   },
 
   hasConnection() {
-    return Object.keys(this._connections).length > 0;
+    return this._connections && Object.keys(this._connections).length > 0;
   },
 
   /**

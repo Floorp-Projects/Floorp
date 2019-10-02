@@ -29,19 +29,11 @@ add_task(async function() {
   info("Wait for the tab to appear in the debug targets with the correct name");
   await waitUntil(() => findDebugTargetByText("TEST_TAB", document));
 
-  const tabTarget = findDebugTargetByText("TEST_TAB", document);
-  const inspectButton = tabTarget.querySelector(
-    ".qa-debug-target-inspect-button"
-  );
-  ok(inspectButton, "Inspect button for the tab is available");
-
-  info("Click on the inspect button for the test tab");
-  inspectButton.click();
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  const newTabUrl = gBrowser.selectedBrowser.currentURI.spec;
-  ok(
-    newTabUrl.startsWith("about:devtools-toolbox"),
-    "about:devtools-toolbox opened in a new tab"
+  const { devtoolsTab } = await openAboutDevtoolsToolbox(
+    document,
+    tab,
+    window,
+    "TEST_TAB"
   );
 
   const evts = readAboutDebuggingEvents().filter(e => e.method === "inspect");
@@ -63,7 +55,7 @@ add_task(async function() {
   );
 
   info("Close the about:devtools-toolbox tab");
-  await removeTab(gBrowser.selectedTab);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await waitForRequestsToSettle(window.AboutDebugging.store);
 
   info("Remove first background tab");
