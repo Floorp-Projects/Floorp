@@ -3,28 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Adapter.h"
+#include "LogEntry.h"
 
-#include "Instance.h"
+#include "Device.h"
 #include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
-Adapter::~Adapter() = default;
+LogEntry::~LogEntry() = default;
 
-void Adapter::Extensions(dom::WebGPUExtensions& out) const {
+dom::WebGPULogEntryType LogEntry::Type() const { MOZ_CRASH("todo"); }
+
+void LogEntry::GetObj(JSContext* cx, JS::MutableHandleValue out) const {
   MOZ_CRASH("todo");
 }
 
-void Adapter::Features(dom::WebGPUFeatures& out) const { MOZ_CRASH("todo"); }
+void LogEntry::GetReason(nsString& out) const { MOZ_CRASH("todo"); }
 
-already_AddRefed<Device> Adapter::CreateDevice(
-    const dom::WebGPUDeviceDescriptor& desc) const {
-  MOZ_CRASH("todo");
-}
-
-WEBGPU_IMPL_GOOP_0(Adapter)
+WEBGPU_IMPL_GOOP_0(LogEntry)
 
 }  // namespace webgpu
 }  // namespace mozilla

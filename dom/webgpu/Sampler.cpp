@@ -3,18 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WebGPUBinding.h"
 #include "Sampler.h"
 
 #include "Device.h"
+#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
 Sampler::~Sampler() = default;
 
-GPU_IMPL_CYCLE_COLLECTION(Sampler, mParent)
-GPU_IMPL_JS_WRAP(Sampler)
+WEBGPU_IMPL_GOOP_0(Sampler)
 
 }  // namespace webgpu
 }  // namespace mozilla

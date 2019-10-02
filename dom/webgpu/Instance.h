@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GPU_INSTANCE_H_
-#define GPU_INSTANCE_H_
+#ifndef WEBGPU_INSTANCE_H_
+#define WEBGPU_INSTANCE_H_
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RefPtr.h"
@@ -13,8 +13,7 @@
 
 namespace mozilla {
 namespace dom {
-class Promise;
-struct GPURequestAdapterOptions;
+struct WebGPUAdapterDescriptor;
 }  // namespace dom
 
 namespace webgpu {
@@ -23,10 +22,9 @@ class InstanceProvider;
 
 class Instance final : public nsWrapperCache {
  public:
-  GPU_DECL_CYCLE_COLLECTION(Instance)
-  GPU_DECL_JS_WRAP(Instance)
+  WEBGPU_DECL_GOOP(Instance)
 
-  nsCOMPtr<nsIGlobalObject> mParent;
+  const nsCOMPtr<nsIGlobalObject> mParent;
 
   static RefPtr<Instance> Create(nsIGlobalObject* parent);
 
@@ -36,9 +34,12 @@ class Instance final : public nsWrapperCache {
 
  public:
   nsIGlobalObject* GetParentObject() const { return mParent.get(); }
+
+  already_AddRefed<Adapter> GetAdapter(
+      const dom::WebGPUAdapterDescriptor& desc) const;
 };
 
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // GPU_INSTANCE_H_
+#endif  // WEBGPU_INSTANCE_H_
