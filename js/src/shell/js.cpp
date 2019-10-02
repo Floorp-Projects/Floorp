@@ -11245,7 +11245,8 @@ int main(int argc, char** argv, char** envp) {
                        "NUMBER of instructions.",
                        -1) ||
       !op.addIntOption('\0', "nursery-size", "SIZE-MB",
-                       "Set the maximum nursery size in MB", 16) ||
+                       "Set the maximum nursery size in MB",
+                       JS::DefaultNurseryMaxBytes / 1024 / 1024) ||
 #ifdef JS_GC_ZEAL
       !op.addStringOption('z', "gc-zeal", "LEVEL(;LEVEL)*[,N]",
                           gc::ZealModeHelpText) ||
@@ -11371,8 +11372,7 @@ int main(int argc, char** argv, char** envp) {
     return 1;
   }
 
-  size_t nurseryBytes = JS::DefaultNurseryBytes;
-  nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
+  size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
 
   /* Use the same parameters as the browser in xpcjsruntime.cpp. */
   JSContext* const cx = JS_NewContext(JS::DefaultHeapMaxBytes, nurseryBytes);
