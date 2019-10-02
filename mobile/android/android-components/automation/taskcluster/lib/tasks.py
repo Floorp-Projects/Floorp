@@ -9,8 +9,6 @@ import json
 import taskcluster
 
 DEFAULT_EXPIRES_IN = '1 year'
-GOOGLE_PROJECT = 'moz-android-components-230120'
-GOOGLE_APPLICATION_CREDENTIALS = '.firebase_token.json'
 
 
 class TaskBuilder(object):
@@ -68,27 +66,6 @@ class TaskBuilder(object):
             dependencies=dependencies,
         )
 
-    def craft_detekt_task(self):
-        return self._craft_build_ish_task(
-            name='Android Components - detekt',
-            description='Running detekt over all modules',
-            command='./gradlew --no-daemon clean detekt'
-        )
-
-    def craft_ktlint_task(self):
-        return self._craft_build_ish_task(
-            name='Android Components - ktlint',
-            description='Running ktlint over all modules',
-            command='./gradlew --no-daemon clean ktlint'
-        )
-
-    def craft_compare_locales_task(self):
-        return self._craft_build_ish_task(
-            name='Android Components - compare-locales',
-            description='Validate strings.xml with compare-locales',
-            command='pip install "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
-        )
-
     def craft_sign_task(self, build_task_label, barrier_task_label, artifacts, component_name, is_staging):
         payload = {
             "upstreamArtifacts": [{
@@ -110,46 +87,6 @@ class TaskBuilder(object):
             name='Android Components - Sign Module :{}'.format(component_name),
             description="Sign release module {}".format(component_name),
             payload=payload
-        )
-
-    def craft_ui_tests_task(self):
-        artifacts = {
-            "public": {
-                "type": "directory",
-                "path": "/build/android-components/results",
-                "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN))
-            }
-        }
-
-        env_vars = {
-            "GOOGLE_PROJECT": "moz-android-components-230120",
-            "GOOGLE_APPLICATION_CREDENTIALS": ".firebase_token.json"
-        }
-
-        gradle_commands = (
-            './gradlew --no-daemon clean assembleGeckoNightly assembleAndroidTest',
-        )
-
-        test_commands = (
-            'automation/taskcluster/androidTest/ui-test.sh browser arm 1',
-        )
-
-        command = ' && '.join(
-            cmd
-            for commands in (gradle_commands, test_commands)
-            for cmd in commands
-            if cmd
-        )
-
-        return self._craft_build_ish_task(
-            name='Android Components - mod UI tests',
-            description='Execute Gradle tasks for UI tests',
-            command=command,
-            scopes=[
-                'secrets:get:project/mobile/android-components/firebase'
-            ],
-            artifacts=artifacts,
-            env_vars=env_vars,
         )
 
     def craft_beetmover_task(

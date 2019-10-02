@@ -5,12 +5,6 @@
 # If a command fails then do not proceed and fail this script too.
 set -ex
 
-# Get token for uploading to codecov and append it to codecov.yml
-python automation/taskcluster/helper/get-secret.py \
-    -s project/mobile/android-components/public-tokens \
-    -k codecov \
-    -f .cc_token \
-
 # Set some environment variables that will help codecov detect the CI
 export CI_BUILD_URL="https://tools.taskcluster.net/tasks/$TASK_ID"
 

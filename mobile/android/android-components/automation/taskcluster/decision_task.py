@@ -153,18 +153,11 @@ def create_module_tasks(builder, module):
 
 def pr(builder, artifacts_info):
     modules = [_get_gradle_module_name(artifact_info) for artifact_info in artifacts_info]
-    build_tasks = [
+    tasks = [
         task_def
         for module in modules
         for task_def in create_module_tasks(builder, module)
     ]
-    other_tasks = [
-        craft_function()
-        for craft_function in
-        (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task)
-    ]
-
-    tasks = build_tasks + other_tasks
 
     for task in tasks:
         task['attributes']['code-review'] = True
@@ -173,11 +166,7 @@ def pr(builder, artifacts_info):
 
 
 def push(builder, artifacts_info):
-    all_tasks = pr(builder, artifacts_info)
-    ui_task = builder.craft_ui_tests_task()
-    ui_task['attributes']['code-review'] = True
-    all_tasks.append(ui_task)
-    return all_tasks
+    return pr(builder, artifacts_info)
 
 
 def _get_gradle_module_name(artifact_info):

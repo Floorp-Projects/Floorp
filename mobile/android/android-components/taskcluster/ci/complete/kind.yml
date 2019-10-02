@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - old-decision
+    - lint
 
 transforms:
     - taskgraph.transforms.code_review:transforms
