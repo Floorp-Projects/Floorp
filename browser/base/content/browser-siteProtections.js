@@ -1782,19 +1782,13 @@ var gProtectionsHandler = {
       if (this._protectionsPopup.state == "open") {
         this.reorderCategoryItems();
 
-        if (!this._descriptionHeightWorkaroundCalled) {
-          // The first time the panel is opened, the category items are still
-          // invisible when descriptionHeightWorkaround gets called, i.e. they
-          // are omitted from the workaround and the content overflows the panel.
-          // We can fix this by calling the function manually the first time we
-          // call reorderCategoryItems(). Since we have set all the relevant
-          // attributes and hidden the "No Trackers Found" description at this
-          // point, the items are guaranteed to be visible when we call it below.
-          PanelMultiView.forNode(
-            this._protectionsPopupMainView
-          ).descriptionHeightWorkaround();
-          this._descriptionHeightWorkaroundCalled = true;
-        }
+        // Until we encounter a site that triggers them, category elements might
+        // be invisible when descriptionHeightWorkaround gets called, i.e. they
+        // are omitted from the workaround and the content overflows the panel.
+        // Solution: call it manually here.
+        PanelMultiView.forNode(
+          this._protectionsPopupMainView
+        ).descriptionHeightWorkaround();
       }
     }
 
