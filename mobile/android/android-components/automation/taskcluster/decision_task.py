@@ -256,8 +256,4 @@ def release(builder, components, is_snapshot, is_staging):
 
     tasks.append(builder.craft_barrier_task(wait_on_builds_label, build_tasks_labels))
 
-    if is_snapshot:     # XXX These jobs perma-fail on release
-        for craft_function in (builder.craft_detekt_task, builder.craft_ktlint_task, builder.craft_compare_locales_task):
-            tasks.append(craft_function())
-
     return tasks
