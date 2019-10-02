@@ -237,6 +237,11 @@ XPCOMUtils.defineLazyScriptGetter(
   "ToolbarKeyboardNavigator",
   "chrome://browser/content/browser-toolbarKeyNav.js"
 );
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "A11yUtils",
+  "chrome://browser/content/browser-a11yUtils.js"
+);
 
 // lazy service getters
 
