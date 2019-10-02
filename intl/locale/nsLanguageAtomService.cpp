@@ -58,7 +58,8 @@ static constexpr struct {
     {"Gujr", nsGkAtoms::x_gujr},
     {"Guru", nsGkAtoms::x_guru},
     {"Hang", nsGkAtoms::ko},
-    {"Hani", nsGkAtoms::Japanese},
+    // Hani is not mapped to a specific langGroup, we prefer to look at the
+    // primary language subtag in this case
     {"Hans", nsGkAtoms::Chinese},
     // Hant is special-cased in code
     // Hant=zh-HK
@@ -172,25 +173,46 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
     // If the lang code can be parsed as BCP47, look up its (likely) script
     Locale loc(langStr);
     if (loc.IsWellFormed()) {
+      // Fill in script subtag if not present.
       if (loc.GetScript().IsEmpty()) {
         loc.AddLikelySubtags();
       }
+      // Traditional Chinese has separate prefs for Hong Kong / Taiwan;
+      // check the region subtag.
       if (loc.GetScript().EqualsLiteral("Hant")) {
         if (loc.GetRegion().EqualsLiteral("HK")) {
           return nsGkAtoms::HongKongChinese;
         }
         return nsGkAtoms::Taiwanese;
-      } else {
-        size_t foundIndex;
-        const nsCString& script = loc.GetScript();
-        if (BinarySearchIf(
-                kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
-                [script](const auto& entry) -> int {
-                  return script.Compare(entry.mTag);
-                },
-                &foundIndex)) {
-          return kScriptLangGroup[foundIndex].mAtom;
+      }
+      // Search list of known script subtags that map to langGroup codes.
+      size_t foundIndex;
+      const nsCString& script = loc.GetScript();
+      if (BinarySearchIf(
+              kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
+              [script](const auto& entry) -> int {
+                return script.Compare(entry.mTag);
+              },
+              &foundIndex)) {
+        return kScriptLangGroup[foundIndex].mAtom;
+      }
+      // Script subtag was not recognized (includes "Hani"); check the language
+      // subtag for CJK possibilities so that we'll prefer the appropriate font
+      // rather than falling back to the browser's hardcoded preference.
+      if (loc.GetLanguage().EqualsLiteral("zh")) {
+        if (loc.GetRegion().EqualsLiteral("HK")) {
+          return nsGkAtoms::HongKongChinese;
         }
+        if (loc.GetRegion().EqualsLiteral("TW")) {
+          return nsGkAtoms::Taiwanese;
+        }
+        return nsGkAtoms::Chinese;
+      }
+      if (loc.GetLanguage().EqualsLiteral("ja")) {
+        return nsGkAtoms::Japanese;
+      }
+      if (loc.GetLanguage().EqualsLiteral("ko")) {
+        return nsGkAtoms::ko;
       }
     }
   }
