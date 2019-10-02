@@ -20,14 +20,14 @@ const {
  *                                    `a.b.c.d.` is described as ['a', 'b', 'c', 'd'] ).
  */
 function autocompleteUpdate(force, getterPath) {
-  return ({ dispatch, getState, services }) => {
-    if (services.inputHasSelection()) {
+  return ({ dispatch, getState, webConsoleUI, hud }) => {
+    if (hud.inputHasSelection()) {
       return dispatch(autocompleteClear());
     }
 
-    const inputValue = services.getInputValue();
-    const { frameActor: frameActorId, client } = services.getFrameActor();
-    const cursor = services.getInputCursor();
+    const inputValue = hud.getInputValue();
+    const { frameActor: frameActorId, client } = webConsoleUI.getFrameActor();
+    const cursor = webConsoleUI.getInputCursor();
 
     const state = getState().autocomplete;
     const { cache } = state;
@@ -131,8 +131,8 @@ function autocompleteDataFetch({
   client,
   authorizedEvaluations,
 }) {
-  return ({ dispatch, services }) => {
-    const selectedNodeActor = services.getSelectedNodeActor();
+  return ({ dispatch, webConsoleUI }) => {
+    const selectedNodeActor = webConsoleUI.getSelectedNodeActor();
     const id = generateRequestId();
     dispatch({ type: AUTOCOMPLETE_PENDING_REQUEST, id });
     client
