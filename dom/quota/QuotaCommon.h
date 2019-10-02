@@ -84,6 +84,8 @@ class LogModule;
 namespace dom {
 namespace quota {
 
+extern const char kQuotaGenericDelimiter;
+
 // Telemetry keys to indicate types of errors.
 #ifdef NIGHTLY_BUILD
 extern const nsLiteralCString kQuotaInternalError;
@@ -125,9 +127,40 @@ void ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr);
 
 LogModule* GetQuotaManagerLogger();
 
-void SanitizeCString(nsACString& aString);
+void AnonymizeCString(nsACString& aCString);
 
-void SanitizeOrigin(nsACString& aOrigin);
+class AnonymizedCString : public nsCString {
+ public:
+  explicit AnonymizedCString(const nsACString& aCString) : nsCString(aCString) {
+    AnonymizeCString(*this);
+  }
+};
+
+void AnonymizeOriginString(nsACString& aOriginString);
+
+class AnonymizedOriginString : public nsCString {
+ public:
+  explicit AnonymizedOriginString(const nsACString& aOriginString)
+      : nsCString(aOriginString) {
+    AnonymizeOriginString(*this);
+  }
+};
+
+template <typename T>
+void StringifyTableKeys(const T& aTable, nsACString& aResult) {
+  bool first = true;
+  for (auto iter = aTable.ConstIter(); !iter.Done(); iter.Next()) {
+    if (first) {
+      first = false;
+    } else {
+      aResult.Append(NS_LITERAL_CSTRING(", "));
+    }
+
+    const auto& key = iter.Get()->GetKey();
+
+    aResult.Append(key);
+  }
+}
 
 }  // namespace quota
 }  // namespace dom
