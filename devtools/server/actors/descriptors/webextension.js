@@ -117,6 +117,10 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
       return this._childTargetPromise;
     },
 
+    getChildren() {
+      return [];
+    },
+
     async _extensionFrameConnect() {
       if (this._browser) {
         throw new Error(

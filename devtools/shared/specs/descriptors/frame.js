@@ -11,7 +11,9 @@ const frameDescriptorSpec = generateActorSpec({
   methods: {
     getTarget: {
       request: {},
-      response: { process: RetVal("json") },
+      response: {
+        frame: RetVal("json"),
+      },
     },
   },
 });
