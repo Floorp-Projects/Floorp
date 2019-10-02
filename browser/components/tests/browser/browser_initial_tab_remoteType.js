@@ -65,7 +65,14 @@ async function assertOneRemoteBrowserShown(
 
   Services.obs.removeObserver(observer, REMOTE_BROWSER_SHOWN);
 
-  Assert.equal(newWin.gBrowser.selectedBrowser.remoteType, aRemoteType);
+  if (aRemoteType == E10SUtils.WEB_REMOTE_TYPE) {
+    Assert.ok(
+      E10SUtils.isWebRemoteType(newWin.gBrowser.selectedBrowser.remoteType)
+    );
+  } else {
+    Assert.equal(newWin.gBrowser.selectedBrowser.remoteType, aRemoteType);
+  }
+
   Assert.equal(
     shownRemoteBrowsers,
     1,
