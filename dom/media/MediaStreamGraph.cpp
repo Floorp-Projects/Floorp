@@ -1205,7 +1205,7 @@ void MediaStreamGraphImpl::Process() {
           for (uint32_t j = i + 1; j < mStreams.Length(); ++j) {
             AudioNodeStream* nextStream = mStreams[j]->AsAudioNodeStream();
             if (nextStream) {
-              MOZ_ASSERT(n->SampleRate() == nextStream->SampleRate(),
+              MOZ_ASSERT(n->mSampleRate == nextStream->mSampleRate,
                          "All AudioNodeStreams in the graph must have the same "
                          "sampling rate");
             }
@@ -1213,7 +1213,7 @@ void MediaStreamGraphImpl::Process() {
 #endif
           // Since an AudioNodeStream is present, go ahead and
           // produce audio block by block for all the rest of the streams.
-          ProduceDataForStreamsBlockByBlock(i, n->SampleRate());
+          ProduceDataForStreamsBlockByBlock(i, n->mSampleRate);
           doneAllProducing = true;
         } else {
           ps->ProcessInput(mProcessedTime, mStateComputedTime,

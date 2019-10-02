@@ -131,7 +131,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
                "PeriodicWave should have sent two channels");
     MOZ_ASSERT(aBuffer.mVolume == 1.0f);
     mPeriodicWave = WebCore::PeriodicWave::create(
-        mSource->SampleRate(), aBuffer.ChannelData<float>()[0],
+        mSource->mSampleRate, aBuffer.ChannelData<float>()[0],
         aBuffer.ChannelData<float>()[1], aBuffer.mDuration,
         mCustomDisableNormalization);
   }
@@ -172,7 +172,7 @@ class OscillatorNodeEngine final : public AudioNodeEngine {
     }
 
     float finalFrequency = frequency * exp2(detune / 1200.);
-    float signalPeriod = mSource->SampleRate() / finalFrequency;
+    float signalPeriod = mSource->mSampleRate / finalFrequency;
     mRecomputeParameters = false;
 
     mPhaseIncrement = 2 * M_PI / signalPeriod;

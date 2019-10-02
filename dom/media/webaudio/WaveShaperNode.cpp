@@ -242,19 +242,19 @@ class WaveShaperNodeEngine final : public AudioNodeEngine {
 
       switch (mType) {
         case OverSampleType::None:
-          mResampler.Reset(channelCount, aStream->SampleRate(),
+          mResampler.Reset(channelCount, aStream->mSampleRate,
                            OverSampleType::None);
           ProcessCurve<1>(inputSamples, outputBuffer);
           break;
         case OverSampleType::_2x:
-          mResampler.Reset(channelCount, aStream->SampleRate(),
+          mResampler.Reset(channelCount, aStream->mSampleRate,
                            OverSampleType::_2x);
           sampleBuffer = mResampler.UpSample(i, inputSamples, 2);
           ProcessCurve<2>(sampleBuffer, sampleBuffer);
           mResampler.DownSample(i, outputBuffer, 2);
           break;
         case OverSampleType::_4x:
-          mResampler.Reset(channelCount, aStream->SampleRate(),
+          mResampler.Reset(channelCount, aStream->mSampleRate,
                            OverSampleType::_4x);
           sampleBuffer = mResampler.UpSample(i, inputSamples, 4);
           ProcessCurve<4>(sampleBuffer, sampleBuffer);

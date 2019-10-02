@@ -194,7 +194,7 @@ void AudioNodeStream::SendTimelineEvent(uint32_t aIndex,
             const AudioTimelineEvent& aEvent)
         : ControlMessage(aStream),
           mEvent(aEvent),
-          mSampleRate(aStream->SampleRate()),
+          mSampleRate(aStream->mSampleRate),
           mIndex(aIndex) {}
     void Run() override {
       static_cast<AudioNodeStream*>(mStream)->Engine()->RecvTimelineEvent(
@@ -222,11 +222,15 @@ void AudioNodeStream::SetBuffer(AudioChunk&& aBuffer) {
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aBuffer)));
 }
 
-void AudioNodeStream::SetReverb(WebCore::Reverb* aReverb, uint32_t aImpulseChannelCount) {
+void AudioNodeStream::SetReverb(WebCore::Reverb* aReverb,
+                                uint32_t aImpulseChannelCount) {
   class Message final : public ControlMessage {
    public:
-    Message(AudioNodeStream* aStream, WebCore::Reverb* aReverb, uint32_t aImpulseChannelCount)
-        : ControlMessage(aStream), mReverb(aReverb), mImpulseChanelCount(aImpulseChannelCount) {}
+    Message(AudioNodeStream* aStream, WebCore::Reverb* aReverb,
+            uint32_t aImpulseChannelCount)
+        : ControlMessage(aStream),
+          mReverb(aReverb),
+          mImpulseChanelCount(aImpulseChannelCount) {}
     void Run() override {
       static_cast<AudioNodeStream*>(mStream)->Engine()->SetReverb(
           mReverb.forget(), mImpulseChanelCount);
@@ -235,7 +239,8 @@ void AudioNodeStream::SetReverb(WebCore::Reverb* aReverb, uint32_t aImpulseChann
     uint32_t mImpulseChanelCount;
   };
 
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aReverb, aImpulseChannelCount));
+  GraphImpl()->AppendMessage(
+      MakeUnique<Message>(this, aReverb, aImpulseChannelCount));
 }
 
 void AudioNodeStream::SetRawArrayData(nsTArray<float>& aData) {
