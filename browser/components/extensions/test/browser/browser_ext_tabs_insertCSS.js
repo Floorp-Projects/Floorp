@@ -2,6 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
+AddonTestUtils.initMochitest(this);
+
 add_task(async function testExecuteScript() {
   let { MessageChannel } = ChromeUtils.import(
     "resource://gre/modules/MessageChannel.jsm"
@@ -224,4 +230,91 @@ add_task(async function testInsertCSS_cleanup() {
   );
 
   BrowserTestUtils.removeTab(tab);
+});
+
+// Verify that no removeSheet/removeSheetUsingURIString errors are logged while
+// cleaning up css injected using a manifest content script or tabs.insertCSS.
+add_task(async function test_csscode_cleanup_on_closed_windows() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["http://example.com/*"],
+      content_scripts: [
+        {
+          matches: ["http://example.com/*"],
+          css: ["content.css"],
+          run_at: "document_start",
+        },
+      ],
+    },
+
+    files: {
+      "content.css": "body { min-width: 15px; }",
+    },
+
+    async background() {
+      browser.runtime.onConnect.addListener(port => {
+        port.onDisconnect.addListener(() => {
+          browser.test.sendMessage("port-disconnected");
+        });
+        browser.test.sendMessage("port-connected");
+      });
+
+      await browser.tabs.create({
+        url: "http://example.com/",
+        active: true,
+      });
+
+      await browser.tabs.insertCSS({
+        code: "body { max-width: 50px; }",
+      });
+
+      // Create a port, as a way to detect when the content script has been
+      // destroyed and any removeSheet error already collected (if it has been
+      // raised during the content scripts cleanup).
+      await browser.tabs.executeScript({
+        code: `(${function() {
+          const { maxWidth, minWidth } = window.getComputedStyle(document.body);
+          browser.test.sendMessage("body-styles", { maxWidth, minWidth });
+          browser.runtime.connect();
+        }})();`,
+      });
+    },
+  });
+
+  await extension.startup();
+
+  let { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
+    info("Waiting for content scripts to be injected");
+
+    const { maxWidth, minWidth } = await extension.awaitMessage("body-styles");
+    is(maxWidth, "50px", "tabs.insertCSS applied");
+    is(minWidth, "15px", "manifest.content_scripts CSS applied");
+
+    await extension.awaitMessage("port-connected");
+    const tab = gBrowser.selectedTab;
+
+    info("Close tab and wait for content script port to be disconnected");
+    BrowserTestUtils.removeTab(tab);
+    await extension.awaitMessage("port-disconnected");
+  });
+
+  // Look for nsIDOMWindowUtils.removeSheet and
+  // nsIDOMWindowUtils.removeSheetUsingURIString errors.
+  messages = messages.filter(
+    m =>
+      m.errorMessage &&
+      m.errorMessage.includes(
+        "(NS_ERROR_FAILURE) [nsIDOMWindowUtils.removeSheet"
+      )
+  );
+
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      forbidden: [/nsIDOMWindowUtils.removeSheet/],
+    },
+    "Expect no remoteSheet errors"
+  );
+
+  await extension.unload();
 });
