@@ -10,7 +10,6 @@
 #include "MediaInfo.h"
 #include "MediaSegment.h"
 #include "nsSize.h"
-#include "TrackID.h"
 
 namespace mozilla {
 
