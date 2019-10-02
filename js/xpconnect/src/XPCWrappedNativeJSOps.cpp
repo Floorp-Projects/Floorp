@@ -192,9 +192,12 @@ static bool XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp) {
 static JSObject* GetDoubleWrappedJSObject(XPCCallContext& ccx,
                                           XPCWrappedNative* wrapper) {
   RootedObject obj(ccx);
-  nsCOMPtr<nsIXPConnectWrappedJS> underware =
+  {
+    nsCOMPtr<nsIXPConnectWrappedJS> underware =
       do_QueryInterface(wrapper->GetIdentityObject());
-  if (underware) {
+    if (!underware) {
+      return nullptr;
+    }
     RootedObject mainObj(ccx, underware->GetJSObject());
     if (mainObj) {
       JSAutoRealm ar(ccx, underware->GetJSObjectGlobal());

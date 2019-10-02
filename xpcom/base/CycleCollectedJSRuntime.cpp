@@ -660,7 +660,9 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
   MOZ_ASSERT(aClasp);
   MOZ_ASSERT(aClasp == js::GetObjectClass(aObj));
 
-  if (NoteCustomGCThingXPCOMChildren(aClasp, aObj, aCb)) {
+  JS::Rooted<JSObject*> obj(RootingCx(), aObj);
+
+  if (NoteCustomGCThingXPCOMChildren(aClasp, obj, aCb)) {
     // Nothing else to do!
     return;
   }
@@ -670,7 +672,7 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
   if (aClasp->flags & JSCLASS_HAS_PRIVATE &&
       aClasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "js::GetObjectPrivate(obj)");
-    aCb.NoteXPCOMChild(static_cast<nsISupports*>(js::GetObjectPrivate(aObj)));
+    aCb.NoteXPCOMChild(static_cast<nsISupports*>(js::GetObjectPrivate(obj)));
     return;
   }
 
@@ -683,21 +685,21 @@ void CycleCollectedJSRuntime::NoteGCThingXPCOMChildren(
     // that case, since NoteXPCOMChild/NoteNativeChild are null-safe.
     if (domClass->mDOMObjectIsISupports) {
       aCb.NoteXPCOMChild(
-          UnwrapPossiblyNotInitializedDOMObject<nsISupports>(aObj));
+          UnwrapPossiblyNotInitializedDOMObject<nsISupports>(obj));
     } else if (domClass->mParticipant) {
-      aCb.NoteNativeChild(UnwrapPossiblyNotInitializedDOMObject<void>(aObj),
+      aCb.NoteNativeChild(UnwrapPossiblyNotInitializedDOMObject<void>(obj),
                           domClass->mParticipant);
     }
     return;
   }
 
-  if (IsRemoteObjectProxy(aObj)) {
+  if (IsRemoteObjectProxy(obj)) {
     auto handler =
-        static_cast<const RemoteObjectProxyBase*>(js::GetProxyHandler(aObj));
-    return handler->NoteChildren(aObj, aCb);
+        static_cast<const RemoteObjectProxyBase*>(js::GetProxyHandler(obj));
+    return handler->NoteChildren(obj, aCb);
   }
 
-  JS::Value value = js::MaybeGetScriptPrivate(aObj);
+  JS::Value value = js::MaybeGetScriptPrivate(obj);
   if (!value.isUndefined()) {
     aCb.NoteXPCOMChild(static_cast<nsISupports*>(value.toPrivate()));
   }

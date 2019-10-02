@@ -692,27 +692,32 @@ JSObject* mozJSComponentLoader::PrepareObjectForLocation(
   // need to be extra careful checking for URIs pointing to files
   // EnsureFile may not always get called, especially on resource URIs
   // so we need to call GetFile to make sure this is a valid file
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
-  nsCOMPtr<nsIFile> testFile;
-  if (NS_SUCCEEDED(rv)) {
-    fileURL->GetFile(getter_AddRefs(testFile));
-  }
+  {
+    // Create an extra scope so that ~nsCOMPtr will run before the returned
+    // JSObject* is placed on the stack, since otherwise a GC in the destructor
+    // would invalidate the return value.
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+    nsCOMPtr<nsIFile> testFile;
+    if (NS_SUCCEEDED(rv)) {
+      fileURL->GetFile(getter_AddRefs(testFile));
+    }
 
-  if (testFile) {
-    *aRealFile = true;
+    if (testFile) {
+      *aRealFile = true;
 
-    if (XRE_IsParentProcess()) {
-      RootedObject locationObj(aCx);
+      if (XRE_IsParentProcess()) {
+        RootedObject locationObj(aCx);
 
-      rv = nsXPConnect::XPConnect()->WrapNative(aCx, thisObj, aComponentFile,
-                                                NS_GET_IID(nsIFile),
-                                                locationObj.address());
-      NS_ENSURE_SUCCESS(rv, nullptr);
-      NS_ENSURE_TRUE(locationObj, nullptr);
+        rv = nsXPConnect::XPConnect()->WrapNative(aCx, thisObj, aComponentFile,
+                                                  NS_GET_IID(nsIFile),
+                                                  locationObj.address());
+        NS_ENSURE_SUCCESS(rv, nullptr);
+        NS_ENSURE_TRUE(locationObj, nullptr);
 
-      if (!JS_DefineProperty(aCx, thisObj, "__LOCATION__", locationObj, 0)) {
-        return nullptr;
+        if (!JS_DefineProperty(aCx, thisObj, "__LOCATION__", locationObj, 0)) {
+          return nullptr;
+        }
       }
     }
   }

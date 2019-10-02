@@ -284,7 +284,7 @@ bool XPCVariant::InitializeData(JSContext* cx) {
     return true;
   }
   if (val.isString()) {
-    JSString* str = val.toString();
+    RootedString str(cx, val.toString());
     if (!str) {
       return false;
     }

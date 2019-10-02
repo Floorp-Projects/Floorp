@@ -242,7 +242,8 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
   return true;
 }
 
-JSScript* mozJSSubScriptLoader::ReadScript(
+bool mozJSSubScriptLoader::ReadScript(
+    JS::MutableHandle<JSScript*> script,
     nsIURI* uri, JSContext* cx, HandleObject targetObj, const char* uriStr,
     nsIIOService* serv, bool wantReturnValue, bool useCompilationScope) {
   // We create a channel and call SetContentType, to avoid expensive MIME type
@@ -267,7 +268,7 @@ JSScript* mozJSSubScriptLoader::ReadScript(
 
   if (NS_FAILED(rv)) {
     ReportError(cx, LOAD_ERROR_NOSTREAM, uri);
-    return nullptr;
+    return false;
   }
 
   int64_t len = -1;
@@ -275,17 +276,17 @@ JSScript* mozJSSubScriptLoader::ReadScript(
   rv = chan->GetContentLength(&len);
   if (NS_FAILED(rv) || len == -1) {
     ReportError(cx, LOAD_ERROR_NOCONTENT, uri);
-    return nullptr;
+    return false;
   }
 
   if (len > INT32_MAX) {
     ReportError(cx, LOAD_ERROR_CONTENTTOOBIG, uri);
-    return nullptr;
+    return false;
   }
 
   nsCString buf;
   rv = NS_ReadInputStreamToString(instream, buf, len);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv, false);
 
   Maybe<JSAutoRealm> ar;
 
@@ -301,8 +302,14 @@ JSScript* mozJSSubScriptLoader::ReadScript(
     ar.emplace(cx, xpc::CompilationScope());
   }
 
-  return PrepareScript(uri, cx, JS_IsGlobalObject(targetObj), uriStr, buf.get(),
-                       len, wantReturnValue);
+  JSScript* ret = PrepareScript(uri, cx, JS_IsGlobalObject(targetObj), uriStr, buf.get(),
+                                len, wantReturnValue);
+  if (!ret) {
+    return false;
+  }
+
+  script.set(ret);
+  return true;
 }
 
 NS_IMETHODIMP
@@ -465,10 +472,8 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
     // |back there.
     cache = nullptr;
   } else {
-    script =
-        ReadScript(uri, cx, targetObj, static_cast<const char*>(uriStr.get()),
-                   serv, options.wantReturnValue, useCompilationScope);
-    if (!script) {
+    if (!ReadScript(&script, uri, cx, targetObj, static_cast<const char*>(uriStr.get()),
+                    serv, options.wantReturnValue, useCompilationScope)) {
       return NS_OK;
     }
   }

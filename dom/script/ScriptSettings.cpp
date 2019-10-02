@@ -295,11 +295,11 @@ void AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
 
   mCx = aCx;
   mIsMainThread = aIsMainThread;
-  mGlobalObject = aGlobalObject;
   if (aGlobal) {
     JS::AssertObjectIsNotGray(aGlobal);
   }
   mAutoNullableRealm.emplace(mCx, aGlobal);
+  mGlobalObject = aGlobalObject;
 
   ScriptSettingsStack::Push(this);
 

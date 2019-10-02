@@ -38,7 +38,7 @@ static bool stepFunc(JSContext* aCtx, uint32_t argc, JS::Value* _vp) {
     return false;
   }
 
-  JSObject* obj = &args.thisv().toObject();
+  JS::RootedObject obj(aCtx, &args.thisv().toObject());
   nsresult rv =
       xpc->GetWrappedNativeOfJSObject(aCtx, obj, getter_AddRefs(wrapper));
   if (NS_FAILED(rv)) {

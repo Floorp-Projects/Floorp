@@ -627,6 +627,10 @@ void* ZoneAllocator::onOutOfMemory(js::AllocFunction allocFunc,
   if (!js::CurrentThreadCanAccessRuntime(runtime_)) {
     return nullptr;
   }
+  // The analysis sees that JSRuntime::onOutOfMemory could report an error,
+  // which with a JSErrorInterceptor could GC. But we're passing a null cx (to
+  // a default parameter) so the error will not be reported.
+  JS::AutoSuppressGCAnalysis suppress;
   return runtimeFromMainThread()->onOutOfMemory(allocFunc, arena, nbytes,
                                                 reallocPtr);
 }

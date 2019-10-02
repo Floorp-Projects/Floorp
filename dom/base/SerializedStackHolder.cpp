@@ -73,13 +73,17 @@ JSObject* SerializedStackHolder::ReadStack(JSContext* aCx) {
     return nullptr;
   }
 
-  Maybe<nsJSPrincipals::AutoSetActiveWorkerPrincipal> set;
-  if (mWorkerRef) {
-    set.emplace(mWorkerRef->Private()->GetPrincipal());
+  JS::RootedValue stackValue(aCx);
+
+  {
+    Maybe<nsJSPrincipals::AutoSetActiveWorkerPrincipal> set;
+    if (mWorkerRef) {
+      set.emplace(mWorkerRef->Private()->GetPrincipal());
+    }
+
+    mHolder.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue, IgnoreErrors());
   }
 
-  JS::RootedValue stackValue(aCx);
-  mHolder.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue, IgnoreErrors());
   return stackValue.isObject() ? &stackValue.toObject() : nullptr;
 }
 
