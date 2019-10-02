@@ -5,8 +5,6 @@
 
 #include "Texture.h"
 
-#include "Device.h"
-#include "mozilla/dom/WebGPUBinding.h"
 #include "TextureView.h"
 
 namespace mozilla {
@@ -14,12 +12,8 @@ namespace webgpu {
 
 Texture::~Texture() = default;
 
-already_AddRefed<TextureView> Texture::CreateTextureView(
-    const dom::WebGPUTextureViewDescriptor& desc) const {
-  MOZ_CRASH("todo");
-}
-
-WEBGPU_IMPL_GOOP_0(Texture)
+GPU_IMPL_CYCLE_COLLECTION(Texture, mParent)
+GPU_IMPL_JS_WRAP(Texture)
 
 }  // namespace webgpu
 }  // namespace mozilla

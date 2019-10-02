@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGPU_INSTANCE_PROVIDER_H_
-#define WEBGPU_INSTANCE_PROVIDER_H_
+#ifndef GPU_INSTANCE_PROVIDER_H_
+#define GPU_INSTANCE_PROVIDER_H_
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Maybe.h"
@@ -52,4 +52,4 @@ void ImplCycleCollectionUnlink(Maybe<T>& field) {
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // WEBGPU_INSTANCE_PROVIDER_H_
+#endif  // GPU_INSTANCE_PROVIDER_H_
