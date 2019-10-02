@@ -40,12 +40,13 @@ import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.utils.ThreadUtils
+import kotlin.properties.Delegates
 
 @Suppress("TooManyFunctions", "LargeClass")
 open class GleanInternalAPI internal constructor () {
     private val logger = Logger("glean/Glean")
 
-    private var applicationContext: Context? = null
+    private var applicationContext: Context by Delegates.notNull()
 
     // Include our singletons of StorageEngineManager and PingMaker
     private lateinit var storageEngineManager: StorageEngineManager
@@ -231,7 +232,7 @@ open class GleanInternalAPI internal constructor () {
      * will perform the migration one more time.
      */
     private fun resetMigration() {
-        val migrationPrefs = applicationContext?.getSharedPreferences(
+        val migrationPrefs = applicationContext.getSharedPreferences(
             MIGRATION_PREFS_FILE,
             Context.MODE_PRIVATE
         )
@@ -251,7 +252,7 @@ open class GleanInternalAPI internal constructor () {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun onChangeUploadEnabled(enabled: Boolean) {
         if (enabled) {
-            initializeCoreMetrics(applicationContext!!)
+            initializeCoreMetrics(applicationContext)
         } else {
             cancelPingWorkers()
             clearMetrics()
@@ -263,8 +264,8 @@ open class GleanInternalAPI internal constructor () {
      * accidentally upload or collect data after the upload has been disabled.
      */
     private fun cancelPingWorkers() {
-        MetricsPingScheduler.cancel()
-        PingUploadWorker.cancel()
+        MetricsPingScheduler.cancel(applicationContext)
+        PingUploadWorker.cancel(applicationContext)
     }
 
     /**
@@ -539,7 +540,7 @@ open class GleanInternalAPI internal constructor () {
                 // Await the serialization tasks. Once the serialization tasks have all completed,
                 // we can then safely enqueue the PingUploadWorker.
                 pingSerializationTasks.joinAll()
-                PingUploadWorker.enqueueWorker()
+                PingUploadWorker.enqueueWorker(applicationContext)
             }
         }
     }

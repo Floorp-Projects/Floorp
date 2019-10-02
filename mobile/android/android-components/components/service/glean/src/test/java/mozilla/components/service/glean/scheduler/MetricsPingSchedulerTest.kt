@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.scheduler
 
+import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -42,6 +43,10 @@ import java.util.concurrent.TimeUnit as AndroidTimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class MetricsPingSchedulerTest {
+
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     private fun <T> kotlinFriendlyAny(): T {
         // This is required to work around the Kotlin/ArgumentMatchers problem with using
         // `verify` on non-nullable arguments (since `any` may return null). See
@@ -253,7 +258,7 @@ class MetricsPingSchedulerTest {
             Glean.metricsPingScheduler.collectPingAndReschedule(Calendar.getInstance())
 
             // Trigger worker task to upload the pings in the background
-            triggerWorkManager()
+            triggerWorkManager(context)
 
             // Fetch the ping from the server and decode its JSON body.
             val request = server.takeRequest(20L, AndroidTimeUnit.SECONDS)
@@ -429,17 +434,17 @@ class MetricsPingSchedulerTest {
     fun `schedulePingCollection must correctly append a work request to the WorkManager`() {
         // Replacing the singleton's metricsPingScheduler here since doWork() refers to it when
         // the worker runs, otherwise we can get a lateinit property is not initialized error.
-        Glean.metricsPingScheduler = MetricsPingScheduler(ApplicationProvider.getApplicationContext())
+        Glean.metricsPingScheduler = MetricsPingScheduler(context)
         MetricsPingScheduler.isInForeground = true
 
         // No work should be enqueued at the beginning of the test.
-        assertFalse(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
+        assertFalse(getWorkerStatus(context, MetricsPingWorker.TAG).isEnqueued)
 
         // Manually schedule a collection task for today.
         Glean.metricsPingScheduler.schedulePingCollection(Calendar.getInstance(), sendTheNextCalendarDay = false)
 
         // We expect the worker to be scheduled.
-        assertTrue(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
+        assertTrue(getWorkerStatus(context, MetricsPingWorker.TAG).isEnqueued)
 
         resetGlean(clearStores = true)
     }
@@ -450,31 +455,31 @@ class MetricsPingSchedulerTest {
         resetGlean()
 
         // We expect the worker to not be scheduled.
-        assertFalse(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
+        assertFalse(getWorkerStatus(context, MetricsPingWorker.TAG).isEnqueued)
 
         // Simulate returning to the foreground with glean initialized.
         Glean.metricsPingScheduler.onEnterForeground()
 
         // We expect the worker to be scheduled.
-        assertTrue(getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
+        assertTrue(getWorkerStatus(context, MetricsPingWorker.TAG).isEnqueued)
     }
 
     @Test
     fun `cancel() correctly cancels worker`() {
-        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext())
+        val mps = MetricsPingScheduler(context)
 
         mps.schedulePingCollection(Calendar.getInstance(), true)
 
         // Verify that the worker is enqueued
         assertTrue("MetricsPingWorker is enqueued",
-            getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
+            getWorkerStatus(context, MetricsPingWorker.TAG).isEnqueued)
 
         // Cancel the worker
-        MetricsPingScheduler.cancel()
+        MetricsPingScheduler.cancel(context)
 
         // Verify worker has been cancelled
         assertFalse("MetricsPingWorker is not enqueued",
-            getWorkerStatus(MetricsPingWorker.TAG).isEnqueued)
+            getWorkerStatus(context, MetricsPingWorker.TAG).isEnqueued)
     }
 
     // @Test

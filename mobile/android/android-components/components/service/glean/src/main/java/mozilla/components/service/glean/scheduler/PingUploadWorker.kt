@@ -49,8 +49,8 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
         /**
          * Function to aid in properly enqueuing the worker in [WorkManager]
          */
-        internal fun enqueueWorker() {
-            WorkManager.getInstance().enqueueUniqueWork(
+        internal fun enqueueWorker(context: Context) {
+            WorkManager.getInstance(context).enqueueUniqueWork(
                 PING_WORKER_TAG,
                 ExistingWorkPolicy.KEEP,
                 buildWorkRequest())
@@ -70,8 +70,8 @@ class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(cont
         /**
          * Function to cancel any pending ping upload workers
          */
-        internal fun cancel() {
-            WorkManager.getInstance().cancelUniqueWork(PING_WORKER_TAG)
+        internal fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(PING_WORKER_TAG)
         }
     }
 

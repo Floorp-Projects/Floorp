@@ -60,7 +60,7 @@ internal class ExperimentsUpdater(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun scheduleUpdates() {
-        WorkManager.getInstance().enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             TAG,
             // We rely on REPLACE behavior to run immediately and then schedule the next update per
             // the specified interval.  KEEP behavior does not run immediately and it is desired to

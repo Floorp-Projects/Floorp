@@ -48,7 +48,7 @@ object Versions {
         const val palette = "1.0.0"
         const val lifecycle = "2.1.0"
         const val media = "1.1.0"
-        const val work = "2.0.1"
+        const val work = "2.2.0"
         const val arch_core_testing = "2.1.0"
         const val uiautomator = "2.2.0"
         const val localbroadcastmanager = "1.0.0"

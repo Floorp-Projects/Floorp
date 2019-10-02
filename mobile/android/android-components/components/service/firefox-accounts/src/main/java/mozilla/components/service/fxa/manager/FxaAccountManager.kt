@@ -890,7 +890,7 @@ open class FxaAccountManager(
 
     @VisibleForTesting
     open fun createSyncManager(config: SyncConfig): SyncManager {
-        return WorkManagerSyncManager(config)
+        return WorkManagerSyncManager(context, config)
     }
 
     @VisibleForTesting

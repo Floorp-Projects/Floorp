@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.checkPingSchema
@@ -29,8 +30,11 @@ import java.util.concurrent.TimeUnit
 @RunWith(RobolectricTestRunner::class)
 class PingTypeTest {
 
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @get:Rule
-    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
+    val gleanRule = GleanTestRule(context)
 
     @Test
     fun `test sending of custom pings`() {
@@ -59,7 +63,7 @@ class PingTypeTest {
 
         customPing.send()
         // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         val request = server.takeRequest(20L, TimeUnit.SECONDS)
         val docType = request.path.split("/")[3]
@@ -97,7 +101,7 @@ class PingTypeTest {
 
         customPing.send()
         // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         val request = server.takeRequest(20L, TimeUnit.SECONDS)
         val docType = request.path.split("/")[3]
@@ -131,7 +135,7 @@ class PingTypeTest {
         Glean.sendPingsByName(listOf("unknown"))
 
         assertFalse("We shouldn't have any pings scheduled",
-            getWorkerStatus(PingUploadWorker.PING_WORKER_TAG).isEnqueued
+            getWorkerStatus(context, PingUploadWorker.PING_WORKER_TAG).isEnqueued
         )
     }
 

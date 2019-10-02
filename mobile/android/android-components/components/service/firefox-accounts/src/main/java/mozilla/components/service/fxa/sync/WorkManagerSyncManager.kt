@@ -59,11 +59,12 @@ private const val SYNC_WORKER_BACKOFF_DELAY_MINUTES = 3L
  *
  * Must be initialized on the main thread.
  */
-internal class WorkManagerSyncManager(syncConfig: SyncConfig) : SyncManager(syncConfig) {
+internal class WorkManagerSyncManager(syncConfig: SyncConfig,
+                                      private val context: Context) : SyncManager(syncConfig) {
     override val logger = Logger("BgSyncManager")
 
     init {
-        WorkersLiveDataObserver.init()
+        WorkersLiveDataObserver.init(context)
 
         if (syncConfig.syncPeriodInMinutes == null) {
             logger.info("Periodic syncing is disabled.")
@@ -73,7 +74,7 @@ internal class WorkManagerSyncManager(syncConfig: SyncConfig) : SyncManager(sync
     }
 
     override fun createDispatcher(supportedEngines: Set<SyncEngine>): SyncDispatcher {
-        return WorkManagerSyncDispatcher(supportedEngines)
+        return WorkManagerSyncDispatcher(context, supportedEngines)
     }
 
     override fun dispatcherUpdated(dispatcher: SyncDispatcher) {
@@ -88,14 +89,22 @@ internal class WorkManagerSyncManager(syncConfig: SyncConfig) : SyncManager(sync
  * single LiveData instance.
  */
 internal object WorkersLiveDataObserver {
-    private val workersLiveData = WorkManager.getInstance().getWorkInfosByTagLiveData(
-        SyncWorkerTag.Common.name
-    )
+    private lateinit var workManager: WorkManager
+    private val workersLiveData  by lazy {
+        workManager.getWorkInfosByTagLiveData(SyncWorkerTag.Common.name)
+    }
 
     private var dispatcher: SyncDispatcher? = null
 
+    /**
+     * Initializes the Observer.
+     *
+     * @param context the context that will be used to with the [WorkManager] to observe workers.
+     */
     @UiThread
-    fun init() {
+    fun init(context: Context) {
+        workManager = WorkManager.getInstance(context)
+
         // Only set our observer once.
         if (workersLiveData.hasObservers()) return
 
@@ -119,6 +128,7 @@ internal object WorkersLiveDataObserver {
 }
 
 class WorkManagerSyncDispatcher(
+    private val context: Context,
     private val supportedEngines: Set<SyncEngine>
 ) : SyncDispatcher, Observable<SyncStatusObserver> by ObserverRegistry(), Closeable {
     private val logger = Logger("WMSyncDispatcher")
@@ -157,7 +167,7 @@ class WorkManagerSyncDispatcher(
         } else {
             0L
         }
-        WorkManager.getInstance().beginUniqueWork(
+        WorkManager.getInstance(context).beginUniqueWork(
             SyncWorkerName.Immediate.name,
             // Use the 'keep' policy to minimize overhead from multiple "sync now" operations coming in
             // at the same time.
@@ -178,7 +188,7 @@ class WorkManagerSyncDispatcher(
         logger.debug("Starting periodic syncing, period = $period, time unit = $unit")
         // Use the 'replace' policy as a simple way to upgrade periodic worker configurations across
         // application versions. We do this instead of versioning workers.
-        WorkManager.getInstance().enqueueUniquePeriodicWork(
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             SyncWorkerName.Periodic.name,
             ExistingPeriodicWorkPolicy.REPLACE,
             periodicSyncWorkRequest(unit, period)
@@ -191,7 +201,7 @@ class WorkManagerSyncDispatcher(
      */
     override fun stopPeriodicSync() {
         logger.debug("Cancelling periodic syncing")
-        WorkManager.getInstance().cancelUniqueWork(SyncWorkerName.Periodic.name)
+        WorkManager.getInstance(context).cancelUniqueWork(SyncWorkerName.Periodic.name)
     }
 
     private fun periodicSyncWorkRequest(unit: TimeUnit, period: Long): PeriodicWorkRequest {
