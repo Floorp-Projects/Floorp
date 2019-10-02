@@ -14,7 +14,6 @@ import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.feature.app.links.RedirectDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
@@ -28,8 +27,6 @@ import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
  * to search the installed market place.
  *
  * It provides use cases to detect and open links openable in third party non-browser apps.
- *
- * It provides a [RequestInterceptor] to do the detection and asking of consent.
  *
  * It requires: a [Context], and a [FragmentManager].
  *
@@ -54,7 +51,7 @@ class AppLinksFeature(
     private val useCases: AppLinksUseCases = AppLinksUseCases(context)
 ) : LifecycleAwareFeature {
 
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val observer: SelectionAwareSessionObserver = object : SelectionAwareSessionObserver(sessionManager) {
         override fun onLoadRequest(
             session: Session,
@@ -84,7 +81,7 @@ class AppLinksFeature(
         }
     }
 
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleLoadRequest(session: Session, url: String, triggeredByWebContent: Boolean) {
         if (!triggeredByWebContent) {
             return
@@ -104,7 +101,7 @@ class AppLinksFeature(
     }
 
     @SuppressLint("MissingPermission")
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun handleRedirect(redirect: AppLinkRedirect, session: Session) {
         if (!redirect.hasExternalApp()) {
             handleFallback(redirect, session)
@@ -135,9 +132,11 @@ class AppLinksFeature(
         }
     }
 
-    private fun handleFallback(redirect: AppLinkRedirect, session: Session) {
-        redirect.webUrl?.let {
-            sessionManager.getOrCreateEngineSession(session).loadUrl(it)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun handleFallback(redirect: AppLinkRedirect, session: Session) {
+        redirect.fallbackUrl?.let {
+            val c = sessionManager.getOrCreateEngineSession(session)
+            c.loadUrl(it)
         }
     }
 
@@ -145,7 +144,7 @@ class AppLinksFeature(
         return findPreviousDialogFragment() != null
     }
 
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun reAttachOnConfirmRedirectListener(previousDialog: RedirectDialogFragment?) {
         previousDialog?.apply {
             this@AppLinksFeature.dialog = this

@@ -143,7 +143,7 @@ class AppLinksUseCasesTest {
         val redirect = subject.interceptedAppLinkRedirect(uri)
         assertFalse(redirect.hasExternalApp())
         assertFalse(redirect.hasFallback())
-        assertNull(redirect.webUrl)
+        assertNull(redirect.fallbackUrl)
         assertFalse(redirect.isInstallable())
     }
 
@@ -160,14 +160,14 @@ class AppLinksUseCasesTest {
 
         assertNull(redirect.info)
 
-        assertEquals("http://zxing.org", redirect.webUrl)
+        assertEquals("http://zxing.org", redirect.fallbackUrl)
     }
 
     @Test
     fun `An openAppLink use case starts an activity`() {
         val context = createContext()
         val appIntent = Intent()
-        val redirect = AppLinkRedirect(appIntent, appUrl, false)
+        val redirect = AppLinkRedirect(appIntent, appUrl)
         val subject = AppLinksUseCases(context, setOf(browserPackage))
 
         subject.openAppLink(redirect)

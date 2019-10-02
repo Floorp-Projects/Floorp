@@ -76,38 +76,28 @@ class AppLinksUseCases(
         private val includeInstallAppFallback: Boolean = false
     ) {
         operator fun invoke(url: String): AppLinkRedirect {
-            val intents = createBrowsableIntents(url)
-            val (appIntent, resolveInfos) = if (includeHttpAppLinks) {
-                intents.asSequence()
-                    .map { it to getNonBrowserActivities(it) }
-                    .firstOrNull { it.second.isNotEmpty() }
-                    ?.let {
-                        // The user may have decided to keep opening this type of link in this browser.
-                        if (ignoreDefaultBrowser &&
-                            findDefaultActivity(it.first)?.activityInfo?.packageName == context.packageName) {
-                            // in which case, this isn't an app intent anymore.
-                            null
-                        } else {
-                            it
-                        }
-                    }
-            } else {
-                intents.asSequence()
-                    .filter { it.data?.isHttpOrHttps != true }
-                    .map { it to getNonBrowserActivities(it) }
-                    .firstOrNull { it.second.isNotEmpty() }
-            } ?: null to null
+            val redirectData = createBrowsableIntents(url)
+            val isAppIntentHttpOrHttps = redirectData.appIntent?.data?.isHttpOrHttps ?: false
 
-            val webUrls = intents.mapNotNull {
-                if (it.data?.isHttpOrHttps == true) it.dataString else null
+            val appIntent = when {
+                redirectData.resolveInfo == null -> null
+                includeHttpAppLinks && (ignoreDefaultBrowser ||
+                    (redirectData.appIntent != null && isDefaultBrowser(redirectData.appIntent))) -> null
+                !includeHttpAppLinks && isAppIntentHttpOrHttps -> null
+                else -> redirectData.appIntent
             }
 
-            val webUrl = webUrls.firstOrNull { it != url } ?: webUrls.firstOrNull()
+            val fallbackUrl = if (redirectData.fallbackIntent?.data?.isHttpOrHttps == true) {
+                redirectData.fallbackIntent.dataString
+            } else {
+                null
+            }
 
-            val appInfo = resolveInfos?.firstOrNull()
-
-            return AppLinkRedirect(appIntent, webUrl, webUrl != url, appInfo)
+            return AppLinkRedirect(appIntent, fallbackUrl, redirectData.resolveInfo)
         }
+
+        private fun isDefaultBrowser(intent: Intent) =
+            findDefaultActivity(intent)?.activityInfo?.packageName == context.packageName
 
         private fun getNonBrowserActivities(intent: Intent): List<ResolveInfo> {
             return findActivities(intent)
@@ -116,34 +106,37 @@ class AppLinksUseCases(
                 .map { it.second }
         }
 
-        private fun createBrowsableIntents(url: String): List<Intent> {
+        private fun createBrowsableIntents(url: String): RedirectData {
             val intent = Intent.parseUri(url, 0)
 
             if (intent.action == Intent.ACTION_VIEW) {
                 intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                intent.component = null
+                intent.selector = null
             }
 
-            return when (intent.data?.isHttpOrHttps) {
-                null -> emptyList()
-                true -> listOf(intent)
-                false -> {
-                    // Non http[s] schemes:
+            val fallbackIntent = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {
+                Intent.parseUri(it, 0)
+            }
 
-                    val fallback = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL)?.let {
-                        Intent.parseUri(it, 0)
-                    }
-
-                    val marketplaceIntent = intent.`package`?.let {
-                        if (includeInstallAppFallback) {
-                            Intent.parseUri(MARKET_INTENT_URI_PACKAGE_PREFIX + it, 0)
-                        } else {
-                            null
-                        }
-                    }
-
-                    return listOfNotNull(intent, fallback, marketplaceIntent)
+            val marketplaceIntent = intent.`package`?.let {
+                if (includeInstallAppFallback) {
+                    Intent.parseUri(MARKET_INTENT_URI_PACKAGE_PREFIX + it, 0)
+                } else {
+                    null
                 }
             }
+
+            val appIntent = when (intent.data) {
+                null -> null
+                else -> intent
+            }
+
+            val resolveInfo = appIntent?.let {
+                getNonBrowserActivities(it).firstOrNull()
+            }
+
+            return RedirectData(appIntent, fallbackIntent, marketplaceIntent, resolveInfo)
         }
     }
 
@@ -175,4 +168,11 @@ class AppLinksUseCases(
             includeInstallAppFallback = false
         )
     }
+
+    private data class RedirectData(
+        val appIntent: Intent? = null,
+        val fallbackIntent: Intent? = null,
+        val marketplaceIntent: Intent? = null,
+        val resolveInfo: ResolveInfo? = null
+    )
 }
