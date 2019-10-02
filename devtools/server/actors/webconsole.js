@@ -1285,7 +1285,14 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     let resultGrip;
     if (!awaitResult) {
       try {
-        resultGrip = this.createValueGrip(result);
+        const objectActor = this.parentActor.threadActor.getThreadLifetimeObject(
+          result
+        );
+        if (objectActor) {
+          resultGrip = this.parentActor.threadActor.createValueGrip(result);
+        } else {
+          resultGrip = this.createValueGrip(result);
+        }
       } catch (e) {
         errorMessage = e;
       }
