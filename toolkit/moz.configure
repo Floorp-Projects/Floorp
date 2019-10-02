@@ -8,8 +8,6 @@
 # were passed somehow (environment, command line, mozconfig)
 @dependable
 @imports(_from='mozbuild.shellutil', _import='quote')
-@imports(_from='mozbuild.util', _import='ensure_unicode')
-@imports(_from='mozbuild.util', _import='system_encoding')
 @imports('__sandbox__')
 def all_configure_options():
     result = []
@@ -29,15 +27,13 @@ def all_configure_options():
         # defaults.
         if (value is not None and value.origin not in ('default', 'implied') and
                 value != option.default):
-            result.append(ensure_unicode(__sandbox__._raw_options[option],
-                                         system_encoding))
+            result.append(__sandbox__._raw_options[option])
         # We however always include options that are sent to old configure
         # because we don't know their actual defaults. (Keep the conditions
         # separate for ease of understanding and ease of removal)
         elif (option.help == 'Help missing for old configure options' and
                 option in __sandbox__._raw_options):
-            result.append(ensure_unicode(__sandbox__._raw_options[option],
-                                         system_encoding))
+            result.append(__sandbox__._raw_options[option])
 
     return quote(*result)
 
