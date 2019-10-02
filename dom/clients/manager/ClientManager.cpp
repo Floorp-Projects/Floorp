@@ -280,37 +280,6 @@ UniquePtr<ClientSource> ClientManager::CreateSourceFromInfo(
   return mgr->CreateSourceInternal(aClientInfo, aEventTarget);
 }
 
-// static
-nsresult ClientManager::ExpectOrForgetFutureClientSource(
-    bool aExpect, const ClientInfo& aClientInfo) {
-  nsresult rv = NS_OK;
-
-  RefPtr<ClientManager> mgr = GetOrCreateForCurrentThread();
-  mgr->MaybeExecute(
-      [&](ClientManagerChild* aActor) {
-        if (!aActor->SendExpectOrForgetFutureClientSource(
-                aExpect, aClientInfo.ToIPC())) {
-          rv = NS_ERROR_DOM_INVALID_STATE_ERR;
-        }
-      },
-      [&] { rv = NS_ERROR_DOM_INVALID_STATE_ERR; });
-
-  return rv;
-}
-
-// static
-nsresult ClientManager::ExpectFutureClientSource(
-    const ClientInfo& aClientInfo) {
-  return ExpectOrForgetFutureClientSource(true, aClientInfo);
-}
-
-// static
-nsresult ClientManager::ForgetFutureClientSource(
-    const ClientInfo& aClientInfo) {
-  return ExpectOrForgetFutureClientSource(false, aClientInfo);
-}
-
-// static
 Maybe<ClientInfo> ClientManager::CreateInfo(ClientType aType,
                                             nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());

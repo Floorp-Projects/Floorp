@@ -52,9 +52,6 @@ class ClientManagerParent final : public PClientManagerParent {
       PClientSourceParent* aActor,
       const ClientSourceConstructorArgs& aArgs) override;
 
-  mozilla::ipc::IPCResult RecvExpectOrForgetFutureClientSource(
-      const bool& aExpect, const IPCClientInfo& aClientInfo) override;
-
  public:
   ClientManagerParent();
   ~ClientManagerParent();

@@ -29,7 +29,6 @@ class ClientOpConstructorArgs;
 class ClientOpenWindowArgs;
 class ClientSource;
 enum class ClientType : uint8_t;
-class PClientManagerChild;
 class WorkerPrivate;
 
 // The ClientManager provides a per-thread singleton interface workering
@@ -74,9 +73,6 @@ class ClientManager final : public ClientThing<ClientManagerChild> {
   // Private methods called by ClientSource
   mozilla::dom::WorkerPrivate* GetWorkerPrivate() const;
 
-  static nsresult ExpectOrForgetFutureClientSource(
-      bool aExpect, const ClientInfo& aClientInfo);
-
  public:
   // Initialize the ClientManager at process start.  This
   // does book-keeping like creating a TLS identifier, etc.
@@ -96,28 +92,9 @@ class ClientManager final : public ClientThing<ClientManagerChild> {
   static UniquePtr<ClientSource> CreateSourceFromInfo(
       const ClientInfo& aClientInfo, nsISerialEventTarget* aSerialEventTarget);
 
-  // Asynchronously declare that a `ClientSource` will _possibly_ be constructed
-  // from an equivalent `ClientInfo` in the future. This must be called _before_
-  // any `ClientHandle`s are created with the `ClientInfo` to avoid race
-  // conditions when `ClientHandle`s query the `ClientManagerService`.
-  //
-  // This method exists so that the `ClientManagerService` can determine if a
-  // particular `ClientSource` can be expected to exist in the future or has
-  // already existed and been destroyed.
-  //
-  // If it's later known that the expected `ClientSource` will _not_ be
-  // constructed, `ForgetFutureClientSource` _must_ be called.
-  static nsresult ExpectFutureClientSource(const ClientInfo& aClientInfo);
-
-  // Negates a prior call to `ExpectFutureClientSource`.
-  static nsresult ForgetFutureClientSource(const ClientInfo& aClientInfo);
-
   // Allocate a new ClientInfo and id without creating a ClientSource. Used
   // when we have a redirect that isn't exposed to the process that owns
   // the global/ClientSource.
-  //
-  // NOTE: callers should consider whether a call to `ExpectFutureClientSource`
-  // should be made when calling this method.
   static Maybe<ClientInfo> CreateInfo(ClientType aType,
                                       nsIPrincipal* aPrincipal);
 
