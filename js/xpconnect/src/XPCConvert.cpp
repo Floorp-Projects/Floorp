@@ -50,6 +50,9 @@ using namespace JS;
 static JSObject* UnwrapNativeCPOW(nsISupports* wrapper) {
   nsCOMPtr<nsIXPConnectWrappedJS> underware = do_QueryInterface(wrapper);
   if (underware) {
+    // The analysis falsely believes that ~nsCOMPtr can GC because it could
+    // drop the refcount to zero, but that can't happen here.
+    JS::AutoSuppressGCAnalysis nogc;
     JSObject* mainObj = underware->GetJSObject();
     if (mainObj && mozilla::jsipc::IsWrappedCPOW(mainObj)) {
       return mainObj;

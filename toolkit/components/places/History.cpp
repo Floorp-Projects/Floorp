@@ -226,7 +226,8 @@ already_AddRefed<nsIURI> GetJSValueAsURI(JSContext* aCtx,
     nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
 
     nsCOMPtr<nsIXPConnectWrappedNative> wrappedObj;
-    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, aValue.toObjectOrNull(),
+    JS::Rooted<JSObject*> obj(aCtx, aValue.toObjectOrNull());
+    nsresult rv = xpc->GetWrappedNativeOfJSObject(aCtx, obj,
                                                   getter_AddRefs(wrappedObj));
     NS_ENSURE_SUCCESS(rv, nullptr);
     nsCOMPtr<nsIURI> uri = do_QueryInterface(wrappedObj->Native());

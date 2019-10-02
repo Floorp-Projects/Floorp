@@ -47,6 +47,7 @@
 #include "jsapi.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/experimental/SourceHook.h"  // js::{,Set}SourceHook
+#include "js/GCAPI.h"
 #include "js/MemoryFunctions.h"
 #include "js/MemoryMetrics.h"
 #include "js/UbiNode.h"
@@ -3022,6 +3023,8 @@ js::UniquePtr<EdgeRange> ReflectorNode::edges(JSContext* cx,
   // to guard against uninitialized objects.
   nsISupports* supp = UnwrapDOMObjectToISupports(&get());
   if (supp) {
+    JS::AutoSuppressGCAnalysis nogc; // bug 1582326
+
     nsINode* node;
     // UnwrapDOMObjectToISupports can only return non-null if its argument is
     // an actual DOM object, not a cross-compartment wrapper.
@@ -3276,34 +3279,38 @@ JSObject* XPCJSRuntime::GetUAWidgetScope(JSContext* cx,
   MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(principal),
              "Running UA Widget in chrome");
 
-  RefPtr<BasePrincipal> key = BasePrincipal::Cast(principal);
-  if (Principal2JSObjectMap::Ptr p = mUAWidgetScopeMap.lookup(key)) {
-    return p->value();
-  }
+  RootedObject scope(cx);
+  do {
+    RefPtr<BasePrincipal> key = BasePrincipal::Cast(principal);
+    if (Principal2JSObjectMap::Ptr p = mUAWidgetScopeMap.lookup(key)) {
+      scope = p->value();
+      break; // Need ~RefPtr to run, and potentially GC, before returning.
+    }
 
-  SandboxOptions options;
-  options.sandboxName.AssignLiteral("UA Widget Scope");
-  options.wantXrays = false;
-  options.wantComponents = false;
-  options.isUAWidgetScope = true;
+    SandboxOptions options;
+    options.sandboxName.AssignLiteral("UA Widget Scope");
+    options.wantXrays = false;
+    options.wantComponents = false;
+    options.isUAWidgetScope = true;
 
-  // Use an ExpandedPrincipal to create asymmetric security.
-  MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
-  nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray(1);
-  principalAsArray.AppendElement(principal);
-  RefPtr<ExpandedPrincipal> ep = ExpandedPrincipal::Create(
+    // Use an ExpandedPrincipal to create asymmetric security.
+    MOZ_ASSERT(!nsContentUtils::IsExpandedPrincipal(principal));
+    nsTArray<nsCOMPtr<nsIPrincipal>> principalAsArray(1);
+    principalAsArray.AppendElement(principal);
+    RefPtr<ExpandedPrincipal> ep = ExpandedPrincipal::Create(
       principalAsArray, principal->OriginAttributesRef());
 
-  // Create the sandbox.
-  RootedValue v(cx);
-  nsresult rv = CreateSandboxObject(
+    // Create the sandbox.
+    RootedValue v(cx);
+    nsresult rv = CreateSandboxObject(
       cx, &v, static_cast<nsIExpandedPrincipal*>(ep), options);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  JSObject* scope = &v.toObject();
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    scope = &v.toObject();
 
-  MOZ_ASSERT(xpc::IsInUAWidgetScope(js::UncheckedUnwrap(scope)));
+    MOZ_ASSERT(xpc::IsInUAWidgetScope(js::UncheckedUnwrap(scope)));
 
-  MOZ_ALWAYS_TRUE(mUAWidgetScopeMap.putNew(key, scope));
+    MOZ_ALWAYS_TRUE(mUAWidgetScopeMap.putNew(key, scope));
+  } while (false);
 
   return scope;
 }
