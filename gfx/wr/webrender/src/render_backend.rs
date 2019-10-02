@@ -1692,9 +1692,6 @@ fn get_blob_image_updates(updates: &[ResourceUpdate]) -> Vec<BlobImageKey> {
             ResourceUpdate::UpdateBlobImage(ref img) => {
                 requests.push(img.key);
             }
-            ResourceUpdate::SetBlobImageVisibleArea(key, ..) => {
-                requests.push(key);
-            }
             _ => {}
         }
     }
