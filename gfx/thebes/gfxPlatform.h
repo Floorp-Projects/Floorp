@@ -926,6 +926,9 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   int32_t mScreenDepth;
   mozilla::gfx::IntSize mScreenSize;
 
+  // Total number of screen pixels across all monitors.
+  int64_t mScreenPixels;
+
   // An instance of gfxSkipChars which is empty. It is used as the
   // basis for error-case iterators.
   const gfxSkipChars kEmptySkipChars;
