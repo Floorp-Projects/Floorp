@@ -46,3 +46,35 @@ fun <T, R> Flow<T>.ifChanged(transform: (T) -> R): Flow<T> {
         }
     }
 }
+
+/**
+ * Returns a [Flow] containing only values of the original [Flow] where the result array
+ * of calling [transform] contains at least one different value.
+ *
+ * Example:
+ * ```
+ * Block: x -> x[0]  // Map to first character of input
+ * Original Flow: "banana", "bandanna", "bus", "apple", "big", "coconut", "circle", "home"
+ * Mapped: [b, a], [b, a], [b, u], [a, p], [b, i], [c, o], [c, i], [h, o]
+ * Returned Flow: "banana", "bus, "apple", "big", "coconut", "circle", "home"
+ * ``
+ */
+fun <T, R> Flow<T>.ifAnyChanged(transform: (T) -> Array<R>): Flow<T> {
+    var observedValueOnce = false
+    var lastMappedValues: Array<R>? = null
+
+    return filter { value ->
+        val mapped = transform(value)
+        val hasChanged = lastMappedValues
+            ?.mapIndexed { i, r -> mapped[i] === r }
+            ?.reduce { a, b -> a && b } == false
+
+        if (!observedValueOnce || hasChanged) {
+            lastMappedValues = mapped
+            observedValueOnce = true
+            true
+        } else {
+            false
+        }
+    }
+}
