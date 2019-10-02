@@ -84,7 +84,7 @@ function connectToContentProcess(connection, mm, onDestroy) {
 
         // ... and notify the child process to clean the target-scoped actors.
         try {
-          mm.sendAsyncMessage("debug:content-process-destroy");
+          mm.sendAsyncMessage("debug:content-process-disconnect", { prefix });
         } catch (e) {
           // Nothing to do
         }
