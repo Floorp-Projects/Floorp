@@ -18,16 +18,9 @@ class GradlewBuild(object):
 
     def test(self, identifier):
         self.adbrun.launch()
-        #self.xcrun.launch()
         # Change path accordingly to go to root folder to run gradlew
         os.chdir('../../../../../../../..')
         args = './gradlew ' + 'app:connectedGeckoNightlyDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.syncintegration.SyncIntegrationTest#{}'.format(identifier)
-        # os.system(args)
-        # Whit this the logs are shown when there is a failure
-        # they are saved in ~/fenix/app/build/reports/androidTests/connected/flavors/X86/index.html
-        # output = subprocess.check_output(args, shell=True)
-
-        # This part below does not work yet...
 
         self.logger.info('Running: {}'.format(' '.join(args)))
         try:

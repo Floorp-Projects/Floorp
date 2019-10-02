@@ -5,8 +5,8 @@
 package org.mozilla.fenix.syncintegration
 
 import android.os.SystemClock.sleep
-import android.widget.Button
 import android.widget.EditText
+
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
@@ -26,6 +26,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class SyncIntegrationTest {
@@ -40,9 +41,9 @@ class SyncIntegrationTest {
         signInFxSync()
         tapReturnToPreviousApp()
         homeScreen {
-        }.openThreeDotMenu {}
-        libraryButton()
-        historyButton()
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openHistory { }
         historyAfterSyncIsShown()
     }
     /* These tests will be running in the future
@@ -54,11 +55,10 @@ class SyncIntegrationTest {
     fun checkBookmarkFromDesktopTest() {
         signInFxSync()
         tapReturnToPreviousApp()
-        sleep(5000)
         homeScreen {
-        }.openThreeDotMenu {}
-        libraryButton()
-        bookmarkButton()
+        }.openThreeDotMenu {
+        }.openLibrary {
+        }.openBookmarks { }
         bookmarkAfterSyncIsShown()
     }
 
@@ -77,7 +77,7 @@ class SyncIntegrationTest {
     fun checkHistoryFromDeviceTest() {
         tapInToolBar()
         typeInToolBar()
-        sleep(3000)
+        sleep(TestAssetHelper.waitingTime)
         mDevice.pressBack()
         signInFxSync()
     }
@@ -88,7 +88,7 @@ class SyncIntegrationTest {
         val emailInput = mDevice.findObject(UiSelector()
                 .instance(0)
                 .className(EditText::class.java))
-        emailInput.waitForExists(1000)
+        emailInput.waitForExists(TestAssetHelper.waitingTime)
 
         val emailAddress = javaClass.classLoader.getResource("email.txt").readText()
         emailInput.setText(emailAddress)
@@ -96,7 +96,7 @@ class SyncIntegrationTest {
 
     fun tapOnContinueButton() {
         val continueButton = mDevice.findObject(By.res("submit-btn"))
-        continueButton.clickAndWait(Until.newWindow(), 50000)
+        continueButton.clickAndWait(Until.newWindow(), TestAssetHelper.waitingTime)
     }
 
     fun typePassowrd() {
@@ -109,13 +109,10 @@ class SyncIntegrationTest {
     }
 
     fun tapOnSygIn() {
+        mDevice.wait(Until.findObjects(By.text("Sign in")), TestAssetHelper.waitingTime)
+        // Let's tap on enter, sometimes depending on the device the sign in button is
+        // hidden by the keyboard
         mDevice.pressEnter()
-        mDevice.wait(Until.findObjects(By.text("Sign in")), 3000)
-        val signInButton = mDevice.findObject(UiSelector()
-                .instance(0)
-                .className(Button::class.java))
-        signInButton.waitForExists(10000)
-        signInButton.click()
     }
 
     fun typeInToolBar() {
@@ -134,18 +131,20 @@ class SyncIntegrationTest {
     }
 
     fun seeBookmark() {
-        mDevice.wait(Until.findObjects(By.text("Bookmark")), 3000)
+        mDevice.wait(Until.findObjects(By.text("Bookmark")), TestAssetHelper.waitingTime)
         val bookmarkButton = mDevice.findObject(By.text("Bookmark"))
         bookmarkButton.click()
     }
 
     fun tapReturnToPreviousApp() {
-        mDevice.wait(Until.findObjects(By.text("Connected")), 2000)
+        mDevice.wait(Until.findObjects(By.text("Connected")), TestAssetHelper.waitingTime)
 
-        val settingsLabel = mDevice.wait(Until.findObject(By.text("Settings")), 20000)
+        val settingsLabel = mDevice.wait(Until.findObject(By.text("Settings")), TestAssetHelper.waitingTime)
         settingsLabel.isClickable()
 
-        mDevice.pressBack()
+        mDevice.wait(Until.findObjects(By.desc("Navigate up")), TestAssetHelper.waitingTime)
+        val backButton = mDevice.findObject(By.desc("Navigate up"))
+        backButton.click()
     }
 
     fun signInFxSync() {
@@ -159,7 +158,7 @@ class SyncIntegrationTest {
         typeEmail()
         tapOnContinueButton()
         typePassowrd()
-        sleep(3000)
+        sleep(TestAssetHelper.waitingTime)
         tapOnSygIn()
     }
 }
@@ -167,7 +166,4 @@ class SyncIntegrationTest {
 fun settingsAccount() = onView(allOf(withText("Turn on Sync"))).perform(click())
 fun tapInToolBar() = onView(withId(org.mozilla.fenix.R.id.toolbar_wrapper))
 fun awesomeBar() = onView(withId(org.mozilla.fenix.R.id.mozac_browser_toolbar_edit_url_view))
-fun libraryButton() = onView(allOf(withText(R.string.browser_menu_your_library))).perform(click())
-fun historyButton() = onView(allOf(withText("History"))).perform(click())
-fun bookmarkButton() = onView(allOf(withText("Bookmarks"))).perform(click())
 fun useEmailInsteadButton() = onView(withId(R.id.signInEmailButton)).perform(click())

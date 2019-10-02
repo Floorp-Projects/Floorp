@@ -2,7 +2,7 @@
 set -e
 
 echo "Waiting emulator is ready..."
-~/Library/Android/sdk/emulator/emulator -avd Pixel_API_28 -wipe-data -no-boot-anim -screen no-touch &
+~/Library/Android/sdk/emulator/emulator -avd Pixel_3_API_28 -wipe-data -no-boot-anim -screen no-touch &
 
 bootanim=""
 failcounter=0
