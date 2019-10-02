@@ -285,16 +285,21 @@ void QuotaRequestChild::HandleResponse(const nsTArray<nsCString>& aResponse) {
   if (aResponse.IsEmpty()) {
     variant->SetAsEmptyArray();
   } else {
-    nsTArray<RefPtr<OriginsResult>> originsResults(aResponse.Length());
+    nsTArray<RefPtr<InitializedOriginsResult>> initializedOriginsResults(
+        aResponse.Length());
     for (auto& origin : aResponse) {
-      RefPtr<OriginsResult> originsResult = new OriginsResult(origin);
+      RefPtr<InitializedOriginsResult> initializedOriginsResult =
+          new InitializedOriginsResult(origin);
 
-      originsResults.AppendElement(originsResult.forget());
+      initializedOriginsResults.AppendElement(
+          initializedOriginsResult.forget());
     }
 
     variant->SetAsArray(
-        nsIDataType::VTYPE_INTERFACE_IS, &NS_GET_IID(nsIQuotaOriginsResult),
-        originsResults.Length(), static_cast<void*>(originsResults.Elements()));
+        nsIDataType::VTYPE_INTERFACE_IS,
+        &NS_GET_IID(nsIQuotaInitializedOriginsResult),
+        initializedOriginsResults.Length(),
+        static_cast<void*>(initializedOriginsResults.Elements()));
   }
 
   mRequest->SetResult(variant);
@@ -337,8 +342,8 @@ mozilla::ipc::IPCResult QuotaRequestChild::Recv__delete__(
       HandleResponse(aResponse.get_EstimateResponse());
       break;
 
-    case RequestResponse::TListOriginsResponse:
-      HandleResponse(aResponse.get_ListOriginsResponse().origins());
+    case RequestResponse::TListInitializedOriginsResponse:
+      HandleResponse(aResponse.get_ListInitializedOriginsResponse().origins());
       break;
 
     default:

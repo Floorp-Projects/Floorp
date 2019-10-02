@@ -58,17 +58,17 @@ class EstimateResult : public nsIQuotaEstimateResult {
   NS_DECL_NSIQUOTAESTIMATERESULT
 };
 
-class OriginsResult : public nsIQuotaOriginsResult {
+class InitializedOriginsResult : public nsIQuotaInitializedOriginsResult {
   nsCString mOrigin;
 
  public:
-  explicit OriginsResult(const nsACString& aOrigin);
+  explicit InitializedOriginsResult(const nsACString& aOrigin);
 
  private:
-  virtual ~OriginsResult() = default;
+  virtual ~InitializedOriginsResult() = default;
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIQUOTAORIGINSRESULT
+  NS_DECL_NSIQUOTAINITIALIZEDORIGINSRESULT
 };
 
 }  // namespace quota

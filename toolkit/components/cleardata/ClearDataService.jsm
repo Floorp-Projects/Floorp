@@ -514,7 +514,7 @@ const QuotaCleaner = {
           // wiped if we are provided an aHost of "example.com".
           promises.push(
             new Promise((aResolve, aReject) => {
-              Services.qms.listOrigins(aRequest => {
+              Services.qms.listInitializedOrigins(aRequest => {
                 if (aRequest.resultCode != Cr.NS_OK) {
                   aReject({ message: "Delete by host failed" });
                   return;
