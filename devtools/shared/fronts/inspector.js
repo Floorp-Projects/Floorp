@@ -453,10 +453,9 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     if (!node.remoteFrame) {
       return super.children(node, options);
     }
-    // First get the target actor form of this remote frame element
-    const target = await node.connectToRemoteFrame();
-    // Then get an inspector front, and grab its walker front
-    const walker = (await target.getFront("inspector")).walker;
+    const remoteTarget = await node.connectToRemoteFrame();
+    const walker = (await remoteTarget.getFront("inspector")).walker;
+
     // Finally retrieve the NodeFront of the remote frame's document
     const documentNode = await walker.getRootNode();
 
@@ -469,6 +468,24 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       hasFirst: true,
       hasLast: true,
     };
+  }
+
+  async reparentRemoteFrame() {
+    // Get the parent target, which most likely runs in another process
+    const descriptorFront = this.targetFront.descriptorFront;
+    const parentTarget = await descriptorFront.getParentTarget();
+    // Get the NodeFront for the embedder element
+    // i.e. the <iframe> element which is hosting the document that
+    const parentWalker = (await parentTarget.getFront("inspector")).walker;
+    // As this <iframe> most likely runs in another process, we have to get it through the parent
+    // target's WalkerFront.
+    const parentNode = (await parentWalker.getEmbedderElement(
+      descriptorFront.id
+    )).node;
+
+    // Finally, set this embedder element's node front as the
+    const documentNode = await this.getRootNode();
+    documentNode.reparent(parentNode);
   }
 }
 
@@ -597,7 +614,9 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       for (const descriptor of frames) {
         const remoteTarget = await descriptor.getTarget();
         if (remoteTarget) {
+          // get inspector
           const remoteInspectorFront = await remoteTarget.getFront("inspector");
+          await remoteInspectorFront.walker.reparentRemoteFrame();
           childInspectors.push(remoteInspectorFront);
         }
       }
