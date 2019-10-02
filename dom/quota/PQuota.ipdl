@@ -105,7 +105,7 @@ struct EstimateParams
   PrincipalInfo principalInfo;
 };
 
-struct ListInitializedOriginsParams
+struct ListOriginsParams
 {
 };
 
@@ -122,7 +122,7 @@ union RequestParams
   PersistedParams;
   PersistParams;
   EstimateParams;
-  ListInitializedOriginsParams;
+  ListOriginsParams;
 };
 
 protocol PQuota

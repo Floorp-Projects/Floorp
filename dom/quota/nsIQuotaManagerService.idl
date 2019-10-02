@@ -90,13 +90,13 @@ interface nsIQuotaManagerService : nsISupports
 
   /**
    * Schedules an asynchronous callback that will inspect all origins and
-   * just returns the origin strings of initialized origins.
+   * just returns the origin strings of origins.
    *
    * @param aCallback
    *        The callback that will be called when the origin is collected.
    */
   [must_use] nsIQuotaRequest
-  listInitializedOrigins(in nsIQuotaCallback aCallback);
+  listOrigins(in nsIQuotaCallback aCallback);
 
   /**
    * Removes all storages. The files may not be deleted immediately depending
