@@ -56,14 +56,14 @@ fuzzy-if(webrender&&winWidget,132-138,183-206) == simple-rtl.svg simple-rtl-ref.
 == multiple-x-dx-bidi.svg multiple-x-dx-bidi-ref.svg
 == multiple-x-dx-rtl.svg multiple-x-dx-rtl-ref.svg
 == multiple-x-dx.svg multiple-x-dx-ref.svg
-== multiple-x-holes-bidi.svg multiple-x-holes-bidi-ref.svg
+fuzzy-if(Android,0-65,0-55) == multiple-x-holes-bidi.svg multiple-x-holes-bidi-ref.svg
 == multiple-x-holes-dx-bidi.svg multiple-x-holes-dx-bidi-ref.svg
 == multiple-x-holes.svg multiple-x-holes-ref.svg
 == multiple-x-holes-dx.svg multiple-x-holes-dx-ref.svg
 == multiple-x-holes-multiple-dx-bidi.svg multiple-x-holes-multiple-dx-bidi-ref.svg
 == multiple-x-holes-multiple-dx-rtl.svg multiple-x-holes-multiple-dx-rtl-ref.svg
 == multiple-x-holes-multiple-dx.svg multiple-x-holes-multiple-dx-ref.svg
-== multiple-x-holes-rtl.svg multiple-x-holes-rtl-ref.svg
+fuzzy-if(Android,0-192,0-82) == multiple-x-holes-rtl.svg multiple-x-holes-rtl-ref.svg
 == multiple-x-multiple-dx-bidi.svg multiple-x-multiple-dx-bidi-ref.svg
 == multiple-x-multiple-dx-rtl.svg multiple-x-multiple-dx-rtl-ref.svg
 == multiple-x-multiple-dx.svg multiple-x-multiple-dx-ref.svg

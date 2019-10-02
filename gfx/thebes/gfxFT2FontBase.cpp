@@ -471,6 +471,15 @@ uint32_t gfxFT2FontBase::GetGlyph(uint32_t unicode,
   return GetGlyph(unicode);
 }
 
+bool gfxFT2FontBase::ShouldRoundXOffset(cairo_t* aCairo) const {
+  // Force rounding if outputting to a Cairo context. Otherwise, allow subpixel
+  // positioning (no rounding) if rendering a scalable outline font with
+  // anti-aliasing. Monochrome rendering or some bitmap fonts can become too
+  // distorted with subpixel positioning, so force rounding in those cases.
+  return aCairo != nullptr || !mFTFace || !FT_IS_SCALABLE(mFTFace->GetFace()) ||
+         (mFTLoadFlags & FT_LOAD_MONOCHROME);
+}
+
 FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) {
   FT_Vector strength = {0, 0};
   if (!mEmbolden) {
@@ -524,8 +533,7 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
   // applying hinting. Otherwise, prefer hinted width from glyph->advance.x.
   if (aAdvance) {
     FT_Fixed advance;
-    if (face.get()->glyph->format == FT_GLYPH_FORMAT_OUTLINE &&
-        (!hintMetrics || FT_HAS_MULTIPLE_MASTERS(face.get()))) {
+    if (!ShouldRoundXOffset(nullptr) || FT_HAS_MULTIPLE_MASTERS(face.get())) {
       advance = face.get()->glyph->linearHoriAdvance;
     } else {
       advance = face.get()->glyph->advance.x << 10;  // convert 26.6 to 16.16

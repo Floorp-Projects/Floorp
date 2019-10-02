@@ -510,6 +510,14 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
 
         FT_BBox bbox;
         FT_Outline_Get_CBox(&fFTFace->glyph->outline, &bbox);
+        if (this->isSubpixel()) {
+          int dx = SkFixedToFDot6(glyph->getSubXFixed());
+          int dy = SkFixedToFDot6(glyph->getSubYFixed());
+          bbox.xMin += dx;
+          bbox.yMin -= dy;
+          bbox.xMax += dx;
+          bbox.yMax -= dy;
+        }
         bbox.xMin &= ~63;
         bbox.yMin &= ~63;
         bbox.xMax = (bbox.xMax + 63) & ~63;

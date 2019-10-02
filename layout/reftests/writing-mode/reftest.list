@@ -31,7 +31,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1b.html 1102175-
 == 1105268-2-min-max-dimensions.html 1105268-2-min-max-dimensions-ref.html
 == 1106669-1-intrinsic-for-container.html 1106669-1-intrinsic-for-container-ref.html
 == 1108923-1-percentage-margins.html 1108923-1-percentage-margins-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html # Bug 1392106
+fuzzy-if(Android,0-128,0-78) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1111944-1-list-marker.html 1111944-1-list-marker-ref.html # Bug 1392106
 fuzzy(0-116,0-94) fuzzy-if(winWidget,0-135,0-124) == 1115916-1-vertical-metrics.html 1115916-1-vertical-metrics-ref.html
 == 1117210-1-vertical-baseline-snap.html 1117210-1-vertical-baseline-snap-ref.html
 == 1117227-1-text-overflow.html 1117227-1-text-overflow-ref.html
@@ -150,7 +150,7 @@ random-if(gtkWidget) == 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.htm
 random-if(gtkWidget) == 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
 fuzzy-if(winWidget,0-3,0-84) fails-if(webrender&&winWidget) == 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
 fuzzy-if(winWidget,0-3,0-112) fails-if(webrender&&!cocoaWidget) fails-if(Android) random-if(gtkWidget) == 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html # see bug 1366692. Rounding error with WR enabled, and on Android.
-fuzzy-if(gtkWidget,0-255,0-12) fuzzy-if(cocoaWidget,0-65,0-69) fuzzy-if(geckoview&&webrender,0-255,0-7) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
+fuzzy-if(gtkWidget,0-255,0-12) fuzzy-if(cocoaWidget,0-65,0-69) fuzzy-if(geckoview&&webrender,0-255,0-13) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
 
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
 == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
