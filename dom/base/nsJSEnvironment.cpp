@@ -206,6 +206,12 @@ struct CycleCollectorStats {
                                   uint32_t aRemovedPurples);
   void UpdateAfterCycleCollection();
 
+  void SendTelemetry(TimeDuration aCCNowDuration) const;
+  void MaybeLogStats(const CycleCollectorResults& aResults,
+                     uint32_t aCleanups) const;
+  void MaybeNotifyStats(const CycleCollectorResults& aResults,
+                        TimeDuration aCCNowDuration, uint32_t aCleanups) const;
+
   // Time the current slice began, including any GC finishing.
   TimeStamp mBeginSliceTime;
 
@@ -1399,6 +1405,130 @@ void CycleCollectorStats::UpdateAfterForgetSkippable(TimeDuration duration,
   mRemovedPurples += aRemovedPurples;
 }
 
+void CycleCollectorStats::SendTelemetry(TimeDuration aCCNowDuration) const {
+  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FINISH_IGC, mAnyLockedOut);
+  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SYNC_SKIPPABLE,
+                        mRanSyncForgetSkippable);
+  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FULL,
+                        aCCNowDuration.ToMilliseconds());
+  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_MAX_PAUSE,
+                        mMaxSliceTime.ToMilliseconds());
+
+  if (!sLastCCEndTime.IsNull()) {
+    TimeDuration timeBetween = TimeBetween(sLastCCEndTime, mBeginTime);
+    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_TIME_BETWEEN,
+                          timeBetween.ToSeconds());
+  }
+
+  Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
+                        mMaxForgetSkippableTime.ToMilliseconds());
+}
+
+void CycleCollectorStats::MaybeLogStats(const CycleCollectorResults& aResults,
+                                        uint32_t aCleanups) const {
+  if (!StaticPrefs::javascript_options_mem_log() && !sCCStats.mFile) {
+    return;
+  }
+
+  TimeDuration delta = GetCollectionTimeDelta();
+
+  nsCString mergeMsg;
+  if (aResults.mMergedZones) {
+    mergeMsg.AssignLiteral(" merged");
+  }
+
+  nsCString gcMsg;
+  if (aResults.mForcedGC) {
+    gcMsg.AssignLiteral(", forced a GC");
+  }
+
+  const char16_t* kFmt =
+      u"CC(T+%.1f)[%s-%i] max pause: %.fms, total time: %.fms, slices: %lu, "
+      u"suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu "
+      u"RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
+      u"ForgetSkippable %lu times before CC, min: %.f ms, max: %.f ms, avg: "
+      u"%.f ms, total: %.f ms, max sync: %.f ms, removed: %lu";
+  nsString msg;
+  nsTextFormatter::ssprintf(
+      msg, kFmt, delta.ToMicroseconds() / PR_USEC_PER_SEC,
+      ProcessNameForCollectorLog(), getpid(), mMaxSliceTime.ToMilliseconds(),
+      mTotalSliceTime.ToMilliseconds(), aResults.mNumSlices, mSuspected,
+      aResults.mVisitedRefCounted, aResults.mVisitedGCed, mergeMsg.get(),
+      aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
+      sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
+      gcMsg.get(), mForgetSkippableBeforeCC,
+      mMinForgetSkippableTime.ToMilliseconds(),
+      mMaxForgetSkippableTime.ToMilliseconds(),
+      mTotalForgetSkippableTime.ToMilliseconds() / aCleanups,
+      mTotalForgetSkippableTime.ToMilliseconds(),
+      mMaxSkippableDuration.ToMilliseconds(), mRemovedPurples);
+  if (StaticPrefs::javascript_options_mem_log()) {
+    nsCOMPtr<nsIConsoleService> cs =
+        do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+    if (cs) {
+      cs->LogStringMessage(msg.get());
+    }
+  }
+  if (mFile) {
+    fprintf(mFile, "%s\n", NS_ConvertUTF16toUTF8(msg).get());
+  }
+}
+
+void CycleCollectorStats::MaybeNotifyStats(
+    const CycleCollectorResults& aResults, TimeDuration aCCNowDuration,
+    uint32_t aCleanups) const {
+  if (!StaticPrefs::javascript_options_mem_notify()) {
+    return;
+  }
+
+  const char16_t* kJSONFmt =
+      u"{ \"timestamp\": %llu, "
+      u"\"duration\": %.f, "
+      u"\"max_slice_pause\": %.f, "
+      u"\"total_slice_pause\": %.f, "
+      u"\"max_finish_gc_duration\": %.f, "
+      u"\"max_sync_skippable_duration\": %.f, "
+      u"\"suspected\": %lu, "
+      u"\"visited\": { "
+      u"\"RCed\": %lu, "
+      u"\"GCed\": %lu }, "
+      u"\"collected\": { "
+      u"\"RCed\": %lu, "
+      u"\"GCed\": %lu }, "
+      u"\"waiting_for_gc\": %lu, "
+      u"\"zones_waiting_for_gc\": %lu, "
+      u"\"short_living_objects_waiting_for_gc\": %lu, "
+      u"\"forced_gc\": %d, "
+      u"\"forget_skippable\": { "
+      u"\"times_before_cc\": %lu, "
+      u"\"min\": %.f, "
+      u"\"max\": %.f, "
+      u"\"avg\": %.f, "
+      u"\"total\": %.f, "
+      u"\"removed\": %lu } "
+      u"}";
+
+  nsString json;
+  nsTextFormatter::ssprintf(
+      json, kJSONFmt, PR_Now(), aCCNowDuration.ToMilliseconds(),
+      mMaxSliceTime.ToMilliseconds(), mTotalSliceTime.ToMilliseconds(),
+      mMaxGCDuration.ToMilliseconds(), mMaxSkippableDuration.ToMilliseconds(),
+      mSuspected, aResults.mVisitedRefCounted, aResults.mVisitedGCed,
+      aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
+      sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
+      aResults.mForcedGC, mForgetSkippableBeforeCC,
+      mMinForgetSkippableTime.ToMilliseconds(),
+      mMaxForgetSkippableTime.ToMilliseconds(),
+      mTotalForgetSkippableTime.ToMilliseconds() / aCleanups,
+      mTotalForgetSkippableTime.ToMilliseconds(), mRemovedPurples);
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->NotifyObservers(nullptr, "cycle-collection-statistics",
+                                     json.get());
+  }
+}
+
 // static
 void nsJSContext::CycleCollectNow(nsICycleCollectorListener* aListener) {
   if (!NS_IsMainThread()) {
@@ -1577,128 +1707,17 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
   }
 
   // Log information about the CC via telemetry, JSON and the console.
-  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FINISH_IGC,
-                        sCCStats.mAnyLockedOut);
-  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SYNC_SKIPPABLE,
-                        sCCStats.mRanSyncForgetSkippable);
-  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FULL,
-                        ccNowDuration.ToMilliseconds());
-  Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_MAX_PAUSE,
-                        sCCStats.mMaxSliceTime.ToMilliseconds());
 
-  if (!sLastCCEndTime.IsNull()) {
-    TimeDuration timeBetween = TimeBetween(sLastCCEndTime, sCCStats.mBeginTime);
-    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_TIME_BETWEEN,
-                          timeBetween.ToSeconds());
-  }
-  sLastCCEndTime = endCCTimeStamp;
-
-  Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
-                        sCCStats.mMaxForgetSkippableTime.ToMilliseconds());
-
-  TimeDuration delta = GetCollectionTimeDelta();
+  sCCStats.SendTelemetry(ccNowDuration);
 
   uint32_t cleanups = std::max(sCCStats.mForgetSkippableBeforeCC, 1u);
 
-  if (StaticPrefs::javascript_options_mem_log() || sCCStats.mFile) {
-    nsCString mergeMsg;
-    if (aResults.mMergedZones) {
-      mergeMsg.AssignLiteral(" merged");
-    }
+  sCCStats.MaybeLogStats(aResults, cleanups);
 
-    nsCString gcMsg;
-    if (aResults.mForcedGC) {
-      gcMsg.AssignLiteral(", forced a GC");
-    }
-
-    const char16_t* kFmt =
-        u"CC(T+%.1f)[%s-%i] max pause: %.fms, total time: %.fms, slices: %lu, "
-        u"suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu "
-        u"RCed and %lu GCed (%lu|%lu|%lu waiting for GC)%s\n"
-        u"ForgetSkippable %lu times before CC, min: %.f ms, max: %.f ms, avg: "
-        u"%.f ms, total: %.f ms, max sync: %.f ms, removed: %lu";
-    nsString msg;
-    nsTextFormatter::ssprintf(
-        msg, kFmt, delta.ToMicroseconds() / PR_USEC_PER_SEC,
-        ProcessNameForCollectorLog(), getpid(),
-        sCCStats.mMaxSliceTime.ToMilliseconds(),
-        sCCStats.mTotalSliceTime.ToMilliseconds(), aResults.mNumSlices,
-        sCCStats.mSuspected, aResults.mVisitedRefCounted, aResults.mVisitedGCed,
-        mergeMsg.get(), aResults.mFreedRefCounted, aResults.mFreedGCed,
-        sCCollectedWaitingForGC, sCCollectedZonesWaitingForGC,
-        sLikelyShortLivingObjectsNeedingGC, gcMsg.get(),
-        sCCStats.mForgetSkippableBeforeCC,
-        sCCStats.mMinForgetSkippableTime.ToMilliseconds(),
-        sCCStats.mMaxForgetSkippableTime.ToMilliseconds(),
-        sCCStats.mTotalForgetSkippableTime.ToMilliseconds() / cleanups,
-        sCCStats.mTotalForgetSkippableTime.ToMilliseconds(),
-        sCCStats.mMaxSkippableDuration.ToMilliseconds(),
-        sCCStats.mRemovedPurples);
-    if (StaticPrefs::javascript_options_mem_log()) {
-      nsCOMPtr<nsIConsoleService> cs =
-          do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-      if (cs) {
-        cs->LogStringMessage(msg.get());
-      }
-    }
-    if (sCCStats.mFile) {
-      fprintf(sCCStats.mFile, "%s\n", NS_ConvertUTF16toUTF8(msg).get());
-    }
-  }
-
-  if (StaticPrefs::javascript_options_mem_notify()) {
-    const char16_t* kJSONFmt =
-        u"{ \"timestamp\": %llu, "
-        u"\"duration\": %.f, "
-        u"\"max_slice_pause\": %.f, "
-        u"\"total_slice_pause\": %.f, "
-        u"\"max_finish_gc_duration\": %.f, "
-        u"\"max_sync_skippable_duration\": %.f, "
-        u"\"suspected\": %lu, "
-        u"\"visited\": { "
-        u"\"RCed\": %lu, "
-        u"\"GCed\": %lu }, "
-        u"\"collected\": { "
-        u"\"RCed\": %lu, "
-        u"\"GCed\": %lu }, "
-        u"\"waiting_for_gc\": %lu, "
-        u"\"zones_waiting_for_gc\": %lu, "
-        u"\"short_living_objects_waiting_for_gc\": %lu, "
-        u"\"forced_gc\": %d, "
-        u"\"forget_skippable\": { "
-        u"\"times_before_cc\": %lu, "
-        u"\"min\": %.f, "
-        u"\"max\": %.f, "
-        u"\"avg\": %.f, "
-        u"\"total\": %.f, "
-        u"\"removed\": %lu } "
-        u"}";
-
-    nsString json;
-    nsTextFormatter::ssprintf(
-        json, kJSONFmt, PR_Now(), ccNowDuration.ToMilliseconds(),
-        sCCStats.mMaxSliceTime.ToMilliseconds(),
-        sCCStats.mTotalSliceTime.ToMilliseconds(),
-        sCCStats.mMaxGCDuration.ToMilliseconds(),
-        sCCStats.mMaxSkippableDuration.ToMilliseconds(), sCCStats.mSuspected,
-        aResults.mVisitedRefCounted, aResults.mVisitedGCed,
-        aResults.mFreedRefCounted, aResults.mFreedGCed, sCCollectedWaitingForGC,
-        sCCollectedZonesWaitingForGC, sLikelyShortLivingObjectsNeedingGC,
-        aResults.mForcedGC, sCCStats.mForgetSkippableBeforeCC,
-        sCCStats.mMinForgetSkippableTime.ToMilliseconds(),
-        sCCStats.mMaxForgetSkippableTime.ToMilliseconds(),
-        sCCStats.mTotalForgetSkippableTime.ToMilliseconds() / cleanups,
-        sCCStats.mTotalForgetSkippableTime.ToMilliseconds(),
-        sCCStats.mRemovedPurples);
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->NotifyObservers(nullptr, "cycle-collection-statistics",
-                                       json.get());
-    }
-  }
+  sCCStats.MaybeNotifyStats(aResults, ccNowDuration, cleanups);
 
   // Update global state to indicate we have just run a cycle collection.
+  sLastCCEndTime = endCCTimeStamp;
   sNeedsFullCC = false;
   sNeedsGCAfterCC = false;
   sCCStats.Clear();
