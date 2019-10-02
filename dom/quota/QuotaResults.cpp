@@ -91,13 +91,12 @@ EstimateResult::GetLimit(uint64_t* aLimit) {
   return NS_OK;
 }
 
-InitializedOriginsResult::InitializedOriginsResult(const nsACString& aOrigin)
-    : mOrigin(aOrigin) {}
+OriginsResult::OriginsResult(const nsACString& aOrigin) : mOrigin(aOrigin) {}
 
-NS_IMPL_ISUPPORTS(InitializedOriginsResult, nsIQuotaInitializedOriginsResult)
+NS_IMPL_ISUPPORTS(OriginsResult, nsIQuotaOriginsResult)
 
 NS_IMETHODIMP
-InitializedOriginsResult::GetOrigin(nsACString& aOrigin) {
+OriginsResult::GetOrigin(nsACString& aOrigin) {
   aOrigin = mOrigin;
   return NS_OK;
 }
