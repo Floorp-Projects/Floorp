@@ -3,15 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GPU_Texture_H_
-#define GPU_Texture_H_
+#ifndef WEBGPU_Texture_H_
+#define WEBGPU_Texture_H_
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
 namespace mozilla {
 namespace dom {
-struct GPUTextureViewDescriptor;
+struct WebGPUTextureViewDescriptor;
 }  // namespace dom
 
 namespace webgpu {
@@ -19,19 +19,20 @@ namespace webgpu {
 class Device;
 class TextureView;
 
-class Texture final : public ObjectBase, public ChildOf<Device> {
+class Texture final : public ChildOf<Device> {
  public:
-  GPU_DECL_CYCLE_COLLECTION(Texture)
-  GPU_DECL_JS_WRAP(Texture)
+  WEBGPU_DECL_GOOP(Texture)
 
  private:
   Texture() = delete;
   virtual ~Texture();
 
  public:
+  already_AddRefed<TextureView> CreateTextureView(
+      const dom::WebGPUTextureViewDescriptor&) const;
 };
 
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // GPU_Texture_H_
+#endif  // WEBGPU_Texture_H_

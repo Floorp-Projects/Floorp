@@ -49,11 +49,6 @@ worker.onmessage = function(event) {
     return;
   }
 
-  if (args.name === "gpu") {
-    is(typeof navigator.gpu, typeof args.value, "gpu type matches");
-    return;
-  }
-
   is(
     navigator[args.name],
     args.value,

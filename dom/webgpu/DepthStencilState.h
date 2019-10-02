@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GPU_RenderBundle_H_
-#define GPU_RenderBundle_H_
+#ifndef WEBGPU_DepthStencilState_H_
+#define WEBGPU_DepthStencilState_H_
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
@@ -14,17 +14,16 @@ namespace webgpu {
 
 class Device;
 
-class RenderBundle final : public ObjectBase, public ChildOf<Device> {
+class DepthStencilState final : public ChildOf<Device> {
  public:
-  GPU_DECL_CYCLE_COLLECTION(RenderBundle)
-  GPU_DECL_JS_WRAP(RenderBundle)
+  WEBGPU_DECL_GOOP(DepthStencilState)
 
  private:
-  RenderBundle() = delete;
-  virtual ~RenderBundle();
+  DepthStencilState() = delete;
+  virtual ~DepthStencilState();
 };
 
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // GPU_RenderBundle_H_
+#endif  // WEBGPU_DepthStencilState_H_

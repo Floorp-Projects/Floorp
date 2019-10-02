@@ -3,16 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/WebGPUBinding.h"
 #include "Queue.h"
+
+#include "Device.h"
+#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
 Queue::~Queue() = default;
 
-GPU_IMPL_CYCLE_COLLECTION(Queue, mParent)
-GPU_IMPL_JS_WRAP(Queue)
+void Queue::Submit(
+    const dom::Sequence<OwningNonNull<CommandBuffer>>& buffers) const {
+  MOZ_CRASH("todo");
+}
+
+already_AddRefed<Fence> Queue::InsertFence() const { MOZ_CRASH("todo"); }
+
+WEBGPU_IMPL_GOOP_0(Queue)
 
 }  // namespace webgpu
 }  // namespace mozilla
