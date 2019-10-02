@@ -51,6 +51,10 @@ class BodyStreamHolder : public nsISupports {
   // Raw pointer because BodyStream keeps BodyStreamHolder alive and it
   // nullifies this stream before being released.
   BodyStream* mBodyStream;
+
+#ifdef DEBUG
+  bool mStreamCreated = false;
+#endif
 };
 
 class BodyStream final : public nsIInputStreamCallback,
