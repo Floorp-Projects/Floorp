@@ -26,7 +26,7 @@ struct AudioTimelineEvent;
 
 class AbstractThread;
 class AudioBlock;
-class AudioNodeStream;
+class AudioNodeTrack;
 
 /**
  * This class holds onto a set of immutable channel buffers. The storage
@@ -246,11 +246,11 @@ float AudioBufferSumOfSquares(const float* aInput, uint32_t aLength);
 
 /**
  * All methods of this class and its subclasses are called on the
- * MediaStreamGraph thread.
+ * MediaTrackGraph thread.
  */
 class AudioNodeEngine {
  public:
-  // This should be compatible with AudioNodeStream::OutputChunks.
+  // This should be compatible with AudioNodeTrack::OutputChunks.
   typedef AutoTArray<AudioBlock, 1> OutputChunks;
 
   explicit AudioNodeEngine(dom::AudioNode* aNode);
@@ -262,8 +262,8 @@ class AudioNodeEngine {
 
   virtual dom::DelayNodeEngine* AsDelayNodeEngine() { return nullptr; }
 
-  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) {
-    NS_ERROR("Invalid SetStreamTimeParameter index");
+  virtual void SetTrackTimeParameter(uint32_t aIndex, TrackTime aParam) {
+    NS_ERROR("Invalid SetTrackTimeParameter index");
   }
   virtual void SetDoubleParameter(uint32_t aIndex, double aParam) {
     NS_ERROR("Invalid SetDoubleParameter index");
@@ -284,7 +284,8 @@ class AudioNodeEngine {
     NS_ERROR("SetRawArrayData called on an engine that doesn't support it");
   }
 
-  virtual void SetReverb(WebCore::Reverb* aBuffer, uint32_t aImpulseChannelCount) {
+  virtual void SetReverb(WebCore::Reverb* aBuffer,
+                         uint32_t aImpulseChannelCount) {
     NS_ERROR("SetReverb called on engine that doesn't support it");
   }
 
@@ -292,14 +293,14 @@ class AudioNodeEngine {
    * Produce the next block of audio samples, given input samples aInput
    * (the mixed data for input 0).
    * aInput is guaranteed to have float sample format (if it has samples at all)
-   * and to have been resampled to the sampling rate for the stream, and to have
+   * and to have been resampled to the sampling rate for the track, and to have
    * exactly WEBAUDIO_BLOCK_SIZE samples.
    * *aFinished is set to false by the caller. The callee must not set this to
    * true unless silent output is produced. If set to true, we'll finish the
-   * stream, consider this input inactive on any downstream nodes, and not
+   * track, consider this input inactive on any downstream nodes, and not
    * call this again.
    */
-  virtual void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  virtual void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                             const AudioBlock& aInput, AudioBlock* aOutput,
                             bool* aFinished);
   /**
@@ -307,8 +308,8 @@ class AudioNodeEngine {
    * ProcessBlock() will be called later, and it then should not change
    * aOutput.  This is used only for DelayNodeEngine in a feedback loop.
    */
-  virtual void ProduceBlockBeforeInput(AudioNodeStream* aStream,
-                                       GraphTime aFrom, AudioBlock* aOutput) {
+  virtual void ProduceBlockBeforeInput(AudioNodeTrack* aTrack, GraphTime aFrom,
+                                       AudioBlock* aOutput) {
     MOZ_ASSERT_UNREACHABLE("ProduceBlockBeforeInput called on wrong engine");
   }
 
@@ -327,17 +328,17 @@ class AudioNodeEngine {
    * corresponding AudioNode, in which case it will be interpreted as a channel
    * of silence.
    */
-  virtual void ProcessBlocksOnPorts(AudioNodeStream* aStream,
+  virtual void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                     Span<const AudioBlock> aInput,
                                     Span<AudioBlock> aOutput, bool* aFinished);
 
   // IsActive() returns true if the engine needs to continue processing an
-  // unfinished stream even when it has silent or no input connections.  This
+  // unfinished track even when it has silent or no input connections.  This
   // includes tail-times and when sources have been scheduled to start.  If
-  // returning false, then the stream can be suspended.
+  // returning false, then the track can be suspended.
   virtual bool IsActive() const { return false; }
 
-  // Called on forced shutdown of the MediaStreamGraph before handing ownership
+  // Called on forced shutdown of the MediaTrackGraph before handing ownership
   // from graph thread to main thread.
   virtual void NotifyForcedShutdown() {}
 
@@ -376,7 +377,7 @@ class AudioNodeEngine {
   }
 
  private:
-  // This is cleared from AudioNode::DestroyMediaStream()
+  // This is cleared from AudioNode::DestroyMediaTrack()
   dom::AudioNode* MOZ_NON_OWNING_REF mNode;  // main thread only
   const char* const mNodeType;
   const uint16_t mInputCount;

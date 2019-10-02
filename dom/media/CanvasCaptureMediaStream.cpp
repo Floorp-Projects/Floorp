@@ -7,7 +7,7 @@
 
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
-#include "MediaStreamGraph.h"
+#include "MediaTrackGraph.h"
 #include "Tracing.h"
 #include "VideoSegment.h"
 #include "gfxPlatform.h"
@@ -22,7 +22,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-OutputStreamDriver::OutputStreamDriver(SourceMediaStream* aSourceStream,
+OutputStreamDriver::OutputStreamDriver(SourceMediaTrack* aSourceStream,
                                        const PrincipalHandle& aPrincipalHandle)
     : FrameCaptureListener(),
       mSourceStream(aSourceStream),
@@ -50,7 +50,7 @@ void OutputStreamDriver::SetImage(const RefPtr<layers::Image>& aImage,
                                   const TimeStamp& aTime) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  TRACE_COMMENT("SourceMediaStream %p", mSourceStream.get());
+  TRACE_COMMENT("SourceMediaTrack %p", mSourceStream.get());
 
   VideoSegment segment;
   segment.AppendFrame(do_AddRef(aImage), aImage->GetSize(), mPrincipalHandle,
@@ -62,7 +62,7 @@ void OutputStreamDriver::SetImage(const RefPtr<layers::Image>& aImage,
 
 class TimerDriver : public OutputStreamDriver {
  public:
-  explicit TimerDriver(SourceMediaStream* aSourceStream, const double& aFPS,
+  explicit TimerDriver(SourceMediaTrack* aSourceStream, const double& aFPS,
                        const PrincipalHandle& aPrincipalHandle)
       : OutputStreamDriver(aSourceStream, aPrincipalHandle),
         mFPS(aFPS),
@@ -114,7 +114,7 @@ class TimerDriver : public OutputStreamDriver {
 
 class AutoDriver : public OutputStreamDriver {
  public:
-  explicit AutoDriver(SourceMediaStream* aSourceStream,
+  explicit AutoDriver(SourceMediaTrack* aSourceStream,
                       const PrincipalHandle& aPrincipalHandle)
       : OutputStreamDriver(aSourceStream, aPrincipalHandle) {}
 
@@ -167,10 +167,10 @@ void CanvasCaptureMediaStream::RequestFrame() {
 
 nsresult CanvasCaptureMediaStream::Init(const dom::Optional<double>& aFPS,
                                         nsIPrincipal* aPrincipal) {
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
-      MediaStreamGraph::SYSTEM_THREAD_DRIVER, mWindow,
-      MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
-  SourceMediaStream* source = graph->CreateSourceStream(MediaSegment::VIDEO);
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, mWindow,
+      MediaTrackGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+  SourceMediaTrack* source = graph->CreateSourceTrack(MediaSegment::VIDEO);
   PrincipalHandle principalHandle = MakePrincipalHandle(aPrincipal);
   if (!aFPS.WasPassed()) {
     mOutputStreamDriver = new AutoDriver(source, principalHandle);
@@ -198,7 +198,7 @@ void CanvasCaptureMediaStream::StopCapture() {
   mOutputStreamDriver = nullptr;
 }
 
-SourceMediaStream* CanvasCaptureMediaStream::GetSourceStream() const {
+SourceMediaTrack* CanvasCaptureMediaStream::GetSourceStream() const {
   if (!mOutputStreamDriver) {
     return nullptr;
   }

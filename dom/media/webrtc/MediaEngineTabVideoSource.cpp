@@ -37,7 +37,7 @@ MediaEngineTabVideoSource::MediaEngineTabVideoSource()
 
 nsresult MediaEngineTabVideoSource::StartRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
-  mVideoSource->mStreamMain = mStream;
+  mVideoSource->mTrackMain = mTrack;
   mVideoSource->mPrincipalHandleMain = mPrincipal;
   mVideoSource->Draw();
   mVideoSource->mTimer->InitWithNamedFuncCallback(
@@ -63,7 +63,7 @@ nsresult MediaEngineTabVideoSource::StopRunnable::Run() {
     mVideoSource->mTabSource->NotifyStreamStop(mVideoSource->mWindow);
   }
   mVideoSource->mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-  mVideoSource->mStream = nullptr;
+  mVideoSource->mTrack = nullptr;
   return NS_OK;
 }
 
@@ -99,7 +99,7 @@ nsresult MediaEngineTabVideoSource::InitRunnable::Run() {
   }
   mVideoSource->mTimer = NS_NewTimer();
   nsCOMPtr<nsIRunnable> start(
-      new StartRunnable(mVideoSource, mStream, mPrincipal));
+      new StartRunnable(mVideoSource, mTrack, mPrincipal));
   start->Run();
   return NS_OK;
 }
@@ -220,8 +220,8 @@ nsresult MediaEngineTabVideoSource::Deallocate() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
 
-  if (mStream) {
-    mStream->End();
+  if (mTrack) {
+    mTrack->End();
   }
 
   NS_DispatchToMainThread(do_AddRef(new DestroyRunnable(this)));
@@ -231,14 +231,14 @@ nsresult MediaEngineTabVideoSource::Deallocate() {
 }
 
 void MediaEngineTabVideoSource::SetTrack(
-    const RefPtr<SourceMediaStream>& aStream,
+    const RefPtr<SourceMediaTrack>& aTrack,
     const mozilla::PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated);
 
-  MOZ_ASSERT(!mStream);
-  MOZ_ASSERT(aStream);
-  mStream = aStream;
+  MOZ_ASSERT(!mTrack);
+  MOZ_ASSERT(aTrack);
+  mTrack = aTrack;
   mPrincipalHandle = aPrincipal;
 }
 
@@ -248,9 +248,9 @@ nsresult MediaEngineTabVideoSource::Start() {
 
   nsCOMPtr<nsIRunnable> runnable;
   if (!mWindow) {
-    runnable = new InitRunnable(this, mStream, mPrincipalHandle);
+    runnable = new InitRunnable(this, mTrack, mPrincipalHandle);
   } else {
-    runnable = new StartRunnable(this, mStream, mPrincipalHandle);
+    runnable = new StartRunnable(this, mTrack, mPrincipalHandle);
   }
   NS_DispatchToMainThread(runnable);
   mState = kStarted;
@@ -375,7 +375,7 @@ void MediaEngineTabVideoSource::Draw() {
 
   VideoSegment segment;
   segment.AppendFrame(do_AddRef(rgbImage), size, mPrincipalHandle);
-  mStreamMain->AppendData(&segment);
+  mTrackMain->AppendData(&segment);
 }
 
 nsresult MediaEngineTabVideoSource::FocusOnSelectedSource() {

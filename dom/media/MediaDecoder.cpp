@@ -232,7 +232,7 @@ RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSink) {
 }
 
 void MediaDecoder::AddOutputStream(DOMMediaStream* aStream,
-                                   SharedDummyStream* aDummyStream) {
+                                   SharedDummyTrack* aDummyStream) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());

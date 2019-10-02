@@ -16,13 +16,13 @@
 
 namespace mozilla {
 
-class CaptureTask::MediaStreamEventListener : public MediaStreamTrackListener {
+class CaptureTask::MediaTrackEventListener : public MediaTrackListener {
  public:
-  explicit MediaStreamEventListener(CaptureTask* aCaptureTask)
+  explicit MediaTrackEventListener(CaptureTask* aCaptureTask)
       : mCaptureTask(aCaptureTask){};
 
-  // MediaStreamTrackListener methods.
-  void NotifyEnded(MediaStreamGraph* aGraph) override {
+  // MediaTrackListener methods.
+  void NotifyEnded(MediaTrackGraph* aGraph) override {
     mCaptureTask->PostTrackEndEvent();
   }
 
@@ -32,7 +32,7 @@ class CaptureTask::MediaStreamEventListener : public MediaStreamTrackListener {
 
 CaptureTask::CaptureTask(dom::ImageCapture* aImageCapture)
     : mImageCapture(aImageCapture),
-      mEventListener(new MediaStreamEventListener(this)),
+      mEventListener(new MediaTrackEventListener(this)),
       mImageGrabbedOrTrackEnd(false),
       mPrincipalChanged(false) {}
 
@@ -93,8 +93,8 @@ void CaptureTask::PrincipalChanged(dom::MediaStreamTrack* aMediaStreamTrack) {
   mPrincipalChanged = true;
 }
 
-void CaptureTask::NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
-                                          StreamTime aTrackOffset,
+void CaptureTask::NotifyRealtimeTrackData(MediaTrackGraph* aGraph,
+                                          TrackTime aTrackOffset,
                                           const MediaSegment& aMedia) {
   MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
   const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
@@ -176,7 +176,7 @@ void CaptureTask::PostTrackEndEvent() {
     RefPtr<CaptureTask> mTask;
   };
 
-  IC_LOG("Got MediaStream track removed or finished event.");
+  IC_LOG("Got MediaTrack track removed or finished event.");
   nsCOMPtr<nsIRunnable> event = new TrackEndRunnable(this);
   SystemGroup::Dispatch(TaskCategory::Other, event.forget());
 }

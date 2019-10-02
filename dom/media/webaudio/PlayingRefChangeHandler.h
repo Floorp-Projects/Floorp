@@ -8,7 +8,7 @@
 #define PlayingRefChangeHandler_h__
 
 #include "nsThreadUtils.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,13 +16,13 @@ namespace dom {
 class PlayingRefChangeHandler final : public Runnable {
  public:
   enum ChangeType { ADDREF, RELEASE };
-  PlayingRefChangeHandler(AudioNodeStream* aStream, ChangeType aChange)
+  PlayingRefChangeHandler(AudioNodeTrack* aTrack, ChangeType aChange)
       : Runnable("dom::PlayingRefChangeHandler"),
-        mStream(aStream),
+        mTrack(aTrack),
         mChange(aChange) {}
 
   NS_IMETHOD Run() override {
-    RefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
+    RefPtr<AudioNode> node = mTrack->Engine()->NodeMainThread();
     if (node) {
       if (mChange == ADDREF) {
         node->MarkActive();
@@ -34,7 +34,7 @@ class PlayingRefChangeHandler final : public Runnable {
   }
 
  private:
-  RefPtr<AudioNodeStream> mStream;
+  RefPtr<AudioNodeTrack> mTrack;
   ChangeType mChange;
 };
 

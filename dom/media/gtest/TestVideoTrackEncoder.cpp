@@ -5,8 +5,8 @@
 #include <algorithm>
 
 #include "DriftCompensation.h"
-#include "MediaStreamGraph.h"
-#include "MediaStreamListener.h"
+#include "MediaTrackGraph.h"
+#include "MediaTrackListener.h"
 #include "VP8TrackEncoder.h"
 #include "WebMWriter.h"  // TODO: it's weird to include muxer header to get the class definition of VP8 METADATA
 #include "gmock/gmock.h"
