@@ -9,7 +9,7 @@
 #include "AudioBuffer.h"
 #include "AudioDestinationNode.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "AudioProcessingEvent.h"
 #include "WebAudioUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -26,7 +26,7 @@ namespace dom {
 static const float MAX_LATENCY_S = 0.5;
 
 // This class manages a queue of output buffers shared between
-// the main thread and the Media Stream Graph thread.
+// the main thread and the Media Track Graph thread.
 class SharedBuffers final {
  private:
   class OutputQueue final {
@@ -90,7 +90,7 @@ class SharedBuffers final {
  public:
   explicit SharedBuffers(float aSampleRate)
       : mOutputQueue("SharedBuffers::outputQueue"),
-        mDelaySoFar(STREAM_TIME_MAX),
+        mDelaySoFar(TRACK_TIME_MAX),
         mSampleRate(aSampleRate),
         mLatency(0.0),
         mDroppingBuffers(false) {}
@@ -183,14 +183,14 @@ class SharedBuffers final {
     {
       MutexAutoLock lock(mOutputQueue.Lock());
       if (mOutputQueue.ReadyToConsume() > 0) {
-        if (mDelaySoFar == STREAM_TIME_MAX) {
+        if (mDelaySoFar == TRACK_TIME_MAX) {
           mDelaySoFar = 0;
         }
         buffer = mOutputQueue.Consume();
       } else {
         // If we're out of buffers to consume, just output silence
         buffer.SetNull(WEBAUDIO_BLOCK_SIZE);
-        if (mDelaySoFar != STREAM_TIME_MAX) {
+        if (mDelaySoFar != TRACK_TIME_MAX) {
           // Remember the delay that we just hit
           mDelaySoFar += WEBAUDIO_BLOCK_SIZE;
         }
@@ -200,14 +200,14 @@ class SharedBuffers final {
     return buffer;
   }
 
-  StreamTime DelaySoFar() const {
+  TrackTime DelaySoFar() const {
     MOZ_ASSERT(!NS_IsMainThread());
-    return mDelaySoFar == STREAM_TIME_MAX ? 0 : mDelaySoFar;
+    return mDelaySoFar == TRACK_TIME_MAX ? 0 : mDelaySoFar;
   }
 
   void Flush() {
     MOZ_ASSERT(!NS_IsMainThread());
-    mDelaySoFar = STREAM_TIME_MAX;
+    mDelaySoFar = TRACK_TIME_MAX;
     {
       MutexAutoLock lock(mOutputQueue.Lock());
       mOutputQueue.Clear();
@@ -218,9 +218,9 @@ class SharedBuffers final {
   OutputQueue mOutputQueue;
   // How much delay we've seen so far.  This measures the amount of delay
   // caused by the main thread lagging behind in producing output buffers.
-  // STREAM_TIME_MAX means that we have not received our first buffer yet.
+  // TRACK_TIME_MAX means that we have not received our first buffer yet.
   // Graph thread only.
-  StreamTime mDelaySoFar;
+  TrackTime mDelaySoFar;
   // The samplerate of the context.
   const float mSampleRate;
   // The remaining members are main thread only.
@@ -243,7 +243,7 @@ class ScriptProcessorNodeEngine final : public AudioNodeEngine {
                             uint32_t aBufferSize,
                             uint32_t aNumberOfInputChannels)
       : AudioNodeEngine(aNode),
-        mDestination(aDestination->Stream()),
+        mDestination(aDestination->Track()),
         mSharedBuffers(new SharedBuffers(mDestination->mSampleRate)),
         mBufferSize(aBufferSize),
         mInputChannelCount(aNumberOfInputChannels),
@@ -265,7 +265,7 @@ class ScriptProcessorNodeEngine final : public AudioNodeEngine {
     }  // End index switch.
   }
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     // This node is not connected to anything. Per spec, we don't fire the
@@ -313,7 +313,7 @@ class ScriptProcessorNodeEngine final : public AudioNodeEngine {
     *aOutput = mSharedBuffers->GetOutputBuffer();
 
     if (mInputWriteIndex >= mBufferSize) {
-      SendBuffersToMainThread(aStream, aFrom);
+      SendBuffersToMainThread(aTrack, aFrom);
       mInputWriteIndex -= mBufferSize;
     }
   }
@@ -342,31 +342,30 @@ class ScriptProcessorNodeEngine final : public AudioNodeEngine {
   }
 
  private:
-  void SendBuffersToMainThread(AudioNodeStream* aStream, GraphTime aFrom) {
+  void SendBuffersToMainThread(AudioNodeTrack* aTrack, GraphTime aFrom) {
     MOZ_ASSERT(!NS_IsMainThread());
 
     // we now have a full input buffer ready to be sent to the main thread.
-    StreamTime playbackTick = mDestination->GraphTimeToStreamTime(aFrom);
+    TrackTime playbackTick = mDestination->GraphTimeToTrackTime(aFrom);
     // Add the duration of the current sample
     playbackTick += WEBAUDIO_BLOCK_SIZE;
     // Add the delay caused by the main thread
     playbackTick += mSharedBuffers->DelaySoFar();
     // Compute the playback time in the coordinate system of the destination
-    double playbackTime = mDestination->StreamTimeToSeconds(playbackTick);
+    double playbackTime = mDestination->TrackTimeToSeconds(playbackTick);
 
     class Command final : public Runnable {
      public:
-      Command(AudioNodeStream* aStream,
+      Command(AudioNodeTrack* aTrack,
               already_AddRefed<ThreadSharedFloatArrayBufferList> aInputBuffer,
               double aPlaybackTime)
           : mozilla::Runnable("Command"),
-            mStream(aStream),
+            mTrack(aTrack),
             mInputBuffer(aInputBuffer),
             mPlaybackTime(aPlaybackTime) {}
 
       NS_IMETHOD Run() override {
-        auto engine =
-            static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
+        auto engine = static_cast<ScriptProcessorNodeEngine*>(mTrack->Engine());
         AudioChunk output;
         output.SetNull(engine->mBufferSize);
         {
@@ -445,19 +444,19 @@ class ScriptProcessorNodeEngine final : public AudioNodeEngine {
       }
 
      private:
-      RefPtr<AudioNodeStream> mStream;
+      RefPtr<AudioNodeTrack> mTrack;
       RefPtr<ThreadSharedFloatArrayBufferList> mInputBuffer;
       double mPlaybackTime;
     };
 
     RefPtr<Command> command =
-        new Command(aStream, mInputBuffer.forget(), playbackTime);
+        new Command(aTrack, mInputBuffer.forget(), playbackTime);
     mAbstractMainThread->Dispatch(command.forget());
   }
 
   friend class ScriptProcessorNode;
 
-  RefPtr<AudioNodeStream> mDestination;
+  RefPtr<AudioNodeTrack> mDestination;
   nsAutoPtr<SharedBuffers> mSharedBuffers;
   RefPtr<ThreadSharedFloatArrayBufferList> mInputBuffer;
   const uint32_t mBufferSize;
@@ -482,8 +481,8 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
   MOZ_ASSERT(BufferSize() % WEBAUDIO_BLOCK_SIZE == 0, "Invalid buffer size");
   ScriptProcessorNodeEngine* engine = new ScriptProcessorNodeEngine(
       this, aContext->Destination(), BufferSize(), aNumberOfInputChannels);
-  mStream = AudioNodeStream::Create(
-      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
+  mTrack = AudioNodeTrack::Create(
+      aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
 ScriptProcessorNode::~ScriptProcessorNode() {}
@@ -525,8 +524,8 @@ void ScriptProcessorNode::UpdateConnectedStatus() {
 
   // Events are queued even when there is no listener because a listener
   // may be added while events are in the queue.
-  SendInt32ParameterToStream(ScriptProcessorNodeEngine::IS_CONNECTED,
-                             isConnected);
+  SendInt32ParameterToTrack(ScriptProcessorNodeEngine::IS_CONNECTED,
+                            isConnected);
 
   if (isConnected && HasListenersFor(nsGkAtoms::onaudioprocess)) {
     MarkActive();
@@ -534,7 +533,7 @@ void ScriptProcessorNode::UpdateConnectedStatus() {
     MarkInactive();
   }
 
-  auto engine = static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
+  auto engine = static_cast<ScriptProcessorNodeEngine*>(mTrack->Engine());
   engine->GetSharedBuffers()->NotifyNodeIsConnected(isConnected);
 }
 

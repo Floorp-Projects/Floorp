@@ -7,7 +7,7 @@
 #include "AudioParam.h"
 #include "mozilla/dom/AudioParamBinding.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "AudioContext.h"
 
 namespace mozilla {
@@ -16,7 +16,7 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(AudioParam)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioParam)
-  tmp->DisconnectFromGraphAndDestroyStream();
+  tmp->DisconnectFromGraphAndDestroyTrack();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -42,14 +42,14 @@ AudioParam::AudioParam(AudioNode* aNode, uint32_t aIndex, const char* aName,
       mMinValue(aMinValue),
       mMaxValue(aMaxValue) {}
 
-AudioParam::~AudioParam() { DisconnectFromGraphAndDestroyStream(); }
+AudioParam::~AudioParam() { DisconnectFromGraphAndDestroyTrack(); }
 
 JSObject* AudioParam::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {
   return AudioParam_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void AudioParam::DisconnectFromGraphAndDestroyStream() {
+void AudioParam::DisconnectFromGraphAndDestroyTrack() {
   MOZ_ASSERT(mRefCnt.get() > mInputNodes.Length(),
              "Caller should be holding a reference or have called "
              "mRefCnt.stabilizeForDeletion()");
@@ -61,47 +61,47 @@ void AudioParam::DisconnectFromGraphAndDestroyStream() {
     input->RemoveOutputParam(this);
   }
 
-  if (mNodeStreamPort) {
-    mNodeStreamPort->Destroy();
-    mNodeStreamPort = nullptr;
+  if (mNodeTrackPort) {
+    mNodeTrackPort->Destroy();
+    mNodeTrackPort = nullptr;
   }
 
-  if (mStream) {
-    mStream->Destroy();
-    mStream = nullptr;
+  if (mTrack) {
+    mTrack->Destroy();
+    mTrack = nullptr;
   }
 }
 
-MediaStream* AudioParam::GetStream() const { return mStream; }
+mozilla::MediaTrack* AudioParam::GetTrack() const { return mTrack; }
 
-MediaStream* AudioParam::Stream() {
-  if (mStream) {
-    return mStream;
+mozilla::MediaTrack* AudioParam::Track() {
+  if (mTrack) {
+    return mTrack;
   }
 
   AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
-  mStream = AudioNodeStream::Create(mNode->Context(), engine,
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    mNode->Context()->Graph());
+  mTrack = AudioNodeTrack::Create(mNode->Context(), engine,
+                                  AudioNodeTrack::NO_TRACK_FLAGS,
+                                  mNode->Context()->Graph());
 
   // Force the input to have only one channel, and make it down-mix using
   // the speaker rules if needed.
-  mStream->SetChannelMixingParametersImpl(1, ChannelCountMode::Explicit,
-                                          ChannelInterpretation::Speakers);
-  // Mark as an AudioParam helper stream
-  mStream->SetAudioParamHelperStream();
+  mTrack->SetChannelMixingParametersImpl(1, ChannelCountMode::Explicit,
+                                         ChannelInterpretation::Speakers);
+  // Mark as an AudioParam helper track
+  mTrack->SetAudioParamHelperTrack();
 
-  // Setup the AudioParam's stream as an input to the owner AudioNode's stream
-  AudioNodeStream* nodeStream = mNode->GetStream();
-  if (nodeStream) {
-    mNodeStreamPort = nodeStream->AllocateInputPort(mStream);
+  // Setup the AudioParam's track as an input to the owner AudioNode's track
+  AudioNodeTrack* nodeTrack = mNode->GetTrack();
+  if (nodeTrack) {
+    mNodeTrackPort = nodeTrack->AllocateInputPort(mTrack);
   }
 
-  // Send the stream to the timeline on the MSG side.
-  AudioTimelineEvent event(mStream);
+  // Send the track to the timeline on the MTG side.
+  AudioTimelineEvent event(mTrack);
   SendEventToEngine(event);
 
-  return mStream;
+  return mTrack;
 }
 
 static const char* ToString(AudioTimelineEvent::Type aType) {
@@ -118,8 +118,8 @@ static const char* ToString(AudioTimelineEvent::Type aType) {
       return "SetTarget";
     case AudioTimelineEvent::SetValueCurve:
       return "SetValueCurve";
-    case AudioTimelineEvent::Stream:
-      return "Stream";
+    case AudioTimelineEvent::Track:
+      return "Track";
     case AudioTimelineEvent::Cancel:
       return "Cancel";
     default:
@@ -141,9 +141,9 @@ void AudioParam::SendEventToEngine(const AudioTimelineEvent& aEvent) {
       aEvent.mType == AudioTimelineEvent::SetValueCurve ? aEvent.mDuration
                                                         : aEvent.mTimeConstant);
 
-  AudioNodeStream* stream = mNode->GetStream();
-  if (stream) {
-    stream->SendTimelineEvent(mIndex, aEvent);
+  AudioNodeTrack* track = mNode->GetTrack();
+  if (track) {
+    track->SendTimelineEvent(mIndex, aEvent);
   }
 }
 
@@ -155,13 +155,13 @@ void AudioParam::CleanupOldEvents() {
 }
 
 float AudioParamTimeline::AudioNodeInputValue(size_t aCounter) const {
-  MOZ_ASSERT(mStream);
+  MOZ_ASSERT(mTrack);
 
   // If we have a chunk produced by the AudioNode inputs to the AudioParam,
   // get its value now.  We use aCounter to tell us which frame of the last
   // AudioChunk to look at.
   float audioNodeInputValue = 0.0f;
-  const AudioBlock& lastAudioNodeChunk = mStream->LastChunks()[0];
+  const AudioBlock& lastAudioNodeChunk = mTrack->LastChunks()[0];
   if (!lastAudioNodeChunk.IsNull()) {
     MOZ_ASSERT(lastAudioNodeChunk.GetDuration() == WEBAUDIO_BLOCK_SIZE);
     audioNodeInputValue =

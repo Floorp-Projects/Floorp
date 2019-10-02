@@ -8,11 +8,11 @@
 #include <vector>
 #include "AudioConduit.h"
 #include "VideoConduit.h"
-#include "MediaStreamGraph.h"
+#include "MediaTrackGraph.h"
 #include "MediaPipeline.h"
 #include "MediaPipelineFilter.h"
 #include "signaling/src/jsep/JsepTrack.h"
-#include "MediaStreamGraphImpl.h"
+#include "MediaTrackGraphImpl.h"
 #include "logging.h"
 #include "MediaEngine.h"
 #include "nsIPrincipal.h"

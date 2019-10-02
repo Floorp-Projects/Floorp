@@ -61,7 +61,7 @@ class WaveShaperNode final : public AudioNode {
   void SetCurveInternal(const nsTArray<float>& aCurve, ErrorResult& aRv);
   void CleanCurveInternal();
 
-  void SendCurveToStream();
+  void SendCurveToTrack();
 
   nsTArray<float> mCurve;
   OverSampleType mType;

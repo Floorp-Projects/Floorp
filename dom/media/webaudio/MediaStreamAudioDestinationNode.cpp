@@ -8,10 +8,10 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaStreamAudioDestinationNodeBinding.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "AudioStreamTrack.h"
 #include "DOMMediaStream.h"
-#include "TrackUnionStream.h"
+#include "ForwardedInputTrack.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,21 +23,21 @@ class AudioDestinationTrackSource final : public MediaStreamTrackSource {
                                            MediaStreamTrackSource)
 
   AudioDestinationTrackSource(MediaStreamAudioDestinationNode* aNode,
-                              MediaStream* aInputStream,
-                              ProcessedMediaStream* aStream,
+                              mozilla::MediaTrack* aInputTrack,
+                              ProcessedMediaTrack* aTrack,
                               nsIPrincipal* aPrincipal)
       : MediaStreamTrackSource(aPrincipal, nsString()),
-        mStream(aStream),
-        mPort(mStream->AllocateInputPort(aInputStream)),
+        mTrack(aTrack),
+        mPort(mTrack->AllocateInputPort(aInputTrack)),
         mNode(aNode) {}
 
   void Destroy() override {
-    if (!mStream->IsDestroyed()) {
-      mStream->Destroy();
+    if (!mTrack->IsDestroyed()) {
+      mTrack->Destroy();
       mPort->Destroy();
     }
     if (mNode) {
-      mNode->DestroyMediaStream();
+      mNode->DestroyMediaTrack();
       mNode = nullptr;
     }
   }
@@ -52,7 +52,7 @@ class AudioDestinationTrackSource final : public MediaStreamTrackSource {
 
   void Enable() override {}
 
-  const RefPtr<ProcessedMediaStream> mStream;
+  const RefPtr<ProcessedMediaTrack> mTrack;
   const RefPtr<MediaInputPort> mPort;
 
  private:
@@ -92,15 +92,14 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(
     Document* doc = aContext->GetParentObject()->GetExtantDoc();
     principal = doc->NodePrincipal();
   }
-  mStream = AudioNodeStream::Create(aContext, new AudioNodeEngine(this),
-                                    AudioNodeStream::EXTERNAL_OUTPUT,
-                                    aContext->Graph());
+  mTrack = AudioNodeTrack::Create(aContext, new AudioNodeEngine(this),
+                                  AudioNodeTrack::EXTERNAL_OUTPUT,
+                                  aContext->Graph());
   auto source = MakeRefPtr<AudioDestinationTrackSource>(
-      this, mStream,
-      aContext->Graph()->CreateTrackUnionStream(MediaSegment::AUDIO),
+      this, mTrack,
+      aContext->Graph()->CreateForwardedInputTrack(MediaSegment::AUDIO),
       principal);
-  auto track =
-      MakeRefPtr<AudioStreamTrack>(GetOwner(), source->mStream, source);
+  auto track = MakeRefPtr<AudioStreamTrack>(GetOwner(), source->mTrack, source);
   mDOMStream->AddTrackInternal(track);
 }
 
@@ -138,8 +137,8 @@ size_t MediaStreamAudioDestinationNode::SizeOfIncludingThis(
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void MediaStreamAudioDestinationNode::DestroyMediaStream() {
-  AudioNode::DestroyMediaStream();
+void MediaStreamAudioDestinationNode::DestroyMediaTrack() {
+  AudioNode::DestroyMediaTrack();
 }
 
 JSObject* MediaStreamAudioDestinationNode::WrapObject(

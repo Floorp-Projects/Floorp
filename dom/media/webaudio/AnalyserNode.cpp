@@ -7,7 +7,7 @@
 #include "mozilla/dom/AnalyserNode.h"
 #include "mozilla/dom/AnalyserNodeBinding.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
 
@@ -25,14 +25,14 @@ namespace dom {
 class AnalyserNodeEngine final : public AudioNodeEngine {
   class TransferBuffer final : public Runnable {
    public:
-    TransferBuffer(AudioNodeStream* aStream, const AudioChunk& aChunk)
+    TransferBuffer(AudioNodeTrack* aTrack, const AudioChunk& aChunk)
         : Runnable("dom::AnalyserNodeEngine::TransferBuffer"),
-          mStream(aStream),
+          mTrack(aTrack),
           mChunk(aChunk) {}
 
     NS_IMETHOD Run() override {
       RefPtr<AnalyserNode> node =
-          static_cast<AnalyserNode*>(mStream->Engine()->NodeMainThread());
+          static_cast<AnalyserNode*>(mTrack->Engine()->NodeMainThread());
       if (node) {
         node->AppendChunk(mChunk);
       }
@@ -40,7 +40,7 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
     }
 
    private:
-    RefPtr<AudioNodeStream> mStream;
+    RefPtr<AudioNodeTrack> mTrack;
     AudioChunk mChunk;
   };
 
@@ -49,7 +49,7 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  virtual void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  virtual void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                             const AudioBlock& aInput, AudioBlock* aOutput,
                             bool* aFinished) override {
     *aOutput = aInput;
@@ -63,7 +63,7 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
 
       --mChunksToProcess;
       if (mChunksToProcess == 0) {
-        aStream->ScheduleCheckForInactive();
+        aTrack->ScheduleCheckForInactive();
       }
 
     } else {
@@ -72,7 +72,7 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
     }
 
     RefPtr<TransferBuffer> transfer =
-        new TransferBuffer(aStream, aInput.AsAudioChunk());
+        new TransferBuffer(aTrack, aInput.AsAudioChunk());
     mAbstractMainThread->Dispatch(transfer.forget());
   }
 
@@ -123,9 +123,9 @@ AnalyserNode::AnalyserNode(AudioContext* aContext)
       mMinDecibels(-100.),
       mMaxDecibels(-30.),
       mSmoothingTimeConstant(.8) {
-  mStream = AudioNodeStream::Create(aContext, new AnalyserNodeEngine(this),
-                                    AudioNodeStream::NO_STREAM_FLAGS,
-                                    aContext->Graph());
+  mTrack =
+      AudioNodeTrack::Create(aContext, new AnalyserNodeEngine(this),
+                             AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 
   // Enough chunks must be recorded to handle the case of fftSize being
   // increased to maximum immediately before getFloatTimeDomainData() is

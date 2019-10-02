@@ -15,8 +15,8 @@
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "AudioChannelService.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
-#include "MediaStreamGraph.h"
+#include "AudioNodeTrack.h"
+#include "MediaTrackGraph.h"
 #include "nsContentUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
@@ -45,7 +45,7 @@ class OfflineDestinationNodeEngine final : public AudioNodeEngine {
         mSampleRate(aNode->Context()->SampleRate()),
         mBufferAllocated(false) {}
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     // Do this just for the sake of political correctness; this output
@@ -106,14 +106,14 @@ class OfflineDestinationNodeEngine final : public AudioNodeEngine {
     if (mWriteIndex >= mLength) {
       NS_ASSERTION(mWriteIndex == mLength, "Overshot length");
       // Go to finished state. When the graph's current time eventually reaches
-      // the end of the stream, then the main thread will be notified and we'll
+      // the end of the track, then the main thread will be notified and we'll
       // shut down the AudioContext.
       *aFinished = true;
     }
   }
 
   bool IsActive() const override {
-    // Keep processing to track stream time, which is used for all timelines
+    // Keep processing to track track time, which is used for all timelines
     // associated with the same AudioContext.
     return true;
   }
@@ -203,7 +203,7 @@ class DestinationNodeEngine final : public AudioNodeEngine {
     MOZ_ASSERT(aNode);
   }
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     *aOutput = aInput;
@@ -217,17 +217,17 @@ class DestinationNodeEngine final : public AudioNodeEngine {
         !aInput.IsNull() && !aInput.IsMuted() && aInput.IsAudible();
 
     auto shouldNotifyChanged = [&]() {
-      // We don't want to notify state changed frequently if the input stream is
+      // We don't want to notify state changed frequently if the input track is
       // consist of interleaving audible and inaudible blocks. This situation is
       // really common, especially when user is using OscillatorNode to produce
       // sound. Sending unnessary runnable frequently would cause performance
-      // debasing. If the stream contains 10 interleaving samples and 5 of them
-      // are audible, others are inaudible, user would tend to feel the stream
-      // is audible. Therefore, we have the loose checking when stream is
+      // debasing. If the track contains 10 interleaving samples and 5 of them
+      // are audible, others are inaudible, user would tend to feel the track
+      // is audible. Therefore, we have the loose checking when track is
       // changing from inaudible to audible, but have strict checking when
       // streaming is changing from audible to inaudible. If the inaudible
       // blocks continue over a speicific time threshold, then we will treat the
-      // stream as inaudible.
+      // track as inaudible.
       if (isInputAudible && !mLastInputAudible) {
         return true;
       }
@@ -240,10 +240,10 @@ class DestinationNodeEngine final : public AudioNodeEngine {
     };
     if (shouldNotifyChanged()) {
       mLastInputAudible = isInputAudible;
-      RefPtr<AudioNodeStream> stream = aStream;
-      auto r = [stream, isInputAudible]() -> void {
+      RefPtr<AudioNodeTrack> track = aTrack;
+      auto r = [track, isInputAudible]() -> void {
         MOZ_ASSERT(NS_IsMainThread());
-        RefPtr<AudioNode> node = stream->Engine()->NodeMainThread();
+        RefPtr<AudioNode> node = track->Engine()->NodeMainThread();
         if (node) {
           RefPtr<AudioDestinationNode> destinationNode =
               static_cast<AudioDestinationNode*>(node.get());
@@ -251,7 +251,7 @@ class DestinationNodeEngine final : public AudioNodeEngine {
         }
       };
 
-      aStream->Graph()->DispatchToMainThreadStableState(NS_NewRunnableFunction(
+      aTrack->Graph()->DispatchToMainThreadStableState(NS_NewRunnableFunction(
           "dom::WebAudioAudibleStateChangedRunnable", r));
     }
 
@@ -261,10 +261,10 @@ class DestinationNodeEngine final : public AudioNodeEngine {
   }
 
   bool IsActive() const override {
-    // Keep processing to track stream time, which is used for all timelines
+    // Keep processing to track track time, which is used for all timelines
     // associated with the same AudioContext.  If there are no other engines
     // for the AudioContext, then this could return false to suspend the
-    // stream, but the stream is blocked anyway through
+    // track, but the track is blocked anyway through
     // AudioDestinationNode::SetIsOnlyNodeForContext().
     return true;
   }
@@ -311,9 +311,9 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(AudioDestinationNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(AudioDestinationNode, AudioNode)
 
-const AudioNodeStream::Flags kStreamFlags =
-    AudioNodeStream::NEED_MAIN_THREAD_CURRENT_TIME |
-    AudioNodeStream::NEED_MAIN_THREAD_ENDED | AudioNodeStream::EXTERNAL_OUTPUT;
+const AudioNodeTrack::Flags kTrackFlags =
+    AudioNodeTrack::NEED_MAIN_THREAD_CURRENT_TIME |
+    AudioNodeTrack::NEED_MAIN_THREAD_ENDED | AudioNodeTrack::EXTERNAL_OUTPUT;
 
 AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                            bool aIsOffline,
@@ -328,24 +328,24 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
       mAudible(AudioChannelService::AudibleState::eAudible),
       mCreatedTime(TimeStamp::Now()) {
   if (aIsOffline) {
-    // The stream is created on demand to avoid creating a graph thread that
+    // The track is created on demand to avoid creating a graph thread that
     // may not be used.
     return;
   }
 
   // GetParentObject can return nullptr here. This will end up creating another
-  // MediaStreamGraph
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
-      MediaStreamGraph::AUDIO_THREAD_DRIVER, aContext->GetParentObject(),
+  // MediaTrackGraph
+  MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
+      MediaTrackGraph::AUDIO_THREAD_DRIVER, aContext->GetParentObject(),
       aContext->SampleRate());
   AudioNodeEngine* engine = new DestinationNodeEngine(this);
 
-  mStream = AudioNodeStream::Create(aContext, engine, kStreamFlags, graph);
-  mStream->AddMainThreadListener(this);
-  mStream->AddAudioOutput(&gWebAudioOutputKey);
+  mTrack = AudioNodeTrack::Create(aContext, engine, kTrackFlags, graph);
+  mTrack->AddMainThreadListener(this);
+  mTrack->AddAudioOutput(&gWebAudioOutputKey);
 
   if (aAllowedToStart) {
-    graph->NotifyWhenGraphStarted(mStream);
+    graph->NotifyWhenGraphStarted(mTrack);
   }
 }
 
@@ -364,9 +364,9 @@ size_t AudioDestinationNode::SizeOfIncludingThis(
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-AudioNodeStream* AudioDestinationNode::Stream() {
-  if (mStream) {
-    return mStream;
+AudioNodeTrack* AudioDestinationNode::Track() {
+  if (mTrack) {
+    return mTrack;
   }
 
   AudioContext* context = Context();
@@ -374,18 +374,18 @@ AudioNodeStream* AudioDestinationNode::Stream() {
     return nullptr;
   }
 
-  MOZ_ASSERT(mIsOffline, "Realtime streams are created in constructor");
+  MOZ_ASSERT(mIsOffline, "Realtime tracks are created in constructor");
 
   // GetParentObject can return nullptr here when the document has been
   // unlinked.
-  MediaStreamGraph* graph = MediaStreamGraph::CreateNonRealtimeInstance(
+  MediaTrackGraph* graph = MediaTrackGraph::CreateNonRealtimeInstance(
       context->SampleRate(), context->GetParentObject());
   AudioNodeEngine* engine = new OfflineDestinationNodeEngine(this);
 
-  mStream = AudioNodeStream::Create(context, engine, kStreamFlags, graph);
-  mStream->AddMainThreadListener(this);
+  mTrack = AudioNodeTrack::Create(context, engine, kTrackFlags, graph);
+  mTrack->AddMainThreadListener(this);
 
-  return mStream;
+  return mTrack;
 }
 
 void AudioDestinationNode::DestroyAudioChannelAgent() {
@@ -395,29 +395,31 @@ void AudioDestinationNode::DestroyAudioChannelAgent() {
     // Reset the state, and it would always be regard as audible.
     mAudible = AudioChannelService::AudibleState::eAudible;
     if (IsCapturingAudio()) {
-      StopAudioCapturingStream();
+      StopAudioCapturingTrack();
     }
   }
 }
 
-void AudioDestinationNode::DestroyMediaStream() {
+void AudioDestinationNode::DestroyMediaTrack() {
   DestroyAudioChannelAgent();
 
-  if (!mStream) return;
+  if (!mTrack) {
+    return;
+  }
 
   Context()->ShutdownWorklet();
 
-  mStream->RemoveMainThreadListener(this);
-  MediaStreamGraph* graph = mStream->Graph();
+  mTrack->RemoveMainThreadListener(this);
+  MediaTrackGraph* graph = mTrack->Graph();
   if (graph->IsNonRealtime()) {
-    MediaStreamGraph::DestroyNonRealtimeInstance(graph);
+    MediaTrackGraph::DestroyNonRealtimeInstance(graph);
   }
-  AudioNode::DestroyMediaStream();
+  AudioNode::DestroyMediaTrack();
 }
 
 void AudioDestinationNode::NotifyMainThreadTrackEnded() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mStream->IsEnded());
+  MOZ_ASSERT(mTrack->IsEnded());
 
   if (mIsOffline && GetAbstractMainThread()) {
     GetAbstractMainThread()->Dispatch(NewRunnableMethod(
@@ -428,7 +430,7 @@ void AudioDestinationNode::NotifyMainThreadTrackEnded() {
 
 void AudioDestinationNode::FireOfflineCompletionEvent() {
   OfflineDestinationNodeEngine* engine =
-      static_cast<OfflineDestinationNodeEngine*>(Stream()->Engine());
+      static_cast<OfflineDestinationNodeEngine*>(Track()->Engine());
   engine->FireOfflineCompletionEvent(this);
 }
 
@@ -454,30 +456,30 @@ void AudioDestinationNode::SetChannelCount(uint32_t aChannelCount,
 
 void AudioDestinationNode::Mute() {
   MOZ_ASSERT(Context() && !Context()->IsOffline());
-  SendDoubleParameterToStream(DestinationNodeEngine::VOLUME, 0.0f);
+  SendDoubleParameterToTrack(DestinationNodeEngine::VOLUME, 0.0f);
 }
 
 void AudioDestinationNode::Unmute() {
   MOZ_ASSERT(Context() && !Context()->IsOffline());
-  SendDoubleParameterToStream(DestinationNodeEngine::VOLUME, 1.0f);
+  SendDoubleParameterToTrack(DestinationNodeEngine::VOLUME, 1.0f);
 }
 
 void AudioDestinationNode::Suspend() {
   DestroyAudioChannelAgent();
-  SendInt32ParameterToStream(DestinationNodeEngine::SUSPENDED, 1);
+  SendInt32ParameterToTrack(DestinationNodeEngine::SUSPENDED, 1);
 }
 
 void AudioDestinationNode::Resume() {
   CreateAudioChannelAgent();
-  SendInt32ParameterToStream(DestinationNodeEngine::SUSPENDED, 0);
+  SendInt32ParameterToTrack(DestinationNodeEngine::SUSPENDED, 0);
 }
 
 void AudioDestinationNode::OfflineShutdown() {
   MOZ_ASSERT(Context() && Context()->IsOffline(),
              "Should only be called on a valid OfflineAudioContext");
 
-  if (mStream) {
-    MediaStreamGraph::DestroyNonRealtimeInstance(mStream->Graph());
+  if (mTrack) {
+    MediaTrackGraph::DestroyNonRealtimeInstance(mTrack->Graph());
     mOfflineRenderingRef.Drop(this);
   }
 }
@@ -490,12 +492,12 @@ JSObject* AudioDestinationNode::WrapObject(JSContext* aCx,
 void AudioDestinationNode::StartRendering(Promise* aPromise) {
   mOfflineRenderingPromise = aPromise;
   mOfflineRenderingRef.Take(this);
-  Stream()->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
+  Track()->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
 }
 
 NS_IMETHODIMP
 AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted) {
-  if (!mStream) {
+  if (!mTrack) {
     return NS_OK;
   }
 
@@ -505,7 +507,7 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted) {
       this, aVolume, aMuted ? "true" : "false");
 
   float volume = aMuted ? 0.0 : aVolume;
-  mStream->SetAudioOutputVolume(&gWebAudioOutputKey, volume);
+  mTrack->SetAudioOutputVolume(&gWebAudioOutputKey, volume);
 
   AudioChannelService::AudibleState audible =
       volume > 0.0 ? AudioChannelService::AudibleState::eAudible
@@ -520,7 +522,7 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted) {
 
 NS_IMETHODIMP
 AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
-  if (!mStream) {
+  if (!mTrack) {
     return NS_OK;
   }
 
@@ -538,7 +540,7 @@ AudioDestinationNode::WindowSuspendChanged(nsSuspendedTypes aSuspend) {
 
   DisabledTrackMode disabledMode =
       suspended ? DisabledTrackMode::SILENCE_BLACK : DisabledTrackMode::ENABLED;
-  mStream->SetEnabled(disabledMode);
+  mTrack->SetEnabled(disabledMode);
 
   AudioChannelService::AudibleState audible =
       aSuspend == nsISuspendedTypes::NONE_SUSPENDED
@@ -557,7 +559,7 @@ NS_IMETHODIMP
 AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture) {
   MOZ_ASSERT(mAudioChannelAgent);
 
-  if (!mStream || Context()->IsOffline()) {
+  if (!mTrack || Context()->IsOffline()) {
     return NS_OK;
   }
 
@@ -571,29 +573,29 @@ AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture) {
   }
 
   if (aCapture) {
-    StartAudioCapturingStream();
+    StartAudioCapturingTrack();
   } else {
-    StopAudioCapturingStream();
+    StopAudioCapturingTrack();
   }
 
   return NS_OK;
 }
 
 bool AudioDestinationNode::IsCapturingAudio() const {
-  return mCaptureStreamPort != nullptr;
+  return mCaptureTrackPort != nullptr;
 }
 
-void AudioDestinationNode::StartAudioCapturingStream() {
+void AudioDestinationNode::StartAudioCapturingTrack() {
   MOZ_ASSERT(!IsCapturingAudio());
   nsCOMPtr<nsPIDOMWindowInner> window = Context()->GetParentObject();
   uint64_t id = window->WindowID();
-  mCaptureStreamPort = mStream->Graph()->ConnectToCaptureStream(id, mStream);
+  mCaptureTrackPort = mTrack->Graph()->ConnectToCaptureTrack(id, mTrack);
 }
 
-void AudioDestinationNode::StopAudioCapturingStream() {
+void AudioDestinationNode::StopAudioCapturingTrack() {
   MOZ_ASSERT(IsCapturingAudio());
-  mCaptureStreamPort->Destroy();
-  mCaptureStreamPort = nullptr;
+  mCaptureTrackPort->Destroy();
+  mCaptureTrackPort = nullptr;
 }
 
 nsresult AudioDestinationNode::CreateAudioChannelAgent() {
@@ -629,7 +631,7 @@ void AudioDestinationNode::NotifyAudibleStateChanged(bool aAudible) {
     // Reset the state, and it would always be regard as audible.
     mAudible = AudioChannelService::AudibleState::eAudible;
     if (IsCapturingAudio()) {
-      StopAudioCapturingStream();
+      StopAudioCapturingTrack();
     }
     return;
   }
