@@ -300,6 +300,7 @@ def get_browser_config(config):
                 'debugger_args': None,
                 'develop': False,
                 'enable_webrender': False,
+                'enable_fission': False,
                 'process': '',
                 'framework': 'talos',
                 'repository': None,

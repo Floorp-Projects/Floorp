@@ -163,6 +163,12 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             "default": False,
             "help": "Enable the WebRender compositor in Gecko.",
         }],
+        [["--enable-fission"], {
+            "action": "store_true",
+            "dest": "enable_fission",
+            "default": False,
+            "help": "Enable Fission (site isolation) in Gecko.",
+        }],
         [["--setpref"], {
             "action": "append",
             "metavar": "PREF=VALUE",
@@ -350,6 +356,8 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             options.extend(['--setpref={}'.format(p) for p in self.config['extra_prefs']])
         if self.config['enable_webrender']:
             options.extend(['--enable-webrender'])
+        if self.config['enable_fission']:
+            options.extend(['--enable-fission'])
 
         return options
 
