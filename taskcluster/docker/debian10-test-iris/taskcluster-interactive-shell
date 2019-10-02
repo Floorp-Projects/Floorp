@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+download() {
+    name=`basename $1`
+    url=${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/$1
+    if ! curl --fail --silent -o ./$name --retry 10 $url; then
+        fail "failed downloading $1 from ${GECKO_HEAD_REPOSITORY}"
+    fi
+}
+
+cd $HOME/bin;
+download taskcluster/scripts/tester/run-wizard;
+chmod +x run-wizard;
+./run-wizard;
+
+SPAWN="$SHELL";
+if [ "$SHELL" = "bash" ]; then
+  SPAWN="bash -li";
+fi;
+
+cd $HOME;
+exec $SPAWN;
