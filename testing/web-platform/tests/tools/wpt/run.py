@@ -583,6 +583,29 @@ class WebKit(BrowserSetup):
         pass
 
 
+class WebKitGTKMiniBrowser(BrowserSetup):
+    name = "webkitgtk_minibrowser"
+    browser_cls = browser.WebKitGTKMiniBrowser
+
+    def install(self, channel=None):
+        raise NotImplementedError
+
+    def setup_kwargs(self, kwargs):
+        if kwargs["binary"] is None:
+            binary = self.browser.find_binary()
+
+            if binary is None:
+                raise WptrunError("Unable to find MiniBrowser binary")
+            kwargs["binary"] = binary
+
+        if kwargs["webdriver_binary"] is None:
+            webdriver_binary = self.browser.find_webdriver()
+
+            if webdriver_binary is None:
+                raise WptrunError("Unable to find WebKitWebDriver in PATH")
+            kwargs["webdriver_binary"] = webdriver_binary
+
+
 class Epiphany(BrowserSetup):
     name = "epiphany"
     browser_cls = browser.Epiphany
@@ -623,6 +646,7 @@ product_setup = {
     "sauce": Sauce,
     "opera": Opera,
     "webkit": WebKit,
+    "webkitgtk_minibrowser": WebKitGTKMiniBrowser,
     "epiphany": Epiphany,
 }
 
