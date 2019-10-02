@@ -146,7 +146,6 @@ interface RTCPeerConnection : EventTarget  {
   void mozInsertAudioLevelForContributingSource(RTCRtpReceiver receiver,
                                                 unsigned long source,
                                                 DOMHighResTimeStamp timestamp,
-                                                unsigned long rtpTimestamp,
                                                 boolean hasLevel,
                                                 byte level);
   [ChromeOnly]
