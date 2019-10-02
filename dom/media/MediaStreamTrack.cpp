@@ -617,7 +617,7 @@ already_AddRefed<MediaInputPort> MediaStreamTrack::ForwardTrackContentsTo(
     ProcessedMediaStream* aStream) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(aStream);
-  return aStream->AllocateInputPort(mStream, mTrackID, mTrackID);
+  return aStream->AllocateInputPort(mStream);
 }
 
 }  // namespace dom
