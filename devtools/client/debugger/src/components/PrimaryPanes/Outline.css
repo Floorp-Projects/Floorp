@@ -81,8 +81,7 @@
 }
 
 .outline-list__class h2.focused,
-.outline-list__class h2.focused .keyword,
-.outline-list__class-list .outline-list__element-icon {
+.outline-list__class h2.focused .keyword {
   color: var(--theme-selection-color);
 }
 
