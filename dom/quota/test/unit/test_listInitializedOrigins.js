@@ -64,20 +64,6 @@ async function testSteps() {
 
   await CreateTestEnvironment(origins);
 
-  info("Getting origins before initializing the storage");
-
-  await new Promise(resolve => {
-    listInitializedOrigins(request => {
-      verifyResult(request.result, []);
-      resolve();
-    });
-  });
-
-  info("Verifying result");
-
-  let request = initTemporaryStorage();
-  request = await requestFinished(request);
-
   info("Getting origins after initializing the storage");
 
   await new Promise(resolve => {
