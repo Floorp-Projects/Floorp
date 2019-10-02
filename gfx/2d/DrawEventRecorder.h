@@ -179,7 +179,8 @@ class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
    * Constructs a DrawEventRecorder that stores the recording in memory.
    */
   DrawEventRecorderMemory();
-  explicit DrawEventRecorderMemory(const SerializeResourcesFn& aSerialize);
+  explicit DrawEventRecorderMemory(const SerializeResourcesFn& aSerialize,
+                                   IntPoint aOrigin = IntPoint());
 
   void RecordEvent(const RecordedEvent& aEvent) override;
 
@@ -216,6 +217,7 @@ class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
  private:
   SerializeResourcesFn mSerializeCallback;
   nsTHashtable<nsUint64HashKey> mDependentSurfaces;
+  IntPoint mOrigin;
 
   void Flush() override;
 };
