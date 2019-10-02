@@ -230,8 +230,9 @@ class XDRState : public XDRCoderBase {
     MOZ_CRASH("does not have scriptSourceObjectOut.");
   }
 
-  virtual XDRAtomMap* atomMap() { return nullptr; }
-  virtual uint32_t& natoms() { MOZ_CRASH("does not have an totalAtoms."); }
+  virtual bool hasAtomMap() const { return false; }
+  virtual XDRAtomMap& atomMap() { MOZ_CRASH("does not have atomMap"); }
+  virtual uint32_t& natoms() { MOZ_CRASH("does not have atomMap."); }
 
   js::GCVector<JSAtom*> atomTable;
   bool hasAtomTable = false;
@@ -541,7 +542,8 @@ class XDRIncrementalEncoder : public XDREncoder {
   XDRBuffer<XDR_ENCODE> atomBuf_;
   XDRBuffer<XDR_ENCODE> headerBuf_;
 
-  XDRAtomMap* atomMap() override { return &atomMap_; }
+  bool hasAtomMap() const override { return true; }
+  XDRAtomMap& atomMap() override { return atomMap_; }
   uint32_t& natoms() override { return natoms_; }
 
   // Switch from streaming into the main buffer into the atom buffer.

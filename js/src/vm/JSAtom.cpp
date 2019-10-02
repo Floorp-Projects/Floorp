@@ -1224,19 +1224,19 @@ XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
   if (mode == XDR_ENCODE) {
     MOZ_ASSERT(!xdr->hasAtomTable);
 
-    if (xdr->atomMap()) {
+    if (xdr->hasAtomMap()) {
       // If the atom has already been encoded, look up its index in the atom
       // map. Otherwise, add the atom index to the map and encode it into the
       // atom buffer.
-      if (XDRAtomMap::Ptr p = xdr->atomMap()->lookup(atomp.get())) {
+      if (XDRAtomMap::Ptr p = xdr->atomMap().lookup(atomp.get())) {
         MOZ_ASSERT(p->key() == atomp.get());
         MOZ_TRY(xdr->codeUint32(&p->value()));
         return Ok();
       }
 
-      XDRAtomMap::AddPtr p = xdr->atomMap()->lookupForAdd(atomp.get());
+      XDRAtomMap::AddPtr p = xdr->atomMap().lookupForAdd(atomp.get());
       MOZ_ASSERT(!p);
-      if (!xdr->atomMap()->add(p, atomp.get(), xdr->natoms())) {
+      if (!xdr->atomMap().add(p, atomp.get(), xdr->natoms())) {
         return xdr->fail(JS::TranscodeResult_Throw);
       }
 

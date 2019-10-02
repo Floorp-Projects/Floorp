@@ -217,7 +217,7 @@ static XDRResult AtomTableCheck(XDRState<mode>* xdr) {
   uint8_t atomHeader = false;
   uint32_t atomCount;
   if (mode == XDR_ENCODE) {
-    if (xdr->atomMap()) {
+    if (xdr->hasAtomMap()) {
       atomHeader = true;
     }
   }
@@ -299,12 +299,13 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
   }
 
   // Only write to seperate header buffer if we are incrementally encoding.
-  if (this->atomMap()) {
+  bool useHeader = this->hasAtomMap();
+  if (useHeader) {
     switchToHeaderBuf();
   }
   MOZ_TRY(VersionCheck(this));
   MOZ_TRY(AtomTableCheck(this));
-  if (this->atomMap()) {
+  if (useHeader) {
     switchToMainBuf();
   }
   MOZ_ASSERT(buf == &this->mainBuf);
@@ -553,7 +554,7 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
 }
 
 void XDRIncrementalEncoder::trace(JSTracer* trc) {
-  if (atomMap()) {
-    atomMap()->trace(trc);
+  if (hasAtomMap()) {
+    atomMap().trace(trc);
   }
 }
