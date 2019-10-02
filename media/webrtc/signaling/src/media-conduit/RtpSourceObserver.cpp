@@ -36,8 +36,8 @@ void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
     auto& hist = mRtpSources[GetKey(aHeader.ssrc, EntryType::Synchronization)];
     hist.Prune(aTimestamp);
     // ssrc-audio-level handling
-    hist.Insert(aTimestamp, jitterAdjusted, aHeader.extension.hasAudioLevel,
-                aHeader.extension.audioLevel);
+    hist.Insert(aTimestamp, jitterAdjusted, aHeader.timestamp,
+                aHeader.extension.hasAudioLevel, aHeader.extension.audioLevel);
 
     // csrc-audio-level handling
     const auto& list = aHeader.extension.csrcAudioLevels;
@@ -47,7 +47,8 @@ void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
       hist.Prune(aTimestamp);
       bool hasLevel = i < list.numAudioLevels;
       uint8_t level = hasLevel ? list.arrOfAudioLevels[i] : 0;
-      hist.Insert(aTimestamp, jitterAdjusted, hasLevel, level);
+      hist.Insert(aTimestamp, jitterAdjusted, aHeader.timestamp, hasLevel,
+                  level);
     }
   }
 }
@@ -64,6 +65,7 @@ void RtpSourceObserver::GetRtpSources(
       domEntry.mSource = GetSourceFromKey(it.first);
       domEntry.mSourceType = GetTypeFromKey(it.first);
       domEntry.mTimestamp = entry->jitterAdjustedTimestamp;
+      domEntry.mRtpTimestamp = entry->rtpTimestamp;
       if (entry->hasAudioLevel) {
         domEntry.mAudioLevel.Construct(entry->ToLinearAudioLevel());
       }
@@ -136,9 +138,11 @@ void RtpSourceObserver::RtpSourceHistory::Prune(const int64_t aTimeNow) {
 
 void RtpSourceObserver::RtpSourceHistory::Insert(const int64_t aTimeNow,
                                                  const int64_t aTimestamp,
+                                                 const uint32_t aRtpTimestamp,
                                                  const bool aHasAudioLevel,
                                                  const uint8_t aAudioLevel) {
-  Insert(aTimeNow, aTimestamp).Update(aTimestamp, aHasAudioLevel, aAudioLevel);
+  Insert(aTimeNow, aTimestamp)
+      .Update(aTimestamp, aRtpTimestamp, aHasAudioLevel, aAudioLevel);
 }
 
 RtpSourceObserver::RtpSourceEntry& RtpSourceObserver::RtpSourceHistory::Insert(

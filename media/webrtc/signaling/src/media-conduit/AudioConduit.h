@@ -242,9 +242,11 @@ class WebrtcAudioConduit : public AudioSessionConduit,
                    const int64_t aTimestamp, const uint32_t aJitter) override;
 
   // test-only: inserts fake CSRCs and audio level data
-  void InsertAudioLevelForContributingSource(uint32_t aSource,
-                                             int64_t aTimestamp, bool aHasLevel,
-                                             uint8_t aLevel);
+  void InsertAudioLevelForContributingSource(const uint32_t aCsrcSource,
+                                             const int64_t aTimestamp,
+                                             const uint32_t aRtpTimestamp,
+                                             const bool aHasAudioLevel,
+                                             const uint8_t aAudioLevel);
 
   bool IsSamplingFreqSupported(int freq) const override;
 
