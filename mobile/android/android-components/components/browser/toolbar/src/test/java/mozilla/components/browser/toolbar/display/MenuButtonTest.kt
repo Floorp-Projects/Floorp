@@ -35,6 +35,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations.initMocks
 
@@ -75,6 +76,17 @@ class MenuButtonTest {
 
         menuButton.menuBuilder = mock()
         verify(menu).dismiss()
+    }
+
+    @Test
+    fun `trying to open a new menu when we already have one will dismiss the current`() {
+        menuButton.menuBuilder = menuBuilder
+
+        menuButton.performClick()
+        menuButton.performClick()
+
+        verify(menu, times(1)).show(eq(menuButton), any(), anyBoolean(), any())
+        verify(menu, times(1)).dismiss()
     }
 
     @Test
