@@ -1,7 +1,7 @@
 // This function takes a sample-rate, and tests that audio flows correctly when
-// the sampling-rate at which the MSG runs is not one of the sampling-rates that
+// the sampling-rate at which the MTG runs is not one of the sampling-rates that
 // the MediaPipeline can work with.
-// It is in a separate file because we have an MSG per document, and we want to
+// It is in a separate file because we have an MTG per document, and we want to
 // test multiple sample-rates, so we include it in multiple HTML mochitest
 // files.
 function test_peerconnection_audio_forced_sample_rate(forcedSampleRate) {

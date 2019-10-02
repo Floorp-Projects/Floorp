@@ -9,7 +9,7 @@
 #include "nsAutoPtr.h"
 #include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "blink/Reverb.h"
 #include "PlayingRefChangeHandler.h"
 
@@ -121,7 +121,7 @@ class ConvolverNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override;
 
@@ -170,8 +170,7 @@ static void AddScaledLeftToRight(AudioBlock* aBlock, float aScale) {
   AudioBlockAddChannelWithScale(left, aScale, right);
 }
 
-void ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
-                                       GraphTime aFrom,
+void ConvolverNodeEngine::ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                                        const AudioBlock& aInput,
                                        AudioBlock* aOutput, bool* aFinished) {
   if (!mReverb) {
@@ -189,10 +188,10 @@ void ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
         mRemainingLeftOutput = INT32_MIN;
         MOZ_ASSERT(mRemainingRightOutput <= 0);
         MOZ_ASSERT(mRemainingRightHistory <= 0);
-        aStream->ScheduleCheckForInactive();
+        aTrack->ScheduleCheckForInactive();
         RefPtr<PlayingRefChanged> refchanged =
-            new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
-        aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
+            new PlayingRefChanged(aTrack, PlayingRefChanged::RELEASE);
+        aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
       }
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
@@ -200,8 +199,8 @@ void ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
   } else {
     if (mRemainingLeftOutput <= 0) {
       RefPtr<PlayingRefChanged> refchanged =
-          new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
-      aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
+          new PlayingRefChanged(aTrack, PlayingRefChanged::ADDREF);
+      aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
     }
 
     // Use mVolume as a flag to detect whether AllocateReverbInput() gets
@@ -212,7 +211,7 @@ void ConvolverNodeEngine::ProcessBlock(AudioNodeStream* aStream,
     // only a single impulse response channel.  See RightConvolverMode.
     if (mRightConvolverMode != RightConvolverMode::Always) {
       ChannelInterpretation channelInterpretation =
-          aStream->GetChannelInterpretation();
+          aTrack->GetChannelInterpretation();
       if (inputChannelCount == 2) {
         if (mRemainingRightHistory <= 0) {
           // Will start the second convolver.  Choose to convolve the right
@@ -337,8 +336,8 @@ ConvolverNode::ConvolverNode(AudioContext* aContext)
                 ChannelInterpretation::Speakers),
       mNormalize(true) {
   ConvolverNodeEngine* engine = new ConvolverNodeEngine(this, mNormalize);
-  mStream = AudioNodeStream::Create(
-      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
+  mTrack = AudioNodeTrack::Create(
+      aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
 /* static */
@@ -405,9 +404,9 @@ void ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer,
     return;
   }
 
-  // Send the buffer to the stream
-  AudioNodeStream* ns = mStream;
-  MOZ_ASSERT(ns, "Why don't we have a stream here?");
+  // Send the buffer to the track
+  AudioNodeTrack* ns = mTrack;
+  MOZ_ASSERT(ns, "Why don't we have a track here?");
   if (aBuffer) {
     AudioChunk data = aBuffer->GetThreadSharedChannelsForRate(aCx);
     if (data.mBufferFormat == AUDIO_FORMAT_S16) {
@@ -468,9 +467,7 @@ void ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer,
   mBuffer = aBuffer;
 }
 
-void ConvolverNode::SetNormalize(bool aNormalize) {
-  mNormalize = aNormalize;
-}
+void ConvolverNode::SetNormalize(bool aNormalize) { mNormalize = aNormalize; }
 
 }  // namespace dom
 }  // namespace mozilla

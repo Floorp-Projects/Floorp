@@ -8,7 +8,7 @@
 #include "AlignmentUtils.h"
 #include "AudioDestinationNode.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "AudioListener.h"
 #include "PanningUtils.h"
 #include "AudioBufferSourceNode.h"
@@ -45,7 +45,7 @@ class PannerNodeEngine final : public AudioNodeEngine {
                             AudioDestinationNode* aDestination,
                             AudioListenerEngine* aListenerEngine)
       : AudioNodeEngine(aNode),
-        mDestination(aDestination->Stream()),
+        mDestination(aDestination->Track()),
         mListenerEngine(aListenerEngine)
         // Please keep these default values consistent with
         // PannerNode::PannerNode below.
@@ -167,7 +167,7 @@ class PannerNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     if (aInput.IsNull()) {
@@ -180,14 +180,13 @@ class PannerNodeEngine final : public AudioNodeEngine {
       } else {
         if (mLeftOverData != INT_MIN) {
           mLeftOverData = INT_MIN;
-          aStream->ScheduleCheckForInactive();
+          aTrack->ScheduleCheckForInactive();
           mHRTFPanner->reset();
 
           RefPtr<PlayingRefChangeHandler> refchanged =
-              new PlayingRefChangeHandler(aStream,
+              new PlayingRefChangeHandler(aTrack,
                                           PlayingRefChangeHandler::RELEASE);
-          aStream->Graph()->DispatchToMainThreadStableState(
-              refchanged.forget());
+          aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
         }
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
@@ -196,14 +195,14 @@ class PannerNodeEngine final : public AudioNodeEngine {
                &PannerNodeEngine::HRTFPanningFunction) {
       if (mLeftOverData == INT_MIN) {
         RefPtr<PlayingRefChangeHandler> refchanged =
-            new PlayingRefChangeHandler(aStream,
+            new PlayingRefChangeHandler(aTrack,
                                         PlayingRefChangeHandler::ADDREF);
-        aStream->Graph()->DispatchToMainThreadStableState(refchanged.forget());
+        aTrack->Graph()->DispatchToMainThreadStableState(refchanged.forget());
       }
       mLeftOverData = mHRTFPanner->maxTailFrames();
     }
 
-    StreamTime tick = mDestination->GraphTimeToStreamTime(aFrom);
+    TrackTime tick = mDestination->GraphTimeToTrackTime(aFrom);
     (this->*mPanningModelFunction)(aInput, aOutput, tick);
   }
 
@@ -217,9 +216,9 @@ class PannerNodeEngine final : public AudioNodeEngine {
   double ComputeDistanceGain(const ThreeDPoint& position);
 
   void EqualPowerPanningFunction(const AudioBlock& aInput, AudioBlock* aOutput,
-                                 StreamTime tick);
+                                 TrackTime tick);
   void HRTFPanningFunction(const AudioBlock& aInput, AudioBlock* aOutput,
-                           StreamTime tick);
+                           TrackTime tick);
 
   float LinearGainFunction(double aDistance);
   float InverseGainFunction(double aDistance);
@@ -228,7 +227,7 @@ class PannerNodeEngine final : public AudioNodeEngine {
   ThreeDPoint ConvertAudioParamTimelineTo3DP(AudioParamTimeline& aX,
                                              AudioParamTimeline& aY,
                                              AudioParamTimeline& aZ,
-                                             StreamTime& tick);
+                                             TrackTime& tick);
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
@@ -243,14 +242,14 @@ class PannerNodeEngine final : public AudioNodeEngine {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  RefPtr<AudioNodeStream> mDestination;
+  RefPtr<AudioNodeTrack> mDestination;
   // This member is set on the main thread, but is not accessed on the rendering
   // thread untile mPanningModelFunction has changed, and this happens strictly
-  // later, via a MediaStreamGraph ControlMessage.
+  // later, via a MediaTrackGraph ControlMessage.
   nsAutoPtr<HRTFPanner> mHRTFPanner;
   RefPtr<AudioListenerEngine> mListenerEngine;
   typedef void (PannerNodeEngine::*PanningModelFunction)(
-      const AudioBlock& aInput, AudioBlock* aOutput, StreamTime tick);
+      const AudioBlock& aInput, AudioBlock* aOutput, TrackTime tick);
   PanningModelFunction mPanningModelFunction;
   typedef float (PannerNodeEngine::*DistanceModelFunction)(double aDistance);
   DistanceModelFunction mDistanceModelFunction;
@@ -292,11 +291,11 @@ PannerNode::PannerNode(AudioContext* aContext)
                    0.f);
   CreateAudioParam(mOrientationZ, PannerNode::ORIENTATIONZ, this->NodeType(),
                    0.f);
-  mStream = AudioNodeStream::Create(
+  mTrack = AudioNodeTrack::Create(
       aContext,
       new PannerNodeEngine(this, aContext->Destination(),
                            aContext->Listener()->Engine()),
-      AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
+      AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
 /* static */
@@ -342,11 +341,11 @@ void PannerNode::SetPanningModel(PanningModelType aPanningModel) {
   mPanningModel = aPanningModel;
   if (mPanningModel == PanningModelType::HRTF) {
     // We can set the engine's `mHRTFPanner` member here from the main thread,
-    // because the engine will not touch it from the MediaStreamGraph
+    // because the engine will not touch it from the MediaTrackGraph
     // thread until the PANNING_MODEL message sent below is received.
-    static_cast<PannerNodeEngine*>(mStream->Engine())->CreateHRTFPanner();
+    static_cast<PannerNodeEngine*>(mTrack->Engine())->CreateHRTFPanner();
   }
-  SendInt32ParameterToStream(PANNING_MODEL, int32_t(mPanningModel));
+  SendInt32ParameterToTrack(PANNING_MODEL, int32_t(mPanningModel));
 }
 
 size_t PannerNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
@@ -382,7 +381,7 @@ float PannerNodeEngine::ExponentialGainFunction(double aDistance) {
 
 void PannerNodeEngine::HRTFPanningFunction(const AudioBlock& aInput,
                                            AudioBlock* aOutput,
-                                           StreamTime tick) {
+                                           TrackTime tick) {
   // The output of this node is always stereo, no matter what the inputs are.
   aOutput->AllocateChannels(2);
 
@@ -407,14 +406,14 @@ void PannerNodeEngine::HRTFPanningFunction(const AudioBlock& aInput,
 
 ThreeDPoint PannerNodeEngine::ConvertAudioParamTimelineTo3DP(
     AudioParamTimeline& aX, AudioParamTimeline& aY, AudioParamTimeline& aZ,
-    StreamTime& tick) {
+    TrackTime& tick) {
   return ThreeDPoint(aX.GetValueAtTime(tick), aY.GetValueAtTime(tick),
                      aZ.GetValueAtTime(tick));
 }
 
 void PannerNodeEngine::EqualPowerPanningFunction(const AudioBlock& aInput,
                                                  AudioBlock* aOutput,
-                                                 StreamTime tick) {
+                                                 TrackTime tick) {
   float azimuth, elevation, gainL, gainR, normalizedAzimuth, distanceGain,
       coneGain;
   int inputChannels = aInput.ChannelCount();

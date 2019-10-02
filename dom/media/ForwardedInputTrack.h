@@ -3,23 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_TRACKUNIONSTREAM_H_
-#define MOZILLA_TRACKUNIONSTREAM_H_
+#ifndef MOZILLA_FORWARDEDINPUTTRACK_H_
+#define MOZILLA_FORWARDEDINPUTTRACK_H_
 
-#include "MediaStreamGraph.h"
+#include "MediaTrackGraph.h"
 #include "nsAutoPtr.h"
 #include <algorithm>
 
 namespace mozilla {
 
 /**
- * See MediaStreamGraph::CreateTrackUnionStream.
+ * See MediaTrackGraph::CreateForwardedInputTrack.
  */
-class TrackUnionStream : public ProcessedMediaStream {
+class ForwardedInputTrack : public ProcessedMediaTrack {
  public:
-  TrackUnionStream(TrackRate aSampleRate, MediaSegment::Type aType);
+  ForwardedInputTrack(TrackRate aSampleRate, MediaSegment::Type aType);
 
-  virtual TrackUnionStream* AsTrackUnionStream() override { return this; }
+  virtual ForwardedInputTrack* AsForwardedInputTrack() override { return this; }
   friend class DOMMediaStream;
 
   void AddInput(MediaInputPort* aPort) override;
@@ -28,27 +28,26 @@ class TrackUnionStream : public ProcessedMediaStream {
 
   void SetEnabledImpl(DisabledTrackMode aMode) override;
 
-  friend class MediaStreamGraphImpl;
+  friend class MediaTrackGraphImpl;
 
  protected:
-  // Set up this stream from a specific input.
+  // Set up this track from a specific input.
   void SetInput(MediaInputPort* aPort);
 
   // MediaSegment-agnostic ProcessInput.
-  void ProcessInputImpl(MediaStream* aSource, MediaSegment* aSegment,
+  void ProcessInputImpl(MediaTrack* aSource, MediaSegment* aSegment,
                         GraphTime aFrom, GraphTime aTo, uint32_t aFlags);
 
   void AddDirectListenerImpl(
-      already_AddRefed<DirectMediaStreamTrackListener> aListener) override;
-  void RemoveDirectListenerImpl(
-      DirectMediaStreamTrackListener* aListener) override;
+      already_AddRefed<DirectMediaTrackListener> aListener) override;
+  void RemoveDirectListenerImpl(DirectMediaTrackListener* aListener) override;
   void RemoveAllDirectListenersImpl() override;
 
   // These are direct track listeners that have been added to this
-  // TrackUnionStream-track. While an input is set, these are forwarded to the
-  // input stream. We will update these when this track's disabled status
+  // ForwardedInputTrack-track. While an input is set, these are forwarded to
+  // the input track. We will update these when this track's disabled status
   // changes.
-  nsTArray<RefPtr<DirectMediaStreamTrackListener>> mOwnedDirectListeners;
+  nsTArray<RefPtr<DirectMediaTrackListener>> mOwnedDirectListeners;
 
   // Set if an input has been added, nullptr otherwise. Adding more than one
   // input is an error.
@@ -57,4 +56,4 @@ class TrackUnionStream : public ProcessedMediaStream {
 
 }  // namespace mozilla
 
-#endif /* MOZILLA_MEDIASTREAMGRAPH_H_ */
+#endif /* MOZILLA_FORWARDEDINPUTTRACK_H_ */

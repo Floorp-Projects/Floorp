@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-class AudioNodeStream;
+class AudioNodeTrack;
 
 namespace dom {
 class AudioContext;
@@ -37,7 +37,7 @@ class AudioWorkletImpl final : public WorkletImpl {
   }
 
   // Any thread:
-  AudioNodeStream* DestinationStream() { return mDestinationStream; }
+  AudioNodeTrack* DestinationTrack() { return mDestinationTrack; }
 
  protected:
   // Execution thread only.
@@ -45,10 +45,10 @@ class AudioWorkletImpl final : public WorkletImpl {
 
  private:
   AudioWorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-                   AudioNodeStream* aDestinationStream);
+                   AudioNodeTrack* aDestinationTrack);
   ~AudioWorkletImpl();
 
-  const RefPtr<AudioNodeStream> mDestinationStream;
+  const RefPtr<AudioNodeTrack> mDestinationTrack;
 };
 
 }  // namespace mozilla

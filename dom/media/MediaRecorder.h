@@ -16,11 +16,10 @@
 #define MAX_ALLOW_MEMORY_BUFFER 1024000
 namespace mozilla {
 
-class AudioNodeStream;
+class AudioNodeTrack;
 class DOMMediaStream;
 class ErrorResult;
 struct MediaRecorderOptions;
-class MediaStream;
 class GlobalObject;
 
 namespace dom {
@@ -50,7 +49,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
  public:
   class Session;
 
-  MediaRecorder(DOMMediaStream& aSourceMediaStream,
+  MediaRecorder(DOMMediaStream& aSourceMediaTrack,
                 nsPIDOMWindowInner* aOwnerWindow);
   MediaRecorder(AudioNode& aSrcAudioNode, uint32_t aSrcOutput,
                 nsPIDOMWindowInner* aOwnerWindow);

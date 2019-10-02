@@ -19,9 +19,9 @@ static LazyLogModule gDriftCompensatorLog("DriftCompensator");
 
 /**
  * DriftCompensator can be used to handle drift between audio and video tracks
- * from the MediaStreamGraph.
+ * from the MediaTrackGraph.
  *
- * Drift can occur because audio is driven by a MediaStreamGraph running off an
+ * Drift can occur because audio is driven by a MediaTrackGraph running off an
  * audio callback, thus it's progressed by the clock of one the audio output
  * devices on the user's machine. Video on the other hand is always expressed in
  * wall-clock TimeStamps, i.e., it's progressed by the system clock. These
@@ -42,7 +42,7 @@ class DriftCompensator {
   const TrackRate mAudioRate;
 
   // Number of audio samples produced. Any thread.
-  Atomic<StreamTime> mAudioSamples{0};
+  Atomic<TrackTime> mAudioSamples{0};
 
   // Time the first audio samples were added. mVideoThread only.
   TimeStamp mAudioStartTime;
@@ -78,7 +78,7 @@ class DriftCompensator {
   /**
    * aSamples is the number of samples fed by an AudioStream.
    */
-  void NotifyAudio(StreamTime aSamples) {
+  void NotifyAudio(TrackTime aSamples) {
     MOZ_ASSERT(aSamples > 0);
     mAudioSamples += aSamples;
 
@@ -93,7 +93,7 @@ class DriftCompensator {
    */
   virtual TimeStamp GetVideoTime(TimeStamp aNow, TimeStamp aTime) {
     MOZ_ASSERT(mVideoThread->IsOnCurrentThread());
-    StreamTime samples = mAudioSamples;
+    TrackTime samples = mAudioSamples;
 
     if (samples / mAudioRate < 10) {
       // We don't apply compensation for the first 10 seconds because of the

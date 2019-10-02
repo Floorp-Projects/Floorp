@@ -28,7 +28,7 @@ class SineWaveGenerator {
     }
   }
 
-  // NOTE: only safely called from a single thread (MSG callback)
+  // NOTE: only safely called from a single thread (MTG callback)
   void generate(int16_t* aBuffer, TrackTicks aLengthInSamples) {
     TrackTicks remaining = aLengthInSamples;
 

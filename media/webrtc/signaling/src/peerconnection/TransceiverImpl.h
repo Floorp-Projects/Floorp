@@ -46,7 +46,7 @@ struct RTCRtpSourceEntry;
 class TransceiverImpl : public nsISupports {
  public:
   /**
-   * |aReceiveStream| is always set; this holds even if the remote end has not
+   * |aReceiveTrack| is always set; this holds even if the remote end has not
    * negotiated one for this transceiver. |aSendTrack| might or might not be
    * set.
    */

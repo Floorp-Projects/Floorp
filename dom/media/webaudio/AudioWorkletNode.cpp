@@ -30,14 +30,14 @@ class WorkletNodeEngine final : public AudioNodeEngine {
       AudioWorkletImpl* aWorkletImpl, const nsAString& aName,
       NotNull<StructuredCloneHolder*> aOptionsSerialization);
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    ProcessBlocksOnPorts(aStream, MakeSpan(&aInput, 1), MakeSpan(aOutput, 1),
+    ProcessBlocksOnPorts(aTrack, MakeSpan(&aInput, 1), MakeSpan(aOutput, 1),
                          aFinished);
   }
 
-  void ProcessBlocksOnPorts(AudioNodeStream* aStream,
+  void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                             Span<const AudioBlock> aInput,
                             Span<AudioBlock> aOutput, bool* aFinished) override;
 
@@ -81,8 +81,8 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   // WorkletNodeEngine are typically kept alive as long as the
   // AudioWorkletNode in the main-thread global.  The objects must be released
   // on the rendering thread, which usually happens simply because
-  // AudioWorkletNode is such that the last AudioNodeStream reference is
-  // released by the MSG.  That occurs on the rendering thread except during
+  // AudioWorkletNode is such that the last AudioNodeTrack reference is
+  // released by the MTG.  That occurs on the rendering thread except during
   // process shutdown, in which case NotifyForcedShutdown() is called on the
   // rendering thread.
   //
@@ -234,8 +234,8 @@ static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
   return !(NS_WARN_IF(!PrepareArray(aCx, aPorts->mPorts, &aPorts->mJSArray)));
 }
 
-// This runs JS script.  MediaStreamGraph control messages, which would
-// potentially destroy the WorkletNodeEngine and its AudioNodeStream, cannot
+// This runs JS script.  MediaTrackGraph control messages, which would
+// potentially destroy the WorkletNodeEngine and its AudioNodeTrack, cannot
 // be triggered by script.  They are not run from an nsIThread event loop and
 // do not run until after ProcessBlocksOnPorts() has returned.
 bool WorkletNodeEngine::CallProcess(JSContext* aCx,
@@ -263,7 +263,7 @@ static void ProduceSilence(Span<AudioBlock> aOutput) {
   }
 }
 
-void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
+void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                              Span<const AudioBlock> aInput,
                                              Span<AudioBlock> aOutput,
                                              bool* aFinished) {
@@ -395,7 +395,7 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
     return nullptr;
   }
 
-  // MSG does not support more than UINT16_MAX inputs or outputs.
+  // MTG does not support more than UINT16_MAX inputs or outputs.
   if (aOptions.mNumberOfInputs > UINT16_MAX) {
     aRv.ThrowRangeError<MSG_VALUE_OUT_OF_RANGE>(
         NS_LITERAL_STRING("numberOfInputs"));
@@ -438,8 +438,8 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
 
   auto engine =
       new WorkletNodeEngine(audioWorkletNode, aOptions.mOutputChannelCount);
-  audioWorkletNode->mStream = AudioNodeStream::Create(
-      &aAudioContext, engine, AudioNodeStream::NO_STREAM_FLAGS,
+  audioWorkletNode->mTrack = AudioNodeTrack::Create(
+      &aAudioContext, engine, AudioNodeTrack::NO_TRACK_FLAGS,
       aAudioContext.Graph());
 
   /**
@@ -449,15 +449,15 @@ already_AddRefed<AudioWorkletNode> AudioWorkletNode::Constructor(
   Worklet* worklet = aAudioContext.GetAudioWorklet(aRv);
   MOZ_ASSERT(worklet, "Worklet already existed and so getter shouldn't fail.");
   auto workletImpl = static_cast<AudioWorkletImpl*>(worklet->Impl());
-  audioWorkletNode->mStream->SendRunnable(NS_NewRunnableFunction(
+  audioWorkletNode->mTrack->SendRunnable(NS_NewRunnableFunction(
       "WorkletNodeEngine::ConstructProcessor",
       // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
       // See bug 1535398.
-      [stream = audioWorkletNode->mStream,
+      [track = audioWorkletNode->mTrack,
        workletImpl = RefPtr<AudioWorkletImpl>(workletImpl),
        name = nsString(aName), options = std::move(optionsSerialization)]()
           MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-            auto engine = static_cast<WorkletNodeEngine*>(stream->Engine());
+            auto engine = static_cast<WorkletNodeEngine*>(track->Engine());
             engine->ConstructProcessor(workletImpl, name,
                                        WrapNotNull(options.get()));
           }));

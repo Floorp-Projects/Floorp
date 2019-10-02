@@ -7,7 +7,7 @@
 #include "AudioListener.h"
 #include "AudioContext.h"
 #include "mozilla/dom/AudioListenerBinding.h"
-#include "MediaStreamGraphImpl.h"
+#include "MediaTrackGraphImpl.h"
 
 namespace mozilla {
 namespace dom {
@@ -127,7 +127,7 @@ void AudioListener::SendListenerEngineEvent(
     ThreeDPoint mValue;
   };
 
-  mContext->DestinationStream()->GraphImpl()->AppendMessage(
+  mContext->DestinationTrack()->GraphImpl()->AppendMessage(
       MakeUnique<Message>(Engine(), aParameter, aValue));
 }
 

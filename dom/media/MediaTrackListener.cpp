@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MediaStreamListener.h"
+#include "MediaTrackListener.h"
 
 #include "AudioSegment.h"
 #include "VideoSegment.h"
@@ -14,14 +14,14 @@ namespace mozilla {
 #  undef LOG
 #endif
 
-#define LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
+#define LOG(type, msg) MOZ_LOG(gMediaTrackGraphLog, type, msg)
 
-void DirectMediaStreamTrackListener::MirrorAndDisableSegment(
-    AudioSegment& aFrom, AudioSegment& aTo) {
+void DirectMediaTrackListener::MirrorAndDisableSegment(AudioSegment& aFrom,
+                                                       AudioSegment& aTo) {
   aTo.AppendNullData(aFrom.GetDuration());
 }
 
-void DirectMediaStreamTrackListener::MirrorAndDisableSegment(
+void DirectMediaTrackListener::MirrorAndDisableSegment(
     VideoSegment& aFrom, VideoSegment& aTo, DisabledTrackMode aMode) {
   if (aMode == DisabledTrackMode::SILENCE_BLACK) {
     for (VideoSegment::ChunkIterator it(aFrom); !it.IsEnded(); it.Next()) {
@@ -35,10 +35,8 @@ void DirectMediaStreamTrackListener::MirrorAndDisableSegment(
   }
 }
 
-void DirectMediaStreamTrackListener::
-    NotifyRealtimeTrackDataAndApplyTrackDisabling(MediaStreamGraph* aGraph,
-                                                  StreamTime aTrackOffset,
-                                                  MediaSegment& aMedia) {
+void DirectMediaTrackListener::NotifyRealtimeTrackDataAndApplyTrackDisabling(
+    MediaTrackGraph* aGraph, TrackTime aTrackOffset, MediaSegment& aMedia) {
   if (mDisabledFreezeCount == 0 && mDisabledBlackCount == 0) {
     NotifyRealtimeTrackData(aGraph, aTrackOffset, aMedia);
     return;
@@ -60,7 +58,7 @@ void DirectMediaStreamTrackListener::
   NotifyRealtimeTrackData(aGraph, aTrackOffset, *media);
 }
 
-void DirectMediaStreamTrackListener::IncreaseDisabled(DisabledTrackMode aMode) {
+void DirectMediaTrackListener::IncreaseDisabled(DisabledTrackMode aMode) {
   if (aMode == DisabledTrackMode::SILENCE_FREEZE) {
     ++mDisabledFreezeCount;
   } else if (aMode == DisabledTrackMode::SILENCE_BLACK) {
@@ -70,13 +68,13 @@ void DirectMediaStreamTrackListener::IncreaseDisabled(DisabledTrackMode aMode) {
   }
 
   LOG(LogLevel::Debug,
-      ("DirectMediaStreamTrackListener %p increased disabled "
+      ("DirectMediaTrackListener %p increased disabled "
        "mode %s. Current counts are: freeze=%d, black=%d",
        this, aMode == DisabledTrackMode::SILENCE_FREEZE ? "freeze" : "black",
        int32_t(mDisabledFreezeCount), int32_t(mDisabledBlackCount)));
 }
 
-void DirectMediaStreamTrackListener::DecreaseDisabled(DisabledTrackMode aMode) {
+void DirectMediaTrackListener::DecreaseDisabled(DisabledTrackMode aMode) {
   if (aMode == DisabledTrackMode::SILENCE_FREEZE) {
     --mDisabledFreezeCount;
     MOZ_ASSERT(mDisabledFreezeCount >= 0, "Double decrease");
@@ -88,7 +86,7 @@ void DirectMediaStreamTrackListener::DecreaseDisabled(DisabledTrackMode aMode) {
   }
 
   LOG(LogLevel::Debug,
-      ("DirectMediaStreamTrackListener %p decreased disabled "
+      ("DirectMediaTrackListener %p decreased disabled "
        "mode %s. Current counts are: freeze=%d, black=%d",
        this, aMode == DisabledTrackMode::SILENCE_FREEZE ? "freeze" : "black",
        int32_t(mDisabledFreezeCount), int32_t(mDisabledBlackCount)));

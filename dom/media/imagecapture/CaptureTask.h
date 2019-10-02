@@ -7,8 +7,8 @@
 #ifndef CAPTURETASK_H
 #define CAPTURETASK_H
 
-#include "MediaStreamGraph.h"
-#include "MediaStreamListener.h"
+#include "MediaTrackGraph.h"
+#include "MediaTrackListener.h"
 #include "PrincipalChangeObserver.h"
 
 namespace mozilla {
@@ -20,23 +20,22 @@ class MediaStreamTrack;
 }  // namespace dom
 
 /**
- * CaptureTask retrieves image from MediaStream and encodes the image to jpeg in
+ * CaptureTask retrieves image from MediaTrack and encodes the image to jpeg in
  * ImageEncoder. The whole procedures start at AttachTrack(), it will add this
- * class into MediaStream and retrieves an image in MediaStreamGraph thread.
+ * class into MediaTrack and retrieves an image in MediaTrackGraph thread.
  * Once the image is retrieved, it will be sent to ImageEncoder and the encoded
  * blob will be sent out via encoder callback in main thread.
  *
  * CaptureTask holds a reference of ImageCapture to ensure ImageCapture won't be
  * released during the period of the capturing process described above.
  */
-class CaptureTask : public DirectMediaStreamTrackListener,
+class CaptureTask : public DirectMediaTrackListener,
                     public dom::PrincipalChangeObserver<dom::MediaStreamTrack> {
  public:
-  class MediaStreamEventListener;
+  class MediaTrackEventListener;
 
-  // DirectMediaStreamTrackListener methods
-  void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
-                               StreamTime aTrackOffset,
+  // DirectMediaTrackListener methods
+  void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
                                const MediaSegment& aMedia) override;
 
   // PrincipalChangeObserver<MediaStreamTrack> methods
@@ -74,9 +73,9 @@ class CaptureTask : public DirectMediaStreamTrackListener,
   // event to script.
   RefPtr<dom::ImageCapture> mImageCapture;
 
-  RefPtr<MediaStreamEventListener> mEventListener;
+  RefPtr<MediaTrackEventListener> mEventListener;
 
-  // True when an image is retrieved from the video track, or MediaStreamGraph
+  // True when an image is retrieved from the video track, or MediaTrackGraph
   // sends a track finish, end, or removed event. Any thread.
   Atomic<bool> mImageGrabbedOrTrackEnd;
 

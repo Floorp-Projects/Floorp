@@ -8,7 +8,7 @@
 #include "mozilla/dom/GainNodeBinding.h"
 #include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
 
@@ -27,7 +27,7 @@ class GainNodeEngine final : public AudioNodeEngine {
  public:
   GainNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
       : AudioNodeEngine(aNode),
-        mDestination(aDestination->Stream())
+        mDestination(aDestination->Track())
         // Keep the default value in sync with the default value in
         // GainNode::GainNode.
         ,
@@ -47,7 +47,7 @@ class GainNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     if (aInput.IsNull()) {
@@ -69,7 +69,7 @@ class GainNodeEngine final : public AudioNodeEngine {
       aOutput->AllocateChannels(aInput.ChannelCount());
 
       // Compute the gain values for the duration of the input AudioChunk
-      StreamTime tick = mDestination->GraphTimeToStreamTime(aFrom);
+      TrackTime tick = mDestination->GraphTimeToTrackTime(aFrom);
       float computedGain[WEBAUDIO_BLOCK_SIZE + 4];
       float* alignedComputedGain = ALIGNED16(computedGain);
       ASSERT_ALIGNED16(alignedComputedGain);
@@ -92,7 +92,7 @@ class GainNodeEngine final : public AudioNodeEngine {
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     // Not owned:
-    // - mDestination - MediaStreamGraphImpl::CollectSizesForMemoryReport()
+    // - mDestination - MediaTrackGraphImpl::CollectSizesForMemoryReport()
     // accounts for mDestination.
     // - mGain - Internal ref owned by AudioNode
     return AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
@@ -102,7 +102,7 @@ class GainNodeEngine final : public AudioNodeEngine {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  RefPtr<AudioNodeStream> mDestination;
+  RefPtr<AudioNodeTrack> mDestination;
   AudioParamTimeline mGain;
 };
 
@@ -111,8 +111,8 @@ GainNode::GainNode(AudioContext* aContext)
                 ChannelInterpretation::Speakers) {
   CreateAudioParam(mGain, GainNodeEngine::GAIN, "gain", 1.0f);
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
-  mStream = AudioNodeStream::Create(
-      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
+  mTrack = AudioNodeTrack::Create(
+      aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
 /* static */

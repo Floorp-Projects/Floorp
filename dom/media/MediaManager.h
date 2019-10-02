@@ -85,7 +85,7 @@ class MediaDevice : public nsIMediaDevice {
                     const MediaEnginePrefs& aPrefs,
                     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint);
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
+  void SetTrack(const RefPtr<SourceMediaTrack>& aTrack,
                 const PrincipalHandle& aPrincipal);
   nsresult Start();
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
@@ -199,7 +199,7 @@ class MediaManager final : public nsIMediaManagerService,
                           dom::MediaStreamError& aError);
   MOZ_CAN_RUN_SCRIPT
   static void CallOnSuccess(GetUserMediaSuccessCallback& aCallback,
-                            DOMMediaStream& aStream);
+                            DOMMediaStream& aTrack);
 
   typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
   typedef media::Refcountable<MediaDeviceSet> MediaDeviceSetRefCnt;

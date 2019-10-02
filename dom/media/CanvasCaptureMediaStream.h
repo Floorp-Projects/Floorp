@@ -14,7 +14,7 @@ class nsIPrincipal;
 
 namespace mozilla {
 class DOMMediaStream;
-class SourceMediaStream;
+class SourceMediaTrack;
 
 namespace layers {
 class Image;
@@ -47,10 +47,10 @@ class OutputStreamFrameListener;
  *                                                  | AppendToTrack()
  *                                                  |
  *                                                  v
- *                                      ___________________________
- *                                     |                           |
- *                                     |  MSG / SourceMediaStream  |
- *                                     |___________________________|
+ *                                      __________________________
+ *                                     |                          |
+ *                                     |  MTG / SourceMediaTrack  |
+ *                                     |__________________________|
  * ----------------------------------------------------------------------------
  */
 
@@ -61,14 +61,14 @@ class OutputStreamFrameListener;
  */
 class OutputStreamDriver : public FrameCaptureListener {
  public:
-  OutputStreamDriver(SourceMediaStream* aSourceStream,
+  OutputStreamDriver(SourceMediaTrack* aSourceStream,
                      const PrincipalHandle& aPrincipalHandle);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OutputStreamDriver);
 
   /*
    * Sub classes can SetImage() to update the image being appended to the
-   * output stream. It will be appended on the next NotifyPull from MSG.
+   * output stream. It will be appended on the next NotifyPull from MTG.
    */
   void SetImage(const RefPtr<layers::Image>& aImage, const TimeStamp& aTime);
 
@@ -84,7 +84,7 @@ class OutputStreamDriver : public FrameCaptureListener {
    */
   virtual void Forget() {}
 
-  const RefPtr<SourceMediaStream> mSourceStream;
+  const RefPtr<SourceMediaTrack> mSourceStream;
   const PrincipalHandle mPrincipalHandle;
 
  protected:
@@ -116,7 +116,7 @@ class CanvasCaptureMediaStream : public DOMMediaStream {
    */
   void StopCapture();
 
-  SourceMediaStream* GetSourceStream() const;
+  SourceMediaTrack* GetSourceStream() const;
 
  protected:
   ~CanvasCaptureMediaStream();
