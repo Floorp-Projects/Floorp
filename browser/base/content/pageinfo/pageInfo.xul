@@ -24,20 +24,21 @@
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode">
 
-#ifdef XP_MACOSX
-#include ../macWindow.inc.xul
-#endif
-
   <linkset>
     <html:link rel="localization" href="browser/pageInfo.ftl"/>
   </linkset>
+  #ifdef XP_MACOSX
+  #include ../macWindow.inc.xul
+  #else
   <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+  <script src="chrome://browser/content/utilityOverlay.js"/>
+  #endif
   <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="chrome://global/content/treeUtils.js"/>
   <script src="chrome://browser/content/pageinfo/pageInfo.js"/>
   <script src="chrome://browser/content/pageinfo/permissions.js"/>
   <script src="chrome://browser/content/pageinfo/security.js"/>
-  <script src="chrome://browser/content/utilityOverlay.js"/>
 
   <stringbundleset id="pageinfobundleset">
     <stringbundle id="pkiBundle" src="chrome://pippki/locale/pippki.properties"/>
@@ -95,12 +96,12 @@
           <row id="generalTitle">
             <label control="titletext" data-l10n-id="general-title"/>
             <separator/>
-            <textbox readonly="true" id="titletext"/>
+            <html:input readonly="readonly" id="titletext" data-l10n-attrs="value"/>
           </row>
           <row id="generalURLRow">
             <label control="urltext" data-l10n-id="general-url"/>
             <separator/>
-            <textbox readonly="true" id="urltext"/>
+            <html:input readonly="readonly" id="urltext"/>
           </row>
           <row id="generalSeparatorRow1">
             <separator class="thin"/>
@@ -108,27 +109,27 @@
           <row id="generalTypeRow">
             <label control="typetext" data-l10n-id="general-type"/>
             <separator/>
-            <textbox readonly="true" id="typetext"/>
+            <html:input readonly="readonly" id="typetext"/>
           </row>
           <row id="generalModeRow">
             <label control="modetext" data-l10n-id="general-mode"/>
             <separator/>
-            <textbox readonly="true" crop="end" id="modetext"/>
+            <html:input readonly="readonly" id="modetext" data-l10n-attrs="value"/>
           </row>
           <row id="generalEncodingRow">
             <label control="encodingtext" data-l10n-id="general-encoding"/>
             <separator/>
-            <textbox readonly="true" id="encodingtext"/>
+            <html:input readonly="readonly" id="encodingtext"/>
           </row>
           <row id="generalSizeRow">
             <label control="sizetext" data-l10n-id="general-size"/>
             <separator/>
-            <textbox readonly="true" id="sizetext"/>
+            <html:input readonly="readonly" id="sizetext" data-l10n-attrs="value"/>
           </row>
           <row id="generalReferrerRow">
             <label control="refertext" data-l10n-id="general-referrer"/>
             <separator/>
-            <textbox readonly="true" id="refertext"/>
+            <html:input readonly="readonly" id="refertext"/>
           </row>
           <row id="generalSeparatorRow2">
             <separator class="thin"/>
@@ -136,7 +137,7 @@
           <row id="generalModifiedRow">
             <label control="modifiedtext" data-l10n-id="general-modified"/>
             <separator/>
-            <textbox readonly="true" id="modifiedtext"/>
+            <html:input readonly="readonly" id="modifiedtext"/>
           </row>
         </rows>
       </grid>
@@ -200,32 +201,32 @@
             <row id="mediaLocationRow">
               <label control="imageurltext" data-l10n-id="media-location"/>
               <separator/>
-              <textbox readonly="true" id="imageurltext"/>
+              <html:input readonly="readonly" id="imageurltext"/>
             </row>
             <row id="mediaTypeRow">
               <label control="imagetypetext" data-l10n-id="general-type"/>
               <separator/>
-              <textbox id="imagetypetext"/>
+              <html:input id="imagetypetext" data-l10n-attrs="value"/>
             </row>
             <row id="mediaSizeRow">
               <label control="imagesizetext" data-l10n-id="general-size"/>
               <separator/>
-              <textbox readonly="true" id="imagesizetext"/>
+              <html:input readonly="readonly" id="imagesizetext" data-l10n-attrs="value"/>
             </row>
             <row id="mediaDimensionRow">
               <label control="imagedimensiontext" data-l10n-id="media-dimension"/>
               <separator/>
-              <textbox readonly="true" id="imagedimensiontext"/>
+              <html:input readonly="readonly" id="imagedimensiontext" data-l10n-attrs="value"/>
             </row>
             <row id="mediaTextRow">
               <label control="imagetext" data-l10n-id="media-text"/>
               <separator/>
-              <textbox readonly="true" id="imagetext"/>
+              <html:input readonly="readonly" id="imagetext"/>
             </row>
             <row id="mediaLongdescRow">
               <label control="imagelongdesctext" data-l10n-id="media-long-desc"/>
               <separator/>
-              <textbox readonly="true" id="imagelongdesctext"/>
+              <html:input readonly="readonly" id="imagelongdesctext"/>
             </row>
           </rows>
         </grid>
@@ -267,8 +268,7 @@
     <vbox id="permPanel">
       <hbox id="permHostBox">
         <label data-l10n-id="permissions-for" control="hostText" />
-        <textbox id="hostText" class="header" readonly="true"
-                 crop="end" flex="1"/>
+        <html:input id="hostText" class="header" readonly="readonly"/>
       </hbox>
 
       <vbox id="permList" flex="1"/>
@@ -292,7 +292,7 @@
             <row>
               <label data-l10n-id="security-view-identity-domain"
                      control="security-identity-domain-value"/>
-              <textbox id="security-identity-domain-value" readonly="true"/>
+              <html:input id="security-identity-domain-value" readonly="readonly"/>
             </row>
             <!-- Owner -->
             <row>
@@ -300,15 +300,15 @@
                      class="fieldLabel"
                      data-l10n-id="security-view-identity-owner"
                      control="security-identity-owner-value"/>
-              <textbox id="security-identity-owner-value" readonly="true"/>
+              <html:input id="security-identity-owner-value" readonly="readonly" data-l10n-attrs="value"/>
             </row>
             <!-- Verifier -->
             <row>
               <label data-l10n-id="security-view-identity-verifier"
                      control="security-identity-verifier-value"/>
               <hbox align="center">
-                <textbox id="security-identity-verifier-value" readonly="true"
-                         flex="1"/>
+                <html:input id="security-identity-verifier-value" readonly="readonly"
+                            data-l10n-attrs="value"/>
                 <button id="security-view-cert" data-l10n-id="security-view"
                         collapsed="true"
                         oncommand="security.viewCert();"/>
@@ -318,7 +318,7 @@
             <row id="security-identity-validity-row">
               <label data-l10n-id="security-view-identity-validity"
                      control="security-identity-validity-value"/>
-              <textbox id="security-identity-validity-value" readonly="true"/>
+              <html:input id="security-identity-validity-value" readonly="readonly"/>
             </row>
           </rows>
         </grid>

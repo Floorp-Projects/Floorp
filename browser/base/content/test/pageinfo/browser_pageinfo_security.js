@@ -124,11 +124,9 @@ add_task(async function test_CertificateError() {
   );
 
   await TestUtils.waitForCondition(
-    () =>
-      owner.textContent ===
-      "This website does not supply ownership information.",
+    () => owner.value === "This website does not supply ownership information.",
     `Value of owner should be should be "This website does not supply ownership information." instead got "${
-      owner.textContent
+      owner.value
     }".`
   );
 

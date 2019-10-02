@@ -5,6 +5,7 @@
 %endif
 
 @import url("chrome://global/skin/");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 /* View buttons */
 #viewGroup > radio {
@@ -66,15 +67,14 @@ tree {
   width: .5em;
 }
 
-textbox {
-  background: transparent !important;
+html|input {
+  background: transparent;
   border: none;
   padding: 0;
   margin-top: 1px;
-  -moz-appearance: none;
 }
 
-textbox.header {
+html|input.header {
   margin-inline-start: 0;
 }
 
@@ -85,7 +85,7 @@ textbox.header {
   border: 1px solid ThreeDLightShadow;
 }
 
-textbox[disabled] {
+html|input:disabled {
   font-style: italic;
 }
 

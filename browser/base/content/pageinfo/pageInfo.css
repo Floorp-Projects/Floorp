@@ -17,3 +17,8 @@
 /* This following entry can be removed when Bug 522850 is fixed. */
   min-width: 1px;
 }
+
+#hostText,
+#security-identity-verifier-value {
+  -moz-box-flex: 1;
+}
