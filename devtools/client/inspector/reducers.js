@@ -23,6 +23,6 @@ exports.rules = require("devtools/client/inspector/rules/reducers/rules");
 
 // This ObjectInspector reducer is needed for the Extension Sidebar.
 const {
-  objectInspector,
-} = require("devtools/client/shared/components/reps/reps");
-exports.objectInspector = objectInspector.reducer.default;
+  default: objectInspector,
+} = require("devtools/client/debugger/packages/devtools-reps/src/object-inspector/reducer");
+exports.objectInspector = objectInspector;

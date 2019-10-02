@@ -10,10 +10,9 @@ const { prefs } = require("./prefs");
 const { ui } = require("./ui");
 const { notifications } = require("./notifications");
 const { history } = require("./history");
-
 const {
-  objectInspector,
-} = require("devtools/client/shared/components/reps/reps.js");
+  default: objectInspector,
+} = require("devtools/client/debugger/packages/devtools-reps/src/object-inspector/reducer");
 
 exports.reducers = {
   autocomplete,
@@ -23,5 +22,5 @@ exports.reducers = {
   ui,
   notifications,
   history,
-  objectInspector: objectInspector.reducer.default,
+  objectInspector,
 };
