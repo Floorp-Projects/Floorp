@@ -100,10 +100,10 @@ class AudioCallbackBufferWrapper {
    */
   void BufferFilled() {
     // It's okay to have exactly zero samples here, it can happen we have an
-    // audio callback driver because of a hint on MSG creation, but the
-    // AudioOutputStream has not been created yet, or if all the streams have
+    // audio callback driver because of a hint on MTG creation, but the
+    // AudioOutputStream has not been created yet, or if all the tracks have
     // finished but we're still running. Note: it's also ok if we had data in
-    // the scratch buffer - and we usually do - and all the streams were ended
+    // the scratch buffer - and we usually do - and all the tracks were ended
     // (no mixer callback occured).
     // XXX Remove this warning, or find a way to avoid it if the mixer callback
     // isn't called.
@@ -135,7 +135,7 @@ class AudioCallbackBufferWrapper {
 
 /**
  * This is a class that interfaces with the AudioCallbackBufferWrapper, and is
- * responsible for storing the excess of data produced by the MediaStreamGraph
+ * responsible for storing the excess of data produced by the MediaTrackGraph
  * because of different rounding constraints, to be used the next time the audio
  * backend calls back.
  */

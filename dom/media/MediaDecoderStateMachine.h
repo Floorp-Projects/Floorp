@@ -188,7 +188,7 @@ class MediaDecoderStateMachine
 
   void SetOutputStreamPrincipal(nsIPrincipal* aPrincipal);
   // If an OutputStreamManager does not exist, one will be created.
-  void EnsureOutputStreamManager(SharedDummyStream* aDummyStream);
+  void EnsureOutputStreamManager(SharedDummyTrack* aDummyStream);
   // If an OutputStreamManager exists, tracks matching aLoadedInfo will be
   // created unless they already exist in the manager.
   void EnsureOutputStreamManagerHasTracks(const MediaInfo& aLoadedInfo);

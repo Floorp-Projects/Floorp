@@ -9,7 +9,7 @@
 #include "AlignmentUtils.h"
 #include "AudioNode.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeStream.h"
+#include "AudioNodeTrack.h"
 #include "mozilla/PodOperations.h"
 
 namespace mozilla {
@@ -190,7 +190,7 @@ class WaveShaperNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
     uint32_t channelCount = aInput.ChannelCount();
@@ -242,19 +242,19 @@ class WaveShaperNodeEngine final : public AudioNodeEngine {
 
       switch (mType) {
         case OverSampleType::None:
-          mResampler.Reset(channelCount, aStream->mSampleRate,
+          mResampler.Reset(channelCount, aTrack->mSampleRate,
                            OverSampleType::None);
           ProcessCurve<1>(inputSamples, outputBuffer);
           break;
         case OverSampleType::_2x:
-          mResampler.Reset(channelCount, aStream->mSampleRate,
+          mResampler.Reset(channelCount, aTrack->mSampleRate,
                            OverSampleType::_2x);
           sampleBuffer = mResampler.UpSample(i, inputSamples, 2);
           ProcessCurve<2>(sampleBuffer, sampleBuffer);
           mResampler.DownSample(i, outputBuffer, 2);
           break;
         case OverSampleType::_4x:
-          mResampler.Reset(channelCount, aStream->mSampleRate,
+          mResampler.Reset(channelCount, aTrack->mSampleRate,
                            OverSampleType::_4x);
           sampleBuffer = mResampler.UpSample(i, inputSamples, 4);
           ProcessCurve<4>(sampleBuffer, sampleBuffer);
@@ -288,8 +288,8 @@ WaveShaperNode::WaveShaperNode(AudioContext* aContext)
                 ChannelInterpretation::Speakers),
       mType(OverSampleType::None) {
   WaveShaperNodeEngine* engine = new WaveShaperNodeEngine(this);
-  mStream = AudioNodeStream::Create(
-      aContext, engine, AudioNodeStream::NO_STREAM_FLAGS, aContext->Graph());
+  mTrack = AudioNodeTrack::Create(
+      aContext, engine, AudioNodeTrack::NO_TRACK_FLAGS, aContext->Graph());
 }
 
 /* static */
@@ -358,17 +358,17 @@ void WaveShaperNode::SetCurveInternal(const nsTArray<float>& aCurve,
   }
 
   mCurve = aCurve;
-  SendCurveToStream();
+  SendCurveToTrack();
 }
 
 void WaveShaperNode::CleanCurveInternal() {
   mCurve.Clear();
-  SendCurveToStream();
+  SendCurveToTrack();
 }
 
-void WaveShaperNode::SendCurveToStream() {
-  AudioNodeStream* ns = mStream;
-  MOZ_ASSERT(ns, "Why don't we have a stream here?");
+void WaveShaperNode::SendCurveToTrack() {
+  AudioNodeTrack* ns = mTrack;
+  MOZ_ASSERT(ns, "Why don't we have a track here?");
 
   nsTArray<float> copyCurve(mCurve);
   ns->SetRawArrayData(copyCurve);
@@ -389,8 +389,8 @@ void WaveShaperNode::GetCurve(JSContext* aCx,
 
 void WaveShaperNode::SetOversample(OverSampleType aType) {
   mType = aType;
-  SendInt32ParameterToStream(WaveShaperNodeEngine::TYPE,
-                             static_cast<int32_t>(aType));
+  SendInt32ParameterToTrack(WaveShaperNodeEngine::TYPE,
+                            static_cast<int32_t>(aType));
 }
 
 }  // namespace dom

@@ -34,7 +34,7 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate() override;
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
+  void SetTrack(const RefPtr<SourceMediaTrack>& aTrack,
                 const PrincipalHandle& aPrincipal) override;
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
@@ -50,14 +50,14 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   class StartRunnable : public Runnable {
    public:
     StartRunnable(MediaEngineTabVideoSource* videoSource,
-                  SourceMediaStream* aStream, const PrincipalHandle& aPrincipal)
+                  SourceMediaTrack* aTrack, const PrincipalHandle& aPrincipal)
         : Runnable("MediaEngineTabVideoSource::StartRunnable"),
           mVideoSource(videoSource),
-          mStream(aStream),
+          mTrack(aTrack),
           mPrincipal(aPrincipal) {}
     NS_IMETHOD Run() override;
     const RefPtr<MediaEngineTabVideoSource> mVideoSource;
-    const RefPtr<SourceMediaStream> mStream;
+    const RefPtr<SourceMediaTrack> mTrack;
     const PrincipalHandle mPrincipal;
   };
 
@@ -73,14 +73,14 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   class InitRunnable : public Runnable {
    public:
     InitRunnable(MediaEngineTabVideoSource* videoSource,
-                 SourceMediaStream* aStream, const PrincipalHandle& aPrincipal)
+                 SourceMediaTrack* aTrack, const PrincipalHandle& aPrincipal)
         : Runnable("MediaEngineTabVideoSource::InitRunnable"),
           mVideoSource(videoSource),
-          mStream(aStream),
+          mTrack(aTrack),
           mPrincipal(aPrincipal) {}
     NS_IMETHOD Run() override;
     const RefPtr<MediaEngineTabVideoSource> mVideoSource;
-    const RefPtr<SourceMediaStream> mStream;
+    const RefPtr<SourceMediaTrack> mTrack;
     const PrincipalHandle mPrincipal;
   };
 
@@ -115,16 +115,16 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITabSource> mTabSource;
-  RefPtr<SourceMediaStream> mStreamMain;
+  RefPtr<SourceMediaTrack> mTrackMain;
   PrincipalHandle mPrincipalHandleMain = PRINCIPAL_HANDLE_NONE;
   // If this is set, we will run despite mWindow == nullptr.
   bool mBlackedoutWindow = false;
 
   // Current state of this source. Accessed on owning thread only.
   MediaEngineSourceState mState = kReleased;
-  // mStream is set in SetTrack() to keep track of what to end in Deallocate().
+  // mTrack is set in SetTrack() to keep track of what to end in Deallocate().
   // Owning thread only.
-  RefPtr<SourceMediaStream> mStream;
+  RefPtr<SourceMediaTrack> mTrack;
   PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
 };
 

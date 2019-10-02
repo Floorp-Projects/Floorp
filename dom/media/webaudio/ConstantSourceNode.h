@@ -17,7 +17,7 @@ namespace dom {
 class AudioContext;
 
 class ConstantSourceNode final : public AudioScheduledSourceNode,
-                                 public MainThreadMediaStreamListener {
+                                 public MainThreadMediaTrackListener {
  public:
   explicit ConstantSourceNode(AudioContext* aContext);
 
@@ -32,7 +32,7 @@ class ConstantSourceNode final : public AudioScheduledSourceNode,
       const GlobalObject& aGlobal, AudioContext& aContext,
       const ConstantSourceOptions& aOptions);
 
-  void DestroyMediaStream() override;
+  void DestroyMediaTrack() override;
 
   uint16_t NumberOfInputs() const final { return 0; }
 

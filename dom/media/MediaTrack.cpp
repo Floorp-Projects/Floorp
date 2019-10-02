@@ -23,11 +23,11 @@ MediaTrack::MediaTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
 
 MediaTrack::~MediaTrack() {}
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaTrack, DOMEventTargetHelper, mList)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(dom::MediaTrack, DOMEventTargetHelper, mList)
 
-NS_IMPL_ADDREF_INHERITED(MediaTrack, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(MediaTrack, DOMEventTargetHelper)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaTrack)
+NS_IMPL_ADDREF_INHERITED(dom::MediaTrack, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(dom::MediaTrack, DOMEventTargetHelper)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(dom::MediaTrack)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 void MediaTrack::SetTrackList(MediaTrackList* aList) { mList = aList; }

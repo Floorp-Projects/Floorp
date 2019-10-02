@@ -6,7 +6,7 @@
 #include "AlignedTArray.h"
 #include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeExternalInputStream.h"
+#include "AudioNodeExternalInputTrack.h"
 #include "AudioChannelFormat.h"
 #include "mozilla/dom/MediaStreamAudioSourceNode.h"
 
@@ -14,29 +14,29 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-AudioNodeExternalInputStream::AudioNodeExternalInputStream(
+AudioNodeExternalInputTrack::AudioNodeExternalInputTrack(
     AudioNodeEngine* aEngine, TrackRate aSampleRate)
-    : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate) {
-  MOZ_COUNT_CTOR(AudioNodeExternalInputStream);
+    : AudioNodeTrack(aEngine, NO_TRACK_FLAGS, aSampleRate) {
+  MOZ_COUNT_CTOR(AudioNodeExternalInputTrack);
 }
 
-AudioNodeExternalInputStream::~AudioNodeExternalInputStream() {
-  MOZ_COUNT_DTOR(AudioNodeExternalInputStream);
+AudioNodeExternalInputTrack::~AudioNodeExternalInputTrack() {
+  MOZ_COUNT_DTOR(AudioNodeExternalInputTrack);
 }
 
 /* static */
-already_AddRefed<AudioNodeExternalInputStream>
-AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
-                                     AudioNodeEngine* aEngine) {
+already_AddRefed<AudioNodeExternalInputTrack>
+AudioNodeExternalInputTrack::Create(MediaTrackGraph* aGraph,
+                                    AudioNodeEngine* aEngine) {
   AudioContext* ctx = aEngine->NodeMainThread()->Context();
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aGraph->GraphRate() == ctx->SampleRate());
 
-  RefPtr<AudioNodeExternalInputStream> stream =
-      new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate());
-  stream->mSuspendedCount += ctx->ShouldSuspendNewStream();
-  aGraph->AddStream(stream);
-  return stream.forget();
+  RefPtr<AudioNodeExternalInputTrack> track =
+      new AudioNodeExternalInputTrack(aEngine, aGraph->GraphRate());
+  track->mSuspendedCount += ctx->ShouldSuspendNewTrack();
+  aGraph->AddTrack(track);
+  return track.forget();
 }
 
 /**
@@ -130,12 +130,12 @@ static void ConvertSegmentToAudioBlock(AudioSegment* aSegment,
   }
 }
 
-void AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
-                                                uint32_t aFlags) {
+void AudioNodeExternalInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
+                                               uint32_t aFlags) {
   // According to spec, number of outputs is always 1.
   MOZ_ASSERT(mLastChunks.Length() == 1);
 
-  // GC stuff can result in our input stream being destroyed before this stream.
+  // GC stuff can result in our input track being destroyed before this track.
   // Handle that.
   if (!IsEnabled() || mInputs.IsEmpty() || mPassThrough) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -144,12 +144,12 @@ void AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   MOZ_ASSERT(mInputs.Length() == 1);
 
-  MediaStream* source = mInputs[0]->GetSource();
+  MediaTrack* source = mInputs[0]->GetSource();
   AutoTArray<AudioSegment, 1> audioSegments;
   uint32_t inputChannels = 0;
 
   MOZ_ASSERT(source->GetData()->GetType() == MediaSegment::AUDIO,
-             "AudioNodeExternalInputStream shouldn't have a video input");
+             "AudioNodeExternalInputTrack shouldn't have a video input");
 
   const AudioSegment& inputSegment =
       *mInputs[0]->GetSource()->GetData<AudioSegment>();
@@ -165,23 +165,23 @@ void AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
       }
       next = interval.mEnd;
 
-      // We know this stream does not block during the processing interval ---
+      // We know this track does not block during the processing interval ---
       // we're not finished, we don't underrun, and we're not suspended.
-      StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-      StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
-      StreamTime ticks = outputEnd - outputStart;
+      TrackTime outputStart = GraphTimeToTrackTime(interval.mStart);
+      TrackTime outputEnd = GraphTimeToTrackTime(interval.mEnd);
+      TrackTime ticks = outputEnd - outputStart;
 
       if (interval.mInputIsBlocked) {
         segment.AppendNullData(ticks);
       } else {
-        // The input stream is not blocked in this interval, so no need to call
-        // GraphTimeToStreamTimeWithBlocking.
-        StreamTime inputStart =
+        // The input track is not blocked in this interval, so no need to call
+        // GraphTimeToTrackTimeWithBlocking.
+        TrackTime inputStart =
             std::min(inputSegment.GetDuration(),
-                     source->GraphTimeToStreamTime(interval.mStart));
-        StreamTime inputEnd =
+                     source->GraphTimeToTrackTime(interval.mStart));
+        TrackTime inputEnd =
             std::min(inputSegment.GetDuration(),
-                     source->GraphTimeToStreamTime(interval.mEnd));
+                     source->GraphTimeToTrackTime(interval.mEnd));
 
         segment.AppendSlice(inputSegment, inputStart, inputEnd);
         // Pad if we're looking past the end of the track
@@ -218,7 +218,7 @@ void AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 }
 
-bool AudioNodeExternalInputStream::IsEnabled() {
+bool AudioNodeExternalInputTrack::IsEnabled() {
   return ((MediaStreamAudioSourceNodeEngine*)Engine())->IsEnabled();
 }
 

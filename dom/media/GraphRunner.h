@@ -17,11 +17,11 @@ struct PRThread;
 namespace mozilla {
 
 class GraphDriver;
-class MediaStreamGraphImpl;
+class MediaTrackGraphImpl;
 
 class GraphRunner {
  public:
-  explicit GraphRunner(MediaStreamGraphImpl* aGraph);
+  explicit GraphRunner(MediaTrackGraphImpl* aGraph);
   ~GraphRunner();
 
   /**
@@ -57,9 +57,9 @@ class GraphRunner {
   // Monitor used for yielding mThread through Wait(), and scheduling mThread
   // through Signal() from a GraphDriver.
   Monitor mMonitor;
-  // The MediaStreamGraph we're running. Weakptr beecause this graph owns us and
+  // The MediaTrackGraph we're running. Weakptr beecause this graph owns us and
   // guarantees that our lifetime will not go beyond that of itself.
-  MediaStreamGraphImpl* const mGraph;
+  MediaTrackGraphImpl* const mGraph;
   // GraphTime being handed over to the graph through OneIteration. Protected by
   // mMonitor.
   GraphTime mStateEnd;

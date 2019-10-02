@@ -41,9 +41,9 @@ namespace mozilla {
 
 class DOMMediaStream;
 class ErrorResult;
-class MediaStream;
-class MediaStreamGraph;
-class AudioNodeStream;
+class MediaTrack;
+class MediaTrackGraph;
+class AudioNodeTrack;
 
 namespace dom {
 
@@ -82,7 +82,7 @@ class Promise;
 enum class OscillatorType : uint8_t;
 
 // This is addrefed by the OscillatorNodeEngine on the main thread
-// and then used from the MSG thread.
+// and then used from the MTG thread.
 // It can be released either from the graph thread or the main thread.
 class BasicWaveFormCache {
  public:
@@ -98,7 +98,7 @@ class BasicWaveFormCache {
   uint32_t mSampleRate;
 };
 
-/* This runnable allows the MSG to notify the main thread when audio is actually
+/* This runnable allows the MTG to notify the main thread when audio is actually
  * flowing */
 class StateChangeTask final : public Runnable {
  public:
@@ -109,7 +109,7 @@ class StateChangeTask final : public Runnable {
 
   /* This constructor should be used when this event is sent from the audio
    * thread. */
-  StateChangeTask(AudioNodeStream* aStream, void* aPromise,
+  StateChangeTask(AudioNodeTrack* aTrack, void* aPromise,
                   AudioContextState aNewState);
 
   NS_IMETHOD Run() override;
@@ -117,7 +117,7 @@ class StateChangeTask final : public Runnable {
  private:
   RefPtr<AudioContext> mAudioContext;
   void* mPromise;
-  RefPtr<AudioNodeStream> mAudioNodeStream;
+  RefPtr<AudioNodeTrack> mAudioNodeTrack;
   AudioContextState mNewState;
 };
 
@@ -185,7 +185,7 @@ class AudioContext final : public DOMEventTargetHelper,
 
   float SampleRate() const { return mSampleRate; }
 
-  bool ShouldSuspendNewStream() const { return mSuspendCalled; }
+  bool ShouldSuspendNewTrack() const { return mSuspendCalled; }
 
   double CurrentTime();
 
@@ -212,10 +212,10 @@ class AudioContext final : public DOMEventTargetHelper,
   void StartBlockedAudioContextIfAllowed();
 
   // Those three methods return a promise to content, that is resolved when an
-  // (possibly long) operation is completed on the MSG (and possibly other)
+  // (possibly long) operation is completed on the MTG (and possibly other)
   // thread(s). To avoid having to match the calls and asychronous result when
   // the operation is completed, we keep a reference to the promises on the main
-  // thread, and then send the promises pointers down the MSG thread, as a void*
+  // thread, and then send the promises pointers down the MTG thread, as a void*
   // (to make it very clear that the pointer is to merely be treated as an ID).
   // When back on the main thread, we can resolve or reject the promise, by
   // casting it back to a `Promise*` while asserting we're back on the main
@@ -304,8 +304,8 @@ class AudioContext final : public DOMEventTargetHelper,
 
   bool IsOffline() const { return mIsOffline; }
 
-  MediaStreamGraph* Graph() const;
-  AudioNodeStream* DestinationStream() const;
+  MediaTrackGraph* Graph() const;
+  AudioNodeTrack* DestinationTrack() const;
 
   // Nodes register here if they will produce sound even if they have silent
   // or no input connections.  The AudioContext will keep registered nodes
@@ -355,7 +355,7 @@ class AudioContext final : public DOMEventTargetHelper,
 
   friend struct ::mozilla::WebAudioDecodeJob;
 
-  nsTArray<MediaStream*> GetAllStreams() const;
+  nsTArray<mozilla::MediaTrack*> GetAllTracks() const;
 
   void ResumeInternal(AudioContextOperationFlags aFlags);
   void SuspendInternal(void* aPromise, AudioContextOperationFlags aFlags);
@@ -379,9 +379,9 @@ class AudioContext final : public DOMEventTargetHelper,
   void MaybeUpdateAutoplayTelemetryWhenShutdown();
 
  private:
-  // Each AudioContext has an id, that is passed down the MediaStreams that
+  // Each AudioContext has an id, that is passed down the MediaTracks that
   // back the AudioNodes, so we can easily compute the set of all the
-  // MediaStreams for a given context, on the MediasStreamGraph side.
+  // MediaTracks for a given context, on the MediasTrackGraph side.
   const AudioContextId mId;
   // Note that it's important for mSampleRate to be initialized before
   // mDestination, as mDestination's constructor needs to access it!

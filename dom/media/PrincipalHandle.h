@@ -11,7 +11,7 @@
 
 namespace mozilla {
 /**
- * We pass the principal through the MediaStreamGraph by wrapping it in a thread
+ * We pass the principal through the MediaTrackGraph by wrapping it in a thread
  * safe nsMainThreadPtrHandle, since it cannot be used directly off the main
  * thread. We can compare two PrincipalHandles to each other on any thread, but
  * they can only be created and converted back to nsIPrincipal* on main thread.

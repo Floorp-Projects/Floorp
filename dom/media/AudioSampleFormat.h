@@ -12,7 +12,7 @@
 namespace mozilla {
 
 /**
- * Audio formats supported in MediaStreams and media elements.
+ * Audio formats supported in MediaTracks and media elements.
  *
  * Only one of these is supported by AudioStream, and that is determined
  * at compile time (roughly, FLOAT32 on desktops, S16 on mobile). Media decoders

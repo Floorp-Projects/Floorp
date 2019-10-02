@@ -374,14 +374,14 @@ AudioNodeEngine::AudioNodeEngine(dom::AudioNode* aNode)
   MOZ_COUNT_CTOR(AudioNodeEngine);
 }
 
-void AudioNodeEngine::ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
+void AudioNodeEngine::ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                                    const AudioBlock& aInput,
                                    AudioBlock* aOutput, bool* aFinished) {
   MOZ_ASSERT(mInputCount <= 1 && mOutputCount <= 1);
   *aOutput = aInput;
 }
 
-void AudioNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
+void AudioNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                            Span<const AudioBlock> aInput,
                                            Span<AudioBlock> aOutput,
                                            bool* aFinished) {

@@ -126,15 +126,15 @@ void ImageCapture::TakePhoto(ErrorResult& aResult) {
   // Try if MediaEngine supports taking photo.
   nsresult rv = TakePhotoByMediaEngine();
 
-  // It falls back to MediaStreamGraph image capture if MediaEngine doesn't
+  // It falls back to MediaTrackGraph image capture if MediaEngine doesn't
   // support TakePhoto().
   if (rv == NS_ERROR_NOT_IMPLEMENTED) {
     IC_LOG(
         "MediaEngine doesn't support TakePhoto(), it falls back to "
-        "MediaStreamGraph.");
+        "MediaTrackGraph.");
     RefPtr<CaptureTask> task = new CaptureTask(this);
 
-    // It adds itself into MediaStreamGraph, so ImageCapture doesn't need to
+    // It adds itself into MediaTrackGraph, so ImageCapture doesn't need to
     // hold the reference.
     task->AttachTrack();
   }

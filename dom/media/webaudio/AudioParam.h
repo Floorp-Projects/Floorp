@@ -153,8 +153,8 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
 
   float MaxValue() const { return mMaxValue; }
 
-  bool IsStreamSuspended() const {
-    return mStream ? mStream->IsSuspended() : false;
+  bool IsTrackSuspended() const {
+    return mTrack ? mTrack->IsSuspended() : false;
   }
 
   const nsTArray<AudioNode::InputNode>& InputNodes() const {
@@ -167,11 +167,11 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
     return mInputNodes.AppendElement();
   }
 
-  // May create the stream if it doesn't exist
-  MediaStream* Stream();
+  // May create the track if it doesn't exist
+  mozilla::MediaTrack* Track();
 
-  // Return nullptr if stream doesn't exist.
-  MediaStream* GetStream() const;
+  // Return nullptr if track doesn't exist.
+  mozilla::MediaTrack* GetTrack() const;
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     size_t amount = AudioParamTimeline::SizeOfExcludingThis(aMallocSizeOf);
@@ -181,8 +181,8 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
     // Just count the array, actual nodes are counted in mNode.
     amount += mInputNodes.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
-    if (mNodeStreamPort) {
-      amount += mNodeStreamPort->SizeOfIncludingThis(aMallocSizeOf);
+    if (mNodeTrackPort) {
+      amount += mNodeTrackPort->SizeOfIncludingThis(aMallocSizeOf);
     }
 
     return amount;
@@ -216,7 +216,7 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
 
   void SendEventToEngine(const AudioTimelineEvent& aEvent);
 
-  void DisconnectFromGraphAndDestroyStream();
+  void DisconnectFromGraphAndDestroyTrack();
 
   nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -225,8 +225,8 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   // InputNode's mInputNode.
   nsTArray<AudioNode::InputNode> mInputNodes;
   const char* mName;
-  // The input port used to connect the AudioParam's stream to its node's stream
-  RefPtr<MediaInputPort> mNodeStreamPort;
+  // The input port used to connect the AudioParam's track to its node's track
+  RefPtr<MediaInputPort> mNodeTrackPort;
   const uint32_t mIndex;
   const float mDefaultValue;
   const float mMinValue;
