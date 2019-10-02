@@ -6,6 +6,7 @@
 #include "InstanceProvider.h"
 
 #include "Instance.h"
+#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {

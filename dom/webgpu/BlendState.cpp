@@ -3,16 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "OutOfMemoryError.h"
+#include "BlendState.h"
+
 #include "Device.h"
+#include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(OutOfMemoryError, mParent)
-GPU_IMPL_JS_WRAP(OutOfMemoryError)
+BlendState::~BlendState() = default;
 
-OutOfMemoryError::~OutOfMemoryError() = default;
+WEBGPU_IMPL_GOOP_0(BlendState)
 
 }  // namespace webgpu
 }  // namespace mozilla

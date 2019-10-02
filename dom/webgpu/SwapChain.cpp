@@ -5,13 +5,25 @@
 
 #include "SwapChain.h"
 
+#include "Device.h"
+#include "mozilla/dom/WebGPUBinding.h"
+
 namespace mozilla {
 namespace webgpu {
 
 SwapChain::~SwapChain() = default;
 
-GPU_IMPL_CYCLE_COLLECTION(SwapChain, mParent)
-GPU_IMPL_JS_WRAP(SwapChain)
+void SwapChain::Configure(const dom::WebGPUSwapChainDescriptor& desc) const {
+  MOZ_CRASH("todo");
+}
+
+already_AddRefed<Texture> SwapChain::GetNextTexture() const {
+  MOZ_CRASH("todo");
+}
+
+void SwapChain::Present() const { MOZ_CRASH("todo"); }
+
+WEBGPU_IMPL_GOOP_0(SwapChain)
 
 }  // namespace webgpu
 }  // namespace mozilla
