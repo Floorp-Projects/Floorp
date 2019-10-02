@@ -2350,7 +2350,7 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
 bool jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
                                       uint32_t frameSize, jsbytecode* pc) {
   MOZ_ASSERT(IsIonEnabled());
-  MOZ_ASSERT(frame->frameSize() == frameSize);
+  MOZ_ASSERT(frame->debugFrameSize() == frameSize);
 
   RootedScript script(cx, frame->script());
   bool isLoopEntry = JSOp(*pc) == JSOP_LOOPENTRY;
