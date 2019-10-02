@@ -62,10 +62,6 @@
   border-bottom: 1px solid var(--panel-separator-color);
 }
 
-.search-panel-input-value {
-  color: var(--autocomplete-popup-color);
-}
-
 .search-panel-one-offs {
   margin: 0 !important;
   /* Bug 1108841: prevent font-size from affecting the layout */
