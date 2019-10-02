@@ -66,20 +66,23 @@ void BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator) {
   frameIterator.baselineScriptAndPc(nullptr, &pc);
   size_t nlivefixed = script->calculateLiveFixed(pc);
 
-  // NB: It is possible that numValueSlots() could be zero, even if nfixed is
-  // nonzero.  This is the case if the function has an early stack check.
-  if (numValueSlots() == 0) {
+  uint32_t numValueSlots = frameIterator.baselineFrameNumValueSlots();
+
+  // NB: It is possible that numValueSlots could be zero, even if nfixed is
+  // nonzero.  This is the case when we're initializing the environment chain or
+  // failed the prologue stack check.
+  if (numValueSlots == 0) {
     return;
   }
 
-  MOZ_ASSERT(nfixed <= numValueSlots());
+  MOZ_ASSERT(nfixed <= numValueSlots);
 
   if (nfixed == nlivefixed) {
     // All locals are live.
-    TraceLocals(this, trc, 0, numValueSlots());
+    TraceLocals(this, trc, 0, numValueSlots);
   } else {
     // Trace operand stack.
-    TraceLocals(this, trc, nfixed, numValueSlots());
+    TraceLocals(this, trc, nfixed, numValueSlots);
 
     // Clear dead block-scoped locals.
     while (nfixed > nlivefixed) {
