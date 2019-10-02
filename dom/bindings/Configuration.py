@@ -13,9 +13,6 @@ class DescriptorProvider:
     """
     A way of getting descriptors for interface names.  Subclasses must
     have a getDescriptor method callable with the interface name only.
-
-    Subclasses must also have a getConfig() method that returns a
-    Configuration.
     """
     def __init__(self):
         pass
@@ -272,9 +269,6 @@ class Configuration(DescriptorProvider):
             return d
 
         raise NoSuchDescriptorError("For " + interfaceName + " found no matches")
-
-    def getConfig(self):
-        return self
 
 
 class NoSuchDescriptorError(TypeError):
@@ -781,9 +775,6 @@ class Descriptor(DescriptorProvider):
         Gets the appropriate descriptor for the given interface name.
         """
         return self.config.getDescriptor(interfaceName)
-
-    def getConfig(self):
-        return self.config
 
 
 # Some utility methods

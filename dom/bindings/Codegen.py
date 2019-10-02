@@ -13492,25 +13492,20 @@ class CGDictionary(CGThing):
                  sourceDescription=self.getMemberSourceDescription(member)))
             for member in dictionary.members]
 
-        # If we have a union member which is going to be declared in a different
-        # header but contains something that will be declared in the same header
-        # as us, bail: the C++ includes won't work out.
+        # If we have a union member containing something in the same
+        # file as us, bail: the C++ includes won't work out.
         for member in dictionary.members:
             type = member.type.unroll()
-            if (type.isUnion() and
-                CGHeaders.getUnionDeclarationFilename(descriptorProvider.getConfig(),
-                                                      type) !=
-                CGHeaders.getDeclarationFilename(dictionary)):
+            if type.isUnion():
                 for t in type.flatMemberTypes:
                     if (t.isDictionary() and
                         CGHeaders.getDeclarationFilename(t.inner) ==
                         CGHeaders.getDeclarationFilename(dictionary)):
                         raise TypeError(
-                            "Dictionary contains a union that will live in a different "
-                            "header that contains a dictionary from the same header as "
-                            "the original dictionary.  This won't compile.  Move the "
-                            "inner dictionary to a different Web IDL file to move it "
-                            "to a different header.\n%s\n%s" %
+                            "Dictionary contains a union that contains a "
+                            "dictionary in the same WebIDL file.  This won't "
+                            "compile.  Move the inner dictionary to a "
+                            "different file.\n%s\n%s" %
                             (t.location, t.inner.location))
         self.structs = self.getStructs()
 
