@@ -21,14 +21,13 @@ type Props = {
   previews: Object,
 };
 
-class InlinePreviews extends Component<Props> {
-  shouldComponentUpdate(nextProps) {
-    const { previews } = nextProps;
-    if (!previews) {
-      return false;
-    }
+function hasPreviews(previews) {
+  return !!previews && Object.keys(previews).length > 0;
+}
 
-    return true;
+class InlinePreviews extends Component<Props> {
+  shouldComponentUpdate({ previews }) {
+    return hasPreviews(previews);
   }
 
   render() {
@@ -38,7 +37,7 @@ class InlinePreviews extends Component<Props> {
     if (
       !selectedFrame ||
       selectedFrame.location.sourceId !== selectedSource.id ||
-      !previews
+      !hasPreviews(previews)
     ) {
       return null;
     }

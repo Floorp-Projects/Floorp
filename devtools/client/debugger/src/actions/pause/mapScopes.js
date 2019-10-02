@@ -29,6 +29,8 @@ import { isFulfilled } from "../../utils/async-value";
 
 import type { OriginalScope } from "../../utils/pause/mapScopes";
 
+const expressionRegex = /\bfp\(\)/g;
+
 export async function buildOriginalScopes(
   frame: Frame,
   client: any,
@@ -46,11 +48,17 @@ export async function buildOriginalScopes(
   }
   const originalVariables: XScopeVariables = frame.originalVariables;
   const frameBase = originalVariables.frameBase || "";
+
   const inputs = [];
   for (let i = 0; i < originalVariables.vars.length; i++) {
-    const expr = originalVariables.vars[i].expr || "void 0";
-    inputs[i] = expr.replace(/\bfp\(\)/g, frameBase);
+    const expr = originalVariables.vars[i].expr;
+    const expression = expr
+      ? expr.replace(expressionRegex, frameBase)
+      : "void 0";
+
+    inputs[i] = expression;
   }
+
   const results = await client.evaluateExpressions(inputs, {
     frameId,
     thread: cx.thread,
@@ -60,13 +68,14 @@ export async function buildOriginalScopes(
   for (let i = 0; i < originalVariables.vars.length; i++) {
     const name = originalVariables.vars[i].name;
     variables[name] = { value: results[i].result };
-    console.log("!Variable", name, inputs[i]);
   }
+
   const bindings = {
     arguments: [],
     variables,
   };
-  const actor = (await generatedScopes).actor;
+
+  const { actor } = await generatedScopes;
   const scope = {
     type: "function",
     scopeKind: "",
