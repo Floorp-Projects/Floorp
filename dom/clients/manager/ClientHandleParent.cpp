@@ -8,6 +8,7 @@
 
 #include "ClientHandleOpParent.h"
 #include "ClientManagerService.h"
+#include "ClientPrincipalUtils.h"
 #include "ClientSourceParent.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/Unused.h"
@@ -27,12 +28,10 @@ void ClientHandleParent::ActorDestroy(ActorDestroyReason aReason) {
     mSource->DetachHandle(this);
     mSource = nullptr;
   } else {
-    mService->StopWaitingForSource(this, mClientId);
+    mSourcePromiseRequestHolder.DisconnectIfExists();
   }
 
-  if (mSourcePromise) {
-    mSourcePromise->Reject(NS_ERROR_FAILURE, __func__);
-  }
+  mSourcePromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
 }
 
 PClientHandleOpParent* ClientHandleParent::AllocPClientHandleOpParent(
@@ -61,13 +60,22 @@ ClientHandleParent::~ClientHandleParent() { MOZ_DIAGNOSTIC_ASSERT(!mSource); }
 void ClientHandleParent::Init(const IPCClientInfo& aClientInfo) {
   mClientId = aClientInfo.id();
   mPrincipalInfo = aClientInfo.principalInfo();
-  mSource = mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo());
-  if (!mSource) {
-    mService->WaitForSource(this, aClientInfo.id());
-    return;
-  }
 
-  mSource->AttachHandle(this);
+  // Capturing `this` is okay because the callbacks are disconnected from the
+  // promise returned by `FindSource` in `ActorDestroy`, so the dangling
+  // pointers will never be used.
+  mService->FindSource(aClientInfo.id(), aClientInfo.principalInfo())
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [this](ClientSourceParent* aSource) {
+            mSourcePromiseRequestHolder.Complete();
+            FoundSource(aSource);
+          },
+          [this](nsresult) {
+            mSourcePromiseRequestHolder.Complete();
+            Unused << Send__delete__(this);
+          })
+      ->Track(mSourcePromiseRequestHolder);
 }
 
 ClientSourceParent* ClientHandleParent::GetSource() const { return mSource; }
@@ -77,28 +85,20 @@ RefPtr<SourcePromise> ClientHandleParent::EnsureSource() {
     return SourcePromise::CreateAndResolve(mSource, __func__);
   }
 
-  if (!mSourcePromise) {
-    mSourcePromise = new SourcePromise::Private(__func__);
-  }
-  return mSourcePromise;
+  return mSourcePromiseHolder.Ensure(__func__);
 }
 
 void ClientHandleParent::FoundSource(ClientSourceParent* aSource) {
   MOZ_ASSERT(aSource->Info().Id() == mClientId);
   if (!ClientMatchPrincipalInfo(aSource->Info().PrincipalInfo(),
                                 mPrincipalInfo)) {
-    if (mSourcePromise) {
-      mSourcePromise->Reject(NS_ERROR_FAILURE, __func__);
-    }
     Unused << Send__delete__(this);
     return;
   }
 
   mSource = aSource;
   mSource->AttachHandle(this);
-  if (mSourcePromise) {
-    mSourcePromise->Resolve(aSource, __func__);
-  }
+  mSourcePromiseHolder.ResolveIfExists(aSource, __func__);
 }
 
 }  // namespace dom
