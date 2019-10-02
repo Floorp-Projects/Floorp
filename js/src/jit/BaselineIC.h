@@ -1025,16 +1025,6 @@ class ICStubCompiler : public ICStubCompilerBase {
   }
 };
 
-// WarmUpCounter_Fallback
-
-// A WarmUpCounter IC chain has only the fallback stub.
-class ICWarmUpCounter_Fallback : public ICFallbackStub {
-  friend class ICStubSpace;
-
-  explicit ICWarmUpCounter_Fallback(TrampolinePtr stubCode)
-      : ICFallbackStub(ICStub::WarmUpCounter_Fallback, stubCode) {}
-};
-
 // Monitored fallback stubs - as the name implies.
 class ICMonitoredFallbackStub : public ICFallbackStub {
  protected:
@@ -1860,11 +1850,6 @@ extern MOZ_MUST_USE bool TypeMonitorResult(JSContext* cx,
 extern bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
                                  ICCacheIR_Updated* stub, HandleValue objval,
                                  HandleValue value);
-
-extern bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
-                                       uint32_t frameSize,
-                                       ICWarmUpCounter_Fallback* stub,
-                                       IonOsrTempData** infoPtr);
 
 extern bool DoCallFallback(JSContext* cx, BaselineFrame* frame,
                            ICCall_Fallback* stub, uint32_t argc, Value* vp,

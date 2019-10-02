@@ -2347,8 +2347,8 @@ static MethodStatus BaselineCanEnterAtBranch(JSContext* cx, HandleScript script,
   return Method_Compiled;
 }
 
-bool jit::IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
-                                      uint32_t frameSize, jsbytecode* pc) {
+static bool IonCompileScriptForBaseline(JSContext* cx, BaselineFrame* frame,
+                                        uint32_t frameSize, jsbytecode* pc) {
   MOZ_ASSERT(IsIonEnabled());
   MOZ_ASSERT(frame->debugFrameSize() == frameSize);
 
@@ -2432,6 +2432,114 @@ bool jit::IonCompileScriptForBaselineAtEntry(JSContext* cx,
   uint32_t frameSize =
       BaselineFrame::frameSizeForNumValueSlots(script->nfixed());
   return IonCompileScriptForBaseline(cx, frame, frameSize, script->code());
+}
+
+/* clang-format off */
+// The following data is kept in a temporary heap-allocated buffer, stored in
+// JitRuntime (high memory addresses at top, low at bottom):
+//
+//     +----->+=================================+  --      <---- High Address
+//     |      |                                 |   |
+//     |      |     ...BaselineFrame...         |   |-- Copy of BaselineFrame + stack values
+//     |      |                                 |   |
+//     |      +---------------------------------+   |
+//     |      |                                 |   |
+//     |      |     ...Locals/Stack...          |   |
+//     |      |                                 |   |
+//     |      +=================================+  --
+//     |      |     Padding(Maybe Empty)        |
+//     |      +=================================+  --
+//     +------|-- baselineFrame                 |   |-- IonOsrTempData
+//            |   jitcode                       |   |
+//            +=================================+  --      <---- Low Address
+//
+// A pointer to the IonOsrTempData is returned.
+/* clang-format on */
+
+static IonOsrTempData* PrepareOsrTempData(JSContext* cx, BaselineFrame* frame,
+                                          uint32_t frameSize, void* jitcode) {
+  uint32_t numValueSlots = frame->numValueSlots(frameSize);
+
+  // Calculate the amount of space to allocate:
+  //      BaselineFrame space:
+  //          (sizeof(Value) * numValueSlots)
+  //        + sizeof(BaselineFrame)
+  //
+  //      IonOsrTempData space:
+  //          sizeof(IonOsrTempData)
+
+  size_t frameSpace = sizeof(BaselineFrame) + sizeof(Value) * numValueSlots;
+  size_t ionOsrTempDataSpace = sizeof(IonOsrTempData);
+
+  size_t totalSpace = AlignBytes(frameSpace, sizeof(Value)) +
+                      AlignBytes(ionOsrTempDataSpace, sizeof(Value));
+
+  IonOsrTempData* info = (IonOsrTempData*)cx->allocateOsrTempData(totalSpace);
+  if (!info) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  memset(info, 0, totalSpace);
+
+  info->jitcode = jitcode;
+
+  // Copy the BaselineFrame + local/stack Values to the buffer. Arguments and
+  // |this| are not copied but left on the stack: the Baseline and Ion frame
+  // share the same frame prefix and Ion won't clobber these values. Note
+  // that info->baselineFrame will point to the *end* of the frame data, like
+  // the frame pointer register in baseline frames.
+  uint8_t* frameStart =
+      (uint8_t*)info + AlignBytes(ionOsrTempDataSpace, sizeof(Value));
+  info->baselineFrame = frameStart + frameSpace;
+
+  memcpy(frameStart, (uint8_t*)frame - numValueSlots * sizeof(Value),
+         frameSpace);
+
+  JitSpew(JitSpew_BaselineOSR, "Allocated IonOsrTempData at %p", (void*)info);
+  JitSpew(JitSpew_BaselineOSR, "Jitcode is %p", info->jitcode);
+
+  // All done.
+  return info;
+}
+
+bool jit::IonCompileScriptForBaselineOSR(JSContext* cx, BaselineFrame* frame,
+                                         uint32_t frameSize, jsbytecode* pc,
+                                         IonOsrTempData** infoPtr) {
+  MOZ_ASSERT(infoPtr);
+  *infoPtr = nullptr;
+
+  MOZ_ASSERT(frame->debugFrameSize() == frameSize);
+  MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
+
+  if (!IonCompileScriptForBaseline(cx, frame, frameSize, pc)) {
+    return false;
+  }
+
+  RootedScript script(cx, frame->script());
+  if (!script->hasIonScript() || script->ionScript()->osrPc() != pc ||
+      script->ionScript()->bailoutExpected() || frame->isDebuggee()) {
+    return true;
+  }
+
+  IonScript* ion = script->ionScript();
+  MOZ_ASSERT(cx->runtime()->geckoProfiler().enabled() ==
+             ion->hasProfilingInstrumentation());
+  MOZ_ASSERT(ion->osrPc() == pc);
+
+  JitSpew(JitSpew_BaselineOSR, "  OSR possible!");
+  void* jitcode = ion->method()->raw() + ion->osrEntryOffset();
+
+  // Prepare the temporary heap copy of the fake InterpreterFrame and actual
+  // args list.
+  JitSpew(JitSpew_BaselineOSR, "Got jitcode.  Preparing for OSR into ion.");
+  IonOsrTempData* info = PrepareOsrTempData(cx, frame, frameSize, jitcode);
+  if (!info) {
+    return false;
+  }
+
+  *infoPtr = info;
+  return true;
 }
 
 MethodStatus jit::Recompile(JSContext* cx, HandleScript script, bool force) {
