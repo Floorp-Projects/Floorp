@@ -277,7 +277,7 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_MAX_NURSERY_BYTES:
       // Reset these togeather to maintain their min <= max invariant.
       gcMinNurseryBytes_ = TuningDefaults::GCMinNurseryBytes;
-      gcMaxNurseryBytes_ = JS::DefaultNurseryBytes;
+      gcMaxNurseryBytes_ = JS::DefaultNurseryMaxBytes;
       break;
     case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
       highFrequencyThreshold_ =
