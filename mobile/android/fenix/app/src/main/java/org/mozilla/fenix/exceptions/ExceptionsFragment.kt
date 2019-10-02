@@ -5,29 +5,28 @@
 package org.mozilla.fenix.exceptions
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import kotlinx.android.synthetic.main.fragment_exceptions.view.*
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.SupportUtils
 
 class ExceptionsFragment : Fragment() {
     private lateinit var exceptionsStore: ExceptionsFragmentStore
     private lateinit var exceptionsView: ExceptionsView
     private lateinit var exceptionsInteractor: ExceptionsInteractor
+    private lateinit var trackingProtectionUseCases: TrackingProtectionUseCases
 
     override fun onResume() {
         super.onResume()
@@ -41,16 +40,21 @@ class ExceptionsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_exceptions, container, false)
+        trackingProtectionUseCases = TrackingProtectionUseCases(
+            sessionManager = view.context.components.core.sessionManager,
+            engine = view.context.components.core.engine
+        )
         exceptionsStore = StoreProvider.get(this) {
             ExceptionsFragmentStore(
                 ExceptionsFragmentState(
-                    items = loadAndMapExceptions()
+                    items = listOf()
                 )
             )
         }
         exceptionsInteractor =
             ExceptionsInteractor(::openLearnMore, ::deleteOneItem, ::deleteAllItems)
         exceptionsView = ExceptionsView(view.exceptionsLayout, exceptionsInteractor)
+        reloadExceptions()
         return view
     }
 
@@ -63,20 +67,15 @@ class ExceptionsFragment : Fragment() {
     }
 
     private fun deleteAllItems() {
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
-            ExceptionDomains(requireContext()).run {
-                val domains = load()
-                remove(domains)
-            }
-            reloadData()
-        }
+        trackingProtectionUseCases.removeAllExceptions()
+        reloadExceptions()
     }
 
     private fun deleteOneItem(item: ExceptionsItem) {
-        viewLifecycleOwner.lifecycleScope.launch(IO) {
-            ExceptionDomains(requireContext()).remove(listOf(item.url))
-            reloadData()
-        }
+        // We can't currently delete one item in this Exceptions list with a URL with the GV API
+        // See https://github.com/mozilla-mobile/android-components/issues/4699
+        Log.e("Remove one exception", "$item")
+        reloadExceptions()
     }
 
     private fun openLearnMore() {
@@ -88,18 +87,13 @@ class ExceptionsFragment : Fragment() {
         )
     }
 
-    private fun loadAndMapExceptions(): List<ExceptionsItem> {
-        return ExceptionDomains(requireContext()).load()
-            .map { item -> ExceptionsItem(item) }
-    }
-
-    private suspend fun reloadData() {
-        val items = loadAndMapExceptions()
-
-        coroutineScope {
-            launch(Main) {
-                exceptionsStore.dispatch(ExceptionsFragmentAction.Change(items))
-            }
+    private fun reloadExceptions() {
+        trackingProtectionUseCases.fetchExceptions { resultList ->
+            exceptionsStore.dispatch(ExceptionsFragmentAction.Change(resultList.map {
+                ExceptionsItem(
+                    it
+                )
+            }))
         }
     }
 }

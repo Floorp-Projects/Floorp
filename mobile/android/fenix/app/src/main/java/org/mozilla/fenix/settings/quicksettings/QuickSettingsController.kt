@@ -14,13 +14,14 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.exceptions.ExceptionDomains
-import org.mozilla.fenix.ext.tryGetHostFromUrl
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
@@ -36,9 +37,8 @@ interface QuickSettingsController {
     /**
      * Handles turning on/off tracking protection.
      *
-     * @param websiteUrl [String] the website URL for which to toggle tracking protection.
-     */
-    fun handleTrackingProtectionToggled(websiteUrl: String, trackingEnabled: Boolean)
+     * */
+    fun handleTrackingProtectionToggled(trackingEnabled: Boolean)
 
     /**
      * Handles showing the tracking protection settings.
@@ -89,7 +89,6 @@ interface QuickSettingsController {
  * @param sitePermissions [SitePermissions]? list of website permissions and their status.
  * @param settings [Settings] application settings.
  * @param permissionStorage [PermissionStorage] app state for website permissions exception.
- * @param trackingExceptions [ExceptionDomains] allows setting whether to allow trackers or not.
  * @param reload [ReloadUrlUseCase] callback allowing for reloading the current web page.
  * @param addNewTab [AddNewTabUseCase] callback allowing for loading a URL in a new tab.
  * @param requestRuntimePermissions [OnNeedToRequestPermissions] callback allowing for requesting
@@ -98,6 +97,7 @@ interface QuickSettingsController {
  * @param displayTrackingProtection callback for when the [TrackingProtectionView] needs to be displayed.
  * @param displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
  * @param dismiss callback allowing to request this entire Fragment to be dismissed.
+ * @param trackingProtectionUseCases usecase allowing us to add or remove tracking protection exceptions
  */
 @Suppress("TooManyFunctions")
 class DefaultQuickSettingsController(
@@ -109,22 +109,28 @@ class DefaultQuickSettingsController(
     private var sitePermissions: SitePermissions?,
     private val settings: Settings,
     private val permissionStorage: PermissionStorage,
-    private val trackingExceptions: ExceptionDomains,
     private val reload: ReloadUrlUseCase,
     private val addNewTab: AddNewTabUseCase,
     private val requestRuntimePermissions: OnNeedToRequestPermissions = { },
     private val reportSiteIssue: () -> Unit,
     private val displayTrackingProtection: () -> Unit,
     private val displayPermissions: () -> Unit,
-    private val dismiss: () -> Unit
+    private val dismiss: () -> Unit,
+    private val trackingProtectionUseCases: TrackingProtectionUseCases
 ) : QuickSettingsController {
 
     override fun handleTrackingProtectionToggled(
-        websiteUrl: String,
         trackingEnabled: Boolean
     ) {
-        val host = websiteUrl.tryGetHostFromUrl()
-        trackingExceptions.toggle(host)
+        session?.let {
+            if (trackingEnabled) {
+                trackingProtectionUseCases.removeException(it)
+            } else {
+                context.metrics.track(Event.TrackingProtectionException)
+                trackingProtectionUseCases.addException(it)
+            }
+        }
+
         reload(session)
 
         quickSettingsStore.dispatch(
@@ -246,13 +252,17 @@ class DefaultQuickSettingsController(
 
         return when (this) {
             PhoneFeature.CAMERA -> WebsitePermission.Camera(
-                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid)
+                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid
+            )
             PhoneFeature.LOCATION -> WebsitePermission.Location(
-                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid)
+                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid
+            )
             PhoneFeature.MICROPHONE -> WebsitePermission.Microphone(
-                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid)
+                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid
+            )
             PhoneFeature.NOTIFICATION -> WebsitePermission.Notification(
-                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid)
+                defaultStatus, defaultVisible, defaultEnabled, defaultBlockedByAndroid
+            )
             PhoneFeature.AUTOPLAY -> defaultWebsitePermission!! // fail-fast
         }
     }

@@ -26,11 +26,11 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.*
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.utils.Settings
@@ -50,7 +50,11 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private lateinit var websiteTrackingProtectionView: TrackingProtectionView
     private lateinit var interactor: QuickSettingsInteractor
     private val safeArguments get() = requireNotNull(arguments)
-    private val promptGravity: Int by lazy { QuickSettingsSheetDialogFragmentArgs.fromBundle(safeArguments).gravity }
+    private val promptGravity: Int by lazy {
+        QuickSettingsSheetDialogFragmentArgs.fromBundle(
+            safeArguments
+        ).gravity
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -80,7 +84,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             sitePermissions = args.sitePermissions,
             settings = Settings.getInstance(context),
             permissionStorage = context.components.core.permissionStorage,
-            trackingExceptions = ExceptionDomains(context),
             reload = context.components.useCases.sessionUseCases.reload,
             addNewTab = context.components.useCases.tabsUseCases.addTab,
             requestRuntimePermissions = { permissions ->
@@ -89,13 +92,20 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             reportSiteIssue = ::launchIntentReceiver,
             displayTrackingProtection = ::showTrackingProtectionView,
             displayPermissions = ::showPermissionsView,
-            dismiss = ::dismiss
+            dismiss = ::dismiss,
+            trackingProtectionUseCases = TrackingProtectionUseCases(
+                context.components.core.sessionManager,
+                context.components.core.engine
+            )
         )
+
         interactor = QuickSettingsInteractor(quickSettingsController)
 
-        websiteTrackingProtectionView = TrackingProtectionView(rootView.trackingProtectionLayout, interactor)
+        websiteTrackingProtectionView =
+            TrackingProtectionView(rootView.trackingProtectionLayout, interactor)
         websiteInfoView = WebsiteInfoView(rootView.websiteInfoLayout)
-        websitePermissionsView = WebsitePermissionsView(rootView.websitePermissionsLayout, interactor)
+        websitePermissionsView =
+            WebsitePermissionsView(rootView.websitePermissionsLayout, interactor)
 
         return rootView
     }

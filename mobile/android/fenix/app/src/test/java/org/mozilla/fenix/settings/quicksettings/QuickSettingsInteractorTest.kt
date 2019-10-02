@@ -36,20 +36,15 @@ class QuickSettingsInteractorTest {
 
     @Test
     fun `onProtectionToggled should delegate the controller`() {
-        val websiteUrl = "https://host.com/page1"
         val trackingEnabled = true
-        val url = slot<String>()
         val trackingStatus = slot<Boolean>()
 
-        interactor.onProtectionToggled(websiteUrl, trackingEnabled)
+        interactor.onProtectionToggled(trackingEnabled)
 
         verifyAll {
-            controller.handleTrackingProtectionToggled(capture(url), capture(trackingStatus))
+            controller.handleTrackingProtectionToggled(capture(trackingStatus))
         }
         assertAll {
-            assertThat(url.isCaptured).isTrue()
-            assertThat(url.captured).isEqualTo(websiteUrl)
-
             assertThat(trackingStatus.isCaptured).isTrue()
             assertThat(trackingStatus.captured).isEqualTo(trackingEnabled)
         }

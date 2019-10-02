@@ -21,6 +21,7 @@ import mozilla.components.feature.pwa.ext.trustedOrigins
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
@@ -154,15 +155,22 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     override fun navToTrackingProtectionPanel(session: Session) {
-        val directions =
-            ExternalAppBrowserFragmentDirections
-                .actionExternalAppBrowserFragmentToTrackingProtectionPanelDialogFragment(
-                    sessionId = session.id,
-                    url = session.url,
-                    trackingProtectionEnabled = session.trackerBlockingEnabled,
-                    gravity = getAppropriateLayoutGravity()
-                )
-        nav(R.id.externalAppBrowserFragment, directions)
+        val useCase = TrackingProtectionUseCases(
+            sessionManager = requireComponents.core.sessionManager,
+            engine = requireComponents.core.engine
+        )
+        useCase.containsException(session) { contains ->
+            val isEnabled = session.trackerBlockingEnabled && !contains
+            val directions =
+                ExternalAppBrowserFragmentDirections
+                    .actionExternalAppBrowserFragmentToTrackingProtectionPanelDialogFragment(
+                        sessionId = session.id,
+                        url = session.url,
+                        trackingProtectionEnabled = isEnabled,
+                        gravity = getAppropriateLayoutGravity()
+                    )
+            nav(R.id.externalAppBrowserFragment, directions)
+        }
     }
 
     override fun getEngineMargins(): Pair<Int, Int> {

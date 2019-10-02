@@ -36,6 +36,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.readerview.ReaderViewFeature
+import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
@@ -224,14 +225,21 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     override fun navToTrackingProtectionPanel(session: Session) {
-        val directions =
-            BrowserFragmentDirections.actionBrowserFragmentToTrackingProtectionPanelDialogFragment(
-                sessionId = session.id,
-                url = session.url,
-                trackingProtectionEnabled = session.trackerBlockingEnabled,
-                gravity = getAppropriateLayoutGravity()
-            )
-        nav(R.id.browserFragment, directions)
+        val useCase = TrackingProtectionUseCases(
+            sessionManager = requireComponents.core.sessionManager,
+            engine = requireComponents.core.engine
+        )
+        useCase.containsException(session) { contains ->
+            val isEnabled = session.trackerBlockingEnabled && !contains
+            val directions =
+                BrowserFragmentDirections.actionBrowserFragmentToTrackingProtectionPanelDialogFragment(
+                    sessionId = session.id,
+                    url = session.url,
+                    trackingProtectionEnabled = isEnabled,
+                    gravity = getAppropriateLayoutGravity()
+                )
+            nav(R.id.browserFragment, directions)
+        }
     }
 
     override fun getEngineMargins(): Pair<Int, Int> {

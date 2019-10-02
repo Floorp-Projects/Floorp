@@ -32,12 +32,10 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.ext.tryGetHostFromUrl
 
 class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHandler {
 
@@ -172,12 +170,22 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), BackHan
 
     private fun toggleTrackingProtection(isEnabled: Boolean) {
         context?.let { context ->
-            val host = url.tryGetHostFromUrl()
-            lifecycleScope.launch {
-                ExceptionDomains(context).toggle(host)
-            }
-            with(context.components) {
-                useCases.sessionUseCases.reload.invoke(core.sessionManager.findSessionById(sessionId))
+            val useCase = TrackingProtectionUseCases(
+                sessionManager = context.components.core.sessionManager,
+                engine = context.components.core.engine
+            )
+            val session = context.components.core.sessionManager.findSessionById(sessionId)
+            session?.let {
+                if (isEnabled) {
+                    useCase.removeException(it)
+                } else {
+                    context.metrics.track(Event.TrackingProtectionException)
+                    useCase.addException(it)
+                }
+
+                with(context.components) {
+                    useCases.sessionUseCases.reload.invoke(session)
+                }
             }
         }
         trackingProtectionStore.dispatch(TrackingProtectionAction.TrackerBlockingChanged(isEnabled))

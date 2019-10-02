@@ -21,8 +21,8 @@ class QuickSettingsInteractor(
         controller.handleReportTrackingProblem(websiteUrl)
     }
 
-    override fun onProtectionToggled(websiteUrl: String, trackingEnabled: Boolean) {
-        controller.handleTrackingProtectionToggled(websiteUrl, trackingEnabled)
+    override fun onProtectionToggled(trackingEnabled: Boolean) {
+        controller.handleTrackingProtectionToggled(trackingEnabled)
     }
 
     override fun onProtectionSettingsSelected() {

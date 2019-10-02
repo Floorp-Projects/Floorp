@@ -26,7 +26,7 @@ interface TrackingProtectionInteractor {
     /**
      * Indicates the user want to toggle the tracking protection on / off.
      */
-    fun onProtectionToggled(websiteUrl: String, trackingEnabled: Boolean)
+    fun onProtectionToggled(trackingEnabled: Boolean)
 
     /**
      * Indicates the user want to see all tracking protection settings.
@@ -84,7 +84,7 @@ class TrackingProtectionView(
         trackingProtectionSwitch.isEnabled = state.isTrackingProtectionEnabledPerApp
         if (state.isTrackingProtectionEnabledPerApp) {
             trackingProtectionSwitch.setOnCheckedChangeListener { _, isChecked ->
-                interactor.onProtectionToggled(state.websiteUrl, isChecked)
+                interactor.onProtectionToggled(isChecked)
             }
         }
     }

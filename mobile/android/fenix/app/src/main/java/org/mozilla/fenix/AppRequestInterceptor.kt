@@ -11,17 +11,15 @@ import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.tryGetHostFromUrl
 
 class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
-    override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
-        val host = uri.tryGetHostFromUrl()
-
-        adjustTrackingProtection(host, context, session)
-
+    override fun onLoadRequest(
+        session: EngineSession,
+        uri: String
+    ): RequestInterceptor.InterceptionResponse? {
+        adjustTrackingProtection(context, session)
         // WebChannel-driven authentication does not require a separate redirect interceptor.
         return if (context.isInExperiment(Experiments.asFeatureWebChannelsDisabled)) {
             context.components.services.accountsAuthFeature.interceptor.onLoadRequest(session, uri)
@@ -30,10 +28,9 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         }
     }
 
-    private fun adjustTrackingProtection(host: String, context: Context, session: EngineSession) {
-        val trackingProtectionException = ExceptionDomains(context).load().contains(host)
+    private fun adjustTrackingProtection(context: Context, session: EngineSession) {
         val trackingProtectionEnabled = context.settings().shouldUseTrackingProtection
-        if (trackingProtectionException || !trackingProtectionEnabled) {
+        if (!trackingProtectionEnabled) {
             session.disableTrackingProtection()
         } else {
             val core = context.components.core
