@@ -3036,70 +3036,8 @@ void MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph) {
   mGraph = aGraph;
 }
 
-void MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId,
-                                            BlockingMode aBlockingMode) {
-  mBlockedTracks.AppendElement(
-      Pair<TrackID, BlockingMode>(aTrackId, aBlockingMode));
-}
-
-RefPtr<GenericPromise> MediaInputPort::BlockSourceTrackId(
-    TrackID aTrackId, BlockingMode aBlockingMode) {
-  class Message : public ControlMessage {
-   public:
-    Message(MediaInputPort* aPort, TrackID aTrackId, BlockingMode aBlockingMode,
-            already_AddRefed<nsIRunnable> aRunnable)
-        : ControlMessage(aPort->GetDestination()),
-          mPort(aPort),
-          mTrackId(aTrackId),
-          mBlockingMode(aBlockingMode),
-          mRunnable(aRunnable) {}
-    void Run() override {
-      mPort->BlockSourceTrackIdImpl(mTrackId, mBlockingMode);
-      if (mRunnable) {
-        mStream->Graph()->DispatchToMainThreadStableState(mRunnable.forget());
-      }
-    }
-    void RunDuringShutdown() override { Run(); }
-    RefPtr<MediaInputPort> mPort;
-    TrackID mTrackId;
-    BlockingMode mBlockingMode;
-    nsCOMPtr<nsIRunnable> mRunnable;
-  };
-
-  MOZ_ASSERT(IsTrackIDExplicit(aTrackId), "Only explicit TrackID is allowed");
-
-  MozPromiseHolder<GenericPromise> holder;
-  RefPtr<GenericPromise> p = holder.Ensure(__func__);
-
-  class HolderRunnable : public Runnable {
-   public:
-    explicit HolderRunnable(MozPromiseHolder<GenericPromise>&& aHolder)
-        : Runnable("MediaInputPort::HolderRunnable"),
-          mHolder(std::move(aHolder)) {}
-
-    NS_IMETHOD Run() override {
-      MOZ_ASSERT(NS_IsMainThread());
-      mHolder.Resolve(true, __func__);
-      return NS_OK;
-    }
-
-   private:
-    ~HolderRunnable() {
-      mHolder.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-    }
-    MozPromiseHolder<GenericPromise> mHolder;
-  };
-
-  auto runnable = MakeRefPtr<HolderRunnable>(std::move(holder));
-  GraphImpl()->AppendMessage(
-      MakeUnique<Message>(this, aTrackId, aBlockingMode, runnable.forget()));
-  return p;
-}
-
 already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(
-    MediaStream* aStream, TrackID aTrackID, TrackID aDestTrackID,
-    uint16_t aInputNumber, uint16_t aOutputNumber,
-    nsTArray<TrackID>* aBlockedTracks) {
+    MediaStream* aStream, uint16_t aInputNumber, uint16_t aOutputNumber) {
   // This method creates two references to the MediaInputPort: one for
   // the main thread, and one for the MediaStreamGraph.
   class Message : public ControlMessage {
@@ -3116,30 +3054,15 @@ already_AddRefed<MediaInputPort> ProcessedMediaStream::AllocateInputPort(
     RefPtr<MediaInputPort> mPort;
   };
 
-  MOZ_ASSERT(aTrackID == TRACK_ANY || IsTrackIDExplicit(aTrackID),
-             "Only TRACK_ANY and explicit ID are allowed for source track");
-  MOZ_ASSERT(
-      aDestTrackID == TRACK_ANY || IsTrackIDExplicit(aDestTrackID),
-      "Only TRACK_ANY and explicit ID are allowed for destination track");
-  MOZ_ASSERT(
-      aTrackID != TRACK_ANY || aDestTrackID == TRACK_ANY,
-      "Generic MediaInputPort cannot produce a single destination track");
   RefPtr<MediaInputPort> port;
   if (aStream->IsDestroyed()) {
     // Create a port that's disconnected, which is what it'd be after its source
     // stream is Destroy()ed normally. Disconnect() is idempotent so destroying
     // this later is fine.
-    port = new MediaInputPort(nullptr, aTrackID, nullptr, aDestTrackID,
-                              aInputNumber, aOutputNumber);
+    port = new MediaInputPort(nullptr, nullptr, aInputNumber, aOutputNumber);
   } else {
     MOZ_ASSERT(aStream->GraphImpl() == GraphImpl());
-    port = new MediaInputPort(aStream, aTrackID, this, aDestTrackID,
-                              aInputNumber, aOutputNumber);
-  }
-  if (aBlockedTracks) {
-    for (TrackID trackID : *aBlockedTracks) {
-      port->BlockSourceTrackIdImpl(trackID, BlockingMode::CREATION);
-    }
+    port = new MediaInputPort(aStream, this, aInputNumber, aOutputNumber);
   }
   port->SetGraphImpl(GraphImpl());
   ++GraphImpl()->mMainThreadPortCount;
