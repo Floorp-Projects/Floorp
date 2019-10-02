@@ -216,8 +216,7 @@ xul|popupnotificationcontent {
 
 /* autorepeatbuttons in menus */
 
-.popup-internal-box > .scrollbutton-up,
-.popup-internal-box > .scrollbutton-down {
+.menupopup-scrollbutton {
   height: 15px;
   position: relative;
   list-style-image: none;
@@ -233,25 +232,24 @@ xul|popupnotificationcontent {
   -moz-appearance: menuitem;
 }
 
-.popup-internal-box > .scrollbutton-up {
+.scrollbutton-up.menupopup-scrollbutton {
   padding-top: 1px; /* 4px padding-top from the .popup-internal-box. */
   margin-bottom: -15px;
 }
 
-.popup-internal-box > .scrollbutton-up > .toolbarbutton-icon {
+.scrollbutton-up.menupopup-scrollbutton > .toolbarbutton-icon {
   -moz-appearance: button-arrow-up;
 }
 
-.popup-internal-box > .scrollbutton-down {
+.scrollbutton-down.menupopup-scrollbutton {
   padding-top: 5px;
   margin-top: -15px;
 }
 
-.popup-internal-box > .scrollbutton-down > .toolbarbutton-icon {
+.scrollbutton-down.menupopup-scrollbutton > .toolbarbutton-icon {
   -moz-appearance: button-arrow-down;
 }
 
-.popup-internal-box > .scrollbutton-up[disabled="true"],
-.popup-internal-box > .scrollbutton-down[disabled="true"] {
+.menupopup-scrollbutton[disabled="true"] {
   visibility: collapse;
 }

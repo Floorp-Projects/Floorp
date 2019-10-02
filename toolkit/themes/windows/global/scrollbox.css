@@ -4,6 +4,13 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+arrowscrollbox[scrolledtoend=true]::part(arrowscrollbox-overflow-end-indicator),
+arrowscrollbox[scrolledtostart=true]::part(arrowscrollbox-overflow-start-indicator),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-up),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-down) {
+  visibility: collapse;
+}
+
 /*
  * Scroll arrows
  */
@@ -71,15 +78,15 @@
   margin-inline-end: 2px;
 }
 
-arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-up,
-arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-down {
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-up),
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-down) {
   -moz-appearance: none;
   border: 1px solid transparent;
   padding: 1px;
 }
 
-arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-up:not([disabled="true"]):hover,
-arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-down:not([disabled="true"]):hover {
+arrowscrollbox:not([clicktoscroll="true"]):not([scrolledtostart=true])::part(scrollbutton-up):hover,
+arrowscrollbox:not([clicktoscroll="true"]):not([scrolledtoend=true])::part(scrollbutton-down):hover {
   margin: 1px;
   border: 1px inset ThreeDFace;
   padding-top: 2px;
