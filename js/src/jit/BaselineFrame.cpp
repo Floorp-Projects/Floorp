@@ -163,10 +163,10 @@ bool BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues) {
   flags_ |= BaselineFrame::RUNNING_IN_INTERPRETER;
   setInterpreterFields(pc);
 
-  frameSize_ = BaselineFrame::FramePointerOffset + BaselineFrame::Size() +
-               numStackValues * sizeof(Value);
-
-  MOZ_ASSERT(numValueSlots() == numStackValues);
+#ifdef DEBUG
+  debugFrameSize_ = frameSizeForNumValueSlots(numStackValues);
+  MOZ_ASSERT(debugNumValueSlots() == numStackValues);
+#endif
 
   for (uint32_t i = 0; i < numStackValues; i++) {
     *valueSlot(i) = fp->slots()[i];

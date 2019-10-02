@@ -179,7 +179,7 @@ void JSJitFrameIter::operator++() {
   current_ = prevFp();
 
   MOZ_ASSERT_IF(isBaselineJS(),
-                baselineFrame()->frameSize() == *baselineFrameSize_);
+                baselineFrame()->debugFrameSize() == *baselineFrameSize_);
 }
 
 uintptr_t* JSJitFrameIter::spillBase() const {

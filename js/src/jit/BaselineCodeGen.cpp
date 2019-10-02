@@ -613,12 +613,12 @@ void BaselineCodeGen<Handler>::prepareVMCall() {
 
 template <>
 void BaselineCompilerCodeGen::storeFrameSizeAndPushDescriptor(
-    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr,
-    Register scratch1, Register scratch2) {
-  uint32_t frameVals = frame.nlocals() + frame.stackDepth();
+    uint32_t argSize, Register scratch1, Register scratch2) {
+  uint32_t frameFullSize = frame.frameSize();
 
-  uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
-  masm.store32(Imm32(frameFullSize), frameSizeAddr);
+#ifdef DEBUG
+  masm.store32(Imm32(frameFullSize), frame.addressOfDebugFrameSize());
+#endif
 
   uint32_t descriptor = MakeFrameDescriptor(
       frameFullSize + argSize, FrameType::BaselineJS, ExitFrameLayout::Size());
@@ -627,17 +627,17 @@ void BaselineCompilerCodeGen::storeFrameSizeAndPushDescriptor(
 
 template <>
 void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
-    uint32_t frameBaseSize, uint32_t argSize, const Address& frameSizeAddr,
-    Register scratch1, Register scratch2) {
+    uint32_t argSize, Register scratch1, Register scratch2) {
   // scratch1 = FramePointer + BaselineFrame::FramePointerOffset - StackPointer.
   masm.computeEffectiveAddress(
       Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), scratch1);
   masm.subStackPtrFrom(scratch1);
 
-  // Store the frame size without VMFunction arguments. Use
-  // computeEffectiveAddress instead of sub32 to avoid an extra move.
+#ifdef DEBUG
+  // Store the frame size without VMFunction arguments in debug builds.
   masm.computeEffectiveAddress(Address(scratch1, -int32_t(argSize)), scratch2);
-  masm.store32(scratch2, frameSizeAddr);
+  masm.store32(scratch2, frame.addressOfDebugFrameSize());
+#endif
 
   // Push frame descriptor based on the full frame size.
   masm.makeFrameDescriptor(scratch1, FrameType::BaselineJS,
@@ -669,16 +669,14 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
 
   saveInterpreterPCReg();
 
-  Address frameSizeAddress(BaselineFrameReg,
-                           BaselineFrame::reverseOffsetOfFrameSize());
-  uint32_t frameBaseSize =
-      BaselineFrame::FramePointerOffset + BaselineFrame::Size();
   if (phase == CallVMPhase::AfterPushingLocals) {
-    storeFrameSizeAndPushDescriptor(frameBaseSize, argSize, frameSizeAddress,
-                                    R0.scratchReg(), R1.scratchReg());
+    storeFrameSizeAndPushDescriptor(argSize, R0.scratchReg(), R1.scratchReg());
   } else {
     MOZ_ASSERT(phase == CallVMPhase::BeforePushingLocals);
-    masm.store32(Imm32(frameBaseSize), frameSizeAddress);
+    uint32_t frameBaseSize = BaselineFrame::frameSizeForNumValueSlots(0);
+#ifdef DEBUG
+    masm.store32(Imm32(frameBaseSize), frame.addressOfDebugFrameSize());
+#endif
     uint32_t descriptor =
         MakeFrameDescriptor(frameBaseSize + argSize, FrameType::BaselineJS,
                             ExitFrameLayout::Size());
@@ -6082,8 +6080,9 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   masm.computeEffectiveAddress(
       Address(BaselineFrameReg, BaselineFrame::FramePointerOffset), scratch2);
   masm.subStackPtrFrom(scratch2);
-  masm.store32(scratch2, Address(BaselineFrameReg,
-                                 BaselineFrame::reverseOffsetOfFrameSize()));
+#ifdef DEBUG
+  masm.store32(scratch2, frame.addressOfDebugFrameSize());
+#endif
   masm.makeFrameDescriptor(scratch2, FrameType::BaselineJS,
                            JitFrameLayout::Size());
 

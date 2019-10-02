@@ -935,9 +935,8 @@ JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame) {
 bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
                    uint32_t frameSize, jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_YIELD || *pc == JSOP_AWAIT);
-  MOZ_ASSERT(frameSize == frame->frameSize());
 
-  uint32_t numValueSlots = frame->numValueSlots();
+  uint32_t numValueSlots = frame->numValueSlots(frameSize);
 
   MOZ_ASSERT(numValueSlots > frame->script()->nfixed());
   uint32_t stackDepth = numValueSlots - frame->script()->nfixed();
