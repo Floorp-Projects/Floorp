@@ -308,9 +308,7 @@ struct DIGroup {
   ScrollableLayerGuid::ViewID mScrollId;
   LayerPoint mResidualOffset;
   LayerIntRect mLayerBounds; // mGroupBounds converted to Layer space
-  // The current bounds of the blob image
-  IntRect mImageBounds; // mLayerBounds in unknown units
-  // mImageBounds clipped to the container/parent of the
+  // mLayerBounds clipped to the container/parent of the
   // current item being processed.
   IntRect mClippedImageBounds; // mLayerBounds with the clipping of any containers applied
   Maybe<mozilla::Pair<wr::RenderRoot, wr::BlobImageKey>> mKey;
@@ -1259,7 +1257,6 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
       groupData->mFollowingGroup.mAppUnitsPerDevPixel =
           currentGroup->mAppUnitsPerDevPixel;
       groupData->mFollowingGroup.mLayerBounds = currentGroup->mLayerBounds;
-      groupData->mFollowingGroup.mImageBounds = currentGroup->mImageBounds;
       groupData->mFollowingGroup.mClippedImageBounds =
           currentGroup->mClippedImageBounds;
       groupData->mFollowingGroup.mScale = currentGroup->mScale;
@@ -1533,8 +1530,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mVisibleRect = visibleRect;
   group.mPreservedRect = group.mVisibleRect.Intersect(group.mLastVisibleRect).ToUnknownRect();
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
-  group.mImageBounds = layerBounds.ToUnknownRect();
-  group.mClippedImageBounds = group.mImageBounds;
+  group.mClippedImageBounds = layerBounds.ToUnknownRect();
 
   g.mTransform = Matrix::Scaling(scale.width, scale.height)
                      .PostTranslate(residualOffset.x, residualOffset.y);
