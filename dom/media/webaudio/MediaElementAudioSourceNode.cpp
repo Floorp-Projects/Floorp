@@ -8,7 +8,7 @@
 #include "mozilla/dom/MediaElementAudioSourceNodeBinding.h"
 #include "AudioDestinationNode.h"
 #include "nsIScriptError.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,7 +54,7 @@ MediaElementAudioSourceNode::Create(
       new MediaElementAudioSourceNode(&aAudioContext, aOptions.mMediaElement);
 
   RefPtr<DOMMediaStream> stream = aOptions.mMediaElement->CaptureAudio(
-      aRv, aAudioContext.Destination()->Track()->Graph());
+      aRv, aAudioContext.Destination()->Stream()->Graph());
   if (aRv.Failed()) {
     return nullptr;
   }

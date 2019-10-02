@@ -8,13 +8,13 @@
 
 #include "DOMMediaStream.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "PrincipalHandle.h"
+#include "StreamTracks.h"
 
 class nsIPrincipal;
 
 namespace mozilla {
 class DOMMediaStream;
-class SourceMediaTrack;
+class SourceMediaStream;
 
 namespace layers {
 class Image;
@@ -47,10 +47,10 @@ class OutputStreamFrameListener;
  *                                                  | AppendToTrack()
  *                                                  |
  *                                                  v
- *                                      __________________________
- *                                     |                          |
- *                                     |  MTG / SourceMediaTrack  |
- *                                     |__________________________|
+ *                                      ___________________________
+ *                                     |                           |
+ *                                     |  MSG / SourceMediaStream  |
+ *                                     |___________________________|
  * ----------------------------------------------------------------------------
  */
 
@@ -61,14 +61,14 @@ class OutputStreamFrameListener;
  */
 class OutputStreamDriver : public FrameCaptureListener {
  public:
-  OutputStreamDriver(SourceMediaTrack* aSourceStream,
+  OutputStreamDriver(SourceMediaStream* aSourceStream, const TrackID& aTrackId,
                      const PrincipalHandle& aPrincipalHandle);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OutputStreamDriver);
 
   /*
    * Sub classes can SetImage() to update the image being appended to the
-   * output stream. It will be appended on the next NotifyPull from MTG.
+   * output stream. It will be appended on the next NotifyPull from MSG.
    */
   void SetImage(const RefPtr<layers::Image>& aImage, const TimeStamp& aTime);
 
@@ -84,7 +84,8 @@ class OutputStreamDriver : public FrameCaptureListener {
    */
   virtual void Forget() {}
 
-  const RefPtr<SourceMediaTrack> mSourceStream;
+  const TrackID mTrackId;
+  const RefPtr<SourceMediaStream> mSourceStream;
   const PrincipalHandle mPrincipalHandle;
 
  protected:
@@ -100,7 +101,8 @@ class CanvasCaptureMediaStream : public DOMMediaStream {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CanvasCaptureMediaStream,
                                            DOMMediaStream)
 
-  nsresult Init(const dom::Optional<double>& aFPS, nsIPrincipal* aPrincipal);
+  nsresult Init(const dom::Optional<double>& aFPS, const TrackID aTrackId,
+                nsIPrincipal* aPrincipal);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -116,7 +118,7 @@ class CanvasCaptureMediaStream : public DOMMediaStream {
    */
   void StopCapture();
 
-  SourceMediaTrack* GetSourceStream() const;
+  SourceMediaStream* GetSourceStream() const;
 
  protected:
   ~CanvasCaptureMediaStream();

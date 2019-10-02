@@ -62,7 +62,7 @@ class PannerNode final : public AudioNode {
   DistanceModelType DistanceModel() const { return mDistanceModel; }
   void SetDistanceModel(DistanceModelType aDistanceModel) {
     mDistanceModel = aDistanceModel;
-    SendInt32ParameterToTrack(DISTANCE_MODEL, int32_t(mDistanceModel));
+    SendInt32ParameterToStream(DISTANCE_MODEL, int32_t(mDistanceModel));
   }
 
   void SetPosition(double aX, double aY, double aZ) {
@@ -100,7 +100,7 @@ class PannerNode final : public AudioNode {
     }
 
     mRefDistance = aRefDistance;
-    SendDoubleParameterToTrack(REF_DISTANCE, mRefDistance);
+    SendDoubleParameterToStream(REF_DISTANCE, mRefDistance);
   }
 
   double MaxDistance() const { return mMaxDistance; }
@@ -116,7 +116,7 @@ class PannerNode final : public AudioNode {
     }
 
     mMaxDistance = aMaxDistance;
-    SendDoubleParameterToTrack(MAX_DISTANCE, mMaxDistance);
+    SendDoubleParameterToStream(MAX_DISTANCE, mMaxDistance);
   }
 
   double RolloffFactor() const { return mRolloffFactor; }
@@ -133,7 +133,7 @@ class PannerNode final : public AudioNode {
     }
 
     mRolloffFactor = aRolloffFactor;
-    SendDoubleParameterToTrack(ROLLOFF_FACTOR, mRolloffFactor);
+    SendDoubleParameterToStream(ROLLOFF_FACTOR, mRolloffFactor);
   }
 
   double ConeInnerAngle() const { return mConeInnerAngle; }
@@ -142,7 +142,7 @@ class PannerNode final : public AudioNode {
       return;
     }
     mConeInnerAngle = aConeInnerAngle;
-    SendDoubleParameterToTrack(CONE_INNER_ANGLE, mConeInnerAngle);
+    SendDoubleParameterToStream(CONE_INNER_ANGLE, mConeInnerAngle);
   }
 
   double ConeOuterAngle() const { return mConeOuterAngle; }
@@ -151,7 +151,7 @@ class PannerNode final : public AudioNode {
       return;
     }
     mConeOuterAngle = aConeOuterAngle;
-    SendDoubleParameterToTrack(CONE_OUTER_ANGLE, mConeOuterAngle);
+    SendDoubleParameterToStream(CONE_OUTER_ANGLE, mConeOuterAngle);
   }
 
   double ConeOuterGain() const { return mConeOuterGain; }
@@ -166,7 +166,7 @@ class PannerNode final : public AudioNode {
     }
 
     mConeOuterGain = aConeOuterGain;
-    SendDoubleParameterToTrack(CONE_OUTER_GAIN, mConeOuterGain);
+    SendDoubleParameterToStream(CONE_OUTER_GAIN, mConeOuterGain);
   }
 
   AudioParam* PositionX() { return mPositionX; }

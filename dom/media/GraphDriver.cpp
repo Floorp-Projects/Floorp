@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <MediaTrackGraphImpl.h>
+#include <MediaStreamGraphImpl.h>
 #include "mozilla/dom/AudioContext.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/WorkletThread.h"
@@ -23,15 +23,15 @@
 #  include <sys/sysctl.h>
 #endif
 
-extern mozilla::LazyLogModule gMediaTrackGraphLog;
+extern mozilla::LazyLogModule gMediaStreamGraphLog;
 #ifdef LOG
 #  undef LOG
 #endif  // LOG
-#define LOG(type, msg) MOZ_LOG(gMediaTrackGraphLog, type, msg)
+#define LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
 namespace mozilla {
 
-GraphDriver::GraphDriver(MediaTrackGraphImpl* aGraphImpl)
+GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     : mIterationStart(0),
       mIterationEnd(0),
       mGraphImpl(aGraphImpl),
@@ -144,14 +144,14 @@ void GraphDriver::SetPreviousDriver(GraphDriver* aPreviousDriver) {
   mPreviousDriver = aPreviousDriver;
 }
 
-ThreadedDriver::ThreadedDriver(MediaTrackGraphImpl* aGraphImpl)
+ThreadedDriver::ThreadedDriver(MediaStreamGraphImpl* aGraphImpl)
     : GraphDriver(aGraphImpl), mThreadRunning(false) {}
 
-class MediaTrackGraphShutdownThreadRunnable : public Runnable {
+class MediaStreamGraphShutdownThreadRunnable : public Runnable {
  public:
-  explicit MediaTrackGraphShutdownThreadRunnable(
+  explicit MediaStreamGraphShutdownThreadRunnable(
       already_AddRefed<nsIThread> aThread)
-      : Runnable("MediaTrackGraphShutdownThreadRunnable"), mThread(aThread) {}
+      : Runnable("MediaStreamGraphShutdownThreadRunnable"), mThread(aThread) {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mThread);
@@ -168,15 +168,15 @@ class MediaTrackGraphShutdownThreadRunnable : public Runnable {
 ThreadedDriver::~ThreadedDriver() {
   if (mThread) {
     nsCOMPtr<nsIRunnable> event =
-        new MediaTrackGraphShutdownThreadRunnable(mThread.forget());
+        new MediaStreamGraphShutdownThreadRunnable(mThread.forget());
     SystemGroup::Dispatch(TaskCategory::Other, event.forget());
   }
 }
 
-class MediaTrackGraphInitThreadRunnable : public Runnable {
+class MediaStreamGraphInitThreadRunnable : public Runnable {
  public:
-  explicit MediaTrackGraphInitThreadRunnable(ThreadedDriver* aDriver)
-      : Runnable("MediaTrackGraphInitThreadRunnable"), mDriver(aDriver) {}
+  explicit MediaStreamGraphInitThreadRunnable(ThreadedDriver* aDriver)
+      : Runnable("MediaStreamGraphInitThreadRunnable"), mDriver(aDriver) {}
   NS_IMETHOD Run() override {
     MOZ_ASSERT(!mDriver->ThreadRunning());
     LOG(LogLevel::Debug, ("Starting a new system driver for graph %p",
@@ -221,10 +221,10 @@ void ThreadedDriver::Start() {
   Unused << NS_WARN_IF(mThread);
   MOZ_ASSERT(!mThread);  // Ensure we haven't already started it
 
-  nsCOMPtr<nsIRunnable> event = new MediaTrackGraphInitThreadRunnable(this);
+  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
   // Note: mThread may be null during event->Run() if we pass to NewNamedThread!
   // See AudioInitTask
-  nsresult rv = NS_NewNamedThread("MediaTrackGrph", getter_AddRefs(mThread));
+  nsresult rv = NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread));
   if (NS_SUCCEEDED(rv)) {
     mThread->EventTarget()->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
   }
@@ -233,7 +233,7 @@ void ThreadedDriver::Start() {
 void ThreadedDriver::Shutdown() {
   NS_ASSERTION(NS_IsMainThread(), "Must be called on main thread");
   // mGraph's thread is not running so it's OK to do whatever here
-  LOG(LogLevel::Debug, ("Stopping threads for MediaTrackGraph %p", this));
+  LOG(LogLevel::Debug, ("Stopping threads for MediaStreamGraph %p", this));
 
   if (mThread) {
     LOG(LogLevel::Debug,
@@ -243,7 +243,7 @@ void ThreadedDriver::Shutdown() {
   }
 }
 
-SystemClockDriver::SystemClockDriver(MediaTrackGraphImpl* aGraphImpl)
+SystemClockDriver::SystemClockDriver(MediaStreamGraphImpl* aGraphImpl)
     : ThreadedDriver(aGraphImpl),
       mInitialTimeStamp(TimeStamp::Now()),
       mCurrentTimeStamp(TimeStamp::Now()),
@@ -320,7 +320,7 @@ MediaTime SystemClockDriver::GetIntervalForIteration() {
   mCurrentTimeStamp = now;
 
   MOZ_LOG(
-      gMediaTrackGraphLog, LogLevel::Verbose,
+      gMediaStreamGraphLog, LogLevel::Verbose,
       ("%p: Updating current time to %f (real %f, StateComputedTime() %f)",
        GraphImpl(), GraphImpl()->MediaTimeToSeconds(IterationEnd() + interval),
        (now - mInitialTimeStamp).ToSeconds(),
@@ -383,7 +383,7 @@ TimeDuration SystemClockDriver::WaitInterval() {
   return TimeDuration::FromMilliseconds(timeoutMS);
 }
 
-OfflineClockDriver::OfflineClockDriver(MediaTrackGraphImpl* aGraphImpl,
+OfflineClockDriver::OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl,
                                        GraphTime aSlice)
     : ThreadedDriver(aGraphImpl), mSlice(aSlice) {}
 
@@ -446,15 +446,15 @@ AsyncCubebTask::Run() {
   return NS_OK;
 }
 
-TrackAndPromiseForOperation::TrackAndPromiseForOperation(
-    MediaTrack* aTrack, void* aPromise, dom::AudioContextOperation aOperation,
+StreamAndPromiseForOperation::StreamAndPromiseForOperation(
+    MediaStream* aStream, void* aPromise, dom::AudioContextOperation aOperation,
     dom::AudioContextOperationFlags aFlags)
-    : mTrack(aTrack),
+    : mStream(aStream),
       mPromise(aPromise),
       mOperation(aOperation),
       mFlags(aFlags) {}
 
-AudioCallbackDriver::AudioCallbackDriver(MediaTrackGraphImpl* aGraphImpl,
+AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
                                          uint32_t aInputChannelCount,
                                          AudioInputType aAudioInputType)
     : GraphDriver(aGraphImpl),
@@ -589,10 +589,10 @@ bool AudioCallbackDriver::Init() {
   }
 #endif
 
-  uint32_t latencyFrames = CubebUtils::GetCubebMTGLatencyInFrames(&output);
+  uint32_t latencyFrames = CubebUtils::GetCubebMSGLatencyInFrames(&output);
 
   // Macbook and MacBook air don't have enough CPU to run very low latency
-  // MediaTrackGraphs, cap the minimal latency to 512 frames int this case.
+  // MediaStreamGraphs, cap the minimal latency to 512 frames int this case.
   if (IsMacbookOrMacbookAir()) {
     latencyFrames = std::max((uint32_t)512, latencyFrames);
   }
@@ -635,7 +635,7 @@ bool AudioCallbackDriver::Init() {
     CubebUtils::ReportCubebBackendUsed();
   } else {
     NS_WARNING(
-        "Could not create a cubeb stream for MediaTrackGraph, falling "
+        "Could not create a cubeb stream for MediaStreamGraph, falling "
         "back to a SystemClockDriver");
     // Only report failures when we're not coming from a driver that was
     // created itself as a fallback driver because of a previous audio driver
@@ -698,7 +698,7 @@ bool AudioCallbackDriver::StartStream() {
   MOZ_ASSERT(!IsStarted() && OnCubebOperationThread());
   mShouldFallbackIfError = true;
   if (cubeb_stream_start(mAudioStream) != CUBEB_OK) {
-    NS_WARNING("Could not start cubeb stream for MTG.");
+    NS_WARNING("Could not start cubeb stream for MSG.");
     return false;
   }
 
@@ -709,7 +709,7 @@ bool AudioCallbackDriver::StartStream() {
 void AudioCallbackDriver::Stop() {
   MOZ_ASSERT(OnCubebOperationThread());
   if (cubeb_stream_stop(mAudioStream) != CUBEB_OK) {
-    NS_WARNING("Could not stop cubeb stream for MTG.");
+    NS_WARNING("Could not stop cubeb stream for MSG.");
   }
   mStarted = false;
 }
@@ -1053,8 +1053,8 @@ uint32_t AudioCallbackDriver::IterationDuration() {
 
 bool AudioCallbackDriver::IsStarted() { return mStarted; }
 
-void AudioCallbackDriver::EnqueueTrackAndPromiseForOperation(
-    MediaTrack* aTrack, void* aPromise, dom::AudioContextOperation aOperation,
+void AudioCallbackDriver::EnqueueStreamAndPromiseForOperation(
+    MediaStream* aStream, void* aPromise, dom::AudioContextOperation aOperation,
     dom::AudioContextOperationFlags aFlags) {
   MOZ_ASSERT(OnGraphThread() || !ThreadRunning());
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
@@ -1062,14 +1062,14 @@ void AudioCallbackDriver::EnqueueTrackAndPromiseForOperation(
              !aPromise);
   if (aFlags == dom::AudioContextOperationFlags::SendStateChange) {
     mPromisesForOperation.AppendElement(
-        TrackAndPromiseForOperation(aTrack, aPromise, aOperation, aFlags));
+        StreamAndPromiseForOperation(aStream, aPromise, aOperation, aFlags));
   }
 }
 
 void AudioCallbackDriver::CompleteAudioContextOperations(
     AsyncCubebOperation aOperation) {
   MOZ_ASSERT(OnCubebOperationThread());
-  AutoTArray<TrackAndPromiseForOperation, 1> array;
+  AutoTArray<StreamAndPromiseForOperation, 1> array;
 
   // We can't lock for the whole function because AudioContextOperationCompleted
   // will grab the monitor
@@ -1079,13 +1079,13 @@ void AudioCallbackDriver::CompleteAudioContextOperations(
   }
 
   for (uint32_t i = 0; i < array.Length(); i++) {
-    TrackAndPromiseForOperation& s = array[i];
+    StreamAndPromiseForOperation& s = array[i];
     if ((aOperation == AsyncCubebOperation::INIT &&
          s.mOperation == dom::AudioContextOperation::Resume) ||
         (aOperation == AsyncCubebOperation::SHUTDOWN &&
          s.mOperation != dom::AudioContextOperation::Resume)) {
       MOZ_ASSERT(s.mFlags == dom::AudioContextOperationFlags::SendStateChange);
-      GraphImpl()->AudioContextOperationCompleted(s.mTrack, s.mPromise,
+      GraphImpl()->AudioContextOperationCompleted(s.mStream, s.mPromise,
                                                   s.mOperation, s.mFlags);
       array.RemoveElementAt(i);
       i--;

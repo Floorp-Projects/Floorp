@@ -6,7 +6,7 @@
 #ifndef VideoOutput_h
 #define VideoOutput_h
 
-#include "MediaTrackListener.h"
+#include "MediaStreamListener.h"
 #include "VideoFrameContainer.h"
 
 namespace mozilla {
@@ -33,7 +33,7 @@ static bool SetImageToBlackPixel(PlanarYCbCrImage* aImage) {
   return aImage->CopyData(data);
 }
 
-class VideoOutput : public DirectMediaTrackListener {
+class VideoOutput : public DirectMediaStreamTrackListener {
  protected:
   virtual ~VideoOutput() = default;
 
@@ -130,7 +130,8 @@ class VideoOutput : public DirectMediaTrackListener {
       : mMutex("VideoOutput::mMutex"),
         mVideoFrameContainer(aContainer),
         mMainThread(aMainThread) {}
-  void NotifyRealtimeTrackData(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
+  void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
+                               StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override {
     MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
@@ -148,7 +149,7 @@ class VideoOutput : public DirectMediaTrackListener {
 
     SendFramesEnsureLocked();
   }
-  void NotifyRemoved(MediaTrackGraph* aGraph) override {
+  void NotifyRemoved(MediaStreamGraph* aGraph) override {
     // Doesn't need locking by mMutex, since the direct listener is removed from
     // the track before we get notified.
     if (mFrames.Length() <= 1) {
@@ -168,7 +169,7 @@ class VideoOutput : public DirectMediaTrackListener {
     SendFrames();
     mFrames.ClearAndRetainStorage();
   }
-  void NotifyEnded(MediaTrackGraph* aGraph) override {
+  void NotifyEnded(MediaStreamGraph* aGraph) override {
     // Doesn't need locking by mMutex, since for the track to end, it must have
     // been ended by the source, meaning that the source won't append more data.
     if (mFrames.IsEmpty()) {
@@ -180,7 +181,7 @@ class VideoOutput : public DirectMediaTrackListener {
     SendFrames();
     mFrames.ClearAndRetainStorage();
   }
-  void NotifyEnabledStateChanged(MediaTrackGraph* aGraph,
+  void NotifyEnabledStateChanged(MediaStreamGraph* aGraph,
                                  bool aEnabled) override {
     MutexAutoLock lock(mMutex);
     mEnabled = aEnabled;

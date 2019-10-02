@@ -9,7 +9,7 @@
 #include "AudioDestinationNode.h"
 #include "nsContentUtils.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -28,9 +28,9 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
   ConstantSourceNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
       : AudioNodeEngine(aNode),
         mSource(nullptr),
-        mDestination(aDestination->Track()),
+        mDestination(aDestination->Stream()),
         mStart(-1),
-        mStop(TRACK_TIME_MAX)
+        mStop(STREAM_TIME_MAX)
         // Keep the default values in sync with
         // ConstantSourceNode::ConstantSourceNode.
         ,
@@ -38,7 +38,7 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  void SetSourceTrack(AudioNodeTrack* aSource) { mSource = aSource; }
+  void SetSourceStream(AudioNodeStream* aSource) { mSource = aSource; }
 
   enum Parameters {
     OFFSET,
@@ -59,7 +59,7 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
     }
   }
 
-  void SetTrackTimeParameter(uint32_t aIndex, TrackTime aParam) override {
+  void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override {
     switch (aIndex) {
       case START:
         mStart = aParam;
@@ -69,16 +69,16 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
         mStop = aParam;
         break;
       default:
-        NS_ERROR("Bad ConstantSourceNodeEngine TrackTimeParameter");
+        NS_ERROR("Bad ConstantSourceNodeEngine StreamTimeParameter");
     }
   }
 
-  void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
+  void ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    MOZ_ASSERT(mSource == aTrack, "Invalid source track");
+    MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
-    TrackTime ticks = mDestination->GraphTimeToTrackTime(aFrom);
+    StreamTime ticks = mDestination->GraphTimeToStreamTime(aFrom);
     if (mStart == -1) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
       return;
@@ -102,7 +102,8 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
       MOZ_ASSERT(ticks + writeOffset >= mStart);
       MOZ_ASSERT(mStop - ticks >= writeOffset);
       uint32_t count =
-          std::min<TrackTime>(WEBAUDIO_BLOCK_SIZE, mStop - ticks) - writeOffset;
+          std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE, mStop - ticks) -
+          writeOffset;
 
       if (mOffset.HasSimpleValue()) {
         float value = mOffset.GetValueAtTime(ticks);
@@ -145,10 +146,10 @@ class ConstantSourceNodeEngine final : public AudioNodeEngine {
   }
 
   // mSource deletes the engine in its destructor.
-  AudioNodeTrack* MOZ_NON_OWNING_REF mSource;
-  RefPtr<AudioNodeTrack> mDestination;
-  TrackTime mStart;
-  TrackTime mStop;
+  AudioNodeStream* MOZ_NON_OWNING_REF mSource;
+  RefPtr<AudioNodeStream> mDestination;
+  StreamTime mStart;
+  StreamTime mStop;
   AudioParamTimeline mOffset;
 };
 
@@ -159,11 +160,11 @@ ConstantSourceNode::ConstantSourceNode(AudioContext* aContext)
   CreateAudioParam(mOffset, ConstantSourceNodeEngine::OFFSET, "offset", 1.0f);
   ConstantSourceNodeEngine* engine =
       new ConstantSourceNodeEngine(this, aContext->Destination());
-  mTrack = AudioNodeTrack::Create(aContext, engine,
-                                  AudioNodeTrack::NEED_MAIN_THREAD_ENDED,
-                                  aContext->Graph());
-  engine->SetSourceTrack(mTrack);
-  mTrack->AddMainThreadListener(this);
+  mStream = AudioNodeStream::Create(aContext, engine,
+                                    AudioNodeStream::NEED_MAIN_THREAD_FINISHED,
+                                    aContext->Graph());
+  engine->SetSourceStream(mStream);
+  mStream->AddMainThreadListener(this);
 }
 
 ConstantSourceNode::~ConstantSourceNode() {}
@@ -194,11 +195,11 @@ already_AddRefed<ConstantSourceNode> ConstantSourceNode::Constructor(
   return object.forget();
 }
 
-void ConstantSourceNode::DestroyMediaTrack() {
-  if (mTrack) {
-    mTrack->RemoveMainThreadListener(this);
+void ConstantSourceNode::DestroyMediaStream() {
+  if (mStream) {
+    mStream->RemoveMainThreadListener(this);
   }
-  AudioNode::DestroyMediaTrack();
+  AudioNode::DestroyMediaStream();
 }
 
 void ConstantSourceNode::Start(double aWhen, ErrorResult& aRv) {
@@ -214,12 +215,12 @@ void ConstantSourceNode::Start(double aWhen, ErrorResult& aRv) {
   }
   mStartCalled = true;
 
-  if (!mTrack) {
+  if (!mStream) {
     return;
   }
 
-  mTrack->SetTrackTimeParameter(ConstantSourceNodeEngine::START, Context(),
-                                aWhen);
+  mStream->SetStreamTimeParameter(ConstantSourceNodeEngine::START, Context(),
+                                  aWhen);
 
   MarkActive();
   Context()->StartBlockedAudioContextIfAllowed();
@@ -236,16 +237,16 @@ void ConstantSourceNode::Stop(double aWhen, ErrorResult& aRv) {
     return;
   }
 
-  if (!mTrack || !Context()) {
+  if (!mStream || !Context()) {
     return;
   }
 
-  mTrack->SetTrackTimeParameter(ConstantSourceNodeEngine::STOP, Context(),
-                                std::max(0.0, aWhen));
+  mStream->SetStreamTimeParameter(ConstantSourceNodeEngine::STOP, Context(),
+                                  std::max(0.0, aWhen));
 }
 
-void ConstantSourceNode::NotifyMainThreadTrackEnded() {
-  MOZ_ASSERT(mTrack->IsEnded());
+void ConstantSourceNode::NotifyMainThreadStreamFinished() {
+  MOZ_ASSERT(mStream->IsFinished());
 
   class EndedEventDispatcher final : public Runnable {
    public:
@@ -259,8 +260,8 @@ void ConstantSourceNode::NotifyMainThreadTrackEnded() {
       }
 
       mNode->DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
-      // Release track resources.
-      mNode->DestroyMediaTrack();
+      // Release stream resources.
+      mNode->DestroyMediaStream();
       return NS_OK;
     }
 

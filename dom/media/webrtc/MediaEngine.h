@@ -6,7 +6,7 @@
 #define MEDIAENGINE_H_
 
 #include "DOMMediaStream.h"
-#include "MediaTrackGraph.h"
+#include "MediaStreamGraph.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"

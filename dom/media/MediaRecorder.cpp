@@ -7,12 +7,12 @@
 #include "MediaRecorder.h"
 
 #include "AudioNodeEngine.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
 #include "MediaDecoder.h"
 #include "MediaEncoder.h"
-#include "MediaTrackGraphImpl.h"
+#include "MediaStreamGraphImpl.h"
 #include "VideoUtils.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/AudioStreamTrack.h"
@@ -180,15 +180,15 @@ NS_IMPL_RELEASE_INHERITED(MediaRecorder, DOMEventTargetHelper)
  *
  * Life cycle of a Session object.
  * 1) Initialization Stage (in main thread)
- *    Setup media tracks in MTG, and bind MediaEncoder with Source Stream when
+ *    Setup media streams in MSG, and bind MediaEncoder with Source Stream when
  * mStream is available. Resource allocation, such as encoded data cache buffer
  * and MediaEncoder. Create read thread. Automatically switch to Extract stage
  * in the end of this stage. 2) Extract Stage (in Read Thread) Pull encoded A/V
  * frames from MediaEncoder, dispatch to OnDataAvailable handler. Unless a
  * client calls Session::Stop, Session object keeps stay in this stage. 3)
  * Destroy Stage (in main thread) Switch from Extract stage to Destroy stage by
- * calling Session::Stop. Release session resource and remove associated tracks
- * from MTG.
+ * calling Session::Stop. Release session resource and remove associated streams
+ * from MSG.
  *
  * Lifetime of MediaRecorder and Session objects.
  * 1) MediaRecorder creates a Session in MediaRecorder::Start function and holds
@@ -1188,7 +1188,7 @@ MediaRecorder::~MediaRecorder() {
   UnRegisterActivityObserver();
 }
 
-MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaTrack,
+MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaStream,
                              nsPIDOMWindowInner* aOwnerWindow)
     : DOMEventTargetHelper(aOwnerWindow),
       mAudioNodeOutput(0),
@@ -1197,7 +1197,7 @@ MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaTrack,
       mVideoBitsPerSecond(0),
       mBitsPerSecond(0) {
   MOZ_ASSERT(aOwnerWindow);
-  mDOMStream = &aSourceMediaTrack;
+  mDOMStream = &aSourceMediaStream;
 
   RegisterActivityObserver();
 }

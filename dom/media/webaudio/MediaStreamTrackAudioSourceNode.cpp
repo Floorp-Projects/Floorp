@@ -7,7 +7,7 @@
 #include "MediaStreamTrackAudioSourceNode.h"
 #include "mozilla/dom/MediaStreamTrackAudioSourceNodeBinding.h"
 #include "AudioNodeEngine.h"
-#include "AudioNodeExternalInputTrack.h"
+#include "AudioNodeExternalInputStream.h"
 #include "AudioStreamTrack.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
@@ -81,17 +81,17 @@ void MediaStreamTrackAudioSourceNode::Init(MediaStreamTrack* aMediaStreamTrack,
     return;
   }
 
-  MediaTrackGraph* graph = Context()->Graph();
+  MediaStreamGraph* graph = Context()->Graph();
 
   AudioNodeEngine* engine = new MediaStreamTrackAudioSourceNodeEngine(this);
-  mTrack = AudioNodeExternalInputTrack::Create(graph, engine);
+  mStream = AudioNodeExternalInputStream::Create(graph, engine);
 
-  MOZ_ASSERT(mTrack);
+  MOZ_ASSERT(mStream);
 
   mInputTrack = aMediaStreamTrack;
-  ProcessedMediaTrack* outputTrack =
-      static_cast<ProcessedMediaTrack*>(mTrack.get());
-  mInputPort = mInputTrack->ForwardTrackContentsTo(outputTrack);
+  ProcessedMediaStream* outputStream =
+      static_cast<ProcessedMediaStream*>(mStream.get());
+  mInputPort = mInputTrack->ForwardTrackContentsTo(outputStream);
   PrincipalChanged(mInputTrack);  // trigger enabling/disabling of the connector
   mInputTrack->AddPrincipalChangeObserver(this);
 
@@ -118,15 +118,15 @@ MediaStreamTrackAudioSourceNode::~MediaStreamTrackAudioSourceNode() {
 
 /**
  * Changes the principal. Note that this will be called on the main thread, but
- * changes will be enacted on the MediaTrackGraph thread. If the principal
- * change results in the document principal losing access to the track, then
+ * changes will be enacted on the MediaStreamGraph thread. If the principal
+ * change results in the document principal losing access to the stream, then
  * there needs to be other measures in place to ensure that any media that is
- * governed by the new track principal is not available to the MediaTrackGraph
+ * governed by the new stream principal is not available to the MediaStreamGraph
  * before this change completes. Otherwise, a site could get access to
  * media that they are not authorized to receive.
  *
  * One solution is to block the altered content, call this method, then dispatch
- * another change request to the MediaTrackGraph thread that allows the content
+ * another change request to the MediaStreamGraph thread that allows the content
  * under the new principal to flow. This might be unnecessary if the principal
  * change is changing to be the document principal.
  */
@@ -147,10 +147,10 @@ void MediaStreamTrackAudioSourceNode::PrincipalChanged(
       }
     }
   }
-  auto track = static_cast<AudioNodeExternalInputTrack*>(mTrack.get());
+  auto stream = static_cast<AudioNodeExternalInputStream*>(mStream.get());
   bool enabled = subsumes;
-  track->SetInt32Parameter(MediaStreamTrackAudioSourceNodeEngine::ENABLE,
-                           enabled);
+  stream->SetInt32Parameter(MediaStreamTrackAudioSourceNodeEngine::ENABLE,
+                            enabled);
   fprintf(stderr, "NOW: %s", enabled ? "enabled" : "disabled");
 
   if (!enabled && doc) {
@@ -174,12 +174,12 @@ size_t MediaStreamTrackAudioSourceNode::SizeOfIncludingThis(
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void MediaStreamTrackAudioSourceNode::DestroyMediaTrack() {
+void MediaStreamTrackAudioSourceNode::DestroyMediaStream() {
   if (mInputPort) {
     mInputPort->Destroy();
     mInputPort = nullptr;
   }
-  AudioNode::DestroyMediaTrack();
+  AudioNode::DestroyMediaStream();
 }
 
 JSObject* MediaStreamTrackAudioSourceNode::WrapObject(

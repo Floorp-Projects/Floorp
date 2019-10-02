@@ -12,7 +12,7 @@ namespace mozilla {
 
 class RemoteTrackSource : public dom::MediaStreamTrackSource {
  public:
-  explicit RemoteTrackSource(SourceMediaTrack* aStream,
+  explicit RemoteTrackSource(SourceMediaStream* aStream,
                              nsIPrincipal* aPrincipal, const nsString& aLabel)
       : dom::MediaStreamTrackSource(aPrincipal, aLabel), mStream(aStream) {}
 
@@ -46,7 +46,7 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
   void SetMuted(bool aMuted) { MutedChanged(aMuted); }
   void ForceEnded() { OverrideEnded(); }
 
-  const RefPtr<SourceMediaTrack> mStream;
+  const RefPtr<SourceMediaStream> mStream;
 
  protected:
   virtual ~RemoteTrackSource() {
