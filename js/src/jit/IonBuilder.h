@@ -39,8 +39,7 @@ enum class InlinableNative : uint16_t;
 // Records information about a baseline frame for compilation that is stable
 // when later used off thread.
 BaselineFrameInspector* NewBaselineFrameInspector(TempAllocator* temp,
-                                                  BaselineFrame* frame,
-                                                  uint32_t frameSize);
+                                                  BaselineFrame* frame);
 
 using CallTargets = Vector<JSFunction*, 6, JitAllocPolicy>;
 

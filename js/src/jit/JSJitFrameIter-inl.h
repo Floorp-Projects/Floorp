@@ -51,11 +51,6 @@ inline BaselineFrame* JSJitFrameIter::baselineFrame() const {
                           BaselineFrame::Size());
 }
 
-inline uint32_t JSJitFrameIter::baselineFrameNumValueSlots() const {
-  MOZ_ASSERT(isBaselineJS());
-  return baselineFrame()->numValueSlots(*baselineFrameSize_);
-}
-
 template <typename T>
 bool JSJitFrameIter::isExitFrameLayout() const {
   if (!isExitFrame()) {

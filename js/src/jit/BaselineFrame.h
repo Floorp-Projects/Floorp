@@ -65,18 +65,7 @@ class BaselineFrame {
   uint32_t loScratchValue_;
   uint32_t hiScratchValue_;
   uint32_t flags_;
-#ifdef DEBUG
-  // Size of the frame. Stored in DEBUG builds when calling into C++. This is
-  // the saved frame pointer (FramePointerOffset) + BaselineFrame::Size() + the
-  // size of the local and expression stack Values.
-  //
-  // We don't store this in release builds because it's redundant with the frame
-  // size stored in the frame descriptor (frame iterators can compute this value
-  // from the descriptor). In debug builds it's still useful for assertions.
-  uint32_t debugFrameSize_;
-#else
-  uint32_t unused_;
-#endif
+  uint32_t frameSize_;
   uint32_t loReturnValue_;  // If HAS_RVAL, the frame's return value.
   uint32_t hiReturnValue_;
 
@@ -87,11 +76,9 @@ class BaselineFrame {
 
   MOZ_MUST_USE bool initForOsr(InterpreterFrame* fp, uint32_t numStackValues);
 
-#ifdef DEBUG
-  uint32_t debugFrameSize() const { return debugFrameSize_; }
-  void setDebugFrameSize(uint32_t frameSize) { debugFrameSize_ = frameSize; }
-#endif
-
+  uint32_t frameSize() const { return frameSize_; }
+  void setFrameSize(uint32_t frameSize) { frameSize_ = frameSize; }
+  inline uint32_t* addressOfFrameSize() { return &frameSize_; }
   JSObject* environmentChain() const { return envChain_; }
   void setEnvironmentChain(JSObject* envChain) { envChain_ = envChain; }
   inline JSObject** addressOfEnvironmentChain() { return &envChain_; }
@@ -116,36 +103,25 @@ class BaselineFrame {
   JSScript* script() const { return ScriptFromCalleeToken(calleeToken()); }
   JSFunction* callee() const { return CalleeTokenToFunction(calleeToken()); }
   Value calleev() const { return ObjectValue(*callee()); }
+  size_t numValueSlots() const {
+    size_t size = frameSize();
 
-  size_t numValueSlots(size_t frameSize) const {
-    MOZ_ASSERT(frameSize == debugFrameSize());
-
-    MOZ_ASSERT(frameSize >=
+    MOZ_ASSERT(size >=
                BaselineFrame::FramePointerOffset + BaselineFrame::Size());
-    frameSize -= BaselineFrame::FramePointerOffset + BaselineFrame::Size();
+    size -= BaselineFrame::FramePointerOffset + BaselineFrame::Size();
 
-    MOZ_ASSERT((frameSize % sizeof(Value)) == 0);
-    return frameSize / sizeof(Value);
+    MOZ_ASSERT((size % sizeof(Value)) == 0);
+    return size / sizeof(Value);
   }
-
-#ifdef DEBUG
-  size_t debugNumValueSlots() const { return numValueSlots(debugFrameSize()); }
-#endif
-
   Value* valueSlot(size_t slot) const {
-    MOZ_ASSERT(slot < debugNumValueSlots());
+    MOZ_ASSERT(slot < numValueSlots());
     return (Value*)this - (slot + 1);
   }
 
-  Value topStackValue(uint32_t frameSize) const {
-    size_t numSlots = numValueSlots(frameSize);
+  Value topStackValue() const {
+    size_t numSlots = numValueSlots();
     MOZ_ASSERT(numSlots > 0);
     return *valueSlot(numSlots - 1);
-  }
-
-  static size_t frameSizeForNumValueSlots(size_t numValueSlots) {
-    return BaselineFrame::FramePointerOffset + BaselineFrame::Size() +
-           numValueSlots * sizeof(Value);
   }
 
   Value& unaliasedFormal(
@@ -375,12 +351,9 @@ class BaselineFrame {
   // The reverseOffsetOf methods below compute the offset relative to the
   // frame's base pointer. Since the stack grows down, these offsets are
   // negative.
-
-#ifdef DEBUG
-  static int reverseOffsetOfDebugFrameSize() {
-    return -int(Size()) + offsetof(BaselineFrame, debugFrameSize_);
+  static int reverseOffsetOfFrameSize() {
+    return -int(Size()) + offsetof(BaselineFrame, frameSize_);
   }
-#endif
 
   // The scratch value slot can either be used as a Value slot or as two
   // separate 32-bit integer slots.

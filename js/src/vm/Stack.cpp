@@ -1396,8 +1396,8 @@ size_t FrameIter::numFrameSlots() const {
         return ionInlineFrames_.snapshotIterator().numAllocations() -
                ionInlineFrames_.script()->nfixed();
       }
-      uint32_t numValueSlots = jsJitFrame().baselineFrameNumValueSlots();
-      return numValueSlots - jsJitFrame().script()->nfixed();
+      jit::BaselineFrame* frame = jsJitFrame().baselineFrame();
+      return frame->numValueSlots() - jsJitFrame().script()->nfixed();
     }
     case INTERP:
       MOZ_ASSERT(data_.interpFrames_.sp() >= interpFrame()->base());

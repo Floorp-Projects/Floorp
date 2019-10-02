@@ -770,18 +770,19 @@ struct IonOsrTempData {
 };
 
 static IonOsrTempData* PrepareOsrTempData(JSContext* cx, BaselineFrame* frame,
-                                          uint32_t frameSize, void* jitcode) {
-  uint32_t numValueSlots = frame->numValueSlots(frameSize);
+                                          void* jitcode) {
+  size_t numLocalsAndStackVals = frame->numValueSlots();
 
   // Calculate the amount of space to allocate:
   //      BaselineFrame space:
-  //          (sizeof(Value) * numValueSlots)
+  //          (sizeof(Value) * (numLocals + numStackVals))
   //        + sizeof(BaselineFrame)
   //
   //      IonOsrTempData space:
   //          sizeof(IonOsrTempData)
 
-  size_t frameSpace = sizeof(BaselineFrame) + sizeof(Value) * numValueSlots;
+  size_t frameSpace =
+      sizeof(BaselineFrame) + sizeof(Value) * numLocalsAndStackVals;
   size_t ionOsrTempDataSpace = sizeof(IonOsrTempData);
 
   size_t totalSpace = AlignBytes(frameSpace, sizeof(Value)) +
@@ -806,7 +807,7 @@ static IonOsrTempData* PrepareOsrTempData(JSContext* cx, BaselineFrame* frame,
       (uint8_t*)info + AlignBytes(ionOsrTempDataSpace, sizeof(Value));
   info->baselineFrame = frameStart + frameSpace;
 
-  memcpy(frameStart, (uint8_t*)frame - numValueSlots * sizeof(Value),
+  memcpy(frameStart, (uint8_t*)frame - numLocalsAndStackVals * sizeof(Value),
          frameSpace);
 
   JitSpew(JitSpew_BaselineOSR, "Allocated IonOsrTempData at %p", (void*)info);
@@ -817,13 +818,10 @@ static IonOsrTempData* PrepareOsrTempData(JSContext* cx, BaselineFrame* frame,
 }
 
 bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
-                                uint32_t frameSize,
                                 ICWarmUpCounter_Fallback* stub,
                                 IonOsrTempData** infoPtr) {
   MOZ_ASSERT(infoPtr);
   *infoPtr = nullptr;
-
-  MOZ_ASSERT(frame->debugFrameSize() == frameSize);
 
   RootedScript script(cx, frame->script());
   jsbytecode* pc = stub->icEntry()->pc(script);
@@ -831,7 +829,7 @@ bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
 
   FallbackICSpew(cx, stub, "WarmUpCounter(%d)", int(script->pcToOffset(pc)));
 
-  if (!IonCompileScriptForBaseline(cx, frame, frameSize, pc)) {
+  if (!IonCompileScriptForBaseline(cx, frame, pc)) {
     return false;
   }
 
@@ -851,7 +849,7 @@ bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
   // Prepare the temporary heap copy of the fake InterpreterFrame and actual
   // args list.
   JitSpew(JitSpew_BaselineOSR, "Got jitcode.  Preparing for OSR into ion.");
-  IonOsrTempData* info = PrepareOsrTempData(cx, frame, frameSize, jitcode);
+  IonOsrTempData* info = PrepareOsrTempData(cx, frame, jitcode);
   if (!info) {
     return false;
   }
@@ -861,8 +859,6 @@ bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
 }
 
 bool FallbackICCodeCompiler::emit_WarmUpCounter() {
-  // Note: frame size is stored in R0.scratchReg().
-
   // Push a stub frame so that we can perform a non-tail call.
   enterStubFrame(masm, R1.scratchReg());
 
@@ -873,13 +869,13 @@ bool FallbackICCodeCompiler::emit_WarmUpCounter() {
     masm.subFromStackPtr(Imm32(sizeof(void*)));
     masm.push(masm.getStackPointer());
 
-    // Push stub pointer, frame size, frame pointer.
+    // Push stub pointer.
     masm.push(ICStubReg);
-    masm.push(R0.scratchReg());
+
     pushStubPayload(masm, R0.scratchReg());
 
-    using Fn = bool (*)(JSContext*, BaselineFrame*, uint32_t,
-                        ICWarmUpCounter_Fallback*, IonOsrTempData**);
+    using Fn = bool (*)(JSContext*, BaselineFrame*, ICWarmUpCounter_Fallback*,
+                        IonOsrTempData * *infoPtr);
     if (!callVM<Fn, DoWarmUpCounterFallbackOSR>(masm)) {
       return false;
     }

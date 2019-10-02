@@ -933,13 +933,11 @@ JSObject* CreateGenerator(JSContext* cx, BaselineFrame* frame) {
 }
 
 bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
-                   uint32_t frameSize, jsbytecode* pc) {
+                   jsbytecode* pc) {
   MOZ_ASSERT(*pc == JSOP_YIELD || *pc == JSOP_AWAIT);
 
-  uint32_t numValueSlots = frame->numValueSlots(frameSize);
-
-  MOZ_ASSERT(numValueSlots > frame->script()->nfixed());
-  uint32_t stackDepth = numValueSlots - frame->script()->nfixed();
+  MOZ_ASSERT(frame->numValueSlots() > frame->script()->nfixed());
+  uint32_t stackDepth = frame->numValueSlots() - frame->script()->nfixed();
 
   // Return value is still on the stack.
   MOZ_ASSERT(stackDepth >= 1);
@@ -952,7 +950,7 @@ bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
     return false;
   }
 
-  size_t firstSlot = numValueSlots - stackDepth;
+  size_t firstSlot = frame->numValueSlots() - stackDepth;
   for (size_t i = 0; i < stackDepth - 1; i++) {
     exprStack.infallibleAppend(*frame->valueSlot(firstSlot + i));
   }
@@ -1312,7 +1310,7 @@ bool RecompileImpl(JSContext* cx, bool force) {
     return true;
   }
 
-  MethodStatus status = Recompile(cx, script, force);
+  MethodStatus status = Recompile(cx, script, nullptr, nullptr, force);
   if (status == Method_Error) {
     return false;
   }

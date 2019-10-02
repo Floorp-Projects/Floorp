@@ -288,10 +288,6 @@ struct BaselineStackBuilder {
 
   void setMonitorPC(jsbytecode* pc) { header_->monitorPC = pc; }
 
-  void setFrameSizeOfInnerMostFrame(uint32_t size) {
-    header_->frameSizeOfInnerMostFrame = size;
-  }
-
   template <typename T>
   BufferPointer<T> pointerAtStackOffset(size_t offset) {
     if (offset < bufferUsed_) {
@@ -1053,15 +1049,13 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
   // BaselineFrame::frameSize is the size of everything pushed since
   // the builder.resetFramePushed() call.
-  const uint32_t frameSize = builder.framePushed();
-#ifdef DEBUG
-  blFrame->setDebugFrameSize(frameSize);
-#endif
+  uint32_t frameSize = builder.framePushed();
+  blFrame->setFrameSize(frameSize);
   JitSpew(JitSpew_BaselineBailouts, "      FrameSize=%u", frameSize);
 
-  // debugNumValueSlots() is based on the frame size, do some sanity checks.
-  MOZ_ASSERT(blFrame->debugNumValueSlots() >= script->nfixed());
-  MOZ_ASSERT(blFrame->debugNumValueSlots() <= script->nslots());
+  // numValueSlots() is based on the frame size, do some sanity checks.
+  MOZ_ASSERT(blFrame->numValueSlots() >= script->nfixed());
+  MOZ_ASSERT(blFrame->numValueSlots() <= script->nslots());
 
   const uint32_t pcOff = script->pcToOffset(pc);
   JitScript* jitScript = script->jitScript();
@@ -1121,7 +1115,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // finally block in this frame, then unpacking is almost done.
   if (!iter.moreFrames() || catchingException) {
     builder.setResumeFramePtr(prevFramePtr);
-    builder.setFrameSizeOfInnerMostFrame(frameSize);
 
     // Compute the native address (within the Baseline Interpreter) that we will
     // resume at and initialize the frame's interpreter fields.
@@ -1287,7 +1280,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     }
 
     // Copy the arguments and |this| from the BaselineFrame, in reverse order.
-    size_t valueSlot = blFrame->numValueSlots(frameSize) - 1;
+    size_t valueSlot = blFrame->numValueSlots() - 1;
     size_t calleeSlot = valueSlot - actualArgc - 1 - pushedNewTarget;
 
     for (size_t i = valueSlot; i > calleeSlot; i--) {
@@ -1890,8 +1883,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
     // particular script/pc location.
     if (fallbackStub->isMonitoredFallback()) {
       ICMonitoredFallbackStub* stub = fallbackStub->toMonitoredFallbackStub();
-      uint32_t frameSize = bailoutInfo->frameSizeOfInnerMostFrame;
-      RootedValue val(cx, topFrame->topStackValue(frameSize));
+      RootedValue val(cx, topFrame->topStackValue());
       if (!TypeMonitorResult(cx, stub, topFrame, script, monitorPC, val)) {
         return false;
       }
