@@ -5,6 +5,7 @@ authors = ["fuzzing@mozilla.com"]
 
 [dependencies]
 libc = "0.2"
+tempfile = "3"
 
 [dependencies.rkv]
 version = "0.10.2"
