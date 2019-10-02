@@ -1741,16 +1741,15 @@ DOMHighResTimeStamp PeerConnectionImpl::GetNowInRtpSourceReferenceTime() {
 
 // test-only: adds fake CSRCs and audio data
 nsresult PeerConnectionImpl::InsertAudioLevelForContributingSource(
-    const dom::MediaStreamTrack& aRecvTrack, const unsigned long aSource,
-    const DOMHighResTimeStamp aTimestamp, const unsigned long aRtpTimestamp,
-    const bool aHasLevel, const uint8_t aLevel) {
+    dom::MediaStreamTrack& aRecvTrack, unsigned long aSource,
+    DOMHighResTimeStamp aTimestamp, bool aHasLevel, uint8_t aLevel) {
   PC_AUTO_ENTER_API_CALL(true);
   std::vector<RefPtr<TransceiverImpl>>& transceivers =
       mMedia->GetTransceivers();
   for (RefPtr<TransceiverImpl>& transceiver : transceivers) {
     if (transceiver->HasReceiveTrack(&aRecvTrack)) {
-      transceiver->InsertAudioLevelForContributingSource(
-          aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
+      transceiver->InsertAudioLevelForContributingSource(aSource, aTimestamp,
+                                                         aHasLevel, aLevel);
       break;
     }
   }

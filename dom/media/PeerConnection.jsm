@@ -1721,7 +1721,6 @@ class RTCPeerConnection {
     receiver,
     source,
     timestamp,
-    rtpTimestamp,
     hasLevel,
     level
   ) {
@@ -1729,7 +1728,6 @@ class RTCPeerConnection {
       receiver.track,
       source,
       timestamp,
-      rtpTimestamp,
       hasLevel,
       level
     );
@@ -2501,7 +2499,6 @@ class RTCRtpReceiver {
         const newEntry = {
           source: e.source,
           timestamp: e.timestamp + e.sourceClockOffset,
-          rtpTimestamp: e.rtpTimestamp,
           audioLevel: e.audioLevel,
         };
         if (e.voiceActivityFlag !== undefined) {
