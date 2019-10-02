@@ -483,7 +483,6 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* mShell;
   MozContainer* mContainer;
   GdkWindow* mGdkWindow;
-  GtkWindow* mToplevelParentWindow;
   bool mWindowShouldStartDragging = false;
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
 
@@ -621,10 +620,12 @@ class nsWindow final : public nsBaseWidget {
 
   void SetPopupWindowDecoration(bool aShowOnTaskbar);
 
+  bool IsMainMenuWindow();
   GtkWidget* ConfigureWaylandPopupWindows();
   void HideWaylandWindow();
   void HideWaylandTooltips();
   void HideWaylandPopupAndAllChildren();
+  void CleanupWaylandPopups();
 
   /**
    * |mIMContext| takes all IME related stuff.
