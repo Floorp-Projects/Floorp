@@ -17,7 +17,16 @@ add_task(
   })
 );
 
-async function testSetWatchpoint({ threadFront, debuggee }) {
+async function testSetWatchpoint({ threadFront, debuggee, targetFront }) {
+  async function evaluateJS(input) {
+    const consoleFront = await targetFront.getFront("console");
+    const { result } = await consoleFront.evaluateJSAsync(input, {
+      thread: threadFront.actor,
+      frameActor: packet.frame.actor,
+    });
+    return result;
+  }
+
   function evaluateTestCode(debuggee) {
     /* eslint-disable */
     Cu.evalInSandbox(
@@ -25,8 +34,8 @@ async function testSetWatchpoint({ threadFront, debuggee }) {
       function stopMe(obj) {              // 2
         debugger;                         // 3
         obj.a = 2;                        // 4
-      }                                   // 
-      stopMe({a: 1})`,                           
+      }                                   //
+      stopMe({a: { b: 1 }})`,
       debuggee,
       "1.8",
       "test_watchpoint-01.js",
@@ -39,21 +48,27 @@ async function testSetWatchpoint({ threadFront, debuggee }) {
     threadFront
   );
 
-  //Test that we paused on the debugger statement.
+  info("Test that we paused on the debugger statement.");
   Assert.equal(packet.frame.where.line, 3);
 
-  //Add set watchpoint.
+  info("Add set watchpoint.");
   const args = packet.frame.arguments;
   const obj = args[0];
   const objClient = threadFront.pauseGrip(obj);
   await objClient.addWatchpoint("a", "obj.a", "set");
 
-  //Test that watchpoint triggers pause on set.
+  let result =  await evaluateJS("obj.a");
+  Assert.equal(result.preview.ownProperties.b.value, 1)
+
+  result = await evaluateJS("obj.a.b");
+  Assert.equal(result, 1);
+
+  info("Test that watchpoint triggers pause on set.");
   const packet2 = await resumeAndWaitForPause(threadFront);
   Assert.equal(packet2.frame.where.line, 4);
   Assert.equal(packet2.why.type, "setWatchpoint");
-  Assert.equal(obj.preview.ownProperties.a.value, 1);
-  
+  Assert.equal(obj.preview.ownProperties.a.value.ownPropertyLength, 1);
+
   await resume(threadFront);
 }
 
@@ -66,7 +81,7 @@ async function testGetWatchpoint({ threadFront, debuggee }) {
         debugger;                         // 3
         obj.a + 4;                        // 4
       }                                   // 
-      stopMe({a: 1})`,                           
+      stopMe({a: 1})`,
       debuggee,
       "1.8",
       "test_watchpoint-01.js",
@@ -82,18 +97,18 @@ async function testGetWatchpoint({ threadFront, debuggee }) {
   //Test that we paused on the debugger statement.
   Assert.equal(packet.frame.where.line, 3);
 
-  //Add get watchpoint.
+  info("Add get watchpoint.");
   const args = packet.frame.arguments;
   const obj = args[0];
   const objClient = threadFront.pauseGrip(obj);
   await objClient.addWatchpoint("a", "obj.a", "get");
 
-  //Test that watchpoint triggers pause on get.
+  info('Test that watchpoint triggers pause on get.');
   const packet2 = await resumeAndWaitForPause(threadFront);
   Assert.equal(packet2.frame.where.line, 4);
   Assert.equal(packet2.why.type, "getWatchpoint");
   Assert.equal(obj.preview.ownProperties.a.value, 1);
-  
+
   await resume(threadFront);
 }
 

@@ -201,6 +201,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return this._threadLifetimePool;
   },
 
+  getThreadLifetimeObject(raw) {
+    return this.threadLifetimePool.objectActors.get(raw);
+  },
+
+  createValueGrip(value) {
+    return createValueGrip(value, this.threadLifetimePool, this.objectGrip);
+  },
+
   get sources() {
     return this._parent.sources;
   },
