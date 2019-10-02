@@ -124,6 +124,11 @@ class BaselineFrame {
     return *valueSlot(numSlots - 1);
   }
 
+  static size_t frameSizeForNumValueSlots(size_t numValueSlots) {
+    return BaselineFrame::FramePointerOffset + BaselineFrame::Size() +
+           numValueSlots * sizeof(Value);
+  }
+
   Value& unaliasedFormal(
       unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
     MOZ_ASSERT(i < numFormalArgs());
