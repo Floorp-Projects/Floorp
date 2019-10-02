@@ -11,10 +11,6 @@ const InspectorUtils = require("InspectorUtils");
 const protocol = require("devtools/shared/protocol");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
 const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
-const {
-  connectToFrame,
-} = require("devtools/server/connectors/frame-connector");
-
 loader.lazyRequireGetter(
   this,
   "getCssPath",
@@ -272,6 +268,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     if (this.isRemoteFrame) {
       form.remoteFrame = true;
       form.numChildren = 1;
+      form.browsingContextID = this.rawNode.browsingContext.id;
     }
 
     return form;
@@ -706,21 +703,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       innerWidth: win.innerWidth,
       innerHeight: win.innerHeight,
     };
-  },
-
-  /**
-   * Fetch the target actor's form for the current remote frame.
-   *
-   * (to be called only if form.remoteFrame is true)
-   */
-  connectToRemoteFrame() {
-    if (!this.isRemoteFrame) {
-      return {
-        error: "ErrorRemoteFrame",
-        message: "Tried to call `connectToRemoteFrame` on a local frame",
-      };
-    }
-    return connectToFrame(this.conn, this.rawNode);
   },
 });
 
