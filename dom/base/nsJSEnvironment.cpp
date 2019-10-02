@@ -97,8 +97,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-const size_t gStackSize = 8192;
-
 // Thank you Microsoft!
 #ifdef CompareString
 #  undef CompareString
@@ -201,6 +199,58 @@ static bool sShuttingDown;
 static bool sIsCompactingOnUserInactive = false;
 
 static TimeDuration sGCUnnotifiedTotalTime;
+
+struct CycleCollectorStats {
+  constexpr CycleCollectorStats() = default;
+  void Init();
+  void Clear();
+  void PrepareForCycleCollectionSlice(TimeStamp aDeadline = TimeStamp());
+  void FinishCycleCollectionSlice();
+  void RunForgetSkippable();
+
+  // Time the current slice began, including any GC finishing.
+  TimeStamp mBeginSliceTime;
+
+  // Time the previous slice of the current CC ended.
+  TimeStamp mEndSliceTime;
+
+  // Time the current cycle collection began.
+  TimeStamp mBeginTime;
+
+  // The longest GC finishing duration for any slice of the current CC.
+  TimeDuration mMaxGCDuration;
+
+  // True if we ran sync forget skippable in any slice of the current CC.
+  bool mRanSyncForgetSkippable = false;
+
+  // Number of suspected objects at the start of the current CC.
+  uint32_t mSuspected = 0;
+
+  // The longest duration spent on sync forget skippable in any slice of the
+  // current CC.
+  TimeDuration mMaxSkippableDuration;
+
+  // The longest pause of any slice in the current CC.
+  TimeDuration mMaxSliceTime;
+
+  // The longest slice time since ClearMaxCCSliceTime() was called.
+  TimeDuration mMaxSliceTimeSinceClear;
+
+  // The total amount of time spent actually running the current CC.
+  TimeDuration mTotalSliceTime;
+
+  // True if we were locked out by the GC in any slice of the current CC.
+  bool mAnyLockedOut = false;
+
+  // A file to dump CC activity to; set by MOZ_CCTIMER environment variable.
+  FILE* mFile = nullptr;
+
+  // In case CC slice was triggered during idle time, set to the end of the idle
+  // period.
+  TimeStamp mIdleDeadline;
+};
+
+CycleCollectorStats gCCStats;
 
 static const char* ProcessNameForCollectorLog() {
   return XRE_GetProcessType() == GeckoProcessType_Default ? "default"
@@ -1245,118 +1295,67 @@ static TimeDuration TimeUntilNow(TimeStamp start) {
   return TimeBetween(start, TimeStamp::Now());
 }
 
-struct CycleCollectorStats {
-  constexpr CycleCollectorStats() = default;
+void CycleCollectorStats::Init() {
+  Clear();
 
-  void Init() {
-    Clear();
-
-    char* env = getenv("MOZ_CCTIMER");
-    if (!env) {
-      return;
+  char* env = getenv("MOZ_CCTIMER");
+  if (!env) {
+    return;
+  }
+  if (strcmp(env, "none") == 0) {
+    mFile = nullptr;
+  } else if (strcmp(env, "stdout") == 0) {
+    mFile = stdout;
+  } else if (strcmp(env, "stderr") == 0) {
+    mFile = stderr;
+  } else {
+    mFile = fopen(env, "a");
+    if (!mFile) {
+      MOZ_CRASH("Failed to open MOZ_CCTIMER log file.");
     }
-    if (strcmp(env, "none") == 0) {
-      mFile = nullptr;
-    } else if (strcmp(env, "stdout") == 0) {
-      mFile = stdout;
-    } else if (strcmp(env, "stderr") == 0) {
-      mFile = stderr;
-    } else {
-      mFile = fopen(env, "a");
-      if (!mFile) {
-        MOZ_CRASH("Failed to open MOZ_CCTIMER log file.");
+  }
+}
+
+void CycleCollectorStats::Clear() {
+  if (mFile && mFile != stdout && mFile != stderr) {
+    fclose(mFile);
+  }
+  *this = CycleCollectorStats();
+}
+
+void CycleCollectorStats::FinishCycleCollectionSlice() {
+  if (mBeginSliceTime.IsNull()) {
+    // We already called this method from EndCycleCollectionCallback for this
+    // slice.
+    return;
+  }
+
+  mEndSliceTime = TimeStamp::Now();
+  TimeDuration duration = mEndSliceTime - mBeginSliceTime;
+
+  if (duration.ToSeconds()) {
+    TimeDuration idleDuration;
+    if (!mIdleDeadline.IsNull()) {
+      if (mIdleDeadline < mEndSliceTime) {
+        // This slice overflowed the idle period.
+        idleDuration = mIdleDeadline - mBeginSliceTime;
+      } else {
+        idleDuration = duration;
       }
     }
+
+    uint32_t percent =
+        uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
+    Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SLICE_DURING_IDLE,
+                          percent);
   }
 
-  void Clear() {
-    if (mFile && mFile != stdout && mFile != stderr) {
-      fclose(mFile);
-    }
-    *this = CycleCollectorStats();
-  }
-
-  void PrepareForCycleCollectionSlice(TimeStamp aDeadline = TimeStamp());
-
-  void FinishCycleCollectionSlice() {
-    if (mBeginSliceTime.IsNull()) {
-      // We already called this method from EndCycleCollectionCallback for this
-      // slice.
-      return;
-    }
-
-    mEndSliceTime = TimeStamp::Now();
-    TimeDuration duration = mEndSliceTime - mBeginSliceTime;
-
-    if (duration.ToSeconds()) {
-      TimeDuration idleDuration;
-      if (!mIdleDeadline.IsNull()) {
-        if (mIdleDeadline < mEndSliceTime) {
-          // This slice overflowed the idle period.
-          idleDuration = mIdleDeadline - mBeginSliceTime;
-        } else {
-          idleDuration = duration;
-        }
-      }
-
-      uint32_t percent =
-          uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
-      Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SLICE_DURING_IDLE,
-                            percent);
-    }
-
-    TimeDuration sliceTime = TimeBetween(mBeginSliceTime, mEndSliceTime);
-    mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
-    mMaxSliceTimeSinceClear = std::max(mMaxSliceTimeSinceClear, sliceTime);
-    mTotalSliceTime += sliceTime;
-    mBeginSliceTime = TimeStamp();
-  }
-
-  void RunForgetSkippable();
-
-  // Time the current slice began, including any GC finishing.
-  TimeStamp mBeginSliceTime;
-
-  // Time the previous slice of the current CC ended.
-  TimeStamp mEndSliceTime;
-
-  // Time the current cycle collection began.
-  TimeStamp mBeginTime;
-
-  // The longest GC finishing duration for any slice of the current CC.
-  TimeDuration mMaxGCDuration;
-
-  // True if we ran sync forget skippable in any slice of the current CC.
-  bool mRanSyncForgetSkippable = false;
-
-  // Number of suspected objects at the start of the current CC.
-  uint32_t mSuspected = 0;
-
-  // The longest duration spent on sync forget skippable in any slice of the
-  // current CC.
-  TimeDuration mMaxSkippableDuration;
-
-  // The longest pause of any slice in the current CC.
-  TimeDuration mMaxSliceTime;
-
-  // The longest slice time since ClearMaxCCSliceTime() was called.
-  TimeDuration mMaxSliceTimeSinceClear;
-
-  // The total amount of time spent actually running the current CC.
-  TimeDuration mTotalSliceTime;
-
-  // True if we were locked out by the GC in any slice of the current CC.
-  bool mAnyLockedOut = false;
-
-  // A file to dump CC activity to; set by MOZ_CCTIMER environment variable.
-  FILE* mFile = nullptr;
-
-  // In case CC slice was triggered during idle time, set to the end of the idle
-  // period.
-  TimeStamp mIdleDeadline;
-};
-
-CycleCollectorStats gCCStats;
+  TimeDuration sliceTime = TimeBetween(mBeginSliceTime, mEndSliceTime);
+  mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
+  mMaxSliceTimeSinceClear = std::max(mMaxSliceTimeSinceClear, sliceTime);
+  mTotalSliceTime += sliceTime;
+  mBeginSliceTime = TimeStamp();
+}
 
 void CycleCollectorStats::PrepareForCycleCollectionSlice(TimeStamp aDeadline) {
   mBeginSliceTime = TimeStamp::Now();
