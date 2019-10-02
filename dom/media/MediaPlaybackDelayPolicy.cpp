@@ -7,7 +7,6 @@
 
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/HTMLMediaElement.h"
-#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 namespace dom {

@@ -2167,7 +2167,7 @@ MediaConduitErrorCode WebrtcVideoConduit::StartReceivingLocked() {
 }
 
 // WebRTC::RTP Callback Implementation
-// Called on MTG thread
+// Called on MSG thread
 bool WebrtcVideoConduit::SendRtp(const uint8_t* packet, size_t length,
                                  const webrtc::PacketOptions& options) {
   // XXX(pkerr) - PacketOptions possibly containing RTP extensions are ignored.

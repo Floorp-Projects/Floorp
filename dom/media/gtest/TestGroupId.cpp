@@ -36,8 +36,8 @@ class MockMediaEngineSource : public MediaEngineSource {
   MOCK_METHOD4(Allocate, nsresult(const dom::MediaTrackConstraints&,
                                   const MediaEnginePrefs&,
                                   const ipc::PrincipalInfo&, const char**));
-  MOCK_METHOD2(SetTrack,
-               void(const RefPtr<SourceMediaTrack>&, const PrincipalHandle&));
+  MOCK_METHOD3(SetTrack, void(const RefPtr<SourceMediaStream>&, TrackID,
+                              const PrincipalHandle&));
   MOCK_METHOD0(Start, nsresult());
   MOCK_METHOD3(Reconfigure, nsresult(const dom::MediaTrackConstraints&,
                                      const MediaEnginePrefs&, const char**));

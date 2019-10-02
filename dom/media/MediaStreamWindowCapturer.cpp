@@ -7,7 +7,7 @@
 
 #include "AudioStreamTrack.h"
 #include "DOMMediaStream.h"
-#include "MediaTrackGraph.h"
+#include "MediaStreamGraph.h"
 
 namespace mozilla {
 using dom::AudioStreamTrack;
@@ -16,8 +16,8 @@ using dom::MediaStreamTrack;
 MediaStreamWindowCapturer::CapturedTrack::CapturedTrack(
     MediaStreamTrack* aTrack, uint64_t aWindowID)
     : mTrack(aTrack),
-      mPort(aTrack->Graph()->ConnectToCaptureTrack(aWindowID,
-                                                   aTrack->GetTrack())) {}
+      mPort(aTrack->Graph()->ConnectToCaptureStream(aWindowID,
+                                                    aTrack->GetStream())) {}
 
 MediaStreamWindowCapturer::CapturedTrack::~CapturedTrack() { mPort->Destroy(); }
 

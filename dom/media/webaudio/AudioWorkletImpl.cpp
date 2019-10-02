@@ -7,7 +7,7 @@
 #include "AudioWorkletImpl.h"
 
 #include "AudioContext.h"
-#include "AudioNodeTrack.h"
+#include "AudioNodeStream.h"
 #include "mozilla/dom/AudioWorkletBinding.h"
 #include "mozilla/dom/AudioWorkletGlobalScope.h"
 #include "mozilla/dom/Worklet.h"
@@ -33,7 +33,7 @@ namespace mozilla {
   }
 
   RefPtr<AudioWorkletImpl> impl =
-      new AudioWorkletImpl(window, principal, aContext->DestinationTrack());
+      new AudioWorkletImpl(window, principal, aContext->DestinationStream());
 
   // The Worklet owns a reference to the AudioContext so as to keep the graph
   // thread running as long as the Worklet is alive by keeping the
@@ -44,8 +44,9 @@ namespace mozilla {
 
 AudioWorkletImpl::AudioWorkletImpl(nsPIDOMWindowInner* aWindow,
                                    nsIPrincipal* aPrincipal,
-                                   AudioNodeTrack* aDestinationTrack)
-    : WorkletImpl(aWindow, aPrincipal), mDestinationTrack(aDestinationTrack) {}
+                                   AudioNodeStream* aDestinationStream)
+    : WorkletImpl(aWindow, aPrincipal),
+      mDestinationStream(aDestinationStream) {}
 
 AudioWorkletImpl::~AudioWorkletImpl() = default;
 
@@ -57,7 +58,7 @@ JSObject* AudioWorkletImpl::WrapWorklet(JSContext* aCx, dom::Worklet* aWorklet,
 
 nsresult AudioWorkletImpl::SendControlMessage(
     already_AddRefed<nsIRunnable> aRunnable) {
-  mDestinationTrack->SendRunnable(std::move(aRunnable));
+  mDestinationStream->SendRunnable(std::move(aRunnable));
   return NS_OK;
 }
 

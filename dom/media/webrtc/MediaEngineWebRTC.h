@@ -14,8 +14,9 @@
 #include "MediaEnginePrefs.h"
 #include "MediaEngineSource.h"
 #include "MediaEngineWrapper.h"
-#include "MediaTrackGraph.h"
+#include "MediaStreamGraph.h"
 #include "NullTransport.h"
+#include "StreamTracks.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
 #include "CubebDeviceEnumerator.h"
@@ -58,7 +59,7 @@ class MediaEngineWebRTC : public MediaEngine {
   // before invoking Shutdown on this class.
   void Shutdown() override;
 
-  // Returns whether the host supports duplex audio track.
+  // Returns whether the host supports duplex audio stream.
   bool SupportsDuplex();
 
   void EnumerateDevices(uint64_t aWindowId, dom::MediaSourceEnum, MediaSinkEnum,

@@ -43,7 +43,7 @@
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
 #define PREF_CUBEB_OUTPUT_DEVICE "media.cubeb.output_device"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
-#define PREF_CUBEB_LATENCY_MTG "media.cubeb_latency_mtg_frames"
+#define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
 // Allows to get something non-default for the preferred sample-rate, to allow
 // troubleshooting in the field and testing.
 #define PREF_CUBEB_FORCE_SAMPLE_RATE "media.cubeb.force_sample_rate"
@@ -112,13 +112,13 @@ enum class CubebState {
 cubeb* sCubebContext;
 double sVolumeScale = 1.0;
 uint32_t sCubebPlaybackLatencyInMilliseconds = 100;
-uint32_t sCubebMTGLatencyInFrames = 512;
+uint32_t sCubebMSGLatencyInFrames = 512;
 // If sCubebForcedSampleRate is zero, PreferredSampleRate will return the
 // preferred sample-rate for the audio backend in use. Otherwise, it will be
 // used as the preferred sample-rate.
 uint32_t sCubebForcedSampleRate = 0;
 bool sCubebPlaybackLatencyPrefSet = false;
-bool sCubebMTGLatencyPrefSet = false;
+bool sCubebMSGLatencyPrefSet = false;
 bool sAudioStreamInitEverSucceeded = false;
 bool sCubebForceNullContext = false;
 bool sCubebDisableDeviceSwitching = true;
@@ -226,15 +226,15 @@ void PrefChanged(const char* aPref, void* aClosure) {
     uint32_t value = Preferences::GetUint(aPref, CUBEB_NORMAL_LATENCY_MS);
     sCubebPlaybackLatencyInMilliseconds =
         std::min<uint32_t>(std::max<uint32_t>(value, 1), 1000);
-  } else if (strcmp(aPref, PREF_CUBEB_LATENCY_MTG) == 0) {
+  } else if (strcmp(aPref, PREF_CUBEB_LATENCY_MSG) == 0) {
     StaticMutexAutoLock lock(sMutex);
-    sCubebMTGLatencyPrefSet = Preferences::HasUserValue(aPref);
+    sCubebMSGLatencyPrefSet = Preferences::HasUserValue(aPref);
     uint32_t value = Preferences::GetUint(aPref, CUBEB_NORMAL_LATENCY_FRAMES);
     // 128 is the block size for the Web Audio API, which limits how low the
     // latency can be here.
     // We don't want to limit the upper limit too much, so that people can
     // experiment.
-    sCubebMTGLatencyInFrames =
+    sCubebMSGLatencyInFrames =
         std::min<uint32_t>(std::max<uint32_t>(value, 128), 1e6);
   } else if (strcmp(aPref, PREF_CUBEB_FORCE_SAMPLE_RATE) == 0) {
     StaticMutexAutoLock lock(sMutex);
@@ -580,16 +580,16 @@ bool CubebPlaybackLatencyPrefSet() {
   return sCubebPlaybackLatencyPrefSet;
 }
 
-bool CubebMTGLatencyPrefSet() {
+bool CubebMSGLatencyPrefSet() {
   StaticMutexAutoLock lock(sMutex);
-  return sCubebMTGLatencyPrefSet;
+  return sCubebMSGLatencyPrefSet;
 }
 
-uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
+uint32_t GetCubebMSGLatencyInFrames(cubeb_stream_params* params) {
   StaticMutexAutoLock lock(sMutex);
-  if (sCubebMTGLatencyPrefSet) {
-    MOZ_ASSERT(sCubebMTGLatencyInFrames > 0);
-    return sCubebMTGLatencyInFrames;
+  if (sCubebMSGLatencyPrefSet) {
+    MOZ_ASSERT(sCubebMSGLatencyInFrames > 0);
+    return sCubebMSGLatencyInFrames;
   }
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -597,12 +597,12 @@ uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
 #else
   cubeb* context = GetCubebContextUnlocked();
   if (!context) {
-    return sCubebMTGLatencyInFrames;  // default 512
+    return sCubebMSGLatencyInFrames;  // default 512
   }
   uint32_t latency_frames = 0;
   if (cubeb_get_min_latency(context, params, &latency_frames) != CUBEB_OK) {
     NS_WARNING("Could not get minimal latency from cubeb.");
-    return sCubebMTGLatencyInFrames;  // default 512
+    return sCubebMSGLatencyInFrames;  // default 512
   }
   return latency_frames;
 #endif
@@ -610,7 +610,7 @@ uint32_t GetCubebMTGLatencyInFrames(cubeb_stream_params* params) {
 
 static const char* gInitCallbackPrefs[] = {
     PREF_VOLUME_SCALE,           PREF_CUBEB_OUTPUT_DEVICE,
-    PREF_CUBEB_LATENCY_PLAYBACK, PREF_CUBEB_LATENCY_MTG,
+    PREF_CUBEB_LATENCY_PLAYBACK, PREF_CUBEB_LATENCY_MSG,
     PREF_CUBEB_BACKEND,          PREF_CUBEB_FORCE_NULL_CONTEXT,
     PREF_CUBEB_SANDBOX,          PREF_AUDIOIPC_POOL_SIZE,
     PREF_AUDIOIPC_STACK_SIZE,    nullptr,

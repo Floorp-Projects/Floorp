@@ -563,7 +563,7 @@ pref("media.cubeb.logging_level", "");
   pref("media.cubeb.sandbox", false);
 #endif
 
-// GraphRunner (fixed MediaTrackGraph thread) control
+// GraphRunner (fixed MediaStreamGraph thread) control
 pref("media.audiograph.single_thread.enabled", false);
 
 // APZ preferences. For documentation/details on what these prefs do, check

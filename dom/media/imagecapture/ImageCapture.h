@@ -33,10 +33,10 @@ class VideoStreamTrack;
  *
  * All the functions in ImageCapture are run in main thread.
  *
- * There are two ways to capture image, MediaEngineSource and MediaTrackGraph.
+ * There are two ways to capture image, MediaEngineSource and MediaStreamGraph.
  * When the implementation of MediaEngineSource supports TakePhoto(),
  * it uses the platform camera to grab image. Otherwise, it falls back
- * to the MediaTrackGraph way.
+ * to the MediaStreamGraph way.
  */
 
 class ImageCapture final : public DOMEventTargetHelper {

@@ -544,7 +544,7 @@ void SpeechRecognition::NotifyError(SpeechEvent* aEvent) {
  **************************************/
 NS_IMETHODIMP
 SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
-  // hold a reference so that the underlying track
+  // hold a reference so that the underlying stream
   // doesn't get Destroy()'ed
   mTrack = aTrack;
 
@@ -569,7 +569,7 @@ NS_IMETHODIMP
 SpeechRecognition::StopRecording() {
   if (mShutdownBlocker) {
     // Block shutdown until the speech track listener has been removed from the
-    // MTG, as it holds a reference to us, and we reference the world, which we
+    // MSG, as it holds a reference to us, and we reference the world, which we
     // don't want to leak.
     mSpeechListener->mRemovedPromise->Then(
         GetCurrentThreadSerialEventTarget(), __func__,
@@ -931,7 +931,7 @@ AudioSegment* SpeechRecognition::CreateAudioSegment(
 
 void SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
                                       uint32_t aDuration,
-                                      MediaTrackListener* aProvider,
+                                      MediaStreamTrackListener* aProvider,
                                       TrackRate aTrackRate) {
   NS_ASSERTION(!NS_IsMainThread(),
                "FeedAudioData should not be called in the main thread");

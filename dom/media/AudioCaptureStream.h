@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_AUDIOCAPTURETRACK_H_
-#define MOZILLA_AUDIOCAPTURETRACK_H_
+#ifndef MOZILLA_AUDIOCAPTURESTREAM_H_
+#define MOZILLA_AUDIOCAPTURESTREAM_H_
 
-#include "MediaTrackGraph.h"
+#include "MediaStreamGraph.h"
 #include "AudioMixer.h"
+#include "StreamTracks.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -16,13 +17,13 @@ class AbstractThread;
 class DOMMediaStream;
 
 /**
- * See MediaTrackGraph::CreateAudioCaptureTrack.
+ * See MediaStreamGraph::CreateAudioCaptureStream.
  */
-class AudioCaptureTrack : public ProcessedMediaTrack,
-                          public MixerCallbackReceiver {
+class AudioCaptureStream : public ProcessedMediaStream,
+                           public MixerCallbackReceiver {
  public:
-  explicit AudioCaptureTrack(TrackRate aRate);
-  virtual ~AudioCaptureTrack();
+  explicit AudioCaptureStream(TrackID aTrackId);
+  virtual ~AudioCaptureStream();
 
   void Start();
 
@@ -33,9 +34,10 @@ class AudioCaptureTrack : public ProcessedMediaTrack,
                      uint32_t aChannels, uint32_t aFrames,
                      uint32_t aSampleRate) override;
   AudioMixer mMixer;
+  TrackID mTrackId;
   bool mStarted;
   bool mTrackCreated;
 };
 }  // namespace mozilla
 
-#endif /* MOZILLA_AUDIOCAPTURETRACK_H_ */
+#endif /* MOZILLA_AUDIOCAPTURESTREAM_H_ */

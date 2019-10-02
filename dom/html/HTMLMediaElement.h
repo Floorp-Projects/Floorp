@@ -53,10 +53,10 @@ class ErrorResult;
 class MediaResource;
 class MediaDecoder;
 class MediaInputPort;
-class MediaTrack;
-class MediaTrackGraph;
+class MediaStream;
+class MediaStreamGraph;
 class MediaStreamWindowCapturer;
-struct SharedDummyTrack;
+struct SharedDummyStream;
 class VideoFrameContainer;
 namespace dom {
 class MediaKeys;
@@ -109,6 +109,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::VideoFrameContainer VideoFrameContainer;
+  typedef mozilla::MediaStream MediaStream;
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::MediaDecoderOwner MediaDecoderOwner;
   typedef mozilla::MetadataTags MetadataTags;
@@ -334,13 +335,13 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * Called by one of our associated MediaTrackLists (audio/video) when an
    * AudioTrack is enabled or a VideoTrack is selected.
    */
-  void NotifyMediaTrackEnabled(dom::MediaTrack* aTrack);
+  void NotifyMediaTrackEnabled(MediaTrack* aTrack);
 
   /**
    * Called by one of our associated MediaTrackLists (audio/video) when an
    * AudioTrack is disabled or a VideoTrack is unselected.
    */
-  void NotifyMediaTrackDisabled(dom::MediaTrack* aTrack);
+  void NotifyMediaTrackDisabled(MediaTrack* aTrack);
 
   /**
    * Returns the current load ID. Asynchronous events store the ID that was
@@ -612,7 +613,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void NotifyWaitingForKey() override;
 
   already_AddRefed<DOMMediaStream> CaptureAudio(ErrorResult& aRv,
-                                                MediaTrackGraph* aGraph);
+                                                MediaStreamGraph* aGraph);
 
   already_AddRefed<DOMMediaStream> MozCaptureStream(ErrorResult& aRv);
 
@@ -754,7 +755,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     // Dummy stream to keep mGraph from shutting down when MediaDecoder shuts
     // down. Shared across all OutputMediaStreams as one stream is enough to
     // keep the graph alive.
-    RefPtr<SharedDummyTrack> mGraphKeepAliveDummyStream;
+    RefPtr<SharedDummyStream> mGraphKeepAliveDummyStream;
     bool mFinishWhenEnded;
     bool mCapturingAudioOnly;
     bool mCapturingDecoder;
@@ -829,7 +830,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * mSrcStream's graph's CurrentTime() has been updated. It might be time to
    * fire "timeupdate".
    */
-  void UpdateSrcTrackTime();
+  void UpdateSrcStreamTime();
 
   /**
    * Called by our DOMMediaStream::TrackListener when a new MediaStreamTrack has
@@ -857,7 +858,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * in aOutputStream. This automatically sets the output track to enabled or
    * disabled depending on our current playing state.
    */
-  void AddCaptureMediaTrackToOutputStream(dom::MediaTrack* aTrack,
+  void AddCaptureMediaTrackToOutputStream(MediaTrack* aTrack,
                                           OutputMediaStream& aOutputStream,
                                           bool aAsyncAddtrack = true);
 
@@ -879,7 +880,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    */
   already_AddRefed<DOMMediaStream> CaptureStreamInternal(
       StreamCaptureBehavior aBehavior, StreamCaptureType aType,
-      MediaTrackGraph* aGraph);
+      MediaStreamGraph* aGraph);
 
   /**
    * Initialize a decoder as a clone of an existing decoder in another
@@ -1192,7 +1193,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   bool ShouldElementBePaused();
 
   // Create or destroy the captured stream.
-  void AudioCaptureTrackChange(bool aCapture);
+  void AudioCaptureStreamChange(bool aCapture);
 
   // A method to check whether the media element is allowed to start playback.
   bool AudioChannelAgentBlockedPlay();
@@ -1304,14 +1305,15 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // of video to display.
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
 
-  // Holds a reference to the MediaStream that has been set in the src
-  // attribute.
+  // Holds a reference to the DOM wrapper for the MediaStream that has been
+  // set in the src attribute.
   RefPtr<DOMMediaStream> mSrcAttrStream;
 
   // Holds the triggering principal for the src attribute.
   nsCOMPtr<nsIPrincipal> mSrcAttrTriggeringPrincipal;
 
-  // Holds a reference to the MediaStream that we're actually playing.
+  // Holds a reference to the DOM wrapper for the MediaStream that we're
+  // actually playing.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<DOMMediaStream> mSrcStream;
 

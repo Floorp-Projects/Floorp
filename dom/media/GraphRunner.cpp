@@ -7,8 +7,8 @@
 #include "GraphRunner.h"
 
 #include "GraphDriver.h"
-#include "MediaTrackGraph.h"
-#include "MediaTrackGraphImpl.h"
+#include "MediaStreamGraph.h"
+#include "MediaStreamGraphImpl.h"
 #include "mozilla/dom/WorkletThread.h"
 #include "nsISupportsImpl.h"
 #include "prthread.h"
@@ -23,7 +23,7 @@ static void Start(void* aArg) {
   th->Run();
 }
 
-GraphRunner::GraphRunner(MediaTrackGraphImpl* aGraph)
+GraphRunner::GraphRunner(MediaStreamGraphImpl* aGraph)
     : mMonitor("GraphRunner::mMonitor"),
       mGraph(aGraph),
       mStateEnd(0),
