@@ -1452,13 +1452,25 @@ FxAccountsInternal.prototype = {
       log.debug("startVerifiedCheck with user data", data);
     }
 
-    // Get us to the verified state. This returns a promise that will fire when
-    // verification is complete.
+    // Get us to the verified state, then get the keys. This returns a promise
+    // that will fire when we are completely ready.
+    //
+    // Login is truly complete once keys have been fetched, so once getKeys()
+    // obtains and stores kSync kXCS kExtSync and kExtKbHash, it will fire the
+    // onverified observer notification.
 
     // The callers of startVerifiedCheck never consume a returned promise (ie,
     // this is simply kicking off a background fetch) so we must add a rejection
     // handler to avoid runtime warnings about the rejection not being handled.
-    this.whenVerified(data).catch(
+
+    this.whenVerified(data).then(
+      () => {
+        log.info("the user became verified");
+        // We are now ready for business. This should only be invoked once
+        // per setSignedInUser(), regardless of whether we've rebooted since
+        // setSignedInUser() was called.
+        return this.notifyObservers(ONVERIFIED_NOTIFICATION);
+      },
       err => log.info("startVerifiedCheck promise was rejected: " + err)
     );
   },
@@ -1508,13 +1520,7 @@ FxAccountsInternal.prototype = {
       // is yet to start up.)  This might cause "A promise chain failed to
       // handle a rejection" messages, so add an error handler directly
       // on the promise to log the error.
-      currentState.whenVerifiedDeferred.promise.then(() => {
-        log.info("the user became verified");
-        // We are now ready for business. This should only be invoked once
-        // per setSignedInUser(), regardless of whether we've rebooted since
-        // setSignedInUser() was called.
-        this.notifyObservers(ONVERIFIED_NOTIFICATION);
-      }, err => {
+      currentState.whenVerifiedDeferred.promise.catch(err => {
         log.info("the wait for user verification was stopped: " + err);
       });
     }
