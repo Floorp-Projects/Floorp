@@ -96,9 +96,11 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(
                                     AudioNodeStream::EXTERNAL_OUTPUT,
                                     aContext->Graph());
   auto source = MakeRefPtr<AudioDestinationTrackSource>(
-      this, mStream, aContext->Graph()->CreateTrackUnionStream(), principal);
-  auto track = MakeRefPtr<AudioStreamTrack>(
-      GetOwner(), source->mStream, AudioNodeStream::AUDIO_TRACK, source);
+      this, mStream,
+      aContext->Graph()->CreateTrackUnionStream(MediaSegment::AUDIO),
+      principal);
+  auto track =
+      MakeRefPtr<AudioStreamTrack>(GetOwner(), source->mStream, source);
   mDOMStream->AddTrackInternal(track);
 }
 

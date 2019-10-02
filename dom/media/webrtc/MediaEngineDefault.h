@@ -19,7 +19,6 @@
 #include "MediaEnginePrefs.h"
 #include "VideoSegment.h"
 #include "AudioSegment.h"
-#include "StreamTracks.h"
 #include "MediaEngineSource.h"
 #include "MediaStreamGraph.h"
 
@@ -46,7 +45,7 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
                     const MediaEnginePrefs& aPrefs,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
                 const PrincipalHandle& aPrincipal) override;
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
@@ -82,7 +81,6 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   MediaEngineSourceState mState = kReleased;
   RefPtr<layers::Image> mImage;
   RefPtr<SourceMediaStream> mStream;
-  TrackID mTrackID = TRACK_NONE;
   PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
 
   MediaEnginePrefs mOpts;
@@ -110,7 +108,7 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
                     const MediaEnginePrefs& aPrefs,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
                 const PrincipalHandle& aPrincipal) override;
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
@@ -133,7 +131,6 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
   // Current state of this source.
   MediaEngineSourceState mState = kReleased;
   RefPtr<SourceMediaStream> mStream;
-  TrackID mTrackID = TRACK_NONE;
   PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
   uint32_t mFrequency = 1000;
   RefPtr<AudioSourcePullListener> mPullListener;

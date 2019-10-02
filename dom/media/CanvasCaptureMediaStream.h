@@ -8,7 +8,7 @@
 
 #include "DOMMediaStream.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "StreamTracks.h"
+#include "PrincipalHandle.h"
 
 class nsIPrincipal;
 
@@ -61,7 +61,7 @@ class OutputStreamFrameListener;
  */
 class OutputStreamDriver : public FrameCaptureListener {
  public:
-  OutputStreamDriver(SourceMediaStream* aSourceStream, const TrackID& aTrackId,
+  OutputStreamDriver(SourceMediaStream* aSourceStream,
                      const PrincipalHandle& aPrincipalHandle);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OutputStreamDriver);
@@ -84,7 +84,6 @@ class OutputStreamDriver : public FrameCaptureListener {
    */
   virtual void Forget() {}
 
-  const TrackID mTrackId;
   const RefPtr<SourceMediaStream> mSourceStream;
   const PrincipalHandle mPrincipalHandle;
 
@@ -101,8 +100,7 @@ class CanvasCaptureMediaStream : public DOMMediaStream {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CanvasCaptureMediaStream,
                                            DOMMediaStream)
 
-  nsresult Init(const dom::Optional<double>& aFPS, const TrackID aTrackId,
-                nsIPrincipal* aPrincipal);
+  nsresult Init(const dom::Optional<double>& aFPS, nsIPrincipal* aPrincipal);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
