@@ -50,6 +50,7 @@ add_task(async function() {
   const onToolboxDestroy = gDevTools.once("toolbox-destroyed");
   await removeTab(tab);
   await onToolboxDestroy;
+  await debuggerClient.close();
   await removeTab(targetTab);
 });
 

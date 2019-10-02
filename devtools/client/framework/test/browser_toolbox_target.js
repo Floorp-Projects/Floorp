@@ -43,7 +43,6 @@ add_task(async function() {
   );
 
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
-  const onTabDetached = toolbox.target.once("tabDetached");
 
   info("Removing the iframes");
   toolboxIframe.remove();
@@ -53,14 +52,6 @@ add_task(async function() {
   info("Waiting for toolbox-destroyed");
   await onToolboxDestroyed;
   info("Toolbox destroyed");
-
-  // Also wait for tabDetached. Toolbox destroys the Target which calls
-  // BrowsingContextTargetActor.detach(). But Target doesn't wait for detach's
-  // end to resolve. Whereas it is quite important as it is a significant part
-  // of toolbox cleanup. If we do not wait for it and starts removing debugged
-  // document, the actor is still considered as being attached and continues
-  // processing events.
-  await onTabDetached;
 
   iframe.remove();
 });
