@@ -6,7 +6,7 @@
 module.exports = {
   attachRefToWebConsoleUI: () => {},
   canRewind: () => false,
-  emitNewMessage: () => {},
+  emitEvent: () => {},
   proxy: {
     client: {},
     releaseActor: actor => console.log("Release actor", actor),

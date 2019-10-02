@@ -77,10 +77,9 @@ function createObjectClient(grip: Grip) {
 
 async function loadObjectProperties(root: Node) {
   const utils = Reps.objectInspector.utils;
-  const properties = await utils.loadProperties.loadItemProperties(
-    root,
-    createObjectClient
-  );
+  const properties = await utils.loadProperties.loadItemProperties(root, {
+    createObjectClient,
+  });
   return utils.node.getChildren({
     item: root,
     loadedProperties: new Map([[root.path, properties]]),
