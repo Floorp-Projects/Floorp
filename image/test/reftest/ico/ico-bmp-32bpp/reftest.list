@@ -19,4 +19,4 @@
 == ico-size-256x256-32bpp.ico ico-size-256x256-32bpp.png
 == ico-partial-transparent-32bpp.ico ico-partial-transparent-32bpp.png
 == ico-transparent-32bpp.ico ico-transparent-32bpp.png
-== ico-not-square-transparent-32bpp.ico ico-not-square-transparent-32bpp.png
+fuzzy(1-1,81-81) == ico-not-square-transparent-32bpp.ico ico-not-square-transparent-32bpp.png
