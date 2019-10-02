@@ -37,7 +37,7 @@ using mozilla::dom::quota::UsageInfo;
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
 static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
-                             UsageInfo* aUsageInfo) {
+                             UsageInfo* aUsageInfo, const bool aInitializing) {
   AssertIsOnIOThread();
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
@@ -88,6 +88,8 @@ static nsresult GetBodyUsage(nsIFile* aMorgueDir, const Atomic<bool>& aCanceled,
       return NS_OK;
     };
     rv = mozilla::dom::cache::BodyTraverseFiles(dummy, bodyDir, getUsage,
+                                                /* aCanRemoveFiles */
+                                                aInitializing,
                                                 /* aTrackQuota */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -474,7 +476,7 @@ class CacheQuotaClient final : public Client {
 
       if (isDir) {
         if (leafName.EqualsLiteral("morgue")) {
-          rv = GetBodyUsage(file, aCanceled, aUsageInfo);
+          rv = GetBodyUsage(file, aCanceled, aUsageInfo, aInitializing);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             if (rv != NS_ERROR_ABORT) {
               REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
