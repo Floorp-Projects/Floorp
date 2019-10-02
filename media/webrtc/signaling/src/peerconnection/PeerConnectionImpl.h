@@ -345,13 +345,12 @@ class PeerConnectionImpl final
   // test-only: called from contributing sources mochitests.
   NS_IMETHODIMP_TO_ERRORRESULT(InsertAudioLevelForContributingSource,
                                ErrorResult& rv,
-                               const dom::MediaStreamTrack& aRecvTrack,
-                               const unsigned long aSource,
-                               const DOMHighResTimeStamp aTimestamp,
-                               const unsigned long aRtpTimestamp,
-                               const bool aHasLevel, const uint8_t aLevel) {
-    rv = InsertAudioLevelForContributingSource(
-        aRecvTrack, aSource, aTimestamp, aRtpTimestamp, aHasLevel, aLevel);
+                               dom::MediaStreamTrack& aRecvTrack,
+                               unsigned long aSource,
+                               DOMHighResTimeStamp aTimestamp, bool aHasLevel,
+                               uint8_t aLevel) {
+    rv = InsertAudioLevelForContributingSource(aRecvTrack, aSource, aTimestamp,
+                                               aHasLevel, aLevel);
   }
 
   // test-only: called from simulcast mochitests.
