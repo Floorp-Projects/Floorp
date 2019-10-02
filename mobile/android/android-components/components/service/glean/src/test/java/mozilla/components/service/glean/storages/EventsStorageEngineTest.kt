@@ -397,6 +397,8 @@ class EventsStorageEngineTest {
             1,
             pingJson.getJSONArray("events").length()
         )
+
+        EventsStorageEngine.clearAllStores()
     }
 
     @kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -488,6 +490,8 @@ class EventsStorageEngineTest {
             "post-init",
             pingJson.getJSONArray("events").getJSONObject(1).getJSONObject("extra").getString("someExtra")
         )
+
+        EventsStorageEngine.clearAllStores()
     }
 
     @Test
