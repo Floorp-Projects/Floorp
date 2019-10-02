@@ -9,7 +9,6 @@
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/InlineTranslator.h"
 #include "mozilla/webrender/webrender_ffi.h"
-#include "mozilla/gfx/Point.h"
 
 namespace mozilla {
 namespace layers {
@@ -24,8 +23,8 @@ class WebRenderDrawEventRecorder final : public gfx::DrawEventRecorderMemory {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(WebRenderDrawEventRecorder, final)
 
   explicit WebRenderDrawEventRecorder(
-      const gfx::SerializeResourcesFn& aSerialize, gfx::IntPoint aOrigin)
-      : DrawEventRecorderMemory(aSerialize, aOrigin) {}
+      const gfx::SerializeResourcesFn& aSerialize)
+      : DrawEventRecorderMemory(aSerialize) {}
 
   void StoreSourceSurfaceRecording(gfx::SourceSurface* aSurface,
                                    const char* aReason) final;
