@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import java.util.HashMap
 
 /**
@@ -207,7 +208,13 @@ class Browsers private constructor(
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = uri
 
-        for (info in packageManager.queryIntentActivities(intent, 0)) {
+        val flag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PackageManager.MATCH_ALL
+        } else {
+            PackageManager.MATCH_DEFAULT_ONLY
+        }
+
+        for (info in packageManager.queryIntentActivities(intent, flag)) {
             if (context.packageName != info.activityInfo.packageName && info.activityInfo.exported) {
                 browsers[info.activityInfo.packageName] = info.activityInfo
             }
