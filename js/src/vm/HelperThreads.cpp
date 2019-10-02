@@ -660,9 +660,13 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   RootedScript resultScript(cx);
   Rooted<ScriptSourceObject*> sourceObject(cx);
 
-  XDROffThreadDecoder decoder(
+  auto decoder = js::MakeUnique<XDROffThreadDecoder>(
       cx, &options, /* sourceObjectOut = */ &sourceObject.get(), range);
-  XDRResult res = decoder.codeScript(&resultScript);
+  if (!decoder) {
+    ReportOutOfMemory(cx);
+    return;
+  }
+  XDRResult res = decoder->codeScript(&resultScript);
   MOZ_ASSERT(bool(resultScript) == res.isOk());
   if (res.isOk()) {
     scripts.infallibleAppend(resultScript);
@@ -720,8 +724,13 @@ void MultiScriptsDecodeTask::parse(JSContext* cx) {
     RootedScript resultScript(cx);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    XDROffThreadDecoder decoder(cx, &opts, &sourceObject.get(), source.range);
-    XDRResult res = decoder.codeScript(&resultScript);
+    auto decoder = js::MakeUnique<XDROffThreadDecoder>(
+        cx, &opts, &sourceObject.get(), source.range);
+    if (!decoder) {
+      ReportOutOfMemory(cx);
+      return;
+    }
+    XDRResult res = decoder->codeScript(&resultScript);
     MOZ_ASSERT(bool(resultScript) == res.isOk());
 
     if (res.isErr()) {
