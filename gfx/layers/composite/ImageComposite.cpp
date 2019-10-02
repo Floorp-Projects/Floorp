@@ -6,8 +6,6 @@
 
 #include "ImageComposite.h"
 
-#include "gfxPlatform.h"
-
 namespace mozilla {
 
 using namespace gfx;
@@ -113,14 +111,8 @@ int ImageComposite::ChooseImageIndex() {
     // We're not returning the same image as the last call to ChooseImageIndex
     // or the immediately next one. We can assume that the frames not returned
     // have been dropped as they were too late to be displayed
-    for (size_t idx = mLastChosenImageIndex; idx <= result; idx++) {
-      if (IsImagesUpdateRateFasterThanCompositedRate(mImages[result],
-                                                     mImages[idx])) {
-        continue;
-      }
-      mDroppedFrames++;
-      PROFILER_ADD_MARKER("Video frames dropped", GRAPHICS);
-    }
+    mDroppedFrames += result - mLastChosenImageIndex - 1;
+    PROFILER_ADD_MARKER("Video frames dropped", GRAPHICS);
   }
   mLastChosenImageIndex = result;
   return result;
@@ -182,10 +174,6 @@ uint32_t ImageComposite::ScanForLastFrameIndex(
       for (++i; i < mImages.Length() && mImages[i].mFrameID < newFrameID &&
                 mImages[i].mProducerID == aNewImages[j].mProducerID;
            i++) {
-        if (IsImagesUpdateRateFasterThanCompositedRate(aNewImages[j],
-                                                       mImages[i])) {
-          continue;
-        }
         dropped++;
       }
       break;
@@ -216,18 +204,6 @@ const ImageComposite::TimedImage* ImageComposite::GetImage(
     return nullptr;
   }
   return &mImages[aIndex];
-}
-
-bool ImageComposite::IsImagesUpdateRateFasterThanCompositedRate(
-    const TimedImage& aNewImage, const TimedImage& aOldImage) const {
-  MOZ_ASSERT(aNewImage.mFrameID >= aOldImage.mFrameID);
-  const uint32_t compositedRate = gfxPlatform::TargetFrameRate();
-  if (compositedRate == 0) {
-    return true;
-  }
-  const double compositedInterval = 1.0 / compositedRate;
-  return aNewImage.mTimeStamp - aOldImage.mTimeStamp <
-         TimeDuration::FromSeconds(compositedInterval);
 }
 
 }  // namespace layers
