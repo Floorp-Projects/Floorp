@@ -155,6 +155,10 @@ using mozilla::gl::GLContextGLX;
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
 
+// We need to shape only a few pixels of the titlebar as we care about
+// the corners only
+#define TITLEBAR_SHAPE_MASK_HEIGHT 10
+
 const gint kEvents =
     GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | GDK_VISIBILITY_NOTIFY_MASK |
     GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK | GDK_BUTTON_PRESS_MASK |
@@ -4576,8 +4580,24 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
       (void (*)(GdkWindow*, cairo_region_t*))dlsym(
           RTLD_DEFAULT, "gdk_window_set_opaque_region");
 
-  if (sGdkWindowSetOpaqueRegion && mGdkWindow &&
-      gdk_window_get_window_type(mGdkWindow) == GDK_WINDOW_TOPLEVEL) {
+  if (!sGdkWindowSetOpaqueRegion) {
+    return;
+  }
+
+  GdkWindow* window = (mCSDSupportLevel == CSD_SUPPORT_CLIENT)
+                          ? gtk_widget_get_window(mShell)
+                          : mGdkWindow;
+
+  // gdk_window_set_opaque_region() work for toplevel Gdk windows only.
+  // Also don't set shape mask if we use transparency bitmap.
+  if (gdk_window_get_window_type(window) != GDK_WINDOW_TOPLEVEL ||
+      mTransparencyBitmapForTitlebar) {
+    return;
+  }
+
+  // We don't tweak opaque regions for non-toplevel windows (popup, panels etc.)
+  // as they can be transparent by gecko.
+  if (mWindowType != eWindowType_toplevel) {
     if (aOpaqueRegion.IsEmpty()) {
       (*sGdkWindowSetOpaqueRegion)(mGdkWindow, nullptr);
     } else {
@@ -4587,14 +4607,47 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
         cairo_rectangle_int_t rect = {r.x, r.y, r.width, r.height};
         cairo_region_union_rectangle(region, &rect);
       }
-      (*sGdkWindowSetOpaqueRegion)(mGdkWindow, region);
-#ifdef MOZ_WAYLAND
-      if (!mIsX11Display) {
-        moz_container_set_opaque_region(MOZ_CONTAINER(mContainer), region);
-      }
-#endif
+      (*sGdkWindowSetOpaqueRegion)(window, region);
       cairo_region_destroy(region);
     }
+  } else {
+    // Gecko does not use transparent toplevel windows (see Bug 1469716),
+    // however we need to make it transparent to draw round corners of
+    // Gtk titlebar.
+    cairo_region_t* region = cairo_region_create();
+
+    GtkBorder decorationSize = {0, 0, 0, 0};
+    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+      GetCSDDecorationSize(GTK_WINDOW(mShell), &decorationSize);
+    }
+
+    int scale = GdkScaleFactor();
+    int width = mBounds.width / scale;
+    int height = mBounds.height / scale;
+
+    cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
+                                  width, height};
+    cairo_region_union_rectangle(region, &rect);
+
+    // Subtract transparent corners which are used by
+    // various Gtk themes for toplevel windows when titlebar
+    // is rendered by gecko.
+    if (mDrawInTitlebar && !mIsPIPWindow && mSizeMode == nsSizeMode_Normal &&
+        !mIsTiled) {
+      cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
+                                    TITLEBAR_SHAPE_MASK_HEIGHT,
+                                    TITLEBAR_SHAPE_MASK_HEIGHT};
+      cairo_region_subtract_rectangle(region, &rect);
+      rect = {
+          decorationSize.left + width - TITLEBAR_SHAPE_MASK_HEIGHT,
+          decorationSize.top,
+          TITLEBAR_SHAPE_MASK_HEIGHT,
+          TITLEBAR_SHAPE_MASK_HEIGHT,
+      };
+      cairo_region_subtract_rectangle(region, &rect);
+    }
+    (*sGdkWindowSetOpaqueRegion)(window, region);
+    cairo_region_destroy(region);
   }
 }
 
@@ -4843,10 +4896,6 @@ nsresult nsWindow::UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
   }
   return NS_OK;
 }
-
-// We need to shape only a few pixels of the titlebar as we care about
-// the corners only
-#define TITLEBAR_SHAPE_MASK_HEIGHT 10
 
 void nsWindow::UpdateTitlebarTransparencyBitmap() {
   NS_ASSERTION(mTransparencyBitmapForTitlebar,
