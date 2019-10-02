@@ -88,6 +88,38 @@ static MOZ_ALWAYS_INLINE __m128i PremultiplyVector_SSE2(const __m128i& aSrc) {
   return _mm_or_si128(rb, ga);
 }
 
+// Premultiply vector of aAlignedRow + aRemainder pixels.
+template <bool aSwapRB, bool aOpaqueAlpha>
+static MOZ_ALWAYS_INLINE void PremultiplyChunk_SSE2(const uint8_t*& aSrc,
+                                                    uint8_t*& aDst,
+                                                    int32_t aAlignedRow,
+                                                    int32_t aRemainder) {
+  // Process all 4-pixel chunks as one vector.
+  for (const uint8_t* end = aSrc + aAlignedRow; aSrc < end;) {
+    __m128i px = _mm_loadu_si128(reinterpret_cast<const __m128i*>(aSrc));
+    px = PremultiplyVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(aDst), px);
+    aSrc += 4 * 4;
+    aDst += 4 * 4;
+  }
+
+  // Handle any 1-3 remaining pixels.
+  if (aRemainder) {
+    __m128i px = LoadRemainder_SSE2(aSrc, aRemainder);
+    px = PremultiplyVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
+    StoreRemainder_SSE2(aDst, aRemainder, px);
+  }
+}
+
+// Premultiply vector of aLength pixels.
+template <bool aSwapRB, bool aOpaqueAlpha>
+void PremultiplyRow_SSE2(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
+  int32_t alignedRow = 4 * (aLength & ~3);
+  int32_t remainder = aLength & 3;
+  PremultiplyChunk_SSE2<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow,
+                                               remainder);
+}
+
 template <bool aSwapRB, bool aOpaqueAlpha>
 void Premultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
                       int32_t aDstGap, IntSize aSize) {
@@ -98,28 +130,22 @@ void Premultiply_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
   aDstGap += 4 * remainder;
 
   for (int32_t height = aSize.height; height > 0; height--) {
-    // Process all 4-pixel chunks as one vector.
-    for (const uint8_t* end = aSrc + alignedRow; aSrc < end;) {
-      __m128i px = _mm_loadu_si128(reinterpret_cast<const __m128i*>(aSrc));
-      px = PremultiplyVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
-      _mm_storeu_si128(reinterpret_cast<__m128i*>(aDst), px);
-      aSrc += 4 * 4;
-      aDst += 4 * 4;
-    }
-
-    // Handle any 1-3 remaining pixels.
-    if (remainder) {
-      __m128i px = LoadRemainder_SSE2(aSrc, remainder);
-      px = PremultiplyVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
-      StoreRemainder_SSE2(aDst, remainder, px);
-    }
-
+    PremultiplyChunk_SSE2<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow,
+                                                 remainder);
     aSrc += aSrcGap;
     aDst += aDstGap;
   }
 }
 
 // Force instantiation of premultiply variants here.
+template void PremultiplyRow_SSE2<false, false>(const uint8_t*, uint8_t*,
+                                                int32_t);
+template void PremultiplyRow_SSE2<false, true>(const uint8_t*, uint8_t*,
+                                               int32_t);
+template void PremultiplyRow_SSE2<true, false>(const uint8_t*, uint8_t*,
+                                               int32_t);
+template void PremultiplyRow_SSE2<true, true>(const uint8_t*, uint8_t*,
+                                              int32_t);
 template void Premultiply_SSE2<false, false>(const uint8_t*, int32_t, uint8_t*,
                                              int32_t, IntSize);
 template void Premultiply_SSE2<false, true>(const uint8_t*, int32_t, uint8_t*,
@@ -294,6 +320,35 @@ SwizzleVector_SSE2<false, false>(const __m128i& aSrc)
 #endif
 
 template <bool aSwapRB, bool aOpaqueAlpha>
+static MOZ_ALWAYS_INLINE void SwizzleChunk_SSE2(const uint8_t*& aSrc,
+                                                uint8_t*& aDst,
+                                                int32_t aAlignedRow,
+                                                int32_t aRemainder) {
+  // Process all 4-pixel chunks as one vector.
+  for (const uint8_t* end = aSrc + aAlignedRow; aSrc < end;) {
+    __m128i px = _mm_loadu_si128(reinterpret_cast<const __m128i*>(aSrc));
+    px = SwizzleVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
+    _mm_storeu_si128(reinterpret_cast<__m128i*>(aDst), px);
+    aSrc += 4 * 4;
+    aDst += 4 * 4;
+  }
+
+  // Handle any 1-3 remaining pixels.
+  if (aRemainder) {
+    __m128i px = LoadRemainder_SSE2(aSrc, aRemainder);
+    px = SwizzleVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
+    StoreRemainder_SSE2(aDst, aRemainder, px);
+  }
+}
+
+template <bool aSwapRB, bool aOpaqueAlpha>
+void SwizzleRow_SSE2(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
+  int32_t alignedRow = 4 * (aLength & ~3);
+  int32_t remainder = aLength & 3;
+  SwizzleChunk_SSE2<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow, remainder);
+}
+
+template <bool aSwapRB, bool aOpaqueAlpha>
 void Swizzle_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
                   int32_t aDstGap, IntSize aSize) {
   int32_t alignedRow = 4 * (aSize.width & ~3);
@@ -303,28 +358,15 @@ void Swizzle_SSE2(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
   aDstGap += 4 * remainder;
 
   for (int32_t height = aSize.height; height > 0; height--) {
-    // Process all 4-pixel chunks as one vector.
-    for (const uint8_t* end = aSrc + alignedRow; aSrc < end;) {
-      __m128i px = _mm_loadu_si128(reinterpret_cast<const __m128i*>(aSrc));
-      px = SwizzleVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
-      _mm_storeu_si128(reinterpret_cast<__m128i*>(aDst), px);
-      aSrc += 4 * 4;
-      aDst += 4 * 4;
-    }
-
-    // Handle any 1-3 remaining pixels.
-    if (remainder) {
-      __m128i px = LoadRemainder_SSE2(aSrc, remainder);
-      px = SwizzleVector_SSE2<aSwapRB, aOpaqueAlpha>(px);
-      StoreRemainder_SSE2(aDst, remainder, px);
-    }
-
+    SwizzleChunk_SSE2<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow, remainder);
     aSrc += aSrcGap;
     aDst += aDstGap;
   }
 }
 
 // Force instantiation of swizzle variants here.
+template void SwizzleRow_SSE2<true, false>(const uint8_t*, uint8_t*, int32_t);
+template void SwizzleRow_SSE2<true, true>(const uint8_t*, uint8_t*, int32_t);
 template void Swizzle_SSE2<true, false>(const uint8_t*, int32_t, uint8_t*,
                                         int32_t, IntSize);
 template void Swizzle_SSE2<true, true>(const uint8_t*, int32_t, uint8_t*,
