@@ -511,7 +511,7 @@ class GleanTest {
         Dispatchers.API.setTestingMode(false)
 
         // This is the important part of the test. Even though both the metrics API and
-        // sendPings are async and off the main thread, "SomeTestValue" should be recorded,
+        // ping.send() are async and off the main thread, "SomeTestValue" should be recorded,
         // the order of the calls must be preserved.
         val testValue = "SomeTestValue"
         stringMetric.set(testValue)

@@ -6,6 +6,7 @@ package mozilla.components.service.glean.debug
 
 import android.app.Activity
 import android.os.Bundle
+import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.logger.Logger
 
@@ -91,7 +92,10 @@ class GleanDebugActivity : Activity() {
             Glean.configuration = debugConfig
 
             intent.getStringExtra(SEND_PING_EXTRA_KEY)?.let {
-                Glean.sendPingsByName(listOf(it))
+                @Suppress("EXPERIMENTAL_API_USAGE")
+                Dispatchers.API.launch {
+                    Glean.sendPingsByName(listOf(it))
+                }
             }
         }
 

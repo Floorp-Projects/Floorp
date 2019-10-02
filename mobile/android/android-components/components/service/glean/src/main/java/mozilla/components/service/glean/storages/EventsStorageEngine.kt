@@ -101,7 +101,7 @@ internal object EventsStorageEngine : StorageEngine {
         // to make sure this work is done before any other Glean API calls, and this
         // will force them to be queued after this work.
         @Suppress("EXPERIMENTAL_API_USAGE")
-        Dispatchers.API.launch {
+        Dispatchers.API.executeTask {
             // Load events from disk
             storageDirectory.listFiles()?.forEach { file ->
                 val storeData = eventStores.getOrPut(file.name) { mutableListOf() }
