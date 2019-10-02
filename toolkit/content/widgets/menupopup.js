@@ -73,7 +73,7 @@
       if (!super.shadowRoot.firstElementChild) {
         super.shadowRoot.appendChild(this.fragment);
 
-        // Retarget events from shadow DOM scrolbox to the popup itself.
+        // Retarget events from shadow DOM arrowscrollbox to the host.
         this.scrollBox.addEventListener("scroll", ev =>
           this.dispatchEvent(new Event("scroll"))
         );
@@ -82,6 +82,10 @@
         );
         this.scrollBox.addEventListener("underflow", ev =>
           this.dispatchEvent(new Event("underflow"))
+        );
+        this.scrollBox._scrollButtonUp.classList.add("menupopup-scrollbutton");
+        this.scrollBox._scrollButtonDown.classList.add(
+          "menupopup-scrollbutton"
         );
       }
       return super.shadowRoot;
@@ -111,13 +115,13 @@
 
     get styles() {
       let s = `
-        :host(.in-menulist) .popup-internal-box > .scrollbutton-up,
-        :host(.in-menulist) .popup-internal-box > .arrowscrollbox-overflow-start-indicator,
-        :host(.in-menulist) .popup-internal-box > .arrowscrollbox-overflow-end-indicator,
-        :host(.in-menulist) .popup-internal-box > .scrollbutton-down {
+        :host(.in-menulist) .popup-internal-box::part(scrollbutton-up),
+        :host(.in-menulist) .popup-internal-box::part(arrowscrollbox-overflow-start-indicator),
+        :host(.in-menulist) .popup-internal-box::part(arrowscrollbox-overflow-end-indicator),
+        :host(.in-menulist) .popup-internal-box::part(scrollbutton-down) {
           display: none;
         }
-        :host(.in-menulist) .popup-internal-box > .arrowscrollbox-scrollbox {
+        :host(.in-menulist) .popup-internal-box::part(scrollbox) {
           overflow: auto;
         }
       `;
@@ -166,6 +170,7 @@
         this._draggingState = this.NOT_DRAGGING;
         this._clearScrollTimer();
         this.releaseCapture();
+        this.scrollBox.scrollbox.scrollTop = 0;
       });
 
       this.addEventListener("mousedown", event => {

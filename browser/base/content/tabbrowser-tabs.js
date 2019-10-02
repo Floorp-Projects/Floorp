@@ -53,7 +53,7 @@
       this._scrollButtonWidth = 0;
       this._lastNumPinned = 0;
       this._pinnedTabsLayoutCache = null;
-      this._animateElement = this.arrowScrollbox._scrollButtonDown;
+      this._animateElement = this.arrowScrollbox;
       this._tabClipWidth = Services.prefs.getIntPref(
         "browser.tabs.tabClipWidth"
       );
@@ -518,12 +518,11 @@
       // return to avoid drawing the drop indicator
       var pixelsToScroll = 0;
       if (this.getAttribute("overflow") == "true") {
-        var targetAnonid = event.originalTarget.getAttribute("anonid");
-        switch (targetAnonid) {
-          case "scrollbutton-up":
+        switch (event.originalTarget) {
+          case arrowScrollbox._scrollButtonUp:
             pixelsToScroll = arrowScrollbox.scrollIncrement * -1;
             break;
-          case "scrollbutton-down":
+          case arrowScrollbox._scrollButtonDown:
             pixelsToScroll = arrowScrollbox.scrollIncrement;
             break;
         }
@@ -956,7 +955,7 @@
 
     _initializeArrowScrollbox() {
       let arrowScrollbox = this.arrowScrollbox;
-      arrowScrollbox.addEventListener(
+      arrowScrollbox.shadowRoot.addEventListener(
         "underflow",
         event => {
           // Ignore underflow events:
@@ -986,7 +985,7 @@
         true
       );
 
-      arrowScrollbox.addEventListener("overflow", event => {
+      arrowScrollbox.shadowRoot.addEventListener("overflow", event => {
         // Ignore overflow events:
         // - from nested scrollable elements
         // - for vertical orientation
@@ -1002,7 +1001,7 @@
         this._handleTabSelect(true);
       });
 
-      // Override scrollbox.xml method, since our scrollbox's children are
+      // Override arrowscrollbox.js method, since our scrollbox's children are
       // inherited from the scrollbox binding parent (this).
       arrowScrollbox._getScrollableElements = () => {
         return this.allTabs.filter(arrowScrollbox._canScrollToElement);
