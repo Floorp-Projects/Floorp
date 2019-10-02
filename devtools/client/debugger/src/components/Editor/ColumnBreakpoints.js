@@ -42,7 +42,11 @@ class ColumnBreakpoints extends Component<Props> {
       breakpointActions,
     } = this.props;
 
-    if (!selectedSource || selectedSource.isBlackBoxed) {
+    if (
+      !selectedSource ||
+      selectedSource.isBlackBoxed ||
+      columnBreakpoints.length === 0
+    ) {
       return null;
     }
 
