@@ -968,7 +968,7 @@ if (/* mozGradientsEnabled */ true) {
     "-moz-radial-gradient(calc(100px + -25%) top, red, blue)",
     "-moz-radial-gradient(left calc(100px + -25%), red, blue)",
     "-moz-radial-gradient(calc(100px + -25px) top, red, blue)",
-    "-moz-radial-gradient(left calc(100px + -25px), red, blue)",
+    "-moz-radial-gradient(left calc(100px + -25px), red, blue)"
   );
 
   invalidGradientAndElementValues.push(
