@@ -330,7 +330,11 @@ pref("browser.urlbar.usepreloadedtopurls.enabled", false);
 pref("browser.urlbar.usepreloadedtopurls.expire_days", 14);
 
 // Whether the quantum bar displays the major design update.
-pref("browser.urlbar.megabar", false);
+#ifdef NIGHTLY_BUILD
+  pref("browser.urlbar.megabar", true);
+#else
+  pref("browser.urlbar.megabar", false);
+#endif
 
 pref("browser.urlbar.openViewOnFocus", false);
 pref("browser.urlbar.eventTelemetry.enabled", false);
