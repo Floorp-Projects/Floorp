@@ -204,6 +204,7 @@ class GeckoEngineSession(
         runtime.settings.contentBlocking.setAntiTracking(ContentBlocking.AntiTracking.NONE)
         runtime.settings.contentBlocking.cookieBehavior = ContentBlocking.CookieBehavior.ACCEPT_ALL
         runtime.settings.contentBlocking.setStrictSocialTrackingProtection(false)
+        runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(ContentBlocking.EtpLevel.NONE)
     }
 
     /**

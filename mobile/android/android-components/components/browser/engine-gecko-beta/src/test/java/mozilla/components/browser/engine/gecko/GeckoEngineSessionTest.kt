@@ -959,6 +959,7 @@ class GeckoEngineSessionTest {
         verify(runtime.settings.contentBlocking).setAntiTracking(ContentBlocking.AntiTracking.NONE)
         verify(runtime.settings.contentBlocking).setCookieBehavior(GeckoCookieBehavior.ACCEPT_ALL)
         verify(runtime.settings.contentBlocking).setStrictSocialTrackingProtection(false)
+        verify(runtime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(ContentBlocking.EtpLevel.NONE)
     }
 
     @Test
