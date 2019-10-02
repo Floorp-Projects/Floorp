@@ -183,10 +183,24 @@
         ]
       }
     },
+    "bo": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "ddg", "wikipedia"
+        ]
+      }
+    },
     "br": {
       "default": {
         "visibleDefaultEngines": [
           "google-b-d", "amazon-france", "ddg", "ebay-fr", "freelang", "wikipedia-br"
+        ]
+      }
+    },
+    "brx": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google-b-d", "ddg", "wikipedia"
         ]
       }
     },
