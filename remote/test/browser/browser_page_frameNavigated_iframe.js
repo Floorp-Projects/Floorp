@@ -5,8 +5,9 @@
 
 // Test that frameNavigated is not fired for iframes embedded in the page.
 
-const PAGE_URL =
-  "http://example.com/browser/remote/test/browser/doc_page_frameNavigated_iframe.html";
+const IFRAME_DOC = toDataURL(
+  `<iframe src="data:text/html,somecontent"></iframe>`
+);
 
 const promises = new Set();
 const resolutions = new Map();
@@ -23,7 +24,7 @@ add_task(async function() {
 
   info("Navigate to a page containing an iframe");
   const onStoppedLoading = Page.frameStoppedLoading();
-  const { frameId } = await Page.navigate({ url: PAGE_URL });
+  const { frameId } = await Page.navigate({ url: IFRAME_DOC });
   await onStoppedLoading;
 
   is(frameNavigatedEvents.length, 1, "Received only 1 frameNavigated event");
