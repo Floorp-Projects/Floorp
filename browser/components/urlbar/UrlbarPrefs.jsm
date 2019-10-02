@@ -61,6 +61,11 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // "heuristic" result).  We fetch it as fast as possible.
   ["delay", 50],
 
+  // Some performance tests disable this because extending the urlbar needs
+  // layout information that we can't get before the first paint. (Or we could
+  // but this would mean flushing layout.)
+  ["disableExtendForTests", false],
+
   // If true, this optimizes for replacing the full URL rather than selecting a
   // portion of it. This also copies the urlbar value to the selection
   // clipboard on systems that support it.

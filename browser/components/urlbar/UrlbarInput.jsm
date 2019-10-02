@@ -275,6 +275,7 @@ class UrlbarInput {
     delete this.controller;
     delete this.textbox;
     delete this.inputField;
+    delete this._layoutBreakoutUpdateKey;
   }
 
   /**
@@ -966,6 +967,11 @@ class UrlbarInput {
       return;
     }
     await this._updateLayoutBreakoutDimensions();
+    if (!this.textbox) {
+      // We may have been uninitialized while waiting for
+      // _updateLayoutBreakoutDimensions.
+      return;
+    }
     this.startLayoutExtend();
   }
 
@@ -982,13 +988,26 @@ class UrlbarInput {
     ) {
       return;
     }
+
+    if (UrlbarPrefs.get("disableExtendForTests")) {
+      this.setAttribute("breakout-extend-disabled", "true");
+      return;
+    }
+    this.removeAttribute("breakout-extend-disabled");
+
     this.setAttribute("breakout-extend", "true");
 
     // Enable the animation only after the first extend call to ensure it
     // doesn't run when opening a new window.
     if (!this.hasAttribute("breakout-extend-animate")) {
       this.window.promiseDocumentFlushed(() => {
+        if (!this.window) {
+          return;
+        }
         this.window.requestAnimationFrame(() => {
+          if (!this.textbox) {
+            return;
+          }
           this.setAttribute("breakout-extend-animate", "true");
         });
       });
@@ -1035,6 +1054,11 @@ class UrlbarInput {
 
     await this.window.promiseDocumentFlushed(() => {});
     await new Promise(resolve => {
+      if (!this.window) {
+        // We may have been uninitialized while waiting for layout.
+        resolve();
+        return;
+      }
       this.window.requestAnimationFrame(() => {
         if (this._layoutBreakoutUpdateKey != updateKey) {
           return;
