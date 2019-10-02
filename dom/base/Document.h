@@ -1089,14 +1089,6 @@ class Document : public nsINode,
   }
 
   /**
-   * Set the mixed content object subrequest flag for this document.
-   */
-  void SetHasMixedContentObjectSubrequest(
-      bool aHasMixedContentObjectSubrequest) {
-    mHasMixedContentObjectSubrequest = aHasMixedContentObjectSubrequest;
-  }
-
-  /**
    * Set CSP flag for this document.
    */
   void SetHasCSP(bool aHasCSP) { mHasCSP = aHasCSP; }
@@ -4711,10 +4703,6 @@ class Document : public nsINode,
   // True if a document has blocked Mixed Display/Passive Content (see
   // nsMixedContentBlocker.cpp)
   bool mHasMixedDisplayContentBlocked : 1;
-
-  // True if a document loads a plugin object that attempts to load mixed
-  // content subresources through necko(see nsMixedContentBlocker.cpp)
-  bool mHasMixedContentObjectSubrequest : 1;
 
   // True if a document load has a CSP attached.
   bool mHasCSP : 1;
