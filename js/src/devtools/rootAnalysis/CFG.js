@@ -125,7 +125,8 @@ function isMatchingConstructor(destructor, edge)
         return false;
 
     var destructExp = destructor.PEdgeCallInstance.Exp;
-    assert(destructExp.Kind == "Var");
+    if (destructExp.Kind != "Var")
+        return false;
 
     var constructExp = edge.PEdgeCallInstance.Exp;
     if (constructExp.Kind != "Var")
