@@ -74,9 +74,10 @@ decorate_task(
     sendEventStub.assertEvents([
       ["enroll", "addon_rollout", recipe.arguments.slug],
     ]);
-    Assert.deepEqual(
-      setExperimentActiveStub.args,
-      [["test-rollout", "active", { type: "normandy-addonrollout" }]],
+    ok(
+      setExperimentActiveStub.calledWithExactly("test-rollout", "active", {
+        type: "normandy-addonrollout",
+      }),
       "a telemetry experiment should be activated"
     );
 
