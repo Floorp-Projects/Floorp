@@ -2302,7 +2302,7 @@ pref("services.settings.security.onecrl.signer", "onecrl.content-signature.mozil
 pref("services.settings.security.onecrl.checked", 0);
 
 pref("extensions.abuseReport.enabled", true);
-pref("extensions.abuseReport.url", "https://addons.mozilla.org/api/v4/abuse/report/addon/");
+pref("extensions.abuseReport.url", "https://services.addons.mozilla.org/api/v4/abuse/report/addon/");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
