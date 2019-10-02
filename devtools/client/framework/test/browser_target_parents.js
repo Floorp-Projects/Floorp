@@ -53,6 +53,8 @@ add_task(async function() {
       );
     })
   );
+
+  await client.close();
 });
 
 // Test against Frame targets
@@ -82,6 +84,8 @@ add_task(async function() {
       );
     })
   );
+
+  await client.close();
 });
 
 // Test against Webextension targets
@@ -113,6 +117,8 @@ add_task(async function() {
         );
       })
   );
+
+  await client.close();
 });
 
 // Test against worker targets on parent process
@@ -139,4 +145,6 @@ add_task(async function() {
       );
     })
   );
+
+  await client.close();
 });

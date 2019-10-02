@@ -16,11 +16,6 @@ add_task(
     info(
       "Setting up and connecting Debugger Server and Client in main process"
     );
-    initDebuggerServer();
-    const transport = DebuggerServer.connectPipe();
-    const client = new DebuggerClient(transport);
-    await client.connect();
-
     info("Opening a non-extension page in a tab");
     const target = await addTabTarget("data:text/html;charset=utf-8,");
 
