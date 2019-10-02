@@ -1222,7 +1222,7 @@ static JSAtom* AtomizeLittleEndianTwoByteChars(JSContext* cx,
 template <XDRMode mode>
 XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
   if (mode == XDR_ENCODE) {
-    MOZ_ASSERT(!xdr->hasAtomTable);
+    MOZ_ASSERT(!xdr->hasAtomTable());
 
     if (xdr->hasAtomMap()) {
       // If the atom has already been encoded, look up its index in the atom
@@ -1253,13 +1253,13 @@ XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
 
   MOZ_ASSERT(mode == XDR_DECODE);
 
-  if (!xdr->hasAtomTable) {
+  if (!xdr->hasAtomTable()) {
     return XDRAtomData(xdr, atomp);
   }
 
   uint32_t atomIndex;
   MOZ_TRY(xdr->codeUint32(&atomIndex));
-  JSAtom* atom = xdr->atomTable[atomIndex];
+  JSAtom* atom = xdr->atomTable()[atomIndex];
 
   if (!atom) {
     return xdr->fail(JS::TranscodeResult_Throw);
