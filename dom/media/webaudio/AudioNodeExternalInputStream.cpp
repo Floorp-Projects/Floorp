@@ -150,10 +150,6 @@ void AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   for (StreamTracks::TrackIter tracks(source->mTracks); !tracks.IsEnded();
        tracks.Next()) {
     const StreamTracks::Track& inputTrack = *tracks;
-    if (!mInputs[0]->PassTrackThrough(tracks->GetID())) {
-      continue;
-    }
-
     if (inputTrack.GetSegment()->GetType() == MediaSegment::VIDEO) {
       MOZ_ASSERT(false,
                  "AudioNodeExternalInputStream shouldn't have video tracks");

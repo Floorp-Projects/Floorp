@@ -100,8 +100,7 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
           StreamTracks::Track* outputTrack =
               mTracks.FindTrack(map->mOutputTrackID);
           found = true;
-          if (!outputTrack || outputTrack->IsEnded() ||
-              !inputs[i]->PassTrackThrough(tracks->GetID())) {
+          if (!outputTrack || outputTrack->IsEnded()) {
             trackFinished = true;
           } else {
             CopyTrackData(tracks.get(), j, aFrom, aTo, &trackFinished);
@@ -111,7 +110,7 @@ void TrackUnionStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
           break;
         }
       }
-      if (!found && inputs[i]->AllowCreationOf(tracks->GetID())) {
+      if (!found) {
         bool trackFinished = false;
         uint32_t mapIndex = AddTrack(inputs[i], tracks.get(), aFrom);
         CopyTrackData(tracks.get(), mapIndex, aFrom, aTo, &trackFinished);
@@ -147,29 +146,12 @@ uint32_t TrackUnionStream::AddTrack(MediaInputPort* aPort,
                                     GraphTime aFrom) {
   STREAM_LOG(LogLevel::Verbose,
              ("TrackUnionStream %p adding track %d for "
-              "input stream %p track %d, desired id %d",
-              this, aTrack->GetID(), aPort->GetSource(), aTrack->GetID(),
-              aPort->GetDestinationTrackId()));
+              "input stream %p track %d",
+              this, aTrack->GetID(), aPort->GetSource(), aTrack->GetID()));
 
   TrackID id;
-  if (IsTrackIDExplicit(id = aPort->GetDestinationTrackId())) {
-    MOZ_ASSERT(id >= mNextAvailableTrackID && !mUsedTracks.ContainsSorted(id),
-               "Desired destination id taken. Only provide a destination ID "
-               "if you can assure its availability, or we may not be able "
-               "to bind to the correct DOM-side track.");
-#ifdef DEBUG
-    AutoTArray<MediaInputPort*, 32> inputs(mInputs);
-    inputs.AppendElements(mSuspendedInputs);
-    for (size_t i = 0; inputs[i] != aPort; ++i) {
-      MOZ_ASSERT(inputs[i]->GetSourceTrackId() != TRACK_ANY,
-                 "You are adding a MediaInputPort with a track mapping "
-                 "while there already exist generic MediaInputPorts for this "
-                 "destination stream. This can lead to TrackID collisions!");
-    }
-#endif
-    mUsedTracks.InsertElementSorted(id);
-  } else if ((id = aTrack->GetID()) && id > mNextAvailableTrackID &&
-             !mUsedTracks.ContainsSorted(id)) {
+  if ((id = aTrack->GetID()) && id > mNextAvailableTrackID &&
+      !mUsedTracks.ContainsSorted(id)) {
     // Input id available. Mark it used in mUsedTracks.
     mUsedTracks.InsertElementSorted(id);
   } else {

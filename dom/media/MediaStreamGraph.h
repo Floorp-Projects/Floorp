@@ -839,38 +839,10 @@ struct SharedDummyStream {
 };
 
 /**
- * The blocking mode decides how a track should be blocked in a MediaInputPort.
- */
-enum class BlockingMode {
-  /**
-   * BlockingMode CREATION blocks the source track from being created
-   * in the destination. It'll end if it already exists.
-   */
-  CREATION,
-  /**
-   * BlockingMode END_EXISTING allows a track to be created in the destination
-   * but will end it before any data has been passed through.
-   */
-  END_EXISTING,
-};
-
-/**
  * Represents a connection between a ProcessedMediaStream and one of its
  * input streams.
  * We make these refcounted so that stream-related messages with MediaInputPort*
  * pointers can be sent to the main thread safely.
- *
- * A port can be locked to a specific track in the source stream, in which case
- * only this track will be forwarded to the destination stream. TRACK_ANY
- * can used to signal that all tracks shall be forwarded.
- *
- * When a port is locked to a specific track in the source stream, it may also
- * indicate a TrackID to map this source track to in the destination stream
- * by setting aDestTrack to an explicit ID. When we do this, we must know
- * that this TrackID in the destination stream is available. We assert during
- * processing that the ID is available and that there are no generic input
- * ports already attached to the destination stream.
- * Note that this is currently only handled by TrackUnionStreams.
  *
  * When a port's source or destination stream dies, the stream's DestroyImpl
  * calls MediaInputPort::Disconnect to disconnect the port from
@@ -887,13 +859,10 @@ class MediaInputPort final {
  private:
   // Do not call this constructor directly. Instead call
   // aDest->AllocateInputPort.
-  MediaInputPort(MediaStream* aSource, TrackID& aSourceTrack,
-                 ProcessedMediaStream* aDest, TrackID& aDestTrack,
+  MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
                  uint16_t aInputNumber, uint16_t aOutputNumber)
       : mSource(aSource),
-        mSourceTrack(aSourceTrack),
         mDest(aDest),
-        mDestTrack(aDestTrack),
         mInputNumber(aInputNumber),
         mOutputNumber(aOutputNumber),
         mGraph(nullptr) {
@@ -921,50 +890,7 @@ class MediaInputPort final {
 
   // Any thread
   MediaStream* GetSource() const { return mSource; }
-  TrackID GetSourceTrackId() const { return mSourceTrack; }
   ProcessedMediaStream* GetDestination() const { return mDest; }
-  TrackID GetDestinationTrackId() const { return mDestTrack; }
-
-  /**
-   * Block aTrackId in the source stream from being passed through the port.
-   * Consumers will interpret this track as ended.
-   * Returns a pledge that resolves on the main thread after the track block has
-   * been applied by the MSG.
-   */
-  RefPtr<GenericPromise> BlockSourceTrackId(TrackID aTrackId,
-                                            BlockingMode aBlockingMode);
-
- private:
-  void BlockSourceTrackIdImpl(TrackID aTrackId, BlockingMode aBlockingMode);
-
- public:
-  // Returns true if aTrackId has not been blocked for any reason and this port
-  // has not been locked to another track.
-  bool PassTrackThrough(TrackID aTrackId) const {
-    bool blocked = false;
-    for (auto pair : mBlockedTracks) {
-      if (pair.first() == aTrackId &&
-          (pair.second() == BlockingMode::CREATION ||
-           pair.second() == BlockingMode::END_EXISTING)) {
-        blocked = true;
-        break;
-      }
-    }
-    return !blocked && (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
-  }
-
-  // Returns true if aTrackId has not been blocked for track creation and this
-  // port has not been locked to another track.
-  bool AllowCreationOf(TrackID aTrackId) const {
-    bool blocked = false;
-    for (auto pair : mBlockedTracks) {
-      if (pair.first() == aTrackId && pair.second() == BlockingMode::CREATION) {
-        blocked = true;
-        break;
-      }
-    }
-    return !blocked && (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
-  }
 
   uint16_t InputNumber() const { return mInputNumber; }
   uint16_t OutputNumber() const { return mOutputNumber; }
@@ -1020,16 +946,11 @@ class MediaInputPort final {
   friend class ProcessedMediaStream;
   // Never modified after Init()
   MediaStream* mSource;
-  TrackID mSourceTrack;
   ProcessedMediaStream* mDest;
-  TrackID mDestTrack;
   // The input and output numbers are optional, and are currently only used by
   // Web Audio.
   const uint16_t mInputNumber;
   const uint16_t mOutputNumber;
-
-  typedef Pair<TrackID, BlockingMode> BlockedTrack;
-  nsTArray<BlockedTrack> mBlockedTracks;
 
   // Our media stream graph
   MediaStreamGraphImpl* mGraph;
@@ -1049,28 +970,10 @@ class ProcessedMediaStream : public MediaStream {
   /**
    * Allocates a new input port attached to source aStream.
    * This stream can be removed by calling MediaInputPort::Remove().
-   *
-   * The input port is tied to aTrackID in the source stream.
-   * aTrackID can be set to TRACK_ANY to automatically forward all tracks from
-   * aStream.
-   *
-   * If aTrackID is an explicit ID, aDestTrackID can also be made explicit
-   * to ensure that the track is assigned this ID in the destination stream.
-   * To avoid intermittent TrackID collisions the destination stream may not
-   * have any existing generic input ports (with TRACK_ANY source track) when
-   * you allocate an input port with a destination TrackID.
-   *
-   * To end a track in the destination stream forwarded with TRACK_ANY,
-   * it can be blocked in the input port through MediaInputPort::BlockTrackId().
-   *
-   * Tracks in aBlockedTracks will be blocked in the input port initially. This
-   * ensures that they don't get created by the MSG-thread before we can
-   * BlockTrackId() on the main thread.
    */
   already_AddRefed<MediaInputPort> AllocateInputPort(
-      MediaStream* aStream, TrackID aTrackID = TRACK_ANY,
-      TrackID aDestTrackID = TRACK_ANY, uint16_t aInputNumber = 0,
-      uint16_t aOutputNumber = 0, nsTArray<TrackID>* aBlockedTracks = nullptr);
+      MediaStream* aStream, uint16_t aInputNumber = 0,
+      uint16_t aOutputNumber = 0);
   /**
    * Queue a message to set the autofinish flag on this stream (defaults to
    * false). When this flag is set, and all input streams are in the finished
