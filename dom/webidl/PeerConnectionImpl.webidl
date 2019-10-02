@@ -75,6 +75,7 @@ interface PeerConnectionImpl  {
   void insertAudioLevelForContributingSource(MediaStreamTrack recvTrack,
                                              unsigned long source,
                                              DOMHighResTimeStamp timestamp,
+                                             unsigned long rtpTimestamp,
                                              boolean hasLevel,
                                              byte level);
 

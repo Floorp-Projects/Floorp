@@ -57,9 +57,10 @@ class RtpSourceObserver : public webrtc::RtpPacketObserver {
   // Note: these are pool allocated
   struct RtpSourceEntry {
     RtpSourceEntry() = default;
-    void Update(const int64_t aTimestamp, const bool aHasAudioLevel,
-                const uint8_t aAudioLevel) {
+    void Update(const int64_t aTimestamp, const uint32_t aRtpTimestamp,
+                const bool aHasAudioLevel, const uint8_t aAudioLevel) {
       jitterAdjustedTimestamp = aTimestamp;
+      rtpTimestamp = aRtpTimestamp;
       // Audio level range is 0 - 127 inclusive
       hasAudioLevel = aHasAudioLevel && !(aAudioLevel & 0x80);
       audioLevel = aAudioLevel;
@@ -69,6 +70,8 @@ class RtpSourceObserver : public webrtc::RtpPacketObserver {
     double ToLinearAudioLevel() const;
     // Time this information was received + jitter
     int64_t jitterAdjustedTimestamp = 0;
+    // The original RTP timestamp in the received packet
+    uint32_t rtpTimestamp = 0;
     bool hasAudioLevel = false;
     uint8_t audioLevel = 0;
   };
@@ -103,7 +106,8 @@ class RtpSourceObserver : public webrtc::RtpPacketObserver {
     const RtpSourceEntry* FindClosestNotAfter(int64_t aTime) const;
     // Inserts data into the history, may silently drop data if it is too old
     void Insert(const int64_t aTimeNow, const int64_t aTimestamp,
-                const bool aHasAudioLevel, const uint8_t aAudioLevel);
+                const uint32_t aRtpTimestamp, const bool aHasAudioLevel,
+                const uint8_t aAudioLevel);
     // Removes aged out from the jitter window
     void Prune(const int64_t aTimeNow);
     // Set Source
@@ -168,11 +172,10 @@ class RtpSourceObserver : public webrtc::RtpPacketObserver {
 
   // Testing only
   // Inserts additional csrc audio levels for mochitests
-  friend void InsertAudioLevelForContributingSource(RtpSourceObserver& observer,
-                                                    uint32_t aCsrcSource,
-                                                    int64_t aTimestamp,
-                                                    bool aHasAudioLevel,
-                                                    uint8_t aAudioLevel);
+  friend void InsertAudioLevelForContributingSource(
+      RtpSourceObserver& observer, const uint32_t aCsrcSource,
+      const int64_t aTimestamp, const uint32_t aRtpTimestamp,
+      const bool aHasAudioLevel, const uint8_t aAudioLevel);
 };
 }  // namespace mozilla
 #undef NG
