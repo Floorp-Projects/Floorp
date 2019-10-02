@@ -880,8 +880,9 @@ struct MOZ_STACK_CLASS ExceptionArgParser {
       return true;
     }
 
+    RootedObject stackObj(cx, &v.toObject());
     return NS_SUCCEEDED(xpc->WrapJS(
-        cx, &v.toObject(), NS_GET_IID(nsIStackFrame), getter_AddRefs(eStack)));
+        cx, stackObj, NS_GET_IID(nsIStackFrame), getter_AddRefs(eStack)));
   }
 
   bool parseData(HandleValue v) {
@@ -891,7 +892,8 @@ struct MOZ_STACK_CLASS ExceptionArgParser {
       return true;
     }
 
-    return NS_SUCCEEDED(xpc->WrapJS(cx, &v.toObject(), NS_GET_IID(nsISupports),
+    RootedObject obj(cx, &v.toObject());
+    return NS_SUCCEEDED(xpc->WrapJS(cx, obj, NS_GET_IID(nsISupports),
                                     getter_AddRefs(eData)));
   }
 
@@ -2036,9 +2038,10 @@ nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
     return NS_ERROR_INVALID_ARG;
   }
 
+  RootedObject runnableObj(cx, &runnable.toObject());
   nsCOMPtr<nsIRunnable> run;
   nsresult rv = nsXPConnect::XPConnect()->WrapJS(
-      cx, &runnable.toObject(), NS_GET_IID(nsIRunnable), getter_AddRefs(run));
+      cx, runnableObj, NS_GET_IID(nsIRunnable), getter_AddRefs(run));
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_ASSERT(run);
 

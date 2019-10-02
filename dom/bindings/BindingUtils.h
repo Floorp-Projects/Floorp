@@ -266,6 +266,12 @@ MOZ_ALWAYS_INLINE nsresult UnwrapObjectInternal(V& obj, U& value,
   nsresult rv = UnwrapObjectInternal<T, false>(unwrappedObj, tempValue, protoID,
                                                protoDepth, nullptr);
   if (NS_SUCCEEDED(rv)) {
+    // Suppress a hazard related to keeping tempValue alive across
+    // UnwrapObjectInternal, because the analysis can't tell that this function
+    // will not GC if maybeWrapped=False and we've already gone through a level
+    // of unwrapping so unwrappedObj will be !IsWrapper.
+    JS::AutoSuppressGCAnalysis suppress;
+
     // It's very important to not update "obj" with the "unwrappedObj" value
     // until we know the unwrap has succeeded.  Otherwise, in a situation in
     // which we have an overload of object and primitive we could end up
@@ -1516,12 +1522,16 @@ bool WrapObject(JSContext* cx, const WindowProxyHolder& p,
 template <typename T>
 static inline JSObject* WrapNativeISupports(JSContext* cx, T* p,
                                             nsWrapperCache* cache) {
-  xpcObjectHelper helper(ToSupports(p), cache);
-  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
-  JS::Rooted<JS::Value> v(cx);
-  return XPCOMObjectToJsval(cx, scope, helper, nullptr, false, &v)
-             ? v.toObjectOrNull()
-             : nullptr;
+  JS::Rooted<JSObject*> retval(cx);
+  {
+    xpcObjectHelper helper(ToSupports(p), cache);
+    JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
+    JS::Rooted<JS::Value> v(cx);
+    retval = XPCOMObjectToJsval(cx, scope, helper, nullptr, false, &v)
+      ? v.toObjectOrNull()
+      : nullptr;
+  }
+  return retval;
 }
 
 // Wrapping of our native parent, for cases when it's a WebIDL object.
