@@ -657,15 +657,18 @@ class HTMLMediaElement::StreamCaptureTrackSource
                                            MediaStreamTrackSource)
 
   StreamCaptureTrackSource(MediaStreamTrackSource* aCapturedTrackSource,
-                           ProcessedMediaStream* aStream, MediaInputPort* aPort)
+                           ProcessedMediaStream* aStream, MediaInputPort* aPort,
+                           TrackID aTrackID)
       : MediaStreamTrackSource(aCapturedTrackSource->GetPrincipal(),
                                nsString()),
         mCapturedTrackSource(aCapturedTrackSource),
         mStream(aStream),
-        mPort(aPort) {
+        mPort(aPort),
+        mTrackID(aTrackID) {
     MOZ_ASSERT(mCapturedTrackSource);
     MOZ_ASSERT(mStream);
     MOZ_ASSERT(mPort);
+    MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
     mCapturedTrackSource->RegisterSink(this);
   }
@@ -674,9 +677,9 @@ class HTMLMediaElement::StreamCaptureTrackSource
     if (!mStream) {
       return;
     }
-    mStream->SetTrackEnabled(mPort->GetDestinationTrackId(),
-                             aEnabled ? DisabledTrackMode::ENABLED
-                                      : DisabledTrackMode::SILENCE_FREEZE);
+    mStream->SetTrackEnabled(mTrackID, aEnabled
+                                           ? DisabledTrackMode::ENABLED
+                                           : DisabledTrackMode::SILENCE_FREEZE);
   }
 
   void Destroy() override {
@@ -754,6 +757,7 @@ class HTMLMediaElement::StreamCaptureTrackSource
   RefPtr<MediaStreamTrackSource> mCapturedTrackSource;
   RefPtr<ProcessedMediaStream> mStream;
   RefPtr<MediaInputPort> mPort;
+  const TrackID mTrackID;
 };
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement::StreamCaptureTrackSource,
@@ -3195,8 +3199,8 @@ void HTMLMediaElement::AddCaptureMediaTrackToOutputStream(
 
   ProcessedMediaStream* stream = inputTrack->Graph()->CreateTrackUnionStream();
   RefPtr<MediaInputPort> port = inputTrack->ForwardTrackContentsTo(stream);
-  auto source = MakeRefPtr<StreamCaptureTrackSource>(&inputTrack->GetSource(),
-                                                     stream, port);
+  auto source = MakeRefPtr<StreamCaptureTrackSource>(
+      &inputTrack->GetSource(), stream, port, inputTrack->GetTrackID());
 
   // Track is muted initially, so we don't leak data if it's added while paused
   // and an MSG iteration passes before the mute comes into effect.
