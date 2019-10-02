@@ -288,6 +288,10 @@ struct BaselineStackBuilder {
 
   void setMonitorPC(jsbytecode* pc) { header_->monitorPC = pc; }
 
+  void setFrameSizeOfInnerMostFrame(uint32_t size) {
+    header_->frameSizeOfInnerMostFrame = size;
+  }
+
   template <typename T>
   BufferPointer<T> pointerAtStackOffset(size_t offset) {
     if (offset < bufferUsed_) {
@@ -1115,6 +1119,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // finally block in this frame, then unpacking is almost done.
   if (!iter.moreFrames() || catchingException) {
     builder.setResumeFramePtr(prevFramePtr);
+    builder.setFrameSizeOfInnerMostFrame(frameSize);
 
     // Compute the native address (within the Baseline Interpreter) that we will
     // resume at and initialize the frame's interpreter fields.
