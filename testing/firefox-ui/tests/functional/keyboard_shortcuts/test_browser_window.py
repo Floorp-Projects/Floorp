@@ -23,7 +23,10 @@ class TestBrowserWindowShortcuts(PuppeteerMixin, MarionetteTestCase):
 
         # TODO: Marionette currently fails to detect the correct tab
         # with self.marionette.using_content('content'):
-        #     self.wait_for_condition(lambda mn: mn.get_url() == "about:addons")
+        #     Wait(self.marionette).until(
+        #         lambda mn: mn.get_url() == "about:addons",
+        #         message="Url does not match with 'about:addons'"
+        #     )
 
         # TODO: remove extra switch once it is done automatically
         self.browser.tabbar.tabs[1].switch_to()
