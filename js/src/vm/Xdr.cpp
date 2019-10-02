@@ -554,7 +554,5 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
 }
 
 void XDRIncrementalEncoder::trace(JSTracer* trc) {
-  if (hasAtomMap()) {
-    atomMap().trace(trc);
-  }
+  atomMap().trace(trc);
 }
