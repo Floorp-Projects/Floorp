@@ -111,7 +111,7 @@ MarkupContainer.prototype = {
 
     this.mutationMarker = this.win.document.createElement("div");
     this.mutationMarker.classList.add("markup-tag-mutation-marker");
-    this.mutationMarker.style.left = `-${this.level}em`;
+    this.mutationMarker.style.setProperty("--markup-level", this.level);
     this.tagLine.appendChild(this.mutationMarker);
 
     this.tagState = this.win.document.createElement("span");
