@@ -40,7 +40,7 @@ class GraphRunner;
 struct StreamUpdate {
   RefPtr<MediaStream> mStream;
   StreamTime mNextMainThreadCurrentTime;
-  bool mNextMainThreadFinished;
+  bool mNextMainThreadEnded;
 };
 
 /**
@@ -263,12 +263,11 @@ class MediaStreamGraphImpl : public MediaStreamGraph,
   void ProcessChunkMetadata(GraphTime aPrevCurrentTime);
   /**
    * Process chunks for the given stream and interval, and raise events for
-   * properties that have changed, such as principalId.
+   * properties that have changed, such as principalHandle.
    */
   template <typename C, typename Chunk>
-  void ProcessChunkMetadataForInterval(MediaStream* aStream, TrackID aTrackID,
-                                       C& aSegment, StreamTime aStart,
-                                       StreamTime aEnd);
+  void ProcessChunkMetadataForInterval(MediaStream* aStream, C& aSegment,
+                                       StreamTime aStart, StreamTime aEnd);
   /**
    * Process graph messages in mFrontMessageQueue.
    */

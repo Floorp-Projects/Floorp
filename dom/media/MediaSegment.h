@@ -43,7 +43,7 @@ typedef int64_t MediaTime;
 const int64_t MEDIA_TIME_MAX = TRACK_TICKS_MAX;
 
 /**
- * Media time relative to the start of a StreamTracks.
+ * Media time relative to the start of a MediaStream.
  */
 typedef MediaTime StreamTime;
 const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
@@ -109,6 +109,11 @@ class MediaSegment {
    * Returns true if all chunks in this segment are null.
    */
   virtual bool IsNull() const = 0;
+
+  /**
+   * Returns true if this segment contains no chunks.
+   */
+  virtual bool IsEmpty() const = 0;
 
   /**
    * Create a MediaSegment of the same type.
@@ -199,6 +204,7 @@ class MediaSegmentBase : public MediaSegment {
     }
     return true;
   }
+  bool IsEmpty() const override { return mChunks.IsEmpty(); }
   MediaSegment* CreateEmptyClone() const override { return new C(); }
   void AppendFrom(MediaSegment* aSource) override {
     NS_ASSERTION(aSource->GetType() == C::StaticType(), "Wrong type");

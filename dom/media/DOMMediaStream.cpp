@@ -44,8 +44,6 @@ using namespace mozilla::media;
 static LazyLogModule gMediaStreamLog("MediaStream");
 #define LOG(type, msg) MOZ_LOG(gMediaStreamLog, type, msg)
 
-const TrackID TRACK_VIDEO_PRIMARY = 1;
-
 static bool ContainsLiveTracks(
     const nsTArray<RefPtr<MediaStreamTrack>>& aTracks) {
   for (const auto& track : aTracks) {
@@ -329,9 +327,8 @@ void DOMMediaStream::GetTracks(
 }
 
 void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
-  LOG(LogLevel::Info,
-      ("DOMMediaStream %p Adding track %p (from stream %p with ID %d)", this,
-       &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
+  LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from stream %p)",
+                       this, &aTrack, aTrack.GetStream()));
 
   if (HasTrack(aTrack)) {
     LOG(LogLevel::Debug,
@@ -344,9 +341,8 @@ void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
 }
 
 void DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack) {
-  LOG(LogLevel::Info,
-      ("DOMMediaStream %p Removing track %p (from stream %p with ID %d)", this,
-       &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
+  LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from stream %p)",
+                       this, &aTrack, aTrack.GetStream()));
 
   if (!mTracks.RemoveElement(&aTrack)) {
     LOG(LogLevel::Debug,

@@ -444,7 +444,7 @@ void MediaEncoder::EnsureGraphStreamFrom(MediaStream* aStream) {
   }
   MOZ_DIAGNOSTIC_ASSERT(!aStream->IsDestroyed());
   mGraphStream = MakeAndAddRef<SharedDummyStream>(
-      aStream->GraphImpl()->CreateSourceStream());
+      aStream->GraphImpl()->CreateSourceStream(MediaSegment::VIDEO));
 }
 
 void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
@@ -518,7 +518,7 @@ void MediaEncoder::ConnectAudioNode(AudioNode* aNode, uint32_t aOutput) {
     AudioContext* ctx = aNode->Context();
     AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
     AudioNodeStream::Flags flags = AudioNodeStream::EXTERNAL_OUTPUT |
-                                   AudioNodeStream::NEED_MAIN_THREAD_FINISHED;
+                                   AudioNodeStream::NEED_MAIN_THREAD_ENDED;
     mPipeStream = AudioNodeStream::Create(ctx, engine, flags, ctx->Graph());
     AudioNodeStream* ns = aNode->GetStream();
     if (ns) {
@@ -530,11 +530,10 @@ void MediaEncoder::ConnectAudioNode(AudioNode* aNode, uint32_t aOutput) {
   mAudioNode = aNode;
 
   if (mPipeStream) {
-    mPipeStream->AddTrackListener(mAudioListener, AudioNodeStream::AUDIO_TRACK);
+    mPipeStream->AddListener(mAudioListener);
     EnsureGraphStreamFrom(mPipeStream);
   } else {
-    mAudioNode->GetStream()->AddTrackListener(mAudioListener,
-                                              AudioNodeStream::AUDIO_TRACK);
+    mAudioNode->GetStream()->AddListener(mAudioListener);
     EnsureGraphStreamFrom(mAudioNode->GetStream());
   }
 }
@@ -925,15 +924,13 @@ void MediaEncoder::Stop() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mAudioNode) {
-    mAudioNode->GetStream()->RemoveTrackListener(mAudioListener,
-                                                 AudioNodeStream::AUDIO_TRACK);
+    mAudioNode->GetStream()->RemoveListener(mAudioListener);
     if (mInputPort) {
       mInputPort->Destroy();
       mInputPort = nullptr;
     }
     if (mPipeStream) {
-      mPipeStream->RemoveTrackListener(mAudioListener,
-                                       AudioNodeStream::AUDIO_TRACK);
+      mPipeStream->RemoveListener(mAudioListener);
       mPipeStream->Destroy();
       mPipeStream = nullptr;
     }

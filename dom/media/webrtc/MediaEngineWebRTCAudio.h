@@ -45,7 +45,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate() override;
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
                 const PrincipalHandle& aPrincipal) override;
   nsresult Start() override;
   nsresult Stop() override;
@@ -99,7 +99,6 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   void UpdateNSSettings(bool aEnable, webrtc::NoiseSuppression::Level aLevel);
   void UpdateAPMExtraOptions(bool aExtendedFilter, bool aDelayAgnostic);
 
-  TrackID mTrackID = TRACK_NONE;
   PrincipalHandle mPrincipal = PRINCIPAL_HANDLE_NONE;
 
   const RefPtr<AudioDeviceInfo> mDeviceInfo;
@@ -144,7 +143,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 class AudioInputProcessing : public AudioDataListener {
  public:
   AudioInputProcessing(uint32_t aMaxChannelCount,
-                       RefPtr<SourceMediaStream> aStream, TrackID aTrackID,
+                       RefPtr<SourceMediaStream> aStream,
                        const PrincipalHandle& aPrincipalHandle);
 
   void Pull(StreamTime aEndOfAppendedData, StreamTime aDesiredTime);
@@ -240,8 +239,6 @@ class AudioInputProcessing : public AudioDataListener {
   // Set to false by Start(). Becomes true after the first time we append
   // silence *after* the first audio callback has appended real frames.
   bool mLiveSilenceAppended;
-  // Track ID on which the data is to be appended after processing
-  const TrackID mTrackID;
   // Principal for the data that flows through this class.
   const PrincipalHandle mPrincipal;
   // Whether or not this MediaEngine is enabled. If it's not enabled, it
@@ -291,7 +288,7 @@ class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
     // Nothing to do here, everything is managed in MediaManager.cpp
     return NS_OK;
   }
-  void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
+  void SetTrack(const RefPtr<SourceMediaStream>& aStream,
                 const PrincipalHandle& aPrincipal) override;
   nsresult Start() override;
   nsresult Stop() override;
