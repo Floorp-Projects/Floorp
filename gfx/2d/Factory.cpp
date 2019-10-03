@@ -163,10 +163,16 @@ void mozilla_AddRefSharedFTFace(void* aContext) {
   }
 }
 
-void mozilla_ReleaseSharedFTFace(void* aContext) {
+void mozilla_ReleaseSharedFTFace(void* aContext, void* aOwner) {
   if (aContext) {
-    static_cast<mozilla::gfx::SharedFTFace*>(aContext)->Release();
+    auto* sharedFace = static_cast<mozilla::gfx::SharedFTFace*>(aContext);
+    sharedFace->ForgetLockOwner(aOwner);
+    sharedFace->Release();
   }
+}
+
+void mozilla_ForgetSharedFTFaceLockOwner(void* aContext, void* aOwner) {
+  static_cast<mozilla::gfx::SharedFTFace*>(aContext)->ForgetLockOwner(aOwner);
 }
 
 int mozilla_LockSharedFTFace(void* aContext, void* aOwner) {
@@ -651,7 +657,7 @@ SharedFTFace::SharedFTFace(FT_Face aFace, SharedFTFaceData* aData)
     : mFace(aFace),
       mData(aData),
       mLock("SharedFTFace::mLock"),
-      mLockOwner(nullptr) {
+      mLastLockOwner(nullptr) {
   if (mData) {
     mData->BindData();
   }
