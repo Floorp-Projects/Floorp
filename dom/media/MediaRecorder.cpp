@@ -212,6 +212,184 @@ static bool AudioNodePrincipalSubsumes(MediaRecorder* aRecorder,
   return PrincipalSubsumes(aRecorder, principal);
 }
 
+static bool CanRecordAudioTrackWith(const Maybe<MediaContainerType>& aMimeType,
+                                    const nsAString& aMimeTypeString) {
+  if (aMimeTypeString.IsEmpty()) {
+    // For the empty string we just need to check whether we have support for an
+    // audio container and an audio codec.
+    if (!MediaEncoder::IsWebMEncoderEnabled() &&
+        !MediaDecoder::IsOggEnabled()) {
+      // No container support for audio.
+      return false;
+    }
+
+    if (!MediaDecoder::IsOpusEnabled()) {
+      // No codec support for audio.
+      return false;
+    }
+
+    return true;
+  }
+
+  if (!aMimeType) {
+    // A mime type string was set, but it couldn't be parsed to a valid
+    // MediaContainerType.
+    return false;
+  }
+
+  if (aMimeType->Type() != MEDIAMIMETYPE(VIDEO_WEBM) &&
+      aMimeType->Type() != MEDIAMIMETYPE(AUDIO_WEBM) &&
+      aMimeType->Type() != MEDIAMIMETYPE(AUDIO_OGG)) {
+    // Any currently supported container can record audio.
+    return false;
+  }
+
+  if (aMimeType->Type() == MEDIAMIMETYPE(VIDEO_WEBM) &&
+      !MediaEncoder::IsWebMEncoderEnabled()) {
+    return false;
+  }
+
+  if (aMimeType->Type() == MEDIAMIMETYPE(AUDIO_WEBM) &&
+      !MediaEncoder::IsWebMEncoderEnabled()) {
+    return false;
+  }
+
+  if (aMimeType->Type() == MEDIAMIMETYPE(AUDIO_OGG) &&
+      !MediaDecoder::IsOggEnabled()) {
+    return false;
+  }
+
+  if (!MediaDecoder::IsOpusEnabled()) {
+    return false;
+  }
+
+  if (!aMimeType->ExtendedType().HaveCodecs()) {
+    // No codecs constrained, we can pick opus.
+    return true;
+  }
+
+  size_t opus = 0;
+  size_t unknown = 0;
+  for (const auto& codec : aMimeType->ExtendedType().Codecs().Range()) {
+    // Ignore video codecs.
+    if (codec.EqualsLiteral("vp8")) {
+      continue;
+    }
+    if (codec.EqualsLiteral("vp8.0")) {
+      continue;
+    }
+    if (codec.EqualsLiteral("opus")) {
+      // All containers support opus
+      opus++;
+      continue;
+    }
+    unknown++;
+  }
+
+  if (unknown > 0) {
+    // Unsupported codec.
+    return false;
+  }
+
+  if (opus == 0) {
+    // Codecs specified but not opus. Unsupported for audio.
+    return false;
+  }
+
+  if (opus > 1) {
+    // Opus specified more than once. Bad form.
+    return false;
+  }
+
+  return true;
+}
+
+static bool CanRecordVideoTrackWith(const Maybe<MediaContainerType>& aMimeType,
+                                    const nsAString& aMimeTypeString) {
+  if (aMimeTypeString.IsEmpty()) {
+    // For the empty string we just need to check whether we have support for a
+    // video container and a video codec. The VP8 encoder is always available.
+    return MediaEncoder::IsWebMEncoderEnabled();
+  }
+
+  if (!aMimeType) {
+    // A mime type string was set, but it couldn't be parsed to a valid
+    // MediaContainerType.
+    return false;
+  }
+
+  if (!aMimeType->Type().HasVideoMajorType()) {
+    return false;
+  }
+
+  if (aMimeType->Type() != MEDIAMIMETYPE(VIDEO_WEBM)) {
+    return false;
+  }
+
+  if (!MediaEncoder::IsWebMEncoderEnabled()) {
+    return false;
+  }
+
+  if (!aMimeType->ExtendedType().HaveCodecs()) {
+    // No codecs constrained, we can pick vp8.
+    return true;
+  }
+
+  size_t vp8 = 0;
+  size_t unknown = 0;
+  for (const auto& codec : aMimeType->ExtendedType().Codecs().Range()) {
+    if (codec.EqualsLiteral("opus")) {
+      // Ignore audio codecs.
+      continue;
+    }
+    if (codec.EqualsLiteral("vp8")) {
+      vp8++;
+      continue;
+    }
+    if (codec.EqualsLiteral("vp8.0")) {
+      vp8++;
+      continue;
+    }
+    unknown++;
+  }
+
+  if (unknown > 0) {
+    // Unsupported codec.
+    return false;
+  }
+
+  if (vp8 == 0) {
+    // Codecs specified but not vp8. Unsupported for video.
+    return false;
+  }
+
+  if (vp8 > 1) {
+    // Vp8 specified more than once. Bad form.
+    return false;
+  }
+
+  return true;
+}
+
+static bool CanRecordWith(MediaStreamTrack* aTrack,
+                          const Maybe<MediaContainerType>& aMimeType,
+                          const nsAString& aMimeTypeString) {
+  if (aTrack->AsAudioStreamTrack()) {
+    return CanRecordAudioTrackWith(aMimeType, aMimeTypeString);
+  }
+
+  if (aTrack->AsVideoStreamTrack()) {
+    return CanRecordVideoTrackWith(aMimeType, aMimeTypeString);
+  }
+
+  MOZ_CRASH("Unexpected track type");
+}
+
+static nsString SelectMimeType(uint8_t aNumVideoTracks, uint8_t aNumAudioTracks,
+                               const nsString& aConstrainedMimeType) {
+  MOZ_CRASH("Implemented in a later patch");
+}
+
 static void SelectBitrates(uint32_t aBitsPerSecond, uint8_t aNumVideoTracks,
                            uint32_t* aOutVideoBps, uint8_t aNumAudioTracks,
                            uint32_t* aOutAudioBps) {
@@ -372,6 +550,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       : mRecorder(aRecorder),
         mMediaStreamTracks(std::move(aMediaStreamTracks)),
         mMainThread(mRecorder->GetOwner()->EventTargetFor(TaskCategory::Other)),
+        mMimeType(mRecorder->mMimeType),
         mTimeslice(aTimeslice),
         mVideoBitsPerSecond(aVideoBitsPerSecond),
         mAudioBitsPerSecond(aAudioBitsPerSecond),
@@ -379,7 +558,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
         mRunningState(RunningState::Idling) {
     MOZ_ASSERT(NS_IsMainThread());
 
-    aRecorder->GetMimeType(mMimeType);
     mMaxMemory = Preferences::GetUint("media.recorder.max_memory",
                                       MAX_ALLOW_MEMORY_BUFFER);
     mLastBlobTimeStamp = mStartTime;
@@ -892,10 +1070,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                    }
                  }
 
-                 // Dispatch stop event and clear MIME type.
-                 mMimeType = NS_LITERAL_STRING("");
-                 mRecorder->SetMimeType(mMimeType);
-
                  // Fire an event named stop
                  mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
 
@@ -922,8 +1096,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       if (mRunningState.isErr()) {
         return NS_OK;
       }
-      mMimeType = mime;
-      mRecorder->SetMimeType(mime);
       RunningState state = mRunningState.inspect();
       if (state == RunningState::Starting || state == RunningState::Stopping) {
         if (state == RunningState::Starting) {
@@ -1081,8 +1253,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // If set, is a promise for the latest GatherBlob() operation. Allows
   // GatherBlob() operations to be serialized in order to avoid races.
   RefPtr<BlobPromise> mBlobPromise;
-  // Current session mimeType
-  nsString mMimeType;
+  // Session mimeType
+  const nsString mMimeType;
   // Timestamp of the last fired dataavailable event.
   TimeStamp mLastBlobTimeStamp;
   // The interval of passing encoded data from MutableBlobStorage to
@@ -1128,10 +1300,6 @@ void MediaRecorder::UnRegisterActivityObserver() {
   }
 }
 
-void MediaRecorder::SetMimeType(const nsString& aMimeType) {
-  mMimeType = aMimeType;
-}
-
 void MediaRecorder::GetMimeType(nsString& aMimeType) { aMimeType = mMimeType; }
 
 void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
@@ -1168,7 +1336,9 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   // 5. If the value of recorder’s state attribute is not inactive, throw an
   //    InvalidStateError DOMException and abort these steps.
   if (mState != RecordingState::Inactive) {
-    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aResult.ThrowDOMException(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING("The MediaRecorder has already been started"));
     return;
   }
 
@@ -1195,7 +1365,6 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
     return;
   }
 
-  // --- these are not yet implemented to spec
   // 8. If the [[ConstrainedMimeType]] slot specifies a media type, container,
   //    or codec, then run the following sub steps:
   //   1. Constrain the configuration of recorder to the media type, container,
@@ -1203,22 +1372,34 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   //   2. For each track in tracks, if the User Agent cannot record the track
   //      using the current configuration, then throw a NotSupportedError
   //      DOMException and abort all steps.
+  Maybe<MediaContainerType> mime;
+  if (mConstrainedMimeType.Length() > 0) {
+    mime = MakeMediaContainerType(mConstrainedMimeType);
+    MOZ_DIAGNOSTIC_ASSERT(
+        mime,
+        "Invalid media MIME type should have been caught by IsTypeSupported");
+  }
+  for (const auto& track : tracks) {
+    if (!CanRecordWith(track, mime, mConstrainedMimeType)) {
+      nsString id;
+      track->GetId(id);
+      aResult.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
+  }
+  if (mAudioNode && !CanRecordAudioTrackWith(mime, mConstrainedMimeType)) {
+    aResult.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
   // 9. Let extendedMimeType be the value of recorder’s [[ConstrainedMimeType]]
   //    slot.
+  nsString extendedMimeType = mConstrainedMimeType;
+
   // 10. Modify extendedMimeType by adding media type, subtype and codecs
   //     parameter reflecting the configuration used by the MediaRecorder to
   //     record all tracks in tracks, if not already present. This MAY include
   //     the profiles parameter [RFC6381] or further codec-specific parameters.
-  // 11. Set recorder’s mimeType attribute to extendedMimeType.
-  // ---
-
-  // 12. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
-  //     recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
-  //     values the User Agent deems reasonable for the respective media types,
-  //     for recording all tracks in tracks, such that the sum of
-  //     videoBitsPerSecond and audioBitsPerSecond is close to the value of
-  //     recorder’s
-  //     [[ConstrainedBitsPerSecond]] slot.
   uint8_t numVideoTracks = 0;
   uint8_t numAudioTracks = 0;
   for (const auto& t : tracks) {
@@ -1232,6 +1413,19 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
     MOZ_DIAGNOSTIC_ASSERT(!mStream);
     ++numAudioTracks;
   }
+  extendedMimeType =
+      SelectMimeType(numVideoTracks, numAudioTracks, extendedMimeType);
+
+  // 11. Set recorder’s mimeType attribute to extendedMimeType.
+  mMimeType = std::move(extendedMimeType);
+
+  // 12. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
+  //     recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
+  //     values the User Agent deems reasonable for the respective media types,
+  //     for recording all tracks in tracks, such that the sum of
+  //     videoBitsPerSecond and audioBitsPerSecond is close to the value of
+  //     recorder’s
+  //     [[ConstrainedBitsPerSecond]] slot.
   if (mConstrainedBitsPerSecond) {
     SelectBitrates(*mConstrainedBitsPerSecond, numVideoTracks,
                    &mVideoBitsPerSecond, numAudioTracks, &mAudioBitsPerSecond);
@@ -1418,6 +1612,8 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   //    argument returns false, throw a NotSupportedError DOMException and abort
   //    these steps.
   if (!IsTypeSupported(aOptions.mMimeType)) {
+    // This catches also the empty string mimeType when support for any encoders
+    // has been disabled.
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
@@ -1425,8 +1621,9 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   // 4. Let recorder be a newly constructed MediaRecorder object.
   RefPtr<MediaRecorder> recorder = new MediaRecorder(ownerWindow);
 
-  // MimeType handling (points 5 and 8) not yet implemented to spec.
-  recorder->SetMimeType(aOptions.mMimeType);
+  // 5. Let recorder have a [[ConstrainedMimeType]] internal slot, initialized
+  //    to the value of options' mimeType member.
+  recorder->mConstrainedMimeType = aOptions.mMimeType;
 
   // 6. Let recorder have a [[ConstrainedBitsPerSecond]] internal slot,
   //    initialized to the value of options’ bitsPerSecond member, if it is
@@ -1438,6 +1635,10 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
 
   // 7. Initialize recorder’s stream attribute to stream.
   recorder->mStream = &aStream;
+
+  // 8. Initialize recorder’s mimeType attribute to the value of recorder’s
+  //    [[ConstrainedMimeType]] slot.
+  recorder->mMimeType = recorder->mConstrainedMimeType;
 
   // 9. Initialize recorder’s state attribute to inactive.
   recorder->mState = RecordingState::Inactive;
@@ -1513,6 +1714,8 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   //    argument returns false, throw a NotSupportedError DOMException and abort
   //    these steps.
   if (!IsTypeSupported(aOptions.mMimeType)) {
+    // This catches also the empty string mimeType when support for any encoders
+    // has been disabled.
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
@@ -1520,8 +1723,9 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   // 4. Let recorder be a newly constructed MediaRecorder object.
   RefPtr<MediaRecorder> recorder = new MediaRecorder(ownerWindow);
 
-  // MimeType handling (points 5 and 8) not yet implemented to spec.
-  recorder->SetMimeType(aOptions.mMimeType);
+  // 5. Let recorder have a [[ConstrainedMimeType]] internal slot, initialized
+  //    to the value of options' mimeType member.
+  recorder->mConstrainedMimeType = aOptions.mMimeType;
 
   // 6. Let recorder have a [[ConstrainedBitsPerSecond]] internal slot,
   //    initialized to the value of options’ bitsPerSecond member, if it is
@@ -1535,6 +1739,10 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   //    audioNode and audioNodeOutput equivalents)
   recorder->mAudioNode = &aAudioNode;
   recorder->mAudioNodeOutput = aAudioNodeOutput;
+
+  // 8. Initialize recorder’s mimeType attribute to the value of recorder’s
+  //    [[ConstrainedMimeType]] slot.
+  recorder->mMimeType = recorder->mConstrainedMimeType;
 
   // 9. Initialize recorder’s state attribute to inactive.
   recorder->mState = RecordingState::Inactive;
@@ -1568,34 +1776,6 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
   return recorder.forget();
 }
 
-static char const* const gWebMVideoEncoderCodecs[4] = {
-    "opus",
-    "vp8",
-    "vp8.0",
-    // no VP9 yet
-    nullptr,
-};
-static char const* const gWebMAudioEncoderCodecs[4] = {
-    "opus",
-    nullptr,
-};
-static char const* const gOggAudioEncoderCodecs[2] = {
-    "opus",
-    // we could support vorbis here too, but don't
-    nullptr,
-};
-
-template <class String>
-static bool CodecListContains(char const* const* aCodecs,
-                              const String& aCodec) {
-  for (int32_t i = 0; aCodecs[i]; ++i) {
-    if (aCodec.EqualsASCII(aCodecs[i])) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /* static */
 bool MediaRecorder::IsTypeSupported(GlobalObject& aGlobal,
                                     const nsAString& aMIMEType) {
@@ -1604,57 +1784,20 @@ bool MediaRecorder::IsTypeSupported(GlobalObject& aGlobal,
 
 /* static */
 bool MediaRecorder::IsTypeSupported(const nsAString& aMIMEType) {
-  char const* const* codeclist = nullptr;
-
   if (aMIMEType.IsEmpty()) {
+    // Lie and return true even if no container/codec support is enabled,
+    // because the spec mandates it.
     return true;
   }
 
-  nsContentTypeParser parser(aMIMEType);
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  if (NS_FAILED(rv)) {
+  Maybe<MediaContainerType> mime = MakeMediaContainerType(aMIMEType);
+  if (!mime) {
+    // Not a media mime type.
     return false;
   }
 
-  // effectively a 'switch (mimeType) {'
-  if (mimeType.EqualsLiteral(AUDIO_OGG)) {
-    if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled()) {
-      codeclist = gOggAudioEncoderCodecs;
-    }
-  }
-#ifdef MOZ_WEBM_ENCODER
-  else if ((mimeType.EqualsLiteral(VIDEO_WEBM) ||
-            mimeType.EqualsLiteral(AUDIO_WEBM)) &&
-           MediaEncoder::IsWebMEncoderEnabled()) {
-    if (mimeType.EqualsLiteral(AUDIO_WEBM)) {
-      codeclist = gWebMAudioEncoderCodecs;
-    } else {
-      codeclist = gWebMVideoEncoderCodecs;
-    }
-  }
-#endif
-
-  // codecs don't matter if we don't support the container
-  if (!codeclist) {
-    return false;
-  }
-  // now filter on codecs, and if needed rescind support
-  nsAutoString codecstring;
-  rv = parser.GetParameter("codecs", codecstring);
-
-  nsTArray<nsString> codecs;
-  if (!ParseCodecsString(codecstring, codecs)) {
-    return false;
-  }
-  for (const nsString& codec : codecs) {
-    if (!CodecListContains(codeclist, codec)) {
-      // Totally unsupported codec
-      return false;
-    }
-  }
-
-  return true;
+  return CanRecordAudioTrackWith(mime, aMIMEType) ||
+         CanRecordVideoTrackWith(mime, aMIMEType);
 }
 
 nsresult MediaRecorder::CreateAndDispatchBlobEvent(Blob* aBlob) {
@@ -1760,10 +1903,9 @@ void MediaRecorder::Inactivate() {
   LOG(LogLevel::Debug, ("MediaRecorder.Inactivate %p", this));
   // The Inactivate the recorder algorithm given a recorder, is as follows:
 
-  // --- Not implemented
   // 1. Set recorder’s mimeType attribute to the value of the
   //    [[ConstrainedMimeType]] slot.
-  // ---
+  mMimeType = mConstrainedMimeType;
 
   // 2. Set recorder’s state attribute to inactive.
   mState = RecordingState::Inactive;
