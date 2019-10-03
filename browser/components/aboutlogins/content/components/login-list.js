@@ -171,9 +171,7 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "change": {
-        this._applySort();
-        this.render();
-        this._list.scrollTop = 0;
+        this._applySortAndScrollToTop();
         const extra = { sort_key: this._sortSelect.value };
         recordTelemetryEvent({ object: "list", method: "sort", extra });
         break;
@@ -348,11 +346,7 @@ export default class LoginList extends HTMLElement {
     const breachedSortOptionElement = this._sortSelect.namedItem("breached");
     breachedSortOptionElement.hidden = false;
     this._sortSelect.selectedIndex = breachedSortOptionElement.index;
-    this._sortSelect.dispatchEvent(new CustomEvent("input", { bubbles: true }));
-    this._sortSelect.dispatchEvent(
-      new CustomEvent("change", { bubbles: true })
-    );
-    this.render();
+    this._applySortAndScrollToTop();
   }
 
   /**
@@ -475,6 +469,12 @@ export default class LoginList extends HTMLElement {
       let loginB = this._logins[b].login;
       return sortFnOptions[sort](loginA, loginB, this._breachesByLoginGUID);
     });
+  }
+
+  _applySortAndScrollToTop() {
+    this._applySort();
+    this.render();
+    this._list.scrollTop = 0;
   }
 
   _updateVisibleLoginCount(count) {
