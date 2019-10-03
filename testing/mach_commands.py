@@ -883,6 +883,22 @@ class TestInfoCommand(MachCommandBase):
                   self.test_name)
             self.activedata_test_name = self.test_name
 
+    def get_run_types(self, record):
+        types_label = ""
+        if 'run' in record and 'type' in record['run']:
+            run_types = record['run']['type']
+            run_types = run_types if isinstance(run_types, list) else [run_types]
+            fission = True if 'fis' in run_types else False
+            for run_type in run_types:
+                # chunked is not interesting
+                if run_type == 'chunked':
+                    continue
+                # fission implies e10s
+                if fission and run_type == 'e10s':
+                    continue
+                types_label += "-" + run_type
+        return types_label
+
     def get_platform(self, record):
         if 'platform' in record['build']:
             platform = record['build']['platform']
@@ -891,13 +907,7 @@ class TestInfoCommand(MachCommandBase):
         tp = record['build']['type']
         if type(tp) is list:
             tp = "-".join(tp)
-        e10s = ""
-        if 'run' in record and 'type' in record['run'] and 'e10s' in str(record['run']['type']):
-            e10s = "-e10s"
-        if 'run' in record and 'type' in record['run'] and 'fis' in str(record['run']['type']):
-            # fission implies e10s - keep the label simple
-            e10s = "-fis"
-        return "%s/%s%s:" % (platform, tp, e10s)
+        return "%s/%s%s:" % (platform, tp, self.get_run_types(record))
 
     def submit(self, query):
         import requests
