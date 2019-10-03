@@ -57,8 +57,7 @@
 :host(.no-logins:not(.create-login-selected)) ol,
 :host(:not(.no-logins)) .intro,
 :host(.create-login-selected) .intro,
-:host(.create-login-selected) .empty-search-message,
-:host(:not(.create-login-selected)) #new-login-list-item {
+:host(.create-login-selected) .empty-search-message {
   display: none;
 }
 
