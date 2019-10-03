@@ -268,7 +268,6 @@ class MockRuntime {
     this.pose_ = {
       orientation: { x: q[0], y: q[1], z: q[2], w: q[3] },
       position: { x: p[0], y: p[1], z: p[2] },
-      emulatedPosition: emulatedPosition,
       angularVelocity: null,
       linearVelocity: null,
       angularAcceleration: null,
@@ -692,7 +691,6 @@ class MockXRInputSource {
     this.desc_dirty_ = true;
     this.pointer_offset_ = new gfx.mojom.Transform();
     this.pointer_offset_.matrix = getMatrixFromTransform(transform);
-    this.emulated_position_ = emulatedPosition;
   }
 
   disconnect() {
@@ -814,10 +812,10 @@ class MockXRInputSource {
 
     input_state.gamepad = this.gamepad_;
 
-    input_state.emulatedPosition = this.emulated_position_;
-
     if (this.desc_dirty_) {
       let input_desc = new device.mojom.XRInputSourceDescription();
+
+      input_desc.emulatedPosition = this.emulated_position_;
 
       switch (this.target_ray_mode_) {
         case 'gaze':
