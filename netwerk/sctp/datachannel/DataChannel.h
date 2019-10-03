@@ -203,10 +203,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
   // Find out state
   enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
-  uint16_t GetReadyState() {
-    MutexAutoLock lock(mLock);
-    return mState;
-  }
 
   friend class DataChannel;
   Mutex mLock;
@@ -231,6 +227,16 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
   bool Init(const uint16_t aLocalPort, const uint16_t aNumStreams,
             const Maybe<uint64_t>& aMaxMessageSize);
+
+  // Caller must hold mLock
+  uint16_t GetReadyState() const {
+    mLock.AssertCurrentThreadOwns();
+
+    return mState;
+  }
+
+  // Caller must hold mLock
+  void SetReadyState(const uint16_t aState);
 
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void* data);
@@ -480,10 +486,13 @@ class DataChannel {
   void AnnounceClosed();
 
   // Find out state
-  uint16_t GetReadyState() {
+  uint16_t GetReadyState() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mReadyState;
   }
+
+  // Set ready state
+  void SetReadyState(const uint16_t aState);
 
   void GetLabel(nsAString& aLabel) { CopyUTF8toUTF16(mLabel, aLabel); }
   void GetProtocol(nsAString& aProtocol) {

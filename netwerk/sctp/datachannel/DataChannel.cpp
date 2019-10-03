@@ -288,7 +288,7 @@ static void debug_printf(const char* format, ...) {
 DataChannelConnection::~DataChannelConnection() {
   DC_DEBUG(("Deleting DataChannelConnection %p", (void*)this));
   // This may die on the MainThread, or on the STS thread
-  ASSERT_WEBRTC(mState == CLOSED);
+  ASSERT_WEBRTC(GetReadyState() == CLOSED);
   MOZ_ASSERT(!mMasterSocket);
   MOZ_ASSERT(mPending.GetSize() == 0);
 
@@ -657,7 +657,7 @@ bool DataChannelConnection::ConnectToTransport(const std::string& aTransportId,
 
   mLocalPort = localport;
   mRemotePort = remoteport;
-  mState = CONNECTING;
+  SetReadyState(CONNECTING);
   mAllocateEven = Some(aClient);
 
   // Could be faster. Probably doesn't matter.
@@ -701,8 +701,9 @@ void DataChannelConnection::TransportStateChange(
 }
 
 void DataChannelConnection::CompleteConnect() {
-  DC_DEBUG(("dtls open"));
   MutexAutoLock lock(mLock);
+
+  DC_DEBUG(("dtls open"));
   ASSERT_WEBRTC(IsSTSThread());
   if (!mMasterSocket) {
     return;
@@ -762,7 +763,7 @@ void DataChannelConnection::CompleteConnect() {
         return;
       }
       DC_ERROR(("usrsctp_connect failed: %d", errno));
-      mState = CLOSED;
+      SetReadyState(CLOSED);
     } else {
       // We fire ON_CONNECTION via SCTP_COMM_UP when we get that
       return;
@@ -896,7 +897,10 @@ bool DataChannelConnection::Listen(unsigned short port) {
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   DC_DEBUG(("Waiting for connections on port %u", ntohs(addr.sin_port)));
-  mState = CONNECTING;
+  {
+    MutexAutoLock lock(mLock);
+    SetReadyState(CONNECTING);
+  }
   if (usrsctp_bind(mMasterSocket, reinterpret_cast<struct sockaddr*>(&addr),
                    sizeof(struct sockaddr_in)) < 0) {
     DC_ERROR(("***Failed userspace_bind"));
@@ -914,7 +918,11 @@ bool DataChannelConnection::Listen(unsigned short port) {
     DC_ERROR(("***Failed accept"));
     return false;
   }
-  mState = OPEN;
+
+  {
+    MutexAutoLock lock(mLock);
+    SetReadyState(OPEN);
+  }
 
   struct linger l;
   l.l_onoff = 1;
@@ -956,8 +964,10 @@ bool DataChannelConnection::Connect(const char* addr, unsigned short port) {
   addr6.sin6_family = AF_INET6;
   addr4.sin_port = htons(port);
   addr6.sin6_port = htons(port);
-  mState = CONNECTING;
-
+  {
+    MutexAutoLock lock(mLock);
+    SetReadyState(CONNECTING);
+  }
 #  if !defined(__Userspace_os_Windows)
   if (inet_pton(AF_INET6, addr, &addr6.sin6_addr) == 1) {
     if (usrsctp_connect(mMasterSocket,
@@ -1009,8 +1019,10 @@ bool DataChannelConnection::Connect(const char* addr, unsigned short port) {
   mSocket = mMasterSocket;
 
   DC_DEBUG(("connect() succeeded!  Entering connected mode"));
-  mState = OPEN;
-
+  {
+    MutexAutoLock lock(mLock);
+    SetReadyState(OPEN);
+  }
   // Notify Connection open
   // XXX We need to make sure connection sticks around until the message is
   // delivered
@@ -1750,14 +1762,16 @@ void DataChannelConnection::HandleMessage(const void* buffer, size_t length,
 
 void DataChannelConnection::HandleAssociationChangeEvent(
     const struct sctp_assoc_change* sac) {
-  uint32_t i, n;
+  mLock.AssertCurrentThreadOwns();
 
+  uint32_t i, n;
+  const auto readyState = GetReadyState();
   switch (sac->sac_state) {
     case SCTP_COMM_UP:
       DC_DEBUG(("Association change: SCTP_COMM_UP"));
-      if (mState == CONNECTING) {
+      if (readyState == CONNECTING) {
         mSocket = mMasterSocket;
-        mState = OPEN;
+        SetReadyState(OPEN);
 
         DC_DEBUG(("Negotiated number of incoming streams: %" PRIu16,
                   sac->sac_inbound_streams));
@@ -1775,10 +1789,10 @@ void DataChannelConnection::HandleAssociationChangeEvent(
         // Open any streams pending...
         ProcessQueuedOpens();
 
-      } else if (mState == OPEN) {
+      } else if (readyState == OPEN) {
         DC_DEBUG(("DataConnection Already OPEN"));
       } else {
-        DC_ERROR(("Unexpected state: %d", mState));
+        DC_ERROR(("Unexpected state: %d", readyState));
       }
       break;
     case SCTP_COMM_LOST:
@@ -2354,9 +2368,9 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
   // So the Open cases are basically the same
   // Not Open cases are simply queue for non-negotiated, and
   // either change the initial ask or possibly renegotiate after open.
-
-  if (mState != OPEN || stream >= mNegotiatedIdLimit) {
-    if (mState == OPEN) {
+  const auto readyState = GetReadyState();
+  if (readyState != OPEN || stream >= mNegotiatedIdLimit) {
+    if (readyState == OPEN) {
       MOZ_ASSERT(stream != INVALID_STREAM);
       // RequestMoreStreams() limits to MAX_NUM_STREAMS -- allocate extra
       // streams to avoid going back immediately for more if the ask to N, N+1,
@@ -2582,7 +2596,7 @@ int DataChannelConnection::SendDataMsgInternalOrBuffer(DataChannel& channel,
                                                        const uint8_t* data,
                                                        size_t len,
                                                        uint32_t ppid) {
-  if (NS_WARN_IF(channel.mReadyState != OPEN)) {
+  if (NS_WARN_IF(channel.GetReadyState() != OPEN)) {
     return EINVAL;  // TODO: Find a better error code
   }
 
@@ -2741,6 +2755,35 @@ class DataChannelBlobSendRunnable : public Runnable {
   uint16_t mStream;
 };
 
+static auto readyStateToCStr(const uint16_t state) -> const char* {
+  switch (state) {
+    case DataChannelConnection::CONNECTING:
+      return "CONNECTING";
+    case DataChannelConnection::OPEN:
+      return "OPEN";
+    case DataChannelConnection::CLOSING:
+      return "CLOSING";
+    case DataChannelConnection::CLOSED:
+      return "CLOSED";
+    default: {
+      MOZ_ASSERT(false);
+      return "UNKNOWW";
+    }
+  }
+};
+
+void DataChannelConnection::SetReadyState(const uint16_t aState) {
+  mLock.AssertCurrentThreadOwns();
+
+  DC_DEBUG(
+      ("DataChannelConnection labeled %s (%p) switching connection state %s -> "
+       "%s",
+       mTransportId.c_str(), this, readyStateToCStr(mState),
+       readyStateToCStr(aState)));
+
+  mState = aState;
+}
+
 void DataChannelConnection::ReadBlob(
     already_AddRefed<DataChannelConnection> aThis, uint16_t aStream,
     nsIInputStream* aBlob) {
@@ -2831,27 +2874,28 @@ void DataChannelConnection::CloseInt(DataChannel* aChannel) {
             channel->mConnection.get(), channel.get(), channel->mStream));
 
   aChannel->mBufferedData.Clear();
-  if (mState == CLOSED) {
+  if (GetReadyState() == CLOSED) {
     // If we're CLOSING, we might leave this in place until we can send a
     // reset.
     mChannels.Remove(channel);
   }
 
+  auto channelState = aChannel->GetReadyState();
   // re-test since it may have closed before the lock was grabbed
-  if (aChannel->mReadyState == CLOSED || aChannel->mReadyState == CLOSING) {
-    DC_DEBUG(("Channel already closing/closed (%u)", aChannel->mReadyState));
+  if (channelState == CLOSED || channelState == CLOSING) {
+    DC_DEBUG(("Channel already closing/closed (%u)", channelState));
     return;
   }
 
   if (channel->mStream != INVALID_STREAM) {
     ResetOutgoingStream(channel->mStream);
-    if (mState != CLOSED) {
+    if (GetReadyState() != CLOSED) {
       // Individual channel is being closed, send reset now.
       SendOutgoingStreamReset();
     }
   }
-  aChannel->mReadyState = CLOSING;
-  if (mState == CLOSED) {
+  aChannel->SetReadyState(CLOSING);
+  if (GetReadyState() == CLOSED) {
     // we're not going to hang around waiting
     channel->StreamClosedLocked();
   }
@@ -2866,7 +2910,7 @@ void DataChannelConnection::CloseAll() {
   // Make sure no more channels will be opened
   {
     MutexAutoLock lock(mLock);
-    mState = CLOSED;
+    SetReadyState(CLOSED);
   }
 
   // Close current channels
@@ -3043,10 +3087,11 @@ void DataChannel::DecrementBufferedAmount(uint32_t aSize) {
 void DataChannel::AnnounceOpen() {
   mMainThreadEventTarget->Dispatch(NS_NewRunnableFunction(
       "DataChannel::AnnounceOpen", [this, self = RefPtr<DataChannel>(this)] {
+        auto state = GetReadyState();
         // Special-case; spec says to put brand-new remote-created DataChannel
         // in "open", but queue the firing of the "open" event.
-        if (mReadyState != CLOSING && mReadyState != CLOSED && mListener) {
-          mReadyState = OPEN;
+        if (state != CLOSING && state != CLOSED && mListener) {
+          SetReadyState(OPEN);
           DC_DEBUG(("%s: sending ON_CHANNEL_OPEN for %s/%s: %u", __FUNCTION__,
                     mLabel.get(), mProtocol.get(), mStream));
           mListener->OnChannelConnected(mContext);
@@ -3057,10 +3102,10 @@ void DataChannel::AnnounceOpen() {
 void DataChannel::AnnounceClosed() {
   mMainThreadEventTarget->Dispatch(NS_NewRunnableFunction(
       "DataChannel::AnnounceClosed", [this, self = RefPtr<DataChannel>(this)] {
-        if (mReadyState == CLOSED) {
+        if (GetReadyState() == CLOSED) {
           return;
         }
-        mReadyState = CLOSED;
+        SetReadyState(CLOSED);
         mBufferedData.Clear();
         if (mListener) {
           DC_DEBUG(("%s: sending ON_CHANNEL_CLOSED for %s/%s: %u", __FUNCTION__,
@@ -3068,6 +3113,19 @@ void DataChannel::AnnounceClosed() {
           mListener->OnChannelClosed(mContext);
         }
       }));
+}
+
+// Set ready state
+void DataChannel::SetReadyState(const uint16_t aState) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  DC_DEBUG(
+      ("DataChannelConnection labeled %s(%p) (stream %d) changing ready state "
+       "%s -> %s",
+       mLabel.get(), this, mStream, readyStateToCStr(mReadyState),
+       readyStateToCStr(aState)));
+
+  mReadyState = aState;
 }
 
 void DataChannel::SendMsg(const nsACString& aMsg, ErrorResult& aRv) {
