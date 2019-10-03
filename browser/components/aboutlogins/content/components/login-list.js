@@ -118,6 +118,18 @@ export default class LoginList extends HTMLElement {
         this._blankLoginListItem.nextElementSibling
       );
     }
+
+    let activeDescendantId = this._list.getAttribute("aria-activedescendant");
+    let activeDescendant =
+      activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
+    if (!activeDescendant || activeDescendant.hidden) {
+      let visibleListItem = this._list.querySelector(
+        ".login-list-item:not([hidden])"
+      );
+      if (visibleListItem) {
+        this._list.setAttribute("aria-activedescendant", visibleListItem.id);
+      }
+    }
   }
 
   handleEvent(event) {
@@ -581,6 +593,7 @@ export default class LoginList extends HTMLElement {
       oldSelectedItem.removeAttribute("aria-selected");
     }
     this.classList.toggle("create-login-selected", !listItem.dataset.guid);
+    this._blankLoginListItem.hidden = !!listItem.dataset.guid;
     this._createLoginButton.disabled = !listItem.dataset.guid;
     listItem.classList.add("selected");
     listItem.setAttribute("aria-selected", "true");

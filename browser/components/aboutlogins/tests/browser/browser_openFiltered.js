@@ -81,7 +81,7 @@ add_task(async function test_query_parameter_filter() {
     );
 
     let hiddenLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item[hidden]"
+      ".login-list-item:not(#new-login-list-item)[hidden]"
     );
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll(
       ".login-list-item:not(#new-login-list-item):not([hidden])"
