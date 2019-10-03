@@ -376,6 +376,15 @@ var gSync = {
     const cadButtonEl = document.getElementById(
       "PanelUI-fxa-menu-connect-device-button"
     );
+
+    const syncPrefsButtonEl = document.getElementById(
+      "PanelUI-fxa-menu-sync-prefs-button"
+    );
+
+    const syncSetupButtonEl = document.getElementById(
+      "PanelUI-fxa-menu-setup-sync-button"
+    );
+
     const syncNowButtonEl = document.getElementById(
       "PanelUI-fxa-menu-syncnow-button"
     );
@@ -396,9 +405,11 @@ var gSync = {
 
     fxaMenuPanel.removeAttribute("title");
     cadButtonEl.setAttribute("disabled", true);
-    syncNowButtonEl.setAttribute("disabled", true);
+    syncNowButtonEl.setAttribute("hidden", true);
     fxaMenuAccountButtonEl.classList.remove("subviewbutton-nav");
     fxaMenuAccountButtonEl.removeAttribute("closemenu");
+    syncPrefsButtonEl.setAttribute("hidden", true);
+    syncSetupButtonEl.removeAttribute("hidden");
 
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
       mainWindowEl.style.removeProperty("--avatar-image-url");
@@ -435,7 +446,13 @@ var gSync = {
       }
 
       cadButtonEl.removeAttribute("disabled");
-      syncNowButtonEl.removeAttribute("disabled");
+
+      if (state.syncEnabled) {
+        syncNowButtonEl.removeAttribute("hidden");
+        syncPrefsButtonEl.removeAttribute("hidden");
+        syncSetupButtonEl.setAttribute("hidden", true);
+      }
+
       fxaMenuAccountButtonEl.classList.add("subviewbutton-nav");
       fxaMenuAccountButtonEl.setAttribute("closemenu", "none");
 

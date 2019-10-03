@@ -99,6 +99,7 @@
 }
 
 #PanelUI-fxa-menu-syncnow-button,
+#PanelUI-fxa-menu-setup-sync-button,
 #PanelUI-remotetabs-syncnow {
   list-style-image: url("chrome://browser/skin/sync.svg");
 }
