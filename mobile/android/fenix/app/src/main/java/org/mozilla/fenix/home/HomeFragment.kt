@@ -347,8 +347,9 @@ class HomeFragment : Fragment() {
                 }
             }
         }, owner = this)
+
         if (context.settings().showPrivateModeContextualFeatureRecommender &&
-            browsingModeManager.mode.isPrivate) {
+            browsingModeManager.mode.isPrivate && !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(requireContext())) {
             recommendPrivateBrowsingShortcut()
         }
     }
