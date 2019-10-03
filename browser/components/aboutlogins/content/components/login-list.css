@@ -172,11 +172,17 @@ ol {
   display: none;
 }
 
-.breached > .list-item-warning-icon {
+.list-item-warning-icon {
   -moz-context-properties: fill;
   fill: var(--red-90);
   min-width: 16px;
   margin-inline-start: 12px;
+}
+
+@media (-moz-windows-default-theme: 0) {
+  .list-item-warning-icon {
+    fill: currentColor;
+  }
 }
 
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
