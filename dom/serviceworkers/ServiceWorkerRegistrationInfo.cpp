@@ -39,41 +39,26 @@ class ContinueActivateRunnable final : public LifeCycleEventCallback {
 
 }  // anonymous namespace
 
+void ServiceWorkerRegistrationInfo::ShutdownWorkers() {
+  ForEachWorker([](RefPtr<ServiceWorkerInfo>& aWorker) {
+    if (aWorker) {
+      aWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
+      aWorker = nullptr;
+    }
+  });
+}
+
 void ServiceWorkerRegistrationInfo::Clear() {
-  if (mEvaluatingWorker) {
-    mEvaluatingWorker = nullptr;
-  }
+  ForEachWorker([](RefPtr<ServiceWorkerInfo>& aWorker) {
+    if (aWorker) {
+      aWorker->UpdateState(ServiceWorkerState::Redundant);
+      aWorker->UpdateRedundantTime();
+    }
+  });
 
-  RefPtr<ServiceWorkerInfo> evaluating = mEvaluatingWorker.forget();
-  RefPtr<ServiceWorkerInfo> installing = mInstallingWorker.forget();
-  RefPtr<ServiceWorkerInfo> waiting = mWaitingWorker.forget();
-  RefPtr<ServiceWorkerInfo> active = mActiveWorker.forget();
+  // FIXME: Abort any inflight requests from installing worker.
 
-  if (evaluating) {
-    evaluating->UpdateState(ServiceWorkerState::Redundant);
-    evaluating->UpdateRedundantTime();
-    evaluating->WorkerPrivate()->NoteDeadServiceWorkerInfo();
-  }
-
-  if (installing) {
-    installing->UpdateState(ServiceWorkerState::Redundant);
-    installing->UpdateRedundantTime();
-    installing->WorkerPrivate()->NoteDeadServiceWorkerInfo();
-    // FIXME(nsm): Abort any inflight requests from installing worker.
-  }
-
-  if (waiting) {
-    waiting->UpdateState(ServiceWorkerState::Redundant);
-    waiting->UpdateRedundantTime();
-    waiting->WorkerPrivate()->NoteDeadServiceWorkerInfo();
-  }
-
-  if (active) {
-    active->UpdateState(ServiceWorkerState::Redundant);
-    active->UpdateRedundantTime();
-    active->WorkerPrivate()->NoteDeadServiceWorkerInfo();
-  }
-
+  ShutdownWorkers();
   UpdateRegistrationState();
   NotifyChromeRegistrationListeners();
   NotifyCleared();
@@ -802,6 +787,25 @@ uint64_t ServiceWorkerRegistrationInfo::GetNextVersion() {
   MOZ_ASSERT(NS_IsMainThread());
   static uint64_t sNextVersion = 0;
   return ++sNextVersion;
+}
+
+void ServiceWorkerRegistrationInfo::ForEachWorker(
+    void (*aFunc)(RefPtr<ServiceWorkerInfo>&)) {
+  if (mEvaluatingWorker) {
+    aFunc(mEvaluatingWorker);
+  }
+
+  if (mInstallingWorker) {
+    aFunc(mInstallingWorker);
+  }
+
+  if (mWaitingWorker) {
+    aFunc(mWaitingWorker);
+  }
+
+  if (mActiveWorker) {
+    aFunc(mActiveWorker);
+  }
 }
 
 }  // namespace dom
