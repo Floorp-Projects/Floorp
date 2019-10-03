@@ -26,18 +26,6 @@
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
-      // textboxes
-
-      var accTree =
-        { SECTION: [
-          { ENTRY: [ { TEXT_LEAF: [] } ] },
-          { MENUPOPUP: [] }
-        ] };
-
-      // default textbox
-      testAccessibleTree("txc", accTree);
-
-      //////////////////////////////////////////////////////////////////////////
       // search textbox
       accTree =
          { GROUPING: [
@@ -63,32 +51,6 @@
 
       testAccessibleTree("txc_search_searchbutton", accTree);
 
-      //////////////////////////////////////////////////////////////////////////
-      // number textbox
-
-      accTree =
-        { SECTION: [
-          { SPINBUTTON: [
-            { ENTRY: [ { TEXT_LEAF: [] } ] },
-            { PUSHBUTTON: [ ] },
-            { PUSHBUTTON: [ ] }
-          ] },
-          { MENUPOPUP: [] },
-        ] };
-
-      testAccessibleTree("txc_number", accTree);
-
-      //////////////////////////////////////////////////////////////////////////
-      // password textbox
-
-      accTree =
-        { SECTION: [
-          { PASSWORD_TEXT: [ { TEXT_LEAF: [] } ] },
-          { MENUPOPUP: [] }
-        ] };
-
-      testAccessibleTree("txc_password", accTree);
-
       SimpleTest.finish();
     }
 
@@ -112,15 +74,12 @@
     </body>
 
     <vbox flex="1">
-      <textbox id="txc" value="hello"/>
       <box role="group" id="txc_search">
         <search-textbox value="hello"/>
       </box>
       <box role="group" id="txc_search_searchbutton">
         <search-textbox searchbutton="true" value="hello"/>
       </box>
-      <textbox id="txc_number" type="number" value="44"/>
-      <textbox id="txc_password" type="password" value="hello"/>
     </vbox>
   </hbox>
 

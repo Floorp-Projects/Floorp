@@ -4,9 +4,7 @@ load chrome://reftest/content/crashtests/dom/xul/crashtests/253479-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/253479-2.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/326204-1.xul
 load 326644-1.html
-load chrome://reftest/content/crashtests/dom/xul/crashtests/326864-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/326875-1.xul
-load chrome://reftest/content/crashtests/dom/xul/crashtests/326881-1.xul
 load 329982-1.xhtml
 load 336096-1.xhtml
 load chrome://reftest/content/crashtests/dom/xul/crashtests/344215-1.xul
