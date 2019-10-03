@@ -106,7 +106,7 @@ static setLcdFilterFunc setLcdFilter;
 #define MAX_FONT_SIZE 2000
 
 extern void mozilla_AddRefSharedFTFace(void* aContext);
-extern void mozilla_ReleaseSharedFTFace(void* aContext);
+extern void mozilla_ReleaseSharedFTFace(void* aContext, void* aOwner);
 /* Returns true if the face's state has been modifide by another owner. */
 extern int mozilla_LockSharedFTFace(void* aContext, void* aOwner);
 extern void mozilla_UnlockSharedFTFace(void* aContext);
@@ -313,7 +313,7 @@ _cairo_ft_unscaled_font_map_pluck_entry (void *entry, void *closure)
 			      &unscaled->base.hash_entry);
 
     if (unscaled->from_face) {
-	mozilla_ReleaseSharedFTFace (unscaled->face_context);
+	mozilla_ReleaseSharedFTFace (unscaled->face_context, unscaled);
     } else {
 	_font_map_release_face_lock_held (font_map, unscaled);
     }
@@ -640,7 +640,7 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 	    cairo_font_face_destroy (&unscaled->faces->base);
 	    CAIRO_FT_UNLOCK (unscaled);
 	}
-        mozilla_ReleaseSharedFTFace (unscaled->face_context);
+        mozilla_ReleaseSharedFTFace (unscaled->face_context, unscaled);
     } else {
 	_font_map_release_face_lock_held (font_map, unscaled);
     }
