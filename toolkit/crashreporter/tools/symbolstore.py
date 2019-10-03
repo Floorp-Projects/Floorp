@@ -253,7 +253,7 @@ class GitFileInfo(VCSFileInfo):
 vcsFileInfoCache = {}
 
 if platform.system() == 'Windows':
-    def normpath(path):
+    def realpath(path):
         '''
         Normalize a path using `GetFinalPathNameByHandleW` to get the
         path with all components in the case they exist in on-disk, so
@@ -298,7 +298,7 @@ if platform.system() == 'Windows':
         return result
 else:
     # Just use the os.path version otherwise.
-    normpath = os.path.normpath
+    realpath = os.path.realpath
 
 def IsInDir(file, dir):
     # the lower() is to handle win32+vc8, where
@@ -381,9 +381,9 @@ def make_file_mapping(install_manifests):
         manifest.populate_registry(reg)
         for dst, src in reg:
             if hasattr(src, 'path'):
-                # Any paths that get compared to source file names need to go through normpath.
-                abs_dest = normpath(os.path.join(destination, dst))
-                file_mapping[abs_dest] = normpath(src.path)
+                # Any paths that get compared to source file names need to go through realpath.
+                abs_dest = realpath(os.path.join(destination, dst))
+                file_mapping[abs_dest] = realpath(src.path)
     return file_mapping
 
 @memoize
@@ -451,8 +451,8 @@ class Dumper:
             self.archs = ['']
         else:
             self.archs = ['-a %s' % a for a in archs.split()]
-        # Any paths that get compared to source file names need to go through normpath.
-        self.srcdirs = [normpath(s) for s in srcdirs]
+        # Any paths that get compared to source file names need to go through realpath.
+        self.srcdirs = [realpath(s) for s in srcdirs]
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
@@ -551,7 +551,7 @@ class Dumper:
                         (x, index, filename) = line.rstrip().split(None, 2)
                         # We want original file paths for the source server.
                         sourcepath = filename
-                        filename = normpath(filename)
+                        filename = realpath(filename)
                         if filename in self.file_mapping:
                             filename = self.file_mapping[filename]
                         if self.vcsinfo:
@@ -958,8 +958,8 @@ to canonical locations in the source repository. Specify
         parser.error(str(e))
         exit(1)
     file_mapping = make_file_mapping(manifests)
-    # Any paths that get compared to source file names need to go through normpath.
-    generated_files = {normpath(os.path.join(buildconfig.topobjdir, f)): f
+    # Any paths that get compared to source file names need to go through realpath.
+    generated_files = {realpath(os.path.join(buildconfig.topobjdir, f)): f
                        for (f, _) in get_generated_sources()}
     _, bucket = get_s3_region_and_bucket()
     dumper = GetPlatformSpecificDumper(dump_syms=args[0],
