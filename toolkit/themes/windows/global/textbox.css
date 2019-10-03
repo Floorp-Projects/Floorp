@@ -63,20 +63,6 @@ search-textbox[disabled="true"] {
   color: GrayText;
 }
 
-/* ::::: plain textbox ::::: */
-
-textbox.plain {
-  -moz-appearance: none !important;
-  background-color: transparent;
-  padding: 0px !important;
-  margin: 0px !important;
-  border: none !important;
-}
-
-textbox.plain html|*.textbox-input {
-  padding: 0px !important;
-}
-
 /* ::::: search textbox ::::: */
 
 search-textbox:not([searchbutton]) > .textbox-search-sign {

@@ -6,7 +6,6 @@ fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests
 fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/passwd-1.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul # Windows: bug 1239170
 fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/passwd-2.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul # Windows: bug 1239170
 != chrome://reftest/content/editor/reftests/xul/passwd-3.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul
-fails-if(Android) == chrome://reftest/content/editor/reftests/xul/plain-1.xul chrome://reftest/content/editor/reftests/xul/plain-ref.xul # bug 783658
 fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/textbox-1.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul # Windows: bug 1239170
 != chrome://reftest/content/editor/reftests/xul/textbox-disabled.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul
 # Read-only textboxes look like normal textboxes in windows Vista/7 default theme
