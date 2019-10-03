@@ -33,7 +33,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   NS_INLINE_DECL_REFCOUNTING(BrowserBridgeChild, final);
 
   BrowserChild* Manager() {
-    MOZ_ASSERT(mIPCOpen);
+    MOZ_ASSERT(CanSend());
     return static_cast<BrowserChild*>(PBrowserBridgeChild::Manager());
   }
 
@@ -106,7 +106,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   TabId mId;
   LayersId mLayersId;
-  bool mIPCOpen;
   bool mHadInitialLoad = false;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<BrowsingContext> mBrowsingContext;

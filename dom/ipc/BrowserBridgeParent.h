@@ -98,9 +98,8 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   RefPtr<BrowserParent> mBrowserParent;
 #if defined(ACCESSIBILITY)
   RefPtr<a11y::DocAccessibleParent> mEmbedderAccessibleDoc;
-  uint64_t mEmbedderAccessibleID;
+  uint64_t mEmbedderAccessibleID = 0;
 #endif  // defined(ACCESSIBILITY)
-  bool mIPCOpen;
 };
 
 }  // namespace dom
