@@ -131,9 +131,14 @@ nsresult MediaEngineTabVideoSource::Allocate(
   // windowId is not a proper constraint, so just read it.
   // It has no well-defined behavior in advanced, so ignore it there.
 
-  mWindowId = aConstraints.mBrowserWindow.WasPassed()
-                  ? aConstraints.mBrowserWindow.Value()
-                  : -1;
+  int64_t windowId = aConstraints.mBrowserWindow.WasPassed()
+                         ? aConstraints.mBrowserWindow.Value()
+                         : -1;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaEngineTabVideoSource::Allocate window id main thread setter",
+      [self = RefPtr<MediaEngineTabVideoSource>(this), this, windowId] {
+        mWindowId = windowId;
+      }));
   mState = kAllocated;
 
   return Reconfigure(aConstraints, aPrefs, aOutBadConstraint);
@@ -175,7 +180,7 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
       "MediaEngineTabVideoSource::Reconfigure main thread setter",
       [self = RefPtr<MediaEngineTabVideoSource>(this), this, scrollWithPage,
        bufWidthMax, bufHeightMax, frameRate, timePerFrame, viewportOffsetX,
-       viewportOffsetY, viewportWidth, viewportHeight, windowId = mWindowId]() {
+       viewportOffsetY, viewportWidth, viewportHeight]() {
         mScrollWithPage = scrollWithPage;
         mBufWidthMax = bufWidthMax;
         mBufHeightMax = bufHeightMax;
@@ -201,8 +206,8 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
           mSettings->mViewportHeight.Construct(*viewportHeight);
           mViewportHeight = *viewportHeight;
         }
-        if (windowId != -1) {
-          mSettings->mBrowserWindow.Construct(windowId);
+        if (mWindowId != -1) {
+          mSettings->mBrowserWindow.Construct(mWindowId);
         }
       }));
   return NS_OK;
