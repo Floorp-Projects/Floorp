@@ -55,7 +55,7 @@ add_task(async function test_ui_state_signedin() {
   checkMenuBarItem("sync-syncnowitem");
   checkFxaToolbarButtonPanel({
     headerTitle: "foo@bar.com",
-    headerDescription: "Manage Account",
+    headerDescription: "Settings",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
       "PanelUI-fxa-menu-remotetabs-button",
@@ -163,7 +163,7 @@ add_task(async function test_ui_state_syncdisabled() {
   checkMenuBarItem("sync-enable");
   checkFxaToolbarButtonPanel({
     headerTitle: "foo@bar.com",
-    headerDescription: "Manage Account",
+    headerDescription: "Settings",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
       "PanelUI-fxa-menu-remotetabs-button",
@@ -229,9 +229,8 @@ add_task(async function test_ui_state_loginFailed() {
 
   gSync.updateAllUI(state);
 
-  const expectedLabel = gSync.fxaStrings.formatStringFromName(
-    "account.reconnectToSync",
-    [gSync.brandStrings.GetStringFromName("syncBrandShortName")]
+  const expectedLabel = gSync.fxaStrings.GetStringFromName(
+    "account.reconnectToFxA"
   );
 
   checkPanelUIStatusBar({

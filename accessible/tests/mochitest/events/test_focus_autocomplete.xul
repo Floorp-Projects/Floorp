@@ -11,6 +11,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="Accessible focus event testing">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -373,7 +374,6 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    //gA11yEventDumpID = "eventdump"; // debug stuff
     //gA11yEventDumpToConsole = true; // debug stuff
 
     var gInitQueue = null;
@@ -489,12 +489,14 @@
     </body>
 
     <vbox flex="1">
-      <textbox id="autocomplete" type="autocomplete"
-               autocompletesearch="test-a11y-search"/>
+      <html:input is="autocomplete-input"
+                  id="autocomplete"
+                  autocompletesearch="test-a11y-search"/>
 
-      <textbox id="richautocomplete" type="autocomplete"
-               autocompletesearch="test-a11y-search"
-               autocompletepopup="richpopup"/>
+      <html:input is="autocomplete-input"
+                  id="richautocomplete"
+                  autocompletesearch="test-a11y-search"
+                  autocompletepopup="richpopup"/>
       <panel is="autocomplete-richlistbox-popup"
              id="richpopup"
              type="autocomplete-richlistbox"
@@ -505,8 +507,6 @@
       <iframe id="iframe2"/>
 
       <searchbar id="searchbar"/>
-
-      <vbox id="eventdump"/>
     </vbox>
   </hbox>
 </window>

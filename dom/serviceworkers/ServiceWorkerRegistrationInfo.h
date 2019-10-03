@@ -120,6 +120,10 @@ class ServiceWorkerRegistrationInfo final
     return mActiveWorker && mControlledClientsCounter;
   }
 
+  // As a side effect, this nullifies
+  // `m{Evaluating,Installing,Waiting,Active}Worker`s.
+  void ShutdownWorkers();
+
   void Clear();
 
   void ClearAsCorrupt();
@@ -231,6 +235,13 @@ class ServiceWorkerRegistrationInfo final
   static uint64_t GetNextId();
 
   static uint64_t GetNextVersion();
+
+  // `aFunc`'s argument will be a reference to
+  // `m{Evaluating,Installing,Waiting,Active}Worker` (not to copy of them).
+  // Additionally, a null check will be performed for each worker before each
+  // call to `aFunc`, so `aFunc` will always get a reference to a non-null
+  // pointer.
+  void ForEachWorker(void (*aFunc)(RefPtr<ServiceWorkerInfo>&));
 };
 
 }  // namespace dom

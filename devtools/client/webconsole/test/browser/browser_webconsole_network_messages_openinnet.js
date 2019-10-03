@@ -74,6 +74,13 @@ add_task(async function task() {
   info(
     "Wait for the event timings request which do not necessarily update the UI as timings may be undefined for cached requests"
   );
+
+  // Hide the header panel to get the eventTimings
+  const { windowRequire } = netmonitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  info("Closing the header panel");
+  await netmonitor.panelWin.store.dispatch(Actions.toggleNetworkDetails());
+
   await waitForRequestData(netmonitor.panelWin.store, ["eventTimings"], 1);
 });
 
