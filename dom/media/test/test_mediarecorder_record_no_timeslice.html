@@ -17,7 +17,7 @@ var manager = new MediaTestManager;
  */
 function startTest(test, token) {
   var element = document.createElement('audio');
-  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
+  var expectedMimeType = test.type;
 
   element.token = token;
   manager.started(token);
@@ -26,7 +26,8 @@ function startTest(test, token) {
   element.test = test;
   element.stream = element.mozCaptureStreamUntilEnded();
 
-  var mediaRecorder = new MediaRecorder(element.stream);
+  var mediaRecorder =
+    new MediaRecorder(element.stream, {mimeType: expectedMimeType});
   var onStopFired = false;
   var onDataAvailableFired = false;
 
