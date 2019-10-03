@@ -2,7 +2,14 @@
 trust-domain: mobile
 treeherder:
     group-names:
-        'I': 'Docker Image Builds'
+        I: Docker Image Builds
+        # Groups are generated off buildconfig.yml, except these ones:
+        samples-browser-beta: samples-browser-beta
+        samples-browser-release: samples-browser-release
+        samples-browser-system: samples-browser-system
+        # These ones are too long to fit in 25 chars
+        browser-engine-gecko-nigh: browser-engine-gecko-nightly
+        lib-fetch-httpurlconnect: lib-fetch-httpurlconnection
 
 task-priority: highest
 
