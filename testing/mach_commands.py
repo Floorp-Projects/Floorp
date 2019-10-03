@@ -671,7 +671,7 @@ class TestInfoCommand(MachCommandBase):
         """
 
     @SubCommand('test-info', 'tests',
-             description='Display historical test result summary for named tests.')
+                description='Display historical test result summary for named tests.')
     @CommandArgument('test_names', nargs=argparse.REMAINDER,
                      help='Test(s) of interest.')
     @CommandArgument('--branches',
