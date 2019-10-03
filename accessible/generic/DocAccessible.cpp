@@ -1215,12 +1215,12 @@ Accessible* DocAccessible::GetAccessibleOrDescendant(nsINode* aNode) const {
   Accessible* acc = GetAccessible(aNode);
   if (acc) return acc;
 
-  acc = GetContainerAccessible(aNode);
-  if (acc == this && aNode == mContent) {
-    // The body node is the doc's content node.
-    return acc;
+  if (aNode == mContent || aNode == mDocumentNode->GetRootElement()) {
+    // If the node is the doc's body or root element, return the doc accessible.
+    return const_cast<DocAccessible*>(this);
   }
 
+  acc = GetContainerAccessible(aNode);
   if (acc) {
     // We access the `mChildren` array directly so that we don't access
     // lazily created children in places like `XULTreeAccessible` and
