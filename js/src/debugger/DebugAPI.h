@@ -98,7 +98,10 @@ class DebugAPI {
   // Trace all debugger-owned GC things unconditionally, during a moving GC.
   static void traceAllForMovingGC(JSTracer* trc);
 
-  // Sweep dying debuggers, and detach edges to dying debuggees.
+  // The garbage collector calls this after everything has been marked, but
+  // before anything has been finalized. We use this to clear Debugger /
+  // debuggee edges at a point where the parties concerned are all still
+  // initialized.
   static void sweepAll(JSFreeOp* fop);
 
   // Add sweep group edges due to the presence of any debuggers.
