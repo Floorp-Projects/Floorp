@@ -26,6 +26,7 @@ function startTest(test, token) {
   element.stream = element.mozCaptureStream();
 
   mMediaRecorder = new MediaRecorder(element.stream);
+  is(mMediaRecorder.mimeType, '', 'Expected MediaRecorder mimetype');
   mMediaRecorder.onwarning = function() {
     ok(false, 'onwarning unexpectedly fired');
   };
@@ -37,8 +38,8 @@ function startTest(test, token) {
   mMediaRecorder.onstart = function() {
     info('onstart fired successfully');
     hasonstart = true;
-    // On audio only case, we produce audio/ogg as mimeType.
-    is('audio/ogg', mMediaRecorder.mimeType, "MediaRecorder mimetype as expected");
+    is(mMediaRecorder.mimeType, 'audio/ogg; codecs=opus',
+      "MediaRecorder mimetype as expected");
     mMediaRecorder.requestData();
   };
 
