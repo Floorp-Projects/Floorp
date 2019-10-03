@@ -944,11 +944,13 @@ void MediaEncoder::Stop() {
   }
 }
 
-#ifdef MOZ_WEBM_ENCODER
 bool MediaEncoder::IsWebMEncoderEnabled() {
+#ifdef MOZ_WEBM_ENCODER
   return StaticPrefs::media_encoder_webm_enabled();
-}
+#else
+  return false;
 #endif
+}
 
 const nsString& MediaEncoder::MimeType() const {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());

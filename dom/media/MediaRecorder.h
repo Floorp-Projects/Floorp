@@ -126,8 +126,6 @@ class MediaRecorder final : public DOMEventTargetHelper,
   void DispatchSimpleEvent(const nsAString& aStr);
   // Creating a error event with message.
   void NotifyError(nsresult aRv);
-  // Set encoded MIME type.
-  void SetMimeType(const nsString& aMimeType);
 
   MediaRecorder(const MediaRecorder& x) = delete;  // prevent bad usage
   // Remove session pointer.
@@ -159,9 +157,8 @@ class MediaRecorder final : public DOMEventTargetHelper,
 
   RefPtr<Document> mDocument;
 
-  // It specifies the container format as well as the audio and video capture
-  // formats.
   nsString mMimeType;
+  nsString mConstrainedMimeType;
 
   uint32_t mAudioBitsPerSecond = 0;
   uint32_t mVideoBitsPerSecond = 0;
