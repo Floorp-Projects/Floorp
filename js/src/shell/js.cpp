@@ -36,6 +36,7 @@
 #if defined(MALLOC_H)
 #  include MALLOC_H /* for malloc_usable_size, malloc_size, _msize */
 #endif
+#include <ctime>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
@@ -2680,6 +2681,13 @@ static bool PutStr(JSContext* cx, unsigned argc, Value* vp) {
 static bool Now(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   double now = PRMJ_Now() / double(PRMJ_USEC_PER_MSEC);
+  args.rval().setDouble(now);
+  return true;
+}
+
+static bool CpuNow(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  double now = double(std::clock()) / double(CLOCKS_PER_SEC);
   args.rval().setDouble(now);
   return true;
 }
@@ -9131,6 +9139,12 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "    proxy: Create a DOM Proxy object instead of a plain DOM object.\n"
 "    object: Don't create a new DOM object, but instead use the supplied\n"
 "            FakeDOMObject."),
+
+    JS_FN_HELP("cpuNow", CpuNow, /* nargs= */ 0, /* flags = */ 0,
+"cpuNow()",
+" Returns the approximate processor time used by the process since an arbitrary epoch, in seconds.\n"
+" Only the difference between two calls to `cpuNow()` is meaningful."),
+
 
     JS_FS_HELP_END
 };
