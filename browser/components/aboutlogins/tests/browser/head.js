@@ -27,8 +27,8 @@ let TEST_LOGIN2 = new nsLoginInfo(
 );
 
 let TEST_LOGIN3 = new nsLoginInfo(
-  "https://breached.com",
-  "https://breached.com",
+  "https://breached.example.com",
+  "https://breached.example.com",
   null,
   "breachedLogin1",
   "pass3",
