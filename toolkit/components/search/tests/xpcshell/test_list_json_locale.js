@@ -12,6 +12,7 @@ add_task(function test_setup() {
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     true
   );
+  Services.prefs.setCharPref("browser.search.region", "US");
 });
 
 add_task(async function test_listJSONlocale() {
