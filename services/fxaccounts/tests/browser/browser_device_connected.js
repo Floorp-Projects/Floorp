@@ -45,15 +45,16 @@ async function testDeviceConnected(deviceName) {
 }
 
 add_task(async function() {
-  expectedBody = accountsBundle.formatStringFromName("deviceConnectedBody", [
-    "My phone",
-  ]);
+  expectedBody = accountsBundle.formatStringFromName(
+    "otherDeviceConnectedBody",
+    ["My phone"]
+  );
   await testDeviceConnected("My phone");
 });
 
 add_task(async function() {
   expectedBody = accountsBundle.GetStringFromName(
-    "deviceConnectedBody.noDeviceName"
+    "otherDeviceConnectedBody.noDeviceName"
   );
   await testDeviceConnected(null);
 });
