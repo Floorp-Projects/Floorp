@@ -37,7 +37,8 @@ def lint(files, config, **kwargs):
     cmd = ['python2', os.path.join(tests_dir, 'wpt'), 'lint', '--json'] + files
     log.debug("Command: {}".format(' '.join(cmd)))
 
-    proc = ProcessHandler(cmd, env=os.environ, processOutputLine=process_line)
+    proc = ProcessHandler(cmd, env=os.environ, processOutputLine=process_line,
+                          universal_newlines=True)
     proc.run()
     try:
         proc.wait()
