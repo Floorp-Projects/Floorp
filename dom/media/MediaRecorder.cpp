@@ -666,7 +666,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     mMaxMemory = Preferences::GetUint("media.recorder.max_memory",
                                       MAX_ALLOW_MEMORY_BUFFER);
-    mLastBlobTimeStamp = mStartTime;
     Telemetry::ScalarAdd(Telemetry::ScalarID::MEDIARECORDER_RECORDING_COUNT, 1);
   }
 
@@ -964,15 +963,23 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     // Whether push encoded data back to onDataAvailable automatically or we
     // need a flush.
     bool pushBlob = aForceFlush;
-    if (!pushBlob && (TimeStamp::Now() - mLastBlobTimeStamp) > mTimeslice) {
+    if (!pushBlob && !mLastBlobTimeStamp.IsNull() &&
+        (TimeStamp::Now() - mLastBlobTimeStamp) > mTimeslice) {
       pushBlob = true;
     }
     if (pushBlob) {
-      mLastBlobTimeStamp = TimeStamp::Now();
+      if (!mLastBlobTimeStamp.IsNull()) {
+        // Only update the timestamp if the encoder has been initialized.
+        mLastBlobTimeStamp = TimeStamp::Now();
+      }
       InvokeAsync(mMainThread, this, __func__, &Session::GatherBlob)
           ->Then(mMainThread, __func__,
                  [this, self = RefPtr<Session>(this)](
                      const BlobPromise::ResolveOrRejectValue& aResult) {
+                   // Assert that we've seen the start event
+                   MOZ_ASSERT_IF(
+                       mRunningState.isOk(),
+                       mRunningState.inspect() != RunningState::Starting);
                    if (aResult.IsReject()) {
                      LOG(LogLevel::Warning,
                          ("GatherBlob failed for pushing blob"));
@@ -1191,6 +1198,12 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   void MediaEncoderInitialized() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
+    // Start issuing timeslice-based blobs.
+    MOZ_ASSERT(mLastBlobTimeStamp.IsNull());
+    mLastBlobTimeStamp = TimeStamp::Now();
+
+    Extract(false);
+
     NS_DispatchToMainThread(NewRunnableFrom([self = RefPtr<Session>(this), this,
                                              mime = mEncoder->MimeType()]() {
       if (mRunningState.isErr()) {
@@ -1209,8 +1222,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
       return NS_OK;
     }));
-
-    Extract(false);
   }
 
   void MediaEncoderDataAvailable() {
