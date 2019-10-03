@@ -1206,7 +1206,7 @@ bool GCRuntime::init(uint32_t maxbytes) {
   MOZ_ASSERT(SystemPageSize());
 
   {
-    AutoLockGCBgAlloc lock(rt);
+    AutoLockGCBgAlloc lock(this);
 
     MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
 
@@ -1300,10 +1300,15 @@ void GCRuntime::finish() {
   stats().printTotalProfileTimes();
 }
 
+bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  waitBackgroundSweepEnd();
+  AutoLockGC lock(this);
+  return setParameter(key, value, lock);
+}
+
 bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
                              AutoLockGC& lock) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-
   switch (key) {
     case JSGC_SLICE_TIME_BUDGET_MS:
       defaultTimeBudgetMS_ = value ? value : SliceBudget::UnlimitedTimeBudget;
@@ -1336,9 +1341,14 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
   return true;
 }
 
-void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
+void GCRuntime::resetParameter(JSGCParamKey key) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  waitBackgroundSweepEnd();
+  AutoLockGC lock(this);
+  resetParameter(key, lock);
+}
 
+void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
   switch (key) {
     case JSGC_SLICE_TIME_BUDGET_MS:
       defaultTimeBudgetMS_ = TuningDefaults::DefaultTimeBudgetMS;
@@ -1358,6 +1368,12 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
         zone->updateGCThresholds(*this, GC_NORMAL, lock);
       }
   }
+}
+
+uint32_t GCRuntime::getParameter(JSGCParamKey key) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  AutoLockGC lock(this);
+  return getParameter(key, lock);
 }
 
 uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
@@ -2507,7 +2523,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
 }
 
 void GCRuntime::clearRelocatedArenas(Arena* arenaList, JS::GCReason reason) {
-  AutoLockGC lock(rt);
+  AutoLockGC lock(this);
   clearRelocatedArenasWithoutUnlocking(arenaList, reason, lock);
 }
 
@@ -2562,7 +2578,7 @@ void GCRuntime::unprotectHeldRelocatedArenas() {
 }
 
 void GCRuntime::releaseRelocatedArenas(Arena* arenaList) {
-  AutoLockGC lock(rt);
+  AutoLockGC lock(this);
   releaseRelocatedArenasWithoutUnlocking(arenaList, lock);
 }
 
@@ -3137,7 +3153,7 @@ void GCRuntime::startDecommit() {
 
   BackgroundDecommitTask::ChunkVector toDecommit;
   {
-    AutoLockGC lock(rt);
+    AutoLockGC lock(this);
 
     // Verify that all entries in the empty chunks pool are already decommitted.
     for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done();
@@ -3228,8 +3244,6 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks) {
       }
     }
 
-    AutoLockGC lock(rt);
-
     // Release any arenas that are now empty.
     //
     // Periodically drop and reaquire the GC lock every so often to avoid
@@ -3238,22 +3252,16 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks) {
     // Also use this opportunity to periodically recalculate the GC thresholds
     // as we free more memory.
     static const size_t LockReleasePeriod = 32;
-    size_t releaseCount = 0;
-    Arena* next;
-    for (Arena* arena = emptyArenas; arena; arena = next) {
-      next = arena->next;
 
-      releaseArena(arena, lock);
-      releaseCount++;
-      if (releaseCount % LockReleasePeriod == 0) {
-        lock.unlock();
-        lock.lock();
-        zone->updateGCThresholds(*this, invocationKind, lock);
+    while (emptyArenas) {
+      AutoLockGC lock(this);
+      for (size_t i = 0; i < LockReleasePeriod && emptyArenas; i++) {
+        Arena* arena = emptyArenas;
+        emptyArenas = emptyArenas->next;
+        releaseArena(arena, lock);
       }
+      zone->updateGCThresholds(*this, invocationKind, lock);
     }
-
-    // Do a final update now we've finished.
-    zone->updateGCThresholds(*this, invocationKind, lock);
   }
 }
 
@@ -4243,7 +4251,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
   /* Save existing mark bits. */
   {
-    AutoLockGC lock(runtime);
+    AutoLockGC lock(gc);
     for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
          chunk.next()) {
       ChunkBitmap* bitmap = &chunk->bitmap;
@@ -4320,7 +4328,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
       MOZ_ASSERT(gcmarker->isDrained());
       gcmarker->reset();
 
-      AutoLockGC lock(runtime);
+      AutoLockGC lock(gc);
       for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
            chunk.next()) {
         chunk->bitmap.clear();
@@ -4363,7 +4371,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
   /* Take a copy of the non-incremental mark state and restore the original. */
   {
-    AutoLockGC lock(runtime);
+    AutoLockGC lock(gc);
     for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
          chunk.next()) {
       ChunkBitmap* bitmap = &chunk->bitmap;
@@ -5463,7 +5471,7 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(JSFreeOp* fop,
 
   /* Update the GC state for zones we have swept. */
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
-    AutoLockGC lock(rt);
+    AutoLockGC lock(this);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
     zone->updateGCThresholds(*this, invocationKind, lock);
     zone->arenas.unmarkPreMarkedFreeCells();
@@ -7485,7 +7493,7 @@ void GCRuntime::onOutOfMallocMemory() {
   // Wait for background free of nursery huge slots to finish.
   sweepTask.join();
 
-  AutoLockGC lock(rt);
+  AutoLockGC lock(this);
   onOutOfMallocMemory(lock);
 }
 

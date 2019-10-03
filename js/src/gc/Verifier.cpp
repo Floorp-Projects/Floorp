@@ -200,7 +200,7 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   AutoPrepareForTracing prep(cx);
 
   {
-    AutoLockGC lock(cx->runtime());
+    AutoLockGC lock(this);
     for (auto chunk = allNonEmptyChunks(lock); !chunk.done(); chunk.next()) {
       chunk->bitmap.clear();
     }

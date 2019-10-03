@@ -190,8 +190,9 @@ void js::NurseryDecommitTask::run() {
 void js::NurseryDecommitTask::decommitChunk(Chunk* chunk) {
   chunk->decommitAllArenas();
   {
-    AutoLockGC lock(runtime());
-    runtime()->gc.recycleChunk(chunk, lock);
+    GCRuntime* gc = &runtime()->gc;
+    AutoLockGC lock(gc);
+    gc->recycleChunk(chunk, lock);
   }
 }
 
@@ -296,7 +297,7 @@ void js::Nursery::enable() {
   }
 
   {
-    AutoLockGCBgAlloc lock(runtime());
+    AutoLockGCBgAlloc lock(gc);
     capacity_ = roundSize(tunables().gcMinNurseryBytes());
     if (!allocateNextChunk(0, lock)) {
       capacity_ = 0;
@@ -484,7 +485,7 @@ void* js::Nursery::allocate(size_t size) {
     if (MOZ_UNLIKELY(chunkno == allocatedChunkCount())) {
       mozilla::TimeStamp start = ReallyNow();
       {
-        AutoLockGCBgAlloc lock(runtime());
+        AutoLockGCBgAlloc lock(gc);
         if (!allocateNextChunk(chunkno, lock)) {
           return nullptr;
         }

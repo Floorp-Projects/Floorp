@@ -254,9 +254,12 @@ class GCRuntime {
   void removeRoot(Value* vp);
   void setMarkStackLimit(size_t limit, AutoLockGC& lock);
 
+  MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value);
   MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value,
                                  AutoLockGC& lock);
+  void resetParameter(JSGCParamKey key);
   void resetParameter(JSGCParamKey key, AutoLockGC& lock);
+  uint32_t getParameter(JSGCParamKey key);
   uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
   MOZ_MUST_USE bool triggerGC(JS::GCReason reason);
