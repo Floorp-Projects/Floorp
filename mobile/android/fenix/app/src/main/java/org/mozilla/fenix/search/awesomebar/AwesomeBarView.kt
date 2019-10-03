@@ -166,31 +166,39 @@ class AwesomeBarView(
     fun update(state: SearchFragmentState) {
         view.removeAllProviders()
 
+        // Do not make suggestions based on user's current URL
+        if (state.query == state.session?.url) {
+            return
+        }
+
+        // Only show the shortcutEnginePicker by itself
         if (state.showSearchShortcuts) {
             view.addProviders(shortcutsEnginePickerProvider)
-        } else {
-            if (state.showSearchSuggestions) {
-                view.addProviders(
-                    when (state.searchEngineSource) {
-                        is SearchEngineSource.Default -> defaultSearchSuggestionProvider
-                        is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
-                            state.searchEngineSource.searchEngine
-                        )
-                    }
-                )
-            }
+            view.onInputChanged(state.query)
+            return
+        }
 
-            if (state.showHistorySuggestions) {
-                view.addProviders(historyStorageProvider)
-            }
+        if (state.showSearchSuggestions) {
+            view.addProviders(
+                when (state.searchEngineSource) {
+                    is SearchEngineSource.Default -> defaultSearchSuggestionProvider
+                    is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
+                        state.searchEngineSource.searchEngine
+                    )
+                }
+            )
+        }
 
-            if (state.showBookmarkSuggestions) {
-                view.addProviders(bookmarksStorageSuggestionProvider)
-            }
+        if (state.showHistorySuggestions) {
+            view.addProviders(historyStorageProvider)
+        }
 
-            if ((container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == false) {
-                view.addProviders(sessionProvider)
-            }
+        if (state.showBookmarkSuggestions) {
+            view.addProviders(bookmarksStorageSuggestionProvider)
+        }
+
+        if ((container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == false) {
+            view.addProviders(sessionProvider)
         }
 
         view.onInputChanged(state.query)
