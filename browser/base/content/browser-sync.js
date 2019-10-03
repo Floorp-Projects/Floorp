@@ -404,10 +404,7 @@ var gSync = {
       mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "unverified";
-      headerTitle = this.fxaStrings.formatStringFromName(
-        "account.reconnectToSync",
-        [this.brandStrings.GetStringFromName("syncBrandShortName")]
-      );
+      headerTitle = this.fxaStrings.GetStringFromName("account.reconnectToFxA");
       headerDescription = state.email;
       mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_NOT_VERIFIED) {
@@ -443,9 +440,7 @@ var gSync = {
       fxaMenuAccountButtonEl.setAttribute("closemenu", "none");
 
       headerTitle = state.email;
-      headerDescription = this.fxaStrings.GetStringFromName(
-        "account.manageAccount"
-      );
+      headerDescription = this.fxaStrings.GetStringFromName("account.settings");
 
       panelTitle = state.displayName ? state.displayName : panelTitle;
     }
@@ -953,9 +948,8 @@ var gSync = {
     const brandProductName = this.brandStrings.GetStringFromName(
       "brandProductName"
     );
-    const notConnected = this.fxaStrings.formatStringFromName(
-      "sendTabToDevice.unconfigured.label",
-      [brandProductName]
+    const notConnected = this.fxaStrings.GetStringFromName(
+      "sendTabToDevice.unconfigured.label2"
     );
     const learnMore = this.fxaStrings.GetStringFromName(
       "sendTabToDevice.unconfigured"

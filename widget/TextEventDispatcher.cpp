@@ -573,7 +573,7 @@ bool TextEventDispatcher::DispatchKeyboardEventInternal(
           !aIndexOfKeypress || aIndexOfKeypress < keyEvent.mKeyValue.Length(),
           "aIndexOfKeypress must be 0 - mKeyValue.Length() - 1");
     }
-    wchar_t ch =
+    char16_t ch =
         keyEvent.mKeyValue.IsEmpty() ? 0 : keyEvent.mKeyValue[aIndexOfKeypress];
     keyEvent.SetCharCode(static_cast<uint32_t>(ch));
     if (aMessage == eKeyPress) {

@@ -1992,10 +1992,19 @@ gfxFont* gfxFontGroup::GetDefaultFont() {
     // If we're a content process, it's possible this is failing because the
     // chrome process has just updated the shared font list and we haven't yet
     // refreshed our reference to it. If that's the case, update and retry.
-    uint32_t oldGeneration = pfl->SharedFontList()->GetGeneration();
-    pfl->UpdateFontList();
-    if (pfl->SharedFontList()->GetGeneration() != oldGeneration) {
-      return GetDefaultFont();
+    // But if we're not on the main thread, we can't do this, so just use
+    // the platform default font directly.
+    if (NS_IsMainThread()) {
+      uint32_t oldGeneration = pfl->SharedFontList()->GetGeneration();
+      pfl->UpdateFontList();
+      if (pfl->SharedFontList()->GetGeneration() != oldGeneration) {
+        return GetDefaultFont();
+      }
+    } else {
+      gfxFontEntry* fe = pfl->GetDefaultFontEntry();
+      if (fe) {
+        return fe->FindOrMakeFont(&mStyle);
+      }
     }
   }
 

@@ -491,7 +491,7 @@ add_task(async function sendToDevice_notSignedIn() {
       },
       {
         attrs: {
-          label: "Not Connected to Firefox",
+          label: "Not Signed In",
         },
         disabled: true,
       },
