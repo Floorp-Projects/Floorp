@@ -19,6 +19,11 @@
             app:allowDividerAbove="false"/>
         <SwitchPreference
             android:defaultValue="true"
+            android:key="@string/pref_key_show_search_shortcuts"
+            android:title="@string/preferences_show_search_shortcuts"
+            app:iconSpaceReserved="false"/>
+        <SwitchPreference
+            android:defaultValue="true"
             android:key="@string/pref_key_show_clipboard_suggestions"
             android:title="@string/preferences_show_clipboard_suggestions"
             app:iconSpaceReserved="false" />

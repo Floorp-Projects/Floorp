@@ -33,6 +33,7 @@ class SearchFragmentStoreTest {
         store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)).join()
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
+        assertEquals(false, store.state.showSearchShortcuts)
     }
 
     @Test
@@ -42,15 +43,15 @@ class SearchFragmentStoreTest {
 
         store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(true)).join()
         assertNotSame(initialState, store.state)
-        assertEquals(true, store.state.showShortcutEnginePicker)
+        assertEquals(true, store.state.showSearchShortcuts)
     }
 
     private fun emptyDefaultState(): SearchFragmentState = SearchFragmentState(
         query = "",
         searchEngineSource = mockk(),
         defaultEngineSource = mockk(),
-        showShortcutEnginePicker = false,
         showSearchSuggestions = false,
+        showSearchShortcuts = false,
         showClipboardSuggestions = false,
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,

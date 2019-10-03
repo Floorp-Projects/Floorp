@@ -33,8 +33,7 @@ class StartSearchIntentProcessor(
             out.removeExtra(HomeActivity.OPEN_TO_SEARCH)
 
             val directions = NavGraphDirections.actionGlobalSearch(
-                sessionId = null,
-                showShortcutEnginePicker = true
+                sessionId = null
             )
             navController.nav(null, directions)
             true

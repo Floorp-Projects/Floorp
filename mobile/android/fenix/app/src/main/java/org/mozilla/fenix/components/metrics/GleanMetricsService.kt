@@ -84,12 +84,6 @@ private val Event.wrapper: EventWrapper<*>?
             },
             { Events.performedSearchKeys.valueOf(it) }
         )
-        is Event.SearchShortcutMenuOpened -> EventWrapper<NoExtraKeys>(
-            { SearchShortcuts.opened.record(it) }
-        )
-        is Event.SearchShortcutMenuClosed -> EventWrapper<NoExtraKeys>(
-            { SearchShortcuts.closed.record(it) }
-        )
         is Event.SearchShortcutSelected -> EventWrapper(
             { SearchShortcuts.selected.record(it) },
             { SearchShortcuts.selectedKeys.valueOf(it) }

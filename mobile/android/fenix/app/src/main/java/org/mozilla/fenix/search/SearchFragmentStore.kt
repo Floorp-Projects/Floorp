@@ -33,10 +33,10 @@ sealed class SearchEngineSource {
 /**
  * The state for the Search Screen
  * @property query The current search query string
- * @property showShortcutEnginePicker Whether or not to show the available search engine view
  * @property searchEngineSource The current selected search engine with the context of how it was selected
  * @property defaultEngineSource The current default search engine source
  * @property showSearchSuggestions Whether or not to show search suggestions from the search engine in the AwesomeBar
+ * @property showSearchShortcuts Whether or not to show search shortcuts in the AwesomeBar
  * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
  * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
@@ -45,10 +45,10 @@ sealed class SearchEngineSource {
  */
 data class SearchFragmentState(
     val query: String,
-    val showShortcutEnginePicker: Boolean,
     val searchEngineSource: SearchEngineSource,
     val defaultEngineSource: SearchEngineSource.Default,
     val showSearchSuggestions: Boolean,
+    val showSearchShortcuts: Boolean,
     val showClipboardSuggestions: Boolean,
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
@@ -74,16 +74,15 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
         is SearchFragmentAction.SearchShortcutEngineSelected ->
             state.copy(
                 searchEngineSource = SearchEngineSource.Shortcut(action.engine),
-                showShortcutEnginePicker = false
+                showSearchShortcuts = false
             )
         is SearchFragmentAction.ShowSearchShortcutEnginePicker ->
-            state.copy(showShortcutEnginePicker = action.show)
+            state.copy(showSearchShortcuts = action.show)
         is SearchFragmentAction.UpdateQuery ->
             state.copy(query = action.query)
         is SearchFragmentAction.SelectNewDefaultSearchEngine ->
             state.copy(
-                searchEngineSource = SearchEngineSource.Default(action.engine),
-                showShortcutEnginePicker = false
+                searchEngineSource = SearchEngineSource.Default(action.engine)
             )
     }
 }

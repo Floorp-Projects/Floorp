@@ -166,7 +166,7 @@ class AwesomeBarView(
     fun update(state: SearchFragmentState) {
         view.removeAllProviders()
 
-        if (state.showShortcutEnginePicker) {
+        if (state.showSearchShortcuts) {
             view.addProviders(shortcutsEnginePickerProvider)
         } else {
             if (state.showSearchSuggestions) {

@@ -163,6 +163,11 @@ class Settings private constructor(
         default = true
     )
 
+    val shouldShowSearchShortcuts by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_search_shortcuts),
+        default = true
+    )
+
     val shouldUseDarkTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_dark_theme),
         default = false

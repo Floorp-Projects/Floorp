@@ -38,7 +38,6 @@ class SearchInteractorTest {
         every { context.openToBrowserAndLoad(any(), any(), any(), any(), any(), any()) } just Runs
 
         every { store.state } returns state
-        every { state.showShortcutEnginePicker } returns true
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
 
@@ -111,7 +110,6 @@ class SearchInteractorTest {
 
         every { store.state } returns state
         every { state.session } returns null
-        every { state.showShortcutEnginePicker } returns true
 
         val searchController: SearchController = DefaultSearchController(
             context,
@@ -146,7 +144,6 @@ class SearchInteractorTest {
         every { store.state } returns state
         every { state.session } returns null
         every { state.searchEngineSource } returns searchEngine
-        every { state.showShortcutEnginePicker } returns true
 
         val searchController: SearchController = DefaultSearchController(
             context,

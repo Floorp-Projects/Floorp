@@ -95,8 +95,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scan</string>
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Shortcuts</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Search engine settings</string>
     <!-- Header displayed when selecting a shortcut search engine -->
@@ -174,6 +172,8 @@
     <string name="developer_tools_category">Developer tools</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging via USB</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_shortcuts">Show search shortcuts</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Show search suggestions</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->

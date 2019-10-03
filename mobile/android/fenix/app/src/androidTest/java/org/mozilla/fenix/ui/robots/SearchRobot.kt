@@ -37,7 +37,6 @@ class SearchRobot {
     fun verifySearchView() = assertSearchView()
     fun verifyBrowserToolbar() = assertBrowserToolbarEditView()
     fun verifyScanButton() = assertScanButton()
-    fun verifyShortcutsButton() = assertShortcutsButton()
     fun verifySearchWithText() = assertSearchWithText()
     fun verifyDuckDuckGoResults() = assertDuckDuckGoResults()
     fun verifyDuckDuckGoURL() = assertDuckDuckGoURL()
@@ -54,10 +53,6 @@ class SearchRobot {
 
     fun clickAllowPermission() {
         allowPermissionButton().click()
-    }
-
-    fun clickShortcutsButton() {
-        shortcutsButton().perform(click())
     }
 
     fun typeSearch(searchTerm: String) {
@@ -124,11 +119,6 @@ private fun scanButton(): ViewInteraction {
     return onView(allOf(withId(R.id.searchScanButton)))
 }
 
-private fun shortcutsButton(): ViewInteraction {
-    mDevice.wait(Until.findObjects(By.res("R.id.search_shortcuts_button")), TestAssetHelper.waitingTime)
-    return onView(withId(R.id.searchShortcutsButton))
-}
-
 private fun clearButton() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
 
 private fun assertDuckDuckGoURL() {
@@ -151,10 +141,6 @@ private fun assertBrowserToolbarEditView() =
 
 private fun assertScanButton() =
     onView(allOf(withText("Scan")))
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertShortcutsButton() =
-    onView(allOf(withText("Shortcuts")))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertSearchWithText() =

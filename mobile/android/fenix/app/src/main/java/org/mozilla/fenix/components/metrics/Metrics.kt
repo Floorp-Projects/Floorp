@@ -36,8 +36,6 @@ sealed class Event {
     object InteractWithSearchURLArea : Event()
     object DismissedOnboarding : Event()
     object ClearedPrivateData : Event()
-    object SearchShortcutMenuOpened : Event()
-    object SearchShortcutMenuClosed : Event()
     object AddBookmark : Event()
     object RemoveBookmark : Event()
     object OpenedBookmark : Event()

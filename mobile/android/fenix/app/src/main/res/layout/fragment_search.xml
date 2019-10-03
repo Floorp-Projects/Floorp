@@ -156,12 +156,5 @@
             android:drawableStart="@drawable/ic_qr"
             android:textOff="@string/search_scan_button"
             android:textOn="@string/search_scan_button" />
-
-        <ToggleButton
-            android:id="@+id/searchShortcutsButton"
-            style="@style/search_pill"
-            android:drawableStart="@drawable/ic_search"
-            android:textOff="@string/search_shortcuts_button"
-            android:textOn="@string/search_shortcuts_button" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -18,6 +18,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.searchEngineManager
+import org.mozilla.fenix.ext.settings
 
 /**
  * An interface that handles the view manipulation of the Search, triggered by the Interactor
@@ -30,7 +31,6 @@ interface SearchController {
     fun handleSearchTermsTapped(searchTerms: String)
     fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine)
     fun handleClickSearchEngineSettings()
-    fun handleTurnOnStartedTyping()
     fun handleExistingSessionSelected(session: Session)
 }
 
@@ -39,10 +39,6 @@ class DefaultSearchController(
     private val store: SearchFragmentStore,
     private val navController: NavController
 ) : SearchController {
-
-    data class UserTypingCheck(var ranOnTextChanged: Boolean, var userHasTyped: Boolean)
-
-    internal val userTypingCheck = UserTypingCheck(false, !store.state.showShortcutEnginePicker)
 
     override fun handleUrlCommitted(url: String) {
         if (url.isNotBlank()) {
@@ -69,13 +65,9 @@ class DefaultSearchController(
 
     override fun handleTextChanged(text: String) {
         store.dispatch(SearchFragmentAction.UpdateQuery(text))
-
-        if (userTypingCheck.ranOnTextChanged && !userTypingCheck.userHasTyped) {
-            store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(false))
-            handleTurnOnStartedTyping()
-        }
-
-        userTypingCheck.ranOnTextChanged = true
+        store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(
+            text.isEmpty() && context.settings().shouldShowSearchShortcuts
+        ))
     }
 
     override fun handleUrlTapped(url: String) {
@@ -109,11 +101,6 @@ class DefaultSearchController(
     override fun handleClickSearchEngineSettings() {
         val directions = SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
         navController.navigate(directions)
-    }
-
-    override fun handleTurnOnStartedTyping() {
-        userTypingCheck.ranOnTextChanged = true
-        userTypingCheck.userHasTyped = true
     }
 
     override fun handleExistingSessionSelected(session: Session) {

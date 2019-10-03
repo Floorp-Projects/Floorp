@@ -133,28 +133,6 @@ events:
     expires: "2020-03-01"
 
 search_shortcuts:
-  opened:
-    type: event
-    description: >
-      A user opened the search shortcut menu in the search view by pressing the shortcuts button
-    bugs:
-      - 793
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-03-01"
-  closed:
-    type: event
-    description: >
-      A user closed the search shortcut menu in the search view by pressing the shortcuts button
-    bugs:
-      - 793
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
-    notification_emails:
-      - fenix-core@mozilla.com
-    expires: "2020-03-01"
   selected:
     type: event
     description: >

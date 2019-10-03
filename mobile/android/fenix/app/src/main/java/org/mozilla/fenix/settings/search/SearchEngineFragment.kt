@@ -16,7 +16,7 @@ import org.mozilla.fenix.settings.SharedPreferenceUpdater
 class SearchEngineFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        setPreferencesFromResource(R.xml.search_engine_preferences, rootKey)
+        setPreferencesFromResource(R.xml.search_preferences, rootKey)
     }
 
     override fun onResume() {
@@ -29,7 +29,10 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
                 isChecked = context.settings().shouldShowSearchSuggestions
             }
 
-        searchSuggestionsPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
+        val showSearchShortcuts =
+            findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_show_search_shortcuts))?.apply {
+                isChecked = context.settings().shouldShowSearchShortcuts
+            }
 
         val showHistorySuggestions =
             findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_search_browsing_history))?.apply {
@@ -46,6 +49,8 @@ class SearchEngineFragment : PreferenceFragmentCompat() {
                 isChecked = context.settings().shouldShowClipboardSuggestions
             }
 
+        searchSuggestionsPreference?.onPreferenceChangeListener = SharedPreferenceUpdater()
+        showSearchShortcuts?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showHistorySuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showBookmarkSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()
         showClipboardSuggestions?.onPreferenceChangeListener = SharedPreferenceUpdater()

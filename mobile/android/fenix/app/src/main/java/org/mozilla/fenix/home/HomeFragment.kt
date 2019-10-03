@@ -251,8 +251,7 @@ class HomeFragment : Fragment() {
             invokePendingDeleteJobs()
             onboarding.finish()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
-                sessionId = null,
-                showShortcutEnginePicker = true
+                sessionId = null
             )
             val extras =
                 FragmentNavigator.Extras.Builder()
@@ -265,8 +264,7 @@ class HomeFragment : Fragment() {
         view.add_tab_button.setOnClickListener {
             invokePendingDeleteJobs()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
-                sessionId = null,
-                showShortcutEnginePicker = true
+                sessionId = null
             )
             nav(R.id.homeFragment, directions)
         }

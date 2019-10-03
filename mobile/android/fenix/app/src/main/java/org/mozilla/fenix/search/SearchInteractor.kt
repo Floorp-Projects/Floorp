@@ -45,10 +45,6 @@ class SearchInteractor(
         searchController.handleClickSearchEngineSettings()
     }
 
-    fun turnOnStartedTyping() {
-        searchController.handleTurnOnStartedTyping()
-    }
-
     override fun onExistingSessionSelected(session: Session) {
         searchController.handleExistingSessionSelected(session)
     }
