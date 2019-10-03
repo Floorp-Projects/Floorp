@@ -36,7 +36,6 @@ add_task(async function test_added_login_shows_breach_warning() {
     );
   });
 
-  TEST_LOGIN3.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged = 123456;
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
   await ContentTask.spawn(browser, TEST_LOGIN3.guid, async aTestLogin3Guid => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
