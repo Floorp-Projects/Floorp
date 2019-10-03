@@ -4,19 +4,26 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.scrollbutton-up > .toolbarbutton-icon {
+arrowscrollbox[scrolledtoend=true]::part(arrowscrollbox-overflow-end-indicator),
+arrowscrollbox[scrolledtostart=true]::part(arrowscrollbox-overflow-start-indicator),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-up),
+arrowscrollbox[notoverflowing=true]::part(scrollbutton-down) {
+  visibility: collapse;
+}
+
+.scrollbutton-up.menupopup-scrollbutton > .toolbarbutton-icon {
   -moz-appearance: button-arrow-up;
 }
 
-.scrollbutton-down > .toolbarbutton-icon {
+.scrollbutton-down.menupopup-scrollbutton > .toolbarbutton-icon {
   -moz-appearance: button-arrow-down;
 }
 
-.scrollbutton-up[orient="horizontal"] > .toolbarbutton-icon {
+.scrollbutton-up.menupopup-scrollbutton[orient="horizontal"] > .toolbarbutton-icon {
   -moz-appearance: button-arrow-previous;
 }
 
-.scrollbutton-down[orient="horizontal"] > .toolbarbutton-icon {
+.scrollbutton-down.menupopup-scrollbutton[orient="horizontal"] > .toolbarbutton-icon {
   -moz-appearance: button-arrow-next;
 }
 
@@ -24,8 +31,8 @@
   display: none;
 }
 
-arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-up,
-arrowscrollbox:not([clicktoscroll="true"]) > .scrollbutton-down {
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-up),
+arrowscrollbox:not([clicktoscroll="true"])::part(scrollbutton-down) {
   -moz-appearance: none;
   border: 1px solid ThreeDShadow;
   padding: 0;

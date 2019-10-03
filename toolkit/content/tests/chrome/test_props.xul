@@ -3,7 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <!--
   XUL Widget Test for basic properties - this test checks that the basic
-  properties defined in general.xml and inherited by a number of elements
+  properties defined in general.js and inherited by a number of elements
   work properly.
   -->
 <window title="Basic Properties Test"
