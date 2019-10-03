@@ -112,7 +112,6 @@ class MediaRecorder final : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(pause)
   IMPL_EVENT_HANDLER(resume)
   IMPL_EVENT_HANDLER(error)
-  IMPL_EVENT_HANDLER(warning)
 
   NS_DECL_NSIDOCUMENTACTIVITY
 
