@@ -27,6 +27,7 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const EventEmitter = require("devtools/shared/event-emitter");
 const App = createFactory(require("devtools/client/webconsole/components/App"));
 const DataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
+const ConsoleCommands = require("devtools/client/webconsole/commands.js");
 
 const {
   setupServiceContainer,
@@ -73,30 +74,38 @@ class WebConsoleWrapper {
     const debuggerClient = this.hud.currentTarget.client;
 
     const webConsoleClient = await this.hud.currentTarget.getFront("console");
+
     this.networkDataProvider = new DataProvider({
       actions: {
-        updateRequest: (id, data) => {
-          return this.batchedRequestUpdates({ id, data });
-        },
+        updateRequest: (id, data) => this.batchedRequestUpdates({ id, data }),
       },
       webConsoleClient,
     });
 
     return new Promise(resolve => {
-      const serviceContainer = setupServiceContainer({
+      const commands = new ConsoleCommands({
         debuggerClient,
-        webConsoleUI,
-        actions,
-        toolbox: this.toolbox,
-        hud: this.hud,
-        webconsoleWrapper: this,
+        proxy: webConsoleUI.getProxy(),
+        threadFront: this.toolbox && this.toolbox.threadFront,
+        currentTarget: this.hud.currentTarget,
       });
 
       store = configureStore(this.webConsoleUI, {
         // We may not have access to the toolbox (e.g. in the browser console).
         sessionId: (this.toolbox && this.toolbox.sessionId) || -1,
         telemetry: this.telemetry,
-        services: serviceContainer,
+        thunkArgs: {
+          webConsoleUI,
+          hud: this.hud,
+          client: commands,
+        },
+      });
+
+      const serviceContainer = setupServiceContainer({
+        webConsoleUI,
+        toolbox: this.toolbox,
+        hud: this.hud,
+        webConsoleWrapper: this,
       });
 
       if (this.toolbox) {
@@ -336,6 +345,10 @@ class WebConsoleWrapper {
     this.setTimeoutIfNeeded();
   }
 
+  requestData(id, type) {
+    this.networkDataProvider.requestData(id, type);
+  }
+
   dispatchClearLogpointMessages(logpointId) {
     store.dispatch(actions.messagesClearLogpoint(logpointId));
   }
@@ -432,6 +445,10 @@ class WebConsoleWrapper {
 
   subscribeToStore(callback) {
     store.subscribe(() => callback(store.getState()));
+  }
+
+  createElement(nodename) {
+    return this.document.createElement(nodename);
   }
 
   // Called by pushing close button.

@@ -3914,14 +3914,14 @@ const {
   nodeIsLongString
 } = __webpack_require__(114);
 
-function loadItemProperties(item, createObjectClient, createLongStringClient, loadedProperties) {
+function loadItemProperties(item, client, loadedProperties) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
   const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
   const promises = [];
   let objectClient;
 
-  const getObjectClient = () => objectClient || createObjectClient(value);
+  const getObjectClient = () => objectClient || client.createObjectClient(value);
 
   if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
     promises.push(enumIndexedProperties(getObjectClient(), start, end));
@@ -3944,7 +3944,7 @@ function loadItemProperties(item, createObjectClient, createLongStringClient, lo
   }
 
   if (shouldLoadItemFullText(item, loadedProperties)) {
-    promises.push(getFullText(createLongStringClient(value), item));
+    promises.push(getFullText(client.createLongStringClient(value), item));
   }
 
   if (shouldLoadItemProxySlots(item, loadedProperties)) {
@@ -7925,7 +7925,7 @@ function nodeLoadProperties(node, actor) {
     }
 
     try {
-      const properties = await loadItemProperties(node, client.createObjectClient, client.createLongStringClient, loadedProperties);
+      const properties = await loadItemProperties(node, client, loadedProperties);
       dispatch(nodePropertiesLoaded(node, actor, properties));
     } catch (e) {
       console.error(e);

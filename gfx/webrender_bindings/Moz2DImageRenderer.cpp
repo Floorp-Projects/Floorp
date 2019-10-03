@@ -367,7 +367,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
   // We try hard to not have empty blobs but we can end up with
   // them because of CompositorHitTestInfo and merging.
-  size_t footerSize = sizeof(size_t) + sizeof(IntPoint);
+  size_t footerSize = sizeof(size_t);
   MOZ_RELEASE_ASSERT(aBlob.length() >= footerSize);
   size_t indexOffset = ConvertFromBytes<size_t>(aBlob.end().get() - footerSize);
 

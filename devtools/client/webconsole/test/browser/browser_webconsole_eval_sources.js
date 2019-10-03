@@ -22,7 +22,7 @@ async function clickFirstStackElement(hud, message, needsExpansion) {
 
   EventUtils.sendMouseEvent({ type: "mousedown" }, frame);
 
-  await once(hud.ui, "source-in-debugger-opened");
+  await once(hud, "source-in-debugger-opened");
 }
 
 // Test that stack/message links in console API and error messages originating

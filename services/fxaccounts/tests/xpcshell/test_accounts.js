@@ -564,6 +564,50 @@ add_test(function test_polling_timeout() {
   });
 });
 
+// For bug 1585299 - ensure we only get a single ONVERIFIED notification.
+add_task(async function test_onverified_once() {
+  let fxa = new MockFxAccounts();
+  let user = getTestUser("francine");
+
+  let numNotifications = 0;
+
+  function observe(aSubject, aTopic, aData) {
+    numNotifications += 1;
+  }
+  Services.obs.addObserver(observe, ONVERIFIED_NOTIFICATION);
+
+  fxa._internal.POLL_SESSION = 1;
+
+  await fxa.setSignedInUser(user);
+
+  Assert.ok(!(await fxa.getSignedInUser()).verified, "starts unverified");
+
+  await fxa._internal.startPollEmailStatus(
+    fxa._internal.currentAccountState,
+    user.sessionToken,
+    "start"
+  );
+
+  Assert.ok(!(await fxa.getSignedInUser()).verified, "still unverified");
+
+  log.debug("Mocking verification of francine's email");
+  fxa._internal.fxAccountsClient._email = user.email;
+  fxa._internal.fxAccountsClient._verified = true;
+
+  await fxa._internal.startPollEmailStatus(
+    fxa._internal.currentAccountState,
+    user.sessionToken,
+    "again"
+  );
+
+  Assert.ok((await fxa.getSignedInUser()).verified, "now verified");
+
+  Assert.equal(numNotifications, 1, "expect exactly 1 ONVERIFIED");
+
+  Services.obs.removeObserver(observe, ONVERIFIED_NOTIFICATION);
+  await fxa.signOut();
+});
+
 add_test(function test_pollEmailStatus_start_verified() {
   let fxa = new MockFxAccounts();
   let test_user = getTestUser("carol");
