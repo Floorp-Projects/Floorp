@@ -44,7 +44,7 @@ export default class ConfirmationDialog extends HTMLElement {
       case "click":
         if (
           event.target.classList.contains("cancel-button") ||
-          event.target.classList.contains("dismiss-button") ||
+          event.currentTarget.classList.contains("dismiss-button") ||
           event.target.classList.contains("overlay")
         ) {
           this.onCancel();

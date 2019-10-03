@@ -26,13 +26,16 @@ struct ImportScanner final {
   // Called when a <style> element ends. Returns the list of URLs scanned.
   nsTArray<nsString> Stop();
 
-  // Scan() should be called when text content is parsed.
-  void Scan(Span<const char16_t> aFragment) {
-    if (mState == State::OutsideOfStyleElement || mState == State::Done) {
-      return;
-    }
-    DoScan(aFragment);
+  // Whether Scan() should be called.
+  bool ShouldScan() const {
+    return mState != State::OutsideOfStyleElement && mState != State::Done;
   }
+
+  // Scan() should be called when text content is parsed, and returns an array
+  // of found URLs, if any.
+  //
+  // Asserts ShouldScan() returns true.
+  nsTArray<nsString> Scan(Span<const char16_t> aFragment);
 
  private:
   enum class State {
@@ -64,7 +67,6 @@ struct ImportScanner final {
   };
 
   void EmitUrl();
-  void DoScan(Span<const char16_t> aFragment);
   MOZ_MUST_USE State Scan(char16_t aChar);
 
   static constexpr const uint32_t kMaxRuleNameLength = 7;  // (charset, import)

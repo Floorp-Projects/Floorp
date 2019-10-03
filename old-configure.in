@@ -645,6 +645,11 @@ case "$target" in
     # certain versions of cygwin's makedepend barf on the
     # #include <string> vs -I./dist/include/string issue so don't use it
     if test -n "$GNU_CC" -o -n "$CLANG_CC"; then
+        # $GNU_CC will match gcc and clang; while $CLANG_CC will match only clang
+        if test -z "$CLANG_CC"; then
+            AC_MSG_ERROR(Firefox cannot be built with mingw-gcc and requires a mingw-clang toolchain to work)
+        fi
+
         CC="$CC -mwindows"
         CXX="$CXX -mwindows"
         CPP="$CPP -mwindows"
@@ -660,19 +665,8 @@ case "$target" in
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows
 
-        if test -z "$CLANG_CC"; then
-            # Use static libgcc and libstdc++
-            LDFLAGS="$LDFLAGS -static"
-
-            # GCC/binutils can't link to a function if we try to include dllexport function
-            # in the same library as dllimport caller. To work around it, we build NSPR
-            # and NSS with -mnop-fun-dllimport flag. The drawback of this solution is that
-            # function thunks need to be generated for cross-DLL calls.
-            MOZ_FOLD_LIBS_FLAGS="-mnop-fun-dllimport"
-        else
-            # Silence problematic clang warnings
-            CXXFLAGS="$CXXFLAGS -Wno-incompatible-ms-struct"
-        fi
+        # Silence problematic clang warnings
+        CXXFLAGS="$CXXFLAGS -Wno-incompatible-ms-struct"
     else
         TARGET_COMPILER_ABI=msvc
         RANLIB='echo not_ranlib'

@@ -367,8 +367,9 @@ LoginManagerStorage_mozStorage.prototype = {
         newLogin.httpRealm
       );
 
-      if (logins.some(login => newLogin.matches(login, true))) {
-        throw new Error("This login already exists.");
+      let matchingLogin = logins.find(login => newLogin.matches(login, true));
+      if (matchingLogin) {
+        throw LoginHelper.createLoginAlreadyExistsError(matchingLogin.guid);
       }
     }
 

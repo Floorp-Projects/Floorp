@@ -106,18 +106,11 @@ decorate_task(
         { enrollmentId: rollouts[0].enrollmentId },
       ],
     ]);
-    Assert.deepEqual(
-      setExperimentActiveStub.args,
-      [
-        [
-          "test-rollout",
-          "active",
-          {
-            type: "normandy-prefrollout",
-            enrollmentId: rollouts[0].enrollmentId,
-          },
-        ],
-      ],
+    ok(
+      setExperimentActiveStub.calledWithExactly("test-rollout", "active", {
+        type: "normandy-prefrollout",
+        enrollmentId: rollouts[0].enrollmentId,
+      }),
       "a telemetry experiment should be activated"
     );
 

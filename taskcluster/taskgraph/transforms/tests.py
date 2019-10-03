@@ -947,8 +947,9 @@ def setup_browsertime(config, tests):
                 'android.*': ['browsertime', 'linux64-geckodriver', 'linux64-node'],
                 'linux.*': ['browsertime', 'linux64-geckodriver', 'linux64-node'],
                 'macosx.*': ['browsertime', 'macosx64-geckodriver', 'macosx64-node'],
-                'windows.*32.*': ['browsertime', 'win32-geckodriver', 'win32-node'],
-                'windows.*64.*': ['browsertime', 'win64-geckodriver', 'win64-node'],
+                'windows.*aarch64.*': ['browsertime', 'win32-geckodriver', 'win32-node'],
+                'windows.*-32.*': ['browsertime', 'win32-geckodriver', 'win32-node'],
+                'windows.*-64.*': ['browsertime', 'win64-geckodriver', 'win64-node'],
             },
         }
 
@@ -960,8 +961,9 @@ def setup_browsertime(config, tests):
                 'android.*': ['linux64-chromedriver', 'linux64-ffmpeg-4.1.4'],
                 'linux.*': ['linux64-chromedriver', 'linux64-ffmpeg-4.1.4'],
                 'macosx.*': ['mac64-chromedriver', 'mac64-ffmpeg-4.1.1'],
-                'windows.*32.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
-                'windows.*64.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
+                'windows.*aarch64.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
+                'windows.*-32.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
+                'windows.*-64.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
             },
         }
 
