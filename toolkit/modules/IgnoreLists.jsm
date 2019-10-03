@@ -63,8 +63,6 @@ class IgnoreListsManager {
    * Note that this may cause a network check of the certificate, but that
    * should generally be quick.
    *
-   * @param {RemoteSettings} ignoreListSettings
-   *   The remote settings object associated with the ignore list.
    * @param {boolean} [firstTime]
    *   Internal boolean to indicate if this is the first time check or not.
    * @returns {array}
@@ -72,8 +70,9 @@ class IgnoreListsManager {
    *   could be obtained.
    */
   async _getIgnoreListSettings(firstTime = true) {
+    let result = [];
     try {
-      return this._ignoreListSettings.get({
+      result = await this._ignoreListSettings.get({
         verifySignature: true,
       });
     } catch (ex) {
@@ -86,13 +85,13 @@ class IgnoreListsManager {
         await collection.clear();
         await collection.db.close();
         // Now call this again.
-        return this._getIgnoreListSettings(this._ignoreListSettings, false);
+        return this._getIgnoreListSettings(false);
       }
       // Don't throw an error just log it, just continue with no data, and hopefully
       // a sync will fix things later on.
       Cu.reportError(ex);
     }
-    return [];
+    return result;
   }
 }
 
