@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+<script>
+function start () {
+  const kf_effect =
+      new KeyframeEffect(document.documentElement,
+                         { opacity: ['', '1'] },
+                         { easing: 'step-end',
+                           duration: 10000 } );
+  const copy = new KeyframeEffect(kf_effect);
+  const animation = new Animation(copy);
+
+  animation.reverse();
+  document.documentElement.getBoundingClientRect();
+
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+}
+
+document.addEventListener('DOMContentLoaded', start);
+</script>
+</html>
