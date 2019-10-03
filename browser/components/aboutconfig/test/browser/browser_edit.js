@@ -34,19 +34,22 @@ add_task(async function test_add_user_pref() {
   await AboutConfigTest.withNewTab(async function() {
     // The row for a new preference appears when searching for its name.
     Assert.ok(!this.getRow(PREF_NEW));
-    this.search(PREF_NEW);
-    let row = this.getRow(PREF_NEW);
-    Assert.ok(row.hasClass("deleted"));
 
     for (let [radioIndex, expectedValue, expectedEditingMode] of [
       [0, true, false],
       [1, 0, true],
       [2, "", true],
     ]) {
+      this.search(PREF_NEW);
+      let row = this.getRow(PREF_NEW);
+      Assert.ok(row.hasClass("deleted"));
+      Assert.ok(row.hasClass("add"));
+
       // Adding the preference should set the default for the data type.
       row.element.querySelectorAll("input")[radioIndex].click();
       row.editColumnButton.click();
       Assert.ok(!row.hasClass("deleted"));
+      Assert.ok(!row.hasClass("add"));
       Assert.ok(Preferences.get(PREF_NEW) === expectedValue);
 
       // Number and String preferences should be in edit mode.
@@ -56,6 +59,7 @@ add_task(async function test_add_user_pref() {
       this.search(PREF_NEW);
       row = this.getRow(PREF_NEW);
       Assert.ok(!row.hasClass("deleted"));
+      Assert.ok(!row.hasClass("add"));
       Assert.ok(!row.valueInput);
 
       // Reset the preference, then continue by adding a different type.

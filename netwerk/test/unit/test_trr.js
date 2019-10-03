@@ -78,7 +78,8 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.trr.confirmationNS");
   Services.prefs.clearUserPref("network.trr.bootstrapAddress");
   Services.prefs.clearUserPref("network.trr.blacklist-duration");
-  Services.prefs.clearUserPref("network.trr.request-timeout");
+  Services.prefs.clearUserPref("network.trr.request_timeout_ms");
+  Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
   Services.prefs.clearUserPref("network.trr.disable-ECS");
   Services.prefs.clearUserPref("network.trr.early-AAAA");
   Services.prefs.clearUserPref("network.trr.skip-AAAA-when-not-supported");
@@ -479,7 +480,7 @@ add_task(async function test11() {
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/dns-750ms`
   );
-  Services.prefs.setIntPref("network.trr.request-timeout", 10);
+  Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
   let [, , inStatus] = await new DNSListener(
     "test11.example.com",
     undefined,
@@ -495,11 +496,13 @@ add_task(async function test11() {
 add_task(async function test12() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=none`
   );
-  Services.prefs.clearUserPref("network.trr.request-timeout");
+  Services.prefs.clearUserPref("network.trr.request_timeout_ms");
+  Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
   await new DNSListener("confirm.example.com", "127.0.0.1");
 });
 
@@ -540,7 +543,8 @@ add_task(async function test15() {
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/dns-750ms`
   );
-  Services.prefs.setIntPref("network.trr.request-timeout", 10);
+  Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
+  Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
   await new DNSListener("test15.example.com", "127.0.0.1");
 
   Services.prefs.setIntPref("network.trr.mode", 4); // MODE_RESERVED4. Interpreted as TRR off.
@@ -559,7 +563,8 @@ add_task(async function test16() {
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/dns-750ms`
   );
-  Services.prefs.setIntPref("network.trr.request-timeout", 10);
+  Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
+  Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
   await new DNSListener("test16.example.com", "127.0.0.1");
 });
 
@@ -571,7 +576,8 @@ add_task(async function test17() {
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/dns-cname`
   );
-  Services.prefs.clearUserPref("network.trr.request-timeout");
+  Services.prefs.clearUserPref("network.trr.request_timeout_ms");
+  Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
   await new DNSListener("cname.example.com", "99.88.77.66");
 });
 
@@ -921,6 +927,8 @@ add_task(async function test_connection_closed() {
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  // We don't need to wait for 30 seconds for the request to fail
+  Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 500);
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=2.2.2.2`

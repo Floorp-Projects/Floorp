@@ -4212,7 +4212,7 @@ pref("network.connectivity-service.IPv4.url", "http://detectportal.firefox.com/s
 pref("network.connectivity-service.IPv6.url", "http://detectportal.firefox.com/success.txt?ipv6");
 
 // DNS Trusted Recursive Resolver
-// 0 - default off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow, 5 off by choice
+// 0 - default off, 1 - reserved/off, 2 - TRR first, 3 - TRR only, 4 - reserved/off, 5 off by choice
 pref("network.trr.mode", 0);
 // DNS-over-HTTP service to use, must be HTTPS://
 pref("network.trr.uri", "https://mozilla.cloudflare-dns.com/dns-query");

@@ -54,6 +54,10 @@ add_task(async function test_search() {
     // Expecting 1 row to be returned since it offers the ability to add.
     this.search("aJunkValueasdf");
     Assert.equal(this.rows.length, 1);
+    // The has-visible-prefs attribute is used to style the border of the add row.
+    Assert.ok(!this.prefsTable.hasAttribute("has-visible-prefs"));
+    let addRow = this.getRow("aJunkValueasdf");
+    Assert.equal(getComputedStyle(addRow.valueCell)["border-top-width"], "0px");
 
     // Pressing ESC clears the field and returns to the initial page.
     EventUtils.sendKey("escape");
@@ -68,10 +72,15 @@ add_task(async function test_search() {
     // new preference with the same name but a different case.
     this.search("TEST.aboutconfig.a");
     Assert.equal(this.rows.length, 3);
+    // The has-visible-prefs attribute is used to style the border of the add row.
+    Assert.ok(this.prefsTable.hasAttribute("has-visible-prefs"));
+    addRow = this.getRow("TEST.aboutconfig.a");
+    Assert.equal(getComputedStyle(addRow.valueCell)["border-top-width"], "1px");
 
     // Entering an empty string returns to the initial page.
     this.search("");
     Assert.equal(this.rows.length, 0);
+    Assert.ok(!this.prefsTable.hasAttribute("has-visible-prefs"));
   });
 });
 

@@ -104,24 +104,24 @@ function messageClose(id) {
  * @return {[type]} [description]
  */
 function messageGetMatchingElements(id, cssSelectors) {
-  return ({ dispatch, services }) => {
-    services
-      .requestEvaluation(`document.querySelectorAll('${cssSelectors}')`)
-      .then(response => {
-        dispatch(messageUpdatePayload(id, response.result));
-      })
-      .catch(err => {
-        console.error(err);
-      });
+  return async ({ dispatch, client }) => {
+    try {
+      const response = await client.evaluateJSAsync(
+        `document.querySelectorAll('${cssSelectors}')`
+      );
+      dispatch(messageUpdatePayload(id, response.result));
+    } catch (err) {
+      console.error(err);
+    }
   };
 }
 
 function messageGetTableData(id, grip, dataType) {
-  return async ({ dispatch, services }) => {
+  return async ({ dispatch, client }) => {
     const needEntries = ["Map", "WeakMap", "Set", "WeakSet"].includes(dataType);
     const results = await (needEntries
-      ? services.fetchObjectEntries(grip)
-      : services.fetchObjectProperties(grip, dataType === "Array"));
+      ? client.fetchObjectEntries(grip)
+      : client.fetchObjectProperties(grip, dataType === "Array"));
 
     dispatch(messageUpdatePayload(id, results));
   };
@@ -165,6 +165,12 @@ function networkUpdateRequest(id, data) {
   };
 }
 
+function jumpToExecutionPoint(executionPoint) {
+  return ({ client }) => {
+    client.timeWarp(executionPoint);
+  };
+}
+
 module.exports = {
   messagesAdd,
   messagesClear,
@@ -179,4 +185,5 @@ module.exports = {
   privateMessagesClear,
   // for test purpose only.
   setPauseExecutionPoint,
+  jumpToExecutionPoint,
 };

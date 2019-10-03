@@ -517,51 +517,25 @@ void Element::ClearStyleStateLocks() {
   NotifyStyleStateChange(locks.mLocks);
 }
 
-static bool IsLikelyCustomElement(const nsXULElement& aElement) {
-  const CustomElementData* data = aElement.GetCustomElementData();
-  if (!data) {
+static bool MayNeedToLoadXBLBinding(const Element& aElement) {
+  if (!aElement.IsAnyOfXULElements(nsGkAtoms::panel, nsGkAtoms::textbox)) {
+    // Other elements no longer have XBL bindings. Please don't add to the list
+    // above unless completely necessary.
     return false;
   }
-
-  const CustomElementRegistry* registry =
-      nsContentUtils::GetCustomElementRegistry(aElement.OwnerDoc());
-  if (!registry) {
+  if (!aElement.IsInComposedDoc()) {
     return false;
   }
-
-  return registry->IsLikelyToBeCustomElement(data->GetCustomElementType());
-}
-
-static bool MayNeedToLoadXBLBinding(const Document& aDocument,
-                                    const Element& aElement) {
   // If we have a frame, the frame has already loaded the binding.
-  // Otherwise, don't do anything else here unless we're dealing with
-  // XUL or an HTML element that may have a plugin-related overlay
-  // (i.e. object or embed).
-  if (!aDocument.GetPresShell() || aElement.GetPrimaryFrame()) {
+  if (aElement.GetPrimaryFrame() || !aElement.OwnerDoc()->GetPresShell()) {
     return false;
   }
-
-  if (auto* xulElem = nsXULElement::FromNode(aElement)) {
-    return !IsLikelyCustomElement(*xulElem);
+  // If we have a binding, well..
+  if (aElement.GetXBLBinding()) {
+    return false;
   }
-
-  return aElement.IsAnyOfHTMLElements(nsGkAtoms::object, nsGkAtoms::embed);
-}
-
-StyleUrlOrNone Element::GetBindingURL(Document* aDocument) {
-  if (!MayNeedToLoadXBLBinding(*aDocument, *this)) {
-    return StyleUrlOrNone::None();
-  }
-
-  // Get the computed -moz-binding directly from the ComputedStyle
-  RefPtr<ComputedStyle> style =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
-  if (!style) {
-    return StyleUrlOrNone::None();
-  }
-
-  return style->StyleDisplay()->mBinding;
+  // We need to try.
+  return true;
 }
 
 JSObject* Element::WrapObject(JSContext* aCx,
@@ -571,60 +545,43 @@ JSObject* Element::WrapObject(JSContext* aCx,
     return nullptr;
   }
 
-  if (XRE_IsContentProcess() && !NodePrincipal()->IsSystemPrincipal()) {
-    // We don't use XBL in content privileged content processes.
+  if (!MayNeedToLoadXBLBinding(*this)) {
     return obj;
   }
-
-  Document* doc = GetComposedDoc();
-  if (!doc) {
-    // There's no baseclass that cares about this call so we just
-    // return here.
-    return obj;
-  }
-
-  // We must ensure that the XBL Binding is installed before we hand
-  // back this object.
-
-  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) && GetXBLBinding()) {
-    // There's already a binding for this element so nothing left to
-    // be done here.
-
-    // In theory we could call ExecuteAttachedHandler here when it's safe to
-    // run script if we also removed the binding from the PAQ queue, but that
-    // seems like a scary change that would mosly just add more
-    // inconsistencies.
-    return obj;
-  }
-
-  // Make sure the ComputedStyle goes away _before_ we load the binding
-  // since that can destroy the relevant presshell.
 
   {
-    StyleUrlOrNone result = GetBindingURL(doc);
-    if (result.IsUrl()) {
-      auto& url = result.AsUrl();
-      nsCOMPtr<nsIURI> uri = url.GetURI();
-      nsCOMPtr<nsIPrincipal> principal = url.ExtraData().Principal();
+    RefPtr<ComputedStyle> style =
+        nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
+    if (!style) {
+      return obj;
+    }
 
-      // We have a binding that must be installed.
-      nsXBLService* xblService = nsXBLService::GetInstance();
-      if (!xblService) {
-        dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
-        return nullptr;
-      }
+    // We have a binding that must be installed.
+    const StyleUrlOrNone& computedBinding = style->StyleDisplay()->mBinding;
+    if (!computedBinding.IsUrl()) {
+      return obj;
+    }
 
-      RefPtr<nsXBLBinding> binding;
-      xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding));
+    auto& url = computedBinding.AsUrl();
+    nsCOMPtr<nsIURI> uri = url.GetURI();
+    nsCOMPtr<nsIPrincipal> principal = url.ExtraData().Principal();
 
-      if (binding) {
-        if (nsContentUtils::IsSafeToRunScript()) {
-          binding->ExecuteAttachedHandler();
-        } else {
-          nsContentUtils::AddScriptRunner(
-              NewRunnableMethod("nsXBLBinding::ExecuteAttachedHandler", binding,
-                                &nsXBLBinding::ExecuteAttachedHandler));
-        }
+    nsXBLService* xblService = nsXBLService::GetInstance();
+    if (!xblService) {
+      dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
+      return nullptr;
+    }
+
+    RefPtr<nsXBLBinding> binding;
+    xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding));
+
+    if (binding) {
+      if (nsContentUtils::IsSafeToRunScript()) {
+        binding->ExecuteAttachedHandler();
+      } else {
+        nsContentUtils::AddScriptRunner(
+            NewRunnableMethod("nsXBLBinding::ExecuteAttachedHandler", binding,
+                              &nsXBLBinding::ExecuteAttachedHandler));
       }
     }
   }

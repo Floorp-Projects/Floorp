@@ -117,7 +117,7 @@
 
 #prefs > tr.deleted > th {
   font-weight: bold;
-  opacity: 0.4;
+  color: var(--in-content-deemphasized-text);
 }
 
 #prefs > tr > td.cell-edit,
@@ -181,4 +181,9 @@ td.cell-value > form > input[type="number"] {
 
 .button-reset:dir(rtl) {
   transform: scaleX(-1);
+}
+
+#prefs[has-visible-prefs] > .add > th,
+#prefs[has-visible-prefs] > .add > td {
+  border-top: 1px solid var(--in-content-box-border-color);
 }

@@ -792,8 +792,6 @@ sync-choose-what-to-sync-dialog =
     .buttonlabelextra2 = Disconnect…
     .buttonaccesskeyextra2 = D
 
-sync-choose-heading = Choose what to sync to your account for devices using { -sync-brand-short-name }:
-
 sync-engine-bookmarks =
     .label = Bookmarks
     .accesskey = m

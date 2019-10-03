@@ -659,8 +659,7 @@ struct DIGroup {
                 aStream.write((const char*)&font, sizeof(font));
               }
               fonts = std::move(aScaledFonts);
-            },
-            mVisibleRect.ToUnknownRect().TopLeft());
+            });
 
     RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
         gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
@@ -2259,8 +2258,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
                   aStream.write((const char*)&font, sizeof(font));
                 }
                 fonts = std::move(aScaledFonts);
-              },
-              visibleRect.ToUnknownRect().TopLeft());
+              });
       RefPtr<gfx::DrawTarget> dummyDt = gfx::Factory::CreateDrawTarget(
           gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
@@ -2491,8 +2489,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
               }
 
               fonts = std::move(aScaledFonts);
-            },
-            IntPoint(0, 0));
+            });
 
     RefPtr<DrawTarget> dummyDt = Factory::CreateDrawTarget(
         BackendType::SKIA, IntSize(1, 1), SurfaceFormat::A8);
