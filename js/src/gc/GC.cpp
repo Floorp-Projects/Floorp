@@ -919,7 +919,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepTask(rt),
       freeTask(rt),
       decommitTask(rt),
-      nursery_(rt),
+      nursery_(this),
       storeBuffer_(rt, nursery()) {
   setGCMode(JSGC_MODE_GLOBAL);
 }
