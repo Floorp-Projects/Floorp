@@ -46,16 +46,17 @@ nsTArray<nsString> ImportScanner::Stop() {
   return std::move(mUrlsFound);
 }
 
-void ImportScanner::DoScan(Span<const char16_t> aFragment) {
-  MOZ_ASSERT(mState != State::OutsideOfStyleElement);
-  MOZ_ASSERT(mState != State::Done);
+nsTArray<nsString> ImportScanner::Scan(Span<const char16_t> aFragment) {
+  MOZ_ASSERT(ShouldScan());
 
   for (char16_t c : aFragment) {
     mState = Scan(c);
     if (mState == State::Done) {
-      return;
+      break;
     }
   }
+
+  return std::move(mUrlsFound);
 }
 
 auto ImportScanner::Scan(char16_t aChar) -> State {
