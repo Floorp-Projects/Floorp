@@ -903,7 +903,7 @@ BrowserGlue.prototype = {
         this._setSyncAutoconnectDelay();
         break;
       case "fxaccounts:onverified":
-        this._onThisDeviceConnected();
+        this._showSyncStartedDoorhanger();
         break;
       case "fxaccounts:device_connected":
         this._onDeviceConnected(data);
@@ -2682,13 +2682,15 @@ BrowserGlue.prototype = {
     notification.persistence = -1; // Until user closes it
   },
 
-  _onThisDeviceConnected() {
+  _showSyncStartedDoorhanger() {
     let bundle = Services.strings.createBundle(
       "chrome://browser/locale/accounts.properties"
     );
     let productName = gBrandBundle.GetStringFromName("brandShortName");
-    let title = bundle.GetStringFromName("deviceConnDisconnTitle");
-    let body = bundle.GetStringFromName("thisDeviceConnectedBody");
+    let title = bundle.GetStringFromName("syncStartNotification.title");
+    let body = bundle.formatStringFromName("syncStartNotification.body2", [
+      productName,
+    ]);
 
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback") {
@@ -3545,9 +3547,9 @@ BrowserGlue.prototype = {
     let accountsBundle = Services.strings.createBundle(
       "chrome://browser/locale/accounts.properties"
     );
-    let title = accountsBundle.GetStringFromName("deviceConnDisconnTitle");
+    let title = accountsBundle.GetStringFromName("deviceConnectedTitle");
     let body = accountsBundle.formatStringFromName(
-      "otherDeviceConnectedBody" + (deviceName ? "" : ".noDeviceName"),
+      "deviceConnectedBody" + (deviceName ? "" : ".noDeviceName"),
       [deviceName]
     );
 
@@ -3584,8 +3586,10 @@ BrowserGlue.prototype = {
     let bundle = Services.strings.createBundle(
       "chrome://browser/locale/accounts.properties"
     );
-    let title = bundle.GetStringFromName("deviceConnDisconnTitle");
-    let body = bundle.GetStringFromName("thisDeviceDisconnectedBody");
+    let title = bundle.GetStringFromName(
+      "deviceDisconnectedNotification.title"
+    );
+    let body = bundle.GetStringFromName("deviceDisconnectedNotification.body");
 
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback") {
