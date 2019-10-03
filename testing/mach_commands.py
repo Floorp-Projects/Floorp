@@ -664,7 +664,14 @@ class TestInfoCommand(MachCommandBase):
     from datetime import date, timedelta
 
     @Command('test-info', category='testing',
-             description='Display historical test result summary.')
+             description='Display historical test results.')
+    def test_info(self):
+        """
+           All functions implemented as subcommands.
+        """
+
+    @SubCommand('test-info', 'tests',
+             description='Display historical test result summary for named tests.')
     @CommandArgument('test_names', nargs=argparse.REMAINDER,
                      help='Test(s) of interest.')
     @CommandArgument('--branches',
@@ -690,7 +697,7 @@ class TestInfoCommand(MachCommandBase):
                      help='Retrieve and display related Bugzilla bugs.')
     @CommandArgument('--verbose', action='store_true',
                      help='Enable debug logging.')
-    def test_info(self, **params):
+    def test_info_tests(self, **params):
         from mozbuild.base import MozbuildObject
         from mozfile import which
 
