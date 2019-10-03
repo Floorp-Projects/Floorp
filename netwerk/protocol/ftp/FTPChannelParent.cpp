@@ -658,7 +658,6 @@ nsresult FTPChannelParent::ResumeForDiversion() {
   if (mSuspendedForDiversion) {
     nsresult rv = ResumeChannelInternalIfPossible();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      FailDiversion(NS_ERROR_UNEXPECTED);
       return rv;
     }
     mSuspendedForDiversion = false;
@@ -667,7 +666,6 @@ nsresult FTPChannelParent::ResumeForDiversion() {
   // Delete() will tear down IPDL, but ref from underlying nsFTPChannel will
   // keep us alive if there's more data to be delivered to listener.
   if (NS_WARN_IF(NS_FAILED(Delete()))) {
-    FailDiversion(NS_ERROR_UNEXPECTED);
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
