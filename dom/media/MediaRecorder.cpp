@@ -690,12 +690,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       // TrackEncoder will pickup tracks that end itself.
       return;
     }
-
-    MOZ_ASSERT(mEncoder);
-    if (mEncoder) {
-      mEncoder->RemoveMediaStreamTrack(aTrack);
-    }
-
     LOG(LogLevel::Warning,
         ("Session.NotifyTrackRemoved %p Raising error due to track set change",
          this));
