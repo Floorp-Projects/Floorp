@@ -27,7 +27,7 @@ var generateRequestMethods = function(actorSpec, frontProto) {
       // The front was probably destroyed earlier.
       if (!this.actorID) {
         throw new Error(
-          `Can not send request because front '${
+          `Can not send request '${name}' because front '${
             this.typeName
           }' is already destroyed.`
         );
