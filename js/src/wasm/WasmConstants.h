@@ -42,7 +42,13 @@ enum class SectionId {
   GcFeatureOptIn = 42  // Arbitrary, but fits in 7 bits
 };
 
+// WebAssembly type encodings are all single-byte negative SLEB128s, hence:
+//  forall tc:TypeCode. ((tc & SLEB128SignMask) == SLEB128SignBit
+static const uint8_t SLEB128SignMask = 0xc0;
+static const uint8_t SLEB128SignBit = 0x40;
+
 enum class TypeCode {
+
   I32 = 0x7f,  // SLEB128(-0x01)
   I64 = 0x7e,  // SLEB128(-0x02)
   F32 = 0x7d,  // SLEB128(-0x03)
@@ -63,7 +69,7 @@ enum class TypeCode {
   // Type constructor for structure types - unofficial
   Struct = 0x50,  // SLEB128(-0x30)
 
-  // Special code representing the block signature ()->()
+  // The 'empty' case of blocktype.
   BlockVoid = 0x40,  // SLEB128(-0x40)
 
   // Type designator for null - unofficial, will not appear in the binary format
