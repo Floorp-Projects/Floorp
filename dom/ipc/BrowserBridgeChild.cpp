@@ -35,7 +35,6 @@ BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader,
                                        TabId aId)
     : mId{aId},
       mLayersId{0},
-      mIPCOpen(false),
       mFrameLoader(aFrameLoader),
       mBrowsingContext(aBrowsingContext) {}
 
@@ -48,9 +47,6 @@ BrowserBridgeChild::~BrowserBridgeChild() {
 }
 
 already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit() {
-  MOZ_ASSERT(!mIPCOpen);
-  mIPCOpen = true;
-
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(owner->GetOwnerGlobal());
   MOZ_DIAGNOSTIC_ASSERT(docShell);
@@ -246,8 +242,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed(
 }
 
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCOpen = false;
-
   // Ensure we unblock our document's 'load' event (in case the OOP-iframe has
   // been removed before it finished loading, or its subprocess crashed):
   UnblockOwnerDocsLoadEvent();

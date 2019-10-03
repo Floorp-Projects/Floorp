@@ -23,13 +23,7 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace dom {
 
-BrowserBridgeParent::BrowserBridgeParent()
-    :
-#ifdef ACCESSIBILITY
-      mEmbedderAccessibleID(0),
-#endif
-      mIPCOpen(false) {
-}
+BrowserBridgeParent::BrowserBridgeParent() {}
 
 BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 
@@ -37,8 +31,6 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const nsString& aRemoteType,
                                    const WindowGlobalInit& aWindowInit,
                                    const uint32_t& aChromeFlags, TabId aTabId) {
-  mIPCOpen = true;
-
   RefPtr<CanonicalBrowsingContext> browsingContext =
       aWindowInit.browsingContext()->Canonical();
 
@@ -120,7 +112,7 @@ CanonicalBrowsingContext* BrowserBridgeParent::GetBrowsingContext() {
 }
 
 BrowserParent* BrowserBridgeParent::Manager() {
-  MOZ_ASSERT(mIPCOpen);
+  MOZ_ASSERT(CanSend());
   return static_cast<BrowserParent*>(PBrowserBridgeParent::Manager());
 }
 
@@ -231,10 +223,7 @@ IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
   return IPC_OK();
 }
 
-void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCOpen = false;
-  Destroy();
-}
+void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) { Destroy(); }
 
 }  // namespace dom
 }  // namespace mozilla
