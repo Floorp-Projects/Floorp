@@ -257,6 +257,12 @@ void MediaEngineTabVideoSource::Draw() {
     return;
   }
 
+  if (mTrackMain->IsDestroyed()) {
+    // The track was already destroyed by MediaManager. This can happen because
+    // stopping the draw timer is async.
+    return;
+  }
+
   if (mWindow) {
     if (mScrollWithPage || mViewportWidth == INT32_MAX) {
       mWindow->GetInnerWidth(&mViewportWidth);
