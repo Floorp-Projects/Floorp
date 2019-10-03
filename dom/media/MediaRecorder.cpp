@@ -321,32 +321,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
   };
 
-  // Fire a named event, run in main thread task.
-  class DispatchEventRunnable : public Runnable {
-   public:
-    explicit DispatchEventRunnable(Session* aSession,
-                                   const nsAString& aEventName)
-        : Runnable("dom::MediaRecorder::Session::DispatchEventRunnable"),
-          mSession(aSession),
-          mEventName(aEventName) {}
-
-    NS_IMETHOD Run() override {
-      LOG(LogLevel::Debug,
-          ("Session.DispatchEventRunnable s=(%p) e=(%s)", mSession.get(),
-           NS_ConvertUTF16toUTF8(mEventName).get()));
-      MOZ_ASSERT(NS_IsMainThread());
-
-      NS_ENSURE_TRUE(mSession->mRecorder, NS_OK);
-      mSession->mRecorder->DispatchSimpleEvent(mEventName);
-
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<Session> mSession;
-    nsString mEventName;
-  };
-
   class EncoderListener : public MediaEncoderListener {
    public:
     EncoderListener(TaskQueue* aEncoderThread, Session* aSession)
@@ -536,32 +510,32 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
   }
 
-  nsresult Pause() {
+  void Pause() {
     LOG(LogLevel::Debug, ("Session.Pause"));
     MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mEncoder) {
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT_IF(mRunningState.isOk(),
+                  mRunningState.unwrap() != RunningState::Idling);
+    if (mRunningState.isErr() ||
+        mRunningState.unwrap() == RunningState::Stopping ||
+        mRunningState.unwrap() == RunningState::Stopped) {
+      return;
     }
-
+    MOZ_ASSERT(mEncoder);
     mEncoder->Suspend();
-    NS_DispatchToMainThread(
-        new DispatchEventRunnable(this, NS_LITERAL_STRING("pause")));
-    return NS_OK;
   }
 
-  nsresult Resume() {
+  void Resume() {
     LOG(LogLevel::Debug, ("Session.Resume"));
     MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mEncoder) {
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT_IF(mRunningState.isOk(),
+                  mRunningState.unwrap() != RunningState::Idling);
+    if (mRunningState.isErr() ||
+        mRunningState.unwrap() == RunningState::Stopping ||
+        mRunningState.unwrap() == RunningState::Stopped) {
+      return;
     }
-
+    MOZ_ASSERT(mEncoder);
     mEncoder->Resume();
-    NS_DispatchToMainThread(
-        new DispatchEventRunnable(this, NS_LITERAL_STRING("resume")));
-    return NS_OK;
   }
 
   void RequestData() {
@@ -1293,63 +1267,128 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
 void MediaRecorder::Stop(ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Stop %p", this));
   MediaRecorderReporter::RemoveMediaRecorder(this);
+
+  // When a MediaRecorder object’s stop() method is invoked, the UA MUST run the
+  // following steps:
+
+  // 1. Let recorder be the MediaRecorder object on which the method was
+  //    invoked.
+
+  // 2. If recorder’s state attribute is inactive, abort these steps.
   if (mState == RecordingState::Inactive) {
     return;
   }
+
+  // 3. Inactivate the recorder with recorder.
   Inactivate();
+
+  // 4. Queue a task, using the DOM manipulation task source, that runs the
+  //    following steps:
+  //   1. Stop gathering data.
+  //   2. Let blob be the Blob of collected data so far, then fire a blob event
+  //      named dataavailable at recorder with blob.
+  //   3. Fire an event named stop at recorder.
   MOZ_ASSERT(mSessions.Length() > 0);
   mSessions.LastElement()->Stop();
+
+  // 5. return undefined.
 }
 
 void MediaRecorder::Pause(ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Pause %p", this));
+
+  // When a MediaRecorder object’s pause() method is invoked, the UA MUST run
+  // the following steps:
+
+  // 1. If state is inactive, throw an InvalidStateError DOMException and abort
+  //    these steps.
   if (mState == RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
+  // 2. If state is paused, abort these steps.
   if (mState == RecordingState::Paused) {
     return;
   }
 
-  MOZ_ASSERT(mSessions.Length() > 0);
-  nsresult rv = mSessions.LastElement()->Pause();
-  if (NS_FAILED(rv)) {
-    NotifyError(rv);
-    return;
-  }
-
+  // 3. Set state to paused, and queue a task, using the DOM manipulation task
+  //    source, that runs the following steps:
   mState = RecordingState::Paused;
+  MOZ_ASSERT(!mSessions.IsEmpty());
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaRecorder::Pause", [session = mSessions.LastElement(),
+                               recorder = RefPtr<MediaRecorder>(this)] {
+        // 1. Stop gathering data into blob (but keep it available so that
+        //    recording can be resumed in the future).
+        session->Pause();
+
+        // 2. Let target be the MediaRecorder context object. Fire an event
+        //    named pause at target.
+        recorder->DispatchSimpleEvent(NS_LITERAL_STRING("pause"));
+      }));
+
+  // 4. return undefined.
 }
 
 void MediaRecorder::Resume(ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Resume %p", this));
+
+  // When a MediaRecorder object’s resume() method is invoked, the UA MUST run
+  // the following steps:
+
+  // 1. If state is inactive, throw an InvalidStateError DOMException and abort
+  //    these steps.
   if (mState == RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
+  // 2. If state is recording, abort these steps.
   if (mState == RecordingState::Recording) {
     return;
   }
 
-  MOZ_ASSERT(mSessions.Length() > 0);
-  nsresult rv = mSessions.LastElement()->Resume();
-  if (NS_FAILED(rv)) {
-    NotifyError(rv);
-    return;
-  }
-
+  // 3. Set state to recording, and queue a task, using the DOM manipulation
+  //    task source, that runs the following steps:
   mState = RecordingState::Recording;
+  MOZ_ASSERT(!mSessions.IsEmpty());
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaRecorder::Resume", [session = mSessions.LastElement(),
+                                recorder = RefPtr<MediaRecorder>(this)] {
+        // 1. Resume (or continue) gathering data into the current blob.
+        session->Resume();
+
+        // 2. Let target be the MediaRecorder context object. Fire an event
+        //    named resume at target.
+        recorder->DispatchSimpleEvent(NS_LITERAL_STRING("resume"));
+      }));
+
+  // 4. return undefined.
 }
 
 void MediaRecorder::RequestData(ErrorResult& aResult) {
+  LOG(LogLevel::Debug, ("MediaRecorder.RequestData %p", this));
+
+  // When a MediaRecorder object’s requestData() method is invoked, the UA MUST
+  // run the following steps:
+
+  // 1. If state is inactive throw an InvalidStateError DOMException and
+  //    terminate these steps. Otherwise the UA MUST queue a task, using the DOM
+  //    manipulation task source, that runs the following steps:
+  //   1. Let blob be the Blob of collected data so far and let target be the
+  //      MediaRecorder context object, then fire a blob event named
+  //      dataavailable at target with blob. (Note that blob will be empty if no
+  //      data has been gathered yet.)
+  //   2. Create a new Blob and gather subsequent data into it.
   if (mState == RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
   MOZ_ASSERT(mSessions.Length() > 0);
   mSessions.LastElement()->RequestData();
+
+  // 2. return undefined.
 }
 
 JSObject* MediaRecorder::WrapObject(JSContext* aCx,
