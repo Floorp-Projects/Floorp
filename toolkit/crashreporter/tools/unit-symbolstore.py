@@ -21,7 +21,7 @@ from mozpack.manifests import InstallManifest
 import mozpack.path as mozpath
 
 import symbolstore
-from symbolstore import normpath
+from symbolstore import realpath
 
 # Some simple functions to mock out files that the platform-specific dumpers will accept.
 # dump_syms itself will not be run (we mock that call out), but we can't override
@@ -255,13 +255,13 @@ class TestGeneratedFilePath(HelperMixin, unittest.TestCase):
 
 
 if target_platform() == 'WINNT':
-    class TestNormpath(HelperMixin, unittest.TestCase):
-        def test_normpath(self):
+    class TestRealpath(HelperMixin, unittest.TestCase):
+        def test_realpath(self):
             # self.test_dir is going to be 8.3 paths...
             junk = os.path.join(self.test_dir, 'x')
             with open(junk, 'wb') as o:
                 o.write('x')
-            fixed_dir = os.path.dirname(normpath(junk))
+            fixed_dir = os.path.dirname(realpath(junk))
             files = [
                 'one\\two.c',
                 'three\\Four.d',
@@ -274,7 +274,7 @@ if target_platform() == 'WINNT':
                 self.make_dirs(full_path)
                 with open(full_path, 'wb') as o:
                     o.write('x')
-                fixed_path = normpath(full_path.lower())
+                fixed_path = realpath(full_path.lower())
                 fixed_path = os.path.relpath(fixed_path, fixed_dir)
                 self.assertEqual(rel_path, fixed_path)
 
@@ -340,8 +340,8 @@ class TestInstallManifest(HelperMixin, unittest.TestCase):
         self.manifest = InstallManifest()
         self.canonical_mapping = {}
         for s in ['src1', 'src2']:
-            srcfile = normpath(os.path.join(self.srcdir, s))
-            objfile = normpath(os.path.join(self.objdir, s))
+            srcfile = realpath(os.path.join(self.srcdir, s))
+            objfile = realpath(os.path.join(self.objdir, s))
             self.canonical_mapping[objfile] = srcfile
             self.manifest.add_copy(srcfile, s)
         self.manifest_file = os.path.join(self.test_dir, 'install-manifest')
@@ -421,10 +421,10 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
         for s, o in files:
             srcfile = os.path.join(self.srcdir, s)
             self.make_file(srcfile)
-            expected_files.append(normpath(srcfile))
+            expected_files.append(realpath(srcfile))
             objfile = os.path.join(self.objdir, o)
             self.make_file(objfile)
-            file_mapping[normpath(objfile)] = normpath(srcfile)
+            file_mapping[realpath(objfile)] = realpath(srcfile)
             dumped_files.append(os.path.join(self.objdir, 'x', 'y',
                                              '..', '..', o))
         # mock the dump_syms output
