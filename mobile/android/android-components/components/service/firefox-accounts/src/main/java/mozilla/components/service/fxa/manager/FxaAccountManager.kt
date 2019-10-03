@@ -587,7 +587,11 @@ open class FxaAccountManager(
                         account.close()
                         // Delete persisted state.
                         getAccountStorage().clear()
+                        // Even though we might not have Sync enabled, clear out sync-related storage
+                        // layers as well; if they're already empty (unused), nothing bad will happen
+                        // and extra overhead is quite small.
                         SyncAuthInfoCache(context).clear()
+                        SyncEnginesStorage(context).clear()
                         // Re-initialize account.
                         account = createAccount(serverConfig)
 

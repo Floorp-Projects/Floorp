@@ -46,5 +46,12 @@ class SyncEnginesStorage(private val context: Context) {
         storage().edit().putBoolean(engine.nativeName, status).apply()
     }
 
+    /**
+     * Clears out any stored [SyncEngine] state.
+     */
+    internal fun clear() {
+        storage().edit().clear().apply()
+    }
+
     private fun storage() = context.getSharedPreferences(SYNC_ENGINES_KEY, Context.MODE_PRIVATE)
 }
