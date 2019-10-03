@@ -1930,7 +1930,7 @@ static SECStatus
 sftk_HMACCmp(CK_ULONG *copyLen, unsigned char *sig, unsigned int sigLen,
              unsigned char *hash, unsigned int hashLen)
 {
-    return (PORT_Memcmp(sig, hash, *copyLen) == 0) ? SECSuccess : SECFailure;
+    return (NSS_SecureMemcmp(sig, hash, *copyLen) == 0) ? SECSuccess : SECFailure;
 }
 
 /*
@@ -2046,7 +2046,7 @@ sftk_SSLMACVerify(SFTKSSLMACInfo *info, unsigned char *sig, unsigned int sigLen,
     info->update(info->hashContext, ssl_pad_2, info->padSize);
     info->update(info->hashContext, hash, hashLen);
     info->end(info->hashContext, tmpBuf, &out, SFTK_MAX_MAC_LENGTH);
-    return (PORT_Memcmp(sig, tmpBuf, info->macSize) == 0) ? SECSuccess : SECFailure;
+    return (NSS_SecureMemcmp(sig, tmpBuf, info->macSize) == 0) ? SECSuccess : SECFailure;
 }
 
 /*
@@ -3558,7 +3558,7 @@ NSC_VerifyFinal(CK_SESSION_HANDLE hSession,
         /* must be block cipher MACing */
         crv = CKR_SIGNATURE_LEN_RANGE;
     } else if (CKR_OK == (crv = sftk_MACFinal(context))) {
-        if (PORT_Memcmp(pSignature, context->macBuf, ulSignatureLen))
+        if (NSS_SecureMemcmp(pSignature, context->macBuf, ulSignatureLen))
             crv = CKR_SIGNATURE_INVALID;
     }
 
@@ -7863,7 +7863,9 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
             CK_BYTE hashbuf[HASH_LENGTH_MAX];
             CK_BYTE *prk; /* psuedo-random key */
             CK_ULONG prkLen;
-            CK_BYTE *okm; /* output keying material */
+            CK_BYTE *okm;                 /* output keying material */
+            unsigned allocated_space = 0; /* If we need more work space, track it */
+            unsigned char *key_buf = &key_block[0];
 
             rawHash = HASH_GetRawHashObject(hashType);
             if (rawHash == NULL || rawHash->length > sizeof(hashbuf)) {
@@ -7879,7 +7881,7 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
                 crv = CKR_MECHANISM_PARAM_INVALID;
                 break;
             }
-            if (keySize == 0 || keySize > sizeof key_block ||
+            if (keySize == 0 ||
                 (!params->bExpand && keySize > hashLen) ||
                 (params->bExpand && keySize > 255 * hashLen)) {
                 crv = CKR_TEMPLATE_INCONSISTENT;
@@ -7929,34 +7931,49 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
                 /* T(1) = HMAC-Hash(prk, "" | info | 0x01)
                  * T(n) = HMAC-Hash(prk, T(n-1) | info | n
                  * key material = T(1) | ... | T(n)
+                 *
+                 * If the requested output length does not fit
+                 * within |key_block|, allocate space for expansion.
                  */
                 HMACContext *hmac;
                 CK_BYTE bi;
-                unsigned iterations = PR_ROUNDUP(keySize, hashLen) / hashLen;
+                unsigned n_bytes = PR_ROUNDUP(keySize, hashLen);
+                unsigned iterations = n_bytes / hashLen;
                 hmac = HMAC_Create(rawHash, prk, prkLen, isFIPS);
                 if (hmac == NULL) {
                     crv = CKR_HOST_MEMORY;
                     break;
                 }
-                for (bi = 1; bi <= iterations; ++bi) {
+                if (n_bytes > sizeof(key_block)) {
+                    key_buf = PORT_Alloc(n_bytes);
+                    if (key_buf == NULL) {
+                        crv = CKR_HOST_MEMORY;
+                        break;
+                    }
+                    allocated_space = n_bytes;
+                }
+                for (bi = 1; bi <= iterations && bi > 0; ++bi) {
                     unsigned len;
                     HMAC_Begin(hmac);
                     if (bi > 1) {
-                        HMAC_Update(hmac, key_block + ((bi - 2) * hashLen), hashLen);
+                        HMAC_Update(hmac, key_buf + ((bi - 2) * hashLen), hashLen);
                     }
                     if (params->ulInfoLen != 0) {
                         HMAC_Update(hmac, params->pInfo, params->ulInfoLen);
                     }
                     HMAC_Update(hmac, &bi, 1);
-                    HMAC_Finish(hmac, key_block + ((bi - 1) * hashLen), &len,
+                    HMAC_Finish(hmac, key_buf + ((bi - 1) * hashLen), &len,
                                 hashLen);
                     PORT_Assert(len == hashLen);
                 }
                 HMAC_Destroy(hmac, PR_TRUE);
-                okm = key_block;
+                okm = key_buf;
             }
             /* key material = prk */
             crv = sftk_forceAttribute(key, CKA_VALUE, okm, keySize);
+            if (allocated_space) {
+                PORT_ZFree(key_buf, allocated_space);
+            }
             break;
         } /* end of CKM_NSS_HKDF_* */
 
