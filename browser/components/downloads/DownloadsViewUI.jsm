@@ -169,6 +169,10 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
   connect() {
     let document = this.element.ownerDocument;
     let downloadListItemFragment = gDownloadListItemFragments.get(document);
+    // When changing the markup within the fragment, please ensure that
+    // the functions within DownloadsView still operate correctly.
+    // E.g. onDownloadClick() relies on brittle logic and performs/prevents
+    // actions based on the check if originaltarget was not a button.
     if (!downloadListItemFragment) {
       let MozXULElement = document.defaultView.MozXULElement;
       downloadListItemFragment = MozXULElement.parseXULToFragment(`
