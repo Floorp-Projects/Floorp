@@ -6896,7 +6896,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam) {
           pInputs[i].dwID,                               // aIdentifier
           ScreenIntPoint::FromUnknownPoint(touchPoint),  // aScreenPoint
           /* radius, if known */
-          pInputs[i].dwFlags & TOUCHINPUTMASKF_CONTACTAREA
+          pInputs[i].dwMask & TOUCHINPUTMASKF_CONTACTAREA
               ? ScreenSize(TOUCH_COORD_TO_PIXEL(pInputs[i].cxContact) / 2,
                            TOUCH_COORD_TO_PIXEL(pInputs[i].cyContact) / 2)
               : ScreenSize(1, 1),  // aRadius
