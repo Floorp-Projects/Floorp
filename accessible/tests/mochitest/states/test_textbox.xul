@@ -25,42 +25,6 @@
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
-      // Ordinary textbox
-      testStates(getInput("textbox"),
-                 STATE_FOCUSABLE,
-                 EXT_STATE_EDITABLE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE,
-                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 "ordinary textbox");
-
-      //////////////////////////////////////////////////////////////////////////
-      // Password textbox
-      testStates(getInput("password"),
-                 STATE_FOCUSABLE | STATE_PROTECTED,
-                 EXT_STATE_EDITABLE,
-                 STATE_UNAVAILABLE,
-                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 "password textbox");
-
-      //////////////////////////////////////////////////////////////////////////
-      // Readonly textbox
-      testStates(getInput("readonly_textbox"),
-                 STATE_FOCUSABLE | STATE_READONLY,
-                 EXT_STATE_EDITABLE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE,
-                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 "readonly textbox");
-
-      //////////////////////////////////////////////////////////////////////////
-      // Disabled textbox
-      testStates(getInput("disabled_textbox"),
-                 STATE_UNAVAILABLE,
-                 EXT_STATE_EDITABLE,
-                 STATE_FOCUSABLE | STATE_PROTECTED,
-                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 "readonly textbox");
-
-      //////////////////////////////////////////////////////////////////////////
       // Search textbox without search button, searches as you type and filters
       // a separate control.
       testStates(getInput("searchbox"),
@@ -106,12 +70,6 @@
   </body>
 
   <vbox flex="1">
-    <textbox id="textbox"/>
-    <textbox id="password" type="password"/>
-
-    <textbox id="readonly_textbox" readonly="true"/>
-    <textbox id="disabled_textbox" disabled="true"/>
-
     <search-textbox id="searchbox" flex="1" results="historyTree"/>
     <search-textbox id="searchfield" placeholder="Search all add-ons"
                     searchbutton="true"/>

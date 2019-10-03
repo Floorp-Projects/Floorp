@@ -4,6 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="Tests: XUL label text interface">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -39,9 +40,9 @@
       testCharAtOffset(ids, 1, "e", 1, 2);
 
       //////////////////////////////////////////////////////////////////////////
-      // XUL textbox
+      // HTML input
 
-      testTextAtOffset([ getNode("tbox1").inputField ], BOUNDARY_LINE_START,
+      testTextAtOffset([ getNode("tbox1") ], BOUNDARY_LINE_START,
                        [ [ 0, 4, "test", 0, 4 ] ]);
 
       SimpleTest.finish();
@@ -73,6 +74,6 @@
   <label id="label1" value="Hello"/>
   <label id="label2">Hello</label>
 
-  <textbox id="tbox1" value="test"/>
+  <html:input id="tbox1" value="test"/>
   </vbox>
 </window>
