@@ -143,6 +143,7 @@ STATIC_ATOMS = [
     Atom("aria_valuemin", "aria-valuemin"),
     Atom("aria_valuenow", "aria-valuenow"),
     Atom("arrow", "arrow"),
+    Atom("arrowscrollbox", "arrowscrollbox"),
     Atom("article", "article"),
     Atom("as", "as"),
     Atom("ascending", "ascending"),

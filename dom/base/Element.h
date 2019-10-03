@@ -459,8 +459,6 @@ class Element : public FragmentOrElement {
     }
   }
 
-  mozilla::StyleUrlOrNone GetBindingURL(Document* aDocument);
-
   Directionality GetComputedDirectionality() const;
 
   static const uint32_t kAllServoDescendantBits =
