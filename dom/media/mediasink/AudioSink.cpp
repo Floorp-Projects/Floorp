@@ -304,7 +304,7 @@ void AudioSink::Drained() {
 void AudioSink::Errored() {
   SINK_LOG("Errored");
   mPlaybackComplete = true;
-  mEndedPromise.Reject(NS_ERROR_FAILURE, __func__);
+  mEndedPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
 }
 
 void AudioSink::CheckIsAudible(const AudioData* aData) {
