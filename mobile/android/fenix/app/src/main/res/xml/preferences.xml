@@ -61,7 +61,7 @@
         <androidx.preference.SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_launch_links_in_private_tab"
-            android:title="@string/preferences_launch_links_in_private_mode" />
+            android:title="@string/preferences_open_links_in_a_private_tab" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"
             android:key="@string/pref_key_add_private_browsing_shortcut"
