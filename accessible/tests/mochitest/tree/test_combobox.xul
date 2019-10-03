@@ -4,6 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="Accessible XUL menulist and textbox @autocomplete hierarchy tests">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -57,27 +58,16 @@
       // textbox@type=autocomplete #1 (history)
 
       accTree = {
-        // textbox
-        role: ROLE_AUTOCOMPLETE,
+        // html:input
+        role: ROLE_ENTRY,
         children: [
           {
-            // html:input
-            role: ROLE_ENTRY,
-            children: [
-              {
-                // #text
-                role: ROLE_TEXT_LEAF,
-                name: "http://mochi.test:8888/redirect-a11y.html",
-                children: []
-              }
-            ]
-          },
-          {
-            // xul:menupopup
-            role: ROLE_COMBOBOX_LIST, // context menu popup
+            // #text
+            role: ROLE_TEXT_LEAF,
+            name: "http://mochi.test:8888/redirect-a11y.html",
             children: []
           }
-        ]
+        ],
       };
 
       testAccessibleTree("autocomplete", accTree);
@@ -117,9 +107,10 @@
         </menupopup>
       </menulist>
 
-      <textbox id="autocomplete" type="autocomplete"
-               autocompletesearch="unifiedcomplete"
-               value="http://mochi.test:8888/redirect-a11y.html"/>
+      <html:input is="autocomplete-input"
+                  id="autocomplete"
+                  autocompletesearch="unifiedcomplete"
+                  value="http://mochi.test:8888/redirect-a11y.html"/>
     </vbox>
   </hbox>
 
