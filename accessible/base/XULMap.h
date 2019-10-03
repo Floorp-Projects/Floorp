@@ -83,11 +83,6 @@ XULMAP(popup, [](Element* aElement, Accessible* aContext) {
 })
 
 XULMAP(textbox, [](Element* aElement, Accessible* aContext) -> Accessible* {
-  if (aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::autocomplete, eIgnoreCase)) {
-    return new XULComboboxAccessible(aElement, aContext->Document());
-  }
-
   return new EnumRoleAccessible<roles::SECTION>(aElement, aContext->Document());
 })
 
