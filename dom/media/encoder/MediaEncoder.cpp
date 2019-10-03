@@ -1021,13 +1021,13 @@ size_t MediaEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
   return size;
 }
 
-void MediaEncoder::SetVideoKeyFrameInterval(int32_t aVideoKeyFrameInterval) {
+void MediaEncoder::SetVideoKeyFrameInterval(uint32_t aVideoKeyFrameInterval) {
   if (!mVideoEncoder) {
     return;
   }
 
   MOZ_ASSERT(mEncoderThread);
-  nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<int32_t>(
+  nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<uint32_t>(
       "mozilla::VideoTrackEncoder::SetKeyFrameInterval", mVideoEncoder,
       &VideoTrackEncoder::SetKeyFrameInterval, aVideoKeyFrameInterval));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
