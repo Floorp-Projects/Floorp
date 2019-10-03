@@ -136,7 +136,7 @@ open class FenixApplication : Application() {
      * private mode was in use during the previous session.
      */
     fun maybeClearPrivateMode(settings: Settings = settings()) {
-        if (!settings.alwaysOpenInPrivateMode) settings.usePrivateMode = false
+        if (!settings.openLinksInAPrivateTab) settings.usePrivateMode = false
     }
 
     private fun registerRxExceptionHandling() {

@@ -50,7 +50,7 @@ class IntentReceiverActivity : Activity() {
         if (didLaunchPrivateLink && Browsers.all(this).isDefaultBrowser) {
             this.settings().openLinksInAPrivateTab = true
         } else if (!Browsers.all(this).isDefaultBrowser) {
-            /* If the user has unset us as the default browser, unset alwaysOpenInPrivateMode */
+            /* If the user has unset us as the default browser, unset openLinksInAPrivateTab */
             this.settings().openLinksInAPrivateTab = false
         }
 

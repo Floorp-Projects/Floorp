@@ -30,8 +30,8 @@ class FenixApplicationTest {
     }
 
     @Test
-    fun `GIVEN alwaysOpenInPrivateMode is active WHEN maybeClearPrivateMode is called THEN private mode should not be changed`() {
-        every { settings.alwaysOpenInPrivateMode } returns true
+    fun `GIVEN openLinksInAPrivateTab is active WHEN maybeClearPrivateMode is called THEN private mode should not be changed`() {
+        every { settings.openLinksInAPrivateTab } returns true
 
         application.maybeClearPrivateMode(settings)
 
@@ -39,8 +39,8 @@ class FenixApplicationTest {
     }
 
     @Test
-    fun `GIVEN alwaysOpenInPrivateMode is inactive WHEN maybeClearPrivateMode is called THEN private mode should be disabled`() {
-        every { settings.alwaysOpenInPrivateMode } returns false
+    fun `GIVEN openLinksInAPrivateTab is inactive WHEN maybeClearPrivateMode is called THEN private mode should be disabled`() {
+        every { settings.openLinksInAPrivateTab } returns false
 
         application.maybeClearPrivateMode(settings)
 
