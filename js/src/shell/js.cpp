@@ -4024,11 +4024,12 @@ static bool ShellBuildId(JS::BuildIdCharVector* buildId);
 static void WorkerMain(WorkerInput* input) {
   MOZ_ASSERT(input->parentRuntime);
 
-  JSContext* cx = JS_NewContext(8L * 1024L * 1024L, 2L * 1024L * 1024L,
-                                input->parentRuntime);
+  JSContext* cx = JS_NewContext(8L * 1024L * 1024L, input->parentRuntime);
   if (!cx) {
     return;
   }
+
+  JS_SetGCParameter(cx, JSGC_MAX_NURSERY_BYTES, 2L * 1024L * 1024L);
 
   ShellContext* sc = js_new<ShellContext>(cx);
   if (!sc) {
@@ -11386,13 +11387,15 @@ int main(int argc, char** argv, char** envp) {
     return 1;
   }
 
-  size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
-
   /* Use the same parameters as the browser in xpcjsruntime.cpp. */
-  JSContext* const cx = JS_NewContext(JS::DefaultHeapMaxBytes, nurseryBytes);
+  JSContext* const cx = JS_NewContext(JS::DefaultHeapMaxBytes);
   if (!cx) {
     return 1;
   }
+
+  size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
+  JS_SetGCParameter(cx, JSGC_MAX_NURSERY_BYTES, nurseryBytes);
+
   auto destroyCx = MakeScopeExit([cx] { JS_DestroyContext(cx); });
 
   UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
