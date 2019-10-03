@@ -34,6 +34,7 @@ data class CounterMetricType(
      * @param amount This is the amount to increment the counter by, defaulting to 1 if called
      * without parameters.
      */
+    @JvmOverloads
     fun add(amount: Int = 1) {
         if (!shouldRecord(logger)) {
             return
@@ -60,6 +61,7 @@ data class CounterMetricType(
      * @return true if metric value exists, otherwise false
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testHasValue(pingName: String = sendInPings.first()): Boolean {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
@@ -78,6 +80,7 @@ data class CounterMetricType(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testGetValue(pingName: String = sendInPings.first()): Int {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()

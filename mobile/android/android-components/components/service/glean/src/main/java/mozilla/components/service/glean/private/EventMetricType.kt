@@ -47,6 +47,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      *              identifiers. This is used for events where additional richer context is needed.
      *              The maximum length for values is defined by [MAX_LENGTH_EXTRA_KEY_VALUE]
      */
+    @JvmOverloads
     fun record(extra: Map<ExtraKeysEnum, String>? = null) {
         if (!shouldRecord(logger)) {
             return
@@ -96,6 +97,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      * @return true if metric value exists, otherwise false
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testHasValue(pingName: String = sendInPings.first()): Boolean {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
@@ -117,6 +119,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testGetValue(pingName: String = sendInPings.first()): List<RecordedEventData> {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()

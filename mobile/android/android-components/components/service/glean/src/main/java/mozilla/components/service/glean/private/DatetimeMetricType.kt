@@ -34,6 +34,7 @@ data class DatetimeMetricType(
      *
      * @param value The [Date] value to set. If not provided, will record the current time.
      */
+    @JvmOverloads
     fun set(value: Date = Date()) {
         if (!shouldRecord(logger)) {
             return
@@ -85,6 +86,7 @@ data class DatetimeMetricType(
      * @return true if metric value exists, otherwise false
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testHasValue(pingName: String = sendInPings.first()): Boolean {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
@@ -104,6 +106,7 @@ data class DatetimeMetricType(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testGetValueAsString(pingName: String = sendInPings.first()): String {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()
@@ -126,6 +129,7 @@ data class DatetimeMetricType(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testGetValue(pingName: String = sendInPings.first()): Date {
         @Suppress("EXPERIMENTAL_API_USAGE")
         Dispatchers.API.assertInTestingMode()

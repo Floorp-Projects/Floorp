@@ -151,6 +151,7 @@ data class TimespanMetricType(
      * @return true if metric value exists, otherwise false
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testHasValue(pingName: String = sendInPings.first()): Boolean {
         return TimespansStorageEngine.getSnapshotWithTimeUnit(pingName, false)?.get(identifier) != null
     }
@@ -165,6 +166,7 @@ data class TimespanMetricType(
      * @throws [NullPointerException] if no value is stored
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    @JvmOverloads
     fun testGetValue(pingName: String = sendInPings.first()): Long {
         return TimespansStorageEngine.getSnapshotWithTimeUnit(pingName, false)!![identifier]!!.second
     }
