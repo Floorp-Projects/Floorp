@@ -26,7 +26,7 @@ const {
   MIN_COLUMN_WIDTH,
   DEFAULT_COLUMN_WIDTH,
 } = require("../constants");
-const { getWaterfallScale } = require("../selectors/index");
+const { getColumns, getWaterfallScale } = require("../selectors/index");
 const { getFormattedTime } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const RequestListHeaderContextMenu = require("../widgets/RequestListHeaderContextMenu");
@@ -601,7 +601,7 @@ class RequestListHeader extends Component {
 
 module.exports = connect(
   state => ({
-    columns: state.ui.columns,
+    columns: getColumns(state),
     columnsData: state.ui.columnsData,
     firstRequestStartedMs: state.requests.firstStartedMs,
     scale: getWaterfallScale(state),
