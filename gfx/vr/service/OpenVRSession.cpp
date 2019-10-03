@@ -870,7 +870,7 @@ bool OpenVRSession::CreateD3DObjects() {
 void OpenVRSession::Shutdown() {
   StopHapticTimer();
   StopHapticThread();
-  if (mVRSystem || mVRCompositor || mVRSystem) {
+  if (mVRSystem || mVRCompositor || mVRChaperone) {
     ::vr::VR_Shutdown();
     mVRCompositor = nullptr;
     mVRChaperone = nullptr;

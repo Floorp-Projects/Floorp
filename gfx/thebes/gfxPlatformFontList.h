@@ -303,6 +303,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // get the system default font family
   FontFamily GetDefaultFont(const gfxFontStyle* aStyle);
 
+  // get the "ultimate" default font, for use if the font list is otherwise
+  // unusable (e.g. in the middle of being updated)
+  gfxFontEntry* GetDefaultFontEntry() { return mDefaultFontEntry.get(); }
+
   /**
    * Look up a font by name on the host platform.
    *
@@ -796,6 +800,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   nsRefPtrHashtable<nsPtrHashKey<mozilla::fontlist::Face>, gfxFontEntry>
       mFontEntries;
+
+  RefPtr<gfxFontEntry> mDefaultFontEntry;
 
   bool mFontFamilyWhitelistActive;
 };

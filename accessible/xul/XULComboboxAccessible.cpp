@@ -25,15 +25,11 @@ using namespace mozilla::a11y;
 XULComboboxAccessible::XULComboboxAccessible(nsIContent* aContent,
                                              DocAccessible* aDoc)
     : AccessibleWrap(aContent, aDoc) {
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                         nsGkAtoms::autocomplete, eIgnoreCase))
-    mGenericTypes |= eAutoComplete;
-  else
-    mGenericTypes |= eCombobox;
+  mGenericTypes |= eCombobox;
 }
 
 role XULComboboxAccessible::NativeRole() const {
-  return IsAutoComplete() ? roles::AUTOCOMPLETE : roles::COMBOBOX;
+  return roles::COMBOBOX;
 }
 
 uint64_t XULComboboxAccessible::NativeState() const {
@@ -119,8 +115,7 @@ void XULComboboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 // Widgets
 
 bool XULComboboxAccessible::IsActiveWidget() const {
-  if (IsAutoComplete() ||
-      mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
                                          nsGkAtoms::_true, eIgnoreCase)) {
     int32_t childCount = mChildren.Length();
     for (int32_t idx = 0; idx < childCount; idx++) {
@@ -135,17 +130,6 @@ bool XULComboboxAccessible::IsActiveWidget() const {
 }
 
 bool XULComboboxAccessible::AreItemsOperable() const {
-  if (IsAutoComplete()) {
-    nsCOMPtr<nsIAutoCompleteInput> autoCompleteInputElm =
-        do_QueryInterface(mContent);
-    if (autoCompleteInputElm) {
-      bool isOpen = false;
-      autoCompleteInputElm->GetPopupOpen(&isOpen);
-      return isOpen;
-    }
-    return false;
-  }
-
   nsCOMPtr<nsIDOMXULMenuListElement> menuListElm = Elm()->AsXULMenuList();
   if (menuListElm) {
     bool isOpen = false;

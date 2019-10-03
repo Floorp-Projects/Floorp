@@ -249,7 +249,7 @@ add_task(async function test_page_contextmenu_unconfigured() {
     "Send tab to device is enabled"
   );
   checkPopup([
-    { label: "Not Connected to Firefox", disabled: true },
+    { label: "Not Signed In", disabled: true },
     "----",
     { label: "Sign in to Firefox..." },
     { label: "Learn About Sending Tabs..." },
