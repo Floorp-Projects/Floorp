@@ -91,8 +91,6 @@ nsresult MediaEngineTabVideoSource::StopRunnable::Run() {
   if (mVideoSource->mTabSource) {
     mVideoSource->mTabSource->NotifyStreamStop(mVideoSource->mWindow);
   }
-  mVideoSource->mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-  mVideoSource->mTrackMain = nullptr;
   return NS_OK;
 }
 
@@ -101,6 +99,12 @@ nsresult MediaEngineTabVideoSource::DestroyRunnable::Run() {
 
   mVideoSource->mWindow = nullptr;
   mVideoSource->mTabSource = nullptr;
+
+  if (mVideoSource->mTrackMain) {
+    mVideoSource->mTrackMain->End();
+  }
+  mVideoSource->mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
+  mVideoSource->mTrackMain = nullptr;
 
   return NS_OK;
 }
@@ -216,10 +220,6 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
 nsresult MediaEngineTabVideoSource::Deallocate() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-
-  if (mTrack) {
-    mTrack->End();
-  }
 
   NS_DispatchToMainThread(do_AddRef(new DestroyRunnable(this)));
   mState = kReleased;
