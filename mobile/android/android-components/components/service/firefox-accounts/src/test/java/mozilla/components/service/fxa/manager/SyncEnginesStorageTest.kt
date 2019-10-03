@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -38,5 +39,8 @@ class SyncEnginesStorageTest {
                 SyncEngine.Other("test") to true
             ), store.getStatus()
         )
+
+        store.clear()
+        assertTrue(store.getStatus().isNullOrEmpty())
     }
 }

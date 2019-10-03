@@ -29,6 +29,7 @@ import mozilla.components.service.fxa.manager.Event
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.authErrorRegistry
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.fxa.sharing.ShareableAuthInfo
 import mozilla.components.service.fxa.sync.SyncManager
@@ -99,6 +100,7 @@ class FxaAccountManagerTest {
         // manager instances will be kept around.
         authErrorRegistry.unregisterObservers()
         SyncAuthInfoCache(testContext).clear()
+        SyncEnginesStorage(testContext).clear()
     }
 
     @Test
@@ -953,9 +955,16 @@ class FxaAccountManagerTest {
         reset(accountObserver)
         reset(accountStorage)
         `when`(mockAccount.disconnectAsync()).thenReturn(CompletableDeferred(true))
+
+        // Simulate SyncManager populating SyncEnginesStorage with some state.
+        SyncEnginesStorage(testContext).setStatus(SyncEngine.History, true)
+        SyncEnginesStorage(testContext).setStatus(SyncEngine.Passwords, false)
+        assertTrue(SyncEnginesStorage(testContext).getStatus().isNotEmpty())
+
         verify(mockAccount, never()).disconnectAsync()
         manager.logoutAsync().await()
 
+        assertTrue(SyncEnginesStorage(testContext).getStatus().isEmpty())
         verify(accountObserver, never()).onAuthenticated(any(), any())
         verify(accountObserver, never()).onProfileUpdated(any())
         verify(accountObserver, times(1)).onLoggedOut()
