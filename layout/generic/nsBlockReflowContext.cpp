@@ -347,7 +347,10 @@ bool nsBlockReflowContext::PlaceBlock(const ReflowInput& aReflowInput,
   // Compute collapsed block-end margin value.
   WritingMode wm = aReflowInput.GetWritingMode();
   WritingMode parentWM = mMetrics.GetWritingMode();
-  if (aReflowStatus.IsComplete()) {
+
+  // Don't apply the block-end margin if the block has a *later* sibling across
+  // column-span split.
+  if (aReflowStatus.IsComplete() && !mFrame->HasColumnSpanSiblings()) {
     aBEndMarginResult = mMetrics.mCarriedOutBEndMargin;
     aBEndMarginResult.Include(aReflowInput.ComputedLogicalMargin()
                                   .ConvertTo(parentWM, wm)
