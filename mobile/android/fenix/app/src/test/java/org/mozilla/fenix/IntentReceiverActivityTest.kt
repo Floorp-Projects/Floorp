@@ -29,7 +29,7 @@ class IntentReceiverActivityTest {
     @Test
     fun `process intent with launchLinksInPrivateTab set to true`() {
         runBlockingTest {
-            testContext.settings().launchLinksInPrivateTab = true
+            testContext.settings().openLinksInAPrivateTab = true
 
             val intent = Intent()
             `when`(testContext.components.intentProcessors.privateIntentProcessor.process(intent)).thenReturn(true)
@@ -46,7 +46,7 @@ class IntentReceiverActivityTest {
     @Test
     fun `process intent with launchLinksInPrivateTab set to false`() {
         runBlockingTest {
-            testContext.settings().launchLinksInPrivateTab = false
+            testContext.settings().openLinksInAPrivateTab = false
 
             val intent = Intent()
             `when`(testContext.components.intentProcessors.intentProcessor.process(intent)).thenReturn(true)

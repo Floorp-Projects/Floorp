@@ -100,7 +100,7 @@
     <string name="pref_key_tracking_protection_onboarding" translatable="false">pref_key_tracking_protection_onboarding</string>
 
     <!-- Privacy Settings -->
-    <string name="pref_key_launch_links_in_private_tab" translatable="false">pref_key_launch_links_in_private_tab</string>
+    <string name="pref_key_open_links_in_a_private_tab" translatable="false">pref_key_open_links_in_a_private_tab</string>
 
     <!-- Quick Action Sheet -->
     <string name="pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>

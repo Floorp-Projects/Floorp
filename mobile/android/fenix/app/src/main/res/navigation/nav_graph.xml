@@ -361,6 +361,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_deleteBrowsingDataOnQuitFragment"
             app:destination="@id/deleteBrowsingDataOnQuitFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_defaultBrowserFragment"
+            app:destination="@id/defaultBrowserFragment" />
     </fragment>
     <fragment
         android:id="@+id/dataChoicesFragment"
@@ -585,4 +588,8 @@
         android:id="@+id/addNewDeviceFragment"
         android:name="org.mozilla.fenix.share.AddNewDeviceFragment"
         android:label="AddNewDeviceFragment" />
+    <fragment
+        android:id="@+id/defaultBrowserFragment"
+        android:name="org.mozilla.fenix.settings.DefaultBrowserSettingsFragment"
+        android:label="DefaultBrowserFragment" />
 </navigation>

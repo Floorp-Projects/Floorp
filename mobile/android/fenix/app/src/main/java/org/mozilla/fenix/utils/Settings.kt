@@ -95,8 +95,8 @@ class Settings private constructor(
         default = false
     )
 
-    var launchLinksInPrivateTab by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_launch_links_in_private_tab),
+    var openLinksInAPrivateTab by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab),
         default = false
     )
 

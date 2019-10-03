@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (Private)</string>
+    <string name="app_name_private">Private Firefox Preview</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->

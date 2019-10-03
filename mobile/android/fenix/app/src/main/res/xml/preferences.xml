@@ -46,7 +46,8 @@
             android:key="@string/pref_key_accessibility"
             android:title="@string/preferences_accessibility" />
 
-        <org.mozilla.fenix.settings.DefaultBrowserPreference
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_internet"
             android:key="@string/pref_key_make_default_browser"
             android:title="@string/preferences_set_as_default_browser" />
     </androidx.preference.PreferenceCategory>
@@ -58,10 +59,6 @@
             android:icon="@drawable/ic_tracking_protection_enabled"
             android:key="@string/pref_key_tracking_protection_settings"
             android:title="@string/preference_enhanced_tracking_protection" />
-        <androidx.preference.SwitchPreference
-            android:defaultValue="false"
-            android:key="@string/pref_key_launch_links_in_private_tab"
-            android:title="@string/preferences_open_links_in_a_private_tab" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"
             android:key="@string/pref_key_add_private_browsing_shortcut"

@@ -29,6 +29,7 @@ import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
+import mozilla.components.support.utils.Browsers
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeIntent
 import org.mozilla.fenix.browser.UriOpenedObserver
@@ -57,6 +58,7 @@ import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
 import org.mozilla.fenix.theme.ThemeManager
+import java.lang.ref.WeakReference
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 open class HomeActivity : AppCompatActivity() {
@@ -107,6 +109,9 @@ open class HomeActivity : AppCompatActivity() {
     @CallSuper
     override fun onResume() {
         super.onResume()
+
+        unsetOpenLinksInAPrivateTab()
+
         lifecycleScope.launch {
             with(components.backgroundServices) {
                 // Make sure accountManager is initialized.
@@ -116,6 +121,21 @@ open class HomeActivity : AppCompatActivity() {
                     accountManager.syncNowAsync(SyncReason.Startup, debounce = true)
                     it.deviceConstellation().pollForEventsAsync().await()
                 }
+            }
+        }
+    }
+
+    private fun unsetOpenLinksInAPrivateTab() {
+        // Toggle off the open_link_in_private_tab pref if we are no longer set as the default browser
+        // We do this on a separate thread to alleviate performance issues
+        val weakReferenceContext = WeakReference(this)
+        lifecycleScope.launch {
+            val context = weakReferenceContext.get() ?: return@launch
+            if (!Browsers.all(context).isDefaultBrowser) {
+                context.settings().preferences
+                    .edit()
+                    .putBoolean(context.getString(R.string.pref_key_open_links_in_a_private_tab), false)
+                    .apply()
             }
         }
     }
@@ -251,8 +271,8 @@ open class HomeActivity : AppCompatActivity() {
             AboutFragmentDirections.actionAboutFragmentToBrowserFragment(customTabSessionId)
         BrowserDirection.FromTrackingProtection ->
             TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToBrowserFragment(
-            customTabSessionId
-        )
+                customTabSessionId
+            )
     }
 
     private fun load(
