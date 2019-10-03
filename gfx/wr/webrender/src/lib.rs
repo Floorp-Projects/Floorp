@@ -82,6 +82,7 @@ mod box_shadow;
 mod capture;
 mod clip;
 mod clip_scroll_tree;
+mod composite;
 mod debug_colors;
 mod debug_font_data;
 mod debug_render;

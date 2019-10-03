@@ -212,6 +212,35 @@ impl ResolveInstanceData {
     }
 }
 
+/// Vertex format for picture cache composite shader.
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub struct CompositeInstance {
+    rect: DeviceRect,
+    clip_rect: DeviceRect,
+    color: PremultipliedColorF,
+    layer: f32,
+    z_id: f32,
+}
+
+impl CompositeInstance {
+    pub fn new(
+        rect: DeviceRect,
+        clip_rect: DeviceRect,
+        color: PremultipliedColorF,
+        layer: f32,
+        z_id: ZBufferId,
+    ) -> Self {
+        CompositeInstance {
+            rect,
+            clip_rect,
+            color,
+            layer,
+            z_id: z_id.0 as f32,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
