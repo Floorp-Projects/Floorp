@@ -91,6 +91,10 @@ class ToolbarAutocompleteFeatureTest {
         override fun addEditAction(action: Toolbar.Action) {
             fail()
         }
+
+        override fun invalidateActions() {
+            fail()
+        }
     }
 
     @Test

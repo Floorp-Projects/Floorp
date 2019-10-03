@@ -5,6 +5,8 @@
 package mozilla.components.support.webextensions
 
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.action.WebExtensionAction
+import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -43,9 +45,10 @@ object WebExtensionSupport {
             }
 
             override fun onInstalled(webExtension: WebExtension) {
-                // TODO see https://github.com/mozilla-mobile/android-components/pull/4626/
-                // store.dispatch(WebExtensionAction.InstallWebExtension(webExtension))
+                store.dispatch(WebExtensionAction.InstallWebExtension(webExtension.toState()))
             }
         })
     }
+
+    private fun WebExtension.toState() = WebExtensionState(id, url)
 }

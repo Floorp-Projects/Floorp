@@ -580,7 +580,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * view for this action should be added or removed. Additionally <code>bind</code> will be
      * called on every visible action to update its view.
      */
-    fun invalidateActions() {
+    override fun invalidateActions() {
         displayToolbar.invalidateActions()
         editToolbar.invalidateActions()
     }

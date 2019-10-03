@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -59,6 +60,10 @@ abstract class EngineSession(
         fun onCloseWindowRequest(windowRequest: WindowRequest) = Unit
         fun onMediaAdded(media: Media) = Unit
         fun onMediaRemoved(media: Media) = Unit
+        /**
+         * Event to notify that a web extension browser action has changed.
+         */
+        fun onBrowserActionChange(webExtensionId: String, action: BrowserAction) = Unit
         fun onWebAppManifestLoaded(manifest: WebAppManifest) = Unit
         fun onCrash() = Unit
         fun onProcessKilled() = Unit

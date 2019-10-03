@@ -17,21 +17,26 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
+import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
+
+typealias WebExtensionBrowserAction = mozilla.components.concept.engine.webextension.BrowserAction
 
 class ToolbarPresenterTest {
     private val testDispatcher = TestCoroutineDispatcher()
@@ -99,6 +104,76 @@ class ToolbarPresenterTest {
         verify(toolbar).setSearchTerms("")
         verify(toolbar).displayProgress(0)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
+    }
+
+    @Test
+    fun `render overridden web extension action from browser state`() {
+        val defaultBrowserAction =
+            WebExtensionBrowserAction("default_title", false, mock(), "", "", 0, 0) {}
+        val overriddenBrowserAction =
+            WebExtensionBrowserAction("overridden_title", false, mock(), "", "", 0, 0) {}
+        val toolbar: Toolbar = mock()
+        val extensions: Map<String, WebExtensionState> = mapOf(
+            "id" to WebExtensionState("id", "url", defaultBrowserAction)
+        )
+        val overriddenExtensions: Map<String, WebExtensionState> = mapOf(
+            "id" to WebExtensionState("id", "url", overriddenBrowserAction)
+        )
+        val store = spy(
+            BrowserStore(
+                BrowserState(
+                    tabs = listOf(
+                        createTab(
+                            "https://www.example.org", id = "tab1",
+                            extensions = overriddenExtensions
+                        )
+                    ), selectedTabId = "tab1",
+                    extensions = extensions
+                )
+            )
+        )
+        val toolbarPresenter = spy(ToolbarPresenter(toolbar, store))
+
+        toolbarPresenter.renderer = mock()
+
+        toolbarPresenter.start()
+
+        testDispatcher.advanceUntilIdle()
+
+        verify(store).observeManually(any())
+        verify(toolbarPresenter).render(any())
+
+        val delegateCaptor = argumentCaptor<WebExtensionToolbarAction>()
+
+        verify(toolbarPresenter.renderer).post("https://www.example.org")
+        verify(toolbar).addBrowserAction(delegateCaptor.capture())
+        assertEquals("overridden_title", delegateCaptor.value.contentDescription)
+    }
+
+    @Test
+    fun `converting a WebExtension_BrowserAction to WebExtensionActionButton`() {
+        val toolbarPresenter = spy(ToolbarPresenter(mock(), mock()))
+        val onClick: () -> Unit = {}
+        val browserAction = WebExtensionBrowserAction(
+            "title",
+            enabled = true,
+            icon = mock(),
+            uri = "uri",
+            badgeText = "badgeText",
+            badgeTextColor = 1,
+            badgeBackgroundColor = 2,
+            onClick = onClick
+        )
+
+        val toolbarAction = toolbarPresenter.convertToToolbarAction(browserAction)
+
+        assertEquals(browserAction.title, toolbarAction.contentDescription)
+        assertEquals(browserAction.enabled, toolbarAction.enabled)
+        assertEquals(browserAction.icon, toolbarAction.imageDrawable)
+        assertEquals(browserAction.badgeText, toolbarAction.badgeText)
+        assertEquals(browserAction.badgeTextColor, toolbarAction.badgeTextColor)
+        assertEquals(browserAction.badgeBackgroundColor, toolbarAction.badgeBackgroundColor)
+        assertEquals(browserAction.onClick, toolbarAction.listener)
     }
 
     @Test

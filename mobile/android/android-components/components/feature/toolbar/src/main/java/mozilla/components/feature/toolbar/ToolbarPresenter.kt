@@ -9,19 +9,21 @@ import androidx.annotation.VisibleForTesting.PRIVATE
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.lib.state.ext.flowScoped
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+
+typealias WebExtensionBrowserAction = mozilla.components.concept.engine.webextension.BrowserAction
 
 /**
  * Presenter implementation for a toolbar implementation in order to update the toolbar whenever
- * the state of the selected session changes.
+ * the state of the selected session or web extensions changes.
  */
 @Suppress("TooManyFunctions")
 class ToolbarPresenter(
@@ -42,47 +44,79 @@ class ToolbarPresenter(
         renderer.start()
 
         scope = store.flowScoped { flow ->
-            flow.map { state -> state.findCustomTabOrSelectedTab(customTabId) }
-                .ifChanged()
+            flow.ifAnyChanged { arrayOf(it.findCustomTabOrSelectedTab(customTabId), it.extensions) }
                 .collect { state ->
-                    if (state == null) {
-                        clear()
-                    } else {
-                        render(state)
-                    }
+                    render(state)
                 }
         }
     }
 
     fun stop() {
         scope?.cancel()
-
         renderer.stop()
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun render(tab: SessionState) {
-        renderer.post(tab.content.url)
+    internal fun render(state: BrowserState) {
+        val tab = state.findCustomTabOrSelectedTab(customTabId)
 
-        toolbar.setSearchTerms(tab.content.searchTerms)
-        toolbar.displayProgress(tab.content.progress)
+        if (tab != null) {
+            renderer.post(tab.content.url)
 
-        toolbar.siteSecure = if (tab.content.securityInfo.secure) {
-            Toolbar.SiteSecurity.SECURE
+            toolbar.setSearchTerms(tab.content.searchTerms)
+            toolbar.displayProgress(tab.content.progress)
+
+            toolbar.siteSecure = if (tab.content.securityInfo.secure) {
+                Toolbar.SiteSecurity.SECURE
+            } else {
+                Toolbar.SiteSecurity.INSECURE
+            }
+
+            toolbar.siteTrackingProtection = when {
+                tab.trackingProtection.ignoredOnTrackingProtection -> SiteTrackingProtection.OFF_FOR_A_SITE
+                tab.trackingProtection.enabled && tab.trackingProtection.blockedTrackers.isNotEmpty() ->
+                    SiteTrackingProtection.ON_TRACKERS_BLOCKED
+
+                tab.trackingProtection.enabled -> SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
+
+                else -> SiteTrackingProtection.OFF_GLOBALLY
+            }
+
+            renderWebExtensionActions(state, tab)
         } else {
-            Toolbar.SiteSecurity.INSECURE
-        }
-
-        toolbar.siteTrackingProtection = when {
-            tab.trackingProtection.ignoredOnTrackingProtection -> SiteTrackingProtection.OFF_FOR_A_SITE
-            tab.trackingProtection.enabled && tab.trackingProtection.blockedTrackers.isNotEmpty() ->
-                SiteTrackingProtection.ON_TRACKERS_BLOCKED
-
-            tab.trackingProtection.enabled -> SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
-
-            else -> SiteTrackingProtection.OFF_GLOBALLY
+            clear()
         }
     }
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun renderWebExtensionActions(state: BrowserState, tab: SessionState) {
+        val extensionsMap = state.extensions.toMutableMap()
+        extensionsMap.putAll(tab.extensionState)
+
+        val extensions = extensionsMap.values.toList()
+
+        extensions.forEach { extension ->
+            extension.browserAction?.let { extensionAction ->
+                val toolbarAction = convertToToolbarAction(extensionAction)
+                // We need to verify, if we this toolbarAction already exits on the toolbar
+                // if so, we don't need to re-add it, just replace it with the new one.
+                // https://github.com/mozilla-mobile/android-components/issues/4651
+                toolbar.addBrowserAction(toolbarAction)
+                toolbar.invalidateActions()
+            }
+        }
+    }
+
+    internal fun convertToToolbarAction(browserAction: WebExtensionBrowserAction) =
+        WebExtensionToolbarAction(
+            contentDescription = browserAction.title,
+            imageDrawable = browserAction.icon,
+            enabled = browserAction.enabled,
+            badgeText = browserAction.badgeText,
+            badgeTextColor = browserAction.badgeTextColor,
+            badgeBackgroundColor = browserAction.badgeBackgroundColor,
+            listener = browserAction.onClick
+        )
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun clear() {

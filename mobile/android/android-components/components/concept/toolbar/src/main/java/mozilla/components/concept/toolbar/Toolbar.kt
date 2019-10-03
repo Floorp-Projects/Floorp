@@ -100,6 +100,12 @@ interface Toolbar {
     fun addBrowserAction(action: Action)
 
     /**
+     * Declare that the actions (navigation actions, browser actions, page actions) have changed and
+     * should be updated if needed.
+     */
+    fun invalidateActions()
+
+    /**
      * Adds an action to be displayed on the right side of the URL in display mode.
      *
      * Related:

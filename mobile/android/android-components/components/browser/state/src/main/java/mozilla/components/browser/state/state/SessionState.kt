@@ -11,10 +11,13 @@ package mozilla.components.browser.state.state
  * @property content the [ContentState] of this session.
  * @property trackingProtection the [TrackingProtectionState] of this session.
  * @property engineState the [EngineState] of this session.
+ * @property extensionState a map of extension id and web extension states
+ * specific to this [SessionState].
  */
 interface SessionState {
     val id: String
     val content: ContentState
     val trackingProtection: TrackingProtectionState
     val engineState: EngineState
+    val extensionState: Map<String, WebExtensionState>
 }

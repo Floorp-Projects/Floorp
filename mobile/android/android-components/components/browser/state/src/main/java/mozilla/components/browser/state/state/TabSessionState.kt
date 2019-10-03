@@ -16,24 +16,32 @@ import java.util.UUID
  * parent. The parent tab is usually the tab that initiated opening this
  * tab (e.g. the user clicked a link with target="_blank" or selected
  * "open in new tab" or a "window.open" was triggered).
+ * @property extensionState a map of web extension ids and extensions, that contains the overridden
+ * values for this tab.
  */
 data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
     override val content: ContentState,
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
     override val engineState: EngineState = EngineState(),
-    val parentId: String? = null
+    val parentId: String? = null,
+    override val extensionState: Map<String, WebExtensionState> = emptyMap()
 ) : SessionState
 
+/**
+ * Convenient function for creating a tab.
+ */
 fun createTab(
     url: String,
     private: Boolean = false,
     id: String = UUID.randomUUID().toString(),
-    parent: TabSessionState? = null
+    parent: TabSessionState? = null,
+    extensions: Map<String, WebExtensionState> = emptyMap()
 ): TabSessionState {
     return TabSessionState(
         id = id,
         content = ContentState(url, private),
-        parentId = parent?.id
+        parentId = parent?.id,
+        extensionState = extensions
     )
 }
