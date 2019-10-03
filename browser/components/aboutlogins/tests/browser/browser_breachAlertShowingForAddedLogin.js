@@ -1,42 +1,25 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let { LoginBreaches } = ChromeUtils.import(
-  "resource:///modules/LoginBreaches.jsm"
-);
-
-const TEST_BREACHES = [
-  {
-    AddedDate: "2019-12-20T23:56:26Z",
-    BreachDate: "2018-12-16",
-    Domain: "breached.example.com",
-    Name: "Breached",
-    PwnCount: 1643100,
-    DataClasses: ["Email addresses", "Usernames", "Passwords", "IP addresses"],
-    _status: "synced",
-    id: "047940fe-d2fd-4314-b636-b4a952ee0043",
-    last_modified: "1541615610052",
-    schema: "1541615609018",
-  },
-];
+EXPECTED_BREACH = {
+  AddedDate: "2018-12-20T23:56:26Z",
+  BreachDate: "2018-12-16",
+  Domain: "breached.example.com",
+  Name: "Breached",
+  PwnCount: 1643100,
+  DataClasses: ["Email addresses", "Usernames", "Passwords", "IP addresses"],
+  _status: "synced",
+  id: "047940fe-d2fd-4314-b636-b4a952ee0043",
+  last_modified: "1541615610052",
+  schema: "1541615609018",
+};
 
 add_task(async function setup() {
-  let oldGetPotentialBreachesByLoginGUID =
-    LoginBreaches.getPotentialBreachesByLoginGUID;
-  LoginBreaches.getPotentialBreachesByLoginGUID = logins => {
-    if (!logins.length) {
-      return new Map();
-    }
-    let breaches = new Map();
-    breaches.set(logins[0].guid, TEST_BREACHES[0]);
-    return breaches;
-  };
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
   });
   registerCleanupFunction(() => {
-    LoginBreaches.getPotentialBreachesByLoginGUID = oldGetPotentialBreachesByLoginGUID;
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     Services.logins.removeAllLogins();
   });
@@ -53,6 +36,7 @@ add_task(async function test_added_login_shows_breach_warning() {
     );
   });
 
+  TEST_LOGIN3.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged = 123456;
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
   await ContentTask.spawn(browser, TEST_LOGIN3.guid, async aTestLogin3Guid => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
