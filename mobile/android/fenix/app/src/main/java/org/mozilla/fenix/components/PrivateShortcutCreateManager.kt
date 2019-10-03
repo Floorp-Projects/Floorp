@@ -14,11 +14,29 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
 import java.util.UUID
+import android.content.pm.ShortcutManager
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 
 /**
- * Handles the creation of pinned shortcuts.
+ * Handles the creation and existence of pinned shortcuts.
  */
 object PrivateShortcutCreateManager {
+
+    fun doesPrivateBrowsingPinnedShortcutExist(context: Context) : Boolean {
+        return if (SDK_INT >= Build.VERSION_CODES.N_MR1) {
+            val pinnedShortcuts = context.getSystemService(ShortcutManager::class.java).pinnedShortcuts
+            for (s in pinnedShortcuts) {
+                if (s.intent?.extras?.getString(HomeActivity.OPEN_TO_SEARCH) ==
+                    StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT) {
+                    return true
+                }
+            }
+            false
+        } else {
+            false
+        }
+    }
 
     fun createPrivateShortcut(context: Context) {
         if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) return
