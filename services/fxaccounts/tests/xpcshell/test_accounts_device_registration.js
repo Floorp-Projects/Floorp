@@ -119,9 +119,6 @@ async function MockFxAccounts(credentials, device = {}) {
       storage.initialize(creds);
       return new AccountState(storage);
     },
-    async availableCommands() {
-      return {};
-    },
     fxAccountsClient: new MockFxAccountsClient(device),
     fxaPushService: {
       registerPushEndpoint() {
@@ -141,7 +138,14 @@ async function MockFxAccounts(credentials, device = {}) {
         return Promise.resolve();
       },
     },
-    DEVICE_REGISTRATION_VERSION,
+    commands: {
+      async availableCommands() {
+        return {};
+      },
+    },
+    device: {
+      DEVICE_REGISTRATION_VERSION,
+    },
   });
   await fxa._internal.setSignedInUser(credentials);
   Services.prefs.setStringPref(
@@ -497,7 +501,7 @@ add_task(
         email: credentials.email,
         registrationVersion: DEVICE_REGISTRATION_VERSION,
       });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("bar");
@@ -528,7 +532,7 @@ add_task(
           registeredCommandsKeys: [],
         },
       });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
@@ -557,7 +561,7 @@ add_task(
         registeredCommandsKeys: [],
       },
     });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       return Promise.resolve("bar");
     };
@@ -578,7 +582,7 @@ add_task(
     const spy = { count: 0, args: [] };
     fxa._internal.currentAccountState.getUserAccountData = () =>
       Promise.resolve({ device: { id: "wibble" } });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
