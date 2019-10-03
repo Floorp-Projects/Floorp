@@ -550,38 +550,40 @@ JSObject* Element::WrapObject(JSContext* aCx,
     return obj;
   }
 
-  RefPtr<ComputedStyle> style =
-      nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
-  if (!style) {
-    return obj;
-  }
+  {
+    RefPtr<ComputedStyle> style =
+        nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
+    if (!style) {
+      return obj;
+    }
 
-  // We have a binding that must be installed.
-  const StyleUrlOrNone& computedBinding = style->StyleDisplay()->mBinding;
-  if (!computedBinding.IsUrl()) {
-    return obj;
-  }
+    // We have a binding that must be installed.
+    const StyleUrlOrNone& computedBinding = style->StyleDisplay()->mBinding;
+    if (!computedBinding.IsUrl()) {
+      return obj;
+    }
 
-  auto& url = computedBinding.AsUrl();
-  nsCOMPtr<nsIURI> uri = url.GetURI();
-  nsCOMPtr<nsIPrincipal> principal = url.ExtraData().Principal();
+    auto& url = computedBinding.AsUrl();
+    nsCOMPtr<nsIURI> uri = url.GetURI();
+    nsCOMPtr<nsIPrincipal> principal = url.ExtraData().Principal();
 
-  nsXBLService* xblService = nsXBLService::GetInstance();
-  if (!xblService) {
-    dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
+    nsXBLService* xblService = nsXBLService::GetInstance();
+    if (!xblService) {
+      dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
+      return nullptr;
+    }
 
-  RefPtr<nsXBLBinding> binding;
-  xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding));
+    RefPtr<nsXBLBinding> binding;
+    xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding));
 
-  if (binding) {
-    if (nsContentUtils::IsSafeToRunScript()) {
-      binding->ExecuteAttachedHandler();
-    } else {
-      nsContentUtils::AddScriptRunner(
-          NewRunnableMethod("nsXBLBinding::ExecuteAttachedHandler", binding,
-                            &nsXBLBinding::ExecuteAttachedHandler));
+    if (binding) {
+      if (nsContentUtils::IsSafeToRunScript()) {
+        binding->ExecuteAttachedHandler();
+      } else {
+        nsContentUtils::AddScriptRunner(
+            NewRunnableMethod("nsXBLBinding::ExecuteAttachedHandler", binding,
+                              &nsXBLBinding::ExecuteAttachedHandler));
+      }
     }
   }
 
