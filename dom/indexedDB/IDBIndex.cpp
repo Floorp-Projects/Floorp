@@ -34,7 +34,7 @@ already_AddRefed<IDBRequest> GenerateRequest(JSContext* aCx, IDBIndex* aIndex) {
   MOZ_ASSERT(aIndex);
   aIndex->AssertIsOnOwningThread();
 
-  IDBTransaction* transaction = aIndex->ObjectStore()->Transaction();
+  IDBTransaction* const transaction = aIndex->ObjectStore()->Transaction();
 
   RefPtr<IDBRequest> request =
       IDBRequest::Create(aCx, aIndex, transaction->Database(), transaction);
@@ -138,7 +138,7 @@ const nsString& IDBIndex::Name() const {
 void IDBIndex::SetName(const nsAString& aName, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  IDBTransaction* transaction = mObjectStore->Transaction();
+  IDBTransaction* const transaction = mObjectStore->Transaction();
 
   if (transaction->GetMode() != IDBTransaction::VERSION_CHANGE ||
       mDeletedMetadata) {
@@ -372,13 +372,11 @@ already_AddRefed<IDBRequest> IDBIndex::GetAllInternal(
 
   const uint32_t limit = aLimit.WasPassed() ? aLimit.Value() : 0;
 
-  RequestParams params;
-  if (aKeysOnly) {
-    params =
-        IndexGetAllKeysParams(objectStoreId, indexId, optionalKeyRange, limit);
-  } else {
-    params = IndexGetAllParams(objectStoreId, indexId, optionalKeyRange, limit);
-  }
+  const auto& params =
+      aKeysOnly ? RequestParams{IndexGetAllKeysParams(objectStoreId, indexId,
+                                                      optionalKeyRange, limit)}
+                : RequestParams{IndexGetAllParams(objectStoreId, indexId,
+                                                  optionalKeyRange, limit)};
 
   RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
   MOZ_ASSERT(request);
@@ -432,8 +430,8 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
     return nullptr;
   }
 
-  int64_t objectStoreId = mObjectStore->Id();
-  int64_t indexId = Id();
+  const int64_t objectStoreId = mObjectStore->Id();
+  const int64_t indexId = Id();
 
   Maybe<SerializedKeyRange> optionalKeyRange;
 
@@ -444,7 +442,8 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
     optionalKeyRange.emplace(std::move(serializedKeyRange));
   }
 
-  IDBCursor::Direction direction = IDBCursor::ConvertDirection(aDirection);
+  const IDBCursor::Direction direction =
+      IDBCursor::ConvertDirection(aDirection);
 
   const CommonIndexOpenCursorParams commonIndexParams = {
       {objectStoreId, std::move(optionalKeyRange), direction}, indexId};
@@ -478,7 +477,7 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
         IDB_LOG_STRINGIFY(direction));
   }
 
-  BackgroundCursorChild* actor =
+  BackgroundCursorChild* const actor =
       new BackgroundCursorChild(request, this, direction);
 
   mObjectStore->Transaction()->OpenCursor(actor, params);
@@ -496,7 +495,7 @@ already_AddRefed<IDBRequest> IDBIndex::Count(JSContext* aCx,
     return nullptr;
   }
 
-  IDBTransaction* transaction = mObjectStore->Transaction();
+  IDBTransaction* const transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
     return nullptr;
