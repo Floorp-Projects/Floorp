@@ -22,6 +22,7 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature
@@ -82,6 +83,13 @@ class Settings private constructor(
         default = ""
     )
 
+    /**
+     * Warning: when possible, prefer to set this via [BrowsingModeManager].
+     *
+     * [BrowsingModeManager] defines a callback to be hit whenever this setting changes. For
+     * example, setting this value directly at the wrong time could cause the private theme to
+     * not be applied.
+     */
     var usePrivateMode by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_private_mode),
         default = false

@@ -22,6 +22,7 @@ import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.fenix.R
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.sessionsOfType
@@ -61,6 +62,11 @@ class SessionNotificationService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent) {
         components.core.sessionManager.removeAndCloseAllPrivateSessions()
+
+        // This is currently safe because we remove this service while destroying activities. If
+        // this service is ever removed while HomeActivity is still active, this could cause
+        // theming issues. See usePrivateMode kdoc
+        baseContext.application.maybeClearPrivateMode()
 
         stopForeground(true)
         stopSelf()
