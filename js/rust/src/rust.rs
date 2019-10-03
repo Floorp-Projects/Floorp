@@ -137,7 +137,7 @@ impl Runtime {
                     }
 
                     let context = JS_NewContext(
-                        DEFAULT_HEAPSIZE, ChunkSize as u32, ptr::null_mut());
+                        DEFAULT_HEAPSIZE, ptr::null_mut());
                     assert!(!context.is_null());
                     JS::InitSelfHostedCode(context);
                     PARENT.set(context);
@@ -160,7 +160,6 @@ impl Runtime {
             assert_eq!(IsDebugBuild(), cfg!(feature = "debugmozjs"));
 
             let js_context = JS_NewContext(DEFAULT_HEAPSIZE,
-                                           ChunkSize as u32,
                                            JS_GetParentRuntime(PARENT.get()));
             assert!(!js_context.is_null());
 
@@ -558,12 +557,6 @@ impl Default for JS::Value {
 impl Default for JS::RealmOptions {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-
-const ChunkShift: usize = 20;
-const ChunkSize: usize = 1 << ChunkShift;
-
-#[cfg(target_pointer_width = "32")]
-const ChunkLocationOffset: usize = ChunkSize - 2 * 4 - 8;
 
 pub trait GCMethods {
     unsafe fn initial() -> Self;
