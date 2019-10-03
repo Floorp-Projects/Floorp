@@ -180,7 +180,7 @@ add_task(async function test_ignoreList_db_modification() {
   getStub.resetHistory();
   getStub
     .onFirstCall()
-    .throws(new RemoteSettingsClient.InvalidSignatureError("abc"));
+    .rejects(new RemoteSettingsClient.InvalidSignatureError("abc"));
   getStub.onSecondCall().returns(IGNORELIST_TEST_DATA);
 
   let result = await IgnoreLists.getAndSubscribe(() => {});
@@ -202,4 +202,41 @@ add_task(async function test_ignoreList_db_modification() {
     IGNORELIST_TEST_DATA,
     "Should have returned the correct data."
   );
+});
+
+add_task(async function test_ignoreList_db_modification_never_succeeds() {
+  // Fill the database with some values that we can use to test that it is cleared.
+  const collection = await RemoteSettings(IGNORELIST_KEY).openCollection();
+  await collection.clear();
+  for (const data of IGNORELIST_TEST_DATA) {
+    await collection.create(
+      {
+        id: data.id,
+        matches: data.matches,
+      },
+      { synced: data._status == "synced" }
+    );
+  }
+  await collection.db.saveLastModified(42);
+
+  // Now simulate the condition where for some reason we never get a
+  // valid result.
+  getStub.reset();
+  getStub.rejects(new RemoteSettingsClient.InvalidSignatureError("abc"));
+
+  let result = await IgnoreLists.getAndSubscribe(() => {});
+
+  Assert.ok(
+    getStub.calledTwice,
+    "Should have called the get() function twice."
+  );
+
+  const databaseEntries = await collection.list();
+  Assert.equal(
+    databaseEntries.data.length,
+    0,
+    "Should have cleared the database."
+  );
+
+  Assert.deepEqual(result, [], "Should have returned an empty result.");
 });
