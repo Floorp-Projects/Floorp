@@ -43,10 +43,12 @@ using mozilla::Some;
 namespace {
 
 typedef Vector<MBasicBlock*, 8, SystemAllocPolicy> BlockVector;
+typedef Vector<MDefinition*, 8, SystemAllocPolicy> DefVector;
 
 struct IonCompilePolicy {
   // We store SSA definitions in the value stack.
   typedef MDefinition* Value;
+  typedef DefVector ValueVector;
 
   // We store loop headers and then/else blocks in the control flow stack.
   typedef MBasicBlock* ControlItem;
@@ -1151,23 +1153,18 @@ class FunctionCompiler {
 
   inline bool inDeadCode() const { return curBlock_ == nullptr; }
 
-  void returnExpr(MDefinition* operand) {
+  void returnValues(const DefVector& values) {
     if (inDeadCode()) {
       return;
     }
 
-    MWasmReturn* ins = MWasmReturn::New(alloc(), operand);
-    curBlock_->end(ins);
-    curBlock_ = nullptr;
-  }
+    MOZ_ASSERT(values.length() <= 1, "until multi-return");
 
-  void returnVoid() {
-    if (inDeadCode()) {
-      return;
+    if (values.empty()) {
+      curBlock_->end(MWasmReturnVoid::New(alloc()));
+    } else {
+      curBlock_->end(MWasmReturn::New(alloc(), values[0]));
     }
-
-    MWasmReturnVoid* ins = MWasmReturnVoid::New(alloc());
-    curBlock_->end(ins);
     curBlock_ = nullptr;
   }
 
@@ -1183,39 +1180,42 @@ class FunctionCompiler {
   }
 
  private:
-  static bool hasPushed(MBasicBlock* block) {
-    uint32_t numPushed = block->stackDepth() - block->info().firstStackSlot();
-    MOZ_ASSERT(numPushed == 0 || numPushed == 1);
-    return numPushed;
+  static uint32_t numPushed(MBasicBlock* block) {
+    return block->stackDepth() - block->info().firstStackSlot();
   }
 
  public:
-  void pushDef(MDefinition* def) {
+  void pushDefs(const DefVector& defs) {
     if (inDeadCode()) {
       return;
     }
-    MOZ_ASSERT(!hasPushed(curBlock_));
-    if (def && def->type() != MIRType::None) {
+    MOZ_ASSERT(numPushed(curBlock_) == 0);
+    for (MDefinition* def : defs) {
+      MOZ_ASSERT(def->type() != MIRType::None);
       curBlock_->push(def);
     }
   }
 
-  MDefinition* popDefIfPushed() {
-    if (!hasPushed(curBlock_)) {
-      return nullptr;
+  bool popPushedDefs(DefVector* defs) {
+    size_t n = numPushed(curBlock_);
+    if (!defs->resizeUninitialized(n)) {
+      return false;
     }
-    MDefinition* def = curBlock_->pop();
-    MOZ_ASSERT(def->type() != MIRType::Value);
-    return def;
+    for (; n > 0; n--) {
+      MDefinition* def = curBlock_->pop();
+      MOZ_ASSERT(def->type() != MIRType::Value);
+      (*defs)[n - 1] = def;
+    }
+    return true;
   }
 
  private:
-  void addJoinPredecessor(MDefinition* def, MBasicBlock** joinPred) {
+  void addJoinPredecessor(const DefVector& defs, MBasicBlock** joinPred) {
     *joinPred = curBlock_;
     if (inDeadCode()) {
       return;
     }
-    pushDef(def);
+    pushDefs(defs);
   }
 
  public:
@@ -1241,15 +1241,15 @@ class FunctionCompiler {
   }
 
   bool switchToElse(MBasicBlock* elseBlock, MBasicBlock** thenJoinPred) {
-    MDefinition* ifDef;
-    if (!finishBlock(&ifDef)) {
+    DefVector values;
+    if (!finishBlock(&values)) {
       return false;
     }
 
     if (!elseBlock) {
       *thenJoinPred = nullptr;
     } else {
-      addJoinPredecessor(ifDef, thenJoinPred);
+      addJoinPredecessor(values, thenJoinPred);
 
       curBlock_ = elseBlock;
       mirGraph().moveBlockToEnd(curBlock_);
@@ -1258,47 +1258,44 @@ class FunctionCompiler {
     return startBlock();
   }
 
-  bool joinIfElse(MBasicBlock* thenJoinPred, MDefinition** def) {
-    MDefinition* elseDef;
-    if (!finishBlock(&elseDef)) {
+  bool joinIfElse(MBasicBlock* thenJoinPred, DefVector* defs) {
+    DefVector values;
+    if (!finishBlock(&values)) {
       return false;
     }
 
     if (!thenJoinPred && inDeadCode()) {
-      *def = nullptr;
-    } else {
-      MBasicBlock* elseJoinPred;
-      addJoinPredecessor(elseDef, &elseJoinPred);
-
-      mozilla::Array<MBasicBlock*, 2> blocks;
-      size_t numJoinPreds = 0;
-      if (thenJoinPred) {
-        blocks[numJoinPreds++] = thenJoinPred;
-      }
-      if (elseJoinPred) {
-        blocks[numJoinPreds++] = elseJoinPred;
-      }
-
-      if (numJoinPreds == 0) {
-        *def = nullptr;
-        return true;
-      }
-
-      MBasicBlock* join;
-      if (!goToNewBlock(blocks[0], &join)) {
-        return false;
-      }
-      for (size_t i = 1; i < numJoinPreds; ++i) {
-        if (!goToExistingBlock(blocks[i], join)) {
-          return false;
-        }
-      }
-
-      curBlock_ = join;
-      *def = popDefIfPushed();
+      return true;
     }
 
-    return true;
+    MBasicBlock* elseJoinPred;
+    addJoinPredecessor(values, &elseJoinPred);
+
+    mozilla::Array<MBasicBlock*, 2> blocks;
+    size_t numJoinPreds = 0;
+    if (thenJoinPred) {
+      blocks[numJoinPreds++] = thenJoinPred;
+    }
+    if (elseJoinPred) {
+      blocks[numJoinPreds++] = elseJoinPred;
+    }
+
+    if (numJoinPreds == 0) {
+      return true;
+    }
+
+    MBasicBlock* join;
+    if (!goToNewBlock(blocks[0], &join)) {
+      return false;
+    }
+    for (size_t i = 1; i < numJoinPreds; ++i) {
+      if (!goToExistingBlock(blocks[i], join)) {
+        return false;
+      }
+    }
+
+    curBlock_ = join;
+    return popPushedDefs(defs);
   }
 
   bool startBlock() {
@@ -1308,10 +1305,10 @@ class FunctionCompiler {
     return true;
   }
 
-  bool finishBlock(MDefinition** def) {
+  bool finishBlock(DefVector* defs) {
     MOZ_ASSERT(blockDepth_);
     uint32_t topLabel = --blockDepth_;
-    return bindBranches(topLabel, def);
+    return bindBranches(topLabel, defs);
   }
 
   bool startLoop(MBasicBlock** loopHeader) {
@@ -1401,7 +1398,7 @@ class FunctionCompiler {
   }
 
  public:
-  bool closeLoop(MBasicBlock* loopHeader, MDefinition** loopResult) {
+  bool closeLoop(MBasicBlock* loopHeader, DefVector* loopResults) {
     MOZ_ASSERT(blockDepth_ >= 1);
     MOZ_ASSERT(loopDepth_);
 
@@ -1413,7 +1410,6 @@ class FunctionCompiler {
                  blockPatches_[headerLabel].empty());
       blockDepth_--;
       loopDepth_--;
-      *loopResult = nullptr;
       return true;
     }
 
@@ -1428,7 +1424,7 @@ class FunctionCompiler {
     // branches as forward jumps to a single backward jump. This is
     // unfortunate but the optimizer is able to fold these into single jumps
     // to backedges.
-    MDefinition* _;
+    DefVector _;
     if (!bindBranches(headerLabel, &_)) {
       return false;
     }
@@ -1437,7 +1433,7 @@ class FunctionCompiler {
 
     if (curBlock_) {
       // We're on the loop backedge block, created by bindBranches.
-      if (hasPushed(curBlock_)) {
+      for (size_t i = 0, n = numPushed(curBlock_); i != n; i++) {
         curBlock_->pop();
       }
 
@@ -1462,8 +1458,7 @@ class FunctionCompiler {
     }
 
     blockDepth_ -= 1;
-    *loopResult = inDeadCode() ? nullptr : popDefIfPushed();
-    return true;
+    return inDeadCode() || popPushedDefs(loopResults);
   }
 
   bool addControlFlowPatch(MControlInstruction* ins, uint32_t relative,
@@ -1479,7 +1474,7 @@ class FunctionCompiler {
     return blockPatches_[absolute].append(ControlFlowPatch(ins, index));
   }
 
-  bool br(uint32_t relativeDepth, MDefinition* maybeValue) {
+  bool br(uint32_t relativeDepth, const DefVector& values) {
     if (inDeadCode()) {
       return true;
     }
@@ -1489,14 +1484,14 @@ class FunctionCompiler {
       return false;
     }
 
-    pushDef(maybeValue);
+    pushDefs(values);
 
     curBlock_->end(jump);
     curBlock_ = nullptr;
     return true;
   }
 
-  bool brIf(uint32_t relativeDepth, MDefinition* maybeValue,
+  bool brIf(uint32_t relativeDepth, const DefVector& values,
             MDefinition* condition) {
     if (inDeadCode()) {
       return true;
@@ -1512,7 +1507,7 @@ class FunctionCompiler {
       return false;
     }
 
-    pushDef(maybeValue);
+    pushDefs(values);
 
     curBlock_->end(test);
     curBlock_ = joinBlock;
@@ -1520,7 +1515,7 @@ class FunctionCompiler {
   }
 
   bool brTable(MDefinition* operand, uint32_t defaultDepth,
-               const Uint32Vector& depths, MDefinition* maybeValue) {
+               const Uint32Vector& depths, const DefVector& values) {
     if (inDeadCode()) {
       return true;
     }
@@ -1573,7 +1568,7 @@ class FunctionCompiler {
       }
     }
 
-    pushDef(maybeValue);
+    pushDefs(values);
 
     curBlock_->end(table);
     curBlock_ = nullptr;
@@ -1621,10 +1616,9 @@ class FunctionCompiler {
     return next->addPredecessor(alloc(), prev);
   }
 
-  bool bindBranches(uint32_t absolute, MDefinition** def) {
+  bool bindBranches(uint32_t absolute, DefVector* defs) {
     if (absolute >= blockPatches_.length() || blockPatches_[absolute].empty()) {
-      *def = inDeadCode() ? nullptr : popDefIfPushed();
-      return true;
+      return inDeadCode() || popPushedDefs(defs);
     }
 
     ControlFlowPatchVector& patches = blockPatches_[absolute];
@@ -1664,7 +1658,9 @@ class FunctionCompiler {
 
     curBlock_ = join;
 
-    *def = popDefIfPushed();
+    if (!popPushedDefs(defs)) {
+      return false;
+    }
 
     patches.clear();
     return true;
@@ -1789,15 +1785,13 @@ static bool EmitIf(FunctionCompiler& f) {
 }
 
 static bool EmitElse(FunctionCompiler& f) {
-  ExprType thenType;
-  MDefinition* thenValue;
-  if (!f.iter().readElse(&thenType, &thenValue)) {
+  ResultType thenType;
+  DefVector thenValues;
+  if (!f.iter().readElse(&thenType, &thenValues)) {
     return false;
   }
 
-  if (!IsVoid(thenType)) {
-    f.pushDef(thenValue);
-  }
+  f.pushDefs(thenValues);
 
   if (!f.switchToElse(f.iter().controlItem(), &f.iter().controlItem())) {
     return false;
@@ -1808,40 +1802,33 @@ static bool EmitElse(FunctionCompiler& f) {
 
 static bool EmitEnd(FunctionCompiler& f) {
   LabelKind kind;
-  ExprType type;
-  MDefinition* value;
-  if (!f.iter().readEnd(&kind, &type, &value)) {
+  ResultType type;
+  DefVector preJoinDefs;
+  if (!f.iter().readEnd(&kind, &type, &preJoinDefs)) {
     return false;
   }
 
   MBasicBlock* block = f.iter().controlItem();
-
   f.iter().popEnd();
 
-  if (!IsVoid(type)) {
-    f.pushDef(value);
-  }
+  f.pushDefs(preJoinDefs);
 
-  MDefinition* def = nullptr;
+  DefVector postJoinDefs;
   switch (kind) {
     case LabelKind::Body:
       MOZ_ASSERT(f.iter().controlStackEmpty());
-      if (!f.finishBlock(&def)) {
+      if (!f.finishBlock(&postJoinDefs)) {
         return false;
       }
-      if (f.inDeadCode() || IsVoid(type)) {
-        f.returnVoid();
-      } else {
-        f.returnExpr(def);
-      }
+      f.returnValues(postJoinDefs);
       return f.iter().readFunctionEnd(f.iter().end());
     case LabelKind::Block:
-      if (!f.finishBlock(&def)) {
+      if (!f.finishBlock(&postJoinDefs)) {
         return false;
       }
       break;
     case LabelKind::Loop:
-      if (!f.closeLoop(block, &def)) {
+      if (!f.closeLoop(block, &postJoinDefs)) {
         return false;
       }
       break;
@@ -1852,76 +1839,54 @@ static bool EmitEnd(FunctionCompiler& f) {
         return false;
       }
 
-      if (!f.joinIfElse(block, &def)) {
+      if (!f.joinIfElse(block, &postJoinDefs)) {
         return false;
       }
       break;
     case LabelKind::Else:
-      if (!f.joinIfElse(block, &def)) {
+      if (!f.joinIfElse(block, &postJoinDefs)) {
         return false;
       }
       break;
   }
 
-  if (!IsVoid(type)) {
-    MOZ_ASSERT_IF(!f.inDeadCode(), def);
-    f.iter().setResult(def);
-  }
+  MOZ_ASSERT_IF(!f.inDeadCode(), postJoinDefs.length() == type.length());
+  f.iter().setResults(postJoinDefs.length(), postJoinDefs);
 
   return true;
 }
 
 static bool EmitBr(FunctionCompiler& f) {
   uint32_t relativeDepth;
-  ExprType type;
-  MDefinition* value;
-  if (!f.iter().readBr(&relativeDepth, &type, &value)) {
+  ResultType type;
+  DefVector values;
+  if (!f.iter().readBr(&relativeDepth, &type, &values)) {
     return false;
   }
 
-  if (IsVoid(type)) {
-    if (!f.br(relativeDepth, nullptr)) {
-      return false;
-    }
-  } else {
-    if (!f.br(relativeDepth, value)) {
-      return false;
-    }
-  }
-
-  return true;
+  return f.br(relativeDepth, values);
 }
 
 static bool EmitBrIf(FunctionCompiler& f) {
   uint32_t relativeDepth;
-  ExprType type;
-  MDefinition* value;
+  ResultType type;
+  DefVector values;
   MDefinition* condition;
-  if (!f.iter().readBrIf(&relativeDepth, &type, &value, &condition)) {
+  if (!f.iter().readBrIf(&relativeDepth, &type, &values, &condition)) {
     return false;
   }
 
-  if (IsVoid(type)) {
-    if (!f.brIf(relativeDepth, nullptr, condition)) {
-      return false;
-    }
-  } else {
-    if (!f.brIf(relativeDepth, value, condition)) {
-      return false;
-    }
-  }
-
-  return true;
+  return f.brIf(relativeDepth, values, condition);
 }
 
 static bool EmitBrTable(FunctionCompiler& f) {
   Uint32Vector depths;
   uint32_t defaultDepth;
-  ExprType branchValueType;
-  MDefinition* branchValue;
+  ResultType branchValueType;
+  DefVector branchValues;
   MDefinition* index;
   if (!f.iter().readBrTable(&depths, &defaultDepth, &branchValueType,
-                            &branchValue, &index)) {
+                            &branchValues, &index)) {
     return false;
   }
 
@@ -1937,24 +1902,19 @@ static bool EmitBrTable(FunctionCompiler& f) {
   }
 
   if (allSameDepth) {
-    return f.br(defaultDepth, branchValue);
+    return f.br(defaultDepth, branchValues);
   }
 
-  return f.brTable(index, defaultDepth, depths, branchValue);
+  return f.brTable(index, defaultDepth, depths, branchValues);
 }
 
 static bool EmitReturn(FunctionCompiler& f) {
-  MDefinition* value;
-  if (!f.iter().readReturn(&value)) {
+  DefVector values;
+  if (!f.iter().readReturn(&values)) {
     return false;
   }
 
-  if (f.funcType().results().length() == 0) {
-    f.returnVoid();
-    return true;
-  }
-
-  f.returnExpr(value);
+  f.returnValues(values);
   return true;
 }
 
@@ -1966,8 +1926,6 @@ static bool EmitUnreachable(FunctionCompiler& f) {
   f.unreachableTrap();
   return true;
 }
-
-typedef IonOpIter::ValueVector DefVector;
 
 static bool EmitCallArgs(FunctionCompiler& f, const FuncType& funcType,
                          const DefVector& args, CallCompileState* call) {
