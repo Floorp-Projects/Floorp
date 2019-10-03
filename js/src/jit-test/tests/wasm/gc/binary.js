@@ -18,7 +18,7 @@ const invalidRefBlockType = funcBody({locals:[], body:[
     0x42,
     EndCode,
 ]});
-checkInvalid(invalidRefBlockType, /invalid inline block type/);
+checkInvalid(invalidRefBlockType, /ref/);
 
 const invalidTooBigRefType = funcBody({locals:[], body:[
     BlockCode,
@@ -26,4 +26,4 @@ const invalidTooBigRefType = funcBody({locals:[], body:[
     varU32(1000000),
     EndCode,
 ]});
-checkInvalid(invalidTooBigRefType, /invalid inline block type/);
+checkInvalid(invalidTooBigRefType, /ref/);
