@@ -70,7 +70,7 @@ struct NurseryChunk {
 
   uintptr_t start() const { return uintptr_t(&data); }
   uintptr_t end() const { return uintptr_t(&trailer); }
-  gc::Chunk* toChunk(JSRuntime* rt);
+  gc::Chunk* toChunk(GCRuntime* gc);
 };
 static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
               "Nursery chunk size must match gc::Chunk size.");
@@ -118,16 +118,16 @@ inline js::NurseryChunk* js::NurseryChunk::fromChunk(Chunk* chunk) {
   return reinterpret_cast<NurseryChunk*>(chunk);
 }
 
-inline Chunk* js::NurseryChunk::toChunk(JSRuntime* rt) {
+inline Chunk* js::NurseryChunk::toChunk(GCRuntime* gc) {
   auto chunk = reinterpret_cast<Chunk*>(this);
-  chunk->init(rt);
+  chunk->init(gc);
   return chunk;
 }
 
 void js::NurseryDecommitTask::queueChunk(
     NurseryChunk* nchunk, const AutoLockHelperThreadState& lock) {
   // Using the chunk pointers to build the queue is infallible.
-  Chunk* chunk = nchunk->toChunk(runtime());
+  Chunk* chunk = nchunk->toChunk(&runtime()->gc);
   chunk->info.prev = nullptr;
   chunk->info.next = queue;
   queue = chunk;
