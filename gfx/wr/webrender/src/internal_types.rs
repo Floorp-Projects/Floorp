@@ -270,6 +270,9 @@ pub enum TextureSource {
     /// passes, these are not made available automatically, but are instead
     /// opt-in by the `RenderTask` (see `mark_for_saving()`).
     RenderTaskCache(SavedTargetIndex, Swizzle),
+    /// Select a dummy 1x1 white texture. This can be used by image
+    /// shaders that want to draw a solid color.
+    Dummy,
 }
 
 // See gpu_types.rs where we declare the number of possible documents and

@@ -8,6 +8,7 @@ use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use crate::composite::CompositeConfig;
 use crate::debug_render::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
@@ -496,6 +497,7 @@ impl FrameBuilder {
         let mut deferred_resolves = vec![];
         let mut has_texture_cache_tasks = false;
         let mut prim_headers = PrimitiveHeaders::new();
+        let mut composite_config = CompositeConfig::new();
 
         {
             profile_marker!("Batching");
@@ -538,6 +540,7 @@ impl FrameBuilder {
                     &mut transform_palette,
                     &mut prim_headers,
                     &mut z_generator,
+                    &mut composite_config,
                 );
 
                 match pass.kind {
@@ -580,6 +583,7 @@ impl FrameBuilder {
             recorded_dirty_regions: mem::replace(&mut scratch.recorded_dirty_regions, Vec::new()),
             dirty_rects: mem::replace(&mut scratch.dirty_rects, Vec::new()),
             debug_items: mem::replace(&mut scratch.debug_items, Vec::new()),
+            composite_config,
         }
     }
 }
@@ -599,6 +603,7 @@ pub fn build_render_pass(
     transforms: &mut TransformPalette,
     prim_headers: &mut PrimitiveHeaders,
     z_generator: &mut ZBufferIdGenerator,
+    composite_config: &mut CompositeConfig,
 ) {
     profile_scope!("RenderPass::build");
 
@@ -624,6 +629,7 @@ pub fn build_render_pass(
                 prim_headers,
                 transforms,
                 z_generator,
+                composite_config,
             );
         }
         RenderPassKind::OffScreen {
@@ -821,6 +827,7 @@ pub fn build_render_pass(
                     root_spatial_node_index,
                     surface_spatial_node_index,
                     z_generator,
+                    composite_config,
                 );
 
                 // Create picture cache targets, one per render task, and assign
@@ -875,6 +882,7 @@ pub fn build_render_pass(
                 prim_headers,
                 transforms,
                 z_generator,
+                composite_config,
             );
             alpha.build(
                 ctx,
@@ -885,6 +893,7 @@ pub fn build_render_pass(
                 prim_headers,
                 transforms,
                 z_generator,
+                composite_config,
             );
         }
     }
@@ -937,6 +946,11 @@ pub struct Frame {
 
     /// Debugging information to overlay for this frame.
     pub debug_items: Vec<DebugItem>,
+
+    /// Contains picture cache tiles, and associated information.
+    /// Used by the renderer to composite tiles into the framebuffer,
+    /// or hand them off to an OS compositor.
+    pub composite_config: CompositeConfig,
 }
 
 impl Frame {
