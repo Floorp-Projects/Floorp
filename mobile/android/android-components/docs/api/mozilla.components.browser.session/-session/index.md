@@ -2,7 +2,7 @@
 
 # Session
 
-`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L54)
+`class Session : `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L51)
 
 Value type that represents the state of a browser session. Changes can be observed.
 
@@ -45,7 +45,6 @@ Value type that represents the state of a browser session. Changes can be observ
 | [openWindowRequest](open-window-request.md) | `var openWindowRequest: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md)`>`<br>[Consumable](../../mozilla.components.support.base.observer/-consumable/index.md) request to open/create a window. |
 | [private](private.md) | `val private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [progress](progress.md) | `var progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The progress loading the current URL. |
-| [promptRequest](prompt-request.md) | `var promptRequest: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`PromptRequest`](../../mozilla.components.concept.engine.prompt/-prompt-request/index.md)`>`<br>[Consumable](../../mozilla.components.support.base.observer/-consumable/index.md) State for a prompt request from web content. |
 | [readerMode](reader-mode.md) | `var readerMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Reader mode state, whether or not reader view is enabled, otherwise false. |
 | [readerable](readerable.md) | `var readerable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Readerable state, whether or not the current page can be shown in a reader view. |
 | [recordingDevices](recording-devices.md) | `var recordingDevices: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`RecordingDevice`](../../mozilla.components.concept.engine.media/-recording-device/index.md)`>`<br>List of recording devices (e.g. camera or microphone) currently in use by web content. |

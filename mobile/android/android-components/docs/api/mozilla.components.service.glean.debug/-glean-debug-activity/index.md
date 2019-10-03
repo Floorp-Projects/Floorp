@@ -2,7 +2,7 @@
 
 # GleanDebugActivity
 
-`class GleanDebugActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt#L22)
+`class GleanDebugActivity` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt#L23)
 
 Debugging activity exported by Glean to allow easier debugging.
 For example, invoking debug mode in the Glean sample application

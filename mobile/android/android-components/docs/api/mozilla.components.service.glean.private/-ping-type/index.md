@@ -2,7 +2,7 @@
 
 # PingType
 
-`data class PingType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/PingType.kt#L17)
+`data class PingType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/PingType.kt#L18)
 
 This implements the developer facing API for custom pings.
 

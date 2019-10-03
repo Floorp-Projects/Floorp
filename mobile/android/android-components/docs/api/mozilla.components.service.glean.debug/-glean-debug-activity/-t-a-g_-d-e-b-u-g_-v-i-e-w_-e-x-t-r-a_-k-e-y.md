@@ -2,4 +2,4 @@
 
 # TAG_DEBUG_VIEW_EXTRA_KEY
 
-`const val TAG_DEBUG_VIEW_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt#L29)
+`const val TAG_DEBUG_VIEW_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/debug/GleanDebugActivity.kt#L30)

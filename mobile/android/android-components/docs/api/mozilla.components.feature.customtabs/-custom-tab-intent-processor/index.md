@@ -10,7 +10,7 @@ Processor for intents which trigger actions related to custom tabs.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `CustomTabIntentProcessor(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, loadUrlUseCase: `[`DefaultLoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-default-load-url-use-case/index.md)`, resources: <ERROR CLASS>)`<br>Processor for intents which trigger actions related to custom tabs. |
+| [&lt;init&gt;](-init-.md) | `CustomTabIntentProcessor(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, loadUrlUseCase: `[`DefaultLoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-default-load-url-use-case/index.md)`, resources: <ERROR CLASS>, isPrivate: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>Processor for intents which trigger actions related to custom tabs. |
 
 ### Functions
 
