@@ -14,6 +14,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
  *  Tests for verifying the main three dot menu options
@@ -42,8 +43,8 @@ class SettingsPrivacyTest {
         mockWebServer.shutdown()
     }
 
-    @Ignore("This is a stub test, ignore for now")
     @Test
+    // Walks through settings privacy menu and sub-menus to ensure all items are present
     fun settingsPrivacyItemsTest() {
         // Open 3dot (main) menu
         // Select settings
@@ -83,6 +84,24 @@ class SettingsPrivacyTest {
         // Verify item: "Privacy notice"
         // Verify item: "Leak Canary" and default toggle value: "Off"
 
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+
+            // PRIVACY
+            verifyPrivacyHeading()
+            verifyEnhancedTrackingProtectionButton()
+            verifyEnhancedTrackingProtectionValue()
+            // drill down to submenu
+            verifyAddPrivateBrowsingShortcutButton()
+            verifySitePermissionsButton()
+            // drill down on search
+            verifyDeleteBrowsingDataButton()
+            verifyDeleteBrowsingDataOnQuitButton()
+            verifyDataCollectionButton()
+            verifyPrivacyNoticeButton()
+            verifyLeakCanaryButton()
+        }
     }
 
     @Ignore("This is a stub test, ignore for now")

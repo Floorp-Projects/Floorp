@@ -26,7 +26,7 @@ import org.mozilla.fenix.share.ShareFragment
 /**
  * Implementation of Robot Pattern for the three dot (main) menu.
  */
-class ThreeDotMenuRobot {
+class ThreeDotMenuMainRobot {
     fun verifySettingsButton() = assertSettingsButton()
     fun verifyLibraryButton() = assertLibraryButton()
     fun verifyHelpButton() = assertHelpButton()

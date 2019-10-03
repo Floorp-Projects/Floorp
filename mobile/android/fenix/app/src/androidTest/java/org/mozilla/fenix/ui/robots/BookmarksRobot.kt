@@ -77,11 +77,11 @@ class BookmarksRobot {
             return LibraryRobot.Transition()
         }
 
-        fun openThreeDotMenu(interact: ThreeDotMenuBookmarks.() -> Unit): ThreeDotMenuBookmarks.Transition {
+        fun openThreeDotMenu(interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {
             threeDotMenu().click()
 
-            ThreeDotMenuBookmarks().interact()
-            return ThreeDotMenuBookmarks.Transition()
+            ThreeDotMenuBookmarksRobot().interact()
+            return ThreeDotMenuBookmarksRobot.Transition()
         }
     }
 }

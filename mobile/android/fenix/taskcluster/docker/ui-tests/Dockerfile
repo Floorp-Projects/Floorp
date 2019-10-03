@@ -10,6 +10,7 @@ USER worker:worker
 
 ENV GOOGLE_SDK_DOWNLOAD ./gcloud.tar.gz
 ENV GOOGLE_SDK_VERSION 233
+ENV FLANK_VERSION v8.0.1 
 
 ENV TEST_TOOLS /builds/worker/test-tools
 ENV PATH ${PATH}:${TEST_TOOLS}:${TEST_TOOLS}/google-cloud-sdk/bin
@@ -23,7 +24,7 @@ RUN curl https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud
     && ${TEST_TOOLS}/google-cloud-sdk/install.sh --quiet \
     && ${TEST_TOOLS}/google-cloud-sdk/bin/gcloud --quiet components update
 
-RUN URL_FLANK_BIN=$(curl -s "https://api.github.com/repos/TestArmada/flank/releases/latest" | grep "browser_download_url*" | sed -r "s/\"//g" | cut -d ":" -f3) \
+RUN URL_FLANK_BIN=$(curl -s "https://api.github.com/repos/TestArmada/flank/releases" | grep "browser_download_url*" | grep "${FLANK_VERSION}" | sed -r "s/\"//g" | cut -d ":" -f3) \
     && wget "https:${URL_FLANK_BIN}" -O ${TEST_TOOLS}/flank.jar \
     && chmod +x ${TEST_TOOLS}/flank.jar
 

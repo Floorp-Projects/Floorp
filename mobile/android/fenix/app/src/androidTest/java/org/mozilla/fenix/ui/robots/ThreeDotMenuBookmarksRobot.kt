@@ -13,7 +13,7 @@ import org.mozilla.fenix.helpers.click
 /**
  * Implementation of Robot Pattern for the Bookmarks three dot menu.
  */
-class ThreeDotMenuBookmarks {
+class ThreeDotMenuBookmarksRobot {
 
     class Transition {
 
