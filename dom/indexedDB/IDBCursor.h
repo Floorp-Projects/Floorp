@@ -90,20 +90,19 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
  public:
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
+      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
       StructuredCloneReadInfo&& aCloneInfo);
 
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey);
+      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey);
 
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
-      const Key& aSortKey, const Key& aPrimaryKey,
-      StructuredCloneReadInfo&& aCloneInfo);
+      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
+      Key aSortKey, Key aPrimaryKey, StructuredCloneReadInfo&& aCloneInfo);
 
   static already_AddRefed<IDBCursor> Create(
-      indexedDB::BackgroundCursorChild* aBackgroundActor, const Key& aKey,
-      const Key& aSortKey, const Key& aPrimaryKey);
+      indexedDB::BackgroundCursorChild* aBackgroundActor, Key aKey,
+      Key aSortKey, Key aPrimaryKey);
 
   static Direction ConvertDirection(IDBCursorDirection aDirection);
 
@@ -169,7 +168,7 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
  private:
   IDBCursor(Type aType, indexedDB::BackgroundCursorChild* aBackgroundActor,
-            const Key& aKey);
+            Key aKey);
 
   ~IDBCursor();
 
