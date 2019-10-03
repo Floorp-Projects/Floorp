@@ -174,11 +174,11 @@ function MockFxAccounts(credentials = null) {
       ]);
       return this._d_signCertificate.promise;
     },
-    _registerOrUpdateDevice() {
-      return Promise.resolve();
-    },
     fxAccountsClient: new MockFxAccountsClient(),
     observerPreloads: [],
+    device: {
+      _registerOrUpdateDevice() {},
+    },
   });
   // and for convenience so we don't have to touch as many lines in this test
   // when we refactored FxAccounts.jsm :)
@@ -204,8 +204,14 @@ async function MakeFxAccounts({ internal = {}, credentials } = {}) {
   if (!internal._signOutServer) {
     internal._signOutServer = () => Promise.resolve();
   }
-  if (!internal._registerOrUpdateDevice) {
-    internal._registerOrUpdateDevice = () => Promise.resolve();
+  if (internal.device) {
+    if (!internal.device._registerOrUpdateDevice) {
+      internal.device._registerOrUpdateDevice = () => Promise.resolve();
+    }
+  } else {
+    internal.device = {
+      _registerOrUpdateDevice() {},
+    };
   }
   if (!internal.observerPreloads) {
     internal.observerPreloads = [];
@@ -1693,8 +1699,10 @@ add_test(function test_getSignedInUserProfile() {
     _signOutServer() {
       return Promise.resolve();
     },
-    _registerOrUpdateDevice() {
-      return Promise.resolve();
+    device: {
+      _registerOrUpdateDevice() {
+        return Promise.resolve();
+      },
     },
   });
 
