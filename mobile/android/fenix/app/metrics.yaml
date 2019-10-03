@@ -107,13 +107,16 @@ events:
     extra_keys:
       preference_key:
         description: "The preference key for the switch preference the user toggled. We currently track:
-          show_search_suggestions, remote_debugging, telemetry, tracking_protection"
+          show_search_suggestions, remote_debugging, telemetry, tracking_protection, search_bookmarks,
+          search_browsing_history, and show_clipboard_suggestions"
       enabled:
         description: "Whether or not the preference is *now* enabled"
     bugs:
     - 975
+    - 5094
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1896
+    - https://github.com/mozilla-mobile/fenix/pull/5704
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
