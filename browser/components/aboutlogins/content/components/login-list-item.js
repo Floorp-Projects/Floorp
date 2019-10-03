@@ -60,9 +60,6 @@ export default class LoginListItemFactory {
     if (login.faviconDataURI) {
       faviconWrapper.classList.add("hide-default-favicon");
       favicon.src = login.faviconDataURI;
-      document.l10n.setAttributes(favicon, "login-favicon", {
-        title: login.title,
-      });
     }
   }
 }
