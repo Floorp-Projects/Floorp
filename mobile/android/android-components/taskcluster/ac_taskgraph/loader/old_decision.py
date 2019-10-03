@@ -42,7 +42,7 @@ def loader(kind, path, config, params, loaded_tasks):
     tasks_for = params['tasks_for']
 
     artifacts_info = components()
-    if tasks_for == 'github-release':
+    if tasks_for in ('github-release', 'cron'):
         artifacts_info = [info for info in artifacts_info if info['shouldPublish']]
     if len(artifacts_info) == 0:
         raise ValueError("Could not get module names from gradle")
