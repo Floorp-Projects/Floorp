@@ -2,20 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-plugins {
-    id "com.jetbrains.python.envs" version "0.0.26"
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-
-/*
- * This defines the location of the JSON schema used to validate the pings
- * created during unit testing.
- * This uses a specific version of the schema identified by a git commit hash.
- */
-String GLEAN_PING_SCHEMA_GIT_HASH = "c566160"
-String GLEAN_PING_SCHEMA_URL = "https://raw.githubusercontent.com/mozilla-services/mozilla-pipeline-schemas/$GLEAN_PING_SCHEMA_GIT_HASH/schemas/glean/baseline/baseline.1.schema.json"
 
 android {
     compileSdkVersion config.compileSdkVersion
@@ -23,9 +11,6 @@ android {
     defaultConfig {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
-
-        buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
-        buildConfigField("String", "GLEAN_PING_SCHEMA_URL", "\"" + GLEAN_PING_SCHEMA_URL + "\"")
     }
 
     buildTypes {
@@ -36,26 +21,40 @@ android {
     }
 }
 
+configurations {
+    // There's an interaction between Gradle's resolution of dependencies with different types
+    // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in
+    // JUnit test runner.  The runtime classpath in the built-in JUnit test runner gets the
+    // dependency from the `implementation`, which is type @aar, and therefore the JNA dependency
+    // doesn't provide the JNI dispatch libraries in the correct Java resource directories.  I think
+    // what's happening is that @aar type in `implementation` resolves to the @jar type in
+    // `testImplementation`, and that it wins the dependency resolution battle.
+    //
+    // A workaround is to add a new configuration which depends on the @jar type and to reference
+    // the underlying JAR file directly in `testImplementation`.  This JAR file doesn't resolve to
+    // the @aar type in `implementation`.  This works when invoked via `gradle`, but also sets the
+    // correct runtime classpath when invoked with Android Studio's built-in JUnit test runner.
+    // Success!
+    jnaForTest
+}
+
+// Define library names and version constants.
+String GLEAN_LIBRARY = "org.mozilla.telemetry:glean:${Versions.mozilla_glean}"
+String GLEAN_LIBRARY_FORUNITTESTS = "org.mozilla.telemetry:glean-forUnitTests:${Versions.mozilla_glean}"
+
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
     implementation Dependencies.androidx_lifecycle_extensions
     implementation Dependencies.androidx_work_runtime
+    
+    api GLEAN_LIBRARY
 
     implementation project(':support-ktx')
     implementation project(':support-base')
     implementation project(':concept-fetch')
     implementation project(':lib-fetch-httpurlconnection')
     implementation project(':support-utils')
-
-    // We need a compileOnly dependency on the following block of testing
-    // libraries in order to expose the GleanTestRule to applications/libraries
-    // using the Glean SDK.
-    // We can't simply create a separate package otherwise we would need
-    // to provide a public API for the testing package to access the
-    // Glean internals, which is something we would not want to do.
-    compileOnly Dependencies.testing_junit
-    compileOnly Dependencies.androidx_work_testing
 
     testImplementation Dependencies.androidx_test_core
 
@@ -67,9 +66,9 @@ dependencies {
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-okhttp')
+
+    testImplementation GLEAN_LIBRARY_FORUNITTESTS
 }
 
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
-
-apply from: './scripts/sdk_generator.gradle'

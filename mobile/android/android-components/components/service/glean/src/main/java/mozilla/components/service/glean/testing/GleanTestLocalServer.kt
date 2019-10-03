@@ -4,11 +4,6 @@
 
 package mozilla.components.service.glean.testing
 
-import androidx.annotation.VisibleForTesting
-import mozilla.components.service.glean.Glean
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
-
 /**
  * This implements a JUnit rule for writing tests for Glean SDK metrics.
  *
@@ -29,11 +24,4 @@ import org.junit.runner.Description
  *
  * @param localPort the port of the local ping server
  */
-@VisibleForTesting(otherwise = VisibleForTesting.NONE)
-class GleanTestLocalServer(
-    private val localPort: Int
-) : TestWatcher() {
-    override fun starting(description: Description?) {
-        Glean.testSetLocalEndpoint(localPort)
-    }
-}
+typealias GleanTestLocalServer = mozilla.telemetry.glean.testing.GleanTestLocalServer

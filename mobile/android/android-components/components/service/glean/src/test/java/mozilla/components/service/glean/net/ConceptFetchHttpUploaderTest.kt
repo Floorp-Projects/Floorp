@@ -9,11 +9,14 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.lib.fetch.okhttp.OkHttpClient
-import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.getMockWebServer
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.telemetry.glean.config.Configuration
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -37,6 +40,20 @@ class ConceptFetchHttpUploaderTest {
     private val testDefaultConfig = Configuration().copy(
         userAgent = "Glean/Test 25.0.2"
     )
+
+    /**
+     * Create a mock webserver that accepts all requests.
+     * @return a [MockWebServer] instance
+     */
+    private fun getMockWebServer(): MockWebServer {
+        val server = MockWebServer()
+        server.setDispatcher(object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                return MockResponse().setBody("OK")
+            }
+        })
+        return server
+    }
 
     @Test
     fun `connection timeouts must be properly set`() {

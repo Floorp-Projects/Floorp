@@ -41,6 +41,7 @@ dependencies {
     testImplementation Dependencies.androidx_work_testing
 
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.mozilla_glean_forUnitTests
 }
 
 apply from: '../../../publish.gradle'

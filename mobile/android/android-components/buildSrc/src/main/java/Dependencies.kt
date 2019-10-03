@@ -29,6 +29,8 @@ object Versions {
 
     const val mozilla_appservices = "0.42.0"
 
+    const val mozilla_glean = "19.0.0"
+
     const val material = "1.0.0"
 
     object AndroidX {
@@ -119,6 +121,8 @@ object Dependencies {
     const val tools_detekt_test = "io.gitlab.arturbosch.detekt:detekt-test:${Versions.detekt}"
 
     const val mozilla_fxa = "org.mozilla.appservices:fxaclient:${Versions.mozilla_appservices}"
+
+    const val mozilla_glean_forUnitTests = "org.mozilla.telemetry:glean-forUnitTests:${Versions.mozilla_glean}"
 
     const val mozilla_sync_logins = "org.mozilla.appservices:logins:${Versions.mozilla_appservices}"
     const val mozilla_places = "org.mozilla.appservices:places:${Versions.mozilla_appservices}"
