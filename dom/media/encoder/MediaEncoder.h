@@ -181,9 +181,7 @@ class MediaEncoder {
 
   bool HasError();
 
-#ifdef MOZ_WEBM_ENCODER
   static bool IsWebMEncoderEnabled();
-#endif
 
   const nsString& MimeType() const;
 
