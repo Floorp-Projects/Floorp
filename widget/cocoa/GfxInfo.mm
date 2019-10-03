@@ -218,6 +218,23 @@ GfxInfo::GetAdapterSubsysID(nsAString& aAdapterSubsysID) { return NS_ERROR_FAILU
 NS_IMETHODIMP
 GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) { return NS_ERROR_FAILURE; }
 
+/* readonly attribute Array<DOMString> displayInfo; */
+NS_IMETHODIMP
+GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
+for (NSScreen* screen in [NSScreen screens]) {
+    NSRect rect = [screen frame];
+    nsString desc;
+    desc.AppendPrintf(
+      "%dx%d scale:%f",
+      (int32_t)rect.size.width, (int32_t)rect.size.height,
+      nsCocoaUtils::GetBackingScaleFactor(screen)
+    );
+    aDisplayInfo.AppendElement(desc);
+  }
+
+  return NS_OK;
+}
+
 /* readonly attribute boolean isGPU2Active; */
 NS_IMETHODIMP
 GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) { return NS_ERROR_FAILURE; }

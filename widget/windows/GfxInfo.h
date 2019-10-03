@@ -46,6 +46,7 @@ class GfxInfo : public GfxInfoBase {
       nsAString& aAdapterDriverVersion) override;
   NS_IMETHOD GetAdapterDriverDate2(nsAString& aAdapterDriverDate) override;
   NS_IMETHOD GetIsGPU2Active(bool* aIsGPU2Active) override;
+  NS_IMETHOD GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) override;
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
 
@@ -70,6 +71,14 @@ class GfxInfo : public GfxInfoBase {
   void DescribeFeatures(JSContext* cx, JS::Handle<JSObject*> aOut) override;
 
  private:
+   struct DisplayInfo {
+     uint32_t mScreenWidth;
+     uint32_t mScreenHeight;
+     uint32_t mRefreshRate;
+     bool mIsPseudoDisplay;
+   };
+
+ private:
   void AddCrashReportAnnotations();
 
   nsString mDeviceString[2];
@@ -83,6 +92,7 @@ class GfxInfo : public GfxInfoBase {
   nsString mAdapterSubsysID[2];
   uint32_t mWindowsVersion;
   uint32_t mActiveGPUIndex;  // This must be 0 or 1
+  nsTArray<DisplayInfo> mDisplayInfo;
   bool mHasDualGPU;
   bool mHasDriverVersionMismatch;
 };
