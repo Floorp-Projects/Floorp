@@ -70,20 +70,6 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
     const RefPtr<MediaEngineTabVideoSource> mVideoSource;
   };
 
-  class InitRunnable : public Runnable {
-   public:
-    InitRunnable(MediaEngineTabVideoSource* videoSource,
-                 SourceMediaTrack* aTrack, const PrincipalHandle& aPrincipal)
-        : Runnable("MediaEngineTabVideoSource::InitRunnable"),
-          mVideoSource(videoSource),
-          mTrack(aTrack),
-          mPrincipal(aPrincipal) {}
-    NS_IMETHOD Run() override;
-    const RefPtr<MediaEngineTabVideoSource> mVideoSource;
-    const RefPtr<SourceMediaTrack> mTrack;
-    const PrincipalHandle mPrincipal;
-  };
-
   class DestroyRunnable : public Runnable {
    public:
     explicit DestroyRunnable(MediaEngineTabVideoSource* videoSource)
@@ -112,6 +98,7 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
   // Members are main thread only.
   const RefPtr<media::Refcountable<dom::MediaTrackSettings>> mSettings;
 
+  // Main thread only.
   nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITabSource> mTabSource;
