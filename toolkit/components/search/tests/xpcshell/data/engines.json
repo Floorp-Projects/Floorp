@@ -4,6 +4,7 @@
       "engineName": "Test search engine",
       "webExtensionId": "engine@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "orderHint": 10000,
       "appliesTo": [{
         "included": { "everywhere": true },
         "default": "yes"
@@ -13,45 +14,61 @@
       "engineName": "engine-pref",
       "webExtensionId": "engine-pref@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "orderHint": 7000,
       "appliesTo": [{
         "included": { "everywhere": true },
-        "default": "yes"
+        "excluded": { "locales": { "matches": ["de"] } },
+        "default": "no",
+        "defaultPrivate": "yes"
       }]
     },
     {
       "engineName": "engine-rel-searchform-purpose",
       "webExtensionId": "engine-rel-searchform-purpose@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "orderHint": 6000,
       "appliesTo": [{
         "included": { "everywhere": true },
-        "default": "yes"
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
       }]
     },
     {
       "engineName": "engine-chromeicon",
       "webExtensionId": "engine-chromeicon@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "orderHint": 8000,
       "appliesTo": [{
         "included": { "everywhere": true },
-        "default": "yes"
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
+      }, {
+        "included": { "regions": ["ru"] },
+        "default": "no"
       }]
     },
     {
       "engineName": "engine-resourceicon",
       "webExtensionId": "engine-resourceicon@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "orderHint": 9000,
       "appliesTo": [{
-        "included": { "everywhere": true },
-        "default": "yes"
+        "included": { "locales": { "matches": ["en-US", "fr"] } },
+        "excluded": {
+          "regions": ["ru"]
+        },
+        "default": "no"
       }]
     },
     {
       "engineName": "engine-reordered",
       "webExtensionId": "engine-reordered@search.mozilla.org",
       "webExtensionVersion": "1.0",
+      "orderHint": 5000,
       "appliesTo": [{
         "included": { "everywhere": true },
-        "default": "yes"
+        "excluded": { "locales": { "matches": ["de", "fr"] } },
+        "default": "no"
       }]
     }
   ]

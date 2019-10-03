@@ -6,11 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["PurgeSessionHistoryChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
-
-class PurgeSessionHistoryChild extends ActorChild {
+class PurgeSessionHistoryChild extends JSWindowActorChild {
   receiveMessage(message) {
     if (message.name != "Browser:PurgeSessionHistory") {
       return;
@@ -30,7 +26,7 @@ class PurgeSessionHistoryChild extends ActorChild {
     }
 
     let purge = sessionHistory.count;
-    if (this.content.location.href != "about:blank") {
+    if (this.document.location.href != "about:blank") {
       --purge; // Don't remove the page the user's staring at from shistory
     }
 

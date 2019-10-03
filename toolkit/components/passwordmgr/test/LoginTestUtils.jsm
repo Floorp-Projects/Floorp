@@ -544,6 +544,7 @@ this.LoginTestUtils.telemetry = {
       }
 
       events = events.filter(e => e[1] == category);
+      dump(`Waiting for ${count} events, got ${events.length}\n`);
       return events.length == count ? events : null;
     }, "waiting for telemetry event count of: " + count);
     Assert.equal(events.length, count, "waiting for telemetry event count");

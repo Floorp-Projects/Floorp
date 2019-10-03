@@ -173,11 +173,18 @@ class Message extends Component {
   }
 
   onContextMenu(e) {
-    const { serviceContainer, source, request, messageId } = this.props;
+    const {
+      serviceContainer,
+      source,
+      request,
+      messageId,
+      executionPoint,
+    } = this.props;
     const messageInfo = {
       source,
       request,
       messageId,
+      executionPoint,
     };
     serviceContainer.openContextMenu(e, messageInfo);
     e.stopPropagation();

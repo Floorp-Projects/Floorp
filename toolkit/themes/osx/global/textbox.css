@@ -49,18 +49,6 @@ search-textbox[disabled="true"] {
   color: GrayText;
 }
 
-textbox.plain {
-  -moz-appearance: none !important;
-  background-color: transparent;
-  padding: 0px !important;
-  margin: 0px !important;
-  border: none !important;
-}
-
-textbox.plain html|*.textbox-input {
-  padding: 0px !important;
-}
-
 /* ::::: search box ::::: */
 
 search-textbox {

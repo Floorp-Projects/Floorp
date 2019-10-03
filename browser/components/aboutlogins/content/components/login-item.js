@@ -16,6 +16,7 @@ export default class LoginItem extends HTMLElement {
   constructor() {
     super();
     this._login = {};
+    this._error = null;
     this._copyUsernameTimeoutId = 0;
     this._copyPasswordTimeoutId = 0;
   }
@@ -42,6 +43,12 @@ export default class LoginItem extends HTMLElement {
     this._deleteButton = this.shadowRoot.querySelector(".delete-button");
     this._editButton = this.shadowRoot.querySelector(".edit-button");
     this._errorMessage = this.shadowRoot.querySelector(".error-message");
+    this._errorMessageLink = this._errorMessage.querySelector(
+      ".error-message-link"
+    );
+    this._errorMessageText = this._errorMessage.querySelector(
+      ".error-message-text"
+    );
     this._form = this.shadowRoot.querySelector("form");
     this._originInput = this.shadowRoot.querySelector("input[name='origin']");
     this._usernameInput = this.shadowRoot.querySelector(
@@ -74,18 +81,19 @@ export default class LoginItem extends HTMLElement {
 
     this.render();
 
-    this._originInput.addEventListener("blur", this);
+    this._breachAlertLink.addEventListener("click", this);
     this._cancelButton.addEventListener("click", this);
     this._copyPasswordButton.addEventListener("click", this);
     this._copyUsernameButton.addEventListener("click", this);
     this._deleteButton.addEventListener("click", this);
     this._dismissBreachAlert.addEventListener("click", this);
     this._editButton.addEventListener("click", this);
+    this._errorMessageLink.addEventListener("click", this);
     this._form.addEventListener("submit", this);
+    this._originInput.addEventListener("blur", this);
     this._originInput.addEventListener("click", this);
-    this._revealCheckbox.addEventListener("click", this);
     this._originInput.addEventListener("auxclick", this);
-    this._breachAlertLink.addEventListener("click", this);
+    this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
@@ -94,35 +102,41 @@ export default class LoginItem extends HTMLElement {
 
   focus() {
     if (!this._breachAlert.hidden) {
-      const breachAlertLink = this._breachAlert.querySelector(
-        ".breach-alert-link"
-      );
-      breachAlertLink.focus();
-      return;
-    }
-    if (!this._editButton.disabled) {
+      this._breachAlertLink.focus();
+    } else if (!this._editButton.disabled) {
       this._editButton.focus();
-      return;
-    }
-    if (!this._deleteButton.disabled) {
+    } else if (!this._deleteButton.disabled) {
       this._deleteButton.focus();
-      return;
+    } else {
+      this._originInput.focus();
     }
-    this._originInput.focus();
   }
 
   async render() {
-    [this._errorMessage, this._breachAlert].forEach(el => {
-      el.hidden = true;
-    });
-    if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
+    if (this._error) {
+      if (this._error.errorMessage.includes("This login already exists")) {
+        document.l10n.setAttributes(
+          this._errorMessageLink,
+          "about-logins-error-message-duplicate-login-with-link",
+          {
+            loginTitle: this._error.login.title,
+          }
+        );
+        this._errorMessageLink.dataset.errorGuid = this._error.existingLoginGuid;
+        this._errorMessageText.hidden = true;
+        this._errorMessageLink.hidden = false;
+      } else {
+        this._errorMessageText.hidden = false;
+        this._errorMessageLink.hidden = true;
+      }
+    }
+    this._errorMessage.hidden = !this._error;
+
+    this._breachAlert.hidden =
+      !this._breachesMap || !this._breachesMap.has(this._login.guid);
+    if (!this._breachAlert.hidden) {
       const breachDetails = this._breachesMap.get(this._login.guid);
       this._breachAlertLink.href = breachDetails.breachAlertURL;
-      document.l10n.setAttributes(
-        this._dismissBreachAlert,
-        "breach-alert-dismiss"
-      );
-      this._breachAlert.hidden = false;
     }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
       timeCreated: this._login.timeCreated || "",
@@ -132,10 +146,6 @@ export default class LoginItem extends HTMLElement {
     });
     document.l10n.setAttributes(this._timeUsed, "login-item-time-used", {
       timeUsed: this._login.timeLastUsed || "",
-    });
-
-    document.l10n.setAttributes(this._favicon, "login-favicon", {
-      title: this._login.title,
     });
 
     if (this._login.faviconDataURI) {
@@ -181,9 +191,19 @@ export default class LoginItem extends HTMLElement {
     this._updatePasswordRevealState();
   }
 
-  updateBreaches(breachesByLoginGUID) {
+  setBreaches(breachesByLoginGUID) {
     this._breachesMap = breachesByLoginGUID;
     this.render();
+  }
+
+  updateBreaches(breachesByLoginGUID) {
+    if (!this._breachesMap) {
+      this._breachesMap = new Map();
+    }
+    for (const [guid, breach] of [...breachesByLoginGUID]) {
+      this._breachesMap.set(guid, breach);
+    }
+    this.setBreaches(this._breachesMap);
   }
 
   dismissBreachAlert() {
@@ -200,27 +220,8 @@ export default class LoginItem extends HTMLElement {
   }
 
   showLoginItemError(error) {
-    const errorMessageText = this._errorMessage.querySelector(
-      ".error-message-text"
-    );
-    if (!error.errorMessage) {
-      return;
-    }
-    if (error.errorMessage.includes("This login already exists")) {
-      document.l10n.setAttributes(
-        errorMessageText,
-        "about-logins-error-message-duplicate-login",
-        {
-          loginTitle: error.login.title,
-        }
-      );
-    } else {
-      document.l10n.setAttributes(
-        errorMessageText,
-        "about-logins-error-message-default"
-      );
-    }
-    this._errorMessage.hidden = false;
+    this._error = error;
+    this.render();
   }
 
   async handleEvent(event) {
@@ -376,6 +377,21 @@ export default class LoginItem extends HTMLElement {
           });
           return;
         }
+        if (
+          event.originalTarget.dataset.l10nName == "duplicate-link" &&
+          event.currentTarget.dataset.errorGuid
+        ) {
+          let existingDuplicateLogin = {
+            guid: event.currentTarget.dataset.errorGuid,
+          };
+          window.dispatchEvent(
+            new CustomEvent("AboutLoginsLoginSelected", {
+              detail: existingDuplicateLogin,
+              cancelable: true,
+            })
+          );
+          return;
+        }
         if (classList.contains("origin-input")) {
           this._handleOriginClick();
         }
@@ -512,6 +528,7 @@ export default class LoginItem extends HTMLElement {
    */
   setLogin(login, { skipFocusChange } = {}) {
     this._login = login;
+    this._error = null;
 
     this._form.reset();
 

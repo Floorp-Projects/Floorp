@@ -34,8 +34,3 @@ html|input.num {
 #linux html|input.num {
   padding-inline-end: 3px;
 }
-
-html|div.plainfield {
-  color: -moz-fieldtext;
-  white-space: pre;
-}
