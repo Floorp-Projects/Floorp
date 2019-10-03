@@ -932,6 +932,10 @@ var Policies = {
     },
   },
 
+  LegacyProfiles: {
+    // Handled in nsToolkitProfileService.cpp (Windows only)
+  },
+
   LocalFileLinks: {
     onBeforeAddons(manager, param) {
       // If there are existing capabilities, lock them with the policy pref.
