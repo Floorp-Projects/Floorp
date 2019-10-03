@@ -229,9 +229,8 @@ add_task(async function test_ui_state_loginFailed() {
 
   gSync.updateAllUI(state);
 
-  const expectedLabel = gSync.fxaStrings.formatStringFromName(
-    "account.reconnectToSync",
-    [gSync.brandStrings.GetStringFromName("syncBrandShortName")]
+  const expectedLabel = gSync.fxaStrings.GetStringFromName(
+    "account.reconnectToFxA"
   );
 
   checkPanelUIStatusBar({
