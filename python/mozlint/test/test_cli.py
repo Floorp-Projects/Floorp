@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import subprocess
+import sys
 from distutils.spawn import find_executable
 
 import mozunit
@@ -30,6 +32,17 @@ def run(parser, lintdir, files):
         lintargs['root'] = here
         return cli.run(**lintargs)
     return inner
+
+
+def test_cli_with_ascii_encoding(run, monkeypatch, capfd):
+    cmd = [sys.executable, 'runcli.py', '-l=string', '-f=stylish']
+    env = os.environ.copy()
+    env['PYTHONPATH'] = os.pathsep.join(sys.path)
+    env['PYTHONIOENCODING'] = 'ascii'
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            cwd=here, env=env, universal_newlines=True)
+    out = proc.communicate()[0]
+    assert 'Traceback' not in out
 
 
 def test_cli_run_with_fix(run, capfd):

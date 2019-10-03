@@ -240,7 +240,7 @@ add_task(async function test_ExceptionsThrownByNonStandardURIsAreCaught() {
   );
 });
 
-add_task(async function test_updateBreachesFromRemoteSettingsSync() {
+add_task(async function test_setBreachesFromRemoteSettingsSync() {
   const login = NOT_BREACHED_SUBDOMAIN_LOGIN;
   const nowExampleIsInBreachedRecords = [
     {

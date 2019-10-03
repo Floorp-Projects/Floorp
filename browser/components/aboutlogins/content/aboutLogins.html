@@ -45,7 +45,9 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/confirmation-dialog.css">
       <div class="overlay">
         <div class="container" role="dialog" aria-labelledby="title" aria-describedby="message">
-          <button class="dismiss-button" data-l10n-id="confirmation-dialog-dismiss-button"></button>
+          <button class="dismiss-button" data-l10n-id="confirmation-dialog-dismiss-button">
+            <img class="dismiss-icon" src="chrome://global/skin/icons/close.svg"/>
+          </button>
           <div class="content">
             <img class="warning-icon" src="chrome://global/skin/icons/warning.svg"/>
             <h1 class="title" id="title"></h1>
@@ -111,13 +113,13 @@
     <template id="login-list-item-template">
       <li class="login-list-item" role="option">
         <div class="favicon-wrapper">
-          <img class="favicon" src="" alt=""/>
+          <img class="favicon" src=""/>
         </div>
         <div class="labels">
           <span class="title" dir="auto"></span>
           <span class="username" dir="ltr"></span>
         </div>
-        <img data-l10n-id="about-logins-list-item-warning-icon" class="list-item-warning-icon" alt="" title="" src="chrome://global/skin/icons/warning.svg"/>
+        <img data-l10n-id="about-logins-list-item-breach-icon" class="list-item-warning-icon" title="" src="chrome://global/skin/icons/warning.svg"/>
       </li>
     </template>
 
@@ -145,16 +147,22 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-item.css">
       <div class="error-message">
-        <span class="error-message-text"></span>
+        <span class="error-message-text" data-l10n-id="about-logins-error-message-default"></span>
+        <span class="error-message-link">
+          <a data-l10n-name="duplicate-link" href=""></a>
+        </span>
       </div>
       <div class="breach-alert">
+        <img class="breach-icon" src="chrome://global/skin/icons/warning.svg"/>
         <span class="breach-alert-text" data-l10n-id="breach-alert-text"></span>
         <a class="breach-alert-link" data-l10n-id="breach-alert-link" href="#" rel="noreferrer" target="_blank"></a>
-        <button class="dismiss-breach-alert"></button>
+        <button class="dismiss-breach-alert" data-l10n-id="breach-alert-dismiss">
+          <img class="dismiss-breach-alert-icon" src="chrome://global/skin/icons/close.svg"/>
+        </button>
       </div>
       <div class="header">
         <div class="login-item-favicon-wrapper">
-          <img class="login-item-favicon" src="" alt=""/>
+          <img class="login-item-favicon" src=""/>
         </div>
         <h2 class="title">
           <span class="login-item-title"></span>

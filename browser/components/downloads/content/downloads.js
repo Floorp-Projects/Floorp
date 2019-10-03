@@ -814,10 +814,7 @@ var DownloadsView = {
 
   onDownloadClick(aEvent) {
     // Handle primary clicks only, and exclude the action button.
-    if (
-      aEvent.button == 0 &&
-      !aEvent.originalTarget.hasAttribute("oncommand")
-    ) {
+    if (aEvent.button == 0 && aEvent.originalTarget.localName != "button") {
       let target = aEvent.target;
       while (target.nodeName != "richlistitem") {
         target = target.parentNode;
