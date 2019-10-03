@@ -174,12 +174,11 @@ var AboutProtectionsHandler = {
    *         The login data.
    */
   async getLoginData() {
-    let syncedDevices = [];
     let hasFxa = false;
 
     try {
       if ((hasFxa = await fxAccounts.accountStatus())) {
-        syncedDevices = await fxAccounts.getDeviceList();
+        await fxAccounts.device.refreshDeviceList();
       }
     } catch (e) {
       Cu.reportError("There was an error fetching login data: ", e.message);
@@ -192,7 +191,9 @@ var AboutProtectionsHandler = {
     return {
       hasFxa,
       numLogins: userFacingLogins,
-      numSyncedDevices: syncedDevices.length,
+      numSyncedDevices: fxAccounts.device.recentDeviceList
+        ? fxAccounts.device.recentDeviceList.length
+        : 0,
     };
   },
 

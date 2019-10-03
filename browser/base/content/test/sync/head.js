@@ -8,23 +8,14 @@ function promiseSyncReady() {
 }
 
 function setupSendTabMocks({
-  syncReady = true,
   fxaDevices = null,
   state = UIState.STATUS_SIGNED_IN,
   isSendableURI = true,
 }) {
   const sandbox = sinon.createSandbox();
-  sandbox.stub(gSync, "syncReady").get(() => syncReady);
-  if (fxaDevices) {
-    // Clone fxaDevices because it gets sorted in-place.
-    sandbox
-      .stub(Weave.Service.clientsEngine, "fxaDevices")
-      .get(() => [...fxaDevices]);
-  }
-  sandbox
-    .stub(Weave.Service.clientsEngine, "hasSyncedThisSession")
-    .get(() => !!fxaDevices);
+  sandbox.stub(fxAccounts.device, "recentDeviceList").get(() => fxaDevices);
   sandbox.stub(UIState, "get").returns({ status: state });
   sandbox.stub(gSync, "isSendableURI").returns(isSendableURI);
+  sandbox.stub(fxAccounts.device, "refreshDeviceList").resolves(true);
   return sandbox;
 }
