@@ -157,8 +157,9 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 #endif
 
 #ifdef SCTP_DTLS_SUPPORTED
-  bool ConnectToTransport(const std::string& aTransportId, bool aClient,
-                          uint16_t localport, uint16_t remoteport);
+  bool ConnectToTransport(const std::string& aTransportId, const bool aClient,
+                          const uint16_t aLocalPort,
+                          const uint16_t aRemotePort);
   void TransportStateChange(const std::string& aTransportId,
                             TransportLayer::State aState);
   void CompleteConnect();
