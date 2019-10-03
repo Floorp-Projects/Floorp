@@ -5,6 +5,7 @@
 package mozilla.components.feature.app.links
 
 import android.content.Intent
+import android.content.pm.ResolveInfo
 
 /**
  * Data class for the external Intent or fallback URL a given URL encodes for.
@@ -12,11 +13,26 @@ import android.content.Intent
 data class AppLinkRedirect(
     val appIntent: Intent?,
     val webUrl: String?,
-    val isFallback: Boolean
+    val isFallback: Boolean,
+    val info: ResolveInfo? = null
 ) {
+    /**
+     * If there is a third-party app intent.
+     */
     fun hasExternalApp() = appIntent != null
 
+    /**
+     * If there is a fallback URL (should the intent fails).
+     */
     fun hasFallback() = webUrl != null && isFallback
 
+    /**
+     * If the app link is a redirect (to an app or URL).
+     */
     fun isRedirect() = hasExternalApp() || hasFallback()
+
+    /**
+     * Is the app link one that can be installed from a store.
+     */
+    fun isInstallable() = appIntent?.data?.scheme == "market"
 }

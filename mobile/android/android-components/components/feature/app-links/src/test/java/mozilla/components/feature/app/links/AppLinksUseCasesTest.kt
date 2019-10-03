@@ -34,16 +34,20 @@ class AppLinksUseCasesTest {
         val pm = testContext.packageManager
         val packageManager = shadowOf(pm)
 
-        urlToPackages.forEach { (urlString, packageName) ->
+        urlToPackages.forEach { (urlString, pkgName) ->
             val intent = Intent.parseUri(urlString, 0).addCategory(Intent.CATEGORY_BROWSABLE)
 
-            val activityInfo = ActivityInfo()
-            activityInfo.packageName = packageName
+            val info = ActivityInfo().apply {
+                packageName = pkgName
+                icon = android.R.drawable.btn_default
+            }
 
-            val resolveInfo = ResolveInfo()
-            resolveInfo.activityInfo = activityInfo
-
-            packageManager.addResolveInfoForIntentNoDefaults(intent, resolveInfo)
+            val resolveInfo = ResolveInfo().apply {
+                labelRes = android.R.string.ok
+                activityInfo = info
+            }
+            packageManager.addResolveInfoForIntent(intent, resolveInfo)
+            packageManager.addDrawableResolution(pkgName, android.R.drawable.btn_default, mock())
         }
 
         val context = mock<Context>()
@@ -111,8 +115,22 @@ class AppLinksUseCasesTest {
         val redirect = subject.interceptedAppLinkRedirect(uri)
         assertTrue(redirect.hasExternalApp())
         assertNotNull(redirect.appIntent)
+        assertNotNull(redirect.info)
+        assertEquals("com.example.app", redirect.info!!.activityInfo.packageName)
 
         assertEquals("zxing://scan/", redirect.appIntent!!.dataString)
+    }
+
+    @Test
+    fun `A market scheme uri is an install link`() {
+        val uri = "intent://details/#Intent;scheme=market;package=com.google.play;end"
+        val context = createContext(uri to appPackage, appUrl to browserPackage)
+        val subject = AppLinksUseCases(context, setOf(browserPackage))
+
+        val redirect = subject.appLinkRedirect.invoke(uri)
+
+        assertTrue(redirect.hasExternalApp())
+        assertTrue(redirect.isInstallable())
     }
 
     @Test
@@ -126,6 +144,7 @@ class AppLinksUseCasesTest {
         assertFalse(redirect.hasExternalApp())
         assertFalse(redirect.hasFallback())
         assertNull(redirect.webUrl)
+        assertFalse(redirect.isInstallable())
     }
 
     @Test
@@ -138,6 +157,8 @@ class AppLinksUseCasesTest {
         val redirect = subject.interceptedAppLinkRedirect(uri)
         assertFalse(redirect.hasExternalApp())
         assertTrue(redirect.hasFallback())
+
+        assertNull(redirect.info)
 
         assertEquals("http://zxing.org", redirect.webUrl)
     }
