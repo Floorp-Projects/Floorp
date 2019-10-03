@@ -46,7 +46,7 @@ import kotlin.properties.Delegates
 open class GleanInternalAPI internal constructor () {
     private val logger = Logger("glean/Glean")
 
-    private var applicationContext: Context by Delegates.notNull()
+    private lateinit var applicationContext: Context
 
     // Include our singletons of StorageEngineManager and PingMaker
     private lateinit var storageEngineManager: StorageEngineManager

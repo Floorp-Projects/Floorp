@@ -27,6 +27,9 @@ permalink: /changelog/
 * **feature-intent**
   * Added support for NFC tag intents to `TabIntentProcessor`.
 
+* **firefox-accounts**, **service-fretboard**
+  * ⚠️ **This is a breaking change**: Due to migration to WorkManager v2.2.0, some classes like `WorkManagerSyncScheduler` and `WorkManagerSyncDispatcher` now expects a `Context` in their constructors.
+
 # 15.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v14.0.0...v15.0.0)
