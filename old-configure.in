@@ -820,11 +820,6 @@ case "$target" in
         ;;
     esac
 
-    if test -n "$GNU_CC" -a -z "$CLANG_CC"; then
-        CFLAGS="$CFLAGS -fno-keep-inline-dllexport"
-        CXXFLAGS="$CXXFLAGS -fno-keep-inline-dllexport"
-    fi
-
     case "$target" in
     i*86-*)
         if test -n "$GNU_CC"; then
