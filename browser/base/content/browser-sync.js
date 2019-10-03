@@ -443,7 +443,9 @@ var gSync = {
       fxaMenuAccountButtonEl.setAttribute("closemenu", "none");
 
       headerTitle = state.email;
-      headerDescription = this.fxaStrings.GetStringFromName("account.settings");
+      headerDescription = this.fxaStrings.GetStringFromName(
+        "account.manageAccount"
+      );
 
       panelTitle = state.displayName ? state.displayName : panelTitle;
     }
