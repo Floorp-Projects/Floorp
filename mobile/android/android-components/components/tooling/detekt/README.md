@@ -2,7 +2,25 @@
 
 Custom Detekt rules for the components repository.
 
-These additional detekt rules are run as part of the _Android Components_ build pipeline. Currently we do not publish packaged versions of these detekt rules for consumption outside of the _Android Components_ repository.
+These additional detekt rules are run as part of the _Android Components_ build pipeline.
+Published for internal usage only.
+
+## Usage
+
+Add into `build.gradle`:
+```
+dependencies {
+    // ...
+
+    detektPlugins "org.mozilla.components:tooling-detekt:$android_components_version"
+}
+```
+
+## Rules
+
+Section `mozilla-rules`:
+
+  - `AbsentOrWrongFileLicense` - check for correct license header in Kotlin files.
 
 ## License
 
