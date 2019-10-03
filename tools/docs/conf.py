@@ -54,7 +54,7 @@ js_source_path = [
     'toolkit/mozapps/extensions',
 ]
 root_for_relative_js_paths = '.'
-jsdoc_config_path = 'tools/docs/jsdoc.json'
+jsdoc_config_path = 'jsdoc.json'
 
 templates_path = ['_templates']
 source_suffix = '.rst'
