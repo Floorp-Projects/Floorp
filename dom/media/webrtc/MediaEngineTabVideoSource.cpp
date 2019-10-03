@@ -37,38 +37,6 @@ MediaEngineTabVideoSource::MediaEngineTabVideoSource()
 
 nsresult MediaEngineTabVideoSource::StartRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
-  mVideoSource->mTrackMain = mTrack;
-  mVideoSource->mPrincipalHandleMain = mPrincipal;
-  mVideoSource->Draw();
-  mVideoSource->mTimer->InitWithNamedFuncCallback(
-      [](nsITimer* aTimer, void* aClosure) mutable {
-        auto source = static_cast<MediaEngineTabVideoSource*>(aClosure);
-        source->Draw();
-      },
-      mVideoSource, mVideoSource->mTimePerFrame, nsITimer::TYPE_REPEATING_SLACK,
-      "MediaEngineTabVideoSource DrawTimer");
-  if (mVideoSource->mTabSource) {
-    mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
-  }
-  return NS_OK;
-}
-
-nsresult MediaEngineTabVideoSource::StopRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mVideoSource->mTimer) {
-    mVideoSource->mTimer->Cancel();
-    mVideoSource->mTimer = nullptr;
-  }
-  if (mVideoSource->mTabSource) {
-    mVideoSource->mTabSource->NotifyStreamStop(mVideoSource->mWindow);
-  }
-  mVideoSource->mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-  mVideoSource->mTrack = nullptr;
-  return NS_OK;
-}
-
-nsresult MediaEngineTabVideoSource::InitRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
   if (mVideoSource->mWindowId != -1) {
     nsGlobalWindowOuter* globalWindow =
         nsGlobalWindowOuter::GetOuterWindowWithId(mVideoSource->mWindowId);
@@ -98,9 +66,33 @@ nsresult MediaEngineTabVideoSource::InitRunnable::Run() {
     MOZ_ASSERT(mVideoSource->mWindow);
   }
   mVideoSource->mTimer = NS_NewTimer();
-  nsCOMPtr<nsIRunnable> start(
-      new StartRunnable(mVideoSource, mTrack, mPrincipal));
-  start->Run();
+  mVideoSource->mTrackMain = mTrack;
+  mVideoSource->mPrincipalHandleMain = mPrincipal;
+  mVideoSource->Draw();
+  mVideoSource->mTimer->InitWithNamedFuncCallback(
+      [](nsITimer* aTimer, void* aClosure) mutable {
+        auto source = static_cast<MediaEngineTabVideoSource*>(aClosure);
+        source->Draw();
+      },
+      mVideoSource, mVideoSource->mTimePerFrame, nsITimer::TYPE_REPEATING_SLACK,
+      "MediaEngineTabVideoSource DrawTimer");
+  if (mVideoSource->mTabSource) {
+    mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
+  }
+  return NS_OK;
+}
+
+nsresult MediaEngineTabVideoSource::StopRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mVideoSource->mTimer) {
+    mVideoSource->mTimer->Cancel();
+    mVideoSource->mTimer = nullptr;
+  }
+  if (mVideoSource->mTabSource) {
+    mVideoSource->mTabSource->NotifyStreamStop(mVideoSource->mWindow);
+  }
+  mVideoSource->mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
+  mVideoSource->mTrackMain = nullptr;
   return NS_OK;
 }
 
@@ -246,13 +238,8 @@ nsresult MediaEngineTabVideoSource::Start() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated);
 
-  nsCOMPtr<nsIRunnable> runnable;
-  if (!mWindow) {
-    runnable = new InitRunnable(this, mTrack, mPrincipalHandle);
-  } else {
-    runnable = new StartRunnable(this, mTrack, mPrincipalHandle);
-  }
-  NS_DispatchToMainThread(runnable);
+  NS_DispatchToMainThread(
+      new StartRunnable(this, mTrack, mPrincipalHandle));
   mState = kStarted;
 
   return NS_OK;
