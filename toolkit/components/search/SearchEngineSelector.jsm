@@ -57,15 +57,17 @@ class SearchEngineSelector {
     log(`fetchEngineConfiguration ${region}:${locale}`);
     let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
     let engines = [];
+    const lcLocale = locale.toLowerCase();
+    const lcRegion = region.toLowerCase();
     for (let config of this.configuration) {
       const appliesTo = config.appliesTo || [];
       const applies = appliesTo.filter(section => {
         let included =
           "included" in section &&
-          this._isInSection(region, locale, section.included);
+          this._isInSection(lcRegion, lcLocale, section.included);
         let excluded =
           "excluded" in section &&
-          this._isInSection(region, locale, section.excluded);
+          this._isInSection(lcRegion, lcLocale, section.excluded);
         if ("cohort" in section && cohort != section.cohort) {
           return false;
         }
@@ -242,8 +244,12 @@ class SearchEngineSelector {
       return true;
     }
     let locales = config.locales || {};
-    let inLocales = locales.matches && locales.matches.includes(locale);
-    let inRegions = config.regions && config.regions.includes(region);
+    let inLocales =
+      "matches" in locales &&
+      !!locales.matches.find(e => e.toLowerCase() == locale);
+    let inRegions =
+      "regions" in config &&
+      !!config.regions.find(e => e.toLowerCase() == region);
     if (
       locales.startsWith &&
       locales.startsWith.some(key => locale.startsWith(key))
