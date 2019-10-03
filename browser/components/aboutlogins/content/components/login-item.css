@@ -351,6 +351,14 @@ a.breach-alert-link {
   background-position-x: right 10px;
 }
 
+.error-message-link > a,
+.error-message-link > a:hover,
+.error-message-link > a:hover:active {
+  color: currentColor;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
 @supports -moz-bool-pref("browser.in-content.dark-mode") {
   @media (prefers-color-scheme: dark) {
     :host {

@@ -460,12 +460,22 @@ var AboutLoginsParent = {
   },
 
   handleLoginStorageErrors(login, error, message) {
-    const messageManager = message.target.messageManager;
-    const errorMessage = error.message;
-    messageManager.sendAsyncMessage("AboutLogins:ShowLoginItemError", {
+    let messageObject = {
       login: augmentVanillaLoginObject(LoginHelper.loginToVanillaObject(login)),
-      errorMessage,
-    });
+      errorMessage: error.message,
+    };
+
+    if (error.message.includes("This login already exists")) {
+      // See comment in LoginHelper.createLoginAlreadyExistsError as to
+      // why we need to call .toString() on the nsISupportsString.
+      messageObject.existingLoginGuid = error.data.toString();
+    }
+
+    const messageManager = message.target.messageManager;
+    messageManager.sendAsyncMessage(
+      "AboutLogins:ShowLoginItemError",
+      messageObject
+    );
   },
 
   async observe(subject, topic, type) {
