@@ -17,7 +17,7 @@ fuzzy-if(skiaContent,0-2,0-529) == 393760-2.xml 393760-2-ref.xml
 == dir-1.html dir-1-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-2.html dir-2-ref.html # Bug 1392106
 random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
-pref(mathml.deprecated_menclose_notation_radical.disabled,false) == dir-4.html dir-4-ref.html
+== dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
 fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
 == css-spacing-1.html css-spacing-1-ref.html
@@ -207,7 +207,7 @@ fuzzy-if(skiaContent,0-1,0-80) fuzzy-if(Android,0-255,0-105) skip-if(winWidget) 
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
 != menclose-1b.html menclose-1-ref.html
-pref(mathml.deprecated_menclose_notation_radical.disabled,false) != menclose-1c.html menclose-1-ref.html
+!= menclose-1c.html menclose-1-ref.html
 != menclose-1d.html menclose-1-ref.html
 != menclose-1e.html menclose-1-ref.html
 != menclose-1f.html menclose-1-ref.html
@@ -240,7 +240,7 @@ random-if(gtkWidget) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.htm
 == menclose-2-phasorangle.html menclose-2-phasorangle-ref.html
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
-pref(mathml.deprecated_menclose_notation_radical.disabled,false) fails-if(Android) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
+fails-if(Android) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
 == menclose-3-default.html menclose-3-default-ref.html
 == menclose-3-invalid.html menclose-3-invalid-ref.html
 == menclose-3-multiple.html menclose-3-multiple-ref.html
@@ -255,7 +255,7 @@ fuzzy-if(d2d,0-7,0-1) == menclose-5-downdiagonalstrike.html menclose-5-downdiago
 == menclose-5-left.html menclose-5-left-ref.html
 == menclose-5-longdiv.html menclose-5-longdiv-ref.html
 == menclose-5-madruwb.html menclose-5-madruwb-ref.html
-pref(mathml.deprecated_menclose_notation_radical.disabled,false) == menclose-5-radical.html menclose-5-radical-ref.html
+== menclose-5-radical.html menclose-5-radical-ref.html
 == menclose-5-right.html menclose-5-right-ref.html
 fuzzy-if(skiaContent,0-5,0-5) == menclose-5-roundedbox.html menclose-5-roundedbox-ref.html
 == menclose-5-top.html menclose-5-top-ref.html
@@ -272,7 +272,7 @@ fuzzy-if(d2d,0-7,0-1) == menclose-6-downdiagonalstrike.html menclose-6-ref.html
 == menclose-6-left.html menclose-6-ref.html
 == menclose-6-longdiv.html menclose-6-ref.html
 == menclose-6-madruwb.html menclose-6-ref.html
-pref(mathml.deprecated_menclose_notation_radical.disabled,false) == menclose-6-radical.html menclose-6-ref.html
+== menclose-6-radical.html menclose-6-ref.html
 == menclose-6-right.html menclose-6-ref.html
 fuzzy-if(skiaContent,0-2,0-3) == menclose-6-roundedbox.html menclose-6-ref.html
 == menclose-6-top.html menclose-6-ref.html
