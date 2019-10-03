@@ -82,8 +82,9 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // The current state of the MediaRecorder object.
   RecordingState State() const { return mState; }
 
-  static bool IsTypeSupported(GlobalObject& aGlobal, const nsAString& aType);
-  static bool IsTypeSupported(const nsAString& aType);
+  static bool IsTypeSupported(GlobalObject& aGlobal,
+                              const nsAString& aMIMEType);
+  static bool IsTypeSupported(const nsAString& aMIMEType);
 
   // Construct a recorder with a DOM media stream object as its source.
   static already_AddRefed<MediaRecorder> Constructor(
