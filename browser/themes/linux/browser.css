@@ -380,6 +380,13 @@ notification[value="translation"] menulist > .menulist-dropmarker {
   z-index: 3;
 }
 
+/* Tab bar scroll arrows */
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon,
+.tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
+  -moz-appearance: none;
+}
+
 /* All tabs menupopup */
 
 .alltabs-item[selected="true"] {

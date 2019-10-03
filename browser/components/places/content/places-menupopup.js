@@ -479,10 +479,11 @@
       }
 
       // Autoscroll the popup strip if we drag over the scroll buttons.
+      let anonid = event.originalTarget.getAttribute("anonid");
       let scrollDir = 0;
-      if (event.originalTarget == this.scrollBox._scrollButtonUp) {
+      if (anonid == "scrollbutton-up") {
         scrollDir = -1;
-      } else if (event.originalTarget == this.scrollBox._scrollButtonDown) {
+      } else if (anonid == "scrollbutton-down") {
         scrollDir = 1;
       }
       if (scrollDir != 0) {
