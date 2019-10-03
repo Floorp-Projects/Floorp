@@ -760,13 +760,13 @@ inline void GCRuntime::prepareToFreeChunk(ChunkInfo& info) {
 
 inline void GCRuntime::updateOnArenaFree() { ++numArenasFreeCommitted; }
 
-void Chunk::addArenaToFreeList(JSRuntime* rt, Arena* arena) {
+void Chunk::addArenaToFreeList(GCRuntime* gc, Arena* arena) {
   MOZ_ASSERT(!arena->allocated());
   arena->next = info.freeArenasHead;
   info.freeArenasHead = arena;
   ++info.numArenasFreeCommitted;
   ++info.numArenasFree;
-  rt->gc.updateOnArenaFree();
+  gc->updateOnArenaFree();
 }
 
 void Chunk::addArenaToDecommittedList(const Arena* arena) {
@@ -780,15 +780,15 @@ void Chunk::recycleArena(Arena* arena, SortedArenaList& dest,
   dest.insertAt(arena, thingsPerArena);
 }
 
-void Chunk::releaseArena(JSRuntime* rt, Arena* arena, const AutoLockGC& lock) {
-  addArenaToFreeList(rt, arena);
-  updateChunkListAfterFree(rt, lock);
+void Chunk::releaseArena(GCRuntime* gc, Arena* arena, const AutoLockGC& lock) {
+  addArenaToFreeList(gc, arena);
+  updateChunkListAfterFree(gc, lock);
 }
 
-bool Chunk::decommitOneFreeArena(JSRuntime* rt, AutoLockGC& lock) {
+bool Chunk::decommitOneFreeArena(GCRuntime* gc, AutoLockGC& lock) {
   MOZ_ASSERT(info.numArenasFreeCommitted > 0);
-  Arena* arena = fetchNextFreeArena(rt);
-  updateChunkListAfterAlloc(rt, lock);
+  Arena* arena = fetchNextFreeArena(gc);
+  updateChunkListAfterAlloc(gc, lock);
 
   bool ok;
   {
@@ -799,9 +799,9 @@ bool Chunk::decommitOneFreeArena(JSRuntime* rt, AutoLockGC& lock) {
   if (ok) {
     addArenaToDecommittedList(arena);
   } else {
-    addArenaToFreeList(rt, arena);
+    addArenaToFreeList(gc, arena);
   }
-  updateChunkListAfterFree(rt, lock);
+  updateChunkListAfterFree(gc, lock);
 
   return ok;
 }
@@ -819,25 +819,25 @@ void Chunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
   }
 }
 
-void Chunk::updateChunkListAfterAlloc(JSRuntime* rt, const AutoLockGC& lock) {
+void Chunk::updateChunkListAfterAlloc(GCRuntime* gc, const AutoLockGC& lock) {
   if (MOZ_UNLIKELY(!hasAvailableArenas())) {
-    rt->gc.availableChunks(lock).remove(this);
-    rt->gc.fullChunks(lock).push(this);
+    gc->availableChunks(lock).remove(this);
+    gc->fullChunks(lock).push(this);
   }
 }
 
-void Chunk::updateChunkListAfterFree(JSRuntime* rt, const AutoLockGC& lock) {
+void Chunk::updateChunkListAfterFree(GCRuntime* gc, const AutoLockGC& lock) {
   if (info.numArenasFree == 1) {
-    rt->gc.fullChunks(lock).remove(this);
-    rt->gc.availableChunks(lock).push(this);
+    gc->fullChunks(lock).remove(this);
+    gc->availableChunks(lock).push(this);
   } else if (!unused()) {
-    MOZ_ASSERT(rt->gc.availableChunks(lock).contains(this));
+    MOZ_ASSERT(gc->availableChunks(lock).contains(this));
   } else {
     MOZ_ASSERT(unused());
-    rt->gc.availableChunks(lock).remove(this);
+    gc->availableChunks(lock).remove(this);
     decommitAllArenas();
     MOZ_ASSERT(info.numArenasFreeCommitted == 0);
-    rt->gc.recycleChunk(this, lock);
+    gc->recycleChunk(this, lock);
   }
 }
 
@@ -847,7 +847,7 @@ void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
 
   arena->zone->gcHeapSize.removeGCArena();
   arena->release(lock);
-  arena->chunk()->releaseArena(rt, arena, lock);
+  arena->chunk()->releaseArena(this, arena, lock);
 }
 
 GCRuntime::GCRuntime(JSRuntime* rt)
@@ -2591,7 +2591,7 @@ void GCRuntime::releaseRelocatedArenasWithoutUnlocking(Arena* arenaList,
 
     // We already updated the memory accounting so just call
     // Chunk::releaseArena.
-    arena->chunk()->releaseArena(rt, arena, lock);
+    arena->chunk()->releaseArena(this, arena, lock);
   }
 }
 
@@ -3198,7 +3198,7 @@ void js::gc::BackgroundDecommitTask::run() {
     // The arena list is not doubly-linked, so we have to work in the free
     // list order and not in the natural order.
     while (chunk->info.numArenasFreeCommitted) {
-      bool ok = chunk->decommitOneFreeArena(runtime(), lock);
+      bool ok = chunk->decommitOneFreeArena(&runtime()->gc, lock);
 
       // If we are low enough on memory that we can't update the page
       // tables, or if we need to return for any other reason, break out
