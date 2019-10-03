@@ -959,7 +959,6 @@ void nsSubDocumentFrame::DestroyFrom(nsIFrame* aDestructRoot,
         ::BeginSwapDocShellsForViews(mInnerView->GetFirstChild());
 
     if (detachedViews && detachedViews->GetFrame()) {
-      MOZ_ASSERT(mContent->OwnerDoc());
       frameloader->SetDetachedSubdocFrame(detachedViews->GetFrame(),
                                           mContent->OwnerDoc());
 

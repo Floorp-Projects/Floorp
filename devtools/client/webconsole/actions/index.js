@@ -11,6 +11,8 @@ const actionModules = [
   require("./messages"),
   require("./ui"),
   require("./notifications"),
+  require("./object"),
+  require("./toolbox"),
   require("./history"),
 ];
 

@@ -607,3 +607,7 @@ visual-metrics
 --------------
 Tasks that compute visual performance metrics from videos and images captured
 by other tasks.
+
+iris
+----
+Iris testing suite

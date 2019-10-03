@@ -47,6 +47,7 @@ use api::channel::{MsgSender, PayloadReceiverHelperMethods};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
+use crate::composite::{CompositeConfig, CompositeTileSurface, CompositeTile};
 use crate::debug_colors;
 use crate::debug_render::{DebugItem, DebugRenderer};
 use crate::device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
@@ -62,7 +63,8 @@ use crate::glyph_cache::GlyphCache;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
-use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, SvgFilterInstance, TransformData, ResolveInstanceData};
+use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, SvgFilterInstance, TransformData};
+use crate::gpu_types::{CompositeInstance, ResolveInstanceData};
 use crate::internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
@@ -223,6 +225,10 @@ const GPU_SAMPLER_TAG_TRANSPARENT: GpuProfileTag = GpuProfileTag {
 const GPU_TAG_SVG_FILTER: GpuProfileTag = GpuProfileTag {
     label: "SvgFilter",
     color: debug_colors::LEMONCHIFFON,
+};
+const GPU_TAG_COMPOSITE: GpuProfileTag = GpuProfileTag {
+    label: "Composite",
+    color: debug_colors::TOMATO,
 };
 
 /// The clear color used for the texture cache when the debug display is enabled.
@@ -796,6 +802,43 @@ pub(crate) mod desc {
             },
         ],
     };
+
+    pub const COMPOSITE: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aDeviceRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aDeviceClipRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aColor",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aLayer",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aZId",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+    };
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -811,6 +854,7 @@ pub(crate) enum VertexArrayKind {
     Gradient,
     Resolve,
     SvgFilter,
+    Composite,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -959,6 +1003,10 @@ impl TextureResolver {
                 None,
                 1,
             );
+        device.upload_texture_immediate(
+            &dummy_cache_texture,
+            &[0xff, 0xff, 0xff, 0xff],
+        );
 
         TextureResolver {
             texture_cache_map: FastHashMap::default(),
@@ -1068,6 +1116,11 @@ impl TextureResolver {
             TextureSource::Invalid => {
                 Swizzle::default()
             }
+            TextureSource::Dummy => {
+                let swizzle = Swizzle::default();
+                device.bind_texture(sampler, &self.dummy_cache_texture, swizzle);
+                swizzle
+            }
             TextureSource::PrevPassAlpha => {
                 let texture = match self.prev_pass_alpha {
                     Some(ref at) => &at.texture,
@@ -1129,6 +1182,9 @@ impl TextureResolver {
     fn resolve(&self, texture_id: &TextureSource) -> Option<(&Texture, Swizzle)> {
         match *texture_id {
             TextureSource::Invalid => None,
+            TextureSource::Dummy => {
+                Some((&self.dummy_cache_texture, Swizzle::default()))
+            }
             TextureSource::PrevPassAlpha => Some((
                 match self.prev_pass_alpha {
                     Some(ref at) => &at.texture,
@@ -1666,6 +1722,7 @@ pub struct RendererVAOs {
     gradient_vao: VAO,
     resolve_vao: VAO,
     svg_filter_vao: VAO,
+    composite_vao: VAO,
 }
 
 
@@ -2012,6 +2069,7 @@ impl Renderer {
         let gradient_vao = device.create_vao_with_new_instances(&desc::GRADIENT, &prim_vao);
         let resolve_vao = device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao);
         let svg_filter_vao = device.create_vao_with_new_instances(&desc::SVG_FILTER, &prim_vao);
+        let composite_vao = device.create_vao_with_new_instances(&desc::COMPOSITE, &prim_vao);
         let texture_cache_upload_pbo = device.create_pbo();
 
         let texture_resolver = TextureResolver::new(&mut device);
@@ -2249,6 +2307,7 @@ impl Renderer {
                 resolve_vao,
                 line_vao,
                 svg_filter_vao,
+                composite_vao,
             },
             transforms_texture,
             prim_header_i_texture,
@@ -3773,6 +3832,111 @@ impl Renderer {
         }
     }
 
+    /// Draw a list of tiles to the framebuffer
+    fn draw_tile_list<'a, I: Iterator<Item = &'a CompositeTile>>(
+        &mut self,
+        tiles_iter: I,
+        stats: &mut RendererStats,
+    ) {
+        let mut current_textures = BatchTextures::no_texture();
+        let mut instances = Vec::new();
+
+        for tile in tiles_iter {
+            // Work out the draw params based on the tile surface
+            let (texture, layer, color) = match tile.surface {
+                CompositeTileSurface::Color { color } => {
+                    (TextureSource::Dummy, 0.0, color)
+                }
+                CompositeTileSurface::Texture { texture_id, texture_layer } => {
+                    (texture_id, texture_layer as f32, ColorF::WHITE)
+                }
+            };
+            let textures = BatchTextures::color(texture);
+
+            // Flush this batch if the textures aren't compatible
+            if !current_textures.is_compatible_with(&textures) {
+                self.draw_instanced_batch(
+                    &instances,
+                    VertexArrayKind::Composite,
+                    &current_textures,
+                    stats,
+                );
+                instances.clear();
+            }
+            current_textures = textures;
+
+            // Create the instance and add to current batch
+            let instance = CompositeInstance::new(
+                tile.rect,
+                tile.clip_rect,
+                color.premultiplied(),
+                layer,
+                tile.z_id,
+            );
+            instances.push(instance);
+        }
+
+        // Flush the last batch
+        if !instances.is_empty() {
+            self.draw_instanced_batch(
+                &instances,
+                VertexArrayKind::Composite,
+                &current_textures,
+                stats,
+            );
+        }
+    }
+
+    /// Composite picture cache tiles into the framebuffer. This is currently
+    /// the only way that picture cache tiles get drawn. In future, the tiles
+    /// will often be handed to the OS compositor, and this method will be
+    /// rarely used.
+    fn composite(
+        &mut self,
+        composite_config: &CompositeConfig,
+        draw_target: DrawTarget,
+        projection: &default::Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        let _gm = self.gpu_profile.start_marker("framebuffer");
+        let _timer = self.gpu_profile.start_timer(GPU_TAG_COMPOSITE);
+
+        self.device.bind_draw_target(draw_target);
+        self.device.enable_depth();
+
+        self.shaders.borrow_mut().composite.bind(
+            &mut self.device,
+            &projection,
+            &mut self.renderer_errors
+        );
+
+        // Draw opaque tiles first, front-to-back to get maxmum
+        // z-reject efficiency.
+        if !composite_config.opaque_tiles.is_empty() {
+            let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
+            self.device.enable_depth_write();
+            self.set_blend(false, FramebufferKind::Main);
+            self.draw_tile_list(
+                composite_config.opaque_tiles.iter().rev(),
+                stats,
+            );
+            self.gpu_profile.finish_sampler(opaque_sampler);
+        }
+
+        // Draw alpha tiles
+        if !composite_config.alpha_tiles.is_empty() {
+            let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
+            self.device.disable_depth_write();
+            self.set_blend(true, FramebufferKind::Main);
+            self.set_blend_mode_premultiplied_alpha(FramebufferKind::Main);
+            self.draw_tile_list(
+                composite_config.alpha_tiles.iter(),
+                stats,
+            );
+            self.gpu_profile.finish_sampler(transparent_sampler);
+        }
+    }
+
     fn draw_color_target(
         &mut self,
         draw_target: DrawTarget,
@@ -4556,7 +4720,7 @@ impl Renderer {
             );
 
             match pass.kind {
-                RenderPassKind::MainFramebuffer { ref main_target, .. } => {
+                RenderPassKind::MainFramebuffer { .. } => {
                     if let Some(device_size) = device_size {
                         stats.color_target_count += 1;
 
@@ -4587,15 +4751,10 @@ impl Renderer {
                                                      None);
                         }
 
-                        self.draw_color_target(
+                        self.composite(
+                            &frame.composite_config,
                             draw_target,
-                            main_target,
-                            frame.content_origin,
-                            None,
-                            None,
-                            &frame.render_tasks,
                             &projection,
-                            frame_id,
                             stats,
                         );
                     }
@@ -5245,6 +5404,7 @@ impl Renderer {
         self.device.delete_vao(self.vaos.border_vao);
         self.device.delete_vao(self.vaos.scale_vao);
         self.device.delete_vao(self.vaos.svg_filter_vao);
+        self.device.delete_vao(self.vaos.composite_vao);
 
         self.debug.deinit(&mut self.device);
 
@@ -6097,6 +6257,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::Gradient => &vaos.gradient_vao,
         VertexArrayKind::Resolve => &vaos.resolve_vao,
         VertexArrayKind::SvgFilter => &vaos.svg_filter_vao,
+        VertexArrayKind::Composite => &vaos.composite_vao,
     }
 }
 #[derive(Clone, Copy, PartialEq)]

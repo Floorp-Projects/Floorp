@@ -114,6 +114,13 @@ gmp-6.1.0:
         strip-components: 1
         add-prefix: gmp-source/
 
+iris-2.0:
+    description: Iris_Firefox source code
+    fetch:
+        type: git
+        repo: https://github.com/mozilla/iris_firefox
+        revision: 4618e109428150a6418526a2f95ccf77e71d3b8a
+
 isl-0.15:
     description: ISL 0.15 source code
     fetch:

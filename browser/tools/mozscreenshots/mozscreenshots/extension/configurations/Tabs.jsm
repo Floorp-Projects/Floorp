@@ -138,7 +138,7 @@ var Tabs = {
         });
         // Make sure the tabstrip is scrolled all the way to the left.
         let scrolled = BrowserTestUtils.waitForEvent(
-          browserWindow.gBrowser.tabContainer,
+          browserWindow.gBrowser.tabContainer.arrowScrollbox,
           "scrollend"
         );
         browserWindow.gBrowser.tabContainer.arrowScrollbox.scrollByIndex(-100);

@@ -40,6 +40,7 @@ loader.lazyRequireGetter(
   "devtools/shared/DevToolsUtils"
 );
 const EventEmitter = require("devtools/shared/event-emitter");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 var gHudId = 0;
 const isMacOS = Services.appinfo.OS === "Darwin";
@@ -71,6 +72,7 @@ class WebConsole {
     this.hudId = "hud_" + ++gHudId;
     this.browserWindow = DevToolsUtils.getTopWindow(this.chromeWindow);
     this.isBrowserConsole = isBrowserConsole;
+    this.telemetry = new Telemetry();
 
     const element = this.browserWindow.document.documentElement;
     if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {
@@ -82,6 +84,13 @@ class WebConsole {
     this._destroyer = null;
 
     EventEmitter.decorate(this);
+  }
+
+  recordEvent(event, extra = {}) {
+    this.telemetry.recordEvent(event, "webconsole", null, {
+      session_id: (this.toolbox && this.toolbox.sessionId) || -1,
+      ...extra,
+    });
   }
 
   get currentTarget() {
@@ -126,6 +135,12 @@ class WebConsole {
     return this.ui ? this.ui.jsterm : null;
   }
 
+  canRewind() {
+    const target = this.hud && this.hud.currentTarget;
+    const traits = target && target.traits;
+    return traits && traits.canRewind;
+  }
+
   /**
    * Get the value from the input field.
    * @returns {String|null} returns null if there's no input.
@@ -136,6 +151,18 @@ class WebConsole {
     }
 
     return this.jsterm._getValue();
+  }
+
+  inputHasSelection() {
+    const { editor } = this.jsterm || {};
+    return editor && !!editor.getSelection();
+  }
+
+  getInputSelection() {
+    if (!this.jsterm || !this.jsterm.editor) {
+      return null;
+    }
+    return this.jsterm.editor.getSelection();
   }
 
   /**
@@ -149,6 +176,10 @@ class WebConsole {
     }
 
     this.jsterm._setValue(newValue);
+  }
+
+  focusInput() {
+    return this.jsterm && this.jsterm.focus();
   }
 
   /**
@@ -217,17 +248,15 @@ class WebConsole {
    * @param integer sourceColumn
    *        The column number which you want to place the caret.
    */
-  viewSourceInDebugger(sourceURL, sourceLine, sourceColumn) {
+  async viewSourceInDebugger(sourceURL, sourceLine, sourceColumn) {
     const toolbox = this.toolbox;
     if (!toolbox) {
       this.viewSource(sourceURL, sourceLine, sourceColumn);
       return;
     }
-    toolbox
-      .viewSourceInDebugger(sourceURL, sourceLine, sourceColumn)
-      .then(() => {
-        this.ui.emit("source-in-debugger-opened");
-      });
+
+    await toolbox.viewSourceInDebugger(sourceURL, sourceLine, sourceColumn);
+    this.ui.emit("source-in-debugger-opened");
   }
 
   /**
@@ -348,6 +377,82 @@ class WebConsole {
       return null;
     }
     return panel.selection;
+  }
+
+  async onViewSourceInDebugger(frame) {
+    if (this.toolbox) {
+      await this.toolbox.viewSourceInDebugger(
+        frame.url,
+        frame.line,
+        frame.column,
+        frame.sourceId
+      );
+
+      this.recordEvent("jump_to_source");
+      this.emit("source-in-debugger-opened");
+    }
+  }
+
+  async onViewSourceInScratchpad(frame) {
+    if (this.toolbox) {
+      await this.toolbox.viewSourceInScratchpad(frame.url, frame.line);
+      this.recordEvent("jump_to_source");
+    }
+  }
+
+  async onViewSourceInStyleEditor(frame) {
+    if (!this.toolbox) {
+      return;
+    }
+    await this.toolbox.viewSourceInStyleEditor(
+      frame.url,
+      frame.line,
+      frame.column
+    );
+    this.recordEvent("jump_to_source");
+  }
+
+  async openNetworkPanel(requestId) {
+    if (!this.toolbox) {
+      return;
+    }
+    const netmonitor = await this.toolbox.selectTool("netmonitor");
+    await netmonitor.panelWin.Netmonitor.inspectRequest(requestId);
+  }
+
+  async resendNetworkRequest(requestId) {
+    if (!this.toolbox) {
+      return;
+    }
+
+    const api = await this.toolbox.getNetMonitorAPI();
+    await api.resendRequest(requestId);
+  }
+
+  async openNodeInInspector(grip) {
+    if (!this.toolbox) {
+      return;
+    }
+
+    const onSelectInspector = this.toolbox.selectTool(
+      "inspector",
+      "inspect_dom"
+    );
+    // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
+    const walkerFront = (await this.toolbox.target.getFront("inspector"))
+      .walker;
+    const onGripNodeToFront = walkerFront.gripToNodeFront(grip);
+    const [front, inspector] = await Promise.all([
+      onGripNodeToFront,
+      onSelectInspector,
+    ]);
+
+    const onInspectorUpdated = inspector.once("inspector-updated");
+    const onNodeFrontSet = this.toolbox.selection.setNodeFront(front, {
+      reason: "console",
+    });
+
+    await Promise.all([onNodeFrontSet, onInspectorUpdated]);
   }
 
   /**
