@@ -678,7 +678,13 @@ void nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent,
 
   memcpy(bufferCopy.get(), aBuffer, aLength * sizeof(char16_t));
 
-  mImportScanner.Scan(MakeSpan(aBuffer, aLength));
+  if (mImportScanner.ShouldScan()) {
+    nsTArray<nsString> imports =
+        mImportScanner.Scan(MakeSpan(aBuffer, aLength));
+    for (nsString& url : imports) {
+      mSpeculativeLoadQueue.AppendElement()->InitImportStyle(std::move(url));
+    }
+  }
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement(mozilla::fallible);
   if (MOZ_UNLIKELY(!treeOp)) {

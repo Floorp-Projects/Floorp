@@ -10,10 +10,12 @@
 using namespace mozilla;
 
 static nsTArray<nsString> Scan(const char* aCssCode) {
+  nsTArray<nsString> urls;
   ImportScanner scanner;
   scanner.Start();
-  scanner.Scan(NS_ConvertUTF8toUTF16(aCssCode));
-  return scanner.Stop();
+  urls.AppendElements(scanner.Scan(NS_ConvertUTF8toUTF16(aCssCode)));
+  urls.AppendElements(scanner.Stop());
+  return urls;
 }
 
 TEST(ImportScanner, Simple)
