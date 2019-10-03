@@ -242,7 +242,7 @@ var AboutLoginsParent = {
         );
         const messageManager = message.target.messageManager;
         messageManager.sendAsyncMessage(
-          "AboutLogins:UpdateBreaches",
+          "AboutLogins:SetBreaches",
           breachesByLoginGUID
         );
         break;
@@ -513,6 +513,13 @@ var AboutLoginsParent = {
           return;
         }
         this.messageSubscribers("AboutLogins:LoginAdded", login);
+
+        if (BREACH_ALERTS_ENABLED) {
+          this.messageSubscribers(
+            "AboutLogins:UpdateBreaches",
+            await LoginBreaches.getPotentialBreachesByLoginGUID([login])
+          );
+        }
         break;
       }
       case "modifyLogin": {
@@ -725,7 +732,7 @@ var AboutLoginsParent = {
     };
     if (BREACH_ALERTS_ENABLED) {
       sendMessageFn(
-        "AboutLogins:UpdateBreaches",
+        "AboutLogins:SetBreaches",
         await LoginBreaches.getPotentialBreachesByLoginGUID(logins)
       );
     }

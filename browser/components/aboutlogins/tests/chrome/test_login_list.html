@@ -242,7 +242,7 @@ add_task(async function test_populated_list() {
 });
 
 add_task(async function test_breach_indicator() {
-  gLoginList.updateBreaches(TEST_BREACHES_MAP);
+  gLoginList.setBreaches(TEST_BREACHES_MAP);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
   let warningIcon = loginListItems[0].querySelector(".list-item-warning-icon");
   let hiddenWarningIcon = loginListItems[1].querySelector(".list-item-warning-icon");
@@ -459,7 +459,7 @@ add_task(async function test_sorted_list() {
   is(pwChanged2 > pwChanged3, true, "Logins sorted by timePasswordChanged. Second: " + pwChanged2 + "; Third: " + pwChanged3);
 
   // sort by breached when there are breached logins
-  gLoginList.updateBreaches(TEST_BREACHES_MAP);
+  gLoginList.setBreaches(TEST_BREACHES_MAP);
   loginSort.selectedIndex = 3;
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
@@ -467,7 +467,7 @@ add_task(async function test_sorted_list() {
   is(!loginListItems[1].classList.contains("breached"), true, "Non-breached login should be displayed below breached");
 
   // sort by name when there are no breached logins
-  gLoginList.updateBreaches(new Map());
+  gLoginList.setBreaches(new Map());
   loginSort.selectedIndex = 3;
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not(#new-login-list-item):not([hidden])");
