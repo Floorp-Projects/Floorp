@@ -117,7 +117,7 @@ add_task(async function() {
   function resetSorting() {
     EventUtils.sendMouseEvent(
       { type: "click" },
-      document.querySelector("#requests-list-waterfall-button")
+      document.querySelector("#requests-list-cause-button")
     );
     EventUtils.sendMouseEvent(
       { type: "click" },
