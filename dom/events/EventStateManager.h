@@ -522,7 +522,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   void EnsureDocument(nsPresContext* aPresContext);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void FlushPendingEvents(nsPresContext* aPresContext);
+  void FlushLayout(nsPresContext* aPresContext);
 
   /**
    * The phases of WalkESMTreeToHandleAccessKey processing. See below.
