@@ -19,39 +19,25 @@ interface MediaRecorder : EventTarget {
   [Throws]
   constructor(AudioNode node, optional unsigned long output = 0,
               optional MediaRecorderOptions options = {});
-
   readonly attribute MediaStream stream;
-
   readonly attribute DOMString mimeType;
-
   readonly attribute RecordingState state;
-
   attribute EventHandler onstart;
-
   attribute EventHandler onstop;
-
   attribute EventHandler ondataavailable;
-
   attribute EventHandler onpause;
-
   attribute EventHandler onresume;
-
   attribute EventHandler onerror;
 
-  attribute EventHandler onwarning;
 
   [Throws]
   void start(optional unsigned long timeslice);
-
   [Throws]
   void stop();
-
   [Throws]
   void pause();
-
   [Throws]
   void resume();
-
   [Throws]
   void requestData();
 
