@@ -474,6 +474,10 @@
       }
     },
 
+    "LegacyProfiles": {
+      "type": "boolean"
+    },
+
     "LocalFileLinks": {
       "type": "array",
       "items": {
