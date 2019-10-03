@@ -3874,9 +3874,27 @@ void Debugger::trace(JSTracer* trc) {
 void DebugAPI::sweepAll(JSFreeOp* fop) {
   JSRuntime* rt = fop->runtime();
 
-  Debugger* dbg = rt->debuggerList().getFirst();
-  while (dbg) {
-    Debugger* next = dbg->getNext();
+  Debugger* next;
+  for (Debugger* dbg = rt->debuggerList().getFirst(); dbg; dbg = next) {
+    next = dbg->getNext();
+
+    // Debugger.Frames for generator calls bump the JSScript's
+    // generatorObserverCount, so the JIT will instrument the code to notify
+    // Debugger when the generator is resumed. When a Debugger.Frame gets GC'd,
+    // generatorObserverCount needs to be decremented. It's much easier to do
+    // this when we know that all parties involved - the Debugger.Frame, the
+    // generator object, and the JSScript - have not yet been finalized.
+    //
+    // Since DebugAPI::sweepAll is called after everything is marked, but before
+    // anything has been finalized, this is the perfect place to drop the count.
+    if (dbg->zone()->isGCSweeping()) {
+      for (Debugger::GeneratorWeakMap::Enum e(dbg->generatorFrames); !e.empty(); e.popFront()) {
+        DebuggerFrame* frameObj = &e.front().value()->as<DebuggerFrame>();
+        if (IsAboutToBeFinalizedUnbarriered(&frameObj)) {
+          frameObj->clearGenerator(fop, dbg, &e);
+        }
+      }
+    }
 
     // Detach dying debuggers and debuggees from each other. Since this
     // requires access to both objects it must be done before either

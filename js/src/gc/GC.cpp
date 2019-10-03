@@ -5535,10 +5535,13 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
     return true;
   }
 
-  // Empty arenas are not released until all foreground finalized GC things in
-  // the current sweep group have been finalized.  This allows finalizers for
-  // other cells in the same sweep group to call IsAboutToBeFinalized on cells
-  // in this arena.
+  // Arenas are released for use for new allocations as soon as the finalizers
+  // for that allocation kind have run. This means that a cell's finalizer can
+  // safely use IsAboutToBeFinalized to check other cells of the same alloc
+  // kind, but not of different alloc kinds: the other arena may have already
+  // had new objects allocated in it, and since we allocate black,
+  // IsAboutToBeFinalized will return false even though the referent we intended
+  // to check is long gone.
   if (!FinalizeArenas(fop, &arenaListsToSweep(thingKind), sweepList, thingKind,
                       sliceBudget)) {
     incrementalSweptArenaKind = thingKind;

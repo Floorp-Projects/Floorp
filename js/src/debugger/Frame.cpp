@@ -375,7 +375,7 @@ void DebuggerFrame::clearGenerator(JSFreeOp* fop) {
 
   GeneratorInfo* info = generatorInfo();
 
-  // 4) The generator's script's observer count must be dropped.
+  // 3) The generator's script's observer count must be dropped.
   //
   // For ordinary calls, Debugger.Frame objects drop the script's stepper count
   // when the frame is popped, but for generators, they leave the stepper count
@@ -1070,8 +1070,12 @@ void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
 void DebuggerFrame::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   DebuggerFrame& frameobj = obj->as<DebuggerFrame>();
+
+  // Connections between dying Debugger.Frames and their
+  // AbstractGeneratorObjects should have been broken in DebugAPI::sweepAll.
+  MOZ_ASSERT(!frameobj.hasGenerator());
+
   frameobj.freeFrameIterData(fop);
-  frameobj.clearGenerator(fop);
   OnStepHandler* onStepHandler = frameobj.onStepHandler();
   if (onStepHandler) {
     onStepHandler->drop(fop, &frameobj);
