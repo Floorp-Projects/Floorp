@@ -13,8 +13,8 @@ function testThrows(stream, options) {
   try {
     new MediaRecorder(stream, options);
     return false;
-  } catch {
-    return true;
+  } catch(e) {
+    return e.name;
   }
 }
 (async () => {
@@ -24,16 +24,24 @@ function testThrows(stream, options) {
       ["media.encoder.webm.enabled", false],
     ]});
   const stream = new AudioContext().createMediaStreamDestination().stream;
-  ok(testThrows(stream, {mimeType: "audio/ogg"}),
+  is(testThrows(stream, {mimeType: "audio/ogg"}), "NotSupportedError",
     "Creating an ogg recorder without ogg support throws");
-  ok(testThrows(stream, {mimeType: "audio/webm"}),
+  is(testThrows(stream, {mimeType: "audio/webm"}), "NotSupportedError",
     "Creating a webm recorder without webm support throws");
-  ok(testThrows(stream, {mimeType: "video/webm"}),
+  is(testThrows(stream, {mimeType: "video/webm"}), "NotSupportedError",
     "Creating a webm recorder without webm support throws");
-  ok(testThrows(stream, {mimeType: "apa/bepa"}),
+  is(testThrows(stream, {mimeType: "apa/bepa"}), "NotSupportedError",
     "Creating a recorder for a bogus mime type throws");
-  ok(testThrows(stream, {}),
-    "Creating a default recorder without any container support throws");
+  is(testThrows(stream, {}), false,
+    "Creating a default recorder never throws, even without container support");
+  const recorder = new MediaRecorder(stream);
+  try {
+    recorder.start();
+    ok(false, "Starting a recorder without container support should throw");
+  } catch(e) {
+    is(e.name, "NotSupportedError",
+      "Starting a recorder without container support throws");
+  }
   SimpleTest.finish();
 })();
 </script>
