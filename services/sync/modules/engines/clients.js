@@ -65,10 +65,6 @@ const STALE_CLIENT_REMOTE_AGE = 604800; // 7 days
 // TTL of the message sent to another device when sending a tab
 const NOTIFY_TAB_SENT_TTL_SECS = 1 * 3600; // 1 hour
 
-// This is to avoid multiple sequential syncs ending up calling
-// this expensive endpoint multiple times in a row.
-const TIME_BETWEEN_FXA_DEVICES_FETCH_MS = 10 * 1000;
-
 // Reasons behind sending collection_changed push notifications.
 const COLLECTION_MODIFIED_REASON_SENDTAB = "sendtab";
 const COLLECTION_MODIFIED_REASON_FIRSTSYNC = "firstsync";
@@ -157,10 +153,6 @@ ClientEngine.prototype = {
   },
   set lastRecordUpload(value) {
     Svc.Prefs.set(this.name + ".lastRecordUpload", Math.floor(value));
-  },
-
-  get fxaDevices() {
-    return this._fxaDevices;
   },
 
   get remoteClients() {
@@ -255,6 +247,19 @@ ClientEngine.prototype = {
   getClientFxaDeviceId(id) {
     if (this._store._remoteClients[id]) {
       return this._store._remoteClients[id].fxaDeviceId;
+    }
+    return null;
+  },
+
+  getClientByFxaDeviceId(fxaDeviceId) {
+    for (let id in this._store._remoteClients) {
+      let client = this._store._remoteClients[id];
+      if (client.stale) {
+        continue;
+      }
+      if (client.fxaDeviceId == fxaDeviceId) {
+        return client;
+      }
     }
     return null;
   },
@@ -387,26 +392,11 @@ ClientEngine.prototype = {
   },
 
   async _fetchFxADevices() {
-    const now = new Date().getTime();
-    if (
-      (this._lastFxADevicesFetch || 0) + TIME_BETWEEN_FXA_DEVICES_FETCH_MS >=
-      now
-    ) {
-      return;
-    }
-    const remoteClients = Object.values(this.remoteClients);
     try {
-      this._fxaDevices = await this.fxAccounts.getDeviceList();
-      for (const device of this._fxaDevices) {
-        device.clientRecord = remoteClients.find(
-          c => c.fxaDeviceId == device.id
-        );
-      }
+      await this.fxAccounts.device.refreshDeviceList();
     } catch (e) {
-      this._log.error("Could not retrieve the FxA device list", e);
-      this._fxaDevices = [];
+      this._log.error("Could not refresh the FxA device list", e);
     }
-    this._lastFxADevicesFetch = now;
 
     // We assume that clients not present in the FxA Device Manager list have been
     // disconnected and so are stale
@@ -414,7 +404,9 @@ ClientEngine.prototype = {
     let localClients = Object.values(this._store._remoteClients)
       .filter(client => client.fxaDeviceId) // iOS client records don't have fxaDeviceId
       .map(client => client.fxaDeviceId);
-    const fxaClients = this._fxaDevices.map(device => device.id);
+    const fxaClients = this.fxAccounts.device.recentDeviceList
+      ? this.fxAccounts.device.recentDeviceList.map(device => device.id)
+      : [];
     this._knownStaleFxADeviceIds = Utils.arraySub(localClients, fxaClients);
   },
 
