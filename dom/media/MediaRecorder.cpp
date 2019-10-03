@@ -304,13 +304,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     Run() override {
       MOZ_ASSERT(NS_IsMainThread());
       mSession->MaybeCreateMutableBlobStorage();
-      for (uint32_t i = 0; i < mBuffer.Length(); i++) {
-        if (mBuffer[i].IsEmpty()) {
+      for (const auto& part : mBuffer) {
+        if (part.IsEmpty()) {
           continue;
         }
 
-        nsresult rv = mSession->mMutableBlobStorage->Append(
-            mBuffer[i].Elements(), mBuffer[i].Length());
+        nsresult rv = mSession->mMutableBlobStorage->Append(part.Elements(),
+                                                            part.Length());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           mSession->DoSessionEndTask(rv);
           break;
@@ -1550,7 +1550,9 @@ template <class String>
 static bool CodecListContains(char const* const* aCodecs,
                               const String& aCodec) {
   for (int32_t i = 0; aCodecs[i]; ++i) {
-    if (aCodec.EqualsASCII(aCodecs[i])) return true;
+    if (aCodec.EqualsASCII(aCodecs[i])) {
+      return true;
+    }
   }
   return false;
 }
