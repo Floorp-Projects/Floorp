@@ -645,18 +645,52 @@ uint64_t DataChannelConnection::GetMaxMessageSize() { return mMaxMessageSize; }
 #ifdef MOZ_PEERCONNECTION
 
 bool DataChannelConnection::ConnectToTransport(const std::string& aTransportId,
-                                               bool aClient, uint16_t localport,
-                                               uint16_t remoteport) {
-  DC_DEBUG(("Connect DTLS local %u, remote %u", localport, remoteport));
-
+                                               const bool aClient,
+                                               const uint16_t aLocalPort,
+                                               const uint16_t aRemotePort) {
+  MutexAutoLock lock(mLock);
   MOZ_ASSERT(mMasterSocket,
              "SCTP wasn't initialized before ConnectToTransport!");
+  static const auto paramString =
+      [](const std::string& tId, const Maybe<bool>& client,
+         const uint16_t localPort, const uint16_t remotePort) -> std::string {
+    std::ostringstream stream;
+    stream << "Transport ID: '" << tId << "', Role: '"
+           << (client ? (client.value() ? "client" : "server") : "")
+           << "', Local Port: '" << localPort << "', Remote Port: '"
+           << remotePort << "'";
+    return stream.str();
+  };
+
+  const auto params =
+      paramString(aTransportId, Some(aClient), aLocalPort, aRemotePort);
+  DC_DEBUG(("ConnectToTransport connecting DTLS transport with parameters: %s",
+            params.c_str()));
+
+  const auto currentReadyState = GetReadyState();
+  if (currentReadyState == OPEN) {
+    if (aTransportId == mTransportId && mAllocateEven.isSome() &&
+        mAllocateEven.value() == aClient && mLocalPort == aLocalPort &&
+        mRemotePort == aRemotePort) {
+      DC_WARN(
+          ("Skipping attempt to connect to an already OPEN transport with "
+           "identical parameters."));
+      return true;
+    }
+    DC_WARN(
+        ("Attempting to connect to an already OPEN transport, because "
+         "different parameters were provided."));
+    DC_WARN(("Original transport parameters: %s",
+             paramString(mTransportId, mAllocateEven, mLocalPort, aRemotePort)
+                 .c_str()));
+    DC_WARN(("New transport parameters: %s", params.c_str()));
+  }
   if (NS_WARN_IF(aTransportId.empty())) {
     return false;
   }
 
-  mLocalPort = localport;
-  mRemotePort = remoteport;
+  mLocalPort = aLocalPort;
+  mRemotePort = aRemotePort;
   SetReadyState(CONNECTING);
   mAllocateEven = Some(aClient);
 
