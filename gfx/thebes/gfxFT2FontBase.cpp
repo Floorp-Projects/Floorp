@@ -38,7 +38,7 @@ gfxFT2FontBase::gfxFT2FontBase(
       mEmbolden(aEmbolden),
       mFTSize(1.0) {}
 
-gfxFT2FontBase::~gfxFT2FontBase() {}
+gfxFT2FontBase::~gfxFT2FontBase() { mFTFace->ForgetLockOwner(this); }
 
 FT_Face gfxFT2FontBase::LockFTFace() {
   if (!mFTFace->Lock(this)) {
