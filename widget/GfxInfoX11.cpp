@@ -131,6 +131,7 @@ void GfxInfo::GetData() {
   nsCString mesaAccelerated;
   // Available if using a DRI-based libGL stack.
   nsCString driDriver;
+  nsCString screenInfo;
 
   nsCString* stringToFill = nullptr;
   char* bufptr = buf;
@@ -159,6 +160,8 @@ void GfxInfo::GetData() {
         stringToFill = &mAdapterRAM;
       else if (!strcmp(line, "DRI_DRIVER"))
         stringToFill = &driDriver;
+      else if (!strcmp(line, "SCREEN_INFO"))
+        stringToFill = &screenInfo;
     }
   }
 
@@ -288,6 +291,21 @@ void GfxInfo::GetData() {
     // TODO: Look into ways to find the device ID on FGLRX.
   } else {
     NS_WARNING("Failed to detect GL vendor!");
+  }
+
+  if (!screenInfo.IsEmpty()) {
+    PRInt32 start = 0;
+    PRInt32 loc = screenInfo.Find(";", PR_FALSE, start);
+    while (loc != kNotFound)
+    {
+      nsCString line(screenInfo.get() + start, loc - start);
+      nsString value;
+      CopyASCIItoUTF16(line, value);
+
+      mScreenInfo.AppendElement(value);
+      start = loc+1;
+      loc = screenInfo.Find(";", PR_FALSE, start);
+    }
   }
 
   // Fallback to GL_VENDOR and GL_RENDERER.
@@ -581,6 +599,17 @@ GfxInfo::GetAdapterSubsysID(nsAString& aAdapterSubsysID) {
 
 NS_IMETHODIMP
 GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) {
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
+  GetData();
+  if (!mScreenInfo.IsEmpty()){
+    aDisplayInfo = mScreenInfo;
+
+    return NS_OK;
+  }
   return NS_ERROR_FAILURE;
 }
 

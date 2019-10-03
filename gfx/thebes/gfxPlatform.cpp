@@ -472,6 +472,7 @@ gfxPlatform::gfxPlatform()
       mTilesInfoCollector(this, &gfxPlatform::GetTilesSupportInfo),
       mFrameStatsCollector(this, &gfxPlatform::GetFrameStats),
       mCMSInfoCollector(this, &gfxPlatform::GetCMSSupportInfo),
+      mDisplayInfoCollector(this, &gfxPlatform::GetDisplayInfo),
       mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
       mScreenDepth(0),
       mScreenPixels(0) {
@@ -3454,6 +3455,22 @@ void gfxPlatform::GetCMSSupportInfo(mozilla::widget::InfoObject& aObj) {
   }
 
   free(profile);
+}
+
+void gfxPlatform::GetDisplayInfo(mozilla::widget::InfoObject& aObj) {
+  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+
+  nsTArray<nsString> displayInfo;
+  auto rv = gfxInfo->GetDisplayInfo(displayInfo);
+  if (NS_SUCCEEDED(rv)) {
+    size_t displayCount = displayInfo.Length();
+    aObj.DefineProperty("DisplayCount", displayCount);
+
+    for (size_t i = 0; i < displayCount; i++) {
+      nsPrintfCString name("Display%zu", i);
+      aObj.DefineProperty(name.get(), displayInfo[i]);
+    }
+  }
 }
 
 class FrameStatsComparator {
