@@ -1706,11 +1706,14 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
         mozilla::dom::Performance* perf = innerWindow->GetPerformance();
         if (perf) {
           timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);
-          // 0 is an inappropriate mixin for this this area; however CSS Animations
-          // needs to have it's Time Reduction Logic refactored, so it's currently
-          // only clamping for RFP mode. RFP mode gives a much lower time precision,
-          // so we accept the security leak here for now
-          timeStamp = nsRFPService::ReduceTimePrecisionAsMSecs(timeStamp, 0, TimerPrecisionType::RFPOnly);
+          // 0 is an inappropriate mixin for this this area; however CSS
+          // Animations needs to have it's Time Reduction Logic refactored, so
+          // it's currently only clamping for RFP mode. RFP mode gives a much
+          // lower time precision, so we accept the security leak here for now
+          if (!perf->IsSystemPrincipal()) {
+            timeStamp = nsRFPService::ReduceTimePrecisionAsMSecs(
+                timeStamp, 0, TimerPrecisionType::RFPOnly);
+          }
         }
         // else window is partially torn down already
       }
@@ -2134,7 +2137,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 #if defined(MOZ_WIDGET_ANDROID)
     gfx::VRManager* vrm = gfx::VRManager::Get();
     skipPaint = vrm->IsPresenting();
-#endif // defined(MOZ_WIDGET_ANDROID)
+#endif  // defined(MOZ_WIDGET_ANDROID)
     if (!skipPaint) {
       PaintTelemetry::AutoRecordPaint record;
       vm->ProcessPendingUpdates();
