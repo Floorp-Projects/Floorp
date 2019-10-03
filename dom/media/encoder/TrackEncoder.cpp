@@ -29,7 +29,7 @@ static const int AUDIO_INIT_FAILED_DURATION = 1;
 static const int VIDEO_INIT_FAILED_DURATION = 30;
 // A maximal key frame interval allowed to set.
 // Longer values will be shorten to this value.
-static const int DEFAULT_KEYFRAME_INTERVAL_MS = 1000;
+static const unsigned int DEFAULT_KEYFRAME_INTERVAL_MS = 1000;
 
 TrackEncoder::TrackEncoder(TrackRate aTrackRate)
     : mEncodingComplete(false),
@@ -753,7 +753,7 @@ size_t VideoTrackEncoder::SizeOfExcludingThis(
          mOutgoingBuffer.SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void VideoTrackEncoder::SetKeyFrameInterval(int32_t aKeyFrameInterval) {
+void VideoTrackEncoder::SetKeyFrameInterval(uint32_t aKeyFrameInterval) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
   if (aKeyFrameInterval == 0) {
     mKeyFrameInterval = DEFAULT_KEYFRAME_INTERVAL_MS;
