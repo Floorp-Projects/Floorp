@@ -17,30 +17,33 @@ var w = null;
 var phase = 0;
 var isWindowLoaded = false;
 
-function pollForPage(expectErrorPage, f, win) {
-  // Start with polling after a delay, we might mistakenly take the current page
-  // as an expected one.
-  window.setTimeout(function() {
-    var iterationsLeft = 200;
-    var int = window.setInterval(function() {
-      iterationsLeft--;
-
-      var haveErrorPage = false;
-      try {
-        win.document.title;
-      } catch (ex) {
-        haveErrorPage = true;
-      }
-
-      if (iterationsLeft == 0 || expectErrorPage == haveErrorPage) {
-        window.clearInterval(int);
-        f(iterationsLeft > 0);
-      }
-    }, 100);
-  }, 1000);
+function delay(msec) {
+  return new Promise(resolve => setTimeout(resolve, msec));
 }
 
-function windowLoaded() {
+async function pollForPage(expectErrorPage, win) {
+  // Start with polling after a delay, we might mistakenly take the current page
+  // as an expected one.
+  await delay(1000);
+
+  for (let i = 0; i < 200; i++) {
+    await delay(100);
+
+    let haveErrorPage = false;
+    try {
+      win.document.title;
+    } catch (ex) {
+      haveErrorPage = true;
+    }
+
+    if (haveErrorPage == expectErrorPage) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function windowLoaded() {
   // The code under here should only be run once
   // The test popup window workingURL was already opened
   if (isWindowLoaded)
@@ -53,26 +56,23 @@ function windowLoaded() {
     w.location.href = faultyURL;
   }, 0);
 
-  pollForPage(true, function(errorSucceeded) {
-    ok(errorSucceeded, "Waiting for error page succeeded");
-    /* 3. now, while we are on the error page, navigate back */
-    try {
-      // We need the SpecialPowers bit, because this is a cross-origin window
-      // and we normally can't touch .history on those.
-      SpecialPowers.wrap(w).history.back();
-    } catch (ex) {
-      ok(false, "w.history.back() threw " + ex);
-    }
+  ok(await pollForPage(true, w), "Waiting for error page succeeded");
+  /* 3. now, while we are on the error page, navigate back */
+  try {
+    // We need the SpecialPowers bit, because this is a cross-origin window
+    // and we normally can't touch .history on those.
+    await SpecialPowers.spawn(w, [], () => this.content.history.back());
+  } catch (ex) {
+    ok(false, "w.history.back() threw " + ex);
+  }
 
-    pollForPage(false, function(originalSucceeded) {
-      ok(originalSucceeded, "Waiting for original page succeeded");
-      /* 4-finish, check we are back at the original page */
-      isnot(SpecialPowers.wrap(w).location.href, faultyURL, "Is on an error page");
-      is(SpecialPowers.wrap(w).location.href, workingURL, "Is not on the previous page");
-      w.close();
-      SimpleTest.finish();
-    }, w);
-  }, w);
+  ok(await pollForPage(false, w), "Waiting for original page succeeded");
+  /* 4-finish, check we are back at the original page */
+  is(await SpecialPowers.spawn(w, [], () => this.content.location.href),
+     workingURL,
+     "Is on the previous page");
+  w.close();
+  SimpleTest.finish();
 }
 
 function startTest() {
