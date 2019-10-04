@@ -26,7 +26,7 @@ async function setupRemoteSettings() {
   sinon.stub(settings, "get").returns([
     {
       id: HOMEPAGE_IGNORELIST,
-      matches: ["ignore=me"],
+      matches: ["ignore=me", "ignoreCASE=ME"],
       _status: "synced",
     },
   ]);
@@ -80,7 +80,7 @@ add_task(async function test_updateIgnoreListCausesReset() {
           id: HOMEPAGE_IGNORELIST,
           schema: 1553857697843,
           last_modified: 1553859483588,
-          matches: ["ignore=me", "new=ignore"],
+          matches: ["ignore=me", "ignoreCASE=ME", "new=ignore"],
         },
       ],
     },
@@ -104,10 +104,10 @@ add_task(async function test_updateIgnoreListCausesReset() {
   );
 });
 
-add_task(async function test_setIgnoredUrl() {
+async function testSetIgnoredUrl(url) {
   Assert.ok(!HomePage.overriden, "Should not be overriding the homepage");
 
-  await HomePage.set("http://bad/?ignore=me");
+  await HomePage.set(url);
 
   Assert.equal(
     HomePage.get(),
@@ -122,6 +122,12 @@ add_task(async function test_setIgnoredUrl() {
       method: "preference",
     }
   );
+}
+
+add_task(async function test_setIgnoredUrl() {
+  await testSetIgnoredUrl("http://bad/?ignore=me");
 });
 
-// Also need an integration mochitest with an extension (if we can).
+add_task(async function test_setIgnoredUrl_case() {
+  await testSetIgnoredUrl("http://bad/?Ignorecase=me");
+});
