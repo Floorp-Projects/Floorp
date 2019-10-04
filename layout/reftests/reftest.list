@@ -226,6 +226,9 @@ include frameset/reftest.list
 # gfx
 include ../../gfx/tests/reftest/reftest.list
 
+# high contrast
+include high-contrast/reftest.list
+
 # block-inside-inline splits
 include ib-split/reftest.list
 
