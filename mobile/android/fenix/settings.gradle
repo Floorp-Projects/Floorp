@@ -1,18 +1,38 @@
 include ':app', ':architecture'
 
+def log(message) {
+    logger.lifecycle("[settings] ${message}")
+}
+
+def runCmd(cmd, workingDir, successMessage) {
+    def proc = cmd.execute(null, new File(workingDir))
+    def standardOutput = new ByteArrayOutputStream()
+    def standardError = new ByteArrayOutputStream()
+    proc.consumeProcessOutput(standardOutput, standardError)
+    proc.waitFor()
+
+    if (proc.exitValue() != 0) {
+        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}:\n\nstdout:\n${standardOutput.toString()}\n\nstderr:\n${standardError.toString()}")
+    } else {
+        log(successMessage)
+    }
+    return standardOutput
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Local Development overrides
 //////////////////////////////////////////////////////////////////////////
 
-Properties localProperties = null;
-String settingAppServicesPath = "substitutions.application-services.dir";
+Properties localProperties = null
+String settingAppServicesPath = "substitutions.application-services.dir"
+String settingAndroidComponentsPath = "autoPublish.android-components.dir"
 
 if (file('local.properties').canRead()) {
     localProperties = new Properties()
     localProperties.load(file('local.properties').newDataInputStream())
-    logger.lifecycle('Local configuration: loaded local.properties')
+    log('Loaded local.properties')
 } else {
-    logger.lifecycle('Local configuration: absent local.properties; proceeding as normal.')
+    log('Missing local.properties; see https://github.com/mozilla-mobile/fenix/blob/master/README.md#local-properties-helpers for instructions.')
 }
 
 if (localProperties != null) {
@@ -20,12 +40,33 @@ if (localProperties != null) {
         gradle.ext.set("localProperties.${prop.key}", prop.value)
     }
 
-    String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath);
+    String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath)
 
     if (appServicesLocalPath != null) {
-        logger.lifecycle("Local configuration: substituting application-services modules from path: $appServicesLocalPath")
+        log("Enabling composite build with application-services modules from: $appServicesLocalPath")
         includeBuild(appServicesLocalPath)
     } else {
-        logger.lifecycle("Local configuration: application-services substitution path missing. Specify it via '$settingAppServicesPath' setting.")
+        log("Disabled composite builds with application-services. Enable them by settings '$settingAppServicesPath' in local.properties")
+    }
+
+    String androidComponentsLocalPath = localProperties.getProperty(settingAndroidComponentsPath)
+
+    if (androidComponentsLocalPath != null) {
+        log("Enabling automatic publication of android-components from: $androidComponentsLocalPath")
+        log("Determining if android-components are up-to-date...")
+        def compileAcCmd = ["${androidComponentsLocalPath}/gradlew", "compileReleaseKotlin"]
+        def compileOutput = runCmd(compileAcCmd, androidComponentsLocalPath, "Compiled android-components.")
+        // This is somewhat brittle: parse last line of gradle output, to fish out how many tasks were executed.
+        // One executed task means gradle didn't do any work other than executing the top-level 'compile' task.
+        def compileTasksExecuted = compileOutput.toString().split('\n').last().split(':')[1].split(' ')[1]
+        if (compileTasksExecuted.equals("1")) {
+            log("android-components are up-to-date, skipping publication.")
+        } else {
+            log("android-components changed, publishing locally...")
+            def publishAcCmd = ["${androidComponentsLocalPath}/gradlew", "publishToMavenLocal", "-Plocal=true"]
+            runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components.")
+        }
+    } else {
+        log("Disabled auto-publication of android-components. Enable it by settings '$settingAndroidComponentsPath' in local.properties")
     }
 }
