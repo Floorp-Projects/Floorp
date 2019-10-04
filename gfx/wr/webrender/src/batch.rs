@@ -1204,32 +1204,42 @@ impl BatchBuilder {
                                     let tile = &tile_cache.tiles[key];
                                     let device_rect = (tile.world_rect * ctx.global_device_pixel_scale).round();
                                     let surface = tile.surface.as_ref().expect("no tile surface set!");
-                                    let (surface, is_opaque) = match surface {
+                                    match surface {
                                         TileSurface::Color { color } => {
-                                            (CompositeTileSurface::Color { color: *color }, true)
+                                            composite_config.opaque_tiles.push(CompositeTile {
+                                                surface: CompositeTileSurface::Color { color: *color },
+                                                rect: device_rect,
+                                                clip_rect: device_clip_rect,
+                                                z_id,
+                                            });
+                                        }
+                                        TileSurface::Clear => {
+                                            composite_config.clear_tiles.push(CompositeTile {
+                                                surface: CompositeTileSurface::Clear,
+                                                rect: device_rect,
+                                                clip_rect: device_clip_rect,
+                                                z_id,
+                                            });
                                         }
                                         TileSurface::Texture { handle, .. } => {
                                             let cache_item = ctx.resource_cache.texture_cache.get(handle);
 
-                                            (
-                                                CompositeTileSurface::Texture {
+                                            let composite_tile = CompositeTile {
+                                                surface: CompositeTileSurface::Texture {
                                                     texture_id: cache_item.texture_id,
                                                     texture_layer: cache_item.texture_layer,
                                                 },
-                                                tile.is_opaque || tile_cache.is_opaque(),
-                                            )
+                                                rect: device_rect,
+                                                clip_rect: device_clip_rect,
+                                                z_id,
+                                            };
+
+                                            if tile.is_opaque || tile_cache.is_opaque() {
+                                                composite_config.opaque_tiles.push(composite_tile);
+                                            } else {
+                                                composite_config.alpha_tiles.push(composite_tile);
+                                            }
                                         }
-                                    };
-                                    let composite_tile = CompositeTile {
-                                        surface,
-                                        rect: device_rect,
-                                        clip_rect: device_clip_rect,
-                                        z_id,
-                                    };
-                                    if is_opaque {
-                                        composite_config.opaque_tiles.push(composite_tile);
-                                    } else {
-                                        composite_config.alpha_tiles.push(composite_tile);
                                     }
                                 }
                             }

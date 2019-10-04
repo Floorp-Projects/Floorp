@@ -23,6 +23,7 @@ pub enum CompositeTileSurface {
     Color {
         color: ColorF,
     },
+    Clear,
 }
 
 /// Describes the geometry and surface of a tile to be composited
@@ -41,6 +42,7 @@ pub struct CompositeTile {
 pub struct CompositeConfig {
     pub opaque_tiles: Vec<CompositeTile>,
     pub alpha_tiles: Vec<CompositeTile>,
+    pub clear_tiles: Vec<CompositeTile>,
     pub z_generator: ZBufferIdGenerator,
 }
 
@@ -49,6 +51,7 @@ impl CompositeConfig {
         CompositeConfig {
             opaque_tiles: Vec::new(),
             alpha_tiles: Vec::new(),
+            clear_tiles: Vec::new(),
             z_generator: ZBufferIdGenerator::new(0),
         }
     }
