@@ -19,7 +19,7 @@ var manager = new MediaTestManager;
  */
 function startTest(test, token) {
   var element = document.createElement('audio');
-  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
+  var expectedMimeType = test.type;
 
   element.token = token;
   manager.started(token);
@@ -28,7 +28,8 @@ function startTest(test, token) {
   element.test = test;
   element.stream = element.mozCaptureStreamUntilEnded();
 
-  var mediaRecorder = new MediaRecorder(element.stream);
+  var mediaRecorder =
+    new MediaRecorder(element.stream, {mimeType: expectedMimeType});
   var onStopFired = false;
   var onDataAvailableFired = false;
 
@@ -73,19 +74,11 @@ function startTest(test, token) {
       // The initialization of encoder can be cancelled.
       // On some platforms, the stop method may run after media stream track
       // available, so the blob can contain the header data.
-      if (evt.data.size > 0) {
-        is(evt.data.type, expectedMimeType,
-           'Blob data received and should have mime type');
-        is(mediaRecorder.mimeType, expectedMimeType,
-           'Media Recorder mime type in ondataavailable = ' + expectedMimeType);
-      } else if (evt.data.size === 0) {
-        is(mediaRecorder.mimeType, '',
-           'Blob data mime type is empty');
-        is(mediaRecorder.mimeType, '',
-           'Media Recorder mime type in ondataavailable is empty');
-      } else {
-        ok(false, 'Blob size can not be negative');
-      }
+      is(evt.data.type, expectedMimeType,
+         'Blob data received and should have mime type');
+      is(mediaRecorder.mimeType, expectedMimeType,
+         'Media Recorder mime type in ondataavailable = ' + expectedMimeType);
+      ok(evt.data.size >= 0, 'Blob size can not be negative');
 
       // onstop should not have fired before ondataavailable
       if (onStopFired) {

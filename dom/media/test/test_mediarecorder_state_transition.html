@@ -237,16 +237,13 @@ function runStateTransitionTests(testStream) {
         }
       }
 
-      if (operationTest.isValid) {
-        ok(true, 'Successful transitions for ' + operationsString);
-      } else {
-        ok(false, 'Failed transitions for ' + operationsString);
-      }
+      ok(operationTest.isValid, `${operationsString} should succeed`);
     } catch (err) {
-      if (!operationTest.isValid && err.name === 'InvalidStateError') {
-        ok(true, 'InvalidStateError fired for ' + operationsString);
+      if (operationTest.isValid) {
+        ok(false, `${operationsString} failed unexpectedly with ${err.name}`);
       } else {
-        ok(false, 'No InvalidStateError for ' + operationsString);
+        is(err.name, "InvalidStateError",
+          `${operationsString} expected to fail with InvalidStateError`);
       }
     }
   }

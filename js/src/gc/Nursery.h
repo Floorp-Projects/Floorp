@@ -180,7 +180,7 @@ class Nursery {
 
   using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
 
-  explicit Nursery(JSRuntime* rt);
+  explicit Nursery(gc::GCRuntime* gc);
   ~Nursery();
 
   MOZ_MUST_USE bool init(AutoLockGCBgAlloc& lock);
@@ -404,7 +404,7 @@ class Nursery {
   void joinDecommitTask() { decommitTask.join(); }
 
  private:
-  JSRuntime* runtime_;
+  gc::GCRuntime* const gc;
 
   // Vector of allocated chunks to allocate from.
   Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
@@ -557,7 +557,7 @@ class Nursery {
 
   MOZ_ALWAYS_INLINE bool isSubChunkMode() const;
 
-  JSRuntime* runtime() const { return runtime_; }
+  JSRuntime* runtime() const;
   gcstats::Statistics& stats() const;
 
   const js::gc::GCSchedulingTunables& tunables() const;

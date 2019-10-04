@@ -2456,7 +2456,7 @@
      *   Operands: uint32_t icIndex, uint8_t BITFIELD
      *   Stack: =>
      */ \
-    MACRO(JSOP_LOOPENTRY, 227, "loopentry", NULL, 6, 0, 0, JOF_LOOPENTRY|JOF_IC) \
+    MACRO(JSOP_LOOPENTRY, 227, "loopentry", NULL, 6, 0, 0, JOF_LOOPENTRY) \
     /*
      * Converts the value on the top of the stack to a String.
      *

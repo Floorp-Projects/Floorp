@@ -17,7 +17,7 @@ var manager = new MediaTestManager;
  */
 function startTest(test, token) {
   var element = document.createElement('audio');
-  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
+  var expectedMimeType = test.type;
 
   element.token = token;
   manager.started(token);
@@ -31,7 +31,8 @@ function startTest(test, token) {
     element.onloadedmetadata = null;
 
     const stream = element.mozCaptureStream();
-    const mediaRecorder = new MediaRecorder(stream);
+    const mediaRecorder =
+      new MediaRecorder(stream, {mimeType: expectedMimeType});
 
     mediaRecorder.onerror = function () {
       ok(false, 'Unexpected onerror callback fired');

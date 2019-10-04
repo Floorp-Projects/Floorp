@@ -43,6 +43,14 @@
 mozilla::LazyLogModule gMediaRecorderLog("MediaRecorder");
 #define LOG(type, msg) MOZ_LOG(gMediaRecorderLog, type, msg)
 
+#define MIN_VIDEO_BITRATE_BPS 10e3        // 10kbps
+#define DEFAULT_VIDEO_BITRATE_BPS 2500e3  // 2.5Mbps
+#define MAX_VIDEO_BITRATE_BPS 100e6       // 100Mbps
+
+#define MIN_AUDIO_BITRATE_BPS 500        // 500bps
+#define DEFAULT_AUDIO_BITRATE_BPS 128e3  // 128kbps
+#define MAX_AUDIO_BITRATE_BPS 512e3      // 512kbps
+
 namespace mozilla {
 
 namespace dom {
@@ -141,7 +149,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(MediaRecorder)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MediaRecorder,
                                                   DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSecurityDomException)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUnknownDomException)
@@ -150,7 +158,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MediaRecorder,
                                                 DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStream)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAudioNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSecurityDomException)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUnknownDomException)
@@ -164,6 +172,365 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(MediaRecorder, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaRecorder, DOMEventTargetHelper)
+
+namespace {
+bool PrincipalSubsumes(MediaRecorder* aRecorder, nsIPrincipal* aPrincipal) {
+  if (!aRecorder->GetOwner()) {
+    return false;
+  }
+  nsCOMPtr<Document> doc = aRecorder->GetOwner()->GetExtantDoc();
+  if (!doc) {
+    return false;
+  }
+  if (!aPrincipal) {
+    return false;
+  }
+  bool subsumes;
+  if (NS_FAILED(doc->NodePrincipal()->Subsumes(aPrincipal, &subsumes))) {
+    return false;
+  }
+  return subsumes;
+}
+
+bool MediaStreamTracksPrincipalSubsumes(
+    MediaRecorder* aRecorder,
+    const nsTArray<RefPtr<MediaStreamTrack>>& aTracks) {
+  nsCOMPtr<nsIPrincipal> principal = nullptr;
+  for (const auto& track : aTracks) {
+    nsContentUtils::CombineResourcePrincipals(&principal,
+                                              track->GetPrincipal());
+  }
+  return PrincipalSubsumes(aRecorder, principal);
+}
+
+bool AudioNodePrincipalSubsumes(MediaRecorder* aRecorder,
+                                AudioNode* aAudioNode) {
+  MOZ_ASSERT(aAudioNode);
+  Document* doc =
+      aAudioNode->GetOwner() ? aAudioNode->GetOwner()->GetExtantDoc() : nullptr;
+  nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
+  return PrincipalSubsumes(aRecorder, principal);
+}
+
+enum class TypeSupport {
+  Supported,
+  MediaTypeInvalid,
+  NoVideoWithAudioType,
+  ContainersDisabled,
+  CodecsDisabled,
+  ContainerUnsupported,
+  CodecUnsupported,
+  CodecDuplicated,
+};
+
+nsCString TypeSupportToCString(TypeSupport aSupport,
+                               const nsAString& aMimeType) {
+  nsAutoCString mime = NS_ConvertUTF16toUTF8(aMimeType);
+  switch (aSupport) {
+    case TypeSupport::Supported:
+      return nsPrintfCString("%s is supported", mime.get());
+    case TypeSupport::MediaTypeInvalid:
+      return nsPrintfCString("%s is not a valid media type", mime.get());
+    case TypeSupport::NoVideoWithAudioType:
+      return nsPrintfCString(
+          "Video cannot be recorded with %s as it is an audio type",
+          mime.get());
+    case TypeSupport::ContainersDisabled:
+      return NS_LITERAL_CSTRING("All containers are disabled");
+    case TypeSupport::CodecsDisabled:
+      return NS_LITERAL_CSTRING("All codecs are disabled");
+    case TypeSupport::ContainerUnsupported:
+      return nsPrintfCString("%s indicates an unsupported container",
+                             mime.get());
+    case TypeSupport::CodecUnsupported:
+      return nsPrintfCString("%s indicates an unsupported codec", mime.get());
+    case TypeSupport::CodecDuplicated:
+      return nsPrintfCString("%s contains the same codec multiple times",
+                             mime.get());
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown TypeSupport");
+      return NS_LITERAL_CSTRING("Unknown error");
+  }
+}
+
+TypeSupport CanRecordAudioTrackWith(const Maybe<MediaContainerType>& aMimeType,
+                                    const nsAString& aMimeTypeString) {
+  if (aMimeTypeString.IsEmpty()) {
+    // For the empty string we just need to check whether we have support for an
+    // audio container and an audio codec.
+    if (!MediaEncoder::IsWebMEncoderEnabled() &&
+        !MediaDecoder::IsOggEnabled()) {
+      // No container support for audio.
+      return TypeSupport::ContainersDisabled;
+    }
+
+    if (!MediaDecoder::IsOpusEnabled()) {
+      // No codec support for audio.
+      return TypeSupport::CodecsDisabled;
+    }
+
+    return TypeSupport::Supported;
+  }
+
+  if (!aMimeType) {
+    // A mime type string was set, but it couldn't be parsed to a valid
+    // MediaContainerType.
+    return TypeSupport::MediaTypeInvalid;
+  }
+
+  if (aMimeType->Type() != MEDIAMIMETYPE(VIDEO_WEBM) &&
+      aMimeType->Type() != MEDIAMIMETYPE(AUDIO_WEBM) &&
+      aMimeType->Type() != MEDIAMIMETYPE(AUDIO_OGG)) {
+    // Any currently supported container can record audio.
+    return TypeSupport::ContainerUnsupported;
+  }
+
+  if (aMimeType->Type() == MEDIAMIMETYPE(VIDEO_WEBM) &&
+      !MediaEncoder::IsWebMEncoderEnabled()) {
+    return TypeSupport::ContainerUnsupported;
+  }
+
+  if (aMimeType->Type() == MEDIAMIMETYPE(AUDIO_WEBM) &&
+      !MediaEncoder::IsWebMEncoderEnabled()) {
+    return TypeSupport::ContainerUnsupported;
+  }
+
+  if (aMimeType->Type() == MEDIAMIMETYPE(AUDIO_OGG) &&
+      !MediaDecoder::IsOggEnabled()) {
+    return TypeSupport::ContainerUnsupported;
+  }
+
+  if (!MediaDecoder::IsOpusEnabled()) {
+    return TypeSupport::CodecUnsupported;
+  }
+
+  if (!aMimeType->ExtendedType().HaveCodecs()) {
+    // No codecs constrained, we can pick opus.
+    return TypeSupport::Supported;
+  }
+
+  size_t opus = 0;
+  size_t unknown = 0;
+  for (const auto& codec : aMimeType->ExtendedType().Codecs().Range()) {
+    // Ignore video codecs.
+    if (codec.EqualsLiteral("vp8")) {
+      continue;
+    }
+    if (codec.EqualsLiteral("vp8.0")) {
+      continue;
+    }
+    if (codec.EqualsLiteral("opus")) {
+      // All containers support opus
+      opus++;
+      continue;
+    }
+    unknown++;
+  }
+
+  if (unknown > 0) {
+    // Unsupported codec.
+    return TypeSupport::CodecUnsupported;
+  }
+
+  if (opus == 0) {
+    // Codecs specified but not opus. Unsupported for audio.
+    return TypeSupport::CodecUnsupported;
+  }
+
+  if (opus > 1) {
+    // Opus specified more than once. Bad form.
+    return TypeSupport::CodecDuplicated;
+  }
+
+  return TypeSupport::Supported;
+}
+
+TypeSupport CanRecordVideoTrackWith(const Maybe<MediaContainerType>& aMimeType,
+                                    const nsAString& aMimeTypeString) {
+  if (aMimeTypeString.IsEmpty()) {
+    // For the empty string we just need to check whether we have support for a
+    // video container and a video codec. The VP8 encoder is always available.
+    if (!MediaEncoder::IsWebMEncoderEnabled()) {
+      // No container support for video.
+      return TypeSupport::ContainersDisabled;
+    }
+
+    return TypeSupport::Supported;
+  }
+
+  if (!aMimeType) {
+    // A mime type string was set, but it couldn't be parsed to a valid
+    // MediaContainerType.
+    return TypeSupport::MediaTypeInvalid;
+  }
+
+  if (!aMimeType->Type().HasVideoMajorType()) {
+    return TypeSupport::NoVideoWithAudioType;
+  }
+
+  if (aMimeType->Type() != MEDIAMIMETYPE(VIDEO_WEBM)) {
+    return TypeSupport::ContainerUnsupported;
+  }
+
+  if (!MediaEncoder::IsWebMEncoderEnabled()) {
+    return TypeSupport::ContainerUnsupported;
+  }
+
+  if (!aMimeType->ExtendedType().HaveCodecs()) {
+    // No codecs constrained, we can pick vp8.
+    return TypeSupport::Supported;
+  }
+
+  size_t vp8 = 0;
+  size_t unknown = 0;
+  for (const auto& codec : aMimeType->ExtendedType().Codecs().Range()) {
+    if (codec.EqualsLiteral("opus")) {
+      // Ignore audio codecs.
+      continue;
+    }
+    if (codec.EqualsLiteral("vp8")) {
+      vp8++;
+      continue;
+    }
+    if (codec.EqualsLiteral("vp8.0")) {
+      vp8++;
+      continue;
+    }
+    unknown++;
+  }
+
+  if (unknown > 0) {
+    // Unsupported codec.
+    return TypeSupport::CodecUnsupported;
+  }
+
+  if (vp8 == 0) {
+    // Codecs specified but not vp8. Unsupported for video.
+    return TypeSupport::CodecUnsupported;
+  }
+
+  if (vp8 > 1) {
+    // Vp8 specified more than once. Bad form.
+    return TypeSupport::CodecDuplicated;
+  }
+
+  return TypeSupport::Supported;
+}
+
+TypeSupport CanRecordWith(MediaStreamTrack* aTrack,
+                          const Maybe<MediaContainerType>& aMimeType,
+                          const nsAString& aMimeTypeString) {
+  if (aTrack->AsAudioStreamTrack()) {
+    return CanRecordAudioTrackWith(aMimeType, aMimeTypeString);
+  }
+
+  if (aTrack->AsVideoStreamTrack()) {
+    return CanRecordVideoTrackWith(aMimeType, aMimeTypeString);
+  }
+
+  MOZ_CRASH("Unexpected track type");
+}
+
+TypeSupport IsTypeSupportedImpl(const nsAString& aMIMEType) {
+  if (aMIMEType.IsEmpty()) {
+    // Lie and return true even if no container/codec support is enabled,
+    // because the spec mandates it.
+    return TypeSupport::Supported;
+  }
+  Maybe<MediaContainerType> mime = MakeMediaContainerType(aMIMEType);
+  TypeSupport rv = CanRecordAudioTrackWith(mime, aMIMEType);
+  if (rv == TypeSupport::Supported) {
+    return rv;
+  }
+  return CanRecordVideoTrackWith(mime, aMIMEType);
+}
+
+nsString SelectMimeType(uint8_t aNumVideoTracks, uint8_t aNumAudioTracks,
+                        const nsString& aConstrainedMimeType) {
+  const bool hasVideo = aNumVideoTracks > 0;
+  const bool hasAudio = aNumAudioTracks > 0;
+  MOZ_ASSERT(hasVideo || hasAudio);
+
+  Maybe<MediaContainerType> constrainedType =
+      MakeMediaContainerType(aConstrainedMimeType);
+
+  nsCString majorType;
+  {
+    // Select major type and container.
+    if (constrainedType) {
+      MOZ_ASSERT_IF(hasVideo, constrainedType->Type().HasVideoMajorType());
+      MOZ_ASSERT(!constrainedType->Type().HasApplicationMajorType());
+      majorType = constrainedType->Type().AsString();
+    } else if (hasVideo) {
+      majorType = NS_LITERAL_CSTRING(VIDEO_WEBM);
+    } else {
+      majorType = NS_LITERAL_CSTRING(AUDIO_OGG);
+    }
+  }
+
+  nsString codecs;
+  {
+    if (constrainedType && constrainedType->ExtendedType().HaveCodecs()) {
+      codecs = constrainedType->ExtendedType().Codecs().AsString();
+    } else {
+      if (hasVideo && hasAudio) {
+        codecs = NS_LITERAL_STRING("\"vp8, opus\"");
+      } else if (hasVideo) {
+        codecs = NS_LITERAL_STRING("vp8");
+      } else {
+        codecs = NS_LITERAL_STRING("opus");
+      }
+    }
+  }
+
+  nsString result = NS_ConvertUTF8toUTF16(nsPrintfCString(
+      "%s; codecs=%s", majorType.get(), NS_ConvertUTF16toUTF8(codecs).get()));
+
+  MOZ_ASSERT_IF(hasAudio,
+                CanRecordAudioTrackWith(MakeMediaContainerType(result),
+                                        result) == TypeSupport::Supported);
+  MOZ_ASSERT_IF(hasVideo,
+                CanRecordVideoTrackWith(MakeMediaContainerType(result),
+                                        result) == TypeSupport::Supported);
+  return result;
+}
+
+void SelectBitrates(uint32_t aBitsPerSecond, uint8_t aNumVideoTracks,
+                    uint32_t* aOutVideoBps, uint8_t aNumAudioTracks,
+                    uint32_t* aOutAudioBps) {
+  uint32_t vbps = 0;
+  uint32_t abps = 0;
+
+  const uint32_t minVideoBps = MIN_VIDEO_BITRATE_BPS * aNumVideoTracks;
+  const uint32_t maxVideoBps = MAX_VIDEO_BITRATE_BPS * aNumVideoTracks;
+
+  const uint32_t minAudioBps = MIN_AUDIO_BITRATE_BPS * aNumAudioTracks;
+  const uint32_t maxAudioBps = MAX_AUDIO_BITRATE_BPS * aNumAudioTracks;
+
+  if (aNumVideoTracks == 0) {
+    MOZ_DIAGNOSTIC_ASSERT(aNumAudioTracks > 0);
+    abps = std::min(maxAudioBps, std::max(minAudioBps, aBitsPerSecond));
+  } else if (aNumAudioTracks == 0) {
+    vbps = std::min(maxVideoBps, std::max(minVideoBps, aBitsPerSecond));
+  } else {
+    // Scale the bits so that video gets 20 times the bits of audio.
+    // Since we must account for varying number of tracks of each type we weight
+    // them by type; video = weight 20, audio = weight 1.
+    const uint32_t videoWeight = aNumVideoTracks * 20;
+    const uint32_t audioWeight = aNumAudioTracks;
+    const uint32_t totalWeights = audioWeight + videoWeight;
+    const uint32_t videoBitrate =
+        uint64_t(aBitsPerSecond) * videoWeight / totalWeights;
+    const uint32_t audioBitrate =
+        uint64_t(aBitsPerSecond) * audioWeight / totalWeights;
+    vbps = std::min(maxVideoBps, std::max(minVideoBps, videoBitrate));
+    abps = std::min(maxAudioBps, std::max(minAudioBps, audioBitrate));
+  }
+
+  *aOutVideoBps = vbps;
+  *aOutAudioBps = abps;
+}
+}  // namespace
 
 /**
  * Session is an object to represent a single recording event.
@@ -221,13 +588,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     Run() override {
       MOZ_ASSERT(NS_IsMainThread());
       mSession->MaybeCreateMutableBlobStorage();
-      for (uint32_t i = 0; i < mBuffer.Length(); i++) {
-        if (mBuffer[i].IsEmpty()) {
+      for (const auto& part : mBuffer) {
+        if (part.IsEmpty()) {
           continue;
         }
 
-        nsresult rv = mSession->mMutableBlobStorage->Append(
-            mBuffer[i].Elements(), mBuffer[i].Length());
+        nsresult rv = mSession->mMutableBlobStorage->Append(part.Elements(),
+                                                            part.Length());
         if (NS_WARN_IF(NS_FAILED(rv))) {
           mSession->DoSessionEndTask(rv);
           break;
@@ -236,32 +603,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
       return NS_OK;
     }
-  };
-
-  // Fire a named event, run in main thread task.
-  class DispatchEventRunnable : public Runnable {
-   public:
-    explicit DispatchEventRunnable(Session* aSession,
-                                   const nsAString& aEventName)
-        : Runnable("dom::MediaRecorder::Session::DispatchEventRunnable"),
-          mSession(aSession),
-          mEventName(aEventName) {}
-
-    NS_IMETHOD Run() override {
-      LOG(LogLevel::Debug,
-          ("Session.DispatchEventRunnable s=(%p) e=(%s)", mSession.get(),
-           NS_ConvertUTF16toUTF8(mEventName).get()));
-      MOZ_ASSERT(NS_IsMainThread());
-
-      NS_ENSURE_TRUE(mSession->mRecorder, NS_OK);
-      mSession->mRecorder->DispatchSimpleEvent(mEventName);
-
-      return NS_OK;
-    }
-
-   private:
-    RefPtr<Session> mSession;
-    nsString mEventName;
   };
 
   class EncoderListener : public MediaEncoderListener {
@@ -308,26 +649,30 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   };
 
  public:
-  Session(MediaRecorder* aRecorder, uint32_t aTimeSlice)
+  Session(MediaRecorder* aRecorder,
+          nsTArray<RefPtr<MediaStreamTrack>> aMediaStreamTracks,
+          TimeDuration aTimeslice, uint32_t aVideoBitsPerSecond,
+          uint32_t aAudioBitsPerSecond)
       : mRecorder(aRecorder),
-        mMediaStreamReady(false),
+        mMediaStreamTracks(std::move(aMediaStreamTracks)),
         mMainThread(mRecorder->GetOwner()->EventTargetFor(TaskCategory::Other)),
-        mTimeSlice(aTimeSlice),
+        mMimeType(mRecorder->mMimeType),
+        mTimeslice(aTimeslice),
+        mVideoBitsPerSecond(aVideoBitsPerSecond),
+        mAudioBitsPerSecond(aAudioBitsPerSecond),
         mStartTime(TimeStamp::Now()),
         mRunningState(RunningState::Idling) {
     MOZ_ASSERT(NS_IsMainThread());
 
-    aRecorder->GetMimeType(mMimeType);
     mMaxMemory = Preferences::GetUint("media.recorder.max_memory",
                                       MAX_ALLOW_MEMORY_BUFFER);
-    mLastBlobTimeStamp = mStartTime;
     Telemetry::ScalarAdd(Telemetry::ScalarID::MEDIARECORDER_RECORDING_COUNT, 1);
   }
 
   void PrincipalChanged(MediaStreamTrack* aTrack) override {
     NS_ASSERTION(mMediaStreamTracks.Contains(aTrack),
                  "Principal changed for unrecorded track");
-    if (!MediaStreamTracksPrincipalSubsumes()) {
+    if (!MediaStreamTracksPrincipalSubsumes(mRecorder, mMediaStreamTracks)) {
       DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
     }
   }
@@ -336,32 +681,14 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     LOG(LogLevel::Warning,
         ("Session.NotifyTrackAdded %p Raising error due to track set change",
          this));
-    if (mMediaStreamReady) {
-      DoSessionEndTask(NS_ERROR_ABORT);
-    }
-
-    NS_DispatchToMainThread(
-        NewRunnableMethod("MediaRecorder::Session::MediaStreamReady", this,
-                          &Session::MediaStreamReady));
-    return;
+    DoSessionEndTask(NS_ERROR_ABORT);
   }
 
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) override {
-    if (!mMediaStreamReady) {
-      // We haven't chosen the track set to record yet.
-      return;
-    }
-
     if (aTrack->Ended()) {
       // TrackEncoder will pickup tracks that end itself.
       return;
     }
-
-    MOZ_ASSERT(mEncoder);
-    if (mEncoder) {
-      mEncoder->RemoveMediaStreamTrack(aTrack);
-    }
-
     LOG(LogLevel::Warning,
         ("Session.NotifyTrackRemoved %p Raising error due to track set change",
          this));
@@ -372,32 +699,51 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     LOG(LogLevel::Debug, ("Session.Start %p", this));
     MOZ_ASSERT(NS_IsMainThread());
 
-    DOMMediaStream* domStream = mRecorder->Stream();
-    if (domStream) {
-      // The callback reports back when tracks are available and can be
-      // attached to MediaEncoder. This allows `recorder.start()` before any
-      // tracks are available. We have supported this historically and have
-      // mochitests assuming this behavior.
-      mMediaStream = domStream;
+    if (mRecorder->mStream) {
+      // The TrackListener reports back when tracks are added or removed from
+      // the MediaStream.
+      mMediaStream = mRecorder->mStream;
       mMediaStream->RegisterTrackListener(this);
-      nsTArray<RefPtr<MediaStreamTrack>> tracks(2);
-      mMediaStream->GetTracks(tracks);
-      for (const auto& track : tracks) {
-        // Notify of existing tracks, as the stream doesn't do this by itself.
-        NotifyTrackAdded(track);
+
+      uint8_t trackTypes = 0;
+      int32_t audioTracks = 0;
+      int32_t videoTracks = 0;
+      for (const auto& track : mMediaStreamTracks) {
+        if (track->AsAudioStreamTrack()) {
+          ++audioTracks;
+          trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
+        } else if (track->AsVideoStreamTrack()) {
+          ++videoTracks;
+          trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
+        } else {
+          MOZ_CRASH("Unexpected track type");
+        }
       }
+
+      if (audioTracks > 1 || videoTracks > 1) {
+        // When MediaRecorder supports multiple tracks, we should set up a
+        // single MediaInputPort from the input stream, and let main thread
+        // check track principals async later.
+        nsPIDOMWindowInner* window = mRecorder->GetOwner();
+        Document* document = window ? window->GetExtantDoc() : nullptr;
+        nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                        NS_LITERAL_CSTRING("Media"), document,
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "MediaRecorderMultiTracksNotSupported");
+        DoSessionEndTask(NS_ERROR_ABORT);
+        return;
+      }
+
+      for (const auto& t : mMediaStreamTracks) {
+        t->AddPrincipalChangeObserver(this);
+      }
+
+      LOG(LogLevel::Debug, ("Session.Start track types = (%d)", trackTypes));
+      InitEncoder(trackTypes, mMediaStreamTracks[0]->Graph()->GraphRate());
       return;
     }
 
     if (mRecorder->mAudioNode) {
-      // Check that we may access the audio node's content.
-      if (!AudioNodePrincipalSubsumes()) {
-        LOG(LogLevel::Warning,
-            ("Session.Start AudioNode principal check failed"));
-        DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
-        return;
-      }
-
       TrackRate trackRate =
           mRecorder->mAudioNode->Context()->Graph()->GraphRate();
 
@@ -424,8 +770,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     {
-      auto tracks(std::move(mMediaStreamTracks));
-      for (RefPtr<MediaStreamTrack>& track : tracks) {
+      for (const auto& track : mMediaStreamTracks) {
         track->RemovePrincipalChangeObserver(this);
       }
     }
@@ -442,32 +787,32 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
   }
 
-  nsresult Pause() {
+  void Pause() {
     LOG(LogLevel::Debug, ("Session.Pause"));
     MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mEncoder) {
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT_IF(mRunningState.isOk(),
+                  mRunningState.unwrap() != RunningState::Idling);
+    if (mRunningState.isErr() ||
+        mRunningState.unwrap() == RunningState::Stopping ||
+        mRunningState.unwrap() == RunningState::Stopped) {
+      return;
     }
-
+    MOZ_ASSERT(mEncoder);
     mEncoder->Suspend();
-    NS_DispatchToMainThread(
-        new DispatchEventRunnable(this, NS_LITERAL_STRING("pause")));
-    return NS_OK;
   }
 
-  nsresult Resume() {
+  void Resume() {
     LOG(LogLevel::Debug, ("Session.Resume"));
     MOZ_ASSERT(NS_IsMainThread());
-
-    if (!mEncoder) {
-      return NS_ERROR_FAILURE;
+    MOZ_ASSERT_IF(mRunningState.isOk(),
+                  mRunningState.unwrap() != RunningState::Idling);
+    if (mRunningState.isErr() ||
+        mRunningState.unwrap() == RunningState::Stopping ||
+        mRunningState.unwrap() == RunningState::Stopped) {
+      return;
     }
-
+    MOZ_ASSERT(mEncoder);
     mEncoder->Resume();
-    NS_DispatchToMainThread(
-        new DispatchEventRunnable(this, NS_LITERAL_STRING("resume")));
-    return NS_OK;
   }
 
   void RequestData() {
@@ -618,16 +963,23 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     // Whether push encoded data back to onDataAvailable automatically or we
     // need a flush.
     bool pushBlob = aForceFlush;
-    if (!pushBlob && mTimeSlice > 0 &&
-        (TimeStamp::Now() - mLastBlobTimeStamp).ToMilliseconds() > mTimeSlice) {
+    if (!pushBlob && !mLastBlobTimeStamp.IsNull() &&
+        (TimeStamp::Now() - mLastBlobTimeStamp) > mTimeslice) {
       pushBlob = true;
     }
     if (pushBlob) {
-      mLastBlobTimeStamp = TimeStamp::Now();
+      if (!mLastBlobTimeStamp.IsNull()) {
+        // Only update the timestamp if the encoder has been initialized.
+        mLastBlobTimeStamp = TimeStamp::Now();
+      }
       InvokeAsync(mMainThread, this, __func__, &Session::GatherBlob)
           ->Then(mMainThread, __func__,
                  [this, self = RefPtr<Session>(this)](
                      const BlobPromise::ResolveOrRejectValue& aResult) {
+                   // Assert that we've seen the start event
+                   MOZ_ASSERT_IF(
+                       mRunningState.isOk(),
+                       mRunningState.inspect() != RunningState::Starting);
                    if (aResult.IsReject()) {
                      LOG(LogLevel::Warning,
                          ("GatherBlob failed for pushing blob"));
@@ -642,129 +994,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                    }
                  });
     }
-  }
-
-  void MediaStreamReady() {
-    if (!mMediaStream) {
-      // Already shut down. This can happen because MediaStreamReady is async.
-      return;
-    }
-
-    if (mMediaStreamReady) {
-      return;
-    }
-
-    if (!mRunningState.isOk() ||
-        mRunningState.inspect() != RunningState::Idling) {
-      return;
-    }
-
-    nsTArray<RefPtr<mozilla::dom::MediaStreamTrack>> tracks;
-    mMediaStream->GetTracks(tracks);
-    uint8_t trackTypes = 0;
-    int32_t audioTracks = 0;
-    int32_t videoTracks = 0;
-    for (auto& track : tracks) {
-      if (track->Ended()) {
-        continue;
-      }
-
-      ConnectMediaStreamTrack(*track);
-
-      if (track->AsAudioStreamTrack()) {
-        ++audioTracks;
-        trackTypes |= ContainerWriter::CREATE_AUDIO_TRACK;
-      } else if (track->AsVideoStreamTrack()) {
-        ++videoTracks;
-        trackTypes |= ContainerWriter::CREATE_VIDEO_TRACK;
-      } else {
-        MOZ_CRASH("Unexpected track type");
-      }
-    }
-
-    if (trackTypes == 0) {
-      MOZ_ASSERT(audioTracks == 0);
-      MOZ_ASSERT(videoTracks == 0);
-      return;
-    }
-
-    mMediaStreamReady = true;
-
-    if (audioTracks > 1 || videoTracks > 1) {
-      // When MediaRecorder supports multiple tracks, we should set up a single
-      // MediaInputPort from the input stream, and let main thread check
-      // track principals async later.
-      nsPIDOMWindowInner* window = mRecorder->GetOwner();
-      Document* document = window ? window->GetExtantDoc() : nullptr;
-      nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                      NS_LITERAL_CSTRING("Media"), document,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "MediaRecorderMultiTracksNotSupported");
-      DoSessionEndTask(NS_ERROR_ABORT);
-      return;
-    }
-
-    // Check that we may access the tracks' content.
-    if (!MediaStreamTracksPrincipalSubsumes()) {
-      LOG(LogLevel::Warning, ("Session.MediaTracksReady MediaStreamTracks "
-                              "principal check failed"));
-      DoSessionEndTask(NS_ERROR_DOM_SECURITY_ERR);
-      return;
-    }
-
-    LOG(LogLevel::Debug,
-        ("Session.MediaTracksReady track type = (%d)", trackTypes));
-    InitEncoder(trackTypes, mMediaStreamTracks[0]->Graph()->GraphRate());
-  }
-
-  void ConnectMediaStreamTrack(MediaStreamTrack& aTrack) {
-    for (auto& track : mMediaStreamTracks) {
-      if (track->AsAudioStreamTrack() && aTrack.AsAudioStreamTrack()) {
-        // We only allow one audio track. See bug 1276928.
-        return;
-      }
-      if (track->AsVideoStreamTrack() && aTrack.AsVideoStreamTrack()) {
-        // We only allow one video track. See bug 1276928.
-        return;
-      }
-    }
-    mMediaStreamTracks.AppendElement(&aTrack);
-    aTrack.AddPrincipalChangeObserver(this);
-  }
-
-  bool PrincipalSubsumes(nsIPrincipal* aPrincipal) {
-    if (!mRecorder->GetOwner()) return false;
-    nsCOMPtr<Document> doc = mRecorder->GetOwner()->GetExtantDoc();
-    if (!doc) {
-      return false;
-    }
-    if (!aPrincipal) {
-      return false;
-    }
-    bool subsumes;
-    if (NS_FAILED(doc->NodePrincipal()->Subsumes(aPrincipal, &subsumes))) {
-      return false;
-    }
-    return subsumes;
-  }
-
-  bool MediaStreamTracksPrincipalSubsumes() {
-    MOZ_ASSERT(mRecorder->mDOMStream);
-    nsCOMPtr<nsIPrincipal> principal = nullptr;
-    for (RefPtr<MediaStreamTrack>& track : mMediaStreamTracks) {
-      nsContentUtils::CombineResourcePrincipals(&principal,
-                                                track->GetPrincipal());
-    }
-    return PrincipalSubsumes(principal);
-  }
-
-  bool AudioNodePrincipalSubsumes() {
-    MOZ_ASSERT(mRecorder->mAudioNode);
-    Document* doc = mRecorder->mAudioNode->GetOwner()
-                        ? mRecorder->mAudioNode->GetOwner()->GetExtantDoc()
-                        : nullptr;
-    nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
-    return PrincipalSubsumes(principal);
   }
 
   void InitEncoder(uint8_t aTrackTypes, TrackRate aTrackRate) {
@@ -835,40 +1064,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     gSessions.PutEntry(this);
 
-    uint32_t audioBitrate = mRecorder->GetAudioBitrate();
-    uint32_t videoBitrate = mRecorder->GetVideoBitrate();
-    uint32_t bitrate = mRecorder->GetBitrate();
-    if (bitrate > 0) {
-      // There's a total cap set. We have to make sure the type-specific limits
-      // are within range.
-      if ((aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) &&
-          (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK) &&
-          audioBitrate + videoBitrate > bitrate) {
-        LOG(LogLevel::Info, ("Session.InitEncoder Bitrates higher than total "
-                             "cap. Recalculating."));
-        double factor =
-            bitrate / static_cast<double>(audioBitrate + videoBitrate);
-        audioBitrate = static_cast<uint32_t>(audioBitrate * factor);
-        videoBitrate = static_cast<uint32_t>(videoBitrate * factor);
-      } else if ((aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) &&
-                 !(aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK)) {
-        audioBitrate = std::min(audioBitrate, bitrate);
-        videoBitrate = 0;
-      } else if (!(aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) &&
-                 (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK)) {
-        audioBitrate = 0;
-        videoBitrate = std::min(videoBitrate, bitrate);
-      }
-      MOZ_ASSERT(audioBitrate + videoBitrate <= bitrate);
-    }
-
-    // Allocate encoder and bind with union stream.
-    // At this stage, the API doesn't allow UA to choose the output mimeType
-    // format.
-
-    mEncoder =
-        MediaEncoder::CreateEncoder(mEncoderThread, mMimeType, audioBitrate,
-                                    videoBitrate, aTrackTypes, aTrackRate);
+    mEncoder = MediaEncoder::CreateEncoder(
+        mEncoderThread, mMimeType, mAudioBitsPerSecond, mVideoBitsPerSecond,
+        aTrackTypes, aTrackRate);
 
     if (!mEncoder) {
       LOG(LogLevel::Error, ("Session.InitEncoder !mEncoder %p", this));
@@ -889,13 +1087,16 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                                  mRecorder->mAudioNodeOutput);
     }
 
-    for (auto& track : mMediaStreamTracks) {
+    for (const auto& track : mMediaStreamTracks) {
       mEncoder->ConnectMediaStreamTrack(track);
     }
 
-    // If user defines timeslice interval for video blobs we have to set
-    // appropriate video keyframe interval defined in milliseconds.
-    mEncoder->SetVideoKeyFrameInterval(mTimeSlice);
+    // If a timeslice is defined we set an appropriate video keyframe interval.
+    // This allows users to get blobs regularly when the timeslice interval is
+    // shorter than the default key frame interval, as we'd normally wait for a
+    // key frame before sending data to the blob.
+    mEncoder->SetVideoKeyFrameInterval(
+        std::max(TimeDuration::FromSeconds(1), mTimeslice).ToMilliseconds());
 
     // Set mRunningState to Running so that DoSessionEndTask will
     // take the responsibility to end the session.
@@ -942,7 +1143,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                  if (mRecorder->mSessions.LastElement() == this) {
                    // Set state to inactive, but only if the recorder is not
                    // controlled by another session already.
-                   mRecorder->ForceInactive();
+                   mRecorder->Inactivate();
                  }
 
                  if (needsStartEvent) {
@@ -976,10 +1177,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                    }
                  }
 
-                 // Dispatch stop event and clear MIME type.
-                 mMimeType = NS_LITERAL_STRING("");
-                 mRecorder->SetMimeType(mMimeType);
-
                  // Fire an event named stop
                  mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
 
@@ -1001,13 +1198,17 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   void MediaEncoderInitialized() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
+    // Start issuing timeslice-based blobs.
+    MOZ_ASSERT(mLastBlobTimeStamp.IsNull());
+    mLastBlobTimeStamp = TimeStamp::Now();
+
+    Extract(false);
+
     NS_DispatchToMainThread(NewRunnableFrom([self = RefPtr<Session>(this), this,
                                              mime = mEncoder->MimeType()]() {
       if (mRunningState.isErr()) {
         return NS_OK;
       }
-      mMimeType = mime;
-      mRecorder->SetMimeType(mime);
       RunningState state = mRunningState.inspect();
       if (state == RunningState::Starting || state == RunningState::Stopping) {
         if (state == RunningState::Starting) {
@@ -1021,8 +1222,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       }
       return NS_OK;
     }));
-
-    Extract(false);
   }
 
   void MediaEncoderDataAvailable() {
@@ -1144,9 +1343,6 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // Stream currently recorded.
   RefPtr<DOMMediaStream> mMediaStream;
 
-  // True after we have decided on the track set to use for the recording.
-  bool mMediaStreamReady;
-
   // Tracks currently recorded. This should be a subset of mMediaStream's track
   // set.
   nsTArray<RefPtr<MediaStreamTrack>> mMediaStreamTracks;
@@ -1168,13 +1364,17 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // If set, is a promise for the latest GatherBlob() operation. Allows
   // GatherBlob() operations to be serialized in order to avoid races.
   RefPtr<BlobPromise> mBlobPromise;
-  // Current session mimeType
-  nsString mMimeType;
+  // Session mimeType
+  const nsString mMimeType;
   // Timestamp of the last fired dataavailable event.
   TimeStamp mLastBlobTimeStamp;
   // The interval of passing encoded data from MutableBlobStorage to
   // onDataAvailable handler.
-  const uint32_t mTimeSlice;
+  const TimeDuration mTimeslice;
+  // The video bitrate the recorder was configured with.
+  const uint32_t mVideoBitsPerSecond;
+  // The audio bitrate the recorder was configured with.
+  const uint32_t mAudioBitsPerSecond;
   // The time this session started, for telemetry.
   const TimeStamp mStartTime;
   // The session's current main thread state. The error type gets set when
@@ -1188,32 +1388,9 @@ MediaRecorder::~MediaRecorder() {
   UnRegisterActivityObserver();
 }
 
-MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaTrack,
-                             nsPIDOMWindowInner* aOwnerWindow)
-    : DOMEventTargetHelper(aOwnerWindow),
-      mAudioNodeOutput(0),
-      mState(RecordingState::Inactive),
-      mAudioBitsPerSecond(0),
-      mVideoBitsPerSecond(0),
-      mBitsPerSecond(0) {
+MediaRecorder::MediaRecorder(nsPIDOMWindowInner* aOwnerWindow)
+    : DOMEventTargetHelper(aOwnerWindow) {
   MOZ_ASSERT(aOwnerWindow);
-  mDOMStream = &aSourceMediaTrack;
-
-  RegisterActivityObserver();
-}
-
-MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode, uint32_t aSrcOutput,
-                             nsPIDOMWindowInner* aOwnerWindow)
-    : DOMEventTargetHelper(aOwnerWindow),
-      mAudioNodeOutput(aSrcOutput),
-      mState(RecordingState::Inactive),
-      mAudioBitsPerSecond(0),
-      mVideoBitsPerSecond(0),
-      mBitsPerSecond(0) {
-  MOZ_ASSERT(aOwnerWindow);
-
-  mAudioNode = &aSrcAudioNode;
-
   RegisterActivityObserver();
 }
 
@@ -1234,111 +1411,316 @@ void MediaRecorder::UnRegisterActivityObserver() {
   }
 }
 
-void MediaRecorder::SetMimeType(const nsString& aMimeType) {
-  mMimeType = aMimeType;
-}
-
 void MediaRecorder::GetMimeType(nsString& aMimeType) { aMimeType = mMimeType; }
 
-void MediaRecorder::Start(const Optional<uint32_t>& aTimeSlice,
+void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
                           ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Start %p", this));
 
   InitializeDomExceptions();
 
+  // When a MediaRecorder object’s start() method is invoked, the UA MUST run
+  // the following steps:
+
+  // 1. Let recorder be the MediaRecorder object on which the method was
+  //    invoked.
+
+  // 2. Let timeslice be the method’s first argument, if provided, or undefined.
+  TimeDuration timeslice =
+      aTimeslice.WasPassed()
+          ? TimeDuration::FromMilliseconds(aTimeslice.Value())
+          : TimeDuration::Forever();
+
+  // 3. Let stream be the value of recorder’s stream attribute.
+
+  // 4. Let tracks be the set of live tracks in stream’s track set.
+  nsTArray<RefPtr<MediaStreamTrack>> tracks;
+  if (mStream) {
+    mStream->GetTracks(tracks);
+  }
+  for (const auto& t : nsTArray<RefPtr<MediaStreamTrack>>(tracks)) {
+    if (t->Ended()) {
+      tracks.RemoveElement(t);
+    }
+  }
+
+  // 5. If the value of recorder’s state attribute is not inactive, throw an
+  //    InvalidStateError DOMException and abort these steps.
   if (mState != RecordingState::Inactive) {
-    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aResult.ThrowDOMException(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING("The MediaRecorder has already been started"));
     return;
   }
 
-  nsTArray<RefPtr<MediaStreamTrack>> tracks;
-  if (mDOMStream) {
-    mDOMStream->GetTracks(tracks);
+  // 6. If the isolation properties of stream disallow access from recorder,
+  //    throw a SecurityError DOMException and abort these steps.
+  if (mStream) {
+    RefPtr<nsIPrincipal> streamPrincipal = mStream->GetPrincipal();
+    if (!PrincipalSubsumes(this, streamPrincipal)) {
+      aResult.ThrowDOMException(
+          NS_ERROR_DOM_SECURITY_ERR,
+          NS_LITERAL_CSTRING("The MediaStream's isolation properties disallow "
+                             "access from MediaRecorder"));
+      return;
+    }
   }
-  if (!tracks.IsEmpty()) {
-    // If there are tracks already available that we're not allowed
-    // to record, we should throw a security error.
-    RefPtr<nsIPrincipal> streamPrincipal = mDOMStream->GetPrincipal();
-    bool subsumes = false;
-    nsPIDOMWindowInner* window;
-    Document* doc;
-    if (!(window = GetOwner()) || !(doc = window->GetExtantDoc()) ||
-        NS_FAILED(doc->NodePrincipal()->Subsumes(streamPrincipal, &subsumes)) ||
-        !subsumes) {
-      aResult.Throw(NS_ERROR_DOM_SECURITY_ERR);
+  if (mAudioNode && !AudioNodePrincipalSubsumes(this, mAudioNode)) {
+    LOG(LogLevel::Warning,
+        ("MediaRecorder %p Start AudioNode principal check failed", this));
+    aResult.ThrowDOMException(
+        NS_ERROR_DOM_SECURITY_ERR,
+        NS_LITERAL_CSTRING("The AudioNode's isolation properties disallow "
+                           "access from MediaRecorder"));
+    return;
+  }
+
+  // 7. If stream is inactive, throw a NotSupportedError DOMException and abort
+  //    these steps.
+  if (mStream && !mStream->Active()) {
+    aResult.ThrowDOMException(
+        NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+        NS_LITERAL_CSTRING("The MediaStream is inactive"));
+    return;
+  }
+
+  // 8. If the [[ConstrainedMimeType]] slot specifies a media type, container,
+  //    or codec, then run the following sub steps:
+  //   1. Constrain the configuration of recorder to the media type, container,
+  //      and codec specified in the [[ConstrainedMimeType]] slot.
+  //   2. For each track in tracks, if the User Agent cannot record the track
+  //      using the current configuration, then throw a NotSupportedError
+  //      DOMException and abort all steps.
+  Maybe<MediaContainerType> mime;
+  if (mConstrainedMimeType.Length() > 0) {
+    mime = MakeMediaContainerType(mConstrainedMimeType);
+    MOZ_DIAGNOSTIC_ASSERT(
+        mime,
+        "Invalid media MIME type should have been caught by IsTypeSupported");
+  }
+  for (const auto& track : tracks) {
+    TypeSupport support = CanRecordWith(track, mime, mConstrainedMimeType);
+    if (support != TypeSupport::Supported) {
+      nsString id;
+      track->GetId(id);
+      aResult.ThrowDOMException(
+          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          nsPrintfCString(
+              "%s track cannot be recorded: %s",
+              track->AsAudioStreamTrack() ? "An audio" : "A video",
+              TypeSupportToCString(support, mConstrainedMimeType).get()));
+      return;
+    }
+  }
+  if (mAudioNode) {
+    TypeSupport support = CanRecordAudioTrackWith(mime, mConstrainedMimeType);
+    if (support != TypeSupport::Supported) {
+      aResult.ThrowDOMException(
+          NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          nsPrintfCString(
+              "An AudioNode cannot be recorded: %s",
+              TypeSupportToCString(support, mConstrainedMimeType).get()));
       return;
     }
   }
 
-  uint32_t timeSlice = aTimeSlice.WasPassed() ? aTimeSlice.Value() : 0;
-  MediaRecorderReporter::AddMediaRecorder(this);
+  // 9. Let extendedMimeType be the value of recorder’s [[ConstrainedMimeType]]
+  //    slot.
+  nsString extendedMimeType = mConstrainedMimeType;
+
+  // 10. Modify extendedMimeType by adding media type, subtype and codecs
+  //     parameter reflecting the configuration used by the MediaRecorder to
+  //     record all tracks in tracks, if not already present. This MAY include
+  //     the profiles parameter [RFC6381] or further codec-specific parameters.
+  uint8_t numVideoTracks = 0;
+  uint8_t numAudioTracks = 0;
+  for (const auto& t : tracks) {
+    if (t->AsVideoStreamTrack() && numVideoTracks < UINT8_MAX) {
+      ++numVideoTracks;
+    } else if (t->AsAudioStreamTrack() && numAudioTracks < UINT8_MAX) {
+      ++numAudioTracks;
+    }
+  }
+  if (mAudioNode) {
+    MOZ_DIAGNOSTIC_ASSERT(!mStream);
+    ++numAudioTracks;
+  }
+  extendedMimeType =
+      SelectMimeType(numVideoTracks, numAudioTracks, extendedMimeType);
+
+  // 11. Set recorder’s mimeType attribute to extendedMimeType.
+  mMimeType = std::move(extendedMimeType);
+
+  // 12. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
+  //     recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
+  //     values the User Agent deems reasonable for the respective media types,
+  //     for recording all tracks in tracks, such that the sum of
+  //     videoBitsPerSecond and audioBitsPerSecond is close to the value of
+  //     recorder’s
+  //     [[ConstrainedBitsPerSecond]] slot.
+  if (mConstrainedBitsPerSecond) {
+    SelectBitrates(*mConstrainedBitsPerSecond, numVideoTracks,
+                   &mVideoBitsPerSecond, numAudioTracks, &mAudioBitsPerSecond);
+  }
+
+  // 13. Let videoBitrate be the value of recorder’s videoBitsPerSecond
+  //     attribute, and constrain the configuration of recorder to target an
+  //     aggregate bitrate of videoBitrate bits per second for all video tracks
+  //     recorder will be recording. videoBitrate is a hint for the encoder and
+  //     the value might be surpassed, not achieved, or only be achieved over a
+  //     long period of time.
+  const uint32_t videoBitrate = mVideoBitsPerSecond;
+
+  // 14. Let audioBitrate be the value of recorder’s audioBitsPerSecond
+  //     attribute, and constrain the configuration of recorder to target an
+  //     aggregate bitrate of audioBitrate bits per second for all audio tracks
+  //     recorder will be recording. audioBitrate is a hint for the encoder and
+  //     the value might be surpassed, not achieved, or only be achieved over a
+  //     long period of time.
+  const uint32_t audioBitrate = mAudioBitsPerSecond;
+
+  // 15. Set recorder’s state to recording
   mState = RecordingState::Recording;
+
+  MediaRecorderReporter::AddMediaRecorder(this);
   // Start a session.
   mSessions.AppendElement();
-  mSessions.LastElement() = new Session(this, timeSlice);
+  mSessions.LastElement() = new Session(this, std::move(tracks), timeslice,
+                                        videoBitrate, audioBitrate);
   mSessions.LastElement()->Start();
 }
 
 void MediaRecorder::Stop(ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Stop %p", this));
   MediaRecorderReporter::RemoveMediaRecorder(this);
+
+  // When a MediaRecorder object’s stop() method is invoked, the UA MUST run the
+  // following steps:
+
+  // 1. Let recorder be the MediaRecorder object on which the method was
+  //    invoked.
+
+  // 2. If recorder’s state attribute is inactive, abort these steps.
   if (mState == RecordingState::Inactive) {
     return;
   }
-  mState = RecordingState::Inactive;
+
+  // 3. Inactivate the recorder with recorder.
+  Inactivate();
+
+  // 4. Queue a task, using the DOM manipulation task source, that runs the
+  //    following steps:
+  //   1. Stop gathering data.
+  //   2. Let blob be the Blob of collected data so far, then fire a blob event
+  //      named dataavailable at recorder with blob.
+  //   3. Fire an event named stop at recorder.
   MOZ_ASSERT(mSessions.Length() > 0);
   mSessions.LastElement()->Stop();
+
+  // 5. return undefined.
 }
 
 void MediaRecorder::Pause(ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Pause %p", this));
+
+  // When a MediaRecorder object’s pause() method is invoked, the UA MUST run
+  // the following steps:
+
+  // 1. If state is inactive, throw an InvalidStateError DOMException and abort
+  //    these steps.
   if (mState == RecordingState::Inactive) {
-    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aResult.ThrowDOMException(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING("The MediaRecorder is inactive"));
     return;
   }
 
+  // 2. If state is paused, abort these steps.
   if (mState == RecordingState::Paused) {
     return;
   }
 
-  MOZ_ASSERT(mSessions.Length() > 0);
-  nsresult rv = mSessions.LastElement()->Pause();
-  if (NS_FAILED(rv)) {
-    NotifyError(rv);
-    return;
-  }
-
+  // 3. Set state to paused, and queue a task, using the DOM manipulation task
+  //    source, that runs the following steps:
   mState = RecordingState::Paused;
+  MOZ_ASSERT(!mSessions.IsEmpty());
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaRecorder::Pause", [session = mSessions.LastElement(),
+                               recorder = RefPtr<MediaRecorder>(this)] {
+        // 1. Stop gathering data into blob (but keep it available so that
+        //    recording can be resumed in the future).
+        session->Pause();
+
+        // 2. Let target be the MediaRecorder context object. Fire an event
+        //    named pause at target.
+        recorder->DispatchSimpleEvent(NS_LITERAL_STRING("pause"));
+      }));
+
+  // 4. return undefined.
 }
 
 void MediaRecorder::Resume(ErrorResult& aResult) {
   LOG(LogLevel::Debug, ("MediaRecorder.Resume %p", this));
+
+  // When a MediaRecorder object’s resume() method is invoked, the UA MUST run
+  // the following steps:
+
+  // 1. If state is inactive, throw an InvalidStateError DOMException and abort
+  //    these steps.
   if (mState == RecordingState::Inactive) {
-    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aResult.ThrowDOMException(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING("The MediaRecorder is inactive"));
     return;
   }
 
+  // 2. If state is recording, abort these steps.
   if (mState == RecordingState::Recording) {
     return;
   }
 
-  MOZ_ASSERT(mSessions.Length() > 0);
-  nsresult rv = mSessions.LastElement()->Resume();
-  if (NS_FAILED(rv)) {
-    NotifyError(rv);
-    return;
-  }
-
+  // 3. Set state to recording, and queue a task, using the DOM manipulation
+  //    task source, that runs the following steps:
   mState = RecordingState::Recording;
+  MOZ_ASSERT(!mSessions.IsEmpty());
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaRecorder::Resume", [session = mSessions.LastElement(),
+                                recorder = RefPtr<MediaRecorder>(this)] {
+        // 1. Resume (or continue) gathering data into the current blob.
+        session->Resume();
+
+        // 2. Let target be the MediaRecorder context object. Fire an event
+        //    named resume at target.
+        recorder->DispatchSimpleEvent(NS_LITERAL_STRING("resume"));
+      }));
+
+  // 4. return undefined.
 }
 
 void MediaRecorder::RequestData(ErrorResult& aResult) {
+  LOG(LogLevel::Debug, ("MediaRecorder.RequestData %p", this));
+
+  // When a MediaRecorder object’s requestData() method is invoked, the UA MUST
+  // run the following steps:
+
+  // 1. If state is inactive throw an InvalidStateError DOMException and
+  //    terminate these steps. Otherwise the UA MUST queue a task, using the DOM
+  //    manipulation task source, that runs the following steps:
+  //   1. Let blob be the Blob of collected data so far and let target be the
+  //      MediaRecorder context object, then fire a blob event named
+  //      dataavailable at target with blob. (Note that blob will be empty if no
+  //      data has been gathered yet.)
+  //   2. Create a new Blob and gather subsequent data into it.
   if (mState == RecordingState::Inactive) {
-    aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aResult.ThrowDOMException(
+        NS_ERROR_DOM_INVALID_STATE_ERR,
+        NS_LITERAL_CSTRING("The MediaRecorder is inactive"));
     return;
   }
   MOZ_ASSERT(mSessions.Length() > 0);
   mSessions.LastElement()->RequestData();
+
+  // 2. return undefined.
 }
 
 JSObject* MediaRecorder::WrapObject(JSContext* aCx,
@@ -1349,7 +1731,7 @@ JSObject* MediaRecorder::WrapObject(JSContext* aCx,
 /* static */
 already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
     const GlobalObject& aGlobal, DOMMediaStream& aStream,
-    const MediaRecorderOptions& aInitDict, ErrorResult& aRv) {
+    const MediaRecorderOptions& aOptions, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> ownerWindow =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!ownerWindow) {
@@ -1357,20 +1739,84 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
     return nullptr;
   }
 
-  if (!IsTypeSupported(aInitDict.mMimeType)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  // When the MediaRecorder() constructor is invoked, the User Agent MUST run
+  // the following steps:
+
+  // 1. Let stream be the constructor’s first argument.
+
+  // 2. Let options be the constructor’s second argument.
+
+  // 3. If invoking is type supported with options’ mimeType member as its
+  //    argument returns false, throw a NotSupportedError DOMException and abort
+  //    these steps.
+  TypeSupport support = IsTypeSupportedImpl(aOptions.mMimeType);
+  if (support != TypeSupport::Supported) {
+    // This catches also the empty string mimeType when support for any encoders
+    // has been disabled.
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                          TypeSupportToCString(support, aOptions.mMimeType));
     return nullptr;
   }
 
-  RefPtr<MediaRecorder> object = new MediaRecorder(aStream, ownerWindow);
-  object->SetOptions(aInitDict);
-  return object.forget();
+  // 4. Let recorder be a newly constructed MediaRecorder object.
+  RefPtr<MediaRecorder> recorder = new MediaRecorder(ownerWindow);
+
+  // 5. Let recorder have a [[ConstrainedMimeType]] internal slot, initialized
+  //    to the value of options' mimeType member.
+  recorder->mConstrainedMimeType = aOptions.mMimeType;
+
+  // 6. Let recorder have a [[ConstrainedBitsPerSecond]] internal slot,
+  //    initialized to the value of options’ bitsPerSecond member, if it is
+  //    present, otherwise undefined.
+  recorder->mConstrainedBitsPerSecond =
+      aOptions.mBitsPerSecond.WasPassed()
+          ? Some(aOptions.mBitsPerSecond.Value())
+          : Nothing();
+
+  // 7. Initialize recorder’s stream attribute to stream.
+  recorder->mStream = &aStream;
+
+  // 8. Initialize recorder’s mimeType attribute to the value of recorder’s
+  //    [[ConstrainedMimeType]] slot.
+  recorder->mMimeType = recorder->mConstrainedMimeType;
+
+  // 9. Initialize recorder’s state attribute to inactive.
+  recorder->mState = RecordingState::Inactive;
+
+  // 10. Initialize recorder’s videoBitsPerSecond attribute to the value of
+  //     options’ videoBitsPerSecond member, if it is present. Otherwise, choose
+  //     a target value the User Agent deems reasonable for video.
+  recorder->mVideoBitsPerSecond = aOptions.mVideoBitsPerSecond.WasPassed()
+                                      ? aOptions.mVideoBitsPerSecond.Value()
+                                      : DEFAULT_VIDEO_BITRATE_BPS;
+
+  // 11. Initialize recorder’s audioBitsPerSecond attribute to the value of
+  //     options’ audioBitsPerSecond member, if it is present. Otherwise, choose
+  //     a target value the User Agent deems reasonable for audio.
+  recorder->mAudioBitsPerSecond = aOptions.mAudioBitsPerSecond.WasPassed()
+                                      ? aOptions.mAudioBitsPerSecond.Value()
+                                      : DEFAULT_AUDIO_BITRATE_BPS;
+
+  // 12. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
+  //     recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
+  //     values the User Agent deems reasonable for the respective media types,
+  //     such that the sum of videoBitsPerSecond and audioBitsPerSecond is close
+  //     to the value of recorder’s [[ConstrainedBitsPerSecond]] slot.
+  if (recorder->mConstrainedBitsPerSecond) {
+    SelectBitrates(*recorder->mConstrainedBitsPerSecond, 1,
+                   &recorder->mVideoBitsPerSecond, 1,
+                   &recorder->mAudioBitsPerSecond);
+  }
+
+  // 13. Return recorder.
+  return recorder.forget();
 }
 
 /* static */
 already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
-    const GlobalObject& aGlobal, AudioNode& aSrcAudioNode, uint32_t aSrcOutput,
-    const MediaRecorderOptions& aInitDict, ErrorResult& aRv) {
+    const GlobalObject& aGlobal, AudioNode& aAudioNode,
+    uint32_t aAudioNodeOutput, const MediaRecorderOptions& aOptions,
+    ErrorResult& aRv) {
   // Allow recording from audio node only when pref is on.
   if (!Preferences::GetBool("media.recorder.audio_node.enabled", false)) {
     // Pretending that this constructor is not defined.
@@ -1387,134 +1833,101 @@ already_AddRefed<MediaRecorder> MediaRecorder::Constructor(
     return nullptr;
   }
 
-  // aSrcOutput doesn't matter to destination node because it has no output.
-  if (aSrcAudioNode.NumberOfOutputs() > 0 &&
-      aSrcOutput >= aSrcAudioNode.NumberOfOutputs()) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+  // aAudioNodeOutput doesn't matter to destination node because it has no
+  // output.
+  if (aAudioNode.NumberOfOutputs() > 0 &&
+      aAudioNodeOutput >= aAudioNode.NumberOfOutputs()) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_INDEX_SIZE_ERR,
+                          NS_LITERAL_CSTRING("Invalid AudioNode output index"));
     return nullptr;
   }
 
-  if (!IsTypeSupported(aInitDict.mMimeType)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  // When the MediaRecorder() constructor is invoked, the User Agent MUST run
+  // the following steps:
+
+  // 1. Let stream be the constructor’s first argument. (we'll let audioNode be
+  //    the first arg, and audioNodeOutput the second)
+
+  // 2. Let options be the constructor’s second argument. (we'll let options be
+  //    the third arg)
+
+  // 3. If invoking is type supported with options’ mimeType member as its
+  //    argument returns false, throw a NotSupportedError DOMException and abort
+  //    these steps.
+  TypeSupport support = IsTypeSupportedImpl(aOptions.mMimeType);
+  if (support != TypeSupport::Supported) {
+    // This catches also the empty string mimeType when support for any encoders
+    // has been disabled.
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+                          TypeSupportToCString(support, aOptions.mMimeType));
     return nullptr;
   }
 
-  RefPtr<MediaRecorder> object =
-      new MediaRecorder(aSrcAudioNode, aSrcOutput, ownerWindow);
-  object->SetOptions(aInitDict);
-  return object.forget();
-}
+  // 4. Let recorder be a newly constructed MediaRecorder object.
+  RefPtr<MediaRecorder> recorder = new MediaRecorder(ownerWindow);
 
-void MediaRecorder::SetOptions(const MediaRecorderOptions& aInitDict) {
-  SetMimeType(aInitDict.mMimeType);
-  mAudioBitsPerSecond = aInitDict.mAudioBitsPerSecond.WasPassed()
-                            ? aInitDict.mAudioBitsPerSecond.Value()
-                            : 0;
-  mVideoBitsPerSecond = aInitDict.mVideoBitsPerSecond.WasPassed()
-                            ? aInitDict.mVideoBitsPerSecond.Value()
-                            : 0;
-  mBitsPerSecond = aInitDict.mBitsPerSecond.WasPassed()
-                       ? aInitDict.mBitsPerSecond.Value()
-                       : 0;
-  // We're not handling dynamic changes yet. Eventually we'll handle
-  // setting audio, video and/or total -- and anything that isn't set,
-  // we'll derive. Calculated versions require querying bitrates after
-  // the encoder is Init()ed. This happens only after data is
-  // available and thus requires dynamic changes.
-  //
-  // Until dynamic changes are supported, I prefer to be safe and err
-  // slightly high
-  if (aInitDict.mBitsPerSecond.WasPassed() &&
-      !aInitDict.mVideoBitsPerSecond.WasPassed()) {
-    mVideoBitsPerSecond = mBitsPerSecond;
+  // 5. Let recorder have a [[ConstrainedMimeType]] internal slot, initialized
+  //    to the value of options' mimeType member.
+  recorder->mConstrainedMimeType = aOptions.mMimeType;
+
+  // 6. Let recorder have a [[ConstrainedBitsPerSecond]] internal slot,
+  //    initialized to the value of options’ bitsPerSecond member, if it is
+  //    present, otherwise undefined.
+  recorder->mConstrainedBitsPerSecond =
+      aOptions.mBitsPerSecond.WasPassed()
+          ? Some(aOptions.mBitsPerSecond.Value())
+          : Nothing();
+
+  // 7. Initialize recorder’s stream attribute to stream. (make that the
+  //    audioNode and audioNodeOutput equivalents)
+  recorder->mAudioNode = &aAudioNode;
+  recorder->mAudioNodeOutput = aAudioNodeOutput;
+
+  // 8. Initialize recorder’s mimeType attribute to the value of recorder’s
+  //    [[ConstrainedMimeType]] slot.
+  recorder->mMimeType = recorder->mConstrainedMimeType;
+
+  // 9. Initialize recorder’s state attribute to inactive.
+  recorder->mState = RecordingState::Inactive;
+
+  // 10. Initialize recorder’s videoBitsPerSecond attribute to the value of
+  //     options’ videoBitsPerSecond member, if it is present. Otherwise, choose
+  //     a target value the User Agent deems reasonable for video.
+  recorder->mVideoBitsPerSecond = aOptions.mVideoBitsPerSecond.WasPassed()
+                                      ? aOptions.mVideoBitsPerSecond.Value()
+                                      : DEFAULT_VIDEO_BITRATE_BPS;
+
+  // 11. Initialize recorder’s audioBitsPerSecond attribute to the value of
+  //     options’ audioBitsPerSecond member, if it is present. Otherwise, choose
+  //     a target value the User Agent deems reasonable for audio.
+  recorder->mAudioBitsPerSecond = aOptions.mAudioBitsPerSecond.WasPassed()
+                                      ? aOptions.mAudioBitsPerSecond.Value()
+                                      : DEFAULT_AUDIO_BITRATE_BPS;
+
+  // 12. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
+  //     recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
+  //     values the User Agent deems reasonable for the respective media types,
+  //     such that the sum of videoBitsPerSecond and audioBitsPerSecond is close
+  //     to the value of recorder’s [[ConstrainedBitsPerSecond]] slot.
+  if (recorder->mConstrainedBitsPerSecond) {
+    SelectBitrates(*recorder->mConstrainedBitsPerSecond, 1,
+                   &recorder->mVideoBitsPerSecond, 1,
+                   &recorder->mAudioBitsPerSecond);
   }
-}
 
-static char const* const gWebMVideoEncoderCodecs[4] = {
-    "opus",
-    "vp8",
-    "vp8.0",
-    // no VP9 yet
-    nullptr,
-};
-static char const* const gWebMAudioEncoderCodecs[4] = {
-    "opus",
-    nullptr,
-};
-static char const* const gOggAudioEncoderCodecs[2] = {
-    "opus",
-    // we could support vorbis here too, but don't
-    nullptr,
-};
-
-template <class String>
-static bool CodecListContains(char const* const* aCodecs,
-                              const String& aCodec) {
-  for (int32_t i = 0; aCodecs[i]; ++i) {
-    if (aCodec.EqualsASCII(aCodecs[i])) return true;
-  }
-  return false;
+  // 13. Return recorder.
+  return recorder.forget();
 }
 
 /* static */
 bool MediaRecorder::IsTypeSupported(GlobalObject& aGlobal,
                                     const nsAString& aMIMEType) {
-  return IsTypeSupported(aMIMEType);
+  return MediaRecorder::IsTypeSupported(aMIMEType);
 }
 
 /* static */
 bool MediaRecorder::IsTypeSupported(const nsAString& aMIMEType) {
-  char const* const* codeclist = nullptr;
-
-  if (aMIMEType.IsEmpty()) {
-    return true;
-  }
-
-  nsContentTypeParser parser(aMIMEType);
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  // effectively a 'switch (mimeType) {'
-  if (mimeType.EqualsLiteral(AUDIO_OGG)) {
-    if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled()) {
-      codeclist = gOggAudioEncoderCodecs;
-    }
-  }
-#ifdef MOZ_WEBM_ENCODER
-  else if ((mimeType.EqualsLiteral(VIDEO_WEBM) ||
-            mimeType.EqualsLiteral(AUDIO_WEBM)) &&
-           MediaEncoder::IsWebMEncoderEnabled()) {
-    if (mimeType.EqualsLiteral(AUDIO_WEBM)) {
-      codeclist = gWebMAudioEncoderCodecs;
-    } else {
-      codeclist = gWebMVideoEncoderCodecs;
-    }
-  }
-#endif
-
-  // codecs don't matter if we don't support the container
-  if (!codeclist) {
-    return false;
-  }
-  // now filter on codecs, and if needed rescind support
-  nsAutoString codecstring;
-  rv = parser.GetParameter("codecs", codecstring);
-
-  nsTArray<nsString> codecs;
-  if (!ParseCodecsString(codecstring, codecs)) {
-    return false;
-  }
-  for (const nsString& codec : codecs) {
-    if (!CodecListContains(codeclist, codec)) {
-      // Totally unsupported codec
-      return false;
-    }
-  }
-
-  return true;
+  return IsTypeSupportedImpl(aMIMEType) == TypeSupport::Supported;
 }
 
 nsresult MediaRecorder::CreateAndDispatchBlobEvent(Blob* aBlob) {
@@ -1616,9 +2029,26 @@ void MediaRecorder::NotifyOwnerDocumentActivityChanged() {
   }
 }
 
-void MediaRecorder::ForceInactive() {
-  LOG(LogLevel::Debug, ("MediaRecorder.ForceInactive %p", this));
+void MediaRecorder::Inactivate() {
+  LOG(LogLevel::Debug, ("MediaRecorder.Inactivate %p", this));
+  // The Inactivate the recorder algorithm given a recorder, is as follows:
+
+  // 1. Set recorder’s mimeType attribute to the value of the
+  //    [[ConstrainedMimeType]] slot.
+  mMimeType = mConstrainedMimeType;
+
+  // 2. Set recorder’s state attribute to inactive.
   mState = RecordingState::Inactive;
+
+  // 3. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
+  //    recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
+  //    values the User Agent deems reasonable for the respective media types,
+  //    such that the sum of videoBitsPerSecond and audioBitsPerSecond is close
+  //    to the value of recorder’s [[ConstrainedBitsPerSecond]] slot.
+  if (mConstrainedBitsPerSecond) {
+    SelectBitrates(*mConstrainedBitsPerSecond, 1, &mVideoBitsPerSecond, 1,
+                   &mAudioBitsPerSecond);
+  }
 }
 
 void MediaRecorder::InitializeDomExceptions() {

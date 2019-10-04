@@ -28,6 +28,7 @@ namespace gc {
 class Arena;
 class ArenaCellSet;
 class ArenaList;
+class GCRuntime;
 class SortedArenaList;
 class StoreBuffer;
 class TenuredCell;
@@ -781,36 +782,36 @@ struct Chunk {
 
   bool isNurseryChunk() const { return trailer.storeBuffer; }
 
-  Arena* allocateArena(JSRuntime* rt, JS::Zone* zone, AllocKind kind,
+  Arena* allocateArena(GCRuntime* gc, JS::Zone* zone, AllocKind kind,
                        const AutoLockGC& lock);
 
-  void releaseArena(JSRuntime* rt, Arena* arena, const AutoLockGC& lock);
+  void releaseArena(GCRuntime* gc, Arena* arena, const AutoLockGC& lock);
   void recycleArena(Arena* arena, SortedArenaList& dest, size_t thingsPerArena);
 
-  MOZ_MUST_USE bool decommitOneFreeArena(JSRuntime* rt, AutoLockGC& lock);
+  MOZ_MUST_USE bool decommitOneFreeArena(GCRuntime* gc, AutoLockGC& lock);
   void decommitAllArenas();
 
   // This will decommit each unused not-already decommitted arena. It performs a
   // system call for each arena but is only used during OOM.
   void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
 
-  static Chunk* allocate(JSRuntime* rt);
-  void init(JSRuntime* rt);
+  static Chunk* allocate(GCRuntime* gc);
+  void init(GCRuntime* gc);
 
  private:
   /* Search for a decommitted arena to allocate. */
   unsigned findDecommittedArenaOffset();
   Arena* fetchNextDecommittedArena();
 
-  void addArenaToFreeList(JSRuntime* rt, Arena* arena);
+  void addArenaToFreeList(GCRuntime* gc, Arena* arena);
   void addArenaToDecommittedList(const Arena* arena);
 
-  void updateChunkListAfterAlloc(JSRuntime* rt, const AutoLockGC& lock);
-  void updateChunkListAfterFree(JSRuntime* rt, const AutoLockGC& lock);
+  void updateChunkListAfterAlloc(GCRuntime* gc, const AutoLockGC& lock);
+  void updateChunkListAfterFree(GCRuntime* gc, const AutoLockGC& lock);
 
  public:
   /* Unlink and return the freeArenasHead. */
-  Arena* fetchNextFreeArena(JSRuntime* rt);
+  Arena* fetchNextFreeArena(GCRuntime* gc);
 };
 
 static_assert(

@@ -18,6 +18,8 @@
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 
+inline JSRuntime* js::Nursery::runtime() const { return gc->rt; }
+
 template <typename T>
 bool js::Nursery::isInside(const SharedMem<T>& p) const {
   return isInside(p.unwrap(/*safe - used for value in comparison above*/));
