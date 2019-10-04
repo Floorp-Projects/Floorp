@@ -387,7 +387,51 @@ static bool CanRecordWith(MediaStreamTrack* aTrack,
 
 static nsString SelectMimeType(uint8_t aNumVideoTracks, uint8_t aNumAudioTracks,
                                const nsString& aConstrainedMimeType) {
-  MOZ_CRASH("Implemented in a later patch");
+  const bool hasVideo = aNumVideoTracks > 0;
+  const bool hasAudio = aNumAudioTracks > 0;
+  MOZ_ASSERT(hasVideo || hasAudio);
+
+  Maybe<MediaContainerType> constrainedType =
+      MakeMediaContainerType(aConstrainedMimeType);
+
+  nsCString majorType;
+  {
+    // Select major type and container.
+    if (constrainedType) {
+      MOZ_ASSERT_IF(hasVideo, constrainedType->Type().HasVideoMajorType());
+      MOZ_ASSERT(!constrainedType->Type().HasApplicationMajorType());
+      majorType = constrainedType->Type().AsString();
+    } else if (hasVideo) {
+      majorType = NS_LITERAL_CSTRING(VIDEO_WEBM);
+    } else {
+      majorType = NS_LITERAL_CSTRING(AUDIO_OGG);
+    }
+  }
+
+  nsString codecs;
+  {
+    if (constrainedType && constrainedType->ExtendedType().HaveCodecs()) {
+      codecs = constrainedType->ExtendedType().Codecs().AsString();
+    } else {
+      if (hasVideo && hasAudio) {
+        codecs = NS_LITERAL_STRING("\"vp8, opus\"");
+      } else if (hasVideo) {
+        codecs = NS_LITERAL_STRING("vp8");
+      } else {
+        codecs = NS_LITERAL_STRING("opus");
+      }
+    }
+  }
+
+  nsString result = NS_ConvertUTF8toUTF16(nsPrintfCString(
+      "%s; codecs=%s", majorType.get(), NS_ConvertUTF16toUTF8(codecs).get()));
+
+  MOZ_ASSERT_IF(hasAudio, CanRecordAudioTrackWith(
+                              MakeMediaContainerType(result), result));
+  MOZ_ASSERT_IF(hasVideo, CanRecordVideoTrackWith(
+                              MakeMediaContainerType(result), result));
+
+  return result;
 }
 
 static void SelectBitrates(uint32_t aBitsPerSecond, uint8_t aNumVideoTracks,
