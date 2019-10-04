@@ -30,10 +30,7 @@ exports.PerfActor = ActorClassWithSpec(perfSpec, {
     Actor.prototype.initialize.call(this, conn);
     // The "bridge" is the actual implementation of the actor. It is abstracted
     // out into its own class so that it can be re-used with the profiler popup.
-    this.bridge = new ActorReadyGeckoProfilerInterface({
-      // Do not use the gzipped API from the Profiler to capture profiles.
-      gzipped: false,
-    });
+    this.bridge = new ActorReadyGeckoProfilerInterface();
 
     _bridgeEvents(this, [
       "profile-locked-by-private-browsing",

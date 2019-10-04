@@ -80,7 +80,7 @@ function adjustState(newState) {
   }
 }
 
-async function getSymbolsFromThisBrowser(debugName, breakpadId) {
+async function getSymbols(debugName, breakpadId) {
   if (symbolCache.size === 0) {
     primeSymbolStore(Services.profiler.sharedLibraries);
   }
@@ -125,7 +125,7 @@ async function captureProfile() {
       return {};
     });
 
-  receiveProfile(profile, getSymbolsFromThisBrowser);
+  receiveProfile(profile, getSymbols);
 
   Services.profiler.StopProfiler();
 }
@@ -424,5 +424,4 @@ var EXPORTED_SYMBOLS = [
   "getRecordingPreferencesFromBrowser",
   "setRecordingPreferencesOnBrowser",
   "forTestsOnly",
-  "getSymbolsFromThisBrowser",
 ];
