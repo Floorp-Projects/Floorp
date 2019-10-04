@@ -44,6 +44,7 @@ import java.lang.Class;
 import java.lang.Exception;
 import java.lang.Float;
 import java.lang.Integer;
+import java.lang.Iterable;
 import java.lang.Long;
 import java.lang.Object;
 import java.lang.Runnable;
@@ -58,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
 import org.mozilla.geckoview.AllowOrDeny;
+import org.mozilla.geckoview.AutofillElement;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
@@ -101,6 +103,30 @@ package org.mozilla.geckoview {
     method public static AllowOrDeny[] values();
     enum_constant public static final AllowOrDeny ALLOW;
     enum_constant public static final AllowOrDeny DENY;
+  }
+
+  public class AutofillElement {
+    ctor protected AutofillElement();
+    field public static final int HINT_EMAIL_ADDRESS = 0;
+    field public static final int HINT_NONE = -1;
+    field public static final int HINT_PASSWORD = 1;
+    field public static final int HINT_URL = 2;
+    field public static final int HINT_USERNAME = 3;
+    field public static final int INPUT_TYPE_NONE = -1;
+    field public static final int INPUT_TYPE_NUMBER = 1;
+    field public static final int INPUT_TYPE_PHONE = 2;
+    field public static final int INPUT_TYPE_TEXT = 0;
+    field @NonNull public final Map<String,String> attributes;
+    field @NonNull public final Iterable<AutofillElement> children;
+    field @NonNull public final Rect dimensions;
+    field @NonNull public final String domain;
+    field public final boolean enabled;
+    field public final boolean focusable;
+    field public final boolean focused;
+    field public final int hint;
+    field public final int id;
+    field public final int inputType;
+    field @NonNull public final String tag;
   }
 
   @UiThread public class BasicSelectionActionDelegate implements ActionMode.Callback GeckoSession.SelectionActionDelegate {
@@ -497,11 +523,14 @@ package org.mozilla.geckoview {
     ctor public GeckoSession();
     ctor public GeckoSession(@Nullable GeckoSessionSettings);
     method @UiThread @NonNull public GeckoDisplay acquireDisplay();
+    method @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @UiThread public void close();
     method @AnyThread @NonNull public static String createDataUri(@NonNull byte[], @Nullable String);
     method @AnyThread @NonNull public static String createDataUri(@NonNull String, @Nullable String);
     method @AnyThread public void exitFullScreen();
     method @UiThread @NonNull public SessionAccessibility getAccessibility();
+    method @UiThread @Nullable public GeckoSession.AutofillDelegate getAutofillDelegate();
+    method @UiThread @NonNull public AutofillElement getAutofillElements();
     method @UiThread public void getClientBounds(@NonNull RectF);
     method @UiThread public void getClientToScreenMatrix(@NonNull Matrix);
     method @UiThread public void getClientToSurfaceMatrix(@NonNull Matrix);
@@ -553,6 +582,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void reload();
     method @AnyThread public void restoreState(@NonNull GeckoSession.SessionState);
     method @AnyThread public void setActive(boolean);
+    method @UiThread public void setAutofillDelegate(@Nullable GeckoSession.AutofillDelegate);
     method @AnyThread public void setContentBlockingDelegate(@Nullable ContentBlocking.Delegate);
     method @UiThread public void setContentDelegate(@Nullable GeckoSession.ContentDelegate);
     method @AnyThread public void setFocused(boolean);
@@ -584,6 +614,18 @@ package org.mozilla.geckoview {
     field public static final int LOAD_FLAGS_NONE = 0;
     field public static final int LOAD_FLAGS_REPLACE_HISTORY = 64;
     field @Nullable protected GeckoSession.Window mWindow;
+  }
+
+  public static interface GeckoSession.AutofillDelegate {
+    method @UiThread default public void onAutofill(@NonNull GeckoSession, int, int);
+    field public static final int AUTOFILL_NOTIFY_CANCELED = 2;
+    field public static final int AUTOFILL_NOTIFY_COMMITTED = 1;
+    field public static final int AUTOFILL_NOTIFY_STARTED = 0;
+    field public static final int AUTOFILL_NOTIFY_VIEW_ADDED = 3;
+    field public static final int AUTOFILL_NOTIFY_VIEW_ENTERED = 6;
+    field public static final int AUTOFILL_NOTIFY_VIEW_EXITED = 7;
+    field public static final int AUTOFILL_NOTIFY_VIEW_REMOVED = 4;
+    field public static final int AUTOFILL_NOTIFY_VIEW_UPDATED = 5;
   }
 
   public static interface GeckoSession.ContentDelegate {
@@ -960,20 +1002,11 @@ package org.mozilla.geckoview {
 
   public static interface GeckoSession.TextInputDelegate {
     method @UiThread default public void hideSoftInput(@NonNull GeckoSession);
-    method @UiThread default public void notifyAutoFill(@NonNull GeckoSession, int, int);
     method @UiThread default public void restartInput(@NonNull GeckoSession, int);
     method @UiThread default public void showSoftInput(@NonNull GeckoSession);
     method @UiThread default public void updateCursorAnchorInfo(@NonNull GeckoSession, @NonNull CursorAnchorInfo);
     method @UiThread default public void updateExtractedText(@NonNull GeckoSession, @NonNull ExtractedTextRequest, @NonNull ExtractedText);
     method @UiThread default public void updateSelection(@NonNull GeckoSession, int, int, int, int);
-    field public static final int AUTO_FILL_NOTIFY_CANCELED = 2;
-    field public static final int AUTO_FILL_NOTIFY_COMMITTED = 1;
-    field public static final int AUTO_FILL_NOTIFY_STARTED = 0;
-    field public static final int AUTO_FILL_NOTIFY_VIEW_ADDED = 3;
-    field public static final int AUTO_FILL_NOTIFY_VIEW_ENTERED = 6;
-    field public static final int AUTO_FILL_NOTIFY_VIEW_EXITED = 7;
-    field public static final int AUTO_FILL_NOTIFY_VIEW_REMOVED = 4;
-    field public static final int AUTO_FILL_NOTIFY_VIEW_UPDATED = 5;
     field public static final int RESTART_REASON_BLUR = 1;
     field public static final int RESTART_REASON_CONTENT_CHANGE = 2;
     field public static final int RESTART_REASON_FOCUS = 0;
@@ -1055,12 +1088,14 @@ package org.mozilla.geckoview {
     ctor public GeckoView(Context, AttributeSet);
     method @UiThread @NonNull public GeckoResult<Bitmap> capturePixels();
     method public void coverUntilFirstPaint(int);
+    method public boolean getAutofillEnabled();
     method @NonNull public DynamicToolbarAnimator getDynamicToolbarAnimator();
     method @NonNull public PanZoomController getPanZoomController();
     method @AnyThread @Nullable public GeckoSession getSession();
     method public int onGenericMotionEventForResult(@NonNull MotionEvent);
     method public int onTouchEventForResult(@NonNull MotionEvent);
     method @UiThread @Nullable public GeckoSession releaseSession();
+    method public void setAutofillEnabled(boolean);
     method @UiThread public void setSession(@NonNull GeckoSession);
     method public void setVerticalClipping(int);
     method public boolean shouldPinOnScreen();
@@ -1245,7 +1280,6 @@ package org.mozilla.geckoview {
   }
 
   public final class SessionTextInput {
-    method @UiThread public void autofill(@NonNull SparseArray<CharSequence>);
     method @UiThread @NonNull public GeckoSession.TextInputDelegate getDelegate();
     method @AnyThread @NonNull public synchronized Handler getHandler(@NonNull Handler);
     method @UiThread @Nullable public View getView();
@@ -1255,7 +1289,6 @@ package org.mozilla.geckoview {
     method @UiThread public boolean onKeyMultiple(int, int, @NonNull KeyEvent);
     method @UiThread public boolean onKeyPreIme(int, @NonNull KeyEvent);
     method @UiThread public boolean onKeyUp(int, @NonNull KeyEvent);
-    method @UiThread public void onProvideAutofillVirtualStructure(@NonNull ViewStructure, int);
     method @UiThread public void setDelegate(@Nullable GeckoSession.TextInputDelegate);
     method @UiThread public synchronized void setView(@Nullable View);
   }
