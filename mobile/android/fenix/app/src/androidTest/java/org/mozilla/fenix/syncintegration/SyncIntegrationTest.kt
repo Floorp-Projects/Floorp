@@ -108,7 +108,7 @@ class SyncIntegrationTest {
         passwordInput.setText(passwordValue)
     }
 
-    fun tapOnSygIn() {
+    fun tapOnSignIn() {
         mDevice.wait(Until.findObjects(By.text("Sign in")), TestAssetHelper.waitingTime)
         // Let's tap on enter, sometimes depending on the device the sign in button is
         // hidden by the keyboard
@@ -159,7 +159,7 @@ class SyncIntegrationTest {
         tapOnContinueButton()
         typePassowrd()
         sleep(TestAssetHelper.waitingTime)
-        tapOnSygIn()
+        tapOnSignIn()
     }
 }
 

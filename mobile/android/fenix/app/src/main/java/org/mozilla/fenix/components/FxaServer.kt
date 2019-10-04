@@ -1,9 +1,16 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.components
 
 import android.content.Context
 import mozilla.components.service.fxa.ServerConfig
 import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.isInExperiment
+
+/**
+ * Utility to configure Firefox Account servers.
+ */
 
 object FxaServer {
     const val CLIENT_ID = "a2270f727f45f648"
