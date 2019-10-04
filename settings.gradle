@@ -41,18 +41,14 @@ if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
 System.setProperty('android.home', json.substs.ANDROID_SDK_ROOT)
 
 include ':annotations'
-include ':app'
 include ':geckoview'
 include ':geckoview_example'
 include ':omnijar'
-include ':thirdparty'
 
 project(':annotations').projectDir = new File("${json.topsrcdir}/mobile/android/annotations")
-project(':app').projectDir = new File("${json.topsrcdir}/mobile/android/app")
 project(':geckoview').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview")
 project(':geckoview_example').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview_example")
 project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
-project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
 // The Gradle instance is shared between settings.gradle and all the
 // other build.gradle files (see

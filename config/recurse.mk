@@ -171,8 +171,7 @@ accessible/xpcom/export: xpcom/xpidl/export
 widget/android/bindings/export: mobile/android/base/export
 
 # The widget JNI wrapper generator code needs to build the GeckoView
-# and Fennec source code in order to find JNI wrapper annotations.
-widget/android/fennec/export: mobile/android/base/export
+# source code in order to find JNI wrapper annotations.
 widget/android/export: mobile/android/base/export
 
 # .xpt generation needs the xpidl lex/yacc files

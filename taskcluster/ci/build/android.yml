@@ -109,6 +109,7 @@ android-x86-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
+        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -168,33 +169,13 @@ android-api-16/pgo:
         config: ["builds/releng_base_android_64_builds.py"]
         custom-build-variant-cfg: api-16
 
-android-api-16-without-google-play-services/opt:
-    description: "Android 4.0 api-16+ (without Google Play Services) Opt"
-    index:
-        job-name: android-api-16-without-google-play-services-opt
-    treeherder:
-        platform: android-4-0-armv7-api16/opt
-        symbol: BnoGPS
-    worker-type: b-linux
-    worker:
-        env:
-            PERFHERDER_EXTRA_OPTIONS: android-api-16-without-google-play-services
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16-without-google-play-services
-    run-on-projects: ['mozilla-central']
-    fetches:
-        toolchain:
-            - linux64-sccache
-
 android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
     use-pgo: android-api-16/pgo
     attributes:
         enable-full-crashsymbols: true
         nightly: true
+        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -281,6 +262,7 @@ android-aarch64-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
+        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -326,6 +308,7 @@ android-x86_64-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
+        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:

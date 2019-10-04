@@ -112,7 +112,6 @@ pthread_key_t sThreadEnvKey;
 jclass sOOMErrorClass;
 jobject sClassLoader;
 jmethodID sClassLoaderLoadClass;
-bool sIsFennec;
 
 void UnregisterThreadEnv(void* env) {
   if (!env) {
@@ -154,17 +153,6 @@ void SetGeckoThreadEnv(JNIEnv* aEnv) {
       Class::LocalRef::Adopt(aEnv->GetObjectClass(sClassLoader)).Get(),
       "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
   MOZ_ASSERT(sClassLoader && sClassLoaderLoadClass);
-
-  if (java::GeckoThread::IsChildProcess()) {
-    // Disallow Fennec-only classes from being used in child processes.
-    sIsFennec = false;
-    return;
-  }
-
-  auto geckoAppClass =
-      Class::LocalRef::Adopt(aEnv->FindClass("org/mozilla/gecko/GeckoApp"));
-  aEnv->ExceptionClear();
-  sIsFennec = !!geckoAppClass;
 }
 
 JNIEnv* GetEnvForThread() {
@@ -332,7 +320,7 @@ void DispatchToGeckoPriorityQueue(already_AddRefed<nsIRunnable> aCall) {
   nsAppShell::PostEvent(MakeUnique<RunnableEvent>(std::move(aCall)));
 }
 
-bool IsFennec() { return sIsFennec; }
+bool IsFennec() { return false; }
 
 int GetAPIVersion() {
   static int32_t apiVersion = 0;

@@ -12,4 +12,3 @@ transforms:
 
 kind-dependencies:
     - build
-    - build-fat-aar

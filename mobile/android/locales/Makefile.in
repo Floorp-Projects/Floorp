@@ -26,16 +26,10 @@ MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
 
 include $(topsrcdir)/toolkit/locales/l10n.mk
 
-# need to kill stage for repacks for now due to the library moves
-# in PACKAGE and UNPACKAGE
-# also clean up potential left-overs of multi-locale builds, notably
-# values-*/strings.xml and raw-*/suggestedsites.json.
-# Those would be in the way of a single locale build, which this
-# target is for
+# For historical reasons, kill stage for repacks due to library moves
+# in PACKAGE and UNPACKAGE.
 clobber-stage:
 	$(RM) -rf $(STAGEDIST)
-	$(RM) $(DEPTH)/mobile/android/base/res/values-*/strings.xml
-	$(RM) $(DEPTH)/mobile/android/base/res/raw-*/suggestedsites.json
 
 # merge if we're not en-US, using conditional function as we need
 # the current value of AB_CD
@@ -45,9 +39,6 @@ libs-%:
 	$(MAKE) -C $(DEPTH)/mobile/locales libs-$*
 	$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 	$(MAKE) multilocale.txt-$* AB_CD=$* XPI_NAME=locale-$*
-ifeq ($(OS_TARGET),Android)
-	$(MAKE) -C $(DEPTH)/mobile/android/base AB_CD=$* XPI_NAME=locale-$*
-endif
 
 # Tailored target to just add the chrome processing for multi-locale builds
 # merge if we're not en-US, using conditional function as we need
@@ -58,9 +49,6 @@ chrome-%:
 	$(if $(filter en-US,$(AB_CD)),, $(MAKE) merge-$*)
 	$(MAKE) -C $(DEPTH)/mobile/locales chrome-$*
 	$(MAKE) chrome AB_CD=$*
-ifeq ($(OS_TARGET),Android)
-	$(MAKE) -C $(DEPTH)/mobile/android/base chrome-$*
-endif
 
 langpack: langpack-$(AB_CD)
 
@@ -71,7 +59,6 @@ installers-%: IS_LANGUAGE_REPACK=1
 installers-%:
 	$(MAKE) clobber-stage
 	$(MAKE) libs-$*
-	$(MAKE) -C $(DEPTH)/mobile/android/base android_apks AB_CD=$* IS_LANGUAGE_REPACK=1 REAL_LOCALE_MERGEDIR=$(CURDIR)/merge-dir/$*
 	$(MAKE) package-langpack-$*
 	$(MAKE) repackage-zip-$*
 	@echo 'repackaging done'

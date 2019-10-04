@@ -6,7 +6,7 @@
 
 #include "MediaDrmProxySupport.h"
 #include "mozilla/EMEUtils.h"
-#include "FennecJNINatives.h"
+#include "GeneratedJNINatives.h"
 #include "MediaCodec.h"  // For MediaDrm::KeyStatus
 
 using namespace mozilla::java;

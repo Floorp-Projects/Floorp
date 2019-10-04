@@ -128,13 +128,6 @@ exclude-multi-locale = [
     reference = "mobile/android/locales/en-US/**"
     l10n = "{l}mobile/android/**"
 
-[[paths]]
-    reference = "mobile/android/base/locales/en-US/**"
-    l10n = "{l}mobile/android/base/**"
-    test = [
-        "android-dtd",
-    ]
-
 # hand-picked paths from toolkit, keep in sync with jar.mn
 [[paths]]
     reference = "dom/locales/en-US/chrome/global.dtd"

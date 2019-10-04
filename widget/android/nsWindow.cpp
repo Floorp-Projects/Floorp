@@ -85,7 +85,6 @@ using mozilla::dom::ContentParent;
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
 #include "AndroidUiThread.h"
-#include "FennecJNINatives.h"
 #include "GeckoEditableSupport.h"
 #include "GeneratedJNINatives.h"
 #include "KeyEvent.h"
@@ -2004,9 +2003,9 @@ void nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal) {
 void nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent) {
   if (aEvent.mMessage == eTouchStart && aEvent.mTouches.Length() == 1) {
     // Since touch events don't get retargeted by PositionedEventTargeting.cpp
-    // code on Fennec, we dispatch a dummy mouse event that *does* get
-    // retargeted. The Fennec browser.js code can use this to activate the
-    // highlight element in case the this touchstart is the start of a tap.
+    // code, we dispatch a dummy mouse event that *does* get retargeted.
+    // Front-end code can use this to activate the highlight element in case
+    // this touchstart is the start of a tap.
     WidgetMouseEvent hittest(true, eMouseHitTest, this,
                              WidgetMouseEvent::eReal);
     hittest.mRefPoint = aEvent.mTouches[0]->mRefPoint;

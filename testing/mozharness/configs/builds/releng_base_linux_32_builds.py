@@ -24,12 +24,6 @@ config = {
         {'filename': '/builds/mozilla-desktop-geoloc-api.key',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/mozilla-desktop-geoloc-api.key',
          'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
-        {'filename': '/builds/adjust-sdk.token',
-         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/adjust-sdk.token',
-         'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
-        {'filename': '/builds/adjust-sdk-beta.token',
-         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/adjust-sdk-beta.token',
-         'min_scm_level': 2, 'default': 'try-build-has-no-secrets'},
     ],
     'vcs_share_base': '/builds/hg-shared',
     #########################################################################

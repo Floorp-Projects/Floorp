@@ -9,7 +9,7 @@
 
 #include "mozilla/DecryptorProxyCallback.h"
 #include "mozilla/Logging.h"
-#include "FennecJNIWrappers.h"
+#include "GeneratedJNIWrappers.h"
 #include "nsString.h"
 
 namespace mozilla {

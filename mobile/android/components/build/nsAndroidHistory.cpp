@@ -7,7 +7,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIURI.h"
 #include "nsIObserverService.h"
-#include "FennecJNIWrappers.h"
 #include "Link.h"
 
 #include "mozilla/Services.h"
@@ -69,10 +68,6 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aContent) {
     mListeners.Put(uriString, list);
   }
   list->AppendElement(aContent);
-
-  if (jni::IsFennec()) {
-    java::GlobalHistory::CheckURIVisited(uriString);
-  }
 
   return NS_OK;
 }
@@ -185,12 +180,14 @@ void nsAndroidHistory::SaveVisitURI(nsIURI* aURI) {
   // Add the URI to our cache so we can take a fast path later
   AppendToRecentlyVisitedURIs(aURI);
 
+#ifdef MOZ_ANDROID_WITH_FENNEC
   if (jni::IsFennec()) {
     // Save this URI in our history
     nsAutoCString spec;
     (void)aURI->GetDisplaySpec(spec);
     java::GlobalHistory::MarkURIVisited(NS_ConvertUTF8toUTF16(spec));
   }
+#endif  // MOZ_ANDROID_WITH_FENNEC
 
   // Finally, notify that we've been visited.
   nsCOMPtr<nsIObserverService> obsService =
@@ -270,6 +267,7 @@ nsAndroidHistory::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
     return NS_OK;
   }
 
+#ifdef MOZ_ANDROID_WITH_FENNEC
   if (jni::IsFennec()) {
     nsAutoCString uri;
     nsresult rv = aURI->GetDisplaySpec(uri);
@@ -282,6 +280,8 @@ nsAndroidHistory::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
     NS_ConvertUTF8toUTF16 uriString(uri);
     java::GlobalHistory::SetURITitle(uriString, aTitle);
   }
+#endif  // MOZ_ANDROID_WITH_FENNEC
+
   return NS_OK;
 }
 
