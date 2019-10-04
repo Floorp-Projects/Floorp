@@ -652,6 +652,8 @@ class ScriptSource {
   // The bytecode cache encoder is used to encode only the content of function
   // which are delazified.  If this value is not nullptr, then each delazified
   // function should be recorded before their first execution.
+  // This value is logically owned by the canonical ScriptSourceObject, and
+  // will be released in the canonical SSO's finalizer.
   UniquePtr<XDRIncrementalEncoder> xdrEncoder_ = nullptr;
 
   // Instant at which the first parse of this source started, or null
@@ -729,7 +731,8 @@ class ScriptSource {
 
   explicit ScriptSource() : id_(++idCount_) {}
 
-  ~ScriptSource() { MOZ_ASSERT(refs == 0); }
+  void finalizeGCData();
+  ~ScriptSource();
 
   void incref() { refs++; }
   void decref() {
