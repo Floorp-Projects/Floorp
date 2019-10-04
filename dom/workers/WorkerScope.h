@@ -14,6 +14,7 @@
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "nsWeakReference.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 
 #ifdef XP_WIN
@@ -172,15 +173,14 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
 
   bool IsSecureContext() const;
 
-  already_AddRefed<Promise> CreateImageBitmap(JSContext* aCx,
-                                              const ImageBitmapSource& aImage,
-                                              ErrorResult& aRv);
+  already_AddRefed<Promise> CreateImageBitmap(
+      JSContext* aCx, const ImageBitmapSource& aImage,
+      const ImageBitmapOptions& aOptions, ErrorResult& aRv);
 
-  already_AddRefed<Promise> CreateImageBitmap(JSContext* aCx,
-                                              const ImageBitmapSource& aImage,
-                                              int32_t aSx, int32_t aSy,
-                                              int32_t aSw, int32_t aSh,
-                                              ErrorResult& aRv);
+  already_AddRefed<Promise> CreateImageBitmap(
+      JSContext* aCx, const ImageBitmapSource& aImage, int32_t aSx, int32_t aSy,
+      int32_t aSw, int32_t aSh, const ImageBitmapOptions& aOptions,
+      ErrorResult& aRv);
 
   bool WindowInteractionAllowed() const {
     return mWindowInteractionsAllowed > 0;

@@ -386,3 +386,18 @@ dictionary ChannelPixelLayout {
 };
 
 typedef sequence<ChannelPixelLayout> ImagePixelLayout;
+
+enum ImageOrientation { "none", "flipY" };
+//enum PremultiplyAlpha { "none", "premultiply", "default" };
+//enum ColorSpaceConversion { "none", "default" };
+//enum ResizeQuality { "pixelated", "low", "medium", "high" };
+
+dictionary ImageBitmapOptions {
+  ImageOrientation imageOrientation = "none";
+  // options to be added  bugs: 1363861
+  //PremultiplyAlpha premultiplyAlpha = "default";
+  //ColorSpaceConversion colorSpaceConversion = "default";
+  //[EnforceRange] unsigned long resizeWidth;
+  //[EnforceRange] unsigned long resizeHeight;
+  //ResizeQuality resizeQuality = "low";
+};
