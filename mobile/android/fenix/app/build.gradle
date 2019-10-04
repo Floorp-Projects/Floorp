@@ -422,8 +422,6 @@ dependencies {
     debugImplementation Deps.leakcanary
     releaseImplementation Deps.leakcanary_noop
 
-    implementation Deps.mozilla_lib_fetch_httpurlconnection
-
     implementation Deps.androidx_legacy
     implementation Deps.androidx_paging
     implementation Deps.androidx_preference
