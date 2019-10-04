@@ -1121,12 +1121,13 @@ add_task(
           "No notifications"
         );
 
-        // make sure the cache entry was removed with the removal of the auto-saved login
-        ok(
-          !LoginManagerParent._generatedPasswordsByPrincipalOrigin.has(
+        // make sure the cache entry is unchanged with the removal of the auto-saved login
+        is(
+          autoSavedLogin.password,
+          LoginManagerParent._generatedPasswordsByPrincipalOrigin.get(
             "https://example.com"
-          ),
-          "Generated password cache entry has been removed"
+          ).value,
+          "Generated password cache entry has the expected password value"
         );
       }
     );
@@ -1315,12 +1316,13 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
         "No notifications"
       );
 
-      // make sure the cache entry was removed with the removal of the auto-saved login
-      ok(
-        !LoginManagerParent._generatedPasswordsByPrincipalOrigin.has(
+      // make sure the cache entry is unchanged with the removal of the auto-saved login
+      is(
+        autoSavedLogin.password,
+        LoginManagerParent._generatedPasswordsByPrincipalOrigin.get(
           "https://example.com"
-        ),
-        "Generated password cache entry has been removed"
+        ).value,
+        "Generated password cache entry has the expected password value"
       );
     }
   );
