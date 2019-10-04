@@ -436,7 +436,7 @@ uint32_t HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr) {
 }
 
 bool IsSegmentBreakSkipChar(uint32_t u) {
-  return unicode::IsEastAsianWidthFWH(u) &&
+  return unicode::IsEastAsianWidthFHWexcludingEmoji(u) &&
          unicode::GetScriptCode(u) != unicode::Script::HANGUL;
 }
 

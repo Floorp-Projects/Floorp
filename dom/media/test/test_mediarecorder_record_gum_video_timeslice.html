@@ -18,6 +18,7 @@ async function startTest() {
     let stream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
     let dataAvailableCount = 0;
     let onDataAvailableFirst = false;
+    const expectedMimeType = 'video/webm; codecs="vp8, opus"';
 
     mediaRecorder = new MediaRecorder(stream);
     is(mediaRecorder.stream, stream,
@@ -44,9 +45,7 @@ async function startTest() {
          'Event type should dataavailable');
       ok(evt.data.size >= 0,
          'Blob data size ' + evt.data.size + ' received is greater than or equal to zero');
-      is(mediaRecorder.mimeType, evt.data.type,
-         'Mime type in MediaRecorder and ondataavailable : '
-         + mediaRecorder.mimeType + ' == ' + evt.data.type);
+      is(evt.data.type, expectedMimeType, 'Expected blob mime type');
 
       // We'll stop recording upon the 1st blob being received
       if (dataAvailableCount === 1) {
@@ -76,6 +75,7 @@ async function startTest() {
 
     mediaRecorder.start(250);
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+    is(mediaRecorder.mimeType, expectedMimeType, 'Expected mime type');
   } catch (err) {
     ok(false, 'Unexpected error fired with: ' + err);
     SimpleTest.finish();

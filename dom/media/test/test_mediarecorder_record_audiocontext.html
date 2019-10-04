@@ -45,7 +45,8 @@ function startTest() {
   };
   mMediaRecorder.ondataavailable = function (e) {
     if (mMediaRecorder.state == 'recording') {
-      is('audio/ogg', mMediaRecorder.mimeType, "check the record mimetype return " + mMediaRecorder.mimeType);
+      is(mMediaRecorder.mimeType, 'audio/ogg; codecs=opus', 'Expected MediaRecorder mimetype');
+      is(e.data.type, 'audio/ogg; codecs=opus', 'Expected Blob mimetype');
       ok(e.data.size > 0, 'check blob has data');
       mMediaRecorder.stop();
     }

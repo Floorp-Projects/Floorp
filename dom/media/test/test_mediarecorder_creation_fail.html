@@ -9,65 +9,41 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
-function startTest() {
-  // the expect sequence should be
-  // 1. onerror
-  // 2. ondataavailable
-  // 3. onstop
-  var callbackStep = 0;
-  var stream = new AudioContext().createMediaStreamDestination().stream;
-  var mediaRecorder = new MediaRecorder(stream);
-
-  mediaRecorder.onerror = function (e) {
-    is(callbackStep, 0, 'should fired onstop callback');
-    is(e.error.name, 'UnknownError', 'error name should be UnknownError');
-    ok(e.error.stack.includes('test_mediarecorder_creation_fail.html'),
-      'Events fired from onerror should include an error with a stack trace indicating ' +
-      'an error in this test');
-    is(mediaRecorder.mimeType, '', 'mimetype should be empty');
-    is(mediaRecorder.state, 'inactive', 'state is inactive');
-    info('onerror callback fired');
-    callbackStep = 1;
-  };
-
-  mediaRecorder.onwarning = function () {
-    ok(false, 'Unexpected onwarning callback fired');
-  };
-
-  mediaRecorder.onstop = function () {
-    info('onstop callback fired');
-    is(mediaRecorder.state, 'inactive', 'state should be inactive');
-    is(callbackStep, 2, 'should fired onstop callback');
-    SimpleTest.finish();
-  };
-
-  // This handler fires every 250ms to generate a blob.
-  mediaRecorder.ondataavailable = function (evt) {
-    info('ondataavailable callback fired');
-    is(callbackStep, 1, 'should fired ondataavailable callback');
-    is(evt.data.size, 0, 'data size should be zero');
-    ok(evt instanceof BlobEvent,
-       'Events fired from ondataavailable should be BlobEvent');
-    is(evt.data.type, '', 'encoder start fail, blob mimeType should be empty');
-    callbackStep = 2;
-  };
-
-  // Start recording
-  mediaRecorder.start(250);
-  is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
-  is(mediaRecorder.stream, stream,
-     'Media recorder stream = element stream at the start of recording');
+function testThrows(stream, options) {
+  try {
+    new MediaRecorder(stream, options);
+    return false;
+  } catch(e) {
+    return e.name;
+  }
 }
-
-SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({
-    "set": [
+(async () => {
+  SimpleTest.waitForExplicitFinish();
+  await SpecialPowers.pushPrefEnv({set: [
       ["media.ogg.enabled", false],
       ["media.encoder.webm.enabled", false],
-    ],
-  }, startTest);
-
+    ]});
+  const stream = new AudioContext().createMediaStreamDestination().stream;
+  is(testThrows(stream, {mimeType: "audio/ogg"}), "NotSupportedError",
+    "Creating an ogg recorder without ogg support throws");
+  is(testThrows(stream, {mimeType: "audio/webm"}), "NotSupportedError",
+    "Creating a webm recorder without webm support throws");
+  is(testThrows(stream, {mimeType: "video/webm"}), "NotSupportedError",
+    "Creating a webm recorder without webm support throws");
+  is(testThrows(stream, {mimeType: "apa/bepa"}), "NotSupportedError",
+    "Creating a recorder for a bogus mime type throws");
+  is(testThrows(stream, {}), false,
+    "Creating a default recorder never throws, even without container support");
+  const recorder = new MediaRecorder(stream);
+  try {
+    recorder.start();
+    ok(false, "Starting a recorder without container support should throw");
+  } catch(e) {
+    is(e.name, "NotSupportedError",
+      "Starting a recorder without container support throws");
+  }
+  SimpleTest.finish();
+})();
 </script>
 </pre>
 </body>
