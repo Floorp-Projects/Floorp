@@ -116,8 +116,10 @@ ifdef MOZ_AUTOMATION
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/informulate.py \
 		$(MOZ_BUILDINFO_FILE) $(MOZ_BUILDHUB_JSON) $(MOZ_BUILDID_INFO_TXT_FILE) \
 		$(MOZ_PKG_PLATFORM) \
-		--package=$(DIST)/$(PACKAGE) \
-		--installer=$(INSTALLER_PACKAGE)
+		$(if $(or $(filter-out mobile/android,$(MOZ_BUILD_APP)),$(MOZ_ANDROID_WITH_FENNEC)), \
+		--package=$(DIST)/$(PACKAGE) --installer=$(INSTALLER_PACKAGE), \
+		--no-download \
+	  )
 endif
 	$(TOUCH) $@
 

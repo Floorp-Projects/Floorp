@@ -23,6 +23,8 @@ def main():
     parser.add_argument('output_txt', help='Output text file')
     # TODO: Move package-name.mk variables into moz.configure.
     parser.add_argument('pkg_platform', help='Package platform identifier')
+    parser.add_argument('--no-download', action='store_true',
+                        help='Do not include download information')
     parser.add_argument('--package', help='Path to application package file')
     parser.add_argument('--installer', help='Path to application installer file')
     args = parser.parse_args()
@@ -50,13 +52,7 @@ def main():
         f.write('\n')
 
     with open(args.buildhub_json, 'wb') as f:
-        if args.installer and os.path.exists(args.installer):
-            package = args.installer
-        else:
-            package = args.package
         build_time = datetime.datetime.strptime(build_id, '%Y%m%d%H%M%S')
-        st = os.stat(package)
-        mtime = datetime.datetime.fromtimestamp(st.st_mtime)
         s = buildconfig.substs
         record = {
             'build': {
@@ -82,14 +78,25 @@ def main():
                 'version': s['MOZ_APP_VERSION_DISPLAY'] or s['MOZ_APP_VERSION'],
                 'channel': s['MOZ_UPDATE_CHANNEL'],
             },
-            'download': {
+        }
+
+        if args.no_download:
+            package = None
+        elif args.installer and os.path.exists(args.installer):
+            package = args.installer
+        else:
+            package = args.package
+        if package:
+            st = os.stat(package)
+            mtime = datetime.datetime.fromtimestamp(st.st_mtime)
+            record['download'] = {
                 # The release pipeline will update these keys.
                 'url': os.path.basename(package),
                 'mimetype': 'application/octet-stream',
                 'date': mtime.isoformat() + 'Z',
                 'size': st.st_size,
             }
-        }
+
         json.dump(record, f, indent=2, sort_keys=True)
         f.write('\n')
 
