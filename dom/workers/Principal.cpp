@@ -13,36 +13,23 @@
 namespace mozilla {
 namespace dom {
 
-struct WorkerPrincipal final : public JSPrincipals {
-  bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) override {
-    return JS_WriteUint32Pair(aWriter, SCTAG_DOM_WORKER_PRINCIPAL, 0);
-  }
-};
-
-JSPrincipals* GetWorkerPrincipal() {
-  static WorkerPrincipal sPrincipal;
-
-  /*
-   * To make sure the the principals refcount is initialized to one, atomically
-   * increment it on every pass though this function. If we discover this wasn't
-   * the first time, decrement it again. This avoids the need for
-   * synchronization.
-   */
-  int32_t prevRefcount = sPrincipal.refcount++;
-  if (prevRefcount > 0) {
-    --sPrincipal.refcount;
-  } else {
-#ifdef DEBUG
-    sPrincipal.debugToken = workerinternals::kJSPrincipalsDebugToken;
-#endif
-  }
-
-  return &sPrincipal;
+WorkerPrincipal::WorkerPrincipal(bool aIsSystemOrAddonPrincipal)
+    : JSPrincipals(), mIsSystemOrAddonPrincipal(aIsSystemOrAddonPrincipal) {
+  setDebugToken(workerinternals::kJSPrincipalsDebugToken);
 }
 
-void DestroyWorkerPrincipals(JSPrincipals* aPrincipals) {
-  MOZ_ASSERT_UNREACHABLE(
-      "Worker principals refcount should never fall below one");
+WorkerPrincipal::~WorkerPrincipal() = default;
+
+bool WorkerPrincipal::write(JSContext* aCx, JSStructuredCloneWriter* aWriter) {
+  return JS_WriteUint32Pair(aWriter, SCTAG_DOM_WORKER_PRINCIPAL, 0);
+}
+
+bool WorkerPrincipal::isSystemOrAddonPrincipal() {
+  return mIsSystemOrAddonPrincipal;
+}
+
+void WorkerPrincipal::Destroy(JSPrincipals* aPrincipals) {
+  delete static_cast<WorkerPrincipal*>(aPrincipals);
 }
 
 }  // namespace dom
