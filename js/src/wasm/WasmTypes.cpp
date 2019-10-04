@@ -227,21 +227,6 @@ uint8_t* FuncType::serialize(uint8_t* cursor) const {
   return cursor;
 }
 
-namespace js {
-namespace wasm {
-
-// ExprType is not POD while ReadScalar requires POD, so specialize.
-template <>
-inline const uint8_t* ReadScalar<ExprType>(const uint8_t* src, ExprType* dst) {
-  static_assert(sizeof(PackedTypeCode) == sizeof(ExprType),
-                "ExprType must carry only a PackedTypeCode");
-  memcpy(dst->packedPtr(), src, sizeof(PackedTypeCode));
-  return src + sizeof(*dst);
-}
-
-}  // namespace wasm
-}  // namespace js
-
 const uint8_t* FuncType::deserialize(const uint8_t* cursor) {
   cursor = DeserializePodVector(cursor, &results_);
   if (!cursor) {
