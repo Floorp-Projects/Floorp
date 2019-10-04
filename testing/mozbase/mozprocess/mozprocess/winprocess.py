@@ -38,7 +38,18 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 import subprocess
 import sys
-from ctypes import c_void_p, POINTER, sizeof, Structure, windll, WinError, WINFUNCTYPE, c_ulong
+from ctypes import (
+    cast,
+    create_unicode_buffer,
+    c_ulong,
+    c_void_p,
+    POINTER,
+    sizeof,
+    Structure,
+    windll,
+    WinError,
+    WINFUNCTYPE,
+)
 from ctypes.wintypes import BOOL, BYTE, DWORD, HANDLE, LPCWSTR, LPWSTR, UINT, WORD
 
 from .qijo import QueryInformationJobObject
@@ -163,8 +174,13 @@ class EnvironmentBlock:
                 if isinstance(v, bytes):
                     v = v.decode(fs_encoding, 'replace')
                 values.append("{}={}".format(k, v))
-            values.append("")
-            self._as_parameter_ = LPCWSTR("\0".join(values))
+
+            # The lpEnvironment parameter of the 'CreateProcess' function expects a series
+            # of null terminated strings followed by a final null terminator. We write this
+            # value to a buffer and then cast it to LPCWSTR to avoid a Python ctypes bug
+            # that probihits embedded null characters (https://bugs.python.org/issue32745).
+            values = create_unicode_buffer("\0".join(values) + "\0")
+            self._as_parameter_ = cast(values, LPCWSTR)
 
 
 # Error Messages we need to watch for go here

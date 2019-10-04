@@ -721,9 +721,7 @@ falling back to not using job objects for managing child processes""", file=sys.
         self.keywordargs = kwargs
         self.read_buffer = ''
 
-        # XXX Bug 1585702 - Setting env is broken on Windows + Python 3. In the
-        # meantime let's at least make sure we don't set it in the default case.
-        if env is None and not (six.PY3 and isWin):
+        if env is None:
             env = os.environ.copy()
         self.env = env
 
