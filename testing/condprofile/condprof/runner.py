@@ -13,7 +13,10 @@ import shutil
 if __name__ == "__main__":
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from condprof import check_install  # NOQA
+from condprof.check_install import check  # NOQA
+
+check()  # NOQA
+
 from condprof.creator import ProfileCreator  # NOQA
 from condprof.desktop import DesktopEnv  # NOQA
 from condprof.android import AndroidEnv  # NOQA
