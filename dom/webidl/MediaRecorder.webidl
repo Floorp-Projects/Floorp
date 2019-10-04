@@ -28,6 +28,8 @@ interface MediaRecorder : EventTarget {
   attribute EventHandler onpause;
   attribute EventHandler onresume;
   attribute EventHandler onerror;
+  readonly attribute unsigned long videoBitsPerSecond;
+  readonly attribute unsigned long audioBitsPerSecond;
 
 
   [Throws]
