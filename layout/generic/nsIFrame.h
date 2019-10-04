@@ -600,7 +600,6 @@ class nsIFrame : public nsQueryFrame {
         mMayHaveTransformAnimation(false),
         mMayHaveOpacityAnimation(false),
         mAllDescendantsAreInvisible(false),
-        mHasBSizeChange(false),
         mInScrollAnchorChain(false),
         mHasColumnSpanSiblings(false),
         mDescendantMayDependOnItsStaticPosition(false) {
@@ -4223,11 +4222,6 @@ class nsIFrame : public nsQueryFrame {
     mMayHaveWillChangeBudget = aHasBudget;
   }
 
-  bool HasBSizeChange() const { return mHasBSizeChange; }
-  void SetHasBSizeChange(bool aHasBSizeChange) {
-    mHasBSizeChange = aHasBSizeChange;
-  }
-
   bool HasColumnSpanSiblings() const { return mHasColumnSpanSiblings; }
   void SetHasColumnSpanSiblings(bool aHasColumnSpanSiblings) {
     mHasColumnSpanSiblings = aHasColumnSpanSiblings;
@@ -4458,8 +4452,6 @@ class nsIFrame : public nsQueryFrame {
    * child. This flag is stil false in such case.
    */
   bool mAllDescendantsAreInvisible : 1;
-
-  bool mHasBSizeChange : 1;
 
   /**
    * True if we are or contain the scroll anchor for a scrollable frame.
