@@ -2601,8 +2601,7 @@ var SessionStoreInternal = {
       );
     }
 
-    let wg = aBrowsingContext.embedderWindowGlobal;
-    return wg.changeFrameRemoteness(aBrowsingContext, aRemoteType, aSwitchId);
+    return aBrowsingContext.changeFrameRemoteness(aRemoteType, aSwitchId);
   },
 
   // Examine the channel response to see if we should change the process

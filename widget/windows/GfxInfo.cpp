@@ -704,6 +704,37 @@ nsresult GfxInfo::Init() {
     }
   }
 
+  // Get monitor information
+  for (int deviceIndex = 0;; deviceIndex++) {
+    DISPLAY_DEVICEA device;
+    device.cb = sizeof(device);
+    if (!::EnumDisplayDevicesA(nullptr, deviceIndex, &device, 0)) {
+      break;
+    }
+
+    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
+      continue;
+    }
+
+    DEVMODEA mode;
+    mode.dmSize = sizeof(mode);
+    mode.dmDriverExtra = 0;
+    if (!::EnumDisplaySettingsA(device.DeviceName, ENUM_CURRENT_SETTINGS,
+                                &mode)) {
+      continue;
+    }
+
+    DisplayInfo displayInfo;
+
+    displayInfo.mScreenWidth = mode.dmPelsWidth;
+    displayInfo.mScreenHeight = mode.dmPelsHeight;
+    displayInfo.mRefreshRate = mode.dmDisplayFrequency;
+    displayInfo.mIsPseudoDisplay =
+        !!(device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER);
+
+    mDisplayInfo.AppendElement(displayInfo);
+  }
+
   const char* spoofedDriverVersionString =
       PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
   if (spoofedDriverVersionString) {
@@ -867,6 +898,22 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) {
   // This is never the case, as the active GPU ends up being
   // the first one.  It should probably be removed.
   *aIsGPU2Active = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
+  for (auto displayInfo : mDisplayInfo) {
+    nsString value;
+    value.AppendPrintf(
+      "%dx%d@%dHz %s",
+      displayInfo.mScreenWidth, displayInfo.mScreenHeight,
+      displayInfo.mRefreshRate, displayInfo.mIsPseudoDisplay ? "Pseudo Display" : ""
+    );
+
+    aDisplayInfo.AppendElement(value);
+  }
+
   return NS_OK;
 }
 
@@ -1803,40 +1850,19 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
 nsresult GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
   int deviceCount = 0;
-  for (int deviceIndex = 0;; deviceIndex++) {
-    DISPLAY_DEVICEA device;
-    device.cb = sizeof(device);
-    if (!::EnumDisplayDevicesA(nullptr, deviceIndex, &device, 0)) {
-      break;
-    }
-
-    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
-      continue;
-    }
-
-    DEVMODEA mode;
-    mode.dmSize = sizeof(mode);
-    mode.dmDriverExtra = 0;
-    if (!::EnumDisplaySettingsA(device.DeviceName, ENUM_CURRENT_SETTINGS,
-                                &mode)) {
-      continue;
-    }
-
+  for (auto displayInfo : mDisplayInfo) {
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
 
-    JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value(mode.dmPelsWidth));
+    JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value(displayInfo.mScreenWidth));
     JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
 
-    JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value(mode.dmPelsHeight));
+    JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value(displayInfo.mScreenHeight));
     JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
 
-    JS::Rooted<JS::Value> refreshRate(aCx,
-                                      JS::Int32Value(mode.dmDisplayFrequency));
+    JS::Rooted<JS::Value> refreshRate(aCx, JS::Int32Value(displayInfo.mRefreshRate));
     JS_SetProperty(aCx, obj, "refreshRate", refreshRate);
 
-    JS::Rooted<JS::Value> pseudoDisplay(
-        aCx, JS::BooleanValue(
-                 !!(device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER)));
+    JS::Rooted<JS::Value> pseudoDisplay(aCx, JS::BooleanValue(displayInfo.mIsPseudoDisplay));
     JS_SetProperty(aCx, obj, "pseudoDisplay", pseudoDisplay);
 
     JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));

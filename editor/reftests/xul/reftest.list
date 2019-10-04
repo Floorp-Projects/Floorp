@@ -1,12 +1,1 @@
-fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/empty-1.xul chrome://reftest/content/editor/reftests/xul/empty-ref.xul # Windows: bug 1239170
-!= chrome://reftest/content/editor/reftests/xul/empty-2.xul chrome://reftest/content/editor/reftests/xul/empty-ref.xul
-fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/emptytextbox-1.xul chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xul # Windows: bug 1239170
-fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/emptytextbox-2.xul chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xul # Windows: bug 1239170
 != chrome://reftest/content/editor/reftests/xul/emptytextbox-4.xul chrome://reftest/content/editor/reftests/xul/emptytextbox-ref.xul
-fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/passwd-1.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul # Windows: bug 1239170
-fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/passwd-2.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul # Windows: bug 1239170
-!= chrome://reftest/content/editor/reftests/xul/passwd-3.xul chrome://reftest/content/editor/reftests/xul/passwd-ref.xul
-fails-if(Android) skip-if(winWidget) == chrome://reftest/content/editor/reftests/xul/textbox-1.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul # Windows: bug 1239170
-!= chrome://reftest/content/editor/reftests/xul/textbox-disabled.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul
-# Read-only textboxes look like normal textboxes in windows Vista/7 default theme
-fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(6\.[012]|10\.0)/.test(http.oscpu)) skip-if(winWidget) != chrome://reftest/content/editor/reftests/xul/textbox-readonly.xul chrome://reftest/content/editor/reftests/xul/textbox-ref.xul # Windows: bug 1239170

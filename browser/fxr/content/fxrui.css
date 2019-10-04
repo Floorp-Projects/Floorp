@@ -4,23 +4,12 @@
 
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-:root {
-  --void: #232426;
-  --asphalt: #3d3d3d;
-  --iron: #5d5d5d;
-  --fog: #e2e6eb;
-  --azure: #518fe1;
-  --secure: #f7ce4d;
-}
-
 * {
   margin: 0;
   padding: 0;
 }
 
 body {
-  background-color: var(--asphalt);
-
   max-width: 1600px;
   min-width: 1600px;
   max-height: 800px;
@@ -32,57 +21,31 @@ body {
 
 .navbar_container {
   width: 100%;
+
+  margin-top: 20px;
   
   display: flex;
   flex-direction: row;
-}
-
-.fxr_logo_container {
-  width: 140px;
-  height: 100px;
-
-  vertical-align: top;
-  display: inline-block;
-}
-.fxr_logo {
-  height: 48px;
-
-  margin: 26px;
-  margin-inline-start: 38px;  
-  padding-inline-end: 32px;
-  border-inline-end: 2px solid var(--iron);
 }
 
 /* Sizing and positioning properties for all icons
    Color is determined by enabled/disabled classes below
  */
 .icon_container {
-  width: 70px;
-  height: 70px;
-  margin: 15px 10px;
+  width: 44px;
+  height: 44px;
+  margin-inline-end: 10px;
 
-  border-radius: 10px;
-  border: none;
+  border-radius: 22px;
+  border-width: 2px;
+  border-style: solid;  
 
-  background-size: 48px;
+  background-size: 22px;
   background-repeat: no-repeat;
   background-position: center;  
   background-color: inherit;
 
   -moz-context-properties: fill;
-  fill: var(--fog);
-}
-.icon_container:hover {
-  background-color: var(--fog);  
-  fill: var(--asphalt);  
-}
-.icon_container:active {
-  background-color: var(--void);
-  fill: var(--fog);    
-}
-.icon_container:disabled {
-  background-color: var(--asphalt);
-  fill: var(--void);
 }
 
 .icon_disabled_hide:disabled {
@@ -106,36 +69,25 @@ body {
 }
 
 .urlbar_container {
-  height: 62px;
+  height: 40px;
   flex-grow: 1;
 
-  margin: 15px 10px;
   padding: 0;
 
-  border-radius: 10px;
-  border: 4px solid transparent;
-
-  background-color: var(--iron);
+  border-radius: 22px;
+  border: 2px solid transparent;
 
   vertical-align: top;
 
   display: flex;
   flex-direction: row;
 }
-.urlbar_container:hover,
-.urlbar_container:focus-within {
-  border-color:var(--azure);
-}
-.urlbar_container:focus-within {
-  background-color: var(--void);
-}
 
 .urlbar_secure_icon {
   -moz-context-properties: fill;
-  fill: var(--secure);
   
-  height: 48px;
-  padding: 6px;
+  height: 32px;
+  padding: 2px;
   
   visibility: hidden;
 
@@ -145,28 +97,21 @@ body {
 .urlbar_input {
   background-color: transparent;  
 
-  vertical-align: top;
-  height: 44px;
   flex-grow: 1;
 
-  padding: 11px 0;
   border: none;
   
-  font-size: 36px;
-  color: var(--fog);
+  font-size: 18px;
+  font-family: 'Open Sans', sans-serif;
 
-  mask-image: linear-gradient(to left, transparent, black 5ch);
-}
-.urlbar_input::selection {
-  background-color: var(--azure);
+  mask-image: linear-gradient(to left, transparent, black 8ch);
 }
 
-xul|browser {
+.browser_container {
   width: 100%;
   flex-grow: 1;
-
-  margin: 0;
-  padding: 0;
-
-  background-color: var(--asphalt);
+}
+xul|browser {
+  width: 100%;
+  height: 100%;
 }

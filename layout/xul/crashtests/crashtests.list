@@ -18,7 +18,6 @@ load chrome://reftest/content/crashtests/layout/xul/crashtests/326879-1.xul
 load chrome://reftest/content/crashtests/layout/xul/crashtests/328135-1.xul
 load chrome://reftest/content/crashtests/layout/xul/crashtests/329327-1.xul
 load 329407-1.xml
-load 329477-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/crashtests/336962-1.xul
 load chrome://reftest/content/crashtests/layout/xul/crashtests/344228-1.xul
 load chrome://reftest/content/crashtests/layout/xul/crashtests/350460.xul

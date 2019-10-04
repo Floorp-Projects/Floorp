@@ -5301,6 +5301,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Whether to disable deprecated "radical" notation for the menclose element.
+- name: mathml.deprecated_menclose_notation_radical.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to disable legacy MathML number values that are not valid CSS numbers
 # (e.g. "1234.")
 - name: mathml.legacy_number_syntax.disabled

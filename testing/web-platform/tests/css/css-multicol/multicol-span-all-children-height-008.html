@@ -5,25 +5,26 @@
   <link rel="author" title="Ting-Yu Lin" href="tlin@mozilla.com">
   <link rel="author" title="Mozilla" href="https://www.mozilla.org/">
   <link rel="help" href="https://drafts.csswg.org/css-multicol-1/#column-span">
-  <link rel="match" href="multicol-span-all-children-height-006-ref.html">
-  <meta name="assert" content="This test verifies that the borders of block container with a fixed block-size, split by column-span, are skipped on the sides adjacent to column-span.">
+  <link rel="match" href="multicol-span-all-children-height-008-ref.html">
+  <meta name="assert" content="This test verifies that the borders of block container with an auto block-size, split by column-span, are skipped on the sides adjacent to column-span.">
+
+  <!-- This test is adapted from multicol-span-all-children-height-005. -->
 
   <style>
   article {
-    column-count: 2;
-    width: 400px;
+    column-count: 1;
+    column-fill: auto;
+    width: 200px;
     background-color: lightgreen;
   }
   div.container {
-    height: 250px;
-    background-color: pink;
+    height: auto;
     border: 20px solid purple;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    background-color: pink;
   }
   div.block {
     width: 100px;
-    height: 200px;
+    height: 100px;
     background-color: yellow;
   }
   div.column-span {
@@ -38,6 +39,8 @@
       <div class="block">block1</div>
       <div class="column-span">column-span1</div>
       <div class="block">block2</div>
+      <div class="column-span">column-span2</div>
+      <div class="block">block3</div>
     </div>
   </article>
 </html>

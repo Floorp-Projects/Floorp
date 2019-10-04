@@ -233,6 +233,79 @@ TEST_P(Pkcs11CbcPadTest, FailEncryptSimple) {
   EXPECT_EQ(333U, output_len);
 }
 
+// It's a bit of a lie to put this in pk11_cbc_unittest, since we
+// also test bounds checking in other modes. There doesn't seem
+// to be an appropriately-generic place elsewhere.
+TEST_F(Pkcs11CbcPadTest, FailEncryptShortParam) {
+  SECStatus rv = SECFailure;
+  uint8_t encrypted[sizeof(kInput)];
+  unsigned int encrypted_len = 0;
+  size_t input_len = AES_BLOCK_SIZE;
+
+  // CK_GCM_PARAMS is the largest param struct used across AES modes
+  uint8_t param_buf[sizeof(CK_GCM_PARAMS)];
+  SECItem param = {siBuffer, param_buf, sizeof(param_buf)};
+  SECItem key_item = {siBuffer, const_cast<uint8_t*>(kKeyData), 16};
+
+  // Setup (we use the ECB key for other modes)
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  ASSERT_NE(nullptr, slot);
+  ScopedPK11SymKey key(PK11_ImportSymKey(slot.get(), CKM_AES_ECB,
+                                         PK11_OriginUnwrap, CKA_ENCRYPT,
+                                         &key_item, nullptr));
+  ASSERT_TRUE(key.get());
+
+  // CTR should have a CK_AES_CTR_PARAMS
+  param.len = sizeof(CK_AES_CTR_PARAMS) - 1;
+  rv = PK11_Encrypt(key.get(), CKM_AES_CTR, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECFailure, rv);
+
+  param.len++;
+  reinterpret_cast<CK_AES_CTR_PARAMS*>(param.data)->ulCounterBits = 32;
+  rv = PK11_Encrypt(key.get(), CKM_AES_CTR, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECSuccess, rv);
+
+  // GCM should have a CK_GCM_PARAMS
+  param.len = sizeof(CK_GCM_PARAMS) - 1;
+  rv = PK11_Encrypt(key.get(), CKM_AES_GCM, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECFailure, rv);
+
+  param.len++;
+  reinterpret_cast<CK_GCM_PARAMS*>(param.data)->pIv = param_buf;
+  reinterpret_cast<CK_GCM_PARAMS*>(param.data)->ulIvLen = 12;
+  reinterpret_cast<CK_GCM_PARAMS*>(param.data)->pAAD = nullptr;
+  reinterpret_cast<CK_GCM_PARAMS*>(param.data)->ulAADLen = 0;
+  reinterpret_cast<CK_GCM_PARAMS*>(param.data)->ulTagBits = 128;
+  rv = PK11_Encrypt(key.get(), CKM_AES_GCM, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECSuccess, rv);
+
+  // CBC should have a 16B IV
+  param.len = AES_BLOCK_SIZE - 1;
+  rv = PK11_Encrypt(key.get(), CKM_AES_CBC, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECFailure, rv);
+
+  param.len++;
+  rv = PK11_Encrypt(key.get(), CKM_AES_CBC, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECSuccess, rv);
+
+  // CTS
+  param.len = AES_BLOCK_SIZE - 1;
+  rv = PK11_Encrypt(key.get(), CKM_AES_CTS, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECFailure, rv);
+
+  param.len++;
+  rv = PK11_Encrypt(key.get(), CKM_AES_CTS, &param, encrypted, &encrypted_len,
+                    sizeof(encrypted), kInput, input_len);
+  EXPECT_EQ(SECSuccess, rv);
+}
+
 TEST_P(Pkcs11CbcPadTest, ContextFailDecryptSimple) {
   ScopedPK11Context dctx = MakeContext(CKA_DECRYPT);
   uint8_t output[sizeof(kInput) + 64];

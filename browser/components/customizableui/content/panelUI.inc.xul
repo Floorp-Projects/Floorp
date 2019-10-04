@@ -742,30 +742,36 @@
                         class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                         closemenu="none"
                         oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
-        <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
-                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                        label="&appMenuRemoteTabs.label;"
-                        closemenu="none"
-                        oncommand="gSync.showRemoteTabsFromFxaMenu(this);"/>
+        <toolbarseparator/>
         <!-- The `Connect Another Device` button is disabled by default until the user logs into Sync. -->
         <toolbarbutton id="PanelUI-fxa-menu-connect-device-button"
                         class="subviewbutton subviewbutton-iconic"
                         label="&fxa.menu.connectAnotherDevice2.label;"
                         disabled="true"
                         oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
-        <toolbarbutton id="PanelUI-fxa-menu-sync-prefs-button"
-                        class="subviewbutton subviewbutton-iconic"
-                        label="&fxa.menu.syncSettings.label;"
-                        oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
         <toolbarseparator/>
-        <!-- The `Sync Now` button is disabled by default until the user logs into Sync. -->
+        <!-- The `Sync Now` button is hidden by default until the user logs into Sync. -->
         <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
                         label="&syncSyncNowItem.label;"
                         syncinglabel="&syncSyncNowItemSyncing.label;"
-                        disabled="true"
+                        hidden="true"
                         class="subviewbutton subviewbutton-iconic"
                         oncommand="gSync.doSyncFromFxaMenu(this);"
                         closemenu="none"/>
+        <toolbarbutton id="PanelUI-fxa-menu-setup-sync-button"
+                        class="subviewbutton subviewbutton-iconic"
+                        label="&fxa.menu.setupSync.label;"
+                        oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
+        <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
+                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                        label="&appMenuRemoteTabs.label;"
+                        closemenu="none"
+                        oncommand="gSync.showRemoteTabsFromFxaMenu(this);"/>
+        <toolbarbutton id="PanelUI-fxa-menu-sync-prefs-button"
+                        class="subviewbutton subviewbutton-iconic"
+                        label="&fxa.menu.syncSettings2.label;"
+                        hidden="true"
+                        oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
         <toolbarseparator/>
         <toolbarbutton id="PanelUI-fxa-menu-logins-button"
                         class="subviewbutton subviewbutton-iconic"

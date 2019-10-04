@@ -37,8 +37,8 @@
 }
 
 .editor-wrapper :not(.empty-line):not(.new-breakpoint)
-  > .CodeMirror-gutter-wrapper:hover
-  > .CodeMirror-linenumber::after {
+  > .CodeMirror-gutter-wrapper
+  > .CodeMirror-linenumber:hover::after {
   content: "";
   position: absolute;
   /* paint below the number */

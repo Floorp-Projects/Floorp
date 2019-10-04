@@ -1747,6 +1747,7 @@ pub struct Renderer {
 
     clear_color: Option<ColorF>,
     enable_clear_scissor: bool,
+    enable_picture_caching: bool,
     enable_advanced_blend_barriers: bool,
 
     debug: LazyInitializedDebugRenderer,
@@ -2295,6 +2296,7 @@ impl Renderer {
             clear_color: options.clear_color,
             enable_clear_scissor: options.enable_clear_scissor,
             enable_advanced_blend_barriers: !ext_blend_equation_advanced_coherent,
+            enable_picture_caching: options.enable_picture_caching,
             last_time: 0,
             gpu_profile,
             vaos: RendererVAOs {
@@ -4720,7 +4722,7 @@ impl Renderer {
             );
 
             match pass.kind {
-                RenderPassKind::MainFramebuffer { .. } => {
+                RenderPassKind::MainFramebuffer { ref main_target, .. } => {
                     if let Some(device_size) = device_size {
                         stats.color_target_count += 1;
 
@@ -4751,12 +4753,26 @@ impl Renderer {
                                                      None);
                         }
 
-                        self.composite(
-                            &frame.composite_config,
-                            draw_target,
-                            &projection,
-                            stats,
-                        );
+                        if self.enable_picture_caching {
+                            self.composite(
+                                &frame.composite_config,
+                                draw_target,
+                                &projection,
+                                stats,
+                            );
+                        } else {
+                            self.draw_color_target(
+                                draw_target,
+                                main_target,
+                                frame.content_origin,
+                                None,
+                                None,
+                                &frame.render_tasks,
+                                &projection,
+                                frame_id,
+                                stats,
+                            );
+                        }
                     }
                 }
                 RenderPassKind::OffScreen {

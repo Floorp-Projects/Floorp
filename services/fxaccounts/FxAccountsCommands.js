@@ -33,6 +33,22 @@ class FxAccountsCommands {
     this.sendTab = new SendTab(this, fxAccountsInternal);
   }
 
+  async availableCommands() {
+    if (
+      !Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)
+    ) {
+      return {};
+    }
+    const sendTabKey = await this.sendTab.getEncryptedKey();
+    if (!sendTabKey) {
+      // This will happen if the account is not verified yet.
+      return {};
+    }
+    return {
+      [COMMAND_SENDTAB]: sendTabKey,
+    };
+  }
+
   async invoke(command, device, payload) {
     const { sessionToken } = await this._fxai.getUserAccountData([
       "sessionToken",
@@ -112,12 +128,19 @@ class FxAccountsCommands {
   }
 
   async _handleCommands(messages) {
-    const fxaDevices = await this._fxai.getDeviceList();
+    try {
+      await this._fxai.device.refreshDeviceList();
+    } catch (e) {
+      log.warn("Error refreshing device list", e);
+    }
     // We debounce multiple incoming tabs so we show a single notification.
     const tabsReceived = [];
     for (const { data } of messages) {
       const { command, payload, sender: senderId } = data;
-      const sender = senderId ? fxaDevices.find(d => d.id == senderId) : null;
+      const sender =
+        senderId && this._fxai.device.recentDeviceList
+          ? this._fxai.device.recentDeviceList.find(d => d.id == senderId)
+          : null;
       if (!sender) {
         log.warn(
           "Incoming command is from an unknown device (maybe disconnected?)"

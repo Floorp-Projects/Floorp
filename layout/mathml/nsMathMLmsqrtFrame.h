@@ -37,6 +37,9 @@ These attributes are inherited by every element from its rendering environment,
 but can be set explicitly only on <mstyle>. (See Section 3.3.4.)
 */
 
+// XXXfredw: This class should share its layout logic with nsMathMLmrootFrame
+// when the menclose "radical" notation is removed.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1548522
 class nsMathMLmsqrtFrame final : public nsMathMLmencloseFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmsqrtFrame)

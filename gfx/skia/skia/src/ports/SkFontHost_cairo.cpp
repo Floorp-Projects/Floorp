@@ -65,7 +65,8 @@ extern "C"
     void mozilla_LockFTLibrary(FT_Library aLibrary);
     void mozilla_UnlockFTLibrary(FT_Library aLibrary);
     void mozilla_AddRefSharedFTFace(void* aContext);
-    void mozilla_ReleaseSharedFTFace(void* aContext);
+    void mozilla_ReleaseSharedFTFace(void* aContext, void* aOwner);
+    void mozilla_ForgetSharedFTFaceLockOwner(void* aContext, void* aOwner);
     int mozilla_LockSharedFTFace(void* aContext, void* aOwner);
     void mozilla_UnlockSharedFTFace(void* aContext);
     FT_Error mozilla_LoadFTGlyph(FT_Face aFace, uint32_t aGlyphIndex, int32_t aFlags);
@@ -96,7 +97,10 @@ public:
                             const SkDescriptor* desc, FT_Face face,
                             void* faceContext, SkPixelGeometry pixelGeometry,
                             FT_LcdFilter lcdFilter);
-    virtual ~SkScalerContext_CairoFT();
+
+    virtual ~SkScalerContext_CairoFT() {
+        mozilla_ForgetSharedFTFaceLockOwner(fFTFaceContext, this);
+    }
 
     bool isValid() const { return fFTFaceContext != nullptr; }
 
@@ -269,7 +273,7 @@ public:
 private:
     ~SkCairoFTTypeface()
     {
-        mozilla_ReleaseSharedFTFace(fFTFaceContext);
+        mozilla_ReleaseSharedFTFace(fFTFaceContext, nullptr);
     }
 
     FT_Face            fFTFace;
@@ -388,10 +392,6 @@ SkScalerContext_CairoFT::SkScalerContext_CairoFT(
     loadFlags |= FT_LOAD_COLOR;
 
     fLoadGlyphFlags = loadFlags;
-}
-
-SkScalerContext_CairoFT::~SkScalerContext_CairoFT()
-{
 }
 
 bool SkScalerContext_CairoFT::computeShapeMatrix(const SkMatrix& m)

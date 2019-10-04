@@ -455,7 +455,6 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 334829-1a.xhtml 334829-1-ref.xhtml
 == 334829-1b.xhtml 334829-1-ref.xhtml
 == 335628-1.html 335628-1-ref.html
-!= chrome://reftest/content/bugs/335628-2.xul chrome://reftest/content/bugs/335628-2-ref.xul
 == chrome://reftest/content/bugs/336096-1.xul chrome://reftest/content/bugs/336096-1-ref.xul
 == 336147-1.html 336147-1-ref.html
 == 336153-1.html 336153-1-ref.html

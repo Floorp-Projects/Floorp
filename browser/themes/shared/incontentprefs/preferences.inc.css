@@ -275,10 +275,6 @@ button > hbox > label {
   margin: 0;
 }
 
-#activeLanguages {
-  height: 16em;
-}
-
 #activeLanguages > richlistitem {
   padding: 0.3em;
 }
@@ -967,10 +963,6 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 #defaultBrowserLanguage {
   margin-inline-start: 0;
   min-width: 20em;
-}
-
-#selectedLocales {
-  height: 150px;
 }
 
 #selectedLocales > richlistitem {

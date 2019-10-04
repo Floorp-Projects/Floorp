@@ -58,12 +58,13 @@ export const setSelectedLocation = (
 export const setPendingSelectedLocation = (
   cx: Context,
   url: string,
-  options: Object
+  options?: PartialPosition
 ) => ({
   type: "SET_PENDING_SELECTED_LOCATION",
   cx,
-  url: url,
-  line: options.location ? options.location.line : null,
+  url,
+  line: options ? options.line : null,
+  column: options ? options.column : null,
 });
 
 export const clearSelectedLocation = (cx: Context) => ({
@@ -85,7 +86,7 @@ export const clearSelectedLocation = (cx: Context) => ({
 export function selectSourceURL(
   cx: Context,
   url: string,
-  options: PartialPosition = {}
+  options?: PartialPosition
 ) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceByURL(getState(), url);
