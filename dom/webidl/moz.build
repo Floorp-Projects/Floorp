@@ -169,9 +169,6 @@ with Files("KeyIdsInitData.webidl"):
 with Files("Keyframe*"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
 
-with Files("MathML*"):
-    BUG_COMPONENT = ("Core", "MathML")
-
 with Files("MediaDevice*"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
@@ -639,7 +636,6 @@ WEBIDL_FILES = [
     'LinkStyle.webidl',
     'LoadURIOptions.webidl',
     'Location.webidl',
-    'MathMLElement.webidl',
     'MediaCapabilities.webidl',
     'MediaDebugInfo.webidl',
     'MediaDeviceInfo.webidl',
