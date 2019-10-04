@@ -39,9 +39,9 @@ function gen_tab_impmod_t(insn)
      (table 30 30 funcref)
      ;; -------- Table initialisers --------
      (elem (i32.const 2) 3 1 4 1)
-     (elem func 2 7 1 8)
+     (elem passive 2 7 1 8)
      (elem (i32.const 12) 7 5 2 3 6)
-     (elem func 5 9 2 7 6)
+     (elem passive 5 9 2 7 6)
      ;; -------- Imports --------
      (import "a" "if0" (result i32))    ;; index 0
      (import "a" "if1" (result i32))
@@ -174,9 +174,9 @@ function gen_mem_mod_t(insn)
      (memory (export "memory0") 1 1)
      ;; -------- Memory initialisers --------
      (data (i32.const 2) "\\03\\01\\04\\01")
-     (data "\\02\\07\\01\\08")
+     (data passive "\\02\\07\\01\\08")
      (data (i32.const 12) "\\07\\05\\02\\03\\06")
-     (data "\\05\\09\\02\\07\\06")
+     (data passive "\\05\\09\\02\\07\\06")
 
      (func (export "testfn")
        ${insn}
@@ -264,8 +264,8 @@ mem_test("(memory.init 1 (i32.const 7) (i32.const 0) (i32.const 4)) \n" +
 assertErrorMessage(() => wasmEvalText(
     `(module
        (datacount 1)
-       (data "")
-       (data ""))`),
+       (data passive "")
+       (data passive ""))`),
                    WebAssembly.CompileError,
                    /number of data segments does not match declared count/);
 
@@ -273,8 +273,8 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
        (datacount 3)
-       (data "")
-       (data ""))`),
+       (data passive "")
+       (data passive ""))`),
                    WebAssembly.CompileError,
                    /number of data segments does not match declared count/);
 
@@ -348,7 +348,7 @@ checkPassiveElemSegment("end", /failed to read end of initializer expression/);
            (elem (i32.const 3) $m)
            (elem (i32.const 6) $m)
            (elem (i32.const 8) $m)
-           (elem funcref (ref.func $f) (ref.null) (ref.func $g) (ref.null) (ref.func $h))
+           (elem passive $f ref.null $g ref.null $h)
            (func $m)
            (func $f)
            (func $g)

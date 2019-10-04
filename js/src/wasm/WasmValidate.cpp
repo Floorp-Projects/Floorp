@@ -2295,7 +2295,7 @@ static inline ElemSegment::Kind NormalizeElemSegmentKind(
     ElemSegmentKind decodedKind) {
   switch (decodedKind) {
     case ElemSegmentKind::Active:
-    case ElemSegmentKind::ActiveWithTableIndex: {
+    case ElemSegmentKind::ActiveWithIndex: {
       return ElemSegment::Kind::Active;
     }
     case ElemSegmentKind::Passive: {
@@ -2350,13 +2350,13 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     seg->kind = NormalizeElemSegmentKind(kind);
 
     if (kind == ElemSegmentKind::Active ||
-        kind == ElemSegmentKind::ActiveWithTableIndex) {
+        kind == ElemSegmentKind::ActiveWithIndex) {
       if (env->tables.length() == 0) {
         return d.fail("active elem segment requires a table");
       }
 
       uint32_t tableIndex = 0;
-      if (kind == ElemSegmentKind::ActiveWithTableIndex &&
+      if (kind == ElemSegmentKind::ActiveWithIndex &&
           !d.readVarU32(&tableIndex)) {
         return d.fail("expected table index");
       }
@@ -2384,8 +2384,8 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
 
     ElemSegmentPayload payload = flags->payload();
 
-    // `ActiveWithTableIndex`, `Declared`, and `Passive` element segments encode
-    // the type or definition kind of the payload. `Active` element segments are
+    // `ActiveWithIndex`, `Declared`, and `Passive` element segments encode the
+    // type or definition kind of the payload. `Active` element segments are
     // restricted to MVP behavior, which assumes only function indices.
     if (kind != ElemSegmentKind::Active) {
       uint8_t form;
@@ -2702,7 +2702,7 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
     switch (initializerKindVal) {
       case uint32_t(DataSegmentKind::Active):
       case uint32_t(DataSegmentKind::Passive):
-      case uint32_t(DataSegmentKind::ActiveWithMemoryIndex):
+      case uint32_t(DataSegmentKind::ActiveWithIndex):
         break;
       default:
         return d.fail("invalid data initializer-kind field");
@@ -2715,7 +2715,7 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     uint32_t memIndex = 0;
-    if (initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
+    if (initializerKind == DataSegmentKind::ActiveWithIndex) {
       if (!d.readVarU32(&memIndex)) {
         return d.fail("expected memory index");
       }
@@ -2726,7 +2726,7 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
 
     DataSegmentEnv seg;
     if (initializerKind == DataSegmentKind::Active ||
-        initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
+        initializerKind == DataSegmentKind::ActiveWithIndex) {
       InitExpr segOffset;
       if (!DecodeInitializerExpression(d, env, ValType::I32, &segOffset)) {
         return false;
