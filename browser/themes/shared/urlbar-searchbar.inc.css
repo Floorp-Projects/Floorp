@@ -7,7 +7,7 @@
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarBreakoutVerticalExtend 4px
-%define urlbarBreakoutHorizontalExtend 55px
+%define urlbarBreakoutHorizontalExtend 30px
 
 :root {
   --toolbar-field-focus-border-color: Highlight;
