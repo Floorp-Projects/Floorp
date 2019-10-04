@@ -8,7 +8,7 @@
         <label value="Left" />
       </column>
       <column style="background:yellow">
-        <textbox value="Right" />
+        <input xmlns="http://www.w3.org/1999/xhtml" value="Right" />
       </column>
     </columns>
   </grid>
