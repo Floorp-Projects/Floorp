@@ -13,7 +13,7 @@ sample:
     A sample custom ping.
   include_client_id: true
   bugs:
-    - 123456789
+    - https://bugzilla.mozilla.org/123456789
   data_reviews:
     - N/A
   notification_emails:
