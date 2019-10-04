@@ -9,7 +9,7 @@
         <label value="Top" />
       </row>
       <row style="background:yellow">
-        <textbox value="Bottom" />
+        <input xmlns="http://www.w3.org/1999/xhtml" value="Bottom" />
       </row>
     </rows>
   </grid>
