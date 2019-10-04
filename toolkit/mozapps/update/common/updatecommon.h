@@ -16,7 +16,7 @@ class UpdateLog {
     return primaryLog;
   }
 
-  void Init(NS_tchar* sourcePath, const NS_tchar* fileName);
+  void Init(NS_tchar* logFilePath);
   void Finish();
   void Flush();
   void Printf(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
@@ -27,7 +27,6 @@ class UpdateLog {
  protected:
   UpdateLog();
   FILE* logFP;
-  NS_tchar mTmpFilePath[MAXPATHLEN];
   NS_tchar mDstFilePath[MAXPATHLEN];
 };
 
@@ -35,8 +34,7 @@ bool IsValidFullPath(NS_tchar* fullPath);
 
 #define LOG_WARN(args) UpdateLog::GetPrimaryLog().WarnPrintf args
 #define LOG(args) UpdateLog::GetPrimaryLog().Printf args
-#define LogInit(PATHNAME_, FILENAME_) \
-  UpdateLog::GetPrimaryLog().Init(PATHNAME_, FILENAME_)
+#define LogInit(FILEPATH_) UpdateLog::GetPrimaryLog().Init(FILEPATH_)
 #define LogFinish() UpdateLog::GetPrimaryLog().Finish()
 #define LogFlush() UpdateLog::GetPrimaryLog().Flush()
 
