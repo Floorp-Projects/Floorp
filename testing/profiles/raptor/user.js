@@ -18,6 +18,3 @@ user_pref("devtools.console.stdout.content", true);
 
 // prevent pages from opening after a crash
 user_pref("browser.sessionstore.resume_from_crash", false);
-
-// prevent pages from opening after a crash
-user_pref("browser.sessionstore.resume_from_crash", false);
