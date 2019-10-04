@@ -10,6 +10,10 @@ import yaml
 from taskgraph.util.memoize import memoize
 
 
+AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
+CHECKSUMS_EXTENSIONS = ('.sha1', '.md5')
+
+
 def get_components():
     build_config = _read_build_config()
     return [{
@@ -17,6 +21,14 @@ def get_components():
         'path': project['path'],
         'shouldPublish': project['publish']
     } for (name, project) in build_config['projects'].items()]
+
+
+def get_version(is_snapshot=False):
+    return _read_build_config()["componentsVersion"]
+
+
+def get_path(component):
+    return _read_build_config()["projects"][component]["path"]
 
 
 @memoize

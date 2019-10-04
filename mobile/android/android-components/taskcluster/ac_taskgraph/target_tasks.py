@@ -7,20 +7,17 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.target_tasks import _target_task, filter_for_tasks_for
 
 
-@_target_task('default')
-def target_tasks_default(full_task_graph, parameters, graph_config):
-    """Target the tasks which have indicated they should be run on this project
-    via the `run_on_projects` attributes."""
-    def filter(t, params):
-        if t.kind == 'old-decision':
-            return True
-
-        return filter_for_tasks_for(t, params)
+@_target_task("snapshot")
+def target_tasks_snapshot(full_task_graph, parameters, graph_config):
+    def filter(task, parameters):
+        return task.attributes.get("build-type", "") == "snapshot"
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]
 
 
-@_target_task("snapshot")
-def target_tasks_snapshot(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required for snapshot builds."""
-    return target_tasks_default(full_task_graph, parameters, graph_config)
+@_target_task("release")
+def target_tasks_release(full_task_graph, parameters, graph_config):
+    def filter(task, parameters):
+        return task.attributes.get("build-type", "") == "release"
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t, parameters)]

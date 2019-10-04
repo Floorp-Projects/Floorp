@@ -8,20 +8,32 @@ import os
 
 from copy import deepcopy
 from taskgraph.loader.transform import loader as base_loader
+from taskgraph.util.templates import merge
 
 from ..build_config import get_components
 
 
 def loader(kind, path, config, params, loaded_tasks):
-    config['jobs'] = jobs = {
-        component['name']: {}
+    not_for_components = config.get("not-for-components", [])
+    jobs = {
+        '{}{}'.format(
+            '' if build_type == 'regular' else build_type + '-',
+            component['name']
+        ): {
+            'attributes': {
+                'build-type': build_type,
+                'component': component['name'],
+            }
+        }
         for component in get_components()
+        for build_type in ('regular', 'release', 'snapshot')
+        if (
+            component['name'] not in not_for_components
+            and (component['shouldPublish'] or build_type == 'regular')
+        )
     }
-    jobs.update(config.pop('overriden-jobs', {}))
+    jobs = merge(jobs, config.pop('overriden-jobs', {}))
 
-    for job_name, job_config in config.pop('additional-jobs', {}).iteritems():
-        if job_name in jobs:
-            raise ValueError('"{}" already exists in config["jobs"]'.format(job_name))
-        jobs[job_name] = job_config
+    config['jobs'] = jobs
 
     return base_loader(kind, path, config, params, loaded_tasks)

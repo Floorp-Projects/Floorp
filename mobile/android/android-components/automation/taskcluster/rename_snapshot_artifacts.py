@@ -15,9 +15,9 @@ import os
 import re
 import sys
 
-from decision_task import AAR_EXTENSIONS, HASH_EXTENSIONS
 
-
+AAR_EXTENSIONS = ('.aar', '.pom', '-sources.jar')
+HASH_EXTENSIONS = ('', '.sha1', '.md5')
 SNAPSHOT_TIMESTAMP_REGEX = r'\d{8}\.\d{6}-\d{1}'
 
 

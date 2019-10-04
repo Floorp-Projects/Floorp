@@ -6,16 +6,19 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from six import text_type
 
-from voluptuous import Required, Optional
+from voluptuous import Any, Required, Optional
 
-from taskgraph.util.schema import taskref_or_string
+from taskgraph.util.schema import taskref_or_string, WHITELISTED_SCHEMA_IDENTIFIERS
 from taskgraph.transforms.task import payload_builder
+
+WHITELISTED_SCHEMA_IDENTIFIERS.extend([
+    lambda path: "[u'artifact-map']" in path,   # handed directly in beetmover
+])
 
 
 @payload_builder(
     "scriptworker-signing",
     schema={
-        # the maximum time to run, in seconds
         Required("max-run-time"): int,
         Required("signing-type"): text_type,
         # list of artifact URLs for the artifacts that should be signed
@@ -39,7 +42,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
     task_def["tags"]["worker-implementation"] = "scriptworker"
 
     task_def["payload"] = {
-        "maxRunTime": worker["max-run-time"],
         "upstreamArtifacts": worker["upstream-artifacts"],
     }
 
@@ -57,3 +59,48 @@ def build_scriptworker_signing_payload(config, task, task_def):
             for format in sorted(formats)
         ]
     )
+
+
+@payload_builder(
+    "scriptworker-beetmover",
+    schema={
+        Required("action"): text_type,
+        Required("artifact-map"): [{
+            Required("paths"): {
+                Any(text_type): {
+                    Required("destinations"): [text_type],
+                },
+            },
+            Required("taskId"): taskref_or_string,
+        }],
+        Required("beetmover-application-name"): text_type,
+        Required("bucket"): text_type,
+        Required("upstream-artifacts"): [{
+            Required("taskId"): taskref_or_string,
+            Required("taskType"): text_type,
+            Required("paths"): [text_type],
+        }],
+    },
+)
+def build_scriptworker_signing_payload(config, task, task_def):
+    worker = task["worker"]
+
+    task_def["tags"]["worker-implementation"] = "scriptworker"
+
+    # Needed by beetmover-scriptworker
+    for map_ in worker["artifact-map"]:
+        map_["locale"] = "en-US"
+        for path_config in map_["paths"].values():
+            path_config["checksums_path"] = ""
+
+    task_def["payload"] = {
+        "artifactMap": worker["artifact-map"],
+        "releaseProperties": {"appName": worker.pop("beetmover-application-name")},
+        "upstreamArtifacts": worker["upstream-artifacts"],
+    }
+
+    scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
+    task_def["scopes"].extend([
+        "{}:beetmover:action:{}".format(scope_prefix, worker["action"]),
+        "{}:beetmover:bucket:{}".format(scope_prefix, worker["bucket"]),
+    ])
