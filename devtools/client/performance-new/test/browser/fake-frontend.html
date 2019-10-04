@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title></title>
+  </head>
+  <body>
+    <script>
+      "use strict";
+      // This file is used to test the injection of performance profiles into a front-end,
+      // specifically the mechanism used to inject into profiler.firefox.com. Rather
+      // than using some kind of complicated message passing scheme to talk to the test
+      // harness, modify the title of the page. The tests can easily read the window
+      // title to see if things worked as expected.
+
+      // The following are the titles used to communicate the page's state to the tests.
+      // Keep these in sync with any tests that read them.
+      const initialTitle = "Waiting on the profile";
+      const successTitle = "Profile received";
+      const errorTitle = "Error"
+
+      document.title = initialTitle;
+
+      // The following gets called by the frame script, and provides an API to
+      // receive the profile.
+      window.connectToGeckoProfiler = async (geckoProfiler) => {
+        try {
+          // Get the profile.
+          const profile = await geckoProfiler.getProfile();
+
+          // Check that the profile is somewhat reasonable. It should be a gzipped
+          // profile, so we can only lightly check some properties about it, and check
+          // that it is an ArrayBuffer.
+          //
+          // After the check, modify the title of the document, so the tab title gets
+          // updated. This is an easy way to pass a message to the test script.
+          if (
+            profile &&
+            typeof profile === 'object' &&
+            profile instanceof ArrayBuffer
+          ) {
+            // The profile looks good!
+            document.title = successTitle;
+          } else {
+            // The profile doesn't look right, surface the error to the terminal.
+            dump('The gecko profile was malformed in fake-frontend.html\n');
+            dump(`Profile: ${JSON.stringify(profile)}\n`);
+
+            // Also to the web console.
+            console.error(profile);
+
+            // Report the error to the tab title.
+            document.title = errorTitle;
+          }
+        } catch (error) {
+          // Catch any error and notify the test.
+          document.title = errorTitle;
+          dump('An error was caught in fake-frontend.html\n');
+          dump(`${error}\n`);
+        }
+      }
+    </script>
+  </body>
+</html>
