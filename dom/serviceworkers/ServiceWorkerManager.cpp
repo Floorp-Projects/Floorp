@@ -486,27 +486,26 @@ void ServiceWorkerManager::MaybeStartShutdown() {
 
   mShuttingDown = true;
 
-  for (auto& entry : mRegistrationInfos) {
-    auto& dataPtr = entry.GetData();
-
-    for (auto& timerEntry : dataPtr->mUpdateTimers) {
-      timerEntry.GetData()->Cancel();
+  for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
+    for (auto it2 = it1.UserData()->mUpdateTimers.Iter(); !it2.Done();
+         it2.Next()) {
+      nsCOMPtr<nsITimer> timer = it2.UserData();
+      timer->Cancel();
     }
-    dataPtr->mUpdateTimers.Clear();
+    it1.UserData()->mUpdateTimers.Clear();
 
-    for (auto& queueEntry : dataPtr->mJobQueues) {
-      queueEntry.GetData()->CancelAll();
+    for (auto it2 = it1.UserData()->mJobQueues.Iter(); !it2.Done();
+         it2.Next()) {
+      RefPtr<ServiceWorkerJobQueue> queue = it2.UserData();
+      queue->CancelAll();
     }
-    dataPtr->mJobQueues.Clear();
+    it1.UserData()->mJobQueues.Clear();
 
-    for (auto& registrationEntry : dataPtr->mInfos) {
-      registrationEntry.GetData()->ShutdownWorkers();
+    for (auto it2 = it1.UserData()->mInfos.Iter(); !it2.Done(); it2.Next()) {
+      RefPtr<ServiceWorkerRegistrationInfo> regInfo = it2.UserData();
+      regInfo->ShutdownWorkers();
     }
-    dataPtr->mInfos.Clear();
-  }
-
-  for (auto& entry : mControlledClients) {
-    entry.GetData()->mRegistrationInfo->ShutdownWorkers();
+    it1.UserData()->mInfos.Clear();
   }
 
   if (mShutdownBlocker) {

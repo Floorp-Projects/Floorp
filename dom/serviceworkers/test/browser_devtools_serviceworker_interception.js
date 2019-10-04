@@ -11,11 +11,9 @@ const crossHelloDoc = CROSS_URI + "hello.html";
 
 const sw = BASE_URI + "fetch.js";
 
-const isParentInterceptEnabled = Cc["@mozilla.org/serviceworkers/manager;1"]
-  .getService(Ci.nsIServiceWorkerManager)
-  .isParentInterceptEnabled();
-
-async function checkObserver(aInput) {
+// XXXtt: We should be able to move this check to chrome process after we move
+// the interception logic to chrome process.
+async function checkObserverInContent(aInput) {
   let interceptedChannel = null;
 
   // We always get two channels which receive the "http-on-stop-request"
@@ -71,26 +69,22 @@ async function checkObserver(aInput) {
       { start: tc.handleFetchEventStartTime, end: tc.handleFetchEventEndTime },
     ];
     if (aInput.swPresent) {
-      // TODO: remove this condition (but keep the if statement's body) when
-      // bug 1577829 is resolved.
-      if (!isParentInterceptEnabled) {
-        serviceWorkerTimings.reduce((aPreviousTimings, aCurrentTimings) => {
-          ok(aPreviousTimings.start !== 0, "Start time check.");
-          ok(
-            aPreviousTimings.start <= aCurrentTimings.start,
-            "Start time order check."
-          );
-          ok(
-            aPreviousTimings.end <= aCurrentTimings.end,
-            "End time order check."
-          );
-          ok(
-            aCurrentTimings.start <= aCurrentTimings.end,
-            "Start time should be smaller than end time."
-          );
-          return aCurrentTimings;
-        });
-      }
+      serviceWorkerTimings.reduce((aPreviousTimings, aCurrentTimings) => {
+        ok(aPreviousTimings.start !== 0, "Start time check.");
+        ok(
+          aPreviousTimings.start <= aCurrentTimings.start,
+          "Start time order check."
+        );
+        ok(
+          aPreviousTimings.end <= aCurrentTimings.end,
+          "End time order check."
+        );
+        ok(
+          aCurrentTimings.start <= aCurrentTimings.end,
+          "Start time should be smaller than end time."
+        );
+        return aCurrentTimings;
+      });
     } else {
       serviceWorkerTimings.forEach(aTimings => {
         is(aTimings.start, 0, "SW timings should be 0.");
@@ -157,27 +151,6 @@ async function contentFetch(aURL) {
   await content.window.fetch(aURL);
 }
 
-// The observer topics are fired in the parent process in parent-intercept
-// and the content process in child-intercept. This function will handle running
-// the check in the correct process. Note that it will block until the observers
-// are notified.
-async function fetchAndCheckObservers(
-  aFetchBrowser,
-  aObserverBrowser,
-  aTestCase
-) {
-  let promise = null;
-
-  if (isParentInterceptEnabled) {
-    promise = checkObserver(aTestCase);
-  } else {
-    promise = ContentTask.spawn(aObserverBrowser, aTestCase, checkObserver);
-  }
-
-  await ContentTask.spawn(aFetchBrowser, aTestCase.url, contentFetch);
-  await promise;
-}
-
 async function registerSWAndWaitForActive(aServiceWorker) {
   let swr = await content.navigator.serviceWorker.register(aServiceWorker, {
     scope: "empty.html",
@@ -194,6 +167,8 @@ async function registerSWAndWaitForActive(aServiceWorker) {
       }
     });
   });
+
+  await swr.active.postMessage("claim");
 
   await new Promise(resolve => {
     if (content.navigator.serviceWorker.controller) {
@@ -271,19 +246,43 @@ add_task(async function test_serivce_worker_interception() {
   ];
 
   info("Test 1: Verify simple fetch");
-  await fetchAndCheckObservers(tabBrowser, tabBrowser_observer, testcases[0]);
+  let promise = ContentTask.spawn(
+    tabBrowser_observer,
+    testcases[0],
+    checkObserverInContent
+  );
+  await ContentTask.spawn(tabBrowser, testcases[0].url, contentFetch);
+  await promise;
 
   info("Register a service worker");
   await ContentTask.spawn(tabBrowser, sw, registerSWAndWaitForActive);
 
   info("Test 2: Verify simple hijack");
-  await fetchAndCheckObservers(tabBrowser, tabBrowser_observer, testcases[1]);
+  promise = ContentTask.spawn(
+    tabBrowser_observer,
+    testcases[1],
+    checkObserverInContent
+  );
+  await ContentTask.spawn(tabBrowser, testcases[1].url, contentFetch);
+  await promise;
 
   info("Test 3: Verify fetch without using http cache");
-  await fetchAndCheckObservers(tabBrowser, tabBrowser_observer, testcases[2]);
+  promise = ContentTask.spawn(
+    tabBrowser_observer,
+    testcases[2],
+    checkObserverInContent
+  );
+  await ContentTask.spawn(tabBrowser, testcases[2].url, contentFetch);
+  await promise;
 
   info("Test 4: make a internal redirect");
-  await fetchAndCheckObservers(tabBrowser, tabBrowser_observer, testcases[3]);
+  promise = ContentTask.spawn(
+    tabBrowser_observer,
+    testcases[3],
+    checkObserverInContent
+  );
+  await ContentTask.spawn(tabBrowser, testcases[3].url, contentFetch);
+  await promise;
 
   info("Clean up");
   await ContentTask.spawn(tabBrowser, undefined, unregisterSW);
