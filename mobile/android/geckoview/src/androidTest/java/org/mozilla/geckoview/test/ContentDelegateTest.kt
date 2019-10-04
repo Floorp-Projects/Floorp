@@ -254,11 +254,11 @@ class ContentDelegateTest : BaseSessionTest() {
         // SessionAccessibility for a11y auto-fill support.
         mainSession.loadTestPath(FORMS_HTML_PATH)
         // Wait for the auto-fill nodes to populate.
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
             // For the root document and the iframe document, each has a form group and
             // a group for inputs outside of forms, so the total count is 4.
             @AssertCalled(count = 4)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+            override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
             }
         })
 
@@ -361,10 +361,10 @@ class ContentDelegateTest : BaseSessionTest() {
 
         val rootStructure = MockViewNode()
 
-        mainSession.textInput.onProvideAutofillVirtualStructure(rootStructure, 0)
+        mainSession.provideAutofillVirtualStructure(null, rootStructure, 0)
         checkAutoFillChild(rootStructure)
 
-        mainSession.textInput.autofill(autoFillValues)
+        mainSession.autofill(autoFillValues)
 
         // Wait on the promises and check for correct values.
         for ((key, actual, expected, eventInterface) in promises.map { it.value.asJSList<String>() }) {
@@ -390,7 +390,7 @@ class ContentDelegateTest : BaseSessionTest() {
                                        { it.className == "android.widget.EditText" },
                                root: MockViewNode? = null): Int {
             val node = if (root !== null) root else MockViewNode().also {
-                mainSession.textInput.onProvideAutofillVirtualStructure(it, 0)
+                mainSession.provideAutofillVirtualStructure(null, it, 0)
             }
 
             return (if (cond(node)) 1 else 0) +
@@ -400,12 +400,12 @@ class ContentDelegateTest : BaseSessionTest() {
 
         // Wait for the accessibility nodes to populate.
         mainSession.loadTestPath(FORMS_HTML_PATH)
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
             @AssertCalled(count = 4)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+            override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be starting auto-fill", notification, equalTo(forEachCall(
-                        GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_STARTED,
-                        GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED)))
+                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_STARTED,
+                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED)))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -414,12 +414,12 @@ class ContentDelegateTest : BaseSessionTest() {
 
         // Now wait for the nodes to clear.
         mainSession.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
             @AssertCalled(count = 1)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+            override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be canceling auto-fill",
                            notification,
-                           equalTo(GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_CANCELED))
+                           equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_CANCELED))
                 assertThat("ID should be valid", virtualId, equalTo(View.NO_ID))
             }
         })
@@ -429,12 +429,12 @@ class ContentDelegateTest : BaseSessionTest() {
         // Now wait for the nodes to reappear.
         mainSession.waitForPageStop()
         mainSession.goBack()
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
             @AssertCalled(count = 4)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+            override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be starting auto-fill", notification, equalTo(forEachCall(
-                        GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_STARTED,
-                        GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED)))
+                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_STARTED,
+                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED)))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -444,12 +444,12 @@ class ContentDelegateTest : BaseSessionTest() {
                    countAutoFillNodes({ it.isFocused }), equalTo(0))
 
         mainSession.evaluateJS("document.querySelector('#pass2').focus()")
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
             @AssertCalled(count = 1)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+            override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be entering auto-fill view",
                            notification,
-                           equalTo(GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED))
+                           equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -461,12 +461,12 @@ class ContentDelegateTest : BaseSessionTest() {
                    equalTo(7))
 
         mainSession.evaluateJS("document.querySelector('#pass2').blur()")
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
             @AssertCalled(count = 1)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+            override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be exiting auto-fill view",
                            notification,
-                           equalTo(GeckoSession.TextInputDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED))
+                           equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -482,9 +482,9 @@ class ContentDelegateTest : BaseSessionTest() {
 
         mainSession.loadTestPath(FORMS2_HTML_PATH)
         // Wait for the auto-fill nodes to populate.
-        sessionRule.waitUntilCalled(object : Callbacks.TextInputDelegate {
+        sessionRule.waitUntilCalled(object : Callbacks.AutofillDelegate {
             @AssertCalled(count = 1)
-            override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
+            override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
             }
         })
 
@@ -524,7 +524,7 @@ class ContentDelegateTest : BaseSessionTest() {
 
         val rootStructure = MockViewNode()
 
-        mainSession.textInput.onProvideAutofillVirtualStructure(rootStructure, 0)
+        mainSession.provideAutofillVirtualStructure(null, rootStructure, 0)
         // form and iframe have each 2 hints.
         assertThat("autofill hint count",
                    checkAutoFillChild(rootStructure), equalTo(4))

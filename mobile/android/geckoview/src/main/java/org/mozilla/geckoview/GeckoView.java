@@ -714,7 +714,7 @@ public class GeckoView extends FrameLayout {
         super.onProvideAutofillVirtualStructure(structure, flags);
 
         if (mSession != null) {
-            mSession.getTextInput().onProvideAutofillVirtualStructure(structure, flags);
+            mSession.provideAutofillVirtualStructure(this, structure, flags);
         }
     }
 
@@ -734,7 +734,7 @@ public class GeckoView extends FrameLayout {
                 strValues.put(values.keyAt(i), value.getTextValue());
             }
         }
-        mSession.getTextInput().autofill(strValues);
+        mSession.autofill(strValues);
     }
 
     /**
