@@ -27,6 +27,11 @@ bool WorkletPrincipals::write(JSContext* aCx,
                                             mWorkletImpl->PrincipalInfo());
 }
 
+bool WorkletPrincipals::isSystemOrAddonPrincipal() {
+  // Per Bug 1578623 rev a83797ed249c - Worklets are always NullPrincipal
+  return false;
+}
+
 void WorkletPrincipals::Destroy(JSPrincipals* aPrincipals) {
   delete static_cast<WorkletPrincipals*>(aPrincipals);
 }
