@@ -165,6 +165,6 @@ function initialize() {
   CustomizableWidgets.push(item);
 }
 
-const ProfilerMenuButton = { toggle, initialize };
+const ProfilerMenuButton = { toggle, initialize, isEnabled };
 
 var EXPORTED_SYMBOLS = ["ProfilerMenuButton"];
