@@ -237,7 +237,7 @@ let HomePage = {
     await this.init();
 
     const lowerURL = url.toLowerCase();
-    return this._ignoreList.some(code => lowerURL.includes(code));
+    return this._ignoreList.some(code => lowerURL.includes(code.toLowerCase()));
   },
 
   /**
