@@ -2646,6 +2646,13 @@ class nsContentUtils {
       nsIContent* aAnonymousContent);
 
   /**
+   * Returns whether a node has an editable ancestor.
+   *
+   * @param aNode The node to test.
+   */
+  static bool IsNodeInEditableRegion(nsINode* aNode);
+
+  /**
    * Returns a LogModule that dump calls from content script are logged to.
    * This can be enabled with the 'Dump' module, and is useful for synchronizing
    * content JS to other logging modules.
