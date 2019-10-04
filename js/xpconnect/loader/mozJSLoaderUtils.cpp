@@ -20,15 +20,16 @@ using mozilla::UniquePtr;
 // principals to the system principals.
 nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
                           MutableHandleScript scriptp) {
-  UniquePtr<char[]> buf;
+  const char* buf;
   uint32_t len;
   nsresult rv = cache->GetBuffer(PromiseFlatCString(uri).get(), &buf, &len);
   if (NS_FAILED(rv)) {
     return rv;  // don't warn since NOT_AVAILABLE is an ok error
   }
-
+  void* copy = malloc(len);
+  memcpy(copy, buf, len);
   JS::TranscodeBuffer buffer;
-  buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(buf.release()), len);
+  buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(copy), len);
   JS::TranscodeResult code = JS::DecodeScript(cx, buffer, scriptp);
   if (code == JS::TranscodeResult_Ok) {
     return NS_OK;
