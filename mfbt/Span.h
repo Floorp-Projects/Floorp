@@ -736,7 +736,8 @@ class Span {
 template <class ElementType, size_t FirstExtent, size_t SecondExtent>
 inline constexpr bool operator==(const Span<ElementType, FirstExtent>& l,
                                  const Span<ElementType, SecondExtent>& r) {
-  return (l.size() == r.size()) && std::equal(l.begin(), l.end(), r.begin());
+  return (l.size() == r.size()) &&
+         std::equal(l.data(), l.data() + l.size(), r.data());
 }
 
 template <class ElementType, size_t Extent>
@@ -748,7 +749,8 @@ inline constexpr bool operator!=(const Span<ElementType, Extent>& l,
 template <class ElementType, size_t Extent>
 inline constexpr bool operator<(const Span<ElementType, Extent>& l,
                                 const Span<ElementType, Extent>& r) {
-  return std::lexicographical_compare(l.begin(), l.end(), r.begin(), r.end());
+  return std::lexicographical_compare(l.data(), l.data() + l.size(), r.data(),
+                                      r.data() + r.size());
 }
 
 template <class ElementType, size_t Extent>
