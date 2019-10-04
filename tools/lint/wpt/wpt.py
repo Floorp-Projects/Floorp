@@ -39,15 +39,6 @@ def lint(files, config, **kwargs):
 
     proc = ProcessHandler(cmd, env=os.environ, processOutputLine=process_line,
                           universal_newlines=True)
-
-    if sys.platform == 'win32':
-        # Workaround for bug 1585702. According to the win32 docs,
-        # CreateProcess will use the calling process's env by default. Since we
-        # are passing in `os.environ` wholesale anyway, setting the env to
-        # `None` shouldn't make a difference. An alternative workaround would
-        # be to stop using mozprocess here and use subprocess directly.
-        proc.env = None
-
     proc.run()
     try:
         proc.wait()
