@@ -12,9 +12,23 @@
 namespace mozilla {
 namespace dom {
 
-JSPrincipals* GetWorkerPrincipal();
+struct MOZ_HEAP_CLASS WorkerPrincipal final : public JSPrincipals {
+  explicit WorkerPrincipal(bool aIsSystemOrAddonPrincipal);
 
-void DestroyWorkerPrincipals(JSPrincipals* aPrincipals);
+  bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) override;
+
+  // We don't distinguish between System or Addon because the only use
+  // case for this right now doesn't need to. When you need to distinguish
+  // add a second bool.
+  bool isSystemOrAddonPrincipal() override;
+
+  // Callback for JS_InitDestroyPrincipalsCallback()
+  static void Destroy(JSPrincipals* aPrincipals);
+
+ private:
+  ~WorkerPrincipal();
+  bool mIsSystemOrAddonPrincipal;
+};
 
 }  // namespace dom
 }  // namespace mozilla
