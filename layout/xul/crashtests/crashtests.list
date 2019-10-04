@@ -61,4 +61,5 @@ load 583957-1.html
 load 617089.html
 load menulist-focused.xhtml
 load 716503.html
+load chrome://reftest/content/crashtests/layout/xul/crashtests/1379332-1.xul
 load chrome://reftest/content/crashtests/layout/xul/crashtests/1379332-2.xul
