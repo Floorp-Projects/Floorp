@@ -88,11 +88,6 @@ html[dir="rtl"] .editor-mount {
   line-height: var(--theme-code-line-height);
 }
 
-.folding-enabled .CodeMirror-linenumber {
-  text-align: left;
-  padding: 0 0 0 2px;
-}
-
 /* set the linenumber white when there is a breakpoint */
 .editor-wrapper:not(.skip-pausing)
   .new-breakpoint
@@ -194,10 +189,35 @@ html[dir="rtl"] .editor-mount {
   }
 }
 
-.CodeMirror-guttermarker-subtle {
-  visibility: hidden;
-}
-
 .visible {
   visibility: visible;
+}
+
+/* Code folding */
+.editor-wrapper .CodeMirror-foldgutter-open {
+  color: var(--grey-40);
+}
+
+.editor-wrapper .CodeMirror-foldgutter-open,
+.editor-wrapper .CodeMirror-foldgutter-folded {
+  fill: var(--grey-40);
+}
+
+.editor-wrapper .CodeMirror-foldgutter-open::before,
+.editor-wrapper .CodeMirror-foldgutter-open::after {
+  border-top: none;
+}
+
+.editor-wrapper .CodeMirror-foldgutter-folded::before,
+.editor-wrapper .CodeMirror-foldgutter-folded::after {
+  border-left: none;
+}
+
+.editor-wrapper .CodeMirror-foldgutter .CodeMirror-guttermarker-subtle {
+  visibility: visible;
+}
+
+.editor-wrapper .CodeMirror-foldgutter .CodeMirror-linenumber {
+  text-align: left;
+  padding: 0 0 0 2px;
 }
