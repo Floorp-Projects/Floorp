@@ -6,7 +6,8 @@
   -->
 <window title="Tabbox Test" width="500" height="600"
         onload="setTimeout(test_tabbox, 0);"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="xul_selectcontrol.js"/>
@@ -53,7 +54,7 @@
 </vbox>
 
 <tabbox id="tabbox-nofocus">
-  <textbox id="textbox-extra" hidden="true"/>
+  <html:input id="textbox-extra" hidden="true"/>
   <tabs>
     <tab label="Tab 1" value="one"/>
     <tab id="tab-nofocus" label="Tab 2" value="two"/>
@@ -195,11 +196,7 @@ function test_tabbox_focus()
       var textboxExtra = $("textbox-extra");
       textboxExtra.addEventListener("focus", function () {
         textboxExtra.removeEventListener("focus", arguments.callee, true);
-
-        // XXX: Switched to from ok() to todo_is() in Bug 1467712. Follow up in 1500971
-        // Here the active element is not the XUL textbox but an HTML input inside it.
-        // textboxExtra is document.activeElement.parentNode.parentNode.
-        todo_is(document.activeElement, textboxExtra, "focus in tab with focus currently in textbox that is sibling of tabs");
+        is(document.activeElement, textboxExtra, "focus in tab with focus currently in textbox that is sibling of tabs");
 
         SimpleTest.finish();
       }, true);

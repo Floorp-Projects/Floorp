@@ -5,12 +5,15 @@
   XUL Widget Test for textbox with Add and Undo Add to Dictionary
   -->
 <window title="Textbox Add and Undo Add to Dictionary Test" width="500" height="600"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <hbox>
-    <textbox id="t1"  value="Hellop" oncontextmenu="runContextMenuTest()" spellcheck="true"/>
+    <moz-input-box id="t1" oncontextmenu="runContextMenuTest()" spellcheck="true">
+      <html:input class="textbox-input" value="Hellop" spellcheck="true"/>
+    </moz-input-box>
   </hbox>
 
   <!-- test results are displayed in the html:body -->
@@ -21,7 +24,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var textbox;
+var inputBox;
 var testNum;
 
 function bringUpContextMenu(element)
@@ -35,27 +38,24 @@ function leftClickElement(element)
 }
 
 var onSpellCheck;
-function startTests() 
-{     
-  textbox = document.getElementById("t1");
-  textbox.focus();
+function startTests()
+{
+  inputBox = document.getElementById("t1");
+  inputBox._input.focus();
   testNum = 0;
-  
+
   ({onSpellCheck} = ChromeUtils.import(
     "resource://testing-common/AsyncSpellCheckTestHelper.jsm"));
-  onSpellCheck(textbox, function () {
-    bringUpContextMenu(textbox);
+  onSpellCheck(inputBox._input, function () {
+    bringUpContextMenu(inputBox);
   });
 }
 
 function runContextMenuTest()
 {
-  SimpleTest.executeSoon( function() {
-    // The textbox has its children in an hbox XUL element, so get that first
-    var inputBox = document.getAnonymousElementByAttribute(textbox, "anonid", "moz-input-box");
-    
+  SimpleTest.executeSoon(function() {
     var contextMenu = inputBox.menupopup;
-   
+
     switch(testNum)
     {
       case 0: // "Add to Dictionary" button
@@ -66,15 +66,15 @@ function runContextMenuTest()
         ok(!separator.hidden, "Is separator visible?");
 
         addToDict.doCommand();
-        
+
         contextMenu.hidePopup();
         testNum++;
-        
-        onSpellCheck(textbox, function () {
-          bringUpContextMenu(textbox);
+
+        onSpellCheck(inputBox._input, function () {
+          bringUpContextMenu(inputBox);
         });
         break;
-        
+
       case 1: // "Undo Add to Dictionary" button
         var undoAddDict = inputBox.getMenuItem("spell-undo-add-to-dictionary");
         ok(!undoAddDict.hidden, "Is Undo Add to Dictioanry visible?");
@@ -83,9 +83,9 @@ function runContextMenuTest()
         ok(!separator.hidden, "Is separator hidden?");
 
         undoAddDict.doCommand();
-        
+
         contextMenu.hidePopup();
-        onSpellCheck(textbox, function () {
+        onSpellCheck(inputBox._input, function () {
           SimpleTest.finish();
         });
         break;
