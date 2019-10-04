@@ -11,36 +11,34 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
 var workingURL = "http://mochi.test:8888/tests/docshell/test/mochitest/bug529119-window.html";
-var faultyURL = "http://some-nonexistent-domain-27489274c892748217cn2384.com/";
+var faultyURL = "http://www.some-nonexistent-domain-27489274c892748217cn2384.com/";
 
 var w = null;
 var phase = 0;
 var gotWrongPageOnTryAgainClick = false;
 
-function pollForPage(f, win) {
-  // Start with polling after a delay, we might mistakenly take the current page
-  // as an expected one.
-  window.setTimeout(function() {
-    var iterationsLeft = 200;
-    var int = window.setInterval(function() {
-      iterationsLeft--;
-
-      var haveErrorPage = false;
-      try {
-        win.document.title;
-      } catch (ex) {
-        haveErrorPage = true;
-      }
-
-      if (iterationsLeft == 0 || haveErrorPage) {
-        window.clearInterval(int);
-        f(iterationsLeft > 0);
-      }
-    }, 100);
-  }, 1000);
+function delay(msec) {
+  return new Promise(resolve => setTimeout(resolve, msec));
 }
 
-function windowLoaded() {
+async function pollForPage(win) {
+  // Start with polling after a delay, we might mistakenly take the current page
+  // as an expected one.
+  await delay(1000);
+
+  for (let i = 0; i < 200; i++) {
+    await delay(100);
+
+    try {
+      win.document.title;
+    } catch (ex) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function windowLoaded() {
   switch (phase) {
     case 0:
       /* 2. We have succeededfully loaded a page, now go to a faulty URL */
@@ -50,25 +48,22 @@ function windowLoaded() {
 
       phase = 1;
 
-      pollForPage(function(enterErrorSucceeded) {
-        ok(enterErrorSucceeded, "Waiting for error page succeeded");
+      ok(await pollForPage(w), "Waiting for error page succeeded");
 
-        /* 3. now, while we are on the error page, try to reload it, actually
-           click the "Try Again" button */
-        SpecialPowers.wrap(w).location.reload();
+      /* 3. now, while we are on the error page, try to reload it, actually
+         click the "Try Again" button */
+      SpecialPowers.spawn(w, [], () => this.content.location.reload());
 
-        pollForPage(function(continueErrorSucceeded) {
-          ok(continueErrorSucceeded, "Waiting for error page succeeded");
+      ok(await pollForPage(w), "Waiting for error page succeeded");
 
-          /* 4-finish, check we are still on the error page */
-          is(SpecialPowers.wrap(w).location.href, faultyURL, "Is on an error page");
-          isnot(SpecialPowers.wrap(w).location.href, workingURL, "Is not on the previous page");
-          is(gotWrongPageOnTryAgainClick, false,
-            "Must not get www.example.com page on reload of an error page");
-          w.close();
-          SimpleTest.finish();
-        }, w);
-      }, w);
+      /* 4-finish, check we are still on the error page */
+      is(await SpecialPowers.spawn(w, [], () => this.content.location.href),
+         faultyURL,
+         "Is on an error page");
+      is(gotWrongPageOnTryAgainClick, false,
+        "Must not get www.example.com page on reload of an error page");
+      w.close();
+      SimpleTest.finish();
       break;
 
     case 1:
