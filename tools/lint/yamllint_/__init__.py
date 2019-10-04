@@ -125,6 +125,7 @@ def lint(files, config, **lintargs):
     binary = get_yamllint_binary()
 
     cmdargs = [
+        which('python'),
         binary,
         '-f', 'parsable'
     ]
