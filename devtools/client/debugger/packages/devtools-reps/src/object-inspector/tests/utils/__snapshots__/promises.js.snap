@@ -25,6 +25,7 @@ Array [
       "path": "root",
     },
     "path": "root◦<state>",
+    "propertyName": undefined,
     "type": Symbol(<state>),
   },
   Object {
@@ -52,6 +53,7 @@ Array [
       "path": "root",
     },
     "path": "root◦<reason>",
+    "propertyName": undefined,
     "type": Symbol(<reason>),
   },
 ]
