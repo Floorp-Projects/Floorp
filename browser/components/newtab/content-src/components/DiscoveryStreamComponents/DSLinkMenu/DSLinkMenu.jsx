@@ -40,7 +40,6 @@ export class DSLinkMenu extends React.PureComponent {
   render() {
     const { index, dispatch } = this.props;
     const TOP_STORIES_CONTEXT_MENU_OPTIONS = [
-      "ShowPrivacyInfo",
       "CheckBookmarkOrArchive",
       "CheckSavedToPocket",
       "Separator",

@@ -12,7 +12,6 @@ import { DSContextFooter } from "../DSContextFooter/DSContextFooter.jsx";
 
 // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
 export const DefaultMeta = ({
-  display_engagement_labels,
   source,
   title,
   excerpt,
@@ -36,14 +35,12 @@ export const DefaultMeta = ({
     <DSContextFooter
       context_type={context_type}
       context={context}
-      display_engagement_labels={display_engagement_labels}
       engagement={engagement}
     />
   </div>
 );
 
 export const CTAButtonMeta = ({
-  display_engagement_labels,
   source,
   title,
   excerpt,
@@ -67,7 +64,6 @@ export const CTAButtonMeta = ({
       <DSContextFooter
         context_type={context_type}
         context={context}
-        display_engagement_labels={display_engagement_labels}
         engagement={engagement}
       />
     )}
@@ -189,7 +185,6 @@ export class DSCard extends React.PureComponent {
           </div>
           {isButtonCTA ? (
             <CTAButtonMeta
-              display_engagement_labels={this.props.display_engagement_labels}
               source={this.props.source}
               title={this.props.title}
               excerpt={this.props.excerpt}
@@ -201,7 +196,6 @@ export class DSCard extends React.PureComponent {
             />
           ) : (
             <DefaultMeta
-              display_engagement_labels={this.props.display_engagement_labels}
               source={this.props.source}
               title={this.props.title}
               excerpt={this.props.excerpt}

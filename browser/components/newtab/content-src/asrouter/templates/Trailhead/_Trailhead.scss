@@ -100,22 +100,16 @@
         background-position-x: right;
       }
 
-      &.knowledge,
-      &.monitor {
+      &.knowledge {
         background-image: url('#{$image-path}trailhead/benefit-knowledge.png');
       }
 
-      &.lockwise,
       &.privacy {
         background-image: url('#{$image-path}trailhead/benefit-privacy.png');
       }
 
       &.products {
         background-image: url('#{$image-path}trailhead/benefit-products.png');
-      }
-
-      &.sync {
-        background-image: url('#{$image-path}trailhead/benefit-sync.png');
       }
     }
 
@@ -412,10 +406,6 @@
   }
 }
 
-.activity-stream.welcome {
-  overflow: hidden;
-}
-
 .inline-onboarding {
   &.activity-stream.welcome {
     overflow-y: hidden;
@@ -438,65 +428,5 @@
 
   .asrouter-toggle {
     position: absolute;
-  }
-}
-
-.error {
-  display: none;
-}
-
-.error.active {
-  display: block;
-  padding: 5px 12px;
-  animation: fade-down 450ms;
-  font-size: 12px;
-  font-weight: 500;
-  color: $white;
-  background-color: $red-60;
-  position: absolute;
-  inset-inline-start: 50px;
-  top: -28px;
-  border-radius: 2px;
-
-  &::before {
-    inset-inline-start: 12px;
-    background: $red-60;
-    bottom: -8px;
-    content: '.';
-    height: 16px;
-    position: absolute;
-    text-indent: -999px;
-    transform: rotate(45deg);
-    white-space: nowrap;
-    width: 16px;
-    z-index: -1;
-  }
-}
-
-@keyframes fade-down {
-  0% {
-    opacity: 0;
-    transform: translateY(-15px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.firstrun-title {
-  background: url('chrome://branding/content/about-logo.png') top left no-repeat;
-  background-size: 90px 90px;
-  margin: 40px 0 10px;
-  padding-top: 110px;
-
-  @media screen and (max-width: 790px) {
-    background: url('chrome://branding/content/about-logo.png') top center no-repeat;
-    background-size: 90px 90px;
-  }
-
-  &:dir(rtl) {
-    background-position: top right;
   }
 }

@@ -57,13 +57,4 @@ describe("ModalOverlayWrapper", () => {
 
     assert.notCalled(onClose);
   });
-
-  it("should not call props.onClose when clicked outside dialog", async () => {
-    const onClose = sandbox.stub();
-    const wrapper = mount(
-      <ModalOverlayWrapper document={fakeDoc} onClose={onClose} />
-    );
-    wrapper.find("div.modalOverlayOuter.active").simulate("click");
-    assert.notCalled(onClose);
-  });
 });
