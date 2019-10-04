@@ -2606,8 +2606,17 @@ toolbar#nav-bar {
             "e10s": options.e10s,
             "fission": self.extraPrefs.get('fission.autostart', False),
             "headless": options.headless,
+
+            # Until the test harness can understand default pref values,
+            # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
+            # should by synchronized with the default pref value indicated in
+            # StaticPrefList.yaml.
+            #
+            # Currently for automation, the pref defaults to true in nightly
+            # builds and false otherwise (but can be overridden with --setpref).
             "serviceworker_e10s": self.extraPrefs.get(
-                'dom.serviceWorkers.parent_intercept', False),
+                'dom.serviceWorkers.parent_intercept', mozinfo.info['nightly_build']),
+
             "socketprocess_e10s": self.extraPrefs.get(
                 'network.process.enabled', False),
             "verify": options.verify,
