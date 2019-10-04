@@ -12,6 +12,7 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.expectException
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -167,16 +168,25 @@ class CrashReporterTest {
     fun `CrashReporter forwards crashes to service`() {
         var nativeCrash = false
         var exceptionCrash = false
+        var caughtException = false
 
         val service = object : CrashReporterService {
             override fun report(crash: Crash.UncaughtExceptionCrash) {
                 exceptionCrash = true
                 nativeCrash = false
+                caughtException = false
             }
 
             override fun report(crash: Crash.NativeCodeCrash) {
                 exceptionCrash = false
                 nativeCrash = true
+                caughtException = false
+            }
+
+            override fun report(throwable: Throwable) {
+                exceptionCrash = false
+                nativeCrash = false
+                caughtException = true
             }
         }
 
@@ -191,6 +201,7 @@ class CrashReporterTest {
 
         assertTrue(exceptionCrash)
         assertFalse(nativeCrash)
+        assertFalse(caughtException)
 
         reporter.onCrash(
             mock(),
@@ -199,6 +210,13 @@ class CrashReporterTest {
 
         assertFalse(exceptionCrash)
         assertTrue(nativeCrash)
+        assertFalse(caughtException)
+
+        reporter.submitCaughtException(RuntimeException()).joinBlocking()
+
+        assertFalse(exceptionCrash)
+        assertFalse(nativeCrash)
+        assertTrue(caughtException)
     }
 
     @Test

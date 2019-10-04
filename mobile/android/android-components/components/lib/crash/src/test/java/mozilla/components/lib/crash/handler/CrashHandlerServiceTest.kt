@@ -42,6 +42,10 @@ class CrashHandlerServiceTest {
                 override fun report(crash: Crash.NativeCodeCrash) {
                     caughtCrash = crash
                 }
+
+                override fun report(throwable: Throwable) {
+                    fail("Didn't expect caught exception")
+                }
             })
         ).install(testContext)
 

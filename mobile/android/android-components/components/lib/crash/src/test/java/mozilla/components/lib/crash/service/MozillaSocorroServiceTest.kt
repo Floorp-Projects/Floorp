@@ -13,6 +13,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -31,13 +32,13 @@ class MozillaSocorroServiceTest {
             testContext,
             "Test App"
         ))
-        doNothing().`when`(service).sendReport(any(), any(), any())
+        doNothing().`when`(service).sendReport(any(), any(), any(), anyBoolean())
 
         val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
         service.report(crash)
 
         verify(service).report(crash)
-        verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath)
+        verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath, false)
     }
 
     @Test
@@ -46,13 +47,28 @@ class MozillaSocorroServiceTest {
             testContext,
             "Test App"
         ))
-        doNothing().`when`(service).sendReport(any(), any(), any())
+        doNothing().`when`(service).sendReport(any(), any(), any(), anyBoolean())
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
         service.report(crash)
 
         verify(service).report(crash)
-        verify(service).sendReport(crash.throwable, null, null)
+        verify(service).sendReport(crash.throwable, null, null, false)
+    }
+
+    @Test
+    fun `MozillaSocorroService send caught exception`() {
+        val service = spy(MozillaSocorroService(
+                testContext,
+                "Test App"
+        ))
+        doNothing().`when`(service).sendReport(any(), any(), any(), anyBoolean())
+
+        val throwable = RuntimeException("Test")
+        service.report(throwable)
+
+        verify(service).report(throwable)
+        verify(service).sendReport(throwable, null, null, true)
     }
 
     @Test
@@ -86,7 +102,41 @@ class MozillaSocorroServiceTest {
         assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
 
         verify(service).report(crash)
-        verify(service).sendReport(crash.throwable, null, null)
+        verify(service).sendReport(crash.throwable, null, null, false)
+    }
+
+    @Test
+    fun `MozillaSocorroService caught exception request is correct`() {
+        var mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(200)
+                .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"))
+        mockWebServer.start()
+        val serverUrl = mockWebServer.url("/")
+        val service = spy(MozillaSocorroService(
+                testContext,
+                "Test App",
+                serverUrl.toString()
+        ))
+
+        val throwable = RuntimeException("Test")
+        service.report(throwable)
+
+        val fileInputStream = ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
+        val inputStream = GZIPInputStream(fileInputStream)
+        val reader = InputStreamReader(inputStream)
+        val bufferedReader = BufferedReader(reader)
+        var request = bufferedReader.readText()
+
+        assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
+        assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
+        assert(request.contains("name=ProductID\r\n\r\n{aa3c5121-dab2-40e2-81ca-7ea25febc110}"))
+        assert(request.contains("name=Vendor\r\n\r\nMozilla"))
+        assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
+        assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
+        assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
+
+        verify(service).report(throwable)
+        verify(service).sendReport(throwable, null, null, true)
     }
 
     @Test
@@ -107,7 +157,7 @@ class MozillaSocorroServiceTest {
 
         mockWebServer.shutdown()
         verify(service).report(crash)
-        verify(service).sendReport(crash.throwable, null, null)
+        verify(service).sendReport(crash.throwable, null, null, false)
     }
 
     @Test
@@ -122,12 +172,12 @@ class MozillaSocorroServiceTest {
                 serverUrl.toString()
         ))
 
-        val crash = Crash.NativeCodeCrash("", true, "", false, arrayListOf())
+        val crash = Crash.NativeCodeCrash(null, true, null, false, arrayListOf())
         service.report(crash)
         mockWebServer.shutdown()
 
         verify(service).report(crash)
-        verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath)
+        verify(service).sendReport(null, crash.minidumpPath, crash.extrasPath, false)
     }
 
     @Test

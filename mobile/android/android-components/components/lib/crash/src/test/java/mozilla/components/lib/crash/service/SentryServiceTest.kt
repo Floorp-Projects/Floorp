@@ -9,6 +9,7 @@ import io.sentry.SentryClient
 import io.sentry.SentryClientFactory
 import io.sentry.context.Context
 import io.sentry.dsn.Dsn
+import io.sentry.event.EventBuilder
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.Breadcrumb
 import mozilla.components.lib.crash.CrashReporter
@@ -21,6 +22,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.spy
@@ -35,7 +37,7 @@ class SentryServiceTest {
         var usedDsn: Dsn? = null
 
         val client: SentryClient = mock()
-        val uncaughtExceptionCrash: Crash.UncaughtExceptionCrash = mock()
+        val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(RuntimeException("test"), arrayListOf())
         val factory = object : SentryClientFactory() {
             override fun createSentryClient(dsn: Dsn?): SentryClient {
                 usedDsn = dsn
@@ -64,7 +66,7 @@ class SentryServiceTest {
     }
 
     @Test
-    fun `SentryService forwards uncaught exceptions to client`() {
+    fun `SentryService forwards uncaught exception to client`() {
         val client: SentryClient = mock()
 
         val factory = object : SentryClientFactory() {
@@ -79,7 +81,26 @@ class SentryServiceTest {
         val exception = RuntimeException("Hello World")
         service.report(Crash.UncaughtExceptionCrash(exception, arrayListOf()))
 
-        verify(client).sendException(exception)
+        verify(client).sendEvent(ArgumentMatchers.any(EventBuilder::class.java))
+    }
+
+    @Test
+    fun `SentryService forwards caught exception to client`() {
+        val client: SentryClient = mock()
+
+        val factory = object : SentryClientFactory() {
+            override fun createSentryClient(dsn: Dsn?): SentryClient = client
+        }
+
+        val service = SentryService(
+                testContext,
+                "https://not:real6@sentry.prod.example.net/405",
+                clientFactory = factory)
+
+        val exception = RuntimeException("Hello World")
+        service.report(exception)
+
+        verify(client).sendEvent(ArgumentMatchers.any(EventBuilder::class.java))
     }
 
     @Test
@@ -118,7 +139,7 @@ class SentryServiceTest {
     @Test
     fun `SentryService adds default tags`() {
         val client: SentryClient = mock()
-        val uncaughtExceptionCrash: Crash.UncaughtExceptionCrash = mock()
+        val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(RuntimeException("test"), arrayListOf())
         SentryService(
             testContext,
             "https://not:real6@sentry.prod.example.net/405",
@@ -135,13 +156,14 @@ class SentryServiceTest {
     fun `SentryService passes an environment or null`() {
         val client: SentryClient = mock()
         val environmentString = "production"
-        val uncaughtExceptionCrash: Crash.UncaughtExceptionCrash = mock()
+        val uncaughtExceptionCrash = Crash.UncaughtExceptionCrash(RuntimeException("test"), arrayListOf())
         SentryService(testContext,
                 "https://fake:notreal@sentry.prod.example.net/405",
                 clientFactory = object : SentryClientFactory() {
                     override fun createSentryClient(dsn: Dsn?): SentryClient = client
                 },
-                environment = environmentString).report(uncaughtExceptionCrash)
+                environment = environmentString
+        ).report(uncaughtExceptionCrash)
         verify(client).environment = eq(environmentString)
 
         SentryService(testContext,

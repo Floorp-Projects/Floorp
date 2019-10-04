@@ -18,6 +18,12 @@ permalink: /changelog/
 * **concept-engine**
   * Added `WebAppManifest.ShareTarget` data class.
 
+* **lib-crash**
+  * Now supports sending caught exceptions.  Use the 'submitCaughtException()' to send caught exceptions if the underlying crash reporter service supports it.
+  ```Kotlin
+  val job = crashReporter.submitCaughtException(e)
+  ```
+
 # 16.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v15.0.0...v16.0.0)

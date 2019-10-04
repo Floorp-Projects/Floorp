@@ -63,9 +63,9 @@ sealed class Crash {
      *                   may be able to recover.
      */
     data class NativeCodeCrash(
-        val minidumpPath: String,
+        val minidumpPath: String?,
         val minidumpSuccess: Boolean,
-        val extrasPath: String,
+        val extrasPath: String?,
         val isFatal: Boolean,
         val breadcrumbs: ArrayList<Breadcrumb>
     ) : Crash() {
@@ -79,9 +79,9 @@ sealed class Crash {
 
         companion object {
             internal fun fromBundle(bundle: Bundle) = NativeCodeCrash(
-                bundle.getString(INTENT_MINIDUMP_PATH, ""),
+                bundle.getString(INTENT_MINIDUMP_PATH, null),
                 bundle.getBoolean(INTENT_MINIDUMP_SUCCESS, false),
-                bundle.getString(INTENT_EXTRAS_PATH, ""),
+                bundle.getString(INTENT_EXTRAS_PATH, null),
                 bundle.getBoolean(INTENT_FATAL, false),
                 bundle.getParcelableArrayList(INTENT_BREADCRUMBS) ?: arrayListOf()
             )

@@ -17,6 +17,7 @@ crash_metrics:
       types of crashes handled by lib-crash.
     labels:
       - uncaught_exception
+      - caught_exception
       - native_code_crash
     bugs:
       - https://bugzilla.mozilla.org/1553935

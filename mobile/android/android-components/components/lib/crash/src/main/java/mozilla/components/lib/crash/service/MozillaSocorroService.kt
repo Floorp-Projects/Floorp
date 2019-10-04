@@ -28,8 +28,9 @@ import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPOutputStream
 import kotlin.random.Random
 
-private val defaultServerUrl = "https://crash-reports.mozilla.com/submit?" +
+private const val DEFAULT_SERVER_URL = "https://crash-reports.mozilla.com/submit?" +
         "id=${BuildConfig.MOZ_APP_ID}&version=${BuildConfig.MOZILLA_VERSION}&${BuildConfig.MOZ_APP_BUILDID}"
+
 /**
  * A [CrashReporterService] implementation uploading crash reports to crash-stats.mozilla.com.
  *
@@ -43,21 +44,30 @@ private val defaultServerUrl = "https://crash-reports.mozilla.com/submit?" +
 class MozillaSocorroService(
     private val applicationContext: Context,
     private val appName: String,
-    private val serverUrl: String = defaultServerUrl
+    private val serverUrl: String = DEFAULT_SERVER_URL
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
 
     override fun report(crash: Crash.UncaughtExceptionCrash) {
-        sendReport(crash.throwable, null, null)
+        sendReport(crash.throwable, null, null, false)
     }
 
     override fun report(crash: Crash.NativeCodeCrash) {
-        sendReport(null, crash.minidumpPath, crash.extrasPath)
+        sendReport(null, crash.minidumpPath, crash.extrasPath, false)
+    }
+
+    override fun report(throwable: Throwable) {
+        sendReport(throwable, null, null, true)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun sendReport(throwable: Throwable?, miniDumpFilePath: String?, extrasFilePath: String?) {
+    internal fun sendReport(
+        throwable: Throwable?,
+        miniDumpFilePath: String?,
+        extrasFilePath: String?,
+        isCaughtException: Boolean
+    ) {
         val serverUrl = URL(serverUrl)
         val boundary = generateBoundary()
         var conn: HttpURLConnection? = null
@@ -69,7 +79,8 @@ class MozillaSocorroService(
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
             conn.setRequestProperty("Content-Encoding", "gzip")
 
-            sendCrashData(conn.outputStream, boundary, throwable, miniDumpFilePath, extrasFilePath)
+            sendCrashData(conn.outputStream, boundary, throwable, miniDumpFilePath, extrasFilePath,
+                    isCaughtException)
 
             BufferedReader(InputStreamReader(conn.inputStream)).use {
                 val response = StringBuffer()
@@ -88,12 +99,14 @@ class MozillaSocorroService(
         }
     }
 
+    @Suppress("LongParameterList")
     private fun sendCrashData(
         os: OutputStream,
         boundary: String,
         throwable: Throwable?,
         miniDumpFilePath: String?,
-        extrasFilePath: String?
+        extrasFilePath: String?,
+        isCaughtException: Boolean
     ) {
         val nameSet = mutableSetOf<String>()
         val gzipOs = GZIPOutputStream(os)
@@ -109,7 +122,8 @@ class MozillaSocorroService(
         }
 
         throwable?.let {
-            sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(it), nameSet)
+            sendPart(gzipOs, boundary, "JavaStackTrace", getExceptionStackTrace(it,
+                    isCaughtException), nameSet)
         }
 
         miniDumpFilePath?.let {
@@ -263,12 +277,15 @@ class MozillaSocorroService(
         return map
     }
 
-    private fun getExceptionStackTrace(throwable: Throwable): String {
+    private fun getExceptionStackTrace(throwable: Throwable, isCaughtException: Boolean): String {
         val stringWriter = StringWriter()
         val printWriter = PrintWriter(stringWriter)
         throwable.printStackTrace(printWriter)
         printWriter.flush()
 
-        return stringWriter.toString()
+        return when (isCaughtException) {
+            true -> "$INFO_PREFIX $stringWriter"
+            false -> stringWriter.toString()
+        }
     }
 }

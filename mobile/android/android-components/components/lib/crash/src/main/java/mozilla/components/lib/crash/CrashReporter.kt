@@ -9,6 +9,10 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.lib.crash.handler.ExceptionHandler
 import mozilla.components.lib.crash.notification.CrashNotification
 import mozilla.components.lib.crash.prompt.CrashPrompt
@@ -84,6 +88,19 @@ class CrashReporter(
         }
 
         logger.info("Crash report submitted to ${services.size} services")
+    }
+
+    /**
+     * Submit a caught exception report to all registered services.
+     */
+    fun submitCaughtException(throwable: Throwable): Job {
+        logger.info("Caught Exception report submitted to ${services.size} services")
+
+        return GlobalScope.launch(Dispatchers.IO) {
+            services.forEach {
+                it.report(throwable)
+            }
+        }
     }
 
     /**

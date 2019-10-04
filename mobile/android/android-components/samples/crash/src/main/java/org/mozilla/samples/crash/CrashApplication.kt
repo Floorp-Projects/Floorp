@@ -58,13 +58,19 @@ private fun createDummyCrashService(context: Context): CrashReporterService {
     return object : CrashReporterService {
         override fun report(crash: Crash.UncaughtExceptionCrash) {
             GlobalScope.launch(Dispatchers.Main) {
-                Toast.makeText(context, "Uploading uncaught exception crash..", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Uploading uncaught exception crash...", Toast.LENGTH_SHORT).show()
             }
         }
 
         override fun report(crash: Crash.NativeCodeCrash) {
             GlobalScope.launch(Dispatchers.Main) {
-                Toast.makeText(context, "Uploading native crash..", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Uploading native crash...", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        override fun report(throwable: Throwable) {
+            GlobalScope.launch(Dispatchers.Main) {
+                Toast.makeText(context, "Uploading caught exception...", Toast.LENGTH_SHORT).show()
             }
         }
     }
