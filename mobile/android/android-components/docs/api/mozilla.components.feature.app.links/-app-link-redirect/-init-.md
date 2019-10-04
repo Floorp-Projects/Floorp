@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AppLinkRedirect(appIntent: <ERROR CLASS>?, webUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, isFallback: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)`
+`AppLinkRedirect(appIntent: <ERROR CLASS>?, webUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?, isFallback: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, info: <ERROR CLASS>? = null)`
 
 Data class for the external Intent or fallback URL a given URL encodes for.
 

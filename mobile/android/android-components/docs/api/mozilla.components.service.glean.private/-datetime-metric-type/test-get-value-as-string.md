@@ -2,7 +2,7 @@
 
 # testGetValueAsString
 
-`fun testGetValueAsString(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/DatetimeMetricType.kt#L107)
+`@JvmOverloads fun testGetValueAsString(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/DatetimeMetricType.kt#L110)
 
 Returns the string representation of the stored value for testing purposes only. This
 function will attempt to await the last task (if any) writing to the the metric's storage

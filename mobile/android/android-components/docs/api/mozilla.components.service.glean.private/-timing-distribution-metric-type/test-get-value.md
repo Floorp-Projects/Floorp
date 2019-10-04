@@ -2,7 +2,7 @@
 
 # testGetValue
 
-`fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`FunctionalHistogram`](../../mozilla.components.service.glean.histogram/-functional-histogram/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L149)
+`@JvmOverloads fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = sendInPings.first()): `[`FunctionalHistogram`](../../mozilla.components.service.glean.histogram/-functional-histogram/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L151)
 
 Returns the stored value for testing purposes only. This function will attempt to await the
 last task (if any) writing to the the metric's storage engine before returning a value.
