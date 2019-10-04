@@ -20,33 +20,27 @@
 
   <script src="chrome://global/content/printProgress.js"/>
 
-    <grid flex="1">
-      <columns>
-        <column/>
-        <column/>
-        <column/>
-      </columns>
+  <box style="display: grid; grid-template-columns: auto 1fr auto;" flex="1">
+    <!-- First row -->
+    <hbox pack="end">
+      <label id="dialog.titleLabel" data-l10n-id="print-title"/>
+    </hbox>
+    <label id="dialog.title"/>
+    <spacer/>
 
-      <rows>
-        <row>
-          <hbox pack="end">
-            <label id="dialog.titleLabel" data-l10n-id="print-title"/>
-          </hbox>
-            <label id="dialog.title"/>
-        </row>
-        <row class="thin-separator">
-          <hbox pack="end">
-            <html:label id="dialog.progressLabel" for="dialog.progress"
-                        style="margin-right: 1em;" data-l10n-id="progress"></html:label>
-          </hbox>
-          <label id="dialog.tempLabel" data-l10n-id="print-preparing"/>
-          <vbox pack="center" id="dialog.progressBox">
-            <html:progress id="dialog.progress" value="0" max="100"></html:progress>
-          </vbox>
-          <hbox pack="end" style="min-width: 2.5em;">
-            <label id="dialog.progressText"/>
-          </hbox>
-        </row>
-      </rows>
-    </grid>
+    <!-- Second row -->
+    <hbox pack="end">
+      <html:label id="dialog.progressLabel" for="dialog.progress"
+                  style="margin-right: 1em;" data-l10n-id="progress"/>
+    </hbox>
+    <box>
+      <label id="dialog.tempLabel" data-l10n-id="print-preparing"/>
+      <vbox pack="center" id="dialog.progressBox" flex="1">
+        <html:progress id="dialog.progress" value="0" max="100" style="width: 100%;"/>
+      </vbox>
+    </box>
+    <hbox pack="end" style="min-width: 2.5em;">
+      <label id="dialog.progressText"/>
+    </hbox>
+  </box>
 </dialog>

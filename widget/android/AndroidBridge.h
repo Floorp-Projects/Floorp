@@ -113,6 +113,7 @@ class AndroidBridge final {
   void GetExtensionFromMimeType(const nsACString& aMimeType,
                                 nsACString& aFileExt);
 
+  gfx::Rect getScreenSize();
   int GetScreenDepth();
 
   void Vibrate(const nsTArray<uint32_t>& aPattern);

@@ -2031,10 +2031,10 @@ void nsChildView::PostRender(WidgetRenderingContext* aContext) {
       compositingState->mNativeLayerChangesPending = true;
     } else {
       // Force a CoreAnimation layer tree update from this thread.
-      [CATransaction begin];
+      [NSAnimationContext beginGrouping];
       mNativeLayerRoot->ApplyChanges();
       compositingState->mNativeLayerChangesPending = false;
-      [CATransaction commit];
+      [NSAnimationContext endGrouping];
     }
   } else {
     UniquePtr<GLManager> manager(GLManager::CreateGLManager(aContext->mLayerManager));

@@ -9,10 +9,15 @@ const { FxAccounts } = ChromeUtils.import(
 const { FxAccountsClient } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsClient.jsm"
 );
+const { FxAccountsDevice } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsDevice.jsm"
+);
 const {
   ERRNO_DEVICE_SESSION_CONFLICT,
   ERRNO_TOO_MANY_CLIENT_REQUESTS,
   ERRNO_UNKNOWN_DEVICE,
+  ON_DEVICE_CONNECTED_NOTIFICATION,
+  ON_DEVICE_DISCONNECTED_NOTIFICATION,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 var { AccountState } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm",
@@ -119,9 +124,6 @@ async function MockFxAccounts(credentials, device = {}) {
       storage.initialize(creds);
       return new AccountState(storage);
     },
-    async availableCommands() {
-      return {};
-    },
     fxAccountsClient: new MockFxAccountsClient(device),
     fxaPushService: {
       registerPushEndpoint() {
@@ -141,7 +143,14 @@ async function MockFxAccounts(credentials, device = {}) {
         return Promise.resolve();
       },
     },
-    DEVICE_REGISTRATION_VERSION,
+    commands: {
+      async availableCommands() {
+        return {};
+      },
+    },
+    device: {
+      DEVICE_REGISTRATION_VERSION,
+    },
   });
   await fxa._internal.setSignedInUser(credentials);
   Services.prefs.setStringPref(
@@ -497,7 +506,7 @@ add_task(
         email: credentials.email,
         registrationVersion: DEVICE_REGISTRATION_VERSION,
       });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("bar");
@@ -528,7 +537,7 @@ add_task(
           registeredCommandsKeys: [],
         },
       });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
@@ -557,7 +566,7 @@ add_task(
         registeredCommandsKeys: [],
       },
     });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       return Promise.resolve("bar");
     };
@@ -578,7 +587,7 @@ add_task(
     const spy = { count: 0, args: [] };
     fxa._internal.currentAccountState.getUserAccountData = () =>
       Promise.resolve({ device: { id: "wibble" } });
-    fxa._internal._registerOrUpdateDevice = function() {
+    fxa._internal.device._registerOrUpdateDevice = function() {
       spy.count += 1;
       spy.args.push(arguments);
       return Promise.resolve("wibble");
@@ -631,10 +640,135 @@ add_task(async function test_devicelist_pushendpointexpired() {
     ]);
   };
 
-  await fxa.getDeviceList();
+  await fxa.device.refreshDeviceList();
 
   Assert.equal(spy.getDeviceList.count, 1);
   Assert.equal(spy.updateDevice.count, 1);
+});
+
+add_task(async function test_refreshDeviceList() {
+  let credentials = getTestUser("baz");
+
+  let storage = new MockStorageManager();
+  storage.initialize(credentials);
+  let state = new AccountState(storage);
+
+  let fxAccountsClient = new MockFxAccountsClient({
+    id: "deviceAAAAAA",
+    name: "iPhone",
+    type: "phone",
+    sessionToken: credentials.sessionToken,
+  });
+  let spy = {
+    getDeviceList: { count: 0 },
+  };
+  fxAccountsClient.getDeviceList = (function(old) {
+    return function getDeviceList() {
+      spy.getDeviceList.count += 1;
+      return old.apply(this, arguments);
+    };
+  })(fxAccountsClient.getDeviceList);
+  let fxai = {
+    _now: Date.now(),
+    fxAccountsClient,
+    now() {
+      return this._now;
+    },
+    withVerifiedAccountState(func) {
+      // Ensure `func` is called asynchronously.
+      return Promise.resolve().then(_ => func(state));
+    },
+    fxaPushService: null,
+  };
+  let device = new FxAccountsDevice(fxai);
+
+  Assert.equal(
+    device.recentDeviceList,
+    null,
+    "Should not have device list initially"
+  );
+  Assert.ok(await device.refreshDeviceList(), "Should refresh list");
+  Assert.deepEqual(
+    device.recentDeviceList,
+    [
+      {
+        id: "deviceAAAAAA",
+        name: "iPhone",
+        type: "phone",
+        isCurrentDevice: true,
+      },
+    ],
+    "Should fetch device list"
+  );
+  Assert.equal(
+    spy.getDeviceList.count,
+    1,
+    "Should make request to refresh list"
+  );
+  Assert.ok(
+    !(await device.refreshDeviceList()),
+    "Should not refresh device list if fresh"
+  );
+
+  fxai._now += device.TIME_BETWEEN_FXA_DEVICES_FETCH_MS;
+
+  let refreshPromise = device.refreshDeviceList();
+  let secondRefreshPromise = device.refreshDeviceList();
+  Assert.ok(
+    await Promise.all([refreshPromise, secondRefreshPromise]),
+    "Should refresh list if stale"
+  );
+  Assert.equal(
+    spy.getDeviceList.count,
+    2,
+    "Should only make one request if called with pending request"
+  );
+
+  device.observe(null, ON_DEVICE_CONNECTED_NOTIFICATION);
+  await device.refreshDeviceList();
+  Assert.equal(
+    spy.getDeviceList.count,
+    3,
+    "Should refresh device list after connecting new device"
+  );
+  device.observe(
+    null,
+    ON_DEVICE_DISCONNECTED_NOTIFICATION,
+    JSON.stringify({ isLocalDevice: false })
+  );
+  await device.refreshDeviceList();
+  Assert.equal(
+    spy.getDeviceList.count,
+    4,
+    "Should refresh device list after disconnecting device"
+  );
+  device.observe(
+    null,
+    ON_DEVICE_DISCONNECTED_NOTIFICATION,
+    JSON.stringify({ isLocalDevice: true })
+  );
+  await device.refreshDeviceList();
+  Assert.equal(
+    spy.getDeviceList.count,
+    4,
+    "Should not refresh device list after disconnecting this device"
+  );
+
+  let refreshBeforeResetPromise = device.refreshDeviceList({
+    ignoreCached: true,
+  });
+  device.reset();
+  await Assert.rejects(refreshBeforeResetPromise, /Another user has signed in/);
+
+  Assert.equal(
+    device.recentDeviceList,
+    null,
+    "Should clear device list after resetting"
+  );
+  Assert.ok(
+    await device.refreshDeviceList(),
+    "Should fetch new list after resetting"
+  );
 });
 
 function expandHex(two_hex) {

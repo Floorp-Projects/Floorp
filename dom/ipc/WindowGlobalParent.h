@@ -111,11 +111,6 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   bool HasBeforeUnload() { return mHasBeforeUnload; }
 
-  already_AddRefed<Promise> ChangeFrameRemoteness(dom::BrowsingContext* aBc,
-                                                  const nsAString& aRemoteType,
-                                                  uint64_t aPendingSwitchId,
-                                                  ErrorResult& aRv);
-
   already_AddRefed<mozilla::dom::Promise> DrawSnapshot(
       const DOMRect* aRect, double aScale, const nsAString& aBackgroundColor,
       mozilla::ErrorResult& aRv);

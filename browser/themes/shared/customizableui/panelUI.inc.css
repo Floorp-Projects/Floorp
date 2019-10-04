@@ -573,7 +573,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 /* Handle different UI states. */
 #appMenu-fxa-status[fxastatus="signedin"] > #appMenu-fxa-label > .toolbarbutton-icon,
-#appMenu-fxa-status:not([fxastatus="signedin"]) > #appMenu-fxa-avatar {
+#appMenu-fxa-status:not([fxastatus="signedin"]) > #appMenu-fxa-avatar,
+:root:not([fxastatus="signedin"]) #PanelUI-fxa-menu-syncnow-button {
   display: none;
 }
 

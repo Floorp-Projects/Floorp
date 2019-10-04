@@ -352,6 +352,30 @@ void glxtest() {
     }
   }
 
+  // Get monitor information
+
+  int screenCount = ScreenCount(dpy);
+  int defaultScreen = DefaultScreen(dpy);
+  if (screenCount != 0)
+  {
+    length += snprintf(buf + length, bufsize - length, "SCREEN_INFO\n");
+    if (length >= bufsize)
+        fatal_error("Screen Info strings length too large for buffer size");
+    for (int idx = 0; idx < screenCount; idx++)
+    {
+      Screen* scrn = ScreenOfDisplay(dpy, idx);
+      int current_height = scrn->height;
+      int current_width  = scrn->width;
+
+      length += snprintf(buf + length, bufsize - length, "%dx%d%s%s",
+                         current_width, current_height,
+                         idx == defaultScreen ? " default" : "",
+                         idx == screenCount -1 ? ";\n" : ";");
+      if (length >= bufsize)
+        fatal_error("Screen Info strings length too large for buffer size");
+    }
+  }
+
   ///// Clean up. Indeed, the parent process might fail to kill us (e.g. if it
   ///// doesn't need to check GL info) so we might be staying alive for longer
   ///// than expected, so it's important to consume as little memory as

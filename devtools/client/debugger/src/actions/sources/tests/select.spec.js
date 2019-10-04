@@ -190,14 +190,15 @@ describe("sources", () => {
   it("sets and clears pending selected location correctly", () => {
     const { dispatch, getState, cx } = createStore(mockCommandClient);
     const url = "testURL";
-    const options = { location: { line: "testLine" } };
+    const options = { line: "testLine", column: "testColumn" };
 
     // set value
     dispatch(actions.setPendingSelectedLocation(cx, url, options));
     const setResult = getState().sources.pendingSelectedLocation;
     expect(setResult).toEqual({
       url,
-      line: options.location.line,
+      line: options.line,
+      column: options.column,
     });
 
     // clear value

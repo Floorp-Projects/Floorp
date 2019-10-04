@@ -20,6 +20,7 @@ class RemoteIframeDocProxyAccessibleWrap;
 namespace dom {
 class BrowsingContext;
 class ContentChild;
+class BrowserBridgeHost;
 
 /**
  * BrowserBridgeChild implements the child actor part of the PBrowserBridge
@@ -32,7 +33,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   NS_INLINE_DECL_REFCOUNTING(BrowserBridgeChild, final);
 
   BrowserChild* Manager() {
-    MOZ_ASSERT(mIPCOpen);
+    MOZ_ASSERT(CanSend());
     return static_cast<BrowserChild*>(PBrowserBridgeChild::Manager());
   }
 
@@ -55,6 +56,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
+  already_AddRefed<BrowserBridgeHost> FinishInit();
+
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
   a11y::RemoteIframeDocProxyAccessibleWrap* GetEmbeddedDocAccessible() {
     return mEmbeddedDocAccessible;
@@ -65,12 +68,12 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   static BrowserBridgeChild* GetFrom(nsIContent* aContent);
 
+  BrowserBridgeChild(nsFrameLoader* aFrameLoader,
+                     BrowsingContext* aBrowsingContext, TabId aId);
+
  protected:
   friend class ContentChild;
   friend class PBrowserBridgeChild;
-
-  BrowserBridgeChild(nsFrameLoader* aFrameLoader,
-                     BrowsingContext* aBrowsingContext, TabId aId);
 
   mozilla::ipc::IPCResult RecvSetLayersId(
       const mozilla::layers::LayersId& aLayersId);
@@ -103,7 +106,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   TabId mId;
   LayersId mLayersId;
-  bool mIPCOpen;
   bool mHadInitialLoad = false;
   RefPtr<nsFrameLoader> mFrameLoader;
   RefPtr<BrowsingContext> mBrowsingContext;

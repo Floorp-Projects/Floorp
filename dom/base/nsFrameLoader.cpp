@@ -2129,12 +2129,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
 
   if (OwnerIsMozBrowserFrame()) {
     docShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
-  } else {
-    nsCOMPtr<nsIDocShellTreeItem> parentCheck;
-    docShell->GetInProcessSameTypeParent(getter_AddRefs(parentCheck));
-    if (!!parentCheck) {
-      docShell->SetIsFrame();
-    }
+  } else if (mBrowsingContext->GetParent()) {
+    docShell->SetIsFrame();
   }
 
   // Apply sandbox flags even if our owner is not an iframe, as this copies

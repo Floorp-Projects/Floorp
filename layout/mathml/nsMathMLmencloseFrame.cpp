@@ -9,6 +9,7 @@
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsPresContext.h"
@@ -105,9 +106,12 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation) {
     mNotationsToDraw += NOTATION_RIGHT;
     mNotationsToDraw += NOTATION_TOP;
   } else if (aNotation.EqualsLiteral("radical")) {
-    rv = AllocateMathMLChar(NOTATION_RADICAL);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mNotationsToDraw += NOTATION_RADICAL;
+    if (!StaticPrefs::mathml_deprecated_menclose_notation_radical_disabled()) {
+      mContent->OwnerDoc()->WarnOnceAbout(dom::Document::eMathML_DeprecatedMencloseNotationRadical);
+      rv = AllocateMathMLChar(NOTATION_RADICAL);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mNotationsToDraw += NOTATION_RADICAL;
+    }
   } else if (aNotation.EqualsLiteral("box")) {
     mNotationsToDraw += NOTATION_LEFT;
     mNotationsToDraw += NOTATION_RIGHT;

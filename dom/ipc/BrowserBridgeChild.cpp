@@ -4,11 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if defined(ACCESSIBILITY) && defined(XP_WIN)
-#  include "mozilla/a11y/ProxyAccessible.h"
-#  include "mozilla/a11y/ProxyWrappers.h"
+#ifdef ACCESSIBILITY
+#  ifdef XP_WIN
+#    include "mozilla/a11y/ProxyAccessible.h"
+#    include "mozilla/a11y/ProxyWrappers.h"
+#  endif
+#  include "mozilla/a11y/DocAccessible.h"
+#  include "mozilla/a11y/DocManager.h"
+#  include "mozilla/a11y/OuterDocAccessible.h"
 #endif
 #include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/BrowserBridgeHost.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "nsFocusManager.h"
@@ -29,7 +35,6 @@ BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader,
                                        TabId aId)
     : mId{aId},
       mLayersId{0},
-      mIPCOpen(true),
       mFrameLoader(aFrameLoader),
       mBrowsingContext(aBrowsingContext) {}
 
@@ -39,6 +44,27 @@ BrowserBridgeChild::~BrowserBridgeChild() {
     mEmbeddedDocAccessible->Shutdown();
   }
 #endif
+}
+
+already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit() {
+  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(owner->GetOwnerGlobal());
+  MOZ_DIAGNOSTIC_ASSERT(docShell);
+
+  nsDocShell::Cast(docShell)->OOPChildLoadStarted(this);
+
+#if defined(ACCESSIBILITY)
+  if (a11y::DocAccessible* docAcc =
+          a11y::GetExistingDocAccessible(owner->OwnerDoc())) {
+    if (a11y::Accessible* ownerAcc = docAcc->GetAccessible(owner)) {
+      if (a11y::OuterDocAccessible* outerAcc = ownerAcc->AsOuterDoc()) {
+        outerAcc->SendEmbedderAccessible(this);
+      }
+    }
+  }
+#endif  // defined(ACCESSIBILITY)
+
+  return MakeAndAddRef<BrowserBridgeHost>(this);
 }
 
 void BrowserBridgeChild::NavigateByKey(bool aForward,
@@ -216,8 +242,6 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvSubFrameCrashed(
 }
 
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
-  mIPCOpen = false;
-
   // Ensure we unblock our document's 'load' event (in case the OOP-iframe has
   // been removed before it finished loading, or its subprocess crashed):
   UnblockOwnerDocsLoadEvent();

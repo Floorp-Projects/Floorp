@@ -7,36 +7,43 @@
 
   <style>
   article {
-    column-count: 2;
-    width: 400px;
+    column-count: 1;
+    column-fill: auto;
+    width: 200px;
     background-color: lightgreen;
   }
   div.container {
+    height: auto;
     background-color: pink;
     border: 20px solid purple;
   }
   div.block {
-    /* This block spreads evenly into two columns, each has 100px height. */
     width: 100px;
-    height: 200px;
+    height: 100px;
     background-color: yellow;
   }
   div.column-span {
-    width: 400px;
+    width: 200px;
     height: 50px;
     background-color: lightblue;
   }
   </style>
 
   <article>
-    <div class="container" style="border-bottom: none; height: 200px; margin-top: 1em;">
+    <div class="container" style="border-bottom: 0;">
       <div class="block">block1</div>
     </div>
   </article>
   <div class="column-span">column-span1</div>
   <article>
-    <div class="container" style="border-top: none; height: 50px; margin-bottom: 1em;">
+    <div class="container" style="border-top: 0; border-bottom: 0;">
       <div class="block">block2</div>
+    </div>
+  </article>
+  <div class="column-span">column-span2</div>
+  <article>
+    <div class="container" style="border-top: 0;">
+      <div class="block">block3</div>
     </div>
   </article>
 </html>
