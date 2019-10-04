@@ -958,6 +958,12 @@ class MachCommandConditions(object):
         return MachCommandConditions.is_firefox(cls) or MachCommandConditions.is_android(cls)
 
     @staticmethod
+    def has_build(cls):
+        """Must have a build."""
+        return (MachCommandConditions.is_firefox_or_android(cls) or
+                MachCommandConditions.is_thunderbird(cls))
+
+    @staticmethod
     def is_hg(cls):
         """Must have a mercurial source checkout."""
         try:
