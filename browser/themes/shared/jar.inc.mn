@@ -144,6 +144,7 @@
   skin/classic/browser/fxa/send-to-device.svg                  (../shared/fxa/send-to-device.svg)
 
   skin/classic/browser/fxa/avatar.svg                          (../shared/fxa/avatar.svg)
+  skin/classic/browser/fxa/avatar-alert.svg                    (../shared/fxa/avatar-alert.svg)
   skin/classic/browser/fxa/avatar-color.svg                    (../shared/fxa/avatar-color.svg)
   skin/classic/browser/fxa/avatar-confirm.svg                  (../shared/fxa/avatar-confirm.svg)
   skin/classic/browser/fxa/avatar-empty.svg                    (../shared/fxa/avatar-empty.svg)
