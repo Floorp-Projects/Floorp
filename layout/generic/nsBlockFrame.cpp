@@ -6799,6 +6799,23 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
             aLineArea.Intersects(aBuilder->GetVisibleRect()));
   };
 
+  // We'll try to draw an accessibility backplate behind text
+  // (to ensure it's readable over any possible background-images),
+  // if all of the following hold:
+  //    (A) the backplate feature is preffed on
+  //    (B) we are in high-contrast mode [by browser setting or
+  //        windows setting]
+  //    (C) this is web content (not chrome) -- mUseAccessibilityTheme
+  //        already checks this, so we check IsChrome() explicitly
+  //        in the browser_display_document_color_use == 2 case.
+  const bool shouldDrawBackplate =
+      StaticPrefs::browser_display_permit_backplate() &&
+      (((PresContext()->PrefSheetPrefs().mUseAccessibilityTheme &&
+         StaticPrefs::browser_display_document_color_use() == 0) ||
+        (StaticPrefs::browser_display_document_color_use() == 2 &&
+         !PresContext()->IsChrome())) &&
+       !IsComboboxControlFrame());
+
   // Don't use the line cursor if we might have a descendant placeholder ...
   // it might skip lines that contain placeholders but don't themselves
   // intersect with the dirty area.
@@ -6809,7 +6826,12 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   // Also skip the cursor if we're creating text overflow markers,
   // since we need to know what line number we're up to in order
   // to generate unique display item keys.
-  nsLineBox* cursor = (hasDescendantPlaceHolders || textOverflow.isSome())
+  // Lastly, the cursor should be skipped if we're drawing
+  // backplates behind text. When backplating we consider consecutive
+  // runs of text as a whole, which requires we iterate through all lines
+  // to find our backplate size.
+  nsLineBox* cursor = (hasDescendantPlaceHolders || textOverflow.isSome() ||
+                       shouldDrawBackplate)
                           ? nullptr
                           : GetFirstLineContaining(aBuilder->GetDirtyRect().y);
   LineIterator line_end = LinesEnd();
@@ -6838,6 +6860,14 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     uint32_t lineCount = 0;
     nscoord lastY = INT32_MIN;
     nscoord lastYMost = INT32_MIN;
+    nsRect curBackplateArea;
+    // A frame's display list cannot contain more than one copy of a
+    // given display item unless the items are uniquely identifiable.
+    // Because backplate occasionally requires multiple
+    // SolidColor items, we use an index (backplateIndex) to maintain
+    // uniqueness among them. Note this is a mapping of index to
+    // item, and the mapping is stable even if the dirty rect changes.
+    uint16_t backplateIndex = 0;
     for (LineIterator line = LinesBegin(); line != line_end; ++line) {
       const nsRect lineArea = line->GetVisualOverflowArea();
       const bool lineInLine = line->IsInline();
@@ -6847,18 +6877,46 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                     lineCount, depth, drawnLines);
       }
 
+      if (!lineInLine && !curBackplateArea.IsEmpty()) {
+        // If we have encountered a non-inline line, but were previously forming
+        // a backplate, we should add the backplate to the display list as-is
+        // and render future backplates disjointly.
+        MOZ_ASSERT(shouldDrawBackplate,
+                   "if this master switch is off, curBackplateArea "
+                   "must be empty and we shouldn't get here");
+        aLists.BorderBackground()->AppendNewToTop<nsDisplaySolidColor>(
+            aBuilder, this, curBackplateArea,
+            PresContext()->DefaultBackgroundColor(), backplateIndex);
+        backplateIndex++;
+
+        curBackplateArea = nsRect();
+      }
+
       if (!lineArea.IsEmpty()) {
         if (lineArea.y < lastY || lineArea.YMost() < lastYMost) {
           nonDecreasingYs = false;
         }
         lastY = lineArea.y;
         lastYMost = lineArea.YMost();
+        if (lineInLine && shouldDrawBackplate) {
+          nsRect lineBackplate = lineArea + aBuilder->ToReferenceFrame(this);
+          if (curBackplateArea.IsEmpty()) {
+            curBackplateArea = lineBackplate;
+          } else {
+            curBackplateArea.OrWith(lineBackplate);
+          }
+        }
       }
       lineCount++;
     }
 
     if (nonDecreasingYs && lineCount >= MIN_LINES_NEEDING_CURSOR) {
       SetupLineCursor();
+    }
+    if (!curBackplateArea.IsEmpty()) {
+      aLists.BorderBackground()->AppendNewToTop<nsDisplaySolidColor>(
+          aBuilder, this, curBackplateArea,
+          PresContext()->DefaultBackgroundColor(), backplateIndex);
     }
   }
 

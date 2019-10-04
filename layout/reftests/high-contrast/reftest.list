@@ -1,0 +1,17 @@
+# This pref enables high-contrast mode in the testcases here:
+default-preferences test-pref(browser.display.document_color_use,2) test-pref(browser.display.permit_backplate,true)
+
+# There are several platform-specific fuzzy-if notations below due to
+# anti-aliasing, extra visual overflow, and slightly inacurrate reftest
+# mocking. You can read more about the annotations and their specifics here:
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1539212#c25
+
+fuzzy-if(cocoaWidget,255-255,48-48) == backplate-bg-image-001.html backplate-bg-image-001-ref.html # bug 1577028
+fuzzy-if(cocoaWidget,255-255,24-24) == backplate-bg-image-002.html backplate-bg-image-002-ref.html
+fuzzy-if(cocoaWidget,255-255,34-34) == backplate-bg-image-003.html backplate-bg-image-003-ref.html
+== backplate-bg-image-004.html backplate-bg-image-004-ref.html
+fuzzy-if(cocoaWidget,255-255,96-96) == backplate-bg-image-005.html backplate-bg-image-005-ref.html
+fuzzy-if(cocoaWidget,255-255,1384-1384) fuzzy-if(winWidget,30-48,48-48) == backplate-bg-image-006.html backplate-bg-image-006-ref.html # bug 1578917
+fuzzy-if(cocoaWidget,255-255,52-52) fuzzy-if(winWidget,15-15,48-48) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
+fuzzy-if(cocoaWidget,255-255,2842-2842) fuzzy-if(gtkWidget,255-255,620-620) fuzzy-if(winWidget||Android,255-255,480-480) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
+fuzzy-if(cocoaWidget,255-255,504-504) fuzzy-if(gtkWidget,255-255,1050-1050) fuzzy-if(winWidget||Android,255-255,480-480) == backplate-bg-image-009.html backplate-bg-image-009-ref.html
