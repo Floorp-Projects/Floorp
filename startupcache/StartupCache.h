@@ -109,6 +109,9 @@ class StartupCache : public nsIMemoryReporter {
 
   // StartupCache methods. See above comments for a more detailed description.
 
+  // true if the archive has an entry for the buffer or not.
+  bool HasEntry(const char* id);
+
   // Returns a buffer that was previously stored, caller takes ownership.
   nsresult GetBuffer(const char* id, UniquePtr<char[]>* outbuf,
                      uint32_t* length);
