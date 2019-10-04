@@ -194,7 +194,14 @@ class PageAction {
   // This is called when the popup closes as a result of interaction _outside_
   // the popup, e.g. by hitting <esc>
   _popupStateChange(state) {
-    if (["dismissed", "removed"].includes(state)) {
+    if (state === "shown") {
+      if (this._autoFocus) {
+        this.window.document.commandDispatcher.advanceFocusIntoSubtree(
+          this.currentNotification.owner.panel
+        );
+        this._autoFocus = false;
+      }
+    } else if (["dismissed", "removed"].includes(state)) {
       this._collapse();
       if (this.currentNotification) {
         this.window.PopupNotifications.remove(this.currentNotification);
@@ -625,6 +632,15 @@ class PageAction {
         },
       },
     ];
+
+    // If the recommendation button is focused, it was probably activated via
+    // the keyboard. Therefore, focus the first element in the notification when
+    // it appears.
+    // We don't use the autofocus option provided by PopupNotifications.show
+    // because it doesn't focus the first element; i.e. the user still has to
+    // press tab once. That's not good enough, especially for screen reader
+    // users. Instead, we handle this ourselves in _popupStateChange.
+    this._autoFocus = this.window.document.activeElement === this.container;
 
     // Actually show the notification
     this.currentNotification = this.window.PopupNotifications.show(
