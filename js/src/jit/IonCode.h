@@ -598,11 +598,10 @@ struct IonScriptCounts {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
     size_t size = 0;
     auto currCounts = this;
-    while (currCounts) {
-      const IonScriptCounts* currCount = currCounts;
-      currCounts = currCount->previous_;
-      size += currCount->sizeOfOneIncludingThis(mallocSizeOf);
-    }
+    do {
+      size += currCounts->sizeOfOneIncludingThis(mallocSizeOf);
+      currCounts = currCounts->previous_;
+    } while (currCounts);
     return size;
   }
 

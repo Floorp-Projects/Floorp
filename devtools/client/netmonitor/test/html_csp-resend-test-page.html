@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src *; script-src 'unsafe-inline'">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Tests 'Edit and Resend' requests re-uses the same content-type</title>
+  </head>
+  <body>
+    The image will be allowed to load by the CSP.<br/>
+    <img id="test-img"></img><br/>
+    <script type="text/javascript">
+      /* exported performRequests */
+      "use strict";
+
+      function performRequests() {
+        const testImg = document.getElementById("test-img");
+        testImg.src = "test-image.png";
+      }
+
+    </script>
+  </body>
+</html>
