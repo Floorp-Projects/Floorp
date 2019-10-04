@@ -49,10 +49,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
  public:
   class Session;
 
-  MediaRecorder(DOMMediaStream& aSourceMediaTrack,
-                nsPIDOMWindowInner* aOwnerWindow);
-  MediaRecorder(AudioNode& aSrcAudioNode, uint32_t aSrcOutput,
-                nsPIDOMWindowInner* aOwnerWindow);
+  explicit MediaRecorder(nsPIDOMWindowInner* aOwnerWindow);
 
   static nsTArray<RefPtr<Session>> GetSessions();
 
@@ -79,7 +76,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // Extract encoded data Blob from MutableBlobStorage.
   void RequestData(ErrorResult& aResult);
   // Return the The DOMMediaStream passed from UA.
-  DOMMediaStream* Stream() const { return mDOMStream; }
+  DOMMediaStream* Stream() const { return mStream; }
   // Return the current encoding MIME type selected by the MediaEncoder.
   void GetMimeType(nsString& aMimeType);
   // The current state of the MediaRecorder object.
@@ -91,11 +88,11 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // Construct a recorder with a DOM media stream object as its source.
   static already_AddRefed<MediaRecorder> Constructor(
       const GlobalObject& aGlobal, DOMMediaStream& aStream,
-      const MediaRecorderOptions& aInitDict, ErrorResult& aRv);
+      const MediaRecorderOptions& aOptions, ErrorResult& aRv);
   // Construct a recorder with a Web Audio destination node as its source.
   static already_AddRefed<MediaRecorder> Constructor(
-      const GlobalObject& aGlobal, AudioNode& aSrcAudioNode,
-      uint32_t aSrcOutput, const MediaRecorderOptions& aInitDict,
+      const GlobalObject& aGlobal, AudioNode& aAudioNode,
+      uint32_t aAudioNodeOutput, const MediaRecorderOptions& aOptions,
       ErrorResult& aRv);
 
   /*
@@ -115,9 +112,8 @@ class MediaRecorder final : public DOMEventTargetHelper,
 
   NS_DECL_NSIDOCUMENTACTIVITY
 
-  uint32_t AudioBitsPerSecond() { return mAudioBitsPerSecond; }
-  uint32_t VideoBitsPerSecond() { return mVideoBitsPerSecond; }
-  uint32_t BitsPerSecond() { return mBitsPerSecond; }
+  uint32_t AudioBitsPerSecond() const { return mAudioBitsPerSecond; }
+  uint32_t VideoBitsPerSecond() const { return mVideoBitsPerSecond; }
 
  protected:
   virtual ~MediaRecorder();
@@ -131,7 +127,6 @@ class MediaRecorder final : public DOMEventTargetHelper,
   void NotifyError(nsresult aRv);
   // Set encoded MIME type.
   void SetMimeType(const nsString& aMimeType);
-  void SetOptions(const MediaRecorderOptions& aInitDict);
 
   MediaRecorder(const MediaRecorder& x) = delete;  // prevent bad usage
   // Remove session pointer.
@@ -142,23 +137,21 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // available at the time the error event is fired. Note, depending on when
   // this is called there may not be a JS stack to capture.
   void InitializeDomExceptions();
-  // Set the recorder state to inactive. This is needed to handle error states
-  // in the recorder where state must transition to inactive before full
-  // stoppage can be reached.
-  void ForceInactive();
+  // Runs the "Inactivate the recorder" algorithm.
+  void Inactivate();
   // Stop the recorder and its internal session. This should be used by
   // sessions that are in the process of being destroyed.
   void StopForSessionDestruction();
   // DOM wrapper for source media stream. Will be null when input is audio node.
-  RefPtr<DOMMediaStream> mDOMStream;
+  RefPtr<DOMMediaStream> mStream;
   // Source audio node. Will be null when input is a media stream.
   RefPtr<AudioNode> mAudioNode;
   // Source audio node's output index. Will be zero when input is a media
   // stream.
-  const uint32_t mAudioNodeOutput;
+  uint32_t mAudioNodeOutput = 0;
 
   // The current state of the MediaRecorder object.
-  RecordingState mState;
+  RecordingState mState = RecordingState::Inactive;
   // Hold the sessions reference and clean it when the DestroyRunnable for a
   // session is running.
   nsTArray<RefPtr<Session>> mSessions;
@@ -169,9 +162,9 @@ class MediaRecorder final : public DOMEventTargetHelper,
   // formats.
   nsString mMimeType;
 
-  uint32_t mAudioBitsPerSecond;
-  uint32_t mVideoBitsPerSecond;
-  uint32_t mBitsPerSecond;
+  uint32_t mAudioBitsPerSecond = 0;
+  uint32_t mVideoBitsPerSecond = 0;
+  Maybe<uint32_t> mConstrainedBitsPerSecond;
 
   // DOMExceptions that are created early and possibly thrown in NotifyError.
   // Creating them early allows us to capture the JS stack for which cannot be
