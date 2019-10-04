@@ -37,6 +37,8 @@ const getReceiveProfileFn = state => getInitializedValues(state).receiveProfile;
 const getSetRecordingPreferencesFn = state =>
   getInitializedValues(state).setRecordingPreferences;
 const getIsPopup = state => getInitializedValues(state).isPopup;
+const getSymbolTableGetter = state =>
+  getInitializedValues(state).getSymbolTableGetter;
 
 module.exports = {
   getRecordingState,
@@ -54,4 +56,5 @@ module.exports = {
   getReceiveProfileFn,
   getSetRecordingPreferencesFn,
   getIsPopup,
+  getSymbolTableGetter,
 };
