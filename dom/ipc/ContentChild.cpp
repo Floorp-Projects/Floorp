@@ -2122,11 +2122,30 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
   RefPtr<BrowserBridgeChild> browserBridge =
       new BrowserBridgeChild(aFrameLoader, aBrowsingContext, tabId);
 
+  nsDocShell::Cast(docShell)->OOPChildLoadStarted(browserBridge);
+
   browserChild->SendPBrowserBridgeConstructor(
       browserBridge, PromiseFlatString(aContext.PresentationURL()), aRemoteType,
       aBrowsingContext, chromeFlags, tabId);
+  browserBridge->mIPCOpen = true;
 
-  return browserBridge->FinishInit();
+#if defined(ACCESSIBILITY)
+  a11y::DocAccessible* docAcc =
+      a11y::GetExistingDocAccessible(owner->OwnerDoc());
+  if (docAcc) {
+    a11y::Accessible* ownerAcc = docAcc->GetAccessible(owner);
+    if (ownerAcc) {
+      a11y::OuterDocAccessible* outerAcc = ownerAcc->AsOuterDoc();
+      if (outerAcc) {
+        outerAcc->SendEmbedderAccessible(browserBridge);
+      }
+    }
+  }
+#endif  // defined(ACCESSIBILITY)
+
+  RefPtr<BrowserBridgeHost> browserBridgeHost =
+      new BrowserBridgeHost(browserBridge);
+  return browserBridgeHost.forget();
 }
 
 PScriptCacheChild* ContentChild::AllocPScriptCacheChild(

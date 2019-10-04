@@ -54,6 +54,11 @@ interface WindowGlobalParent {
   [Throws]
   JSWindowActorParent getActor(DOMString name);
 
+  [Throws]
+  Promise<unsigned long long> changeFrameRemoteness(
+    BrowsingContext? bc, DOMString remoteType,
+    unsigned long long pendingSwitchId);
+
   /**
    * Renders a region of the frame into an image bitmap.
    *
