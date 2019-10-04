@@ -33,7 +33,6 @@ const { require } = BrowserLoader({
 const {
   getRecordingPreferencesFromBrowser,
   setRecordingPreferencesOnBrowser,
-  getSymbolsFromThisBrowser,
 } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm"
 );
@@ -58,16 +57,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /**
  * Initialize the panel by creating a redux store, and render the root component.
+ *
+ * @param perfFront - The Perf actor's front. Used to start and stop recordings.
+ * @param preferenceFront - Used to get the recording preferences from the device.
  */
-async function gInit() {
+async function gInit(perfFront, preferenceFront) {
   const store = createStore(reducers);
-  const perfFrontInterface = new ActorReadyGeckoProfilerInterface();
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
   store.dispatch(
     actions.initializeStore({
-      perfFront: perfFrontInterface,
+      perfFront: new ActorReadyGeckoProfilerInterface(),
       receiveProfile,
       // Pull the default recording settings from the reducer, and update them according
       // to what's in the browser's preferences.
@@ -79,9 +80,6 @@ async function gInit() {
         setRecordingPreferencesOnBrowser(
           selectors.getRecordingSettings(store.getState())
         ),
-      // The popup doesn't need to support remote symbol tables from the debuggee.
-      // Only get the symbols from this browser.
-      getSymbolTableGetter: () => getSymbolsFromThisBrowser,
       isPopup: true,
     })
   );
@@ -90,12 +88,6 @@ async function gInit() {
     React.createElement(Provider, { store }, React.createElement(Perf)),
     document.querySelector("#root")
   );
-
-  window.addEventListener("unload", function() {
-    // The perf front interface needs to be unloaded in order to remove event handlers.
-    // Not doing so leads to leaks.
-    perfFrontInterface.destroy();
-  });
 
   resizeWindow();
 }

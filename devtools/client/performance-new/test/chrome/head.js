@@ -202,8 +202,6 @@ function createPerfComponent() {
     recordingPreferencesCalls.push(settings);
   }
 
-  const noop = () => {};
-
   function mountComponent() {
     store.dispatch(
       actions.initializeStore({
@@ -213,7 +211,6 @@ function createPerfComponent() {
           store.getState()
         ),
         setRecordingPreferences: recordingPreferencesMock,
-        getSymbolTableGetter: () => noop,
       })
     );
 

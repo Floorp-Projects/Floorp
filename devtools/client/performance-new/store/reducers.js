@@ -139,7 +139,6 @@ function objdirs(state = [], action) {
  *   setRecordingPreferences - A function to set the recording settings.
  *   isPopup - A boolean value that sets lets the UI know if it is in the popup window
  *             or inside of devtools.
- *   getSymbolTableGetter - Run this function to get the getSymbolTable function.
  * }
  */
 function initializedValues(state = null, action) {
@@ -150,7 +149,6 @@ function initializedValues(state = null, action) {
         receiveProfile: action.receiveProfile,
         setRecordingPreferences: action.setRecordingPreferences,
         isPopup: Boolean(action.isPopup),
-        getSymbolTableGetter: action.getSymbolTableGetter,
       };
     default:
       return state;
