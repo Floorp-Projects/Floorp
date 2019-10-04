@@ -14,13 +14,8 @@ namespace mozilla {
 class ErrorResult;
 namespace dom {
 class BrowsingContext;
-class PBrowserBridgeChild;
 struct RemotenessOptions;
 }  // namespace dom
-namespace ipc {
-template <typename T>
-class ManagedEndpoint;
-}  // namespace ipc
 }  // namespace mozilla
 
 // IID for the FrameLoaderOwner interface
@@ -57,19 +52,10 @@ class nsFrameLoaderOwner : public nsISupports {
   void ChangeRemoteness(const mozilla::dom::RemotenessOptions& aOptions,
                         mozilla::ErrorResult& rv);
 
-  void ChangeRemotenessWithBridge(
-      mozilla::ipc::ManagedEndpoint<mozilla::dom::PBrowserBridgeChild>
-          aEndpoint,
-      uint64_t aTabId, mozilla::ErrorResult& rv);
-
  private:
   bool UseRemoteSubframes();
   bool ShouldPreserveBrowsingContext(
       const mozilla::dom::RemotenessOptions& aOptions);
-  void ChangeRemotenessCommon(bool aPreserveContext,
-                              const nsAString& aRemoteType,
-                              std::function<void()>& aFrameLoaderInit,
-                              mozilla::ErrorResult& aRv);
 
  protected:
   virtual ~nsFrameLoaderOwner() = default;
