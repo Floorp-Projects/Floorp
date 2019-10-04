@@ -1826,23 +1826,25 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 #protections-popup #messaging-system-message-container {
   height: 260px;
   overflow: hidden;
-  transition: height .25s;
+  transition: margin-bottom .25s;
   border-top: 1px solid var(--panel-separator-color);
 }
 
 #protections-popup #messaging-system-message-container[disabled] {
-  height: 0;
+  /* Offset the height when hidden. This makes the panel content
+   * cover the info message and reveal it as it slides down, rather
+   * than the info message growing in height. */
+  margin-bottom: -260px;
 }
 
 #protections-popup #messaging-system-message-container[disabled] #protections-popup-message {
-  /* height + margins */
-  transform: translateY(calc(-100% - 10px));
+  opacity: 0;
 }
 
 #protections-popup-message {
   display: flex;
   align-items: flex-end;
-  transition: transform .25s;
+  transition: opacity .25s;
 }
 
 #protections-popup-message.whatsNew-hero-message {
