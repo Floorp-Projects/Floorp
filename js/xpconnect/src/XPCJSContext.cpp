@@ -957,6 +957,7 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
   JS::ContextOptionsRef(cx)
       .setAsmJS(useAsmJS)
       .setWasm(useWasm)
+      .setWasmForTrustedPrinciples(useWasm)
       .setWasmIon(useWasmIon)
       .setWasmBaseline(useWasmBaseline)
 #ifdef ENABLE_WASM_CRANELIFT
