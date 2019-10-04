@@ -273,6 +273,11 @@ static const char SandboxPolicyFlash[] = R"SANDBOX_LITERAL(
   ; bug 1475707
   (if (= macosMinorVersion 9)
      (allow mach-lookup (global-name "com.apple.xpcd")))
+  (if (>= macosMinorVersion 15)
+     (allow mach-lookup
+      (global-name "com.apple.ViewBridgeAuxiliary")
+      (global-name "com.apple.appkit.xpc.openAndSavePanelService")
+      (global-name "com.apple.MTLCompilerService")))
 
   ; Fonts
   (allow file-read*
