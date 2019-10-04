@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-contextmenu**
   * The "Save Image" context menu item will no longer prompt before downloading the image.
 
+* **concept-engine**
+  * Added `WebAppManifest.ShareTarget` data class.
+
 # 16.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v15.0.0...v16.0.0)
