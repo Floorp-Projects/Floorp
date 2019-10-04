@@ -7,14 +7,9 @@
 var EXPORTED_SYMBOLS = ["PictureInPicture"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
 );
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-});
 
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
 var PLAYER_FEATURES =
