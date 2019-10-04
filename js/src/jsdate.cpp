@@ -1411,7 +1411,7 @@ static bool date_parse(JSContext* cx, unsigned argc, Value* vp) {
 
 static ClippedTime NowAsMillis(JSContext* cx) {
   double now = PRMJ_Now();
-  bool clampAndJitter = cx->realm()->creationOptions().clampAndJitterTime();
+  bool clampAndJitter = cx->realm()->behaviors().clampAndJitterTime();
   if (clampAndJitter && sReduceMicrosecondTimePrecisionCallback) {
     now = sReduceMicrosecondTimePrecisionCallback(now);
   } else if (clampAndJitter && sResolutionUsec) {
