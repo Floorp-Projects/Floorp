@@ -50,13 +50,6 @@ var gSync = {
     ));
   },
 
-  get brandStrings() {
-    delete this.brandStrings;
-    return (this.brandStrings = Services.strings.createBundle(
-      "chrome://branding/locale/brand.properties"
-    ));
-  },
-
   // Returns true if FxA is configured, but the send tab targets list isn't
   // ready yet.
   get sendTabConfiguredAndLoading() {
@@ -152,6 +145,8 @@ var gSync = {
       this.onFxaDisabled();
       return;
     }
+
+    MozXULElement.insertFTLIfNeeded("browser/sync.ftl");
 
     this._generateNodeGetters();
 
@@ -999,9 +994,7 @@ var gSync = {
   },
 
   _appendSendTabUnconfigured(fragment, createDeviceNodeFn) {
-    const brandProductName = this.brandStrings.GetStringFromName(
-      "brandProductName"
-    );
+    const brandProductName = gBrandBundle.GetStringFromName("brandProductName");
     const notConnected = this.fxaStrings.GetStringFromName(
       "sendTabToDevice.unconfigured.label2"
     );
@@ -1227,17 +1220,8 @@ var gSync = {
   // Returns true if the disconnection happened (ie, if the user didn't decline
   // when asked to confirm)
   async disconnect({ confirm = true, disconnectAccount = true } = {}) {
-    if (confirm) {
-      let args = { disconnectAccount, confirmed: false };
-      window.openDialog(
-        "chrome://browser/content/fxaDisconnect.xul",
-        "_blank",
-        "chrome,modal,centerscreen,resizable=no",
-        args
-      );
-      if (!args.confirmed) {
-        return false;
-      }
+    if (confirm && !(await this._confirmDisconnect(disconnectAccount))) {
+      return false;
     }
     await Weave.Service.promiseInitialized;
     await Weave.Service.startOver();
@@ -1245,6 +1229,39 @@ var gSync = {
       await fxAccounts.signOut();
     }
     return true;
+  },
+
+  /**
+   * Prompts the user whether or not they want to proceed with
+   * disconnecting from their Firefox Account or Sync.
+   * @param {Boolean} disconnectAccount True if we are disconnecting both Sync and FxA.
+   * @returns {Boolean} True if the user confirmed.
+   */
+  async _confirmDisconnect(disconnectAccount) {
+    const l10nPrefix = `${
+      disconnectAccount ? "fxa" : "sync"
+    }-disconnect-dialog`;
+    const [title, body, button] = await document.l10n.formatValues([
+      { id: `${l10nPrefix}-title` },
+      { id: `${l10nPrefix}-body` },
+      { id: "sync-disconnect-dialog-button" },
+    ]);
+    // buttonPressed will be 0 for disconnect, 1 for cancel.
+    const flags =
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1;
+    const buttonPressed = Services.prompt.confirmEx(
+      window,
+      title,
+      body,
+      flags,
+      button,
+      null,
+      null,
+      null,
+      {}
+    );
+    return buttonPressed == 0;
   },
 
   // doSync forces a sync - it *does not* return a promise as it is called
