@@ -92,6 +92,32 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   NS_DECL_NSISERVICEWORKERMANAGER
   NS_DECL_NSIOBSERVER
 
+  struct RegistrationDataPerPrincipal;
+  nsClassHashtable<nsCStringHashKey, RegistrationDataPerPrincipal>
+      mRegistrationInfos;
+
+  struct ControlledClientData {
+    RefPtr<ClientHandle> mClientHandle;
+    RefPtr<ServiceWorkerRegistrationInfo> mRegistrationInfo;
+
+    ControlledClientData(ClientHandle* aClientHandle,
+                         ServiceWorkerRegistrationInfo* aRegistrationInfo)
+        : mClientHandle(aClientHandle), mRegistrationInfo(aRegistrationInfo) {}
+  };
+
+  nsClassHashtable<nsIDHashKey, ControlledClientData> mControlledClients;
+
+  struct PendingReadyData {
+    RefPtr<ClientHandle> mClientHandle;
+    RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
+
+    explicit PendingReadyData(ClientHandle* aClientHandle)
+        : mClientHandle(aClientHandle),
+          mPromise(new ServiceWorkerRegistrationPromise::Private(__func__)) {}
+  };
+
+  nsTArray<UniquePtr<PendingReadyData>> mPendingReadyList;
+
   bool IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI);
 
   // Return true if the given content process could potentially be executing
@@ -230,6 +256,11 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void LoadRegistrations(
       const nsTArray<ServiceWorkerRegistrationData>& aRegistrations);
 
+  // Used by remove() and removeAll() when clearing history.
+  // MUST ONLY BE CALLED FROM UnregisterIfMatchesHost!
+  void ForceUnregister(RegistrationDataPerPrincipal* aRegistrationData,
+                       ServiceWorkerRegistrationInfo* aRegistration);
+
   void MaybeCheckNavigationUpdate(const ClientInfo& aClientInfo);
 
   nsresult SendPushEvent(const nsACString& aOriginAttributes,
@@ -257,13 +288,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
       ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
  private:
-  struct RegistrationDataPerPrincipal;
-
-  static bool FindScopeForPath(const nsACString& aScopeKey,
-                               const nsACString& aPath,
-                               RegistrationDataPerPrincipal** aData,
-                               nsACString& aMatch);
-
   ServiceWorkerManager();
   ~ServiceWorkerManager();
 
@@ -318,6 +342,11 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   static void AddScopeAndRegistration(
       const nsACString& aScope, ServiceWorkerRegistrationInfo* aRegistation);
 
+  static bool FindScopeForPath(const nsACString& aScopeKey,
+                               const nsACString& aPath,
+                               RegistrationDataPerPrincipal** aData,
+                               nsACString& aMatch);
+
   static bool HasScope(nsIPrincipal* aPrincipal, const nsACString& aScope);
 
   static void RemoveScopeAndRegistration(
@@ -360,37 +389,7 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
                                  const nsAString& aData,
                                  const nsAString& aBehavior);
 
-  // Used by remove() and removeAll() when clearing history.
-  // MUST ONLY BE CALLED FROM UnregisterIfMatchesHost!
-  void ForceUnregister(RegistrationDataPerPrincipal* aRegistrationData,
-                       ServiceWorkerRegistrationInfo* aRegistration);
-
   RefPtr<ServiceWorkerShutdownBlocker> mShutdownBlocker;
-
-  nsClassHashtable<nsCStringHashKey, RegistrationDataPerPrincipal>
-      mRegistrationInfos;
-
-  struct ControlledClientData {
-    RefPtr<ClientHandle> mClientHandle;
-    RefPtr<ServiceWorkerRegistrationInfo> mRegistrationInfo;
-
-    ControlledClientData(ClientHandle* aClientHandle,
-                         ServiceWorkerRegistrationInfo* aRegistrationInfo)
-        : mClientHandle(aClientHandle), mRegistrationInfo(aRegistrationInfo) {}
-  };
-
-  nsClassHashtable<nsIDHashKey, ControlledClientData> mControlledClients;
-
-  struct PendingReadyData {
-    RefPtr<ClientHandle> mClientHandle;
-    RefPtr<ServiceWorkerRegistrationPromise::Private> mPromise;
-
-    explicit PendingReadyData(ClientHandle* aClientHandle)
-        : mClientHandle(aClientHandle),
-          mPromise(new ServiceWorkerRegistrationPromise::Private(__func__)) {}
-  };
-
-  nsTArray<UniquePtr<PendingReadyData>> mPendingReadyList;
 };
 
 }  // namespace dom
