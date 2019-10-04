@@ -24,7 +24,7 @@ const SCROLL_BEHAVIOR_AUTO = 1;
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
-  GeckoViewAutoFill: "resource://gre/modules/GeckoViewAutoFill.jsm",
+  GeckoViewAutofill: "resource://gre/modules/GeckoViewAutofill.jsm",
   ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
@@ -70,7 +70,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     XPCOMUtils.defineLazyGetter(
       this,
       "_autoFill",
-      () => new GeckoViewAutoFill(this.eventDispatcher)
+      () => new GeckoViewAutofill(this.eventDispatcher)
     );
 
     // Notify WebExtension process script that this tab is ready for extension content to load.

@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewAutoFill"];
+var EXPORTED_SYMBOLS = ["GeckoViewAutofill"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -19,9 +19,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
 });
 
-const { debug, warn } = GeckoViewUtils.initLogging("AutoFill"); // eslint-disable-line no-unused-vars
+const { debug, warn } = GeckoViewUtils.initLogging("Autofill"); // eslint-disable-line no-unused-vars
 
-class GeckoViewAutoFill {
+class GeckoViewAutofill {
   constructor(aEventDispatcher) {
     this._eventDispatcher = aEventDispatcher;
     this._autoFillId = 0;
@@ -167,7 +167,7 @@ class GeckoViewAutoFill {
         getInfo(element, rootInfo.id, rootInfo.id, usernameField)
       );
 
-    this._eventDispatcher.dispatch("GeckoView:AddAutoFill", rootInfo, {
+    this._eventDispatcher.dispatch("GeckoView:AddAutofill", rootInfo, {
       onSuccess: responses => {
         // `responses` is an object with IDs as keys.
         debug`Performing auto-fill ${Object.keys(responses)}`;
@@ -226,7 +226,7 @@ class GeckoViewAutoFill {
     const info =
       aTarget && this._autoFillInfos && this._autoFillInfos.get(aTarget);
     if (!aTarget || info) {
-      this._eventDispatcher.dispatch("GeckoView:OnAutoFillFocus", info);
+      this._eventDispatcher.dispatch("GeckoView:OnAutofillFocus", info);
     }
   }
 
@@ -241,7 +241,7 @@ class GeckoViewAutoFill {
     this._autoFillElements = undefined;
 
     this._eventDispatcher.sendRequest({
-      type: "GeckoView:ClearAutoFill",
+      type: "GeckoView:ClearAutofill",
     });
   }
 
@@ -258,7 +258,7 @@ class GeckoViewAutoFill {
     let inputAdded = false;
     for (let i = 0; i < inputs.length; i++) {
       if (inputs[i].form) {
-        // Let _addAutoFillElement coalesce multiple calls for the same form.
+        // Let _addElement coalesce multiple calls for the same form.
         this._addElement(FormLikeFactory.createFromForm(inputs[i].form));
       } else if (!inputAdded) {
         // Treat inputs without forms as one unit, and process them only once.

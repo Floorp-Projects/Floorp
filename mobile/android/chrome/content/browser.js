@@ -219,8 +219,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "GeckoViewAutoFill",
-  "resource://gre/modules/GeckoViewAutoFill.jsm"
+  "GeckoViewAutofill",
+  "resource://gre/modules/GeckoViewAutofill.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -4408,7 +4408,7 @@ Tab.prototype = {
     XPCOMUtils.defineLazyGetter(
       this,
       "_autoFill",
-      () => new GeckoViewAutoFill(WindowEventDispatcher)
+      () => new GeckoViewAutofill(WindowEventDispatcher)
     );
 
     // Always initialise new tabs with basic session store data to avoid

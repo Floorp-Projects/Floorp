@@ -1528,7 +1528,7 @@ public class GeckoSession implements Parcelable {
             mTextInput.onWindowChanged(mWindow);
         }
         if ((change == WINDOW_CLOSE || change == WINDOW_TRANSFER_OUT) && !inProgress) {
-            getAutofillSupport().clearAutoFill();
+            getAutofillSupport().clearAutofill();
         }
     }
 
@@ -5589,42 +5589,42 @@ public class GeckoSession implements Parcelable {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({
-            AutofillDelegate.AUTO_FILL_NOTIFY_STARTED,
-            AutofillDelegate.AUTO_FILL_NOTIFY_COMMITTED,
-            AutofillDelegate.AUTO_FILL_NOTIFY_CANCELED,
-            AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED,
-            AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_REMOVED,
-            AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_UPDATED,
-            AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED,
-            AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED})
+            AutofillDelegate.AUTOFILL_NOTIFY_STARTED,
+            AutofillDelegate.AUTOFILL_NOTIFY_COMMITTED,
+            AutofillDelegate.AUTOFILL_NOTIFY_CANCELED,
+            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ADDED,
+            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_REMOVED,
+            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_UPDATED,
+            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED,
+            AutofillDelegate.AUTOFILL_NOTIFY_VIEW_EXITED})
     /* package */ @interface AutofillNotification {}
 
     public interface AutofillDelegate {
 
-        /** An auto-fill session has started, usually as a result of loading a page. */
-        int AUTO_FILL_NOTIFY_STARTED = 0;
-        /** An auto-fill session has been committed, usually as a result of submitting a form. */
-        int AUTO_FILL_NOTIFY_COMMITTED = 1;
-        /** An auto-fill session has been canceled, usually as a result of unloading a page. */
-        int AUTO_FILL_NOTIFY_CANCELED = 2;
-        /** A view within the auto-fill session has been added. */
-        int AUTO_FILL_NOTIFY_VIEW_ADDED = 3;
-        /** A view within the auto-fill session has been removed. */
-        int AUTO_FILL_NOTIFY_VIEW_REMOVED = 4;
-        /** A view within the auto-fill session has been updated (e.g. change in state). */
-        int AUTO_FILL_NOTIFY_VIEW_UPDATED = 5;
-        /** A view within the auto-fill session has gained focus. */
-        int AUTO_FILL_NOTIFY_VIEW_ENTERED = 6;
-        /** A view within the auto-fill session has lost focus. */
-        int AUTO_FILL_NOTIFY_VIEW_EXITED = 7;
+        /** An autofill session has started, usually as a result of loading a page. */
+        int AUTOFILL_NOTIFY_STARTED = 0;
+        /** An autofill session has been committed, usually as a result of submitting a form. */
+        int AUTOFILL_NOTIFY_COMMITTED = 1;
+        /** An autofill session has been canceled, usually as a result of unloading a page. */
+        int AUTOFILL_NOTIFY_CANCELED = 2;
+        /** A view within the autofill session has been added. */
+        int AUTOFILL_NOTIFY_VIEW_ADDED = 3;
+        /** A view within the autofill session has been removed. */
+        int AUTOFILL_NOTIFY_VIEW_REMOVED = 4;
+        /** A view within the autofill session has been updated (e.g. change in state). */
+        int AUTOFILL_NOTIFY_VIEW_UPDATED = 5;
+        /** A view within the autofill session has gained focus. */
+        int AUTOFILL_NOTIFY_VIEW_ENTERED = 6;
+        /** A view within the autofill session has lost focus. */
+        int AUTOFILL_NOTIFY_VIEW_EXITED = 7;
 
         /**
-         * Notify that an auto-fill event has occurred. The default implementation forwards the
+         * Notify that an autofill event has occurred. The default implementation forwards the
          * notification to the system {@link AutofillManager}. This method is
          * only called on Android 6.0 and above, and it is called in viewless mode as well.
          *
          * @param session Session instance.
-         * @param notification Notification type as one of the {@link #AUTO_FILL_NOTIFY_STARTED
+         * @param notification Notification type as one of the {@link #AUTOFILL_NOTIFY_STARTED
          *                     AUTO_FILL_NOTIFY_*} constants.
          * @param virtualId Virtual ID of the target, or {@link View#NO_ID} if not
          *                  applicable. The ID matches one of the virtual IDs provided by {@link
@@ -5664,9 +5664,9 @@ public class GeckoSession implements Parcelable {
     }
 
     /**
-     * Perform auto-fill using the specified values.
+     * Perform autofill using the specified values.
      *
-     * @param values Map of auto-fill IDs to values.
+     * @param values Map of autofill IDs to values.
      */
     @UiThread
     public void autofill(final @NonNull SparseArray<CharSequence> values) {

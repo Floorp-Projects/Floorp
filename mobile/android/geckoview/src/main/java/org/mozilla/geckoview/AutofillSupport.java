@@ -17,10 +17,10 @@ import org.mozilla.gecko.util.GeckoBundle;
 
     private final GeckoSession mSession;
     private GeckoSession.AutofillDelegate mDelegate;
-    private SparseArray<GeckoBundle> mAutoFillNodes;
-    private SparseArray<EventCallback> mAutoFillRoots;
-    private int mAutoFillFocusedId = View.NO_ID;
-    private int mAutoFillFocusedRoot = View.NO_ID;
+    private SparseArray<GeckoBundle> mAutofillNodes;
+    private SparseArray<EventCallback> mAutofillRoots;
+    private int mAutofillFocusedId = View.NO_ID;
+    private int mAutofillFocusedRoot = View.NO_ID;
 
     public AutofillSupport(final GeckoSession session) {
         mSession = session;
@@ -30,18 +30,18 @@ import org.mozilla.gecko.util.GeckoBundle;
                     @Override
                     public void handleMessage(final String event, final GeckoBundle message,
                                               final EventCallback callback) {
-                        if ("GeckoView:AddAutoFill".equals(event)) {
-                            addAutoFill(message, callback);
-                        } else if ("GeckoView:ClearAutoFill".equals(event)) {
-                            clearAutoFill();
-                        } else if ("GeckoView:OnAutoFillFocus".equals(event)) {
-                            onAutoFillFocus(message);
+                        if ("GeckoView:AddAutofill".equals(event)) {
+                            addAutofill(message, callback);
+                        } else if ("GeckoView:ClearAutofill".equals(event)) {
+                            clearAutofill();
+                        } else if ("GeckoView:OnAutofillFocus".equals(event)) {
+                            onAutofillFocus(message);
                         }
                     }
                 },
-                "GeckoView:AddAutoFill",
-                "GeckoView:ClearAutoFill",
-                "GeckoView:OnAutoFillFocus",
+                "GeckoView:AddAutofill",
+                "GeckoView:ClearAutofill",
+                "GeckoView:OnAutofillFocus",
                 null);
     }
 
@@ -51,7 +51,7 @@ import org.mozilla.gecko.util.GeckoBundle;
      * @param values Map of auto-fill IDs to values.
      */
     public void autofill(final SparseArray<CharSequence> values) {
-        if (mAutoFillRoots == null) {
+        if (mAutofillRoots == null) {
             return;
         }
 
@@ -63,11 +63,11 @@ import org.mozilla.gecko.util.GeckoBundle;
             final CharSequence value = values.valueAt(i);
 
             if (DEBUG) {
-                Log.d(LOGTAG, "performAutoFill(" + id + ')');
+                Log.d(LOGTAG, "autofill(" + id + ')');
             }
             int rootId = id;
             for (int currentId = id; currentId != View.NO_ID; ) {
-                final GeckoBundle bundle = mAutoFillNodes.get(currentId);
+                final GeckoBundle bundle = mAutofillNodes.get(currentId);
                 if (bundle == null) {
                     return;
                 }
@@ -75,7 +75,7 @@ import org.mozilla.gecko.util.GeckoBundle;
                 currentId = bundle.getInt("parent", View.NO_ID);
             }
 
-            final EventCallback newCallback = mAutoFillRoots.get(rootId);
+            final EventCallback newCallback = mAutofillRoots.get(rootId);
             if (callback == null || newCallback != callback) {
                 if (callback != null) {
                     callback.sendSuccess(response);
@@ -102,14 +102,14 @@ import org.mozilla.gecko.util.GeckoBundle;
     public @NonNull AutofillElement getAutofillElements() {
         final AutofillElement.Builder builder = new AutofillElement.Builder();
 
-        final Rect rect = getDummyAutoFillRect(mSession, false, null);
+        final Rect rect = getDummyAutofillRect(mSession, false, null);
         builder.dimensions(rect);
 
-        if (mAutoFillRoots != null) {
-            final int size = mAutoFillRoots.size();
+        if (mAutofillRoots != null) {
+            final int size = mAutofillRoots.size();
             for (int i = 0; i < size; i++) {
-                final int id = mAutoFillRoots.keyAt(i);
-                final GeckoBundle root = mAutoFillNodes.get(id);
+                final int id = mAutofillRoots.keyAt(i);
+                final GeckoBundle root = mAutofillNodes.get(id);
                 fillAutofillElement(id, root, rect, builder.child());
             }
         }
@@ -121,7 +121,7 @@ import org.mozilla.gecko.util.GeckoBundle;
         builder.id(id);
         builder.domain(bundle.getString("origin"));
 
-        if (mAutoFillFocusedRoot != View.NO_ID && mAutoFillFocusedRoot == bundle.getInt("root", View.NO_ID)) {
+        if (mAutofillFocusedRoot != View.NO_ID && mAutofillFocusedRoot == bundle.getInt("root", View.NO_ID)) {
             builder.dimensions(rect);
         }
 
@@ -130,7 +130,7 @@ import org.mozilla.gecko.util.GeckoBundle;
             for (final GeckoBundle childBundle : children) {
                 final int childId = childBundle.getInt("id");
                 fillAutofillElement(childId, childBundle, rect, builder.child());
-                mAutoFillNodes.append(childId, childBundle);
+                mAutofillNodes.append(childId, childBundle);
             }
         }
 
@@ -155,7 +155,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 
                 builder.enabled(!disabled);
                 builder.focusable(!disabled);
-                builder.focused(id == mAutoFillFocusedId);
+                builder.focused(id == mAutofillFocusedId);
                 break;
             }
             default:
@@ -191,12 +191,12 @@ import org.mozilla.gecko.util.GeckoBundle;
         }
     }
 
-    /* package */ void addAutoFill(@NonNull final GeckoBundle message,
+    /* package */ void addAutofill(@NonNull final GeckoBundle message,
                                    @NonNull final EventCallback callback) {
         final boolean initializing;
-        if (mAutoFillRoots == null) {
-            mAutoFillRoots = new SparseArray<>();
-            mAutoFillNodes = new SparseArray<>();
+        if (mAutofillRoots == null) {
+            mAutofillRoots = new SparseArray<>();
+            mAutofillNodes = new SparseArray<>();
             initializing = true;
         } else {
             initializing = false;
@@ -204,9 +204,9 @@ import org.mozilla.gecko.util.GeckoBundle;
 
         final int id = message.getInt("id");
         if (DEBUG) {
-            Log.d(LOGTAG, "addAutoFill(" + id + ')');
+            Log.d(LOGTAG, "addAutofill(" + id + ')');
         }
-        mAutoFillRoots.append(id, callback);
+        mAutofillRoots.append(id, callback);
         populateAutofillNodes(message);
 
         if (mDelegate == null) {
@@ -215,17 +215,17 @@ import org.mozilla.gecko.util.GeckoBundle;
 
         if (initializing) {
             mDelegate.onAutofill(
-                    mSession, GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_STARTED, id);
+                    mSession, GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_STARTED, id);
         } else {
             mDelegate.onAutofill(
-                    mSession, GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED, id);
+                    mSession, GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ADDED, id);
         }
     }
 
     private void populateAutofillNodes(final GeckoBundle bundle) {
         final int id = bundle.getInt("id");
 
-        mAutoFillNodes.append(id, bundle);
+        mAutofillNodes.append(id, bundle);
 
         final GeckoBundle[] children = bundle.getBundleArray("children");
         if (children != null) {
@@ -235,26 +235,26 @@ import org.mozilla.gecko.util.GeckoBundle;
         }
     }
 
-    /* package */ void clearAutoFill() {
-        if (mAutoFillRoots == null) {
+    /* package */ void clearAutofill() {
+        if (mAutofillRoots == null) {
             return;
         }
         if (DEBUG) {
-            Log.d(LOGTAG, "clearAutoFill()");
+            Log.d(LOGTAG, "clearAutofill()");
         }
-        mAutoFillRoots = null;
-        mAutoFillNodes = null;
-        mAutoFillFocusedId = View.NO_ID;
-        mAutoFillFocusedRoot = View.NO_ID;
+        mAutofillRoots = null;
+        mAutofillNodes = null;
+        mAutofillFocusedId = View.NO_ID;
+        mAutofillFocusedRoot = View.NO_ID;
 
         if (mDelegate != null) {
             mDelegate.onAutofill(
-                    mSession, GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_CANCELED, View.NO_ID);
+                    mSession, GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_CANCELED, View.NO_ID);
         }
     }
 
-    /* package */ void onAutoFillFocus(@Nullable final GeckoBundle message) {
-        if (mAutoFillRoots == null) {
+    /* package */ void onAutofillFocus(@Nullable final GeckoBundle message) {
+        if (mAutofillRoots == null) {
             return;
         }
 
@@ -268,29 +268,29 @@ import org.mozilla.gecko.util.GeckoBundle;
         }
 
         if (DEBUG) {
-            Log.d(LOGTAG, "onAutoFillFocus(" + id + ')');
+            Log.d(LOGTAG, "onAutofillFocus(" + id + ')');
         }
-        if (mAutoFillFocusedId == id) {
+        if (mAutofillFocusedId == id) {
             return;
         }
 
-        if (mDelegate != null && mAutoFillFocusedId != View.NO_ID) {
+        if (mDelegate != null && mAutofillFocusedId != View.NO_ID) {
             mDelegate.onAutofill(
-                    mSession, GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED,
-                    mAutoFillFocusedId);
+                    mSession, GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_EXITED,
+                    mAutofillFocusedId);
         }
 
-        mAutoFillFocusedId = id;
-        mAutoFillFocusedRoot = root;
+        mAutofillFocusedId = id;
+        mAutofillFocusedRoot = root;
 
-        if (mDelegate != null && mAutoFillFocusedId != View.NO_ID) {
+        if (mDelegate != null && mAutofillFocusedId != View.NO_ID) {
             mDelegate.onAutofill(
-                    mSession, GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED,
-                    mAutoFillFocusedId);
+                    mSession, GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED,
+                    mAutofillFocusedId);
         }
     }
 
-    /* package */ static Rect getDummyAutoFillRect(@NonNull final GeckoSession session,
+    /* package */ static Rect getDummyAutofillRect(@NonNull final GeckoSession session,
                                                    final boolean screen,
                                                    @Nullable final View view) {
         final Rect rect = new Rect();
@@ -307,15 +307,15 @@ import org.mozilla.gecko.util.GeckoBundle;
     }
 
     public void onActiveChanged(final boolean active) {
-        if (mDelegate == null || mAutoFillFocusedId == View.NO_ID) {
+        if (mDelegate == null || mAutofillFocusedId == View.NO_ID) {
             return;
         }
 
         // We blur/focus the active element (if we have one) when the document is made inactive/active.
         getDelegate().onAutofill(
                 mSession,
-                active ? GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED
-                : GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED,
-                mAutoFillFocusedId);
+                active ? GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED
+                : GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_EXITED,
+                mAutofillFocusedId);
     }
 }
