@@ -2177,9 +2177,9 @@ WorkerPrivate::WorkerPrivate(
 
     RuntimeService::GetDefaultJSSettings(mJSSettings);
 
-    mJSSettings.chrome.realmOptions.creationOptions().setClampAndJitterTime(
+    mJSSettings.chrome.realmOptions.behaviors().setClampAndJitterTime(
         !UsesSystemPrincipal());
-    mJSSettings.content.realmOptions.creationOptions().setClampAndJitterTime(
+    mJSSettings.content.realmOptions.behaviors().setClampAndJitterTime(
         !UsesSystemPrincipal());
 
     if (mIsSecureContext) {
