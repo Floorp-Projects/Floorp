@@ -74,9 +74,6 @@ add_task(async function() {
           get [`"quoted-getter"`]() {
             return "quoted";
           },
-          get [`"'\``]() {
-            return "quoted2";
-          },
         })
       )
     );
@@ -103,7 +100,7 @@ add_task(async function() {
   await testThrowingGetter(oi);
   await testLongStringGetter(oi, LONGSTRING);
   await testHypgenGetter(oi);
-  await testQuotedGetters(oi);
+  await testQuotedGetter(oi);
 });
 
 async function testStringGetter(oi) {
@@ -602,47 +599,33 @@ async function testHypgenGetter(oi) {
   );
 }
 
-async function testQuotedGetters(oi) {
-  const nodes = [
-    {
-      name: `"\\"quoted-getter\\""`,
-      expected: `"quoted"`,
-      expandable: false,
-    },
-    {
-      name: `"\\"'\`"`,
-      expected: `"quoted2"`,
-      expandable: false,
-    },
-  ];
+async function testQuotedGetter(oi) {
+  const findQuotedGetterNode = () =>
+    findObjectInspectorNode(oi, `"\\"quoted-getter\\""`);
+  let node = findQuotedGetterNode();
 
-  for (const { name, expected, expandable } of nodes) {
-    await testGetter(oi, name, expected, expandable);
-  }
-}
-
-async function testGetter(oi, propertyName, expectedResult, resultExpandable) {
-  info(`Check «${propertyName}» getter`);
-  const findNode = () => findObjectInspectorNode(oi, propertyName);
-
-  let node = findNode();
   is(
     isObjectInspectorNodeExpandable(node),
     false,
-    `«${propertyName}» can't be expanded`
+    "The node can't be expanded"
   );
-  getObjectInspectorInvokeGetterButton(node).click();
-  await waitFor(() => !getObjectInspectorInvokeGetterButton(findNode()));
+  const invokeButton = getObjectInspectorInvokeGetterButton(node);
+  ok(invokeButton, "There is an invoke button as expected");
 
-  node = findNode();
+  invokeButton.click();
+  await waitFor(
+    () => !getObjectInspectorInvokeGetterButton(findQuotedGetterNode())
+  );
+
+  node = findQuotedGetterNode();
   ok(
-    node.textContent.includes(`${propertyName}: ${expectedResult}`),
-    `«${propertyName}» now has the expected text content («${expectedResult}»)`
+    node.textContent.includes(`"\\"quoted-getter\\"": "quoted"`),
+    "Node now has the expected text content"
   );
   is(
     isObjectInspectorNodeExpandable(node),
-    resultExpandable,
-    `«${propertyName}» ${resultExpandable ? "now can" : "can't"} be expanded`
+    false,
+    "The node can't be expanded"
   );
 }
 
