@@ -260,14 +260,13 @@
 }
 
 /* Focus ring. */
-#urlbar:not(.megabar):not(.hidden-focus)[focused="true"],
-#urlbar.megabar:not(.hidden-focus)[focused="true"] > #urlbar-background,
+#urlbar:not(.hidden-focus)[focused="true"],
 #searchbar:focus-within {
   box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
               0 0 0 1px var(--toolbar-field-focus-border-color);
 }
 
-#urlbar[breakout][breakout-extend]:not(.hidden-focus)[focused="true"] > #urlbar-background {
+#urlbar[breakout][breakout-extend]:not(.hidden-focus)[focused="true"] {
   box-shadow: 0 0 0 1px var(--toolbar-field-focus-border-color) inset,
               0 0 0 1px var(--toolbar-field-focus-border-color),
               0 4px 16px rgba(0, 0, 0, 0.1);

@@ -8,7 +8,7 @@
 %define urlbarViewPadding 4px
 %define urlbarViewIconMarginEnd 8px
 %define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
-%define urlbarViewInlineStartPadding (@urlbarBreakoutHorizontalExtend@ - 16px /* type icon width */ - @urlbarViewIconMarginEnd@ - 1px /* border */)
+%define urlbarViewInlineStartPadding (@urlbarBreakoutHorizontalExtend@ - 16px /* type icon width */ - @urlbarViewIconMarginEnd@ - 2px /* border */)
 %define urlbarViewHorizontalMargin 6px
 
 :root {
