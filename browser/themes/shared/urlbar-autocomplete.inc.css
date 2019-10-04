@@ -46,6 +46,7 @@
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   border-block: 1px solid var(--chrome-content-separator-color);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
 }
 
 #urlbar-contextual-tip {
