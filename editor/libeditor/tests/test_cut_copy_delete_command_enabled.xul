@@ -21,61 +21,61 @@
       text.select();
 
       ok(editor1.canCopy(),
-         "nsIEditor.canCopy() should return true in <textbox>");
+         "nsIEditor.canCopy() should return true in <input>");
       ok(editor1.canCut(),
-         "nsIEditor.canCut() should return true in <textbox>");
+         "nsIEditor.canCut() should return true in <input>");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be enabled in <textbox>");
+         "cmd_copy command should be enabled in <input>");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be enabled in <textbox>");
+         "cmd_cut command should be enabled in <input>");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox>");
+         "cmd_delete command should be enabled in <input>");
 
       password.focus();
       password.select();
 
       // Copy and cut commands should be disabled on password fields.
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password>");
+         "nsIEditor.canCopy() should return false in <input type=password>");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password>");
+         "nsIEditor.canCut() should return false in <input type=password>");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password>");
+         "cmd_copy command should be disabled in <input type=password>");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password>");
+         "cmd_cut command should be disabled in <input type=password>");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password>");
+         "cmd_delete command should be enabled in <input type=password>");
 
       // If selection is in unmasked range, allow to copy the selected
       // password into the clipboard.
       editor2.unmask(0);
       ok(editor2.canCopy(),
-         "nsIEditor.canCopy() should return true in <textbox type=password> if the password is unmasked");
+         "nsIEditor.canCopy() should return true in <input type=password> if the password is unmasked");
       ok(editor2.canCut(),
-         "nsIEditor.canCut() should return true in <textbox type=password> if the password is unmasked");
+         "nsIEditor.canCut() should return true in <input type=password> if the password is unmasked");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be enabled in <textbox type=password> if the password is unmasked");
+         "cmd_copy command should be enabled in <input type=password> if the password is unmasked");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be enabled in <textbox type=password> if the password is unmasked");
+         "cmd_cut command should be enabled in <input type=password> if the password is unmasked");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> if the password is unmasked");
+         "cmd_delete command should be enabled in <input type=password> if the password is unmasked");
 
       // If unmasked range will be masked automatically, we shouldn't allow to
       // copy the selected password since the state may be changed during
       // showing edit menu or something.
       editor2.unmask(0, 13, 1000);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> if the password is unmasked but will be masked automatically");
+         "nsIEditor.canCopy() should return false in <input type=password> if the password is unmasked but will be masked automatically");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> if the password is unmasked but will be masked automatically");
+         "nsIEditor.canCut() should return false in <input type=password> if the password is unmasked but will be masked automatically");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> if the password is unmasked but will be masked automatically");
+         "cmd_copy command should be disabled in <input type=password> if the password is unmasked but will be masked automatically");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> if the password is unmasked but will be masked automatically");
+         "cmd_cut command should be disabled in <input type=password> if the password is unmasked but will be masked automatically");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> if the password is unmasked but will be masked automatically");
+         "cmd_delete command should be enabled in <input type=password> if the password is unmasked but will be masked automatically");
 
-      // <textbox type="password"> does not support setSelectionRange() oddly.
+      // <input type="password"> does not support setSelectionRange() oddly.
       function setSelectionRange(aEditor, aStart, aEnd) {
         let container = aEditor.rootElement.firstChild;
         aEditor.selection.setBaseAndExtent(container, aStart, container, aEnd);
@@ -85,131 +85,131 @@
       editor2.unmask(3, 9);
       setSelectionRange(editor2, 0, 2);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 0-2)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 0-2)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 0-2)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 0-2)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 0-2)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 0-2)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 0-2)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 0-2)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 0-2)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 0-2)");
 
       setSelectionRange(editor2, 2, 3);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 2-3)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 2-3)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 2-3)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 2-3)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 2-3)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 2-3)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 2-3)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 2-3)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 2-3)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 2-3)");
 
       setSelectionRange(editor2, 2, 5);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 2-5)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 2-5)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 2-5)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 2-5)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 2-5)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 2-5)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 2-5)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 2-5)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 2-5)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 2-5)");
 
       setSelectionRange(editor2, 2, 10);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 2-10)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 2-10)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 2-10)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 2-10)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 2-10)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 2-10)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 2-10)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 2-10)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 2-10)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 2-10)");
 
       setSelectionRange(editor2, 2, 10);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 3-10)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 3-10)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 3-10)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 3-10)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 3-10)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 3-10)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 3-10)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 3-10)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 3-10)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 3-10)");
 
       setSelectionRange(editor2, 8, 12);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 8-12)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 8-12)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 8-12)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 8-12)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 8-12)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 8-12)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 8-12)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 8-12)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 8-12)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 8-12)");
 
       setSelectionRange(editor2, 9, 12);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 9-12)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 9-12)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 9-12)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 9-12)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 9-12)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 9-12)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 9-12)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 9-12)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 9-12)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 9-12)");
 
       setSelectionRange(editor2, 10, 12);
       ok(!editor2.canCopy(),
-         "nsIEditor.canCopy() should return false in <textbox type=password> (unmasked range 3-9, selected range 10-12)");
+         "nsIEditor.canCopy() should return false in <input type=password> (unmasked range 3-9, selected range 10-12)");
       ok(!editor2.canCut(),
-         "nsIEditor.canCut() should return false in <textbox type=password> (unmasked range 3-9, selected range 10-12)");
+         "nsIEditor.canCut() should return false in <input type=password> (unmasked range 3-9, selected range 10-12)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 10-12)");
+         "cmd_copy command should be disabled in <input type=password> (unmasked range 3-9, selected range 10-12)");
       ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be disabled in <textbox type=password> (unmasked range 3-9, selected range 10-12)");
+         "cmd_cut command should be disabled in <input type=password> (unmasked range 3-9, selected range 10-12)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 10-12)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 10-12)");
 
       setSelectionRange(editor2, 3, 9);
       ok(editor2.canCopy(),
-         "nsIEditor.canCopy() should return true in <textbox type=password> (unmasked range 3-9, selected range 3-9)");
+         "nsIEditor.canCopy() should return true in <input type=password> (unmasked range 3-9, selected range 3-9)");
       ok(editor2.canCut(),
-         "nsIEditor.canCut() should return true in <textbox type=password> (unmasked range 3-9, selected range 3-9)");
+         "nsIEditor.canCut() should return true in <input type=password> (unmasked range 3-9, selected range 3-9)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 3-9)");
+         "cmd_copy command should be enabled in <input type=password> (unmasked range 3-9, selected range 3-9)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 3-9)");
+         "cmd_cut command should be enabled in <input type=password> (unmasked range 3-9, selected range 3-9)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 3-9)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 3-9)");
 
       setSelectionRange(editor2, 4, 8);
       ok(editor2.canCopy(),
-         "nsIEditor.canCopy() should return true in <textbox type=password> (unmasked range 3-9, selected range 4-8)");
+         "nsIEditor.canCopy() should return true in <input type=password> (unmasked range 3-9, selected range 4-8)");
       ok(editor2.canCut(),
-         "nsIEditor.canCut() should return true in <textbox type=password> (unmasked range 3-9, selected range 4-8)");
+         "nsIEditor.canCut() should return true in <input type=password> (unmasked range 3-9, selected range 4-8)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-         "cmd_copy command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 4-8)");
+         "cmd_copy command should be enabled in <input type=password> (unmasked range 3-9, selected range 4-8)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-         "cmd_cut command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 4-8)");
+         "cmd_cut command should be enabled in <input type=password> (unmasked range 3-9, selected range 4-8)");
       ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-         "cmd_delete command should be enabled in <textbox type=password> (unmasked range 3-9, selected range 4-8)");
+         "cmd_delete command should be enabled in <input type=password> (unmasked range 3-9, selected range 4-8)");
 
       SimpleTest.finish();
     });
   ]]></script>
 
   <vbox flex="1">
-    <textbox id="textbox" value="normal text"/>
-    <textbox id="password" type="password" value="password text"/>
+    <input xmlns="http://www.w3.org/1999/xhtml" id="textbox" value="normal text"/>
+    <input xmlns="http://www.w3.org/1999/xhtml" id="password" type="password" value="password text"/>
   </vbox>
 
 </window>
