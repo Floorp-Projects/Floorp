@@ -145,6 +145,9 @@ void PreferenceSheet::Initialize() {
 
   Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_THEME, useDocumentColorPref,
                        UseAccessibilityTheme(false));
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_BACKPLATE,
+                       StaticPrefs::browser_display_permit_backplate());
 }
 
 }  // namespace mozilla
