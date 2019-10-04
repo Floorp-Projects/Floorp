@@ -8,7 +8,6 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
@@ -27,7 +26,7 @@ class BrowserRobot {
         val redirectUrl = "https://support.mozilla.org/"
         mDevice.wait(Until.findObject(By.res("mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime)
         onView(withId(R.id.mozac_browser_toolbar_url_view))
-                .check(matches(withText(containsString(redirectUrl))))
+            .check(matches(withText(containsString(redirectUrl))))
     }
 
     fun verifyWhatsNewURL() {
@@ -36,7 +35,7 @@ class BrowserRobot {
 
         mDevice.wait(Until.findObject(By.res("mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime)
         onView(withId(R.id.mozac_browser_toolbar_url_view))
-                .check(matches(withText(containsString(redirectUrl))))
+            .check(matches(withText(containsString(redirectUrl))))
     }
 
     /* Asserts that the text within DOM element with ID="testContent" has the given text, i.e.
@@ -49,7 +48,7 @@ class BrowserRobot {
 
     fun verifyTabCounter(expectedText: String) {
         onView(withId(R.id.counter_text))
-                .check((matches(withText(containsString(expectedText)))))
+            .check((matches(withText(containsString(expectedText)))))
     }
 
     class Transition {
@@ -71,6 +70,16 @@ class BrowserRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun openQuickActionBar(interact: QuickActionBarRobot.() -> Unit): QuickActionBarRobot.Transition {
+            mDevice.wait(Until.gone(By.res("org.mozilla.fenix.nightly:id/quick_action_sheet")),
+                TestAssetHelper.waitingTime
+            )
+            quickActionBarHandle().click()
+
+            QuickActionBarRobot().interact()
+            return QuickActionBarRobot.Transition()
+        }
     }
 }
 
@@ -79,8 +88,9 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
     return BrowserRobot.Transition()
 }
 
-private fun dismissOnboardingButton() = onView(ViewMatchers.withId(R.id.close_onboarding))
+private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
 
 fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 
 private fun tabsCounter() = onView(withId(R.id.counter_box))
+private fun quickActionBarHandle() = onView(withId(R.id.quick_action_sheet_handle))
