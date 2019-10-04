@@ -677,7 +677,7 @@ class Install(MachCommandBase):
     """Install a package."""
 
     @Command('install', category='post-build',
-             conditions=[conditions.is_firefox_or_android],
+             conditions=[conditions.has_build],
              description='Install the package on the machine (or device in the case of Android).')
     @CommandArgument('--verbose', '-v', action='store_true',
                      help='Print verbose output when installing.')
@@ -799,7 +799,7 @@ class RunProgram(MachCommandBase):
     """Run the compiled program."""
 
     @Command('run', category='post-build',
-             conditions=[conditions.is_firefox_or_android],
+             conditions=[conditions.has_build],
              parser=setup_run_parser,
              description='Run the compiled program, possibly under a debugger or DMD.')
     def run(self, **kwargs):
