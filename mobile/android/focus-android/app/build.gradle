@@ -19,7 +19,7 @@ android {
         targetSdkVersion 28
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "8.0.21"
+        versionName "8.0.22"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
@@ -225,7 +225,6 @@ dependencies {
     testImplementation 'androidx.test:rules:1.2.0'
 
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.jakewharton:process-phoenix:2.0.0'
     debugImplementation 'com.facebook.stetho:stetho:1.5.1'
 }
 // -------------------------------------------------------------------------------------------------
