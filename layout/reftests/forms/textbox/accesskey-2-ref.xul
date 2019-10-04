@@ -9,7 +9,7 @@
       padding-top: 0px;
       font-size: 36px;
     }
-    label, textbox {
+    label, input {
       -moz-appearance: none;
       background: inherit;
       border: none 0px;
@@ -20,7 +20,7 @@
       margin-bottom: 0px;
       padding-bottom: 0px;
     }
-    textbox {
+    input {
       margin-top: 12px;
       padding-top: 8px;
       margin-bottom: 5px;
@@ -31,6 +31,6 @@
   <hbox align="baseline">
     <!-- access key in LTR-overridden Arabic text -->
     <label value="&#x202d;&#x64a;&#x628;&#x631;&#x639;&#x644;&#x627;&#x202c; test" accesskey="&#x639;"/>
-    <textbox value=""/>
+    <input xmlns="http://www.w3.org/1999/xhtml" value=""/>
   </hbox>
 </window>

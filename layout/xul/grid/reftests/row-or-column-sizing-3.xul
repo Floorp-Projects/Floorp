@@ -19,7 +19,7 @@
         <hbox />
       </row>
       <row>
-        <textbox value="Lower left" />
+        <input xmlns="http://www.w3.org/1999/xhtml" value="Lower left" />
         <hbox />
       </row>
     </rows>
