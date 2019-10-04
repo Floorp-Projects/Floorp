@@ -151,8 +151,15 @@ static bool HasAvailableCompilerTier(JSContext* cx) {
 }
 
 bool wasm::HasSupport(JSContext* cx) {
-  return cx->options().wasm() && HasCompilerSupport(cx) &&
-         HasAvailableCompilerTier(cx);
+  // If the general wasm pref is on, it's on for everything.
+  bool prefEnabled = cx->options().wasm();
+  // If the general pref is off, check trusted principals.
+  if (MOZ_UNLIKELY(!prefEnabled)) {
+    prefEnabled = cx->options().wasmForTrustedPrinciples() && cx->realm() &&
+                  cx->realm()->principals() &&
+                  cx->realm()->principals()->isSystemOrAddonPrincipal();
+  }
+  return prefEnabled && HasCompilerSupport(cx) && HasAvailableCompilerTier(cx);
 }
 
 bool wasm::HasStreamingSupport(JSContext* cx) {
