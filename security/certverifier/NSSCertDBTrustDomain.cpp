@@ -272,6 +272,17 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   }
 
   for (const auto& thirdPartyRootInput : mThirdPartyRootInputs) {
+    BackCert root(thirdPartyRootInput, EndEntityOrCA::MustBeCA, nullptr);
+    Result rv = root.Init();
+    if (rv != Success) {
+      continue;
+    }
+    // Filter out 3rd party roots that can't be issuers we're looking for
+    // because the subject distinguished name doesn't match. This prevents
+    // mozilla::pkix from accumulating spurious errors during path building.
+    if (!InputsAreEqual(encodedIssuerName, root.GetSubject())) {
+      continue;
+    }
     if (!geckoRootCandidates.append(thirdPartyRootInput)) {
       return Result::FATAL_ERROR_NO_MEMORY;
     }
@@ -279,6 +290,18 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
 
   for (const auto& thirdPartyIntermediateInput :
        mThirdPartyIntermediateInputs) {
+    BackCert intermediate(thirdPartyIntermediateInput, EndEntityOrCA::MustBeCA,
+                          nullptr);
+    Result rv = intermediate.Init();
+    if (rv != Success) {
+      continue;
+    }
+    // Filter out 3rd party intermediates that can't be issuers we're looking
+    // for because the subject distinguished name doesn't match. This prevents
+    // mozilla::pkix from accumulating spurious errors during path building.
+    if (!InputsAreEqual(encodedIssuerName, intermediate.GetSubject())) {
+      continue;
+    }
     if (!geckoIntermediateCandidates.append(thirdPartyIntermediateInput)) {
       return Result::FATAL_ERROR_NO_MEMORY;
     }
