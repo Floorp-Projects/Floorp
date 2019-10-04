@@ -402,8 +402,9 @@ var gSync = {
 
     // The Firefox Account toolbar currently handles 3 different states for
     // users. The default `not_configured` state shows an empty avatar, `unverified`
-    // state shows an avatar with an email icon and the `verified` state will show
-    // the users custom profile image or a filled avatar.
+    // state shows an avatar with an email icon, `login-failed` state shows an avatar
+    // with a danger icon and the `verified` state will show the users
+    // custom profile image or a filled avatar.
     let stateValue = "not_configured";
 
     const menuHeaderTitleEl = document.getElementById("fxa-menu-header-title");
@@ -452,7 +453,7 @@ var gSync = {
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
       mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
-      stateValue = "unverified";
+      stateValue = "login-failed";
       headerTitle = this.fxaStrings.GetStringFromName("account.reconnectToFxA");
       headerDescription = state.email;
       mainWindowEl.style.removeProperty("--avatar-image-url");

@@ -265,7 +265,7 @@ add_task(async function test_ui_state_loginFailed() {
       "PanelUI-fxa-menu-sync-prefs-button",
     ],
   });
-  checkFxAAvatar("unverified");
+  checkFxAAvatar("login-failed");
 });
 
 function checkPanelUIStatusBar({ label, fxastatus, syncing }) {
@@ -386,7 +386,7 @@ async function checkFxABadged() {
   ok(BrowserTestUtils.is_visible(badge), "expected the badge to be visible");
 }
 
-// fxaStatus is one of 'not_configured', 'unverified', or 'signedin'.
+// fxaStatus is one of 'not_configured', 'unverified', 'login-failed', or 'signedin'.
 function checkFxAAvatar(fxaStatus) {
   const avatarContainers = [
     document.getElementById("fxa-menu-avatar"),
@@ -399,6 +399,7 @@ function checkFxAAvatar(fxaStatus) {
         'url("chrome://browser/skin/fxa/avatar-empty-badged.svg")',
       unverified: 'url("chrome://browser/skin/fxa/avatar-confirm.svg")',
       signedin: 'url("chrome://browser/skin/fxa/avatar.svg")',
+      "login-failed": 'url("chrome://browser/skin/fxa/avatar-alert.svg")',
     };
     ok(
       avatarURL == expected[fxaStatus],

@@ -597,6 +597,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 #appMenu-fxa-status[fxastatus="login-failed"],
 #appMenu-fxa-status[fxastatus="unverified"],
+:root[fxastatus="login-failed"] .fxa-menu-header,
 :root[fxastatus="unverified"] .fxa-menu-header {
   background-color: @appmenuWarningBackgroundColor@;
   color: @appmenuWarningColor@;
@@ -606,12 +607,14 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 #appMenu-fxa-status[fxastatus="login-failed"]:hover,
 #appMenu-fxa-status[fxastatus="unverified"]:hover,
+:root[fxastatus="login-failed"] .fxa-menu-header:hover,
 :root[fxastatus="unverified"] .fxa-menu-header:hover {
   background-color: @appmenuWarningBackgroundColorHover@;
 }
 
 #appMenu-fxa-status[fxastatus="login-failed"]:hover:active,
 #appMenu-fxa-status[fxastatus="unverified"]:hover:active,
+:root[fxastatus="login-failed"] .fxa-menu-header:hover:active,
 :root[fxastatus="unverified"] .fxa-menu-header:hover:active {
   background-color: @appmenuWarningBackgroundColorActive@;
 }
@@ -672,6 +675,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="login-failed"],
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"],
+:root[lwt-popup-brighttext][fxastatus="login-failed"] .fxa-menu-header,
 :root[lwt-popup-brighttext][fxastatus="unverified"] .fxa-menu-header {
   background-color: @appmenuWarningBackgroundColorBrightText@;
   color: @appmenuWarningColorBrightText@;
@@ -679,12 +683,14 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="login-failed"]:hover,
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"]:hover,
+:root[lwt-popup-brighttext][fxastatus="login-failed"] .fxa-menu-header:hover,
 :root[lwt-popup-brighttext][fxastatus="unverified"] .fxa-menu-header:hover {
   background-color: @appmenuWarningBackgroundColorHoverBrightText@;
 }
 
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="login-failed"]:hover:active,
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"]:hover:active,
+:root[lwt-popup-brighttext][fxastatus="login-failed"] .fxa-menu-header:hover:active,
 :root[lwt-popup-brighttext][fxastatus="unverified"] .fxa-menu-header:hover:active {
   background-color: @appmenuWarningBackgroundColorActiveBrightText@;
 }
@@ -702,6 +708,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 :root[fxastatus="unverified"] {
   --avatar-image-url: url(chrome://browser/skin/fxa/avatar-confirm.svg);
+}
+
+:root[fxastatus="login-failed"] {
+  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-alert.svg);
 }
 
 :root[fxastatus="not_configured"] {
