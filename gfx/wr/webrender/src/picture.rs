@@ -379,6 +379,7 @@ pub enum TileSurface {
     Color {
         color: ColorF,
     },
+    Clear,
 }
 
 impl TileSurface {
@@ -386,6 +387,7 @@ impl TileSurface {
         match *self {
             TileSurface::Color { .. } => "Color",
             TileSurface::Texture { .. } => "Texture",
+            TileSurface::Clear => "Clear",
         }
     }
 }
@@ -655,15 +657,22 @@ impl Tile {
 
         // See if this tile is a simple color, in which case we can just draw
         // it as a rect, and avoid allocating a texture surface and drawing it.
-        let is_solid_color = self.current_descriptor.prims.len() == 1 && self.is_opaque;
+        let is_simple_prim = self.current_descriptor.prims.len() == 1 && self.is_opaque;
 
         // Set up the backing surface for this tile.
-        let mut surface = if is_solid_color {
+        let mut surface = if is_simple_prim {
             // If we determine the tile can be represented by a color, set the
             // surface unconditionally (this will drop any previously used
             // texture cache backing surface).
-            TileSurface::Color {
-                color: ctx.backdrop.color,
+            match ctx.backdrop.kind {
+                BackdropKind::Color { color } => {
+                    TileSurface::Color {
+                        color,
+                    }
+                }
+                BackdropKind::Clear => {
+                    TileSurface::Clear
+                }
             }
         } else {
             // If this tile will be backed by a surface, we want to retain
@@ -674,7 +683,7 @@ impl Tile {
                 Some(old_surface @ TileSurface::Texture { .. }) => {
                     old_surface
                 }
-                Some(TileSurface::Color { .. }) | None => {
+                Some(TileSurface::Color { .. }) | Some(TileSurface::Clear) | None => {
                     TileSurface::Texture {
                         handle: TextureCacheHandle::invalid(),
                         visibility_mask: PrimitiveVisibilityMask::empty(),
@@ -1067,6 +1076,14 @@ impl ::std::fmt::Debug for RecordedDirtyRegion {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+enum BackdropKind {
+    Color {
+        color: ColorF,
+    },
+    Clear,
+}
+
 /// Stores information about the calculated opaque backdrop of this slice.
 #[derive(Debug, Copy, Clone)]
 struct BackdropInfo {
@@ -1074,15 +1091,17 @@ struct BackdropInfo {
     /// to determine where subpixel AA can be used, and where alpha blending
     /// can be disabled.
     rect: PictureRect,
-    /// Color of the backdrop.
-    color: ColorF,
+    /// Kind of the backdrop
+    kind: BackdropKind,
 }
 
 impl BackdropInfo {
     fn empty() -> Self {
         BackdropInfo {
             rect: PictureRect::zero(),
-            color: ColorF::BLACK,
+            kind: BackdropKind::Color {
+                color: ColorF::BLACK,
+            },
         }
     }
 }
@@ -1619,7 +1638,9 @@ impl TileCacheInstance {
                             if clip_chain.pic_clip_rect.contains_rect(&self.backdrop.rect) {
                                 self.backdrop = BackdropInfo {
                                     rect: clip_chain.pic_clip_rect,
-                                    color,
+                                    kind: BackdropKind::Color {
+                                        color,
+                                    },
                                 };
                             }
                         }
@@ -1685,8 +1706,15 @@ impl TileCacheInstance {
                     }
                 }
             }
+            PrimitiveInstanceKind::Clear { .. } => {
+                if let Some(ref clip_chain) = prim_clip_chain {
+                    self.backdrop = BackdropInfo {
+                        rect: clip_chain.pic_clip_rect,
+                        kind: BackdropKind::Clear,
+                    };
+                }
+            }
             PrimitiveInstanceKind::LineDecoration { .. } |
-            PrimitiveInstanceKind::Clear { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
             PrimitiveInstanceKind::LinearGradient { .. } |
             PrimitiveInstanceKind::RadialGradient { .. } |
@@ -2287,6 +2315,8 @@ bitflags! {
         const CREATE_PICTURE_CACHE_POST = 32;
         /// If set, this cluster represents a scroll bar container.
         const SCROLLBAR_CONTAINER = 64;
+        /// If set, this cluster contains clear rectangle primitives.
+        const IS_CLEAR_PRIMITIVE = 128;
     }
 }
 
@@ -2399,6 +2429,9 @@ impl PrimitiveList {
             }
             PrimitiveInstanceKind::Backdrop { .. } => {
                 flags.insert(ClusterFlags::IS_BACKDROP_FILTER);
+            }
+            PrimitiveInstanceKind::Clear { .. } => {
+                flags.insert(ClusterFlags::IS_CLEAR_PRIMITIVE);
             }
             _ => {}
         }

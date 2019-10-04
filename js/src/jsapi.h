@@ -338,8 +338,7 @@ extern JS_PUBLIC_API bool JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 
 // Create a new context (and runtime) for this thread.
 extern JS_PUBLIC_API JSContext* JS_NewContext(
-    uint32_t maxbytes, uint32_t maxNurseryBytes = JS::DefaultNurseryBytes,
-    JSRuntime* parentRuntime = nullptr);
+    uint32_t maxbytes, JSRuntime* parentRuntime = nullptr);
 
 // The methods below for controlling the active context in a cooperatively
 // multithreaded runtime are not threadsafe, and the caller must ensure they
