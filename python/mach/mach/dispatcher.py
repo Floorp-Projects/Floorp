@@ -200,7 +200,7 @@ class CommandAction(argparse.Action):
                 # pick any extra argument, wherever they are.
                 # Assume a limited CommandArgument for those arguments.
                 assert len(arg[0]) == 1
-                assert all(k in ('default', 'nargs', 'help') for k in arg[1])
+                assert all(k in ('default', 'nargs', 'help', 'metavar') for k in arg[1])
                 remainder = arg
             else:
                 subparser.add_argument(*arg[0], **arg[1])

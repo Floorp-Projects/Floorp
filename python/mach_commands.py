@@ -97,6 +97,10 @@ class MachCommands(MachCommandBase):
                      metavar='TEST',
                      help=('Tests to run. Each test can be a single file or a directory. '
                            'Default test resolution relies on PYTHON_UNITTEST_MANIFESTS.'))
+    @CommandArgument('extra', nargs=argparse.REMAINDER,
+                     metavar='PYTEST ARGS',
+                     help=('Arguments that aren\'t recognized by mach. These will be '
+                           'passed as it is to pytest'))
     def python_test(self, *args, **kwargs):
         try:
             tempdir = os.environ[b'PYTHON_TEST_TMP'] = str(tempfile.mkdtemp(suffix='-python-test'))
@@ -113,6 +117,7 @@ class MachCommands(MachCommandBase):
                          jobs=None,
                          python=None,
                          exitfirst=False,
+                         extra=None,
                          **kwargs):
         python = python or self.virtualenv_manager.python_path
         self.activate_pipenv(pipfile=None, populate=True, python=python)
@@ -153,6 +158,9 @@ class MachCommands(MachCommandBase):
         parallel = []
         sequential = []
         os.environ.setdefault('PYTEST_ADDOPTS', '')
+
+        if extra:
+            os.environ['PYTEST_ADDOPTS'] += " " + " ".join(extra)
 
         if exitfirst:
             sequential = tests

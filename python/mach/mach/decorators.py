@@ -286,7 +286,7 @@ class CommandArgument(object):
             # These are the assertions we make in dispatcher.py about
             # those types of CommandArguments.
             assert len(args) == 1
-            assert all(k in ('default', 'nargs', 'help', 'group') for k in kwargs)
+            assert all(k in ('default', 'nargs', 'help', 'group', 'metavar') for k in kwargs)
         self._command_args = (args, kwargs)
 
     def __call__(self, func):
