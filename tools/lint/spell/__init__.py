@@ -114,7 +114,8 @@ def lint(paths, config, fix=None, **lintargs):
     skip_files = '--skip=*.dic,{}'.format(','.join(config['exclude']))
 
     exclude_list = os.path.join(here, 'exclude-list.txt')
-    cmd_args = [binary,
+    cmd_args = [which('python'),
+                binary,
                 '--disable-colors',
                 # Silence some warnings:
                 # 1: disable warnings about wrong encoding
