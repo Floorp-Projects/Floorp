@@ -1176,7 +1176,7 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mJustifyItems(NS_STYLE_JUSTIFY_NORMAL),
       mJustifySelf(NS_STYLE_JUSTIFY_AUTO),
       mFlexDirection(StyleFlexDirection::Row),
-      mFlexWrap(NS_STYLE_FLEX_WRAP_NOWRAP),
+      mFlexWrap(StyleFlexWrap::Nowrap),
       mObjectFit(NS_STYLE_OBJECT_FIT_FILL),
       mOrder(NS_STYLE_ORDER_INITIAL),
       mFlexGrow(0.0f),

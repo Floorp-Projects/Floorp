@@ -453,9 +453,11 @@ enum class StyleFlexDirection : uint8_t {
 };
 
 // See nsStylePosition
-#define NS_STYLE_FLEX_WRAP_NOWRAP 0
-#define NS_STYLE_FLEX_WRAP_WRAP 1
-#define NS_STYLE_FLEX_WRAP_WRAP_REVERSE 2
+enum class StyleFlexWrap : uint8_t {
+  Nowrap,
+  Wrap,
+  WrapReverse,
+};
 
 // See nsStylePosition
 // NOTE: This is the initial value of the integer-valued 'order' property
