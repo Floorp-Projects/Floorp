@@ -11,6 +11,8 @@ import re
 import subprocess
 import sys
 
+from mozbuild.util import ensure_subprocess_env
+
 from distutils.spawn import find_executable
 from distutils.version import LooseVersion
 
@@ -99,7 +101,7 @@ class Repository(object):
         try:
             return subprocess.check_output(cmd,
                                            cwd=self.path,
-                                           env=self._env,
+                                           env=ensure_subprocess_env(self._env),
                                            universal_newlines=True)
         except subprocess.CalledProcessError as e:
             if e.returncode in return_codes:
