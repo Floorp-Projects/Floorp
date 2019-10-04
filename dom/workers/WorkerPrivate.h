@@ -695,6 +695,9 @@ class WorkerPrivate : public RelativeTimeline {
   }
 
   bool UsesSystemPrincipal() const { return mLoadInfo.mPrincipalIsSystem; }
+  bool UsesAddonOrExpandedAddonPrincipal() const {
+    return mLoadInfo.mPrincipalIsAddonOrExpandedAddon;
+  }
 
   const mozilla::ipc::PrincipalInfo& GetPrincipalInfo() const {
     return *mLoadInfo.mPrincipalInfo;

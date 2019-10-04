@@ -965,7 +965,7 @@ class WorkerJSContext final : public mozilla::CycleCollectedJSContext {
     JSContext* cx = Context();
 
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
-    JS_InitDestroyPrincipalsCallback(cx, DestroyWorkerPrincipals);
+    JS_InitDestroyPrincipalsCallback(cx, WorkerPrincipal::Destroy);
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     if (mWorkerPrivate->IsDedicatedWorker()) {
       JS_SetFutexCanWait(cx);
