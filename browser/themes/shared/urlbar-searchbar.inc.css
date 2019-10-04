@@ -34,39 +34,28 @@
 
 #urlbar,
 #searchbar {
-  min-height: 30px;
-  text-shadow: none;
-  color: -moz-FieldText;
-}
-
-#urlbar:not(.megabar),
-#urlbar.megabar > #urlbar-background,
-#searchbar {
   background-color: -moz-Field;
+  color: -moz-FieldText;
   background-clip: padding-box;
   border: 1px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
-}
-
-#urlbar-input-container,
-#searchbar {
-  border-radius: var(--toolbarbutton-border-radius);
+  min-height: 30px;
   overflow: -moz-hidden-unscrollable;
+  text-shadow: none;
 }
 
-#urlbar-input,
-#urlbar-scheme,
 .searchbar-textbox {
+  -moz-appearance: none;
   -moz-box-flex: 1;
-  background-color: transparent;
+  background: none;
   color: inherit;
   border: none;
-  margin: 0;
+  font: inherit;
+  margin: 0 !important; /* override autocomplete.css */
 }
 
-#urlbar:not(.megabar):hover:not([open]),
-#urlbar.megabar:hover:not([breakout-extend]) > #urlbar-background,
+#urlbar:hover:not([open]),
 #searchbar:hover {
   border-color: @fieldHoverBorderColor@;
   box-shadow: 0 1px 6px rgba(0,0,0,.1);
@@ -74,82 +63,30 @@
 
 #urlbar:-moz-lwtheme,
 #navigator-toolbox #searchbar:-moz-lwtheme {
+  background-color: var(--lwt-toolbar-field-background-color, hsla(0,0%,100%,.8));
   color: var(--lwt-toolbar-field-color, black);
 }
 
-#urlbar:not(.megabar):-moz-lwtheme,
-#urlbar.megabar:-moz-lwtheme > #urlbar-background,
-#navigator-toolbox #searchbar:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-background-color, hsla(0,0%,100%,.8));
-}
-
-#urlbar:not(.megabar):not([focused="true"]):-moz-lwtheme,
-#urlbar.megabar:not([focused="true"]):-moz-lwtheme > #urlbar-background,
+#urlbar:not([focused="true"]):-moz-lwtheme,
 #urlbar.hidden-focus:-moz-lwtheme,
 #navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme {
   border-color: var(--lwt-toolbar-field-border-color, @fieldBorderColor@);
 }
 
-#urlbar:not(.megabar):not([focused="true"]):-moz-lwtheme:hover,
-#urlbar.megabar:not([focused="true"]):-moz-lwtheme:hover > #urlbar-background,
+#urlbar:not([focused="true"]):-moz-lwtheme:hover,
 #urlbar.hidden-focus:-moz-lwtheme:hover,
 #navigator-toolbox #searchbar:not(:focus-within):-moz-lwtheme:hover {
   border-color: var(--lwt-toolbar-field-border-color, @fieldHoverBorderColor@);
 }
 
-#urlbar:not(.megabar):-moz-lwtheme:hover,
-#urlbar.megabar:-moz-lwtheme:hover > #urlbar-background,
+#urlbar:-moz-lwtheme:hover,
 #navigator-toolbox #searchbar:-moz-lwtheme:hover {
   background-color: var(--lwt-toolbar-field-background-color, white);
 }
 
-#urlbar:not(.megabar):not(.hidden-focus)[focused="true"],
-#urlbar.megabar:not(.hidden-focus)[focused="true"] > #urlbar-background,
+#urlbar:not(.hidden-focus)[focused="true"],
 #searchbar:focus-within {
   border-color: var(--toolbar-field-focus-border-color);
-}
-
-#urlbar:not(.hidden-focus):-moz-lwtheme[focused="true"],
-#navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
-  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, black));
-}
-
-#urlbar:not(.megabar):not(.hidden-focus):-moz-lwtheme[focused="true"],
-#urlbar.megabar:not(.hidden-focus):-moz-lwtheme[focused="true"] > #urlbar-background,
-#navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, white));
-}
-
-:root[lwt-selection] #urlbar-input:-moz-lwtheme::selection,
-:root[lwt-selection] .searchbar-textbox:-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, Highlight);
-  color: var(--lwt-toolbar-field-highlight-text, HighlightText);
-}
-
-/**
- * The urlbar background is a separate element so we can animate it
- * independently from the content. It's positioned absolutely and stretched to
- * the bounds of the urlbar.
- */
-
-#urlbar.megabar,
-#urlbar.megabar > #urlbar-input-container,
-#urlbar.megabar > .urlbarView {
-  position: relative;
-}
-
-#urlbar.megabar > #urlbar-background {
-  content: "";
-  display: block;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
-
-#urlbar.megabar > #urlbar-input-container {
-  border: 1px solid transparent;
 }
 
 #urlbar-container[breakout] {
@@ -164,11 +101,26 @@
   height: var(--urlbar-height);
   top: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
   left: 0;
+  transition-property: left, width;
 }
 
 #urlbar[breakout] > #urlbar-input-container {
   width: 100%;
   height: 100%;
+  transition-property: width, padding-inline;
+}
+
+#urlbar[breakout][breakout-extend-animate],
+#urlbar[breakout][breakout-extend-animate] > #urlbar-input-container {
+  transition-duration: 150ms;
+  transition-timing-function: var(--animation-easing-function);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #urlbar[breakout][breakout-extend-animate],
+  #urlbar[breakout][breakout-extend-animate] > #urlbar-input-container {
+    transition-duration: 0s;
+  }
 }
 
 #urlbar[breakout][breakout-extend],
@@ -183,39 +135,25 @@
   top: -@urlbarBreakoutVerticalExtend@;
   left: -@urlbarBreakoutHorizontalExtend@;
   width: calc(100% + 2 * @urlbarBreakoutHorizontalExtend@);
-}
-
-#urlbar[breakout][breakout-extend] > #urlbar-background {
   box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
-  height: calc(var(--urlbar-toolbar-height) + 2 * @urlbarBreakoutVerticalExtend@);
+  height: calc(var(--urlbar-toolbar-height) + 2 * @urlbarBreakoutVerticalExtend@ - 2px /* urlbar border */);
   padding-block: calc(@urlbarBreakoutVerticalExtend@ + (var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
   padding-inline: @urlbarBreakoutHorizontalExtend@;
 }
 
-@keyframes urlbar-grow {
-  0% {
-    transform: scale(.9);
-  }
-  100% {
-    transform: scale(1.0);
-  }
+#urlbar:not(.hidden-focus):-moz-lwtheme[focused="true"],
+#navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
+  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, white));
+  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, black));
 }
 
-#urlbar[breakout][breakout-extend] > #urlbar-background,
-#urlbar[breakout][breakout-extend] > .urlbarView {
-  animation-name: urlbar-grow;
-  animation-duration: 0s;
-  animation-timing-function: var(--animation-easing-function);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  #urlbar[breakout][breakout-extend][breakout-extend-animate] > #urlbar-background,
-  #urlbar[breakout][breakout-extend][breakout-extend-animate] > .urlbarView {
-    animation-duration: 150ms;
-  }
+:root[lwt-selection] #urlbar-input:-moz-lwtheme::selection,
+:root[lwt-selection] .searchbar-textbox:-moz-lwtheme::selection {
+  background-color: var(--lwt-toolbar-field-highlight, Highlight);
+  color: var(--lwt-toolbar-field-highlight-text, HighlightText);
 }
 
 :root[uidensity=compact] #urlbar,
@@ -235,6 +173,16 @@
 
 :root[customizing] .urlbar-input-box {
   visibility: hidden;
+}
+
+#urlbar-input,
+#urlbar-scheme {
+  -moz-box-flex: 1;
+  background-color: transparent;
+  color: inherit;
+  border: none;
+  padding: 0;
+  margin: 0;
 }
 
 #urlbar-container {
