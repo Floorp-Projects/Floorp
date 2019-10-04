@@ -78,8 +78,6 @@ browser.jar:
         content/browser/defaultthemes/5.header.png    (content/defaultthemes/5.header.png)
         content/browser/defaultthemes/5.icon.jpg      (content/defaultthemes/5.icon.jpg)
         content/browser/defaultthemes/5.preview.jpg   (content/defaultthemes/5.preview.jpg)
-        content/browser/fxaDisconnect.js              (content/fxaDisconnect.js)
-        content/browser/fxaDisconnect.xul             (content/fxaDisconnect.xul)
         content/browser/history-swipe-arrow.svg       (content/history-swipe-arrow.svg)
 *       content/browser/pageinfo/pageInfo.xul         (content/pageinfo/pageInfo.xul)
         content/browser/pageinfo/pageInfo.js          (content/pageinfo/pageInfo.js)
