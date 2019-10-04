@@ -58,7 +58,7 @@ function mem_init(min, max, shared, backup, write) {
     let ins = wasmEvalText(
         `(module
            (memory (export "mem") ${min} ${max} ${shared})
-           (data "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
+           (data passive "\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42\\42")
            (func (export "run") (param $offs i32) (param $len i32)
              (memory.init 0 (local.get $offs) (i32.const 0) (local.get $len))))`);
     // A fill writing past the end of the memory should throw *and* have filled

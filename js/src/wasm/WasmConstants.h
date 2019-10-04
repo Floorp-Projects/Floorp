@@ -145,13 +145,13 @@ enum class MemoryMasks { AllowUnshared = 0x1, AllowShared = 0x3 };
 enum class DataSegmentKind {
   Active = 0x00,
   Passive = 0x01,
-  ActiveWithMemoryIndex = 0x02
+  ActiveWithIndex = 0x02
 };
 
 enum class ElemSegmentKind : uint32_t {
   Active = 0x0,
   Passive = 0x1,
-  ActiveWithTableIndex = 0x2,
+  ActiveWithIndex = 0x2,
   Declared = 0x3,
 };
 
