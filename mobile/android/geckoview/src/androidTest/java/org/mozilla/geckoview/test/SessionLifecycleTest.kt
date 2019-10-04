@@ -286,6 +286,8 @@ class SessionLifecycleTest : BaseSessionTest() {
                                          ontoSession: GeckoSession?) =
             GeckoView(InstrumentationRegistry.getTargetContext()).apply {
                 id = 0
+                autofillEnabled = false
+
                 if (fromSession != null) {
                     setSession(fromSession)
                 }
