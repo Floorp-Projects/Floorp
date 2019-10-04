@@ -56,3 +56,12 @@ page-action-manage-extension =
     .label = Manage Extension…
 page-action-remove-from-urlbar =
     .label = Remove from Address Bar
+
+## Auto-hide Context Menu
+
+full-screen-autohide =
+    .label = Hide Toolbars
+    .accesskey = H
+full-screen-exit =
+    .label = Exit Full Screen Mode
+    .accesskey = F
