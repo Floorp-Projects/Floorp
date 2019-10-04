@@ -896,6 +896,8 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
 
   bool useAsmJS = Preferences::GetBool(JS_OPTIONS_DOT_STR "asmjs");
   bool useWasm = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm");
+  bool useWasmTrustedPrincipals =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_trustedprincipals");
   bool useWasmIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_ionjit");
   bool useWasmBaseline =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit");
@@ -957,7 +959,7 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
   JS::ContextOptionsRef(cx)
       .setAsmJS(useAsmJS)
       .setWasm(useWasm)
-      .setWasmForTrustedPrinciples(useWasm)
+      .setWasmForTrustedPrinciples(useWasmTrustedPrincipals)
       .setWasmIon(useWasmIon)
       .setWasmBaseline(useWasmBaseline)
 #ifdef ENABLE_WASM_CRANELIFT

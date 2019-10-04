@@ -1046,16 +1046,17 @@ pref("javascript.options.ion.threshold",    1000);
 pref("javascript.options.ion.full.threshold", 100000);
 // Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.frequent_bailout_threshold", 10);
-pref("javascript.options.asmjs",            true);
-pref("javascript.options.wasm",             true);
-pref("javascript.options.wasm_verbose",     false);
-pref("javascript.options.wasm_ionjit",      true);
-pref("javascript.options.wasm_baselinejit", true);
+pref("javascript.options.asmjs",                  true);
+pref("javascript.options.wasm",                   true);
+pref("javascript.options.wasm_trustedprincipals", true);
+pref("javascript.options.wasm_verbose",           false);
+pref("javascript.options.wasm_ionjit",            true);
+pref("javascript.options.wasm_baselinejit",       true);
 #ifdef ENABLE_WASM_CRANELIFT
-  pref("javascript.options.wasm_cranelift",   false);
+  pref("javascript.options.wasm_cranelift",       false);
 #endif
 #ifdef ENABLE_WASM_REFTYPES
-  pref("javascript.options.wasm_gc",          false);
+  pref("javascript.options.wasm_gc",              false);
 #endif
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);

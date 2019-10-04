@@ -287,7 +287,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
   contextOptions.setAsmJS(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs")))
       .setWasm(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm")))
       .setWasmForTrustedPrinciples(
-          GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm")))
+          GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_trustedprincipals")))
       .setWasmBaseline(
           GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_baselinejit")))
       .setWasmIon(GetWorkerPref<bool>(NS_LITERAL_CSTRING("wasm_ionjit")))
