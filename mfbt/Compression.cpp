@@ -13,7 +13,9 @@
 #include <string>
 
 #include "lz4/lz4.h"
+#include "lz4/lz4frame.h"
 
+using namespace mozilla;
 using namespace mozilla::Compression;
 
 /* Our wrappers */
@@ -77,4 +79,114 @@ bool LZ4::decompressPartial(const char* aSource, size_t aInputSize, char* aDest,
 
   *aOutputSize = 0;
   return false;
+}
+
+LZ4FrameCompressionContext::LZ4FrameCompressionContext(int aCompressionLevel,
+                                                       size_t aMaxSrcSize,
+                                                       bool aChecksum,
+                                                       bool aStableSrc)
+    : mContext(nullptr),
+      mCompressionLevel(aCompressionLevel),
+      mGenerateChecksum(aChecksum),
+      mStableSrc(aStableSrc),
+      mMaxSrcSize(aMaxSrcSize),
+      mWriteBufLen(0) {
+  LZ4F_contentChecksum_t checksum =
+      mGenerateChecksum ? LZ4F_contentChecksumEnabled : LZ4F_noContentChecksum;
+  LZ4F_preferences_t prefs = {
+      {
+          LZ4F_max256KB,
+          LZ4F_blockLinked,
+          checksum,
+      },
+      mCompressionLevel,
+  };
+  mWriteBufLen = LZ4F_compressBound(mMaxSrcSize, &prefs);
+  LZ4F_errorCode_t err = LZ4F_createCompressionContext(&mContext, LZ4F_VERSION);
+  MOZ_RELEASE_ASSERT(!LZ4F_isError(err));
+}
+
+LZ4FrameCompressionContext::~LZ4FrameCompressionContext() {
+  LZ4F_freeCompressionContext(mContext);
+}
+
+Result<Span<const char>, size_t> LZ4FrameCompressionContext::BeginCompressing(
+    Span<char> aWriteBuffer) {
+  mWriteBuffer = aWriteBuffer;
+  LZ4F_contentChecksum_t checksum =
+      mGenerateChecksum ? LZ4F_contentChecksumEnabled : LZ4F_noContentChecksum;
+  LZ4F_preferences_t prefs = {
+      {
+          LZ4F_max256KB,
+          LZ4F_blockLinked,
+          checksum,
+      },
+      mCompressionLevel,
+  };
+  size_t headerSize = LZ4F_compressBegin(mContext, mWriteBuffer.Elements(),
+                                         mWriteBufLen, &prefs);
+  if (LZ4F_isError(headerSize)) {
+    return Err(headerSize);
+  }
+
+  return MakeSpan(static_cast<const char*>(mWriteBuffer.Elements()),
+                  headerSize);
+}
+
+Result<Span<const char>, size_t>
+LZ4FrameCompressionContext::ContinueCompressing(Span<const char> aInput) {
+  LZ4F_compressOptions_t opts = {};
+  opts.stableSrc = (uint32_t)mStableSrc;
+  size_t outputSize =
+      LZ4F_compressUpdate(mContext, mWriteBuffer.Elements(), mWriteBufLen,
+                          aInput.Elements(), aInput.Length(), &opts);
+  if (LZ4F_isError(outputSize)) {
+    return Err(outputSize);
+  }
+
+  return MakeSpan(static_cast<const char*>(mWriteBuffer.Elements()),
+                  outputSize);
+}
+
+Result<Span<const char>, size_t> LZ4FrameCompressionContext::EndCompressing() {
+  size_t outputSize =
+      LZ4F_compressEnd(mContext, mWriteBuffer.Elements(), mWriteBufLen,
+                       /* options */ nullptr);
+  if (LZ4F_isError(outputSize)) {
+    return Err(outputSize);
+  }
+
+  return MakeSpan(static_cast<const char*>(mWriteBuffer.Elements()),
+                  outputSize);
+}
+
+LZ4FrameDecompressionContext::LZ4FrameDecompressionContext(bool aStableDest)
+    : mContext(nullptr), mStableDest(aStableDest) {
+  LZ4F_errorCode_t err =
+      LZ4F_createDecompressionContext(&mContext, LZ4F_VERSION);
+  MOZ_RELEASE_ASSERT(!LZ4F_isError(err));
+}
+
+LZ4FrameDecompressionContext::~LZ4FrameDecompressionContext() {
+  LZ4F_freeDecompressionContext(mContext);
+}
+
+Result<LZ4FrameDecompressionResult, size_t>
+LZ4FrameDecompressionContext::Decompress(Span<char> aOutput,
+                                         Span<const char> aInput) {
+  LZ4F_decompressOptions_t opts = {};
+  opts.stableDst = (uint32_t)mStableDest;
+  size_t outBytes = aOutput.Length();
+  size_t inBytes = aInput.Length();
+  size_t result = LZ4F_decompress(mContext, aOutput.Elements(), &outBytes,
+                                  aInput.Elements(), &inBytes, &opts);
+  if (LZ4F_isError(result)) {
+    return Err(result);
+  }
+
+  LZ4FrameDecompressionResult decompressionResult = {};
+  decompressionResult.mFinished = !result;
+  decompressionResult.mSizeRead = inBytes;
+  decompressionResult.mSizeWritten = outBytes;
+  return decompressionResult;
 }
