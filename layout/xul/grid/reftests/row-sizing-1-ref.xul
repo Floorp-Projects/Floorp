@@ -8,7 +8,7 @@
       <label value="Top" />
     </hbox>
     <hbox style="background:yellow">
-      <textbox value="Bottom" />
+      <input xmlns="http://www.w3.org/1999/xhtml" value="Bottom" />
     </hbox>
   </vbox>
 </window>
