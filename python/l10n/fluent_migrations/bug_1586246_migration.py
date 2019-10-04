@@ -8,6 +8,7 @@ import fluent.syntax.ast as FTL
 from fluent.migrate.helpers import transforms_from
 from fluent.migrate.helpers import COPY
 
+
 def migrate(ctx):
     """Bug 1586246 - Convert autohide-context to Fluent, part {index}"""
 
@@ -15,11 +16,11 @@ def migrate(ctx):
         "browser/browser/browser.ftl",
         "browser/browser/browser.ftl",
         transforms_from(
-"""
-full-screen-autohide = 
+            """
+full-screen-autohide =
     .label = { COPY(path1, "fullScreenAutohide.label") }
     .accesskey = { COPY(path1, "fullScreenAutohide.accesskey") }
-full-screen-exit = 
+full-screen-exit =
     .label = { COPY(path1, "fullScreenExit.label") }
     .accesskey = { COPY(path1, "fullScreenExit.accesskey") }
 """, path1="browser/chrome/browser/browser.dtd"))
