@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1386222
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
-  <textbox id="t"/>
+  <input xmlns="http://www.w3.org/1999/xhtml" id="t"/>
   <script class="testbody" type="application/javascript">
   <![CDATA[
 
