@@ -35,7 +35,7 @@ internal class MenuButton(
     }
 
     init {
-        setBackgroundResource(context.theme.resolveAttribute(android.R.attr.selectableItemBackground))
+        setBackgroundResource(context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless))
 
         visibility = View.GONE
         isClickable = true
