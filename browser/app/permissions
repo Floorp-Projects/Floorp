@@ -22,3 +22,4 @@ origin	hc_telemetry	1	https://discovery.addons.mozilla.org
 
 # addon install
 origin	install	1	https://private-network.firefox.com
+origin	install	1	https://fpn.firefox.com
