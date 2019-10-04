@@ -149,7 +149,8 @@ StartupCache::StartupCache()
       mCurTableReferenced(false),
       mRequestedCount(0),
       mCacheEntriesBaseOffset(0),
-      mWriteThread(nullptr) {}
+      mWriteThread(nullptr),
+      mPrefetchThread(nullptr) {}
 
 StartupCache::~StartupCache() {
   if (mTimer) {
@@ -160,6 +161,7 @@ StartupCache::~StartupCache() {
   // but an early shutdown means either mTimer didn't run
   // or the write thread is still running.
   WaitOnWriteThread();
+  WaitOnPrefetchThread();
 
   // If we shutdown quickly timer wont have fired. Instead of writing
   // it on the main thread and block the shutdown we simply wont update
@@ -243,6 +245,15 @@ nsresult StartupCache::Init() {
   return NS_OK;
 }
 
+void StartupCache::StartPrefetchMemoryThread() {
+  // XXX: It would be great for this to not create its own thread, unfortunately
+  // there doesn't seem to be an existing thread that makes sense for this, so
+  // barring a coordinated global scheduling system this is the best we get.
+  mPrefetchThread = PR_CreateThread(
+      PR_USER_THREAD, StartupCache::ThreadedPrefetch, this, PR_PRIORITY_NORMAL,
+      PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+}
+
 /**
  * LoadArchive can be called from the main thread or while reloading cache on
  * write thread.
@@ -252,6 +263,9 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
 
   MOZ_TRY(mCacheData.init(mFile));
   auto size = mCacheData.size();
+  if (CanPrefetchMemory()) {
+    StartPrefetchMemoryThread();
+  }
 
   uint32_t headerSize;
   if (size < sizeof(MAGIC) + sizeof(headerSize)) {
@@ -365,9 +379,6 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
     Span<const char> compressed = MakeSpan(
         mCacheData.get<char>().get() + mCacheEntriesBaseOffset + value.mOffset,
         value.mCompressedSize);
-    if (CanPrefetchMemory()) {
-      PrefetchMemory((uint8_t*)compressed.Elements(), compressed.Length());
-    }
     value.mData = MakeUnique<char[]>(value.mUncompressedSize);
     Span<char> uncompressed =
         MakeSpan(value.mData.get(), value.mUncompressedSize);
@@ -611,6 +622,23 @@ void StartupCache::WaitOnWriteThread() {
   mWriteThread = nullptr;
 }
 
+void StartupCache::WaitOnPrefetchThread() {
+  if (!mPrefetchThread || mPrefetchThread == PR_GetCurrentThread()) return;
+
+  PR_JoinThread(mPrefetchThread);
+  mPrefetchThread = nullptr;
+}
+
+void StartupCache::ThreadedPrefetch(void* aClosure) {
+  AUTO_PROFILER_REGISTER_THREAD("StartupCache");
+  NS_SetCurrentThreadName("StartupCache");
+  mozilla::IOInterposer::RegisterCurrentThread();
+  StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
+  PrefetchMemory(startupCacheObj->mCacheData.get<uint8_t>().get(),
+                 startupCacheObj->mCacheData.size());
+  mozilla::IOInterposer::UnregisterCurrentThread();
+}
+
 void StartupCache::ThreadedWrite(void* aClosure) {
   AUTO_PROFILER_REGISTER_THREAD("StartupCache");
   NS_SetCurrentThreadName("StartupCache");
@@ -660,6 +688,7 @@ void StartupCache::WriteTimeout(nsITimer* aTimer, void* aClosure) {
     return;
   }
 
+  startupCacheObj->WaitOnPrefetchThread();
   startupCacheObj->mStartupWriteInitiated = false;
   startupCacheObj->mDirty = true;
   startupCacheObj->mCacheData.reset();
