@@ -864,6 +864,13 @@ void BrowsingContext::Blur(ErrorResult& aError) {
   }
 }
 
+Nullable<WindowProxyHolder> BrowsingContext::GetWindow() {
+  if (XRE_IsParentProcess() && !IsInProcess()) {
+    return nullptr;
+  }
+  return WindowProxyHolder(this);
+}
+
 Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
   if (mIsDiscarded) {
     return nullptr;

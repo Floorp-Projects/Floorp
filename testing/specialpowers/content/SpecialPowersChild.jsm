@@ -1613,6 +1613,17 @@ class SpecialPowersChild extends JSWindowActorChild {
     return BrowsingContext.getFromWindow(target);
   }
 
+  getBrowsingContextID(target) {
+    return this._browsingContextForTarget(target).id;
+  }
+
+  *getGroupTopLevelWindows(target) {
+    let { group } = this._browsingContextForTarget(target);
+    for (let bc of group.getToplevels()) {
+      yield bc.window;
+    }
+  }
+
   /**
    * Runs a task in the context of the given frame, and returns a
    * promise which resolves to the return value of that task.

@@ -224,3 +224,58 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
 
   var frameWaitInterval = setInterval(poll, 500);
 }
+
+function delay(msec) {
+  return new Promise(resolve => setTimeout(resolve, msec));
+}
+
+async function waitForFinishedFrames(numFrames) {
+  SimpleTest.requestFlakyTimeout("Polling");
+
+  var finishedWindows = new Set();
+
+  async function searchForFinishedFrames(win) {
+    try {
+      let { href, bodyText, readyState } = await SpecialPowers.spawn(
+        win,
+        [],
+        () => {
+          return {
+            href: this.content.location.href,
+            bodyText:
+              this.content.document.body &&
+              this.content.document.body.textContent.trim(),
+            readyState: this.content.document.readyState,
+          };
+        }
+      );
+
+      if (
+        (href.endsWith(target_url) || href.endsWith(target_popup_url)) &&
+        (bodyText == body || bodyText == popup_body) &&
+        readyState == "complete"
+      ) {
+        finishedWindows.add(SpecialPowers.getBrowsingContextID(win));
+      }
+    } catch (e) {
+      // This may throw if a frame is not fully initialized, in which
+      // case we'll handle it in a later iteration.
+    }
+
+    for (let i = 0; i < win.frames.length; i++) {
+      await searchForFinishedFrames(win.frames[i]);
+    }
+  }
+
+  while (finishedWindows.size < numFrames) {
+    await delay(500);
+
+    for (let win of SpecialPowers.getGroupTopLevelWindows(window)) {
+      await searchForFinishedFrames(win);
+    }
+  }
+
+  if (finishedWindows.size > numFrames) {
+    throw new Error("Too many frames loaded.");
+  }
+}
