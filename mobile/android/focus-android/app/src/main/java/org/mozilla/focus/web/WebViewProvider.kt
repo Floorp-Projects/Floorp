@@ -8,26 +8,14 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.webkit.WebSettings
-import org.mozilla.focus.utils.geckoEngineExperimentDescriptor
-import org.mozilla.focus.utils.isInExperiment
 import org.mozilla.focus.webview.SystemWebView
-
-const val ENGINE_PREF_STRING_KEY = "use_gecko_engine"
 
 object WebViewProvider : IWebViewProvider {
 
     var engine: IWebViewProvider? = null
 
-    fun determineEngine(context: Context): IWebViewProvider {
-        val useNewRenderer =
-            if (context.isInExperiment(geckoEngineExperimentDescriptor))
-                    true
-                else
-                    Config.DEFAULT_NEW_RENDERER
-        engine = when (useNewRenderer) {
-            false -> ClassicWebViewProvider()
-            true -> GeckoWebViewProvider()
-        }
+    fun determineEngine(): IWebViewProvider {
+        engine = GeckoWebViewProvider()
         return engine!!
     }
 

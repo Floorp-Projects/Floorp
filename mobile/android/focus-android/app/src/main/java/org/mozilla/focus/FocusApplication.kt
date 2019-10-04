@@ -100,7 +100,7 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             })
         fretboard.loadExperiments()
         TelemetryWrapper.recordActiveExperiments(this)
-        WebViewProvider.determineEngine(this@FocusApplication)
+        WebViewProvider.determineEngine()
     }
 
     private fun enableStrictMode() {
