@@ -303,7 +303,7 @@ function mouseWillTriggerFocus(element)
 function mouseOnElement(element, expectedElement, focusChanged, testid)
 {
   var expectedWindow = (element.ownerGlobal == gChildWindow) ? gChildWindow : window;
-  // on Mac, form elements are not focused when clicking, except for lists and textboxes.
+  // on Mac, form elements are not focused when clicking, except for lists and inputs.
   var noFocusOnMouse = !mouseWillTriggerFocus(element)
 
   if (noFocusOnMouse) {
@@ -370,7 +370,7 @@ function startTest()
   is(gChildWindow.document.hasFocus(), false, " child document hasFocus");
 
   // test to see if the Mac Full Keyboard Access setting is set. If t3 is
-  // focused after tab is pressed, then it is set to textboxes and lists only.
+  // focused after tab is pressed, then it is set to inputs and lists only.
   // Otherwise, all elements are in the tab order.
   pressTab();
 
@@ -429,10 +429,10 @@ function startTest()
   gLastFocusMethod = 0;
   var selectFired = false;
   function selectListener() { selectFired = true; }
-  t19.addEventListener("select", selectListener, false); 
+  t19.addEventListener("select", selectListener, false);
   expectFocusShift(() => t19.select(),
                    null, getById("t" + 19), true, "input.select()");
-  t19.removeEventListener("select", selectListener, false); 
+  t19.removeEventListener("select", selectListener, false);
   ok(selectFired, "select event fires for input");
 
   // mouse clicking
@@ -460,7 +460,7 @@ function startTest()
 
   ok(t19.selectionStart == t19.selectionEnd, "input focused from mouse selection");
 
-  // mouse clicking on elements that are not tabbable 
+  // mouse clicking on elements that are not tabbable
   for (idx = 1; idx <= kFocusSteps; idx++) {
     var element = getById("o" + (idx % 2 ? idx : idx - 1));
 
@@ -502,7 +502,7 @@ function startTest()
   ok(gEvents === "", "blurring element that is not focused");
   is(document.activeElement, $("t1"), "old element still focused after blur() on another element");
 
-  // focus() method on elements that are not tabbable 
+  // focus() method on elements that are not tabbable
   for (idx = 1; idx <= kFocusSteps; idx++) {
     var expected = getById("o" + (idx % 2 ? idx : idx - 1));
     expectFocusShift(() => getById("o" + idx).focus(),
@@ -705,7 +705,7 @@ function startTest()
 
   // next, check cases where the focus is adjusted during the focus event
 
-  // switch focus to an element in the same document  
+  // switch focus to an element in the same document
   trapFocus(o5, shiftFocusParentDocument);
   compareEvents("commandupdate: cu focus: o5 commandupdate: cu blur: o5 commandupdate: cu focus: o9",
                 window, o9, "change focus to sibling during element focus");
@@ -787,31 +787,31 @@ function startTest()
   getById("inpopup1").focus();
   is(fm.focusedElement, getById("t9"), "focus in closed popup");
 
-  // ---- tests to check if tabbing out of a textbox works
+  // ---- tests to check if tabbing out of a input works
 
   setFocusTo("t1", window);
 
-  var textbox1 = document.createXULElement("textbox");
-  $("innerbox").appendChild(textbox1);
+  var input1 = document.createElement("input");
+  $("innerbox").appendChild(input1);
 
-  var textbox2 = document.createXULElement("textbox");
-  $("innerbox").appendChild(textbox2);
+  var input2 = document.createElement("input");
+  $("innerbox").appendChild(input2);
 
   gLastFocusMethod = 0;
-  expectFocusShift(() => textbox2.focus(),
-                   null, textbox2.inputField, true, "focus on textbox");
+  expectFocusShift(() => input2.focus(),
+                   null, input2, true, "focus on input");
   gLastFocusMethod = fm.FLAG_BYKEY;
   expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
-                   null, textbox1.inputField, true, "shift+tab on textbox");
+                   null, input1, true, "shift+tab on input");
 
-  textbox1.tabIndex = 2;
-  textbox2.tabIndex = 2;
+  input1.tabIndex = 2;
+  input2.tabIndex = 2;
   gLastFocusMethod = 0;
-  expectFocusShift(() => textbox2.focus(),
-                   null, textbox2.inputField, true, "focus on textbox with tabindex set");
+  expectFocusShift(() => input2.focus(),
+                   null, input2, true, "focus on input with tabindex set");
   gLastFocusMethod = fm.FLAG_BYKEY;
   expectFocusShift(() => synthesizeKey("KEY_Tab", {shiftKey: true}),
-                   null, textbox1.inputField, true, "shift+tab on textbox with tabindex set");
+                   null, input1, true, "shift+tab on input with tabindex set");
 
   // ---- test for bug 618907 which ensures that canceling the mousedown event still focuses the
   //      right frame
@@ -1066,7 +1066,7 @@ function testMoveFocus()
 
   gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
   expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FORWARD, 0),
-                   gChildWindow, t19, true, "moveFocus to next textbox");
+                   gChildWindow, t19, true, "moveFocus to next input");
   is(t19.selectionStart, 0, "input focused after moveFocus selectionStart");
   is(t19.selectionEnd, 5, "input focused after moveFocus selectionEnd");
 
@@ -1074,7 +1074,7 @@ function testMoveFocus()
   setFocusTo("t18", gChildWindow);
   gLastFocusMethod = fm.FLAG_BYKEY;
   expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FORWARD, fm.FLAG_BYKEY),
-                   gChildWindow, t19, true, "moveFocus to next textbox by key");
+                   gChildWindow, t19, true, "moveFocus to next input by key");
   is(t19.selectionStart, 0, "input focused after moveFocus by key selectionStart");
   is(t19.selectionEnd, 5, "input focused after moveFocus by key selectionEnd");
 }
@@ -1329,21 +1329,21 @@ function switchWindowTest(otherWindow, framesetWindow)
   is(fm.activeWindow, gNewExpectedWindow, "setting commandDispatcher focusedWindow doesn't raise window");
 
   fm.moveFocus(otherWindow, null, fm.MOVEFOCUS_FORWARD, 0);
-  var otherTextbox = otherWindow.document.getElementById("other-textbox");
-  otherTextbox.setSelectionRange(2, 3);
+  var otherInput = otherWindow.document.getElementById("other-input");
+  otherInput.setSelectionRange(2, 3);
   fm.activeWindow = topWindow;
   fm.activeWindow = otherWindow;
-  is(otherTextbox.selectionStart, 2, "selectionStart after textbox focus and window raise");
-  is(otherTextbox.selectionEnd, 3, "selectionEnd after textbox focus and window raise");
-  is(fm.getLastFocusMethod(null), fm.FLAG_BYMOVEFOCUS, "last focus method after textbox focus and window raise");
+  is(otherInput.selectionStart, 2, "selectionStart after input focus and window raise");
+  is(otherInput.selectionEnd, 3, "selectionEnd after input focus and window raise");
+  is(fm.getLastFocusMethod(null), fm.FLAG_BYMOVEFOCUS, "last focus method after input focus and window raise");
 
   fm.clearFocus(otherWindow);
 
   // test to ensure that a synthetic event won't move focus
   var synevent = new FocusEvent("focus", {});
-  otherTextbox.inputField.dispatchEvent(synevent);
+  otherInput.dispatchEvent(synevent);
   is(synevent.type, "focus", "event.type after synthetic focus event");
-  is(synevent.target, otherTextbox, "event.target after synthetic focus event");
+  is(synevent.target, otherInput, "event.target after synthetic focus event");
   is(fm.focusedElement, null, "focusedElement after synthetic focus event");
   is(otherWindow.document.activeElement, otherWindow.document.documentElement,
      "document.activeElement after synthetic focus event");
@@ -1351,7 +1351,7 @@ function switchWindowTest(otherWindow, framesetWindow)
   // check accessing a focus event after the event has finishing firing
   function continueTest(event) {
     is(event.type, "focus", "event.type after accessing focus event in timeout");
-    is(event.target, otherTextbox, "event.target after accessing focus event in timeout");
+    is(event.target, otherInput, "event.target after accessing focus event in timeout");
 
     gOldExpectedWindow = null;
     gNewExpectedWindow = null;
@@ -1361,13 +1361,13 @@ function switchWindowTest(otherWindow, framesetWindow)
     SimpleTest.waitForFocus(doWindowNoRootTest);
   }
 
-  function textboxFocused(event) {
-    otherTextbox.removeEventListener("focus", textboxFocused, true);
+  function inputFocused(event) {
+    otherInput.removeEventListener("focus", inputFocused, true);
     setTimeout(continueTest, 0, event);
   }
 
-  otherTextbox.addEventListener("focus", textboxFocused, true);
-  otherTextbox.focus();
+  otherInput.addEventListener("focus", inputFocused, true);
+  otherInput.focus();
 }
 
 // open a window with no root element
@@ -1449,7 +1449,7 @@ function doFrameSwitchingTests()
                      [inputb, "focus", inputb, frameb.contentWindow, window, frameb]];
   inputb.focus();
   ok(gEventMatched && gExpectedEvents.length == 0, "frame switch from input to sibling frame");
-  is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), inputa, 
+  is(fm.getFocusedElementForWindow(framea.contentWindow, false, {}), inputa,
      "blurred frame still has input as focus");
 
   // focus a descendant in a sibling
@@ -1694,7 +1694,7 @@ SimpleTest.waitForFocus(startTest);
 <hbox>
 <panel>
   <button id="inpopup1" label="One"/>
-  <textbox label="Two"/>
+  <input xmlns="http://www.w3.org/1999/xhtml" label="Two"/>
 </panel>
 <description label="o" accesskey="v"/>
 <button id="t38"/>
