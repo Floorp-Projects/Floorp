@@ -8,7 +8,7 @@
       margin-top: 0px;
       padding-top: 0px;
     }
-    label, textbox {
+    label, input {
       -moz-appearance: none;
       background: inherit;
       border: none 0px;
@@ -19,7 +19,7 @@
       margin-bottom: 0px;
       padding-bottom: 0px;
     }
-    textbox {
+    input {
       margin-top: 12px;
       padding-top: 8px;
       margin-bottom: 5px;
@@ -29,6 +29,6 @@
 
   <hbox align="baseline">
     <label value="test"/>
-    <textbox value="text"/>
+    <input xmlns="http://www.w3.org/1999/xhtml" value="text"/>
   </hbox>
 </window>

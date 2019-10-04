@@ -7,7 +7,7 @@
       <label value="Left" />
     </vbox>
     <vbox style="background:yellow">
-      <textbox value="Right" />
+      <input xmlns="http://www.w3.org/1999/xhtml" value="Right" />
     </vbox>
   </hbox>
 </window>
