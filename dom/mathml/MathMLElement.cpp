@@ -13,7 +13,6 @@
 #include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/TextUtils.h"
 #include "nsGkAtoms.h"
-#include "nsIContentInlines.h"
 #include "nsITableCellLayout.h"  // for MAX_COLSPAN / MAX_ROWSPAN
 #include "nsLayoutStylesheetCache.h"
 #include "nsCSSValue.h"
@@ -29,7 +28,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MappedDeclarations.h"
-#include "mozilla/dom/MathMLElementBinding.h"
+#include "mozilla/dom/ElementBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -117,9 +116,6 @@ bool MathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
         aAttribute == nsGkAtoms::background ||
         aAttribute == nsGkAtoms::mathbackground_) {
       return aResult.ParseColor(aValue);
-    }
-    if (aAttribute == nsGkAtoms::tabindex) {
-      return aResult.ParseIntValue(aValue);
     }
     if (mNodeInfo->Equals(nsGkAtoms::mtd_)) {
       if (aAttribute == nsGkAtoms::columnspan_) {
@@ -318,12 +314,12 @@ bool MathMLElement::ParseNumericValue(const nsString& aString,
     }
     number.Append(c);
   }
-  if (StaticPrefs::mathml_legacy_number_syntax_disabled() && gotDot &&
-      str[i - 1] == '.') {
+  if (StaticPrefs::mathml_legacy_number_syntax_disabled() &&
+      gotDot && str[i - 1] == '.') {
     if (!(aFlags & PARSE_SUPPRESS_WARNINGS)) {
       ReportLengthParseError(aString, aDocument);
     }
-    return false;  // Number ending with a dot.
+    return false; // Number ending with a dot.
   }
 
   // Convert number to floating point
@@ -850,51 +846,20 @@ void MathMLElement::SetIncrementScriptLevel(bool aIncrementScriptLevel,
   UpdateState(true);
 }
 
-int32_t MathMLElement::TabIndexDefault() {
-  nsCOMPtr<nsIURI> uri;
-  return IsLink(getter_AddRefs(uri)) ? 0 : -1;
-}
-
-// XXX Bug 1586011: Share logic with other element classes.
 bool MathMLElement::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) {
-  Document* doc = GetComposedDoc();
-  if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
-    // In designMode documents we only allow focusing the document.
-    if (aTabIndex) {
-      *aTabIndex = -1;
-    }
-    return false;
-  }
-
-  int32_t tabIndex = TabIndex();
-  if (aTabIndex) {
-    *aTabIndex = tabIndex;
-  }
-
   nsCOMPtr<nsIURI> uri;
-  if (!IsLink(getter_AddRefs(uri))) {
-    // If a tabindex is specified at all we're focusable
-    return HasAttr(nsGkAtoms::tabindex);
-  }
-
-  if (!OwnerDoc()->LinkHandlingEnabled()) {
-    return false;
-  }
-
-  // Links that are in an editable region should never be focusable, even if
-  // they are in a contenteditable="false" region.
-  if (nsContentUtils::IsNodeInEditableRegion(this)) {
+  if (IsLink(getter_AddRefs(uri))) {
     if (aTabIndex) {
-      *aTabIndex = -1;
+      *aTabIndex = ((sTabFocusModel & eTabFocus_linksMask) == 0 ? -1 : 0);
     }
-    return false;
+    return true;
   }
 
-  if (aTabIndex && (sTabFocusModel & eTabFocus_linksMask) == 0) {
+  if (aTabIndex) {
     *aTabIndex = -1;
   }
 
-  return true;
+  return false;
 }
 
 bool MathMLElement::IsLink(nsIURI** aURI) const {
@@ -980,48 +945,6 @@ already_AddRefed<nsIURI> MathMLElement::GetHrefURI() const {
   return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nullptr;
 }
 
-// XXX Bug 1586014: Share logic with other element classes.
-void MathMLElement::RecompileScriptEventListeners() {
-  int32_t i, count = mAttrs.AttrCount();
-  for (i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrs.AttrNameAt(i);
-
-    // Eventlistenener-attributes are always in the null namespace
-    if (!name->IsAtom()) {
-      continue;
-    }
-
-    nsAtom* attr = name->Atom();
-    if (!IsEventAttributeName(attr)) {
-      continue;
-    }
-
-    nsAutoString value;
-    GetAttr(kNameSpaceID_None, attr, value);
-    SetEventHandler(attr, value, true);
-  }
-}
-
-bool MathMLElement::IsEventAttributeNameInternal(nsAtom* aName) {
-  // The intent is to align MathML event attributes on HTML5, so the flag
-  // EventNameType_HTML is used here.
-  return nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML);
-}
-
-nsresult MathMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                      const nsAttrValueOrString* aValue,
-                                      bool aNotify) {
-  if (aNamespaceID == kNameSpaceID_None) {
-    if (!aValue && IsEventAttributeName(aName)) {
-      if (EventListenerManager* manager = GetExistingListenerManager()) {
-        manager->RemoveEventHandler(aName);
-      }
-    }
-  }
-
-  return MathMLElementBase::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
-}
-
 nsresult MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                      const nsAttrValue* aValue,
                                      const nsAttrValue* aOldValue,
@@ -1041,20 +964,11 @@ nsresult MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     Link::ResetLinkState(aNotify, aValue || Link::ElementHasHref());
   }
 
-  if (aNameSpaceID == kNameSpaceID_None) {
-    if (IsEventAttributeName(aName) && aValue) {
-      MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
-                 "Expected string value for script body");
-      nsresult rv = SetEventHandler(aName, aValue->GetStringValue());
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
   return MathMLElementBase::AfterSetAttr(aNameSpaceID, aName, aValue, aOldValue,
                                          aSubjectPrincipal, aNotify);
 }
 
 JSObject* MathMLElement::WrapNode(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto) {
-  return MathMLElement_Binding::Wrap(aCx, this, aGivenProto);
+  return Element_Binding::Wrap(aCx, this, aGivenProto);
 }
