@@ -6587,10 +6587,6 @@ void nsFrame::DidReflow(nsPresContext* aPresContext,
   RemoveStateBits(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW |
                   NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
 
-  // Clear state that was used in ReflowInput::InitResizeFlags (see
-  // comment there for why we can't clear it there).
-  SetHasBSizeChange(false);
-
   // Notify the percent bsize observer if there is a percent bsize.
   // The observer may be able to initiate another reflow with a computed
   // bsize. This happens in the case where a table cell has no computed

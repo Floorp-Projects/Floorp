@@ -2002,8 +2002,6 @@ skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 skip-if(isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg
 == 1348481-1.html 1348481-ref.html
 == 1348481-2.html 1348481-ref.html
-== 1351924-1.html 1351924-1-ref.html
-== 1351924-2.html 1351924-2-ref.html
 == 1352464-1.html 1352464-1-ref.html
 == 1358375-1.html 1358375-ref.html
 == 1358375-2.html 1358375-ref.html
