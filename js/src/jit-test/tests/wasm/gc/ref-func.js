@@ -86,8 +86,8 @@ function validFuncRefText(forwardDeclare) {
 assertErrorMessage(() => validFuncRefText(''), WebAssembly.CompileError, /function index is not in an element segment/);
 
 // referenced function can be forward declared via segments
-assertEq(validFuncRefText('(elem 0 (i32.const 0) $referenced)') instanceof WebAssembly.Instance, true);
-assertEq(validFuncRefText('(elem passive $referenced)') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(elem 0 (i32.const 0) func $referenced)') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(elem func $referenced)') instanceof WebAssembly.Instance, true);
 assertEq(validFuncRefText('(elem declared $referenced)') instanceof WebAssembly.Instance, true);
 
 // referenced function cannot be forward declared via start section or export

@@ -14,7 +14,7 @@ wasmFullPass(`
 assertThrowsInstanceOf(() => {
 	wasmTextToBinary(`
 		(module
-			(elem declared ref.null)
+			(elem declared (ref.null))
 		)
 	`)
 }, SyntaxError);

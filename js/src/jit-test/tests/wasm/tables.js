@@ -26,6 +26,32 @@ assertEq(new Module(wasmTextToBinary(`(module (table 10 funcref) (elem (i32.cons
 wasmEvalText(`(module (table 10 funcref) (import "globals" "a" (global i32)) (elem (i32.const 1) $f0 $f0) (elem (global.get 0) $f0) ${callee(0)})`, {globals:{a:0}});
 wasmEvalText(`(module (table 10 funcref) (import "globals" "a" (global i32)) (elem (global.get 0) $f0 $f0) (elem (i32.const 2) $f0) ${callee(0)})`, {globals:{a:1}});
 
+// Explicit table index in a couple of ways, note this requires us to talk about the table type also.
+assertEq(new Module(wasmTextToBinary(`(module
+                                        (table 10 funcref)
+                                        (table 10 funcref)
+                                        (elem 1 (i32.const 1) func $f0 $f0)
+                                        ${callee(0)})`)) instanceof Module, true);
+assertEq(new Module(wasmTextToBinary(`(module
+                                        (table 10 funcref)
+                                        (table 10 funcref)
+                                        (elem (table 1) (i32.const 1) func $f0 $f0)
+                                        ${callee(0)})`)) instanceof Module, true);
+
+// With "funcref" rather than "func".
+assertEq(new Module(wasmTextToBinary(`(module
+                                        (table 10 funcref)
+                                        (table 10 funcref)
+                                        (elem (table 1) (i32.const 1) funcref (ref.func $f0) (ref.func $f0))
+                                        ${callee(0)})`)) instanceof Module, true);
+
+// Syntax for the offset, ditto.
+assertEq(new Module(wasmTextToBinary(`(module
+                                        (table 10 funcref)
+                                        (table 10 funcref)
+                                        (elem 1 (offset (i32.const 1)) func $f0 $f0)
+                                        ${callee(0)})`)) instanceof Module, true);
+
 var m = new Module(wasmTextToBinary(`
     (module
         (import "globals" "table" (table 10 funcref))

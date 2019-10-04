@@ -15,7 +15,7 @@ function tbl_init(min, max, backup, write, segoffs=0) {
     let ins = wasmEvalText(
         `(module
            (table (export "tbl") ${min} ${max} funcref)
-           (elem passive $f0 $f1 $f2 $f3 $f4 $f5 $f6 $f7 $f8 $f9 $f10 $f11 $f12 $f13 $f14 $f15)
+           (elem func $f0 $f1 $f2 $f3 $f4 $f5 $f6 $f7 $f8 $f9 $f10 $f11 $f12 $f13 $f14 $f15)
            (func $f0 (export "f0"))
            (func $f1 (export "f1"))
            (func $f2 (export "f2"))
