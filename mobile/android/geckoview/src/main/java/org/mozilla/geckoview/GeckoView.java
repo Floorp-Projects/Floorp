@@ -941,20 +941,20 @@ public class GeckoView extends FrameLayout {
             }
 
             switch (notification) {
-                case AUTO_FILL_NOTIFY_STARTED:
+                case AUTOFILL_NOTIFY_STARTED:
                     // This line seems necessary for auto-fill to work on the initial page.
                     manager.cancel();
                     break;
-                case AUTO_FILL_NOTIFY_COMMITTED:
+                case AUTOFILL_NOTIFY_COMMITTED:
                     manager.commit();
                     break;
-                case AUTO_FILL_NOTIFY_CANCELED:
+                case AUTOFILL_NOTIFY_CANCELED:
                     manager.cancel();
                     break;
-                case AUTO_FILL_NOTIFY_VIEW_ENTERED:
+                case AUTOFILL_NOTIFY_VIEW_ENTERED:
                     manager.notifyViewEntered(GeckoView.this, virtualId, displayRectForId(session, virtualId, GeckoView.this));
                     break;
-                case AUTO_FILL_NOTIFY_VIEW_EXITED:
+                case AUTOFILL_NOTIFY_VIEW_EXITED:
                     manager.notifyViewExited(GeckoView.this, virtualId);
                     break;
             }

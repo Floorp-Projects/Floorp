@@ -145,8 +145,8 @@ class AutofillDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 4)
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be starting auto-fill", notification, equalTo(forEachCall(
-                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_STARTED,
-                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED)))
+                        GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_STARTED,
+                        GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ADDED)))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -161,7 +161,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be canceling auto-fill",
                            notification,
-                           equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_CANCELED))
+                           equalTo(GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_CANCELED))
                 assertThat("ID should be valid", virtualId, equalTo(View.NO_ID))
             }
         })
@@ -175,8 +175,8 @@ class AutofillDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 4)
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be starting auto-fill", notification, equalTo(forEachCall(
-                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_STARTED,
-                        GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED)))
+                        GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_STARTED,
+                        GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ADDED)))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -191,7 +191,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be entering auto-fill view",
                            notification,
-                           equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED))
+                           equalTo(GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -208,7 +208,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be exiting auto-fill view",
                            notification,
-                           equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED))
+                           equalTo(GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_EXITED))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -224,9 +224,9 @@ class AutofillDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 3)
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Autofill notification should match", notification,
-                        equalTo(forEachCall(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_STARTED,
-                                GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED,
-                                GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ADDED)))
+                        equalTo(forEachCall(GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_STARTED,
+                                GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED,
+                                GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ADDED)))
             }
         })
 
@@ -275,7 +275,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be entering auto-fill view",
                         notification,
-                        equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED))
+                        equalTo(GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -289,7 +289,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be exiting auto-fill view",
                         notification,
-                        equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED))
+                        equalTo(GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_EXITED))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
@@ -301,7 +301,7 @@ class AutofillDelegateTest : BaseSessionTest() {
             override fun onAutofill(session: GeckoSession, notification: Int, virtualId: Int) {
                 assertThat("Should be entering auto-fill view",
                         notification,
-                        equalTo(GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED))
+                        equalTo(GeckoSession.AutofillDelegate.AUTOFILL_NOTIFY_VIEW_ENTERED))
                 assertThat("ID should be valid", virtualId, not(equalTo(View.NO_ID)))
             }
         })
