@@ -42,9 +42,10 @@ int wmain(int argc, WCHAR** argv) {
   // Otherwise, the service is probably being started by the SCM.
   bool forceInstall = !lstrcmpi(argv[1], L"forceinstall");
   if (!lstrcmpi(argv[1], L"install") || forceInstall) {
-    WCHAR updatePath[MAX_PATH + 1];
-    if (GetLogDirectoryPath(updatePath)) {
-      LogInit(updatePath, L"maintenanceservice-install.log");
+    WCHAR logFilePath[MAX_PATH + 1];
+    if (GetLogDirectoryPath(logFilePath) &&
+        PathAppendSafe(logFilePath, L"maintenanceservice-install.log")) {
+      LogInit(logFilePath);
     }
 
     SvcInstallAction action = InstallSvc;
@@ -68,9 +69,10 @@ int wmain(int argc, WCHAR** argv) {
   }
 
   if (!lstrcmpi(argv[1], L"upgrade")) {
-    WCHAR updatePath[MAX_PATH + 1];
-    if (GetLogDirectoryPath(updatePath)) {
-      LogInit(updatePath, L"maintenanceservice-install.log");
+    WCHAR logFilePath[MAX_PATH + 1];
+    if (GetLogDirectoryPath(logFilePath) &&
+        PathAppendSafe(logFilePath, L"maintenanceservice-install.log")) {
+      LogInit(logFilePath);
     }
 
     LOG(("Upgrading service if installed..."));
@@ -86,9 +88,10 @@ int wmain(int argc, WCHAR** argv) {
   }
 
   if (!lstrcmpi(argv[1], L"uninstall")) {
-    WCHAR updatePath[MAX_PATH + 1];
-    if (GetLogDirectoryPath(updatePath)) {
-      LogInit(updatePath, L"maintenanceservice-uninstall.log");
+    WCHAR logFilePath[MAX_PATH + 1];
+    if (GetLogDirectoryPath(logFilePath) &&
+        PathAppendSafe(logFilePath, L"maintenanceservice-uninstall.log")) {
+      LogInit(logFilePath);
     }
     LOG(("Uninstalling service..."));
     if (!SvcUninstall()) {
@@ -226,10 +229,12 @@ void StartTerminationThread() {
  */
 void WINAPI SvcMain(DWORD argc, LPWSTR* argv) {
   // Setup logging, and backup the old logs
-  WCHAR updatePath[MAX_PATH + 1];
-  if (GetLogDirectoryPath(updatePath)) {
-    BackupOldLogs(updatePath, LOGS_TO_KEEP);
-    LogInit(updatePath, L"maintenanceservice.log");
+  WCHAR logFilePath[MAX_PATH + 1];
+  if (GetLogDirectoryPath(logFilePath)) {
+    BackupOldLogs(logFilePath, LOGS_TO_KEEP);
+    if (PathAppendSafe(logFilePath, L"maintenanceservice.log")) {
+      LogInit(logFilePath);
+    }
   }
 
   // Disable every privilege we don't need. Processes started using
