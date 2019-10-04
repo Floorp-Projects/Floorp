@@ -470,12 +470,14 @@ endif
 endif
 endif
 
+ifdef MOZ_1TIER_PGO
 ifneq (,$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
 ifneq (,$(filter target,$(MAKECMDGOALS)))
 ifdef GNU_CC
 # Force rebuilding libraries and programs in both passes because each
 # pass uses different object files.
 $(PROGRAM) $(SHARED_LIBRARY) $(LIBRARY): FORCE
+endif
 endif
 endif
 endif
