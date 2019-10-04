@@ -110,12 +110,13 @@ class ContentBlockingLog final {
           // We don't care about if the the reason is the same, just keep the
           // first one.
           // Note: {aReason, aTrackingFullHashes} are not compared here and we
-          // simply keep the first ones.
-#ifdef DEBUG
+          // simply keep the first for the reason, and merge hashes to make sure
+          // they can be correctly recorded.
           for (const auto& hash : aTrackingFullHashes) {
-            MOZ_ASSERT(last.mTrackingFullHashes.Contains(hash));
+            if (!last.mTrackingFullHashes.Contains(hash)) {
+              last.mTrackingFullHashes.AppendElement(hash);
+            }
           }
-#endif
           return;
         }
       }
