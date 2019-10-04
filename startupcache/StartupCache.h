@@ -202,10 +202,13 @@ class StartupCache : public nsIMemoryReporter {
   Result<Ok, nsresult> WriteToDisk();
 
   void WaitOnWriteThread();
+  void WaitOnPrefetchThread();
+  void StartPrefetchMemoryThread();
 
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);
   static void ThreadedWrite(void* aClosure);
+  static void ThreadedPrefetch(void* aClosure);
 
   HashMap<nsCString, StartupCacheEntry, nsCStringHasher> mTable;
   // owns references to the contents of tables which have been invalidated.
@@ -230,6 +233,7 @@ class StartupCache : public nsIMemoryReporter {
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   PRThread* mWriteThread;
+  PRThread* mPrefetchThread;
   UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;
 #ifdef DEBUG
   nsTHashtable<nsISupportsHashKey> mWriteObjectMap;
