@@ -1,3 +1,0 @@
-    <!-- Permission needed to publish the app on Samsung AppStore -->
-    <uses-permission
-        android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY"/>

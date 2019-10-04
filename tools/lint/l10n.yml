@@ -12,7 +12,6 @@ l10n:
         - devtools/shared/locales/en-US
         - devtools/startup/locales/en-US
         - dom/locales/en-US
-        - mobile/android/base/locales/en-US
         - mobile/android/locales/en-US
         - mobile/locales/en-US
         - netwerk/locales/en-US

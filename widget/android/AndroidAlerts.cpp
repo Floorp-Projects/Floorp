@@ -90,20 +90,13 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
     sListenerMap->Put(name, aAlertListener);
   }
 
-  if (jni::IsFennec()) {
-    java::GeckoAppShell::ShowNotification(
-        name, cookie, title, text, host, imageUrl,
-        !aPersistentData.IsEmpty() ? jni::StringParam(aPersistentData)
-                                   : jni::StringParam(nullptr));
-  } else {
-    java::WebNotification::LocalRef notification = notification->New(
-        title, name, cookie, text, imageUrl, dir, lang, requireInteraction);
-    java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-    if (runtime != NULL) {
-      runtime->NotifyOnShow(notification);
-    }
-    mNotificationsMap.Put(name, notification);
+  java::WebNotification::LocalRef notification = notification->New(
+      title, name, cookie, text, imageUrl, dir, lang, requireInteraction);
+  java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
+  if (runtime != NULL) {
+    runtime->NotifyOnShow(notification);
   }
+  mNotificationsMap.Put(name, notification);
 
   return NS_OK;
 }
@@ -111,19 +104,13 @@ AndroidAlerts::ShowPersistentNotification(const nsAString& aPersistentData,
 NS_IMETHODIMP
 AndroidAlerts::CloseAlert(const nsAString& aAlertName,
                           nsIPrincipal* aPrincipal) {
-  if (jni::IsFennec()) {
-    // We delete the entry in sListenerMap later, when CloseNotification calls
-    // NotifyListener.
-    java::GeckoAppShell::CloseNotification(aAlertName);
-  } else {
-    java::WebNotification::LocalRef notification =
-        mNotificationsMap.Get(aAlertName);
-    java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-    if (runtime != NULL) {
-      runtime->NotifyOnClose(notification);
-    }
-    mNotificationsMap.Remove(aAlertName);
+  java::WebNotification::LocalRef notification =
+      mNotificationsMap.Get(aAlertName);
+  java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
+  if (runtime != NULL) {
+    runtime->NotifyOnClose(notification);
   }
+  mNotificationsMap.Remove(aAlertName);
 
   return NS_OK;
 }

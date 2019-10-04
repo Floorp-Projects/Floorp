@@ -20,7 +20,6 @@ codespell:
         - intl/locales/en-US/
         - js/src/doc/
         - layout/tools/layout-debug/ui/locale/en-US/
-        - mobile/android/base/locales/en-US/
         - mobile/android/branding/
         - mobile/android/docs/
         - mobile/android/locales/en-US/

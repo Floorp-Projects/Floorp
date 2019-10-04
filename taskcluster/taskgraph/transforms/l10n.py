@@ -98,7 +98,7 @@ l10n_description_schema = schema.extend({
 
     # Docker image required for task.  We accept only in-tree images
     # -- generally desktop-build or android-build -- for now.
-    Required('docker-image'): _by_platform(Any(
+    Required('docker-image', default=None): _by_platform(Any(
         # an in-tree generated docker image (from `taskcluster/docker/<name>`)
         {'in-tree': basestring},
         None,

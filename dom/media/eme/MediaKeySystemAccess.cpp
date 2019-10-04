@@ -34,7 +34,6 @@
 #endif
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidDecoderModule.h"
-#  include "FennecJNIWrappers.h"
 #  include "GeneratedJNIWrappers.h"
 #endif
 

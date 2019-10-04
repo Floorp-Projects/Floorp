@@ -31,8 +31,8 @@ from mach.decorators import (
 # deprecation message ourselves instead.
 LINT_DEPRECATION_MESSAGE = """
 Android lints are now integrated with mozlint.  Instead of
-`mach android {api-lint,checkstyle,findbugs,lint,test}`, run
-`mach lint --linter android-{api-lint,checkstyle,findbugs,lint,test}`.
+`mach android {api-lint,checkstyle,lint,test}`, run
+`mach lint --linter android-{api-lint,checkstyle,lint,test}`.
 Or run `mach lint`.
 """
 
@@ -133,13 +133,6 @@ REMOVED/DEPRECATED: Use 'mach lint --linter android-lint'.""")
                 """Run Android checkstyle.
 REMOVED/DEPRECATED: Use 'mach lint --linter android-checkstyle'.""")
     def android_checkstyle_REMOVED(self):
-        print(LINT_DEPRECATION_MESSAGE)
-        return 1
-
-    @SubCommand('android', 'findbugs',
-                """Run Android findbugs.
-REMOVED/DEPRECATED: Use 'mach lint --linter android-findbugs'.""")
-    def android_findbugs_REMOVED(self):
         print(LINT_DEPRECATION_MESSAGE)
         return 1
 

@@ -62,12 +62,6 @@ lints:
             - name: public/android/checkstyle/checkstyle.xml
               path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
               type: file
-            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.html
-              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.html
-              type: file
-            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.xml
-              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.xml
-              type: file
     run:
         using: run-task
         command: >
@@ -80,7 +74,6 @@ lints:
             --linter android-api-lint
             --linter android-javadoc
             --linter android-checkstyle
-            --linter android-findbugs
             --linter android-lint
             --linter android-test
         tooltool-downloads: internal  # For internal toolchains.

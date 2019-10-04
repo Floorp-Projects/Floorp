@@ -7,25 +7,10 @@
 with Files('**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
-with Files('findbugs-exclude.xml'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('lint*'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
 with Files('mobile*'):
     BUG_COMPONENT = ('Firefox for Android', 'General')
 
 with Files('omnijar/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
-
-with Files('src/main/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
-
-with Files('src/androidTest/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Testing')
-
-with Files('src/test/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
 for var in ('APP_NAME', 'APP_VERSION'):

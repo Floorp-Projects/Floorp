@@ -32,14 +32,8 @@ with Files('geckoview_example/**'):
 with Files('gradle/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
-with Files('services/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'Android Sync')
-
 with Files('themes/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Theme and Visual Design')
-
-with Files('thirdparty/**'):
-    BUG_COMPONENT = ('Firefox for Android', 'General')
 
 CONFIGURE_SUBST_FILES += ['installer/Makefile']
 
