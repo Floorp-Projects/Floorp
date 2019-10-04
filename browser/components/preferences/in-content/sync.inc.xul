@@ -244,22 +244,12 @@
         </groupbox>
       </vbox>
     </hbox>
-    <label class="fxaMobilePromo" data-l10n-id="sync-mobile-promo">
-      <html:img
-        src="chrome://browser/skin/preferences/in-content/logo-android.svg"
-        data-l10n-name="android-icon"
-        class="androidIcon"/>
-      <html:a
-        data-l10n-name="android-link"
-        class="fxaMobilePromo-android text-link" target="_blank"/>
-      <html:img
-        src="chrome://browser/skin/preferences/in-content/logo-ios.svg"
-        data-l10n-name="ios-icon"
-        class="iOSIcon"/>
-      <html:a
-        data-l10n-name="ios-link"
-        class="fxaMobilePromo-ios text-link" target="_blank"/>
-    </label>
+    <vbox align="start">
+      <label id="connect-another-device"
+             is="text-link"
+             class="fxaMobilePromo"
+             data-l10n-id="sync-connect-another-device"/>
+    </vbox>
   </vbox>
 </deck>
 </html:template>
