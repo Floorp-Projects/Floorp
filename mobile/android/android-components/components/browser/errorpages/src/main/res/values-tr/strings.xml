@@ -111,6 +111,12 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Adres geçersiz</string>
 
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+  <li>Web adresleri genelde <strong>http://www.example.com/</strong> biçiminde yazılır.</li>
+  <li>Adreste sağa yatık bölü işareti (<strong>/</strong>) bulunduğundan emin olun.</li>
+</ul>]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Bilinmeyen protokol</string>
     <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[<p>Girilen adres tarayıcı tarafından tanınmayan bir iletişim kuralına (ör. <q>abcd://</q>) işaret ettiğinden tarayıcı siteye düzgünce bağlanamıyor.</p><ul><li>Çoklu ortam barındıran veya metin içermeyen bir hizmete bağlanmak istiyor olabilirsiniz.</li><li>Bazı iletişim kurallarının tarayıcı tarafından tanınabilmesi için üçüncü kişilerce geliştirilen yazılımlara ya da eklentilere ihtiyaç duyulabilir.</li></ul>]]></string>
