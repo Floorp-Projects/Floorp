@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-/* exported gInit, gDestroy */
+/* exported gInit, gDestroy, loader */
 
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
 );
-const { require } = BrowserLoader({
+const { require, loader } = BrowserLoader({
   baseURI: "resource://devtools/client/performance-new/",
   window,
 });
@@ -24,6 +24,7 @@ const {
   receiveProfile,
   getRecordingPreferencesFromDebuggee,
   setRecordingPreferencesOnDebuggee,
+  createMultiModalGetSymbolTableFn,
 } = require("devtools/client/performance-new/browser");
 
 /**
@@ -55,12 +56,22 @@ async function gInit(perfFront, preferenceFront) {
         preferenceFront,
         selectors.getRecordingSettings(store.getState())
       ),
+
       // Go ahead and hide the implementation details for the component on how the
       // preference information is stored
       setRecordingPreferences: () =>
         setRecordingPreferencesOnDebuggee(
           preferenceFront,
           selectors.getRecordingSettings(store.getState())
+        ),
+
+      // Configure the getSymbolTable function for the DevTools workflow.
+      // See createMultiModalGetSymbolTableFn for more information.
+      getSymbolTableGetter: profile =>
+        createMultiModalGetSymbolTableFn(
+          profile,
+          selectors.getPerfFront(store.getState()),
+          selectors.getObjdirs(store.getState())
         ),
     })
   );
