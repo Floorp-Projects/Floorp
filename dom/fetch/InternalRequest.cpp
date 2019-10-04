@@ -95,7 +95,6 @@ InternalRequest::InternalRequest(const nsACString& aURL,
       mResponseTainting(LoadTainting::Basic),
       mCacheMode(RequestCache::Default),
       mRedirectMode(RequestRedirect::Follow),
-      mMozErrors(false),
       mAuthenticationFlag(false),
       mPreserveContentCodings(false)
       // FIXME(nsm): This should be false by default, but will lead to the
@@ -131,7 +130,6 @@ InternalRequest::InternalRequest(
       mCacheMode(aCacheMode),
       mRedirectMode(aRequestRedirect),
       mIntegrity(aIntegrity),
-      mMozErrors(false),
       mAuthenticationFlag(false),
       mPreserveContentCodings(false)
       // FIXME See the above comment in the default constructor.
