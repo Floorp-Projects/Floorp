@@ -591,7 +591,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
  *
  * Attribute is controlled by browser.js:/gRemoteControl.
  */
-:root[remotecontrol] #urlbar {
+:root[remotecontrol] #urlbar:not(.megabar),
+:root[remotecontrol] #urlbar.megabar > #urlbar-background {
   background: repeating-linear-gradient(
     -45deg,
     transparent,

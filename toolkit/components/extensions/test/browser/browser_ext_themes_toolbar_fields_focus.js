@@ -32,8 +32,10 @@ add_task(async function test_toolbar_field_hover() {
   });
   info("Checking toolbar field's focus color");
 
-  let urlBar = document.getElementById("urlbar");
-  urlBar.setAttribute("focused", "true");
+  let urlBar = gURLBar.megabar
+    ? document.querySelector("#urlbar-background")
+    : gURLBar.textbox;
+  gURLBar.textbox.setAttribute("focused", "true");
   Assert.equal(
     window.getComputedStyle(urlBar).backgroundColor,
     `rgb(${hexToRGB(TOOLBAR_FOCUS_BACKGROUND).join(", ")})`,
@@ -47,7 +49,7 @@ add_task(async function test_toolbar_field_hover() {
   );
   testBorderColor(urlBar, TOOLBAR_FOCUS_BORDER);
 
-  urlBar.removeAttribute("focused");
+  gURLBar.textbox.removeAttribute("focused");
 
   Assert.equal(
     window.getComputedStyle(urlBar).backgroundColor,
