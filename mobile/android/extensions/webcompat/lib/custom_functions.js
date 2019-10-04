@@ -36,7 +36,7 @@ const replaceStringInRequest = (
 };
 
 const CUSTOM_FUNCTIONS = {
-  dtagFix: injection => {
+  noSniffFix: injection => {
     const { urls, contentType } = injection.data;
     const listener = (injection.data.listener = e => {
       e.responseHeaders.push(contentType);
@@ -48,7 +48,7 @@ const CUSTOM_FUNCTIONS = {
       "responseHeaders",
     ]);
   },
-  dtagFixDisable: injection => {
+  noSniffFixDisable: injection => {
     const { listener } = injection.data;
     browser.webRequest.onHeadersReceived.removeListener(listener);
     delete injection.data.listener;
