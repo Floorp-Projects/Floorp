@@ -242,10 +242,10 @@ scriptworker:
     # See additional configuration in taskcluster/taskgraph/util/scriptworker.py
     scope-prefix: 'project:releng'
     worker-types:
-        'linux-signing':
+        'scriptworker-k8s/gecko-3-signing':
             - 'project:releng:signing:cert:release-signing'
             - 'project:releng:signing:cert:nightly-signing'
-        'linux-depsigning':
+        'scriptworker-k8s/gecko-t-signing':
             - 'project:releng:signing:cert:dep-signing'
         'scriptworker-k8s/gecko-3-beetmover':
             - 'project:releng:beetmover:bucket:release'
