@@ -22,6 +22,8 @@ struct MOZ_HEAP_CLASS WorkletPrincipals final : public JSPrincipals {
 
   bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) override;
 
+  bool isSystemOrAddonPrincipal() override;
+
   // Callback for JS_InitDestroyPrincipalsCallback()
   static void Destroy(JSPrincipals* aPrincipals);
 
