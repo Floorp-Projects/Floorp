@@ -108,7 +108,7 @@ add_task(async function setup() {
   item = document.createXULElement("menuitem");
   item.setAttribute("value", "2");
   menuPopup.appendChild(item);
-  gMainTextbox = document.createXULElement("textbox");
+  gMainTextbox = document.createElement("input");
   gMainTextbox.id = "gMainTextbox";
   gMainView.appendChild(gMainTextbox);
   gMainTextbox.setAttribute("value", "value");

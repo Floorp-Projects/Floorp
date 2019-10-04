@@ -21,6 +21,6 @@ SimpleTest.waitForFocus(focused);
 </script>
 
 <button id="other" label="OK"/>
-<textbox id="other-textbox" value="test"/>
+<input xmlns="http://www.w3.org/1999/xhtml" id="other-input" value="test"/>
 
 </window>
