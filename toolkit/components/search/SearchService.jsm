@@ -2289,6 +2289,15 @@ SearchService.prototype = {
       SearchUtils.fail("Invalid template passed to addEngineWithDetails!");
     }
     let existingEngine = this._engines.get(name);
+    if (
+      existingEngine &&
+      existingEngine._loadPath.startsWith("[distribution]")
+    ) {
+      SearchUtils.fail(
+        "Not loading engine due to having a distribution engine with the same name",
+        Cr.NS_ERROR_FILE_ALREADY_EXISTS
+      );
+    }
     if (!isReload && existingEngine) {
       if (
         params.extensionID &&
