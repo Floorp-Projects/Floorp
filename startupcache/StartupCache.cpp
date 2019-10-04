@@ -255,24 +255,10 @@ nsresult StartupCache::GetBuffer(const char* id, UniquePtr<char[]>* outbuf,
   }
 
   nsresult rv = GetBufferFromZipArchive(mArchive, true, id, outbuf, length);
-  if (NS_SUCCEEDED(rv)) {
-    Telemetry::AccumulateCategorical(
-        Telemetry::LABELS_STARTUP_CACHE_REQUESTS::HitDisk);
-    return rv;
-  }
-
   Telemetry::AccumulateCategorical(
-      Telemetry::LABELS_STARTUP_CACHE_REQUESTS::Miss);
-
-  RefPtr<nsZipArchive> omnijar =
-      mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
-  // no need to checksum omnijarred entries
-  rv = GetBufferFromZipArchive(omnijar, false, id, outbuf, length);
-  if (NS_SUCCEEDED(rv)) return rv;
-
-  omnijar = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
-  // no need to checksum omnijarred entries
-  return GetBufferFromZipArchive(omnijar, false, id, outbuf, length);
+      NS_SUCCEEDED(rv) ? Telemetry::LABELS_STARTUP_CACHE_REQUESTS::HitDisk
+                       : Telemetry::LABELS_STARTUP_CACHE_REQUESTS::Miss);
+  return rv;
 }
 
 // Makes a copy of the buffer, client retains ownership of inbuf.
