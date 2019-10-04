@@ -19,6 +19,7 @@ DevToolsModules(
     'index.js',
     'manager.js',
     'reducers.js',
+    'responsive-browser.css',
     'store.js',
     'types.js',
     'ui.js',

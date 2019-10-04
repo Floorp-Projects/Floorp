@@ -234,10 +234,13 @@ class ResponsiveUI {
     rdmFrame.style.height = rdmFrame.style.minHeight = "30px";
     rdmFrame.style.borderStyle = "none";
 
+    this.browserContainerEl = gBrowser.getBrowserContainer(
+      gBrowser.getBrowserForTab(this.tab)
+    );
+    this.browserContainerEl.classList.add("responsive-mode");
+
     // Prepend the RDM iframe inside of the current tab's browser container.
-    gBrowser
-      .getBrowserContainer(gBrowser.getBrowserForTab(this.tab))
-      .prepend(rdmFrame);
+    this.browserContainerEl.prepend(rdmFrame);
 
     // Wait for the frame script to be loaded.
     message.wait(rdmFrame.contentWindow, "script-init").then(async () => {
@@ -299,6 +302,8 @@ class ResponsiveUI {
     } else {
       this.rdmFrame.contentWindow.removeEventListener("message", this);
       this.rdmFrame.remove();
+
+      this.browserContainerEl.classList.remove("responsive-mode");
     }
 
     if (!this.isBrowserUIEnabled && !isTabContentDestroying) {
@@ -324,6 +329,7 @@ class ResponsiveUI {
 
     // Destroy local state
     const swap = this.swap;
+    this.browserContainerEl = null;
     this.browserWindow = null;
     this.tab = null;
     this.inited = null;

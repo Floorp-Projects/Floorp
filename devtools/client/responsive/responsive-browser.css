@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ #appcontent[devtoolstheme="light"] {
+  --rdm-browser-container-background: #F5F5F6;
+  --rdm-browser-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
+}
+
+#appcontent[devtoolstheme="dark"] {
+  --rdm-browser-container-background: #18181a; /* This should map to --theme-toolbar-background. */
+  --rdm-browser-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
+}
+
+.browserContainer.responsive-mode {
+  background-color: var(--rdm-browser-container-background);
+}
+
+.browserContainer.responsive-mode browser {
+  border: 1px solid var(--devtools-splitter-color);
+  box-shadow: var(--rdm-browser-box-shadow);
+}
+
+.browserContainer.responsive-mode > .browserStack {
+  margin-top: 15px;
+}
