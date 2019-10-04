@@ -135,8 +135,7 @@ bool JSContext::init(ContextKind kind) {
   return true;
 }
 
-JSContext* js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes,
-                          JSRuntime* parentRuntime) {
+JSContext* js::NewContext(uint32_t maxBytes, JSRuntime* parentRuntime) {
   AutoNoteSingleThreadedRegion anstr;
 
   MOZ_RELEASE_ASSERT(!TlsContext.get());
@@ -163,7 +162,7 @@ JSContext* js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes,
     return nullptr;
   }
 
-  if (!runtime->init(cx, maxBytes, maxNurseryBytes)) {
+  if (!runtime->init(cx, maxBytes)) {
     runtime->destroyRuntime();
     js_delete(cx);
     js_delete(runtime);

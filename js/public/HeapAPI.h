@@ -118,11 +118,11 @@ enum StackKind {
 };
 
 /*
- * Default size for the generational nursery in bytes.
- * This is the initial nursery size, when running in the browser this is
- * updated by JS_SetGCParameter().
+ * Default maximum size for the generational nursery in bytes. This is the
+ * initial value. In the browser this configured by the
+ * javascript.options.mem.nursery.max_kb pref.
  */
-const uint32_t DefaultNurseryBytes = 16 * js::gc::ChunkSize;
+const uint32_t DefaultNurseryMaxBytes = 16 * js::gc::ChunkSize;
 
 /* Default maximum heap size in bytes to pass to JS_NewContext(). */
 const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
