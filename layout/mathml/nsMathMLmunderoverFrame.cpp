@@ -108,7 +108,8 @@ void nsMathMLmunderoverFrame::SetIncrementScriptLevel(uint32_t aChildIndex,
     return;
   }
 
-  auto element = dom::MathMLElement::FromNode(child->GetContent());
+  // XXXfredw: Use MathMLElement::fromNode.
+  auto element = static_cast<dom::MathMLElement*>(child->GetContent());
   if (element->GetIncrementScriptLevel() == aIncrement) {
     return;
   }
@@ -143,7 +144,8 @@ void nsMathMLmunderoverFrame::SetPendingPostReflowIncrementScriptLevel() {
       continue;
     }
 
-    auto element = dom::MathMLElement::FromNode(child->GetContent());
+    // XXXfredw: Use MathMLElement::fromNode.
+    auto element = static_cast<dom::MathMLElement*>(child->GetContent());
     element->SetIncrementScriptLevel(command.mDoIncrement, true);
   }
 }
