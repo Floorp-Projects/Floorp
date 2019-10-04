@@ -448,20 +448,20 @@ nsresult LookupCache::GetLookupWhitelistFragments(
   nsTArray<nsCString> topLevelURLs;
   topLevelURLs.AppendElement(topLevelURL);
 
-  MOZ_ASSERT(!IsCanonicalizedIP(topLevelURL));
-
-  topLevelURL.BeginReading(begin);
-  topLevelURL.EndReading(end);
-  int numTopLevelURLComponents = 0;
-  while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
-         numTopLevelURLComponents < MAX_HOST_COMPONENTS) {
-    // don't bother checking toplevel domains
-    if (++numTopLevelURLComponents >= 2) {
-      topLevelURL.EndReading(iter);
-      topLevelURLs.AppendElement(Substring(end, iter));
-    }
-    end = begin;
+  if (!IsCanonicalizedIP(topLevelURL)) {
     topLevelURL.BeginReading(begin);
+    topLevelURL.EndReading(end);
+    int numTopLevelURLComponents = 0;
+    while (RFindInReadable(NS_LITERAL_CSTRING("."), begin, end) &&
+           numTopLevelURLComponents < MAX_HOST_COMPONENTS) {
+      // don't bother checking toplevel domains
+      if (++numTopLevelURLComponents >= 2) {
+        topLevelURL.EndReading(iter);
+        topLevelURLs.AppendElement(Substring(end, iter));
+      }
+      end = begin;
+      topLevelURL.BeginReading(begin);
+    }
   }
 
   /**
@@ -474,16 +474,18 @@ nsresult LookupCache::GetLookupWhitelistFragments(
   nsTArray<nsCString> thirdPartyURLs;
   thirdPartyURLs.AppendElement(thirdPartyURL);
 
-  thirdPartyURL.BeginReading(iter);
-  thirdPartyURL.EndReading(end);
-  if (FindCharInReadable('.', iter, end)) {
-    iter++;
-    nsAutoCString thirdPartyURLToAdd;
-    thirdPartyURLToAdd.Assign(Substring(iter++, end));
-
-    // don't bother checking toplevel domains
+  if (!IsCanonicalizedIP(thirdPartyURL)) {
+    thirdPartyURL.BeginReading(iter);
+    thirdPartyURL.EndReading(end);
     if (FindCharInReadable('.', iter, end)) {
-      thirdPartyURLs.AppendElement(thirdPartyURLToAdd);
+      iter++;
+      nsAutoCString thirdPartyURLToAdd;
+      thirdPartyURLToAdd.Assign(Substring(iter++, end));
+
+      // don't bother checking toplevel domains
+      if (FindCharInReadable('.', iter, end)) {
+        thirdPartyURLs.AppendElement(thirdPartyURLToAdd);
+      }
     }
   }
 
