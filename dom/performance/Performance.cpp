@@ -274,11 +274,13 @@ void Performance::Measure(const nsAString& aName,
 
   DOMHighResTimeStamp startTime;
   DOMHighResTimeStamp endTime;
+  DOMHighResTimeStamp startTimeUnfuzzed;
+  DOMHighResTimeStamp endTimeUnfuzzed;
 
   if (aStartMark.WasPassed()) {
-    startTime = ResolveTimestampFromName(aStartMark.Value(), aRv);
+    startTimeUnfuzzed = ResolveTimestampFromName(aStartMark.Value(), aRv);
     startTime = nsRFPService::ReduceTimePrecisionAsMSecs(
-        startTime, GetRandomTimelineSeed());
+        startTimeUnfuzzed, GetRandomTimelineSeed());
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -287,17 +289,19 @@ void Performance::Measure(const nsAString& aName,
     // in relation to navigation start, this will be zero if a name is not
     // passed.
     startTime = 0;
+    startTimeUnfuzzed = 0;
   }
 
   if (aEndMark.WasPassed()) {
-    endTime = ResolveTimestampFromName(aEndMark.Value(), aRv);
-    endTime = nsRFPService::ReduceTimePrecisionAsMSecs(endTime,
+    endTimeUnfuzzed = ResolveTimestampFromName(aEndMark.Value(), aRv);
+    endTime = nsRFPService::ReduceTimePrecisionAsMSecs(endTimeUnfuzzed,
                                                        GetRandomTimelineSeed());
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
   } else {
     endTime = Now();
+    endTimeUnfuzzed = Now();
   }
 
   RefPtr<PerformanceMeasure> performanceMeasure =
@@ -307,9 +311,9 @@ void Performance::Measure(const nsAString& aName,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     TimeStamp startTimeStamp =
-        CreationTimeStamp() + TimeDuration::FromMilliseconds(startTime);
+        CreationTimeStamp() + TimeDuration::FromMilliseconds(startTimeUnfuzzed);
     TimeStamp endTimeStamp =
-        CreationTimeStamp() + TimeDuration::FromMilliseconds(endTime);
+        CreationTimeStamp() + TimeDuration::FromMilliseconds(endTimeUnfuzzed);
 
     // Convert to Maybe values so that Optional types do not need to be used in
     // the profiler.
