@@ -16,8 +16,8 @@ var ins = wasmEvalText(
       (table $t1 2 funcref)
       (table $t2 2 funcref)
       (type $ftype (func (param i32) (result i32)))
-      (elem $t1 (i32.const 0) $f1 $f2)
-      (elem $t2 (i32.const 0) $f3 $f4)
+      (elem $t1 (i32.const 0) func $f1 $f2)
+      (elem $t2 (i32.const 0) func $f3 $f4)
       (func $f1 (param $n i32) (result i32)
        (i32.add (local.get $n) (i32.const 1)))
       (func $f2 (param $n i32) (result i32)
@@ -65,14 +65,14 @@ var ins = wasmEvalText(
       (table $t0 (import "m" "t0") 2 funcref)
       (type $id_i32_t (func (param i32) (result i32)))
       (func $id_i32 (param i32) (result i32) (local.get 0))
-      (elem $t0 (i32.const 1) $id_i32)
+      (elem $t0 (i32.const 1) func $id_i32)
 
       (table $t1 (import "m" "t1") 3 anyref)
 
       (table $t2 (import "m" "t2") 4 funcref)
       (type $id_f64_t (func (param f64) (result f64)))
       (func $id_f64 (param f64) (result f64) (local.get 0))
-      (elem $t2 (i32.const 3) $id_f64)
+      (elem $t2 (i32.const 3) func $id_f64)
 
       (table $t3 (import "m" "t3") 5 anyref)
 
@@ -189,7 +189,7 @@ for (let [x,y,result,init] of [['(export "t")', '', arg*13, true],
           (type $fn1 (func (param i32) (result i32)))
           (func $f1 (param $n i32) (result i32)
            (i32.sub (local.get $n) (i32.const 11)))
-          (elem $t (i32.const 1) $f1))`);
+          (elem $t (i32.const 1) func $f1))`);
 
     let text =
         `(module
@@ -199,7 +199,7 @@ for (let [x,y,result,init] of [['(export "t")', '', arg*13, true],
           (type $fn1 (func (param i32) (result i32)))
           (func $f1 (param $n i32) (result i32)
            (i32.mul (local.get $n) (i32.const 13)))
-          ${init ? "(elem $t1 (i32.const 1) $f1)" : ""}
+          ${init ? "(elem $t1 (i32.const 1) func $f1)" : ""}
 
           (func (export "f") (param $n i32) (result i32)
            (table.copy $t0 (i32.const 0) $t1 (i32.const 0) (i32.const 2))
@@ -244,7 +244,7 @@ var ins = wasmEvalText(
     `(module
       (table $t0 2 funcref)
       (table $t1 2 funcref)
-      (elem passive $f0 $f1) ;; 0
+      (elem func $f0 $f1) ;; 0
       (type $ftype (func (param i32) (result i32)))
       (func $f0 (param i32) (result i32)
        (i32.mul (local.get 0) (i32.const 13)))
@@ -376,7 +376,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t0 2 funcref)
-      (elem passive) ;; 0
+      (elem func) ;; 0
       (func $f (result i32)
        (table.init 2 0 (i32.const 0) (i32.const 0) (i32.const 0))))`),
                    WebAssembly.CompileError,
@@ -385,7 +385,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t0 2 funcref)
-      (elem 2 (i32.const 0)))`),
+      (elem 2 (i32.const 0) func))`),
                    WebAssembly.CompileError,
                    /table index out of range for element segment/);
 
@@ -403,14 +403,7 @@ assertErrorMessage(() => wasmEvalText(
 assertErrorMessage(() => wasmEvalText(
     `(module
       (table $t0 2 funcref)
-      (elem 0 passive (i32.const 0)))`),
-                   SyntaxError,
-                   /passive or declared segment must not have a table/);
-
-assertErrorMessage(() => wasmEvalText(
-    `(module
-      (table $t0 2 funcref)
-      (elem passive) ;; 0
+      (elem func) ;; 0
       (func $f (result i32)
        (table.init $t0 (i32.const 0) (i32.const 0) (i32.const 0))))`), // no segment
                    SyntaxError,
