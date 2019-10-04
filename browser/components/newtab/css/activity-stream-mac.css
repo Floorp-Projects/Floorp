@@ -3103,6 +3103,11 @@ main {
     [lwt-newtab-brighttext] .ds-chevron-link::after {
       background-color: #45A1FF; }
 
+.ds-privacy-modal .privacy-notice {
+  width: 492px;
+  padding: 40px 0;
+  margin: auto; }
+
 .ASRouterButton {
   font-weight: 600;
   font-size: 14px;
@@ -3261,7 +3266,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   position: fixed;
   top: 15%;
   left: calc(50% - 480px);
-  background: #FFF;
+  background: var(--newtab-modal-color);
   box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   display: none;
@@ -3279,6 +3284,15 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       top: 5%; } }
   .modalOverlayInner.active {
     display: block; }
+  .modalOverlayInner .icon-dismiss {
+    border: 0;
+    cursor: pointer;
+    inset-inline-end: 0;
+    padding: 20px;
+    fill: #FFF;
+    position: absolute; }
+    .modalOverlayInner .icon-dismiss:focus {
+      border: 1px dotted; }
   .modalOverlayInner h2 {
     color: #4A4A4F;
     text-align: center;
@@ -3925,264 +3939,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     align-self: flex-end;
     display: flex; }
 
-.activity-stream.welcome {
-  overflow: hidden; }
-
-.activity-stream:not(.welcome) .overlay-wrapper {
-  display: none; }
-
-.overlay-wrapper {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 21000;
-  transition: opacity 0.4s;
-  opacity: 0;
-  overflow-x: auto; }
-  .overlay-wrapper.show {
-    transition: none;
-    opacity: 1; }
-    .overlay-wrapper.show .firstrun-sign-in {
-      transition: opacity 1.5s, transform 1.5s;
-      transition-delay: 0.2s;
-      transform: translateY(-50%) scale(1);
-      opacity: 1; }
-      @media screen and (max-width: 790px) {
-        .overlay-wrapper.show .firstrun-sign-in {
-          float: none;
-          margin: auto;
-          top: 190px;
-          margin-bottom: 100px; } }
-    .overlay-wrapper.show .firstrun-firefox-logo {
-      transition: opacity 2.3s;
-      opacity: 1; }
-    .overlay-wrapper.show .firstrun-title,
-    .overlay-wrapper.show .firstrun-content,
-    .overlay-wrapper.show .firstrun-link {
-      transition: transform 0.5s, opacity 0.8s;
-      transform: translateY(0);
-      opacity: 1; }
-    .overlay-wrapper.show .firstrun-title {
-      transition-delay: 0.2s; }
-    .overlay-wrapper.show .firstrun-content {
-      transition-delay: 0.4s; }
-    .overlay-wrapper.show .firstrun-link {
-      transition-delay: 0.6s; }
-    .overlay-wrapper.show .fxaccounts-container {
-      transition: none;
-      opacity: 1; }
-
-.background,
-.fxa + body.hide-main {
-  width: 100%;
-  height: 100%;
-  display: block;
-  background-image: url("../data/content/assets/fox-tail.png"), linear-gradient(to bottom, #003EAA 40%, #004EC2 60%, #0060DF 80%, #0080FF 90%, #00C7FF 100%);
-  background-position-x: center;
-  background-position-y: -200px, top;
-  background-repeat: no-repeat;
-  background-size: cover;
-  position: fixed; }
-
-.firstrun-sign-in {
-  transform: translateY(-50%) scale(0.8);
-  position: relative;
-  top: 50%;
-  width: 358px;
-  opacity: 0;
-  background-color: #FFF;
-  float: inline-end;
-  color: #0C0C0D;
-  text-align: center;
-  padding: 10px; }
-  .firstrun-sign-in form {
-    position: relative; }
-  .firstrun-sign-in .extra-links {
-    font-size: 12px;
-    max-width: 340px;
-    margin: 17px 50px;
-    color: #676F7E;
-    cursor: default; }
-    .firstrun-sign-in .extra-links a {
-      color: #737373;
-      cursor: pointer;
-      text-decoration: underline; }
-    .firstrun-sign-in .extra-links a:hover,
-    .firstrun-sign-in .extra-links a:active,
-    .firstrun-sign-in .extra-links a:focus {
-      color: #0A84FF; }
-  .firstrun-sign-in .email-input {
-    box-shadow: none;
-    margin: auto;
-    width: 244px;
-    display: block;
-    height: 40px;
-    padding-inline-start: 20px;
-    border: 1px solid #737373;
-    border-radius: 2px;
-    font-size: 16px;
-    transition: border-color 150ms, box-shadow 150ms; }
-    .firstrun-sign-in .email-input:hover {
-      border-color: #0C0C0D; }
-    .firstrun-sign-in .email-input:focus {
-      border-color: #0A84FF;
-      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3); }
-    .firstrun-sign-in .email-input.invalid {
-      border-color: #D70022; }
-    .firstrun-sign-in .email-input.invalid:focus {
-      box-shadow: 0 0 0 3px rgba(215, 0, 34, 0.3); }
-  .firstrun-sign-in .form-header {
-    font-size: 22px;
-    margin: 15px auto; }
-  .firstrun-sign-in .form-header .sub-header {
-    font-size: 14px;
-    margin-top: 4px;
-    display: block; }
-  .firstrun-sign-in button {
-    display: block;
-    cursor: pointer;
-    margin: 10px auto 0; }
-  .firstrun-sign-in .continue-button {
-    font-size: 18px;
-    height: 43px;
-    width: 250px;
-    padding: 8px 0;
-    border: 0;
-    border-radius: 4px;
-    color: #FFF;
-    background-color: #0060DF;
-    transition: background-color 150ms; }
-    .firstrun-sign-in .continue-button:not([disabled]):active, .firstrun-sign-in .continue-button:not([disabled]):hover {
-      background: #003EAA;
-      border-color: #002275; }
-  .firstrun-sign-in .skip-button {
-    font-size: 13px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    background-color: #F9F9FA;
-    color: #0A84FF;
-    border: 1px solid #0A84FF;
-    border-radius: 2px;
-    min-height: 24px;
-    padding: 5px 10px;
-    transition: background-color 150ms, color 150ms, border-color 150ms; }
-    .firstrun-sign-in .skip-button[disabled] {
-      background-color: #EDEDF0;
-      border-color: #B1B1B3;
-      color: #737373;
-      cursor: default;
-      opacity: 0.5; }
-    .firstrun-sign-in .skip-button:not([disabled]):hover {
-      background-color: #0A84FF;
-      border-color: #0060DF;
-      color: #FFF; }
-
-.firstrun-left-divider {
-  position: relative;
-  float: inline-start;
-  clear: both;
-  width: 435px; }
-  @media screen and (max-width: 825px) {
-    .firstrun-left-divider {
-      width: 400px; } }
-  @media screen and (max-width: 790px) {
-    .firstrun-left-divider {
-      margin: auto;
-      float: none;
-      width: 352px;
-      text-align: center; } }
-
-.firstrun-content {
-  line-height: 1.5;
-  margin-bottom: 48px;
-  max-width: 352px;
-  background: url("../data/content/assets/sync-devices.svg") bottom center no-repeat;
-  padding-bottom: 210px; }
-
-a.firstrun-link {
-  color: #FFF;
-  display: block;
-  text-decoration: underline; }
-  a.firstrun-link:hover, a.firstrun-link:active, a.firstrun-link:focus {
-    color: #FFF; }
-
-.firstrun-title {
-  background: url("chrome://branding/content/about-logo.png") top left no-repeat;
-  background-size: 90px 90px;
-  margin: 40px 0 10px;
-  padding-top: 110px; }
-  @media screen and (max-width: 790px) {
-    .firstrun-title {
-      background: url("chrome://branding/content/about-logo.png") top center no-repeat;
-      background-size: 90px 90px; } }
-  .firstrun-title:dir(rtl) {
-    background-position: top right; }
-
-.fxaccounts-container {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  top: 0;
-  left: 0;
-  color: #FFF;
-  height: 515px;
-  margin: auto;
-  width: 819px;
-  z-index: 10;
-  transition: opacity 0.3s;
-  opacity: 0; }
-  @media screen and (max-width: 825px) {
-    .fxaccounts-container {
-      width: 784px; } }
-  @media screen and (max-width: 790px) {
-    .fxaccounts-container {
-      width: auto;
-      height: 100%; } }
-
-.firstrun-title,
-.firstrun-content,
-.firstrun-link {
-  opacity: 0;
-  transform: translateY(-5px); }
-
-.error {
-  display: none; }
-
-.error.active {
-  display: block;
-  padding: 5px 12px;
-  animation: fade-down 450ms;
-  font-size: 12px;
-  font-weight: 500;
-  color: #FFF;
-  background-color: #D70022;
-  position: absolute;
-  inset-inline-start: 50px;
-  top: -28px;
-  border-radius: 2px; }
-  .error.active::before {
-    inset-inline-start: 12px;
-    background: #D70022;
-    bottom: -8px;
-    content: '.';
-    height: 16px;
-    position: absolute;
-    text-indent: -999px;
-    transform: rotate(45deg);
-    white-space: nowrap;
-    width: 16px;
-    z-index: -1; }
-
-@keyframes fade-down {
-  0% {
-    opacity: 0;
-    transform: translateY(-15px); }
-  100% {
-    opacity: 1;
-    transform: translateY(0); } }
-
 .trailhead {
   background: url("../data/content/assets/trailhead/accounts-form-bg.jpg") bottom/cover;
   color: #FFF;
@@ -4246,12 +4002,14 @@ a.firstrun-link {
           padding-inline-start: 74px; } }
       .trailhead .trailheadBenefits li:dir(rtl) {
         background-position-x: right; }
-      .trailhead .trailheadBenefits li.knowledge {
+      .trailhead .trailheadBenefits li.knowledge, .trailhead .trailheadBenefits li.monitor {
         background-image: url("../data/content/assets/trailhead/benefit-knowledge.png"); }
-      .trailhead .trailheadBenefits li.privacy {
+      .trailhead .trailheadBenefits li.lockwise, .trailhead .trailheadBenefits li.privacy {
         background-image: url("../data/content/assets/trailhead/benefit-privacy.png"); }
       .trailhead .trailheadBenefits li.products {
         background-image: url("../data/content/assets/trailhead/benefit-products.png"); }
+      .trailhead .trailheadBenefits li.sync {
+        background-image: url("../data/content/assets/trailhead/benefit-sync.png"); }
     .trailhead .trailheadBenefits h2 {
       text-align: start;
       line-height: inherit;
@@ -4449,6 +4207,9 @@ a.firstrun-link {
     width: 100%;
     text-align: center; }
 
+.activity-stream.welcome {
+  overflow: hidden; }
+
 .inline-onboarding.activity-stream.welcome {
   overflow-y: hidden; }
 
@@ -4463,3 +4224,51 @@ a.firstrun-link {
 
 .inline-onboarding .asrouter-toggle {
   position: absolute; }
+
+.error {
+  display: none; }
+
+.error.active {
+  display: block;
+  padding: 5px 12px;
+  animation: fade-down 450ms;
+  font-size: 12px;
+  font-weight: 500;
+  color: #FFF;
+  background-color: #D70022;
+  position: absolute;
+  inset-inline-start: 50px;
+  top: -28px;
+  border-radius: 2px; }
+  .error.active::before {
+    inset-inline-start: 12px;
+    background: #D70022;
+    bottom: -8px;
+    content: '.';
+    height: 16px;
+    position: absolute;
+    text-indent: -999px;
+    transform: rotate(45deg);
+    white-space: nowrap;
+    width: 16px;
+    z-index: -1; }
+
+@keyframes fade-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px); }
+  100% {
+    opacity: 1;
+    transform: translateY(0); } }
+
+.firstrun-title {
+  background: url("chrome://branding/content/about-logo.png") top left no-repeat;
+  background-size: 90px 90px;
+  margin: 40px 0 10px;
+  padding-top: 110px; }
+  @media screen and (max-width: 790px) {
+    .firstrun-title {
+      background: url("chrome://branding/content/about-logo.png") top center no-repeat;
+      background-size: 90px 90px; } }
+  .firstrun-title:dir(rtl) {
+    background-position: top right; }

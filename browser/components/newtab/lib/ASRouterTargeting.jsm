@@ -23,13 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "UpdateManager",
-  "@mozilla.org/updates/update-manager;1",
-  "nsIUpdateManager"
-);
-
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "cfrFeaturesUserPref",
@@ -453,16 +446,6 @@ const TargetingGetters = {
   },
   get isWhatsNewPanelEnabled() {
     return isWhatsNewPanelEnabled;
-  },
-  get earliestFirefoxVersion() {
-    if (UpdateManager.updateCount) {
-      const earliestFirefoxVersion = UpdateManager.getUpdateAt(
-        UpdateManager.updateCount - 1
-      ).previousAppVersion;
-      return parseInt(earliestFirefoxVersion.match(/\d+/), 10);
-    }
-
-    return null;
   },
   get isFxABadgeEnabled() {
     return isFxABadgeEnabled;
