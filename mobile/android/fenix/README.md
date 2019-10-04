@@ -108,6 +108,29 @@ To push without running the pre-push hook (e.g. doc updates):
 git push <remote> --no-verify
 ```
 
+## local.properties helpers
+There are multiple helper flags available via `local.properties` that will help speed up local development workflow
+when working across multiple layers of the dependency stack - specifically, with android-components, geckoview or application-services.
+
+### android-components auto-publication workflow
+Specify a relative path to your local `android-components` checkout via `autoPublish.android-components.dir`.
+
+If enabled, during a Fenix build android-components will be compiled and locally published if it has been modified,
+and published versions of android-components modules will be automatically used instead of whatever is declared in Dependencies.kt.
+
+### application-services composite builds
+Specify a relative path to your local `application-services` checkout via `substitutions.application-services.dir`.
+
+If enabled, a multi-project gradle build will be configured, and any application-services dependency will be substituted
+for the local version. Any changes to `application-services` will be automatically included in Fenix builds.
+
+### GeckoView
+Specify a relative path to your local `mozilla-central` checkout via `dependencySubstitutions.geckoviewTopsrcdir`,
+and optional a path to m-c object directory via `dependencySubstitutions.geckoviewTopobjdir`.
+
+If these are configured, local builds of GeckoView will be used instead of what's configured in Dependencies.kt.
+For more details, see https://mozilla.github.io/geckoview/contributor/geckoview-quick-start#include-geckoview-as-a-dependency
+
 ## License
 
 
