@@ -27,8 +27,24 @@ describe("<DSContextFooter>", () => {
     assert.isTrue(wrapper.exists());
     assert.isOk(wrapper.find(".story-footer"));
   });
+  it("should not render an engagement status if display_engagement_labels is false", () => {
+    wrapper = mount(
+      <DSContextFooter
+        display_engagement_labels={false}
+        engagement={engagement}
+      />
+    );
+
+    const engagementLabel = wrapper.find(".story-view-count");
+    assert.equal(engagementLabel.length, 0);
+  });
   it("should render an engagement status if no badge and spoc passed", () => {
-    wrapper = mount(<DSContextFooter engagement={engagement} />);
+    wrapper = mount(
+      <DSContextFooter
+        display_engagement_labels={true}
+        engagement={engagement}
+      />
+    );
 
     const engagementLabel = wrapper.find(".story-view-count");
     assert.equal(engagementLabel.text(), engagement);
