@@ -1170,7 +1170,7 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
     cairo_status_t status;
     const cairo_scaled_font_backend_t *backend;
     tt_segment_map_t *map;
-    char buf[4];
+    tt_segment_map_t buf;
     unsigned int num_segments, i;
     unsigned long size;
     uint16_t *start_code;
@@ -1190,7 +1190,7 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
 	return status;
 
     /* All table formats have the same first two words */
-    map = (tt_segment_map_t *) buf;
+    map = &buf;
     if (be16_to_cpu (map->format) != 4)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
