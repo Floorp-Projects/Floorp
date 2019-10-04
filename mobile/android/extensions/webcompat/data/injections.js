@@ -203,16 +203,20 @@ const AVAILABLE_INJECTIONS = [
   {
     id: "bug1577870",
     platform: "desktop",
-    domain: "slideshare.net",
+    domain: "Download prompt for files with no content-type",
     bug: "1577870",
     data: {
-      urls: ["https://*.linkedin.com/tscp-serving/dtag*"],
+      urls: [
+        "https://*.linkedin.com/tscp-serving/dtag*",
+        "https://ads-us.rd.linksynergy.com/as.php*",
+        "https://www.office.com/logout?sid*",
+      ],
       contentType: {
         name: "content-type",
         value: "text/html; charset=utf-8",
       },
     },
-    customFunc: "dtagFix",
+    customFunc: "noSniffFix",
   },
   {
     id: "bug1305028",
