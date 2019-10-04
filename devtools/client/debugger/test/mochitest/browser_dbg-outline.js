@@ -8,13 +8,14 @@ function getItems(dbg) {
 function getNthItem(dbg, index) {
   return findElement(dbg, "outlineItem", index);
 }
-// Tests that the editor highlights the correct location when the
-// debugger pauses
+
+// Tests that clicking a function in outline panel, the editor highlights the correct location.
+// Tests that outline panel can sort functions alphabetically.
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1");
   const {
     selectors: { getSelectedSource },
-    getState
+    getState,
   } = dbg;
 
   await selectSource(dbg, "simple1", 1);
@@ -22,13 +23,17 @@ add_task(async function() {
   findElementWithSelector(dbg, ".outline-tab").click();
   is(getItems(dbg).length, 5, "5 items in the list");
 
-  // click on an element
+  info("Click an item in outline panel");
   const item = getNthItem(dbg, 3);
   is(item.innerText, "evaledFunc()", "got evaled func");
   item.click();
   assertHighlightLocation(dbg, "simple1", 15);
+  ok(
+    item.parentNode.classList.contains("focused"),
+    "The clicked item li is focused"
+  );
 
-  // Ensure "main()" is the first function listed
+  info("Ensure main() is the first function listed");
   const firstFunction = findElementWithSelector(
     dbg,
     ".outline-list__element .function-signature"
@@ -38,7 +43,8 @@ add_task(async function() {
     "main()",
     "Natural first function is first listed"
   );
-  // Sort the list
+
+  info("Sort the list");
   findElementWithSelector(dbg, ".outline-footer button").click();
   // Button becomes active to show alphabetization
   is(
@@ -46,11 +52,15 @@ add_task(async function() {
     "active",
     "Alphabetize button is highlighted when active"
   );
-  // Ensure "doEval()" is the first function listed after alphabetization
+
+  info("Ensure doEval() is the first function listed after alphabetization");
   const firstAlphaFunction = findElementWithSelector(
     dbg,
     ".outline-list__element .function-signature"
   );
-  is(firstAlphaFunction.innerText, "doEval()",
-     "Alphabetized first function is correct");
+  is(
+    firstAlphaFunction.innerText,
+    "doEval()",
+    "Alphabetized first function is correct"
+  );
 });
