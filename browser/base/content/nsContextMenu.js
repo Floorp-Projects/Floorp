@@ -35,9 +35,20 @@ XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
   )
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "BrowserHandler",
+  "@mozilla.org/browser/clh;1",
+  "nsIBrowserHandler"
+);
+
 var gContextMenuContentData = null;
 
 function openContextMenu(aMessage, aBrowser, aActor) {
+  if (BrowserHandler.kiosk) {
+    // Don't display context menus in kiosk mode
+    return;
+  }
   let data = aMessage.data;
   let browser = aBrowser;
   let actor = aActor;
