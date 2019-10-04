@@ -131,8 +131,8 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "source": "TOP_SITES",
   "action_position": 2,
   "value": {
-    "card_type": ["pinned" | "search"],
-    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"],
+    "card_type": ["pinned" | "search" | "spoc"],
+    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image" | "custom_screenshot"],
     // only exists if its card_type = "search"
     "search_vendor": "google"
   }
@@ -199,7 +199,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "action_position": 2,
   "value": {
     "card_type": "pinned",
-    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"]
+    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image" | "custom_screenshot"]
   }
 
   // Basic metadata
@@ -221,8 +221,8 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "source": "TOP_SITES",
   "action_position": 2,
   "value": {
-    "card_type": ["pinned" | "search"],
-    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"],
+    "card_type": ["pinned" | "search" | "spoc"],
+    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image" | "custom_screenshot"],
     // only exists if its card_type = "search"
     "search_vendor": "google"
   }
@@ -291,7 +291,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "action_position": 2,
   "value": {
     "card_type": "pinned",
-    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"]
+    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image" | "custom_screenshot"]
   }
 
   // Basic metadata
@@ -314,7 +314,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "action_position": 2,
   "value": {
     "card_type": "pinned",
-    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image"]
+    "icon_type": ["screenshot_with_icon" | "screenshot" | "tippytop" | "rich_icon" | "no_image" | "custom_screenshot"]
   }
 
   // Basic metadata

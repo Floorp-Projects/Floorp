@@ -18,6 +18,11 @@ onboarding-button-label-get-started = Get Started
 onboarding-welcome-header = Welcome to { -brand-short-name }
 onboarding-welcome-body = You’ve got the browser.<br/>Meet the rest of { -brand-product-name }.
 onboarding-welcome-learn-more = Learn more about the benefits.
+onboarding-welcome-modal-get-body = You’ve got the browser.<br/>Now get the most out of { -brand-product-name }.
+onboarding-welcome-modal-supercharge-body = Supercharge your privacy protection.
+onboarding-welcome-modal-privacy-body = You’ve got the browser. Let’s add more privacy protection.
+onboarding-welcome-modal-family-learn-more = Learn about the { -brand-product-name } family of products.
+onboarding-welcome-form-header = Start Here
 
 onboarding-join-form-header = Join { -brand-product-name }
 onboarding-join-form-body = Enter your email address to get started.
@@ -37,8 +42,6 @@ onboarding-cards-dismiss =
 onboarding-sync-welcome-header = Take { -brand-product-name } with You
 onboarding-sync-welcome-content = Get your bookmarks, history, passwords and other settings on all your devices.
 onboarding-sync-welcome-learn-more-link = Learn more about Firefox Accounts
-onboarding-sync-form-invalid-input = Valid email required
-onboarding-sync-legal-notice = By proceeding, you agree to the <a data-l10n-name="terms">Terms of Service</a> and <a data-l10n-name="privacy">Privacy Notice</a>.
 
 onboarding-sync-form-input =
     .placeholder = Email
@@ -68,6 +71,15 @@ onboarding-benefit-privacy-title = True Privacy
 # make and do. We take less data. We keep it safe. And we make sure that we are
 # transparent about how we use it."
 onboarding-benefit-privacy-text = Everything we do honors our Personal Data Promise: Take less. Keep it safe. No secrets.
+
+onboarding-benefit-sync-title = { -sync-brand-short-name }
+onboarding-benefit-sync-text = Take your bookmarks, passwords, history, and more everywhere you use { -brand-product-name }.
+
+onboarding-benefit-monitor-title = { -monitor-brand-short-name }
+onboarding-benefit-monitor-text = Get notified when your personal info is in a known data breach.
+
+onboarding-benefit-lockwise-title = { -lockwise-brand-short-name }
+onboarding-benefit-lockwise-text = Manage passwords that are protected and portable.
 
 
 ## These strings belong to the individual onboarding messages.
