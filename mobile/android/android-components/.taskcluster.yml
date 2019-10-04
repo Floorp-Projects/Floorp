@@ -18,7 +18,7 @@ tasks:
                   else:
                       # GitHub adds "[bot]" to bot usernames and that doesn't validate as email.
                       $if: 'event.sender.login == "bors[bot]"'
-                      then: bors@users.noreply.github.com
+                      then: 'skaspari+mozlando@mozilla.com'   # It must match what's in bors.toml
                       else:
                           $if: 'tasks_for == "github-push"'
                           then: '${event.pusher.email}'
