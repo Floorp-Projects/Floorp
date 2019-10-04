@@ -20,7 +20,9 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Region;
 import android.os.Build;
 import android.os.Handler;
@@ -31,6 +33,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.v4.view.ViewCompat;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
@@ -42,6 +45,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStructure;
+import android.view.autofill.AutofillManager;
 import android.view.autofill.AutofillValue;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -61,7 +65,10 @@ public class GeckoView extends FrameLayout {
 
     private boolean mIsResettingFocus;
 
+    private boolean mAutofillEnabled = true;
+
     private GeckoSession.SelectionActionDelegate mSelectionActionDelegate;
+    private GeckoSession.AutofillDelegate mAutofillDelegate;
 
     private static class SavedState extends BaseSavedState {
         public final GeckoSession session;
@@ -235,6 +242,8 @@ public class GeckoView extends FrameLayout {
         if (activity != null) {
             mSelectionActionDelegate = new BasicSelectionActionDelegate(activity);
         }
+
+        mAutofillDelegate = new AndroidAutofillDelegate();
     }
 
     /**
@@ -326,6 +335,10 @@ public class GeckoView extends FrameLayout {
             mSession.setSelectionActionDelegate(null);
         }
 
+        if (mSession.getAutofillDelegate() == mAutofillDelegate) {
+            mSession.setAutofillDelegate(null);
+        }
+
         if (isFocused()) {
             mSession.setFocused(false);
         }
@@ -396,6 +409,10 @@ public class GeckoView extends FrameLayout {
 
         if (session.getSelectionActionDelegate() == null && mSelectionActionDelegate != null) {
             session.setSelectionActionDelegate(mSelectionActionDelegate);
+        }
+
+        if (mAutofillEnabled) {
+            session.setAutofillDelegate(mAutofillDelegate);
         }
 
         if (isFocused()) {
@@ -713,8 +730,99 @@ public class GeckoView extends FrameLayout {
                                                   final int flags) {
         super.onProvideAutofillVirtualStructure(structure, flags);
 
-        if (mSession != null) {
-            mSession.provideAutofillVirtualStructure(this, structure, flags);
+        if (mSession == null) {
+            return;
+        }
+
+        final AutofillElement root = mSession.getAutofillElements();
+        fillViewStructure(root, structure, flags);
+    }
+
+    @TargetApi(23)
+    private void fillViewStructure(final AutofillElement element, final ViewStructure structure, final int flags) {
+        if (Build.VERSION.SDK_INT >= 26) {
+            structure.setAutofillId(getAutofillId(), element.id);
+            structure.setWebDomain(element.domain);
+        }
+
+        structure.setId(element.id, null, null, null);
+        structure.setDimens(0, 0, 0, 0, element.dimensions.width(), element.dimensions.height());
+
+        if (Build.VERSION.SDK_INT >= 26) {
+            final ViewStructure.HtmlInfo.Builder htmlBuilder = structure.newHtmlInfoBuilder(element.tag);
+            for (final String key : element.attributes.keySet()) {
+                htmlBuilder.addAttribute(key, String.valueOf(element.attributes.get(key)));
+            }
+
+            structure.setHtmlInfo(htmlBuilder.build());
+        }
+
+        int childCount = 0;
+        for (final AutofillElement child : element.children) {
+            final ViewStructure childStructure = structure.newChild(childCount);
+            fillViewStructure(child, childStructure, flags);
+            childCount++;
+        }
+
+        structure.setChildCount(childCount);
+
+        switch (element.tag) {
+            case "input":
+            case "textarea":
+                structure.setClassName("android.widget.EditText");
+                structure.setEnabled(element.enabled);
+                structure.setFocusable(element.focusable);
+                structure.setFocused(element.focused);
+                structure.setVisibility(View.VISIBLE);
+
+                if (Build.VERSION.SDK_INT >= 26) {
+                    structure.setAutofillType(View.AUTOFILL_TYPE_TEXT);
+                }
+                break;
+            default:
+                if (childCount > 0) {
+                    structure.setClassName("android.view.ViewGroup");
+                } else {
+                    structure.setClassName("android.view.View");
+                }
+                break;
+        }
+
+        if (Build.VERSION.SDK_INT >= 26 && "input".equals(element.tag)) {
+            // LastPass will fill password to the field that setAutofillHints is unset and setInputType is set.
+            switch (element.hint) {
+                case AutofillElement.HINT_EMAIL_ADDRESS:
+                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_EMAIL_ADDRESS });
+                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
+                            InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                    break;
+                case AutofillElement.HINT_PASSWORD:
+                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_PASSWORD });
+                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
+                            InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD);
+                    break;
+                case AutofillElement.HINT_URL:
+                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
+                            InputType.TYPE_TEXT_VARIATION_URI);
+                    break;
+                case AutofillElement.HINT_USERNAME:
+                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_USERNAME });
+                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
+                            InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+                    break;
+            }
+
+            switch (element.inputType) {
+                case AutofillElement.INPUT_TYPE_NUMBER:
+                    structure.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    break;
+                case AutofillElement.INPUT_TYPE_PHONE:
+                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_PHONE });
+                    structure.setInputType(InputType.TYPE_CLASS_PHONE);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -749,5 +857,107 @@ public class GeckoView extends FrameLayout {
     @UiThread
     public @NonNull GeckoResult<Bitmap> capturePixels() {
         return mDisplay.capturePixels();
+    }
+
+    /**
+     * Sets whether or not this View participates in Android autofill.
+     *
+     * When enabled, this will set an {@link GeckoSession.AutofillDelegate} on the
+     * {@link GeckoSession} for this instance.
+     *
+     * @param enabled Whether or not Android autofill is enabled for this view.
+     */
+    @TargetApi(26)
+    public void setAutofillEnabled(final boolean enabled) {
+        mAutofillEnabled = enabled;
+
+        if (mSession != null) {
+            if (!enabled && mSession.getAutofillDelegate() == mAutofillDelegate) {
+                mSession.setAutofillDelegate(null);
+            } else if (enabled) {
+                mSession.setAutofillDelegate(mAutofillDelegate);
+            }
+        }
+    }
+
+    /**
+     * @return Whether or not Android autofill is enabled for this view.
+     */
+    @TargetApi(26)
+    public boolean getAutofillEnabled() {
+        return mAutofillEnabled;
+    }
+
+    private class AndroidAutofillDelegate implements GeckoSession.AutofillDelegate {
+
+        private AutofillElement findElementWithId(final AutofillElement root, final int id) {
+            if (root.id == id) {
+                return root;
+            }
+
+            for (AutofillElement child : root.children) {
+                final AutofillElement found = findElementWithId(child, id);
+                if (found != null) {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
+        private Rect displayRectForId(@NonNull final GeckoSession session,
+                                      @NonNull final int virtualId,
+                                      @Nullable final View view) {
+            final AutofillElement structure = session.getAutofillElements();
+            final AutofillElement element = findElementWithId(structure, virtualId);
+
+            if (element == null) {
+                return new Rect(0, 0, 0, 0);
+            }
+
+            final Matrix matrix = new Matrix();
+            final RectF rectF = new RectF(element.dimensions);
+            session.getPageToScreenMatrix(matrix);
+            matrix.mapRect(rectF);
+
+            final Rect screenRect = new Rect();
+            rectF.roundOut(screenRect);
+            return screenRect;
+        }
+
+        @Override
+        public void onAutofill(@NonNull final GeckoSession session,
+                               @GeckoSession.AutofillNotification final int notification,
+                               final int virtualId) {
+            ThreadUtils.assertOnUiThread();
+            if (Build.VERSION.SDK_INT < 26) {
+                return;
+            }
+
+            final AutofillManager manager =
+                    GeckoView.this.getContext().getSystemService(AutofillManager.class);
+            if (manager == null) {
+                return;
+            }
+
+            switch (notification) {
+                case AUTO_FILL_NOTIFY_STARTED:
+                    // This line seems necessary for auto-fill to work on the initial page.
+                    manager.cancel();
+                    break;
+                case AUTO_FILL_NOTIFY_COMMITTED:
+                    manager.commit();
+                    break;
+                case AUTO_FILL_NOTIFY_CANCELED:
+                    manager.cancel();
+                    break;
+                case AUTO_FILL_NOTIFY_VIEW_ENTERED:
+                    manager.notifyViewEntered(GeckoView.this, virtualId, displayRectForId(session, virtualId, GeckoView.this));
+                    break;
+                case AUTO_FILL_NOTIFY_VIEW_EXITED:
+                    manager.notifyViewExited(GeckoView.this, virtualId);
+                    break;
+            }
+        }
     }
 }
