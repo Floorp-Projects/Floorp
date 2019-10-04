@@ -3849,6 +3849,9 @@ impl Renderer {
                 CompositeTileSurface::Color { color } => {
                     (TextureSource::Dummy, 0.0, color)
                 }
+                CompositeTileSurface::Clear => {
+                    (TextureSource::Dummy, 0.0, ColorF::BLACK)
+                }
                 CompositeTileSurface::Texture { texture_id, texture_layer } => {
                     (texture_id, texture_layer as f32, ColorF::WHITE)
                 }
@@ -3923,6 +3926,18 @@ impl Renderer {
                 stats,
             );
             self.gpu_profile.finish_sampler(opaque_sampler);
+        }
+
+        if !composite_config.clear_tiles.is_empty() {
+            let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
+            self.device.disable_depth_write();
+            self.set_blend(true, FramebufferKind::Main);
+            self.device.set_blend_mode_premultiplied_dest_out();
+            self.draw_tile_list(
+                composite_config.clear_tiles.iter(),
+                stats,
+            );
+            self.gpu_profile.finish_sampler(transparent_sampler);
         }
 
         // Draw alpha tiles

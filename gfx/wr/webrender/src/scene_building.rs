@@ -511,7 +511,9 @@ impl<'a> SceneBuilder<'a> {
         // Walk the supplied top level of clusters, slicing into slices as appropriate
         for cluster in main_prim_list.clusters.drain(..) {
             // Check if this cluster requires a new slice
-            create_slice |= cluster.flags.contains(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+            create_slice |= cluster.flags.intersects(
+                ClusterFlags::CREATE_PICTURE_CACHE_PRE | ClusterFlags::IS_CLEAR_PRIMITIVE
+            );
 
             if create_slice {
                 // When creating a slice, close off any open clip chains on prev slice.
@@ -608,7 +610,9 @@ impl<'a> SceneBuilder<'a> {
             }
 
             // If this cluster creates a slice after, then note that for next cluster
-            create_slice |= cluster.flags.contains(ClusterFlags::CREATE_PICTURE_CACHE_POST);
+            create_slice |= cluster.flags.intersects(
+                ClusterFlags::CREATE_PICTURE_CACHE_POST | ClusterFlags::IS_CLEAR_PRIMITIVE
+            );
 
             // Finally, add this cluster to the current slice
             slices.last_mut().unwrap().prim_list.add_cluster(cluster);
