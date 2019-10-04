@@ -5,9 +5,10 @@
   XUL Widget Test for tabindex
   -->
 <window title="tabindex" width="500" height="600"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <!--
   Elements are navigated in the following order:
@@ -22,10 +23,10 @@
   <checkbox id="t1" label="Four" tabindex="1"/>
 </hbox>
 <hbox>
-  <textbox id="t9" idmod="t5" size="3"/>
-  <textbox id="f2" size="3" tabindex="-1"/>
-  <textbox id="t10" idmod="t6" size="3" tabindex="0"/>
-  <textbox id="t2" idmod="t1" size="3" tabindex="1"/>
+  <html:input id="t9" idmod="t5" size="3"/>
+  <html:input id="f2" size="3" tabindex="-1"/>
+  <html:input id="t10" idmod="t6" size="3" tabindex="0"/>
+  <html:input id="t2" idmod="t1" size="3" tabindex="1"/>
 </hbox>
 <hbox>
   <button id="n1" style="-moz-user-focus: ignore;" label="One"/>
@@ -34,10 +35,10 @@
   <checkbox id="t3" style="-moz-user-focus: ignore;" label="Four" tabindex="1"/>
 </hbox>
 <hbox>
-  <textbox id="t12" idmod="t7" style="-moz-user-focus: ignore;" size="3"/>
-  <textbox id="f4" style="-moz-user-focus: ignore;" size="3" tabindex="-1"/>
-  <textbox id="t13" idmod="t8" style="-moz-user-focus: ignore;" size="3" tabindex="0"/>
-  <textbox id="t4" idmod="t2" style="-moz-user-focus: ignore;" size="3" tabindex="1"/>
+  <html:input id="t12" idmod="t7" style="-moz-user-focus: ignore;" size="3"/>
+  <html:input id="f4" style="-moz-user-focus: ignore;" size="3" tabindex="-1"/>
+  <html:input id="t13" idmod="t8" style="-moz-user-focus: ignore;" size="3" tabindex="0"/>
+  <html:input id="t4" idmod="t2" style="-moz-user-focus: ignore;" size="3" tabindex="1"/>
 </hbox>
 <richlistbox id="t14" idmod="t9">
   <richlistitem><label value="Item One"/></richlistitem>
@@ -76,9 +77,6 @@ function checkFocusability(aId, aFocusable)
   let testNode = document.getElementById(aId);
   testNode.focus();
   let newFocus = document.activeElement;
-  if (newFocus.localName == "input") {
-    newFocus = document.getBindingParent(newFocus);
-  }
   let check = aFocusable ? is : isnot;
   let focusableText = aFocusable ? "focusable " : "unfocusable ";
   check(newFocus, testNode,
@@ -106,16 +104,9 @@ function runTests()
 
     // check for the last test which should wrap aorund to the first item
     // consider the focus event on the inner input of textboxes instead
-    if (event.originalTarget.localName == "input") {
-      is(document.getBindingParent(event.originalTarget).getAttribute(attrcompare),
-         "t" + t, "tab " + t + " to inner input");
-      gTestsOccurred++;
-    }
-    else {
-      is(event.target.getAttribute(attrcompare), "t" + t, "tab " + t + " to " + event.target.localName)
-      if (event.target.localName != "textbox")
-        gTestsOccurred++;
-    }
+    is(event.target.getAttribute(attrcompare), "t" + t,
+       "tab " + t + " to " + event.target.localName);
+    gTestsOccurred++;
   }
   window.addEventListener("focus", onFocus, true);
 

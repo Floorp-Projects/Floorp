@@ -6,12 +6,13 @@
   -->
 <window title="tabindex" width="500" height="600"
         onload="runTests()"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>  
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <label id="textbox-label" control="textbox" />
-<textbox id="textbox" value="Test"/>
+<html:input id="textbox" value="Test"/>
 <label id="checkbox-label" control="checkbox" />
 <checkbox id="checkbox" value="Checkbox"/>
 
@@ -27,7 +28,7 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
- 
+
 function runTests()
 {
   let textbox = $("textbox");

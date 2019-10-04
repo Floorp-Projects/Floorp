@@ -4,6 +4,7 @@
   XUL Widget Test for preferences window
 -->
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         class="prefwindow"
         title="preferences window"
         windowtype="test:preferences"
@@ -38,7 +39,7 @@
     <!-- one element for each preference type above -->
     <hbox>
       <label flex="1" value="int"/>
-      <textbox id="static_element_int"     preference="tests.static_preference_int"/>
+      <html:input id="static_element_int"     preference="tests.static_preference_int"/>
     </hbox>
     <hbox>
       <label flex="1" value="bool"/>
@@ -46,19 +47,19 @@
     </hbox>
     <hbox>
       <label flex="1" value="string"/>
-      <textbox id="static_element_string"  preference="tests.static_preference_string"/>
+      <html:input id="static_element_string"  preference="tests.static_preference_string"/>
     </hbox>
     <hbox>
       <label flex="1" value="wstring"/>
-      <textbox id="static_element_wstring" preference="tests.static_preference_wstring"/>
+      <html:input id="static_element_wstring" preference="tests.static_preference_wstring"/>
     </hbox>
     <hbox>
       <label flex="1" value="unichar"/>
-      <textbox id="static_element_unichar" preference="tests.static_preference_unichar"/>
+      <html:input id="static_element_unichar" preference="tests.static_preference_unichar"/>
     </hbox>
     <hbox>
       <label flex="1" value="file"/>
-      <textbox id="static_element_file"    preference="tests.static_preference_file"/>
+      <html:input id="static_element_file"    preference="tests.static_preference_file"/>
     </hbox>
   </vbox>
 </dialog>

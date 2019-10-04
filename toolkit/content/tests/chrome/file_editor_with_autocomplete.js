@@ -378,10 +378,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): type 'Mo'",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("M", { shiftKey: true }, aWindow);
         synthesizeKey("o", {}, aWindow);
         return true;
@@ -400,10 +396,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): select 'Mozilla' to complete the word",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("KEY_ArrowDown", {}, aWindow);
         synthesizeKey("KEY_Enter", {}, aWindow);
         return true;
@@ -418,10 +410,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): undo the word, but typed text shouldn't be canceled",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
       },
@@ -435,10 +423,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): undo the typed text",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
       },
@@ -452,10 +436,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): redo the typed text",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
       },
@@ -472,10 +452,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): redo the word",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
       },
@@ -489,10 +465,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text exactly matches the case (completeDefaultIndex is true): removing all text for next test...",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("a", { accelKey: true }, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
         return true;
@@ -508,10 +480,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): type 'mo'",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("m", {}, aWindow);
         synthesizeKey("o", {}, aWindow);
         return true;
@@ -530,10 +498,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): select 'Mozilla' to complete the word",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("KEY_ArrowDown", {}, aWindow);
         synthesizeKey("KEY_Enter", {}, aWindow);
         return true;
@@ -550,10 +514,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): undo the selected word, but typed text shouldn't be canceled",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
       },
@@ -567,10 +527,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): undo the word, but typed text shouldn't be canceled",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
       },
@@ -584,10 +540,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): undo the typed text",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("z", { accelKey: true }, aWindow);
         return true;
       },
@@ -605,10 +557,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): redo the typed text",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
       },
@@ -625,10 +573,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): redo the default index word",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
       },
@@ -642,10 +586,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): redo the word",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("Z", { accelKey: true, shiftKey: true }, aWindow);
         return true;
       },
@@ -659,10 +599,6 @@ nsDoTestsForEditorWithAutoComplete.prototype = {
         "Undo/Redo behavior check when typed text does not match the case (completeDefaultIndex is true): removing all text for next test...",
       completeDefaultIndex: true,
       execute(aWindow, aTarget) {
-        // Undo/Redo behavior on XUL <textbox> with completeDefaultIndex is set to true is unstable. Skip it now.
-        if (aTarget.tagName === "textbox") {
-          return false;
-        }
         synthesizeKey("a", { accelKey: true }, aWindow);
         synthesizeKey("KEY_Backspace", {}, aWindow);
         return true;
