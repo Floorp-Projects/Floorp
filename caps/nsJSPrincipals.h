@@ -46,6 +46,8 @@ class nsJSPrincipals : public nsIPrincipal, public JSPrincipals {
 
   bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) final;
 
+  bool isSystemOrAddonPrincipal() final;
+
   /*
    * Get a weak reference to nsIPrincipal associated with the given JS
    * principal, and vice-versa.

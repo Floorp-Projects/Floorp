@@ -203,6 +203,8 @@ struct StructuredCloneTestPrincipals final : public JSPrincipals {
     return JS_WriteUint32Pair(writer, rank, 0);
   }
 
+  bool isSystemOrAddonPrincipal() override { return true; }
+
   static bool read(JSContext* cx, JSStructuredCloneReader* reader,
                    JSPrincipals** outPrincipals) {
     uint32_t rank;

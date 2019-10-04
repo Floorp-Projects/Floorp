@@ -77,6 +77,8 @@ struct Principals final : public JSPrincipals {
     MOZ_ASSERT(false, "not imlemented");
     return false;
   }
+
+  bool isSystemOrAddonPrincipal() override { return true; }
 };
 
 static void DestroyPrincipals(JSPrincipals* principals) {

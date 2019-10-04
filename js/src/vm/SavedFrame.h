@@ -200,6 +200,13 @@ struct ReconstructedSavedFramePrincipals : public JSPrincipals {
     return false;
   }
 
+  bool isSystemOrAddonPrincipal() override {
+    MOZ_ASSERT(false,
+               "ReconstructedSavedFramePrincipals should never be exposed to "
+               "embedders");
+    return false;
+  }
+
   static ReconstructedSavedFramePrincipals IsSystem;
   static ReconstructedSavedFramePrincipals IsNotSystem;
 
