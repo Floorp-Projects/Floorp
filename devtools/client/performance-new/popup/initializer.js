@@ -58,18 +58,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /**
  * Initialize the panel by creating a redux store, and render the root component.
- *
- * @param perfFront - The Perf actor's front. Used to start and stop recordings.
- * @param preferenceFront - Used to get the recording preferences from the device.
  */
-async function gInit(perfFront, preferenceFront) {
+async function gInit() {
   const store = createStore(reducers);
+  const perfFrontInterface = new ActorReadyGeckoProfilerInterface();
 
   // Do some initialization, especially with privileged things that are part of the
   // the browser.
   store.dispatch(
     actions.initializeStore({
-      perfFront: new ActorReadyGeckoProfilerInterface(),
+      perfFront: perfFrontInterface,
       receiveProfile,
       // Pull the default recording settings from the reducer, and update them according
       // to what's in the browser's preferences.
@@ -92,6 +90,12 @@ async function gInit(perfFront, preferenceFront) {
     React.createElement(Provider, { store }, React.createElement(Perf)),
     document.querySelector("#root")
   );
+
+  window.addEventListener("unload", function() {
+    // The perf front interface needs to be unloaded in order to remove event handlers.
+    // Not doing so leads to leaks.
+    perfFrontInterface.destroy();
+  });
 
   resizeWindow();
 }
