@@ -96,9 +96,8 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
 
         if (SDK_INT <= Build.VERSION_CODES.M) {
-            findPreference<DefaultBrowserPreference>(getPreferenceKey(pref_key_make_default_browser))?.apply {
-                isVisible = false
-            }
+            findPreference<Preference>(getPreferenceKey(pref_key_make_default_browser))?.isVisible =
+                false
         }
     }
 
