@@ -65,6 +65,22 @@ function toggle(document) {
   }
 }
 
+/**
+ * This is a utility function to get the iframe from an event.
+ * @param {Object} The event fired by the CustomizableUI interface, contains a target.
+ */
+function getIframeFromEvent(event) {
+  const panelview = event.target;
+  const document = panelview.ownerDocument;
+
+  // Create the iframe, and append it.
+  const iframe = document.getElementById("PanelUI-profilerIframe");
+  if (!iframe) {
+    throw new Error("Unable to select the PanelUI-profilerIframe.");
+  }
+  return iframe;
+}
+
 // This function takes the button element, and returns a function that's used to
 // update the profiler button whenever the profiler activation status changed.
 const updateButtonColorForElement = buttonElement => () => {
@@ -93,17 +109,9 @@ function initialize() {
     viewId: "PanelUI-profiler",
     tooltiptext: "profiler-button.tooltiptext",
     onViewShowing: event => {
-      const panelview = event.target;
-      const document = panelview.ownerDocument;
-
-      // Create an iframe and append it to the panelview.
-      const iframe = document.createXULElement("iframe");
-      iframe.id = "PanelUI-profilerIframe";
-      iframe.className = "PanelUI-developer-iframe";
+      const iframe = getIframeFromEvent(event);
       iframe.src =
         "chrome://devtools/content/performance-new/popup/popup.xhtml";
-
-      panelview.appendChild(iframe);
 
       // Provide a mechanism for the iframe to close the popup.
       iframe.contentWindow.gClosePopup = () => {
@@ -130,16 +138,10 @@ function initialize() {
       );
     },
     onViewHiding(event) {
-      const document = event.target.ownerDocument;
-
-      // Create the iframe, and append it.
-      const iframe = document.getElementById("PanelUI-profilerIframe");
-      if (!iframe) {
-        throw new Error("Unable to select the PanelUI-profilerIframe.");
-      }
-
-      // Remove the iframe so it doesn't leak.
-      iframe.remove();
+      const iframe = getIframeFromEvent(event);
+      // Unset the iframe src so that when the popup DOM element is moved, the popup's
+      // contents aren't re-initialized.
+      iframe.src = "";
     },
     onBeforeCreated: document => {
       setMenuItemChecked(document, true);
@@ -163,6 +165,6 @@ function initialize() {
   CustomizableWidgets.push(item);
 }
 
-const ProfilerMenuButton = { toggle, initialize, isEnabled };
+const ProfilerMenuButton = { toggle, initialize };
 
 var EXPORTED_SYMBOLS = ["ProfilerMenuButton"];
