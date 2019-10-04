@@ -13,7 +13,6 @@ with Files("*CompositorWidget*"):
 
 DIRS += [
     'bindings',
-    'fennec',
     'jni',
 ]
 
@@ -49,7 +48,6 @@ UNIFIED_SOURCES += [
     'AndroidCompositorWidget.cpp',
     'AndroidContentController.cpp',
     'AndroidUiThread.cpp',
-    'ANRReporter.cpp',
     'EventDispatcher.cpp',
     'GeckoEditableSupport.cpp',
     'GfxInfo.cpp',

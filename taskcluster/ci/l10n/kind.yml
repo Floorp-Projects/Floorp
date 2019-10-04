@@ -20,7 +20,6 @@ kind-dependencies:
 primary-dependency: build
 
 only-for-build-platforms:
-    - android-api-16/opt
     - linux64-shippable/opt
     - linux-shippable/opt
     - macosx64-shippable/opt
@@ -28,29 +27,15 @@ only-for-build-platforms:
     - win64-shippable/opt
 
 job-template:
-    description:
-        by-build-platform:
-            default: Localization
-            android-api-16: Single Locale Repack
-    locales-file:
-        by-build-platform:
-            default: browser/locales/l10n-onchange-changesets.json
-            android-api-16: mobile/locales/l10n-onchange-changesets.json
+    description: Localization
+    locales-file: browser/locales/l10n-onchange-changesets.json
     ignore-locales:
         by-build-platform:
             # OSX has a special locale for japanese
             macosx64.*: [ja]
             default: [ja-JP-mac]
     run-time: 3600
-    docker-image:
-        by-build-platform:
-            android-api-16:
-                in-tree: android-build
-            default: null
-    secrets:
-        by-build-platform:
-            default: false
-            android-api-16: true
+    secrets: false
     fetches:
         toolchain:
             by-build-platform:
@@ -58,19 +43,13 @@ job-template:
                 macosx64.*:
                     - linux64-libdmg
                     - linux64-hfsplus
-                android-api-16:
-                    - android-gradle-dependencies
-                    - android-sdk-linux
     tooltool:
         by-build-platform:
             default: internal
             linux.*: public
     index:
         type: l10n
-        product:
-            by-build-platform:
-                default: firefox
-                android-api-16: mobile
+        product: firefox
         job-name:
             by-build-platform:
                 linux(?!64).*: linux-opt
@@ -78,7 +57,6 @@ job-template:
                 macosx64.*: macosx64-opt
                 win32.*: win32-opt
                 win64.*: win64-opt
-                android-api-16: android-api-16-opt
     run-on-projects: ['all']
     worker-type:
         by-build-platform:
@@ -86,10 +64,7 @@ job-template:
             win.*: b-win2012
     treeherder:
         symbol: L10n
-        tier:
-            by-build-platform:
-                default: 1
-                android-api-16: 2
+        tier: 1
         platform:
             by-build-platform:
                 linux64: linux64/opt
@@ -105,7 +80,6 @@ job-template:
                 win64: windows2012-64/opt
                 win64-pgo: windows2012-64-pgo/opt
                 win64-shippable: windows2012-64-shippable/opt
-                android-api-16: android-4-0-armv7-api16/opt
     env:
         by-build-platform:
             linux.*:    # linux64 and 32 get same treatment here
@@ -120,10 +94,6 @@ job-template:
                 EN_US_PACKAGE_NAME: target.zip
                 EN_US_BINARY_URL:
                     artifact-reference: <build-signing/{artifact_prefix}>
-            android-api-16:
-                EN_US_PACKAGE_NAME: target.apk
-                EN_US_BINARY_URL:
-                    artifact-reference: <build/{artifact_prefix}>
     mozharness:
         config:
             by-build-platform:
@@ -152,29 +122,15 @@ job-template:
                     - single_locale/win64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py
-                android-api-16:
-                    - single_locale/tc_common.py
-                    - single_locale/tc_android-api-16.py
         # no default, so we fail on new entries
-        actions:
-            by-build-platform:
-                default: ['clone-locales', 'list-locales', 'setup', 'repack',
-                          'summary']
-                android-api-16: ['get-secrets',
-                                 'clone-locales', 'list-locales', 'setup', 'repack',
-                                 'upload-repacks', 'summary']
-        script:
-            by-build-platform:
-                default: mozharness/scripts/desktop_l10n.py
-                android-api-16: mozharness/scripts/mobile_l10n.py
+        actions: ['clone-locales', 'list-locales', 'setup', 'repack', 'summary']
+        script: mozharness/scripts/desktop_l10n.py
     when:
         files-changed:
             - browser/locales/l10n-onchange-changesets.json
-            - mobile/locales/l10n-onchange-changesets.json
             - testing/mozharness/configs/single_locale/**
             - testing/mozharness/mozharness/mozilla/l10n/locales.py
             - testing/mozharness/scripts/desktop_l10n.py
-            - testing/mozharness/scripts/mobile_l10n.py
             - third_party/python/compare-locales/**
             - toolkit/locales/**
             - toolkit/mozapps/installer/**

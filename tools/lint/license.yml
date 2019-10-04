@@ -64,9 +64,6 @@ license:
         - media/libdav1d/vcs_version.h
         - media/mtransport/mdns_service/mdns_service.h
         - media/webrtc/signaling/src/sdp
-        - mobile/android/app/lint.xml
-        - mobile/android/app/src/main/AndroidManifest.xml
-        - mobile/android/app/src/main/res
         - mobile/android/branding
         - mobile/android/chrome/content/ExtensionPermissions.js
         - mobile/android/components/extensions
@@ -74,7 +71,6 @@ license:
         - mobile/android/geckoview/src/main/AndroidManifest.xml
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
         - mobile/android/geckoview_example/src/main
-        - mobile/android/services/src/main/res
         - modules/libpref/greprefs.js
         - mozglue/android/NativeCrypto.h
         - netwerk/base/rust-helper/src/lib.rs

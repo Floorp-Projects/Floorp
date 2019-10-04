@@ -38,10 +38,6 @@
 #  include "../../../xpcom/io/CocoaFileUtils.h"
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-#  include "FennecJNIWrappers.h"
-#endif
-
 #ifdef MOZ_WIDGET_GTK
 #  include <gtk/gtk.h>
 #endif
@@ -140,12 +136,8 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIURI* aReferrer,
     // On Windows and Gtk, add the download to the system's "recent documents"
     // list, with a pref to disable.
     {
+#    ifndef MOZ_WIDGET_ANDROID
       bool addToRecentDocs = Preferences::GetBool(PREF_BDM_ADDTORECENTDOCS);
-#    ifdef MOZ_WIDGET_ANDROID
-      if (jni::IsFennec() && addToRecentDocs) {
-        java::DownloadsIntegration::ScanMedia(path, aContentType);
-      }
-#    else
       if (addToRecentDocs && !aIsPrivate) {
 #      ifdef XP_WIN
         ::SHAddToRecentDocs(SHARD_PATHW, path.get());

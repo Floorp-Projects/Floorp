@@ -6,8 +6,6 @@
 #include "nsShellService.h"
 #include "nsString.h"
 
-#include "FennecJNIWrappers.h"
-
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsShellService, nsIShellService)
@@ -19,9 +17,5 @@ NS_IMETHODIMP
 nsShellService::CreateShortcut(const nsAString& aTitle, const nsAString& aURI,
                                const nsAString& aIcondata,
                                const nsAString& aIntent) {
-  if (!aTitle.Length() || !aURI.Length() || !jni::IsFennec())
-    return NS_ERROR_FAILURE;
-
-  java::GeckoApplication::CreateShortcut(aTitle, aURI);
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }

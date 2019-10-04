@@ -11,14 +11,5 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   localeswitching
-   uitelemetry
-   activitystreamtelemetry
-   downloadcontenttelemetry
-   adjust
-   mma
-   defaultdomains
-   shutdown
-   push
    gradle
    testcoverage

@@ -6,7 +6,7 @@
 #define RemoteDataDecoder_h_
 
 #include "AndroidDecoderModule.h"
-#include "FennecJNIWrappers.h"
+#include "GeneratedJNIWrappers.h"
 #include "SurfaceTexture.h"
 #include "TimeUnits.h"
 #include "mozilla/Maybe.h"
