@@ -76,6 +76,7 @@ def lint(files, config, **lintargs):
 
     while paths:
         cmdargs = [
+            which('python'),
             binary,
         ] + paths[:chunk_size]
         log.debug("Command: {}".format(' '.join(cmdargs)))
