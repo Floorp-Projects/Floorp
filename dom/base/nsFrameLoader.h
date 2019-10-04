@@ -93,7 +93,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
                             public nsWrapperCache {
   friend class AutoResetInShow;
   friend class AutoResetInFrameSwap;
-  friend class nsFrameLoaderOwner;
   typedef mozilla::dom::Document Document;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::BrowserParent BrowserParent;

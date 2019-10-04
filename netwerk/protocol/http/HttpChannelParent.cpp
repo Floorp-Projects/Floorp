@@ -2114,6 +2114,16 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   return NS_OK;
 }
 
+void HttpChannelParent::CancelChildCrossProcessRedirect() {
+  MOZ_ASSERT(!mDoingCrossProcessRedirect, "Already redirected");
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mDoingCrossProcessRedirect = true;
+  if (!mIPCClosed) {
+    Unused << SendCancelRedirected();
+  }
+}
+
 NS_IMETHODIMP
 HttpChannelParent::CompleteRedirect(bool succeeded) {
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n", this,
@@ -2632,13 +2642,7 @@ HttpChannelParent::OnRedirectResult(bool succeeded) {
 
 nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
                                                       uint64_t aIdentifier) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Mark ourselves as performing a cross-process redirect. This will prevent
-  // messages being communicated to the underlying channel, allowing us to keep
-  // it open.
-  MOZ_ASSERT(!mDoingCrossProcessRedirect, "Already redirected");
-  mDoingCrossProcessRedirect = true;
+  CancelChildCrossProcessRedirect();
 
   nsCOMPtr<nsIChannel> channel = aChannel;
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(channel);
@@ -2668,12 +2672,6 @@ nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
       GetMainThreadSerialEventTarget(), __func__,
       [=](uint64_t cpId) {
         nsresult rv;
-
-        // Cancel the channel in the original process, as the switch is
-        // happening in earnest.
-        if (!self->mIPCClosed) {
-          Unused << self->SendCancelRedirected();
-        }
 
         // Register the new channel and obtain id for it
         nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
@@ -2744,14 +2742,8 @@ nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
                   self->CrossProcessRedirectDone(NS_ERROR_FAILURE, Nothing());
                 });
       },
-      [=](nsresult aStatus) {
+      [httpChannel](nsresult aStatus) {
         MOZ_ASSERT(NS_FAILED(aStatus), "Status should be error");
-
-        // We failed to do a process switch. Make sure the content process has
-        // canceled the channel, and then resume the load process with an error.
-        if (!self->mIPCClosed) {
-          Unused << self->SendCancelRedirected();
-        }
         httpChannel->OnRedirectVerifyCallback(aStatus);
       });
 
