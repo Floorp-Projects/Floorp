@@ -3,15 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("resource://devtools/client/themes/splitters.css");
-
-/* Eyedropper Widget */
-/* <panel> added to mainPopupSet */
-
-.devtools-eyedropper-panel {
-  pointer-events: none;
-  -moz-appearance: none;
-  width: 156px;
-  height: 120px;
-  background-color: transparent;
-  border: none;
-}
+/* Imports the styles that will apply to the browser window for Responsive Design Mode.
+   This is dynamically loaded when either the toolbox or RDM is open. */
+@import url("resource://devtools/client/responsive/responsive-browser.css");
