@@ -230,6 +230,21 @@ nsresult GetBufferFromZipArchive(nsZipArchive* zip, bool doCRC, const char* id,
 
 } /* anonymous namespace */
 
+bool StartupCache::HasEntry(const char* id) {
+  AUTO_PROFILER_LABEL("StartupCache::HasEntry", OTHER);
+
+  MOZ_ASSERT(NS_IsMainThread(), "Startup cache only available on main thread");
+  WaitOnWriteThread();
+
+  if (!mStartupWriteInitiated) {
+    CacheEntry* entry;
+    mTable.Get(nsDependentCString(id), &entry);
+    return !!entry;
+  }
+
+  return mArchive && mArchive->GetItem(id);
+}
+
 // NOTE: this will not find a new entry until it has been written to disk!
 // Consumer should take ownership of the resulting buffer.
 nsresult StartupCache::GetBuffer(const char* id, UniquePtr<char[]>* outbuf,
