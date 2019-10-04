@@ -20,6 +20,7 @@ class JS_PUBLIC_API ContextOptions {
   ContextOptions()
       : asmJS_(true),
         wasm_(true),
+        wasmForTrustedPrinciples_(true),
         wasmVerbose_(false),
         wasmBaseline_(true),
         wasmIon_(true),
@@ -61,6 +62,12 @@ class JS_PUBLIC_API ContextOptions {
   }
   ContextOptions& toggleWasm() {
     wasm_ = !wasm_;
+    return *this;
+  }
+
+  bool wasmForTrustedPrinciples() const { return wasmForTrustedPrinciples_; }
+  ContextOptions& setWasmForTrustedPrinciples(bool flag) {
+    wasmForTrustedPrinciples_ = flag;
     return *this;
   }
 
@@ -187,6 +194,7 @@ class JS_PUBLIC_API ContextOptions {
  private:
   bool asmJS_ : 1;
   bool wasm_ : 1;
+  bool wasmForTrustedPrinciples_ : 1;
   bool wasmVerbose_ : 1;
   bool wasmBaseline_ : 1;
   bool wasmIon_ : 1;

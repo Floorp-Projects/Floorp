@@ -10327,6 +10327,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
       .setWasm(enableWasm)
+      .setWasmForTrustedPrinciples(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
       .setWasmIon(enableWasmIon)
 #ifdef ENABLE_WASM_CRANELIFT
