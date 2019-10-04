@@ -144,8 +144,15 @@ NS_IMETHODIMP
 nsParentalControlsService::GetBlockFileDownloadsEnabled(bool* aResult) {
   *aResult = false;
 
-  if (!mEnabled || !mPC) {
+  if (!mEnabled) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // If we're on Windows 10 and we don't have the whole API available, then
+  // we can't tell if file downloads are allowed, so assume they are to avoid
+  // breaking downloads for every single user with parental controls.
+  if (!mPC) {
+    return NS_OK;
   }
 
   RefPtr<IWPCWebSettings> wpcws;
@@ -162,8 +169,14 @@ NS_IMETHODIMP
 nsParentalControlsService::GetLoggingEnabled(bool* aResult) {
   *aResult = false;
 
-  if (!mEnabled || !mPC) {
+  if (!mEnabled) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // If we're on Windows 10 and we don't have the whole API available, then
+  // we don't know how logging should be done, so report that it's disabled.
+  if (!mPC) {
+    return NS_OK;
   }
 
   // Check the general purpose logging flag
@@ -217,8 +230,13 @@ nsParentalControlsService::RequestURIOverride(
     nsIURI* aTarget, nsIInterfaceRequestor* aWindowContext, bool* _retval) {
   *_retval = false;
 
-  if (!mEnabled || !mPC) {
+  if (!mEnabled) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // We don't know how to get the overrides unless the PC API exists.
+  if (!mPC) {
+    return NS_OK;
   }
 
   NS_ENSURE_ARG_POINTER(aTarget);
@@ -250,8 +268,13 @@ nsParentalControlsService::RequestURIOverrides(
     nsIArray* aTargets, nsIInterfaceRequestor* aWindowContext, bool* _retval) {
   *_retval = false;
 
-  if (!mEnabled || !mPC) {
+  if (!mEnabled) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // We don't know how to get the overrides unless the PC API exists.
+  if (!mPC) {
+    return NS_OK;
   }
 
   NS_ENSURE_ARG_POINTER(aTargets);
