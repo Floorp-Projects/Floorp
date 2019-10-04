@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 
@@ -37,6 +38,12 @@ loader.lazyRequireGetter(
   this,
   "gDevTools",
   "devtools/client/framework/devtools",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "gDevToolsBrowser",
+  "devtools/client/framework/devtools-browser",
   true
 );
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
@@ -110,6 +117,10 @@ class ResponsiveUIManager {
       return promise.reject(new Error("RDM only available for remote tabs."));
     }
     if (!this.isActiveForTab(tab)) {
+      if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
+        await gDevToolsBrowser.loadBrowserStyleSheet(window);
+      }
+
       this.initMenuCheckListenerFor(window);
 
       const ui = new ResponsiveUI(this, window, tab);

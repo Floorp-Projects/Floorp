@@ -36,11 +36,11 @@
 
 #appcontent[devtoolstheme="light"] {
   /* These variables are used in browser.xhtml but inside the toolbox they are overridden by --theme-splitter-color */
-  --devtools-splitter-color: #dde1e4;
+  --devtools-splitter-color: #e0e0e2;
 }
 
 #appcontent[devtoolstheme="dark"] {
-  --devtools-splitter-color: #42484f;
+  --devtools-splitter-color: #38383d;
 }
 
 splitter.devtools-horizontal-splitter,
