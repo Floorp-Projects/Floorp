@@ -920,18 +920,6 @@ function setupTestCommon(aAppUpdateAutoEnabled = false, aAllowBits = false) {
     );
   }
 
-  if (gIsServiceTest) {
-    let exts = ["id", "log", "status"];
-    for (let i = 0; i < exts.length; ++i) {
-      let file = getSecureOutputFile(exts[i]);
-      if (file.exists()) {
-        try {
-          file.remove(false);
-        } catch (e) {}
-      }
-    }
-  }
-
   adjustGeneralPaths();
   createWorldWritableAppUpdateDir();
 
@@ -994,18 +982,6 @@ function cleanupTestCommon() {
   if (AppConstants.platform == "macosx" || AppConstants.platform == "linux") {
     // This will delete the launch script if it exists.
     getLaunchScript();
-  }
-
-  if (gIsServiceTest) {
-    let exts = ["id", "log", "status"];
-    for (let i = 0; i < exts.length; ++i) {
-      let file = getSecureOutputFile(exts[i]);
-      if (file.exists()) {
-        try {
-          file.remove(false);
-        } catch (e) {}
-      }
-    }
   }
 
   if (AppConstants.platform == "win" && MOZ_APP_BASENAME) {
@@ -1529,36 +1505,6 @@ function getMaintSvcDir() {
 }
 
 /**
- * Reads the current update operation/state in the status file in the secure
- * update log directory.
- *
- * @return The status value.
- */
-function readSecureStatusFile() {
-  let file = getSecureOutputFile("status");
-  if (!file.exists()) {
-    debugDump("update status file does not exist, path: " + file.path);
-    return STATE_NONE;
-  }
-  return readFile(file).split("\n")[0];
-}
-
-/**
- * Get the nsIFile in the secure update log directory. The file name is always
- * the value of gTestID with either a file extension of 'log' or 'status'.
- *
- * @param  aFileExt
- *         The file extension.
- * @return The nsIFile of the secure update file.
- */
-function getSecureOutputFile(aFileExt) {
-  let file = getMaintSvcDir();
-  file.append("UpdateLogs");
-  file.append(gTestID + "." + aFileExt);
-  return file;
-}
-
-/**
  * Get the nsIFile for a Windows special folder determined by the CSIDL
  * passed.
  *
@@ -2021,7 +1967,7 @@ function runUpdate(
   let status = readStatusFile();
   if (
     (!gIsServiceTest && process.exitValue != aExpectedExitValue) ||
-    (status != aExpectedStatus && !gIsServiceTest && !isInvalidArgTest)
+    status != aExpectedStatus
   ) {
     if (process.exitValue != aExpectedExitValue) {
       logTestInfo(
@@ -2040,13 +1986,6 @@ function runUpdate(
       );
     }
     logUpdateLog(FILE_LAST_UPDATE_LOG);
-  }
-
-  if (gIsServiceTest && isInvalidArgTest) {
-    let secureStatus = readSecureStatusFile();
-    if (secureStatus != STATE_NONE) {
-      status = secureStatus;
-    }
   }
 
   if (!gIsServiceTest) {

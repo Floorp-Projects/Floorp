@@ -89,39 +89,6 @@ BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra) {
 }
 
 /**
- * Obtains a uuid as a wide string.
- *
- * @param  outBuf
- *         A buffer of size MAX_PATH + 1 to store the result.
- * @return TRUE if successful
- */
-BOOL GetUUIDString(LPWSTR outBuf) {
-  UUID uuid;
-  RPC_WSTR uuidString = nullptr;
-
-  // Note: the return value of UuidCreate should always be RPC_S_OK on systems
-  // after Win2K / Win2003 due to the network hardware address no longer being
-  // used to create the UUID.
-  if (UuidCreate(&uuid) != RPC_S_OK) {
-    return FALSE;
-  }
-  if (UuidToStringW(&uuid, &uuidString) != RPC_S_OK) {
-    return FALSE;
-  }
-  if (!uuidString) {
-    return FALSE;
-  }
-
-  if (wcslen(reinterpret_cast<LPCWSTR>(uuidString)) > MAX_PATH) {
-    return FALSE;
-  }
-  wcsncpy(outBuf, reinterpret_cast<LPCWSTR>(uuidString), MAX_PATH + 1);
-  RpcStringFreeW(&uuidString);
-
-  return TRUE;
-}
-
-/**
  * Build a temporary file path whose name component is a UUID.
  *
  * @param  basePath  The base directory path for the temp file
@@ -133,27 +100,25 @@ BOOL GetUUIDString(LPWSTR outBuf) {
 BOOL GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath) {
   WCHAR filename[MAX_PATH + 1] = {L"\0"};
   if (prefix) {
-    if (wcslen(prefix) > MAX_PATH) {
-      return FALSE;
-    }
-    wcsncpy(filename, prefix, MAX_PATH + 1);
+    wcsncpy(filename, prefix, MAX_PATH);
   }
 
-  WCHAR tmpFileNameString[MAX_PATH + 1] = {L"\0"};
-  if (!GetUUIDString(tmpFileNameString)) {
+  UUID tmpFileNameUuid;
+  RPC_WSTR tmpFileNameString = nullptr;
+  if (UuidCreate(&tmpFileNameUuid) != RPC_S_OK) {
+    return FALSE;
+  }
+  if (UuidToStringW(&tmpFileNameUuid, &tmpFileNameString) != RPC_S_OK) {
+    return FALSE;
+  }
+  if (!tmpFileNameString) {
     return FALSE;
   }
 
-  size_t tmpFileNameStringLen = wcslen(tmpFileNameString);
-  if (wcslen(filename) + tmpFileNameStringLen > MAX_PATH) {
-    return FALSE;
-  }
-  wcsncat(filename, tmpFileNameString, tmpFileNameStringLen);
+  wcsncat(filename, (LPCWSTR)tmpFileNameString, MAX_PATH);
+  RpcStringFreeW(&tmpFileNameString);
 
-  if (wcslen(basePath) > MAX_PATH) {
-    return FALSE;
-  }
-  wcsncpy(tmpPath, basePath, MAX_PATH + 1);
+  wcsncpy(tmpPath, basePath, MAX_PATH);
   if (!PathAppendSafe(tmpPath, filename)) {
     return FALSE;
   }
