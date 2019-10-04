@@ -56,12 +56,14 @@ is(m2.getAttribute("style"), "border:: invalid",
 
 d2.style.color = "green";
 s2.style.color = "green";
-is (m2.style, undefined, ".style shouldn't exist on MathML");
+m2.style.color = "green";
 
 is(d2.getAttribute("style"), "color: green;",
    "Adjusting .style should parse style on HTML");
 is(s2.getAttribute("style"), "color: green;",
-   "Getting .style should parse style on SVG");
+   "Adjusting .style should parse style on SVG");
+is(m2.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on MathML");
 
 d = document.adoptNode(d);
 s = document.adoptNode(s);
@@ -87,12 +89,14 @@ is(m.getAttribute("style"), "border:: invalid",
 
 d.style.color = "green";
 s.style.color = "green";
-is (m.style, undefined, ".style shouldn't exist on MathML");
+m.style.color = "green";
 
 is(d.getAttribute("style"), "color: green;",
    "Adjusting .style should parse style on HTML");
 is(s.getAttribute("style"), "color: green;",
    "Adjusting .style should parse style on SVG");
+is(m.getAttribute("style"), "color: green;",
+   "Adjusting .style should parse style on MathML");
 
 </script>
 </pre>
