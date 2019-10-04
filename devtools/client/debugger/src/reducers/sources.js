@@ -203,6 +203,7 @@ function update(
       location = {
         url: action.url,
         line: action.line,
+        column: action.column,
       };
 
       prefs.pendingSelectedLocation = location;
