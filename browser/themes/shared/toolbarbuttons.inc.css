@@ -353,6 +353,7 @@ toolbarbutton.bookmark-item {
   margin-inline-end: 0;
 }
 
+#bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]) {
   margin-inline-end: 4px;
 }
