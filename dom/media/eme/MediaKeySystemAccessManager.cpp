@@ -94,9 +94,16 @@ void MediaKeySystemAccessManager::Request(
           self->RequestCallback(isSupportedLambda, promise, keySystem, configs,
                                 aType);
         },
-        [](const mozilla::ipc::ResponseRejectReason) {
-          MOZ_CRASH(
-              "Failed to make IPC call to IsWindowSupportingProtectedMedia");
+        [self, browser, promise, keySystem, configs,
+         aType](const mozilla::ipc::ResponseRejectReason reason) {
+          // We're likely here because the tab/window was closed as we were
+          // performing the check. Try to gracefully handle.
+          EME_LOG(
+              "Failed to make IPC call to IsWindowSupportingProtectedMedia: "
+              "reason=%d",
+              static_cast<int>(reason));
+          // Treat as failure.
+          self->RequestCallback(false, promise, keySystem, configs, aType);
         });
   } else {
 #endif
@@ -114,7 +121,6 @@ void MediaKeySystemAccessManager::RequestCallback(
     aPromise->MaybeReject(
         NS_ERROR_DOM_NOT_SUPPORTED_ERR,
         NS_LITERAL_CSTRING("EME is not supported in this window"));
-
     return;
   }
 
