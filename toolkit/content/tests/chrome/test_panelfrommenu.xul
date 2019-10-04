@@ -4,11 +4,11 @@
 
 <window title="Open panel from menuitem"
   onload="setTimeout(runTests, 0);"
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <!--
   This test does the following:
@@ -33,7 +33,7 @@
 
 <panel id="panel" onpopupshown="panelOpened()"
                   onpopuphidden="$('button').focus(); $('button').open = true">
-  <textbox/>
+  <html:input/>
 </panel>
 
 <button id="button" type="menu" label="Button">
@@ -46,7 +46,7 @@
 <toolbarbutton id="tbutton" type="menu" label="Toolbarbutton">
   <panel onpopupshown="panelOnToolbarbuttonOpened(this)"
          onpopuphidden="SimpleTest.finish()">
-    <textbox/>
+    <html:input/>
   </panel>
 </toolbarbutton>
 
@@ -99,7 +99,7 @@ function panelOnToolbarbuttonOpened(panel)
   is(document.activeElement, document.documentElement, "focus blurred on panel from toolbarbutton open");
   panel.firstChild.focus();
   synthesizeKey("KEY_ArrowDown");
-  is(document.activeElement, panel.firstChild.inputField, "focus not modified on cursor down from toolbarbutton");
+  is(document.activeElement, panel.firstChild, "focus not modified on cursor down from toolbarbutton");
   panel.parentNode.open = false;
 }
 

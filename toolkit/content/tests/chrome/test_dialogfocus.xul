@@ -80,9 +80,7 @@ function runTest()
         return;
       }
 
-      if (expectedFocus == "textbox-yes")
-        match = (activeElement == win.document.getElementById(expectedFocus).inputField);
-      else if (expectedFocus[0] == "_")
+      if (expectedFocus[0] == "_")
         match = (activeElement.dlgType == expectedFocus.substring(1));
       else
         match = (activeElement.id == expectedFocus);

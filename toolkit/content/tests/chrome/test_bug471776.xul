@@ -10,12 +10,13 @@
 
 <window title="Textbox with placeholder undo test" width="500" height="600"
         onload="doTest();"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <hbox>
-    <textbox id="t1" placeholder="empty"/>
+    <html:input id="t1" placeholder="empty"/>
   </hbox>
 
   <!-- test results are displayed in the html:body -->

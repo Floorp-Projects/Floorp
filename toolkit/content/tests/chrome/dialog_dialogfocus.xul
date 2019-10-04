@@ -1,7 +1,8 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
 <dialog buttons="extra2,accept,cancel" onload="loaded()"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
 <tabbox id="tabbox" hidden="true">
   <tabs>
@@ -15,8 +16,8 @@
   </tabpanels>
 </tabbox>
 
-<textbox id="textbox-yes" value="textbox-yes" hidden="true"/>
-<textbox id="textbox-no" value="textbox-no" noinitialfocus="true" hidden="true"/>
+<html:input id="textbox-yes" value="textbox-yes" hidden="true"/>
+<html:input id="textbox-no" value="textbox-no" noinitialfocus="true" hidden="true"/>
 <button id="one" label="One"/>
 <button id="two" label="Two" hidden="true"/>
 

@@ -11,6 +11,7 @@
 
 <window id="360437Test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         width="600"
         height="600"
         onload="startTest();"
@@ -86,7 +87,7 @@
 
       ok(gFindBar.hidden, "Findbar is hidden");
       gFindBar.onFindAgainCommand(false);
-      ok(textbox.hasAttribute("focused"),
+      is(document.activeElement, textbox,
          "Focus was stolen from a chrome element");
     }
 
@@ -116,7 +117,7 @@
       return promise;
     }
   ]]></script>
-  <textbox id="textbox"/>
+  <html:input id="textbox"/>
   <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>
   <browser type="content" primary="true" flex="1" id="content-remote" remote="true" src="about:blank"/>
   <findbar id="FindToolbar" browserid="content"/>
