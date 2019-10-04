@@ -98,6 +98,7 @@
 #define INVALID_WORKING_DIR_PATH_ERROR 76
 #define INVALID_CALLBACK_PATH_ERROR 77
 #define INVALID_CALLBACK_DIR_ERROR 78
+#define UPDATE_STATUS_UNCHANGED 79
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js
 

@@ -12,6 +12,13 @@ BOOL DoesFallbackKeyExist();
 BOOL IsLocalFile(LPCWSTR file, BOOL& isLocal);
 DWORD StartServiceCommand(int argc, LPCWSTR* argv);
 BOOL IsUnpromptedElevation(BOOL& isUnpromptedElevation);
+BOOL GetSecureOutputDirectoryPath(LPWSTR outBuf);
+BOOL GetSecureOutputFilePath(LPCWSTR patchDirPath, LPCWSTR fileExt,
+                             LPWSTR outBuf);
+BOOL WriteSecureIDFile(LPCWSTR patchDirPath);
+void RemoveSecureOutputFiles(LPCWSTR patchDirPath);
+
+#define PATCH_DIR_PATH L"\\updates\\0"
 
 #define SVC_NAME L"MozillaMaintenance"
 
