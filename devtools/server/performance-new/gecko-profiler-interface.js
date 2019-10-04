@@ -31,7 +31,19 @@ const IS_SUPPORTED_PLATFORM = "nsIProfiler" in Ci;
  * the Gecko Profiler on the current browser.
  */
 class ActorReadyGeckoProfilerInterface {
-  constructor() {
+  /**
+   * @param {Object} options
+   * @param options.gzipped - This flag controls whether or not to gzip the profile when
+   *   capturing it. The profiler popup wants a gzipped profile in an array buffer, while
+   *   the devtools want the full object. See Bug 1581963 to perhaps provide an API
+   *   to request the gzipped profile. This would then remove this configuration from
+   *   the GeckoProfilerInterface.
+   */
+  constructor(
+    options = {
+      gzipped: true,
+    }
+  ) {
     // Only setup the observers on a supported platform.
     if (IS_SUPPORTED_PLATFORM) {
       this._observer = {
@@ -45,6 +57,7 @@ class ActorReadyGeckoProfilerInterface {
       );
       Services.obs.addObserver(this._observer, "last-pb-context-exited");
     }
+    this.gzipped = options.gzipped;
 
     EventEmitter.decorate(this);
   }
@@ -128,20 +141,32 @@ class ActorReadyGeckoProfilerInterface {
     let profile;
     try {
       // Attempt to pull out the data.
-      profile = await Services.profiler.getProfileDataAsync();
+      if (this.gzipped) {
+        profile = await Services.profiler.getProfileDataAsGzippedArrayBuffer();
+      } else {
+        profile = await Services.profiler.getProfileDataAsync();
 
-      // Stop and discard the buffers.
-      Services.profiler.StopProfiler();
+        if (Object.keys(profile).length === 0) {
+          console.error(
+            "An empty object was received from getProfileDataAsync.getProfileDataAsync(), " +
+              "meaning that a profile could not successfully be serialized and captured."
+          );
+          profile = null;
+        }
+      }
     } catch (e) {
-      // If there was any kind of error, bailout with no profile.
-      return null;
+      // Explicitly set the profile to null if there as an error.
+      profile = null;
+      console.error(
+        `There was an error fetching a profile (gzipped: ${this.gzipped})`,
+        e
+      );
     }
 
-    // Gecko Profiler errors can return an empty object, return null for this
-    // case as well.
-    if (Object.keys(profile).length === 0) {
-      return null;
-    }
+    // Stop and discard the buffers.
+    Services.profiler.StopProfiler();
+
+    // Returns a profile when successful, and null when there is an error.
     return profile;
   }
 
