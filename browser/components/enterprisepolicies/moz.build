@@ -7,6 +7,8 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Enterprise Policies")
 
+SPHINX_TREES['docs'] = 'docs'
+
 DIRS += [
     'helpers',
     'schemas',
