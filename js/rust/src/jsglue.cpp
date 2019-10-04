@@ -287,6 +287,8 @@ class RustJSPrincipal : public JSPrincipals {
     if (this->destroyCallback) this->destroyCallback(this);
   }
 
+  bool isSystemOrAddonPrincipal() { return false; }
+
   bool write(JSContext* cx, JSStructuredCloneWriter* writer) {
     return this->writeCallback ? this->writeCallback(cx, writer) : false;
   }
