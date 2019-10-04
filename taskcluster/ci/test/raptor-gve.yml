@@ -342,7 +342,6 @@ raptor-tp6m-1-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     tier:
@@ -367,7 +366,6 @@ raptor-tp6m-2-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     tier:
@@ -392,7 +390,6 @@ raptor-tp6m-3-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     tier:
@@ -417,7 +414,6 @@ raptor-tp6m-4-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     tier:
@@ -442,7 +438,6 @@ raptor-tp6m-5-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     tier:
@@ -467,7 +462,6 @@ raptor-tp6m-6-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     tier:
@@ -492,7 +486,6 @@ raptor-tp6m-7-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -512,7 +505,6 @@ raptor-tp6m-8-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -532,7 +524,6 @@ raptor-tp6m-9-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -552,7 +543,6 @@ raptor-tp6m-10-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -572,7 +562,6 @@ raptor-tp6m-11-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -592,7 +581,6 @@ raptor-tp6m-12-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -612,7 +600,6 @@ raptor-tp6m-13-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -632,7 +619,6 @@ raptor-tp6m-14-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -652,7 +638,6 @@ raptor-tp6m-15-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -672,7 +657,6 @@ raptor-tp6m-16-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -692,7 +676,6 @@ raptor-tp6m-17-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -712,7 +695,6 @@ raptor-tp6m-18-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -732,7 +714,6 @@ raptor-tp6m-19-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -752,7 +733,6 @@ raptor-tp6m-20-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -772,7 +752,6 @@ raptor-tp6m-21-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -792,7 +771,6 @@ raptor-tp6m-22-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -812,7 +790,6 @@ raptor-tp6m-23-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -832,7 +809,6 @@ raptor-tp6m-24-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -852,7 +828,6 @@ raptor-tp6m-25-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -872,7 +847,6 @@ raptor-tp6m-26-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -892,7 +866,6 @@ raptor-tp6m-27-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
@@ -912,7 +885,6 @@ raptor-tp6m-28-geckoview-cold:
             android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
-            android-hw-g5.*/pgo: ['mozilla-central']
             default: ['trunk', 'mozilla-beta']
     e10s: true
     mozharness:
