@@ -80,14 +80,29 @@ describe("#CachedTargetingGetter", () => {
       context,
     });
 
-    const messageCount = messages.filter(
-      message => message.trigger && message.trigger.id === "firstRun"
-    ).length;
-
-    assert.equal(stub.callCount, messageCount);
+    assert.equal(stub.callCount, 6);
     const calls = stub.getCalls().map(call => call.args[0]);
     const lastCall = calls[calls.length - 1];
-    assert.equal(lastCall.id, "TRAILHEAD_1");
+    assert.equal(lastCall.id, "FXA_1");
+  });
+  it("should return FxA message (is fallback)", async () => {
+    const messages = (await OnboardingMessageProvider.getUntranslatedMessages()).filter(
+      m => m.id !== "RETURN_TO_AMO_1"
+    );
+    const context = {
+      attributionData: {
+        campaign: "non-fx-button",
+        source: "addons.mozilla.org",
+      },
+    };
+    const result = await ASRouterTargeting.findMatchingMessage({
+      messages,
+      trigger: { id: "firstRun" },
+      context,
+    });
+
+    assert.isDefined(result);
+    assert.equal(result.id, "FXA_1");
   });
   describe("sortMessagesByPriority", () => {
     it("should sort messages in descending priority order", async () => {

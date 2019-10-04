@@ -316,9 +316,6 @@ export class TopSite extends React.PureComponent {
       value.card_type = "search";
       value.search_vendor = this.props.link.hostname;
     }
-    if (this.props.link.type === SPOC_TYPE) {
-      value.card_type = "spoc";
-    }
     return { value };
   }
 

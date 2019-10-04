@@ -208,7 +208,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 | `action` | [Required] Either `activity_stream_event`, `activity_stream_session`, or `activity_stream_performance`. | :one:
 | `addon_version` | [Required] Firefox build ID, i.e. `Services.appinfo.appBuildID`. | :one:
 | `client_id` | [Required] An identifier for this client. | :one:
-| `card_type` | [Optional] ("bookmark", "pocket", "trending", "pinned", "search", "spoc") | :one:
+| `card_type` | [Optional] ("bookmark", "pocket", "trending", "pinned", "search") | :one:
 | `search_vendor` | [Optional] the vendor of the search shortcut, one of ("google", "amazon", "wikipedia", "duckduckgo", "bing", etc.). This field only exists when `card_type = "search"` | :one:
 | `date` | [Auto populated by Onyx] The date in YYYY-MM-DD format. | :three:
 | `experiment_id` | [Optional] The unique identifier for a specific experiment. | :one:
@@ -256,7 +256,7 @@ and losing focus. | :one:
 | `pocket` | [Optional] An integer to record the 0-based index when user saves a Pocket tile to Pocket. | :one:
 | `user_prefs` | [Required] The encoded integer of user's preferences. | :one: & :four:
 | `is_preloaded` | [Required] A boolean to signify whether the page is preloaded or not | :one:
-| `icon_type` | [Optional] ("tippytop", "rich_icon", "screenshot_with_icon", "screenshot", "no_image", "custom_screenshot") | :one:
+| `icon_type` | [Optional] ("tippytop", "rich_icon", "screenshot_with_icon", "screenshot", "no_image") | :one:
 | `region` | [Optional] A string maps to pref "browser.search.region", which is essentially the two letter ISO 3166-1 country code populated by the Firefox search service. Note that: 1). it reports "OTHER" for those regions with smaller Firefox user base (less than 10000) so that users cannot be uniquely identified; 2). it reports "UNSET" if this pref is missing; 3). it reports "EMPTY" if the value of this pref is an empty string. | :one:
 | `profile_creation_date` | [Optional] An integer to record the age of the Firefox profile as the total number of days since the UNIX epoch. | :one:
 | `message_id` | [required] A string identifier of the message in Activity Stream Router. | :one:
