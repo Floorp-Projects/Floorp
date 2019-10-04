@@ -1,23 +1,15 @@
 package org.mozilla.geckoview;
 
-import android.annotation.TargetApi;
 import android.graphics.Rect;
-import android.os.Build;
-import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.UiThread;
-import android.text.InputType;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
-import android.view.ViewStructure;
 
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-
-import java.util.Locale;
 
 /* package */ class AutofillSupport {
     private static final String LOGTAG = "AutofillSupport";
@@ -99,14 +91,105 @@ import java.util.Locale;
         }
     }
 
-    public void setDelegate(final GeckoSession.AutofillDelegate delegate) {
+    public void setDelegate(final @Nullable GeckoSession.AutofillDelegate delegate) {
         mDelegate = delegate;
     }
 
-    public GeckoSession.AutofillDelegate getDelegate() {
+    public @Nullable GeckoSession.AutofillDelegate getDelegate() {
         return mDelegate;
     }
 
+    public @NonNull AutofillElement getAutofillElements() {
+        final AutofillElement.Builder builder = new AutofillElement.Builder();
+
+        final Rect rect = getDummyAutoFillRect(mSession, false, null);
+        builder.dimensions(rect);
+
+        if (mAutoFillRoots != null) {
+            final int size = mAutoFillRoots.size();
+            for (int i = 0; i < size; i++) {
+                final int id = mAutoFillRoots.keyAt(i);
+                final GeckoBundle root = mAutoFillNodes.get(id);
+                fillAutofillElement(id, root, rect, builder.child());
+            }
+        }
+
+        return builder.build();
+    }
+
+    private void fillAutofillElement(final int id, final GeckoBundle bundle, final Rect rect, final AutofillElement.Builder builder) {
+        builder.id(id);
+        builder.domain(bundle.getString("origin"));
+
+        if (mAutoFillFocusedRoot != View.NO_ID && mAutoFillFocusedRoot == bundle.getInt("root", View.NO_ID)) {
+            builder.dimensions(rect);
+        }
+
+        final GeckoBundle[] children = bundle.getBundleArray("children");
+        if (children != null) {
+            for (final GeckoBundle childBundle : children) {
+                final int childId = childBundle.getInt("id");
+                fillAutofillElement(childId, childBundle, rect, builder.child());
+                mAutoFillNodes.append(childId, childBundle);
+            }
+        }
+
+        String tag = bundle.getString("tag", "");
+        builder.tag(tag.toLowerCase());
+
+        final String type = bundle.getString("type", "text");
+
+        final GeckoBundle attrs = bundle.getBundle("attributes");
+        for (final String key : attrs.keys()) {
+            builder.attribute(key, String.valueOf(attrs.get(key)));
+        }
+
+        if ("INPUT".equals(tag) && !bundle.getBoolean("editable", false)) {
+            tag = ""; // Don't process non-editable inputs (e.g. type="button").
+        }
+
+        switch (tag) {
+            case "INPUT":
+            case "TEXTAREA": {
+                final boolean disabled = bundle.getBoolean("disabled");
+
+                builder.enabled(!disabled);
+                builder.focusable(!disabled);
+                builder.focused(id == mAutoFillFocusedId);
+                break;
+            }
+            default:
+                break;
+        }
+
+        switch (type) {
+            case "email":
+                builder.hint(AutofillElement.HINT_EMAIL_ADDRESS);
+                builder.inputType(AutofillElement.INPUT_TYPE_TEXT);
+                break;
+            case "number":
+                builder.inputType(AutofillElement.INPUT_TYPE_NUMBER);
+                break;
+            case "password":
+                builder.hint(AutofillElement.HINT_PASSWORD);
+                builder.inputType(AutofillElement.INPUT_TYPE_TEXT);
+                break;
+            case "tel":
+                builder.inputType(AutofillElement.INPUT_TYPE_PHONE);
+                break;
+            case "url":
+                builder.hint(AutofillElement.HINT_URL);
+                builder.inputType(AutofillElement.INPUT_TYPE_TEXT);
+                break;
+            case "text":
+                final String autofillhint = bundle.getString("autofillhint", "");
+                if (autofillhint.equals("username")) {
+                    builder.hint(AutofillElement.HINT_USERNAME);
+                    builder.inputType(AutofillElement.INPUT_TYPE_TEXT);
+                }
+                break;
+        }
+    }
 
     /* package */ void addAutoFill(@NonNull final GeckoBundle message,
                                    @NonNull final EventCallback callback) {
@@ -207,157 +290,6 @@ import java.util.Locale;
         }
     }
 
-
-    /**
-     * Fill the specified {@link ViewStructure} with auto-fill fields from the current page.
-     *
-     * @param structure Structure to be filled.
-     * @param flags     Zero or a combination of {@link View#AUTOFILL_FLAG_INCLUDE_NOT_IMPORTANT_VIEWS
-     *                  AUTOFILL_FLAG_*} constants.
-     */
-    @TargetApi(23)
-    @UiThread
-    public void provideAutofillVirtualStructure(@Nullable final View view,
-                                                @NonNull final ViewStructure structure,
-                                                final int flags) {
-        if (view != null) {
-            structure.setClassName(view.getClass().getName());
-        }
-        structure.setEnabled(true);
-        structure.setVisibility(View.VISIBLE);
-
-        final Rect rect = getDummyAutoFillRect(mSession, false, null);
-        structure.setDimens(rect.left, rect.top, 0, 0, rect.width(), rect.height());
-
-        if (mAutoFillRoots == null) {
-            structure.setChildCount(0);
-            return;
-        }
-
-        final int size = mAutoFillRoots.size();
-        structure.setChildCount(size);
-
-        for (int i = 0; i < size; i++) {
-            final int id = mAutoFillRoots.keyAt(i);
-            final GeckoBundle root = mAutoFillNodes.get(id);
-            fillAutoFillStructure(view, id, root, structure.newChild(i), rect);
-        }
-    }
-
-    @TargetApi(23)
-    private void fillAutoFillStructure(@Nullable final View view, final int id,
-                                       @NonNull final GeckoBundle bundle,
-                                       @NonNull final ViewStructure structure,
-                                       @NonNull final Rect rect) {
-        if (mAutoFillRoots == null) {
-            return;
-        }
-
-        if (DEBUG) {
-            Log.d(LOGTAG, "fillAutoFillStructure(" + id + ')');
-        }
-
-        if (Build.VERSION.SDK_INT >= 26) {
-            if (view != null) {
-                structure.setAutofillId(view.getAutofillId(), id);
-            }
-            structure.setWebDomain(bundle.getString("origin"));
-        }
-        structure.setId(id, null, null, null);
-
-        if (mAutoFillFocusedRoot != View.NO_ID &&
-                mAutoFillFocusedRoot == bundle.getInt("root", View.NO_ID)) {
-            structure.setDimens(0, 0, 0, 0, rect.width(), rect.height());
-        }
-
-        final GeckoBundle[] children = bundle.getBundleArray("children");
-        if (children != null) {
-            structure.setChildCount(children.length);
-            for (int i = 0; i < children.length; i++) {
-                final GeckoBundle childBundle = children[i];
-                final int childId = childBundle.getInt("id");
-                final ViewStructure childStructure = structure.newChild(i);
-                fillAutoFillStructure(view, childId, childBundle, childStructure, rect);
-                mAutoFillNodes.append(childId, childBundle);
-            }
-        }
-
-        String tag = bundle.getString("tag", "");
-        final String type = bundle.getString("type", "text");
-
-        if (Build.VERSION.SDK_INT >= 26) {
-            final GeckoBundle attrs = bundle.getBundle("attributes");
-            final ViewStructure.HtmlInfo.Builder builder =
-                    structure.newHtmlInfoBuilder(tag.toLowerCase(Locale.US));
-            for (final String key : attrs.keys()) {
-                builder.addAttribute(key, String.valueOf(attrs.get(key)));
-            }
-            structure.setHtmlInfo(builder.build());
-        }
-
-        if ("INPUT".equals(tag) && !bundle.getBoolean("editable", false)) {
-            tag = ""; // Don't process non-editable inputs (e.g. type="button").
-        }
-        switch (tag) {
-            case "INPUT":
-            case "TEXTAREA": {
-                final boolean disabled = bundle.getBoolean("disabled");
-                structure.setClassName("android.widget.EditText");
-                structure.setEnabled(!disabled);
-                structure.setFocusable(!disabled);
-                structure.setFocused(id == mAutoFillFocusedId);
-                structure.setVisibility(View.VISIBLE);
-
-                if (Build.VERSION.SDK_INT >= 26) {
-                    structure.setAutofillType(View.AUTOFILL_TYPE_TEXT);
-                }
-                break;
-            }
-            default:
-                if (children != null) {
-                    structure.setClassName("android.view.ViewGroup");
-                } else {
-                    structure.setClassName("android.view.View");
-                }
-                break;
-        }
-
-        if (Build.VERSION.SDK_INT >= 26 && "INPUT".equals(tag)) {
-            // LastPass will fill password to the feild that setAutofillHints is unset and setInputType is set.
-            switch (type) {
-                case "email":
-                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_EMAIL_ADDRESS });
-                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                                           InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
-                    break;
-                case "number":
-                    structure.setInputType(InputType.TYPE_CLASS_NUMBER);
-                    break;
-                case "password":
-                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_PASSWORD });
-                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                                           InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD);
-                    break;
-                case "tel":
-                    structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_PHONE });
-                    structure.setInputType(InputType.TYPE_CLASS_PHONE);
-                    break;
-                case "url":
-                    structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                                           InputType.TYPE_TEXT_VARIATION_URI);
-                    break;
-                case "text":
-                    final String autofillhint = bundle.getString("autofillhint", "");
-                    if (autofillhint.equals("username")) {
-                        structure.setAutofillHints(new String[] { View.AUTOFILL_HINT_USERNAME });
-                        structure.setInputType(InputType.TYPE_CLASS_TEXT |
-                                               InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
-                    }
-                    break;
-            }
-        }
-    }
-
     /* package */ static Rect getDummyAutoFillRect(@NonNull final GeckoSession session,
                                                    final boolean screen,
                                                    @Nullable final View view) {
@@ -374,10 +306,16 @@ import java.util.Locale;
         return rect;
     }
 
-    public void onScreenMetricsUpdated() {
-        if (mDelegate != null && mAutoFillFocusedId != View.NO_ID) {
-            getDelegate().onAutofill(
-                    mSession, GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED, mAutoFillFocusedId);
+    public void onActiveChanged(final boolean active) {
+        if (mDelegate == null || mAutoFillFocusedId == View.NO_ID) {
+            return;
         }
+
+        // We blur/focus the active element (if we have one) when the document is made inactive/active.
+        getDelegate().onAutofill(
+                mSession,
+                active ? GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_ENTERED
+                : GeckoSession.AutofillDelegate.AUTO_FILL_NOTIFY_VIEW_EXITED,
+                mAutoFillFocusedId);
     }
 }
