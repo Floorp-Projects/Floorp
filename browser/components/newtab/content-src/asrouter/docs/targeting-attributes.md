@@ -36,7 +36,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasPinnedTabs](#haspinnedtabs)
 * [hasAccessedFxAPanel](#hasaccessedfxapanel)
 * [isWhatsNewPanelEnabled](#iswhatsnewpanelenabled)
-* [earliestFirefoxVersion](#earliestfirefoxversion)
 * [isFxABadgeEnabled](#isfxabadgeenabled)
 * [totalBlockedCount](#totalblockedcount)
 * [recentBookmarks](#recentbookmarks)
@@ -500,16 +499,6 @@ Boolean pref that controls if the What's New panel feature is enabled
 
 ```ts
 declare const isWhatsNewPanelEnabled: boolean;
-```
-
-### `earliestFirefoxVersion`
-
-Integer value of the first Firefox version the profile ran on
-
-#### Definition
-
-```ts
-declare const earliestFirefoxVersion: boolean;
 ```
 
 ### `isFxABadgeEnabled`
