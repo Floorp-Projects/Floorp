@@ -93,6 +93,8 @@ function resolveURIInternal(aCmdLine, aArgument) {
   return uri;
 }
 
+let gKiosk = false;
+
 let gRemoteInstallPage = null;
 
 function getNewInstallPage() {
@@ -393,6 +395,9 @@ nsBrowserContentHandler.prototype = {
 
   /* nsICommandLineHandler */
   handle: function bch_handle(cmdLine) {
+    if (cmdLine.handleFlag("kiosk", false)) {
+      gKiosk = true;
+    }
     if (cmdLine.handleFlag("browser", false)) {
       openBrowserWindow(cmdLine, gSystemPrincipal);
       cmdLine.preventDefault = true;
@@ -606,6 +611,7 @@ nsBrowserContentHandler.prototype = {
     info += "  --setDefaultBrowser Set this app as the default browser.\n";
     info +=
       "  --first-startup    Run post-install actions before opening a new window.\n";
+    info += "  --kiosk Start the browser in kiosk mode.\n";
     return info;
   },
 
@@ -819,6 +825,10 @@ nsBrowserContentHandler.prototype = {
     }
 
     return this.mFeatures;
+  },
+
+  get kiosk() {
+    return gKiosk;
   },
 
   /* nsIContentHandler */

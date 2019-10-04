@@ -266,6 +266,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ],
   Marionette: ["@mozilla.org/remote/marionette;1", "nsIMarionette"],
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
+  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });
 
 if (AppConstants.MOZ_CRASHREPORTER) {
@@ -2178,6 +2179,15 @@ var gBrowserInit = {
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished");
     TelemetryTimestamps.add("delayedStartupFinished");
+
+    if (BrowserHandler.kiosk) {
+      // We don't modify popup windows for kiosk mode
+      if (!gURLBar.readOnly) {
+        // Don't show status tooltips in kiosk mode
+        document.getElementById("statuspanel").hidden = true;
+        window.fullScreen = true;
+      }
+    }
   },
 
   _setInitialFocus() {
@@ -3853,7 +3863,7 @@ function getDefaultHomePage() {
 }
 
 function BrowserFullScreen() {
-  window.fullScreen = !window.fullScreen;
+  window.fullScreen = !window.fullScreen || BrowserHandler.kiosk;
 }
 
 function getWebNavigation() {

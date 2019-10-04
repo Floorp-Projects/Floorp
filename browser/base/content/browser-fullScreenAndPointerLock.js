@@ -8,6 +8,17 @@
 
 ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
 
+var { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "BrowserHandler",
+  "@mozilla.org/browser/clh;1",
+  "nsIBrowserHandler"
+);
+
 var PointerlockFsWarning = {
   _element: null,
   _origin: null,
@@ -649,6 +660,9 @@ var FullScreen = {
   },
 
   showNavToolbox(trackMouse = true) {
+    if (BrowserHandler.kiosk) {
+      return;
+    }
     this._fullScrToggler.hidden = true;
     gNavToolbox.removeAttribute("fullscreenShouldAnimate");
     gNavToolbox.style.marginTop = "";
@@ -690,11 +704,13 @@ var FullScreen = {
     }
 
     // a textbox in chrome is focused (location bar anyone?): don't collapse chrome
+    // unless we are kiosk mode
     let focused = document.commandDispatcher.focusedElement;
     if (
       focused &&
       focused.ownerDocument == document &&
-      focused.localName == "input"
+      focused.localName == "input" &&
+      !BrowserHandler.kiosk
     ) {
       // But try collapse the chrome again when anything happens which can make
       // it lose the focus. We cannot listen on "blur" event on focused here
@@ -725,7 +741,8 @@ var FullScreen = {
 
     if (
       aAnimate &&
-      Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")
+      Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
+      !BrowserHandler.kiosk
     ) {
       gNavToolbox.setAttribute("fullscreenShouldAnimate", true);
       // Hide the fullscreen toggler until the transition ends.
