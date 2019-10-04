@@ -9,22 +9,22 @@
       iframe { width: 90%; height: 50px; }
     </style>
 <script>
-window.onload = function() {
+window.onload = async function() {
   document.getElementById("active").innerHTML =
       '<iframe src="navigate.html#parent.frames[0],location"></iframe>' +
       '<iframe src="navigate.html#child1,open"></iframe>' +
       '<iframe src="navigate.html#child2,form"></iframe>' +
       '<iframe src="navigate.html#child3,hyperlink"></iframe>';
 
-  xpcWaitForFinishedFrames(async function() {
-    await isNavigated(frames[0], "Should be able to navigate sibling with on-domain parent by setting location.");
-    await isNavigated(frames[1], "Should be able to navigate sibling with on-domain parent by calling window.open.");
-    await isNavigated(frames[2], "Should be able to navigate sibling with on-domain parent by submitting form.");
-    await isNavigated(frames[3], "Should be able to navigate sibling with on-domain parent by targeted hyperlink.");
+  await waitForFinishedFrames(4);
 
-    xpcCleanupWindows();
-    SimpleTest.finish();
-  }, 4);
+  await isNavigated(frames[0], "Should be able to navigate sibling with on-domain parent by setting location.");
+  await isNavigated(frames[1], "Should be able to navigate sibling with on-domain parent by calling window.open.");
+  await isNavigated(frames[2], "Should be able to navigate sibling with on-domain parent by submitting form.");
+  await isNavigated(frames[3], "Should be able to navigate sibling with on-domain parent by targeted hyperlink.");
+
+  xpcCleanupWindows();
+  SimpleTest.finish();
 };
 </script>
 </head>

@@ -31,6 +31,8 @@ interface BrowsingContext {
   readonly attribute BrowsingContext? opener;
 
   readonly attribute BrowsingContextGroup group;
+
+  readonly attribute WindowProxy? window;
 };
 
 [Exposed=Window, ChromeOnly]

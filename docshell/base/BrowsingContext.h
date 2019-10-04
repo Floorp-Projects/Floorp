@@ -305,6 +305,8 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
     mWindowProxy = aWindowProxy;
   }
 
+  Nullable<WindowProxyHolder> GetWindow();
+
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(BrowsingContext)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContext)
