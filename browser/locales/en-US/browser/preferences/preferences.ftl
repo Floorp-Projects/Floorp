@@ -850,6 +850,8 @@ sync-device-name-save =
     .label = Save
     .accesskey = v
 
+sync-connect-another-device = Connect another device
+
 ## Privacy Section
 
 privacy-header = Browser Privacy
