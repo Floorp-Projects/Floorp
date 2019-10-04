@@ -175,10 +175,6 @@ public class MmaLeanplumImp implements MmaInterface {
             case WELCOME:
                 return new PanelConfig(type, useLocalValues, LeanplumVariables.welcomePanelTitle, LeanplumVariables.welcomePanelMessage,
                         LeanplumVariables.welcomePanelSubtext, LeanplumVariables.getWelcomeImage());
-            case PRIVACY:
-            case LAST_PRIVACY:
-                return new PanelConfig(type, useLocalValues, LeanplumVariables.privacyPanelTitle, LeanplumVariables.privacyPanelMessage,
-                        LeanplumVariables.privacyPanelSubtext, LeanplumVariables.getPrivacyImage());
             case CUSTOMIZE:
             case LAST_CUSTOMIZE:
                 return new PanelConfig(type, useLocalValues, LeanplumVariables.customizePanelTitle, LeanplumVariables.customizePanelMessage,
@@ -186,6 +182,10 @@ public class MmaLeanplumImp implements MmaInterface {
             case SYNC:
                 return new PanelConfig(type, useLocalValues, LeanplumVariables.syncPanelTitle, LeanplumVariables.syncPanelMessage,
                         LeanplumVariables.syncPanelSubtext, LeanplumVariables.getSyncImage());
+            case SEND_TAB:
+                return new PanelConfig(type, useLocalValues, LeanplumVariables.sendTabPanelTitle, LeanplumVariables.sendTabPanelMessage,
+                        LeanplumVariables.sendTabPanelSubtext, LeanplumVariables.getSendTabImage());
+
             default:    // This will also be the case for "WELCOME"
                 return new PanelConfig(type, useLocalValues, LeanplumVariables.welcomePanelTitle, LeanplumVariables.welcomePanelMessage,
                         LeanplumVariables.welcomePanelSubtext, LeanplumVariables.getWelcomeImage());
