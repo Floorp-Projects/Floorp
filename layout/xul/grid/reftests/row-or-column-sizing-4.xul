@@ -6,7 +6,7 @@
     <columns>
       <column>
         <hbox />
-        <input xmlns="http://www.w3.org/1999/xhtml" value="Lower left" />
+        <textbox value="Lower left" />
       </column>
       <column>
         <hbox />
