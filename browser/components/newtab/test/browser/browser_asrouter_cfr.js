@@ -175,6 +175,7 @@ add_task(async function test_cfr_notification_show() {
     "Should return true if addRecommendation checks were successful"
   );
 
+  const oldFocus = document.activeElement;
   const showPanel = BrowserTestUtils.waitForEvent(
     PopupNotifications.panel,
     "popupshown"
@@ -187,6 +188,11 @@ add_task(async function test_cfr_notification_show() {
     document.getElementById("contextual-feature-recommendation-notification")
       .hidden === false,
     "Panel should be visible"
+  );
+  Assert.equal(
+    document.activeElement,
+    oldFocus,
+    "Focus didn't move when panel was shown"
   );
 
   // Check there is a primary button and click it. It will trigger the callback.
@@ -687,4 +693,42 @@ add_task(async function test_providerNames() {
       );
     }
   }
+});
+
+add_task(async function test_cfr_notification_keyboard() {
+  // addRecommendation checks that scheme starts with http and host matches
+  const browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  const response = await trigger_cfr_panel(browser, "example.com");
+  Assert.ok(
+    response,
+    "Should return true if addRecommendation checks were successful"
+  );
+
+  // Open the panel with the keyboard.
+  // Toolbar buttons aren't always focusable; toolbar keyboard navigation
+  // makes them focusable on demand. Therefore, we must force focus.
+  const button = document.getElementById("contextual-feature-recommendation");
+  button.setAttribute("tabindex", "-1");
+  button.focus();
+  button.removeAttribute("tabindex");
+
+  let focused = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "focus",
+    true
+  );
+  EventUtils.synthesizeKey(" ");
+  await focused;
+  Assert.ok(true, "Focus inside panel after button pressed");
+
+  let hidden = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popuphidden"
+  );
+  EventUtils.synthesizeKey("KEY_Escape");
+  await hidden;
+  Assert.ok(true, "Panel hidden after Escape pressed");
 });
