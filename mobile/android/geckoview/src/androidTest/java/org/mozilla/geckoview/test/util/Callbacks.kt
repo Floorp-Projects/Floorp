@@ -23,12 +23,13 @@ import org.json.JSONObject
 class Callbacks private constructor() {
     object Default : All
 
-    interface All : ContentBlockingDelegate, ContentDelegate,
+    interface All : AutofillDelegate, ContentBlockingDelegate, ContentDelegate,
                     HistoryDelegate, MediaDelegate,
                     NavigationDelegate, PermissionDelegate, ProgressDelegate,
                     PromptDelegate, ScrollDelegate, SelectionActionDelegate,
                     TextInputDelegate
 
+    interface AutofillDelegate : GeckoSession.AutofillDelegate {}
     interface ContentDelegate : GeckoSession.ContentDelegate {}
     interface NavigationDelegate : GeckoSession.NavigationDelegate {}
     interface PermissionDelegate : GeckoSession.PermissionDelegate {}
@@ -57,9 +58,6 @@ class Callbacks private constructor() {
         }
 
         override fun updateCursorAnchorInfo(session: GeckoSession, info: CursorAnchorInfo) {
-        }
-
-        override fun notifyAutoFill(session: GeckoSession, notification: Int, virtualId: Int) {
         }
     }
 }
