@@ -14,7 +14,7 @@ browser.engagement:
     description: >
       Just testing events
     bugs:
-      - 123456789
+      - https://bugzilla.mozilla.org/123456789
     data_reviews:
       - N/A 
     notification_emails:
@@ -31,7 +31,7 @@ browser.engagement:
     description: >
       Just testing events without keys
     bugs:
-      - 123456789
+      - https://bugzilla.mozilla.org/123456789
     data_reviews:
       - N/A 
     notification_emails:
@@ -44,7 +44,7 @@ basic:
     description: >
       The name of the os
     bugs:
-      - 123456789
+      - https://bugzilla.mozilla.org/123456789
     data_reviews:
       - N/A 
     notification_emails:
@@ -60,7 +60,7 @@ test:
       - test_string_list
     lifetime: user
     bugs:
-      - 1234567890
+      - https://bugzilla.mozilla.org/123456789
     data_reviews:
       - N/A 
     notification_emails:
@@ -75,7 +75,7 @@ test:
       - test_string_list
     lifetime: user
     bugs:
-      - 1234567890
+      - https://bugzilla.mozilla.org/123456789
     data_reviews:
       - N/A 
     notification_emails:
@@ -89,7 +89,7 @@ test:
     time_unit: microsecond
     lifetime: application
     bugs:
-      - 1508948
+      - https://bugzilla.mozilla.org/1508948
     data_reviews:
       - N/A 
     notification_emails:
@@ -105,7 +105,7 @@ custom:
     send_in_pings:
       - sample
     bugs:
-      - 1547330
+      - https://bugzilla.mozilla.org/1547330
     data_reviews:
       - N/A
     notification_emails:

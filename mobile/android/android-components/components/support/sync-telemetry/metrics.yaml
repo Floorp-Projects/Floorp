@@ -16,7 +16,7 @@ history_sync:
     send_in_pings:
     - history_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -31,7 +31,7 @@ history_sync:
     send_in_pings:
     - history_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -47,7 +47,7 @@ history_sync:
     send_in_pings:
     - history_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -69,7 +69,7 @@ history_sync:
     send_in_pings:
     - history_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -89,7 +89,7 @@ history_sync:
     send_in_pings:
     - history_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -106,7 +106,7 @@ history_sync:
     send_in_pings:
     - history_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -126,7 +126,7 @@ history_sync:
     send_in_pings:
     - history_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -142,7 +142,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -157,7 +157,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -172,7 +172,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -190,7 +190,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -207,7 +207,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -221,7 +221,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -239,7 +239,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:
@@ -263,7 +263,7 @@ bookmarks_sync:
     send_in_pings:
     - bookmarks_sync
     bugs:
-    - 3092
+    - https://github.com/mozilla-mobile/android-components/pull/3092
     data_reviews:
     - https://github.com/mozilla-mobile/android-components/pull/3092
     notification_emails:

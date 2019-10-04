@@ -18,7 +18,7 @@ sample_metrics:
     # send_in_pings:
     #   - baseline
     bugs:
-      - 123456789
+      - https://bugzilla.mozilla.org/123456789
     data_reviews:
       - N/A
     notification_emails:
