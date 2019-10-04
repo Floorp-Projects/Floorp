@@ -49,10 +49,9 @@ add_task(async function test_support_toolbar_field_properties() {
     root.setAttribute("remotecontrol", "true");
   });
 
+  let toolbox = document.querySelector("#navigator-toolbox");
   let fields = [
-    gURLBar.megabar
-      ? document.querySelector("#urlbar-background")
-      : gURLBar.textbox,
+    toolbox.querySelector("#urlbar"),
     BrowserSearch.searchBar,
   ].filter(field => {
     let bounds = field.getBoundingClientRect();
@@ -91,7 +90,8 @@ add_task(async function test_support_toolbar_field_brighttext() {
   registerCleanupFunction(() => {
     root.setAttribute("remotecontrol", "true");
   });
-  let urlbar = gURLBar.textbox;
+  let toolbox = document.querySelector("#navigator-toolbox");
+  let urlbar = toolbox.querySelector("#urlbar");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
