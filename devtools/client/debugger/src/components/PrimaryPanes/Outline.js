@@ -28,7 +28,6 @@ import PreviewFunction from "../shared/PreviewFunction";
 import { uniq, sortBy } from "lodash";
 
 import type {
-  AstLocation,
   SymbolDeclarations,
   SymbolDeclaration,
   FunctionDeclaration,
@@ -126,17 +125,19 @@ export class Outline extends Component<Props, State> {
     this.setState({ focusedItem: closestItem });
   }
 
-  selectItem(location: AstLocation) {
+  selectItem(selectedItem: ?SymbolDeclaration) {
     const { cx, selectedSource, selectLocation } = this.props;
-    if (!selectedSource) {
+    if (!selectedSource || !selectedItem) {
       return;
     }
 
     selectLocation(cx, {
       sourceId: selectedSource.id,
-      line: location.start.line,
-      column: location.start.column,
+      line: selectedItem.location.start.line,
+      column: selectedItem.location.start.column,
     });
+
+    this.setState({ focusedItem: selectedItem });
   }
 
   onContextMenu(event: SyntheticEvent<HTMLElement>, func: SymbolDeclaration) {
@@ -205,7 +206,7 @@ export class Outline extends Component<Props, State> {
             this.focusedElRef = el;
           }
         }}
-        onClick={() => this.selectItem(location)}
+        onClick={() => this.selectItem(func)}
         onContextMenu={e => this.onContextMenu(e, func)}
       >
         <span className="outline-list__element-icon">λ</span>
@@ -232,7 +233,8 @@ export class Outline extends Component<Props, State> {
     const classFunctions = functions.filter(func => func.klass === klass);
     const classInfo = this.props.symbols.classes.find(c => c.name === klass);
 
-    const isFocused = focusedItem === (classFunc || classInfo);
+    const item = classFunc || classInfo;
+    const isFocused = focusedItem === item;
 
     return (
       <li
@@ -246,7 +248,7 @@ export class Outline extends Component<Props, State> {
       >
         <h2
           className={classnames("", { focused: isFocused })}
-          onClick={classInfo ? () => this.selectItem(classInfo.location) : null}
+          onClick={() => this.selectItem(item)}
         >
           {classFunc
             ? this.renderFunction(classFunc)
