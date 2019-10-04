@@ -4,11 +4,12 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.tabs.TabsUseCases
 import java.util.UUID
 
@@ -40,7 +41,8 @@ class SessionSuggestionProvider(
                         id = session.id,
                         title = session.title,
                         description = session.url,
-                        icon = icons.loadLambda(session.url),
+                        // We can runBlocking here to get the icon since we are already on an IO thread
+                        icon = runBlocking { icons?.loadIcon(IconRequest(session.url))?.await()?.bitmap },
                         onSuggestionClicked = { selectTabUseCase(session) }
                     )
                 )

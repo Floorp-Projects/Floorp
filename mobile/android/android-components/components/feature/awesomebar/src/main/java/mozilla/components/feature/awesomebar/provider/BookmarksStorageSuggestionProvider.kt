@@ -4,11 +4,12 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
-import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -44,7 +45,8 @@ class BookmarksStorageSuggestionProvider(
             AwesomeBar.Suggestion(
                 provider = this@BookmarksStorageSuggestionProvider,
                 id = it.guid,
-                icon = icons.loadLambda(it.url!!),
+                // We can runBlocking here to get the icon since we are already on an IO thread
+                icon = runBlocking { icons?.loadIcon(IconRequest(it.url!!))?.await()?.bitmap },
                 title = it.title,
                 description = it.url,
                 onSuggestionClicked = { loadUrlUseCase.invoke(it.url!!) }

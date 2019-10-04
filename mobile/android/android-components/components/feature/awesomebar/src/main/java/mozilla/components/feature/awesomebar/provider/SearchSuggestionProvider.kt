@@ -147,9 +147,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
                 id = if (item == text) ID_OF_ENTERED_TEXT else item,
                 title = item,
                 description = client.searchEngine?.name,
-                icon = { _, _ ->
-                    icon ?: client.searchEngine?.icon
-                },
+                icon = icon ?: client.searchEngine?.icon,
                 score = Int.MAX_VALUE - index,
                 onSuggestionClicked = {
                     searchUseCase.invoke(item)
@@ -178,9 +176,7 @@ class SearchSuggestionProvider : AwesomeBar.SuggestionProvider {
             title = client.searchEngine?.name,
             chips = chips,
             score = Int.MAX_VALUE,
-            icon = { _, _ ->
-                icon ?: client.searchEngine?.icon
-            },
+            icon = icon ?: client.searchEngine?.icon,
             onChipClicked = { chip ->
                 searchUseCase.invoke(chip.title)
             }

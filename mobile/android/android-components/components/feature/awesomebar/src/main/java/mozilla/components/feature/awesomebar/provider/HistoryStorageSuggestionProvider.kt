@@ -4,11 +4,12 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
-import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -46,7 +47,8 @@ class HistoryStorageSuggestionProvider(
             AwesomeBar.Suggestion(
                 provider = this@HistoryStorageSuggestionProvider,
                 id = it.id,
-                icon = icons.loadLambda(it.url),
+                // We can runBlocking here to get the icon since we are already on an IO thread
+                icon = runBlocking { icons?.loadIcon(IconRequest(it.url))?.await()?.bitmap },
                 title = it.title,
                 description = it.url,
                 score = it.score,

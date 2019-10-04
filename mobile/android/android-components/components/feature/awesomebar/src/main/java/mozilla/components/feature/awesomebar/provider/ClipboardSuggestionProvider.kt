@@ -8,9 +8,10 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
 import java.util.UUID
@@ -48,7 +49,8 @@ class ClipboardSuggestionProvider(
             id = url,
             description = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
-            icon = icons.loadLambda(url, icon),
+            // We can runBlocking here to get the icon since we are already on an IO thread
+            icon = icon ?: runBlocking { icons?.loadIcon(IconRequest(url))?.await()?.bitmap },
             title = title,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(url)
