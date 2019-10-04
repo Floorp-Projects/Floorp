@@ -835,9 +835,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     gSessions.PutEntry(this);
 
-    uint32_t audioBitrate = mRecorder->GetAudioBitrate();
-    uint32_t videoBitrate = mRecorder->GetVideoBitrate();
-    uint32_t bitrate = mRecorder->GetBitrate();
+    uint32_t audioBitrate = mRecorder->AudioBitsPerSecond();
+    uint32_t videoBitrate = mRecorder->VideoBitsPerSecond();
+    uint32_t bitrate = mRecorder->BitsPerSecond();
     if (bitrate > 0) {
       // There's a total cap set. We have to make sure the type-specific limits
       // are within range.

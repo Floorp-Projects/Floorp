@@ -115,9 +115,9 @@ class MediaRecorder final : public DOMEventTargetHelper,
 
   NS_DECL_NSIDOCUMENTACTIVITY
 
-  uint32_t GetAudioBitrate() { return mAudioBitsPerSecond; }
-  uint32_t GetVideoBitrate() { return mVideoBitsPerSecond; }
-  uint32_t GetBitrate() { return mBitsPerSecond; }
+  uint32_t AudioBitsPerSecond() { return mAudioBitsPerSecond; }
+  uint32_t VideoBitsPerSecond() { return mVideoBitsPerSecond; }
+  uint32_t BitsPerSecond() { return mBitsPerSecond; }
 
  protected:
   virtual ~MediaRecorder();
