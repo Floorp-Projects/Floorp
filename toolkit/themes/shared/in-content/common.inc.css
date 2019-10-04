@@ -150,9 +150,7 @@
 }
 }
 
-html|html,
-xul|page,
-xul|window {
+:root {
   font: message-box;
   -moz-appearance: none;
   background-color: var(--in-content-page-background);

@@ -135,7 +135,7 @@
   top: -@urlbarBreakoutVerticalExtend@;
   left: -@urlbarBreakoutHorizontalExtend@;
   width: calc(100% + 2 * @urlbarBreakoutHorizontalExtend@);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {

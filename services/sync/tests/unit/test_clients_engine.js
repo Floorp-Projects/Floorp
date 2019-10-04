@@ -990,9 +990,10 @@ add_task(async function test_clients_not_in_fxa_list() {
       getLocalType() {
         return fxAccounts.device.getLocalType();
       },
-    },
-    getDeviceList() {
-      return Promise.resolve([{ id: remoteId }]);
+      recentDeviceList: [{ id: remoteId }],
+      refreshDeviceList() {
+        return Promise.resolve(true);
+      },
     },
   };
 
@@ -1069,9 +1070,10 @@ add_task(async function test_dupe_device_ids() {
       getLocalType() {
         return fxAccounts.device.getLocalType();
       },
-    },
-    getDeviceList() {
-      return Promise.resolve([{ id: remoteDeviceId }]);
+      recentDeviceList: [{ id: remoteDeviceId }],
+      refreshDeviceList() {
+        return Promise.resolve(true);
+      },
     },
   };
 

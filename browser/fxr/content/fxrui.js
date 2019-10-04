@@ -44,7 +44,7 @@ function setupBrowser() {
     browser = document.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
-    document.body.append(browser);
+    document.getElementById("eBrowserContainer").appendChild(browser);
 
     urlInput.value = homeURL;
     browser.loadURI(homeURL);

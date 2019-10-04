@@ -6,9 +6,6 @@
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
@@ -26,10 +23,7 @@ const {
   ASSERTION_LIFETIME,
   ASSERTION_USE_PERIOD,
   CERT_LIFETIME,
-  COMMAND_SENDTAB,
-  ERRNO_DEVICE_SESSION_CONFLICT,
   ERRNO_INVALID_AUTH_TOKEN,
-  ERRNO_UNKNOWN_DEVICE,
   ERROR_AUTH_ERROR,
   ERROR_INVALID_PARAMETER,
   ERROR_NO_ACCOUNT,
@@ -47,7 +41,6 @@ const {
   ONLOGOUT_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
-  ON_NEW_DEVICE_ID,
   POLL_SESSION,
   PREF_ACCOUNT_ROOT,
   PREF_LAST_FXA_USER,
@@ -360,10 +353,6 @@ function copyObjectProperties(from, to, thisObj, keys) {
   }
 }
 
-function urlsafeBase64Encode(key) {
-  return ChromeUtils.base64URLEncode(new Uint8Array(key), { pad: false });
-}
-
 /**
  * The public API.
  *
@@ -384,13 +373,19 @@ class FxAccounts {
         mocks,
         this._internal,
         this._internal,
-        Object.keys(mocks)
+        Object.keys(mocks).filter(key => !["device", "commands"].includes(key))
       );
     }
     this._internal.initialize();
     // allow mocking our "sub-objects" too.
     if (mocks) {
-      for (let subobject of ["currentAccountState", "keys", "fxaPushService"]) {
+      for (let subobject of [
+        "currentAccountState",
+        "keys",
+        "fxaPushService",
+        "device",
+        "commands",
+      ]) {
         if (typeof mocks[subobject] == "object") {
           copyObjectProperties(
             mocks[subobject],
@@ -425,10 +420,6 @@ class FxAccounts {
 
   _withVerifiedAccountState(func) {
     return this._internal.withVerifiedAccountState(func);
-  }
-
-  getDeviceList() {
-    return this._internal.getDeviceList();
   }
 
   /**
@@ -770,9 +761,6 @@ FxAccountsInternal.prototype = {
   // After X minutes, the polling will slow down to _SUBSEQUENT if we have
   // logged-in in this session.
   VERIFICATION_POLL_START_SLOWDOWN_THRESHOLD: 5,
-  // The current version of the device registration, we use this to re-register
-  // devices after we update what we send on device registration.
-  DEVICE_REGISTRATION_VERSION: 2,
 
   _fxAccountsClient: null,
 
@@ -1109,43 +1097,6 @@ FxAccountsInternal.prototype = {
       .then(result => currentState.resolve(result));
   },
 
-  async checkDeviceUpdateNeeded(device) {
-    // There is no device registered or the device registration is outdated.
-    // Either way, we should register the device with FxA
-    // before returning the id to the caller.
-    const availableCommandsKeys = Object.keys(
-      await this.availableCommands()
-    ).sort();
-    return (
-      !device ||
-      !device.registrationVersion ||
-      device.registrationVersion < this.DEVICE_REGISTRATION_VERSION ||
-      !device.registeredCommandsKeys ||
-      !CommonUtils.arrayEqual(
-        device.registeredCommandsKeys,
-        availableCommandsKeys
-      )
-    );
-  },
-
-  getDeviceList() {
-    return this.withVerifiedAccountState(async state => {
-      let accountData = await state.getUserAccountData();
-
-      const devices = await this.fxAccountsClient.getDeviceList(
-        accountData.sessionToken
-      );
-
-      // Check if our push registration is still good.
-      const ourDevice = devices.find(device => device.isCurrentDevice);
-      if (ourDevice.pushEndpointExpired) {
-        await this.fxaPushService.unsubscribe();
-        await this._registerOrUpdateDevice(accountData);
-      }
-      return devices;
-    });
-  },
-
   /*
    * Reset state such that any previous flow is canceled.
    */
@@ -1161,6 +1112,9 @@ FxAccountsInternal.prototype = {
     }
     if (this._commands) {
       this._commands = null;
+    }
+    if (this._device) {
+      this._device.reset();
     }
     // We "abort" the accountState and assume our caller is about to throw it
     // away and replace it with a new one.
@@ -1828,15 +1782,8 @@ FxAccountsInternal.prototype = {
   // Attempt to update the auth server with whatever device details are stored
   // in the account data. Returns a promise that always resolves, never rejects.
   // If the promise resolves to a value, that value is the device id.
-  async updateDeviceRegistration() {
-    try {
-      const signedInUser = await this.currentAccountState.getUserAccountData();
-      if (signedInUser) {
-        await this._registerOrUpdateDevice(signedInUser);
-      }
-    } catch (error) {
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
-    }
+  updateDeviceRegistration() {
+    return this.device.updateDeviceRegistration();
   },
 
   /**
@@ -1859,178 +1806,6 @@ FxAccountsInternal.prototype = {
     FXA_PWDMGR_MEMORY_FIELDS.forEach(clearField);
 
     return state.updateUserAccountData(updateData);
-  },
-
-  async availableCommands() {
-    if (
-      !Services.prefs.getBoolPref("identity.fxaccounts.commands.enabled", true)
-    ) {
-      return {};
-    }
-    const sendTabKey = await this.commands.sendTab.getEncryptedKey();
-    if (!sendTabKey) {
-      // This will happen if the account is not verified yet.
-      return {};
-    }
-    return {
-      [COMMAND_SENDTAB]: sendTabKey,
-    };
-  },
-
-  // If you change what we send to the FxA servers during device registration,
-  // you'll have to bump the DEVICE_REGISTRATION_VERSION number to force older
-  // devices to re-register when Firefox updates
-  async _registerOrUpdateDevice(signedInUser) {
-    const { sessionToken, device: currentDevice } = signedInUser;
-    if (!sessionToken) {
-      throw new Error("_registerOrUpdateDevice called without a session token");
-    }
-
-    try {
-      const subscription = await this.fxaPushService.registerPushEndpoint();
-      const deviceName = this.device.getLocalName();
-      let deviceOptions = {};
-
-      // if we were able to obtain a subscription
-      if (subscription && subscription.endpoint) {
-        deviceOptions.pushCallback = subscription.endpoint;
-        let publicKey = subscription.getKey("p256dh");
-        let authKey = subscription.getKey("auth");
-        if (publicKey && authKey) {
-          deviceOptions.pushPublicKey = urlsafeBase64Encode(publicKey);
-          deviceOptions.pushAuthKey = urlsafeBase64Encode(authKey);
-        }
-      }
-      deviceOptions.availableCommands = await this.availableCommands();
-      const availableCommandsKeys = Object.keys(
-        deviceOptions.availableCommands
-      ).sort();
-
-      let device;
-      if (currentDevice && currentDevice.id) {
-        log.debug("updating existing device details");
-        device = await this.fxAccountsClient.updateDevice(
-          sessionToken,
-          currentDevice.id,
-          deviceName,
-          deviceOptions
-        );
-      } else {
-        log.debug("registering new device details");
-        device = await this.fxAccountsClient.registerDevice(
-          sessionToken,
-          deviceName,
-          this.device.getLocalType(),
-          deviceOptions
-        );
-        Services.obs.notifyObservers(null, ON_NEW_DEVICE_ID);
-      }
-
-      // Get the freshest device props before updating them.
-      let {
-        device: deviceProps,
-      } = await this.currentAccountState.getUserAccountData();
-      await this.currentAccountState.updateUserAccountData({
-        device: {
-          ...deviceProps, // Copy the other properties (e.g. handledCommands).
-          id: device.id,
-          registrationVersion: this.DEVICE_REGISTRATION_VERSION,
-          registeredCommandsKeys: availableCommandsKeys,
-        },
-      });
-      return device.id;
-    } catch (error) {
-      return this._handleDeviceError(error, sessionToken);
-    }
-  },
-
-  _handleDeviceError(error, sessionToken) {
-    return Promise.resolve()
-      .then(() => {
-        if (error.code === 400) {
-          if (error.errno === ERRNO_UNKNOWN_DEVICE) {
-            return this._recoverFromUnknownDevice();
-          }
-
-          if (error.errno === ERRNO_DEVICE_SESSION_CONFLICT) {
-            return this._recoverFromDeviceSessionConflict(error, sessionToken);
-          }
-        }
-
-        // `_handleTokenError` re-throws the error.
-        return this._handleTokenError(error);
-      })
-      .catch(error => this._logErrorAndResetDeviceRegistrationVersion(error))
-      .catch(() => {});
-  },
-
-  async _recoverFromUnknownDevice() {
-    // FxA did not recognise the device id. Handle it by clearing the device
-    // id on the account data. At next sync or next sign-in, registration is
-    // retried and should succeed.
-    log.warn("unknown device id, clearing the local device data");
-    try {
-      await this.currentAccountState.updateUserAccountData({ device: null });
-    } catch (error) {
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
-    }
-  },
-
-  async _recoverFromDeviceSessionConflict(error, sessionToken) {
-    // FxA has already associated this session with a different device id.
-    // Perhaps we were beaten in a race to register. Handle the conflict:
-    //   1. Fetch the list of devices for the current user from FxA.
-    //   2. Look for ourselves in the list.
-    //   3. If we find a match, set the correct device id and device registration
-    //      version on the account data and return the correct device id. At next
-    //      sync or next sign-in, registration is retried and should succeed.
-    //   4. If we don't find a match, log the original error.
-    log.warn(
-      "device session conflict, attempting to ascertain the correct device id"
-    );
-    try {
-      const devices = await this.fxAccountsClient.getDeviceList(sessionToken);
-      const matchingDevices = devices.filter(device => device.isCurrentDevice);
-      const length = matchingDevices.length;
-      if (length === 1) {
-        const deviceId = matchingDevices[0].id;
-        await this.currentAccountState.updateUserAccountData({
-          device: {
-            id: deviceId,
-            registrationVersion: null,
-          },
-        });
-        return deviceId;
-      }
-      if (length > 1) {
-        log.error(
-          "insane server state, " + length + " devices for this session"
-        );
-      }
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
-    } catch (secondError) {
-      log.error("failed to recover from device-session conflict", secondError);
-      await this._logErrorAndResetDeviceRegistrationVersion(error);
-    }
-    return null;
-  },
-
-  async _logErrorAndResetDeviceRegistrationVersion(error) {
-    // Device registration should never cause other operations to fail.
-    // If we've reached this point, just log the error and reset the device
-    // on the account data. At next sync or next sign-in,
-    // registration will be retried.
-    log.error("device registration failed", error);
-    try {
-      this.currentAccountState.updateUserAccountData({
-        device: null,
-      });
-    } catch (secondError) {
-      log.error(
-        "failed to reset the device registration version, device registration won't be retried",
-        secondError
-      );
-    }
   },
 
   _handleTokenError(err) {

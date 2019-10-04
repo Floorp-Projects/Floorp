@@ -58,18 +58,19 @@ add_task(async function test_ui_state_signedin() {
     headerDescription: "Settings",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
-      "PanelUI-fxa-menu-remotetabs-button",
       "PanelUI-fxa-menu-connect-device-button",
+      "PanelUI-fxa-menu-syncnow-button",
+      "PanelUI-fxa-menu-remotetabs-button",
       "PanelUI-fxa-menu-sync-prefs-button",
       "PanelUI-fxa-menu-logins-button",
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
-      "PanelUI-fxa-menu-syncnow-button",
       "PanelUI-fxa-menu-account-settings-button",
       "PanelUI-fxa-menu-account-devices-button",
       "PanelUI-fxa-menu-account-signout-button",
     ],
     disabledItems: [],
+    hiddenItems: ["PanelUI-fxa-menu-setup-sync-button"],
   });
   if (!msBadgeEnabled) {
     checkFxAAvatar("signedin");
@@ -125,15 +126,16 @@ add_task(async function test_ui_state_unconfigured() {
     headerDescription: "Turn on Sync",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
+      "PanelUI-fxa-menu-setup-sync-button",
       "PanelUI-fxa-menu-remotetabs-button",
-      "PanelUI-fxa-menu-sync-prefs-button",
       "PanelUI-fxa-menu-logins-button",
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
     ],
-    disabledItems: [
+    disabledItems: ["PanelUI-fxa-menu-connect-device-button"],
+    hiddenItems: [
       "PanelUI-fxa-menu-syncnow-button",
-      "PanelUI-fxa-menu-connect-device-button",
+      "PanelUI-fxa-menu-sync-prefs-button",
     ],
   });
   if (!msBadgeEnabled) {
@@ -166,16 +168,21 @@ add_task(async function test_ui_state_syncdisabled() {
     headerDescription: "Settings",
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
-      "PanelUI-fxa-menu-remotetabs-button",
       "PanelUI-fxa-menu-connect-device-button",
-      "PanelUI-fxa-menu-sync-prefs-button",
+      "PanelUI-fxa-menu-setup-sync-button",
+      "PanelUI-fxa-menu-remotetabs-button",
       "PanelUI-fxa-menu-logins-button",
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
-      // This one will move to `disabledItems` in subsequent patches!
-      "PanelUI-fxa-menu-syncnow-button",
+      "PanelUI-fxa-menu-account-settings-button",
+      "PanelUI-fxa-menu-account-devices-button",
+      "PanelUI-fxa-menu-account-signout-button",
     ],
     disabledItems: [],
+    hiddenItems: [
+      "PanelUI-fxa-menu-syncnow-button",
+      "PanelUI-fxa-menu-sync-prefs-button",
+    ],
   });
   if (!msBadgeEnabled) {
     checkFxAAvatar("signedin");
@@ -207,15 +214,16 @@ add_task(async function test_ui_state_unverified() {
     headerDescription: state.email,
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
+      "PanelUI-fxa-menu-setup-sync-button",
       "PanelUI-fxa-menu-remotetabs-button",
-      "PanelUI-fxa-menu-sync-prefs-button",
       "PanelUI-fxa-menu-logins-button",
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
     ],
-    disabledItems: [
+    disabledItems: ["PanelUI-fxa-menu-connect-device-button"],
+    hiddenItems: [
       "PanelUI-fxa-menu-syncnow-button",
-      "PanelUI-fxa-menu-connect-device-button",
+      "PanelUI-fxa-menu-sync-prefs-button",
     ],
   });
   checkFxAAvatar("unverified");
@@ -245,15 +253,16 @@ add_task(async function test_ui_state_loginFailed() {
     headerDescription: state.email,
     enabledItems: [
       "PanelUI-fxa-menu-sendtab-button",
+      "PanelUI-fxa-menu-setup-sync-button",
       "PanelUI-fxa-menu-remotetabs-button",
-      "PanelUI-fxa-menu-sync-prefs-button",
       "PanelUI-fxa-menu-logins-button",
       "PanelUI-fxa-menu-monitor-button",
       "PanelUI-fxa-menu-send-button",
     ],
-    disabledItems: [
+    disabledItems: ["PanelUI-fxa-menu-connect-device-button"],
+    hiddenItems: [
       "PanelUI-fxa-menu-syncnow-button",
-      "PanelUI-fxa-menu-connect-device-button",
+      "PanelUI-fxa-menu-sync-prefs-button",
     ],
   });
   checkFxAAvatar("unverified");
@@ -338,6 +347,7 @@ async function checkFxaToolbarButtonPanel({
   headerDescription,
   enabledItems,
   disabledItems,
+  hiddenItems,
 }) {
   is(
     document.getElementById("fxa-menu-header-title").value,
@@ -358,6 +368,11 @@ async function checkFxaToolbarButtonPanel({
   for (const id of disabledItems) {
     const el = document.getElementById(id);
     is(el.getAttribute("disabled"), "true", id + " is disabled");
+  }
+
+  for (const id of hiddenItems) {
+    const el = document.getElementById(id);
+    is(el.getAttribute("hidden"), "true", id + " is hidden");
   }
 }
 

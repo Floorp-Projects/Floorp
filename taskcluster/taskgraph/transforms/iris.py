@@ -26,6 +26,7 @@ def make_iris_tasks(config, jobs):
         'dependencies.build',
         'fetches.build',
         'run.command',
+        'run-on-projects',
         'treeherder.platform',
         'worker.docker-image',
         'worker.artifacts',
