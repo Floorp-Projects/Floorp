@@ -49,27 +49,17 @@ typedef struct _REPARSE_DATA_BUFFER {
 
 UpdateLog::UpdateLog() : logFP(nullptr) {}
 
-void UpdateLog::Init(NS_tchar* sourcePath, const NS_tchar* fileName) {
+void UpdateLog::Init(NS_tchar* logFilePath) {
   if (logFP) {
     return;
   }
 
-  int dstFilePathLen =
-      NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath) / sizeof(mDstFilePath[0]),
-                   NS_T("%s/%s"), sourcePath, fileName);
-  // If the destination path was over the length limit,
-  // disable logging by skipping opening the file and setting logFP.
-  if ((dstFilePathLen > 0) &&
-      (dstFilePathLen <
-       static_cast<int>(sizeof(mDstFilePath) / sizeof(mDstFilePath[0])))) {
-#ifdef XP_WIN
-    if (GetUUIDTempFilePath(sourcePath, L"log", mTmpFilePath)) {
-      logFP = NS_tfopen(mTmpFilePath, NS_T("w"));
-      // Delete this file now so it is possible to tell from the unelevated
-      // updater process if the elevated updater process has written the log.
-      DeleteFileW(mDstFilePath);
-    }
-#elif XP_MACOSX
+  // When the path is over the length limit disable logging by not opening the
+  // file and not setting logFP.
+  int dstFilePathLen = NS_tstrlen(logFilePath);
+  if (dstFilePathLen > 0 && dstFilePathLen < MAXPATHLEN - 1) {
+    NS_tstrncpy(mDstFilePath, logFilePath, MAXPATHLEN);
+#if defined(XP_WIN) || defined(XP_MACOSX)
     logFP = NS_tfopen(mDstFilePath, NS_T("w"));
 #else
     // On platforms that have an updates directory in the installation directory
@@ -126,16 +116,6 @@ void UpdateLog::Finish() {
 
   fclose(logFP);
   logFP = nullptr;
-
-#ifdef XP_WIN
-  // When the log file already exists then the elevated updater has already
-  // written the log file and the temp file for the log should be discarded.
-  if (!NS_taccess(mDstFilePath, F_OK)) {
-    DeleteFileW(mTmpFilePath);
-  } else {
-    MoveFileW(mTmpFilePath, mDstFilePath);
-  }
-#endif
 }
 
 void UpdateLog::Flush() {
