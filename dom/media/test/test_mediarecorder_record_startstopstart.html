@@ -17,9 +17,7 @@ function startTest() {
   var recorder = new MediaRecorder(dest.stream);
   var stopCount = 0;
   var dataavailable = 0;
-  // mobile device may produce another format, but not landed.
-  // In audio only case, we should produce opus type.
-  var expectedMimeType = 'audio/ogg';
+  var expectedMimeType = 'audio/ogg; codecs=opus';
   recorder.onstop = function (e) {
     info('onstop fired');
     is(recorder.stream, dest.stream,

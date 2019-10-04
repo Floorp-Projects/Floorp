@@ -35,6 +35,8 @@ struct Cell;
 
 namespace jit {
 
+struct IonOsrTempData;
+
 enum DataType : uint8_t {
   Type_Void,
   Type_Bool,
@@ -694,6 +696,10 @@ struct OutParamToDataType<uint32_t*> {
 };
 template <>
 struct OutParamToDataType<uint8_t**> {
+  static const DataType result = Type_Pointer;
+};
+template <>
+struct OutParamToDataType<IonOsrTempData**> {
   static const DataType result = Type_Pointer;
 };
 template <>

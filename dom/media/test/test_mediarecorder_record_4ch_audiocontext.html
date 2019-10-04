@@ -26,7 +26,7 @@ function startTest() {
   var stopTriggered = false;
   var onstopTriggered = false;
   dest.channelCount = 4;
-  var expectedMimeType = 'audio/ogg';
+  var expectedMimeType = 'audio/ogg; codecs=opus';
   var totalBlobSize = 0;
   source.channelCountMode = 'explicit';
   source.connect(dest);
@@ -51,15 +51,13 @@ function startTest() {
     SimpleTest.finish();
   };
   mMediaRecorder.ondataavailable = function (e) {
-    if (mMediaRecorder.state == 'recording') {
-      ok(e.data.size > 0, 'check blob has data');
-    }
+    ok(e.data.size > 0, 'check blob has data');
     totalBlobSize += e.data.size;
-    ok(totalBlobSize > 0, 'check the totalBlobSize');
     is(e.data.type, expectedMimeType, 'blob should have expected mimetype');
-    is(mMediaRecorder.mimeType, expectedMimeType, 'recorder should have expected mimetype');
     if (!stopTriggered) {
+      is(mMediaRecorder.mimeType, expectedMimeType, 'recorder should have expected mimetype');
       mMediaRecorder.stop();
+      is(mMediaRecorder.mimeType, '', 'recorder should have reset its mimetype');
       stopTriggered = true;
     } else if (onstopTriggered) {
       ok(false, 'ondataavailable should come before onstop event');

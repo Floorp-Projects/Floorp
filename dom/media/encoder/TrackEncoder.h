@@ -420,7 +420,7 @@ class VideoTrackEncoder : public TrackEncoder {
   /**
    * Set desired keyframe interval defined in milliseconds.
    */
-  void SetKeyFrameInterval(int32_t aKeyFrameInterval);
+  void SetKeyFrameInterval(uint32_t aKeyFrameInterval);
 
  protected:
   /**
@@ -518,7 +518,7 @@ class VideoTrackEncoder : public TrackEncoder {
   /**
    * The desired keyframe interval defined in milliseconds.
    */
-  int32_t mKeyFrameInterval;
+  uint32_t mKeyFrameInterval;
 
   /**
    * True if the video MediaTrackTrack this VideoTrackEncoder is attached to is

@@ -1284,7 +1284,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       interruptCallbacks_(this),
       interruptCallbackDisabled(this, false),
       interruptBits_(0),
-      osrTempData_(this, nullptr),
       ionReturnOverride_(this, MagicValue(JS_ARG_POISON)),
       jitStackLimit(UINTPTR_MAX),
       jitStackLimitNoInterrupt(this, UINTPTR_MAX),
@@ -1314,7 +1313,6 @@ JSContext::~JSContext() {
   }
 
   fx.destroyInstance();
-  freeOsrTempData();
 
 #ifdef JS_SIMULATOR
   js::jit::Simulator::Destroy(simulator_);

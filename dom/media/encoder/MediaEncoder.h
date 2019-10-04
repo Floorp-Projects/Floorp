@@ -181,9 +181,7 @@ class MediaEncoder {
 
   bool HasError();
 
-#ifdef MOZ_WEBM_ENCODER
   static bool IsWebMEncoderEnabled();
-#endif
 
   const nsString& MimeType() const;
 
@@ -220,7 +218,7 @@ class MediaEncoder {
   /**
    * Set desired video keyframe interval defined in milliseconds.
    */
-  void SetVideoKeyFrameInterval(int32_t aVideoKeyFrameInterval);
+  void SetVideoKeyFrameInterval(uint32_t aVideoKeyFrameInterval);
 
  protected:
   ~MediaEncoder();
