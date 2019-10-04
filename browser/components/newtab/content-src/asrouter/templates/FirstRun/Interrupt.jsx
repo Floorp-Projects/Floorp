@@ -5,7 +5,6 @@
 import React from "react";
 import { Trailhead } from "../Trailhead/Trailhead";
 import { ReturnToAMO } from "../ReturnToAMO/ReturnToAMO";
-import { StartupOverlay } from "../StartupOverlay/StartupOverlay";
 import { LocalizationProvider } from "fluent-react";
 import { generateBundles } from "../../rich-text-strings";
 
@@ -38,15 +37,6 @@ export class Interrupt extends React.PureComponent {
               sendUserActionTelemetry={sendUserActionTelemetry}
             />
           </LocalizationProvider>
-        );
-      case "fxa_overlay":
-        return (
-          <StartupOverlay
-            document={this.props.document}
-            onBlock={onDismiss}
-            dispatch={dispatch}
-            fxa_endpoint={fxaEndpoint}
-          />
         );
       case "trailhead":
         return (

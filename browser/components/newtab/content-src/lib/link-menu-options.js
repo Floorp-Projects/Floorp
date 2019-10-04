@@ -22,6 +22,13 @@ const _OpenInPrivateWindow = site => ({
 export const LinkMenuOptions = {
   Separator: () => ({ type: "separator" }),
   EmptyItem: () => ({ type: "empty" }),
+  ShowPrivacyInfo: site => ({
+    id: "newtab-menu-show-privacy-info",
+    icon: "info",
+    action: {
+      type: at.SHOW_PRIVACY_INFO,
+    },
+  }),
   RemoveBookmark: site => ({
     id: "newtab-menu-remove-bookmark",
     icon: "bookmark-added",
