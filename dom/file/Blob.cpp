@@ -317,8 +317,8 @@ class BlobBodyStreamHolder final : public BodyStreamHolder {
   // Public to make trace happy.
   JS::Heap<JSObject*> mStream;
 
- private:
-  ~BlobBodyStreamHolder() = default;
+ protected:
+  virtual ~BlobBodyStreamHolder() { NullifyStream(); }
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BlobBodyStreamHolder)
@@ -334,7 +334,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BlobBodyStreamHolder,
                                                 BodyStreamHolder)
-  tmp->mStream = nullptr;
+  tmp->NullifyStream();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(BlobBodyStreamHolder, BodyStreamHolder)
