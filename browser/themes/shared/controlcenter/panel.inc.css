@@ -264,19 +264,19 @@
 
 #protections-popup-mainView-panel-header-section {
   color: white;
-  background: radial-gradient(circle at top right, #9059FF, #0250BB);
+  background: radial-gradient(circle farthest-side at top right, #9059FF, #0250BB);
 }
 
 #protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
-  background: radial-gradient(circle at top left, #9059FF, #0250BB);
+  background: radial-gradient(circle farthest-side at top left, #9059FF, #0250BB);
 }
 
 :root[lwt-popup-brighttext] #protections-popup-mainView-panel-header-section {
-  background: radial-gradient(circle at top right, #C689FF, #00B3F4);
+  background: radial-gradient(circle farthest-side at top right, #C689FF, #00B3F4);
 }
 
 :root[lwt-popup-brighttext] #protections-popup-mainView-panel-header-section:-moz-locale-dir(rtl) {
-  background: radial-gradient(circle at top left, #C689FF, #00B3F4);
+  background: radial-gradient(circle farthest-side at top left, #C689FF, #00B3F4);
 }
 
 #identity-popup-mainView-panel-header-span,
