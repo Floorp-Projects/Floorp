@@ -39,6 +39,7 @@ describe("ToolbarPanelHub", () => {
       hasAttribute: sandbox.stub(),
       toggleAttribute: sandbox.stub(),
       remove: sandbox.stub(),
+      removeChild: sandbox.stub(),
     };
     fakeDocument = {
       l10n: {
@@ -285,6 +286,22 @@ describe("ToolbarPanelHub", () => {
       // Call the click handler to make coverage happy.
       eventListeners.mouseup();
       assert.calledOnce(handleUserActionStub);
+    });
+    it("should clear previous messages on 2nd renderMessages()", async () => {
+      const messages = (await PanelTestProvider.getMessages()).filter(
+        m => m.template === "whatsnew_panel_message"
+      );
+      fakeElementById.querySelectorAll.onCall(0).returns([]);
+      fakeElementById.querySelectorAll.onCall(1).returns(["a", "b", "c"]);
+
+      getMessagesStub.returns(messages);
+
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+      await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
+
+      assert.calledThrice(fakeElementById.removeChild);
+      assert.equal(fakeElementById.removeChild.firstCall.args[0], "a");
+      assert.equal(fakeElementById.removeChild.secondCall.args[0], "b");
     });
     it("should sort based on order field value", async () => {
       const messages = (await PanelTestProvider.getMessages()).filter(
@@ -644,12 +661,17 @@ describe("ToolbarPanelHub", () => {
       instance.insertProtectionPanelMessage({
         target: { ownerGlobal: fakeWindow, ownerDocument: fakeDocument },
       });
+    let getMessagesStub;
     beforeEach(async () => {
       const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      getMessagesStub = sandbox
+        .stub()
+        .resolves(
+          onboardingMsgs.find(msg => msg.template === "protections_panel")
+        );
       await instance.init(waitForInitializedStub, {
         dispatch: fakeDispatch,
-        getMessages: () =>
-          onboardingMsgs.find(msg => msg.template === "protections_panel"),
+        getMessages: getMessagesStub,
         handleUserAction: handleUserActionStub,
       });
     });
@@ -676,7 +698,30 @@ describe("ToolbarPanelHub", () => {
 
       assert.callCount(fakeElementById.toggleAttribute, 6);
     });
-    it("should open link on click", async () => {
+    it("should open link on click (separate link element)", async () => {
+      await fakeInsert();
+
+      eventListeners.mouseup();
+
+      assert.calledOnce(handleUserActionStub);
+      assert.calledWithExactly(handleUserActionStub, {
+        target: fakeWindow,
+        data: {
+          type: "OPEN_URL",
+          data: {
+            args: sinon.match.string,
+            where: "tabshifted",
+          },
+        },
+      });
+    });
+    it("should open link on click (directly attached to the message)", async () => {
+      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const msg = onboardingMsgs.find(m => m.template === "protections_panel");
+      getMessagesStub.resolves({
+        ...msg,
+        content: { ...msg.content, link_text: null },
+      });
       await fakeInsert();
 
       eventListeners.mouseup();

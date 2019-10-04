@@ -37,7 +37,7 @@
   position: fixed;
   top: 15%;
   left: calc(50% - 480px); // halfway across minus half the width of the modal
-  background: $white;
+  background: var(--newtab-modal-color);
   box-shadow: 0 1px 15px 0 $black-30;
   border-radius: 4px;
   display: none;
@@ -60,6 +60,19 @@
 
   &.active {
     display: block;
+  }
+
+  .icon-dismiss {
+    border: 0;
+    cursor: pointer;
+    inset-inline-end: 0;
+    padding: 20px;
+    fill: $white;
+    position: absolute;
+
+    &:focus {
+      border: 1px dotted;
+    }
   }
 
   h2 {

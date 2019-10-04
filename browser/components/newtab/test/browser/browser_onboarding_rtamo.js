@@ -24,7 +24,7 @@ async function setRTAMOOnboarding() {
     "Attribution data should be set"
   );
 
-  Services.prefs.setCharPref(BRANCH_PREF, "control");
+  Services.prefs.setCharPref(BRANCH_PREF, "join-supercharge");
 
   // Reset trailhead so it loads the new branch.
   Services.prefs.clearUserPref("trailhead.firstrun.didSeeAboutWelcome");
