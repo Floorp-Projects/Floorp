@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
   // We have the following origins:
   //
   // 1: this page:    mochi.test:8888
-  // 2: iframe:       example.org
+  // 2: iframe:       test1.mochi.test:8888
   // 3: inner iframe: mochi.test:8888
   //
   // Test that 1 and 2 are cross-compartment (because cross-origin), but 1 and 3
@@ -41,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1530608">Mozilla Bug 1530608</a>
 
-<iframe id="frame" src="http://example.org/tests/dom/base/test/iframe_shared_compartment2a.html"></iframe>
+<iframe id="frame" src="http://test1.mochi.test:8888/tests/dom/base/test/iframe_shared_compartment2a.html"></iframe>
 
 </body>
 </html>
