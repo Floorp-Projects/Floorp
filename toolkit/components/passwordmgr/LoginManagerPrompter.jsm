@@ -969,7 +969,7 @@ LoginManagerPrompter.prototype = {
    * @param {string} [options.messageStringID = undefined]
    *        An optional string ID to override the default message.
    * @param {string} [options.autoSavedLoginGuid = ""]
-   *        A string guid value for the old login to be removed if the changes
+   *        A string guid value for the auto-saved login to be removed if the changes
    *        match it to an different login
    */
   _showLoginCaptureDoorhanger(
