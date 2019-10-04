@@ -8,7 +8,6 @@
        hidden="true"
        role="alertdialog"
        aria-labelledby="protections-popup-main-header-label"
-       onpopupshowing="gProtectionsHandler.reorderCategoryItems()"
        onpopupshown="gProtectionsHandler.onPopupShown(event);"
        onpopuphidden="gProtectionsHandler.onPopupHidden(event);"
        orient="vertical">
