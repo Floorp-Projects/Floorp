@@ -167,4 +167,10 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Không tìm thấy tệp</string>
 
-    </resources>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Vấn đề trang web lừa đảo</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Trang web này tại %1$s đã được báo cáo là trang lừa đảo và đã bị chặn dựa trên tùy chọn bảo mật của bạn.</p>
+    ]]></string>
+</resources>

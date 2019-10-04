@@ -19,7 +19,7 @@
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">Tab pribadi baru dibuka</string>
     <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
-    <string name="mozac_feature_contextmenu_snackbar_text_copied">Teks disalin ke papan klip</string>
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">Tautan disalin ke papan klip</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Ganti</string>
 </resources>
