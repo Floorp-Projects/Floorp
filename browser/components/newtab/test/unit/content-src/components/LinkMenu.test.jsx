@@ -322,7 +322,6 @@ describe("<LinkMenu>", () => {
       "GoToDownloadPage",
       "RemoveDownload",
       "Separator",
-      "ShowPrivacyInfo",
       "RemoveBookmark",
       "AddBookmark",
       "OpenInNewWindow",

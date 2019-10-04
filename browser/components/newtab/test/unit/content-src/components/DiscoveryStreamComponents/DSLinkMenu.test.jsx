@@ -134,7 +134,6 @@ describe("<DSLinkMenu>", () => {
         .simulate("click", { preventDefault: () => {} });
       const linkMenuProps = wrapper.find(LinkMenu).props();
       assert.deepEqual(linkMenuProps.options, [
-        "ShowPrivacyInfo",
         "CheckBookmarkOrArchive",
         "CheckSavedToPocket",
         "Separator",

@@ -1,0 +1,343 @@
+.activity-stream {
+  &.welcome {
+    overflow: hidden;
+  }
+
+  &:not(.welcome) {
+    .overlay-wrapper {
+      display: none;
+    }
+  }
+}
+
+.overlay-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 21000;
+  transition: opacity 0.4s;
+  opacity: 0;
+  overflow-x: auto;
+
+  &.show {
+    transition: none;
+    opacity: 1;
+
+    .firstrun-sign-in {
+      transition: opacity 1.5s, transform 1.5s;
+      transition-delay: 0.2s;
+      transform: translateY(-50%) scale(1);
+      opacity: 1;
+
+      @media screen and (max-width: 790px) {
+        float: none;
+        margin: auto;
+        top: 190px;
+        margin-bottom: 100px;
+      }
+    }
+
+    .firstrun-firefox-logo {
+      transition: opacity 2.3s;
+      opacity: 1;
+    }
+
+    .firstrun-title,
+    .firstrun-content,
+    .firstrun-link {
+      transition: transform 0.5s, opacity 0.8s;
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .firstrun-title {
+      transition-delay: 0.2s;
+    }
+
+    .firstrun-content {
+      transition-delay: 0.4s;
+    }
+
+    .firstrun-link {
+      transition-delay: 0.6s;
+    }
+
+    .fxaccounts-container {
+      transition: none;
+      opacity: 1;
+    }
+  }
+}
+
+.background,
+.fxa + body.hide-main { // sass-lint:disable-line no-qualifying-elements
+  width: 100%;
+  height: 100%;
+  display: block;
+  background-image: url('#{$image-path}fox-tail.png'), $about-welcome-gradient;
+  background-position-x: center;
+  background-position-y: -200px, top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: fixed;
+}
+
+.firstrun-sign-in {
+  transform: translateY(-50%) scale(0.8);
+  position: relative;
+  top: 50%;
+  width: 358px;
+  opacity: 0;
+  background-color: $white;
+  float: inline-end;
+  color: $grey-90;
+  text-align: center;
+  padding: 10px;
+
+  form {
+    position: relative;
+  }
+
+  .extra-links {
+    font-size: 12px;
+    max-width: 340px;
+    margin: 17px 50px;
+    color: $about-welcome-extra-links;
+    cursor: default;
+
+    a {
+      color: $grey-50;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    a:hover,
+    a:active,
+    a:focus {
+      color: $blue-50;
+    }
+  }
+
+  .email-input {
+    box-shadow: none;
+    margin: auto;
+    width: 244px;
+    display: block;
+    height: 40px;
+    padding-inline-start: 20px;
+    border: 1px solid $grey-50;
+    border-radius: 2px;
+    font-size: 16px;
+    transition: border-color 150ms, box-shadow 150ms;
+
+    &:hover {
+      border-color: $grey-90;
+    }
+
+    &:focus {
+      border-color: $blue-50;
+      box-shadow: 0 0 0 3px $email-input-focus;
+    }
+
+    &.invalid {
+      border-color: $red-60;
+    }
+
+    &.invalid:focus {
+      box-shadow: 0 0 0 3px $email-input-invalid;
+    }
+  }
+
+  .form-header {
+    font-size: 22px;
+    margin: 15px auto;
+  }
+
+  .form-header .sub-header {
+    font-size: 14px;
+    margin-top: 4px;
+    display: block;
+  }
+
+  button {
+    display: block;
+    cursor: pointer;
+    margin: 10px auto 0;
+  }
+
+  .continue-button {
+    font-size: 18px;
+    height: 43px;
+    width: 250px;
+    padding: 8px 0;
+    border: 0;
+    border-radius: 4px;
+    color: $white;
+    background-color: $blue-60;
+    transition: background-color 150ms;
+
+    &:not([disabled]):active,
+    &:not([disabled]):hover {
+      background: $blue-70;
+      border-color: $blue-80;
+    }
+  }
+
+  .skip-button {
+    font-size: 13px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: $grey-10;
+    color: $blue-50;
+    border: 1px solid $blue-50;
+    border-radius: 2px;
+    min-height: 24px;
+    padding: 5px 10px;
+    transition: background-color 150ms, color 150ms, border-color 150ms;
+
+    &[disabled] {
+      background-color: $grey-20;
+      border-color: $grey-40;
+      color: $grey-50;
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    &:not([disabled]):hover {
+      background-color: $blue-50;
+      border-color: $blue-60;
+      color: $white;
+    }
+  }
+}
+
+.firstrun-left-divider {
+  position: relative;
+  float: inline-start;
+  clear: both;
+  width: 435px;
+
+  @media screen and (max-width: 825px) {
+    width: 400px;
+  }
+
+  @media screen and (max-width: 790px) {
+    margin: auto;
+    float: none;
+    width: 352px;
+    text-align: center;
+  }
+}
+
+.firstrun-content {
+  line-height: 1.5;
+  margin-bottom: 48px;
+  max-width: 352px;
+  background: url('#{$image-path}sync-devices.svg') bottom center no-repeat;
+  padding-bottom: 210px;
+}
+
+a.firstrun-link { // sass-lint:disable-line no-qualifying-elements
+  color: $white;
+  display: block;
+  text-decoration: underline;
+
+  &:hover,
+  &:active,
+  &:focus {
+    color: $white;
+  }
+}
+
+.firstrun-title {
+  background: url('chrome://branding/content/about-logo.png') top left no-repeat;
+  background-size: 90px 90px;
+  margin: 40px 0 10px;
+  padding-top: 110px;
+
+  @media screen and (max-width: 790px) {
+    background: url('chrome://branding/content/about-logo.png') top center no-repeat;
+    background-size: 90px 90px;
+  }
+
+  &:dir(rtl) {
+    background-position: top right;
+  }
+}
+
+.fxaccounts-container {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  top: 0;
+  left: 0;
+  color: $white;
+  height: 515px;
+  margin: auto;
+  width: 819px;
+  z-index: 10;
+  transition: opacity 0.3s;
+  opacity: 0;
+
+  @media screen and (max-width: 825px) {
+    width: 784px;
+  }
+
+  @media screen and (max-width: 790px) {
+    width: auto;
+    height: 100%;
+  }
+}
+
+.firstrun-title,
+.firstrun-content,
+.firstrun-link {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+.error {
+  display: none;
+}
+
+.error.active {
+  display: block;
+  padding: 5px 12px;
+  animation: fade-down 450ms;
+  font-size: 12px;
+  font-weight: 500;
+  color: $white;
+  background-color: $red-60;
+  position: absolute;
+  inset-inline-start: 50px;
+  top: -28px;
+  border-radius: 2px;
+
+  &::before {
+    inset-inline-start: 12px;
+    background: $red-60;
+    bottom: -8px;
+    content: '.';
+    height: 16px;
+    position: absolute;
+    text-indent: -999px;
+    transform: rotate(45deg);
+    white-space: nowrap;
+    width: 16px;
+    z-index: -1;
+  }
+}
+
+@keyframes fade-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

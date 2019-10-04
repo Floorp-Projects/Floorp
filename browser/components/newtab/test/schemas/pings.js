@@ -130,7 +130,6 @@ export const UserEventAction = Joi.object().keys({
           "screenshot_with_icon",
           "screenshot",
           "no_image",
-          "custom_screenshot",
         ]),
         card_type: Joi.valid([
           "bookmark",
@@ -138,7 +137,6 @@ export const UserEventAction = Joi.object().keys({
           "pinned",
           "pocket",
           "search",
-          "spoc",
         ]),
         search_vendor: Joi.valid(["google", "amazon"]),
         has_flow_params: Joi.bool(),

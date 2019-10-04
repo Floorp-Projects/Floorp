@@ -164,7 +164,6 @@ input {
 @import '../components/DiscoveryStreamImpressionStats/ImpressionStats';
 @import '../components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState';
 @import '../components/DiscoveryStreamComponents/DSTextPromo/DSTextPromo';
-@import '../components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal';
 
 // AS Router
 @import '../asrouter/components/Button/Button';
@@ -176,4 +175,5 @@ input {
 @import '../asrouter/templates/SubmitFormSnippet/SubmitFormSnippet';
 @import '../asrouter/templates/OnboardingMessage/OnboardingMessage';
 @import '../asrouter/templates/EOYSnippet/EOYSnippet';
+@import '../asrouter/templates/StartupOverlay/StartupOverlay';
 @import '../asrouter/templates/Trailhead/Trailhead';

@@ -62,7 +62,7 @@ const TRAILHEAD_CONFIG = {
   INTERRUPTS_EXPERIMENT_PREF: "trailhead.firstrun.interruptsExperiment",
   TRIPLETS_ENROLLED_PREF: "trailhead.firstrun.tripletsEnrolled",
   BRANCHES: {
-    interrupts: [["join"], ["sync"], ["nofirstrun"], ["cards"]],
+    interrupts: [["control"], ["join"], ["sync"], ["nofirstrun"], ["cards"]],
     triplets: [["supercharge"], ["payoff"], ["multidevice"], ["privacy"]],
   },
   LOCALES: ["en-US", "en-GB", "en-CA", "de", "de-DE", "fr", "fr-FR"],
@@ -995,11 +995,11 @@ class _ASRouter {
       [interrupt, triplet] = overrideValue.split("-");
     }
 
-    // Use join Trailhead Branch (for cards) if we are showing RTAMO.
+    // Use control Trailhead Branch (for cards) if we are showing RTAMO.
     if (await this._hasAddonAttributionData()) {
       return {
         experiment,
-        interrupt: "join",
+        interrupt: "control",
         triplet: triplet || "privacy",
       };
     }
@@ -1039,9 +1039,8 @@ class _ASRouter {
         );
       }
     } else {
-      // If the user is not in a trailhead-compabtible locale, return the join + supercharge (default) experience and no experiment.
-      interrupt = "join";
-      triplet = "supercharge";
+      // If the user is not in a trailhead-compabtible locale, return the control experience and no experiment.
+      interrupt = "control";
     }
 
     return { experiment, interrupt, triplet };
