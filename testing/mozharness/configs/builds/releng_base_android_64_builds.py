@@ -73,5 +73,8 @@ config = {
         'MINIDUMP_SAVE_PATH': '%(base_work_dir)s/minidumps',
     },
     'src_mozconfig': 'mobile/android/config/mozconfigs/android/nightly',
+    # Bug 1583594: GeckoView doesn't (yet) produce have a package file
+    # from which to extract package metrics.
+    'disable_package_metrics': True,
     #########################################################################
 }
