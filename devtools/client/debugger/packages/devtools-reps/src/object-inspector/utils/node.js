@@ -522,6 +522,7 @@ function makeDefaultPropsBucket(
       createNode({
         parent: defaultPropertiesNode,
         name: maybeEscapePropertyName(name),
+        propertyName: name,
         path: createPath(index, name),
         contents: ownProperties[name],
       })
@@ -540,6 +541,7 @@ function makeNodesForOwnProps(
     createNode({
       parent,
       name: maybeEscapePropertyName(name),
+      propertyName: name,
       contents: ownProperties[name],
     })
   );
@@ -660,10 +662,12 @@ function createNode(options: {
   path?: string,
   type?: Symbol,
   meta?: Object,
+  propertyName?: string,
 }): ?Node {
   const {
     parent,
     name,
+    propertyName,
     path,
     contents,
     type = NODE_TYPES.GRIP,
@@ -681,6 +685,8 @@ function createNode(options: {
   return {
     parent,
     name,
+    // `name` can be escaped; propertyName contains the original property name.
+    propertyName,
     path: createPath(parent && parent.path, path || name),
     contents,
     type,

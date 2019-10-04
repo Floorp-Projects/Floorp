@@ -484,12 +484,10 @@
 
     <menupopup id="autohide-context"
            onpopupshowing="FullScreen.getAutohide(this.firstChild);">
-      <menuitem type="checkbox" label="&fullScreenAutohide.label;"
-                accesskey="&fullScreenAutohide.accesskey;"
+      <menuitem type="checkbox" data-l10n-id="full-screen-autohide"
                 oncommand="FullScreen.setAutohide();"/>
       <menuseparator/>
-      <menuitem label="&fullScreenExit.label;"
-                accesskey="&fullScreenExit.accesskey;"
+      <menuitem data-l10n-id="full-screen-exit"
                 oncommand="BrowserFullScreen();"/>
     </menupopup>
 

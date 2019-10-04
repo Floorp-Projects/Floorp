@@ -1499,9 +1499,13 @@ js::PCCounts* ScriptCounts::getThrowCounts(size_t offset) {
 }
 
 size_t ScriptCounts::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-  return mallocSizeOf(this) + pcCounts_.sizeOfExcludingThis(mallocSizeOf) +
-         throwCounts_.sizeOfExcludingThis(mallocSizeOf) +
-         ionCounts_->sizeOfIncludingThis(mallocSizeOf);
+  size_t size = mallocSizeOf(this);
+  size += pcCounts_.sizeOfExcludingThis(mallocSizeOf);
+  size += throwCounts_.sizeOfExcludingThis(mallocSizeOf);
+  if (ionCounts_) {
+    size += ionCounts_->sizeOfIncludingThis(mallocSizeOf);
+  }
+  return size;
 }
 
 js::PCCounts* JSScript::maybeGetPCCounts(jsbytecode* pc) {
