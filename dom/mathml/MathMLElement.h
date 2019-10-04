@@ -34,6 +34,8 @@ class MathMLElement final : public MathMLElementBase,
   // Implementation of nsISupports is inherited from MathMLElementBase
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_IMPL_FROMNODE(MathMLElement, kNameSpaceID_MathML)
+
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
 
@@ -74,6 +76,7 @@ class MathMLElement final : public MathMLElementBase,
   void SetIncrementScriptLevel(bool aIncrementScriptLevel, bool aNotify);
   bool GetIncrementScriptLevel() const { return mIncrementScriptLevel; }
 
+  int32_t TabIndexDefault() final;
   virtual bool IsFocusableInternal(int32_t* aTabIndex,
                                    bool aWithMouse) override;
   virtual bool IsLink(nsIURI** aURI) const override;
@@ -85,12 +88,17 @@ class MathMLElement final : public MathMLElementBase,
     MathMLElementBase::NodeInfoChanged(aOldDoc);
   }
 
+  void RecompileScriptEventListeners() final;
+  bool IsEventAttributeNameInternal(nsAtom* aName) final;
+
  protected:
   virtual ~MathMLElement() {}
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
 
+  nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                         const nsAttrValueOrString* aValue, bool aNotify) final;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,
