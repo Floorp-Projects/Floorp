@@ -2064,7 +2064,11 @@ class UrlbarInput {
       return;
     }
 
-    // Drag only if the entire value is selected and it's a loaded URI.
+    // Make sure we don't cover the tab bar or other potential drop targets.
+    this.endLayoutExtend(true);
+
+    // Only customize the drag data if the entire value is selected and it's a
+    // loaded URI. Use default behavior otherwise.
     if (
       this.selectionStart != 0 ||
       this.selectionEnd != this.inputField.textLength ||
