@@ -21,9 +21,9 @@ import androidx.core.view.forEach
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.library_site_item.view.*
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
-import org.mozilla.fenix.ext.getColorFromAttr
 
 open class LibraryPageView(
     override val containerView: ViewGroup
@@ -40,8 +40,8 @@ open class LibraryPageView(
             context.getColorFromAttr(R.attr.primaryText),
             context.getColorFromAttr(R.attr.foundation)
         )
-        libraryItemsList.children.forEach {
-                item -> item.overflow_menu.visibility = View.VISIBLE
+        libraryItemsList.children.forEach { item ->
+            item.overflow_menu.visibility = View.VISIBLE
         }
     }
 
@@ -54,8 +54,8 @@ open class LibraryPageView(
             ContextCompat.getColor(context, R.color.white_color),
             context.getColorFromAttr(R.attr.accentHighContrast)
         )
-        libraryItemsList.children.forEach {
-            item -> item.overflow_menu.visibility = View.INVISIBLE
+        libraryItemsList.children.forEach { item ->
+            item.overflow_menu.visibility = View.INVISIBLE
         }
     }
 

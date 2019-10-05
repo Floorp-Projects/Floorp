@@ -19,9 +19,9 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_library.*
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 

@@ -2,13 +2,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/delete_bookmarks_multi_select"
         android:icon="@drawable/mozac_ic_delete"
-        android:iconTint="?primaryText"
+        app:iconTint="@color/white_color"
         android:title="@string/bookmark_menu_delete_button"
-        app:showAsAction="ifRoom"
-        tools:targetApi="o" />
+        app:showAsAction="ifRoom" />
 </menu>

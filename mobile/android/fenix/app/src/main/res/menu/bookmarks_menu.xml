@@ -3,20 +3,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/add_bookmark_folder"
         android:icon="@drawable/ic_folder_new"
-        android:iconTint="?primaryText"
+        app:iconTint="?primaryText"
         android:title="@string/bookmark_add_folder"
-        app:showAsAction="ifRoom"
-        tools:targetApi="o" />
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/libraryClose"
         android:icon="@drawable/ic_close"
-        android:iconTint="?primaryText"
+        app:iconTint="?primaryText"
         android:title="@string/content_description_close_button"
-        app:showAsAction="ifRoom"
-        tools:targetApi="o" />
+        app:showAsAction="ifRoom" />
 </menu>
