@@ -220,7 +220,7 @@ class SessionControlAdapter(
 
             if (it.shouldUpdateHostname) { holder.updateHostname(it.tab.hostname) }
             if (it.shouldUpdateTitle) { holder.updateTitle(it.tab.title) }
-            if (it.shouldUpdateUrl) { holder.updateFavIcon(it.tab.url) }
+            if (it.shouldUpdateUrl) { holder.updateFavIcon(it.tab.url, it.tab.sessionId) }
             if (it.shouldUpdateSelected) { holder.updateSelected(it.tab.selected ?: false) }
             if (it.shouldUpdateMediaState) {
                 holder.updatePlayPauseButton(it.tab.mediaState ?: MediaState.None)
