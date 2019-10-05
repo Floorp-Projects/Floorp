@@ -6132,6 +6132,7 @@ pub extern "C" fn Servo_ProcessInvalidations(
 
 #[no_mangle]
 pub extern "C" fn Servo_HasPendingRestyleAncestor(element: &RawGeckoElement) -> bool {
+    let mut has_yet_to_be_styled = false;
     let mut element = Some(GeckoElement(element));
     while let Some(e) = element {
         if e.has_animations() {
@@ -6141,15 +6142,23 @@ pub extern "C" fn Servo_HasPendingRestyleAncestor(element: &RawGeckoElement) -> 
         // If the element needs a frame, it means that we haven't styled it yet
         // after it got inserted in the document, and thus we may need to do
         // that for transitions and animations to trigger.
+        //
+        // This is a fast path in the common case, but `has_yet_to_be_styled` is
+        // the real check for this.
         if e.needs_frame() {
             return true;
         }
 
-        if let Some(data) = e.borrow_data() {
+        let data = e.borrow_data();
+        if let Some(ref data) = data {
             if !data.hint.is_empty() {
                 return true;
             }
+            if has_yet_to_be_styled && !data.styles.is_display_none() {
+                return true;
+            }
         }
+        has_yet_to_be_styled = data.is_none();
 
         element = e.traversal_parent();
     }
