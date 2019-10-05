@@ -58,6 +58,13 @@
             </intent-filter>
 
             <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <intent-filter>
                 <action android:name="mozilla.components.feature.pwa.VIEW_PWA" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="https" />

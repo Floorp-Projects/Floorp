@@ -5,6 +5,7 @@
 package mozilla.components.feature.intent.processing
 
 import android.content.Intent
+import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
@@ -106,6 +107,68 @@ class TabIntentProcessorTest {
         )
         val intent = mock<Intent>()
         whenever(intent.action).thenReturn(Intent.ACTION_VIEW)
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
+
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+    }
+
+    @Test
+    fun processNfcIntent() = runBlockingTest {
+        val engine = mock<Engine>()
+        val sessionManager = spy(SessionManager(engine))
+        val useCases = SessionUseCases(sessionManager)
+        val handler =
+            TabIntentProcessor(sessionManager, useCases.loadUrl, searchUseCases.newTabSearch)
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(ACTION_NDEF_DISCOVERED)
+
+        val engineSession = mock<EngineSession>()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        whenever(intent.dataString).thenReturn("")
+        handler.process(intent)
+        verify(engineSession, never()).loadUrl("")
+
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+
+        val session = sessionManager.all[0]
+        assertNotNull(session)
+        assertEquals("http://mozilla.org", session.url)
+        assertEquals(Source.ACTION_VIEW, session.source)
+    }
+
+    @Test
+    fun processNfcIntentUsingSelectedSession() = runBlockingTest {
+        val handler = TabIntentProcessor(
+            sessionManager,
+            sessionUseCases.loadUrl,
+            searchUseCases.newTabSearch,
+            openNewTab = false
+        )
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(ACTION_NDEF_DISCOVERED)
+        whenever(intent.dataString).thenReturn("http://mozilla.org")
+
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+    }
+
+    @Test
+    fun processNfcIntentHavingNoSelectedSession() = runBlockingTest {
+        whenever(sessionManager.selectedSession).thenReturn(null)
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(anySession())
+
+        val handler = TabIntentProcessor(
+            sessionManager,
+            sessionUseCases.loadUrl,
+            searchUseCases.newTabSearch,
+            openNewTab = false
+        )
+        val intent = mock<Intent>()
+        whenever(intent.action).thenReturn(ACTION_NDEF_DISCOVERED)
         whenever(intent.dataString).thenReturn("http://mozilla.org")
 
         handler.process(intent)
