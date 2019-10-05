@@ -150,6 +150,7 @@
 }
 
 #urlbar.megabar > #urlbar-input-container {
+  /* Match urlbar-background's border. */
   border: 1px solid transparent;
 }
 

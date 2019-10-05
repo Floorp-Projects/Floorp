@@ -8,8 +8,8 @@
 %define urlbarViewPadding 4px
 %define urlbarViewIconMarginEnd 8px
 %define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
-%define urlbarViewInlineStartPadding (@urlbarBreakoutHorizontalExtend@ - 16px /* type icon width */ - @urlbarViewIconMarginEnd@ - 1px /* border */)
-%define urlbarViewHorizontalMargin 6px
+%define urlbarViewInlineStartPadding (@urlbarBreakoutHorizontalExtend@ - 16px /* type icon width */ - @urlbarViewIconMarginEnd@)
+%define urlbarViewHorizontalMargin 5px
 
 :root {
   --autocomplete-popup-background: var(--arrowpanel-background);
@@ -49,6 +49,8 @@
 .urlbarView.megabar {
   margin-inline: @urlbarViewHorizontalMargin@;
   width: calc(100% - 2 * @urlbarViewHorizontalMargin@);
+  /* Match urlbar-background's border. */
+  border-inline: 1px solid transparent;
 }
 
 .urlbarView:not([hidden]) {
