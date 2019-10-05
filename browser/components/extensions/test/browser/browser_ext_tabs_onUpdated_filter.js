@@ -251,39 +251,6 @@ add_task(async function test_filter_windowId() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-// TODO Bug 1465520 test should be removed when filter name is.
-add_task(async function test_filter_isarticle_deprecated() {
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      permissions: ["tabs"],
-    },
-    background() {
-      // We expect only status updates, anything else is a failure.
-      browser.tabs.onUpdated.addListener(
-        (tabId, changeInfo) => {
-          browser.test.log(`got onUpdated ${JSON.stringify(changeInfo)}`);
-          if ("isArticle" in changeInfo) {
-            browser.test.notifyPass("isarticle");
-          }
-        },
-        { properties: ["isarticle"] }
-      );
-    },
-  });
-  await extension.startup();
-  let ok = extension.awaitFinish("isarticle");
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "http://mochi.test:8888/"
-  );
-  await ok;
-
-  await extension.unload();
-
-  await BrowserTestUtils.removeTab(tab);
-});
-
 add_task(async function test_filter_isArticle() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
