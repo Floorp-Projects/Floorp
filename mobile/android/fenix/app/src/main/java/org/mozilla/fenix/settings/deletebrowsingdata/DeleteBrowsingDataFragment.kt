@@ -6,9 +6,7 @@ package org.mozilla.fenix.settings.deletebrowsingdata
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -28,17 +26,10 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
 
 @SuppressWarnings("TooManyFunctions")
-class DeleteBrowsingDataFragment : Fragment() {
+class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_data) {
     private lateinit var sessionObserver: SessionManager.Observer
     private var tabCollections: List<TabCollection> = listOf()
     private lateinit var controller: DeleteBrowsingDataController
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? =
-        inflater.inflate(R.layout.fragment_delete_browsing_data, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

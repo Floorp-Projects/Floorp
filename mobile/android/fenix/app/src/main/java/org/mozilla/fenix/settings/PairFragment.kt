@@ -5,9 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
@@ -20,16 +18,9 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 
-class PairFragment : Fragment(), BackHandler {
-    private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
+class PairFragment : Fragment(R.layout.fragment_pair), BackHandler {
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_pair, container, false)
-    }
+    private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

@@ -37,8 +37,8 @@ import org.mozilla.fenix.ext.nav
 
 private const val MAX_ITEMS_PER_PAGE = 50
 
-@SuppressWarnings("TooManyFunctions")
-class SitePermissionsExceptionsFragment : Fragment(), View.OnClickListener {
+class SitePermissionsExceptionsFragment :
+    Fragment(R.layout.fragment_site_permissions_exceptions), View.OnClickListener {
     private lateinit var emptyContainerMessage: View
     private lateinit var recyclerView: RecyclerView
     private lateinit var clearButton: Button
@@ -46,10 +46,6 @@ class SitePermissionsExceptionsFragment : Fragment(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (activity as AppCompatActivity).supportActionBar?.show()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_site_permissions_exceptions, container, false)
     }
 
     override fun onViewCreated(rootView: View, savedInstanceState: Bundle?) {

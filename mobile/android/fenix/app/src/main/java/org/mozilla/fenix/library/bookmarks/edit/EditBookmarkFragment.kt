@@ -6,12 +6,10 @@ package org.mozilla.fenix.library.bookmarks.edit
 
 import android.content.DialogInterface
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -48,7 +46,10 @@ import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 import org.mozilla.fenix.library.bookmarks.DesktopFolders
 import java.util.concurrent.TimeUnit
 
-class EditBookmarkFragment : Fragment() {
+/**
+ * Menu to edit the name, URL, and location of a bookmark item.
+ */
+class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
     private lateinit var guidToEdit: String
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
@@ -60,10 +61,6 @@ class EditBookmarkFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_edit_bookmark, container, false)
     }
 
     override fun onResume() {

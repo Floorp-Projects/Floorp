@@ -9,9 +9,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.fragment.app.Fragment
@@ -29,11 +27,7 @@ import org.mozilla.geckoview.BuildConfig as GeckoViewBuildConfig
 /**
  * Displays the logo and information about the app, including library versions.
  */
-class AboutFragment : Fragment() {
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_about, container, false)
-    }
+class AboutFragment : Fragment(R.layout.fragment_about) {
 
     /**
      * Sets the activity title, displays library version strings, and sets up the [view_licenses_button].

@@ -149,7 +149,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     }
 
     final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
         browserInitialized = initializeUI(view) != null
     }
 

@@ -5,9 +5,7 @@
 package org.mozilla.fenix.share
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -15,12 +13,7 @@ import kotlinx.android.synthetic.main.fragment_add_new_device.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.SupportUtils
 
-class AddNewDeviceFragment : Fragment() {
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_add_new_device, container, false)
+class AddNewDeviceFragment : Fragment(R.layout.fragment_add_new_device) {
 
     override fun onResume() {
         super.onResume()
