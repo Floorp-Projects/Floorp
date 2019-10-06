@@ -476,9 +476,16 @@ LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
     return nullptr;
   }
 
-  LSRequestChild* actor = new LSRequestChild(aCallback);
+  LSRequestChild* actor = new LSRequestChild();
 
-  backgroundActor->SendPBackgroundLSRequestConstructor(actor, aParams);
+  if (!backgroundActor->SendPBackgroundLSRequestConstructor(actor, aParams)) {
+    return nullptr;
+  }
+
+  // Must set callback after calling SendPBackgroundLSRequestConstructor since
+  // it can be called synchronously when SendPBackgroundLSRequestConstructor
+  // fails.
+  actor->SetCallback(aCallback);
 
   return actor;
 }
