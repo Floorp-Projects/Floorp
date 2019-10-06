@@ -74,6 +74,13 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
     }
   }
 
+  // Add-on principals should never get any first-party domain
+  // attributes in order to guarantee their storage integrity when switching
+  // FPI on and off.
+  if (scheme.EqualsLiteral("moz-extension")) {
+    return;
+  }
+
   nsCOMPtr<nsIPrincipal> blobPrincipal;
   if (aURI && dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
                   aURI, getter_AddRefs(blobPrincipal))) {
