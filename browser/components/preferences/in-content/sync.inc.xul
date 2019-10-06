@@ -234,8 +234,8 @@
                 </html:div>
                 <hbox>
                   <button id="syncChangeOptions"
-                          label="Change…"
-                          is="highlightable-button"/>
+                          is="highlightable-button"
+                          data-l10n-id="sync-change-options"/>
                   <spacer flex="1"/>
                 </hbox>
               </vbox>
