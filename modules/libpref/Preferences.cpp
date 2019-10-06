@@ -5234,9 +5234,14 @@ static void InitPref_uint32_t(const char* aName, uint32_t aDefaultValue) {
 static void InitPref_float(const char* aName, float aDefaultValue) {
   MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
-  // Convert the value in a locale-independent way.
+  // Convert the value in a locale-independent way, including a trailing ".0"
+  // if necessary to distinguish floating-point from integer prefs when viewing
+  // them in about:config.
   nsAutoCString defaultValue;
   defaultValue.AppendFloat(aDefaultValue);
+  if (!defaultValue.Contains('.') && !defaultValue.Contains('e')) {
+    defaultValue.AppendLiteral(".0");
+  }
   value.mStringVal = defaultValue.get();
   pref_SetPref(aName, PrefType::String, PrefValueKind::Default, value,
                /* isSticky */ false,
