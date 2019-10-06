@@ -140,7 +140,6 @@
 }
 
 #urlbar.megabar > #urlbar-background {
-  content: "";
   display: block;
   position: absolute;
   top: 0;
