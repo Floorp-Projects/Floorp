@@ -61,7 +61,7 @@ coverity:
               path: /builds/worker/coverity.json
 
 coverity-full-analysis:
-    description: Run Coverity based static-analysis on on the entire Gecko repo
+    description: Run Coverity based static-analysis on the entire Gecko repo
     treeherder:
         symbol: Static-Analysis(coverity-full-analysis)
     worker-type:
