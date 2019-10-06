@@ -253,7 +253,6 @@
 | [mozilla.components.browser.engine.gecko.glean.GeckoAdapter](../mozilla.components.browser.engine.gecko.glean/-gecko-adapter/index.md) | This implements a [RuntimeTelemetry.Delegate](#) that dispatches Gecko runtime telemetry to the Glean SDK. |
 | [mozilla.components.browser.engine.gecko.prompt.GeckoAuthOptions](../mozilla.components.browser.engine.gecko.prompt/-gecko-auth-options.md) |  |
 | [mozilla.components.browser.engine.gecko.prompt.GeckoChoice](../mozilla.components.browser.engine.gecko.prompt/-gecko-choice.md) |  |
-| [mozilla.components.lib.crash.service.GeckoCrashReporter](../mozilla.components.lib.crash.service/-gecko-crash-reporter.md) |  |
 | [mozilla.components.browser.engine.gecko.GeckoEngine](../mozilla.components.browser.engine.gecko/-gecko-engine/index.md) | Gecko-based implementation of Engine interface. |
 | [mozilla.components.browser.engine.gecko.GeckoEngineSession](../mozilla.components.browser.engine.gecko/-gecko-engine-session/index.md) | Gecko-based EngineSession implementation. |
 | [mozilla.components.browser.engine.gecko.GeckoEngineSessionState](../mozilla.components.browser.engine.gecko/-gecko-engine-session-state/index.md) |  |
