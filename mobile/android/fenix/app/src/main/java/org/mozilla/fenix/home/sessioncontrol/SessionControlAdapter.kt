@@ -45,7 +45,8 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
         // Tell the adapter exactly what values have changed so it only has to draw those
         override fun getChangePayload(newItem: AdapterItem): Any? {
             (newItem as TabItem).let {
-                val shouldUpdateUrl = newItem.tab.url != this.tab.url
+                val shouldUpdateFavicon =
+                    newItem.tab.url != this.tab.url || newItem.tab.icon != this.tab.icon
                 val shouldUpdateHostname = newItem.tab.hostname != this.tab.hostname
                 val shouldUpdateTitle = newItem.tab.title != this.tab.title
                 val shouldUpdateSelected = newItem.tab.selected != this.tab.selected
@@ -53,7 +54,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
 
                 return AdapterItemDiffCallback.TabChangePayload(
                     tab = newItem.tab,
-                    shouldUpdateUrl = shouldUpdateUrl,
+                    shouldUpdateFavicon = shouldUpdateFavicon,
                     shouldUpdateHostname = shouldUpdateHostname,
                     shouldUpdateTitle = shouldUpdateTitle,
                     shouldUpdateSelected = shouldUpdateSelected,
@@ -129,7 +130,7 @@ class AdapterItemDiffCallback : DiffUtil.ItemCallback<AdapterItem>() {
 
     data class TabChangePayload(
         val tab: Tab,
-        val shouldUpdateUrl: Boolean,
+        val shouldUpdateFavicon: Boolean,
         val shouldUpdateHostname: Boolean,
         val shouldUpdateTitle: Boolean,
         val shouldUpdateSelected: Boolean,
@@ -220,7 +221,9 @@ class SessionControlAdapter(
 
             if (it.shouldUpdateHostname) { holder.updateHostname(it.tab.hostname) }
             if (it.shouldUpdateTitle) { holder.updateTitle(it.tab.title) }
-            if (it.shouldUpdateUrl) { holder.updateFavIcon(it.tab.url, it.tab.sessionId) }
+            if (it.shouldUpdateFavicon) {
+                holder.updateFavIcon(it.tab.url, it.tab.icon)
+            }
             if (it.shouldUpdateSelected) { holder.updateSelected(it.tab.selected ?: false) }
             if (it.shouldUpdateMediaState) {
                 holder.updatePlayPauseButton(it.tab.mediaState ?: MediaState.None)

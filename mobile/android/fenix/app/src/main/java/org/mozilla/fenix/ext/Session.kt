@@ -16,6 +16,7 @@ fun Session.toTab(context: Context, selected: Boolean? = null, mediaState: Media
         this.url.urlToTrimmedHost(context),
         this.title,
         selected,
-        mediaState
+        mediaState,
+        this.icon
     )
 }

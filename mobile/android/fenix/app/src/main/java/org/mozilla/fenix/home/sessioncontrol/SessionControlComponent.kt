@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -50,7 +51,8 @@ data class Tab(
     val hostname: String,
     val title: String,
     val selected: Boolean? = null,
-    var mediaState: MediaState? = null
+    var mediaState: MediaState? = null,
+    val icon: Bitmap? = null
 )
 
 fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
