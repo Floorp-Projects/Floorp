@@ -213,7 +213,10 @@ struct MOZ_STACK_CLASS DebuggerScript::CallData {
   RootedScript script;
 
   CallData(JSContext* cx, const CallArgs& args, HandleDebuggerScript obj)
-      : cx(cx), args(args), obj(obj), referent(cx, obj->getReferent()),
+      : cx(cx),
+        args(args),
+        obj(obj),
+        referent(cx, obj->getReferent()),
         script(cx) {}
 
   MOZ_MUST_USE bool ensureScriptMaybeLazy() {
@@ -283,7 +286,8 @@ struct MOZ_STACK_CLASS DebuggerScript::CallData {
 
 template <DebuggerScript::CallData::Method MyMethod>
 /* static */
-bool DebuggerScript::CallData::ToNative(JSContext* cx, unsigned argc, Value* vp) {
+bool DebuggerScript::CallData::ToNative(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedDebuggerScript obj(cx, DebuggerScript::check(cx, args.thisv()));
@@ -2462,7 +2466,7 @@ bool DebuggerScript::construct(JSContext* cx, unsigned argc, Value* vp) {
 const JSPropertySpec DebuggerScript::properties_[] = {
     JS_DEBUG_PSG("isGeneratorFunction", getIsGeneratorFunction),
     JS_DEBUG_PSG("isAsyncFunction", getIsAsyncFunction),
-    JS_DEBUG_PSG("isFunction",  getIsFunction),
+    JS_DEBUG_PSG("isFunction", getIsFunction),
     JS_DEBUG_PSG("isModule", getIsModule),
     JS_DEBUG_PSG("displayName", getDisplayName),
     JS_DEBUG_PSG("url", getUrl),
@@ -2480,7 +2484,8 @@ const JSPropertySpec DebuggerScript::properties_[] = {
 const JSFunctionSpec DebuggerScript::methods_[] = {
     JS_DEBUG_FN("getChildScripts", getChildScripts, 0),
     JS_DEBUG_FN("getPossibleBreakpoints", getPossibleBreakpoints, 0),
-    JS_DEBUG_FN("getPossibleBreakpointOffsets", getPossibleBreakpointOffsets, 0),
+    JS_DEBUG_FN("getPossibleBreakpointOffsets", getPossibleBreakpointOffsets,
+                0),
     JS_DEBUG_FN("setBreakpoint", setBreakpoint, 2),
     JS_DEBUG_FN("getBreakpoints", getBreakpoints, 1),
     JS_DEBUG_FN("clearBreakpoint", clearBreakpoint, 1),
@@ -2488,8 +2493,8 @@ const JSFunctionSpec DebuggerScript::methods_[] = {
     JS_DEBUG_FN("isInCatchScope", isInCatchScope, 1),
     JS_DEBUG_FN("getOffsetMetadata", getOffsetMetadata, 1),
     JS_DEBUG_FN("getOffsetsCoverage", getOffsetsCoverage, 0),
-    JS_DEBUG_FN("getSuccessorOffsets",
-                getSuccessorOrPredecessorOffsets<true>, 1),
+    JS_DEBUG_FN("getSuccessorOffsets", getSuccessorOrPredecessorOffsets<true>,
+                1),
     JS_DEBUG_FN("getPredecessorOffsets",
                 getSuccessorOrPredecessorOffsets<false>, 1),
     JS_DEBUG_FN("getEffectfulOffsets", getEffectfulOffsets, 1),

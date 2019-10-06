@@ -2372,8 +2372,9 @@ void nsPresContext::NotifyContentfulPaint() {
             Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
 #if defined(MOZ_WIDGET_ANDROID)
         (new AsyncEventDispatcher(mDocument,
-            NS_LITERAL_STRING("MozFirstContentfulPaint"), CanBubble::eYes,
-            ChromeOnlyDispatch::eYes))->PostDOMEvent();
+                                  NS_LITERAL_STRING("MozFirstContentfulPaint"),
+                                  CanBubble::eYes, ChromeOnlyDispatch::eYes))
+            ->PostDOMEvent();
 #endif
       }
     }

@@ -125,11 +125,10 @@ static mozilla::LazyLogModule gSriPRLog("SRI");
   PR_END_MACRO
 
 // And some convenience strings...
-static const char* const gStateStrings[] =
-  {"Unknown", "NeedsParser", "Pending", "Loading", "Complete"};
+static const char* const gStateStrings[] = {"Unknown", "NeedsParser", "Pending",
+                                            "Loading", "Complete"};
 
 namespace mozilla {
-
 
 class SheetLoadDataHashKey : public nsURIHashKey {
  public:
@@ -463,7 +462,6 @@ struct Loader::Sheets {
 
   nsRefPtrHashtable<nsStringHashKey, StyleSheet> mInlineSheets;
 
-
   RefPtr<StyleSheet> LookupInline(const nsAString&);
 
   // A cache hit or miss. It is a miss if the `StyleSheet` is null.
@@ -530,7 +528,8 @@ auto Loader::Sheets::Lookup(SheetLoadDataHashKey& aKey, bool aSyncLoad)
             sheet->ParsingMode() == aKey.ParsingMode()) {
           return MakeTuple(CloneSheet(*sheet), SheetState::Complete);
         }
-        LOG(("    Not cloning due to forced unique inner or mismatched "
+        LOG(
+            ("    Not cloning due to forced unique inner or mismatched "
              "parsing mode"));
       }
     }
@@ -600,7 +599,8 @@ size_t Loader::Sheets::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     // If the sheet has a parent, then its parent will report it so we don't
     // have to worry about it here.
     const StyleSheet* sheet = iter.UserData();
-    MOZ_ASSERT(!sheet->GetParentSheet(), "How did an @import rule end up here?");
+    MOZ_ASSERT(!sheet->GetParentSheet(),
+               "How did an @import rule end up here?");
     if (!sheet->GetOwnerNode()) {
       n += sheet->SizeOfIncludingThis(aMallocSizeOf);
     }
@@ -1109,7 +1109,8 @@ Tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
                            aCORSMode, aParsingMode);
   auto cacheResult = mSheets->Lookup(key, aSyncLoad);
   if (Get<0>(cacheResult)) {
-    LOG(("  Hit cache with state: %s", gStateStrings[size_t(Get<1>(cacheResult))]));
+    LOG(("  Hit cache with state: %s",
+         gStateStrings[size_t(Get<1>(cacheResult))]));
     return cacheResult;
   }
 
@@ -1172,7 +1173,7 @@ Loader::MediaMatched Loader::PrepareSheet(
 
   aSheet.SetTitle(aTitle);
   aSheet.SetEnabled(aIsAlternate == IsAlternate::No ||
-                     aIsExplicitlyEnabled == IsExplicitlyEnabled::Yes);
+                    aIsExplicitlyEnabled == IsExplicitlyEnabled::Yes);
   return MediaListMatches(mediaList, mDocument);
 }
 
@@ -1321,7 +1322,7 @@ nsresult Loader::LoadSheet(SheetLoadData& aLoadData, SheetState aSheetState,
     LOG(("  Synchronous load"));
     MOZ_ASSERT(!aLoadData.mObserver, "Observer for a sync load?");
     MOZ_ASSERT(aSheetState == SheetState::NeedsParser,
-                 "Sync loads can't reuse existing async loads");
+               "Sync loads can't reuse existing async loads");
 
     // Create a StreamLoader instance to which we will feed
     // the data from the sync load.  Do this before creating the
@@ -1731,8 +1732,7 @@ void Loader::SheetComplete(SheetLoadData& aLoadData, nsresult aStatus) {
     }
   }
 
-  if (mSheets &&
-      mSheets->mLoadingDatas.Count() == 0 &&
+  if (mSheets && mSheets->mLoadingDatas.Count() == 0 &&
       mSheets->mPendingDatas.Count() > 0) {
     LOG(("  No more loading sheets; starting deferred loads"));
     StartDeferredLoads();

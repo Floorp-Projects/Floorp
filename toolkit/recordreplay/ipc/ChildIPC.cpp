@@ -564,9 +564,8 @@ bool Repaint(nsAString& aData) {
 
   nsString options;
   nsresult rv = encoder->InitFromData(
-      (const uint8_t*)gDrawTargetBuffer, stride * gPaintHeight,
-      gPaintWidth, gPaintHeight, stride,
-      imgIEncoder::INPUT_FORMAT_HOSTARGB, options);
+      (const uint8_t*)gDrawTargetBuffer, stride * gPaintHeight, gPaintWidth,
+      gPaintHeight, stride, imgIEncoder::INPUT_FORMAT_HOSTARGB, options);
   if (NS_FAILED(rv)) {
     return false;
   }

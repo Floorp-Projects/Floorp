@@ -139,11 +139,12 @@ struct MOZ_STACK_CLASS DebuggerEnvironment::CallData {
 
 template <DebuggerEnvironment::CallData::Method MyMethod>
 /* static */
-bool DebuggerEnvironment::CallData::ToNative(JSContext* cx, unsigned argc, Value* vp) {
+bool DebuggerEnvironment::CallData::ToNative(JSContext* cx, unsigned argc,
+                                             Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  RootedDebuggerEnvironment environment(cx,
-      DebuggerEnvironment_checkThis(cx, args));
+  RootedDebuggerEnvironment environment(
+      cx, DebuggerEnvironment_checkThis(cx, args));
   if (!environment) {
     return false;
   }
@@ -381,11 +382,9 @@ const JSPropertySpec DebuggerEnvironment::properties_[] = {
     JS_PS_END};
 
 const JSFunctionSpec DebuggerEnvironment::methods_[] = {
-    JS_DEBUG_FN("names", namesMethod, 0),
-    JS_DEBUG_FN("find", findMethod, 1),
+    JS_DEBUG_FN("names", namesMethod, 0), JS_DEBUG_FN("find", findMethod, 1),
     JS_DEBUG_FN("getVariable", getVariableMethod, 1),
-    JS_DEBUG_FN("setVariable", setVariableMethod, 2),
-    JS_FS_END};
+    JS_DEBUG_FN("setVariable", setVariableMethod, 2), JS_FS_END};
 
 /* static */
 NativeObject* DebuggerEnvironment::initClass(JSContext* cx,

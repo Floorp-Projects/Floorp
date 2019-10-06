@@ -203,7 +203,7 @@ bool MoveResolver::resolve() {
 
   if (splitDoubles) {
     for (auto iter = pending_.begin(); iter != pending_.end(); ++iter) {
-      PendingMove *pm = *iter;
+      PendingMove* pm = *iter;
 
       if (!MoveIsDouble(pm->from()) && !MoveIsDouble(pm->to())) {
         continue;

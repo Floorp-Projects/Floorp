@@ -201,9 +201,7 @@ size_t NumSnapshots() {
   return gRewindInfo ? gRewindInfo->mSnapshots.length() : 0;
 }
 
-size_t GetLastCheckpoint() {
-  return gLastCheckpoint;
-}
+size_t GetLastCheckpoint() { return gLastCheckpoint; }
 
 static bool gMainThreadShouldPause = false;
 

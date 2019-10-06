@@ -20,7 +20,8 @@ static nsTArray<nsString> Scan(const char* aCssCode) {
 
 TEST(ImportScanner, Simple)
 {
-  auto urls = Scan("/* Something something */ "
+  auto urls = Scan(
+      "/* Something something */ "
       "@charset \"utf-8\";"
       "@import url(bar);"
       "@import uRL( baz );"
@@ -34,7 +35,8 @@ TEST(ImportScanner, Simple)
 
 TEST(ImportScanner, UrlWithQuotes)
 {
-  auto urls = Scan("/* Something something */ "
+  auto urls = Scan(
+      "/* Something something */ "
       "@import url(\"bar\");"
       "@import\tuRL( \"baz\" );"
       "@imPort\turL( 'bazz' );"

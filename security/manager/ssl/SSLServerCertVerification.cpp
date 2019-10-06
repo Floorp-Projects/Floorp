@@ -1605,8 +1605,8 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
 
 // Make a cert chain from an array of ders.
 SECStatus MakeCertChain(nsTArray<nsTArray<uint8_t>>& inPeerCertChain,
-                        UniqueCERTCertificate &outCert,
-                        UniqueCERTCertList &outCertChain) {
+                        UniqueCERTCertificate& outCert,
+                        UniqueCERTCertList& outCertChain) {
   for (auto& certDer : inPeerCertChain) {
     if (certDer.Length() > UINT32_MAX) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
@@ -1614,8 +1614,7 @@ SECStatus MakeCertChain(nsTArray<nsTArray<uint8_t>>& inPeerCertChain,
       return SECFailure;
     }
     SECItem der = {SECItemType::siBuffer, certDer.Elements(),
-                   (uint32_t)certDer.Length()
-    };
+                   (uint32_t)certDer.Length()};
 
     if (!outCert) {
       outCert.reset(CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &der,

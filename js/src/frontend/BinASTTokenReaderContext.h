@@ -728,9 +728,7 @@ class MultiLookupHuffmanTable {
 /// A Huffman table suitable for max bit lengths in [8, 14]
 template <typename T>
 using TwoLookupsHuffmanTable = MultiLookupHuffmanTable<
-    T,
-    SingleLookupHuffmanTable</* external index */ size_t>,
-    6>;
+    T, SingleLookupHuffmanTable</* external index */ size_t>, 6>;
 
 /// A Huffman table suitable for max bit lengths in [15, 20]
 template <typename T>

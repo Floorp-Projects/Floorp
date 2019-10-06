@@ -18,8 +18,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gfx {
 
-InlineTranslator::InlineTranslator()
-    : mFontContext(nullptr) {}
+InlineTranslator::InlineTranslator() : mFontContext(nullptr) {}
 
 InlineTranslator::InlineTranslator(DrawTarget* aDT, void* aFontContext)
     : mBaseDT(aDT), mFontContext(aFontContext) {}
