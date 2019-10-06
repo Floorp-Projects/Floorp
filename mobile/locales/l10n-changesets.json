@@ -27,13 +27,13 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "7106c388779b"
+        "revision": "7ba89667233d"
     },
     "bg": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "acd3650fbbf3"
+        "revision": "d093e631c1fa"
     },
     "bn": {
         "platforms": [
@@ -87,13 +87,13 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "8fcd45a2a4bf"
+        "revision": "9f0a9e2cc0b2"
     },
     "dsb": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "13647ad4eaee"
+        "revision": "047426dcbe8d"
     },
     "el": {
         "platforms": [
@@ -159,7 +159,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "8db7d50e3a39"
+        "revision": "71c0b32f3895"
     },
     "ff": {
         "platforms": [
@@ -177,7 +177,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "c325aa184504"
+        "revision": "de397286d716"
     },
     "fy-NL": {
         "platforms": [
@@ -231,19 +231,19 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ab21a0bbead8"
+        "revision": "0e509196d495"
     },
     "hsb": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "87663ea34812"
+        "revision": "cdafaf3f4629"
     },
     "hu": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "def23bbbf9a9"
+        "revision": "96a59ea46a68"
     },
     "hy-AM": {
         "platforms": [
@@ -267,13 +267,13 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "0b2bc68e6f08"
+        "revision": "ec51917dacf9"
     },
     "ja": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "9e1b2853ba8a"
+        "revision": "38a2b620bc48"
     },
     "ka": {
         "platforms": [
@@ -285,7 +285,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "4a6520386c6c"
+        "revision": "de53682c76a7"
     },
     "kk": {
         "platforms": [
@@ -321,7 +321,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "9676d6a53602"
+        "revision": "8888b31201df"
     },
     "lv": {
         "platforms": [
@@ -357,7 +357,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ae4e4af465f2"
+        "revision": "ef1398f3c775"
     },
     "ne-NP": {
         "platforms": [
@@ -375,7 +375,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "790143ad71a3"
+        "revision": "00301ca47852"
     },
     "oc": {
         "platforms": [
@@ -387,7 +387,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "7cfe957c780e"
+        "revision": "7b3f15fefeac"
     },
     "pl": {
         "platforms": [
@@ -429,7 +429,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "3f224e820cf3"
+        "revision": "0138dae5d4c9"
     },
     "sl": {
         "platforms": [
@@ -447,7 +447,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "13cb024895f7"
+        "revision": "d5691549eabc"
     },
     "sr": {
         "platforms": [
@@ -477,13 +477,13 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ed11aa40dd51"
+        "revision": "7b378ecb1d9f"
     },
     "tr": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "683800461d89"
+        "revision": "fb9773879982"
     },
     "trs": {
         "platforms": [
@@ -507,7 +507,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "006a6cc569e1"
+        "revision": "4df3b2837c4c"
     },
     "vi": {
         "platforms": [
