@@ -6,6 +6,7 @@ package org.mozilla.fenix.home
 
 import android.animation.Animator
 import android.content.DialogInterface
+import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -108,6 +109,10 @@ class HomeFragment : Fragment() {
 
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
+            if (deleteAllSessionsJob == null) emitSessionChanges()
+        }
+
+        override fun onIconChanged(session: Session, icon: Bitmap?) {
             if (deleteAllSessionsJob == null) emitSessionChanges()
         }
     }
