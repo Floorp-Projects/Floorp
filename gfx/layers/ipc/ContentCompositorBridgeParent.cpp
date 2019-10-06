@@ -635,8 +635,7 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvInitPCanvasParent(
 
 mozilla::ipc::IPCResult
 ContentCompositorBridgeParent::RecvReleasePCanvasParent() {
-  MOZ_RELEASE_ASSERT(mCanvasParent,
-                     "Canvas Parent hasn't been created.");
+  MOZ_RELEASE_ASSERT(mCanvasParent, "Canvas Parent hasn't been created.");
 
   mCanvasParent = nullptr;
   return IPC_OK();

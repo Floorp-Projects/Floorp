@@ -387,7 +387,8 @@ void InitMemorySubsystem() {
 #endif
 #ifdef RLIMIT_AS
     rlimit as_limit;
-    if (getrlimit(RLIMIT_AS, &as_limit) == 0 && as_limit.rlim_max != RLIM_INFINITY) {
+    if (getrlimit(RLIMIT_AS, &as_limit) == 0 &&
+        as_limit.rlim_max != RLIM_INFINITY) {
       virtualMemoryLimit = as_limit.rlim_max;
     }
 #endif

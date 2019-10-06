@@ -429,8 +429,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
 
 STATIC_PRECONDITION_ASSUME(ubound(args.argv_) >= argc)
 MOZ_ALWAYS_INLINE bool CallJSNative(JSContext* cx, Native native,
-                                    CallReason reason,
-                                    const CallArgs& args) {
+                                    CallReason reason, const CallArgs& args) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread(cx);
   AutoTraceLog traceLog(logger, TraceLogger_Call);
 
@@ -502,8 +501,7 @@ MOZ_ALWAYS_INLINE bool CallJSNativeConstructor(JSContext* cx, Native native,
  *       this step already!
  */
 bool js::InternalCallOrConstruct(JSContext* cx, const CallArgs& args,
-                                 MaybeConstruct construct,
-                                 CallReason reason) {
+                                 MaybeConstruct construct, CallReason reason) {
   MOZ_ASSERT(args.length() <= ARGS_LENGTH_MAX);
   MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
 

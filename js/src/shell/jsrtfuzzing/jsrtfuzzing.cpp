@@ -8,7 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "FuzzerDefs.h"
 #include "FuzzingInterface.h"
@@ -17,7 +17,7 @@
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/Equality.h"
-#include "js/SourceText.h"                // JS::Source{Ownership,Text}
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 
 #include "vm/Interpreter.h"
 #include "vm/TypedArrayObject.h"

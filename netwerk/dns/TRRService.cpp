@@ -327,8 +327,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
     if (NS_SUCCEEDED(rv)) {
       nsAutoCString host;
       uri->GetHost(host);
-      LOG(("TRRService::ReadPrefs captive portal URL:[%s]\n",
-           host.get()));
+      LOG(("TRRService::ReadPrefs captive portal URL:[%s]\n", host.get()));
       mExcludedDomains.PutEntry(host);
     }
   }

@@ -100,12 +100,12 @@ Maybe<IntRect> ContainerLayerMLGPU::FindVisibleBounds(
   ContainerLayer* container = aLayer->AsContainerLayer();
   if (container) {
     if (container->UseIntermediateSurface()) {
-      ContainerLayerMLGPU* c = container->AsHostLayer()
-          ->AsLayerMLGPU()
-          ->AsContainerLayerMLGPU();
+      ContainerLayerMLGPU* c =
+          container->AsHostLayer()->AsLayerMLGPU()->AsContainerLayerMLGPU();
       if (!c) {
-        gfxCriticalError() << "not container: " << container->AsHostLayer()
-          ->AsLayerMLGPU()->GetType();
+        gfxCriticalError()
+            << "not container: "
+            << container->AsHostLayer()->AsLayerMLGPU()->GetType();
       }
       MOZ_RELEASE_ASSERT(c);
       c->ComputeIntermediateSurfaceBounds();

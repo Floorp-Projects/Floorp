@@ -452,7 +452,7 @@ struct MovableCellHasher<ObjectGroupRealm::NewEntry> {
                                                lookup.associated);
   }
 };
-} // namespace js
+}  // namespace js
 
 class ObjectGroupRealm::NewTable
     : public JS::WeakCache<js::GCHashSet<NewEntry, MovableCellHasher<NewEntry>,
@@ -1402,7 +1402,7 @@ struct MovableCellHasher<ObjectGroupRealm::AllocationSiteKey> {
                                                b.proto.unbarrieredGet());
   }
 };
-} // namespace js
+}  // namespace js
 
 class ObjectGroupRealm::AllocationSiteTable
     : public JS::WeakCache<js::GCHashMap<

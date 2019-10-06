@@ -159,7 +159,7 @@ void HTMLListBulletAccessible::AppendTextTo(nsAString& aText,
 bool HTMLListBulletAccessible::IsInside() const {
   if (nsIFrame* frame = mContent->GetPrimaryFrame()) {
     return frame->StyleList()->mListStylePosition ==
-        NS_STYLE_LIST_STYLE_POSITION_INSIDE;
+           NS_STYLE_LIST_STYLE_POSITION_INSIDE;
   }
   return false;
 }

@@ -13,7 +13,7 @@
 
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
-#include "builtin/streams/ReadableStream.h"           // js::ReadableStream
+#include "builtin/streams/ReadableStream.h"  // js::ReadableStream
 #include "builtin/streams/ReadableStreamReader.h"  // js::ReadableStream{,Default}Reader
 #include "js/CallArgs.h"                           // JS::CallArgs{,FromVp}
 #include "js/Class.h"                              // JSClass, JS_NULL_CLASS_OPS

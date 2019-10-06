@@ -33,6 +33,6 @@ class ThreadId {
   static ThreadId ThisThreadId();
 };
 
-} // namespace js
+}  // namespace js
 
 #endif  // threading_ThreadId_h

@@ -467,8 +467,7 @@ class nsWindow::NPZCSupport final
       }
 
       uiThread->Dispatch(NS_NewRunnableFunction(
-          "NPZCSupport::OnDetach",
-          [npzc, disposer = std::move(disposer)] {
+          "NPZCSupport::OnDetach", [npzc, disposer = std::move(disposer)] {
             npzc->SetAttached(false);
             disposer->Run();
           }));

@@ -29,7 +29,7 @@
 #include "vm/ObjectOperations.h"  // js::GetProperty
 #include "vm/Realm.h"             // JS::Realm
 
-#include "vm/Compartment-inl.h"  // js::UnwrapAndTypeCheckThis
+#include "vm/Compartment-inl.h"   // js::UnwrapAndTypeCheckThis
 #include "vm/JSObject-inl.h"      // js::NewBuiltinClassInstance
 #include "vm/NativeObject-inl.h"  // js::ThrowIfNotConstructing
 

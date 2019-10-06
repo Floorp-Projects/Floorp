@@ -1259,10 +1259,10 @@ nsresult nsNSSComponent::setEnabledTLSVersions() {
   uint32_t maxFromPrefs = Preferences::GetUint("security.tls.version.max",
                                                PSM_DEFAULT_MAX_TLS_VERSION);
 
-  // This override should be removed when PSM_DEFAULT_MIN_TLS_VERSION is increased
-  // to 3 in March 2020, see bug 1579285.
-  bool enableDeprecated = Preferences::GetBool("security.tls.version.enable-deprecated",
-                                              false);
+  // This override should be removed when PSM_DEFAULT_MIN_TLS_VERSION is
+  // increased to 3 in March 2020, see bug 1579285.
+  bool enableDeprecated =
+      Preferences::GetBool("security.tls.version.enable-deprecated", false);
   if (enableDeprecated) {
     minFromPrefs = std::min(minFromPrefs, PSM_DEFAULT_MIN_TLS_VERSION);
   }

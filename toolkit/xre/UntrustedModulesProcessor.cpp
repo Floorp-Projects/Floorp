@@ -374,7 +374,7 @@ void UntrustedModulesProcessor::ProcessModuleLoadQueue(const char* aSource) {
     }
 
     glue::EnhancedModuleLoadInfo::BacktraceType backtrace =
-      std::move(entry.mNtLoadInfo.mBacktrace);
+        std::move(entry.mNtLoadInfo.mBacktrace);
     ProcessedModuleLoadEvent event(std::move(entry), std::move(module));
 
     if (!event) {

@@ -254,8 +254,8 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FuncHookCrossProcess final {
  private:
   bool CopyStubToChildProcess(FuncPtrT aStub, HANDLE aProcess) {
     SIZE_T bytesWritten;
-    return ::WriteProcessMemory(aProcess, &mOrigFunc, &aStub,
-                                sizeof(FuncPtrT), &bytesWritten) &&
+    return ::WriteProcessMemory(aProcess, &mOrigFunc, &aStub, sizeof(FuncPtrT),
+                                &bytesWritten) &&
            bytesWritten == sizeof(FuncPtrT);
   }
 

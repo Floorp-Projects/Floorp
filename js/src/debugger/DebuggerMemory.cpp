@@ -137,7 +137,8 @@ struct MOZ_STACK_CLASS DebuggerMemory::CallData {
 
 template <DebuggerMemory::CallData::Method MyMethod>
 /* static */
-bool DebuggerMemory::CallData::ToNative(JSContext* cx, unsigned argc, Value* vp) {
+bool DebuggerMemory::CallData::ToNative(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   Rooted<DebuggerMemory*> memory(cx, DebuggerMemory::checkThis(cx, args));

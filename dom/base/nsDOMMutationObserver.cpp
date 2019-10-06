@@ -621,7 +621,8 @@ void nsDOMMutationObserver::Observe(
   if (!(childList || attributes || characterData || animations ||
         nativeAnonymousChildList)) {
     aRv.ThrowTypeError(
-        u"One of 'childList', 'attributes', 'characterData' must not be false.");
+        u"One of 'childList', 'attributes', 'characterData' must not be "
+        u"false.");
     return;
   }
 

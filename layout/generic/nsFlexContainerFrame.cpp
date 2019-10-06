@@ -2125,9 +2125,9 @@ nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(
   nscoord marginBStartToBaseline =
       ResolvedAscent(aUseFirstLineBaseline) + mMargin.Side(itemBlockStartSide);
 
-  return (physSideMeasuringFrom == itemBlockStartSide) ?
-      marginBStartToBaseline :
-      GetOuterCrossSize(crossAxis) - marginBStartToBaseline;
+  return (physSideMeasuringFrom == itemBlockStartSide)
+             ? marginBStartToBaseline
+             : GetOuterCrossSize(crossAxis) - marginBStartToBaseline;
 }
 
 bool FlexItem::IsCrossSizeAuto() const {

@@ -109,7 +109,6 @@ static int FuzzingInitNetworkHttpProxyHttp2(int* argc, char*** argv) {
   // This is http over an https proxy
   proxyType = "https";
 
-
   return FuzzingInitNetworkHttp(argc, argv);
 }
 
@@ -300,17 +299,17 @@ MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp, FuzzingRunNetworkHttp,
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2, FuzzingRunNetworkHttp,
                           NetworkHttp2);
 
-MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2ProxyHttp2, FuzzingRunNetworkHttp,
-                          NetworkHttp2ProxyHttp2);
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2ProxyHttp2,
+                          FuzzingRunNetworkHttp, NetworkHttp2ProxyHttp2);
 
-MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttpProxyHttp2, FuzzingRunNetworkHttp,
-                          NetworkHttpProxyHttp2);
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttpProxyHttp2,
+                          FuzzingRunNetworkHttp, NetworkHttpProxyHttp2);
 
-MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttpProxyPlain, FuzzingRunNetworkHttp,
-                          NetworkHttpProxyPlain);
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttpProxyPlain,
+                          FuzzingRunNetworkHttp, NetworkHttpProxyPlain);
 
-MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2ProxyPlain, FuzzingRunNetworkHttp,
-                          NetworkHttp2ProxyPlain);
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2ProxyPlain,
+                          FuzzingRunNetworkHttp, NetworkHttp2ProxyPlain);
 
 }  // namespace net
 }  // namespace mozilla

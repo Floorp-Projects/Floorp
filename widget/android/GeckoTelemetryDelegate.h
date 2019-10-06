@@ -36,8 +36,7 @@ class GeckoTelemetryDelegate final
       : mProxy(aProxy) {}
 
  private:
-  void DispatchHistogram(bool aIsCategorical,
-                         const nsCString& aName,
+  void DispatchHistogram(bool aIsCategorical, const nsCString& aName,
                          const nsTArray<uint32_t>& aSamples) {
     if (!mozilla::jni::IsAvailable() || !mProxy || aSamples.Length() < 1) {
       return;
@@ -49,8 +48,7 @@ class GeckoTelemetryDelegate final
     }
 
     mProxy->DispatchHistogram(
-        aIsCategorical,
-        aName,
+        aIsCategorical, aName,
         mozilla::jni::LongArray::New(samples->Elements(), samples->Length()));
   }
 

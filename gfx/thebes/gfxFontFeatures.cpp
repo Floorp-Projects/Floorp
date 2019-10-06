@@ -36,8 +36,7 @@ nsTArray<uint32_t>* gfxFontFeatureValueSet::AppendFeatureValueHashEntry(
 
 bool gfxFontFeatureValueSet::FeatureValueHashEntry::KeyEquals(
     const KeyTypePointer aKey) const {
-  return aKey->mPropVal == mKey.mPropVal &&
-         aKey->mName == mKey.mName &&
+  return aKey->mPropVal == mKey.mPropVal && aKey->mName == mKey.mName &&
          aKey->mFamily.Equals(mKey.mFamily);
 }
 

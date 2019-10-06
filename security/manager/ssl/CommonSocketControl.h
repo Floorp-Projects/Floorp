@@ -13,8 +13,6 @@
 class CommonSocketControl : public mozilla::psm::TransportSecurityInfo,
                             public nsISSLSocketControl {
  public:
-
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISSLSOCKETCONTROL
 

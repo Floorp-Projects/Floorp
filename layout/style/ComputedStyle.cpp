@@ -56,13 +56,14 @@ static bool ContainingBlockMayHaveChanged(const ComputedStyle& aOldStyle,
   auto* newDisp = aNewStyle.StyleDisplay();
 
   if (oldDisp->IsAbsPosContainingBlockForNonSVGTextFrames() !=
-        newDisp->IsAbsPosContainingBlockForNonSVGTextFrames()) {
+      newDisp->IsAbsPosContainingBlockForNonSVGTextFrames()) {
     return true;
   }
 
   bool fixedCB =
       oldDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aOldStyle);
-  if (fixedCB != newDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aNewStyle)) {
+  if (fixedCB !=
+      newDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aNewStyle)) {
     return true;
   }
   // If we were both before and after a fixed-pos containing-block that means
@@ -78,12 +79,13 @@ static bool ContainingBlockMayHaveChanged(const ComputedStyle& aOldStyle,
   // few frame types support transforms but not contain: layout/paint (e.g.,
   // table rows and row groups, many SVG frames).
   if (oldDisp->IsFixedPosContainingBlockForTransformSupportingFrames() !=
-        newDisp->IsFixedPosContainingBlockForTransformSupportingFrames()) {
+      newDisp->IsFixedPosContainingBlockForTransformSupportingFrames()) {
     return true;
   }
-  if (oldDisp->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() !=
-        newDisp
-        ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames()) {
+  if (oldDisp
+          ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() !=
+      newDisp
+          ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames()) {
     return true;
   }
   return false;
