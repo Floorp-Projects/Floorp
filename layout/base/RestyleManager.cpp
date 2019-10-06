@@ -3205,10 +3205,6 @@ void RestyleManager::ProcessAllPendingAttributeAndStateInvalidations() {
   ClearSnapshots();
 }
 
-bool RestyleManager::HasPendingRestyleAncestor(Element* aElement) const {
-  return Servo_HasPendingRestyleAncestor(aElement);
-}
-
 void RestyleManager::UpdateOnlyAnimationStyles() {
   bool doCSS = PresContext()->EffectCompositor()->HasPendingStyleUpdates();
   if (!doCSS) {
