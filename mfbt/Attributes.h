@@ -738,10 +738,10 @@
  *   be called by the method that it overrides.
  * MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG: Applies to method declarations.
  *   Callers of the annotated method must return from that function within the
- *   calling block using an explicit `return` statement if the "this" value for the
- *   call is a parameter of the caller.  Only calls to Constructors, references to
- *   local and member variables, and calls to functions or methods marked as
- *   MOZ_MAY_CALL_AFTER_MUST_RETURN may be made after the
+ *   calling block using an explicit `return` statement if the "this" value for
+ * the call is a parameter of the caller.  Only calls to Constructors,
+ * references to local and member variables, and calls to functions or methods
+ * marked as MOZ_MAY_CALL_AFTER_MUST_RETURN may be made after the
  *   MOZ_MUST_RETURN_FROM_CALLER_IF_THIS_IS_ARG call.
  * MOZ_MAY_CALL_AFTER_MUST_RETURN: Applies to function or method declarations.
  *   Calls to these methods may be made in functions after calls a

@@ -313,9 +313,8 @@ void HTMLEditor::PreDestroy(bool aDestroyingFrames) {
     // is destroyed.
     RefPtr<HTMLEditor> self = this;
     nsContentUtils::AddScriptRunner(
-        NS_NewRunnableFunction("HTMLEditor::PreDestroy", [self]() {
-          self->HideAnonymousEditingUIs();
-        }));
+        NS_NewRunnableFunction("HTMLEditor::PreDestroy",
+                               [self]() { self->HideAnonymousEditingUIs(); }));
   } else {
     // PresShell is alive or already gone.
     HideAnonymousEditingUIs();

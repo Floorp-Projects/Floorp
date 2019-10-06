@@ -20,7 +20,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/SyncRunnable.h"
 #ifdef XP_MACOSX
-#include "nsCocoaFeatures.h"
+#  include "nsCocoaFeatures.h"
 #endif
 #include "nsIPropertyBag2.h"
 #include "nsIThreadManager.h"
@@ -80,9 +80,10 @@ static uint32_t GetPaintThreadStackSize() {
   // Workaround bug 1578075 by increasing the stack size of paint threads
   if (nsCocoaFeatures::OnCatalinaOrLater()) {
     static const uint32_t kCatalinaPaintThreadStackSize = 512 * 1024;
-    static_assert(kCatalinaPaintThreadStackSize >= nsIThreadManager::DEFAULT_STACK_SIZE,
-                  "update default stack size of paint "
-                  "workers");
+    static_assert(
+        kCatalinaPaintThreadStackSize >= nsIThreadManager::DEFAULT_STACK_SIZE,
+        "update default stack size of paint "
+        "workers");
     return kCatalinaPaintThreadStackSize;
   }
   return nsIThreadManager::DEFAULT_STACK_SIZE;

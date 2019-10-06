@@ -320,11 +320,12 @@ TEST(Hashtables, DataHashtable_STLIterators)
   // the actual syntactical requirements of those algorithms).
   std::for_each(UniToEntity.cbegin(), UniToEntity.cend(),
                 [](const auto& entry) {});
-  Unused << std::find_if(UniToEntity.cbegin(), UniToEntity.cend(),
-                         [](const auto& entry) { return entry.GetKey() == 42; });
+  Unused << std::find_if(
+      UniToEntity.cbegin(), UniToEntity.cend(),
+      [](const auto& entry) { return entry.GetKey() == 42; });
   Unused << std::accumulate(
-                UniToEntity.cbegin(), UniToEntity.cend(), 0u,
-                [](size_t sum, const auto& entry) { return sum + entry.GetKey(); });
+      UniToEntity.cbegin(), UniToEntity.cend(), 0u,
+      [](size_t sum, const auto& entry) { return sum + entry.GetKey(); });
   Unused << std::any_of(UniToEntity.cbegin(), UniToEntity.cend(),
                         [](const auto& entry) { return entry.GetKey() == 42; });
   Unused << std::max_element(UniToEntity.cbegin(), UniToEntity.cend(),

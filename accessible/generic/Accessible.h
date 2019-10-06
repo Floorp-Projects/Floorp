@@ -1041,7 +1041,7 @@ class Accessible : public nsISupports {
     eKidsMutating = 1 << 6,      // subtree is being mutated
     eIgnoreDOMUIEvent = 1 << 7,  // don't process DOM UI events for a11y events
     eRelocated = 1 << 8,         // accessible was moved in tree
-    eNoKidsFromDOM = 1 << 9,    // accessible doesn't allow children from DOM
+    eNoKidsFromDOM = 1 << 9,     // accessible doesn't allow children from DOM
     eHasTextKids = 1 << 10,      // accessible have a text leaf in children
 
     eLastStateFlag = eHasTextKids

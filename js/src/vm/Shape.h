@@ -655,9 +655,9 @@ class BaseShape : public gc::TenuredCell {
 
  private:
   const JSClass* clasp_; /* Class of referring object. */
-  uint32_t flags;      /* Vector of above flags. */
-  uint32_t slotSpan_;  /* Object slot span for BaseShapes at
-                        * dictionary last properties. */
+  uint32_t flags;        /* Vector of above flags. */
+  uint32_t slotSpan_;    /* Object slot span for BaseShapes at
+                          * dictionary last properties. */
 
   /* For owned BaseShapes, the canonical unowned BaseShape. */
   GCPtrUnownedBaseShape unowned_;

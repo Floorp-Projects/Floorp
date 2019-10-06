@@ -776,7 +776,8 @@ nsresult nsPlainTextSerializer::DoOpenContainer(const nsAtom* aTag) {
           if (NS_SUCCEEDED(rv)) mOLStack[mOLStackIndex - 1] = valueAttrVal;
         }
         // This is what nsBulletFrame does for OLs:
-        mCurrentLine.mIndentation.mHeader.AppendInt(mOLStack[mOLStackIndex - 1]++, 10);
+        mCurrentLine.mIndentation.mHeader.AppendInt(
+            mOLStack[mOLStackIndex - 1]++, 10);
       } else {
         mCurrentLine.mIndentation.mHeader.Append(char16_t('#'));
       }
@@ -1006,7 +1007,8 @@ nsresult nsPlainTextSerializer::DoCloseContainer(const nsAtom* aTag) {
     bool isInCiteBlockquote = PopBool(mIsInCiteBlockquote);
 
     if (isInCiteBlockquote) {
-      NS_ASSERTION(mCurrentLine.mCiteQuoteLevel, "CiteQuote level will be negative!");
+      NS_ASSERTION(mCurrentLine.mCiteQuoteLevel,
+                   "CiteQuote level will be negative!");
       mCurrentLine.mCiteQuoteLevel--;
       mFloatingLines = 0;
       mHasWrittenCiteBlockquote = true;
@@ -1595,17 +1597,16 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
       (mSpanLevel > 0 && mEmptyLines >= 0 && IsQuotedLine(str))) {
     // No intelligent wrapping.
 
-        // This mustn't be mixed with intelligent wrapping without clearing
-        // the mCurrentLine.mContent buffer before!!!
-        NS_ASSERTION(
-            mCurrentLine.mContent.IsEmpty() ||
-                (IsElementPreformatted() && !mPreFormattedMail),
-            "Mixed wrapping data and nonwrapping data on the same line");
-        MOZ_ASSERT(mOutputManager);
+    // This mustn't be mixed with intelligent wrapping without clearing
+    // the mCurrentLine.mContent buffer before!!!
+    NS_ASSERTION(mCurrentLine.mContent.IsEmpty() ||
+                     (IsElementPreformatted() && !mPreFormattedMail),
+                 "Mixed wrapping data and nonwrapping data on the same line");
+    MOZ_ASSERT(mOutputManager);
 
-        if (!mCurrentLine.mContent.IsEmpty()) {
-          mOutputManager->Flush(mCurrentLine);
-        }
+    if (!mCurrentLine.mContent.IsEmpty()) {
+      mOutputManager->Flush(mCurrentLine);
+    }
 
     ConvertToLinesAndOutput(str);
     return;

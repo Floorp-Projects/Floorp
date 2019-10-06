@@ -21,8 +21,7 @@ class DeviceChangeCallback {
 class DeviceChangeNotifier {
  public:
   DeviceChangeNotifier()
-      : mCallbackMutex("mozilla::DeviceChangeCallback::mCallbackMutex") {
-  }
+      : mCallbackMutex("mozilla::DeviceChangeCallback::mCallbackMutex") {}
 
   void NotifyDeviceChange() {
     MutexAutoLock lock(mCallbackMutex);
@@ -44,8 +43,7 @@ class DeviceChangeNotifier {
     return RemoveDeviceChangeCallbackLocked(aCallback);
   }
 
-  int RemoveDeviceChangeCallbackLocked(
-      DeviceChangeCallback* aCallback) {
+  int RemoveDeviceChangeCallbackLocked(DeviceChangeCallback* aCallback) {
     mCallbackMutex.AssertCurrentThreadOwns();
     if (mDeviceChangeCallbackList.IndexOf(aCallback) !=
         mDeviceChangeCallbackList.NoIndex)

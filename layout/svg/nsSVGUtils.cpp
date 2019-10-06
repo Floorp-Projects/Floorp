@@ -927,9 +927,8 @@ gfxRect nsSVGUtils::GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   const nsStyleEffects* effects = aFrame->StyleEffects();
 
-  bool clipApplies =
-      disp->mOverflowX == StyleOverflow::Hidden ||
-      disp->mOverflowY == StyleOverflow::Hidden;
+  bool clipApplies = disp->mOverflowX == StyleOverflow::Hidden ||
+                     disp->mOverflowY == StyleOverflow::Hidden;
 
   if (!clipApplies || effects->mClip.IsAuto()) {
     return gfxRect(aX, aY, aWidth, aHeight);
@@ -939,8 +938,8 @@ gfxRect nsSVGUtils::GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
   nsRect coordClipRect = rect.ToLayoutRect();
   nsIntRect clipPxRect = coordClipRect.ToOutsidePixels(
       aFrame->PresContext()->AppUnitsPerDevPixel());
-  gfxRect clipRect = gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width,
-                             clipPxRect.height);
+  gfxRect clipRect =
+      gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width, clipPxRect.height);
   if (rect.right.IsAuto()) {
     clipRect.width = aWidth - clipRect.X();
   }

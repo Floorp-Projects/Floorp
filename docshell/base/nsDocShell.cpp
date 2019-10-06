@@ -2134,7 +2134,8 @@ void nsDocShell::TriggerParentCheckDocShellIsEmpty() {
   if (RefPtr<nsDocShell> parent = GetInProcessParentDocshell()) {
     parent->DocLoaderIsEmpty(true);
   }
-  if (GetBrowsingContext()->IsContentSubframe() && !GetBrowsingContext()->GetParent()->IsInProcess()) {
+  if (GetBrowsingContext()->IsContentSubframe() &&
+      !GetBrowsingContext()->GetParent()->IsInProcess()) {
     if (BrowserChild* browserChild = BrowserChild::GetFrom(this)) {
       mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
           /*aIsTrusted*/ true, /*aFireLoadAtEmbeddingElement*/ false);
@@ -3966,7 +3967,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   // because error documents do not result in a call to
   // SendMaybeFireEmbedderLoadEvents via any of the normal call paths.
   // (Obviously, we must do this before any of the returns below.)
-  if (GetBrowsingContext()->IsContentSubframe() && !GetBrowsingContext()->GetParent()->IsInProcess()) {
+  if (GetBrowsingContext()->IsContentSubframe() &&
+      !GetBrowsingContext()->GetParent()->IsInProcess()) {
     if (BrowserChild* browserChild = BrowserChild::GetFrom(this)) {
       mozilla::Unused << browserChild->SendMaybeFireEmbedderLoadEvents(
           /*aIsTrusted*/ true, /*aFireLoadAtEmbeddingElement*/ false);

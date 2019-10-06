@@ -307,10 +307,11 @@ struct DIGroup {
   gfx::Size mScale;
   ScrollableLayerGuid::ViewID mScrollId;
   LayerPoint mResidualOffset;
-  LayerIntRect mLayerBounds; // mGroupBounds converted to Layer space
+  LayerIntRect mLayerBounds;  // mGroupBounds converted to Layer space
   // mLayerBounds clipped to the container/parent of the
   // current item being processed.
-  IntRect mClippedImageBounds; // mLayerBounds with the clipping of any containers applied
+  IntRect mClippedImageBounds;  // mLayerBounds with the clipping of any
+                                // containers applied
   Maybe<mozilla::Pair<wr::RenderRoot, wr::BlobImageKey>> mKey;
   std::vector<RefPtr<ScaledFont>> mFonts;
 
@@ -441,8 +442,8 @@ struct DIGroup {
       if (!combined.IsEmpty()) {
         // There might be no point in doing this elaborate tracking here to get
         // smaller areas
-        InvalidateRect(aData->mRect);  // invalidate the old area -- in theory combined
-                             // should take care of this
+        InvalidateRect(aData->mRect);  // invalidate the old area -- in theory
+                                       // combined should take care of this
         UniquePtr<nsDisplayItemGeometry> geometry(
             aItem->AllocateGeometry(aBuilder));
         // invalidate the invalidated area.
@@ -540,8 +541,8 @@ struct DIGroup {
               InvalidateRect(aData->mRect);
             } else {
               GP("Layer NoChange: %s %d %d %d %d\n", aItem->Name(),
-               aData->mRect.x, aData->mRect.y, aData->mRect.XMost(),
-               aData->mRect.YMost());
+                 aData->mRect.x, aData->mRect.y, aData->mRect.XMost(),
+                 aData->mRect.YMost());
             }
           }
         } else {
@@ -559,9 +560,8 @@ struct DIGroup {
             aData->mRect = rect;
             InvalidateRect(aData->mRect);
           } else {
-            GP("NoChange: %s %d %d %d %d\n", aItem->Name(),
-               aData->mRect.x, aData->mRect.y, aData->mRect.XMost(),
-               aData->mRect.YMost());
+            GP("NoChange: %s %d %d %d %d\n", aItem->Name(), aData->mRect.x,
+               aData->mRect.y, aData->mRect.XMost(), aData->mRect.YMost());
           }
         }
       }
@@ -1249,7 +1249,9 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
           currentGroup->mResidualOffset;
       groupData->mFollowingGroup.mVisibleRect = currentGroup->mVisibleRect;
       groupData->mFollowingGroup.mPreservedRect =
-        groupData->mFollowingGroup.mVisibleRect.Intersect(groupData->mFollowingGroup.mLastVisibleRect).ToUnknownRect();
+          groupData->mFollowingGroup.mVisibleRect
+              .Intersect(groupData->mFollowingGroup.mLastVisibleRect)
+              .ToUnknownRect();
 
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                              aBuilder, aResources, this, startOfCurrentGroup,
@@ -1455,12 +1457,13 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
       ScaleToOutsidePixelsOffset(groupBounds, scale.width, scale.height,
                                  appUnitsPerDevPixel, residualOffset));
 
-  const nsRect& untransformedPaintRect = aWrappingItem->GetUntransformedPaintRect();
+  const nsRect& untransformedPaintRect =
+      aWrappingItem->GetUntransformedPaintRect();
 
   auto visibleRect = LayerIntRect::FromUnknownRect(
                          ScaleToOutsidePixelsOffset(
-                             untransformedPaintRect, scale.width,
-                             scale.height, appUnitsPerDevPixel, residualOffset))
+                             untransformedPaintRect, scale.width, scale.height,
+                             appUnitsPerDevPixel, residualOffset))
                          .Intersect(layerBounds);
 
   GP("LayerBounds: %d %d %d %d\n", layerBounds.x, layerBounds.y,
@@ -1513,7 +1516,8 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mGroupBounds = groupBounds;
   group.mLayerBounds = layerBounds;
   group.mVisibleRect = visibleRect;
-  group.mPreservedRect = group.mVisibleRect.Intersect(group.mLastVisibleRect).ToUnknownRect();
+  group.mPreservedRect =
+      group.mVisibleRect.Intersect(group.mLastVisibleRect).ToUnknownRect();
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mClippedImageBounds = layerBounds.ToUnknownRect();
 
@@ -2254,7 +2258,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
             new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
       }
       bool isInvalidated = PaintItemByDrawTarget(
-          aItem, dt, (dtRect/layerScale).TopLeft(),
+          aItem, dt, (dtRect / layerScale).TopLeft(),
           /*aVisibleRect: */ dt->GetRect(), aDisplayListBuilder,
           fallbackData->mBasicLayerManager, scale, highlight);
       if (!isInvalidated) {
@@ -2359,10 +2363,9 @@ WebRenderCommandBuilder::GenerateFallbackData(
   }
 
   if (useBlobImage) {
-      aResources.SetBlobImageVisibleArea(
-            fallbackData->GetBlobImageKey().value(),
-            ViewAs<ImagePixel>(visibleRect,
-                               PixelCastJustification::LayerIsImage));
+    aResources.SetBlobImageVisibleArea(
+        fallbackData->GetBlobImageKey().value(),
+        ViewAs<ImagePixel>(visibleRect, PixelCastJustification::LayerIsImage));
   }
 
   // Update current bounds to fallback data

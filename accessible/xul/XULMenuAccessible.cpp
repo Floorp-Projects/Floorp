@@ -36,8 +36,7 @@ using namespace mozilla::a11y;
 
 XULMenuitemAccessible::XULMenuitemAccessible(nsIContent* aContent,
                                              DocAccessible* aDoc)
-    : AccessibleWrap(aContent, aDoc) {
-}
+    : AccessibleWrap(aContent, aDoc) {}
 
 uint64_t XULMenuitemAccessible::NativeState() const {
   uint64_t state = Accessible::NativeState();

@@ -9,9 +9,9 @@
 #ifndef builtin_streams_StreamController_h
 #define builtin_streams_StreamController_h
 
-#include "js/Value.h"     // JS::Value, JS::NumberValue
-#include "vm/JSObject.h"  // JSObject
-#include "vm/List.h"   // js::ListObject
+#include "js/Value.h"         // JS::Value, JS::NumberValue
+#include "vm/JSObject.h"      // JSObject
+#include "vm/List.h"          // js::ListObject
 #include "vm/NativeObject.h"  // js::NativeObject
 
 namespace js {

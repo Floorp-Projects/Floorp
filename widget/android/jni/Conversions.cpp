@@ -96,9 +96,8 @@ ipc::LaunchError Java2Native(mozilla::jni::Object::Param aData, JNIEnv* aEnv) {
 
 template <>
 nsString Java2Native(mozilla::jni::Object::Param aData, JNIEnv* aEnv) {
-
   nsString result;
-  if(aData != NULL && aData.IsInstanceOf<jni::String>()) {
+  if (aData != NULL && aData.IsInstanceOf<jni::String>()) {
     result = jni::String::Ref::From(aData)->ToString();
   }
   return result;

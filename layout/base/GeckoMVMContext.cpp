@@ -180,10 +180,9 @@ void GeckoMVMContext::Reflow(const CSSSize& aNewSize) {
   MOZ_ASSERT(mPresShell);
 
   RefPtr<PresShell> presShell = mPresShell;
-  presShell->ResizeReflowIgnoreOverride(
-      CSSPixel::ToAppUnits(aNewSize.width),
-      CSSPixel::ToAppUnits(aNewSize.height),
-      ResizeReflowOptions::NoOption);
+  presShell->ResizeReflowIgnoreOverride(CSSPixel::ToAppUnits(aNewSize.width),
+                                        CSSPixel::ToAppUnits(aNewSize.height),
+                                        ResizeReflowOptions::NoOption);
 }
 
 }  // namespace mozilla

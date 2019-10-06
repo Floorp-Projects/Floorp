@@ -19,13 +19,13 @@
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{DealWithRejection,FinishErroring,UpdateBackpressure}
-#include "js/CallArgs.h"                     // JS::CallArgs{,FromVp}
-#include "js/RootingAPI.h"                   // JS::Handle, JS::Rooted
-#include "js/Value.h"                        // JS::{,Object}Value
-#include "vm/JSContext.h"                    // JSContext
-#include "vm/JSObject.h"                     // JSObject
-#include "vm/List.h"                         // js::ListObject
-#include "vm/Runtime.h"                      // JSAtomState
+#include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
+#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/Value.h"       // JS::{,Object}Value
+#include "vm/JSContext.h"   // JSContext
+#include "vm/JSObject.h"    // JSObject
+#include "vm/List.h"        // js::ListObject
+#include "vm/Runtime.h"     // JSAtomState
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
 #include "vm/JSObject-inl.h"  // js::NewBuiltinClassInstance, js::NewObjectWithClassProto

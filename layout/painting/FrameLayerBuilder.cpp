@@ -5961,7 +5961,7 @@ void ContainerState::Finish(uint32_t* aTextContentFlags,
   mPaintedLayerDataTree.Finish();
 
   NS_ASSERTION(mContainerBounds.IsEqualInterior(mAccumulatedChildBounds),
-                "Bounds computation mismatch");
+               "Bounds computation mismatch");
 
   if (mLayerBuilder->IsBuildingRetainedLayers()) {
     nsIntRegion containerOpaqueRegion;
