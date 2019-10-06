@@ -24,7 +24,7 @@ function setup() {
   let testPage =
     "data:text/html," +
     '<p><a id="commonlink" href="http://mochi.test/moz/">Common link</a></p>' +
-    '<p><math id="mathxlink" xmlns="http://www.w3.org/1998/Math/MathML" xlink:type="simple" xlink:href="http://mochi.test/moz/"><mtext>MathML XLink</mtext></math></p>' +
+    '<p><math id="mathlink" xmlns="http://www.w3.org/1998/Math/MathML" href="http://mochi.test/moz/"><mtext>MathML XLink</mtext></math></p>' +
     '<p><svg id="svgxlink" xmlns="http://www.w3.org/2000/svg" width="100px" height="50px" version="1.1"><a xlink:type="simple" xlink:href="http://mochi.test/moz/"><text transform="translate(10, 25)">SVG XLink</text></a></svg></p><br>' +
     '<span id="host"></span><script>document.getElementById("host").attachShadow({mode: "closed"}).appendChild(document.getElementById("commonlink").cloneNode(true));</script>';
 
@@ -137,7 +137,7 @@ add_task(async function test_alt_click_on_xlinks() {
   });
   await downloadList.addView(downloadView);
   await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#mathxlink",
+    "#mathlink",
     { altKey: true },
     gBrowser.selectedBrowser
   );
@@ -155,7 +155,7 @@ add_task(async function test_alt_click_on_xlinks() {
   is(
     downloads[0].source.url,
     "http://mochi.test/moz/",
-    "Downloaded #mathxlink element"
+    "Downloaded #mathlink element"
   );
   is(
     downloads[1].source.url,

@@ -131,3 +131,40 @@ add_task(async function test_unlimitedStorage_removed_on_update() {
 
   await extension.unload();
 });
+
+add_task(async function test_unlimitedStorage_origin_attributes() {
+  Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
+
+  const id = "test-unlimitedStorage-origin-attributes@mozilla";
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["unlimitedStorage"],
+      applications: { gecko: { id } },
+    },
+  });
+
+  await extension.startup();
+
+  let policy = WebExtensionPolicy.getByID(extension.id);
+  let principal = policy.extension.principal;
+
+  ok(
+    !principal.firstPartyDomain,
+    "extension principal has no firstPartyDomain"
+  );
+
+  let perm = Services.perms.testExactPermissionFromPrincipal(
+    principal,
+    "persistent-storage"
+  );
+  equal(
+    perm,
+    Services.perms.ALLOW_ACTION,
+    "Should have the correct permission without OAs"
+  );
+
+  await extension.unload();
+
+  Services.prefs.clearUserPref("privacy.firstparty.isolate");
+});
