@@ -327,7 +327,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   // Find out if we can safely skip flushing (i.e. pending restyles do not
   // affect our element).
-  bool NeedsToFlushStyle() const;
+  bool NeedsToFlushStyle(nsCSSPropertyID) const;
   // Find out if we need to flush layout of the document, depending on the
   // property that was requested.
   bool NeedsToFlushLayout(nsCSSPropertyID) const;
