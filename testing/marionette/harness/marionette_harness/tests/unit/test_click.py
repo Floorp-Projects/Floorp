@@ -120,6 +120,19 @@ class TestLegacyClick(MarionetteTestCase):
         self.marionette.find_element(By.ID, "testDiv")
         self.assertEqual(self.marionette.title, "Marionette Test")
 
+    def test_click_mathml(self):
+        self.marionette.navigate(inline("""
+            <math><mtext id="target">click me</mtext></math>
+            <script>
+              window.clicks = 0;
+              let mtext = document.getElementById("target");
+              mtext.addEventListener("click", () => window.clicks++);
+            </script>
+        """))
+        mtext = self.marionette.find_element(By.ID, "target")
+        mtext.click()
+        self.assertEqual(1, self.marionette.execute_script("return window.clicks", sandbox=None))
+
     def test_scroll_into_view_near_end(self):
         self.marionette.navigate(fixed_overlay)
         link = self.marionette.find_element(By.TAG_NAME, "a")
