@@ -782,6 +782,10 @@ sync-currently-syncing-prefs =
        *[other] Preferences
     }
 
+sync-change-options =
+    .label = Change…
+    .accesskey = C
+
 ## The "Choose what to sync" dialog.
 
 sync-choose-what-to-sync-dialog =
