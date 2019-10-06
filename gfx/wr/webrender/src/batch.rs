@@ -7,7 +7,7 @@ use api::{YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF,
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
-use crate::composite::{CompositeConfig, CompositeTile, CompositeTileSurface};
+use crate::composite::{CompositeState, CompositeTile, CompositeTileSurface};
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheHandle, GpuCacheAddress};
 use crate::gpu_types::{BrushFlags, BrushInstance, PrimitiveHeaders, ZBufferId, ZBufferIdGenerator};
@@ -645,7 +645,7 @@ impl BatchBuilder {
         root_spatial_node_index: SpatialNodeIndex,
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
-        composite_config: &mut CompositeConfig,
+        composite_state: &mut CompositeState,
     ) {
         for cluster in &pic.prim_list.clusters {
             // Add each run in this picture to the batch.
@@ -662,7 +662,7 @@ impl BatchBuilder {
                     root_spatial_node_index,
                     surface_spatial_node_index,
                     z_generator,
-                    composite_config,
+                    composite_state,
                 );
             }
         }
@@ -685,7 +685,7 @@ impl BatchBuilder {
         root_spatial_node_index: SpatialNodeIndex,
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
-        composite_config: &mut CompositeConfig,
+        composite_state: &mut CompositeState,
     ) {
         if prim_instance.visibility_info == PrimitiveVisibilityIndex::INVALID {
             return;
@@ -1199,24 +1199,27 @@ impl BatchBuilder {
                                     .map(&local_tile_clip_rect)
                                     .expect("bug: unable to map clip rect");
                                 let device_clip_rect = (world_clip_rect * ctx.global_device_pixel_scale).round();
-                                let z_id = composite_config.z_generator.next();
+                                let z_id = composite_state.z_generator.next();
                                 for key in &tile_cache.tiles_to_draw {
                                     let tile = &tile_cache.tiles[key];
                                     let device_rect = (tile.world_rect * ctx.global_device_pixel_scale).round();
+                                    let dirty_rect = (tile.world_dirty_rect * ctx.global_device_pixel_scale).round();
                                     let surface = tile.surface.as_ref().expect("no tile surface set!");
                                     match surface {
                                         TileSurface::Color { color } => {
-                                            composite_config.opaque_tiles.push(CompositeTile {
+                                            composite_state.opaque_tiles.push(CompositeTile {
                                                 surface: CompositeTileSurface::Color { color: *color },
                                                 rect: device_rect,
+                                                dirty_rect,
                                                 clip_rect: device_clip_rect,
                                                 z_id,
                                             });
                                         }
                                         TileSurface::Clear => {
-                                            composite_config.clear_tiles.push(CompositeTile {
+                                            composite_state.clear_tiles.push(CompositeTile {
                                                 surface: CompositeTileSurface::Clear,
                                                 rect: device_rect,
+                                                dirty_rect,
                                                 clip_rect: device_clip_rect,
                                                 z_id,
                                             });
@@ -1230,14 +1233,15 @@ impl BatchBuilder {
                                                     texture_layer: cache_item.texture_layer,
                                                 },
                                                 rect: device_rect,
+                                                dirty_rect,
                                                 clip_rect: device_clip_rect,
                                                 z_id,
                                             };
 
                                             if tile.is_opaque || tile_cache.is_opaque() {
-                                                composite_config.opaque_tiles.push(composite_tile);
+                                                composite_state.opaque_tiles.push(composite_tile);
                                             } else {
-                                                composite_config.alpha_tiles.push(composite_tile);
+                                                composite_state.alpha_tiles.push(composite_tile);
                                             }
                                         }
                                     }
@@ -1710,7 +1714,7 @@ impl BatchBuilder {
                             root_spatial_node_index,
                             surface_spatial_node_index,
                             z_generator,
-                            composite_config,
+                            composite_state,
                         );
                     }
                 }
