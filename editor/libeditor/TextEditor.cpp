@@ -525,6 +525,17 @@ nsresult TextEditor::DeleteSelectionAsAction(EDirection aDirection,
                "operation "
                "unless mutation event listener nests some operations");
 
+  // Although ExtendSelectionForDelete will use nsFrameSelection, if it
+  // still has dirty frame, nsFrameSelection doesn't extend selection
+  // since we block script.
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (presShell) {
+    presShell->FlushPendingNotifications(FlushType::Layout);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+  }
+
   EditAction editAction = EditAction::eDeleteSelection;
   switch (aDirection) {
     case nsIEditor::ePrevious:
