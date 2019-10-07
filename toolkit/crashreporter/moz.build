@@ -9,10 +9,6 @@ SPHINX_TREES['crashreporter'] = 'docs'
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
 
-GENERATED_FILES += [
-    'CrashAnnotations.h',
-]
-
 EXPORTS += [
     '!CrashAnnotations.h',
     'nsExceptionHandler.h',
@@ -136,12 +132,11 @@ else:
     ]
 
 # Generate CrashAnnotations.h
-crash_annotations = GENERATED_FILES['CrashAnnotations.h']
-crash_annotations.script = 'generate_crash_reporter_sources.py:emit_header'
-crash_annotations.inputs = [
-    'CrashAnnotations.h.in',
-    'CrashAnnotations.yaml',
-]
+GeneratedFile('CrashAnnotations.h', script='generate_crash_reporter_sources.py',
+              entry_point='emit_header', inputs=[
+                  'CrashAnnotations.h.in',
+                  'CrashAnnotations.yaml',
+              ])
 
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Crash Reporting')

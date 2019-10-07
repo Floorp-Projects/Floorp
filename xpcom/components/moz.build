@@ -38,14 +38,10 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         '!Components.h',
     ]
 
-    generated = ('Components.h', 'StaticComponentData.h',
-                 'StaticComponents.cpp')
-
-    GENERATED_FILES += [generated]
-
-    gen = GENERATED_FILES[generated]
-    gen.script = 'gen_static_components.py'
-    gen.inputs += ['!manifest-lists.json', 'StaticComponents.cpp.in']
+    GeneratedFile(
+        'Components.h', 'StaticComponentData.h', 'StaticComponents.cpp',
+        script='gen_static_components.py',
+        inputs=['!manifest-lists.json', 'StaticComponents.cpp.in'])
 
 UNIFIED_SOURCES += [
     'GenericFactory.cpp',

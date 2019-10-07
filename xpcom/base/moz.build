@@ -200,15 +200,11 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'MemoryInfo.cpp',
     ]
 
-GENERATED_FILES += [
-    "error_list.rs",
-    "ErrorList.h",
-    "ErrorNamesInternal.h",
-]
-
-GENERATED_FILES["ErrorList.h"].script = "ErrorList.py:error_list_h"
-GENERATED_FILES["ErrorNamesInternal.h"].script = "ErrorList.py:error_names_internal_h"
-GENERATED_FILES["error_list.rs"].script = "ErrorList.py:error_list_rs"
+GeneratedFile("ErrorList.h", script="ErrorList.py", entry_point="error_list_h")
+GeneratedFile("ErrorNamesInternal.h", script="ErrorList.py",
+              entry_point="error_names_internal_h")
+GeneratedFile("error_list.rs", script="ErrorList.py",
+              entry_point="error_list_rs")
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
@@ -220,19 +216,13 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GENERATED_FILES += [
-        'gk_rust_utils_ffi_generated.h',
-    ]
-
     EXPORTS.mozilla += [
         '!gk_rust_utils_ffi_generated.h',
     ]
 
-    ffi_generated = GENERATED_FILES['gk_rust_utils_ffi_generated.h']
-    ffi_generated.script = '/layout/style/RunCbindgen.py:generate'
-    ffi_generated.inputs = [
-        '/xpcom/rust/gkrust_utils',
-    ]
+    GeneratedFile('gk_rust_utils_ffi_generated.h',
+                  script='/layout/style/RunCbindgen.py',
+                  entry_point='generate', inputs=['/xpcom/rust/gkrust_utils'])
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

@@ -17,10 +17,8 @@ include('../js-cxxflags.mozbuild')
 
 
 # Generate frontend/ReservedWordsGenerated.h from frontend/ReservedWords.h
-GENERATED_FILES += ['ReservedWordsGenerated.h']
-ReservedWordsGenerated = GENERATED_FILES['ReservedWordsGenerated.h']
-ReservedWordsGenerated.script = 'GenerateReservedWords.py'
-ReservedWordsGenerated.inputs += ['ReservedWords.h']
+GeneratedFile('ReservedWordsGenerated.h', script='GenerateReservedWords.py',
+              inputs=['ReservedWords.h'])
 
 
 UNIFIED_SOURCES += [

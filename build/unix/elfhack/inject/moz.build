@@ -13,12 +13,8 @@ DIST_INSTALL = False
 cpu = CONFIG['CPU_ARCH']
 
 gen_src = '%s.c' % cpu
-GENERATED_FILES += [
-    gen_src,
-]
-
-GENERATED_FILES[gen_src].script = 'copy_source.py:copy'
-GENERATED_FILES[gen_src].inputs = ['../inject.c']
+GeneratedFile(gen_src, script='copy_source.py', entry_point='copy',
+              inputs = ['../inject.c'])
 
 SOURCES += [
     '!%s' % gen_src,
