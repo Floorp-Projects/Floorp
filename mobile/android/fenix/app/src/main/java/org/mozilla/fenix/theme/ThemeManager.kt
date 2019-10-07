@@ -6,6 +6,7 @@ package org.mozilla.fenix.theme
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
@@ -14,6 +15,8 @@ import android.util.TypedValue
 import android.view.View
 import android.view.Window
 import androidx.annotation.StyleRes
+import mozilla.components.support.utils.toSafeIntent
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.getColorFromAttr
@@ -111,6 +114,10 @@ class DefaultThemeManager(
                 field = value
 
                 setActivityTheme(activity)
+
+                val intent = activity.intent ?: Intent().also { activity.intent = it }
+                intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, value == BrowsingMode.Private)
+
                 activity.recreate()
             }
         }
