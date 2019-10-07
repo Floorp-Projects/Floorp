@@ -3773,29 +3773,23 @@ EditActionResult HTMLEditor::TryToJoinBlocksWithTransaction(
       // XXX It's odd to continue handling this edit action if there is no
       //     editing host.
       if (!editingHost || &aLeftContentInBlock != editingHost) {
-        nsCOMPtr<nsIContent> splittedPreviousContent;
-        nsCOMPtr<nsINode> previousContentParent =
-            atPreviousContent.GetContainer();
-        int32_t previousContentOffset = atPreviousContent.Offset();
-        rv = SplitStyleAbovePoint(
-            address_of(previousContentParent), &previousContentOffset, nullptr,
-            nullptr, nullptr, getter_AddRefs(splittedPreviousContent));
-        if (NS_WARN_IF(Destroyed())) {
-          return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return EditActionIgnored(rv);
+        SplitNodeResult splitResult = SplitAncestorStyledInlineElementsAt(
+            atPreviousContent, nullptr, nullptr);
+        if (NS_WARN_IF(splitResult.Failed())) {
+          return EditActionIgnored(splitResult.Rv());
         }
 
-        if (splittedPreviousContent) {
-          atPreviousContent.Set(splittedPreviousContent);
-          if (NS_WARN_IF(!atPreviousContent.IsSet())) {
-            return EditActionIgnored(NS_ERROR_NULL_POINTER);
-          }
-        } else {
-          atPreviousContent.Set(previousContentParent, previousContentOffset);
-          if (NS_WARN_IF(!atPreviousContent.IsSet())) {
-            return EditActionIgnored(NS_ERROR_NULL_POINTER);
+        if (splitResult.Handled()) {
+          if (splitResult.GetNextNode()) {
+            atPreviousContent.Set(splitResult.GetNextNode());
+            if (NS_WARN_IF(!atPreviousContent.IsSet())) {
+              return EditActionIgnored(NS_ERROR_NULL_POINTER);
+            }
+          } else {
+            atPreviousContent = splitResult.SplitPoint();
+            if (NS_WARN_IF(!atPreviousContent.IsSet())) {
+              return EditActionIgnored(NS_ERROR_NULL_POINTER);
+            }
           }
         }
       }
@@ -6197,9 +6191,6 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
   MOZ_ASSERT(aAbstractRange.IsPositioned());
   MOZ_ASSERT(mTypeInState);
 
-  nsCOMPtr<nsINode> node = aAbstractRange.GetStartContainer();
-  int32_t offset = aAbstractRange.StartOffset();
-
   RefPtr<Element> documentRootElement = GetDocument()->GetRootElement();
   if (NS_WARN_IF(!documentRootElement)) {
     return NS_ERROR_FAILURE;
@@ -6208,25 +6199,21 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
   // process clearing any styles first
   UniquePtr<PropItem> item = mTypeInState->TakeClearProperty();
 
-  bool weDidSomething = false;
+  EditorDOMPoint pointToPutCaret(aAbstractRange.StartRef());
+  bool putCaret = false;
   {
     // Transactions may set selection, but we will set selection if necessary.
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
-    while (item && node != documentRootElement) {
-      // XXX If we redesign ClearStyle(), we can use EditorDOMPoint in this
-      //     method.
-      nsresult rv =
-          ClearStyle(address_of(node), &offset, MOZ_KnownLive(item->tag),
-                     MOZ_KnownLive(item->attr));
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+    while (item && pointToPutCaret.GetContainer() != documentRootElement) {
+      EditResult result = ClearStyleAt(
+          pointToPutCaret, MOZ_KnownLive(item->tag), MOZ_KnownLive(item->attr));
+      if (NS_WARN_IF(result.Failed())) {
+        return result.Rv();
       }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      pointToPutCaret = result.PointRefToCollapseSelection();
       item = mTypeInState->TakeClearProperty();
-      weDidSomething = true;
+      putCaret = true;
     }
   }
 
@@ -6237,10 +6224,10 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
   if (item || relFontSize) {
     // we have at least one style to add; make a new text node to insert style
     // nodes above.
-    if (RefPtr<Text> text = node->GetAsText()) {
+    if (pointToPutCaret.IsInTextNode()) {
       // if we are in a text node, split it
       SplitNodeResult splitTextNodeResult = SplitNodeDeepWithTransaction(
-          *text, EditorDOMPoint(text, offset),
+          MOZ_KnownLive(*pointToPutCaret.GetContainerAsText()), pointToPutCaret,
           SplitAtEdges::eAllowToCreateEmptyContainer);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
@@ -6248,35 +6235,31 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
       if (NS_WARN_IF(splitTextNodeResult.Failed())) {
         return splitTextNodeResult.Rv();
       }
-      EditorRawDOMPoint splitPoint(splitTextNodeResult.SplitPoint());
-      node = splitPoint.GetContainer();
-      offset = splitPoint.Offset();
+      pointToPutCaret = splitTextNodeResult.SplitPoint();
     }
-    if (!IsContainer(node)) {
+    if (!IsContainer(pointToPutCaret.GetContainer())) {
       return NS_OK;
     }
-    RefPtr<Text> newNode = CreateTextNode(EmptyString());
-    if (NS_WARN_IF(!newNode)) {
+    RefPtr<Text> newEmptyTextNode = CreateTextNode(EmptyString());
+    if (NS_WARN_IF(!newEmptyTextNode)) {
       return NS_ERROR_FAILURE;
     }
-    nsresult rv =
-        InsertNodeWithTransaction(*newNode, EditorDOMPoint(node, offset));
+    nsresult rv = InsertNodeWithTransaction(*newEmptyTextNode, pointToPutCaret);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    node = newNode;
-    offset = 0;
-    weDidSomething = true;
+    pointToPutCaret.Set(newEmptyTextNode, 0);
+    putCaret = true;
 
     if (relFontSize) {
       // dir indicated bigger versus smaller.  1 = bigger, -1 = smaller
       HTMLEditor::FontSize dir = relFontSize > 0 ? HTMLEditor::FontSize::incr
                                                  : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
-        rv = RelativeFontChangeOnTextNode(dir, *newNode, 0, -1);
+        rv = RelativeFontChangeOnTextNode(dir, *newEmptyTextNode, 0, -1);
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -6287,9 +6270,9 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
     }
 
     while (item) {
-      rv = SetInlinePropertyOnNode(MOZ_KnownLive(*node->AsContent()),
-                                   MOZ_KnownLive(*item->tag),
-                                   MOZ_KnownLive(item->attr), item->value);
+      rv = SetInlinePropertyOnNode(
+          MOZ_KnownLive(*pointToPutCaret.GetContainerAsContent()),
+          MOZ_KnownLive(*item->tag), MOZ_KnownLive(item->attr), item->value);
       if (NS_WARN_IF(Destroyed())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -6300,11 +6283,11 @@ nsresult HTMLEditor::CreateStyleForInsertText(AbstractRange& aAbstractRange) {
     }
   }
 
-  if (!weDidSomething) {
+  if (!putCaret) {
     return NS_OK;
   }
 
-  nsresult rv = SelectionRefPtr()->Collapse(node, offset);
+  nsresult rv = SelectionRefPtr()->Collapse(pointToPutCaret);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
