@@ -378,7 +378,7 @@ export default class LoginItem extends HTMLElement {
           return;
         }
         if (
-          event.originalTarget.dataset.l10nName == "duplicate-link" &&
+          event.target.dataset.l10nName == "duplicate-link" &&
           event.currentTarget.dataset.errorGuid
         ) {
           let existingDuplicateLogin = {
