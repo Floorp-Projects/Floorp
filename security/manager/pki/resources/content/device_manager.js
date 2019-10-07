@@ -326,7 +326,11 @@ function doLogout() {
 
 // load a new device
 function doLoad() {
-  window.open("load_device.xul", "loaddevice", "chrome,centerscreen,modal");
+  window.docShell.rootTreeItem.domWindow.open(
+    "load_device.xul",
+    "loaddevice",
+    "chrome,centerscreen,modal"
+  );
   ClearDeviceList();
   RefreshDeviceList();
 }
@@ -361,7 +365,7 @@ function changePassword() {
   let objects = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   objects.appendElement(selected_slot.getToken());
   params.objects = objects;
-  window.openDialog(
+  window.docShell.rootTreeItem.domWindow.openDialog(
     "changepassword.xul",
     "",
     "chrome,centerscreen,modal",
