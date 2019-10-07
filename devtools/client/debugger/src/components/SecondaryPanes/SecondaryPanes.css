@@ -13,6 +13,10 @@
   --breakpoint-expression-right-clear-space: 36px;
 }
 
+.secondary-panes .controlled > div {
+  max-width: 100%;
+}
+
 /*
   We apply overflow to the container with the commandbar.
   This allows the commandbar to remain fixed when scrolling
