@@ -312,7 +312,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void sweepAfterMinorGC(JSTracer* trc);
   void sweepBreakpoints(JSFreeOp* fop);
   void sweepUniqueIds();
-  void sweepWeakMaps();
+  void traceWeakMaps(JSTracer* trc);
   void sweepCompartments(JSFreeOp* fop, bool keepAtleastOne, bool lastGC);
 
   using DebuggerVector = js::Vector<js::Debugger*, 0, js::SystemAllocPolicy>;
