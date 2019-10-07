@@ -9141,6 +9141,20 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "rotate": {
+    "isInherited": false,
+    "subproperties": [
+      "rotate"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "unset"
+    ]
+  },
   "row-gap": {
     "isInherited": false,
     "subproperties": [
@@ -9211,6 +9225,20 @@ exports.CSS_PROPERTIES = {
       "auto",
       "inherit",
       "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scale": {
+    "isInherited": false,
+    "subproperties": [
+      "scale"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
       "revert",
       "unset"
     ]
@@ -10514,6 +10542,20 @@ exports.CSS_PROPERTIES = {
       "step-end",
       "step-start",
       "steps",
+      "unset"
+    ]
+  },
+  "translate": {
+    "isInherited": false,
+    "subproperties": [
+      "translate"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "none",
+      "revert",
       "unset"
     ]
   },
