@@ -419,6 +419,61 @@ bool BaselineCacheIRCompiler::emitGuardSpecificSymbol() {
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitGuardToInt32ModUint32() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ValueOperand value = allocator.useValueRegister(masm, reader.valOperandId());
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label notInt32;
+  masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
+  masm.unboxInt32(value, output);
+
+  Label done;
+  masm.jump(&done);
+
+  // If the value is a double, truncate; else, jump to failure.
+  masm.bind(&notInt32);
+  masm.branchTestDouble(Assembler::NotEqual, value, failure->label());
+  masm.unboxDouble(value, FloatReg0);
+  masm.branchTruncateDoubleMaybeModUint32(FloatReg0, output, failure->label());
+
+  masm.bind(&done);
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitGuardToUint8Clamped() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ValueOperand value = allocator.useValueRegister(masm, reader.valOperandId());
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label notInt32;
+  masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
+  masm.unboxInt32(value, output);
+  masm.clampIntToUint8(output);
+
+  Label done;
+  masm.jump(&done);
+
+  // If the value is a double, clamp to uint8; else, jump to failure.
+  masm.bind(&notInt32);
+  masm.branchTestDouble(Assembler::NotEqual, value, failure->label());
+  masm.unboxDouble(value, FloatReg0);
+  masm.clampDoubleToUint8(FloatReg0, output);
+
+  masm.bind(&done);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitLoadValueResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
@@ -1448,14 +1503,39 @@ bool BaselineCacheIRCompiler::emitArrayPush() {
 bool BaselineCacheIRCompiler::emitStoreTypedElement() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
-  ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
-
   TypedThingLayout layout = reader.typedThingLayout();
   Scalar::Type type = reader.scalarType();
+  Register index = allocator.useRegister(masm, reader.int32OperandId());
+
+  Maybe<Register> valInt32;
+  Maybe<NumberOperandId> valFloat;
+  switch (type) {
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+    case Scalar::Uint32:
+    case Scalar::Uint8Clamped:
+      valInt32.emplace(allocator.useRegister(masm, reader.int32OperandId()));
+      break;
+
+    case Scalar::Float32:
+    case Scalar::Float64:
+      valFloat.emplace(reader.numberOperandId());
+      break;
+
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+    case Scalar::MaxTypedArrayViewType:
+    case Scalar::Int64:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+
   bool handleOOB = reader.readBool();
 
   AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1466,10 +1546,7 @@ bool BaselineCacheIRCompiler::emitStoreTypedElement() {
   Label done;
   LoadTypedThingLength(masm, layout, obj, scratch1);
 
-  // Unfortunately we don't have more registers available on x86, so use
-  // InvalidReg and emit slightly slower code on x86.
-  Register spectreTemp = InvalidReg;
-  masm.spectreBoundsCheck32(index, scratch1, spectreTemp,
+  masm.spectreBoundsCheck32(index, scratch1, scratch2,
                             handleOOB ? &done : failure->label());
 
   // Load the elements vector.
@@ -1477,20 +1554,19 @@ bool BaselineCacheIRCompiler::emitStoreTypedElement() {
 
   BaseIndex dest(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(type)));
 
-  // Use ICStubReg as second scratch register. TODO: consider doing the RHS
-  // type check/conversion as a separate IR instruction so we can simplify
-  // this.
-  Register scratch2 = ICStubReg;
-  masm.push(scratch2);
+  if (type == Scalar::Float32 || type == Scalar::Float64) {
+    allocator.ensureDoubleRegister(masm, *valFloat, FloatReg0);
 
-  Label fail;
-  StoreToTypedArray(cx_, masm, type, val, dest, scratch2, &fail);
-  masm.pop(scratch2);
-  masm.jump(&done);
-
-  masm.bind(&fail);
-  masm.pop(scratch2);
-  masm.jump(failure->label());
+    if (type == Scalar::Float32) {
+      ScratchFloat32Scope fpscratch(masm);
+      masm.convertDoubleToFloat32(FloatReg0, fpscratch);
+      masm.storeToTypedFloatArray(type, fpscratch, dest);
+    } else {
+      masm.storeToTypedFloatArray(type, FloatReg0, dest);
+    }
+  } else {
+    masm.storeToTypedIntArray(type, *valInt32, dest);
+  }
 
   masm.bind(&done);
   return true;

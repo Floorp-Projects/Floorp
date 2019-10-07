@@ -788,6 +788,42 @@ bool IonCacheIRCompiler::emitGuardSpecificSymbol() {
   return true;
 }
 
+bool IonCacheIRCompiler::emitGuardToInt32ModUint32() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ConstantOrRegister val =
+      allocator.useConstantOrRegister(masm, reader.valOperandId());
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  FloatRegister maybeTempDouble = ic_->asSetPropertyIC()->maybeTempDouble();
+  MOZ_ASSERT(maybeTempDouble != InvalidFloatReg);
+
+  return masm.truncateConstantOrRegisterToInt32(cx_, val, maybeTempDouble,
+                                                output, failure->label());
+}
+
+bool IonCacheIRCompiler::emitGuardToUint8Clamped() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ConstantOrRegister val =
+      allocator.useConstantOrRegister(masm, reader.valOperandId());
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  FloatRegister maybeTempDouble = ic_->asSetPropertyIC()->maybeTempDouble();
+  MOZ_ASSERT(maybeTempDouble != InvalidFloatReg);
+
+  return masm.clampConstantOrRegisterToUint8(cx_, val, maybeTempDouble, output,
+                                             failure->label());
+}
+
 bool IonCacheIRCompiler::emitLoadValueResult() {
   MOZ_CRASH("Baseline-specific op");
 }
@@ -1812,12 +1848,36 @@ bool IonCacheIRCompiler::emitArrayPush() {
 bool IonCacheIRCompiler::emitStoreTypedElement() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
-  Register index = allocator.useRegister(masm, reader.int32OperandId());
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-
   TypedThingLayout layout = reader.typedThingLayout();
   Scalar::Type arrayType = reader.scalarType();
+  Register index = allocator.useRegister(masm, reader.int32OperandId());
+
+  Maybe<Register> valInt32;
+  Maybe<ConstantOrRegister> valFloat;
+  switch (arrayType) {
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+    case Scalar::Uint32:
+    case Scalar::Uint8Clamped:
+      valInt32.emplace(allocator.useRegister(masm, reader.int32OperandId()));
+      break;
+
+    case Scalar::Float32:
+    case Scalar::Float64:
+      valFloat.emplace(
+          allocator.useConstantOrRegister(masm, reader.numberOperandId()));
+      break;
+
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+    case Scalar::MaxTypedArrayViewType:
+    case Scalar::Int64:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+
   bool handleOOB = reader.readBool();
 
   AutoScratchRegister scratch1(allocator, masm);
@@ -1848,31 +1908,19 @@ bool IonCacheIRCompiler::emitStoreTypedElement() {
   if (arrayType == Scalar::Float32) {
     FloatRegister tempFloat =
         hasUnaliasedDouble() ? maybeTempFloat32 : maybeTempDouble;
-    if (!masm.convertConstantOrRegisterToFloat(cx_, val, tempFloat,
+    if (!masm.convertConstantOrRegisterToFloat(cx_, *valFloat, tempFloat,
                                                failure->label())) {
       return false;
     }
     masm.storeToTypedFloatArray(arrayType, tempFloat, dest);
   } else if (arrayType == Scalar::Float64) {
-    if (!masm.convertConstantOrRegisterToDouble(cx_, val, maybeTempDouble,
+    if (!masm.convertConstantOrRegisterToDouble(cx_, *valFloat, maybeTempDouble,
                                                 failure->label())) {
       return false;
     }
     masm.storeToTypedFloatArray(arrayType, maybeTempDouble, dest);
   } else {
-    Register valueToStore = scratch2;
-    if (arrayType == Scalar::Uint8Clamped) {
-      if (!masm.clampConstantOrRegisterToUint8(
-              cx_, val, maybeTempDouble, valueToStore, failure->label())) {
-        return false;
-      }
-    } else {
-      if (!masm.truncateConstantOrRegisterToInt32(
-              cx_, val, maybeTempDouble, valueToStore, failure->label())) {
-        return false;
-      }
-    }
-    masm.storeToTypedIntArray(arrayType, valueToStore, dest);
+    masm.storeToTypedIntArray(arrayType, *valInt32, dest);
   }
 
   masm.bind(&done);
