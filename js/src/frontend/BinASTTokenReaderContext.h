@@ -1287,13 +1287,35 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   // Base class used by other Auto* classes.
   class MOZ_STACK_CLASS AutoBase {
    protected:
-    explicit AutoBase(BinASTTokenReaderContext& reader);
-    ~AutoBase();
+    explicit AutoBase(BinASTTokenReaderContext& reader)
+#ifdef DEBUG
+        : initialized_(false),
+          reader_(reader)
+#endif
+    {
+    }
+    ~AutoBase() {
+      // By now, the `AutoBase` must have been deinitialized by calling
+      // `done()`. The only case in which we can accept not calling `done()` is
+      // if we have bailed out because of an error.
+      MOZ_ASSERT_IF(initialized_, reader_.hasRaisedError());
+    }
 
     friend BinASTTokenReaderContext;
 
    public:
-    void init();
+    inline void init() {
+#ifdef DEBUG
+      initialized_ = true;
+#endif
+    }
+
+    inline MOZ_MUST_USE JS::Result<Ok> done() {
+#ifdef DEBUG
+      initialized_ = false;
+#endif
+      return Ok();
+    }
 
    protected:
 #ifdef DEBUG
@@ -1305,22 +1327,14 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   // Guard class used to ensure that `enterList` is used properly.
   class MOZ_STACK_CLASS AutoList : public AutoBase {
    public:
-    explicit AutoList(BinASTTokenReaderContext& reader);
-
-    // Check that we have properly read to the end of the list.
-    MOZ_MUST_USE JS::Result<Ok> done();
-
-   protected:
-    friend BinASTTokenReaderContext;
+    explicit AutoList(BinASTTokenReaderContext& reader) : AutoBase(reader) {}
   };
 
   // Guard class used to ensure that `enterTaggedTuple` is used properly.
   class MOZ_STACK_CLASS AutoTaggedTuple : public AutoBase {
    public:
-    explicit AutoTaggedTuple(BinASTTokenReaderContext& reader);
-
-    // Check that we have properly read to the end of the tuple.
-    MOZ_MUST_USE JS::Result<Ok> done();
+    explicit AutoTaggedTuple(BinASTTokenReaderContext& reader)
+        : AutoBase(reader) {}
   };
 
   // Compare a `Chars` and a string literal (ONLY a string literal).
