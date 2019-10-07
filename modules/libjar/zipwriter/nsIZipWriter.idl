@@ -108,6 +108,7 @@ interface nsIZipWriter : nsISupports
    * @throws NS_ERROR_FILE_ALREADY_EXISTS if the path already exists in the
    *  file
    * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   * @throws NS_ERROR_INVALID_ARG if aModTime is older than 1980-1-1
    */
   void addEntryDirectory(in AUTF8String aZipEntry, in PRTime aModTime,
                          in boolean aQueue);
@@ -147,6 +148,7 @@ interface nsIZipWriter : nsISupports
    * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
    * @throws NS_ERROR_FILE_ALREADY_EXISTS if the path already exists in the zip
    * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   * @throws NS_ERROR_INVALID_ARG if aModTime is older than 1980-1-1
    */
   void addEntryChannel(in AUTF8String aZipEntry, in PRTime aModTime,
                        in int32_t aCompression, in nsIChannel aChannel,
@@ -165,6 +167,7 @@ interface nsIZipWriter : nsISupports
    * @throws NS_ERROR_NOT_INITIALIZED if no zip file has been opened
    * @throws NS_ERROR_FILE_ALREADY_EXISTS if the path already exists in the zip
    * @throws NS_ERROR_IN_PROGRESS if another operation is currently in progress
+   * @throws NS_ERROR_INVALID_ARG if aModTime is older than 1980-1-1
    */
   void addEntryStream(in AUTF8String aZipEntry, in PRTime aModTime,
                       in int32_t aCompression, in nsIInputStream aStream,

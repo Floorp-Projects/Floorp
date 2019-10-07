@@ -4,6 +4,7 @@
 
 var Cm = Components.manager;
 const URL_HOST = "http://localhost";
+const PR_USEC_PER_MSEC = 1000;
 
 var GMPScope = ChromeUtils.import(
   "resource://gre/modules/GMPInstallManager.jsm",
@@ -950,7 +951,7 @@ function createNewZipFile(zipName, data) {
   zipWriter.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
   zipWriter.addEntryStream(
     "entry1.info",
-    Date.now(),
+    Date.now() * PR_USEC_PER_MSEC,
     Ci.nsIZipWriter.COMPRESSION_BEST,
     stream,
     false
