@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1568996
+-->
+<html>
+<head>
+<title>Test for Bug 1568996</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1568996">Bug 1568996</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<input id="input1">
+<script>
+add_task(async () => {
+  await new Promise((resolve) => {
+    SimpleTest.waitForFocus(() => {
+      SimpleTest.executeSoon(resolve);
+    }, window);
+  });
+
+  let input1 = document.getElementById("input1");
+  input1.value = "hello"
+  input1.focus();
+  input1.setSelectionRange(0, 0);
+
+  input1.addEventListener('keydown', () => {
+    let s = input1.selectionStart;
+    let e = input1.selectionEnd;
+    input1.value = input1.value.toUpperCase();
+    input1.setSelectionRange(s, e);
+  });
+
+  input1.addEventListener('input', () => {
+    let s = input1.selectionStart;
+    let e = input1.selectionEnd;
+    input1.value = input1.value.toLowerCase();
+    input1.setSelectionRange(s, e);
+  });
+
+  synthesizeKey('1');
+  synthesizeKey('KEY_Delete');
+  is(input1.value, "1ello", "Delete key should be worked");
+
+  synthesizeKey('B');
+  synthesizeKey('KEY_Delete');
+  synthesizeKey('KEY_Delete');
+  is(input1.value, "1blo", "Multiple delete key should be worked");
+
+  synthesizeKey('KEY_ArrowRight');
+  synthesizeKey('2');
+  synthesizeKey('KEY_Delete');
+  is(input1.value, "1bl2", "Delete key should be worked");
+
+  synthesizeKey('3');
+  is(input1.value, "1bl23", "charcter should be inserted");
+
+  synthesizeKey('KEY_Backspace');
+  is(input1.value, "1bl2", "Backspace key should be worked");
+});
+</script>
+</body>
+</html>
