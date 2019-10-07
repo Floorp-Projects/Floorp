@@ -3357,6 +3357,13 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
   controller->NotifyLayerTransforms(messages);
 }
 
+void APZCTreeManager::SetFixedLayerMargins(ScreenIntCoord aTop,
+                                           ScreenIntCoord aBottom) {
+  RecursiveMutexAutoLock lock(mTreeLock);
+  mFixedLayerMargins.top = aTop;
+  mFixedLayerMargins.bottom = aBottom;
+}
+
 /*static*/
 LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForScrollThumb(
     const LayerToParentLayerMatrix4x4& aCurrentTransform,
