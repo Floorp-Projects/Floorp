@@ -293,7 +293,7 @@ inline int LoggerOptionsBasedOnSize(const IntSize& aSize) {
 }
 
 bool Factory::ReasonableSurfaceSize(const IntSize& aSize) {
-  return Factory::CheckSurfaceSize(aSize, 8192);
+  return Factory::CheckSurfaceSize(aSize, kReasonableSurfaceSize);
 }
 
 bool Factory::AllowedSurfaceSize(const IntSize& aSize) {
