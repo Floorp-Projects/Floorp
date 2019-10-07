@@ -243,6 +243,20 @@ const AbuseReporter = {
       throw new Error("Abuse Reporter dialog cancelled, opener tab closed");
     }
 
+    const windowName = "addons-abuse-report-dialog";
+    const dialogWin = Services.ww.getWindowByName(windowName, null);
+
+    if (dialogWin) {
+      // If an abuse report dialog is already open, cancel the
+      // previous report flow and start a new one.
+      const {
+        deferredReport,
+        promiseReport,
+      } = dialogWin.arguments[0].wrappedJSObject;
+      deferredReport.resolve({ userCancelled: true });
+      await promiseReport;
+    }
+
     const report = await AbuseReporter.createAbuseReport(addonId, {
       reportEntryPoint,
     });
@@ -296,7 +310,7 @@ const AbuseReporter = {
     win = Services.ww.openWindow(
       chromeWin,
       "chrome://mozapps/content/extensions/abuse-report-frame.html",
-      "addons-abuse-report-dialog",
+      windowName,
       // Set the dialog window options (including a reasonable initial
       // window height size, eventually adjusted by the panel once it
       // has been rendered its content).

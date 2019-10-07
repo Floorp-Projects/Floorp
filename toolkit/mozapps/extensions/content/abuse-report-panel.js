@@ -782,6 +782,18 @@ if (IS_DIALOG_WINDOW) {
     deferredReportPanel,
   } = window.arguments[0].wrappedJSObject;
 
+  window.addEventListener(
+    "unload",
+    () => {
+      // If the window has been closed resolve the deferredReport
+      // promise and reject the deferredReportPanel one, in case
+      // they haven't been resolved yet.
+      deferredReport.resolve({ userCancelled: true });
+      deferredReportPanel.reject(new Error("report dialog closed"));
+    },
+    { once: true }
+  );
+
   document.l10n.setAttributes(
     document.querySelector("head > title"),
     "abuse-report-dialog-title",
@@ -800,6 +812,11 @@ if (IS_DIALOG_WINDOW) {
   el.addEventListener(
     "abuse-report:cancel",
     () => {
+      // Resolve the report panel deferred (in case the report
+      // has been cancelled automatically before it has been fully
+      // rendered, e.g. in case of non-supported addon types).
+      deferredReportPanel.resolve(el);
+      // Resolve the deferred report as cancelled.
       deferredReport.resolve({ userCancelled: true });
     },
     { once: true }
