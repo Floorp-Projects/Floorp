@@ -136,7 +136,8 @@ class GleanTest {
         ))
 
         // Fake calling the lifecycle observer.
-        val lifecycleRegistry = LifecycleRegistry(mock(LifecycleOwner::class.java))
+        val lifecycleOwner = mock(LifecycleOwner::class.java)
+        val lifecycleRegistry = LifecycleRegistry(lifecycleOwner)
         val gleanLifecycleObserver = GleanLifecycleObserver()
         lifecycleRegistry.addObserver(gleanLifecycleObserver)
 
