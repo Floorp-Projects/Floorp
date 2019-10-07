@@ -456,3 +456,17 @@ setJitCompilerOption('wasm.fold-offsets', 1);
                        WebAssembly.CompileError,
                        /memory index must be zero/);
 }
+
+// Misc syntax for data.
+
+// When memory index is present it must be zero, and the offset must be present too;
+// but it's OK for there to be neither
+new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 0 (i32.const 0) ""))`));
+new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 0 (offset (i32.const 0)) ""))`));
+new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data ""))`));
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 0 ""))`)),
+                   SyntaxError,
+                   /data segment with memory index must have offset/);
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 1 (i32.const 0) ""))`)),
+                   SyntaxError,
+                   /can't handle non-default memory/);

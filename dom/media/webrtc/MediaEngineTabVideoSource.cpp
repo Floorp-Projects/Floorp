@@ -37,38 +37,6 @@ MediaEngineTabVideoSource::MediaEngineTabVideoSource()
 
 nsresult MediaEngineTabVideoSource::StartRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
-  mVideoSource->mTrackMain = mTrack;
-  mVideoSource->mPrincipalHandleMain = mPrincipal;
-  mVideoSource->Draw();
-  mVideoSource->mTimer->InitWithNamedFuncCallback(
-      [](nsITimer* aTimer, void* aClosure) mutable {
-        auto source = static_cast<MediaEngineTabVideoSource*>(aClosure);
-        source->Draw();
-      },
-      mVideoSource, mVideoSource->mTimePerFrame, nsITimer::TYPE_REPEATING_SLACK,
-      "MediaEngineTabVideoSource DrawTimer");
-  if (mVideoSource->mTabSource) {
-    mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
-  }
-  return NS_OK;
-}
-
-nsresult MediaEngineTabVideoSource::StopRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mVideoSource->mTimer) {
-    mVideoSource->mTimer->Cancel();
-    mVideoSource->mTimer = nullptr;
-  }
-  if (mVideoSource->mTabSource) {
-    mVideoSource->mTabSource->NotifyStreamStop(mVideoSource->mWindow);
-  }
-  mVideoSource->mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-  mVideoSource->mTrack = nullptr;
-  return NS_OK;
-}
-
-nsresult MediaEngineTabVideoSource::InitRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
   if (mVideoSource->mWindowId != -1) {
     nsGlobalWindowOuter* globalWindow =
         nsGlobalWindowOuter::GetOuterWindowWithId(mVideoSource->mWindowId);
@@ -98,9 +66,31 @@ nsresult MediaEngineTabVideoSource::InitRunnable::Run() {
     MOZ_ASSERT(mVideoSource->mWindow);
   }
   mVideoSource->mTimer = NS_NewTimer();
-  nsCOMPtr<nsIRunnable> start(
-      new StartRunnable(mVideoSource, mTrack, mPrincipal));
-  start->Run();
+  mVideoSource->mTrackMain = mTrack;
+  mVideoSource->mPrincipalHandleMain = mPrincipal;
+  mVideoSource->Draw();
+  mVideoSource->mTimer->InitWithNamedFuncCallback(
+      [](nsITimer* aTimer, void* aClosure) mutable {
+        auto source = static_cast<MediaEngineTabVideoSource*>(aClosure);
+        source->Draw();
+      },
+      mVideoSource, mVideoSource->mTimePerFrame, nsITimer::TYPE_REPEATING_SLACK,
+      "MediaEngineTabVideoSource DrawTimer");
+  if (mVideoSource->mTabSource) {
+    mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
+  }
+  return NS_OK;
+}
+
+nsresult MediaEngineTabVideoSource::StopRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mVideoSource->mTimer) {
+    mVideoSource->mTimer->Cancel();
+    mVideoSource->mTimer = nullptr;
+  }
+  if (mVideoSource->mTabSource) {
+    mVideoSource->mTabSource->NotifyStreamStop(mVideoSource->mWindow);
+  }
   return NS_OK;
 }
 
@@ -109,6 +99,12 @@ nsresult MediaEngineTabVideoSource::DestroyRunnable::Run() {
 
   mVideoSource->mWindow = nullptr;
   mVideoSource->mTabSource = nullptr;
+
+  if (mVideoSource->mTrackMain) {
+    mVideoSource->mTrackMain->End();
+  }
+  mVideoSource->mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
+  mVideoSource->mTrackMain = nullptr;
 
   return NS_OK;
 }
@@ -139,9 +135,14 @@ nsresult MediaEngineTabVideoSource::Allocate(
   // windowId is not a proper constraint, so just read it.
   // It has no well-defined behavior in advanced, so ignore it there.
 
-  mWindowId = aConstraints.mBrowserWindow.WasPassed()
-                  ? aConstraints.mBrowserWindow.Value()
-                  : -1;
+  int64_t windowId = aConstraints.mBrowserWindow.WasPassed()
+                         ? aConstraints.mBrowserWindow.Value()
+                         : -1;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaEngineTabVideoSource::Allocate window id main thread setter",
+      [self = RefPtr<MediaEngineTabVideoSource>(this), this, windowId] {
+        mWindowId = windowId;
+      }));
   mState = kAllocated;
 
   return Reconfigure(aConstraints, aPrefs, aOutBadConstraint);
@@ -183,7 +184,7 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
       "MediaEngineTabVideoSource::Reconfigure main thread setter",
       [self = RefPtr<MediaEngineTabVideoSource>(this), this, scrollWithPage,
        bufWidthMax, bufHeightMax, frameRate, timePerFrame, viewportOffsetX,
-       viewportOffsetY, viewportWidth, viewportHeight, windowId = mWindowId]() {
+       viewportOffsetY, viewportWidth, viewportHeight]() {
         mScrollWithPage = scrollWithPage;
         mBufWidthMax = bufWidthMax;
         mBufHeightMax = bufHeightMax;
@@ -209,8 +210,8 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
           mSettings->mViewportHeight.Construct(*viewportHeight);
           mViewportHeight = *viewportHeight;
         }
-        if (windowId != -1) {
-          mSettings->mBrowserWindow.Construct(windowId);
+        if (mWindowId != -1) {
+          mSettings->mBrowserWindow.Construct(mWindowId);
         }
       }));
   return NS_OK;
@@ -219,10 +220,6 @@ nsresult MediaEngineTabVideoSource::Reconfigure(
 nsresult MediaEngineTabVideoSource::Deallocate() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-
-  if (mTrack) {
-    mTrack->End();
-  }
 
   NS_DispatchToMainThread(do_AddRef(new DestroyRunnable(this)));
   mState = kReleased;
@@ -246,13 +243,8 @@ nsresult MediaEngineTabVideoSource::Start() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated);
 
-  nsCOMPtr<nsIRunnable> runnable;
-  if (!mWindow) {
-    runnable = new InitRunnable(this, mTrack, mPrincipalHandle);
-  } else {
-    runnable = new StartRunnable(this, mTrack, mPrincipalHandle);
-  }
-  NS_DispatchToMainThread(runnable);
+  NS_DispatchToMainThread(
+      new StartRunnable(this, mTrack, mPrincipalHandle));
   mState = kStarted;
 
   return NS_OK;
@@ -262,6 +254,12 @@ void MediaEngineTabVideoSource::Draw() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mWindow && !mBlackedoutWindow) {
+    return;
+  }
+
+  if (mTrackMain->IsDestroyed()) {
+    // The track was already destroyed by MediaManager. This can happen because
+    // stopping the draw timer is async.
     return;
   }
 

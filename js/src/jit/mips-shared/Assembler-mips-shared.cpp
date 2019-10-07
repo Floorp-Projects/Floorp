@@ -363,10 +363,16 @@ InstImm AssemblerMIPSShared::getBranchCode(Register s, Condition c) {
 InstImm AssemblerMIPSShared::getBranchCode(FloatTestKind testKind,
                                            FPConditionBit fcc) {
   MOZ_ASSERT(!(fcc && FccMask));
+#ifdef MIPSR6
+  RSField rsField = ((testKind == TestForTrue ? rs_t : rs_f));
+
+  return InstImm(op_cop1, rsField, FloatRegisters::f24 << 16, BOffImm16(0));
+#else
   uint32_t rtField = ((testKind == TestForTrue ? 1 : 0) | (fcc << FccShift))
                      << RTShift;
 
   return InstImm(op_cop1, rs_bc1, rtField, BOffImm16(0));
+#endif
 }
 
 BufferOffset AssemblerMIPSShared::as_j(JOffImm26 off) {
@@ -382,8 +388,13 @@ BufferOffset AssemblerMIPSShared::as_jal(JOffImm26 off) {
 
 BufferOffset AssemblerMIPSShared::as_jr(Register rs) {
   spew("jr     %3s", rs.name());
+#ifdef MIPSR6
+  BufferOffset bo =
+      writeInst(InstReg(op_special, rs, zero, zero, ff_jalr).encode());
+#else
   BufferOffset bo =
       writeInst(InstReg(op_special, rs, zero, zero, ff_jr).encode());
+#endif
   return bo;
 }
 BufferOffset AssemblerMIPSShared::as_jalr(Register rs) {
@@ -457,9 +468,33 @@ BufferOffset AssemblerMIPSShared::as_div(Register rs, Register rt) {
   return writeInst(InstReg(op_special, rs, rt, ff_div).encode());
 }
 
+BufferOffset AssemblerMIPSShared::as_div(Register rd, Register rs,
+                                         Register rt) {
+  spew("div    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_div).encode());
+}
+
 BufferOffset AssemblerMIPSShared::as_divu(Register rs, Register rt) {
   spew("divu   %3s,%3s", rs.name(), rt.name());
   return writeInst(InstReg(op_special, rs, rt, ff_divu).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_divu(Register rd, Register rs,
+                                          Register rt) {
+  spew("divu    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_divu).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_mod(Register rd, Register rs,
+                                         Register rt) {
+  spew("mod    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_mod).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_modu(Register rd, Register rs,
+                                          Register rt) {
+  spew("modu   %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_modu).encode());
 }
 
 BufferOffset AssemblerMIPSShared::as_ddiv(Register rs, Register rt) {
@@ -467,15 +502,85 @@ BufferOffset AssemblerMIPSShared::as_ddiv(Register rs, Register rt) {
   return writeInst(InstReg(op_special, rs, rt, ff_ddiv).encode());
 }
 
+BufferOffset AssemblerMIPSShared::as_ddiv(Register rd, Register rs,
+                                          Register rt) {
+  spew("ddiv   %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_ddiv).encode());
+}
+
 BufferOffset AssemblerMIPSShared::as_ddivu(Register rs, Register rt) {
   spew("ddivu  %3s,%3s", rs.name(), rt.name());
   return writeInst(InstReg(op_special, rs, rt, ff_ddivu).encode());
 }
 
+BufferOffset AssemblerMIPSShared::as_ddivu(Register rd, Register rs,
+                                           Register rt) {
+  spew("ddivu  %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_ddivu).encode());
+}
+
 BufferOffset AssemblerMIPSShared::as_mul(Register rd, Register rs,
                                          Register rt) {
   spew("mul    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+#ifdef MIPSR6
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_mul).encode());
+#else
   return writeInst(InstReg(op_special2, rs, rt, rd, ff_mul).encode());
+#endif
+}
+
+BufferOffset AssemblerMIPSShared::as_muh(Register rd, Register rs,
+                                         Register rt) {
+  spew("muh  %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_muh).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_mulu(Register rd, Register rs,
+                                          Register rt) {
+  spew("mulu %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_mulu).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_muhu(Register rd, Register rs,
+                                          Register rt) {
+  spew("muhu %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_muhu).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dmul(Register rd, Register rs,
+                                          Register rt) {
+  spew("dmul   %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_dmul).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dmuh(Register rd, Register rs,
+                                          Register rt) {
+  spew("dmuh   %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_dmuh).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dmulu(Register rd, Register rt,
+                                           Register rs) {
+  spew("dmulu   %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x2, ff_dmulu).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dmuhu(Register rd, Register rt,
+                                           Register rs) {
+  spew("dmuhu   %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_dmuhu).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dmod(Register rd, Register rs,
+                                          Register rt) {
+  spew("dmod    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_dmod).encode());
+}
+
+BufferOffset AssemblerMIPSShared::as_dmodu(Register rd, Register rs,
+                                           Register rt) {
+  spew("dmodu    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x3, ff_dmodu).encode());
 }
 
 BufferOffset AssemblerMIPSShared::as_madd(Register rs, Register rt) {
@@ -678,13 +783,21 @@ BufferOffset AssemblerMIPSShared::as_lwr(Register rd, Register rs,
 
 BufferOffset AssemblerMIPSShared::as_ll(Register rd, Register rs, int16_t off) {
   spew("ll     %3s, (0x%x)%2s", rd.name(), off, rs.name());
+#ifdef MIPSR6
+  return writeInst(InstReg(op_special3, rs, rd, ff_ll).encode());
+#else
   return writeInst(InstImm(op_ll, rs, rd, Imm16(off)).encode());
+#endif
 }
 
 BufferOffset AssemblerMIPSShared::as_lld(Register rd, Register rs,
                                          int16_t off) {
   spew("lld     %3s, (0x%x)%2s", rd.name(), off, rs.name());
+#ifdef MIPSR6
+  return writeInst(InstReg(op_special3, rs, rd, ff_lld).encode());
+#else
   return writeInst(InstImm(op_lld, rs, rd, Imm16(off)).encode());
+#endif
 }
 
 BufferOffset AssemblerMIPSShared::as_ld(Register rd, Register rs, int16_t off) {
@@ -733,13 +846,21 @@ BufferOffset AssemblerMIPSShared::as_swr(Register rd, Register rs,
 
 BufferOffset AssemblerMIPSShared::as_sc(Register rd, Register rs, int16_t off) {
   spew("sc     %3s, (0x%x)%2s", rd.name(), off, rs.name());
+#ifdef MIPSR6
+  return writeInst(InstReg(op_special3, rs, rd, ff_sc).encode());
+#else
   return writeInst(InstImm(op_sc, rs, rd, Imm16(off)).encode());
+#endif
 }
 
 BufferOffset AssemblerMIPSShared::as_scd(Register rd, Register rs,
                                          int16_t off) {
+#ifdef MIPSR6
+  return writeInst(InstReg(op_special3, rs, rd, ff_scd).encode());
+#else
   spew("scd     %3s, (0x%x)%2s", rd.name(), off, rs.name());
   return writeInst(InstImm(op_scd, rs, rd, Imm16(off)).encode());
+#endif
 }
 
 BufferOffset AssemblerMIPSShared::as_sd(Register rd, Register rs, int16_t off) {
@@ -757,6 +878,20 @@ BufferOffset AssemblerMIPSShared::as_sdr(Register rd, Register rs,
                                          int16_t off) {
   spew("sdr    %3s, (0x%x)%2s", rd.name(), off, rs.name());
   return writeInst(InstImm(op_sdr, rs, rd, Imm16(off)).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_seleqz(Register rd, Register rs, Register rt)
+{
+  spew("seleqz    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x0, ff_seleqz).encode());
+}
+
+BufferOffset
+AssemblerMIPSShared::as_selnez(Register rd, Register rs, Register rt)
+{
+  spew("selnez    %3s,%3s,%3s", rd.name(), rs.name(), rt.name());
+  return writeInst(InstReg(op_special, rs, rt, rd, 0x0, ff_selnez).encode());
 }
 
 BufferOffset AssemblerMIPSShared::as_gslbx(Register rd, Register rs,
@@ -898,12 +1033,20 @@ BufferOffset AssemblerMIPSShared::as_movf(Register rd, Register rs,
 // Bit twiddling.
 BufferOffset AssemblerMIPSShared::as_clz(Register rd, Register rs) {
   spew("clz    %3s,%3s", rd.name(), rs.name());
+#ifdef MIPSR6
+  return writeInst(InstReg(op_special, rs, 0x0, rd, 0x1, ff_clz).encode());
+#else
   return writeInst(InstReg(op_special2, rs, rd, rd, ff_clz).encode());
+#endif
 }
 
 BufferOffset AssemblerMIPSShared::as_dclz(Register rd, Register rs) {
   spew("dclz   %3s,%3s", rd.name(), rs.name());
+#ifdef MIPSR6
+  return writeInst(InstReg(op_special, rs, 0x0, rd, 0x1, ff_dclz).encode());
+#else
   return writeInst(InstReg(op_special2, rs, rd, rd, ff_dclz).encode());
+#endif
 }
 
 BufferOffset AssemblerMIPSShared::as_ins(Register rt, Register rs, uint16_t pos,
@@ -1387,12 +1530,24 @@ BufferOffset AssemblerMIPSShared::as_cf(FloatFormat fmt, FloatRegister fs,
                                         FloatRegister ft, FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.f.d  FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_f_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_f_fmt).encode());
+#endif
   } else {
     spew("c.f.s  FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_f_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_f_fmt).encode());
+#endif
   }
 }
 
@@ -1400,12 +1555,24 @@ BufferOffset AssemblerMIPSShared::as_cun(FloatFormat fmt, FloatRegister fs,
                                          FloatRegister ft, FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.un.d FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_un_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_un_fmt).encode());
+#endif
   } else {
     spew("c.un.s FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_un_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_un_fmt).encode());
+#endif
   }
 }
 
@@ -1413,12 +1580,24 @@ BufferOffset AssemblerMIPSShared::as_ceq(FloatFormat fmt, FloatRegister fs,
                                          FloatRegister ft, FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.eq.d FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_eq_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_eq_fmt).encode());
+#endif
   } else {
     spew("c.eq.s FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_eq_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_eq_fmt).encode());
+#endif
   }
 }
 
@@ -1427,12 +1606,24 @@ BufferOffset AssemblerMIPSShared::as_cueq(FloatFormat fmt, FloatRegister fs,
                                           FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.ueq.d FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ueq_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_ueq_fmt).encode());
+#endif
   } else {
     spew("c.ueq.s FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ueq_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_ueq_fmt).encode());
+#endif
   }
 }
 
@@ -1441,12 +1632,24 @@ BufferOffset AssemblerMIPSShared::as_colt(FloatFormat fmt, FloatRegister fs,
                                           FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.olt.d FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_olt_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_olt_fmt).encode());
+#endif
   } else {
     spew("c.olt.s FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_olt_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_olt_fmt).encode());
+#endif
   }
 }
 
@@ -1455,12 +1658,24 @@ BufferOffset AssemblerMIPSShared::as_cult(FloatFormat fmt, FloatRegister fs,
                                           FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.ult.d FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ult_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_ult_fmt).encode());
+#endif
   } else {
     spew("c.ult.s FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ult_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_ult_fmt).encode());
+#endif
   }
 }
 
@@ -1469,12 +1684,24 @@ BufferOffset AssemblerMIPSShared::as_cole(FloatFormat fmt, FloatRegister fs,
                                           FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.ole.d FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ole_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_ole_fmt).encode());
+#endif
   } else {
     spew("c.ole.s FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ole_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_ole_fmt).encode());
+#endif
   }
 }
 
@@ -1483,12 +1710,24 @@ BufferOffset AssemblerMIPSShared::as_cule(FloatFormat fmt, FloatRegister fs,
                                           FPConditionBit fcc) {
   if (fmt == DoubleFloat) {
     spew("c.ule.d FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_d_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ule_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_d, ft, fs, fcc << FccShift, ff_c_ule_fmt).encode());
+#endif
   } else {
     spew("c.ule.s FCC%d,%3s,%3s", fcc, fs.name(), ft.name());
+#ifdef MIPSR6
+    return writeInst(
+        InstReg(op_cop1, rs_s_r6, ft, fs, FloatRegisters::f24,
+                ff_c_ule_fmt).encode());
+#else
     return writeInst(
         InstReg(op_cop1, rs_s, ft, fs, fcc << FccShift, ff_c_ule_fmt).encode());
+#endif
   }
 }
 
@@ -1538,6 +1777,28 @@ BufferOffset AssemblerMIPSShared::as_movn(FloatFormat fmt, FloatRegister fd,
   } else {
     spew("movn.s %3s,%3s,%3s", fd.name(), fs.name(), rt.name());
     return writeInst(InstReg(op_cop1, rs_s, rt, fs, fd, ff_movn_fmt).encode());
+  }
+}
+
+BufferOffset AssemblerMIPSShared::as_max(FloatFormat fmt, FloatRegister fd,
+                                         FloatRegister fs, FloatRegister ft) {
+  if (fmt == DoubleFloat) {
+    spew("max  %3s,%3s,%3s", fd.name(), fs.name(), ft.name());
+    return writeInst(InstReg(op_cop1, rs_d, ft, fs, fd, ff_max).encode());
+  } else {
+    spew("max  %3s,%3s,%3s", fd.name(), fs.name(), ft.name());
+    return writeInst(InstReg(op_cop1, rs_s, ft, fs, fd, ff_max).encode());
+  }
+}
+
+BufferOffset AssemblerMIPSShared::as_min(FloatFormat fmt, FloatRegister fd,
+                                         FloatRegister fs, FloatRegister ft) {
+  if (fmt == DoubleFloat) {
+    spew("min  %3s,%3s,%3s", fd.name(), fs.name(), ft.name());
+    return writeInst(InstReg(op_cop1, rs_d, ft, fs, fd, ff_min).encode());
+  } else {
+    spew("min  %3s,%3s,%3s", fd.name(), fs.name(), ft.name());
+    return writeInst(InstReg(op_cop1, rs_s, ft, fs, fd, ff_min).encode());
   }
 }
 

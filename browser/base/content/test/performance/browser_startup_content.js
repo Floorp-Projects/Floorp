@@ -62,7 +62,6 @@ const whitelist = {
   frameScripts: new Set([
     // Test related
     "chrome://mochikit/content/shutdown-leaks-collector.js",
-    "chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js",
     "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js",
 
     // Browser front-end

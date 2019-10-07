@@ -596,8 +596,12 @@ void CodeGenerator::visitDivI(LDivI* ins) {
 
   // All regular. Lets call div.
   if (mir->canTruncateRemainder()) {
+#ifdef MIPSR6
+    masm.as_div(dest, lhs, rhs);
+#else
     masm.as_div(lhs, rhs);
     masm.as_mflo(dest);
+#endif
   } else {
     MOZ_ASSERT(mir->fallible());
 
@@ -726,9 +730,12 @@ void CodeGenerator::visitModI(LModI* ins) {
     }
     masm.bind(&notNegative);
   }
-
+#ifdef MIPSR6
+  masm.as_mod(dest, lhs, rhs);
+#else
   masm.as_div(lhs, rhs);
   masm.as_mfhi(dest);
+#endif
 
   // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
   if (mir->canBeNegativeDividend()) {
@@ -2278,8 +2285,12 @@ void CodeGenerator::visitUDivOrMod(LUDivOrMod* ins) {
     }
   }
 
+#ifdef MIPSR6
+  masm.as_modu(output, lhs, rhs);
+#else
   masm.as_divu(lhs, rhs);
   masm.as_mfhi(output);
+#endif
 
   // If the remainder is > 0, bailout since this must be a double.
   if (ins->mir()->isDiv()) {
@@ -2287,7 +2298,11 @@ void CodeGenerator::visitUDivOrMod(LUDivOrMod* ins) {
       bailoutCmp32(Assembler::NonZero, output, output, ins->snapshot());
     }
     // Get quotient
+#ifdef MIPSR6
+    masm.as_divu(output, lhs, rhs);
+#else
     masm.as_mflo(output);
+#endif
   }
 
   if (!ins->mir()->isTruncated()) {

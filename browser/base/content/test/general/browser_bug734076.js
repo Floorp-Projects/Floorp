@@ -80,7 +80,8 @@ add_task(async function() {
     {
       name: "show only this frame",
       url: "http://mochi.test:8888/",
-      element: ["iframe", "html"],
+      element: "html",
+      frameIndex: 0,
       go() {
         return ContentTask.spawn(
           gBrowser.selectedBrowser,
@@ -135,13 +136,33 @@ add_task(async function() {
       contentAreaContextMenu,
       "popupshown"
     );
-    await BrowserTestUtils.synthesizeMouse(
-      test.element,
-      3,
-      3,
-      { type: "contextmenu", button: 2 },
-      gBrowser.selectedBrowser
-    );
+
+    let browsingContext = gBrowser.selectedBrowser.browsingContext;
+    if (test.frameIndex != null) {
+      browsingContext = browsingContext.getChildren()[test.frameIndex];
+    }
+
+    await new Promise(r => {
+      SimpleTest.executeSoon(r);
+    });
+
+    // Sometimes, the iframe test fails as the child iframe hasn't finishing layout
+    // yet. Try again in this case.
+    while (true) {
+      try {
+        await BrowserTestUtils.synthesizeMouse(
+          test.element,
+          3,
+          3,
+          { type: "contextmenu", button: 2 },
+          browsingContext
+        );
+      } catch (ex) {
+        continue;
+      }
+      break;
+    }
+
     await popupShownPromise;
     info("onImage: " + gContextMenu.onImage);
 

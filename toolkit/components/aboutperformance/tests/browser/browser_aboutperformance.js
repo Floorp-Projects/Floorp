@@ -45,6 +45,7 @@ add_task(async function init() {
   ) {
     row = row.nextSibling;
   }
+
   Assert.ok(row, "found a table row for our test tab");
   Assert.equal(
     row.windowId,
@@ -60,11 +61,12 @@ add_task(async function init() {
   );
 
   // Verify selecting a row works.
-  await BrowserTestUtils.synthesizeMouseAtCenter(
+  EventUtils.synthesizeMouseAtCenter(
     row,
     {},
-    tabAboutPerformance.linkedBrowser
+    tabAboutPerformance.linkedBrowser.contentWindow
   );
+
   Assert.equal(
     row.getAttribute("selected"),
     "true",
@@ -77,10 +79,10 @@ add_task(async function init() {
     tabAboutPerformance,
     "the about:performance tab is selected"
   );
-  await BrowserTestUtils.synthesizeMouseAtCenter(
+  EventUtils.synthesizeMouseAtCenter(
     row,
     { clickCount: 2 },
-    tabAboutPerformance.linkedBrowser
+    tabAboutPerformance.linkedBrowser.contentWindow
   );
   Assert.equal(
     gBrowser.selectedTab,
@@ -93,10 +95,10 @@ add_task(async function init() {
   await BrowserTestUtils.switchTab(gBrowser, tabAboutPerformance);
   // ... and click the X button at the end of the row.
   let tabClosing = BrowserTestUtils.waitForTabClosing(tabContent);
-  await BrowserTestUtils.synthesizeMouseAtCenter(
+  EventUtils.synthesizeMouseAtCenter(
     row.children[4],
     {},
-    tabAboutPerformance.linkedBrowser
+    tabAboutPerformance.linkedBrowser.contentWindow
   );
   await tabClosing;
 
