@@ -4,8 +4,9 @@
 
 package mozilla.components.feature.awesomebar.provider
 
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Deferred
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -31,29 +32,28 @@ class SessionSuggestionProvider(
         }
 
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
+        val iconRequests: List<Deferred<Icon>?> = sessionManager.sessions.map { icons?.loadIcon(IconRequest(it.url)) }
 
-        sessionManager.sessions.forEach { session ->
-            if (session.contains(text) && !session.private && shouldIncludeSelectedSession(session)
+        sessionManager.sessions.zip(iconRequests) { result, icon ->
+            if (result.contains(text) && !result.private && shouldIncludeSelectedSession(result)
             ) {
                 suggestions.add(
-                    AwesomeBar.Suggestion(
-                        provider = this,
-                        id = session.id,
-                        title = session.title,
-                        description = session.url,
-                        // We can runBlocking here to get the icon since we are already on an IO thread
-                        icon = runBlocking { icons?.loadIcon(IconRequest(session.url))?.await()?.bitmap },
-                        onSuggestionClicked = { selectTabUseCase(session) }
-                    )
+                        AwesomeBar.Suggestion(
+                            provider = this,
+                            id = result.id,
+                            title = result.title,
+                            description = result.url,
+                            icon = icon?.await()?.bitmap,
+                            onSuggestionClicked = { selectTabUseCase(result) }
+                        )
                 )
             }
         }
-
         return suggestions
     }
 
     private fun Session.contains(text: String) =
-        (url.contains(text, ignoreCase = true) || title.contains(text, ignoreCase = true))
+            (url.contains(text, ignoreCase = true) || title.contains(text, ignoreCase = true))
 
     private fun shouldIncludeSelectedSession(session: Session): Boolean {
         return if (excludeSelectedSession) {

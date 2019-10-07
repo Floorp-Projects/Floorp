@@ -136,7 +136,7 @@ class ClipboardSuggestionProviderTest {
         }
 
         runBlocking {
-            assertEquals(bitmap, suggestion?.icon?.invoke(2, 2))
+            assertEquals(bitmap, suggestion?.icon)
             assertEquals("My test title", suggestion?.title)
         }
     }

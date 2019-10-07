@@ -8,10 +8,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
-import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.icons.BrowserIcons
-import mozilla.components.browser.icons.IconRequest
+import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
 import java.util.UUID
@@ -23,11 +22,10 @@ private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
  * any).
  */
 class ClipboardSuggestionProvider(
-    context: Context,
+    private val context: Context,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icon: Bitmap? = null,
     private val title: String? = null,
-    private val icons: BrowserIcons? = null,
     private val requireEmptyText: Boolean = true
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
@@ -49,8 +47,7 @@ class ClipboardSuggestionProvider(
             id = url,
             description = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
-            // We can runBlocking here to get the icon since we are already on an IO thread
-            icon = icon ?: runBlocking { icons?.loadIcon(IconRequest(url))?.await()?.bitmap },
+            icon = icon ?: context.getDrawable(R.drawable.mozac_ic_search)?.toBitmap(),
             title = title,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(url)

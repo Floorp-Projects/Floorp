@@ -108,7 +108,7 @@ class AwesomeBarFeature(
         context: Context,
         loadUrlUseCase: SessionUseCases.LoadUrlUseCase
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase, icons = icons))
+        awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase))
         return this
     }
 

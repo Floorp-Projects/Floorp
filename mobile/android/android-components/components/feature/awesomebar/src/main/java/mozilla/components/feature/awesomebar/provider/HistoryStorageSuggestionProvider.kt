@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.awesomebar.provider
 
-import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -42,17 +41,17 @@ class HistoryStorageSuggestionProvider(
         // We do not want the suggestion of this provider to disappear and re-appear when text changes.
         get() = false
 
-    private fun Iterable<SearchResult>.into(): List<AwesomeBar.Suggestion> {
-        return this.map {
+    private suspend fun Iterable<SearchResult>.into(): List<AwesomeBar.Suggestion> {
+        val iconRequests = this.map { icons?.loadIcon(IconRequest(it.url)) }
+        return this.zip(iconRequests) { result, icon ->
             AwesomeBar.Suggestion(
                 provider = this@HistoryStorageSuggestionProvider,
-                id = it.id,
-                // We can runBlocking here to get the icon since we are already on an IO thread
-                icon = runBlocking { icons?.loadIcon(IconRequest(it.url))?.await()?.bitmap },
-                title = it.title,
-                description = it.url,
-                score = it.score,
-                onSuggestionClicked = { loadUrlUseCase.invoke(it.url) }
+                id = result.id,
+                icon = icon?.await()?.bitmap,
+                title = result.title,
+                description = result.url,
+                score = result.score,
+                onSuggestionClicked = { loadUrlUseCase.invoke(result.url) }
             )
         }
     }
