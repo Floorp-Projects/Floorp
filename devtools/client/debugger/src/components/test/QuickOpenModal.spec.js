@@ -362,7 +362,7 @@ describe("QuickOpenModal", () => {
       expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
         column: 12,
         line: 34,
-        sourceId: sourceId,
+        sourceId,
       });
     });
 
@@ -636,7 +636,7 @@ describe("QuickOpenModal", () => {
       expect(wrapper.state().selectedIndex).toEqual(0);
       expect(props.highlightLineRange).toHaveBeenCalledWith({
         end: 3,
-        sourceId: sourceId,
+        sourceId,
         start: 1,
       });
     });

@@ -172,12 +172,11 @@ class SourceTreeItem extends Component<Props, State> {
   };
 
   handleDownloadFile = async (cx: Context, source: ?Source, item: TreeNode) => {
-    const name = item.name;
-    if (!this.props.sourceContent) {
+    const { sourceContent } = this.props;
+    if (!sourceContent) {
       await this.props.loadSourceText({ cx, source });
     }
-    const data = this.props.sourceContent;
-    downloadFile(data, name);
+    downloadFile(sourceContent, item.name);
   };
 
   addCollapseExpandAllOptions = (menuOptions: ContextMenu, item: TreeNode) => {

@@ -30,7 +30,7 @@ describe("SourcesTree", () => {
 
   it("Should show a 'No Sources' message if there are no sources", async () => {
     const { component, defaultState } = render();
-    const sourceTree = defaultState.sourceTree;
+    const { sourceTree } = defaultState;
     sourceTree.contents = [];
     component.setState({ sourceTree: sourceTree });
     expect(component).toMatchSnapshot();

@@ -148,7 +148,7 @@ describe("sources - new sources", () => {
           return [
             {
               id: generatedToOriginalId(source.id, url),
-              url: url,
+              url,
             },
           ];
         },

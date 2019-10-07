@@ -9,10 +9,7 @@ import { shallow } from "enzyme";
 import WhyPaused from "../SecondaryPanes/WhyPaused.js";
 
 function render(why: Object, delay: ?number) {
-  const props = {
-    why: why,
-    delay: delay,
-  };
+  const props = { why, delay };
 
   // $FlowIgnore
   const component = shallow(<WhyPaused.WrappedComponent {...props} />);

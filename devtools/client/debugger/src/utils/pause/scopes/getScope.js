@@ -60,7 +60,7 @@ export function getScope(
 
   const key = `${actor}-${scopeIndex}`;
   if (type === "function" || type === "block") {
-    const bindings = scope.bindings;
+    const { bindings } = scope;
 
     let vars = getBindingVariables(bindings, key);
 
