@@ -52,6 +52,7 @@ class MoveNodeResult;
 class ParagraphStateAtSelection;
 class ResizerSelectionListener;
 class SplitRangeOffFromNodeResult;
+class SplitRangeOffResult;
 class WSRunObject;
 enum class EditSubAction : int32_t;
 struct PropItem;
@@ -977,6 +978,23 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT
   nsresult SetInlinePropertyOnNode(nsIContent& aNode, nsAtom& aProperty,
                                    nsAtom* aAttribute, const nsAString& aValue);
+
+  /**
+   * SplitAncestorStyledInlineElementsAtRangeEdges() splits all ancestor inline
+   * elements in the block at both aStartPoint and aEndPoint if given style
+   * matches with some of them.
+   *
+   * @param aStartPoint Start of range to split ancestor inline elements.
+   * @param aEndPoint   End of range to split ancestor inline elements.
+   * @param aProperty   The style tag name which you want to split.  Set
+   *                    nullptr if you want to split any styled elements.
+   * @param aAttribute  Attribute name if aProperty has some styles like
+   *                    nsGkAtoms::font.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitRangeOffResult
+  SplitAncestorStyledInlineElementsAtRangeEdges(
+      const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
+      nsAtom* aProperty, nsAtom* aAttribute);
 
   /**
    * SplitAncestorStyledInlineElementsAt() splits ancestor inline elements at
@@ -3945,9 +3963,7 @@ class HTMLEditor final : public TextEditor,
 
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SplitStyleAboveRange(nsRange* aRange, nsAtom* aProperty,
-                                nsAtom* aAttribute);
+
   MOZ_CAN_RUN_SCRIPT
   nsresult RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
                              nsAtom* aAttribute,

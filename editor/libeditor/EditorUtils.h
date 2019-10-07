@@ -607,6 +607,88 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
 };
 
 /***************************************************************************
+ * SplitRangeOffResult class is a simple class for methods which splits
+ * specific ancestor elements at 2 DOM points.
+ */
+class MOZ_STACK_CLASS SplitRangeOffResult final {
+ public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+  bool Handled() const { return mHandled; }
+  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
+
+  /**
+   * This is at right node of split at start point.
+   */
+  const EditorDOMPoint& SplitPointAtStart() const { return mSplitPointAtStart; }
+  /**
+   * This is at right node of split at end point.  I.e., not in the range.
+   * This is after the range.
+   */
+  const EditorDOMPoint& SplitPointAtEnd() const { return mSplitPointAtEnd; }
+
+  SplitRangeOffResult() = delete;
+
+  /**
+   * Constructor for success case.
+   *
+   * @param aTrackedRangeStart          This should be at topmost right node
+   *                                    child at start point if actually split
+   *                                    there, or at start point to be tried
+   *                                    to split.  Note that if the method
+   *                                    allows to run script after splitting
+   *                                    at start point, the point should be
+   *                                    tracked with AutoTrackDOMPoint.
+   * @param aSplitNodeResultAtStart     Raw split node result at start point.
+   * @param aTrackedRangeEnd            This should be at topmost right node
+   *                                    child at end point if actually split
+   *                                    here, or at end point to be tried to
+   *                                    split.  As same as aTrackedRangeStart,
+   *                                    this value should be tracked while
+   *                                    running some script.
+   * @param aSplitNodeResultAtEnd       Raw split node result at start point.
+   */
+  SplitRangeOffResult(const EditorDOMPoint& aTrackedRangeStart,
+                      const SplitNodeResult& aSplitNodeResultAtStart,
+                      const EditorDOMPoint& aTrackedRangeEnd,
+                      const SplitNodeResult& aSplitNodeResultAtEnd)
+      : mSplitPointAtStart(aTrackedRangeStart),
+        mSplitPointAtEnd(aTrackedRangeEnd),
+        mRv(NS_OK),
+        mHandled(aSplitNodeResultAtStart.Handled() ||
+                 aSplitNodeResultAtEnd.Handled()) {
+    MOZ_ASSERT(mSplitPointAtStart.IsSet());
+    MOZ_ASSERT(mSplitPointAtEnd.IsSet());
+    MOZ_ASSERT(aSplitNodeResultAtStart.Succeeded());
+    MOZ_ASSERT(aSplitNodeResultAtEnd.Succeeded());
+  }
+
+  explicit SplitRangeOffResult(nsresult aRv) : mRv(aRv), mHandled(false) {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+  SplitRangeOffResult(const SplitRangeOffResult& aOther) = delete;
+  SplitRangeOffResult& operator=(const SplitRangeOffResult& aOther) = delete;
+  SplitRangeOffResult(SplitRangeOffResult&& aOther) = default;
+  SplitRangeOffResult& operator=(SplitRangeOffResult&& aOther) = default;
+
+ private:
+  EditorDOMPoint mSplitPointAtStart;
+  EditorDOMPoint mSplitPointAtEnd;
+
+  // If you need to store previous and/or next node at start/end point,
+  // you might be able to use `SplitNodeResult::GetPreviousNode()` etc in the
+  // constructor only when `SplitNodeResult::Handled()` returns true.  But
+  // the node might have gone with another DOM tree mutation.  So, be careful
+  // if you do it.
+
+  nsresult mRv;
+
+  bool mHandled;
+};
+
+/***************************************************************************
  * stack based helper class for calling EditorBase::EndTransaction() after
  * EditorBase::BeginTransaction().  This shouldn't be used in editor classes
  * or helper classes while an edit action is being handled.  Use
