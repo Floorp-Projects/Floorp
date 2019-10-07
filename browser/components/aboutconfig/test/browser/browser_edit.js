@@ -122,10 +122,10 @@ add_task(async function test_click_type_label_multiple_forms() {
 
       // Even if this is the second form on the page, the click should select
       // the radio button next to the label, not the one on the first form.
-      await BrowserTestUtils.synthesizeMouseAtCenter(
+      EventUtils.synthesizeMouseAtCenter(
         radioLabels[radioIndex],
         {},
-        this.browser
+        this.browser.contentWindow
       );
 
       // Adding the preference should set the default for the data type.

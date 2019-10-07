@@ -19,6 +19,7 @@
 #include "RequestContextService.h"
 
 #include "FuzzingInterface.h"
+#include "FuzzyLayer.h"
 
 namespace mozilla {
 namespace net {
@@ -82,11 +83,6 @@ FuzzingStreamListener::OnStopRequest(nsIRequest* aRequest,
   return NS_OK;
 }
 
-// Forward declaration to the function in FuzzyLayer.cpp,
-// used to set the buffer to the global defined there.
-void setNetworkFuzzingBuffer(const uint8_t* data, size_t size);
-extern Atomic<bool> gFuzzingConnClosed;
-
 static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
   Preferences::SetBool("network.dns.native-is-localhost", true);
   Preferences::SetBool("fuzzing.necko.enabled", true);
@@ -135,7 +131,7 @@ static int FuzzingInitNetworkHttp2ProxyPlain(int* argc, char*** argv) {
 
 static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
   // Set the data to be processed
-  setNetworkFuzzingBuffer(data, size);
+  addNetworkFuzzingBuffer(data, size);
 
   nsWeakPtr channelRef;
 
@@ -286,8 +282,10 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
     return channel == nullptr;
   });
 
-  // Wait for the connection to indicate closed
-  SpinEventLoopUntil([&]() -> bool { return gFuzzingConnClosed; });
+  if (!signalNetworkFuzzingDone()) {
+    // Wait for the connection to indicate closed
+    SpinEventLoopUntil([&]() -> bool { return gFuzzingConnClosed; });
+  }
 
   rcsvc->RemoveRequestContext(rcID);
   return 0;

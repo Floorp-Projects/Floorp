@@ -3,47 +3,21 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>Setting document.domain and IDN</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 
 <!--
 
-TODO: after bug 945240 this test is no longer relevant. Should fix.
+This test checks that the value of document.domain is always punycode,
+no matter if the TLD is whitelisted or not.
+Prior to bug 945240 that was not true.
 
-This testing all gets a bit complicated here; the problem is that our
-document.domain implementation will do a suffix comparison of the value to which
-it's being set against the current URI's base domain (where "base domain" is
-defined as the effective TLD plus one; see nsIEffectiveTLDService.idl).  Seems
-simple enough, right?  Wrong.
-
-The problem, as usual, is IDN.  Our current, wholly-inadequate solution to
-preventing Unicode domain-name spoofing is done at the level of the URL
-implementation, not at the presentation level.  However, the value of the
-base domain for the current URI is always calculated in punycode; if the
-provided domain is one which is whitelisted, we'll get an IDN name and the
-suffix-comparison will fail.  Nice great big mess, huh?
-
-Anyway: "test" currently fits the bill as a TLD which is not whitelisted, while
-"δοκιμή" (the Greek IDN TLD for "test") fits the bill as a TLD which is
-whitelisted.  RFC 2606 reserves "test" for DNS testing, so nobody's going to
-clamor for it to be whitelisted any time soon.  The latter is as of February
-2008 undergoing testing for IDN TLDs, and it's at least temporarily whitelisted
-for now.  Once the testing period ends the latter's probably going to be
-un-whitelisted, so we're going to have to do a careful bit of stepping to ensure
-that in the future this test tests what it was intended to test (and, until
-bug 414090 is fixed, that it doesn't break when the Greek TLD is
-un-whitelisted).
-
-After bug 722299 the IDN whitelist is expected to go away (bug
-843689), but bug 414090 still applies, mutatis mutandis. The test has
-been changed to use exaмple.test instead (with a Cyrillic м), which
-will fail the mixed-script tests and use punycode.
 -->
 
 <div>
@@ -93,18 +67,7 @@ function receiveMessage(evt)
   var match;
   if (/test$/.test(origin))
   {
-    // XXX bug 414090
-    // The value of MessageEvent.origin with postMessage *should* always be IDN;
-    // unfortunately, given our current setup for dealing with Unicode-based
-    // domain-name spoofing, whether a domain is in the safe-for-IDN whitelist
-    // affects the value of this property (likewise for window.location,
-    // document.location, document.domain, and probably a slew of other
-    // things).  :-(
-    //
-    // These two tests should illustrate what currently happens and what should
-    // happen once bug 414090 is fixed.
-    todo_is(evt.origin, "http://sub1.exaмple.test", "wrong sender");
-    todo_isnot(evt.origin, "http://sub1.xn--exaple-kqf.test", "wrong sender");
+    is(evt.origin, "http://sub1.xn--exaple-kqf.test", "wrong sender");
   }
   else
   {
@@ -148,63 +111,42 @@ function receiveMessage(evt)
   state++;
 }
 
-function run()
-{
+function* rungen() {
   var target = window.frames.idnKidWhitelist;
   target.postMessage("idn-whitelist", "http://sub1.παράδειγμα.δοκιμή");
+  receiveMessage(yield);
 
-  // Double-timeouts account for 1) delay for message to be received by target
-  // window and 2) delay for response from target window to be received by this
-  // window.
+  ok(gotIDNWhitelist, "IDN whitelist message not received");
 
-  setTimeout(function()
-  {
-    setTimeout(function()
-    {
-      ok(gotIDNWhitelist, "IDN whitelist message not received");
+  var target = window.frames.punycodeKidWhitelist;
+  target.postMessage("punycode-whitelist", "http://sub1.παράδειγμα.δοκιμή");
 
-      var target = window.frames.punycodeKidWhitelist;
-      target.postMessage("punycode-whitelist", "http://sub1.παράδειγμα.δοκιμή");
+  receiveMessage(yield);
 
-      setTimeout(function()
-      {
-        setTimeout(function()
-        {
-          ok(gotPunycodeWhitelist, "punycode whitelist message not received");
+  ok(gotPunycodeWhitelist, "punycode whitelist message not received");
 
-          var target = window.frames.idnKidNoWhitelist;
-          target.postMessage("idn-nowhitelist", "http://sub1.exaмple.test");
+  var target = window.frames.idnKidNoWhitelist;
+  target.postMessage("idn-nowhitelist", "http://sub1.exaмple.test");
 
-          setTimeout(function()
-          {
-            setTimeout(function()
-            {
-              ok(gotIDNNoWhitelist, "IDN no-whitelist message not received");
-    
-              var target = window.frames.punycodeKidNoWhitelist;
-              target.postMessage("punycode-nowhitelist",
-                                 "http://sub1.exaмple.test");
+  receiveMessage(yield);
 
-              setTimeout(function()
-              {
-                setTimeout(function()
-                {
-                  ok(gotPunycodeNoWhitelist,
-                     "punycode no-whitelist message not received");
+  ok(gotIDNNoWhitelist, "IDN no-whitelist message not received");
 
-                  SimpleTest.finish();
-                }, 0);
-              }, 0);
-            }, 0);
-          }, 0);
-        }, 0);
-      }, 0);
-    }, 0);
-  }, 0);
+  var target = window.frames.punycodeKidNoWhitelist;
+  target.postMessage("punycode-nowhitelist",
+                     "http://sub1.exaмple.test");
+
+  receiveMessage(yield);
+
+  ok(gotPunycodeNoWhitelist,
+     "punycode no-whitelist message not received");
+
+  SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage);
-window.addEventListener("load", run);
+var gen = rungen();
+window.addEventListener("message", (m) => gen.next(m));
+window.addEventListener("load", () => gen.next());
 </script>
 </pre>
 </body>

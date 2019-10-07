@@ -47,11 +47,7 @@ enum class StyleDisplay : uint16_t {
   FlowRoot = StyleDisplayFrom(StyleDisplayOutside::Block,
                               StyleDisplayInside::FlowRoot),
   Flex = StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::Flex),
-  InlineFlex =
-      StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::Flex),
   Grid = StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::Grid),
-  InlineGrid =
-      StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::Grid),
   Table =
       StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::Table),
   InlineTable =

@@ -2645,6 +2645,7 @@ void SourceMediaTrack::SetEnabledImpl(DisabledTrackMode aMode) {
 
 void SourceMediaTrack::RemoveAllDirectListenersImpl() {
   GraphImpl()->AssertOnGraphThreadOrNotRunning();
+  MutexAutoLock lock(mMutex);
 
   auto directListeners(mDirectTrackListeners);
   for (auto& l : directListeners) {

@@ -225,8 +225,12 @@ void MacroAssembler::sub64(Imm64 imm, Register64 dest) {
 void MacroAssembler::mul64(Imm64 imm, const Register64& dest) {
   MOZ_ASSERT(dest.reg != ScratchRegister);
   mov(ImmWord(imm.value), ScratchRegister);
+#ifdef MIPSR6
+  as_dmulu(dest.reg, ScratchRegister, dest.reg);
+#else
   as_dmultu(dest.reg, ScratchRegister);
   as_mflo(dest.reg);
+#endif
 }
 
 void MacroAssembler::mul64(Imm64 imm, const Register64& dest,
@@ -238,8 +242,12 @@ void MacroAssembler::mul64(Imm64 imm, const Register64& dest,
 void MacroAssembler::mul64(const Register64& src, const Register64& dest,
                            const Register temp) {
   MOZ_ASSERT(temp == InvalidReg);
+#ifdef MIPSR6
+  as_dmulu(dest.reg, src.reg, dest.reg);
+#else
   as_dmultu(dest.reg, src.reg);
   as_mflo(dest.reg);
+#endif
 }
 
 void MacroAssembler::mul64(const Operand& src, const Register64& dest,

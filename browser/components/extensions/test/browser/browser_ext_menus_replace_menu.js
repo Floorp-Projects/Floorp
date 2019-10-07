@@ -259,7 +259,7 @@ add_task(async function overrideContext_in_extension_tab() {
   {
     // Tests that overrideContext({}) can be used from a listener inside shadow DOM.
     let menu = await openContextMenu(
-      () => content.document.getElementById("shadowHost").shadowRoot.firstChild
+      () => this.document.getElementById("shadowHost").shadowRoot.firstChild
     );
     await extension.awaitMessage("oncontextmenu_in_shadow_dom");
     await extension.awaitMessage("onShown");

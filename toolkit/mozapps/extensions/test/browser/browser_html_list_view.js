@@ -335,14 +335,13 @@ add_task(async function testMouseSupport() {
   let [card] = getTestCards(doc);
   is(card.addon.id, "test@mochi.test", "The right card is found");
 
-  let menuButton = card.querySelector('[action="more-options"]');
   let panel = card.querySelector("panel-list");
 
   ok(!panel.open, "The panel is initially closed");
   await BrowserTestUtils.synthesizeMouseAtCenter(
-    menuButton,
+    "addon-card[addon-id$='@mochi.test'] button[action='more-options']",
     { type: "mousedown" },
-    gBrowser.selectedBrowser
+    win.docShell.browsingContext
   );
   ok(panel.open, "The panel is now open");
 
