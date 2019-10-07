@@ -119,13 +119,7 @@ mozilla::ipc::IPCResult UiCompositorControllerParent::RecvFixedBottomOffset(
       CompositorBridgeParent::GetCompositorBridgeParentFromLayersId(
           mRootLayerTreeId);
   if (parent) {
-    AsyncCompositionManager* manager = parent->GetCompositionManager(nullptr);
-    if (manager) {
-      manager->SetFixedLayerMargins(0, aOffset);
-    }
-
-    parent->Invalidate();
-    parent->ScheduleComposition();
+    parent->SetFixedLayerMargins(0, aOffset);
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 

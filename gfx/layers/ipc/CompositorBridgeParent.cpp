@@ -1436,6 +1436,16 @@ void CompositorBridgeParent::SetConfirmedTargetAPZC(
   mApzUpdater->RunOnControllerThread(selector, task.forget());
 }
 
+void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,
+                                                  ScreenIntCoord aBottom) {
+  if (AsyncCompositionManager* manager = GetCompositionManager(nullptr)) {
+    manager->SetFixedLayerMargins(aTop, aBottom);
+  }
+
+  Invalidate();
+  ScheduleComposition();
+}
+
 void CompositorBridgeParent::InitializeLayerManager(
     const nsTArray<LayersBackend>& aBackendHints) {
   NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");

@@ -394,6 +394,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       LayerTransactionParent* aLayerTree) override {
     return mCompositionManager;
   }
+  void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
 
   PTextureParent* AllocPTextureParent(
       const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
