@@ -101,7 +101,8 @@ add_task(async function test_search_result() {
       fireInputEvent: true,
     });
 
-    const details = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    let index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
+    const details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
 
     // We'll initially display no separator.
     assertElementsDisplayed(details, {
@@ -110,7 +111,10 @@ add_task(async function test_search_result() {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
     });
 
-    EventUtils.sendKey("down");
+    // Down to select the first search suggestion.
+    for (let i = index; i > 0; --i) {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
 
     // We should now be displaying one.
     assertElementsDisplayed(details, {
