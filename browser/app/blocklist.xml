@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570053270833">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570454742516">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3485,6 +3485,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="19f599bd-2226-49e2-90fd-685fd106fc3d" id="sparalarm@chip.de">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -3520,12 +3524,12 @@
     <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
       <match name="filename" exp="libflashplayer\.so"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.223" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.238" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
       <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.223" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.238" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
