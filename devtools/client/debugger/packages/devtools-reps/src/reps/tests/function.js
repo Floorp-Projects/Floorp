@@ -298,8 +298,11 @@ describe("Function - Anonymous generator function", () => {
 });
 
 describe("Function - Jump to definition", () => {
-  it("renders an icon when onViewSourceInDebugger props is provided", () => {
-    const onViewSourceInDebugger = jest.fn();
+  it("renders an icon when onViewSourceInDebugger props is provided", async () => {
+    let onViewSourceInDebugger;
+    const onViewSourceCalled = new Promise(resolve => {
+      onViewSourceInDebugger = jest.fn(resolve);
+    });
     const object = stubs.get("getRandom");
     const renderedComponent = renderRep(object, {
       onViewSourceInDebugger,
@@ -310,6 +313,7 @@ describe("Function - Jump to definition", () => {
       type: "click",
       stopPropagation: () => {},
     });
+    await onViewSourceCalled;
 
     expect(node.exists()).toBeTruthy();
     expect(onViewSourceInDebugger.mock.calls).toHaveLength(1);
@@ -362,7 +366,7 @@ describe("Function - Jump to definition", () => {
     const object = {
       ...stubs.get("getRandom"),
     };
-    object.location.url = null;
+    object.location = { ...object.location, url: null };
     const renderedComponent = renderRep(object, {
       onViewSourceInDebugger: () => {},
     });
@@ -379,6 +383,39 @@ describe("Function - Jump to definition", () => {
 
     const node = renderedComponent.find(".jump-definition");
     expect(node.exists()).toBeFalsy();
+  });
+
+  it("applies source mapping to the object's location", async () => {
+    let onViewSourceInDebugger;
+    const onViewSourceCalled = new Promise(resolve => {
+      onViewSourceInDebugger = jest.fn(resolve);
+    });
+
+    const object = stubs.get("getRandom");
+    const { url, line, column } = object.location;
+    const sourceId = "test source id";
+    const originalPositionFor = jest.fn(() =>
+      Promise.resolve({ sourceUrl: url, line, column, sourceId })
+    );
+
+    const renderedComponent = renderRep(object, {
+      onViewSourceInDebugger,
+      sourceMapService: { originalPositionFor },
+    });
+
+    const node = renderedComponent.find(".jump-definition");
+    node.simulate("click", {
+      type: "click",
+      stopPropagation: () => {},
+    });
+    await onViewSourceCalled;
+
+    expect(originalPositionFor.mock.calls).toHaveLength(1);
+    expect(originalPositionFor.mock.calls[0]).toEqual([url, line, column]);
+    expect(onViewSourceInDebugger.mock.calls).toHaveLength(1);
+    console.log(onViewSourceInDebugger.mock.calls[0]);
+    const expectedLocation = { ...object.location, sourceId };
+    expect(onViewSourceInDebugger.mock.calls[0][0]).toEqual(expectedLocation);
   });
 });
 
