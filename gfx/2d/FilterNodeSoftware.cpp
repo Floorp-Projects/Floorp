@@ -2296,10 +2296,12 @@ static inline void DebugOnlyCheckColorSamplingAccess(
 #  define DebugOnlyCheckColorSamplingAccess(address, boundsBegin, boundsEnd)
 #endif
 
-static inline uint8_t ColorComponentAtPoint(
-    const uint8_t* aData, ptrdiff_t aStride, const uint8_t* aBoundsBegin,
-    const uint8_t* aBoundsEnd, int32_t x, int32_t y, ptrdiff_t bpp,
-    ptrdiff_t c) {
+static inline uint8_t ColorComponentAtPoint(const uint8_t* aData,
+                                            ptrdiff_t aStride,
+                                            const uint8_t* aBoundsBegin,
+                                            const uint8_t* aBoundsEnd,
+                                            int32_t x, int32_t y, ptrdiff_t bpp,
+                                            ptrdiff_t c) {
   DebugOnlyCheckColorSamplingAccess(&aData[y * aStride + bpp * x + c],
                                     aBoundsBegin, aBoundsEnd);
   return aData[y * aStride + bpp * x + c];
@@ -2316,12 +2318,9 @@ static inline int32_t ColorAtPoint(const uint8_t* aData, ptrdiff_t aStride,
 
 // Accepts fractional x & y and does bilinear interpolation.
 // Only call this if the pixel (floor(x)+1, floor(y)+1) is accessible.
-static inline uint8_t ColorComponentAtPoint(const uint8_t* aData,
-                                            ptrdiff_t aStride,
-                                            const uint8_t* aBoundsBegin,
-                                            const uint8_t* aBoundsEnd, Float x,
-                                            Float y, ptrdiff_t bpp,
-                                            ptrdiff_t c) {
+static inline uint8_t ColorComponentAtPoint(
+    const uint8_t* aData, ptrdiff_t aStride, const uint8_t* aBoundsBegin,
+    const uint8_t* aBoundsEnd, Float x, Float y, ptrdiff_t bpp, ptrdiff_t c) {
   const uint32_t f = 256;
   const int32_t lx = floor(x);
   const int32_t ly = floor(y);

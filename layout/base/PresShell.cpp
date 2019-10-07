@@ -1915,7 +1915,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
   }
 
   MOZ_ASSERT(!mPresContext->SuppressingResizeReflow() &&
-             !(aOptions & ResizeReflowOptions::SuppressReflow),
+                 !(aOptions & ResizeReflowOptions::SuppressReflow),
              "Can't suppress resize reflow and shrink-wrap at the same time");
 
   // Make sure that style is flushed before setting the pres context

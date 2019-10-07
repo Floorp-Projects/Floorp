@@ -86,9 +86,8 @@ void QuicSocketControl::SetNegotiatedNPN(const nsACString& aValue) {
 }
 
 void QuicSocketControl::SetInfo(uint16_t aCipherSuite,
-                                         uint16_t aProtocolVersion,
-                                         uint16_t aKeaGroup,
-                                   uint16_t aSignatureScheme) {
+                                uint16_t aProtocolVersion, uint16_t aKeaGroup,
+                                uint16_t aSignatureScheme) {
   SSLCipherSuiteInfo cipherInfo;
   if (SSL_GetCipherSuiteInfo(aCipherSuite, &cipherInfo, sizeof cipherInfo) ==
       SECSuccess) {

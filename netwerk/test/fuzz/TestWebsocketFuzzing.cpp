@@ -150,9 +150,9 @@ static int FuzzingRunNetworkWebsocket(const uint8_t* data, size_t size) {
     nsCOMPtr<nsIPrincipal> nullPrincipal =
         NullPrincipal::CreateWithoutOriginAttributes();
 
-    rv = gWebSocketChannel->InitLoadInfo(nullptr, nullPrincipal,
-                                         nsContentUtils::GetSystemPrincipal(),
-                                         secFlags, nsIContentPolicy::TYPE_WEBSOCKET);
+    rv = gWebSocketChannel->InitLoadInfo(
+        nullptr, nullPrincipal, nsContentUtils::GetSystemPrincipal(), secFlags,
+        nsIContentPolicy::TYPE_WEBSOCKET);
 
     if (rv != NS_OK) {
       MOZ_CRASH("Failed to call InitLoadInfo");

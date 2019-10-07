@@ -1181,8 +1181,8 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   // All accessors/methods require a live frame, except for the live getter.
   bool checkLive = MyMethod != &CallData::liveGetter;
 
-  RootedDebuggerFrame frame(cx, DebuggerFrame::check(cx, args.thisv(),
-                                                     checkLive));
+  RootedDebuggerFrame frame(cx,
+                            DebuggerFrame::check(cx, args.thisv(), checkLive));
   if (!frame) {
     return false;
   }
@@ -1317,8 +1317,8 @@ static bool DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedValue framev(cx,
-      argsobj->as<NativeObject>().getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME));
+  RootedValue framev(cx, argsobj->as<NativeObject>().getReservedSlot(
+                             JSSLOT_DEBUGARGUMENTS_FRAME));
   RootedDebuggerFrame thisobj(cx, DebuggerFrame::check(cx, framev, true));
   if (!thisobj) {
     return false;
@@ -1615,8 +1615,7 @@ const JSPropertySpec DebuggerFrame::properties_[] = {
 
 const JSFunctionSpec DebuggerFrame::methods_[] = {
     JS_DEBUG_FN("eval", evalMethod, 1),
-    JS_DEBUG_FN("evalWithBindings", evalWithBindingsMethod, 1),
-    JS_FS_END};
+    JS_DEBUG_FN("evalWithBindings", evalWithBindingsMethod, 1), JS_FS_END};
 
 JSObject* js::IdVectorToArray(JSContext* cx, Handle<IdVector> ids) {
   Rooted<ValueVector> vals(cx, ValueVector(cx));

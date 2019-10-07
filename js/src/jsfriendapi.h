@@ -199,9 +199,9 @@ typedef void (*JSSetUseCounterCallback)(JSObject* obj, JSUseCounter counter);
 extern JS_FRIEND_API void JS_SetSetUseCounterCallback(
     JSContext* cx, JSSetUseCounterCallback callback);
 
-extern JS_FRIEND_API void JS_ReportFirstCompileTime(JS::HandleScript script,
-                                                    mozilla::TimeDuration& parse,
-                                                    mozilla::TimeDuration& emit);
+extern JS_FRIEND_API void JS_ReportFirstCompileTime(
+    JS::HandleScript script, mozilla::TimeDuration& parse,
+    mozilla::TimeDuration& emit);
 
 extern JS_FRIEND_API JSPrincipals* JS_GetScriptPrincipals(JSScript* script);
 

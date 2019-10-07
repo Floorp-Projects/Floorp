@@ -79,7 +79,7 @@ class JSWindowActor : public nsISupports, public nsWrapperCache {
   void InvokeCallback(CallbackFunction willDestroy);
 
  private:
-  friend class ::nsQueryActor; // for QueryInterfaceActor
+  friend class ::nsQueryActor;  // for QueryInterfaceActor
 
   nsresult QueryInterfaceActor(const nsIID& aIID, void** aPtr);
 

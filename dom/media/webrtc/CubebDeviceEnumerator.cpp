@@ -314,11 +314,11 @@ void CubebDeviceEnumerator::AudioDeviceListChanged(Side aSide) {
     }
   }
 
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "CubebDeviceEnumerator::AudioDeviceListChanged",
-      [self = RefPtr<CubebDeviceEnumerator>(this)]() {
-        self->NotifyDeviceChange();
-      }));
+  NS_DispatchToMainThread(
+      NS_NewRunnableFunction("CubebDeviceEnumerator::AudioDeviceListChanged",
+                             [self = RefPtr<CubebDeviceEnumerator>(this)]() {
+                               self->NotifyDeviceChange();
+                             }));
 }
 
 }  // namespace mozilla

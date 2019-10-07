@@ -133,7 +133,7 @@ bool BinaryASTSupport::ensureBinASTKindsInitialized(JSContext* cx) {
       const CharSlice& key = getBinASTKind(variant);
       auto ptr = binASTKindMap_.lookupForAdd(key);
       MOZ_ASSERT(!ptr);
-      if (!binASTKindMap_.add(ptr, key, variant)) {
+      if (MOZ_UNLIKELY(!binASTKindMap_.add(ptr, key, variant))) {
         ReportOutOfMemory(cx);
         return false;
       }
@@ -151,7 +151,7 @@ bool BinaryASTSupport::ensureBinASTVariantsInitialized(JSContext* cx) {
       const CharSlice& key = getBinASTVariant(variant);
       auto ptr = binASTVariantMap_.lookupForAdd(key);
       MOZ_ASSERT(!ptr);
-      if (!binASTVariantMap_.add(ptr, key, variant)) {
+      if (MOZ_UNLIKELY(!binASTVariantMap_.add(ptr, key, variant))) {
         ReportOutOfMemory(cx);
         return false;
       }
@@ -165,7 +165,7 @@ JS::Result<const js::frontend::BinASTKind*> BinaryASTSupport::binASTKind(
   MOZ_ASSERT_IF(cx->isHelperThreadContext(), !binASTKindMap_.empty());
   if (!cx->isHelperThreadContext()) {
     // Initialize Lazily if on main thread.
-    if (!ensureBinASTKindsInitialized(cx)) {
+    if (MOZ_UNLIKELY(!ensureBinASTKindsInitialized(cx))) {
       return cx->alreadyReportedError();
     }
   }
@@ -183,7 +183,7 @@ JS::Result<const js::frontend::BinASTVariant*> BinaryASTSupport::binASTVariant(
   MOZ_ASSERT_IF(cx->isHelperThreadContext(), !binASTVariantMap_.empty());
   if (!cx->isHelperThreadContext()) {
     // Initialize lazily if on main thread.
-    if (!ensureBinASTVariantsInitialized(cx)) {
+    if (MOZ_UNLIKELY(!ensureBinASTVariantsInitialized(cx))) {
       return cx->alreadyReportedError();
     }
   }

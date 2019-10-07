@@ -12,9 +12,10 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/SelectionState.h"
-#include "mozilla/dom/Selection.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsAttrName.h"
 #include "nsCOMPtr.h"
@@ -573,202 +574,282 @@ nsresult HTMLEditor::SplitStyleAboveRange(nsRange* aRange, nsAtom* aProperty,
                                           nsAtom* aAttribute) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aRange)) {
+  if (NS_WARN_IF(!aRange) || NS_WARN_IF(!aRange->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsCOMPtr<nsINode> startNode = aRange->GetStartContainer();
-  int32_t startOffset = aRange->StartOffset();
-  nsCOMPtr<nsINode> endNode = aRange->GetEndContainer();
-  int32_t endOffset = aRange->EndOffset();
-
-  nsCOMPtr<nsINode> origStartNode = startNode;
+  EditorDOMPoint startOfRange(aRange->StartRef());
+  EditorDOMPoint endOfRange(aRange->EndRef());
 
   // split any matching style nodes above the start of range
   {
-    AutoTrackDOMPoint tracker(RangeUpdaterRef(), address_of(endNode),
-                              &endOffset);
-    nsresult rv = SplitStyleAbovePoint(address_of(startNode), &startOffset,
-                                       aProperty, aAttribute);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    AutoTrackDOMPoint tracker(RangeUpdaterRef(), &endOfRange);
+    SplitNodeResult result = SplitAncestorStyledInlineElementsAt(
+        startOfRange, aProperty, aAttribute);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.Rv();
+    }
+    if (result.Handled()) {
+      startOfRange = result.SplitPoint();
+      if (NS_WARN_IF(!startOfRange.IsSet())) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
 
   // second verse, same as the first...
-  nsresult rv = SplitStyleAbovePoint(address_of(endNode), &endOffset, aProperty,
-                                     aAttribute);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  {
+    AutoTrackDOMPoint tracker(RangeUpdaterRef(), &startOfRange);
+    SplitNodeResult result =
+        SplitAncestorStyledInlineElementsAt(endOfRange, aProperty, aAttribute);
+    if (NS_WARN_IF(result.Failed())) {
+      return result.Rv();
+    }
+    if (result.Handled()) {
+      endOfRange = result.SplitPoint();
+      if (NS_WARN_IF(!endOfRange.IsSet())) {
+        return NS_ERROR_FAILURE;
+      }
+    }
   }
 
   // reset the range
-  rv = aRange->SetStartAndEnd(startNode, startOffset, endNode, endOffset);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  nsresult rv = aRange->SetStartAndEnd(startOfRange.ToRawRangeBoundary(),
+                                       endOfRange.ToRawRangeBoundary());
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "nsRange::SetStartAndEnd() failed");
+  return rv;
 }
 
-nsresult HTMLEditor::SplitStyleAbovePoint(
-    nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-    // null here means we split all properties
-    nsAtom* aProperty, nsAtom* aAttribute, nsIContent** aOutLeftNode,
-    nsIContent** aOutRightNode) {
-  NS_ENSURE_TRUE(aNode && *aNode && aOffset, NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE((*aNode)->IsContent(), NS_OK);
-
-  if (aOutLeftNode) {
-    *aOutLeftNode = nullptr;
+SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
+    const EditorDOMPoint& aPointToSplit, nsAtom* aProperty,
+    nsAtom* aAttribute) {
+  if (NS_WARN_IF(!aPointToSplit.IsSet()) ||
+      NS_WARN_IF(!aPointToSplit.GetContainerAsContent())) {
+    return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
-  if (aOutRightNode) {
-    *aOutRightNode = nullptr;
-  }
-
-  // Split any matching style nodes above the node/offset
-  nsCOMPtr<nsIContent> node = (*aNode)->AsContent();
 
   bool useCSS = IsCSSEnabled();
 
-  bool isSet;
-  while (!IsBlockNode(node) && node->GetParent() &&
-         IsEditable(node->GetParent())) {
-    isSet = false;
+  // Split any matching style nodes above the point.
+  SplitNodeResult result(aPointToSplit);
+  MOZ_ASSERT(!result.Handled());
+  for (nsCOMPtr<nsIContent> content = aPointToSplit.GetContainerAsContent();
+       !IsBlockNode(content) && content->GetParent() &&
+       IsEditable(content->GetParent());
+       content = content->GetParent()) {
+    bool isSetByCSS = false;
     if (useCSS &&
-        CSSEditUtils::IsCSSEditableProperty(node, aProperty, aAttribute)) {
+        CSSEditUtils::IsCSSEditableProperty(content, aProperty, aAttribute)) {
       // The HTML style defined by aProperty/aAttribute has a CSS equivalence
       // in this implementation for the node; let's check if it carries those
       // CSS styles
       nsAutoString firstValue;
-      isSet = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-          node, aProperty, aAttribute, firstValue, CSSEditUtils::eSpecified);
+      isSetByCSS = CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
+          content, aProperty, aAttribute, firstValue, CSSEditUtils::eSpecified);
     }
-    if (  // node is the correct inline prop
-        (aProperty && node->IsHTMLElement(aProperty)) ||
-        // node is href - test if really <a href=...
-        (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(node)) ||
-        // or node is any prop, and we asked to split them all
-        (!aProperty && node->IsElement() && IsEditable(node) &&
-         HTMLEditUtils::IsRemovableInlineStyleElement(*node->AsElement())) ||
-        // or the style is specified in the style attribute
-        isSet) {
-      // Found a style node we need to split
-      SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
-          *node, EditorDOMPoint(*aNode, *aOffset),
-          SplitAtEdges::eAllowToCreateEmptyContainer);
-      NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
-                           "Failed to split the node");
-
-      EditorRawDOMPoint atRightNode(splitNodeResult.SplitPoint());
-      *aNode = atRightNode.GetContainer();
-      *aOffset = atRightNode.Offset();
-      if (aOutLeftNode) {
-        NS_IF_ADDREF(*aOutLeftNode = splitNodeResult.GetPreviousNode());
+    if (!isSetByCSS) {
+      if (!content->IsElement()) {
+        continue;
       }
-      if (aOutRightNode) {
-        NS_IF_ADDREF(*aOutRightNode = splitNodeResult.GetNextNode());
-      }
-    }
-    node = node->GetParent();
-    if (NS_WARN_IF(!node)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                                nsAtom* aProperty, nsAtom* aAttribute) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  nsCOMPtr<nsIContent> leftNode, rightNode;
-  nsresult rv =
-      SplitStyleAbovePoint(aNode, aOffset, aProperty, aAttribute,
-                           getter_AddRefs(leftNode), getter_AddRefs(rightNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (leftNode) {
-    bool bIsEmptyNode;
-    IsEmptyNode(leftNode, &bIsEmptyNode, false, true);
-    if (bIsEmptyNode) {
-      // delete leftNode if it became empty
-      rv = DeleteNodeWithTransaction(*leftNode);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-    }
-  }
-  if (rightNode) {
-    nsCOMPtr<nsINode> secondSplitParent = GetLeftmostChild(rightNode);
-    // don't try to split non-containers (br's, images, hr's, etc.)
-    if (!secondSplitParent) {
-      secondSplitParent = rightNode;
-    }
-    RefPtr<Element> savedBR;
-    if (!IsContainer(secondSplitParent)) {
-      if (secondSplitParent->IsHTMLElement(nsGkAtoms::br)) {
-        savedBR = Element::FromNode(secondSplitParent);
-        MOZ_ASSERT(savedBR);
-      }
-
-      secondSplitParent = secondSplitParent->GetParentNode();
-    }
-    *aOffset = 0;
-    rv = SplitStyleAbovePoint(address_of(secondSplitParent), aOffset, aProperty,
-                              aAttribute, getter_AddRefs(leftNode),
-                              getter_AddRefs(rightNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (rightNode) {
-      bool bIsEmptyNode;
-      IsEmptyNode(rightNode, &bIsEmptyNode, false, true);
-      if (bIsEmptyNode) {
-        // delete rightNode if it became empty
-        rv = DeleteNodeWithTransaction(*rightNode);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+      // If aProperty is set, we need to split only elements which applies the
+      // given style.
+      if (aProperty) {
+        // If the content is an inline element represents aProperty or
+        // the content is a link element and aProperty is `href`, we should
+        // split the content.
+        if (!content->IsHTMLElement(aProperty) &&
+            !(aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(content))) {
+          continue;
         }
       }
-    }
-
-    if (!leftNode) {
-      return NS_OK;
-    }
-
-    // should be impossible to not get a new leftnode here
-    nsCOMPtr<nsINode> newSelParent = GetLeftmostChild(leftNode);
-    if (!newSelParent) {
-      newSelParent = leftNode;
-    }
-    // If rightNode starts with a br, suck it out of right node and into
-    // leftNode.  This is so we you don't revert back to the previous style
-    // if you happen to click at the end of a line.
-    if (savedBR) {
-      rv = MoveNodeWithTransaction(*savedBR, EditorDOMPoint(newSelParent, 0));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      // If aProperty is nullptr, we need to split any style.
+      else if (!IsEditable(content) ||
+               !HTMLEditUtils::IsRemovableInlineStyleElement(
+                   *content->AsElement())) {
+        continue;
       }
     }
-    // remove the style on this new hierarchy
-    int32_t newSelOffset = 0;
-    {
-      // Track the point at the new hierarchy.  This is so we can know where
-      // to put the selection after we call RemoveStyleInside().
-      // RemoveStyleInside() could remove any and all of those nodes, so I
-      // have to use the range tracking system to find the right spot to put
-      // selection.
-      AutoTrackDOMPoint tracker(RangeUpdaterRef(), address_of(newSelParent),
-                                &newSelOffset);
-      rv = RemoveStyleInside(*leftNode, aProperty, aAttribute);
-      NS_ENSURE_SUCCESS(rv, rv);
+
+    // Found a style node we need to split.
+    // XXX If first content is a text node and CSS is enabled, we call this
+    //     with text node but in such case, this does nothing, but returns
+    //     as handled with setting only previous or next node.  If its parent
+    //     is a block, we do nothing but return as handled.
+    SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
+        *content, result.SplitPoint(),
+        SplitAtEdges::eAllowToCreateEmptyContainer);
+    if (NS_WARN_IF(splitNodeResult.Failed())) {
+      return splitNodeResult;
     }
-    // reset our node offset values to the resulting new sel point
-    *aNode = newSelParent;
-    *aOffset = newSelOffset;
+    MOZ_ASSERT(splitNodeResult.Handled());
+    // Mark the final result as handled forcibly.
+    result = SplitNodeResult(splitNodeResult.GetPreviousNode(),
+                             splitNodeResult.GetNextNode());
+    MOZ_ASSERT(result.Handled());
   }
 
-  return NS_OK;
+  return result;
+}
+
+EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
+                                    nsAtom* aProperty, nsAtom* aAttribute) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!aPoint.IsSet())) {
+    return EditResult(NS_ERROR_INVALID_ARG);
+  }
+
+  // First, split inline elements at the point.
+  // E.g., if aProperty is nsGkAtoms::b and `<p><b><i>a[]bc</i></b></p>`,
+  //       we want to make it as `<p><b><i>a</i></b><b><i>bc</i></b></p>`.
+  SplitNodeResult splitResult =
+      SplitAncestorStyledInlineElementsAt(aPoint, aProperty, aAttribute);
+  if (NS_WARN_IF(splitResult.Failed())) {
+    return EditResult(splitResult.Rv());
+  }
+
+  // If there is no styled inline elements of aProperty/aAttribute, we just
+  // return the given point.
+  // E.g., `<p><i>a[]bc</i></p>` for nsGkAtoms::b.
+  if (!splitResult.Handled()) {
+    return EditResult(aPoint);
+  }
+
+  // If it did split nodes, but topmost ancestor inline element is split
+  // at start of it, we don't need the empty inline element.  Let's remove
+  // it now.
+  if (splitResult.GetPreviousNode()) {
+    bool isEmpty = false;
+    IsEmptyNode(splitResult.GetPreviousNode(), &isEmpty, false, true);
+    if (isEmpty) {
+      // Delete previous node if it's empty.
+      nsresult rv = DeleteNodeWithTransaction(
+          MOZ_KnownLive(*splitResult.GetPreviousNode()));
+      if (NS_WARN_IF(Destroyed())) {
+        return EditResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditResult(rv);
+      }
+    }
+  }
+
+  // If we reached block from end of a text node, we can do nothing here.
+  // E.g., `<p style="font-weight: bold;">a[]bc</p>` for nsGkAtoms::b and
+  // we're in CSS mode.
+  // XXX Chrome resets block style and creates `<span>` elements for each
+  //     line in this case.
+  if (!splitResult.GetNextNode()) {
+    MOZ_ASSERT(IsCSSEnabled());
+    return EditResult(aPoint);
+  }
+
+  // Otherwise, the next node is topmost ancestor inline element which has
+  // the style.  We want to put caret between the split nodes, but we need
+  // to keep other styles.  Therefore, next, we need to split at start of
+  // the next node.  The first example should become
+  // `<p><b><i>a</i></b><b><i></i></b><b><i>bc</i></b></p>`.
+  //                    ^^^^^^^^^^^^^^
+  nsIContent* leftmostChildOfNextNode =
+      GetLeftmostChild(splitResult.GetNextNode());
+  EditorDOMPoint atStartOfNextNode(leftmostChildOfNextNode
+                                       ? leftmostChildOfNextNode
+                                       : splitResult.GetNextNode(),
+                                   0);
+  RefPtr<HTMLBRElement> brElement;
+  // But don't try to split non-containers like `<br>`, `<hr>` and `<img>`
+  // element.
+  if (!IsContainer(atStartOfNextNode.GetContainer())) {
+    // If it's a `<br>` element, let's move it into new node later.
+    brElement = HTMLBRElement::FromNode(atStartOfNextNode.GetContainer());
+    if (NS_WARN_IF(!atStartOfNextNode.GetContainerParentAsContent())) {
+      return EditResult(NS_ERROR_FAILURE);
+    }
+    atStartOfNextNode.Set(atStartOfNextNode.GetContainerParent(), 0);
+  }
+  SplitNodeResult splitResultAtStartOfNextNode =
+      SplitAncestorStyledInlineElementsAt(atStartOfNextNode, aProperty,
+                                          aAttribute);
+  if (NS_WARN_IF(splitResultAtStartOfNextNode.Failed())) {
+    return EditResult(splitResultAtStartOfNextNode.Rv());
+  }
+
+  // Let's remove the next node if it becomes empty by splitting it.
+  // XXX Is this possible case without mutation event listener?
+  if (splitResultAtStartOfNextNode.Handled() &&
+      splitResultAtStartOfNextNode.GetNextNode()) {
+    bool isEmpty = false;
+    IsEmptyNode(splitResultAtStartOfNextNode.GetNextNode(), &isEmpty, false,
+                true);
+    if (isEmpty) {
+      // Delete next node if it's empty.
+      nsresult rv = DeleteNodeWithTransaction(
+          MOZ_KnownLive(*splitResultAtStartOfNextNode.GetNextNode()));
+      if (NS_WARN_IF(Destroyed())) {
+        return EditResult(NS_ERROR_EDITOR_DESTROYED);
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return EditResult(rv);
+      }
+    }
+  }
+
+  // If there is no content, we should return here.
+  // XXX Is this possible case without mutation event listener?
+  if (NS_WARN_IF(!splitResultAtStartOfNextNode.Handled()) ||
+      !splitResultAtStartOfNextNode.GetPreviousNode()) {
+    // XXX This is really odd, but we retrun this value...
+    return EditResult(
+        EditorDOMPoint(splitResult.SplitPoint().GetContainer(),
+                       splitResultAtStartOfNextNode.SplitPoint().Offset()));
+  }
+
+  // Now, we want to put `<br>` element into the empty split node if
+  // it was in next node of the first split.
+  // E.g., `<p><b><i>a</i></b><b><i><br></i></b><b><i>bc</i></b></p>`
+  nsIContent* leftmostChild =
+      GetLeftmostChild(splitResultAtStartOfNextNode.GetPreviousNode());
+  EditorDOMPoint pointToPutCaret(
+      leftmostChild ? leftmostChild
+                    : splitResultAtStartOfNextNode.GetPreviousNode(),
+      0);
+  // If the right node starts with a `<br>`, suck it out of right node and into
+  // the left node left node.  This is so we you don't revert back to the
+  // previous style if you happen to click at the end of a line.
+  if (brElement) {
+    nsresult rv = MoveNodeWithTransaction(*brElement, pointToPutCaret);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditResult(rv);
+    }
+    // Update the child.
+    pointToPutCaret.Set(pointToPutCaret.GetContainer(), 0);
+  }
+  // Finally, remove the specified style in the previous node at the
+  // second split and tells good insertion point to the caller.  I.e., we
+  // want to make the first example as:
+  // `<p><b><i>a</i></b><i>[]</i><b><i>bc</i></b></p>`
+  //                    ^^^^^^^^^
+  {
+    // Track the point at the new hierarchy.  This is so we can know where
+    // to put the selection after we call RemoveStyleInside().
+    // RemoveStyleInside() could remove any and all of those nodes, so I
+    // have to use the range tracking system to find the right spot to put
+    // selection.
+    AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToPutCaret);
+    nsresult rv = RemoveStyleInside(
+        MOZ_KnownLive(*splitResultAtStartOfNextNode.GetPreviousNode()),
+        aProperty, aAttribute);
+    if (NS_WARN_IF(Destroyed())) {
+      return EditResult(NS_ERROR_EDITOR_DESTROYED);
+    }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return EditResult(rv);
+    }
+  }
+  return EditResult(pointToPutCaret);
 }
 
 nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,

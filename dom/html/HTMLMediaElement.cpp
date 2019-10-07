@@ -2114,8 +2114,7 @@ void HTMLMediaElement::Load() {
        HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay),
        AutoplayPolicy::IsAllowedToPlay(*this), OwnerDoc(),
        DocumentOrigin(OwnerDoc()).get(),
-       OwnerDoc()->HasBeenUserGestureActivated(), mMuted,
-       mVolume));
+       OwnerDoc()->HasBeenUserGestureActivated(), mMuted, mVolume));
 
   if (mIsRunningLoadMethod) {
     return;
@@ -4404,13 +4403,13 @@ void HTMLMediaElement::UnbindFromTree(bool aNullParent) {
   // be connected, though other browsers match our current behavior...
   //
   // Also, https://github.com/whatwg/html/issues/4928
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
-      "dom::HTMLMediaElement::UnbindFromTree",
-      [self = RefPtr<HTMLMediaElement>(this)]() {
-        if (!self->IsInComposedDoc()) {
-          self->Pause();
-        }
-      });
+  nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableFunction("dom::HTMLMediaElement::UnbindFromTree",
+                             [self = RefPtr<HTMLMediaElement>(this)]() {
+                               if (!self->IsInComposedDoc()) {
+                                 self->Pause();
+                               }
+                             });
   RunInStableState(task);
 }
 
@@ -7364,32 +7363,31 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
             // Promise is rejected, sink not found.
             return SinkInfoPromise::CreateAndReject(res, __func__);
           })
-      ->Then(
-          mAbstractMainThread, __func__,
-          [promise, self = RefPtr<HTMLMediaElement>(this),
-           sinkId](const SinkInfoPromise::ResolveOrRejectValue& aValue) {
-            if (aValue.IsResolve()) {
-              self->mSink = MakePair(sinkId, aValue.ResolveValue());
-              promise->MaybeResolveWithUndefined();
-            } else {
-              switch (aValue.RejectValue()) {
-                case NS_ERROR_ABORT:
-                  promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-                  break;
-                case NS_ERROR_NOT_AVAILABLE: {
-                  promise->MaybeRejectWithDOMException(
-                      NS_ERROR_DOM_NOT_FOUND_ERR,
-                      "The object can not be found here.");
-                  break;
-                }
-                case NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
-                  promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-                  break;
-                default:
-                  MOZ_ASSERT_UNREACHABLE("Invalid error.");
-              }
-            }
-          });
+      ->Then(mAbstractMainThread, __func__,
+             [promise, self = RefPtr<HTMLMediaElement>(this),
+              sinkId](const SinkInfoPromise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve()) {
+                 self->mSink = MakePair(sinkId, aValue.ResolveValue());
+                 promise->MaybeResolveWithUndefined();
+               } else {
+                 switch (aValue.RejectValue()) {
+                   case NS_ERROR_ABORT:
+                     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+                     break;
+                   case NS_ERROR_NOT_AVAILABLE: {
+                     promise->MaybeRejectWithDOMException(
+                         NS_ERROR_DOM_NOT_FOUND_ERR,
+                         "The object can not be found here.");
+                     break;
+                   }
+                   case NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR:
+                     promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+                     break;
+                   default:
+                     MOZ_ASSERT_UNREACHABLE("Invalid error.");
+                 }
+               }
+             });
 
   aRv = NS_OK;
   return promise.forget();

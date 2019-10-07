@@ -609,8 +609,8 @@ MFBT_API void DllBlocklist_Initialize(uint32_t aInitFlags) {
   const bool skipUser32Check =
       (sInitFlags & eDllBlocklistInitFlagWasBootstrapped)
 #ifdef MOZ_BASE_PROFILER
-      || (!IsWin10AnniversaryUpdateOrLater()
-          && baseprofiler::profiler_is_active())
+      ||
+      (!IsWin10AnniversaryUpdateOrLater() && baseprofiler::profiler_is_active())
 #endif
       ;
 

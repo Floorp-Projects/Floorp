@@ -52,16 +52,23 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   };
 
   // The context in which we read a token.
-  using Context = mozilla::Variant<RootContext, ListContext, FieldContext>;
+  using FieldOrRootContext = mozilla::Variant<FieldContext, RootContext>;
+  using FieldOrListContext = mozilla::Variant<FieldContext, ListContext>;
 
 #ifdef DEBUG
   // Utility matcher, used to print a `Context` during debugging.
   struct ContextPrinter {
-    static void print(const char* text, const Context& context) {
+    static void print(const char* text, const FieldOrRootContext& context) {
       fprintf(stderr, "%s ", text);
       context.match(ContextPrinter());
       fprintf(stderr, "\n");
     }
+    static void print(const char* text, const FieldOrListContext& context) {
+      fprintf(stderr, "%s ", text);
+      context.match(ContextPrinter());
+      fprintf(stderr, "\n");
+    }
+
     void operator()(const RootContext&) { fprintf(stderr, "<Root context>"); }
     void operator()(const ListContext& context) {
       fprintf(stderr, "<List context>: %s => %s",
@@ -99,7 +106,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
    */
   TokenPos pos();
   TokenPos pos(size_t startOffset);
-  size_t offset() const;
+  size_t offset() const { return current_ - start_; }
 
   // Set the tokenizer's cursor in the file. Use with caution.
   void seek(size_t offset);
@@ -156,7 +163,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   template <size_t N>
   MOZ_MUST_USE JS::Result<Ok> readConst(const char (&value)[N]) {
     updateLatestKnownGood();
-    if (!matchConst(value, false)) {
+    if (MOZ_UNLIKELY(!matchConst(value, false))) {
       return raiseError("Could not find expected literal");
     }
     return Ok();
@@ -178,7 +185,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
     MOZ_ASSERT(value[N - 1] == 0);
     MOZ_ASSERT(!hasRaisedError());
 
-    if (current_ + N - 1 > stop_) {
+    if (MOZ_UNLIKELY(current_ + N - 1 > stop_)) {
       return false;
     }
 

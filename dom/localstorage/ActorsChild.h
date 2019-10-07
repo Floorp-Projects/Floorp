@@ -158,10 +158,12 @@ class LSRequestChild final : public PBackgroundLSRequestChild {
 
  private:
   // Only created by LSObject.
-  explicit LSRequestChild(LSRequestChildCallback* aCallback);
+  LSRequestChild();
 
   // Only destroyed by mozilla::ipc::BackgroundChildImpl.
   ~LSRequestChild();
+
+  void SetCallback(LSRequestChildCallback* aCallback);
 
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -205,7 +207,9 @@ class LSSimpleRequestChild final : public PBackgroundLSSimpleRequestChild {
 
  private:
   // Only created by LocalStorageManager2.
-  explicit LSSimpleRequestChild(LSSimpleRequestChildCallback* aCallback);
+  LSSimpleRequestChild();
+
+  void SetCallback(LSSimpleRequestChildCallback* aCallback);
 
   // Only destroyed by mozilla::ipc::BackgroundChildImpl.
   ~LSSimpleRequestChild();

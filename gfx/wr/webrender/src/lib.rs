@@ -211,7 +211,7 @@ pub use crate::renderer::{
     AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind, ExternalImage,
     ExternalImageHandler, ExternalImageSource, GpuProfile, GraphicsApi, GraphicsApiInfo,
     PipelineInfo, Renderer, RendererOptions, RenderResults, RendererStats, SceneBuilderHooks,
-    ThreadListener, ShaderPrecacheFlags, MAX_VERTEX_TEXTURE_WIDTH,
+    ThreadListener, ShaderPrecacheFlags, MAX_VERTEX_TEXTURE_WIDTH, PresentConfig,
 };
 pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
 pub use crate::shade::{Shaders, WrShaders};

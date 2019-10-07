@@ -44,6 +44,7 @@ class AlignStateAtSelection;
 class AutoSelectionSetterAfterTableEdit;
 class AutoSetTemporaryAncestorLimiter;
 class EditActionResult;
+class EditResult;
 class EmptyEditableFunctor;
 class ListElementSelectionState;
 class ListItemElementSelectionState;
@@ -977,11 +978,24 @@ class HTMLEditor final : public TextEditor,
   nsresult SetInlinePropertyOnNode(nsIContent& aNode, nsAtom& aProperty,
                                    nsAtom* aAttribute, const nsAString& aValue);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SplitStyleAbovePoint(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                                nsAtom* aProperty, nsAtom* aAttribute,
-                                nsIContent** aOutLeftNode = nullptr,
-                                nsIContent** aOutRightNode = nullptr);
+  /**
+   * SplitAncestorStyledInlineElementsAt() splits ancestor inline elements at
+   * aPointToSplit if specified style matches with them.
+   *
+   * @param aPointToSplit       The point to split style at.
+   * @param aProperty           The style tag name which you want to split.
+   *                            Set nullptr if you want to split any styled
+   *                            elements.
+   * @param aAttribute          Attribute name if aProperty has some styles
+   *                            like nsGkAtoms::font.
+   * @return                    The result of SplitNodeDeepWithTransaction()
+   *                            with topmost split element.  If this didn't
+   *                            find inline elements to be split, Handled()
+   *                            returns false.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE SplitNodeResult
+  SplitAncestorStyledInlineElementsAt(const EditorDOMPoint& aPointToSplit,
+                                      nsAtom* aProperty, nsAtom* aAttribute);
 
   nsIContent* GetPriorHTMLSibling(nsINode* aNode);
 
@@ -1138,9 +1152,20 @@ class HTMLEditor final : public TextEditor,
                                  bool* aAny, bool* aAll,
                                  nsAString* outValue) const;
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
-                      nsAtom* aProperty, nsAtom* aAttribute);
+  /**
+   * ClearStyleAt() splits parent elements to remove the specified style.
+   * If this splits some parent elements at near their start or end, such
+   * empty elements will be removed.  Then, remove the specified style
+   * from the point and returns DOM point to put caret.
+   *
+   * @param aPoint      The point to clear style at.
+   * @param aProperty   An HTML tag name which represents a style.
+   *                    Set nullptr if you want to clear all styles.
+   * @param aAttribute  Attribute name if aProperty has some styles like
+   *                    nsGkAtoms::font.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditResult ClearStyleAt(
+      const EditorDOMPoint& aPoint, nsAtom* aProperty, nsAtom* aAttribute);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsolute(Element& aElement);
   MOZ_CAN_RUN_SCRIPT nsresult SetPositionToStatic(Element& aElement);

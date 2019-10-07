@@ -599,8 +599,7 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".disable-text-prims", wr::DebugFlags_DISABLE_TEXT_PRIMS)
   GFX_WEBRENDER_DEBUG(".disable-gradient-prims",
                       wr::DebugFlags_DISABLE_GRADIENT_PRIMS)
-  GFX_WEBRENDER_DEBUG(".obscure-images",
-                      wr::DebugFlags_OBSCURE_IMAGES)
+  GFX_WEBRENDER_DEBUG(".obscure-images", wr::DebugFlags_OBSCURE_IMAGES)
   GFX_WEBRENDER_DEBUG(".log-transactions", wr::DebugFlags_LOG_TRANSACTIONS)
 #undef GFX_WEBRENDER_DEBUG
 
@@ -2652,19 +2651,19 @@ static void UpdateWRQualificationForNvidia(FeatureState& aFeature,
   // aOutGuardedByQualifiedPref as true unless the hardware is qualified
   // for users on the release channel.
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   // Nvidia devices with device id >= 0x6c0 got WR in release Firefox 67.
   *aOutGuardedByQualifiedPref = false;
-#elif defined(NIGHTLY_BUILD)
+#  elif defined(NIGHTLY_BUILD)
   // Qualify on Linux Nightly, but leave *aOutGuardedByQualifiedPref as true
   // to indicate users on release don't have it yet, and it's still guarded
   // by the qualified pref.
-#else
+#  else
   // Disqualify everywhere else
   aFeature.Disable(
       FeatureStatus::BlockedReleaseChannelNvidia, "Release channel and Nvidia",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_NVIDIA"));
-#endif
+#  endif
 }
 
 static void UpdateWRQualificationForAMD(FeatureState& aFeature,
@@ -2689,19 +2688,19 @@ static void UpdateWRQualificationForAMD(FeatureState& aFeature,
 
   // we have a desktop CAYMAN, SI, CIK, VI, or GFX9 device.
 
-#if defined(XP_WIN)
+#  if defined(XP_WIN)
   // These devices got WR in release Firefox 68.
   *aOutGuardedByQualifiedPref = false;
-#elif defined(NIGHTLY_BUILD)
+#  elif defined(NIGHTLY_BUILD)
   // Qualify on Linux Nightly, but leave *aOutGuardedByQualifiedPref as true
   // to indicate users on release don't have it yet, and it's still guarded
   // by the qualified pref.
-#else
+#  else
   // Disqualify everywhere else
   aFeature.Disable(FeatureStatus::BlockedReleaseChannelAMD,
                    "Release channel and AMD",
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_AMD"));
-#endif
+#  endif
 }
 
 static void UpdateWRQualificationForIntel(FeatureState& aFeature,
@@ -2806,20 +2805,20 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
   // Performance is not great on 4k screens with WebRender.
   // Disable it for now on all release platforms, and also on Linux
   // nightly. We only allow it on Windows nightly.
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+#  if defined(XP_WIN) && defined(NIGHTLY_BUILD)
   // Windows nightly, so don't do screen size checks
-#else
+#  else
   // Windows release, Linux nightly, Linux release. Do screen size
   // checks. (macOS is still completely blocked by the blocklist).
   // On Windows release, we only allow really small screens (sub-WUXGA). On
   // Linux we allow medium size screens as well (anything sub-4k).
-#  if defined(XP_WIN)
+#    if defined(XP_WIN)
   // Allow up to WUXGA on Windows release
   const int64_t kMaxPixels = 1920 * 1200;  // WUXGA
-#  else
+#    else
   // Allow up to 4k on Linux
   const int64_t kMaxPixels = 3440 * 1440;  // UWQHD
-#  endif
+#    endif
   if (aScreenPixels > kMaxPixels) {
     aFeature.Disable(
         FeatureStatus::BlockedScreenTooLarge, "Screen size too large",
@@ -2831,21 +2830,21 @@ static void UpdateWRQualificationForIntel(FeatureState& aFeature,
                      NS_LITERAL_CSTRING("FEATURE_FAILURE_SCREEN_SIZE_UNKNOWN"));
     return;
   }
-#endif
+#  endif
 
-#if (defined(XP_WIN) || (defined(MOZ_WIDGET_GTK) && defined(NIGHTLY_BUILD)))
+#  if (defined(XP_WIN) || (defined(MOZ_WIDGET_GTK) && defined(NIGHTLY_BUILD)))
   // Qualify Intel graphics cards on Windows to release and on Linux nightly
   // (subject to device whitelist and screen size checks above).
   // Leave *aOutGuardedByQualifiedPref as true to indicate no existing
   // release users have this yet, and it's still guarded by the qualified pref.
-#else
+#  else
   // Disqualify everywhere else
   aFeature.Disable(FeatureStatus::BlockedReleaseChannelIntel,
                    "Release channel and Intel",
                    NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_INTEL"));
-#endif
+#  endif
 }
-#endif // !MOZ_WIDGET_ANDROID
+#endif  // !MOZ_WIDGET_ANDROID
 
 static FeatureState& WebRenderHardwareQualificationStatus(
     int64_t aScreenPixels, bool aHasBattery, bool* aOutGuardedByQualifiedPref) {
@@ -2920,11 +2919,11 @@ static FeatureState& WebRenderHardwareQualificationStatus(
   // We leave checking the battery for last because we would like to know
   // which users were denied WebRender only because they have a battery.
   if (aHasBattery) {
-#ifndef XP_WIN
+#  ifndef XP_WIN
     // aHasBattery is only ever true on Windows, we don't check it on other
     // platforms.
     MOZ_ASSERT(false);
-#endif
+#  endif
     // We never released WR to the battery populations, so let's keep the pref
     // guard for these populations. That way we can do a gradual rollout to
     // the battery population using the pref.
@@ -2933,25 +2932,25 @@ static FeatureState& WebRenderHardwareQualificationStatus(
     // if we have a battery, ignore it if the screen is small enough.
     const int64_t kMaxPixelsBattery = 1920 * 1200;  // WUXGA
     if (aScreenPixels > 0 && aScreenPixels <= kMaxPixelsBattery) {
-#ifndef NIGHTLY_BUILD
+#  ifndef NIGHTLY_BUILD
       featureWebRenderQualified.Disable(
           FeatureStatus::BlockedReleaseChannelBattery,
           "Release channel and battery",
           NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_BATTERY"));
-#endif  // !NIGHTLY_BUILD
+#  endif  // !NIGHTLY_BUILD
     } else {
       featureWebRenderQualified.Disable(
           FeatureStatus::BlockedHasBattery, "Has battery",
           NS_LITERAL_CSTRING("FEATURE_FAILURE_WR_HAS_BATTERY"));
     }
   }
-#else // !MOZ_WIDGET_ANDROID
-#ifndef NIGHTLY_BUILD
+#else  // !MOZ_WIDGET_ANDROID
+#  ifndef NIGHTLY_BUILD
   featureWebRenderQualified.Disable(
-    FeatureStatus::BlockedReleaseChannelAndroid,
-    "Release channel and Android",
-    NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_ANDROID"));
-#endif
+      FeatureStatus::BlockedReleaseChannelAndroid,
+      "Release channel and Android",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_RELEASE_CHANNEL_ANDROID"));
+#  endif
 #endif
   return featureWebRenderQualified;
 }
