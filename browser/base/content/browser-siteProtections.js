@@ -1627,8 +1627,6 @@ var gProtectionsHandler = {
       // remain collapsed.
       ToolbarPanelHub.insertProtectionPanelMessage(event);
 
-      this.reorderCategoryItems();
-
       if (!event.target.hasAttribute("toast")) {
         Services.telemetry.recordEvent(
           "security.ui.protectionspopup",
@@ -1779,7 +1777,7 @@ var gProtectionsHandler = {
     if (anyDetected) {
       this.noTrackersDetectedDescription.hidden = true;
 
-      if (this._protectionsPopup.state == "open") {
+      if (["showing", "open"].includes(this._protectionsPopup.state)) {
         this.reorderCategoryItems();
 
         // Until we encounter a site that triggers them, category elements might
