@@ -538,8 +538,13 @@ nsresult HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
   NS_ENSURE_STATE(aNode.GetParentNode());
   OwningNonNull<nsINode> parent = *aNode.GetParentNode();
 
-  nsresult rv = RemoveStyleInside(aNode, &aProperty, aAttribute);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aNode.IsElement()) {
+    nsresult rv = RemoveStyleInside(MOZ_KnownLive(*aNode.AsElement()),
+                                    &aProperty, aAttribute);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
 
   if (aNode.GetParentNode()) {
     // The node is still where it was
@@ -563,8 +568,11 @@ nsresult HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
   }
 
   for (auto& node : nodesToSet) {
-    rv = SetInlinePropertyOnNodeImpl(node, aProperty, aAttribute, aValue);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv =
+        SetInlinePropertyOnNodeImpl(node, aProperty, aAttribute, aValue);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -832,7 +840,7 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // want to make the first example as:
   // `<p><b><i>a</i></b><i>[]</i><b><i>bc</i></b></p>`
   //                    ^^^^^^^^^
-  {
+  if (splitResultAtStartOfNextNode.GetPreviousNode()->IsElement()) {
     // Track the point at the new hierarchy.  This is so we can know where
     // to put the selection after we call RemoveStyleInside().
     // RemoveStyleInside() could remove any and all of those nodes, so I
@@ -840,11 +848,9 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
     // selection.
     AutoTrackDOMPoint tracker(RangeUpdaterRef(), &pointToPutCaret);
     nsresult rv = RemoveStyleInside(
-        MOZ_KnownLive(*splitResultAtStartOfNextNode.GetPreviousNode()),
+        MOZ_KnownLive(
+            *splitResultAtStartOfNextNode.GetPreviousNode()->AsElement()),
         aProperty, aAttribute);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditResult(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditResult(rv);
     }
@@ -852,120 +858,151 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   return EditResult(pointToPutCaret);
 }
 
-nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
-                                       nsAtom* aAttribute,
-                                       const bool aChildrenOnly /* = false */) {
-  if (!aNode.IsElement()) {
-    return NS_OK;
-  }
-
-  // first process the children
-  RefPtr<nsIContent> child = aNode.GetFirstChild();
+nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
+                                       nsAtom* aAttribute) {
+  // First, handle all descendants.
+  RefPtr<nsIContent> child = aElement.GetFirstChild();
   while (child) {
     // cache next sibling since we might remove child
-    nsCOMPtr<nsIContent> next = child->GetNextSibling();
-    nsresult rv = RemoveStyleInside(*child, aProperty, aAttribute);
-    NS_ENSURE_SUCCESS(rv, rv);
-    child = next.forget();
+    // XXX Well, the next sibling is moved from `aElement`, shouldn't we skip
+    //     it here?
+    nsCOMPtr<nsIContent> nextSibling = child->GetNextSibling();
+    if (child->IsElement()) {
+      nsresult rv = RemoveStyleInside(MOZ_KnownLive(*child->AsElement()),
+                                      aProperty, aAttribute);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    child = nextSibling.forget();
   }
 
-  // then process the node itself
-  if (!aChildrenOnly &&
-      // node is prop we asked for
-      ((aProperty && aNode.NodeInfo()->NameAtom() == aProperty) ||
-       // but check for link (<a href=...)
-       (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&aNode)) ||
-       // and for named anchors
-       (aProperty == nsGkAtoms::name && HTMLEditUtils::IsNamedAnchor(&aNode)) ||
-       // or node is any prop and we asked for that
-       (!aProperty && IsEditable(&aNode) &&
-        HTMLEditUtils::IsRemovableInlineStyleElement(*aNode.AsElement())))) {
-    // if we weren't passed an attribute, then we want to
-    // remove any matching inlinestyles entirely
+  // Next, remove the element or its attribute.
+  bool removeHTMLStyle = false;
+  if (aProperty) {
+    removeHTMLStyle =
+        // If the element is a presentation element of aProperty
+        aElement.NodeInfo()->NameAtom() == aProperty ||
+        // or an `<a>` element with `href` attribute
+        (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(&aElement)) ||
+        // or an `<a>` element with `name` attribute
+        (aProperty == nsGkAtoms::name &&
+         HTMLEditUtils::IsNamedAnchor(&aElement));
+  }
+  // XXX Why do we check if aElement is editable only when aProperty is
+  //     nullptr?
+  else if (IsEditable(&aElement)) {
+    // or removing all styles and the element is a presentation element.
+    removeHTMLStyle = HTMLEditUtils::IsRemovableInlineStyleElement(aElement);
+  }
+
+  if (removeHTMLStyle) {
+    // If aAttribute is nullptr, we want to remove any matching inline styles
+    // entirely.
     if (!aAttribute) {
-      bool hasStyleAttr =
-          aNode.AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
-      bool hasClassAttr =
-          aNode.AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::_class);
-      if (aProperty && (hasStyleAttr || hasClassAttr)) {
-        // aNode carries inline styles or a class attribute so we can't
-        // just remove the element... We need to create above the element
-        // a span that will carry those styles or class, then we can delete
-        // the node.
-        RefPtr<Element> spanNode =
-            InsertContainerWithTransaction(aNode, *nsGkAtoms::span);
-        if (NS_WARN_IF(!spanNode)) {
+      // If some style rules are specified to aElement, we need to keep them
+      // as far as possible.
+      // XXX Why don't we clone `id` attribute?
+      if (aProperty &&
+          (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::style) ||
+           aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::_class))) {
+        // Move `style` attribute and `class` element to span element before
+        // removing aElement from the tree.
+        RefPtr<Element> spanElement =
+            InsertContainerWithTransaction(aElement, *nsGkAtoms::span);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(!spanElement)) {
           return NS_ERROR_FAILURE;
         }
-        nsresult rv = CloneAttributeWithTransaction(
-            *nsGkAtoms::style, *spanNode, MOZ_KnownLive(*aNode.AsElement()));
+        nsresult rv = CloneAttributeWithTransaction(*nsGkAtoms::style,
+                                                    *spanElement, aElement);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
-        rv = CloneAttributeWithTransaction(*nsGkAtoms::_class, *spanNode,
-                                           MOZ_KnownLive(*aNode.AsElement()));
+        rv = CloneAttributeWithTransaction(*nsGkAtoms::_class, *spanElement,
+                                           aElement);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
-      nsresult rv =
-          RemoveContainerWithTransaction(MOZ_KnownLive(*aNode.AsElement()));
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else if (aNode.IsElement()) {
-      // otherwise we just want to eliminate the attribute
-      if (aNode.AsElement()->HasAttr(kNameSpaceID_None, aAttribute)) {
-        // if this matching attribute is the ONLY one on the node,
-        // then remove the whole node.  Otherwise just nix the attribute.
-        if (IsOnlyAttribute(aNode.AsElement(), aAttribute)) {
-          nsresult rv =
-              RemoveContainerWithTransaction(MOZ_KnownLive(*aNode.AsElement()));
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-        } else {
-          nsresult rv = RemoveAttributeWithTransaction(
-              MOZ_KnownLive(*aNode.AsElement()), *aAttribute);
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
+      nsresult rv = RemoveContainerWithTransaction(aElement);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+    // If aAttribute is specified, we want to remove only the attribute
+    // unless it's the last attribute of aElement.
+    else if (aElement.HasAttr(kNameSpaceID_None, aAttribute)) {
+      if (IsOnlyAttribute(&aElement, aAttribute)) {
+        nsresult rv = RemoveContainerWithTransaction(aElement);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      } else {
+        nsresult rv = RemoveAttributeWithTransaction(aElement, *aAttribute);
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
         }
       }
     }
   }
 
-  if (!aChildrenOnly &&
-      CSSEditUtils::IsCSSEditableProperty(&aNode, aProperty, aAttribute)) {
-    // the HTML style defined by aProperty/aAttribute has a CSS equivalence in
-    // this implementation for the node aNode; let's check if it carries those
-    // css styles
-    if (aNode.IsElement()) {
-      bool hasAttribute = CSSEditUtils::HaveCSSEquivalentStyles(
-          aNode, aProperty, aAttribute, CSSEditUtils::eSpecified);
-      if (hasAttribute) {
-        // yes, tmp has the corresponding css declarations in its style
-        // attribute
-        // let's remove them
-        mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(
-            MOZ_KnownLive(aNode.AsElement()), aProperty, aAttribute, nullptr,
-            false);
-        // remove the node if it is a span or font, if its style attribute is
-        // empty or absent, and if it does not have a class nor an id
-        RemoveElementIfNoStyleOrIdOrClass(MOZ_KnownLive(*aNode.AsElement()));
+  // Then, remove CSS style if specified.
+  // XXX aElement may have already been removed from the DOM tree.  Why
+  //     do we keep handling aElement here??
+  if (CSSEditUtils::IsCSSEditableProperty(&aElement, aProperty, aAttribute) &&
+      CSSEditUtils::HaveCSSEquivalentStyles(aElement, aProperty, aAttribute,
+                                            CSSEditUtils::eSpecified)) {
+    // If aElement has CSS declaration of the given style, remove it.
+    mCSSEditUtils->RemoveCSSEquivalentToHTMLStyle(&aElement, aProperty,
+                                                  aAttribute, nullptr, false);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    // Additionally, remove aElement itself if it's a `<span>` or `<font>`
+    // and it does not have non-empty `style`, `id` nor `class` attribute.
+    if (aElement.IsAnyOfHTMLElements(nsGkAtoms::span, nsGkAtoms::font) &&
+        !HTMLEditor::HasStyleOrIdOrClassAttribute(aElement)) {
+      DebugOnly<nsresult> rvIgnored = RemoveContainerWithTransaction(aElement);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
       }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored),
+          "RemoveContainerWithTransaction() failed, but ignored");
     }
   }
 
-  // Or node is big or small and we are setting font size
-  if (aChildrenOnly) {
-    return NS_OK;
+  // Finally, remove aElement if it's a `<big>` or `<small>` element and
+  // we're removing `<font size>`.
+  if (aProperty == nsGkAtoms::font && aAttribute == nsGkAtoms::size &&
+      aElement.IsAnyOfHTMLElements(nsGkAtoms::big, nsGkAtoms::small)) {
+    nsresult rv = RemoveContainerWithTransaction(aElement);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "RemoveContainerWithTransaction() failed");
+    return rv;
   }
-  if (aProperty == nsGkAtoms::font &&
-      (aNode.IsHTMLElement(nsGkAtoms::big) ||
-       aNode.IsHTMLElement(nsGkAtoms::small)) &&
-      aAttribute == nsGkAtoms::size) {
-    // if we are setting font size, remove any nested bigs and smalls
-    return RemoveContainerWithTransaction(MOZ_KnownLive(*aNode.AsElement()));
-  }
+
   return NS_OK;
 }
 
@@ -1583,9 +1620,12 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
       }
 
       for (auto& content : arrayOfContents) {
-        nsresult rv = RemoveStyleInside(content, aProperty, aAttribute);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+        if (content->IsElement()) {
+          nsresult rv = RemoveStyleInside(MOZ_KnownLive(*content->AsElement()),
+                                          aProperty, aAttribute);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         }
         // TODO: If parent block has the removing style, we should create
         //       `<span>` element to remove the style even in HTML mode
@@ -2089,32 +2129,16 @@ HTMLEditor::GetIsCSSEnabled(bool* aIsCSSEnabled) {
   return NS_OK;
 }
 
-static bool HasNonEmptyAttribute(Element* aElement, nsAtom* aName) {
-  MOZ_ASSERT(aElement);
-
+inline bool HasNonEmptyAttribute(Element& aElement, nsStaticAtom& aAttribute) {
   nsAutoString value;
-  return aElement->GetAttr(kNameSpaceID_None, aName, value) && !value.IsEmpty();
+  return aElement.GetAttr(kNameSpaceID_None, &aAttribute, value) &&
+         !value.IsEmpty();
 }
 
-bool HTMLEditor::HasStyleOrIdOrClass(Element* aElement) {
-  MOZ_ASSERT(aElement);
-
-  // remove the node if its style attribute is empty or absent,
-  // and if it does not have a class nor an id
-  return HasNonEmptyAttribute(aElement, nsGkAtoms::style) ||
-         HasNonEmptyAttribute(aElement, nsGkAtoms::_class) ||
-         HasNonEmptyAttribute(aElement, nsGkAtoms::id);
-}
-
-nsresult HTMLEditor::RemoveElementIfNoStyleOrIdOrClass(Element& aElement) {
-  // early way out if node is not the right kind of element
-  if ((!aElement.IsHTMLElement(nsGkAtoms::span) &&
-       !aElement.IsHTMLElement(nsGkAtoms::font)) ||
-      HasStyleOrIdOrClass(&aElement)) {
-    return NS_OK;
-  }
-
-  return RemoveContainerWithTransaction(aElement);
+bool HTMLEditor::HasStyleOrIdOrClassAttribute(Element& aElement) {
+  return HasNonEmptyAttribute(aElement, *nsGkAtoms::style) ||
+         HasNonEmptyAttribute(aElement, *nsGkAtoms::_class) ||
+         HasNonEmptyAttribute(aElement, *nsGkAtoms::id);
 }
 
 }  // namespace mozilla

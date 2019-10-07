@@ -3964,18 +3964,23 @@ class HTMLEditor final : public TextEditor,
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
-                             nsAtom* aAttribute,
-                             const bool aChildrenOnly = false);
+  /**
+   * RemoveStyleInside() removes elements which represent aProperty/aAttribute
+   * and removes CSS style.  This handles aElement and all its descendants
+   * recursively.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  RemoveStyleInside(Element& aElement, nsAtom* aProperty, nsAtom* aAttribute);
 
   bool IsAtFrontOfNode(nsINode& aNode, int32_t aOffset);
   bool IsAtEndOfNode(nsINode& aNode, int32_t aOffset);
   bool IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute);
 
-  bool HasStyleOrIdOrClass(Element* aElement);
-  MOZ_CAN_RUN_SCRIPT
-  nsresult RemoveElementIfNoStyleOrIdOrClass(Element& aElement);
+  /**
+   * HasStyleOrIdOrClassAttribute() returns true when at least one of
+   * `style`, `id` or `class` attribute value of aElement is not empty.
+   */
+  static bool HasStyleOrIdOrClassAttribute(Element& aElement);
 
   /**
    * Whether the outer window of the DOM event target has focus or not.
