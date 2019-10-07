@@ -2,7 +2,7 @@
 
 # Button
 
-`class Button` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L70)
+`class Button` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/item/BrowserMenuItemToolbar.kt#L67)
 
 A button to be shown in a toolbar inside the browser menu.
 
