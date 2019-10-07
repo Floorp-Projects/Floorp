@@ -124,7 +124,7 @@ TEST(PlainTextSerializer, PreformatFlowedQuotes)
 
   test.AssignLiteral(
       "<html><body>"
-      "<span style=\"white-space: pre-wrap;\">"
+      "<span style=\"white-space: pre-wrap;\" _moz_quote=\"true\">"
       "&gt; Firefox Firefox Firefox Firefox <br>"
       "&gt; Firefox Firefox Firefox Firefox<br>"
       "&gt;<br>"
