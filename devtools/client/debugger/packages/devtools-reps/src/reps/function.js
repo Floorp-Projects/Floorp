@@ -21,10 +21,16 @@ FunctionRep.propTypes = {
   object: PropTypes.object.isRequired,
   parameterNames: PropTypes.array,
   onViewSourceInDebugger: PropTypes.func,
+  sourceMapService: PropTypes.object,
 };
 
 function FunctionRep(props) {
-  const { object: grip, onViewSourceInDebugger, recordTelemetryEvent } = props;
+  const {
+    object: grip,
+    onViewSourceInDebugger,
+    recordTelemetryEvent,
+    sourceMapService,
+  } = props;
 
   let jumpToDefinitionButton;
   if (
@@ -37,14 +43,19 @@ function FunctionRep(props) {
       className: "jump-definition",
       draggable: false,
       title: "Jump to definition",
-      onClick: e => {
+      onClick: async e => {
         // Stop the event propagation so we don't trigger ObjectInspector
         // expand/collapse.
         e.stopPropagation();
         if (recordTelemetryEvent) {
           recordTelemetryEvent("jump_to_definition");
         }
-        onViewSourceInDebugger(grip.location);
+
+        const sourceLocation = await getSourceLocation(
+          grip.location,
+          sourceMapService
+        );
+        onViewSourceInDebugger(sourceLocation);
       },
     });
   }
@@ -179,6 +190,24 @@ function supportsObject(grip, noGrip = false) {
   }
 
   return type == "Function";
+}
+
+async function getSourceLocation(location, sourceMapService) {
+  if (!sourceMapService) {
+    return location;
+  }
+  try {
+    const originalLocation = await sourceMapService.originalPositionFor(
+      location.url,
+      location.line,
+      location.column
+    );
+    if (originalLocation) {
+      const { sourceUrl, line, column, sourceId } = originalLocation;
+      return { url: sourceUrl, line, column, sourceId };
+    }
+  } catch (e) {}
+  return location;
 }
 
 // Exports from this module

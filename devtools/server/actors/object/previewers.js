@@ -123,6 +123,7 @@ const previewers = {
         grip.location = {
           url: obj.script.url,
           line: obj.script.startLine,
+          column: obj.script.startColumn
         };
       }
 
