@@ -1244,6 +1244,9 @@ GtkTargetList* nsDragService::GetSourceList(void) {
       g_free(thisTarget);
     }
     g_free(targets);
+  } else {
+    // We need to create a dummy target list to be able initialize dnd.
+    targetList = gtk_target_list_new(nullptr, 0);
   }
   return targetList;
 }

@@ -46,7 +46,7 @@
 #include "mozilla/Unused.h"
 #include "nsFrameLoader.h"
 #include "BrowserParent.h"
-
+#include "nsIMutableArray.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include <algorithm>
@@ -253,12 +253,28 @@ nsBaseDragService::InvokeDragSession(
 
   uint32_t length = 0;
   mozilla::Unused << aTransferableArray->GetLength(&length);
-  for (uint32_t i = 0; i < length; ++i) {
-    nsCOMPtr<nsITransferable> trans = do_QueryElementAt(aTransferableArray, i);
-    if (trans) {
-      // Set the requestingPrincipal on the transferable.
+  if (!length) {
+    nsCOMPtr<nsIMutableArray> mutableArray =
+        do_QueryInterface(aTransferableArray);
+    if (mutableArray) {
+      // In order to be able trigger dnd, we need to have some transferable
+      // object.
+      nsCOMPtr<nsITransferable> trans =
+          do_CreateInstance("@mozilla.org/widget/transferable;1");
+      trans->Init(nullptr);
       trans->SetRequestingPrincipal(mSourceNode->NodePrincipal());
       trans->SetContentPolicyType(mContentPolicyType);
+      mutableArray->AppendElement(trans);
+    }
+  } else {
+    for (uint32_t i = 0; i < length; ++i) {
+      nsCOMPtr<nsITransferable> trans =
+          do_QueryElementAt(aTransferableArray, i);
+      if (trans) {
+        // Set the requestingPrincipal on the transferable.
+        trans->SetRequestingPrincipal(mSourceNode->NodePrincipal());
+        trans->SetContentPolicyType(mContentPolicyType);
+      }
     }
   }
 
@@ -864,9 +880,8 @@ bool nsBaseDragService::MaybeAddChildProcess(
 bool nsBaseDragService::RemoveAllChildProcesses() {
   for (uint32_t c = 0; c < mChildProcesses.Length(); c++) {
     mozilla::Unused << mChildProcesses[c]->SendEndDragSession(
-      true, false, LayoutDeviceIntPoint(), 0);
+        true, false, LayoutDeviceIntPoint(), 0);
   }
   mChildProcesses.Clear();
   return true;
 }
-
