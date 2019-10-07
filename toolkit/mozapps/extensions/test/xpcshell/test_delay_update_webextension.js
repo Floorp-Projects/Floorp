@@ -369,7 +369,8 @@ add_task(async function runtime_reload() {
 
   extension.sendMessage("reload");
   // Wait for extension to restart, to make sure reload works.
-  await extension.awaitStartup();
+  await AddonTestUtils.promiseWebExtensionStartup(NOUPDATE_ID);
+  await extension.awaitMessage("ready");
 
   addon = await promiseAddonByID(NOUPDATE_ID);
   Assert.notEqual(addon, null);
