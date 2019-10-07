@@ -90,7 +90,7 @@ function selectPrettyLocation(cx: Context, prettySource: Source) {
   return async ({ dispatch, sourceMaps, getState }: ThunkArgs) => {
     let location = getSelectedLocation(getState());
 
-    if (location) {
+    if (location && location.line >= 1) {
       location = await sourceMaps.getOriginalLocation(location);
       return dispatch(
         selectSpecificLocation(cx, { ...location, sourceId: prettySource.id })
