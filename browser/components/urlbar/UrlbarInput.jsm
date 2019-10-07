@@ -979,7 +979,9 @@ class UrlbarInput {
     if (
       !this.hasAttribute("breakout") ||
       this.hasAttribute("breakout-extend") ||
-      this.selectionStart != this.selectionEnd ||
+      // Avoid extending when the user is copying a part of the text, provided
+      // the view is not open, otherwise it may be the autofill selection.
+      (this.selectionStart != this.selectionEnd && !this.view.isOpen) ||
       !(
         (this.getAttribute("focused") == "true" &&
           !this.textbox.classList.contains("hidden-focus")) ||
