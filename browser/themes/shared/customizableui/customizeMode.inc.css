@@ -458,6 +458,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 }
 
 #customization-panelWrapper > .panel-arrowbox {
+  display: block;
   position: relative;
   height: 10px;
   margin-bottom: -1px;
