@@ -484,8 +484,7 @@ void AtomsTable::traceWeak(JSTracer* trc) {
     for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
       JSAtom* atom = e.front().asPtrUnbarriered();
       MOZ_DIAGNOSTIC_ASSERT(atom);
-      if (!TraceManuallyBarrieredWeakEdge(trc, &atom,
-                                          "AtomsTable::partitions::atoms")) {
+      if (!TraceWeakEdge(trc, &atom, "AtomsTable::partitions::atoms")) {
         e.removeFront();
       } else {
         MOZ_ASSERT(atom == e.front().asPtrUnbarriered());
