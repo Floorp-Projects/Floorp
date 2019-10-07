@@ -618,7 +618,7 @@ class JitRealm {
     return stubs_[StringConcat];
   }
 
-  void sweep(JS::Realm* realm);
+  void traceWeak(JSTracer* trc, JS::Realm* realm);
 
   void discardStubs() {
     for (WeakHeapPtrJitCode& stubRef : stubs_) {
