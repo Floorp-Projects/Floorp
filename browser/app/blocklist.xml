@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570053270833">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570441214263">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3482,6 +3482,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="6ce8f6d0-5cef-457c-b7e4-d5c08d61531a" id="{67d4f93e-6857-45ab-9e7a-158cc61f15d2}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="19f599bd-2226-49e2-90fd-685fd106fc3d" id="sparalarm@chip.de">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
