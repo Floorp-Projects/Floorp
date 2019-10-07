@@ -85,7 +85,7 @@ open class HomeActivity : AppCompatActivity() {
     final override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val mode = setPrivateModeIfNecessary()
+        val mode = getPrivateModeFromIntent()
 
         components.publicSuffixList.prefetch()
         setupThemeAndBrowsingMode(mode)
@@ -191,7 +191,7 @@ open class HomeActivity : AppCompatActivity() {
      * External sources such as 3rd party links and shortcuts use this function to enter
      * private mode directly before the content view is created.
      */
-    private fun setPrivateModeIfNecessary(): BrowsingMode {
+    private fun getPrivateModeFromIntent(): BrowsingMode {
         intent?.toSafeIntent()?.let {
             if (it.hasExtra(PRIVATE_BROWSING_MODE)) {
                 val startPrivateMode = it.getBooleanExtra(PRIVATE_BROWSING_MODE, false)
