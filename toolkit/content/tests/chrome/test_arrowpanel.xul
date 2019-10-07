@@ -286,8 +286,8 @@ function checkPanelPosition(panel)
 
   is(anchor, expectedAnchor, "anchor");
 
-  var arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
-  is(arrow.getAttribute("side"), expectedSide, "panel arrow side");
+  var arrow = panel.shadowRoot.querySelector(".panel-arrow");
+  is(panel.getAttribute("side"), expectedSide, "panel arrow side");
   is(arrow.hidden, false, "panel hidden");
   is(arrow.parentNode.pack, expectedPack, "panel arrow pack");
   is(panel.alignmentPosition, expectedAlignment, "panel alignmentPosition");

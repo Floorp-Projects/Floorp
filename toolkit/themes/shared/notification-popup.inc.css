@@ -1,4 +1,4 @@
-.popup-notification-panel > .panel-arrowcontainer > .panel-arrowcontent {
+.popup-notification-panel::part(arrowcontent) {
   /* To keep the rounded borders of the panel, we use overflow: hidden; from the
    * panel-no-padding class to ensure the contents are clipped to the border box.
    * That causes us to override the "display" property so that the height of the

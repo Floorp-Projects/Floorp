@@ -248,17 +248,17 @@
   padding: var(--vertical-section-padding) var(--horizontal-padding);
 }
 
-#protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
+#protections-popup::part(arrow) {
   transition-property: fill;
   transition-timing-function: var(--animation-easing-function);
   transition-duration: var(--panelui-subview-transition-duration);
 }
 
-#protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side=top] {
+#protections-popup[mainviewshowing][side=top]::part(arrow) {
   fill: #0A51BF;
 }
 
-:root[lwt-popup-brighttext] #protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side=top] {
+:root[lwt-popup-brighttext] #protections-popup[mainviewshowing][side=top]::part(arrow) {
   fill: #0CB0F5;
 }
 
