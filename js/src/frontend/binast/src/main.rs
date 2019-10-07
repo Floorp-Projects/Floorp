@@ -2260,7 +2260,7 @@ impl CPPExporter {
                     "".to_string()
                 } else {
                     format!("
-    if (length == 0) {{
+    if (MOZ_UNLIKELY(length == 0)) {{
         return raiseEmpty(\"{kind}\");
     }}
 ",
@@ -2546,7 +2546,7 @@ impl CPPExporter {
     AutoTaggedTuple guard(*tokenizer_);
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
-    if (kind != BinASTKind::{kind}) {{
+    if (MOZ_UNLIKELY(kind != BinASTKind::{kind})) {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
     const auto start = tokenizer_->offset();
