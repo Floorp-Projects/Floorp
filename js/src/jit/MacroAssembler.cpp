@@ -2098,7 +2098,9 @@ void MacroAssembler::convertDoubleToInt(FloatRegister src, Register output,
       break;
     case IntConversionBehavior::ClampToUint8:
       // Clamping clobbers the input register, so use a temp.
-      moveDouble(src, temp);
+      if (src != temp) {
+        moveDouble(src, temp);
+      }
       clampDoubleToUint8(temp, output);
       break;
   }
