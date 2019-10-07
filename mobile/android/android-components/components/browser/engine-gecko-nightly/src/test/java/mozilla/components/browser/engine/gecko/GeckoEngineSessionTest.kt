@@ -53,6 +53,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -136,6 +137,35 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun isIgnoredForTrackingProtection() {
+        val mockedRuntime = mock<GeckoRuntime>()
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        var geckoResult = GeckoResult<Boolean?>()
+        val session = GeckoEngineSession(mockedRuntime, geckoSessionProvider = geckoSessionProvider)
+        var wasExecuted = false
+
+        whenever(mockedRuntime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
+        session.isIgnoredForTrackingProtection {
+            wasExecuted = it
+        }
+
+        geckoResult.complete(true)
+        assertTrue(wasExecuted)
+
+        geckoResult = GeckoResult()
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
+        session.isIgnoredForTrackingProtection {
+            wasExecuted = it
+        }
+
+        geckoResult.complete(null)
+        assertFalse(wasExecuted)
+    }
+
+    @Test
     fun progressDelegateNotifiesObservers() {
         val engineSession = GeckoEngineSession(mock(),
                 geckoSessionProvider = geckoSessionProvider)
@@ -185,7 +215,10 @@ class GeckoEngineSessionTest {
 
     @Test
     fun navigationDelegateNotifiesObservers() {
-        val engineSession = GeckoEngineSession(mock(),
+        val geckoResult = GeckoResult<Boolean?>()
+        val mockedRuntime = mock<GeckoRuntime>()
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        val engineSession = GeckoEngineSession(mockedRuntime,
                 geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
@@ -199,10 +232,16 @@ class GeckoEngineSessionTest {
             }
         })
 
+        whenever(mockedRuntime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
         captureDelegates()
+
+        geckoResult.complete(true)
 
         navigationDelegate.value.onLocationChange(mock(), "http://mozilla.org")
         assertEquals("http://mozilla.org", observedUrl)
+        verify(mockedContentBlockingController).checkException(any())
 
         navigationDelegate.value.onCanGoBack(mock(), true)
         assertEquals(true, observedCanGoBack)
@@ -470,7 +509,10 @@ class GeckoEngineSessionTest {
 
     @Test
     fun navigationDelegateIgnoresInitialLoadOfAboutBlank() {
-        val engineSession = GeckoEngineSession(mock(),
+        val geckoResult = GeckoResult<Boolean?>()
+        val mockedRuntime = mock<GeckoRuntime>()
+        val mockedContentBlockingController = mock<ContentBlockingController>()
+        val engineSession = GeckoEngineSession(mockedRuntime,
                 geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
@@ -478,7 +520,12 @@ class GeckoEngineSessionTest {
             override fun onLocationChange(url: String) { observedUrl = url }
         })
 
+        whenever(mockedRuntime.contentBlockingController).thenReturn(mockedContentBlockingController)
+        whenever(mockedContentBlockingController.checkException(any())).thenReturn(geckoResult)
+
         captureDelegates()
+
+        geckoResult.complete(true)
 
         navigationDelegate.value.onLocationChange(mock(), "about:blank")
         assertEquals("", observedUrl)
@@ -488,6 +535,7 @@ class GeckoEngineSessionTest {
 
         navigationDelegate.value.onLocationChange(mock(), "https://www.mozilla.org")
         assertEquals("https://www.mozilla.org", observedUrl)
+        verify(mockedContentBlockingController).checkException(any())
 
         navigationDelegate.value.onLocationChange(mock(), "about:blank")
         assertEquals("about:blank", observedUrl)

@@ -41,6 +41,10 @@ abstract class EngineSession(
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
         fun onTrackerBlocked(tracker: Tracker) = Unit
         fun onTrackerLoaded(tracker: Tracker) = Unit
+        /**
+         * Event to notifies when this [EngineSession] should be [excluded] on tracking protection .
+         */
+        fun onExcludedOnTrackingProtectionChange(excluded: Boolean) = Unit
         fun onLongPress(hitResult: HitResult) = Unit
         fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit

@@ -61,6 +61,47 @@ class TrackingProtectionActionTest {
     }
 
     @Test
+    fun `ToggleExclusionListAction - Updates enabled flag of TrackingProtectionState`() {
+        assertFalse(trackingProtectionState().ignoredOnTrackingProtection)
+
+        store.dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                tabId = tab.id,
+                excluded = true
+            )
+        ).joinBlocking()
+
+        assertTrue(trackingProtectionState().ignoredOnTrackingProtection)
+
+        store.dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                tabId = tab.id,
+                excluded = true
+            )
+        ).joinBlocking()
+
+        assertTrue(trackingProtectionState().ignoredOnTrackingProtection)
+
+        store.dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                tabId = tab.id,
+                excluded = false
+            )
+        ).joinBlocking()
+
+        assertFalse(trackingProtectionState().ignoredOnTrackingProtection)
+
+        store.dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                tabId = tab.id,
+                excluded = true
+            )
+        ).joinBlocking()
+
+        assertTrue(trackingProtectionState().ignoredOnTrackingProtection)
+    }
+
+    @Test
     fun `TrackerBlockedAction - Adds tackers to TrackingProtectionState`() {
         assertTrue(trackingProtectionState().blockedTrackers.isEmpty())
         assertTrue(trackingProtectionState().loadedTrackers.isEmpty())

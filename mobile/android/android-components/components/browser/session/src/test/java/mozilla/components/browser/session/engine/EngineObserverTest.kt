@@ -9,6 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -21,7 +22,9 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -171,6 +174,23 @@ class EngineObserverTest {
 
         observer.onTrackerBlocked(tracker2)
         assertEquals(listOf(tracker1, tracker2), session.trackersBlocked)
+    }
+
+    @Test
+    fun engineSessionObserverExcludedOnTrackingProtection() {
+        val session = Session("")
+        val store = mock(BrowserStore::class.java)
+        val observer = EngineObserver(session, store)
+
+        whenever(store.dispatch(any())).thenReturn(mock())
+        observer.onExcludedOnTrackingProtectionChange(true)
+
+        verify(store).dispatch(
+            TrackingProtectionAction.ToggleExclusionListAction(
+                session.id,
+                true
+            )
+        )
     }
 
     @Test

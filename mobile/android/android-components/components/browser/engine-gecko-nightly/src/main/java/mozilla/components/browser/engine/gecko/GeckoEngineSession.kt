@@ -197,6 +197,21 @@ class GeckoEngineSession(
         notifyObservers { onTrackerBlockingEnabledChange(false) }
     }
 
+    /**
+     * Indicates if this [EngineSession] should be ignored the tracking protection policies.
+     * @param onResult A callback to inform if this [EngineSession] is in
+     * the exception list, true if it is in, otherwise false.
+     */
+    internal fun isIgnoredForTrackingProtection(onResult: (Boolean) -> Unit) {
+        runtime.contentBlockingController.checkException(geckoSession).accept {
+            if (it != null) {
+                onResult(it)
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
     // To fully disable tracking protection we need to change the different tracking protection
     // variables to none.
     private fun disableTrackingProtectionOnGecko() {
@@ -320,7 +335,11 @@ class GeckoEngineSession(
                 return
             }
             initialLoad = false
-
+            isIgnoredForTrackingProtection { ignored ->
+                notifyObservers {
+                    onExcludedOnTrackingProtectionChange(ignored)
+                }
+            }
             notifyObservers { onLocationChange(url) }
         }
 

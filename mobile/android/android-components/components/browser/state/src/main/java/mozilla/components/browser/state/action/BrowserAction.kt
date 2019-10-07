@@ -226,6 +226,11 @@ sealed class TrackingProtectionAction : BrowserAction() {
     data class ToggleAction(val tabId: String, val enabled: Boolean) : TrackingProtectionAction()
 
     /**
+     * Updates the [TrackingProtectionState.ignoredOnTrackingProtection] flag.
+     */
+    data class ToggleExclusionListAction(val tabId: String, val excluded: Boolean) : TrackingProtectionAction()
+
+    /**
      * Adds a [Tracker] to the [TrackingProtectionState.blockedTrackers] list.
      */
     data class TrackerBlockedAction(val tabId: String, val tracker: Tracker) : TrackingProtectionAction()

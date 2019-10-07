@@ -27,6 +27,11 @@ internal object TrackingProtectionStateReducer {
         is TrackingProtectionAction.ClearTrackersAction -> state.copyWithTrackingProtectionState(action.tabId) {
             it.copy(loadedTrackers = emptyList(), blockedTrackers = emptyList())
         }
+        is TrackingProtectionAction.ToggleExclusionListAction -> state.copyWithTrackingProtectionState(
+            action.tabId
+        ) {
+            it.copy(ignoredOnTrackingProtection = action.excluded)
+        }
     }
 }
 
