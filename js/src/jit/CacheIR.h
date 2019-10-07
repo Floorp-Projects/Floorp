@@ -1335,7 +1335,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset,
                                       TypedThingLayout layout,
-                                      Scalar::Type type, ValOperandId rhs) {
+                                      Scalar::Type type, OperandId rhs) {
     writeOpWithOperandId(CacheOp::StoreTypedObjectScalarProperty, obj);
     addStubField(offset, StubField::Type::RawWord);
     buffer_.writeByte(uint32_t(layout));
