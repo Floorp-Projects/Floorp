@@ -175,10 +175,10 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GeneratedFile('CSS2Properties.webidl',
-                  script='GenerateCSS2PropertiesWebIDL.py',
-                  entry_point='generate',
-                  inputs=[
-                      '/dom/webidl/CSS2Properties.webidl.in',
-                      '!/layout/style/ServoCSSPropList.py',
-                  ])
+    GENERATED_FILES += ['CSS2Properties.webidl']
+    css_props = GENERATED_FILES['CSS2Properties.webidl']
+    css_props.script = 'GenerateCSS2PropertiesWebIDL.py:generate'
+    css_props.inputs = [
+        '/dom/webidl/CSS2Properties.webidl.in',
+        '!/layout/style/ServoCSSPropList.py',
+    ]
