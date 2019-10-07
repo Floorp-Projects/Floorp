@@ -10,27 +10,74 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
+not-for-components:
+    - samples-browser   # Their configs are too different, so they're handled in a specific kind
+
 job-defaults:
+    artifact-template:
+        type: file
+        name: public/build/{artifact_file_name}
+        path: '/builds/worker/checkouts/src/{component_path}/build/maven/org/mozilla/components/{component}/{version_with_snapshot}/{artifact_file_name}'
+    expose-artifacts:
+        by-build-type:
+            release: true
+            snapshot: true
+            default: false
     attributes:
-        code-review: true
+        code-review:
+            by-build-type:
+                release: false
+                snapshot: false
+                default: true
     description: Execute Gradle tasks for component "{component}"
-    # XXX Cannot use run.gradlew because the loader concatenates lists
-    include-default-gradle-commands: true
-    include-coverage: true
-    lint-release: true
+    include-coverage:
+        by-build-type:
+            release: false
+            snapshot: false
+            default: true
     run:
-        post-gradlew:
-            - ['automation/taskcluster/action/upload_coverage_report.sh']
-        secrets:
-            - name: project/mobile/android-components/public-tokens
-              key: codecov
-              path: .cc_token
+        gradlew:
+            by-build-type:
+                release:
+                    - ':{component}:assembleRelease'
+                    - ':{component}:testRelease'
+                    - ':{component}:lintRelease'
+                    - ':{component}:publish'
+                snapshot:
+                    - '-Psnapshot'
+                    - '-Ptimestamp={timestamp}'
+                    - ':{component}:assemble'
+                    - ':{component}:test'
+                    - ':{component}:lint'
+                    - ':{component}:publish'
+                    - ':{component}:renameSnapshotArtifacts'
+                default:
+                    by-component:
+                        # No lintRelease on this job, gradle task isn't defined
+                        tooling-lint:
+                            - ':{component}:assemble'
+                            - ':{component}:assembleAndroidTest'
+                            - ':{component}:test'
+                            - ':{component}:lint'
+                        default:
+                            - ':{component}:assemble'
+                            - ':{component}:assembleAndroidTest'
+                            - ':{component}:test'
+                            - ':{component}:lintRelease'
         using: gradlew
         use-caches: false
-    run-on-tasks-for: [github-pull-request, github-push]
+    run-on-tasks-for:
+        by-build-type:
+            release: []
+            snapshot: []
+            default: [github-pull-request, github-push]
     treeherder:
         kind: build
-        symbol: '{component}(B)'
+        symbol:
+            by-build-type:
+                release: '{component}(BR)'
+                snapshot: '{component}(BSnap)'
+                default: '{component}(B)'
         platform: android-all/opt
         tier: 1
     worker-type: b-android
@@ -41,47 +88,23 @@ job-defaults:
 
 
 overriden-jobs:
+    # Treeherder group names are too long to fit in 25 chars
     browser-engine-gecko-nightly:
         treeherder:
-            # Too long to fit in 25 chars
             symbol: 'browser-engine-gecko-nigh(B)'
+    snapshot-browser-engine-gecko-nightly:
+        treeherder:
+            symbol: 'browser-engine-gecko-nigh(BSnap)'
+    release-browser-engine-gecko-nightly:
+        treeherder:
+            symbol: 'browser-engine-gecko-nigh(BR)'
 
     lib-fetch-httpurlconnection:
         treeherder:
-            # Too long to fit in 25 chars
             symbol: 'lib-fetch-httpurlconnect(B)'
-
-    samples-browser:
-        include-default-gradle-commands: false
-        run:
-            gradlew:
-                - ':{component}:assembleGeckoNightly'
-                - ':{component}:testGeckoNightlyDebugUnitTest'
-                - ':{component}:lintGeckoNightly'
-
-    support-test:
-        lint-release: false
-
-    tooling-lint:
-        lint-release: false
-
-
-additional-jobs:
-    samples-browser-beta:
-        include-default-gradle-commands: false
-        run:
-            gradlew:
-                - ':samples-browser:assembleGeckoBeta'
-                - ':samples-browser:testGeckoBetaDebugUnitTest'
-
-    samples-browser-release:
-        include-default-gradle-commands: false
-        run:
-            gradlew:
-                - ':samples-browser:assembleGeckoRelease'
-                - ':samples-browser:testGeckoReleaseDebugUnitTest'
-
-    samples-browser-system:
-        include-default-gradle-commands: false
-        run:
-            gradlew: [':samples-browser:assembleSystem']
+    snapshot-lib-fetch-httpurlconnection:
+        treeherder:
+            symbol: 'lib-fetch-httpurlconnect(BSnap)'
+    release-lib-fetch-httpurlconnection:
+        treeherder:
+            symbol: 'lib-fetch-httpurlconnect(BR)'

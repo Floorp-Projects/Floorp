@@ -46,6 +46,14 @@ workers:
                 by-level:
                     "3": mobile-signing-v1
                     default: mobile-signing-dep-v1
+        beetmover:
+            provisioner: scriptworker-prov-v1
+            implementation: scriptworker-beetmover
+            os: scriptworker
+            worker-type:
+                by-level:
+                    "3": mobile-beetmover-v1
+                    default: mobile-beetmover-dev
 
 scriptworker:
     scope-prefix: project:mobile:android-components:releng

@@ -5,8 +5,8 @@
 loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
-    - old-decision
     - build
+    - build-samples-browser
     - lint
 
 transforms:
