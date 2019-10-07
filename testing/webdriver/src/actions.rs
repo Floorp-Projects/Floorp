@@ -240,19 +240,20 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::{check_deserialize, check_serialize_deserialize};
-    use serde_json;
+    use crate::test::{assert_de, assert_ser_de};
+    use serde_json::{self, json};
 
     #[test]
     fn test_json_action_sequence_null() {
-        let json = r#"{
-            "id":"some_key",
-            "type":"none",
-            "actions":[{
-                "type":"pause","duration":1
+        let json = json!({
+            "id": "some_key",
+            "type": "none",
+            "actions": [{
+                "type": "pause",
+                "duration": 1,
             }]
-        }"#;
-        let data = ActionSequence {
+        });
+        let seq = ActionSequence {
             id: "some_key".into(),
             actions: ActionsType::Null {
                 actions: vec![NullActionItem::General(GeneralAction::Pause(PauseAction {
@@ -261,19 +262,19 @@ mod test {
             },
         };
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&seq, json);
     }
 
     #[test]
     fn test_json_action_sequence_key() {
-        let json = r#"{
-            "id":"some_key",
-            "type":"key",
-            "actions":[
-                {"type":"keyDown","value":"f"}
-            ]
-        }"#;
-        let data = ActionSequence {
+        let json = json!({
+            "id": "some_key",
+            "type": "key",
+            "actions": [
+                {"type": "keyDown", "value": "f"},
+            ],
+        });
+        let seq = ActionSequence {
             id: "some_key".into(),
             actions: ActionsType::Key {
                 actions: vec![KeyActionItem::Key(KeyAction::Down(KeyDownAction {
@@ -282,24 +283,24 @@ mod test {
             },
         };
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&seq, json);
     }
 
     #[test]
     fn test_json_action_sequence_pointer() {
-        let json = r#"{
-            "id":"some_pointer",
-            "type":"pointer",
-            "parameters":{
-                "pointerType":"mouse"
+        let json = json!({
+            "id": "some_pointer",
+            "type": "pointer",
+            "parameters": {
+                "pointerType": "mouse"
             },
-            "actions":[
-                {"type":"pointerDown","button":0},
-                {"type":"pointerMove","origin":"pointer","x":10,"y":20},
-                {"type":"pointerUp","button":0}
+            "actions": [
+                {"type": "pointerDown", "button": 0},
+                {"type": "pointerMove", "origin": "pointer", "x": 10, "y": 20},
+                {"type": "pointerUp", "button": 0},
             ]
-        }"#;
-        let data = ActionSequence {
+        });
+        let seq = ActionSequence {
             id: "some_pointer".into(),
             actions: ActionsType::Pointer {
                 parameters: PointerActionParameters {
@@ -320,104 +321,96 @@ mod test {
             },
         };
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&seq, json);
     }
 
     #[test]
     fn test_json_action_sequence_id_missing() {
-        let json = r#"{
+        let json = json!({
             "type": "key",
-            "actions": []
-        }"#;
-
-        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+            "actions": [],
+        });
+        assert!(serde_json::from_value::<ActionSequence>(json).is_err());
     }
 
     #[test]
     fn test_json_action_sequence_id_null() {
-        let json = r#"{
+        let json = json!({
             "id": null,
             "type": "key",
-            "actions": []
-        }"#;
-
-        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+            "actions": [],
+        });
+        assert!(serde_json::from_value::<ActionSequence>(json).is_err());
     }
 
     #[test]
     fn test_json_action_sequence_actions_missing() {
-        let json = r#"{
-            "id": "3"
-        }"#;
-
-        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+        assert!(serde_json::from_value::<ActionSequence>(json!({"id": "3"})).is_err());
     }
 
     #[test]
     fn test_json_action_sequence_actions_null() {
-        let json = r#"{
+        let json = json!({
             "id": "3",
-            "actions": null
-        }"#;
-
-        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+            "actions": null,
+        });
+        assert!(serde_json::from_value::<ActionSequence>(json).is_err());
     }
 
     #[test]
     fn test_json_action_sequence_actions_invalid_type() {
-        let json = r#"{
+        let json = json!({
             "id": "3",
-            "actions": "foo"
-        }"#;
-
-        assert!(serde_json::from_str::<ActionSequence>(&json).is_err());
+            "actions": "foo",
+        });
+        assert!(serde_json::from_value::<ActionSequence>(json).is_err());
     }
 
     #[test]
     fn test_json_actions_type_null() {
-        let json = r#"{
-            "type":"none",
-            "actions":[{
-                "type":"pause",
-                "duration":1
-            }]
-        }"#;
-        let data = ActionsType::Null {
+        let json = json!({
+            "type": "none",
+            "actions": [{
+                "type": "pause",
+                "duration": 1,
+            }],
+        });
+        let null = ActionsType::Null {
             actions: vec![NullActionItem::General(GeneralAction::Pause(PauseAction {
                 duration: Some(1),
             }))],
         };
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&null, json);
     }
 
     #[test]
     fn test_json_actions_type_key() {
-        let json = r#"{
-            "type":"key",
-            "actions":[{
-                "type":"keyDown",
-                "value":"f"
-            }]
-        }"#;
-        let data = ActionsType::Key {
+        let json = json!({
+            "type": "key",
+            "actions": [{
+                "type": "keyDown",
+                "value": "f",
+            }],
+        });
+        let key = ActionsType::Key {
             actions: vec![KeyActionItem::Key(KeyAction::Down(KeyDownAction {
                 value: String::from("f"),
             }))],
         };
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&key, json);
     }
 
     #[test]
     fn test_json_actions_type_pointer() {
-        let json = r#"{
-            "type":"pointer",
-            "parameters":{"pointerType":"mouse"},
-            "actions":[
-                {"type":"pointerDown","button":1}
-            ]}"#;
-        let data = ActionsType::Pointer {
+        let json = json!({
+        "type": "pointer",
+        "parameters": {"pointerType": "mouse"},
+        "actions": [
+            {"type": "pointerDown", "button": 1},
+        ]});
+        let pointer = ActionsType::Pointer {
             parameters: PointerActionParameters {
                 pointer_type: PointerType::Mouse,
             },
@@ -426,17 +419,17 @@ mod test {
             ))],
         };
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pointer, json);
     }
 
     #[test]
     fn test_json_actions_type_pointer_with_parameters_missing() {
-        let json = r#"{
-            "type":"pointer",
-            "actions":[
-                {"type":"pointerDown","button":1}
-            ]}"#;
-        let data = ActionsType::Pointer {
+        let json = json!({
+        "type": "pointer",
+        "actions": [
+            {"type": "pointerDown", "button": 1},
+        ]});
+        let pointer = ActionsType::Pointer {
             parameters: PointerActionParameters {
                 pointer_type: PointerType::Mouse,
             },
@@ -445,737 +438,619 @@ mod test {
             ))],
         };
 
-        check_deserialize(&json, &data);
+        assert_de(&pointer, json);
     }
 
     #[test]
     fn test_json_actions_type_pointer_with_parameters_invalid_type() {
-        let json = r#"{
-            "type":"pointer",
-            "parameters":null,
-            "actions":[
-                {"type":"pointerDown","button":1}
-            ]}"#;
-
-        assert!(serde_json::from_str::<ActionsType>(&json).is_err());
+        let json = json!({
+        "type": "pointer",
+        "parameters": null,
+        "actions": [
+            {"type":"pointerDown", "button": 1},
+        ]});
+        assert!(serde_json::from_value::<ActionsType>(json).is_err());
     }
 
     #[test]
     fn test_json_actions_type_invalid() {
-        let json = r#"{"actions":[{"foo":"bar"}]}"#;
-        assert!(serde_json::from_str::<ActionsType>(&json).is_err());
+        let json = json!({"actions": [{"foo": "bar"}]});
+        assert!(serde_json::from_value::<ActionsType>(json).is_err());
     }
 
     #[test]
     fn test_json_null_action_item_general() {
-        let json = r#"{"type":"pause","duration":1}"#;
-        let data = NullActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
-
-        check_serialize_deserialize(&json, &data);
+        let pause =
+            NullActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
+        assert_ser_de(&pause, json!({"type": "pause", "duration": 1}));
     }
 
     #[test]
     fn test_json_null_action_item_invalid_type() {
-        let json = r#"{"type":"invalid"}"#;
-        assert!(serde_json::from_str::<NullActionItem>(&json).is_err());
+        assert!(serde_json::from_value::<NullActionItem>(json!({"type": "invalid"})).is_err());
     }
 
     #[test]
     fn test_json_general_action_pause() {
-        let json = r#"{"type":"pause","duration":1}"#;
-        let data = GeneralAction::Pause(PauseAction { duration: Some(1) });
-
-        check_serialize_deserialize(&json, &data);
+        let pause = GeneralAction::Pause(PauseAction { duration: Some(1) });
+        assert_ser_de(&pause, json!({"type": "pause", "duration": 1}));
     }
 
     #[test]
     fn test_json_general_action_pause_with_duration_missing() {
-        let json = r#"{"type":"pause"}"#;
-        let data = GeneralAction::Pause(PauseAction { duration: None });
-
-        check_serialize_deserialize(&json, &data);
+        let pause = GeneralAction::Pause(PauseAction { duration: None });
+        assert_ser_de(&pause, json!({"type": "pause"}));
     }
 
     #[test]
     fn test_json_general_action_pause_with_duration_null() {
-        let json = r#"{"type":"pause","duration":null}"#;
-
-        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+        let json = json!({"type": "pause", "duration": null});
+        assert!(serde_json::from_value::<GeneralAction>(json).is_err());
     }
 
     #[test]
     fn test_json_general_action_pause_with_duration_invalid_type() {
-        let json = r#"{"type":"pause","duration":"foo"}"#;
-
-        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+        let json = json!({"type": "pause", "duration":" foo"});
+        assert!(serde_json::from_value::<GeneralAction>(json).is_err());
     }
 
     #[test]
     fn test_json_general_action_pause_with_duration_negative() {
-        let json = r#"{"type":"pause","duration":-30}"#;
-
-        assert!(serde_json::from_str::<GeneralAction>(&json).is_err());
+        let json = json!({"type": "pause", "duration": -30});
+        assert!(serde_json::from_value::<GeneralAction>(json).is_err());
     }
 
     #[test]
     fn test_json_key_action_item_general() {
-        let json = r#"{"type":"pause","duration":1}"#;
-        let data = KeyActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
-
-        check_serialize_deserialize(&json, &data);
+        let pause = KeyActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
+        assert_ser_de(&pause, json!({"type": "pause", "duration": 1}));
     }
 
     #[test]
     fn test_json_key_action_item_key() {
-        let json = r#"{"type":"keyDown","value":"f"}"#;
-        let data = KeyActionItem::Key(KeyAction::Down(KeyDownAction {
+        let key_down = KeyActionItem::Key(KeyAction::Down(KeyDownAction {
             value: String::from("f"),
         }));
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&key_down, json!({"type": "keyDown", "value": "f"}));
     }
 
     #[test]
     fn test_json_key_action_item_invalid_type() {
-        let json = r#"{"type":"invalid"}"#;
-        assert!(serde_json::from_str::<KeyActionItem>(&json).is_err());
+        assert!(serde_json::from_value::<KeyActionItem>(json!({"type": "invalid"})).is_err());
     }
 
     #[test]
     fn test_json_key_action_missing_subtype() {
-        let json = r#"{"value":"f"}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        assert!(serde_json::from_value::<KeyAction>(json!({"value": "f"})).is_err());
     }
 
     #[test]
     fn test_json_key_action_wrong_subtype() {
-        let json = r#"{"type":"pause","value":"f"}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        let json = json!({"type": "pause", "value": "f"});
+        assert!(serde_json::from_value::<KeyAction>(json).is_err());
     }
 
     #[test]
     fn test_json_key_action_down() {
-        let json = r#"{"type":"keyDown","value":"f"}"#;
-        let data = KeyAction::Down(KeyDownAction {
-            value: "f".to_owned(),
+        let key_down = KeyAction::Down(KeyDownAction {
+            value: "f".to_string(),
         });
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&key_down, json!({"type": "keyDown", "value": "f"}));
     }
 
     #[test]
     fn test_json_key_action_down_with_value_unicode() {
-        let json = r#"{"type":"keyDown","value":"à"}"#;
-        let data = KeyAction::Down(KeyDownAction {
-            value: "à".to_owned(),
+        let key_down = KeyAction::Down(KeyDownAction {
+            value: "à".to_string(),
         });
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&key_down, json!({"type": "keyDown", "value": "à"}));
     }
 
     #[test]
     fn test_json_key_action_down_with_value_unicode_encoded() {
-        let json = r#"{"type":"keyDown","value":"\u00E0"}"#;
-        let data = KeyAction::Down(KeyDownAction {
-            value: "à".to_owned(),
+        let key_down = KeyAction::Down(KeyDownAction {
+            value: "à".to_string(),
         });
-
-        check_deserialize(&json, &data);
+        assert_de(&key_down, json!({"type": "keyDown", "value": "\u{00E0}"}));
     }
 
     #[test]
     fn test_json_key_action_down_with_value_missing() {
-        let json = r#"{"type":"keyDown"}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        assert!(serde_json::from_value::<KeyAction>(json!({"type": "keyDown"})).is_err());
     }
 
     #[test]
     fn test_json_key_action_down_with_value_null() {
-        let json = r#"{"type":"keyDown","value":null}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        let json = json!({"type": "keyDown", "value": null});
+        assert!(serde_json::from_value::<KeyAction>(json).is_err());
     }
 
     #[test]
     fn test_json_key_action_down_with_value_invalid_type() {
-        let json = r#"{"type":"keyDown,"value":["f","o","o"]}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        let json = json!({"type": "keyDown", "value": ["f", "o", "o"]});
+        assert!(serde_json::from_value::<KeyAction>(json).is_err());
     }
 
     #[test]
     fn test_json_key_action_down_with_multiple_code_points() {
-        let json = r#"{"type":"keyDown","value":"fo"}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        let json = json!({"type": "keyDown", "value": "fo"});
+        assert!(serde_json::from_value::<KeyAction>(json).is_err());
     }
 
     #[test]
     fn test_json_key_action_up() {
-        let json = r#"{"type":"keyUp","value":"f"}"#;
-        let data = KeyAction::Up(KeyUpAction {
-            value: "f".to_owned(),
+        let key_up = KeyAction::Up(KeyUpAction {
+            value: "f".to_string(),
         });
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&key_up, json!({"type": "keyUp", "value": "f"}));
     }
 
     #[test]
     fn test_json_key_action_up_with_value_unicode() {
-        let json = r#"{"type":"keyUp","value":"à"}"#;
-        let data = KeyAction::Up(KeyUpAction {
-            value: "à".to_owned(),
+        let key_up = KeyAction::Up(KeyUpAction {
+            value: "à".to_string(),
         });
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&key_up, json!({"type":"keyUp", "value": "à"}));
     }
 
     #[test]
     fn test_json_key_action_up_with_value_unicode_encoded() {
-        let json = r#"{"type":"keyUp","value":"\u00E0"}"#;
-        let data = KeyAction::Up(KeyUpAction {
-            value: "à".to_owned(),
+        let key_up = KeyAction::Up(KeyUpAction {
+            value: "à".to_string(),
         });
-
-        check_deserialize(&json, &data);
+        assert_de(&key_up, json!({"type": "keyUp", "value": "\u{00E0}"}));
     }
 
     #[test]
     fn test_json_key_action_up_with_value_missing() {
-        let json = r#"{"type":"keyUp"}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        assert!(serde_json::from_value::<KeyAction>(json!({"type": "keyUp"})).is_err());
     }
 
     #[test]
     fn test_json_key_action_up_with_value_null() {
-        let json = r#"{"type":"keyUp,"value":null}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        let json = json!({"type": "keyUp", "value": null});
+        assert!(serde_json::from_value::<KeyAction>(json).is_err());
     }
 
     #[test]
     fn test_json_key_action_up_with_value_invalid_type() {
-        let json = r#"{"type":"keyUp,"value":["f","o","o"]}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        let json = json!({"type": "keyUp", "value": ["f","o","o"]});
+        assert!(serde_json::from_value::<KeyAction>(json).is_err());
     }
 
     #[test]
     fn test_json_key_action_up_with_multiple_code_points() {
-        let json = r#"{"type":"keyUp","value":"fo"}"#;
-
-        assert!(serde_json::from_str::<KeyAction>(&json).is_err());
+        let json = json!({"type": "keyUp", "value": "fo"});
+        assert!(serde_json::from_value::<KeyAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_item_general() {
-        let json = r#"{"type":"pause","duration":1}"#;
-        let data =
+        let pause =
             PointerActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pause, json!({"type": "pause", "duration": 1}));
     }
 
     #[test]
     fn test_json_pointer_action_item_pointer() {
-        let json = r#"{"type":"pointerCancel"}"#;
-        let data = PointerActionItem::Pointer(PointerAction::Cancel);
-
-        check_serialize_deserialize(&json, &data);
+        let cancel = PointerActionItem::Pointer(PointerAction::Cancel);
+        assert_ser_de(&cancel, json!({"type": "pointerCancel"}));
     }
 
     #[test]
     fn test_json_pointer_action_item_invalid() {
-        let json = r#"{"type":"invalid"}"#;
-
-        assert!(serde_json::from_str::<PointerActionItem>(&json).is_err());
+        assert!(serde_json::from_value::<PointerActionItem>(json!({"type": "invalid"})).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_parameters_mouse() {
-        let json = r#"{"pointerType":"mouse"}"#;
-        let data = PointerActionParameters {
+        let mouse = PointerActionParameters {
             pointer_type: PointerType::Mouse,
         };
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&mouse, json!({"pointerType": "mouse"}));
     }
 
     #[test]
     fn test_json_pointer_action_parameters_pen() {
-        let json = r#"{"pointerType":"pen"}"#;
-        let data = PointerActionParameters {
+        let pen = PointerActionParameters {
             pointer_type: PointerType::Pen,
         };
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pen, json!({"pointerType": "pen"}));
     }
 
     #[test]
     fn test_json_pointer_action_parameters_touch() {
-        let json = r#"{"pointerType":"touch"}"#;
-        let data = PointerActionParameters {
+        let touch = PointerActionParameters {
             pointer_type: PointerType::Touch,
         };
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&touch, json!({"pointerType": "touch"}));
     }
 
     #[test]
     fn test_json_pointer_action_item_invalid_type() {
-        let json = r#"{"type":"pointerInvalid"}"#;
-        assert!(serde_json::from_str::<PointerActionItem>(&json).is_err());
+        let json = json!({"type": "pointerInvalid"});
+        assert!(serde_json::from_value::<PointerActionItem>(json).is_err());
     }
 
     #[test]
-    fn test_json_pointer_action_with_subtype_missing() {
-        let json = r#"{"button":1}"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    fn test_json_pointer_action_missing_subtype() {
+        assert!(serde_json::from_value::<PointerAction>(json!({"button": 1})).is_err());
     }
 
     #[test]
-    fn test_json_pointer_action_with_subtype_invalid() {
-        let json = r#"{"type":"invalid"}"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
-    }
-
-    #[test]
-    fn test_json_pointer_action_with_subtype_wrong() {
-        let json = r#"{"type":"pointerMove",button":1}"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+    fn test_json_pointer_action_invalid_subtype() {
+        let json = json!({"type": "invalid", "button": 1});
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_cancel() {
-        let json = r#"{"type":"pointerCancel"}"#;
-        let data = PointerAction::Cancel;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&PointerAction::Cancel, json!({"type": "pointerCancel"}));
     }
 
     #[test]
     fn test_json_pointer_action_down() {
-        let json = r#"{"type":"pointerDown","button":1}"#;
-        let data = PointerAction::Down(PointerDownAction { button: 1 });
-
-        check_serialize_deserialize(&json, &data);
+        let pointer_down = PointerAction::Down(PointerDownAction { button: 1 });
+        assert_ser_de(&pointer_down, json!({"type": "pointerDown", "button": 1}));
     }
 
     #[test]
     fn test_json_pointer_action_down_with_button_missing() {
-        let json = r#"{"type":"pointerDown"}"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({"type": "pointerDown"});
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_down_with_button_null() {
-        let json = r#"{
-            "type":"pointerDown",
-            "button":null
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerDown",
+            "button": null,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_down_with_button_invalid_type() {
-        let json = r#"{
-            "type":"pointerDown",
-            "button":"foo",
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerDown",
+            "button": "foo",
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_down_with_button_negative() {
-        let json = r#"{
-            "type":"pointerDown",
-            "button":-30
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerDown",
+            "button": -30,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":"viewport",
-            "x":5,
-            "y":10
-        }"#;
-        let data = PointerAction::Move(PointerMoveAction {
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": "viewport",
+            "x": 5,
+            "y": 10,
+        });
+        let pointer_move = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: Some(10),
         });
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pointer_move, json);
     }
 
     #[test]
     fn test_json_pointer_action_move_missing_subtype() {
-        let json = r#"{
-            "duration":100,
-            "origin":"viewport",
-            "x":5,
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "duration": 100,
+            "origin": "viewport",
+            "x": 5,
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_wrong_subtype() {
-        let json = r#"{
-            "type":"pointerUp",
-            "duration":100,
-            "origin":"viewport",
-            "x":5,
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerUp",
+            "duration": 100,
+            "origin": "viewport",
+            "x": 5,
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_duration_missing() {
-        let json = r#"{
-            "type":"pointerMove",
-            "origin":"viewport",
-            "x":5,
-            "y":10
-        }"#;
-        let data = PointerAction::Move(PointerMoveAction {
+        let json = json!({
+            "type": "pointerMove",
+            "origin": "viewport",
+            "x": 5,
+            "y": 10,
+        });
+        let pointer_move = PointerAction::Move(PointerMoveAction {
             duration: None,
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: Some(10),
         });
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pointer_move, json);
     }
 
     #[test]
     fn test_json_pointer_action_move_with_duration_null() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":null,
-            "origin":"viewport",
-            "x":5,
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerMove",
+            "duration": null,
+            "origin": "viewport",
+            "x": 5,
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_duration_invalid_type() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":"invalid",
-            "origin":"viewport",
-            "x":5,
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerMove",
+            "duration": "invalid",
+            "origin": "viewport",
+            "x": 5,
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_duration_negative() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":-30,
-            "origin":"viewport",
-            "x":5,
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerMove",
+            "duration": -30,
+            "origin": "viewport",
+            "x": 5,
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_origin_missing() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "x":5,
-            "y":10
-        }"#;
-        let data = PointerAction::Move(PointerMoveAction {
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "x": 5,
+            "y": 10,
+        });
+        let pointer_move = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: Some(10),
         });
 
-        check_deserialize(&json, &data);
+        assert_de(&pointer_move, json);
     }
 
     #[test]
     fn test_json_pointer_action_move_with_origin_webelement() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":{
-                "element-6066-11e4-a52e-4f735466cecf":"elem"
-            },
-            "x":5,
-            "y":10
-        }"#;
-        let data = PointerAction::Move(PointerMoveAction {
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": {ELEMENT_KEY: "elem"},
+            "x": 5,
+            "y": 10,
+        });
+        let pointer_move = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
             origin: PointerOrigin::Element(WebElement("elem".into())),
             x: Some(5),
             y: Some(10),
         });
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pointer_move, json);
     }
 
     #[test]
     fn test_json_pointer_action_move_with_origin_webelement_and_legacy_element() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":{
-                "element-6066-11e4-a52e-4f735466cecf":"elem"
-            },
-            "x":5,
-            "y":10
-        }"#;
-        let data = PointerAction::Move(PointerMoveAction {
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": {ELEMENT_KEY: "elem"},
+            "x": 5,
+            "y": 10,
+        });
+        let pointer_move = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
             origin: PointerOrigin::Element(WebElement("elem".into())),
             x: Some(5),
             y: Some(10),
         });
 
-        check_deserialize(&json, &data);
+        assert_de(&pointer_move, json);
     }
 
     #[test]
     fn test_json_pointer_action_move_with_origin_only_legacy_element() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":{
-                "element-6066-11e4-a52e-4f735466cecf":"elem"
-            },
-            "x":5,
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerOrigin>(&json).is_err());
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": {ELEMENT_KEY: "elem"},
+            "x": 5,
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerOrigin>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_x_missing() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":"viewport",
-            "y":10
-        }"#;
-        let data = PointerAction::Move(PointerMoveAction {
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": "viewport",
+            "y": 10,
+        });
+        let pointer_move = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
             origin: PointerOrigin::Viewport,
             x: None,
             y: Some(10),
         });
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pointer_move, json);
     }
 
     #[test]
     fn test_json_pointer_action_move_with_x_null() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":"viewport",
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": "viewport",
             "x": null,
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_x_invalid_type() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":"viewport",
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": "viewport",
             "x": "invalid",
-            "y":10
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+            "y": 10,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_y_missing() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":"viewport",
-            "x":5
-        }"#;
-        let data = PointerAction::Move(PointerMoveAction {
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": "viewport",
+            "x": 5,
+        });
+        let pointer_move = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
             origin: PointerOrigin::Viewport,
             x: Some(5),
             y: None,
         });
 
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&pointer_move, json);
     }
 
     #[test]
     fn test_json_pointer_action_move_with_y_null() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":"viewport",
-            "x":5,
-            "y":null
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": "viewport",
+            "x": 5,
+            "y": null,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_move_with_y_invalid_type() {
-        let json = r#"{
-            "type":"pointerMove",
-            "duration":100,
-            "origin":"viewport",
-            "x":5,
-            "y":"invalid"
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerMove",
+            "duration": 100,
+            "origin": "viewport",
+            "x": 5,
+            "y": "invalid",
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_up() {
-        let json = r#"{
-            "type":"pointerUp",
-            "button":1
-        }"#;
-        let data = PointerAction::Up(PointerUpAction { button: 1 });
-
-        check_serialize_deserialize(&json, &data);
+        let pointer_up = PointerAction::Up(PointerUpAction { button: 1 });
+        assert_ser_de(&pointer_up, json!({"type": "pointerUp", "button": 1}));
     }
 
     #[test]
     fn test_json_pointer_action_up_with_button_missing() {
-        let json = r#"{
-            "type":"pointerUp"
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        assert!(serde_json::from_value::<PointerAction>(json!({"type": "pointerUp"})).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_up_with_button_null() {
-        let json = r#"{
-            "type":"pointerUp",
-            "button":null
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerUp",
+            "button": null,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_up_with_button_invalid_type() {
-        let json = r#"{
-            "type":"pointerUp",
-            "button":"foo",
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerUp",
+            "button": "foo",
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_action_up_with_button_negative() {
-        let json = r#"{
-            "type":"pointerUp",
-            "button":-30
-        }"#;
-
-        assert!(serde_json::from_str::<PointerAction>(&json).is_err());
+        let json = json!({
+            "type": "pointerUp",
+            "button": -30,
+        });
+        assert!(serde_json::from_value::<PointerAction>(json).is_err());
     }
 
     #[test]
     fn test_json_pointer_origin_pointer() {
-        let json = r#""pointer""#;
-        let data = PointerOrigin::Pointer;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&PointerOrigin::Pointer, json!("pointer"));
     }
 
     #[test]
     fn test_json_pointer_origin_viewport() {
-        let json = r#""viewport""#;
-        let data = PointerOrigin::Viewport;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&PointerOrigin::Viewport, json!("viewport"));
     }
 
     #[test]
     fn test_json_pointer_origin_web_element() {
-        let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
-        let data = PointerOrigin::Element(WebElement("elem".into()));
-
-        check_serialize_deserialize(&json, &data);
+        let element = PointerOrigin::Element(WebElement("elem".into()));
+        assert_ser_de(&element, json!({ELEMENT_KEY: "elem"}));
     }
 
     #[test]
     fn test_json_pointer_origin_invalid_type() {
-        let data = r#""invalid""#;
-        assert!(serde_json::from_str::<PointerOrigin>(&data).is_err());
+        assert!(serde_json::from_value::<PointerOrigin>(json!("invalid")).is_err());
     }
 
     #[test]
     fn test_json_pointer_type_mouse() {
-        let json = r#""mouse""#;
-        let data = PointerType::Mouse;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&PointerType::Mouse, json!("mouse"));
     }
 
     #[test]
     fn test_json_pointer_type_pen() {
-        let json = r#""pen""#;
-        let data = PointerType::Pen;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&PointerType::Pen, json!("pen"));
     }
 
     #[test]
     fn test_json_pointer_type_touch() {
-        let json = r#""touch""#;
-        let data = PointerType::Touch;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&PointerType::Touch, json!("touch"));
     }
 
     #[test]
     fn test_json_pointer_type_invalid_type() {
-        let json = r#""invalid""#;
-        assert!(serde_json::from_str::<PointerType>(&json).is_err());
+        assert!(serde_json::from_value::<PointerType>(json!("invalid")).is_err());
     }
 }

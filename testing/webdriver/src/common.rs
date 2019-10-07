@@ -153,130 +153,97 @@ impl<'de> Deserialize<'de> for WebWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test::{check_serialize, check_serialize_deserialize};
-    use serde_json;
+    use crate::test::{assert_ser, assert_ser_de};
+    use serde_json::{self, json};
 
     #[test]
     fn test_json_date() {
-        let json = r#"1234"#;
-        let data = Date(1234);
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&Date(1234), json!(1234));
     }
 
     #[test]
     fn test_json_date_invalid() {
-        let json = r#""2018-01-01""#;
-        assert!(serde_json::from_str::<Date>(&json).is_err());
+        assert!(serde_json::from_value::<Date>(json!("2018-01-01")).is_err());
     }
 
     #[test]
     fn test_json_frame_id_short() {
-        let json = r#"1234"#;
-        let data = FrameId::Short(1234);
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&FrameId::Short(1234), json!(1234));
     }
 
     #[test]
     fn test_json_frame_id_webelement() {
-        let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
-        let data = FrameId::Element(WebElement("elem".into()));
-
-        check_serialize(&json, &data);
+        assert_ser(
+            &FrameId::Element(WebElement("elem".into())),
+            json!({ELEMENT_KEY: "elem"}),
+        );
     }
 
     #[test]
     fn test_json_frame_id_invalid() {
-        let json = r#"true"#;
-        assert!(serde_json::from_str::<FrameId>(&json).is_err());
+        assert!(serde_json::from_value::<FrameId>(json!(true)).is_err());
     }
 
     #[test]
     fn test_json_locator_strategy_css_selector() {
-        let json = r#""css selector""#;
-        let data = LocatorStrategy::CSSSelector;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&LocatorStrategy::CSSSelector, json!("css selector"));
     }
 
     #[test]
     fn test_json_locator_strategy_link_text() {
-        let json = r#""link text""#;
-        let data = LocatorStrategy::LinkText;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&LocatorStrategy::LinkText, json!("link text"));
     }
 
     #[test]
     fn test_json_locator_strategy_partial_link_text() {
-        let json = r#""partial link text""#;
-        let data = LocatorStrategy::PartialLinkText;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(
+            &LocatorStrategy::PartialLinkText,
+            json!("partial link text"),
+        );
     }
 
     #[test]
     fn test_json_locator_strategy_tag_name() {
-        let json = r#""tag name""#;
-        let data = LocatorStrategy::TagName;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&LocatorStrategy::TagName, json!("tag name"));
     }
 
     #[test]
     fn test_json_locator_strategy_xpath() {
-        let json = r#""xpath""#;
-        let data = LocatorStrategy::XPath;
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&LocatorStrategy::XPath, json!("xpath"));
     }
 
     #[test]
     fn test_json_locator_strategy_invalid() {
-        let json = r#""foo""#;
-        assert!(serde_json::from_str::<LocatorStrategy>(&json).is_err());
+        assert!(serde_json::from_value::<LocatorStrategy>(json!("foo")).is_err());
     }
 
     #[test]
     fn test_json_webelement() {
-        let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
-        let data = WebElement("elem".into());
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&WebElement("elem".into()), json!({ELEMENT_KEY: "elem"}));
     }
 
     #[test]
     fn test_json_webelement_invalid() {
-        let data = r#"{"elem-6066-11e4-a52e-4f735466cecf":"elem"}"#;
-        assert!(serde_json::from_str::<WebElement>(&data).is_err());
+        assert!(serde_json::from_value::<WebElement>(json!({"invalid": "elem"})).is_err());
     }
 
     #[test]
     fn test_json_webframe() {
-        let json = r#"{"frame-075b-4da1-b6ba-e579c2d3230a":"frm"}"#;
-        let data = WebFrame("frm".into());
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&WebFrame("frame".into()), json!({FRAME_KEY: "frame"}));
     }
 
     #[test]
     fn test_json_webframe_invalid() {
-        let data = r#"{"frm-075b-4da1-b6ba-e579c2d3230a":"frm"}"#;
-        assert!(serde_json::from_str::<WebFrame>(&data).is_err());
+        assert!(serde_json::from_value::<WebFrame>(json!({"invalid": "frame"})).is_err());
     }
 
     #[test]
     fn test_json_webwindow() {
-        let json = r#"{"window-fcc6-11e5-b4f8-330a88ab9d7f":"window"}"#;
-        let data = WebWindow("window".into());
-
-        check_serialize_deserialize(&json, &data);
+        assert_ser_de(&WebWindow("window".into()), json!({WINDOW_KEY: "window"}));
     }
 
     #[test]
     fn test_json_webwindow_invalid() {
-        let data = r#"{""wind-fcc6-11e5-b4f8-330a88ab9d7f":"window"}"#;
-        assert!(serde_json::from_str::<WebWindow>(&data).is_err());
+        assert!(serde_json::from_value::<WebWindow>(json!({"invalid": "window"})).is_err());
     }
 }
