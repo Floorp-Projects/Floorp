@@ -146,11 +146,6 @@ function testInit() {
     ChromeUtils.import("chrome://mochikit/content/ShutdownLeaksCollector.jsm");
   }
 
-  Services.mm.loadFrameScript(
-    "chrome://mochikit/content/tests/SimpleTest/AsyncUtilsContent.js",
-    true
-  );
-
   var testSuite = Cc["@mozilla.org/process/environment;1"]
     .getService(Ci.nsIEnvironment)
     .get("TEST_SUITE");

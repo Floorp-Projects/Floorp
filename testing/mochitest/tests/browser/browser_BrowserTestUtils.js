@@ -1,5 +1,5 @@
 function getLastEventDetails(browser) {
-  return ContentTask.spawn(browser, {}, async function() {
+  return SpecialPowers.spawn(browser, [], async function() {
     return content.document.getElementById("out").textContent;
   });
 }
@@ -33,7 +33,12 @@ add_task(async function() {
   details = await getLastEventDetails(browser);
   is(details, "body,15,6", "synthesizeMouseAtPoint on body");
 
-  await BrowserTestUtils.synthesizeMouseAtPoint(20, 22, {}, browser);
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    20,
+    22,
+    {},
+    browser.browsingContext
+  );
   details = await getLastEventDetails(browser);
   is(details, "button,20,22", "synthesizeMouseAtPoint on button");
 
@@ -72,6 +77,45 @@ add_task(async function() {
     !cancelled,
     "synthesizeMouseAtCenter mouseup with complex selector cancelled"
   );
+
+  gBrowser.removeTab(tab);
+});
+
+add_task(async function mouse_in_iframe() {
+  let onClickEvt = "document.body.lastChild.textContent = event.target.id;";
+  const url = `<iframe style='margin: 30px;' src='data:text/html,<body onclick="${onClickEvt}">
+     <p><button>One</button></p><p><button id="two">Two</button></p><p id="out"></p></body>'></iframe>
+     <iframe style='margin: 10px;' src='data:text/html,<body onclick="${onClickEvt}">
+     <p><button>Three</button></p><p><button id="four">Four</button></p><p id="out"></p></body>'></iframe>`;
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "data:text/html," + url
+  );
+
+  let browser = tab.linkedBrowser;
+
+  await BrowserTestUtils.synthesizeMouse(
+    "#two",
+    5,
+    10,
+    {},
+    browser.browsingContext.getChildren()[0]
+  );
+
+  let details = await getLastEventDetails(
+    browser.browsingContext.getChildren()[0]
+  );
+  is(details, "two", "synthesizeMouse");
+
+  await BrowserTestUtils.synthesizeMouse(
+    "#four",
+    5,
+    10,
+    {},
+    browser.browsingContext.getChildren()[1]
+  );
+  details = await getLastEventDetails(browser.browsingContext.getChildren()[1]);
+  is(details, "four", "synthesizeMouse");
 
   gBrowser.removeTab(tab);
 });

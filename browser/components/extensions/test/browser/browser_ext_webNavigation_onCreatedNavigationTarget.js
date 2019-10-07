@@ -139,15 +139,9 @@ add_task(
       extension,
       openNavTarget() {
         BrowserTestUtils.synthesizeMouseAtCenter(
-          () => {
-            // This code runs as a framescript in the child process and it returns the
-            // target link in the subframe.
-            return this.content.frames[0].document.querySelector(
-              "#test-create-new-tab-from-mouse-click-subframe"
-            );
-          },
+          "#test-create-new-tab-from-mouse-click-subframe",
           { ctrlKey: true, metaKey: true },
-          tab.linkedBrowser
+          tab.linkedBrowser.browsingContext.getChildren()[0]
         );
       },
       expectedWebNavProps: {
@@ -163,15 +157,9 @@ add_task(
       extension,
       openNavTarget() {
         BrowserTestUtils.synthesizeMouseAtCenter(
-          () => {
-            // This code runs as a framescript in the child process and it returns the
-            // target link in the subframe.
-            return this.content.frames[0].document.querySelector(
-              "#test-create-new-window-from-mouse-click-subframe"
-            );
-          },
+          "#test-create-new-window-from-mouse-click-subframe",
           { shiftKey: true },
-          tab.linkedBrowser
+          tab.linkedBrowser.browsingContext.getChildren()[0]
         );
       },
       expectedWebNavProps: {
@@ -187,15 +175,9 @@ add_task(
       extension,
       openNavTarget() {
         BrowserTestUtils.synthesizeMouseAtCenter(
-          () => {
-            // This code runs as a framescript in the child process and it returns the
-            // target link in the subframe.
-            return this.content.frames[0].document.querySelector(
-              "#test-create-new-tab-from-targetblank-click-subframe"
-            );
-          },
+          "#test-create-new-tab-from-targetblank-click-subframe",
           {},
-          tab.linkedBrowser
+          tab.linkedBrowser.browsingContext.getChildren()[0]
         );
       },
       expectedWebNavProps: {
