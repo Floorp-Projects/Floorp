@@ -2946,7 +2946,7 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength() {
   Register obj = allocator.useRegister(masm, reader.objOperandId());
   Register index = allocator.useRegister(masm, reader.int32OperandId());
   AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -2959,7 +2959,7 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanDenseInitLength() {
   // Ensure index >= initLength.
   Label outOfBounds;
   Address capacity(scratch, ObjectElements::offsetOfInitializedLength());
-  masm.spectreBoundsCheck32(index, capacity, scratch2, &outOfBounds);
+  masm.spectreBoundsCheck32(index, capacity, spectreScratch, &outOfBounds);
   masm.jump(failure->label());
   masm.bind(&outOfBounds);
 
@@ -2971,7 +2971,7 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanDenseCapacity() {
   Register obj = allocator.useRegister(masm, reader.objOperandId());
   Register index = allocator.useRegister(masm, reader.int32OperandId());
   AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -2984,7 +2984,7 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanDenseCapacity() {
   // Ensure index >= capacity.
   Label outOfBounds;
   Address capacity(scratch, ObjectElements::offsetOfCapacity());
-  masm.spectreBoundsCheck32(index, capacity, scratch2, &outOfBounds);
+  masm.spectreBoundsCheck32(index, capacity, spectreScratch, &outOfBounds);
   masm.jump(failure->label());
   masm.bind(&outOfBounds);
 
@@ -2996,7 +2996,7 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanArrayLength() {
   Register obj = allocator.useRegister(masm, reader.objOperandId());
   Register index = allocator.useRegister(masm, reader.int32OperandId());
   AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -3009,7 +3009,7 @@ bool CacheIRCompiler::emitGuardIndexGreaterThanArrayLength() {
   // Ensure index >= length;
   Label outOfBounds;
   Address length(scratch, ObjectElements::offsetOfLength());
-  masm.spectreBoundsCheck32(index, length, scratch2, &outOfBounds);
+  masm.spectreBoundsCheck32(index, length, spectreScratch, &outOfBounds);
   masm.jump(failure->label());
   masm.bind(&outOfBounds);
   return true;
@@ -3020,7 +3020,7 @@ bool CacheIRCompiler::emitGuardIndexIsValidUpdateOrAdd() {
   Register obj = allocator.useRegister(masm, reader.objOperandId());
   Register index = allocator.useRegister(masm, reader.int32OperandId());
   AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -3040,7 +3040,7 @@ bool CacheIRCompiler::emitGuardIndexIsValidUpdateOrAdd() {
 
   // Otherwise, ensure index is in bounds.
   Address length(scratch, ObjectElements::offsetOfLength());
-  masm.spectreBoundsCheck32(index, length, scratch2,
+  masm.spectreBoundsCheck32(index, length, spectreScratch,
                             /* failure = */ failure->label());
   masm.bind(&success);
   return true;
@@ -3433,7 +3433,7 @@ bool CacheIRCompiler::emitStoreTypedElement() {
   bool handleOOB = reader.readBool();
 
   AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -3443,7 +3443,7 @@ bool CacheIRCompiler::emitStoreTypedElement() {
   // Bounds check.
   Label done;
   LoadTypedThingLength(masm, layout, obj, scratch1);
-  masm.spectreBoundsCheck32(index, scratch1, scratch2,
+  masm.spectreBoundsCheck32(index, scratch1, spectreScratch,
                             handleOOB ? &done : failure->label());
 
   // Load the elements vector.
