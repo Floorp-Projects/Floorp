@@ -15,12 +15,9 @@ else:
     CONFIGURE_DEFINE_FILES += [
         '../../../js/src/ctypes/libffi/fficonfig.h',
     ]
-    GENERATED_FILES += [
-        '../../../js/src/ctypes/libffi/include/ffi.h',
-    ]
-    ffi_h = GENERATED_FILES['../../../js/src/ctypes/libffi/include/ffi.h']
-    ffi_h.script = 'subst_header.py'
-    ffi_h.inputs = ['../../../js/src/ctypes/libffi/include/ffi.h.in']
+    GeneratedFile('../../../js/src/ctypes/libffi/include/ffi.h',
+                  script='subst_header.py',
+                  inputs=['../../../js/src/ctypes/libffi/include/ffi.h.in'])
 
     LOCAL_INCLUDES += [
         '!/js/src/ctypes/libffi',
@@ -80,15 +77,15 @@ else:
     elif CONFIG['FFI_TARGET'] == 'ARM64_WIN64':
         ffi_srcs = ['ffi.c']
 
-        GENERATED_FILES += ['win64_aarch.asm']
-        asm = GENERATED_FILES['win64_aarch.asm']
-        asm.inputs = [
-            '/js/src/ctypes/libffi/src/aarch64/win64.asm',
-            '!../../../js/src/ctypes/libffi/fficonfig.h',
-            '!../../../js/src/ctypes/libffi/include/ffi.h',
-        ]
-        asm.script = 'preprocess_libffi_asm.py'
-        asm.flags = ['$(DEFINES)', '$(LOCAL_INCLUDES)']
+        GeneratedFile(
+            'win64_aarch.asm',
+            inputs=[
+                '/js/src/ctypes/libffi/src/aarch64/win64.asm',
+                '!../../../js/src/ctypes/libffi/fficonfig.h',
+                '!../../../js/src/ctypes/libffi/include/ffi.h',
+            ],
+            script='preprocess_libffi_asm.py',
+            flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
         SOURCES += ['!win64_aarch.asm']
     elif CONFIG['FFI_TARGET'] == 'X86':
         ffi_srcs = ('ffi.c', 'sysv.S', 'win32.S')
@@ -102,15 +99,12 @@ else:
             ffi_srcs += ['win32.S']
         else:
             # libffi asm needs to be preprocessed for MSVC
-            GENERATED_FILES += ['win32.asm']
-            asm = GENERATED_FILES['win32.asm']
-            asm.inputs = [
+            GeneratedFile('win32.asm', inputs=[
                 '/js/src/ctypes/libffi/src/x86/win32.S',
                 '!../../../js/src/ctypes/libffi/fficonfig.h',
                 '!../../../js/src/ctypes/libffi/include/ffi.h',
-            ]
-            asm.script = 'preprocess_libffi_asm.py'
-            asm.flags = ['$(DEFINES)', '$(LOCAL_INCLUDES)']
+            ], script='preprocess_libffi_asm.py',
+            flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
             SOURCES += ['!win32.asm']
             ASFLAGS += ['-safeseh']
     elif CONFIG['FFI_TARGET'] == 'X86_WIN64':
@@ -119,15 +113,14 @@ else:
             ffi_srcs += ['win64.S']
         else:
             # libffi asm needs to be preprocessed for MSVC
-            GENERATED_FILES += ['win64.asm']
-            asm = GENERATED_FILES['win64.asm']
-            asm.inputs = [
-                '/js/src/ctypes/libffi/src/x86/win64.S',
-                '!../../../js/src/ctypes/libffi/fficonfig.h',
-                '!../../../js/src/ctypes/libffi/include/ffi.h',
-            ]
-            asm.script = 'preprocess_libffi_asm.py'
-            asm.flags = ['$(DEFINES)', '$(LOCAL_INCLUDES)']
+            GeneratedFile(
+                'win64.asm',
+                inputs=[
+                    '/js/src/ctypes/libffi/src/x86/win64.S',
+                    '!../../../js/src/ctypes/libffi/fficonfig.h',
+                    '!../../../js/src/ctypes/libffi/include/ffi.h',
+                ], script='preprocess_libffi_asm.py',
+                flags=['$(DEFINES)', '$(LOCAL_INCLUDES)'])
             SOURCES += ['!win64.asm']
     elif CONFIG['FFI_TARGET'] == 'X86_DARWIN':
         DEFINES['FFI_MMAP_EXEC_WRIT'] = True

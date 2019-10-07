@@ -17,11 +17,10 @@ include('../js-cxxflags.mozbuild')
 
 
 # Generate GC statistics phase data.
-GENERATED_FILES += ['StatsPhasesGenerated.h', 'StatsPhasesGenerated.inc']
-StatsPhasesGeneratedHeader = GENERATED_FILES['StatsPhasesGenerated.h']
-StatsPhasesGeneratedHeader.script = 'GenerateStatsPhases.py:generateHeader'
-StatsPhasesGeneratedCpp = GENERATED_FILES['StatsPhasesGenerated.inc']
-StatsPhasesGeneratedCpp.script = 'GenerateStatsPhases.py:generateCpp'
+GeneratedFile('StatsPhasesGenerated.h',
+              script='GenerateStatsPhases.py', entry_point='generateHeader')
+GeneratedFile('StatsPhasesGenerated.inc',
+              script='GenerateStatsPhases.py', entry_point='generateCpp')
 
 UNIFIED_SOURCES += [
     'Allocator.cpp',
