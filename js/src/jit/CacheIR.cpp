@@ -3889,12 +3889,6 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
     return AttachDecision::NoAction;
   }
 
-  // bigIntArray[index] = rhsVal_ will throw as the RHS is a number.
-  if (obj->is<TypedArrayObject>() &&
-      Scalar::isBigIntType(obj->as<TypedArrayObject>().type())) {
-    return AttachDecision::NoAction;
-  }
-
   bool handleOutOfBounds = false;
   if (obj->is<TypedArrayObject>()) {
     handleOutOfBounds = (index >= obj->as<TypedArrayObject>().length());
@@ -3915,6 +3909,11 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
   Scalar::Type elementType = TypedThingElementType(obj);
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
+  // bigIntArray[index] = rhsVal_ will throw as the RHS is a number.
+  if (Scalar::isBigIntType(elementType)) {
+    return AttachDecision::NoAction;
+  }
+
   if (IsPrimitiveArrayTypedObject(obj)) {
     writer.guardNoDetachedTypedObjects();
     writer.guardGroupForLayout(objId, obj->group());
@@ -3922,7 +3921,34 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
     writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
   }
 
-  writer.storeTypedElement(objId, indexId, rhsId, layout, elementType,
+  Maybe<OperandId> rhsValId;
+  switch (elementType) {
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+    case Scalar::Uint32:
+      rhsValId.emplace(writer.guardToInt32ModUint32(rhsId));
+      break;
+
+    case Scalar::Float32:
+    case Scalar::Float64:
+      rhsValId.emplace(writer.guardIsNumber(rhsId));
+      break;
+
+    case Scalar::Uint8Clamped:
+      rhsValId.emplace(writer.guardToUint8Clamped(rhsId));
+      break;
+
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+    case Scalar::MaxTypedArrayViewType:
+    case Scalar::Int64:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+
+  writer.storeTypedElement(objId, layout, elementType, indexId, *rhsValId,
                            handleOutOfBounds);
   writer.returnFromIC();
 
