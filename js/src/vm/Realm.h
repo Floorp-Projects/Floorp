@@ -779,7 +779,7 @@ class JS::Realm : public JS::shadow::Realm {
   void setValidAccessPtr(bool* accessp) { validAccessPtr_ = accessp; }
 
   bool ensureJitRealmExists(JSContext* cx);
-  void traceWeakEdgesInJitRealm(JSTracer* trc);
+  void sweepJitRealm();
 
   js::jit::JitRealm* jitRealm() { return jitRealm_.get(); }
 

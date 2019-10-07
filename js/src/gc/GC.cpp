@@ -2103,7 +2103,7 @@ void GCRuntime::sweepZoneAfterCompacting(Zone* zone) {
     r->sweepGlobalObject();
     r->sweepSelfHostingScriptSource();
     r->sweepDebugEnvironments();
-    r->traceWeakEdgesInJitRealm(trc);
+    r->sweepJitRealm();
     r->sweepObjectRealm();
     r->sweepTemplateObjects();
   }
@@ -5234,9 +5234,8 @@ void GCRuntime::sweepJitDataOnMainThread(JSFreeOp* fop) {
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
 
-    SweepingTracer trc(rt);
     for (SweepGroupRealmsIter r(rt); !r.done(); r.next()) {
-      r->traceWeakEdgesInJitRealm(&trc);
+      r->sweepJitRealm();
     }
 
     for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {

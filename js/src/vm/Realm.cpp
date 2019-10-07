@@ -384,9 +384,9 @@ void Realm::sweepSelfHostingScriptSource() {
   }
 }
 
-void Realm::traceWeakEdgesInJitRealm(JSTracer* trc) {
+void Realm::sweepJitRealm() {
   if (jitRealm_) {
-    jitRealm_->traceWeak(trc, this);
+    jitRealm_->sweep(this);
   }
 }
 
