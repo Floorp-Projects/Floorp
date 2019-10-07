@@ -375,6 +375,18 @@ add_task(async function test_tokenizer() {
         { value: "eXaMpLe", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
       ],
     },
+    // This is not properly correct, an origin cannot be completely numeric,
+    // but we use this to check whether we should match against origins, thus
+    // whether an origin could start with this string.
+    // In the future we may evaluate reporting this as TEXT and instead
+    // introduce a "looksLikeStartOfOrigin".
+    {
+      desc: "plain number",
+      searchString: "1001",
+      expectedTokens: [
+        { value: "1001", type: UrlbarTokenizer.TYPE.POSSIBLE_ORIGIN },
+      ],
+    },
   ];
 
   for (let queryContext of testContexts) {
