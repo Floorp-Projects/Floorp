@@ -10,6 +10,7 @@
 #include <unordered_map>  // for std::unordered_map
 
 #include "FocusState.h"          // for FocusState
+#include "HitTestingTreeNode.h"  // for HitTestingTreeNodeAutoLock
 #include "gfxPoint.h"            // for gfxPoint
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT_HELPER2
 #include "mozilla/gfx/CompositorHitTestInfo.h"
@@ -549,6 +550,27 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   Maybe<TimeStamp> mTestSampleTime;
 
  public:
+  // Represents the results of an APZ hit test.
+  struct HitTestResult {
+    // The APZC targeted by the hit test.
+    RefPtr<AsyncPanZoomController> mTargetApzc;
+    // The applicable hit test flags.
+    gfx::CompositorHitTestInfo mHitResult;
+    // The layers id of the content that was hit.
+    // This effectively identifiers the process that was hit for
+    // Fission purposes.
+    LayersId mLayersId;
+    // If a scrollbar was hit, this will be populated with the
+    // scrollbar node. The AutoLock allows accessing the scrollbar
+    // node without having to hold the tree lock.
+    HitTestingTreeNodeAutoLock mScrollbarNode;
+
+    HitTestResult() = default;
+    // Make it move-only.
+    HitTestResult(HitTestResult&&) = default;
+    HitTestResult& operator=(HitTestResult&&) = default;
+  };
+
   /* Some helper functions to find an APZC given some identifying input. These
      functions lock the tree of APZCs while they find the right one, and then
      return an addref'd pointer to it. This allows caller code to just use the
@@ -556,10 +578,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
      testing code and generally should not be used by other production code.
   */
   RefPtr<HitTestingTreeNode> GetRootNode() const;
-  already_AddRefed<AsyncPanZoomController> GetTargetAPZC(
-      const ScreenPoint& aPoint, gfx::CompositorHitTestInfo* aOutHitResult,
-      LayersId* aOutLayersId,
-      HitTestingTreeNodeAutoLock* aOutScrollbarNode = nullptr);
+  HitTestResult GetTargetAPZC(const ScreenPoint& aPoint);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(
       const LayersId& aLayersId,
       const ScrollableLayerGuid::ViewID& aScrollId) const;
@@ -609,14 +628,11 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                                      const ScrollableLayerGuid& aGuid,
                                      GuidComparator aComparator);
   AsyncPanZoomController* GetTargetApzcForNode(HitTestingTreeNode* aNode);
-  AsyncPanZoomController* GetAPZCAtPoint(
+  HitTestResult GetAPZCAtPoint(const ScreenPoint& aHitTestPoint,
+                               const RecursiveMutexAutoLock& aProofOfTreeLock);
+  HitTestResult GetAPZCAtPointWR(
       const ScreenPoint& aHitTestPoint,
-      gfx::CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
-      HitTestingTreeNode** aOutScrollbarNode);
-  already_AddRefed<AsyncPanZoomController> GetAPZCAtPointWR(
-      const ScreenPoint& aHitTestPoint,
-      gfx::CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
-      HitTestingTreeNode** aOutScrollbarNode);
+      const RecursiveMutexAutoLock& aProofOfTreeLock);
   AsyncPanZoomController* FindRootApzcForLayersId(LayersId aLayersId) const;
   AsyncPanZoomController* FindRootContentApzcForLayersId(
       LayersId aLayersId) const;
@@ -636,19 +652,12 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    *
    * @param aOutTouchBehaviors
    *     The touch behaviours that should be allowed for this touch block.
-   * @param aOutHitResult The hit test result.
-   * @param aOutHitScrollbarNode
-   *     If the touch event contains a single touch point (so that it may
-   *     potentially start a scrollbar drag), and a scrollbar node was hit,
-   *     that scrollbar node, otherwise nullptr.
-   *
-   * @return The APZC that was hit.
+
+   * @return The results of the hit test, including the APZC that was hit.
    */
-  already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(
+  HitTestResult GetTouchInputBlockAPZC(
       const MultiTouchInput& aEvent,
-      nsTArray<TouchBehaviorFlags>* aOutTouchBehaviors,
-      gfx::CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
-      HitTestingTreeNodeAutoLock* aOutHitScrollbarNode);
+      nsTArray<TouchBehaviorFlags>* aOutTouchBehaviors);
   APZEventResult ProcessTouchInput(MultiTouchInput& aInput);
   /**
    * Given a mouse-down event that hit a scroll thumb node, set up APZ
