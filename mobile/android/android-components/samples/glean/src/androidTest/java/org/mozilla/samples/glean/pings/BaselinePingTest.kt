@@ -42,9 +42,11 @@ class BaselinePingTest {
         Configuration(serverEndpoint = getPingServerAddress())
     )
 
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Before
     fun clearWorkManager() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         WorkManagerTestInitHelper.initializeTestWorkManager(context)
     }
 
@@ -82,12 +84,12 @@ class BaselinePingTest {
         runBlocking {
             withTimeout(reasonablyHighCITimeoutMs) {
                 do {
-                    val workInfoList = WorkManager.getInstance().getWorkInfosByTag(tag).get()
+                    val workInfoList = WorkManager.getInstance(context).getWorkInfosByTag(tag).get()
                     workInfoList.forEach { workInfo ->
                         if (workInfo.state === WorkInfo.State.ENQUEUED) {
                             // Trigger WorkManager using TestDriver
-                            val testDriver = WorkManagerTestInitHelper.getTestDriver()
-                            testDriver.setAllConstraintsMet(workInfo.id)
+                            val testDriver = WorkManagerTestInitHelper.getTestDriver(context)
+                            testDriver?.setAllConstraintsMet(workInfo.id)
                             return@withTimeout
                         }
                     }

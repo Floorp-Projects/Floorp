@@ -79,11 +79,11 @@ class ExperimentsUpdaterTest {
     @Test
     fun `ExperimentsUpdater initialize schedules ExperimentsUpdateWorker in WorkManager`() {
         assertFalse("ExperimentsUpdateWorker should not be scheduled yet",
-            isWorkScheduled(ExperimentsUpdater.TAG))
+            isWorkScheduled(context, ExperimentsUpdater.TAG))
         experimentsUpdater.initialize(configuration)
         assertTrue("initialize must schedule ExperimentsUpdateWorker",
-            isWorkScheduled(ExperimentsUpdater.TAG))
-        val workInfo = getWorkInfoByTag(ExperimentsUpdater.TAG)
+            isWorkScheduled(context, ExperimentsUpdater.TAG))
+        val workInfo = getWorkInfoByTag(context, ExperimentsUpdater.TAG)
         assertNotNull("workInfo must not be null", workInfo)
         assertEquals("workInfo id must match request id", workRequest.id, workInfo?.id)
     }

@@ -56,8 +56,8 @@ internal class MetricsPingScheduler(val applicationContext: Context) : Lifecycle
         /**
          * Function to cancel any pending metrics ping workers
          */
-        internal fun cancel() {
-            WorkManager.getInstance().cancelUniqueWork(MetricsPingWorker.TAG)
+        internal fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(MetricsPingWorker.TAG)
         }
     }
 
@@ -104,7 +104,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) : Lifecycle
         // - Glean restarts;
         // - the ping is overdue and is immediately collected at startup;
         // - a new work is scheduled for the next calendar day.
-        WorkManager.getInstance().enqueueUniqueWork(
+        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
             MetricsPingWorker.TAG,
             ExistingWorkPolicy.REPLACE,
             workRequest)

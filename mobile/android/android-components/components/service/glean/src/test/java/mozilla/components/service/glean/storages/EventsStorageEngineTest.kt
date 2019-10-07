@@ -3,6 +3,7 @@
 
 package mozilla.components.service.glean.storages
 
+import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Dispatchers
@@ -51,8 +52,12 @@ enum class TruncatedKeys {
 
 @RunWith(RobolectricTestRunner::class)
 class EventsStorageEngineTest {
+
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @get:Rule
-    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
+    val gleanRule = GleanTestRule(context)
 
     @Before
     fun setUp() {
@@ -284,7 +289,7 @@ class EventsStorageEngineTest {
             assertTrue(click.testHasValue())
 
             // Trigger worker task to upload the pings in the background
-            triggerWorkManager()
+            triggerWorkManager(context)
 
             val request = server.takeRequest(20L, TimeUnit.SECONDS)
             val applicationId = "mozilla-components-service-glean"
@@ -381,7 +386,7 @@ class EventsStorageEngineTest {
         )
 
         // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         val request = server.takeRequest(20L, TimeUnit.SECONDS)
         assertEquals("POST", request.method)
@@ -448,7 +453,7 @@ class EventsStorageEngineTest {
         event.record(extra = mapOf(SomeExtraKeys.SomeExtra to "post-init"))
 
         // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         var request = server.takeRequest(20L, TimeUnit.SECONDS)
         var pingJsonData = request.body.readUtf8()
@@ -469,7 +474,7 @@ class EventsStorageEngineTest {
         Glean.sendPingsByName(listOf("events"))
 
         // Trigger worker task to upload the pings in the background
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         request = server.takeRequest(20L, TimeUnit.SECONDS)
         pingJsonData = request.body.readUtf8()
@@ -535,7 +540,7 @@ class EventsStorageEngineTest {
             ),
             clearStores = false
         )
-        triggerWorkManager()
+        triggerWorkManager(context)
 
         event.record(mapOf(ExtraKeys.Key1 to "bip"))
 

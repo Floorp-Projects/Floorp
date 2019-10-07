@@ -37,8 +37,11 @@ class GleanDebugActivityTest {
 
     private val testPackageName = "mozilla.components.service.glean"
 
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @get:Rule
-    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
+    val gleanRule = GleanTestRule(context)
 
     @Before
     fun setup() {
@@ -144,7 +147,7 @@ class GleanDebugActivityTest {
             serverEndpoint = "http://" + server.hostName + ":" + server.port
         )
 
-        triggerWorkManager()
+        triggerWorkManager(context)
         val request = server.takeRequest(10L, TimeUnit.SECONDS)
 
         assertTrue(
@@ -188,7 +191,7 @@ class GleanDebugActivityTest {
         assertEquals("Server endpoint must be reset if tag didn't pass regex",
             "http://" + server.hostName + ":" + server.port, Glean.configuration.serverEndpoint)
 
-        triggerWorkManager()
+        triggerWorkManager(context)
         val request = server.takeRequest(10L, TimeUnit.SECONDS)
 
         assertTrue(
@@ -241,6 +244,6 @@ class GleanDebugActivityTest {
 
         // This will trigger the call to `fetch()` in the TestPingTagClient which is where the
         // test assertions will occur
-        triggerWorkManager()
+        triggerWorkManager(context)
     }
 }

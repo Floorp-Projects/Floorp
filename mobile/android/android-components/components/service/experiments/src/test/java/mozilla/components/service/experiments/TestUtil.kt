@@ -4,6 +4,7 @@
 
 package mozilla.components.service.experiments
 
+import android.content.Context
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import java.util.concurrent.ExecutionException
@@ -14,8 +15,8 @@ import java.util.concurrent.ExecutionException
  * @param tag a string representing the worker tag
  * @return True if the task found in [WorkManager], false otherwise
  */
-internal fun isWorkScheduled(tag: String): Boolean {
-    val instance = WorkManager.getInstance()
+internal fun isWorkScheduled(context: Context, tag: String): Boolean {
+    val instance = WorkManager.getInstance(context)
     val statuses = instance.getWorkInfosByTag(tag)
     try {
         val workInfoList = statuses.get()
@@ -41,8 +42,8 @@ internal fun isWorkScheduled(tag: String): Boolean {
  * @param tag a string representing the worker tag
  * @return [WorkInfo] for the tag that was passed in or null
  */
-internal fun getWorkInfoByTag(tag: String): WorkInfo? {
-    val instance = WorkManager.getInstance()
+internal fun getWorkInfoByTag(context: Context, tag: String): WorkInfo? {
+    val instance = WorkManager.getInstance(context)
     val statuses = instance.getWorkInfosByTag(tag)
     try {
         val workInfoList = statuses.get()
