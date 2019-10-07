@@ -50,6 +50,12 @@ class BrowserInteractorTest {
     }
 
     @Test
+    fun onTabCounterClicked() {
+        interactor.onTabCounterClicked()
+        verify { browserToolbarController.handleTabCounterClick() }
+    }
+
+    @Test
     fun onBrowserToolbarPaste() {
         val pastedText = "Mozilla"
         interactor.onBrowserToolbarPaste(pastedText)

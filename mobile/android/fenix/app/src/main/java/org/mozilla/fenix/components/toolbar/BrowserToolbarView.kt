@@ -30,6 +30,7 @@ interface BrowserToolbarViewInteractor {
     fun onBrowserToolbarPasteAndGo(text: String)
     fun onBrowserToolbarClicked()
     fun onBrowserToolbarMenuItemTapped(item: ToolbarMenu.Item)
+    fun onTabCounterClicked()
 }
 
 class BrowserToolbarView(
@@ -55,8 +56,10 @@ class BrowserToolbarView(
 
         view.setOnUrlLongClickListener {
             val clipboard = view.context.components.clipboardHandler
-            val customView = LayoutInflater.from(view.context).inflate(R.layout.browser_toolbar_popup_window, null)
-            val popupWindow = PopupWindow(customView,
+            val customView = LayoutInflater.from(view.context)
+                .inflate(R.layout.browser_toolbar_popup_window, null)
+            val popupWindow = PopupWindow(
+                customView,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 view.context.dimen(R.dimen.context_menu_height),
                 true
@@ -64,10 +67,12 @@ class BrowserToolbarView(
 
             val selectedSession = container.context.components.core.sessionManager.selectedSession
 
-            popupWindow.elevation = view.context.dimen(R.dimen.mozac_browser_menu_elevation).toFloat()
+            popupWindow.elevation =
+                view.context.dimen(R.dimen.mozac_browser_menu_elevation).toFloat()
 
             customView.paste.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
-            customView.paste_and_go.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
+            customView.paste_and_go.isVisible =
+                !clipboard.text.isNullOrEmpty() && !isCustomTabSession
 
             customView.copy.setOnClickListener {
                 popupWindow.dismiss()
@@ -88,7 +93,12 @@ class BrowserToolbarView(
                 interactor.onBrowserToolbarPasteAndGo(clipboard.text!!)
             }
 
-            popupWindow.showAsDropDown(view, view.context.dimen(R.dimen.context_menu_x_offset), 0, Gravity.START)
+            popupWindow.showAsDropDown(
+                view,
+                view.context.dimen(R.dimen.context_menu_x_offset),
+                0,
+                Gravity.START
+            )
 
             true
         }
@@ -152,13 +162,13 @@ class BrowserToolbarView(
             toolbarIntegration = ToolbarIntegration(
                 this,
                 view,
-                container,
                 menuToolbar,
                 ShippedDomainsProvider().also { it.initialize(this) },
                 components.core.historyStorage,
                 components.core.sessionManager,
                 customTabSession?.id,
-                customTabSession?.private ?: sessionManager.selectedSession?.private ?: false
+                customTabSession?.private ?: sessionManager.selectedSession?.private ?: false,
+                interactor
             )
         }
     }

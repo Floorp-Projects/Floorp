@@ -5,9 +5,12 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
+import android.view.ViewGroup
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -54,7 +57,8 @@ import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 class DefaultBrowserToolbarControllerTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
-
+    private var browserLayout: ViewGroup = mockk(relaxed = true)
+    private var swipeRefreshLayout: SwipeRefreshLayout = mockk(relaxed = true)
     private var activity: HomeActivity = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
     private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
@@ -66,11 +70,13 @@ class DefaultBrowserToolbarControllerTest {
     private val getSupportUrl: () -> String = { "https://supportUrl.org" }
     private val openInFenixIntent: Intent = mockk(relaxed = true)
     private val currentSessionAsTab: Tab = mockk(relaxed = true)
-    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> = mockk(relaxed = true)
+    private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView> =
+        mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val searchUseCases: SearchUseCases = mockk(relaxed = true)
     private val sessionUseCases: SessionUseCases = mockk(relaxed = true)
     private val scope: LifecycleCoroutineScope = mockk(relaxed = true)
+    private val adjustBackgroundAndNavigate: (NavDirections) -> Unit = mockk(relaxed = true)
 
     private lateinit var controller: DefaultBrowserToolbarController
 
@@ -84,12 +90,15 @@ class DefaultBrowserToolbarControllerTest {
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
+            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
             customTabSession = null,
             viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             bottomSheetBehavior = bottomSheetBehavior,
-            scope = scope
+            scope = scope,
+            browserLayout = browserLayout,
+            swipeRefresh = swipeRefreshLayout
         )
 
         mockkStatic(
@@ -107,6 +116,7 @@ class DefaultBrowserToolbarControllerTest {
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
         every { activity.components.useCases.searchUseCases } returns searchUseCases
         every { activity.components.core.sessionManager.selectedSession } returns currentSession
+        every { adjustBackgroundAndNavigate.invoke(any()) } just Runs
     }
 
     @Test
@@ -117,10 +127,9 @@ class DefaultBrowserToolbarControllerTest {
         controller.handleToolbarPaste(pastedText)
 
         verify {
-            navController.nav(
-                R.id.browserFragment,
+            adjustBackgroundAndNavigate.invoke(
                 BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                    sessionId = currentSession.id,
+                    sessionId = "1",
                     pastedText = pastedText
                 )
             )
@@ -163,8 +172,7 @@ class DefaultBrowserToolbarControllerTest {
 
         verify { metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)) }
         verify {
-            navController.nav(
-                R.id.browserFragment,
+            adjustBackgroundAndNavigate.invoke(
                 BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                     sessionId = "1"
                 )
@@ -222,8 +230,7 @@ class DefaultBrowserToolbarControllerTest {
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SETTINGS)) }
         verify {
-            navController.nav(
-                R.id.settingsFragment,
+            adjustBackgroundAndNavigate.invoke(
                 BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
             )
         }
@@ -237,9 +244,8 @@ class DefaultBrowserToolbarControllerTest {
 
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.LIBRARY)) }
         verify {
-            navController.nav(
-                R.id.libraryFragment,
-                BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
+            adjustBackgroundAndNavigate.invoke(
+                BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
             )
         }
     }
@@ -316,7 +322,7 @@ class DefaultBrowserToolbarControllerTest {
         verify {
             val directions = BrowserFragmentDirections
                 .actionBrowserFragmentToSearchFragment(sessionId = null)
-            navController.nav(R.id.browserFragment, directions)
+            adjustBackgroundAndNavigate.invoke(directions)
         }
         verify { browsingModeManager.mode = BrowsingMode.Private }
     }
@@ -388,7 +394,7 @@ class DefaultBrowserToolbarControllerTest {
         verify {
             val directions = BrowserFragmentDirections
                 .actionBrowserFragmentToSearchFragment(sessionId = null)
-            navController.nav(R.id.browserFragment, directions)
+            adjustBackgroundAndNavigate.invoke(directions)
         }
         verify { browsingModeManager.mode = BrowsingMode.Normal }
     }
@@ -427,12 +433,15 @@ class DefaultBrowserToolbarControllerTest {
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             engineView = engineView,
+            adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
             customTabSession = currentSession,
             viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             bottomSheetBehavior = bottomSheetBehavior,
-            scope = scope
+            scope = scope,
+            browserLayout = browserLayout,
+            swipeRefresh = swipeRefreshLayout
         )
 
         val sessionManager: SessionManager = mockk(relaxed = true)

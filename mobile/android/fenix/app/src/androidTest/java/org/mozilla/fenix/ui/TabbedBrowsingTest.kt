@@ -5,7 +5,9 @@
 package org.mozilla.fenix.ui
 
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -72,6 +74,7 @@ class TabbedBrowsingTest {
         }.openHomeScreen { }
 
         homeScreen {
+            mDevice.wait(Until.findObject(By.res("R.id.item_tab")), TestAssetHelper.waitingTime)
             verifyExistingTabList()
 
         }.openTabsListThreeDotMenu {
@@ -100,6 +103,7 @@ class TabbedBrowsingTest {
             verifyPageContent(defaultWebPage.content)
             verifyTabCounter("1")
         }.openHomeScreen {
+            mDevice.wait(Until.findObject(By.res("R.id.item_tab")), TestAssetHelper.waitingTime)
             verifyExistingTabList()
             verifyShareTabsButton(true)
             verifyCloseTabsButton(true)
@@ -127,6 +131,7 @@ class TabbedBrowsingTest {
         }.openHomeScreen { }
 
         homeScreen {
+            mDevice.wait(Until.findObject(By.res("R.id.item_tab")), TestAssetHelper.waitingTime)
             verifyExistingTabList()
         }.openTabsListThreeDotMenu {
             verifyCloseAllTabsButton()

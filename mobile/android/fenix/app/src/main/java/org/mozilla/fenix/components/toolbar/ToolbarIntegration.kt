@@ -5,13 +5,9 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
-import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.navigation.NavOptions
-import androidx.navigation.Navigation
 import com.airbnb.lottie.LottieCompositionFactory
 import com.airbnb.lottie.LottieDrawable
-import androidx.navigation.fragment.FragmentNavigator
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
@@ -26,20 +22,19 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
 
 class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
-    browserLayout: ViewGroup,
     toolbarMenu: ToolbarMenu,
     domainAutocompleteProvider: DomainAutocompleteProvider,
     historyStorage: HistoryStorage,
     sessionManager: SessionManager,
     sessionId: String? = null,
-    isPrivate: Boolean
+    isPrivate: Boolean,
+    interactor: BrowserToolbarViewInteractor
 ) : LifecycleAwareFeature {
 
     private var renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.UncoloredUrl
@@ -87,30 +82,7 @@ class ToolbarIntegration(
                     sessionManager,
                     {
                         toolbar.hideKeyboard()
-                        // We need to dynamically add the options here because if you do it in XML it overwrites
-                        val options = NavOptions.Builder().setPopUpTo(R.id.nav_graph, false)
-                            .setEnterAnim(R.anim.fade_in).build()
-                        val extras =
-                            FragmentNavigator.Extras.Builder()
-                                .addSharedElement(
-                                    browserLayout,
-                                    "$TAB_ITEM_TRANSITION_NAME${sessionManager.selectedSession?.id}"
-                                )
-                                .build()
-                        val navController = Navigation.findNavController(toolbar)
-                        if (!navController.popBackStack(
-                                R.id.homeFragment,
-                                false
-                            )
-                        ) {
-                            navController.nav(
-                                R.id.browserFragment,
-                                R.id.action_browserFragment_to_homeFragment,
-                                null,
-                                options,
-                                extras
-                            )
-                        }
+                        interactor.onTabCounterClicked()
                     },
                     isPrivate
                 )
@@ -146,9 +118,5 @@ class ToolbarIntegration(
     override fun stop() {
         menuPresenter.stop()
         toolbarPresenter.stop()
-    }
-
-    companion object {
-        private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
     }
 }

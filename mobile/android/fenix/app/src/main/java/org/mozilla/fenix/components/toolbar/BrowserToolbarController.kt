@@ -6,9 +6,17 @@ package org.mozilla.fenix.components.toolbar
 
 import android.app.Activity
 import android.content.Intent
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.VisibleForTesting
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
+import androidx.navigation.NavDirections
+import androidx.navigation.NavOptions
+import androidx.navigation.fragment.FragmentNavigator
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
@@ -40,14 +48,19 @@ interface BrowserToolbarController {
     fun handleToolbarPasteAndGo(text: String)
     fun handleToolbarItemInteraction(item: ToolbarMenu.Item)
     fun handleToolbarClick()
+    fun handleTabCounterClick()
 }
 
+@Suppress("LargeClass")
 class DefaultBrowserToolbarController(
     private val activity: Activity,
     private val navController: NavController,
     private val browsingModeManager: BrowsingModeManager,
     private val findInPageLauncher: () -> Unit,
+    private val browserLayout: ViewGroup,
     private val engineView: EngineView,
+    private val adjustBackgroundAndNavigate: (NavDirections) -> Unit,
+    private val swipeRefresh: SwipeRefreshLayout,
     private val customTabSession: Session?,
     private val viewModel: CreateCollectionViewModel,
     private val getSupportUrl: () -> String,
@@ -60,8 +73,7 @@ class DefaultBrowserToolbarController(
         get() = customTabSession ?: activity.components.core.sessionManager.selectedSession
 
     override fun handleToolbarPaste(text: String) {
-        navController.nav(
-            R.id.browserFragment,
+        adjustBackgroundAndNavigate.invoke(
             BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                 sessionId = currentSession?.id,
                 pastedText = text
@@ -84,10 +96,13 @@ class DefaultBrowserToolbarController(
         activity.components.analytics.metrics.track(
             Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
         )
-        navController.nav(
-            R.id.browserFragment,
+        adjustBackgroundAndNavigate.invoke(
             BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(currentSession?.id)
         )
+    }
+
+    override fun handleTabCounterClick() {
+        animateTabAndNavigateHome()
     }
 
     @ExperimentalCoroutinesApi
@@ -102,12 +117,10 @@ class DefaultBrowserToolbarController(
             ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke(currentSession)
             ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke(currentSession)
             ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke(currentSession)
-            ToolbarMenu.Item.Settings -> navController.nav(
-                R.id.browserFragment,
+            ToolbarMenu.Item.Settings -> adjustBackgroundAndNavigate.invoke(
                 BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment()
             )
-            ToolbarMenu.Item.Library -> navController.nav(
-                R.id.browserFragment,
+            ToolbarMenu.Item.Library -> adjustBackgroundAndNavigate.invoke(
                 BrowserFragmentDirections.actionBrowserFragmentToLibraryFragment()
             )
             is ToolbarMenu.Item.RequestDesktop -> sessionUseCases.requestDesktopSite.invoke(
@@ -120,7 +133,8 @@ class DefaultBrowserToolbarController(
                         if (isInstallable()) {
                             addToHomescreen()
                         } else {
-                            val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateShortcutFragment()
+                            val directions =
+                                BrowserFragmentDirections.actionBrowserFragmentToCreateShortcutFragment()
                             navController.navigate(directions)
                         }
                     }
@@ -137,14 +151,14 @@ class DefaultBrowserToolbarController(
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                     sessionId = null
                 )
-                navController.nav(R.id.browserFragment, directions)
+                adjustBackgroundAndNavigate.invoke(directions)
                 browsingModeManager.mode = BrowsingMode.Normal
             }
             ToolbarMenu.Item.NewPrivateTab -> {
                 val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
                     sessionId = null
                 )
-                navController.nav(R.id.browserFragment, directions)
+                adjustBackgroundAndNavigate.invoke(directions)
                 browsingModeManager.mode = BrowsingMode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
@@ -174,7 +188,8 @@ class DefaultBrowserToolbarController(
                     )
                     viewModel.previousFragmentId = R.id.browserFragment
 
-                    val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
+                    val directions =
+                        BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
                     navController.nav(R.id.browserFragment, directions)
                 }
             }
@@ -193,6 +208,31 @@ class DefaultBrowserToolbarController(
                 activity.finish()
             }
             ToolbarMenu.Item.Quit -> deleteAndQuit(activity, scope)
+        }
+    }
+
+    private fun animateTabAndNavigateHome() {
+        // We need to dynamically add the options here because if you do it in XML it overwrites
+        val options = NavOptions.Builder().setPopUpTo(R.id.nav_graph, false)
+            .setEnterAnim(R.anim.fade_in).build()
+        val extras = FragmentNavigator.Extras.Builder().addSharedElement(
+            browserLayout,
+            "${TAB_ITEM_TRANSITION_NAME}${currentSession?.id}"
+        ).build()
+        engineView.captureThumbnail { bitmap ->
+            scope.launch {
+                swipeRefresh.background = bitmap?.toDrawable(activity.resources)
+                engineView.asView().visibility = View.GONE
+                if (!navController.popBackStack(R.id.homeFragment, false)) {
+                    navController.nav(
+                        R.id.browserFragment,
+                        R.id.action_browserFragment_to_homeFragment,
+                        null,
+                        options,
+                        extras
+                    )
+                }
+            }
         }
     }
 
@@ -228,6 +268,8 @@ class DefaultBrowserToolbarController(
     }
 
     companion object {
+        @VisibleForTesting
+        const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         internal const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
     }
 }

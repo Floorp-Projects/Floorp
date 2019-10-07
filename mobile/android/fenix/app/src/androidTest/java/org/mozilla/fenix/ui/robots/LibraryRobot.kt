@@ -15,8 +15,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiDevice
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -48,6 +51,7 @@ class LibraryRobot {
         }
 
         fun openBookmarks(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
+            mDevice.wait(Until.findObject(By.text("Bookmarks")), TestAssetHelper.waitingTime)
             bookmarksButton().click()
 
             BookmarksRobot().interact()
@@ -55,6 +59,7 @@ class LibraryRobot {
         }
 
         fun openHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+            mDevice.wait(Until.findObject(By.text("History")), TestAssetHelper.waitingTime)
             historyButton().click()
 
             HistoryRobot().interact()
@@ -62,15 +67,19 @@ class LibraryRobot {
         }
     }
 }
+
 private fun goBackButton() = onView(allOf(withContentDescription("Navigate up")))
 private fun closeButton() = onView(withId(R.id.libraryClose))
 private fun bookmarksButton() = onView(allOf(withText("Bookmarks")))
 private fun historyButton() = onView(allOf(withText("History")))
 
 private fun assertLibraryView() {
-    onView(allOf(
+    onView(
+        allOf(
             withText("Library"),
-            ViewMatchers.withParent(withId(R.id.navigationToolbar))))
+            ViewMatchers.withParent(withId(R.id.navigationToolbar))
+        )
+    )
         .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
 

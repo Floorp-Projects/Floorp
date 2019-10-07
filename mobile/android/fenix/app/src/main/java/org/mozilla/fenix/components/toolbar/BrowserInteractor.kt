@@ -17,6 +17,10 @@ open class BrowserToolbarInteractor(
     private val browserToolbarController: BrowserToolbarController
 ) : BrowserToolbarViewInteractor {
 
+    override fun onTabCounterClicked() {
+        browserToolbarController.handleTabCounterClick()
+    }
+
     override fun onBrowserToolbarPaste(text: String) {
         browserToolbarController.handleToolbarPaste(text)
     }

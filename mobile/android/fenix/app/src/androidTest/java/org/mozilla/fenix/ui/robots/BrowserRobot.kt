@@ -67,6 +67,11 @@ class BrowserRobot {
 
             tabsCounter().click()
 
+            mDevice.wait(
+                Until.findObject(By.res("R.id.header_text")),
+                TestAssetHelper.waitingTime
+            )
+
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
