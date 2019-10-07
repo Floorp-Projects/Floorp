@@ -1692,10 +1692,9 @@ void EventStateManager::StopTrackingDragGesture(bool aClearInChildProcesses) {
   mGestureDownFrameOwner = nullptr;
   mGestureDownDragStartData = nullptr;
 
-  // If a content process starts a drag but the mouse is released before the
-  // parent starts the actual drag, the content process will think a drag is
-  // still happening. Inform any child processes with active drags that the drag
-  // should be stopped.
+  // If a content process starts a drag but the mouse is released before the parent
+  // starts the actual drag, the content process will think a drag is still happening.
+  // Inform any child processes with active drags that the drag should be stopped.
   if (aClearInChildProcesses) {
     nsCOMPtr<nsIDragService> dragService =
         do_GetService("@mozilla.org/widget/dragservice;1");
@@ -1855,7 +1854,6 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent> eventContent, targetContent;
   nsCOMPtr<nsIPrincipal> principal;
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  bool allowEmptyDataTransfer = false;
   mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
   if (eventContent) {
     // If the content is a text node in a password field, we shouldn't
@@ -1877,10 +1875,9 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       }
     }
     DetermineDragTargetAndDefaultData(
-        window, eventContent, dataTransfer, &allowEmptyDataTransfer,
-        getter_AddRefs(selection), getter_AddRefs(remoteDragStartData),
-        getter_AddRefs(targetContent), getter_AddRefs(principal),
-        getter_AddRefs(csp));
+        window, eventContent, dataTransfer, getter_AddRefs(selection),
+        getter_AddRefs(remoteDragStartData), getter_AddRefs(targetContent),
+        getter_AddRefs(principal), getter_AddRefs(csp));
   }
 
   // Stop tracking the drag gesture now. This should stop us from
@@ -1945,9 +1942,9 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
   }
 
   if (status != nsEventStatus_eConsumeNoDefault) {
-    bool dragStarted = DoDefaultDragStart(
-        aPresContext, event, dataTransfer, allowEmptyDataTransfer,
-        targetContent, selection, remoteDragStartData, principal, csp);
+    bool dragStarted =
+        DoDefaultDragStart(aPresContext, event, dataTransfer, targetContent,
+                           selection, remoteDragStartData, principal, csp);
     if (dragStarted) {
       sActiveESM = nullptr;
       MaybeFirePointerCancel(aEvent);
@@ -1965,12 +1962,11 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
 void EventStateManager::DetermineDragTargetAndDefaultData(
     nsPIDOMWindowOuter* aWindow, nsIContent* aSelectionTarget,
-    DataTransfer* aDataTransfer, bool* aAllowEmptyDataTransfer,
-    Selection** aSelection, RemoteDragStartData** aRemoteDragStartData,
-    nsIContent** aTargetNode, nsIPrincipal** aPrincipal,
-    nsIContentSecurityPolicy** aCsp) {
+    DataTransfer* aDataTransfer, Selection** aSelection,
+    RemoteDragStartData** aRemoteDragStartData, nsIContent** aTargetNode,
+    nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp) {
   *aTargetNode = nullptr;
-  *aAllowEmptyDataTransfer = false;
+
   nsCOMPtr<nsIContent> dragDataNode;
 
   nsIContent* editingElement = aSelectionTarget->IsEditable()
@@ -1986,7 +1982,6 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
       mGestureDownDragStartData->AddInitialDnDDataTo(aDataTransfer, aPrincipal,
                                                      aCsp);
       mGestureDownDragStartData.forget(aRemoteDragStartData);
-      *aAllowEmptyDataTransfer = true;
     }
   } else {
     mGestureDownDragStartData = nullptr;
@@ -2026,9 +2021,6 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
     while (dragContent) {
       if (auto htmlElement = nsGenericHTMLElement::FromNode(dragContent)) {
         if (htmlElement->Draggable()) {
-          // We let draggable elements to trigger dnd even if there is no data
-          // in the DataTransfer.
-          *aAllowEmptyDataTransfer = true;
           break;
         }
       } else {
@@ -2065,8 +2057,7 @@ void EventStateManager::DetermineDragTargetAndDefaultData(
 
 bool EventStateManager::DoDefaultDragStart(
     nsPresContext* aPresContext, WidgetDragEvent* aDragEvent,
-    DataTransfer* aDataTransfer, bool aAllowEmptyDataTransfer,
-    nsIContent* aDragTarget, Selection* aSelection,
+    DataTransfer* aDataTransfer, nsIContent* aDragTarget, Selection* aSelection,
     RemoteDragStartData* aDragStartData, nsIPrincipal* aPrincipal,
     nsIContentSecurityPolicy* aCsp) {
   nsCOMPtr<nsIDragService> dragService =
@@ -2090,7 +2081,7 @@ bool EventStateManager::DoDefaultDragStart(
   if (aDataTransfer) {
     count = aDataTransfer->MozItemCount();
   }
-  if (!aAllowEmptyDataTransfer && !count) {
+  if (!count) {
     return false;
   }
 
