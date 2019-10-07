@@ -4,14 +4,6 @@
 "use strict";
 
 const selectors = require("devtools/client/performance-new/store/selectors");
-const {
-  recordingState: {
-    AVAILABLE_TO_RECORD,
-    REQUEST_TO_START_RECORDING,
-    REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER,
-    REQUEST_TO_STOP_PROFILER,
-  },
-} = require("devtools/client/performance-new/utils");
 
 /**
  * The recording state manages the current state of the recording panel.
@@ -130,7 +122,7 @@ exports.startRecording = () => {
     // In the case of the profiler popup, the startProfiler can be synchronous.
     // In order to properly allow the React components to handle the state changes
     // make sure and change the recording state first, then start the profiler.
-    dispatch(changeRecordingState(REQUEST_TO_START_RECORDING));
+    dispatch(changeRecordingState("request-to-start-recording"));
     perfFront.startProfiler(recordingSettings);
   };
 };
@@ -142,7 +134,7 @@ exports.startRecording = () => {
 exports.getProfileAndStopProfiler = window => {
   return async (dispatch, getState) => {
     const perfFront = selectors.getPerfFront(getState());
-    dispatch(changeRecordingState(REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER));
+    dispatch(changeRecordingState("request-to-get-profile-and-stop-profiler"));
     const profile = await perfFront.getProfileAndStopProfiler();
 
     if (window.gClosePopup) {
@@ -152,10 +144,8 @@ exports.getProfileAndStopProfiler = window => {
 
     const getSymbolTable = selectors.getSymbolTableGetter(getState())(profile);
     const receiveProfile = selectors.getReceiveProfileFn(getState());
-
     receiveProfile(profile, getSymbolTable);
-
-    dispatch(changeRecordingState(AVAILABLE_TO_RECORD));
+    dispatch(changeRecordingState("available-to-record"));
   };
 };
 
@@ -165,7 +155,7 @@ exports.getProfileAndStopProfiler = window => {
 exports.stopProfilerAndDiscardProfile = () => {
   return async (dispatch, getState) => {
     const perfFront = selectors.getPerfFront(getState());
-    dispatch(changeRecordingState(REQUEST_TO_STOP_PROFILER));
+    dispatch(changeRecordingState("request-to-stop-profiler"));
     perfFront.stopProfilerAndDiscardProfile();
   };
 };

@@ -13,18 +13,6 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const actions = require("devtools/client/performance-new/store/actions");
-const {
-  recordingState: {
-    NOT_YET_KNOWN,
-    AVAILABLE_TO_RECORD,
-    REQUEST_TO_START_RECORDING,
-    REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER,
-    REQUEST_TO_STOP_PROFILER,
-    RECORDING,
-    OTHER_IS_RECORDING,
-    LOCKED_BY_PRIVATE_BROWSING,
-  },
-} = require("devtools/client/performance-new/utils");
 const selectors = require("devtools/client/performance-new/store/selectors");
 
 /**
@@ -124,10 +112,10 @@ class RecordingButton extends PureComponent {
 
     // TODO - L10N all of the messages. Bug 1418056
     switch (recordingState) {
-      case NOT_YET_KNOWN:
+      case "not-yet-known":
         return null;
 
-      case AVAILABLE_TO_RECORD:
+      case "available-to-record":
         return this.renderButton({
           onClick: startRecording,
           label: span(
@@ -143,39 +131,39 @@ class RecordingButton extends PureComponent {
             : null,
         });
 
-      case REQUEST_TO_STOP_PROFILER:
+      case "request-to-stop-profiler":
         return this.renderButton({
           label: "Stopping recording",
           disabled: true,
         });
 
-      case REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER:
+      case "request-to-get-profile-and-stop-profiler":
         return this.renderButton({
           label: "Capturing profile",
           disabled: true,
         });
 
-      case REQUEST_TO_START_RECORDING:
-      case RECORDING:
+      case "request-to-start-recording":
+      case "recording":
         return this.renderButton({
           label: "Capture recording",
           isPrimary: true,
           onClick: this._getProfileAndStopProfiler,
-          disabled: recordingState === REQUEST_TO_START_RECORDING,
+          disabled: recordingState === "request-to-start-recording",
           additionalButton: {
             label: "Cancel recording",
             onClick: stopProfilerAndDiscardProfile,
           },
         });
 
-      case OTHER_IS_RECORDING:
+      case "other-is-recording":
         return this.renderButton({
           label: "Stop and discard the other recording",
           onClick: stopProfilerAndDiscardProfile,
           additionalMessage: "Another tool is currently recording.",
         });
 
-      case LOCKED_BY_PRIVATE_BROWSING:
+      case "locked-by-private-browsing":
         return this.renderButton({
           label: span(
             null,
