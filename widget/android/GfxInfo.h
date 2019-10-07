@@ -83,9 +83,8 @@ class GfxInfo : public GfxInfoBase {
    };
  private:
   void AddCrashReportAnnotations();
-  int32_t WebRtcHwVp8EncodeSupported();
-  int32_t WebRtcHwVp8DecodeSupported();
-  int32_t WebRtcHwH264Supported();
+  int32_t WebRtcHwEncodeSupported();
+  int32_t WebRtcHwDecodeSupported();
 
   bool mInitialized;
 

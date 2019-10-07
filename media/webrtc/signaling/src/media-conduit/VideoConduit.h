@@ -76,9 +76,6 @@ class WebrtcVideoConduit
   // VoiceEngine defined constant for Payload Name Size.
   static const unsigned int CODEC_PLNAME_SIZE;
 
-  // Returns true when both encoder and decoder are HW accelerated.
-  static bool HasH264Hardware();
-
   MediaConduitErrorCode SetLocalRTPExtensions(
       MediaSessionConduitLocalDirection aDirection,
       const RtpExtList& aExtensions) override;

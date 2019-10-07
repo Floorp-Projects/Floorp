@@ -235,26 +235,20 @@ bool AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
   return true;
 }
 
-bool AndroidBridge::HasHWVP8Encoder() {
-  ALOG_BRIDGE("AndroidBridge::HasHWVP8Encoder");
+bool AndroidBridge::GetHWEncoderCapability() {
+  ALOG_BRIDGE("AndroidBridge::GetHWEncoderCapability");
 
-  bool value = GeckoAppShell::HasHWVP8Encoder();
-
-  return value;
-}
-
-bool AndroidBridge::HasHWVP8Decoder() {
-  ALOG_BRIDGE("AndroidBridge::HasHWVP8Decoder");
-
-  bool value = GeckoAppShell::HasHWVP8Decoder();
+  bool value = GeckoAppShell::GetHWEncoderCapability();
 
   return value;
 }
 
-bool AndroidBridge::HasHWH264() {
-  ALOG_BRIDGE("AndroidBridge::HasHWH264");
+bool AndroidBridge::GetHWDecoderCapability() {
+  ALOG_BRIDGE("AndroidBridge::GetHWDecoderCapability");
 
-  return HardwareCodecCapabilityUtils::HasHWH264();
+  bool value = GeckoAppShell::GetHWDecoderCapability();
+
+  return value;
 }
 
 bool AndroidBridge::GetHandlersForURL(const nsAString& aURL,
