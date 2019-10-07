@@ -40,9 +40,9 @@ interface mixin WindowOrWorkerGlobalScope {
 
   // ImageBitmap
   [Throws]
-  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage, optional ImageBitmapOptions aOptions = {});
+  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage);
   [Throws]
-  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage, long aSx, long aSy, long aSw, long aSh, optional ImageBitmapOptions aOptions = {});
+  Promise<ImageBitmap> createImageBitmap(ImageBitmapSource aImage, long aSx, long aSy, long aSw, long aSh);
 };
 
 // https://fetch.spec.whatwg.org/#fetch-method

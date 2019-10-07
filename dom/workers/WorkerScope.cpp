@@ -491,17 +491,15 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
 }
 
 already_AddRefed<Promise> WorkerGlobalScope::CreateImageBitmap(
-    JSContext* aCx, const ImageBitmapSource& aImage,
-    const ImageBitmapOptions& aOptions, ErrorResult& aRv) {
-  return ImageBitmap::Create(this, aImage, Nothing(), aOptions, aRv);
+    JSContext* aCx, const ImageBitmapSource& aImage, ErrorResult& aRv) {
+  return ImageBitmap::Create(this, aImage, Nothing(), aRv);
 }
 
 already_AddRefed<Promise> WorkerGlobalScope::CreateImageBitmap(
     JSContext* aCx, const ImageBitmapSource& aImage, int32_t aSx, int32_t aSy,
-    int32_t aSw, int32_t aSh, const ImageBitmapOptions& aOptions,
-    ErrorResult& aRv) {
-  return ImageBitmap::Create(
-      this, aImage, Some(gfx::IntRect(aSx, aSy, aSw, aSh)), aOptions, aRv);
+    int32_t aSw, int32_t aSh, ErrorResult& aRv) {
+  return ImageBitmap::Create(this, aImage,
+                             Some(gfx::IntRect(aSx, aSy, aSw, aSh)), aRv);
 }
 
 nsresult WorkerGlobalScope::Dispatch(
