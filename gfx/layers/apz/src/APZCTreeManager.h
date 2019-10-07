@@ -859,6 +859,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * sync with mApzcForInputBlock.
    */
   gfx::CompositorHitTestInfo mHitResultForInputBlock;
+  /* If the current input event block is targeting an element that is fixed to
+   * the viewport, the sides of the viewport to which the element is fixed.
+   * Such elements may have been shifted to the dynamic toolbar, and this is
+   * used to offset event coordinates accordingly.
+   * This should be in sync with mApzcForInputBlock.
+   */
+  SideBits mFixedPosSidesForInputBlock;
   /* Sometimes we want to ignore all touches except one. In such cases, this
    * is set to the identifier of the touch we are not ignoring; in other cases,
    * this is set to -1.
