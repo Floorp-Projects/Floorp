@@ -36,12 +36,4 @@ add_task(async function() {
     "The Urlbar should not have the breakout-extend attribute."
   );
   Assert.ok(win.gURLBar.focused, "The Urlbar should be focused.");
-
-  // Simulating a user switching out of the Firefox window and back in.
-  let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  await BrowserTestUtils.closeWindow(newWin);
-  Assert.ok(
-    win.gURLBar.hasAttribute("breakout-extend"),
-    "The Urlbar should have the breakout-extend attribute."
-  );
 });

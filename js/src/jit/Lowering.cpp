@@ -3903,19 +3903,16 @@ void LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins) {
   // attach a scripted setter stub that calls this script recursively.
   gen->setNeedsOverrecursedCheck();
 
-  // We need a double/float32 temp register for typed array stubs if this is
-  // a SETELEM or INITELEM op.
+  // We need a double temp register for typed array stubs if this is a SETELEM
+  // or INITELEM op.
   LDefinition tempD = LDefinition::BogusTemp();
-  LDefinition tempF32 = LDefinition::BogusTemp();
   if (IsElemPC(ins->resumePoint()->pc())) {
-    tempD = tempDouble();
-    tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
+    tempD = tempFixed(FloatReg0);
   }
 
   LInstruction* lir = new (alloc()) LSetPropertyCache(
       useRegister(ins->object()), useBoxOrTypedOrConstant(id, useConstId),
-      useBoxOrTypedOrConstant(ins->value(), useConstValue), temp(), tempD,
-      tempF32);
+      useBoxOrTypedOrConstant(ins->value(), useConstValue), temp(), tempD);
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

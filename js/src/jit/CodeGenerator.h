@@ -243,7 +243,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                            GetPropertyResultFlags flags);
   void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                            Register objReg, Register temp,
-                           FloatRegister tempDouble, FloatRegister tempF32,
                            const ConstantOrRegister& id,
                            const ConstantOrRegister& value, bool strict,
                            bool needsPostBarrier, bool needsTypeBarrier,

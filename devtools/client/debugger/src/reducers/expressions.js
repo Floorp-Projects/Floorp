@@ -71,7 +71,7 @@ function update(
       return zip(inputs, results).reduce(
         (_state, [input, result]) =>
           updateExpressionInList(_state, input, {
-            input: input,
+            input,
             value: result,
             updating: false,
           }),

@@ -11,6 +11,16 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 
+const IS_DIALOG_WINDOW = window.arguments && window.arguments.length;
+
+let openWebLink = IS_DIALOG_WINDOW
+  ? window.arguments[0].wrappedJSObject.openWebLink
+  : url => {
+      window.windowRoot.ownerGlobal.openWebLinkIn(url, "tab", {
+        relatedToCurrent: true,
+      });
+    };
+
 const showOnAnyType = () => false;
 const hideOnAnyType = () => true;
 const hideOnThemeType = addonType => addonType === "theme";
@@ -449,7 +459,11 @@ class AbuseReport extends HTMLElement {
           }
           this.cancel();
         }
-        this.handleKeyboardNavigation(evt);
+        if (!IS_DIALOG_WINDOW) {
+          // Workaround keyboard navigation issues when
+          // the panel is running in its own dialog window.
+          this.handleKeyboardNavigation(evt);
+        }
         break;
       case "click":
         if (evt.target === this._iconClose || evt.target === this._btnCancel) {
@@ -474,9 +488,7 @@ class AbuseReport extends HTMLElement {
           const url = evt.target.getAttribute("href");
           // Ignore if url is empty.
           if (url) {
-            window.windowRoot.ownerGlobal.openWebLinkIn(url, "tab", {
-              relatedToCurrent: true,
-            });
+            openWebLink(url);
           }
         }
         break;
@@ -527,7 +539,23 @@ class AbuseReport extends HTMLElement {
 
   render() {
     this.textContent = "";
-    this.appendChild(document.importNode(this.template.content, true));
+    const formTemplate = document.importNode(this.template.content, true);
+    if (IS_DIALOG_WINDOW) {
+      this.appendChild(formTemplate);
+    } else {
+      // Append the report form inside a modal overlay when the report panel
+      // is a sub-frame of the about:addons tab.
+      const modalTemplate = document.importNode(
+        this.modalTemplate.content,
+        true
+      );
+
+      this.appendChild(modalTemplate);
+      this.querySelector(".modal-panel-container").appendChild(formTemplate);
+
+      // Add the card styles to the form.
+      this.querySelector("form").classList.add("card");
+    }
   }
 
   async update() {
@@ -581,6 +609,7 @@ class AbuseReport extends HTMLElement {
     _submitPanel.update();
 
     this.focus();
+
     dispatchCustomEvent(this, "abuse-report:updated", {
       addonId,
       panel: "reasons",
@@ -628,10 +657,10 @@ class AbuseReport extends HTMLElement {
     if (!this.isConnected || !this.addon) {
       return;
     }
+    this._report.setMessage(this.message);
+    this._report.setReason(this.reason);
     dispatchCustomEvent(this, "abuse-report:submit", {
       addonId: this.addonId,
-      reason: this.reason,
-      message: this.message,
       report: this._report,
     });
   }
@@ -721,6 +750,10 @@ class AbuseReport extends HTMLElement {
     return this._form.elements.reason.value;
   }
 
+  get modalTemplate() {
+    return document.getElementById("tmpl-modal");
+  }
+
   get template() {
     return document.getElementById("tmpl-abuse-report");
   }
@@ -737,10 +770,79 @@ customElements.define("abuse-report-reasons-panel", AbuseReasonsPanel);
 customElements.define("abuse-report-submit-panel", AbuseSubmitPanel);
 customElements.define("addon-abuse-report", AbuseReport);
 
-window.addEventListener(
-  "load",
-  () => {
-    document.body.prepend(document.createElement("addon-abuse-report"));
-  },
-  { once: true }
-);
+// The panel has been opened in a new dialog window.
+if (IS_DIALOG_WINDOW) {
+  // CSS customizations when panel is in its own window
+  // (vs. being an about:addons subframe).
+  document.documentElement.className = "dialog-window";
+
+  const {
+    report,
+    deferredReport,
+    deferredReportPanel,
+  } = window.arguments[0].wrappedJSObject;
+
+  window.addEventListener(
+    "unload",
+    () => {
+      // If the window has been closed resolve the deferredReport
+      // promise and reject the deferredReportPanel one, in case
+      // they haven't been resolved yet.
+      deferredReport.resolve({ userCancelled: true });
+      deferredReportPanel.reject(new Error("report dialog closed"));
+    },
+    { once: true }
+  );
+
+  document.l10n.setAttributes(
+    document.querySelector("head > title"),
+    "abuse-report-dialog-title",
+    {
+      "addon-name": report.addon.name,
+    }
+  );
+
+  const el = document.querySelector("addon-abuse-report");
+  el.addEventListener("abuse-report:submit", () => {
+    deferredReport.resolve({
+      userCancelled: false,
+      report,
+    });
+  });
+  el.addEventListener(
+    "abuse-report:cancel",
+    () => {
+      // Resolve the report panel deferred (in case the report
+      // has been cancelled automatically before it has been fully
+      // rendered, e.g. in case of non-supported addon types).
+      deferredReportPanel.resolve(el);
+      // Resolve the deferred report as cancelled.
+      deferredReport.resolve({ userCancelled: true });
+    },
+    { once: true }
+  );
+
+  // Adjust window size (if needed) once the fluent strings have been
+  // added to the document and the document has been flushed.
+  el.addEventListener(
+    "abuse-report:updated",
+    async () => {
+      const form = document.querySelector("form");
+      await document.l10n.translateFragment(form);
+      const { clientWidth, clientHeight } = await window.promiseDocumentFlushed(
+        () => form
+      );
+      // Resolve promiseReportPanel once the panel completed the initial render
+      // (used in tests).
+      deferredReportPanel.resolve(el);
+      if (
+        window.innerWidth !== clientWidth ||
+        window.innerheight !== clientHeight
+      ) {
+        window.resizeTo(clientWidth, clientHeight);
+      }
+    },
+    { once: true }
+  );
+  el.setAbuseReport(report);
+}

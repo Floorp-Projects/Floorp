@@ -11,6 +11,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
+  ExtensionPreferencesManager:
+    "resource://gre/modules/ExtensionPreferencesManager.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -71,7 +74,7 @@ let HomePage = {
    * homepage, but this is deemed acceptable, as we'll correct it once
    * initialised.
    */
-  async init() {
+  async delayedStartup() {
     if (this._initializationPromise) {
       await this._initializationPromise;
       return;
@@ -178,7 +181,7 @@ let HomePage = {
    *   `|` separated list of URLs.
    */
   async set(value) {
-    await this.init();
+    await this.delayedStartup();
 
     if (await this.shouldIgnore(value)) {
       Cu.reportError(
@@ -234,7 +237,7 @@ let HomePage = {
    *   True if the url should be ignored.
    */
   async shouldIgnore(url) {
-    await this.init();
+    await this.delayedStartup();
 
     const lowerURL = url.toLowerCase();
     return this._ignoreList.some(code => lowerURL.includes(code.toLowerCase()));
@@ -261,8 +264,37 @@ let HomePage = {
       if (
         this._ignoreList.some(code => homePages.includes(code.toLowerCase()))
       ) {
-        this.clear();
-        Services.prefs.clearUserPref(kExtensionControllerPref);
+        if (Services.prefs.getBoolPref(kExtensionControllerPref, false)) {
+          if (Services.appinfo.inSafeMode) {
+            // Add-ons don't get started in safe mode, so just abort this.
+            // We'll get to remove them when we next start in normal mode.
+            return;
+          }
+          // getSetting does not need the module to be loaded.
+          const item = await ExtensionPreferencesManager.getSetting(
+            "homepage_override"
+          );
+          if (item && item.id) {
+            // During startup some modules may not be loaded yet, so we load
+            // the setting we need prior to removal.
+            await ExtensionParent.apiManager.asyncLoadModule(
+              "chrome_settings_overrides"
+            );
+            ExtensionPreferencesManager.removeSetting(
+              item.id,
+              "homepage_override"
+            ).catch(Cu.reportError);
+          } else {
+            // If we don't have a setting for it, we assume the pref has
+            // been incorrectly set somehow.
+            Services.prefs.clearUserPref(kExtensionControllerPref);
+            Services.prefs.clearUserPref(
+              "browser.startup.homepage_override.privateAllowed"
+            );
+          }
+        } else {
+          this.clear();
+        }
         Services.telemetry.recordEvent(
           "homepage",
           "preference",

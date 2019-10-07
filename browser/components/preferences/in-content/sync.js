@@ -283,7 +283,17 @@ var gSyncPane = {
     });
   },
 
-  _chooseWhatToSync(isAlreadySyncing) {
+  async _chooseWhatToSync(isAlreadySyncing) {
+    // Assuming another device is syncing and we're not,
+    // we update the engines selection so the correct
+    // checkboxes are pre-filed.
+    if (!isAlreadySyncing) {
+      try {
+        await Weave.Service.updateLocalEnginesState();
+      } catch (err) {
+        console.error("Error updating the local engines state", err);
+      }
+    }
     let params = {};
     if (isAlreadySyncing) {
       // If we are already syncing then we also offer to disconnect.

@@ -117,7 +117,7 @@ function mockIndexeddDB() {
 // NOTE: We polyfill finally because TRY uses node 8
 if (!global.Promise.prototype.finally) {
   global.Promise.prototype.finally = function finallyPolyfill(callback) {
-    const constructor = this.constructor;
+    const { constructor } = this;
 
     return this.then(
       function(value) {

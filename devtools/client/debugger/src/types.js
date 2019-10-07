@@ -340,6 +340,8 @@ export type Expression = {
   value: Object,
   from: string,
   updating: boolean,
+  exception?: string,
+  error?: string,
 };
 
 /**

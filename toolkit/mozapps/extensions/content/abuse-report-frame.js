@@ -281,7 +281,18 @@
   // abuse report panel from outside of the about:addons page
   // (e.g. triggered from the browserAction context menu).
   window.openAbuseReport = ({ addonId, reportEntryPoint }) => {
-    const frame = document.querySelector("addon-abuse-report-xulframe");
-    frame.openReport({ addonId, reportEntryPoint });
+    if (AbuseReporter.openDialogDisabled) {
+      const frame = document.querySelector("addon-abuse-report-xulframe");
+      frame.openReport({ addonId, reportEntryPoint });
+
+      return;
+    }
+
+    htmlBrowserLoaded.then(() => {
+      getHtmlBrowser().contentWindow.openAbuseReport({
+        addonId,
+        reportEntryPoint,
+      });
+    });
   };
 }

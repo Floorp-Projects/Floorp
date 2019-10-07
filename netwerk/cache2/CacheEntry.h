@@ -25,8 +25,7 @@
 #include "mozilla/TimeStamp.h"
 
 static inline uint32_t PRTimeToSeconds(PRTime t_usec) {
-  PRTime usec_per_sec = PR_USEC_PER_SEC;
-  return uint32_t(t_usec /= usec_per_sec);
+  return uint32_t(t_usec / PR_USEC_PER_SEC);
 }
 
 #define NowInSeconds() PRTimeToSeconds(PR_Now())

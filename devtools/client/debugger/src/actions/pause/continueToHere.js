@@ -39,7 +39,7 @@ export function continueToHere(
     await dispatch(
       addHiddenBreakpoint(cx, {
         line,
-        column: column,
+        column,
         sourceId: selectedSource.id,
       })
     );

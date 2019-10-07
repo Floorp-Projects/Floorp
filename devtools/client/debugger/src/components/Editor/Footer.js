@@ -154,7 +154,7 @@ class SourceFooter extends PureComponent<Props, State> {
         onClick={() => toggleBlackBox(cx, selectedSource)}
         className={classnames("action", type, {
           active: sourceLoaded,
-          blackboxed: blackboxed,
+          blackboxed,
         })}
         key={type}
         title={tooltip}
