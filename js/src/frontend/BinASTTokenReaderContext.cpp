@@ -102,8 +102,6 @@ using EndOfFilePolicy = BinASTTokenReaderContext::EndOfFilePolicy;
 #define WRAP_MAYBE_STRING_ENUM(TYPE) \
   MaybeStringEnum::Maker(BinASTStringEnum::TYPE)
 
-using AutoList = BinASTTokenReaderContext::AutoList;
-using AutoTaggedTuple = BinASTTokenReaderContext::AutoTaggedTuple;
 using CharSlice = BinaryASTSupport::CharSlice;
 using Chars = BinASTTokenReaderContext::Chars;
 
@@ -1563,37 +1561,6 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   return Ok();
 }
 
-void BinASTTokenReaderContext::AutoBase::init() {
-#ifdef DEBUG
-  initialized_ = true;
-#endif
-}
-
-BinASTTokenReaderContext::AutoBase::AutoBase(BinASTTokenReaderContext& reader)
-#ifdef DEBUG
-    : initialized_(false),
-      reader_(reader)
-#endif
-{
-}
-
-BinASTTokenReaderContext::AutoBase::~AutoBase() {
-  // By now, the `AutoBase` must have been deinitialized by calling `done()`.
-  // The only case in which we can accept not calling `done()` is if we have
-  // bailed out because of an error.
-  MOZ_ASSERT_IF(initialized_, reader_.hasRaisedError());
-}
-
-BinASTTokenReaderContext::AutoList::AutoList(BinASTTokenReaderContext& reader)
-    : AutoBase(reader) {}
-
-JS::Result<Ok> BinASTTokenReaderContext::AutoList::done() {
-#ifdef DEBUG
-  initialized_ = false;
-#endif
-  return Ok();
-}
-
 // Internal uint32_t
 // Note that this is different than varnum in multipart.
 //
@@ -1634,17 +1601,6 @@ JS::Result<uint32_t> BinASTTokenReaderContext::readUnpackedLong() {
   const uint32_t result = uint32_t(bytes[0]) << 24 | uint32_t(bytes[1]) << 16 |
                           uint32_t(bytes[2]) << 8 | uint32_t(bytes[3]);
   return result;
-}
-
-BinASTTokenReaderContext::AutoTaggedTuple::AutoTaggedTuple(
-    BinASTTokenReaderContext& reader)
-    : AutoBase(reader) {}
-
-JS::Result<Ok> BinASTTokenReaderContext::AutoTaggedTuple::done() {
-#ifdef DEBUG
-  initialized_ = false;
-#endif
-  return Ok();
 }
 
 HuffmanKey::HuffmanKey(const uint32_t bits, const uint8_t bitLength)
