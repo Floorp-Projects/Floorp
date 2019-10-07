@@ -56,7 +56,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsSize.h"
 #include "nsCheapSets.h"
-#include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
 #include "nsRefreshDriver.h"
@@ -884,13 +883,11 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   already_AddRefed<mozilla::dom::Promise> CreateImageBitmap(
       JSContext* aCx, const mozilla::dom::ImageBitmapSource& aImage,
-      const mozilla::dom::ImageBitmapOptions& aOptions,
       mozilla::ErrorResult& aRv);
 
   already_AddRefed<mozilla::dom::Promise> CreateImageBitmap(
       JSContext* aCx, const mozilla::dom::ImageBitmapSource& aImage,
       int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
-      const mozilla::dom::ImageBitmapOptions& aOptions,
       mozilla::ErrorResult& aRv);
 
   // ChromeWindow bits.  Do NOT call these unless your window is in
@@ -1444,7 +1441,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
     NS_IMETHOD Run() override {
       if (mInner) {
-        ;
         RefPtr<nsIRunnable> inner = std::move(mInner);
         inner->Run();
       }
