@@ -80,12 +80,13 @@ bool WeakMapBase::findSweepGroupEdgesForZone(JS::Zone* zone) {
   return true;
 }
 
-void WeakMapBase::sweepZone(JS::Zone* zone) {
+void WeakMapBase::traceWeakEdgesInZone(JS::Zone* zone, JSTracer* trc) {
   for (WeakMapBase* m = zone->gcWeakMapList().getFirst(); m;) {
     WeakMapBase* next = m->getNext();
     if (m->marked) {
-      m->sweep();
+      m->traceWeak(trc);
     } else {
+      MOZ_ASSERT(zone->isGCSweeping());
       m->clearAndCompact();
       m->removeFrom(zone->gcWeakMapList());
     }
