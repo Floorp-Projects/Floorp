@@ -2451,7 +2451,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnStateChange(
                                    getter_AddRefs(webProgress),
                                    getter_AddRefs(request));
 
-  if (aWebProgressData && aWebProgressData->isTopLevel()) {
+  if (aWebProgressData && aWebProgressData->isTopLevel() &&
+      aStateChangeData.isSome()) {
     Unused << browser->SetIsNavigating(aStateChangeData->isNavigating());
     Unused << browser->SetMayEnableCharacterEncodingMenu(
         aStateChangeData->mayEnableCharacterEncodingMenu());
@@ -2520,7 +2521,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
   Unused << browser->UpdateWebNavigationForLocationChange(aCanGoBack,
                                                           aCanGoForward);
 
-  if (aWebProgressData && aWebProgressData->isTopLevel()) {
+  if (aWebProgressData && aWebProgressData->isTopLevel() &&
+      aLocationChangeData.isSome()) {
     nsCOMPtr<nsIPrincipal> contentBlockingAllowListPrincipal;
     Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
     Unused << browser->UpdateForLocationChange(
@@ -2587,7 +2589,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnSecurityChange(
                                    getter_AddRefs(webProgress),
                                    getter_AddRefs(request));
 
-  if (aWebProgressData && aWebProgressData->isTopLevel()) {
+  if (aWebProgressData && aWebProgressData->isTopLevel() &&
+      aSecurityChangeData.isSome()) {
     Unused << browser->UpdateSecurityUIForSecurityChange(
         aSecurityChangeData->securityInfo(), aState,
         aSecurityChangeData->isSecureContext());
