@@ -14,6 +14,7 @@ const ADDONS = {
 
 // The ID in signed1.xpi and signed2.xpi
 const ID = "test@somewhere.com";
+const PR_USEC_PER_MSEC = 1000;
 
 let testserver = createHttpServer({ hosts: ["example.com"] });
 
@@ -38,7 +39,7 @@ function createBrokenAddonModify(file) {
   zipW.removeEntry("test.txt", false);
   zipW.addEntryStream(
     "test.txt",
-    0,
+    new Date() * PR_USEC_PER_MSEC,
     Ci.nsIZipWriter.COMPRESSION_NONE,
     stream,
     false
@@ -62,7 +63,7 @@ function createBrokenAddonAdd(file) {
   zipW.open(brokenFile, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);
   zipW.addEntryStream(
     "test2.txt",
-    0,
+    new Date() * PR_USEC_PER_MSEC,
     Ci.nsIZipWriter.COMPRESSION_NONE,
     stream,
     false
