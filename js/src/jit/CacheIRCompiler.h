@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 
 #include "jit/CacheIR.h"
+#include "jit/JitOptions.h"
 #include "jit/SharedICRegisters.h"
 
 namespace js {
@@ -650,6 +651,31 @@ class MOZ_RAII AutoScratchRegister {
     MOZ_ASSERT(alloc_.currentOpRegs_.has(reg_));
   }
   ~AutoScratchRegister() { alloc_.releaseRegister(reg_); }
+
+  Register get() const { return reg_; }
+  operator Register() const { return reg_; }
+};
+
+// On x86, spectreBoundsCheck32 can emit better code if it has a scratch
+// register and index masking is enabled.
+class MOZ_RAII AutoSpectreBoundsScratchRegister {
+  mozilla::Maybe<AutoScratchRegister> scratch_;
+  Register reg_ = InvalidReg;
+
+  AutoSpectreBoundsScratchRegister(const AutoSpectreBoundsScratchRegister&) =
+      delete;
+  void operator=(const AutoSpectreBoundsScratchRegister&) = delete;
+
+ public:
+  AutoSpectreBoundsScratchRegister(CacheRegisterAllocator& alloc,
+                                   MacroAssembler& masm) {
+#ifdef JS_CODEGEN_X86
+    if (JitOptions.spectreIndexMasking) {
+      scratch_.emplace(alloc, masm);
+      reg_ = scratch_->get();
+    }
+#endif
+  }
 
   Register get() const { return reg_; }
   operator Register() const { return reg_; }
