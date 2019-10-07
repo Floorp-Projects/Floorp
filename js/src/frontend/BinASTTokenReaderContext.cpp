@@ -1373,41 +1373,6 @@ struct ExtractBinASTInterfaceAndFieldMatcher {
   }
 };
 
-struct TagReader {
-  using BitBuffer = BinASTTokenReaderContext::BitBuffer;
-
-  const HuffmanLookup bits;
-  BitBuffer& bitBuffer;
-  BinASTTokenReaderContext& owner;
-  TagReader(const HuffmanLookup bits, BitBuffer& bitBuffer,
-            BinASTTokenReaderContext& owner)
-      : bits(bits), bitBuffer(bitBuffer), owner(owner) {}
-  JS::Result<BinASTKind> operator()(
-      const HuffmanTableIndexedSymbolsSum& specialized) {
-    // We're entering either a single interface or a sum.
-    const auto lookup = specialized.lookup(bits);
-    bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
-    if (MOZ_UNLIKELY(!lookup.value)) {
-      return owner.raiseInvalidValue();
-    }
-    return *lookup.value;
-  }
-  JS::Result<BinASTKind> operator()(
-      const HuffmanTableIndexedSymbolsMaybeInterface& specialized) {
-    // We're entering an optional interface.
-    const auto lookup = specialized.lookup(bits);
-    bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
-    if (MOZ_UNLIKELY(!lookup.value)) {
-      return owner.raiseInvalidValue();
-    }
-    return *lookup.value;
-  }
-  template <typename Table>
-  JS::Result<BinASTKind> operator()(const Table&) {
-    MOZ_CRASH("Unreachable");
-  }
-};
-
 JS::Result<BinASTKind> BinASTTokenReaderContext::readTagFromTable(
     const BinASTInterfaceAndField& identity) {
   // Extract the table.
@@ -1415,7 +1380,29 @@ JS::Result<BinASTKind> BinASTTokenReaderContext::readTagFromTable(
       dictionary.tableForField(NormalizedInterfaceAndField(identity));
   BINJS_MOZ_TRY_DECL(bits,
                      (bitBuffer.getHuffmanLookup<Compression::No>(*this)));
-  return table.match(TagReader(bits, bitBuffer, *this));
+
+  if (table.is<HuffmanTableIndexedSymbolsSum>()) {
+    const auto& specialized = table.as<HuffmanTableIndexedSymbolsSum>();
+
+    // We're entering either a single interface or a sum.
+    const auto lookup = specialized.lookup(bits);
+    bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
+    if (MOZ_UNLIKELY(!lookup.value)) {
+      return raiseInvalidValue();
+    }
+    return *lookup.value;
+  }
+
+  MOZ_ASSERT(table.is<HuffmanTableIndexedSymbolsMaybeInterface>());
+  const auto& specialized =
+      table.as<HuffmanTableIndexedSymbolsMaybeInterface>();
+  // We're entering an optional interface.
+  const auto lookup = specialized.lookup(bits);
+  bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
+  if (MOZ_UNLIKELY(!lookup.value)) {
+    return raiseInvalidValue();
+  }
+  return *lookup.value;
 }
 
 template <typename Table>
