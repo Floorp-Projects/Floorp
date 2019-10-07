@@ -31,7 +31,6 @@ FINAL_TARGET_FILES.actors += [
     'ContentSearchChild.jsm',
     'ContextMenuChild.jsm',
     'ContextMenuParent.jsm',
-    'ContextMenuSpecialProcessChild.jsm',
     'DOMFullscreenChild.jsm',
     'FormValidationChild.jsm',
     'FormValidationParent.jsm',
