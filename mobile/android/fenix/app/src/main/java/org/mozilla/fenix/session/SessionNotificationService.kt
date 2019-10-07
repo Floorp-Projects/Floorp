@@ -63,11 +63,6 @@ class SessionNotificationService : Service() {
     override fun onTaskRemoved(rootIntent: Intent) {
         components.core.sessionManager.removeAndCloseAllPrivateSessions()
 
-        // This is currently safe because we remove this service while destroying activities. If
-        // this service is ever removed while HomeActivity is still active, this could cause
-        // theming issues. See usePrivateMode kdoc
-        baseContext.application.maybeClearPrivateMode()
-
         stopForeground(true)
         stopSelf()
     }

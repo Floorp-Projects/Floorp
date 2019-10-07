@@ -117,10 +117,6 @@ open class FenixApplication : Application() {
         if ((System.currentTimeMillis() - settings().lastPlacesStorageMaintenance) > ONE_DAY_MILLIS) {
             runStorageMaintenance()
         }
-
-        // This needs to be called before the theme is set. No BrowsingModeManager is available
-        // at this point, which is why this is set directly
-        maybeClearPrivateMode()
     }
 
     private fun runStorageMaintenance() {
@@ -130,14 +126,6 @@ open class FenixApplication : Application() {
             components.core.bookmarksStorage.runMaintenance()
         }
         settings().lastPlacesStorageMaintenance = System.currentTimeMillis()
-    }
-
-    /**
-     * Clears private mode. This is done in order to avoid leaking the fact that
-     * private mode was in use during the previous session.
-     */
-    fun maybeClearPrivateMode(settings: Settings = settings()) {
-        if (!settings.openLinksInAPrivateTab) settings.usePrivateMode = false
     }
 
     private fun registerRxExceptionHandling() {
