@@ -45,7 +45,7 @@ async_test(t => {
 
     assert_equals(scroller.scrollTop, 200);
 
-    setTimeout(t.step_func_done(function() {
+    t.step_timeout(t.step_func_done(function() {
       // Expand #before again and make sure we don't keep #anchor as
       // an anchor from the last time.
       before.style.height = '600px';
