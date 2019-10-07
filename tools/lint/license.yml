@@ -60,7 +60,6 @@ license:
         - layout/style/tools/cleanup_computed_getters.py
         - layout/style/tools/cleanup_keywords.py
         - layout/style/tools/cleanup_ktables.py
-        - media/audioipc
         - media/libdav1d/vcs_version.h
         - media/mtransport/mdns_service/mdns_service.h
         - media/webrtc/signaling/src/sdp
