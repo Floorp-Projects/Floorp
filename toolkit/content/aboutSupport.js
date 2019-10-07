@@ -1489,11 +1489,11 @@ function setupEventListeners() {
     button = $("show-update-history-button");
     if (button) {
       button.addEventListener("click", function(event) {
-        let uri = "chrome://mozapps/content/update/history.xul";
-        let features =
-          "chrome,centerscreen,resizable=no,titlebar,toolbar=no," +
-          "dialog=yes,modal";
-        Services.ww.openWindow(window, uri, "Update:History", features, null);
+        window.docShell.rootTreeItem.domWindow.openDialog(
+          "chrome://mozapps/content/update/history.xul",
+          "Update:History",
+          "centerscreen,resizable=no,titlebar,modal"
+        );
       });
     }
   }
