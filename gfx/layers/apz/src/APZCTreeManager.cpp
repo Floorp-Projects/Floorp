@@ -3193,6 +3193,18 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::CommonAncestor(
   return ancestor.forget();
 }
 
+bool APZCTreeManager::IsFixedToRootContent(
+    const HitTestingTreeNode* aNode) const {
+  mTreeLock.AssertCurrentThreadIn();
+  ScrollableLayerGuid::ViewID fixedTarget = aNode->GetFixedPosTarget();
+  if (fixedTarget == ScrollableLayerGuid::NULL_SCROLL_ID) {
+    return false;
+  }
+  RefPtr<AsyncPanZoomController> targetApzc =
+      GetTargetAPZC(aNode->GetLayersId(), fixedTarget);
+  return targetApzc && targetApzc->IsRootContent();
+}
+
 LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
     const HitTestingTreeNode* aNode) const {
   mTreeLock.AssertCurrentThreadIn();

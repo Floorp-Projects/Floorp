@@ -630,6 +630,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
   already_AddRefed<AsyncPanZoomController> CommonAncestor(
       AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
+  bool IsFixedToRootContent(const HitTestingTreeNode* aNode) const;
   /**
    * Perform hit testing for a touch-start event.
    *
