@@ -5,26 +5,6 @@
 
 const { OS } = require("resource://gre/modules/osfile.jsm");
 
-const recordingState = {
-  // The initial state before we've queried the PerfActor
-  NOT_YET_KNOWN: "not-yet-known",
-  // The profiler is available, we haven't started recording yet.
-  AVAILABLE_TO_RECORD: "available-to-record",
-  // An async request has been sent to start the profiler.
-  REQUEST_TO_START_RECORDING: "request-to-start-recording",
-  // An async request has been sent to get the profile and stop the profiler.
-  REQUEST_TO_GET_PROFILE_AND_STOP_PROFILER:
-    "request-to-get-profile-and-stop-profiler",
-  // An async request has been sent to stop the profiler.
-  REQUEST_TO_STOP_PROFILER: "request-to-stop-profiler",
-  // The profiler notified us that our request to start it actually started it.
-  RECORDING: "recording",
-  // Some other code with access to the profiler started it.
-  OTHER_IS_RECORDING: "other-is-recording",
-  // Profiling is not available when in private browsing mode.
-  LOCKED_BY_PRIVATE_BROWSING: "locked-by-private-browsing",
-};
-
 const UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
 /**
@@ -251,6 +231,5 @@ module.exports = {
   makeExponentialScale,
   scaleRangeWithClamping,
   calculateOverhead,
-  recordingState,
   withCommonPathPrefixRemoved,
 };
