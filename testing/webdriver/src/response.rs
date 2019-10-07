@@ -136,42 +136,43 @@ pub struct WindowRectResponse {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::{json, Map};
+
     use super::*;
     use crate::common::Date;
-    use crate::test::check_serialize;
-    use serde_json;
+    use crate::test::assert_ser;
 
     #[test]
     fn test_json_new_window_response() {
-        let json = r#"{"value":{"handle":"42","type":"window"}}"#;
-        let data = WebDriverResponse::NewWindow(NewWindowResponse {
+        let json = json!({"value": {"handle": "42", "type": "window"}});
+        let response = WebDriverResponse::NewWindow(NewWindowResponse {
             handle: "42".into(),
             typ: "window".into(),
         });
 
-        check_serialize(&json, &data);
+        assert_ser(&response, json);
     }
 
     #[test]
     fn test_json_close_window_response() {
-        let json = r#"{"value":["1234"]}"#;
-        let data = WebDriverResponse::CloseWindow(CloseWindowResponse(vec!["1234".into()]));
-
-        check_serialize(&json, &data);
+        assert_ser(
+            &WebDriverResponse::CloseWindow(CloseWindowResponse(vec!["1234".into()])),
+            json!({"value": ["1234"]}),
+        );
     }
 
     #[test]
     fn test_json_cookie_response_with_optional() {
-        let json = r#"{"value":{
-            "name":"foo",
-            "value":"bar",
-            "path":"/",
-            "domain":"foo.bar",
-            "secure":true,
-            "httpOnly":false,
-            "expiry":123
-        }}"#;
-        let data = WebDriverResponse::Cookie(CookieResponse(Cookie {
+        let json = json!({"value": {
+            "name": "foo",
+            "value": "bar",
+            "path": "/",
+            "domain": "foo.bar",
+            "secure": true,
+            "httpOnly": false,
+            "expiry": 123,
+        }});
+        let response = WebDriverResponse::Cookie(CookieResponse(Cookie {
             name: "foo".into(),
             value: "bar".into(),
             path: Some("/".into()),
@@ -181,20 +182,20 @@ mod tests {
             http_only: false,
         }));
 
-        check_serialize(&json, &data);
+        assert_ser(&response, json);
     }
 
     #[test]
     fn test_json_cookie_response_without_optional() {
-        let json = r#"{"value":{
-            "name":"foo",
-            "value":"bar",
-            "path":"/",
-            "domain":null,
-            "secure":true,
-            "httpOnly":false
-        }}"#;
-        let data = WebDriverResponse::Cookie(CookieResponse(Cookie {
+        let json = json!({"value": {
+            "name": "foo",
+            "value": "bar",
+            "path": "/",
+            "domain": null,
+            "secure": true,
+            "httpOnly": false,
+        }});
+        let response = WebDriverResponse::Cookie(CookieResponse(Cookie {
             name: "foo".into(),
             value: "bar".into(),
             path: Some("/".into()),
@@ -204,20 +205,20 @@ mod tests {
             http_only: false,
         }));
 
-        check_serialize(&json, &data);
+        assert_ser(&response, json);
     }
 
     #[test]
     fn test_json_cookies_response() {
-        let json = r#"{"value":[{
-            "name":"name",
-            "value":"value",
-            "path":"/",
-            "domain":null,
-            "secure":true,
-            "httpOnly":false
-        }]}"#;
-        let data = WebDriverResponse::Cookies(CookiesResponse(vec![Cookie {
+        let json = json!({"value": [{
+            "name": "name",
+            "value": "value",
+            "path": "/",
+            "domain": null,
+            "secure": true,
+            "httpOnly": false,
+        }]});
+        let response = WebDriverResponse::Cookies(CookiesResponse(vec![Cookie {
             name: "name".into(),
             value: "value".into(),
             path: Some("/".into()),
@@ -227,89 +228,91 @@ mod tests {
             http_only: false,
         }]));
 
-        check_serialize(&json, &data);
+        assert_ser(&response, json);
     }
 
     #[test]
     fn test_json_delete_session_response() {
-        let json = r#"{"value":null}"#;
-        let data = WebDriverResponse::DeleteSession;
-
-        check_serialize(&json, &data);
+        assert_ser(&WebDriverResponse::DeleteSession, json!({ "value": null }));
     }
 
     #[test]
     fn test_json_element_rect_response() {
-        let json = r#"{"value":{"x":0.0,"y":1.0,"width":2.0,"height":3.0}}"#;
-        let data = WebDriverResponse::ElementRect(ElementRectResponse {
+        let json = json!({"value": {
+            "x": 0.0,
+            "y": 1.0,
+            "width": 2.0,
+            "height": 3.0,
+        }});
+        let response = WebDriverResponse::ElementRect(ElementRectResponse {
             x: 0f64,
             y: 1f64,
             width: 2f64,
             height: 3f64,
         });
 
-        check_serialize(&json, &data);
+        assert_ser(&response, json);
     }
 
     #[test]
     fn test_json_generic_value_response() {
-        let json = r#"{"value":{"example":["test"]}}"#;
-        let mut value = serde_json::Map::new();
-        value.insert(
-            "example".into(),
-            Value::Array(vec![Value::String("test".into())]),
-        );
-
-        let data = WebDriverResponse::Generic(ValueResponse(Value::Object(value)));
-
-        check_serialize(&json, &data);
+        let response = {
+            let mut value = Map::new();
+            value.insert(
+                "example".into(),
+                Value::Array(vec![Value::String("test".into())]),
+            );
+            WebDriverResponse::Generic(ValueResponse(Value::Object(value)))
+        };
+        assert_ser(&response, json!({"value": {"example": ["test"]}}));
     }
 
     #[test]
     fn test_json_new_session_response() {
-        let json = r#"{"value":{"sessionId":"id","capabilities":{}}}"#;
-        let data = WebDriverResponse::NewSession(NewSessionResponse::new(
-            "id".into(),
-            Value::Object(serde_json::Map::new()),
-        ));
-
-        check_serialize(&json, &data);
+        let response =
+            WebDriverResponse::NewSession(NewSessionResponse::new("id".into(), json!({})));
+        assert_ser(
+            &response,
+            json!({"value": {"sessionId": "id", "capabilities": {}}}),
+        );
     }
 
     #[test]
     fn test_json_timeouts_response() {
-        let json = r#"{"value":{"script":1,"pageLoad":2,"implicit":3}}"#;
-        let data = WebDriverResponse::Timeouts(TimeoutsResponse::new(Some(1), 2, 3));
-
-        check_serialize(&json, &data);
+        assert_ser(
+            &WebDriverResponse::Timeouts(TimeoutsResponse::new(Some(1), 2, 3)),
+            json!({"value": {"script": 1, "pageLoad": 2, "implicit": 3}}),
+        );
     }
 
     #[test]
     fn test_json_timeouts_response_with_null_script_timeout() {
-        let json = r#"{"value":{"script":null,"pageLoad":2,"implicit":3}}"#;
-        let data = WebDriverResponse::Timeouts(TimeoutsResponse::new(None, 2, 3));
-
-        check_serialize(&json, &data);
+        assert_ser(
+            &WebDriverResponse::Timeouts(TimeoutsResponse::new(None, 2, 3)),
+            json!({"value": {"script": null, "pageLoad": 2, "implicit": 3}}),
+        );
     }
 
     #[test]
     fn test_json_void_response() {
-        let json = r#"{"value":null}"#;
-        let data = WebDriverResponse::Void;
-
-        check_serialize(&json, &data);
+        assert_ser(&WebDriverResponse::Void, json!({ "value": null }));
     }
 
     #[test]
     fn test_json_window_rect_response() {
-        let json = r#"{"value":{"x":0,"y":1,"width":2,"height":3}}"#;
-        let data = WebDriverResponse::WindowRect(WindowRectResponse {
+        let json = json!({"value": {
+            "x": 0,
+            "y": 1,
+            "width": 2,
+            "height": 3,
+        }});
+        let response = WebDriverResponse::WindowRect(WindowRectResponse {
             x: 0i32,
             y: 1i32,
             width: 2i32,
             height: 3i32,
         });
 
-        check_serialize(&json, &data);
+        assert_ser(&response, json);
     }
 }
