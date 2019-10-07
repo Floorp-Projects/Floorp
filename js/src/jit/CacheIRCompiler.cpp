@@ -1553,24 +1553,13 @@ bool CacheIRCompiler::emitGuardToInt32Index() {
 
   masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
 
-  // If we're compiling a Baseline IC, FloatReg0 is always available.
-  Label failurePopReg;
-  if (mode_ != Mode::Baseline) {
-    masm.push(FloatReg0);
-  }
+  {
+    AutoScratchFloatRegister floatReg(this, failure);
 
-  masm.unboxDouble(input, FloatReg0);
-  // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
-  masm.convertDoubleToInt32(
-      FloatReg0, output,
-      (mode_ == Mode::Baseline) ? failure->label() : &failurePopReg, false);
-  if (mode_ != Mode::Baseline) {
-    masm.pop(FloatReg0);
-    masm.jump(&done);
+    masm.unboxDouble(input, floatReg);
 
-    masm.bind(&failurePopReg);
-    masm.pop(FloatReg0);
-    masm.jump(failure->label());
+    // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
+    masm.convertDoubleToInt32(floatReg, output, floatReg.failure(), false);
   }
 
   masm.bind(&done);
@@ -2510,28 +2499,12 @@ bool CacheIRCompiler::emitDoubleNegationResult() {
     return false;
   }
 
-  // If we're compiling a Baseline IC, FloatReg0 is always available.
-  Label failurePopReg, done;
-  if (mode_ != Mode::Baseline) {
-    masm.push(FloatReg0);
-  }
+  AutoScratchFloatRegister floatReg(this, failure);
 
-  masm.ensureDouble(
-      val, FloatReg0,
-      (mode_ != Mode::Baseline) ? &failurePopReg : failure->label());
-  masm.negateDouble(FloatReg0);
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  masm.ensureDouble(val, floatReg, floatReg.failure());
+  masm.negateDouble(floatReg);
+  masm.boxDouble(floatReg, output.valueReg(), floatReg);
 
-  if (mode_ != Mode::Baseline) {
-    masm.pop(FloatReg0);
-    masm.jump(&done);
-
-    masm.bind(&failurePopReg);
-    masm.pop(FloatReg0);
-    masm.jump(failure->label());
-  }
-
-  masm.bind(&done);
   return true;
 }
 
@@ -2544,36 +2517,20 @@ bool CacheIRCompiler::emitDoubleIncDecResult(bool isInc) {
     return false;
   }
 
-  // If we're compiling a Baseline IC, FloatReg0 is always available.
-  Label failurePopReg, done;
-  if (mode_ != Mode::Baseline) {
-    masm.push(FloatReg0);
-  }
+  AutoScratchFloatRegister floatReg(this, failure);
 
-  masm.ensureDouble(
-      val, FloatReg0,
-      (mode_ != Mode::Baseline) ? &failurePopReg : failure->label());
+  masm.ensureDouble(val, floatReg, floatReg.failure());
   {
     ScratchDoubleScope fpscratch(masm);
     masm.loadConstantDouble(1.0, fpscratch);
     if (isInc) {
-      masm.addDouble(fpscratch, FloatReg0);
+      masm.addDouble(fpscratch, floatReg);
     } else {
-      masm.subDouble(fpscratch, FloatReg0);
+      masm.subDouble(fpscratch, floatReg);
     }
   }
-  masm.boxDouble(FloatReg0, output.valueReg(), FloatReg0);
+  masm.boxDouble(floatReg, output.valueReg(), floatReg);
 
-  if (mode_ != Mode::Baseline) {
-    masm.pop(FloatReg0);
-    masm.jump(&done);
-
-    masm.bind(&failurePopReg);
-    masm.pop(FloatReg0);
-    masm.jump(failure->label());
-  }
-
-  masm.bind(&done);
   return true;
 }
 
@@ -2593,37 +2550,35 @@ bool CacheIRCompiler::emitTruncateDoubleToUInt32() {
   Label int32, done;
   masm.branchTestInt32(Assembler::Equal, val, &int32);
 
-  Label doneTruncate, truncateABICall;
-  if (mode_ != Mode::Baseline) {
-    masm.push(FloatReg0);
+  {
+    Label doneTruncate, truncateABICall;
+
+    AutoScratchFloatRegister floatReg(this);
+
+    masm.unboxDouble(val, floatReg);
+    masm.branchTruncateDoubleMaybeModUint32(floatReg, res, &truncateABICall);
+    masm.jump(&doneTruncate);
+
+    masm.bind(&truncateABICall);
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(),
+                         liveVolatileFloatRegs());
+    save.takeUnchecked(floatReg);
+    // Bug 1451976
+    save.takeUnchecked(floatReg.get().asSingle());
+    masm.PushRegsInMask(save);
+
+    masm.setupUnalignedABICall(res);
+    masm.passABIArg(floatReg, MoveOp::DOUBLE);
+    masm.callWithABI(BitwiseCast<void*, int32_t (*)(double)>(JS::ToInt32),
+                     MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
+    masm.storeCallInt32Result(res);
+
+    LiveRegisterSet ignore;
+    ignore.add(res);
+    masm.PopRegsInMaskIgnore(save, ignore);
+
+    masm.bind(&doneTruncate);
   }
-
-  masm.unboxDouble(val, FloatReg0);
-  masm.branchTruncateDoubleMaybeModUint32(FloatReg0, res, &truncateABICall);
-  masm.jump(&doneTruncate);
-
-  masm.bind(&truncateABICall);
-  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
-  save.takeUnchecked(FloatReg0);
-  // Bug 1451976
-  save.takeUnchecked(FloatReg0.asSingle());
-  masm.PushRegsInMask(save);
-
-  masm.setupUnalignedABICall(res);
-  masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
-  masm.callWithABI(BitwiseCast<void*, int32_t (*)(double)>(JS::ToInt32),
-                   MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
-  masm.storeCallInt32Result(res);
-
-  LiveRegisterSet ignore;
-  ignore.add(res);
-  masm.PopRegsInMaskIgnore(save, ignore);
-
-  masm.bind(&doneTruncate);
-  if (mode_ != Mode::Baseline) {
-    masm.pop(FloatReg0);
-  }
-
   masm.jump(&done);
   masm.bind(&int32);
 
@@ -3496,25 +3451,19 @@ bool CacheIRCompiler::emitLoadDoubleTruthyResult() {
   AutoOutputRegister output(*this);
   ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
 
-  Label ifFalse, done, failurePopReg;
+  AutoScratchFloatRegister floatReg(this);
 
-  // If we're compiling a Baseline IC, FloatReg0 is always available.
-  if (mode_ != Mode::Baseline) {
-    masm.push(FloatReg0);
-  }
+  Label ifFalse, done;
 
-  masm.unboxDouble(val, FloatReg0);
+  masm.unboxDouble(val, floatReg);
 
-  masm.branchTestDoubleTruthy(false, FloatReg0, &ifFalse);
+  masm.branchTestDoubleTruthy(false, floatReg, &ifFalse);
   masm.moveValue(BooleanValue(true), output.valueReg());
   masm.jump(&done);
 
   masm.bind(&ifFalse);
   masm.moveValue(BooleanValue(false), output.valueReg());
 
-  if (mode_ != Mode::Baseline) {
-    masm.pop(FloatReg0);
-  }
   masm.bind(&done);
   return true;
 }
@@ -4566,4 +4515,47 @@ AutoCallVM::~AutoCallVM() {
   }
   MOZ_ASSERT(compiler_->mode_ == CacheIRCompiler::Mode::Baseline);
   stubFrame_->leave(masm_);
+}
+
+AutoScratchFloatRegister::AutoScratchFloatRegister(CacheIRCompiler* compiler,
+                                                   FailurePath* failure)
+    : compiler_(compiler), failure_(failure) {
+  // If we're compiling a Baseline IC, FloatReg0 is always available.
+  if (!compiler_->isBaseline()) {
+    MacroAssembler& masm = compiler_->masm;
+    masm.push(FloatReg0);
+  }
+
+  if (failure_) {
+    failure_->setHasAutoScratchFloatRegister();
+  }
+}
+
+AutoScratchFloatRegister::~AutoScratchFloatRegister() {
+  if (failure_) {
+    failure_->clearHasAutoScratchFloatRegister();
+  }
+
+  if (!compiler_->isBaseline()) {
+    MacroAssembler& masm = compiler_->masm;
+    masm.pop(FloatReg0);
+
+    if (failure_) {
+      Label done;
+      masm.jump(&done);
+      masm.bind(&failurePopReg_);
+      masm.pop(FloatReg0);
+      masm.jump(failure_->label());
+      masm.bind(&done);
+    }
+  }
+}
+
+Label* AutoScratchFloatRegister::failure() {
+  MOZ_ASSERT(failure_);
+
+  if (!compiler_->isBaseline()) {
+    return &failurePopReg_;
+  }
+  return failure_->labelUnchecked();
 }
