@@ -124,6 +124,7 @@ class IonCacheIRCompiler;
   _(CompareObjectUndefinedNullResult)     \
   _(ArrayJoinResult)                      \
   _(StoreTypedElement)                    \
+  _(StoreTypedObjectScalarProperty)       \
   _(CallPrintString)                      \
   _(Breakpoint)                           \
   _(MegamorphicLoadSlotResult)            \
@@ -877,6 +878,7 @@ class MOZ_RAII CacheIRCompiler {
 
   void emitLoadStubField(StubFieldOffset val, Register dest);
   void emitLoadStubFieldConstant(StubFieldOffset val, Register dest);
+  Address emitAddressFromStubField(StubFieldOffset val, Register base);
 
   uintptr_t readStubWord(uint32_t offset, StubField::Type type) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
