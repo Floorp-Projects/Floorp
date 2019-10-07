@@ -406,6 +406,12 @@ class MOZ_STACK_CLASS LayerMetricsWrapper final {
     return mLayer->GetFixedPositionScrollContainerId();
   }
 
+  SideBits GetFixedPositionSides() const {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetFixedPositionSides();
+  }
+
   Maybe<uint64_t> GetZoomAnimationId() const {
     MOZ_ASSERT(IsValid());
     // This function is only really needed for template-compatibility with
