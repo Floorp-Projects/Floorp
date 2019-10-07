@@ -3411,8 +3411,39 @@ AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
   // Scalar types can always be stored without a type update stub.
   if (fieldDescr->is<ScalarTypeDescr>()) {
     Scalar::Type type = fieldDescr->as<ScalarTypeDescr>().type();
+
+    Maybe<OperandId> rhsValId;
+    switch (type) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+        rhsValId.emplace(writer.guardToInt32ModUint32(rhsId));
+        break;
+
+      case Scalar::Float32:
+      case Scalar::Float64:
+        rhsValId.emplace(writer.guardIsNumber(rhsId));
+        break;
+
+      case Scalar::Uint8Clamped:
+        rhsValId.emplace(writer.guardToUint8Clamped(rhsId));
+        break;
+
+      case Scalar::BigInt64:
+      case Scalar::BigUint64:
+        // FIXME: https://bugzil.la/1536703
+        return AttachDecision::NoAction;
+
+      case Scalar::MaxTypedArrayViewType:
+      case Scalar::Int64:
+        MOZ_CRASH("Unsupported TypedArray type");
+    }
+
     writer.storeTypedObjectScalarProperty(objId, fieldOffset, layout, type,
-                                          rhsId);
+                                          *rhsValId);
     writer.returnFromIC();
 
     trackAttached("TypedObject");
