@@ -106,6 +106,10 @@ class DataSourceSurfaceRecording : public DataSourceSurface {
   static already_AddRefed<DataSourceSurface> Init(
       uint8_t* aData, IntSize aSize, int32_t aStride, SurfaceFormat aFormat,
       DrawEventRecorderPrivate* aRecorder) {
+    if (!Factory::AllowedSurfaceSize(aSize)) {
+      return nullptr;
+    }
+
     // XXX: do we need to ensure any alignment here?
     auto data = MakeUnique<uint8_t[]>(aStride * aSize.height);
     if (data) {
