@@ -64,6 +64,7 @@ class WebAppLauncherActivity : AppCompatActivity() {
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun launchBrowser(startUrl: Uri) {
         val intent = Intent(Intent.ACTION_VIEW, startUrl).apply {
+            addCategory(SHORTCUT_CATEGORY)
             `package` = packageName
         }
 

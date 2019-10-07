@@ -38,6 +38,7 @@ import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PW
 import mozilla.components.feature.pwa.ext.installableManifest
 
 private val pwaIconMemoryCache = IconMemoryCache()
+const val SHORTCUT_CATEGORY = "mozilla.components.pwa.category.SHORTCUT"
 
 class WebAppShortcutManager(
     context: Context,
@@ -95,6 +96,7 @@ class WebAppShortcutManager(
 
     /**
      * Create a new basic pinned website shortcut using info from the session.
+     * Consuming `SHORTCUT_CATEGORY` in `AndroidManifest` is required for the package to be launched
      */
     fun buildBasicShortcut(
         context: Context,
@@ -102,6 +104,7 @@ class WebAppShortcutManager(
         overrideShortcutName: String? = null
     ): ShortcutInfoCompat {
         val shortcutIntent = Intent(Intent.ACTION_VIEW, session.url.toUri()).apply {
+            addCategory(SHORTCUT_CATEGORY)
             `package` = context.packageName
         }
 
