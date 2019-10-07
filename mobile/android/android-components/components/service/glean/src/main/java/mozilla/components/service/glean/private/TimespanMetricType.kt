@@ -83,11 +83,11 @@ data class TimespanMetricType(
                 @Suppress("EXPERIMENTAL_API_USAGE")
                 Dispatchers.API.launch {
                     TimespansStorageEngine.set(this@TimespanMetricType, timeUnit, elapsedNanos)
-
-                    // Reset the timerId.
-                    timerId = null
                 }
             }
+
+            // Reset the timerId.
+            timerId = null
         }
     }
 
