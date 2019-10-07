@@ -332,7 +332,7 @@ function editCerts() {
   getSelectedCerts();
 
   for (let cert of selected_certs) {
-    window.openDialog(
+    window.docShell.rootTreeItem.domWindow.openDialog(
       "chrome://pippki/content/editcacert.xul",
       "",
       "chrome,centerscreen,modal",
@@ -460,7 +460,7 @@ function deleteCerts() {
   let retVals = {
     deleteConfirmed: false,
   };
-  window.openDialog(
+  window.docShell.rootTreeItem.domWindow.openDialog(
     "chrome://pippki/content/deletecert.xul",
     "",
     "chrome,centerscreen,modal",
