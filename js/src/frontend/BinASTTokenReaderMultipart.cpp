@@ -376,8 +376,7 @@ BinASTTokenReaderMultipart::readSkippableSubTree(const FieldContext&) {
 // - uint32_t index in table [grammar];
 // - content (specified by the higher-level grammar);
 JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields&, const Context&,
-    AutoTaggedTuple& guard) {
+    BinASTKind& tag, AutoTaggedTuple& guard) {
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
   if (index >= metadata_->numBinASTKinds()) {
     return raiseError("Invalid index to grammar table");
@@ -388,22 +387,6 @@ JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
   // Enter the body.
   guard.init();
   return Ok();
-}
-
-JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-    const RootContext& context, AutoTaggedTuple& guard) {
-  return enterTaggedTuple(tag, fields, Context(context), guard);
-}
-JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-    const ListContext& context, AutoTaggedTuple& guard) {
-  return enterTaggedTuple(tag, fields, Context(context), guard);
-}
-JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-    const FieldContext& context, AutoTaggedTuple& guard) {
-  return enterTaggedTuple(tag, fields, Context(context), guard);
 }
 
 // List:
