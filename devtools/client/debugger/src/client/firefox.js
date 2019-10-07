@@ -25,25 +25,24 @@ export async function onConnect(connection: any, actions: Object) {
     return;
   }
 
-  const supportsWasm =
-    features.wasm && !!debuggerClient.mainRoot.traits.wasmBinarySource;
-
   setupCommands({
     threadFront,
     tabTarget,
     debuggerClient,
-    supportsWasm,
   });
 
-  setupEvents({ threadFront, tabTarget, actions, supportsWasm });
+  setupEvents({ threadFront, tabTarget, actions });
 
   tabTarget.on("will-navigate", actions.willNavigate);
   tabTarget.on("navigate", actions.navigated);
 
+  const wasmBinarySource =
+    features.wasm && !!debuggerClient.mainRoot.traits.wasmBinarySource;
+
   await threadFront.reconfigure({
     observeAsmJS: true,
     pauseWorkersUntilAttach: true,
-    wasmBinarySource: supportsWasm,
+    wasmBinarySource,
     skipBreakpoints: prefs.skipPausing,
     logEventBreakpoints: prefs.logEventBreakpoints,
   });
@@ -59,7 +58,7 @@ export async function onConnect(connection: any, actions: Object) {
   await actions.connect(
     tabTarget.url,
     threadFront.actor,
-    traits && traits.canRewind,
+    traits,
     tabTarget.isWebExtension
   );
 
