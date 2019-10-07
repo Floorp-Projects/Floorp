@@ -1545,22 +1545,32 @@ bool CacheIRCompiler::emitGuardToInt32Index() {
     return false;
   }
 
-  Label notInt32, done;
-  masm.branchTestInt32(Assembler::NotEqual, input, &notInt32);
-  masm.unboxInt32(input, output);
-  masm.jump(&done);
-
-  masm.bind(&notInt32);
-
-  masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
+  Label done;
 
   {
-    AutoScratchFloatRegister floatReg(this, failure);
+    ScratchTagScope tag(masm, input);
+    masm.splitTagForTest(input, tag);
 
-    masm.unboxDouble(input, floatReg);
+    Label notInt32;
+    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
+    {
+      ScratchTagScopeRelease _(&tag);
 
-    // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
-    masm.convertDoubleToInt32(floatReg, output, floatReg.failure(), false);
+      masm.unboxInt32(input, output);
+      masm.jump(&done);
+    }
+    masm.bind(&notInt32);
+
+    masm.branchTestDouble(Assembler::NotEqual, tag, failure->label());
+    {
+      ScratchTagScopeRelease _(&tag);
+      AutoScratchFloatRegister floatReg(this, failure);
+
+      masm.unboxDouble(input, floatReg);
+
+      // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
+      masm.convertDoubleToInt32(floatReg, output, floatReg.failure(), false);
+    }
   }
 
   masm.bind(&done);
