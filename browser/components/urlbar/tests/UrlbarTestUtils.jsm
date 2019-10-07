@@ -160,6 +160,8 @@ var UrlbarTestUtils = {
         keyword: result.payload.keyword,
         query: result.payload.query,
         suggestion: result.payload.suggestion,
+        inPrivateWindow: result.payload.inPrivateWindow,
+        isPrivateEngine: result.payload.isPrivateEngine,
       };
     } else if (details.type == UrlbarUtils.RESULT_TYPE.KEYWORD) {
       details.keyword = result.payload.keyword;
@@ -239,12 +241,13 @@ var UrlbarTestUtils = {
     // complete.
     return this.promiseSearchComplete(win).then(context => {
       // Look for search suggestions.
-      let hasSearchSuggestion = context.results.some(
+      let firstSearchSuggestionIndex = context.results.findIndex(
         r => r.type == UrlbarUtils.RESULT_TYPE.SEARCH && r.payload.suggestion
       );
-      if (!hasSearchSuggestion) {
+      if (firstSearchSuggestionIndex == -1) {
         throw new Error("Cannot find a search suggestion");
       }
+      return firstSearchSuggestionIndex;
     });
   },
 

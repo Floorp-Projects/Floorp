@@ -52,6 +52,23 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    * @param {UrlbarQueryContext} context The query context.
    */
   sort(context) {
+    // A Search in a Private Window result should only be shown when there are
+    // other results, and all of them are searches.
+    let searchInPrivateWindowIndex = context.results.findIndex(
+      r => r.type == UrlbarUtils.RESULT_TYPE.SEARCH && r.payload.inPrivateWindow
+    );
+    if (
+      searchInPrivateWindowIndex != -1 &&
+      (context.results.length == 1 ||
+        context.results.some(
+          r =>
+            r.type != UrlbarUtils.RESULT_TYPE.SEARCH || r.payload.keywordOffer
+        ))
+    ) {
+      // Remove the result.
+      context.results.splice(searchInPrivateWindowIndex, 1);
+    }
+
     if (!context.results.length) {
       return;
     }

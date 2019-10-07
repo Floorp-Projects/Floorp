@@ -92,7 +92,3 @@ function promiseAutocompleteResultPopup(
 async function waitForAutocompleteResultAt(index) {
   return UrlbarTestUtils.waitForAutocompleteResultAt(window, index);
 }
-
-function promiseSuggestionsPresent(msg = "") {
-  return UrlbarTestUtils.promiseSuggestionsPresent(window, msg);
-}

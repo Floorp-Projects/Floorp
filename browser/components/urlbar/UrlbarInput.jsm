@@ -408,12 +408,17 @@ class UrlbarInput {
     // Use the selected element if we have one; this is usually the case
     // when the view is open.
     let element = this.view.selectedElement;
-    if (!selectedOneOff && element) {
+    let result = this.view.getResultFromElement(element);
+    let selectedPrivateResult =
+      result &&
+      result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
+      result.payload.inPrivateWindow;
+    let selectedPrivateEngineResult =
+      selectedPrivateResult && result.payload.isPrivateEngine;
+    if (element && (!selectedOneOff || selectedPrivateEngineResult)) {
       this.pickElement(element, event);
       return;
     }
-
-    let result = this.view.getResultFromElement(element);
 
     let url;
     let selType = this.controller.engagementEvent.typeFromElement(element);
@@ -449,6 +454,10 @@ class UrlbarInput {
     );
 
     let where = openWhere || this._whereToOpen(event);
+    if (selectedPrivateResult) {
+      where = "window";
+      openParams.private = true;
+    }
     openParams.allowInheritPrincipal = false;
     url = this._maybeCanonizeURL(event, url) || url.trim();
 
@@ -640,6 +649,11 @@ class UrlbarInput {
               `An error occured while trying to fixup "${originalUntrimmedValue.trim()}": ${ex}`
             );
           }
+        }
+
+        if (result.payload.inPrivateWindow) {
+          where = "window";
+          openParams.private = true;
         }
 
         const actionDetails = {
@@ -885,7 +899,6 @@ class UrlbarInput {
         allowAutofill,
         isPrivate: this.isPrivate,
         maxResults: UrlbarPrefs.get("maxRichResults"),
-        muxer: "UnifiedComplete",
         searchString,
         userContextId: this.window.gBrowser.selectedBrowser.getAttribute(
           "usercontextid"

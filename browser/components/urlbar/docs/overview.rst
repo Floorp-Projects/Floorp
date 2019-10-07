@@ -365,6 +365,8 @@ properties, supported by all of the results.
     autofill.selectionStart: {integer} The first index in the autofill
                              selection.
     autofill.selectionEnd: {integer} The last index in the autofill selection.
+    suggestedIndex: {integer} Suggest a preferred position for this result
+                    within the result set.
   }
 
 The following RESULT_TYPEs are supported:
@@ -374,7 +376,7 @@ The following RESULT_TYPEs are supported:
 
     // Payload: { icon, url, userContextId }
     TAB_SWITCH: 1,
-    // Payload: { icon, suggestion, keyword, query, keywordOffer }
+    // Payload: { icon, suggestion, keyword, query, keywordOffer, inPrivateWindow, isPrivateEngine }
     SEARCH: 2,
     // Payload: { icon, url, title, tags }
     URL: 3,

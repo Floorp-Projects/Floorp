@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
 var localProviderModules = {
   UrlbarProviderUnifiedComplete:
     "resource:///modules/UrlbarProviderUnifiedComplete.jsm",
+  UrlbarProviderPrivateSearch:
+    "resource:///modules/UrlbarProviderPrivateSearch.jsm",
 };
 
 // List of available local muxers, each is implemented in its own jsm module.
