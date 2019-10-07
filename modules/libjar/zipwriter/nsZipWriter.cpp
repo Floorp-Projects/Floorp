@@ -419,9 +419,14 @@ nsresult nsZipWriter::AddEntryStream(const nsACString& aZipEntry,
 
   RefPtr<nsZipHeader> header = new nsZipHeader();
   NS_ENSURE_TRUE(header, NS_ERROR_OUT_OF_MEMORY);
-  header->Init(aZipEntry, aModTime, ZIP_ATTRS(aPermissions, ZIP_ATTRS_FILE),
-               mCDSOffset);
-  nsresult rv = header->WriteFileHeader(mStream);
+  nsresult rv = header->Init(
+      aZipEntry, aModTime, ZIP_ATTRS(aPermissions, ZIP_ATTRS_FILE), mCDSOffset);
+  if (NS_FAILED(rv)) {
+    SeekCDS();
+    return rv;
+  }
+
+  rv = header->WriteFileHeader(mStream);
   if (NS_FAILED(rv)) {
     SeekCDS();
     return rv;
@@ -776,17 +781,24 @@ nsresult nsZipWriter::InternalAddEntryDirectory(const nsACString& aZipEntry,
 
   uint32_t zipAttributes = ZIP_ATTRS(aPermissions, ZIP_ATTRS_DIRECTORY);
 
+  nsresult rv = NS_OK;
   if (aZipEntry.Last() != '/') {
     nsCString dirPath;
     dirPath.Assign(aZipEntry + NS_LITERAL_CSTRING("/"));
-    header->Init(dirPath, aModTime, zipAttributes, mCDSOffset);
-  } else
-    header->Init(aZipEntry, aModTime, zipAttributes, mCDSOffset);
+    rv = header->Init(dirPath, aModTime, zipAttributes, mCDSOffset);
+  } else {
+    rv = header->Init(aZipEntry, aModTime, zipAttributes, mCDSOffset);
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Cleanup();
+    return rv;
+  }
 
   if (mEntryHash.Get(header->mName, nullptr))
     return NS_ERROR_FILE_ALREADY_EXISTS;
 
-  nsresult rv = header->WriteFileHeader(mStream);
+  rv = header->WriteFileHeader(mStream);
   if (NS_FAILED(rv)) {
     Cleanup();
     return rv;
@@ -893,8 +905,11 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
     RefPtr<nsZipHeader> header = new nsZipHeader();
     NS_ENSURE_TRUE(header, NS_ERROR_OUT_OF_MEMORY);
 
-    header->Init(aItem->mZipEntry, aItem->mModTime, zipAttributes, mCDSOffset);
-    nsresult rv = header->WriteFileHeader(mStream);
+    nsresult rv = header->Init(aItem->mZipEntry, aItem->mModTime, zipAttributes,
+                               mCDSOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = header->WriteFileHeader(mStream);
     NS_ENSURE_SUCCESS(rv, rv);
 
     RefPtr<nsZipDataStream> stream = new nsZipDataStream();
