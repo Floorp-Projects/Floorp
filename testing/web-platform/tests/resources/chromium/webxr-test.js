@@ -584,7 +584,7 @@ class MockRuntime {
         this.dataProviderBinding_ = new mojo.Binding(
             device.mojom.XRFrameDataProvider, this, dataProviderRequest);
 
-        let clientRequest = mojo.makeRequest(this.sessionClient_);
+        let clientReceiver = mojo.makeRequest(this.sessionClient_);
 
         let enabled_features = [];
         for(let i = 0; i < sessionOptions.requiredFeatures.length; i++) {
@@ -605,7 +605,7 @@ class MockRuntime {
           session: {
             submitFrameSink: submit_frame_sink,
             dataProvider: dataProviderPtr,
-            clientRequest: clientRequest,
+            clientReceiver: clientReceiver,
             displayInfo: this.displayInfo_,
             enabledFeatures: enabled_features,
           }
