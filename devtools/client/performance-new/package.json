@@ -1,0 +1,12 @@
+{
+  "name": "devtools-bin",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "tsc",
+    "test-ci": "tsc"
+  },
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "typescript": "^3.6.3"
+  }
+}
