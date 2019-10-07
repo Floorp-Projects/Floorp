@@ -100,8 +100,8 @@ encode
 /*
  * PL_Base64Encode
  *
- * If the destination argument is NULL, a return buffer is 
- * allocated, and the data therein will be null-terminated.  
+ * If the destination argument is NULL, a return buffer is
+ * allocated, and the data therein will be null-terminated.
  * If the destination argument is not NULL, it is assumed to
  * be of sufficient size, and the contents will not be null-
  * terminated by this routine.
@@ -341,8 +341,8 @@ decode
  * If the destination argument is not null, it is assumed
  * to be of sufficient size, and the data will not be null-
  * terminated by this routine.
- * 
- * Returns null if the allocation fails, or if the source string is 
+ *
+ * Returns null if the allocation fails, or if the source string is
  * not well-formed.
  */
 

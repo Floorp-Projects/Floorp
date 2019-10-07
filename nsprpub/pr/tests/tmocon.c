@@ -11,10 +11,10 @@
 **
 ** Modification History:
 ** 19-May-97 AGarcia- Converted the test to accomodate the debug_mode flag.
-**	         The debug mode will print all of the printfs associated with this test.
-**			 The regress mode will be the default mode. Since the regress tool limits
+**           The debug mode will print all of the printfs associated with this test.
+**           The regress mode will be the default mode. Since the regress tool limits
 **           the output to a one line status:PASS or FAIL,all of the printf statements
-**			 have been handled with an if (debug_mode) statement. 
+**           have been handled with an if (debug_mode) statement.
 ***********************************************************************/
 
 /***********************************************************************
@@ -87,7 +87,9 @@ static PRIntervalTime Timeout(const Shared *shared)
 
 static void CauseTimeout(const Shared *shared)
 {
-    if (shared->intermittant) PR_Sleep(Timeout(shared));
+    if (shared->intermittant) {
+        PR_Sleep(Timeout(shared));
+    }
 }  /* CauseTimeout */
 
 static PRStatus MakeReceiver(Shared *shared)
@@ -110,24 +112,30 @@ static PRStatus MakeReceiver(Shared *shared)
             argv[1] = "-d";
             argv[2] = NULL;
         }
-        else argv[1] = NULL;
-        if (shared->debug > 1)
+        else {
+            argv[1] = NULL;
+        }
+        if (shared->debug > 1) {
             PR_fprintf(debug_out, " creating accept process %s ...", path);
+        }
         fflush(stdout);
         rv = PR_CreateProcessDetached(path, argv, NULL, NULL);
         if (PR_SUCCESS == rv)
         {
-            if (shared->debug > 1)
+            if (shared->debug > 1) {
                 PR_fprintf(debug_out, " wait 5 seconds");
-            if (shared->debug > 1)
+            }
+            if (shared->debug > 1) {
                 PR_fprintf(debug_out, " before connecting to accept process ...");
+            }
             fflush(stdout);
             PR_Sleep(PR_SecondsToInterval(5));
             return rv;
         }
         shared->failed = PR_TRUE;
-        if (shared->debug > 0)
+        if (shared->debug > 0) {
             PL_FPrintError(debug_out, "PR_CreateProcessDetached failed");
+        }
     }
     return rv;
 }  /* MakeReceiver */
@@ -139,28 +147,35 @@ static void Connect(void *arg)
     PRFileDesc *clientSock;
     Shared *shared = (Shared*)arg;
     PRInt32 loop, bytes, flags = 0;
-    struct Descriptor { PRInt32 length; PRUint32 checksum; } descriptor;
+    struct Descriptor {
+        PRInt32 length;
+        PRUint32 checksum;
+    } descriptor;
     debug_out = (0 == shared->debug) ? NULL : PR_GetSpecialFD(PR_StandardError);
 
     buffer = (char*)PR_MALLOC(shared->message_length);
 
-    for (bytes = 0; bytes < shared->message_length; ++bytes)
+    for (bytes = 0; bytes < shared->message_length; ++bytes) {
         buffer[bytes] = (char)bytes;
+    }
 
     descriptor.checksum = 0;
     for (bytes = 0; bytes < shared->message_length; ++bytes)
     {
         PRUint32 overflow = descriptor.checksum & 0x80000000;
         descriptor.checksum = (descriptor.checksum << 1);
-        if (0x00000000 != overflow) descriptor.checksum += 1;
+        if (0x00000000 != overflow) {
+            descriptor.checksum += 1;
+        }
         descriptor.checksum += buffer[bytes];
     }
     descriptor.checksum = PR_htonl(descriptor.checksum);
 
     for (loop = 0; loop < shared->messages; ++loop)
     {
-        if (shared->debug > 1)
+        if (shared->debug > 1) {
             PR_fprintf(debug_out, "[%d]socket ... ", loop);
+        }
         clientSock = PR_NewTCPSocket();
         if (clientSock)
         {
@@ -179,58 +194,72 @@ static void Connect(void *arg)
                 PR_fprintf(debug_out, "connecting to %s ... ", buf);
             }
             rv = PR_Connect(
-                clientSock, &shared->serverAddress, Timeout(shared));
+                     clientSock, &shared->serverAddress, Timeout(shared));
             if (PR_SUCCESS == rv)
             {
                 PRInt32 descriptor_length = (loop < (shared->messages - 1)) ?
-                    shared->message_length : 0;
+                                            shared->message_length : 0;
                 descriptor.length = PR_htonl(descriptor_length);
                 if (shared->debug > 1)
                     PR_fprintf(
                         debug_out, "sending %d bytes ... ", descriptor_length);
                 CauseTimeout(shared);  /* might cause server to timeout */
                 bytes = PR_Send(
-                    clientSock, &descriptor, sizeof(descriptor),
-                    flags, Timeout(shared));
+                            clientSock, &descriptor, sizeof(descriptor),
+                            flags, Timeout(shared));
                 if (bytes != sizeof(descriptor))
                 {
                     shared->failed = PR_TRUE;
-                    if (shared->debug > 0)
+                    if (shared->debug > 0) {
                         PL_FPrintError(debug_out, "PR_Send failed");
+                    }
                 }
                 if (0 != descriptor_length)
                 {
                     CauseTimeout(shared);
                     bytes = PR_Send(
-                        clientSock, buffer, descriptor_length,
-                        flags, Timeout(shared));
+                                clientSock, buffer, descriptor_length,
+                                flags, Timeout(shared));
                     if (bytes != descriptor_length)
                     {
                         shared->failed = PR_TRUE;
-                        if (shared->debug > 0)
+                        if (shared->debug > 0) {
                             PL_FPrintError(debug_out, "PR_Send failed");
+                        }
                     }
                 }
-                if (shared->debug > 1) PR_fprintf(debug_out, "closing ... ");
+                if (shared->debug > 1) {
+                    PR_fprintf(debug_out, "closing ... ");
+                }
                 rv = PR_Shutdown(clientSock, PR_SHUTDOWN_BOTH);
                 rv = PR_Close(clientSock);
                 if (shared->debug > 1)
                 {
-                    if (PR_SUCCESS == rv) PR_fprintf(debug_out, "\n");
-                    else PL_FPrintError(debug_out, "shutdown failed");
+                    if (PR_SUCCESS == rv) {
+                        PR_fprintf(debug_out, "\n");
+                    }
+                    else {
+                        PL_FPrintError(debug_out, "shutdown failed");
+                    }
                 }
             }
             else
             {
-                if (shared->debug > 1) PL_FPrintError(debug_out, "connect failed");
+                if (shared->debug > 1) {
+                    PL_FPrintError(debug_out, "connect failed");
+                }
                 PR_Close(clientSock);
                 if ((loop == 0) && (PR_GetError() == PR_CONNECT_REFUSED_ERROR))
                 {
-                    if (MakeReceiver(shared) == PR_FAILURE) break;
+                    if (MakeReceiver(shared) == PR_FAILURE) {
+                        break;
+                    }
                 }
                 else
                 {
-                    if (shared->debug > 1) PR_fprintf(debug_out, " exiting\n");
+                    if (shared->debug > 1) {
+                        PR_fprintf(debug_out, " exiting\n");
+                    }
                     break;
                 }
             }
@@ -238,7 +267,9 @@ static void Connect(void *arg)
         else
         {
             shared->failed = PR_TRUE;
-            if (shared->debug > 0) PL_FPrintError(debug_out, "create socket");
+            if (shared->debug > 0) {
+                PL_FPrintError(debug_out, "create socket");
+            }
             break;
         }
     }
@@ -285,28 +316,34 @@ int Tmocon(int argc, char **argv)
     memset(&shared->serverAddress, 0, sizeof(shared->serverAddress));
     rv = PR_InitializeNetAddr(PR_IpAddrLoopback, BASE_PORT, &shared->serverAddress);
     PR_ASSERT(PR_SUCCESS == rv);
-    
+
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':
-            if (0 == shared->debug) shared->debug = 1;
-            break;
-        case 'v':
-            if (0 == shared->debug) shared->debug = 2;
-            break;
-        case 'i':
-            shared->intermittant = PR_TRUE;
-            break;
-        case 'R':
-            shared->random = PR_TRUE;
-            break;
-        case 'G':
-            thread_scope = PR_GLOBAL_THREAD;
-            break;
-        case 'h':  /* the value for backlock */
+            case 'd':
+                if (0 == shared->debug) {
+                    shared->debug = 1;
+                }
+                break;
+            case 'v':
+                if (0 == shared->debug) {
+                    shared->debug = 2;
+                }
+                break;
+            case 'i':
+                shared->intermittant = PR_TRUE;
+                break;
+            case 'R':
+                shared->random = PR_TRUE;
+                break;
+            case 'G':
+                thread_scope = PR_GLOBAL_THREAD;
+                break;
+            case 'h':  /* the value for backlock */
             {
                 PRIntn es = 0;
                 PRHostEnt host;
@@ -314,35 +351,43 @@ int Tmocon(int argc, char **argv)
                 (void)PR_GetHostByName(
                     opt->value, buffer, sizeof(buffer), &host);
                 es = PR_EnumerateHostEnt(
-                    es, &host, BASE_PORT, &shared->serverAddress);
+                         es, &host, BASE_PORT, &shared->serverAddress);
                 PR_ASSERT(es > 0);
             }
             break;
-        case 'm':  /* number of messages to send */
-            shared->messages = atoi(opt->value);
-            break;
-        case 't':  /* number of threads sending */
-            threads = atoi(opt->value);
-            break;
-        case 'D':  /* dally time between transmissions */
-            dally = atoi(opt->value);
-            break;
-        case 'T':  /* timeout on I/O operations */
-            timeout = atoi(opt->value);
-            break;
-        case 's':  /* total size of each message */
-            shared->message_length = atoi(opt->value);
-            break;
-        default:
-            break;
+            case 'm':  /* number of messages to send */
+                shared->messages = atoi(opt->value);
+                break;
+            case 't':  /* number of threads sending */
+                threads = atoi(opt->value);
+                break;
+            case 'D':  /* dally time between transmissions */
+                dally = atoi(opt->value);
+                break;
+            case 'T':  /* timeout on I/O operations */
+                timeout = atoi(opt->value);
+                break;
+            case 's':  /* total size of each message */
+                shared->message_length = atoi(opt->value);
+                break;
+            default:
+                break;
         }
     }
-        PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
-    if (0 == timeout) timeout = DEFAULT_TIMEOUT;
-    if (0 == threads) threads = DEFAULT_THREADS;
-    if (0 == shared->messages) shared->messages = DEFAULT_MESSAGES;
-    if (0 == shared->message_length) shared->message_length = DEFAULT_MESSAGESIZE;
+    if (0 == timeout) {
+        timeout = DEFAULT_TIMEOUT;
+    }
+    if (0 == threads) {
+        threads = DEFAULT_THREADS;
+    }
+    if (0 == shared->messages) {
+        shared->messages = DEFAULT_MESSAGES;
+    }
+    if (0 == shared->message_length) {
+        shared->message_length = DEFAULT_MESSAGESIZE;
+    }
 
     shared->dally = PR_SecondsToInterval(dally);
     shared->timeout = PR_SecondsToInterval(timeout);
@@ -351,11 +396,12 @@ int Tmocon(int argc, char **argv)
 
     for (index = 0; index < threads; ++index)
         thread[index] = PR_CreateThread(
-            PR_USER_THREAD, Connect, shared,
-            PR_PRIORITY_NORMAL, thread_scope,
-            PR_JOINABLE_THREAD, 0);
-    for (index = 0; index < threads; ++index)
+                            PR_USER_THREAD, Connect, shared,
+                            PR_PRIORITY_NORMAL, thread_scope,
+                            PR_JOINABLE_THREAD, 0);
+    for (index = 0; index < threads; ++index) {
         rv = PR_JoinThread(thread[index]);
+    }
 
     PR_DELETE(thread);
 
@@ -370,7 +416,7 @@ int Tmocon(int argc, char **argv)
 int main(int argc, char **argv)
 {
     return (PR_VersionCheck(PR_VERSION)) ?
-        PR_Initialize(Tmocon, argc, argv, 4) : -1;
+           PR_Initialize(Tmocon, argc, argv, 4) : -1;
 }  /* main */
 
 /* tmocon.c */

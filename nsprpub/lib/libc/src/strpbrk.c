@@ -9,7 +9,9 @@
 PR_IMPLEMENT(char *)
 PL_strpbrk(const char *s, const char *list)
 {
-    if( ((const char *)0 == s) || ((const char *)0 == list) ) return (char *)0;
+    if( ((const char *)0 == s) || ((const char *)0 == list) ) {
+        return (char *)0;
+    }
 
     return strpbrk(s, list);
 }
@@ -20,15 +22,18 @@ PL_strprbrk(const char *s, const char *list)
     const char *p;
     const char *r;
 
-    if( ((const char *)0 == s) || ((const char *)0 == list) ) return (char *)0;
+    if( ((const char *)0 == s) || ((const char *)0 == list) ) {
+        return (char *)0;
+    }
 
     for( r = s; *r; r++ )
         ;
 
     for( r--; r >= s; r-- )
         for( p = list; *p; p++ )
-            if( *r == *p )
+            if( *r == *p ) {
                 return (char *)r;
+            }
 
     return (char *)0;
 }
@@ -38,12 +43,15 @@ PL_strnpbrk(const char *s, const char *list, PRUint32 max)
 {
     const char *p;
 
-    if( ((const char *)0 == s) || ((const char *)0 == list) ) return (char *)0;
+    if( ((const char *)0 == s) || ((const char *)0 == list) ) {
+        return (char *)0;
+    }
 
     for( ; max && *s; s++, max-- )
         for( p = list; *p; p++ )
-            if( *s == *p )
+            if( *s == *p ) {
                 return (char *)s;
+            }
 
     return (char *)0;
 }
@@ -54,15 +62,18 @@ PL_strnprbrk(const char *s, const char *list, PRUint32 max)
     const char *p;
     const char *r;
 
-    if( ((const char *)0 == s) || ((const char *)0 == list) ) return (char *)0;
+    if( ((const char *)0 == s) || ((const char *)0 == list) ) {
+        return (char *)0;
+    }
 
     for( r = s; max && *r; r++, max-- )
         ;
 
     for( r--; r >= s; r-- )
         for( p = list; *p; p++ )
-            if( *r == *p )
+            if( *r == *p ) {
                 return (char *)r;
+            }
 
     return (char *)0;
 }

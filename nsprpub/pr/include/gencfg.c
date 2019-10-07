@@ -7,54 +7,54 @@
 
 #if defined(__sun)
 #ifndef SOLARIS
-	error - SOLARIS is not defined
+error - SOLARIS is not defined
 #endif
 #endif
 
 #if defined(__hpux)
 #ifndef HPUX
-	error - HPUX is not defined
+error - HPUX is not defined
 #endif
 #endif
 
-#if defined(__alpha) 
+#if defined(__alpha)
 #if !(defined(_WIN32)) && !(defined(__linux)) && !(defined(__FreeBSD__))
-	error - None of _WIN32, __linux, or __FreeBSD__ is defined
+error - None of _WIN32, __linux, or __FreeBSD__ is defined
 #endif
 #endif
 
 #if defined(_IBMR2)
 #ifndef AIX
-	error - AIX is not defined
+error - AIX is not defined
 #endif
 #endif
 
 #if defined(linux)
 #ifndef LINUX
-	error - LINUX is not defined
+error - LINUX is not defined
 #endif
 #endif
 
 #if defined(bsdi)
 #ifndef BSDI
-	error - BSDI is not defined
+error - BSDI is not defined
 #endif
 #endif
 
 #if defined(M_UNIX)
 #ifndef SCO
-      error - SCO is not defined
+error - SCO is not defined
 #endif
 #endif
 #if !defined(M_UNIX) && defined(_USLC_)
 #ifndef UNIXWARE
-      error - UNIXWARE is not defined
+error - UNIXWARE is not defined
 #endif
 #endif
 
 #if defined(__APPLE__)
 #ifndef DARWIN
-      error - DARWIN is not defined
+error - DARWIN is not defined
 #endif
 #endif
 
@@ -64,15 +64,15 @@
 
 #ifdef XP_PC
 #ifdef WIN32
-#define INT64	_PRInt64
+#define INT64   _PRInt64
 #else
-#define INT64	long
+#define INT64   long
 #endif
 #else
 #if defined(HPUX) || defined(SCO) || defined(UNIXWARE)
-#define INT64	long
+#define INT64   long
 #else
-#define INT64	long long
+#define INT64   long long
 #endif
 #endif
 
@@ -95,7 +95,7 @@ struct align_PRInt64 {
 struct align_fakelonglong {
     char c;
     struct {
-	long hi, lo;
+        long hi, lo;
     } a;
 };
 struct align_float {
@@ -123,18 +123,24 @@ static int Log2(int n)
 {
     int log2 = 0;
 
-    if (n & (n-1))
-	log2++;
-    if (n >> 16)
-	log2 += 16, n >>= 16;
-    if (n >> 8)
-	log2 += 8, n >>= 8;
-    if (n >> 4)
-	log2 += 4, n >>= 4;
-    if (n >> 2)
-	log2 += 2, n >>= 2;
-    if (n >> 1)
-	log2++;
+    if (n & (n-1)) {
+        log2++;
+    }
+    if (n >> 16) {
+        log2 += 16, n >>= 16;
+    }
+    if (n >> 8) {
+        log2 += 8, n >>= 8;
+    }
+    if (n >> 4) {
+        log2 += 4, n >>= 4;
+    }
+    if (n >> 2) {
+        log2 += 2, n >>= 2;
+    }
+    if (n >> 1) {
+        log2++;
+    }
     return log2;
 }
 
@@ -142,34 +148,34 @@ static int Log2(int n)
 static void do64(void)
 {
     union {
-	int i;
-	char c[4];
+        int i;
+        char c[4];
     } u;
 
     u.i = 0x01020304;
     if (u.c[0] == 0x01) {
-	fprintf(stream, "#undef  IS_LITTLE_ENDIAN\n");
-	fprintf(stream, "#define IS_BIG_ENDIAN 1\n\n");
+        fprintf(stream, "#undef  IS_LITTLE_ENDIAN\n");
+        fprintf(stream, "#define IS_BIG_ENDIAN 1\n\n");
     } else {
-	fprintf(stream, "#define IS_LITTLE_ENDIAN 1\n");
-	fprintf(stream, "#undef  IS_BIG_ENDIAN\n\n");
+        fprintf(stream, "#define IS_LITTLE_ENDIAN 1\n");
+        fprintf(stream, "#undef  IS_BIG_ENDIAN\n\n");
     }
 }
 
 static void do32(void)
 {
     union {
-	long i;
-	char c[4];
+        long i;
+        char c[4];
     } u;
 
     u.i = 0x01020304;
     if (u.c[0] == 0x01) {
-	fprintf(stream, "#undef  IS_LITTLE_ENDIAN\n");
-	fprintf(stream, "#define IS_BIG_ENDIAN 1\n\n");
+        fprintf(stream, "#undef  IS_LITTLE_ENDIAN\n");
+        fprintf(stream, "#define IS_BIG_ENDIAN 1\n\n");
     } else {
-	fprintf(stream, "#define IS_LITTLE_ENDIAN 1\n");
-	fprintf(stream, "#undef  IS_BIG_ENDIAN\n\n");
+        fprintf(stream, "#define IS_LITTLE_ENDIAN 1\n");
+        fprintf(stream, "#undef  IS_BIG_ENDIAN\n\n");
     }
 }
 
@@ -195,8 +201,8 @@ int main(int argc, char **argv)
             return 1;
         }
     } else {
-		stream = stdout;
-	}
+        stream = stdout;
+    }
 
     fprintf(stream, "#ifndef nspr_cpucfg___\n");
     fprintf(stream, "#define nspr_cpucfg___\n\n");
@@ -204,9 +210,9 @@ int main(int argc, char **argv)
     fprintf(stream, "/* AUTOMATICALLY GENERATED - DO NOT EDIT */\n\n");
 
     if (sizeof(long) == 8) {
-	do64();
+        do64();
     } else {
-	do32();
+        do32();
     }
     fprintf(stream, "#define PR_BYTES_PER_BYTE   %d\n", sizeof(char));
     fprintf(stream, "#define PR_BYTES_PER_SHORT  %d\n", sizeof(short));
@@ -222,31 +228,31 @@ int main(int argc, char **argv)
     fprintf(stream, "#define PR_BITS_PER_INT64   %d\n", bpb * 8);
     fprintf(stream, "#define PR_BITS_PER_LONG    %d\n", bpb * sizeof(long));
     fprintf(stream, "#define PR_BITS_PER_FLOAT   %d\n", bpb * sizeof(float));
-    fprintf(stream, "#define PR_BITS_PER_DOUBLE  %d\n\n", 
+    fprintf(stream, "#define PR_BITS_PER_DOUBLE  %d\n\n",
             bpb * sizeof(double));
 
     fprintf(stream, "#define PR_BITS_PER_BYTE_LOG2   %d\n", Log2(bpb));
-    fprintf(stream, "#define PR_BITS_PER_SHORT_LOG2  %d\n", 
+    fprintf(stream, "#define PR_BITS_PER_SHORT_LOG2  %d\n",
             Log2(bpb * sizeof(short)));
-    fprintf(stream, "#define PR_BITS_PER_INT_LOG2    %d\n", 
+    fprintf(stream, "#define PR_BITS_PER_INT_LOG2    %d\n",
             Log2(bpb * sizeof(int)));
     fprintf(stream, "#define PR_BITS_PER_INT64_LOG2  %d\n", 6);
-    fprintf(stream, "#define PR_BITS_PER_LONG_LOG2   %d\n", 
+    fprintf(stream, "#define PR_BITS_PER_LONG_LOG2   %d\n",
             Log2(bpb * sizeof(long)));
-    fprintf(stream, "#define PR_BITS_PER_FLOAT_LOG2  %d\n", 
+    fprintf(stream, "#define PR_BITS_PER_FLOAT_LOG2  %d\n",
             Log2(bpb * sizeof(float)));
-    fprintf(stream, "#define PR_BITS_PER_DOUBLE_LOG2 %d\n\n", 
+    fprintf(stream, "#define PR_BITS_PER_DOUBLE_LOG2 %d\n\n",
             Log2(bpb * sizeof(double)));
 
     fprintf(stream, "#define PR_ALIGN_OF_SHORT   %d\n", ALIGN_OF(short));
     fprintf(stream, "#define PR_ALIGN_OF_INT     %d\n", ALIGN_OF(int));
     fprintf(stream, "#define PR_ALIGN_OF_LONG    %d\n", ALIGN_OF(long));
     if (sizeof(INT64) < 8) {
-	/* this machine doesn't actually support PRInt64's */
-	fprintf(stream, "#define PR_ALIGN_OF_INT64   %d\n", 
+        /* this machine doesn't actually support PRInt64's */
+        fprintf(stream, "#define PR_ALIGN_OF_INT64   %d\n",
                 ALIGN_OF(fakelonglong));
     } else {
-	fprintf(stream, "#define PR_ALIGN_OF_INT64   %d\n", ALIGN_OF(PRInt64));
+        fprintf(stream, "#define PR_ALIGN_OF_INT64   %d\n", ALIGN_OF(PRInt64));
     }
     fprintf(stream, "#define PR_ALIGN_OF_FLOAT   %d\n", ALIGN_OF(float));
     fprintf(stream, "#define PR_ALIGN_OF_DOUBLE  %d\n", ALIGN_OF(double));

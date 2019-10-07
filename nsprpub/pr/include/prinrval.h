@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-** File:		prinrval.h
-** Description:	API to interval timing functions of NSPR.
+** File:        prinrval.h
+** Description: API to interval timing functions of NSPR.
 **
 **
 ** NSPR provides interval times that are independent of network time
@@ -34,7 +34,7 @@ typedef PRUint32 PRIntervalTime;
 ** DESCRIPTION:
 **  These two constants define the range (in ticks / second) of the
 **  platform dependent type, PRIntervalTime. These constants bound both
-**  the period and the resolution of a PRIntervalTime. 
+**  the period and the resolution of a PRIntervalTime.
 ***********************************************************************/
 #define PR_INTERVAL_MIN 1000UL
 #define PR_INTERVAL_MAX 100000UL
@@ -46,9 +46,9 @@ typedef PRUint32 PRIntervalTime;
 **  Two reserved constants are defined in the PRIntervalTime namespace.
 **  They are used to indicate that the process should wait no time (return
 **  immediately) or wait forever (never time out), respectively.
-**  Note: PR_INTERVAL_NO_TIMEOUT passed as input to PR_Connect is 
+**  Note: PR_INTERVAL_NO_TIMEOUT passed as input to PR_Connect is
 **  interpreted as use the OS's connect timeout.
-**  
+**
 ***********************************************************************/
 #define PR_INTERVAL_NO_WAIT 0UL
 #define PR_INTERVAL_NO_TIMEOUT 0xffffffffUL
@@ -66,13 +66,13 @@ typedef PRUint32 PRIntervalTime;
 ** INPUTS:      void
 ** OUTPUTS:     void
 ** RETURN:      PRIntervalTime
-**  
+**
 ** SIDE EFFECTS:
 **  None
 ** RESTRICTIONS:
 **  The units of PRIntervalTime are platform dependent. They are chosen
 **  such that they are appropriate for the host OS, yet provide sufficient
-**  resolution and period to be useful to clients. 
+**  resolution and period to be useful to clients.
 ** MEMORY:      N/A
 ** ALGORITHM:   Platform dependent
 ***********************************************************************/
@@ -86,7 +86,7 @@ NSPR_API(PRIntervalTime) PR_IntervalNow(void);
 ** INPUTS:      void
 ** OUTPUTS:     void
 ** RETURN:      PRUint32
-**  
+**
 ** SIDE EFFECTS:
 **  None
 ** RESTRICTIONS:
@@ -105,7 +105,7 @@ NSPR_API(PRUint32) PR_TicksPerSecond(void);
 ** INPUTS:      PRUint32
 ** OUTPUTS:     void
 ** RETURN:      PRIntervalTime
-**  
+**
 ** SIDE EFFECTS:
 **  None
 ** RESTRICTIONS:
@@ -126,7 +126,7 @@ NSPR_API(PRIntervalTime) PR_MicrosecondsToInterval(PRUint32 micro);
 ** INPUTS:      PRIntervalTime
 ** OUTPUTS:     void
 ** RETURN:      PRUint32
-**  
+**
 ** SIDE EFFECTS:
 **  None
 ** RESTRICTIONS:

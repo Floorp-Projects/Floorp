@@ -16,8 +16,9 @@ CurrentClockTickTime(LPDWORD lpdwHigh, LPDWORD lpdwLow)
 {
     LARGE_INTEGER   liCount;
 
-    if (!QueryPerformanceCounter(&liCount))
+    if (!QueryPerformanceCounter(&liCount)) {
         return FALSE;
+    }
 
     *lpdwHigh = liCount.u.HighPart;
     *lpdwLow = liCount.u.LowPart;
@@ -31,8 +32,9 @@ extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size )
     size_t  nBytes;
     time_t  sTime;
 
-    if (size <= 0)
+    if (size <= 0) {
         return 0;
+    }
 
     CurrentClockTickTime(&dwHigh, &dwLow);
 
@@ -42,16 +44,18 @@ extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size )
     n += nBytes;
     size -= nBytes;
 
-    if (size <= 0)
+    if (size <= 0) {
         return n;
+    }
 
     nBytes = sizeof(dwHigh) > size ? size : sizeof(dwHigh);
     memcpy(((char *)buf) + n, &dwHigh, nBytes);
     n += nBytes;
     size -= nBytes;
 
-    if (size <= 0)
+    if (size <= 0) {
         return n;
+    }
 
     // get the number of milliseconds that have elapsed since Windows started
     dwVal = GetTickCount();
@@ -61,8 +65,9 @@ extern PRSize _PR_MD_GetRandomNoise( void *buf, PRSize size )
     n += nBytes;
     size -= nBytes;
 
-    if (size <= 0)
+    if (size <= 0) {
         return n;
+    }
 
     // get the time in seconds since midnight Jan 1, 1970
     time(&sTime);

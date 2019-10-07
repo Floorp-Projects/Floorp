@@ -19,40 +19,42 @@ static void housecleaning(void *cur_time);
 
 int main (int argc, char **argv)
 {
-	static PRIntervalTime thread_start_time;
-	static PRThread *housekeeping_tid = NULL;
-	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "d");
+    static PRIntervalTime thread_start_time;
+    static PRThread *housekeeping_tid = NULL;
+    PLOptStatus os;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "d");
 
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
-	{
-		if (PL_OPT_BAD == os) continue;
-		switch (opt->option)
-		{
-			case 'd':  /* debug mode */
-				_debug_on = 1;
-				break;
-			default:
-				break;
-		}
-	}
-	PL_DestroyOptState(opt);
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    {
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
+        switch (opt->option)
+        {
+            case 'd':  /* debug mode */
+                _debug_on = 1;
+                break;
+            default:
+                break;
+        }
+    }
+    PL_DestroyOptState(opt);
 
-	if (( housekeeping_tid = 
-		PR_CreateThread (PR_USER_THREAD, housecleaning,  (void*)&thread_start_time,
-						 PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0)) 
-																		== NULL ) {
-		fprintf(stderr,
-			"simple_test: Error - PR_CreateThread failed: (%ld, %ld)\n",
-									  PR_GetError(), PR_GetOSError());
-		exit( 1 );
-	}
-	PR_Cleanup();
-	return(0);
+    if (( housekeeping_tid =
+              PR_CreateThread (PR_USER_THREAD, housecleaning,  (void*)&thread_start_time,
+                               PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0))
+        == NULL ) {
+        fprintf(stderr,
+                "simple_test: Error - PR_CreateThread failed: (%ld, %ld)\n",
+                PR_GetError(), PR_GetOSError());
+        exit( 1 );
+    }
+    PR_Cleanup();
+    return(0);
 }
 
 static void
-housecleaning (void *cur_time) 
+housecleaning (void *cur_time)
 {
-  DPRINTF(("Child Thread exiting\n"));
+    DPRINTF(("Child Thread exiting\n"));
 }

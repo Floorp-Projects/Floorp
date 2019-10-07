@@ -31,7 +31,7 @@ class PR_IMPLEMENT(RCThread): public RCBase
 {
 public:
 
-    typedef enum 
+    typedef enum
     {
         local = PR_LOCAL_THREAD, global = PR_GLOBAL_THREAD
     } Scope;
@@ -68,12 +68,12 @@ public:
      * the target thread returns from it's root function.
      */
     virtual PRStatus Join();
-    
+
     /*
      * The priority of a newly created thread is the same as the creator.
      * The priority may be changed either by the new thread itself, by
      * the creator or any other arbitrary thread.
-     */   
+     */
     virtual void SetPriority(Priority newPriority);
 
 
@@ -82,14 +82,14 @@ public:
      * is doing and return with a well known error code.
      */
     virtual PRStatus Interrupt();
-    
+
     /*
      * And in case a thread was interrupted and didn't get a chance
      * to have the notification delivered, a way to cancel the pending
      * status.
      */
     static void ClearInterrupt();
-    
+
     /*
      * Methods to discover the attributes of an existing thread.
      */
@@ -150,15 +150,15 @@ private:
     /* There is no public default constructor or copy constructor */
     RCThread();
     RCThread(const RCThread&);
-    
+
     /* And there is no assignment operator */
     void operator=(const RCThread&);
 
 public:
-    static RCPrimordialThread *WrapPrimordialThread();    
+    static RCPrimordialThread *WrapPrimordialThread();
 
- };
- 
+};
+
 /*
 ** class RCPrimordialThread
 */
@@ -180,7 +180,7 @@ public:
     */
     static PRStatus SetVirtualProcessors(PRIntn count=10);
 
-friend class RCThread;
+    friend class RCThread;
 private:
     /*
     ** None other than the runtime can create of destruct
@@ -192,4 +192,4 @@ private:
     void RootFunction();
 };  /* RCPrimordialThread */
 
- #endif /* defined(_RCTHREAD_H) */
+#endif /* defined(_RCTHREAD_H) */

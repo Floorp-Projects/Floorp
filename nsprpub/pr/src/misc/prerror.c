@@ -34,25 +34,27 @@ PR_IMPLEMENT(void) PR_SetErrorText(PRIntn textLength, const char *text)
 
     if (0 == textLength)
     {
-	    if (NULL != thread->errorString)
-	        PR_DELETE(thread->errorString);
-	    thread->errorStringSize = 0;
+        if (NULL != thread->errorString) {
+            PR_DELETE(thread->errorString);
+        }
+        thread->errorStringSize = 0;
     }
     else
     {
-	    PRIntn size = textLength + 31;  /* actual length to allocate. Plus a little extra */
+        PRIntn size = textLength + 31;  /* actual length to allocate. Plus a little extra */
         if (thread->errorStringSize < textLength+1)  /* do we have room? */
         {
-	        if (NULL != thread->errorString)
-	            PR_DELETE(thread->errorString);
-		    thread->errorString = (char*)PR_MALLOC(size);
+            if (NULL != thread->errorString) {
+                PR_DELETE(thread->errorString);
+            }
+            thread->errorString = (char*)PR_MALLOC(size);
             if ( NULL == thread->errorString ) {
                 thread->errorStringSize = 0;
                 thread->errorStringLength = 0;
                 return;
             }
             thread->errorStringSize = size;
-	    }
+        }
         memcpy(thread->errorString, text, textLength+1 );
     }
     thread->errorStringLength = textLength;
@@ -67,8 +69,9 @@ PR_IMPLEMENT(PRInt32) PR_GetErrorTextLength(void)
 PR_IMPLEMENT(PRInt32) PR_GetErrorText(char *text)
 {
     PRThread *thread = PR_GetCurrentThread();
-    if (0 != thread->errorStringLength)
+    if (0 != thread->errorStringLength) {
         memcpy(text, thread->errorString, thread->errorStringLength+1);
+    }
     return thread->errorStringLength;
 }  /* PR_GetErrorText */
 

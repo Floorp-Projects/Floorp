@@ -8,19 +8,19 @@
 
 /*
 ** API for PR printf like routines. Supports the following formats
-**	%d - decimal
-**	%u - unsigned decimal
-**	%x - unsigned hex
-**	%X - unsigned uppercase hex
-**	%o - unsigned octal
-**	%hd, %hu, %hx, %hX, %ho - 16-bit versions of above
-**	%ld, %lu, %lx, %lX, %lo - 32-bit versions of above
-**	%lld, %llu, %llx, %llX, %llo - 64 bit versions of above
-**	%s - string
-**	%c - character
-**	%p - pointer (deals with machine dependent pointer size)
-**	%f - float
-**	%g - float
+**  %d - decimal
+**  %u - unsigned decimal
+**  %x - unsigned hex
+**  %X - unsigned uppercase hex
+**  %o - unsigned octal
+**  %hd, %hu, %hx, %hX, %ho - 16-bit versions of above
+**  %ld, %lu, %lx, %lX, %lo - 32-bit versions of above
+**  %lld, %llu, %llx, %llX, %llo - 64 bit versions of above
+**  %s - string
+**  %c - character
+**  %p - pointer (deals with machine dependent pointer size)
+**  %f - float
+**  %g - float
 */
 #include "prtypes.h"
 #include "prio.h"

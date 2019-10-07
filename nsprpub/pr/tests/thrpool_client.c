@@ -43,7 +43,7 @@ static char *program_name = NULL;
 
 #define    BUF_DATA_SIZE    (2 * 1024)
 #define TCP_MESG_SIZE    1024
-#define NUM_TCP_CLIENTS            10	/* for a listen queue depth of 5 */
+#define NUM_TCP_CLIENTS            10   /* for a listen queue depth of 5 */
 
 #define NUM_TCP_CONNECTIONS_PER_CLIENT    10
 #define NUM_TCP_MESGS_PER_CONNECTION    10
@@ -79,18 +79,18 @@ readn(PRFileDesc *sockfd, char *buf, int len)
     int rem;
     int bytes;
     int offset = 0;
-	PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
+    PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
 
     for (rem=len; rem; offset += bytes, rem -= bytes) {
         DPRINTF(("thread = 0x%lx: calling PR_Recv, bytes = %d\n",
-            PR_GetCurrentThread(), rem));
+                 PR_GetCurrentThread(), rem));
         bytes = PR_Recv(sockfd, buf + offset, rem, 0,
-            	timeout);
+                        timeout);
         DPRINTF(("thread = 0x%lx: returning from PR_Recv, bytes = %d\n",
-            PR_GetCurrentThread(), bytes));
+                 PR_GetCurrentThread(), bytes));
         if (bytes < 0) {
-			return -1;
-		}	
+            return -1;
+        }
     }
     return len;
 }
@@ -108,13 +108,14 @@ writen(PRFileDesc *sockfd, char *buf, int len)
 
     for (rem=len; rem; offset += bytes, rem -= bytes) {
         DPRINTF(("thread = 0x%lx: calling PR_Send, bytes = %d\n",
-            PR_GetCurrentThread(), rem));
+                 PR_GetCurrentThread(), rem));
         bytes = PR_Send(sockfd, buf + offset, rem, 0,
-            PR_INTERVAL_NO_TIMEOUT);
+                        PR_INTERVAL_NO_TIMEOUT);
         DPRINTF(("thread = 0x%lx: returning from PR_Send, bytes = %d\n",
-            PR_GetCurrentThread(), bytes));
-        if (bytes <= 0)
+                 PR_GetCurrentThread(), bytes));
+        if (bytes <= 0) {
             return -1;
+        }
     }
     return len;
 }
@@ -163,9 +164,9 @@ TCP_Client(void *arg)
         }
 
         DPRINTF(("TCP client connecting to server:%d\n", server_port));
-        if (PR_Connect(sockfd, &netaddr,PR_INTERVAL_NO_TIMEOUT) < 0){
-        	fprintf(stderr, "PR_Connect failed: (%ld, %ld)\n",
-            		PR_GetError(), PR_GetOSError());
+        if (PR_Connect(sockfd, &netaddr,PR_INTERVAL_NO_TIMEOUT) < 0) {
+            fprintf(stderr, "PR_Connect failed: (%ld, %ld)\n",
+                    PR_GetError(), PR_GetOSError());
             failed_already=1;
             return;
         }
@@ -182,10 +183,10 @@ TCP_Client(void *arg)
                 failed_already=1;
                 return;
             }
-			/*
+            /*
             DPRINTF(("TCP Client [0x%lx]: out_buf = 0x%lx out_buf[0] = 0x%lx\n",
                 PR_GetCurrentThread(), out_buf, (*((int *) out_buf->data))));
-			*/
+            */
             if (readn(sockfd, in_buf->data, bytes) < bytes) {
                 fprintf(stderr,"%s: ERROR - TCP_Client:readn\n", program_name);
                 failed_already=1;
@@ -226,7 +227,7 @@ TCP_Client(void *arg)
 
 /*
  * TCP_Socket_Client_Server_Test    - concurrent server test
- *    
+ *
  *    Each client connects to the server and sends a chunk of data
  *    For each connection, server reads the data
  *    from the client and sends it back to the client, unmodified.
@@ -243,7 +244,7 @@ TCP_Socket_Client_Server_Test(void)
     PRMonitor *mon2;
     PRInt32    datalen;
     PRInt32    connections = 0;
-	PRThread *thr;
+    PRThread *thr;
 
     datalen = tcp_mesg_size;
     connections = 0;
@@ -271,16 +272,16 @@ TCP_Socket_Client_Server_Test(void)
     cparamp->exit_counter = &connections;
     cparamp->datalen = datalen;
     for (i = 0; i < num_tcp_clients; i++) {
-		thr = PR_CreateThread(PR_USER_THREAD, TCP_Client, (void *)cparamp,
-        		PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+        thr = PR_CreateThread(PR_USER_THREAD, TCP_Client, (void *)cparamp,
+                              PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
         if (NULL == thr) {
             fprintf(stderr,"%s: PR_CreateThread failed\n", program_name);
             failed_already=1;
             return -1;
         }
-    	PR_EnterMonitor(mon2);
+        PR_EnterMonitor(mon2);
         connections++;
-    	PR_ExitMonitor(mon2);
+        PR_ExitMonitor(mon2);
         DPRINTF(("Created TCP client = 0x%lx\n", thr));
     }
     /* Wait for client jobs to exit */
@@ -292,9 +293,9 @@ TCP_Socket_Client_Server_Test(void)
     PR_ExitMonitor(mon2);
     printf("%30s","TCP_Socket_Client_Server_Test:");
     printf("%2ld Server %2ld Clients %2ld connections_per_client\n",1l,
-        num_tcp_clients, num_tcp_connections_per_client);
+           num_tcp_clients, num_tcp_connections_per_client);
     printf("%30s %2ld messages_per_connection %4ld bytes_per_message\n",":",
-        num_tcp_mesgs_per_connection, tcp_mesg_size);
+           num_tcp_mesgs_per_connection, tcp_mesg_size);
 
     PR_DELETE(cparamp);
     return 0;
@@ -309,22 +310,24 @@ int main(int argc, char **argv)
      */
     PLOptStatus os;
     PLOptState *opt;
-	program_name = argv[0];
+    program_name = argv[0];
 
     opt = PL_CreateOptState(argc, argv, "dp:");
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-            _debug_on = 1;
-            break;
-        case 'p':
-            server_port = atoi(opt->value);
-            break;
-        default:
-            break;
+            case 'd':  /* debug mode */
+                _debug_on = 1;
+                break;
+            case 'p':
+                server_port = atoi(opt->value);
+                break;
+            default:
+                break;
         }
     }
     PL_DestroyOptState(opt);
@@ -334,11 +337,13 @@ int main(int argc, char **argv)
 
     PR_SetConcurrency(4);
 
-	TCP_Socket_Client_Server_Test();
+    TCP_Socket_Client_Server_Test();
 
     PR_Cleanup();
-    if (failed_already)
-		return 1;
-    else
-		return 0;
+    if (failed_already) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }

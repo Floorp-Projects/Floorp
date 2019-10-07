@@ -41,8 +41,8 @@ public:
     virtual PRInt64     Seek(PRInt64 offset, RCIO::Whence how);
     virtual PRInt32     Write(const void *buf, PRSize amount);
     virtual PRInt32     Writev(
-                            const PRIOVec *iov, PRSize size,
-                            const RCInterval& timeout);
+        const PRIOVec *iov, PRSize size,
+        const RCInterval& timeout);
 
 private:
 
@@ -52,8 +52,8 @@ private:
 
     RCIO*       Accept(RCNetAddr* addr, const RCInterval& timeout);
     PRInt32     AcceptRead(
-                    RCIO **newfd, RCNetAddr **address, void *buffer,
-                    PRSize amount, const RCInterval& timeout);
+        RCIO **newfd, RCNetAddr **address, void *buffer,
+        PRSize amount, const RCInterval& timeout);
     PRStatus    Bind(const RCNetAddr& addr);
     PRStatus    Connect(const RCNetAddr& addr, const RCInterval& timeout);
     PRStatus    GetLocalName(RCNetAddr *addr) const;
@@ -62,24 +62,24 @@ private:
     PRStatus    Listen(PRIntn backlog);
     PRInt16     Poll(PRInt16 in_flags, PRInt16 *out_flags);
     PRInt32     Recv(
-                    void *buf, PRSize amount, PRIntn flags,
-                    const RCInterval& timeout);
+        void *buf, PRSize amount, PRIntn flags,
+        const RCInterval& timeout);
     PRInt32     Recvfrom(
-                    void *buf, PRSize amount, PRIntn flags,
-                    RCNetAddr* addr, const RCInterval& timeout);
+        void *buf, PRSize amount, PRIntn flags,
+        RCNetAddr* addr, const RCInterval& timeout);
     PRInt32     Send(
-                    const void *buf, PRSize amount, PRIntn flags,
-                    const RCInterval& timeout);
+        const void *buf, PRSize amount, PRIntn flags,
+        const RCInterval& timeout);
     PRInt32     Sendto(
-                    const void *buf, PRSize amount, PRIntn flags,
-                    const RCNetAddr& addr,
-                    const RCInterval& timeout);
+        const void *buf, PRSize amount, PRIntn flags,
+        const RCNetAddr& addr,
+        const RCInterval& timeout);
     PRStatus    SetSocketOption(const PRSocketOptionData *data);
     PRStatus    Shutdown(RCIO::ShutdownHow how);
     PRInt32     TransmitFile(
-                    RCIO *source, const void *headers,
-                    PRSize hlen, RCIO::FileDisposition flags,
-                    const RCInterval& timeout);
+        RCIO *source, const void *headers,
+        PRSize hlen, RCIO::FileDisposition flags,
+        const RCInterval& timeout);
 public:
 
     /*
@@ -116,14 +116,16 @@ public:
     RCTime ModifyTime() const;
     RCFileInfo::FileType Type() const;
 
-friend PRStatus RCFileIO::FileInfo(RCFileInfo*) const;
-friend PRStatus RCFileIO::FileInfo(const char *name, RCFileInfo*);
+    friend PRStatus RCFileIO::FileInfo(RCFileInfo*) const;
+    friend PRStatus RCFileIO::FileInfo(const char *name, RCFileInfo*);
 
 private:
     PRFileInfo64 info;
 };  /* RCFileInfo */
 
 inline RCFileInfo::RCFileInfo(): RCBase() { }
-inline PRInt64 RCFileInfo::Size() const { return info.size; }
+inline PRInt64 RCFileInfo::Size() const {
+    return info.size;
+}
 
 #endif /* defined(_RCFILEIO_H) */

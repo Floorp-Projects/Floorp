@@ -73,7 +73,7 @@ PR_Now(void)
     LL_MUL(ms, ms, ms2us);
     LL_MUL(s, s, s2us);
     LL_ADD(s, s, ms);
-    return s;       
+    return s;
 }
 
 
@@ -120,7 +120,7 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
             strcat(*cmdLine, " ");
         }
         strcat(*cmdLine, *arg);
-    } 
+    }
     return 0;
 }
 
@@ -150,15 +150,16 @@ static int assembleEnvBlock(char **envp, char **envBlock)
         return 0;
     }
 
-    if(DosGetInfoBlocks(&ptib, &ppib) != NO_ERROR)
-       return -1;
+    if(DosGetInfoBlocks(&ptib, &ppib) != NO_ERROR) {
+        return -1;
+    }
 
     curEnv = ppib->pib_pchenv;
 
     cwdStart = curEnv;
     while (*cwdStart) {
         if (cwdStart[0] == '=' && cwdStart[1] != '\0'
-                && cwdStart[2] == ':' && cwdStart[3] == '=') {
+            && cwdStart[2] == ':' && cwdStart[3] == '=') {
             break;
         }
         cwdStart += strlen(cwdStart) + 1;
@@ -168,7 +169,7 @@ static int assembleEnvBlock(char **envp, char **envBlock)
         cwdEnd += strlen(cwdEnd) + 1;
         while (*cwdEnd) {
             if (cwdEnd[0] != '=' || cwdEnd[1] == '\0'
-                    || cwdEnd[2] != ':' || cwdEnd[3] != '=') {
+                || cwdEnd[2] != ':' || cwdEnd[3] != '=') {
                 break;
             }
             cwdEnd += strlen(cwdEnd) + 1;
@@ -221,7 +222,7 @@ PRProcess * _PR_CreateOS2Process(
     char *cmdLine = NULL;
     char **newEnvp = NULL;
     char *envBlock = NULL;
-   
+
     STARTDATA startData = {0};
     APIRET    rc;
     ULONG     ulAppType = 0;
@@ -250,7 +251,7 @@ PRProcess * _PR_CreateOS2Process(
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
         goto errorExit;
     }
-   
+
     if (assembleCmdLine(argv, &cmdLine) == -1) {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
         goto errorExit;
@@ -260,7 +261,7 @@ PRProcess * _PR_CreateOS2Process(
     /*
      * DosQueryAppType() fails if path (the char* in the first argument) is in
      * high memory. If that is the case, the following moves it to low memory.
-     */ 
+     */
     if ((ULONG)path >= 0x20000000) {
         size_t len = strlen(path) + 1;
         char *copy = (char *)alloca(len);
@@ -268,7 +269,7 @@ PRProcess * _PR_CreateOS2Process(
         path = copy;
     }
 #endif
-   
+
     if (envp == NULL) {
         newEnvp = NULL;
     } else {
@@ -287,27 +288,27 @@ PRProcess * _PR_CreateOS2Process(
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
         goto errorExit;
     }
-  
+
     rc = DosQueryAppType(path, &ulAppType);
     if (rc != NO_ERROR) {
-       char *pszDot = strrchr(path, '.');
-       if (pszDot) {
-          /* If it is a CMD file, launch the users command processor */
-          if (!stricmp(pszDot, ".cmd")) {
-             rc = DosScanEnv("COMSPEC", (PSZ *)&pszComSpec);
-             if (!rc) {
-                strcpy(pszFormatString, "/C %s %s");
-                strcpy(pszEXEName, pszComSpec);
-                ulAppType = FAPPTYP_WINDOWCOMPAT;
-             }
-          }
-       }
+        char *pszDot = strrchr(path, '.');
+        if (pszDot) {
+            /* If it is a CMD file, launch the users command processor */
+            if (!stricmp(pszDot, ".cmd")) {
+                rc = DosScanEnv("COMSPEC", (PSZ *)&pszComSpec);
+                if (!rc) {
+                    strcpy(pszFormatString, "/C %s %s");
+                    strcpy(pszEXEName, pszComSpec);
+                    ulAppType = FAPPTYP_WINDOWCOMPAT;
+                }
+            }
+        }
     }
     if (ulAppType == 0) {
-       PR_SetError(PR_UNKNOWN_ERROR, 0);
-       goto errorExit;
+        PR_SetError(PR_UNKNOWN_ERROR, 0);
+        goto errorExit;
     }
- 
+
     if ((ulAppType & FAPPTYP_WINDOWAPI) == FAPPTYP_WINDOWAPI) {
         startData.SessionType = SSF_TYPE_PM;
     }
@@ -317,16 +318,16 @@ PRProcess * _PR_CreateOS2Process(
     else {
         startData.SessionType = SSF_TYPE_DEFAULT;
     }
- 
+
     if (ulAppType & (FAPPTYP_WINDOWSPROT31 | FAPPTYP_WINDOWSPROT | FAPPTYP_WINDOWSREAL))
     {
         strcpy(pszEXEName, "WINOS2.COM");
         startData.SessionType = PROG_31_STDSEAMLESSVDM;
         strcpy(pszFormatString, "/3 %s %s");
     }
- 
+
     startData.InheritOpt = SSF_INHERTOPT_SHELL;
- 
+
     if (pszEXEName[0]) {
         pszFormatResult = PR_MALLOC(strlen(pszFormatString)+strlen(path)+strlen(cmdLine));
         sprintf(pszFormatResult, pszFormatString, path, cmdLine);
@@ -336,13 +337,13 @@ PRProcess * _PR_CreateOS2Process(
         startData.PgmInputs = cmdLine;
     }
     startData.PgmName = pszEXEName;
- 
+
     startData.Length = sizeof(startData);
     startData.Related = SSF_RELATED_INDEPENDENT;
     startData.ObjectBuffer = pszObjectBuffer;
     startData.ObjectBuffLen = CCHMAXPATH;
     startData.Environment = envBlock;
- 
+
     if (attr) {
         /* On OS/2, there is really no way to pass file handles for stdin,
          * stdout, and stderr to a new process.  Instead, we can make it
@@ -407,7 +408,7 @@ PRProcess * _PR_CreateOS2Process(
         }
 
         proc->md.pid = procInfo.codeTerminate;
-    } else {	
+    } else {
         /*
          * If no STDIN/STDOUT redirection is not needed, use DosStartSession
          * to create a new, independent session
@@ -418,7 +419,7 @@ PRProcess * _PR_CreateOS2Process(
             PR_SetError(PR_UNKNOWN_ERROR, rc);
             goto errorExit;
         }
- 
+
         proc->md.pid = pid;
     }
 
@@ -453,7 +454,7 @@ errorExit:
 
 PRStatus _PR_DetachOS2Process(PRProcess *process)
 {
-    /* On OS/2, a process is either created as a child or not. 
+    /* On OS/2, a process is either created as a child or not.
      * You can't 'detach' it later on.
      */
     PR_DELETE(process);
@@ -464,18 +465,18 @@ PRStatus _PR_DetachOS2Process(PRProcess *process)
  * XXX: This will currently only work on a child process.
  */
 PRStatus _PR_WaitOS2Process(PRProcess *process,
-    PRInt32 *exitCode)
+                            PRInt32 *exitCode)
 {
     ULONG ulRetVal;
     RESULTCODES results;
     PID pidEnded = 0;
 
-    ulRetVal = DosWaitChild(DCWA_PROCESS, DCWW_WAIT, 
+    ulRetVal = DosWaitChild(DCWA_PROCESS, DCWW_WAIT,
                             &results,
                             &pidEnded, process->md.pid);
 
     if (ulRetVal != NO_ERROR) {
-       printf("\nDosWaitChild rc = %lu\n", ulRetVal);
+        printf("\nDosWaitChild rc = %lu\n", ulRetVal);
         PR_SetError(PR_UNKNOWN_ERROR, ulRetVal);
         return PR_FAILURE;
     }
@@ -485,9 +486,9 @@ PRStatus _PR_WaitOS2Process(PRProcess *process,
 
 PRStatus _PR_KillOS2Process(PRProcess *process)
 {
-   ULONG ulRetVal;
+    ULONG ulRetVal;
     if ((ulRetVal = DosKillProcess(DKP_PROCESS, process->md.pid)) == NO_ERROR) {
-	return PR_SUCCESS;
+        return PR_SUCCESS;
     }
     PR_SetError(PR_UNKNOWN_ERROR, ulRetVal);
     return PR_FAILURE;
@@ -501,7 +502,7 @@ PRStatus _MD_OS2GetHostName(char *name, PRUint32 namelen)
     if (0 == rv) {
         return PR_SUCCESS;
     }
-	_PR_MD_MAP_GETHOSTNAME_ERROR(sock_errno());
+    _PR_MD_MAP_GETHOSTNAME_ERROR(sock_errno());
     return PR_FAILURE;
 }
 
@@ -509,7 +510,7 @@ void
 _PR_MD_WAKEUP_CPUS( void )
 {
     return;
-}    
+}
 
 /*
  **********************************************************************

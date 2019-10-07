@@ -64,13 +64,15 @@ int main(int argc, char **argv)
     PLOptState *opt = PL_CreateOptState(argc, argv, "d");
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt))) {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option) {
-        case 'd':  /* debug mode */
-            _debug_on = 1;
-            break;
-         default:
-            break;
+            case 'd':  /* debug mode */
+                _debug_on = 1;
+                break;
+            default:
+                break;
         }
     }
     PL_DestroyOptState(opt);

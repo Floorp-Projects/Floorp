@@ -44,7 +44,7 @@ NSPR_API(void) PR_cnvtf(char *buf, PRIntn bufsz, PRIntn prcsn, PRFloat64 fval);
 **           and rounded to nearest.
 */
 NSPR_API(PRStatus) PR_dtoa(PRFloat64 d, PRIntn mode, PRIntn ndigits,
-	PRIntn *decpt, PRIntn *sign, char **rve, char *buf, PRSize bufsize);
+                           PRIntn *decpt, PRIntn *sign, char **rve, char *buf, PRSize bufsize);
 
 PR_END_EXTERN_C
 

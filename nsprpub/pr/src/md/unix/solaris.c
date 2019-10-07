@@ -25,8 +25,8 @@ PRIntervalTime _MD_Solaris_TicksPerSecond(void)
 PRIntervalTime _MD_Solaris_GetInterval(void)
 {
     union {
-	hrtime_t hrt;  /* hrtime_t is a 64-bit (long long) integer */
-	PRInt64 pr64;
+        hrtime_t hrt;  /* hrtime_t is a 64-bit (long long) integer */
+        PRInt64 pr64;
     } time;
     PRInt64 resolution;
     PRIntervalTime ticks;
@@ -49,8 +49,8 @@ void _MD_EarlyInit(void)
 
 PRWord *_MD_HomeGCRegisters(PRThread *t, PRIntn isCurrent, PRIntn *np)
 {
-	*np = 0;
-	return NULL;
+    *np = 0;
+    return NULL;
 }
 #endif /* _PR_PTHREADS */
 
@@ -74,7 +74,7 @@ _MD_SET_PRIORITY(_MDThread *thread, PRThreadPriority newPri)
 PRStatus
 _MD_InitializeThread(PRThread *thread)
 {
-	return PR_SUCCESS;
+    return PR_SUCCESS;
 }
 
 PRStatus
@@ -88,7 +88,7 @@ _MD_WAIT(PRThread *thread, PRIntervalTime ticks)
 PRStatus
 _MD_WAKEUP_WAITER(PRThread *thread)
 {
-	PR_ASSERT((thread == NULL) || (!(thread->flags & _PR_GLOBAL_SCOPE)));
+    PR_ASSERT((thread == NULL) || (!(thread->flags & _PR_GLOBAL_SCOPE)));
     return PR_SUCCESS;
 }
 
@@ -109,14 +109,14 @@ _MD_CREATE_THREAD(
     PRUint32 stackSize)
 {
     PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for Solaris");
-	return(PR_FAILURE);
+    return(PR_FAILURE);
 }
 
 #ifdef USE_SETJMP
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
     if (isCurrent) {
-		(void) setjmp(CONTEXT(t));
+        (void) setjmp(CONTEXT(t));
     }
     *np = sizeof(CONTEXT(t)) / sizeof(PRWord);
     return (PRWord *) CONTEXT(t);
@@ -125,7 +125,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 PRWord *_MD_HomeGCRegisters(PRThread *t, PRIntn isCurrent, PRIntn *np)
 {
     if (isCurrent) {
-		(void) getcontext(CONTEXT(t));
+        (void) getcontext(CONTEXT(t));
     }
     *np = NGREG;
     return (PRWord*) &t->md.context.uc_mcontext.gregs[0];
@@ -136,7 +136,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, PRIntn isCurrent, PRIntn *np)
 
 #ifndef _PR_PTHREADS
 #if defined(i386) && defined(SOLARIS2_4)
-/* 
+/*
  * Because clock_gettime() on Solaris/x86 2.4 always generates a
  * segmentation fault, we use an emulated version _pr_solx86_clock_gettime(),
  * which is implemented using gettimeofday().
@@ -148,8 +148,8 @@ _pr_solx86_clock_gettime(clockid_t clock_id, struct timespec *tp)
     struct timeval tv;
 
     if (clock_id != CLOCK_REALTIME) {
-	errno = EINVAL;
-	return -1;
+        errno = EINVAL;
+        return -1;
     }
 
     gettimeofday(&tv, NULL);

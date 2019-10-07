@@ -53,13 +53,21 @@ private:
     RCEnter(const RCEnter&);
     void operator=(const RCEnter&);
 
-    void *operator new(PRSize) { return NULL; }
+    void *operator new(PRSize) {
+        return NULL;
+    }
     void operator delete(void*) { }
 };  /* RCEnter */
 
 
-inline RCEnter::RCEnter(RCLock* ml) { lock = ml; lock->Acquire(); }
-inline RCEnter::~RCEnter() { lock->Release(); lock = NULL; }
+inline RCEnter::RCEnter(RCLock* ml) {
+    lock = ml;
+    lock->Acquire();
+}
+inline RCEnter::~RCEnter() {
+    lock->Release();
+    lock = NULL;
+}
 
 #endif /* defined(_RCLOCK_H) */
 

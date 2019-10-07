@@ -16,15 +16,15 @@
 #include <string.h>
 #endif
 
-PRSize _pr_CopyLowBits( 
-    void *dst, 
-    PRSize dstlen, 
-    void *src, 
+PRSize _pr_CopyLowBits(
+    void *dst,
+    PRSize dstlen,
+    void *src,
     PRSize srclen )
 {
     if (srclen <= dstlen) {
-    	memcpy(dst, src, srclen);
-	    return srclen;
+        memcpy(dst, src, srclen);
+        return srclen;
     }
 #if defined IS_BIG_ENDIAN
     memcpy(dst, (char*)src + (srclen - dstlen), dstlen);
@@ -32,9 +32,9 @@ PRSize _pr_CopyLowBits(
     memcpy(dst, src, dstlen);
 #endif
     return dstlen;
-}    
+}
 
-PR_IMPLEMENT(PRSize) PR_GetRandomNoise( 
+PR_IMPLEMENT(PRSize) PR_GetRandomNoise(
     void    *buf,
     PRSize  size
 )

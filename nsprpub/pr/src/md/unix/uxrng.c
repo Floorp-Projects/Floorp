@@ -20,7 +20,7 @@ GetHighResClock(void *buf, size_t maxbytes)
     hrtime_t t;
     t = gethrtime();
     if (t) {
-	    return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
+        return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
     }
     return 0;
 }
@@ -100,7 +100,7 @@ static size_t GetDevURandom( void *buf, size_t size )
 
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
-{             
+{
     return(GetDevURandom( buf, maxbytes ));
 }
 

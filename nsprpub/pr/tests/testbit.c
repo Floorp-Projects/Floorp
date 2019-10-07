@@ -24,74 +24,88 @@ int main(int argc, char **argv)
     /*
     ** Test bitmap things.
     */
-    if ( PR_TEST_BIT( myMap, 0 ))
+    if ( PR_TEST_BIT( myMap, 0 )) {
         ErrorReport("Test 0.0: Failed\n");
+    }
 
-    if ( PR_TEST_BIT( myMap, 31 ))
+    if ( PR_TEST_BIT( myMap, 31 )) {
         ErrorReport("Test 0.1: Failed\n");
+    }
 
-    if ( PR_TEST_BIT( myMap, 128 ))
+    if ( PR_TEST_BIT( myMap, 128 )) {
         ErrorReport("Test 0.2: Failed\n");
+    }
 
-    if ( PR_TEST_BIT( myMap, 129 ))
+    if ( PR_TEST_BIT( myMap, 129 )) {
         ErrorReport("Test 0.3: Failed\n");
+    }
 
 
     PR_SET_BIT( myMap, 0 );
-    if ( !PR_TEST_BIT( myMap, 0 ))
+    if ( !PR_TEST_BIT( myMap, 0 )) {
         ErrorReport("Test 1.0: Failed\n");
+    }
 
     PR_CLEAR_BIT( myMap, 0 );
-    if ( PR_TEST_BIT( myMap, 0 ))
+    if ( PR_TEST_BIT( myMap, 0 )) {
         ErrorReport("Test 1.0.1: Failed\n");
+    }
 
     PR_SET_BIT( myMap, 31 );
-    if ( !PR_TEST_BIT( myMap, 31 ))
+    if ( !PR_TEST_BIT( myMap, 31 )) {
         ErrorReport("Test 1.1: Failed\n");
+    }
 
     PR_CLEAR_BIT( myMap, 31 );
-    if ( PR_TEST_BIT( myMap, 31 ))
+    if ( PR_TEST_BIT( myMap, 31 )) {
         ErrorReport("Test 1.1.1: Failed\n");
+    }
 
     PR_SET_BIT( myMap, 128 );
-    if ( !PR_TEST_BIT( myMap, 128 ))
+    if ( !PR_TEST_BIT( myMap, 128 )) {
         ErrorReport("Test 1.2: Failed\n");
+    }
 
     PR_CLEAR_BIT( myMap, 128 );
-    if ( PR_TEST_BIT( myMap, 128 ))
+    if ( PR_TEST_BIT( myMap, 128 )) {
         ErrorReport("Test 1.2.1: Failed\n");
+    }
 
     PR_SET_BIT( myMap, 129 );
-    if ( !PR_TEST_BIT( myMap, 129 ))
+    if ( !PR_TEST_BIT( myMap, 129 )) {
         ErrorReport("Test 1.3: Failed\n");
+    }
 
     PR_CLEAR_BIT( myMap, 129 );
-    if ( PR_TEST_BIT( myMap, 129 ))
+    if ( PR_TEST_BIT( myMap, 129 )) {
         ErrorReport("Test 1.3.1: Failed\n");
+    }
 
 
     /*
     ** Test Ceiling and Floor functions and macros
     */
-    if ((rc = PR_CeilingLog2(32)) != 5 )
+    if ((rc = PR_CeilingLog2(32)) != 5 ) {
         ErrorReport("Test 10.0: Failed\n");
+    }
 
-    if ((rc = PR_FloorLog2(32)) != 5 )
+    if ((rc = PR_FloorLog2(32)) != 5 ) {
         ErrorReport("Test 10.1: Failed\n");
+    }
 
 
     /*
     ** Evaluate results and exit
     */
     if (failed)
-      {
+    {
         printf("FAILED\n");
         return(1);
-      }
+    }
     else
-      {
+    {
         printf("PASSED\n");
         return(0);
-      }
+    }
 }  /* end main() */
 /* end testbit.c */

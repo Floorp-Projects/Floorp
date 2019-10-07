@@ -30,9 +30,11 @@ static int iterations = 10;
  *     send_amount[i] <= recv_amount[i].
  */
 static PRInt32 recv_amount[10] = {
-    16, 128, 256, 1024, 512, 512, 128, 256, 32, 32};
+    16, 128, 256, 1024, 512, 512, 128, 256, 32, 32
+};
 static PRInt32 send_amount[10] = {
-    16,  64, 128, 1024, 512, 256, 128,  64, 16, 32};
+    16,  64, 128, 1024, 512, 256, 128,  64, 16, 32
+};
 
 /* Blocking I/O */
 static void ServerB(void *arg)
@@ -53,7 +55,7 @@ static void ServerB(void *arg)
     for (i = 0; i < iterations; i++) {
         memset(buf, 0, sizeof(buf));
         nbytes = PR_Recv(sock, buf, recv_amount[i],
-                PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT);
+                         PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT);
         if (-1 == nbytes) {
             fprintf(stderr, "PR_Recv failed\n");
             exit(1);
@@ -73,7 +75,7 @@ static void ServerB(void *arg)
 
         memset(buf, 0, sizeof(buf));
         nbytes = PR_Recv(sock, buf, recv_amount[i],
-                PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT);
+                         PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT);
         if (-1 == nbytes) {
             fprintf(stderr, "PR_Recv failed\n");
             exit(1);
@@ -93,7 +95,7 @@ static void ServerB(void *arg)
 
         memset(buf, 0, sizeof(buf));
         nbytes = PR_Recv(sock, buf, recv_amount[i],
-                0, PR_INTERVAL_NO_TIMEOUT);
+                         0, PR_INTERVAL_NO_TIMEOUT);
         if (-1 == nbytes) {
             fprintf(stderr, "PR_Recv failed\n");
             exit(1);
@@ -114,7 +116,7 @@ static void ServerB(void *arg)
         PR_Sleep(PR_SecondsToInterval(1));
         memset(buf, 2*i+1, send_amount[i]);
         nbytes = PR_Send(sock, buf, send_amount[i],
-                0, PR_INTERVAL_NO_TIMEOUT);
+                         0, PR_INTERVAL_NO_TIMEOUT);
         if (-1 == nbytes) {
             fprintf(stderr, "PR_Send failed\n");
             exit(1);
@@ -157,7 +159,7 @@ static void ClientNB(void *arg)
     }
     memset(&addr, 0, sizeof(addr));
     if (PR_SetNetAddr(PR_IpAddrLoopback, PR_AF_INET6, port, &addr)
-            == PR_FAILURE) {
+        == PR_FAILURE) {
         fprintf(stderr, "PR_SetNetAddr failed\n");
         exit(1);
     }
@@ -187,7 +189,7 @@ static void ClientNB(void *arg)
         PR_Sleep(PR_SecondsToInterval(1));
         memset(buf, 2*i, send_amount[i]);
         while ((nbytes = PR_Send(sock, buf, send_amount[i],
-                0, PR_INTERVAL_NO_TIMEOUT)) == -1) {
+                                 0, PR_INTERVAL_NO_TIMEOUT)) == -1) {
             if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
                 fprintf(stderr, "PR_Send failed\n");
                 exit(1);
@@ -211,7 +213,7 @@ static void ClientNB(void *arg)
 
         memset(buf, 0, sizeof(buf));
         while ((nbytes = PR_Recv(sock, buf, recv_amount[i],
-                PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT)) == -1) {
+                                 PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT)) == -1) {
             if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
                 fprintf(stderr, "PR_Recv failed\n");
                 exit(1);
@@ -243,7 +245,7 @@ static void ClientNB(void *arg)
 
         memset(buf, 0, sizeof(buf));
         nbytes = PR_Recv(sock, buf, recv_amount[i],
-                PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT);
+                         PR_MSG_PEEK, PR_INTERVAL_NO_TIMEOUT);
         if (-1 == nbytes) {
             fprintf(stderr, "PR_Recv failed\n");
             exit(1);
@@ -263,7 +265,7 @@ static void ClientNB(void *arg)
 
         memset(buf, 0, sizeof(buf));
         nbytes = PR_Recv(sock, buf, recv_amount[i],
-                0, PR_INTERVAL_NO_TIMEOUT);
+                         0, PR_INTERVAL_NO_TIMEOUT);
         if (-1 == nbytes) {
             fprintf(stderr, "PR_Recv failed\n");
             exit(1);
@@ -293,14 +295,14 @@ RunTest(PRThreadScope scope, PRFileDesc *listenSock, PRUint16 port)
     PRThread *server, *client;
 
     server = PR_CreateThread(PR_USER_THREAD, ServerB, listenSock,
-            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
+                             PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
     if (NULL == server) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);
     }
     client = PR_CreateThread(
-            PR_USER_THREAD, ClientNB, (void *) port,
-            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
+                 PR_USER_THREAD, ClientNB, (void *) port,
+                 PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
     if (NULL == client) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);

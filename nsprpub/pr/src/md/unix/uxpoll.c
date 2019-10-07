@@ -52,19 +52,19 @@ static PRInt32 NativeThreadPoll(
             if (pds[index].in_flags & PR_POLL_READ)
             {
                 in_flags_read = (pds[index].fd->methods->poll)(
-                    pds[index].fd,
-                    pds[index].in_flags & ~PR_POLL_WRITE,
-                    &out_flags_read);
+                                    pds[index].fd,
+                                    pds[index].in_flags & ~PR_POLL_WRITE,
+                                    &out_flags_read);
             }
             if (pds[index].in_flags & PR_POLL_WRITE)
             {
                 in_flags_write = (pds[index].fd->methods->poll)(
-                    pds[index].fd,
-                    pds[index].in_flags & ~PR_POLL_READ,
-                    &out_flags_write);
+                                     pds[index].fd,
+                                     pds[index].in_flags & ~PR_POLL_READ,
+                                     &out_flags_write);
             }
             if ((0 != (in_flags_read & out_flags_read))
-            || (0 != (in_flags_write & out_flags_write)))
+                || (0 != (in_flags_write & out_flags_write)))
             {
                 /* this one is ready right now */
                 if (0 == ready)
@@ -91,7 +91,7 @@ static PRInt32 NativeThreadPoll(
                 bottom = PR_GetIdentitiesLayer(pds[index].fd, PR_NSPR_IO_LAYER);
                 PR_ASSERT(NULL != bottom);  /* what to do about that? */
                 if ((NULL != bottom)
-                && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                    && (_PR_FILEDESC_OPEN == bottom->secret->state))
                 {
                     if (0 == ready)
                     {
@@ -121,8 +121,9 @@ static PRInt32 NativeThreadPoll(
                                 _PR_POLL_WRITE_SYS_WRITE;
                             syspoll[index].events |= POLLOUT;
                         }
-                        if (pds[index].in_flags & PR_POLL_EXCEPT)
+                        if (pds[index].in_flags & PR_POLL_EXCEPT) {
                             syspoll[index].events |= POLLPRI;
+                        }
                     }
                 }
                 else
@@ -168,12 +169,18 @@ retry:
 
             if (EINTR == oserror)
             {
-                if (timeout == PR_INTERVAL_NO_TIMEOUT) goto retry;
-                else if (timeout == PR_INTERVAL_NO_WAIT) ready = 0;
+                if (timeout == PR_INTERVAL_NO_TIMEOUT) {
+                    goto retry;
+                }
+                else if (timeout == PR_INTERVAL_NO_WAIT) {
+                    ready = 0;
+                }
                 else
                 {
                     elapsed = (PRIntervalTime)(PR_IntervalNow() - start);
-                    if (elapsed > timeout) ready = 0;  /* timed out */
+                    if (elapsed > timeout) {
+                        ready = 0;    /* timed out */
+                    }
                     else
                     {
                         remaining = timeout - elapsed;
@@ -182,7 +189,9 @@ retry:
                     }
                 }
             }
-            else _PR_MD_MAP_POLL_ERROR(oserror);
+            else {
+                _PR_MD_MAP_POLL_ERROR(oserror);
+            }
         }
         else if (ready > 0)
         {
@@ -203,12 +212,12 @@ retry:
                         if (syspoll[index].revents & POLLIN)
                         {
                             if (pds[index].out_flags
-                            & _PR_POLL_READ_SYS_READ)
+                                & _PR_POLL_READ_SYS_READ)
                             {
                                 out_flags |= PR_POLL_READ;
                             }
                             if (pds[index].out_flags
-                            & _PR_POLL_WRITE_SYS_READ)
+                                & _PR_POLL_WRITE_SYS_READ)
                             {
                                 out_flags |= PR_POLL_WRITE;
                             }
@@ -216,24 +225,28 @@ retry:
                         if (syspoll[index].revents & POLLOUT)
                         {
                             if (pds[index].out_flags
-                            & _PR_POLL_READ_SYS_WRITE)
+                                & _PR_POLL_READ_SYS_WRITE)
                             {
                                 out_flags |= PR_POLL_READ;
                             }
                             if (pds[index].out_flags
-                            & _PR_POLL_WRITE_SYS_WRITE)
+                                & _PR_POLL_WRITE_SYS_WRITE)
                             {
                                 out_flags |= PR_POLL_WRITE;
                             }
                         }
-                        if (syspoll[index].revents & POLLPRI)
+                        if (syspoll[index].revents & POLLPRI) {
                             out_flags |= PR_POLL_EXCEPT;
-                        if (syspoll[index].revents & POLLERR)
+                        }
+                        if (syspoll[index].revents & POLLERR) {
                             out_flags |= PR_POLL_ERR;
-                        if (syspoll[index].revents & POLLNVAL)
+                        }
+                        if (syspoll[index].revents & POLLNVAL) {
                             out_flags |= PR_POLL_NVAL;
-                        if (syspoll[index].revents & POLLHUP)
+                        }
+                        if (syspoll[index].revents & POLLHUP) {
                             out_flags |= PR_POLL_HUP;
+                        }
                     }
                 }
                 pds[index].out_flags = out_flags;
@@ -277,15 +290,15 @@ static PRInt32 NativeThreadSelect(
             if (pd->in_flags & PR_POLL_READ)
             {
                 in_flags_read = (pd->fd->methods->poll)(
-                    pd->fd, pd->in_flags & ~PR_POLL_WRITE, &out_flags_read);
+                                    pd->fd, pd->in_flags & ~PR_POLL_WRITE, &out_flags_read);
             }
             if (pd->in_flags & PR_POLL_WRITE)
             {
                 in_flags_write = (pd->fd->methods->poll)(
-                    pd->fd, pd->in_flags & ~PR_POLL_READ, &out_flags_write);
+                                     pd->fd, pd->in_flags & ~PR_POLL_READ, &out_flags_write);
             }
             if ((0 != (in_flags_read & out_flags_read))
-            || (0 != (in_flags_write & out_flags_write)))
+                || (0 != (in_flags_write & out_flags_write)))
             {
                 /* this one's ready right now */
                 if (0 == ready)
@@ -313,12 +326,14 @@ static PRInt32 NativeThreadSelect(
                 bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
                 PR_ASSERT(NULL != bottom);  /* what to do about that? */
                 if ((NULL != bottom)
-                && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                    && (_PR_FILEDESC_OPEN == bottom->secret->state))
                 {
                     if (0 == ready)
                     {
                         PRInt32 osfd = bottom->secret->md.osfd;
-                        if (osfd > maxfd) maxfd = osfd;
+                        if (osfd > maxfd) {
+                            maxfd = osfd;
+                        }
                         if (in_flags_read & PR_POLL_READ)
                         {
                             pd->out_flags |= _PR_POLL_READ_SYS_READ;
@@ -339,7 +354,9 @@ static PRInt32 NativeThreadSelect(
                             pd->out_flags |= _PR_POLL_WRITE_SYS_WRITE;
                             FD_SET(osfd, &wt);
                         }
-                        if (pd->in_flags & PR_POLL_EXCEPT) FD_SET(osfd, &ex);
+                        if (pd->in_flags & PR_POLL_EXCEPT) {
+                            FD_SET(osfd, &ex);
+                        }
                     }
                 }
                 else
@@ -363,7 +380,9 @@ static PRInt32 NativeThreadSelect(
         }
     }
 
-    if (0 != ready) return ready;  /* no need to block */
+    if (0 != ready) {
+        return ready;    /* no need to block */
+    }
 
     remaining = timeout;
     start = PR_IntervalNow();
@@ -381,11 +400,15 @@ retry:
 
     if (ready == -1 && errno == EINTR)
     {
-        if (timeout == PR_INTERVAL_NO_TIMEOUT) goto retry;
+        if (timeout == PR_INTERVAL_NO_TIMEOUT) {
+            goto retry;
+        }
         else
         {
             elapsed = (PRIntervalTime) (PR_IntervalNow() - start);
-            if (elapsed > timeout) ready = 0;  /* timed out */
+            if (elapsed > timeout) {
+                ready = 0;    /* timed out */
+            }
             else
             {
                 remaining = timeout - elapsed;
@@ -415,22 +438,30 @@ retry:
 
                 if (FD_ISSET(osfd, &rd))
                 {
-                    if (pd->out_flags & _PR_POLL_READ_SYS_READ)
+                    if (pd->out_flags & _PR_POLL_READ_SYS_READ) {
                         out_flags |= PR_POLL_READ;
-                    if (pd->out_flags & _PR_POLL_WRITE_SYS_READ)
+                    }
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_READ) {
                         out_flags |= PR_POLL_WRITE;
-                } 
+                    }
+                }
                 if (FD_ISSET(osfd, &wt))
                 {
-                    if (pd->out_flags & _PR_POLL_READ_SYS_WRITE)
+                    if (pd->out_flags & _PR_POLL_READ_SYS_WRITE) {
                         out_flags |= PR_POLL_READ;
-                    if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE)
+                    }
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE) {
                         out_flags |= PR_POLL_WRITE;
-                } 
-                if (FD_ISSET(osfd, &ex)) out_flags |= PR_POLL_EXCEPT;
+                    }
+                }
+                if (FD_ISSET(osfd, &ex)) {
+                    out_flags |= PR_POLL_EXCEPT;
+                }
             }
             pd->out_flags = out_flags;
-            if (out_flags) ready++;
+            if (out_flags) {
+                ready++;
+            }
         }
         PR_ASSERT(ready > 0);
     }
@@ -456,7 +487,9 @@ retry:
             }
             PR_ASSERT(ready > 0);
         }
-        else _PR_MD_MAP_SELECT_ERROR(err);
+        else {
+            _PR_MD_MAP_SELECT_ERROR(err);
+        }
     }
 
     return ready;
@@ -484,7 +517,7 @@ static PRInt32 LocalThreads(
      */
 
     unixpd = unixpds = (_PRUnixPollDesc*)
-        PR_MALLOC(npds * sizeof(_PRUnixPollDesc));
+                       PR_MALLOC(npds * sizeof(_PRUnixPollDesc));
     if (NULL == unixpds)
     {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -503,15 +536,15 @@ static PRInt32 LocalThreads(
             if (pd->in_flags & PR_POLL_READ)
             {
                 in_flags_read = (pd->fd->methods->poll)(
-                    pd->fd, pd->in_flags & ~PR_POLL_WRITE, &out_flags_read);
+                                    pd->fd, pd->in_flags & ~PR_POLL_WRITE, &out_flags_read);
             }
             if (pd->in_flags & PR_POLL_WRITE)
             {
                 in_flags_write = (pd->fd->methods->poll)(
-                    pd->fd, pd->in_flags & ~PR_POLL_READ, &out_flags_write);
+                                     pd->fd, pd->in_flags & ~PR_POLL_READ, &out_flags_write);
             }
             if ((0 != (in_flags_read & out_flags_read))
-            || (0 != (in_flags_write & out_flags_write)))
+                || (0 != (in_flags_write & out_flags_write)))
             {
                 /* this one's ready right now */
                 if (0 == ready)
@@ -537,7 +570,7 @@ static PRInt32 LocalThreads(
                 bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
                 PR_ASSERT(NULL != bottom);  /* what to do about that? */
                 if ((NULL != bottom)
-                && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                    && (_PR_FILEDESC_OPEN == bottom->secret->state))
                 {
                     if (0 == ready)
                     {
@@ -614,26 +647,34 @@ static PRInt32 LocalThreads(
             {
                 if (unixpd->out_flags & _PR_UNIX_POLL_READ)
                 {
-                    if (pd->out_flags & _PR_POLL_READ_SYS_READ)
+                    if (pd->out_flags & _PR_POLL_READ_SYS_READ) {
                         out_flags |= PR_POLL_READ;
-                    if (pd->out_flags & _PR_POLL_WRITE_SYS_READ)
+                    }
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_READ) {
                         out_flags |= PR_POLL_WRITE;
+                    }
                 }
                 if (unixpd->out_flags & _PR_UNIX_POLL_WRITE)
                 {
-                    if (pd->out_flags & _PR_POLL_READ_SYS_WRITE)
+                    if (pd->out_flags & _PR_POLL_READ_SYS_WRITE) {
                         out_flags |= PR_POLL_READ;
-                    if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE)
+                    }
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE) {
                         out_flags |= PR_POLL_WRITE;
+                    }
                 }
-                if (unixpd->out_flags & _PR_UNIX_POLL_EXCEPT)
+                if (unixpd->out_flags & _PR_UNIX_POLL_EXCEPT) {
                     out_flags |= PR_POLL_EXCEPT;
-                if (unixpd->out_flags & _PR_UNIX_POLL_ERR)
+                }
+                if (unixpd->out_flags & _PR_UNIX_POLL_ERR) {
                     out_flags |= PR_POLL_ERR;
-                if (unixpd->out_flags & _PR_UNIX_POLL_NVAL)
+                }
+                if (unixpd->out_flags & _PR_UNIX_POLL_NVAL) {
                     out_flags |= PR_POLL_NVAL;
-                if (unixpd->out_flags & _PR_UNIX_POLL_HUP)
+                }
+                if (unixpd->out_flags & _PR_UNIX_POLL_HUP) {
                     out_flags |= PR_POLL_HUP;
+                }
             }
             unixpd++;
         }
@@ -662,15 +703,20 @@ PRInt32 _MD_pr_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
         PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
         return -1;
     }
-    if (0 == npds) PR_Sleep(timeout);
-    else if (_PR_IS_NATIVE_THREAD(me))
+    if (0 == npds) {
+        PR_Sleep(timeout);
+    }
+    else if (_PR_IS_NATIVE_THREAD(me)) {
         rv = NativeThreads(pds, npds, timeout);
-    else rv = LocalThreads(pds, npds, timeout);
+    }
+    else {
+        rv = LocalThreads(pds, npds, timeout);
+    }
 
     return rv;
 }  /* _MD_pr_poll */
 
-#endif  /* defined(_PR_PTHREADS) */               
+#endif  /* defined(_PR_PTHREADS) */
 
 /* uxpoll.c */
 

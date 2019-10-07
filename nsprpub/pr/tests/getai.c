@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     ai = PR_GetAddrInfoByName(argv[1], PR_AF_UNSPEC, PR_AI_ADDRCONFIG);
     if (ai == NULL) {
         fprintf(stderr, "PR_GetAddrInfoByName failed: (%d, %d)\n",
-            PR_GetError(), PR_GetOSError());
+                PR_GetError(), PR_GetOSError());
         exit(1);
     }
     printf("%s\n", PR_GetCanonNameFromAddrInfo(ai));

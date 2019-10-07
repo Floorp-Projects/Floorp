@@ -47,7 +47,7 @@ void _PR_NT_InitSids(void)
                                          * to force proper alignment */
     PTOKEN_OWNER pTokenOwner = (PTOKEN_OWNER) infoBuffer;
     PTOKEN_PRIMARY_GROUP pTokenPrimaryGroup
-            = (PTOKEN_PRIMARY_GROUP) infoBuffer;
+        = (PTOKEN_PRIMARY_GROUP) infoBuffer;
     DWORD dwLength;
     BOOL rv;
 
@@ -67,13 +67,13 @@ void _PR_NT_InitSids(void)
          * with the error code ERROR_ACCESS_DENIED.
          */
         PR_LOG(_pr_io_lm, PR_LOG_DEBUG,
-                ("_PR_NT_InitSids: OpenProcessToken() failed. Error: %d",
+               ("_PR_NT_InitSids: OpenProcessToken() failed. Error: %d",
                 GetLastError()));
         return;
     }
 
     rv = GetTokenInformation(hToken, TokenOwner, infoBuffer,
-            sizeof(infoBuffer), &dwLength);
+                             sizeof(infoBuffer), &dwLength);
     PR_ASSERT(rv != 0);
     dwLength = GetLengthSid(pTokenOwner->Owner);
     _pr_nt_sids.owner = (PSID) PR_Malloc(dwLength);
@@ -82,13 +82,13 @@ void _PR_NT_InitSids(void)
     PR_ASSERT(rv != 0);
 
     rv = GetTokenInformation(hToken, TokenPrimaryGroup, infoBuffer,
-            sizeof(infoBuffer), &dwLength);
+                             sizeof(infoBuffer), &dwLength);
     PR_ASSERT(rv != 0);
     dwLength = GetLengthSid(pTokenPrimaryGroup->PrimaryGroup);
     _pr_nt_sids.group = (PSID) PR_Malloc(dwLength);
     PR_ASSERT(_pr_nt_sids.group != NULL);
     rv = CopySid(dwLength, _pr_nt_sids.group,
-            pTokenPrimaryGroup->PrimaryGroup);
+                 pTokenPrimaryGroup->PrimaryGroup);
     PR_ASSERT(rv != 0);
 
     rv = CloseHandle(hToken);
@@ -96,9 +96,9 @@ void _PR_NT_InitSids(void)
 
     /* Create a well-known SID for the Everyone group. */
     rv = AllocateAndInitializeSid(&SIDAuthWorld, 1,
-            SECURITY_WORLD_RID,
-            0, 0, 0, 0, 0, 0, 0,
-            &_pr_nt_sids.everyone);
+                                  SECURITY_WORLD_RID,
+                                  0, 0, 0, 0, 0, 0, 0,
+                                  &_pr_nt_sids.everyone);
     PR_ASSERT(rv != 0);
 #endif
 }
@@ -184,10 +184,10 @@ _PR_NT_MakeSecurityDescriptorACL(
      */
 
     cbACL = sizeof(ACL)
-          + 3 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD))
-          + GetLengthSid(_pr_nt_sids.owner)
-          + GetLengthSid(_pr_nt_sids.group)
-          + GetLengthSid(_pr_nt_sids.everyone);
+            + 3 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD))
+            + GetLengthSid(_pr_nt_sids.owner)
+            + GetLengthSid(_pr_nt_sids.group)
+            + GetLengthSid(_pr_nt_sids.everyone);
     pACL = (PACL) PR_Malloc(cbACL);
     if (pACL == NULL) {
         _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
@@ -198,29 +198,47 @@ _PR_NT_MakeSecurityDescriptorACL(
         goto failed;
     }
     accessMask = 0;
-    if (mode & 00400) accessMask |= accessTable[0];
-    if (mode & 00200) accessMask |= accessTable[1];
-    if (mode & 00100) accessMask |= accessTable[2];
+    if (mode & 00400) {
+        accessMask |= accessTable[0];
+    }
+    if (mode & 00200) {
+        accessMask |= accessTable[1];
+    }
+    if (mode & 00100) {
+        accessMask |= accessTable[2];
+    }
     if (accessMask && !AddAccessAllowedAce(pACL, ACL_REVISION, accessMask,
-            _pr_nt_sids.owner)) {
+                                           _pr_nt_sids.owner)) {
         _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
         goto failed;
     }
     accessMask = 0;
-    if (mode & 00040) accessMask |= accessTable[0];
-    if (mode & 00020) accessMask |= accessTable[1];
-    if (mode & 00010) accessMask |= accessTable[2];
+    if (mode & 00040) {
+        accessMask |= accessTable[0];
+    }
+    if (mode & 00020) {
+        accessMask |= accessTable[1];
+    }
+    if (mode & 00010) {
+        accessMask |= accessTable[2];
+    }
     if (accessMask && !AddAccessAllowedAce(pACL, ACL_REVISION, accessMask,
-            _pr_nt_sids.group)) {
+                                           _pr_nt_sids.group)) {
         _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
         goto failed;
     }
     accessMask = 0;
-    if (mode & 00004) accessMask |= accessTable[0];
-    if (mode & 00002) accessMask |= accessTable[1];
-    if (mode & 00001) accessMask |= accessTable[2];
+    if (mode & 00004) {
+        accessMask |= accessTable[0];
+    }
+    if (mode & 00002) {
+        accessMask |= accessTable[1];
+    }
+    if (mode & 00001) {
+        accessMask |= accessTable[2];
+    }
     if (accessMask && !AddAccessAllowedAce(pACL, ACL_REVISION, accessMask,
-            _pr_nt_sids.everyone)) {
+                                           _pr_nt_sids.everyone)) {
         _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
         goto failed;
     }

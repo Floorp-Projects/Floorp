@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Test: sendzlf.c 
+ * Test: sendzlf.c
  *
  * Description: send a zero-length file with PR_SendFile and
  * PR_TransmitFile.
@@ -63,7 +63,7 @@ static void ClientThread(void *arg)
         exit(1);
     }
     if (memcmp(buf, HEADER_STR TRAILER_STR TRAILER_STR HEADER_STR HEADER_STR,
-            nexpected) != 0) {
+               nexpected) != 0) {
         fprintf(stderr, "wrong data is received\n");
         exit(1);
     }
@@ -84,7 +84,7 @@ static void ServerThread(void *arg)
 
     /* Create a zero-length file */
     file = PR_Open(ZERO_LEN_FILE_NAME,
-            PR_CREATE_FILE|PR_TRUNCATE|PR_RDWR, 0666);
+                   PR_CREATE_FILE|PR_TRUNCATE|PR_RDWR, 0666);
     if (NULL == file) {
         fprintf(stderr, "PR_Open failed\n");
         exit(1);
@@ -105,7 +105,7 @@ static void ServerThread(void *arg)
     }
     /* Send both header and trailer */
     nbytes = PR_SendFile(acceptSock, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
-            PR_INTERVAL_NO_TIMEOUT);
+                         PR_INTERVAL_NO_TIMEOUT);
     if (HEADER_LEN+TRAILER_LEN != nbytes) {
         fprintf(stderr, "PR_SendFile should return %d but returned %d\n",
                 HEADER_LEN+TRAILER_LEN, nbytes);
@@ -114,7 +114,7 @@ static void ServerThread(void *arg)
     /* Trailer only, no header */
     sfd.hlen = 0;
     nbytes = PR_SendFile(acceptSock, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
-            PR_INTERVAL_NO_TIMEOUT);
+                         PR_INTERVAL_NO_TIMEOUT);
     if (TRAILER_LEN != nbytes) {
         fprintf(stderr, "PR_SendFile should return %d but returned %d\n",
                 TRAILER_LEN, nbytes);
@@ -124,7 +124,7 @@ static void ServerThread(void *arg)
     sfd.hlen = HEADER_LEN;
     sfd.tlen = 0;
     nbytes = PR_SendFile(acceptSock, &sfd, PR_TRANSMITFILE_KEEP_OPEN,
-            PR_INTERVAL_NO_TIMEOUT);
+                         PR_INTERVAL_NO_TIMEOUT);
     if (HEADER_LEN != nbytes) {
         fprintf(stderr, "PR_SendFile should return %d but returned %d\n",
                 HEADER_LEN, nbytes);
@@ -132,7 +132,7 @@ static void ServerThread(void *arg)
     }
     /* Try PR_TransmitFile */
     nbytes = PR_TransmitFile(acceptSock, file, header, HEADER_LEN,
-            PR_TRANSMITFILE_KEEP_OPEN, PR_INTERVAL_NO_TIMEOUT);
+                             PR_TRANSMITFILE_KEEP_OPEN, PR_INTERVAL_NO_TIMEOUT);
     if (HEADER_LEN != nbytes) {
         fprintf(stderr, "PR_TransmitFile should return %d but returned %d\n",
                 HEADER_LEN, nbytes);
@@ -184,15 +184,15 @@ int main(int argc, char **argv)
     }
 
     clientThread = PR_CreateThread(PR_USER_THREAD,
-            ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
-            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
+                                   ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
+                                   PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
     if (NULL == clientThread) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);
     }
     serverThread = PR_CreateThread(PR_USER_THREAD,
-            ServerThread, listenSock,
-            PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
+                                   ServerThread, listenSock,
+                                   PR_PRIORITY_NORMAL, scope, PR_JOINABLE_THREAD, 0);
     if (NULL == serverThread) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);

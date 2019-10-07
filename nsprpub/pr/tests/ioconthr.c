@@ -62,8 +62,8 @@ int main(int argc, char **argv)
             PR_ProcessExit(1);
         }
         threads[index] = PR_CreateThread(
-                PR_USER_THREAD, ThreadFunc, fds[2 * index],
-                PR_PRIORITY_NORMAL, thread_scope, PR_JOINABLE_THREAD, 0);
+                             PR_USER_THREAD, ThreadFunc, fds[2 * index],
+                             PR_PRIORITY_NORMAL, thread_scope, PR_JOINABLE_THREAD, 0);
         if (NULL == threads[index]) {
             fprintf(stderr, "PR_CreateThread failed\n");
             PR_ProcessExit(1);
@@ -90,9 +90,9 @@ int main(int argc, char **argv)
     }
     elapsed = (PRIntervalTime)(PR_IntervalNow() - start);
     printf("Threads terminated in %d milliseconds\n",
-            PR_IntervalToMilliseconds(elapsed));
+           PR_IntervalToMilliseconds(elapsed));
     fflush(stdout);
-    
+
     /* We are being very generous and allow 10 seconds. */
     if (elapsed >= PR_SecondsToInterval(10)) {
         fprintf(stderr, "Interrupting threads took longer than 10 seconds!!\n");

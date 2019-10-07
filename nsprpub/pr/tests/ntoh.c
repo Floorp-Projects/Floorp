@@ -33,17 +33,17 @@ int main(int argc, char **argv)
 
     un.s = s_h;
     printf("%u %u\n",
-        un.bytes[0], un.bytes[1]);
+           un.bytes[0], un.bytes[1]);
     un.s = PR_htons(un.s);
     printf("%u %u\n",
-        un.bytes[0], un.bytes[1]);
+           un.bytes[0], un.bytes[1]);
     if (memcmp(un.bytes, bytes_n, 2)) {
         fprintf(stderr, "PR_htons failed\n");
         exit(1);
     }
     un.s = PR_ntohs(un.s);
     printf("%u %u\n",
-        un.bytes[0], un.bytes[1]);
+           un.bytes[0], un.bytes[1]);
     if (un.s != s_h) {
         fprintf(stderr, "PR_ntohs failed\n");
         exit(1);
@@ -51,17 +51,17 @@ int main(int argc, char **argv)
 
     un.l = l_h;
     printf("%u %u %u %u\n",
-        un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3]);
+           un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3]);
     un.l = PR_htonl(un.l);
     printf("%u %u %u %u\n",
-        un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3]);
+           un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3]);
     if (memcmp(un.bytes, bytes_n, 4)) {
         fprintf(stderr, "PR_htonl failed\n");
         exit(1);
     }
     un.l = PR_ntohl(un.l);
     printf("%u %u %u %u\n",
-        un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3]);
+           un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3]);
     if (un.l != l_h) {
         fprintf(stderr, "PR_ntohl failed\n");
         exit(1);
@@ -69,20 +69,20 @@ int main(int argc, char **argv)
 
     un.ll = ll_h;
     printf("%u %u %u %u %u %u %u %u\n",
-        un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3],
-        un.bytes[4], un.bytes[5], un.bytes[6], un.bytes[7]);
+           un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3],
+           un.bytes[4], un.bytes[5], un.bytes[6], un.bytes[7]);
     un.ll = PR_htonll(un.ll);
     printf("%u %u %u %u %u %u %u %u\n",
-        un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3],
-        un.bytes[4], un.bytes[5], un.bytes[6], un.bytes[7]);
+           un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3],
+           un.bytes[4], un.bytes[5], un.bytes[6], un.bytes[7]);
     if (memcmp(un.bytes, bytes_n, 8)) {
         fprintf(stderr, "PR_htonll failed\n");
         exit(1);
     }
     un.ll = PR_ntohll(un.ll);
     printf("%u %u %u %u %u %u %u %u\n",
-        un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3],
-        un.bytes[4], un.bytes[5], un.bytes[6], un.bytes[7]);
+           un.bytes[0], un.bytes[1], un.bytes[2], un.bytes[3],
+           un.bytes[4], un.bytes[5], un.bytes[6], un.bytes[7]);
     if (LL_NE(un.ll, ll_h)) {
         fprintf(stderr, "PR_ntohll failed\n");
         exit(1);

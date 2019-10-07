@@ -47,19 +47,19 @@ typedef struct PRSegment PRSegment;
 *************************************************************************/
 
 /*
-NSPR 2.0 must implement its function across a range of platforms 
+NSPR 2.0 must implement its function across a range of platforms
 including: MAC, Windows/16, Windows/95, Windows/NT, and several
-variants of Unix. Each implementation shares common code as well 
+variants of Unix. Each implementation shares common code as well
 as having platform dependent portions. This standard describes how
 the model dependent portions are to be implemented.
 
-In header file pr/include/primpl.h, each publicly declared 
+In header file pr/include/primpl.h, each publicly declared
 platform dependent function is declared as:
 
 NSPR_API void _PR_MD_FUNCTION( long arg1, long arg2 );
 #define _PR_MD_FUNCTION _MD_FUNCTION
 
-In header file pr/include/md/<platform>/_<platform>.h, 
+In header file pr/include/md/<platform>/_<platform>.h,
 each #define'd macro is redefined as one of:
 
 #define _MD_FUNCTION <blanks>
@@ -69,26 +69,26 @@ each #define'd macro is redefined as one of:
 
 Where:
 
-<blanks> is no definition at all. In this case, the function is not implemented 
-and is never called for this platform. 
-For example: 
+<blanks> is no definition at all. In this case, the function is not implemented
+and is never called for this platform.
+For example:
 #define _MD_INIT_CPUS()
 
-<expanded macro> is a C language macro expansion. 
-For example: 
+<expanded macro> is a C language macro expansion.
+For example:
 #define        _MD_CLEAN_THREAD(_thread) \
     PR_BEGIN_MACRO \
         PR_DestroyCondVar(_thread->md.asyncIOCVar); \
         PR_DestroyLock(_thread->md.asyncIOLock); \
     PR_END_MACRO
 
-<osFunction> is some function implemented by the host operating system. 
-For example: 
+<osFunction> is some function implemented by the host operating system.
+For example:
 #define _MD_EXIT        exit
 
-<_MD_function> is the name of a function implemented for this platform in 
-pr/src/md/<platform>/<soruce>.c file. 
-For example: 
+<_MD_function> is the name of a function implemented for this platform in
+pr/src/md/<platform>/<soruce>.c file.
+For example:
 #define        _MD_GETFILEINFO         _MD_GetFileInfo
 
 In <source>.c, the implementation is:
@@ -133,7 +133,7 @@ struct _PT_Notified
 };
 
 /*
- * bits defined for pthreads 'state' field 
+ * bits defined for pthreads 'state' field
  */
 #define PT_THREAD_DETACHED  0x01    /* thread can't be joined */
 #define PT_THREAD_GLOBAL    0x02    /* a global thread (unlikely) */
@@ -145,16 +145,16 @@ struct _PT_Notified
 #define PT_THREAD_FOREIGN   0x80    /* thread is not one of ours */
 #define PT_THREAD_BOUND     0x100    /* a bound-global thread */
 
-#define _PT_THREAD_INTERRUPTED(thr)					\
-		(!(thr->interrupt_blocked) && (thr->state & PT_THREAD_ABORTED))
-#define _PT_THREAD_BLOCK_INTERRUPT(thr)				\
-		(thr->interrupt_blocked = 1)
-#define _PT_THREAD_UNBLOCK_INTERRUPT(thr)			\
-		(thr->interrupt_blocked = 0)
+#define _PT_THREAD_INTERRUPTED(thr)                 \
+        (!(thr->interrupt_blocked) && (thr->state & PT_THREAD_ABORTED))
+#define _PT_THREAD_BLOCK_INTERRUPT(thr)             \
+        (thr->interrupt_blocked = 1)
+#define _PT_THREAD_UNBLOCK_INTERRUPT(thr)           \
+        (thr->interrupt_blocked = 0)
 
 #define _PT_IS_GCABLE_THREAD(thr) ((thr)->state & PT_THREAD_GCABLE)
 
-/* 
+/*
 ** Possible values for thread's suspend field
 ** Note that the first two can be the same as they are really mutually exclusive,
 ** i.e. both cannot be happening at the same time. We have two symbolic names
@@ -205,13 +205,13 @@ NSPR_API(void) PT_FPrintStats(PRFileDesc *fd, const char *msg);
  */
 #ifdef _PR_LOCAL_THREADS_ONLY
 
-#define        _PR_MD_SUSPEND_THREAD(thread)        
-#define        _PR_MD_RESUME_THREAD(thread)        
-#define        _PR_MD_SUSPEND_CPU(cpu)        
-#define        _PR_MD_RESUME_CPU(cpu)        
-#define        _PR_MD_BEGIN_SUSPEND_ALL()        
-#define        _PR_MD_END_SUSPEND_ALL()        
-#define        _PR_MD_BEGIN_RESUME_ALL()        
+#define        _PR_MD_SUSPEND_THREAD(thread)
+#define        _PR_MD_RESUME_THREAD(thread)
+#define        _PR_MD_SUSPEND_CPU(cpu)
+#define        _PR_MD_RESUME_CPU(cpu)
+#define        _PR_MD_BEGIN_SUSPEND_ALL()
+#define        _PR_MD_END_SUSPEND_ALL()
+#define        _PR_MD_BEGIN_RESUME_ALL()
 #define        _PR_MD_END_RESUME_ALL()
 #define _PR_MD_INIT_ATTACHED_THREAD(thread) PR_FAILURE
 
@@ -252,7 +252,7 @@ struct _PRCPU {
     PRThread *thread;           /* native thread for this CPUThread */
     PRThread *idle_thread;      /* user-level idle thread for this CPUThread */
 
-    PRIntervalTime last_clock;  /* the last time we went into 
+    PRIntervalTime last_clock;  /* the last time we went into
                                  * _PR_ClockInterrupt() on this CPU
                                  */
 
@@ -275,7 +275,7 @@ typedef struct _PRInterruptTable {
 #define _MD_GET_ATTACHED_THREAD()        (_PR_MD_CURRENT_THREAD())
 #endif
 
-#ifdef _PR_LOCAL_THREADS_ONLY 
+#ifdef _PR_LOCAL_THREADS_ONLY
 
 NSPR_API(struct _PRCPU *)              _pr_currentCPU;
 NSPR_API(PRThread *)                   _pr_currentThread;
@@ -353,7 +353,7 @@ extern PRInt32                  _native_threads_only;
         _PR_MD_SET_INTSOFF(_is); \
     PR_END_MACRO
 
-#ifdef _PR_LOCAL_THREADS_ONLY 
+#ifdef _PR_LOCAL_THREADS_ONLY
 
 #define _PR_IS_NATIVE_THREAD(thread) 0
 #define _PR_THREAD_LOCK(_thread)
@@ -383,10 +383,10 @@ extern PRInt32                  _native_threads_only;
     PR_END_MACRO
 
 #define _PR_ADD_SLEEPQ(_thread, _timeout) \
-    _PR_AddSleepQ(_thread, _timeout);   
+    _PR_AddSleepQ(_thread, _timeout);
 
 #define _PR_DEL_SLEEPQ(_thread, _propogate) \
-    _PR_DelSleepQ(_thread, _propogate);  
+    _PR_DelSleepQ(_thread, _propogate);
 
 #define _PR_ADD_JOINQ(_thread, _cpu) \
     PR_APPEND_LINK(&(_thread)->links, &_PR_WAITINGTOJOINQ(_cpu));
@@ -418,7 +418,7 @@ extern PRInt32                  _native_threads_only;
     PR_BEGIN_MACRO \
     _PR_MD_LOCK(&(_cpu)->queue->runQLock );\
     PR_END_MACRO
-    
+
 #define _PR_RUNQ_UNLOCK(_cpu) \
     PR_BEGIN_MACRO \
     _PR_MD_UNLOCK(&(_cpu)->queue->runQLock );\
@@ -467,12 +467,12 @@ extern PRInt32                  _native_threads_only;
 #define _PR_ADD_SLEEPQ(_thread, _timeout) \
     PR_ASSERT((_thread)->queueCount == 0); \
     (_thread)->queueCount = QUEUE_SLEEP; \
-    _PR_AddSleepQ(_thread, _timeout);  
+    _PR_AddSleepQ(_thread, _timeout);
 
 #define _PR_DEL_SLEEPQ(_thread, _propogate) \
     PR_ASSERT((_thread)->queueCount == QUEUE_SLEEP);\
     (_thread)->queueCount = 0; \
-    _PR_DelSleepQ(_thread, _propogate);  
+    _PR_DelSleepQ(_thread, _propogate);
 
 #define _PR_ADD_JOINQ(_thread, _cpu) \
     PR_ASSERT((_thread)->queueCount == 0); \
@@ -525,7 +525,7 @@ NSPR_API(void) _PR_PauseCPU(void);
     _PR_MD_LOCK(&(_lock)->ilock);
 #define _PR_LOCK_UNLOCK(_lock) \
     _PR_MD_UNLOCK(&(_lock)->ilock);
-    
+
 extern void _PR_UnblockLockWaiter(PRLock *lock);
 extern PRStatus _PR_InitLock(PRLock *lock);
 extern void _PR_FreeLock(PRLock *lock);
@@ -536,7 +536,7 @@ extern void _PR_FreeLock(PRLock *lock);
 /************************************************************************/
 
 #define _PR_CVAR_LOCK(_cvar) \
-    _PR_MD_LOCK(&(_cvar)->ilock); 
+    _PR_MD_LOCK(&(_cvar)->ilock);
 #define _PR_CVAR_UNLOCK(_cvar) \
     _PR_MD_UNLOCK(&(_cvar)->ilock);
 
@@ -561,7 +561,7 @@ NSPR_API(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 #define _PR_IDLE_THREAD     0x200       /* this is an idle thread        */
 #define _PR_GCABLE_THREAD   0x400       /* this is a collectable thread */
 #define _PR_BOUND_THREAD    0x800       /* a bound thread */
-#define _PR_INTERRUPT_BLOCKED	0x1000	/* interrupts blocked */
+#define _PR_INTERRUPT_BLOCKED   0x1000  /* interrupts blocked */
 
 /* PRThread.state */
 #define _PR_UNBORN       0
@@ -579,7 +579,7 @@ NSPR_API(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 #define _PR_STACK_MAPPED        0x2    /* vm is mapped */
 #define _PR_STACK_PRIMORDIAL    0x4    /* stack for primordial thread */
 
-/* 
+/*
 ** If the default stcksize from the client is zero, we need to pick a machine
 ** dependent value.  This is only for standard user threads.  For custom threads,
 ** 0 has a special meaning.
@@ -587,7 +587,7 @@ NSPR_API(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 */
 
 #ifndef _MD_MINIMUM_STACK_SIZE
-#define _MD_MINIMUM_STACK_SIZE	0
+#define _MD_MINIMUM_STACK_SIZE  0
 #endif
 
 #if (!defined(HAVE_CUSTOM_USER_THREADS))
@@ -606,12 +606,12 @@ NSPR_API(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
 
 #define _PR_IS_GCABLE_THREAD(thr) ((thr)->flags & _PR_GCABLE_THREAD)
 
-#define _PR_PENDING_INTERRUPT(thr)					\
-		(!((thr)->flags & _PR_INTERRUPT_BLOCKED) && ((thr)->flags & _PR_INTERRUPT))
-#define _PR_THREAD_BLOCK_INTERRUPT(thr)			\
-		(thr->flags |= _PR_INTERRUPT_BLOCKED)
-#define _PR_THREAD_UNBLOCK_INTERRUPT(thr)			\
-		(thr->flags &= ~_PR_INTERRUPT_BLOCKED)
+#define _PR_PENDING_INTERRUPT(thr)                  \
+        (!((thr)->flags & _PR_INTERRUPT_BLOCKED) && ((thr)->flags & _PR_INTERRUPT))
+#define _PR_THREAD_BLOCK_INTERRUPT(thr)         \
+        (thr->flags |= _PR_INTERRUPT_BLOCKED)
+#define _PR_THREAD_UNBLOCK_INTERRUPT(thr)           \
+        (thr->flags &= ~_PR_INTERRUPT_BLOCKED)
 
 #define _PR_THREAD_PTR(_qp) \
     ((PRThread*) ((char*) (_qp) - offsetof(PRThread,links)))
@@ -693,28 +693,28 @@ extern void _PR_SetThreadPriority(
     PRThread* thread, PRThreadPriority priority);
 
 /***********************************************************************
-** FUNCTION:	_PR_NewSegment()
+** FUNCTION:    _PR_NewSegment()
 ** DESCRIPTION:
 **   Allocate a memory segment. The "size" value is rounded up to the
 **   native system page size and a page aligned portion of memory is
 **   returned.  This memory is not part of the malloc heap. If "vaddr" is
 **   not NULL then PR tries to allocate the segment at the desired virtual
 **   address.
-** INPUTS:	size:  size of the desired memory segment
+** INPUTS:  size:  size of the desired memory segment
 **          vaddr:  address at which the newly aquired segment is to be
 **                  mapped into memory.
-** OUTPUTS:	a memory segment is allocated, a PRSegment is allocated
-** RETURN:	pointer to PRSegment
+** OUTPUTS: a memory segment is allocated, a PRSegment is allocated
+** RETURN:  pointer to PRSegment
 ***********************************************************************/
 extern PRSegment* _PR_NewSegment(PRUint32 size, void *vaddr);
 
 /***********************************************************************
-** FUNCTION:	_PR_DestroySegment()
+** FUNCTION:    _PR_DestroySegment()
 ** DESCRIPTION:
 **   The memory segment and the PRSegment are freed
-** INPUTS:	seg:  pointer to PRSegment to be freed
-** OUTPUTS:	the the PRSegment and its associated memory segment are freed
-** RETURN:	void
+** INPUTS:  seg:  pointer to PRSegment to be freed
+** OUTPUTS: the the PRSegment and its associated memory segment are freed
+** RETURN:  void
 ***********************************************************************/
 extern void _PR_DestroySegment(PRSegment *seg);
 
@@ -735,7 +735,7 @@ NSPR_API(PRThread*) _PR_CreateThread(PRThreadType type,
                                      PRThreadScope scope,
                                      PRThreadState state,
                                      PRUint32 stackSize,
-                     PRUint32 flags);
+                                     PRUint32 flags);
 
 extern void _PR_NativeDestroyThread(PRThread *thread);
 extern void _PR_UserDestroyThread(PRThread *thread);
@@ -954,19 +954,19 @@ extern void _PR_MD_CREATE_PRIMORDIAL_USER_THREAD(PRThread *);
 #define    _PR_MD_CREATE_PRIMORDIAL_USER_THREAD _MD_CREATE_PRIMORDIAL_USER_THREAD
 
 extern PRThread* _PR_MD_CREATE_USER_THREAD(
-                        PRUint32 stacksize,
-                        void (*start)(void *),
-                        void *arg);
+    PRUint32 stacksize,
+    void (*start)(void *),
+    void *arg);
 #define    _PR_MD_CREATE_USER_THREAD _MD_CREATE_USER_THREAD
 #endif
 
 extern PRStatus _PR_MD_CREATE_THREAD(
-                        PRThread *thread, 
-                        void (*start) (void *), 
-                        PRThreadPriority priority,                      
-                        PRThreadScope scope,
-                        PRThreadState state,
-                        PRUint32 stackSize);
+    PRThread *thread,
+    void (*start) (void *),
+    PRThreadPriority priority,
+    PRThreadScope scope,
+    PRThreadState state,
+    PRUint32 stackSize);
 #define    _PR_MD_CREATE_THREAD _MD_CREATE_THREAD
 
 extern void _PR_MD_JOIN_THREAD(_MDThread *md);
@@ -1133,32 +1133,32 @@ extern PRInt32 _PR_MD_LISTEN(PRFileDesc *fd, PRIntn backlog);
 extern PRInt32 _PR_MD_SHUTDOWN(PRFileDesc *fd, PRIntn how);
 #define    _PR_MD_SHUTDOWN _MD_SHUTDOWN
 
-extern PRInt32 _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, 
-                               PRIntn flags, PRIntervalTime timeout);
+extern PRInt32 _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount,
+                           PRIntn flags, PRIntervalTime timeout);
 #define    _PR_MD_RECV _MD_RECV
 
 extern PRInt32 _PR_MD_SEND(
-    PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, 
+    PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     PRIntervalTime timeout);
 #define    _PR_MD_SEND _MD_SEND
 
-extern PRInt32 _PR_MD_ACCEPT_READ(PRFileDesc *sd, PROsfd *newSock, 
-                                PRNetAddr **raddr, void *buf, PRInt32 amount,
-                                PRIntervalTime timeout);
+extern PRInt32 _PR_MD_ACCEPT_READ(PRFileDesc *sd, PROsfd *newSock,
+                                  PRNetAddr **raddr, void *buf, PRInt32 amount,
+                                  PRIntervalTime timeout);
 #define _PR_MD_ACCEPT_READ _MD_ACCEPT_READ
 
 #ifdef WIN32
-extern PROsfd _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *addr, 
-                                PRUint32 *addrlen, PRIntervalTime timeout,
-                                PRBool fast,
-                                _PR_AcceptTimeoutCallback callback,
-                                void *callbackArg);
+extern PROsfd _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *addr,
+                                 PRUint32 *addrlen, PRIntervalTime timeout,
+                                 PRBool fast,
+                                 _PR_AcceptTimeoutCallback callback,
+                                 void *callbackArg);
 
-extern PRInt32 _PR_MD_FAST_ACCEPT_READ(PRFileDesc *sd, PROsfd *newSock, 
-                                PRNetAddr **raddr, void *buf, PRInt32 amount,
-                                PRIntervalTime timeout, PRBool fast,
-                                _PR_AcceptTimeoutCallback callback,
-                                void *callbackArg);
+extern PRInt32 _PR_MD_FAST_ACCEPT_READ(PRFileDesc *sd, PROsfd *newSock,
+                                       PRNetAddr **raddr, void *buf, PRInt32 amount,
+                                       PRIntervalTime timeout, PRBool fast,
+                                       _PR_AcceptTimeoutCallback callback,
+                                       void *callbackArg);
 
 extern void _PR_MD_UPDATE_ACCEPT_CONTEXT(PROsfd s, PROsfd ls);
 #define _PR_MD_UPDATE_ACCEPT_CONTEXT _MD_UPDATE_ACCEPT_CONTEXT
@@ -1172,8 +1172,8 @@ extern const PRTime _pr_filetime_offset;
 #endif /* WIN32 */
 
 extern PRInt32 _PR_MD_SENDFILE(
-    PRFileDesc *sock, PRSendFileData *sfd, 
-	PRInt32 flags, PRIntervalTime timeout);
+    PRFileDesc *sock, PRSendFileData *sfd,
+    PRInt32 flags, PRIntervalTime timeout);
 #define _PR_MD_SENDFILE _MD_SENDFILE
 
 extern PRStatus _PR_MD_GETSOCKNAME(
@@ -1229,7 +1229,7 @@ extern PRInt32 _PR_MD_PIPEAVAILABLE(PRFileDesc *fd);
 #define    _PR_MD_PIPEAVAILABLE _MD_PIPEAVAILABLE
 
 extern PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds,
-                                                                                        PRIntervalTime timeout);
+                              PRIntervalTime timeout);
 #define    _PR_MD_PR_POLL _MD_PR_POLL
 
 /*
@@ -1257,8 +1257,8 @@ extern PRStatus _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable);
                 PR_SetError( PR_PENDING_INTERRUPT_ERROR, 0); \
         } else { \
                 PR_SetError(PR_IO_TIMEOUT_ERROR, 0); \
-        }                                                        
-                
+        }
+
 extern void *_PR_MD_GET_SP(PRThread *thread);
 #define    _PR_MD_GET_SP _MD_GET_SP
 
@@ -1360,32 +1360,32 @@ extern PRUintn _PR_NetAddrSize(const PRNetAddr* addr);
 */
 
 #if defined(XP_UNIX) || defined(XP_OS2)
-#define PR_NETADDR_SIZE(_addr) 					\
-        ((_addr)->raw.family == PR_AF_INET		\
-        ? sizeof((_addr)->inet)					\
-        : ((_addr)->raw.family == PR_AF_INET6	\
-        ? sizeof(struct _md_sockaddr_in6)		\
+#define PR_NETADDR_SIZE(_addr)                  \
+        ((_addr)->raw.family == PR_AF_INET      \
+        ? sizeof((_addr)->inet)                 \
+        : ((_addr)->raw.family == PR_AF_INET6   \
+        ? sizeof(struct _md_sockaddr_in6)       \
         : sizeof((_addr)->local)))
 #else
-#define PR_NETADDR_SIZE(_addr) 					\
-        ((_addr)->raw.family == PR_AF_INET		\
-        ? sizeof((_addr)->inet)					\
+#define PR_NETADDR_SIZE(_addr)                  \
+        ((_addr)->raw.family == PR_AF_INET      \
+        ? sizeof((_addr)->inet)                 \
         : sizeof(struct _md_sockaddr_in6))
 #endif /* defined(XP_UNIX) */
 
 #else
 
 #if defined(XP_UNIX) || defined(XP_OS2)
-#define PR_NETADDR_SIZE(_addr) 					\
-        ((_addr)->raw.family == PR_AF_INET		\
-        ? sizeof((_addr)->inet)					\
-        : ((_addr)->raw.family == PR_AF_INET6	\
-        ? sizeof((_addr)->ipv6)					\
+#define PR_NETADDR_SIZE(_addr)                  \
+        ((_addr)->raw.family == PR_AF_INET      \
+        ? sizeof((_addr)->inet)                 \
+        : ((_addr)->raw.family == PR_AF_INET6   \
+        ? sizeof((_addr)->ipv6)                 \
         : sizeof((_addr)->local)))
 #else
-#define PR_NETADDR_SIZE(_addr) 					\
-        ((_addr)->raw.family == PR_AF_INET		\
-        ? sizeof((_addr)->inet)					\
+#define PR_NETADDR_SIZE(_addr)                  \
+        ((_addr)->raw.family == PR_AF_INET      \
+        ? sizeof((_addr)->inet)                 \
         : sizeof((_addr)->ipv6))
 #endif /* defined(XP_UNIX) */
 
@@ -1403,14 +1403,14 @@ struct PRLock {
     PRBool locked;                  /* whether the mutex is locked */
     pthread_t owner;                /* if locked, current lock owner */
 #elif defined(_PR_BTHREADS)
-    sem_id	semaphoreID;	    /* the underlying lock */
-    int32	benaphoreCount;	    /* number of people in lock */
-    thread_id	owner;		    /* current lock owner */
+    sem_id  semaphoreID;        /* the underlying lock */
+    int32   benaphoreCount;     /* number of people in lock */
+    thread_id   owner;          /* current lock owner */
 #else /* not pthreads or Be threads */
     PRCList links;                  /* linkage for PRThread.lockList */
     struct PRThread *owner;         /* current lock owner */
     PRCList waitQ;                  /* list of threads waiting for lock */
-    PRThreadPriority priority;      /* priority of lock */ 
+    PRThreadPriority priority;      /* priority of lock */
     PRThreadPriority boostPriority; /* boosted priority of lock owner */
     _MDLock ilock;                  /* Internal Lock to protect user-level fields */
 #endif
@@ -1533,7 +1533,7 @@ struct PRThreadStack {
     PRUint32 stackSize;         /* size of usable portion of the stack */
 
     PRSegment *seg;
-        PRThread* thr;          /* back pointer to thread owning this stack */
+    PRThread* thr;          /* back pointer to thread owning this stack */
 
 #if defined(_PR_PTHREADS)
 #else /* defined(_PR_PTHREADS) */
@@ -1645,19 +1645,19 @@ struct PRThread {
     _PRCPU *cpu;                    /* cpu to which this thread is bound    */
     PRUint32 threadAllocatedOnStack;/* boolean */
 
-    /* When an async IO is in progress and a second async IO cannot be 
+    /* When an async IO is in progress and a second async IO cannot be
      * initiated, the io_pending flag is set to true.  Some platforms will
      * not use the io_pending flag.  If the io_pending flag is true, then
      * io_fd is the OS-file descriptor on which IO is pending.
      */
     PRBool io_pending;
     PRInt32 io_fd;
- 
+
     /* If a timeout occurs or if an outstanding IO is interrupted and the
-     * OS doesn't support a real cancellation (NT or MAC), then the 
+     * OS doesn't support a real cancellation (NT or MAC), then the
      * io_suspended flag will be set to true.  The thread will be resumed
      * but may run into trouble issuing additional IOs until the io_pending
-     * flag can be cleared 
+     * flag can be cleared
      */
     PRBool io_suspended;
 
@@ -1735,8 +1735,8 @@ struct PRFilePrivate {
     _MDFileDesc md;
 #ifdef _PR_NEED_SECRET_AF
     PRUint16 af;        /* If the platform's implementation of accept()
-                         * requires knowing the address family of the 
-			 * socket, we save the address family here. */
+                         * requires knowing the address family of the
+             * socket, we save the address family here. */
 #endif
 
 #if defined(_WIN64)
@@ -1770,10 +1770,10 @@ struct PRDir {
 };
 
 #ifdef MOZ_UNICODE
-struct PRDirUTF16 { 
-    PRDirEntry d; 
-    _MDDirUTF16 md; 
-}; 
+struct PRDirUTF16 {
+    PRDirEntry d;
+    _MDDirUTF16 md;
+};
 #endif /* MOZ_UNICODE */
 
 extern void _PR_InitLocks(void);
@@ -1913,7 +1913,7 @@ extern PRStatus _PR_MD_WAIT_PROCESS(PRProcess *process, PRInt32 *exitCode);
 #define    _PR_MD_WAIT_PROCESS _MD_WAIT_PROCESS
 
 extern PRStatus _PR_MD_KILL_PROCESS(PRProcess *process);
-#define    _PR_MD_KILL_PROCESS _MD_KILL_PROCESS        
+#define    _PR_MD_KILL_PROCESS _MD_KILL_PROCESS
 
 /* Current Time */
 NSPR_API(PRTime) _PR_MD_NOW(void);
@@ -2016,7 +2016,7 @@ extern PRStatus _PR_MD_SYNC_MEM_MAP(
 /*
 ** Declare PRSharedMemory.
 */
-struct PRSharedMemory 
+struct PRSharedMemory
 {
     char        *ipcname; /* after conversion to native */
     PRSize      size;  /* from open */
@@ -2034,8 +2034,8 @@ struct PRSharedMemory
     PRUint32    ident; /* guard word at end of struct */
 #define _PR_SHM_IDENT 0xdeadbad
 };
-                                                      
-extern PRSharedMemory * _MD_OpenSharedMemory( 
+
+extern PRSharedMemory * _MD_OpenSharedMemory(
     const char *name,
     PRSize      size,
     PRIntn      flags,
@@ -2055,7 +2055,7 @@ extern PRStatus _MD_CloseSharedMemory( PRSharedMemory *shm );
 extern PRStatus _MD_DeleteSharedMemory( const char *name );
 #define _PR_MD_DELETE_SHARED_MEMORY  _MD_DeleteSharedMemory
 
-extern PRFileMap* _md_OpenAnonFileMap( 
+extern PRFileMap* _md_OpenAnonFileMap(
     const char *dirName,
     PRSize      size,
     PRFileMapProtect prot
@@ -2134,8 +2134,8 @@ extern PRSize _pr_CopyLowBits( void *dest, PRSize dstlen, void *src, PRSize srcl
 
 #if defined(_WIN64) && defined(WIN95)
 typedef struct _PRFileDescList {
-  PRFileDesc *fd;
-  struct _PRFileDescList *next;
+    PRFileDesc *fd;
+    struct _PRFileDescList *next;
 } PRFileDescList;
 
 extern PRLock *_fd_waiting_for_overlapped_done_lock;

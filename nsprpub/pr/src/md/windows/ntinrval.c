@@ -26,14 +26,14 @@ _PR_MD_INTERVAL_INIT()
     HMODULE mmtimerlib = LoadLibraryW(L"mmtimer.dll");  /* XXX leaked! */
     if (mmtimerlib) {
         intervalFunc = (IntervalFuncType)GetProcAddress(mmtimerlib,
-                                                        "timeGetTime");
+                       "timeGetTime");
     } else {
         intervalFunc = &GetTickCount;
     }
 #endif
 }
 
-PRIntervalTime 
+PRIntervalTime
 _PR_MD_GET_INTERVAL()
 {
     /* milliseconds since system start */
@@ -44,7 +44,7 @@ _PR_MD_GET_INTERVAL()
 #endif
 }
 
-PRIntervalTime 
+PRIntervalTime
 _PR_MD_INTERVAL_PER_SEC()
 {
     return 1000;

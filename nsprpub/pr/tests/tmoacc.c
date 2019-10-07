@@ -54,45 +54,54 @@ static void Accept(void *arg)
     PRInt32 recv_length = 0, flags = 0;
     PRFileDesc *clientSock;
     PRIntn toread, byte, bytes, loop = 0;
-    struct Descriptor { PRInt32 length; PRUint32 checksum; } descriptor;
+    struct Descriptor {
+        PRInt32 length;
+        PRUint32 checksum;
+    } descriptor;
 
     do
     {
         PRUint32 checksum = 0;
-        if (NULL != shared->debug)
+        if (NULL != shared->debug) {
             PR_fprintf(shared->debug, "[%d]accepting ... ", loop++);
+        }
         clientSock = PR_Accept(
-            shared->listenSock, &clientAddr, Timeout(shared));
+                         shared->listenSock, &clientAddr, Timeout(shared));
         if (clientSock != NULL)
         {
-            if (NULL != shared->debug)
+            if (NULL != shared->debug) {
                 PR_fprintf(shared->debug, "reading length ... ");
+            }
             bytes = PR_Recv(
-                clientSock, &descriptor, sizeof(descriptor),
-                flags, Timeout(shared));
+                        clientSock, &descriptor, sizeof(descriptor),
+                        flags, Timeout(shared));
             if (sizeof(descriptor) == bytes)
             {
                 /* and, before doing something stupid ... */
                 descriptor.length = PR_ntohl(descriptor.length);
                 descriptor.checksum = PR_ntohl(descriptor.checksum);
-                if (NULL != shared->debug)
+                if (NULL != shared->debug) {
                     PR_fprintf(shared->debug, "%d bytes ... ", descriptor.length);
+                }
                 toread = descriptor.length;
                 if (recv_length < descriptor.length)
                 {
-                    if (NULL != buffer) PR_DELETE(buffer);
+                    if (NULL != buffer) {
+                        PR_DELETE(buffer);
+                    }
                     buffer = (char*)PR_MALLOC(descriptor.length);
                     recv_length = descriptor.length;
                 }
                 for (toread = descriptor.length; toread > 0; toread -= bytes)
                 {
                     bytes = PR_Recv(
-                        clientSock, &buffer[descriptor.length - toread],
-                        toread, flags, Timeout(shared));
+                                clientSock, &buffer[descriptor.length - toread],
+                                toread, flags, Timeout(shared));
                     if (-1 == bytes)
                     {
-                        if (NULL != shared->debug)
+                        if (NULL != shared->debug) {
                             PR_fprintf(shared->debug, "read data failed...");
+                        }
                         bytes = 0;
                     }
                 }
@@ -102,8 +111,9 @@ static void Accept(void *arg)
                 PR_fprintf(shared->debug, "read desciptor failed...");
                 descriptor.length = -1;
             }
-            if (NULL != shared->debug)
+            if (NULL != shared->debug) {
                 PR_fprintf(shared->debug, "closing");
+            }
             rv = PR_Shutdown(clientSock, PR_SHUTDOWN_BOTH);
             if ((PR_FAILURE == rv) && (NULL != shared->debug))
             {
@@ -112,17 +122,19 @@ static void Accept(void *arg)
             }
             rv = PR_Close(clientSock);
             if (PR_FAILURE == rv) if (NULL != shared->debug)
-            {
-                PR_fprintf(shared->debug, " failed");
-                shared->passed = PR_FALSE;
-            }
+                {
+                    PR_fprintf(shared->debug, " failed");
+                    shared->passed = PR_FALSE;
+                }
             if (descriptor.length > 0)
             {
                 for (byte = 0; byte < descriptor.length; ++byte)
                 {
                     PRUint32 overflow = checksum & 0x80000000;
                     checksum = (checksum << 1);
-                    if (0x00000000 != overflow) checksum += 1;
+                    if (0x00000000 != overflow) {
+                        checksum += 1;
+                    }
                     checksum += buffer[byte];
                 }
                 if ((descriptor.checksum != checksum) && (NULL != shared->debug))
@@ -138,19 +150,24 @@ static void Accept(void *arg)
                 PR_NotifyCondVar(shared->cv);
                 PR_Unlock(shared->ml);
             }
-            if (NULL != shared->debug)
+            if (NULL != shared->debug) {
                 PR_fprintf(shared->debug, "\n");
+            }
         }
         else
         {
             if (PR_PENDING_INTERRUPT_ERROR != PR_GetError())
             {
-                if (NULL != shared->debug) PL_PrintError("Accept");
+                if (NULL != shared->debug) {
+                    PL_PrintError("Accept");
+                }
                 shared->passed = PR_FALSE;
             }
-        }        
+        }
     } while (running == shared->status);
-    if (NULL != buffer) PR_DELETE(buffer);
+    if (NULL != buffer) {
+        PR_DELETE(buffer);
+    }
 }  /* Accept */
 
 PRIntn Tmoacc(PRIntn argc, char **argv)
@@ -158,9 +175,9 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
     PRStatus rv;
     PRIntn exitStatus;
     PRIntn index;
-	Shared *shared;
-	PLOptStatus os;
-	PRThread **thread;
+    Shared *shared;
+    PLOptStatus os;
+    PRThread **thread;
     PRNetAddr listenAddr;
     PRSocketOptionData sockOpt;
     PRIntn timeout = DEFAULT_TIMEOUT;
@@ -168,7 +185,7 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
     PRIntn backlog = DEFAULT_BACKLOG;
     PRThreadScope thread_scope = PR_LOCAL_THREAD;
 
-	PLOptState *opt = PL_CreateOptState(argc, argv, "dGb:t:T:R");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "dGb:t:T:R");
 
     shared = PR_NEWZAP(Shared);
 
@@ -179,38 +196,46 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
     shared->ml = PR_NewLock();
     shared->cv = PR_NewCondVar(shared->ml);
 
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-            shared->debug = PR_GetSpecialFD(PR_StandardError);
-            break;
-        case 'G':  /* use global threads */
-            thread_scope = PR_GLOBAL_THREAD;
-            break;
-        case 'b':  /* size of listen backlog */
-            backlog = atoi(opt->value);
-            break;
-        case 't':  /* number of threads doing accept */
-            threads = atoi(opt->value);
-            break;
-        case 'T':  /* timeout used for network operations */
-            timeout = atoi(opt->value);
-            break;
-        case 'R':  /* randomize the timeout values */
-            shared->random = PR_TRUE;
-            break;
-        default:
-            break;
+            case 'd':  /* debug mode */
+                shared->debug = PR_GetSpecialFD(PR_StandardError);
+                break;
+            case 'G':  /* use global threads */
+                thread_scope = PR_GLOBAL_THREAD;
+                break;
+            case 'b':  /* size of listen backlog */
+                backlog = atoi(opt->value);
+                break;
+            case 't':  /* number of threads doing accept */
+                threads = atoi(opt->value);
+                break;
+            case 'T':  /* timeout used for network operations */
+                timeout = atoi(opt->value);
+                break;
+            case 'R':  /* randomize the timeout values */
+                shared->random = PR_TRUE;
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
-    if (0 == threads) threads = DEFAULT_THREADS;
-    if (0 == backlog) backlog = DEFAULT_BACKLOG;
-    if (0 == timeout) timeout = DEFAULT_TIMEOUT;
-    
+    PL_DestroyOptState(opt);
+    if (0 == threads) {
+        threads = DEFAULT_THREADS;
+    }
+    if (0 == backlog) {
+        backlog = DEFAULT_BACKLOG;
+    }
+    if (0 == timeout) {
+        timeout = DEFAULT_TIMEOUT;
+    }
+
     PR_STDIO_INIT();
     memset(&listenAddr, 0, sizeof(listenAddr));
     rv = PR_InitializeNetAddr(PR_IpAddrAny, BASE_PORT, &listenAddr);
@@ -236,15 +261,16 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
                 for (index = 0; index < threads; ++index)
                 {
                     thread[index] = PR_CreateThread(
-                        PR_USER_THREAD, Accept, shared,
-                        PR_PRIORITY_NORMAL, thread_scope,
-                        PR_JOINABLE_THREAD, 0);
+                                        PR_USER_THREAD, Accept, shared,
+                                        PR_PRIORITY_NORMAL, thread_scope,
+                                        PR_JOINABLE_THREAD, 0);
                     PR_ASSERT(NULL != thread[index]);
                 }
 
                 PR_Lock(shared->ml);
-                while (shared->status == running)
+                while (shared->status == running) {
                     PR_WaitCondVar(shared->cv, PR_INTERVAL_NO_TIMEOUT);
+                }
                 PR_Unlock(shared->ml);
                 for (index = 0; index < threads; ++index)
                 {
@@ -257,13 +283,17 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
             }
             else
             {
-                if (shared->debug) PL_PrintError("Listen");
+                if (shared->debug) {
+                    PL_PrintError("Listen");
+                }
                 shared->passed = PR_FALSE;
             }
         }
         else
         {
-            if (shared->debug) PL_PrintError("Bind");
+            if (shared->debug) {
+                PL_PrintError("Bind");
+            }
             shared->passed = PR_FALSE;
         }
 
@@ -271,7 +301,9 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
     }
     else
     {
-        if (shared->debug) PL_PrintError("Create");
+        if (shared->debug) {
+            PL_PrintError("Create");
+        }
         shared->passed = PR_FALSE;
     }
 
@@ -290,7 +322,7 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
 int main(int argc, char **argv)
 {
     return (PR_VersionCheck(PR_VERSION)) ?
-        PR_Initialize(Tmoacc, argc, argv, 4) : -1;
+           PR_Initialize(Tmoacc, argc, argv, 4) : -1;
 }  /* main */
 
 /* tmoacc */

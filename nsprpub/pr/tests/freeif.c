@@ -27,16 +27,20 @@ int main(int argc, char **argv)
     char *ptr = NULL;
 
     /* this fails to compile with the old definition of PR_DELETE */
-    if (foo)
+    if (foo) {
         PR_DELETE(ptr);
-    else
+    }
+    else {
         Noop();
+    }
 
     /* this nests incorrectly with the old definition of PR_FREEIF */
-    if (foo)
+    if (foo) {
         PR_FREEIF(ptr);
-    else
+    }
+    else {
         Fail();
+    }
 
     printf("PASS\n");
     return 0;

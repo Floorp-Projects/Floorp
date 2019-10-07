@@ -22,22 +22,22 @@
  */
 
 #define PR_LINKER_ARCH          "aix"
-#define _PR_SI_SYSNAME		    "AIX"
-#define _PR_SI_ARCHITECTURE	    "rs6000"
-#define PR_DLL_SUFFIX		    ".so"
+#define _PR_SI_SYSNAME          "AIX"
+#define _PR_SI_ARCHITECTURE     "rs6000"
+#define PR_DLL_SUFFIX           ".so"
 
-#define _PR_VMBASE	 	        0x30000000
-#define _PR_STACK_VMBASE	    0x50000000
-#define _MD_DEFAULT_STACK_SIZE	(2*65536L)
-#define _MD_MINIMUM_STACK_SIZE	(2*65536L)
-#define _MD_MMAP_FLAGS		    MAP_PRIVATE
+#define _PR_VMBASE              0x30000000
+#define _PR_STACK_VMBASE        0x50000000
+#define _MD_DEFAULT_STACK_SIZE  (2*65536L)
+#define _MD_MINIMUM_STACK_SIZE  (2*65536L)
+#define _MD_MMAP_FLAGS          MAP_PRIVATE
 
 #define NEED_TIME_R
 #undef  HAVE_STACK_GROWING_UP
-#undef	HAVE_WEAK_IO_SYMBOLS
-#undef	HAVE_WEAK_MALLOC_SYMBOLS
-#define	HAVE_DLL
-#define	USE_DLFCN
+#undef  HAVE_WEAK_IO_SYMBOLS
+#undef  HAVE_WEAK_MALLOC_SYMBOLS
+#define HAVE_DLL
+#define USE_DLFCN
 #define _PR_HAVE_SOCKADDR_LEN
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
@@ -85,13 +85,13 @@ extern PRIntervalTime _MD_AixIntervalPerSec(void);
 
 #include <setjmp.h>
 
-#define _MD_GET_SP(_t)				(_t)->md.jb[3]
-#define _MD_SET_THR_SP(_t, _sp)		((_t)->md.jb[3] = (int) (_sp - 2 * 64))
-#define PR_NUM_GCREGS				_JBLEN
+#define _MD_GET_SP(_t)              (_t)->md.jb[3]
+#define _MD_SET_THR_SP(_t, _sp)     ((_t)->md.jb[3] = (int) (_sp - 2 * 64))
+#define PR_NUM_GCREGS               _JBLEN
 
-#define CONTEXT(_th) 				((_th)->md.jb)
-#define SAVE_CONTEXT(_th)			_setjmp(CONTEXT(_th))
-#define GOTO_CONTEXT(_th)			_longjmp(CONTEXT(_th), 1)
+#define CONTEXT(_th)                ((_th)->md.jb)
+#define SAVE_CONTEXT(_th)           _setjmp(CONTEXT(_th))
+#define GOTO_CONTEXT(_th)           _longjmp(CONTEXT(_th), 1)
 
 #ifdef PTHREADS_USER
 #include "_nspr_pthread.h"
@@ -100,26 +100,26 @@ extern PRIntervalTime _MD_AixIntervalPerSec(void);
 /*
 ** Initialize the thread context preparing it to execute _main.
 */
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)	      \
-    PR_BEGIN_MACRO				      \
+#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)         \
+    PR_BEGIN_MACRO                    \
         *status = PR_TRUE;              \
-	if (setjmp(CONTEXT(_thread))) {	\
-	    (*_main)();			\
-	}				\
-	_MD_GET_SP(_thread) = (int) (_sp - 2 * 64);		\
+    if (setjmp(CONTEXT(_thread))) { \
+        (*_main)();         \
+    }               \
+    _MD_GET_SP(_thread) = (int) (_sp - 2 * 64);     \
     PR_END_MACRO
 
 #define _MD_SWITCH_CONTEXT(_thread)  \
     if (!setjmp(CONTEXT(_thread))) { \
-	(_thread)->md.errcode = errno;  \
-	_PR_Schedule();		     \
+    (_thread)->md.errcode = errno;  \
+    _PR_Schedule();          \
     }
 
 /*
 ** Restore a thread context, saved by _MD_SWITCH_CONTEXT
 */
 #define _MD_RESTORE_CONTEXT(_thread) \
-{				     \
+{                    \
     errno = (_thread)->md.errcode; \
     _MD_SET_CURRENT_THREAD(_thread); \
     longjmp(CONTEXT(_thread), 1); \
@@ -166,28 +166,28 @@ struct _MDCPU_Unix {
 #ifndef _PR_USE_POLL
     fd_set fd_read_set, fd_write_set, fd_exception_set;
     PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
-				fd_exception_cnt[_PR_MD_MAX_OSFD];
+            fd_exception_cnt[_PR_MD_MAX_OSFD];
 #else
-	struct pollfd *ioq_pollfds;
-	int ioq_pollfds_size;
-#endif	/* _PR_USE_POLL */
+    struct pollfd *ioq_pollfds;
+    int ioq_pollfds_size;
+#endif  /* _PR_USE_POLL */
 };
 
-#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_IOQ(_cpu)           ((_cpu)->md.md_unix.ioQ)
 #define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
-#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
-#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
-#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
-#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
-#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
-#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
-#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
-#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
-#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
-#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
-#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+#define _PR_FD_READ_SET(_cpu)       ((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)       ((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)      ((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)      ((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)  ((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)  ((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)       ((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)      ((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)      ((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)       ((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)  ((_cpu)->md.md_unix.ioq_pollfds_size)
 
-#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)  32
 
 struct _MDCPU {
     struct _MDCPU_Unix md_unix;
@@ -205,19 +205,19 @@ struct _MDCPU {
 #define _MD_IOQ_LOCK()
 #define _MD_IOQ_UNLOCK()
 
-#define _MD_EARLY_INIT          	_MD_EarlyInit
-#define _MD_FINAL_INIT			_PR_UnixInit
-#define _MD_INIT_RUNNING_CPU(cpu)	_MD_unix_init_running_cpu(cpu)
-#define _MD_INIT_THREAD			_MD_InitializeThread
+#define _MD_EARLY_INIT              _MD_EarlyInit
+#define _MD_FINAL_INIT          _PR_UnixInit
+#define _MD_INIT_RUNNING_CPU(cpu)   _MD_unix_init_running_cpu(cpu)
+#define _MD_INIT_THREAD         _MD_InitializeThread
 #define _MD_EXIT_THREAD(thread)
-#define	_MD_SUSPEND_THREAD(thread)
-#define	_MD_RESUME_THREAD(thread)
+#define _MD_SUSPEND_THREAD(thread)
+#define _MD_RESUME_THREAD(thread)
 #define _MD_CLEAN_THREAD(_thread)
 #endif /* PTHREADS_USER */
 
 #ifdef AIX_RENAME_SELECT
-#define _MD_SELECT	select
-#define _MD_POLL	poll
+#define _MD_SELECT  select
+#define _MD_POLL    poll
 #endif
 
 extern void _MD_aix_map_sendfile_error(int err);

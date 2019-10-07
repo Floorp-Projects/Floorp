@@ -32,8 +32,8 @@
 ** process exits when the last user thread exits).
 **
 ** Threads also have a "scope flag" which controls whether the threads
-** are scheduled in the local scope or scheduled by the OS globally. This 
-** indicates whether a thread is permanently bound to a native OS thread. 
+** are scheduled in the local scope or scheduled by the OS globally. This
+** indicates whether a thread is permanently bound to a native OS thread.
 ** An unbound thread competes for scheduling resources in the same process.
 **
 ** Another flag is "state flag" which control whether the thread is joinable.
@@ -103,18 +103,18 @@ typedef enum PRThreadPriority
 ** PR_USER_THREAD to exit then the process exits.
 */
 NSPR_API(PRThread*) PR_CreateThread(PRThreadType type,
-                     void (PR_CALLBACK *start)(void *arg),
-                     void *arg,
-                     PRThreadPriority priority,
-                     PRThreadScope scope,
-                     PRThreadState state,
-                     PRUint32 stackSize);
+                                    void (PR_CALLBACK *start)(void *arg),
+                                    void *arg,
+                                    PRThreadPriority priority,
+                                    PRThreadScope scope,
+                                    PRThreadState state,
+                                    PRUint32 stackSize);
 
 /*
 ** Wait for thread termination:
-**     "thread" is the target thread 
+**     "thread" is the target thread
 **
-** This can return PR_FAILURE if no joinable thread could be found 
+** This can return PR_FAILURE if no joinable thread could be found
 ** corresponding to the specified target thread.
 **
 ** The calling thread is blocked until the target thread completes.
@@ -163,9 +163,9 @@ NSPR_API(PRStatus) PR_SetCurrentThreadName(const char *name);
 NSPR_API(const char *) PR_GetThreadName(const PRThread *thread);
 
 /*
-** This routine returns a new index for per-thread-private data table. 
-** The index is visible to all threads within a process. This index can 
-** be used with the PR_SetThreadPrivate() and PR_GetThreadPrivate() routines 
+** This routine returns a new index for per-thread-private data table.
+** The index is visible to all threads within a process. This index can
+** be used with the PR_SetThreadPrivate() and PR_GetThreadPrivate() routines
 ** to save and retrieve data associated with the index for a thread.
 **
 ** Each index is associationed with a destructor function ('dtor'). The function
@@ -176,14 +176,14 @@ NSPR_API(const char *) PR_GetThreadName(const PRThread *thread);
 **      - new thread private data is set and the current private data is
 **        not NULL.
 **
-** The index independently maintains specific values for each binding thread. 
+** The index independently maintains specific values for each binding thread.
 ** A thread can only get access to its own thread-specific-data.
 **
 ** Upon a new index return the value associated with the index for all threads
-** is NULL, and upon thread creation the value associated with all indices for 
-** that thread is NULL. 
+** is NULL, and upon thread creation the value associated with all indices for
+** that thread is NULL.
 **
-** Returns PR_FAILURE if the total number of indices will exceed the maximun 
+** Returns PR_FAILURE if the total number of indices will exceed the maximun
 ** allowed.
 */
 typedef void (PR_CALLBACK *PRThreadPrivateDTOR)(void *priv);
@@ -194,7 +194,7 @@ NSPR_API(PRStatus) PR_NewThreadPrivateIndex(
 /*
 ** Define some per-thread-private data.
 **     "tpdIndex" is an index into the per-thread private data table
-**     "priv" is the per-thread-private data 
+**     "priv" is the per-thread-private data
 **
 ** If the per-thread private data table has a previously registered
 ** destructor function and a non-NULL per-thread-private data value,
@@ -206,9 +206,9 @@ NSPR_API(PRStatus) PR_SetThreadPrivate(PRUintn tpdIndex, void *priv);
 
 /*
 ** Recover the per-thread-private data for the current thread. "tpdIndex" is
-** the index into the per-thread private data table. 
+** the index into the per-thread private data table.
 **
-** The returned value may be NULL which is indistinguishable from an error 
+** The returned value may be NULL which is indistinguishable from an error
 ** condition.
 **
 ** A thread can only get access to its own thread-specific-data.

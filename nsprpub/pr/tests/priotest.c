@@ -34,8 +34,9 @@ static PRBool debug_mode = PR_FALSE;
 static PRUint32 PerSecond(PRIntervalTime timein)
 {
     PRUint32 loop = 0;
-    while (((PRIntervalTime)(PR_IntervalNow()) - timein) < oneSecond)
+    while (((PRIntervalTime)(PR_IntervalNow()) - timein) < oneSecond) {
         loop += 1;
+    }
     return loop;
 }  /* PerSecond */
 
@@ -66,9 +67,9 @@ static void PR_CALLBACK High(void *arg)
 static void Help(void)
 {
     PR_fprintf(
-		debug_out, "Usage: priotest [-d] [-c n]\n");
+        debug_out, "Usage: priotest [-d] [-c n]\n");
     PR_fprintf(
-		debug_out, "-c n\tduration of test in seconds (default: %d)\n", DEFAULT_DURATION);
+        debug_out, "-c n\tduration of test in seconds (default: %d)\n", DEFAULT_DURATION);
     PR_fprintf(
         debug_out, "-d\tturn on debugging output (default: FALSE)\n");
 }  /* Help */
@@ -84,7 +85,7 @@ static void RudimentaryTests(void)
     PR_SetThreadPriority(PR_GetCurrentThread(), PR_PRIORITY_URGENT);
     priority = PR_GetThreadPriority(PR_GetCurrentThread());
     failed = ((PR_TRUE == failed) || (PR_PRIORITY_URGENT != priority))
-        ? PR_TRUE : PR_FALSE;
+             ? PR_TRUE : PR_FALSE;
     if (debug_mode && (PR_PRIORITY_URGENT != priority))
     {
         PR_fprintf(debug_out, "PR_[S/G]etThreadPriority() failed\n");
@@ -95,7 +96,7 @@ static void RudimentaryTests(void)
         PR_GetCurrentThread(), (PRThreadPriority)(PR_PRIORITY_FIRST - 1));
     priority = PR_GetThreadPriority(PR_GetCurrentThread());
     failed = ((PR_TRUE == failed) || (PR_PRIORITY_FIRST != priority))
-        ? PR_TRUE : PR_FALSE;
+             ? PR_TRUE : PR_FALSE;
     if (debug_mode && (PR_PRIORITY_FIRST != priority))
     {
         PR_fprintf(debug_out, "PR_SetThreadPriority(-1) failed\n");
@@ -105,7 +106,7 @@ static void RudimentaryTests(void)
         PR_GetCurrentThread(), (PRThreadPriority)(PR_PRIORITY_LAST + 1));
     priority = PR_GetThreadPriority(PR_GetCurrentThread());
     failed = ((PR_TRUE == failed) || (PR_PRIORITY_LAST != priority))
-        ? PR_TRUE : PR_FALSE;
+             ? PR_TRUE : PR_FALSE;
     if (debug_mode && (PR_PRIORITY_LAST != priority))
     {
         PR_fprintf(debug_out, "PR_SetThreadPriority(+1) failed\n");
@@ -128,32 +129,36 @@ int main(int argc, char **argv)
     PLOptStatus os;
     PRIntn duration = DEFAULT_DURATION;
     PRUint32 totalCount, highCount = 0, lowCount = 0;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "hdc:");
+    PLOptState *opt = PL_CreateOptState(argc, argv, "hdc:");
 
     debug_out = PR_STDOUT;
     oneSecond = PR_SecondsToInterval(1);
 
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-			debug_mode = PR_TRUE;
-            break;
-        case 'c':  /* test duration */
-			duration = atoi(opt->value);
-            break;
-        case 'h':  /* help message */
-         default:
-			Help();
-			return 2;
+            case 'd':  /* debug mode */
+                debug_mode = PR_TRUE;
+                break;
+            case 'c':  /* test duration */
+                duration = atoi(opt->value);
+                break;
+            case 'h':  /* help message */
+            default:
+                Help();
+                return 2;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
     PR_STDIO_INIT();
 
-    if (duration == 0) duration = DEFAULT_DURATION;
+    if (duration == 0) {
+        duration = DEFAULT_DURATION;
+    }
 
     RudimentaryTests();
 
@@ -167,9 +172,9 @@ int main(int argc, char **argv)
     if (debug_mode)
     {
         PR_fprintf(debug_out,
-		    "The high priority thread should get approximately three\n");
+                   "The high priority thread should get approximately three\n");
         PR_fprintf( debug_out,
-		    "times what the low priority thread manages. A maximum of \n");
+                    "times what the low priority thread manages. A maximum of \n");
         PR_fprintf( debug_out, "%d cycles are available.\n\n", totalCount);
     }
 
@@ -178,16 +183,19 @@ int main(int argc, char **argv)
     while (duration--)
     {
         PRIntn loop = 5;
-        while (loop--) PR_Sleep(oneSecond);
-        if (debug_mode)
+        while (loop--) {
+            PR_Sleep(oneSecond);
+        }
+        if (debug_mode) {
             PR_fprintf(debug_out, "high : low :: %d : %d\n", highCount, lowCount);
+        }
     }
 
 
     PR_ProcessExit((failed) ? 1 : 0);
 
-	PR_NOT_REACHED("You can't get here -- but you did!");
-	return 1;  /* or here */
+    PR_NOT_REACHED("You can't get here -- but you did!");
+    return 1;  /* or here */
 
 }  /* main */
 

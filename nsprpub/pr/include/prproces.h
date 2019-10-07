@@ -60,7 +60,7 @@ NSPR_API(PRStatus) PR_ProcessAttrSetInheritableFD(
 ** invalid arguments or insufficient resources.
 **
 ** A process may be created such that the creator can later synchronize its
-** termination using PR_WaitProcess(). 
+** termination using PR_WaitProcess().
 */
 
 NSPR_API(PRProcess*) PR_CreateProcess(

@@ -46,21 +46,23 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'i':  /* signed integer */
-            si.i = (PRInt32)atoi(opt->value);
-            bsi = PR_TRUE;
-            break;
-        case 'u':  /* unsigned */
-            ui.i = (PRUint32)atoi(opt->value);
-            bui = PR_TRUE;
-            break;
-        case 'h':  /* user wants some guidance */
-         default:
-            Help();  /* so give him an earful */
-            return 2;  /* but not a lot else */
+            case 'i':  /* signed integer */
+                si.i = (PRInt32)atoi(opt->value);
+                bsi = PR_TRUE;
+                break;
+            case 'u':  /* unsigned */
+                ui.i = (PRUint32)atoi(opt->value);
+                bui = PR_TRUE;
+                break;
+            case 'h':  /* user wants some guidance */
+            default:
+                Help();  /* so give him an earful */
+                return 2;  /* but not a lot else */
         }
     }
     PL_DestroyOptState(opt);
@@ -92,7 +94,7 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
 int main(int argc, char **argv)
 {
     PRIntn rv;
-    
+
     PR_STDIO_INIT();
     rv = PR_Initialize(RealMain, argc, argv, 0);
     return rv;

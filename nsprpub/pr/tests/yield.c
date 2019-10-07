@@ -17,7 +17,7 @@
 #define THREADS 10
 
 
-void 
+void
 threadmain(void *_id)
 {
     int id = (int)_id;
@@ -43,14 +43,15 @@ int main(int argc, char **argv)
 
     for (index=0; index<THREADS; index++) {
         a[index] = PR_CreateThread(PR_USER_THREAD,
-                              threadmain,
-                              (void *)index,
-                              PR_PRIORITY_NORMAL,
-                              index%2?PR_LOCAL_THREAD:PR_GLOBAL_THREAD,
-                              PR_JOINABLE_THREAD,
-                              0);
+                                   threadmain,
+                                   (void *)index,
+                                   PR_PRIORITY_NORMAL,
+                                   index%2?PR_LOCAL_THREAD:PR_GLOBAL_THREAD,
+                                   PR_JOINABLE_THREAD,
+                                   0);
     }
-    for(index=0; index<THREADS; index++)
+    for(index=0; index<THREADS; index++) {
         PR_JoinThread(a[index]);
+    }
     printf("main dying\n");
 }

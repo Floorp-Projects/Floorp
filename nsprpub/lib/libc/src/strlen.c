@@ -13,17 +13,20 @@ PL_strlen(const char *str)
 {
     size_t l;
 
-    if( (const char *)0 == str ) return 0;
+    if( (const char *)0 == str ) {
+        return 0;
+    }
 
     l = strlen(str);
 
     /* error checking in case we have a 64-bit platform -- make sure
      * we don't have ultra long strings that overflow an int32
-     */ 
+     */
     if( sizeof(PRUint32) < sizeof(size_t) )
     {
-        if( l > PR_INT32_MAX )
+        if( l > PR_INT32_MAX ) {
             PR_Assert("l <= PR_INT32_MAX", __FILE__, __LINE__);
+        }
     }
 
     return (PRUint32)l;
@@ -34,7 +37,9 @@ PL_strnlen(const char *str, PRUint32 max)
 {
     register const char *s;
 
-    if( (const char *)0 == str ) return 0;
+    if( (const char *)0 == str ) {
+        return 0;
+    }
     for( s = str; max && *s; s++, max-- )
         ;
 

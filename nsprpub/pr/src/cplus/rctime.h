@@ -39,7 +39,7 @@ public:
     virtual ~RCTime();
 
     /* assignment operators */
-    void operator=(const RCTime&); 
+    void operator=(const RCTime&);
     void operator=(const PRExplodedTime&);
 
     /* comparitive operators */
@@ -75,31 +75,61 @@ public:
 
 inline RCTime::RCTime(): RCBase() { }
 
-inline void RCTime::Now() { gmt = PR_Now(); }
-inline RCTime::operator PRTime() const { return gmt; }
+inline void RCTime::Now() {
+    gmt = PR_Now();
+}
+inline RCTime::operator PRTime() const {
+    return gmt;
+}
 
-inline void RCTime::operator=(PRTime his) { gmt = his; }
-inline void RCTime::operator=(const RCTime& his) { gmt = his.gmt; }
+inline void RCTime::operator=(PRTime his) {
+    gmt = his;
+}
+inline void RCTime::operator=(const RCTime& his) {
+    gmt = his.gmt;
+}
 
 inline PRBool RCTime::operator<(const RCTime& his)
-    { return (gmt < his.gmt) ? PR_TRUE : PR_FALSE; }
+{
+    return (gmt < his.gmt) ? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCTime::operator>(const RCTime& his)
-    { return (gmt > his.gmt) ? PR_TRUE : PR_FALSE; }
+{
+    return (gmt > his.gmt) ? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCTime::operator<=(const RCTime& his)
-    { return (gmt <= his.gmt) ? PR_TRUE : PR_FALSE; }
+{
+    return (gmt <= his.gmt) ? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCTime::operator>=(const RCTime& his)
-    { return (gmt >= his.gmt) ? PR_TRUE : PR_FALSE; }
+{
+    return (gmt >= his.gmt) ? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCTime::operator==(const RCTime& his)
-    { return (gmt == his.gmt) ? PR_TRUE : PR_FALSE; }
+{
+    return (gmt == his.gmt) ? PR_TRUE : PR_FALSE;
+}
 
 inline RCTime& RCTime::operator+=(const RCTime& his)
-    { gmt += his.gmt; return *this; }
+{
+    gmt += his.gmt;
+    return *this;
+}
 inline RCTime& RCTime::operator-=(const RCTime& his)
-    { gmt -= his.gmt; return *this; }
+{
+    gmt -= his.gmt;
+    return *this;
+}
 inline RCTime& RCTime::operator/=(PRUint64 his)
-    { gmt /= his; return *this; }
+{
+    gmt /= his;
+    return *this;
+}
 inline RCTime& RCTime::operator*=(PRUint64 his)
-    { gmt *= his; return *this; }
+{
+    gmt *= his;
+    return *this;
+}
 
 #endif /* defined(_RCTIME_H) */
 

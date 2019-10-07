@@ -27,9 +27,9 @@ PR_BEGIN_EXTERN_C
 
 /*
 ** Associate a thread object with an existing native thread.
-** 	"type" is the type of thread object to attach
-** 	"priority" is the priority to assign to the thread
-** 	"stack" defines the shape of the threads stack
+**  "type" is the type of thread object to attach
+**  "priority" is the priority to assign to the thread
+**  "stack" defines the shape of the threads stack
 **
 ** This can return NULL if some kind of error occurs, or if memory is
 ** tight. This call invokes "start(obj,arg)" and returns when the
@@ -39,8 +39,8 @@ PR_BEGIN_EXTERN_C
 ** thread. PR_Init does this automatically for the primordial thread.
 */
 NSPR_API(PRThread*) PR_AttachThread(PRThreadType type,
-                                     PRThreadPriority priority,
-				     PRThreadStack *stack);
+                                    PRThreadPriority priority,
+                                    PRThreadStack *stack);
 
 /*
 ** Detach the nspr thread from the currently executing native thread.
@@ -81,7 +81,7 @@ NSPR_API(void) PR_SetThreadDumpProc(
 NSPR_API(PRInt32) PR_GetThreadAffinityMask(PRThread *thread, PRUint32 *mask);
 
 /*
-** Set this thread's affinity mask.  
+** Set this thread's affinity mask.
 **
 ** Returns 0 on success, -1 on failure.
 */
@@ -105,11 +105,11 @@ NSPR_API(void) PR_SetThreadRecycleMode(PRUint32 flag);
 
 
 /*---------------------------------------------------------------------------
-** THREAD PRIVATE FUNCTIONS FOR GARBAGE COLLECTIBLE THREADS           
+** THREAD PRIVATE FUNCTIONS FOR GARBAGE COLLECTIBLE THREADS
 ---------------------------------------------------------------------------*/
 
-/* 
-** Only Garbage collectible threads participate in resume all, suspend all and 
+/*
+** Only Garbage collectible threads participate in resume all, suspend all and
 ** enumeration operations.  They are also different during creation when
 ** platform specific action may be needed (For example, all Solaris GC able
 ** threads are bound threads).
@@ -120,20 +120,20 @@ NSPR_API(void) PR_SetThreadRecycleMode(PRUint32 flag);
 ** collectible.
 */
 NSPR_API(PRThread*) PR_CreateThreadGCAble(PRThreadType type,
-				     void (*start)(void *arg),
-				     void *arg,
-				     PRThreadPriority priority,
-				     PRThreadScope scope,
-				     PRThreadState state,
-				     PRUint32 stackSize);
+        void (*start)(void *arg),
+        void *arg,
+        PRThreadPriority priority,
+        PRThreadScope scope,
+        PRThreadState state,
+        PRUint32 stackSize);
 
 /*
-** Same as PR_AttachThread except that the thread being attached is marked as 
+** Same as PR_AttachThread except that the thread being attached is marked as
 ** garbage collectible.
 */
 NSPR_API(PRThread*) PR_AttachThreadGCAble(PRThreadType type,
-					PRThreadPriority priority,
-					PRThreadStack *stack);
+        PRThreadPriority priority,
+        PRThreadStack *stack);
 
 /*
 ** Mark the thread as garbage collectible.
@@ -146,19 +146,19 @@ NSPR_API(void) PR_SetThreadGCAble(void);
 NSPR_API(void) PR_ClearThreadGCAble(void);
 
 /*
-** This routine prevents all other GC able threads from running. This call is needed by 
+** This routine prevents all other GC able threads from running. This call is needed by
 ** the garbage collector.
 */
 NSPR_API(void) PR_SuspendAll(void);
 
 /*
-** This routine unblocks all other GC able threads that were suspended from running by 
+** This routine unblocks all other GC able threads that were suspended from running by
 ** PR_SuspendAll(). This call is needed by the garbage collector.
 */
 NSPR_API(void) PR_ResumeAll(void);
 
 /*
-** Return the thread stack pointer of the given thread. 
+** Return the thread stack pointer of the given thread.
 ** Needed by the garbage collector.
 */
 NSPR_API(void *) PR_GetSP(PRThread *thread);
@@ -199,26 +199,26 @@ NSPR_API(void) SetExecutionEnvironment(PRThread* thread, void *environment);
 typedef PRStatus (PR_CALLBACK *PREnumerator)(PRThread *t, int i, void *arg);
 NSPR_API(PRStatus) PR_EnumerateThreads(PREnumerator func, void *arg);
 
-/* 
+/*
 ** Signature of a thread stack scanning function. It is applied to every
 ** contiguous group of potential pointers within a thread. Count denotes the
-** number of pointers. 
+** number of pointers.
 */
-typedef PRStatus 
+typedef PRStatus
 (PR_CALLBACK *PRScanStackFun)(PRThread* t,
-			      void** baseAddr, PRUword count, void* closure);
+                              void** baseAddr, PRUword count, void* closure);
 
 /*
-** Applies scanFun to all contiguous groups of potential pointers 
+** Applies scanFun to all contiguous groups of potential pointers
 ** within a thread. This includes the stack, registers, and thread-local
 ** data. If scanFun returns a status value other than PR_SUCCESS the scan
-** is aborted, and the status value is returned. 
+** is aborted, and the status value is returned.
 */
 NSPR_API(PRStatus)
 PR_ThreadScanStackPointers(PRThread* t,
                            PRScanStackFun scanFun, void* scanClosure);
 
-/* 
+/*
 ** Calls PR_ThreadScanStackPointers for every thread.
 */
 NSPR_API(PRStatus)
@@ -226,14 +226,14 @@ PR_ScanStackPointers(PRScanStackFun scanFun, void* scanClosure);
 
 /*
 ** Returns a conservative estimate on the amount of stack space left
-** on a thread in bytes, sufficient for making decisions about whether 
+** on a thread in bytes, sufficient for making decisions about whether
 ** to continue recursing or not.
 */
 NSPR_API(PRUword)
 PR_GetStackSpaceLeft(PRThread* t);
 
 /*---------------------------------------------------------------------------
-** THREAD CPU PRIVATE FUNCTIONS             
+** THREAD CPU PRIVATE FUNCTIONS
 ---------------------------------------------------------------------------*/
 
 /*
@@ -294,7 +294,7 @@ NSPR_API(void) PR_OS2_UnsetFloatExcpHandler(EXCEPTIONREGISTRATIONRECORD* e);
 #endif /* XP_OS2 */
 
 /* I think PR_GetMonitorEntryCount is useless. All you really want is this... */
-#define PR_InMonitor(m)		(PR_GetMonitorEntryCount(m) > 0)
+#define PR_InMonitor(m)     (PR_GetMonitorEntryCount(m) > 0)
 
 /*---------------------------------------------------------------------------
 ** Special X-Lock hack for client

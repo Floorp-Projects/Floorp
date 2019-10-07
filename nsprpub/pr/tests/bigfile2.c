@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     LL_SHL(offset, offset, 32);
 
     fd = PR_Open(TEST_FILE_NAME,
-            PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666);
+                 PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666);
     if (fd == NULL) {
         fprintf(stderr, "PR_Open failed\n");
         exit(1);
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
 #ifdef _WIN32
     hFile = CreateFile(TEST_FILE_NAME_FOR_CREATEFILE, GENERIC_READ, 0, NULL,
-            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "CreateFile failed\n");
         exit(1);

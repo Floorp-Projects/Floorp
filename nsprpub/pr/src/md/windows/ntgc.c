@@ -10,7 +10,7 @@
 #include <windows.h>
 #include "primpl.h"
 
-PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np) 
+PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
 #if defined(_X86_)
     CONTEXT context;
@@ -34,8 +34,8 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
     } else {
         /* WARNING WARNING WARNING WARNING WARNING WARNING WARNING
          *
-         * This code is extremely machine dependant and completely 
-         * undocumented by MS.  Its only known to work experimentally.  
+         * This code is extremely machine dependant and completely
+         * undocumented by MS.  Its only known to work experimentally.
          * Ready for a walk on the wild * side?
          *
          * WARNING WARNING WARNING WARNING WARNING WARNING WARNING */
@@ -47,7 +47,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
          * Are your palms sweating yet?
          */
 
-        /* 
+        /*
         ** EAX is on the stack (ESP+0)
         ** EDX is on the stack (ESP+4)
         ** ECX is on the stack (ESP+8)
@@ -71,7 +71,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 }
 
 /* This function is not used right now, but is left as a reference.
- * If you ever need to get the fiberID from the currently running fiber, 
+ * If you ever need to get the fiberID from the currently running fiber,
  * this is it.
  */
 void *
@@ -81,15 +81,15 @@ GetMyFiberID()
     void *fiberData;
 
     /* A pointer to our tib entry is found at FS:[18]
-     * At offset 10h is the fiberData pointer.  The context of the 
-     * fiber is stored in there.  
+     * At offset 10h is the fiberData pointer.  The context of the
+     * fiber is stored in there.
      */
     __asm {
         mov    EDX, FS:[18h]
         mov    EAX, DWORD PTR [EDX+10h]
         mov    [fiberData], EAX
     }
-  
+
     return fiberData;
 #else
     PR_NOT_REACHED("not implemented");

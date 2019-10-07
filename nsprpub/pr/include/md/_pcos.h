@@ -6,7 +6,7 @@
 #ifndef prpcos_h___
 #define prpcos_h___
 
-#define PR_DLL_SUFFIX		".dll"
+#define PR_DLL_SUFFIX       ".dll"
 
 #include <stdlib.h>
 

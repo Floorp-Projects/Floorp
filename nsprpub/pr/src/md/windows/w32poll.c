@@ -62,13 +62,17 @@ int _PR_NTFiberSafeSelect(
         data.tv = timeout;
 
         selectThread = PR_CreateThread(
-            PR_USER_THREAD, _PR_MD_select_thread, &data,
-            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
-        if (selectThread == NULL) return -1;
+                           PR_USER_THREAD, _PR_MD_select_thread, &data,
+                           PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+        if (selectThread == NULL) {
+            return -1;
+        }
 
         PR_JoinThread(selectThread);
         ready = data.status;
-        if (ready == SOCKET_ERROR) WSASetLastError(data.error);
+        if (ready == SOCKET_ERROR) {
+            WSASetLastError(data.error);
+        }
     }
     return ready;
 }
@@ -120,17 +124,17 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
             if (pd->in_flags & PR_POLL_READ)
             {
                 in_flags_read = (pd->fd->methods->poll)(
-                    pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_WRITE),
-                    &out_flags_read);
+                                    pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_WRITE),
+                                    &out_flags_read);
             }
             if (pd->in_flags & PR_POLL_WRITE)
             {
                 in_flags_write = (pd->fd->methods->poll)(
-                    pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_READ),
-                    &out_flags_write);
+                                     pd->fd, (PRInt16)(pd->in_flags & ~PR_POLL_READ),
+                                     &out_flags_write);
             }
             if ((0 != (in_flags_read & out_flags_read))
-            || (0 != (in_flags_write & out_flags_write)))
+                || (0 != (in_flags_write & out_flags_write)))
             {
                 /* this one's ready right now (buffered input) */
                 if (0 == ready)
@@ -158,7 +162,7 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                 /* ignore a socket without PR_NSPR_IO_LAYER available */
 
                 if ((NULL != bottom)
-                && (_PR_FILEDESC_OPEN == bottom->secret->state))
+                    && (_PR_FILEDESC_OPEN == bottom->secret->state))
                 {
                     if (0 == ready)
                     {
@@ -214,7 +218,9 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
         }
     }
 
-    if (0 != ready) return ready;  /* no need to block */
+    if (0 != ready) {
+        return ready;    /* no need to block */
+    }
 
     /*
      * FD_SET does nothing if the fd_set's internal fd_array is full.  If
@@ -271,22 +277,30 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 
                 if (FD_ISSET(osfd, &rd))
                 {
-                    if (pd->out_flags & _PR_POLL_READ_SYS_READ)
+                    if (pd->out_flags & _PR_POLL_READ_SYS_READ) {
                         out_flags |= PR_POLL_READ;
-                    if (pd->out_flags & _PR_POLL_WRITE_SYS_READ)
+                    }
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_READ) {
                         out_flags |= PR_POLL_WRITE;
-                } 
+                    }
+                }
                 if (FD_ISSET(osfd, &wt))
                 {
-                    if (pd->out_flags & _PR_POLL_READ_SYS_WRITE)
+                    if (pd->out_flags & _PR_POLL_READ_SYS_WRITE) {
                         out_flags |= PR_POLL_READ;
-                    if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE)
+                    }
+                    if (pd->out_flags & _PR_POLL_WRITE_SYS_WRITE) {
                         out_flags |= PR_POLL_WRITE;
-                } 
-                if (FD_ISSET(osfd, &ex)) out_flags |= PR_POLL_EXCEPT;
+                    }
+                }
+                if (FD_ISSET(osfd, &ex)) {
+                    out_flags |= PR_POLL_EXCEPT;
+                }
             }
             pd->out_flags = out_flags;
-            if (out_flags) ready++;
+            if (out_flags) {
+                ready++;
+            }
         }
         PR_ASSERT(ready > 0);
     }
@@ -306,7 +320,7 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
                 {
                     bottom = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
                     if (getsockopt(bottom->secret->md.osfd, SOL_SOCKET,
-                        SO_TYPE, (char *) &optval, &optlen) == -1)
+                                   SO_TYPE, (char *) &optval, &optlen) == -1)
                     {
                         PR_ASSERT(WSAGetLastError() == WSAENOTSOCK);
                         if (WSAGetLastError() == WSAENOTSOCK)
@@ -319,7 +333,9 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
             }
             PR_ASSERT(ready > 0);
         }
-        else _PR_MD_MAP_SELECT_ERROR(err);
+        else {
+            _PR_MD_MAP_SELECT_ERROR(err);
+        }
     }
 
     return ready;

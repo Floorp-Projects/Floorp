@@ -11,7 +11,7 @@
 
 
 sigset_t ints_off;
-pthread_mutex_t	_pr_heapLock;
+pthread_mutex_t _pr_heapLock;
 pthread_key_t current_thread_key;
 pthread_key_t current_cpu_key;
 pthread_key_t last_thread_key;
@@ -23,55 +23,57 @@ PRInt32 _pr_md_pthreads = 1;
 
 void _MD_EarlyInit(void)
 {
-extern PRInt32 _nspr_noclock;
+    extern PRInt32 _nspr_noclock;
 
-	if (pthread_key_create(&current_thread_key, NULL) != 0) {
-		perror("pthread_key_create failed");
-		exit(1);
-	}
-	if (pthread_key_create(&current_cpu_key, NULL) != 0) {
-		perror("pthread_key_create failed");
-		exit(1);
-	}
-	if (pthread_key_create(&last_thread_key, NULL) != 0) {
-		perror("pthread_key_create failed");
-		exit(1);
-	}
-	if (pthread_key_create(&intsoff_key, NULL) != 0) {
-		perror("pthread_key_create failed");
-		exit(1);
-	}
+    if (pthread_key_create(&current_thread_key, NULL) != 0) {
+        perror("pthread_key_create failed");
+        exit(1);
+    }
+    if (pthread_key_create(&current_cpu_key, NULL) != 0) {
+        perror("pthread_key_create failed");
+        exit(1);
+    }
+    if (pthread_key_create(&last_thread_key, NULL) != 0) {
+        perror("pthread_key_create failed");
+        exit(1);
+    }
+    if (pthread_key_create(&intsoff_key, NULL) != 0) {
+        perror("pthread_key_create failed");
+        exit(1);
+    }
 
-	sigemptyset(&ints_off);
-	sigaddset(&ints_off, SIGALRM);
-	sigaddset(&ints_off, SIGIO);
-	sigaddset(&ints_off, SIGCLD);
+    sigemptyset(&ints_off);
+    sigaddset(&ints_off, SIGALRM);
+    sigaddset(&ints_off, SIGIO);
+    sigaddset(&ints_off, SIGCLD);
 
-	/*
-	 * disable clock interrupts
-	 */
-	_nspr_noclock = 1;
+    /*
+     * disable clock interrupts
+     */
+    _nspr_noclock = 1;
 
 }
 
 void _MD_InitLocks()
 {
-	if (pthread_mutex_init(&_pr_heapLock, NULL) != 0) {
-		perror("pthread_mutex_init failed");
-		exit(1);
-	}
+    if (pthread_mutex_init(&_pr_heapLock, NULL) != 0) {
+        perror("pthread_mutex_init failed");
+        exit(1);
+    }
 }
 
 PR_IMPLEMENT(void) _MD_FREE_LOCK(struct _MDLock *lockp)
 {
-	PRIntn _is;
-	PRThread *me = _PR_MD_CURRENT_THREAD();
+    PRIntn _is;
+    PRThread *me = _PR_MD_CURRENT_THREAD();
 
-	if (me && !_PR_IS_NATIVE_THREAD(me))
-		_PR_INTSOFF(_is); 
-	pthread_mutex_destroy(&lockp->mutex);
-	if (me && !_PR_IS_NATIVE_THREAD(me))
-		_PR_FAST_INTSON(_is);
+    if (me && !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSOFF(_is);
+    }
+    pthread_mutex_destroy(&lockp->mutex);
+    if (me && !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_FAST_INTSON(_is);
+    }
 }
 
 
@@ -80,21 +82,23 @@ PR_IMPLEMENT(PRStatus) _MD_NEW_LOCK(struct _MDLock *lockp)
 {
     PRStatus rv;
     PRIntn is;
-    PRThread *me = _PR_MD_CURRENT_THREAD();	
+    PRThread *me = _PR_MD_CURRENT_THREAD();
 
-	if (me && !_PR_IS_NATIVE_THREAD(me))
-		_PR_INTSOFF(is);
-	rv = pthread_mutex_init(&lockp->mutex, NULL);
-	if (me && !_PR_IS_NATIVE_THREAD(me))
-		_PR_FAST_INTSON(is);
-	return (rv == 0) ? PR_SUCCESS : PR_FAILURE;
+    if (me && !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSOFF(is);
+    }
+    rv = pthread_mutex_init(&lockp->mutex, NULL);
+    if (me && !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_FAST_INTSON(is);
+    }
+    return (rv == 0) ? PR_SUCCESS : PR_FAILURE;
 }
 
 
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
     if (isCurrent) {
-	(void) setjmp(CONTEXT(t));
+        (void) setjmp(CONTEXT(t));
     }
     *np = sizeof(CONTEXT(t)) / sizeof(PRWord);
     return (PRWord *) CONTEXT(t);
@@ -103,9 +107,9 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 PR_IMPLEMENT(void)
 _MD_SetPriority(_MDThread *thread, PRThreadPriority newPri)
 {
-	/*
-	 * XXX - to be implemented
-	 */
+    /*
+     * XXX - to be implemented
+     */
     return;
 }
 
@@ -116,17 +120,17 @@ PR_IMPLEMENT(PRStatus) _MD_InitThread(struct PRThread *thread)
     if (thread->flags & _PR_GLOBAL_SCOPE) {
         thread->md.pthread = pthread_self();
 #if 0
-		/*
-		 * set up SIGUSR1 handler; this is used to save state
-		 * during PR_SuspendAll
-		 */
-		sigact.sa_handler = save_context_and_block;
-		sigact.sa_flags = SA_RESTART;
-		/*
-		 * Must mask clock interrupts
-		 */
-		sigact.sa_mask = timer_set;
-		sigaction(SIGUSR1, &sigact, 0);
+        /*
+         * set up SIGUSR1 handler; this is used to save state
+         * during PR_SuspendAll
+         */
+        sigact.sa_handler = save_context_and_block;
+        sigact.sa_flags = SA_RESTART;
+        /*
+         * Must mask clock interrupts
+         */
+        sigact.sa_mask = timer_set;
+        sigaction(SIGUSR1, &sigact, 0);
 #endif
     }
 
@@ -144,8 +148,8 @@ PR_IMPLEMENT(void) _MD_ExitThread(struct PRThread *thread)
 PR_IMPLEMENT(void) _MD_CleanThread(struct PRThread *thread)
 {
     if (thread->flags & _PR_GLOBAL_SCOPE) {
-		pthread_mutex_destroy(&thread->md.pthread_mutex);
-		pthread_cond_destroy(&thread->md.pthread_cond);
+        pthread_mutex_destroy(&thread->md.pthread_mutex);
+        pthread_cond_destroy(&thread->md.pthread_cond);
     }
 }
 
@@ -154,16 +158,16 @@ PR_IMPLEMENT(void) _MD_SuspendThread(struct PRThread *thread)
     PRInt32 rv;
 
     PR_ASSERT((thread->flags & _PR_GLOBAL_SCOPE) &&
-        _PR_IS_GCABLE_THREAD(thread));
+              _PR_IS_GCABLE_THREAD(thread));
 #if 0
-	thread->md.suspending_id = getpid();
-	rv = kill(thread->md.id, SIGUSR1);
-	PR_ASSERT(rv == 0);
-	/*
-	 * now, block the current thread/cpu until woken up by the suspended
-	 * thread from it's SIGUSR1 signal handler
-	 */
-	blockproc(getpid());
+    thread->md.suspending_id = getpid();
+    rv = kill(thread->md.id, SIGUSR1);
+    PR_ASSERT(rv == 0);
+    /*
+     * now, block the current thread/cpu until woken up by the suspended
+     * thread from it's SIGUSR1 signal handler
+     */
+    blockproc(getpid());
 #endif
 }
 
@@ -172,7 +176,7 @@ PR_IMPLEMENT(void) _MD_ResumeThread(struct PRThread *thread)
     PRInt32 rv;
 
     PR_ASSERT((thread->flags & _PR_GLOBAL_SCOPE) &&
-        _PR_IS_GCABLE_THREAD(thread));
+              _PR_IS_GCABLE_THREAD(thread));
 #if 0
     rv = unblockproc(thread->md.id);
 #endif
@@ -183,21 +187,21 @@ PR_IMPLEMENT(void) _MD_SuspendCPU(struct _PRCPU *thread)
     PRInt32 rv;
 
 #if 0
-	cpu->md.suspending_id = getpid();
-	rv = kill(cpu->md.id, SIGUSR1);
-	PR_ASSERT(rv == 0);
-	/*
-	 * now, block the current thread/cpu until woken up by the suspended
-	 * thread from it's SIGUSR1 signal handler
-	 */
-	blockproc(getpid());
+    cpu->md.suspending_id = getpid();
+    rv = kill(cpu->md.id, SIGUSR1);
+    PR_ASSERT(rv == 0);
+    /*
+     * now, block the current thread/cpu until woken up by the suspended
+     * thread from it's SIGUSR1 signal handler
+     */
+    blockproc(getpid());
 #endif
 }
 
 PR_IMPLEMENT(void) _MD_ResumeCPU(struct _PRCPU *thread)
 {
 #if 0
-	unblockproc(cpu->md.id);
+    unblockproc(cpu->md.id);
 #endif
 }
 
@@ -208,54 +212,55 @@ PR_IMPLEMENT(void) _MD_ResumeCPU(struct _PRCPU *thread)
 PR_IMPLEMENT(PRStatus)
 _pt_wait(PRThread *thread, PRIntervalTime timeout)
 {
-int rv;
-struct timeval now;
-struct timespec tmo;
-PRUint32 ticks = PR_TicksPerSecond();
+    int rv;
+    struct timeval now;
+    struct timespec tmo;
+    PRUint32 ticks = PR_TicksPerSecond();
 
 
-	if (timeout != PR_INTERVAL_NO_TIMEOUT) {
-		tmo.tv_sec = timeout / ticks;
-		tmo.tv_nsec = timeout - (tmo.tv_sec * ticks);
-		tmo.tv_nsec = PR_IntervalToMicroseconds(PT_NANOPERMICRO *
-											tmo.tv_nsec);
+    if (timeout != PR_INTERVAL_NO_TIMEOUT) {
+        tmo.tv_sec = timeout / ticks;
+        tmo.tv_nsec = timeout - (tmo.tv_sec * ticks);
+        tmo.tv_nsec = PR_IntervalToMicroseconds(PT_NANOPERMICRO *
+                                                tmo.tv_nsec);
 
-		/* pthreads wants this in absolute time, off we go ... */
-		(void)GETTIMEOFDAY(&now);
-		/* that one's usecs, this one's nsecs - grrrr! */
-		tmo.tv_sec += now.tv_sec;
-		tmo.tv_nsec += (PT_NANOPERMICRO * now.tv_usec);
-		tmo.tv_sec += tmo.tv_nsec / PT_BILLION;
-		tmo.tv_nsec %= PT_BILLION;
-	}
+        /* pthreads wants this in absolute time, off we go ... */
+        (void)GETTIMEOFDAY(&now);
+        /* that one's usecs, this one's nsecs - grrrr! */
+        tmo.tv_sec += now.tv_sec;
+        tmo.tv_nsec += (PT_NANOPERMICRO * now.tv_usec);
+        tmo.tv_sec += tmo.tv_nsec / PT_BILLION;
+        tmo.tv_nsec %= PT_BILLION;
+    }
 
-	pthread_mutex_lock(&thread->md.pthread_mutex);
-	thread->md.wait--;
-	if (thread->md.wait < 0) {
-		if (timeout != PR_INTERVAL_NO_TIMEOUT) {
-			rv = pthread_cond_timedwait(&thread->md.pthread_cond,
-					&thread->md.pthread_mutex, &tmo);
+    pthread_mutex_lock(&thread->md.pthread_mutex);
+    thread->md.wait--;
+    if (thread->md.wait < 0) {
+        if (timeout != PR_INTERVAL_NO_TIMEOUT) {
+            rv = pthread_cond_timedwait(&thread->md.pthread_cond,
+                                        &thread->md.pthread_mutex, &tmo);
         }
-		else
-			rv = pthread_cond_wait(&thread->md.pthread_cond,
-					&thread->md.pthread_mutex);
-		if (rv != 0) {
-			thread->md.wait++;
-		}
-	} else
-		rv = 0;
-	pthread_mutex_unlock(&thread->md.pthread_mutex);
+        else
+            rv = pthread_cond_wait(&thread->md.pthread_cond,
+                                   &thread->md.pthread_mutex);
+        if (rv != 0) {
+            thread->md.wait++;
+        }
+    } else {
+        rv = 0;
+    }
+    pthread_mutex_unlock(&thread->md.pthread_mutex);
 
-	return (rv == 0) ? PR_SUCCESS : PR_FAILURE;
+    return (rv == 0) ? PR_SUCCESS : PR_FAILURE;
 }
 
 PR_IMPLEMENT(PRStatus)
 _MD_wait(PRThread *thread, PRIntervalTime ticks)
 {
     if ( thread->flags & _PR_GLOBAL_SCOPE ) {
-		_MD_CHECK_FOR_EXIT();
+        _MD_CHECK_FOR_EXIT();
         if (_pt_wait(thread, ticks) == PR_FAILURE) {
-	    	_MD_CHECK_FOR_EXIT();
+            _MD_CHECK_FOR_EXIT();
             /*
              * wait timed out
              */
@@ -269,12 +274,12 @@ _MD_wait(PRThread *thread, PRIntervalTime ticks)
                 thread->state =  _PR_RUNNING;
                 _PR_THREAD_UNLOCK(thread);
             }  else {
-        		_pt_wait(thread, PR_INTERVAL_NO_TIMEOUT);
+                _pt_wait(thread, PR_INTERVAL_NO_TIMEOUT);
                 _PR_THREAD_UNLOCK(thread);
             }
         }
     } else {
-		_PR_MD_SWITCH_CONTEXT(thread);
+        _PR_MD_SWITCH_CONTEXT(thread);
     }
     return PR_SUCCESS;
 }
@@ -286,38 +291,43 @@ _MD_WakeupWaiter(PRThread *thread)
     PRInt32 pid, rv;
     PRIntn is;
 
-	PR_ASSERT(_pr_md_idle_cpus >= 0);
+    PR_ASSERT(_pr_md_idle_cpus >= 0);
     if (thread == NULL) {
-		if (_pr_md_idle_cpus)
-        	_MD_Wakeup_CPUs();
+        if (_pr_md_idle_cpus) {
+            _MD_Wakeup_CPUs();
+        }
     } else if (!_PR_IS_NATIVE_THREAD(thread)) {
-		/*
-		 * If the thread is on my cpu's runq there is no need to
-		 * wakeup any cpus
-		 */
-		if (!_PR_IS_NATIVE_THREAD(me)) {
-			if (me->cpu != thread->cpu) {
-				if (_pr_md_idle_cpus)
-        			_MD_Wakeup_CPUs();
-			}
-		} else {
-			if (_pr_md_idle_cpus)
-        		_MD_Wakeup_CPUs();
-		}
+        /*
+         * If the thread is on my cpu's runq there is no need to
+         * wakeup any cpus
+         */
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            if (me->cpu != thread->cpu) {
+                if (_pr_md_idle_cpus) {
+                    _MD_Wakeup_CPUs();
+                }
+            }
+        } else {
+            if (_pr_md_idle_cpus) {
+                _MD_Wakeup_CPUs();
+            }
+        }
     } else {
-		PR_ASSERT(_PR_IS_NATIVE_THREAD(thread));
-		if (!_PR_IS_NATIVE_THREAD(me))
-			_PR_INTSOFF(is);
+        PR_ASSERT(_PR_IS_NATIVE_THREAD(thread));
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            _PR_INTSOFF(is);
+        }
 
-		pthread_mutex_lock(&thread->md.pthread_mutex);
-		thread->md.wait++;
-		rv = pthread_cond_signal(&thread->md.pthread_cond);
-		PR_ASSERT(rv == 0);
-		pthread_mutex_unlock(&thread->md.pthread_mutex);
+        pthread_mutex_lock(&thread->md.pthread_mutex);
+        thread->md.wait++;
+        rv = pthread_cond_signal(&thread->md.pthread_cond);
+        PR_ASSERT(rv == 0);
+        pthread_mutex_unlock(&thread->md.pthread_mutex);
 
-		if (!_PR_IS_NATIVE_THREAD(me))
-			_PR_FAST_INTSON(is);
-    } 
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            _PR_FAST_INTSON(is);
+        }
+    }
     return PR_SUCCESS;
 }
 
@@ -339,51 +349,57 @@ _MD_CreateThread(
 {
     PRIntn is;
     int rv;
-	PRThread *me = _PR_MD_CURRENT_THREAD();	
-	pthread_attr_t attr;
+    PRThread *me = _PR_MD_CURRENT_THREAD();
+    pthread_attr_t attr;
 
-	if (!_PR_IS_NATIVE_THREAD(me))
-		_PR_INTSOFF(is);
+    if (!_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSOFF(is);
+    }
 
-	if (pthread_mutex_init(&thread->md.pthread_mutex, NULL) != 0) {
-		if (!_PR_IS_NATIVE_THREAD(me))
-			_PR_FAST_INTSON(is);
+    if (pthread_mutex_init(&thread->md.pthread_mutex, NULL) != 0) {
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            _PR_FAST_INTSON(is);
+        }
         return PR_FAILURE;
-	}
+    }
 
-	if (pthread_cond_init(&thread->md.pthread_cond, NULL) != 0) {
-		pthread_mutex_destroy(&thread->md.pthread_mutex);
-		if (!_PR_IS_NATIVE_THREAD(me))
-			_PR_FAST_INTSON(is);
+    if (pthread_cond_init(&thread->md.pthread_cond, NULL) != 0) {
+        pthread_mutex_destroy(&thread->md.pthread_mutex);
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            _PR_FAST_INTSON(is);
+        }
         return PR_FAILURE;
-	}
+    }
     thread->flags |= _PR_GLOBAL_SCOPE;
 
-	pthread_attr_init(&attr); /* initialize attr with default attributes */
-	if (pthread_attr_setstacksize(&attr, (size_t) stackSize) != 0) {
-		pthread_mutex_destroy(&thread->md.pthread_mutex);
-		pthread_cond_destroy(&thread->md.pthread_cond);
-		pthread_attr_destroy(&attr);
-		if (!_PR_IS_NATIVE_THREAD(me))
-			_PR_FAST_INTSON(is);
+    pthread_attr_init(&attr); /* initialize attr with default attributes */
+    if (pthread_attr_setstacksize(&attr, (size_t) stackSize) != 0) {
+        pthread_mutex_destroy(&thread->md.pthread_mutex);
+        pthread_cond_destroy(&thread->md.pthread_cond);
+        pthread_attr_destroy(&attr);
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            _PR_FAST_INTSON(is);
+        }
         return PR_FAILURE;
-	}
+    }
 
-	thread->md.wait = 0;
+    thread->md.wait = 0;
     rv = pthread_create(&thread->md.pthread, &attr, start, (void *)thread);
     if (0 == rv) {
         _MD_ATOMIC_INCREMENT(&_pr_md_pthreads_created);
         _MD_ATOMIC_INCREMENT(&_pr_md_pthreads);
-		if (!_PR_IS_NATIVE_THREAD(me))
-			_PR_FAST_INTSON(is);
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            _PR_FAST_INTSON(is);
+        }
         return PR_SUCCESS;
     } else {
-		pthread_mutex_destroy(&thread->md.pthread_mutex);
-		pthread_cond_destroy(&thread->md.pthread_cond);
-		pthread_attr_destroy(&attr);
+        pthread_mutex_destroy(&thread->md.pthread_mutex);
+        pthread_cond_destroy(&thread->md.pthread_cond);
+        pthread_attr_destroy(&attr);
         _MD_ATOMIC_INCREMENT(&_pr_md_pthreads_failed);
-		if (!_PR_IS_NATIVE_THREAD(me))
-			_PR_FAST_INTSON(is);
+        if (!_PR_IS_NATIVE_THREAD(me)) {
+            _PR_FAST_INTSON(is);
+        }
         PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, rv);
         return PR_FAILURE;
     }
@@ -396,12 +412,12 @@ _MD_InitRunningCPU(struct _PRCPU *cpu)
 
     _MD_unix_init_running_cpu(cpu);
     cpu->md.pthread = pthread_self();
-	if (_pr_md_pipefd[0] >= 0) {
-    	_PR_IOQ_MAX_OSFD(cpu) = _pr_md_pipefd[0];
+    if (_pr_md_pipefd[0] >= 0) {
+        _PR_IOQ_MAX_OSFD(cpu) = _pr_md_pipefd[0];
 #ifndef _PR_USE_POLL
-    	FD_SET(_pr_md_pipefd[0], &_PR_FD_READ_SET(cpu));
+        FD_SET(_pr_md_pipefd[0], &_PR_FD_READ_SET(cpu));
 #endif
-	}
+    }
 }
 
 
@@ -411,7 +427,7 @@ _MD_CleanupBeforeExit(void)
 #if 0
     extern PRInt32    _pr_cpus_exit;
 
-	_pr_irix_exit_now = 1;
+    _pr_irix_exit_now = 1;
     if (_pr_numCPU > 1) {
         /*
          * Set a global flag, and wakeup all cpus which will notice the flag
@@ -427,22 +443,22 @@ _MD_CleanupBeforeExit(void)
     /*
      * cause global threads on the recycle list to exit
      */
-     _PR_DEADQ_LOCK;
-     if (_PR_NUM_DEADNATIVE != 0) {
-	PRThread *thread;
-    	PRCList *ptr;
+    _PR_DEADQ_LOCK;
+    if (_PR_NUM_DEADNATIVE != 0) {
+        PRThread *thread;
+        PRCList *ptr;
 
         ptr = _PR_DEADNATIVEQ.next;
         while( ptr != &_PR_DEADNATIVEQ ) {
-        	thread = _PR_THREAD_PTR(ptr);
-		_MD_CVAR_POST_SEM(thread);
-                ptr = ptr->next;
-        } 
-     }
-     _PR_DEADQ_UNLOCK;
-     while(_PR_NUM_DEADNATIVE > 1) {
-	_PR_WAIT_SEM(_pr_irix_exit_sem);
-	_PR_DEC_DEADNATIVE;
-     }
+            thread = _PR_THREAD_PTR(ptr);
+            _MD_CVAR_POST_SEM(thread);
+            ptr = ptr->next;
+        }
+    }
+    _PR_DEADQ_UNLOCK;
+    while(_PR_NUM_DEADNATIVE > 1) {
+        _PR_WAIT_SEM(_pr_irix_exit_sem);
+        _PR_DEC_DEADNATIVE;
+    }
 #endif
 }

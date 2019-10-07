@@ -8,7 +8,7 @@
 /*
 
 Copyright 1987, 1988 by the Student Information Processing Board
-	of the Massachusetts Institute of Technology
+    of the Massachusetts Institute of Technology
 
 Permission to use, copy, modify, and distribute this software
 and its documentation for any purpose and without fee is
@@ -30,8 +30,8 @@ provided "as is" without express or implied warranty.
 #include "prmem.h"
 #include "prerror.h"
 
-#define	ERRCODE_RANGE	8	/* # of bits to shift table number */
-#define	BITS_PER_CHAR	6	/* # bits to shift per character in name */
+#define ERRCODE_RANGE   8   /* # of bits to shift table number */
+#define BITS_PER_CHAR   6   /* # bits to shift per character in name */
 
 #ifdef NEED_SYS_ERRLIST
 extern char const * const sys_errlist[];
@@ -57,12 +57,12 @@ static PRErrorCallbackNewTableFn *callback_newtable = 0;
 
 
 static const char char_set[] =
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
 
 static const char *
 error_table_name (PRErrorCode num)
 {
-    static char buf[6];	/* only used if internal code problems exist */
+    static char buf[6]; /* only used if internal code problems exist */
 
     long ch;
     int i;
@@ -75,9 +75,10 @@ error_table_name (PRErrorCode num)
     num &= 077777777;
     /* num = 00 000 000 aaa aaa bbb bbb ccc ccc ddd ddd */
     for (i = 4; i >= 0; i--) {
-	ch = (num >> BITS_PER_CHAR * i) & ((1 << BITS_PER_CHAR) - 1);
-	if (ch != 0)
-	    *p++ = char_set[ch-1];
+        ch = (num >> BITS_PER_CHAR * i) & ((1 << BITS_PER_CHAR) - 1);
+        if (ch != 0) {
+            *p++ = char_set[ch-1];
+        }
     }
     *p = '\0';
     return(buf);
@@ -99,40 +100,42 @@ PR_ErrorToString(PRErrorCode code, PRLanguageCode language)
     char *cp;
 
     for (et = Table_List; et; et = et->next) {
-	if (et->table->base <= code &&
-	    et->table->base + et->table->n_msgs > code) {
-	    /* This is the right table */
-	    if (callback_lookup) {
-		msg = callback_lookup(code, language, et->table,
-		    callback_private, et->table_private);
-		if (msg) return msg;
-	    }
-    
-	    return(et->table->msgs[code - et->table->base].en_text);
-	}
+        if (et->table->base <= code &&
+            et->table->base + et->table->n_msgs > code) {
+            /* This is the right table */
+            if (callback_lookup) {
+                msg = callback_lookup(code, language, et->table,
+                                      callback_private, et->table_private);
+                if (msg) {
+                    return msg;
+                }
+            }
+
+            return(et->table->msgs[code - et->table->base].en_text);
+        }
     }
 
     if (code >= 0 && code < 256) {
-	return strerror(code);
+        return strerror(code);
     }
 
     offset = (int) (code & ((1<<ERRCODE_RANGE)-1));
     table_num = code - offset;
     strcpy (buffer, "Unknown code ");
     if (table_num) {
-	strcat(buffer, error_table_name (table_num));
-	strcat(buffer, " ");
+        strcat(buffer, error_table_name (table_num));
+        strcat(buffer, " ");
     }
     for (cp = buffer; *cp; cp++)
-	;
+        ;
     if (offset >= 100) {
-	*cp++ = (char)('0' + offset / 100);
-	offset %= 100;
-	started++;
+        *cp++ = (char)('0' + offset / 100);
+        offset %= 100;
+        started++;
     }
     if (started || offset >= 10) {
-	*cp++ = (char)('0' + offset / 10);
-	offset %= 10;
+        *cp++ = (char)('0' + offset / 10);
+        offset %= 10;
     }
     *cp++ = (char)('0' + offset);
     *cp = '\0';
@@ -145,11 +148,11 @@ PR_ErrorToName(PRErrorCode code)
     struct PRErrorTableList *et;
 
     for (et = Table_List; et; et = et->next) {
-	if (et->table->base <= code &&
-	    et->table->base + et->table->n_msgs > code) {
-	    /* This is the right table */
-	    return(et->table->msgs[code - et->table->base].name);
-	}
+        if (et->table->base <= code &&
+            et->table->base + et->table->n_msgs > code) {
+            /* This is the right table */
+            return(et->table->msgs[code - et->table->base].name);
+        }
     }
 
     return 0;
@@ -167,14 +170,15 @@ PR_ErrorInstallTable(const struct PRErrorTable *table)
     struct PRErrorTableList * new_et;
 
     new_et = (struct PRErrorTableList *)
-					PR_Malloc(sizeof(struct PRErrorTableList));
-    if (!new_et)
-	return errno;	/* oops */
+             PR_Malloc(sizeof(struct PRErrorTableList));
+    if (!new_et) {
+        return errno;    /* oops */
+    }
     new_et->table = table;
     if (callback_newtable) {
-	new_et->table_private = callback_newtable(table, callback_private);
+        new_et->table_private = callback_newtable(table, callback_private);
     } else {
-	new_et->table_private = 0;
+        new_et->table_private = 0;
     }
     new_et->next = Table_List;
     Table_List = new_et;
@@ -183,23 +187,23 @@ PR_ErrorInstallTable(const struct PRErrorTable *table)
 
 PR_IMPLEMENT(void)
 PR_ErrorInstallCallback(const char * const * languages,
-		       PRErrorCallbackLookupFn *lookup, 
-		       PRErrorCallbackNewTableFn *newtable,
-		       struct PRErrorCallbackPrivate *cb_private)
+                        PRErrorCallbackLookupFn *lookup,
+                        PRErrorCallbackNewTableFn *newtable,
+                        struct PRErrorCallbackPrivate *cb_private)
 {
     struct PRErrorTableList *et;
 
     assert(strcmp(languages[0], "i-default") == 0);
     assert(strcmp(languages[1], "en") == 0);
-    
+
     callback_languages = languages;
     callback_lookup = lookup;
     callback_newtable = newtable;
     callback_private = cb_private;
 
     if (callback_newtable) {
-	for (et = Table_List; et; et = et->next) {
-	    et->table_private = callback_newtable(et->table, callback_private);
-	}
+        for (et = Table_List; et; et = et->next) {
+            et->table_private = callback_newtable(et->table, callback_private);
+        }
     }
 }

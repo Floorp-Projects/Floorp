@@ -10,7 +10,7 @@
 /*
  * Copyright (c) 1983, 1990, 1993
  *    The Regents of the University of California.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -22,7 +22,7 @@
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -38,14 +38,14 @@
 
 /*
  * Portions Copyright (c) 1993 by Digital Equipment Corporation.
- * 
+ *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies, and that
  * the name of Digital Equipment Corporation not be used in advertising or
  * publicity pertaining to distribution of the document or software without
  * specific, written prior permission.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND DIGITAL EQUIPMENT CORP. DISCLAIMS ALL
  * WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS.   IN NO EVENT SHALL DIGITAL EQUIPMENT
@@ -78,7 +78,7 @@ static const unsigned char index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
-     0, 1, 2, 3,  4, 5, 6, 7,  8, 9,XX,XX, XX,XX,XX,XX,
+    0, 1, 2, 3,  4, 5, 6, 7,  8, 9,XX,XX, XX,XX,XX,XX,
     XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
     XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
@@ -93,9 +93,15 @@ static const unsigned char index_hex[256] = {
     XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
 };
 
-static PRBool _isdigit(char c) { return c >= '0' && c <= '9'; }
-static PRBool _isxdigit(char c) { return index_hex[(unsigned char) c] != XX; }
-static PRBool _isspace(char c) { return c == ' ' || (c >= '\t' && c <= '\r'); }
+static PRBool _isdigit(char c) {
+    return c >= '0' && c <= '9';
+}
+static PRBool _isxdigit(char c) {
+    return index_hex[(unsigned char) c] != XX;
+}
+static PRBool _isspace(char c) {
+    return c == ' ' || (c >= '\t' && c <= '\r');
+}
 #undef XX
 
 int
@@ -115,13 +121,15 @@ pr_inet_aton(const char *cp, PRUint32 *addr)
          * Values are specified as for C:
          * 0x=hex, 0=octal, isdigit=decimal.
          */
-        if (!_isdigit(c))
+        if (!_isdigit(c)) {
             return (0);
+        }
         val = 0; base = 10; digit = 0;
         if (c == '0') {
             c = *++cp;
-            if (c == 'x' || c == 'X')
+            if (c == 'x' || c == 'X') {
                 base = 16, c = *++cp;
+            }
             else {
                 base = 8;
                 digit = 1;
@@ -129,8 +137,9 @@ pr_inet_aton(const char *cp, PRUint32 *addr)
         }
         for (;;) {
             if (_isdigit(c)) {
-                if (base == 8 && (c == '8' || c == '9'))
+                if (base == 8 && (c == '8' || c == '9')) {
                     return (0);
+                }
                 val = (val * base) + (c - '0');
                 c = *++cp;
                 digit = 1;
@@ -138,8 +147,9 @@ pr_inet_aton(const char *cp, PRUint32 *addr)
                 val = (val << 4) + index_hex[(unsigned char) c];
                 c = *++cp;
                 digit = 1;
-            } else
+            } else {
                 break;
+            }
         }
         if (c == '.') {
             /*
@@ -148,51 +158,58 @@ pr_inet_aton(const char *cp, PRUint32 *addr)
              *    a.b.c    (with c treated as 16 bits)
              *    a.b    (with b treated as 24 bits)
              */
-            if (pp >= parts + 3 || val > 0xffU)
+            if (pp >= parts + 3 || val > 0xffU) {
                 return (0);
+            }
             *pp++ = val;
             c = *++cp;
-        } else
+        } else {
             break;
+        }
     }
     /*
      * Check for trailing characters.
      */
-    if (c != '\0' && !_isspace(c))
+    if (c != '\0' && !_isspace(c)) {
         return (0);
+    }
     /*
      * Did we get a valid digit?
      */
-    if (!digit)
+    if (!digit) {
         return (0);
+    }
     /*
      * Concoct the address according to
      * the number of parts specified.
      */
     n = pp - parts + 1;
     switch (n) {
-    case 1:                /*%< a -- 32 bits */
-        break;
+        case 1:                /*%< a -- 32 bits */
+            break;
 
-    case 2:                /*%< a.b -- 8.24 bits */
-        if (val > 0xffffffU)
-            return (0);
-        val |= (unsigned int)parts[0] << 24;
-        break;
+        case 2:                /*%< a.b -- 8.24 bits */
+            if (val > 0xffffffU) {
+                return (0);
+            }
+            val |= (unsigned int)parts[0] << 24;
+            break;
 
-    case 3:                /*%< a.b.c -- 8.8.16 bits */
-        if (val > 0xffffU)
-            return (0);
-        val |= ((unsigned int)parts[0] << 24) | ((unsigned int)parts[1] << 16);
-        break;
+        case 3:                /*%< a.b.c -- 8.8.16 bits */
+            if (val > 0xffffU) {
+                return (0);
+            }
+            val |= ((unsigned int)parts[0] << 24) | ((unsigned int)parts[1] << 16);
+            break;
 
-    case 4:                /*%< a.b.c.d -- 8.8.8.8 bits */
-        if (val > 0xffU)
-            return (0);
-        val |= ((unsigned int)parts[0] << 24) |
-               ((unsigned int)parts[1] << 16) |
-               ((unsigned int)parts[2] << 8);
-        break;
+        case 4:                /*%< a.b.c.d -- 8.8.8.8 bits */
+            if (val > 0xffU) {
+                return (0);
+            }
+            val |= ((unsigned int)parts[0] << 24) |
+                   ((unsigned int)parts[1] << 16) |
+                   ((unsigned int)parts[2] << 8);
+            break;
     }
     *addr = PR_htonl(val);
     return (1);

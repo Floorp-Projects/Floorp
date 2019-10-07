@@ -39,25 +39,27 @@ int main(int argc, char **argv)
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 0:       /* Name of file to create */
-            filename = opt->value;
-            break;
-        case 'S':       /* Use sych option on file */
-            flags |= PR_SYNC;
-            break;
-        case 'K':       /* Size of file to write */
-            filesize = atoi(opt->value);
-            break;
-        case 'c':       /* Number of iterations */
-            iterations = atoi(opt->value);
-            break;
-        case 'h':       /* user wants some guidance */
-        default:        /* user needs some guidance */
-            Help();     /* so give him an earful */
-            return 2;   /* but not a lot else */
+            case 0:       /* Name of file to create */
+                filename = opt->value;
+                break;
+            case 'S':       /* Use sych option on file */
+                flags |= PR_SYNC;
+                break;
+            case 'K':       /* Size of file to write */
+                filesize = atoi(opt->value);
+                break;
+            case 'c':       /* Number of iterations */
+                iterations = atoi(opt->value);
+                break;
+            case 'h':       /* user wants some guidance */
+            default:        /* user needs some guidance */
+                Help();     /* so give him an earful */
+                return 2;   /* but not a lot else */
         }
     }
     PL_DestroyOptState(opt);
@@ -76,8 +78,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    for (index = 0; index < sizeof(buffer); ++index)
+    for (index = 0; index < sizeof(buffer); ++index) {
         buffer[index] = (PRUint8)index;
+    }
 
     for (loops = 0; loops < iterations; ++loops)
     {
@@ -89,12 +92,16 @@ int main(int argc, char **argv)
         time = (PR_IntervalNow() - time);
 
         total += time;
-        if (time < shortest) shortest = time;
-        else if (time > longest) longest = time;
+        if (time < shortest) {
+            shortest = time;
+        }
+        else if (time > longest) {
+            longest = time;
+        }
         if (0 != PR_Seek(file, 0, PR_SEEK_SET))
         {
-           PL_FPrintError(err, "Rewinding file");
-           return 1;
+            PL_FPrintError(err, "Rewinding file");
+            return 1;
         }
     }
 

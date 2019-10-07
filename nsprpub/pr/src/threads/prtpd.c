@@ -39,10 +39,10 @@
 
 #if defined(WIN95)
 /*
-** Some local variables report warnings on Win95 because the code paths 
+** Some local variables report warnings on Win95 because the code paths
 ** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
 ** The pragma suppresses the warning.
-** 
+**
 */
 #pragma warning(disable : 4101)
 #endif
@@ -51,9 +51,9 @@
 static PRInt32 _pr_tpd_length = 0;      /* current length of destructor vector */
 static PRInt32 _pr_tpd_highwater = 0;   /* next TPD key to be assigned */
 static PRThreadPrivateDTOR *_pr_tpd_destructors = NULL;
-                                        /* the destructors are associated with
-                                            the keys, therefore asserting that
-                                            the TPD key depicts the data's 'type' */
+/* the destructors are associated with
+    the keys, therefore asserting that
+    the TPD key depicts the data's 'type' */
 
 /*
 ** Initialize the thread private data manipulation
@@ -61,7 +61,7 @@ static PRThreadPrivateDTOR *_pr_tpd_destructors = NULL;
 void _PR_InitTPD(void)
 {
     _pr_tpd_destructors = (PRThreadPrivateDTOR*)
-        PR_CALLOC(_PR_TPD_LIMIT * sizeof(PRThreadPrivateDTOR*));
+                          PR_CALLOC(_PR_TPD_LIMIT * sizeof(PRThreadPrivateDTOR*));
     PR_ASSERT(NULL != _pr_tpd_destructors);
     _pr_tpd_length = _PR_TPD_LIMIT;
 }
@@ -74,22 +74,22 @@ void _PR_CleanupTPD(void)
 }  /* _PR_CleanupTPD */
 
 /*
-** This routine returns a new index for per-thread-private data table. 
-** The index is visible to all threads within a process. This index can 
-** be used with the PR_SetThreadPrivate() and PR_GetThreadPrivate() routines 
+** This routine returns a new index for per-thread-private data table.
+** The index is visible to all threads within a process. This index can
+** be used with the PR_SetThreadPrivate() and PR_GetThreadPrivate() routines
 ** to save and retrieve data associated with the index for a thread.
 **
-** The index independently maintains specific values for each binding thread. 
+** The index independently maintains specific values for each binding thread.
 ** A thread can only get access to its own thread-specific-data.
 **
 ** Upon a new index return the value associated with the index for all threads
-** is NULL, and upon thread creation the value associated with all indices for 
-** that thread is NULL. 
+** is NULL, and upon thread creation the value associated with all indices for
+** that thread is NULL.
 **
 **     "dtor" is the destructor function to invoke when the private
 **       data is set or destroyed
 **
-** Returns PR_FAILURE if the total number of indices will exceed the maximun 
+** Returns PR_FAILURE if the total number of indices will exceed the maximun
 ** allowed.
 */
 
@@ -99,7 +99,9 @@ PR_IMPLEMENT(PRStatus) PR_NewThreadPrivateIndex(
     PRStatus rv;
     PRInt32 index;
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     PR_ASSERT(NULL != newIndex);
     PR_ASSERT(NULL != _pr_tpd_destructors);
@@ -123,7 +125,7 @@ PR_IMPLEMENT(PRStatus) PR_NewThreadPrivateIndex(
 /*
 ** Define some per-thread-private data.
 **     "index" is an index into the per-thread private data table
-**     "priv" is the per-thread-private data 
+**     "priv" is the per-thread-private data
 **
 ** If the per-thread private data table has a previously registered
 ** destructor function and a non-NULL per-thread-private data value,
@@ -149,7 +151,7 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
     }
 
     PR_ASSERT(((NULL == self->privateData) && (0 == self->tpdLength))
-        || ((NULL != self->privateData) && (0 != self->tpdLength)));
+              || ((NULL != self->privateData) && (0 != self->tpdLength)));
 
     /*
     ** If this thread does not have a sufficient vector for the index
@@ -191,9 +193,9 @@ PR_IMPLEMENT(PRStatus) PR_SetThreadPrivate(PRUintn index, void *priv)
 
 /*
 ** Recover the per-thread-private data for the current thread. "index" is
-** the index into the per-thread private data table. 
+** the index into the per-thread private data table.
 **
-** The returned value may be NULL which is indistinguishable from an error 
+** The returned value may be NULL which is indistinguishable from an error
 ** condition.
 **
 */
@@ -202,7 +204,7 @@ PR_IMPLEMENT(void*) PR_GetThreadPrivate(PRUintn index)
 {
     PRThread *self = PR_GetCurrentThread();
     void *tpd = ((NULL == self->privateData) || (index >= self->tpdLength)) ?
-        NULL : self->privateData[index];
+                NULL : self->privateData[index];
 
     return tpd;
 }

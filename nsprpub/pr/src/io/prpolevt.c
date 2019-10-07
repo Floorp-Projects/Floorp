@@ -62,30 +62,30 @@ static PRIOMethods _pr_polevt_methods = {
     (PRSeek64FN)_PR_InvalidInt64,
     (PRFileInfoFN)_PR_InvalidStatus,
     (PRFileInfo64FN)_PR_InvalidStatus,
-    (PRWritevFN)_PR_InvalidInt,        
-    (PRConnectFN)_PR_InvalidStatus,        
-    (PRAcceptFN)_PR_InvalidDesc,        
-    (PRBindFN)_PR_InvalidStatus,        
-    (PRListenFN)_PR_InvalidStatus,        
-    (PRShutdownFN)_PR_InvalidStatus,    
-    (PRRecvFN)_PR_InvalidInt,        
-    (PRSendFN)_PR_InvalidInt,        
-    (PRRecvfromFN)_PR_InvalidInt,    
-    (PRSendtoFN)_PR_InvalidInt,        
+    (PRWritevFN)_PR_InvalidInt,
+    (PRConnectFN)_PR_InvalidStatus,
+    (PRAcceptFN)_PR_InvalidDesc,
+    (PRBindFN)_PR_InvalidStatus,
+    (PRListenFN)_PR_InvalidStatus,
+    (PRShutdownFN)_PR_InvalidStatus,
+    (PRRecvFN)_PR_InvalidInt,
+    (PRSendFN)_PR_InvalidInt,
+    (PRRecvfromFN)_PR_InvalidInt,
+    (PRSendtoFN)_PR_InvalidInt,
     _pr_PolEvtPoll,
-    (PRAcceptreadFN)_PR_InvalidInt,   
-    (PRTransmitfileFN)_PR_InvalidInt, 
-    (PRGetsocknameFN)_PR_InvalidStatus,    
-    (PRGetpeernameFN)_PR_InvalidStatus,    
-    (PRReservedFN)_PR_InvalidInt,    
-    (PRReservedFN)_PR_InvalidInt,    
+    (PRAcceptreadFN)_PR_InvalidInt,
+    (PRTransmitfileFN)_PR_InvalidInt,
+    (PRGetsocknameFN)_PR_InvalidStatus,
+    (PRGetpeernameFN)_PR_InvalidStatus,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
-    (PRSendfileFN)_PR_InvalidInt, 
-    (PRConnectcontinueFN)_PR_InvalidStatus, 
-    (PRReservedFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
-    (PRReservedFN)_PR_InvalidInt, 
+    (PRSendfileFN)_PR_InvalidInt,
+    (PRConnectcontinueFN)_PR_InvalidStatus,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
+    (PRReservedFN)_PR_InvalidInt,
     (PRReservedFN)_PR_InvalidInt
 };
 
@@ -130,7 +130,7 @@ PR_IMPLEMENT(PRFileDesc *) PR_NewPollableEvent(void)
     event = PR_CreateIOLayerStub(_pr_polevt_id, &_pr_polevt_methods);
     if (NULL == event) {
         goto errorExit;
-    } 
+    }
     event->secret = PR_NEW(PRFilePrivate);
     if (event->secret == NULL) {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
@@ -147,9 +147,9 @@ PR_IMPLEMENT(PRFileDesc *) PR_NewPollableEvent(void)
         fd[0] = fd[1] = NULL;
         goto errorExit;
     }
-	/*
-	 * set the TCP_NODELAY option to reduce notification latency
-	 */
+    /*
+     * set the TCP_NODELAY option to reduce notification latency
+     */
     socket_opt.option = PR_SockOpt_NoDelay;
     socket_opt.value.no_delay = PR_TRUE;
     rv = PR_SetSocketOption(fd[1], &socket_opt);

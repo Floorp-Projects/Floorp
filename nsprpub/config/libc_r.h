@@ -25,7 +25,7 @@
 #define R_STRTOK_INIT_R() \
     char *r_strtok_r=NULL
 
-#define R_STRTOK_R(return,source,delim) \     
+#define R_STRTOK_R(return,source,delim) \
     return=strtok_r(source,delim,&r_strtok_r)
 
 #define R_STRTOK_NORET_R(source,delim) \
@@ -68,14 +68,14 @@
 
 #define R_LOCALTIME_R(val) \
    localtime_r(val,&r_localtime_r)
-    
+
 /***********/
 /*  crypt  */
 /***********/
 #include <crypt.h>
 #define R_CRYPT_INIT_R() \
     CRYPTD r_cryptd_r; \
-    bzero(&r_cryptd_r,sizeof(CRYPTD)) 
+    bzero(&r_cryptd_r,sizeof(CRYPTD))
 
 #define R_CRYPT_R(pass,salt) \
     crypt_r(pass,salt,&r_cryptd_r)

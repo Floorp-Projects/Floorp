@@ -115,7 +115,7 @@ PRfilebuf *PRfilebuf::open(
     _opened = true;
 
     if (ate &&
-            seekoff(0, ios_base::end, flags) == pos_type(traits_type::eof())) {
+        seekoff(0, ios_base::end, flags) == pos_type(traits_type::eof())) {
         close();
         return NULL;
     }
@@ -138,13 +138,14 @@ PRfilebuf *PRfilebuf::attach(PRFileDesc *fd)
 
 PRfilebuf *PRfilebuf::close()
 {
-    if (_fd == NULL)
+    if (_fd == NULL) {
         return NULL;
+    }
 
     int status = sync();
 
     if (PR_Close(_fd) == PR_FAILURE ||
-            traits_type::eq_int_type(status, traits_type::eof())) {
+        traits_type::eq_int_type(status, traits_type::eof())) {
         return NULL;
     }
 

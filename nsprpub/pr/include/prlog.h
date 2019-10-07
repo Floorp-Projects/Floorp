@@ -36,27 +36,27 @@ PR_BEGIN_EXTERN_C
 **  <value> is a numeric constant, e.g. 5. This value is the maximum
 ** value of a log event, enumerated by PRLogModuleLevel, that you want
 ** written to the log.
-** 
+**
 ** For example: to record all events of greater value than or equal to
 ** PR_LOG_ERROR for a LogModule names "gizmo", say:
-** 
+**
 ** set NSPR_LOG_MODULES=gizmo:2
-** 
+**
 ** Note that you must specify the numeric value of PR_LOG_ERROR.
-** 
+**
 ** Special LogModule names are provided for controlling NSPR's log
 ** service at execution time. These controls should be set in the
 ** NSPR_LOG_MODULES environment variable at execution time to affect
 ** NSPR's log service for your application.
-** 
+**
 ** The special LogModule "all" enables all LogModules. To enable all
 ** LogModule calls to PR_LOG(), say:
-** 
+**
 ** set NSPR_LOG_MODULES=all:5
-** 
+**
 ** The special LogModule name "sync" tells the NSPR log service to do
 ** unbuffered logging.
-** 
+**
 ** The special LogModule name "bufsize:<size>" tells NSPR to set the
 ** log buffer to <size>.
 **
@@ -66,7 +66,7 @@ PR_BEGIN_EXTERN_C
 ** (case sensitive). This value causes PR_LOG() output to be written
 ** using the Windows API OutputDebugString(). OutputDebugString()
 ** writes to the debugger window; some people find this helpful.
-** 
+**
 **
 ** To put log messages in your programs, use the PR_LOG macro:
 **
@@ -78,29 +78,29 @@ PR_BEGIN_EXTERN_C
 ** is: (fmtstring, ...).
 **
 ** Example:
-** 
+**
 ** main() {
 **    PRIntn one = 1;
 **    PRLogModuleInfo * myLm = PR_NewLogModule("gizmo");
-**    PR_LOG( myLm, PR_LOG_ALWAYS, ("Log this! %d\n", one)); 
-**    return; 
+**    PR_LOG( myLm, PR_LOG_ALWAYS, ("Log this! %d\n", one));
+**    return;
 ** }
-** 
+**
 ** Note the use of printf() style arguments as the third agrument(s) to
 ** PR_LOG().
-** 
+**
 ** After compiling and linking you application, set the environment:
-** 
+**
 ** set NSPR_LOG_MODULES=gizmo:5
 ** set NSPR_LOG_FILE=logfile.txt
-** 
+**
 ** When you execute your application, the string "Log this! 1" will be
 ** written to the file "logfile.txt".
-** 
+**
 ** Note to NSPR engineers: a number of PRLogModuleInfo structures are
 ** defined and initialized in prinit.c. See this module for ideas on
 ** what to log where.
-** 
+**
 */
 
 typedef enum PRLogModuleLevel {
@@ -158,7 +158,7 @@ NSPR_API(void) PR_LogPrint(const char *fmt, ...);
 NSPR_API(void) PR_LogFlush(void);
 
 NSPR_API(void) PR_Assert(const char *s, const char *file, PRIntn ln)
-    PR_PRETEND_NORETURN;
+PR_PRETEND_NORETURN;
 
 #if defined(DEBUG) || defined(FORCE_PR_LOG)
 #define PR_LOGGING 1

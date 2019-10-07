@@ -100,9 +100,11 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
     ** Expand the monitor-cache-entry free list
     */
     new_block = (MonitorCacheEntryBlock*)
-        PR_CALLOC(sizeof(MonitorCacheEntryBlock)
-        + (entries - 1) * sizeof(MonitorCacheEntry));
-    if (NULL == new_block) return PR_FAILURE;
+                PR_CALLOC(sizeof(MonitorCacheEntryBlock)
+                          + (entries - 1) * sizeof(MonitorCacheEntry));
+    if (NULL == new_block) {
+        return PR_FAILURE;
+    }
 
     /*
     ** Allocate system monitors for the new monitor cache entries. If we
@@ -110,8 +112,9 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
     */
     for (i = 0, p = new_block->entries; i < entries; i++, p++) {
         p->mon = PR_NewMonitor();
-        if (!p->mon)
+        if (!p->mon) {
             break;
+        }
     }
     added = i;
     if (added != entries) {
@@ -129,10 +132,11 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
         ** carry on with the too-large new_block.
         */
         realloc_block = (MonitorCacheEntryBlock*)
-            PR_REALLOC(new_block, sizeof(MonitorCacheEntryBlock)
-            + (added - 1) * sizeof(MonitorCacheEntry));
-        if (realloc_block)
+                        PR_REALLOC(new_block, sizeof(MonitorCacheEntryBlock)
+                                   + (added - 1) * sizeof(MonitorCacheEntry));
+        if (realloc_block) {
             new_block = realloc_block;
+        }
     }
 
     /*
@@ -141,8 +145,9 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
     ** the mcache-lock and we aren't calling anyone who might want to use
     ** it.
     */
-    for (i = 0, p = new_block->entries; i < added - 1; i++, p++)
+    for (i = 0, p = new_block->entries; i < added - 1; i++, p++) {
         p->next = p + 1;
+    }
     p->next = free_entries;
     free_entries = new_block->entries;
     num_free_entries += added;
@@ -151,7 +156,7 @@ static PRStatus ExpandMonitorCache(PRUintn new_size_log2)
 
     /* Try to expand the hash table */
     new_hash_buckets = (MonitorCacheEntry**)
-        PR_CALLOC(entries * sizeof(MonitorCacheEntry*));
+                       PR_CALLOC(entries * sizeof(MonitorCacheEntry*));
     if (NULL == new_hash_buckets) {
         /*
         ** Partial lossage. In this situation we don't get any more hash
@@ -220,8 +225,9 @@ static MonitorCacheEntry **LookupMonitorCacheEntry(void *address)
     pp = hash_buckets + hash;
     while ((p = *pp) != 0) {
         if (p->address == address) {
-            if (p->cacheEntryCount > 0)
+            if (p->cacheEntryCount > 0) {
                 return pp;
+            }
             return NULL;
         }
         pp = &p->next;
@@ -242,7 +248,9 @@ static PRMonitor *CreateMonitor(void *address)
     hash = HASH(address);
     pp = hash_buckets + hash;
     while ((p = *pp) != 0) {
-        if (p->address == address) goto gotit;
+        if (p->address == address) {
+            goto gotit;
+        }
 
         pp = &p->next;
     }
@@ -261,7 +269,9 @@ static PRMonitor *CreateMonitor(void *address)
             expanding = PR_TRUE;
             rv = ExpandMonitorCache(num_hash_buckets_log2 + 1);
             expanding = PR_FALSE;
-            if (PR_FAILURE == rv)  return NULL;
+            if (PR_FAILURE == rv) {
+                return NULL;
+            }
 
             /* redo the hash because it'll be different now */
             hash = HASH(address);
@@ -278,14 +288,15 @@ static PRMonitor *CreateMonitor(void *address)
     p = free_entries;
     free_entries = p->next;
     num_free_entries--;
-    if (OnMonitorRecycle && p->address)
+    if (OnMonitorRecycle && p->address) {
         OnMonitorRecycle(p->address);
+    }
     p->address = address;
     p->next = hash_buckets[hash];
     hash_buckets[hash] = p;
     PR_ASSERT(p->cacheEntryCount == 0);
 
-  gotit:
+gotit:
     p->cacheEntryCount++;
     return p->mon;
 }
@@ -337,13 +348,17 @@ PR_IMPLEMENT(PRMonitor*) PR_CEnterMonitor(void *address)
 {
     PRMonitor *mon;
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     _PR_LOCK_MCACHE();
     mon = CreateMonitor(address);
     _PR_UNLOCK_MCACHE();
 
-    if (!mon) return NULL;
+    if (!mon) {
+        return NULL;
+    }
 
     PR_EnterMonitor(mon);
     return mon;
@@ -389,8 +404,9 @@ PR_IMPLEMENT(PRStatus) PR_CWait(void *address, PRIntervalTime ticks)
     mon = pp ? ((*pp)->mon) : NULL;
     _PR_UNLOCK_MCACHE();
 
-    if (mon == NULL)
+    if (mon == NULL) {
         return PR_FAILURE;
+    }
     return PR_Wait(mon, ticks);
 }
 
@@ -404,8 +420,9 @@ PR_IMPLEMENT(PRStatus) PR_CNotify(void *address)
     mon = pp ? ((*pp)->mon) : NULL;
     _PR_UNLOCK_MCACHE();
 
-    if (mon == NULL)
+    if (mon == NULL) {
         return PR_FAILURE;
+    }
     return PR_Notify(mon);
 }
 
@@ -419,8 +436,9 @@ PR_IMPLEMENT(PRStatus) PR_CNotifyAll(void *address)
     mon = pp ? ((*pp)->mon) : NULL;
     _PR_UNLOCK_MCACHE();
 
-    if (mon == NULL)
+    if (mon == NULL) {
         return PR_FAILURE;
+    }
     return PR_NotifyAll(mon);
 }
 

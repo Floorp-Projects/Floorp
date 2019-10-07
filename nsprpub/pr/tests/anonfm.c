@@ -5,7 +5,7 @@
 
 /*
 ** File: anonfm.c
-** Description: Test anonymous file map 
+** Description: Test anonymous file map
 **
 ** Synopsis: anonfm [options] [dirName]
 **
@@ -13,7 +13,7 @@
 ** -d   enable debug mode
 ** -h   display a help message
 ** -s <n>  size of the anonymous memory map, in KBytes. default: 100KBytes.
-** -C 1 Operate this process as ClientOne() 
+** -C 1 Operate this process as ClientOne()
 ** -C 2 Operate this process as ClientTwo()
 **
 ** anonfn.c contains two tests, corresponding to the two protocols for
@@ -28,8 +28,8 @@
 ** PRProcessAttr structure.
 **
 */
-#include <plgetopt.h> 
-#include <nspr.h> 
+#include <plgetopt.h>
+#include <nspr.h>
 #include <private/primpl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,37 +73,37 @@ static void ClientOne( void )
     PRStatus    rc;
 
     PR_LOG(lm, msgLevel,
-        ("ClientOne() starting"));
-    
+           ("ClientOne() starting"));
+
     fmString = PR_GetEnv( fmEnvName );
     if ( NULL == fmString ) {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-                ("ClientOne(): PR_Getenv() failed"));
+               ("ClientOne(): PR_Getenv() failed"));
         return;
     }
     PR_LOG(lm, msgLevel,
-        ("ClientOne(): PR_Getenv(): found: %s", fmString));
+           ("ClientOne(): PR_Getenv(): found: %s", fmString));
 
     fm = PR_ImportFileMapFromString( fmString );
     if ( NULL == fm ) {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-                ("ClientOne(): PR_ImportFileMapFromString() failed"));
+               ("ClientOne(): PR_ImportFileMapFromString() failed"));
         return;
     }
     PR_LOG(lm, msgLevel,
-        ("ClientOne(): PR_ImportFileMapFromString(): fm: %p", fm ));
+           ("ClientOne(): PR_ImportFileMapFromString(): fm: %p", fm ));
 
     addr = PR_MemMap( fm, LL_ZERO, fmSize );
     if ( NULL == addr ) {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-            ("ClientOne(): PR_MemMap() failed, OSError: %d", PR_GetOSError() ));
+               ("ClientOne(): PR_MemMap() failed, OSError: %d", PR_GetOSError() ));
         return;
     }
     PR_LOG(lm, msgLevel,
-        ("ClientOne(): PR_MemMap(): addr: %p", addr ));
+           ("ClientOne(): PR_MemMap(): addr: %p", addr ));
 
     /* write to memory map to release server */
     *addr = 1;
@@ -111,17 +111,17 @@ static void ClientOne( void )
     rc = PR_MemUnmap( addr, fmSize );
     PR_ASSERT( rc == PR_SUCCESS );
     PR_LOG(lm, msgLevel,
-        ("ClientOne(): PR_MemUnap(): success" ));
+           ("ClientOne(): PR_MemUnap(): success" ));
 
     rc = PR_CloseFileMap( fm );
     if ( PR_FAILURE == rc ) {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-            ("ClientOne(): PR_MemUnap() failed, OSError: %d", PR_GetOSError() ));
+               ("ClientOne(): PR_MemUnap() failed, OSError: %d", PR_GetOSError() ));
         return;
     }
     PR_LOG(lm, msgLevel,
-        ("ClientOne(): PR_CloseFileMap(): success" ));
+           ("ClientOne(): PR_CloseFileMap(): success" ));
 
     return;
 } /* end ClientOne() */
@@ -150,23 +150,23 @@ static void ServerOne( void )
     PRInt32     exit_status;
 
     PR_LOG(lm, msgLevel,
-        ("ServerOne() starting"));
-    
+           ("ServerOne() starting"));
+
     fm = PR_OpenAnonFileMap( dirName, fmSize, fmProt );
     if ( NULL == fm )      {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-                ("PR_OpenAnonFileMap() failed"));
+               ("PR_OpenAnonFileMap() failed"));
         return;
     }
     PR_LOG(lm, msgLevel,
-        ("ServerOne(): FileMap: %p", fm ));
-    
+           ("ServerOne(): FileMap: %p", fm ));
+
     rc = PR_ExportFileMapAsString( fm, sizeof(fmString), fmString );
     if ( PR_FAILURE == rc )  {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-            ("PR_ExportFileMap() failed"));
+               ("PR_ExportFileMap() failed"));
         return;
     }
 
@@ -175,22 +175,23 @@ static void ServerOne( void )
     */
     PR_snprintf( envBuf, sizeof(envBuf), "%s=%s", fmEnvName, fmString);
     putenv( envBuf );
-    
+
     addr = PR_MemMap( fm, LL_ZERO, fmSize );
     if ( NULL == addr ) {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-            ("PR_MemMap() failed"));
+               ("PR_MemMap() failed"));
         return;
     }
 
     /* set initial value for client */
-    for (i = 0; i < (PRIntn)fmSize ; i++ )
-        *(addr+i) = 0x00;  
+    for (i = 0; i < (PRIntn)fmSize ; i++ ) {
+        *(addr+i) = 0x00;
+    }
 
     PR_LOG(lm, msgLevel,
-        ("ServerOne(): PR_MemMap(): addr: %p", addr ));
-    
+           ("ServerOne(): PR_MemMap(): addr: %p", addr ));
+
     /*
     ** set arguments for child process
     */
@@ -202,45 +203,47 @@ static void ServerOne( void )
     proc = PR_CreateProcess(child_argv[0], child_argv, NULL, NULL);
     PR_ASSERT( proc );
     PR_LOG(lm, msgLevel,
-        ("ServerOne(): PR_CreateProcess(): proc: %x", proc ));
+           ("ServerOne(): PR_CreateProcess(): proc: %x", proc ));
 
     /*
     ** ClientOne() will set the memory to 1
     */
     PR_LOG(lm, msgLevel,
-        ("ServerOne(): waiting on Client, *addr: %x", *addr ));
+           ("ServerOne(): waiting on Client, *addr: %x", *addr ));
     while( *addr == 0x00 ) {
-        if ( debug )
+        if ( debug ) {
             fprintf(stderr, ".");
+        }
         PR_Sleep(PR_MillisecondsToInterval(300));
     }
-    if ( debug )
+    if ( debug ) {
         fprintf(stderr, "\n");
+    }
     PR_LOG(lm, msgLevel,
-        ("ServerOne(): Client responded" ));
+           ("ServerOne(): Client responded" ));
 
     rc = PR_WaitProcess( proc, &exit_status );
     PR_ASSERT( PR_FAILURE != rc );
 
     rc = PR_MemUnmap( addr, fmSize);
     if ( PR_FAILURE == rc ) {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-            ("PR_MemUnmap() failed"));
+               ("PR_MemUnmap() failed"));
         return;
     }
     PR_LOG(lm, msgLevel,
-        ("ServerOne(): PR_MemUnmap(): success" ));
+           ("ServerOne(): PR_MemUnmap(): success" ));
 
     rc = PR_CloseFileMap(fm);
     if ( PR_FAILURE == rc ) {
-        failed_already = 1;    
+        failed_already = 1;
         PR_LOG(lm, msgLevel,
-            ("PR_CloseFileMap() failed"));
+               ("PR_CloseFileMap() failed"));
         return;
     }
     PR_LOG(lm, msgLevel,
-        ("ServerOne(): PR_CloseFileMap() success" ));
+           ("ServerOne(): PR_CloseFileMap() success" ));
 
     return;
 } /* end ServerOne() */
@@ -251,7 +254,7 @@ static void ServerOne( void )
 static void ServerTwo( void )
 {
     PR_LOG(lm, msgLevel,
-        ("ServerTwo(): Not implemented yet" ));
+           ("ServerTwo(): Not implemented yet" ));
 } /* end ServerTwo() */
 
 
@@ -264,30 +267,32 @@ int main(int argc, char **argv)
         PLOptStatus os;
         PLOptState *opt = PL_CreateOptState(argc, argv, "hdC:");
 
-	    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+        while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
         {
-		    if (PL_OPT_BAD == os) continue;
+            if (PL_OPT_BAD == os) {
+                continue;
+            }
             switch (opt->option)
             {
-            case 'C':  /* Client style */
-                client = atol(opt->value);
-                break;
-            case 's':  /* file size */
-                fmSize = atol( opt->value ) * 1024;
-                break;
-            case 'd':  /* debug */
-                debug = 1;
-			    msgLevel = PR_LOG_DEBUG;
-                break;
-            case 'h':  /* help message */
-			    Help();
-                break;
-             default:
-                strcpy(dirName, opt->value);
-                break;
+                case 'C':  /* Client style */
+                    client = atol(opt->value);
+                    break;
+                case 's':  /* file size */
+                    fmSize = atol( opt->value ) * 1024;
+                    break;
+                case 'd':  /* debug */
+                    debug = 1;
+                    msgLevel = PR_LOG_DEBUG;
+                    break;
+                case 'h':  /* help message */
+                    Help();
+                    break;
+                default:
+                    strcpy(dirName, opt->value);
+                    break;
             }
         }
-	    PL_DestroyOptState(opt);
+        PL_DestroyOptState(opt);
     }
 
     lm = PR_NewLogModule("Test");       /* Initialize logging */
@@ -298,13 +303,16 @@ int main(int argc, char **argv)
         ClientTwo();
     } else {
         ServerOne();
-        if ( failed_already ) goto Finished;
+        if ( failed_already ) {
+            goto Finished;
+        }
         ServerTwo();
     }
 
 Finished:
-    if ( debug )
+    if ( debug ) {
         printf("%s\n", (failed_already)? "FAIL" : "PASS");
+    }
     return( (failed_already == PR_TRUE )? 1 : 0 );
 }  /* main() */
 /* end anonfm.c */

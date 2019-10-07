@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-** File:		pralarm.h
-** Description:	API to periodic alarms.
+** File:        pralarm.h
+** Description: API to periodic alarms.
 **
 **
-** Alarms are defined to invoke some client specified function at 
+** Alarms are defined to invoke some client specified function at
 ** a time in the future. The notification may be a one time event
 ** or repeated at a fixed interval. The interval at which the next
 ** notification takes place may be modified by the client code only
@@ -57,14 +57,14 @@ typedef PRBool (PR_CALLBACK *PRPeriodicAlarmFn)(
 ** INPUTS:      void
 ** OUTPUTS:     None
 ** RETURN:      PRAlarm*
-**  
+**
 ** SIDE EFFECTS:
 **  This creates an alarm context, which is an object used for subsequent
 **  notification creations. It also creates a thread that will be used to
 ** deliver the notifications that are expected to be defined. The client
 ** is resposible for destroying the context when appropriate.
 ** RESTRICTIONS:
-**  None. 
+**  None.
 ** MEMORY:      The object (PRAlarm) and a thread to support notifications.
 ** ALGORITHM:   N/A
 ***********************************************************************/
@@ -77,14 +77,14 @@ NSPR_API(PRAlarm*) PR_CreateAlarm(void);
 ** INPUTS:      PRAlarm*
 ** OUTPUTS:     None
 ** RETURN:      PRStatus
-**  
+**
 ** SIDE EFFECTS:
 **  This destroys the context that was created by PR_CreateAlarm().
 **  If there are any active alarms (PRAlarmID), they will be cancelled.
 **  Once that is done, the thread that was used to deliver the alarms
-**  will be joined. 
+**  will be joined.
 ** RESTRICTIONS:
-**  None. 
+**  None.
 ** MEMORY:      N/A
 ** ALGORITHM:   N/A
 ***********************************************************************/
@@ -105,7 +105,7 @@ NSPR_API(PRStatus) PR_DestroyAlarm(PRAlarm *alarm);
 ** OUTPUTS:     None
 ** RETURN:      PRAlarmID*                  Handle to the notifier just created
 **                                          or NULL if the request failed.
-**  
+**
 ** SIDE EFFECTS:
 **  A periodic notifier is created. The notifications will be delivered
 **  by the alarm's internal thread at a fixed interval whose rate is the
@@ -114,7 +114,7 @@ NSPR_API(PRStatus) PR_DestroyAlarm(PRAlarm *alarm);
 **  the notifier routine indicates that they should cease of the alarm
 **  context is destroyed (PR_DestroyAlarm).
 ** RESTRICTIONS:
-**  None. 
+**  None.
 ** MEMORY:      Memory for the notifier object.
 ** ALGORITHM:   The rate at which notifications are delivered are stated
 **              to be "'rate' notifies per 'interval'". The exact time of
@@ -124,7 +124,7 @@ NSPR_API(PRStatus) PR_DestroyAlarm(PRAlarm *alarm);
 **              notification sequence number. Such notifications have the
 **              potential to be late by not more than 'interval'/'rate'.
 **              The amount of lateness of one notification is taken into
-**              account on the next in an attempt to avoid long term slew.  
+**              account on the next in an attempt to avoid long term slew.
 ***********************************************************************/
 NSPR_API(PRAlarmID*) PR_SetAlarm(
     PRAlarm *alarm, PRIntervalTime period, PRUint32 rate,
@@ -141,7 +141,7 @@ NSPR_API(PRAlarmID*) PR_SetAlarm(
 **                                          the notifies will be delivered.
 ** OUTPUTS:     None
 ** RETURN:      PRStatus                    Indication of completion.
-**  
+**
 ** SIDE EFFECTS:
 **  An existing alarm may have its period and rate redefined. The
 **  additional side effect is that the notifier's epoch is recomputed.
@@ -150,10 +150,10 @@ NSPR_API(PRAlarmID*) PR_SetAlarm(
 ** RESTRICTIONS:
 **  This function may only be called in the notifier for that alarm.
 ** MEMORY:      N/A.
-** ALGORITHM:   See PR_SetAlarm().  
+** ALGORITHM:   See PR_SetAlarm().
 ***********************************************************************/
 NSPR_API(PRStatus) PR_ResetAlarm(
-	PRAlarmID *id, PRIntervalTime period, PRUint32 rate);
+    PRAlarmID *id, PRIntervalTime period, PRUint32 rate);
 
 PR_END_EXTERN_C
 

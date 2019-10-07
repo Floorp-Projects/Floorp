@@ -62,7 +62,7 @@ static void PR_CALLBACK IOThread(void *arg)
     }
     if (PR_GetError() != PR_PENDING_INTERRUPT_ERROR) {
         fprintf(stderr, "PR_Accept failed (%d, %d)\n",
-            PR_GetError(), PR_GetOSError());
+                PR_GetError(), PR_GetOSError());
         exit(1);
     }
     printf("PR_Accept() is interrupted as expected\n");
@@ -77,23 +77,24 @@ static void Test(PRThreadScope scope1, PRThreadScope scope2)
     PRThread *iothread, *abortio;
 
     printf("A %s thread will be interrupted by a %s thread\n",
-        (scope1 == PR_LOCAL_THREAD ? "local" : "global"),
-        (scope2 == PR_LOCAL_THREAD ? "local" : "global"));
+           (scope1 == PR_LOCAL_THREAD ? "local" : "global"),
+           (scope2 == PR_LOCAL_THREAD ? "local" : "global"));
     iothread_ready = PR_FALSE;
     iothread = PR_CreateThread(
-        PR_USER_THREAD, IOThread, NULL, PR_PRIORITY_NORMAL,
-        scope1, PR_JOINABLE_THREAD, 0);
+                   PR_USER_THREAD, IOThread, NULL, PR_PRIORITY_NORMAL,
+                   scope1, PR_JOINABLE_THREAD, 0);
     if (iothread == NULL) {
         fprintf(stderr, "cannot create thread\n");
         exit(1);
     }
     PR_Lock(lock);
-    while (!iothread_ready)
+    while (!iothread_ready) {
         PR_WaitCondVar(cvar, PR_INTERVAL_NO_TIMEOUT);
+    }
     PR_Unlock(lock);
     abortio = PR_CreateThread(
-        PR_USER_THREAD, AbortIO, iothread, PR_PRIORITY_NORMAL,
-        scope2, PR_JOINABLE_THREAD, 0);
+                  PR_USER_THREAD, AbortIO, iothread, PR_PRIORITY_NORMAL,
+                  scope2, PR_JOINABLE_THREAD, 0);
     if (abortio == NULL) {
         fprintf(stderr, "cannot create thread\n");
         exit(1);

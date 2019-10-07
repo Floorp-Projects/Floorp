@@ -14,7 +14,7 @@ void _MD_EarlyInit(void)
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
     if (isCurrent) {
-	(void) setjmp(CONTEXT(t));
+        (void) setjmp(CONTEXT(t));
     }
     *np = sizeof(CONTEXT(t)) / sizeof(PRWord);
     return (PRWord *) CONTEXT(t);
@@ -29,7 +29,7 @@ _MD_SET_PRIORITY(_MDThread *thread, PRUintn newPri)
 PRStatus
 _MD_InitializeThread(PRThread *thread)
 {
-	return PR_SUCCESS;
+    return PR_SUCCESS;
 }
 
 PRStatus
@@ -44,7 +44,7 @@ PRStatus
 _MD_WAKEUP_WAITER(PRThread *thread)
 {
     if (thread) {
-	PR_ASSERT(!(thread->flags & _PR_GLOBAL_SCOPE));
+        PR_ASSERT(!(thread->flags & _PR_GLOBAL_SCOPE));
     }
     return PR_SUCCESS;
 }

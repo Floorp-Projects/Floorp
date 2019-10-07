@@ -25,7 +25,7 @@
 #define PR_DLL_SUFFIX        ".sl"
 #endif
 
-#define _PR_VMBASE        0x30000000 
+#define _PR_VMBASE        0x30000000
 #define _PR_STACK_VMBASE    0x50000000
 /*
  * _USE_BIG_FDS increases the size of fd_set from 256 bytes to
@@ -40,9 +40,9 @@
 #define NEED_TIME_R
 
 #define HAVE_STACK_GROWING_UP
-#undef	HAVE_WEAK_IO_SYMBOLS
-#undef	HAVE_WEAK_MALLOC_SYMBOLS
-#define	HAVE_DLL
+#undef  HAVE_WEAK_IO_SYMBOLS
+#undef  HAVE_WEAK_MALLOC_SYMBOLS
+#define HAVE_DLL
 #ifdef IS_64
 #define USE_DLFCN
 #else
@@ -134,7 +134,7 @@ struct _md_sockaddr_in6 {
 /* Caveat: This makes jmp_buf full of doubles. */
 #define CONTEXT(_th) ((_th)->md.jb)
 
-    /* Stack needs two frames (64 bytes) at the bottom */ \
+/* Stack needs two frames (64 bytes) at the bottom */ \
 #define _MD_SET_THR_SP(_t, _sp)     ((_MD_GET_SP(_t)) = (int) (_sp + 64 *2))
 #define SAVE_CONTEXT(_th)           _setjmp(CONTEXT(_th))
 #define GOTO_CONTEXT(_th)           _longjmp(CONTEXT(_th), 1)
@@ -206,28 +206,28 @@ struct _MDCPU_Unix {
 #ifndef _PR_USE_POLL
     fd_set fd_read_set, fd_write_set, fd_exception_set;
     PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
-				fd_exception_cnt[_PR_MD_MAX_OSFD];
+            fd_exception_cnt[_PR_MD_MAX_OSFD];
 #else
-	struct pollfd *ioq_pollfds;
-	int ioq_pollfds_size;
-#endif	/* _PR_USE_POLL */
+    struct pollfd *ioq_pollfds;
+    int ioq_pollfds_size;
+#endif  /* _PR_USE_POLL */
 };
 
-#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_IOQ(_cpu)           ((_cpu)->md.md_unix.ioQ)
 #define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
-#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
-#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
-#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
-#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
-#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
-#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
-#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
-#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
-#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
-#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
-#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+#define _PR_FD_READ_SET(_cpu)       ((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)       ((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)      ((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)      ((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)  ((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)  ((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)       ((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)      ((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)      ((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)       ((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)  ((_cpu)->md.md_unix.ioq_pollfds_size)
 
-#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)  32
 
 struct _MDCPU {
     struct _MDCPU_Unix md_unix;
@@ -249,18 +249,18 @@ struct _MDCPU {
 #define _MD_RESUME_THREAD(thread)       _MD_resume_thread
 #define _MD_CLEAN_THREAD(_thread)
 
-#else /* PTHREADS_USER	*/
+#else /* PTHREADS_USER  */
 
 #include "_nspr_pthread.h"
 
-#endif /* PTHREADS_USER	*/
+#endif /* PTHREADS_USER */
 
 #endif  /* !defined(_PR_PTHREADS) */
 
 #if !defined(PTHREADS_USER)
-#define _MD_EARLY_INIT                 	_MD_EarlyInit
-#define _MD_FINAL_INIT					_PR_UnixInit
-#endif 
+#define _MD_EARLY_INIT                  _MD_EarlyInit
+#define _MD_FINAL_INIT                  _PR_UnixInit
+#endif
 
 #if defined(HPUX_LW_TIMER)
 extern void _PR_HPUX_LW_IntervalInit(void);

@@ -45,11 +45,11 @@ static void Help(void)
     debug_out = PR_STDOUT;
 
     PR_fprintf(
-		debug_out, "Usage: >./switch [-c n] [-t n] [-d] [-v] [-G] [-C n]\n");
+        debug_out, "Usage: >./switch [-c n] [-t n] [-d] [-v] [-G] [-C n]\n");
     PR_fprintf(
-		debug_out, "-c n\tloops at thread level (default: %d)\n", DEFAULT_LOOPS);
+        debug_out, "-c n\tloops at thread level (default: %d)\n", DEFAULT_LOOPS);
     PR_fprintf(
-		debug_out, "-t n\tnumber of threads (default: %d)\n", DEFAULT_THREADS);
+        debug_out, "-t n\tnumber of threads (default: %d)\n", DEFAULT_THREADS);
     PR_fprintf(debug_out, "-d\tturn on debugging output (default: FALSE)\n");
     PR_fprintf(debug_out, "-v\tturn on verbose output (default: FALSE)\n");
     PR_fprintf(debug_out, "-G\tglobal threads only (default: FALSE)\n");
@@ -63,9 +63,12 @@ static void PR_CALLBACK Notified(void *arg)
     while (PR_SUCCESS == status)
     {
         PR_Lock(shared->ml);
-        while (shared->twiddle && (PR_SUCCESS == status))
+        while (shared->twiddle && (PR_SUCCESS == status)) {
             status = PR_WaitCondVar(shared->cv, PR_INTERVAL_NO_TIMEOUT);
-		if (verbosity) PR_fprintf(debug_out, "+");
+        }
+        if (verbosity) {
+            PR_fprintf(debug_out, "+");
+        }
         shared->twiddle = PR_TRUE;
         shared->next->twiddle = PR_FALSE;
         PR_NotifyCondVar(shared->next->cv);
@@ -76,7 +79,7 @@ static void PR_CALLBACK Notified(void *arg)
 static Shared home;
 PRIntn PR_CALLBACK Switch(PRIntn argc, char **argv)
 {
-	PLOptStatus os;
+    PLOptStatus os;
     PRStatus status;
     PRBool help = PR_FALSE;
     PRUintn concurrency = 1;
@@ -85,52 +88,56 @@ PRIntn PR_CALLBACK Switch(PRIntn argc, char **argv)
     PRThreadScope thread_scope = PR_LOCAL_THREAD;
     PRUintn thread_count, inner_count, loop_count, average;
     PRUintn thread_limit = DEFAULT_THREADS, loop_limit = DEFAULT_LOOPS;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "hdvc:t:C:G");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    PLOptState *opt = PL_CreateOptState(argc, argv, "hdvc:t:C:G");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'v':  /* verbose mode */
-			verbosity = PR_TRUE;
-        case 'd':  /* debug mode */
-			debug_mode = PR_TRUE;
-            break;
-        case 'c':  /* loop counter */
-			loop_limit = atoi(opt->value);
-            break;
-        case 't':  /* thread limit */
-			thread_limit = atoi(opt->value);
-            break;
-        case 'C':  /* Concurrency limit */
-			concurrency = atoi(opt->value);
-            break;
-        case 'G':  /* global threads only */
-			thread_scope = PR_GLOBAL_THREAD;
-            break;
-        case 'h':  /* help message */
-			Help();
-			help = PR_TRUE;
-            break;
-         default:
-            break;
+            case 'v':  /* verbose mode */
+                verbosity = PR_TRUE;
+            case 'd':  /* debug mode */
+                debug_mode = PR_TRUE;
+                break;
+            case 'c':  /* loop counter */
+                loop_limit = atoi(opt->value);
+                break;
+            case 't':  /* thread limit */
+                thread_limit = atoi(opt->value);
+                break;
+            case 'C':  /* Concurrency limit */
+                concurrency = atoi(opt->value);
+                break;
+            case 'G':  /* global threads only */
+                thread_scope = PR_GLOBAL_THREAD;
+                break;
+            case 'h':  /* help message */
+                Help();
+                help = PR_TRUE;
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
-    if (help) return -1;
+    if (help) {
+        return -1;
+    }
 
-	if (PR_TRUE == debug_mode)
-	{
-		debug_out = PR_STDOUT;
-		PR_fprintf(debug_out, "Test parameters\n");
-		PR_fprintf(debug_out, "\tThreads involved: %d\n", thread_limit);
-		PR_fprintf(debug_out, "\tIteration limit: %d\n", loop_limit);
-		PR_fprintf(debug_out, "\tConcurrency: %d\n", concurrency);
-		PR_fprintf(
-			debug_out, "\tThread type: %s\n",
-			(PR_GLOBAL_THREAD == thread_scope) ? "GLOBAL" : "LOCAL");
-	}
+    if (PR_TRUE == debug_mode)
+    {
+        debug_out = PR_STDOUT;
+        PR_fprintf(debug_out, "Test parameters\n");
+        PR_fprintf(debug_out, "\tThreads involved: %d\n", thread_limit);
+        PR_fprintf(debug_out, "\tIteration limit: %d\n", loop_limit);
+        PR_fprintf(debug_out, "\tConcurrency: %d\n", concurrency);
+        PR_fprintf(
+            debug_out, "\tThread type: %s\n",
+            (PR_GLOBAL_THREAD == thread_scope) ? "GLOBAL" : "LOCAL");
+    }
 
     PR_SetConcurrency(concurrency);
 
@@ -153,70 +160,78 @@ PRIntn PR_CALLBACK Switch(PRIntn argc, char **argv)
         link = shared;
 
         shared->thread = PR_CreateThread(
-            PR_USER_THREAD, Notified, shared,
-            PR_PRIORITY_HIGH, thread_scope,
-            PR_JOINABLE_THREAD, 0);
+                             PR_USER_THREAD, Notified, shared,
+                             PR_PRIORITY_HIGH, thread_scope,
+                             PR_JOINABLE_THREAD, 0);
         PR_ASSERT(shared->thread != NULL);
-        if (NULL == shared->thread)
+        if (NULL == shared->thread) {
             failed = PR_TRUE;
-	}
+        }
+    }
 
     for (loop_count = 1; loop_count <= loop_limit; ++loop_count)
     {
-		timein = PR_IntervalNow();
-		for (inner_count = 0; inner_count < INNER_LOOPS; ++inner_count)
-		{
-			PR_Lock(home.ml);
-			home.twiddle = PR_TRUE;
-			shared->twiddle = PR_FALSE;
-			PR_NotifyCondVar(shared->cv);
-			while (home.twiddle)
+        timein = PR_IntervalNow();
+        for (inner_count = 0; inner_count < INNER_LOOPS; ++inner_count)
+        {
+            PR_Lock(home.ml);
+            home.twiddle = PR_TRUE;
+            shared->twiddle = PR_FALSE;
+            PR_NotifyCondVar(shared->cv);
+            while (home.twiddle)
             {
-				status = PR_WaitCondVar(home.cv, PR_INTERVAL_NO_TIMEOUT);
-				if (PR_FAILURE == status)
-				    failed = PR_TRUE;
+                status = PR_WaitCondVar(home.cv, PR_INTERVAL_NO_TIMEOUT);
+                if (PR_FAILURE == status) {
+                    failed = PR_TRUE;
+                }
             }
-			PR_Unlock(home.ml);
-		}
-		timeout += (PR_IntervalNow() - timein);
-	}
+            PR_Unlock(home.ml);
+        }
+        timeout += (PR_IntervalNow() - timein);
+    }
 
-	if (debug_mode)
-	{
-		average = PR_IntervalToMicroseconds(timeout)
-			/ (INNER_LOOPS * loop_limit * thread_count);
-		PR_fprintf(
-			debug_out, "Average switch times %d usecs for %d threads\n",
+    if (debug_mode)
+    {
+        average = PR_IntervalToMicroseconds(timeout)
+                  / (INNER_LOOPS * loop_limit * thread_count);
+        PR_fprintf(
+            debug_out, "Average switch times %d usecs for %d threads\n",
             average, thread_limit);
-	}
+    }
 
     link = shared;
     for (thread_count = 1; thread_count <= thread_limit; ++thread_count)
     {
-        if (&home == link) break;
+        if (&home == link) {
+            break;
+        }
         status = PR_Interrupt(link->thread);
-		if (PR_SUCCESS != status)
+        if (PR_SUCCESS != status)
         {
             failed = PR_TRUE;
-            if (debug_mode)
-			    PL_FPrintError(debug_out, "Failed to interrupt");
+            if (debug_mode) {
+                PL_FPrintError(debug_out, "Failed to interrupt");
+            }
         }
-		link = link->next; 
+        link = link->next;
     }
 
     for (thread_count = 1; thread_count <= thread_limit; ++thread_count)
     {
         link = shared->next;
         status = PR_JoinThread(shared->thread);
-		if (PR_SUCCESS != status)
-		{
+        if (PR_SUCCESS != status)
+        {
             failed = PR_TRUE;
-            if (debug_mode)
-			    PL_FPrintError(debug_out, "Failed to join");
+            if (debug_mode) {
+                PL_FPrintError(debug_out, "Failed to join");
+            }
         }
         PR_DestroyCondVar(shared->cv);
         PR_DELETE(shared);
-        if (&home == link) break;
+        if (&home == link) {
+            break;
+        }
         shared = link;
     }
     PR_DestroyCondVar(home.cv);

@@ -26,51 +26,51 @@
 **   given in the PR_OpenSharedMemory() call, a protocol for using the
 **   shared memory API is required to ensure desired behavior. Failing
 **   to follow the protocol may yield unpredictable results.
-**   
+**
 **   PR_OpenSharedMemory() will create the shared memory segment, if it
 **   does not already exist, or open a connection that the existing
 **   shared memory segment if it already exists.
-**   
+**
 **   PR_AttachSharedMemory() should be called following
 **   PR_OpenSharedMemory() to map the memory segment to an address in
 **   the application's address space.
-**   
+**
 **   PR_AttachSharedMemory() may be called to re-map a shared memory
 **   segment after detaching the same PRSharedMemory object. Be
 **   sure to detach it when done.
-**   
+**
 **   PR_DetachSharedMemory() should be called to un-map the shared
 **   memory segment from the application's address space.
-**   
+**
 **   PR_CloseSharedMemory() should be called when no further use of the
 **   PRSharedMemory object is required within a process. Following a
 **   call to  PR_CloseSharedMemory() the PRSharedMemory object is
 **   invalid and cannot be reused.
-**   
+**
 **   PR_DeleteSharedMemory() should be called before process
 **   termination. After calling PR_DeleteSharedMemory() any further use
 **   of the shared memory associated with the name may cause
 **   unpredictable results.
-**   
+**
 ** Files:
 **   The name passed to PR_OpenSharedMemory() should be a valid filename
 **   for a unix platform. PR_OpenSharedMemory() creates file using the
 **   name passed in. Some platforms may mangle the name before creating
 **   the file and the shared memory.
-**   
+**
 **   The unix implementation may use SysV IPC shared memory, Posix
 **   shared memory, or memory mapped files; the filename may used to
 **   define the namespace. On Windows, the name is significant, but
 **   there is no file associated with name.
-**   
+**
 **   No assumptions about the persistence of data in the named file
 **   should be made. Depending on platform, the shared memory may be
 **   mapped onto system paging space and be discarded at process
 **   termination.
-**   
+**
 **   All names provided to PR_OpenSharedMemory() should be valid
 **   filename syntax or name syntax for shared memory for the target
-**   platform. Referenced directories should have permissions 
+**   platform. Referenced directories should have permissions
 **   appropriate for writing.
 **
 ** Limits:
@@ -132,11 +132,11 @@ typedef struct PRSharedMemory PRSharedMemory;
 **
 ** INPUTS:
 **   name -- the name the shared-memory segment is known as.
-**   size -- the size of the shared memory segment. 
+**   size -- the size of the shared memory segment.
 **   flags -- Options for creating the shared memory
 **   mode -- Same as is passed to PR_Open()
 **
-** OUTPUTS: 
+** OUTPUTS:
 **   The shared memory is allocated.
 **
 ** RETURNS: Pointer to opaque structure PRSharedMemory or NULL.
@@ -145,11 +145,11 @@ typedef struct PRSharedMemory PRSharedMemory;
 **
 */
 NSPR_API( PRSharedMemory * )
-    PR_OpenSharedMemory(
-        const char *name,
-        PRSize      size,
-        PRIntn      flags,
-        PRIntn      mode
+PR_OpenSharedMemory(
+    const char *name,
+    PRSize      size,
+    PRIntn      flags,
+    PRIntn      mode
 );
 /* Define values for PR_OpenShareMemory(...,create) */
 #define PR_SHM_CREATE 0x1  /* create if not exist */
@@ -160,12 +160,12 @@ NSPR_API( PRSharedMemory * )
 **
 ** DESCRIPTION:
 ** PR_AttachSharedMemory() maps the shared-memory described by
-** shm to the current process. 
+** shm to the current process.
 **
-** INPUTS: 
+** INPUTS:
 **   shm -- The handle returned from PR_OpenSharedMemory().
 **   flags -- options for mapping the shared memory.
-**   PR_SHM_READONLY causes the memory to be attached 
+**   PR_SHM_READONLY causes the memory to be attached
 **   read-only.
 **
 ** OUTPUTS:
@@ -179,11 +179,11 @@ NSPR_API( PRSharedMemory * )
 **
 */
 NSPR_API( void * )
-    PR_AttachSharedMemory(
-        PRSharedMemory *shm,
-        PRIntn  flags
+PR_AttachSharedMemory(
+    PRSharedMemory *shm,
+    PRIntn  flags
 );
-/* Define values for PR_AttachSharedMemory(...,flags) */ 
+/* Define values for PR_AttachSharedMemory(...,flags) */
 #define PR_SHM_READONLY 0x01
 
 /*
@@ -191,9 +191,9 @@ NSPR_API( void * )
 **
 ** DESCRIPTION:
 **   PR_DetachSharedMemory() detaches the shared-memory described
-**   by shm. 
+**   by shm.
 **
-** INPUTS: 
+** INPUTS:
 **   shm -- The handle returned from PR_OpenSharedMemory().
 **   addr -- The address at which the memory was attached.
 **
@@ -205,9 +205,9 @@ NSPR_API( void * )
 **
 */
 NSPR_API( PRStatus )
-    PR_DetachSharedMemory(
-        PRSharedMemory *shm,
-        void  *addr
+PR_DetachSharedMemory(
+    PRSharedMemory *shm,
+    void  *addr
 );
 
 /*
@@ -216,7 +216,7 @@ NSPR_API( PRStatus )
 ** DESCRIPTION:
 **   PR_CloseSharedMemory() closes the shared-memory described by
 **   shm.
-** 
+**
 ** INPUTS:
 **   shm -- The handle returned from PR_OpenSharedMemory().
 **
@@ -227,8 +227,8 @@ NSPR_API( PRStatus )
 **
 */
 NSPR_API( PRStatus )
-    PR_CloseSharedMemory(
-        PRSharedMemory *shm
+PR_CloseSharedMemory(
+    PRSharedMemory *shm
 );
 
 /*
@@ -248,8 +248,8 @@ NSPR_API( PRStatus )
 **
 */
 NSPR_API( PRStatus )
-    PR_DeleteSharedMemory( 
-        const char *name
+PR_DeleteSharedMemory(
+    const char *name
 );
 
 PR_END_EXTERN_C

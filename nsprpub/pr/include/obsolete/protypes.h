@@ -126,9 +126,9 @@ typedef PRWord prword_t;
 
 
 /* Re: prbit.h */
-#define TEST_BIT	PR_TEST_BIT
-#define SET_BIT		PR_SET_BIT
-#define CLEAR_BIT	PR_CLEAR_BIT
+#define TEST_BIT    PR_TEST_BIT
+#define SET_BIT     PR_SET_BIT
+#define CLEAR_BIT   PR_CLEAR_BIT
 
 /* Re: prarena.h->plarena.h */
 #define PRArena PLArena
