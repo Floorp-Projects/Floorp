@@ -34,4 +34,9 @@ interface nsITouchBarUpdater : nsISupports
    * sets this value after a Touch Bar is initialized on compatible Macs.
    */
   void setTouchBarInitialized(in boolean aIsInitialized);
+
+  /**
+   * If aShowing is true, aPopover is shown. Otherwise, it is hidden.
+   */
+  void showPopover(in nsIBaseWindow aWindow, in nsITouchBarInput aPopover, in boolean aShowing);
 };

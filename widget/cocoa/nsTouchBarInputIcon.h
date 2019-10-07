@@ -26,9 +26,9 @@ class imgRequestProxy;
 class nsTouchBarInputIcon : public nsIconLoaderObserver {
  public:
   explicit nsTouchBarInputIcon(
-      RefPtr<Document> aDocument,
-      NSButton* aButton,
-      NSSharingServicePickerTouchBarItem* aShareScrubber = nil);
+      RefPtr<Document> aDocument, NSButton* aButton,
+      NSSharingServicePickerTouchBarItem* aShareScrubber = nil,
+      NSPopoverTouchBarItem* aPopoverItem = nil);
 
  private:
   virtual ~nsTouchBarInputIcon();
@@ -59,6 +59,8 @@ class nsTouchBarInputIcon : public nsIconLoaderObserver {
   // NSSharingServicePickerTouchBarItem does not expose an NSButton* on which we
   // can set the `image` property.
   NSSharingServicePickerTouchBarItem* mShareScrubber;
+  // We accept a popover only as a special case.
+  NSPopoverTouchBarItem* mPopoverItem;
   // The icon loader object should never outlive its creating
   // nsTouchBarInputIcon object.
   RefPtr<nsIconLoaderService> mIconLoader;

@@ -9,7 +9,6 @@
 #include "nsTouchBarUpdater.h"
 #include "nsTouchBarNativeAPIDefines.h"
 
-#include "nsCocoaWindow.h"
 #include "nsIArray.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
@@ -28,12 +27,11 @@ NS_IMPL_ISUPPORTS(nsTouchBarUpdater, nsITouchBarUpdater);
 NS_IMETHODIMP
 nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow,
                                         const nsTArray<RefPtr<nsITouchBarInput>>& aInputs) {
-  nsCOMPtr<nsIWidget> widget = nullptr;
-  aWindow->GetMainWidget(getter_AddRefs(widget));
-  if (!widget) {
-    return NS_ERROR_FAILURE;
+  if (!sTouchBarIsInitialized) {
+    return NS_OK;
   }
-  BaseWindow* cocoaWin = (BaseWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+
+  BaseWindow* cocoaWin = nsTouchBarUpdater::GetCocoaWindow(aWindow);
   if (!cocoaWin) {
     return NS_ERROR_FAILURE;
   }
@@ -55,6 +53,42 @@ nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow,
 }
 
 NS_IMETHODIMP
+nsTouchBarUpdater::ShowPopover(nsIBaseWindow* aWindow, nsITouchBarInput* aPopover, bool aShowing) {
+  if (!sTouchBarIsInitialized || !aPopover) {
+    return NS_OK;
+  }
+
+  BaseWindow* cocoaWin = nsTouchBarUpdater::GetCocoaWindow(aWindow);
+  if (!cocoaWin) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if ([cocoaWin respondsToSelector:@selector(touchBar)]) {
+    // We don't need to completely reinitialize the popover. We only need its
+    // identifier to look it up in [nsTouchBar mappedLayoutItems].
+    nsAutoString keyStr;
+    nsresult rv = aPopover->GetKey(keyStr);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+    NSString* key = nsCocoaUtils::ToNSString(keyStr);
+
+    nsAutoString typeStr;
+    rv = aPopover->GetType(typeStr);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+    NSString* type = nsCocoaUtils::ToNSString(typeStr);
+
+    TouchBarInput* popoverItem = [[(nsTouchBar*)cocoaWin.touchBar mappedLayoutItems]
+        objectForKey:[TouchBarInput nativeIdentifierWithType:type withKey:key]];
+
+    [(nsTouchBar*)cocoaWin.touchBar showPopover:popoverItem showing:aShowing];
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTouchBarUpdater::EnterCustomizeMode() {
   [NSApp toggleTouchBarCustomizationPalette:(id)this];
   return NS_OK;
@@ -64,6 +98,19 @@ NS_IMETHODIMP
 nsTouchBarUpdater::IsTouchBarInitialized(bool* aResult) {
   *aResult = sTouchBarIsInitialized;
   return NS_OK;
+}
+
+BaseWindow* nsTouchBarUpdater::GetCocoaWindow(nsIBaseWindow* aWindow) {
+  nsCOMPtr<nsIWidget> widget = nullptr;
+  aWindow->GetMainWidget(getter_AddRefs(widget));
+  if (!widget) {
+    return nil;
+  }
+  BaseWindow* cocoaWin = (BaseWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+  if (!cocoaWin) {
+    return nil;
+  }
+  return cocoaWin;
 }
 
 // NOTE: This method is for internal unit tests only.
