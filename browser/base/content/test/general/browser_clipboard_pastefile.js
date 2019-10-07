@@ -2,15 +2,15 @@
 // event.clipboardData.
 
 add_task(async function() {
-  var textbox = document.createXULElement("textbox");
-  document.documentElement.appendChild(textbox);
+  var input = document.createElement("input");
+  document.documentElement.appendChild(input);
 
-  textbox.focus();
-  textbox.value = "Text";
-  textbox.select();
+  input.focus();
+  input.value = "Text";
+  input.select();
 
   await new Promise((resolve, reject) => {
-    textbox.addEventListener(
+    input.addEventListener(
       "copy",
       function(event) {
         event.clipboardData.setData("text/plain", "Alternate");
@@ -42,10 +42,10 @@ add_task(async function() {
   });
   is(output, "Passed", "Paste file");
 
-  textbox.focus();
+  input.focus();
 
   await new Promise((resolve, reject) => {
-    textbox.addEventListener(
+    input.addEventListener(
       "paste",
       function(event) {
         let dt = event.clipboardData;
@@ -74,7 +74,7 @@ add_task(async function() {
     EventUtils.synthesizeKey("v", { accelKey: true });
   });
 
-  document.documentElement.removeChild(textbox);
+  input.remove();
 
   BrowserTestUtils.removeTab(tab);
 });
