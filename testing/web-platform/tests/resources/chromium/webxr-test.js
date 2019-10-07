@@ -574,7 +574,7 @@ class MockRuntime {
       let submit_frame_sink;
       if (result.supportsSession) {
         submit_frame_sink = {
-          clientRequest: this.presentation_provider_.getClientRequest(),
+          clientReceiver: this.presentation_provider_.getClientReceiver(),
           provider: this.presentation_provider_.bindProvider(sessionOptions),
           transportOptions: options
         };
@@ -957,7 +957,7 @@ class MockXRPresentationProvider {
     return providerPtr;
   }
 
-  getClientRequest() {
+  getClientReceiver() {
     this.submitFrameClient_ = new device.mojom.XRPresentationClientPtr();
     return mojo.makeRequest(this.submitFrameClient_);
   }
