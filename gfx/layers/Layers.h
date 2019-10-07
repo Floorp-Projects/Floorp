@@ -1278,7 +1278,7 @@ class Layer {
    *     combining appropriate values from mozilla::SideBits.
    */
   void SetFixedPositionData(ScrollableLayerGuid::ViewID aScrollId,
-                            const LayerPoint& aAnchor, int32_t aSides) {
+                            const LayerPoint& aAnchor, SideBits aSides) {
     if (mSimpleAttrs.SetFixedPositionData(aScrollId, aAnchor, aSides)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(
           this, ("Layer::Mutated(%p) FixedPositionData", this));
@@ -1389,7 +1389,7 @@ class Layer {
   LayerPoint GetFixedPositionAnchor() {
     return mSimpleAttrs.GetFixedPositionAnchor();
   }
-  int32_t GetFixedPositionSides() {
+  SideBits GetFixedPositionSides() {
     return mSimpleAttrs.GetFixedPositionSides();
   }
   ScrollableLayerGuid::ViewID GetStickyScrollContainerId() {
