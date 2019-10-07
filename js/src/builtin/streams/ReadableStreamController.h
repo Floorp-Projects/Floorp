@@ -13,10 +13,10 @@
 
 #include <stdint.h>  // uint32_t
 
-#include "builtin/streams/ReadableStream.h"  // js::ReadableStream
+#include "builtin/streams/ReadableStream.h"    // js::ReadableStream
 #include "builtin/streams/StreamController.h"  // js::StreamController
-#include "js/Class.h"                        // JSClass, js::ClassSpec
-#include "js/RootingAPI.h"                   // JS::Handle
+#include "js/Class.h"                          // JSClass, js::ClassSpec
+#include "js/RootingAPI.h"                     // JS::Handle
 #include "js/Stream.h"  // JS::ReadableStreamUnderlyingSource
 #include "js/Value.h"  // JS::Value, JS::{Number,Object,Private,Undefined}Value, JS::UndefinedHandleValue
 #include "vm/List.h"   // js::ListObject

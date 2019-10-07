@@ -136,9 +136,7 @@ class nsWrapperCache {
    * anywhere or pass it into JSAPI functions that may cause the value to
    * escape.
    */
-  JSObject* GetWrapperMaybeDead() const {
-    return mWrapper;
-  }
+  JSObject* GetWrapperMaybeDead() const { return mWrapper; }
 
 #ifdef DEBUG
  private:

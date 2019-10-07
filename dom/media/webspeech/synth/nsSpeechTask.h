@@ -23,7 +23,6 @@ class SpeechSynthesis;
 class nsSpeechTask : public nsISpeechTask,
                      public nsIAudioChannelAgentCallback,
                      public nsSupportsWeakReference {
-
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsSpeechTask, nsISpeechTask)

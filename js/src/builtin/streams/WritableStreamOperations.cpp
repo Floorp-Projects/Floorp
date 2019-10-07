@@ -15,11 +15,11 @@
 
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
-#include "js/RootingAPI.h"                   // JS::Handle, JS::Rooted
-#include "js/Value.h"                        // JS::Value, JS::ObjecValue
+#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/Value.h"       // JS::Value, JS::ObjecValue
 
-#include "vm/JSObject-inl.h"                 // js::NewObjectWithClassProto
-#include "vm/List-inl.h"                     // js::StoreNewListInFixedSlot
+#include "vm/JSObject-inl.h"  // js::NewObjectWithClassProto
+#include "vm/List-inl.h"      // js::StoreNewListInFixedSlot
 
 using js::WritableStream;
 

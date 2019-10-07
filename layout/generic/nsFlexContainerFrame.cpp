@@ -1220,7 +1220,7 @@ uint16_t nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     const uint8_t alignContent = SimplifyAlignOrJustifyContentForOneItem(
         containerStylePos->mAlignContent,
         /*aIsAlign = */ true);
-    if (NS_STYLE_FLEX_WRAP_NOWRAP != containerStylePos->mFlexWrap &&
+    if (StyleFlexWrap::Nowrap != containerStylePos->mFlexWrap &&
         alignContent != NS_STYLE_ALIGN_STRETCH) {
       // Multi-line, align-content isn't stretch --> align-content determines
       // this child's alignment in the cross axis.
@@ -1600,7 +1600,7 @@ void nsFlexContainerFrame::ResolveAutoFlexBasisAndMinSize(
   const ReflowInput* flexContainerRI = aItemReflowInput.mParentReflowInput;
   MOZ_ASSERT(flexContainerRI,
              "flex item's reflow input should have ptr to container's state");
-  if (NS_STYLE_FLEX_WRAP_NOWRAP == flexContainerRI->mStylePosition->mFlexWrap) {
+  if (StyleFlexWrap::Nowrap == flexContainerRI->mStylePosition->mFlexWrap) {
     // XXXdholbert Maybe this should share logic with ComputeCrossSize()...
     // Alternately, maybe tentative container cross size should be passed down.
     nscoord containerCrossSize = GET_CROSS_COMPONENT_LOGICAL(
@@ -2125,9 +2125,9 @@ nscoord FlexItem::GetBaselineOffsetFromOuterCrossEdge(
   nscoord marginBStartToBaseline =
       ResolvedAscent(aUseFirstLineBaseline) + mMargin.Side(itemBlockStartSide);
 
-  return (physSideMeasuringFrom == itemBlockStartSide) ?
-      marginBStartToBaseline :
-      GetOuterCrossSize(crossAxis) - marginBStartToBaseline;
+  return (physSideMeasuringFrom == itemBlockStartSide)
+             ? marginBStartToBaseline
+             : GetOuterCrossSize(crossAxis) - marginBStartToBaseline;
 }
 
 bool FlexItem::IsCrossSizeAuto() const {
@@ -3150,7 +3150,7 @@ CrossAxisPositionTracker::CrossAxisPositionTracker(
   }
 
   const bool isSingleLine =
-      NS_STYLE_FLEX_WRAP_NOWRAP == aReflowInput.mStylePosition->mFlexWrap;
+      StyleFlexWrap::Nowrap == aReflowInput.mStylePosition->mFlexWrap;
   if (isSingleLine) {
     MOZ_ASSERT(!aFirstLine->getNext(),
                "If we're styled as single-line, we should only have 1 line");
@@ -3782,7 +3782,7 @@ void FlexboxAxisTracker::InitAxesFromModernProps(
   }
 
   // "flex-wrap: wrap-reverse" reverses our cross axis.
-  if (stylePos->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
+  if (stylePos->mFlexWrap == StyleFlexWrap::WrapReverse) {
     mCrossAxis = GetReverseAxis(mCrossAxis);
     mIsCrossAxisReversed = true;
   } else {
@@ -3845,7 +3845,7 @@ void nsFlexContainerFrame::GenerateFlexLines(
   MOZ_ASSERT(aLines.isEmpty(), "Expecting outparam to start out empty");
 
   const bool isSingleLine =
-      NS_STYLE_FLEX_WRAP_NOWRAP == aReflowInput.mStylePosition->mFlexWrap;
+      StyleFlexWrap::Nowrap == aReflowInput.mStylePosition->mFlexWrap;
 
   // If we're transparently reversing axes, then we'll need to link up our
   // FlexItems and FlexLines in the reverse order, so that the rest of flex
@@ -5364,7 +5364,7 @@ nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
       // is the max of its items' min isizes.
       // * For a row-oriented multi-line flex container, the intrinsic
       // pref isize is former (sum), and its min isize is the latter (max).
-      bool isSingleLine = (NS_STYLE_FLEX_WRAP_NOWRAP == stylePos->mFlexWrap);
+      bool isSingleLine = (StyleFlexWrap::Nowrap == stylePos->mFlexWrap);
       if (axisTracker.IsRowOriented() &&
           (isSingleLine || aType == nsLayoutUtils::PREF_ISIZE)) {
         containerISize += childISize;

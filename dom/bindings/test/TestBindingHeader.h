@@ -109,8 +109,8 @@ class TestInterface : public nsISupports, public nsWrapperCache {
                                                      const Nullable<bool>&);
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
                                                      TestInterface*);
-  static already_AddRefed<TestInterface> Constructor(
-      const GlobalObject&, uint32_t, TestInterface&);
+  static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
+                                                     uint32_t, TestInterface&);
 
   static already_AddRefed<TestInterface> Constructor(const GlobalObject&,
                                                      Date&);
@@ -1522,8 +1522,7 @@ class TestThrowingConstructorInterface : public nsISupports,
   static already_AddRefed<TestThrowingConstructorInterface> Constructor(
       const GlobalObject&, TestInterface*, ErrorResult&);
   static already_AddRefed<TestThrowingConstructorInterface> Constructor(
-      const GlobalObject&, uint32_t, TestInterface&,
-      ErrorResult&);
+      const GlobalObject&, uint32_t, TestInterface&, ErrorResult&);
 
   static already_AddRefed<TestThrowingConstructorInterface> Constructor(
       const GlobalObject&, Date&, ErrorResult&);

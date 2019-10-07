@@ -118,14 +118,14 @@ hpp:
 
         using Tokenizer = Tok;
 
-        using BinASTFields = typename Tokenizer::BinASTFields;
         using AutoList = typename Tokenizer::AutoList;
         using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
         using Chars = typename Tokenizer::Chars;
-        using Context = typename BinASTTokenReaderBase::Context;
         using ListContext = typename BinASTTokenReaderBase::ListContext;
         using FieldContext = typename BinASTTokenReaderBase::FieldContext;
         using RootContext = typename BinASTTokenReaderBase::RootContext;
+        using FieldOrRootContext = BinASTTokenReaderBase::FieldOrRootContext;
+        using FieldOrListContext = BinASTTokenReaderBase::FieldOrListContext;
 
        public:
         // Auto-generated types.
@@ -659,7 +659,7 @@ BreakStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(BinASTInterfaceAndField::BreakStatement__Label))));
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(FieldContext(BinASTInterfaceAndField::BreakStatement__Label)));
 
   build: |
     if (label) {
@@ -803,7 +803,7 @@ ContinueStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(BinASTInterfaceAndField::ContinueStatement__Label))));
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(FieldContext(BinASTInterfaceAndField::ContinueStatement__Label)));
 
   build: |
     if (label) {
@@ -1310,7 +1310,7 @@ LiteralRegExpExpression:
       block:
         replace: |
           RegExpFlags reflags = JS::RegExpFlag::NoFlags;
-          auto flagsContext = Context(FieldContext(BinASTInterfaceAndField::LiteralRegExpExpression__Flags));
+          auto flagsContext = FieldContext(BinASTInterfaceAndField::LiteralRegExpExpression__Flags);
           if (mozilla::IsSame<Tok, BinASTTokenReaderContext>::value) {
             // Hack: optimized `readChars` is not implemented for `BinASTTokenReaderContext`.
             RootedAtom flags(cx_);

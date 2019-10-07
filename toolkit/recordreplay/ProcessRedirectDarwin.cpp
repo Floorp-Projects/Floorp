@@ -1689,12 +1689,12 @@ static size_t CGPathElementPointCount(CGPathElementType aType) {
 }
 
 static void CGPathDataCallback(void* aData, const CGPathElement* aElement) {
-  InfallibleVector<char>* data = (InfallibleVector<char>*) aData;
+  InfallibleVector<char>* data = (InfallibleVector<char>*)aData;
 
-  data->append((char) aElement->type);
+  data->append((char)aElement->type);
 
   for (size_t i = 0; i < CGPathElementPointCount(aElement->type); i++) {
-    data->append((char*) &aElement->points[i], sizeof(CGPoint));
+    data->append((char*)&aElement->points[i], sizeof(CGPoint));
   }
 }
 
@@ -1707,7 +1707,7 @@ static void CGPathApplyWithData(const InfallibleVector<char>& aData,
   size_t offset = 0;
   while (offset < aData.length()) {
     CGPathElement element;
-    element.type = (CGPathElementType) aData[offset++];
+    element.type = (CGPathElementType)aData[offset++];
 
     CGPoint points[3];
     element.points = points;
@@ -2336,7 +2336,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"CGImageRelease", RR_ScalarRval, nullptr, nullptr, Preamble_Veto<0>},
     {"CGMainDisplayID", RR_ScalarRval},
     {"CGPathAddPath"},
-    {"CGPathApply", nullptr, Preamble_CGPathApply, MM_CGPathApply },
+    {"CGPathApply", nullptr, Preamble_CGPathApply, MM_CGPathApply},
     {"CGPathContainsPoint", RR_ScalarRval},
     {"CGPathCreateMutable", RR_ScalarRval},
     {"CGPathCreateWithRoundedRect", RR_ScalarRval, nullptr,
@@ -2466,7 +2466,8 @@ static SystemRedirection gSystemRedirections[] = {
     {"GetEventDispatcherTarget", RR_ScalarRval},
     {"GetEventKind", RR_ScalarRval},
     {"HIThemeDrawButton",
-     RR_Compose<RR_WriteOptionalBufferFixedSize<4, sizeof(HIRect)>, RR_ScalarRval>,
+     RR_Compose<RR_WriteOptionalBufferFixedSize<4, sizeof(HIRect)>,
+                RR_ScalarRval>,
      nullptr,
      MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
                 MM_BufferFixedSize<1, sizeof(HIThemeButtonDrawInfo)>,
@@ -2489,7 +2490,8 @@ static SystemRedirection gSystemRedirections[] = {
                 MM_BufferFixedSize<1, sizeof(HIThemeMenuDrawInfo)>,
                 MM_UpdateCFTypeArg<2>>},
     {"HIThemeDrawMenuItem",
-     RR_Compose<RR_WriteOptionalBufferFixedSize<5, sizeof(HIRect)>, RR_ScalarRval>,
+     RR_Compose<RR_WriteOptionalBufferFixedSize<5, sizeof(HIRect)>,
+                RR_ScalarRval>,
      nullptr,
      MM_Compose<MM_BufferFixedSize<0, sizeof(HIRect)>,
                 MM_BufferFixedSize<1, sizeof(HIRect)>,

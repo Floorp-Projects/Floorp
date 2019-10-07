@@ -376,7 +376,7 @@ MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(MovePLDHashTableContents,
                                     (aFirstOps, aSecondOps))
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(InvalidateRecording, (const char* aWhy),
                                     (aWhy))
-MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(HoldJSObject, (JSObject* aObject),
+MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(HoldJSObject, (JSObject * aObject),
                                     (aObject))
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(RecordReplayAssertBytes,
                                     (const void* aData, size_t aSize),

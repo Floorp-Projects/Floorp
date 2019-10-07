@@ -850,7 +850,7 @@ ResumeMode DebugAPI::slowPathOnNativeCall(JSContext* cx, const CallArgs& args,
       cx,
       [cx](Debugger* dbg) -> bool {
         return dbg == cx->insideDebuggerEvaluationWithOnNativeCallHook &&
-          dbg->getHook(Debugger::OnNativeCall);
+               dbg->getHook(Debugger::OnNativeCall);
       },
       [&](Debugger* dbg) -> ResumeMode {
         return dbg->fireNativeCall(cx, args, reason, &rval);
@@ -3888,7 +3888,8 @@ void DebugAPI::sweepAll(JSFreeOp* fop) {
     // Since DebugAPI::sweepAll is called after everything is marked, but before
     // anything has been finalized, this is the perfect place to drop the count.
     if (dbg->zone()->isGCSweeping()) {
-      for (Debugger::GeneratorWeakMap::Enum e(dbg->generatorFrames); !e.empty(); e.popFront()) {
+      for (Debugger::GeneratorWeakMap::Enum e(dbg->generatorFrames); !e.empty();
+           e.popFront()) {
         DebuggerFrame* frameObj = &e.front().value()->as<DebuggerFrame>();
         if (IsAboutToBeFinalizedUnbarriered(&frameObj)) {
           frameObj->clearGenerator(fop, dbg, &e);

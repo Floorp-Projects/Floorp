@@ -22,21 +22,19 @@ namespace net {
 class FuzzySecurityInfo final : public nsITransportSecurityInfo,
                                 public nsIInterfaceRequestor,
                                 public nsISSLSocketControl {
+ public:
+  FuzzySecurityInfo();
 
-  public:
-    FuzzySecurityInfo();
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITRANSPORTSECURITYINFO
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSISSLSOCKETCONTROL
 
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSITRANSPORTSECURITYINFO
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSISSLSOCKETCONTROL
+ protected:
+  virtual ~FuzzySecurityInfo();
 
-
-  protected:
-    virtual ~FuzzySecurityInfo();
-
-  private:
-    nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+ private:
+  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
 };  // class FuzzySecurityInfo
 

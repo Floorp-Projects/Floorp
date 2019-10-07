@@ -509,20 +509,22 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
              "about: page must not contain a CSP including 'unsafe-eval'");
 
   static nsLiteralCString sLegacyUnsafeInlineAllowList[] = {
-    // Bug 1579160: Remove 'unsafe-inline' from style-src within about:preferences
-    NS_LITERAL_CSTRING("about:preferences"),
-    // Bug 1571346: Remove 'unsafe-inline' from style-src within about:addons
-    NS_LITERAL_CSTRING("about:addons"),
-    // Bug 1584485: Remove 'unsafe-inline' from style-src within:
-    // * about:newtab
-    // * about:welcome
-    // * about:home
-    NS_LITERAL_CSTRING("about:newtab"),
-    NS_LITERAL_CSTRING("about:welcome"),
-    NS_LITERAL_CSTRING("about:home"),
+      // Bug 1579160: Remove 'unsafe-inline' from style-src within
+      // about:preferences
+      NS_LITERAL_CSTRING("about:preferences"),
+      // Bug 1571346: Remove 'unsafe-inline' from style-src within about:addons
+      NS_LITERAL_CSTRING("about:addons"),
+      // Bug 1584485: Remove 'unsafe-inline' from style-src within:
+      // * about:newtab
+      // * about:welcome
+      // * about:home
+      NS_LITERAL_CSTRING("about:newtab"),
+      NS_LITERAL_CSTRING("about:welcome"),
+      NS_LITERAL_CSTRING("about:home"),
   };
 
-  for (const nsLiteralCString& aUnsafeInlineEntry : sLegacyUnsafeInlineAllowList) {
+  for (const nsLiteralCString& aUnsafeInlineEntry :
+       sLegacyUnsafeInlineAllowList) {
     // please note that we perform a substring match here on purpose,
     // so we don't have to deal and parse out all the query arguments
     // the various about pages rely on.

@@ -22,8 +22,8 @@ mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvPivot(
 }
 
 mozilla::ipc::IPCResult DocAccessiblePlatformExtChild::RecvNavigateText(
-    uint64_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset,
-    bool aForward, bool aSelect) {
+    uint64_t aID, int32_t aGranularity, int32_t aStartOffset,
+    int32_t aEndOffset, bool aForward, bool aSelect) {
   if (auto acc = IdToAccessibleWrap(aID)) {
     acc->NavigateText(aGranularity, aStartOffset, aEndOffset, aForward,
                       aSelect);

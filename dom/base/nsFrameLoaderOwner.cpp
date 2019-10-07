@@ -83,9 +83,7 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   // blocker until the process is complete.
   Document* doc = owner->OwnerDoc();
   doc->BlockOnload();
-  auto cleanup = MakeScopeExit([&]() {
-    doc->UnblockOnload(false);
-  });
+  auto cleanup = MakeScopeExit([&]() { doc->UnblockOnload(false); });
 
   // If we already have a Frameloader, destroy it, possibly preserving its
   // browsing context.

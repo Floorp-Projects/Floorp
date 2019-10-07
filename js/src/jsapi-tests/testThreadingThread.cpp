@@ -58,8 +58,9 @@ BEGIN_TEST(testThreadingThreadId) {
   CHECK(js::ThreadId() == js::ThreadId());
   js::ThreadId fromOther;
   js::Thread thread;
-  CHECK(thread.init([](js::ThreadId* idp) { *idp = js::ThreadId::ThisThreadId(); },
-                    &fromOther));
+  CHECK(thread.init(
+      [](js::ThreadId* idp) { *idp = js::ThreadId::ThisThreadId(); },
+      &fromOther));
   js::ThreadId fromMain = thread.get_id();
   thread.join();
   CHECK(fromOther == fromMain);

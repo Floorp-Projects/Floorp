@@ -470,7 +470,8 @@ ScrollAnchorContainer::ExamineAnchorCandidate(nsIFrame* aFrame) const {
   // altogether.
   if (!isText && (isNonReplacedInline || isAnonBox)) {
     ANCHOR_LOG(
-        "\t\tSearching descendants of anon or non-replaced inline box (a=%d, i=%d).\n",
+        "\t\tSearching descendants of anon or non-replaced inline box (a=%d, "
+        "i=%d).\n",
         isAnonBox, isNonReplacedInline);
     if (canDescend) {
       return ExamineResult::PassThrough;

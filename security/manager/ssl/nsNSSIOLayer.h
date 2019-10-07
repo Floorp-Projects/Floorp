@@ -53,20 +53,20 @@ class nsNSSSocketInfo final : public CommonSocketControl {
   // From nsISSLSocketControl.
   NS_IMETHOD ProxyStartSSL(void) override;
   NS_IMETHOD StartTLS(void) override;
-  NS_IMETHOD SetNPNList(nsTArray<nsCString> & aNPNList) override;
+  NS_IMETHOD SetNPNList(nsTArray<nsCString>& aNPNList) override;
   NS_IMETHOD GetAlpnEarlySelection(nsACString& _retval) override;
-  NS_IMETHOD GetEarlyDataAccepted(bool *aEarlyDataAccepted) override;
+  NS_IMETHOD GetEarlyDataAccepted(bool* aEarlyDataAccepted) override;
   NS_IMETHOD DriveHandshake(void) override;
   using nsISSLSocketControl::GetKEAUsed;
-  NS_IMETHOD GetKEAUsed(int16_t *aKEAUsed) override;
-  NS_IMETHOD GetKEAKeyBits(uint32_t *aKEAKeyBits) override;
-  NS_IMETHOD GetProviderTlsFlags(uint32_t *aProviderTlsFlags) override;
+  NS_IMETHOD GetKEAUsed(int16_t* aKEAUsed) override;
+  NS_IMETHOD GetKEAKeyBits(uint32_t* aKEAKeyBits) override;
+  NS_IMETHOD GetProviderTlsFlags(uint32_t* aProviderTlsFlags) override;
   NS_IMETHOD GetSSLVersionOffered(int16_t* aSSLVersionOffered) override;
-  NS_IMETHOD GetMACAlgorithmUsed(int16_t *aMACAlgorithmUsed) override;
+  NS_IMETHOD GetMACAlgorithmUsed(int16_t* aMACAlgorithmUsed) override;
   bool GetDenyClientCert() override;
   void SetDenyClientCert(bool aDenyClientCert) override;
-  NS_IMETHOD GetClientCert(nsIX509Cert **aClientCert) override;
-  NS_IMETHOD SetClientCert(nsIX509Cert *aClientCert) override;
+  NS_IMETHOD GetClientCert(nsIX509Cert** aClientCert) override;
+  NS_IMETHOD SetClientCert(nsIX509Cert* aClientCert) override;
   NS_IMETHOD GetEsniTxt(nsACString& aEsniTxt) override;
   NS_IMETHOD SetEsniTxt(const nsACString& aEsniTxt) override;
   NS_IMETHOD GetPeerId(nsACString& aResult) override;

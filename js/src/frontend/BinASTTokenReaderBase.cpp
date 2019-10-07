@@ -66,8 +66,6 @@ bool BinASTTokenReaderBase::hasRaisedError() const {
   return cx_->isExceptionPending();
 }
 
-size_t BinASTTokenReaderBase::offset() const { return current_ - start_; }
-
 TokenPos BinASTTokenReaderBase::pos() { return pos(offset()); }
 
 TokenPos BinASTTokenReaderBase::pos(size_t start) {
@@ -86,7 +84,7 @@ void BinASTTokenReaderBase::seek(size_t offset) {
 JS::Result<Ok> BinASTTokenReaderBase::readBuf(uint8_t* bytes, uint32_t len) {
   MOZ_ASSERT(!hasRaisedError());
 
-  if (stop_ < current_ + len) {
+  if (MOZ_UNLIKELY(stop_ < current_ + len)) {
     return raiseError("Buffer exceeds length");
   }
 

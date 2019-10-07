@@ -20,20 +20,20 @@
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent, Debugger
 #include "debugger/Script.h"    // for DebuggerScript
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
-#include "js/CompilationAndEvaluation.h" // for Compile
-#include "js/StableStringChars.h"  // for AutoStableStringChars
-#include "vm/BytecodeUtil.h"       // for JSDVG_SEARCH_STACK
-#include "vm/JSContext.h"          // for JSContext (ptr only)
-#include "vm/JSObject.h"           // for JSObject, RequireObject
-#include "vm/JSScript.h"           // for ScriptSource, ScriptSourceObject
-#include "vm/ObjectGroup.h"        // for TenuredObject
-#include "vm/StringType.h"         // for NewStringCopyZ, JSString (ptr only)
-#include "vm/TypedArrayObject.h"   // for TypedArrayObject, JSObject::is
-#include "wasm/WasmCode.h"         // for Metadata
-#include "wasm/WasmDebug.h"        // for DebugState
-#include "wasm/WasmInstance.h"     // for Instance
-#include "wasm/WasmJS.h"           // for WasmInstanceObject
-#include "wasm/WasmTypes.h"        // for Bytes, RootedWasmInstanceObject
+#include "js/CompilationAndEvaluation.h"  // for Compile
+#include "js/StableStringChars.h"         // for AutoStableStringChars
+#include "vm/BytecodeUtil.h"              // for JSDVG_SEARCH_STACK
+#include "vm/JSContext.h"                 // for JSContext (ptr only)
+#include "vm/JSObject.h"                  // for JSObject, RequireObject
+#include "vm/JSScript.h"          // for ScriptSource, ScriptSourceObject
+#include "vm/ObjectGroup.h"       // for TenuredObject
+#include "vm/StringType.h"        // for NewStringCopyZ, JSString (ptr only)
+#include "vm/TypedArrayObject.h"  // for TypedArrayObject, JSObject::is
+#include "wasm/WasmCode.h"        // for Metadata
+#include "wasm/WasmDebug.h"       // for DebugState
+#include "wasm/WasmInstance.h"    // for Instance
+#include "wasm/WasmJS.h"          // for WasmInstanceObject
+#include "wasm/WasmTypes.h"       // for Bytes, RootedWasmInstanceObject
 
 #include "vm/JSObject-inl.h"      // for InitClass
 #include "vm/NativeObject-inl.h"  // for NewNativeObjectWithGivenProto
@@ -184,7 +184,8 @@ struct MOZ_STACK_CLASS DebuggerSource::CallData {
 
 template <DebuggerSource::CallData::Method MyMethod>
 /* static */
-bool DebuggerSource::CallData::ToNative(JSContext* cx, unsigned argc, Value* vp) {
+bool DebuggerSource::CallData::ToNative(JSContext* cx, unsigned argc,
+                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedDebuggerSource obj(cx, DebuggerSource::check(cx, args.thisv()));
@@ -511,8 +512,8 @@ ScriptSourceObject* EnsureSourceObject(JSContext* cx,
                                        HandleDebuggerSource obj) {
   if (!obj->getReferent().is<ScriptSourceObject*>()) {
     RootedValue v(cx, ObjectValue(*obj));
-    ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK,
-                     v, nullptr, "a JS source");
+    ReportValueError(cx, JSMSG_DEBUG_BAD_REFERENT, JSDVG_SEARCH_STACK, v,
+                     nullptr, "a JS source");
     return nullptr;
   }
   return obj->getReferent().as<ScriptSourceObject*>();
@@ -676,5 +677,4 @@ const JSPropertySpec DebuggerSource::properties_[] = {
     JS_PS_END};
 
 const JSFunctionSpec DebuggerSource::methods_[] = {
-    JS_DEBUG_FN("reparse", reparse, 0),
-    JS_FS_END};
+    JS_DEBUG_FN("reparse", reparse, 0), JS_FS_END};

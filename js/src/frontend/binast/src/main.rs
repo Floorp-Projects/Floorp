@@ -548,15 +548,97 @@ enum MethodCallKind {
 
 /// Fixed parameter of interface method.
 const INTERFACE_PARAMS: &str =
-    "const size_t start, const BinASTKind kind, const BinASTFields& fields";
+    "const size_t start, const BinASTKind kind";
 
 /// Fixed arguments of interface method.
 const INTERFACE_ARGS: &str =
-    "start, kind, fields";
+    "start, kind";
 
 /// The name of the toplevel interface for the script.
 const TOPLEVEL_INTERFACE: &str =
     "Program";
+
+/// In which context an interface appears.
+#[derive(Clone, Debug, PartialEq)]
+struct LookupContext {
+    /// In root of parsing.
+    in_root: bool,
+
+    /// In list element.
+    in_list: bool,
+
+    /// In interface field.
+    in_field: bool,
+}
+impl LookupContext {
+    fn empty() -> Self {
+        Self {
+            in_root: false,
+            in_list: false,
+            in_field: false,
+        }
+    }
+
+    fn root() -> Self {
+        Self {
+            in_root: true,
+            in_list: false,
+            in_field: false,
+        }
+    }
+
+    fn list() -> Self {
+        Self {
+            in_root: false,
+            in_list: true,
+            in_field: false,
+        }
+    }
+
+    fn field() -> Self {
+        Self {
+            in_root: false,
+            in_list: false,
+            in_field: true,
+        }
+    }
+
+    fn is_root(&self) -> bool {
+        self.in_root && !self.in_list && !self.in_field
+    }
+
+    fn is_list(&self) -> bool {
+        !self.in_root && self.in_list && !self.in_field
+    }
+
+    fn is_field(&self) -> bool {
+        !self.in_root && !self.in_list && self.in_field
+    }
+
+    fn is_field_and_list(&self) -> bool {
+        !self.in_root && self.in_list && self.in_field
+    }
+
+    fn is_field_and_root(&self) -> bool {
+        self.in_root && !self.in_list && self.in_field
+    }
+
+    fn is_single(&self) -> bool {
+        self.is_root() || self.is_list() || self.is_field()
+    }
+
+    fn is_valid_double(&self) -> bool {
+        self.is_field_and_root() || self.is_field_and_list()
+    }
+
+    fn add(&mut self, rhs: Self) {
+        self.in_root |= rhs.in_root;
+        self.in_list |= rhs.in_list;
+        self.in_field |= rhs.in_field;
+    }
+}
+
+type ContextMap = HashMap<Rc<String>, LookupContext>;
 
 /// The actual exporter.
 struct CPPExporter {
@@ -568,6 +650,8 @@ struct CPPExporter {
 
     /// Reference graph of the method call.
     refgraph: ReferenceGraph,
+
+    context_map: ContextMap,
 
     /// All parsers of lists.
     list_parsers_to_generate: Vec<ListParserData>,
@@ -685,15 +769,37 @@ impl CPPExporter {
         // The field will be overwritten later in generate_reference_graph.
         let refgraph = ReferenceGraph::new();
 
+        let context_map = HashMap::new();
+
         CPPExporter {
             syntax,
             rules,
             refgraph,
+            context_map,
             list_parsers_to_generate,
             option_parsers_to_generate,
             canonical_list_parsers,
             variants_by_symbol,
             enum_types,
+        }
+    }
+
+    /// Return NamedType for given NodeName.
+    /// Panic if NodeName is not NamedType
+    fn get_named_implementation(&self, name: &NodeName) -> NamedType {
+        if let Some(NamedType::Typedef(ref typedef)) = self.syntax.get_type_by_name(name) {
+            assert!(typedef.is_optional());
+            if let TypeSpec::NamedType(ref named) = *typedef.spec() {
+                self.syntax.get_type_by_name(named)
+                    .unwrap_or_else(|| panic!("Internal error: Could not find type {}, which should have been generated.", named.to_str()))
+            } else {
+                panic!("Internal error: In {}, type {:?} should have been a named type",
+                       name.to_str(),
+                       typedef);
+            }
+        } else {
+            panic!("Internal error: In {}, there should be a type with that name",
+                   name.to_str());
         }
     }
 
@@ -791,21 +897,7 @@ impl CPPExporter {
         // 5. Optional values
         for parser in &self.option_parsers_to_generate {
             let mut edges: HashSet<Rc<String>> = HashSet::new();
-            let named_implementation =
-                if let Some(NamedType::Typedef(ref typedef)) = self.syntax.get_type_by_name(&parser.name) {
-                    assert!(typedef.is_optional());
-                    if let TypeSpec::NamedType(ref named) = *typedef.spec() {
-                        self.syntax.get_type_by_name(named)
-                            .unwrap_or_else(|| panic!("Internal error: Could not find type {}, which should have been generated.", named.to_str()))
-                    } else {
-                        panic!("Internal error: In {}, type {:?} should have been a named type",
-                               parser.name.to_str(),
-                               typedef);
-                    }
-                } else {
-                    panic!("Internal error: In {}, there should be a type with that name",
-                           parser.name.to_str());
-                };
+            let named_implementation = self.get_named_implementation(&parser.name);
             match named_implementation {
                 NamedType::Interface(_) => {
                     edges.insert(Rc::new(format!("Interface{}", parser.elements.to_string())));
@@ -834,6 +926,146 @@ impl CPPExporter {
     /// as used. `name` is the name of the method, without leading "parse".
     fn trace(&mut self, name: Rc<String>) {
         self.refgraph.trace(name)
+    }
+
+    /// Collect context information for each interface to determine
+    /// which *Context type each method should receive.
+    fn collect_context(&mut self) {
+        fn add_context(map: &mut ContextMap, name: Rc<String>,
+                       context: LookupContext) {
+            let entry = map.entry(name).or_insert(LookupContext::empty());
+            (*entry).add(context);
+        }
+
+        // 1. Root
+        add_context(&mut self.context_map,
+                    Rc::new("Program".to_string()), LookupContext::root());
+        add_context(&mut self.context_map,
+                    Rc::new("FunctionExpressionContents".to_string()),
+                    LookupContext::root());
+        add_context(&mut self.context_map,
+                    Rc::new("FunctionOrMethodContents".to_string()),
+                    LookupContext::root());
+
+        // 2. Interface fields
+        // XXX => XXX.field
+        for (name, interface) in self.syntax.interfaces_by_name() {
+            let inner_prefix = "Interface";
+            let inner_name = Rc::new(format!("{}{}", inner_prefix, name));
+            if !self.refgraph.is_used(inner_name) {
+                continue;
+            }
+
+            for field in interface.contents().fields() {
+                match field.type_().get_primitive(&self.syntax) {
+                    Some(IsNullable { is_nullable: _,
+                                      content: Primitive::Interface(_) })
+                        | None => {
+                            let typename = TypeName::type_(field.type_());
+                            add_context(&mut self.context_map,
+                                        Rc::new(typename),
+                                        LookupContext::field());
+                        }
+                    _ => {}
+                }
+            }
+        }
+
+        // 3. List contents
+        // ListXXX => XXX
+        for parser in &self.list_parsers_to_generate {
+            if !self.refgraph.is_used(parser.name.to_rc_string().clone()) {
+                continue;
+            }
+
+            add_context(&mut self.context_map,
+                        Rc::new(parser.elements.to_class_cases()),
+                        LookupContext::list());
+        }
+
+        fn propagate_context(map: &mut ContextMap, from: Rc<String>,
+                             to: Rc<String>) {
+            let opt_context = match map.get(&from) {
+                Some(opt_context) => {
+                    opt_context.clone()
+                }
+                _ => {
+                    return;
+                }
+            };
+            let entry = map.entry(to).or_insert(LookupContext::empty());
+            (*entry).add(opt_context);
+        }
+
+        // 4. Propagate Optional
+        // OptionalXXX => XXX
+        for parser in &self.option_parsers_to_generate {
+            if !self.refgraph.is_used(parser.name.to_rc_string().clone()) {
+                continue;
+            }
+
+            let named_implementation = self.get_named_implementation(&parser.name);
+            match named_implementation {
+                NamedType::Interface(_) => {
+                    propagate_context(&mut self.context_map,
+                                      Rc::new(parser.name.to_class_cases()),
+                                      Rc::new(format!("Interface{}", parser.elements.to_class_cases())));
+                },
+                NamedType::Typedef(ref type_) => {
+                    match type_.spec() {
+                        &TypeSpec::TypeSum(_) => {
+                            propagate_context(&mut self.context_map,
+                                              Rc::new(parser.name.to_class_cases()),
+                                              Rc::new(format!("Sum{}", parser.elements.to_class_cases())));
+                        },
+                        _ => {}
+                    }
+                },
+                _ => {}
+            }
+        }
+
+        // 5. Propagate Sum
+        // XXX => SumXXX
+        // SumXXX => each arm
+        let sums_of_interfaces = self.syntax.resolved_sums_of_interfaces_by_name();
+        for (name, nodes) in sums_of_interfaces {
+            if !self.refgraph.is_used(name.to_rc_string().clone()) {
+                continue;
+            }
+
+            propagate_context(
+                &mut self.context_map,
+                Rc::new(name.to_class_cases()),
+                Rc::new(format!("Sum{}", name.to_class_cases())));
+
+            for node in nodes {
+                propagate_context(
+                    &mut self.context_map,
+                    Rc::new(format!("Sum{}", name.to_class_cases())),
+                    Rc::new(format!("Interface{}", node.to_class_cases())));
+            }
+        }
+
+        // 6. Propagate Interface
+        // XXX => InterfaceXXX
+        // InterfaceXXX => XXX
+        for (name, _) in self.syntax.interfaces_by_name() {
+            let inner_prefix = "Interface";
+            let inner_name = Rc::new(format!("{}{}", inner_prefix, name));
+            if !self.refgraph.is_used(inner_name) {
+                continue;
+            }
+
+            propagate_context(
+                &mut self.context_map,
+                Rc::new(name.to_class_cases()),
+                Rc::new(format!("Interface{}", name.to_class_cases())));
+            propagate_context(
+                &mut self.context_map,
+                Rc::new(format!("Interface{}", name.to_class_cases())),
+                Rc::new(name.to_class_cases()));
+        }
     }
 
 // ----- Generating the header
@@ -866,6 +1098,34 @@ impl CPPExporter {
         self.rules.parser_default_value.clone()
     }
 
+    fn get_context_param(&self, name: &NodeName, prefix: &str) -> String {
+        let context = match self.context_map.get(&Rc::new(format!("{}{}", prefix, name.to_rc_string()))) {
+            Some(context) => {
+                context.clone()
+            }
+            _ => {
+                panic!("{}{} doesn't have context", prefix, name.to_rc_string());
+            }
+        };
+        if context.is_root() {
+            return "const RootContext& context".to_string();
+        }
+        if context.is_list() {
+            return "const ListContext& context".to_string();
+        }
+        if context.is_field() {
+            return "const FieldContext& context".to_string();
+        }
+        if context.is_field_and_list() {
+            return "const FieldOrListContext& context".to_string();
+        }
+        if context.is_field_and_root() {
+            return "const FieldOrRootContext& context".to_string();
+        }
+
+        panic!("unexpected context");
+    }
+
     fn get_method_signature(&self, name: &NodeName, prefix: &str, args: &str,
                             extra_params: &Option<Rc<String>>) -> String {
         let type_ok = self.get_type_ok(name);
@@ -896,7 +1156,7 @@ impl CPPExporter {
             } else {
                 ""
             },
-            context = "const Context& context",
+            context = self.get_context_param(name, prefix),
         )
     }
 
@@ -932,14 +1192,111 @@ impl CPPExporter {
             } else {
                 ""
             },
-            context = "const Context& context",
+            context = self.get_context_param(name, prefix),
         )
+    }
+
+    fn get_context_param_for_sum(&self, sum: &NodeName,
+                                 arm: &NodeName, context: &str) -> String {
+        let sum_name = format!("Sum{}", sum);
+        let arm_name = format!("Interface{}", arm);
+
+        let sum_context = match self.context_map.get(&sum_name) {
+            Some(context) => context.clone(),
+            _ => panic!("no context")
+        };
+        let arm_context = match self.context_map.get(&arm_name) {
+            Some(context) => context.clone(),
+            _ => panic!("no context")
+        };
+
+        if sum_context == arm_context {
+            return context.to_string();
+        }
+
+        assert!(sum_context.is_single());
+        assert!(arm_context.is_valid_double());
+
+        if arm_context.is_field_and_root() {
+            return format!("FieldOrRootContext({})", context);
+        }
+
+        return format!("FieldOrListContext({})", context);
+    }
+
+    fn get_context_param_for_optional(&self, optional: &NodeName,
+                                      body_prefix: &str, body: &NodeName,
+                                      context: &str) -> String {
+        let optional_name = optional.to_string().clone();
+        let body_name = format!("{}{}", body_prefix, body);
+
+        let optional_context = match self.context_map.get(&optional_name) {
+            Some(context) => context.clone(),
+            _ => panic!("no context")
+        };
+        let body_context = match self.context_map.get(&body_name) {
+            Some(context) => context.clone(),
+            _ => panic!("no context")
+        };
+
+        if optional_context == body_context {
+            return context.to_string();
+        }
+
+        assert!(optional_context.is_single());
+        assert!(body_context.is_valid_double());
+
+        if body_context.is_field_and_root() {
+            return format!("FieldOrRootContext({})", context);
+        }
+
+        return format!("FieldOrListContext({})", context);
+    }
+
+    fn get_context_param_for_list(&self, element: &NodeName,
+                                  context: &str) -> String {
+        let element_name = element.to_string().clone();
+
+        let element_context = match self.context_map.get(&element_name) {
+            Some(context) => context.clone(),
+            _ => panic!("no context")
+        };
+
+        if element_context.is_list() {
+            return context.to_string();
+        }
+
+        assert!(element_context.is_field_and_list());
+
+        return format!("FieldOrListContext({})", context);
+    }
+
+    fn get_context_param_for_field(&self, field: &NodeName,
+                                  context: &str) -> String {
+        let field_name = field.to_string().clone();
+
+        let field_context = match self.context_map.get(&field_name) {
+            Some(context) => context.clone(),
+            _ => panic!("no context")
+        };
+
+        if field_context.is_field() {
+            return context.to_string();
+        }
+
+        assert!(field_context.is_valid_double());
+
+        if field_context.is_field_and_root() {
+            return format!("FieldOrRootContext({})", context);
+        }
+
+        return format!("FieldOrListContext({})", context);
     }
 
     fn get_method_call(&self, var_name: &str, name: &NodeName,
                        prefix: &str, args: &str,
                        extra_params: &Option<Rc<String>>,
-                       context_name: &str,
+                       context_name: String,
                        call_kind: MethodCallKind) -> String {
         let type_ok_is_ok = match call_kind {
             MethodCallKind::Decl | MethodCallKind::Var => {
@@ -1739,11 +2096,11 @@ impl CPPExporter {
 {first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
     const auto start = tokenizer_->offset();
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
 {call}
 
@@ -1755,7 +2112,7 @@ impl CPPExporter {
                 call = self.get_method_call("result", name,
                                             "Sum", INTERFACE_ARGS,
                                             &extra_args,
-                                            "context",
+                                            "context".to_string(),
                                             MethodCallKind::AlwaysDecl)
                     .reindent("    "),
                 first_line = self.get_method_definition_start(name, "", "",
@@ -1790,7 +2147,8 @@ impl CPPExporter {
                 call = self.get_method_call("result", node,
                                             "Interface", INTERFACE_ARGS,
                                             &extra_args,
-                                            "context",
+                                            self.get_context_param_for_sum(
+                                                name, node, "context"),
                                             MethodCallKind::AlwaysVar)
                     .reindent("        "),
                 variant_name = node.to_cpp_enum_case(),
@@ -1881,8 +2239,9 @@ impl CPPExporter {
     AutoList guard(*tokenizer_);
 
     const auto start = tokenizer_->offset();
-    const Context childContext(Context(ListContext(context.as<FieldContext>().position, BinASTList::{content_kind})));
-    MOZ_TRY(tokenizer_->enterList(length, childContext, guard));{empty_check}
+    const auto childContext = ListContext(context.position, BinASTList::{content_kind});
+    guard.init();
+    MOZ_TRY(tokenizer_->enterList(length, childContext));{empty_check}
 {init}
 
     for (uint32_t i = 0; i < length; ++i) {{
@@ -1902,7 +2261,7 @@ impl CPPExporter {
                     "".to_string()
                 } else {
                     format!("
-    if (length == 0) {{
+    if (MOZ_UNLIKELY(length == 0)) {{
         return raiseEmpty(\"{kind}\");
     }}
 ",
@@ -1911,7 +2270,9 @@ impl CPPExporter {
             call = self.get_method_call("item",
                                         &parser.elements, "", "",
                                         &extra_args,
-                                        "childContext",
+                                        self.get_context_param_for_list(
+                                            &parser.elements,
+                                            "childContext"),
                                         MethodCallKind::Decl)
                 .reindent("        "),
             init = init,
@@ -1968,10 +2329,10 @@ impl CPPExporter {
                 buffer.push_str(&format!("{first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -1994,7 +2355,10 @@ impl CPPExporter {
                                                 &parser.elements,
                                                 "Interface", INTERFACE_ARGS,
                                                 &extra_args,
-                                                "context",
+                                                self.get_context_param_for_optional(
+                                                    &parser.name,
+                                                    "Interface", &parser.elements,
+                                                    "context"),
                                                 MethodCallKind::AlwaysVar)
                         .reindent("        "),
                     before = rules_for_this_node.some_before
@@ -2022,10 +2386,10 @@ impl CPPExporter {
                 buffer.push_str(&format!("{first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -2044,7 +2408,10 @@ impl CPPExporter {
                             call = self.get_method_call("result", &parser.elements,
                                                         "Sum", INTERFACE_ARGS,
                                                         &extra_args,
-                                                        "context",
+                                                        self.get_context_param_for_optional(
+                                                            &parser.name,
+                                                            "Sum", &parser.elements,
+                                                            "context"),
                                                         MethodCallKind::AlwaysVar)
                                 .reindent("        "),
                             before = rules_for_this_node.some_before
@@ -2176,11 +2543,11 @@ impl CPPExporter {
             buffer.push_str(&format!("{first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
-    if (kind != BinASTKind::{kind}) {{
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
+    if (MOZ_UNLIKELY(kind != BinASTKind::{kind})) {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
     const auto start = tokenizer_->offset();
@@ -2197,7 +2564,7 @@ impl CPPExporter {
                 call = self.get_method_call("result", name,
                                             "Interface", INTERFACE_ARGS,
                                             &extra_args,
-                                            "context",
+                                            "context".to_string(),
                                             MethodCallKind::AlwaysDecl)
                     .reindent("    ")
             ));
@@ -2209,20 +2576,13 @@ impl CPPExporter {
         }
 
         // Generate aux method
-        let number_of_fields = interface.contents().fields().len();
         let first_line = self.get_method_definition_start(name, inner_prefix,
                                                           INTERFACE_PARAMS,
                                                           &extra_params);
 
-        let fields_type_list = format!("{{ {} }}", interface.contents()
-            .fields()
-            .iter()
-            .map(|field| format!("BinASTField::{}", field.name().to_cpp_enum_case()))
-            .format(", "));
-
         let mut fields_implem = String::new();
         for field in interface.contents().fields() {
-            let context = format!("Context(FieldContext(BinASTInterfaceAndField::{kind}__{field}))",
+            let context = format!("FieldContext(BinASTInterfaceAndField::{kind}__{field})",
                 kind = name.to_cpp_enum_case(),
                 field = field.name().to_cpp_enum_case());
 
@@ -2342,7 +2702,9 @@ impl CPPExporter {
                     (decl_var,
                      Some(self.get_method_call(var_name.to_str(),
                                                &name, "", "", &field_extra_args,
-                                               &context,
+                                               self.get_context_param_for_field(
+                                                   name,
+                                                   &context),
                                                call_kind)))
                 }
             };
@@ -2410,29 +2772,15 @@ impl CPPExporter {
                 first_line = first_line,
             ));
         } else {
-            let check_fields = if number_of_fields == 0 {
-                format!("MOZ_TRY(tokenizer_->checkFields0(kind, fields));")
-            } else {
-                // The following strategy is designed for old versions of clang.
-                format!("
-#if defined(DEBUG)
-    const BinASTField expected_fields[{number_of_fields}] = {fields_type_list};
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
-#endif // defined(DEBUG)",
-                    fields_type_list = fields_type_list,
-                    number_of_fields = number_of_fields)
-            };
             buffer.push_str(&format!("{first_line}
 {{
     MOZ_ASSERT(kind == BinASTKind::{kind});
     BINJS_TRY(CheckRecursionLimit(cx_));
-{check_fields}
 {pre}{fields_implem}
 {post}    return result;
 }}
 
 ",
-                check_fields = check_fields,
                 fields_implem = fields_implem,
                 pre = init.newline_if_not_empty(),
                 post = build_result.newline_if_not_empty(),
@@ -2671,6 +3019,7 @@ fn main() {
 
     exporter.generate_reference_graph();
     exporter.trace(Rc::new(TOPLEVEL_INTERFACE.to_string()));
+    exporter.collect_context();
 
     let write_to = |description, arg, data: &String| {
         let dest_path = matches.value_of(arg)

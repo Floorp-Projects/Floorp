@@ -47,7 +47,7 @@ use api::channel::{MsgSender, PayloadReceiverHelperMethods};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
-use crate::composite::{CompositeConfig, CompositeTileSurface, CompositeTile};
+use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile};
 use crate::debug_colors;
 use crate::debug_render::{DebugItem, DebugRenderer};
 use crate::device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
@@ -938,6 +938,34 @@ impl CpuProfile {
             draw_calls,
         }
     }
+}
+
+/// Defines the configuration that the client is using to present results
+/// to the underlying device.
+#[derive(Debug, Copy, Clone)]
+pub enum PresentConfig {
+    /// In this mode, the device supports updating some number of dirty
+    /// regions since the last frame was drawn, which can provide significant
+    /// power savings.
+    PartialPresent {
+        /// The maximum number of dirty rects that are supported by the device.
+        max_dirty_rects: usize,
+    },
+}
+
+/// The selected partial present mode for a given frame.
+#[derive(Debug, Copy, Clone)]
+enum PartialPresentMode {
+    /// The device supports fewer dirty rects than the number of dirty rects
+    /// that WR produced. In this case, the WR dirty rects are union'ed into
+    /// a single dirty rect, that is provided to the caller.
+    Single {
+        dirty_rect: DeviceRect,
+    },
+    /// The device supports at least the same number of dirty rects as the
+    /// number of dirty rects produced by WR this frame. In this case, the
+    /// tile dirty rect is applied to the clip for each tile as it's drawn.
+    Multi,
 }
 
 /// A Texture that has been initialized by the `device` module and is ready to
@@ -1839,6 +1867,14 @@ pub struct Renderer {
     read_fbo: FBOId,
     #[cfg(feature = "replay")]
     owned_external_images: FastHashMap<(ExternalImageId, u8), ExternalTexture>,
+
+    /// The current presentation config, affecting how WR composites into the
+    /// final scene.
+    present_config: Option<PresentConfig>,
+
+    /// If true, partial present state has been reset and everything needs to
+    /// be drawn on the next render.
+    force_redraw: bool,
 }
 
 #[derive(Debug)]
@@ -2110,6 +2146,7 @@ impl Renderer {
         };
         info!("WR {:?}", config);
 
+        let present_config = options.present_config.take();
         let device_pixel_ratio = options.device_pixel_ratio;
         let debug_flags = options.debug_flags;
         let payload_rx_for_backend = payload_rx.to_mpsc_receiver();
@@ -2342,6 +2379,8 @@ impl Renderer {
             cursor_position: DeviceIntPoint::zero(),
             shared_texture_cache_cleared: false,
             documents_seen: FastHashSet::default(),
+            present_config,
+            force_redraw: true,
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -2812,6 +2851,12 @@ impl Renderer {
         self.slow_frame_indicator.changed();
     }
 
+    /// Reset the current partial present state. This forces the entire framebuffer
+    /// to be refreshed next time `render` is called.
+    pub fn force_redraw(&mut self) {
+        self.force_redraw = true;
+    }
+
     /// Renders the current frame.
     ///
     /// A Frame is supplied by calling [`generate_frame()`][webrender_api::Transaction::generate_frame].
@@ -2924,7 +2969,7 @@ impl Renderer {
                     frame,
                     device_size,
                     cpu_frame_id,
-                    &mut results.stats,
+                    &mut results,
                     doc_index == 0,
                 );
 
@@ -2938,8 +2983,6 @@ impl Renderer {
                 let dirty_regions =
                     mem::replace(&mut frame.recorded_dirty_regions, Vec::new());
                 results.recorded_dirty_regions.extend(dirty_regions);
-                let dirty_rects = mem::replace(&mut frame.dirty_rects, Vec::new());
-                results.dirty_rects.extend(dirty_rects);
 
                 // If we're the last document, don't call end_pass here, because we'll
                 // be moving on to drawing the debug overlays. See the comment above
@@ -3838,6 +3881,7 @@ impl Renderer {
     fn draw_tile_list<'a, I: Iterator<Item = &'a CompositeTile>>(
         &mut self,
         tiles_iter: I,
+        partial_present_mode: Option<PartialPresentMode>,
         stats: &mut RendererStats,
     ) {
         let mut current_textures = BatchTextures::no_texture();
@@ -3858,6 +3902,19 @@ impl Renderer {
             };
             let textures = BatchTextures::color(texture);
 
+            // Determine a clip rect to apply to this tile, depending on what
+            // the partial present mode is.
+            let partial_clip_rect = match partial_present_mode {
+                Some(PartialPresentMode::Single { dirty_rect }) => dirty_rect,
+                Some(PartialPresentMode::Multi) => tile.dirty_rect,
+                None => tile.rect,
+            };
+
+            let clip_rect = match partial_clip_rect.intersection(&tile.clip_rect) {
+                Some(rect) => rect,
+                None => continue,
+            };
+
             // Flush this batch if the textures aren't compatible
             if !current_textures.is_compatible_with(&textures) {
                 self.draw_instanced_batch(
@@ -3873,7 +3930,7 @@ impl Renderer {
             // Create the instance and add to current batch
             let instance = CompositeInstance::new(
                 tile.rect,
-                tile.clip_rect,
+                clip_rect,
                 color.premultiplied(),
                 layer,
                 tile.z_id,
@@ -3898,16 +3955,96 @@ impl Renderer {
     /// rarely used.
     fn composite(
         &mut self,
-        composite_config: &CompositeConfig,
+        composite_state: &CompositeState,
+        clear_framebuffer: bool,
         draw_target: DrawTarget,
         projection: &default::Transform3D<f32>,
-        stats: &mut RendererStats,
+        results: &mut RenderResults,
     ) {
         let _gm = self.gpu_profile.start_marker("framebuffer");
         let _timer = self.gpu_profile.start_timer(GPU_TAG_COMPOSITE);
 
         self.device.bind_draw_target(draw_target);
         self.device.enable_depth();
+        self.device.enable_depth_write();
+
+        // Determine the partial present mode for this frame, which is used during
+        // framebuffer clears and calculating the clip rect for each tile that is drawn.
+        let mut partial_present_mode = None;
+
+        if let Some(PresentConfig::PartialPresent { max_dirty_rects }) = self.present_config {
+            // We can only use partial present if we have valid dirty rects and the
+            // client hasn't reset partial present state since last frame.
+            if composite_state.dirty_rects_are_valid && !self.force_redraw {
+                let mut dirty_rect_count = 0;
+                let mut combined_dirty_rect = DeviceRect::zero();
+
+                // Work out how many dirty rects WR produced, and if that's more than
+                // what the device supports.
+                for tile in composite_state.opaque_tiles.iter().chain(composite_state.alpha_tiles.iter()) {
+                    if !tile.dirty_rect.is_empty() {
+                        dirty_rect_count += 1;
+                        results.dirty_rects.push(tile.dirty_rect.to_i32());
+                        combined_dirty_rect = combined_dirty_rect.union(&tile.dirty_rect);
+                    }
+                }
+
+                let mode = if dirty_rect_count > max_dirty_rects {
+                    // In this case, WR produced more dirty rects than what the device supports.
+                    // As a simple way to handle this, just union all the dirty rects into a
+                    // single dirty rect.
+                    // TODO(gw): In future, maybe we can handle this case better by trying to
+                    //           coalesce dirty rects into a smaller number rather than just
+                    //           falling back to a single dirty rect.
+                    let combined_dirty_rect = combined_dirty_rect.round();
+                    results.dirty_rects.clear();
+                    results.dirty_rects.push(combined_dirty_rect.to_i32());
+                    PartialPresentMode::Single {
+                        dirty_rect: combined_dirty_rect,
+                    }
+                } else {
+                    PartialPresentMode::Multi
+                };
+
+                partial_present_mode = Some(mode);
+            }
+
+            self.force_redraw = false;
+        }
+
+        // Clear the framebuffer, if required
+        if clear_framebuffer {
+            let clear_color = self.clear_color.map(|color| color.to_array());
+
+            match partial_present_mode {
+                Some(PartialPresentMode::Single { dirty_rect }) => {
+                    // We have a single dirty rect, so clear only that
+                    self.device.clear_target(clear_color,
+                                             Some(1.0),
+                                             Some(draw_target.to_framebuffer_rect(dirty_rect.to_i32())));
+                }
+                Some(PartialPresentMode::Multi) => {
+                    // We have a dirty rect per tile, so clear each of them
+                    let opaque_iter = composite_state.opaque_tiles.iter();
+                    let clear_iter = composite_state.clear_tiles.iter();
+                    let alpha_iter = composite_state.alpha_tiles.iter();
+
+                    for tile in opaque_iter.chain(clear_iter.chain(alpha_iter)) {
+                        if !tile.dirty_rect.is_empty() {
+                            self.device.clear_target(clear_color,
+                                                     Some(1.0),
+                                                     Some(draw_target.to_framebuffer_rect(tile.dirty_rect.to_i32())));
+                        }
+                    }
+                }
+                None => {
+                    // Partial present is disabled, so clear the entire framebuffer
+                    self.device.clear_target(clear_color,
+                                             Some(1.0),
+                                             None);
+                }
+            }
+        }
 
         self.shaders.borrow_mut().composite.bind(
             &mut self.device,
@@ -3917,38 +4054,41 @@ impl Renderer {
 
         // Draw opaque tiles first, front-to-back to get maxmum
         // z-reject efficiency.
-        if !composite_config.opaque_tiles.is_empty() {
+        if !composite_state.opaque_tiles.is_empty() {
             let opaque_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_OPAQUE);
             self.device.enable_depth_write();
             self.set_blend(false, FramebufferKind::Main);
             self.draw_tile_list(
-                composite_config.opaque_tiles.iter().rev(),
-                stats,
+                composite_state.opaque_tiles.iter().rev(),
+                partial_present_mode,
+                &mut results.stats,
             );
             self.gpu_profile.finish_sampler(opaque_sampler);
         }
 
-        if !composite_config.clear_tiles.is_empty() {
+        if !composite_state.clear_tiles.is_empty() {
             let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
             self.device.disable_depth_write();
             self.set_blend(true, FramebufferKind::Main);
             self.device.set_blend_mode_premultiplied_dest_out();
             self.draw_tile_list(
-                composite_config.clear_tiles.iter(),
-                stats,
+                composite_state.clear_tiles.iter(),
+                partial_present_mode,
+                &mut results.stats,
             );
             self.gpu_profile.finish_sampler(transparent_sampler);
         }
 
         // Draw alpha tiles
-        if !composite_config.alpha_tiles.is_empty() {
+        if !composite_state.alpha_tiles.is_empty() {
             let transparent_sampler = self.gpu_profile.start_sampler(GPU_SAMPLER_TAG_TRANSPARENT);
             self.device.disable_depth_write();
             self.set_blend(true, FramebufferKind::Main);
             self.set_blend_mode_premultiplied_alpha(FramebufferKind::Main);
             self.draw_tile_list(
-                composite_config.alpha_tiles.iter(),
-                stats,
+                composite_state.alpha_tiles.iter(),
+                partial_present_mode,
+                &mut results.stats,
             );
             self.gpu_profile.finish_sampler(transparent_sampler);
         }
@@ -4703,7 +4843,7 @@ impl Renderer {
         frame: &mut Frame,
         device_size: Option<DeviceIntSize>,
         frame_id: GpuFrameId,
-        stats: &mut RendererStats,
+        results: &mut RenderResults,
         clear_framebuffer: bool,
     ) {
         // These markers seem to crash a lot on Android, see bug 1559834
@@ -4739,7 +4879,7 @@ impl Renderer {
             match pass.kind {
                 RenderPassKind::MainFramebuffer { ref main_target, .. } => {
                     if let Some(device_size) = device_size {
-                        stats.color_target_count += 1;
+                        results.stats.color_target_count += 1;
 
                         let offset = frame.content_origin.to_f32();
                         let size = frame.device_rect.size.to_f32();
@@ -4760,20 +4900,14 @@ impl Renderer {
                             rect: fb_rect,
                             total_size: device_size * fb_scale,
                         };
-                        if clear_framebuffer {
-                            self.device.bind_draw_target(draw_target);
-                            self.device.enable_depth_write();
-                            self.device.clear_target(self.clear_color.map(|color| color.to_array()),
-                                                     Some(1.0),
-                                                     None);
-                        }
 
                         if self.enable_picture_caching {
                             self.composite(
-                                &frame.composite_config,
+                                &frame.composite_state,
+                                clear_framebuffer,
                                 draw_target,
                                 &projection,
-                                stats,
+                                results,
                             );
                         } else {
                             self.draw_color_target(
@@ -4785,7 +4919,7 @@ impl Renderer {
                                 &frame.render_tasks,
                                 &projection,
                                 frame_id,
-                                stats,
+                                &mut results.stats,
                             );
                         }
                     }
@@ -4809,13 +4943,13 @@ impl Renderer {
                                 target_index,
                                 target,
                                 &frame.render_tasks,
-                                stats,
+                                &mut results.stats,
                             );
                         }
 
                         // Draw picture caching tiles for this pass.
                         for picture_target in picture_cache {
-                            stats.color_target_count += 1;
+                            results.stats.color_target_count += 1;
 
                             let (texture, _) = self.texture_resolver
                                 .resolve(&picture_target.texture)
@@ -4841,13 +4975,13 @@ impl Renderer {
                                 frame.content_origin,
                                 &projection,
                                 &frame.render_tasks,
-                                stats,
+                                &mut results.stats,
                             );
                         }
                     }
 
                     for (target_index, target) in alpha.targets.iter().enumerate() {
-                        stats.alpha_target_count += 1;
+                        results.stats.alpha_target_count += 1;
                         let draw_target = DrawTarget::from_texture(
                             &alpha_tex.as_ref().unwrap().texture,
                             target_index,
@@ -4868,12 +5002,12 @@ impl Renderer {
                             target,
                             &projection,
                             &frame.render_tasks,
-                            stats,
+                            &mut results.stats,
                         );
                     }
 
                     for (target_index, target) in color.targets.iter().enumerate() {
-                        stats.color_target_count += 1;
+                        results.stats.color_target_count += 1;
                         let draw_target = DrawTarget::from_texture(
                             &color_tex.as_ref().unwrap().texture,
                             target_index,
@@ -4904,7 +5038,7 @@ impl Renderer {
                             &frame.render_tasks,
                             &projection,
                             frame_id,
-                            stats,
+                            &mut results.stats,
                         );
                     }
 
@@ -5735,6 +5869,8 @@ pub struct RendererOptions {
     pub start_debug_server: bool,
     /// Output the source of the shader with the given name.
     pub dump_shader_source: Option<String>,
+    /// An optional presentation config for compositor integration.
+    pub present_config: Option<PresentConfig>,
 }
 
 impl Default for RendererOptions {
@@ -5786,6 +5922,7 @@ impl Default for RendererOptions {
             // needed.
             start_debug_server: true,
             dump_shader_source: None,
+            present_config: None,
         }
     }
 }

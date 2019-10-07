@@ -21,8 +21,7 @@ namespace mozilla {
 namespace layers {
 
 ActiveElementManager::ActiveElementManager()
-    : mCanBePan(false), mCanBePanSet(false), mSetActiveTask(nullptr) {
-}
+    : mCanBePan(false), mCanBePanSet(false), mSetActiveTask(nullptr) {}
 
 ActiveElementManager::~ActiveElementManager() {}
 

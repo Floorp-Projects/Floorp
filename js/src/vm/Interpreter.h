@@ -46,11 +46,7 @@ extern JSObject* ValueToCallable(JSContext* cx, HandleValue v,
                                  MaybeConstruct construct = NO_CONSTRUCT);
 
 // Reasons why a call could be performed, for passing onto the debugger.
-enum class CallReason {
-  Call,
-  Getter,
-  Setter
-};
+enum class CallReason { Call, Getter, Setter };
 
 /*
  * Call or construct arguments that are stored in rooted memory.

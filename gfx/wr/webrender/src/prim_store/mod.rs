@@ -1692,9 +1692,6 @@ pub struct PrimitiveScratchBuffer {
     /// verify invalidation in wrench reftests. Only collected in testing.
     pub recorded_dirty_regions: Vec<RecordedDirtyRegion>,
 
-    /// List of dirty rects for the cached pictures in this document.
-    pub dirty_rects: Vec<DeviceIntRect>,
-
     /// List of debug display items for rendering.
     pub debug_items: Vec<DebugItem>,
 }
@@ -1709,7 +1706,6 @@ impl PrimitiveScratchBuffer {
             segment_instances: SegmentInstanceStorage::new(0),
             gradient_tiles: GradientTileStorage::new(0),
             recorded_dirty_regions: Vec::new(),
-            dirty_rects: Vec::new(),
             debug_items: Vec::new(),
             prim_info: Vec::new(),
         }
@@ -1746,7 +1742,6 @@ impl PrimitiveScratchBuffer {
         self.debug_items.clear();
 
         assert!(self.recorded_dirty_regions.is_empty(), "Should have sent to Renderer");
-        assert!(self.dirty_rects.is_empty(), "Should have sent to Renderer");
     }
 
     #[allow(dead_code)]
@@ -2315,10 +2310,8 @@ impl PrimitiveStore {
 
                 // Build the dirty region(s) for this tile cache.
                 tile_cache.post_update(
-                    frame_state.resource_cache,
-                    frame_state.gpu_cache,
                     frame_context,
-                    frame_state.scratch,
+                    frame_state,
                 );
 
                 pic.tile_cache = Some(tile_cache);

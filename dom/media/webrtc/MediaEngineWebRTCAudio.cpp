@@ -120,8 +120,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
 
   // Get the number of channels asked for by content, and clamp it between the
   // pref and the maximum number of channels that the device supports.
-  prefs.mChannels =
-      c.mChannelCount.Get(std::min(prefs.mChannels, maxChannels));
+  prefs.mChannels = c.mChannelCount.Get(std::min(prefs.mChannels, maxChannels));
   prefs.mChannels = std::max(1, std::min(prefs.mChannels, maxChannels));
 
   LOG("Audio config: aec: %d, agc: %d, noise: %d, channels: %d",

@@ -269,7 +269,8 @@ void WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage) {
 #if defined(XP_MACOSX)
   // bug 1573048
   if (gl->WorkAroundDriverBugs() && size > 1200000000) {
-    return ErrorOutOfMemory("Allocations larger than 1200000000 fail on macOS.");
+    return ErrorOutOfMemory(
+        "Allocations larger than 1200000000 fail on macOS.");
   }
 #endif
 

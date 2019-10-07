@@ -100,7 +100,8 @@ already_AddRefed<CSSValue> GetBackgroundList(
 }
 
 // Whether aDocument needs to restyle for aElement
-static bool ElementNeedsRestyle(Element* aElement, nsAtom* aPseudo) {
+static bool ElementNeedsRestyle(Element* aElement, nsAtom* aPseudo,
+                                bool aMayNeedToFlushLayout) {
   const Document* doc = aElement->GetComposedDoc();
   if (!doc) {
     // If the element is out of the document we don't return styles for it, so
@@ -171,7 +172,7 @@ static bool ElementNeedsRestyle(Element* aElement, nsAtom* aPseudo) {
   // Note this is different from Gecko: we only check if any ancestor needs
   // to restyle _itself_, not descendants, since dirty descendants can be
   // another subtree.
-  return restyleManager->HasPendingRestyleAncestor(aElement);
+  return Servo_HasPendingRestyleAncestor(aElement, aMayNeedToFlushLayout);
 }
 
 /**
@@ -762,9 +763,61 @@ void nsComputedDOMStyle::SetFrameComputedStyle(mozilla::ComputedStyle* aStyle,
   mPresShellId = mPresShell->GetPresShellId();
 }
 
-bool nsComputedDOMStyle::NeedsToFlushStyle() const {
+static bool MayNeedToFlushLayout(nsCSSPropertyID aPropID) {
+  switch (aPropID) {
+    case eCSSProperty_width:
+    case eCSSProperty_height:
+    case eCSSProperty_block_size:
+    case eCSSProperty_inline_size:
+    case eCSSProperty_line_height:
+    case eCSSProperty_grid_template_rows:
+    case eCSSProperty_grid_template_columns:
+    case eCSSProperty_perspective_origin:
+    case eCSSProperty_transform_origin:
+    case eCSSProperty_transform:
+    case eCSSProperty_border_top_width:
+    case eCSSProperty_border_bottom_width:
+    case eCSSProperty_border_left_width:
+    case eCSSProperty_border_right_width:
+    case eCSSProperty_border_block_start_width:
+    case eCSSProperty_border_block_end_width:
+    case eCSSProperty_border_inline_start_width:
+    case eCSSProperty_border_inline_end_width:
+    case eCSSProperty_top:
+    case eCSSProperty_right:
+    case eCSSProperty_bottom:
+    case eCSSProperty_left:
+    case eCSSProperty_inset_block_start:
+    case eCSSProperty_inset_block_end:
+    case eCSSProperty_inset_inline_start:
+    case eCSSProperty_inset_inline_end:
+    case eCSSProperty_padding_top:
+    case eCSSProperty_padding_right:
+    case eCSSProperty_padding_bottom:
+    case eCSSProperty_padding_left:
+    case eCSSProperty_padding_block_start:
+    case eCSSProperty_padding_block_end:
+    case eCSSProperty_padding_inline_start:
+    case eCSSProperty_padding_inline_end:
+    case eCSSProperty_margin_top:
+    case eCSSProperty_margin_right:
+    case eCSSProperty_margin_bottom:
+    case eCSSProperty_margin_left:
+    case eCSSProperty_margin_block_start:
+    case eCSSProperty_margin_block_end:
+    case eCSSProperty_margin_inline_start:
+    case eCSSProperty_margin_inline_end:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool nsComputedDOMStyle::NeedsToFlushStyle(nsCSSPropertyID aPropID) const {
+  bool mayNeedToFlushLayout = MayNeedToFlushLayout(aPropID);
+
   // We always compute styles from the element's owner document.
-  if (ElementNeedsRestyle(mElement, mPseudo)) {
+  if (ElementNeedsRestyle(mElement, mPseudo, mayNeedToFlushLayout)) {
     return true;
   }
 
@@ -774,7 +827,7 @@ bool nsComputedDOMStyle::NeedsToFlushStyle() const {
   while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
     Document* parentDocument = doc->GetInProcessParentDocument();
     Element* element = parentDocument->FindContentForSubDocument(doc);
-    if (ElementNeedsRestyle(element, nullptr)) {
+    if (ElementNeedsRestyle(element, nullptr, mayNeedToFlushLayout)) {
       return true;
     }
     doc = parentDocument;
@@ -837,15 +890,14 @@ static bool PaddingNeedsUsedValue(const LengthPercentage& aValue,
 
 bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
   MOZ_ASSERT(aPropID != eCSSProperty_UNKNOWN);
+  if (aPropID == eCSSPropertyExtra_variable) {
+    return false;
+  }
   nsIFrame* outerFrame = GetOuterFrame();
   if (!outerFrame) {
     return false;
   }
   nsIFrame* frame = StyleFrame(outerFrame);
-  if (aPropID == eCSSPropertyExtra_variable) {
-    return false;
-  }
-
   auto* style = frame->Style();
   if (nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::IsLogical)) {
     aPropID = Servo_ResolveLogicalProperty(aPropID, style);
@@ -963,7 +1015,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
   }
 
   DebugOnly<bool> didFlush = false;
-  if (NeedsToFlushStyle()) {
+  if (NeedsToFlushStyle(aPropID)) {
     didFlush = true;
     // We look at the frame in NeedsToFlushLayout, so flush frames, not only
     // styles.
@@ -971,6 +1023,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
   }
 
   if (NeedsToFlushLayout(aPropID)) {
+    MOZ_ASSERT(MayNeedToFlushLayout(aPropID));
     didFlush = true;
     Flush(*document, FlushType::Layout);
 #ifdef DEBUG

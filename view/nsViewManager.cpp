@@ -232,7 +232,8 @@ void nsViewManager::SetWindowDimensions(nscoord aWidth, nscoord aHeight,
 
 void nsViewManager::FlushDelayedResize(bool aDoReflow) {
   if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height, aDoReflow);
+    DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height,
+                          aDoReflow);
     mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
   }
 }
