@@ -50,6 +50,8 @@ public class Browsers {
 
         ANDROID_STOCK_BROWSER("com.android.browser"),
 
+        VIVALDI("com.vivaldi.browser"),
+
         SAMSUNG_INTERNET("com.sec.android.app.sbrowser"),
         DOLPHIN_BROWSER("mobi.mgeek.TunnyBrowser"),
         BRAVE_BROWSER("com.brave.browser"),
