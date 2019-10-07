@@ -62,7 +62,7 @@
       <vbox id="tracking-protection-container" class="protections-popup-section">
         <description id="protections-popup-no-trackers-found-description">&protections.noTrackersFound.description;</description>
         <tooltip id="protections-popup-not-blocking-why-etp-on-tooltip">&protections.notBlocking.why.etpOn.tooltip;</tooltip>
-        <tooltip id="protections-popup-not-blocking-why-etp-off-tooltip">&protections.notBlocking.why.etpOff.tooltip;</tooltip>
+        <tooltip id="protections-popup-not-blocking-why-etp-off-tooltip">&protections.notBlocking.why.etpOff2.tooltip;</tooltip>
         <vbox id="protections-popup-content" flex="1">
           <vbox id="protections-popup-category-list">
             <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
