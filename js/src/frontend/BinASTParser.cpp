@@ -59,7 +59,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedMaybePositionalParameterName(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result,
                      parseSumAssertedMaybePositionalParameterName(
@@ -109,7 +110,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseAssignmentTarget(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumAssignmentTarget(start, kind, context));
 
@@ -163,7 +165,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseAssignmentTargetOrForInOfBinding(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(
       result, parseSumAssignmentTargetOrForInOfBinding(start, kind, context));
@@ -219,7 +222,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseBinding(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumBinding(start, kind, context));
 
@@ -291,7 +295,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseExpression(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumExpression(start, kind, context));
 
@@ -480,7 +485,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseExpressionOrSpreadElement(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result,
                      parseSumExpressionOrSpreadElement(start, kind, context));
@@ -673,7 +679,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseExpressionOrSuper(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumExpressionOrSuper(start, kind, context));
 
@@ -984,7 +991,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseObjectProperty(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumObjectProperty(start, kind, context));
 
@@ -1041,7 +1049,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseParameter(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumParameter(start, kind, context));
 
@@ -1093,7 +1102,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseProgram(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumProgram(start, kind, context));
 
@@ -1129,7 +1139,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parsePropertyName(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumPropertyName(start, kind, context));
 
@@ -1168,7 +1179,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSimpleAssignmentTarget(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result,
                      parseSumSimpleAssignmentTarget(start, kind, context));
@@ -1233,7 +1245,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseStatement(
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
   BINJS_MOZ_TRY_DECL(result, parseSumStatement(start, kind, context));
 
@@ -1384,7 +1397,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedBlockScope(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::AssertedBlockScope)) {
     return raiseInvalidKind("AssertedBlockScope", kind);
   }
@@ -1437,7 +1451,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedBoundName(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::AssertedBoundName)) {
     return raiseInvalidKind("AssertedBoundName", kind);
   }
@@ -1485,7 +1500,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedBoundNamesScope(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::AssertedBoundNamesScope)) {
     return raiseInvalidKind("AssertedBoundNamesScope", kind);
   }
@@ -1539,7 +1555,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedDeclaredName(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::AssertedDeclaredName)) {
     return raiseInvalidKind("AssertedDeclaredName", kind);
   }
@@ -1599,7 +1616,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedParameterScope(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::AssertedParameterScope)) {
     return raiseInvalidKind("AssertedParameterScope", kind);
   }
@@ -1713,7 +1731,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedScriptGlobalScope(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::AssertedScriptGlobalScope)) {
     return raiseInvalidKind("AssertedScriptGlobalScope", kind);
   }
@@ -1766,7 +1785,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedVarScope(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::AssertedVarScope)) {
     return raiseInvalidKind("AssertedVarScope", kind);
   }
@@ -1979,7 +1999,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseBindingIdentifier(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::BindingIdentifier)) {
     return raiseInvalidKind("BindingIdentifier", kind);
   }
@@ -2028,7 +2049,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseBlock(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::Block)) {
     return raiseInvalidKind("Block", kind);
   }
@@ -2156,7 +2178,8 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseCatchClause(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::CatchClause)) {
     return raiseInvalidKind("CatchClause", kind);
   }
@@ -2438,7 +2461,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseDirective(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::Directive)) {
     return raiseInvalidKind("Directive", kind);
   }
@@ -3014,7 +3038,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseFormalParameters(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::FormalParameters)) {
     return raiseInvalidKind("FormalParameters", kind);
   }
@@ -3065,7 +3090,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseFunctionExpressionContents(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::FunctionExpressionContents)) {
     return raiseInvalidKind("FunctionExpressionContents", kind);
   }
@@ -3144,7 +3170,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseFunctionOrMethodContents(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::FunctionOrMethodContents)) {
     return raiseInvalidKind("FunctionOrMethodContents", kind);
   }
@@ -3209,7 +3236,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseGetterContents(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::GetterContents)) {
     return raiseInvalidKind("GetterContents", kind);
   }
@@ -3259,7 +3287,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseIdentifierExpression(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::IdentifierExpression)) {
     return raiseInvalidKind("IdentifierExpression", kind);
   }
@@ -3761,7 +3790,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseSetterContents(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::SetterContents)) {
     return raiseInvalidKind("SetterContents", kind);
   }
@@ -3912,7 +3942,8 @@ JS::Result<CaseClause*> BinASTParser<Tok>::parseSwitchCase(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::SwitchCase)) {
     return raiseInvalidKind("SwitchCase", kind);
   }
@@ -3952,7 +3983,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSwitchDefault(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::SwitchDefault)) {
     return raiseInvalidKind("SwitchDefault", kind);
   }
@@ -4303,7 +4335,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseVariableDeclarator(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   if (MOZ_UNLIKELY(kind != BinASTKind::VariableDeclarator)) {
     return raiseInvalidKind("VariableDeclarator", kind);
   }
@@ -4672,7 +4705,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseArguments(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::Arguments);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newList(ParseNodeKind::Arguments,
                                           tokenizer_->pos(start)));
 
@@ -4694,7 +4728,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseFunctionBody(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfStatement);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -4715,7 +4750,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseListOfAssertedBoundName(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfAssertedBoundName);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   (void)start;
   auto result = Ok();
 
@@ -4737,7 +4773,8 @@ JS::Result<Ok> BinASTParser<Tok>::parseListOfAssertedDeclaredName(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfAssertedDeclaredName);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   (void)start;
   auto result = Ok();
 
@@ -4762,7 +4799,8 @@ BinASTParser<Tok>::parseListOfAssertedMaybePositionalParameterName(
   const auto start = tokenizer_->offset();
   const auto childContext = ListContext(
       context.position, BinASTList::ListOfAssertedMaybePositionalParameterName);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   (void)start;
   auto result = Ok();
   // This list contains also destructuring parameters, and the number of
@@ -4793,7 +4831,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfDirective(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfDirective);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -4814,7 +4853,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfObjectProperty(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfObjectProperty);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newObjectLiteral(start));
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -4837,7 +4877,8 @@ BinASTParser<Tok>::parseListOfOptionalExpressionOrSpreadElement(
   const auto start = tokenizer_->offset();
   const auto childContext = ListContext(
       context.position, BinASTList::ListOfOptionalExpressionOrSpreadElement);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newArrayLiteral(start));
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -4863,7 +4904,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfParameter(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfParameter);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newParamsBody(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -4884,7 +4926,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfStatement(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfStatement);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -4905,7 +4948,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfSwitchCase(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfSwitchCase);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newStatementList(tokenizer_->pos(start)));
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -4926,7 +4970,8 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfVariableDeclarator(
   const auto start = tokenizer_->offset();
   const auto childContext =
       ListContext(context.position, BinASTList::ListOfVariableDeclarator);
-  MOZ_TRY(tokenizer_->enterList(length, childContext, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterList(length, childContext));
   BINJS_TRY_DECL(result, handler_.newDeclarationList(declarationListKind,
                                                      tokenizer_->pos(start)));
 
@@ -4946,7 +4991,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalBinding(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   ParseNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
@@ -4965,7 +5011,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalBindingIdentifier(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   ParseNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
@@ -4987,7 +5034,8 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseOptionalCatchClause(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   LexicalScopeNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
@@ -5008,7 +5056,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalExpression(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   ParseNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
@@ -5028,7 +5077,8 @@ BinASTParser<Tok>::parseOptionalExpressionOrSpreadElement(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   ParseNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
@@ -5049,7 +5099,8 @@ BinASTParser<Tok>::parseOptionalExpressionOrVariableDeclaration(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   ParseNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
@@ -5069,7 +5120,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalStatement(
   BinASTKind kind;
   AutoTaggedTuple guard(*tokenizer_);
 
-  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+  guard.init();
+  MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
   ParseNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;

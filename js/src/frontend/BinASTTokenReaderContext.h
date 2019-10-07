@@ -1175,8 +1175,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    * If the caller has consumed too few/too many bytes, this will be reported
    * in the call go `guard.done()`.
    */
-  MOZ_MUST_USE JS::Result<Ok> enterList(uint32_t& length, const ListContext&,
-                                        AutoList& guard);
+  MOZ_MUST_USE JS::Result<Ok> enterList(uint32_t& length, const ListContext&);
 
   /**
    * Start reading a tagged tuple.
@@ -1195,20 +1194,15 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    * @return out If the header of the tuple is invalid.
    */
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(BinASTKind& tag,
-                                               const FieldOrRootContext&,
-                                               AutoTaggedTuple& guard);
+                                               const FieldOrRootContext&);
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(BinASTKind& tag,
-                                               const FieldOrListContext&,
-                                               AutoTaggedTuple& guard);
+                                               const FieldOrListContext&);
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(BinASTKind& tag,
-                                               const RootContext&,
-                                               AutoTaggedTuple& guard);
+                                               const RootContext&);
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(BinASTKind& tag,
-                                               const ListContext&,
-                                               AutoTaggedTuple& guard);
+                                               const ListContext&);
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(BinASTKind& tag,
-                                               const FieldContext&,
-                                               AutoTaggedTuple& guard);
+                                               const FieldContext&);
 
   /**
    * Read a single unsigned long.
@@ -1296,14 +1290,16 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     explicit AutoBase(BinASTTokenReaderContext& reader);
     ~AutoBase();
 
-    // Raise an error if we are not in the expected position.
-    MOZ_MUST_USE JS::Result<Ok> checkPosition(const uint8_t* expectedPosition);
-
     friend BinASTTokenReaderContext;
+
+   public:
     void init();
 
+   protected:
+#ifdef DEBUG
     bool initialized_;
     BinASTTokenReaderContext& reader_;
+#endif
   };
 
   // Guard class used to ensure that `enterList` is used properly.
@@ -1316,7 +1312,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
    protected:
     friend BinASTTokenReaderContext;
-    void init();
   };
 
   // Guard class used to ensure that `enterTaggedTuple` is used properly.

@@ -375,17 +375,13 @@ BinASTTokenReaderMultipart::readSkippableSubTree(const FieldContext&) {
 // Tagged tuples:
 // - uint32_t index in table [grammar];
 // - content (specified by the higher-level grammar);
-JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
-    BinASTKind& tag, AutoTaggedTuple& guard) {
+JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(BinASTKind& tag) {
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
   if (index >= metadata_->numBinASTKinds()) {
     return raiseError("Invalid index to grammar table");
   }
 
   tag = metadata_->getBinASTKind(index);
-
-  // Enter the body.
-  guard.init();
   return Ok();
 }
 
@@ -397,10 +393,7 @@ JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
 // The total byte length of `number of items` + `contents` must be `byte
 // length`.
 JS::Result<Ok> BinASTTokenReaderMultipart::enterList(uint32_t& items,
-                                                     const ListContext&,
-                                                     AutoList& guard) {
-  guard.init();
-
+                                                     const ListContext&) {
   MOZ_TRY_VAR(items, readInternalUint32());
 
   return Ok();
@@ -419,21 +412,9 @@ BinASTTokenReaderMultipart::AutoBase::~AutoBase() {
   MOZ_ASSERT_IF(initialized_, reader_.hasRaisedError());
 }
 
-JS::Result<Ok> BinASTTokenReaderMultipart::AutoBase::checkPosition(
-    const uint8_t* expectedEnd) {
-  if (reader_.current_ != expectedEnd) {
-    return reader_.raiseError(
-        "Caller did not consume the expected set of bytes");
-  }
-
-  return Ok();
-}
-
 BinASTTokenReaderMultipart::AutoList::AutoList(
     BinASTTokenReaderMultipart& reader)
     : AutoBase(reader) {}
-
-void BinASTTokenReaderMultipart::AutoList::init() { AutoBase::init(); }
 
 JS::Result<Ok> BinASTTokenReaderMultipart::AutoList::done() {
   MOZ_ASSERT(initialized_);

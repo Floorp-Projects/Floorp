@@ -1494,8 +1494,7 @@ BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const FieldOrRootContext& context,
-    AutoTaggedTuple& guard) {
+    BinASTKind& tag, const FieldOrRootContext& context) {
   return context.match(
       [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
           -> JS::Result<Ok> {
@@ -1511,8 +1510,7 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const FieldOrListContext& context,
-    AutoTaggedTuple& guard) {
+    BinASTKind& tag, const FieldOrListContext& context) {
   return context.match(
       [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
           -> JS::Result<Ok> {
@@ -1529,29 +1527,28 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const RootContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const RootContext& context) {
   // For the moment, the format hardcodes `Script` as root.
   tag = BinASTKind::Script;
   return Ok();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const ListContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const ListContext& context) {
   // This tuple is an element in a list we're currently reading.
   MOZ_TRY_VAR(tag, readTagFromTable(context.position));
   return Ok();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const FieldContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const FieldContext& context) {
   // This tuple is the value of the field we're currently reading.
   MOZ_TRY_VAR(tag, readTagFromTable(context.position));
   return Ok();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
-                                                   const ListContext& context,
-                                                   AutoList& guard) {
+                                                   const ListContext& context) {
   const auto identity = context.content;
   const auto& table = dictionary.tableForListLength(identity);
   BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
@@ -1566,10 +1563,19 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   return Ok();
 }
 
-void BinASTTokenReaderContext::AutoBase::init() { initialized_ = true; }
+void BinASTTokenReaderContext::AutoBase::init() {
+#ifdef DEBUG
+  initialized_ = true;
+#endif
+}
 
 BinASTTokenReaderContext::AutoBase::AutoBase(BinASTTokenReaderContext& reader)
-    : initialized_(false), reader_(reader) {}
+#ifdef DEBUG
+    : initialized_(false),
+      reader_(reader)
+#endif
+{
+}
 
 BinASTTokenReaderContext::AutoBase::~AutoBase() {
   // By now, the `AutoBase` must have been deinitialized by calling `done()`.
@@ -1578,17 +1584,15 @@ BinASTTokenReaderContext::AutoBase::~AutoBase() {
   MOZ_ASSERT_IF(initialized_, reader_.hasRaisedError());
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::AutoBase::checkPosition(
-    const uint8_t* expectedEnd) {
-  return reader_.raiseError("Not Yet Implemented");
-}
-
 BinASTTokenReaderContext::AutoList::AutoList(BinASTTokenReaderContext& reader)
     : AutoBase(reader) {}
 
-void BinASTTokenReaderContext::AutoList::init() { AutoBase::init(); }
-
-JS::Result<Ok> BinASTTokenReaderContext::AutoList::done() { return Ok(); }
+JS::Result<Ok> BinASTTokenReaderContext::AutoList::done() {
+#ifdef DEBUG
+  initialized_ = false;
+#endif
+  return Ok();
+}
 
 // Internal uint32_t
 // Note that this is different than varnum in multipart.
@@ -1637,6 +1641,9 @@ BinASTTokenReaderContext::AutoTaggedTuple::AutoTaggedTuple(
     : AutoBase(reader) {}
 
 JS::Result<Ok> BinASTTokenReaderContext::AutoTaggedTuple::done() {
+#ifdef DEBUG
+  initialized_ = false;
+#endif
   return Ok();
 }
 
