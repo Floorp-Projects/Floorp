@@ -62,7 +62,7 @@ export class InfoItem extends HTMLElement {
 
     this.classList.add(labelId);
 
-    if (this.item.label === "modulus") {
+    if (labelId === "modulus") {
       info.classList.add("long-hex");
       this.addEventListener("click", () => {
         info.classList.toggle("long-hex-open");
