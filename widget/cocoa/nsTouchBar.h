@@ -7,59 +7,12 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include "mozilla/RefPtr.h"
 #include "nsITouchBarHelper.h"
 #include "nsITouchBarInput.h"
+#include "nsTouchBarInputIcon.h"
+#include "nsTouchBarNativeAPIDefines.h"
 
-#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
-@interface NSButton (NewConstructors)
-@property(nonatomic) BOOL imageHugsTitle;
-+ (NSButton*)buttonWithTitle:(NSString*)title target:(id)target action:(SEL)action;
-@end
-
-@interface NSColor (DisplayP3Colors)
-+ (NSColor*)colorWithDisplayP3Red:(CGFloat)red
-                            green:(CGFloat)green
-                             blue:(CGFloat)blue
-                            alpha:(CGFloat)alpha;
-@end
-#endif
-
-#if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
-typedef NSString* NSTouchBarItemIdentifier;
-__attribute__((weak_import)) @interface NSTouchBarItem : NSObject
-- (instancetype)initWithIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
-@end
-
-__attribute__((weak_import)) @interface NSCustomTouchBarItem : NSTouchBarItem
-@property(strong) NSView* view;
-@property(strong) NSString* customizationLabel;
-@end
-
-@protocol NSTouchBarDelegate
-@end
-
-typedef NSString* NSTouchBarCustomizationIdentifier;
-__attribute__((weak_import)) @interface NSTouchBar : NSObject
-@property(strong) NSArray<NSTouchBarItemIdentifier>* defaultItemIdentifiers;
-@property(strong) id<NSTouchBarDelegate> delegate;
-@property(strong) NSTouchBarCustomizationIdentifier customizationIdentifier;
-@property(strong) NSArray<NSTouchBarItemIdentifier>* customizationAllowedItemIdentifiers;
-- (NSTouchBarItem*)itemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
-@end
-
-@protocol NSSharingServicePickerTouchBarItemDelegate
-@end
-
-__attribute__((weak_import)) @interface NSSharingServicePickerTouchBarItem : NSTouchBarItem
-@property(strong) id<NSSharingServicePickerTouchBarItemDelegate> delegate;
-@property(strong) NSImage* buttonImage;
-@end
-
-@interface NSButton (TouchBarButton)
-@property(strong) NSColor* bezelColor;
-@end
-#endif
+using namespace mozilla::dom;
 
 /**
  * NSObject representation of nsITouchBarInput.
@@ -67,38 +20,48 @@ __attribute__((weak_import)) @interface NSSharingServicePickerTouchBarItem : NST
 @interface TouchBarInput : NSObject {
   NSString* mKey;
   NSString* mTitle;
-  NSImage* mImage;
+  nsCOMPtr<nsIURI> mImageURI;
+  RefPtr<nsTouchBarInputIcon> mIcon;
   NSString* mType;
   NSColor* mColor;
   BOOL mDisabled;
   NSTouchBarItemIdentifier mNativeIdentifier;
   nsCOMPtr<nsITouchBarInputCallback> mCallback;
+  RefPtr<Document> mDocument;
+  BOOL mIsIconPositionSet;
 }
 
 - (NSString*)key;
 - (NSString*)title;
-- (NSImage*)image;
+- (nsCOMPtr<nsIURI>)imageURI;
+- (RefPtr<nsTouchBarInputIcon>)icon;
 - (NSString*)type;
 - (NSColor*)color;
 - (BOOL)isDisabled;
 - (NSTouchBarItemIdentifier)nativeIdentifier;
 - (nsCOMPtr<nsITouchBarInputCallback>)callback;
+- (RefPtr<Document>)document;
+- (BOOL)isIconPositionSet;
 - (void)setKey:(NSString*)aKey;
 - (void)setTitle:(NSString*)aTitle;
-- (void)setImage:(NSImage*)aImage;
+- (void)setImageURI:(nsCOMPtr<nsIURI>)aImageURI;
+- (void)setIcon:(RefPtr<nsTouchBarInputIcon>)aIcon;
 - (void)setType:(NSString*)aType;
 - (void)setColor:(NSColor*)aColor;
 - (void)setDisabled:(BOOL)aDisabled;
 - (void)setNativeIdentifier:(NSString*)aNativeIdentifier;
 - (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback;
+- (void)setDocument:(RefPtr<Document>)aDocument;
+- (void)setIconPositionSet:(BOOL)aIsIconPositionSet;
 
 - (id)initWithKey:(NSString*)aKey
             title:(NSString*)aTitle
-            image:(NSString*)aImage
+         imageURI:(nsCOMPtr<nsIURI>)aImageURI
              type:(NSString*)aType
          callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
             color:(uint32_t)aColor
-         disabled:(BOOL)aDisabled;
+         disabled:(BOOL)aDisabled
+         document:(RefPtr<Document>)aDocument;
 
 - (TouchBarInput*)initWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;
 
@@ -170,11 +133,6 @@ __attribute__((weak_import)) @interface NSSharingServicePickerTouchBarItem : NST
 - (NSArray<NSSharingService*>*)sharingServicePicker:(NSSharingServicePicker*)aSharingServicePicker
                             sharingServicesForItems:(NSArray*)aItems
                             proposedSharingServices:(NSArray<NSSharingService*>*)aProposedServices;
-
-/**
- * Retrieves TouchBarInput icons.
- */
-+ (NSImage*)getTouchBarIconNamed:(NSString*)aImageName;
 
 - (void)releaseJSObjects;
 

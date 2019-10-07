@@ -18,6 +18,7 @@
 #include "nsGkAtoms.h"
 #include "nsObjCExceptions.h"
 #include "nsThreadUtils.h"
+#include "nsTouchBarNativeAPIDefines.h"
 
 #include "nsIContent.h"
 #include "nsITouchBarUpdater.h"
@@ -853,12 +854,6 @@ static BOOL gMenuItemsExecuteCommands = YES;
 }
 
 @end
-
-#if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
-@interface NSApplication (TouchBarMenu)
-- (IBAction)toggleTouchBarCustomizationPalette:(id)sender;
-@end
-#endif
 
 //
 // Objective-C class used as action target for menu items
