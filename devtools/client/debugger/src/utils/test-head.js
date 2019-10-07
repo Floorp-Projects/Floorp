@@ -30,11 +30,6 @@ import type { Source, OriginalSourceData, GeneratedSourceData } from "../types";
  * @static
  */
 function createStore(client: any, initialState: any = {}, sourceMapsMock: any) {
-  client = {
-    hasWasmSupport: () => true,
-    ...client,
-  };
-
   const store = configureStore({
     log: false,
     history: getHistory(),

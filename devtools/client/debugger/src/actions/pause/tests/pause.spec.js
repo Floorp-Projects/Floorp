@@ -354,27 +354,10 @@ describe("pause", () => {
       await dispatch(actions.paused(mockPauseInfo));
       expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
         {
-          displayName: "fooBar",
           generatedLocation: { column: 0, line: 1, sourceId: "foo-wasm" },
           id: mockFrameId,
-          isOriginal: true,
           location: originalLocation,
-          originalDisplayName: "fooBar",
           scope: { bindings: { arguments: [], variables: {} } },
-          source: null,
-          this: undefined,
-          thread: "FakeThread",
-        },
-        {
-          displayName: "barZoo",
-          generatedLocation: { column: 0, line: 1, sourceId: "foo-wasm" },
-          id: `${mockFrameId}-originalFrame1`,
-          isOriginal: true,
-          location: originalLocation2,
-          originalDisplayName: "barZoo",
-          scope: { bindings: { arguments: [], variables: {} } },
-          source: null,
-          this: undefined,
           thread: "FakeThread",
         },
       ]);
