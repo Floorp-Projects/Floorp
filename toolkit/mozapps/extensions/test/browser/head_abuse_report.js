@@ -4,6 +4,7 @@
 /* eslint max-len: ["error", 80] */
 
 /* exported installTestExtension, addCommonAbuseReportTestTasks,
+ *          waitClosedWindow,
  *          AbuseReporter, AbuseReporterTestUtils, AddonTestUtils */
 
 /* global mockPromptService, MockProvider, loadInitialView, closeView */
