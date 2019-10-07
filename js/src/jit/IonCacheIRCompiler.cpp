@@ -1567,58 +1567,6 @@ bool IonCacheIRCompiler::emitStoreTypedObjectReferenceProperty() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitStoreTypedObjectScalarProperty() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Register obj = allocator.useRegister(masm, reader.objOperandId());
-  int32_t offset = int32StubField(reader.stubOffset());
-  TypedThingLayout layout = reader.typedThingLayout();
-  Scalar::Type type = reader.scalarType();
-
-  Maybe<Register> valInt32;
-  switch (type) {
-    case Scalar::Int8:
-    case Scalar::Uint8:
-    case Scalar::Int16:
-    case Scalar::Uint16:
-    case Scalar::Int32:
-    case Scalar::Uint32:
-    case Scalar::Uint8Clamped:
-      valInt32.emplace(allocator.useRegister(masm, reader.int32OperandId()));
-      break;
-
-    case Scalar::Float32:
-    case Scalar::Float64:
-      // Float register must be preserved. The SetProp ICs use the fact that
-      // baseline has them available, as well as fixed temps on
-      // LSetPropertyCache.
-      allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
-      break;
-
-    case Scalar::BigInt64:
-    case Scalar::BigUint64:
-    case Scalar::MaxTypedArrayViewType:
-    case Scalar::Int64:
-      MOZ_CRASH("Unsupported TypedArray type");
-  }
-
-  AutoScratchRegister scratch(allocator, masm);
-
-  // Compute the address being written to.
-  LoadTypedThingData(masm, layout, obj, scratch);
-  Address dest(scratch, offset);
-
-  if (type == Scalar::Float32) {
-    ScratchFloat32Scope fpscratch(masm);
-    masm.convertDoubleToFloat32(FloatReg0, fpscratch);
-    masm.storeToTypedFloatArray(type, fpscratch, dest);
-  } else if (type == Scalar::Float64) {
-    masm.storeToTypedFloatArray(type, FloatReg0, dest);
-  } else {
-    masm.storeToTypedIntArray(type, *valInt32, dest);
-  }
-  return true;
-}
-
 static void EmitStoreDenseElement(MacroAssembler& masm,
                                   const ConstantOrRegister& value,
                                   Register elements,
