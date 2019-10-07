@@ -564,6 +564,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     // scrollbar node. The AutoLock allows accessing the scrollbar
     // node without having to hold the tree lock.
     HitTestingTreeNodeAutoLock mScrollbarNode;
+    // If content that is fixed to the root-content APZC was hit,
+    // the sides of the viewport to which the content is fixed.
+    SideBits mFixedPosSides;
 
     HitTestResult() = default;
     // Make it move-only.
