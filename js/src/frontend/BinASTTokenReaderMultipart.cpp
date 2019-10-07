@@ -221,7 +221,7 @@ void BinASTTokenReaderMultipart::traceMetadata(JSTracer* trc) {
   }
 }
 
-JS::Result<bool> BinASTTokenReaderMultipart::readBool(const Context&) {
+JS::Result<bool> BinASTTokenReaderMultipart::readBool(const FieldContext&) {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(byte, readByte());
 
@@ -241,7 +241,7 @@ JS::Result<bool> BinASTTokenReaderMultipart::readBool(const Context&) {
 //
 // NULL_FLOAT_REPRESENTATION (signaling NaN) => null
 // anything other 64 bit sequence => IEEE-764 64-bit floating point number
-JS::Result<double> BinASTTokenReaderMultipart::readDouble(const Context&) {
+JS::Result<double> BinASTTokenReaderMultipart::readDouble(const FieldContext&) {
   updateLatestKnownGood();
 
   uint8_t bytes[8];
@@ -262,7 +262,8 @@ JS::Result<double> BinASTTokenReaderMultipart::readDouble(const Context&) {
 }
 
 // A single atom is represented as an index into the table of strings.
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeAtom(const Context&) {
+JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeAtom(
+    const FieldContext&) {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -273,7 +274,7 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeAtom(const Context&) {
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderMultipart::readAtom(
-    const Context& context) {
+    const FieldContext& context) {
   BINJS_MOZ_TRY_DECL(maybe, readMaybeAtom(context));
 
   if (!maybe) {
@@ -284,7 +285,7 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readAtom(
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeIdentifierName(
-    const Context& context) {
+    const FieldContext& context) {
   BINJS_MOZ_TRY_DECL(result, readMaybeAtom(context));
   if (result) {
     if (!IsIdentifier(result)) {
@@ -295,7 +296,7 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeIdentifierName(
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderMultipart::readIdentifierName(
-    const Context& context) {
+    const FieldContext& context) {
   BINJS_MOZ_TRY_DECL(result, readAtom(context));
   if (!IsIdentifier(result)) {
     return raiseError("Invalid identifier");
@@ -304,12 +305,12 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readIdentifierName(
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderMultipart::readPropertyKey(
-    const Context& context) {
+    const FieldContext& context) {
   return readAtom(context);
 }
 
 JS::Result<Ok> BinASTTokenReaderMultipart::readChars(Chars& out,
-                                                     const Context&) {
+                                                     const FieldContext&) {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -321,8 +322,7 @@ JS::Result<Ok> BinASTTokenReaderMultipart::readChars(Chars& out,
   return Ok();
 }
 
-JS::Result<BinASTVariant> BinASTTokenReaderMultipart::readVariant(
-    const Context&) {
+JS::Result<BinASTVariant> BinASTTokenReaderMultipart::readVariant() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -357,7 +357,7 @@ JS::Result<BinASTVariant> BinASTTokenReaderMultipart::readVariant(
 }
 
 JS::Result<BinASTTokenReaderBase::SkippableSubTree>
-BinASTTokenReaderMultipart::readSkippableSubTree(const Context&) {
+BinASTTokenReaderMultipart::readSkippableSubTree(const FieldContext&) {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
@@ -390,6 +390,22 @@ JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
   return Ok();
 }
 
+JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
+    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
+    const RootContext& context, AutoTaggedTuple& guard) {
+  return enterTaggedTuple(tag, fields, Context(context), guard);
+}
+JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
+    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
+    const ListContext& context, AutoTaggedTuple& guard) {
+  return enterTaggedTuple(tag, fields, Context(context), guard);
+}
+JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
+    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
+    const FieldContext& context, AutoTaggedTuple& guard) {
+  return enterTaggedTuple(tag, fields, Context(context), guard);
+}
+
 // List:
 //
 // - uint32_t number of items;
@@ -398,7 +414,7 @@ JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
 // The total byte length of `number of items` + `contents` must be `byte
 // length`.
 JS::Result<Ok> BinASTTokenReaderMultipart::enterList(uint32_t& items,
-                                                     const Context&,
+                                                     const ListContext&,
                                                      AutoList& guard) {
   guard.init();
 
