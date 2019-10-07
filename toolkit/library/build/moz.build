@@ -23,10 +23,7 @@ if CONFIG['COMPILE_ENVIRONMENT']:
             SHARED_LIBRARY_NAME,
             CONFIG['DLL_SUFFIX']
         )
-    GENERATED_FILES += [('dependentlibs.list', 'dependentlibs.list.gtest')]
-    dep_libs_list = GENERATED_FILES[('dependentlibs.list', 'dependentlibs.list.gtest')]
-    dep_libs_list.script = 'dependentlibs.py:gen_list'
-    dep_libs_list.inputs = [
-        '!%s' % full_libname,
-    ]
+    GeneratedFile('dependentlibs.list', 'dependentlibs.list.gtest',
+                  script='dependentlibs.py', entry_point='gen_list',
+                  inputs=['!%s' % full_libname])
     FINAL_TARGET_FILES += ['!dependentlibs.list', '!dependentlibs.list.gtest']

@@ -49,10 +49,8 @@ elif CONFIG['CPU_ARCH'] == 'aarch64':
     # we generate different names for the objdir files
     for src in asm_files:
         obj = src.replace('_asm_aarch64', '')
-        GENERATED_FILES += [obj]
-        asm = GENERATED_FILES[obj]
-        asm.script = 'preprocess.py:preprocess'
-        asm.inputs = [src]
+        GeneratedFile(obj, script='preprocess.py', entry_point='preprocess',
+                      inputs=[src])
         SOURCES += ['!%s' % obj]
 
 FINAL_LIBRARY = 'xul'

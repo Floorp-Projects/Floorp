@@ -82,12 +82,9 @@ def Libxul(name, output_category=None):
         LDFLAGS += CONFIG['RUSTC_NATVIS_LDFLAGS']
 
     if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
-        GENERATED_FILES += ['symverscript']
-        GENERATED_FILES['symverscript'].script = '/build/gen_symverscript.py'
-        GENERATED_FILES['symverscript'].inputs = ['../symverscript.in']
-        GENERATED_FILES['symverscript'].flags = [
-            'xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']
-        ]
+        GeneratedFile('symverscript', script='/build/gen_symverscript.py',
+                      inputs=['../symverscript.in'],
+                      flags=['xul%s' % CONFIG['MOZILLA_SYMBOLVERSION']])
         SYMBOLS_FILE = '!symverscript'
 
     # Generate GDB pretty printer-autoload files only on Linux. OSX's GDB is
@@ -363,11 +360,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 # objects files that constitute libxul, so that if any of the files linked into
 # libxul is rebuilt, we refresh the buildid and link it into libxul.
 SOURCES += ['!buildid.cpp']
-GENERATED_FILES += ['buildid.cpp']
-GENERATED_FILES['buildid.cpp'].script = 'gen_buildid.py'
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
     libxul_list = 'XUL'
 else:
     libxul_list = '%sxul_%s' % (
         CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'].lstrip('.').replace('.','_'))
-GENERATED_FILES['buildid.cpp'].inputs = ['!build/%s.list' % libxul_list]
+GeneratedFile('buildid.cpp', script = 'gen_buildid.py',
+              inputs=['!build/%s.list' % libxul_list])
+

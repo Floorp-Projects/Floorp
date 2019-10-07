@@ -8,11 +8,8 @@
 def GeneratedTestCertificate(name):
     if not CONFIG['COMPILE_ENVIRONMENT']:
         return
-
-    GENERATED_FILES += [name]
-    props = GENERATED_FILES[name]
-    props.script = '/security/manager/ssl/tests/unit/pycert.py'
-    props.inputs = ['%s.certspec' % name]
+    GeneratedFile(name, script='/security/manager/ssl/tests/unit/pycert.py',
+                  inputs=['%s.certspec' % name])
     # Turn RELATIVEDIR into list entry: like
     # 'security/manager/ssl/tests/unit/bad_certs' ->
     # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.bad_certs.
@@ -25,11 +22,8 @@ def GeneratedTestCertificate(name):
 def GeneratedTestKey(name):
     if not CONFIG['COMPILE_ENVIRONMENT']:
         return
-
-    GENERATED_FILES += [name]
-    props = GENERATED_FILES[name]
-    props.script = '/security/manager/ssl/tests/unit/pykey.py'
-    props.inputs = ['%s.keyspec' % name]
+    GeneratedFile(name, script='/security/manager/ssl/tests/unit/pykey.py',
+                  inputs=['%s.keyspec' % name])
     # Turn RELATIVEDIR into list entry: like
     # 'security/manager/ssl/tests/unit/bad_certs' ->
     # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.bad_certs.

@@ -77,13 +77,10 @@ include('/ipc/chromium/chromium-config.mozbuild')
 # an open FileAvoidWrite to the invoked script.  That doesn't work well with
 # the Gradle task that generates all of the outputs, so we add a dummy first
 # output.
-t = ('generated_jni_wrappers',
-     'GeneratedJNINatives.h',
-     'GeneratedJNIWrappers.h',
-     'GeneratedJNIWrappers.cpp')
-
-GENERATED_FILES += [t]
-GENERATED_FILES[t].script = '/mobile/android/gradle.py:generate_generated_jni_wrappers'
+GeneratedFile(
+    'generated_jni_wrappers', 'GeneratedJNINatives.h', 'GeneratedJNIWrappers.h',
+    'GeneratedJNIWrappers.cpp', script='/mobile/android/gradle.py',
+    entry_point='generate_generated_jni_wrappers')
 
 FINAL_LIBRARY = 'xul'
 
