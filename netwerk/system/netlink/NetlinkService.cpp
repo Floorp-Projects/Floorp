@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <arpa/inet.h>
-#include <linux/if_ether.h>
+#include <netinet/ether.h>
 #include <net/if.h>
 #include <poll.h>
 #include <linux/rtnetlink.h>
@@ -215,7 +215,7 @@ class NetlinkLink {
   }
 
   void GetName(nsACString& _retval) const { _retval = mName; }
-
+  bool IsTypeEther() const { return mIface.ifi_type == ARPHRD_ETHER; }
   uint32_t GetIndex() const { return mIface.ifi_index; }
 
   bool Init(struct nlmsghdr* aNlh) {
@@ -1351,7 +1351,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
 
     for (uint32_t i = 0; i < linkNames.Length(); ++i) {
       LOG(("Hashing name of adapter: %s", linkNames[i].get()));
-      aSHA1->update(linkNames[i].BeginReading(), linkNames[i].Length());
+      aSHA1->update(linkNames[i].get(), linkNames[i].Length());
       retval = true;
     }
   }
@@ -1364,17 +1364,54 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     return retval;
   }
 
-  // Check whether we know next hop for mRouteCheckIPv4/6 host
+  if (!(*routeCheckResultPtr)->HasOif()) {
+    // This is strange, the route for our checked host doesn't have output
+    // interface.
+#ifdef NL_DEBUG_LOG
+    nsAutoCString routeDbgStr;
+    (*routeCheckResultPtr)->GetAsString(routeDbgStr);
+    LOG(("There is no output interface in route: %s", routeDbgStr.get()));
+#else
+    LOG(("There is no output interface in route"));
+#endif
+    return retval;
+  }
+
+  nsAutoCString routeCheckLinkName;
+  NetlinkLink* routeCheckLink = nullptr;
+  uint32_t routeCheckIfIdx = (*routeCheckResultPtr)->Oif();
+  if (!mLinks.Get(routeCheckIfIdx, &routeCheckLink)) {
+    LOG(("Cannot find link with index %u ??", routeCheckIfIdx));
+    return retval;
+  }
+  routeCheckLink->GetName(routeCheckLinkName);
   const in_common_addr* addrPtr = (*routeCheckResultPtr)->GetGWAddrPtr();
-  if (addrPtr && (*routeCheckResultPtr)->HasOif()) {
+
+  if (routeCheckLink->IsTypeEther()) {
+    // The traffic is routed through an ethernet device.
+
+    if (!addrPtr) {
+      // This shouldn't normally happen, missing next hop in case of ethernet
+      // device would mean that the checked host is on the same network.
+#ifdef NL_DEBUG_LOG
+      nsAutoCString routeDbgStr;
+      (*routeCheckResultPtr)->GetAsString(routeDbgStr);
+      LOG(("There is no next hop in route: %s", routeDbgStr.get()));
+#else
+      LOG(("There is no next hop in route through an ethernet device %s",
+           routeCheckLinkName.get()));
+#endif
+      return retval;
+    }
+
     // If we know MAC address of the next hop for mRouteCheckIPv4/6 host, hash
     // it even if it's MAC of some of the default routes we've checked above.
     // This ensures that if we have 2 different default routes and next hop for
     // mRouteCheckIPv4/6 changes from one default route to the other, we'll
     // detect it as a network change.
     nsAutoCString neighKey;
-    GetNeighborKey(addrPtr, (*routeCheckResultPtr)->Family(),
-                   (*routeCheckResultPtr)->Oif(), neighKey);
+    GetNeighborKey(addrPtr, (*routeCheckResultPtr)->Family(), routeCheckIfIdx,
+                   neighKey);
     LOG(("Next hop for the checked host is %s.", neighKey.get()));
 
     NetlinkNeighbor* neigh = nullptr;
@@ -1397,103 +1434,105 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
 #endif
     aSHA1->update(neigh->GetMACPtr(), ETH_ALEN);
     retval = true;
-  } else if ((*routeCheckResultPtr)->HasOif()) {
-    // The traffic is routed directly via an interface. It's likely VPN tun
-    // device. Probably the best we can do is to hash name of the interface
-    // (e.g. "tun1") and network address. Using host address would cause that
-    // network ID would be different every time the VPN give us a different IP
-    // address.
-    nsAutoCString linkName;
-    NetlinkLink* link = nullptr;
-    uint32_t ifIdx = (*routeCheckResultPtr)->Oif();
-    if (!mLinks.Get(ifIdx, &link)) {
-      LOG(("Cannot find link with index %u ??", ifIdx));
-      return retval;
-    }
-    link->GetName(linkName);
+  } else {
+    // The traffic is routed through a non-ethernet device.
+    if (addrPtr) {
+      // The route contains next hop. Hash the name of the interface (e.g.
+      // "tun1") and the IP address of the next hop.
 
-    bool hasSrcAddr = (*routeCheckResultPtr)->HasPrefSrcAddr();
-    if (!hasSrcAddr) {
-      LOG(("There is no preferred source address."));
-    }
+      nsAutoCString addrStr;
+      GetAddrStr(addrPtr, aFamily, addrStr);
+      size_t addrSize = (aFamily == AF_INET) ? sizeof(addrPtr->addr4)
+                                             : sizeof(addrPtr->addr6);
 
-    NetlinkAddress* linkAddress = nullptr;
-    // Find network address of the interface matching the source address. In
-    // theory there could be multiple addresses with different prefix length.
-    // Get the one with smallest prefix length.
-    for (uint32_t i = 0; i < mAddresses.Length(); ++i) {
-      if (mAddresses[i]->GetIndex() != ifIdx) {
-        continue;
-      }
+      LOG(("Hashing link name %s and GW address %s", routeCheckLinkName.get(),
+           addrStr.get()));
+      aSHA1->update(routeCheckLinkName.get(), routeCheckLinkName.Length());
+      aSHA1->update(addrPtr, addrSize);
+      retval = true;
+    } else {
+      // The traffic is routed directly via an interface. Hash the name of the
+      // interface and the network address. Using host address would cause that
+      // network ID would be different every time we get a different IP address
+      // in this network/VPN.
+
+      bool hasSrcAddr = (*routeCheckResultPtr)->HasPrefSrcAddr();
       if (!hasSrcAddr) {
-        // there is no preferred src, match just the family
-        if (mAddresses[i]->Family() != aFamily) {
+        LOG(("There is no preferred source address."));
+      }
+
+      NetlinkAddress* linkAddress = nullptr;
+      // Find network address of the interface matching the source address. In
+      // theory there could be multiple addresses with different prefix length.
+      // Get the one with smallest prefix length.
+      for (uint32_t i = 0; i < mAddresses.Length(); ++i) {
+        if (mAddresses[i]->GetIndex() != routeCheckIfIdx) {
           continue;
         }
-      } else if (!(*routeCheckResultPtr)->PrefSrcAddrEquals(mAddresses[i])) {
-        continue;
+        if (!hasSrcAddr) {
+          // there is no preferred src, match just the family
+          if (mAddresses[i]->Family() != aFamily) {
+            continue;
+          }
+        } else if (!(*routeCheckResultPtr)->PrefSrcAddrEquals(mAddresses[i])) {
+          continue;
+        }
+
+        if (!linkAddress ||
+            linkAddress->GetPrefixLen() > mAddresses[i]->GetPrefixLen()) {
+          // We have no address yet or this one has smaller prefix length,
+          // use it.
+          linkAddress = mAddresses[i];
+        }
       }
 
-      if (!linkAddress ||
-          linkAddress->GetPrefixLen() > mAddresses[i]->GetPrefixLen()) {
-        // We have no address yet or this one has smaller prefix length, use it.
-        linkAddress = mAddresses[i];
-      }
-    }
-
-    if (!linkAddress) {
-      // There is no address in our array?
-      nsAutoCString dbgStr;
+      if (!linkAddress) {
+        // There is no address in our array?
+        nsAutoCString dbgStr;
 #ifdef NL_DEBUG_LOG
-      (*routeCheckResultPtr)->GetAsString(dbgStr);
-      LOG(("No address found for preferred source address in route: %s",
-           dbgStr.get()));
+        (*routeCheckResultPtr)->GetAsString(dbgStr);
+        LOG(("No address found for preferred source address in route: %s",
+             dbgStr.get()));
 #else
-      GetAddrStr((*routeCheckResultPtr)->GetPrefSrcAddrPtr(), aFamily, dbgStr);
-      LOG(("No address found for preferred source address %s", dbgStr.get()));
+        GetAddrStr((*routeCheckResultPtr)->GetPrefSrcAddrPtr(), aFamily,
+                   dbgStr);
+        LOG(("No address found for preferred source address %s", dbgStr.get()));
 #endif
-      return retval;
-    }
-
-    in_common_addr prefix;
-    int32_t prefixSize = (aFamily == AF_INET) ? (int32_t)sizeof(prefix.addr4)
-                                              : (int32_t)sizeof(prefix.addr6);
-    memcpy(&prefix, linkAddress->GetAddrPtr(), prefixSize);
-    uint8_t maskit[] = {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe};
-    int32_t bits = linkAddress->GetPrefixLen();
-    if (bits > prefixSize * 8) {
-      MOZ_ASSERT(false, "Unexpected prefix length!");
-      LOG(("Unexpected prefix length %d, maximum for this family is %d", bits,
-           prefixSize * 8));
-      return retval;
-    }
-    for (int32_t i = 0; i < prefixSize; i++) {
-      uint8_t mask = (bits >= 8) ? 0xff : maskit[bits];
-      ((unsigned char*)&prefix)[i] &= mask;
-      bits -= 8;
-      if (bits <= 0) {
-        bits = 0;
+        return retval;
       }
-    }
 
-    nsAutoCString addrStr;
-    GetAddrStr(&prefix, aFamily, addrStr);
-    LOG(("Hashing link name %s and network address %s/%u", linkName.get(),
-         addrStr.get(), linkAddress->GetPrefixLen()));
-    aSHA1->update(linkName.BeginReading(), linkName.Length());
-    aSHA1->update(&prefix, prefixSize);
-    aSHA1->update(&bits, sizeof(bits));
-    retval = true;
-  } else {
-    // This is strange, there is neither next hop nor output interface.
-#ifdef NL_DEBUG_LOG
-    nsAutoCString routeDbgStr;
-    (*routeCheckResultPtr)->GetAsString(routeDbgStr);
-    LOG(("Neither GW address nor output interface found in route: %s",
-         routeDbgStr.get()));
-#else
-    LOG(("Neither GW address nor output interface found in route"));
-#endif
+      in_common_addr prefix;
+      int32_t prefixSize = (aFamily == AF_INET) ? (int32_t)sizeof(prefix.addr4)
+                                                : (int32_t)sizeof(prefix.addr6);
+      memcpy(&prefix, linkAddress->GetAddrPtr(), prefixSize);
+      uint8_t maskit[] = {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe};
+      int32_t bits = linkAddress->GetPrefixLen();
+      if (bits > prefixSize * 8) {
+        MOZ_ASSERT(false, "Unexpected prefix length!");
+        LOG(("Unexpected prefix length %d, maximum for this family is %d", bits,
+             prefixSize * 8));
+        return retval;
+      }
+      for (int32_t i = 0; i < prefixSize; i++) {
+        uint8_t mask = (bits >= 8) ? 0xff : maskit[bits];
+        ((unsigned char*)&prefix)[i] &= mask;
+        bits -= 8;
+        if (bits <= 0) {
+          bits = 0;
+        }
+      }
+
+      nsAutoCString addrStr;
+      GetAddrStr(&prefix, aFamily, addrStr);
+      LOG(("Hashing link name %s and network address %s/%u",
+           routeCheckLinkName.get(), addrStr.get(),
+           linkAddress->GetPrefixLen()));
+      aSHA1->update(routeCheckLinkName.get(), routeCheckLinkName.Length());
+      aSHA1->update(&prefix, prefixSize);
+      bits = linkAddress->GetPrefixLen();
+      aSHA1->update(&bits, sizeof(bits));
+      retval = true;
+    }
   }
 
   return retval;
