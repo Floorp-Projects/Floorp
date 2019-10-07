@@ -1833,14 +1833,6 @@ inline bool IsCacheableDOMProxy(JSObject* obj) {
 
 struct IonOsrTempData;
 
-// Write an arbitrary value to a typed array or typed object address at dest.
-// If the value could not be converted to the appropriate format, jump to
-// failure.
-template <typename T>
-void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
-                       const ValueOperand& value, const T& dest,
-                       Register scratch, Label* failure);
-
 extern MOZ_MUST_USE bool TypeMonitorResult(JSContext* cx,
                                            ICMonitoredFallbackStub* stub,
                                            BaselineFrame* frame,

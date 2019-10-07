@@ -11,7 +11,7 @@ export function getFramePopVariables(why: Why, path: string): NamedValue[] {
   const vars: Array<NamedValue> = [];
 
   if (why && why.frameFinished) {
-    const frameFinished = why.frameFinished;
+    const { frameFinished } = why;
 
     // Always display a `throw` property if present, even if it is falsy.
     if (Object.prototype.hasOwnProperty.call(frameFinished, "throw")) {

@@ -218,6 +218,8 @@ extern const uint32_t ArgLengths[];
   _(GuardIsNumber, Id)                                                         \
   _(GuardToInt32, Id, Id)                                                      \
   _(GuardToInt32Index, Id, Id)                                                 \
+  _(GuardToInt32ModUint32, Id, Id)                                             \
+  _(GuardToUint8Clamped, Id, Id)                                               \
   _(GuardType, Id, Byte)                                                       \
   _(GuardShape, Id, Field)                                                     \
   _(GuardGroup, Id, Field)                                                     \
@@ -292,7 +294,7 @@ extern const uint32_t ArgLengths[];
   _(StoreDenseElementHole, Id, Id, Id, Byte)                                   \
   _(ArrayPush, Id, Id)                                                         \
   _(ArrayJoinResult, Id)                                                       \
-  _(StoreTypedElement, Id, Id, Id, Byte, Byte, Byte)                           \
+  _(StoreTypedElement, Id, Byte, Byte, Id, Id, Byte)                           \
   _(CallNativeSetter, Id, Id, Field)                                           \
   _(CallScriptedSetter, Id, Field, Id, Byte)                                   \
   _(CallSetArrayLength, Id, Byte, Id)                                          \
@@ -850,6 +852,20 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
 
+  Int32OperandId guardToInt32ModUint32(ValOperandId val) {
+    Int32OperandId res(nextOperandId_++);
+    writeOpWithOperandId(CacheOp::GuardToInt32ModUint32, val);
+    writeOperandId(res);
+    return res;
+  }
+
+  Int32OperandId guardToUint8Clamped(ValOperandId val) {
+    Int32OperandId res(nextOperandId_++);
+    writeOpWithOperandId(CacheOp::GuardToUint8Clamped, val);
+    writeOperandId(res);
+    return res;
+  }
+
   NumberOperandId guardIsNumber(ValOperandId val) {
     writeOpWithOperandId(CacheOp::GuardIsNumber, val);
     return NumberOperandId(val.id());
@@ -1319,7 +1335,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset,
                                       TypedThingLayout layout,
-                                      Scalar::Type type, ValOperandId rhs) {
+                                      Scalar::Type type, OperandId rhs) {
     writeOpWithOperandId(CacheOp::StoreTypedObjectScalarProperty, obj);
     addStubField(offset, StubField::Type::RawWord);
     buffer_.writeByte(uint32_t(layout));
@@ -1334,14 +1350,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
   }
 
-  void storeTypedElement(ObjOperandId obj, Int32OperandId index,
-                         ValOperandId rhs, TypedThingLayout layout,
-                         Scalar::Type elementType, bool handleOOB) {
+  void storeTypedElement(ObjOperandId obj, TypedThingLayout layout,
+                         Scalar::Type elementType, Int32OperandId index,
+                         OperandId rhs, bool handleOOB) {
     writeOpWithOperandId(CacheOp::StoreTypedElement, obj);
-    writeOperandId(index);
-    writeOperandId(rhs);
     buffer_.writeByte(uint32_t(layout));
     buffer_.writeByte(uint32_t(elementType));
+    writeOperandId(index);
+    writeOperandId(rhs);
     buffer_.writeByte(uint32_t(handleOOB));
   }
 

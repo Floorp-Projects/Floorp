@@ -458,3 +458,52 @@ add_task(async function test_dependentEnginesDisabledLocally() {
     await promiseStopServer(server);
   }
 });
+
+add_task(async function test_service_updateLocalEnginesState() {
+  Service.syncID = "abcdefghij";
+  const engine = Service.engineManager.get("steam");
+  const metaWBO = new ServerWBO("global", {
+    syncID: Service.syncID,
+    storageVersion: STORAGE_VERSION,
+    declined: ["steam"],
+    engines: {},
+  });
+  const server = httpd_setup({
+    "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
+  });
+  await SyncTestingInfrastructure(server, "johndoe");
+
+  // Disconnect sync.
+  await Service.startOver();
+  Service._ignorePrefObserver = true;
+  // Steam engine is enabled on our machine.
+  engine.enabled = true;
+  Service._ignorePrefObserver = false;
+  Service.identity._findCluster = () => server.baseURI + "/1.1/johndoe/";
+
+  // Update engine state from the server.
+  await Service.updateLocalEnginesState();
+  // Now disabled.
+  Assert.ok(!engine.enabled);
+});
+
+add_task(async function test_service_updateLocalEnginesState_no_meta_global() {
+  Service.syncID = "abcdefghij";
+  const engine = Service.engineManager.get("steam");
+  // The server doesn't contain /meta/global (sync was never enabled).
+  const server = httpd_setup({});
+  await SyncTestingInfrastructure(server, "johndoe");
+
+  // Disconnect sync.
+  await Service.startOver();
+  Service._ignorePrefObserver = true;
+  // Steam engine is enabled on our machine.
+  engine.enabled = true;
+  Service._ignorePrefObserver = false;
+  Service.identity._findCluster = () => server.baseURI + "/1.1/johndoe/";
+
+  // Update engine state from the server.
+  await Service.updateLocalEnginesState();
+  // Still enabled.
+  Assert.ok(engine.enabled);
+});

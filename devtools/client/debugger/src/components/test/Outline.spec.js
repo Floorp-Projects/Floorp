@@ -27,9 +27,7 @@ function generateDefaults(overrides) {
     flashLineRange: jest.fn(),
     isHidden: false,
     symbols: {},
-    selectedLocation: {
-      sourceId: sourceId,
-    },
+    selectedLocation: { sourceId },
     onAlphabetizeClick: jest.fn(),
     ...overrides,
   };
@@ -147,7 +145,7 @@ describe("Outline", () => {
       };
 
       const { component } = render({
-        symbols: symbols,
+        symbols,
         alphabetizeOutline: true,
       });
       expect(component).toMatchSnapshot();
@@ -181,7 +179,7 @@ describe("Outline", () => {
         ],
       };
 
-      const { component } = render({ symbols: symbols });
+      const { component } = render({ symbols });
       expect(component).toMatchSnapshot();
     });
 
@@ -199,7 +197,7 @@ describe("Outline", () => {
       };
 
       const { component } = render({
-        symbols: symbols,
+        symbols,
         alphabetizeOutline: true,
       });
       expect(component).toMatchSnapshot();
@@ -211,13 +209,13 @@ describe("Outline", () => {
         classes: [makeSymbolDeclaration("x_klass", 24, 27)],
       };
 
-      const { component, props } = render({ symbols: symbols });
+      const { component, props } = render({ symbols });
 
       await component.find("h2").simulate("click", {});
 
       expect(props.selectLocation).toHaveBeenCalledWith(mockcx, {
         line: 24,
-        sourceId: sourceId,
+        sourceId,
       });
     });
 
@@ -296,7 +294,7 @@ describe("Outline", () => {
       expect(copyToTheClipboard).toHaveBeenCalledWith(mockFunctionText);
       expect(props.flashLineRange).toHaveBeenCalledWith({
         end: endLine,
-        sourceId: sourceId,
+        sourceId,
         start: startLine,
       });
     });

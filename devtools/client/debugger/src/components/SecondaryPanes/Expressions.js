@@ -156,7 +156,7 @@ class Expressions extends Component<Props, State> {
   }
 
   handleChange = (e: SyntheticInputEvent<HTMLInputElement>) => {
-    const target = e.target;
+    const { target } = e;
     if (features.autocompleteExpression) {
       this.findAutocompleteMatches(target.value, target.selectionStart);
     }

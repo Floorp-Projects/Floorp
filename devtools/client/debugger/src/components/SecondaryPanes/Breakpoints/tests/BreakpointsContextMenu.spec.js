@@ -33,7 +33,7 @@ function generateDefaults(disabled) {
     {
       ...makeMockBreakpoint(source, 1),
       id: "https://example.com/main.js:1:",
-      disabled: disabled,
+      disabled,
       options: {
         condition: "",
         logValue: "",
@@ -43,7 +43,7 @@ function generateDefaults(disabled) {
     {
       ...makeMockBreakpoint(source, 2),
       id: "https://example.com/main.js:2:",
-      disabled: disabled,
+      disabled,
       options: {
         hidden: false,
       },
@@ -51,7 +51,7 @@ function generateDefaults(disabled) {
     {
       ...makeMockBreakpoint(source, 3),
       id: "https://example.com/main.js:3:",
-      disabled: disabled,
+      disabled,
     },
   ];
 

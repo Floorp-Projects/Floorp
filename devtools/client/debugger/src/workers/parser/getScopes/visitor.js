@@ -839,7 +839,7 @@ const scopeCollectionVisitor = {
       scope && scope !== parentScope;
       scope = scope.parent
     ) {
-      const freeVariables = state.freeVariables;
+      const { freeVariables } = state;
       state.freeVariables = state.freeVariableStack.pop();
       const parentFreeVariables = state.freeVariables;
 

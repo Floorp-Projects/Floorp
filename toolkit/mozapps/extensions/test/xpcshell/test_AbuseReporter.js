@@ -325,7 +325,9 @@ add_task(async function test_report_create_and_submit() {
   };
 
   info("Submitting report");
-  await report.submit(reportProperties);
+  report.setMessage(reportProperties.message);
+  report.setReason(reportProperties.reason);
+  await report.submit();
 
   const expectedEntries = Object.entries({
     report_entry_point: reportEntryPoint,
@@ -382,11 +384,10 @@ add_task(async function test_error_recent_submit() {
   );
 
   // Submit the two reports in fast sequence.
-  await report.submit({ reason: "reason1" });
-  await assertRejectsAbuseReportError(
-    report2.submit({ reason: "reason2" }),
-    "ERROR_RECENT_SUBMIT"
-  );
+  report.setReason("reason1");
+  report2.setReason("reason2");
+  await report.submit();
+  await assertRejectsAbuseReportError(report2.submit(), "ERROR_RECENT_SUBMIT");
   equal(
     reportSubmitted.reason,
     "reason1",
@@ -443,7 +444,8 @@ add_task(async function test_submission_server_error() {
       ADDON_ID,
       REPORT_OPTIONS
     );
-    const promiseSubmit = report.submit({ reason: "a-reason" });
+    report.setReason("a-reason");
+    const promiseSubmit = report.submit();
     if (typeof expectedErrorType === "string") {
       // Assert a specific AbuseReportError errorType.
       await assertRejectsAbuseReportError(
@@ -565,7 +567,8 @@ add_task(async function test_submission_aborting() {
     ADDON_ID,
     REPORT_OPTIONS
   );
-  const promiseResult = report.submit({ reason: "a-reason" });
+  report.setReason("a-reason");
+  const promiseResult = report.submit();
 
   await onRequestReceived;
 
@@ -624,7 +627,9 @@ add_task(async function test_truncated_string_properties() {
     REPORT_OPTIONS
   );
 
-  await report.submit({ message: "fake-message", reason: "fake-reason" });
+  report.setMessage("fake-message");
+  report.setReason("fake-reason");
+  await report.submit();
 
   const expected = {
     addon_name: generateString(255),
@@ -686,7 +691,9 @@ add_task(async function test_report_recommended() {
       addonId,
       REPORT_OPTIONS
     );
-    await report.submit({ message: "fake-message", reason: "fake-reason" });
+    report.setMessage("fake-message");
+    report.setReason("fake-reason");
+    await report.submit();
     equal(
       reportSubmitted.addon_signature,
       expectedAddonSignature,

@@ -239,7 +239,7 @@ const mapStateToProps = (state, { source }) => {
   return {
     cx: getContext(state),
     tabSources: getSourcesForTabs(state),
-    selectedSource: selectedSource,
+    selectedSource,
     activeSearch: getActiveSearch(state),
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
   };

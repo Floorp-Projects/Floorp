@@ -1597,8 +1597,8 @@ Search.prototype = {
       keyword
     ).trim();
 
-    let url = null,
-      postData = null;
+    let url = null;
+    let postData = null;
     try {
       [url, postData] = await BrowserUtils.parseUrlAndPostData(
         entry.url.href,
@@ -1621,18 +1621,21 @@ Search.prototype = {
         postData,
       });
     }
-    // The title will end up being "host: queryString"
-    let comment = entry.url.host;
 
-    this._addMatch({
+    let match = {
       value,
-      comment,
       // Don't use the url with replaced strings, since the icon doesn't change
       // but the string does, it may cause pointless icon flicker on typing.
       icon: iconHelper(entry.url),
       style,
       frecency: Infinity,
-    });
+    };
+    // If there is a query string, the title will be "host: queryString".
+    if (this._searchTokens.length > 1) {
+      match.comment = entry.url.host;
+    }
+
+    this._addMatch(match);
     if (!this._keywordSubstitute) {
       this._keywordSubstitute = entry.url.host;
     }

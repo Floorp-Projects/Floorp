@@ -11,6 +11,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 Cu.importGlobalProperties(["fetch"]);
 
 const PREF_ABUSE_REPORT_URL = "extensions.abuseReport.url";
+const PREF_ABUSE_REPORT_OPEN_DIALOG = "extensions.abuseReport.openDialog";
 
 // Maximum length of the string properties sent to the API endpoint.
 const MAX_STRING_LENGTH = 255;
@@ -30,6 +31,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "ABUSE_REPORT_URL",
   PREF_ABUSE_REPORT_URL
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SHOULD_OPEN_DIALOG",
+  PREF_ABUSE_REPORT_OPEN_DIALOG,
+  false
 );
 
 const PRIVATE_REPORT_PROPS = Symbol("privateReportProps");
@@ -201,6 +209,128 @@ const AbuseReporter = {
 
     return data;
   },
+
+  /**
+   * Helper function that opens an abuse report form in a new dialog window.
+   *
+   * @param {string} addonId
+   *        The addonId being reported.
+   * @param {string} reportEntryPoint
+   *        The entry point from which the user has triggered the abuse report
+   *        flow.
+   * @param {XULElement} browser
+   *        The browser element (if any) that is opening the report window.
+   *
+   * @return {Promise<AbuseReportDialog>}
+   *         Returns an AbuseReportDialog object, rejects if it fails to open
+   *         the dialog.
+   *
+   * @typedef {object}                        AbuseReportDialog
+   *          An object that represents the abuse report dialog.
+   * @prop    {function}                      close
+   *          A method that closes the report dialog (used by the caller
+   *          to close the dialog when the user chooses to close the window
+   *          that started the abuse report flow).
+   * @prop    {Promise<AbuseReport|undefined} promiseReport
+   *          A promise resolved to an AbuseReport instance if the report should
+   *          be submitted, or undefined if the user has cancelled the report.
+   *          Rejects if it fails to create an AbuseReport instance or to open
+   *          the abuse report window.
+   */
+  async openDialog(addonId, reportEntryPoint, browser) {
+    const chromeWin = browser && browser.ownerGlobal;
+    if (!chromeWin) {
+      throw new Error("Abuse Reporter dialog cancelled, opener tab closed");
+    }
+
+    const windowName = "addons-abuse-report-dialog";
+    const dialogWin = Services.ww.getWindowByName(windowName, null);
+
+    if (dialogWin) {
+      // If an abuse report dialog is already open, cancel the
+      // previous report flow and start a new one.
+      const {
+        deferredReport,
+        promiseReport,
+      } = dialogWin.arguments[0].wrappedJSObject;
+      deferredReport.resolve({ userCancelled: true });
+      await promiseReport;
+    }
+
+    const report = await AbuseReporter.createAbuseReport(addonId, {
+      reportEntryPoint,
+    });
+    const params = Cc["@mozilla.org/array;1"].createInstance(
+      Ci.nsIMutableArray
+    );
+
+    const dialogInit = {
+      report,
+      openWebLink(url) {
+        chromeWin.openWebLinkIn(url, "tab", {
+          relatedToCurrent: true,
+        });
+      },
+    };
+
+    params.appendElement(dialogInit);
+
+    let win;
+    function closeDialog() {
+      if (win && !win.closed) {
+        win.close();
+      }
+    }
+
+    const promiseReport = new Promise((resolve, reject) => {
+      dialogInit.deferredReport = { resolve, reject };
+    }).then(
+      ({ userCancelled }) => {
+        closeDialog();
+        return userCancelled ? undefined : report;
+      },
+      err => {
+        Cu.reportError(
+          `Unexpected abuse report panel error: ${err} :: ${err.stack}`
+        );
+        closeDialog();
+        return Promise.reject({
+          message: "Unexpected abuse report panel error",
+        });
+      }
+    );
+
+    const promiseReportPanel = new Promise((resolve, reject) => {
+      dialogInit.deferredReportPanel = { resolve, reject };
+    });
+
+    dialogInit.promiseReport = promiseReport;
+    dialogInit.promiseReportPanel = promiseReportPanel;
+
+    win = Services.ww.openWindow(
+      chromeWin,
+      "chrome://mozapps/content/extensions/abuse-report-frame.html",
+      windowName,
+      // Set the dialog window options (including a reasonable initial
+      // window height size, eventually adjusted by the panel once it
+      // has been rendered its content).
+      "dialog,centerscreen,alwaysOnTop,height=700",
+      params
+    );
+
+    return {
+      close: closeDialog,
+      promiseReport,
+
+      // Properties used in tests
+      promiseReportPanel,
+      window: win,
+    };
+  },
+
+  get openDialogDisabled() {
+    return !SHOULD_OPEN_DIALOG;
+  },
 };
 
 /**
@@ -234,6 +364,10 @@ class AbuseReport {
       addon,
       reportData,
       reportEntryPoint,
+      // message and reason are initially null, and then set by the panel
+      // using the related set method.
+      message: null,
+      reason: null,
     };
   }
 
@@ -250,21 +384,20 @@ class AbuseReport {
   /**
    * Submit the current report, given a reason and a message.
    *
-   * @params {object} options
-   * @params {string} options.reason
-   *         String identifier for the report reason.
-   * @params {string} [options.message]
-   *         An optional string which contains a description for the reported issue.
-   *
    * @returns {Promise<void>}
    *          Resolves once the report has been successfully submitted.
    *          It rejects with an AbuseReportError if the report couldn't be
    *          submitted for a known reason (or another Error type otherwise).
    */
-  async submit({ reason, message }) {
-    const { aborted, abortController, reportData, reportEntryPoint } = this[
-      PRIVATE_REPORT_PROPS
-    ];
+  async submit() {
+    const {
+      aborted,
+      abortController,
+      message,
+      reason,
+      reportData,
+      reportEntryPoint,
+    } = this[PRIVATE_REPORT_PROPS];
 
     // Record telemetry event and throw an AbuseReportError.
     const rejectReportError = async (errorType, { response } = {}) => {
@@ -358,5 +491,25 @@ class AbuseReport {
 
   get reportEntryPoint() {
     return this[PRIVATE_REPORT_PROPS].reportEntryPoint;
+  }
+
+  /**
+   * Set the open message (called from the panel when the user submit the report)
+   *
+   * @parm {string} message
+   *         An optional string which contains a description for the reported issue.
+   */
+  setMessage(message) {
+    this[PRIVATE_REPORT_PROPS].message = message;
+  }
+
+  /**
+   * Set the report reason (called from the panel when the user submit the report)
+   *
+   * @parm {string} reason
+   *       String identifier for the report reason.
+   */
+  setReason(reason) {
+    this[PRIVATE_REPORT_PROPS].reason = reason;
   }
 }

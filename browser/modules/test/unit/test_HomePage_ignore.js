@@ -44,7 +44,7 @@ add_task(async function test_initWithIgnoredPageCausesReset() {
   );
   Assert.ok(HomePage.overridden, "Should have overriden the homepage");
 
-  await HomePage.init();
+  await HomePage.delayedStartup();
 
   Assert.ok(
     !HomePage.overridden,
