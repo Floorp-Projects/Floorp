@@ -580,10 +580,17 @@ IPDL_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-  GeneratedFile('CompositorD3D11Shaders.h', script='d3d11/genshaders.py',
-                inputs=['d3d11/shaders.manifest'])
-  GeneratedFile('MLGShaders.h', script='d3d11/genshaders.py',
-                inputs=['d3d11/mlgshaders/shaders.manifest'])
+  GENERATED_FILES = [
+      'CompositorD3D11Shaders.h',
+      'MLGShaders.h',
+  ]
+
+  d3d11_shaders = GENERATED_FILES['CompositorD3D11Shaders.h']
+  d3d11_shaders.script = 'd3d11/genshaders.py'
+  d3d11_shaders.inputs = ['d3d11/shaders.manifest']
+  mlg_shaders = GENERATED_FILES['MLGShaders.h']
+  mlg_shaders.script = 'd3d11/genshaders.py'
+  mlg_shaders.inputs = ['d3d11/mlgshaders/shaders.manifest']
 
 LOCAL_INCLUDES += [
     '/docshell/base',  # for nsDocShell.h
