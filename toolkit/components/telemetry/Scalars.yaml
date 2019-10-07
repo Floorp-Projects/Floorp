@@ -622,6 +622,22 @@ security:
       - 'geckoview'
     record_in_processes:
       - main
+  tls_delegated_credentials_txn:
+    bug_numbers:
+      - 1564179
+    description: >-
+      Count of how many transactions used delegated credentials (ietf-draft-tls-subcerts)
+    expires: "80"
+    kind: uint
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - kjacobs@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+      - 'geckoview'
+    record_in_processes:
+      - main
 
 pwmgr:
   potentially_breached_passwords:

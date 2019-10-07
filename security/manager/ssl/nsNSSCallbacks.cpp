@@ -709,6 +709,11 @@ static void PreliminaryHandshakeDone(PRFileDesc* fd) {
       infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
       infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
       infoObject->mIsDelegatedCredential = channelInfo.peerDelegCred;
+
+      if (infoObject->mIsDelegatedCredential) {
+        Telemetry::ScalarAdd(
+            Telemetry::ScalarID::SECURITY_TLS_DELEGATED_CREDENTIALS_TXN, 1);
+      }
     }
   }
 
