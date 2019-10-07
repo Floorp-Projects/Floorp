@@ -1046,6 +1046,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *
    * aSelectionTarget - target to check for selection
    * aDataTransfer - data transfer object that will contain the data to drag
+   * aAllowEmptyDataTransfer - [out] set to true, if dnd operation can be
+   *                           started even if DataTransfer is empty
    * aSelection - [out] set to the selection to be dragged
    * aTargetNode - [out] the draggable node, or null if there isn't one
    * aPrincipal - [out] set to the triggering principal of the drag, or null
@@ -1053,7 +1055,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    */
   void DetermineDragTargetAndDefaultData(
       nsPIDOMWindowOuter* aWindow, nsIContent* aSelectionTarget,
-      dom::DataTransfer* aDataTransfer, dom::Selection** aSelection,
+      dom::DataTransfer* aDataTransfer, bool* aAllowEmptyDataTransfer,
+      dom::Selection** aSelection,
       dom::RemoteDragStartData** aRemoteDragStartData, nsIContent** aTargetNode,
       nsIPrincipal** aPrincipal, nsIContentSecurityPolicy** aCsp);
 
@@ -1064,6 +1067,8 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    *
    * aDragEvent - the dragstart event
    * aDataTransfer - the data transfer that holds the data to be dragged
+   * aAllowEmptyDataTransfer - if true, dnd can be started even if there is no
+   *                           data to drag
    * aDragTarget - the target of the drag
    * aSelection - the selection to be dragged
    * aData - information pertaining to a drag started in a child process
@@ -1074,6 +1079,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   bool DoDefaultDragStart(nsPresContext* aPresContext,
                           WidgetDragEvent* aDragEvent,
                           dom::DataTransfer* aDataTransfer,
+                          bool aAllowEmptyDataTransfer,
                           nsIContent* aDragTarget, dom::Selection* aSelection,
                           dom::RemoteDragStartData* aDragStartData,
                           nsIPrincipal* aPrincipal,
