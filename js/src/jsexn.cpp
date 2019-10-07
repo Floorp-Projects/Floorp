@@ -742,7 +742,7 @@ static JSString* ErrorReportToString(JSContext* cx, JSErrorReport* reportp) {
    * message without prefixing it with anything.
    */
   if (str) {
-    RootedString separator(cx, JS_NewUCStringCopyN(cx, u": ", 2));
+    RootedString separator(cx, JS_NewStringCopyN(cx, ": ", 2));
     if (!separator) {
       return nullptr;
     }
@@ -765,9 +765,9 @@ static JSString* ErrorReportToString(JSContext* cx, JSErrorReport* reportp) {
 }
 
 ErrorReport::ErrorReport(JSContext* cx)
-    : reportp(nullptr), str(cx), strChars(cx), exnObject(cx) {}
+    : reportp(nullptr), exnObject(cx) {}
 
-ErrorReport::~ErrorReport() {}
+ErrorReport::~ErrorReport() = default;
 
 bool ErrorReport::init(JSContext* cx, HandleValue exn,
                        SniffingBehavior sniffingBehavior) {
@@ -784,6 +784,7 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
   // Be careful not to invoke ToString if we've already successfully extracted
   // an error report, since the exception might be wrapped in a security
   // wrapper, and ToString-ing it might throw.
+  RootedString str(cx);
   if (reportp) {
     str = ErrorReportToString(cx, reportp);
   } else if (exn.isSymbol()) {
@@ -897,11 +898,8 @@ bool ErrorReport::init(JSContext* cx, HandleValue exn,
       // historically done for duck-typed error objects.
       //
       // If only this stuff could get specced one day...
-      char* utf8;
-      if (str->ensureFlat(cx) && strChars.initTwoByte(cx, str) &&
-          (utf8 =
-               JS::CharsToNewUTF8CharsZ(cx, strChars.twoByteRange()).c_str())) {
-        ownedReport.initOwnedMessage(utf8);
+      if (auto utf8 = JS_EncodeStringToUTF8(cx, str)) {
+        ownedReport.initOwnedMessage(utf8.release());
       } else {
         cx->clearPendingException();
         str = nullptr;
