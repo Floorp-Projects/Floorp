@@ -1226,10 +1226,7 @@ bool AsyncCompositionManager::ApplyAsyncContentTransformToTree(
               !layer->GetParent()->GetIsFixedPosition() &&
               IsFixedToZoomContainer(layer)) {
             LayerToParentLayerMatrix4x4 emptyTransform;
-            ScreenMargin marginsForFixedLayer;
-#ifdef MOZ_WIDGET_ANDROID
-            marginsForFixedLayer = GetFixedLayerMargins();
-#endif
+            ScreenMargin marginsForFixedLayer = GetFixedLayerMargins();
             AdjustFixedOrStickyLayer(zoomContainer, layer,
                                      sampler->GetGuid(*zoomedMetrics).mScrollId,
                                      emptyTransform, emptyTransform,
@@ -1473,7 +1470,6 @@ bool AsyncCompositionManager::TransformShadowTree(
   return wantNextFrame;
 }
 
-#if defined(MOZ_WIDGET_ANDROID)
 void AsyncCompositionManager::SetFixedLayerMargins(ScreenIntCoord aTop,
                                                    ScreenIntCoord aBottom) {
   mFixedLayerMargins.top = aTop;
@@ -1487,7 +1483,6 @@ ScreenMargin AsyncCompositionManager::GetFixedLayerMargins() const {
   }
   return result;
 }
-#endif  // defined(MOZ_WIDGET_ANDROID)
 
 }  // namespace layers
 }  // namespace mozilla
