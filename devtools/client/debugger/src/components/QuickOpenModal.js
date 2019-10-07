@@ -83,7 +83,7 @@ function filter(values, query) {
 
   return fuzzyAldrin.filter(values, query, {
     key: "value",
-    maxResults: maxResults,
+    maxResults,
     preparedQuery,
   });
 }

@@ -115,7 +115,7 @@ export function toSourceLine(sourceId: string, line: number): ?number {
 
 export function scrollToColumn(codeMirror: any, line: number, column: number) {
   const { top, left } = codeMirror.charCoords(
-    { line: line, ch: column },
+    { line, ch: column },
     "local"
   );
 
@@ -268,7 +268,7 @@ export function getCursorColumn(codeMirror: Object): number {
 
 export function getTokenEnd(codeMirror: Object, line: number, column: number) {
   const token = codeMirror.getTokenAt({
-    line: line,
+    line,
     ch: column + 1,
   });
   const tokenString = token.string;

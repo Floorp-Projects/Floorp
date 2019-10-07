@@ -29,7 +29,7 @@ describe("file text search", () => {
       count: 2,
       index: 2,
       matchIndex: 1,
-      matches: matches,
+      matches,
     });
   });
 
