@@ -9,6 +9,7 @@
 const PR_RDWR = 0x04;
 const PR_CREATE_FILE = 0x08;
 const PR_TRUNCATE = 0x20;
+const PR_USEC_PER_MSEC = 1000;
 
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
@@ -81,7 +82,7 @@ function tamper(inFilePath, outFilePath, modifications, newEntries) {
         sis.setData(newEntry.content, newEntry.content.length);
         writer.addEntryStream(
           newEntry.name,
-          new Date(),
+          new Date() * PR_USEC_PER_MSEC,
           Ci.nsIZipWriter.COMPRESSION_BEST,
           sis,
           false

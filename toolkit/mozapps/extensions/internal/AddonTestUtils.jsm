@@ -1156,10 +1156,11 @@ var AddonTestUtils = {
 
       let stream = ArrayBufferInputStream(data, 0, data.byteLength);
 
-      // Note these files are being created in the XPI archive with date "0" which is 1970-01-01.
+      // Note these files are being created in the XPI archive with date
+      // 1 << 49, which is a valid time for ZipWriter.
       zipW.addEntryStream(
         path,
-        0,
+        Math.pow(2, 49),
         Ci.nsIZipWriter.COMPRESSION_NONE,
         stream,
         false
