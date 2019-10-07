@@ -48,7 +48,7 @@ export function willNavigate(event: Object) {
 export function connect(
   url: string,
   actor: string,
-  traits: Object,
+  canRewind: boolean,
   isWebExtension: boolean
 ) {
   return async function({ dispatch }: ThunkArgs) {
@@ -62,7 +62,7 @@ export function connect(
           type: "mainThread",
           name: L10N.getStr("mainThread"),
         },
-        traits,
+        canRewind,
         isWebExtension,
       }: Action)
     );

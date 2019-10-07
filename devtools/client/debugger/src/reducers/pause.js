@@ -91,6 +91,7 @@ type ThreadPauseState = {
 export type PauseState = {
   cx: Context,
   threadcx: ThreadContext,
+  canRewind: boolean,
   threads: { [ThreadId]: ThreadPauseState },
   skipPausing: boolean,
   mapScopes: boolean,
@@ -112,6 +113,7 @@ function createPauseState(thread: ThreadId = "UnknownThread") {
     },
     previewLocation: null,
     threads: {},
+    canRewind: false,
     skipPausing: prefs.skipPausing,
     mapScopes: prefs.mapScopes,
     shouldPauseOnExceptions: prefs.pauseOnExceptions,
@@ -134,6 +136,7 @@ const resumedPauseState = {
 const createInitialPauseState = () => ({
   ...resumedPauseState,
   isWaitingOnBreak: false,
+  canRewind: false,
   command: null,
   lastCommand: null,
   previousLocation: null,
@@ -276,6 +279,7 @@ function update(
     case "CONNECT":
       return {
         ...createPauseState(action.mainThread.actor),
+        canRewind: action.canRewind,
       };
 
     case "PAUSE_ON_EXCEPTIONS": {
@@ -479,6 +483,10 @@ export function getShouldPauseOnExceptions(state: State) {
 
 export function getShouldPauseOnCaughtExceptions(state: State) {
   return state.pause.shouldPauseOnCaughtExceptions;
+}
+
+export function getCanRewind(state: State) {
+  return state.pause.canRewind;
 }
 
 export function getFrames(state: State, thread: ThreadId) {
