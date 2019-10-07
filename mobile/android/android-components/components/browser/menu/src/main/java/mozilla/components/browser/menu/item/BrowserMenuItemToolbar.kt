@@ -37,23 +37,20 @@ class BrowserMenuItemToolbar(
             val button = AppCompatImageButton(layout.context)
             item.bind(button)
 
+            button.setFocusable(true)
             button.setBackgroundResource(selectableBackground)
             button.setOnClickListener {
-                item.listener.invoke()
+                item.listener()
                 menu.dismiss()
             }
 
-            layout.addView(
-                button,
-                LinearLayout.LayoutParams(0, iconHeight, 1f)
-            )
+            layout.addView(button, LinearLayout.LayoutParams(0, iconHeight, 1f))
         }
     }
 
     override fun invalidate(view: View) {
         val layout = view as LinearLayout
-        items.withIndex().forEach {
-            val (index, item) = it
+        items.withIndex().forEach { (index, item) ->
             item.invalidate(layout.getChildAt(index) as AppCompatImageButton)
         }
     }
@@ -138,9 +135,5 @@ class BrowserMenuItemToolbar(
                 bind(view)
             }
         }
-    }
-
-    companion object {
-        private const val ICON_HEIGHT_DP = 24
     }
 }

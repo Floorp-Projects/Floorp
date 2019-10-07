@@ -9,20 +9,23 @@
         android:layout_width="match_parent"
         android:orientation="horizontal"
         android:clickable="true"
+        android:focusable="true"
         android:gravity="center_vertical"
-        android:focusable="true">
+        tools:ignore="UseCompoundDrawables">
 
     <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/image"
             style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
             android:clickable="false"
             android:background="@android:color/transparent"
+            android:importantForAccessibility="no"
             tools:src="@android:drawable/screen_background_dark"/>
 
     <TextView
             android:id="@+id/text"
             style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
             android:clickable="false"
+            android:focusable="false"
             android:background="@android:color/transparent"
             android:gravity="center_vertical"
             tools:text="Item"

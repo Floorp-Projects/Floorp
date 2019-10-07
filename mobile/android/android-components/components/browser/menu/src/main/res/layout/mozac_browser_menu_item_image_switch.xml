@@ -15,6 +15,7 @@
         style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
         android:background="@android:color/transparent"
         android:clickable="false"
+        android:importantForAccessibility="no"
         tools:src="@android:drawable/screen_background_dark" />
 
     <Switch

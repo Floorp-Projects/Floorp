@@ -9,22 +9,25 @@
     android:layout_width="match_parent"
     android:orientation="horizontal"
     android:clickable="true"
-    android:gravity="center_vertical"
-    android:focusable="true">
+    android:focusable="true"
+    android:gravity="center_vertical">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/image"
         style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
         android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
         android:background="@android:color/transparent"
         tools:src="@android:drawable/screen_background_dark"/>
 
     <TextView
         android:id="@+id/text"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
         android:clickable="false"
+        android:focusable="false"
         android:background="@android:color/transparent"
         android:gravity="center_vertical"
         tools:text="Item"
@@ -32,10 +35,12 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/end_image"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
         android:layout_alignParentEnd="true"
         android:layout_gravity="center_vertical"
-        style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
         android:clickable="false"
+        android:focusable="false"
+        android:importantForAccessibility="no"
         android:background="@android:color/transparent"
         tools:src="@android:drawable/screen_background_dark"/>
 </RelativeLayout>
