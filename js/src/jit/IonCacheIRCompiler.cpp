@@ -1622,7 +1622,7 @@ bool IonCacheIRCompiler::emitStoreTypedObjectScalarProperty() {
   LoadTypedThingData(masm, layout, obj, scratch1);
   Address dest(scratch1, offset);
 
-  StoreToTypedArray(cx_, masm, type, val, dest, scratch2, failure->label());
+  StoreToTypedObject(cx_, masm, type, val, dest, scratch2, failure->label());
   return true;
 }
 

@@ -2249,10 +2249,9 @@ bool FallbackICCodeCompiler::emit_SetElem() {
   return tailCallVM<Fn, DoSetElemFallback>(masm);
 }
 
-template <typename T>
-void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
-                       const ValueOperand& value, const T& dest,
-                       Register scratch, Label* failure) {
+void StoreToTypedObject(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
+                        const ValueOperand& value, const Address& dest,
+                        Register scratch, Label* failure) {
   Label done;
 
   if (type == Scalar::Float32 || type == Scalar::Float64) {
@@ -2306,16 +2305,6 @@ void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
 
   masm.bind(&done);
 }
-
-template void StoreToTypedArray(JSContext* cx, MacroAssembler& masm,
-                                Scalar::Type type, const ValueOperand& value,
-                                const Address& dest, Register scratch,
-                                Label* failure);
-
-template void StoreToTypedArray(JSContext* cx, MacroAssembler& masm,
-                                Scalar::Type type, const ValueOperand& value,
-                                const BaseIndex& dest, Register scratch,
-                                Label* failure);
 
 //
 // In_Fallback
