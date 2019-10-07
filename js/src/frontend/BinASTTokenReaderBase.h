@@ -106,7 +106,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
    */
   TokenPos pos();
   TokenPos pos(size_t startOffset);
-  size_t offset() const;
+  size_t offset() const { return current_ - start_; }
 
   // Set the tokenizer's cursor in the file. Use with caution.
   void seek(size_t offset);
