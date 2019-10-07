@@ -2099,7 +2099,8 @@ impl CPPExporter {
     AutoTaggedTuple guard(*tokenizer_);
     const auto start = tokenizer_->offset();
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
 
 {call}
 
@@ -2239,7 +2240,8 @@ impl CPPExporter {
 
     const auto start = tokenizer_->offset();
     const auto childContext = ListContext(context.position, BinASTList::{content_kind});
-    MOZ_TRY(tokenizer_->enterList(length, childContext, guard));{empty_check}
+    guard.init();
+    MOZ_TRY(tokenizer_->enterList(length, childContext));{empty_check}
 {init}
 
     for (uint32_t i = 0; i < length; ++i) {{
@@ -2329,7 +2331,8 @@ impl CPPExporter {
     BinASTKind kind;
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -2385,7 +2388,8 @@ impl CPPExporter {
     BinASTKind kind;
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -2541,7 +2545,8 @@ impl CPPExporter {
     BinASTKind kind;
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
+    guard.init();
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
     if (MOZ_UNLIKELY(kind != BinASTKind::{kind})) {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
