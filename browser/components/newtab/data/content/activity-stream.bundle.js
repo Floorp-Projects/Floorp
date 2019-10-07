@@ -2851,7 +2851,8 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureCompone
       innerClassName: innerClassName,
       onClose: this.closeModal,
       id: "trailheadDialog",
-      headerId: "trailheadHeader"
+      headerId: "trailheadHeader",
+      hasDismissIcon: true
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "trailheadInner"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
@@ -2998,7 +2999,9 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
   constructor(props) {
     super(props);
     this.onKeyDown = this.onKeyDown.bind(this);
-  }
+  } // The intended behaviour is to listen for an escape key
+  // but not for a click; see Bug 1582242
+
 
   onKeyDown(event) {
     if (event.key === "Escape") {
@@ -3039,7 +3042,6 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
 
     return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "modalOverlayOuter active",
-      onClick: props.onClose,
       onKeyDown: this.onKeyDown,
       role: "presentation"
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -3047,7 +3049,11 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
       "aria-labelledby": props.headerId,
       id: props.id,
       role: "dialog"
-    }, props.children));
+    }, props.hasDismissIcon && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+      className: "icon icon-dismiss",
+      onClick: props.onClose,
+      "data-l10n-id": "onboarding-cards-dismiss"
+    }), props.children));
   }
 
 }
