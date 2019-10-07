@@ -433,7 +433,7 @@ addEventListener("load", function() {
   // anchor is set by the test runner above
   panel = document.getElementById("testPanel");
 
-  arrow = SpecialPowers.wrap(document).getAnonymousElementByAttribute(panel, "anonid", "arrow");
+  arrow = panel.shadowRoot.querySelector(".panel-arrow");
   runTests();
 });
 

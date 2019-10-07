@@ -231,7 +231,6 @@ menupopup {
 }
 
 panel {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#panel");
   -moz-box-orient: vertical;
 }
 
@@ -247,10 +246,6 @@ tooltip {
   -moz-box-orient: vertical;
   white-space: pre-wrap;
   margin-top: 21px;
-}
-
-panel[type="arrow"] {
-  -moz-binding: url("chrome://global/content/bindings/popup.xml#arrowpanel");
 }
 
 @supports -moz-bool-pref("xul.panel-animations.enabled") {

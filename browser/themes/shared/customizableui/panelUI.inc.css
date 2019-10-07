@@ -255,11 +255,11 @@ panelview {
   font-size: 1.1rem;
 }
 
-#confirmation-hint > .panel-arrowcontainer > .panel-arrowcontent {
+#confirmation-hint::part(arrowcontent) {
   -moz-box-align: center;
 }
 
-#confirmation-hint[hidearrow] > .panel-arrowcontainer > .panel-arrowbox {
+#confirmation-hint[hidearrow]::part(arrowbox) {
   /* Don't display the arrow but keep the popup at the same vertical
      offset as other arrow panels. */
   visibility: hidden;
@@ -372,8 +372,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   min-width: calc(@menuPanelWidth@ + 32px);
 }
 
-.cui-widget-panel.cui-widget-panelWithFooter::part(arrowcontent),
-.cui-widget-panel.cui-widget-panelWithFooter > .panel-arrowcontainer > .panel-arrowcontent {
+.cui-widget-panel.cui-widget-panelWithFooter::part(arrowcontent) {
   padding-bottom: 0;
 }
 
