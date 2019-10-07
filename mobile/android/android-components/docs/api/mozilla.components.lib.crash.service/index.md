@@ -11,9 +11,3 @@
 | [MozillaSocorroService](-mozilla-socorro-service/index.md) | `class MozillaSocorroService : `[`CrashReporterService`](-crash-reporter-service/index.md)<br>A [CrashReporterService](-crash-reporter-service/index.md) implementation uploading crash reports to crash-stats.mozilla.com. |
 | [SendCrashReportService](-send-crash-report-service/index.md) | `class SendCrashReportService` |
 | [SentryService](-sentry-service/index.md) | `class SentryService : `[`CrashReporterService`](-crash-reporter-service/index.md)<br>A [CrashReporterService](-crash-reporter-service/index.md) implementation that uploads crash reports to a Sentry server. |
-
-### Type Aliases
-
-| Name | Summary |
-|---|---|
-| [GeckoCrashReporter](-gecko-crash-reporter.md) | `typealias GeckoCrashReporter = `[`CrashReporter`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/CrashReporter.html) |
