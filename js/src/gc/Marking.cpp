@@ -3477,6 +3477,9 @@ bool SweepingTracer::onLazyScriptEdge(LazyScript** lazyp) {
 bool SweepingTracer::onBaseShapeEdge(BaseShape** basep) {
   return sweepEdge(basep);
 }
+bool SweepingTracer::onJitCodeEdge(jit::JitCode** jitp) {
+  return sweepEdge(jitp);
+}
 bool SweepingTracer::onScopeEdge(Scope** scopep) { return sweepEdge(scopep); }
 bool SweepingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
   return sweepEdge(sharedp);
