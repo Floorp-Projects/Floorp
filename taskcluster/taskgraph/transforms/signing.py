@@ -176,12 +176,20 @@ def make_task_description(config, jobs):
         }
 
         if 'macosx' in build_platform:
-            assert worker_type_alias.startswith("linux-"), \
+            worker_type_alias_map = {
+                'scriptworker-k8s/gecko-t-signing': 'mac-depsigning',
+                'scriptworker-k8s/gecko-3-signing': 'mac-signing',
+                'scriptworker-k8s/gecko-t-signing-dev': 'mac-depsigning',
+                'scriptworker-k8s/gecko-3-signing-dev': 'mac-signing',
+            }
+
+            assert worker_type_alias in worker_type_alias_map, \
                 (
                     "Make sure to adjust the below worker_type_alias logic for "
                     "mac if you change the signing workerType aliases!"
+                    " ({} not found in mapping)".format(worker_type_alias)
                 )
-            worker_type_alias = worker_type_alias.replace("linux-", "mac-")
+            worker_type_alias = worker_type_alias_map[worker_type_alias]
             mac_behavior = evaluate_keyed_by(
                 config.graph_config['mac-notarization']['mac-behavior'],
                 'mac behavior',

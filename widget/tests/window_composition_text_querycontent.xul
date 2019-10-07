@@ -100,6 +100,8 @@ var iframe2 = document.getElementById("iframe2");
 var iframe3 = document.getElementById("iframe3");
 var contenteditable;
 var windowOfContenteditable;
+var contenteditableBySpan;
+var windowOfContenteditableBySpan;
 var input = document.getElementById("input");
 var password = document.getElementById("password");
 var textareaInFrame;
@@ -5190,8 +5192,6 @@ function runBug1530649Test()
 
 function runBug1571375Test()
 {
-  let contenteditableBySpan = document.getElementById("iframe7").contentDocument.getElementById("contenteditable");
-  let windowOfContenteditableBySpan = document.getElementById("iframe7").contentWindow;
   let selection = windowOfContenteditableBySpan.getSelection();
   let doc = document.getElementById("iframe7").contentDocument;
 
@@ -5241,6 +5241,31 @@ function runBug1571375Test()
   synthesizeComposition({type: "compositioncommit", data: "world", key: " "});
   is(contenteditableBySpan.innerHTML, "hello world<div>.</div>",
      "runBug1571375Test: space must not be removed by commit");
+}
+
+async function runBug1584901Test()
+{
+  contenteditableBySpan.focus();
+  contenteditableBySpan.innerHTML = "";
+
+  // XXX synthesizeCompositionChange won't work without wait.
+  await waitForTick();
+
+  synthesizeCompositionChange({
+    composition: {string: "a ", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+  });
+  synthesizeComposition({type: "compositioncommitasis", key: " "});
+
+  is(contenteditableBySpan.innerHTML, "a&nbsp;",
+     "runBug1584901Test: space must not be removed by composition change");
+
+  synthesizeCompositionChange({
+    composition: {string: "b ", clauses: [{length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+  });
+  synthesizeComposition({type: "compositioncommitasis", key: " "});
+
+  is(contenteditableBySpan.innerHTML, "a b&nbsp;",
+     "runBug1584901Test: space must not be removed by composition change");
 }
 
 function runCSSTransformTest()
@@ -9168,12 +9193,16 @@ async function runTest()
   windowOfContenteditable = document.getElementById("iframe4").contentWindow;
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
 
+  contenteditableBySpan = document.getElementById("iframe7").contentDocument.getElementById("contenteditable");
+  windowOfContenteditableBySpan = document.getElementById("iframe7").contentWindow;
+
   await runIMEContentObserverTest();
   await runEditorReframeTests();
   await runAsyncForceCommitTest();
   await runRemoveContentTest();
   await runPanelTest();
   await runPasswordMaskDelayTest();
+  await runBug1584901Test();
 
   runUndoRedoTest();
   runCompositionCommitAsIsTest();

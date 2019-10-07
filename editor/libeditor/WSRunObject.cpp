@@ -362,7 +362,12 @@ nsresult WSRunObject::InsertText(Document& aDocument,
           theString.SetCharAt(kNBSP, lastCharIndex);
         }
       }
-    } else if (mEndReason & WSType::block) {
+    } else if (afterRunObject.mEndReason & WSType::block) {
+      // When afterRun is null, it means that mScanEndPoint is last point in
+      // editing host or editing block.
+      // If this text insertion replaces composition, this.mEndReason is
+      // start position of compositon. So we have to use afterRunObject's
+      // reason instead.
       theString.SetCharAt(kNBSP, lastCharIndex);
     }
   }

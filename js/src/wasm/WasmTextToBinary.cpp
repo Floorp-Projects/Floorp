@@ -4452,18 +4452,6 @@ static AstTypeDef* ParseTypeDef(WasmParseContext& c) {
   return type;
 }
 
-static bool MaybeParseOwnerIndex(WasmParseContext& c) {
-  if (c.ts.peek().kind() == WasmToken::Index) {
-    WasmToken elemIndex = c.ts.get();
-    if (elemIndex.index()) {
-      c.ts.generateError(elemIndex, "can't handle non-default memory/table yet",
-                         c.error);
-      return false;
-    }
-  }
-  return true;
-}
-
 static AstExpr* ParseInitializerConstExpression(WasmParseContext& c) {
   bool need_rparen = false;
 
@@ -4489,7 +4477,12 @@ static AstExpr* ParseInitializerExpression(WasmParseContext& c) {
     return nullptr;
   }
 
-  AstExpr* initExpr = ParseExprInsideParens(c);
+  AstExpr* initExpr;
+  if (c.ts.getIf(WasmToken::Offset)) {
+    initExpr = ParseInitializerConstExpression(c);
+  } else {
+    initExpr = ParseExprInsideParens(c);
+  }
   if (!initExpr) {
     return nullptr;
   }
@@ -4502,16 +4495,30 @@ static AstExpr* ParseInitializerExpression(WasmParseContext& c) {
 }
 
 static AstDataSegment* ParseDataSegment(WasmParseContext& c) {
-  if (!MaybeParseOwnerIndex(c)) {
+  // The syntax is effectively this:
+  //   (data [[<mem-index>] <offset>] <string-list>)
+  //
+  // The segment is passive if and only if <mem-index> and <offset> are both
+  // absent.
+
+  WasmToken elemIndex;
+  bool haveMemIndex = c.ts.getIf(WasmToken::Index, &elemIndex);
+  if (haveMemIndex && elemIndex.index()) {
+    c.ts.generateError(elemIndex, "can't handle non-default memory", c.error);
     return nullptr;
   }
 
   AstExpr* offsetIfActive = nullptr;
-  if (!c.ts.getIf(WasmToken::Passive)) {
+  if (c.ts.peek().kind() == WasmToken::OpenParen) {
     offsetIfActive = ParseInitializerExpression(c);
     if (!offsetIfActive) {
       return nullptr;
     }
+  } else if (haveMemIndex) {
+    c.ts.generateError(c.ts.peek(),
+                       "data segment with memory index must have offset",
+                       c.error);
+    return nullptr;
   }
 
   AstNameVector fragments(c.lifo);
@@ -4529,7 +4536,7 @@ static AstDataSegment* ParseDataSegment(WasmParseContext& c) {
 static bool ParseDataCount(WasmParseContext& c, AstModule* module) {
   WasmToken token;
   if (!c.ts.getIf(WasmToken::Index, &token)) {
-    c.ts.generateError(token, "Literal data segment count required", c.error);
+    c.ts.generateError(token, "literal data segment count required", c.error);
     return false;
   }
 
@@ -5046,55 +5053,141 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
   return segment && module->append(segment);
 }
 
-static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
-  // (elem table-name init-expr (fnref|ref.null)...)
-  // (elem init-expr (fnref|ref.null)...)
-  // (elem passive (fnref|ref.null)...)
-  // (elem declared fnref...)
-
-  AstRef targetTable = AstRef(0);
-  bool hasTableName = c.ts.getIfRef(&targetTable);
-
-  AstElemSegmentKind kind;
-  AstExpr* offsetIfActive = nullptr;
-
-  if (c.ts.getIf(WasmToken::Passive)) {
-    kind = AstElemSegmentKind::Passive;
-  } else if (c.ts.getIf(WasmToken::Declared)) {
-    kind = AstElemSegmentKind::Declared;
-  } else {
-    kind = AstElemSegmentKind::Active;
-    offsetIfActive = ParseInitializerExpression(c);
-    if (!offsetIfActive) {
-      return nullptr;
-    }
+static bool TryParseFuncOrFuncRef(WasmParseContext& c, bool* isFunc) {
+  if (c.ts.getIf(WasmToken::Func)) {
+    *isFunc = true;
+    return true;
   }
 
-  if (hasTableName && kind != AstElemSegmentKind::Active) {
-    c.ts.generateError(c.ts.peek(),
-                       "passive or declared segment must not have a table",
-                       c.error);
-    return nullptr;
+  WasmToken token = c.ts.peek();
+  if (token.kind() == WasmToken::ValueType &&
+      token.valueType() == ValType::FuncRef) {
+    c.ts.get();
+    *isFunc = false;
+    return true;
+  }
+
+  return false;
+}
+
+static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
+  // Syntax from bulk memory proposal.
+  // <init-expr> is any <expr> or (offset <const>).
+  // <table-use> is (table <n>) or just <n> (an extension).
+  // <fnref> is a naked function reference (index or name)
+  //
+  // Active initializer for table 0 which must be table-of-functions, this is
+  // sugar:
+  //   (elem <init-expr> <fnref> ...)
+  //
+  // Active initializer for a given table of functions:
+  //   (elem <table-use> <init-expr> func <fnref> ...)
+  //
+  // Active initializer for a given table of functions, allowing null.  Note the
+  // parens are required also around ref.null:
+  //   (elem <table-use> <init-expr> funcref
+  //         "(" (ref.func <fnref>|ref.null) ")" ...)
+  //
+  // Passive initializers:
+  //   (elem func <fnref> ...)
+  //   (elem funcref "(" (ref.func <fnref>|ref.null) ")" ...)
+  //
+  // Forward declaration for ref.func uses:
+  //   (elem declared <fnref> ...)
+
+  AstRef targetTable = AstRef(0);
+  AstExpr* offsetIfActive = nullptr;
+  bool haveTableref = false;
+  AstElemSegmentKind kind;
+
+  if (c.ts.peek().kind() == WasmToken::OpenParen) {
+    WasmToken lparen = c.ts.get();
+    if (c.ts.getIf(WasmToken::Table)) {
+      if (!c.ts.matchRef(&targetTable, c.error)) {
+        return nullptr;
+      }
+      if (!c.ts.match(WasmToken::CloseParen, c.error)) {
+        return nullptr;
+      }
+      haveTableref = true;
+    } else {
+      c.ts.unget(lparen);
+    }
+  } else if (c.ts.getIfRef(&targetTable)) {
+    haveTableref = true;
+  }
+
+  // The order of clauses matters because ParseInitializerExpression changes the
+  // state of the token stream, we can't recover after that fails.
+
+  bool nakedFnrefs = false;
+  if (haveTableref) {
+    if ((offsetIfActive = ParseInitializerExpression(c)) == nullptr) {
+      c.ts.generateError(
+          c.ts.peek(),
+          "elem segment with table reference must have offset expression",
+          c.error);
+      return nullptr;
+    }
+    if (!TryParseFuncOrFuncRef(c, &nakedFnrefs)) {
+      c.ts.generateError(c.ts.peek(),
+                         "'func' or 'funcref' required for elem segment",
+                         c.error);
+      return nullptr;
+    }
+    kind = AstElemSegmentKind::Active;
+  } else if (c.ts.getIf(WasmToken::Declared)) {
+    kind = AstElemSegmentKind::Declared;
+    nakedFnrefs = true;
+  } else if (TryParseFuncOrFuncRef(c, &nakedFnrefs)) {
+    // 'func' or 'funcref' for a passive segment.
+    kind = AstElemSegmentKind::Passive;
+  } else {
+    if ((offsetIfActive = ParseInitializerExpression(c)) == nullptr) {
+      c.ts.generateError(c.ts.peek(),
+                         "elem segment for table 0 must have offset expression",
+                         c.error);
+      return nullptr;
+    }
+    // Implicit table 0 with implicit naked fnrefs
+    nakedFnrefs = true;
+    kind = AstElemSegmentKind::Active;
   }
 
   AstElemVector elems(c.lifo);
 
-  for (;;) {
+  if (nakedFnrefs) {
     AstRef elemRef;
-    if (c.ts.getIfRef(&elemRef)) {
+    while (c.ts.getIfRef(&elemRef)) {
       if (!elems.append(AstElem(elemRef))) {
         return nullptr;
       }
-      continue;
     }
-    if (kind != AstElemSegmentKind::Declared &&
-        c.ts.getIf(WasmToken::RefNull)) {
-      if (!elems.append(AstElem(AstNullValue()))) {
+  } else {
+    AstRef elemRef;
+    WasmToken openParen;
+    while (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+      if (c.ts.getIf(WasmToken::RefFunc)) {
+        if (!c.ts.matchRef(&elemRef, c.error)) {
+          return nullptr;
+        }
+        if (!elems.append(AstElem(elemRef))) {
+          return nullptr;
+        }
+      } else if (c.ts.getIf(WasmToken::RefNull)) {
+        if (!elems.append(AstElem(AstNullValue()))) {
+          return nullptr;
+        }
+      } else {
+        c.ts.generateError(c.ts.peek(),
+                           "ref.func or ref.null required in element segment",
+                           c.error);
         return nullptr;
       }
-      continue;
+      if (!c.ts.match(WasmToken::CloseParen, c.error)) {
+        return nullptr;
+      }
     }
-    break;
   }
 
   return new (c.lifo)
@@ -7225,7 +7318,7 @@ static bool EncodeDataInitializerKind(Encoder& e, uint32_t index,
     // be zero.  In the bulk-mem-ops proposal, it is repurposed as a flag
     // field, and if the index is not zero it must be present.
     if (index) {
-      if (!e.writeVarU32(uint32_t(DataSegmentKind::ActiveWithIndex)) ||
+      if (!e.writeVarU32(uint32_t(DataSegmentKind::ActiveWithMemoryIndex)) ||
           !e.writeVarU32(index)) {
         return false;
       }
@@ -7336,8 +7429,9 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
   ElemSegmentKind kind;
   switch (segment.kind()) {
     case AstElemSegmentKind::Active: {
-      kind = segment.targetTable().index() ? ElemSegmentKind::ActiveWithIndex
-                                           : ElemSegmentKind::Active;
+      kind = segment.targetTable().index()
+                 ? ElemSegmentKind::ActiveWithTableIndex
+                 : ElemSegmentKind::Active;
       break;
     }
     case AstElemSegmentKind::Passive: {
@@ -7352,20 +7446,20 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
   ElemSegmentPayload payload = hasRefNull ? ElemSegmentPayload::ElemExpression
                                           : ElemSegmentPayload::ExternIndex;
 
-  // Write the flags field
+  // Write the flags field.
   if (!e.writeVarU32(ElemSegmentFlags(kind, payload).encoded())) {
     return false;
   }
 
-  // Write the table index if it is not zero
-  if (kind == ElemSegmentKind::ActiveWithIndex &&
+  // Write the table index.
+  if (kind == ElemSegmentKind::ActiveWithTableIndex &&
       !e.writeVarU32(segment.targetTable().index())) {
     return false;
   }
 
+  // Write the offset expression.
   if (kind == ElemSegmentKind::Active ||
-      kind == ElemSegmentKind::ActiveWithIndex) {
-    // Write the offset expression
+      kind == ElemSegmentKind::ActiveWithTableIndex) {
     if (!EncodeExpr(e, *segment.offsetIfActive())) {
       return false;
     }
@@ -7374,10 +7468,11 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
     }
   }
 
+  // Write the type or definition kind.
+  //
   // An active element segment without explicit index uses the original MVP
-  // encoding, which doesn't include an explicit type or definition kind
+  // encoding, which doesn't include an explicit type or definition kind.
   if (kind != ElemSegmentKind::Active) {
-    // Write the type or definition kind
     if (payload == ElemSegmentPayload::ElemExpression &&
         !e.writeFixedU8(uint8_t(TypeCode::FuncRef))) {
       return false;
@@ -7388,10 +7483,12 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
     }
   }
 
+  // Write the number of elements.
   if (!e.writeVarU32(segment.elems().length())) {
     return false;
   }
 
+  // Write the elements.
   for (const AstElem& elem : segment.elems()) {
     if (elem.is<AstRef>()) {
       const AstRef& ref = elem.as<AstRef>();

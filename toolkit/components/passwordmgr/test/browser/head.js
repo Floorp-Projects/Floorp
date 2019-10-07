@@ -510,12 +510,17 @@ async function openACPopup(popup, browser, inputSelector) {
 async function openPasswordContextMenu(
   browser,
   passwordInput,
-  assertCallback = null
+  assertCallback = null,
+  browsingContext = null
 ) {
   const doc = browser.ownerDocument;
   const CONTEXT_MENU = doc.getElementById("contentAreaContextMenu");
   const POPUP_HEADER = doc.getElementById("fill-login");
   const LOGIN_POPUP = doc.getElementById("fill-login-popup");
+
+  if (!browsingContext) {
+    browsingContext = browser.browsingContext;
+  }
 
   let contextMenuShownPromise = BrowserTestUtils.waitForEvent(
     CONTEXT_MENU,
@@ -529,14 +534,14 @@ async function openPasswordContextMenu(
   await BrowserTestUtils.synthesizeMouseAtCenter(
     passwordInput,
     eventDetails,
-    browser
+    browsingContext
   );
   // Synthesize a contextmenu event to actually open the context menu.
   eventDetails = { type: "contextmenu", button: 2 };
   await BrowserTestUtils.synthesizeMouseAtCenter(
     passwordInput,
     eventDetails,
-    browser
+    browsingContext
   );
 
   await contextMenuShownPromise;

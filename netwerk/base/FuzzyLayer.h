@@ -16,6 +16,13 @@ namespace net {
 
 nsresult AttachFuzzyIOLayer(PRFileDesc* fd);
 
+extern Atomic<bool> gFuzzingConnClosed;
+bool signalNetworkFuzzingDone();
+
+void addNetworkFuzzingBuffer(const uint8_t* data, size_t size,
+                             bool readFirst = false,
+                             bool useIsOptional = false);
+
 }  // namespace net
 }  // namespace mozilla
 
