@@ -1117,10 +1117,10 @@ impl CPPExporter {
             return "const FieldContext& context".to_string();
         }
         if context.is_field_and_list() {
-            return "const Context& context".to_string();
+            return "const FieldOrListContext& context".to_string();
         }
         if context.is_field_and_root() {
-            return "const Context& context".to_string();
+            return "const FieldOrRootContext& context".to_string();
         }
 
         panic!("unexpected context");
@@ -1217,7 +1217,11 @@ impl CPPExporter {
         assert!(sum_context.is_single());
         assert!(arm_context.is_valid_double());
 
-        return format!("Context({})", context);
+        if arm_context.is_field_and_root() {
+            return format!("FieldOrRootContext({})", context);
+        }
+
+        return format!("FieldOrListContext({})", context);
     }
 
     fn get_context_param_for_optional(&self, optional: &NodeName,
@@ -1242,7 +1246,11 @@ impl CPPExporter {
         assert!(optional_context.is_single());
         assert!(body_context.is_valid_double());
 
-        return format!("Context({})", context);
+        if body_context.is_field_and_root() {
+            return format!("FieldOrRootContext({})", context);
+        }
+
+        return format!("FieldOrListContext({})", context);
     }
 
     fn get_context_param_for_list(&self, element: &NodeName,
@@ -1260,7 +1268,7 @@ impl CPPExporter {
 
         assert!(element_context.is_field_and_list());
 
-        return format!("Context({})", context);
+        return format!("FieldOrListContext({})", context);
     }
 
     fn get_context_param_for_field(&self, field: &NodeName,
@@ -1278,7 +1286,11 @@ impl CPPExporter {
 
         assert!(field_context.is_valid_double());
 
-        return format!("Context({})", context);
+        if field_context.is_field_and_root() {
+            return format!("FieldOrRootContext({})", context);
+        }
+
+        return format!("FieldOrListContext({})", context);
     }
 
     fn get_method_call(&self, var_name: &str, name: &NodeName,

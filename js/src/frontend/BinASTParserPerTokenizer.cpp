@@ -197,7 +197,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
 
   // Inject a toplevel context (i.e. no parent) to parse the lazy content.
   // In the future, we may move this to a more specific context.
-  const auto context = Context(RootContext());
+  const auto context = FieldOrRootContext(RootContext());
   MOZ_TRY(
       (asFinalParser()->*parseFunc)(func->nargs(), &params, &tmpBody, context));
 
