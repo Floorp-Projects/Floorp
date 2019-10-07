@@ -773,9 +773,10 @@ add_task(async function test_abusereport_submit() {
 
   const expectedDetail = {
     addonId: extension.id,
-    reason: abuseReportEl.reason,
-    message: abuseReportEl.message,
   };
+
+  const expectedReason = abuseReportEl.reason;
+  const expectedMessage = abuseReportEl.message;
 
   let reportSubmitted;
   const onReportSubmitted = new Promise(resolve => {
@@ -802,8 +803,6 @@ add_task(async function test_abusereport_submit() {
 
   const actualDetail = {
     addonId: submitEvent.detail.addonId,
-    reason: submitEvent.detail.reason,
-    message: submitEvent.detail.message,
   };
   Assert.deepEqual(
     actualDetail,
@@ -838,12 +837,12 @@ add_task(async function test_abusereport_submit() {
   );
   is(
     reportSubmitted.reason,
-    expectedDetail.reason,
+    expectedReason,
     "Got the expected reason in the submitted report"
   );
   is(
     reportSubmitted.message,
-    expectedDetail.message,
+    expectedMessage,
     "Got the expected message in the submitted report"
   );
   is(

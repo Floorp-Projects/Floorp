@@ -11,6 +11,10 @@
  * helpers used for the Abuse Reporting submission (and related message bars).
  */
 
+const { AbuseReporter } = ChromeUtils.import(
+  "resource://gre/modules/AbuseReporter.jsm"
+);
+
 // Message Bars definitions.
 const ABUSE_REPORT_MESSAGE_BARS = {
   // Idle message-bar (used while the submission is still ongoing).
@@ -73,13 +77,65 @@ const ABUSE_REPORT_MESSAGE_BARS = {
   },
 };
 
-function openAbuseReport({ addonId, reportEntryPoint }) {
-  document.dispatchEvent(
-    new CustomEvent("abuse-report:new", {
-      detail: { addonId, reportEntryPoint },
-    })
-  );
+async function openAbuseReport({ addonId, reportEntryPoint }) {
+  if (AbuseReporter.openDialogDisabled) {
+    document.dispatchEvent(
+      new CustomEvent("abuse-report:new", {
+        detail: { addonId, reportEntryPoint },
+      })
+    );
+    return;
+  }
+
+  try {
+    const reportDialog = await AbuseReporter.openDialog(
+      addonId,
+      reportEntryPoint,
+      window.docShell.chromeEventHandler
+    );
+
+    // Warn the user before the about:addons tab while an
+    // abuse report dialog is still open, and close the
+    // report dialog if the user choose to close the related
+    // about:addons tab.
+    const beforeunloadListener = evt => evt.preventDefault();
+    const unloadListener = () => reportDialog.close();
+    const clearUnloadListeners = () => {
+      window.removeEventListener("beforeunload", beforeunloadListener);
+      window.removeEventListener("unload", unloadListener);
+    };
+    window.addEventListener("beforeunload", beforeunloadListener);
+    window.addEventListener("unload", unloadListener);
+
+    reportDialog.promiseReport
+      .then(
+        report => {
+          if (report) {
+            submitReport({ report });
+          }
+        },
+        err => {
+          Cu.reportError(
+            `Unexpected abuse report panel error: ${err} :: ${err.stack}`
+          );
+          reportDialog.close();
+        }
+      )
+      .then(clearUnloadListeners);
+  } catch (err) {
+    document.dispatchEvent(
+      new CustomEvent("abuse-report:create-error", {
+        detail: {
+          addonId,
+          addon: err.addon,
+          errorType: err.errorType,
+        },
+      })
+    );
+  }
 }
+
+window.openAbuseReport = openAbuseReport;
 
 // Helper function used to create abuse report message bars in the
 // HTML about:addons page.
@@ -143,11 +199,19 @@ function createReportMessageBar(
   return messagebar;
 }
 
-async function submitReport({ report, reason, message }) {
+async function submitReport({ report }) {
   const { addon } = report;
   const addonId = addon.id;
   const addonName = addon.name;
   const addonType = addon.type;
+
+  // Ensure that the tab that originated the report dialog is selected
+  // when the user is submitting the report.
+  const { gBrowser } = window.windowRoot.ownerGlobal;
+  if (gBrowser && gBrowser.getTabForBrowser) {
+    let tab = gBrowser.getTabForBrowser(window.docShell.chromeEventHandler);
+    gBrowser.selectedTab = tab;
+  }
 
   // Create a message bar while we are still submitting the report.
   const mbSubmitting = createReportMessageBar(
@@ -164,7 +228,7 @@ async function submitReport({ report, reason, message }) {
   );
 
   try {
-    await report.submit({ reason, message });
+    await report.submit();
     mbSubmitting.remove();
 
     // Create a submitted message bar when the submission has been
@@ -227,7 +291,7 @@ async function submitReport({ report, reason, message }) {
           mbError.remove();
           switch (action) {
             case "retry":
-              submitReport({ report, reason, message });
+              submitReport({ report });
               break;
             case "cancel":
               report.abort();
