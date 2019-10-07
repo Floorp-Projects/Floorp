@@ -981,6 +981,8 @@ void nsWindow::ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) {
 }
 
 void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
+  LOG(("nsWindow::SetSizeConstraints [%p]\n", (void*)this));
+
   mSizeConstraints.mMinSize = GetSafeWindowSize(aConstraints.mMinSize);
   mSizeConstraints.mMaxSize = GetSafeWindowSize(aConstraints.mMaxSize);
 
@@ -995,6 +997,11 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
     geometry.max_height =
         DevicePixelsToGdkCoordRoundDown(mSizeConstraints.mMaxSize.height);
 
+    LOG(("    min width %d min height %d\n", geometry.min_width,
+         geometry.min_height));
+    LOG(("    max width %d max height %d\n", geometry.max_width,
+         geometry.max_height));
+
     uint32_t hints = 0;
     if (aConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
       hints |= GDK_HINT_MIN_SIZE;
@@ -1004,6 +1011,7 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
     }
 
     if (mAspectRatio != 0.0f) {
+      LOG(("    aspect %f\n", mAspectRatio));
       geometry.min_aspect = mAspectRatio;
       geometry.max_aspect = mAspectRatio;
       hints |= GDK_HINT_ASPECT;
@@ -7327,8 +7335,9 @@ GtkTextDirection nsWindow::GetTextDirection() {
 
 void nsWindow::LockAspectRatio(bool aShouldLock) {
   if (aShouldLock) {
-    float width = (float)mBounds.Width();
-    float height = (float)mBounds.Height();
+    gint scale = GdkScaleFactor();
+    float width = (float)mBounds.Width() / scale;
+    float height = (float)mBounds.Height() / scale;
 
     if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
       GtkBorder decorationSize;
