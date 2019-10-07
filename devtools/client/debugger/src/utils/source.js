@@ -84,8 +84,7 @@ export function isJavaScript(source: Source, content: SourceContent): boolean {
  * @static
  */
 export function isPretty(source: Source): boolean {
-  const url = source.url;
-  return isPrettyURL(url);
+  return isPrettyURL(source.url);
 }
 
 export function isPrettyURL(url: string): boolean {
@@ -398,8 +397,7 @@ export function getTextAtPosition(
   asyncContent: AsyncValue<SourceContent> | null,
   location: SourceLocation
 ) {
-  const column = location.column || 0;
-  const line = location.line;
+  const { column, line = 0 } = location;
 
   const lineText = getLineText(sourceId, asyncContent, line);
   return lineText.slice(column, column + 100).trim();

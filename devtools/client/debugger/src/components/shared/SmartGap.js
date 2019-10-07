@@ -125,7 +125,7 @@ export default function SmartGap({
   const tokenRect = token.getBoundingClientRect();
   // $FlowIgnore
   const previewRect = preview.getBoundingClientRect();
-  const orientation = coords.orientation;
+  const { orientation } = coords;
   let optionalMarginLeft, optionalMarginTop;
 
   if (orientation === "down") {
@@ -156,8 +156,8 @@ export default function SmartGap({
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
       style={{
-        height: height,
-        width: width,
+        height,
+        width,
         position: "absolute",
         marginLeft: optionalMarginLeft,
         marginTop: optionalMarginTop,
