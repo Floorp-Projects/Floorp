@@ -87,7 +87,7 @@ SimpleTest.waitForExplicitFinish();
 addEventListener("load", function() {
   anchor = document.getElementById("anchor");
   panel = document.getElementById("testPanel");
-  arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
+  arrow = panel.shadowRoot.querySelector(".panel-arrow");
 
   // Cancel the arrow panel slide-in transition (bug 767133) - we are only
   // testing reflows in the core panel implementation and not reflows that may

@@ -321,18 +321,6 @@
       }
     }
 
-    /**
-     * Passes DOM events to the on_<event type> methods.
-     */
-    handleEvent(event) {
-      let methodName = "on_" + event.type;
-      if (methodName in this) {
-        this[methodName](event);
-      } else {
-        throw new Error("Unrecognized event: " + event.type);
-      }
-    }
-
     on_mousedown(event) {
       if (event.button != 0 || this.disabled) {
         return;

@@ -5,12 +5,8 @@
 
 async function testPanel(browser, standAlone, initial_background) {
   let panel = getPanelForNode(browser);
-  let arrowContent = document.getAnonymousElementByAttribute(
-    panel,
-    "class",
-    "panel-arrowcontent"
-  );
-  let arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
+  let arrowContent = panel.shadowRoot.querySelector(".panel-arrowcontent");
+  let arrow = panel.shadowRoot.querySelector(".panel-arrow");
 
   let checkArrow = (background = null) => {
     if (background == null || !standAlone) {

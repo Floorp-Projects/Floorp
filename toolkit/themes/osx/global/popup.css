@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 menupopup,
 panel {
@@ -53,25 +54,30 @@ panel[type="arrow"][side="right"] {
   margin: 1px;
 }
 
-panel[type="arrow"].panel-no-padding > .panel-arrowcontainer > .panel-arrowcontent {
+.panel-arrowcontent > html|slot {
+  /* propagate border-radius from arrowcontent to slotted children */
+  border-radius: inherit;
+}
+
+panel[type="arrow"].panel-no-padding::part(arrowcontent) {
   padding: 0;
   overflow: hidden; /* Don't let panel content overflow the border-radius */
 }
 
-.panel-arrow {
+:-moz-any(panel, menupopup)::part(arrow) {
   -moz-context-properties: fill, stroke;
   fill: var(--arrowpanel-background);
   stroke: var(--arrowpanel-border-color);
 }
 
-.panel-arrow[side="top"] {
+:-moz-any(panel, menupopup)[side="top"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   margin-left: 16px;
   margin-right: 16px;
   margin-bottom: -1px;
 }
 
-.panel-arrow[side="bottom"] {
+:-moz-any(panel, menupopup)[side="bottom"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   -moz-transform: scaleY(-1);
   margin-left: 16px;
@@ -79,14 +85,14 @@ panel[type="arrow"].panel-no-padding > .panel-arrowcontainer > .panel-arrowconte
   margin-top: -1px;
 }
 
-.panel-arrow[side="left"] {
+:-moz-any(panel, menupopup)[side="left"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
   margin-top: 16px;
   margin-bottom: 16px;
   margin-right: -1px;
 }
 
-.panel-arrow[side="right"] {
+:-moz-any(panel, menupopup)[side="right"]::part(arrow) {
   list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
   transform: scaleX(-1);
   margin-top: 16px;

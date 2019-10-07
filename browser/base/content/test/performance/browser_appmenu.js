@@ -25,8 +25,8 @@ const EXPECTED_APPMENU_OPEN_REFLOWS = [
 
   {
     stack: [
-      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
-      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/elements/panel.js",
+      "on_popuppositioned@chrome://global/content/elements/panel.js",
     ],
 
     maxCount: 22, // This number should only ever go down - never up.

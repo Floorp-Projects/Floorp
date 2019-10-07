@@ -388,6 +388,9 @@ async function checkFxABadged() {
 
 // fxaStatus is one of 'not_configured', 'unverified', 'login-failed', or 'signedin'.
 function checkFxAAvatar(fxaStatus) {
+  // Unhide the panel so computed styles can be read
+  document.querySelector("#appMenu-popup").hidden = false;
+
   const avatarContainers = [
     document.getElementById("fxa-menu-avatar"),
     document.getElementById("fxa-avatar-image"),

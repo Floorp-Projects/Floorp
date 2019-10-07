@@ -460,6 +460,18 @@
       }
 
       /**
+       * Passes DOM events to the on_<event type> methods.
+       */
+      handleEvent(event) {
+        let methodName = "on_" + event.type;
+        if (methodName in this) {
+          this[methodName](event);
+        } else {
+          throw new Error("Unrecognized event: " + event.type);
+        }
+      }
+
+      /**
        * Allows eager deterministic construction of XUL elements with XBL attached, by
        * parsing an element tree and returning a DOM fragment to be inserted in the
        * document before any of the inner elements is referenced by JavaScript.
@@ -761,6 +773,7 @@
       "chrome://global/content/elements/menu.js",
       "chrome://global/content/elements/menupopup.js",
       "chrome://global/content/elements/notificationbox.js",
+      "chrome://global/content/elements/panel.js",
       "chrome://global/content/elements/popupnotification.js",
       "chrome://global/content/elements/radio.js",
       "chrome://global/content/elements/richlistbox.js",

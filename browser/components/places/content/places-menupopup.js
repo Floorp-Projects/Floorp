@@ -584,27 +584,25 @@
 
     static get inheritedAttributes() {
       return {
-        ".panel-arrowcontainer": "side,panelopen",
-        ".panel-arrow": "side",
-        ".panel-arrowcontent": "side,align,dir,orient,pack",
+        ".panel-arrowcontent": "align,dir,orient,pack",
       };
     }
 
     get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
       <vbox class="panel-arrowcontainer" flex="1">
-        <box class="panel-arrowbox">
-          <image class="panel-arrow"></image>
+        <box class="panel-arrowbox" part="arrowbox">
+          <image class="panel-arrow" part="arrow"/>
         </box>
         <box class="panel-arrowcontent" part="arrowcontent" flex="1">
           <vbox part="drop-indicator-bar" hidden="true">
-            <image part="drop-indicator" mousethrough="always"></image>
+            <image part="drop-indicator" mousethrough="always"/>
           </vbox>
           <arrowscrollbox class="popup-internal-box" flex="1"
                           orient="vertical" smoothscroll="false"
                           part="popupbox">
-            <html:slot></html:slot>
+            <html:slot/>
           </arrowscrollbox>
         </box>
       </vbox>
