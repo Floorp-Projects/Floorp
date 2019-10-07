@@ -48,7 +48,15 @@ def generate_pp_info(path, topsrcdir):
                 if this_section:
                     finish_section(count + 1)
                 inc_start, inc_source = m.groups()
-                inc_source = mozpath.relpath(inc_source, topsrcdir)
+
+                # Special case to handle $SRCDIR prefixes
+                src_dir_prefix = '$SRCDIR'
+                parts = mozpath.split(inc_source)
+                if parts[0] == src_dir_prefix:
+                    inc_source = mozpath.join(*parts[1:])
+                else:
+                    inc_source = mozpath.relpath(inc_source, topsrcdir)
+
                 pp_start = count + 2
                 this_section = pp_start, inc_source, int(inc_start)
 
@@ -93,7 +101,9 @@ class ChromeMapBackend(CommonBackend):
                     pp_info = generate_pp_info(obj_path, obj.topsrcdir)
                 else:
                     pp_info = None
-                self._install_mapping[dest] = mozpath.relpath(f.full_path, obj.topsrcdir), pp_info
+
+                base = obj.topobjdir if f.full_path.startswith(obj.topobjdir) else obj.topsrcdir
+                self._install_mapping[dest] = mozpath.relpath(f.full_path, base), pp_info
 
     def consume_finished(self):
         mp = os.path.join(self.environment.topobjdir, '_build_manifests', 'install', '_tests')
@@ -114,7 +124,9 @@ class ChromeMapBackend(CommonBackend):
                 pp_info = generate_pp_info(obj_path, self.environment.topsrcdir)
             else:
                 pp_info = None
-            self._install_mapping[dest] = src.path, pp_info
+
+            rel_src = mozpath.relpath(src.path, self.environment.topsrcdir)
+            self._install_mapping[dest] = rel_src, pp_info
 
         # Our result has four parts:
         #  A map from url prefixes to objdir directories:
