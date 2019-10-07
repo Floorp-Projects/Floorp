@@ -12,6 +12,8 @@
 import { sortBy } from "lodash";
 import { createSelector } from "reselect";
 
+import { features } from "../utils/prefs";
+
 import type { Selector, State } from "./types";
 import type { Thread, ThreadList } from "../types";
 import type { Action } from "../actions/types";
@@ -19,6 +21,7 @@ import type { Action } from "../actions/types";
 export type ThreadsState = {
   threads: ThreadList,
   mainThread: Thread,
+  traits: Object,
   isWebExtension: boolean,
 };
 
@@ -31,6 +34,7 @@ export function initialThreadsState(): ThreadsState {
       type: "mainThread",
       name: "",
     },
+    traits: {},
     isWebExtension: false,
   };
 }
@@ -44,6 +48,7 @@ export default function update(
       return {
         ...state,
         mainThread: action.mainThread,
+        traits: action.traits,
         isWebExtension: action.isWebExtension,
       };
     case "INSERT_THREADS":
@@ -91,6 +96,14 @@ export const getAllThreads: Selector<Thread[]> = createSelector(
     ...sortBy(threads, thread => thread.name),
   ]
 );
+
+export function getCanRewind(state: State) {
+  return state.threads.traits.canRewind;
+}
+
+export function supportsWasm(state: State) {
+  return features.wasm && state.threads.traits.wasmBinarySource;
+}
 
 // checks if a path begins with a thread actor
 // e.g "server1.conn0.child1/workerTarget22/context1/dbg-workers.glitch.me"
