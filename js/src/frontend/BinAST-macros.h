@@ -25,7 +25,7 @@
 // Throw `cx->alreadyReportedError()` if it returns 0/nullptr.
 #define BINJS_TRY_VAR(VAR, EXPR)          \
   do {                                    \
-    (VAR) = (EXPR);                       \
+    VAR = (EXPR);                         \
     if (MOZ_UNLIKELY(!(VAR))) {           \
       return cx_->alreadyReportedError(); \
     }                                     \
@@ -36,7 +36,7 @@
 //
 // Throw `cx->alreadyReportedError()` if it returns 0/nullptr.
 #define BINJS_TRY_DECL(VAR, EXPR)       \
-  auto (VAR) = (EXPR);                  \
+  auto VAR = (EXPR);                    \
   if (MOZ_UNLIKELY(!(VAR))) {           \
     return cx_->alreadyReportedError(); \
   }
@@ -68,6 +68,6 @@
   if (MOZ_UNLIKELY(_##VAR.isErr())) {          \
     return ::mozilla::Err(_##VAR.unwrapErr()); \
   }                                            \
-  auto (VAR) = _##VAR.unwrap();
+  auto VAR = _##VAR.unwrap();
 
 #endif  // frontend_BinAST_macros_h
