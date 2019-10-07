@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+// @ts-ignore
 const { OS } = require("resource://gre/modules/osfile.jsm");
 
 const UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
@@ -11,9 +12,8 @@ const UNITS = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
  * Linearly interpolate between values.
  * https://en.wikipedia.org/wiki/Linear_interpolation
  *
- * @param {number} frac - Value ranged 0 - 1 to interpolate between the range
- *                        start and range end.
- * @param {number} rangeState - The value to start from.
+ * @param {number} frac - Value ranged 0 - 1 to interpolate between the range start and range end.
+ * @param {number} rangeStart - The value to start from.
  * @param {number} rangeEnd - The value to interpolate to.
  * @returns {number}
  */
@@ -26,6 +26,7 @@ function lerp(frac, rangeStart, rangeEnd) {
  *
  * @param {number} val - The value to clamp.
  * @param {number} min - The minimum value.
+ * @param {number} max - The max value.
  * @returns {number}
  */
 function clamp(val, min, max) {
@@ -63,21 +64,42 @@ function formatFileSize(num) {
 }
 
 /**
+ * Scale a number value.
+ *
+ * @callback NumberScaler
+ * @param {number} value
+ * @returns {number}
+ */
+
+/**
  * Creates numbers that scale exponentially.
  *
  * @param {number} rangeStart
  * @param {number} rangeEnd
+ *
+ * @returns {{
+ *  fromFractionToValue: NumberScaler,
+ *  fromValueToFraction: NumberScaler,
+ *  fromFractionToSingleDigitValue: NumberScaler,
+ * }}
  */
 function makeExponentialScale(rangeStart, rangeEnd) {
   const startExp = Math.log(rangeStart);
   const endExp = Math.log(rangeEnd);
+
+  /** @type {NumberScaler} */
   const fromFractionToValue = frac =>
     Math.exp((1 - frac) * startExp + frac * endExp);
+
+  /** @type {NumberScaler} */
   const fromValueToFraction = value =>
     (Math.log(value) - startExp) / (endExp - startExp);
+
+  /** @type {NumberScaler} */
   const fromFractionToSingleDigitValue = frac => {
     return +fromFractionToValue(frac).toPrecision(1);
   };
+
   return {
     // Takes a number ranged 0-1 and returns it within the range.
     fromFractionToValue,
@@ -117,7 +139,7 @@ function scaleRangeWithClamping(
  * Use some heuristics to guess at the overhead of the recording settings.
  * @param {number} interval
  * @param {number} bufferSize
- * @param {array} features - List of the selected features.
+ * @param {string[]} features - List of the selected features.
  */
 function calculateOverhead(interval, bufferSize, features) {
   const overheadFromSampling =
@@ -175,8 +197,9 @@ function calculateOverhead(interval, bufferSize, features) {
  * This makes some lists look a little nicer. For example, this turns the list
  * ["/Users/foo/code/obj-m-android-opt", "/Users/foo/code/obj-m-android-debug"]
  * into the list ["obj-m-android-opt", "obj-m-android-debug"].
- * @param {array of string} pathArray The array of absolute paths.
- * @returns {array of string} A new array with the described adjustment.
+ *
+ * @param {string[]} pathArray The array of absolute paths.
+ * @returns {string[]} A new array with the described adjustment.
  */
 function withCommonPathPrefixRemoved(pathArray) {
   if (pathArray.length === 0) {

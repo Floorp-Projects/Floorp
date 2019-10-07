@@ -6,9 +6,23 @@
 const selectors = require("devtools/client/performance-new/store/selectors");
 
 /**
+ * @typedef {import("../types").Action} Action
+ * @typedef {import("../types").Library} Library
+ * @typedef {import("../types").PerfFront} PerfFront
+ * @typedef {import("../types").SymbolTableAsTuple} SymbolTableAsTuple
+ * @typedef {import("../types").RecordingState} RecordingState
+ */
+
+/**
+ * @template T
+ * @typedef {import("../types").ThunkAction<T>} ThunkAction<T>
+ *
+
+/**
  * The recording state manages the current state of the recording panel.
- * @param {string} state - A valid state in `recordingState`.
- * @param {object} options
+ * @param {RecordingState} state - A valid state in `recordingState`.
+ * @param {{ didRecordingUnexpectedlyStopped: boolean }} options
+ * @return {Action}
  */
 const changeRecordingState = (exports.changeRecordingState = (
   state,
@@ -23,7 +37,8 @@ const changeRecordingState = (exports.changeRecordingState = (
  * This is the result of the initial questions about the state of the profiler.
  *
  * @param {boolean} isSupportedPlatform - This is a supported platform.
- * @param {string} recordingState - A valid state in `recordingState`.
+ * @param {RecordingState} recordingState - A valid state in `recordingState`.
+ * @return {Action}
  */
 exports.reportProfilerReady = (isSupportedPlatform, recordingState) => ({
   type: "REPORT_PROFILER_READY",
@@ -33,7 +48,8 @@ exports.reportProfilerReady = (isSupportedPlatform, recordingState) => ({
 
 /**
  * Dispatch the given action, and then update the recording settings.
- * @param {object} action
+ * @param {Action} action
+ * @return {ThunkAction<void>}
  */
 function _dispatchAndUpdatePreferences(action) {
   return (dispatch, getState) => {
@@ -55,6 +71,7 @@ function _dispatchAndUpdatePreferences(action) {
 /**
  * Updates the recording settings for the interval.
  * @param {number} interval
+ * @return {ThunkAction<void>}
  */
 exports.changeInterval = interval =>
   _dispatchAndUpdatePreferences({
@@ -65,6 +82,7 @@ exports.changeInterval = interval =>
 /**
  * Updates the recording settings for the entries.
  * @param {number} entries
+ * @return {ThunkAction<void>}
  */
 exports.changeEntries = entries =>
   _dispatchAndUpdatePreferences({
@@ -74,7 +92,8 @@ exports.changeEntries = entries =>
 
 /**
  * Updates the recording settings for the features.
- * @param {object} features
+ * @param {Object} features
+ * @return {ThunkAction<void>}
  */
 exports.changeFeatures = features =>
   _dispatchAndUpdatePreferences({
@@ -84,7 +103,8 @@ exports.changeFeatures = features =>
 
 /**
  * Updates the recording settings for the threads.
- * @param {array} threads
+ * @param {string[]} threads
+ * @return {ThunkAction<void>}
  */
 exports.changeThreads = threads =>
   _dispatchAndUpdatePreferences({
@@ -94,7 +114,8 @@ exports.changeThreads = threads =>
 
 /**
  * Updates the recording settings for the objdirs.
- * @param {array} objdirs
+ * @param {string[]} objdirs
+ * @return {ThunkAction<void>}
  */
 exports.changeObjdirs = objdirs =>
   _dispatchAndUpdatePreferences({
@@ -105,7 +126,8 @@ exports.changeObjdirs = objdirs =>
 /**
  * Receive the values to intialize the store. See the reducer for what values
  * are expected.
- * @param {object} threads
+ * @param {object} values
+ * @return {ThunkAction<void>}
  */
 exports.initializeStore = values => ({
   type: "INITIALIZE_STORE",
@@ -114,6 +136,7 @@ exports.initializeStore = values => ({
 
 /**
  * Start a new recording with the perfFront and update the internal recording state.
+ * @return {ThunkAction<void>}
  */
 exports.startRecording = () => {
   return (dispatch, getState) => {
@@ -130,6 +153,7 @@ exports.startRecording = () => {
 /**
  * Stops the profiler, and opens the profile in a new window.
  * @param {object} window - The current window for the page.
+ * @return {ThunkAction<void>}
  */
 exports.getProfileAndStopProfiler = window => {
   return async (dispatch, getState) => {
@@ -151,6 +175,7 @@ exports.getProfileAndStopProfiler = window => {
 
 /**
  * Stops the profiler, but does not try to retrieve the profile.
+ * @return {ThunkAction<void>}
  */
 exports.stopProfilerAndDiscardProfile = () => {
   return async (dispatch, getState) => {
