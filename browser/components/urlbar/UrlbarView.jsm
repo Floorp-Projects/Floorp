@@ -785,7 +785,8 @@ class UrlbarView {
 
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
-      !result.payload.keywordOffer
+      !result.payload.keywordOffer &&
+      !result.payload.inPrivateWindow
     ) {
       item.setAttribute("type", "search");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
@@ -867,9 +868,23 @@ class UrlbarView {
         setURL = true;
         break;
       case UrlbarUtils.RESULT_TYPE.SEARCH:
-        action = UrlbarUtils.strings.formatStringFromName("searchWithEngine", [
-          result.payload.engine,
-        ]);
+        if (result.payload.inPrivateWindow) {
+          if (result.payload.isPrivateEngine) {
+            action = UrlbarUtils.strings.formatStringFromName(
+              "searchInPrivateWindowWithEngine",
+              [result.payload.engine]
+            );
+          } else {
+            action = UrlbarUtils.strings.GetStringFromName(
+              "searchInPrivateWindow"
+            );
+          }
+        } else {
+          action = UrlbarUtils.strings.formatStringFromName(
+            "searchWithEngine",
+            [result.payload.engine]
+          );
+        }
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
         isVisitAction = result.payload.input.trim() == result.payload.keyword;
@@ -1228,7 +1243,9 @@ class UrlbarView {
       let result = this._queryContext.results[i];
       if (
         result.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
-        (!result.heuristic && !result.payload.suggestion)
+        (!result.heuristic &&
+          !result.payload.suggestion &&
+          (!result.payload.inPrivateWindow || result.payload.isPrivateEngine))
       ) {
         continue;
       }
@@ -1242,11 +1259,13 @@ class UrlbarView {
         delete result.payload.originalEngine;
       }
       let item = this._rows.children[i];
-      let action = item.querySelector(".urlbarView-action");
-      action.textContent = UrlbarUtils.strings.formatStringFromName(
-        "searchWithEngine",
-        [(engine && engine.name) || result.payload.engine]
-      );
+      if (!result.payload.inPrivateWindow) {
+        let action = item.querySelector(".urlbarView-action");
+        action.textContent = UrlbarUtils.strings.formatStringFromName(
+          "searchWithEngine",
+          [(engine && engine.name) || result.payload.engine]
+        );
+      }
       // If we just changed the engine from the original engine and it had an
       // icon, then make sure the result now uses the new engine's icon or
       // failing that the default icon.  If we changed it back to the original

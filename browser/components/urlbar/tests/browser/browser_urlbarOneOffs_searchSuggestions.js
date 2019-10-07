@@ -45,19 +45,21 @@ async function withSecondSuggestion(testFn) {
   await BrowserTestUtils.withNewTab(gBrowser, async () => {
     let typedValue = "foo";
     await promiseAutocompleteResultPopup(typedValue, window, true);
-    await promiseSuggestionsPresent();
+    let index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
     assertState(0, -1, typedValue);
 
     // Down to select the first search suggestion.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(1, -1, "foofoo");
+    for (let i = index; i > 0; --i) {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    assertState(index, -1, "foofoo");
 
     // Down to select the next search suggestion.
     EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(2, -1, "foobar");
+    assertState(index + 1, -1, "foobar");
 
     await withHttpServer(serverInfo, () => {
-      return testFn();
+      return testFn(index + 1);
     });
   });
   await PlacesUtils.history.clear();
@@ -66,10 +68,10 @@ async function withSecondSuggestion(testFn) {
 // Presses the Return key when a one-off is selected after selecting a search
 // suggestion.
 add_task(async function test_returnAfterSuggestion() {
-  await withSecondSuggestion(async () => {
+  await withSecondSuggestion(async index => {
     // Alt+Down to select the first one-off.
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    assertState(2, 0, "foobar");
+    assertState(index, 0, "foobar");
 
     let resultsPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
@@ -84,11 +86,11 @@ add_task(async function test_returnAfterSuggestion() {
 // Presses the Return key when a non-default one-off is selected after selecting
 // a search suggestion.
 add_task(async function test_returnAfterSuggestion_nonDefault() {
-  await withSecondSuggestion(async () => {
+  await withSecondSuggestion(async index => {
     // Alt+Down twice to select the second one-off.
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    assertState(2, 1, "foobar");
+    assertState(index, 1, "foobar");
 
     let resultsPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
@@ -137,7 +139,7 @@ add_task(async function test_selectOneOffThenSuggestion() {
   await BrowserTestUtils.withNewTab(gBrowser, async () => {
     let typedValue = "foo";
     await promiseAutocompleteResultPopup(typedValue, window, true);
-    await promiseSuggestionsPresent();
+    let index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
     assertState(0, -1, typedValue);
 
     // Select a non-default one-off engine.
@@ -147,7 +149,10 @@ add_task(async function test_selectOneOffThenSuggestion() {
 
     // Now click the second suggestion.
     await withHttpServer(serverInfo, async () => {
-      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 2);
+      let result = await UrlbarTestUtils.getDetailsOfResultAt(
+        window,
+        index + 1
+      );
 
       let resultsPromise = BrowserTestUtils.browserLoaded(
         gBrowser.selectedBrowser,
@@ -167,23 +172,25 @@ add_task(async function overridden_engine_not_reused() {
   await BrowserTestUtils.withNewTab(gBrowser, async () => {
     let typedValue = "foo";
     await promiseAutocompleteResultPopup(typedValue, window, true);
-    await promiseSuggestionsPresent();
+    let index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
     // Down to select the first search suggestion.
-    EventUtils.synthesizeKey("KEY_ArrowDown");
-    assertState(1, -1, "foofoo");
+    for (let i = index; i > 0; --i) {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    assertState(index, -1, "foofoo");
     // ALT+Down to select the second search engine.
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
     EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
-    assertState(1, 1, "foofoo");
+    assertState(index, 1, "foofoo");
 
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
     let label = result.displayed.action;
     // Run again the query, check the label has been replaced.
     await UrlbarTestUtils.promisePopupClose(window);
     await promiseAutocompleteResultPopup(typedValue, window, true);
-    await promiseSuggestionsPresent();
+    index = await UrlbarTestUtils.promiseSuggestionsPresent(window);
     assertState(0, -1, "foo");
-    result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
     Assert.notEqual(
       result.displayed.action,
       label,
@@ -192,15 +199,15 @@ add_task(async function overridden_engine_not_reused() {
   });
 });
 
-function assertState(result, oneOff, textValue = undefined) {
+function assertState(expectedIndex, oneOffIndex, textValue = undefined) {
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
-    result,
+    expectedIndex,
     "Expected result should be selected"
   );
   Assert.equal(
     UrlbarTestUtils.getOneOffSearchButtons(window).selectedButtonIndex,
-    oneOff,
+    oneOffIndex,
     "Expected one-off should be selected"
   );
   if (textValue !== undefined) {

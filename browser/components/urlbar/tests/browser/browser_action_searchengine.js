@@ -49,6 +49,8 @@ async function testSearch(win, expectedName, expectedBaseUrl) {
       keyword: undefined,
       query: "open a search",
       suggestion: undefined,
+      inPrivateWindow: undefined,
+      isPrivateEngine: undefined,
     },
     "Should have the correct result parameters."
   );
