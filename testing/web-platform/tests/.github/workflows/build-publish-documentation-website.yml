@@ -2,6 +2,11 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'resources/**'
+      - 'tools/**'
 name: Build & Publish Documentation Website
 jobs:
   website-build-and-publish:
