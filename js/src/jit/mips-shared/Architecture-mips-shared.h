@@ -32,6 +32,10 @@
 #  error "Unsupported ABI"
 #endif
 
+#if (defined(__mips_isa_rev) && (__mips_isa_rev >= 6))
+#  define MIPSR6
+#endif
+
 namespace js {
 namespace jit {
 
