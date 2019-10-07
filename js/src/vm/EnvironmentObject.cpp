@@ -1426,14 +1426,6 @@ void LiveEnvironmentVal::staticAsserts() {
 
 namespace {
 
-static void ReportOptimizedOut(JSContext* cx, HandleId id) {
-  if (UniqueChars printable =
-          IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier)) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_DEBUG_OPTIMIZED_OUT, printable.get());
-  }
-}
-
 /*
  * DebugEnvironmentProxy is the handler for DebugEnvironmentProxy proxy
  * objects. Having a custom handler (rather than trying to reuse js::Wrapper)
@@ -1962,6 +1954,20 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     return true;
   }
 
+  static void reportOptimizedOut(JSContext* cx, HandleId id) {
+    if (isThis(cx, id)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_DEBUG_OPTIMIZED_OUT, "this");
+      return;
+    }
+
+    if (UniqueChars printable =
+            IdToPrintableUTF8(cx, id, IdToPrintableBehavior::IdIsIdentifier)) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_DEBUG_OPTIMIZED_OUT, printable.get());
+    }
+  }
+
  public:
   static const char family;
   static const DebugEnvironmentProxyHandler singleton;
@@ -2077,7 +2083,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       case ACCESS_GENERIC:
         return JS_GetOwnPropertyDescriptorById(cx, env, id, desc);
       case ACCESS_LOST:
-        ReportOptimizedOut(cx, id);
+        reportOptimizedOut(cx, id);
         return false;
       default:
         MOZ_CRASH("bad AccessResult");
@@ -2157,7 +2163,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         }
         return true;
       case ACCESS_LOST:
-        ReportOptimizedOut(cx, id);
+        reportOptimizedOut(cx, id);
         return false;
       default:
         MOZ_CRASH("bad AccessResult");
