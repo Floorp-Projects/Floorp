@@ -32,28 +32,28 @@ function isUnavailable(value) {
 }
 
 export function getValue(expression: Expression) {
-  const value = expression.value;
+  const { value, from, exception, error } = expression;
   if (!value) {
     return {
-      path: expression.from,
+      path: from,
       value: { unavailable: true },
     };
   }
 
-  if (value.exception) {
-    if (isUnavailable(value.exception)) {
+  if (exception) {
+    if (isUnavailable(exception)) {
       return { value: { unavailable: true } };
     }
     return {
-      path: value.from,
-      value: value.exception,
+      path: from,
+      value: exception,
     };
   }
 
-  if (value.error) {
+  if (error) {
     return {
-      path: value.from,
-      value: value.error,
+      path: from,
+      value: error,
     };
   }
 

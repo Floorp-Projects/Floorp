@@ -75,7 +75,7 @@ describe("SearchInput", () => {
     it("stores scroll history in state", () => {
       const onHistoryScroll = jest.fn();
       wrapper.setProps({
-        onHistoryScroll: onHistoryScroll,
+        onHistoryScroll,
         onKeyDown: jest.fn(),
       });
       wrapper.find("input").simulate("keyDown", createSearch(searches[0]));
