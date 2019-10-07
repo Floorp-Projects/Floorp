@@ -138,6 +138,7 @@ export class Trailhead extends React.PureComponent {
         onClose={this.closeModal}
         id="trailheadDialog"
         headerId="trailheadHeader"
+        hasDismissIcon={true}
       >
         <div className="trailheadInner">
           <div className="trailheadContent">

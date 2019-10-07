@@ -2851,7 +2851,8 @@ class Trailhead extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureCompone
       innerClassName: innerClassName,
       onClose: this.closeModal,
       id: "trailheadDialog",
-      headerId: "trailheadHeader"
+      headerId: "trailheadHeader",
+      hasDismissIcon: true
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "trailheadInner"
     }, react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
@@ -3048,7 +3049,7 @@ class ModalOverlayWrapper extends react__WEBPACK_IMPORTED_MODULE_0___default.a.P
       "aria-labelledby": props.headerId,
       id: props.id,
       role: "dialog"
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
+    }, props.hasDismissIcon && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
       className: "icon icon-dismiss",
       onClick: props.onClose,
       "data-l10n-id": "onboarding-cards-dismiss"
