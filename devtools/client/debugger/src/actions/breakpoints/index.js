@@ -225,7 +225,7 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
       addBreakpoint(cx, {
         sourceId: selectedSource.id,
         sourceUrl: selectedSource.url,
-        line: line,
+        line,
       })
     );
   };

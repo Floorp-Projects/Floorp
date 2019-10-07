@@ -11207,7 +11207,6 @@ void CodeGenerator::addGetPropertyCache(
 
 void CodeGenerator::addSetPropertyCache(
     LInstruction* ins, LiveRegisterSet liveRegs, Register objReg, Register temp,
-    FloatRegister tempDouble, FloatRegister tempF32,
     const ConstantOrRegister& id, const ConstantOrRegister& value, bool strict,
     bool needsPostBarrier, bool needsTypeBarrier, bool guardHoles) {
   CacheKind kind = CacheKind::SetElem;
@@ -11218,9 +11217,8 @@ void CodeGenerator::addSetPropertyCache(
       kind = CacheKind::SetProp;
     }
   }
-  IonSetPropertyIC cache(kind, liveRegs, objReg, temp, tempDouble, tempF32, id,
-                         value, strict, needsPostBarrier, needsTypeBarrier,
-                         guardHoles);
+  IonSetPropertyIC cache(kind, liveRegs, objReg, temp, id, value, strict,
+                         needsPostBarrier, needsTypeBarrier, guardHoles);
   addIC(ins, allocateIC(cache));
 }
 
@@ -11398,17 +11396,14 @@ void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {
   LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
   Register objReg = ToRegister(ins->getOperand(0));
   Register temp = ToRegister(ins->temp());
-  FloatRegister tempDouble = ToTempFloatRegisterOrInvalid(ins->tempDouble());
-  FloatRegister tempF32 = ToTempFloatRegisterOrInvalid(ins->tempFloat32());
 
   ConstantOrRegister id = toConstantOrRegister(ins, LSetPropertyCache::Id,
                                                ins->mir()->idval()->type());
   ConstantOrRegister value = toConstantOrRegister(ins, LSetPropertyCache::Value,
                                                   ins->mir()->value()->type());
 
-  addSetPropertyCache(ins, liveRegs, objReg, temp, tempDouble, tempF32, id,
-                      value, ins->mir()->strict(),
-                      ins->mir()->needsPostBarrier(),
+  addSetPropertyCache(ins, liveRegs, objReg, temp, id, value,
+                      ins->mir()->strict(), ins->mir()->needsPostBarrier(),
                       ins->mir()->needsTypeBarrier(), ins->mir()->guardHoles());
 }
 

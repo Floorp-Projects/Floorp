@@ -5,6 +5,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title></title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/abuse-report-panel.css">
@@ -13,52 +14,56 @@
     <link rel="localization" href="toolkit/about/aboutAddons.ftl">
     <link rel="localization" href="toolkit/about/abuseReports.ftl">
 
-    <script src="chrome://mozapps/content/extensions/abuse-report-panel.js"></script>
+    <script defer src="chrome://mozapps/content/extensions/abuse-report-panel.js"></script>
   </head>
 
   <body>
+    <addon-abuse-report></addon-abuse-report>
+
     <!-- WebComponents Templates -->
-    <template id="tmpl-abuse-report">
+    <template id="tmpl-modal">
       <div class="modal-overlay-outer"></div>
-      <div class="modal-panel-container">
-        <form class="card addon-abuse-report" onsubmit="return false;">
-          <div class="abuse-report-header">
-            <img class="card-heading-icon addon-icon"/>
-            <div class="card-contents">
-              <span class="addon-name"></span>
-              <span class="addon-author-box"
-                    data-l10n-args='{"author-name": "author placeholder"}'
-                    data-l10n-id="abuse-report-addon-authored-by">
-                <a data-l10n-name="author-name"
-                   class="author" href="#" target="_blank"></a>
-              </span>
-            </div>
+      <div class="modal-panel-container"></div>
+    </template>
+
+    <template id="tmpl-abuse-report">
+      <form class="addon-abuse-report" onsubmit="return false;">
+        <div class="abuse-report-header">
+          <img class="card-heading-icon addon-icon"/>
+          <div class="card-contents">
+            <span class="addon-name"></span>
+            <span class="addon-author-box"
+                  data-l10n-args='{"author-name": "author placeholder"}'
+                  data-l10n-id="abuse-report-addon-authored-by">
+              <a data-l10n-name="author-name"
+                 class="author" href="#" target="_blank"></a>
+            </span>
           </div>
-          <button class="abuse-report-close-icon"></button>
-          <div class="abuse-report-contents">
-            <abuse-report-reasons-panel></abuse-report-reasons-panel>
-            <abuse-report-submit-panel hidden></abuse-report-submit-panel>
+        </div>
+        <button class="abuse-report-close-icon"></button>
+        <div class="abuse-report-contents">
+          <abuse-report-reasons-panel></abuse-report-reasons-panel>
+          <abuse-report-submit-panel hidden></abuse-report-submit-panel>
+        </div>
+        <div class="abuse-report-buttons">
+          <div class="abuse-report-reasons-buttons">
+            <button class="abuse-report-cancel"
+                    data-l10n-id="abuse-report-cancel-button">
+            </button>
+            <button class="primary abuse-report-next"
+                    data-l10n-id="abuse-report-next-button">
+            </button>
           </div>
-          <div class="abuse-report-buttons">
-            <div class="abuse-report-reasons-buttons">
-              <button class="abuse-report-cancel"
-                      data-l10n-id="abuse-report-cancel-button">
-              </button>
-              <button class="primary abuse-report-next"
-                      data-l10n-id="abuse-report-next-button">
-              </button>
-            </div>
-            <div class="abuse-report-submit-buttons" hidden>
-              <button class="abuse-report-goback"
-                      data-l10n-id="abuse-report-goback-button">
-              </button>
-              <button class="primary abuse-report-submit"
-                      data-l10n-id="abuse-report-submit-button">
-              </button>
-            </div>
+          <div class="abuse-report-submit-buttons" hidden>
+            <button class="abuse-report-goback"
+                    data-l10n-id="abuse-report-goback-button">
+            </button>
+            <button class="primary abuse-report-submit"
+                    data-l10n-id="abuse-report-submit-button">
+            </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </template>
 
     <template id="tmpl-reasons-panel">

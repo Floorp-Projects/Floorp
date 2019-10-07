@@ -442,6 +442,10 @@ class UrlbarView {
           (trimmedValue[0] != UrlbarTokenizer.RESTRICT.SEARCH ||
             trimmedValue.length != 1)
       );
+
+      // The input field applies autofill on input, without waiting for results.
+      // Once we get results, we can ask it to correct wrong predictions.
+      this.input.maybeClearAutofillPlaceholder(queryContext.results[0]);
     }
 
     this._openPanel();

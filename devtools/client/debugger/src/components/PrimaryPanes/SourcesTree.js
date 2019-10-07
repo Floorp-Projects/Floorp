@@ -93,7 +93,7 @@ function shouldAutoExpand(depth, item, debuggeeUrl, projectRoot) {
 function findSource({ threads, sources }, itemPath, source) {
   const targetThread = threads.find(thread => itemPath.includes(thread.actor));
   if (targetThread && source) {
-    const actor = targetThread.actor;
+    const { actor } = targetThread;
     if (sources[actor]) {
       return sources[actor][source.id];
     }

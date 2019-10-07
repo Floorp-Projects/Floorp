@@ -50,7 +50,7 @@ class WhyPaused extends PureComponent<Props, State> {
       return exception;
     }
 
-    const preview = exception.preview;
+    const { preview } = exception;
     if (!preview || !preview.name || !preview.message) {
       return;
     }
