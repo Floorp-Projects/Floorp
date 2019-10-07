@@ -486,10 +486,112 @@ class HuffmanPreludeReader {
   // A stack of entries to process. We always process the latest entry added.
   Vector<Entry> stack;
 
+  /*
+  Implementation of "To push a field" from the specs.
+
+  As per the spec:
+
+  1. If the field is in the set of visited contexts, stop
+  2. Add the field to the set of visited fields
+  3. If the field has a FrozenArray type
+    a. Determine if the array type is always empty
+    b. If so, stop
+  4. If the effective type is a monomorphic interface, push all of the
+  interface’s fields
+  5. Otherwise, push the field onto the stack
+  */
+
   // Enqueue an entry to the stack.
   MOZ_MUST_USE JS::Result<Ok> pushValue(NormalizedInterfaceAndField identity,
+                                        const List& list) {
+    auto& table = dictionary.tableForListLength(list.contents);
+    if (table.is<HuffmanTableUnreachable>()) {
+      // Spec:
+      // 2. Add the field to the set of visited fields
+      table = {mozilla::VariantType<HuffmanTableInitializing>{}};
+
+      // Read the lengths immediately.
+      MOZ_TRY((readTable<HuffmanTableListLength, List>(table, list)));
+    }
+
+    // Spec:
+    // 3. If the field has a FrozenArray type
+    //   a. Determine if the array type is always empty
+    //   b. If so, stop
+    auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
+    bool empty = true;
+    for (auto iter : lengthTable) {
+      if (*iter > 0) {
+        empty = false;
+        break;
+      }
+    }
+    if (empty) {
+      return Ok();
+    }
+
+    // Spec:
+    // To determine a field’s effective type:
+    // 1. If the field’s type is an array type, the effective type is the
+    // array element type. Stop.
+
+    // We now recurse with the contents of the list/array, *without checking
+    // whether the field has already been visited*.
+    switch (list.contents) {
+#define WRAP_LIST_2(_, CONTENT) CONTENT
+#define EMIT_CASE(LIST_NAME, _CONTENT_TYPE, _HUMAN_NAME, TYPE) \
+  case BinASTList::LIST_NAME:                                  \
+    return pushValue(list.identity, TYPE(list.identity));
+
+      FOR_EACH_BIN_LIST(EMIT_CASE, WRAP_PRIMITIVE, WRAP_INTERFACE,
+                        WRAP_MAYBE_INTERFACE, WRAP_LIST_2, WRAP_SUM,
+                        WRAP_MAYBE_SUM, WRAP_STRING_ENUM,
+                        WRAP_MAYBE_STRING_ENUM)
+#undef EMIT_CASE
+#undef WRAP_LIST_2
+    }
+    return Ok();
+  }
+
+  MOZ_MUST_USE JS::Result<Ok> pushValue(NormalizedInterfaceAndField identity,
+                                        const Interface& interface) {
+    // Note: In this case, for compatibility, we do *not* check whether
+    // the interface has already been visited.
+    auto& table = dictionary.tableForField(identity);
+    if (table.is<HuffmanTableUnreachable>()) {
+      // Effectively, an `Interface` is a sum with a single entry.
+      HuffmanTableIndexedSymbolsSum sum(cx_);
+      MOZ_TRY(sum.initWithSingleValue(cx_, BinASTKind(interface.kind)));
+      table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
+               std::move(sum)};
+    }
+
+    // Spec:
+    // 4. If the effective type is a monomorphic interface, push all of the
+    // interface’s fields
+    return pushFields(interface.kind);
+  }
+
+  // Generic implementation for other cases.
+  template <class Entry>
+  MOZ_MUST_USE JS::Result<Ok> pushValue(NormalizedInterfaceAndField identity,
                                         const Entry& entry) {
-    return entry.match(PushEntryMatcher(cx_, *this, identity));
+    // Spec:
+    // 1. If the field is in the set of visited contexts, stop.
+    auto& table = dictionary.tableForField(identity);
+    if (!table.is<HuffmanTableUnreachable>()) {
+      // Entry already initialized/initializing.
+      return Ok();
+    }
+
+    // Spec:
+    // 2. Add the field to the set of visited fields
+    table = {mozilla::VariantType<HuffmanTableInitializing>{}};
+
+    // Spec:
+    // 5. Otherwise, push the field onto the stack
+    BINJS_TRY(stack.append(entry));
+    return Ok();
   }
 
   // Enqueue all the fields of an interface to the stack.
@@ -509,12 +611,11 @@ class HuffmanPreludeReader {
     */
 
     switch (tag) {
-#define EMIT_FIELD(TAG_NAME, FIELD_NAME, FIELD_INDEX, FIELD_TYPE, _)    \
-  MOZ_TRY(                                                              \
-      pushValue(NormalizedInterfaceAndField(                            \
-                    BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME), \
-                Entry(FIELD_TYPE(NormalizedInterfaceAndField(           \
-                    BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME)))));
+#define EMIT_FIELD(TAG_NAME, FIELD_NAME, FIELD_INDEX, FIELD_TYPE, _)        \
+  MOZ_TRY(pushValue(NormalizedInterfaceAndField(                            \
+                        BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME), \
+                    FIELD_TYPE(NormalizedInterfaceAndField(                 \
+                        BinASTInterfaceAndField::TAG_NAME##__##FIELD_NAME))));
 #define EMIT_CASE(TAG_ENUM_NAME, _2, TAG_MACRO_NAME)                      \
   case BinASTKind::TAG_ENUM_NAME: {                                       \
     FOR_EACH_BIN_FIELD_IN_INTERFACE_##TAG_MACRO_NAME(                     \
@@ -801,122 +902,6 @@ class HuffmanPreludeReader {
   };
   Vector<BitLengthAndIndex> auxStorageLength;
 
-  /*
-  Implementation of "To push a field" from the specs.
-
-  As per the spec:
-
-  1. If the field is in the set of visited contexts, stop
-  2. Add the field to the set of visited fields
-  3. If the field has a FrozenArray type
-    a. Determine if the array type is always empty
-    b. If so, stop
-  4. If the effective type is a monomorphic interface, push all of the
-  interface’s fields
-  5. Otherwise, push the field onto the stack
-  */
-  struct PushEntryMatcher {
-    JSContext* cx_;
-
-    // The owning HuffmanPreludeReader.
-    HuffmanPreludeReader& owner;
-
-    const NormalizedInterfaceAndField identity;
-
-    PushEntryMatcher(JSContext* cx_, HuffmanPreludeReader& owner,
-                     NormalizedInterfaceAndField identity)
-        : cx_(cx_), owner(owner), identity(identity) {}
-
-    MOZ_MUST_USE JS::Result<Ok> operator()(const List& list) {
-      auto& table = owner.dictionary.tableForListLength(list.contents);
-      if (table.is<HuffmanTableUnreachable>()) {
-        // Spec:
-        // 2. Add the field to the set of visited fields
-        table = {mozilla::VariantType<HuffmanTableInitializing>{}};
-
-        // Read the lengths immediately.
-        MOZ_TRY((owner.readTable<HuffmanTableListLength, List>(table, list)));
-      }
-
-      // Spec:
-      // 3. If the field has a FrozenArray type
-      //   a. Determine if the array type is always empty
-      //   b. If so, stop
-      auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
-      bool empty = true;
-      for (auto iter : lengthTable) {
-        if (*iter > 0) {
-          empty = false;
-          break;
-        }
-      }
-      if (empty) {
-        return Ok();
-      }
-
-      // Spec:
-      // To determine a field’s effective type:
-      // 1. If the field’s type is an array type, the effective type is the
-      // array element type. Stop.
-
-      // We now recurse with the contents of the list/array, *without checking
-      // whether the field has already been visited*.
-      switch (list.contents) {
-#define WRAP_LIST_2(_, CONTENT) CONTENT
-#define EMIT_CASE(LIST_NAME, _CONTENT_TYPE, _HUMAN_NAME, TYPE) \
-  case BinASTList::LIST_NAME:                                  \
-    return owner.pushValue(list.identity, Entry(TYPE(list.identity)));
-
-        FOR_EACH_BIN_LIST(EMIT_CASE, WRAP_PRIMITIVE, WRAP_INTERFACE,
-                          WRAP_MAYBE_INTERFACE, WRAP_LIST_2, WRAP_SUM,
-                          WRAP_MAYBE_SUM, WRAP_STRING_ENUM,
-                          WRAP_MAYBE_STRING_ENUM)
-#undef EMIT_CASE
-#undef WRAP_LIST_2
-      }
-      return Ok();
-    }
-
-    MOZ_MUST_USE JS::Result<Ok> operator()(const Interface& interface) {
-      // Note: In this case, for compatibility, we do *not* check whether
-      // the interface has already been visited.
-      auto& table = owner.dictionary.tableForField(identity);
-      if (table.is<HuffmanTableUnreachable>()) {
-        // Effectively, an `Interface` is a sum with a single entry.
-        HuffmanTableIndexedSymbolsSum sum(cx_);
-        MOZ_TRY(sum.initWithSingleValue(cx_, BinASTKind(interface.kind)));
-        table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
-                 std::move(sum)};
-      }
-
-      // Spec:
-      // 4. If the effective type is a monomorphic interface, push all of the
-      // interface’s fields
-      return owner.pushFields(interface.kind);
-    }
-
-    // Generic implementation for other cases.
-    template <class Entry>
-    MOZ_MUST_USE JS::Result<Ok> operator()(const Entry& entry) {
-      // Spec:
-      // 1. If the field is in the set of visited contexts, stop.
-      auto& table = owner.dictionary.tableForField(identity);
-      if (!table.is<HuffmanTableUnreachable>()) {
-        // Entry already initialized/initializing.
-        return Ok();
-      }
-
-      // Spec:
-      // 2. Add the field to the set of visited fields
-      table = {mozilla::VariantType<HuffmanTableInitializing>{}};
-
-      // Spec:
-      // 5. Otherwise, push the field onto the stack
-      BINJS_TRY(owner.stack.append(entry));
-      return Ok();
-    }
-  };
-
   // Implementation of pattern-matching cases for `entry.match`.
   struct ReadPoppedEntryMatcher {
     // The owning HuffmanPreludeReader.
@@ -984,9 +969,8 @@ class HuffmanPreludeReader {
       const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
 
       for (auto iter : tableRef) {
-        MOZ_TRY(owner.pushValue(
-            entry.identity,
-            {mozilla::VariantType<Interface>(), entry.identity, *iter}));
+        MOZ_TRY(
+            owner.pushValue(entry.identity, Interface(entry.identity, *iter)));
       }
       return Ok();
     }
@@ -1009,9 +993,8 @@ class HuffmanPreludeReader {
       const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
 
       for (auto iter : tableRef) {
-        MOZ_TRY(owner.pushValue(
-            entry.identity,
-            {mozilla::VariantType<Interface>(), entry.identity, *iter}));
+        MOZ_TRY(
+            owner.pushValue(entry.identity, Interface(entry.identity, *iter)));
       }
       return Ok();
     }
