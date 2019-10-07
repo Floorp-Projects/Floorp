@@ -36,25 +36,6 @@ class SettingsTest {
     }
 
     @Test
-    fun usePrivateMode() {
-        // When just created
-        // Then
-        assertFalse(settings.usePrivateMode)
-
-        // When
-        settings.usePrivateMode = true
-
-        // Then
-        assertTrue(settings.usePrivateMode)
-
-        // When
-        settings.usePrivateMode = false
-
-        // Then
-        assertFalse(settings.usePrivateMode)
-    }
-
-    @Test
     fun launchLinksInPrivateTab() {
         // When just created
         // Then
@@ -65,12 +46,6 @@ class SettingsTest {
 
         // Then
         assertTrue(settings.openLinksInAPrivateTab)
-
-        // When
-        settings.openLinksInAPrivateTab = false
-
-        // Then
-        assertFalse(settings.usePrivateMode)
     }
 
     @Test
