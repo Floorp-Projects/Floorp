@@ -4,12 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Also see <http://www.icu-project.org/repos/icu/tags/latest/icu4c/readme.html#RecBuild> for the
+# recommended build options when compiling ICU.
 DEFINES.update(
     # Don't use icu namespace automatically in client code.
     U_USING_ICU_NAMESPACE = 0,
 
     # Don't include obsolete header files.
     U_NO_DEFAULT_INCLUDE_UTF_HEADERS = 1,
+    U_HIDE_OBSOLETE_UTF_OLD_H = 1,
 
     # Remove chunks of the library that we don't need (yet).
     UCONFIG_NO_LEGACY_CONVERSION = True,
@@ -18,6 +21,10 @@ DEFINES.update(
 
     # We don't need to pass data to and from legacy char* APIs.
     U_CHARSET_IS_UTF8 = True,
+
+    # Add 'explicit' keyword to UnicodeString constructors.
+    UNISTR_FROM_CHAR_EXPLICIT = "explicit",
+    UNISTR_FROM_STRING_EXPLICIT = "explicit",
 )
 
 if not CONFIG['HAVE_LANGINFO_CODESET']:
