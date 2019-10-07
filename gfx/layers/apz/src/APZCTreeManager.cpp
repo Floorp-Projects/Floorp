@@ -1790,6 +1790,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
     HitTestResult hit = GetTouchInputBlockAPZC(aInput, &touchBehaviors);
     mApzcForInputBlock = hit.mTargetApzc;
     mHitResultForInputBlock = hit.mHitResult;
+    mFixedPosSidesForInputBlock = hit.mFixedPosSides;
     if (hit.mLayersId.IsValid()) {
       // Check for validity because we won't get a layers id for multi-touch
       // events.
@@ -1881,6 +1882,12 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
           return result;
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
+        if (mFixedPosSidesForInputBlock != eSideBitsNone) {
+          RecursiveMutexAutoLock lock(mTreeLock);
+          touchData.mScreenPoint +=
+              RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
+                  mFixedLayerMargins, mFixedPosSidesForInputBlock));
+        }
       }
     }
   }
