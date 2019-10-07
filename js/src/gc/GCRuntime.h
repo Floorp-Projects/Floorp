@@ -677,7 +677,7 @@ class GCRuntime {
                                    AutoGCSession& session);
   void endCompactPhase();
   void sweepTypesAfterCompacting(Zone* zone);
-  void sweepZoneAfterCompacting(Zone* zone);
+  void sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone);
   MOZ_MUST_USE bool relocateArenas(Zone* zone, JS::GCReason reason,
                                    Arena*& relocatedListOut,
                                    SliceBudget& sliceBudget);

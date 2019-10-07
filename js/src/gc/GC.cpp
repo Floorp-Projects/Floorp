@@ -2081,12 +2081,12 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
   zone->types.endSweep(rt);
 }
 
-void GCRuntime::sweepZoneAfterCompacting(Zone* zone) {
+void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isCollecting());
   JSFreeOp* fop = rt->defaultFreeOp();
   sweepTypesAfterCompacting(zone);
   zone->sweepBreakpoints(fop);
-  zone->sweepWeakMaps();
+  zone->traceWeakMaps(trc);
   for (auto* cache : zone->weakCaches()) {
     cache->sweep();
   }
@@ -2467,7 +2467,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   }
 
   // Sweep everything to fix up weak pointers.
-  sweepZoneAfterCompacting(zone);
+  sweepZoneAfterCompacting(&trc, zone);
 
   // Call callbacks to get the rest of the system to fixup other untraced
   // pointers.
@@ -5140,6 +5140,7 @@ void js::gc::SweepLazyScripts(GCParallelTask* task) {
 static void SweepWeakMaps(GCParallelTask* task) {
   AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
+  SweepingTracer trc(runtime);
   for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
     /* No need to look up any more weakmap keys from this sweep group. */
     AutoEnterOOMUnsafeRegion oomUnsafe;
@@ -5147,7 +5148,7 @@ static void SweepWeakMaps(GCParallelTask* task) {
       oomUnsafe.crash("clearing weak keys in beginSweepingSweepGroup()");
     }
 
-    zone->sweepWeakMaps();
+    zone->traceWeakMaps(&trc);
   }
 }
 
