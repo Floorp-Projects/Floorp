@@ -351,9 +351,10 @@ TEST(TestMozURL, UrlTestData)
   rv = NS_ConsumeStream(bufferedStream, UINT32_MAX, data);
   ASSERT_EQ(rv, NS_OK);
 
-  Json::Reader reader;
   Json::Value root;
-  ASSERT_TRUE(reader.parse(data.BeginReading(), data.EndReading(), root));
+  Json::CharReaderBuilder builder;
+  std::unique_ptr<Json::CharReader> const reader(builder.newCharReader());
+  ASSERT_TRUE(reader->parse(data.BeginReading(), data.EndReading(), &root, nullptr));
   ASSERT_TRUE(root.isArray());
 
   for (uint32_t index = 0; index < root.size(); index++) {
