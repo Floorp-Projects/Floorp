@@ -99,7 +99,7 @@ module.exports = function makeDebugger({
   return dbg;
 };
 
-const reportDebuggerHookException = e => reportException("Debugger Hook", e);
+const reportDebuggerHookException = e => reportException("DBG-SERVER", e);
 
 /**
  * Add |global| as a debuggee to |dbg|, handling error cases.
