@@ -779,7 +779,9 @@
         direction: aDir,
         wrap: aWrap,
       });
-      this._selectNewTab(newTab, aDir, aWrap);
+      if (newTab && newTab != startTab) {
+        this._selectNewTab(newTab, aDir, aWrap);
+      }
     }
 
     appendItem(label, value) {
