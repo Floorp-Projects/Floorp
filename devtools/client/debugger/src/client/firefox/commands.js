@@ -48,20 +48,27 @@ let debuggerClient: DebuggerClient;
 let sourceActors: { [ActorId]: SourceId };
 let breakpoints: { [string]: Object };
 let eventBreakpoints: ?EventListenerActiveList;
+let supportsWasm: boolean;
 
 type Dependencies = {
   threadFront: ThreadFront,
   tabTarget: Target,
   debuggerClient: DebuggerClient,
+  supportsWasm: boolean,
 };
 
 function setupCommands(dependencies: Dependencies) {
   currentThreadFront = dependencies.threadFront;
   currentTarget = dependencies.tabTarget;
   debuggerClient = dependencies.debuggerClient;
+  supportsWasm = dependencies.supportsWasm;
   targets = { worker: {}, contentProcess: {} };
   sourceActors = {};
   breakpoints = {};
+}
+
+function hasWasmSupport() {
+  return supportsWasm;
 }
 
 function createObjectClient(grip: Grip) {
@@ -581,6 +588,7 @@ const clientCommands = {
   setEventListenerBreakpoints,
   getEventListenerBreakpointTypes,
   detachWorkers,
+  hasWasmSupport,
   lookupTarget,
 };
 
