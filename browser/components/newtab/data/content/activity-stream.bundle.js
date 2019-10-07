@@ -8343,10 +8343,12 @@ const StatusMessage = ({
 }));
 class DSContextFooter_DSContextFooter extends external_React_default.a.PureComponent {
   render() {
+    // display_engagement_labels is based on pref `browser.newtabpage.activity-stream.discoverystream.engagementLabelEnabled`
     const {
       context,
       context_type,
-      engagement
+      engagement,
+      display_engagement_labels
     } = this.props;
     const {
       icon,
@@ -8358,7 +8360,7 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
       className: "story-sponsored-label clamp"
     }, context), external_React_default.a.createElement(external_ReactTransitionGroup_["TransitionGroup"], {
       component: null
-    }, !context && (context_type || engagement) && external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
+    }, !context && (context_type || display_engagement_labels && engagement) && external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
       key: fluentID,
       timeout: ANIMATION_DURATION,
       classNames: "story-animate"
@@ -8384,6 +8386,7 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
  // Default Meta that displays CTA as link if cta_variant in layout is set as "link"
 
 const DefaultMeta = ({
+  display_engagement_labels,
   source,
   title,
   excerpt,
@@ -8409,9 +8412,11 @@ const DefaultMeta = ({
 }, cta)), external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
   context_type: context_type,
   context: context,
+  display_engagement_labels: display_engagement_labels,
   engagement: engagement
 }));
 const CTAButtonMeta = ({
+  display_engagement_labels,
   source,
   title,
   excerpt,
@@ -8435,6 +8440,7 @@ const CTAButtonMeta = ({
 }, cta), !context && external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
   context_type: context_type,
   context: context,
+  display_engagement_labels: display_engagement_labels,
   engagement: engagement
 }));
 class DSCard_DSCard extends external_React_default.a.PureComponent {
@@ -8544,6 +8550,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       source: this.props.image_src,
       rawSource: this.props.raw_image_src
     })), isButtonCTA ? external_React_default.a.createElement(CTAButtonMeta, {
+      display_engagement_labels: this.props.display_engagement_labels,
       source: this.props.source,
       title: this.props.title,
       excerpt: this.props.excerpt,
@@ -8553,6 +8560,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       cta: this.props.cta,
       sponsor: this.props.sponsor
     }) : external_React_default.a.createElement(DefaultMeta, {
+      display_engagement_labels: this.props.display_engagement_labels,
       source: this.props.source,
       title: this.props.title,
       excerpt: this.props.excerpt,
@@ -8724,6 +8732,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
         engagement: rec.engagement,
+        display_engagement_labels: this.props.display_engagement_labels,
         cta: rec.cta,
         cta_variant: this.props.cta_variant
       }));
@@ -9881,6 +9890,8 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
   }
 
   renderComponent(component, embedWidth) {
+    const ENGAGEMENT_LABEL_ENABLED = this.props.Prefs.values[`discoverystream.engagementLabelEnabled`];
+
     switch (component.type) {
       case "Highlights":
         return external_React_default.a.createElement(Highlights, null);
@@ -9971,7 +9982,8 @@ class DiscoveryStreamBase_DiscoveryStreamBase extends external_React_default.a.P
           type: component.type,
           dispatch: this.props.dispatch,
           items: component.properties.items,
-          cta_variant: component.cta_variant
+          cta_variant: component.cta_variant,
+          display_engagement_labels: ENGAGEMENT_LABEL_ENABLED
         });
 
       case "Hero":
