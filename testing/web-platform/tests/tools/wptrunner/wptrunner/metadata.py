@@ -702,8 +702,7 @@ class TestFileData(object):
                         value = Result(status,
                                        known_intermittent,
                                        default_expected_by_type[self.item_type,
-                                                                subtest_id is not None],
-                        )
+                                                                subtest_id is not None])
                         item_expected.set_result(run_info, value)
                     elif prop == "asserts":
                         item_expected.set_asserts(run_info, value)
