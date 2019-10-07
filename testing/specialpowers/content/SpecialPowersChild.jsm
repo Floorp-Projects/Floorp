@@ -187,9 +187,9 @@ class SpecialPowersChild extends JSWindowActorChild {
     this._extensionListeners = null;
   }
 
-  handleEvent(aEvent) {
-    // We don't actually care much about the "DOMWindowCreated" event.
-    // We only listen to it to force creation of the actor.
+  observe(aSubject, aTopic, aData) {
+    // Ignore the "{chrome/content}-document-global-created" event. It
+    // is only observed to force creation of the actor.
   }
 
   actorCreated() {
