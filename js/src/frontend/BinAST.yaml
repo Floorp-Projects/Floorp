@@ -659,7 +659,7 @@ BreakStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(BinASTInterfaceAndField::BreakStatement__Label))));
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(FieldContext(BinASTInterfaceAndField::BreakStatement__Label)));
 
   build: |
     if (label) {
@@ -803,7 +803,7 @@ ContinueStatement:
       block:
         replace: |
           RootedAtom label(cx_);
-          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(Context(FieldContext(BinASTInterfaceAndField::ContinueStatement__Label))));
+          MOZ_TRY_VAR(label, tokenizer_->readMaybeAtom(FieldContext(BinASTInterfaceAndField::ContinueStatement__Label)));
 
   build: |
     if (label) {
@@ -1310,7 +1310,7 @@ LiteralRegExpExpression:
       block:
         replace: |
           RegExpFlags reflags = JS::RegExpFlag::NoFlags;
-          auto flagsContext = Context(FieldContext(BinASTInterfaceAndField::LiteralRegExpExpression__Flags));
+          auto flagsContext = FieldContext(BinASTInterfaceAndField::LiteralRegExpExpression__Flags);
           if (mozilla::IsSame<Tok, BinASTTokenReaderContext>::value) {
             // Hack: optimized `readChars` is not implemented for `BinASTTokenReaderContext`.
             RootedAtom flags(cx_);
