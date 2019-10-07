@@ -5415,21 +5415,21 @@ class LCallDeleteElement : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0> {
 };
 
 // Patchable jump to stubs generated for a SetProperty cache.
-class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 3> {
+class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 2> {
  public:
   LIR_HEADER(SetPropertyCache)
 
+  // Takes an additional temp: this is intendend to be FloatReg0 to allow the
+  // actual cache code to safely clobber that value without save and restore.
   LSetPropertyCache(const LAllocation& object, const LBoxAllocation& id,
                     const LBoxAllocation& value, const LDefinition& temp,
-                    const LDefinition& tempDouble,
-                    const LDefinition& tempFloat32)
+                    const LDefinition& tempDouble)
       : LInstructionHelper(classOpcode) {
     setOperand(0, object);
     setBoxOperand(Id, id);
     setBoxOperand(Value, value);
     setTemp(0, temp);
     setTemp(1, tempDouble);
-    setTemp(2, tempFloat32);
   }
 
   static const size_t Id = 1;
@@ -5438,13 +5438,6 @@ class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 3> {
   const MSetPropertyCache* mir() const { return mir_->toSetPropertyCache(); }
 
   const LDefinition* temp() { return getTemp(0); }
-  const LDefinition* tempDouble() { return getTemp(1); }
-  const LDefinition* tempFloat32() {
-    if (hasUnaliasedDouble()) {
-      return getTemp(2);
-    }
-    return getTemp(1);
-  }
 };
 
 class LGetIteratorCache : public LInstructionHelper<1, BOX_PIECES, 2> {
