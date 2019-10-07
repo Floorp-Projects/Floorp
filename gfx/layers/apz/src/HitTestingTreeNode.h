@@ -237,14 +237,17 @@ class HitTestingTreeNode {
  * Clear() being called, it unlocks the underlying node at which point it can
  * be recycled or freed.
  */
-class MOZ_RAII HitTestingTreeNodeAutoLock final {
+class HitTestingTreeNodeAutoLock final {
  public:
   HitTestingTreeNodeAutoLock();
-  HitTestingTreeNodeAutoLock(const HitTestingTreeNodeAutoLock&) = delete;
-  HitTestingTreeNodeAutoLock& operator=(const HitTestingTreeNodeAutoLock&) =
-      delete;
-  HitTestingTreeNodeAutoLock(HitTestingTreeNodeAutoLock&&) = delete;
   ~HitTestingTreeNodeAutoLock();
+  // Make it move-only. Note that the default implementations of the move
+  // constructor and assignment operator are correct: they'll call the
+  // move constructor of mNode, which will null out mNode on the moved-from
+  // object, and Clear() will early-exit when the moved-from object's
+  // destructor is called.
+  HitTestingTreeNodeAutoLock(HitTestingTreeNodeAutoLock&&) = default;
+  HitTestingTreeNodeAutoLock& operator=(HitTestingTreeNodeAutoLock&&) = default;
 
   void Initialize(const RecursiveMutexAutoLock& aProofOfTreeLock,
                   already_AddRefed<HitTestingTreeNode> aNode,
