@@ -81,7 +81,7 @@ type NavigateAction =
   | {|
       +type: "CONNECT",
       +mainThread: Thread,
-      +canRewind: boolean,
+      +traits: Object,
       +isWebExtension: boolean,
     |}
   | {| +type: "NAVIGATE", +mainThread: Thread |};
