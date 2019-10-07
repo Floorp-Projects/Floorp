@@ -1,0 +1,32 @@
+logger.lifecycle("[local-ac] adjusting project to use locally published android-components modules")
+
+// Inject mavenLocal repository. This is where we're expected to publish modules.
+repositories {
+    mavenLocal()
+}
+
+configurations.all { config ->
+    if (config.isCanBeResolved()) {
+        config.resolutionStrategy { strategy ->
+            dependencySubstitution {
+                all { dependency ->
+                    if (!(dependency.requested instanceof ModuleComponentSelector)) {
+                        // We only care about substituting for a module, not a project.
+                        return
+                    }
+
+                    // For every org.mozilla.components.* module, substitute its version for '+'.
+                    // '+' version tells gradle to resolve the latest available version.
+                    // As long as 'mavenLocal' is in the repositories list, gradle should pick out
+                    // latest published module during dependency resolution phase.
+                    def group = dependency.requested.group
+                    if (group == 'org.mozilla.components') {
+                        def name = dependency.requested.module
+                        dependency.useTarget([group: group, name: name, version: '+'])
+                    }
+                }
+            }
+        }
+    }
+}
+
