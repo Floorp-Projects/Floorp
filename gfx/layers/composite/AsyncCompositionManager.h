@@ -234,11 +234,14 @@ class AsyncCompositionManager final {
 
   MOZ_NON_OWNING_REF CompositorBridgeParent* mCompositorBridge;
 
-#ifdef MOZ_WIDGET_ANDROID
  public:
   void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
   ScreenMargin GetFixedLayerMargins() const;
 
+ private:
+  ScreenMargin mFixedLayerMargins;
+
+#ifdef MOZ_WIDGET_ANDROID
  private:
   // This calculates whether frame metrics should be sent to Java.
   bool FrameMetricsHaveUpdated(const FrameMetrics& aMetrics);
@@ -249,7 +252,6 @@ class AsyncCompositionManager final {
   // then we need to reposition the gecko scrollbar to deal with the
   // dynamic toolbar shifting content around.
   ScrollableLayerGuid::ViewID mRootScrollableId;
-  ScreenMargin mFixedLayerMargins;
 #endif
 };
 
