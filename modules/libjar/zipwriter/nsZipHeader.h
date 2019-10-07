@@ -77,8 +77,8 @@ class nsZipHeader final : public nsIZipEntry {
   mozilla::UniquePtr<uint8_t[]> mExtraField;
   mozilla::UniquePtr<uint8_t[]> mLocalExtraField;
 
-  void Init(const nsACString& aPath, PRTime aDate, uint32_t aAttr,
-            uint32_t aOffset);
+  nsresult Init(const nsACString& aPath, PRTime aDate, uint32_t aAttr,
+                uint32_t aOffset);
   uint32_t GetFileHeaderLength();
   nsresult WriteFileHeader(nsIOutputStream* aStream);
   uint32_t GetCDSHeaderLength();

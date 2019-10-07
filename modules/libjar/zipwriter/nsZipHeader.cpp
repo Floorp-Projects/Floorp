@@ -124,12 +124,15 @@ NS_IMETHODIMP nsZipHeader::GetPermissions(uint32_t* aPermissions) {
   return NS_OK;
 }
 
-void nsZipHeader::Init(const nsACString& aPath, PRTime aDate, uint32_t aAttr,
-                       uint32_t aOffset) {
+nsresult nsZipHeader::Init(const nsACString& aPath, PRTime aDate,
+                           uint32_t aAttr, uint32_t aOffset) {
   NS_ASSERTION(!mInited, "Already initalised");
 
   PRExplodedTime time;
   PR_ExplodeTime(aDate, PR_LocalTimeParameters, &time);
+  if (time.tm_year < 1980) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   mTime = time.tm_sec / 2 + (time.tm_min << 5) + (time.tm_hour << 11);
   mDate =
@@ -163,6 +166,8 @@ void nsZipHeader::Init(const nsACString& aPath, PRTime aDate, uint32_t aAttr,
   // Claim a UTF-8 path in case it needs it.
   mFlags |= FLAGS_IS_UTF8;
   mInited = true;
+
+  return NS_OK;
 }
 
 uint32_t nsZipHeader::GetFileHeaderLength() {
