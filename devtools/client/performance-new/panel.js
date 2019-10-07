@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+// @ts-ignore - No support yet for lazyRequireGetter.
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 /**
@@ -12,17 +13,37 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * with wiring this panel into the rest of DevTools and fetching the Actor's fronts.
  */
 
+/**
+ * @typedef {import("./types").PanelWindow} PanelWindow
+ * @typedef {import("./types").Toolbox} Toolbox
+ * @typedef {import("./types").Target} Target
+ */
+
 class PerformancePanel {
+  /**
+   * @param {PanelWindow} iframeWindow
+   * @param {Toolbox} toolbox
+   */
   constructor(iframeWindow, toolbox) {
     this.panelWin = iframeWindow;
     this.toolbox = toolbox;
 
+    // @ts-ignore - No support yet for lazyRequireGetter.
     EventEmitter.decorate(this);
   }
 
   /**
+   * This is implemented (and overwritten) by the EventEmitter. Is there a way
+   * to use mixins with JSDoc?
+   *
+   * @param {string} eventName
+   */
+  emit(eventName) {}
+
+  /**
    * Open is effectively an asynchronous constructor.
-   * @return {Promise} Resolves when the Perf tool completes opening.
+   * @return {Promise<PerformancePanel>} Resolves when the Perf tool completes
+   *     opening.
    */
   open() {
     if (!this._opening) {
@@ -31,6 +52,10 @@ class PerformancePanel {
     return this._opening;
   }
 
+  /**
+   * This function is the actual implementation of the open() method.
+   * @returns Promise<PerformancePanel>
+   */
   async _doOpen() {
     this.panelWin.gToolbox = this.toolbox;
     this.panelWin.gTarget = this.target;
@@ -48,6 +73,9 @@ class PerformancePanel {
 
   // DevToolPanel API:
 
+  /**
+   * @returns {Target} target
+   */
   get target() {
     return this.toolbox.target;
   }
@@ -62,4 +90,5 @@ class PerformancePanel {
     this._destroyed = true;
   }
 }
+
 exports.PerformancePanel = PerformancePanel;
