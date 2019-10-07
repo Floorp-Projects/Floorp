@@ -37,10 +37,11 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   class AutoTaggedTuple;
 
   using CharSlice = BinaryASTSupport::CharSlice;
-  using Context = BinASTTokenReaderBase::Context;
   using RootContext = BinASTTokenReaderBase::RootContext;
   using ListContext = BinASTTokenReaderBase::ListContext;
   using FieldContext = BinASTTokenReaderBase::FieldContext;
+  using FieldOrRootContext = BinASTTokenReaderBase::FieldOrRootContext;
+  using FieldOrListContext = BinASTTokenReaderBase::FieldOrListContext;
 
   // This implementation of `BinASTFields` is effectively `void`, as the format
   // does not embed field information.
@@ -185,18 +186,34 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    *
    * @return out If the header of the tuple is invalid.
    */
+  MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(BinASTKind& tag,
+                                               AutoTaggedTuple& guard);
+
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
       BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-      const Context&, AutoTaggedTuple& guard);
+      const FieldOrRootContext&, AutoTaggedTuple& guard) {
+    return enterTaggedTuple(tag, guard);
+  }
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
       BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-      const RootContext&, AutoTaggedTuple& guard);
+      const FieldOrListContext&, AutoTaggedTuple& guard) {
+    return enterTaggedTuple(tag, guard);
+  }
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
       BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-      const ListContext&, AutoTaggedTuple& guard);
+      const RootContext&, AutoTaggedTuple& guard) {
+    return enterTaggedTuple(tag, guard);
+  }
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
       BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
-      const FieldContext&, AutoTaggedTuple& guard);
+      const ListContext&, AutoTaggedTuple& guard) {
+    return enterTaggedTuple(tag, guard);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
+      BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
+      const FieldContext&, AutoTaggedTuple& guard) {
+    return enterTaggedTuple(tag, guard);
+  }
 
   /**
    * Read a single unsigned long.

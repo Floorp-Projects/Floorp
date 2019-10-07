@@ -58,7 +58,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   using BinASTFields = typename Tokenizer::BinASTFields;
   using Chars = typename Tokenizer::Chars;
   using RootContext = BinASTTokenReaderBase::RootContext;
-  using Context = BinASTTokenReaderBase::Context;
+  using FieldOrRootContext = BinASTTokenReaderBase::FieldOrRootContext;
 
  public:
   // Auto-generated types.

@@ -961,10 +961,11 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   class AutoTaggedTuple;
 
   using CharSlice = BinaryASTSupport::CharSlice;
-  using Context = BinASTTokenReaderBase::Context;
   using RootContext = BinASTTokenReaderBase::RootContext;
   using ListContext = BinASTTokenReaderBase::ListContext;
   using FieldContext = BinASTTokenReaderBase::FieldContext;
+  using FieldOrRootContext = BinASTTokenReaderBase::FieldOrRootContext;
+  using FieldOrListContext = BinASTTokenReaderBase::FieldOrListContext;
 
   // This implementation of `BinASTFields` is effectively `void`, as the format
   // does not embed field information.
@@ -1202,7 +1203,10 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
    */
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
       BinASTKind& tag, BinASTTokenReaderContext::BinASTFields& fields,
-      const Context&, AutoTaggedTuple& guard);
+      const FieldOrRootContext&, AutoTaggedTuple& guard);
+  MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
+      BinASTKind& tag, BinASTTokenReaderContext::BinASTFields& fields,
+      const FieldOrListContext&, AutoTaggedTuple& guard);
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
       BinASTKind& tag, BinASTTokenReaderContext::BinASTFields& fields,
       const RootContext&, AutoTaggedTuple& guard);

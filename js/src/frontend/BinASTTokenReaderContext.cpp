@@ -1525,23 +1525,35 @@ BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
     BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
-    const Context& context, AutoTaggedTuple& guard) {
+    const FieldOrRootContext& context, AutoTaggedTuple& guard) {
   return context.match(
+      [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
+          -> JS::Result<Ok> {
+        // This tuple is the value of the field we're currently reading.
+        MOZ_TRY_VAR(tag, readTagFromTable(asFieldContext.position));
+        return Ok();
+      },
       [&tag](const BinASTTokenReaderBase::RootContext&) -> JS::Result<Ok> {
         // For the moment, the format hardcodes `Script` as root.
         tag = BinASTKind::Script;
+        return Ok();
+      });
+}
+
+JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
+    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
+    const FieldOrListContext& context, AutoTaggedTuple& guard) {
+  return context.match(
+      [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
+          -> JS::Result<Ok> {
+        // This tuple is the value of the field we're currently reading.
+        MOZ_TRY_VAR(tag, readTagFromTable(asFieldContext.position));
         return Ok();
       },
       [this, &tag](const BinASTTokenReaderBase::ListContext& asListContext)
           -> JS::Result<Ok> {
         // This tuple is an element in a list we're currently reading.
         MOZ_TRY_VAR(tag, readTagFromTable(asListContext.position));
-        return Ok();
-      },
-      [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
-          -> JS::Result<Ok> {
-        // This tuple is the value of the field we're currently reading.
-        MOZ_TRY_VAR(tag, readTagFromTable(asFieldContext.position));
         return Ok();
       });
 }

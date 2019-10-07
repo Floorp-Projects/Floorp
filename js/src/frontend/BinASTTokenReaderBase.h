@@ -52,16 +52,23 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   };
 
   // The context in which we read a token.
-  using Context = mozilla::Variant<RootContext, ListContext, FieldContext>;
+  using FieldOrRootContext = mozilla::Variant<FieldContext, RootContext>;
+  using FieldOrListContext = mozilla::Variant<FieldContext, ListContext>;
 
 #ifdef DEBUG
   // Utility matcher, used to print a `Context` during debugging.
   struct ContextPrinter {
-    static void print(const char* text, const Context& context) {
+    static void print(const char* text, const FieldOrRootContext& context) {
       fprintf(stderr, "%s ", text);
       context.match(ContextPrinter());
       fprintf(stderr, "\n");
     }
+    static void print(const char* text, const FieldOrListContext& context) {
+      fprintf(stderr, "%s ", text);
+      context.match(ContextPrinter());
+      fprintf(stderr, "\n");
+    }
+
     void operator()(const RootContext&) { fprintf(stderr, "<Root context>"); }
     void operator()(const ListContext& context) {
       fprintf(stderr, "<List context>: %s => %s",
