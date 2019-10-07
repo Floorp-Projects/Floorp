@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    // Set the baseUrl to the root of the project.
+    "baseUrl": "../../..",
+    "paths": {},
+    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "esnext",
+    "lib": ["esnext", "dom"]
+  },
+  // For now, manually include typed files.
+  "include": [
+    "utils.js",
+    "panel.js",
+    "store"
+  ]
+}
