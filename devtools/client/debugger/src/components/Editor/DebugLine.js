@@ -66,7 +66,7 @@ export class DebugLine extends PureComponent<Props> {
     if (!isDocumentReady(source, location)) {
       return;
     }
-    const { sourceId } = location;
+    const sourceId = location.sourceId;
     const doc = getDocument(sourceId);
 
     let { line, column } = toEditorPosition(location);
@@ -104,8 +104,9 @@ export class DebugLine extends PureComponent<Props> {
       this.debugExpression.clear();
     }
 
+    const sourceId = location.sourceId;
     const { line } = toEditorPosition(location);
-    const doc = getDocument(location.sourceId);
+    const doc = getDocument(sourceId);
     const { lineClass } = this.getTextClasses(why);
     doc.removeLineClass(line, "line", lineClass);
   }

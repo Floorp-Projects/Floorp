@@ -47,7 +47,7 @@ export function getWasmText(sourceId: string, data: Uint8Array) {
     result = { lines: ["No luck with wast conversion"], offsets: [0], done };
   }
 
-  const { offsets } = result;
+  const offsets = result.offsets;
   const lines = [];
   for (let i = 0; i < offsets.length; i++) {
     lines[offsets[i]] = i;
