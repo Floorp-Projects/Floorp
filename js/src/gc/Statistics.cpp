@@ -1108,7 +1108,8 @@ void Statistics::sendGCTelemetry() {
         TimeDuration::Max(total, TimeDuration::FromMilliseconds(1));
     double effectiveness =
         (double(bytesFreed) / (1024.0 * 1024.0)) / clampedTotal.ToSeconds();
-    runtime->addTelemetry(JS_TELEMETRY_GC_EFFECTIVENESS, uint32_t(effectiveness));
+    runtime->addTelemetry(JS_TELEMETRY_GC_EFFECTIVENESS,
+                          uint32_t(effectiveness));
   }
 }
 

@@ -288,12 +288,10 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
 
     if (aClearStyle) {
       // pasting does not inherit local inline styles
-      nsCOMPtr<nsINode> tmpNode = SelectionRefPtr()->GetAnchorNode();
-      int32_t tmpOffset =
-          static_cast<int32_t>(SelectionRefPtr()->AnchorOffset());
-      rv = ClearStyle(address_of(tmpNode), &tmpOffset, nullptr, nullptr);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
+      EditResult result = ClearStyleAt(
+          EditorDOMPoint(SelectionRefPtr()->AnchorRef()), nullptr, nullptr);
+      if (NS_WARN_IF(result.Failed())) {
+        return result.Rv();
       }
     }
   } else {

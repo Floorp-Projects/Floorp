@@ -77,7 +77,8 @@ nsresult ScriptLoadHandler::DecodeRawDataHelper(const uint8_t* aData,
   using namespace mozilla::Telemetry;
   if (aEndOfStream && haveRead) {
     // Compute the percent of data transfered incrementally.
-    Accumulate(DOM_SCRIPT_LOAD_INCREMENTAL_RATIO, 100 * haveRead / (haveRead + written));
+    Accumulate(DOM_SCRIPT_LOAD_INCREMENTAL_RATIO,
+               100 * haveRead / (haveRead + written));
     // Compute the rate of transfer of the incremental data calls averaged
     // across the time needed to complete the request.
     auto streamingTime = TimeStamp::Now() - mFirstOnIncrementalData;

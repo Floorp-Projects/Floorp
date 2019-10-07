@@ -248,7 +248,6 @@ class nsCSSProps {
   }
 
  public:
-
   static bool IsEnabled(nsCSSPropertyID aProperty, EnabledState aEnabled) {
     if (IsEnabled(aProperty)) {
       return true;

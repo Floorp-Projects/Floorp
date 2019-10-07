@@ -30,8 +30,7 @@ enum MediaSinkEnum {
 
 enum { kVideoTrack = 1, kAudioTrack = 2, kTrackCount };
 
-class MediaEngine : public DeviceChangeNotifier,
-                    public DeviceChangeCallback {
+class MediaEngine : public DeviceChangeNotifier, public DeviceChangeCallback {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEngine)
   NS_DECL_OWNINGTHREAD

@@ -375,8 +375,6 @@ class RestyleManager {
   // ::first-line.
   void ReparentComputedStyleForFirstLine(nsIFrame*);
 
-  bool HasPendingRestyleAncestor(dom::Element* aElement) const;
-
   /**
    * Performs a Servo animation-only traversal to compute style for all nodes
    * with the animation-only dirty bit in the document.

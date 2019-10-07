@@ -332,13 +332,13 @@ class DebuggerWeakMap : private WeakMap<HeapPtr<Referent*>, HeapPtr<Wrapper*>> {
 
   // Expose WeakMap public interface.
 
-  using Base::zone;
   using Base::all;
   using Base::has;
   using Base::lookup;
   using Base::lookupForAdd;
   using Base::remove;
   using Base::trace;
+  using Base::zone;
 #ifdef DEBUG
   using Base::hasEntry;
 #endif
@@ -1412,14 +1412,14 @@ Result<Completion> DebuggerGenericEval(
 bool ParseResumptionValue(JSContext* cx, HandleValue rval,
                           ResumeMode& resumeMode, MutableHandleValue vp);
 
-#define JS_DEBUG_PSG(Name, Getter)                        \
+#define JS_DEBUG_PSG(Name, Getter) \
   JS_PSG(Name, CallData::ToNative<&CallData::Getter>, 0)
 
-#define JS_DEBUG_PSGS(Name, Getter, Setter)               \
-  JS_PSGS(Name, CallData::ToNative<&CallData::Getter>,  \
+#define JS_DEBUG_PSGS(Name, Getter, Setter)            \
+  JS_PSGS(Name, CallData::ToNative<&CallData::Getter>, \
           CallData::ToNative<&CallData::Setter>, 0)
 
-#define JS_DEBUG_FN(Name, Method, NumArgs)                \
+#define JS_DEBUG_FN(Name, Method, NumArgs) \
   JS_FN(Name, CallData::ToNative<&CallData::Method>, NumArgs, 0)
 
 } /* namespace js */

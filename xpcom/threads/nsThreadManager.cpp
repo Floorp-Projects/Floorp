@@ -37,9 +37,8 @@ static MOZ_THREAD_LOCAL(PRThread*) gTlsCurrentVirtualThread;
 
 bool NS_IsMainThreadTLSInitialized() { return sTLSIsMainThread.initialized(); }
 
-class BackgroundEventTarget final : public nsIEventTarget
-{
-public:
+class BackgroundEventTarget final : public nsIEventTarget {
+ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
 
@@ -49,7 +48,7 @@ public:
 
   nsresult Shutdown();
 
-private:
+ private:
   ~BackgroundEventTarget() = default;
 
   nsCOMPtr<nsIThreadPool> mPool;
@@ -98,20 +97,19 @@ BackgroundEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
 }
 
 NS_IMETHODIMP
-BackgroundEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) {
+BackgroundEventTarget::DispatchFromScript(nsIRunnable* aRunnable,
+                                          uint32_t aFlags) {
   return mPool->Dispatch(aRunnable, aFlags);
 }
 
 NS_IMETHODIMP
-BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t) {
+BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable,
+                                       uint32_t) {
   nsCOMPtr<nsIRunnable> dropRunnable(aRunnable);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult
-BackgroundEventTarget::Shutdown() {
-  return mPool->Shutdown();
-}
+nsresult BackgroundEventTarget::Shutdown() { return mPool->Shutdown(); }
 
 extern "C" {
 // This uses the C language linkage because it's exposed to Rust
@@ -272,10 +270,7 @@ void nsThreadManager::InitializeShutdownObserver() {
 }
 
 nsThreadManager::nsThreadManager()
-  : mCurThreadIndex(0),
-    mMainPRThread(nullptr),
-    mInitialized(false)
-{}
+    : mCurThreadIndex(0), mMainPRThread(nullptr), mInitialized(false) {}
 
 nsresult nsThreadManager::Init() {
   // Child processes need to initialize the thread manager before they

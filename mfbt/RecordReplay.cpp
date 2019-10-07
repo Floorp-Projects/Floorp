@@ -49,26 +49,23 @@ namespace recordreplay {
         (aValue)) Macro(InternalEndOrderedAtomicAccess, (), ())                \
       Macro(InternalBeginPassThroughThreadEvents, (), ()) Macro(               \
           InternalEndPassThroughThreadEvents, (),                              \
-          ()) Macro(InternalBeginDisallowThreadEvents, (),                     \
-                    ()) Macro(InternalEndDisallowThreadEvents, (),             \
-                              ()) Macro(InternalRecordReplayBytes,             \
-                                        (void* aData, size_t aSize),           \
-                                        (aData, aSize))                        \
-          Macro(                                                               \
-              InternalInvalidateRecording, (const char* aWhy),                 \
-              (aWhy)) Macro(InternalDestroyPLDHashTableCallbacks,              \
-                            (const PLDHashTableOps* aOps),                     \
-                            (aOps)) Macro(InternalMovePLDHashTableContents,    \
-                                          (const PLDHashTableOps* aFirstOps,   \
-                                           const PLDHashTableOps* aSecondOps), \
-                                          (aFirstOps, aSecondOps))             \
-              Macro(InternalHoldJSObject, (JSObject* aJSObj), (aJSObj))        \
-                  Macro(InternalRecordReplayAssert,                            \
-                          (const char* aFormat, va_list aArgs),                \
-                          (aFormat,                                            \
-                           aArgs)) Macro(InternalRecordReplayAssertBytes,      \
-                                         (const void* aData, size_t aSize),    \
-                                         (aData, aSize))                       \
+          ()) Macro(InternalBeginDisallowThreadEvents, (), ())                 \
+          Macro(InternalEndDisallowThreadEvents, (), ()) Macro(                \
+              InternalRecordReplayBytes, (void* aData, size_t aSize),          \
+              (aData, aSize)) Macro(InternalInvalidateRecording,               \
+                                    (const char* aWhy), (aWhy))                \
+              Macro(InternalDestroyPLDHashTableCallbacks,                      \
+                    (const PLDHashTableOps* aOps),                             \
+                    (aOps)) Macro(InternalMovePLDHashTableContents,            \
+                                  (const PLDHashTableOps* aFirstOps,           \
+                                   const PLDHashTableOps* aSecondOps),         \
+                                  (aFirstOps, aSecondOps))                     \
+                  Macro(InternalHoldJSObject, (JSObject * aJSObj),             \
+                        (aJSObj)) Macro(InternalRecordReplayAssert,            \
+                                        (const char* aFormat, va_list aArgs),  \
+                                        (aFormat, aArgs))                      \
+                      Macro(InternalRecordReplayAssertBytes,                   \
+                            (const void* aData, size_t aSize), (aData, aSize)) \
                           Macro(InternalRegisterThing, (void* aThing),         \
                                 (aThing)) Macro(InternalUnregisterThing,       \
                                                 (void* aThing), (aThing))      \

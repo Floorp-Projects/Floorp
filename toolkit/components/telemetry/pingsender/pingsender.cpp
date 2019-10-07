@@ -29,8 +29,8 @@ const uint32_t kConnectionTimeoutMs = 30 * 1000;
 // Operate in std::string because nul bytes will be preserved
 bool IsValidDestination(std::string aHost) {
   static const std::string kValidDestinations[] = {
-    "localhost",
-    "incoming.telemetry.mozilla.org",
+      "localhost",
+      "incoming.telemetry.mozilla.org",
   };
   for (auto destination : kValidDestinations) {
     if (aHost == destination) {
@@ -43,7 +43,6 @@ bool IsValidDestination(std::string aHost) {
 bool IsValidDestination(char* aHost) {
   return IsValidDestination(std::string(aHost));
 }
-
 
 /**
  * This shared function returns a Date header string for use in HTTP requests.

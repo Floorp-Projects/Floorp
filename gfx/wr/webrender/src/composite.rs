@@ -33,26 +33,35 @@ pub struct CompositeTile {
     pub surface: CompositeTileSurface,
     pub rect: DeviceRect,
     pub clip_rect: DeviceRect,
+    pub dirty_rect: DeviceRect,
     pub z_id: ZBufferId,
 }
 
 /// The list of tiles to be drawn this frame
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct CompositeConfig {
+pub struct CompositeState {
     pub opaque_tiles: Vec<CompositeTile>,
     pub alpha_tiles: Vec<CompositeTile>,
     pub clear_tiles: Vec<CompositeTile>,
     pub z_generator: ZBufferIdGenerator,
+    // If false, we can't rely on the dirty rects in the CompositeTile
+    // instances. This currently occurs during a scroll event, as a
+    // signal to refresh the whole screen. This is only a temporary
+    // measure until we integrate with OS compositors. In the meantime
+    // it gives us the ability to partial present for any non-scroll
+    // case as a simple win (e.g. video, animation etc).
+    pub dirty_rects_are_valid: bool,
 }
 
-impl CompositeConfig {
+impl CompositeState {
     pub fn new() -> Self {
-        CompositeConfig {
+        CompositeState {
             opaque_tiles: Vec::new(),
             alpha_tiles: Vec::new(),
             clear_tiles: Vec::new(),
             z_generator: ZBufferIdGenerator::new(0),
+            dirty_rects_are_valid: true,
         }
     }
 }

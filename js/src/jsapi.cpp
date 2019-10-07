@@ -5539,11 +5539,11 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_WASM_JIT_BASELINE:
       *valueOut = JS::ContextOptionsRef(cx).wasmBaseline() ? 1 : 0;
       break;
-#ifdef ENABLE_WASM_CRANELIFT
+#  ifdef ENABLE_WASM_CRANELIFT
     case JSJITCOMPILER_WASM_JIT_CRANELIFT:
       *valueOut = JS::ContextOptionsRef(cx).wasmCranelift() ? 1 : 0;
       break;
-#endif
+#  endif
     case JSJITCOMPILER_WASM_JIT_ION:
       *valueOut = JS::ContextOptionsRef(cx).wasmIon() ? 1 : 0;
       break;

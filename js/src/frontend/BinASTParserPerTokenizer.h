@@ -55,10 +55,9 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   using AutoList = typename Tokenizer::AutoList;
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
-  using BinASTFields = typename Tokenizer::BinASTFields;
   using Chars = typename Tokenizer::Chars;
   using RootContext = BinASTTokenReaderBase::RootContext;
-  using Context = BinASTTokenReaderBase::Context;
+  using FieldOrRootContext = BinASTTokenReaderBase::FieldOrRootContext;
 
  public:
   // Auto-generated types.
@@ -231,7 +230,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
      */
 
     ObjectBox* objbox = alloc_.new_<ObjectBox>(obj, traceListHead_);
-    if (!objbox) {
+    if (MOZ_UNLIKELY(!objbox)) {
       ReportOutOfMemory(cx_);
       return nullptr;
     }

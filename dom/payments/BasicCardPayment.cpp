@@ -111,7 +111,8 @@ bool BasicCardService::IsValidExpiryYear(const nsAString& aExpiryYear) {
   return true;
 }
 
-void BasicCardService::CheckForValidBasicCardErrors(JSContext* aCx, JSObject* aData,
+void BasicCardService::CheckForValidBasicCardErrors(JSContext* aCx,
+                                                    JSObject* aData,
                                                     ErrorResult& aRv) {
   MOZ_ASSERT(aData, "Don't pass null data");
   JS::RootedValue data(aCx, JS::ObjectValue(*aData));

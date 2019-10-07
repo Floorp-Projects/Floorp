@@ -1036,8 +1036,8 @@ nsTArray<uint32_t>* Gecko_AppendFeatureValueHashEntry(
     gfxFontFeatureValueSet* aFontFeatureValues, nsAtom* aFamily,
     uint32_t aAlternate, nsAtom* aName) {
   MOZ_ASSERT(NS_IsMainThread());
-  return aFontFeatureValues->AppendFeatureValueHashEntry(
-      nsAtomCString(aFamily), aName, aAlternate);
+  return aFontFeatureValues->AppendFeatureValueHashEntry(nsAtomCString(aFamily),
+                                                         aName, aAlternate);
 }
 
 float Gecko_FontStretch_ToFloat(FontStretch aStretch) {

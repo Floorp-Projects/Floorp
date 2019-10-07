@@ -66,7 +66,6 @@ class Pivot final {
   Accessible* AtPoint(int32_t aX, int32_t aY, PivotRule& aRule);
 
  private:
-
   Accessible* AdjustStartPosition(Accessible* aAnchor, PivotRule& aRule,
                                   uint16_t* aFilterResult);
 

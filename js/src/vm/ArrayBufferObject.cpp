@@ -731,10 +731,12 @@ static bool CreateSpecificWasmBuffer(
   Maybe<uint32_t> clampedMaxSize = maxSize;
   if (clampedMaxSize) {
 #ifdef JS_64BIT
-    // On 64-bit platforms when we aren't using huge memory, clamp clampedMaxSize to
-    // a smaller value that satisfies the 32-bit invariants
-    // clampedMaxSize + wasm::PageSize < UINT32_MAX and clampedMaxSize % wasm::PageSize == 0
-    if (!useHugeMemory && clampedMaxSize.value() >= (UINT32_MAX - wasm::PageSize)) {
+    // On 64-bit platforms when we aren't using huge memory, clamp
+    // clampedMaxSize to a smaller value that satisfies the 32-bit invariants
+    // clampedMaxSize + wasm::PageSize < UINT32_MAX and clampedMaxSize %
+    // wasm::PageSize == 0
+    if (!useHugeMemory &&
+        clampedMaxSize.value() >= (UINT32_MAX - wasm::PageSize)) {
       uint32_t clamp = (wasm::MaxMemoryMaximumPages - 2) * wasm::PageSize;
       MOZ_ASSERT(clamp < UINT32_MAX);
       MOZ_ASSERT(initialSize <= clamp);
@@ -774,8 +776,8 @@ static bool CreateSpecificWasmBuffer(
       return false;
     }
 
-    // If we fail, and have a clampedMaxSize, try to reserve the biggest chunk in
-    // the range [initialSize, clampedMaxSize) using log backoff.
+    // If we fail, and have a clampedMaxSize, try to reserve the biggest chunk
+    // in the range [initialSize, clampedMaxSize) using log backoff.
     if (!clampedMaxSize) {
       wasm::Log(cx, "new Memory({initial=%u bytes}) failed", initialSize);
       ReportOutOfMemory(cx);
@@ -808,7 +810,8 @@ static bool CreateSpecificWasmBuffer(
 
   // ObjT::createFromNewRawBuffer assumes ownership of |buffer| even in case
   // of failure.
-  RootedArrayBufferObjectMaybeShared object(cx, ObjT::createFromNewRawBuffer(cx, buffer, initialSize));
+  RootedArrayBufferObjectMaybeShared object(
+      cx, ObjT::createFromNewRawBuffer(cx, buffer, initialSize));
   if (!object) {
     return false;
   }
