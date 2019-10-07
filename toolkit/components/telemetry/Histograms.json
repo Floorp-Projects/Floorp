@@ -9978,6 +9978,7 @@
     "description": "Video decoder's number of discarded packets (in packets/min) over an entire call"
   },
   "WEBRTC_CALL_DURATION": {
+    "bug_numbers": [1571015, 1586271],
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
@@ -9985,7 +9986,8 @@
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 1000,
-    "description": "The length of time (in seconds) that a call lasted."
+    "description": "The length of time (in seconds) that a call lasted.",
+    "releaseChannelCollection": "opt-out"
   },
   "WEBRTC_CALL_COUNT_2": {
     "record_in_processes": ["main", "content"],
