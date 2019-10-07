@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 
 #include "jit/CacheIR.h"
+#include "jit/SharedICRegisters.h"
 
 namespace js {
 namespace jit {
@@ -658,6 +659,11 @@ class FailurePath {
   SpilledRegisterVector spilledRegs_;
   NonAssertingLabel label_;
   uint32_t stackPushed_;
+#ifdef DEBUG
+  // Flag to ensure FailurePath::label() isn't taken while there's a scratch
+  // float register which still needs to be restored.
+  bool hasAutoScratchFloatRegister_ = false;
+#endif
 
  public:
   FailurePath() = default;
@@ -668,7 +674,11 @@ class FailurePath {
         label_(other.label_),
         stackPushed_(other.stackPushed_) {}
 
-  Label* label() { return &label_; }
+  Label* labelUnchecked() { return &label_; }
+  Label* label() {
+    MOZ_ASSERT(!hasAutoScratchFloatRegister_);
+    return labelUnchecked();
+  }
 
   void setStackPushed(uint32_t i) { stackPushed_ = i; }
   uint32_t stackPushed() const { return stackPushed_; }
@@ -688,6 +698,20 @@ class FailurePath {
   // If canShareFailurePath(other) returns true, the same machine code will
   // be emitted for two failure paths, so we can share them.
   bool canShareFailurePath(const FailurePath& other) const;
+
+  void setHasAutoScratchFloatRegister() {
+#ifdef DEBUG
+    MOZ_ASSERT(!hasAutoScratchFloatRegister_);
+    hasAutoScratchFloatRegister_ = true;
+#endif
+  }
+
+  void clearHasAutoScratchFloatRegister() {
+#ifdef DEBUG
+    MOZ_ASSERT(hasAutoScratchFloatRegister_);
+    hasAutoScratchFloatRegister_ = false;
+#endif
+  }
 };
 
 /**
@@ -716,6 +740,7 @@ class MOZ_RAII CacheIRCompiler {
   friend class AutoStubFrame;
   friend class AutoSaveLiveRegisters;
   friend class AutoCallVM;
+  friend class AutoScratchFloatRegister;
 
   enum class Mode { Baseline, Ion };
 
@@ -1074,6 +1099,35 @@ class MOZ_RAII AutoCallVM {
   void prepare();
 
   ~AutoCallVM();
+};
+
+// RAII class to allocate FloatReg0 as a scratch register and release it when
+// we're done with it. The previous contents of FloatReg0 may be spilled on the
+// stack and, if necessary, are restored when the destructor runs.
+//
+// When FailurePath is passed to the constructor, FailurePath::label() must not
+// be used during the life time of the AutoScratchFloatRegister. Instead use
+// AutoScratchFloatRegister::failure().
+class MOZ_RAII AutoScratchFloatRegister {
+  Label failurePopReg_{};
+  CacheIRCompiler* compiler_;
+  FailurePath* failure_;
+
+  AutoScratchFloatRegister(const AutoScratchFloatRegister&) = delete;
+  void operator=(const AutoScratchFloatRegister&) = delete;
+
+ public:
+  explicit AutoScratchFloatRegister(CacheIRCompiler* compiler)
+      : AutoScratchFloatRegister(compiler, nullptr) {}
+
+  AutoScratchFloatRegister(CacheIRCompiler* compiler, FailurePath* failure);
+
+  ~AutoScratchFloatRegister();
+
+  Label* failure();
+
+  FloatRegister get() const { return FloatReg0; }
+  operator FloatRegister() const { return FloatReg0; }
 };
 
 // See the 'Sharing Baseline stub code' comment in CacheIR.h for a description
