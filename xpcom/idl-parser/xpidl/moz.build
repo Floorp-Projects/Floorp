@@ -8,8 +8,5 @@ PYTHON_UNITTEST_MANIFESTS += [
     'python.ini',
 ]
 
-GENERATED_FILES += [
-    ('xpidl.stub', 'xpidllex.py', 'xpidlyacc.py'),
-]
-
-GENERATED_FILES[('xpidl.stub', 'xpidllex.py', 'xpidlyacc.py')].script = 'header.py:main'
+GeneratedFile('xpidl.stub', 'xpidllex.py', 'xpidlyacc.py', script='header.py',
+              entry_point='main')

@@ -42,18 +42,12 @@ OS_LIBS += [
 ]
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    ntdll_freestanding_lib = '%sntdll_freestanding.%s' % (CONFIG['LIB_PREFIX'],
-                                                          CONFIG['LIB_SUFFIX'])
-
-    GENERATED_FILES += [
-        ntdll_freestanding_lib,
-    ]
-
-    ntdll_freestanding_gen = GENERATED_FILES[ntdll_freestanding_lib]
-    ntdll_freestanding_gen.script = 'gen_ntdll_freestanding_lib.py'
-    ntdll_freestanding_gen.inputs = ['ntdll_freestanding.def']
-    ntdll_freestanding_gen.flags = [CONFIG['LLVM_DLLTOOL']] + \
-                                   CONFIG['LLVM_DLLTOOL_FLAGS']
+    GeneratedFile(
+        '%sntdll_freestanding.%s' % (CONFIG['LIB_PREFIX'],
+                                     CONFIG['LIB_SUFFIX']),
+        script='gen_ntdll_freestanding_lib.py',
+        inputs=['ntdll_freestanding.def'],
+        flags=[CONFIG['LLVM_DLLTOOL']] + CONFIG['LLVM_DLLTOOL_FLAGS'])
 
 DisableStlWrapping()
 

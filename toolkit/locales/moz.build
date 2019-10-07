@@ -15,11 +15,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
 
 JAR_MANIFESTS += ['jar.mn']
 
-GENERATED_FILES = [
-    'multilocale.txt',
-]
-multilocale = GENERATED_FILES['multilocale.txt']
-multilocale.script = 'gen_multilocale.py'
+GeneratedFile('multilocale.txt', script='gen_multilocale.py')
 FINAL_TARGET_FILES.res += [
     '!multilocale.txt',
 ]

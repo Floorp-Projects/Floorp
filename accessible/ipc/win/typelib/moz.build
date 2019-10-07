@@ -8,6 +8,4 @@ FINAL_TARGET_FILES += [
     '!Accessible.tlb',
 ]
 
-GENERATED_FILES += [
-    'Accessible.tlb',
-]
+GeneratedFile('Accessible.tlb')

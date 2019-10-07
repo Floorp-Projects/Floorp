@@ -68,13 +68,13 @@ if CONFIG['WRAP_STL_INCLUDES']:
     # which won't need this wrapper, such as L10N. Just don't try to generate the
     # wrapper in that case.
     if CONFIG['OS_ARCH'] == 'WINNT':
-        GENERATED_FILES += ['../dist/stl_wrappers/windows.h']
-        windows_h = GENERATED_FILES['../dist/stl_wrappers/windows.h']
-        windows_h.script = 'make-windows-h-wrapper.py:generate'
-        windows_h.inputs = ['windows-h-constant.decls.h',
-                            'windows-h-unicode.decls.h',
-                            'windows-h-wrapper.template.h']
-        windows_h.flags = [stl_compiler]
+        GeneratedFile('../dist/stl_wrappers/windows.h',
+                      script='make-windows-h-wrapper.py',
+                      entry_point='generate',
+                      inputs = ['windows-h-constant.decls.h',
+                                'windows-h-unicode.decls.h',
+                                'windows-h-wrapper.template.h'],
+                      flags=[stl_compiler])
 
 if CONFIG['WRAP_SYSTEM_INCLUDES']:
     include('system-headers.mozbuild')
