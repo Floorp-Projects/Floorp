@@ -231,7 +231,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
      */
 
     ObjectBox* objbox = alloc_.new_<ObjectBox>(obj, traceListHead_);
-    if (!objbox) {
+    if (MOZ_UNLIKELY(!objbox)) {
       ReportOutOfMemory(cx_);
       return nullptr;
     }

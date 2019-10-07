@@ -20,7 +20,7 @@ BinASTSourceMetadata* BinASTSourceMetadata::Create(
 
   BinASTSourceMetadata* data = static_cast<BinASTSourceMetadata*>(
       js_malloc(BinASTSourceMetadata::totalSize(numBinASTKinds, numStrings)));
-  if (!data) {
+  if (MOZ_UNLIKELY(!data)) {
     return nullptr;
   }
 
