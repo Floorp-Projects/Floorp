@@ -303,6 +303,7 @@ struct DIGroup {
   // This is the intersection of mVisibleRect and mLastVisibleRect
   // we ensure that mInvalidRect is contained in mPreservedRect
   IntRect mPreservedRect;
+  IntRect mActualBounds;
   int32_t mAppUnitsPerDevPixel;
   gfx::Size mScale;
   ScrollableLayerGuid::ViewID mScrollId;
@@ -566,6 +567,7 @@ struct DIGroup {
         }
       }
     }
+    mActualBounds.OrWith(aData->mRect);
     aData->mClip = clip;
     aData->mMatrix = aMatrix;
     aData->mImageRect = mClippedImageBounds;
@@ -580,6 +582,10 @@ struct DIGroup {
                 nsDisplayItem* aStartItem, nsDisplayItem* aEndItem) {
     GP("\n\n");
     GP("Begin EndGroup\n");
+
+    mVisibleRect = mVisibleRect.Intersect(
+            ViewAs<LayerPixel>(mActualBounds,
+                               PixelCastJustification::LayerIsImage));
 
     if (mVisibleRect.IsEmpty()) {
       return;
@@ -1252,6 +1258,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
           groupData->mFollowingGroup.mVisibleRect
               .Intersect(groupData->mFollowingGroup.mLastVisibleRect)
               .ToUnknownRect();
+      groupData->mFollowingGroup.mActualBounds = IntRect();
 
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                              aBuilder, aResources, this, startOfCurrentGroup,
@@ -1516,6 +1523,7 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mGroupBounds = groupBounds;
   group.mLayerBounds = layerBounds;
   group.mVisibleRect = visibleRect;
+  group.mActualBounds = IntRect();
   group.mPreservedRect =
       group.mVisibleRect.Intersect(group.mLastVisibleRect).ToUnknownRect();
   group.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
