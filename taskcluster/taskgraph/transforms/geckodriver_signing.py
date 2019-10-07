@@ -84,10 +84,8 @@ def make_repackage_signing_description(config, jobs):
         if build_platform.startswith('macosx'):
             worker_type = task['worker-type']
             worker_type_alias_map = {
-                'scriptworker-k8s/gecko-t-signing': 'mac-depsigning',
-                'scriptworker-k8s/gecko-3-signing': 'mac-signing',
-                'scriptworker-k8s/gecko-t-signing-dev': 'mac-depsigning',
-                'scriptworker-k8s/gecko-3-signing-dev': 'mac-signing',
+                'linux-depsigning': 'mac-depsigning',
+                'linux-signing': 'mac-signing',
             }
 
             assert worker_type in worker_type_alias_map, \

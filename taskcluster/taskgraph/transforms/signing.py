@@ -177,10 +177,8 @@ def make_task_description(config, jobs):
 
         if 'macosx' in build_platform:
             worker_type_alias_map = {
-                'scriptworker-k8s/gecko-t-signing': 'mac-depsigning',
-                'scriptworker-k8s/gecko-3-signing': 'mac-signing',
-                'scriptworker-k8s/gecko-t-signing-dev': 'mac-depsigning',
-                'scriptworker-k8s/gecko-3-signing-dev': 'mac-signing',
+                'linux-depsigning': 'mac-depsigning',
+                'linux-signing': 'mac-signing',
             }
 
             assert worker_type_alias in worker_type_alias_map, \
