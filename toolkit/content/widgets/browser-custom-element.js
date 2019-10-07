@@ -1591,7 +1591,7 @@
 
         this._remoteWebNavigationImpl._currentURI = aLocation;
         this._documentURI = aDocumentURI;
-        this._contentTile = aTitle;
+        this._contentTitle = aTitle;
         this._imageDocument = null;
         this._contentPrincipal = aContentPrincipal;
         this._contentStoragePrincipal = aContentStoragePrincipal;
