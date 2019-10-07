@@ -615,7 +615,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                                      GuidComparator aComparator);
   AsyncPanZoomController* GetTargetApzcForNode(HitTestingTreeNode* aNode);
   AsyncPanZoomController* GetAPZCAtPoint(
-      HitTestingTreeNode* aNode, const ScreenPoint& aHitTestPoint,
+      const ScreenPoint& aHitTestPoint,
       gfx::CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
       HitTestingTreeNode** aOutScrollbarNode);
   already_AddRefed<AsyncPanZoomController> GetAPZCAtPointWR(

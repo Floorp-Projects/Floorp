@@ -2588,8 +2588,7 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
   if (gfx::gfxVars::UseWebRender()) {
     target = GetAPZCAtPointWR(aPoint, &hitResult, aOutLayersId, &scrollbarNode);
   } else {
-    target = GetAPZCAtPoint(mRootNode, aPoint, &hitResult, aOutLayersId,
-                            &scrollbarNode);
+    target = GetAPZCAtPoint(aPoint, &hitResult, aOutLayersId, &scrollbarNode);
   }
 
   if (aOutHitResult) {
@@ -2778,15 +2777,14 @@ AsyncPanZoomController* APZCTreeManager::GetTargetApzcForNode(
 }
 
 AsyncPanZoomController* APZCTreeManager::GetAPZCAtPoint(
-    HitTestingTreeNode* aNode, const ScreenPoint& aHitTestPoint,
-    CompositorHitTestInfo* aOutHitResult, LayersId* aOutLayersId,
-    HitTestingTreeNode** aOutScrollbarNode) {
+    const ScreenPoint& aHitTestPoint, CompositorHitTestInfo* aOutHitResult,
+    LayersId* aOutLayersId, HitTestingTreeNode** aOutScrollbarNode) {
   mTreeLock.AssertCurrentThreadIn();
 
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
   HitTestingTreeNode* resultNode;
-  HitTestingTreeNode* root = aNode;
+  HitTestingTreeNode* root = mRootNode;
   std::stack<LayerPoint> hitTestPoints;
   ParentLayerPoint point = ViewAs<ParentLayerPixel>(
       aHitTestPoint, PixelCastJustification::ScreenIsParentLayerForRoot);
