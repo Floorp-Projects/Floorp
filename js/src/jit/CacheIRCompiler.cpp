@@ -18,6 +18,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/SharedICRegisters.h"
 #include "proxy/Proxy.h"
+#include "vm/ArrayBufferObject.h"
 #include "vm/GeneratorObject.h"
 
 #include "builtin/Boolean-inl.h"
@@ -1560,6 +1561,117 @@ bool CacheIRCompiler::emitGuardToInt32Index() {
 
     // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
     masm.convertDoubleToInt32(floatReg, output, floatReg.failure(), false);
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardToInt32ModUint32() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ValOperandId inputId = reader.valOperandId();
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  if (allocator.knownType(inputId) == JSVAL_TYPE_INT32) {
+    ConstantOrRegister input = allocator.useConstantOrRegister(masm, inputId);
+    if (input.constant()) {
+      masm.move32(Imm32(input.value().toInt32()), output);
+    } else {
+      MOZ_ASSERT(input.reg().type() == MIRType::Int32);
+      masm.move32(input.reg().typedReg().gpr(), output);
+    }
+    return true;
+  }
+
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label done;
+
+  {
+    ScratchTagScope tag(masm, input);
+    masm.splitTagForTest(input, tag);
+
+    Label notInt32;
+    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
+    {
+      ScratchTagScopeRelease _(&tag);
+
+      masm.unboxInt32(input, output);
+      masm.jump(&done);
+    }
+    masm.bind(&notInt32);
+
+    // If the value is a double, truncate; else, jump to failure.
+    masm.branchTestDouble(Assembler::NotEqual, tag, failure->label());
+    {
+      ScratchTagScopeRelease _(&tag);
+      AutoScratchFloatRegister floatReg(this, failure);
+
+      masm.unboxDouble(input, floatReg);
+      masm.branchTruncateDoubleMaybeModUint32(floatReg, output,
+                                              floatReg.failure());
+    }
+  }
+
+  masm.bind(&done);
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardToUint8Clamped() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ValOperandId inputId = reader.valOperandId();
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  if (allocator.knownType(inputId) == JSVAL_TYPE_INT32) {
+    ConstantOrRegister input = allocator.useConstantOrRegister(masm, inputId);
+    if (input.constant()) {
+      masm.move32(Imm32(ClampDoubleToUint8(input.value().toInt32())), output);
+    } else {
+      MOZ_ASSERT(input.reg().type() == MIRType::Int32);
+      masm.move32(input.reg().typedReg().gpr(), output);
+      masm.clampIntToUint8(output);
+    }
+    return true;
+  }
+
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  Label done;
+
+  {
+    ScratchTagScope tag(masm, input);
+    masm.splitTagForTest(input, tag);
+
+    Label notInt32;
+    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
+    {
+      ScratchTagScopeRelease _(&tag);
+
+      masm.unboxInt32(input, output);
+      masm.clampIntToUint8(output);
+      masm.jump(&done);
+    }
+    masm.bind(&notInt32);
+
+    // If the value is a double, clamp to uint8; else, jump to failure.
+    masm.branchTestDouble(Assembler::NotEqual, tag, failure->label());
+    {
+      ScratchTagScopeRelease _(&tag);
+      AutoScratchFloatRegister floatReg(this);
+
+      masm.unboxDouble(input, floatReg);
+      masm.clampDoubleToUint8(floatReg, output);
+    }
   }
 
   masm.bind(&done);
