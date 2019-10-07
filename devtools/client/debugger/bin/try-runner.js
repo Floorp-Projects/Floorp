@@ -75,8 +75,6 @@ function jest() {
   const jsonOut = out.substring(out.indexOf("{"), out.lastIndexOf("}") + 1);
   const results = JSON.parse(jsonOut);
 
-  const failed = results.numFailedTests == 0;
-
   // The individual failing tests are in jammed into the same message string :/
   const errors = [].concat(
     ...results.testResults.map(r =>
@@ -85,7 +83,7 @@ function jest() {
   );
 
   logErrors("jest", errors);
-  return failed;
+  return errors.length == 0;
 }
 
 function stylelint() {
