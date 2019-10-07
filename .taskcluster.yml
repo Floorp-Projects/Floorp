@@ -198,6 +198,10 @@ tasks:
                 GECKO_HEAD_REV: '${push.revision}'
                 HG_STORE_PATH: /builds/worker/checkouts/hg-store
                 TASKCLUSTER_CACHES: /builds/worker/checkouts
+                # mach generates pyc files when reading `mach_commands.py`
+                # This causes cached_task digest generation to be random for
+                # some tasks. Disable bytecode generation to work around that.
+                PYTHONDONTWRITEBYTECODE: '1'
                 # someday, these will be provided by the worker - Bug 1492664
                 TASKCLUSTER_ROOT_URL: https://taskcluster.net
                 TASKCLUSTER_PROXY_URL: http://taskcluster
