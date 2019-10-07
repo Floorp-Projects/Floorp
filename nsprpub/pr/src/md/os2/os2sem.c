@@ -14,7 +14,7 @@
 void
 _PR_MD_NEW_SEM(_MDSemaphore *md, PRUintn value)
 {
-   int rv;
+    int rv;
 
     /* Our Sems don't support a value > 1 */
     PR_ASSERT(value <= 1);
@@ -26,9 +26,9 @@ _PR_MD_NEW_SEM(_MDSemaphore *md, PRUintn value)
 void
 _PR_MD_DESTROY_SEM(_MDSemaphore *md)
 {
-   int rv;
-   rv = DosCloseEventSem(md->sem);
-   PR_ASSERT(rv == NO_ERROR);
+    int rv;
+    rv = DosCloseEventSem(md->sem);
+    PR_ASSERT(rv == NO_ERROR);
 
 }
 
@@ -38,10 +38,12 @@ _PR_MD_TIMED_WAIT_SEM(_MDSemaphore *md, PRIntervalTime ticks)
     int rv;
     rv = DosWaitEventSem(md->sem, PR_IntervalToMilliseconds(ticks));
 
-    if (rv == NO_ERROR)
+    if (rv == NO_ERROR) {
         return PR_SUCCESS;
-    else
+    }
+    else {
         return PR_FAILURE;
+    }
 }
 
 PRStatus
@@ -53,9 +55,9 @@ _PR_MD_WAIT_SEM(_MDSemaphore *md)
 void
 _PR_MD_POST_SEM(_MDSemaphore *md)
 {
-   int rv;
-   rv = DosPostEventSem(md->sem);
-   PR_ASSERT(rv == NO_ERROR); 
+    int rv;
+    rv = DosPostEventSem(md->sem);
+    PR_ASSERT(rv == NO_ERROR);
 }
 
 

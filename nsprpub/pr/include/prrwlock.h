@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-** File:		prrwlock.h
-** Description:	API to basic reader-writer lock functions of NSPR.
+** File:        prrwlock.h
+** Description: API to basic reader-writer lock functions of NSPR.
 **
 **/
 
@@ -19,14 +19,14 @@ PR_BEGIN_EXTERN_C
 /*
  * PRRWLock --
  *
- *	The reader writer lock, PRRWLock, is an opaque object to the clients
- *	of NSPR.  All routines operate on a pointer to this opaque entity.
+ *  The reader writer lock, PRRWLock, is an opaque object to the clients
+ *  of NSPR.  All routines operate on a pointer to this opaque entity.
  */
 
 
 typedef struct PRRWLock PRRWLock;
 
-#define	PR_RWLOCK_RANK_NONE	0
+#define PR_RWLOCK_RANK_NONE 0
 
 
 /***********************************************************************
@@ -34,12 +34,12 @@ typedef struct PRRWLock PRRWLock;
 ** DESCRIPTION:
 **  Returns a pointer to a newly created reader-writer lock object.
 ** INPUTS:      Lock rank
-**				Lock name
+**              Lock name
 ** OUTPUTS:     void
 ** RETURN:      PRRWLock*
 **   If the lock cannot be created because of resource constraints, NULL
 **   is returned.
-**  
+**
 ***********************************************************************/
 NSPR_API(PRRWLock*) PR_NewRWLock(PRUint32 lock_rank, const char *lock_name);
 

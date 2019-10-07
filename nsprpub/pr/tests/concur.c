@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-** File:            concur.c 
+** File:            concur.c
 ** Description:     test of adding and removing concurrency options
 */
 
@@ -46,8 +46,9 @@ static void PR_CALLBACK Dull(void *arg)
     Context *context = (Context*)arg;
     PR_Lock(context->ml);
     context->have += 1;
-    while (context->want >= context->have)
+    while (context->want >= context->have) {
         PR_WaitCondVar(context->cv, PR_INTERVAL_NO_TIMEOUT);
+    }
     context->have -= 1;
     PR_Unlock(context->ml);
 }  /* Dull */
@@ -55,40 +56,46 @@ static void PR_CALLBACK Dull(void *arg)
 PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
 {
     PRUintn cpus;
-	PLOptStatus os;
-	PRThread **threads;
+    PLOptStatus os;
+    PRThread **threads;
     PRBool debug = PR_FALSE;
     PRUintn range = DEFAULT_RANGE;
-	PRStatus rc;
+    PRStatus rc;
     PRUintn cnt;
     PRUintn loops = DEFAULT_LOOPS;
-	PRIntervalTime hundredMills = PR_MillisecondsToInterval(100);
-	PLOptState *opt = PL_CreateOptState(argc, argv, "Gdl:r:");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    PRIntervalTime hundredMills = PR_MillisecondsToInterval(100);
+    PLOptState *opt = PL_CreateOptState(argc, argv, "Gdl:r:");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'G':  /* GLOBAL threads */
-			thread_scope = PR_GLOBAL_THREAD;
-            break;
-        case 'd':  /* debug mode */
-			debug = PR_TRUE;
-            break;
-        case 'r':  /* range limit */
-			range = atoi(opt->value);
-            break;
-        case 'l':  /* loop counter */
-			loops = atoi(opt->value);
-            break;
-         default:
-            break;
+            case 'G':  /* GLOBAL threads */
+                thread_scope = PR_GLOBAL_THREAD;
+                break;
+            case 'd':  /* debug mode */
+                debug = PR_TRUE;
+                break;
+            case 'r':  /* range limit */
+                range = atoi(opt->value);
+                break;
+            case 'l':  /* loop counter */
+                loops = atoi(opt->value);
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
-    if (0 == range) range = DEFAULT_RANGE;
-    if (0 == loops) loops = DEFAULT_LOOPS;
+    if (0 == range) {
+        range = DEFAULT_RANGE;
+    }
+    if (0 == loops) {
+        loops = DEFAULT_LOOPS;
+    }
 
     context.ml = PR_NewLock();
     context.cv = PR_NewCondVar(context.ml);
@@ -97,7 +104,7 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
         PR_fprintf(
             PR_STDERR, "Testing with %d CPUs and %d interations\n", range, loops);
 
-	threads = (PRThread**) PR_CALLOC(sizeof(PRThread*) * range);
+    threads = (PRThread**) PR_CALLOC(sizeof(PRThread*) * range);
     while (--loops > 0)
     {
         for (cpus = 1; cpus <= range; ++cpus)
@@ -106,8 +113,8 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
             context.want = cpus;
 
             threads[cpus - 1] = PR_CreateThread(
-                PR_USER_THREAD, Dull, &context, PR_PRIORITY_NORMAL,
-				      thread_scope, PR_JOINABLE_THREAD, 0);
+                                    PR_USER_THREAD, Dull, &context, PR_PRIORITY_NORMAL,
+                                    thread_scope, PR_JOINABLE_THREAD, 0);
         }
 
         PR_Sleep(hundredMills);
@@ -121,18 +128,20 @@ PRIntn PR_CALLBACK Concur(PRIntn argc, char **argv)
             PR_NotifyCondVar(context.cv);
             PR_Unlock(context.ml);
         }
-		for(cnt = 0; cnt < range; cnt++) {
-			rc = PR_JoinThread(threads[cnt]);
-			PR_ASSERT(rc == PR_SUCCESS);
-		}
+        for(cnt = 0; cnt < range; cnt++) {
+            rc = PR_JoinThread(threads[cnt]);
+            PR_ASSERT(rc == PR_SUCCESS);
+        }
     }
 
-    
+
     if (debug)
         PR_fprintf(
             PR_STDERR, "Waiting for %d thread(s) to exit\n", context.have);
 
-    while (context.have > 0) PR_Sleep(hundredMills);
+    while (context.have > 0) {
+        PR_Sleep(hundredMills);
+    }
 
     if (debug)
         PR_fprintf(

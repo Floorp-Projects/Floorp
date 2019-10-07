@@ -28,16 +28,16 @@ public:
     RCNetAddr(const RCNetAddr&);        /* copy constructor */
     RCNetAddr(HostValue, PRUint16 port);/* init'd w/ 'special' assignments */
     RCNetAddr(const RCNetAddr&, PRUint16 port);
-                                        /* copy w/ port reassigment */
+    /* copy w/ port reassigment */
 
     virtual ~RCNetAddr();
 
     void operator=(const RCNetAddr&);
 
     virtual PRBool operator==(const RCNetAddr&) const;
-                                        /* compare of all relavent fields */
+    /* compare of all relavent fields */
     virtual PRBool EqualHost(const RCNetAddr&) const;
-                                        /* compare of just host field */
+    /* compare of just host field */
 
 
 public:
@@ -45,9 +45,9 @@ public:
     void operator=(const PRNetAddr*);   /* construction from more primitive data */
     operator const PRNetAddr*() const;  /* extraction of underlying representation */
     virtual PRStatus FromString(const char* string);
-                                        /* initialization from an ASCII string */
+    /* initialization from an ASCII string */
     virtual PRStatus ToString(char *string, PRSize size) const;
-                                        /* convert internal fromat to a string */
+    /* convert internal fromat to a string */
 
 private:
 
@@ -87,7 +87,9 @@ private:
 };
 
 inline RCNetAddr::RCNetAddr(): RCBase() { }
-inline RCNetAddr::operator const PRNetAddr*() const { return &address; }
+inline RCNetAddr::operator const PRNetAddr*() const {
+    return &address;
+}
 
 
 #endif /* defined(_RCNETDB_H) */

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Test: zerolen.c 
+ * Test: zerolen.c
  *
  * Description: a test for Bugzilla bug #17699.  We perform
  * the same test for PR_Writev, PR_Write, and PR_Send.  In
@@ -124,8 +124,8 @@ int main()
      * First test PR_Writev.
      */
     clientThread = PR_CreateThread(PR_USER_THREAD,
-            ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
-            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                                   ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
+                                   PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (NULL == clientThread) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);
@@ -165,8 +165,8 @@ int main()
      * Then test PR_Write.
      */
     clientThread = PR_CreateThread(PR_USER_THREAD,
-            ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
-            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                                   ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
+                                   PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (NULL == clientThread) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);
@@ -204,8 +204,8 @@ int main()
      * Finally test PR_Send.
      */
     clientThread = PR_CreateThread(PR_USER_THREAD,
-            ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
-            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                                   ClientThread, (void *) PR_ntohs(PR_NetAddrInetPort(&addr)),
+                                   PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (NULL == clientThread) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);

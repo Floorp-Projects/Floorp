@@ -11,7 +11,7 @@
 #endif
 #ifdef _WIN32
 #include <windows.h>
-#endif 
+#endif
 
 PRInt32 _pr_pageShift;
 PRInt32 _pr_pageSize;
@@ -21,7 +21,7 @@ PRInt32 _pr_pageSize;
 */
 static void GetPageSize(void)
 {
-	PRInt32 pageSize;
+    PRInt32 pageSize;
 
     /* Get page size */
 #ifdef XP_UNIX
@@ -48,14 +48,14 @@ static void GetPageSize(void)
 #endif
 #endif /* XP_PC */
 
-	pageSize = _pr_pageSize;
-	PR_CEILING_LOG2(_pr_pageShift, pageSize);
+    pageSize = _pr_pageSize;
+    PR_CEILING_LOG2(_pr_pageShift, pageSize);
 }
 
 PR_IMPLEMENT(PRInt32) PR_GetPageShift(void)
 {
     if (!_pr_pageSize) {
-	GetPageSize();
+        GetPageSize();
     }
     return _pr_pageShift;
 }
@@ -63,7 +63,7 @@ PR_IMPLEMENT(PRInt32) PR_GetPageShift(void)
 PR_IMPLEMENT(PRInt32) PR_GetPageSize(void)
 {
     if (!_pr_pageSize) {
-	GetPageSize();
+        GetPageSize();
     }
     return _pr_pageSize;
 }

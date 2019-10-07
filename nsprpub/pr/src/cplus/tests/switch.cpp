@@ -70,8 +70,12 @@ void Shared::RootFunction()
     while (PR_SUCCESS == status)
     {
         RCEnter entry(ml);
-        while (twiddle && (PR_SUCCESS == status)) status = Wait();
-		if (verbosity) PR_fprintf(debug_out, "+");
+        while (twiddle && (PR_SUCCESS == status)) {
+            status = Wait();
+        }
+        if (verbosity) {
+            PR_fprintf(debug_out, "+");
+        }
         twiddle = PR_TRUE;
         next->twiddle = PR_FALSE;
         next->Notify();
@@ -83,11 +87,11 @@ static void Help(void)
     debug_out = PR_STDOUT;
 
     PR_fprintf(
-		debug_out, "Usage: >./switch [-d] [-c n] [-t n] [-T n] [-G]\n");
+        debug_out, "Usage: >./switch [-d] [-c n] [-t n] [-T n] [-G]\n");
     PR_fprintf(
-		debug_out, "-c n\tloops at thread level (default: %d)\n", DEFAULT_LOOPS);
+        debug_out, "-c n\tloops at thread level (default: %d)\n", DEFAULT_LOOPS);
     PR_fprintf(
-		debug_out, "-t n\tnumber of threads (default: %d)\n", DEFAULT_THREADS);
+        debug_out, "-t n\tnumber of threads (default: %d)\n", DEFAULT_THREADS);
     PR_fprintf(debug_out, "-d\tturn on debugging output (default: FALSE)\n");
     PR_fprintf(debug_out, "-v\tturn on verbose output (default: FALSE)\n");
     PR_fprintf(debug_out, "-G n\tglobal threads only (default: FALSE)\n");
@@ -96,59 +100,63 @@ static void Help(void)
 
 PRIntn main(PRIntn argc, char **argv)
 {
-	PLOptStatus os;
+    PLOptStatus os;
     PRStatus status;
     PRBool help = PR_FALSE;
     PRUintn concurrency = 1;
     RCThread::Scope thread_scope = RCThread::local;
     PRUintn thread_count, inner_count, loop_count, average;
     PRUintn thread_limit = DEFAULT_THREADS, loop_limit = DEFAULT_LOOPS;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "hdvc:t:C:G");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    PLOptState *opt = PL_CreateOptState(argc, argv, "hdvc:t:C:G");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'v':  /* verbose mode */
-			verbosity = PR_TRUE;
-        case 'd':  /* debug mode */
-			debug_mode = PR_TRUE;
-            break;
-        case 'c':  /* loop counter */
-			loop_limit = atoi(opt->value);
-            break;
-        case 't':  /* thread limit */
-			thread_limit = atoi(opt->value);
-            break;
-        case 'C':  /* Concurrency limit */
-			concurrency = atoi(opt->value);
-            break;
-        case 'G':  /* global threads only */
-			thread_scope = RCThread::global;
-            break;
-        case 'h':  /* help message */
-			Help();
-			help = PR_TRUE;
-            break;
-         default:
-            break;
+            case 'v':  /* verbose mode */
+                verbosity = PR_TRUE;
+            case 'd':  /* debug mode */
+                debug_mode = PR_TRUE;
+                break;
+            case 'c':  /* loop counter */
+                loop_limit = atoi(opt->value);
+                break;
+            case 't':  /* thread limit */
+                thread_limit = atoi(opt->value);
+                break;
+            case 'C':  /* Concurrency limit */
+                concurrency = atoi(opt->value);
+                break;
+            case 'G':  /* global threads only */
+                thread_scope = RCThread::global;
+                break;
+            case 'h':  /* help message */
+                Help();
+                help = PR_TRUE;
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
-    if (help) return -1;
+    if (help) {
+        return -1;
+    }
 
-	if (PR_TRUE == debug_mode)
-	{
-		debug_out = PR_STDOUT;
-		PR_fprintf(debug_out, "Test parameters\n");
-		PR_fprintf(debug_out, "\tThreads involved: %d\n", thread_limit);
-		PR_fprintf(debug_out, "\tIteration limit: %d\n", loop_limit);
-		PR_fprintf(debug_out, "\tConcurrency: %d\n", concurrency);
-		PR_fprintf(
-			debug_out, "\tThread type: %s\n",
-			(PR_GLOBAL_THREAD == thread_scope) ? "GLOBAL" : "LOCAL");
-	}
+    if (PR_TRUE == debug_mode)
+    {
+        debug_out = PR_STDOUT;
+        PR_fprintf(debug_out, "Test parameters\n");
+        PR_fprintf(debug_out, "\tThreads involved: %d\n", thread_limit);
+        PR_fprintf(debug_out, "\tIteration limit: %d\n", loop_limit);
+        PR_fprintf(debug_out, "\tConcurrency: %d\n", concurrency);
+        PR_fprintf(
+            debug_out, "\tThread type: %s\n",
+            (PR_GLOBAL_THREAD == thread_scope) ? "GLOBAL" : "LOCAL");
+    }
 
     /*
     ** The interesting part starts here
@@ -165,62 +173,68 @@ PRIntn main(PRIntn argc, char **argv)
         shared = new Shared(thread_scope, link, &lock);
         shared->Start();  /* make it run */
         link = (Home*)shared;
-	}
+    }
 
     /* Pass the message around the horn a few times */
     for (loop_count = 1; loop_count <= loop_limit; ++loop_count)
     {
-		timein.SetToNow();
-		for (inner_count = 0; inner_count < INNER_LOOPS; ++inner_count)
-		{
-			RCEnter entry(&lock);
-			home.twiddle = PR_TRUE;
-			shared->twiddle = PR_FALSE;
-			shared->Notify();
-			while (home.twiddle)
+        timein.SetToNow();
+        for (inner_count = 0; inner_count < INNER_LOOPS; ++inner_count)
+        {
+            RCEnter entry(&lock);
+            home.twiddle = PR_TRUE;
+            shared->twiddle = PR_FALSE;
+            shared->Notify();
+            while (home.twiddle)
             {
-				failed = (PR_FAILURE == home.Wait()) ? PR_TRUE : PR_FALSE;
+                failed = (PR_FAILURE == home.Wait()) ? PR_TRUE : PR_FALSE;
             }
-		}
-		timeout += (RCInterval(RCInterval::now) - timein);
-	}
+        }
+        timeout += (RCInterval(RCInterval::now) - timein);
+    }
 
     /* Figure out how well we did */
-	if (debug_mode)
-	{
-		average = timeout.ToMicroseconds()
-			/ (INNER_LOOPS * loop_limit * thread_count);
-		PR_fprintf(
-			debug_out, "Average switch times %d usecs for %d threads\n",
+    if (debug_mode)
+    {
+        average = timeout.ToMicroseconds()
+                  / (INNER_LOOPS * loop_limit * thread_count);
+        PR_fprintf(
+            debug_out, "Average switch times %d usecs for %d threads\n",
             average, thread_limit);
-	}
+    }
 
     /* Start reclamation process */
     link = shared;
     for (thread_count = 1; thread_count <= thread_limit; ++thread_count)
     {
-        if (&home == link) break;
+        if (&home == link) {
+            break;
+        }
         status = ((Shared*)link)->Interrupt();
-		if (PR_SUCCESS != status)
+        if (PR_SUCCESS != status)
         {
             failed = PR_TRUE;
-            if (debug_mode)
-			    PL_FPrintError(debug_out, "Failed to interrupt");
+            if (debug_mode) {
+                PL_FPrintError(debug_out, "Failed to interrupt");
+            }
         }
-		link = link->next; 
+        link = link->next;
     }
 
     for (thread_count = 1; thread_count <= thread_limit; ++thread_count)
     {
         link = shared->next;
         status = shared->Join();
-		if (PR_SUCCESS != status)
-		{
+        if (PR_SUCCESS != status)
+        {
             failed = PR_TRUE;
-            if (debug_mode)
-			    PL_FPrintError(debug_out, "Failed to join");
+            if (debug_mode) {
+                PL_FPrintError(debug_out, "Failed to join");
+            }
         }
-        if (&home == link) break;
+        if (&home == link) {
+            break;
+        }
         shared = (Shared*)link;
     }
 

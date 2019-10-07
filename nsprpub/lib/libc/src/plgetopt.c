@@ -45,20 +45,20 @@ PR_IMPLEMENT(PLOptState*) PL_CreateOptState(
 }  /* PL_CreateOptState */
 
 PR_IMPLEMENT(PLOptState*) PL_CreateLongOptState(
-    PRIntn argc, char **argv, const char *options, 
+    PRIntn argc, char **argv, const char *options,
     const PLLongOpt *longOpts)
 {
     PLOptState *opt = NULL;
     PLOptionInternal *internal;
 
-    if (NULL == options) 
+    if (NULL == options)
     {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return opt;
     }
 
     opt = PR_NEWZAP(PLOptState);
-    if (NULL == opt) 
+    if (NULL == opt)
     {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
         return opt;
@@ -124,15 +124,15 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
         }
         internal->xargv = internal->argv[internal->xargc];
         internal->minus = 0;
-        if (!internal->endOfOpts && ('-' == *internal->xargv)) 
+        if (!internal->endOfOpts && ('-' == *internal->xargv))
         {
             internal->minus++;
             internal->xargv++;  /* and consume */
-            if ('-' == *internal->xargv && internal->longOpts) 
+            if ('-' == *internal->xargv && internal->longOpts)
             {
                 internal->minus++;
                 internal->xargv++;
-                if (0 == *internal->xargv) 
+                if (0 == *internal->xargv)
                 {
                     internal->endOfOpts = PR_TRUE;
                 }
@@ -145,7 +145,7 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
     ** option. See if we can find a match in the list of possible
     ** options supplied.
     */
-    if (internal->minus == 2) 
+    if (internal->minus == 2)
     {
         char * foundEqual = strchr(internal->xargv,'=');
         PRIntn optNameLen = foundEqual ? (foundEqual - internal->xargv) :
@@ -156,19 +156,21 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
         opt->option = 0;
         opt->value  = NULL;
 
-        for (; longOpt->longOptName; ++longOpt) 
+        for (; longOpt->longOptName; ++longOpt)
         {
-            if (strncmp(longOpt->longOptName, internal->xargv, optNameLen))
-                continue;  /* not a possible match */
-            if (strlen(longOpt->longOptName) != optNameLen)
-                continue;  /* not a match */
+            if (strncmp(longOpt->longOptName, internal->xargv, optNameLen)) {
+                continue;    /* not a possible match */
+            }
+            if (strlen(longOpt->longOptName) != optNameLen) {
+                continue;    /* not a match */
+            }
             /* option name match */
             opt->longOptIndex = longOpt - internal->longOpts;
             opt->longOption   = longOpt->longOption;
             /* value is part of the current argv[] element if = was found */
             /* note: this sets value even for long options that do not
              * require option if specified as --long=value */
-            if (foundEqual) 
+            if (foundEqual)
             {
                 opt->value = foundEqual + 1;
             }
@@ -227,8 +229,9 @@ PR_IMPLEMENT(PLOptStatus) PL_GetNextOpt(PLOptState *opt)
                     internal->xargv = &static_Nul;
                     internal->minus = 0;
                 }
-                else 
-                    opt->value = NULL; 
+                else {
+                    opt->value = NULL;
+                }
                 return PL_OPT_OK;
             }
         }

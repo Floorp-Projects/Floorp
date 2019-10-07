@@ -14,42 +14,42 @@ typedef struct PRCListStr PRCList;
 ** Circular linked list
 */
 struct PRCListStr {
-    PRCList	*next;
-    PRCList	*prev;
+    PRCList *next;
+    PRCList *prev;
 };
 
 /*
 ** Insert element "_e" into the list, before "_l".
 */
-#define PR_INSERT_BEFORE(_e,_l)	 \
-    PR_BEGIN_MACRO		 \
-	(_e)->next = (_l);	 \
-	(_e)->prev = (_l)->prev; \
-	(_l)->prev->next = (_e); \
-	(_l)->prev = (_e);	 \
+#define PR_INSERT_BEFORE(_e,_l)  \
+    PR_BEGIN_MACRO       \
+    (_e)->next = (_l);   \
+    (_e)->prev = (_l)->prev; \
+    (_l)->prev->next = (_e); \
+    (_l)->prev = (_e);   \
     PR_END_MACRO
 
 /*
 ** Insert element "_e" into the list, after "_l".
 */
-#define PR_INSERT_AFTER(_e,_l)	 \
-    PR_BEGIN_MACRO		 \
-	(_e)->next = (_l)->next; \
-	(_e)->prev = (_l);	 \
-	(_l)->next->prev = (_e); \
-	(_l)->next = (_e);	 \
+#define PR_INSERT_AFTER(_e,_l)   \
+    PR_BEGIN_MACRO       \
+    (_e)->next = (_l)->next; \
+    (_e)->prev = (_l);   \
+    (_l)->next->prev = (_e); \
+    (_l)->next = (_e);   \
     PR_END_MACRO
 
 /*
 ** Return the element following element "_e"
 */
-#define PR_NEXT_LINK(_e)	 \
-    	((_e)->next)
+#define PR_NEXT_LINK(_e)     \
+        ((_e)->next)
 /*
 ** Return the element preceding element "_e"
 */
-#define PR_PREV_LINK(_e)	 \
-    	((_e)->prev)
+#define PR_PREV_LINK(_e)     \
+        ((_e)->prev)
 
 /*
 ** Append an element "_e" to the end of the list "_l"
@@ -68,10 +68,10 @@ struct PRCListStr {
 /*
 ** Remove the element "_e" from it's circular list.
 */
-#define PR_REMOVE_LINK(_e)	       \
-    PR_BEGIN_MACRO		       \
-	(_e)->prev->next = (_e)->next; \
-	(_e)->next->prev = (_e)->prev; \
+#define PR_REMOVE_LINK(_e)         \
+    PR_BEGIN_MACRO             \
+    (_e)->prev->next = (_e)->next; \
+    (_e)->next->prev = (_e)->prev; \
     PR_END_MACRO
 
 /*
@@ -79,11 +79,11 @@ struct PRCListStr {
 ** linkage.
 */
 #define PR_REMOVE_AND_INIT_LINK(_e)    \
-    PR_BEGIN_MACRO		       \
-	(_e)->prev->next = (_e)->next; \
-	(_e)->next->prev = (_e)->prev; \
-	(_e)->next = (_e);	       \
-	(_e)->prev = (_e);	       \
+    PR_BEGIN_MACRO             \
+    (_e)->prev->next = (_e)->next; \
+    (_e)->next->prev = (_e)->prev; \
+    (_e)->next = (_e);         \
+    (_e)->prev = (_e);         \
     PR_END_MACRO
 
 /*
@@ -97,9 +97,9 @@ struct PRCListStr {
 ** Initialize a circular list
 */
 #define PR_INIT_CLIST(_l)  \
-    PR_BEGIN_MACRO	   \
-	(_l)->next = (_l); \
-	(_l)->prev = (_l); \
+    PR_BEGIN_MACRO     \
+    (_l)->next = (_l); \
+    (_l)->prev = (_l); \
     PR_END_MACRO
 
 #define PR_INIT_STATIC_CLIST(_l) \

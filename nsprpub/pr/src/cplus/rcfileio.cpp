@@ -13,24 +13,42 @@
 
 RCFileIO::RCFileIO(): RCIO(RCIO::file) { }
 
-RCFileIO::~RCFileIO() { if (NULL != fd) (void)Close(); }
+RCFileIO::~RCFileIO() {
+    if (NULL != fd) {
+        (void)Close();
+    }
+}
 
 PRInt64 RCFileIO::Available()
-    { return fd->methods->available(fd); }
+{
+    return fd->methods->available(fd);
+}
 
 PRStatus RCFileIO::Close()
-    { PRStatus rv = fd->methods->close(fd); fd = NULL; return rv; }
+{
+    PRStatus rv = fd->methods->close(fd);
+    fd = NULL;
+    return rv;
+}
 
-PRStatus RCFileIO::Delete(const char* filename) { return PR_Delete(filename); }
+PRStatus RCFileIO::Delete(const char* filename) {
+    return PR_Delete(filename);
+}
 
 PRStatus RCFileIO::FileInfo(RCFileInfo* info) const
-    { return fd->methods->fileInfo64(fd, &info->info); }
+{
+    return fd->methods->fileInfo64(fd, &info->info);
+}
 
 PRStatus RCFileIO::FileInfo(const char *name, RCFileInfo* info)
-    { return PR_GetFileInfo64(name, &info->info); }
+{
+    return PR_GetFileInfo64(name, &info->info);
+}
 
 PRStatus RCFileIO::Fsync()
-    { return fd->methods->fsync(fd); }
+{
+    return fd->methods->fsync(fd);
+}
 
 PRStatus RCFileIO::Open(const char *filename, PRIntn flags, PRIntn mode)
 {
@@ -39,7 +57,9 @@ PRStatus RCFileIO::Open(const char *filename, PRIntn flags, PRIntn mode)
 }  /* RCFileIO::Open */
 
 PRInt32 RCFileIO::Read(void *buf, PRSize amount)
-    { return fd->methods->read(fd, buf, amount); }
+{
+    return fd->methods->read(fd, buf, amount);
+}
 
 PRInt64 RCFileIO::Seek(PRInt64 offset, RCIO::Whence how)
 {
@@ -55,11 +75,15 @@ PRInt64 RCFileIO::Seek(PRInt64 offset, RCIO::Whence how)
 }  /* RCFileIO::Seek */
 
 PRInt32 RCFileIO::Write(const void *buf, PRSize amount)
-    { return fd->methods->write(fd, buf, amount); }
+{
+    return fd->methods->write(fd, buf, amount);
+}
 
 PRInt32 RCFileIO::Writev(
     const PRIOVec *iov, PRSize size, const RCInterval& timeout)
-    { return fd->methods->writev(fd, iov, size, timeout); }
+{
+    return fd->methods->writev(fd, iov, size, timeout);
+}
 
 RCIO *RCFileIO::GetSpecialFile(RCFileIO::SpecialFile special)
 {
@@ -78,7 +102,9 @@ RCIO *RCFileIO::GetSpecialFile(RCFileIO::SpecialFile special)
     if (NULL != fd)
     {
         spec = new RCFileIO();
-        if (NULL != spec) spec->fd = fd;
+        if (NULL != spec) {
+            spec->fd = fd;
+        }
     }
     return spec;
 }  /* RCFileIO::GetSpecialFile */
@@ -90,56 +116,104 @@ RCIO *RCFileIO::GetSpecialFile(RCFileIO::SpecialFile special)
 ** are not valid for this type of I/O class (normal and special file).
 */
 PRStatus RCFileIO::Connect(const RCNetAddr&, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRStatus RCFileIO::GetLocalName(RCNetAddr*) const
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRStatus RCFileIO::GetPeerName(RCNetAddr*) const
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRStatus RCFileIO::GetSocketOption(PRSocketOptionData*) const
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRStatus RCFileIO::Listen(PRIntn)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRInt16 RCFileIO::Poll(PRInt16, PRInt16*)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return 0; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return 0;
+}
 
 PRInt32 RCFileIO::Recv(void*, PRSize, PRIntn, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return -1; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+}
 
 PRInt32 RCFileIO::Recvfrom(void*, PRSize, PRIntn, RCNetAddr*, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return -1; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+}
 
 PRInt32 RCFileIO::Send(
     const void*, PRSize, PRIntn, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return -1; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+}
 
 PRInt32 RCFileIO::Sendto(
     const void*, PRSize, PRIntn, const RCNetAddr&, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return -1; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+}
 
 RCIO* RCFileIO::Accept(RCNetAddr*, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return NULL; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return NULL;
+}
 
 PRStatus RCFileIO::Bind(const RCNetAddr&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRInt32 RCFileIO::AcceptRead(
     RCIO**, RCNetAddr**, void*, PRSize, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return -1; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+}
 
 PRStatus RCFileIO::SetSocketOption(const PRSocketOptionData*)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRStatus RCFileIO::Shutdown(RCIO::ShutdownHow)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return PR_FAILURE; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return PR_FAILURE;
+}
 
 PRInt32 RCFileIO::TransmitFile(
     RCIO*, const void*, PRSize, RCIO::FileDisposition, const RCInterval&)
-{ PR_SetError(PR_INVALID_METHOD_ERROR, 0); return -1; }
+{
+    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+    return -1;
+}
 
 /*
 ** Class implementation for file information object (ref: prio.h)
@@ -148,11 +222,17 @@ PRInt32 RCFileIO::TransmitFile(
 RCFileInfo::~RCFileInfo() { }
 
 RCFileInfo::RCFileInfo(const RCFileInfo& her): RCBase()
-    { info = her.info; }  /* RCFileInfo::RCFileInfo */
+{
+    info = her.info;    /* RCFileInfo::RCFileInfo */
+}
 
-RCTime RCFileInfo::CreationTime() const { return RCTime(info.creationTime); }
+RCTime RCFileInfo::CreationTime() const {
+    return RCTime(info.creationTime);
+}
 
-RCTime RCFileInfo::ModifyTime() const { return RCTime(info.modifyTime); }
+RCTime RCFileInfo::ModifyTime() const {
+    return RCTime(info.modifyTime);
+}
 
 RCFileInfo::FileType RCFileInfo::Type() const
 {

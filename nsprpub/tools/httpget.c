@@ -70,22 +70,22 @@ PRInt32 ReadLine(PRFileDesc *fd, char *buf, PRUint32 bufSize)
 
 loop:
     PR_ASSERT(inputBuf <= inputHead && inputHead <= inputTail
-	    && inputTail <= inputBufEnd);
+              && inputTail <= inputBufEnd);
     while (lineFound == PR_FALSE && inputHead != inputTail
-	    && dst < bufEnd - 1) {
-	if (*inputHead == '\r') {
-	    crPtr = dst;
-	} else if (*inputHead == '\n') {
-	    lineFound = PR_TRUE;
-	    if (crPtr == dst - 1) {
-		dst--; 
-	    }
-	}
-	*(dst++) = *(inputHead++);
+           && dst < bufEnd - 1) {
+        if (*inputHead == '\r') {
+            crPtr = dst;
+        } else if (*inputHead == '\n') {
+            lineFound = PR_TRUE;
+            if (crPtr == dst - 1) {
+                dst--;
+            }
+        }
+        *(dst++) = *(inputHead++);
     }
     if (lineFound == PR_TRUE || dst == bufEnd - 1 || endOfStream == PR_TRUE) {
-	*dst = '\0';
-	return dst - buf;
+        *dst = '\0';
+        return dst - buf;
     }
 
     /*
@@ -95,12 +95,12 @@ loop:
 
     nRead = PR_Read(fd, inputBuf, sizeof(inputBuf));
     if (nRead == -1) {
-	*dst = '\0';
-	return -1;
+        *dst = '\0';
+        return -1;
     } else if (nRead == 0) {
-	endOfStream = PR_TRUE;
-	*dst = '\0';
-	return dst - buf;
+        endOfStream = PR_TRUE;
+        *dst = '\0';
+        return dst - buf;
     }
     inputHead = inputBuf;
     inputTail = inputBuf + nRead;
@@ -112,14 +112,14 @@ PRInt32 DrainInputBuffer(char *buf, PRUint32 bufSize)
     PRInt32 nBytes = inputTail - inputHead;
 
     if (nBytes == 0) {
-	if (endOfStream) {
-	    return -1;
-	} else {
-	    return 0;
-	}
+        if (endOfStream) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
     if ((PRInt32) bufSize < nBytes) {
-	nBytes = bufSize;
+        nBytes = bufSize;
     }
     memcpy(buf, inputHead, nBytes);
     inputHead += nBytes;
@@ -132,24 +132,24 @@ PRStatus FetchFile(PRFileDesc *in, PRFileDesc *out)
     PRInt32 nBytes;
 
     while ((nBytes = DrainInputBuffer(buf, sizeof(buf))) > 0) {
-	if (PR_Write(out, buf, nBytes) != nBytes) {
+        if (PR_Write(out, buf, nBytes) != nBytes) {
             fprintf(stderr, "httpget: cannot write to file\n");
-	    return PR_FAILURE;
-	}
-    }
-    if (nBytes < 0) {
-	/* Input buffer is empty and end of stream */
-	return PR_SUCCESS;
-    }
-    while ((nBytes = PR_Read(in, buf, sizeof(buf))) > 0) {
-	if (PR_Write(out, buf, nBytes) != nBytes) {
-	    fprintf(stderr, "httpget: cannot write to file\n");
-	    return PR_FAILURE;
+            return PR_FAILURE;
         }
     }
     if (nBytes < 0) {
-	fprintf(stderr, "httpget: cannot read from socket\n");
-	return PR_FAILURE;
+        /* Input buffer is empty and end of stream */
+        return PR_SUCCESS;
+    }
+    while ((nBytes = PR_Read(in, buf, sizeof(buf))) > 0) {
+        if (PR_Write(out, buf, nBytes) != nBytes) {
+            fprintf(stderr, "httpget: cannot write to file\n");
+            return PR_FAILURE;
+        }
+    }
+    if (nBytes < 0) {
+        fprintf(stderr, "httpget: cannot read from socket\n");
+        return PR_FAILURE;
     }
     return PR_SUCCESS;
 }
@@ -170,31 +170,31 @@ PRStatus FastFetchFile(PRFileDesc *in, PRFileDesc *out, PRUint32 size)
     PR_ASSERT(outfMap);
     addr = PR_MemMap(outfMap, LL_ZERO, size);
     if (addr == NULL) {
-	fprintf(stderr, "cannot memory-map file: (%d, %d)\n", PR_GetError(),
-		PR_GetOSError());
+        fprintf(stderr, "cannot memory-map file: (%d, %d)\n", PR_GetError(),
+                PR_GetOSError());
 
-	PR_CloseFileMap(outfMap);
-	return PR_FAILURE;
+        PR_CloseFileMap(outfMap);
+        return PR_FAILURE;
     }
     start = (char *) addr;
     rem = size;
     while ((nBytes = DrainInputBuffer(start, rem)) > 0) {
-	start += nBytes;
-	rem -= nBytes;
+        start += nBytes;
+        rem -= nBytes;
     }
     if (nBytes < 0) {
-	/* Input buffer is empty and end of stream */
-	return PR_SUCCESS;
+        /* Input buffer is empty and end of stream */
+        return PR_SUCCESS;
     }
     bytesToRead = (rem < FCOPY_BUFFER_SIZE) ? rem : FCOPY_BUFFER_SIZE;
     while (rem > 0 && (nBytes = PR_Read(in, start, bytesToRead)) > 0) {
-	start += nBytes;
-	rem -= nBytes;
+        start += nBytes;
+        rem -= nBytes;
         bytesToRead = (rem < FCOPY_BUFFER_SIZE) ? rem : FCOPY_BUFFER_SIZE;
     }
     if (nBytes < 0) {
-	fprintf(stderr, "httpget: cannot read from socket\n");
-	return PR_FAILURE;
+        fprintf(stderr, "httpget: cannot read from socket\n");
+        return PR_FAILURE;
     }
     rv = PR_MemUnmap(addr, size);
     PR_ASSERT(rv == PR_SUCCESS);
@@ -204,7 +204,7 @@ PRStatus FastFetchFile(PRFileDesc *in, PRFileDesc *out, PRUint32 size)
 }
 
 PRStatus ParseURL(char *url, char *host, PRUint32 hostSize,
-    char *port, PRUint32 portSize, char *path, PRUint32 pathSize)
+                  char *port, PRUint32 portSize, char *path, PRUint32 pathSize)
 {
     char *start, *end;
     char *dst;
@@ -213,60 +213,60 @@ PRStatus ParseURL(char *url, char *host, PRUint32 hostSize,
     char *pathEnd;
 
     if (strncmp(url, "http", 4)) {
-	fprintf(stderr, "httpget: the protocol must be http\n");
-	return PR_FAILURE;
+        fprintf(stderr, "httpget: the protocol must be http\n");
+        return PR_FAILURE;
     }
     if (strncmp(url + 4, "://", 3) || url[7] == '\0') {
-	fprintf(stderr, "httpget: malformed URL: %s\n", url);
-	return PR_FAILURE;
+        fprintf(stderr, "httpget: malformed URL: %s\n", url);
+        return PR_FAILURE;
     }
 
     start = end = url + 7;
     dst = host;
     hostEnd = host + hostSize;
     while (*end && *end != ':' && *end != '/') {
-	if (dst == hostEnd - 1) {
-	    fprintf(stderr, "httpget: host name too long\n");
-	    return PR_FAILURE;
-	}
-	*(dst++) = *(end++);
+        if (dst == hostEnd - 1) {
+            fprintf(stderr, "httpget: host name too long\n");
+            return PR_FAILURE;
+        }
+        *(dst++) = *(end++);
     }
     *dst = '\0';
 
     if (*end == '\0') {
-	PR_snprintf(port, portSize, "%d", 80);
-	PR_snprintf(path, pathSize, "%s", "/");
-	return PR_SUCCESS;
+        PR_snprintf(port, portSize, "%d", 80);
+        PR_snprintf(path, pathSize, "%s", "/");
+        return PR_SUCCESS;
     }
 
     if (*end == ':') {
-	end++;
-	dst = port;
-	portEnd = port + portSize;
-	while (*end && *end != '/') {
-	    if (dst == portEnd - 1) {
-		fprintf(stderr, "httpget: port number too long\n");
-		return PR_FAILURE;
-	    }
-	    *(dst++) = *(end++);
+        end++;
+        dst = port;
+        portEnd = port + portSize;
+        while (*end && *end != '/') {
+            if (dst == portEnd - 1) {
+                fprintf(stderr, "httpget: port number too long\n");
+                return PR_FAILURE;
+            }
+            *(dst++) = *(end++);
         }
-	*dst = '\0';
-	if (*end == '\0') {
-	    PR_snprintf(path, pathSize, "%s", "/");
-	    return PR_SUCCESS;
+        *dst = '\0';
+        if (*end == '\0') {
+            PR_snprintf(path, pathSize, "%s", "/");
+            return PR_SUCCESS;
         }
     } else {
-	PR_snprintf(port, portSize, "%d", 80);
+        PR_snprintf(port, portSize, "%d", 80);
     }
 
     dst = path;
     pathEnd = path + pathSize;
     while (*end) {
-	if (dst == pathEnd - 1) {
-	    fprintf(stderr, "httpget: file pathname too long\n");
-	    return PR_FAILURE;
-	}
-	*(dst++) = *(end++);
+        if (dst == pathEnd - 1) {
+            fprintf(stderr, "httpget: file pathname too long\n");
+            return PR_FAILURE;
+        }
+        *(dst++) = *(end++);
     }
     *dst = '\0';
     return PR_SUCCESS;
@@ -274,8 +274,8 @@ PRStatus ParseURL(char *url, char *host, PRUint32 hostSize,
 
 void PrintUsage(void) {
     fprintf(stderr, "usage: httpget url\n"
-		    "       httpget -o outputfile url\n"
-		    "       httpget url -o outputfile\n");
+            "       httpget -o outputfile url\n"
+            "       httpget url -o outputfile\n");
 }
 
 int main(int argc, char **argv)
@@ -296,44 +296,44 @@ int main(int argc, char **argv)
     PRUint32 fileSize;
 
     if (argc != 2 && argc != 4) {
-	PrintUsage();
-	exit(1);
+        PrintUsage();
+        exit(1);
     }
 
     if (argc == 2) {
-	/*
-	 * case 1: httpget url
-	 */
-	url = argv[1];
+        /*
+         * case 1: httpget url
+         */
+        url = argv[1];
     } else {
-	if (strcmp(argv[1], "-o") == 0) {
-	    /*
-	     * case 2: httpget -o outputfile url
-	     */
-	    fileName = argv[2];
-	    url = argv[3];
+        if (strcmp(argv[1], "-o") == 0) {
+            /*
+             * case 2: httpget -o outputfile url
+             */
+            fileName = argv[2];
+            url = argv[3];
         } else {
-	    /*
-	     * case 3: httpget url -o outputfile
-	     */
-	    url = argv[1];
-	    if (strcmp(argv[2], "-o") != 0) {
-		PrintUsage();
-		exit(1);
+            /*
+             * case 3: httpget url -o outputfile
+             */
+            url = argv[1];
+            if (strcmp(argv[2], "-o") != 0) {
+                PrintUsage();
+                exit(1);
             }
-	    fileName = argv[3];
-	}
+            fileName = argv[3];
+        }
     }
 
     if (ParseURL(url, host, sizeof(host), port, sizeof(port),
-	    path, sizeof(path)) == PR_FAILURE) {
-	exit(1);
+                 path, sizeof(path)) == PR_FAILURE) {
+        exit(1);
     }
 
     if (PR_GetHostByName(host, buf, sizeof(buf), &hostentry)
-	    == PR_FAILURE) {
+        == PR_FAILURE) {
         fprintf(stderr, "httpget: unknown host name: %s\n", host);
-	exit(1);
+        exit(1);
     }
 
     addr.inet.family = PR_AF_INET;
@@ -342,92 +342,96 @@ int main(int argc, char **argv)
 
     socket = PR_NewTCPSocket();
     if (socket == NULL) {
-	fprintf(stderr, "httpget: cannot create new tcp socket\n");
-	exit(1);
+        fprintf(stderr, "httpget: cannot create new tcp socket\n");
+        exit(1);
     }
 
     if (PR_Connect(socket, &addr, PR_INTERVAL_NO_TIMEOUT) == PR_FAILURE) {
-	fprintf(stderr, "httpget: cannot connect to http server\n");
-	exitStatus = 1;
-	goto done;
+        fprintf(stderr, "httpget: cannot connect to http server\n");
+        exitStatus = 1;
+        goto done;
     }
 
     if (fileName == NULL) {
-	file = PR_STDOUT;
+        file = PR_STDOUT;
     } else {
         file = PR_Open(fileName, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE,
-		00777);
+                       00777);
         if (file == NULL) {
-	    fprintf(stderr, "httpget: cannot open file %s: (%d, %d)\n",
-		    fileName, PR_GetError(), PR_GetOSError());
-	    exitStatus = 1;
-	    goto done;
-	}
+            fprintf(stderr, "httpget: cannot open file %s: (%d, %d)\n",
+                    fileName, PR_GetError(), PR_GetOSError());
+            exitStatus = 1;
+            goto done;
+        }
     }
 
     cmdSize = PR_snprintf(buf, sizeof(buf), "GET %s HTTP/1.0\r\n\r\n", path);
     PR_ASSERT(cmdSize == (PRIntn) strlen("GET  HTTP/1.0\r\n\r\n")
-            + (PRIntn) strlen(path));
+              + (PRIntn) strlen(path));
     if (PR_Write(socket, buf, cmdSize) != cmdSize) {
-	fprintf(stderr, "httpget: cannot write to http server\n");
-	exitStatus = 1;
-	goto done;
+        fprintf(stderr, "httpget: cannot write to http server\n");
+        exitStatus = 1;
+        goto done;
     }
 
     if (ReadLine(socket, line, sizeof(line)) <= 0) {
-	fprintf(stderr, "httpget: cannot read line from http server\n");
-	exitStatus = 1;
-	goto done;
+        fprintf(stderr, "httpget: cannot read line from http server\n");
+        exitStatus = 1;
+        goto done;
     }
 
     /* HTTP response: 200 == OK */
     if (strstr(line, "200") == NULL) {
-	fprintf(stderr, "httpget: %s\n", line);
-	exitStatus = 1;
-	goto done;
+        fprintf(stderr, "httpget: %s\n", line);
+        exitStatus = 1;
+        goto done;
     }
 
     while (ReadLine(socket, line, sizeof(line)) > 0) {
-	if (line[0] == '\n') {
-	    endOfHeader = PR_TRUE;
-	    break;
-	}
-	if (strncmp(line, "Content-Length", 14) == 0
-		|| strncmp(line, "Content-length", 14) == 0) {
-	    char *p = line + 14;
+        if (line[0] == '\n') {
+            endOfHeader = PR_TRUE;
+            break;
+        }
+        if (strncmp(line, "Content-Length", 14) == 0
+            || strncmp(line, "Content-length", 14) == 0) {
+            char *p = line + 14;
 
-	    while (*p == ' ' || *p == '\t') {
-		p++;
-	    }
-	    if (*p != ':') {
-		continue;
+            while (*p == ' ' || *p == '\t') {
+                p++;
             }
-	    p++;
-	    while (*p == ' ' || *p == '\t') {
-		p++;
-	    }
-	    fileSize = 0;
-	    while ('0' <= *p && *p <= '9') {
-		fileSize = 10 * fileSize + (*p - '0');
-		p++;
+            if (*p != ':') {
+                continue;
             }
-	}
+            p++;
+            while (*p == ' ' || *p == '\t') {
+                p++;
+            }
+            fileSize = 0;
+            while ('0' <= *p && *p <= '9') {
+                fileSize = 10 * fileSize + (*p - '0');
+                p++;
+            }
+        }
     }
     if (endOfHeader == PR_FALSE) {
-	fprintf(stderr, "httpget: cannot read line from http server\n");
-	exitStatus = 1;
-	goto done;
+        fprintf(stderr, "httpget: cannot read line from http server\n");
+        exitStatus = 1;
+        goto done;
     }
 
     if (fileName == NULL || fileSize == 0) {
         FetchFile(socket, file);
     } else {
-	FastFetchFile(socket, file, fileSize);
+        FastFetchFile(socket, file, fileSize);
     }
 
 done:
-    if (socket) PR_Close(socket);
-    if (file) PR_Close(file);
+    if (socket) {
+        PR_Close(socket);
+    }
+    if (file) {
+        PR_Close(file);
+    }
     PR_Cleanup();
     return exitStatus;
 }

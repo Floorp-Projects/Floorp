@@ -36,7 +36,7 @@ static void PrintProgress(PRIntn line)
         printf(
             "@ line %d destructor should%s have been called and was%s\n",
             line, ((should) ? "" : " NOT"), ((did) ? "" : " NOT"));
-#else    
+#else
         PR_fprintf(
             fout, "@ line %d destructor should%s have been called and was%s\n",
             line, ((should) ? "" : " NOT"), ((did) ? "" : " NOT"));
@@ -46,8 +46,9 @@ static void PrintProgress(PRIntn line)
 
 static void MyAssert(const char *expr, const char *file, PRIntn line)
 {
-    if (debug > 0)
+    if (debug > 0) {
         (void)PR_fprintf(fout, "'%s' in file: %s: %d\n", expr, file, line);
+    }
 }  /* MyAssert */
 
 #define MY_ASSERT(_expr) \
@@ -57,8 +58,12 @@ static void MyAssert(const char *expr, const char *file, PRIntn line)
 static void PR_CALLBACK Destructor(void *data)
 {
     MY_ASSERT(NULL != data);
-    if (should) did = PR_TRUE;
-    else failed = PR_TRUE;
+    if (should) {
+        did = PR_TRUE;
+    }
+    else {
+        failed = PR_TRUE;
+    }
     /*
      * We don't actually free the storage since it's actually allocated
      * on the stack. Normally, this would not be the case and this is
@@ -74,8 +79,9 @@ static void PR_CALLBACK Thread(void *null)
     PRUintn keys;
     char *key_string[] = {
         "Key #0", "Key #1", "Key #2", "Key #3",
-        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"};
-    
+        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"
+    };
+
     did = should = PR_FALSE;
     for (keys = 0; keys < 8; ++keys)
     {
@@ -99,7 +105,7 @@ static void PR_CALLBACK Thread(void *null)
         MY_ASSERT(PR_FAILURE == rv);
     }
     PrintProgress(__LINE__);
-    
+
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
     {
@@ -167,8 +173,9 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
     PRThread *thread;
     char *key_string[] = {
         "Key #0", "Key #1", "Key #2", "Key #3",
-        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"};
-    
+        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"
+    };
+
     fout = PR_STDOUT;
 
     did = should = PR_FALSE;
@@ -195,8 +202,9 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
     }
     PrintProgress(__LINE__);
 
-    for (keys = 4; keys < 8; ++keys)
-		key[keys] = 4096;		/* set to invalid value */
+    for (keys = 4; keys < 8; ++keys) {
+        key[keys] = 4096;    /* set to invalid value */
+    }
     did = should = PR_FALSE;
     for (keys = 4; keys < 8; ++keys)
     {
@@ -204,7 +212,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         MY_ASSERT(PR_FAILURE == rv);
     }
     PrintProgress(__LINE__);
-    
+
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
     {
@@ -255,8 +263,8 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
     }
 
     thread = PR_CreateThread(
-        PR_USER_THREAD, Thread, NULL, PR_PRIORITY_NORMAL,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+                 PR_USER_THREAD, Thread, NULL, PR_PRIORITY_NORMAL,
+                 PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     (void)PR_JoinThread(thread);
 
@@ -268,7 +276,7 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
 #else
     (void)PR_fprintf(
         fout, "%s\n",((PR_TRUE == failed) ? "FAILED" : "PASSED"));
-#endif    
+#endif
 
     return 0;
 
@@ -276,21 +284,23 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
 
 int main(int argc, char **argv)
 {
-	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "dl:r:");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    PLOptStatus os;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "dl:r:");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-			debug = PR_TRUE;
-            break;
-         default:
-            break;
+            case 'd':  /* debug mode */
+                debug = PR_TRUE;
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
     PR_STDIO_INIT();
     return PR_Initialize(Tpd, argc, argv, 0);
 }  /* main */

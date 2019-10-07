@@ -34,24 +34,26 @@ public:
     PRfilebuf(PRFileDesc *fd, char_type *ptr, std::streamsize len);
     virtual ~PRfilebuf();
 
-    bool is_open() const { return _fd != NULL; }
+    bool is_open() const {
+        return _fd != NULL;
+    }
 
     PRfilebuf *open(
-                  const char *name,
-                  std::ios_base::openmode flags,
-                  PRIntn mode);
+        const char *name,
+        std::ios_base::openmode flags,
+        PRIntn mode);
     PRfilebuf *attach(PRFileDesc *fd);
     PRfilebuf *close();
 
 protected:
     virtual std::streambuf *setbuf(char_type *ptr, std::streamsize len);
     virtual pos_type seekoff(
-                         off_type offset,
-                         std::ios_base::seekdir dir,
-                         std::ios_base::openmode flags);
+        off_type offset,
+        std::ios_base::seekdir dir,
+        std::ios_base::openmode flags);
     virtual pos_type seekpos(
-                         pos_type pos,
-                         std::ios_base::openmode flags) {
+        pos_type pos,
+        std::ios_base::openmode flags) {
         return seekoff(pos, std::ios_base::beg, flags);
     }
     virtual int sync();
@@ -83,8 +85,12 @@ public:
     PRifstream(const char *name, openmode flags = in, PRIntn mode = 0);
     virtual ~PRifstream();
 
-    PRfilebuf *rdbuf() const { return &_filebuf; }
-    bool is_open() const { return _filebuf.is_open(); }
+    PRfilebuf *rdbuf() const {
+        return &_filebuf;
+    }
+    bool is_open() const {
+        return _filebuf.is_open();
+    }
 
     void open(const char *name, openmode flags = in, PRIntn mode = 0);
     void attach(PRFileDesc *fd);
@@ -104,8 +110,12 @@ public:
     PRofstream(const char *name, openmode flags = out, PRIntn mode = 0);
     virtual ~PRofstream();
 
-    PRfilebuf *rdbuf() const { return &_filebuf; }
-    bool is_open() const { return _filebuf.is_open(); }
+    PRfilebuf *rdbuf() const {
+        return &_filebuf;
+    }
+    bool is_open() const {
+        return _filebuf.is_open();
+    }
 
     void open(const char *name, openmode flags = out, PRIntn mode = 0);
     void attach(PRFileDesc *fd);
@@ -125,8 +135,12 @@ public:
     PRfstream(const char *name, openmode flags = in | out, PRIntn mode = 0);
     virtual ~PRfstream();
 
-    PRfilebuf *rdbuf() const { return &_filebuf; }
-    bool is_open() const { return _filebuf.is_open(); }
+    PRfilebuf *rdbuf() const {
+        return &_filebuf;
+    }
+    bool is_open() const {
+        return _filebuf.is_open();
+    }
 
     void open(const char *name, openmode flags = in | out, PRIntn mode = 0);
     void attach(PRFileDesc *fd);

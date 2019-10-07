@@ -95,7 +95,7 @@ typedef enum PRLibSpecType {
     PR_LibSpec_Pathname,
     PR_LibSpec_MacNamedFragment,   /* obsolete (for Mac OS Classic) */
     PR_LibSpec_MacIndexedFragment, /* obsolete (for Mac OS Classic) */
-    PR_LibSpec_PathnameU           /* supported only on Win32 */ 
+    PR_LibSpec_PathnameU           /* supported only on Win32 */
 } PRLibSpecType;
 
 struct FSSpec; /* Mac OS Classic FSSpec */
@@ -134,7 +134,7 @@ typedef struct PRLibSpec {
 #define PR_LD_GLOBAL 0x4  /* equivalent to RTLD_GLOBAL on Unix */
 #define PR_LD_LOCAL  0x8  /* equivalent to RTLD_LOCAL on Unix */
 /* The following is equivalent to LOAD_WITH_ALTERED_SEARCH_PATH on Windows */
-#define PR_LD_ALT_SEARCH_PATH  0x10  
+#define PR_LD_ALT_SEARCH_PATH  0x10
 /*                0x8000     reserved for NSPR internal use */
 
 /*
@@ -185,12 +185,12 @@ NSPR_API(PRFuncPtr) PR_FindFunctionSymbol(PRLibrary *lib, const char *name);
 ** implements the procedure, and return the library that contains that
 ** symbol, or NULL if no such function can be found. This does not find
 ** symbols in the main program (the ".exe"); use PR_AddStaticLibrary to
-** register symbols in the main program.  
+** register symbols in the main program.
 **
 ** This increments the reference count of the library.
 */
 NSPR_API(void*) PR_FindSymbolAndLibrary(const char *name,
-						      PRLibrary* *lib);
+                                        PRLibrary* *lib);
 
 /*
 ** Similar to PR_FindSymbolAndLibrary, except that the return value is
@@ -201,7 +201,7 @@ NSPR_API(void*) PR_FindSymbolAndLibrary(const char *name,
 ** This increments the reference count of the library.
 */
 NSPR_API(PRFuncPtr) PR_FindFunctionSymbolAndLibrary(const char *name,
-						      PRLibrary* *lib);
+        PRLibrary* *lib);
 
 /*
 ** Register a static link table with the runtime under the name

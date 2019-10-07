@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * File:		aixwrap.c
+ * File:        aixwrap.c
  * Description:
  *     This file contains a single function, _MD_SELECT(), which simply
  *     invokes the select() function.  This file is used in an ugly

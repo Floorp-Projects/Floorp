@@ -6,12 +6,12 @@
 
 /*
 ** prrng.h -- NSPR Random Number Generator
-** 
+**
 **
 ** lth. 29-Oct-1999.
 */
 
-#ifndef prrng_h___ 
+#ifndef prrng_h___
 #define prrng_h___
 
 #include "prtypes.h"
@@ -64,7 +64,7 @@ PR_BEGIN_EXTERN_C
 **   component.
 **
 */
-NSPR_API(PRSize) PR_GetRandomNoise( 
+NSPR_API(PRSize) PR_GetRandomNoise(
     void    *buf,
     PRSize  size
 );

@@ -28,7 +28,7 @@
  *   time again, to rule out the possibility that PR_IntervalNow()
  *   is broken.  We allow the actual elapsed time to deviate from
  *   the specified timeout by a certain tolerance (in milliseconds).
- */ 
+ */
 
 #include "nspr.h"
 #include "plgetopt.h"
@@ -95,7 +95,7 @@ static void SleepThread(void *arg)
 #if defined(XP_UNIX)
     gettimeofday(&end_time_tv, NULL);
     elapsed_msecs = 1000*(end_time_tv.tv_sec - start_time_tv.tv_sec)
-            + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
+                    + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
 #if defined(WINCE)
@@ -103,12 +103,12 @@ static void SleepThread(void *arg)
 #else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
-            + (end_time_tb.millitm - start_time_tb.millitm);
+                    + (end_time_tb.millitm - start_time_tb.millitm);
 #endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
-            || elapsed_msecs > timeout_msecs + tolerance_msecs) {
+        || elapsed_msecs > timeout_msecs + tolerance_msecs) {
         fprintf(stderr, "timeout wrong\n");
         exit(1);
     }
@@ -167,7 +167,7 @@ static void AcceptThread(void *arg)
 #if defined(XP_UNIX)
     gettimeofday(&end_time_tv, NULL);
     elapsed_msecs = 1000*(end_time_tv.tv_sec - start_time_tv.tv_sec)
-            + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
+                    + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
 #if defined(WINCE)
@@ -175,12 +175,12 @@ static void AcceptThread(void *arg)
 #else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
-            + (end_time_tb.millitm - start_time_tb.millitm);
+                    + (end_time_tb.millitm - start_time_tb.millitm);
 #endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
-            || elapsed_msecs > timeout_msecs + tolerance_msecs) {
+        || elapsed_msecs > timeout_msecs + tolerance_msecs) {
         fprintf(stderr, "timeout wrong\n");
         exit(1);
     }
@@ -246,7 +246,7 @@ static void PollThread(void *arg)
 #if defined(XP_UNIX)
     gettimeofday(&end_time_tv, NULL);
     elapsed_msecs = 1000*(end_time_tv.tv_sec - start_time_tv.tv_sec)
-            + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
+                    + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
 #if defined(WINCE)
@@ -254,12 +254,12 @@ static void PollThread(void *arg)
 #else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
-            + (end_time_tb.millitm - start_time_tb.millitm);
+                    + (end_time_tb.millitm - start_time_tb.millitm);
 #endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
-            || elapsed_msecs > timeout_msecs + tolerance_msecs) {
+        || elapsed_msecs > timeout_msecs + tolerance_msecs) {
         fprintf(stderr, "timeout wrong\n");
         exit(1);
     }
@@ -312,7 +312,7 @@ static void WaitCondVarThread(void *arg)
 #if defined(XP_UNIX)
     gettimeofday(&end_time_tv, NULL);
     elapsed_msecs = 1000*(end_time_tv.tv_sec - start_time_tv.tv_sec)
-            + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
+                    + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
 #if defined(WINCE)
@@ -320,12 +320,12 @@ static void WaitCondVarThread(void *arg)
 #else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
-            + (end_time_tb.millitm - start_time_tb.millitm);
+                    + (end_time_tb.millitm - start_time_tb.millitm);
 #endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
-            || elapsed_msecs > timeout_msecs + tolerance_msecs) {
+        || elapsed_msecs > timeout_msecs + tolerance_msecs) {
         fprintf(stderr, "timeout wrong\n");
         exit(1);
     }
@@ -370,7 +370,7 @@ static void WaitMonitorThread(void *arg)
 #if defined(XP_UNIX)
     gettimeofday(&end_time_tv, NULL);
     elapsed_msecs = 1000*(end_time_tv.tv_sec - start_time_tv.tv_sec)
-            + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
+                    + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
 #if defined(WINCE)
@@ -378,12 +378,12 @@ static void WaitMonitorThread(void *arg)
 #else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
-            + (end_time_tb.millitm - start_time_tb.millitm);
+                    + (end_time_tb.millitm - start_time_tb.millitm);
 #endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
-            || elapsed_msecs > timeout_msecs + tolerance_msecs) {
+        || elapsed_msecs > timeout_msecs + tolerance_msecs) {
         fprintf(stderr, "timeout wrong\n");
         exit(1);
     }
@@ -422,7 +422,7 @@ static void WaitCMonitorThread(void *arg)
 #if defined(XP_UNIX)
     gettimeofday(&end_time_tv, NULL);
     elapsed_msecs = 1000*(end_time_tv.tv_sec - start_time_tv.tv_sec)
-            + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
+                    + (end_time_tv.tv_usec - start_time_tv.tv_usec)/1000;
 #endif
 #if defined(WIN32)
 #if defined(WINCE)
@@ -430,12 +430,12 @@ static void WaitCMonitorThread(void *arg)
 #else
     _ftime(&end_time_tb);
     elapsed_msecs = 1000*(end_time_tb.time - start_time_tb.time)
-            + (end_time_tb.millitm - start_time_tb.millitm);
+                    + (end_time_tb.millitm - start_time_tb.millitm);
 #endif
 #endif
 #if defined(XP_UNIX) || defined(WIN32)
     if (elapsed_msecs + tolerance_msecs < timeout_msecs
-            || elapsed_msecs > timeout_msecs + tolerance_msecs) {
+        || elapsed_msecs > timeout_msecs + tolerance_msecs) {
         fprintf(stderr, "timeout wrong\n");
         exit(1);
     }
@@ -450,10 +450,12 @@ typedef void (*NSPRThreadFunc)(void*);
 
 static NSPRThreadFunc threadFuncs[] = {
     SleepThread, AcceptThread, PollThread,
-    WaitCondVarThread, WaitMonitorThread, WaitCMonitorThread};
+    WaitCondVarThread, WaitMonitorThread, WaitCMonitorThread
+};
 
 static PRThreadScope threadScopes[] = {
-    PR_LOCAL_THREAD, PR_GLOBAL_THREAD, PR_GLOBAL_BOUND_THREAD};
+    PR_LOCAL_THREAD, PR_GLOBAL_THREAD, PR_GLOBAL_BOUND_THREAD
+};
 
 static void Help(void)
 {
@@ -478,7 +480,9 @@ int main(int argc, char **argv)
     PLOptState *opt = PL_CreateOptState(argc, argv, "dl:t:h");
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt))) {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option) {
             case 'd':  /* debug mode */
                 debug_mode = PR_TRUE;
@@ -516,7 +520,7 @@ int main(int argc, char **argv)
     tolerance = PR_MillisecondsToInterval(tolerance_msecs);
 
     threads = PR_Malloc(
-            num_thread_scopes * num_thread_funcs * sizeof(PRThread*));
+                  num_thread_scopes * num_thread_funcs * sizeof(PRThread*));
     if (threads == NULL) {
         fprintf(stderr, "PR_Malloc failed\n");
         exit(1);
@@ -525,11 +529,11 @@ int main(int argc, char **argv)
     /* start to time out 5 seconds after a rollover date */
     secs = lead_time_secs + 5;
     idx = 0;
-    for (i = 0; i < num_thread_scopes; i++) { 
+    for (i = 0; i < num_thread_scopes; i++) {
         for (j = 0; j < num_thread_funcs; j++) {
             threads[idx] = PR_CreateThread(PR_USER_THREAD, threadFuncs[j],
-                (void*)PR_SecondsToInterval(secs), PR_PRIORITY_NORMAL,
-                threadScopes[i], PR_JOINABLE_THREAD, 0);
+                                           (void*)PR_SecondsToInterval(secs), PR_PRIORITY_NORMAL,
+                                           threadScopes[i], PR_JOINABLE_THREAD, 0);
             if (threads[idx] == NULL) {
                 fprintf(stderr, "PR_CreateThread failed\n");
                 exit(1);

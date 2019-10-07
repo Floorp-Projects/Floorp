@@ -19,7 +19,7 @@ PRBool _pr_debugStacks = PR_FALSE;
 #endif
 
 /* How much space to leave between the stacks, at each end */
-#define REDZONE		(2 << _pr_pageShift)
+#define REDZONE     (2 << _pr_pageShift)
 
 #define _PR_THREAD_STACK_PTR(_qp) \
     ((PRThreadStack*) ((char*) (_qp) - offsetof(PRThreadStack,links)))
@@ -54,22 +54,23 @@ PRThreadStack *_PR_NewStack(PRUint32 stackSize)
     PR_Lock(_pr_stackLock);
     qp = _pr_freeStacks.prev;
     while ((_pr_numFreeStacks > _pr_maxFreeStacks) && (qp != &_pr_freeStacks)) {
-	ts = _PR_THREAD_STACK_PTR(qp);
-	thr = _PR_THREAD_STACK_TO_PTR(ts);
-	qp = qp->prev;
-	/*
-	 * skip stacks which are still being used
-	 */
-	if (thr->no_sched)
-		continue;
-	PR_REMOVE_LINK(&ts->links);
+        ts = _PR_THREAD_STACK_PTR(qp);
+        thr = _PR_THREAD_STACK_TO_PTR(ts);
+        qp = qp->prev;
+        /*
+         * skip stacks which are still being used
+         */
+        if (thr->no_sched) {
+            continue;
+        }
+        PR_REMOVE_LINK(&ts->links);
 
-	/* Give platform OS to clear out the stack for debugging */
-	_PR_MD_CLEAR_STACK(ts);
+        /* Give platform OS to clear out the stack for debugging */
+        _PR_MD_CLEAR_STACK(ts);
 
-	_pr_numFreeStacks--;
-	_PR_DestroySegment(ts->seg);
-	PR_DELETE(ts);
+        _pr_numFreeStacks--;
+        _PR_DestroySegment(ts->seg);
+        PR_DELETE(ts);
     }
 
     /*
@@ -79,51 +80,51 @@ PRThreadStack *_PR_NewStack(PRUint32 stackSize)
     qp = _pr_freeStacks.next;
     ts = 0;
     while (qp != &_pr_freeStacks) {
-	ts = _PR_THREAD_STACK_PTR(qp);
-	thr = _PR_THREAD_STACK_TO_PTR(ts);
-	qp = qp->next;
-	/*
-	 * skip stacks which are still being used
-	 */
-	if ((!(thr->no_sched)) && ((ts->allocSize - 2*REDZONE) >= stackSize)) {
-	    /*
-	    ** Found a stack that is not in use and is big enough. Change
-	    ** stackSize to fit it.
-	    */
-	    stackSize = ts->allocSize - 2*REDZONE;
-	    PR_REMOVE_LINK(&ts->links);
-	    _pr_numFreeStacks--;
-	    ts->links.next = 0;
-	    ts->links.prev = 0;
-	    PR_Unlock(_pr_stackLock);
-	    goto done;
-	}
-	ts = 0;
+        ts = _PR_THREAD_STACK_PTR(qp);
+        thr = _PR_THREAD_STACK_TO_PTR(ts);
+        qp = qp->next;
+        /*
+         * skip stacks which are still being used
+         */
+        if ((!(thr->no_sched)) && ((ts->allocSize - 2*REDZONE) >= stackSize)) {
+            /*
+            ** Found a stack that is not in use and is big enough. Change
+            ** stackSize to fit it.
+            */
+            stackSize = ts->allocSize - 2*REDZONE;
+            PR_REMOVE_LINK(&ts->links);
+            _pr_numFreeStacks--;
+            ts->links.next = 0;
+            ts->links.prev = 0;
+            PR_Unlock(_pr_stackLock);
+            goto done;
+        }
+        ts = 0;
     }
     PR_Unlock(_pr_stackLock);
 
     if (!ts) {
-	/* Make a new thread stack object. */
-	ts = PR_NEWZAP(PRThreadStack);
-	if (!ts) {
-	    return NULL;
-	}
+        /* Make a new thread stack object. */
+        ts = PR_NEWZAP(PRThreadStack);
+        if (!ts) {
+            return NULL;
+        }
 
-	/*
-	** Assign some of the virtual space to the new stack object. We
-	** may not get that piece of VM, but if nothing else we will
-	** advance the pointer so we don't collide (unless the OS screws
-	** up).
-	*/
-	ts->allocSize = stackSize + 2*REDZONE;
-	ts->seg = _PR_NewSegment(ts->allocSize, 0);
-	if (!ts->seg) {
-	    PR_DELETE(ts);
-	    return NULL;
-	}
-	}
+        /*
+        ** Assign some of the virtual space to the new stack object. We
+        ** may not get that piece of VM, but if nothing else we will
+        ** advance the pointer so we don't collide (unless the OS screws
+        ** up).
+        */
+        ts->allocSize = stackSize + 2*REDZONE;
+        ts->seg = _PR_NewSegment(ts->allocSize, 0);
+        if (!ts->seg) {
+            PR_DELETE(ts);
+            return NULL;
+        }
+    }
 
-  done:
+done:
     ts->allocBase = (char*)ts->seg->vaddr;
     ts->flags = _PR_STACK_MAPPED;
     ts->stackSize = stackSize;
@@ -137,11 +138,11 @@ PRThreadStack *_PR_NewStack(PRUint32 stackSize)
 #endif
 
     PR_LOG(_pr_thread_lm, PR_LOG_NOTICE,
-	   ("thread stack: base=0x%x limit=0x%x bottom=0x%x top=0x%x\n",
-	    ts->allocBase, ts->allocBase + ts->allocSize - 1,
-	    ts->allocBase + REDZONE,
-	    ts->allocBase + REDZONE + stackSize - 1));
-	    
+           ("thread stack: base=0x%x limit=0x%x bottom=0x%x top=0x%x\n",
+            ts->allocBase, ts->allocBase + ts->allocSize - 1,
+            ts->allocBase + REDZONE,
+            ts->allocBase + REDZONE + stackSize - 1));
+
     _PR_MD_INIT_STACK(ts,REDZONE);
 
     return ts;
@@ -153,11 +154,11 @@ PRThreadStack *_PR_NewStack(PRUint32 stackSize)
 void _PR_FreeStack(PRThreadStack *ts)
 {
     if (!ts) {
-	return;
+        return;
     }
     if (ts->flags & _PR_STACK_PRIMORDIAL) {
-	PR_DELETE(ts);
-	return;
+        PR_DELETE(ts);
+        return;
     }
 
     /*

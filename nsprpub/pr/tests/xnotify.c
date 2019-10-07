@@ -43,8 +43,12 @@ static void LogNow(const char *msg, PRStatus rv)
     PRIntervalTime now = PR_IntervalNow();
     PR_Lock(ml);
     PR_fprintf(err, "%6ld: %s", (now - base), msg);
-    if (PR_FAILURE == rv) PL_FPrintError(err, " ");
-    else PR_fprintf(err, "\n");
+    if (PR_FAILURE == rv) {
+        PL_FPrintError(err, " ");
+    }
+    else {
+        PR_fprintf(err, "\n");
+    }
     PR_Unlock(ml);
 }  /* LogNow */
 
@@ -66,12 +70,20 @@ static void PR_CALLBACK T2CMon(void *arg)
     PR_CEnterMonitor(&shared->o1);
     LogNow("T2 waiting 5 seconds on o1", PR_SUCCESS);
     rv = PR_CWait(&shared->o1, PR_SecondsToInterval(5));
-    if (PR_SUCCESS == rv) LogNow("T2 resuming on o1", rv);
-    else LogNow("T2 wait failed on o1", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T2 resuming on o1", rv);
+    }
+    else {
+        LogNow("T2 wait failed on o1", rv);
+    }
 
     rv = PR_CNotify(&shared->o1);
-    if (PR_SUCCESS == rv) LogNow("T2 notified o1", rv);
-    else LogNow("T2 notify on o1 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T2 notified o1", rv);
+    }
+    else {
+        LogNow("T2 notify on o1 failed", rv);
+    }
 
     PR_CExitMonitor(&shared->o1);
 }  /* T2CMon */
@@ -84,8 +96,12 @@ static void PR_CALLBACK T3CMon(void *arg)
     PR_CEnterMonitor(&shared->o2);
     LogNow("T3 waiting 5 seconds on o2", PR_SUCCESS);
     rv = PR_CWait(&shared->o2, PR_SecondsToInterval(5));
-    if (PR_SUCCESS == rv) LogNow("T3 resuming on o2", rv);
-    else LogNow("T3 wait failed on o2", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T3 resuming on o2", rv);
+    }
+    else {
+        LogNow("T3 wait failed on o2", rv);
+    }
     rv = PR_CNotify(&shared->o2);
     LogNow("T3 notify on o2", rv);
     PR_CExitMonitor(&shared->o2);
@@ -108,25 +124,33 @@ static void T1CMon(void)
     PR_CEnterMonitor(&sharedCM.o1);
     LogNow("T1 waiting 3 seconds on o1", PR_SUCCESS);
     rv = PR_CWait(&sharedCM.o1, PR_SecondsToInterval(3));
-    if (PR_SUCCESS == rv) LogNow("T1 resuming on o1", rv);
-    else LogNow("T1 wait on o1 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T1 resuming on o1", rv);
+    }
+    else {
+        LogNow("T1 wait on o1 failed", rv);
+    }
     PR_CExitMonitor(&sharedCM.o1);
 
     LogNow("T1 creating T2", PR_SUCCESS);
     t2 = PR_CreateThread(
-        PR_USER_THREAD, T2CMon, &sharedCM, PR_PRIORITY_NORMAL,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+             PR_USER_THREAD, T2CMon, &sharedCM, PR_PRIORITY_NORMAL,
+             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     LogNow("T1 creating T3", PR_SUCCESS);
     t3 = PR_CreateThread(
-        PR_USER_THREAD, T3CMon, &sharedCM, PR_PRIORITY_NORMAL,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+             PR_USER_THREAD, T3CMon, &sharedCM, PR_PRIORITY_NORMAL,
+             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     PR_CEnterMonitor(&sharedCM.o2);
     LogNow("T1 waiting forever on o2", PR_SUCCESS);
     rv = PR_CWait(&sharedCM.o2, PR_INTERVAL_NO_TIMEOUT);
-    if (PR_SUCCESS == rv) LogNow("T1 resuming on o2", rv);
-    else LogNow("T1 wait on o2 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T1 resuming on o2", rv);
+    }
+    else {
+        LogNow("T1 wait on o2 failed", rv);
+    }
     PR_CExitMonitor(&sharedCM.o2);
 
     (void)PR_JoinThread(t2);
@@ -142,12 +166,20 @@ static void PR_CALLBACK T2Mon(void *arg)
     PR_EnterMonitor(shared->o1);
     LogNow("T2 waiting 5 seconds on o1", PR_SUCCESS);
     rv = PR_Wait(shared->o1, PR_SecondsToInterval(5));
-    if (PR_SUCCESS == rv) LogNow("T2 resuming on o1", rv);
-    else LogNow("T2 wait failed on o1", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T2 resuming on o1", rv);
+    }
+    else {
+        LogNow("T2 wait failed on o1", rv);
+    }
 
     rv = PR_Notify(shared->o1);
-    if (PR_SUCCESS == rv) LogNow("T2 notified o1", rv);
-    else LogNow("T2 notify on o1 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T2 notified o1", rv);
+    }
+    else {
+        LogNow("T2 notify on o1 failed", rv);
+    }
 
     PR_ExitMonitor(shared->o1);
 }  /* T2Mon */
@@ -160,8 +192,12 @@ static void PR_CALLBACK T3Mon(void *arg)
     PR_EnterMonitor(shared->o2);
     LogNow("T3 waiting 5 seconds on o2", PR_SUCCESS);
     rv = PR_Wait(shared->o2, PR_SecondsToInterval(5));
-    if (PR_SUCCESS == rv) LogNow("T3 resuming on o2", rv);
-    else LogNow("T3 wait failed on o2", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T3 resuming on o2", rv);
+    }
+    else {
+        LogNow("T3 wait failed on o2", rv);
+    }
     rv = PR_Notify(shared->o2);
     LogNow("T3 notify on o2", rv);
     PR_ExitMonitor(shared->o2);
@@ -186,25 +222,33 @@ static void T1Mon(void)
     PR_EnterMonitor(sharedM.o1);
     LogNow("T1 waiting 3 seconds on o1", PR_SUCCESS);
     rv = PR_Wait(sharedM.o1, PR_SecondsToInterval(3));
-    if (PR_SUCCESS == rv) LogNow("T1 resuming on o1", rv);
-    else LogNow("T1 wait on o1 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T1 resuming on o1", rv);
+    }
+    else {
+        LogNow("T1 wait on o1 failed", rv);
+    }
     PR_ExitMonitor(sharedM.o1);
 
     LogNow("T1 creating T2", PR_SUCCESS);
     t2 = PR_CreateThread(
-        PR_USER_THREAD, T2Mon, &sharedM, PR_PRIORITY_NORMAL,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+             PR_USER_THREAD, T2Mon, &sharedM, PR_PRIORITY_NORMAL,
+             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     LogNow("T1 creating T3", PR_SUCCESS);
     t3 = PR_CreateThread(
-        PR_USER_THREAD, T3Mon, &sharedM, PR_PRIORITY_NORMAL,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+             PR_USER_THREAD, T3Mon, &sharedM, PR_PRIORITY_NORMAL,
+             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     PR_EnterMonitor(sharedM.o2);
     LogNow("T1 waiting forever on o2", PR_SUCCESS);
     rv = PR_Wait(sharedM.o2, PR_INTERVAL_NO_TIMEOUT);
-    if (PR_SUCCESS == rv) LogNow("T1 resuming on o2", rv);
-    else LogNow("T1 wait on o2 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T1 resuming on o2", rv);
+    }
+    else {
+        LogNow("T1 wait on o2 failed", rv);
+    }
     PR_ExitMonitor(sharedM.o2);
 
     (void)PR_JoinThread(t2);
@@ -223,12 +267,20 @@ static void PR_CALLBACK T2Lock(void *arg)
     PR_Lock(shared->o1);
     LogNow("T2 waiting 5 seconds on o1", PR_SUCCESS);
     rv = PR_WaitCondVar(shared->cv1, PR_SecondsToInterval(5));
-    if (PR_SUCCESS == rv) LogNow("T2 resuming on o1", rv);
-    else LogNow("T2 wait failed on o1", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T2 resuming on o1", rv);
+    }
+    else {
+        LogNow("T2 wait failed on o1", rv);
+    }
 
     rv = PR_NotifyCondVar(shared->cv1);
-    if (PR_SUCCESS == rv) LogNow("T2 notified o1", rv);
-    else LogNow("T2 notify on o1 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T2 notified o1", rv);
+    }
+    else {
+        LogNow("T2 notify on o1 failed", rv);
+    }
 
     PR_Unlock(shared->o1);
 }  /* T2Lock */
@@ -241,8 +293,12 @@ static void PR_CALLBACK T3Lock(void *arg)
     PR_Lock(shared->o2);
     LogNow("T3 waiting 5 seconds on o2", PR_SUCCESS);
     rv = PR_WaitCondVar(shared->cv2, PR_SecondsToInterval(5));
-    if (PR_SUCCESS == rv) LogNow("T3 resuming on o2", rv);
-    else LogNow("T3 wait failed on o2", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T3 resuming on o2", rv);
+    }
+    else {
+        LogNow("T3 wait failed on o2", rv);
+    }
     rv = PR_NotifyCondVar(shared->cv2);
     LogNow("T3 notify on o2", rv);
     PR_Unlock(shared->o2);
@@ -272,25 +328,33 @@ static void T1Lock(void)
     PR_Lock(sharedL.o1);
     LogNow("T1 waiting 3 seconds on o1", PR_SUCCESS);
     rv = PR_WaitCondVar(sharedL.cv1, PR_SecondsToInterval(3));
-    if (PR_SUCCESS == rv) LogNow("T1 resuming on o1", rv);
-    else LogNow("T1 wait on o1 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T1 resuming on o1", rv);
+    }
+    else {
+        LogNow("T1 wait on o1 failed", rv);
+    }
     PR_Unlock(sharedL.o1);
 
     LogNow("T1 creating T2", PR_SUCCESS);
     t2 = PR_CreateThread(
-        PR_USER_THREAD, T2Lock, &sharedL, PR_PRIORITY_NORMAL,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+             PR_USER_THREAD, T2Lock, &sharedL, PR_PRIORITY_NORMAL,
+             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     LogNow("T1 creating T3", PR_SUCCESS);
     t3 = PR_CreateThread(
-        PR_USER_THREAD, T3Lock, &sharedL, PR_PRIORITY_NORMAL,
-        PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+             PR_USER_THREAD, T3Lock, &sharedL, PR_PRIORITY_NORMAL,
+             PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     PR_Lock(sharedL.o2);
     LogNow("T1 waiting forever on o2", PR_SUCCESS);
     rv = PR_WaitCondVar(sharedL.cv2, PR_INTERVAL_NO_TIMEOUT);
-    if (PR_SUCCESS == rv) LogNow("T1 resuming on o2", rv);
-    else LogNow("T1 wait on o2 failed", rv);
+    if (PR_SUCCESS == rv) {
+        LogNow("T1 resuming on o2", rv);
+    }
+    else {
+        LogNow("T1 wait on o2 failed", rv);
+    }
     PR_Unlock(sharedL.o2);
 
     (void)PR_JoinThread(t2);
@@ -304,44 +368,52 @@ static void T1Lock(void)
 
 static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 {
-	PLOptStatus os;
-  	PLOptState *opt = PL_CreateOptState(argc, argv, "dhlmc");
-	PRBool locks = PR_FALSE, monitors = PR_FALSE, cmonitors = PR_FALSE;
+    PLOptStatus os;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "dhlmc");
+    PRBool locks = PR_FALSE, monitors = PR_FALSE, cmonitors = PR_FALSE;
 
     err = PR_GetSpecialFD(PR_StandardError);
 
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode (noop) */
-            break;
-        case 'l':  /* locks */
-			locks = PR_TRUE;
-            break;
-        case 'm':  /* monitors */
-			monitors = PR_TRUE;
-            break;
-        case 'c':  /* cached monitors */
-			cmonitors = PR_TRUE;
-            break;
-        case 'h':  /* needs guidance */
-         default:
-            Help();
-            return 2;
+            case 'd':  /* debug mode (noop) */
+                break;
+            case 'l':  /* locks */
+                locks = PR_TRUE;
+                break;
+            case 'm':  /* monitors */
+                monitors = PR_TRUE;
+                break;
+            case 'c':  /* cached monitors */
+                cmonitors = PR_TRUE;
+                break;
+            case 'h':  /* needs guidance */
+            default:
+                Help();
+                return 2;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
     ml = PR_NewLock();
-    if (locks) T1Lock();
-    if (monitors) T1Mon();
-    if (cmonitors) T1CMon();
+    if (locks) {
+        T1Lock();
+    }
+    if (monitors) {
+        T1Mon();
+    }
+    if (cmonitors) {
+        T1CMon();
+    }
 
     PR_DestroyLock(ml);
 
-    PR_fprintf(err, "Done!\n");    
+    PR_fprintf(err, "Done!\n");
     return 0;
 }  /* main */
 
@@ -349,7 +421,7 @@ static PRIntn PR_CALLBACK RealMain( PRIntn argc, char **argv )
 int main(int argc, char **argv)
 {
     PRIntn rv;
-    
+
     PR_STDIO_INIT();
     rv = PR_Initialize(RealMain, argc, argv, 0);
     return rv;

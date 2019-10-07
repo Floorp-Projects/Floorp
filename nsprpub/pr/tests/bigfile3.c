@@ -38,7 +38,7 @@ int main(int argc, char **argv)
 
 #ifdef _WIN32
     hFile = CreateFile(TEST_FILE_NAME_FOR_CREATEFILE, GENERIC_WRITE, 0, NULL,
-            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "CreateFile failed\n");
         exit(1);

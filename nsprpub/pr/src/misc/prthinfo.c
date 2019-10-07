@@ -32,8 +32,9 @@ PR_ThreadScanStackPointers(PRThread* t,
     */
     p0 = _MD_HomeGCRegisters(t, t == current, &n);
     status = scanFun(t, (void**)p0, n, scanClosure);
-    if (status != PR_SUCCESS)
+    if (status != PR_SUCCESS) {
         return status;
+    }
 
     /* Scan the C stack for pointers into the GC heap */
 #if defined(XP_PC) && defined(WIN16)
@@ -86,7 +87,7 @@ PR_ThreadScanStackPointers(PRThread* t,
     {
         prword_t scan;
         prword_t limit;
-        
+
         scan = (prword_t) sp;
         limit = (prword_t) esp;
         while (scan < limit) {
@@ -94,16 +95,18 @@ PR_ThreadScanStackPointers(PRThread* t,
 
             test = *((prword_t **)scan);
             status = scanFun(t, (void**)&test, 1, scanClosure);
-            if (status != PR_SUCCESS)
+            if (status != PR_SUCCESS) {
                 return status;
+            }
             scan += sizeof(char);
         }
     }
 #else
     if (sp < esp) {
         status = scanFun(t, (void**)sp, esp - sp, scanClosure);
-        if (status != PR_SUCCESS)
+        if (status != PR_SUCCESS) {
             return status;
+        }
     }
 #endif
 
@@ -114,17 +117,19 @@ PR_ThreadScanStackPointers(PRThread* t,
     ** will be collected
     */
     status = scanFun(t, (void**)&t->environment, 1, scanClosure);
-    if (status != PR_SUCCESS)
+    if (status != PR_SUCCESS) {
         return status;
+    }
 
     /* if thread is not allocated on stack, this is redundant. */
     ptd = t->privateData;
     for (index = 0; index < t->tpdLength; index++, ptd++) {
         status = scanFun(t, (void**)ptd, 1, scanClosure);
-        if (status != PR_SUCCESS)
+        if (status != PR_SUCCESS) {
             return status;
+        }
     }
-    
+
     return PR_SUCCESS;
 }
 
@@ -173,9 +178,9 @@ PR_GetStackSpaceLeft(PRThread* t)
         sp  = (PRWord*) PR_GetSP(t);
         esp = (PRWord*) t->stack->stackTop;
 
-	PR_ASSERT((t->stack->stackSize == 0) ||
-                 ((sp >  (PRWord*)t->stack->stackBottom) &&
-		  (sp <= (PRWord*)t->stack->stackTop)));
+        PR_ASSERT((t->stack->stackSize == 0) ||
+                  ((sp >  (PRWord*)t->stack->stackBottom) &&
+                   (sp <= (PRWord*)t->stack->stackTop)));
     }
 #else   /* ! WIN16 */
 #ifdef HAVE_STACK_GROWING_UP
@@ -197,8 +202,8 @@ PR_GetStackSpaceLeft(PRThread* t)
     }
     esp = (PRWord*) t->stack->stackTop;
     if (t->stack->stackSize) {
-	PR_ASSERT((sp > (PRWord*)t->stack->stackBottom) &&
-		  (sp < (PRWord*)t->stack->stackTop));
+        PR_ASSERT((sp > (PRWord*)t->stack->stackBottom) &&
+                  (sp < (PRWord*)t->stack->stackTop));
     }
 #endif  /* ! HAVE_STACK_GROWING_UP */
 #endif  /* ! WIN16 */

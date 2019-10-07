@@ -77,13 +77,13 @@ NSPR_API(PRInt32) PR_GetPageShift(void);
 ** Description:
 ** PR_GetNumberOfProcessors() extracts the number of processors
 ** (CPUs available in an SMP system) and returns the number.
-** 
+**
 ** Parameters:
 **   none
 **
 ** Returns:
 **   The number of available processors or -1 on error
-** 
+**
 */
 NSPR_API(PRInt32) PR_GetNumberOfProcessors( void );
 

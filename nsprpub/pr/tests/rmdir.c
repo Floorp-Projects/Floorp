@@ -5,9 +5,9 @@
 
 /*
 ** File:        rmdir.c
-** Description: Demonstrate bugzilla 80884. 
+** Description: Demonstrate bugzilla 80884.
 **
-** after fix to unix_errors.c, message should report correct 
+** after fix to unix_errors.c, message should report correct
 ** failure of PR_Rmdir().
 **
 **
@@ -24,7 +24,7 @@
 #define FILENAME "file80883"
 
 PRBool  failed_already = PR_FALSE;
-PRBool	debug_mode = PR_FALSE;
+PRBool  debug_mode = PR_FALSE;
 
 PRLogModuleInfo     *lm;
 
@@ -33,8 +33,8 @@ PRLogModuleInfo     *lm;
 */
 static void Help( void )  {
     fprintf(stderr, "template usage:\n"
-                    "\t-d     debug mode\n"
-                    );
+            "\t-d     debug mode\n"
+           );
 } /* --- end Help() */
 
 int main(int argc, char **argv)
@@ -46,7 +46,9 @@ int main(int argc, char **argv)
 
     /* parse command line options */
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt))) {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option) {
             case 'd':  /* debug mode */
                 debug_mode = PR_TRUE;
@@ -66,11 +68,11 @@ int main(int argc, char **argv)
     if (fd == 0) {
         PRErrorCode err = PR_GetError();
         fprintf(stderr, "create file fails: %d: %s\n", err,
-            PR_ErrorToString(err, PR_LANGUAGE_I_DEFAULT));
+                PR_ErrorToString(err, PR_LANGUAGE_I_DEFAULT));
         failed_already = PR_TRUE;
         goto Finished;
     }
- 
+
     PR_Close(fd);
 
     if (PR_RmDir( DIRNAME ) == PR_SUCCESS) {
@@ -78,10 +80,10 @@ int main(int argc, char **argv)
         failed_already = PR_TRUE;
         goto Finished;
     }
- 
+
     err = PR_GetError();
     fprintf(stderr, "remove directory fails with: %d: %s\n", err,
-        PR_ErrorToString(err, PR_LANGUAGE_I_DEFAULT));
+            PR_ErrorToString(err, PR_LANGUAGE_I_DEFAULT));
 
     (void) PR_Delete( DIRNAME FILENAME);
     (void) PR_RmDir( DIRNAME );
@@ -89,7 +91,9 @@ int main(int argc, char **argv)
     return 0;
 
 Finished:
-    if ( debug_mode ) printf("%s\n", ( failed_already ) ? "FAILED" : "PASS" );
+    if ( debug_mode ) {
+        printf("%s\n", ( failed_already ) ? "FAILED" : "PASS" );
+    }
     return( (failed_already)? 1 : 0 );
 }  /* --- end main() */
 /* --- end template.c */

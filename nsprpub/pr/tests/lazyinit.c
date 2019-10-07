@@ -53,49 +53,50 @@ int main(int argc, char **argv)
     {
         test = 0;
     }
-    else
+    else {
         test = atoi(argv[1]);
-        
+    }
+
     switch (test)
     {
-        case 0: ml = PR_NewLock(); 
+        case 0: ml = PR_NewLock();
             break;
-            
+
         case 1: interval = PR_SecondsToInterval(1);
             break;
-            
+
         case 2: thread = PR_CreateThread(
-            PR_USER_THREAD, lazyEntry, NULL, PR_PRIORITY_NORMAL,
-            PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0); 
+                                 PR_USER_THREAD, lazyEntry, NULL, PR_PRIORITY_NORMAL,
+                                 PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
             break;
-            
-        case 3: file = PR_Open("/usr/tmp/", PR_RDONLY, 0); 
+
+        case 3: file = PR_Open("/usr/tmp/", PR_RDONLY, 0);
             break;
-            
-        case 4: udp = PR_NewUDPSocket(); 
+
+        case 4: udp = PR_NewUDPSocket();
             break;
-            
-        case 5: tcp = PR_NewTCPSocket(); 
+
+        case 5: tcp = PR_NewTCPSocket();
             break;
-            
-        case 6: dir = PR_OpenDir("/usr/tmp/"); 
+
+        case 6: dir = PR_OpenDir("/usr/tmp/");
             break;
-            
+
         case 7: (void)PR_NewThreadPrivateIndex(&pdkey, NULL);
             break;
-        
+
         case 8: path = PR_GetEnv("PATH");
             break;
-            
+
         case 9: status = PR_NewTCPSocketPair(pair);
             break;
-            
+
         case 10: PR_SetConcurrency(2);
             break;
-            
-        default: 
+
+        default:
             printf(
-                "lazyinit: unrecognized command line argument: %s\n", 
+                "lazyinit: unrecognized command line argument: %s\n",
                 argv[1] );
             printf( "FAIL\n" );
             exit( 1 );

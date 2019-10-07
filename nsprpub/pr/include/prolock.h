@@ -16,24 +16,24 @@ PR_BEGIN_EXTERN_C
 ** Hierarchy (or Lock Ordering) schema. An application designed
 ** using the Ordered Lock functions will terminate with a
 ** diagnostic message when a lock inversion condition is
-** detected. 
-** 
+** detected.
+**
 ** The lock ordering detection is compile-time enabled only. In
 ** optimized builds of NSPR, the Ordered Lock functions map
 ** directly to PRLock functions, providing no lock order
 ** detection.
-** 
+**
 ** The Ordered Lock Facility is compiled in when DEBUG is defined at
 ** compile-time. Ordered Lock can be forced on in optimized builds by
 ** defining FORCE_NSPR_ORDERED_LOCK at compile-time. Both the
 ** application using Ordered Lock and NSPR must be compiled with the
 ** facility enabled to achieve the desired results.
-** 
+**
 ** Application designers should use the macro interfaces to the Ordered
 ** Lock facility to ensure that it is compiled out in optimized builds.
 **
 ** Application designers are responsible for defining their own
-** lock hierarchy. 
+** lock hierarchy.
 **
 ** Ordered Lock is thread-safe and SMP safe.
 **
@@ -55,7 +55,7 @@ typedef void * PROrderedLock;
 /*
 ** Map PROrderedLock and methods onto PRLock when ordered locking
 ** is not compiled in.
-**  
+**
 */
 #include "prlock.h"
 
@@ -64,19 +64,19 @@ typedef PRLock PROrderedLock;
 
 /* -----------------------------------------------------------------------
 ** FUNCTION: PR_CreateOrderedLock() -- Create an Ordered Lock
-** 
+**
 ** DESCRIPTION: PR_CreateOrderedLock() creates an ordered lock.
-** 
+**
 ** INPUTS:
 **  order: user defined order of this lock.
 **  name: name of the lock. For debugging purposes.
-** 
+**
 ** OUTPUTS: returned
-** 
+**
 ** RETURNS: PR_OrderedLock pointer
-** 
+**
 ** RESTRICTIONS:
-** 
+**
 */
 #if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_CREATE_ORDERED_LOCK(order,name)\
@@ -85,26 +85,26 @@ typedef PRLock PROrderedLock;
 #define PR_CREATE_ORDERED_LOCK(order) PR_NewLock()
 #endif
 
-NSPR_API(PROrderedLock *) 
-    PR_CreateOrderedLock( 
-        PRInt32 order,
-        const char *name
+NSPR_API(PROrderedLock *)
+PR_CreateOrderedLock(
+    PRInt32 order,
+    const char *name
 );
 
 /* -----------------------------------------------------------------------
 ** FUNCTION: PR_DestroyOrderedLock() -- Destroy an Ordered Lock
-** 
+**
 ** DESCRIPTION: PR_DestroyOrderedLock() destroys the ordered lock
 ** referenced by lock.
-** 
+**
 ** INPUTS: lock: pointer to a PROrderedLock
-** 
+**
 ** OUTPUTS: the lock is destroyed
-** 
+**
 ** RETURNS: void
-** 
+**
 ** RESTRICTIONS:
-** 
+**
 */
 #if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_DESTROY_ORDERED_LOCK(lock) PR_DestroyOrderedLock((lock))
@@ -112,27 +112,27 @@ NSPR_API(PROrderedLock *)
 #define PR_DESTROY_ORDERED_LOCK(lock) PR_DestroyLock((lock))
 #endif
 
-NSPR_API(void) 
-    PR_DestroyOrderedLock( 
-        PROrderedLock *lock 
+NSPR_API(void)
+PR_DestroyOrderedLock(
+    PROrderedLock *lock
 );
 
 /* -----------------------------------------------------------------------
 ** FUNCTION: PR_LockOrderedLock() -- Lock an ordered lock
-** 
+**
 ** DESCRIPTION: PR_LockOrderedLock() locks the ordered lock
 ** referenced by lock. If the order of lock is less than or equal
 ** to the order of the highest lock held by the locking thread,
 ** the function asserts.
-** 
+**
 ** INPUTS: lock: a pointer to a PROrderedLock
-** 
+**
 ** OUTPUTS: The lock is held or the function asserts.
-** 
+**
 ** RETURNS: void
-** 
+**
 ** RESTRICTIONS:
-** 
+**
 */
 #if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_LOCK_ORDERED_LOCK(lock) PR_LockOrderedLock((lock))
@@ -140,27 +140,27 @@ NSPR_API(void)
 #define PR_LOCK_ORDERED_LOCK(lock) PR_Lock((lock))
 #endif
 
-NSPR_API(void) 
-    PR_LockOrderedLock( 
-        PROrderedLock *lock 
+NSPR_API(void)
+PR_LockOrderedLock(
+    PROrderedLock *lock
 );
 
 /* -----------------------------------------------------------------------
 ** FUNCTION: PR_UnlockOrderedLock() -- unlock and Ordered Lock
-** 
+**
 ** DESCRIPTION: PR_UnlockOrderedLock() unlocks the lock referenced
 ** by lock.
-** 
+**
 ** INPUTS: lock: a pointer to a PROrderedLock
-** 
+**
 ** OUTPUTS: the lock is unlocked
-** 
+**
 ** RETURNS:
 **  PR_SUCCESS
 **  PR_FAILURE
-** 
+**
 ** RESTRICTIONS:
-** 
+**
 */
 #if defined(DEBUG) || defined(FORCE_NSPR_ORDERED_LOCKS)
 #define PR_UNLOCK_ORDERED_LOCK(lock) PR_UnlockOrderedLock((lock))
@@ -168,9 +168,9 @@ NSPR_API(void)
 #define PR_UNLOCK_ORDERED_LOCK(lock) PR_Unlock((lock))
 #endif
 
-NSPR_API(PRStatus) 
-    PR_UnlockOrderedLock( 
-        PROrderedLock *lock 
+NSPR_API(PRStatus)
+PR_UnlockOrderedLock(
+    PROrderedLock *lock
 );
 
 PR_END_EXTERN_C

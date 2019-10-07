@@ -68,8 +68,9 @@ static void PrintProgress(PRIntn line)
 
 static void MyAssert(const char *expr, const char *file, PRIntn line)
 {
-    if (debug > 0)
+    if (debug > 0) {
         (void)PR_fprintf(fout, "'%s' in file: %s: %d\n", expr, file, line);
+    }
 }  /* MyAssert */
 
 #define MY_ASSERT(_expr) \
@@ -86,14 +87,16 @@ int main(PRIntn argc, char *argv[])
     RCThread *primordial = RCThread::WrapPrimordialThread();
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-            debug = PR_TRUE;
-            break;
-         default:
-            break;
+            case 'd':  /* debug mode */
+                debug = PR_TRUE;
+                break;
+            default:
+                break;
         }
     }
     PL_DestroyOptState(opt);
@@ -103,8 +106,9 @@ int main(PRIntn argc, char *argv[])
     MyPrivateData extension = MyPrivateData("EXTENSION");
     MyPrivateData key_string[] = {
         "Key #0", "Key #1", "Key #2", "Key #3",
-        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"};
-    
+        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"
+    };
+
 
     did = should = PR_FALSE;
     for (keys = 0; keys < 4; ++keys)
@@ -133,7 +137,7 @@ int main(PRIntn argc, char *argv[])
     }
     PrintProgress(__LINE__);
 
-    /* re-assign the private data, albeit the same content */    
+    /* re-assign the private data, albeit the same content */
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
     {
@@ -190,13 +194,21 @@ int main(PRIntn argc, char *argv[])
         MY_ASSERT(PR_SUCCESS == rv);
     }
 
-    if (debug) PR_fprintf(fout, "Creating thread\n");
+    if (debug) {
+        PR_fprintf(fout, "Creating thread\n");
+    }
     thread = new MyThread();
-    if (debug) PR_fprintf(fout, "Starting thread\n");
+    if (debug) {
+        PR_fprintf(fout, "Starting thread\n");
+    }
     thread->Start();
-    if (debug) PR_fprintf(fout, "Joining thread\n");
+    if (debug) {
+        PR_fprintf(fout, "Joining thread\n");
+    }
     (void)thread->Join();
-    if (debug) PR_fprintf(fout, "Joined thread\n");
+    if (debug) {
+        PR_fprintf(fout, "Joined thread\n");
+    }
 
     failed |= (PR_FAILURE == RCPrimordialThread::Cleanup());
 
@@ -237,8 +249,12 @@ MyPrivateData::MyPrivateData(const MyPrivateData& him): RCThreadPrivateData(him)
 
 void MyPrivateData::Release()
 {
-    if (should) did = PR_TRUE;
-    else failed = PR_TRUE;
+    if (should) {
+        did = PR_TRUE;
+    }
+    else {
+        failed = PR_TRUE;
+    }
 }  /* MyPrivateData::operator= */
 
 /*
@@ -253,12 +269,13 @@ void MyThread::RootFunction()
     PRStatus rv;
     PRUintn keys;
     const RCThreadPrivateData *pd;
-    
+
     MyPrivateData extension = MyPrivateData("EXTENSION");
     MyPrivateData key_string[] = {
         "Key #0", "Key #1", "Key #2", "Key #3",
-        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"};
-    
+        "Bogus #5", "Bogus #6", "Bogus #7", "Bogus #8"
+    };
+
     did = should = PR_FALSE;
     for (keys = 0; keys < 8; ++keys)
     {
@@ -284,7 +301,7 @@ void MyThread::RootFunction()
     }
     PrintProgress(__LINE__);
 #endif
-    
+
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
     {

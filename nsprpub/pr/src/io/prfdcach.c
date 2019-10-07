@@ -63,8 +63,12 @@ PRFileDesc *_PR_Getfd(void)
     {
         do
         {
-            if (NULL == _pr_fd_cache.head) goto allocate;  /* nothing there */
-            if (_pr_fd_cache.count < _pr_fd_cache.limit_low) goto allocate;
+            if (NULL == _pr_fd_cache.head) {
+                goto allocate;    /* nothing there */
+            }
+            if (_pr_fd_cache.count < _pr_fd_cache.limit_low) {
+                goto allocate;
+            }
 
             /* we "should" be able to extract an fd from the cache */
             PR_Lock(_pr_fd_cache.ml);  /* need the lock to do this safely */
@@ -104,10 +108,16 @@ allocate:
     if (NULL != fd)
     {
         fd->secret = PR_NEW(PRFilePrivate);
-        if (NULL == fd->secret) PR_DELETE(fd);
+        if (NULL == fd->secret) {
+            PR_DELETE(fd);
+        }
     }
-    if (NULL != fd) goto finished;
-    else return NULL;
+    if (NULL != fd) {
+        goto finished;
+    }
+    else {
+        return NULL;
+    }
 
 }  /* _PR_Getfd */
 
@@ -157,10 +167,14 @@ PR_IMPLEMENT(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high)
     ** turn the caches off, or turn them on. It is not dependent
     ** on the compilation setting of DEBUG.
     */
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
-    if (low > high) low = high;  /* sanity check the params */
-    
+    if (low > high) {
+        low = high;    /* sanity check the params */
+    }
+
     PR_Lock(_pr_fd_cache.ml);
     _pr_fd_cache.limit_high = high;
     _pr_fd_cache.limit_low = low;
@@ -179,7 +193,7 @@ void _PR_InitFdCache(void)
     const char *low = PR_GetEnv("NSPR_FD_CACHE_SIZE_LOW");
     const char *high = PR_GetEnv("NSPR_FD_CACHE_SIZE_HIGH");
 
-    /* 
+    /*
     ** _low is allowed to be zero, _high is not.
     ** If _high is zero, we're not doing the caching.
     */
@@ -191,19 +205,27 @@ void _PR_InitFdCache(void)
     _pr_fd_cache.limit_high = 0;
 #endif  /* defined(DEBUG) */
 
-    if (NULL != low) _pr_fd_cache.limit_low = atoi(low);
-    if (NULL != high) _pr_fd_cache.limit_high = atoi(high);
+    if (NULL != low) {
+        _pr_fd_cache.limit_low = atoi(low);
+    }
+    if (NULL != high) {
+        _pr_fd_cache.limit_high = atoi(high);
+    }
 
-    if (_pr_fd_cache.limit_low < 0)
+    if (_pr_fd_cache.limit_low < 0) {
         _pr_fd_cache.limit_low = 0;
-    if (_pr_fd_cache.limit_low > FD_SETSIZE)
+    }
+    if (_pr_fd_cache.limit_low > FD_SETSIZE) {
         _pr_fd_cache.limit_low = FD_SETSIZE;
+    }
 
-    if (_pr_fd_cache.limit_high > FD_SETSIZE)
+    if (_pr_fd_cache.limit_high > FD_SETSIZE) {
         _pr_fd_cache.limit_high = FD_SETSIZE;
+    }
 
-    if (_pr_fd_cache.limit_high < _pr_fd_cache.limit_low)
+    if (_pr_fd_cache.limit_high < _pr_fd_cache.limit_low) {
         _pr_fd_cache.limit_high = _pr_fd_cache.limit_low;
+    }
 
     _pr_fd_cache.ml = PR_NewLock();
     PR_ASSERT(NULL != _pr_fd_cache.ml);

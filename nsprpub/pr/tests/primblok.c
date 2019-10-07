@@ -79,8 +79,8 @@ int main(int argc, char **argv)
 
     /* Must be a global thread */
     iothread = PR_CreateThread(
-        PR_USER_THREAD, IOThread, NULL, PR_PRIORITY_NORMAL,
-        PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                   PR_USER_THREAD, IOThread, NULL, PR_PRIORITY_NORMAL,
+                   PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (iothread == NULL) {
         fprintf(stderr, "cannot create thread\n");
         exit(1);

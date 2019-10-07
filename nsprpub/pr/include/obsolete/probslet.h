@@ -48,51 +48,51 @@ typedef struct PR_fd_set {
 ** DESCRIPTION:
 **
 ** The call returns as soon as I/O is ready on one or more of the underlying
-** file/socket descriptors or an exceptional condition is pending. A count of the 
-** number of ready descriptors is returned unless a timeout occurs in which case 
-** zero is returned.  On return, PR_Select replaces the given descriptor sets with 
+** file/socket descriptors or an exceptional condition is pending. A count of the
+** number of ready descriptors is returned unless a timeout occurs in which case
+** zero is returned.  On return, PR_Select replaces the given descriptor sets with
 ** subsets consisting of those descriptors that are ready for the requested condition.
 ** The total number of ready descriptors in all the sets is the return value.
 **
 ** INPUTS:
-**   PRInt32 num             
+**   PRInt32 num
 **       This argument is unused but is provided for select(unix) interface
 **       compatability.  All input PR_fd_set arguments are self-describing
 **       with its own maximum number of elements in the set.
-**                               
+**
 **   PR_fd_set *readfds
 **       A set describing the io descriptors for which ready for reading
-**       condition is of interest.  
-**                               
+**       condition is of interest.
+**
 **   PR_fd_set *writefds
 **       A set describing the io descriptors for which ready for writing
-**       condition is of interest.  
-**                               
+**       condition is of interest.
+**
 **   PR_fd_set *exceptfds
 **       A set describing the io descriptors for which exception pending
-**       condition is of interest.  
+**       condition is of interest.
 **
-**   Any of the above readfds, writefds or exceptfds may be given as NULL 
-**   pointers if no descriptors are of interest for that particular condition.                          
-**   
-**   PRIntervalTime timeout  
-**       Amount of time the call will block waiting for I/O to become ready. 
+**   Any of the above readfds, writefds or exceptfds may be given as NULL
+**   pointers if no descriptors are of interest for that particular condition.
+**
+**   PRIntervalTime timeout
+**       Amount of time the call will block waiting for I/O to become ready.
 **       If this time expires without any I/O becoming ready, the result will
 **       be zero.
 **
-** OUTPUTS:    
+** OUTPUTS:
 **   PR_fd_set *readfds
 **       A set describing the io descriptors which are ready for reading.
-**                               
+**
 **   PR_fd_set *writefds
 **       A set describing the io descriptors which are ready for writing.
-**                               
+**
 **   PR_fd_set *exceptfds
 **       A set describing the io descriptors which have pending exception.
 **
 ** RETURN:PRInt32
 **   Number of io descriptors with asked for conditions or zero if the function
-**   timed out or -1 on failure.  The reason for the failure is obtained by 
+**   timed out or -1 on failure.  The reason for the failure is obtained by
 **   calling PR_GetError().
 ** XXX can we implement this on windoze and mac?
 **************************************************************************
@@ -101,21 +101,21 @@ NSPR_API(PRInt32) PR_Select(
     PRInt32 num, PR_fd_set *readfds, PR_fd_set *writefds,
     PR_fd_set *exceptfds, PRIntervalTime timeout);
 
-/* 
+/*
 ** The following are not thread safe for two threads operating on them at the
 ** same time.
 **
 ** The following routines are provided for manipulating io descriptor sets.
 ** PR_FD_ZERO(&fdset) initializes a descriptor set fdset to the null set.
 ** PR_FD_SET(fd, &fdset) includes a particular file descriptor fd in fdset.
-** PR_FD_CLR(fd, &fdset) removes a file descriptor fd from fdset.  
-** PR_FD_ISSET(fd, &fdset) is nonzero if file descriptor fd is a member of 
+** PR_FD_CLR(fd, &fdset) removes a file descriptor fd from fdset.
+** PR_FD_ISSET(fd, &fdset) is nonzero if file descriptor fd is a member of
 ** fdset, zero otherwise.
 **
 ** PR_FD_NSET(osfd, &fdset) includes a particular native file descriptor osfd
 ** in fdset.
-** PR_FD_NCLR(osfd, &fdset) removes a native file descriptor osfd from fdset.  
-** PR_FD_NISSET(osfd, &fdset) is nonzero if native file descriptor osfd is a member of 
+** PR_FD_NCLR(osfd, &fdset) removes a native file descriptor osfd from fdset.
+** PR_FD_NISSET(osfd, &fdset) is nonzero if native file descriptor osfd is a member of
 ** fdset, zero otherwise.
 */
 

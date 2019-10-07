@@ -73,7 +73,7 @@ int _pr_aix_send_file_use_disabled = 0;
 void _MD_EarlyInit(void)
 {
     void *main_app_handle;
-	char *evp;
+    char *evp;
 
     main_app_handle = dlopen(NULL, RTLD_NOW);
     PR_ASSERT(NULL != main_app_handle);
@@ -85,10 +85,11 @@ void _MD_EarlyInit(void)
     }
     dlclose(main_app_handle);
 
-	if (evp = getenv("NSPR_AIX_SEND_FILE_USE_DISABLED")) {
-		if (1 == atoi(evp))
-			_pr_aix_send_file_use_disabled = 1;
-	}
+    if (evp = getenv("NSPR_AIX_SEND_FILE_USE_DISABLED")) {
+        if (1 == atoi(evp)) {
+            _pr_aix_send_file_use_disabled = 1;
+        }
+    }
 
 #if defined(AIX_TIMERS)
     _MD_AixIntervalInit();
@@ -110,13 +111,13 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
 #ifndef _PR_PTHREADS
     if (isCurrent) {
-	(void) setjmp(CONTEXT(t));
+        (void) setjmp(CONTEXT(t));
     }
     *np = sizeof(CONTEXT(t)) / sizeof(PRWord);
     return (PRWord *) CONTEXT(t);
 #else
-	*np = 0;
-	return NULL;
+    *np = 0;
+    return NULL;
 #endif
 }
 
@@ -130,7 +131,7 @@ _MD_SET_PRIORITY(_MDThread *thread, PRUintn newPri)
 PR_IMPLEMENT(PRStatus)
 _MD_InitializeThread(PRThread *thread)
 {
-	return PR_SUCCESS;
+    return PR_SUCCESS;
 }
 
 PR_IMPLEMENT(PRStatus)
@@ -145,7 +146,7 @@ PR_IMPLEMENT(PRStatus)
 _MD_WAKEUP_WAITER(PRThread *thread)
 {
     if (thread) {
-	PR_ASSERT(!(thread->flags & _PR_GLOBAL_SCOPE));
+        PR_ASSERT(!(thread->flags & _PR_GLOBAL_SCOPE));
     }
     return PR_SUCCESS;
 }
@@ -193,17 +194,17 @@ int _MD_SELECT(int width, fd_set *r, fd_set *w, fd_set *e, struct timeval *t)
     if (!aix_select_fcn) {
         void *aix_handle;
 
-	aix_handle = dlopen("/unix", RTLD_NOW);
-	if (!aix_handle) {
-	    PR_SetError(PR_UNKNOWN_ERROR, 0);
-	    return -1;
-	}
-	aix_select_fcn = (int(*)())dlsym(aix_handle,"select");
+        aix_handle = dlopen("/unix", RTLD_NOW);
+        if (!aix_handle) {
+            PR_SetError(PR_UNKNOWN_ERROR, 0);
+            return -1;
+        }
+        aix_select_fcn = (int(*)())dlsym(aix_handle,"select");
         dlclose(aix_handle);
-	if (!aix_select_fcn) {
-	    PR_SetError(PR_UNKNOWN_ERROR, 0);
-	    return -1;
-	}
+        if (!aix_select_fcn) {
+            PR_SetError(PR_UNKNOWN_ERROR, 0);
+            return -1;
+        }
     }
     rv = (*aix_select_fcn)(width, r, w, e, t);
     return rv;
@@ -216,17 +217,17 @@ int _MD_POLL(void *listptr, unsigned long nfds, long timeout)
     if (!aix_poll_fcn) {
         void *aix_handle;
 
-	aix_handle = dlopen("/unix", RTLD_NOW);
-	if (!aix_handle) {
-	    PR_SetError(PR_UNKNOWN_ERROR, 0);
-	    return -1;
-	}
-	aix_poll_fcn = (int(*)())dlsym(aix_handle,"poll");
+        aix_handle = dlopen("/unix", RTLD_NOW);
+        if (!aix_handle) {
+            PR_SetError(PR_UNKNOWN_ERROR, 0);
+            return -1;
+        }
+        aix_poll_fcn = (int(*)())dlsym(aix_handle,"poll");
         dlclose(aix_handle);
-	if (!aix_poll_fcn) {
-	    PR_SetError(PR_UNKNOWN_ERROR, 0);
-	    return -1;
-	}
+        if (!aix_poll_fcn) {
+            PR_SetError(PR_UNKNOWN_ERROR, 0);
+            return -1;
+        }
     }
     rv = (*aix_poll_fcn)(listptr, nfds, timeout);
     return rv;
@@ -251,51 +252,51 @@ void _pr_aix_dummy()
 
 #include "pratom.h"
 
-#define _PR_AIX_ATOMIC_LOCK	-1
+#define _PR_AIX_ATOMIC_LOCK -1
 
 PR_IMPLEMENT(void)
 PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
 {
-PRStackElem *addr;
-boolean_t locked = TRUE;
+    PRStackElem *addr;
+    boolean_t locked = TRUE;
 
-	/* Is it safe to cast a pointer to an int? */
-	PR_ASSERT(sizeof(int) == sizeof(PRStackElem *));
-	do {
-		while ((addr = stack->prstk_head.prstk_elem_next) ==
-											(PRStackElem *)_PR_AIX_ATOMIC_LOCK)
-			;
-		locked = _check_lock((atomic_p) &stack->prstk_head.prstk_elem_next,
-							(int) addr, _PR_AIX_ATOMIC_LOCK);
-	} while (locked == TRUE);
-	stack_elem->prstk_elem_next = addr;
-	_clear_lock((atomic_p)&stack->prstk_head.prstk_elem_next, (int)stack_elem);
+    /* Is it safe to cast a pointer to an int? */
+    PR_ASSERT(sizeof(int) == sizeof(PRStackElem *));
+    do {
+        while ((addr = stack->prstk_head.prstk_elem_next) ==
+               (PRStackElem *)_PR_AIX_ATOMIC_LOCK)
+            ;
+        locked = _check_lock((atomic_p) &stack->prstk_head.prstk_elem_next,
+                             (int) addr, _PR_AIX_ATOMIC_LOCK);
+    } while (locked == TRUE);
+    stack_elem->prstk_elem_next = addr;
+    _clear_lock((atomic_p)&stack->prstk_head.prstk_elem_next, (int)stack_elem);
     return;
 }
 
 PR_IMPLEMENT(PRStackElem *)
 PR_StackPop(PRStack *stack)
 {
-PRStackElem *element;
-boolean_t locked = TRUE;
+    PRStackElem *element;
+    boolean_t locked = TRUE;
 
-	/* Is it safe to cast a pointer to an int? */
-	PR_ASSERT(sizeof(int) == sizeof(PRStackElem *));
-	do {
-		while ((element = stack->prstk_head.prstk_elem_next) ==
-										(PRStackElem *) _PR_AIX_ATOMIC_LOCK)
-			;
-		locked = _check_lock((atomic_p) &stack->prstk_head.prstk_elem_next,
-							(int)element, _PR_AIX_ATOMIC_LOCK);
-	} while (locked == TRUE);
+    /* Is it safe to cast a pointer to an int? */
+    PR_ASSERT(sizeof(int) == sizeof(PRStackElem *));
+    do {
+        while ((element = stack->prstk_head.prstk_elem_next) ==
+               (PRStackElem *) _PR_AIX_ATOMIC_LOCK)
+            ;
+        locked = _check_lock((atomic_p) &stack->prstk_head.prstk_elem_next,
+                             (int)element, _PR_AIX_ATOMIC_LOCK);
+    } while (locked == TRUE);
 
-	if (element == NULL) {
-		_clear_lock((atomic_p) &stack->prstk_head.prstk_elem_next, NULL);
-	} else {
-		_clear_lock((atomic_p) &stack->prstk_head.prstk_elem_next,
-										(int) element->prstk_elem_next);
-	}
-	return element;
+    if (element == NULL) {
+        _clear_lock((atomic_p) &stack->prstk_head.prstk_elem_next, NULL);
+    } else {
+        _clear_lock((atomic_p) &stack->prstk_head.prstk_elem_next,
+                    (int) element->prstk_elem_next);
+    }
+    return element;
 }
 
-#endif	/* _PR_HAVE_ATOMIC_CAS */
+#endif  /* _PR_HAVE_ATOMIC_CAS */

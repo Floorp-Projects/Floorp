@@ -7,8 +7,8 @@
 #define prsem_h___
 
 /*
-** API for counting semaphores. Semaphores are counting synchronizing 
-** variables based on a lock and a condition variable.  They are lightweight 
+** API for counting semaphores. Semaphores are counting synchronizing
+** variables based on a lock and a condition variable.  They are lightweight
 ** contention control for a given count of resources.
 */
 #include "prtypes.h"
@@ -30,23 +30,23 @@ NSPR_API(void) PR_DestroySem(PRSemaphore *sem);
 
 /*
 ** Wait on a Semaphore.
-** 
-** This routine allows a calling thread to wait or proceed depending upon the 
-** state of the semahore sem. The thread can proceed only if the counter value 
-** of the semaphore sem is currently greater than 0. If the value of semaphore 
-** sem is positive, it is decremented by one and the routine returns immediately 
-** allowing the calling thread to continue. If the value of semaphore sem is 0, 
-** the calling thread blocks awaiting the semaphore to be released by another 
+**
+** This routine allows a calling thread to wait or proceed depending upon the
+** state of the semahore sem. The thread can proceed only if the counter value
+** of the semaphore sem is currently greater than 0. If the value of semaphore
+** sem is positive, it is decremented by one and the routine returns immediately
+** allowing the calling thread to continue. If the value of semaphore sem is 0,
+** the calling thread blocks awaiting the semaphore to be released by another
 ** thread.
-** 
-** This routine can return PR_PENDING_INTERRUPT if the waiting thread 
+**
+** This routine can return PR_PENDING_INTERRUPT if the waiting thread
 ** has been interrupted.
 */
 NSPR_API(PRStatus) PR_WaitSem(PRSemaphore *sem);
 
 /*
-** This routine increments the counter value of the semaphore. If other threads 
-** are blocked for the semaphore, then the scheduler will determine which ONE 
+** This routine increments the counter value of the semaphore. If other threads
+** are blocked for the semaphore, then the scheduler will determine which ONE
 ** thread will be unblocked.
 */
 NSPR_API(void) PR_PostSem(PRSemaphore *sem);

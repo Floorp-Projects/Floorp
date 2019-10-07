@@ -48,11 +48,16 @@ static PRStatus DeleteIfFound(const char *filename)
     {
         VERBOSE(v_shout, "Deleting existing file");
         rv = PR_Delete(filename);
-        if (PR_FAILURE == rv) VERBOSE(v_shout, "Cannot delete big file");
+        if (PR_FAILURE == rv) {
+            VERBOSE(v_shout, "Cannot delete big file");
+        }
     }
-    else if (PR_FILE_NOT_FOUND_ERROR !=  PR_GetError())
+    else if (PR_FILE_NOT_FOUND_ERROR !=  PR_GetError()) {
         VERBOSE(v_shout, "Cannot access big file");
-    else rv = PR_SUCCESS;
+    }
+    else {
+        rv = PR_SUCCESS;
+    }
     return rv;
 }  /* DeleteIfFound */
 
@@ -61,19 +66,26 @@ static PRIntn Error(const char *msg, const char *filename)
     PRInt32 error = PR_GetError();
     if (NULL != msg)
     {
-        if (0 == error) PR_fprintf(output, msg);
-        else PL_FPrintError(output, msg);
+        if (0 == error) {
+            PR_fprintf(output, msg);
+        }
+        else {
+            PL_FPrintError(output, msg);
+        }
     }
     (void)DeleteIfFound(filename);
-    if (v_shout == verbose) PR_Abort();
+    if (v_shout == verbose) {
+        PR_Abort();
+    }
     return 1;
 }  /* Error */
 
 static void Verbose(
     Verbosity level, const char *msg, const char *file, PRIntn line)
 {
-    if (level <= verbose)
+    if (level <= verbose) {
         PR_fprintf(output, "[%s : %d]: %s\n", file, line, msg);
+    }
 }  /* Verbose */
 
 static void PrintInfo(PRFileInfo64 *info, const char *filename)
@@ -119,44 +131,58 @@ int main(int argc, char **argv)
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 0:
-            filename = opt->value;
-            break;
-        case 'd':  /* debug mode */
-            verbose = v_shout;
-            break;
-        case 'k':  /* keep file */
-            keep = PR_TRUE;
-            break;
-        case 'v':  /* verbosity */
-            if (v_shout > verbose) verbose += 1;
-            break;
-        case 'c':  /* loop counter */
-            count = atoi(opt->value);
-            break;
-        case 's':  /* filesize */
-            filesize = atoi(opt->value);
-            break;
-        case 'h':  /* confused */
-        default:
-            return Usage();
+            case 0:
+                filename = opt->value;
+                break;
+            case 'd':  /* debug mode */
+                verbose = v_shout;
+                break;
+            case 'k':  /* keep file */
+                keep = PR_TRUE;
+                break;
+            case 'v':  /* verbosity */
+                if (v_shout > verbose) {
+                    verbose += 1;
+                }
+                break;
+            case 'c':  /* loop counter */
+                count = atoi(opt->value);
+                break;
+            case 's':  /* filesize */
+                filesize = atoi(opt->value);
+                break;
+            case 'h':  /* confused */
+            default:
+                return Usage();
         }
     }
     PL_DestroyOptState(opt);
 
-    if (0 == count) count = DEFAULT_COUNT;
-    if (0 == filesize) filesize = DEFAULT_FILESIZE;
+    if (0 == count) {
+        count = DEFAULT_COUNT;
+    }
+    if (0 == filesize) {
+        filesize = DEFAULT_FILESIZE;
+    }
     if (NULL == filename)
     {
 #define FILE_NAME "bigfile.dat"
-        if (DEFAULT_FILESIZE != filesize) return Usage();
-        else filename = FILE_NAME;
+        if (DEFAULT_FILESIZE != filesize) {
+            return Usage();
+        }
+        else {
+            filename = FILE_NAME;
+        }
     }
 
-    if (PR_FAILURE == DeleteIfFound(filename)) return 1;
+    if (PR_FAILURE == DeleteIfFound(filename)) {
+        return 1;
+    }
 
     test_result = 0;
 
@@ -165,35 +191,51 @@ int main(int argc, char **argv)
     LL_I2L(filesize64, filesize);
     buffer = (char*)PR_MALLOC(BUFFER_SIZE);
     LL_I2L(big_fragment, BUFFER_SIZE);
-    LL_MUL(filesize64, filesize64, one_meg); 
+    LL_MUL(filesize64, filesize64, one_meg);
 
-    for (loop = 0; loop < BUFFER_SIZE; ++loop) buffer[loop] = (char)loop;
+    for (loop = 0; loop < BUFFER_SIZE; ++loop) {
+        buffer[loop] = (char)loop;
+    }
 
     VERBOSE(v_whisper, "Creating big file");
     file = PR_Open(filename, PR_CREATE_FILE | PR_WRONLY, 0666);
-    if (NULL == file) return Error("PR_Open()", filename);
-    
+    if (NULL == file) {
+        return Error("PR_Open()", filename);
+    }
+
     VERBOSE(v_whisper, "Testing available space in empty file");
     big_answer = file->methods->available64(file);
-    if (!LL_IS_ZERO(big_answer)) return Error("empty available64()", filename);
+    if (!LL_IS_ZERO(big_answer)) {
+        return Error("empty available64()", filename);
+    }
 
-	LL_SUB(big_size, filesize64, one_meg);
+    LL_SUB(big_size, filesize64, one_meg);
     VERBOSE(v_whisper, "Creating sparse big file by seeking to end");
-	big_answer = file->methods->seek64(file, big_size, PR_SEEK_SET);
-    if (!LL_EQ(big_answer, big_size)) return Error("seek", filename);
+    big_answer = file->methods->seek64(file, big_size, PR_SEEK_SET);
+    if (!LL_EQ(big_answer, big_size)) {
+        return Error("seek", filename);
+    }
 
     VERBOSE(v_whisper, "Writing block at end of sparse file");
-	bytes = file->methods->write(file, buffer, BUFFER_SIZE);
-    if (bytes != BUFFER_SIZE) return Error("write", filename);
+    bytes = file->methods->write(file, buffer, BUFFER_SIZE);
+    if (bytes != BUFFER_SIZE) {
+        return Error("write", filename);
+    }
 
     VERBOSE(v_whisper, "Testing available space at end of sparse file");
     big_answer = file->methods->available64(file);
-    if (!LL_IS_ZERO(big_answer)) return Error("eof available64()", filename);
+    if (!LL_IS_ZERO(big_answer)) {
+        return Error("eof available64()", filename);
+    }
 
     VERBOSE(v_whisper, "Getting big info on sparse big file");
     rv = file->methods->fileInfo64(file, &big_info);
-    if (PR_FAILURE == rv) return Error("fileInfo64()", filename);
-    if (v_shout <= verbose) PrintInfo(&big_info, filename);
+    if (PR_FAILURE == rv) {
+        return Error("fileInfo64()", filename);
+    }
+    if (v_shout <= verbose) {
+        PrintInfo(&big_info, filename);
+    }
 
     VERBOSE(v_whisper, "Getting small info on sparse big file");
     rv = file->methods->fileInfo(file, &small_info);
@@ -210,75 +252,104 @@ int main(int argc, char **argv)
 
     VERBOSE(v_whisper, "Rewinding big file");
     big_answer = file->methods->seek64(file, zero_meg, PR_SEEK_SET);
-    if (!LL_IS_ZERO(big_answer)) return Error("rewind seek64()", filename);
+    if (!LL_IS_ZERO(big_answer)) {
+        return Error("rewind seek64()", filename);
+    }
 
     VERBOSE(v_whisper, "Establishing available space in rewound file");
     big_answer = file->methods->available64(file);
-    if (LL_NE(filesize64, big_answer))
+    if (LL_NE(filesize64, big_answer)) {
         return Error("bof available64()", filename);
+    }
 
     VERBOSE(v_whisper, "Closing big file");
     rv = file->methods->close(file);
-    if (PR_FAILURE == rv) return Error("close()", filename);
+    if (PR_FAILURE == rv) {
+        return Error("close()", filename);
+    }
 
     VERBOSE(v_whisper, "Reopening big file");
     file = PR_Open(filename, PR_RDWR, 0666);
-    if (NULL == file) return Error("open failed", filename);
+    if (NULL == file) {
+        return Error("open failed", filename);
+    }
 
     VERBOSE(v_whisper, "Checking available data in reopened file");
     big_answer = file->methods->available64(file);
-    if (LL_NE(filesize64, big_answer))
+    if (LL_NE(filesize64, big_answer)) {
         return Error("reopened available64()", filename);
+    }
 
     big_answer = zero_meg;
     VERBOSE(v_whisper, "Rewriting every byte of big file data");
     do
     {
         bytes = file->methods->write(file, buffer, BUFFER_SIZE);
-        if (bytes != BUFFER_SIZE)
+        if (bytes != BUFFER_SIZE) {
             return Error("write", filename);
+        }
         LL_ADD(big_answer, big_answer, big_fragment);
     } while (LL_CMP(big_answer, <, filesize64));
 
     VERBOSE(v_whisper, "Checking position at eof");
     big_answer = file->methods->seek64(file, zero_meg, PR_SEEK_CUR);
-    if (LL_NE(big_answer, filesize64))
+    if (LL_NE(big_answer, filesize64)) {
         return Error("file size error", filename);
+    }
 
     VERBOSE(v_whisper, "Testing available space at eof");
     big_answer = file->methods->available64(file);
-    if (!LL_IS_ZERO(big_answer))
+    if (!LL_IS_ZERO(big_answer)) {
         return Error("eof available64()", filename);
+    }
 
     VERBOSE(v_whisper, "Rewinding full file");
     big_answer = file->methods->seek64(file, zero_meg, PR_SEEK_SET);
-    if (!LL_IS_ZERO(big_answer)) return Error("bof seek64()", filename);
+    if (!LL_IS_ZERO(big_answer)) {
+        return Error("bof seek64()", filename);
+    }
 
     VERBOSE(v_whisper, "Testing available space in rewound file");
     big_answer = file->methods->available64(file);
-    if (LL_NE(big_answer, filesize64)) return Error("bof available64()", filename);
+    if (LL_NE(big_answer, filesize64)) {
+        return Error("bof available64()", filename);
+    }
 
     VERBOSE(v_whisper, "Seeking to end of big file");
     big_answer = file->methods->seek64(file, filesize64, PR_SEEK_SET);
-    if (LL_NE(big_answer, filesize64)) return Error("eof seek64()", filename);
+    if (LL_NE(big_answer, filesize64)) {
+        return Error("eof seek64()", filename);
+    }
 
     VERBOSE(v_whisper, "Getting info on big file while it's open");
     rv = file->methods->fileInfo64(file, &big_info);
-    if (PR_FAILURE == rv) return Error("fileInfo64()", filename);
-    if (v_shout <= verbose) PrintInfo(&big_info, filename);
+    if (PR_FAILURE == rv) {
+        return Error("fileInfo64()", filename);
+    }
+    if (v_shout <= verbose) {
+        PrintInfo(&big_info, filename);
+    }
 
     VERBOSE(v_whisper, "Closing big file");
     rv = file->methods->close(file);
-    if (PR_FAILURE == rv) return Error("close()", filename);
+    if (PR_FAILURE == rv) {
+        return Error("close()", filename);
+    }
 
     VERBOSE(v_whisper, "Getting info on big file after it's closed");
     rv = PR_GetFileInfo64(filename, &big_info);
-    if (PR_FAILURE == rv) return Error("fileInfo64()", filename);
-    if (v_shout <= verbose) PrintInfo(&big_info, filename);
+    if (PR_FAILURE == rv) {
+        return Error("fileInfo64()", filename);
+    }
+    if (v_shout <= verbose) {
+        PrintInfo(&big_info, filename);
+    }
 
     VERBOSE(v_whisper, "Deleting big file");
     rv = PR_Delete(filename);
-    if (PR_FAILURE == rv) return Error("PR_Delete()", filename);
+    if (PR_FAILURE == rv) {
+        return Error("PR_Delete()", filename);
+    }
 
     PR_DELETE(buffer);
     return test_result;

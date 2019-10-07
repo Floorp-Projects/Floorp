@@ -24,11 +24,11 @@ PR_BEGIN_EXTERN_C
 /************************* TYPES AND CONSTANTS ************************/
 /**********************************************************************/
 
-#define PR_MSEC_PER_SEC		1000L
-#define PR_USEC_PER_SEC		1000000L
-#define PR_NSEC_PER_SEC		1000000000L
-#define PR_USEC_PER_MSEC	1000L
-#define PR_NSEC_PER_MSEC	1000000L
+#define PR_MSEC_PER_SEC     1000L
+#define PR_USEC_PER_SEC     1000000L
+#define PR_NSEC_PER_SEC     1000000000L
+#define PR_USEC_PER_MSEC    1000L
+#define PR_NSEC_PER_MSEC    1000000L
 
 /*
  * PRTime --
@@ -81,21 +81,21 @@ typedef struct PRTimeParameters {
  */
 
 typedef struct PRExplodedTime {
-    PRInt32 tm_usec;		    /* microseconds past tm_sec (0-99999)  */
+    PRInt32 tm_usec;            /* microseconds past tm_sec (0-99999)  */
     PRInt32 tm_sec;             /* seconds past tm_min (0-61, accomodating
                                    up to two leap seconds) */
     PRInt32 tm_min;             /* minutes past tm_hour (0-59) */
     PRInt32 tm_hour;            /* hours past tm_day (0-23) */
     PRInt32 tm_mday;            /* days past tm_mon (1-31, note that it
-				                starts from 1) */
+                                starts from 1) */
     PRInt32 tm_month;           /* months past tm_year (0-11, Jan = 0) */
     PRInt16 tm_year;            /* absolute year, AD (note that we do not
-				                count from 1900) */
+                                count from 1900) */
 
-    PRInt8 tm_wday;		        /* calculated day of the week
-				                (0-6, Sun = 0) */
+    PRInt8 tm_wday;             /* calculated day of the week
+                                (0-6, Sun = 0) */
     PRInt16 tm_yday;            /* calculated day of the year
-				                (0-365, Jan 1 = 0) */
+                                (0-365, Jan 1 = 0) */
 
     PRTimeParameters tm_params;  /* time parameters used by conversion */
 } PRExplodedTime;
@@ -229,9 +229,9 @@ NSPR_API(PRTimeParameters) PR_USPacificTimeParameters(const PRExplodedTime *gmt)
  */
 
 NSPR_API(PRStatus) PR_ParseTimeStringToExplodedTime (
-        const char *string,
-        PRBool default_to_gmt,
-        PRExplodedTime *result);
+    const char *string,
+    PRBool default_to_gmt,
+    PRExplodedTime *result);
 
 /*
  * This uses PR_ParseTimeStringToExplodedTime to parse
@@ -242,9 +242,9 @@ NSPR_API(PRStatus) PR_ParseTimeStringToExplodedTime (
  */
 
 NSPR_API(PRStatus) PR_ParseTimeString (
-	const char *string,
-	PRBool default_to_gmt,
-	PRTime *result);
+    const char *string,
+    PRBool default_to_gmt,
+    PRTime *result);
 
 /* Format a time value into a buffer. Same semantics as strftime() */
 NSPR_API(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt,

@@ -40,22 +40,30 @@ static void PR_CALLBACK AbortCV(void *arg)
     /* some other thread (main) is doing the interrupt */
     PR_Lock(ml);
     rv = PR_WaitCondVar(cv, PR_INTERVAL_NO_TIMEOUT);
-    if (debug_mode) printf( "Expected interrupt on wait CV and ");
+    if (debug_mode) {
+        printf( "Expected interrupt on wait CV and ");
+    }
     if (PR_FAILURE == rv)
     {
         if (PR_PENDING_INTERRUPT_ERROR == PR_GetError())
         {
-            if (debug_mode) printf("got it\n");
+            if (debug_mode) {
+                printf("got it\n");
+            }
         }
         else
         {
-            if (debug_mode) printf("got random error\n");
+            if (debug_mode) {
+                printf("got random error\n");
+            }
             passed = PR_FALSE;
         }
     }
     else
     {
-        if (debug_mode) printf("got a successful completion\n");
+        if (debug_mode) {
+            printf("got a successful completion\n");
+        }
         passed = PR_FALSE;
     }
 
@@ -88,22 +96,30 @@ static void PR_CALLBACK AbortCV(void *arg)
     /* set, then wait - interrupt - then wait again */
     PR_Interrupt(me);
     rv = PR_WaitCondVar(cv, 10);
-    if (debug_mode) printf( "Expected interrupt on wait CV and ");
+    if (debug_mode) {
+        printf( "Expected interrupt on wait CV and ");
+    }
     if (PR_FAILURE == rv)
     {
         if (PR_PENDING_INTERRUPT_ERROR == PR_GetError())
         {
-            if (debug_mode) printf("got it\n");
+            if (debug_mode) {
+                printf("got it\n");
+            }
         }
         else
         {
-            if (debug_mode) printf("failed\n");
+            if (debug_mode) {
+                printf("failed\n");
+            }
             passed = PR_FALSE;
         }
     }
     else
     {
-        if (debug_mode) printf("got a successful completion\n");
+        if (debug_mode) {
+            printf("got a successful completion\n");
+        }
         passed = PR_FALSE;
     }
 
@@ -152,11 +168,13 @@ static void setup_listen_socket(PRFileDesc **listner, PRNetAddr *netaddr)
 
     rv = PR_Listen(*listner, 5);
 
-	if (PR_GetSockName(*listner, netaddr) < 0) {
-		if (debug_mode) printf("intrupt: ERROR - PR_GetSockName failed\n");
-		passed = PR_FALSE;
-		return;
-	}
+    if (PR_GetSockName(*listner, netaddr) < 0) {
+        if (debug_mode) {
+            printf("intrupt: ERROR - PR_GetSockName failed\n");
+        }
+        passed = PR_FALSE;
+        return;
+    }
 
 }
 
@@ -167,11 +185,11 @@ static void PR_CALLBACK IntrBlock(void *arg)
     PRFileDesc *listner;
 
     /* some other thread (main) is doing the interrupt */
-	/* block the interrupt */
-	PR_BlockInterrupt();
+    /* block the interrupt */
+    PR_BlockInterrupt();
     PR_Lock(ml);
     rv = PR_WaitCondVar(cv, PR_SecondsToInterval(4));
-	PR_Unlock(ml);
+    PR_Unlock(ml);
     if (debug_mode)
     {
         printf("Expected success on wait CV and ");
@@ -180,30 +198,39 @@ static void PR_CALLBACK IntrBlock(void *arg)
             printf(
                 "%s\n", (PR_PENDING_INTERRUPT_ERROR == PR_GetError()) ?
                 "got interrupted" : "got a random failure");
-        } else
-        	printf("got it\n");
+        } else {
+            printf("got it\n");
+        }
     }
     passed = ((PR_TRUE == passed) && (PR_SUCCESS == rv)) ? PR_TRUE : PR_FALSE;
 
-	setup_listen_socket(&listner, &netaddr);
-	PR_UnblockInterrupt();
+    setup_listen_socket(&listner, &netaddr);
+    PR_UnblockInterrupt();
     if (PR_Accept(listner, &netaddr, PR_INTERVAL_NO_TIMEOUT) == NULL)
     {
         PRInt32 error = PR_GetError();
-        if (debug_mode) printf("Expected interrupt on PR_Accept() and ");
+        if (debug_mode) {
+            printf("Expected interrupt on PR_Accept() and ");
+        }
         if (PR_PENDING_INTERRUPT_ERROR == error)
         {
-            if (debug_mode) printf("got it\n");
+            if (debug_mode) {
+                printf("got it\n");
+            }
         }
         else
         {
-            if (debug_mode) printf("failed\n");
+            if (debug_mode) {
+                printf("failed\n");
+            }
             passed = PR_FALSE;
         }
     }
     else
     {
-        if (debug_mode) printf("Failed to interrupt PR_Accept()\n");
+        if (debug_mode) {
+            printf("Failed to interrupt PR_Accept()\n");
+        }
         passed = PR_FALSE;
     }
 
@@ -221,10 +248,12 @@ void PR_CALLBACK Intrupt(void *arg)
     cv = PR_NewCondVar(ml);
 
     /* Part I */
-    if (debug_mode) printf("Part I\n");
+    if (debug_mode) {
+        printf("Part I\n");
+    }
     abortCV = PR_CreateThread(
-        PR_USER_THREAD, AbortCV, 0, PR_PRIORITY_NORMAL,
-        thread_scope, PR_JOINABLE_THREAD, 0);
+                  PR_USER_THREAD, AbortCV, 0, PR_PRIORITY_NORMAL,
+                  thread_scope, PR_JOINABLE_THREAD, 0);
 
     PR_Sleep(PR_SecondsToInterval(2));
     rv = PR_Interrupt(abortCV);
@@ -233,42 +262,58 @@ void PR_CALLBACK Intrupt(void *arg)
     PR_ASSERT(PR_SUCCESS == rv);
 
     /* Part II */
-    if (debug_mode) printf("Part II\n");
+    if (debug_mode) {
+        printf("Part II\n");
+    }
     abortJoin = PR_CreateThread(
-        PR_USER_THREAD, AbortJoin, 0, PR_PRIORITY_NORMAL,
-        thread_scope, PR_JOINABLE_THREAD, 0);
+                    PR_USER_THREAD, AbortJoin, 0, PR_PRIORITY_NORMAL,
+                    thread_scope, PR_JOINABLE_THREAD, 0);
     PR_Sleep(PR_SecondsToInterval(2));
-    if (debug_mode) printf("Expecting to interrupt an exited thread ");
+    if (debug_mode) {
+        printf("Expecting to interrupt an exited thread ");
+    }
     rv = PR_Interrupt(abortJoin);
     PR_ASSERT(PR_SUCCESS == rv);
     rv = PR_JoinThread(abortJoin);
     PR_ASSERT(PR_SUCCESS == rv);
-    if (debug_mode) printf("and succeeded\n");
+    if (debug_mode) {
+        printf("and succeeded\n");
+    }
 
     /* Part III */
-    if (debug_mode) printf("Part III\n");
-	setup_listen_socket(&listner, &netaddr);
+    if (debug_mode) {
+        printf("Part III\n");
+    }
+    setup_listen_socket(&listner, &netaddr);
     abortIO = PR_CreateThread(
-        PR_USER_THREAD, AbortIO, PR_GetCurrentThread(), PR_PRIORITY_NORMAL,
-        thread_scope, PR_JOINABLE_THREAD, 0);
+                  PR_USER_THREAD, AbortIO, PR_GetCurrentThread(), PR_PRIORITY_NORMAL,
+                  thread_scope, PR_JOINABLE_THREAD, 0);
 
     if (PR_Accept(listner, &netaddr, PR_INTERVAL_NO_TIMEOUT) == NULL)
     {
         PRInt32 error = PR_GetError();
-        if (debug_mode) printf("Expected interrupt on PR_Accept() and ");
+        if (debug_mode) {
+            printf("Expected interrupt on PR_Accept() and ");
+        }
         if (PR_PENDING_INTERRUPT_ERROR == error)
         {
-            if (debug_mode) printf("got it\n");
+            if (debug_mode) {
+                printf("got it\n");
+            }
         }
         else
         {
-            if (debug_mode) printf("failed\n");
+            if (debug_mode) {
+                printf("failed\n");
+            }
             passed = PR_FALSE;
         }
     }
     else
     {
-        if (debug_mode) printf("Failed to interrupt PR_Accept()\n");
+        if (debug_mode) {
+            printf("Failed to interrupt PR_Accept()\n");
+        }
         passed = PR_FALSE;
     }
 
@@ -277,10 +322,12 @@ void PR_CALLBACK Intrupt(void *arg)
     rv = PR_JoinThread(abortIO);
     PR_ASSERT(PR_SUCCESS == rv);
     /* Part VI */
-    if (debug_mode) printf("Part VI\n");
+    if (debug_mode) {
+        printf("Part VI\n");
+    }
     intrBlock = PR_CreateThread(
-        PR_USER_THREAD, IntrBlock, 0, PR_PRIORITY_NORMAL,
-        thread_scope, PR_JOINABLE_THREAD, 0);
+                    PR_USER_THREAD, IntrBlock, 0, PR_PRIORITY_NORMAL,
+                    thread_scope, PR_JOINABLE_THREAD, 0);
 
     PR_Sleep(PR_SecondsToInterval(2));
     rv = PR_Interrupt(intrBlock);
@@ -289,32 +336,34 @@ void PR_CALLBACK Intrupt(void *arg)
     PR_ASSERT(PR_SUCCESS == rv);
 
     PR_DestroyCondVar(cv);
-    PR_DestroyLock(ml);    
+    PR_DestroyLock(ml);
 }  /* Intrupt */
 
 int main(int argc, char **argv)
 {
     PRThread *intrupt;
-	PLOptStatus os;
-  	PLOptState *opt = PL_CreateOptState(argc, argv, "dG");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    PLOptStatus os;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "dG");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-			debug_mode = PR_TRUE;
-            break;
-        case 'G':  /* use global threads */
-            thread_scope = PR_GLOBAL_THREAD;
-            break;
+            case 'd':  /* debug mode */
+                debug_mode = PR_TRUE;
+                break;
+            case 'G':  /* use global threads */
+                thread_scope = PR_GLOBAL_THREAD;
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
     PR_STDIO_INIT();
     intrupt = PR_CreateThread(
-        PR_USER_THREAD, Intrupt, NULL, PR_PRIORITY_NORMAL,
-        thread_scope, PR_JOINABLE_THREAD, 0);
+                  PR_USER_THREAD, Intrupt, NULL, PR_PRIORITY_NORMAL,
+                  thread_scope, PR_JOINABLE_THREAD, 0);
     if (intrupt == NULL) {
         fprintf(stderr, "cannot create thread\n");
         passed = PR_FALSE;
@@ -324,7 +373,7 @@ int main(int argc, char **argv)
         PR_ASSERT(rv == PR_SUCCESS);
     }
     printf("%s\n", ((passed) ? "PASSED" : "FAILED"));
-	return ((passed) ? 0 : 1);
+    return ((passed) ? 0 : 1);
 }  /* main */
 
 /* intrupt.c */

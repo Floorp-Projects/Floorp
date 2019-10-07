@@ -35,8 +35,12 @@ int main(int argc, char **argv)
     for (cmd = PR_SI_HOSTNAME; cmd <= PR_SI_ARCHITECTURE; Incr(&cmd))
     {
         rv = PR_GetSystemInfo(cmd, info, SYS_INFO_BUFFER_LENGTH);
-        if (PR_SUCCESS == rv) PR_fprintf(output, "%s: %s\n", tag[cmd], info);
-        else PL_FPrintError(output, tag[cmd]);
+        if (PR_SUCCESS == rv) {
+            PR_fprintf(output, "%s: %s\n", tag[cmd], info);
+        }
+        else {
+            PL_FPrintError(output, tag[cmd]);
+        }
     }
     PR_DELETE(info);
 

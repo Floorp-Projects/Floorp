@@ -41,7 +41,7 @@ public:
     virtual PRStatus Broadcast();   /* perhaps ready many threads */
 
     virtual PRStatus SetTimeout(const RCInterval&);
-                                    /* set object's current timeout value */
+    /* set object's current timeout value */
 
 private:
     PRCondVar *cv;

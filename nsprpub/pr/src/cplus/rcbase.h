@@ -43,8 +43,12 @@ protected:
     RCBase() { }
 };  /* RCObject */
 
-inline PRErrorCode RCBase::GetError() { return PR_GetError(); }
-inline PRInt32 RCBase::GetOSError() { return PR_GetOSError(); }
+inline PRErrorCode RCBase::GetError() {
+    return PR_GetError();
+}
+inline PRInt32 RCBase::GetOSError() {
+    return PR_GetOSError();
+}
 
 #endif  /* defined(_RCRUNTIME_H) */
 

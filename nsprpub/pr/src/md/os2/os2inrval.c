@@ -14,7 +14,7 @@ static PRBool useHighResTimer = PR_FALSE;
 PRIntervalTime _os2_ticksPerSec = -1;
 PRIntn _os2_bitShift = 0;
 PRInt32 _os2_highMask = 0;
-   
+
 void
 _PR_MD_INTERVAL_INIT()
 {
@@ -23,8 +23,9 @@ _PR_MD_INTERVAL_INIT()
     APIRET rc;
 
     if ((envp = getenv("NSPR_OS2_NO_HIRES_TIMER")) != NULL) {
-        if (atoi(envp) == 1)
-           return;
+        if (atoi(envp) == 1) {
+            return;
+        }
     }
 
     timerFreq = 0; /* OS/2 high-resolution timer frequency in Hz */
@@ -59,8 +60,8 @@ _PR_MD_GET_INTERVAL()
          */
         top = timestamp.ulHi & _os2_highMask;
         top = top << (32 - _os2_bitShift);
-        timestamp.ulLo = timestamp.ulLo >> _os2_bitShift;   
-        timestamp.ulLo = timestamp.ulLo + top; 
+        timestamp.ulLo = timestamp.ulLo >> _os2_bitShift;
+        timestamp.ulLo = timestamp.ulLo + top;
         return (PRUint32)timestamp.ulLo;
     } else {
         ULONG msCount = -1;

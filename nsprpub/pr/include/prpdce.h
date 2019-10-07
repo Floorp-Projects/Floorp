@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * File:		prpdce.h
- * Description:	This file is the API defined to allow for DCE (aka POSIX)
- *				thread emulation in an NSPR environment. It is not the
- *				intent that this be a fully supported API.
+ * File:        prpdce.h
+ * Description: This file is the API defined to allow for DCE (aka POSIX)
+ *              thread emulation in an NSPR environment. It is not the
+ *              intent that this be a fully supported API.
  */
 
 #if !defined(PRPDCE_H)
@@ -61,7 +61,7 @@ NSPR_API(void) PRP_DestroyNakedCondVar(PRCondVar *cvar);
 ** NB: The CV ('cvar') must be one created using PR_NewNakedCondVar.
 */
 NSPR_API(PRStatus) PRP_NakedWait(
-	PRCondVar *cvar, PRLock *lock, PRIntervalTime timeout);
+    PRCondVar *cvar, PRLock *lock, PRIntervalTime timeout);
 
 /*
 ** Notify a thread waiting on a condition

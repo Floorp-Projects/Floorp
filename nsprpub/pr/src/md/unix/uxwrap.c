@@ -22,21 +22,21 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
-#define ZAP_SET(_to, _width)				      \
-    PR_BEGIN_MACRO					      \
-	memset(_to, 0,					      \
-	       ((_width + 8*sizeof(int)-1) / (8*sizeof(int))) \
-		* sizeof(int)				      \
-	       );					      \
+#define ZAP_SET(_to, _width)                      \
+    PR_BEGIN_MACRO                        \
+    memset(_to, 0,                        \
+           ((_width + 8*sizeof(int)-1) / (8*sizeof(int))) \
+        * sizeof(int)                     \
+           );                         \
     PR_END_MACRO
 
 /* see comments in ns/cmd/xfe/mozilla.c (look for "PR_XGetXtHackFD") */
 static int _pr_xt_hack_fd = -1;
- 
+
 int PR_XGetXtHackFD(void)
 {
     int fds[2];
- 
+
     if (_pr_xt_hack_fd == -1) {
         if (!pipe(fds)) {
             _pr_xt_hack_fd = fds[0];
@@ -49,7 +49,7 @@ static int (*_pr_xt_hack_okayToReleaseXLock)(void) = 0;
 
 void PR_SetXtHackOkayToReleaseXLockFn(int (*fn)(void))
 {
-    _pr_xt_hack_okayToReleaseXLock = fn; 
+    _pr_xt_hack_okayToReleaseXLock = fn;
 }
 
 
@@ -67,10 +67,10 @@ void PR_SetXtHackOkayToReleaseXLockFn(int (*fn)(void))
 int select(size_t width, int *rl, int *wl, int *el, const struct timeval *tv)
 #elif defined(AIX_RENAME_SELECT)
 int wrap_select(unsigned long width, void *rl, void *wl, void *el,
-        struct timeval *tv)
+                struct timeval *tv)
 #elif defined(_PR_SELECT_CONST_TIMEVAL)
 int select(int width, fd_set *rd, fd_set *wr, fd_set *ex,
-        const struct timeval *tv)
+           const struct timeval *tv)
 #else
 int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
 #endif
@@ -103,10 +103,10 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
     if (!_pr_initialized) {
         _PR_ImplicitInitialization();
     }
-		
+
 #ifndef _PR_LOCAL_THREADS_ONLY
     if (_PR_IS_NATIVE_THREAD(_PR_MD_CURRENT_THREAD())) {
-        return _MD_SELECT(width, rd, wr, ex, tv);	
+        return _MD_SELECT(width, rd, wr, ex, tv);
     }
 #endif
 
@@ -122,7 +122,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
          * from the select() man pages.
          */
         if (tv->tv_sec < 0 || tv->tv_sec > 100000000
-                || tv->tv_usec < 0 || tv->tv_usec >= 1000000) {
+            || tv->tv_usec < 0 || tv->tv_usec >= 1000000) {
             errno = EINVAL;
             return -1;
         }
@@ -182,31 +182,37 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
      * see comments in mozilla/cmd/xfe/mozilla.c (look for
      * "PR_XGetXtHackFD")
      */
-   {
-     int needToLockXAgain;
- 
-     needToLockXAgain = 0;
-     if (rd && (_pr_xt_hack_fd != -1)
-             && FD_ISSET(_pr_xt_hack_fd, rd) && PR_XIsLocked()
-             && (!_pr_xt_hack_okayToReleaseXLock
-             || _pr_xt_hack_okayToReleaseXLock())) {
-         PR_XUnlock();
-         needToLockXAgain = 1;
-     }
+    {
+        int needToLockXAgain;
 
-    /* This is the potentially blocking step */
-    retVal = _PR_WaitForMultipleFDs(unixpds, pdcnt, timeout);
+        needToLockXAgain = 0;
+        if (rd && (_pr_xt_hack_fd != -1)
+            && FD_ISSET(_pr_xt_hack_fd, rd) && PR_XIsLocked()
+            && (!_pr_xt_hack_okayToReleaseXLock
+                || _pr_xt_hack_okayToReleaseXLock())) {
+            PR_XUnlock();
+            needToLockXAgain = 1;
+        }
 
-     if (needToLockXAgain) {
-         PR_XLock();
-     }
-   }
+        /* This is the potentially blocking step */
+        retVal = _PR_WaitForMultipleFDs(unixpds, pdcnt, timeout);
+
+        if (needToLockXAgain) {
+            PR_XLock();
+        }
+    }
 
     if (retVal > 0) {
         /* Compute select results */
-        if (rd) ZAP_SET(rd, width);
-        if (wr) ZAP_SET(wr, width);
-        if (ex) ZAP_SET(ex, width);
+        if (rd) {
+            ZAP_SET(rd, width);
+        }
+        if (wr) {
+            ZAP_SET(wr, width);
+        }
+        if (ex) {
+            ZAP_SET(ex, width);
+        }
 
         /*
          * The return value can be either the number of ready file
@@ -221,7 +227,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
                 if (unixpd->out_flags & _PR_UNIX_POLL_NVAL) {
                     errno = EBADF;
                     PR_LOG(_pr_io_lm, PR_LOG_ERROR,
-                            ("select returns EBADF for %d", unixpd->osfd));
+                           ("select returns EBADF for %d", unixpd->osfd));
                     retVal = -1;
                     break;
                 }
@@ -233,19 +239,19 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
                  * it has a hangup condition.
                  */
                 if (rd && (unixpd->in_flags & _PR_UNIX_POLL_READ)
-                        && (unixpd->out_flags & (_PR_UNIX_POLL_READ
-                        | _PR_UNIX_POLL_ERR | _PR_UNIX_POLL_HUP))) {
+                    && (unixpd->out_flags & (_PR_UNIX_POLL_READ
+                                             | _PR_UNIX_POLL_ERR | _PR_UNIX_POLL_HUP))) {
                     FD_SET(unixpd->osfd, rd);
                     nbits++;
                 }
                 if (wr && (unixpd->in_flags & _PR_UNIX_POLL_WRITE)
-                        && (unixpd->out_flags & (_PR_UNIX_POLL_WRITE
-                        | _PR_UNIX_POLL_ERR))) {
+                    && (unixpd->out_flags & (_PR_UNIX_POLL_WRITE
+                                             | _PR_UNIX_POLL_ERR))) {
                     FD_SET(unixpd->osfd, wr);
                     nbits++;
                 }
                 if (ex && (unixpd->in_flags & _PR_UNIX_POLL_WRITE)
-                        && (unixpd->out_flags & PR_POLL_EXCEPT)) {
+                    && (unixpd->out_flags & PR_POLL_EXCEPT)) {
                     FD_SET(unixpd->osfd, ex);
                     nbits++;
                 }
@@ -281,7 +287,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
  *-----------------------------------------------------------------------
  * poll() --
  *
- * RETURN VALUES: 
+ * RETURN VALUES:
  *     -1:  fails, errno indicates the error.
  *      0:  timed out, the revents bitmasks are not set.
  *      positive value: the number of file descriptors for which poll()
@@ -337,7 +343,7 @@ int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
 
 #ifndef _PR_LOCAL_THREADS_ONLY
     if (_PR_IS_NATIVE_THREAD(_PR_MD_CURRENT_THREAD())) {
-    	return _MD_POLL(filedes, nfds, timeout);
+        return _MD_POLL(filedes, nfds, timeout);
     }
 #endif
 
@@ -365,7 +371,7 @@ int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
     }
 
     unixpds = (_PRUnixPollDesc *)
-            PR_MALLOC(nfds * sizeof(_PRUnixPollDesc));
+              PR_MALLOC(nfds * sizeof(_PRUnixPollDesc));
     if (NULL == unixpds) {
         errno = EAGAIN;
         return -1;
@@ -398,23 +404,23 @@ int poll(struct pollfd *filedes, unsigned long nfds, int timeout)
             unixpd->in_flags = 0;
             if (pfd->events & (POLLIN
 #ifdef POLLRDNORM
-                    | POLLRDNORM
+                               | POLLRDNORM
 #endif
-                    )) {
+                              )) {
                 unixpd->in_flags |= _PR_UNIX_POLL_READ;
             }
             if (pfd->events & (POLLOUT
 #ifdef POLLWRNORM
-                    | POLLWRNORM
+                               | POLLWRNORM
 #endif
-                    )) {
+                              )) {
                 unixpd->in_flags |= _PR_UNIX_POLL_WRITE;
             }
             if (pfd->events & (POLLPRI
 #ifdef POLLRDBAND
-                    | POLLRDBAND
+                               | POLLRDBAND
 #endif
-                    )) {
+                              )) {
                 unixpd->in_flags |= PR_POLL_EXCEPT;
             }
 #endif  /* _PR_USE_POLL */

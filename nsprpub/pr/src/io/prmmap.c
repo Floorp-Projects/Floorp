@@ -21,19 +21,19 @@ PR_IMPLEMENT(PRFileMap *) PR_CreateFileMap(
     PRFileMap *fmap;
 
     PR_ASSERT(prot == PR_PROT_READONLY || prot == PR_PROT_READWRITE
-            || prot == PR_PROT_WRITECOPY);
+              || prot == PR_PROT_WRITECOPY);
     fmap = PR_NEWZAP(PRFileMap);
     if (NULL == fmap) {
-      PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-      return NULL;
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
     }
     fmap->fd = fd;
     fmap->prot = prot;
     if (_PR_MD_CREATE_FILE_MAP(fmap, size) == PR_SUCCESS) {
-      return fmap;
+        return fmap;
     }
-	PR_DELETE(fmap);
-	return NULL;
+    PR_DELETE(fmap);
+    return NULL;
 }
 
 PR_IMPLEMENT(PRInt32) PR_GetMemMapAlignment(void)
@@ -64,5 +64,5 @@ PR_IMPLEMENT(PRStatus) PR_SyncMemMap(
     void *addr,
     PRUint32 len)
 {
-  return _PR_MD_SYNC_MEM_MAP(fd, addr, len);
+    return _PR_MD_SYNC_MEM_MAP(fd, addr, len);
 }

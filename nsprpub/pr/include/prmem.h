@@ -45,81 +45,81 @@ NSPR_API(void) PR_Free(void *ptr);
 */
 
 /***********************************************************************
-** FUNCTION:	PR_MALLOC()
+** FUNCTION:    PR_MALLOC()
 ** DESCRIPTION:
 **   PR_NEW() allocates an untyped item of size _size from the heap.
 ** INPUTS:  _size: size in bytes of item to be allocated
-** OUTPUTS:	untyped pointer to the node allocated
-** RETURN:	pointer to node or error returned from malloc().
+** OUTPUTS: untyped pointer to the node allocated
+** RETURN:  pointer to node or error returned from malloc().
 ***********************************************************************/
 #define PR_MALLOC(_bytes) (PR_Malloc((_bytes)))
 
 /***********************************************************************
-** FUNCTION:	PR_NEW()
+** FUNCTION:    PR_NEW()
 ** DESCRIPTION:
 **   PR_NEW() allocates an item of type _struct from the heap.
 ** INPUTS:  _struct: a data type
-** OUTPUTS:	pointer to _struct
-** RETURN:	pointer to _struct or error returns from malloc().
+** OUTPUTS: pointer to _struct
+** RETURN:  pointer to _struct or error returns from malloc().
 ***********************************************************************/
 #define PR_NEW(_struct) ((_struct *) PR_MALLOC(sizeof(_struct)))
 
 /***********************************************************************
-** FUNCTION:	PR_REALLOC()
+** FUNCTION:    PR_REALLOC()
 ** DESCRIPTION:
 **   PR_REALLOC() re-allocates _ptr bytes from the heap as a _size
 **   untyped item.
-** INPUTS:	_ptr: pointer to node to reallocate
+** INPUTS:  _ptr: pointer to node to reallocate
 **          _size: size of node to allocate
-** OUTPUTS:	pointer to node allocated
-** RETURN:	pointer to node allocated
+** OUTPUTS: pointer to node allocated
+** RETURN:  pointer to node allocated
 ***********************************************************************/
 #define PR_REALLOC(_ptr, _size) (PR_Realloc((_ptr), (_size)))
 
 /***********************************************************************
-** FUNCTION:	PR_CALLOC()
+** FUNCTION:    PR_CALLOC()
 ** DESCRIPTION:
 **   PR_CALLOC() allocates a _size bytes untyped item from the heap
 **   and sets the allocated memory to all 0x00.
-** INPUTS:	_size: size of node to allocate
-** OUTPUTS:	pointer to node allocated
-** RETURN:	pointer to node allocated
+** INPUTS:  _size: size of node to allocate
+** OUTPUTS: pointer to node allocated
+** RETURN:  pointer to node allocated
 ***********************************************************************/
 #define PR_CALLOC(_size) (PR_Calloc(1, (_size)))
 
 /***********************************************************************
-** FUNCTION:	PR_NEWZAP()
+** FUNCTION:    PR_NEWZAP()
 ** DESCRIPTION:
 **   PR_NEWZAP() allocates an item of type _struct from the heap
 **   and sets the allocated memory to all 0x00.
-** INPUTS:	_struct: a data type
-** OUTPUTS:	pointer to _struct
-** RETURN:	pointer to _struct
+** INPUTS:  _struct: a data type
+** OUTPUTS: pointer to _struct
+** RETURN:  pointer to _struct
 ***********************************************************************/
 #define PR_NEWZAP(_struct) ((_struct*)PR_Calloc(1, sizeof(_struct)))
 
 /***********************************************************************
-** FUNCTION:	PR_DELETE()
+** FUNCTION:    PR_DELETE()
 ** DESCRIPTION:
 **   PR_DELETE() unallocates an object previosly allocated via PR_NEW()
 **   or PR_NEWZAP() to the heap.
-** INPUTS:	pointer to previously allocated object
-** OUTPUTS:	the referenced object is returned to the heap
-** RETURN:	void
+** INPUTS:  pointer to previously allocated object
+** OUTPUTS: the referenced object is returned to the heap
+** RETURN:  void
 ***********************************************************************/
 #define PR_DELETE(_ptr) { PR_Free(_ptr); (_ptr) = NULL; }
 
 /***********************************************************************
-** FUNCTION:	PR_FREEIF()
+** FUNCTION:    PR_FREEIF()
 ** DESCRIPTION:
 **   PR_FREEIF() conditionally unallocates an object previously allocated
 **   vial PR_NEW() or PR_NEWZAP(). If the pointer to the object is
 **   equal to zero (0), the object is not released.
-** INPUTS:	pointer to previously allocated object
-** OUTPUTS:	the referenced object is conditionally returned to the heap
-** RETURN:	void
+** INPUTS:  pointer to previously allocated object
+** OUTPUTS: the referenced object is conditionally returned to the heap
+** RETURN:  void
 ***********************************************************************/
-#define PR_FREEIF(_ptr)	if (_ptr) PR_DELETE(_ptr)
+#define PR_FREEIF(_ptr) if (_ptr) PR_DELETE(_ptr)
 
 PR_END_EXTERN_C
 

@@ -7,17 +7,17 @@
 
 #if defined(WIN95)
 /*
-** Some local variables report warnings on Win95 because the code paths 
+** Some local variables report warnings on Win95 because the code paths
 ** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
 ** The pragma suppresses the warning.
-** 
+**
 */
 #pragma warning(disable : 4101)
 #endif
 
 
 extern PRLock *_pr_sleeplock;  /* allocated and initialized in prinit */
-/* 
+/*
 ** Routines common to both native and user threads.
 **
 **
@@ -46,7 +46,7 @@ PR_IMPLEMENT(PRStatus) PR_Yield()
 {
     static PRBool warning = PR_TRUE;
     if (warning) warning = _PR_Obsolete(
-        "PR_Yield()", "PR_Sleep(PR_INTERVAL_NO_WAIT)");
+                                   "PR_Yield()", "PR_Sleep(PR_INTERVAL_NO_WAIT)");
     return (PR_Sleep(PR_INTERVAL_NO_WAIT));
 }
 
@@ -64,7 +64,9 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime timeout)
 {
     PRStatus rv = PR_SUCCESS;
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     if (PR_INTERVAL_NO_WAIT == timeout)
     {
@@ -76,7 +78,9 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime timeout)
         PRUintn pri = me->priority;
         _PRCPU *cpu = _PR_MD_CURRENT_CPU();
 
-        if ( _PR_IS_NATIVE_THREAD(me) ) _PR_MD_YIELD();
+        if ( _PR_IS_NATIVE_THREAD(me) ) {
+            _PR_MD_YIELD();
+        }
         else
         {
             _PR_INTSOFF(is);
@@ -118,7 +122,9 @@ PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime timeout)
         do
         {
             PRIntervalTime delta = PR_IntervalNow() - timein;
-            if (delta > timeout) break;
+            if (delta > timeout) {
+                break;
+            }
             rv = PR_WaitCondVar(cv, timeout - delta);
         } while (rv == PR_SUCCESS);
         PR_Unlock(_pr_sleeplock);
@@ -139,7 +145,9 @@ PR_IMPLEMENT(PRThreadPriority) PR_GetThreadPriority(const PRThread *thread)
 
 PR_IMPLEMENT(PRThread *) PR_GetCurrentThread()
 {
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     return _PR_MD_CURRENT_THREAD();
 }
 
@@ -161,52 +169,60 @@ PR_IMPLEMENT(PRStatus) PR_Interrupt(PRThread *thread)
     if ((NULL != victim) && (!(thread->flags & _PR_INTERRUPT_BLOCKED))) {
         int haveLock = (victim->lock->owner == _PR_MD_CURRENT_THREAD());
 
-        if (!haveLock) PR_Lock(victim->lock);
+        if (!haveLock) {
+            PR_Lock(victim->lock);
+        }
         PR_NotifyAllCondVar(victim);
-        if (!haveLock) PR_Unlock(victim->lock);
+        if (!haveLock) {
+            PR_Unlock(victim->lock);
+        }
     }
     return PR_SUCCESS;
 #else  /* ! _PR_GLOBAL_THREADS_ONLY */
     PRIntn is;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
-            if (!_PR_IS_NATIVE_THREAD(me))
-            	_PR_INTSOFF(is);
+    if (!_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSOFF(is);
+    }
 
-            _PR_THREAD_LOCK(thread);
-            thread->flags |= _PR_INTERRUPT;
-        switch (thread->state) {
-                case _PR_COND_WAIT:
-                        /*
-                         * call is made with thread locked;
-                         * on return lock is released
-                         */
-						if (!(thread->flags & _PR_INTERRUPT_BLOCKED))
-                        	_PR_NotifyLockedThread(thread);
-                        break;
-                case _PR_IO_WAIT:
-                        /*
-                         * Need to hold the thread lock when calling
-                         * _PR_Unblock_IO_Wait().  On return lock is
-                         * released. 
-                         */
+    _PR_THREAD_LOCK(thread);
+    thread->flags |= _PR_INTERRUPT;
+    switch (thread->state) {
+        case _PR_COND_WAIT:
+            /*
+             * call is made with thread locked;
+             * on return lock is released
+             */
+            if (!(thread->flags & _PR_INTERRUPT_BLOCKED)) {
+                _PR_NotifyLockedThread(thread);
+            }
+            break;
+        case _PR_IO_WAIT:
+            /*
+             * Need to hold the thread lock when calling
+             * _PR_Unblock_IO_Wait().  On return lock is
+             * released.
+             */
 #if defined(XP_UNIX) || defined(WINNT) || defined(WIN16)
-						if (!(thread->flags & _PR_INTERRUPT_BLOCKED))
-                        	_PR_Unblock_IO_Wait(thread);
+            if (!(thread->flags & _PR_INTERRUPT_BLOCKED)) {
+                _PR_Unblock_IO_Wait(thread);
+            }
 #else
-                        _PR_THREAD_UNLOCK(thread);
+            _PR_THREAD_UNLOCK(thread);
 #endif
-                        break;
-                case _PR_RUNNING:
-                case _PR_RUNNABLE:
-                case _PR_LOCK_WAIT:
-                default:
-                            _PR_THREAD_UNLOCK(thread);
-                        break;
-        }
-            if (!_PR_IS_NATIVE_THREAD(me))
-            	_PR_INTSON(is);
-            return PR_SUCCESS;
+            break;
+        case _PR_RUNNING:
+        case _PR_RUNNABLE:
+        case _PR_LOCK_WAIT:
+        default:
+            _PR_THREAD_UNLOCK(thread);
+            break;
+    }
+    if (!_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSON(is);
+    }
+    return PR_SUCCESS;
 #endif  /* _PR_GLOBAL_THREADS_ONLY */
 }
 
@@ -218,11 +234,15 @@ PR_IMPLEMENT(void) PR_ClearInterrupt()
     PRIntn is;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
-        if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
+    if ( !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSOFF(is);
+    }
     _PR_THREAD_LOCK(me);
-         me->flags &= ~_PR_INTERRUPT;
+    me->flags &= ~_PR_INTERRUPT;
     _PR_THREAD_UNLOCK(me);
-        if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSON(is);
+    if ( !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSON(is);
+    }
 }
 
 PR_IMPLEMENT(void) PR_BlockInterrupt()
@@ -230,11 +250,15 @@ PR_IMPLEMENT(void) PR_BlockInterrupt()
     PRIntn is;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
-    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
+    if ( !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSOFF(is);
+    }
     _PR_THREAD_LOCK(me);
     _PR_THREAD_BLOCK_INTERRUPT(me);
     _PR_THREAD_UNLOCK(me);
-    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSON(is);
+    if ( !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSON(is);
+    }
 }  /* PR_BlockInterrupt */
 
 PR_IMPLEMENT(void) PR_UnblockInterrupt()
@@ -242,11 +266,15 @@ PR_IMPLEMENT(void) PR_UnblockInterrupt()
     PRIntn is;
     PRThread *me = _PR_MD_CURRENT_THREAD();
 
-    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
+    if ( !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSOFF(is);
+    }
     _PR_THREAD_LOCK(me);
     _PR_THREAD_UNBLOCK_INTERRUPT(me);
     _PR_THREAD_UNLOCK(me);
-    if ( !_PR_IS_NATIVE_THREAD(me)) _PR_INTSON(is);
+    if ( !_PR_IS_NATIVE_THREAD(me)) {
+        _PR_INTSON(is);
+    }
 }  /* PR_UnblockInterrupt */
 
 /*
@@ -254,17 +282,17 @@ PR_IMPLEMENT(void) PR_UnblockInterrupt()
 */
 PR_IMPLEMENT(void *) PR_GetSP(PRThread *thread)
 {
-        return (void *)_PR_MD_GET_SP(thread);
+    return (void *)_PR_MD_GET_SP(thread);
 }
 
 PR_IMPLEMENT(void*) GetExecutionEnvironment(PRThread *thread)
 {
-        return thread->environment;
+    return thread->environment;
 }
 
 PR_IMPLEMENT(void) SetExecutionEnvironment(PRThread *thread, void *env)
 {
-        thread->environment = env;
+    thread->environment = env;
 }
 
 
@@ -294,7 +322,9 @@ PR_IMPLEMENT(PRInt32) PR_SetCPUAffinityMask(PRUint32 mask)
     PRCList *qp;
     extern PRUint32 _pr_cpu_affinity_mask;
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     _pr_cpu_affinity_mask = mask;
 
@@ -319,27 +349,27 @@ PR_IMPLEMENT(void) PR_SetThreadRecycleMode(PRUint32 count)
 }
 
 PR_IMPLEMENT(PRThread*) PR_CreateThreadGCAble(PRThreadType type,
-                                     void (*start)(void *arg),
-                                     void *arg,
-                                     PRThreadPriority priority,
-                                     PRThreadScope scope,
-                                     PRThreadState state,
-                                     PRUint32 stackSize)
+        void (*start)(void *arg),
+        void *arg,
+        PRThreadPriority priority,
+        PRThreadScope scope,
+        PRThreadState state,
+        PRUint32 stackSize)
 {
-    return _PR_CreateThread(type, start, arg, priority, scope, state, 
+    return _PR_CreateThread(type, start, arg, priority, scope, state,
                             stackSize, _PR_GCABLE_THREAD);
 }
 
 #ifdef SOLARIS
 PR_IMPLEMENT(PRThread*) PR_CreateThreadBound(PRThreadType type,
-                                     void (*start)(void *arg),
-                                     void *arg,
-                                     PRUintn priority,
-                                     PRThreadScope scope,
-                                     PRThreadState state,
-                                     PRUint32 stackSize)
+        void (*start)(void *arg),
+        void *arg,
+        PRUintn priority,
+        PRThreadScope scope,
+        PRThreadState state,
+        PRUint32 stackSize)
 {
-    return _PR_CreateThread(type, start, arg, priority, scope, state, 
+    return _PR_CreateThread(type, start, arg, priority, scope, state,
                             stackSize, _PR_BOUND_THREAD);
 }
 #endif
@@ -355,29 +385,36 @@ PR_IMPLEMENT(PRThread*) PR_AttachThreadGCAble(
 
 PR_IMPLEMENT(void) PR_SetThreadGCAble()
 {
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     PR_Lock(_pr_activeLock);
-        _PR_MD_CURRENT_THREAD()->flags |= _PR_GCABLE_THREAD;
-        PR_Unlock(_pr_activeLock);        
+    _PR_MD_CURRENT_THREAD()->flags |= _PR_GCABLE_THREAD;
+    PR_Unlock(_pr_activeLock);
 }
 
 PR_IMPLEMENT(void) PR_ClearThreadGCAble()
 {
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     PR_Lock(_pr_activeLock);
-        _PR_MD_CURRENT_THREAD()->flags &= (~_PR_GCABLE_THREAD);
-        PR_Unlock(_pr_activeLock);
+    _PR_MD_CURRENT_THREAD()->flags &= (~_PR_GCABLE_THREAD);
+    PR_Unlock(_pr_activeLock);
 }
 
 PR_IMPLEMENT(PRThreadScope) PR_GetThreadScope(const PRThread *thread)
 {
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     if (_PR_IS_NATIVE_THREAD(thread)) {
-    	return (thread->flags & _PR_BOUND_THREAD) ? PR_GLOBAL_BOUND_THREAD :
-										PR_GLOBAL_THREAD;
-    } else
+        return (thread->flags & _PR_BOUND_THREAD) ? PR_GLOBAL_BOUND_THREAD :
+               PR_GLOBAL_THREAD;
+    } else {
         return PR_LOCAL_THREAD;
+    }
 }
 
 PR_IMPLEMENT(PRThreadType) PR_GetThreadType(const PRThread *thread)

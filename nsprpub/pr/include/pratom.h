@@ -25,7 +25,7 @@ PR_BEGIN_EXTERN_C
 ** RETURN:
 **    the returned value is the result of the increment
 */
-NSPR_API(PRInt32)	PR_AtomicIncrement(PRInt32 *val);
+NSPR_API(PRInt32)   PR_AtomicIncrement(PRInt32 *val);
 
 /*
 ** FUNCTION: PR_AtomicDecrement
@@ -36,7 +36,7 @@ NSPR_API(PRInt32)	PR_AtomicIncrement(PRInt32 *val);
 ** RETURN:
 **    the returned value is the result of the decrement
 */
-NSPR_API(PRInt32)	PR_AtomicDecrement(PRInt32 *val);
+NSPR_API(PRInt32)   PR_AtomicDecrement(PRInt32 *val);
 
 /*
 ** FUNCTION: PR_AtomicSet
@@ -56,11 +56,11 @@ NSPR_API(PRInt32) PR_AtomicSet(PRInt32 *val, PRInt32 newval);
 **    Atomically add a 32 bit value.
 ** INPUTS:
 **    ptr:  a pointer to the value to increment
-**	  val:  value to be added
+**    val:  value to be added
 ** RETURN:
 **    the returned value is the result of the addition
 */
-NSPR_API(PRInt32)	PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+NSPR_API(PRInt32)   PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 
 /*
 ** MACRO: PR_ATOMIC_INCREMENT
@@ -137,8 +137,8 @@ NSPR_API(PRInt32)	PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 typedef struct PRStackElemStr PRStackElem;
 
 struct PRStackElemStr {
-    PRStackElem	*prstk_elem_next;	/* next pointer MUST be at offset 0;
-									  assembly language code relies on this */
+    PRStackElem *prstk_elem_next;   /* next pointer MUST be at offset 0;
+                                      assembly language code relies on this */
 };
 
 typedef struct PRStackStr PRStack;
@@ -152,46 +152,46 @@ typedef struct PRStackStr PRStack;
 ** RETURN:
 **    A pointer to the created stack, if successful, else NULL.
 */
-NSPR_API(PRStack *)	PR_CreateStack(const char *stack_name);
+NSPR_API(PRStack *) PR_CreateStack(const char *stack_name);
 
 /*
 ** FUNCTION: PR_StackPush
 ** DESCRIPTION:
 **    Push an element on the top of the stack
 ** INPUTS:
-**    stack:		pointer to the stack
-**    stack_elem:	pointer to the stack element
+**    stack:        pointer to the stack
+**    stack_elem:   pointer to the stack element
 ** RETURN:
 **    None
 */
-NSPR_API(void)			PR_StackPush(PRStack *stack, PRStackElem *stack_elem);
+NSPR_API(void)          PR_StackPush(PRStack *stack, PRStackElem *stack_elem);
 
 /*
 ** FUNCTION: PR_StackPop
 ** DESCRIPTION:
 **    Remove the element on the top of the stack
 ** INPUTS:
-**    stack:		pointer to the stack
+**    stack:        pointer to the stack
 ** RETURN:
 **    A pointer to the stack element removed from the top of the stack,
-**	  if non-empty,
+**    if non-empty,
 **    else NULL
 */
-NSPR_API(PRStackElem *)	PR_StackPop(PRStack *stack);
+NSPR_API(PRStackElem *) PR_StackPop(PRStack *stack);
 
 /*
 ** FUNCTION: PR_DestroyStack
 ** DESCRIPTION:
 **    Destroy the stack
 ** INPUTS:
-**    stack:		pointer to the stack
+**    stack:        pointer to the stack
 ** RETURN:
 **    PR_SUCCESS - if successfully deleted
-**	  PR_FAILURE - if the stack is not empty
-**					PR_GetError will return
-**						PR_INVALID_STATE_ERROR - stack is not empty
+**    PR_FAILURE - if the stack is not empty
+**                  PR_GetError will return
+**                      PR_INVALID_STATE_ERROR - stack is not empty
 */
-NSPR_API(PRStatus)		PR_DestroyStack(PRStack *stack);
+NSPR_API(PRStatus)      PR_DestroyStack(PRStack *stack);
 
 PR_END_EXTERN_C
 

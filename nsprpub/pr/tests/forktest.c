@@ -62,13 +62,13 @@ ClientThreadFunc(void *arg)
     addr.inet.port = 0;
     if ((sock = PR_NewTCPSocket()) == NULL) {
         fprintf(stderr, "failed to create TCP socket: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
     if (PR_Bind(sock, &addr) != PR_SUCCESS) {
         fprintf(stderr, "PR_Bind failed: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
@@ -79,7 +79,7 @@ ClientThreadFunc(void *arg)
     if (PR_Connect(sock, &addr, PR_SecondsToInterval(5)) !=
         PR_SUCCESS) {
         fprintf(stderr, "PR_Connect failed: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
@@ -88,7 +88,7 @@ ClientThreadFunc(void *arg)
     if (PR_Send(sock, message, strlen(message) + 1, 0, PR_INTERVAL_NO_TIMEOUT) ==
         -1) {
         fprintf(stderr, "PR_Send failed: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
@@ -117,7 +117,7 @@ DoIO(void)
     listenSock = PR_NewTCPSocket();
     if (!listenSock) {
         fprintf(stderr, "failed to create a TCP socket: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
@@ -126,28 +126,28 @@ DoIO(void)
     addr.inet.port = 0;
     if (PR_Bind(listenSock, &addr) == PR_FAILURE) {
         fprintf(stderr, "failed to bind socket: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
     if (PR_GetSockName(listenSock, &addr) == PR_FAILURE) {
         fprintf(stderr, "failed to get socket port number: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
     if (PR_Listen(listenSock, 5) == PR_FAILURE) {
         fprintf(stderr, "PR_Listen failed: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
     clientThread = PR_CreateThread( PR_USER_THREAD, ClientThreadFunc,
-        (void *) PR_ntohs(addr.inet.port), PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-        PR_JOINABLE_THREAD, 0);
+                                    (void *) PR_ntohs(addr.inet.port), PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                                    PR_JOINABLE_THREAD, 0);
     if (clientThread == NULL) {
         fprintf(stderr, "Cannot create client thread: (%d, %d)\n",
-            PR_GetError(), PR_GetOSError());
+                PR_GetError(), PR_GetOSError());
         failed_already = 1;
         goto finish;
     }
@@ -156,20 +156,20 @@ DoIO(void)
     sock = PR_Accept(listenSock, &addr, PR_SecondsToInterval(5));
     if (!sock) {
         fprintf(stderr, "PR_Accept failed: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
     nBytes = PR_Recv(sock, buf, sizeof(buf), 0, PR_INTERVAL_NO_TIMEOUT);
     if (nBytes == -1) {
         fprintf(stderr, "PR_Recv failed: error code %d\n",
-            PR_GetError());
+                PR_GetError());
         failed_already = 1;
         goto finish;
     }
 
     /*
-     * Make sure it has proper null byte to mark end of string 
+     * Make sure it has proper null byte to mark end of string
      */
 
     buf[sizeof(buf) - 1] = '\0';
@@ -182,7 +182,7 @@ DoIO(void)
         fflush(stdout);
     } else {
         fprintf(stderr, "The message should be \"%s\"\n",
-            message);
+                message);
         failed_already = 1;
     }
 
@@ -199,7 +199,7 @@ finish:
 int main(int argc, char **argv)
 {
     pid_t pid;
-	int rv;
+    int rv;
 
     /* main test program */
 
@@ -217,12 +217,12 @@ int main(int argc, char **argv)
         printf("Fork succeeded.  Parent process continues.\n");
         DoIO();
         if ((rv = waitpid(pid, &childStatus, 0)) != pid) {
-			{
-				fprintf(stderr, "waitpid failed: %d\n", errno);
-				failed_already = 1;
-			}
+            {
+                fprintf(stderr, "waitpid failed: %d\n", errno);
+                failed_already = 1;
+            }
         } else if (!WIFEXITED(childStatus)
-                || WEXITSTATUS(childStatus) != 0) {
+                   || WEXITSTATUS(childStatus) != 0) {
             failed_already = 1;
         }
         printf("Parent process exits.\n");
@@ -243,8 +243,8 @@ int main(int argc, char **argv)
 #else  /* XP_UNIX */
 
 int main(    int     argc,
-char   *argv[]
-)
+             char   *argv[]
+        )
 {
 
     printf("The fork test is applicable to Unix only.\n");

@@ -22,7 +22,9 @@ RCCondition::RCCondition(class RCLock *lock): RCBase()
 
 RCCondition::~RCCondition()
 {
-    if (NULL != cv) PR_DestroyCondVar(cv);
+    if (NULL != cv) {
+        PR_DestroyCondVar(cv);
+    }
 }  /* RCCondition::~RCCondition */
 
 PRStatus RCCondition::Wait()
@@ -34,8 +36,9 @@ PRStatus RCCondition::Wait()
         SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         rv = PR_FAILURE;
     }
-    else
+    else {
         rv = PR_WaitCondVar(cv, timeout.interval);
+    }
     return rv;
 }  /* RCCondition::Wait */
 
@@ -60,6 +63,8 @@ PRStatus RCCondition::SetTimeout(const RCInterval& tmo)
     return PR_SUCCESS;
 }  /* RCCondition::SetTimeout */
 
-RCInterval RCCondition::GetTimeout() const { return timeout; }
+RCInterval RCCondition::GetTimeout() const {
+    return timeout;
+}
 
 /* rccv.cpp */

@@ -13,7 +13,7 @@
  * - GetLastError(): for Win32 functions
  * - WSAGetLastError(): for Winsock functions
  * - errno: for standard C library functions
- * 
+ *
  * GetLastError() and WSAGetLastError() return error codes in
  * non-overlapping ranges, so their error codes (ERROR_* and
  * WSAE*) can be mapped by the same function.  On the other hand,
@@ -61,7 +61,7 @@ void _MD_win32_map_default_error(PRInt32 err)
             prError = PR_NOT_IMPLEMENTED_ERROR;
             break;
         case ERROR_DISK_CORRUPT:
-            prError = PR_IO_ERROR; 
+            prError = PR_IO_ERROR;
             break;
         case ERROR_DISK_FULL:
             prError = PR_NO_DEVICE_SPACE_ERROR;
@@ -518,7 +518,7 @@ void _MD_win32_map_gethostname_error(PRInt32 err)
 }
 
 /* Win32 select() only works on sockets.  So in this
-** context, WSAENOTSOCK is equivalent to EBADF on Unix.  
+** context, WSAENOTSOCK is equivalent to EBADF on Unix.
 */
 void _MD_win32_map_select_error(PRInt32 err)
 {

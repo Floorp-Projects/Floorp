@@ -29,7 +29,7 @@ static PRIOMethods emu_layer_methods;
 
 /* the acceptread method in emu_layer_methods */
 static PRInt32 PR_CALLBACK emu_AcceptRead(PRFileDesc *sd, PRFileDesc **nd,
-    PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout)
+        PRNetAddr **raddr, void *buf, PRInt32 amount, PRIntervalTime timeout)
 {
     return PR_EmulateAcceptRead(sd, nd, raddr, buf, amount, timeout);
 }
@@ -38,10 +38,12 @@ static PRStatus PrintAddress(const PRNetAddr* address)
 {
     char buffer[100];
     PRStatus rv = PR_NetAddrToString(address, buffer, sizeof(buffer));
-    if (PR_FAILURE == rv) PL_FPrintError(err_out, "PR_NetAddrToString");
+    if (PR_FAILURE == rv) {
+        PL_FPrintError(err_out, "PR_NetAddrToString");
+    }
     else PR_fprintf(
-        std_out, "Accepted connection from (0x%p)%s:%d\n",
-        address, buffer, address->inet.port);
+            std_out, "Accepted connection from (0x%p)%s:%d\n",
+            address, buffer, address->inet.port);
     return rv;
 }  /* PrintAddress */
 
@@ -81,10 +83,14 @@ static void ConnectingThread(void *arg)
     PR_Sleep(write_dally);
 
     nbytes = PR_Send(sock, GET, sizeof(GET), 0, PR_INTERVAL_NO_TIMEOUT);
-    if (nbytes == -1) PL_FPrintError(err_out, "PR_Send (client) failed");
+    if (nbytes == -1) {
+        PL_FPrintError(err_out, "PR_Send (client) failed");
+    }
 
     nbytes = PR_Recv(sock, buf, sizeof(buf), 0, PR_INTERVAL_NO_TIMEOUT);
-    if (nbytes == -1) PL_FPrintError(err_out, "PR_Recv (client) failed");
+    if (nbytes == -1) {
+        PL_FPrintError(err_out, "PR_Recv (client) failed");
+    }
     else
     {
         PR_fprintf(std_out, "PR_Recv (client) succeeded: %d bytes\n", nbytes);
@@ -92,11 +98,13 @@ static void ConnectingThread(void *arg)
         PR_fprintf(std_out, "%s\n", buf);
     }
 
-    if (PR_FAILURE == PR_Shutdown(sock, PR_SHUTDOWN_BOTH))
+    if (PR_FAILURE == PR_Shutdown(sock, PR_SHUTDOWN_BOTH)) {
         PL_FPrintError(err_out, "PR_Shutdown (client) failed");
+    }
 
-    if (PR_FAILURE == PR_Close(sock))
+    if (PR_FAILURE == PR_Close(sock)) {
         PL_FPrintError(err_out, "PR_Close (client) failed");
+    }
 
     return;
 }  /* ConnectingThread */
@@ -116,18 +124,18 @@ static void AcceptingThread(void *arg)
     if (NULL == listen_sock)
     {
         PL_FPrintError(err_out, "PR_NewTCPSocket (server) failed");
-        PR_ProcessExit(1);        
+        PR_ProcessExit(1);
     }
     layer = PR_CreateIOLayerStub(emu_layer_ident, &emu_layer_methods);
     if (NULL == layer)
     {
         PL_FPrintError(err_out, "PR_CreateIOLayerStub (server) failed");
-        PR_ProcessExit(1);        
+        PR_ProcessExit(1);
     }
     if (PR_PushIOLayer(listen_sock, PR_TOP_IO_LAYER, layer) == PR_FAILURE)
     {
         PL_FPrintError(err_out, "PR_PushIOLayer (server) failed");
-        PR_ProcessExit(1);        
+        PR_ProcessExit(1);
     }
     sock_opt.option = PR_SockOpt_Reuseaddr;
     sock_opt.value.reuse_addr = PR_TRUE;
@@ -135,24 +143,26 @@ static void AcceptingThread(void *arg)
     if (PR_FAILURE == rv)
     {
         PL_FPrintError(err_out, "PR_SetSocketOption (server) failed");
-        PR_ProcessExit(1);        
+        PR_ProcessExit(1);
     }
     rv = PR_Bind(listen_sock, listen_addr);
     if (PR_FAILURE == rv)
     {
         PL_FPrintError(err_out, "PR_Bind (server) failed");
-        PR_ProcessExit(1);        
+        PR_ProcessExit(1);
     }
     rv = PR_Listen(listen_sock, 10);
     if (PR_FAILURE == rv)
     {
         PL_FPrintError(err_out, "PR_Listen (server) failed");
-        PR_ProcessExit(1);        
+        PR_ProcessExit(1);
     }
     bytes = PR_AcceptRead(
-        listen_sock, &accept_sock, &accept_addr, buf, buf_size, accept_timeout);
+                listen_sock, &accept_sock, &accept_addr, buf, buf_size, accept_timeout);
 
-    if (-1 == bytes) PL_FPrintError(err_out, "PR_AcceptRead (server) failed");
+    if (-1 == bytes) {
+        PL_FPrintError(err_out, "PR_AcceptRead (server) failed");
+    }
     else
     {
         PrintAddress(accept_addr);
@@ -161,20 +171,23 @@ static void AcceptingThread(void *arg)
             buf, &buf[BUF_SIZE], buf);
         bytes = PR_Write(accept_sock, buf, bytes);
         rv = PR_Shutdown(accept_sock, PR_SHUTDOWN_BOTH);
-        if (PR_FAILURE == rv)
+        if (PR_FAILURE == rv) {
             PL_FPrintError(err_out, "PR_Shutdown (server) failed");
+        }
     }
 
     if (-1 != bytes)
     {
         rv = PR_Close(accept_sock);
-        if (PR_FAILURE == rv)
+        if (PR_FAILURE == rv) {
             PL_FPrintError(err_out, "PR_Close (server) failed");
+        }
     }
 
     rv = PR_Close(listen_sock);
-    if (PR_FAILURE == rv)
+    if (PR_FAILURE == rv) {
         PL_FPrintError(err_out, "PR_Close (server) failed");
+    }
 }  /* AcceptingThread */
 
 int main(int argc, char **argv)
@@ -195,8 +208,12 @@ int main(int argc, char **argv)
     emu_layer_methods = *PR_GetDefaultIOMethods();
     emu_layer_methods.acceptread = emu_AcceptRead;
 
-    if (argc != 2 && argc != 3) port_number = DEFAULT_PORT;
-    else port_number = (PRUint16)atoi(argv[(argc == 2) ? 1 : 2]);
+    if (argc != 2 && argc != 3) {
+        port_number = DEFAULT_PORT;
+    }
+    else {
+        port_number = (PRUint16)atoi(argv[(argc == 2) ? 1 : 2]);
+    }
 
     status = PR_InitializeNetAddr(PR_IpAddrAny, port_number, &server_addr);
     if (PR_SUCCESS != status)
@@ -207,7 +224,7 @@ int main(int argc, char **argv)
     if (argc < 3)
     {
         status = PR_InitializeNetAddr(
-            PR_IpAddrLoopback, port_number, &client_addr);
+                     PR_IpAddrLoopback, port_number, &client_addr);
         if (PR_SUCCESS != status)
         {
             PL_FPrintError(err_out, "PR_InitializeNetAddr failed");
@@ -217,7 +234,7 @@ int main(int argc, char **argv)
     else
     {
         status = PR_GetHostByName(
-            argv[1], netdb_buf, sizeof(netdb_buf), &he);
+                     argv[1], netdb_buf, sizeof(netdb_buf), &he);
         if (status == PR_FAILURE)
         {
             PL_FPrintError(err_out, "PR_GetHostByName failed");
@@ -240,8 +257,8 @@ int main(int argc, char **argv)
             std_out, "Testing w/ write_dally = %d msec\n",
             PR_IntervalToMilliseconds(write_dally));
         server_thread = PR_CreateThread(
-            PR_USER_THREAD, AcceptingThread, &server_addr,
-            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                            PR_USER_THREAD, AcceptingThread, &server_addr,
+                            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
         if (server_thread == NULL)
         {
             PL_FPrintError(err_out, "PR_CreateThread (server) failed");
@@ -251,19 +268,21 @@ int main(int argc, char **argv)
         PR_Sleep(delta);  /* let the server pot thicken */
 
         client_thread = PR_CreateThread(
-            PR_USER_THREAD, ConnectingThread, &client_addr,
-            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                            PR_USER_THREAD, ConnectingThread, &client_addr,
+                            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
         if (client_thread == NULL)
         {
             PL_FPrintError(err_out, "PR_CreateThread (client) failed");
             PR_ProcessExit(1);
         }
 
-        if (PR_JoinThread(client_thread) == PR_FAILURE)
+        if (PR_JoinThread(client_thread) == PR_FAILURE) {
             PL_FPrintError(err_out, "PR_JoinThread (client) failed");
+        }
 
-        if (PR_JoinThread(server_thread) == PR_FAILURE)
+        if (PR_JoinThread(server_thread) == PR_FAILURE) {
             PL_FPrintError(err_out, "PR_JoinThread (server) failed");
+        }
     }
 
     return 0;

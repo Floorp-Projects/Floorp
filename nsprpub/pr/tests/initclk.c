@@ -49,13 +49,13 @@ int main(int argc, char **argv)
     PR_ASSERT(NULL != cv2);
     start = PR_IntervalNow();
     thread = PR_CreateThread(
-            PR_USER_THREAD,
-            ThreadFunc,
-            NULL,
-            PR_PRIORITY_NORMAL,
-            PR_LOCAL_THREAD,
-            PR_JOINABLE_THREAD,
-            0);
+                 PR_USER_THREAD,
+                 ThreadFunc,
+                 NULL,
+                 PR_PRIORITY_NORMAL,
+                 PR_LOCAL_THREAD,
+                 PR_JOINABLE_THREAD,
+                 0);
     PR_ASSERT(NULL != thread);
     PR_Lock(lock2);
     PR_WaitCondVar(cv2, PR_MillisecondsToInterval(LONG_TIMEOUT));
@@ -66,12 +66,12 @@ int main(int argc, char **argv)
     /* Allow 100ms imprecision */
     if (elapsed_ms < LONG_TIMEOUT - 100 || elapsed_ms > LONG_TIMEOUT + 100) {
         printf("Elapsed time should be %u ms but is %u ms\n",
-                LONG_TIMEOUT, elapsed_ms);
+               LONG_TIMEOUT, elapsed_ms);
         printf("FAIL\n");
         exit(1);
     }
-	printf("Elapsed time: %u ms, expected time: %u ms\n",
-               LONG_TIMEOUT, elapsed_ms);
+    printf("Elapsed time: %u ms, expected time: %u ms\n",
+           LONG_TIMEOUT, elapsed_ms);
     printf("PASS\n");
     return 0;
 }
