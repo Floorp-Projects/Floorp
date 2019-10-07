@@ -282,11 +282,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   void ClearTree();
 
   /**
-   * Tests if a screen point intersect an apz in the tree.
-   */
-  bool HitTestAPZC(const ScreenIntPoint& aPoint);
-
-  /**
    * Sets the dpi value used by all AsyncPanZoomControllers attached to this
    * tree manager.
    * DPI defaults to 160 if not set using SetDPI() at any point.
