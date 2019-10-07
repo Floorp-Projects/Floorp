@@ -33,26 +33,26 @@ add_task(async function test_copy() {
 
       let selectText = async target => {
         let { width, height } = target.getBoundingClientRect();
-        await BrowserTestUtils.synthesizeMouse(
+        EventUtils.synthesizeMouse(
           target,
           1,
           1,
           { type: "mousedown" },
-          this.browser
+          this.browser.contentWindow
         );
-        await BrowserTestUtils.synthesizeMouse(
+        EventUtils.synthesizeMouse(
           target,
           width - 1,
           height - 1,
           { type: "mousemove" },
-          this.browser
+          this.browser.contentWindow
         );
-        await BrowserTestUtils.synthesizeMouse(
+        EventUtils.synthesizeMouse(
           target,
           width - 1,
           height - 1,
           { type: "mouseup" },
-          this.browser
+          this.browser.contentWindow
         );
       };
 
@@ -107,26 +107,27 @@ add_task(async function test_copy_multiple() {
     let { width, height } = endRow.valueCell.getBoundingClientRect();
 
     // Drag from the top left of the first row to the bottom right of the last.
-    await BrowserTestUtils.synthesizeMouse(
+    EventUtils.synthesizeMouse(
       startRow.nameCell,
       1,
       1,
       { type: "mousedown" },
-      this.browser
+      this.browser.contentWindow
     );
-    await BrowserTestUtils.synthesizeMouse(
+
+    EventUtils.synthesizeMouse(
       endRow.valueCell,
       width - 1,
       height - 1,
       { type: "mousemove" },
-      this.browser
+      this.browser.contentWindow
     );
-    await BrowserTestUtils.synthesizeMouse(
+    EventUtils.synthesizeMouse(
       endRow.valueCell,
       width - 1,
       height - 1,
       { type: "mouseup" },
-      this.browser
+      this.browser.contentWindow
     );
 
     await SimpleTest.promiseClipboardChange(expectedString, async () => {

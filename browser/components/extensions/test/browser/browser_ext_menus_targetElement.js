@@ -210,7 +210,7 @@ add_task(async function getTargetElement_in_frame() {
   await extension.startup();
   await extension.awaitMessage("ready");
 
-  let menu = await openContextMenuInFrame("#frame");
+  let menu = await openContextMenuInFrame();
   await extension.awaitMessage("pageAndFrameChecked");
   let menuItem = menu.getElementsByAttribute("label", "menu for frame")[0];
   await closeExtensionContextMenu(menuItem);

@@ -79,11 +79,6 @@ registrar.registerFactory(OUR_PROCESSSELECTOR_CID, "", null, selectorFactory);
 // some cases.
 Cu.permitCPOWsInScope(this);
 
-var gSendCharCount = 0;
-var gSynthesizeKeyCount = 0;
-var gSynthesizeCompositionCount = 0;
-var gSynthesizeCompositionChangeCount = 0;
-
 const kAboutPageRegistrationContentScript =
   "chrome://mochikit/content/tests/BrowserTestUtils/content-about-page-utils.js";
 
@@ -321,6 +316,18 @@ var BrowserTestUtils = {
     }
 
     return true;
+  },
+
+  /**
+   * If the argument is a browsingContext, return it. If the
+   * argument is a browser/frame, returns the browsing context for it.
+   */
+  getBrowsingContextFrom(browser) {
+    if (Element.isInstance(browser)) {
+      return browser.browsingContext;
+    }
+
+    return browser;
   },
 
   /**
@@ -1435,17 +1442,13 @@ var BrowserTestUtils = {
   /**
    *  Versions of EventUtils.jsm synthesizeMouse functions that synthesize a
    *  mouse event in a child process and return promises that resolve when the
-   *  event has fired and completed. Instead of a window, a browser is required
-   *  to be passed to this function.
+   *  event has fired and completed. Instead of a window, a browser or
+   *  browsing context is required to be passed to this function.
    *
    * @param target
    *        One of the following:
    *        - a selector string that identifies the element to target. The syntax is as
    *          for querySelector.
-   *        - An array of selector strings. Each selector after the first
-   *          selects for an element in the iframe specified by the previous
-   *          selector.
-   *        - a CPOW element (for easier test-conversion).
    *        - a function to be run in the content process that returns the element to
    *        target
    *        - null, in which case the offset is from the content document's edge.
@@ -1455,58 +1458,41 @@ var BrowserTestUtils = {
    *        y offset from target's top bounding edge
    * @param {Object} event object
    *        Additional arguments, similar to the EventUtils.jsm version
-   * @param {Browser} browser
-   *        Browser element, must not be null
+   * @param {BrowserContext|MozFrameLoaderOwner} browsingContext
+   *        Browsing context or browser element, must not be null
    *
    * @returns {Promise}
    * @resolves True if the mouse event was cancelled.
    */
-  synthesizeMouse(target, offsetX, offsetY, event, browser) {
-    return new Promise((resolve, reject) => {
-      let mm = browser.messageManager;
-      mm.addMessageListener("Test:SynthesizeMouseDone", function mouseMsg(
-        message
-      ) {
-        mm.removeMessageListener("Test:SynthesizeMouseDone", mouseMsg);
-        if (message.data.hasOwnProperty("defaultPrevented")) {
-          resolve(message.data.defaultPrevented);
-        } else {
-          reject(new Error(message.data.error));
-        }
-      });
+  synthesizeMouse(target, offsetX, offsetY, event, browsingContext) {
+    let targetFn = null;
+    if (typeof target == "function") {
+      targetFn = target.toString();
+      target = null;
+    } else if (typeof target != "string" && !Array.isArray(target)) {
+      target = null;
+    }
 
-      let cpowObject = null;
-      let targetFn = null;
-      if (typeof target == "function") {
-        targetFn = target.toString();
-        target = null;
-      } else if (typeof target != "string" && !Array.isArray(target)) {
-        cpowObject = target;
-        target = null;
-      }
-
-      mm.sendAsyncMessage(
-        "Test:SynthesizeMouse",
-        { target, targetFn, x: offsetX, y: offsetY, event },
-        { object: cpowObject }
-      );
+    browsingContext = this.getBrowsingContextFrom(browsingContext);
+    return this.sendQuery(browsingContext, "Test:SynthesizeMouse", {
+      target,
+      targetFn,
+      x: offsetX,
+      y: offsetY,
+      event,
     });
   },
 
   /**
    *  Versions of EventUtils.jsm synthesizeTouch functions that synthesize a
    *  touch event in a child process and return promises that resolve when the
-   *  event has fired and completed. Instead of a window, a browser is required
-   *  to be passed to this function.
+   *  event has fired and completed. Instead of a window, a browser or
+   *  browsing context is required to be passed to this function.
    *
    * @param target
    *        One of the following:
    *        - a selector string that identifies the element to target. The syntax is as
    *          for querySelector.
-   *        - An array of selector strings. Each selector after the first
-   *          selects for an element in the iframe specified by the previous
-   *          selector.
-   *        - a CPOW element (for easier test-conversion).
    *        - a function to be run in the content process that returns the element to
    *        target
    *        - null, in which case the offset is from the content document's edge.
@@ -1516,41 +1502,28 @@ var BrowserTestUtils = {
    *        y offset from target's top bounding edge
    * @param {Object} event object
    *        Additional arguments, similar to the EventUtils.jsm version
-   * @param {Browser} browser
-   *        Browser element, must not be null
+   * @param {BrowserContext|MozFrameLoaderOwner} browsingContext
+   *        Browsing context or browser element, must not be null
    *
    * @returns {Promise}
    * @resolves True if the touch event was cancelled.
    */
-  synthesizeTouch(target, offsetX, offsetY, event, browser) {
-    return new Promise((resolve, reject) => {
-      let mm = browser.messageManager;
-      mm.addMessageListener("Test:SynthesizeTouchDone", function touchMsg(
-        message
-      ) {
-        mm.removeMessageListener("Test:SynthesizeTouchDone", touchMsg);
-        if (message.data.hasOwnProperty("defaultPrevented")) {
-          resolve(message.data.defaultPrevented);
-        } else {
-          reject(new Error(message.data.error));
-        }
-      });
+  synthesizeTouch(target, offsetX, offsetY, event, browsingContext) {
+    let targetFn = null;
+    if (typeof target == "function") {
+      targetFn = target.toString();
+      target = null;
+    } else if (typeof target != "string" && !Array.isArray(target)) {
+      target = null;
+    }
 
-      let cpowObject = null;
-      let targetFn = null;
-      if (typeof target == "function") {
-        targetFn = target.toString();
-        target = null;
-      } else if (typeof target != "string" && !Array.isArray(target)) {
-        cpowObject = target;
-        target = null;
-      }
-
-      mm.sendAsyncMessage(
-        "Test:SynthesizeTouch",
-        { target, targetFn, x: offsetX, y: offsetY, event },
-        { object: cpowObject }
-      );
+    browsingContext = this.getBrowsingContextFrom(browsingContext);
+    return this.sendQuery(browsingContext, "Test:SynthesizeTouch", {
+      target,
+      targetFn,
+      x: offsetX,
+      y: offsetY,
+      event,
     });
   },
 
@@ -1579,10 +1552,16 @@ var BrowserTestUtils = {
    *  Version of synthesizeMouse that uses the center of the target as the mouse
    *  location. Arguments and the return value are the same.
    */
-  synthesizeMouseAtCenter(target, event, browser) {
+  synthesizeMouseAtCenter(target, event, browsingContext) {
     // Use a flag to indicate to center rather than having a separate message.
     event.centered = true;
-    return BrowserTestUtils.synthesizeMouse(target, 0, 0, event, browser);
+    return BrowserTestUtils.synthesizeMouse(
+      target,
+      0,
+      0,
+      event,
+      browsingContext
+    );
   },
 
   /**
@@ -1590,13 +1569,13 @@ var BrowserTestUtils = {
    *  window instead of a target as the offset. Otherwise, the arguments and
    *  return value are the same as synthesizeMouse.
    */
-  synthesizeMouseAtPoint(offsetX, offsetY, event, browser) {
+  synthesizeMouseAtPoint(offsetX, offsetY, event, browsingContext) {
     return BrowserTestUtils.synthesizeMouse(
       null,
       offsetX,
       offsetY,
       event,
-      browser
+      browsingContext
     );
   },
 
@@ -1835,102 +1814,63 @@ var BrowserTestUtils = {
   /**
    * Version of EventUtils' `sendChar` function; it will synthesize a keypress
    * event in a child process and returns a Promise that will resolve when the
-   * event was fired. Instead of a Window, a Browser object is required to be
-   * passed to this function.
+   * event was fired. Instead of a Window, a Browser or Browsing Context
+   * is required to be passed to this function.
    *
    * @param {String} char
    *        A character for the keypress event that is sent to the browser.
-   * @param {Browser} browser
-   *        Browser element, must not be null.
+   * @param {BrowserContext|MozFrameLoaderOwner} browsingContext
+   *        Browsing context or browser element, must not be null
    *
    * @returns {Promise}
    * @resolves True if the keypress event was synthesized.
    */
-  sendChar(char, browser) {
-    return new Promise(resolve => {
-      let seq = ++gSendCharCount;
-      let mm = browser.messageManager;
-
-      mm.addMessageListener("Test:SendCharDone", function charMsg(message) {
-        if (message.data.seq != seq) {
-          return;
-        }
-
-        mm.removeMessageListener("Test:SendCharDone", charMsg);
-        resolve(message.data.result);
-      });
-
-      mm.sendAsyncMessage("Test:SendChar", {
-        char,
-        seq,
-      });
-    });
+  sendChar(char, browsingContext) {
+    browsingContext = this.getBrowsingContextFrom(browsingContext);
+    return this.sendQuery(browsingContext, "Test:SendChar", { char });
   },
 
   /**
    * Version of EventUtils' `synthesizeKey` function; it will synthesize a key
    * event in a child process and returns a Promise that will resolve when the
-   * event was fired. Instead of a Window, a Browser object is required to be
-   * passed to this function.
+   * event was fired. Instead of a Window, a Browser or Browsing Context
+   * is required to be passed to this function.
    *
    * @param {String} key
    *        See the documentation available for EventUtils#synthesizeKey.
    * @param {Object} event
    *        See the documentation available for EventUtils#synthesizeKey.
-   * @param {Browser} browser
-   *        Browser element, must not be null.
+   * @param {BrowserContext|MozFrameLoaderOwner} browsingContext
+   *        Browsing context or browser element, must not be null
    *
    * @returns {Promise}
    */
-  synthesizeKey(key, event, browser) {
-    return new Promise(resolve => {
-      let seq = ++gSynthesizeKeyCount;
-      let mm = browser.messageManager;
-
-      mm.addMessageListener("Test:SynthesizeKeyDone", function keyMsg(message) {
-        if (message.data.seq != seq) {
-          return;
-        }
-
-        mm.removeMessageListener("Test:SynthesizeKeyDone", keyMsg);
-        resolve();
-      });
-
-      mm.sendAsyncMessage("Test:SynthesizeKey", { key, event, seq });
+  synthesizeKey(key, event, browsingContext) {
+    browsingContext = this.getBrowsingContextFrom(browsingContext);
+    return this.sendQuery(browsingContext, "Test:SynthesizeKey", {
+      key,
+      event,
     });
   },
 
   /**
    * Version of EventUtils' `synthesizeComposition` function; it will synthesize
    * a composition event in a child process and returns a Promise that will
-   * resolve when the event was fired. Instead of a Window, a Browser object is
-   * required to be passed to this function.
+   * resolve when the event was fired. Instead of a Window, a Browser or
+   * Browsing Context is required to be passed to this function.
    *
    * @param {Object} event
    *        See the documentation available for EventUtils#synthesizeComposition.
-   * @param {Browser} browser
-   *        Browser element, must not be null.
+   * @param {BrowserContext|MozFrameLoaderOwner} browsingContext
+   *        Browsing context or browser element, must not be null
    *
    * @returns {Promise}
    * @resolves False if the composition event could not be synthesized.
    */
-  synthesizeComposition(event, browser) {
-    return new Promise(resolve => {
-      let seq = ++gSynthesizeCompositionCount;
-      let mm = browser.messageManager;
-
-      mm.addMessageListener("Test:SynthesizeCompositionDone", function compMsg(
-        message
-      ) {
-        if (message.data.seq != seq) {
-          return;
-        }
-
-        mm.removeMessageListener("Test:SynthesizeCompositionDone", compMsg);
-        resolve(message.data.result);
-      });
-
-      mm.sendAsyncMessage("Test:SynthesizeComposition", { event, seq });
+  synthesizeComposition(event, browsingContext) {
+    browsingContext = this.getBrowsingContextFrom(browsingContext);
+    return this.sendQuery(browsingContext, "Test:SynthesizeComposition", {
+      event,
     });
   },
 
@@ -1938,36 +1878,19 @@ var BrowserTestUtils = {
    * Version of EventUtils' `synthesizeCompositionChange` function; it will
    * synthesize a compositionchange event in a child process and returns a
    * Promise that will resolve when the event was fired. Instead of a Window, a
-   * Browser object is required to be passed to this function.
+   * Browser or Browsing Context object is required to be passed to this function.
    *
    * @param {Object} event
    *        See the documentation available for EventUtils#synthesizeCompositionChange.
-   * @param {Browser} browser
-   *        Browser element, must not be null.
+   * @param {BrowserContext|MozFrameLoaderOwner} browsingContext
+   *        Browsing context or browser element, must not be null
    *
    * @returns {Promise}
    */
-  synthesizeCompositionChange(event, browser) {
-    return new Promise(resolve => {
-      let seq = ++gSynthesizeCompositionChangeCount;
-      let mm = browser.messageManager;
-
-      mm.addMessageListener(
-        "Test:SynthesizeCompositionChangeDone",
-        function compMsg(message) {
-          if (message.data.seq != seq) {
-            return;
-          }
-
-          mm.removeMessageListener(
-            "Test:SynthesizeCompositionChangeDone",
-            compMsg
-          );
-          resolve();
-        }
-      );
-
-      mm.sendAsyncMessage("Test:SynthesizeCompositionChange", { event, seq });
+  synthesizeCompositionChange(event, browsingContext) {
+    browsingContext = this.getBrowsingContextFrom(browsingContext);
+    return this.sendQuery(browsingContext, "Test:SynthesizeCompositionChange", {
+      event,
     });
   },
 
@@ -2240,5 +2163,25 @@ var BrowserTestUtils = {
       "BrowserTestUtils"
     );
     actor.sendAsyncMessage(aMessageName, aMessageData);
+  },
+
+  /**
+   * Sends a query to a specific BrowserTestUtils window actor.
+   * @param aBrowsingContext
+   *        The browsing context where the actor lives.
+   * @param {string} aMessageName
+   *        Name of the message to be sent to the actor.
+   * @param {object} aMessageData
+   *        Extra information to pass to the actor.
+   */
+  async sendQuery(aBrowsingContext, aMessageName, aMessageData) {
+    if (!aBrowsingContext.currentWindowGlobal) {
+      await this.waitForCondition(() => aBrowsingContext.currentWindowGlobal);
+    }
+
+    let actor = aBrowsingContext.currentWindowGlobal.getActor(
+      "BrowserTestUtils"
+    );
+    return actor.sendQuery(aMessageName, aMessageData);
   },
 };

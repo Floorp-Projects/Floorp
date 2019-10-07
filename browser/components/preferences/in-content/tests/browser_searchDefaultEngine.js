@@ -212,10 +212,10 @@ async function setDefaultEngine(
 
   const popup = defaultEngineSelector.menupopup;
   const popupShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
-  BrowserTestUtils.synthesizeMouseAtCenter(
+  EventUtils.synthesizeMouseAtCenter(
     defaultEngineSelector,
     {},
-    gBrowser.selectedBrowser
+    defaultEngineSelector.ownerGlobal
   );
   await popupShown;
 
@@ -229,11 +229,7 @@ async function setDefaultEngine(
     "browser-search-engine-modified"
   );
   const popupHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
-  BrowserTestUtils.synthesizeMouseAtCenter(
-    engine2Item,
-    {},
-    gBrowser.selectedBrowser
-  );
+  EventUtils.synthesizeMouseAtCenter(engine2Item, {}, engine2Item.ownerGlobal);
   await popupHidden;
   await defaultChanged;
 
