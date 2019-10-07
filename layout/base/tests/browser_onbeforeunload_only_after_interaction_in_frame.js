@@ -60,23 +60,20 @@ async function openPage(shouldClick) {
       await BrowserTestUtils.loadURI(browser, PAGE_URL);
       await BrowserTestUtils.browserLoaded(browser);
 
+      let frameBC = browser.browsingContext.getChildren()[0];
       if (shouldClick) {
-        await BrowserTestUtils.synthesizeMouse(
-          function() {
-            return content.frames[0].document.body;
-          },
-          2,
-          2,
-          {},
-          browser
-        );
+        await BrowserTestUtils.synthesizeMouse("body", 2, 2, {}, frameBC);
       }
-      let hasInteractedWith = await ContentTask.spawn(browser, "", function() {
-        return [
-          content.document.userHasInteracted,
-          content.frames[0].document.userHasInteracted,
-        ];
-      });
+      let hasInteractedWith = await SpecialPowers.spawn(
+        frameBC,
+        [],
+        function() {
+          return [
+            content.document.userHasInteracted,
+            content.document.userHasInteracted,
+          ];
+        }
+      );
       is(
         shouldClick,
         hasInteractedWith[0],
