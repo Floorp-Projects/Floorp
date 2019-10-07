@@ -3049,16 +3049,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void convertValueToFloatingPoint(ValueOperand value, FloatRegister output,
                                    Label* fail, MIRType outputType);
-  MOZ_MUST_USE bool convertValueToFloatingPoint(JSContext* cx, const Value& v,
-                                                FloatRegister output,
-                                                Label* fail,
-                                                MIRType outputType);
-  MOZ_MUST_USE bool convertConstantOrRegisterToFloatingPoint(
-      JSContext* cx, const ConstantOrRegister& src, FloatRegister output,
-      Label* fail, MIRType outputType);
-  void convertTypedOrValueToFloatingPoint(TypedOrValueRegister src,
-                                          FloatRegister output, Label* fail,
-                                          MIRType outputType);
 
   void outOfLineTruncateSlow(FloatRegister src, Register dest,
                              bool widenFloatToDouble, bool compilingWasm,
@@ -3072,39 +3062,12 @@ class MacroAssembler : public MacroAssemblerSpecific {
                             Label* fail) {
     convertValueToFloatingPoint(value, output, fail, MIRType::Double);
   }
-  MOZ_MUST_USE bool convertValueToDouble(JSContext* cx, const Value& v,
-                                         FloatRegister output, Label* fail) {
-    return convertValueToFloatingPoint(cx, v, output, fail, MIRType::Double);
-  }
-  MOZ_MUST_USE bool convertConstantOrRegisterToDouble(
-      JSContext* cx, const ConstantOrRegister& src, FloatRegister output,
-      Label* fail) {
-    return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail,
-                                                    MIRType::Double);
-  }
-  void convertTypedOrValueToDouble(TypedOrValueRegister src,
-                                   FloatRegister output, Label* fail) {
-    convertTypedOrValueToFloatingPoint(src, output, fail, MIRType::Double);
-  }
 
   void convertValueToFloat(ValueOperand value, FloatRegister output,
                            Label* fail) {
     convertValueToFloatingPoint(value, output, fail, MIRType::Float32);
   }
-  MOZ_MUST_USE bool convertValueToFloat(JSContext* cx, const Value& v,
-                                        FloatRegister output, Label* fail) {
-    return convertValueToFloatingPoint(cx, v, output, fail, MIRType::Float32);
-  }
-  MOZ_MUST_USE bool convertConstantOrRegisterToFloat(
-      JSContext* cx, const ConstantOrRegister& src, FloatRegister output,
-      Label* fail) {
-    return convertConstantOrRegisterToFloatingPoint(cx, src, output, fail,
-                                                    MIRType::Float32);
-  }
-  void convertTypedOrValueToFloat(TypedOrValueRegister src,
-                                  FloatRegister output, Label* fail) {
-    convertTypedOrValueToFloatingPoint(src, output, fail, MIRType::Float32);
-  }
+
   //
   // Functions for converting values to int.
   //
