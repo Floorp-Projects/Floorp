@@ -234,6 +234,27 @@ add_task(async function test_ip() {
   }
 });
 
+// host starting with large number.
+add_task(async function large_number_host() {
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://12345example.it:8888/",
+    },
+  ]);
+  await check_autocomplete({
+    search: "1234",
+    completed: "http://12345example.it:8888/",
+    matches: [
+      {
+        value: "12345example.it:8888/",
+        comment: "12345example.it:8888",
+        style: ["autofill", "heuristic"],
+      },
+    ],
+  });
+  await cleanup();
+});
+
 // When determining which origins should be autofilled, all the origins sharing
 // a host should be added together to get their combined frecency -- i.e.,
 // prefixes should be collapsed.  And then from that list, the origin with the
