@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_SEND
 import android.content.Intent.ACTION_VIEW
 import android.content.Intent.EXTRA_TEXT
+import android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
@@ -82,7 +83,9 @@ class TabIntentProcessor(
 
     override fun matches(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
-        return safeIntent.action == ACTION_VIEW || safeIntent.action == ACTION_SEND
+        return safeIntent.action == ACTION_VIEW ||
+            safeIntent.action == ACTION_SEND ||
+            safeIntent.action == ACTION_NDEF_DISCOVERED
     }
 
     /**
@@ -94,7 +97,7 @@ class TabIntentProcessor(
     override suspend fun process(intent: Intent): Boolean {
         val safeIntent = SafeIntent(intent)
         return when (safeIntent.action) {
-            ACTION_VIEW -> processViewIntent(safeIntent)
+            ACTION_VIEW, ACTION_NDEF_DISCOVERED -> processViewIntent(safeIntent)
             ACTION_SEND -> processSendIntent(safeIntent)
             else -> false
         }
