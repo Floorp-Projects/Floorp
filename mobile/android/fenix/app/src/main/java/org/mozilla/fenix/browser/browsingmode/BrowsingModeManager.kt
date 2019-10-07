@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.browser.browsingmode
 
-import org.mozilla.fenix.utils.Settings
-
 /**
  * Enum that represents whether or not private browsing is active.
  */

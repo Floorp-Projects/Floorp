@@ -15,7 +15,6 @@ import android.util.TypedValue
 import android.view.View
 import android.view.Window
 import androidx.annotation.StyleRes
-import mozilla.components.support.utils.toSafeIntent
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode

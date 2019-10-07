@@ -22,7 +22,6 @@ import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.fenix.R
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.sessionsOfType

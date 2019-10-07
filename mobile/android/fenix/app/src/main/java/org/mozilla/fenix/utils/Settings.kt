@@ -22,7 +22,6 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
-import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.settings.PhoneFeature

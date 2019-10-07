@@ -35,7 +35,6 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.session.NotificationSessionObserver
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
-import org.mozilla.fenix.utils.Settings
 import java.io.File
 
 @SuppressLint("Registered")
