@@ -134,14 +134,16 @@ class XHRBreakpoints extends Component<Props, State> {
   };
 
   handleChange = (e: SyntheticInputEvent<HTMLInputElement>) => {
-    this.setState({ inputValue: e.target.value });
+    const target = e.target;
+    this.setState({ inputValue: target.value });
   };
 
   handleMethodChange = (e: SyntheticInputEvent<HTMLInputElement>) => {
+    const target = e.target;
     this.setState({
       focused: true,
       editing: true,
-      inputMethod: e.target.value,
+      inputMethod: target.value,
     });
   };
 

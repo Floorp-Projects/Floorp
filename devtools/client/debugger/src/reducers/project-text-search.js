@@ -61,6 +61,7 @@ function update(
       return { ...state, query: action.query };
 
     case "ADD_SEARCH_RESULT":
+      const results = state.results;
       if (action.result.matches.length === 0) {
         return state;
       }
@@ -70,7 +71,7 @@ function update(
         ...action.result,
         matches: action.result.matches.map(m => ({ type: "MATCH", ...m })),
       };
-      return { ...state, results: [...state.results, result] };
+      return { ...state, results: [...results, result] };
 
     case "UPDATE_STATUS":
       const ongoingSearch =

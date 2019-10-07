@@ -69,13 +69,14 @@ export default function FrameMenu(
 
   const menuOptions = [];
 
+  const source = frame.source;
+
   const toggleFrameworkElement = toggleFrameworkGroupingElement(
     callbacks.toggleFrameworkGrouping,
     frameworkGroupingOn
   );
   menuOptions.push(toggleFrameworkElement);
 
-  const { source } = frame;
   if (source) {
     const copySourceUri2 = copySourceElement(source.url);
     menuOptions.push(copySourceUri2);

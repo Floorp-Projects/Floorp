@@ -41,7 +41,6 @@ export function findFunctionByName(
     return null;
   }
 
-  return symbols.functions.find(
-    node => node.name === name && node.index === index
-  );
+  const functions = symbols.functions;
+  return functions.find(node => node.name === name && node.index === index);
 }
