@@ -29,8 +29,8 @@ function do_test(insn1, insn2, errKind, errText,
         let mem_def  = haveStorage ? "(memory 1 1)" : "";
         let mem_ia1  = `(data (i32.const 2) "\\03\\01\\04\\01")`;
         let mem_ia2  = `(data (i32.const 12) "\\07\\05\\02\\03\\06")`;
-        let mem_ip1  = `(data passive "\\02\\07\\01\\08")`;
-        let mem_ip2  = `(data passive "\\05\\09\\02\\07\\06")`;
+        let mem_ip1  = `(data "\\02\\07\\01\\08")`;
+        let mem_ip2  = `(data "\\05\\09\\02\\07\\06")`;
         let mem_init = ``;
         if (haveInitA && haveInitP)
             mem_init = `${mem_ia1} ${mem_ip1} ${mem_ia2} ${mem_ip2}`;
@@ -46,8 +46,8 @@ function do_test(insn1, insn2, errKind, errText,
         let tab_def  = haveStorage ? "(table 30 30 funcref)" : "";
         let tab_ia1  = `(elem (i32.const 2) 3 1 4 1)`;
         let tab_ia2  = `(elem (i32.const 12) 7 5 2 3 6)`;
-        let tab_ip1  = `(elem passive 2 7 1 8)`;
-        let tab_ip2  = `(elem passive 5 9 2 7 6)`;
+        let tab_ip1  = `(elem func 2 7 1 8)`;
+        let tab_ip2  = `(elem func 5 9 2 7 6)`;
         let tab_init = ``;
         if (haveInitA && haveInitP)
             tab_init = `${tab_ia1} ${tab_ip1} ${tab_ia2} ${tab_ip2}`;

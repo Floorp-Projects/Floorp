@@ -83,7 +83,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func $f1 (result i32) (i32.const 0))
        (table 10 anyref)
-       (elem (i32.const 0) $f1))`)),
+       (elem 0 (i32.const 0) func $f1))`)),
                    WebAssembly.CompileError,
                    /only tables of 'funcref' may have element segments/);
 
@@ -93,7 +93,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func $f1 (result i32) (i32.const 0))
        (table 10 anyref)
-       (elem passive $f1)
+       (elem func $f1)
        (func
          (table.init 0 (i32.const 0) (i32.const 0) (i32.const 0))))`)),
                    WebAssembly.CompileError,
