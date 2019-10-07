@@ -782,6 +782,14 @@ if (IS_DIALOG_WINDOW) {
     deferredReportPanel,
   } = window.arguments[0].wrappedJSObject;
 
+  document.l10n.setAttributes(
+    document.querySelector("head > title"),
+    "abuse-report-dialog-title",
+    {
+      "addon-name": report.addon.name,
+    }
+  );
+
   const el = document.querySelector("addon-abuse-report");
   el.addEventListener("abuse-report:submit", () => {
     deferredReport.resolve({
