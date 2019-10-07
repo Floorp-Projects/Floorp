@@ -253,11 +253,11 @@
   transition-duration: var(--panelui-subview-transition-duration);
 }
 
-#protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
+#protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side=top] {
   fill: #0A51BF;
 }
 
-:root[lwt-popup-brighttext] #protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
+:root[lwt-popup-brighttext] #protections-popup[mainviewshowing] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side=top] {
   fill: #0CB0F5;
 }
 
