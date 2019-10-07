@@ -788,42 +788,6 @@ bool IonCacheIRCompiler::emitGuardSpecificSymbol() {
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardToInt32ModUint32() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-  Register output = allocator.defineRegister(masm, reader.int32OperandId());
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  FloatRegister maybeTempDouble = ic_->asSetPropertyIC()->maybeTempDouble();
-  MOZ_ASSERT(maybeTempDouble != InvalidFloatReg);
-
-  return masm.truncateConstantOrRegisterToInt32(cx_, val, maybeTempDouble,
-                                                output, failure->label());
-}
-
-bool IonCacheIRCompiler::emitGuardToUint8Clamped() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  ConstantOrRegister val =
-      allocator.useConstantOrRegister(masm, reader.valOperandId());
-  Register output = allocator.defineRegister(masm, reader.int32OperandId());
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  FloatRegister maybeTempDouble = ic_->asSetPropertyIC()->maybeTempDouble();
-  MOZ_ASSERT(maybeTempDouble != InvalidFloatReg);
-
-  return masm.clampConstantOrRegisterToUint8(cx_, val, maybeTempDouble, output,
-                                             failure->label());
-}
-
 bool IonCacheIRCompiler::emitLoadValueResult() {
   MOZ_CRASH("Baseline-specific op");
 }

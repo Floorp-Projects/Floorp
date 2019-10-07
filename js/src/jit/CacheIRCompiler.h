@@ -34,6 +34,8 @@ class IonCacheIRCompiler;
   _(GuardIsNumber)                        \
   _(GuardToInt32)                         \
   _(GuardToInt32Index)                    \
+  _(GuardToInt32ModUint32)                \
+  _(GuardToUint8Clamped)                  \
   _(GuardType)                            \
   _(GuardClass)                           \
   _(GuardGroupHasUnanalyzedNewScript)     \
