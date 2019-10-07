@@ -159,7 +159,7 @@ export default class SourceEditor {
    * @memberof utils/source-editor
    */
   setFirstVisibleLine(line: number) {
-    const { top } = this.editor.charCoords({ line: line, ch: 0 }, "local");
+    const { top } = this.editor.charCoords({ line, ch: 0 }, "local");
     this.editor.scrollTo(0, top);
   }
 }

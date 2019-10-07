@@ -34,8 +34,7 @@ function addThreadEventListeners(thread: ThreadFront) {
 }
 
 function setupEvents(dependencies: Dependencies) {
-  const threadFront = dependencies.threadFront;
-  const tabTarget = dependencies.tabTarget;
+  const { tabTarget, threadFront } = dependencies;
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
 
