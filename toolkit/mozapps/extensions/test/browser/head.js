@@ -1723,3 +1723,7 @@ async function testUndoPendingUninstall(addonList, addon) {
     "The addon pending uninstall cancelled"
   );
 }
+
+function loadTestSubscript(filePath) {
+  Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
+}
