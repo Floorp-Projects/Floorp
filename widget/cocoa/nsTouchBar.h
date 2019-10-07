@@ -130,18 +130,37 @@ using namespace mozilla::dom;
 /**
  * Updates an input on the Touch Bar by redirecting to one of the specific
  * TouchBarItem types updaters.
+ * Returns true if the input was successfully updated.
  */
-- (void)updateItem:(TouchBarInput*)aInput;
+- (bool)updateItem:(TouchBarInput*)aInput;
+
+/**
+ * Helper function for updateItem. Checks to see if a given input exists within
+ * any of this Touch Bar's popovers and updates it if it exists.
+ */
+- (bool)maybeUpdatePopoverChild:(TouchBarInput*)aInput;
+
+/**
+ * Helper function for updateItem. Replaces an item in the
+ * self.mappedLayoutItems dictionary.
+ */
+- (void)replaceMappedLayoutItem:(TouchBarInput*)aItem;
 
 /**
  * Update or create various subclasses of TouchBarItem.
  */
 - (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput;
 - (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput;
+- (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem input:(TouchBarInput*)aInput;
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 
 /**
- *  Redirects button actions to the appropriate handler and handles telemetry.
+ * If aShowing is true, aPopover is shown. Otherwise, it is hidden.
+ */
+- (void)showPopover:(TouchBarInput*)aPopover showing:(bool)aShowing;
+
+/**
+ *  Redirects button actions to the appropriate handler.
  */
 - (void)touchBarAction:(id)aSender;
 

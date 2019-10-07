@@ -57,6 +57,16 @@ __attribute__((weak_import)) @interface NSTouchBar : NSObject
 - (NSTouchBarItem*)itemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 @end
 
+__attribute__((weak_import)) @interface NSPopoverTouchBarItem : NSTouchBarItem
+@property(strong) NSView* collapsedRepresentation;
+@property(strong) NSImage* collapsedRepresentationImage;
+@property(strong) NSString* collapsedRepresentationLabel;
+@property(strong) NSTouchBar* popoverTouchBar;
+@property BOOL showsCloseButton;
+- (void)showPopover:(id)sender;
+- (void)dismissPopover:(id)sender;
+@end
+
 @interface NSButton (TouchBarButton)
 @property(strong) NSColor* bezelColor;
 @end

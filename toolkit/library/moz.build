@@ -74,6 +74,7 @@ def Libxul(name, output_category=None):
         LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSSharingServicePickerTouchBarItem']
         LDFLAGS += ['-Wl,-U,_OBJC_METACLASS_$_NSTouchBar']
         LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSCustomTouchBarItem']
+        LDFLAGS += ['-Wl,-U,_OBJC_CLASS_$_NSPopoverTouchBarItem']
         LDFLAGS += ['-lresolv']
 
     if CONFIG['MOZ_DEBUG_SYMBOLS'] and CONFIG['CC_TYPE'] == 'clang-cl':

@@ -26,6 +26,7 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   @"button",
   @"mainButton",
   @"scrubber",
+  @"popover",
 ];
 
 // The system default width for Touch Bar inputs is 128px. This is double.
@@ -106,6 +107,15 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
 - (void)dealloc {
   for (NSTouchBarItemIdentifier identifier in self.mappedLayoutItems) {
     NSTouchBarItem* item = [self itemForIdentifier:identifier];
+    if (!item) {
+      continue;
+    }
+    if ([item isKindOfClass:[NSPopoverTouchBarItem class]]) {
+      [(NSPopoverTouchBarItem*)item setCollapsedRepresentation:nil];
+      [(NSPopoverTouchBarItem*)item setCollapsedRepresentationImage:nil];
+      [(nsTouchBar*)[(NSPopoverTouchBarItem*)item popoverTouchBar] release];
+    }
+
     [item release];
   }
 
@@ -139,6 +149,17 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
     return [self makeShareScrubberForIdentifier:aIdentifier];
   }
 
+  if ([[input type] hasSuffix:@"popover"]) {
+    NSPopoverTouchBarItem* newPopoverItem =
+        [[NSPopoverTouchBarItem alloc] initWithIdentifier:aIdentifier];
+    // We initialize popoverTouchBar here because we only allow setting this
+    // property on popover creation. Updating popoverTouchBar for every update
+    // of the popover item would be very expensive.
+    newPopoverItem.popoverTouchBar = [[nsTouchBar alloc] initWithInputs:[input children]];
+    [self updatePopover:newPopoverItem input:input];
+    return newPopoverItem;
+  }
+
   // Our new item, which will be initialized depending on aIdentifier.
   NSCustomTouchBarItem* newItem = [[NSCustomTouchBarItem alloc] initWithIdentifier:aIdentifier];
 
@@ -154,10 +175,14 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   return newItem;
 }
 
-- (void)updateItem:(TouchBarInput*)aInput {
+- (bool)updateItem:(TouchBarInput*)aInput {
   NSTouchBarItem* item = [self itemForIdentifier:[aInput nativeIdentifier]];
   if (!item) {
-    return;
+    if ([self maybeUpdatePopoverChild:aInput]) {
+      [self replaceMappedLayoutItem:aInput];
+      return true;
+    }
+    return false;
   }
 
   item.customizationLabel = [aInput title];
@@ -165,10 +190,33 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
     [self updateButton:(NSButton*)item.view input:aInput];
   } else if ([[aInput type] hasSuffix:@"mainButton"]) {
     [self updateMainButton:(NSButton*)item.view input:aInput];
+  } else if ([[aInput type] hasSuffix:@"popover"]) {
+    [self updatePopover:(NSPopoverTouchBarItem*)item input:aInput];
   }
 
-  [self.mappedLayoutItems[[aInput nativeIdentifier]] release];
-  self.mappedLayoutItems[[aInput nativeIdentifier]] = aInput;
+  [self replaceMappedLayoutItem:aInput];
+  return true;
+}
+
+- (bool)maybeUpdatePopoverChild:(TouchBarInput*)aInput {
+  for (NSTouchBarItemIdentifier identifier in self.mappedLayoutItems) {
+    TouchBarInput* potentialPopover = self.mappedLayoutItems[identifier];
+    if (![[potentialPopover type] hasSuffix:@"popover"]) {
+      continue;
+    }
+    NSTouchBarItem* popover = [self itemForIdentifier:[potentialPopover nativeIdentifier]];
+    if (popover) {
+      if ([(nsTouchBar*)[(NSPopoverTouchBarItem*)popover popoverTouchBar] updateItem:aInput]) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+- (void)replaceMappedLayoutItem:(TouchBarInput*)aItem {
+  [self.mappedLayoutItems[[aItem nativeIdentifier]] release];
+  self.mappedLayoutItems[[aItem nativeIdentifier]] = aItem;
 }
 
 - (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput {
@@ -219,6 +267,25 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
                           forOrientation:NSLayoutConstraintOrientationHorizontal];
 }
 
+- (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem input:(TouchBarInput*)aInput {
+  if (!aPopoverItem || !aInput) {
+    return;
+  }
+  aPopoverItem.showsCloseButton = YES;
+  if ([aInput imageURI]) {
+    RefPtr<nsTouchBarInputIcon> icon = [aInput icon];
+    if (!icon) {
+      icon = new nsTouchBarInputIcon([aInput document], nil, nil, aPopoverItem);
+      [aInput setIcon:icon];
+    }
+    icon->SetupIcon([aInput imageURI]);
+  } else if ([aInput title]) {
+    aPopoverItem.collapsedRepresentationLabel = [aInput title];
+  } else {
+    aPopoverItem.collapsedRepresentation = nil;
+  }
+}
+
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
   TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
   // System-default share menu
@@ -239,6 +306,22 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
 
   servicesItem.delegate = self;
   return servicesItem;
+}
+
+- (void)showPopover:(TouchBarInput*)aPopover showing:(bool)aShowing {
+  if (!aPopover) {
+    return;
+  }
+  NSPopoverTouchBarItem* popoverItem =
+      (NSPopoverTouchBarItem*)[self itemForIdentifier:[aPopover nativeIdentifier]];
+  if (!popoverItem) {
+    return;
+  }
+  if (aShowing) {
+    [popoverItem showPopover:self];
+  } else {
+    [popoverItem dismissPopover:self];
+  }
 }
 
 - (void)touchBarAction:(id)aSender {
@@ -270,6 +353,12 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
     if (!input) {
       continue;
     }
+
+    if ([[input type] hasSuffix:@"popover"]) {
+      NSTouchBarItem* item = [self itemForIdentifier:identifier];
+      [(nsTouchBar*)[(NSPopoverTouchBarItem*)item popoverTouchBar] releaseJSObjects];
+    }
+
     [input setCallback:nil];
     [input setDocument:nil];
     [input setImageURI:nil];
