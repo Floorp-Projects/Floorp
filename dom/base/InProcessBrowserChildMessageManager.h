@@ -47,14 +47,7 @@ class InProcessBrowserChildMessageManager final
 
  public:
   static already_AddRefed<InProcessBrowserChildMessageManager> Create(
-      nsDocShell* aShell, nsIContent* aOwner, nsFrameMessageManager* aChrome) {
-    RefPtr<InProcessBrowserChildMessageManager> mm =
-        new InProcessBrowserChildMessageManager(aShell, aOwner, aChrome);
-
-    NS_ENSURE_TRUE(mm->Init(), nullptr);
-
-    return mm.forget();
-  }
+      nsDocShell* aShell, nsIContent* aOwner, nsFrameMessageManager* aChrome);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
