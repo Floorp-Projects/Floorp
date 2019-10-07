@@ -125,8 +125,10 @@ class HitTestingTreeNode {
 
   /* Fixed pos info */
 
-  void SetFixedPosData(ScrollableLayerGuid::ViewID aFixedPosTarget);
+  void SetFixedPosData(ScrollableLayerGuid::ViewID aFixedPosTarget,
+                       SideBits aFixedPosSides);
   ScrollableLayerGuid::ViewID GetFixedPosTarget() const;
+  SideBits GetFixedPosSides() const;
 
   /* Convert |aPoint| into the LayerPixel space for the layer corresponding to
    * this node. |aTransform| is the complete (content + async) transform for
@@ -183,6 +185,7 @@ class HitTestingTreeNode {
   ScrollbarData mScrollbarData;
 
   ScrollableLayerGuid::ViewID mFixedPosTarget;
+  SideBits mFixedPosSides;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions
