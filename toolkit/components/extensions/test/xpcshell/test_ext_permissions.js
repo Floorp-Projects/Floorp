@@ -570,7 +570,6 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "geckoProfiler",
   "identity",
   "idle",
-  "memory",
   "menus",
   "menus.overrideContext",
   "mozillaAddons",
