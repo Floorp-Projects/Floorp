@@ -456,6 +456,11 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const AsyncPanZoomController* aAncestor);
 
   /**
+   * Set fixed layer margins for dynamic toolbar.
+   */
+  void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
+
+  /**
    * Compute the updated shadow transform for a scroll thumb layer that
    * reflects async scrolling of the associated scroll frame.
    *
@@ -863,6 +868,11 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   /* Stores the current mouse position in screen coordinates.
    */
   ScreenPoint mCurrentMousePosition;
+  /* Extra margins that should be applied to content that fixed wrt. the
+   * RCD-RSF, to account for the dynamic toolbar.
+   * Acquire mTreeLock before accessing this.
+   */
+  ScreenMargin mFixedLayerMargins;
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
    * pref). */
   gfx::TreeLog<gfx::LOG_DEFAULT> mApzcTreeLog;
