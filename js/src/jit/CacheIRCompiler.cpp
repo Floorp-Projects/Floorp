@@ -133,9 +133,32 @@ void CacheRegisterAllocator::ensureDoubleRegister(MacroAssembler& masm,
       return;
     }
 
-    case OperandLocation::Constant:
-    case OperandLocation::PayloadStack:
-    case OperandLocation::PayloadReg:
+    case OperandLocation::Constant: {
+      MOZ_ASSERT(loc.constant().isNumber(),
+                 "Caller must ensure the operand is a number value");
+      masm.loadConstantDouble(loc.constant().toNumber(), dest);
+      return;
+    }
+
+    case OperandLocation::PayloadReg: {
+      // Doubles can't be stored in payload registers, so this must be an int32.
+      MOZ_ASSERT(loc.payloadType() == JSVAL_TYPE_INT32,
+                 "Caller must ensure the operand is a number value");
+      masm.convertInt32ToDouble(loc.payloadReg(), dest);
+      return;
+    }
+
+    case OperandLocation::PayloadStack: {
+      // Doubles can't be stored in payload registers, so this must be an int32.
+      MOZ_ASSERT(loc.payloadType() == JSVAL_TYPE_INT32,
+                 "Caller must ensure the operand is a number value");
+      MOZ_ASSERT(loc.payloadStack() <= stackPushed_);
+      masm.convertInt32ToDouble(
+          Address(masm.getStackPointer(), stackPushed_ - loc.payloadStack()),
+          dest);
+      return;
+    }
+
     case OperandLocation::Uninitialized:
       MOZ_CRASH("Unhandled operand type in ensureDoubleRegister");
       return;
@@ -3370,6 +3393,75 @@ bool CacheIRCompiler::emitArrayJoinResult() {
 
   masm.bind(&finished);
 
+  return true;
+}
+
+bool CacheIRCompiler::emitStoreTypedElement() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  TypedThingLayout layout = reader.typedThingLayout();
+  Scalar::Type type = reader.scalarType();
+  Register index = allocator.useRegister(masm, reader.int32OperandId());
+
+  Maybe<Register> valInt32;
+  switch (type) {
+    case Scalar::Int8:
+    case Scalar::Uint8:
+    case Scalar::Int16:
+    case Scalar::Uint16:
+    case Scalar::Int32:
+    case Scalar::Uint32:
+    case Scalar::Uint8Clamped:
+      valInt32.emplace(allocator.useRegister(masm, reader.int32OperandId()));
+      break;
+
+    case Scalar::Float32:
+    case Scalar::Float64:
+      // Float register must be preserved. The SetProp ICs use the fact that
+      // baseline has them available, as well as fixed temps on
+      // LSetPropertyCache.
+      allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+      break;
+
+    case Scalar::BigInt64:
+    case Scalar::BigUint64:
+    case Scalar::MaxTypedArrayViewType:
+    case Scalar::Int64:
+      MOZ_CRASH("Unsupported TypedArray type");
+  }
+
+  bool handleOOB = reader.readBool();
+
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Bounds check.
+  Label done;
+  LoadTypedThingLength(masm, layout, obj, scratch1);
+  masm.spectreBoundsCheck32(index, scratch1, scratch2,
+                            handleOOB ? &done : failure->label());
+
+  // Load the elements vector.
+  LoadTypedThingData(masm, layout, obj, scratch1);
+
+  BaseIndex dest(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(type)));
+
+  if (type == Scalar::Float32) {
+    ScratchFloat32Scope fpscratch(masm);
+    masm.convertDoubleToFloat32(FloatReg0, fpscratch);
+    masm.storeToTypedFloatArray(type, fpscratch, dest);
+  } else if (type == Scalar::Float64) {
+    masm.storeToTypedFloatArray(type, FloatReg0, dest);
+  } else {
+    masm.storeToTypedIntArray(type, *valInt32, dest);
+  }
+
+  masm.bind(&done);
   return true;
 }
 
