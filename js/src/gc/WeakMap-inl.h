@@ -217,10 +217,10 @@ inline bool WeakMap<K, V>::keyNeedsMark(GCMarker* marker,
 }
 
 template <class K, class V>
-void WeakMap<K, V>::traceWeak(JSTracer* trc) {
+void WeakMap<K, V>::sweep() {
   /* Remove all entries whose keys remain unmarked. */
   for (Enum e(*this); !e.empty(); e.popFront()) {
-    if (!TraceWeakEdge(trc, &e.front().mutableKey(), "WeakMap::key")) {
+    if (gc::IsAboutToBeFinalized(&e.front().mutableKey())) {
       e.removeFront();
     }
   }
