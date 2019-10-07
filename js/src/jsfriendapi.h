@@ -1374,14 +1374,7 @@ struct MOZ_STACK_CLASS JS_FRIEND_API ErrorReport {
   // Or we may need to synthesize a JSErrorReport one of our own.
   JSErrorReport ownedReport;
 
-  // And we have a string to maybe keep alive that has pointers into
-  // it from ownedReport.
-  JS::RootedString str;
-
-  // And keep its chars alive too.
-  JS::AutoStableStringChars strChars;
-
-  // And we need to root our exception value.
+  // Root our exception value to keep a possibly borrowed |reportp| alive.
   JS::RootedObject exnObject;
 
   // And for our filename.
