@@ -1643,7 +1643,7 @@ bool IonCacheIRCompiler::emitStoreDenseElement() {
       allocator.useConstantOrRegister(masm, reader.valOperandId());
 
   AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1660,7 +1660,8 @@ bool IonCacheIRCompiler::emitStoreDenseElement() {
 
   // Bounds check.
   Address initLength(scratch1, ObjectElements::offsetOfInitializedLength());
-  masm.spectreBoundsCheck32(index, initLength, scratch2, failure->label());
+  masm.spectreBoundsCheck32(index, initLength, spectreScratch,
+                            failure->label());
 
   // Hole check.
   BaseObjectElementIndex element(scratch1, index);
@@ -1694,7 +1695,7 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole() {
   reader.readBool();
 
   AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -1713,8 +1714,7 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole() {
   BaseObjectElementIndex element(scratch1, index);
 
   Label inBounds, outOfBounds;
-  Register spectreTemp = scratch2;
-  masm.spectreBoundsCheck32(index, initLength, spectreTemp, &outOfBounds);
+  masm.spectreBoundsCheck32(index, initLength, spectreScratch, &outOfBounds);
   masm.jump(&inBounds);
 
   masm.bind(&outOfBounds);
@@ -1724,7 +1724,7 @@ bool IonCacheIRCompiler::emitStoreDenseElementHole() {
   // need to allocate more elements.
   Label capacityOk, allocElement;
   Address capacity(scratch1, ObjectElements::offsetOfCapacity());
-  masm.spectreBoundsCheck32(index, capacity, spectreTemp, &allocElement);
+  masm.spectreBoundsCheck32(index, capacity, spectreScratch, &allocElement);
   masm.jump(&capacityOk);
 
   // Check for non-writable array length. We only have to do this if
