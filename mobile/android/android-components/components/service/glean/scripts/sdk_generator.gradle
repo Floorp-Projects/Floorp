@@ -170,7 +170,7 @@ if (project.ext.has("allowMetricsFromAAR")) {
     }
 }
 
-def gleanTaskNamePrefix = "generateMetricsSourceFor"
+def gleanTaskNamePrefix = "gleanGenerateMetrics"
 
 // A shared function to get the Python command line executable.
 ext.gleanGetPythonCommand = {
@@ -182,8 +182,8 @@ ext.gleanGetPythonCommand = {
     return new File(GLEAN_MINICONDA_DIR, "bin/python")
 }
 
-// Generate the Metrics API
-ext.gleanGenerateMetricsAPI = {
+// Generate the various Glean SDK artifacts.
+ext.gleanAttachGeneratingTasks = {
     variant ->
 
     def sourceOutputDir =  "$buildDir/generated/source/glean/${variant.dirName}/kotlin"
@@ -195,7 +195,7 @@ ext.gleanGenerateMetricsAPI = {
     def originalPackageName = buildConfigProvider.get().getBuildConfigPackageName()
 
     def fullNamespace = "${originalPackageName}.GleanMetrics"
-    def generateKotlinAPI = task("$gleanTaskNamePrefix${variant.name.capitalize()}", type: Exec) {
+    def generateKotlinAPI = task("${gleanTaskNamePrefix}SourceFor${variant.name.capitalize()}", type: Exec) {
         description = "Generate the Kotlin code for the Metrics API"
 
         if (project.ext.has("allowMetricsFromAAR")) {
@@ -265,29 +265,23 @@ ext.gleanGenerateMetricsAPI = {
         }
     }
 
-    // Only attach the generation task if the metrics file is available or we're requested
-    // to fetch them from AAR files. We don't need to fail hard otherwise, as some 3rd party
-    // project might just want metrics included in Glean and nothing more.
-    if (file("$projectDir/metrics.yaml").exists()
-        || file("$projectDir/pings.yaml").exists()
-        || project.ext.has("allowMetricsFromAAR")) {
-        // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
-        // searching for "registerJavaGeneratingTask", and finding
-        // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
-        // The added directory doesn't appear in the paths listed by the
-        // `sourceSets` task, for reasons unknown.
-        variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
-    }
-}
-
-// Generate the Metrics docs, if requested.
-if (project.ext.has("gleanGenerateMarkdownDocs")) {
-    task gleanGenerateMetricsDocs(type: Exec) {
+    // Create the task for generating Glean SDK docs.
+    def generateDocsTask = task("${gleanTaskNamePrefix}DocsFor${variant.name.capitalize()}", type: Exec) {
         description = "Generate the Markdown docs for the collected metrics"
 
         def gleanDocsDirectory = "$projectDir/docs"
         if (project.ext.has("gleanDocsDirectory")) {
             gleanDocsDirectory = project.ext.get("gleanDocsDirectory")
+        }
+
+        if (project.ext.has("allowMetricsFromAAR")) {
+            // This is sufficiently lazy to be valid at configuration time.  See the model at
+            // https://github.com/google/protobuf-gradle-plugin/blob/6d99a421c8d15710045e4e8d31a3af6cb0cc3b70/src/main/groovy/com/google/protobuf/gradle/ProtobufPlugin.groovy#L270-L277
+            inputs.files variant.compileConfiguration.incoming.artifactView {
+                attributes {
+                    it.attribute(ArtifactAttributes.ARTIFACT_FORMAT, 'glean-metrics-yaml')
+                }
+            }.files
         }
 
         outputs.dir gleanDocsDirectory
@@ -306,9 +300,21 @@ if (project.ext.has("gleanGenerateMarkdownDocs")) {
         args "$projectDir/metrics.yaml"
         args "$projectDir/pings.yaml"
 
+        // If we're building the Glean library itself (rather than an
+        // application using Glean) pass the --allow-reserved flag so we can
+        // use metrics in the "glean..." category
+        if (project.name == 'service-glean' || project.ext.has("allowGleanInternal")) {
+            args "--allow-reserved"
+        }
+
         doFirst {
-            inputs.files.forEach{ file ->
-                project.logger.lifecycle("Glean SDK - generating docs for ${file.path} in $gleanDocsDirectory")
+            // Add the potential 'metrics.yaml' files at evaluation-time, rather than
+            // configuration-time. Otherwise the Gradle build will fail.
+            if (project.ext.has("allowMetricsFromAAR")) {
+                inputs.files.forEach{ file ->
+                    project.logger.lifecycle("Glean SDK - generating docs for ${file.path} in $gleanDocsDirectory")
+                    args file.path
+                }
             }
         }
 
@@ -323,17 +329,30 @@ if (project.ext.has("gleanGenerateMarkdownDocs")) {
         }
     }
 
-    // Attach the docs generation task to the code generation task, to make sure
-    // we generate docs, if we're asked for it.
-    tasks.whenTaskAdded { task ->
-        if (task.name.startsWith(gleanTaskNamePrefix)) {
-            task.dependsOn(gleanGenerateMetricsDocs)
+    // Only attach the generation task if the metrics file is available or we're requested
+    // to fetch them from AAR files. We don't need to fail hard otherwise, as some 3rd party
+    // project might just want metrics included in Glean and nothing more.
+    if (file("$projectDir/metrics.yaml").exists()
+        || file("$projectDir/pings.yaml").exists()
+        || project.ext.has("allowMetricsFromAAR")) {
+        // Generate the Metrics docs, if requested.
+        if (project.ext.has("gleanGenerateMarkdownDocs")) {
+            // Attach the docs generation task to the code generation task, to make sure
+            // we generate docs, if we're asked for it.
+            generateKotlinAPI.dependsOn(generateDocsTask)
         }
+
+        // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
+        // searching for "registerJavaGeneratingTask", and finding
+        // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
+        // The added directory doesn't appear in the paths listed by the
+        // `sourceSets` task, for reasons unknown.
+        variant.registerJavaGeneratingTask(generateKotlinAPI, new File(sourceOutputDir))
     }
 }
 
 if (android.hasProperty('applicationVariants')) {
-    android.applicationVariants.all(ext.gleanGenerateMetricsAPI)
+    android.applicationVariants.all(ext.gleanAttachGeneratingTasks)
 } else {
-    android.libraryVariants.all(ext.gleanGenerateMetricsAPI)
+    android.libraryVariants.all(ext.gleanAttachGeneratingTasks)
 }

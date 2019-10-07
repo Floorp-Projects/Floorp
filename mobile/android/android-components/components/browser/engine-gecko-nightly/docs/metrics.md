@@ -18,6 +18,7 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
+| gfx.composite_time |[timing_distribution](https://mozilla.github.io/glean/book/user/metrics/timing_distribution.html) |The time taken to composite a frame. On non-webrender this is the time taken in `CompositorBridgeParent::CompositeToTarget()`. On webrender, this is the time taken from the start of `WebRenderBridgeParent::CompositeToTarget()`, until the render thread has rendered the frame (in `RenderThread::HandleFrameOneDoc()`).  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1580129#c7)||never |
 | test.glean.geckoview.streaming |[timing_distribution](https://mozilla.github.io/glean/book/user/metrics/timing_distribution.html) |A test-only, disabled metric. This is required to guarantee that a `GleanGeckoHistogramMapping` is always generated, even though the GeckoView AAR exports no metric. Please note that the data-review field below contains no review, since this metric is disabled and not allowed to collect any data.  |[1](https://bugzilla.mozilla.org/show_bug.cgi?id=1566374)||never |
 
 
