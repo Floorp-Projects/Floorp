@@ -12,18 +12,21 @@
 
 @implementation nsTouchBar
 
-static NSTouchBarItemIdentifier CustomButtonIdentifier = @"com.mozilla.firefox.touchbar.button";
-static NSTouchBarItemIdentifier CustomMainButtonIdentifier =
-    @"com.mozilla.firefox.touchbar.mainbutton";
-static NSTouchBarItemIdentifier ScrubberIdentifier = @"com.mozilla.firefox.touchbar.scrubber";
+static const NSTouchBarItemIdentifier BaseIdentifier = @"com.mozilla.firefox.touchbar";
 
 // Non-JS scrubber implemention for the Share Scrubber,
 // since it is defined by an Apple API.
 static NSTouchBarItemIdentifier ShareScrubberIdentifier =
-    [ScrubberIdentifier stringByAppendingPathExtension:@"share"];
+    [TouchBarInput nativeIdentifierWithType:@"scrubber" withKey:@"share"];
 
 // Used to tie action strings to buttons.
 static char sIdentifierAssociationKey;
+
+static const NSArray<NSString*>* kAllowedInputTypes = @[
+  @"button",
+  @"mainButton",
+  @"scrubber",
+];
 
 // The system default width for Touch Bar inputs is 128px. This is double.
 #define MAIN_BUTTON_WIDTH 256
@@ -31,53 +34,70 @@ static char sIdentifierAssociationKey;
 #pragma mark - NSTouchBarDelegate
 
 - (instancetype)init {
+  return [self initWithInputs:nil];
+}
+
+- (instancetype)initWithInputs:(NSMutableArray<TouchBarInput*>*)aInputs {
   if ((self = [super init])) {
     mTouchBarHelper = do_GetService(NS_TOUCHBARHELPER_CID);
     if (!mTouchBarHelper) {
+      NS_ERROR("Unable to create Touch Bar Helper.");
       return nil;
     }
 
     self.delegate = self;
-    // This customization identifier is how users' custom layouts are saved by macOS.
-    // If this changes, all users' layouts would be reset to the default layout.
-    self.customizationIdentifier = @"com.mozilla.firefox.touchbar.defaultbar";
     self.mappedLayoutItems = [NSMutableDictionary dictionary];
-    nsCOMPtr<nsIArray> allItems;
+    self.customizationAllowedItemIdentifiers = nil;
 
-    nsresult rv = mTouchBarHelper->GetAllItems(getter_AddRefs(allItems));
-    if (NS_FAILED(rv) || !allItems) {
-      return nil;
-    }
+    if (!aInputs) {
+      // This customization identifier is how users' custom layouts are saved by macOS.
+      // If this changes, all users' layouts would be reset to the default layout.
+      self.customizationIdentifier = [BaseIdentifier stringByAppendingPathExtension:@"defaultbar"];
+      nsCOMPtr<nsIArray> allItems;
 
-    uint32_t itemCount = 0;
-    allItems->GetLength(&itemCount);
-    // This is copied to self.customizationAllowedItemIdentifiers. Required since
-    // [self.mappedItems allKeys] does not preserve order.
-    // One slot is added for the spacer item.
-    NSMutableArray* orderedIdentifiers = [NSMutableArray arrayWithCapacity:itemCount + 1];
-    for (uint32_t i = 0; i < itemCount; ++i) {
-      nsCOMPtr<nsITouchBarInput> input = do_QueryElementAt(allItems, i);
-      if (!input) {
-        continue;
+      nsresult rv = mTouchBarHelper->GetAllItems(getter_AddRefs(allItems));
+      if (NS_FAILED(rv) || !allItems) {
+        return nil;
       }
 
-      TouchBarInput* convertedInput = [[TouchBarInput alloc] initWithXPCOM:input];
+      uint32_t itemCount = 0;
+      allItems->GetLength(&itemCount);
+      // This is copied to self.customizationAllowedItemIdentifiers.
+      // Required since [self.mappedItems allKeys] does not preserve order.
+      // One slot is added for the spacer item.
+      NSMutableArray* orderedIdentifiers = [NSMutableArray arrayWithCapacity:itemCount + 1];
+      for (uint32_t i = 0; i < itemCount; ++i) {
+        nsCOMPtr<nsITouchBarInput> input = do_QueryElementAt(allItems, i);
+        if (!input) {
+          continue;
+        }
 
-      // Add new input to dictionary for lookup of properties in delegate.
-      self.mappedLayoutItems[[convertedInput nativeIdentifier]] = convertedInput;
-      orderedIdentifiers[i] = [convertedInput nativeIdentifier];
+        TouchBarInput* convertedInput = [[TouchBarInput alloc] initWithXPCOM:input];
+
+        // Add new input to dictionary for lookup of properties in delegate.
+        self.mappedLayoutItems[[convertedInput nativeIdentifier]] = convertedInput;
+        orderedIdentifiers[i] = [convertedInput nativeIdentifier];
+      }
+      [orderedIdentifiers addObject:@"NSTouchBarItemIdentifierFlexibleSpace"];
+      self.customizationAllowedItemIdentifiers = [orderedIdentifiers copy];
+
+      NSArray* defaultItemIdentifiers = @[
+        [TouchBarInput nativeIdentifierWithType:@"button" withKey:@"back"],
+        [TouchBarInput nativeIdentifierWithType:@"button" withKey:@"forward"],
+        [TouchBarInput nativeIdentifierWithType:@"button" withKey:@"reload"],
+        [TouchBarInput nativeIdentifierWithType:@"mainButton" withKey:@"open-location"],
+        [TouchBarInput nativeIdentifierWithType:@"button" withKey:@"new-tab"],
+        ShareScrubberIdentifier
+      ];
+      self.defaultItemIdentifiers = [defaultItemIdentifiers copy];
+    } else {
+      NSMutableArray* defaultItemIdentifiers = [NSMutableArray arrayWithCapacity:[aInputs count]];
+      for (TouchBarInput* input in aInputs) {
+        self.mappedLayoutItems[[input nativeIdentifier]] = input;
+        [defaultItemIdentifiers addObject:[input nativeIdentifier]];
+      }
+      self.defaultItemIdentifiers = [defaultItemIdentifiers copy];
     }
-    [orderedIdentifiers addObject:@"NSTouchBarItemIdentifierFlexibleSpace"];
-
-    NSArray* defaultItemIdentifiers = @[
-      [CustomButtonIdentifier stringByAppendingPathExtension:@"back"],
-      [CustomButtonIdentifier stringByAppendingPathExtension:@"forward"],
-      [CustomButtonIdentifier stringByAppendingPathExtension:@"reload"],
-      [CustomMainButtonIdentifier stringByAppendingPathExtension:@"open-location"],
-      [CustomButtonIdentifier stringByAppendingPathExtension:@"new-tab"], ShareScrubberIdentifier
-    ];
-    self.defaultItemIdentifiers = [defaultItemIdentifiers copy];
-    self.customizationAllowedItemIdentifiers = [orderedIdentifiers copy];
   }
 
   return self;
@@ -98,7 +118,20 @@ static char sIdentifierAssociationKey;
 
 - (NSTouchBarItem*)touchBar:(NSTouchBar*)aTouchBar
       makeItemForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
-  if ([aIdentifier hasPrefix:ScrubberIdentifier]) {
+  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
+
+  if (!input) {
+    return nil;
+  }
+
+  // Checking to see if our new item is of an accepted type.
+  if (![kAllowedInputTypes
+          containsObject:[[[input type] componentsSeparatedByString:@"-"] lastObject]]) {
+    return nil;
+  }
+
+  if ([[input type] hasSuffix:@"scrubber"]) {
+    // We check the identifier rather than the type here as a special case.
     if (![aIdentifier isEqualToString:ShareScrubberIdentifier]) {
       // We're only supporting the Share scrubber for now.
       return nil;
@@ -106,19 +139,17 @@ static char sIdentifierAssociationKey;
     return [self makeShareScrubberForIdentifier:aIdentifier];
   }
 
+  // Our new item, which will be initialized depending on aIdentifier.
+  NSCustomTouchBarItem* newItem = [[NSCustomTouchBarItem alloc] initWithIdentifier:aIdentifier];
+
   // The cases of a button or main button require the same setup.
   NSButton* button = [NSButton buttonWithTitle:@"" target:self action:@selector(touchBarAction:)];
-  NSCustomTouchBarItem* item = [[NSCustomTouchBarItem alloc] initWithIdentifier:aIdentifier];
-  item.view = button;
+  newItem.view = button;
 
-  TouchBarInput* input = self.mappedLayoutItems[aIdentifier];
-  if ([aIdentifier hasPrefix:CustomButtonIdentifier]) {
-    return [self updateButton:item input:input];
-  } else if ([aIdentifier hasPrefix:CustomMainButtonIdentifier]) {
-    return [self updateMainButton:item input:input];
+  if ([[input type] hasSuffix:@"mainButton"]) {
+    return [self updateMainButton:newItem input:input];
   }
-
-  return nil;
+  return [self updateButton:newItem input:input];
 }
 
 - (void)updateItem:(TouchBarInput*)aInput {
@@ -126,9 +157,9 @@ static char sIdentifierAssociationKey;
   if (!item) {
     return;
   }
-  if ([[aInput nativeIdentifier] hasPrefix:CustomButtonIdentifier]) {
+  if ([[aInput type] hasSuffix:@"button"]) {
     [self updateButton:(NSCustomTouchBarItem*)item input:aInput];
-  } else if ([[aInput nativeIdentifier] hasPrefix:CustomMainButtonIdentifier]) {
+  } else if ([[aInput type] hasSuffix:@"mainButton"]) {
     [self updateMainButton:(NSCustomTouchBarItem*)item input:aInput];
   }
 
@@ -236,13 +267,14 @@ static char sIdentifierAssociationKey;
 
   for (NSTouchBarItemIdentifier identifier in self.mappedLayoutItems) {
     TouchBarInput* input = self.mappedLayoutItems[identifier];
-    RefPtr<nsTouchBarInputIcon> icon = [input icon];
-    if (icon) {
-      icon->ReleaseJSObjects();
+    if (!input) {
+      continue;
     }
     [input setCallback:nil];
     [input setDocument:nil];
     [input setImageURI:nil];
+
+    [input releaseJSObjects];
   }
 }
 
@@ -319,7 +351,7 @@ static char sIdentifierAssociationKey;
   return mDisabled;
 }
 - (NSTouchBarItemIdentifier)nativeIdentifier {
-  return mNativeIdentifier;
+  return [TouchBarInput nativeIdentifierWithType:mType withKey:mKey];
 }
 - (nsCOMPtr<nsITouchBarInputCallback>)callback {
   return mCallback;
@@ -329,6 +361,9 @@ static char sIdentifierAssociationKey;
 }
 - (BOOL)isIconPositionSet {
   return mIsIconPositionSet;
+}
+- (NSMutableArray<TouchBarInput*>*)children {
+  return mChildren;
 }
 - (void)setKey:(NSString*)aKey {
   [aKey retain];
@@ -366,12 +401,6 @@ static char sIdentifierAssociationKey;
   mDisabled = aDisabled;
 }
 
-- (void)setNativeIdentifier:(NSTouchBarItemIdentifier)aNativeIdentifier {
-  [aNativeIdentifier retain];
-  [mNativeIdentifier release];
-  mNativeIdentifier = aNativeIdentifier;
-}
-
 - (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback {
   mCallback = aCallback;
 }
@@ -388,6 +417,16 @@ static char sIdentifierAssociationKey;
   mIsIconPositionSet = aIsIconPositionSet;
 }
 
+- (void)setChildren:(NSMutableArray<TouchBarInput*>*)aChildren {
+  [aChildren retain];
+  for (TouchBarInput* child in mChildren) {
+    [child releaseJSObjects];
+  }
+  [mChildren removeAllObjects];
+  [mChildren release];
+  mChildren = aChildren;
+}
+
 - (id)initWithKey:(NSString*)aKey
             title:(NSString*)aTitle
          imageURI:(nsCOMPtr<nsIURI>)aImageURI
@@ -395,7 +434,8 @@ static char sIdentifierAssociationKey;
          callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
             color:(uint32_t)aColor
          disabled:(BOOL)aDisabled
-         document:(RefPtr<Document>)aDocument {
+         document:(RefPtr<Document>)aDocument
+         children:(nsCOMPtr<nsIArray>)aChildren {
   if (self = [super init]) {
     [self setKey:aKey];
     [self setTitle:aTitle];
@@ -404,29 +444,28 @@ static char sIdentifierAssociationKey;
     [self setCallback:aCallback];
     [self setDocument:aDocument];
     [self setIconPositionSet:false];
+    [self setDisabled:aDisabled];
     if (aColor) {
       [self setColor:[NSColor colorWithDisplayP3Red:((aColor >> 16) & 0xFF) / 255.0
                                               green:((aColor >> 8) & 0xFF) / 255.0
                                                blue:((aColor)&0xFF) / 255.0
                                               alpha:1.0]];
     }
-    [self setDisabled:aDisabled];
-
-    NSTouchBarItemIdentifier TypeIdentifier = @"";
-    if ([aType isEqualToString:@"scrubber"]) {
-      TypeIdentifier = ScrubberIdentifier;
-    } else if ([aType isEqualToString:@"mainButton"]) {
-      TypeIdentifier = CustomMainButtonIdentifier;
-    } else {
-      TypeIdentifier = CustomButtonIdentifier;
-    }
-
-    if (!aKey) {
-      [self setNativeIdentifier:TypeIdentifier];
-    } else if ([aKey isEqualToString:@"share"]) {
-      [self setNativeIdentifier:[TypeIdentifier stringByAppendingPathExtension:aKey]];
-    } else {
-      [self setNativeIdentifier:[TypeIdentifier stringByAppendingPathExtension:aKey]];
+    if (aChildren) {
+      uint32_t itemCount = 0;
+      aChildren->GetLength(&itemCount);
+      NSMutableArray* orderedChildren = [NSMutableArray arrayWithCapacity:itemCount];
+      for (uint32_t i = 0; i < itemCount; ++i) {
+        nsCOMPtr<nsITouchBarInput> child = do_QueryElementAt(aChildren, i);
+        if (!child) {
+          continue;
+        }
+        TouchBarInput* convertedChild = [[TouchBarInput alloc] initWithXPCOM:child];
+        if (convertedChild) {
+          orderedChildren[i] = convertedChild;
+        }
+      }
+      [self setChildren:orderedChildren];
     }
   }
 
@@ -482,6 +521,12 @@ static char sIdentifierAssociationKey;
     return nil;
   }
 
+  nsCOMPtr<nsIArray> children;
+  rv = aInput->GetChildren(getter_AddRefs(children));
+  if (NS_FAILED(rv)) {
+    return nil;
+  }
+
   return [self initWithKey:nsCocoaUtils::ToNSString(keyStr)
                      title:nsCocoaUtils::ToNSString(titleStr)
                   imageURI:imageURI
@@ -489,7 +534,20 @@ static char sIdentifierAssociationKey;
                   callback:callback
                      color:colorInt
                   disabled:(BOOL)disabled
-                  document:document];
+                  document:document
+                  children:children];
+}
+
+- (void)releaseJSObjects {
+  if (mIcon) {
+    mIcon->ReleaseJSObjects();
+  }
+  mCallback = nil;
+  mImageURI = nil;
+  mDocument = nil;
+  for (TouchBarInput* child in mChildren) {
+    [child releaseJSObjects];
+  }
 }
 
 - (void)dealloc {
@@ -501,8 +559,18 @@ static char sIdentifierAssociationKey;
   [mTitle release];
   [mType release];
   [mColor release];
-  [mNativeIdentifier release];
+  [mChildren removeAllObjects];
+  [mChildren release];
   [super dealloc];
+}
+
++ (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey {
+  NSTouchBarItemIdentifier identifier;
+  identifier = [BaseIdentifier stringByAppendingPathExtension:aType];
+  if (aKey) {
+    identifier = [identifier stringByAppendingPathExtension:aKey];
+  }
+  return identifier;
 }
 
 @end
