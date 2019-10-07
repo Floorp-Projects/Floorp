@@ -1494,8 +1494,8 @@ BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
-    const FieldOrRootContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const FieldOrRootContext& context,
+    AutoTaggedTuple& guard) {
   return context.match(
       [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
           -> JS::Result<Ok> {
@@ -1511,8 +1511,8 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
-    const FieldOrListContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const FieldOrListContext& context,
+    AutoTaggedTuple& guard) {
   return context.match(
       [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
           -> JS::Result<Ok> {
@@ -1529,24 +1529,21 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
-    const RootContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const RootContext& context, AutoTaggedTuple& guard) {
   // For the moment, the format hardcodes `Script` as root.
   tag = BinASTKind::Script;
   return Ok();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
-    const ListContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const ListContext& context, AutoTaggedTuple& guard) {
   // This tuple is an element in a list we're currently reading.
   MOZ_TRY_VAR(tag, readTagFromTable(context.position));
   return Ok();
 }
 
 JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
-    const FieldContext& context, AutoTaggedTuple& guard) {
+    BinASTKind& tag, const FieldContext& context, AutoTaggedTuple& guard) {
   // This tuple is the value of the field we're currently reading.
   MOZ_TRY_VAR(tag, readTagFromTable(context.position));
   return Ok();

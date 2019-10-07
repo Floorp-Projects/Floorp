@@ -118,7 +118,6 @@ hpp:
 
         using Tokenizer = Tok;
 
-        using BinASTFields = typename Tokenizer::BinASTFields;
         using AutoList = typename Tokenizer::AutoList;
         using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
         using Chars = typename Tokenizer::Chars;

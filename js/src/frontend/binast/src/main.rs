@@ -548,11 +548,11 @@ enum MethodCallKind {
 
 /// Fixed parameter of interface method.
 const INTERFACE_PARAMS: &str =
-    "const size_t start, const BinASTKind kind, const BinASTFields& fields";
+    "const size_t start, const BinASTKind kind";
 
 /// Fixed arguments of interface method.
 const INTERFACE_ARGS: &str =
-    "start, kind, fields";
+    "start, kind";
 
 /// The name of the toplevel interface for the script.
 const TOPLEVEL_INTERFACE: &str =
@@ -2096,11 +2096,10 @@ impl CPPExporter {
 {first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
     const auto start = tokenizer_->offset();
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
 
 {call}
 
@@ -2328,10 +2327,9 @@ impl CPPExporter {
                 buffer.push_str(&format!("{first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -2385,10 +2383,9 @@ impl CPPExporter {
                 buffer.push_str(&format!("{first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -2542,10 +2539,9 @@ impl CPPExporter {
             buffer.push_str(&format!("{first_line}
 {{
     BinASTKind kind;
-    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, context, guard));
+    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context, guard));
     if (MOZ_UNLIKELY(kind != BinASTKind::{kind})) {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
@@ -2575,16 +2571,9 @@ impl CPPExporter {
         }
 
         // Generate aux method
-        let number_of_fields = interface.contents().fields().len();
         let first_line = self.get_method_definition_start(name, inner_prefix,
                                                           INTERFACE_PARAMS,
                                                           &extra_params);
-
-        let fields_type_list = format!("{{ {} }}", interface.contents()
-            .fields()
-            .iter()
-            .map(|field| format!("BinASTField::{}", field.name().to_cpp_enum_case()))
-            .format(", "));
 
         let mut fields_implem = String::new();
         for field in interface.contents().fields() {
@@ -2778,29 +2767,15 @@ impl CPPExporter {
                 first_line = first_line,
             ));
         } else {
-            let check_fields = if number_of_fields == 0 {
-                format!("MOZ_TRY(tokenizer_->checkFields0(kind, fields));")
-            } else {
-                // The following strategy is designed for old versions of clang.
-                format!("
-#if defined(DEBUG)
-    const BinASTField expected_fields[{number_of_fields}] = {fields_type_list};
-    MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
-#endif // defined(DEBUG)",
-                    fields_type_list = fields_type_list,
-                    number_of_fields = number_of_fields)
-            };
             buffer.push_str(&format!("{first_line}
 {{
     MOZ_ASSERT(kind == BinASTKind::{kind});
     BINJS_TRY(CheckRecursionLimit(cx_));
-{check_fields}
 {pre}{fields_implem}
 {post}    return result;
 }}
 
 ",
-                check_fields = check_fields,
                 fields_implem = fields_implem,
                 pre = init.newline_if_not_empty(),
                 post = build_result.newline_if_not_empty(),
