@@ -266,6 +266,10 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
 already_AddRefed<gfx::SourceSurface> CanvasChild::WrapSurface(
     const RefPtr<gfx::SourceSurface>& aSurface) {
   MOZ_ASSERT(aSurface);
+  if (!mRecorder) {
+    return nullptr;
+  }
+
   return MakeAndAddRef<SourceSurfaceCanvasRecording>(aSurface, this, mRecorder);
 }
 
