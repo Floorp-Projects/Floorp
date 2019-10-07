@@ -40,5 +40,8 @@ module.exports = {
   moduleNameMapper: {
     "\\.css$": "<rootDir>/src/test/__mocks__/styleMock.js",
     "\\.svg$": "<rootDir>/src/test/__mocks__/svgMock.js",
+    "^Services": "<rootDir>/src/test/fixtures/Services",
+    // Map all require("devtools/...") to the real devtools root.
+    "^devtools\\/(.*)": "<rootDir>/../../$1",
   },
 };
