@@ -1364,13 +1364,13 @@ void BinASTTokenReaderContext::traceMetadata(JSTracer* trc) {
 }
 
 MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&>
-BinASTTokenReaderContext::raiseInvalidValue(const Context&) {
+BinASTTokenReaderContext::raiseInvalidValue() {
   errorReporter_->errorNoOffset(JSMSG_BINAST, "Invalid value");
   return cx_->alreadyReportedError();
 }
 
 MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&>
-BinASTTokenReaderContext::raiseNotInPrelude(const Context&) {
+BinASTTokenReaderContext::raiseNotInPrelude() {
   errorReporter_->errorNoOffset(JSMSG_BINAST, "Value is not in prelude");
   return cx_->alreadyReportedError();
 }
@@ -1391,23 +1391,21 @@ struct ExtractBinASTInterfaceAndFieldMatcher {
 };
 
 struct TagReader {
-  using Context = BinASTTokenReaderBase::Context;
   using BitBuffer = BinASTTokenReaderContext::BitBuffer;
 
-  const Context& context;
   const HuffmanLookup bits;
   BitBuffer& bitBuffer;
   BinASTTokenReaderContext& owner;
-  TagReader(const Context& context, const HuffmanLookup bits,
-            BitBuffer& bitBuffer, BinASTTokenReaderContext& owner)
-      : context(context), bits(bits), bitBuffer(bitBuffer), owner(owner) {}
+  TagReader(const HuffmanLookup bits, BitBuffer& bitBuffer,
+            BinASTTokenReaderContext& owner)
+      : bits(bits), bitBuffer(bitBuffer), owner(owner) {}
   JS::Result<BinASTKind> operator()(
       const HuffmanTableIndexedSymbolsSum& specialized) {
     // We're entering either a single interface or a sum.
     const auto lookup = specialized.lookup(bits);
     bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
     if (!lookup.value) {
-      return owner.raiseInvalidValue(context);
+      return owner.raiseInvalidValue();
     }
     return *lookup.value;
   }
@@ -1417,7 +1415,7 @@ struct TagReader {
     const auto lookup = specialized.lookup(bits);
     bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
     if (!lookup.value) {
-      return owner.raiseInvalidValue(context);
+      return owner.raiseInvalidValue();
     }
     return *lookup.value;
   }
@@ -1428,91 +1426,100 @@ struct TagReader {
 };
 
 JS::Result<BinASTKind> BinASTTokenReaderContext::readTagFromTable(
-    const Context& context) {
+    const BinASTInterfaceAndField& identity) {
   // Extract the table.
-  BinASTInterfaceAndField identity =
-      context.match(ExtractBinASTInterfaceAndFieldMatcher());
   const auto& table =
       dictionary.tableForField(NormalizedInterfaceAndField(identity));
   BINJS_MOZ_TRY_DECL(bits,
                      (bitBuffer.getHuffmanLookup<Compression::No>(*this)));
-  return table.match(TagReader(context, bits, bitBuffer, *this));
+  return table.match(TagReader(bits, bitBuffer, *this));
 }
 
 template <typename Table>
 JS::Result<typename Table::Contents>
-BinASTTokenReaderContext::readFieldFromTable(const Context& context) {
+BinASTTokenReaderContext::readFieldFromTable(
+    const BinASTInterfaceAndField& identity) {
   // Extract the table.
-  BinASTInterfaceAndField identity =
-      context.match(ExtractBinASTInterfaceAndFieldMatcher());
   const auto& table =
       dictionary.tableForField(NormalizedInterfaceAndField(identity));
   if (!table.is<Table>()) {
-    return raiseNotInPrelude(context);
+    return raiseNotInPrelude();
   }
   BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
   const auto lookup = table.as<Table>().lookup(bits);
 
   bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
-    return raiseInvalidValue(context);
+    return raiseInvalidValue();
   }
   return *lookup.value;
 }
 
-JS::Result<bool> BinASTTokenReaderContext::readBool(const Context& context) {
-  return readFieldFromTable<HuffmanTableIndexedSymbolsBool>(context);
+JS::Result<bool> BinASTTokenReaderContext::readBool(
+    const FieldContext& context) {
+  return readFieldFromTable<HuffmanTableIndexedSymbolsBool>(context.position);
 }
 
 JS::Result<double> BinASTTokenReaderContext::readDouble(
-    const Context& context) {
-  return readFieldFromTable<HuffmanTableExplicitSymbolsF64>(context);
+    const FieldContext& context) {
+  return readFieldFromTable<HuffmanTableExplicitSymbolsF64>(context.position);
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom(
-    const Context& context) {
+    const FieldContext& context) {
   return readFieldFromTable<HuffmanTableIndexedSymbolsOptionalLiteralString>(
-      context);
+      context.position);
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(const Context& context) {
-  return readFieldFromTable<HuffmanTableIndexedSymbolsLiteralString>(context);
+JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(
+    const FieldContext& context) {
+  return readFieldFromTable<HuffmanTableIndexedSymbolsLiteralString>(
+      context.position);
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeIdentifierName(
-    const Context& context) {
+    const FieldContext& context) {
   return readMaybeAtom(context);
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readIdentifierName(
-    const Context& context) {
+    const FieldContext& context) {
   return readAtom(context);
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readPropertyKey(
-    const Context& context) {
+    const FieldContext& context) {
   return readAtom(context);
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out, const Context&) {
+JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out,
+                                                   const FieldContext&) {
   return raiseError("readChars is not implemented in BinASTTokenReaderContext");
 }
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
-    const Context& context) {
-  BINJS_MOZ_TRY_DECL(
-      result,
-      readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(context));
+    const ListContext& context) {
+  BINJS_MOZ_TRY_DECL(result,
+                     readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(
+                         context.position));
+  return result;
+}
+
+JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
+    const FieldContext& context) {
+  BINJS_MOZ_TRY_DECL(result,
+                     readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(
+                         context.position));
   return result;
 }
 
 JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
-    const Context& context) {
-  return readFieldFromTable<HuffmanTableExplicitSymbolsU32>(context);
+    const FieldContext& context) {
+  return readFieldFromTable<HuffmanTableExplicitSymbolsU32>(context.position);
 }
 
 JS::Result<BinASTTokenReaderBase::SkippableSubTree>
-BinASTTokenReaderContext::readSkippableSubTree(const Context&) {
+BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
   return raiseError("Not Yet Implemented");
 }
 
@@ -1525,26 +1532,48 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
         tag = BinASTKind::Script;
         return Ok();
       },
-      [this, context,
-       &tag](const BinASTTokenReaderBase::ListContext&) -> JS::Result<Ok> {
+      [this, &tag](const BinASTTokenReaderBase::ListContext& asListContext)
+          -> JS::Result<Ok> {
         // This tuple is an element in a list we're currently reading.
-        MOZ_TRY_VAR(tag, readTagFromTable(context));
+        MOZ_TRY_VAR(tag, readTagFromTable(asListContext.position));
         return Ok();
       },
-      [this, context,
-       &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
+      [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
           -> JS::Result<Ok> {
         // This tuple is the value of the field we're currently reading.
-        MOZ_TRY_VAR(tag, readTagFromTable(context));
+        MOZ_TRY_VAR(tag, readTagFromTable(asFieldContext.position));
         return Ok();
       });
 }
 
+JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
+    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
+    const RootContext& context, AutoTaggedTuple& guard) {
+  // For the moment, the format hardcodes `Script` as root.
+  tag = BinASTKind::Script;
+  return Ok();
+}
+
+JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
+    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
+    const ListContext& context, AutoTaggedTuple& guard) {
+  // This tuple is an element in a list we're currently reading.
+  MOZ_TRY_VAR(tag, readTagFromTable(context.position));
+  return Ok();
+}
+
+JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
+    BinASTKind& tag, BinASTTokenReaderContext::BinASTFields&,
+    const FieldContext& context, AutoTaggedTuple& guard) {
+  // This tuple is the value of the field we're currently reading.
+  MOZ_TRY_VAR(tag, readTagFromTable(context.position));
+  return Ok();
+}
+
 JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
-                                                   const Context& context,
+                                                   const ListContext& context,
                                                    AutoList& guard) {
-  const auto identity =
-      context.as<BinASTTokenReaderBase::ListContext>().content;
+  const auto identity = context.content;
   const auto& table = dictionary.tableForListLength(identity);
   BINJS_MOZ_TRY_DECL(bits, bitBuffer.getHuffmanLookup<Compression::No>(*this));
   const auto& tableForLookup =
@@ -1552,7 +1581,7 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   const auto lookup = tableForLookup.lookup(bits);
   bitBuffer.advanceBitBuffer<Compression::No>(lookup.key.bitLength);
   if (!lookup.value) {
-    return raiseInvalidValue(context);
+    return raiseInvalidValue();
   }
   items = *lookup.value;
   return Ok();
