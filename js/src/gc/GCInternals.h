@@ -184,7 +184,6 @@ struct SweepingTracer final : public JS::CallbackTracer {
   bool onScriptEdge(JSScript** scriptp) override;
   bool onLazyScriptEdge(LazyScript** lazyp) override;
   bool onBaseShapeEdge(BaseShape** basep) override;
-  bool onJitCodeEdge(jit::JitCode** jitp) override;
   bool onScopeEdge(Scope** scopep) override;
   bool onRegExpSharedEdge(RegExpShared** sharedp) override;
   bool onBigIntEdge(BigInt** bip) override;
