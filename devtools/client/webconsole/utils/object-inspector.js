@@ -69,6 +69,7 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
     onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
     recordTelemetryEvent: serviceContainer.recordTelemetryEvent,
     openLink: serviceContainer.openLink,
+    sourceMapService: serviceContainer.sourceMapService,
     renderStacktrace: stacktrace =>
       createElement(SmartTrace, {
         key: "stacktrace",
