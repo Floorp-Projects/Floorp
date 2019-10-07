@@ -18,6 +18,7 @@ import type { PauseState } from "./pause";
 import type { PreviewState } from "./preview";
 import type { PendingBreakpointsState } from "../selectors";
 import type { ProjectTextSearchState } from "./project-text-search";
+import type { Record } from "../utils/makeRecord";
 import type { SourcesState } from "./sources";
 import type { SourceActorsState } from "./source-actors";
 import type { TabList } from "./tabs";
@@ -28,7 +29,7 @@ import type { EventListenersState } from "./event-listeners";
 export type State = {
   ast: ASTState,
   breakpoints: BreakpointsState,
-  expressions: ExpressionState,
+  expressions: Record<ExpressionState>,
   eventListenerBreakpoints: EventListenersState,
   threads: ThreadsState,
   fileSearch: FileSearchState,

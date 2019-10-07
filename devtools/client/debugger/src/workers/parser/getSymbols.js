@@ -196,7 +196,7 @@ function extractSymbol(path: SimplePath, symbols, state) {
         property: { name, loc },
       } = callee;
       symbols.callExpressions.push({
-        name,
+        name: name,
         values: args.filter(arg => arg.value).map(arg => arg.value),
         location: loc,
       });
@@ -435,7 +435,8 @@ function getSnippet(
       return expression;
     }
 
-    const prop = extendSnippet(node.name, expression, path, prevPath);
+    const name = node.name;
+    const prop = extendSnippet(name, expression, path, prevPath);
     return prop;
   }
 
@@ -454,7 +455,8 @@ function getSnippet(
   }
 
   if (t.isIdentifier(path)) {
-    return `${path.node.name}.${expression}`;
+    const node = path.node;
+    return `${node.name}.${expression}`;
   }
 
   if (t.isObjectProperty(path)) {
