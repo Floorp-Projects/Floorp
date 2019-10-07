@@ -15646,5 +15646,17 @@
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Whether a child process successfully mapped the User Agent style sheet shared memory buffer at the desired address"
+  },
+  "TLS_DELEGATED_CREDENTIALS_TIME_UNTIL_READY_MS": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["seceng-telemetry@mozilla.com", "kjacobs@mozilla.com"],
+    "expires_in_version": "80",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 2000,
+    "n_buckets": 100,
+    "bug_numbers": [1564179],
+    "description": "milliseconds to complete a TLS handshake that used delegated credentials"
   }
 }
