@@ -123,6 +123,7 @@ class IonCacheIRCompiler;
   _(CompareDoubleResult)                  \
   _(CompareObjectUndefinedNullResult)     \
   _(ArrayJoinResult)                      \
+  _(StoreTypedElement)                    \
   _(CallPrintString)                      \
   _(Breakpoint)                           \
   _(MegamorphicLoadSlotResult)            \
