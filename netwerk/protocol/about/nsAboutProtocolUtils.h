@@ -44,11 +44,9 @@ inline nsresult NS_GetAboutModule(nsIURI* aAboutURI, nsIAboutModule** aModule) {
 }
 
 inline PRTime SecondsToPRTime(uint32_t t_sec) {
-  PRTime t_usec, usec_per_sec;
-  t_usec = t_sec;
-  usec_per_sec = PR_USEC_PER_SEC;
-  return t_usec *= usec_per_sec;
+  return (PRTime)t_sec * PR_USEC_PER_SEC;
 }
+
 inline void PrintTimeString(char* buf, uint32_t bufsize, uint32_t t_sec) {
   PRExplodedTime et;
   PRTime t_usec = SecondsToPRTime(t_sec);
