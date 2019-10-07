@@ -163,7 +163,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   template <size_t N>
   MOZ_MUST_USE JS::Result<Ok> readConst(const char (&value)[N]) {
     updateLatestKnownGood();
-    if (!matchConst(value, false)) {
+    if (MOZ_UNLIKELY(!matchConst(value, false))) {
       return raiseError("Could not find expected literal");
     }
     return Ok();
@@ -185,7 +185,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
     MOZ_ASSERT(value[N - 1] == 0);
     MOZ_ASSERT(!hasRaisedError());
 
-    if (current_ + N - 1 > stop_) {
+    if (MOZ_UNLIKELY(current_ + N - 1 > stop_)) {
       return false;
     }
 
