@@ -18,4 +18,6 @@ GENERATED FILE, DO NOT EDIT
 This code is governed by the BSD license
 This Source Code Form is subject to the terms of the Apache License
 DO NOT EDIT
-
+This program is made available under an ISC-style license.
+under MIT license
+License MIT per upstream
