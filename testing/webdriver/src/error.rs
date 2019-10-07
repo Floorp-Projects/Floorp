@@ -373,31 +373,30 @@ impl From<Box<dyn Error>> for WebDriverError {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::*;
-    use crate::test::check_serialize;
+    use crate::test::assert_ser;
 
     #[test]
     fn test_json_webdriver_error() {
-        let json = r#"{"value":{
-            "error":"unknown error",
-            "message":"foo bar",
-            "stacktrace":"foo\nbar"
-        }}"#;
-        let data = WebDriverError {
+        let json = json!({"value": {
+            "error": "unknown error",
+            "message": "foo bar",
+            "stacktrace": "foo\nbar",
+        }});
+        let error = WebDriverError {
             error: ErrorStatus::UnknownError,
             message: "foo bar".into(),
             stack: "foo\nbar".into(),
             delete_session: true,
         };
 
-        check_serialize(&json, &data);
+        assert_ser(&error, json);
     }
 
     #[test]
     fn test_json_error_status() {
-        let json = format!(r#""unknown error""#);
-        let data = ErrorStatus::UnknownError;
-
-        check_serialize(&json, &data);
+        assert_ser(&ErrorStatus::UnknownError, json!("unknown error"));
     }
 }
