@@ -793,7 +793,8 @@ const proto = {
     if ("value" in desc) {
       retval.writable = desc.writable;
       retval.value = this.hooks.createValueGrip(desc.value);
-    } else if (this._originalDescriptors.has(name)) {
+    } else if (this._originalDescriptors.has(name.toString())) {
+      name = name.toString();
       const watchpointType = this._originalDescriptors.get(name).watchpointType;
       desc = this._originalDescriptors.get(name).desc;
       retval.value = this.hooks.createValueGrip(
