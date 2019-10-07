@@ -2548,7 +2548,8 @@ static bool GuidComparatorIgnoringPresShell(const ScrollableLayerGuid& aOne,
 }
 
 already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
-    const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId) {
+    const LayersId& aLayersId,
+    const ScrollableLayerGuid::ViewID& aScrollId) const {
   MutexAutoLock lock(mMapLock);
   ScrollableLayerGuid guid(aLayersId, 0, aScrollId);
   auto it = mApzcMap.find(guid);
