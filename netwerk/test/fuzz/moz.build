@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'FuzzingStreamListener.cpp',
+    'TestFtpFuzzing.cpp',
     'TestHttpFuzzing.cpp',
     'TestWebsocketFuzzing.cpp',
 ]
@@ -12,6 +14,7 @@ UNIFIED_SOURCES += [
 LOCAL_INCLUDES += [
     '/caps',
     '/netwerk/base',
+    '/netwerk/protocol/ftp',
     '/netwerk/protocol/http',
     '/xpcom/tests/gtest',
 ]
