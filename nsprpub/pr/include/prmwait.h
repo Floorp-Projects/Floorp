@@ -105,7 +105,7 @@ typedef struct PRMWaitClientData PRMWaitClientData;
 **      in the caller's address space where data from an initial read
 **      can be placed. The description may indicate a null interval.
 */
-typedef struct PRRecvWait 
+typedef struct PRRecvWait
 {
     PRCList internal;           /* internal runtime linkages */
 
@@ -372,7 +372,7 @@ NSPR_API(PRStatus) PR_DestroyMWaitEnumerator(PRMWaitEnumerator* enumerator);
 */
 NSPR_API(PRRecvWait*) PR_EnumerateWaitGroup(
     PRMWaitEnumerator *enumerator, const PRRecvWait *previous);
-   
+
 PR_END_EXTERN_C
 
 #endif /* defined(_PRMWAIT_H) */

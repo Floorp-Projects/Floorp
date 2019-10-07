@@ -28,23 +28,23 @@ PR_BEGIN_EXTERN_C
 typedef struct {
     /*
      * The first field defines which version of this structure is in use.
-     * At this time, only version 2 is specified. If this value is not 
+     * At this time, only version 2 is specified. If this value is not
      * 2, you must read no further into the structure.
      */
-    PRInt32    version; 
-  
+    PRInt32    version;
+
     /* for Version 2, this is the body format. */
     PRInt64         buildTime;      /* 64 bits - usecs since midnight, 1/1/1970 */
     char *          buildTimeString;/* a human readable version of the time */
-  
+
     PRUint8   vMajor;               /* Major version of this component */
     PRUint8   vMinor;               /* Minor version of this component */
     PRUint8   vPatch;               /* Patch level of this component */
-  
+
     PRBool          beta;           /* true if this is a beta component */
     PRBool          debug;          /* true if this is a debug component */
     PRBool          special;        /* true if this component is a special build */
-  
+
     char *          filename;       /* The original filename */
     char *          description;    /* description of this component */
     char *          security;       /* level of security in this component */
@@ -76,8 +76,8 @@ typedef struct {
  */
 typedef const PRVersionDescription *(*versionEntryPointType)(void);
 
-/* 
- * Where you declare your libVersionPoint, do it like this: 
+/*
+ * Where you declare your libVersionPoint, do it like this:
  * PR_IMPLEMENT(const PRVersionDescription *) libVersionPoint(void) {
  *  fill it in...
  * }

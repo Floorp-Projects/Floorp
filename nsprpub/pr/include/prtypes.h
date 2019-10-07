@@ -219,7 +219,7 @@ typedef unsigned char PRUint8;
 ** Mozilla C++ code expects the PRInt{N} and int{N}_t types to match (see bug
 ** 634793). If a platform defines int8_t as 'char', but NSPR defines it as
 ** 'signed char', it results in a type mismatch.
-** On such platforms we define PRInt8 as 'char' to avoid the mismatch. 
+** On such platforms we define PRInt8 as 'char' to avoid the mismatch.
 */
 #if (defined(HPUX) && defined(__cplusplus) /* reason 1*/ \
         && !defined(__GNUC__) && __cplusplus < 199707L) \
@@ -515,7 +515,7 @@ typedef unsigned long PRUword;
 ** Fundamental NSPR macros, used nearly everywhere.
 */
 
-#define PR_PUBLIC_API		PR_IMPLEMENT
+#define PR_PUBLIC_API       PR_IMPLEMENT
 
 /*
 ** Macro body brackets so that macros with compound statement definitions

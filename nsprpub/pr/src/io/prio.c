@@ -40,11 +40,11 @@ void _PR_InitIO(void)
 
 #ifdef WIN32
     _pr_stdin = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_INPUT_HANDLE),
-            methods);
+                                 methods);
     _pr_stdout = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_OUTPUT_HANDLE),
-            methods);
+                                  methods);
     _pr_stderr = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_ERROR_HANDLE),
-            methods);
+                                  methods);
 #ifdef WINNT
     _pr_stdin->secret->md.sync_file_io = PR_TRUE;
     _pr_stdout->secret->md.sync_file_io = PR_TRUE;
@@ -88,8 +88,10 @@ PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
     PRFileDesc *result = NULL;
     PR_ASSERT((int) osfd >= PR_StandardInput && osfd <= PR_StandardError);
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
-    
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
+
     switch (osfd)
     {
         case PR_StandardInput: result = _pr_stdin; break;
@@ -107,25 +109,25 @@ PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
     PRFileDesc *fd;
 
 #ifdef XP_UNIX
-	/*
-	 * Assert that the file descriptor is small enough to fit in the
-	 * fd_set passed to select
-	 */
-	PR_ASSERT(osfd < FD_SETSIZE);
+    /*
+     * Assert that the file descriptor is small enough to fit in the
+     * fd_set passed to select
+     */
+    PR_ASSERT(osfd < FD_SETSIZE);
 #endif
     fd = _PR_Getfd();
     if (fd) {
         /* Initialize the members of PRFileDesc and PRFilePrivate */
         fd->methods = methods;
         fd->secret->state = _PR_FILEDESC_OPEN;
-	fd->secret->md.osfd = osfd;
+        fd->secret->md.osfd = osfd;
 #if defined(_WIN64)
         fd->secret->alreadyConnected = PR_FALSE;
         fd->secret->overlappedActive = PR_FALSE;
 #endif
         _PR_MD_INIT_FILEDESC(fd);
     } else {
-	    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
     }
 
     return fd;
@@ -144,62 +146,62 @@ PRLock *_fd_waiting_for_overlapped_done_lock = NULL;
 
 void CheckOverlappedPendingSocketsAreDone()
 {
-  if (!_fd_waiting_for_overlapped_done_lock ||
-      !_fd_waiting_for_overlapped_done) {
-    return;
-  }
-
-  PR_Lock(_fd_waiting_for_overlapped_done_lock);
-
-  PRFileDescList *cur = _fd_waiting_for_overlapped_done;
-  PRFileDescList *previous = NULL;
-  while (cur) {
-    PR_ASSERT(cur->fd->secret->overlappedActive);
-    PRFileDesc *fd = cur->fd;
-    DWORD rvSent;
-    if (GetOverlappedResult((HANDLE)fd->secret->md.osfd, &fd->secret->ol, &rvSent, FALSE) == TRUE) {
-      fd->secret->overlappedActive = PR_FALSE;
-      PR_LOG(_pr_io_lm, PR_LOG_MIN,
-             ("CheckOverlappedPendingSocketsAreDone GetOverlappedResult succeeded\n"));
-    } else {
-      DWORD err = WSAGetLastError();
-      PR_LOG(_pr_io_lm, PR_LOG_MIN,
-             ("CheckOverlappedPendingSocketsAreDone GetOverlappedResult failed %d\n", err));
-      if (err != ERROR_IO_INCOMPLETE) {
-        fd->secret->overlappedActive = PR_FALSE;
-      }
+    if (!_fd_waiting_for_overlapped_done_lock ||
+        !_fd_waiting_for_overlapped_done) {
+        return;
     }
 
-    if (!fd->secret->overlappedActive) {
+    PR_Lock(_fd_waiting_for_overlapped_done_lock);
 
-      _PR_MD_CLOSE_SOCKET(fd->secret->md.osfd);
-      fd->secret->state = _PR_FILEDESC_CLOSED;
+    PRFileDescList *cur = _fd_waiting_for_overlapped_done;
+    PRFileDescList *previous = NULL;
+    while (cur) {
+        PR_ASSERT(cur->fd->secret->overlappedActive);
+        PRFileDesc *fd = cur->fd;
+        DWORD rvSent;
+        if (GetOverlappedResult((HANDLE)fd->secret->md.osfd, &fd->secret->ol, &rvSent, FALSE) == TRUE) {
+            fd->secret->overlappedActive = PR_FALSE;
+            PR_LOG(_pr_io_lm, PR_LOG_MIN,
+                   ("CheckOverlappedPendingSocketsAreDone GetOverlappedResult succeeded\n"));
+        } else {
+            DWORD err = WSAGetLastError();
+            PR_LOG(_pr_io_lm, PR_LOG_MIN,
+                   ("CheckOverlappedPendingSocketsAreDone GetOverlappedResult failed %d\n", err));
+            if (err != ERROR_IO_INCOMPLETE) {
+                fd->secret->overlappedActive = PR_FALSE;
+            }
+        }
+
+        if (!fd->secret->overlappedActive) {
+
+            _PR_MD_CLOSE_SOCKET(fd->secret->md.osfd);
+            fd->secret->state = _PR_FILEDESC_CLOSED;
 #ifdef _PR_HAVE_PEEK_BUFFER
-      if (fd->secret->peekBuffer) {
-        PR_ASSERT(fd->secret->peekBufSize > 0);
-        PR_DELETE(fd->secret->peekBuffer);
-        fd->secret->peekBufSize = 0;
-        fd->secret->peekBytes = 0;
-      }
+            if (fd->secret->peekBuffer) {
+                PR_ASSERT(fd->secret->peekBufSize > 0);
+                PR_DELETE(fd->secret->peekBuffer);
+                fd->secret->peekBufSize = 0;
+                fd->secret->peekBytes = 0;
+            }
 #endif
 
-      PR_FreeFileDesc(fd);
+            PR_FreeFileDesc(fd);
 
-      if (previous) {
-        previous->next = cur->next;
-      } else {
-        _fd_waiting_for_overlapped_done = cur->next;
-      }
-      PRFileDescList *del = cur;
-      cur = cur->next;
-      PR_Free(del);
-    } else {
-      previous = cur;
-      cur = cur->next;
+            if (previous) {
+                previous->next = cur->next;
+            } else {
+                _fd_waiting_for_overlapped_done = cur->next;
+            }
+            PRFileDescList *del = cur;
+            cur = cur->next;
+            PR_Free(del);
+        } else {
+            previous = cur;
+            cur = cur->next;
+        }
     }
-  }
 
-  PR_Unlock(_fd_waiting_for_overlapped_done_lock);
+    PR_Unlock(_fd_waiting_for_overlapped_done_lock);
 }
 #endif
 
@@ -209,11 +211,11 @@ void CheckOverlappedPendingSocketsAreDone()
 PR_IMPLEMENT(PRInt32) PR_Poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
 #if defined(_WIN64) && defined(WIN95)
-  // For each iteration check if TFO overlapped IOs are down.
-  CheckOverlappedPendingSocketsAreDone();
+    // For each iteration check if TFO overlapped IOs are down.
+    CheckOverlappedPendingSocketsAreDone();
 #endif
 
-	return(_PR_MD_PR_POLL(pds, npds, timeout));
+    return(_PR_MD_PR_POLL(pds, npds, timeout));
 }
 
 /*

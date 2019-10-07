@@ -31,21 +31,23 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'n':  /* number to translate */
-            number = opt->value;
-            break;
-        case 'l':  /* number of times to run the tests */
-            loops = atoi(opt->value);
-            break;
-        case 'h':  /* user wants some guidance */
-            Help();  /* so give him an earful */
-            return 2;  /* but not a lot else */
-            break;
-         default:
-            break;
+            case 'n':  /* number to translate */
+                number = opt->value;
+                break;
+            case 'l':  /* number of times to run the tests */
+                loops = atoi(opt->value);
+                break;
+            case 'h':  /* user wants some guidance */
+                Help();  /* so give him an earful */
+                return 2;  /* but not a lot else */
+                break;
+            default:
+                break;
         }
     }
     PL_DestroyOptState(opt);
@@ -67,7 +69,7 @@ static PRIntn PR_CALLBACK RealMain(PRIntn argc, char **argv)
 int main(int argc, char **argv)
 {
     PRIntn rv;
-    
+
     PR_STDIO_INIT();
     rv = PR_Initialize(RealMain, argc, argv, 0);
     return rv;

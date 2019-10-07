@@ -38,21 +38,21 @@ struct PRAlarm {                         /* typedef'd in pralarm.h       */
 
 static PRAlarmID *pr_getNextAlarm(PRAlarm *alarm, PRAlarmID *id)
 {
-/*
- * Puts 'id' back into the sorted list iff it's not NULL.
- * Removes the first element from the list and returns it (or NULL).
- * List is "assumed" to be short.
- *
- * NB: Caller is providing locking
- */
+    /*
+     * Puts 'id' back into the sorted list iff it's not NULL.
+     * Removes the first element from the list and returns it (or NULL).
+     * List is "assumed" to be short.
+     *
+     * NB: Caller is providing locking
+     */
     PRCList *timer;
     PRAlarmID *result = id;
     PRIntervalTime now = PR_IntervalNow();
 
     if (!PR_CLIST_IS_EMPTY(&alarm->timers))
-    {    
+    {
         if (id != NULL)  /* have to put this id back in */
-        {        
+        {
             PRIntervalTime idDelta = now - id->nextNotify;
             timer = alarm->timers.next;
             do
@@ -107,12 +107,15 @@ static void PR_CALLBACK pr_alarmNotifier(void *arg)
         while (why == scan)
         {
             alarm->current = NULL;  /* reset current id */
-            if (alarm->state == alarm_inactive) why = abort;  /* we're toast */
+            if (alarm->state == alarm_inactive) {
+                why = abort;    /* we're toast */
+            }
             else if (why == scan)  /* the dominant case */
             {
                 id = pr_getNextAlarm(alarm, id);  /* even if it's the same */
-                if (id == NULL)  /* there are no alarms set */
+                if (id == NULL) { /* there are no alarms set */
                     (void)PR_WaitCondVar(alarm->cond, PR_INTERVAL_NO_TIMEOUT);
+                }
                 else
                 {
                     pause = id->nextNotify - (PR_IntervalNow() - id->epoch);
@@ -121,8 +124,9 @@ static void PR_CALLBACK pr_alarmNotifier(void *arg)
                         why = notify;  /* set up to do our thing */
                         alarm->current = id;  /* id we're about to schedule */
                     }
-                    else
-                        (void)PR_WaitCondVar(alarm->cond, pause);  /* dally */
+                    else {
+                        (void)PR_WaitCondVar(alarm->cond, pause);    /* dally */
+                    }
                 }
             }
         }
@@ -152,21 +156,31 @@ PR_IMPLEMENT(PRAlarm*) PR_CreateAlarm(void)
     PRAlarm *alarm = PR_NEWZAP(PRAlarm);
     if (alarm != NULL)
     {
-        if ((alarm->lock = PR_NewLock()) == NULL) goto done;
-        if ((alarm->cond = PR_NewCondVar(alarm->lock)) == NULL) goto done;
+        if ((alarm->lock = PR_NewLock()) == NULL) {
+            goto done;
+        }
+        if ((alarm->cond = PR_NewCondVar(alarm->lock)) == NULL) {
+            goto done;
+        }
         alarm->state = alarm_active;
         PR_INIT_CLIST(&alarm->timers);
         alarm->notifier = PR_CreateThread(
-            PR_USER_THREAD, pr_alarmNotifier, alarm,
-            PR_GetThreadPriority(PR_GetCurrentThread()),
-            PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
-        if (alarm->notifier == NULL) goto done;
+                              PR_USER_THREAD, pr_alarmNotifier, alarm,
+                              PR_GetThreadPriority(PR_GetCurrentThread()),
+                              PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+        if (alarm->notifier == NULL) {
+            goto done;
+        }
     }
     return alarm;
 
 done:
-    if (alarm->cond != NULL) PR_DestroyCondVar(alarm->cond);
-    if (alarm->lock != NULL) PR_DestroyLock(alarm->lock);
+    if (alarm->cond != NULL) {
+        PR_DestroyCondVar(alarm->cond);
+    }
+    if (alarm->lock != NULL) {
+        PR_DestroyLock(alarm->lock);
+    }
     PR_DELETE(alarm);
     return NULL;
 }  /* CreateAlarm */
@@ -180,8 +194,9 @@ PR_IMPLEMENT(PRStatus) PR_DestroyAlarm(PRAlarm *alarm)
     rv = PR_NotifyCondVar(alarm->cond);
     PR_Unlock(alarm->lock);
 
-    if (rv == PR_SUCCESS)
+    if (rv == PR_SUCCESS) {
         rv = PR_JoinThread(alarm->notifier);
+    }
     if (rv == PR_SUCCESS)
     {
         PR_DestroyCondVar(alarm->cond);
@@ -204,8 +219,9 @@ PR_IMPLEMENT(PRAlarmID*) PR_SetAlarm(
 
     PRAlarmID *id = PR_NEWZAP(PRAlarmID);
 
-    if (!id)
+    if (!id) {
         return NULL;
+    }
 
     id->alarm = alarm;
     PR_INIT_CLIST(&id->list);
@@ -232,8 +248,9 @@ PR_IMPLEMENT(PRStatus) PR_ResetAlarm(
      * need locking because it can only be called from within the
      * notify routine.
      */
-    if (id != id->alarm->current)
+    if (id != id->alarm->current) {
         return PR_FAILURE;
+    }
     id->period = period;
     id->rate = rate;
     id->accumulator = 1;

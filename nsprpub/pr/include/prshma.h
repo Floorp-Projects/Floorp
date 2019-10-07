@@ -13,7 +13,7 @@
 ** memory described in prshm.h. The intent is to provide a shared
 ** memory that is accessable only by parent and child processes. ...
 ** It's a security thing.
-** 
+**
 ** Depending on the underlying platform, the file-mapped shared memory
 ** may be backed by a file. ... surprise! ... On some platforms, no
 ** real file backs the shared memory. On platforms where the shared
@@ -24,11 +24,11 @@
 ** reading or writing its contents. Further, when all processes
 ** using an anonymous shared memory terminate, the backing file is
 ** deleted. ... If you are not paranoid, you're not paying attention.
-** 
+**
 ** The file-mapped shared memory requires a protocol for the parent
 ** process and child process to share the memory. NSPR provides two
 ** protocols. Use one or the other; don't mix and match.
-** 
+**
 ** In the first protocol, the job of passing the inheritable shared
 ** memory is done via helper-functions with PR_CreateProcess(). In the
 ** second protocol, the parent process is responsible for creating the
@@ -36,7 +36,7 @@
 ** passing a FileMap string. NSPR provides helper functions for
 ** extracting data from the PRFileMap object. ... See the examples
 ** below.
-** 
+**
 ** Both sides should adhere strictly to the protocol for proper
 ** operation. The pseudo-code below shows the use of a file-mapped
 ** shared memory by a parent and child processes. In the examples, the
@@ -46,18 +46,18 @@
 ** First protocol.
 ** Server:
 **
-**   fm = PR_OpenAnonFileMap(dirName, size, FilemapProt); 
-**   addr = PR_MemMap(fm); 
+**   fm = PR_OpenAnonFileMap(dirName, size, FilemapProt);
+**   addr = PR_MemMap(fm);
 **   attr = PR_NewProcessAttr();
 **   PR_ProcessAttrSetInheritableFileMap( attr, fm, shmname );
-**   PR_CreateProcess(Client); 
+**   PR_CreateProcess(Client);
 **   PR_DestroyProcessAttr(attr);
 **   ... yadda ...
 **   PR_MemUnmap( addr );
 **   PR_CloseFileMap(fm);
 **
 **
-** Client: 
+** Client:
 **   ... started by server via PR_CreateProcess()
 **   fm = PR_GetInheritedFileMap( shmname );
 **   addr = PR_MemMap(fm);
@@ -69,16 +69,16 @@
 ** Second Protocol:
 ** Server:
 **
-**   fm = PR_OpenAnonFileMap(dirName, size, FilemapProt); 
+**   fm = PR_OpenAnonFileMap(dirName, size, FilemapProt);
 **   fmstring = PR_ExportFileMapAsString( fm );
-**   addr = PR_MemMap(fm); 
+**   addr = PR_MemMap(fm);
 **    ... application specific technique to pass fmstring to child
 **    ... yadda ... Server uses his own magic to create child
 **   PR_MemUnmap( addr );
 **   PR_CloseFileMap(fm);
 **
 **
-** Client: 
+** Client:
 **   ... started by server via his own magic
 **   ... application specific technique to find fmstring from parent
 **   fm = PR_ImportFileMapFromString( fmstring )
@@ -93,7 +93,7 @@
 ** Note: The second protocol was requested by NelsonB (7/1999); this is
 ** to accomodate servers which already create their own child processes
 ** using platform native methods.
-** 
+**
 */
 
 #ifndef prshma_h___
@@ -123,7 +123,7 @@ PR_BEGIN_EXTERN_C
 **   dirName -- A directory name to contain the anonymous file.
 **   size -- The size of the shared memory
 **   prot -- How the shared memory is mapped. See prio.h
-**   
+**
 ** Outputs:
 **   PRFileMap *
 **
@@ -134,12 +134,12 @@ PR_BEGIN_EXTERN_C
 NSPR_API( PRFileMap *)
 PR_OpenAnonFileMap(
     const char *dirName,
-    PRSize      size, 
+    PRSize      size,
     PRFileMapProtect prot
-);  
+);
 
 /*
-** PR_ProcessAttrSetInheritableFileMap() -- Prepare FileMap for export  
+** PR_ProcessAttrSetInheritableFileMap() -- Prepare FileMap for export
 **   to my children processes via PR_CreateProcess()
 **
 ** Description:
@@ -159,10 +159,10 @@ PR_OpenAnonFileMap(
 **   PRStatus
 **
 */
-NSPR_API(PRStatus) 
-PR_ProcessAttrSetInheritableFileMap( 
+NSPR_API(PRStatus)
+PR_ProcessAttrSetInheritableFileMap(
     PRProcessAttr   *attr,
-    PRFileMap       *fm, 
+    PRFileMap       *fm,
     const char      *shmname
 );
 
@@ -176,7 +176,7 @@ PR_ProcessAttrSetInheritableFileMap(
 **
 ** Inputs:
 **    shmname -- The name provided to PR_ProcessAttrSetInheritableFileMap()
-** 
+**
 ** Outputs:
 **   PRFileMap *
 **
@@ -185,8 +185,8 @@ PR_ProcessAttrSetInheritableFileMap(
 **
 */
 NSPR_API( PRFileMap *)
-PR_GetInheritedFileMap( 
-    const char *shmname 
+PR_GetInheritedFileMap(
+    const char *shmname
 );
 
 /*
@@ -209,7 +209,7 @@ PR_GetInheritedFileMap(
 **
 */
 NSPR_API( PRStatus )
-PR_ExportFileMapAsString( 
+PR_ExportFileMapAsString(
     PRFileMap *fm,
     PRSize    bufsize,
     char      *buf
@@ -231,7 +231,7 @@ PR_ExportFileMapAsString(
 **
 */
 NSPR_API( PRFileMap * )
-PR_ImportFileMapFromString( 
+PR_ImportFileMapFromString(
     const char *fmstring
 );
 

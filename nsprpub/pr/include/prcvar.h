@@ -16,7 +16,7 @@ typedef struct PRCondVar PRCondVar;
 /*
 ** Create a new condition variable.
 **
-** 	"lock" is the lock used to protect the condition variable.
+**  "lock" is the lock used to protect the condition variable.
 **
 ** Condition variables are synchronization objects that threads can use
 ** to wait for some condition to occur.
@@ -68,7 +68,7 @@ NSPR_API(PRStatus) PR_WaitCondVar(PRCondVar *cvar, PRIntervalTime timeout);
 ** Notify ONE thread that is currently waiting on 'cvar'. Which thread is
 ** dependent on the implementation of the runtime. Common sense would dictate
 ** that all threads waiting on a single condition have identical semantics,
-** therefore which one gets notified is not significant. 
+** therefore which one gets notified is not significant.
 **
 ** The calling thead must hold the lock that protects the condition, as
 ** well as the invariants that are tightly bound to the condition, when

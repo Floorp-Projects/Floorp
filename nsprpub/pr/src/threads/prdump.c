@@ -7,10 +7,10 @@
 
 #if defined(WIN95)
 /*
-** Some local variables report warnings on Win95 because the code paths 
+** Some local variables report warnings on Win95 because the code paths
 ** using them are conditioned on HAVE_CUSTOME_USER_THREADS.
 ** The pragma suppresses the warning.
-** 
+**
 */
 #pragma warning(disable : 4101)
 #endif
@@ -40,26 +40,26 @@ void _PR_DumpThread(PRFileDesc *fd, PRThread *thread)
     _PR_DumpPrintf(fd, "%05d[%08p] pri=%2d flags=0x%02x",
                    thread->id, thread, thread->priority, thread->flags);
     switch (thread->state) {
-      case _PR_RUNNABLE:
-      case _PR_RUNNING:
-        break;
-      case _PR_LOCK_WAIT:
-        _PR_DumpPrintf(fd, " lock=%p", thread->wait.lock);
-        break;
-      case _PR_COND_WAIT:
-        _PR_DumpPrintf(fd, " condvar=%p sleep=%lldms",
-                       thread->wait.cvar, thread->sleep);
-        break;
-      case _PR_SUSPENDED:
-        _PR_DumpPrintf(fd, " suspended");
-        break;
+        case _PR_RUNNABLE:
+        case _PR_RUNNING:
+            break;
+        case _PR_LOCK_WAIT:
+            _PR_DumpPrintf(fd, " lock=%p", thread->wait.lock);
+            break;
+        case _PR_COND_WAIT:
+            _PR_DumpPrintf(fd, " condvar=%p sleep=%lldms",
+                           thread->wait.cvar, thread->sleep);
+            break;
+        case _PR_SUSPENDED:
+            _PR_DumpPrintf(fd, " suspended");
+            break;
     }
     PR_Write(fd, "\n", 1);
 #endif
 
     /* Now call dump routine */
     if (thread->dump) {
-	thread->dump(fd, thread, thread->dumpArg);
+        thread->dump(fd, thread, thread->dumpArg);
     }
 }
 
@@ -106,11 +106,15 @@ PR_IMPLEMENT(void) PR_ShowStatus(void)
     PRIntn is;
 
     if ( _PR_MD_CURRENT_THREAD()
-    && !_PR_IS_NATIVE_THREAD(_PR_MD_CURRENT_THREAD())) _PR_INTSOFF(is);
+         && !_PR_IS_NATIVE_THREAD(_PR_MD_CURRENT_THREAD())) {
+        _PR_INTSOFF(is);
+    }
     _pr_dumpOut = _pr_stderr;
     _PR_DumpThreads(_pr_dumpOut);
     if ( _PR_MD_CURRENT_THREAD()
-    && !_PR_IS_NATIVE_THREAD(_PR_MD_CURRENT_THREAD())) _PR_FAST_INTSON(is);
+         && !_PR_IS_NATIVE_THREAD(_PR_MD_CURRENT_THREAD())) {
+        _PR_FAST_INTSON(is);
+    }
 }
 
 PR_IMPLEMENT(void)

@@ -8,12 +8,12 @@
 
 /* Need to force service-pack 3 extensions to be defined by
 ** setting _WIN32_WINNT to NT 4.0 for winsock.h, winbase.h, winnt.h.
-*/ 
+*/
 #ifndef  _WIN32_WINNT
-    #define _WIN32_WINNT 0x0400
+#define _WIN32_WINNT 0x0400
 #elif   (_WIN32_WINNT < 0x0400)
-    #undef  _WIN32_WINNT
-    #define _WIN32_WINNT 0x0400
+#undef  _WIN32_WINNT
+#define _WIN32_WINNT 0x0400
 #endif /* _WIN32_WINNT */
 
 #include <windows.h>
@@ -103,14 +103,14 @@ extern struct PRLock                      *_pr_schedLock;
 typedef void (*FiberFunc)(void *);
 
 #define PR_NUM_GCREGS           8
-typedef PRInt32	                PR_CONTEXT_TYPE[PR_NUM_GCREGS];
+typedef PRInt32                 PR_CONTEXT_TYPE[PR_NUM_GCREGS];
 #define GC_VMBASE               0x40000000
 #define GC_VMLIMIT              0x00FFFFFF
 
-#define _MD_MAGIC_THREAD	0x22222222
-#define _MD_MAGIC_THREADSTACK	0x33333333
-#define _MD_MAGIC_SEGMENT	0x44444444
-#define _MD_MAGIC_DIR		0x55555555
+#define _MD_MAGIC_THREAD    0x22222222
+#define _MD_MAGIC_THREADSTACK   0x33333333
+#define _MD_MAGIC_SEGMENT   0x44444444
+#define _MD_MAGIC_DIR       0x55555555
 
 struct _MDCPU {
     int              unused;
@@ -146,7 +146,7 @@ typedef struct _MDOverlapped {
 } _MDOverlapped;
 
 struct _MDThread {
-        /* The overlapped structure must be first! */
+    /* The overlapped structure must be first! */
     struct _MDOverlapped overlapped;    /* Used for async IO for this thread */
     void            *acceptex_buf;      /* Used for AcceptEx() */
     TRANSMIT_FILE_BUFFERS *xmit_bufs;   /* Used for TransmitFile() */
@@ -161,10 +161,10 @@ struct _MDThread {
     void            *sp;                /* only valid when suspended */
     PRUint32         magic;             /* for debugging */
     PR_CONTEXT_TYPE  gcContext;         /* Thread context for GC */
-	struct _PRCPU    *thr_bound_cpu;		/* thread bound to cpu */
-	PRBool   		 interrupt_disabled;/* thread cannot be interrupted */
-	HANDLE 			 thr_event;			/* For native-threads-only support,
-											thread blocks on this event		*/
+    struct _PRCPU    *thr_bound_cpu;        /* thread bound to cpu */
+    PRBool           interrupt_disabled;/* thread cannot be interrupted */
+    HANDLE           thr_event;         /* For native-threads-only support,
+                                            thread blocks on this event     */
 
     /* The following are used only if this is a fiber */
     void            *fiber_id;          /* flag whether or not this is a fiber*/
@@ -277,12 +277,12 @@ extern PRInt32 _PR_MD_CLOSE(PROsfd osfd, PRBool socket);
 #define _MD_GETOPENFILEINFO           _PR_MD_GETOPENFILEINFO
 #define _MD_GETOPENFILEINFO64         _PR_MD_GETOPENFILEINFO64
 #define _MD_STAT                      _PR_MD_STAT
-#define _MD_RENAME                    _PR_MD_RENAME     
-#define _MD_ACCESS                    _PR_MD_ACCESS     
-#define _MD_DELETE                    _PR_MD_DELETE     
-#define _MD_MKDIR                     _PR_MD_MKDIR      
+#define _MD_RENAME                    _PR_MD_RENAME
+#define _MD_ACCESS                    _PR_MD_ACCESS
+#define _MD_DELETE                    _PR_MD_DELETE
+#define _MD_MKDIR                     _PR_MD_MKDIR
 #define _MD_MAKE_DIR                  _PR_MD_MAKE_DIR
-#define _MD_RMDIR                     _PR_MD_RMDIR      
+#define _MD_RMDIR                     _PR_MD_RMDIR
 #define _MD_LOCKFILE                  _PR_MD_LOCKFILE
 #define _MD_TLOCKFILE                 _PR_MD_TLOCKFILE
 #define _MD_UNLOCKFILE                _PR_MD_UNLOCKFILE
@@ -307,7 +307,7 @@ extern PRInt32 _PR_MD_CLOSE(PROsfd osfd, PRBool socket);
 #define _MD_SETSOCKOPT                _PR_MD_SETSOCKOPT
 #define _MD_SELECT                    select
 extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
-    const struct timeval *);
+                                 const struct timeval *);
 #define _MD_FSYNC                     _PR_MD_FSYNC
 #define _MD_SOCKETAVAILABLE           _PR_MD_SOCKETAVAILABLE
 #define _MD_PIPEAVAILABLE             _PR_MD_PIPEAVAILABLE
@@ -316,7 +316,7 @@ extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
 #define _MD_INIT_ATOMIC()
 #if defined(_M_IX86) || defined(_X86_)
 #define _MD_ATOMIC_INCREMENT          _PR_MD_ATOMIC_INCREMENT
-#define _MD_ATOMIC_ADD          	  _PR_MD_ATOMIC_ADD
+#define _MD_ATOMIC_ADD                _PR_MD_ATOMIC_ADD
 #define _MD_ATOMIC_DECREMENT          _PR_MD_ATOMIC_DECREMENT
 #else /* non-x86 processors */
 #define _MD_ATOMIC_INCREMENT(x)       InterlockedIncrement((PLONG)x)
@@ -342,7 +342,7 @@ extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
 #define _MD_BIND                      _PR_MD_BIND
 #define _MD_RECV                      _PR_MD_RECV
 #define _MD_SEND                      _PR_MD_SEND
-#define _MD_SENDFILE              	  _PR_MD_SENDFILE
+#define _MD_SENDFILE                  _PR_MD_SENDFILE
 #define _MD_PR_POLL                   _PR_MD_PR_POLL
 
 /* --- Scheduler stuff --- */
@@ -351,8 +351,8 @@ extern int _PR_NTFiberSafeSelect(int, fd_set *, fd_set *, fd_set *,
 /* --- DIR stuff --- */
 #define PR_DIRECTORY_SEPARATOR        '\\'
 #define PR_DIRECTORY_SEPARATOR_STR    "\\"
-#define PR_PATH_SEPARATOR		';'
-#define PR_PATH_SEPARATOR_STR		";"
+#define PR_PATH_SEPARATOR       ';'
+#define PR_PATH_SEPARATOR_STR       ";"
 #define _MD_ERRNO()                   GetLastError()
 #define _MD_OPEN_DIR                  _PR_MD_OPEN_DIR
 #define _MD_CLOSE_DIR                 _PR_MD_CLOSE_DIR
@@ -414,13 +414,13 @@ extern void _PR_Unblock_IO_Wait(PRThread *thr);
 #define _MD_UNLOCK(lock)              LeaveCriticalSection(&((lock)->mutex))
 #endif
 #define _PR_LOCK                      _MD_LOCK
-#define _PR_UNLOCK					  _MD_UNLOCK
+#define _PR_UNLOCK                    _MD_UNLOCK
 
 /* --- lock and cv waiting --- */
 #define _MD_WAIT                      _PR_MD_WAIT
 #define _MD_WAKEUP_WAITER             _PR_MD_WAKEUP_WAITER
 
-   /* XXXMB- the IOQ stuff is certainly not working correctly yet. */
+/* XXXMB- the IOQ stuff is certainly not working correctly yet. */
 extern  struct _MDLock              _pr_ioq_lock;
 #define _MD_IOQ_LOCK()                _MD_LOCK(&_pr_ioq_lock)
 #define _MD_IOQ_UNLOCK()              _MD_UNLOCK(&_pr_ioq_lock)
@@ -456,8 +456,8 @@ extern PRStatus _PR_DetachWindowsProcess(struct PRProcess *process);
 
 /* --- Wait for a child process to terminate --- */
 #define _MD_WAIT_PROCESS _PR_WaitWindowsProcess
-extern PRStatus _PR_WaitWindowsProcess(struct PRProcess *process, 
-    PRInt32 *exitCode);
+extern PRStatus _PR_WaitWindowsProcess(struct PRProcess *process,
+                                       PRInt32 *exitCode);
 
 #define _MD_KILL_PROCESS _PR_KillWindowsProcess
 extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
@@ -573,7 +573,7 @@ extern PRInt32 _MD_GetMemMapAlignment(void);
 #define _MD_GET_MEM_MAP_ALIGNMENT _MD_GetMemMapAlignment
 
 extern void * _MD_MemMap(struct PRFileMap *fmap, PRInt64 offset,
-        PRUint32 len);
+                         PRUint32 len);
 #define _MD_MEM_MAP _MD_MemMap
 
 extern PRStatus _MD_MemUnmap(void *addr, PRUint32 size);

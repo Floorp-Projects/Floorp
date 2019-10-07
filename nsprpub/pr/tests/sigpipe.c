@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     PR_SetError(0, 0);
 
     thread = PR_CreateThread(PR_USER_THREAD, Test, NULL, PR_PRIORITY_NORMAL,
-            PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                             PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (thread == NULL) {
         fprintf(stderr, "PR_CreateThread failed\n");
         exit(1);

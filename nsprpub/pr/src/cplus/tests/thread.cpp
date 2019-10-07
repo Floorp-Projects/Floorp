@@ -28,7 +28,9 @@ private:
 TestThread::~TestThread() { }
 
 TestThread::TestThread(RCThread::State state, PRIntn count):
-    RCThread(RCThread::global, state, 0) { mydata = count; }
+    RCThread(RCThread::global, state, 0) {
+    mydata = count;
+}
 
 void TestThread::RootFunction()
 {
@@ -46,7 +48,7 @@ public:
     PRIntn data;
 };
 
-Foo1::Foo1() 
+Foo1::Foo1()
 {
     data = 0xafaf;
     thread = new TestThread(RCThread::joinable, 0xafaf);

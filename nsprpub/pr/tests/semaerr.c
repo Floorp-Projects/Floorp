@@ -33,7 +33,9 @@ int main(int argc, char **argv)
     PRInt32 exit_code;
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt))) {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option) {
             case 'd':  /* debug mode */
                 debug_mode = PR_TRUE;

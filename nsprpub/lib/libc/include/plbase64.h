@@ -19,11 +19,11 @@ PR_BEGIN_EXTERN_C
  * is zero, the source data is assumed to be null-terminated, and PL_strlen
  * is used to determine the source length.  If the "dest" parameter is not
  * null, it is assumed to point to a buffer of sufficient size (which may be
- * calculated: ((srclen + 2)/3)*4) into which the encoded data is placed 
+ * calculated: ((srclen + 2)/3)*4) into which the encoded data is placed
  * (without any termination).  If the "dest" parameter is null, a buffer is
  * allocated from the heap to hold the encoded data, and the result *will*
- * be terminated with an extra null character.  It is the caller's 
- * responsibility to free the result when it is allocated.  A null is returned 
+ * be terminated with an extra null character.  It is the caller's
+ * responsibility to free the result when it is allocated.  A null is returned
  * if the allocation fails.
  *
  * NOTE: when calculating ((srclen + 2)/3)*4), first ensure that
@@ -56,7 +56,7 @@ PL_Base64Encode
  * caller's responsibility to free the result when it is allocated.  A null
  * is retuned if the allocation fails, or if the source is not well-coded.
  *
- * NOTE: when calculating (srclen * 3)/4, first ensure that 
+ * NOTE: when calculating (srclen * 3)/4, first ensure that
  *     srclen <= PR_UINT32_MAX/3
  * to avoid PRUint32 overflow.  Alternatively, calculate
  *     (srclen/4) * 3 + ((srclen%4) * 3)/4

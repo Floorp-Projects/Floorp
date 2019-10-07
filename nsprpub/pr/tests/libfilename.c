@@ -34,7 +34,9 @@ static PRStatus RunTest(const char *name, PRFuncPtr addr)
         return PR_FAILURE;
     }
 
-    if (debug_mode) printf("Pathname is %s\n", pathname);
+    if (debug_mode) {
+        printf("Pathname is %s\n", pathname);
+    }
     fd = PR_OpenFile(pathname, PR_RDONLY, 0);
     if (fd == NULL) {
         fprintf(stderr, "PR_Open failed: %d\n", (int)PR_GetError());
@@ -74,7 +76,9 @@ int main(int argc, char **argv)
 
     /* Next test a library that is dynamically loaded. */
     name = PR_GetLibraryName("dll", "my");
-    if (debug_mode) printf("Loading library %s\n", name);
+    if (debug_mode) {
+        printf("Loading library %s\n", name);
+    }
     lib = PR_LoadLibrary(name);
     if (!lib) {
         fprintf(stderr, "PR_LoadLibrary failed\n");

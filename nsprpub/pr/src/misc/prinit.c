@@ -26,9 +26,9 @@ PRFileDesc *_pr_stderr;
 #if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
 
 PRCList _pr_active_local_threadQ =
-			PR_INIT_STATIC_CLIST(&_pr_active_local_threadQ);
+    PR_INIT_STATIC_CLIST(&_pr_active_local_threadQ);
 PRCList _pr_active_global_threadQ =
-			PR_INIT_STATIC_CLIST(&_pr_active_global_threadQ);
+    PR_INIT_STATIC_CLIST(&_pr_active_global_threadQ);
 
 _MDLock  _pr_cpuLock;           /* lock for the CPU Q */
 PRCList _pr_cpuQ = PR_INIT_STATIC_CLIST(&_pr_cpuQ);
@@ -41,10 +41,10 @@ PRUintn _pr_maxPTDs;
 
 #ifdef _PR_LOCAL_THREADS_ONLY
 
-struct _PRCPU 	*_pr_currentCPU;
-PRThread 	*_pr_currentThread;
-PRThread 	*_pr_lastThread;
-PRInt32 	_pr_intsOff;
+struct _PRCPU   *_pr_currentCPU;
+PRThread    *_pr_currentThread;
+PRThread    *_pr_lastThread;
+PRInt32     _pr_intsOff;
 
 #endif /* _PR_LOCAL_THREADS_ONLY */
 
@@ -138,7 +138,9 @@ static void _pr_SetNativeThreadsOnlyMode(void)
 static void _PR_InitStuff(void)
 {
 
-    if (_pr_initialized) return;
+    if (_pr_initialized) {
+        return;
+    }
     _pr_initialized = PR_TRUE;
 #ifdef _PR_ZONE_ALLOCATOR
     _PR_InitZones();
@@ -150,26 +152,26 @@ static void _PR_InitStuff(void)
 
     (void) PR_GetPageSize();
 
-	_pr_clock_lm = PR_NewLogModule("clock");
-	_pr_cmon_lm = PR_NewLogModule("cmon");
-	_pr_io_lm = PR_NewLogModule("io");
-	_pr_mon_lm = PR_NewLogModule("mon");
-	_pr_linker_lm = PR_NewLogModule("linker");
-	_pr_cvar_lm = PR_NewLogModule("cvar");
-	_pr_sched_lm = PR_NewLogModule("sched");
-	_pr_thread_lm = PR_NewLogModule("thread");
-	_pr_gc_lm = PR_NewLogModule("gc");
-	_pr_shm_lm = PR_NewLogModule("shm");
-	_pr_shma_lm = PR_NewLogModule("shma");
-      
-    /* NOTE: These init's cannot depend on _PR_MD_CURRENT_THREAD() */ 
+    _pr_clock_lm = PR_NewLogModule("clock");
+    _pr_cmon_lm = PR_NewLogModule("cmon");
+    _pr_io_lm = PR_NewLogModule("io");
+    _pr_mon_lm = PR_NewLogModule("mon");
+    _pr_linker_lm = PR_NewLogModule("linker");
+    _pr_cvar_lm = PR_NewLogModule("cvar");
+    _pr_sched_lm = PR_NewLogModule("sched");
+    _pr_thread_lm = PR_NewLogModule("thread");
+    _pr_gc_lm = PR_NewLogModule("gc");
+    _pr_shm_lm = PR_NewLogModule("shm");
+    _pr_shma_lm = PR_NewLogModule("shma");
+
+    /* NOTE: These init's cannot depend on _PR_MD_CURRENT_THREAD() */
     _PR_MD_EARLY_INIT();
 
     _PR_InitLocks();
     _PR_InitAtomic();
     _PR_InitSegs();
     _PR_InitStacks();
-	_PR_InitTPD();
+    _PR_InitTPD();
     _PR_InitEnv();
     _PR_InitLayerCache();
     _PR_InitClock();
@@ -178,22 +180,22 @@ static void _PR_InitStuff(void)
     PR_ASSERT(NULL != _pr_sleeplock);
 
     _PR_InitThreads(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
-    
-#ifdef WIN16
-	{
-	PRInt32 top;   /* artificial top of stack, win16 */
-    _pr_top_of_task_stack = (char *) &top;
-	}
-#endif    
 
-#ifndef _PR_GLOBAL_THREADS_ONLY
-	_PR_InitCPUs();
+#ifdef WIN16
+    {
+        PRInt32 top;   /* artificial top of stack, win16 */
+        _pr_top_of_task_stack = (char *) &top;
+    }
 #endif
 
-/*
- * XXX: call _PR_InitMem only on those platforms for which nspr implements
- *	malloc, for now.
- */
+#ifndef _PR_GLOBAL_THREADS_ONLY
+    _PR_InitCPUs();
+#endif
+
+    /*
+     * XXX: call _PR_InitMem only on those platforms for which nspr implements
+     *  malloc, for now.
+     */
 #ifdef _PR_OVERRIDE_MALLOC
     _PR_InitMem();
 #endif
@@ -216,7 +218,7 @@ static void _PR_InitStuff(void)
 
 void _PR_ImplicitInitialization(void)
 {
-	_PR_InitStuff();
+    _PR_InitStuff();
 
     /* Enable interrupts */
 #if !defined(_PR_PTHREADS) && !defined(_PR_GLOBAL_THREADS_ONLY)
@@ -228,20 +230,20 @@ void _PR_ImplicitInitialization(void)
 PR_IMPLEMENT(void) PR_DisableClockInterrupts(void)
 {
 #if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
-	if (!_pr_initialized) {
-		_PR_InitStuff();
-	} else {
-    	_PR_MD_DISABLE_CLOCK_INTERRUPTS();
-	}
+    if (!_pr_initialized) {
+        _PR_InitStuff();
+    } else {
+        _PR_MD_DISABLE_CLOCK_INTERRUPTS();
+    }
 #endif
 }
 
 PR_IMPLEMENT(void) PR_EnableClockInterrupts(void)
 {
 #if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
-	if (!_pr_initialized) {
-		_PR_InitStuff();
-	}
+    if (!_pr_initialized) {
+        _PR_InitStuff();
+    }
     _PR_MD_ENABLE_CLOCK_INTERRUPTS();
 #endif
 }
@@ -249,14 +251,14 @@ PR_IMPLEMENT(void) PR_EnableClockInterrupts(void)
 PR_IMPLEMENT(void) PR_BlockClockInterrupts(void)
 {
 #if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
-    	_PR_MD_BLOCK_CLOCK_INTERRUPTS();
+    _PR_MD_BLOCK_CLOCK_INTERRUPTS();
 #endif
 }
 
 PR_IMPLEMENT(void) PR_UnblockClockInterrupts(void)
 {
 #if !defined(_PR_PTHREADS) && !defined(_PR_BTHREADS)
-    	_PR_MD_UNBLOCK_CLOCK_INTERRUPTS();
+    _PR_MD_UNBLOCK_CLOCK_INTERRUPTS();
 #endif
 }
 
@@ -272,7 +274,7 @@ PR_IMPLEMENT(PRIntn) PR_Initialize(
     PRIntn rv;
     _PR_ImplicitInitialization();
     rv = prmain(argc, argv);
-	PR_Cleanup();
+    PR_Cleanup();
     return rv;
 }  /* PR_Initialize */
 
@@ -281,7 +283,7 @@ PR_IMPLEMENT(PRIntn) PR_Initialize(
  *
  * _PR_CleanupBeforeExit --
  *
- *   Perform the cleanup work before exiting the process. 
+ *   Perform the cleanup work before exiting the process.
  *   We first do the cleanup generic to all platforms.  Then
  *   we call _PR_MD_CLEANUP_BEFORE_EXIT(), where platform-dependent
  *   cleanup is done.  This function is used by PR_Cleanup().
@@ -291,23 +293,25 @@ PR_IMPLEMENT(PRIntn) PR_Initialize(
  *-----------------------------------------------------------------------
  */
 #if defined(_PR_PTHREADS) || defined(_PR_BTHREADS)
-    /* see ptthread.c */
+/* see ptthread.c */
 #else
 static void
 _PR_CleanupBeforeExit(void)
 {
-/* 
-Do not make any calls here other than to destroy resources.  For example,
-do not make any calls that eventually may end up in PR_Lock.  Because the
-thread is destroyed, can not access current thread any more.
-*/
+    /*
+    Do not make any calls here other than to destroy resources.  For example,
+    do not make any calls that eventually may end up in PR_Lock.  Because the
+    thread is destroyed, can not access current thread any more.
+    */
     _PR_CleanupTPD();
     if (_pr_terminationCVLock)
-    /*
-     * In light of the comment above, this looks real suspicious.
-     * I'd go so far as to say it's just a problem waiting to happen.
-     */
+        /*
+         * In light of the comment above, this looks real suspicious.
+         * I'd go so far as to say it's just a problem waiting to happen.
+         */
+    {
         PR_DestroyLock(_pr_terminationCVLock);
+    }
 
     _PR_MD_CLEANUP_BEFORE_EXIT();
 }
@@ -329,7 +333,7 @@ thread is destroyed, can not access current thread any more.
  *   Then it performs cleanup in preparation for exiting the process.
  *   PR_Cleanup() does not exit the primordial thread (which would
  *   in turn exit the process).
- *   
+ *
  *   PR_Cleanup() only responds when it is called by the primordial
  *   thread. Calls by any other thread are silently ignored.
  *
@@ -338,7 +342,7 @@ thread is destroyed, can not access current thread any more.
  *----------------------------------------------------------------------
  */
 #if defined(_PR_PTHREADS) || defined(_PR_BTHREADS)
-    /* see ptthread.c */
+/* see ptthread.c */
 #else
 
 PR_IMPLEMENT(PRStatus) PR_Cleanup()
@@ -375,7 +379,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         _PR_CleanupTime();
         _PR_CleanupDtoa();
         _PR_CleanupCallOnce();
-		_PR_ShutdownLinker();
+        _PR_ShutdownLinker();
         _PR_CleanupNet();
         _PR_CleanupIO();
         /* Release the primordial thread's private data, etc. */
@@ -383,9 +387,9 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
 
         _PR_MD_STOP_INTERRUPTS();
 
-	    PR_LOG(_pr_thread_lm, PR_LOG_MIN,
-	            ("PR_Cleanup: clean up before destroying thread"));
-	    _PR_LogCleanup();
+        PR_LOG(_pr_thread_lm, PR_LOG_MIN,
+               ("PR_Cleanup: clean up before destroying thread"));
+        _PR_LogCleanup();
 
         /*
          * This part should look like the end of _PR_NativeRunThread
@@ -428,18 +432,18 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
 /*
  *------------------------------------------------------------------------
  * PR_ProcessExit --
- * 
+ *
  *   Cause an immediate, nongraceful, forced termination of the process.
  *   It takes a PRIntn argument, which is the exit status code of the
  *   process.
- *   
+ *
  * See also: PR_Cleanup()
  *
  *------------------------------------------------------------------------
  */
 
 #if defined(_PR_PTHREADS) || defined(_PR_BTHREADS)
-    /* see ptthread.c */
+/* see ptthread.c */
 #else
 PR_IMPLEMENT(void) PR_ProcessExit(PRIntn status)
 {
@@ -510,7 +514,7 @@ PR_SetStdioRedirect(
     static PRBool warn = PR_TRUE;
     if (warn) {
         warn = _PR_Obsolete("PR_SetStdioRedirect()",
-                "PR_ProcessAttrSetStdioRedirect()");
+                            "PR_ProcessAttrSetStdioRedirect()");
     }
 #endif
     PR_ProcessAttrSetStdioRedirect(attr, stdioFd, redirectFd);
@@ -575,11 +579,11 @@ PR_ProcessAttrSetInheritableFD(
     if (NULL == attr->fdInheritBuffer) {
         /* The first time, we print "NSPR_INHERIT_FDS=<name>:<type>:<val>" */
         newSize = NSPR_INHERIT_FDS_STRLEN + strlen(name)
-                + FD_TYPE_STRLEN + OSFD_STRLEN + 2 + 1;
+                  + FD_TYPE_STRLEN + OSFD_STRLEN + 2 + 1;
     } else {
         /* At other times, we print ":<name>:<type>:<val>" */
         newSize = attr->fdInheritBufferUsed + strlen(name)
-                + FD_TYPE_STRLEN + OSFD_STRLEN + 3 + 1;
+                  + FD_TYPE_STRLEN + OSFD_STRLEN + 3 + 1;
     }
     if (newSize > attr->fdInheritBufferSize) {
         /* Make newSize a multiple of FD_INHERIT_BUFFER_INCR */
@@ -603,13 +607,13 @@ PR_ProcessAttrSetInheritableFD(
     freeSize = attr->fdInheritBufferSize - attr->fdInheritBufferUsed;
     if (0 == attr->fdInheritBufferUsed) {
         nwritten = PR_snprintf(cur, freeSize,
-                "NSPR_INHERIT_FDS=%s:%d:0x%" PR_PRIxOSFD,
-                name, (PRIntn)fd->methods->file_type, fd->secret->md.osfd);
+                               "NSPR_INHERIT_FDS=%s:%d:0x%" PR_PRIxOSFD,
+                               name, (PRIntn)fd->methods->file_type, fd->secret->md.osfd);
     } else {
         nwritten = PR_snprintf(cur, freeSize, ":%s:%d:0x%" PR_PRIxOSFD,
-                name, (PRIntn)fd->methods->file_type, fd->secret->md.osfd);
+                               name, (PRIntn)fd->methods->file_type, fd->secret->md.osfd);
     }
-    attr->fdInheritBufferUsed += nwritten; 
+    attr->fdInheritBufferUsed += nwritten;
     return PR_SUCCESS;
 }
 
@@ -705,13 +709,13 @@ PR_IMPLEMENT(PRStatus) PR_CreateProcessDetached(
 
     process = PR_CreateProcess(path, argv, envp, attr);
     if (NULL == process) {
-	return PR_FAILURE;
+        return PR_FAILURE;
     }
     rv = PR_DetachProcess(process);
     PR_ASSERT(PR_SUCCESS == rv);
     if (rv == PR_FAILURE) {
-	PR_DELETE(process);
-	return PR_FAILURE;
+        PR_DELETE(process);
+        return PR_FAILURE;
     }
     return PR_SUCCESS;
 }
@@ -763,22 +767,24 @@ PR_IMPLEMENT(PRStatus) PR_CallOnce(
     PRCallOnceType *once,
     PRCallOnceFN    func)
 {
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     if (!once->initialized) {
-	if (PR_ATOMIC_SET(&once->inProgress, 1) == 0) {
-	    once->status = (*func)();
-	    PR_Lock(mod_init.ml);
-	    once->initialized = 1;
-	    PR_NotifyAllCondVar(mod_init.cv);
-	    PR_Unlock(mod_init.ml);
-	} else {
-	    PR_Lock(mod_init.ml);
-	    while (!once->initialized) {
-		PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
+        if (PR_ATOMIC_SET(&once->inProgress, 1) == 0) {
+            once->status = (*func)();
+            PR_Lock(mod_init.ml);
+            once->initialized = 1;
+            PR_NotifyAllCondVar(mod_init.cv);
+            PR_Unlock(mod_init.ml);
+        } else {
+            PR_Lock(mod_init.ml);
+            while (!once->initialized) {
+                PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
             }
-	    PR_Unlock(mod_init.ml);
-	}
+            PR_Unlock(mod_init.ml);
+        }
     } else {
         if (PR_SUCCESS != once->status) {
             PR_SetError(PR_CALL_ONCE_ERROR, 0);
@@ -792,22 +798,24 @@ PR_IMPLEMENT(PRStatus) PR_CallOnceWithArg(
     PRCallOnceWithArgFN  func,
     void                *arg)
 {
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     if (!once->initialized) {
-	if (PR_ATOMIC_SET(&once->inProgress, 1) == 0) {
-	    once->status = (*func)(arg);
-	    PR_Lock(mod_init.ml);
-	    once->initialized = 1;
-	    PR_NotifyAllCondVar(mod_init.cv);
-	    PR_Unlock(mod_init.ml);
-	} else {
-	    PR_Lock(mod_init.ml);
-	    while (!once->initialized) {
-		PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
+        if (PR_ATOMIC_SET(&once->inProgress, 1) == 0) {
+            once->status = (*func)(arg);
+            PR_Lock(mod_init.ml);
+            once->initialized = 1;
+            PR_NotifyAllCondVar(mod_init.cv);
+            PR_Unlock(mod_init.ml);
+        } else {
+            PR_Lock(mod_init.ml);
+            while (!once->initialized) {
+                PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
             }
-	    PR_Unlock(mod_init.ml);
-	}
+            PR_Unlock(mod_init.ml);
+        }
     } else {
         if (PR_SUCCESS != once->status) {
             PR_SetError(PR_CALL_ONCE_ERROR, 0);

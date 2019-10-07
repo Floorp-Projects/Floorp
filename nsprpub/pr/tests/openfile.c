@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     PRInt32 nbytes;
     PRFileDesc *fd;
 
-    
+
     /* Write in text mode.  Let stdio deal with line endings. */
     template = fopen(TEMPLATE_FILE_NAME, "w");
     fputs("line 1\nline 2\n", template);

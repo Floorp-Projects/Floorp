@@ -12,7 +12,7 @@
 **
 ** Modification History:
 ** 04-Jun-97 AGarcia - Reconvert test file to return a 0 for PASS and a 1 for FAIL
-** 13-May-97 AGarcia- Converted the test to accomodate the debug_mode 
+** 13-May-97 AGarcia- Converted the test to accomodate the debug_mode
 **             The debug mode will print all of the printfs associated with this test.
 **             The regress mode will be the default mode. Since the regress tool limits
 **           the output to a one line status:PASS or FAIL,all of the printf statements
@@ -96,8 +96,9 @@ void Test_Assert(const char *msg, const char *file, PRIntn line)
 void timeout_callback(void *magic)
 {
     TEST_ASSERT(magic == (void *)CALLBACK_MAGIC);
-    if (debug_mode)
+    if (debug_mode) {
         PR_fprintf(output, "timeout callback called okay\n");
+    }
 }
 #endif
 
@@ -120,37 +121,40 @@ ClientThread(void *_action)
         memset(buf, 0xaf, sizeof(buf)); /* initialize with arbitrary data */
         sock = PR_NewTCPSocket();
         if (!sock) {
-            if (!debug_mode)
+            if (!debug_mode) {
                 failed_already=1;
-            else    
+            }
+            else {
                 PR_fprintf(output, "client: unable to create socket\n");
+            }
             return;
         }
 
         if (action != CLIENT_TIMEOUT_ACCEPT) {
 
             if ((rv = PR_Connect(sock, &serverAddr,
-                timeoutTime)) < 0) {
-                if (!debug_mode)
+                                 timeoutTime)) < 0) {
+                if (!debug_mode) {
                     failed_already=1;
-                else    
-                    PR_fprintf(output, 
-                        "client: unable to connect to server (%ld, %ld, %ld, %ld)\n",
-                        iterations, rv, PR_GetError(), PR_GetOSError());
+                }
+                else
+                    PR_fprintf(output,
+                               "client: unable to connect to server (%ld, %ld, %ld, %ld)\n",
+                               iterations, rv, PR_GetError(), PR_GetOSError());
                 goto ErrorExit;
             }
 
             if (action != CLIENT_TIMEOUT_SEND) {
                 if ((rv = PR_Send(sock, buf, CLIENT_DATA,
-                    0, timeoutTime))< 0) {
+                                  0, timeoutTime))< 0) {
                     if (!debug_mode) {
                         failed_already=1;
                     } else {
                         PR_fprintf(output,
-                            "client: unable to send to server (%d, %ld, %ld)\n",
-                            CLIENT_DATA, rv, PR_GetError());
+                                   "client: unable to send to server (%d, %ld, %ld)\n",
+                                   CLIENT_DATA, rv, PR_GetError());
                     }
-                	goto ErrorExit;
+                    goto ErrorExit;
                 }
             } else {
                 PR_Sleep(PR_SecondsToInterval(TIMEOUTSECS + 1));
@@ -158,34 +162,38 @@ ClientThread(void *_action)
         } else {
             PR_Sleep(PR_SecondsToInterval(TIMEOUTSECS + 1));
         }
-        if (debug_mode)
+        if (debug_mode) {
             PR_fprintf(output, ".");
+        }
         PR_Close(sock);
-		sock = NULL;
+        sock = NULL;
     }
-    if (debug_mode)
+    if (debug_mode) {
         PR_fprintf(output, "\n");
+    }
 
 ErrorExit:
-	if (sock != NULL)
+    if (sock != NULL) {
         PR_Close(sock);
+    }
 }
 
 
-static void 
+static void
 RunTest(PRInt32 acceptType, PRInt32 clientAction)
 {
-int i;
+    int i;
 
     /* First bind to the socket */
     listenSock = PR_NewTCPSocket();
     if (!listenSock) {
         failed_already=1;
-        if (debug_mode)
+        if (debug_mode) {
             PR_fprintf(output, "unable to create listen socket\n");
+        }
         return;
     }
-	memset(&listenAddr, 0 , sizeof(listenAddr));
+    memset(&listenAddr, 0, sizeof(listenAddr));
     listenAddr.inet.family = PR_AF_INET;
     listenAddr.inet.port = PR_htons(BASE_PORT);
     listenAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
@@ -197,148 +205,153 @@ int i;
     while (PR_Bind(listenSock, &listenAddr) == PR_FAILURE) {
         if (PR_GetError() == PR_ADDRESS_IN_USE_ERROR) {
             listenAddr.inet.port += 2;
-            if (i++ < SERVER_MAX_BIND_COUNT)
+            if (i++ < SERVER_MAX_BIND_COUNT) {
                 continue;
+            }
         }
         failed_already=1;
         if (debug_mode) {
-        	PR_fprintf(output,"accept: ERROR - PR_Bind failed\n");
+            PR_fprintf(output,"accept: ERROR - PR_Bind failed\n");
         }
-		return;
+        return;
     }
 
 
     rv = PR_Listen(listenSock, 100);
     if (rv == PR_FAILURE) {
         failed_already=1;
-        if (debug_mode)
+        if (debug_mode) {
             PR_fprintf(output, "unable to listen\n");
+        }
         return;
     }
 
     clientCommand = clientAction;
     clientThread = PR_CreateThread(PR_USER_THREAD, ClientThread,
-        (void *)&clientCommand, PR_PRIORITY_NORMAL, thread_scope,
-        PR_JOINABLE_THREAD, 0);
+                                   (void *)&clientCommand, PR_PRIORITY_NORMAL, thread_scope,
+                                   PR_JOINABLE_THREAD, 0);
     if (!clientThread) {
         failed_already=1;
-        if (debug_mode)
+        if (debug_mode) {
             PR_fprintf(output, "error creating client thread\n");
+        }
         return;
     }
 
     iterations = count;
-    for (;iterations--;) {
+    for (; iterations--;) {
         switch (acceptType) {
-        case ACCEPT_NORMAL:
-            clientSock = PR_Accept(listenSock, &clientAddr,
-                timeoutTime);
-            switch(clientAction) {
-            case CLIENT_TIMEOUT_ACCEPT:
-                TEST_ASSERT(clientSock == 0);
-                TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+            case ACCEPT_NORMAL:
+                clientSock = PR_Accept(listenSock, &clientAddr,
+                                       timeoutTime);
+                switch(clientAction) {
+                    case CLIENT_TIMEOUT_ACCEPT:
+                        TEST_ASSERT(clientSock == 0);
+                        TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+                        break;
+                    case CLIENT_NORMAL:
+                        TEST_ASSERT(clientSock);
+                        bytesRead = PR_Recv(clientSock,
+                                            buf,  CLIENT_DATA,  0,  timeoutTime);
+                        TEST_ASSERT(bytesRead == CLIENT_DATA);
+                        break;
+                    case CLIENT_TIMEOUT_SEND:
+                        TEST_ASSERT(clientSock);
+                        bytesRead = PR_Recv(clientSock,
+                                            buf,  CLIENT_DATA,  0,  timeoutTime);
+                        TEST_ASSERT(bytesRead == -1);
+                        TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+                        break;
+                }
                 break;
-            case CLIENT_NORMAL:
-                TEST_ASSERT(clientSock);
-                bytesRead = PR_Recv(clientSock,
-                    buf,  CLIENT_DATA,  0,  timeoutTime);
-                TEST_ASSERT(bytesRead == CLIENT_DATA);
+            case ACCEPT_READ:
+                status = PR_AcceptRead(listenSock, &clientSock,
+                                       &raddr, buf, CLIENT_DATA, timeoutTime);
+                switch(clientAction) {
+                    case CLIENT_TIMEOUT_ACCEPT:
+                        /* Invalid test case */
+                        TEST_ASSERT(0);
+                        break;
+                    case CLIENT_NORMAL:
+                        TEST_ASSERT(clientSock);
+                        TEST_ASSERT(status == CLIENT_DATA);
+                        break;
+                    case CLIENT_TIMEOUT_SEND:
+                        TEST_ASSERT(status == -1);
+                        TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+                        break;
+                }
                 break;
-            case CLIENT_TIMEOUT_SEND:
-                TEST_ASSERT(clientSock);
-                bytesRead = PR_Recv(clientSock,
-                    buf,  CLIENT_DATA,  0,  timeoutTime);
-                TEST_ASSERT(bytesRead == -1);
-                TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
-                break;
-            }
-            break;
-        case ACCEPT_READ:
-            status = PR_AcceptRead(listenSock, &clientSock,
-                &raddr, buf, CLIENT_DATA, timeoutTime);
-            switch(clientAction) {
-            case CLIENT_TIMEOUT_ACCEPT:
-                /* Invalid test case */
-                TEST_ASSERT(0);
-                break;
-            case CLIENT_NORMAL:
-                TEST_ASSERT(clientSock);
-                TEST_ASSERT(status == CLIENT_DATA);
-                break;
-            case CLIENT_TIMEOUT_SEND:
-                TEST_ASSERT(status == -1);
-                TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
-                break;
-            }
-            break;
 #ifdef WINNT
-        case ACCEPT_FAST:
-            clientSock = PR_NTFast_Accept(listenSock,
-                &clientAddr, timeoutTime);
-            switch(clientAction) {
-            case CLIENT_TIMEOUT_ACCEPT:
-                TEST_ASSERT(clientSock == 0);
-                if (debug_mode)
-                    PR_fprintf(output, "PR_GetError is %ld\n", PR_GetError());
-                TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+            case ACCEPT_FAST:
+                clientSock = PR_NTFast_Accept(listenSock,
+                                              &clientAddr, timeoutTime);
+                switch(clientAction) {
+                    case CLIENT_TIMEOUT_ACCEPT:
+                        TEST_ASSERT(clientSock == 0);
+                        if (debug_mode) {
+                            PR_fprintf(output, "PR_GetError is %ld\n", PR_GetError());
+                        }
+                        TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+                        break;
+                    case CLIENT_NORMAL:
+                        TEST_ASSERT(clientSock);
+                        bytesRead = PR_Recv(clientSock,
+                                            buf,  CLIENT_DATA,  0,  timeoutTime);
+                        TEST_ASSERT(bytesRead == CLIENT_DATA);
+                        break;
+                    case CLIENT_TIMEOUT_SEND:
+                        TEST_ASSERT(clientSock);
+                        bytesRead = PR_Recv(clientSock,
+                                            buf,  CLIENT_DATA,  0,  timeoutTime);
+                        TEST_ASSERT(bytesRead == -1);
+                        TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+                        break;
+                }
                 break;
-            case CLIENT_NORMAL:
-                TEST_ASSERT(clientSock);
-                bytesRead = PR_Recv(clientSock,
-                    buf,  CLIENT_DATA,  0,  timeoutTime);
-                TEST_ASSERT(bytesRead == CLIENT_DATA);
                 break;
-            case CLIENT_TIMEOUT_SEND:
-                TEST_ASSERT(clientSock);
-                bytesRead = PR_Recv(clientSock,
-                    buf,  CLIENT_DATA,  0,  timeoutTime);
-                TEST_ASSERT(bytesRead == -1);
-                TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+            case ACCEPT_READ_FAST:
+                status = PR_NTFast_AcceptRead(listenSock,
+                                              &clientSock, &raddr, buf, 4096, timeoutTime);
+                switch(clientAction) {
+                    case CLIENT_TIMEOUT_ACCEPT:
+                        /* Invalid test case */
+                        TEST_ASSERT(0);
+                        break;
+                    case CLIENT_NORMAL:
+                        TEST_ASSERT(clientSock);
+                        TEST_ASSERT(status == CLIENT_DATA);
+                        break;
+                    case CLIENT_TIMEOUT_SEND:
+                        TEST_ASSERT(clientSock == NULL);
+                        TEST_ASSERT(status == -1);
+                        TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+                        break;
+                }
                 break;
-            }
-            break;
-            break;
-        case ACCEPT_READ_FAST:
-            status = PR_NTFast_AcceptRead(listenSock,
-                &clientSock, &raddr, buf, 4096, timeoutTime);
-            switch(clientAction) {
-            case CLIENT_TIMEOUT_ACCEPT:
-                /* Invalid test case */
-                TEST_ASSERT(0);
+            case ACCEPT_READ_FAST_CB:
+                status = PR_NTFast_AcceptRead_WithTimeoutCallback(
+                             listenSock, &clientSock, &raddr, buf, 4096,
+                             timeoutTime, timeout_callback, (void *)CALLBACK_MAGIC);
+                switch(clientAction) {
+                    case CLIENT_TIMEOUT_ACCEPT:
+                        /* Invalid test case */
+                        TEST_ASSERT(0);
+                        break;
+                    case CLIENT_NORMAL:
+                        TEST_ASSERT(clientSock);
+                        TEST_ASSERT(status == CLIENT_DATA);
+                        break;
+                    case CLIENT_TIMEOUT_SEND:
+                        if (debug_mode) {
+                            PR_fprintf(output, "clientSock = 0x%8.8lx\n", clientSock);
+                        }
+                        TEST_ASSERT(clientSock == NULL);
+                        TEST_ASSERT(status == -1);
+                        TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
+                        break;
+                }
                 break;
-            case CLIENT_NORMAL:
-                TEST_ASSERT(clientSock);
-                TEST_ASSERT(status == CLIENT_DATA);
-                break;
-            case CLIENT_TIMEOUT_SEND:
-                TEST_ASSERT(clientSock == NULL);
-                TEST_ASSERT(status == -1);
-                TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
-                break;
-            }
-            break;
-        case ACCEPT_READ_FAST_CB:
-            status = PR_NTFast_AcceptRead_WithTimeoutCallback(
-                listenSock, &clientSock, &raddr, buf, 4096,
-                timeoutTime, timeout_callback, (void *)CALLBACK_MAGIC);
-            switch(clientAction) {
-            case CLIENT_TIMEOUT_ACCEPT:
-                /* Invalid test case */
-                TEST_ASSERT(0);
-                break;
-            case CLIENT_NORMAL:
-                TEST_ASSERT(clientSock);
-                TEST_ASSERT(status == CLIENT_DATA);
-                break;
-            case CLIENT_TIMEOUT_SEND:
-                if (debug_mode)
-                    PR_fprintf(output, "clientSock = 0x%8.8lx\n", clientSock);
-                TEST_ASSERT(clientSock == NULL);
-                TEST_ASSERT(status == -1);
-                TEST_ASSERT(PR_GetError() == PR_IO_TIMEOUT_ERROR);
-                break;
-            }
-            break;
 #endif
         }
         if (clientSock != NULL) {
@@ -353,58 +366,58 @@ int i;
 
 
 void AcceptUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_NORMAL, CLIENT_NORMAL); 
+{
+    RunTest(ACCEPT_NORMAL, CLIENT_NORMAL);
 }
 void AcceptNotUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_FAST, CLIENT_NORMAL); 
+{
+    RunTest(ACCEPT_FAST, CLIENT_NORMAL);
 }
 void AcceptReadTest(void)
-{ 
-    RunTest(ACCEPT_READ, CLIENT_NORMAL); 
+{
+    RunTest(ACCEPT_READ, CLIENT_NORMAL);
 }
 void AcceptReadNotUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_READ_FAST, CLIENT_NORMAL); 
+{
+    RunTest(ACCEPT_READ_FAST, CLIENT_NORMAL);
 }
 void AcceptReadCallbackTest(void)
-{ 
-    RunTest(ACCEPT_READ_FAST_CB, CLIENT_NORMAL); 
+{
+    RunTest(ACCEPT_READ_FAST_CB, CLIENT_NORMAL);
 }
 
 void TimeoutAcceptUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_NORMAL, CLIENT_TIMEOUT_ACCEPT); 
+{
+    RunTest(ACCEPT_NORMAL, CLIENT_TIMEOUT_ACCEPT);
 }
 void TimeoutAcceptNotUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_FAST, CLIENT_TIMEOUT_ACCEPT); 
+{
+    RunTest(ACCEPT_FAST, CLIENT_TIMEOUT_ACCEPT);
 }
 void TimeoutAcceptReadCallbackTest(void)
-{ 
-    RunTest(ACCEPT_READ_FAST_CB, CLIENT_TIMEOUT_ACCEPT); 
+{
+    RunTest(ACCEPT_READ_FAST_CB, CLIENT_TIMEOUT_ACCEPT);
 }
 
 void TimeoutReadUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_NORMAL, CLIENT_TIMEOUT_SEND); 
+{
+    RunTest(ACCEPT_NORMAL, CLIENT_TIMEOUT_SEND);
 }
 void TimeoutReadNotUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_FAST, CLIENT_TIMEOUT_SEND); 
+{
+    RunTest(ACCEPT_FAST, CLIENT_TIMEOUT_SEND);
 }
 void TimeoutReadReadTest(void)
-{ 
-    RunTest(ACCEPT_READ, CLIENT_TIMEOUT_SEND); 
+{
+    RunTest(ACCEPT_READ, CLIENT_TIMEOUT_SEND);
 }
 void TimeoutReadReadNotUpdatedTest(void)
-{ 
-    RunTest(ACCEPT_READ_FAST, CLIENT_TIMEOUT_SEND); 
+{
+    RunTest(ACCEPT_READ_FAST, CLIENT_TIMEOUT_SEND);
 }
 void TimeoutReadReadCallbackTest(void)
-{ 
-    RunTest(ACCEPT_READ_FAST_CB, CLIENT_TIMEOUT_SEND); 
+{
+    RunTest(ACCEPT_READ_FAST_CB, CLIENT_TIMEOUT_SEND);
 }
 
 /************************************************************************/
@@ -419,8 +432,9 @@ static void Measure(void (*func)(void), const char *msg)
     stop = PR_IntervalNow();
 
     d = (double)PR_IntervalToMicroseconds(stop - start);
-    if (debug_mode)
+    if (debug_mode) {
         PR_fprintf(output, "%40s: %6.2f usec\n", msg, d / count);
+    }
 
 }
 
@@ -437,20 +451,22 @@ int main(int argc, char **argv)
     PLOptState *opt = PL_CreateOptState(argc, argv, "Gdc:");
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'G':  /* global threads */
-            thread_scope = PR_GLOBAL_THREAD;
-            break;
-        case 'd':  /* debug mode */
-            debug_mode = 1;
-            break;
-        case 'c':  /* loop counter */
-            count = atoi(opt->value);
-            break;
-        default:
-            break;
+            case 'G':  /* global threads */
+                thread_scope = PR_GLOBAL_THREAD;
+                break;
+            case 'd':  /* debug mode */
+                debug_mode = 1;
+                break;
+            case 'c':  /* loop counter */
+                count = atoi(opt->value);
+                break;
+            default:
+                break;
         }
     }
     PL_DestroyOptState(opt);
@@ -460,8 +476,9 @@ int main(int argc, char **argv)
     PR_STDIO_INIT();
 
     timeoutTime = PR_SecondsToInterval(TIMEOUTSECS);
-    if (debug_mode)
+    if (debug_mode) {
         PR_fprintf(output, "\nRun accept() sucessful connection tests\n");
+    }
 
     Measure(AcceptUpdatedTest, "PR_Accept()");
     Measure(AcceptReadTest, "PR_AcceptRead()");
@@ -470,14 +487,16 @@ int main(int argc, char **argv)
     Measure(AcceptReadNotUpdatedTest, "PR_NTFast_AcceptRead()");
     Measure(AcceptReadCallbackTest, "PR_NTFast_AcceptRead_WithTimeoutCallback()");
 #endif
-    if (debug_mode)
+    if (debug_mode) {
         PR_fprintf(output, "\nRun accept() timeout in the accept tests\n");
+    }
 #ifdef WINNT
     Measure(TimeoutReadReadCallbackTest, "PR_NTFast_AcceptRead_WithTimeoutCallback()");
 #endif
     Measure(TimeoutReadUpdatedTest, "PR_Accept()");
-    if (debug_mode)
+    if (debug_mode) {
         PR_fprintf(output, "\nRun accept() timeout in the read tests\n");
+    }
     Measure(TimeoutReadReadTest, "PR_AcceptRead()");
 #ifdef WINNT
     Measure(TimeoutReadNotUpdatedTest, "PR_NTFast_Accept()");

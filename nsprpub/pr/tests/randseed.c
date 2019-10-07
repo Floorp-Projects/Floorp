@@ -5,17 +5,17 @@
 
 /*
 ** File: rngseed.c
-** Description: 
+** Description:
 ** Test NSPR's Random Number Seed generator
 **
 ** Initial test: Just make sure it outputs some data.
-** 
+**
 ** ... more? ... check some iterations to ensure it is random (no dupes)
 ** ... more? ... histogram distribution of random numbers
 */
 
 #include "plgetopt.h"
-#include "nspr.h" 
+#include "nspr.h"
 #include "prrng.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,22 +55,22 @@ static void PrintRand( void *buf, PRIntn size )
         switch( size )  {
             case 1 :
                 printf("%2.2X\n", *(rp++) );
-                size -= 4;    
+                size -= 4;
                 break;
             case 2 :
                 printf("%4.4X\n", *(rp++) );
-                size -= 4;    
+                size -= 4;
                 break;
             case 3 :
                 printf("%6.6X\n", *(rp++) );
-                size -= 4;    
+                size -= 4;
                 break;
             default:
                 while ( size >= 4) {
                     PRIntn i = 3;
                     do {
                         printf("%8.8X ", *(rp++) );
-                        size -= 4;    
+                        size -= 4;
                     } while( i-- );
                     i = 3;
                     printf("\n");
@@ -90,26 +90,28 @@ int main(int argc, char **argv)
         PLOptStatus os;
         PLOptState *opt = PL_CreateOptState(argc, argv, "hdv");
 
-	    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+        while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
         {
-		    if (PL_OPT_BAD == os) continue;
+            if (PL_OPT_BAD == os) {
+                continue;
+            }
             switch (opt->option)
             {
-            case 'd':  /* debug */
-                debug = 1;
-			    msgLevel = PR_LOG_ERROR;
-                break;
-            case 'v':  /* verbose mode */
-			    msgLevel = PR_LOG_DEBUG;
-                break;
-            case 'h':  /* help message */
-			    Help();
-                break;
-             default:
-                break;
+                case 'd':  /* debug */
+                    debug = 1;
+                    msgLevel = PR_LOG_ERROR;
+                    break;
+                case 'v':  /* verbose mode */
+                    msgLevel = PR_LOG_DEBUG;
+                    break;
+                case 'h':  /* help message */
+                    Help();
+                    break;
+                default:
+                    break;
             }
         }
-	    PL_DestroyOptState(opt);
+        PL_DestroyOptState(opt);
     }
 
     lm = PR_NewLogModule("Test");       /* Initialize logging */
@@ -121,10 +123,14 @@ int main(int argc, char **argv)
             failed_already = PR_TRUE;
             break;
         }
-        if (debug) PrintRand( buf, rSize );
+        if (debug) {
+            PrintRand( buf, rSize );
+        }
     }
 
-    if (debug) printf("%s\n", (failed_already)? "FAIL" : "PASS");
+    if (debug) {
+        printf("%s\n", (failed_already)? "FAIL" : "PASS");
+    }
     return( (failed_already == PR_TRUE )? 1 : 0 );
 }  /* main() */
 /* end template.c */

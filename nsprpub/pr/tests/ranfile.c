@@ -12,12 +12,12 @@
 ** Description: Test to hammer on various components of NSPR
 ** Modification History:
 ** 20-May-97 AGarcia- Converted the test to accomodate the debug_mode flag.
-**	         The debug mode will print all of the printfs associated with this test.
-**			 The regress mode will be the default mode. Since the regress tool limits
+**           The debug mode will print all of the printfs associated with this test.
+**           The regress mode will be the default mode. Since the regress tool limits
 **           the output to a one line status:PASS or FAIL,all of the printf statements
-**			 have been handled with an if (debug_mode) statement.
+**           have been handled with an if (debug_mode) statement.
 ** 04-June-97 AGarcia removed the Test_Result function. Regress tool has been updated to
-**			recognize the return code from tha main program.
+**          recognize the return code from tha main program.
 ***********************************************************************/
 
 
@@ -57,9 +57,9 @@ typedef struct Hammer_s {
     Problem problem;
 } Hammer_t;
 
-#define DEFAULT_LIMIT		10
-#define DEFAULT_THREADS		2
-#define DEFAULT_LOOPS		1
+#define DEFAULT_LIMIT       10
+#define DEFAULT_THREADS     2
+#define DEFAULT_LOOPS       1
 
 static PRInt32 pageSize = 1024;
 static const char* baseName = "./";
@@ -132,7 +132,9 @@ static void PR_CALLBACK Thread(void *arg)
 
     (void)sprintf(filename, "%ssg%04ld.dat", baseName, cd->id);
 
-    if (debug_mode) printf("Starting work on %s\n", filename);
+    if (debug_mode) {
+        printf("Starting work on %s\n", filename);
+    }
 
     while (PR_TRUE)
     {
@@ -143,51 +145,75 @@ static void PR_CALLBACK Thread(void *arg)
         while (minor-- > 0)
         {
             cd->problem = sg_okay;
-            if (cd->action != sg_go) goto finished;
+            if (cd->action != sg_go) {
+                goto finished;
+            }
             cd->problem = sg_open;
             file = PR_Open(filename, PR_RDWR|PR_CREATE_FILE, 0666);
-            if (file == NULL) goto finished;
+            if (file == NULL) {
+                goto finished;
+            }
             for (index = 0; index < pages; index++)
             {
                 cd->problem = sg_okay;
-                if (cd->action != sg_go) goto close;
+                if (cd->action != sg_go) {
+                    goto close;
+                }
                 cd->problem = sg_seek;
                 bytes = PR_Seek(file, pageSize * index, PR_SEEK_SET);
-                if (bytes != pageSize * index) goto close;
+                if (bytes != pageSize * index) {
+                    goto close;
+                }
                 cd->problem = sg_write;
                 bytes = PR_Write(file, &zero, sizeof(zero));
-                if (bytes <= 0) goto close;
+                if (bytes <= 0) {
+                    goto close;
+                }
                 cd->writes += 1;
             }
             cd->problem = sg_close;
             rv = PR_Close(file);
-            if (rv != PR_SUCCESS) goto purge;
+            if (rv != PR_SUCCESS) {
+                goto purge;
+            }
 
             cd->problem = sg_okay;
-            if (cd->action != sg_go) goto purge;
+            if (cd->action != sg_go) {
+                goto purge;
+            }
 
             cd->problem = sg_open;
             file = PR_Open(filename, PR_RDWR, 0666);
             for (index = 0; index < pages; index++)
             {
                 cd->problem = sg_okay;
-                if (cd->action != sg_go) goto close;
+                if (cd->action != sg_go) {
+                    goto close;
+                }
                 cd->problem = sg_seek;
                 bytes = PR_Seek(file, pageSize * index, PR_SEEK_SET);
-                if (bytes != pageSize * index) goto close;
+                if (bytes != pageSize * index) {
+                    goto close;
+                }
                 cd->problem = sg_write;
                 bytes = PR_Write(file, &zero, sizeof(zero));
-                if (bytes <= 0) goto close;
+                if (bytes <= 0) {
+                    goto close;
+                }
                 cd->writes += 1;
                 random = (random + 511) % pages;
             }
             cd->problem = sg_close;
             rv = PR_Close(file);
-            if (rv != PR_SUCCESS) goto purge;
+            if (rv != PR_SUCCESS) {
+                goto purge;
+            }
             cd->problem = sg_delete;
             rv = PR_Delete(filename);
-            if (rv != PR_SUCCESS) goto finished;
-       }
+            if (rv != PR_SUCCESS) {
+                goto finished;
+            }
+        }
     }
 
 close:
@@ -200,7 +226,9 @@ finished:
     PR_NotifyCondVar(cd->cv);
     PR_Unlock(cd->ml);
 
-    if (debug_mode) printf("Ending work on %s\n", filename);
+    if (debug_mode) {
+        printf("Ending work on %s\n", filename);
+    }
 
     return;
 }  /* Thread */
@@ -249,42 +277,44 @@ int main(int argc, char **argv)
 
     const char *where[] = {"okay", "open", "close", "delete", "write", "seek"};
 
-	/* The command line argument: -d is used to determine if the test is being run
-	in debug mode. The regress tool requires only one line output:PASS or FAIL.
-	All of the printfs associated with this test has been handled with a if (debug_mode)
-	test.
-	Usage: test_name -d
-	*/
-	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "Gdl:t:i:");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    /* The command line argument: -d is used to determine if the test is being run
+    in debug mode. The regress tool requires only one line output:PASS or FAIL.
+    All of the printfs associated with this test has been handled with a if (debug_mode)
+    test.
+    Usage: test_name -d
+    */
+    PLOptStatus os;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "Gdl:t:i:");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'G':  /* global threads */
-			thread_scope = PR_GLOBAL_THREAD;
-            break;
-        case 'd':  /* debug mode */
-			debug_mode = 1;
-            break;
-        case 'l':  /* limiting number */
-			limit = atoi(opt->value);
-            break;
-        case 't':  /* number of threads */
-			threads = atoi(opt->value);
-            break;
-        case 'i':  /* iteration counter */
-			loops = atoi(opt->value);
-            break;
-         default:
-            break;
+            case 'G':  /* global threads */
+                thread_scope = PR_GLOBAL_THREAD;
+                break;
+            case 'd':  /* debug mode */
+                debug_mode = 1;
+                break;
+            case 'l':  /* limiting number */
+                limit = atoi(opt->value);
+                break;
+            case 't':  /* number of threads */
+                threads = atoi(opt->value);
+                break;
+            case 'i':  /* iteration counter */
+                loops = atoi(opt->value);
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
- /* main test */
-	
+    /* main test */
+
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
@@ -293,18 +323,26 @@ int main(int argc, char **argv)
     ml = PR_NewLock();
     cv = PR_NewCondVar(ml);
 
-    if (loops == 0) loops = DEFAULT_LOOPS;
-    if (limit == 0) limit = DEFAULT_LIMIT;
-    if (threads == 0) threads = DEFAULT_THREADS;
+    if (loops == 0) {
+        loops = DEFAULT_LOOPS;
+    }
+    if (limit == 0) {
+        limit = DEFAULT_LIMIT;
+    }
+    if (threads == 0) {
+        threads = DEFAULT_THREADS;
+    }
 
     if (debug_mode) printf(
-        "%s: Using loops = %d, threads = %d, limit = %d and %s threads\n",
-        programName, loops, threads, limit,
-        (thread_scope == PR_LOCAL_THREAD) ? "LOCAL" : "GLOBAL");
+            "%s: Using loops = %d, threads = %d, limit = %d and %s threads\n",
+            programName, loops, threads, limit,
+            (thread_scope == PR_LOCAL_THREAD) ? "LOCAL" : "GLOBAL");
 
     for (times = 0; times < loops; ++times)
     {
-        if (debug_mode) printf("%s: Setting concurrency level to %d\n", programName, times + 1);
+        if (debug_mode) {
+            printf("%s: Setting concurrency level to %d\n", programName, times + 1);
+        }
         PR_SetConcurrency(times + 1);
         for (active = 0; active < threads; active++)
         {
@@ -317,9 +355,9 @@ int main(int argc, char **argv)
             hammer[active].limit = (RandomNum() % limit) + 1;
             hammer[active].timein = PR_IntervalNow();
             hammer[active].thread = PR_CreateThread(
-                PR_USER_THREAD, Thread, &hammer[active],
-                PR_GetThreadPriority(PR_GetCurrentThread()),
-                thread_scope, PR_JOINABLE_THREAD, 0);
+                                        PR_USER_THREAD, Thread, &hammer[active],
+                                        PR_GetThreadPriority(PR_GetCurrentThread()),
+                                        thread_scope, PR_JOINABLE_THREAD, 0);
 
             PR_Lock(ml);
             PR_WaitCondVar(cv, interleave);  /* start new ones slowly */
@@ -333,8 +371,9 @@ int main(int argc, char **argv)
         PR_Lock(ml);
         for (poll = 0; poll < threads; poll++)
         {
-            if (hammer[poll].action == sg_go)  /* don't overwrite done */
-                hammer[poll].action = sg_stop;  /* ask him to stop */
+            if (hammer[poll].action == sg_go) { /* don't overwrite done */
+                hammer[poll].action = sg_stop;    /* ask him to stop */
+            }
         }
         PR_Unlock(ml);
 
@@ -343,8 +382,9 @@ int main(int argc, char **argv)
             for (poll = 0; poll < threads; poll++)
             {
                 PR_Lock(ml);
-                while (hammer[poll].action < sg_done)
+                while (hammer[poll].action < sg_done) {
                     PR_WaitCondVar(cv, PR_INTERVAL_NO_TIMEOUT);
+                }
                 PR_Unlock(ml);
 
                 active -= 1;  /* this is another one down */
@@ -353,38 +393,41 @@ int main(int argc, char **argv)
                 if (hammer[poll].problem == sg_okay)
                 {
                     duration = PR_IntervalToMilliseconds(
-                        PR_IntervalNow() - hammer[poll].timein);
+                                   PR_IntervalNow() - hammer[poll].timein);
                     writes = hammer[poll].writes * 1000 / duration;
-                    if (writes < writesMin) 
+                    if (writes < writesMin) {
                         writesMin = writes;
-                    if (writes > writesMax) 
+                    }
+                    if (writes > writesMax) {
                         writesMax = writes;
+                    }
                     writesTot += hammer[poll].writes;
                     durationTot += duration;
                 }
-                else
-                    if (debug_mode) printf(
+                else if (debug_mode) printf(
                         "%s: test failed %s after %ld seconds\n",
                         programName, where[hammer[poll].problem], duration);
-					else failed_already=1;
+                else {
+                    failed_already=1;
+                }
             }
         }
     }
     if (debug_mode) printf(
-        "%s: [%ld [%ld] %ld] writes/sec average\n",
-        programName, writesMin, writesTot * 1000 / durationTot, writesMax);
+            "%s: [%ld [%ld] %ld] writes/sec average\n",
+            programName, writesMin, writesTot * 1000 / durationTot, writesMax);
 
     PR_DestroyCondVar(cv);
     PR_DestroyLock(ml);
 
-	if (failed_already) 
-	{
-	    printf("FAIL\n");
-		return 1;
-	}
+    if (failed_already)
+    {
+        printf("FAIL\n");
+        return 1;
+    }
     else
     {
         printf("PASS\n");
-		return 0;
+        return 0;
     }
 }  /* main */

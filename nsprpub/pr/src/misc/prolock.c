@@ -5,18 +5,18 @@
 
 /*
 **  prolock.c -- NSPR Ordered Lock
-** 
+**
 **  Implement the API defined in prolock.h
-** 
+**
 */
 #include "prolock.h"
 #include "prlog.h"
 #include "prerror.h"
 
-PR_IMPLEMENT(PROrderedLock *) 
-    PR_CreateOrderedLock( 
-        PRInt32 order,
-        const char *name
+PR_IMPLEMENT(PROrderedLock *)
+PR_CreateOrderedLock(
+    PRInt32 order,
+    const char *name
 )
 {
     PR_NOT_REACHED("Not implemented"); /* Not implemented yet */
@@ -25,9 +25,9 @@ PR_IMPLEMENT(PROrderedLock *)
 } /*  end PR_CreateOrderedLock() */
 
 
-PR_IMPLEMENT(void) 
-    PR_DestroyOrderedLock( 
-        PROrderedLock *lock 
+PR_IMPLEMENT(void)
+PR_DestroyOrderedLock(
+    PROrderedLock *lock
 )
 {
     PR_NOT_REACHED("Not implemented"); /* Not implemented yet */
@@ -35,9 +35,9 @@ PR_IMPLEMENT(void)
 } /*  end PR_DestroyOrderedLock() */
 
 
-PR_IMPLEMENT(void) 
-    PR_LockOrderedLock( 
-        PROrderedLock *lock 
+PR_IMPLEMENT(void)
+PR_LockOrderedLock(
+    PROrderedLock *lock
 )
 {
     PR_NOT_REACHED("Not implemented"); /* Not implemented yet */
@@ -45,9 +45,9 @@ PR_IMPLEMENT(void)
 } /*  end PR_LockOrderedLock() */
 
 
-PR_IMPLEMENT(PRStatus) 
-    PR_UnlockOrderedLock( 
-        PROrderedLock *lock 
+PR_IMPLEMENT(PRStatus)
+PR_UnlockOrderedLock(
+    PROrderedLock *lock
 )
 {
     PR_NOT_REACHED("Not implemented"); /* Not implemented yet */

@@ -10,13 +10,13 @@
  * plstr.h
  *
  * This header file exports the API to the NSPR portable library or string-
- * handling functions.  
- * 
- * This API was not designed as an "optimal" or "ideal" string library; it 
+ * handling functions.
+ *
+ * This API was not designed as an "optimal" or "ideal" string library; it
  * was based on the good ol' unix string.3 functions, and was written to
  *
- *  1) replace the libc functions, for cross-platform consistency, 
- *  2) complete the API on platforms lacking common functions (e.g., 
+ *  1) replace the libc functions, for cross-platform consistency,
+ *  2) complete the API on platforms lacking common functions (e.g.,
  *     strcase*), and
  *  3) to implement some obvious "closure" functions that I've seen
  *     people hacking around in our code.
@@ -76,13 +76,13 @@ PL_strncpy(char *dest, const char *src, PRUint32 max);
 /*
  * PL_strncpyz
  *
- * Copies the source string into the destination buffer, up to and including 
- * the trailing '\0' or up but not including the max'th character, whichever 
+ * Copies the source string into the destination buffer, up to and including
+ * the trailing '\0' or up but not including the max'th character, whichever
  * comes first.  It does not (can not) verify that the destination buffer is
  * large enough.  The destination string is always terminated with a '\0',
  * unlike the traditional libc implementation.  It returns the "dest" argument.
  *
- * NOTE: If you call this with a source "abcdefg" and a max of 5, the 
+ * NOTE: If you call this with a source "abcdefg" and a max of 5, the
  * destination will end up with "abcd\0" (i.e., its strlen length will be 4)!
  *
  * This means you can do this:
@@ -152,7 +152,7 @@ PL_strcat(char *dst, const char *src);
  * Appends a copy of the string pointed to by the second argument, up to
  * the maximum size specified, to the end of the string pointed to by the
  * first.  The destination buffer is not (can not be) checked for sufficient
- * size.  A null destination argument returns null; otherwise, the first 
+ * size.  A null destination argument returns null; otherwise, the first
  * argument is returned.  If the maximum size limits the copy, then the
  * result will *not* be null-terminated (JLRU).  A null destination
  * returns null; otherwise, the destination argument is returned.
@@ -189,10 +189,10 @@ PL_strcmp(const char *a, const char *b);
 
 /*
  * PL_strncmp
- * 
+ *
  * Returns an integer, the sign of which -- positive, zero, or negative --
  * reflects the lexical sorting order of the two strings indicated, up to
- * the maximum specified.  The result is positive if the first string comes 
+ * the maximum specified.  The result is positive if the first string comes
  * after the second.  The NSPR implementation is not i18n.  If the maximum
  * is zero, only the existance or non-existance (pointer is null) of the
  * strings is compared.
@@ -206,7 +206,7 @@ PL_strncmp(const char *a, const char *b, PRUint32 max);
  *
  * Returns an integer, the sign of which -- positive, zero or negative --
  * reflects the case-insensitive lexical sorting order of the two strings
- * indicated.  The result is positive if the first string comes after the 
+ * indicated.  The result is positive if the first string comes after the
  * second.  The NSPR implementation is not i18n.
  */
 
@@ -218,7 +218,7 @@ PL_strcasecmp(const char *a, const char *b);
  *
  * Returns an integer, the sign of which -- positive, zero or negative --
  * reflects the case-insensitive lexical sorting order of the first n characters
- * of the two strings indicated.  The result is positive if the first string comes 
+ * of the two strings indicated.  The result is positive if the first string comes
  * after the second.  The NSPR implementation is not i18n.
  */
 
@@ -249,7 +249,7 @@ PL_strrchr(const char *s, char c);
 
 /*
  * PL_strnchr
- * 
+ *
  * Returns a pointer to the first instance of the specified character within the
  * first n characters of the provided string.  It returns null if the character
  * is not found, or if the provided string is null.  The character may be the
@@ -386,7 +386,7 @@ PL_strcaserstr(const char *big, const char *little);
  * PL_strncasestr
  *
  * Returns a pointer to the first instance of the little string within the first
- * n characters of the big one, ignoring case.  It returns null if either string is 
+ * n characters of the big one, ignoring case.  It returns null if either string is
  * null.  It returns null if the length of the little string is greater than n.
  */
 

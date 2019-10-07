@@ -17,7 +17,7 @@ PR_IMPLEMENT(PRIntn) My_GetValue()
 }
 
 #if defined(WIN16)
-int CALLBACK LibMain( HINSTANCE hInst, WORD wDataSeg, 
+int CALLBACK LibMain( HINSTANCE hInst, WORD wDataSeg,
                       WORD cbHeapSize, LPSTR lpszCmdLine )
 {
     return TRUE;

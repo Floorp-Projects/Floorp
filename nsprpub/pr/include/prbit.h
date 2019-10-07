@@ -18,18 +18,18 @@ PR_BEGIN_EXTERN_C
      defined(_M_ARM64))
 # include <intrin.h>
 # pragma  intrinsic(_BitScanForward,_BitScanReverse)
-  __forceinline static int __prBitScanForward32(unsigned int val)
-  { 
+__forceinline static int __prBitScanForward32(unsigned int val)
+{
     unsigned long idx;
     _BitScanForward(&idx, (unsigned long)val);
     return( (int)idx );
-  }
-  __forceinline static int __prBitScanReverse32(unsigned int val)
-  {
+}
+__forceinline static int __prBitScanReverse32(unsigned int val)
+{
     unsigned long idx;
     _BitScanReverse(&idx, (unsigned long)val);
     return( (int)(31-idx) );
-  }
+}
 # define pr_bitscan_ctz32(val)  __prBitScanForward32(val)
 # define pr_bitscan_clz32(val)  __prBitScanReverse32(val)
 # define  PR_HAVE_BUILTIN_BITSCAN32
@@ -56,18 +56,18 @@ typedef unsigned long prbitmap_t;
 /*
 ** Compute the log of the least power of 2 greater than or equal to n
 */
-NSPR_API(PRIntn) PR_CeilingLog2(PRUint32 i); 
+NSPR_API(PRIntn) PR_CeilingLog2(PRUint32 i);
 
 /*
 ** Compute the log of the greatest power of 2 less than or equal to n
 */
-NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i); 
+NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
 
 /*
 ** Macro version of PR_CeilingLog2: Compute the log of the least power of
 ** 2 greater than or equal to _n. The result is returned in _log2.
 */
-#ifdef PR_HAVE_BUILTIN_BITSCAN32 
+#ifdef PR_HAVE_BUILTIN_BITSCAN32
 #define PR_CEILING_LOG2(_log2,_n)      \
   PR_BEGIN_MACRO                       \
     PRUint32 j_ = (PRUint32)(_n);      \
@@ -76,20 +76,20 @@ NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
 #else
 #define PR_CEILING_LOG2(_log2,_n)   \
   PR_BEGIN_MACRO                    \
-    PRUint32 j_ = (PRUint32)(_n); 	\
+    PRUint32 j_ = (PRUint32)(_n);   \
     (_log2) = 0;                    \
     if ((j_) & ((j_)-1))            \
-	(_log2) += 1;               \
+    (_log2) += 1;               \
     if ((j_) >> 16)                 \
-	(_log2) += 16, (j_) >>= 16; \
+    (_log2) += 16, (j_) >>= 16; \
     if ((j_) >> 8)                  \
-	(_log2) += 8, (j_) >>= 8;   \
+    (_log2) += 8, (j_) >>= 8;   \
     if ((j_) >> 4)                  \
-	(_log2) += 4, (j_) >>= 4;   \
+    (_log2) += 4, (j_) >>= 4;   \
     if ((j_) >> 2)                  \
-	(_log2) += 2, (j_) >>= 2;   \
+    (_log2) += 2, (j_) >>= 2;   \
     if ((j_) >> 1)                  \
-	(_log2) += 1;               \
+    (_log2) += 1;               \
   PR_END_MACRO
 #endif /* PR_HAVE_BUILTIN_BITSCAN32 */
 
@@ -108,18 +108,18 @@ NSPR_API(PRIntn) PR_FloorLog2(PRUint32 i);
 #else
 #define PR_FLOOR_LOG2(_log2,_n)   \
   PR_BEGIN_MACRO                    \
-    PRUint32 j_ = (PRUint32)(_n); 	\
+    PRUint32 j_ = (PRUint32)(_n);   \
     (_log2) = 0;                    \
     if ((j_) >> 16)                 \
-	(_log2) += 16, (j_) >>= 16; \
+    (_log2) += 16, (j_) >>= 16; \
     if ((j_) >> 8)                  \
-	(_log2) += 8, (j_) >>= 8;   \
+    (_log2) += 8, (j_) >>= 8;   \
     if ((j_) >> 4)                  \
-	(_log2) += 4, (j_) >>= 4;   \
+    (_log2) += 4, (j_) >>= 4;   \
     if ((j_) >> 2)                  \
-	(_log2) += 2, (j_) >>= 2;   \
+    (_log2) += 2, (j_) >>= 2;   \
     if ((j_) >> 1)                  \
-	(_log2) += 1;               \
+    (_log2) += 1;               \
   PR_END_MACRO
 #endif /* PR_HAVE_BUILTIN_BITSCAN32 */
 

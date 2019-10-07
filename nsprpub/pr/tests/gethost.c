@@ -45,7 +45,9 @@ void PrintHostent(const PRHostEnt *he)
     for (i = 0; he->h_addr_list[i]; i++) {
         printf("h_addr_list[%d]: ", i);
         for (j = 0; j < he->h_length; j++) {
-            if (j != 0) printf(".");
+            if (j != 0) {
+                printf(".");
+            }
             printf("%u", (unsigned char)he->h_addr_list[i][j]);
         }
         printf("\n");
@@ -64,7 +66,9 @@ int main(int argc, char **argv)
     PLOptState *opt = PL_CreateOptState(argc, argv, "h");
 
     while (PL_OPT_EOL != (os = PL_GetNextOpt(opt))) {
-        if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option) {
             case 0:  /* naked */
                 hostName = opt->value;
@@ -89,10 +93,12 @@ int main(int argc, char **argv)
             fprintf(stderr, "PR_EnumerateHostEnt failed\n");
             exit(1);
         }
-        if (idx == 0) break;  /* normal loop termination */
+        if (idx == 0) {
+            break;    /* normal loop termination */
+        }
         printf("reverse lookup\n");
         if (PR_GetHostByAddr(&addr, reversebuf, sizeof(reversebuf),
-                &reversehe) == PR_FAILURE) {
+                             &reversehe) == PR_FAILURE) {
             fprintf(stderr, "PR_GetHostByAddr failed\n");
             exit(1);
         }
@@ -101,14 +107,14 @@ int main(int argc, char **argv)
 
     printf("PR_GetIPNodeByName with PR_AF_INET\n");
     if (PR_GetIPNodeByName(hostName, PR_AF_INET, PR_AI_DEFAULT,
-            buf, sizeof(buf), &he) == PR_FAILURE) {
+                           buf, sizeof(buf), &he) == PR_FAILURE) {
         fprintf(stderr, "PR_GetIPNodeByName failed\n");
         exit(1);
     }
     PrintHostent(&he);
     printf("PR_GetIPNodeByName with PR_AF_INET6\n");
     if (PR_GetIPNodeByName(hostName, PR_AF_INET6, PR_AI_DEFAULT,
-            buf, sizeof(buf), &he) == PR_FAILURE) {
+                           buf, sizeof(buf), &he) == PR_FAILURE) {
         fprintf(stderr, "PR_GetIPNodeByName failed\n");
         exit(1);
     }
@@ -121,17 +127,19 @@ int main(int argc, char **argv)
             fprintf(stderr, "PR_EnumerateHostEnt failed\n");
             exit(1);
         }
-        if (idx == 0) break;  /* normal loop termination */
+        if (idx == 0) {
+            break;    /* normal loop termination */
+        }
         printf("reverse lookup\n");
         if (PR_GetHostByAddr(&addr, reversebuf, sizeof(reversebuf),
-                &reversehe) == PR_FAILURE) {
+                             &reversehe) == PR_FAILURE) {
             fprintf(stderr, "PR_GetHostByAddr failed\n");
             exit(1);
         }
         PrintHostent(&reversehe);
     }
     printf("PR_GetHostByAddr with PR_AF_INET6 done\n");
-  
+
     PR_StringToNetAddr("::1", &addr);
     if (PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped) == PR_TRUE) {
         fprintf(stderr, "addr should not be ipv4 mapped address\n");
@@ -198,11 +206,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "addr should be unspecified address\n");
         exit(1);
     }
-	{
-		char buf[256];
-		PR_NetAddrToString(&addr, buf, 256);
-		printf("IPv4 INADDRANY: %s\n", buf);
-	}
+    {
+        char buf[256];
+        PR_NetAddrToString(&addr, buf, 256);
+        printf("IPv4 INADDRANY: %s\n", buf);
+    }
     addr.inet.family = PR_AF_INET;
     addr.inet.port = 0;
     addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
@@ -210,11 +218,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "addr should be loopback address\n");
         exit(1);
     }
-	{
-		char buf[256];
-		PR_NetAddrToString(&addr, buf, 256);
-		printf("IPv4 LOOPBACK: %s\n", buf);
-	}
+    {
+        char buf[256];
+        PR_NetAddrToString(&addr, buf, 256);
+        printf("IPv4 LOOPBACK: %s\n", buf);
+    }
 
     if (PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &addr) == PR_FAILURE) {
         fprintf(stderr, "PR_SetNetAddr failed\n");
@@ -224,11 +232,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "addr should be unspecified address\n");
         exit(1);
     }
-	{
-		char buf[256];
-		PR_NetAddrToString(&addr, buf, 256);
-		printf("IPv6 INADDRANY: %s\n", buf);
-	}
+    {
+        char buf[256];
+        PR_NetAddrToString(&addr, buf, 256);
+        printf("IPv6 INADDRANY: %s\n", buf);
+    }
     if (PR_SetNetAddr(PR_IpAddrLoopback, PR_AF_INET6, 0, &addr) == PR_FAILURE) {
         fprintf(stderr, "PR_SetNetAddr failed\n");
         exit(1);
@@ -237,23 +245,23 @@ int main(int argc, char **argv)
         fprintf(stderr, "addr should be loopback address\n");
         exit(1);
     }
-	{
-		char buf[256];
-		PR_NetAddrToString(&addr, buf, 256);
-		printf("IPv6 LOOPBACK: %s\n", buf);
-	}
-	{
-		PRIPv6Addr v6addr;
-		char tmp_buf[256];
+    {
+        char buf[256];
+        PR_NetAddrToString(&addr, buf, 256);
+        printf("IPv6 LOOPBACK: %s\n", buf);
+    }
+    {
+        PRIPv6Addr v6addr;
+        char tmp_buf[256];
 
-    	PR_SetNetAddr(PR_IpAddrLoopback, PR_AF_INET, 0, &addr);
+        PR_SetNetAddr(PR_IpAddrLoopback, PR_AF_INET, 0, &addr);
 
-		PR_ConvertIPv4AddrToIPv6(addr.inet.ip, &v6addr);
-    	PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &addr);
-		addr.ipv6.ip = v6addr;
-		PR_NetAddrToString(&addr, tmp_buf, 256);
-		printf("IPv4-mapped IPv6 LOOPBACK: %s\n", tmp_buf);
-	}
+        PR_ConvertIPv4AddrToIPv6(addr.inet.ip, &v6addr);
+        PR_SetNetAddr(PR_IpAddrAny, PR_AF_INET6, 0, &addr);
+        addr.ipv6.ip = v6addr;
+        PR_NetAddrToString(&addr, tmp_buf, 256);
+        printf("IPv4-mapped IPv6 LOOPBACK: %s\n", tmp_buf);
+    }
     printf("PASS\n");
     return 0;
 }

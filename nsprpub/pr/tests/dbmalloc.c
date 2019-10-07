@@ -11,10 +11,10 @@
 **
 ** Modification History:
 ** 14-May-97 AGarcia- Converted the test to accomodate the debug_mode flag.
-**	         The debug mode will print all of the printfs associated with this test.
-**			 The regress mode will be the default mode. Since the regress tool limits
+**           The debug mode will print all of the printfs associated with this test.
+**           The regress mode will be the default mode. Since the regress tool limits
 **           the output to a one line status:PASS or FAIL,all of the printf statements
-**			 have been handled with an if (debug_mode) statement. 
+**           have been handled with an if (debug_mode) statement.
 ***********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,15 +38,17 @@ typedef struct node_struct
     int line;
     char value[4];
 }
-    node_t,
-   *node_pt;
+node_t,
+*node_pt;
 
 node_pt get_node(const char *line)
 {
     node_pt rv;
     int l = strlen(line);
     rv = (node_pt)PR_MALLOC(sizeof(node_t) + l + 1 - 4);
-    if( (node_pt)0 == rv ) return (node_pt)0;
+    if( (node_pt)0 == rv ) {
+        return (node_pt)0;
+    }
     memcpy(&rv->value[0], line, l+1);
     rv->next = rv->prev = (node_pt)0;
     return rv;
@@ -61,10 +63,18 @@ dump
     int         debug
 )
 {
-    if( (node_pt)0 != node->prev ) dump(name, node->prev, mf, debug);
-    if( 0 != debug ) printf("[%s]: %6d: %s", name, node->line, node->value);
-    if( node->line == mf ) fprintf(stderr, "[%s]: Line %d was allocated!\n", name, node->line);
-    if( (node_pt)0 != node->next ) dump(name, node->next, mf, debug);
+    if( (node_pt)0 != node->prev ) {
+        dump(name, node->prev, mf, debug);
+    }
+    if( 0 != debug ) {
+        printf("[%s]: %6d: %s", name, node->line, node->value);
+    }
+    if( node->line == mf ) {
+        fprintf(stderr, "[%s]: Line %d was allocated!\n", name, node->line);
+    }
+    if( (node_pt)0 != node->next ) {
+        dump(name, node->next, mf, debug);
+    }
     return;
 }
 
@@ -74,8 +84,12 @@ release
     node_pt node
 )
 {
-    if( (node_pt)0 != node->prev ) release(node->prev);
-    if( (node_pt)0 != node->next ) release(node->next);
+    if( (node_pt)0 != node->prev ) {
+        release(node->prev);
+    }
+    if( (node_pt)0 != node->next ) {
+        release(node->next);
+    }
     PR_DELETE(node);
 }
 
@@ -129,13 +143,14 @@ t2
         node_pt n;
         node_pt *w = &head;
 
-        if( (strlen(buffer) == (BUFSIZ-1)) && (buffer[BUFSIZ-2] != '\n') )
+        if( (strlen(buffer) == (BUFSIZ-1)) && (buffer[BUFSIZ-2] != '\n') ) {
             buffer[BUFSIZ-2] == '\n';
+        }
 
         l++;
 
         n = get_node(buffer);
-        if( (node_pt)0 == n ) 
+        if( (node_pt)0 == n )
         {
             printf("[%s]: Line %d: malloc failure!\n", name, l);
             continue;
@@ -154,8 +169,12 @@ t2
             }
 
             comp = strcmp((*w)->value, n->value);
-            if( comp < 0 ) w = &(*w)->next;
-            else w = &(*w)->prev;
+            if( comp < 0 ) {
+                w = &(*w)->next;
+            }
+            else {
+                w = &(*w)->prev;
+            }
         }
     }
 
@@ -186,16 +205,24 @@ test
 
     printf("[%s]: starting test 0\n", name);
     n = t2(name, 0, debug);
-    if( -1 == n ) return;
+    if( -1 == n ) {
+        return;
+    }
     printf("[%s]: test 0 had %ld allocations.\n", name, n);
 
-    if( 0 >= n ) return;
+    if( 0 >= n ) {
+        return;
+    }
 
     for( i = 0; i < nf; i++ )
     {
         int which = rand() % n;
-        if( 0 == which ) printf("[%s]: starting test %d -- no allocation should fail\n", name, i+1);
-        else printf("[%s]: starting test %d -- allocation %d should fail\n", name, i+1, which);
+        if( 0 == which ) {
+            printf("[%s]: starting test %d -- no allocation should fail\n", name, i+1);
+        }
+        else {
+            printf("[%s]: starting test %d -- allocation %d should fail\n", name, i+1, which);
+        }
         (void)t2(name, which, debug);
         printf("[%s]: test %d done.\n", name, i+1);
     }
@@ -213,7 +240,7 @@ int main(int argc, char **argv)
         struct threadlist *next;
         PRThread *thread;
     }
-        *threadhead = (struct threadlist *)0;
+    *threadhead = (struct threadlist *)0;
 
     extern int nf, debug;
 
@@ -268,15 +295,15 @@ int main(int argc, char **argv)
                 struct threadlist *n;
 
                 n = (struct threadlist *)malloc(sizeof(struct threadlist));
-                if( (struct threadlist *)0 == n ) 
+                if( (struct threadlist *)0 == n )
                 {
                     fprintf(stderr, "This is getting tedious. \"%s\"\n", *argv);
                     continue;
                 }
 
                 n->next = threadhead;
-                n->thread = PR_CreateThread(PR_USER_THREAD, (void (*)(void *))test, 
-                                            *argv, PR_PRIORITY_NORMAL, 
+                n->thread = PR_CreateThread(PR_USER_THREAD, (void (*)(void *))test,
+                                            *argv, PR_PRIORITY_NORMAL,
                                             PR_LOCAL_THREAD, PR_JOINABLE_THREAD,
                                             0);
                 if( (PRThread *)0 == n->thread )
@@ -296,14 +323,16 @@ int main(int argc, char **argv)
         }
     }
 
-    if( okay == 0 ) usage();
-    else while( (struct threadlist *)0 != threadhead )
-    {
-        struct threadlist *x = threadhead->next;
-        (void)PR_JoinThread(threadhead->thread);
-        PR_DELETE(threadhead);
-        threadhead = x;
+    if( okay == 0 ) {
+        usage();
     }
+    else while( (struct threadlist *)0 != threadhead )
+        {
+            struct threadlist *x = threadhead->next;
+            (void)PR_JoinThread(threadhead->thread);
+            PR_DELETE(threadhead);
+            threadhead = x;
+        }
 
     return 0;
 }

@@ -16,7 +16,7 @@
 #include <TargetConditionals.h>
 #endif
 
-#define PR_LINKER_ARCH	"darwin"
+#define PR_LINKER_ARCH  "darwin"
 #define _PR_SI_SYSNAME  "DARWIN"
 #ifdef __i386__
 #define _PR_SI_ARCHITECTURE "x86"
@@ -31,11 +31,11 @@
 #else
 #error "Unknown CPU architecture"
 #endif
-#define PR_DLL_SUFFIX		".dylib"
+#define PR_DLL_SUFFIX       ".dylib"
 
 #define _PR_VMBASE              0x30000000
-#define _PR_STACK_VMBASE	0x50000000
-#define _MD_DEFAULT_STACK_SIZE	65536L
+#define _PR_STACK_VMBASE    0x50000000
+#define _MD_DEFAULT_STACK_SIZE  65536L
 #define _MD_MMAP_FLAGS          MAP_PRIVATE
 
 #undef  HAVE_STACK_GROWING_UP
@@ -45,7 +45,7 @@
 #else
 #define USE_MACH_DYLD
 #endif
-#define _PR_HAVE_SOCKADDR_LEN  
+#define _PR_HAVE_SOCKADDR_LEN
 #define _PR_STAT_HAS_ST_ATIMESPEC
 #define _PR_HAVE_LARGE_OFF_T
 #define _PR_HAVE_SYSV_SEMAPHORES
@@ -146,11 +146,11 @@ static inline PRInt32 _MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
 
 #include <setjmp.h>
 
-#define PR_CONTEXT_TYPE	jmp_buf
+#define PR_CONTEXT_TYPE jmp_buf
 
 #define CONTEXT(_th)       ((_th)->md.context)
 #define _MD_GET_SP(_th)    (((struct sigcontext *) (_th)->md.context)->sc_onstack)
-#define PR_NUM_GCREGS	    _JBLEN
+#define PR_NUM_GCREGS       _JBLEN
 
 /*
 ** Initialize a thread context to run "_main()" when started
@@ -166,8 +166,8 @@ static inline PRInt32 _MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
 
 #define _MD_SWITCH_CONTEXT(_thread)  \
     if (!setjmp(CONTEXT(_thread))) {  \
-	(_thread)->md.errcode = errno;  \
-	_PR_Schedule();  \
+    (_thread)->md.errcode = errno;  \
+    _PR_Schedule();  \
     }
 
 /*
@@ -221,31 +221,31 @@ struct _MDCPU_Unix {
 #ifndef _PR_USE_POLL
     fd_set fd_read_set, fd_write_set, fd_exception_set;
     PRInt16 fd_read_cnt[_PR_MD_MAX_OSFD],fd_write_cnt[_PR_MD_MAX_OSFD],
-				fd_exception_cnt[_PR_MD_MAX_OSFD];
+            fd_exception_cnt[_PR_MD_MAX_OSFD];
 #else
-	struct pollfd *ioq_pollfds;
-	int ioq_pollfds_size;
-#endif	/* _PR_USE_POLL */
+    struct pollfd *ioq_pollfds;
+    int ioq_pollfds_size;
+#endif  /* _PR_USE_POLL */
 };
 
-#define _PR_IOQ(_cpu)			((_cpu)->md.md_unix.ioQ)
+#define _PR_IOQ(_cpu)           ((_cpu)->md.md_unix.ioQ)
 #define _PR_ADD_TO_IOQ(_pq, _cpu) PR_APPEND_LINK(&_pq.links, &_PR_IOQ(_cpu))
-#define _PR_FD_READ_SET(_cpu)		((_cpu)->md.md_unix.fd_read_set)
-#define _PR_FD_READ_CNT(_cpu)		((_cpu)->md.md_unix.fd_read_cnt)
-#define _PR_FD_WRITE_SET(_cpu)		((_cpu)->md.md_unix.fd_write_set)
-#define _PR_FD_WRITE_CNT(_cpu)		((_cpu)->md.md_unix.fd_write_cnt)
-#define _PR_FD_EXCEPTION_SET(_cpu)	((_cpu)->md.md_unix.fd_exception_set)
-#define _PR_FD_EXCEPTION_CNT(_cpu)	((_cpu)->md.md_unix.fd_exception_cnt)
-#define _PR_IOQ_TIMEOUT(_cpu)		((_cpu)->md.md_unix.ioq_timeout)
-#define _PR_IOQ_MAX_OSFD(_cpu)		((_cpu)->md.md_unix.ioq_max_osfd)
-#define _PR_IOQ_OSFD_CNT(_cpu)		((_cpu)->md.md_unix.ioq_osfd_cnt)
-#define _PR_IOQ_POLLFDS(_cpu)		((_cpu)->md.md_unix.ioq_pollfds)
-#define _PR_IOQ_POLLFDS_SIZE(_cpu)	((_cpu)->md.md_unix.ioq_pollfds_size)
+#define _PR_FD_READ_SET(_cpu)       ((_cpu)->md.md_unix.fd_read_set)
+#define _PR_FD_READ_CNT(_cpu)       ((_cpu)->md.md_unix.fd_read_cnt)
+#define _PR_FD_WRITE_SET(_cpu)      ((_cpu)->md.md_unix.fd_write_set)
+#define _PR_FD_WRITE_CNT(_cpu)      ((_cpu)->md.md_unix.fd_write_cnt)
+#define _PR_FD_EXCEPTION_SET(_cpu)  ((_cpu)->md.md_unix.fd_exception_set)
+#define _PR_FD_EXCEPTION_CNT(_cpu)  ((_cpu)->md.md_unix.fd_exception_cnt)
+#define _PR_IOQ_TIMEOUT(_cpu)       ((_cpu)->md.md_unix.ioq_timeout)
+#define _PR_IOQ_MAX_OSFD(_cpu)      ((_cpu)->md.md_unix.ioq_max_osfd)
+#define _PR_IOQ_OSFD_CNT(_cpu)      ((_cpu)->md.md_unix.ioq_osfd_cnt)
+#define _PR_IOQ_POLLFDS(_cpu)       ((_cpu)->md.md_unix.ioq_pollfds)
+#define _PR_IOQ_POLLFDS_SIZE(_cpu)  ((_cpu)->md.md_unix.ioq_pollfds_size)
 
-#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)	32
+#define _PR_IOQ_MIN_POLLFDS_SIZE(_cpu)  32
 
 struct _MDCPU {
-	struct _MDCPU_Unix md_unix;
+    struct _MDCPU_Unix md_unix;
 };
 
 #define _MD_INIT_LOCKS()
@@ -281,7 +281,7 @@ extern void _MD_YIELD(void);
 #endif /* ! _PR_PTHREADS */
 
 #define _MD_EARLY_INIT          _MD_EarlyInit
-#define _MD_FINAL_INIT			_PR_UnixInit
+#define _MD_FINAL_INIT          _PR_UnixInit
 #define _MD_INTERVAL_INIT       _PR_Mach_IntervalInit
 #define _MD_GET_INTERVAL        _PR_Mach_GetInterval
 #define _MD_INTERVAL_PER_SEC    _PR_Mach_TicksPerSecond

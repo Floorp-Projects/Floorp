@@ -46,34 +46,36 @@ int main(int argc, char **argv)
         PLOptStatus os;
         PLOptState *opt = PL_CreateOptState(argc, argv, "vds");
 
-	    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+        while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
         {
-		    if (PL_OPT_BAD == os) continue;
+            if (PL_OPT_BAD == os) {
+                continue;
+            }
             switch (opt->option)
             {
-            case 'd':  /* debug */
-                debug = 1;
-                break;
-            case 'v':  /* verbose */
-                verbose = 1;
-                break;
-            case 's':  /* secure / set[ug]id */
-                /*
-                ** To test PR_GetEnvSecure, make this executable (or a
-                ** copy of it) setuid / setgid / otherwise inherently
-                ** privileged (e.g., file capabilities) and run it
-                ** with this flag.
-                */
-                secure = 1;
-                break;
-             default:
-                break;
+                case 'd':  /* debug */
+                    debug = 1;
+                    break;
+                case 'v':  /* verbose */
+                    verbose = 1;
+                    break;
+                case 's':  /* secure / set[ug]id */
+                    /*
+                    ** To test PR_GetEnvSecure, make this executable (or a
+                    ** copy of it) setuid / setgid / otherwise inherently
+                    ** privileged (e.g., file capabilities) and run it
+                    ** with this flag.
+                    */
+                    secure = 1;
+                    break;
+                default:
+                    break;
             }
         }
-	    PL_DestroyOptState(opt);
+        PL_DestroyOptState(opt);
     } /* end block "Get command line options" */
 
-#if 0 
+#if 0
     {
         /*
         ** This uses Windows native environment manipulation
@@ -83,24 +85,36 @@ int main(int argc, char **argv)
         DWORD   size;
         rv = SetEnvironmentVariable( ENVNAME, ENVVALUE );
         if ( rv == 0 )  {
-            if (debug) printf("env: Shit! SetEnvironmentVariable() failed\n");
+            if (debug) {
+                printf("env: Shit! SetEnvironmentVariable() failed\n");
+            }
             failedAlready = PR_TRUE;
         }
-        if (verbose) printf("env: SetEnvironmentVariable() worked\n");
+        if (verbose) {
+            printf("env: SetEnvironmentVariable() worked\n");
+        }
 
-        size = GetEnvironmentVariable( ENVNAME, envBuf, ENVBUFSIZE );    
+        size = GetEnvironmentVariable( ENVNAME, envBuf, ENVBUFSIZE );
         if ( size == 0 )  {
-            if (debug) printf("env: Shit! GetEnvironmentVariable() failed. Found: %s\n", envBuf );
+            if (debug) {
+                printf("env: Shit! GetEnvironmentVariable() failed. Found: %s\n", envBuf );
+            }
             failedAlready = PR_TRUE;
         }
-        if (verbose) printf("env: GetEnvironmentVariable() worked. Found: %s\n", envBuf);
+        if (verbose) {
+            printf("env: GetEnvironmentVariable() worked. Found: %s\n", envBuf);
+        }
 
         value = PR_GetEnv( ENVNAME );
         if ( (NULL == value ) || (strcmp( value, ENVVALUE)))  {
-            if (debug) printf( "env: PR_GetEnv() failed retrieving WinNative. Found: %s\n", value);
+            if (debug) {
+                printf( "env: PR_GetEnv() failed retrieving WinNative. Found: %s\n", value);
+            }
             failedAlready = PR_TRUE;
         }
-        if (verbose) printf("env: PR_GetEnv() worked. Found: %s\n", value);
+        if (verbose) {
+            printf("env: PR_GetEnv() worked. Found: %s\n", value);
+        }
     }
 #endif
 
@@ -109,18 +123,26 @@ int main(int argc, char **argv)
     sprintf( envBuf, ENVNAME "=" ENVVALUE );
     rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_SetEnv() failed setting\n");
+        if (debug) {
+            printf( "env: PR_SetEnv() failed setting\n");
+        }
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_SetEnv() worked.\n");
+        if (verbose) {
+            printf("env: PR_SetEnv() worked.\n");
+        }
     }
 
     value = PR_GetEnv( ENVNAME );
     if ( (NULL == value ) || (strcmp( value, ENVVALUE)))  {
-        if (debug) printf( "env: PR_GetEnv() Failed after setting\n" );
+        if (debug) {
+            printf( "env: PR_GetEnv() Failed after setting\n" );
+        }
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_GetEnv() worked after setting it. Found: %s\n", value );
+        if (verbose) {
+            printf("env: PR_GetEnv() worked after setting it. Found: %s\n", value );
+        }
     }
 
     if ( secure ) {
@@ -130,10 +152,14 @@ int main(int argc, char **argv)
         */
         value = PR_GetEnvSecure( ENVNAME );
         if ( NULL != value ) {
-            if (debug) printf( "env: PR_GetEnvSecure() failed; expected NULL, found \"%s\"\n", value );
+            if (debug) {
+                printf( "env: PR_GetEnvSecure() failed; expected NULL, found \"%s\"\n", value );
+            }
             failedAlready = PR_TRUE;
         } else {
-            if (verbose) printf("env: PR_GetEnvSecure() worked\n" );
+            if (verbose) {
+                printf("env: PR_GetEnvSecure() worked\n" );
+            }
         }
     } else {
         /*
@@ -142,14 +168,18 @@ int main(int argc, char **argv)
         */
         value = PR_GetEnvSecure( ENVNAME );
         if ( (NULL == value ) || (strcmp( value, ENVVALUE)))  {
-            if (debug) printf( "env: PR_GetEnvSecure() Failed after setting\n" );
+            if (debug) {
+                printf( "env: PR_GetEnvSecure() Failed after setting\n" );
+            }
             failedAlready = PR_TRUE;
         } else {
-            if (verbose) printf("env: PR_GetEnvSecure() worked after setting it. Found: %s\n", value );
+            if (verbose) {
+                printf("env: PR_GetEnvSecure() worked after setting it. Found: %s\n", value );
+            }
         }
     }
 
-/* ---------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------- */
     /* check that PR_DuplicateEnvironment() agrees with PR_GetEnv() */
     {
 #if defined(XP_UNIX) && (!defined(DARWIN) || defined(HAVE_CRT_EXTERNS_H))
@@ -163,9 +193,11 @@ int main(int argc, char **argv)
         if ( NULL == dupenv ) {
             if (expect_failure) {
                 if (verbose) printf("env: PR_DuplicateEnvironment failed, "
-                                    "as expected on this platform.\n");
+                                        "as expected on this platform.\n");
             } else {
-                if (debug) printf("env: PR_DuplicateEnvironment() failed.\n");
+                if (debug) {
+                    printf("env: PR_DuplicateEnvironment() failed.\n");
+                }
                 failedAlready = PR_TRUE;
             }
         } else {
@@ -173,17 +205,19 @@ int main(int argc, char **argv)
 
             if (expect_failure) {
                 if (debug) printf("env: PR_DuplicateEnvironment() succeeded, "
-                                  "but failure is expected on this platform.\n");
+                                      "but failure is expected on this platform.\n");
                 failedAlready = PR_TRUE;
             } else {
-                if (verbose) printf("env: PR_DuplicateEnvironment() succeeded.\n");
+                if (verbose) {
+                    printf("env: PR_DuplicateEnvironment() succeeded.\n");
+                }
             }
             for (i = dupenv; *i; i++) {
                 char *equals = strchr(*i, '=');
 
                 if ( equals == NULL ) {
                     if (debug) printf("env: PR_DuplicateEnvironment() returned a string"
-                                      " with no '=': %s\n", *i);
+                                          " with no '=': %s\n", *i);
                     failedAlready = PR_TRUE;
                 } else {
                     /* We own this string, so we can temporarily alter it */
@@ -193,23 +227,23 @@ int main(int argc, char **argv)
                     if ( strcmp(*i, ENVNAME) == 0) {
                         found++;
                         if (verbose) printf("env: PR_DuplicateEnvironment() found " ENVNAME
-                                            " (%u so far).\n", found);
+                                                " (%u so far).\n", found);
                     }
 
                     /* Multiple values for the same name can't happen, according to POSIX. */
                     value = PR_GetEnv(*i);
                     if ( value == NULL ) {
                         if (debug) printf("env: PR_DuplicateEnvironment() returned a name"
-                                          " which PR_GetEnv() failed to find: %s\n", *i);
+                                              " which PR_GetEnv() failed to find: %s\n", *i);
                         failedAlready = PR_TRUE;
                     } else if ( strcmp(equals + 1, value) != 0) {
                         if (debug) printf("env: PR_DuplicateEnvironment() returned the wrong"
-                                          " value for %s: expected %s; found %s\n",
-                                          *i, value, equals + 1);
+                                              " value for %s: expected %s; found %s\n",
+                                              *i, value, equals + 1);
                         failedAlready = PR_TRUE;
                     } else {
                         if (verbose) printf("env: PR_DuplicateEnvironment() agreed with"
-                                            " PR_GetEnv() about %s\n", *i);
+                                                " PR_GetEnv() about %s\n", *i);
                     }
                 }
                 PR_Free(*i);
@@ -218,44 +252,58 @@ int main(int argc, char **argv)
 
             if (found != 1) {
                 if (debug) printf("env: PR_DuplicateEnvironment() found %u entries for " ENVNAME
-                                  " (expected 1)\n", found);
+                                      " (expected 1)\n", found);
                 failedAlready = PR_TRUE;
             } else {
-                if (verbose) printf("env: PR_DuplicateEnvironment() found 1 entry for " ENVNAME "\n");
+                if (verbose) {
+                    printf("env: PR_DuplicateEnvironment() found 1 entry for " ENVNAME "\n");
+                }
             }
         }
     }
 
-/* ---------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------- */
     /* un-set the variable, using RAW name... should not work */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME );
     rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (verbose) printf( "env: PR_SetEnv() not un-set using RAW name. Good!\n");
+        if (verbose) {
+            printf( "env: PR_SetEnv() not un-set using RAW name. Good!\n");
+        }
     } else {
-        if (debug) printf("env: PR_SetEnv() un-set using RAW name. Bad!\n" );
+        if (debug) {
+            printf("env: PR_SetEnv() un-set using RAW name. Bad!\n" );
+        }
         failedAlready = PR_TRUE;
     }
 
     value = PR_GetEnv( ENVNAME );
     if ( NULL == value ) {
-        if (debug) printf("env: PR_GetEnv() after un-set using RAW name. Bad!\n" );
+        if (debug) {
+            printf("env: PR_GetEnv() after un-set using RAW name. Bad!\n" );
+        }
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf( "env: PR_GetEnv() after RAW un-set found: %s\n", value );
+        if (verbose) {
+            printf( "env: PR_GetEnv() after RAW un-set found: %s\n", value );
+        }
     }
-    
-/* ---------------------------------------------------------------------- */
+
+    /* ---------------------------------------------------------------------- */
     /* set it again ... */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME "=" ENVVALUE );
     rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_SetEnv() failed setting the second time.\n");
+        if (debug) {
+            printf( "env: PR_SetEnv() failed setting the second time.\n");
+        }
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_SetEnv() worked.\n");
+        if (verbose) {
+            printf("env: PR_SetEnv() worked.\n");
+        }
     }
 
     /* un-set the variable using the form name= */
@@ -263,41 +311,59 @@ int main(int argc, char **argv)
     sprintf( envBuf, ENVNAME "=" );
     rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_SetEnv() failed un-setting using name=\n");
+        if (debug) {
+            printf( "env: PR_SetEnv() failed un-setting using name=\n");
+        }
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_SetEnv() un-set using name= worked\n" );
+        if (verbose) {
+            printf("env: PR_SetEnv() un-set using name= worked\n" );
+        }
     }
 
     value = PR_GetEnv( ENVNAME );
     if (( NULL == value ) || ( 0x00 == *value )) {
-        if (verbose) printf("env: PR_GetEnv() after un-set using name= worked\n" );
+        if (verbose) {
+            printf("env: PR_GetEnv() after un-set using name= worked\n" );
+        }
     } else {
-        if (debug) printf( "env: PR_GetEnv() after un-set using name=. Found: %s\n", value );
+        if (debug) {
+            printf( "env: PR_GetEnv() after un-set using name=. Found: %s\n", value );
+        }
         failedAlready = PR_TRUE;
     }
-/* ---------------------------------------------------------------------- */
+    /* ---------------------------------------------------------------------- */
     /* un-set the variable using the form name= */
     envBuf = NewBuffer( ENVBUFSIZE );
     sprintf( envBuf, ENVNAME "999=" );
     rc = PR_SetEnv( envBuf );
     if ( PR_FAILURE == rc )  {
-        if (debug) printf( "env: PR_SetEnv() failed un-setting using name=\n");
+        if (debug) {
+            printf( "env: PR_SetEnv() failed un-setting using name=\n");
+        }
         failedAlready = PR_TRUE;
     } else {
-        if (verbose) printf("env: PR_SetEnv() un-set using name= worked\n" );
+        if (verbose) {
+            printf("env: PR_SetEnv() un-set using name= worked\n" );
+        }
     }
 
     value = PR_GetEnv( ENVNAME "999" );
     if (( NULL == value ) || ( 0x00 == *value )) {
-        if (verbose) printf("env: PR_GetEnv() after un-set using name= worked\n" );
+        if (verbose) {
+            printf("env: PR_GetEnv() after un-set using name= worked\n" );
+        }
     } else {
-        if (debug) printf( "env: PR_GetEnv() after un-set using name=. Found: %s\n", value );
+        if (debug) {
+            printf( "env: PR_GetEnv() after un-set using name=. Found: %s\n", value );
+        }
         failedAlready = PR_TRUE;
     }
 
-/* ---------------------------------------------------------------------- */
-    if (debug || verbose) printf("\n%s\n", (failedAlready)? "FAILED" : "PASSED" );
+    /* ---------------------------------------------------------------------- */
+    if (debug || verbose) {
+        printf("\n%s\n", (failedAlready)? "FAILED" : "PASSED" );
+    }
     return( (failedAlready)? 1 : 0 );
 }  /* main() */
 

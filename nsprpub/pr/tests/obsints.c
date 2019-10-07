@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Test: obsints.c 
+ * Test: obsints.c
  *
  * Description: make sure that protypes.h defines the obsolete integer
  * types intn, uintn, uint, int8, uint8, int16, uint16, int32, uint32,

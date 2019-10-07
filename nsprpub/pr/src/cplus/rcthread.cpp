@@ -18,11 +18,13 @@ static RCPrimordialThread *primordial = NULL;
 void nas_Root(void *arg)
 {
     RCThread *him = (RCThread*)arg;
-    while (RCThread::ex_unstarted == him->execution)
-        (void)PR_Sleep(PR_INTERVAL_NO_TIMEOUT);  /* wait for Start() */
+    while (RCThread::ex_unstarted == him->execution) {
+        (void)PR_Sleep(PR_INTERVAL_NO_TIMEOUT);    /* wait for Start() */
+    }
     him->RootFunction();  /* he gets a self reference */
-    if (PR_UNJOINABLE_THREAD == PR_GetThreadState(him->identity))
+    if (PR_UNJOINABLE_THREAD == PR_GetThreadState(him->identity)) {
         delete him;
+    }
 }  /* nas_Root */
 
 RCThread::~RCThread() { }
@@ -40,9 +42,9 @@ RCThread::RCThread(
 {
     execution = ex_unstarted;
     identity = PR_CreateThread(
-        PR_USER_THREAD, nas_Root, this,
-        PR_GetThreadPriority(PR_GetCurrentThread()),
-        (PRThreadScope)scope, (PRThreadState)join, stackSize);
+                   PR_USER_THREAD, nas_Root, this,
+                   PR_GetThreadPriority(PR_GetCurrentThread()),
+                   (PRThreadScope)scope, (PRThreadState)join, stackSize);
 }  /* RCThread::RCThread */
 
 void RCThread::operator=(const RCThread&)
@@ -77,8 +79,12 @@ PRStatus RCThread::Join()
         rv = PR_FAILURE;
         PR_SetError(PR_INVALID_STATE_ERROR, 0);
     }
-    else rv = PR_JoinThread(identity);
-    if (PR_SUCCESS == rv) delete this;
+    else {
+        rv = PR_JoinThread(identity);
+    }
+    if (PR_SUCCESS == rv) {
+        delete this;
+    }
     return rv;
 }  /* RCThread::Join */
 
@@ -90,27 +96,41 @@ PRStatus RCThread::Interrupt()
         rv = PR_FAILURE;
         PR_SetError(PR_INVALID_STATE_ERROR, 0);
     }
-    else rv = PR_Interrupt(identity);
+    else {
+        rv = PR_Interrupt(identity);
+    }
     return rv;
 }  /* RCThread::Interrupt */
 
-void RCThread::ClearInterrupt() { PR_ClearInterrupt(); }
+void RCThread::ClearInterrupt() {
+    PR_ClearInterrupt();
+}
 
 void RCThread::SetPriority(RCThread::Priority new_priority)
-    { PR_SetThreadPriority(identity, (PRThreadPriority)new_priority); }
+{
+    PR_SetThreadPriority(identity, (PRThreadPriority)new_priority);
+}
 
 PRThread *RCThread::Self()
-    { return PR_GetCurrentThread(); }
+{
+    return PR_GetCurrentThread();
+}
 
 RCThread::Scope RCThread::GetScope() const
-    { return (RCThread::Scope)PR_GetThreadScope(identity); }
+{
+    return (RCThread::Scope)PR_GetThreadScope(identity);
+}
 
 RCThread::State RCThread::GetState() const
-    { return (RCThread::State)PR_GetThreadState(identity); }
+{
+    return (RCThread::State)PR_GetThreadState(identity);
+}
 
 RCThread::Priority RCThread::GetPriority() const
-    { return (RCThread::Priority)PR_GetThreadPriority(identity); }
-    
+{
+    return (RCThread::Priority)PR_GetThreadPriority(identity);
+}
+
 static void _rc_PDDestructor(RCThreadPrivateData* privateData)
 {
     PR_ASSERT(NULL != privateData);
@@ -120,10 +140,14 @@ static void _rc_PDDestructor(RCThreadPrivateData* privateData)
 static PRThreadPrivateDTOR _tpd_dtor = (PRThreadPrivateDTOR)_rc_PDDestructor;
 
 PRStatus RCThread::NewPrivateIndex(PRUintn* index)
-    { return PR_NewThreadPrivateIndex(index, _tpd_dtor); }
+{
+    return PR_NewThreadPrivateIndex(index, _tpd_dtor);
+}
 
 PRStatus RCThread::SetPrivateData(PRUintn index)
-    { return PR_SetThreadPrivate(index, NULL); }
+{
+    return PR_SetThreadPrivate(index, NULL);
+}
 
 PRStatus RCThread::SetPrivateData(PRUintn index, RCThreadPrivateData* data)
 {
@@ -131,10 +155,15 @@ PRStatus RCThread::SetPrivateData(PRUintn index, RCThreadPrivateData* data)
 }
 
 RCThreadPrivateData* RCThread::GetPrivateData(PRUintn index)
-    { return (RCThreadPrivateData*)PR_GetThreadPrivate(index); }
+{
+    return (RCThreadPrivateData*)PR_GetThreadPrivate(index);
+}
 
 PRStatus RCThread::Sleep(const RCInterval& ticks)
-    { PRIntervalTime tmo = ticks; return PR_Sleep(tmo); }
+{
+    PRIntervalTime tmo = ticks;
+    return PR_Sleep(tmo);
+}
 
 RCPrimordialThread *RCThread::WrapPrimordialThread()
 {
@@ -155,7 +184,9 @@ RCPrimordialThread *RCThread::WrapPrimordialThread()
             me->execution = RCThread::ex_started;
             me->identity = PR_GetCurrentThread();
         }
-        else delete me;  /* somebody beat us to it */
+        else {
+            delete me;    /* somebody beat us to it */
+        }
     }
     return primordial;
 }  /* RCThread::WrapPrimordialThread */
@@ -166,10 +197,12 @@ RCPrimordialThread::~RCPrimordialThread() { }
 
 void RCPrimordialThread::RootFunction()
 {
-    PR_NOT_REACHED("Primordial thread calling root function"); 
+    PR_NOT_REACHED("Primordial thread calling root function");
 }  /* RCPrimordialThread::RootFunction */
- 
-PRStatus RCPrimordialThread::Cleanup() { return PR_Cleanup(); }
+
+PRStatus RCPrimordialThread::Cleanup() {
+    return PR_Cleanup();
+}
 
 PRStatus RCPrimordialThread::SetVirtualProcessors(PRIntn count)
 {

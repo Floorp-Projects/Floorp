@@ -9,8 +9,12 @@
 PR_IMPLEMENT(char *)
 PL_strstr(const char *big, const char *little)
 {
-    if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
-    if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
+    if( ((const char *)0 == big) || ((const char *)0 == little) ) {
+        return (char *)0;
+    }
+    if( ((char)0 == *big) || ((char)0 == *little) ) {
+        return (char *)0;
+    }
 
     return strstr(big, little);
 }
@@ -22,18 +26,25 @@ PL_strrstr(const char *big, const char *little)
     size_t ll;
     size_t bl;
 
-    if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
-    if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
+    if( ((const char *)0 == big) || ((const char *)0 == little) ) {
+        return (char *)0;
+    }
+    if( ((char)0 == *big) || ((char)0 == *little) ) {
+        return (char *)0;
+    }
 
     ll = strlen(little);
     bl = strlen(big);
-    if( bl < ll ) return (char *)0;
+    if( bl < ll ) {
+        return (char *)0;
+    }
     p = &big[ bl - ll ];
 
     for( ; p >= big; p-- )
         if( *little == *p )
-            if( 0 == strncmp(p, little, ll) )
+            if( 0 == strncmp(p, little, ll) ) {
                 return (char *)p;
+            }
 
     return (char *)0;
 }
@@ -43,18 +54,25 @@ PL_strnstr(const char *big, const char *little, PRUint32 max)
 {
     size_t ll;
 
-    if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
-    if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
+    if( ((const char *)0 == big) || ((const char *)0 == little) ) {
+        return (char *)0;
+    }
+    if( ((char)0 == *big) || ((char)0 == *little) ) {
+        return (char *)0;
+    }
 
     ll = strlen(little);
-    if( ll > (size_t)max ) return (char *)0;
+    if( ll > (size_t)max ) {
+        return (char *)0;
+    }
     max -= (PRUint32)ll;
     max++;
 
     for( ; max && *big; big++, max-- )
         if( *little == *big )
-            if( 0 == strncmp(big, little, ll) )
+            if( 0 == strncmp(big, little, ll) ) {
                 return (char *)big;
+            }
 
     return (char *)0;
 }
@@ -65,8 +83,12 @@ PL_strnrstr(const char *big, const char *little, PRUint32 max)
     const char *p;
     size_t ll;
 
-    if( ((const char *)0 == big) || ((const char *)0 == little) ) return (char *)0;
-    if( ((char)0 == *big) || ((char)0 == *little) ) return (char *)0;
+    if( ((const char *)0 == big) || ((const char *)0 == little) ) {
+        return (char *)0;
+    }
+    if( ((char)0 == *big) || ((char)0 == *little) ) {
+        return (char *)0;
+    }
 
     ll = strlen(little);
 
@@ -74,12 +96,15 @@ PL_strnrstr(const char *big, const char *little, PRUint32 max)
         ;
 
     p -= ll;
-    if( p < big ) return (char *)0;
+    if( p < big ) {
+        return (char *)0;
+    }
 
     for( ; p >= big; p-- )
         if( *little == *p )
-            if( 0 == strncmp(p, little, ll) )
+            if( 0 == strncmp(p, little, ll) ) {
                 return (char *)p;
+            }
 
     return (char *)0;
 }

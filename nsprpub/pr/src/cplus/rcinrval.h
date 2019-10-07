@@ -66,71 +66,125 @@ public:
 
 private:
     PRIntervalTime interval;
-    
+
 };  /* RCInterval */
 
 
 inline RCInterval::RCInterval(): RCBase() { }
 
 inline RCInterval::RCInterval(const RCInterval& his): RCBase()
-    { interval = his.interval; }
+{
+    interval = his.interval;
+}
 
 inline RCInterval::RCInterval(PRIntervalTime ticks): RCBase()
-    { interval = ticks; }
+{
+    interval = ticks;
+}
 
-inline void RCInterval::SetToNow() { interval = PR_IntervalNow(); }
+inline void RCInterval::SetToNow() {
+    interval = PR_IntervalNow();
+}
 
 inline void RCInterval::operator=(const RCInterval& his)
-    { interval = his.interval; }
+{
+    interval = his.interval;
+}
 
 inline void RCInterval::operator=(PRIntervalTime his)
-    { interval = his; }
+{
+    interval = his;
+}
 
 inline PRBool RCInterval::operator==(const RCInterval& his)
-    { return (interval == his.interval) ? PR_TRUE : PR_FALSE; }
+{
+    return (interval == his.interval) ? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCInterval::operator<(const RCInterval& his)
-    { return (interval < his.interval)? PR_TRUE : PR_FALSE; }
+{
+    return (interval < his.interval)? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCInterval::operator>(const RCInterval& his)
-    { return (interval > his.interval) ? PR_TRUE : PR_FALSE; }
+{
+    return (interval > his.interval) ? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCInterval::operator<=(const RCInterval& his)
-    { return (interval <= his.interval) ? PR_TRUE : PR_FALSE; }
+{
+    return (interval <= his.interval) ? PR_TRUE : PR_FALSE;
+}
 inline PRBool RCInterval::operator>=(const RCInterval& his)
-    { return (interval <= his.interval) ? PR_TRUE : PR_FALSE; }
+{
+    return (interval <= his.interval) ? PR_TRUE : PR_FALSE;
+}
 
 inline RCInterval RCInterval::operator+(const RCInterval& his)
-    { return RCInterval((PRIntervalTime)(interval + his.interval)); }
+{
+    return RCInterval((PRIntervalTime)(interval + his.interval));
+}
 inline RCInterval RCInterval::operator-(const RCInterval& his)
-    { return RCInterval((PRIntervalTime)(interval - his.interval)); }
+{
+    return RCInterval((PRIntervalTime)(interval - his.interval));
+}
 inline RCInterval& RCInterval::operator+=(const RCInterval& his)
-    { interval += his.interval; return *this; }
+{
+    interval += his.interval;
+    return *this;
+}
 inline RCInterval& RCInterval::operator-=(const RCInterval& his)
-    { interval -= his.interval; return *this; }
+{
+    interval -= his.interval;
+    return *this;
+}
 
 inline RCInterval RCInterval::operator/(PRUint32 him)
-    { return RCInterval((PRIntervalTime)(interval / him)); }
+{
+    return RCInterval((PRIntervalTime)(interval / him));
+}
 inline RCInterval RCInterval::operator*(PRUint32 him)
-    { return RCInterval((PRIntervalTime)(interval * him)); }
+{
+    return RCInterval((PRIntervalTime)(interval * him));
+}
 
 inline RCInterval& RCInterval::operator/=(PRUint32 him)
-    { interval /= him; return *this; }
+{
+    interval /= him;
+    return *this;
+}
 
 inline RCInterval& RCInterval::operator*=(PRUint32 him)
-    { interval *= him; return *this; }
+{
+    interval *= him;
+    return *this;
+}
 
 inline PRUint32 RCInterval::ToSeconds() const
-    { return PR_IntervalToSeconds(interval); }
+{
+    return PR_IntervalToSeconds(interval);
+}
 inline PRUint32 RCInterval::ToMilliseconds() const
-    { return PR_IntervalToMilliseconds(interval); }
+{
+    return PR_IntervalToMilliseconds(interval);
+}
 inline PRUint32 RCInterval::ToMicroseconds() const
-    { return PR_IntervalToMicroseconds(interval); }
-inline RCInterval::operator PRIntervalTime() const { return interval; }
+{
+    return PR_IntervalToMicroseconds(interval);
+}
+inline RCInterval::operator PRIntervalTime() const {
+    return interval;
+}
 
 inline PRIntervalTime RCInterval::FromSeconds(PRUint32 seconds)
-    { return PR_SecondsToInterval(seconds); }
+{
+    return PR_SecondsToInterval(seconds);
+}
 inline PRIntervalTime RCInterval::FromMilliseconds(PRUint32 milli)
-    { return PR_MillisecondsToInterval(milli); }
+{
+    return PR_MillisecondsToInterval(milli);
+}
 inline PRIntervalTime RCInterval::FromMicroseconds(PRUint32 micro)
-    { return PR_MicrosecondsToInterval(micro); }
+{
+    return PR_MicrosecondsToInterval(micro);
+}
 
 #endif  /* defined(_RCINTERVAL_H) */
 

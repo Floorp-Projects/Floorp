@@ -88,43 +88,43 @@ NowCalibrate(void)
     LARGE_INTEGER liFreq, now;
 
     if (calibration.freq == 0.0) {
-	if(!QueryPerformanceFrequency(&liFreq)) {
-	    /* High-performance timer is unavailable */
-	    calibration.freq = -1.0;
-	} else {
-	    calibration.freq = (long double) liFreq.QuadPart;
-	}
+        if(!QueryPerformanceFrequency(&liFreq)) {
+            /* High-performance timer is unavailable */
+            calibration.freq = -1.0;
+        } else {
+            calibration.freq = (long double) liFreq.QuadPart;
+        }
     }
     if (calibration.freq > 0.0) {
-	PRInt64 calibrationDelta = 0;
-	/*
-	 * By wrapping a timeBegin/EndPeriod pair of calls around this loop,
-	 * the loop seems to take much less time (1 ms vs 15ms) on Vista. 
-	 */
-	timeBeginPeriod(1);
-	LowResTime(&ftStart);
-	do {
-	    LowResTime(&ft);
-	} while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
-	timeEndPeriod(1);
+        PRInt64 calibrationDelta = 0;
+        /*
+         * By wrapping a timeBegin/EndPeriod pair of calls around this loop,
+         * the loop seems to take much less time (1 ms vs 15ms) on Vista.
+         */
+        timeBeginPeriod(1);
+        LowResTime(&ftStart);
+        do {
+            LowResTime(&ft);
+        } while (memcmp(&ftStart,&ft, sizeof(ft)) == 0);
+        timeEndPeriod(1);
 
-	calibration.granularity = 
-	    (FILETIME_TO_INT64(ft) - FILETIME_TO_INT64(ftStart))/10;
+        calibration.granularity =
+            (FILETIME_TO_INT64(ft) - FILETIME_TO_INT64(ftStart))/10;
 
-	QueryPerformanceCounter(&now);
+        QueryPerformanceCounter(&now);
 
-	calibration.offset = (long double) FILETIME_TO_INT64(ft);
-	calibration.timer_offset = (long double) now.QuadPart;
-	/*
-	 * The windows epoch is around 1600. The unix epoch is around 1970. 
-	 * _pr_filetime_offset is the difference (in windows time units which
-	 * are 10 times more highres than the JS time unit) 
-	 */
-	calibration.offset -= _pr_filetime_offset;
-	calibration.offset *= 0.1;
-	calibration.last = 0;
+        calibration.offset = (long double) FILETIME_TO_INT64(ft);
+        calibration.timer_offset = (long double) now.QuadPart;
+        /*
+         * The windows epoch is around 1600. The unix epoch is around 1970.
+         * _pr_filetime_offset is the difference (in windows time units which
+         * are 10 times more highres than the JS time unit)
+         */
+        calibration.offset -= _pr_filetime_offset;
+        calibration.offset *= 0.1;
+        calibration.last = 0;
 
-	calibration.calibrated = PR_TRUE;
+        calibration.calibrated = PR_TRUE;
     }
 }
 
@@ -138,7 +138,7 @@ _MD_InitTime(void)
     /* try for CE6 GetSystemTimeAsFileTime first */
     HANDLE h = GetModuleHandleW(L"coredll.dll");
     ce6_GetSystemTimeAsFileTime = (GetSystemTimeAsFileTimeFcn)
-        GetProcAddressA(h, "GetSystemTimeAsFileTime");
+                                  GetProcAddressA(h, "GetSystemTimeAsFileTime");
 
     /* otherwise go the slow route */
     if (ce6_GetSystemTimeAsFileTime == NULL) {
@@ -199,113 +199,113 @@ PR_Now(void)
          * a constant, and the entire expression is faster to execute.
          */
         return currentTime.prt/_pr_filetime_divisor -
-            _pr_filetime_offset/_pr_filetime_divisor;
+               _pr_filetime_offset/_pr_filetime_divisor;
     }
 
     do {
-	if (!calibration.calibrated || needsCalibration) {
-	    EnterCriticalSection(&calibration.calibration_lock);
-	    EnterCriticalSection(&calibration.data_lock);
+        if (!calibration.calibrated || needsCalibration) {
+            EnterCriticalSection(&calibration.calibration_lock);
+            EnterCriticalSection(&calibration.data_lock);
 
-	    /* Recalibrate only if no one else did before us */
-	    if (calibration.offset == cachedOffset) {
-		/*
-		 * Since calibration can take a while, make any other
-		 * threads immediately wait 
-		 */
-		MUTEX_SETSPINCOUNT(&calibration.data_lock, 0);
+            /* Recalibrate only if no one else did before us */
+            if (calibration.offset == cachedOffset) {
+                /*
+                 * Since calibration can take a while, make any other
+                 * threads immediately wait
+                 */
+                MUTEX_SETSPINCOUNT(&calibration.data_lock, 0);
 
-		NowCalibrate();
+                NowCalibrate();
 
-		calibrated = PR_TRUE;
+                calibrated = PR_TRUE;
 
-		/* Restore spin count */
-		MUTEX_SETSPINCOUNT(&calibration.data_lock, DATALOCK_SPINCOUNT);
-	    }
-	    LeaveCriticalSection(&calibration.data_lock);
-	    LeaveCriticalSection(&calibration.calibration_lock);
-	}
+                /* Restore spin count */
+                MUTEX_SETSPINCOUNT(&calibration.data_lock, DATALOCK_SPINCOUNT);
+            }
+            LeaveCriticalSection(&calibration.data_lock);
+            LeaveCriticalSection(&calibration.calibration_lock);
+        }
 
-	/* Calculate a low resolution time */
-	LowResTime(&ft);
-	lowresTime =
+        /* Calculate a low resolution time */
+        LowResTime(&ft);
+        lowresTime =
             ((long double)(FILETIME_TO_INT64(ft) - _pr_filetime_offset)) * 0.1;
 
-	if (calibration.freq > 0.0) {
-	    long double highresTime, diff;
-	    DWORD timeAdjustment, timeIncrement;
-	    BOOL timeAdjustmentDisabled;
+        if (calibration.freq > 0.0) {
+            long double highresTime, diff;
+            DWORD timeAdjustment, timeIncrement;
+            BOOL timeAdjustmentDisabled;
 
-	    /* Default to 15.625 ms if the syscall fails */
-	    long double skewThreshold = 15625.25;
+            /* Default to 15.625 ms if the syscall fails */
+            long double skewThreshold = 15625.25;
 
-	    /* Grab high resolution time */
-	    QueryPerformanceCounter(&now);
-	    highresTimerValue = (long double)now.QuadPart;
+            /* Grab high resolution time */
+            QueryPerformanceCounter(&now);
+            highresTimerValue = (long double)now.QuadPart;
 
-	    EnterCriticalSection(&calibration.data_lock);
-	    highresTime = calibration.offset + 1000000L *
-		(highresTimerValue-calibration.timer_offset)/calibration.freq;
-	    cachedOffset = calibration.offset;
+            EnterCriticalSection(&calibration.data_lock);
+            highresTime = calibration.offset + 1000000L *
+                          (highresTimerValue-calibration.timer_offset)/calibration.freq;
+            cachedOffset = calibration.offset;
 
-	    /* 
-	     * On some dual processor/core systems, we might get an earlier 
-	     * time so we cache the last time that we returned.
-	     */
-	    calibration.last = PR_MAX(calibration.last,(PRInt64)highresTime);
-	    returnedTime = calibration.last;
-	    LeaveCriticalSection(&calibration.data_lock);
+            /*
+             * On some dual processor/core systems, we might get an earlier
+             * time so we cache the last time that we returned.
+             */
+            calibration.last = PR_MAX(calibration.last,(PRInt64)highresTime);
+            returnedTime = calibration.last;
+            LeaveCriticalSection(&calibration.data_lock);
 
-	    /* Get an estimate of clock ticks per second from our own test */
-	    skewThreshold = calibration.granularity;
-	    /* Check for clock skew */
-	    diff = lowresTime - highresTime;
+            /* Get an estimate of clock ticks per second from our own test */
+            skewThreshold = calibration.granularity;
+            /* Check for clock skew */
+            diff = lowresTime - highresTime;
 
-	    /* 
-	     * For some reason that I have not determined, the skew can be
-	     * up to twice a kernel tick. This does not seem to happen by
-	     * itself, but I have only seen it triggered by another program
-	     * doing some kind of file I/O. The symptoms are a negative diff
-	     * followed by an equally large positive diff. 
-	     */
-	    if (fabs(diff) > 2*skewThreshold) {
-		if (calibrated) {
-		    /*
-		     * If we already calibrated once this instance, and the
-		     * clock is still skewed, then either the processor(s) are
-		     * wildly changing clockspeed or the system is so busy that
-		     * we get switched out for long periods of time. In either
-		     * case, it would be infeasible to make use of high
-		     * resolution results for anything, so let's resort to old
-		     * behavior for this call. It's possible that in the
-		     * future, the user will want the high resolution timer, so
-		     * we don't disable it entirely. 
-		     */
-		    returnedTime = (PRInt64)lowresTime;
-		    needsCalibration = PR_FALSE;
-		} else {
-		    /*
-		     * It is possible that when we recalibrate, we will return 
-		     * a value less than what we have returned before; this is
-		     * unavoidable. We cannot tell the different between a
-		     * faulty QueryPerformanceCounter implementation and user
-		     * changes to the operating system time. Since we must
-		     * respect user changes to the operating system time, we
-		     * cannot maintain the invariant that Date.now() never
-		     * decreases; the old implementation has this behavior as
-		     * well. 
-		     */
-		    needsCalibration = PR_TRUE;
-		}
-	    } else {
-		/* No detectable clock skew */
-		returnedTime = (PRInt64)highresTime;
-		needsCalibration = PR_FALSE;
-	    }
-	} else {
-	    /* No high resolution timer is available, so fall back */
-	    returnedTime = (PRInt64)lowresTime;
-	}
+            /*
+             * For some reason that I have not determined, the skew can be
+             * up to twice a kernel tick. This does not seem to happen by
+             * itself, but I have only seen it triggered by another program
+             * doing some kind of file I/O. The symptoms are a negative diff
+             * followed by an equally large positive diff.
+             */
+            if (fabs(diff) > 2*skewThreshold) {
+                if (calibrated) {
+                    /*
+                     * If we already calibrated once this instance, and the
+                     * clock is still skewed, then either the processor(s) are
+                     * wildly changing clockspeed or the system is so busy that
+                     * we get switched out for long periods of time. In either
+                     * case, it would be infeasible to make use of high
+                     * resolution results for anything, so let's resort to old
+                     * behavior for this call. It's possible that in the
+                     * future, the user will want the high resolution timer, so
+                     * we don't disable it entirely.
+                     */
+                    returnedTime = (PRInt64)lowresTime;
+                    needsCalibration = PR_FALSE;
+                } else {
+                    /*
+                     * It is possible that when we recalibrate, we will return
+                     * a value less than what we have returned before; this is
+                     * unavoidable. We cannot tell the different between a
+                     * faulty QueryPerformanceCounter implementation and user
+                     * changes to the operating system time. Since we must
+                     * respect user changes to the operating system time, we
+                     * cannot maintain the invariant that Date.now() never
+                     * decreases; the old implementation has this behavior as
+                     * well.
+                     */
+                    needsCalibration = PR_TRUE;
+                }
+            } else {
+                /* No detectable clock skew */
+                returnedTime = (PRInt64)highresTime;
+                needsCalibration = PR_FALSE;
+            }
+        } else {
+            /* No high resolution timer is available, so fall back */
+            returnedTime = (PRInt64)lowresTime;
+        }
     } while (needsCalibration);
 
     return returnedTime;
@@ -323,7 +323,7 @@ PR_Now(void)
     GetSystemTime(&st);
     SystemTimeToFileTime(&st, &ft);
     _PR_FileTimeToPRTime(&ft, &prt);
-    return prt;       
+    return prt;
 }
 
 #endif
@@ -365,8 +365,8 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
          * a null byte at the end of command line.
          */
         cmdLineSize += 2 * strlen(*arg)  /* \ and " need to be escaped */
-                + 2                      /* we quote every argument */
-                + 1;                     /* space in between, or final null */
+                       + 2                      /* we quote every argument */
+                       + 1;                     /* space in between, or final null */
     }
     p = *cmdLine = PR_MALLOC((PRUint32) cmdLineSize);
     if (p == NULL) {
@@ -376,7 +376,7 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
     for (arg = argv; *arg; arg++) {
         /* Add a space to separates the arguments */
         if (arg != argv) {
-            *p++ = ' '; 
+            *p++ = ' ';
         }
         q = *arg;
         numBackslashes = 0;
@@ -442,7 +442,7 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
         if (argNeedQuotes) {
             *p++ = '"';
         }
-    } 
+    }
 
     *p = '\0';
     return 0;
@@ -488,7 +488,7 @@ static int assembleEnvBlock(char **envp, char **envBlock)
     cwdStart = curEnv;
     while (*cwdStart) {
         if (cwdStart[0] == '=' && cwdStart[1] != '\0'
-                && cwdStart[2] == ':' && cwdStart[3] == '=') {
+            && cwdStart[2] == ':' && cwdStart[3] == '=') {
             break;
         }
         cwdStart += strlen(cwdStart) + 1;
@@ -498,7 +498,7 @@ static int assembleEnvBlock(char **envp, char **envBlock)
         cwdEnd += strlen(cwdEnd) + 1;
         while (*cwdEnd) {
             if (cwdEnd[0] != '=' || cwdEnd[1] == '\0'
-                    || cwdEnd[2] != ':' || cwdEnd[3] != '=') {
+                || cwdEnd[2] != ':' || cwdEnd[3] != '=') {
                 break;
             }
             cwdEnd += strlen(cwdEnd) + 1;
@@ -609,7 +609,7 @@ PRProcess * _PR_CreateWindowsProcess(
         for (idx = 0; idx < numEnv; idx++) {
             newEnvp[idx] = envp[idx];
             if (hasFdInheritBuffer && !found
-                    && !strncmp(newEnvp[idx], "NSPR_INHERIT_FDS=", 17)) {
+                && !strncmp(newEnvp[idx], "NSPR_INHERIT_FDS=", 17)) {
                 newEnvp[idx] = attr->fdInheritBuffer;
                 found = PR_TRUE;
             }
@@ -759,7 +759,7 @@ PRStatus _PR_DetachWindowsProcess(PRProcess *process)
  * It can be called by native threads only (not by fibers).
  */
 PRStatus _PR_WaitWindowsProcess(PRProcess *process,
-    PRInt32 *exitCode)
+                                PRInt32 *exitCode)
 {
     DWORD dwRetVal;
 
@@ -770,7 +770,7 @@ PRStatus _PR_WaitWindowsProcess(PRProcess *process,
     }
     PR_ASSERT(dwRetVal == WAIT_OBJECT_0);
     if (exitCode != NULL &&
-            GetExitCodeProcess(process->md.handle, exitCode) == FALSE) {
+        GetExitCodeProcess(process->md.handle, exitCode) == FALSE) {
         PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
         return PR_FAILURE;
     }
@@ -787,7 +787,7 @@ PRStatus _PR_KillWindowsProcess(PRProcess *process)
      * 256 to indicate that the process is killed.
      */
     if (TerminateProcess(process->md.handle, 256)) {
-	return PR_SUCCESS;
+        return PR_SUCCESS;
     }
     PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
     return PR_FAILURE;
@@ -804,86 +804,92 @@ PRStatus _MD_WindowsGetHostName(char *name, PRUint32 namelen)
     }
     syserror = WSAGetLastError();
     PR_ASSERT(WSANOTINITIALISED != syserror);
-	_PR_MD_MAP_GETHOSTNAME_ERROR(syserror);
+    _PR_MD_MAP_GETHOSTNAME_ERROR(syserror);
     return PR_FAILURE;
 }
 
 PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
 {
-	OSVERSIONINFO osvi;
+    OSVERSIONINFO osvi;
 
-	PR_ASSERT((cmd == PR_SI_SYSNAME) || (cmd == PR_SI_RELEASE));
+    PR_ASSERT((cmd == PR_SI_SYSNAME) || (cmd == PR_SI_RELEASE));
 
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
-	if (! GetVersionEx (&osvi) ) {
-		_PR_MD_MAP_DEFAULT_ERROR(GetLastError());
-    	return PR_FAILURE;
-	}
+    if (! GetVersionEx (&osvi) ) {
+        _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
+        return PR_FAILURE;
+    }
 
-	switch (osvi.dwPlatformId) {
-		case VER_PLATFORM_WIN32_NT:
-			if (PR_SI_SYSNAME == cmd)
-				(void)PR_snprintf(name, namelen, "Windows_NT");
-			else if (PR_SI_RELEASE == cmd)
-				(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
-            							osvi.dwMinorVersion);
-			break;
-		case VER_PLATFORM_WIN32_WINDOWS:
-			if (PR_SI_SYSNAME == cmd) {
-				if ((osvi.dwMajorVersion > 4) || 
-					((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion > 0)))
-					(void)PR_snprintf(name, namelen, "Windows_98");
-				else
-					(void)PR_snprintf(name, namelen, "Windows_95");
-			} else if (PR_SI_RELEASE == cmd) {
-				(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
-            							osvi.dwMinorVersion);
-			}
-			break;
+    switch (osvi.dwPlatformId) {
+        case VER_PLATFORM_WIN32_NT:
+            if (PR_SI_SYSNAME == cmd) {
+                (void)PR_snprintf(name, namelen, "Windows_NT");
+            }
+            else if (PR_SI_RELEASE == cmd)
+                (void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion,
+                                  osvi.dwMinorVersion);
+            break;
+        case VER_PLATFORM_WIN32_WINDOWS:
+            if (PR_SI_SYSNAME == cmd) {
+                if ((osvi.dwMajorVersion > 4) ||
+                    ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion > 0))) {
+                    (void)PR_snprintf(name, namelen, "Windows_98");
+                }
+                else {
+                    (void)PR_snprintf(name, namelen, "Windows_95");
+                }
+            } else if (PR_SI_RELEASE == cmd) {
+                (void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion,
+                                  osvi.dwMinorVersion);
+            }
+            break;
 #ifdef VER_PLATFORM_WIN32_CE
-    case VER_PLATFORM_WIN32_CE:
-			if (PR_SI_SYSNAME == cmd)
-				(void)PR_snprintf(name, namelen, "Windows_CE");
-			else if (PR_SI_RELEASE == cmd)
-				(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
-            							osvi.dwMinorVersion);
-			break;
+        case VER_PLATFORM_WIN32_CE:
+            if (PR_SI_SYSNAME == cmd) {
+                (void)PR_snprintf(name, namelen, "Windows_CE");
+            }
+            else if (PR_SI_RELEASE == cmd)
+                (void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion,
+                                  osvi.dwMinorVersion);
+            break;
 #endif
-   		default:
-			if (PR_SI_SYSNAME == cmd)
-				(void)PR_snprintf(name, namelen, "Windows_Unknown");
-			else if (PR_SI_RELEASE == cmd)
-				(void)PR_snprintf(name, namelen, "%d.%d",0,0);
-			break;
-	}
-	return PR_SUCCESS;
+        default:
+            if (PR_SI_SYSNAME == cmd) {
+                (void)PR_snprintf(name, namelen, "Windows_Unknown");
+            }
+            else if (PR_SI_RELEASE == cmd) {
+                (void)PR_snprintf(name, namelen, "%d.%d",0,0);
+            }
+            break;
+    }
+    return PR_SUCCESS;
 }
 
 PRStatus _MD_WindowsGetReleaseName(char *name, PRUint32 namelen)
 {
-	OSVERSIONINFO osvi;
+    OSVERSIONINFO osvi;
 
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
-	if (! GetVersionEx (&osvi) ) {
-		_PR_MD_MAP_DEFAULT_ERROR(GetLastError());
-    	return PR_FAILURE;
-	}
+    if (! GetVersionEx (&osvi) ) {
+        _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
+        return PR_FAILURE;
+    }
 
-	switch (osvi.dwPlatformId) {
-		case VER_PLATFORM_WIN32_NT:
-		case VER_PLATFORM_WIN32_WINDOWS:
-			(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
-            							osvi.dwMinorVersion);
-			break;
-   		default:
-			(void)PR_snprintf(name, namelen, "%d.%d",0,0);
-			break;
-	}
-	return PR_SUCCESS;
+    switch (osvi.dwPlatformId) {
+        case VER_PLATFORM_WIN32_NT:
+        case VER_PLATFORM_WIN32_WINDOWS:
+            (void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion,
+                              osvi.dwMinorVersion);
+            break;
+        default:
+            (void)PR_snprintf(name, namelen, "%d.%d",0,0);
+            break;
+    }
+    return PR_SUCCESS;
 }
 
 /*
@@ -924,12 +930,12 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
     }
 
     fmap->md.hFileMap = CreateFileMapping(
-        (HANDLE) osfd,
-        NULL,
-        flProtect,
-        dwHi,
-        dwLo,
-        NULL);
+                            (HANDLE) osfd,
+                            NULL,
+                            flProtect,
+                            dwHi,
+                            dwLo,
+                            NULL);
 
     if (fmap->md.hFileMap == NULL) {
         PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
@@ -958,18 +964,18 @@ void * _MD_MemMap(
     dwLo = (DWORD) (offset & 0xffffffff);
     dwHi = (DWORD) (((PRUint64) offset >> 32) & 0xffffffff);
     if ((addr = MapViewOfFile(fmap->md.hFileMap, fmap->md.dwAccess,
-            dwHi, dwLo, len)) == NULL) {
+                              dwHi, dwLo, len)) == NULL) {
         {
-            LPVOID lpMsgBuf; 
-            
-            FormatMessage( 
+            LPVOID lpMsgBuf;
+
+            FormatMessage(
                 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                 NULL,
                 GetLastError(),
                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
                 (LPTSTR) &lpMsgBuf,
                 0,
-                NULL 
+                NULL
             );
             PR_LOG( _pr_shma_lm, PR_LOG_DEBUG, ("md_memmap(): %s", lpMsgBuf ));
         }
@@ -1035,13 +1041,13 @@ PRStatus _MD_SyncMemMap(
 
 #pragma warning(disable: 4035)
 PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
-{    
+{
 #if defined(__GNUC__)
-  PRInt32 result;
-  asm volatile ("lock ; xadd %0, %1" 
-                : "=r"(result), "=m"(*val)
-                : "0"(1), "m"(*val));
-  return result + 1;
+    PRInt32 result;
+    asm volatile ("lock ; xadd %0, %1"
+                  : "=r"(result), "=m"(*val)
+                  : "0"(1), "m"(*val));
+    return result + 1;
 #else
     __asm
     {
@@ -1058,12 +1064,12 @@ PRInt32 _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
 PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
 {
 #if defined(__GNUC__)
-  PRInt32 result;
-  asm volatile ("lock ; xadd %0, %1" 
-                : "=r"(result), "=m"(*val)
-                : "0"(-1), "m"(*val));
-  //asm volatile("lock ; xadd %0, %1" : "=m" (val), "=a" (result) : "-1" (1));
-  return result - 1;
+    PRInt32 result;
+    asm volatile ("lock ; xadd %0, %1"
+                  : "=r"(result), "=m"(*val)
+                  : "0"(-1), "m"(*val));
+    //asm volatile("lock ; xadd %0, %1" : "=m" (val), "=a" (result) : "-1" (1));
+    return result - 1;
 #else
     __asm
     {
@@ -1080,12 +1086,12 @@ PRInt32 _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
 PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
 {
 #if defined(__GNUC__)
-  PRInt32 result;
-  //asm volatile("lock ; xadd %1, %0" : "=m" (intp), "=a" (result) : "1" (val));
-  asm volatile ("lock ; xadd %0, %1" 
-                : "=r"(result), "=m"(*intp)
-                : "0"(val), "m"(*intp));
-  return result + val;
+    PRInt32 result;
+    //asm volatile("lock ; xadd %1, %0" : "=m" (intp), "=a" (result) : "1" (val));
+    asm volatile ("lock ; xadd %0, %1"
+                  : "=r"(result), "=m"(*intp)
+                  : "0"(val), "m"(*intp));
+    return result + val;
 #else
     __asm
     {
@@ -1102,96 +1108,101 @@ PRInt32 _PR_MD_ATOMIC_ADD(PRInt32 *intp, PRInt32 val)
 #ifdef _PR_HAVE_ATOMIC_CAS
 
 #pragma warning(disable: 4035)
-void 
+void
 PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
 {
 #if defined(__GNUC__)
-  void **tos = (void **) stack;
-  void *tmp;
-  
- retry:
-  if (*tos == (void *) -1)
-    goto retry;
-  
-  __asm__("xchg %0,%1"
-          : "=r" (tmp), "=m"(*tos)
-          : "0" (-1), "m"(*tos));
-  
-  if (tmp == (void *) -1)
-    goto retry;
-  
-  *(void **)stack_elem = tmp;
-  __asm__("" : : : "memory");
-  *tos = stack_elem;
+    void **tos = (void **) stack;
+    void *tmp;
+
+retry:
+    if (*tos == (void *) -1) {
+        goto retry;
+    }
+
+    __asm__("xchg %0,%1"
+            : "=r" (tmp), "=m"(*tos)
+            : "0" (-1), "m"(*tos));
+
+    if (tmp == (void *) -1) {
+        goto retry;
+    }
+
+    *(void **)stack_elem = tmp;
+    __asm__("" : : : "memory");
+    *tos = stack_elem;
 #else
     __asm
     {
-	mov ebx, stack
-	mov ecx, stack_elem
-retry:	mov eax,[ebx]
-	cmp eax,-1
-	je retry
-	mov eax,-1
-	xchg dword ptr [ebx], eax
-	cmp eax,-1
-	je  retry
-	mov [ecx],eax
-	mov [ebx],ecx
+        mov ebx, stack
+        mov ecx, stack_elem
+        retry:  mov eax,[ebx]
+        cmp eax,-1
+        je retry
+        mov eax,-1
+        xchg dword ptr [ebx], eax
+        cmp eax,-1
+        je  retry
+        mov [ecx],eax
+        mov [ebx],ecx
     }
 #endif /* __GNUC__ */
 }
 #pragma warning(default: 4035)
 
 #pragma warning(disable: 4035)
-PRStackElem * 
+PRStackElem *
 PR_StackPop(PRStack *stack)
 {
 #if defined(__GNUC__)
-  void **tos = (void **) stack;
-  void *tmp;
-  
- retry:
-  if (*tos == (void *) -1)
-    goto retry;
-  
-  __asm__("xchg %0,%1"
-          : "=r" (tmp), "=m"(*tos)
-          : "0" (-1), "m"(*tos));
+    void **tos = (void **) stack;
+    void *tmp;
 
-  if (tmp == (void *) -1)
-    goto retry;
-  
-  if (tmp != (void *) 0)
-    {
-      void *next = *(void **)tmp;
-      *tos = next;
-      *(void **)tmp = 0;
+retry:
+    if (*tos == (void *) -1) {
+        goto retry;
     }
-  else
-    *tos = tmp;
-  
-  return tmp;
+
+    __asm__("xchg %0,%1"
+            : "=r" (tmp), "=m"(*tos)
+            : "0" (-1), "m"(*tos));
+
+    if (tmp == (void *) -1) {
+        goto retry;
+    }
+
+    if (tmp != (void *) 0)
+    {
+        void *next = *(void **)tmp;
+        *tos = next;
+        *(void **)tmp = 0;
+    }
+    else {
+        *tos = tmp;
+    }
+
+    return tmp;
 #else
     __asm
     {
-	mov ebx, stack
-retry:	mov eax,[ebx]
-	cmp eax,-1
-	je retry
-	mov eax,-1
-	xchg dword ptr [ebx], eax
-	cmp eax,-1
-	je  retry
-	cmp eax,0
-	je  empty
-	mov ecx,[eax]
-	mov [ebx],ecx
-	mov [eax],0
-	jmp done
-empty:
-	mov [ebx],eax
-done:	
-	}
+        mov ebx, stack
+        retry:  mov eax,[ebx]
+        cmp eax,-1
+        je retry
+        mov eax,-1
+        xchg dword ptr [ebx], eax
+        cmp eax,-1
+        je  retry
+        cmp eax,0
+        je  empty
+        mov ecx,[eax]
+        mov [ebx],ecx
+        mov [eax],0
+        jmp done
+        empty:
+        mov [ebx],eax
+        done:
+    }
 #endif /* __GNUC__ */
 }
 #pragma warning(default: 4035)

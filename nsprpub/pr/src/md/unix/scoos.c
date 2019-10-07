@@ -17,7 +17,7 @@ void _MD_EarlyInit(void)
 PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 {
     if (isCurrent) {
-	(void) setjmp(CONTEXT(t));
+        (void) setjmp(CONTEXT(t));
     }
     *np = sizeof(CONTEXT(t)) / sizeof(PRWord);
     return (PRWord *) CONTEXT(t);
@@ -26,7 +26,7 @@ PRWord *_MD_HomeGCRegisters(PRThread *t, int isCurrent, int *np)
 #ifdef ALARMS_BREAK_TCP /* I don't think they do */
 
 PRInt32 _MD_connect(PRInt32 osfd, PRNetAddr *addr, PRInt32 addrlen,
-                        PRIntervalTime timeout)
+                    PRIntervalTime timeout)
 {
     PRInt32 rv;
 
@@ -36,7 +36,7 @@ PRInt32 _MD_connect(PRInt32 osfd, PRNetAddr *addr, PRInt32 addrlen,
 }
 
 PRInt32 _MD_accept(PRInt32 osfd, PRNetAddr *addr, PRInt32 addrlen,
-                        PRIntervalTime timeout)
+                   PRIntervalTime timeout)
 {
     PRInt32 rv;
 
@@ -61,8 +61,9 @@ void
 _MD_INIT_ATOMIC(void)
 {
     /* Sigh.  Sure wish SYSV semaphores weren't such a pain to use */
-    if ((_uw_semf = tmpfile()) == NULL)
+    if ((_uw_semf = tmpfile()) == NULL) {
         PR_ASSERT(0);
+    }
 
     return;
 }
@@ -109,7 +110,7 @@ _MD_SET_PRIORITY(_MDThread *thread, PRUintn newPri)
 PRStatus
 _MD_InitializeThread(PRThread *thread)
 {
-	return PR_SUCCESS;
+    return PR_SUCCESS;
 }
 
 PRStatus
@@ -124,7 +125,7 @@ PRStatus
 _MD_WAKEUP_WAITER(PRThread *thread)
 {
     if (thread) {
-	PR_ASSERT(!(thread->flags & _PR_GLOBAL_SCOPE));
+        PR_ASSERT(!(thread->flags & _PR_GLOBAL_SCOPE));
     }
     return PR_SUCCESS;
 }

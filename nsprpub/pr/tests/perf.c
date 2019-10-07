@@ -32,18 +32,18 @@ static void LocalProcedureCall(void)
     PRInt32 i;
 
     for (i = 0; i < count; i++) {
-    nop(i, i, 5);
+        nop(i, i, 5);
     }
 }
 
 static void DLLProcedureCall(void)
 {
     PRInt32 i;
-	PRThreadState state;
-	PRThread *self = PR_GetCurrentThread();
+    PRThreadState state;
+    PRThread *self = PR_GetCurrentThread();
 
     for (i = 0; i < count; i++) {
-    	state = PR_GetThreadState(self);
+        state = PR_GetThreadState(self);
     }
 }
 
@@ -72,8 +72,8 @@ static void IdleLock(void)
     PRInt32 i;
 
     for (i = 0; i < count; i++) {
-    PR_Lock(lock);
-    PR_Unlock(lock);
+        PR_Lock(lock);
+        PR_Unlock(lock);
     }
 }
 
@@ -82,8 +82,8 @@ static void IdleMonitor(void)
     PRInt32 i;
 
     for (i = 0; i < count; i++) {
-    PR_EnterMonitor(mon);
-    PR_ExitMonitor(mon);
+        PR_EnterMonitor(mon);
+        PR_ExitMonitor(mon);
     }
 }
 
@@ -92,8 +92,8 @@ static void IdleCMonitor(void)
     PRInt32 i;
 
     for (i = 0; i < count; i++) {
-    PR_CEnterMonitor((void*)7);
-    PR_CExitMonitor((void*)7);
+        PR_CEnterMonitor((void*)7);
+        PR_CExitMonitor((void*)7);
     }
 }
 
@@ -111,16 +111,17 @@ static void CDThread(void)
     /*
      * Cannot create too many threads
      */
-    if (num_threads > 1000)
-    num_threads = 1000;
+    if (num_threads > 1000) {
+        num_threads = 1000;
+    }
 
     for (i = 0; i < num_threads; i++) {
         PRThread *t = PR_CreateThread(PR_USER_THREAD,
-                      dull, 0, 
-                      PR_PRIORITY_NORMAL,
-                      PR_LOCAL_THREAD,
-                      PR_UNJOINABLE_THREAD,
-                      0);
+                                      dull, 0,
+                                      PR_PRIORITY_NORMAL,
+                                      PR_LOCAL_THREAD,
+                                      PR_UNJOINABLE_THREAD,
+                                      0);
         if (NULL == t) {
             fprintf(stderr, "CDThread: cannot create thread %3d\n", i);
         } else {
@@ -140,13 +141,13 @@ static void PR_CALLBACK CXReader(void *arg)
     PR_EnterMonitor(mon);
     n = count / 2;
     for (i = 0; i < n; i++) {
-    while (cxq == 0) {
+        while (cxq == 0) {
             DPRINTF(("CXReader: thread = 0x%lx waiting\n",
-                    PR_GetCurrentThread()));
-        PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
-    }
-    --cxq;
-    PR_Notify(mon);
+                     PR_GetCurrentThread()));
+            PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
+        }
+        --cxq;
+        PR_Notify(mon);
     }
     PR_ExitMonitor(mon);
 
@@ -164,13 +165,13 @@ static void PR_CALLBACK CXWriter(void *arg)
     PR_EnterMonitor(mon);
     n = count / 2;
     for (i = 0; i < n; i++) {
-    while (cxq == 1) {
+        while (cxq == 1) {
             DPRINTF(("CXWriter: thread = 0x%lx waiting\n",
-                    PR_GetCurrentThread()));
-        PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
-    }
-    ++cxq;
-    PR_Notify(mon);
+                     PR_GetCurrentThread()));
+            PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT);
+        }
+        ++cxq;
+        PR_Notify(mon);
     }
     PR_ExitMonitor(mon);
 
@@ -190,37 +191,37 @@ static void ContextSwitch(PRThreadScope scope1, PRThreadScope scope2)
     cxq = 0;
 
     t1 = PR_CreateThread(PR_USER_THREAD,
-                      CXReader, 0, 
-                      PR_PRIORITY_NORMAL,
-                      scope1,
-                      PR_UNJOINABLE_THREAD,
-                      0);
+                         CXReader, 0,
+                         PR_PRIORITY_NORMAL,
+                         scope1,
+                         PR_UNJOINABLE_THREAD,
+                         0);
     if (NULL == t1) {
         fprintf(stderr, "ContextSwitch: cannot create thread\n");
     } else {
         DPRINTF(("ContextSwitch: created %s thread = 0x%lx\n",
-                (scope1 == PR_GLOBAL_THREAD ?
-                "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
-                            t1));
+                 (scope1 == PR_GLOBAL_THREAD ?
+                  "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
+                 t1));
     }
     t2 = PR_CreateThread(PR_USER_THREAD,
-                      CXWriter, 0, 
-                      PR_PRIORITY_NORMAL,
-                      scope2,
-                      PR_UNJOINABLE_THREAD,
-                      0);
+                         CXWriter, 0,
+                         PR_PRIORITY_NORMAL,
+                         scope2,
+                         PR_UNJOINABLE_THREAD,
+                         0);
     if (NULL == t2) {
         fprintf(stderr, "ContextSwitch: cannot create thread\n");
     } else {
         DPRINTF(("ContextSwitch: created %s thread = 0x%lx\n",
-                (scope2 == PR_GLOBAL_THREAD ?
-                "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
-                            t2));
+                 (scope2 == PR_GLOBAL_THREAD ?
+                  "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
+                 t2));
     }
 
     /* Wait for both of the threads to exit */
     while (alive) {
-    PR_Wait(mon2, PR_INTERVAL_NO_TIMEOUT);
+        PR_Wait(mon2, PR_INTERVAL_NO_TIMEOUT);
     }
     PR_ExitMonitor(mon2);
 }
@@ -255,10 +256,10 @@ static void PR_CALLBACK SemaThread(void *argSema)
     n = count / 2;
     for (i = 0; i < n; i++) {
         DPRINTF(("SemaThread: thread = 0x%lx waiting on sem = 0x%lx\n",
-                PR_GetCurrentThread(), sem[0]));
+                 PR_GetCurrentThread(), sem[0]));
         PR_WaitSem(sem[0]);
         DPRINTF(("SemaThread: thread = 0x%lx posting on sem = 0x%lx\n",
-                PR_GetCurrentThread(), sem[1]));
+                 PR_GetCurrentThread(), sem[1]));
         PR_PostSem(sem[1]);
     }
 
@@ -285,34 +286,34 @@ static void SemaContextSwitch(PRThreadScope scope1, PRThreadScope scope2)
     cxq = 0;
 
     t1 = PR_CreateThread(PR_USER_THREAD,
-                      SemaThread, 
-                      sem_set1, 
-                      PR_PRIORITY_NORMAL,
-                      scope1,
-                      PR_UNJOINABLE_THREAD,
-                      0);
+                         SemaThread,
+                         sem_set1,
+                         PR_PRIORITY_NORMAL,
+                         scope1,
+                         PR_UNJOINABLE_THREAD,
+                         0);
     if (NULL == t1) {
         fprintf(stderr, "SemaContextSwitch: cannot create thread\n");
     } else {
         DPRINTF(("SemaContextSwitch: created %s thread = 0x%lx\n",
-                (scope1 == PR_GLOBAL_THREAD ?
-                "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
-                            t1));
+                 (scope1 == PR_GLOBAL_THREAD ?
+                  "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
+                 t1));
     }
     t2 = PR_CreateThread(PR_USER_THREAD,
-                      SemaThread, 
-                      sem_set2, 
-                      PR_PRIORITY_NORMAL,
-                      scope2,
-                      PR_UNJOINABLE_THREAD,
-                      0);
+                         SemaThread,
+                         sem_set2,
+                         PR_PRIORITY_NORMAL,
+                         scope2,
+                         PR_UNJOINABLE_THREAD,
+                         0);
     if (NULL == t2) {
         fprintf(stderr, "SemaContextSwitch: cannot create thread\n");
     } else {
         DPRINTF(("SemaContextSwitch: created %s thread = 0x%lx\n",
-                (scope2 == PR_GLOBAL_THREAD ?
-                "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
-                            t2));
+                 (scope2 == PR_GLOBAL_THREAD ?
+                  "PR_GLOBAL_THREAD" : "PR_LOCAL_THREAD"),
+                 t2));
     }
 
     /* Wait for both of the threads to exit */
@@ -363,30 +364,34 @@ static void Measure(void (*func)(void), const char *msg)
 
 int main(int argc, char **argv)
 {
-	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "dc:");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    PLOptStatus os;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "dc:");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-			_debug_on = 1;
-            break;
-        case 'c':  /* loop count */
-            count = atoi(opt->value);
-            break;
-         default:
-            break;
+            case 'd':  /* debug mode */
+                _debug_on = 1;
+                break;
+            case 'c':  /* loop count */
+                count = atoi(opt->value);
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
-    if (0 == count) count = DEFAULT_COUNT;
-    
+    if (0 == count) {
+        count = DEFAULT_COUNT;
+    }
+
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
-	PR_BlockClockInterrupts();
-	PR_UnblockClockInterrupts();
+    PR_BlockClockInterrupts();
+    PR_UnblockClockInterrupts();
     PR_STDIO_INIT();
 
     lock = PR_NewLock();

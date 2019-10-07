@@ -154,7 +154,7 @@ NSPR_API(PRUint64) LL_MaxUint(void);
 /***********************************************************************
 ** MACROS:      LL_UDIVMOD
 ** DESCRIPTION:
-**  Produce both a quotient and a remainder given an unsigned 
+**  Produce both a quotient and a remainder given an unsigned
 ** INPUTS:      PRUint64 a: The dividend of the operation
 **              PRUint64 b: The quotient of the operation
 ** OUTPUTS:     PRUint64 *qp: pointer to quotient

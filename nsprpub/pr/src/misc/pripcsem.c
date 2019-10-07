@@ -60,9 +60,11 @@ PR_IMPLEMENT(PRSem *) PR_OpenSemaphore(
 {
     char osname[PR_IPC_NAME_SIZE];
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     if (_PR_MakeNativeIPCName(name, osname, sizeof(osname), _PRIPCSem)
-            == PR_FAILURE) {
+        == PR_FAILURE) {
         return NULL;
     }
     return _PR_MD_OPEN_SEMAPHORE(osname, flags, mode, value);
@@ -87,9 +89,11 @@ PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
 {
     char osname[PR_IPC_NAME_SIZE];
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
     if (_PR_MakeNativeIPCName(name, osname, sizeof(osname), _PRIPCSem)
-            == PR_FAILURE) {
+        == PR_FAILURE) {
         return PR_FAILURE;
     }
     return _PR_MD_DELETE_SEMAPHORE(osname);

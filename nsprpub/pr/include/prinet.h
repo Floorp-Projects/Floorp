@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * File:		prinet.h
+ * File:        prinet.h
  * Description:
  *     Header file used to find the system header files for socket support[1].
  *     This file serves the following purposes:
@@ -34,7 +34,7 @@
 
 #if defined(XP_UNIX) || defined(XP_OS2)
 #include <sys/types.h>
-#include <sys/socket.h>		/* AF_INET */
+#include <sys/socket.h>     /* AF_INET */
 #include <netinet/in.h>         /* INADDR_ANY, ..., ntohl(), ... */
 #ifdef XP_OS2
 #include <sys/ioctl.h>

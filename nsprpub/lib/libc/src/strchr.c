@@ -9,7 +9,9 @@
 PR_IMPLEMENT(char *)
 PL_strchr(const char *s, char c)
 {
-    if( (const char *)0 == s ) return (char *)0;
+    if( (const char *)0 == s ) {
+        return (char *)0;
+    }
 
     return strchr(s, c);
 }
@@ -17,7 +19,9 @@ PL_strchr(const char *s, char c)
 PR_IMPLEMENT(char *)
 PL_strrchr(const char *s, char c)
 {
-    if( (const char *)0 == s ) return (char *)0;
+    if( (const char *)0 == s ) {
+        return (char *)0;
+    }
 
     return strrchr(s, c);
 }
@@ -25,13 +29,18 @@ PL_strrchr(const char *s, char c)
 PR_IMPLEMENT(char *)
 PL_strnchr(const char *s, char c, PRUint32 n)
 {
-    if( (const char *)0 == s ) return (char *)0;
+    if( (const char *)0 == s ) {
+        return (char *)0;
+    }
 
     for( ; n && *s; s++, n-- )
-        if( *s == c )
+        if( *s == c ) {
             return (char *)s;
+        }
 
-    if( ((char)0 == c) && (n > 0) && ((char)0 == *s) ) return (char *)s;
+    if( ((char)0 == c) && (n > 0) && ((char)0 == *s) ) {
+        return (char *)s;
+    }
 
     return (char *)0;
 }
@@ -41,16 +50,21 @@ PL_strnrchr(const char *s, char c, PRUint32 n)
 {
     const char *p;
 
-    if( (const char *)0 == s ) return (char *)0;
+    if( (const char *)0 == s ) {
+        return (char *)0;
+    }
 
     for( p = s; n && *p; p++, n-- )
         ;
 
-    if( ((char)0 == c) && (n > 0) && ((char)0 == *p) ) return (char *)p;
+    if( ((char)0 == c) && (n > 0) && ((char)0 == *p) ) {
+        return (char *)p;
+    }
 
     for( p--; p >= s; p-- )
-        if( *p == c )
+        if( *p == c ) {
             return (char *)p;
+        }
 
     return (char *)0;
 }

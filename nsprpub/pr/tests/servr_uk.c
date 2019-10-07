@@ -8,18 +8,18 @@
 ** This server simulates a server running in loopback mode.
 **
 ** The idea is that a single server is created.  The server initially creates
-** a number of worker threads.  Then, with the server running, a number of 
+** a number of worker threads.  Then, with the server running, a number of
 ** clients are created which start requesting service from the server.
 **
 **
 ** Modification History:
 ** 19-May-97 AGarcia- Converted the test to accomodate the debug_mode flag.
-**	         The debug mode will print all of the printfs associated with this test.
-**			 The regress mode will be the default mode. Since the regress tool limits
+**           The debug mode will print all of the printfs associated with this test.
+**           The regress mode will be the default mode. Since the regress tool limits
 **           the output to a one line status:PASS or FAIL,all of the printf statements
-**			 have been handled with an if (debug_mode) statement.
+**           have been handled with an if (debug_mode) statement.
 ** 04-June-97 AGarcia removed the Test_Result function. Regress tool has been updated to
-**			recognize the return code from tha main program.
+**          recognize the return code from tha main program.
 ***********************************************************************/
 
 /***********************************************************************
@@ -75,7 +75,9 @@ SetServerState(char *waiter, PRInt32 state)
     ServerState = state;
     PR_NotifyCondVar(ServerStateCV);
 
-	if (debug_mode) DPRINTF("\t%s changed state to %d\n", waiter, state);
+    if (debug_mode) {
+        DPRINTF("\t%s changed state to %d\n", waiter, state);
+    }
 
     PR_Unlock(ServerStateCVLock);
 }
@@ -87,14 +89,17 @@ WaitServerState(char *waiter, PRInt32 state)
 
     PR_Lock(ServerStateCVLock);
 
-    if (debug_mode) DPRINTF("\t%s waiting for state %d\n", waiter, state);
+    if (debug_mode) {
+        DPRINTF("\t%s waiting for state %d\n", waiter, state);
+    }
 
-    while(!(ServerState & state))
+    while(!(ServerState & state)) {
         PR_WaitCondVar(ServerStateCV, PR_INTERVAL_NO_TIMEOUT);
+    }
     rv = ServerState;
 
-    if (debug_mode) DPRINTF("\t%s resuming from wait for state %d; state now %d\n", 
-        waiter, state, ServerState);
+    if (debug_mode) DPRINTF("\t%s resuming from wait for state %d; state now %d\n",
+                                waiter, state, ServerState);
     PR_Unlock(ServerStateCVLock);
 
     return rv;
@@ -116,15 +121,21 @@ WorkerThreadFunc(void *_listenSock)
     char *sendBuf;
 
     if (debug_mode) DPRINTF("\tServer buffer is %d bytes; %d data, %d netaddrs\n",
-            _client_data+(2*sizeof(PRNetAddr))+32, _client_data, (2*sizeof(PRNetAddr))+32);
+                                _client_data+(2*sizeof(PRNetAddr))+32, _client_data, (2*sizeof(PRNetAddr))+32);
     dataBuf = (char *)PR_MALLOC(_client_data + 2*sizeof(PRNetAddr) + 32);
     if (!dataBuf)
-        if (debug_mode) printf("\tServer could not malloc space!?\n");
+        if (debug_mode) {
+            printf("\tServer could not malloc space!?\n");
+        }
     sendBuf = (char *)PR_MALLOC(_server_data *sizeof(char));
     if (!sendBuf)
-        if (debug_mode) printf("\tServer could not malloc space!?\n");
+        if (debug_mode) {
+            printf("\tServer could not malloc space!?\n");
+        }
 
-    if (debug_mode) DPRINTF("\tServer worker thread running\n");
+    if (debug_mode) {
+        DPRINTF("\tServer worker thread running\n");
+    }
 
     while(1) {
         PRInt32 bytesToRead = _client_data;
@@ -135,9 +146,11 @@ WorkerThreadFunc(void *_listenSock)
 
         loops++;
 
-        if (debug_mode) DPRINTF("\tServer thread going into accept\n");
+        if (debug_mode) {
+            DPRINTF("\tServer thread going into accept\n");
+        }
 
-        bytesRead = PR_AcceptRead(listenSock, 
+        bytesRead = PR_AcceptRead(listenSock,
                                   &newSock,
                                   &rAddr,
                                   dataBuf,
@@ -145,12 +158,16 @@ WorkerThreadFunc(void *_listenSock)
                                   PR_INTERVAL_NO_TIMEOUT);
 
         if (bytesRead < 0) {
-            if (debug_mode) printf("\tServer error in accept (%d)\n", bytesRead);
+            if (debug_mode) {
+                printf("\tServer error in accept (%d)\n", bytesRead);
+            }
             continue;
         }
 
-        if (debug_mode) DPRINTF("\tServer accepted connection (%d bytes)\n", bytesRead);
-        
+        if (debug_mode) {
+            DPRINTF("\tServer accepted connection (%d bytes)\n", bytesRead);
+        }
+
         PR_AtomicIncrement(&workerThreadsBusy);
         if (workerThreadsBusy == workerThreads) {
             PR_Lock(workerThreadsLock);
@@ -158,48 +175,58 @@ WorkerThreadFunc(void *_listenSock)
                 PRThread *WorkerThread;
 
                 WorkerThread = PR_CreateThread(
-                                  PR_SYSTEM_THREAD,
-                                  WorkerThreadFunc,
-                                  listenSock,
-                                  PR_PRIORITY_NORMAL,
-                                  ServerScope,
-                                  PR_UNJOINABLE_THREAD,
-                                  THREAD_STACKSIZE);
+                                   PR_SYSTEM_THREAD,
+                                   WorkerThreadFunc,
+                                   listenSock,
+                                   PR_PRIORITY_NORMAL,
+                                   ServerScope,
+                                   PR_UNJOINABLE_THREAD,
+                                   THREAD_STACKSIZE);
 
                 if (!WorkerThread) {
-                    if (debug_mode) printf("Error creating client thread %d\n", workerThreads);
+                    if (debug_mode) {
+                        printf("Error creating client thread %d\n", workerThreads);
+                    }
                 } else {
                     PR_AtomicIncrement(&workerThreads);
-                    if (debug_mode) DPRINTF("\tServer creates worker (%d)\n", workerThreads);
+                    if (debug_mode) {
+                        DPRINTF("\tServer creates worker (%d)\n", workerThreads);
+                    }
                 }
             }
             PR_Unlock(workerThreadsLock);
         }
- 
+
         bytesToRead -= bytesRead;
         while (bytesToRead) {
-            bytesRead = PR_Recv(newSock, 
-                                dataBuf, 
-                                bytesToRead, 
-                                0, 
+            bytesRead = PR_Recv(newSock,
+                                dataBuf,
+                                bytesToRead,
+                                0,
                                 PR_INTERVAL_NO_TIMEOUT);
             if (bytesRead < 0) {
-                if (debug_mode) printf("\tServer error receiving data (%d)\n", bytesRead);
+                if (debug_mode) {
+                    printf("\tServer error receiving data (%d)\n", bytesRead);
+                }
                 continue;
             }
-            if (debug_mode) DPRINTF("\tServer received %d bytes\n", bytesRead);
+            if (debug_mode) {
+                DPRINTF("\tServer received %d bytes\n", bytesRead);
+            }
         }
 
         bytesWritten = PR_Send(newSock,
-                               sendBuf, 
-                               bytesToWrite, 
-                               0, 
+                               sendBuf,
+                               bytesToWrite,
+                               0,
                                PR_INTERVAL_NO_TIMEOUT);
         if (bytesWritten != _server_data) {
-            if (debug_mode) printf("\tError sending data to client (%d, %d)\n", 
-                bytesWritten, PR_GetOSError());
+            if (debug_mode) printf("\tError sending data to client (%d, %d)\n",
+                                       bytesWritten, PR_GetOSError());
         } else {
-            if (debug_mode) DPRINTF("\tServer sent %d bytes\n", bytesWritten);
+            if (debug_mode) {
+                DPRINTF("\tServer sent %d bytes\n", bytesWritten);
+            }
         }
 
         PR_Close(newSock);
@@ -216,17 +243,22 @@ ServerSetup(void)
     PRThread *WorkerThread;
 
     if ( (listenSocket = PR_NewTCPSocket()) == NULL) {
-        if (debug_mode) printf("\tServer error creating listen socket\n");
-		else 
-        return NULL;
+        if (debug_mode) {
+            printf("\tServer error creating listen socket\n");
+        }
+        else {
+            return NULL;
+        }
     }
 
     sockOpt.option = PR_SockOpt_Reuseaddr;
     sockOpt.value.reuse_addr = PR_TRUE;
     if ( PR_SetSocketOption(listenSocket, &sockOpt) == PR_FAILURE) {
         if (debug_mode) printf("\tServer error setting socket option: OS error %d\n",
-                PR_GetOSError());
-		else failed_already=1;
+                                   PR_GetOSError());
+        else {
+            failed_already=1;
+        }
         PR_Close(listenSocket);
         return NULL;
     }
@@ -238,15 +270,21 @@ ServerSetup(void)
 
     if ( PR_Bind(listenSocket, &serverAddr) == PR_FAILURE) {
         if (debug_mode) printf("\tServer error binding to server address: OS error %d\n",
-                PR_GetOSError());
-		else failed_already=1;
+                                   PR_GetOSError());
+        else {
+            failed_already=1;
+        }
         PR_Close(listenSocket);
         return NULL;
     }
 
     if ( PR_Listen(listenSocket, 128) == PR_FAILURE) {
-        if (debug_mode) printf("\tServer error listening to server socket\n");
-		else failed_already=1;
+        if (debug_mode) {
+            printf("\tServer error listening to server socket\n");
+        }
+        else {
+            failed_already=1;
+        }
         PR_Close(listenSocket);
 
         return NULL;
@@ -259,21 +297,25 @@ ServerSetup(void)
     workerThreadsLock = PR_NewLock();
 
     WorkerThread = PR_CreateThread(
-                      PR_SYSTEM_THREAD,
-                      WorkerThreadFunc,
-                      listenSocket,
-                      PR_PRIORITY_NORMAL,
-                      ServerScope,
-                      PR_UNJOINABLE_THREAD,
-                      THREAD_STACKSIZE);
+                       PR_SYSTEM_THREAD,
+                       WorkerThreadFunc,
+                       listenSocket,
+                       PR_PRIORITY_NORMAL,
+                       ServerScope,
+                       PR_UNJOINABLE_THREAD,
+                       THREAD_STACKSIZE);
 
     if (!WorkerThread) {
-        if (debug_mode) printf("error creating working thread\n");
+        if (debug_mode) {
+            printf("error creating working thread\n");
+        }
         PR_Close(listenSocket);
         return NULL;
     }
     PR_AtomicIncrement(&workerThreads);
-    if (debug_mode) DPRINTF("\tServer created primordial worker thread\n");
+    if (debug_mode) {
+        DPRINTF("\tServer created primordial worker thread\n");
+    }
 
     return listenSocket;
 }
@@ -291,7 +333,9 @@ ServerThreadFunc(void *unused)
         SetServerState(SERVER, SERVER_STATE_DEAD);
     } else {
 
-        if (debug_mode) DPRINTF("\tServer up\n");
+        if (debug_mode) {
+            DPRINTF("\tServer up\n");
+        }
 
         /* Tell clients they can start now. */
         SetServerState(SERVER, SERVER_STATE_READY);
@@ -322,10 +366,14 @@ ClientThreadFunc(void *unused)
 
     sendBuf = (char *)PR_MALLOC(_client_data * sizeof(char));
     if (!sendBuf)
-        if (debug_mode) printf("\tClient could not malloc space!?\n");
+        if (debug_mode) {
+            printf("\tClient could not malloc space!?\n");
+        }
     recvBuf = (char *)PR_MALLOC(_server_data * sizeof(char));
     if (!recvBuf)
-        if (debug_mode) printf("\tClient could not malloc space!?\n");
+        if (debug_mode) {
+            printf("\tClient could not malloc space!?\n");
+        }
 
     memset(&serverAddr, 0, sizeof(PRNetAddr));
     serverAddr.inet.family = PR_AF_INET;
@@ -335,59 +383,75 @@ ClientThreadFunc(void *unused)
     while(numRequests > 0) {
 
         if ( (numRequests % 10) == 0 )
-            if (debug_mode) printf(".");
-        if (debug_mode) DPRINTF("\tClient starting request %d\n", numRequests);
+            if (debug_mode) {
+                printf(".");
+            }
+        if (debug_mode) {
+            DPRINTF("\tClient starting request %d\n", numRequests);
+        }
 
         clientSocket = PR_NewTCPSocket();
         if (!clientSocket) {
             if (debug_mode) printf("Client error creating socket: OS error %d\n",
-		    PR_GetOSError());
+                                       PR_GetOSError());
             continue;
         }
 
-        if (debug_mode) DPRINTF("\tClient connecting\n");
+        if (debug_mode) {
+            DPRINTF("\tClient connecting\n");
+        }
 
-        rv = PR_Connect(clientSocket, 
+        rv = PR_Connect(clientSocket,
                         &serverAddr,
                         PR_INTERVAL_NO_TIMEOUT);
         if (!clientSocket) {
-            if (debug_mode) printf("\tClient error connecting\n");
+            if (debug_mode) {
+                printf("\tClient error connecting\n");
+            }
             continue;
         }
 
-        if (debug_mode) DPRINTF("\tClient connected\n");
+        if (debug_mode) {
+            DPRINTF("\tClient connected\n");
+        }
 
-        rv = PR_Send(clientSocket, 
-                     sendBuf, 
-                     _client_data, 
-                     0, 
+        rv = PR_Send(clientSocket,
+                     sendBuf,
+                     _client_data,
+                     0,
                      PR_INTERVAL_NO_TIMEOUT);
         if (rv != _client_data) {
-            if (debug_mode) printf("Client error sending data (%d)\n", rv);
+            if (debug_mode) {
+                printf("Client error sending data (%d)\n", rv);
+            }
             PR_Close(clientSocket);
             continue;
         }
 
-        if (debug_mode) DPRINTF("\tClient sent %d bytes\n", rv);
+        if (debug_mode) {
+            DPRINTF("\tClient sent %d bytes\n", rv);
+        }
 
         bytesNeeded = _server_data;
         while(bytesNeeded) {
-            rv = PR_Recv(clientSocket, 
-                         recvBuf, 
-                         bytesNeeded, 
-                         0, 
+            rv = PR_Recv(clientSocket,
+                         recvBuf,
+                         bytesNeeded,
+                         0,
                          PR_INTERVAL_NO_TIMEOUT);
             if (rv <= 0) {
-                if (debug_mode) printf("Client error receiving data (%d) (%d/%d)\n", 
-                    rv, (_server_data - bytesNeeded), _server_data);
+                if (debug_mode) printf("Client error receiving data (%d) (%d/%d)\n",
+                                           rv, (_server_data - bytesNeeded), _server_data);
                 break;
             }
-            if (debug_mode) DPRINTF("\tClient received %d bytes; need %d more\n", rv, bytesNeeded - rv);
+            if (debug_mode) {
+                DPRINTF("\tClient received %d bytes; need %d more\n", rv, bytesNeeded - rv);
+            }
             bytesNeeded -= rv;
         }
 
         PR_Close(clientSocket);
- 
+
         PR_AtomicDecrement(&numRequests);
     }
 
@@ -412,26 +476,30 @@ RunClients(void)
     for (index=0; index<_clients; index++) {
         PRThread *clientThread;
 
-  
+
         clientThread = PR_CreateThread(
-                          PR_USER_THREAD,
-                          ClientThreadFunc,
-                          NULL,
-                          PR_PRIORITY_NORMAL,
-                          ClientScope,
-                          PR_UNJOINABLE_THREAD,
-                          THREAD_STACKSIZE);
+                           PR_USER_THREAD,
+                           ClientThreadFunc,
+                           NULL,
+                           PR_PRIORITY_NORMAL,
+                           ClientScope,
+                           PR_UNJOINABLE_THREAD,
+                           THREAD_STACKSIZE);
 
         if (!clientThread) {
-            if (debug_mode) printf("\terror creating client thread %d\n", index);
-        } else
-            if (debug_mode) DPRINTF("\tMain created client %d/%d\n", index+1, _clients);
+            if (debug_mode) {
+                printf("\terror creating client thread %d\n", index);
+            }
+        } else if (debug_mode) {
+            DPRINTF("\tMain created client %d/%d\n", index+1, _clients);
+        }
 
     }
 
     PR_EnterMonitor(clientMonitor);
-    while(numClients)
+    while(numClients) {
         PR_Wait(clientMonitor, PR_INTERVAL_NO_TIMEOUT);
+    }
     PR_ExitMonitor(clientMonitor);
 }
 
@@ -445,15 +513,17 @@ void do_work()
 
     SetServerState(MAIN, SERVER_STATE_STARTUP);
     ServerThread = PR_CreateThread(
-                      PR_USER_THREAD,
-                      ServerThreadFunc,
-                      NULL,
-                      PR_PRIORITY_NORMAL,
-                      ServerScope,
-                      PR_JOINABLE_THREAD,
-                      THREAD_STACKSIZE);
+                       PR_USER_THREAD,
+                       ServerThreadFunc,
+                       NULL,
+                       PR_PRIORITY_NORMAL,
+                       ServerScope,
+                       PR_JOINABLE_THREAD,
+                       THREAD_STACKSIZE);
     if (!ServerThread) {
-        if (debug_mode) printf("error creating main server thread\n");
+        if (debug_mode) {
+            printf("error creating main server thread\n");
+        }
         return;
     }
 
@@ -492,59 +562,63 @@ static void Measure(void (*func)(void), const char *msg)
 
     d = (double)PR_IntervalToMicroseconds(stop - start);
 
-    if (debug_mode) printf("\n%40s: %6.2f usec\n", msg, d / _iterations);
+    if (debug_mode) {
+        printf("\n%40s: %6.2f usec\n", msg, d / _iterations);
+    }
 }
 
 
 int main(int argc, char **argv)
 {
-	/* The command line argument: -d is used to determine if the test is being run
-	in debug mode. The regress tool requires only one line output:PASS or FAIL.
-	All of the printfs associated with this test has been handled with a if (debug_mode)
-	test.
-	Usage: test_name -d
-	*/
-	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "d:");
-	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+    /* The command line argument: -d is used to determine if the test is being run
+    in debug mode. The regress tool requires only one line output:PASS or FAIL.
+    All of the printfs associated with this test has been handled with a if (debug_mode)
+    test.
+    Usage: test_name -d
+    */
+    PLOptStatus os;
+    PLOptState *opt = PL_CreateOptState(argc, argv, "d:");
+    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
-		if (PL_OPT_BAD == os) continue;
+        if (PL_OPT_BAD == os) {
+            continue;
+        }
         switch (opt->option)
         {
-        case 'd':  /* debug mode */
-			debug_mode = 1;
-            break;
-         default:
-            break;
+            case 'd':  /* debug mode */
+                debug_mode = 1;
+                break;
+            default:
+                break;
         }
     }
-	PL_DestroyOptState(opt);
+    PL_DestroyOptState(opt);
 
- /* main test */
+    /* main test */
     if (debug_mode) {
-		printf("Enter number of iterations: \n");
-		scanf("%d", &_iterations);
-		printf("Enter number of clients   : \n");
-		scanf("%d", &_clients);
-		printf("Enter size of client data : \n");
-		scanf("%d", &_client_data);
-		printf("Enter size of server data : \n");
-		scanf("%d", &_server_data);
-	}
-	else 
-	{
-		_iterations = 7;
-		_clients = 7;
-		_client_data = 100;
-		_server_data = 100;
-	}
+        printf("Enter number of iterations: \n");
+        scanf("%d", &_iterations);
+        printf("Enter number of clients   : \n");
+        scanf("%d", &_clients);
+        printf("Enter size of client data : \n");
+        scanf("%d", &_client_data);
+        printf("Enter size of server data : \n");
+        scanf("%d", &_server_data);
+    }
+    else
+    {
+        _iterations = 7;
+        _clients = 7;
+        _client_data = 100;
+        _server_data = 100;
+    }
 
     if (debug_mode) {
-		printf("\n\n%d iterations with %d client threads.\n", 
-        _iterations, _clients);
-		printf("Sending %d bytes of client data and %d bytes of server data\n", 
-        _client_data, _server_data);
-	}
+        printf("\n\n%d iterations with %d client threads.\n",
+               _iterations, _clients);
+        printf("Sending %d bytes of client data and %d bytes of server data\n",
+               _client_data, _server_data);
+    }
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
 
@@ -557,8 +631,10 @@ int main(int argc, char **argv)
 
     PR_Cleanup();
 
-	if(failed_already)	
-		return 1;
-	else
-		return 0;
+    if(failed_already) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }

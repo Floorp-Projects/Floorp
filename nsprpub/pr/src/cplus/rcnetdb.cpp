@@ -15,7 +15,9 @@
 #include <string.h>
 
 RCNetAddr::RCNetAddr(const RCNetAddr& his): RCBase()
-    { address = his.address; }
+{
+    address = his.address;
+}
 
 RCNetAddr::RCNetAddr(const RCNetAddr& his, PRUint16 port): RCBase()
 {
@@ -42,12 +44,18 @@ RCNetAddr::RCNetAddr(RCNetAddr::HostValue host, PRUint16 port): RCBase()
 
 RCNetAddr::~RCNetAddr() { }
 
-void RCNetAddr::operator=(const RCNetAddr& his) { address = his.address; }
+void RCNetAddr::operator=(const RCNetAddr& his) {
+    address = his.address;
+}
 
 PRStatus RCNetAddr::FromString(const char* string)
-    { return PR_StringToNetAddr(string, &address); }
+{
+    return PR_StringToNetAddr(string, &address);
+}
 
-void RCNetAddr::operator=(const PRNetAddr* addr) { address = *addr; }
+void RCNetAddr::operator=(const PRNetAddr* addr) {
+    address = *addr;
+}
 
 PRBool RCNetAddr::operator==(const RCNetAddr& his) const
 {
@@ -76,14 +84,14 @@ PRBool RCNetAddr::EqualHost(const RCNetAddr& his) const
             rv = (address.inet.ip == his.address.inet.ip); break;
         case PR_AF_INET6:
             rv = (0 == memcmp(
-                &address.ipv6.ip, &his.address.ipv6.ip,
-                sizeof(address.ipv6.ip)));
+                      &address.ipv6.ip, &his.address.ipv6.ip,
+                      sizeof(address.ipv6.ip)));
             break;
 #if defined(XP_UNIX)
         case PR_AF_LOCAL:
             rv = (0 == strncmp(
-                address.local.path, his.address.local.path,
-                sizeof(address.local.path)));
+                      address.local.path, his.address.local.path,
+                      sizeof(address.local.path)));
             break;
 #endif
         default: break;
@@ -92,7 +100,9 @@ PRBool RCNetAddr::EqualHost(const RCNetAddr& his) const
 }  /* RCNetAddr::operator== */
 
 PRStatus RCNetAddr::ToString(char *string, PRSize size) const
-    { return PR_NetAddrToString(&address, string, size); }
+{
+    return PR_NetAddrToString(&address, string, size);
+}
 
 /*
 ** RCHostLookup
@@ -100,7 +110,9 @@ PRStatus RCNetAddr::ToString(char *string, PRSize size) const
 
 RCHostLookup::~RCHostLookup()
 {
-    if (NULL != address) delete [] address;
+    if (NULL != address) {
+        delete [] address;
+    }
 }  /* RCHostLookup::~RCHostLookup */
 
 RCHostLookup::RCHostLookup(): RCBase()
@@ -118,14 +130,18 @@ PRStatus RCHostLookup::ByName(const char* name)
     RCNetAddr* vector = NULL;
     RCNetAddr* old_vector = NULL;
     void* buffer = PR_Malloc(PR_NETDB_BUF_SIZE);
-    if (NULL == buffer) return PR_FAILURE;
+    if (NULL == buffer) {
+        return PR_FAILURE;
+    }
     rv = PR_GetHostByName(name, (char*)buffer, PR_NETDB_BUF_SIZE, &hostentry);
     if (PR_SUCCESS == rv)
     {
         for (max = 0, index = 0;; ++max)
         {
             index = PR_EnumerateHostEnt(index, &hostentry, 0, &addr);
-            if (0 == index) break;
+            if (0 == index) {
+                break;
+            }
         }
         if (max > 0)
         {
@@ -133,7 +149,9 @@ PRStatus RCHostLookup::ByName(const char* name)
             while (--max > 0)
             {
                 index = PR_EnumerateHostEnt(index, &hostentry, 0, &addr);
-                if (0 == index) break;
+                if (0 == index) {
+                    break;
+                }
                 vector[index] = &addr;
             }
             {
@@ -142,10 +160,14 @@ PRStatus RCHostLookup::ByName(const char* name)
                 address = vector;
                 max_index = max;
             }
-            if (NULL != old_vector) delete [] old_vector;
+            if (NULL != old_vector) {
+                delete [] old_vector;
+            }
         }
     }
-    if (NULL != buffer) PR_DELETE(buffer);
+    if (NULL != buffer) {
+        PR_DELETE(buffer);
+    }
     return PR_SUCCESS;
 }  /* RCHostLookup::ByName */
 
@@ -158,14 +180,18 @@ PRStatus RCHostLookup::ByAddress(const RCNetAddr& host_addr)
     RCNetAddr* vector = NULL;
     RCNetAddr* old_vector = NULL;
     char *buffer = (char*)PR_Malloc(PR_NETDB_BUF_SIZE);
-    if (NULL == buffer) return PR_FAILURE;
+    if (NULL == buffer) {
+        return PR_FAILURE;
+    }
     rv = PR_GetHostByAddr(host_addr, buffer, PR_NETDB_BUF_SIZE, &hostentry);
     if (PR_SUCCESS == rv)
     {
         for (max = 0, index = 0;; ++max)
         {
             index = PR_EnumerateHostEnt(index, &hostentry, 0, &addr);
-            if (0 == index) break;
+            if (0 == index) {
+                break;
+            }
         }
         if (max > 0)
         {
@@ -173,7 +199,9 @@ PRStatus RCHostLookup::ByAddress(const RCNetAddr& host_addr)
             while (--max > 0)
             {
                 index = PR_EnumerateHostEnt(index, &hostentry, 0, &addr);
-                if (0 == index) break;
+                if (0 == index) {
+                    break;
+                }
                 vector[index] = &addr;
             }
             {
@@ -182,18 +210,23 @@ PRStatus RCHostLookup::ByAddress(const RCNetAddr& host_addr)
                 address = vector;
                 max_index = max;
             }
-            if (NULL != old_vector) delete [] old_vector;
+            if (NULL != old_vector) {
+                delete [] old_vector;
+            }
         }
     }
-    if (NULL != buffer) PR_DELETE(buffer);
+    if (NULL != buffer) {
+        PR_DELETE(buffer);
+    }
     return PR_SUCCESS;
 }  /* RCHostLookup::ByAddress */
 
 const RCNetAddr* RCHostLookup::operator[](PRUintn which)
 {
     RCNetAddr* addr = NULL;
-    if (which < max_index)
+    if (which < max_index) {
         addr = &address[which];
+    }
     return addr;
 }  /* RCHostLookup::operator[] */
 

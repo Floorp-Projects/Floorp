@@ -55,7 +55,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     /*
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     /* Switch to the fd stack. */
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     /*
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     /* Switch to the fd cache. */
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     for (i = 0; i < numfds; i++) {
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     /* Switch to the fd stack. */
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     for (i = 0; i < numfds; i++) {
@@ -218,7 +218,7 @@ int main(int argc, char **argv)
         if (PR_Close(savefds[i]) == PR_FAILURE) {
             fprintf(stderr, "PR_Close failed\n");
             exit(1);
-        } 
+        }
     }
 
     PR_Cleanup();

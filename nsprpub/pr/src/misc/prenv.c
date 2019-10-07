@@ -50,7 +50,7 @@ static PRLock *_pr_envLock = NULL;
 
 void _PR_InitEnv(void)
 {
-	_PR_NEW_LOCK_ENV();
+    _PR_NEW_LOCK_ENV();
 }
 
 void _PR_CleanupEnv(void)
@@ -62,7 +62,9 @@ PR_IMPLEMENT(char*) PR_GetEnv(const char *var)
 {
     char *ev;
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
     _PR_LOCK_ENV();
     ev = _PR_MD_GET_ENV(var);
@@ -73,28 +75,30 @@ PR_IMPLEMENT(char*) PR_GetEnv(const char *var)
 PR_IMPLEMENT(char*) PR_GetEnvSecure(const char *var)
 {
 #ifdef HAVE_SECURE_GETENV
-  char *ev;
+    char *ev;
 
-  if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
-  _PR_LOCK_ENV();
-  ev = secure_getenv(var);
-  _PR_UNLOCK_ENV();
+    _PR_LOCK_ENV();
+    ev = secure_getenv(var);
+    _PR_UNLOCK_ENV();
 
-  return ev;
+    return ev;
 #else
 #ifdef XP_UNIX
-  /*
-  ** Fall back to checking uids and gids.  This won't detect any other
-  ** privilege-granting mechanisms the platform may have.  This also
-  ** can't detect the case where the process already called
-  ** setuid(geteuid()) and/or setgid(getegid()).
-  */
-  if (getuid() != geteuid() || getgid() != getegid()) {
-    return NULL;
-  }
+    /*
+    ** Fall back to checking uids and gids.  This won't detect any other
+    ** privilege-granting mechanisms the platform may have.  This also
+    ** can't detect the case where the process already called
+    ** setuid(geteuid()) and/or setgid(getegid()).
+    */
+    if (getuid() != geteuid() || getgid() != getegid()) {
+        return NULL;
+    }
 #endif /* XP_UNIX */
-  return PR_GetEnv(var);
+    return PR_GetEnv(var);
 #endif /* HAVE_SECURE_GETENV */
 }
 
@@ -102,9 +106,13 @@ PR_IMPLEMENT(PRStatus) PR_SetEnv(const char *string)
 {
     PRIntn result;
 
-    if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) {
+        _PR_ImplicitInitialization();
+    }
 
-    if (!strchr(string, '=')) return(PR_FAILURE);
+    if (!strchr(string, '=')) {
+        return(PR_FAILURE);
+    }
 
     _PR_LOCK_ENV();
     result = _PR_MD_PUT_ENV((char*)string);
@@ -135,21 +143,21 @@ PR_IMPLEMENT(char **) PR_DuplicateEnvironment(void)
             len = strlen(*src) + 1;
             *dst = PR_Malloc(len);
             if (*dst == NULL) {
-              /* Allocation failed.  Must clean up the half-copied env. */
-              char **to_delete;
+                /* Allocation failed.  Must clean up the half-copied env. */
+                char **to_delete;
 
-              for (to_delete = result; to_delete != dst; to_delete++) {
-                PR_Free(*to_delete);
-              }
-              PR_Free(result);
-              result = NULL;
-              goto out;
+                for (to_delete = result; to_delete != dst; to_delete++) {
+                    PR_Free(*to_delete);
+                }
+                PR_Free(result);
+                result = NULL;
+                goto out;
             }
             memcpy(*dst, *src, len);
         }
         *dst = NULL;
     }
- out:
+out:
     _PR_UNLOCK_ENV();
     return result;
 }
