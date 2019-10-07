@@ -4,14 +4,11 @@
 "use strict";
 const { combineReducers } = require("devtools/client/shared/vendor/redux");
 
-const {
-  recordingState: { NOT_YET_KNOWN },
-} = require("devtools/client/performance-new/utils");
 /**
  * The current state of the recording.
  * @param state - A recordingState key.
  */
-function recordingState(state = NOT_YET_KNOWN, action) {
+function recordingState(state = "not-yet-known", action) {
   switch (action.type) {
     case "CHANGE_RECORDING_STATE":
       return action.state;
