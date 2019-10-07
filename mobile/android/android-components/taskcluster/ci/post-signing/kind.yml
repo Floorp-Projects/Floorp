@@ -25,4 +25,4 @@ job-template:
                 release: post-signing-release
                 snapshot: post-signing-snapshot
                 default: post-signing
-        tier: 2
+        tier: 1
