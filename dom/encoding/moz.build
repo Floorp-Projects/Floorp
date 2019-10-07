@@ -34,17 +34,12 @@ prefixes = (
 for prefix in prefixes:
     input_file = prefix + '.properties'
     header = prefix + '.properties.h'
-    GENERATED_FILES += [header]
-    props = GENERATED_FILES[header]
-    props.script = props2arrays
-    props.inputs = [input_file]
+    GeneratedFile(header, script=props2arrays, inputs=[input_file])
 
 input_file = 'nonparticipatingdomains.properties'
 header = input_file + '.h'
-GENERATED_FILES += [header]
-props = GENERATED_FILES[header]
-props.script = '../../intl/locale/props2arrays.py'
-props.inputs = [input_file]
+GeneratedFile(header, script='../../intl/locale/props2arrays.py',
+              inputs=[input_file])
 
 MOCHITEST_MANIFESTS += [
     'test/mochitest.ini',

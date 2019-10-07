@@ -138,20 +138,6 @@ PYTHON_UNITTEST_MANIFESTS += [
     'tests/python/python.ini',
 ]
 
-GENERATED_FILES = [
-    'EventArtifactDefinitions.json',
-    'ScalarArtifactDefinitions.json',
-    'TelemetryEventData.h',
-    'TelemetryEventEnums.h',
-    'TelemetryHistogramData.inc',
-    'TelemetryHistogramEnums.h',
-    'TelemetryHistogramNameMap.h',
-    'TelemetryProcessData.h',
-    'TelemetryProcessEnums.h',
-    'TelemetryScalarData.h',
-    'TelemetryScalarEnums.h',
-]
-
 # Generate histogram files.
 histogram_files = [
     'Histograms.json',
@@ -163,17 +149,15 @@ histogram_files = [
 if CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES']:
     histogram_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_HISTOGRAM_FILES'])
 
-data = GENERATED_FILES['TelemetryHistogramData.inc']
-data.script = 'build_scripts/gen_histogram_data.py'
-data.inputs = histogram_files
-
-enums = GENERATED_FILES['TelemetryHistogramEnums.h']
-enums.script = 'build_scripts/gen_histogram_enum.py'
-enums.inputs = histogram_files
-
-data = GENERATED_FILES['TelemetryHistogramNameMap.h']
-data.script = 'build_scripts/gen_histogram_phf.py'
-data.inputs = histogram_files
+GeneratedFile('TelemetryHistogramData.inc',
+              script='build_scripts/gen_histogram_data.py',
+              inputs=histogram_files)
+GeneratedFile('TelemetryHistogramEnums.h',
+              script='build_scripts/gen_histogram_enum.py',
+              inputs=histogram_files)
+GeneratedFile('TelemetryHistogramNameMap.h',
+              script='build_scripts/gen_histogram_phf.py',
+              inputs=histogram_files)
 
 # Generate scalar files.
 scalar_files = [
@@ -182,19 +166,20 @@ scalar_files = [
 if CONFIG['MOZ_TELEMETRY_EXTRA_SCALAR_FILES']:
     scalar_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_SCALAR_FILES'])
 
-scalar_data = GENERATED_FILES['TelemetryScalarData.h']
-scalar_data.script = 'build_scripts/gen_scalar_data.py'
-scalar_data.inputs = scalar_files
-
-scalar_enums = GENERATED_FILES['TelemetryScalarEnums.h']
-scalar_enums.script = 'build_scripts/gen_scalar_enum.py'
-scalar_enums.inputs = scalar_files
+GeneratedFile('TelemetryScalarData.h',
+              script='build_scripts/gen_scalar_data.py',
+              inputs=scalar_files)
+GeneratedFile('TelemetryScalarEnums.h',
+              script='build_scripts/gen_scalar_enum.py',
+              inputs=scalar_files)
 
 # Generate the JSON scalar definitions. They will only be
 # used in artifact or "build faster" builds.
-scalar_json_data = GENERATED_FILES['ScalarArtifactDefinitions.json']
-scalar_json_data.script = 'build_scripts/gen_scalar_data.py:generate_JSON_definitions'
-scalar_json_data.inputs = scalar_files
+GeneratedFile(
+    'ScalarArtifactDefinitions.json',
+    script='build_scripts/gen_scalar_data.py',
+    entry_point='generate_JSON_definitions',
+    inputs=scalar_files)
 
 # Move the scalars JSON file to the directory where the Firefox binary is.
 FINAL_TARGET_FILES += ['!ScalarArtifactDefinitions.json']
@@ -206,19 +191,17 @@ event_files = [
 if CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES']:
     event_files.extend(CONFIG['MOZ_TELEMETRY_EXTRA_EVENT_FILES'])
 
-event_data = GENERATED_FILES['TelemetryEventData.h']
-event_data.script = 'build_scripts/gen_event_data.py'
-event_data.inputs = event_files
+GeneratedFile('TelemetryEventData.h', script='build_scripts/gen_event_data.py',
+              inputs=event_files)
 
-event_enums = GENERATED_FILES['TelemetryEventEnums.h']
-event_enums.script = 'build_scripts/gen_event_enum.py'
-event_enums.inputs = event_files
+GeneratedFile('TelemetryEventEnums.h', script='build_scripts/gen_event_enum.py',
+              inputs=event_files)
 
 # Generate the JSON event definitions. They will only be
 # used in artifact or "build faster" builds.
-event_json_data = GENERATED_FILES['EventArtifactDefinitions.json']
-event_json_data.script = 'build_scripts/gen_event_data.py:generate_JSON_definitions'
-event_json_data.inputs = event_files
+GeneratedFile('EventArtifactDefinitions.json',
+              script='build_scripts/gen_event_data.py',
+              entryt_point='generate_JSON_definitions', inputs=event_files)
 
 # Move the events JSON file to the directory where the Firefox binary is.
 FINAL_TARGET_FILES += ['!EventArtifactDefinitions.json']
@@ -228,13 +211,14 @@ processes_files = [
     'Processes.yaml',
 ]
 
-processes_enum = GENERATED_FILES['TelemetryProcessEnums.h']
-processes_enum.script = 'build_scripts/gen_process_enum.py'
-processes_enum.inputs = processes_files
+GeneratedFile('TelemetryProcessEnums.h',
+              script='build_scripts/gen_process_enum.py',
+              inputs=processes_files)
 
-processes_data = GENERATED_FILES['TelemetryProcessData.h']
-processes_data.script = 'build_scripts/gen_process_data.py'
-processes_data.inputs = processes_files
+
+GeneratedFile('TelemetryProcessData.h',
+              script='build_scripts/gen_process_data.py',
+              inputs=processes_files)
 
 # Add support for GeckoView: please note that building GeckoView
 # implies having an Android build. The packaging step decides

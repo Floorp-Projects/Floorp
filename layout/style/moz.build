@@ -259,76 +259,47 @@ CONTENT_ACCESSIBLE_FILES += [
     'TopLevelVideoDocument.css',
 ]
 
-GENERATED_FILES += [
-    'nsCSSPropertyID.h',
-    'ServoCSSPropList.h',
-    'ServoCSSPropList.py',
-]
 
-prop_id = GENERATED_FILES['nsCSSPropertyID.h']
-prop_id.script = 'GenerateCSSPropertyID.py:generate'
-prop_id.inputs = [
-    'nsCSSPropertyID.h.in',
-    '!ServoCSSPropList.py',
-]
-
-servo_props = GENERATED_FILES['ServoCSSPropList.h']
-servo_props.script = 'GenerateServoCSSPropList.py:generate_header'
-servo_props.inputs = [
-    '!ServoCSSPropList.py',
-]
-
-servo_props = GENERATED_FILES['ServoCSSPropList.py']
-servo_props.script = 'GenerateServoCSSPropList.py:generate_data'
-servo_props.inputs = [
-    'ServoCSSPropList.mako.py',
-]
+GeneratedFile('nsCSSPropertyID.h', script='GenerateCSSPropertyID.py',
+              entry_point='generate',
+              inputs=['nsCSSPropertyID.h.in', '!ServoCSSPropList.py'])
+GeneratedFile('ServoCSSPropList.h',
+              script='GenerateServoCSSPropList.py',
+              entry_point='generate_header',
+              inputs=['!ServoCSSPropList.py'])
+GeneratedFile('ServoCSSPropList.py',
+              script='GenerateServoCSSPropList.py', entry_point='generate_data',
+              inputs=['ServoCSSPropList.mako.py'])
 
 if CONFIG['COMPILE_ENVIRONMENT']:
-    GENERATED_FILES += [
-        'CompositorAnimatableProperties.h',
-        'CountedUnknownProperties.h',
-        'nsComputedDOMStyleGenerated.inc',
-        'nsCSSPropsGenerated.inc',
-        'ServoStyleConsts.h',
-    ]
-
     EXPORTS.mozilla += [
         '!CompositorAnimatableProperties.h',
         '!CountedUnknownProperties.h',
         '!ServoStyleConsts.h',
     ]
 
-    compositor = GENERATED_FILES['CompositorAnimatableProperties.h']
-    compositor.script = 'GenerateCompositorAnimatableProperties.py:generate'
-    compositor.inputs = [
-        '!ServoCSSPropList.py',
-    ]
-
-    counted_unknown = GENERATED_FILES['CountedUnknownProperties.h']
-    counted_unknown.script = 'GenerateCountedUnknownProperties.py:generate'
-    counted_unknown.inputs = [
-        '/servo/components/style/properties/counted_unknown_properties.py',
-    ]
-
-    computed = GENERATED_FILES['nsComputedDOMStyleGenerated.inc']
-    computed.script = 'GenerateComputedDOMStyleGenerated.py:generate'
-    computed.inputs = [
-        '!ServoCSSPropList.py',
-    ]
-
-    css_props = GENERATED_FILES['nsCSSPropsGenerated.inc']
-    css_props.script = 'GenerateCSSPropsGenerated.py:generate'
-    css_props.inputs = [
-        '!ServoCSSPropList.py',
-    ]
-
-    consts = GENERATED_FILES['ServoStyleConsts.h']
-    consts.script = 'RunCbindgen.py:generate'
-    consts.inputs = [
-        '/servo/ports/geckolib',
-        '/servo/components/style',
-    ]
+    GeneratedFile('CompositorAnimatableProperties.h',
+                  script='GenerateCompositorAnimatableProperties.py',
+                  entry_point='generate',
+                  inputs=['!ServoCSSPropList.py'])
+    GeneratedFile(
+        'CountedUnknownProperties.h',
+        script='GenerateCountedUnknownProperties.py',
+        entry_point='generate',
+        inputs=[
+            '/servo/components/style/properties/counted_unknown_properties.py',
+        ])
+    GeneratedFile('nsComputedDOMStyleGenerated.inc',
+                  script='GenerateComputedDOMStyleGenerated.py',
+                  entry_point='generate',
+                  inputs=['!ServoCSSPropList.py'])
+    GeneratedFile('nsCSSPropsGenerated.inc',
+                  script='GenerateCSSPropsGenerated.py',
+                  entry_point='generate',
+                  inputs=['!ServoCSSPropList.py'])
+    GeneratedFile('ServoStyleConsts.h', script='RunCbindgen.py',
+                  entry_point='generate',
+                  inputs = ['/servo/ports/geckolib', '/servo/components/style'])
 
     CONFIGURE_SUBST_FILES += [
         'bindgen.toml',
