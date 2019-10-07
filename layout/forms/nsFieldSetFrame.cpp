@@ -689,11 +689,9 @@ a11y::AccType nsFieldSetFrame::AccessibleType() {
 #endif
 
 nscoord nsFieldSetFrame::GetLogicalBaseline(WritingMode aWM) const {
-  switch (StyleDisplay()->mDisplay) {
-    case mozilla::StyleDisplay::Grid:
-    case mozilla::StyleDisplay::InlineGrid:
-    case mozilla::StyleDisplay::Flex:
-    case mozilla::StyleDisplay::InlineFlex:
+  switch (StyleDisplay()->DisplayInside()) {
+    case mozilla::StyleDisplayInside::Grid:
+    case mozilla::StyleDisplayInside::Flex:
       return BaselineBOffset(aWM, BaselineSharingGroup::First,
                              AlignmentContext::Inline);
     default:
