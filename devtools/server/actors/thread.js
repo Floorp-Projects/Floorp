@@ -11,7 +11,7 @@ const { ActorPool } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object/utils");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { assert, dumpn } = DevToolsUtils;
+const { assert, dumpn, reportException } = DevToolsUtils;
 const { threadSpec } = require("devtools/shared/specs/thread");
 const {
   getAvailableEventBreakpoints,
@@ -134,7 +134,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     this.onNewSourceEvent = this.onNewSourceEvent.bind(this);
 
-    this.uncaughtExceptionHook = this.uncaughtExceptionHook.bind(this);
     this.createCompletionGrip = this.createCompletionGrip.bind(this);
     this.onDebuggerStatement = this.onDebuggerStatement.bind(this);
     this.onNewScript = this.onNewScript.bind(this);
@@ -405,7 +404,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // now
       return null;
     } catch (e) {
-      reportError(e);
+      reportException("DBG-SERVER", e);
       return {
         error: "notAttached",
         message: e.toString(),
@@ -828,7 +827,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.conn.sendActorEvent(this.actorID, "paused", pkt);
       this.showOverlay();
     } catch (error) {
-      reportError(error);
+      reportException("DBG-SERVER", error);
       this.conn.send({
         error: "unknownError",
         message: error.message + "\n" + error.stack,
@@ -839,7 +838,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     try {
       this._pushThreadPause();
     } catch (e) {
-      reportError(e, "Got an exception during TA__pauseAndRespond: ");
+      reportException("TA__pauseAndRespond", e);
     }
 
     // If the parent actor has been closed, terminate the debuggee script
@@ -1276,9 +1275,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       needNest = false;
       returnVal = resolvedVal;
     })
-      .catch(error => {
-        reportError(error, "Error inside unsafeSynchronize:");
-      })
+      .catch(e => reportException("unsafeSynchronize", e))
       .then(() => {
         if (eventLoop) {
           eventLoop.resolve();
@@ -1479,7 +1476,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // now.
       return null;
     } catch (e) {
-      reportError(e);
+      reportException("DBG-SERVER", e);
       return { error: "notInterrupted", message: e.toString() };
     }
   },
@@ -1736,19 +1733,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   // JS Debugger API hooks.
-
-  /**
-   * A function that the engine calls when a call to a debug event hook,
-   * breakpoint handler, watchpoint handler, or similar function throws some
-   * exception.
-   *
-   * @param exception exception
-   *        The exception that was thrown in the debugger code.
-   */
-  uncaughtExceptionHook: function(exception) {
-    dump("Got an exception: " + exception.message + "\n" + exception.stack);
-  },
-
   pauseForMutationBreakpoint: function(mutationType) {
     if (
       !["subtreeModified", "nodeRemoved", "attributeModified"].includes(
@@ -1930,7 +1914,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
       this._pushThreadPause();
     } catch (e) {
-      reportError(e, "Got an exception during TA_onExceptionUnwind: ");
+      reportException("TA_onExceptionUnwind", e);
     }
 
     return undefined;
@@ -2187,22 +2171,6 @@ Object.assign(ChromeDebuggerActor.prototype, {
 exports.ChromeDebuggerActor = ChromeDebuggerActor;
 
 // Utility functions.
-
-/**
- * Report the given error in the error console and to stdout.
- *
- * @param Error error
- *        The error object you wish to report.
- * @param String prefix
- *        An optional prefix for the reported error message.
- */
-var oldReportError = reportError;
-this.reportError = function(error, prefix = "") {
-  const message = error.message ? error.message : String(error);
-  const msg = prefix + message + ":\n" + error.stack;
-  oldReportError(msg);
-  dumpn(msg);
-};
 
 /**
  * Unwrap a global that is wrapped in a |Debugger.Object|, or if the global has
