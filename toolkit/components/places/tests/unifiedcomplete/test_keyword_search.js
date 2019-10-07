@@ -117,7 +117,6 @@ add_task(async function test_keyword_search() {
     matches: [
       {
         uri: NetUtil.newURI("http://abc/?search="),
-        title: "abc",
         style: ["keyword", "heuristic"],
       },
       {
@@ -138,7 +137,6 @@ add_task(async function test_keyword_search() {
     matches: [
       {
         uri: NetUtil.newURI("http://abc/?search="),
-        title: "abc",
         style: ["keyword", "heuristic"],
       },
       {

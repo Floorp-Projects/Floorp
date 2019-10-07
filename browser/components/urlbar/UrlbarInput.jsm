@@ -812,6 +812,25 @@ class UrlbarInput {
   }
 
   /**
+   * Invoked by the view when the first result is received.
+   * To prevent selection flickering, we apply autofill on input through a
+   * placeholder, without waiting for results.
+   * But, if the first result is not an autofill one, the autofill prediction
+   * was wrong and we should restore the original user typed string.
+   * @param {UrlbarResult} firstResult The first result received.
+   */
+  maybeClearAutofillPlaceholder(firstResult) {
+    if (
+      this._autofillPlaceholder &&
+      !firstResult.autofill &&
+      // Avoid clobbering added spaces (for token aliases, for example).
+      !this.value.endsWith(" ")
+    ) {
+      this._setValue(this.window.gBrowser.userTypedValue, false);
+    }
+  }
+
+  /**
    * Starts a query based on the current input value.
    *
    * @param {boolean} [options.allowAutofill]
