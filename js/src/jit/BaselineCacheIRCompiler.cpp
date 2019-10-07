@@ -419,61 +419,6 @@ bool BaselineCacheIRCompiler::emitGuardSpecificSymbol() {
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardToInt32ModUint32() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  ValueOperand value = allocator.useValueRegister(masm, reader.valOperandId());
-  Register output = allocator.defineRegister(masm, reader.int32OperandId());
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  Label notInt32;
-  masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
-  masm.unboxInt32(value, output);
-
-  Label done;
-  masm.jump(&done);
-
-  // If the value is a double, truncate; else, jump to failure.
-  masm.bind(&notInt32);
-  masm.branchTestDouble(Assembler::NotEqual, value, failure->label());
-  masm.unboxDouble(value, FloatReg0);
-  masm.branchTruncateDoubleMaybeModUint32(FloatReg0, output, failure->label());
-
-  masm.bind(&done);
-  return true;
-}
-
-bool BaselineCacheIRCompiler::emitGuardToUint8Clamped() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  ValueOperand value = allocator.useValueRegister(masm, reader.valOperandId());
-  Register output = allocator.defineRegister(masm, reader.int32OperandId());
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  Label notInt32;
-  masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
-  masm.unboxInt32(value, output);
-  masm.clampIntToUint8(output);
-
-  Label done;
-  masm.jump(&done);
-
-  // If the value is a double, clamp to uint8; else, jump to failure.
-  masm.bind(&notInt32);
-  masm.branchTestDouble(Assembler::NotEqual, value, failure->label());
-  masm.unboxDouble(value, FloatReg0);
-  masm.clampDoubleToUint8(FloatReg0, output);
-
-  masm.bind(&done);
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitLoadValueResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
