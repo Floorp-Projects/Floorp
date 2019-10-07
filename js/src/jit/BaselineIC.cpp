@@ -2252,6 +2252,9 @@ bool FallbackICCodeCompiler::emit_SetElem() {
 void StoreToTypedObject(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
                         const ValueOperand& value, const Address& dest,
                         Register scratch, Label* failure) {
+  // Float register must be preserved. The SetProp ICs use the fact that
+  // baseline has them available, as well as fixed temps on LSetPropertyCache.
+
   Label done;
 
   if (type == Scalar::Float32 || type == Scalar::Float64) {
