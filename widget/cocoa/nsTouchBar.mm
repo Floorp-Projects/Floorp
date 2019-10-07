@@ -147,9 +147,11 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   newItem.view = button;
 
   if ([[input type] hasSuffix:@"mainButton"]) {
-    return [self updateMainButton:newItem input:input];
+    [self updateMainButton:button input:input];
+    return newItem;
   }
-  return [self updateButton:newItem input:input];
+  [self updateButton:button input:input];
+  return newItem;
 }
 
 - (void)updateItem:(TouchBarInput*)aInput {
@@ -157,66 +159,64 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   if (!item) {
     return;
   }
+
+  item.customizationLabel = [aInput title];
   if ([[aInput type] hasSuffix:@"button"]) {
-    [self updateButton:(NSCustomTouchBarItem*)item input:aInput];
+    [self updateButton:(NSButton*)item.view input:aInput];
   } else if ([[aInput type] hasSuffix:@"mainButton"]) {
-    [self updateMainButton:(NSCustomTouchBarItem*)item input:aInput];
+    [self updateMainButton:(NSButton*)item.view input:aInput];
   }
 
   [self.mappedLayoutItems[[aInput nativeIdentifier]] release];
   self.mappedLayoutItems[[aInput nativeIdentifier]] = aInput;
 }
 
-- (NSTouchBarItem*)updateButton:(NSCustomTouchBarItem*)aButton input:(TouchBarInput*)aInput {
-  NSButton* button = (NSButton*)aButton.view;
-  if (!button) {
-    return nil;
+- (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput {
+  if (!aButton || !aInput) {
+    return;
   }
 
-  button.title = [aInput title];
+  aButton.title = [aInput title];
   if (![aInput isIconPositionSet]) {
-    [button setImagePosition:NSImageOnly];
+    [aButton setImagePosition:NSImageOnly];
     [aInput setIconPositionSet:true];
   }
 
   if ([aInput imageURI]) {
     RefPtr<nsTouchBarInputIcon> icon = [aInput icon];
     if (!icon) {
-      icon = new nsTouchBarInputIcon([aInput document], button);
+      icon = new nsTouchBarInputIcon([aInput document], aButton);
       [aInput setIcon:icon];
     }
     icon->SetupIcon([aInput imageURI]);
   }
-  [button setEnabled:![aInput isDisabled]];
+  [aButton setEnabled:![aInput isDisabled]];
 
   if ([aInput color]) {
-    button.bezelColor = [aInput color];
+    aButton.bezelColor = [aInput color];
   }
 
-  objc_setAssociatedObject(button, &sIdentifierAssociationKey, [aInput nativeIdentifier],
+  objc_setAssociatedObject(aButton, &sIdentifierAssociationKey, [aInput nativeIdentifier],
                            OBJC_ASSOCIATION_RETAIN);
-
-  aButton.customizationLabel = [aInput title];
-
-  return aButton;
 }
 
-- (NSTouchBarItem*)updateMainButton:(NSCustomTouchBarItem*)aMainButton
-                              input:(TouchBarInput*)aInput {
-  NSButton* button = (NSButton*)aMainButton.view;
+- (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput {
+  if (!aMainButton || !aInput) {
+    return;
+  }
   // If empty, string is still being localized. Display a blank input instead.
   if ([[aInput title] isEqualToString:@""]) {
-    [button setImagePosition:NSNoImage];
+    [aMainButton setImagePosition:NSNoImage];
   } else {
-    [button setImagePosition:NSImageLeft];
+    [aMainButton setImagePosition:NSImageLeft];
   }
-  button.imageHugsTitle = YES;
+  aMainButton.imageHugsTitle = YES;
   [aInput setIconPositionSet:true];
 
-  aMainButton = (NSCustomTouchBarItem*)[self updateButton:aMainButton input:aInput];
-  [button.widthAnchor constraintGreaterThanOrEqualToConstant:MAIN_BUTTON_WIDTH].active = YES;
-  [button setContentHuggingPriority:1.0 forOrientation:NSLayoutConstraintOrientationHorizontal];
-  return aMainButton;
+  [self updateButton:aMainButton input:aInput];
+  [aMainButton.widthAnchor constraintGreaterThanOrEqualToConstant:MAIN_BUTTON_WIDTH].active = YES;
+  [aMainButton setContentHuggingPriority:1.0
+                          forOrientation:NSLayoutConstraintOrientationHorizontal];
 }
 
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
