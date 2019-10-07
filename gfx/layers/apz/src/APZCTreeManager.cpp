@@ -2527,12 +2527,6 @@ ParentLayerPoint APZCTreeManager::DispatchFling(
   return finalResidualVelocity;
 }
 
-bool APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint) {
-  RefPtr<AsyncPanZoomController> target =
-      GetTargetAPZC(aPoint, nullptr, nullptr);
-  return target != nullptr;
-}
-
 already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetTargetAPZC(
     const ScrollableLayerGuid& aGuid) {
   RecursiveMutexAutoLock lock(mTreeLock);
