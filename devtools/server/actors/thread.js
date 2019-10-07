@@ -339,7 +339,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     this._state = "attached";
-    this.dbg.uncaughtExceptionHook = this.uncaughtExceptionHook;
     this.dbg.onDebuggerStatement = this.onDebuggerStatement;
     this.dbg.onNewScript = this.onNewScript;
     this.dbg.onNewDebuggee = this._onNewDebuggee;
