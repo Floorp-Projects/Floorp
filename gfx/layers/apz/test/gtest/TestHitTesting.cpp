@@ -17,7 +17,7 @@ class APZHitTestingTester : public APZCTreeManagerTester {
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(
       const ScreenPoint& aPoint) {
     RefPtr<AsyncPanZoomController> hit =
-        manager->GetTargetAPZC(aPoint, nullptr, nullptr);
+        manager->GetTargetAPZC(aPoint).mTargetApzc;
     if (hit) {
       transformToApzc = manager->GetScreenToApzcTransform(hit.get());
       transformToGecko = manager->GetApzcToGeckoTransform(hit.get());
