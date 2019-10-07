@@ -7,6 +7,7 @@
 #include "jit/CacheIRCompiler.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/ScopeExit.h"
 
 #include <utility>
@@ -1527,6 +1528,68 @@ bool CacheIRCompiler::emitGuardToInt32() {
   return true;
 }
 
+// Infallible |emitDouble| emitters can use this implementation to avoid
+// generating extra clean-up instructions to restore the scratch float register.
+// To select this function simply omit the |Label* fail| parameter for the
+// emitter lambda function.
+template <typename EmitDouble>
+static typename std::enable_if_t<
+    mozilla::FunctionTypeTraits<EmitDouble>::arity == 1, void>
+EmitGuardDouble(CacheIRCompiler* compiler, MacroAssembler& masm,
+                ValueOperand input, FailurePath* failure,
+                EmitDouble emitDouble) {
+  AutoScratchFloatRegister floatReg(compiler);
+
+  masm.unboxDouble(input, floatReg);
+  emitDouble(floatReg.get());
+}
+
+template <typename EmitDouble>
+static typename std::enable_if_t<
+    mozilla::FunctionTypeTraits<EmitDouble>::arity == 2, void>
+EmitGuardDouble(CacheIRCompiler* compiler, MacroAssembler& masm,
+                ValueOperand input, FailurePath* failure,
+                EmitDouble emitDouble) {
+  AutoScratchFloatRegister floatReg(compiler, failure);
+
+  masm.unboxDouble(input, floatReg);
+  emitDouble(floatReg.get(), floatReg.failure());
+}
+
+template <typename EmitInt32, typename EmitDouble>
+static void EmitGuardInt32OrDouble(CacheIRCompiler* compiler,
+                                   MacroAssembler& masm, ValueOperand input,
+                                   Register output, FailurePath* failure,
+                                   EmitInt32 emitInt32, EmitDouble emitDouble) {
+  Label done;
+
+  {
+    ScratchTagScope tag(masm, input);
+    masm.splitTagForTest(input, tag);
+
+    Label notInt32;
+    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
+    {
+      ScratchTagScopeRelease _(&tag);
+
+      masm.unboxInt32(input, output);
+      emitInt32();
+
+      masm.jump(&done);
+    }
+    masm.bind(&notInt32);
+
+    masm.branchTestDouble(Assembler::NotEqual, tag, failure->label());
+    {
+      ScratchTagScopeRelease _(&tag);
+
+      EmitGuardDouble(compiler, masm, input, failure, emitDouble);
+    }
+  }
+
+  masm.bind(&done);
+}
+
 bool CacheIRCompiler::emitGuardToInt32Index() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
@@ -1545,35 +1608,16 @@ bool CacheIRCompiler::emitGuardToInt32Index() {
     return false;
   }
 
-  Label done;
+  EmitGuardInt32OrDouble(
+      this, masm, input, output, failure,
+      []() {
+        // No-op if the value is already an int32.
+      },
+      [&](FloatRegister floatReg, Label* fail) {
+        // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
+        masm.convertDoubleToInt32(floatReg, output, fail, false);
+      });
 
-  {
-    ScratchTagScope tag(masm, input);
-    masm.splitTagForTest(input, tag);
-
-    Label notInt32;
-    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
-    {
-      ScratchTagScopeRelease _(&tag);
-
-      masm.unboxInt32(input, output);
-      masm.jump(&done);
-    }
-    masm.bind(&notInt32);
-
-    masm.branchTestDouble(Assembler::NotEqual, tag, failure->label());
-    {
-      ScratchTagScopeRelease _(&tag);
-      AutoScratchFloatRegister floatReg(this, failure);
-
-      masm.unboxDouble(input, floatReg);
-
-      // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
-      masm.convertDoubleToInt32(floatReg, output, floatReg.failure(), false);
-    }
-  }
-
-  masm.bind(&done);
   return true;
 }
 
@@ -1600,35 +1644,15 @@ bool CacheIRCompiler::emitGuardToInt32ModUint32() {
     return false;
   }
 
-  Label done;
+  EmitGuardInt32OrDouble(
+      this, masm, input, output, failure,
+      []() {
+        // No-op if the value is already an int32.
+      },
+      [&](FloatRegister floatReg, Label* fail) {
+        masm.branchTruncateDoubleMaybeModUint32(floatReg, output, fail);
+      });
 
-  {
-    ScratchTagScope tag(masm, input);
-    masm.splitTagForTest(input, tag);
-
-    Label notInt32;
-    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
-    {
-      ScratchTagScopeRelease _(&tag);
-
-      masm.unboxInt32(input, output);
-      masm.jump(&done);
-    }
-    masm.bind(&notInt32);
-
-    // If the value is a double, truncate; else, jump to failure.
-    masm.branchTestDouble(Assembler::NotEqual, tag, failure->label());
-    {
-      ScratchTagScopeRelease _(&tag);
-      AutoScratchFloatRegister floatReg(this, failure);
-
-      masm.unboxDouble(input, floatReg);
-      masm.branchTruncateDoubleMaybeModUint32(floatReg, output,
-                                              floatReg.failure());
-    }
-  }
-
-  masm.bind(&done);
   return true;
 }
 
@@ -1656,35 +1680,16 @@ bool CacheIRCompiler::emitGuardToUint8Clamped() {
     return false;
   }
 
-  Label done;
+  EmitGuardInt32OrDouble(
+      this, masm, input, output, failure,
+      [&]() {
+        // |output| holds the unboxed int32 value.
+        masm.clampIntToUint8(output);
+      },
+      [&](FloatRegister floatReg) {
+        masm.clampDoubleToUint8(floatReg, output);
+      });
 
-  {
-    ScratchTagScope tag(masm, input);
-    masm.splitTagForTest(input, tag);
-
-    Label notInt32;
-    masm.branchTestInt32(Assembler::NotEqual, tag, &notInt32);
-    {
-      ScratchTagScopeRelease _(&tag);
-
-      masm.unboxInt32(input, output);
-      masm.clampIntToUint8(output);
-      masm.jump(&done);
-    }
-    masm.bind(&notInt32);
-
-    // If the value is a double, clamp to uint8; else, jump to failure.
-    masm.branchTestDouble(Assembler::NotEqual, tag, failure->label());
-    {
-      ScratchTagScopeRelease _(&tag);
-      AutoScratchFloatRegister floatReg(this);
-
-      masm.unboxDouble(input, floatReg);
-      masm.clampDoubleToUint8(floatReg, output);
-    }
-  }
-
-  masm.bind(&done);
   return true;
 }
 
