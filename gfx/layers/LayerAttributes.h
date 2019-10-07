@@ -7,9 +7,11 @@
 #ifndef mozilla_gfx_layers_LayerAttributes_h
 #define mozilla_gfx_layers_LayerAttributes_h
 
+#include "FrameMetrics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/ScrollableLayerGuid.h"
 
 namespace IPC {
 template <typename T>
