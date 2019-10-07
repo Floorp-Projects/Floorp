@@ -1442,6 +1442,10 @@ void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,
     manager->SetFixedLayerMargins(aTop, aBottom);
   }
 
+  if (mApzcTreeManager) {
+    mApzcTreeManager->SetFixedLayerMargins(aTop, aBottom);
+  }
+
   Invalidate();
   ScheduleComposition();
 }
