@@ -620,7 +620,7 @@ class CompareCodecPriority {
 class ConfigureCodec {
  public:
   explicit ConfigureCodec(nsCOMPtr<nsIPrefBranch>& branch)
-      : mHardwareH264Enabled(false),
+      : mHardwareH264Supported(false),
         mSoftwareH264Enabled(false),
         mH264Enabled(false),
         mVP9Enabled(true),
@@ -637,12 +637,7 @@ class ConfigureCodec {
         mDtmfEnabled(false) {
     mSoftwareH264Enabled = PeerConnectionCtx::GetInstance()->gmpHasH264();
 
-    if (WebrtcVideoConduit::HasH264Hardware()) {
-      branch->GetBoolPref("media.webrtc.hw.h264.enabled",
-                          &mHardwareH264Enabled);
-    }
-
-    mH264Enabled = mHardwareH264Enabled || mSoftwareH264Enabled;
+    mH264Enabled = mHardwareH264Supported || mSoftwareH264Enabled;
 
     branch->GetIntPref("media.navigator.video.h264.level", &mH264Level);
     mH264Level &= 0xFF;
@@ -715,7 +710,7 @@ class ConfigureCodec {
             videoCodec.mEnabled = false;
           }
 
-          if (mHardwareH264Enabled) {
+          if (mHardwareH264Supported) {
             videoCodec.mStronglyPreferred = true;
           }
         } else if (videoCodec.mName == "red") {
@@ -751,7 +746,7 @@ class ConfigureCodec {
   }
 
  private:
-  bool mHardwareH264Enabled;
+  bool mHardwareH264Supported;
   bool mSoftwareH264Enabled;
   bool mH264Enabled;
   bool mVP9Enabled;

@@ -132,7 +132,7 @@ async function run_test() {
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     status = gfxInfo.getFeatureStatus(
-      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_H264,
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION,
       failureId
     );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
