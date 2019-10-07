@@ -71,7 +71,7 @@ let HomePage = {
    * homepage, but this is deemed acceptable, as we'll correct it once
    * initialised.
    */
-  async init() {
+  async delayedStartup() {
     if (this._initializationPromise) {
       await this._initializationPromise;
       return;
@@ -178,7 +178,7 @@ let HomePage = {
    *   `|` separated list of URLs.
    */
   async set(value) {
-    await this.init();
+    await this.delayedStartup();
 
     if (await this.shouldIgnore(value)) {
       Cu.reportError(
@@ -234,7 +234,7 @@ let HomePage = {
    *   True if the url should be ignored.
    */
   async shouldIgnore(url) {
-    await this.init();
+    await this.delayedStartup();
 
     const lowerURL = url.toLowerCase();
     return this._ignoreList.some(code => lowerURL.includes(code.toLowerCase()));
