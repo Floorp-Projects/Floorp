@@ -320,6 +320,8 @@ class SurfacePattern : public Pattern {
 class StoredPattern;
 class DrawTargetCaptureImpl;
 
+static const int32_t kReasonableSurfaceSize = 8192;
+
 /**
  * This is the base class for source surfaces. These objects are surfaces
  * which may be used as a source in a SurfacePattern or a DrawSurface call.
@@ -1597,7 +1599,7 @@ struct Config {
 
   Config()
       : mLogForwarder(nullptr),
-        mMaxTextureSize(8192),
+        mMaxTextureSize(kReasonableSurfaceSize),
         mMaxAllocSize(52000000) {}
 };
 
