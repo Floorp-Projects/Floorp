@@ -10,6 +10,8 @@ export class ModalOverlayWrapper extends React.PureComponent {
     this.onKeyDown = this.onKeyDown.bind(this);
   }
 
+  // The intended behaviour is to listen for an escape key
+  // but not for a click; see Bug 1582242
   onKeyDown(event) {
     if (event.key === "Escape") {
       this.props.onClose(event);
@@ -51,7 +53,6 @@ export class ModalOverlayWrapper extends React.PureComponent {
       <React.Fragment>
         <div
           className="modalOverlayOuter active"
-          onClick={props.onClose}
           onKeyDown={this.onKeyDown}
           role="presentation"
         />
@@ -61,6 +62,13 @@ export class ModalOverlayWrapper extends React.PureComponent {
           id={props.id}
           role="dialog"
         >
+          {props.hasDismissIcon && (
+            <button
+              className="icon icon-dismiss"
+              onClick={props.onClose}
+              data-l10n-id="onboarding-cards-dismiss"
+            />
+          )}
           {props.children}
         </div>
       </React.Fragment>

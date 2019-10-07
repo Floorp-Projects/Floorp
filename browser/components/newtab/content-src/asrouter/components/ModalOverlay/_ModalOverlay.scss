@@ -62,6 +62,19 @@
     display: block;
   }
 
+  .icon-dismiss {
+    border: 0;
+    cursor: pointer;
+    inset-inline-end: 0;
+    padding: 20px;
+    fill: $white;
+    position: absolute;
+
+    &:focus {
+      border: 1px dotted;
+    }
+  }
+
   h2 {
     color: $grey-60;
     text-align: center;

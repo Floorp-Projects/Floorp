@@ -3260,6 +3260,15 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       top: 5%; } }
   .modalOverlayInner.active {
     display: block; }
+  .modalOverlayInner .icon-dismiss {
+    border: 0;
+    cursor: pointer;
+    inset-inline-end: 0;
+    padding: 20px;
+    fill: #FFF;
+    position: absolute; }
+    .modalOverlayInner .icon-dismiss:focus {
+      border: 1px dotted; }
   .modalOverlayInner h2 {
     color: #4A4A4F;
     text-align: center;
