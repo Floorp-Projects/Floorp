@@ -31,13 +31,13 @@ namespace mscom {
 template <typename T>
 class MOZ_NONHEAP_CLASS Factory : public IClassFactory {
   template <typename... Args>
-  HRESULT DoCreate(Args... args) {
+  HRESULT DoCreate(Args&&... args) {
     MOZ_DIAGNOSTIC_ASSERT(false, "This should not be executed");
     return E_NOTIMPL;
   }
 
   template <typename... Args>
-  HRESULT DoCreate(HRESULT (*aFnPtr)(IUnknown*, REFIID, void**), Args... args) {
+  HRESULT DoCreate(HRESULT (*aFnPtr)(IUnknown*, REFIID, void**), Args&&... args) {
     return aFnPtr(std::forward<Args>(args)...);
   }
 
