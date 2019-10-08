@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`WorkManagerSyncScheduler()`
+`WorkManagerSyncScheduler(context: <ERROR CLASS>)`
 
 Class used to schedule sync of experiment
 configuration from the server using WorkManager

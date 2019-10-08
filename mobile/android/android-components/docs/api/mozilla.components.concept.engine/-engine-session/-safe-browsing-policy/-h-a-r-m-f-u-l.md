@@ -2,7 +2,7 @@
 
 # HARMFUL
 
-`HARMFUL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L110)
+`HARMFUL` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L114)
 
 Blocks harmful sites.
 

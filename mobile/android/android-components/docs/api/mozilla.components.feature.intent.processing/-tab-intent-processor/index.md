@@ -2,7 +2,7 @@
 
 # TabIntentProcessor
 
-`class TabIntentProcessor : `[`IntentProcessor`](../-intent-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/processing/TabIntentProcessor.kt#L31)
+`class TabIntentProcessor : `[`IntentProcessor`](../-intent-processor/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/processing/TabIntentProcessor.kt#L32)
 
 Processor for intents which should trigger session-related actions.
 

@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`WorkManagerSyncDispatcher(supportedEngines: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`SyncEngine`](../../mozilla.components.service.fxa/-sync-engine/index.md)`>)`
+`WorkManagerSyncDispatcher(context: <ERROR CLASS>, supportedEngines: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`SyncEngine`](../../mozilla.components.service.fxa/-sync-engine/index.md)`>)`

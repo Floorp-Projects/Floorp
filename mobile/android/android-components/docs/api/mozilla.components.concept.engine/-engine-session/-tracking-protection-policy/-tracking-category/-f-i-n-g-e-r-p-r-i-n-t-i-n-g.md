@@ -2,7 +2,7 @@
 
 # FINGERPRINTING
 
-`FINGERPRINTING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L210)
+`FINGERPRINTING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L214)
 
 Blocks fingerprinting trackers.
 

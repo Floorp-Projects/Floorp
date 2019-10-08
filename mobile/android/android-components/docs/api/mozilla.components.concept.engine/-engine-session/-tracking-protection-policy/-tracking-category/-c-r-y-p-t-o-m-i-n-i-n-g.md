@@ -2,7 +2,7 @@
 
 # CRYPTOMINING
 
-`CRYPTOMINING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L205)
+`CRYPTOMINING` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L209)
 
 Blocks cryptocurrency miners.
 

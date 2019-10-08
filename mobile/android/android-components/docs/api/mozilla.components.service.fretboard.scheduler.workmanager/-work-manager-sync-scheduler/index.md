@@ -2,7 +2,7 @@
 
 # WorkManagerSyncScheduler
 
-`class WorkManagerSyncScheduler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/scheduler/workmanager/WorkManagerSyncScheduler.kt#L18)
+`class WorkManagerSyncScheduler` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/fretboard/src/main/java/mozilla/components/service/fretboard/scheduler/workmanager/WorkManagerSyncScheduler.kt#L19)
 
 Class used to schedule sync of experiment
 configuration from the server using WorkManager
@@ -11,7 +11,7 @@ configuration from the server using WorkManager
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WorkManagerSyncScheduler()`<br>Class used to schedule sync of experiment configuration from the server using WorkManager |
+| [&lt;init&gt;](-init-.md) | `WorkManagerSyncScheduler(context: <ERROR CLASS>)`<br>Class used to schedule sync of experiment configuration from the server using WorkManager |
 
 ### Functions
 
