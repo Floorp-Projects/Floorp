@@ -5,6 +5,10 @@
 package org.mozilla.fenix.crashes
 
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
@@ -29,22 +33,25 @@ class CrashReporterController(
      * Closes the crash reporter fragment and tries to recover the session.
      *
      * @param sendCrash If true, submit a crash report.
+     * @return Job if report is submitted through an IO thread, null otherwise
      */
-    fun handleCloseAndRestore(sendCrash: Boolean) {
-        submitReportIfNecessary(sendCrash)
+    fun handleCloseAndRestore(sendCrash: Boolean): Job? {
+        val job = submitReportIfNecessary(sendCrash)
 
         components.useCases.sessionUseCases.crashRecovery.invoke()
         navController.popBackStack()
+        return job
     }
 
     /**
      * Closes the crash reporter fragment and the tab.
      *
      * @param sendCrash If true, submit a crash report.
+     * @return Job if report is submitted through an IO thread, null otherwise
      */
-    fun handleCloseAndRemove(sendCrash: Boolean) {
-        session ?: return
-        submitReportIfNecessary(sendCrash)
+    fun handleCloseAndRemove(sendCrash: Boolean): Job? {
+        session ?: return null
+        val job = submitReportIfNecessary(sendCrash)
 
         components.useCases.tabsUseCases.removeTab(session)
         components.useCases.sessionUseCases.crashRecovery.invoke()
@@ -52,19 +59,28 @@ class CrashReporterController(
             R.id.crashReporterFragment,
             CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment()
         )
+
+        return job
     }
 
     /**
      * Submits the crash report if the "Send crash" checkbox was checked and the setting is enabled.
+     *
+     * @param sendCrash If true, submit a crash report.
+     * @return Job if report is submitted through an IO thread, null otherwise
      */
-    private fun submitReportIfNecessary(sendCrash: Boolean) {
+    private fun submitReportIfNecessary(sendCrash: Boolean): Job? {
+        var job: Job? = null
         val didSubmitReport = if (sendCrash && settings.isCrashReportingEnabled) {
-            components.analytics.crashReporter.submitReport(crash)
+            job = GlobalScope.launch(Dispatchers.IO) {
+                components.analytics.crashReporter.submitReport(crash)
+            }
             true
         } else {
             false
         }
 
         components.analytics.metrics.track(Event.CrashReporterClosed(didSubmitReport))
+        return job
     }
 }
