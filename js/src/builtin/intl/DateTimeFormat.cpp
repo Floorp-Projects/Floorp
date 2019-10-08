@@ -734,11 +734,19 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
   switch (fieldName) {
     case UDAT_ERA_FIELD:
       return &JSAtomState::era;
+
     case UDAT_YEAR_FIELD:
     case UDAT_YEAR_WOY_FIELD:
     case UDAT_EXTENDED_YEAR_FIELD:
-    case UDAT_YEAR_NAME_FIELD:
       return &JSAtomState::year;
+
+    case UDAT_YEAR_NAME_FIELD:
+#ifdef NIGHTLY_BUILD
+      return &JSAtomState::yearName;
+#else
+      // Currently restricted to Nightly.
+      return &JSAtomState::year;
+#endif
 
     case UDAT_MONTH_FIELD:
     case UDAT_STANDALONE_MONTH_FIELD:
@@ -780,6 +788,16 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
       return &JSAtomState::unknown;
 #endif
 
+#ifndef U_HIDE_INTERNAL_API
+    case UDAT_RELATED_YEAR_FIELD:
+#  ifdef NIGHTLY_BUILD
+      return &JSAtomState::relatedYear;
+#  else
+      // Currently restricted to Nightly.
+      return &JSAtomState::unknown;
+#  endif
+#endif
+
     case UDAT_DAY_OF_YEAR_FIELD:
     case UDAT_WEEK_OF_YEAR_FIELD:
     case UDAT_WEEK_OF_MONTH_FIELD:
@@ -792,9 +810,6 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
     case UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD:
     case UDAT_TIMEZONE_ISO_FIELD:
     case UDAT_TIMEZONE_ISO_LOCAL_FIELD:
-#ifndef U_HIDE_INTERNAL_API
-    case UDAT_RELATED_YEAR_FIELD:
-#endif
     case UDAT_AM_PM_MIDNIGHT_NOON_FIELD:
     case UDAT_FLEXIBLE_DAY_PERIOD_FIELD:
 #ifndef U_HIDE_INTERNAL_API
