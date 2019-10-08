@@ -1552,6 +1552,17 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 }
 
 void js::Nursery::minimizeAllocableSpace() {
+  if (capacity_ < roundSize(tunables().gcMinNurseryBytes())) {
+    // The nursery is already smaller than the minimum size. This can happen
+    // because changing parameters (like an increase in minimum size) can only
+    // occur after a minor GC. See Bug 1585159.
+    //
+    // We could either do the /correct/ thing and increase the size to the
+    // configured minimum size. Or do nothing, keeping the nursery smaller. We
+    // do nothing because this can be executed as a last-ditch GC and we don't
+    // want to add memory pressure then.
+    return;
+  }
   shrinkAllocableSpace(roundSize(tunables().gcMinNurseryBytes()));
 }
 
