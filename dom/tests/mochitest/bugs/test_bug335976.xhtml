@@ -11,11 +11,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=335976
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=335976">Mozilla Bug 335976</a>
 <p id="display"></p>
 
-<iframe srcdoc="&lt;html xmlns='http://www.w3.org/1999/xhtml'&gt;&lt;body&gt; &lt;textbox xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'/&gt; &lt;/body&gt;&lt;/html&gt;" style="width: 95%; height: 150px;"></iframe>
+<iframe srcdoc="&lt;html xmlns='http://www.w3.org/1999/xhtml'&gt;&lt;body&gt; &lt;input&gt; &lt;/body&gt;&lt;/html&gt;" style="width: 95%; height: 150px;"></iframe>
 
 <div id="rootish" style="background: yellow">
   <div>
-    <textbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+    <input/>
   </div>
 </div>
 
@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=335976
 
 function lookAtTextboxesIn(root, numExpected) 
 {
-  var textboxes = root.getElementsByTagName("textbox");
+  var textboxes = root.getElementsByTagName("input");
   var threw;
   var i;
   var n;
