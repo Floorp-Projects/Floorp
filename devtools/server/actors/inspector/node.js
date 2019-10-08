@@ -6,7 +6,6 @@
 
 const { Cu } = require("chrome");
 const Services = require("Services");
-const ChromeUtils = require("ChromeUtils");
 const InspectorUtils = require("InspectorUtils");
 const protocol = require("devtools/shared/protocol");
 const { PSEUDO_CLASSES } = require("devtools/shared/css/constants");
@@ -93,6 +92,12 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "isXBLAnonymous",
+  "devtools/shared/layout/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "isRemoteFrame",
   "devtools/shared/layout/utils",
   true
 );
@@ -305,14 +310,13 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
   /**
    * Check if the current node is representing a remote frame.
-   * EXPERIMENTAL: Only works if fission is enabled in the toolbox.
+   * In the context of the browser toolbox, a remote frame can be the <browser remote>
+   * element found inside each tab.
+   * In the context of the content toolbox, a remote frame can be a <iframe> that contains
+   * a different origin document.
    */
   get isRemoteFrame() {
-    return (
-      this.numChildren == 0 &&
-      ChromeUtils.getClassName(this.rawNode) == "XULFrameElement" &&
-      this.rawNode.getAttribute("remote") == "true"
-    );
+    return isRemoteFrame(this.rawNode);
   },
 
   // Estimate the number of children that the walker will return without making
