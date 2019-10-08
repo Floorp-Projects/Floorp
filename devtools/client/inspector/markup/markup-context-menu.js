@@ -192,7 +192,8 @@ class MarkupContextMenu {
       return;
     }
 
-    this.walker.duplicateNode(this.selection.nodeFront).catch(console.error);
+    const nodeFront = this.selection.nodeFront;
+    nodeFront.walkerFront.duplicateNode(nodeFront).catch(console.error);
   }
 
   /**
