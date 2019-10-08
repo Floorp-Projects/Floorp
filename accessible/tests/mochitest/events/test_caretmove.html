@@ -39,7 +39,6 @@
      */
     var gQueue = null;
 
-    // gA11yEventDumpID = "eventdump"; // debug stuff
     // gA11yEventDumpToConsole = true;
 
     function doTests() {
@@ -51,6 +50,15 @@
       gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, id)));
       gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
       gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
+
+      if (!MAC) {
+        gQueue.push(new synthSelectAll(id, new caretMoveChecker(5, id)));
+        gQueue.push(new synthHomeKey(id, new caretMoveChecker(0, id)));
+        gQueue.push(new synthRightKey(id, new caretMoveChecker(1, id)));
+      }
+      else {
+        todo(false, "Make these tests pass on OSX (bug 650294)");
+      }
 
       id = "textarea";
       gQueue.push(new synthClick(id, new caretMoveChecker(0, id)));
@@ -119,6 +127,7 @@
   </pre>
 
   <input id="textbox" value="hello"/>
+
   <textarea id="textarea">text<br>text</textarea>
   <p id="p" contentEditable="true"><span>text</span><br/>text</p>
   <div id="div" contentEditable="true"><p id="p1_in_div">text</p><p id="p2_in_div">text</p></div>
@@ -129,7 +138,5 @@
   <p contentEditable="true" id="test4"><span id="test4_span"></span></p>
 
   <textarea id="textarea_wrapped" cols="5">hey friend</textarea>
-
-  <div id="eventdump"></div>
 </body>
 </html>
