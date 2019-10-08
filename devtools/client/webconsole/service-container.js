@@ -42,7 +42,7 @@ function setupServiceContainer({
     focusInput: () => hud.focusInput(),
     setInputValue: value => hud.setInputValue(value),
     canRewind: () => hud.canRewind(),
-    onMessageHover: (type, message) => webConsoleUI.onMessageHover(message),
+    onMessageHover: (type, message) => webConsoleUI.onMessageHover(type, message),
     getLongString: grip => webConsoleUI.getLongString(grip),
     getJsTermTooltipAnchor: () => webConsoleUI.getJsTermTooltipAnchor(),
     emitEvent: (event, value) => webConsoleUI.emit(event, value),
