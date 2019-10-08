@@ -21,3 +21,4 @@ DO NOT EDIT
 This program is made available under an ISC-style license.
 under MIT license
 License MIT per upstream
+DO NOT MODIFY
