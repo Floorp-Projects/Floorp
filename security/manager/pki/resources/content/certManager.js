@@ -533,7 +533,7 @@ async function addEmailCert() {
 }
 
 function addException() {
-  window.openDialog(
+  window.docShell.rootTreeItem.domWindow.openDialog(
     "chrome://pippki/content/exceptionDialog.xul",
     "",
     "chrome,centerscreen,modal"
