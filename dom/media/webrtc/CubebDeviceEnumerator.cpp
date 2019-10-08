@@ -222,6 +222,8 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
 #else
   if (devices.IsEmpty() || manualInvalidation) {
     devices.Clear();
+
+    MutexAutoUnlock unlock(mMutex);
     GetDeviceCollection(devices, (aSide == Side::INPUT) ? CubebUtils::Input
                                                         : CubebUtils::Output);
   }
