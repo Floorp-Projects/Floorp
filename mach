@@ -26,7 +26,6 @@ py2commands="
     cargo
     check-spidermonkey
     clang-format
-    compare-locales
     compileflags
     configure
     cppunittest
@@ -209,6 +208,26 @@ def check_and_get_mach(dir_path):
     return None
 
 
+def setdefaultenv(key, value):
+    """Compatibility shim to ensure the proper string type is used with
+    os.environ for the version of Python being used.
+    """
+    encoding = "mbcs" if sys.platform == "win32" else "utf-8"
+
+    if sys.version_info[0] == 2:
+        if isinstance(key, unicode):
+            key = key.encode(encoding)
+        if isinstance(value, unicode):
+            value = value.encode(encoding)
+    else:
+        if isinstance(key, bytes):
+            key = key.decode(encoding)
+        if isinstance(value, bytes):
+            value = value.decode(encoding)
+
+    os.environ.setdefault(key, value)
+
+
 def get_mach():
     # Check whether the current directory is within a mach src or obj dir.
     for dir_path in ancestors(os.getcwd()):
@@ -218,14 +237,12 @@ def get_mach():
         if os.path.isfile(config_status_path) and os.path.isfile(mozinfo_path):
             import json
             info = json.load(open(mozinfo_path))
-            if 'mozconfig' in info and 'MOZCONFIG' not in os.environ:
+            if 'mozconfig' in info:
                 # If the MOZCONFIG environment variable is not already set, set it
                 # to the value from mozinfo.json.  This will tell the build system
                 # to look for a config file at the path in $MOZCONFIG rather than
                 # its default locations.
-                #
-                # Note: subprocess requires native strings in os.environ on Windows
-                os.environ[b'MOZCONFIG'] = str(info['mozconfig'])
+                setdefaultenv('MOZCONFIG', info['mozconfig'])
 
             if 'topsrcdir' in info:
                 # Continue searching for mach_bootstrap in the source directory.
