@@ -6,12 +6,6 @@
     <string name="mozac_feature_prompts_cancel">취소</string>
     <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
     <string name="mozac_feature_prompts_no_more_dialogs">이 페이지에서 추가 대화창 생성 막기</string>
-    <!-- Title of a date picker dialog, this text is shown above a date picker. -->
-    <string name="mozac_feature_prompts_pick_a_date">날짜 선택</string>
-    <!-- Title of a time picker dialog, this text is shown above a time picker. -->
-    <string name="mozac_feature_prompts_pick_a_time">시간 선택</string>
-    <!-- Title of a date and time picker dialog, this text is shown above the picker. -->
-    <string name="mozac_feature_prompts_pick_a_date_and_time">날짜와 시간 선택</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">설정</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
@@ -31,4 +25,30 @@
     <string name="mozac_feature_prompts_allow">허용</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">거부</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">월 선택</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">1월</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">2월</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">3월</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">4월</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">5월</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">6월</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">7월</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">8월</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">9월</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">10월</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">11월</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">12월</string>
 </resources>

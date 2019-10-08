@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">다운로드</string>
+    <!-- Text shown on the first row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_title">다운로드 중</string>
+    <!-- Text shown on the second row of an ongoing download notification. -->
+    <string name="mozac_feature_downloads_ongoing_notification_text">다운로드 진행 중</string>
+
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text">다운로드를 완료하였습니다.</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text">다운로드를 실패하였습니다.</string>
+
     <!-- Alert dialog confirmation before download a file, this is the title. -->
     <string name="mozac_feature_downloads_dialog_title">파일 다운로드</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
