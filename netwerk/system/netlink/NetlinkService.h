@@ -70,7 +70,7 @@ class NetlinkService : public nsIRunnable {
   void OnNeighborMessage(struct nlmsghdr* aNlh);
   void OnRouteCheckResult(struct nlmsghdr* aNlh);
 
-  void CheckLinks();
+  void UpdateLinkStatus();
 
   void TriggerNetworkIDCalculation();
   int GetPollWait();
@@ -109,16 +109,33 @@ class NetlinkService : public nsIRunnable {
 
   nsCString mNetworkId;
 
-  // All IPv4 and IPv6 addresses received via netlink
-  nsTArray<nsAutoPtr<NetlinkAddress> > mAddresses;
-  // All neighbors, key is a string containing "address,ifidx"
-  nsClassHashtable<nsCStringHashKey, NetlinkNeighbor> mNeighbors;
-  // All interfaces keyed by interface index
-  nsClassHashtable<nsUint32HashKey, NetlinkLink> mLinks;
-  // Default IPv4 routes
-  nsTArray<nsAutoPtr<NetlinkRoute> > mIPv4Routes;
-  // Default IPv6 routes
-  nsTArray<nsAutoPtr<NetlinkRoute> > mIPv6Routes;
+  class LinkInfo {
+   public:
+    explicit LinkInfo(NetlinkLink* aLink);
+    virtual ~LinkInfo();
+
+    // Updates mIsUp according to current mLink and mAddresses. Returns true if
+    // the value has changed.
+    bool UpdateLinkStatus();
+
+    // NetlinkLink structure for this link
+    nsAutoPtr<NetlinkLink> mLink;
+
+    // All IPv4/IPv6 addresses on this link
+    nsTArray<nsAutoPtr<NetlinkAddress> > mAddresses;
+
+    // All neighbors on this link, key is an address
+    nsClassHashtable<nsCStringHashKey, NetlinkNeighbor> mNeighbors;
+
+    // Default IPv4/IPv6 routes
+    nsTArray<nsAutoPtr<NetlinkRoute> > mDefaultRoutes;
+
+    // Link is up when it's running, it's not a loopback and there is
+    // a non-local address associated with it.
+    bool mIsUp;
+  };
+
+  nsClassHashtable<nsUint32HashKey, LinkInfo> mLinks;
 
   // Route for mRouteCheckIPv4 address
   nsAutoPtr<NetlinkRoute> mIPv4RouteCheckResult;
