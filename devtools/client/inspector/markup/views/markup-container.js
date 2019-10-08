@@ -591,17 +591,13 @@ MarkupContainer.prototype = {
     if (this.isDragging) {
       this.cancelDragging();
 
-      const dropTargetNodes = this.markup.dropTargetNodes;
-
-      if (!dropTargetNodes) {
+      if (!this.markup.dropTargetNodes) {
         return;
       }
 
-      await this.markup.walker.insertBefore(
-        this.node,
-        dropTargetNodes.parent,
-        dropTargetNodes.nextSibling
-      );
+      const { nextSibling, parent } = this.markup.dropTargetNodes;
+      const { walkerFront } = parent;
+      await walkerFront.insertBefore(this.node, parent, nextSibling);
       this.markup.emit("drop-completed");
     }
   },
