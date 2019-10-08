@@ -5,6 +5,7 @@
 // @flow
 
 import { PrefsHelper, asyncStoreHelper } from "devtools-modules";
+
 import { isDevelopment } from "devtools-environment";
 import Services from "devtools-services";
 

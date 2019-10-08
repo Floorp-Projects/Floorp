@@ -11,6 +11,8 @@ const { Provider } = require("react-redux");
 
 import ToolboxProvider from "devtools/client/framework/store-provider";
 import { isFirefoxPanel, isDevelopment, isTesting } from "devtools-environment";
+import { AppConstants } from "devtools-modules";
+
 import SourceMaps, {
   startSourceMapWorker,
   stopSourceMapWorker,
@@ -64,9 +66,10 @@ export function bootstrapStore(
   panel: Panel,
   initialState: Object
 ) {
+  const debugJsModules = AppConstants.AppConstants.DEBUG_JS_MODULES == "1";
   const createStore = configureStore({
     log: prefs.logging || isTesting(),
-    timing: isDevelopment(),
+    timing: debugJsModules || isDevelopment(),
     makeThunkArgs: (args, state) => {
       return { ...args, client, ...workers, panel };
     },

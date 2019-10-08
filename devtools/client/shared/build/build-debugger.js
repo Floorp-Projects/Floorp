@@ -73,6 +73,7 @@ const moduleMapping = {
   asyncStorage: "devtools/shared/async-storage",
   PluralForm: "devtools/shared/plural-form",
   DevToolsUtils: "devtools/shared/DevToolsUtils",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
 };
 
 /*
@@ -202,6 +203,7 @@ function transformMC({ types: t }) {
         if (
           !exists &&
           !value.endsWith("index") &&
+          !value.endsWith(".jsm") &&
           !(value.startsWith("devtools") || mappingValues.includes(value))
         ) {
           value = `${value}/index`;
