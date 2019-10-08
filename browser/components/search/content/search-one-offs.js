@@ -447,16 +447,14 @@ class SearchOneOffs {
       this._rebuildAddEngineList();
     }
 
-    // Return early if the list of engines has not changed.
-    if (!this.popup && this._engines) {
-      return;
-    }
-
-    // Return early if the panel width has not changed.
-    if (this.popup && this._textbox) {
-      let textboxWidth = await window.promiseDocumentFlushed(() => {
-        return this._textbox.clientWidth;
-      });
+    // Check if the one-off buttons really need to be rebuilt.
+    if (this._textbox) {
+      // We can't get a reliable value for the popup width without flushing,
+      // but the popup width won't change if the textbox width doesn't.
+      let DOMUtils = window.windowUtils;
+      let textboxWidth = DOMUtils.getBoundsWithoutFlushing(this._textbox).width;
+      // We can return early if neither the list of engines nor the panel
+      // width has changed.
       if (this._engines && this._textboxWidth == textboxWidth) {
         return;
       }
