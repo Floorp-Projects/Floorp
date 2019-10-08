@@ -253,7 +253,9 @@ void VideoSink::SetPlaying(bool aPlaying) {
     // Reset any update timer if paused.
     mUpdateScheduler.Reset();
     // Since playback is paused, tell compositor to render only current frame.
-    RenderVideoFrames(1);
+    TimeStamp nowTime;
+    const auto clockTime = mAudioSink->GetPosition(&nowTime);
+    RenderVideoFrames(1, clockTime.ToMicroseconds(), nowTime);
     if (mContainer) {
       mContainer->ClearCachedResources();
     }
@@ -495,21 +497,19 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
       continue;
     }
 
-    TimeStamp t;
-    if (aMaxFrames > 1) {
-      MOZ_ASSERT(!aClockTimeStamp.IsNull());
-      int64_t delta = frame->mTime.ToMicroseconds() - aClockTime;
-      t = aClockTimeStamp +
-          TimeDuration::FromMicroseconds(delta / params.mPlaybackRate);
-      if (!lastFrameTime.IsNull() && t <= lastFrameTime) {
-        // Timestamps out of order; drop the new frame. In theory we should
-        // probably replace the previous frame with the new frame if the
-        // timestamps are equal, but this is a corrupt video file already so
-        // never mind.
-        continue;
-      }
-      lastFrameTime = t;
+    MOZ_ASSERT(!aClockTimeStamp.IsNull());
+    int64_t delta = frame->mTime.ToMicroseconds() - aClockTime;
+    TimeStamp t = aClockTimeStamp +
+                  TimeDuration::FromMicroseconds(delta / params.mPlaybackRate);
+    if (!lastFrameTime.IsNull() && t <= lastFrameTime) {
+      // Timestamps out of order; drop the new frame. In theory we should
+      // probably replace the previous frame with the new frame if the
+      // timestamps are equal, but this is a corrupt video file already so
+      // never mind.
+      continue;
     }
+    MOZ_ASSERT(!t.IsNull());
+    lastFrameTime = t;
 
     ImageContainer::NonOwningImage* img = images.AppendElement();
     img->mTimeStamp = t;
