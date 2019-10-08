@@ -77,7 +77,7 @@ class Toolbar extends Component {
           dom.select(
             {
               id: "select-display",
-              className: "select-display",
+              className: "devtools-toolbar-select select-display",
               onChange: e => {
                 const newDisplay = censusDisplays.find(
                   b => b.displayName === e.target.value
@@ -175,6 +175,7 @@ class Toolbar extends Component {
           dom.select(
             {
               id: "select-label-display",
+              className: "devtools-toolbar-select select-label-display",
               onChange: e => {
                 const newDisplay = labelDisplays.find(
                   b => b.displayName === e.target.value
@@ -211,6 +212,7 @@ class Toolbar extends Component {
         dom.select(
           {
             id: "select-view",
+            className: "devtools-toolbar-select select-view",
             onChange: e => onViewChange(e.target.value),
             value: view.state,
           },
