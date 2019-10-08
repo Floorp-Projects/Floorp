@@ -4571,7 +4571,9 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
       (void (*)(GdkWindow*, cairo_region_t*))dlsym(
           RTLD_DEFAULT, "gdk_window_set_opaque_region");
 
+  LOG(("nsWindow::UpdateOpaqueRegion [%p]\n", (void*)this));
   if (!sGdkWindowSetOpaqueRegion) {
+    LOG(("    gdk_window_set_opaque_region is not available!\n"));
     return;
   }
 
@@ -4583,12 +4585,16 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
   // Also don't set shape mask if we use transparency bitmap.
   if (gdk_window_get_window_type(window) != GDK_WINDOW_TOPLEVEL ||
       mTransparencyBitmapForTitlebar) {
+    LOG(("    disabled due to %s\n", mTransparencyBitmapForTitlebar
+                                         ? "transparency bitmap"
+                                         : "non-toplevel window"));
     return;
   }
 
   // We don't tweak opaque regions for non-toplevel windows (popup, panels etc.)
   // as they can be transparent by gecko.
   if (mWindowType != eWindowType_toplevel) {
+    LOG(("    setting for non-toplevel window\n"));
     if (aOpaqueRegion.IsEmpty()) {
       (*sGdkWindowSetOpaqueRegion)(mGdkWindow, nullptr);
     } else {
@@ -4620,11 +4626,15 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
                                   width, height};
     cairo_region_union_rectangle(region, &rect);
 
+    LOG(("    setting for toplevel window %d,%d -> %d x %d\n", rect.x, rect.y,
+         rect.width, rect.height));
+
     // Subtract transparent corners which are used by
     // various Gtk themes for toplevel windows when titlebar
     // is rendered by gecko.
     if (mDrawInTitlebar && !mIsPIPWindow && mSizeMode == nsSizeMode_Normal &&
         !mIsTiled) {
+      LOG(("    substracted corners for titlebar decoration\n"));
       cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
                                     TITLEBAR_SHAPE_MASK_HEIGHT,
                                     TITLEBAR_SHAPE_MASK_HEIGHT};
