@@ -27,10 +27,10 @@
 
         if (currentCookie.localeCompare("REFRESHED") == 0) {
                 setCookie("DEFAULT");
-            return "My little test page - DEFAULT";
+            return "DEFAULT";
         } else {
                 setCookie("REFRESHED");
-            return "My little test page - REFRESHED!";
+            return "REFRESHED";
         }
     }
 
@@ -40,6 +40,6 @@
     });
 </script>
 <body>
-<h1>My little test page - DEFAULT</h1>
+<h1>DEFAULT</h1>
 </body>
 </html>
