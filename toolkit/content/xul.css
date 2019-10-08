@@ -630,3 +630,7 @@ tabmodalprompt {
   [ordinal="9"] { -moz-box-ordinal-group: 9; }
   [ordinal="1000"] { -moz-box-ordinal-group: 1000; }
 }
+
+%ifndef MOZ_XBL
+* { -moz-binding: none !important }
+%endif
