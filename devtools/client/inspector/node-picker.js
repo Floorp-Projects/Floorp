@@ -47,21 +47,6 @@ class NodePicker extends EventEmitter {
   }
 
   /**
-   * Get all of the InspectorFront instances corresponding to the frames where the node
-   * picking should occur.
-   *
-   * @return {Array<InspectorFront>}
-   *         The list of InspectorFront instances
-   */
-  async getAllInspectorFronts() {
-    // TODO: For Fission, we should list all remote frames here.
-    // TODO: For the Browser Toolbox, we should list all remote browsers here.
-    // TODO: For now we just return a single item in the array.
-    const inspectorFront = await this.target.getFront("inspector");
-    return [inspectorFront];
-  }
-
-  /**
    * Start/stop the element picker on the debuggee target.
    *
    * @param {Boolean} doFocus
@@ -93,7 +78,10 @@ class NodePicker extends EventEmitter {
 
     this.emit("picker-starting");
 
-    this._currentInspectorFronts = await this.getAllInspectorFronts();
+    // Get all the inspector fronts where the picker should start, and cache them locally
+    // so we can stop the picker when needed for the same list of inspector fronts.
+    const inspectorFront = await this.target.getFront("inspector");
+    this._currentInspectorFronts = await inspectorFront.getAllInspectorFronts();
 
     for (const { walker, highlighter } of this._currentInspectorFronts) {
       walker.on("picker-node-hovered", this._onHovered);
@@ -147,6 +135,19 @@ class NodePicker extends EventEmitter {
    */
   _onHovered(data) {
     this.emit("picker-node-hovered", data.node);
+
+    // One of the HighlighterActor instances, in one of the current targets, is hovering
+    // over a node. Because we may be connected to several targets, we have several
+    // HighlighterActor instances running at the same time. Tell the ones that don't match
+    // the hovered node to hide themselves to avoid having several highlighters visible at
+    // the same time.
+    const unmatchedInspectors = this._currentInspectorFronts.filter(
+      ({ highlighter }) => highlighter !== data.node.highlighterFront
+    );
+
+    Promise.all(
+      unmatchedInspectors.map(({ highlighter }) => highlighter.hideBoxModel())
+    ).catch(e => console.error);
   }
 
   /**

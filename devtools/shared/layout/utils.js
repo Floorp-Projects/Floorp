@@ -11,6 +11,7 @@ loader.lazyRequireGetter(
   "DevToolsUtils",
   "devtools/shared/DevToolsUtils"
 );
+loader.lazyRequireGetter(this, "ChromeUtils");
 
 const SHEET_TYPE = {
   agent: "AGENT_SHEET",
@@ -934,3 +935,25 @@ function getAbsoluteScrollOffsetsForNode(node) {
   };
 }
 exports.getAbsoluteScrollOffsetsForNode = getAbsoluteScrollOffsetsForNode;
+
+/**
+ * Check if the provided node is representing a remote frame.
+ *
+ * - In the context of the browser toolbox, a remote frame can be the <browser remote>
+ * element found inside each tab.
+ * - In the context of the content toolbox, a remote frame can be a <iframe> that contains
+ * a different origin document.
+ *
+ * For now, this function only checks the former.
+ *
+ * @param  {DOMNode} node
+ * @return {Boolean}
+ */
+function isRemoteFrame(node) {
+  return (
+    node.childNodes.length == 0 &&
+    ChromeUtils.getClassName(node) == "XULFrameElement" &&
+    node.getAttribute("remote") == "true"
+  );
+}
+exports.isRemoteFrame = isRemoteFrame;
