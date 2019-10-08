@@ -93,6 +93,13 @@ class ImageComposite {
   // Return the index of what the last returned image would have been.
   uint32_t ScanForLastFrameIndex(const nsTArray<TimedImage>& aNewImages);
 
+  // Return true if we send image in a speed which is faster than the one we can
+  // composite image. It's used to decide whether we should report the frame
+  // dropping, because we only want to know the frame dropping, which is caused
+  // by machine overload.
+  bool IsImagesUpdateRateFasterThanCompositedRate(
+      const TimedImage& aNewImage, const TimedImage& aOldImage) const;
+
   /**
    * Bias to apply to the next frame.
    */
