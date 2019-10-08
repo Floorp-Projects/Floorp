@@ -86,7 +86,6 @@ DIRS += [
     'url',
     'webauthn',
     'webidl',
-    'xbl',
     'xml',
     'xslt',
     'xul',
@@ -108,6 +107,11 @@ DIRS += [
     'prio',
     'l10n',
 ]
+
+if CONFIG['MOZ_XBL']:
+    DIRS += ['xbl']
+else:
+    EXPORTS += ['xbl/stub/nsXBLBinding.h']
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['plugins/ipc/hangui']

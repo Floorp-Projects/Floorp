@@ -36,7 +36,10 @@
 #include "nsMediaFeatures.h"
 #include "nsPrintfCString.h"
 #include "gfxUserFontSet.h"
-#include "nsBindingManager.h"
+#ifdef MOZ_XBL
+#  include "nsXBLPrototypeBinding.h"
+#  include "nsBindingManager.h"
+#endif
 #include "nsWindowSizes.h"
 #include "GeckoProfiler.h"
 

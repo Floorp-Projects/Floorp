@@ -17,9 +17,11 @@ SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
-    '/dom/xbl',
     '/dom/xul',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 

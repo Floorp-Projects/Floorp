@@ -251,7 +251,6 @@ LOCAL_INCLUDES += [
     '/dom/html',
     '/dom/smil',
     '/dom/svg',
-    '/dom/xbl',
     '/dom/xml',
     '/layout/base',
     '/layout/generic',
@@ -259,6 +258,9 @@ LOCAL_INCLUDES += [
     '/layout/svg',
     '/layout/xul',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

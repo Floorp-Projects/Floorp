@@ -198,6 +198,7 @@ nsresult nsXULPrototypeCache::PutScript(nsIURI* aURI,
   return NS_OK;
 }
 
+#ifdef MOZ_XBL
 nsXBLDocumentInfo* nsXULPrototypeCache::GetXBLDocumentInfo(nsIURI* aURL) {
   return mXBLDocTable.GetWeak(aURL);
 }
@@ -211,6 +212,7 @@ nsresult nsXULPrototypeCache::PutXBLDocumentInfo(
   }
   return NS_OK;
 }
+#endif
 
 void nsXULPrototypeCache::FlushScripts() { mScriptTable.Clear(); }
 
@@ -218,7 +220,9 @@ void nsXULPrototypeCache::Flush() {
   mPrototypeTable.Clear();
   mScriptTable.Clear();
   mStyleSheetTable.Clear();
+#ifdef MOZ_XBL
   mXBLDocTable.Clear();
+#endif
 }
 
 bool nsXULPrototypeCache::IsEnabled() { return !gDisableXULCache; }
@@ -481,9 +485,11 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
 }
 
 void nsXULPrototypeCache::MarkInCCGeneration(uint32_t aGeneration) {
+#ifdef MOZ_XBL
   for (auto iter = mXBLDocTable.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->MarkInCCGeneration(aGeneration);
   }
+#endif
   for (auto iter = mPrototypeTable.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->MarkInCCGeneration(aGeneration);
   }
@@ -509,6 +515,7 @@ static void ReportSize(const nsCString& aPath, size_t aAmount,
                           aData);
 }
 
+#ifdef MOZ_XBL
 static void AppendURIForMemoryReport(nsIURI* aUri, nsACString& aOutput) {
   nsCString spec = aUri->GetSpecOrDefault();
   // A hack: replace forward slashes with '\\' so they aren't
@@ -517,6 +524,7 @@ static void AppendURIForMemoryReport(nsIURI* aUri, nsACString& aOutput) {
   spec.ReplaceChar('/', '\\');
   aOutput += spec;
 }
+#endif
 
 /* static */
 void nsXULPrototypeCache::CollectMemoryReports(
@@ -540,6 +548,7 @@ void nsXULPrototypeCache::CollectMemoryReports(
   other += sInstance->mScriptTable.ShallowSizeOfExcludingThis(mallocSizeOf);
   // TODO Report content inside mScriptTable?
 
+#ifdef MOZ_XBL
   other += sInstance->mXBLDocTable.ShallowSizeOfExcludingThis(mallocSizeOf);
   for (auto iter = sInstance->mXBLDocTable.ConstIter(); !iter.Done();
        iter.Next()) {
@@ -550,6 +559,7 @@ void nsXULPrototypeCache::CollectMemoryReports(
     size_t size = iter.UserData()->SizeOfIncludingThis(mallocSizeOf);
     REPORT_SIZE(path, size, "Memory used by this XBL document.");
   }
+#endif
 
   other +=
       sInstance->mStartupCacheURITable.ShallowSizeOfExcludingThis(mallocSizeOf);

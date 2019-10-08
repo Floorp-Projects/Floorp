@@ -19,6 +19,8 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/dom/xbl',
     '/dom/xul',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']

@@ -10,9 +10,11 @@
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "nsIReferrerInfo.h"
-#include "nsBindingManager.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#  include "nsXBLPrototypeBinding.h"
+#endif
 #include "nsEscape.h"
-#include "nsXBLPrototypeBinding.h"
 #include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
@@ -63,8 +65,10 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
 
   nsIContent* bindingParent = aFromContent->GetBindingParent();
   if (bindingParent && !aFromContent->IsInShadowTree()) {
+#ifdef MOZ_XBL
     nsXBLBinding* binding = bindingParent->GetXBLBinding();
     if (!binding) {
+#endif
       // This happens, for example, if aFromContent is part of the content
       // inserted by a call to Document::InsertAnonymousContent, which we
       // also want to handle.  (It also happens for <use>'s anonymous
@@ -77,6 +81,7 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
         // here.
         return;
       }
+#ifdef MOZ_XBL
     } else {
       bool isEqualExceptRef;
       rv = aURI->EqualsExceptRef(binding->PrototypeBinding()->DocURI(),
@@ -106,6 +111,7 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
         return;
       }
     }
+#endif
   }
 
   bool isEqualExceptRef;

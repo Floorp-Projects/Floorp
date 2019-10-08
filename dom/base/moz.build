@@ -503,7 +503,6 @@ LOCAL_INCLUDES += [
     '/dom/storage',
     '/dom/svg',
     '/dom/u2f',
-    '/dom/xbl',
     '/dom/xml',
     '/dom/xslt/xpath',
     '/dom/xul',
@@ -525,6 +524,9 @@ LOCAL_INCLUDES += [
     '/widget',
     '/xpcom/ds',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 if CONFIG['MOZ_WEBRTC']:
     LOCAL_INCLUDES += [

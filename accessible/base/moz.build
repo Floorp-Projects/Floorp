@@ -82,7 +82,6 @@ LOCAL_INCLUDES += [
     '/accessible/xpcom',
     '/accessible/xul',
     '/dom/base',
-    '/dom/xbl',
     '/ipc/chromium/src',
     '/layout/generic',
     '/layout/style',
@@ -90,6 +89,9 @@ LOCAL_INCLUDES += [
     '/layout/xul',
     '/layout/xul/tree/',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     LOCAL_INCLUDES += [

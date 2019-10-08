@@ -767,6 +767,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      pseudo-frames as needed */
   static const PseudoParentData sPseudoParentData[eParentTypeCount];
 
+#ifdef MOZ_XBL
   // The information that concerns the frame constructor after loading an XBL
   // binding.
   //
@@ -784,6 +785,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // Returns null mStyle member to signal an error.
   XBLBindingLoadInfo LoadXBLBindingIfNeeded(nsIContent&, const ComputedStyle&,
                                             uint32_t aFlags);
+#endif
 
   const FrameConstructionData* FindDataForContent(nsIContent&, ComputedStyle&,
                                                   nsIFrame* aParentFrame,
