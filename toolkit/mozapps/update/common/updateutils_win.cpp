@@ -150,10 +150,14 @@ BOOL GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath) {
   }
   wcsncat(filename, tmpFileNameString, tmpFileNameStringLen);
 
-  if (wcslen(basePath) > MAX_PATH) {
+  size_t basePathLen = wcslen(basePath);
+  if (basePathLen > MAX_PATH) {
     return FALSE;
   }
-  wcsncpy(tmpPath, basePath, MAX_PATH + 1);
+  // Use basePathLen + 1 so wcsncpy will add null termination and if a caller
+  // doesn't allocate MAX_PATH + 1 for tmpPath this won't fail when there is
+  // actually enough space allocated.
+  wcsncpy(tmpPath, basePath, basePathLen + 1);
   if (!PathAppendSafe(tmpPath, filename)) {
     return FALSE;
   }
