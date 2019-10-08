@@ -104,6 +104,13 @@ using namespace mozilla::dom;
 @property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, TouchBarInput*>* mappedLayoutItems;
 
 /**
+ * Stores buttons displayed in a NSScrollView. They must be stored separately
+ * because they are generic NSButtons and not NSTouchBarItems. As such, they
+ * cannot be retrieved with [NSTouchBar itemForIdentifier].
+ */
+@property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, NSButton*>* scrollViewButtons;
+
+/**
  * Returns an instance of nsTouchBar based on implementation details
  * fetched from the frontend through nsTouchBarHelper.
  */
@@ -141,6 +148,12 @@ using namespace mozilla::dom;
 - (bool)maybeUpdatePopoverChild:(TouchBarInput*)aInput;
 
 /**
+ * Helper function for updateItem. Checks to see if a given input exists within
+ * any of this Touch Bar's scroll views and updates it if it exists.
+ */
+- (bool)maybeUpdateScrollViewChild:(TouchBarInput*)aInput;
+
+/**
  * Helper function for updateItem. Replaces an item in the
  * self.mappedLayoutItems dictionary.
  */
@@ -152,6 +165,7 @@ using namespace mozilla::dom;
 - (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput;
 - (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput;
 - (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem input:(TouchBarInput*)aInput;
+- (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem input:(TouchBarInput*)aInput;
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 
 /**
