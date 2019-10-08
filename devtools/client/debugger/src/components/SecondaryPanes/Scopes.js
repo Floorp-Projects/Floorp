@@ -33,6 +33,7 @@ import "./Scopes.css";
 
 const { ObjectInspector } = objectInspector;
 
+type OwnProps = {||};
 type Props = {
   cx: ThreadContext,
   selectedFrame: Object,
@@ -275,7 +276,7 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     openLink: actions.openLink,

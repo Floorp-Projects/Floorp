@@ -38,6 +38,10 @@ type State = {
   focused: boolean,
 };
 
+type OwnProps = {|
+  showInput: boolean,
+  onExpressionAdded: () => void,
+|};
 type Props = {
   cx: ThreadContext,
   expressions: List<Expression>,
@@ -393,7 +397,7 @@ const mapStateToProps = state => ({
   expressionError: getExpressionError(state),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     autocomplete: actions.autocomplete,

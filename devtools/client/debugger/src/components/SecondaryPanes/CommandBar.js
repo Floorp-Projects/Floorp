@@ -75,6 +75,9 @@ function formatKey(action) {
   return formatKeyShortcut(key);
 }
 
+type OwnProps = {|
+  horizontal: boolean,
+|};
 type Props = {
   cx: ThreadContext,
   isWaitingOnBreak: boolean,
@@ -315,7 +318,7 @@ const mapStateToProps = state => ({
   skipPausing: getSkipPausing(state),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     resume: actions.resume,

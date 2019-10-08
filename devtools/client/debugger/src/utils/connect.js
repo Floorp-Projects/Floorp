@@ -4,19 +4,5 @@
 // @flow
 
 import { connect as reduxConnect } from "react-redux";
-import * as React from "react";
 
-export function connect<Config, RSP: {}, MDP: {}>(
-  mapStateToProps: (state: any, props: any) => RSP,
-  mapDispatchToProps?: (Function => MDP) | MDP,
-  mergeProps?: void,
-  opts?: ?{|
-    storeKey?: string,
-  |}
-): (
-  Component: React.AbstractComponent<Config>
-) => React.AbstractComponent<$Diff<Config, RSP & MDP>> {
-  // TODO: Bug 1572214 - We should use the standard type definitions directly.
-  // $FlowFixMe
-  return reduxConnect(mapStateToProps, mapDispatchToProps, null, opts);
-}
+export const connect: typeof reduxConnect = reduxConnect;
