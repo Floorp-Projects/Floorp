@@ -1008,12 +1008,25 @@ class UrlbarInput {
   }
 
   startLayoutExtend() {
+    // Do not expand if:
+    // The Urlbar does not support being expanded or it is already expanded
     if (
       !this.hasAttribute("breakout") ||
-      this.hasAttribute("breakout-extend") ||
-      // Avoid extending when the user is copying a part of the text, provided
-      // the view is not open, otherwise it may be the autofill selection.
-      (this.selectionStart != this.selectionEnd && !this.view.isOpen) ||
+      this.hasAttribute("breakout-extend")
+    ) {
+      return;
+    }
+    // The user is copying less than the entire string, provided the view is
+    // not open, otherwise it may be the autofill selection
+    if (
+      this.selectionStart != this.selectionEnd &&
+      !(this.selectionStart == 0 && this.selectionEnd == this.value.length) &&
+      !this.view.isOpen
+    ) {
+      return;
+    }
+    // The Urlbar is unfocused or the view is closed
+    if (
       !(
         (this.getAttribute("focused") == "true" &&
           !this.textbox.classList.contains("hidden-focus")) ||
@@ -1869,6 +1882,14 @@ class UrlbarInput {
         // the browser toolbox.
         if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
           this.view.close();
+        }
+
+        if (
+          event.target.id == "tabs-newtab-button" ||
+          event.target.id == "new-tab-button" ||
+          event.target.classList.contains("tab-close-button")
+        ) {
+          break;
         }
 
         // We collapse the urlbar for any clicks outside of it.

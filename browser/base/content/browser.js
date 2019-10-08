@@ -2886,7 +2886,7 @@ function loadOneOrMoreURIs(aURIString, aTriggeringPrincipal, aCsp) {
 }
 
 /**
- * Focuses the location bar input field and selects its contents.
+ * Focuses and expands the location bar input field and selects its contents.
  */
 function focusAndSelectUrlBar() {
   // In customize mode, the url bar is disabled. If a new tab is opened or the
@@ -2906,6 +2906,9 @@ function focusAndSelectUrlBar() {
   }
 
   gURLBar.select();
+  // In cases where the Urlbar is focused but not expanded, the select call
+  // above may not result in an expansion.
+  gURLBar.startLayoutExtend();
 }
 
 function openLocation(event) {
