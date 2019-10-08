@@ -501,6 +501,12 @@ function BuildConditionSandbox(aURL) {
     sandbox.webrtc = false;
 #endif
 
+#if MOZ_XBL
+    sandbox.xbl = true;
+#else
+    sandbox.xbl = false;
+#endif
+
 let retainedDisplayListsEnabled = prefs.getBoolPref("layout.display-list.retain", false);
 sandbox.retainedDisplayLists = retainedDisplayListsEnabled && !g.compareRetainedDisplayLists;
 sandbox.compareRetainedDisplayLists = g.compareRetainedDisplayLists;
