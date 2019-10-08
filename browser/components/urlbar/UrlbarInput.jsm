@@ -983,6 +983,14 @@ class UrlbarInput {
     return this._setValue(val, true);
   }
 
+  get lastSearchString() {
+    return this._lastSearchString;
+  }
+
+  get openViewOnFocus() {
+    return this._openViewOnFocus;
+  }
+
   get openViewOnFocusForCurrentTab() {
     return (
       this._openViewOnFocusAndSearchString ||

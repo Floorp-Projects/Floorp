@@ -7,11 +7,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -19,6 +20,14 @@ XPCOMUtils.defineLazyServiceGetter(
   "gTouchBarUpdater",
   "@mozilla.org/widget/touchbarupdater;1",
   "nsITouchBarUpdater"
+);
+
+// For accessing TouchBarHelper methods from static contexts in this file.
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gTouchBarHelper",
+  "@mozilla.org/widget/touchbarhelper;1",
+  "nsITouchBarHelper"
 );
 
 /**
@@ -177,27 +186,42 @@ const kBuiltInInputs = {
           Bookmarks: {
             title: "search-bookmarks",
             type: kInputTypes.BUTTON,
-            callback: () => console.log("Bookmarks success!"), // FIXME: Bug 1563351
+            callback: () =>
+              gTouchBarHelper.insertRestrictionInUrlbar(
+                UrlbarTokenizer.RESTRICT.BOOKMARK
+              ),
           },
           History: {
             title: "search-history",
             type: kInputTypes.BUTTON,
-            callback: () => console.log("History success!"), // FIXME: Bug 1563351
+            callback: () =>
+              gTouchBarHelper.insertRestrictionInUrlbar(
+                UrlbarTokenizer.RESTRICT.HISTORY
+              ),
           },
           OpenTabs: {
             title: "search-opentabs",
             type: kInputTypes.BUTTON,
-            callback: () => console.log("Open Tabs success!"), // FIXME: Bug 1563351
+            callback: () =>
+              gTouchBarHelper.insertRestrictionInUrlbar(
+                UrlbarTokenizer.RESTRICT.OPENPAGE
+              ),
           },
           Tags: {
             title: "search-tags",
             type: kInputTypes.BUTTON,
-            callback: () => console.log("Tags success!"), // FIXME: Bug 1563351
+            callback: () =>
+              gTouchBarHelper.insertRestrictionInUrlbar(
+                UrlbarTokenizer.RESTRICT.TAG
+              ),
           },
           Titles: {
             title: "search-titles",
             type: kInputTypes.BUTTON,
-            callback: () => console.log("Titles success!"), // FIXME: Bug 1563351
+            callback: () =>
+              gTouchBarHelper.insertRestrictionInUrlbar(
+                UrlbarTokenizer.RESTRICT.TITLE
+              ),
           },
         },
       },
@@ -347,6 +371,22 @@ class TouchBarHelper {
     }
 
     gTouchBarUpdater.updateTouchBarInputs(TouchBarHelper.baseWindow, inputs);
+  }
+
+  /**
+   * Inserts a restriction token into the Urlbar ahead of the current typed
+   * search term.
+   * @param {string} restrictionToken
+   *        The restriction token to be inserted into the Urlbar. Preferably
+   *        sourced from UrlbarTokenizer.RESTRICT.
+   */
+  insertRestrictionInUrlbar(restrictionToken) {
+    let searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
+    if (Object.values(UrlbarTokenizer.RESTRICT).includes(searchString[0])) {
+      searchString = searchString.substring(1).trimStart();
+    }
+
+    TouchBarHelper.window.gURLBar.search(`${restrictionToken} ${searchString}`);
   }
 
   observe(subject, topic, data) {
