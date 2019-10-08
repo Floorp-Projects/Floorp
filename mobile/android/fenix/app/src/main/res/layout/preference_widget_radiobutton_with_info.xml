@@ -63,8 +63,8 @@
 
     <ImageView
         android:id="@+id/info_button"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginStart="18dp"
         android:layout_marginEnd="18dp"
         android:src="@drawable/ic_info"
