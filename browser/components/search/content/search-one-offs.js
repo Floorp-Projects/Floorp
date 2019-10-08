@@ -30,6 +30,7 @@ class SearchOneOffs {
         <menupopup class="search-one-offs-context-menu">
           <menuitem class="search-one-offs-context-open-in-new-tab" data-l10n-id="search-one-offs-context-open-new-tab"/>
           <menuitem class="search-one-offs-context-set-default" data-l10n-id="search-one-offs-context-set-as-default"/>
+          <menuitem class="search-one-offs-context-set-default-private" data-l10n-id="search-one-offs-context-set-as-default-private"/>
         </menupopup>
       </box>
       `
@@ -1176,13 +1177,23 @@ class SearchOneOffs {
       this.handleSearchCommand(event, this._contextEngine, true);
     }
 
-    if (target.classList.contains("search-one-offs-context-set-default")) {
-      const engineType = PrivateBrowsingUtils.isWindowPrivate(window)
+    const isPrivateButton = target.classList.contains(
+      "search-one-offs-context-set-default-private"
+    );
+    if (
+      target.classList.contains("search-one-offs-context-set-default") ||
+      isPrivateButton
+    ) {
+      const engineType = isPrivateButton
         ? "defaultPrivateEngine"
         : "defaultEngine";
       let currentEngine = Services.search[engineType];
 
-      if (!this.getAttribute("includecurrentengine")) {
+      const isPrivateWin = PrivateBrowsingUtils.isWindowPrivate(window);
+      if (
+        !this.getAttribute("includecurrentengine") &&
+        isPrivateButton == isPrivateWin
+      ) {
         // Make the target button of the context menu reflect the current
         // search engine first. Doing this as opposed to rebuilding all the
         // one-off buttons avoids flicker.
@@ -1217,6 +1228,26 @@ class SearchOneOffs {
         "disabled",
         target.engine == Services.search.defaultEngine.wrappedJSObject
       );
+
+    const privateDefaultItem = this.contextMenuPopup.querySelector(
+      ".search-one-offs-context-set-default-private"
+    );
+
+    if (
+      Services.prefs.getBoolPref(
+        "browser.search.separatePrivateDefault.ui.enabled",
+        false
+      ) &&
+      Services.prefs.getBoolPref("browser.search.separatePrivateDefault", false)
+    ) {
+      privateDefaultItem.hidden = false;
+      privateDefaultItem.setAttribute(
+        "disabled",
+        target.engine == Services.search.defaultPrivateEngine.wrappedJSObject
+      );
+    } else {
+      privateDefaultItem.hidden = true;
+    }
 
     this.contextMenuPopup.openPopupAtScreen(event.screenX, event.screenY, true);
     event.preventDefault();
