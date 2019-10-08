@@ -90,8 +90,8 @@ const DISPLAY_TYPES = {
  *
  * @param  {MarkupContainer} container
  *         The container owning this editor.
- * @param  {Element} node
- *         The node being edited.
+ * @param  {NodeFront} node
+ *         The NodeFront being edited.
  */
 function ElementEditor(container, node) {
   this.container = container;
@@ -977,7 +977,7 @@ ElementEditor.prototype = {
     // Changing the tagName removes the node. Make sure the replacing node gets
     // selected afterwards.
     this.markup.reselectOnRemoved(this.node, "edittagname");
-    this.markup.walker.editTagName(this.node, newTagName).catch(() => {
+    this.node.walkerFront.editTagName(this.node, newTagName).catch(() => {
       // Failed to edit the tag name, cancel the reselection.
       this.markup.cancelReselectOnRemoved();
     });
