@@ -19,6 +19,12 @@ static const NSTouchBarItemIdentifier BaseIdentifier = @"com.mozilla.firefox.tou
 static NSTouchBarItemIdentifier ShareScrubberIdentifier =
     [TouchBarInput nativeIdentifierWithType:@"scrubber" withKey:@"share"];
 
+// The search popover needs to show/hide depending on if the Urlbar is focused
+// when it is created. We keep track of its identifier to accomodate this
+// special handling.
+static NSTouchBarItemIdentifier SearchPopoverIdentifier =
+    [TouchBarInput nativeIdentifierWithType:@"popover" withKey:@"search-popover"];
+
 // Used to tie action strings to buttons.
 static char sIdentifierAssociationKey;
 
@@ -97,7 +103,7 @@ static const uint32_t kInputIconSize = 16;
         [TouchBarInput nativeIdentifierWithType:@"button" withKey:@"reload"],
         [TouchBarInput nativeIdentifierWithType:@"mainButton" withKey:@"open-location"],
         [TouchBarInput nativeIdentifierWithType:@"button" withKey:@"new-tab"],
-        ShareScrubberIdentifier
+        ShareScrubberIdentifier, SearchPopoverIdentifier
       ];
       self.defaultItemIdentifiers = [defaultItemIdentifiers copy];
     } else {
@@ -480,7 +486,10 @@ static const uint32_t kInputIconSize = 16;
       continue;
     }
 
-    if ([[input type] hasSuffix:@"popover"]) {
+    // Childless popovers contain the default Touch Bar as its popoverTouchBar.
+    // We check for [input children] since the default Touch Bar contains a
+    // popover (search-popover), so this would infinitely loop if there was no check.
+    if ([[input type] hasSuffix:@"popover"] && [input children]) {
       NSTouchBarItem* item = [self itemForIdentifier:identifier];
       [(nsTouchBar*)[(NSPopoverTouchBarItem*)item popoverTouchBar] releaseJSObjects];
     }
