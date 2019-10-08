@@ -390,22 +390,6 @@ convenience of Safari and Chrome users on macOS. See bug 1398988. -->
 <!ENTITY searchInput.placeholder      "Search">
 <!ENTITY searchIcon.tooltip           "Search">
 
-<!-- LOCALIZATION NOTE (searchWithDesc.label):
-     This string prompts the user to use the list of one-click search engines in
-     the Urlbar and searchbar. -->
-<!ENTITY searchWithDesc.label         "This time, search with:">
-
-<!-- LOCALIZATION NOTE (changeSearchSettings.button):
-     This string won't wrap, so if the translated string is longer,
-     consider translating it as if it said only "Search Settings". -->
-<!ENTITY changeSearchSettings.button  "Change Search Settings">
-<!ENTITY changeSearchSettings.tooltip "Change search settings">
-
-<!ENTITY searchInNewTab.label         "Search in New Tab">
-<!ENTITY searchInNewTab.accesskey     "T">
-<!ENTITY searchSetAsDefault.label     "Set As Default Search Engine">
-<!ENTITY searchSetAsDefault.accesskey "D">
-
 <!ENTITY openLinkCmdInTab.label       "Open Link in New Tab">
 <!ENTITY openLinkCmdInTab.accesskey   "T">
 <!ENTITY openLinkCmd.label            "Open Link in New Window">
