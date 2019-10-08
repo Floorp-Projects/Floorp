@@ -110,7 +110,7 @@ open class HomeActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        unsetOpenLinksInAPrivateTab()
+        unsetOpenLinksInAPrivateTabIfNecessary()
 
         lifecycleScope.launch {
             with(components.backgroundServices) {
@@ -125,7 +125,7 @@ open class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun unsetOpenLinksInAPrivateTab() {
+    private fun unsetOpenLinksInAPrivateTabIfNecessary() {
         // Toggle off the open_link_in_private_tab pref if we are no longer set as the default browser
         // We do this on a separate thread to alleviate performance issues
         val weakReferenceContext = WeakReference(this)

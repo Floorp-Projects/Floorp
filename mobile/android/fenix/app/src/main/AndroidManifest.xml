@@ -89,7 +89,7 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
+                <category android:name="mozilla.components.pwa.category.SHORTCUT" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
             </intent-filter>
