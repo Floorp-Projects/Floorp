@@ -9,7 +9,7 @@
 
 function setupBackgroundJsm() {
   const background = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm"
+    "resource://devtools/client/performance-new/popup/background.jsm.js"
   );
   return background;
 }
