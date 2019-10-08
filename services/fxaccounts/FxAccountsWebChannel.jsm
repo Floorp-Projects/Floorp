@@ -30,6 +30,7 @@ const {
   COMMAND_PAIR_DECLINE,
   COMMAND_PAIR_COMPLETE,
   COMMAND_PAIR_PREFERENCES,
+  FX_OAUTH_CLIENT_ID,
   ON_PROFILE_CHANGE_NOTIFICATION,
   PREF_LAST_FXA_USER,
   WEBCHANNEL_ID,
@@ -286,8 +287,9 @@ this.FxAccountsWebChannel.prototype = {
 
         const service = data && data.service;
         const isPairing = data && data.isPairing;
+        const context = data && data.context;
         this._helpers
-          .getFxaStatus(service, sendingContext, isPairing)
+          .getFxaStatus(service, sendingContext, isPairing, context)
           .then(fxaStatus => {
             let response = {
               command,
@@ -426,28 +428,9 @@ this.FxAccountsWebChannelHelpers.prototype = {
     log.debug("Webchannel is logging a user in.");
     delete accountData.customizeSync;
 
-    if (accountData.offeredSyncEngines) {
-      EXTRA_ENGINES.forEach(engine => {
-        if (
-          accountData.offeredSyncEngines.includes(engine) &&
-          !accountData.declinedSyncEngines.includes(engine)
-        ) {
-          // These extra engines are disabled by default.
-          Services.prefs.setBoolPref(`services.sync.engine.${engine}`, true);
-        }
-      });
-      delete accountData.offeredSyncEngines;
-    }
-
-    if (accountData.declinedSyncEngines) {
-      let declinedSyncEngines = accountData.declinedSyncEngines;
-      log.debug("Received declined engines", declinedSyncEngines);
-      Weave.Service.engineManager.setDeclined(declinedSyncEngines);
-      declinedSyncEngines.forEach(engine => {
-        Services.prefs.setBoolPref("services.sync.engine." + engine, false);
-      });
-      delete accountData.declinedSyncEngines;
-    }
+    // Save requested services for later.
+    const requestedServices = accountData.services;
+    delete accountData.services;
 
     // the user has already been shown the "can link account"
     // screen. No need to keep this data around.
@@ -466,11 +449,28 @@ this.FxAccountsWebChannelHelpers.prototype = {
         .wrappedJSObject;
     await xps.whenLoaded();
     await this._fxAccounts._internal.setSignedInUser(accountData);
-    // Configure sync itself if necessary, but after signing in the user.
-    // (Soon we'll have a way of making the sync configuration optional, based
-    // on the content of the message, but for now, sync is unconditionally
-    // configured)
-    await xps.Weave.Service.configure();
+
+    if (requestedServices) {
+      // User has enabled Sync.
+      if (requestedServices.sync) {
+        const { offeredEngines, declinedEngines } = requestedServices.sync;
+        EXTRA_ENGINES.forEach(engine => {
+          if (
+            offeredEngines.includes(engine) &&
+            !declinedEngines.includes(engine)
+          ) {
+            // These extra engines are disabled by default.
+            Services.prefs.setBoolPref(`services.sync.engine.${engine}`, true);
+          }
+        });
+        log.debug("Received declined engines", declinedEngines);
+        Weave.Service.engineManager.setDeclined(declinedEngines);
+        declinedEngines.forEach(engine => {
+          Services.prefs.setBoolPref(`services.sync.engine.${engine}`, false);
+        });
+        await xps.Weave.Service.configure();
+      }
+    }
   },
 
   /**
@@ -508,7 +508,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
   /**
    * Check whether sending fxa_status data should be allowed.
    */
-  shouldAllowFxaStatus(service, sendingContext, isPairing) {
+  shouldAllowFxaStatus(service, sendingContext, isPairing, context) {
     // Return user data for any service in non-PB mode. In PB mode,
     // only return user data if service==="sync" or is in pairing mode
     // (as service will be equal to the OAuth client ID and not "sync").
@@ -529,6 +529,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
     return (
       !this.isPrivateBrowsingMode(sendingContext) ||
       service === "sync" ||
+      context === "fx_desktop_v3" ||
       isPairing
     );
   },
@@ -555,7 +556,9 @@ this.FxAccountsWebChannelHelpers.prototype = {
 
     return {
       signedInUser,
+      clientId: FX_OAUTH_CLIENT_ID,
       capabilities: {
+        multiService: true,
         pairing: pairingEnabled,
         engines: this._getAvailableExtraEngines(),
       },
