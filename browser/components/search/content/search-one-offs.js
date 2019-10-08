@@ -19,21 +19,20 @@ class SearchOneOffs {
       MozXULElement.parseXULToFragment(
         `
       <hbox class="search-panel-one-offs-header search-panel-header search-panel-current-input">
-        <label class="search-panel-one-offs-header-label" value="&searchWithDesc.label;"/>
+        <label class="search-panel-one-offs-header-label" data-l10n-id="search-one-offs-with-title"/>
       </hbox>
       <hbox class="search-panel-one-offs" role="group"/>
       <vbox class="search-add-engines"/>
       <hbox class="search-one-offs-spacer"/>
-      <button class="searchbar-engine-one-off-item search-setting-button-compact" tooltiptext="&changeSearchSettings.tooltip;"/>
-      <button class="search-setting-button" label="&changeSearchSettings.button;"/>
+      <button class="searchbar-engine-one-off-item search-setting-button-compact" data-l10n-id="search-one-offs-change-settings-compact-button"/>
+      <button class="search-setting-button" data-l10n-id="search-one-offs-change-settings-button"/>
       <box style="visibiltiy:collapse">
         <menupopup class="search-one-offs-context-menu">
-          <menuitem class="search-one-offs-context-open-in-new-tab" label="&searchInNewTab.label;" accesskey="&searchInNewTab.accesskey;"/>
-          <menuitem class="search-one-offs-context-set-default" label="&searchSetAsDefault.label;" accesskey="&searchSetAsDefault.accesskey;"/>
+          <menuitem class="search-one-offs-context-open-in-new-tab" data-l10n-id="search-one-offs-context-open-new-tab"/>
+          <menuitem class="search-one-offs-context-set-default" data-l10n-id="search-one-offs-context-set-as-default"/>
         </menupopup>
       </box>
-      `,
-        ["chrome://browser/locale/browser.dtd"]
+      `
       )
     );
 
