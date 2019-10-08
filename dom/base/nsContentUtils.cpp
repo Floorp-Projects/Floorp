@@ -113,7 +113,9 @@
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "nsBindingManager.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#endif
 #include "nsCanvasFrame.h"
 #include "nsCaret.h"
 #include "nsCCUncollectableMarker.h"
@@ -2146,9 +2148,13 @@ bool nsContentUtils::ThreadsafeIsSystemCaller(JSContext* aCx) {
 bool nsContentUtils::LookupBindingMember(
     JSContext* aCx, nsIContent* aContent, JS::Handle<jsid> aId,
     JS::MutableHandle<JS::PropertyDescriptor> aDesc) {
+#ifdef MOZ_XBL
   nsXBLBinding* binding = aContent->GetXBLBinding();
   if (!binding) return true;
   return binding->LookupMember(aCx, aId, aDesc);
+#else
+  return true;
+#endif
 }
 
 // static

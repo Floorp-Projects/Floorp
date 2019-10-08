@@ -66,7 +66,6 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
     '/dom/html',
-    '/dom/xbl',
     '/dom/xml',
     '/layout/base',
     '/layout/generic',
@@ -74,6 +73,9 @@ LOCAL_INCLUDES += [
     '/layout/xul',
     '/layout/xul/tree',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

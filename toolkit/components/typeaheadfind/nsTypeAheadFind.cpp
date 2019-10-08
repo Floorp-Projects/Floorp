@@ -54,7 +54,9 @@
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "nsRange.h"
-#include "nsXBLBinding.h"
+#ifdef MOZ_XBL
+#  include "nsXBLBinding.h"
+#endif
 
 #include "nsTypeAheadFind.h"
 
@@ -783,6 +785,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(
   }
   nsCOMPtr<nsINode> searchRootNode(rootContent);
 
+#ifdef MOZ_XBL
   // Hack for XMLPrettyPrinter. nsFind can't handle complex anonymous content.
   // If the root node has an XBL binding then there's not much we can do in
   // in general, but we can try searching the binding's first child, which
@@ -795,6 +798,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(
       searchRootNode = anonContent->GetFirstChild();
     }
   }
+#endif
   mSearchRange->SelectNodeContents(*searchRootNode, IgnoreErrors());
 
   if (!mStartPointRange) {

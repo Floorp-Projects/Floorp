@@ -15,7 +15,6 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/Text.h"
 #include "nsAttrName.h"
-#include "nsBindingManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsDocElementCreatedNotificationRunner.h"
@@ -39,7 +38,10 @@
 #include "nsNetUtil.h"
 #include "nsNodeUtils.h"
 #include "nsTextNode.h"
-#include "nsXBLBinding.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#  include "nsXBLBinding.h"
+#endif
 
 using namespace mozilla;
 using mozilla::dom::Document;

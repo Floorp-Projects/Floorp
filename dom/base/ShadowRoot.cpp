@@ -12,7 +12,9 @@
 #include "nsContentUtils.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsWindowSizes.h"
-#include "nsXBLPrototypeBinding.h"
+#ifdef MOZ_XBL
+#  include "nsXBLPrototypeBinding.h"
+#endif
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"

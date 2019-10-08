@@ -253,6 +253,9 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
+
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:

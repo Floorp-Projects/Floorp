@@ -86,7 +86,9 @@ class ElementCreationOptionsOrString;
 
 class gfxUserFontSet;
 class imgIRequest;
+#ifdef MOZ_XBL
 class nsBindingManager;
+#endif
 class nsCachableElementsByNameNodeList;
 class nsContentList;
 class nsIDocShell;
@@ -1787,7 +1789,9 @@ class Document : public nsINode,
 
   void DoUnblockOnload();
 
+#ifdef MOZ_XBL
   void MaybeEndOutermostXBLUpdate();
+#endif
 
   void RetrieveRelevantHeaders(nsIChannel* aChannel);
 
@@ -2365,9 +2369,11 @@ class Document : public nsINode,
     DoUpdateSVGUseElementShadowTrees();
   }
 
+#ifdef MOZ_XBL
   nsBindingManager* BindingManager() const {
     return mNodeInfoManager->GetBindingManager();
   }
+#endif
 
   /**
    * Only to be used inside Gecko, you can't really do anything with the
@@ -3716,8 +3722,10 @@ class Document : public nsINode,
                                           const nsAString& aAttrName,
                                           const nsAString& aAttrValue);
   Element* GetBindingParent(nsINode& aNode);
+
   void LoadBindingDocument(const nsAString& aURI,
                            nsIPrincipal& aSubjectPrincipal, ErrorResult& rv);
+
   XPathExpression* CreateExpression(const nsAString& aExpression,
                                     XPathNSResolver* aResolver,
                                     ErrorResult& rv);
@@ -5272,7 +5280,9 @@ class Document : public nsINode,
 
   RefPtr<EventListenerManager> mListenerManager;
 
+#ifdef MOZ_XBL
   nsCOMPtr<nsIRunnable> mMaybeEndOutermostXBLUpdateRunner;
+#endif
   nsCOMPtr<nsIRequest> mOnloadBlocker;
 
   nsTArray<RefPtr<StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];

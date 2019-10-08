@@ -149,10 +149,12 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/html',
     '/dom/svg',
-    '/dom/xbl',
     '/dom/xul',
     '/view',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     LOCAL_INCLUDES += [

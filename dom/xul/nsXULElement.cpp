@@ -65,7 +65,9 @@
 #include "nsReadableUtils.h"
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
-#include "nsXBLBinding.h"
+#ifdef MOZ_XBL
+#  include "nsXBLBinding.h"
+#endif
 #include "nsXULTooltipListener.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozAutoDocUpdate.h"

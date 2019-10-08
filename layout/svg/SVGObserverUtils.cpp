@@ -1692,14 +1692,18 @@ already_AddRefed<nsIURI> SVGObserverUtils::GetBaseURLForLocalRef(
     nsIContent* bindingParent = content->GetBindingParent();
 
     if (bindingParent) {
+#ifdef MOZ_XBL
       nsXBLBinding* binding = bindingParent->GetXBLBinding();
       if (binding) {
         originalURI = binding->GetSourceDocURI();
       } else {
+#endif
         MOZ_ASSERT(content->IsInNativeAnonymousSubtree(),
                    "a non-native anonymous tree which is not from "
                    "an XBL binding?");
+#ifdef MOZ_XBL
       }
+#endif
     }
   }
 
