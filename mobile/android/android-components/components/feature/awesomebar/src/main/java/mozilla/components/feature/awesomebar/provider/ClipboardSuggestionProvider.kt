@@ -8,9 +8,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
-import mozilla.components.browser.icons.BrowserIcons
+import androidx.core.graphics.drawable.toBitmap
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.feature.awesomebar.internal.loadLambda
+import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
 import java.util.UUID
@@ -22,11 +22,10 @@ private const val MIME_TYPE_TEXT_PLAIN = "text/plain"
  * any).
  */
 class ClipboardSuggestionProvider(
-    context: Context,
+    private val context: Context,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icon: Bitmap? = null,
     private val title: String? = null,
-    private val icons: BrowserIcons? = null,
     private val requireEmptyText: Boolean = true
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
@@ -48,7 +47,7 @@ class ClipboardSuggestionProvider(
             id = url,
             description = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
-            icon = icons.loadLambda(url, icon),
+            icon = icon ?: context.getDrawable(R.drawable.mozac_ic_search)?.toBitmap(),
             title = title,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(url)

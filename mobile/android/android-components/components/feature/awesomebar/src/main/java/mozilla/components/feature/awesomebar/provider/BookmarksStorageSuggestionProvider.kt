@@ -5,10 +5,10 @@
 package mozilla.components.feature.awesomebar.provider
 
 import mozilla.components.browser.icons.BrowserIcons
+import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
-import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -39,15 +39,17 @@ class BookmarksStorageSuggestionProvider(
     /**
     * Expects list of BookmarkNode to be specifically of bookmarks (e.g. nodes with a url).
     */
-    private fun List<BookmarkNode>.into(): List<AwesomeBar.Suggestion> {
-        return this.map {
+    private suspend fun List<BookmarkNode>.into(): List<AwesomeBar.Suggestion> {
+        val iconRequests = this.map { icons?.loadIcon(IconRequest(it.url!!)) }
+
+        return this.zip(iconRequests) { result, icon ->
             AwesomeBar.Suggestion(
                 provider = this@BookmarksStorageSuggestionProvider,
-                id = it.guid,
-                icon = icons.loadLambda(it.url!!),
-                title = it.title,
-                description = it.url,
-                onSuggestionClicked = { loadUrlUseCase.invoke(it.url!!) }
+                id = result.guid,
+                icon = icon?.await()?.bitmap,
+                title = result.title,
+                description = result.url,
+                onSuggestionClicked = { loadUrlUseCase.invoke(result.url!!) }
             )
         }
     }

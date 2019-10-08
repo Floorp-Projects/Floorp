@@ -266,7 +266,7 @@ class SearchSuggestionProviderTest {
             try {
                 val suggestions = provider.onInputChanged("fire")
                 assertEquals(1, suggestions.size)
-                assertTrue(suggestions[0].icon?.invoke(20, 20)?.sameAs(engineIcon)!!)
+                assertTrue(suggestions[0].icon?.sameAs(engineIcon)!!)
             } finally {
                 server.shutdown()
             }
@@ -296,7 +296,7 @@ class SearchSuggestionProviderTest {
             try {
                 val suggestions = provider.onInputChanged("fire")
                 assertEquals(1, suggestions.size)
-                assertTrue(suggestions[0].icon?.invoke(20, 20)?.sameAs(paramIcon)!!)
+                assertTrue(suggestions[0].icon?.sameAs(paramIcon)!!)
             } finally {
                 server.shutdown()
             }

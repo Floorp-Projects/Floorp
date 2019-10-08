@@ -84,7 +84,7 @@ interface AwesomeBar {
         val id: String = UUID.randomUUID().toString(),
         val title: String? = null,
         val description: String? = null,
-        val icon: (suspend (width: Int, height: Int) -> Bitmap?)? = null,
+        val icon: Bitmap? = null,
         val chips: List<Chip> = emptyList(),
         val flags: Set<Flag> = emptySet(),
         val onSuggestionClicked: (() -> Unit)? = null,
