@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - build
+    - lint
     - test
 
 transforms:
