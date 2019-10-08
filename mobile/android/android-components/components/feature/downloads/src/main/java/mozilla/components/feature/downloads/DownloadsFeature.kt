@@ -107,7 +107,7 @@ class DownloadsFeature(
      */
     private fun processDownload(tab: SessionState, download: DownloadState): Boolean {
         return if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
-            if (fragmentManager != null) {
+            if (fragmentManager != null && !download.skipConfirmation) {
                 showDialog(tab, download)
                 false
             } else {
