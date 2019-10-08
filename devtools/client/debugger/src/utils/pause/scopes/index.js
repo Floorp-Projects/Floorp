@@ -16,7 +16,7 @@ export type NamedValue = {
 };
 
 export function getScopes(
-  why: Why,
+  why: ?Why,
   selectedFrame: Frame,
   frameScopes: ?RenderableScope
 ): ?(NamedValue[]) {

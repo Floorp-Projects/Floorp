@@ -31,6 +31,7 @@ const isMacOS = appinfo.OS === "Darwin";
 // NOTE: the "resume" command will call either the resume or breakOnNext action
 // depending on whether or not the debugger is paused or running
 const COMMANDS = ["resume", "stepOver", "stepIn", "stepOut"];
+type CommandActionType = "resume" | "stepOver" | "stepIn" | "stepOut";
 
 const KEYS = {
   WINNT: {
@@ -118,7 +119,7 @@ class CommandBar extends Component<Props> {
     }
   }
 
-  handleEvent(e, action) {
+  handleEvent(e: Event, action: CommandActionType) {
     const { cx } = this.props;
     e.preventDefault();
     e.stopPropagation();

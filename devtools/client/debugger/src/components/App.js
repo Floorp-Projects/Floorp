@@ -60,11 +60,11 @@ import QuickOpenModal from "./QuickOpenModal";
 import WhyPaused from "./SecondaryPanes/WhyPaused";
 
 type Props = {
-  selectedSource: Source,
+  selectedSource: ?Source,
   orientation: OrientationType,
   startPanelCollapsed: boolean,
   endPanelCollapsed: boolean,
-  activeSearch: ActiveSearchType,
+  activeSearch: ?ActiveSearchType,
   quickOpenEnabled: boolean,
   canRewind: boolean,
   setActiveSearch: typeof actions.setActiveSearch,
@@ -90,7 +90,7 @@ class App extends Component<Props, State> {
   onEscape: Function;
   onCommandSlash: Function;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       shortcutsModalEnabled: false,
@@ -145,7 +145,7 @@ class App extends Component<Props, State> {
     shortcuts.off("Escape", this.onEscape);
   }
 
-  onEscape = (_, e) => {
+  onEscape = (_: mixed, e: KeyboardEvent) => {
     const {
       activeSearch,
       closeActiveSearch,
@@ -179,7 +179,7 @@ class App extends Component<Props, State> {
   }
 
   toggleQuickOpenModal = (
-    _,
+    _: mixed,
     e: SyntheticEvent<HTMLElement>,
     query?: string
   ) => {
@@ -227,17 +227,9 @@ class App extends Component<Props, State> {
             startPanelCollapsed={startPanelCollapsed}
             endPanelCollapsed={endPanelCollapsed}
             horizontal={horizontal}
-            startPanelSize={startPanelSize}
-            endPanelSize={endPanelSize}
           />
-          <Editor
-            horizontal={horizontal}
-            startPanelSize={startPanelSize}
-            endPanelSize={endPanelSize}
-          />
-          {this.props.endPanelCollapsed ? (
-            <WhyPaused horizontal={horizontal} />
-          ) : null}
+          <Editor startPanelSize={startPanelSize} endPanelSize={endPanelSize} />
+          {this.props.endPanelCollapsed ? <WhyPaused /> : null}
           {!this.props.selectedSource ? (
             <WelcomeBox
               horizontal={horizontal}

@@ -66,7 +66,7 @@ type Props = {
   query: string,
   results: List<Result>,
   status: StatusType,
-  activeSearch: ActiveSearchType,
+  activeSearch: ?ActiveSearchType,
   closeProjectSearch: typeof actions.closeProjectSearch,
   searchSources: typeof actions.searchSources,
   clearSearch: typeof actions.clearSearch,

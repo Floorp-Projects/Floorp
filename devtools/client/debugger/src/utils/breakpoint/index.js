@@ -199,7 +199,7 @@ export function createPendingBreakpoint(bp: Breakpoint) {
 
 export function getSelectedText(
   breakpoint: Breakpoint,
-  selectedSource: Source
+  selectedSource: ?Source
 ) {
   return selectedSource && isGenerated(selectedSource)
     ? breakpoint.text

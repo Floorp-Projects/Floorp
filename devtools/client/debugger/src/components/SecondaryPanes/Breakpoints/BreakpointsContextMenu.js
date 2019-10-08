@@ -16,7 +16,7 @@ type Props = {
   cx: Context,
   breakpoint: Breakpoint,
   breakpoints: Breakpoint[],
-  selectedSource: Source,
+  selectedSource: ?Source,
   removeBreakpoint: typeof actions.removeBreakpoint,
   removeBreakpoints: typeof actions.removeBreakpoints,
   removeAllBreakpoints: typeof actions.removeAllBreakpoints,

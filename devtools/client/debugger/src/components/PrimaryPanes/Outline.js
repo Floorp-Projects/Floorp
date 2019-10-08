@@ -27,8 +27,9 @@ import "./Outline.css";
 import PreviewFunction from "../shared/PreviewFunction";
 import { uniq, sortBy } from "lodash";
 
+import type { Symbols } from "../../reducers/ast";
+
 import type {
-  SymbolDeclarations,
   SymbolDeclaration,
   FunctionDeclaration,
 } from "../../workers/parser";
@@ -36,7 +37,7 @@ import type { Source, Context, SourceLocation } from "../../types";
 
 type Props = {
   cx: Context,
-  symbols: SymbolDeclarations,
+  symbols: ?Symbols,
   selectedSource: ?Source,
   alphabetizeOutline: boolean,
   onAlphabetizeClick: Function,
@@ -104,7 +105,12 @@ export class Outline extends Component<Props, State> {
 
   setFocus(cursorPosition: SourceLocation) {
     const { symbols } = this.props;
-    const { classes, functions } = symbols;
+    let classes = [];
+    let functions = [];
+
+    if (symbols && !symbols.loading) {
+      ({ classes, functions } = symbols);
+    }
 
     // Find items that enclose the selected location
     const enclosedItems = [...functions, ...classes].filter(
@@ -224,14 +230,16 @@ export class Outline extends Component<Props, State> {
   }
 
   renderClassFunctions(klass: ?string, functions: FunctionDeclaration[]) {
-    if (klass == null || functions.length == 0) {
+    const { symbols } = this.props;
+
+    if (!symbols || symbols.loading || klass == null || functions.length == 0) {
       return null;
     }
 
     const { focusedItem } = this.state;
     const classFunc = functions.find(func => func.name === klass);
     const classFunctions = functions.filter(func => func.klass === klass);
-    const classInfo = this.props.symbols.classes.find(c => c.name === klass);
+    const classInfo = symbols.classes.find(c => c.name === klass);
 
     const item = classFunc || classInfo;
     const isFocused = focusedItem === item;

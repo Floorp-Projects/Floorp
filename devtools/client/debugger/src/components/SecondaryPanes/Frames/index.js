@@ -219,6 +219,9 @@ const mapStateToProps = state => ({
   frames: getCallStackFrames(state),
   frameworkGroupingOn: getFrameworkGroupingState(state),
   selectedFrame: getSelectedFrame(state, getCurrentThread(state)),
+  disableFrameTruncate: false,
+  disableContextMenu: false,
+  displayFullUrl: false,
 });
 
 export default connect(
@@ -227,9 +230,6 @@ export default connect(
     selectFrame: actions.selectFrame,
     toggleBlackBox: actions.toggleBlackBox,
     toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
-    disableFrameTruncate: false,
-    disableContextMenu: false,
-    displayFullUrl: false,
   }
 )(Frames);
 

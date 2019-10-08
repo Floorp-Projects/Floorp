@@ -21,7 +21,7 @@ const {
 } = utils;
 
 import actions from "../../../actions";
-import { getThreadContext, getPreview } from "../../../selectors";
+import { getThreadContext } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
 
@@ -296,7 +296,6 @@ export function removeHighlightForTargetSiblings(target: Element) {
 
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
-  preview: getPreview(state),
 });
 
 const {

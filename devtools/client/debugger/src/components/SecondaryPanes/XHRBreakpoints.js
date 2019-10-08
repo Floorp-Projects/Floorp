@@ -16,6 +16,7 @@ import { getXHRBreakpoints, shouldPauseOnAnyXHR } from "../../selectors";
 import ExceptionOption from "./Breakpoints/ExceptionOption";
 
 import type { XHRBreakpointsList } from "../../reducers/types";
+import type { XHRBreakpoint } from "../../types";
 
 type Props = {
   xhrBreakpoints: XHRBreakpointsList,
@@ -82,7 +83,7 @@ class XHRBreakpoints extends Component<Props, State> {
     }
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps: Props, prevState: State) {
     const input = this._input;
 
     if (!input) {
@@ -167,28 +168,28 @@ class XHRBreakpoints extends Component<Props, State> {
     this.setState({ focused: true, editing: true });
   };
 
-  onMouseDown = e => {
+  onMouseDown = (e: SyntheticEvent<HTMLElement>) => {
     this.setState({ editing: false, clickedOnFormElement: true });
   };
 
-  handleTab = e => {
+  handleTab = (e: SyntheticKeyboardEvent<HTMLElement>) => {
     if (e.key !== "Tab") {
       return;
     }
 
-    if (e.target.nodeName === "INPUT") {
+    if (e.currentTarget.nodeName === "INPUT") {
       this.setState({
         clickedOnFormElement: true,
         editing: false,
       });
-    } else if (e.target.nodeName === "SELECT" && !e.shiftKey) {
+    } else if (e.currentTarget.nodeName === "SELECT" && !e.shiftKey) {
       // The user has tabbed off the select and we should
       // cancel the edit
       this.hideInput();
     }
   };
 
-  editExpression = index => {
+  editExpression = (index: number) => {
     const { xhrBreakpoints } = this.props;
     const { path, method } = xhrBreakpoints[index];
     this.setState({
@@ -199,7 +200,7 @@ class XHRBreakpoints extends Component<Props, State> {
     });
   };
 
-  renderXHRInput(onSubmit) {
+  renderXHRInput(onSubmit: (e: SyntheticEvent<HTMLFormElement>) => void) {
     const { focused, inputValue } = this.state;
     const placeholder = L10N.getStr("xhrBreakpoints.placeholder");
 
@@ -227,7 +228,7 @@ class XHRBreakpoints extends Component<Props, State> {
     );
   }
 
-  handleCheckbox = index => {
+  handleCheckbox = (index: number) => {
     const {
       xhrBreakpoints,
       enableXHRBreakpoint,
@@ -241,7 +242,7 @@ class XHRBreakpoints extends Component<Props, State> {
     }
   };
 
-  renderBreakpoint = breakpoint => {
+  renderBreakpoint = (breakpoint: XHRBreakpoint) => {
     const { path, disabled, method } = breakpoint;
     const { editIndex } = this.state;
     const { removeXHRBreakpoint, xhrBreakpoints } = this.props;
@@ -318,7 +319,7 @@ class XHRBreakpoints extends Component<Props, State> {
     );
   };
 
-  renderMethodOption = method => {
+  renderMethodOption = (method: string) => {
     return (
       <option
         key={method}

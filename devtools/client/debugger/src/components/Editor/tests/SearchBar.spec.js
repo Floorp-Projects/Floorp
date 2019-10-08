@@ -21,7 +21,7 @@ jest.mock("../../../utils/editor", () => ({
   find: () => ({ ch: "1", line: "1" }),
 }));
 
-function generateDefaults() {
+function generateDefaults(): any {
   return {
     query: "",
     searchOn: true,

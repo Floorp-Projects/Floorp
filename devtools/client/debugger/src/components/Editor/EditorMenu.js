@@ -37,8 +37,6 @@ type Props = {
 };
 
 class EditorMenu extends Component<Props> {
-  props: Props;
-
   componentWillUpdate(nextProps: Props) {
     this.props.clearContextMenu();
     if (nextProps.contextMenu) {
@@ -46,7 +44,7 @@ class EditorMenu extends Component<Props> {
     }
   }
 
-  showMenu(props) {
+  showMenu(props: Props) {
     const {
       cx,
       editor,
