@@ -14,6 +14,7 @@ import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
+import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
@@ -84,6 +85,7 @@ class AwesomeBarView(
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
+    private var providersInUse = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
         override fun invoke(url: String, flags: EngineSession.LoadUrlFlags) {
@@ -110,6 +112,8 @@ class AwesomeBarView(
     }
 
     init {
+        view.itemAnimator = null
+
         with(container.context) {
             val primaryTextColor = getColorFromAttr(R.attr.primaryText)
 
@@ -164,22 +168,41 @@ class AwesomeBarView(
 
     @SuppressWarnings("ComplexMethod")
     fun update(state: SearchFragmentState) {
-        view.removeAllProviders()
-
         // Do not make suggestions based on user's current URL
         if (state.query == state.session?.url) {
             return
         }
 
-        // Only show the shortcutEnginePicker by itself
+        updateSuggestionProvidersVisibility(state)
+
+        view.onInputChanged(state.query)
+    }
+
+    @Suppress("ComplexMethod")
+    private fun updateSuggestionProvidersVisibility(state: SearchFragmentState) {
+        val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
+        val providersToRemove = mutableSetOf<AwesomeBar.SuggestionProvider>()
+
         if (state.showSearchShortcuts) {
-            view.addProviders(shortcutsEnginePickerProvider)
-            view.onInputChanged(state.query)
-            return
+            providersToAdd.add(shortcutsEnginePickerProvider)
+        } else {
+            providersToRemove.add(shortcutsEnginePickerProvider)
+        }
+
+        if (state.showHistorySuggestions) {
+            providersToAdd.add(historyStorageProvider)
+        } else {
+            providersToRemove.add(historyStorageProvider)
+        }
+
+        if (state.showBookmarkSuggestions) {
+            providersToAdd.add(bookmarksStorageSuggestionProvider)
+        } else {
+            providersToRemove.add(bookmarksStorageSuggestionProvider)
         }
 
         if (state.showSearchSuggestions) {
-            view.addProviders(
+            providersToAdd.add(
                 when (state.searchEngineSource) {
                     is SearchEngineSource.Default -> defaultSearchSuggestionProvider
                     is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
@@ -187,21 +210,34 @@ class AwesomeBarView(
                     )
                 }
             )
-        }
-
-        if (state.showHistorySuggestions) {
-            view.addProviders(historyStorageProvider)
-        }
-
-        if (state.showBookmarkSuggestions) {
-            view.addProviders(bookmarksStorageSuggestionProvider)
+        } else {
+            providersToRemove.add(when (state.searchEngineSource) {
+                is SearchEngineSource.Default -> defaultSearchSuggestionProvider
+                is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
+                    state.searchEngineSource.searchEngine
+                )
+            })
         }
 
         if ((container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == false) {
-            view.addProviders(sessionProvider)
+            providersToAdd.add(sessionProvider)
+        } else {
+            providersToRemove.add(sessionProvider)
         }
 
-        view.onInputChanged(state.query)
+        for (provider in providersToAdd) {
+            if (providersInUse.find { it.id == provider.id } == null) {
+                providersInUse.add(provider)
+                view.addProviders(provider)
+            }
+        }
+
+        for (provider in providersToRemove) {
+            if (providersInUse.find { it.id == provider.id } != null) {
+                providersInUse.remove(provider)
+                view.removeProviders(provider)
+            }
+        }
     }
 
     private fun createSuggestionProviderForEngine(engine: SearchEngine): SearchSuggestionProvider {

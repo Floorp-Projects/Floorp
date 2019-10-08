@@ -38,9 +38,7 @@ class ShortcutsSuggestionProvider(
                 AwesomeBar.Suggestion(
                     provider = this,
                     id = it.identifier,
-                    icon = { _, _ ->
-                        it.icon
-                    },
+                    icon = it.icon,
                     title = it.name,
                     onSuggestionClicked = {
                         selectShortcutEngine(it)
@@ -52,7 +50,7 @@ class ShortcutsSuggestionProvider(
             AwesomeBar.Suggestion(
                 provider = this,
                 id = context.getString(R.string.search_shortcuts_engine_settings),
-                icon = { _, _ -> settingsIcon },
+                icon = settingsIcon,
                 title = context.getString(R.string.search_shortcuts_engine_settings),
                 onSuggestionClicked = {
                     selectShortcutEngineSettings()
