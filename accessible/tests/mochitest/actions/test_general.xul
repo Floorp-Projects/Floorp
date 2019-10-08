@@ -7,6 +7,7 @@
 
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="nsIAccessible actions testing">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -156,7 +157,7 @@
              tabindex="0"/>
       <hbox>
         <label id="name_entry_label" value="Name" control="name_entry"/>
-        <textbox id="name_entry"/>
+        <html:input id="name_entry"/>
       </hbox>
       <toolbarbutton id="toolbarbutton">
         <label id="toolbarbutton_label">toolbarbutton</label>

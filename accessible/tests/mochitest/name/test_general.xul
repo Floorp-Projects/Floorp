@@ -7,6 +7,7 @@
 
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="Accessibility Name Calculating Test.">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -231,8 +232,8 @@
   <checkbox id="rememberHistoryDays"
             label="Remember "
             aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
-  <textbox id="historyDays" value="3"
-           aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
+  <html:input id="historyDays" value="3"
+              aria-labelledby="rememberHistoryDays historyDays rememberAfter"/>
   <label id="rememberAfter">days</label>
 
   <!-- the name from subtree, mixed content -->
