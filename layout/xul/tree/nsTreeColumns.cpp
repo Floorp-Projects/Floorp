@@ -177,15 +177,12 @@ void nsTreeColumn::Invalidate(ErrorResult& aRv) {
 
   // Figure out our column type. Default type is text.
   mType = TreeColumn_Binding::TYPE_TEXT;
-  static Element::AttrValuesArray typestrings[] = {
-      nsGkAtoms::checkbox, nsGkAtoms::password, nullptr};
+  static Element::AttrValuesArray typestrings[] = {nsGkAtoms::checkbox,
+                                                   nullptr};
   switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                     typestrings, eCaseMatters)) {
     case 0:
       mType = TreeColumn_Binding::TYPE_CHECKBOX;
-      break;
-    case 1:
-      mType = TreeColumn_Binding::TYPE_PASSWORD;
       break;
   }
 
