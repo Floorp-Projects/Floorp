@@ -8,6 +8,7 @@
 
 #include "CompositorWidget.h"
 #include "gfxASurface.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/Mutex.h"
@@ -109,6 +110,8 @@ class WinCompositorWidget : public CompositorWidget,
   bool HasFxrOutputHandler() const { return mFxrHandler != nullptr; }
   FxROutputHandler* GetFxrOutputHandler() const { return mFxrHandler.get(); }
 
+  bool HasGlass() const;
+
  protected:
  private:
   HDC GetWindowSurface();
@@ -127,7 +130,8 @@ class WinCompositorWidget : public CompositorWidget,
 
   // Transparency handling.
   mozilla::Mutex mTransparentSurfaceLock;
-  nsTransparencyMode mTransparencyMode;
+  mozilla::Atomic<nsTransparencyMode, MemoryOrdering::Relaxed>
+      mTransparencyMode;
   RefPtr<gfxASurface> mTransparentSurface;
   HDC mMemoryDC;
   HDC mCompositeDC;

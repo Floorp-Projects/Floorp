@@ -453,6 +453,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
     WriteParam(aMsg, aParam.mSupportsTextureDirectMapping);
     WriteParam(aMsg, aParam.mCompositorUseANGLE);
     WriteParam(aMsg, aParam.mCompositorUseDComp);
+    WriteParam(aMsg, aParam.mUseCompositorWnd);
     WriteParam(aMsg, aParam.mSupportsTextureBlitting);
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
     WriteParam(aMsg, aParam.mSupportsComponentAlpha);
@@ -469,6 +470,7 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
         ReadParam(aMsg, aIter, &aResult->mSupportsTextureDirectMapping) &&
         ReadParam(aMsg, aIter, &aResult->mCompositorUseANGLE) &&
         ReadParam(aMsg, aIter, &aResult->mCompositorUseDComp) &&
+        ReadParam(aMsg, aIter, &aResult->mUseCompositorWnd) &&
         ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
         ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
         ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
