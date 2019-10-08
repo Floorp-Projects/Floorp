@@ -3,6 +3,7 @@
 
 <window title="Add and remove dictionaries test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="RunTest();">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
@@ -122,5 +123,5 @@ function RunTest() {
 }
   ]]>
   </script>
-  <textbox id="textbox" spellcheck="true" value="created imply Frühstück tomorrow qwertyu"/>
+  <html:input id="textbox" spellcheck="true" value="created imply Frühstück tomorrow qwertyu"/>
 </window>
