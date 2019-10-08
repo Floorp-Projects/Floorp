@@ -35,6 +35,9 @@ type State = {
   alphabetizeOutline: boolean,
 };
 
+type OwnProps = {|
+  horizontal: boolean,
+|};
 type Props = {
   cx: Context,
   selectedTab: SelectedPrimaryPaneTabType,
@@ -172,7 +175,7 @@ const mapStateToProps = state => ({
   projectRoot: getProjectDirectoryRoot(state),
 });
 
-const connector = connect(
+const connector = connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     setPrimaryPaneTab: actions.setPrimaryPaneTab,

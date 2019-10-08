@@ -25,6 +25,12 @@ import type { SourceWithContent, ThreadContext } from "../../types";
 import type { EditorItemActions } from "./menus/editor";
 import type SourceEditor from "../../utils/editor/source-editor";
 
+type OwnProps = {|
+  selectedSource: SourceWithContent,
+  contextMenu: ?MouseEvent,
+  clearContextMenu: () => void,
+  editor: SourceEditor,
+|};
 type Props = {
   cx: ThreadContext,
   contextMenu: ?MouseEvent,
@@ -96,7 +102,7 @@ const mapDispatchToProps = dispatch => ({
   editorActions: editorItemActions(dispatch),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   mapDispatchToProps
 )(EditorMenu);

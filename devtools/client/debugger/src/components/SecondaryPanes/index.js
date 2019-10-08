@@ -85,6 +85,10 @@ type State = {
   showXHRInput: boolean,
 };
 
+type OwnProps = {|
+  horizontal: boolean,
+  toggleShortcutsModal: () => void,
+|};
 type Props = {
   cx: ThreadContext,
   expressions: List<Expression>,
@@ -569,7 +573,7 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     toggleAllBreakpoints: actions.toggleAllBreakpoints,

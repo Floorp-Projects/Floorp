@@ -8,6 +8,9 @@ import { range, isEmpty } from "lodash";
 import { connect } from "../../utils/connect";
 import { getHighlightedLineRange } from "../../selectors";
 
+type OwnProps = {|
+  editor: Object,
+|};
 type Props = {
   highlightedLineRange: Object,
   editor: Object,
@@ -74,6 +77,6 @@ class HighlightLines extends Component<Props> {
   }
 }
 
-export default connect(state => ({
+export default connect<Props, OwnProps, _, _, _, _>(state => ({
   highlightedLineRange: getHighlightedLineRange(state),
 }))(HighlightLines);

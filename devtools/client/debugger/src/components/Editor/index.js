@@ -95,6 +95,10 @@ const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
 };
 
+type OwnProps = {|
+  startPanelSize: number,
+  endPanelSize: number,
+|};
 export type Props = {
   cx: ThreadContext,
   selectedLocation: ?SourceLocation,
@@ -712,7 +716,7 @@ const mapDispatchToProps = dispatch => ({
   editorActions: editorItemActions(dispatch),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   mapDispatchToProps
 )(Editor);

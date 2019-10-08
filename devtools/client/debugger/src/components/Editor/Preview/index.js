@@ -16,6 +16,10 @@ import type { ThreadContext } from "../../../types";
 
 import type { Preview as PreviewType } from "../../../reducers/types";
 
+type OwnProps = {|
+  editor: any,
+  editorRef: ?HTMLDivElement,
+|};
 type Props = {
   cx: ThreadContext,
   editor: any,
@@ -109,7 +113,7 @@ const mapStateToProps = state => ({
   preview: getPreview(state),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     clearPreview: actions.clearPreview,

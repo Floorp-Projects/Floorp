@@ -35,6 +35,10 @@ import type {
 } from "../../workers/parser";
 import type { Source, Context, SourceLocation } from "../../types";
 
+type OwnProps = {|
+  alphabetizeOutline: boolean,
+  onAlphabetizeClick: Function,
+|};
 type Props = {
   cx: Context,
   symbols: ?Symbols,
@@ -365,7 +369,7 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     selectLocation: actions.selectLocation,

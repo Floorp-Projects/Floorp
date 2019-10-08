@@ -33,6 +33,11 @@ import type { Source, Context } from "../../types";
 
 type SourcesList = Source[];
 
+type OwnProps = {|
+  horizontal: boolean,
+  startPanelCollapsed: boolean,
+  endPanelCollapsed: boolean,
+|};
 type Props = {
   cx: Context,
   tabSources: SourcesList,
@@ -234,7 +239,7 @@ const mapStateToProps = state => ({
   isPaused: getIsPaused(state, getCurrentThread(state)),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     selectSource: actions.selectSource,

@@ -32,6 +32,11 @@ import "./Popup.css";
 import type { ThreadContext } from "../../../types";
 import type { Preview } from "../../../reducers/types";
 
+type OwnProps = {|
+  editor: any,
+  preview: Preview,
+  editorRef: ?HTMLDivElement,
+|};
 type Props = {
   cx: ThreadContext,
   preview: Preview,
@@ -318,7 +323,7 @@ const mapDispatchToProps = {
   clearPreview,
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   mapDispatchToProps
 )(Popup);

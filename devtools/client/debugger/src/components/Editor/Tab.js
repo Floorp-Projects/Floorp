@@ -39,6 +39,9 @@ import type { ActiveSearchType } from "../../selectors";
 
 import classnames from "classnames";
 
+type OwnProps = {|
+  source: Source,
+|};
 type Props = {
   cx: Context,
   tabSources: Source[],
@@ -248,7 +251,7 @@ const mapStateToProps = (state, { source }) => {
   };
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     selectSource: actions.selectSource,

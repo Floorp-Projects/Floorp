@@ -17,6 +17,9 @@ import type { Grip, Why } from "../../types";
 
 import "./WhyPaused.css";
 
+type OwnProps = {|
+  +delay?: number,
+|};
 type Props = {
   endPanelCollapsed: boolean,
   +delay: ?number,
@@ -102,4 +105,4 @@ const mapStateToProps = state => ({
   why: getWhy(state, getCurrentThread(state)),
 });
 
-export default connect(mapStateToProps)(WhyPaused);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(WhyPaused);

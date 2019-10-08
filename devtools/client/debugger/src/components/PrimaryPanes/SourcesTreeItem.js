@@ -39,6 +39,20 @@ import { isFulfilled } from "../../utils/async-value";
 import type { TreeNode } from "../../utils/sources-tree/types";
 import type { Source, Context, Thread, SourceContent } from "../../types";
 
+type OwnProps = {|
+  item: TreeNode,
+  threads: Thread[],
+  depth: number,
+  focused: boolean,
+  autoExpand: ?boolean,
+  expanded: boolean,
+  focusItem: TreeNode => void,
+  selectItem: TreeNode => void,
+  source: ?Source,
+  debuggeeUrl: string,
+  projectRoot: string,
+  setExpanded: (TreeNode, boolean, boolean) => void,
+|};
 type Props = {
   source: ?Source,
   item: TreeNode,
@@ -368,7 +382,7 @@ function isExtensionDirectory(depth, extensionName) {
   return extensionName && depth === 1;
 }
 
-const mapStateToProps = (state, props) => {
+const mapStateToProps = (state, props: OwnProps) => {
   const { source, item } = props;
   return {
     cx: getContext(state),
@@ -376,9 +390,7 @@ const mapStateToProps = (state, props) => {
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
     hasPrettySource: source ? checkHasPrettySource(state, source.id) : false,
-    sourceContent: source
-      ? (getSourceContentValue(state, source): ?SourceContent)
-      : null,
+    sourceContent: source ? getSourceContentValue(state, source) : null,
     extensionName:
       (isUrlExtension(item.name) &&
         getExtensionNameBySourceUrl(state, item.name)) ||
@@ -386,7 +398,7 @@ const mapStateToProps = (state, props) => {
   };
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     setProjectDirectoryRoot: actions.setProjectDirectoryRoot,

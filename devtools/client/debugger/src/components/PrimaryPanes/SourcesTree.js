@@ -55,6 +55,9 @@ import type {
 } from "../../reducers/types";
 import type { Item } from "../shared/ManagedTree";
 
+type OwnProps = {|
+  threads: Thread[],
+|};
 type Props = {
   cx: Context,
   threads: Thread[],
@@ -364,7 +367,7 @@ const mapStateToProps = (state, props) => {
   };
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     selectSource: actions.selectSource,

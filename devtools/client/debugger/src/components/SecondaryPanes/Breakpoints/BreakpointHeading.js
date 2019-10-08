@@ -23,6 +23,10 @@ import SourceIcon from "../../shared/SourceIcon";
 import type { Source, Breakpoint, Context } from "../../../types";
 import showContextMenu from "./BreakpointHeadingsContextMenu";
 
+type OwnProps = {|
+  sources: Source[],
+  source: Source,
+|};
 type Props = {
   cx: Context,
   sources: Source[],
@@ -78,7 +82,7 @@ const mapStateToProps = (state, { source }) => ({
   breakpointsForSource: getBreakpointsForSource(state, source.id),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     selectSource: actions.selectSource,
