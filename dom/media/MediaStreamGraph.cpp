@@ -958,6 +958,15 @@ void MediaStreamGraphImpl::DeviceChanged() {
     MediaStreamGraphImpl* mGraphImpl;
   };
 
+  if (mMainThreadStreamCount == 0 && mMainThreadPortCount == 0) {
+    // This is a special case where the origin of this event cannot control the
+    // lifetime of the graph, because the graph is controling the lifetime of
+    // the AudioCallbackDriver where the event originated.
+    // We know the graph is soon going away, so there's no need to notify about
+    // this device change.
+    return;
+  }
+
   // Reset the latency, it will get fetched again next time it's queried.
   MOZ_ASSERT(NS_IsMainThread());
   mAudioOutputLatency = 0.0;
