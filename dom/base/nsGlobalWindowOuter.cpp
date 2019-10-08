@@ -177,9 +177,11 @@
 
 #include "nsIDOMXULCommandDispatcher.h"
 
-#include "nsBindingManager.h"
-#include "nsXBLService.h"
 #include "mozilla/GlobalKeyListener.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#  include "nsXBLService.h"
+#endif
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"

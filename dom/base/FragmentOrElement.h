@@ -21,7 +21,9 @@
 #include "nsNodeUtils.h"  // class member nsNodeUtils::CloneNodeImpl
 #include "nsIHTMLCollection.h"
 #include "nsDataHashtable.h"
-#include "nsXBLBinding.h"
+#ifdef MOZ_XBL
+#  include "nsXBLBinding.h"
+#endif
 
 class ContentUnbinder;
 class nsContentList;
@@ -100,7 +102,9 @@ class FragmentOrElement : public nsIContent {
   virtual uint32_t TextLength() const override;
   virtual bool TextIsOnlyWhitespace() override;
   virtual bool ThreadSafeTextIsOnlyWhitespace() const override;
+#ifdef MOZ_XBL
   virtual nsXBLBinding* DoGetXBLBinding() const override;
+#endif
   virtual bool IsLink(nsIURI** aURI) const override;
 
   virtual void DestroyContent() override;
@@ -193,10 +197,12 @@ class FragmentOrElement : public nsIContent {
      */
     RefPtr<ShadowRoot> mShadowRoot;
 
+#ifdef MOZ_XBL
     /**
      * XBL binding installed on the element.
      */
     RefPtr<nsXBLBinding> mXBLBinding;
+#endif
 
     /**
      * Web components custom element data.

@@ -39,7 +39,6 @@
 #include "mozilla/dom/L10nOverlays.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsAttrValueOrString.h"
-#include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
@@ -90,8 +89,11 @@
 #include "nsSVGUtils.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
-#include "nsXBLBinding.h"
-#include "nsXBLPrototypeBinding.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#  include "nsXBLBinding.h"
+#  include "nsXBLPrototypeBinding.h"
+#endif
 #include "nsWindowSizes.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"

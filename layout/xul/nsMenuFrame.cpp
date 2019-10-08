@@ -20,7 +20,9 @@
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
-#include "nsBindingManager.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#endif
 #include "nsIServiceManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsString.h"

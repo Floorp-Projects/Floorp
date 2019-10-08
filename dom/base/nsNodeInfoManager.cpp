@@ -25,7 +25,9 @@
 #include "nsGkAtoms.h"
 #include "nsComponentManagerUtils.h"
 #include "nsLayoutStatics.h"
-#include "nsBindingManager.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#endif
 #include "nsHashKeys.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsNameSpaceManager.h"
@@ -58,7 +60,9 @@ nsNodeInfoManager::~nsNodeInfoManager() {
   // Note: mPrincipal may be null here if we never got inited correctly
   mPrincipal = nullptr;
 
+#ifdef MOZ_XBL
   mBindingManager = nullptr;
+#endif
 
   if (gNodeInfoManagerLeakPRLog)
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
@@ -74,7 +78,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNodeInfoManager)
   if (tmp->mNonDocumentNodeInfos) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDocument)
   }
+#ifdef MOZ_XBL
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBindingManager)
+#endif
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfoManager, AddRef)
@@ -106,9 +112,11 @@ nsresult nsNodeInfoManager::Init(mozilla::dom::Document* aDocument) {
 
   mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
 
+#ifdef MOZ_XBL
   if (aDocument) {
     mBindingManager = new nsBindingManager(aDocument);
   }
+#endif
 
   mDefaultPrincipal = mPrincipal;
 
@@ -122,9 +130,11 @@ nsresult nsNodeInfoManager::Init(mozilla::dom::Document* aDocument) {
 }
 
 void nsNodeInfoManager::DropDocumentReference() {
+#ifdef MOZ_XBL
   if (mBindingManager) {
     mBindingManager->DropDocumentReference();
   }
+#endif
 
   // This is probably not needed anymore.
   for (auto iter = mNodeInfoHash.Iter(); !iter.Done(); iter.Next()) {
@@ -367,10 +377,12 @@ bool nsNodeInfoManager::InternalMathMLEnabled() {
 void nsNodeInfoManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   aSizes.mDOMOtherSize += aSizes.mState.mMallocSizeOf(this);
 
+#ifdef MOZ_XBL
   if (mBindingManager) {
     aSizes.mBindingsSize +=
         mBindingManager->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
+#endif
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:

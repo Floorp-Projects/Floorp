@@ -183,8 +183,10 @@
 #include "nsNetCID.h"
 #include "nsIArray.h"
 
-#include "nsBindingManager.h"
-#include "nsXBLService.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#  include "nsXBLService.h"
+#endif
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
@@ -2007,11 +2009,13 @@ nsresult nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         break;
       }
     }
+#ifdef MOZ_XBL
     // Execute bindingdetached handlers before we tear ourselves
     // down.
     if (mDoc) {
       mDoc->BindingManager()->ExecuteDetachedHandlers();
     }
+#endif
     mIsDocumentLoaded = false;
   } else if (aVisitor.mEvent->mMessage == eLoad &&
              aVisitor.mEvent->IsTrusted()) {

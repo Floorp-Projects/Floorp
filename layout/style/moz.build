@@ -239,10 +239,12 @@ LOCAL_INCLUDES += [
     '../xul',
     '/dom/base',
     '/dom/html',
-    '/dom/xbl',
     '/dom/xul',
     '/image',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 JAR_MANIFESTS += ['jar.mn']
 

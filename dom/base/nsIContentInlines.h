@@ -9,7 +9,9 @@
 
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
-#include "nsBindingManager.h"
+#ifdef MOZ_XBL
+#  include "nsBindingManager.h"
+#endif
 #include "nsContentUtils.h"
 #include "nsAtom.h"
 #include "nsIFrame.h"
@@ -118,6 +120,7 @@ static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
     }
   }
 
+#ifdef MOZ_XBL
   if (content->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) ||
       parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
     if (nsIContent* xblInsertionPoint = content->GetXBLInsertionPoint()) {
@@ -131,6 +134,7 @@ static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
       return nullptr;
     }
   }
+#endif
 
   MOZ_ASSERT(!parentAsContent->IsActiveChildrenElement(),
              "<xbl:children> isn't in the flattened tree");

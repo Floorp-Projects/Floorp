@@ -17,10 +17,12 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
-#include "nsXBLBinding.h"
-#include "nsXBLPrototypeBinding.h"
+#ifdef MOZ_XBL
+#  include "nsXBLBinding.h"
+#  include "nsBindingManager.h"
+#  include "nsXBLPrototypeBinding.h"
+#endif
 #include "nsIMutableArray.h"
-#include "nsBindingManager.h"
 #include "ChildIterator.h"
 #include "nsComputedDOMStyle.h"
 #include "mozilla/EventStateManager.h"
@@ -522,6 +524,7 @@ bool InspectorUtils::IsValidCSSColor(GlobalObject& aGlobalObject,
 void InspectorUtils::GetBindingURLs(GlobalObject& aGlobalObject,
                                     Element& aElement,
                                     nsTArray<nsString>& aResult) {
+#ifdef MOZ_XBL
   nsXBLBinding* binding = aElement.GetXBLBinding();
 
   while (binding) {
@@ -532,6 +535,7 @@ void InspectorUtils::GetBindingURLs(GlobalObject& aGlobalObject,
     CopyASCIItoUTF16(spec, *resultURI);
     binding = binding->GetBaseBinding();
   }
+#endif
 }
 
 /* static */

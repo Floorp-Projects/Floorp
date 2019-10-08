@@ -42,7 +42,6 @@ LOCAL_INCLUDES += [
     '/dom/offline',
     '/dom/storage',
     '/dom/svg',
-    '/dom/xbl',
     '/dom/xslt/base',
     '/dom/xslt/xml',
     '/dom/xslt/xpath',
@@ -56,6 +55,9 @@ LOCAL_INCLUDES += [
     '/netwerk/cookie',
     '/view',
 ]
+
+if CONFIG['MOZ_XBL']:
+    LOCAL_INCLUDES += ['/dom/xbl']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
