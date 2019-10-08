@@ -161,6 +161,48 @@ const kBuiltInInputs = {
     type: kInputTypes.SCRUBBER,
     callback: () => execCommand("cmd_share", "Share"),
   },
+  SearchPopover: {
+    title: "search-popover",
+    image: "chrome://browser/skin/search-glass.svg",
+    type: kInputTypes.POPOVER,
+    children: {
+      SearchScrollViewLabel: {
+        title: "search-search-in",
+        type: kInputTypes.LABEL,
+      },
+      SearchScrollView: {
+        key: "search-scrollview",
+        type: kInputTypes.SCROLLVIEW,
+        children: {
+          Bookmarks: {
+            title: "search-bookmarks",
+            type: kInputTypes.BUTTON,
+            callback: () => console.log("Bookmarks success!"), // FIXME: Bug 1563351
+          },
+          History: {
+            title: "search-history",
+            type: kInputTypes.BUTTON,
+            callback: () => console.log("History success!"), // FIXME: Bug 1563351
+          },
+          OpenTabs: {
+            title: "search-opentabs",
+            type: kInputTypes.BUTTON,
+            callback: () => console.log("Open Tabs success!"), // FIXME: Bug 1563351
+          },
+          Tags: {
+            title: "search-tags",
+            type: kInputTypes.BUTTON,
+            callback: () => console.log("Tags success!"), // FIXME: Bug 1563351
+          },
+          Titles: {
+            title: "search-titles",
+            type: kInputTypes.BUTTON,
+            callback: () => console.log("Titles success!"), // FIXME: Bug 1563351
+          },
+        },
+      },
+    },
+  },
 };
 
 const kHelperObservers = new Set([
@@ -182,9 +224,13 @@ class TouchBarHelper {
     for (let topic of kHelperObservers) {
       Services.obs.addObserver(this, topic);
     }
+    // We cache our search popover since otherwise it is frequently
+    // created/destroyed for the urlbar-focus/blur events.
+    this._searchPopover = this.getTouchBarInput("SearchPopover");
   }
 
   destructor() {
+    this._searchPopover = null;
     for (let topic of kHelperObservers) {
       Services.obs.removeObserver(this, topic);
     }
@@ -222,6 +268,10 @@ class TouchBarHelper {
     return BrowserWindowTracker.getTopWindow();
   }
 
+  get isUrlbarFocused() {
+    return TouchBarHelper.window.gURLBar.focused;
+  }
+
   static get baseWindow() {
     return TouchBarHelper.window.docShell.treeOwner.QueryInterface(
       Ci.nsIBaseWindow
@@ -229,6 +279,10 @@ class TouchBarHelper {
   }
 
   getTouchBarInput(inputName) {
+    if (inputName == "SearchPopover" && this._searchPopover) {
+      return this._searchPopover;
+    }
+
     // inputName might be undefined if an input's context() returns undefined.
     if (!inputName || !kBuiltInInputs.hasOwnProperty(inputName)) {
       return null;
@@ -320,8 +374,29 @@ class TouchBarHelper {
         kBuiltInInputs.ReaderView.disabled = false;
         this._updateTouchBarInputs("ReaderView");
         break;
+      case "urlbar-focus":
+        if (!this._searchPopover) {
+          this._searchPopover = this.getTouchBarInput("SearchPopover");
+        }
+        gTouchBarUpdater.showPopover(
+          TouchBarHelper.baseWindow,
+          this._searchPopover,
+          true
+        );
+        break;
+      case "urlbar-blur":
+        if (!this._searchPopover) {
+          this._searchPopover = this.getTouchBarInput("SearchPopover");
+        }
+        gTouchBarUpdater.showPopover(
+          TouchBarHelper.baseWindow,
+          this._searchPopover,
+          false
+        );
+        break;
       case "intl:app-locales-changed":
         // On locale change, refresh all inputs after loading new localTitle.
+        this._searchPopover = null;
         for (let input in kBuiltInInputs) {
           delete input.localTitle;
         }
