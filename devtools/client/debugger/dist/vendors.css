@@ -132,6 +132,7 @@ menuitem {
   line-height: 20px;
   font-weight: 500;
   font-size: 13px;
+  -moz-user-select: none;
   user-select: none;
 }
 
