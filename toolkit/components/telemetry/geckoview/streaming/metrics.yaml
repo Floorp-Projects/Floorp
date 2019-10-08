@@ -18,9 +18,9 @@ gfx:
       On non-webrender this is the time taken in `CompositorBridgeParent::CompositeToTarget()`.
       On webrender, this is the time taken from the start of `WebRenderBridgeParent::CompositeToTarget()`, until the render thread has rendered the frame (in `RenderThread::HandleFrameOneDoc()`).
     bugs:
-      - 1080160
-      - 1529352
-      - 1580129
+      - https://bugzilla.mozilla.org/1080160
+      - https://bugzilla.mozilla.org/1529352
+      - https://bugzilla.mozilla.org/1580129
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1580129#c7
     notification_emails:
