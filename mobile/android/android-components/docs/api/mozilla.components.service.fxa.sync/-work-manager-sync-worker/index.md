@@ -2,7 +2,7 @@
 
 # WorkManagerSyncWorker
 
-`class WorkManagerSyncWorker : CoroutineWorker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/WorkManagerSyncManager.kt#L250)
+`class WorkManagerSyncWorker : CoroutineWorker` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sync/WorkManagerSyncManager.kt#L262)
 
 ### Constructors
 

@@ -2,7 +2,7 @@
 
 # WebAppShortcutManager
 
-`class WebAppShortcutManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L42)
+`class WebAppShortcutManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L43)
 
 ### Constructors
 
@@ -14,7 +14,7 @@
 
 | Name | Summary |
 |---|---|
-| [buildBasicShortcut](build-basic-shortcut.md) | `fun buildBasicShortcut(context: <ERROR CLASS>, session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, overrideShortcutName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null): ShortcutInfoCompat`<br>Create a new basic pinned website shortcut using info from the session. |
+| [buildBasicShortcut](build-basic-shortcut.md) | `fun buildBasicShortcut(context: <ERROR CLASS>, session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, overrideShortcutName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null): ShortcutInfoCompat`<br>Create a new basic pinned website shortcut using info from the session. Consuming `SHORTCUT_CATEGORY` in `AndroidManifest` is required for the package to be launched |
 | [buildWebAppShortcut](build-web-app-shortcut.md) | `suspend fun buildWebAppShortcut(context: <ERROR CLASS>, manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`): ShortcutInfoCompat?`<br>Create a new Progressive Web App shortcut using a web app manifest. |
 | [findShortcut](find-shortcut.md) | `fun findShortcut(context: <ERROR CLASS>, startUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Nothing`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-nothing/index.html)`?`<br>Finds the shortcut associated with the given startUrl. This method can be used to check if a web app was added to the homescreen. |
 | [requestPinShortcut](request-pin-shortcut.md) | `suspend fun requestPinShortcut(context: <ERROR CLASS>, session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`, overrideShortcutName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Request to create a new shortcut on the home screen. |

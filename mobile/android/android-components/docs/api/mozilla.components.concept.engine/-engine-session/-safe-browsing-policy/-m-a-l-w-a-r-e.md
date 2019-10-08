@@ -2,7 +2,7 @@
 
 # MALWARE
 
-`MALWARE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L100)
+`MALWARE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L104)
 
 Blocks malware sites.
 
