@@ -105,6 +105,8 @@ policy-Homepage = Set and optionally lock the homepage.
 
 policy-InstallAddonsPermission = Allow certain websites to install add-ons.
 
+policy-LegacyProfiles = Disable the feature enforcing a separate profile for each installation
+
 policy-LocalFileLinks = Allow specific websites to link to local files.
 
 policy-NetworkPrediction = Enable or disable network prediction (DNS prefetching).
