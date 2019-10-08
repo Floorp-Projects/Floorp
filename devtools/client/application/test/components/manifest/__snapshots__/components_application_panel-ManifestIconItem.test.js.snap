@@ -1,0 +1,106 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManifestIconItem renders the expected snapshop when a label member is missing 1`] = `
+<ManifestItem
+  label={
+    Array [
+      null,
+      null,
+      "image/png",
+    ]
+  }
+>
+  <Localized
+    attrs={
+      Object {
+        "alt": true,
+      }
+    }
+    id="manifest-icon-img"
+  >
+    <img
+      className="manifest-item__icon"
+      src="icon.png"
+      title="manifest-icon-img-title-no-sizes"
+    />
+  </Localized>
+  <br />
+  <Localized
+    $purpose="any"
+    code={<code />}
+    id="manifest-icon-purpose"
+  >
+    <span />
+  </Localized>
+</ManifestItem>
+`;
+
+exports[`ManifestIconItem renders the expected snapshop when all label members are missing 1`] = `
+<ManifestItem
+  label={
+    Array [
+      null,
+      null,
+      null,
+    ]
+  }
+>
+  <Localized
+    attrs={
+      Object {
+        "alt": true,
+      }
+    }
+    id="manifest-icon-img"
+  >
+    <img
+      className="manifest-item__icon"
+      src="icon.png"
+      title="manifest-icon-img-title-no-sizes"
+    />
+  </Localized>
+  <br />
+  <Localized
+    $purpose="any"
+    code={<code />}
+    id="manifest-icon-purpose"
+  >
+    <span />
+  </Localized>
+</ManifestItem>
+`;
+
+exports[`ManifestIconItem renders the expected snapshot for a fully populated icon item 1`] = `
+<ManifestItem
+  label={
+    Array [
+      "128x128",
+      <br />,
+      "image/png",
+    ]
+  }
+>
+  <Localized
+    attrs={
+      Object {
+        "alt": true,
+      }
+    }
+    id="manifest-icon-img"
+  >
+    <img
+      className="manifest-item__icon"
+      src="icon.png"
+      title="manifest-icon-img-title__{\\"sizes\\":\\"128x128\\"}"
+    />
+  </Localized>
+  <br />
+  <Localized
+    $purpose="any"
+    code={<code />}
+    id="manifest-icon-purpose"
+  >
+    <span />
+  </Localized>
+</ManifestItem>
+`;
