@@ -14,6 +14,7 @@
 
 .browserContainer.responsive-mode {
   background-color: var(--rdm-browser-container-background);
+  overflow: auto;
 }
 
 .browserContainer.responsive-mode browser {
