@@ -510,6 +510,8 @@ void MacroAssembler::branchSub32(Condition cond, T src, Register dest,
       break;
     case NonZero:
     case Zero:
+    case Signed:
+    case NotSigned:
       ma_subu(dest, src);
       ma_b(dest, dest, overflow, cond);
       break;
