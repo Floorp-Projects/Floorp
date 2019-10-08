@@ -2,6 +2,10 @@
 
 This folder contains the code for the new performance panel that is a simplified recorder that works to record a performance profile, and inject it into profiler.firefox.com. This tool is not in charge of any of the analysis, only the recording.
 
+## TypeScript
+
+This project contains TypeScript types in JSDoc comments. To run the type checker point your terminal to this directory, and run `yarn install`, then `yarn test`. In addition type hints should work if your editor is configured to speak TypeScript.
+
 ## Overall Architecture
 
 The performance panel is split into two different modes. There is the DevTools panel mode, and the browser menu bar "popup" mode. The UI is implemented for both in `devtools/client/performance-new`, and many codepaths are shared. Both use the same React/Redux setup, but then each are configured with slightly different workflows. These are documented below.

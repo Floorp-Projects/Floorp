@@ -1,21 +1,22 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
 "use strict";
 
 const selectors = require("devtools/client/performance-new/store/selectors");
 
 /**
- * @typedef {import("../types").Action} Action
- * @typedef {import("../types").Library} Library
- * @typedef {import("../types").PerfFront} PerfFront
- * @typedef {import("../types").SymbolTableAsTuple} SymbolTableAsTuple
- * @typedef {import("../types").RecordingState} RecordingState
+ * @typedef {import("../@types/perf").Action} Action
+ * @typedef {import("../@types/perf").Library} Library
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
+ * @typedef {import("../@types/perf").RecordingState} RecordingState
  */
 
 /**
  * @template T
- * @typedef {import("../types").ThunkAction<T>} ThunkAction<T>
+ * @typedef {import("../@types/perf").ThunkAction<T>} ThunkAction<T>
  *
 
 /**

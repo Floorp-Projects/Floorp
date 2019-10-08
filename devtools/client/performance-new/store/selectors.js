@@ -1,20 +1,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
 "use strict";
 
 /**
- * @typedef {import("../types").RecordingState} RecordingState
- * @typedef {import("../types").RecordingStateFromPreferences} RecordingStateFromPreferences
- * @typedef {import("../types").InitializedValues} InitializedValues
- * @typedef {import("../types").PerfFront} PerfFront
- * @typedef {import("../types").ReceiveProfile} ReceiveProfile
- * @typedef {import("../types").SetRecordingPreferences} SetRecordingPreferences
- * @typedef {import("../types").GetSymbolTableCallback} GetSymbolTableCallback
+ * @typedef {import("../@types/perf").RecordingState} RecordingState
+ * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("../@types/perf").InitializedValues} InitializedValues
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").ReceiveProfile} ReceiveProfile
+ * @typedef {import("../@types/perf").SetRecordingPreferences} SetRecordingPreferences
+ * @typedef {import("../@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  */
 /**
  * @template S
- * @typedef {import("../types").Selector<S>} Selector<S>
+ * @typedef {import("../@types/perf").Selector<S>} Selector<S>
  */
 
 /** @type {Selector<RecordingState>} */
