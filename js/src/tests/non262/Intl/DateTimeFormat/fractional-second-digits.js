@@ -1,104 +1,41 @@
 // |reftest| skip-if(!this.hasOwnProperty("Intl")||release_or_beta)
 
+const {
+    Second, FractionalSecond, Literal
+} = DateTimeFormatParts
+
 const tests = [
   {
       date: new Date("2019-01-01T00:00:00.123"),
       digits: {
-          1: {
-              string: "1 (second: 0)",
-              parts: [
-                  {type: "fractionalSecond", value: "1"},
-                  {type: "literal", value: " (second: "},
-                  {type: "second", value: "0"},
-                  {type: "literal", value: ")"},
-              ],
-          },
-          2: {
-              string: "0.12",
-              parts: [
-                  {type: "second", value: "0"},
-                  {type: "literal", value: "."},
-                  {type: "fractionalSecond", value: "12"},
-              ],
-          },
-          3: {
-              string: "0.123",
-              parts: [
-                  {type: "second", value: "0"},
-                  {type: "literal", value: "."},
-                  {type: "fractionalSecond", value: "123"},
-              ],
-          },
+          1: [FractionalSecond("1"), Literal(" (second: "), Second("0"), Literal(")")],
+          2: [Second("0"), Literal("."), FractionalSecond("12")],
+          3: [Second("0"), Literal("."), FractionalSecond("123")],
       }
   },
   {
       date: new Date("2019-01-01T00:00:00.023"),
       digits: {
-          1: {
-              string: "0 (second: 0)",
-              parts: [
-                  {type: "fractionalSecond", value: "0"},
-                  {type: "literal", value: " (second: "},
-                  {type: "second", value: "0"},
-                  {type: "literal", value: ")"},
-              ],
-          },
-          2: {
-              string: "0.02",
-              parts: [
-                  {type: "second", value: "0"},
-                  {type: "literal", value: "."},
-                  {type: "fractionalSecond", value: "02"},
-              ],
-          },
-          3: {
-              string: "0.023",
-              parts: [
-                  {type: "second", value: "0"},
-                  {type: "literal", value: "."},
-                  {type: "fractionalSecond", value: "023"},
-              ],
-          },
+          1: [FractionalSecond("0"), Literal(" (second: "), Second("0"), Literal(")")],
+          2: [Second("0"), Literal("."), FractionalSecond("02")],
+          3: [Second("0"), Literal("."), FractionalSecond("023")],
       }
   },
   {
       date: new Date("2019-01-01T00:00:00.003"),
       digits: {
-          1: {
-              string: "0 (second: 0)",
-              parts: [
-                  {type: "fractionalSecond", value: "0"},
-                  {type: "literal", value: " (second: "},
-                  {type: "second", value: "0"},
-                  {type: "literal", value: ")"},
-              ],
-          },
-          2: {
-              string: "0.00",
-              parts: [
-                  {type: "second", value: "0"},
-                  {type: "literal", value: "."},
-                  {type: "fractionalSecond", value: "00"},
-              ],
-          },
-          3: {
-              string: "0.003",
-              parts: [
-                  {type: "second", value: "0"},
-                  {type: "literal", value: "."},
-                  {type: "fractionalSecond", value: "003"},
-              ],
-          },
+          1: [FractionalSecond("0"), Literal(" (second: "), Second("0"), Literal(")")],
+          2: [Second("0"), Literal("."), FractionalSecond("00")],
+          3: [Second("0"), Literal("."), FractionalSecond("003")],
       }
   },
 ];
 
 for (let {date, digits} of tests) {
-    for (let [fractionalSecondDigits, {string, parts}] of Object.entries(digits)) {
+    for (let [fractionalSecondDigits, parts] of Object.entries(digits)) {
         let dtf = new Intl.DateTimeFormat("en", {second: "numeric", fractionalSecondDigits});
 
-        assertEq(dtf.format(date), string);
-        assertDeepEq(dtf.formatToParts(date), parts);
+        assertParts(dtf, date, parts);
     }
 }
 
