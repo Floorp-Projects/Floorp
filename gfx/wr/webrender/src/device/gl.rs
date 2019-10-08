@@ -3493,7 +3493,10 @@ impl<'a, T> TextureUploader<'a, T> {
         // for optimal PBO texture uploads the stride of the data in
         // the buffer may have to be a multiple of a certain value.
         let dst_stride = round_up_to_multiple(src_stride, self.target.optimal_pbo_stride);
-        let dst_size = (rect.size.height as usize - 1) * dst_stride + width_bytes;
+        // The size of the PBO should only need to be (height - 1) * dst_stride + width_bytes,
+        // however, the android emulator will error unless it is height * dst_stride.
+        // See bug 1587047 for details.
+        let dst_size = rect.size.height as usize * dst_stride;
 
         match self.buffer {
             Some(ref mut buffer) => {
