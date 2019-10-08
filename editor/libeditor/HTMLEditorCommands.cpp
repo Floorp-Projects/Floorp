@@ -615,45 +615,38 @@ nsresult FontFaceStateCommand::SetState(HTMLEditor* aHTMLEditor,
     return NS_ERROR_INVALID_ARG;
   }
 
-  // Handling `<tt>` element code was implemented for composer (bug 115922).
-  // This shouldn't work with `Document.execCommand()`.  Currently, aPrincipal
-  // is set only when the root caller is Document::ExecCommand() so that
-  // we should handle `<tt>` element only when aPrincipal is nullptr that
-  // must be only when XUL command is executed on composer.
-  if (!aPrincipal) {
-    if (aNewState.EqualsLiteral("tt")) {
-      // The old "teletype" attribute
-      nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
-          *nsGkAtoms::tt, nullptr, EmptyString(), aPrincipal);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      // Clear existing font face
-      rv = aHTMLEditor->RemoveInlinePropertyAsAction(
-          *nsGkAtoms::font, nsGkAtoms::face, aPrincipal);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "RemoveInlinePropertyAsAction() failed");
-      return rv;
-    }
-
-    // Remove any existing `<tt>` elements before setting new font face.
-    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
-        *nsGkAtoms::tt, nullptr, aPrincipal);
+  if (aNewState.EqualsLiteral("tt")) {
+    // The old "teletype" attribute
+    nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
+        *nsGkAtoms::tt, nullptr, EmptyString(), aPrincipal);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  }
-
-  if (aNewState.IsEmpty() || aNewState.EqualsLiteral("normal")) {
-    nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(
-        *nsGkAtoms::font, nsGkAtoms::face, aPrincipal);
+    // Clear existing font face
+    rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::font,
+                                                   nsGkAtoms::face, aPrincipal);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "RemoveInlinePropertyAsAction() failed");
     return rv;
   }
 
-  nsresult rv = aHTMLEditor->SetInlinePropertyAsAction(
-      *nsGkAtoms::font, nsGkAtoms::face, aNewState, aPrincipal);
+  // Remove any existing TT nodes
+  nsresult rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::tt,
+                                                          nullptr, aPrincipal);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aNewState.IsEmpty() || aNewState.EqualsLiteral("normal")) {
+    rv = aHTMLEditor->RemoveInlinePropertyAsAction(*nsGkAtoms::font,
+                                                   nsGkAtoms::face, aPrincipal);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "RemoveInlinePropertyAsAction() failed");
+    return rv;
+  }
+
+  rv = aHTMLEditor->SetInlinePropertyAsAction(*nsGkAtoms::font, nsGkAtoms::face,
+                                              aNewState, aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyAsAction() failed");
   return rv;
 }
