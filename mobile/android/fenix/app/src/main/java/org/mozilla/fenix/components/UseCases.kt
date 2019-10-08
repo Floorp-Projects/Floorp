@@ -18,6 +18,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.fenix.FeatureFlags.progressiveWebApps
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -55,7 +56,9 @@ class UseCases(
 
     val appLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
-    val webAppUseCases by lazy { WebAppUseCases(context, sessionManager, httpClient, supportWebApps = false) }
+    val webAppUseCases by lazy {
+        WebAppUseCases(context, sessionManager, httpClient, supportWebApps = progressiveWebApps)
+    }
 
     val downloadUseCases by lazy { DownloadsUseCases(store) }
 

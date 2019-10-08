@@ -49,4 +49,16 @@ object FeatureFlags {
      * Gives option in Settings to disable auto play media
      */
     val autoPlayMedia = nightly or debug
+
+    val granularDataDeletion = nightly or debug
+
+    /**
+     * Gives option in Settings to Delete Browsing Data on new menu option Quit
+     */
+    val deleteDataOnQuit = nightly or debug
+
+    /**
+     * Allows Progressive Web Apps to be installed to the device home screen.
+     */
+    val progressiveWebApps = nightly or debug
 }

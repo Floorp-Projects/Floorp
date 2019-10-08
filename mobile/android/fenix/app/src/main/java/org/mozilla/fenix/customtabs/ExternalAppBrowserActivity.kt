@@ -5,8 +5,11 @@
 package org.mozilla.fenix.customtabs
 
 import androidx.navigation.NavDestination
+import androidx.navigation.NavDirections
 import mozilla.components.browser.session.runWithSession
+import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.feature.intent.ext.getSessionId
+import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -23,6 +26,7 @@ import java.security.InvalidParameterException
  * such as custom tabs and progressive web apps.
  */
 open class ExternalAppBrowserActivity : HomeActivity() {
+
     final override fun getBreadcrumbMessage(destination: NavDestination): String {
         val fragmentName = resources.getResourceEntryName(destination.id)
         return "Changing to fragment $fragmentName, isCustomTab: true"
@@ -35,12 +39,20 @@ open class ExternalAppBrowserActivity : HomeActivity() {
     override fun getNavDirections(
         from: BrowserDirection,
         customTabSessionId: String?
-    ) = when (from) {
-        BrowserDirection.FromGlobal ->
-            NavGraphDirections.actionGlobalExternalAppBrowser(customTabSessionId)
-        else -> throw InvalidParameterException(
-            "Tried to navigate to ExternalAppBrowserFragment from $from"
-        )
+    ): NavDirections {
+        val manifest = intent
+            .getWebAppManifest()
+            ?.let { WebAppManifestParser().serialize(it).toString() }
+        return when (from) {
+            BrowserDirection.FromGlobal ->
+                NavGraphDirections.actionGlobalExternalAppBrowser(
+                    activeSessionId = customTabSessionId,
+                    webAppManifest = manifest
+                )
+            else -> throw InvalidParameterException(
+                "Tried to navigate to ExternalAppBrowserFragment from $from"
+            )
+        }
     }
 
     final override fun createBrowsingModeManager(initialMode: BrowsingMode) =

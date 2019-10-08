@@ -6,13 +6,20 @@ package org.mozilla.fenix.customtabs
 
 import android.view.Gravity
 import android.view.View
+import androidx.core.view.isGone
+import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.session.Session
+import mozilla.components.concept.engine.manifest.WebAppManifestParser
+import mozilla.components.concept.engine.manifest.getOrNull
+import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.trustedOrigins
+import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
+import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
@@ -32,6 +39,8 @@ import org.mozilla.fenix.ext.requireComponents
 @ExperimentalCoroutinesApi
 class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
 
+    private val args by navArgs<ExternalAppBrowserFragmentArgs>()
+
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
     private val hideToolbarFeature = ViewBoundFeatureWrapper<WebAppHideToolbarFeature>()
 
@@ -39,6 +48,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
         return super.initializeUI(view)?.also {
             val activity = requireActivity()
             val components = activity.components
+
+            val manifest = args.webAppManifest?.let { json ->
+                WebAppManifestParser().parse(json).getOrNull()
+            }
+            val trustedScopes = listOfNotNull(manifest?.getTrustedScope())
 
             customTabSessionId?.let { customTabSessionId ->
                 customTabsIntegration.set(
@@ -59,12 +73,31 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                         requireComponents.core.sessionManager,
                         toolbar,
                         customTabSessionId,
-                        emptyList()
+                        trustedScopes
                     ) { toolbarVisible ->
                         updateLayoutMargins(inFullScreen = !toolbarVisible)
                     },
                     owner = this,
                     view = toolbar)
+
+                if (manifest != null) {
+                    activity.lifecycle.addObserver(
+                        WebAppActivityFeature(
+                            activity,
+                            components.core.icons,
+                            manifest
+                        )
+                    )
+                    viewLifecycleOwner.lifecycle.addObserver(
+                        WebAppSiteControlsFeature(
+                            activity.applicationContext,
+                            requireComponents.core.sessionManager,
+                            requireComponents.useCases.sessionUseCases.reload,
+                            customTabSessionId,
+                            manifest
+                        )
+                    )
+                }
             }
 
             consumeFrom(browserStore) {
@@ -121,8 +154,13 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     override fun getEngineMargins(): Pair<Int, Int> {
-        val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-        return toolbarSize to 0
+        val toolbarHidden = toolbar.isGone
+        return if (toolbarHidden) {
+            0 to 0
+        } else {
+            val toolbarSize = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+            toolbarSize to 0
+        }
     }
 
     override fun getAppropriateLayoutGravity() = Gravity.TOP

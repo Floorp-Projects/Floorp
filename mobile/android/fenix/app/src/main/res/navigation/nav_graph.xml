@@ -198,10 +198,8 @@
         android:id="@+id/externalAppBrowserFragment"
         android:name="org.mozilla.fenix.customtabs.ExternalAppBrowserFragment"
         tools:layout="@layout/fragment_browser">
-        <argument
-            android:name="activeSessionId"
-            app:argType="string"
-            app:nullable="true" />
+        <argument android:name="activeSessionId" app:argType="string" app:nullable="true" />
+        <argument android:name="webAppManifest" app:argType="string" app:nullable="true"/>
         <action
             android:id="@+id/action_externalAppBrowserFragment_to_shareFragment"
             app:destination="@id/shareFragment" />

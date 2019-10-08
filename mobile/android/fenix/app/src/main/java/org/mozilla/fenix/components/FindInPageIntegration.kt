@@ -32,12 +32,12 @@ class FindInPageIntegration(
     }
 
     override fun onLaunch(view: View, feature: LifecycleAwareFeature) {
-        store.state.findCustomTabOrSelectedTab(sessionId)?.let { session ->
-            if (session !is CustomTabSessionState) {
+        store.state.findCustomTabOrSelectedTab(sessionId)?.let { tab ->
+            if (tab is CustomTabSessionState) {
                 toolbar.visibility = View.GONE
             }
             view.visibility = View.VISIBLE
-            (feature as FindInPageFeature).bind(session)
+            (feature as FindInPageFeature).bind(tab)
             view.layoutParams.height = toolbar.height
         }
     }
