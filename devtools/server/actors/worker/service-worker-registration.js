@@ -51,6 +51,11 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
       this._conn = conn;
       this._registration = registration;
       this._pushSubscriptionActor = null;
+
+      // A flag to know if preventShutdown has been called and we should
+      // try to allow the shutdown of the SW when the actor is destroyed
+      this._preventedShutdown = false;
+
       this._registration.addListener(this);
 
       this._createServiceWorkerActors();
@@ -96,6 +101,16 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
 
     destroy() {
       protocol.Actor.prototype.destroy.call(this);
+
+      // Ensure resuming the service worker in case the connection drops
+      if (
+        swm.isParentInterceptEnabled() &&
+        this._registration.activeWorker &&
+        this._preventedShutdown
+      ) {
+        this.allowShutdown();
+      }
+
       Services.obs.removeObserver(this, PushService.subscriptionModifiedTopic);
       this._registration.removeListener(this);
       this._registration = null;
@@ -213,7 +228,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
      */
     preventShutdown() {
       if (!swm.isParentInterceptEnabled()) {
-        // In non parent-intercept mode, this is handled by the WorkerTargetFront attach().
+        // In non parent-intercept mode, this is handled by the WorkerTargetActor attach().
         throw new Error(
           "ServiceWorkerRegistrationActor.preventShutdown can only be used " +
             "in parent-intercept mode"
@@ -229,6 +244,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
 
       // attachDebugger has to be called from the parent process in parent-intercept mode.
       this._registration.activeWorker.attachDebugger();
+      this._preventedShutdown = true;
     },
 
     /**
@@ -236,7 +252,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
      */
     allowShutdown() {
       if (!swm.isParentInterceptEnabled()) {
-        // In non parent-intercept mode, this is handled by the WorkerTargetFront detach().
+        // In non parent-intercept mode, this is handled by the WorkerTargetActor detach().
         throw new Error(
           "ServiceWorkerRegistrationActor.allowShutdown can only be used " +
             "in parent-intercept mode"
@@ -251,6 +267,7 @@ const ServiceWorkerRegistrationActor = protocol.ActorClassWithSpec(
       }
 
       this._registration.activeWorker.detachDebugger();
+      this._preventedShutdown = false;
     },
 
     getPushSubscription() {
