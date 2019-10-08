@@ -1800,32 +1800,50 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
     }
 
     // Step 9.
-    if (supportedExtension.length > 2) {
-        assert(!callFunction(std_String_startsWith, foundLocale, "x-"),
-               "unexpected privateuse-only locale returned from ICU");
-
-        // Step 9.a.
-        var privateIndex = callFunction(std_String_indexOf, foundLocale, "-x-");
-
-        // Steps 9.b-c.
-        if (privateIndex === -1) {
-            foundLocale += supportedExtension;
-        } else {
-            var preExtension = callFunction(String_substring, foundLocale, 0, privateIndex);
-            var postExtension = callFunction(String_substring, foundLocale, privateIndex);
-            foundLocale = preExtension + supportedExtension + postExtension;
-        }
-
-        // Steps 9.d-e (Step 9.e is not required in this implementation,
-        // because we don't canonicalize Unicode extension subtags).
-        assertIsValidAndCanonicalLanguageTag(foundLocale, "locale after concatenation");
-    }
+    if (supportedExtension.length > 2)
+        foundLocale = addUnicodeExtension(foundLocale, supportedExtension);
 
     // Step 10.
     result.locale = foundLocale;
 
     // Step 11.
     return result;
+}
+
+/**
+ * Adds a Unicode extension subtag to a locale.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.6.
+ */
+function addUnicodeExtension(locale, extension) {
+    assert(typeof locale === "string", "locale is a string value");
+    assert(!callFunction(std_String_startsWith, locale, "x-"),
+           "unexpected privateuse-only locale");
+    assert(startOfUnicodeExtensions(locale) < 0,
+           "Unicode extension subtag already present in locale");
+
+    assert(typeof extension === "string", "extension is a string value");
+    assert(callFunction(std_String_startsWith, extension, "-u-") &&
+           getUnicodeExtensions("und" + extension) === extension,
+           "extension is a Unicode extension subtag");
+
+    // Step 9.a.
+    var privateIndex = callFunction(std_String_indexOf, locale, "-x-");
+
+    // Steps 9.b-c.
+    if (privateIndex === -1) {
+        locale += extension;
+    } else {
+         var preExtension = callFunction(String_substring, locale, 0, privateIndex);
+         var postExtension = callFunction(String_substring, locale, privateIndex);
+         locale = preExtension + extension + postExtension;
+    }
+
+    // Steps 9.d-e (Step 9.e is not required in this implementation, because we don't canonicalize
+    // Unicode extension subtags).
+    assertIsValidAndCanonicalLanguageTag(locale, "locale after concatenation");
+
+    return locale;
 }
 
 /**

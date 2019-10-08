@@ -366,6 +366,7 @@
   MACRO(Reify, Reify, "Reify")                                                 \
   MACRO(reject, reject, "reject")                                              \
   MACRO(rejected, rejected, "rejected")                                        \
+  MACRO(relatedYear, relatedYear, "relatedYear")                               \
   MACRO(RelativeTimeFormat, RelativeTimeFormat, "RelativeTimeFormat")          \
   MACRO(RelativeTimeFormatFormat, RelativeTimeFormatFormat,                    \
         "Intl_RelativeTimeFormat_Format")                                      \
@@ -481,6 +482,7 @@
   MACRO(writable, writable, "writable")                                        \
   MACRO(write, write, "write")                                                 \
   MACRO(year, year, "year")                                                    \
+  MACRO(yearName, yearName, "yearName")                                        \
   MACRO(yield, yield, "yield")                                                 \
   /* Type names must be contiguous and ordered; see js::TypeName. */           \
   MACRO(undefined, undefined, "undefined")                                     \
