@@ -406,7 +406,7 @@ class InternalRequest final {
   RequestCache mCacheMode;
   RequestRedirect mRedirectMode;
   nsString mIntegrity;
-  bool mMozErrors;
+  bool mMozErrors = false;
   nsCString mFragment;
   MOZ_INIT_OUTSIDE_CTOR bool mAuthenticationFlag;
   MOZ_INIT_OUTSIDE_CTOR bool mPreserveContentCodings;
