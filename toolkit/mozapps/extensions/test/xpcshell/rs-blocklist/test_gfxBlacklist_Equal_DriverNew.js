@@ -71,7 +71,7 @@ async function run_test() {
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     status = gfxInfo.getFeatureStatus(
-      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION
+      Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_H264
     );
     Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
