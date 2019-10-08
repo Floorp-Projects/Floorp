@@ -23,10 +23,6 @@ const {
   ONVERIFIED_NOTIFICATION,
   SCOPE_OLD_SYNC,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const {
-  FxAccountsOAuthGrantClient,
-  FxAccountsOAuthGrantClientError,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
@@ -1322,23 +1318,17 @@ add_test(function test_getOAuthToken() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
-  let getTokenFromAssertionCalled = false;
+  let oauthTokenCalled = false;
 
-  fxa._internal._d_signCertificate.resolve("cert1");
-
-  // create a mock oauth client
-  let client = new FxAccountsOAuthGrantClient({
-    serverURL: "https://example.com/v1",
-    client_id: "abc123",
-  });
-  client.getTokenFromAssertion = function() {
-    getTokenFromAssertionCalled = true;
+  let client = fxa._internal.fxAccountsClient;
+  client.oauthToken = () => {
+    oauthTokenCalled = true;
     return Promise.resolve({ access_token: "token" });
   };
 
   fxa.setSignedInUser(alice).then(() => {
-    fxa.getOAuthToken({ scope: "profile", client }).then(result => {
-      Assert.ok(getTokenFromAssertionCalled);
+    fxa.getOAuthToken({ scope: "profile" }).then(result => {
+      Assert.ok(oauthTokenCalled);
       Assert.equal(result, "token");
       run_next_test();
     });
@@ -1349,24 +1339,18 @@ add_test(function test_getOAuthTokenScoped() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
-  let getTokenFromAssertionCalled = false;
+  let oauthTokenCalled = false;
 
-  fxa._internal._d_signCertificate.resolve("cert1");
-
-  // create a mock oauth client
-  let client = new FxAccountsOAuthGrantClient({
-    serverURL: "https://example.com/v1",
-    client_id: "abc123",
-  });
-  client.getTokenFromAssertion = function(assertion, scopeString) {
+  let client = fxa._internal.fxAccountsClient;
+  client.oauthToken = (_1, _2, scopeString) => {
     equal(scopeString, "bar foo"); // scopes are sorted locally before request.
-    getTokenFromAssertionCalled = true;
+    oauthTokenCalled = true;
     return Promise.resolve({ access_token: "token" });
   };
 
   fxa.setSignedInUser(alice).then(() => {
-    fxa.getOAuthToken({ scope: ["foo", "bar"], client }).then(result => {
-      Assert.ok(getTokenFromAssertionCalled);
+    fxa.getOAuthToken({ scope: ["foo", "bar"] }).then(result => {
+      Assert.ok(oauthTokenCalled);
       Assert.equal(result, "token");
       run_next_test();
     });
@@ -1377,44 +1361,35 @@ add_task(async function test_getOAuthTokenCached() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
-  let numTokenFromAssertionCalls = 0;
+  let numOauthTokenCalls = 0;
 
-  fxa._internal._d_signCertificate.resolve("cert1");
-
-  // create a mock oauth client
-  let client = new FxAccountsOAuthGrantClient({
-    serverURL: "https://example.com/v1",
-    client_id: "abc123",
-  });
-  client.getTokenFromAssertion = function() {
-    numTokenFromAssertionCalls += 1;
+  let client = fxa._internal.fxAccountsClient;
+  client.oauthToken = () => {
+    numOauthTokenCalls += 1;
     return Promise.resolve({ access_token: "token" });
   };
 
   await fxa.setSignedInUser(alice);
   let result = await fxa.getOAuthToken({
     scope: "profile",
-    client,
     service: "test-service",
   });
-  Assert.equal(numTokenFromAssertionCalls, 1);
+  Assert.equal(numOauthTokenCalls, 1);
   Assert.equal(result, "token");
 
   // requesting it again should not re-fetch the token.
   result = await fxa.getOAuthToken({
     scope: "profile",
-    client,
     service: "test-service",
   });
-  Assert.equal(numTokenFromAssertionCalls, 1);
+  Assert.equal(numOauthTokenCalls, 1);
   Assert.equal(result, "token");
   // But requesting the same service and a different scope *will* get a new one.
   result = await fxa.getOAuthToken({
     scope: "something-else",
-    client,
     service: "test-service",
   });
-  Assert.equal(numTokenFromAssertionCalls, 2);
+  Assert.equal(numOauthTokenCalls, 2);
   Assert.equal(result, "token");
 });
 
@@ -1422,52 +1397,42 @@ add_task(async function test_getOAuthTokenCachedScopeNormalization() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
-  let numTokenFromAssertionCalls = 0;
+  let numOAuthTokenCalls = 0;
 
-  fxa._internal._d_signCertificate.resolve("cert1");
-
-  // create a mock oauth client
-  let client = new FxAccountsOAuthGrantClient({
-    serverURL: "https://example.com/v1",
-    client_id: "abc123",
-  });
-  client.getTokenFromAssertion = function() {
-    numTokenFromAssertionCalls += 1;
+  let client = fxa._internal.fxAccountsClient;
+  client.oauthToken = () => {
+    numOAuthTokenCalls += 1;
     return Promise.resolve({ access_token: "token" });
   };
 
   await fxa.setSignedInUser(alice);
   let result = await fxa.getOAuthToken({
     scope: ["foo", "bar"],
-    client,
     service: "test-service",
   });
-  Assert.equal(numTokenFromAssertionCalls, 1);
+  Assert.equal(numOAuthTokenCalls, 1);
   Assert.equal(result, "token");
 
   // requesting it again with the scope array in a different order not re-fetch the token.
   result = await fxa.getOAuthToken({
     scope: ["bar", "foo"],
-    client,
     service: "test-service",
   });
-  Assert.equal(numTokenFromAssertionCalls, 1);
+  Assert.equal(numOAuthTokenCalls, 1);
   Assert.equal(result, "token");
   // requesting it again with the scope array in different case not re-fetch the token.
   result = await fxa.getOAuthToken({
     scope: ["Bar", "Foo"],
-    client,
     service: "test-service",
   });
-  Assert.equal(numTokenFromAssertionCalls, 1);
+  Assert.equal(numOAuthTokenCalls, 1);
   Assert.equal(result, "token");
   // But requesting with a new entry in the array does fetch one.
   result = await fxa.getOAuthToken({
     scope: ["foo", "bar", "etc"],
-    client,
     service: "test-service",
   });
-  Assert.equal(numTokenFromAssertionCalls, 2);
+  Assert.equal(numOAuthTokenCalls, 2);
   Assert.equal(result, "token");
 });
 
@@ -1534,85 +1499,18 @@ add_test(function test_getOAuthToken_unverified() {
   });
 });
 
-add_test(function test_getOAuthToken_network_error() {
+add_test(function test_getOAuthToken_error() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
 
-  fxa._internal._d_signCertificate.resolve("cert1");
-
-  // create a mock oauth client
-  let client = new FxAccountsOAuthGrantClient({
-    serverURL: "https://example.com/v1",
-    client_id: "abc123",
-  });
-  client.getTokenFromAssertion = function() {
-    return Promise.reject(
-      new FxAccountsOAuthGrantClientError({
-        error: ERROR_NETWORK,
-        errno: ERRNO_NETWORK,
-      })
-    );
-  };
-
-  fxa.setSignedInUser(alice).then(() => {
-    fxa.getOAuthToken({ scope: "profile", client }).catch(err => {
-      Assert.equal(err.message, "NETWORK_ERROR");
-      Assert.equal(err.details.errno, ERRNO_NETWORK);
-      run_next_test();
-    });
-  });
-});
-
-add_test(function test_getOAuthToken_auth_error() {
-  let fxa = new MockFxAccounts();
-  let alice = getTestUser("alice");
-  alice.verified = true;
-
-  fxa._internal._d_signCertificate.resolve("cert1");
-
-  // create a mock oauth client
-  let client = new FxAccountsOAuthGrantClient({
-    serverURL: "https://example.com/v1",
-    client_id: "abc123",
-  });
-  client.getTokenFromAssertion = function() {
-    return Promise.reject(
-      new FxAccountsOAuthGrantClientError({
-        error: ERROR_INVALID_FXA_ASSERTION,
-        errno: ERRNO_INVALID_FXA_ASSERTION,
-      })
-    );
-  };
-
-  fxa.setSignedInUser(alice).then(() => {
-    fxa.getOAuthToken({ scope: "profile", client }).catch(err => {
-      Assert.equal(err.message, "AUTH_ERROR");
-      Assert.equal(err.details.errno, ERRNO_INVALID_FXA_ASSERTION);
-      run_next_test();
-    });
-  });
-});
-
-add_test(function test_getOAuthToken_unknown_error() {
-  let fxa = new MockFxAccounts();
-  let alice = getTestUser("alice");
-  alice.verified = true;
-
-  fxa._internal._d_signCertificate.resolve("cert1");
-
-  // create a mock oauth client
-  let client = new FxAccountsOAuthGrantClient({
-    serverURL: "https://example.com/v1",
-    client_id: "abc123",
-  });
-  client.getTokenFromAssertion = function() {
+  let client = fxa._internal.fxAccountsClient;
+  client.oauthToken = () => {
     return Promise.reject("boom");
   };
 
   fxa.setSignedInUser(alice).then(() => {
-    fxa.getOAuthToken({ scope: "profile", client }).catch(err => {
-      Assert.equal(err.message, "UNKNOWN_ERROR");
+    fxa.getOAuthToken({ scope: "profile" }).catch(err => {
       run_next_test();
     });
   });
