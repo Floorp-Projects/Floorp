@@ -92,7 +92,7 @@ def add_release_version(config, tasks):
     for task in tasks:
         if task.pop("include-release-version", False):
             task["run"]["gradlew"].append(
-                '-PversionName="{}"'.format(config.params["release_version"])
+                '-PversionName={}'.format(config.params["release_version"])
             )
         yield task
 
