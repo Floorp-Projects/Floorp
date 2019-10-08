@@ -1,9 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
+/* exported gInit, gDestroy, loader */
 "use strict";
 
-/* exported gInit, gDestroy, loader */
+/**
+ * @typedef {import("./@types/perf").PerfFront} PerfFront
+ * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
+ */
 
 const { BrowserLoader } = ChromeUtils.import(
   "resource://devtools/client/shared/browser-loader.js"
@@ -36,8 +41,8 @@ const {
 /**
  * Initialize the panel by creating a redux store, and render the root component.
  *
- * @param perfFront - The Perf actor's front. Used to start and stop recordings.
- * @param preferenceFront - Used to get the recording preferences from the device.
+ * @param {PerfFront} perfFront - The Perf actor's front. Used to start and stop recordings.
+ * @param {PreferenceFront} preferenceFront - Used to get the recording preferences from the device.
  */
 async function gInit(perfFront, preferenceFront) {
   const store = createStore(reducers);
@@ -67,12 +72,14 @@ async function gInit(perfFront, preferenceFront) {
 
       // Configure the getSymbolTable function for the DevTools workflow.
       // See createMultiModalGetSymbolTableFn for more information.
-      getSymbolTableGetter: profile =>
-        createMultiModalGetSymbolTableFn(
-          profile,
-          selectors.getPerfFront(store.getState()),
-          selectors.getObjdirs(store.getState())
-        ),
+      getSymbolTableGetter:
+        /** @type {(profile: Object) => GetSymbolTableCallback} */
+        profile =>
+          createMultiModalGetSymbolTableFn(
+            profile,
+            selectors.getPerfFront(store.getState()),
+            selectors.getObjdirs(store.getState())
+          ),
     })
   );
 

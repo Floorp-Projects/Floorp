@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
 "use strict";
 
 /**
@@ -8,20 +9,37 @@
  * Care should be taken to keep it minimal as it can be run with browser initialization.
  */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
+/**
+ * TS-TODO
+ *
+ * This function replaces lazyRequireGetter, and TypeScript can understand it. It's
+ * currently duplicated until we have consensus that TypeScript is a good idea.
+ *
+ * @template T
+ * @type {(callback: () => T) => () => T}
+ */
+function requireLazy(callback) {
+  /** @type {T | undefined} */
+  let cache;
+  return () => {
+    if (cache === undefined) {
+      cache = callback();
+    }
+    return cache;
+  };
+}
+
+const lazyServices = requireLazy(() =>
+  /** @type {import("resource://gre/modules/Services.jsm")} */
+  (ChromeUtils.import("resource://gre/modules/Services.jsm"))
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
+const lazyCustomizableUI = requireLazy(() =>
+  /** @type {import("resource:///modules/CustomizableUI.jsm")} */
+  ChromeUtils.import("resource:///modules/CustomizableUI.jsm")
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "CustomizableWidgets",
-  "resource:///modules/CustomizableWidgets.jsm"
+const lazyCustomizableWidgets = requireLazy(() =>
+  /** @type {import("resource:///modules/CustomizableWidgets.jsm")} */
+  ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm")
 );
 
 // The profiler's menu button and its popup can be enabled/disabled by the user.
@@ -31,26 +49,40 @@ ChromeUtils.defineModuleGetter(
 const BUTTON_ENABLED_PREF = "devtools.performance.popup.enabled";
 const WIDGET_ID = "profiler-button";
 
+/**
+ * @return {boolean}
+ */
 function isEnabled() {
+  const { Services } = lazyServices();
   return Services.prefs.getBoolPref(BUTTON_ENABLED_PREF, false);
 }
 
+/**
+ * @param {HTMLDocument} document
+ * @param {boolean} isChecked
+ * @return {void}
+ */
 function setMenuItemChecked(document, isChecked) {
   const menuItem = document.querySelector("#menu_toggleProfilerButtonMenu");
   if (!menuItem) {
     return;
   }
-  menuItem.setAttribute("checked", isChecked);
+  menuItem.setAttribute("checked", isChecked.toString());
 }
 
 /**
  * Toggle the menu button, and initialize the widget if needed.
  *
- * @param {Object} document - The browser's document.
+ * @param {object} document - The browser's document.
+ * @return {void}
  */
 function toggle(document) {
+  const { CustomizableUI } = lazyCustomizableUI();
+  const { Services } = lazyServices();
+
   const toggledValue = !isEnabled();
   Services.prefs.setBoolPref(BUTTON_ENABLED_PREF, toggledValue);
+
   if (toggledValue) {
     initialize();
     CustomizableUI.addWidgetToArea(WIDGET_ID, CustomizableUI.AREA_NAVBAR);
@@ -65,70 +97,108 @@ function toggle(document) {
   }
 }
 
-// This function takes the button element, and returns a function that's used to
-// update the profiler button whenever the profiler activation status changed.
-const updateButtonColorForElement = buttonElement => () => {
-  const isRunning = Services.profiler.IsActive();
+/**
+ * This function takes the button element, and returns a function that's used to
+ * update the profiler button whenever the profiler activation status changed.
+ *
+ * @param {HTMLElement} buttonElement
+ * @returns {() => void}
+ */
+function updateButtonColorForElement(buttonElement) {
+  return () => {
+    const { Services } = lazyServices();
+    const isRunning = Services.profiler.IsActive();
 
-  // Use photon blue-60 when active.
-  buttonElement.style.fill = isRunning ? "#0060df" : "";
-};
+    // Use photon blue-60 when active.
+    buttonElement.style.fill = isRunning ? "#0060df" : "";
+  };
+}
 
 /**
  * This function creates the widget definition for the CustomizableUI. It should
  * only be run if the profiler button is enabled.
+ * @return {void}
  */
 function initialize() {
+  const { CustomizableUI } = lazyCustomizableUI();
+  const { CustomizableWidgets } = lazyCustomizableWidgets();
+  const { Services } = lazyServices();
+
   const widget = CustomizableUI.getWidget(WIDGET_ID);
   if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
     // This widget has already been created.
     return;
   }
 
-  let observer;
+  /** @typedef {() => void} Observer */
+
+  /** @type {null | Observer} */
+  let observer = null;
 
   const item = {
     id: WIDGET_ID,
     type: "view",
     viewId: "PanelUI-profiler",
     tooltiptext: "profiler-button.tooltiptext",
-    onViewShowing: event => {
-      const panelview = event.target;
-      const document = panelview.ownerDocument;
 
-      // Create an iframe and append it to the panelview.
-      const iframe = document.createXULElement("iframe");
-      iframe.id = "PanelUI-profilerIframe";
-      iframe.className = "PanelUI-developer-iframe";
-      iframe.src =
-        "chrome://devtools/content/performance-new/popup/popup.xhtml";
+    onViewShowing:
+      /**
+       * @type {(event: {
+       *   target: ChromeHTMLElement | XULElement,
+       *   detail: {
+       *     addBlocker: (blocker: Promise<void>) => void
+       *   }
+       * }) => void}
+       */
+      event => {
+        const panelview = event.target;
+        const document = panelview.ownerDocument;
+        if (!document) {
+          throw new Error(
+            "Expected to find a document on the panelview element."
+          );
+        }
 
-      panelview.appendChild(iframe);
+        // Create an iframe and append it to the panelview.
+        const iframe = document.createXULElement("iframe");
+        iframe.id = "PanelUI-profilerIframe";
+        iframe.className = "PanelUI-developer-iframe";
+        iframe.src =
+          "chrome://devtools/content/performance-new/popup/popup.xhtml";
 
-      // Provide a mechanism for the iframe to close the popup.
-      iframe.contentWindow.gClosePopup = () => {
-        CustomizableUI.hidePanelForNode(iframe);
-      };
+        panelview.appendChild(iframe);
+        /** @type {any} - Cast to an any since we're assigning values to the window object. */
+        const contentWindow = iframe.contentWindow;
 
-      // Provide a mechanism for the iframe to resize the popup.
-      iframe.contentWindow.gResizePopup = height => {
-        iframe.style.height = `${Math.min(600, height)}px`;
-      };
+        // Provide a mechanism for the iframe to close the popup.
+        contentWindow.gClosePopup = () => {
+          CustomizableUI.hidePanelForNode(iframe);
+        };
 
-      // The popup has an annoying rendering "blip" when first rendering the react
-      // components. This adds a blocker until the content is ready to show.
-      event.detail.addBlocker(
-        new Promise(resolve => {
-          iframe.contentWindow.gReportReady = () => {
-            // Delete the function gReportReady so we don't leave any dangling
-            // references between windows.
-            delete iframe.contentWindow.gReportReady;
-            // Now resolve this promise to open the window.
-            resolve();
-          };
-        })
-      );
-    },
+        // Provide a mechanism for the iframe to resize the popup.
+        /** @type {(height: number) => void} */
+        contentWindow.gResizePopup = height => {
+          iframe.style.height = `${Math.min(600, height)}px`;
+        };
+
+        // The popup has an annoying rendering "blip" when first rendering the react
+        // components. This adds a blocker until the content is ready to show.
+        event.detail.addBlocker(
+          new Promise(resolve => {
+            contentWindow.gReportReady = () => {
+              // Delete the function gReportReady so we don't leave any dangling
+              // references between windows.
+              delete contentWindow.gReportReady;
+              // Now resolve this promise to open the window.
+              resolve();
+            };
+          })
+        );
+      },
+
+    /**
+     * @type {(event: { target: ChromeHTMLElement | XULElement }) => void}
+     */
     onViewHiding(event) {
       const document = event.target.ownerDocument;
 
@@ -141,9 +211,13 @@ function initialize() {
       // Remove the iframe so it doesn't leak.
       iframe.remove();
     },
+
+    /** @type {(document: HTMLDocument) => void} */
     onBeforeCreated: document => {
       setMenuItemChecked(document, true);
     },
+
+    /** @type {(document: HTMLElement) => void} */
     onCreated: buttonElement => {
       observer = updateButtonColorForElement(buttonElement);
       Services.obs.addObserver(observer, "profiler-started");
@@ -153,12 +227,16 @@ function initialize() {
       // already running at startup.
       observer();
     },
+
     onDestroyed: () => {
-      Services.obs.removeObserver(observer, "profiler-started");
-      Services.obs.removeObserver(observer, "profiler-stopped");
-      observer = null;
+      if (observer) {
+        Services.obs.removeObserver(observer, "profiler-started");
+        Services.obs.removeObserver(observer, "profiler-stopped");
+        observer = null;
+      }
     },
   };
+
   CustomizableUI.createWidget(item);
   CustomizableWidgets.push(item);
 }
