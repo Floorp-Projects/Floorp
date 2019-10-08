@@ -29,28 +29,6 @@
 
         // Make sure we generated shadow DOM to place menuitems into.
         this.shadowRoot;
-
-        let array = [];
-        let width = 0;
-        for (
-          let menuitem = this.firstElementChild;
-          menuitem;
-          menuitem = menuitem.nextElementSibling
-        ) {
-          if (
-            menuitem.localName == "menuitem" &&
-            menuitem.hasAttribute("acceltext")
-          ) {
-            let accel = menuitem.querySelector(".menu-accel-container");
-            if (accel && accel.boxObject) {
-              array.push(accel);
-              if (accel.boxObject.width > width) {
-                width = accel.boxObject.width;
-              }
-            }
-          }
-        }
-        array.forEach(accel => (accel.width = width));
       });
 
       this.attachShadow({ mode: "open" });
