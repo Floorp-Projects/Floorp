@@ -8,6 +8,7 @@
   --debug-line-error-border: rgb(255, 0, 0);
   --debug-expression-error-background: rgba(231, 116, 113, 0.3);
   --highlight-line-duration: 1500ms;
+  --highlight-line-delay: 200ms;
 }
 
 .theme-dark .editor-wrapper {
@@ -164,25 +165,15 @@ html[dir="rtl"] .editor-mount {
   display: none;
 }
 .highlight-line .CodeMirror-line {
-  animation: fade-highlight-out var(--highlight-line-duration) normal forwards;
+  animation-name: fade-highlight-out;
+  animation-duration: var(--highlight-line-duration);
+  animation-delay: var(--highlight-line-delay);
+  animation-direction: forwards;
 }
 
 @keyframes fade-highlight-out {
   0% {
-    background-color: var(--theme-highlight-gray);
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-
-.theme-dark .highlight-line .CodeMirror-line {
-  animation: fade-highlight-out-dark 1s normal forwards;
-}
-
-@keyframes fade-highlight-out-dark {
-  0% {
-    background-color: var(--theme-comment);
+    background-color: var(--theme-contrast-background);
   }
   100% {
     background-color: transparent;
