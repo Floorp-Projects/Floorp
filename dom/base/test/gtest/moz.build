@@ -7,6 +7,7 @@
 UNIFIED_SOURCES += [
     'TestContentUtils.cpp',
     'TestMimeType.cpp',
+    'TestParser.cpp',
     'TestPlainTextSerializer.cpp',
     'TestXPathGenerator.cpp',
 ]
