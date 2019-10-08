@@ -1069,6 +1069,7 @@ void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
 /* static */
 void DebuggerFrame::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
+
   DebuggerFrame& frameobj = obj->as<DebuggerFrame>();
 
   // Connections between dying Debugger.Frames and their
