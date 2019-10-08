@@ -19,6 +19,10 @@
                              blue:(CGFloat)blue
                             alpha:(CGFloat)alpha;
 @end
+
+@interface NSTextField (NewConstructors)
++ (NSTextField*)labelWithString:(NSString*)stringValue;
+@end
 #endif  // !defined(MAC_OS_X_VERSION_10_12)
 
 #if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
