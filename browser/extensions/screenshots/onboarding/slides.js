@@ -44,7 +44,7 @@ this.slides = (function() {
       iframe.addEventListener("load", catcher.watchFunction(() => {
         doc = iframe.contentDocument;
         assertIsBlankDocument(doc);
-        const parsedDom = (new DOMParser()).parseFromString(
+        const parsedDom = (new doc.defaultView.DOMParser()).parseFromString(
           html,
           "text/html"
         );
