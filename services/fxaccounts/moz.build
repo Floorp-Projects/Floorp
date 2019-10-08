@@ -24,6 +24,7 @@ EXTRA_JS_MODULES += [
   'FxAccountsConfig.jsm',
   'FxAccountsDevice.jsm',
   'FxAccountsKeys.jsm',
+  'FxAccountsOAuthGrantClient.jsm',
   'FxAccountsPairing.jsm',
   'FxAccountsPairingChannel.js',
   'FxAccountsProfile.jsm',
