@@ -488,25 +488,28 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
   bool useCSS = (IsCSSEnabled() && CSSEditUtils::IsCSSEditableProperty(
                                        &aNode, &aProperty, aAttribute)) ||
                 // bgcolor is always done using CSS
-                aAttribute == nsGkAtoms::bgcolor;
+                aAttribute == nsGkAtoms::bgcolor ||
+                // called for removing parent style, we should use CSS with
+                // `<span>` element.
+                aValue.EqualsLiteral("-moz-editor-invert-value");
 
   if (useCSS) {
-    RefPtr<dom::Element> tmp;
+    RefPtr<Element> spanElement;
     // We only add style="" to <span>s with no attributes (bug 746515).  If we
     // don't have one, we need to make one.
     if (aNode.IsHTMLElement(nsGkAtoms::span) &&
         !aNode.AsElement()->GetAttrCount()) {
-      tmp = aNode.AsElement();
+      spanElement = aNode.AsElement();
     } else {
-      tmp = InsertContainerWithTransaction(aNode, *nsGkAtoms::span);
-      if (NS_WARN_IF(!tmp)) {
+      spanElement = InsertContainerWithTransaction(aNode, *nsGkAtoms::span);
+      if (NS_WARN_IF(!spanElement)) {
         return NS_ERROR_FAILURE;
       }
     }
 
     // Add the CSS styles corresponding to the HTML style request
-    mCSSEditUtils->SetCSSEquivalentToHTMLStyle(tmp, &aProperty, aAttribute,
-                                               &aValue, false);
+    mCSSEditUtils->SetCSSEquivalentToHTMLStyle(spanElement, &aProperty,
+                                               aAttribute, &aValue, false);
     return NS_OK;
   }
 
@@ -636,7 +639,18 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
     return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
 
-  bool useCSS = IsCSSEnabled();
+  // We assume that this method is called only when we're removing style(s).
+  // Even if we're in HTML mode and there is no presentation element in the
+  // block, we may need to overwrite the block's style with `<span>` element
+  // and CSS.  For example, `<h1>` element has `font-weight: bold;` as its
+  // default style.  If `Document.execCommand("bold")` is called for its
+  // text, we should make it unbold.  Therefore, we shouldn't check
+  // IsCSSEnabled() in most cases.  However, there is an exception.
+  // FontFaceStateCommand::SetState() calls RemoveInlinePropertyAsAction()
+  // with nsGkAtoms::tt before calling SetInlinePropertyAsAction() if we
+  // are handling a XUL command.  Only in that case, we need to check
+  // IsCSSEnabled().
+  bool useCSS = aProperty != nsGkAtoms::tt || IsCSSEnabled();
 
   // Split any matching style nodes above the point.
   SplitNodeResult result(aPointToSplit);
@@ -1569,12 +1583,8 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
 
       if (startOfRange.GetContainer() == endOfRange.GetContainer() &&
           startOfRange.IsInTextNode()) {
-        // TODO: If parent block has the removing style, we should create
-        //       `<span>` element to remove the style even in HTML mode
-        //       since Chrome does it.  See bug 1566795.
-        if (!IsCSSEnabled()) {
-          continue;
-        }
+        // If parent block has the removing style, we should create `<span>`
+        // element to remove the style even in HTML mode since Chrome does it.
         if (!CSSEditUtils::IsCSSEditableProperty(startOfRange.GetContainer(),
                                                  aProperty, aAttribute)) {
           continue;
@@ -1593,11 +1603,10 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
         if (!CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
           continue;
         }
-        NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
         SetInlinePropertyOnTextNode(
             MOZ_KnownLive(*startOfRange.GetContainerAsText()),
             startOfRange.Offset(), endOfRange.Offset(), *aProperty, aAttribute,
-            value);
+            NS_LITERAL_STRING("-moz-editor-invert-value"));
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -1627,12 +1636,8 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
             return rv;
           }
         }
-        // TODO: If parent block has the removing style, we should create
-        //       `<span>` element to remove the style even in HTML mode
-        //       since Chrome does it.  See bug 1566795.
-        if (!IsCSSEnabled()) {
-          continue;
-        }
+        // If parent block has the removing style, we should create `<span>`
+        // element to remove the style even in HTML mode since Chrome does it.
         if (!CSSEditUtils::IsCSSEditableProperty(content, aProperty,
                                                  aAttribute)) {
           continue;
@@ -1650,8 +1655,14 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
         if (!CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
           continue;
         }
-        NS_NAMED_LITERAL_STRING(value, "-moz-editor-invert-value");
-        SetInlinePropertyOnNode(content, *aProperty, aAttribute, value);
+        DebugOnly<nsresult> rvIgnored = SetInlinePropertyOnNode(
+            content, *aProperty, aAttribute,
+            NS_LITERAL_STRING("-moz-editor-invert-value"));
+        if (NS_WARN_IF(Destroyed())) {
+          return NS_ERROR_EDITOR_DESTROYED;
+        }
+        NS_WARNING_ASSERTION(NS_FAILED(rvIgnored),
+                             "SetInlinePropertyOnNode() failed, but ignored");
       }
     }
   }
