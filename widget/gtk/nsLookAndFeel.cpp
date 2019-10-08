@@ -39,6 +39,17 @@
 using namespace mozilla;
 using mozilla::LookAndFeel;
 
+#undef LOG
+#ifdef MOZ_LOGGING
+#  include "mozilla/Logging.h"
+#  include "nsTArray.h"
+#  include "Units.h"
+extern mozilla::LazyLogModule gWidgetLog;
+#  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#else
+#  define LOG(args)
+#endif /* MOZ_LOGGING */
+
 #define GDK_COLOR_TO_NS_RGB(c) \
   ((nscolor)NS_RGB(c.red >> 8, c.green >> 8, c.blue >> 8))
 #define GDK_RGBA_TO_NS_RGBA(c)                                    \
@@ -870,11 +881,17 @@ static bool IsGtkThemeCompatibleWithHTMLColors() {
 }
 
 static void ConfigureContentGtkTheme() {
+  LOG(("ConfigureContentGtkTheme\n"));
+
   GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
   nsAutoCString contentThemeName;
   mozilla::Preferences::GetCString("widget.content.gtk-theme-override",
                                    contentThemeName);
   if (!contentThemeName.IsEmpty()) {
+    LOG(
+        ("    widget.content.gtk-theme-override is set to %s, setting by "
+         "gtk-theme-name\n",
+         contentThemeName.get()));
     g_object_set(settings, "gtk-theme-name", contentThemeName.get(), nullptr);
   }
 
@@ -889,11 +906,13 @@ static void ConfigureContentGtkTheme() {
   gboolean darkThemeDefault;
   g_object_get(settings, dark_theme_setting, &darkThemeDefault, nullptr);
   if (darkThemeDefault) {
+    LOG(("    disabling gtk-application-prefer-dark-theme\n"));
     g_object_set(settings, dark_theme_setting, FALSE, nullptr);
   }
 
   // ...and use a default Gtk theme as a fallback.
   if (contentThemeName.IsEmpty() && !IsGtkThemeCompatibleWithHTMLColors()) {
+    LOG(("    Non-compatible drark theme, default to Adwaita\n"));
     g_object_set(settings, "gtk-theme-name", "Adwaita", nullptr);
   }
 }
@@ -940,10 +959,13 @@ void nsLookAndFeel::EnsureInit() {
        RelativeLuminanceUtils::Compute(GDK_RGBA_TO_NS_RGBA(fg)));
 
   if (XRE_IsContentProcess()) {
+    LOG(("nsLookAndFeel::EnsureInit() [%p] Content process\n", (void*)this));
     // Dark themes interacts poorly with widget styling (see bug 1216658).
     // We disable dark themes by default for web content
     // but allow user to overide it by prefs.
     ConfigureContentGtkTheme();
+  } else {
+    LOG(("nsLookAndFeel::EnsureInit() [%p] Crome process\n", (void*)this));
   }
 
   // The label is not added to a parent widget, but shared for constructing
