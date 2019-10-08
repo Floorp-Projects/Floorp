@@ -45,6 +45,10 @@ import type { Tab } from "../reducers/tabs";
 
 import "./QuickOpenModal.css";
 
+type OwnProps = {|
+  shortcutsModalEnabled: boolean,
+  toggleShortcutsModal: () => void,
+|};
 type Props = {
   cx: Context,
   enabled: boolean,
@@ -471,7 +475,7 @@ function mapStateToProps(state) {
 }
 
 /* istanbul ignore next: ignoring testing of redux connection stuff */
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     selectSpecificLocation: actions.selectSpecificLocation,

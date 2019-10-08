@@ -10,6 +10,9 @@ import { getSelectedSource, getSelectedBreakableLines } from "../../selectors";
 import type { Source } from "../../types";
 import { fromEditorLine } from "../../utils/editor";
 
+type OwnProps = {|
+  editor: Object,
+|};
 type Props = {
   selectedSource: Source,
   editor: Object,
@@ -72,4 +75,6 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(EmptyLines);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(
+  EmptyLines
+);

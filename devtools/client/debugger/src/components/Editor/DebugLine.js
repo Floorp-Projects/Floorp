@@ -25,6 +25,7 @@ import {
 
 import type { SourceLocation, Why, SourceWithContent } from "../../types";
 
+type OwnProps = {||};
 type Props = {
   location: ?SourceLocation,
   why: ?Why,
@@ -145,4 +146,4 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps)(DebugLine);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(DebugLine);

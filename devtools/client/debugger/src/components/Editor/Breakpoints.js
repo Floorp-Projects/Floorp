@@ -20,6 +20,10 @@ import type {
   ThreadContext,
 } from "../../types";
 
+type OwnProps = {|
+  cx: ThreadContext,
+  editor: Object,
+|};
 type Props = {
   cx: ThreadContext,
   selectedSource: ?Source,
@@ -64,7 +68,7 @@ class Breakpoints extends Component<Props> {
   }
 }
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   state => ({
     // Retrieves only the first breakpoint per line so that the
     // breakpoint marker represents only the first breakpoint

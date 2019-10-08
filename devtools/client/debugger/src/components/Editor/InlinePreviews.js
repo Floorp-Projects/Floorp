@@ -14,6 +14,10 @@ import {
 
 import type { Frame } from "../../types";
 
+type OwnProps = {|
+  editor: Object,
+  selectedSource: Object,
+|};
 type Props = {
   editor: Object,
   +selectedFrame: ?Frame,
@@ -85,4 +89,6 @@ const mapStateToProps = (
   };
 };
 
-export default connect(mapStateToProps)(InlinePreviews);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(
+  InlinePreviews
+);

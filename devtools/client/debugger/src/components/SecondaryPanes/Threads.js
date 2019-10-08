@@ -14,6 +14,7 @@ import type { Thread as ThreadType } from "../../types";
 
 import "./Threads.css";
 
+type OwnProps = {||};
 type Props = {
   threads: ThreadType[],
 };
@@ -36,4 +37,4 @@ const mapStateToProps = state => ({
   threads: getAllThreads(state),
 });
 
-export default connect(mapStateToProps)(Threads);
+export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(Threads);

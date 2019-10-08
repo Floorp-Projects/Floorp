@@ -26,6 +26,9 @@ function addNewLine(doc: Object) {
   doc.replaceRange("\n", pos);
 }
 
+type OwnProps = {|
+  editor: Object,
+|};
 type Props = {
   cx: Context,
   breakpoint: ?Object,
@@ -260,7 +263,7 @@ const mapDispatchToProps = {
   closeConditionalPanel,
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   mapDispatchToProps
 )(ConditionalPanel);

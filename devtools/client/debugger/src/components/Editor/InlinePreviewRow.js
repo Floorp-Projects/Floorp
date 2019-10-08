@@ -13,6 +13,11 @@ import InlinePreview from "./InlinePreview";
 
 import type { Preview } from "../../types";
 
+type OwnProps = {|
+  editor: Object,
+  line: number,
+  previews: Array<Preview>,
+|};
 type Props = {
   editor: Object,
   line: number,
@@ -108,7 +113,7 @@ class InlinePreviewRow extends PureComponent<Props> {
   }
 }
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   () => ({}),
   {
     openElementInInspector: actions.openElementInInspectorCommand,

@@ -29,6 +29,10 @@ import "./Frames.css";
 
 const NUM_FRAMES_SHOWN = 7;
 
+type OwnProps = {|
+  getFrameTitle?: string => string,
+  selectable?: boolean,
+|};
 type Props = {
   cx: ThreadContext,
   frames: Array<Frame>,
@@ -224,7 +228,7 @@ const mapStateToProps = state => ({
   displayFullUrl: false,
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     selectFrame: actions.selectFrame,

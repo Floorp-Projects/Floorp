@@ -43,6 +43,12 @@ import {
   getContext,
 } from "../../../selectors";
 
+type OwnProps = {|
+  source: Source,
+  selectedSource: ?Source,
+  breakpoint: BreakpointType,
+  editor: SourceEditor,
+|};
 type Props = {
   cx: Context,
   breakpoint: BreakpointType,
@@ -211,13 +217,13 @@ const getFormattedFrame = createSelector(
   }
 );
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state, p: OwnProps) => ({
   cx: getContext(state),
   breakpoints: getBreakpointsList(state),
   frame: getFormattedFrame(state, getCurrentThread(state)),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     enableBreakpoint: actions.enableBreakpoint,

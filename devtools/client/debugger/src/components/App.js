@@ -59,6 +59,7 @@ import EditorFooter from "./Editor/Footer";
 import QuickOpenModal from "./QuickOpenModal";
 import WhyPaused from "./SecondaryPanes/WhyPaused";
 
+type OwnProps = {||};
 type Props = {
   selectedSource: ?Source,
   orientation: OrientationType,
@@ -351,7 +352,7 @@ const mapStateToProps = state => ({
   orientation: getOrientation(state),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     setActiveSearch: actions.setActiveSearch,

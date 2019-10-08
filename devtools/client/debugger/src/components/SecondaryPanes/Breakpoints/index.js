@@ -30,6 +30,11 @@ import type SourceEditor from "../../../utils/editor/source-editor";
 
 import "./Breakpoints.css";
 
+type OwnProps = {|
+  shouldPauseOnExceptions: boolean,
+  shouldPauseOnCaughtExceptions: boolean,
+  pauseOnExceptions: Function,
+|};
 type Props = {
   breakpointSources: BreakpointSources,
   selectedSource: ?Source,
@@ -149,7 +154,7 @@ const mapStateToProps = state => ({
   selectedSource: getSelectedSource(state),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     pauseOnExceptions: actions.pauseOnExceptions,

@@ -32,6 +32,7 @@ type State = {
   focused: boolean,
 };
 
+type OwnProps = {||};
 type Props = {
   categories: EventListenerCategoryList,
   expandedCategories: EventListenerExpandedList,
@@ -298,7 +299,7 @@ const mapStateToProps = state => ({
   expandedCategories: getEventListenerExpanded(state),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     addEventListeners: actions.addEventListenerBreakpoints,

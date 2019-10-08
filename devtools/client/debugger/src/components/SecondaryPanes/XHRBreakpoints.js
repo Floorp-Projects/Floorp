@@ -18,6 +18,10 @@ import ExceptionOption from "./Breakpoints/ExceptionOption";
 import type { XHRBreakpointsList } from "../../reducers/types";
 import type { XHRBreakpoint } from "../../types";
 
+type OwnProps = {|
+  onXHRAdded: () => void,
+  showInput: boolean,
+|};
 type Props = {
   xhrBreakpoints: XHRBreakpointsList,
   shouldPauseOnAny: boolean,
@@ -362,7 +366,7 @@ const mapStateToProps = state => ({
   shouldPauseOnAny: shouldPauseOnAnyXHR(state),
 });
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     setXHRBreakpoint: actions.setXHRBreakpoint,

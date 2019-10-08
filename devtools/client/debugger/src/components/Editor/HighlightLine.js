@@ -27,6 +27,7 @@ type HighlightFrame = {
   location: SourceLocation,
 };
 
+type OwnProps = {||};
 type Props = {
   pauseCommand: Command,
   selectedFrame: ?HighlightFrame,
@@ -182,7 +183,7 @@ export class HighlightLine extends Component<Props> {
   }
 }
 
-export default connect(state => {
+export default connect<Props, OwnProps, _, _, _, _>(state => {
   const selectedLocation = getSelectedLocation(state);
 
   if (!selectedLocation) {

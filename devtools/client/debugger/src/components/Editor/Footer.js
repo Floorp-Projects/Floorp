@@ -37,6 +37,9 @@ type CursorPosition = {
   column: number,
 };
 
+type OwnProps = {|
+  horizontal: boolean,
+|};
 type Props = {
   cx: Context,
   selectedSource: ?SourceWithContent,
@@ -284,7 +287,7 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(
+export default connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,
   {
     togglePrettyPrint: actions.togglePrettyPrint,
