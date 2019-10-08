@@ -1135,12 +1135,19 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
           nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
           DOCUMENT_FRAGMENT_NODE);
 
-  if (Document* doc = GetComposedDoc()) {
-    if (PresShell* presShell = doc->GetPresShell()) {
-      presShell->DestroyFramesForAndRestyle(this);
+  // If there are no children, the flat tree is not changing due to the presence
+  // of the shadow root, so we don't need to invalidate style / layout.
+  //
+  // This is a minor optimization, but also works around nasty stuff like
+  // bug 1397876.
+  if (HasChildren()) {
+    if (Document* doc = GetComposedDoc()) {
+      if (PresShell* presShell = doc->GetPresShell()) {
+        presShell->DestroyFramesForAndRestyle(this);
+      }
     }
+    MOZ_ASSERT(!GetPrimaryFrame());
   }
-  MOZ_ASSERT(!GetPrimaryFrame());
 
   /**
    * 4. Let shadow be a new shadow root whose node document is
