@@ -69,12 +69,6 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "FxAccountsOAuthGrantClient",
-  "resource://gre/modules/FxAccountsOAuthGrantClient.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
   "FxAccountsCommands",
   "resource://gre/modules/FxAccountsCommands.js"
 );
@@ -251,8 +245,8 @@ AccountState.prototype = {
   },
 
   // Set a cached token. |tokenData| must have a 'token' element, but may also
-  // have additional fields (eg, it probably specifies the server to revoke
-  // from). The 'get' functions below return the entire |tokenData| value.
+  // have additional fields.
+  // The 'get' functions below return the entire |tokenData| value.
   setCachedToken(scopeArray, tokenData) {
     this._cachePreamble();
     if (!tokenData.token) {
@@ -461,7 +455,7 @@ class FxAccounts {
   }
 
   /**
-   * Retrieves an OAuth authorization code
+   * Retrieves an OAuth authorization code.
    *
    * @param {Object} options
    * @param options.client_id
@@ -475,8 +469,7 @@ class FxAccounts {
    */
   authorizeOAuthCode(options) {
     return this._withVerifiedAccountState(async state => {
-      const client = this._internal.oauthClient;
-      const oAuthURL = client.serverURL.href;
+      const { sessionToken } = await state.getUserAccountData(["sessionToken"]);
       const params = { ...options };
       if (params.keys_jwk) {
         const jwk = JSON.parse(
@@ -492,8 +485,10 @@ class FxAccounts {
         delete params.keys_jwk;
       }
       try {
-        const assertion = await this._internal.getAssertion(oAuthURL);
-        return await client.authorizeCodeFromAssertion(assertion, params);
+        return await this._internal.fxAccountsClient.oauthAuthorize(
+          sessionToken,
+          params
+        );
       } catch (err) {
         throw this._internal._errorToErrorClass(err);
       }
@@ -862,20 +857,6 @@ FxAccountsInternal.prototype = {
     return this._device;
   },
 
-  _oauthClient: null,
-  get oauthClient() {
-    if (!this._oauthClient) {
-      const serverURL = Services.urlFormatter.formatURLPref(
-        "identity.fxaccounts.remote.oauth.uri"
-      );
-      this._oauthClient = new FxAccountsOAuthGrantClient({
-        serverURL,
-        client_id: FX_OAUTH_CLIENT_ID,
-      });
-    }
-    return this._oauthClient;
-  },
-
   // A hook-point for tests who may want a mocked AccountState or mocked storage.
   newAccountState(credentials) {
     let storage = new FxAccountsStorageManager();
@@ -1147,11 +1128,10 @@ FxAccountsInternal.prototype = {
   },
 
   _destroyOAuthToken(tokenData) {
-    let client = new FxAccountsOAuthGrantClient({
-      serverURL: tokenData.server,
-      client_id: FX_OAUTH_CLIENT_ID,
-    });
-    return client.destroyToken(tokenData.token);
+    return this.fxAccountsClient.oauthDestroy(
+      FX_OAUTH_CLIENT_ID,
+      tokenData.token
+    );
   },
 
   _destroyAllOAuthTokens(tokenInfos) {
@@ -1566,17 +1546,16 @@ FxAccountsInternal.prototype = {
   },
 
   // Does the actual fetch of an oauth token for getOAuthToken()
-  async _doTokenFetch(client, scopeString) {
-    let oAuthURL = client.serverURL.href;
-    try {
-      log.debug("getOAuthToken fetching new token from", oAuthURL);
-      let assertion = await this.getAssertion(oAuthURL);
-      let result = await client.getTokenFromAssertion(assertion, scopeString);
-      let token = result.access_token;
-      return token;
-    } catch (err) {
-      throw this._errorToErrorClass(err);
-    }
+  async _doTokenFetch(scopeString) {
+    return this.withVerifiedAccountState(async state => {
+      const { sessionToken } = await state.getUserAccountData(["sessionToken"]);
+      const result = await this.fxAccountsClient.oauthToken(
+        sessionToken,
+        FX_OAUTH_CLIENT_ID,
+        scopeString
+      );
+      return result.access_token;
+    });
   },
 
   getOAuthToken(options = {}) {
@@ -1606,8 +1585,6 @@ FxAccountsInternal.prototype = {
       // Build the string we use in our "inflight" map and that we send to the
       // server. Because it's used as a key in the map we sort the scopes.
       let scopeString = scope.sort().join(" ");
-      let client = options.client || this.oauthClient;
-      let oAuthURL = client.serverURL.href;
 
       // We keep a map of in-flight requests to avoid multiple promise-based
       // consumers concurrently requesting the same token.
@@ -1619,7 +1596,7 @@ FxAccountsInternal.prototype = {
 
       // We need to start a new fetch and stick the promise in our in-flight map
       // and remove it when it resolves.
-      let promise = this._doTokenFetch(client, scopeString)
+      let promise = this._doTokenFetch(scopeString)
         .then(token => {
           // As a sanity check, ensure something else hasn't raced getting a token
           // of the same scope. If something has we just make noise rather than
@@ -1629,7 +1606,7 @@ FxAccountsInternal.prototype = {
           }
           // If we got one, cache it.
           if (token) {
-            let entry = { token, server: oAuthURL };
+            let entry = { token };
             currentState.setCachedToken(scope, entry);
           }
           return token;
