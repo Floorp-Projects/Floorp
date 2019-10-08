@@ -2432,9 +2432,6 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
 
   bool snap;
   nsRect bounds = aMaskItem->GetBounds(aDisplayListBuilder, &snap);
-  if (bounds.IsEmpty()) {
-    return Nothing();
-  }
 
   const int32_t appUnitsPerDevPixel =
       aMaskItem->Frame()->PresContext()->AppUnitsPerDevPixel();
@@ -2451,6 +2448,10 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
   LayerIntRect itemRect =
       LayerIntRect::FromUnknownRect(bounds.ScaleToOutsidePixels(
           scale.width, scale.height, appUnitsPerDevPixel));
+
+  if (itemRect.IsEmpty()) {
+    return Nothing();
+  }
 
   LayoutDeviceToLayerScale2D layerScale(scale.width, scale.height);
   LayoutDeviceRect imageRect = LayerRect(itemRect) / layerScale;
