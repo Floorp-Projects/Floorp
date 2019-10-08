@@ -5639,6 +5639,8 @@ TEST_F(SdpTest, hugeSdp) {
       "a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r\n"
       "a=extmap:3 "
       "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n"
+      "a=extmap:6 "
+      "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r\n"
       "a=sendrecv\r\n"
       "a=mid:video\r\n"
       "a=rtcp-mux\r\n"
