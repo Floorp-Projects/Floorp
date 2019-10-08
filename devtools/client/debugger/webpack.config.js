@@ -5,6 +5,7 @@
 const toolbox = require("devtools-launchpad/index");
 const sourceMapAssets = require("devtools-source-map/assets");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const webpack = require("webpack");
 
 const getConfig = require("./bin/getConfig");
 const mozillaCentralMappings = require("./configs/mozilla-central-mappings");
@@ -46,6 +47,14 @@ const webpackConfig = {
         to: `source-map-worker-assets/${name}`,
       }))
     ),
+    new webpack.BannerPlugin({
+      banner: `/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ `,
+      raw: true,
+      exclude: /\.css$/,
+    }),
   ],
 };
 
