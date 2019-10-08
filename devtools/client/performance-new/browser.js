@@ -1,16 +1,47 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
 "use strict";
 
-// The "loader" is globally available, much like "require".
-loader.lazyRequireGetter(this, "Services");
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
-loader.lazyRequireGetter(
-  this,
-  "ProfilerGetSymbols",
-  "resource://gre/modules/ProfilerGetSymbols.jsm",
-  true
+/**
+ * @typedef {import("./@types/perf").Action} Action
+ * @typedef {import("./@types/perf").Library} Library
+ * @typedef {import("./@types/perf").PerfFront} PerfFront
+ * @typedef {import("./@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
+ * @typedef {import("./@types/perf").RecordingState} RecordingState
+ * @typedef {import("./@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
+ * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
+ */
+
+/**
+ * TS-TODO
+ *
+ * This function replaces lazyRequireGetter, and TypeScript can understand it. It's
+ * currently duplicated until we have consensus that TypeScript is a good idea.
+ *
+ * @template T
+ * @type {(callback: () => T) => () => T}
+ */
+function requireLazy(callback) {
+  /** @type {T | undefined} */
+  let cache;
+  return () => {
+    if (cache === undefined) {
+      cache = callback();
+    }
+    return cache;
+  };
+}
+
+const lazyServices = requireLazy(() =>
+  require("resource://gre/modules/Services.jsm")
+);
+
+const lazyOS = requireLazy(() => require("resource://gre/modules/osfile.jsm"));
+
+const lazyProfilerGetSymbols = requireLazy(() =>
+  require("resource://gre/modules/ProfilerGetSymbols.jsm")
 );
 
 const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
@@ -35,13 +66,14 @@ const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
  * into a new browser tab, and injects the profile via a frame script.
  *
  * @param {object} profile - The Gecko profile.
- * @param {function} getSymbolTableCallback - A callback function with the signature
+ * @param {GetSymbolTableCallback} getSymbolTableCallback - A callback function with the signature
  *   (debugName, breakpadId) => Promise<SymbolTableAsTuple>, which will be invoked
  *   when profiler.firefox.com sends SYMBOL_TABLE_REQUEST_EVENT messages to us. This
  *   function should obtain a symbol table for the requested binary and resolve the
  *   returned promise with it.
  */
 function receiveProfile(profile, getSymbolTableCallback) {
+  const { Services } = lazyServices();
   // Find the most recently used window, as the DevTools client could be in a variety
   // of hosts.
   const win = Services.wm.getMostRecentWindow("navigator:browser");
@@ -104,7 +136,7 @@ function receiveProfile(profile, getSymbolTableCallback) {
  * function always returns a valid array of strings.
  * @param {PreferenceFront} preferenceFront
  * @param {string} prefName
- * @param {array of string} defaultValue
+ * @param {string[]} defaultValue
  */
 async function _getArrayOfStringsPref(preferenceFront, prefName, defaultValue) {
   let array;
@@ -132,9 +164,10 @@ async function _getArrayOfStringsPref(preferenceFront, prefName, defaultValue) {
  * even exists. Gracefully handle malformed data or missing data. Ensure that this
  * function always returns a valid array of strings.
  * @param {string} prefName
- * @param {array of string} defaultValue
+ * @param {string[]} defaultValue
  */
 async function _getArrayOfStringsHostPref(prefName, defaultValue) {
+  const { Services } = lazyServices();
   let array;
   try {
     const text = Services.prefs.getStringPref(
@@ -220,10 +253,11 @@ async function getRecordingPreferencesFromDebuggee(
  * and some of them on the host browser instance.
  *
  * @param {PreferenceFront} preferenceFront
- * @param {object} defaultSettings See the getRecordingSettings selector for the shape
+ * @param {object} settings See the getRecordingSettings selector for the shape
  *                                 of the object and how it gets defined.
  */
 async function setRecordingPreferencesOnDebuggee(preferenceFront, settings) {
+  const { Services } = lazyServices();
   await Promise.all([
     preferenceFront.setIntPref(
       `devtools.performance.recording.entries`,
@@ -273,9 +307,14 @@ async function setRecordingPreferencesOnDebuggee(preferenceFront, settings) {
  *    profile has been passed to the UI.
  *
  * @param {object} profile - The profile JSON object
+ * @returns {(debugName: string, breakpadId: string) => Library | undefined}
  */
 function createLibraryMap(profile) {
   const map = new Map();
+
+  /**
+   * @param {object} processProfile
+   */
   function fillMapForProcessRecursive(processProfile) {
     for (const lib of processProfile.libs) {
       const { debugName, breakpadId } = lib;
@@ -294,6 +333,12 @@ function createLibraryMap(profile) {
   };
 }
 
+/**
+ * @param {PerfFront} perfFront
+ * @param {string} path
+ * @param {string} breakpadId
+ * @returns {Promise<SymbolTableAsTuple>}
+ */
 async function getSymbolTableFromDebuggee(perfFront, path, breakpadId) {
   const [addresses, index, buffer] = await perfFront.getSymbolTable(
     path,
@@ -308,7 +353,12 @@ async function getSymbolTableFromDebuggee(perfFront, path, breakpadId) {
   ];
 }
 
+/**
+ * @param {string} path
+ * @returns {Promise<boolean>}
+ */
 async function doesFileExistAtPath(path) {
+  const { OS } = lazyOS();
   try {
     const result = await OS.File.stat(path);
     return !result.isDir;
@@ -332,15 +382,16 @@ async function doesFileExistAtPath(path) {
  * An objdir, or "object directory", is a directory on the host machine that's
  * used to store build artifacts ("object files") from the compilation process.
  *
- * @param {array of string} objdirs An array of objdir paths on the host machine
+ * @param {string[]} objdirs An array of objdir paths on the host machine
  *   that should be searched for relevant build artifacts.
  * @param {string} filename The file name of the binary.
  * @param {string} breakpadId The breakpad ID of the binary.
- * @returns {Promise} The symbol table of the first encountered binary with a
+ * @returns {Promise<SymbolTableAsTuple>} The symbol table of the first encountered binary with a
  *   matching breakpad ID, in SymbolTableAsTuple format. An exception is thrown (the
  *   promise is rejected) if nothing was found.
  */
 async function getSymbolTableFromLocalBinary(objdirs, filename, breakpadId) {
+  const { OS } = lazyOS();
   const candidatePaths = [];
   for (const objdirPath of objdirs) {
     // Binaries are usually expected to exist at objdir/dist/bin/filename.
@@ -354,6 +405,7 @@ async function getSymbolTableFromLocalBinary(objdirs, filename, breakpadId) {
 
   for (const path of candidatePaths) {
     if (await doesFileExistAtPath(path)) {
+      const { ProfilerGetSymbols } = lazyProfilerGetSymbols();
       try {
         return await ProfilerGetSymbols.getSymbolTable(path, path, breakpadId);
       } catch (e) {
@@ -379,18 +431,25 @@ async function getSymbolTableFromLocalBinary(objdirs, filename, breakpadId) {
  * The profiler popup uses a more simplified version of this function as
  * it's dealing with a simpler situation.
  *
- * @param {Profile} profile - The raw profie (not gzipped).
- * @param {array of string} objdirs - An array of objdir paths on the host machine
+ * @param {object} profile - The raw profie (not gzipped).
+ * @param {string[]} objdirs - An array of objdir paths on the host machine
  *   that should be searched for relevant build artifacts.
  * @param {PerfFront} perfFront
- * @return {Function}
+ * @return {GetSymbolTableCallback}
  */
 function createMultiModalGetSymbolTableFn(profile, objdirs, perfFront) {
   const libraryGetter = createLibraryMap(profile);
 
   return async function getSymbolTable(debugName, breakpadId) {
-    const { name, path, debugPath } = libraryGetter(debugName, breakpadId);
+    const result = libraryGetter(debugName, breakpadId);
+    if (!result) {
+      throw new Error(
+        `Could not find the library for "${debugName}", "${breakpadId}".`
+      );
+    }
+    const { name, path, debugPath } = result;
     if (await doesFileExistAtPath(path)) {
+      const { ProfilerGetSymbols } = lazyProfilerGetSymbols();
       // This profile was obtained from this machine, and not from a
       // different device (e.g. an Android phone). Dump symbols from the file
       // on this machine directly.

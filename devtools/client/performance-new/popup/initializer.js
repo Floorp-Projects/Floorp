@@ -1,8 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
+// @ts-check
 "use strict";
+
+/**
+ * @typedef {import("../@types/perf").PerfFront} PerfFront
+ * @typedef {import("../@types/perf").PreferenceFront} PreferenceFront
+ */
 
 /**
  * This file initializes the profiler popup UI. It is in charge of initializing
@@ -25,7 +30,7 @@ const { require } = BrowserLoader({
 });
 
 /**
- * The background.jsm manages the profiler state, and can be loaded multiple time
+ * The background.jsm.js manages the profiler state, and can be loaded multiple time
  * for various components. This pop-up needs a copy, and it is also used by the
  * profiler shortcuts. In order to do this, the background code needs to live in a
  * JSM module, that can be shared with the DevTools keyboard shortcut manager.
@@ -102,8 +107,9 @@ async function gInit() {
 
 function resizeWindow() {
   window.requestAnimationFrame(() => {
-    if (window.gResizePopup) {
-      window.gResizePopup(document.body.clientHeight);
+    const { gResizePopup } = /** @type {any} */ (window);
+    if (gResizePopup) {
+      gResizePopup(document.body.clientHeight);
     }
   });
 }

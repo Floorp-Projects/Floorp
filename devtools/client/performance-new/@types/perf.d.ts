@@ -1,12 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * This file contains the shared types for the performance-new client.
+ */
+
 import {
   Reducer as ReduxReducer,
   Store as ReduxStore,
 } from "devtools/client/shared/vendor/redux";
 
-export interface PanelWindow extends Window {
+export interface PanelWindow {
   gToolbox?: any;
   gTarget?: any;
   gInit(perfFront: any, preferenceFront: any): void;
@@ -14,7 +19,7 @@ export interface PanelWindow extends Window {
 }
 
 /**
- * TODO
+ * TS-TODO - Stub.
  */
 export interface Target {
   // TODO
@@ -22,14 +27,14 @@ export interface Target {
 }
 
 /**
- * TODO
+ * TS-TODO - Stub.
  */
 export interface Toolbox {
   target: Target;
 }
 
 /**
- * TODO
+ * TS-TODO - Stub.
  */
 export interface PerfFront {
   startProfiler: any;
@@ -42,9 +47,17 @@ export interface PerfFront {
 }
 
 /**
- * TODO
+ * TS-TODO - Stub
  */
-export interface PreferenceFront {}
+export interface PreferenceFront {
+  clearUserPref: (prefName: string) => Promise<void>;
+  getStringPref: (prefName: string) => Promise<string>;
+  setStringPref: (prefName: string, value: string) => Promise<void>;
+  getCharPref: (prefName: string) => Promise<string>;
+  setCharPref: (prefName: string, value: string) => Promise<void>;
+  getIntPref: (prefName: string) => Promise<number>;
+  setIntPref: (prefName: string, value: number) => Promise<void>;
+}
 
 export type RecordingState =
   // The initial state before we've queried the PerfActor
@@ -122,7 +135,15 @@ export type ReceiveProfile = (
   getSymbolTableCallback: GetSymbolTableCallback
 ) => void;
 
-export type SetRecordingPreferences = (settings: Object) => void;
+export type SetRecordingPreferences = (settings: object) => void;
+
+/**
+ * This interface is injected into profiler.firefox.com
+ */
+interface GeckoProfilerFrameScriptInterface {
+  getProfile: () => Promise<object>;
+  getSymbolTable: GetSymbolTableCallback;
+}
 
 export interface RecordingStateFromPreferences {
   entries: number;
@@ -148,7 +169,7 @@ export interface InitializedValues {
   // or inside of devtools.
   isPopup: boolean;
   // The popup and devtools panel use different codepaths for getting symbol tables.
-  getSymbolTableGetter: (profile: Object) => GetSymbolTableCallback;
+  getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
 }
 
 /**
@@ -195,5 +216,27 @@ export type Action =
       setRecordingPreferences: SetRecordingPreferences;
       isPopup: boolean;
       recordingSettingsFromPreferences: RecordingStateFromPreferences;
-      getSymbolTableGetter: (profile: Object) => GetSymbolTableCallback;
+      getSymbolTableGetter: (profile: object) => GetSymbolTableCallback;
     };
+
+export type PopupBackgroundFeatures = { [feature: string]: boolean };
+
+/**
+ * The state of the profiler popup.
+ */
+export interface PopupBackgroundState {
+  isRunning: boolean;
+  settingsOpen: boolean;
+  features: PopupBackgroundFeatures;
+  buffersize: number;
+  windowLength: number;
+  interval: number;
+  threads: string;
+}
+
+// TS-TODO - Stub
+export interface ContentFrameMessageManager {
+  addMessageListener: (event: string, listener: (event: any) => void) => void;
+  addEventListener: (event: string, listener: (event: any) => void) => void;
+  sendAsyncMessage: (name: string, data: any) => void;
+}
