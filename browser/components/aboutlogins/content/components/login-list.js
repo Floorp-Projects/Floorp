@@ -542,7 +542,6 @@ export default class LoginList extends HTMLElement {
     switch (event.key) {
       case "ArrowDown": {
         if (!nextItem) {
-          this._list.removeAttribute("aria-activedescendant");
           return;
         }
         newlyFocusedItem = nextItem;
@@ -551,7 +550,6 @@ export default class LoginList extends HTMLElement {
       case "ArrowLeft": {
         let item = isLTR ? previousItem : nextItem;
         if (!item) {
-          this._list.removeAttribute("aria-activedescendant");
           return;
         }
         newlyFocusedItem = item;
@@ -560,7 +558,6 @@ export default class LoginList extends HTMLElement {
       case "ArrowRight": {
         let item = isLTR ? nextItem : previousItem;
         if (!item) {
-          this._list.removeAttribute("aria-activedescendant");
           return;
         }
         newlyFocusedItem = item;
@@ -568,7 +565,6 @@ export default class LoginList extends HTMLElement {
       }
       case "ArrowUp": {
         if (!previousItem) {
-          this._list.removeAttribute("aria-activedescendant");
           return;
         }
         newlyFocusedItem = previousItem;
@@ -580,9 +576,6 @@ export default class LoginList extends HTMLElement {
         activeDescendant.click();
         return;
       }
-      case "Tab":
-        newlyFocusedItem = activeDescendant;
-        break;
       default:
         return;
     }
@@ -598,12 +591,6 @@ export default class LoginList extends HTMLElement {
     if (oldSelectedItem) {
       oldSelectedItem.classList.remove("selected");
       oldSelectedItem.removeAttribute("aria-selected");
-    }
-    let oldKeyboardSelectedItem = this._list.querySelector(
-      ".keyboard-selected"
-    );
-    if (oldKeyboardSelectedItem) {
-      oldKeyboardSelectedItem.classList.remove("keyboard-selected");
     }
     this.classList.toggle("create-login-selected", !listItem.dataset.guid);
     this._blankLoginListItem.hidden = !!listItem.dataset.guid;
