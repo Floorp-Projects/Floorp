@@ -4542,7 +4542,7 @@ AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
 
 AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM() {
   if (zone->types.hadOOMSweepingTypes()) {
-    gc::AutoSetThreadIsSweeping threadIsSweeping;
+    gc::AutoSetThreadIsSweeping threadIsSweeping(zone);
     JSRuntime* rt = zone->runtimeFromMainThread();
     JSFreeOp fop(rt);
     js::CancelOffThreadIonCompile(rt);
