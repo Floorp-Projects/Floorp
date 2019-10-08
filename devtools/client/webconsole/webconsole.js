@@ -136,8 +136,7 @@ class WebConsole {
   }
 
   canRewind() {
-    const target = this.hud && this.hud.currentTarget;
-    const traits = target && target.traits;
+    const traits = this.currentTarget && this.currentTarget.traits;
     return traits && traits.canRewind;
   }
 
