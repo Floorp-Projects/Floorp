@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469774
 <vbox height="50"/>
 
 <menupopup id="popup">
-  <textbox id="textbox"/>
+  <input xmlns="http://www.w3.org/1999/xhtml"  id="textbox"/>
 </menupopup>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
