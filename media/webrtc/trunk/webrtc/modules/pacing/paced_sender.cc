@@ -268,7 +268,11 @@ void PacedSender::Process() {
     pacing_info = prober_->CurrentCluster();
     recommended_probe_size = prober_->RecommendedMinProbeSize();
   }
-  while (!packets_->Empty()) {
+  // We need to check paused_ here because the critical section protecting
+  // it is released during the call to SendPacket. This has been fixed in
+  // a similar way upstream, so these changes can be dropped the next time
+  // we update.
+  while (!paused_ && !packets_->Empty()) {
     // Since we need to release the lock in order to send, we first pop the
     // element from the priority queue but keep it in storage, so that we can
     // reinsert it if send fails.
