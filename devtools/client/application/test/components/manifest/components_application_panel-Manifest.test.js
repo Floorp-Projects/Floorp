@@ -13,6 +13,7 @@ const Manifest = createFactory(
 
 const {
   MANIFEST_COLOR_MEMBERS,
+  MANIFEST_ICON_MEMBERS,
   MANIFEST_STRING_MEMBERS,
   MANIFEST_UNKNOWN_TYPE_MEMBERS,
   MANIFEST_NO_ISSUES,
@@ -36,6 +37,11 @@ describe("Manifest", () => {
 
   it("renders the expected snapshot for a manifest with unknown types", () => {
     const wrapper = shallow(Manifest(MANIFEST_UNKNOWN_TYPE_MEMBERS));
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders the expected snapshop for a manifest with icon members", () => {
+    const wrapper = shallow(Manifest(MANIFEST_ICON_MEMBERS));
     expect(wrapper).toMatchSnapshot();
   });
 
