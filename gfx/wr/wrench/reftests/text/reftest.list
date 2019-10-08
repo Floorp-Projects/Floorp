@@ -32,7 +32,7 @@ skip_on(android) != synthetic-bold-transparent.yaml synthetic-bold.yaml
 skip_on(android) != synthetic-italics.yaml synthetic-italics-ref.yaml
 skip_on(android) != synthetic-italics-custom.yaml synthetic-italics-ref.yaml
 skip_on(android) != synthetic-italics-custom.yaml synthetic-italics.yaml
-skip_on(android,emulator) options(disable-aa) == ahem.yaml ahem-ref.yaml
+options(disable-aa) == ahem.yaml ahem-ref.yaml
 platform(linux) == isolated-text.yaml isolated-text.png
 platform(mac) skip_on(mac,>=10.14) fuzzy(3,67) == white-opacity.yaml white-opacity.png
 fuzzy(1,4) platform(linux) options(disable-subpixel) == colors.yaml colors-alpha.png
