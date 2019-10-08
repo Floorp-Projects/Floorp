@@ -225,6 +225,12 @@ module.exports = {
       }
 
       const viewport = getState().viewports[0];
+
+      post(window, {
+        type: "viewport-resize",
+        height: device.height,
+        width: device.width,
+      });
       post(window, {
         type: "change-device",
         device,
