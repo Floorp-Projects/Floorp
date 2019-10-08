@@ -27,7 +27,15 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   @"mainButton",
   @"scrubber",
   @"popover",
+  @"scrollView",
 ];
+
+// The default space between inputs, used where layout is not automatic.
+static const uint32_t kInputSpacing = 8;
+// The width of buttons in Apple's Share ScrollView. We use this in our
+// ScrollViews to give them a native appearance.
+static const uint32_t kScrollViewButtonWidth = 144;
+static const uint32_t kInputIconSize = 16;
 
 // The system default width for Touch Bar inputs is 128px. This is double.
 #define MAIN_BUTTON_WIDTH 256
@@ -114,13 +122,18 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
       [(NSPopoverTouchBarItem*)item setCollapsedRepresentation:nil];
       [(NSPopoverTouchBarItem*)item setCollapsedRepresentationImage:nil];
       [(nsTouchBar*)[(NSPopoverTouchBarItem*)item popoverTouchBar] release];
+    } else if ([[item view] isKindOfClass:[NSScrollView class]]) {
+      [[(NSScrollView*)[item view] documentView] release];
     }
 
+    [[item view] release];
     [item release];
   }
 
   [self.defaultItemIdentifiers release];
   [self.customizationAllowedItemIdentifiers release];
+  [self.scrollViewButtons removeAllObjects];
+  [self.scrollViewButtons release];
   [self.mappedLayoutItems removeAllObjects];
   [self.mappedLayoutItems release];
   [super dealloc];
@@ -163,21 +176,35 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   // Our new item, which will be initialized depending on aIdentifier.
   NSCustomTouchBarItem* newItem = [[NSCustomTouchBarItem alloc] initWithIdentifier:aIdentifier];
 
+  if ([[input type] hasSuffix:@"scrollView"]) {
+    [self updateScrollView:newItem input:input];
+    return newItem;
+  }
+
   // The cases of a button or main button require the same setup.
   NSButton* button = [NSButton buttonWithTitle:@"" target:self action:@selector(touchBarAction:)];
   newItem.view = button;
 
-  if ([[input type] hasSuffix:@"mainButton"]) {
+  if ([[input type] hasSuffix:@"button"] && ![[input type] hasPrefix:@"scrollView"]) {
+    [self updateButton:button input:input];
+  } else if ([[input type] hasSuffix:@"mainButton"]) {
     [self updateMainButton:button input:input];
-    return newItem;
   }
-  [self updateButton:button input:input];
   return newItem;
 }
 
 - (bool)updateItem:(TouchBarInput*)aInput {
   NSTouchBarItem* item = [self itemForIdentifier:[aInput nativeIdentifier]];
+  // If we can't immediately find item, there are three possibilities:
+  //   * It is a button in a ScrollView, which can't be found with itemForIdentifier; or
+  //   * It is contained within a popover; or
+  //   * It simply does not exist.
+  // We check for each possibility here.
   if (!item) {
+    if ([self maybeUpdateScrollViewChild:aInput]) {
+      [self replaceMappedLayoutItem:aInput];
+      return true;
+    }
     if ([self maybeUpdatePopoverChild:aInput]) {
       [self replaceMappedLayoutItem:aInput];
       return true;
@@ -190,6 +217,8 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
     [self updateButton:(NSButton*)item.view input:aInput];
   } else if ([[aInput type] hasSuffix:@"mainButton"]) {
     [self updateMainButton:(NSButton*)item.view input:aInput];
+  } else if ([[aInput type] hasSuffix:@"scrollView"]) {
+    [self updateScrollView:(NSCustomTouchBarItem*)item input:aInput];
   } else if ([[aInput type] hasSuffix:@"popover"]) {
     [self updatePopover:(NSPopoverTouchBarItem*)item input:aInput];
   }
@@ -209,6 +238,35 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
       if ([(nsTouchBar*)[(NSPopoverTouchBarItem*)popover popoverTouchBar] updateItem:aInput]) {
         return true;
       }
+    }
+  }
+  return false;
+}
+
+- (bool)maybeUpdateScrollViewChild:(TouchBarInput*)aInput {
+  NSButton* scrollViewButton = self.scrollViewButtons[[aInput nativeIdentifier]];
+  if (scrollViewButton) {
+    // ScrollView buttons are similar to mainButtons except for their width.
+    [self updateMainButton:scrollViewButton input:aInput];
+    uint32_t buttonSize =
+        MAX(scrollViewButton.attributedTitle.size.width + kInputIconSize + kInputSpacing,
+            kScrollViewButtonWidth);
+    [[scrollViewButton widthAnchor] constraintGreaterThanOrEqualToConstant:buttonSize].active = YES;
+  }
+  // Updating the TouchBarInput* in the ScrollView's mChildren array.
+  for (NSTouchBarItemIdentifier identifier in self.mappedLayoutItems) {
+    TouchBarInput* potentialScrollView = self.mappedLayoutItems[identifier];
+    if (![[potentialScrollView type] hasSuffix:@"scrollView"]) {
+      continue;
+    }
+    for (uint32_t i = 0; i < [[potentialScrollView children] count]; ++i) {
+      TouchBarInput* child = [potentialScrollView children][i];
+      if (![[child nativeIdentifier] isEqualToString:[aInput nativeIdentifier]]) {
+        continue;
+      }
+      [[potentialScrollView children] replaceObjectAtIndex:i withObject:aInput];
+      [child release];
+      return true;
     }
   }
   return false;
@@ -284,6 +342,59 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   } else {
     aPopoverItem.collapsedRepresentation = nil;
   }
+}
+
+- (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem input:(TouchBarInput*)aInput {
+  if (!aScrollViewItem || ![aInput children]) {
+    return;
+  }
+  NSMutableDictionary* constraintViews = [NSMutableDictionary dictionary];
+  NSView* documentView = [[NSView alloc] initWithFrame:NSZeroRect];
+  NSString* layoutFormat = @"H:|-8-";
+  NSSize size = NSMakeSize(kInputSpacing, 30);
+  // Layout strings allow only alphanumeric characters. We will use this
+  // NSCharacterSet to strip illegal characters.
+  NSCharacterSet* charactersToRemove = [[NSCharacterSet alphanumericCharacterSet] invertedSet];
+
+  for (TouchBarInput* childInput in [aInput children]) {
+    if (![[childInput type] hasSuffix:@"button"]) {
+      continue;
+    }
+    NSButton* button = [NSButton buttonWithTitle:[childInput title]
+                                          target:self
+                                          action:@selector(touchBarAction:)];
+    // ScrollView buttons are similar to mainButtons except for their width.
+    [self updateMainButton:button input:childInput];
+    uint32_t buttonSize = MAX(button.attributedTitle.size.width + kInputIconSize + kInputSpacing,
+                              kScrollViewButtonWidth);
+    [[button widthAnchor] constraintGreaterThanOrEqualToConstant:buttonSize].active = YES;
+
+    self.scrollViewButtons[[childInput nativeIdentifier]] = button;
+
+    button.translatesAutoresizingMaskIntoConstraints = NO;
+    [documentView addSubview:button];
+    NSString* layoutKey = [[[childInput nativeIdentifier]
+        componentsSeparatedByCharactersInSet:charactersToRemove] componentsJoinedByString:@""];
+
+    // Iteratively create our layout string.
+    layoutFormat =
+        [layoutFormat stringByAppendingString:[NSString stringWithFormat:@"[%@]-8-", layoutKey]];
+    [constraintViews setObject:button forKey:layoutKey];
+    size.width += kInputSpacing + buttonSize;
+  }
+  layoutFormat = [layoutFormat stringByAppendingString:[NSString stringWithFormat:@"|"]];
+  NSArray* hConstraints =
+      [NSLayoutConstraint constraintsWithVisualFormat:layoutFormat
+                                              options:NSLayoutFormatAlignAllCenterY
+                                              metrics:nil
+                                                views:constraintViews];
+  NSScrollView* scrollView =
+      [[NSScrollView alloc] initWithFrame:CGRectMake(0, 0, size.width, size.height)];
+  [documentView setFrame:NSMakeRect(0, 0, size.width, size.height)];
+  [NSLayoutConstraint activateConstraints:hConstraints];
+  scrollView.documentView = documentView;
+
+  aScrollViewItem.view = scrollView;
 }
 
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
