@@ -24,6 +24,7 @@ permalink: /changelog/
     * To open .apk files, you must still add the permisison `android.permission.INSTALL_PACKAGES` to your manifest.
   * Improved visuals of `SimpleDownloadDialogFragment` to better match `SitePermissionsDialogFragment`.
     * `SimpleDownloadDialogFragment` can similarly be themed by using `PromptsStyling` properties.
+  * Recreated download notification channel with lower importance for Android O+ so that the notification is not audibly intrusive.
 
 * **feature-webnotifications**
   * Adds feature implementation for configuring and displaying web notifications to the user

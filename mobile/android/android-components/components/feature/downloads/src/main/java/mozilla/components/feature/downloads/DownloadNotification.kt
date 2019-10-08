@@ -28,7 +28,8 @@ import kotlin.random.Random
 @Suppress("TooManyFunctions")
 internal object DownloadNotification {
 
-    private const val NOTIFICATION_CHANNEL_ID = "Downloads"
+    private const val NOTIFICATION_CHANNEL_ID = "mozac.feature.downloads.generic"
+    private const val LEGACY_NOTIFICATION_CHANNEL_ID = "Downloads"
 
     internal const val EXTRA_DOWNLOAD_ID = "downloadId"
 
@@ -49,6 +50,7 @@ internal object DownloadNotification {
             .setOngoing(true)
             .addAction(getPauseAction(context, downloadState.id))
             .addAction(getCancelAction(context, downloadState.id))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 
@@ -82,6 +84,7 @@ internal object DownloadNotification {
             .setContentText(context.getString(R.string.mozac_feature_downloads_completed_notification_text2))
             .setColor(ContextCompat.getColor(context, R.color.mozac_feature_downloads_notification))
             .setContentIntent(createPendingIntent(context, ACTION_OPEN, downloadState.id))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 
@@ -99,6 +102,7 @@ internal object DownloadNotification {
             .setCategory(NotificationCompat.CATEGORY_ERROR)
             .addAction(getTryAgainAction(context, downloadState.id))
             .addAction(getCancelAction(context, downloadState.id))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 
@@ -133,10 +137,12 @@ internal object DownloadNotification {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 context.getString(R.string.mozac_feature_downloads_notification_channel),
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             )
 
             notificationManager.createNotificationChannel(channel)
+
+            notificationManager.deleteNotificationChannel(LEGACY_NOTIFICATION_CHANNEL_ID)
         }
 
         return NOTIFICATION_CHANNEL_ID
