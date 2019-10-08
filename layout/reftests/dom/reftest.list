@@ -31,17 +31,24 @@
 == insertmultiplemultiple-2.html insertmultiplemultiple-ref.html
 
 # testing bindings that have multiple insertion points
-== multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-ref2-shadow.xhtml multipleinsertionpoints-ref.xhtml
+skip-if(!xbl) == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref.xhtml
 # append a single element
-== multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-ref.xhtml
-== multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-appendsingle-1-shadow.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-appendsingle-2-shadow.xhtml multipleinsertionpoints-ref.xhtml
+skip-if(!xbl) == multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-ref.xhtml
+skip-if(!xbl) == multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-ref.xhtml
 # append several elements
-== multipleinsertionpoints-appendmultiple.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-appendmultiple-shadow.xhtml multipleinsertionpoints-ref.xhtml
+skip-if(!xbl) == multipleinsertionpoints-appendmultiple.xhtml multipleinsertionpoints-ref.xhtml
 # insert a single element
-== multipleinsertionpoints-insertsingle-1.xhtml multipleinsertionpoints-ref.xhtml
-== multipleinsertionpoints-insertsingle-2.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-insertsingle-1-shadow.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-insertsingle-2-shadow.xhtml multipleinsertionpoints-ref.xhtml
+skip-if(!xbl) == multipleinsertionpoints-insertsingle-1.xhtml multipleinsertionpoints-ref.xhtml
+skip-if(!xbl) == multipleinsertionpoints-insertsingle-2.xhtml multipleinsertionpoints-ref.xhtml
 # insert several elements
-== multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpoints-ref.xhtml
+== multipleinsertionpoints-insertmultiple-shadow.xhtml multipleinsertionpoints-ref.xhtml
+skip-if(!xbl) == multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpoints-ref.xhtml
 
 # test appending some nodes whose frame construction should be done lazily
 # followed by appending a node that might not be done lazily
@@ -49,6 +56,6 @@
 == multipleappendwithinput.xhtml multipleappendwithinput-ref.xhtml
 == multipleappendwitheditable.xhtml multipleappendwitheditable-ref.xhtml
 
-== xbl-children-2.xhtml about:blank
-== xbl-children-3.xhtml xbl-children-3-ref.html
-== xbl-children-4.xhtml about:blank
+skip-if(!xbl) == xbl-children-2.xhtml about:blank
+skip-if(!xbl) == xbl-children-3.xhtml xbl-children-3-ref.html
+skip-if(!xbl) == xbl-children-4.xhtml about:blank

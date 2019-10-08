@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="386310-script.js"></script>
+    <script>
+      customElements.define("custom-element", class extends HTMLElement {
+        constructor() {
+          super();
+          const template = document.getElementById("template");
+          const shadowRoot = this.attachShadow({mode: "open"})
+            .appendChild(template.content.cloneNode(true));
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <template id="template">
+      <span></span>
+      <slot></slot>
+    </template>
+    <custom-element id="test" style="display: block;">first second third [fourth]</custom-element>
+  </body>
+</html>

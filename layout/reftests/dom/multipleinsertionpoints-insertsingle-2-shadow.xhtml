@@ -1,0 +1,43 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script>
+customElements.define("custom-element", class extends HTMLElement {
+  constructor() {
+    super();
+    const template = document.getElementById("template");
+    const shadowRoot = this.attachShadow({mode: "open"})
+      .appendChild(template.content.cloneNode(true));
+  }
+});
+
+function boom()
+{
+  document.body.offsetHeight;
+
+  var afterelt = document.getElementById("after");
+  var parent = afterelt.parentNode;
+
+  var newelt = document.createElement("div");
+  newelt.appendChild(document.createTextNode(4));
+  parent.insertBefore(newelt, afterelt);
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<template id="template">
+  <div>
+    <slot name="foo"/>
+  </div>
+  <div>
+    <slot/>
+  </div>
+</template>
+<custom-element style="display: block;">
+  <div>3</div><span slot="foo">1</span><span id="after" slot="foo">2</span><div>5</div>
+</custom-element>
+</body>
+</html>

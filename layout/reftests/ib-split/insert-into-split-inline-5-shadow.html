@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <script>
+    customElements.define("custom-element", class extends HTMLElement {
+      constructor() {
+        super();
+        const template = document.getElementById("template");
+        const shadowRoot = this.attachShadow({mode: "open"})
+          .appendChild(template.content.cloneNode(true));
+      }
+    });
+    function doit() {
+      var newNode = document.createElement("span");
+      newNode.appendChild(document.createTextNode("Nine"));
+      document.getElementById("target").appendChild(newNode);
+    }
+  </script>
+  <style>
+   body > custom-element { border: 3px solid blue }
+  </style>
+ </head>
+ <body onload='doit()'>
+ <template id="template">
+   <!-- Multiple insertion points to force appends to be handled via
+       ContentInserted -->
+  <slot name="foo"></slot>
+  <slot name="bar"></slot>
+  <slot></slot>
+ </template>
+  <custom-element id="target"
+  ><span>One</span
+  ><span>Two</span
+  ><span>Three</span
+  ><div>Four</div
+  ><div>Five</div
+  ><span>Six</span
+  ><div>Seven</div
+  ><div>Eight</div
+ ></custom-element>
+ </body>
+</html>

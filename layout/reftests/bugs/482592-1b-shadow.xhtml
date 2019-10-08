@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+    <script>
+      customElements.define("custom-element", class extends HTMLElement {
+        constructor() {
+          super();
+          const template = document.getElementById("template");
+          const shadowRoot = this.attachShadow({mode: "open"})
+            .appendChild(template.content.cloneNode(true));
+        }
+      });
+      function doTest() {
+        var l = document.getElementById("l");
+        l.parentNode.insertBefore(document.createTextNode("y"), l);
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </head>
+  <body onload="doTest()">
+    <template id="template">
+      <style>
+        #hasBefore::before { content: "x"; }
+      </style>
+      <span id="hasBefore"><slot/></span>
+    </template>
+    <custom-element style="font-size: 300%; display: block;"><span id="l"></span></custom-element>
+  </body>
+</html>
