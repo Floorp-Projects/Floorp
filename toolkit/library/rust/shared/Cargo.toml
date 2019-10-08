@@ -69,6 +69,7 @@ new_xulstore = ["xulstore"]
 new_cert_storage = ["cert_storage"]
 fuzzing_interfaces = []
 webrtc = ["mdns_service"]
+moz_xbl = ["geckoservo/moz_xbl"]
 
 [lib]
 path = "lib.rs"
