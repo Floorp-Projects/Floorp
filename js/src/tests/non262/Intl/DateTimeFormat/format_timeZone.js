@@ -1,5 +1,11 @@
 // |reftest| skip-if(!this.hasOwnProperty("Intl"))
 
+if (typeof getBuildConfiguration === "undefined") {
+    var getBuildConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getBuildConfiguration;
+}
+
+const isNightly = !getBuildConfiguration().release_or_beta;
+
 const defaultLocale = "en-US";
 const defaultDate = Date.UTC(2012, 12-1, 6, 12, 0, 0);
 const defaultOptions = {
@@ -44,7 +50,7 @@ const tests = [
     {
         timeZone: "Africa/Casablanca",
         locale: "ar-MA-u-ca-islamicc", options: longFormatOptions,
-        result: "22 محرم 1434 12:00:00",
+        result: isNightly ? "22 محرم 1434 هـ 12:00:00" : "22 محرم 1434 12:00:00",
     },
     {
         timeZone: "Europe/Berlin",

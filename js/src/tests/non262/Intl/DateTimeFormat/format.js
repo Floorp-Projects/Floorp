@@ -6,6 +6,12 @@
 // Tests the format function with a diverse set of locales and options.
 // Always use UTC to avoid dependencies on test environment.
 
+if (typeof getBuildConfiguration === "undefined") {
+    var getBuildConfiguration = SpecialPowers.Cu.getJSTestingFunctions().getBuildConfiguration;
+}
+
+const isNightly = !getBuildConfiguration().release_or_beta;
+
 var format;
 var date = Date.UTC(2012, 11, 12, 3, 0, 0);
 var longFormatOptions = {timeZone: "UTC",
@@ -31,7 +37,11 @@ assertEq(format.format(date), "2012年12月12日 3:00:00");
 
 // Locale ar-MA; long format, Islamic civilian calendar.
 format = new Intl.DateTimeFormat("ar-ma-u-ca-islamicc", longFormatOptions);
-assertEq(format.format(date), "28 محرم 1434 03:00:00");
+if (isNightly) {
+    assertEq(format.format(date), "28 محرم 1434 هـ 03:00:00");
+} else {
+    assertEq(format.format(date), "28 محرم 1434 03:00:00");
+}
 
 // Locale en-IE: timeZoneName for crash test
 format = new Intl.DateTimeFormat("en-IE", {timeZone: "UTC", timeZoneName: "short"});

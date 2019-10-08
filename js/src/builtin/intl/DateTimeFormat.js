@@ -76,6 +76,11 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     // Step 16.
     var dataLocale = r.dataLocale;
 
+#ifdef NIGHTLY_BUILD
+    // Allow the calendar field to modify the pattern selection choice.
+    dataLocale = addUnicodeExtension(dataLocale, "-u-ca-" + r.ca);
+#endif
+
     // Step 20.
     internalProps.timeZone = lazyDateTimeFormatData.timeZone;
 
