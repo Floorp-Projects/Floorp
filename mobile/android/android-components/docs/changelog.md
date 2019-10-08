@@ -30,6 +30,18 @@ permalink: /changelog/
 * **firefox-accounts**, **service-fretboard**
   * ⚠️ **This is a breaking change**: Due to migration to WorkManager v2.2.0, some classes like `WorkManagerSyncScheduler` and `WorkManagerSyncDispatcher` now expects a `Context` in their constructors.
 
+* **engine**, **engine-gecko-nightly** and **engine-gecko-beta**
+  * Added `WebExtensionsTabsDelegate` to support `browser.tabs.create()` in web extensions.
+  ```kotlin
+  GeckoEngine(applicationContext, engineSettings).also {
+    it.registerWebExtensionTabDelegate(object : WebExtensionTabDelegate {
+        override fun onNewTab(webExtension: WebExtension?, url: String, engineSession: EngineSession) {
+          sessionManager.add(Session(url), true, engineSession)
+        }
+    })
+  }
+  ```
+
 # 15.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v14.0.0...v15.0.0)

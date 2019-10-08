@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionTabDelegate
 import org.json.JSONObject
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -33,6 +34,7 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.WebExtensionController
 import java.lang.IllegalStateException
 
 /**
@@ -144,6 +146,28 @@ class GeckoEngine(
                 GeckoResult<Void>()
             })
         }
+    }
+
+    /**
+     * See [Engine.registerWebExtensionTabDelegate].
+     */
+    override fun registerWebExtensionTabDelegate(
+        webExtensionTabDelegate: WebExtensionTabDelegate
+    ) {
+        val tabsDelegate = object : WebExtensionController.TabDelegate {
+            override fun onNewTab(
+                webExtension: org.mozilla.geckoview.WebExtension?,
+                url: String?
+            ): GeckoResult<GeckoSession>? {
+                val geckoEngineSession = GeckoEngineSession(runtime, openGeckoSession = false)
+                val geckoWebExtension = webExtension?.let { GeckoWebExtension(it.id, it.location) }
+                webExtensionTabDelegate.onNewTab(geckoWebExtension, url ?: "", geckoEngineSession)
+
+                return GeckoResult.fromValue(geckoEngineSession.geckoSession)
+            }
+        }
+
+        runtime.webExtensionController.tabDelegate = tabsDelegate
     }
 
     /**
