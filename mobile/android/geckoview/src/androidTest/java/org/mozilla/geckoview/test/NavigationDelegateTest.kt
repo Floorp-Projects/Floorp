@@ -194,6 +194,12 @@ class NavigationDelegateTest : BaseSessionTest() {
                 WebRequestError.ERROR_SECURITY_BAD_CERT)
     }
 
+    @Test fun loadUnknownProtocol() {
+        testLoadEarlyError(UNKNOWN_PROTOCOL_URI,
+                WebRequestError.ERROR_CATEGORY_URI,
+                WebRequestError.ERROR_UNKNOWN_PROTOCOL)
+    }
+
     @Setting(key = Setting.Key.USE_TRACKING_PROTECTION, value = "true")
     @Ignore // TODO: Bug 1564373
     @Test fun trackingProtection() {
