@@ -410,7 +410,8 @@ class PeerConnectionImpl final
   NS_IMETHODIMP GetFingerprint(char** fingerprint);
   void GetFingerprint(nsAString& fingerprint) {
     char* tmp;
-    GetFingerprint(&tmp);
+    nsresult rv = GetFingerprint(&tmp);
+    NS_ENSURE_SUCCESS_VOID(rv);
     fingerprint.AssignASCII(tmp);
     delete[] tmp;
   }
