@@ -10,7 +10,11 @@ import re
 import subprocess
 import sys
 from distutils.spawn import find_executable
+from datetime import datetime, timedelta
+import requests
+import json
 
+from mozbuild.base import MozbuildObject
 from mozboot.util import get_state_dir
 from mozterm import Terminal
 
@@ -21,6 +25,14 @@ from ..push import check_working_directory, push_to_try, generate_try_task_confi
 terminal = Terminal()
 
 here = os.path.abspath(os.path.dirname(__file__))
+build = MozbuildObject.from_environment(cwd=here)
+
+PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/formatters/preview.py')
+TASK_DURATION_URL = 'https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json'
+TASK_DURATION_CACHE = os.path.join(get_state_dir(
+    srcdir=True), 'cache', 'task_duration_history.json')
+TASK_DURATION_TAG_FILE = os.path.join(get_state_dir(
+    srcdir=True), 'cache', 'task_duration_tag.json')
 
 # Some tasks show up in the target task set, but are either special cases
 # or uncommon enough that they should only be selectable with --full.
@@ -82,6 +94,72 @@ fzf_header_shortcuts = [
 ]
 
 
+def check_downloaded_history():
+    if not os.path.isfile(TASK_DURATION_TAG_FILE):
+        return False
+
+    try:
+        with open(TASK_DURATION_TAG_FILE) as f:
+            duration_tags = json.load(f)
+        download_date = datetime.strptime(duration_tags.get('download_date'), '%Y-%M-%d')
+        if download_date < datetime.now() - timedelta(days=30):
+            return False
+    except (IOError, ValueError):
+        return False
+
+    if not os.path.isfile(TASK_DURATION_CACHE):
+        return False
+
+    return True
+
+
+def download_task_history_data():
+    """Fetch task duration data exported from BigQuery."""
+
+    if check_downloaded_history():
+        return
+
+    try:
+        os.unlink(TASK_DURATION_TAG_FILE)
+        os.unlink(TASK_DURATION_CACHE)
+    except OSError:
+        print("No existing task history to clean up.")
+
+    try:
+        r = requests.get(TASK_DURATION_URL, stream=True)
+    except:  # noqa
+        # This is fine, the results just won't be in the preview window.
+        return
+
+    # The data retrieved from google storage is a newline-separated
+    # list of json entries, which Python's json module can't parse.
+    duration_data = list()
+    for line in r.content.splitlines():
+        duration_data.append(json.loads(line))
+
+    with open(TASK_DURATION_CACHE, 'w') as f:
+        json.dump(duration_data, f, indent=4)
+    with open(TASK_DURATION_TAG_FILE, 'w') as f:
+        json.dump({
+            'download_date': datetime.now().strftime('%Y-%m-%d')
+            }, f, indent=4)
+
+
+def make_trimmed_taskgraph_cache(graph_cache, dep_cache):
+    """Trim the taskgraph cache used for dependencies.
+
+    Speeds up the fzf preview window to less human-perceptible
+    ranges."""
+    if not os.path.isfile(graph_cache):
+        return
+
+    with open(graph_cache) as f:
+        graph = json.load(f)
+    graph = {name: list(defn['dependencies'].values()) for name, defn in graph.items()}
+    with open(dep_cache, 'w') as f:
+        json.dump(graph, f, indent=4)
+
+
 class FuzzyParser(BaseTryParser):
     name = 'fuzzy'
     arguments = [
@@ -119,6 +197,12 @@ class FuzzyParser(BaseTryParser):
           'default': False,
           'help': "Update fzf before running.",
           }],
+        [['-s', '--show-estimates'],
+         {'action': 'store_true',
+          'default': False,
+          'help': "Show task duration estimates.",
+          }],
+
     ]
     common_groups = ['push', 'task', 'preset']
     templates = [
@@ -232,16 +316,26 @@ def filter_target_task(task):
 
 def run(update=False, query=None, intersect_query=None, try_config=None, full=False,
         parameters=None, save_query=False, push=True, message='{msg}',
-        test_paths=None, exact=False, closed_tree=False):
+        test_paths=None, exact=False, closed_tree=False, show_estimates=False):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
         print(FZF_NOT_FOUND)
         return 1
 
+    if show_estimates:
+        download_task_history_data()
+
     check_working_directory(push)
     tg = generate_tasks(parameters, full)
     all_tasks = sorted(tg.tasks.keys())
+
+    cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
+    graph_cache = os.path.join(cache_dir, 'target_task_graph')
+    dep_cache = os.path.join(cache_dir, 'target_task_dependencies')
+
+    if show_estimates:
+        make_trimmed_taskgraph_cache(graph_cache, dep_cache)
 
     if not full:
         all_tasks = filter(filter_target_task, all_tasks)
@@ -256,12 +350,19 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         fzf, '-m',
         '--bind', ','.join(key_shortcuts),
         '--header', format_header(),
-        # Using python to split the preview string is a bit convoluted,
-        # but is guaranteed to be available on all platforms.
-        '--preview', 'python -c "print(\\"\\n\\".join(sorted([s.strip(\\"\'\\") for s in \\"{+}\\".split()])))"',  # noqa
         '--preview-window=right:30%',
         '--print-query',
     ]
+
+    if show_estimates and os.path.isfile(TASK_DURATION_CACHE):
+        base_cmd.extend([
+            '--preview', 'python {} -g {} -d {} "{{+}}"'.format(
+                PREVIEW_SCRIPT, dep_cache, TASK_DURATION_CACHE),
+        ])
+    else:
+        base_cmd.extend([
+            '--preview', 'python {} "{{+}}"'.format(PREVIEW_SCRIPT),
+        ])
 
     if exact:
         base_cmd.append('--exact')
