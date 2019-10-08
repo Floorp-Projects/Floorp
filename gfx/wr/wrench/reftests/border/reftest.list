@@ -18,7 +18,7 @@ skip_on(android,device) fuzzy(64,24) == border-ridge-simple.yaml border-ridge-si
 platform(linux,mac) fuzzy(1,3) == degenerate-curve.yaml degenerate-curve.png
 platform(linux,mac) == border-image.yaml border-image-ref.png
 == border-image-crash.yaml border-image-crash-ref.yaml
-== border-image-fill.yaml border-image-fill-ref.png  # fails on Android emulator
+== border-image-fill.yaml border-image-fill-ref.png
 == border-no-bogus-line.yaml border-no-bogus-line-ref.png
 platform(linux,mac) == dotted-corner-small-radius.yaml dotted-corner-small-radius.png
 == overlapping.yaml overlapping.png
