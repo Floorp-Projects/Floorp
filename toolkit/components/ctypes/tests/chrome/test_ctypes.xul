@@ -5,7 +5,8 @@
 
 <window title="DOM Worker Threads Test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="test();">
+        onload="test();"
+        onunload="onunload();">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -71,6 +72,8 @@
     {
       SimpleTest.waitForExplicitFinish();
 
+      Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
+
       var dir = getCurrentDir(location.path);
       ok(dir.exists() && dir.isDirectory(), "Chrome test dir doesn't exist?!");
       setupLibs(dir);
@@ -95,6 +98,11 @@
       }
 
       worker.postMessage({dir: dir.path, os: Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS});
+    }
+
+    function onunload()
+    {
+      Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
     }
 
   ]]>

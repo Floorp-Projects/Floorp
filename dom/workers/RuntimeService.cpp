@@ -7,6 +7,7 @@
 #include "RuntimeService.h"
 
 #include "nsAutoPtr.h"
+#include "nsContentSecurityUtils.h"
 #include "nsIChannel.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsICookieService.h"
@@ -595,19 +596,24 @@ bool ContentSecurityPolicyAllows(JSContext* aCx, JS::HandleValue aValue) {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   worker->AssertIsOnWorkerThread();
 
+  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, aValue));
+  if (NS_WARN_IF(!jsString)) {
+    JS_ClearPendingException(aCx);
+    return false;
+  }
+
+  nsAutoJSString scriptSample;
+  if (NS_WARN_IF(!scriptSample.init(aCx, jsString))) {
+    JS_ClearPendingException(aCx);
+    return false;
+  }
+
+  if (!nsContentSecurityUtils::IsEvalAllowed(aCx, worker->UsesSystemPrincipal(),
+                                             scriptSample)) {
+    return false;
+  }
+
   if (worker->GetReportCSPViolations()) {
-    JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, aValue));
-    if (NS_WARN_IF(!jsString)) {
-      JS_ClearPendingException(aCx);
-      return false;
-    }
-
-    nsAutoJSString scriptSample;
-    if (NS_WARN_IF(!scriptSample.init(aCx, jsString))) {
-      JS_ClearPendingException(aCx);
-      return false;
-    }
-
     nsString fileName;
     uint32_t lineNum = 0;
     uint32_t columnNum = 0;
