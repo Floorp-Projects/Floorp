@@ -49,7 +49,7 @@ type Props = {
   cx: Context,
   enabled: boolean,
   displayedSources: Source[],
-  selectedSource?: Source,
+  selectedSource: ?Source,
   selectedContentLoaded?: boolean,
   query: string,
   searchType: QuickOpenType,

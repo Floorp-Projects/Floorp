@@ -32,7 +32,7 @@ type State = {
 
 class Preview extends PureComponent<Props, State> {
   target = null;
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = { selecting: false };
   }
@@ -60,7 +60,7 @@ class Preview extends PureComponent<Props, State> {
     codeMirrorWrapper.addEventListener("mousedown", this.onMouseDown);
   }
 
-  onTokenEnter = ({ target, tokenPos }) => {
+  onTokenEnter = ({ target, tokenPos }: any) => {
     const { cx, editor, updatePreview } = this.props;
 
     if (cx.isPaused && !this.state.selecting) {

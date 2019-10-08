@@ -21,7 +21,7 @@ import { filter } from "fuzzaldrin-plus";
 lodash.throttle = jest.fn(fn => fn);
 
 function generateModal(propOverrides, renderType = "shallow") {
-  const props = {
+  const props: any = {
     cx: mockcx,
     enabled: false,
     query: "",

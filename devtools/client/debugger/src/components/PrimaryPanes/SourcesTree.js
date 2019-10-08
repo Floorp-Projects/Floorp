@@ -60,15 +60,15 @@ type Props = {
   threads: Thread[],
   sources: SourcesMapByThread,
   sourceCount: number,
-  shownSource?: Source,
-  selectedSource?: Source,
+  shownSource: ?Source,
+  selectedSource: ?Source,
   debuggeeUrl: string,
   projectRoot: string,
   expanded: Set<string>,
   selectSource: typeof actions.selectSource,
   setExpandedState: typeof actions.setExpandedState,
   focusItem: typeof actions.focusItem,
-  focused: TreeNode,
+  focused: ?TreeNode,
 };
 
 type State = {
@@ -219,7 +219,7 @@ class SourcesTree extends Component<Props, State> {
     return sourceTree.contents.length === 0;
   }
 
-  renderEmptyElement(message) {
+  renderEmptyElement(message: string) {
     return (
       <div key="empty" className="no-sources-message">
         {message}
@@ -227,7 +227,7 @@ class SourcesTree extends Component<Props, State> {
     );
   }
 
-  getRoots = (sourceTree, projectRoot) => {
+  getRoots = (sourceTree: TreeDirectory, projectRoot: string) => {
     const sourceContents = sourceTree.contents[0];
 
     if (projectRoot && sourceContents) {
@@ -248,7 +248,7 @@ class SourcesTree extends Component<Props, State> {
     item: TreeNode,
     depth: number,
     focused: boolean,
-    _,
+    _: mixed,
     expanded: boolean,
     { setExpanded }: { setExpanded: SetExpanded }
   ) => {
@@ -301,7 +301,7 @@ class SourcesTree extends Component<Props, State> {
     return <ManagedTree {...treeProps} />;
   }
 
-  renderPane(...children) {
+  renderPane(child: React$Node) {
     const { projectRoot } = this.props;
 
     return (
@@ -311,7 +311,7 @@ class SourcesTree extends Component<Props, State> {
           "sources-list-custom-root": projectRoot,
         })}
       >
-        {children}
+        {child}
       </div>
     );
   }

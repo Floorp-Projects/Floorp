@@ -43,7 +43,7 @@ type Props = {
   expressions: List<Expression>,
   expressionError: boolean,
   showInput: boolean,
-  autocompleteMatches: string[],
+  autocompleteMatches: ?(string[]),
   onExpressionAdded: () => void,
   autocomplete: typeof actions.autocomplete,
   clearAutocomplete: typeof actions.clearAutocomplete,
@@ -97,13 +97,13 @@ class Expressions extends Component<Props, State> {
     });
   };
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps: Props) {
     if (this.state.editing && !nextProps.expressionError) {
       this.clear();
     }
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps: Props, nextState: State) {
     const { editing, inputValue, focused } = this.state;
     const {
       expressions,
@@ -123,7 +123,7 @@ class Expressions extends Component<Props, State> {
     );
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps: Props, prevState: State) {
     const input = this._input;
 
     if (!input) {
@@ -163,10 +163,13 @@ class Expressions extends Component<Props, State> {
     this.setState({ inputValue: target.value });
   };
 
-  findAutocompleteMatches = debounce((value, selectionStart) => {
-    const { autocomplete } = this.props;
-    autocomplete(this.props.cx, value, selectionStart);
-  }, 250);
+  findAutocompleteMatches = debounce(
+    (value: string, selectionStart: number) => {
+      const { autocomplete } = this.props;
+      autocomplete(this.props.cx, value, selectionStart);
+    },
+    250
+  );
 
   handleKeyDown = (e: SyntheticKeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
@@ -385,7 +388,7 @@ class Expressions extends Component<Props, State> {
 
 const mapStateToProps = state => ({
   cx: getThreadContext(state),
-  autocompleteMatches: getAutocompleteMatchset(state),
+  autocompleteMatches: (getAutocompleteMatchset(state): ?(string[])),
   expressions: getExpressions(state),
   expressionError: getExpressionError(state),
 });

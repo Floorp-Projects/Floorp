@@ -42,9 +42,9 @@ import classnames from "classnames";
 type Props = {
   cx: Context,
   tabSources: Source[],
-  selectedSource: Source,
+  selectedSource: ?Source,
   source: Source,
-  activeSearch: ActiveSearchType,
+  activeSearch: ?ActiveSearchType,
   hasSiblingOfSameName: boolean,
   selectSource: typeof actions.selectSource,
   closeTab: typeof actions.closeTab,
@@ -56,12 +56,15 @@ type Props = {
 };
 
 class Tab extends PureComponent<Props> {
-  onTabContextMenu = (event, tab: string) => {
+  onTabContextMenu = (
+    event: SyntheticClipboardEvent<HTMLDivElement>,
+    tab: string
+  ) => {
     event.preventDefault();
     this.showContextMenu(event, tab);
   };
 
-  showContextMenu(e, tab: string) {
+  showContextMenu(e: SyntheticClipboardEvent<HTMLDivElement>, tab: string) {
     const {
       cx,
       closeTab,
@@ -81,7 +84,7 @@ class Tab extends PureComponent<Props> {
     const tabURLs = tabSources.map(t => t.url);
     const otherTabURLs = otherTabs.map(t => t.url);
 
-    if (!sourceTab) {
+    if (!sourceTab || !selectedSource) {
       return;
     }
 

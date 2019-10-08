@@ -17,21 +17,27 @@ import {
 } from "../../selectors";
 
 import type {
-  Frame,
   SourceLocation,
   SourceWithContent,
   SourceDocuments,
 } from "../../types";
 import type { Command } from "../../reducers/types";
 
+type HighlightFrame = {
+  location: SourceLocation,
+};
+
 type Props = {
   pauseCommand: Command,
-  selectedFrame: Frame,
+  selectedFrame: ?HighlightFrame,
   selectedLocation: SourceLocation,
   selectedSource: ?SourceWithContent,
 };
 
-function isDebugLine(selectedFrame: Frame, selectedLocation: SourceLocation) {
+function isDebugLine(
+  selectedFrame: ?HighlightFrame,
+  selectedLocation: SourceLocation
+) {
   if (!selectedFrame) {
     return;
   }
@@ -117,7 +123,7 @@ export class HighlightLine extends Component<Props> {
 
   setHighlightLine(
     selectedLocation: SourceLocation,
-    selectedFrame: Frame,
+    selectedFrame: ?HighlightFrame,
     selectedSource: ?SourceWithContent
   ) {
     const { sourceId, line } = selectedLocation;
@@ -176,9 +182,16 @@ export class HighlightLine extends Component<Props> {
   }
 }
 
-export default connect(state => ({
-  pauseCommand: getPauseCommand(state, getCurrentThread(state)),
-  selectedFrame: getVisibleSelectedFrame(state),
-  selectedLocation: getSelectedLocation(state),
-  selectedSource: getSelectedSourceWithContent(state),
-}))(HighlightLine);
+export default connect(state => {
+  const selectedLocation = getSelectedLocation(state);
+
+  if (!selectedLocation) {
+    throw new Error("must have selected location");
+  }
+  return {
+    pauseCommand: getPauseCommand(state, getCurrentThread(state)),
+    selectedFrame: getVisibleSelectedFrame(state),
+    selectedLocation,
+    selectedSource: getSelectedSourceWithContent(state),
+  };
+})(HighlightLine);

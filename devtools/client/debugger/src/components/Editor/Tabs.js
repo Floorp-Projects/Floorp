@@ -65,7 +65,7 @@ class Tabs extends PureComponent<Props, State> {
   renderEndPanelToggleButton: Function;
   onResize: Function;
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       dropdownShown: false,
@@ -77,7 +77,7 @@ class Tabs extends PureComponent<Props, State> {
     });
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     if (!(prevProps === this.props)) {
       this.updateHiddenTabs();
     }
@@ -121,7 +121,7 @@ class Tabs extends PureComponent<Props, State> {
     this.setState({ hiddenTabs });
   };
 
-  toggleSourcesDropdown(e) {
+  toggleSourcesDropdown() {
     this.setState(prevState => ({
       dropdownShown: !prevState.dropdownShown,
     }));

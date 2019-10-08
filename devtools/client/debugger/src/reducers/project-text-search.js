@@ -40,7 +40,7 @@ export type ProjectTextSearchState = {
   +query: string,
   +ongoingSearch: ?SearchOperation,
   +results: ResultList,
-  +status: string,
+  +status: StatusType,
 };
 
 export function initialProjectTextSearchState(): ProjectTextSearchState {

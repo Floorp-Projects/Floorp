@@ -25,7 +25,7 @@ import type { ColumnBreakpoint as ColumnBreakpointType } from "../../selectors/v
 type Props = {
   cx: Context,
   editor: Object,
-  selectedSource: Source,
+  selectedSource: ?Source,
   columnBreakpoints: ColumnBreakpointType[],
   breakpointActions: BreakpointItemActions,
 };

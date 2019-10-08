@@ -91,7 +91,9 @@ describe("EventListeners", () => {
     const searchInput = component.find(".event-search-input");
     // Simulate a search query of "Subcategory 3" to display just one event which
     // will be the Subcategory 3 event
-    searchInput.simulate("change", { target: { value: "Subcategory 3" } });
+    searchInput.simulate("change", {
+      currentTarget: { value: "Subcategory 3" },
+    });
 
     const displayedEvents = component.find(".event-listener-event");
     expect(displayedEvents).toHaveLength(1);
@@ -108,7 +110,7 @@ describe("EventListeners", () => {
     const searchInput = component.find(".event-search-input");
     // Simulate a search query of "Category 1" to display two events which will be
     // the Subcategory 1 event and the Subcategory 2 event
-    searchInput.simulate("change", { target: { value: "Category 1" } });
+    searchInput.simulate("change", { currentTarget: { value: "Category 1" } });
 
     const displayedEvents = component.find(".event-listener-event");
     expect(displayedEvents).toHaveLength(2);
@@ -125,7 +127,9 @@ describe("EventListeners", () => {
     const searchInput = component.find(".event-search-input");
     // Simulate a search query of "Subcategory 3" to display just one event which
     // will be the Subcategory 3 event
-    searchInput.simulate("change", { target: { value: "sUbCaTeGoRy 3" } });
+    searchInput.simulate("change", {
+      currentTarget: { value: "sUbCaTeGoRy 3" },
+    });
 
     const displayedEvents = component.find(".event-listener-event");
     expect(displayedEvents).toHaveLength(1);

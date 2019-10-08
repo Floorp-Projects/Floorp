@@ -34,19 +34,20 @@ import { isDirectory, getPathWithoutThread } from "../../utils/sources-tree";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
 import { downloadFile } from "../../utils/utils";
+import { isFulfilled } from "../../utils/async-value";
 
 import type { TreeNode } from "../../utils/sources-tree/types";
 import type { Source, Context, Thread, SourceContent } from "../../types";
 
 type Props = {
+  source: ?Source,
+  item: TreeNode,
   autoExpand: ?boolean,
   cx: Context,
   debuggeeUrl: string,
   projectRoot: string,
-  source: ?Source,
   extensionName: string | null,
-  item: TreeNode,
-  sourceContent: SourceContent,
+  sourceContent: ?SourceContent,
   depth: number,
   focused: boolean,
   expanded: boolean,
@@ -172,11 +173,18 @@ class SourceTreeItem extends Component<Props, State> {
   };
 
   handleDownloadFile = async (cx: Context, source: ?Source, item: TreeNode) => {
-    const { sourceContent } = this.props;
-    if (!sourceContent) {
+    if (!source) {
+      return;
+    }
+
+    if (!this.props.sourceContent) {
       await this.props.loadSourceText({ cx, source });
     }
-    downloadFile(sourceContent, item.name);
+    const data = this.props.sourceContent;
+    if (!data) {
+      return;
+    }
+    downloadFile(data, item.name);
   };
 
   addCollapseExpandAllOptions = (menuOptions: ContextMenu, item: TreeNode) => {
@@ -264,7 +272,7 @@ class SourceTreeItem extends Component<Props, State> {
     return null;
   }
 
-  renderItemName(depth) {
+  renderItemName(depth: number) {
     const { item, threads, extensionName } = this.props;
 
     if (depth === 0) {
@@ -353,7 +361,7 @@ function getHasMatchingGeneratedSource(state, source: ?Source) {
 
 function getSourceContentValue(state, source: Source) {
   const content = getSourceContent(state, source.id);
-  return content !== null ? content.value : false;
+  return content && isFulfilled(content) ? content.value : null;
 }
 
 function isExtensionDirectory(depth, extensionName) {
@@ -368,7 +376,9 @@ const mapStateToProps = (state, props) => {
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
     hasPrettySource: source ? checkHasPrettySource(state, source.id) : false,
-    sourceContent: source ? getSourceContentValue(state, source) : false,
+    sourceContent: source
+      ? (getSourceContentValue(state, source): ?SourceContent)
+      : null,
     extensionName:
       (isUrlExtension(item.name) &&
         getExtensionNameBySourceUrl(state, item.name)) ||
