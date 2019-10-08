@@ -70,6 +70,8 @@ void addNetworkFuzzingBuffer(const uint8_t* data, size_t size, bool readFirst,
     MOZ_CRASH("Unsupported buffer size");
   }
 
+  MutexAutoLock lock(gConnRecvMutex);
+
   NetworkFuzzingBuffer* buf = new NetworkFuzzingBuffer();
   buf->buf = data;
   buf->size = size;
