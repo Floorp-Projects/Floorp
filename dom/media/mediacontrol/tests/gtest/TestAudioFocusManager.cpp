@@ -30,6 +30,18 @@ class AudioFocusManagmentPrefSetterRAII {
   bool mOriginalValue;
 };
 
+TEST(AudioFocusManager, TestRequestAudioFocus)
+{
+  AudioFocusManager manager(nullptr);
+  ASSERT_TRUE(manager.GetAudioFocusNums() == 0);
+
+  manager.RequestAudioFocus(FIRST_CONTROLLER_ID);
+  ASSERT_TRUE(manager.GetAudioFocusNums() == 1);
+
+  manager.RevokeAudioFocus(FIRST_CONTROLLER_ID);
+  ASSERT_TRUE(manager.GetAudioFocusNums() == 0);
+}
+
 TEST(AudioFocusManager, TestAudioFocusNumsWhenEnableAudioFocusManagement)
 {
   // When enabling audio focus management, we only allow one controller owing
