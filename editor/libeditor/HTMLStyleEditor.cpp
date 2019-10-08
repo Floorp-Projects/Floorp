@@ -1581,50 +1581,50 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
         return rv;
       }
 
-      if (startOfRange.GetContainer() == endOfRange.GetContainer() &&
-          startOfRange.IsInTextNode()) {
-        // If parent block has the removing style, we should create `<span>`
-        // element to remove the style even in HTML mode since Chrome does it.
-        if (!CSSEditUtils::IsCSSEditableProperty(startOfRange.GetContainer(),
-                                                 aProperty, aAttribute)) {
-          continue;
-        }
-        // The HTML style defined by aProperty/aAttribute has a CSS
-        // equivalence in this implementation for startOfRange.
-        if (!CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-                startOfRange.GetContainer(), aProperty, aAttribute,
-                EmptyString(), CSSEditUtils::eComputed)) {
-          continue;
-        }
-        // startOfRange's computed style indicates the CSS equivalence to the
-        // HTML style to remove is applied; but we found no element in the
-        // ancestors of startOfRange carrying specified styles; assume it
-        // comes from a rule and try to insert a span "inverting" the style
-        if (!CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
-          continue;
-        }
-        SetInlinePropertyOnTextNode(
-            MOZ_KnownLive(*startOfRange.GetContainerAsText()),
-            startOfRange.Offset(), endOfRange.Offset(), *aProperty, aAttribute,
-            NS_LITERAL_STRING("-moz-editor-invert-value"));
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        continue;
-      }
-
       // Collect editable nodes which are entirely contained in the range.
       AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
-      ContentSubtreeIterator subtreeIter;
-      if (NS_SUCCEEDED(subtreeIter.Init(range))) {
-        for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-          nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
-          if (NS_WARN_IF(!node)) {
-            return NS_ERROR_FAILURE;
+      if (startOfRange.GetContainer() == endOfRange.GetContainer() &&
+          startOfRange.IsInTextNode()) {
+        if (!IsEditable(startOfRange.GetContainer())) {
+          continue;
+        }
+        arrayOfContents.AppendElement(*startOfRange.GetContainerAsText());
+      } else if (startOfRange.IsInTextNode() && endOfRange.IsInTextNode() &&
+                 startOfRange.GetContainer()->GetNextSibling() ==
+                     endOfRange.GetContainer()) {
+        if (IsEditable(startOfRange.GetContainer())) {
+          arrayOfContents.AppendElement(*startOfRange.GetContainerAsText());
+        }
+        if (IsEditable(endOfRange.GetContainer())) {
+          arrayOfContents.AppendElement(*endOfRange.GetContainerAsText());
+        }
+        if (arrayOfContents.IsEmpty()) {
+          continue;
+        }
+      } else {
+        // Append first node if it's a text node but selected not entirely.
+        if (startOfRange.IsInTextNode() && !startOfRange.IsStartOfContainer() &&
+            IsEditable(startOfRange.GetContainer())) {
+          arrayOfContents.AppendElement(*startOfRange.GetContainerAsText());
+        }
+        // Append all entirely selected nodes.
+        ContentSubtreeIterator subtreeIter;
+        if (NS_SUCCEEDED(subtreeIter.Init(range))) {
+          for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
+            nsCOMPtr<nsINode> node = subtreeIter.GetCurrentNode();
+            if (NS_WARN_IF(!node)) {
+              return NS_ERROR_FAILURE;
+            }
+            if (node->IsContent() && IsEditable(node)) {
+              arrayOfContents.AppendElement(*node->AsContent());
+            }
           }
-          if (node->IsContent() && IsEditable(node)) {
-            arrayOfContents.AppendElement(*node->AsContent());
-          }
+        }
+        // Append last node if it's a text node but selected not entirely.
+        if (startOfRange.GetContainer() != endOfRange.GetContainer() &&
+            endOfRange.IsInTextNode() && !endOfRange.IsEndOfContainer() &&
+            IsEditable(endOfRange.GetContainer())) {
+          arrayOfContents.AppendElement(*endOfRange.GetContainerAsText());
         }
       }
 
@@ -1655,14 +1655,37 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
         if (!CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
           continue;
         }
-        DebugOnly<nsresult> rvIgnored = SetInlinePropertyOnNode(
-            content, *aProperty, aAttribute,
+        if (!content->IsText()) {
+          DebugOnly<nsresult> rvIgnored = SetInlinePropertyOnNode(
+              content, *aProperty, aAttribute,
+              NS_LITERAL_STRING("-moz-editor-invert-value"));
+          if (NS_WARN_IF(Destroyed())) {
+            return NS_ERROR_EDITOR_DESTROYED;
+          }
+          NS_WARNING_ASSERTION(NS_FAILED(rvIgnored),
+                               "SetInlinePropertyOnNode() failed, but ignored");
+          continue;
+        }
+        // If current node is a text node, we need to create `<span>` element
+        // for it to overwrite parent style.  Unfortunately, all browsers
+        // don't join text nodes when removing a style.  Therefore, there
+        // may be multiple text nodes as adjacent siblings.  That's the
+        // reason why we need to handle text nodes in this loop.
+        uint32_t startOffset =
+            content == startOfRange.GetContainer() ? startOfRange.Offset() : 0;
+        uint32_t endOffset = content == endOfRange.GetContainer()
+                                 ? endOfRange.Offset()
+                                 : content->Length();
+        nsresult rv = SetInlinePropertyOnTextNode(
+            MOZ_KnownLive(*content->AsText()), startOffset, endOffset,
+            *aProperty, aAttribute,
             NS_LITERAL_STRING("-moz-editor-invert-value"));
         if (NS_WARN_IF(Destroyed())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
-        NS_WARNING_ASSERTION(NS_FAILED(rvIgnored),
-                             "SetInlinePropertyOnNode() failed, but ignored");
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
