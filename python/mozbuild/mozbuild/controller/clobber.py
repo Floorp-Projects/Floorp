@@ -153,8 +153,7 @@ class Clobberer(object):
         no_clobber |= rust_targets
 
         if full:
-            # mozfile doesn't like unicode arguments (bug 818783).
-            paths = [self.topobjdir.encode('utf-8')]
+            paths = [self.topobjdir]
         else:
             paths = self.collect_subdirs(self.topobjdir, no_clobber)
 
