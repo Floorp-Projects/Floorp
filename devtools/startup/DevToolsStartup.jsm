@@ -64,7 +64,7 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineModuleGetter(
   this,
   "ProfilerMenuButton",
-  "resource://devtools/client/performance-new/popup/menu-button.jsm"
+  "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
 );
 
 // We don't want to spend time initializing the full loader here so we create
@@ -259,7 +259,7 @@ function isProfilerButtonEnabled() {
 
 XPCOMUtils.defineLazyGetter(this, "ProfilerPopupBackground", function() {
   return ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/background.jsm"
+    "resource://devtools/client/performance-new/popup/background.jsm.js"
   );
 });
 

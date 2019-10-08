@@ -35,7 +35,7 @@ const {
   setRecordingPreferencesOnBrowser,
   getSymbolsFromThisBrowser,
 } = ChromeUtils.import(
-  "resource://devtools/client/performance-new/popup/background.jsm"
+  "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 
 const { receiveProfile } = require("devtools/client/performance-new/browser");

@@ -108,7 +108,7 @@ async function makeSureProfilerPopupIsEnabled() {
 
   info("> Load the profiler menu button.");
   const { ProfilerMenuButton } = ChromeUtils.import(
-    "resource://devtools/client/performance-new/popup/menu-button.jsm"
+    "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
   );
 
   if (!ProfilerMenuButton.isEnabled()) {
