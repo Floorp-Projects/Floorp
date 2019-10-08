@@ -55,6 +55,18 @@
 -keep class org.mozilla.fenix.**ViewModel { *; }
 
 ####################################################################################################
+# Leanplum
+####################################################################################################
+
+-keepclassmembers class * {
+  @com.leanplum.annotations.* <fields>;
+}
+
+-keep class com.leanplum.** { *; }
+-dontwarn com.leanplum.**
+
+
+####################################################################################################
 # Adjust
 ####################################################################################################
 
@@ -94,3 +106,4 @@
 # Keep motionlayout internal methods
 # https://github.com/mozilla-mobile/fenix/issues/2094
 -keep class androidx.constraintlayout.** { *; }
+
