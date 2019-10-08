@@ -136,6 +136,11 @@ void UpdateLog::Printf(const char* fmt, ...) {
   vfprintf(logFP, fmt, ap);
   fprintf(logFP, "\n");
   va_end(ap);
+#if defined(XP_WIN) && defined(MOZ_DEBUG)
+  // When the updater crashes on Windows the log file won't be flushed and this
+  // can make it easier to debug what is going on.
+  fflush(logFP);
+#endif
 }
 
 void UpdateLog::WarnPrintf(const char* fmt, ...) {
@@ -149,6 +154,11 @@ void UpdateLog::WarnPrintf(const char* fmt, ...) {
   vfprintf(logFP, fmt, ap);
   fprintf(logFP, "***\n");
   va_end(ap);
+#if defined(XP_WIN) && defined(MOZ_DEBUG)
+  // When the updater crashes on Windows the log file won't be flushed and this
+  // can make it easier to debug what is going on.
+  fflush(logFP);
+#endif
 }
 
 #ifdef XP_WIN

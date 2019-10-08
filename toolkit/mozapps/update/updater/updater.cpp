@@ -947,7 +947,7 @@ static int remove_recursive_on_reboot(const NS_tchar* path,
   }
 
   if (!S_ISDIR(sInfo.st_mode)) {
-    NS_tchar tmpDeleteFile[MAXPATHLEN];
+    NS_tchar tmpDeleteFile[MAXPATHLEN + 1];
     GetUUIDTempFilePath(deleteDir, L"rep", tmpDeleteFile);
     if (NS_tremove(tmpDeleteFile) && errno != ENOENT) {
       LOG(("remove_recursive_on_reboot: failed to remove temporary file: " LOG_S
@@ -1059,7 +1059,7 @@ static int backup_discard(const NS_tchar* path, const NS_tchar* relPath) {
 #if defined(XP_WIN)
   if (rv && !sStagedUpdate && !sReplaceRequest) {
     LOG(("backup_discard: unable to remove: " LOG_S, relBackup));
-    NS_tchar path[MAXPATHLEN];
+    NS_tchar path[MAXPATHLEN + 1];
     GetUUIDTempFilePath(gDeleteDirPath, L"moz", path);
     if (rename_file(backup, path)) {
       LOG(("backup_discard: failed to rename file:" LOG_S ", dst:" LOG_S,

@@ -1544,8 +1544,9 @@ function readSecureStatusFile() {
 }
 
 /**
- * Get the nsIFile in the secure update log directory. The file name is always
- * the value of gTestID with either a file extension of 'log' or 'status'.
+ * Get an nsIFile for a file in the secure update log directory. The file name
+ * is always the value of gTestID and the file extension is specified by the
+ * aFileExt parameter.
  *
  * @param  aFileExt
  *         The file extension.
@@ -1864,7 +1865,7 @@ function logUpdateLog(aLogLeafName) {
     updateLogContents = replaceLogPaths(updateLogContents);
     let aryLogContents = updateLogContents.split("\n");
     logTestInfo("contents of " + updateLog.path + ":");
-    aryLogContents.forEach(function RU_LC_FE(aLine) {
+    aryLogContents.forEach(function LU_ULC_FE(aLine) {
       logTestInfo(aLine);
     });
   } else {
@@ -1872,6 +1873,23 @@ function logUpdateLog(aLogLeafName) {
   }
 
   if (gIsServiceTest) {
+    let secureStatus = readSecureStatusFile();
+    logTestInfo("secure update status: " + secureStatus);
+
+    updateLog = getSecureOutputFile("log");
+    if (updateLog.exists()) {
+      // xpcshell tests won't display the entire contents so log each line.
+      let updateLogContents = readFileBytes(updateLog).replace(/\r\n/g, "\n");
+      updateLogContents = replaceLogPaths(updateLogContents);
+      let aryLogContents = updateLogContents.split("\n");
+      logTestInfo("contents of " + updateLog.path + ":");
+      aryLogContents.forEach(function LU_SULC_FE(aLine) {
+        logTestInfo(aLine);
+      });
+    } else {
+      logTestInfo("secure update log doesn't exist, path: " + updateLog.path);
+    }
+
     let serviceLog = getMaintSvcDir();
     serviceLog.append("logs");
     serviceLog.append("maintenanceservice.log");
@@ -1881,7 +1899,7 @@ function logUpdateLog(aLogLeafName) {
       serviceLogContents = replaceLogPaths(serviceLogContents);
       let aryLogContents = serviceLogContents.split("\n");
       logTestInfo("contents of " + serviceLog.path + ":");
-      aryLogContents.forEach(function RU_LC_FE(aLine) {
+      aryLogContents.forEach(function LU_MSLC_FE(aLine) {
         logTestInfo(aLine);
       });
     } else {
@@ -2055,6 +2073,10 @@ function runUpdate(
       aExpectedExitValue,
       "the process exit value" + MSG_SHOULD_EQUAL
     );
+  }
+
+  if (status != aExpectedStatus) {
+    logUpdateLog(FILE_UPDATE_LOG);
   }
   Assert.equal(status, aExpectedStatus, "the update status" + MSG_SHOULD_EQUAL);
 
