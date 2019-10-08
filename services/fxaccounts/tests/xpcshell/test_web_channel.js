@@ -455,31 +455,7 @@ add_task(
 
               // customizeSync should be stripped in the data.
               Assert.equal(false, "customizeSync" in accountData);
-              Assert.equal(false, "declinedSyncEngines" in accountData);
-              Assert.equal(
-                Services.prefs.getBoolPref("services.sync.engine.addons"),
-                false
-              );
-              Assert.equal(
-                Services.prefs.getBoolPref("services.sync.engine.bookmarks"),
-                true
-              );
-              Assert.equal(
-                Services.prefs.getBoolPref("services.sync.engine.history"),
-                true
-              );
-              Assert.equal(
-                Services.prefs.getBoolPref("services.sync.engine.passwords"),
-                true
-              );
-              Assert.equal(
-                Services.prefs.getBoolPref("services.sync.engine.prefs"),
-                false
-              );
-              Assert.equal(
-                Services.prefs.getBoolPref("services.sync.engine.tabs"),
-                true
-              );
+              Assert.equal(false, "services" in accountData);
               resolve();
             });
           },
@@ -520,8 +496,40 @@ add_task(
       email: "testuser@testuser.com",
       verifiedCanLinkAccount: true,
       customizeSync: true,
-      declinedSyncEngines: ["addons", "prefs"],
+      services: {
+        sync: {
+          offeredEngines: [
+            "addons",
+            "bookmarks",
+            "history",
+            "passwords",
+            "prefs",
+          ],
+          declinedEngines: ["addons", "prefs"],
+        },
+      },
     });
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.addons"),
+      false
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.bookmarks"),
+      true
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.history"),
+      true
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.passwords"),
+      true
+    );
+    Assert.equal(
+      Services.prefs.getBoolPref("services.sync.engine.prefs"),
+      false
+    );
+    Assert.equal(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
   }
 );
 
@@ -554,8 +562,12 @@ add_task(async function test_helpers_login_with_offered_sync_engines() {
     email: "testuser@testuser.com",
     verifiedCanLinkAccount: true,
     customizeSync: true,
-    declinedSyncEngines: ["addresses"],
-    offeredSyncEngines: ["creditcards", "addresses"],
+    services: {
+      sync: {
+        declinedEngines: ["addresses"],
+        offeredEngines: ["creditcards", "addresses"],
+      },
+    },
   });
 
   const accountData = await setSignedInUserCalled;
@@ -563,8 +575,8 @@ add_task(async function test_helpers_login_with_offered_sync_engines() {
   // ensure fxAccounts is informed of the new user being signed in.
   equal(accountData.email, "testuser@testuser.com");
 
-  // offeredSyncEngines should be stripped in the data.
-  ok(!("offeredSyncEngines" in accountData));
+  // services should be stripped in the data.
+  ok(!("services" in accountData));
   // credit cards was offered but not declined.
   equal(Services.prefs.getBoolPref("services.sync.engine.creditcards"), true);
   // addresses was offered and explicitely declined.
