@@ -1,0 +1,28 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+customElements.define("custom-element", class extends HTMLElement {
+  constructor() {
+    super();
+    const template = document.getElementById("template");
+    const shadowRoot = this.attachShadow({mode: "open"})
+      .appendChild(template.content.cloneNode(true));
+  }
+});
+</script>
+</head>
+
+<body>
+<template id="template">
+  <div>
+    <slot name="foo"/>
+  </div>
+  <div>
+    <slot/>
+  </div>
+</template>
+<custom-element style="display: block;">
+  <div>3</div><span slot="foo">1</span><div>4</div><span slot="foo">2</span><div>5</div>
+</custom-element>
+</body>
+</html>

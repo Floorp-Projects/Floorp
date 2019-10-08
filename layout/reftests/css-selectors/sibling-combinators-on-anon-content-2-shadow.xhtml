@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+  <head>
+  </head>
+  <body>
+    <template id="template">
+      <style>
+        .a:empty + .b { color: green; }
+      </style>
+      <span class="a">Some text</span>
+      <span class="b">This should be green</span>
+      <slot/>
+    </template>
+    <custom-element id="foo"></custom-element>
+    <script>
+      customElements.define("custom-element", class extends HTMLElement {
+        constructor() {
+          super();
+          const template = document.getElementById("template");
+          const shadowRoot = this.attachShadow({mode: "open"})
+            .appendChild(template.content.cloneNode(true));
+        }
+
+        nixText() {
+          this.shadowRoot.children[1].textContent = "";
+        }
+      });
+      window.onload = function() {
+        var el = document.getElementById("foo");
+        // Flush its layout
+        el.offsetWidth;
+        el.nixText();
+        document.documentElement.className = "";
+      }
+    </script>
+  </body>
+</html>

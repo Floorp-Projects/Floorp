@@ -28,7 +28,7 @@ include ../../dom/plugins/test/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
 include ../../dom/svg/crashtests/crashtests.list
 include ../../dom/workers/test/crashtests/crashtests.list
-include ../../dom/xbl/crashtests/crashtests.list
+skip-if(!xbl) include ../../dom/xbl/crashtests/crashtests.list
 include ../../dom/xhr/tests/crashtests/crashtests.list
 include ../../dom/xml/crashtests/crashtests.list
 include ../../dom/xslt/crashtests/crashtests.list

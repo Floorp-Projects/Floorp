@@ -23,6 +23,7 @@ var lastContentType = -1;
 const testURL = window.location.href + "/this/is/the/test/url";
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
+var {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
 
 // Content policy / factory implementation for the test
 var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
@@ -76,6 +77,10 @@ categoryManager.addCategoryEntry("content-policy", policyName, policyName, false
 // Try creating different request types
 var tests = ["SCRIPT", "IMAGE", "STYLESHEET", "OBJECT", "DOCUMENT", "SUBDOCUMENT", "XBL", "XMLHTTPREQUEST"];
 var curTest = -1;
+
+if (!AppConstants.MOZ_XBL) {
+  tests.splice(tests.indexOf("XBL"), 1);
+}
 
 var div;
 

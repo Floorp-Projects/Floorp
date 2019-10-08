@@ -4,13 +4,9 @@
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <base href="/tests/dom/base/" />
-  <style>
-    #bound { -moz-binding: url("test/file_base_xbl.xml#test"); }
-  </style>
 </head>
 <body>
 <div id="1" xml:base="supercalifragilisticexpialidocious"><p><p xml:base="hello/"><p xml:base="world"><span xml:base="#iamtheverymodelofamodernmajorgeneral">text</span></p></p></p></div>
-<div id="bound"/>
 <pre id="test">
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
@@ -34,18 +30,6 @@ addLoadEvent(function() {
     node = node.firstChild;
   }
   is(expected.length, 0, "found all expected nodes");
-
-  var svgExpected =
-    ["http://mochi.test:8888/tests/dom/base/",
-     "http://mochi.test:8888/tests/dom/base/",
-     "http://mochi.test:8888/tests/dom/base/",
-     ];
-  node = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById("bound"))[0];
-  while(node) {
-    is(node.baseURI, svgExpected.shift(), "node base");
-    node = node.firstChild;
-  }
-  is(svgExpected.length, 0, "found all expected nodes");
 
   SimpleTest.finish();
 });
