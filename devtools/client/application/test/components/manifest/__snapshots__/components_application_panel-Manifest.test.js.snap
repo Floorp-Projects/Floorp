@@ -53,14 +53,7 @@ exports[`Manifest does not render the issues section when the manifest is valid 
     title="manifest-item-icons"
   >
     <table>
-      <tbody>
-        <ManifestItem
-          key="1x1"
-          label="1x1"
-        >
-          something.png
-        </ManifestItem>
-      </tbody>
+      <tbody />
     </table>
   </ManifestSection>
 </article>
@@ -134,13 +127,76 @@ exports[`Manifest does render the issues section when the manifest is not valid 
     title="manifest-item-icons"
   >
     <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+</article>
+`;
+
+exports[`Manifest renders the expected snapshop for a manifest with icon members 1`] = `
+<article
+  className="js-manifest"
+>
+  <Localized
+    id="manifest-view-header"
+  >
+    <h1
+      className="app-page__title"
+    />
+  </Localized>
+  <ManifestJsonLink />
+  <ManifestSection
+    key="manifest-section-1"
+    title="manifest-item-identity"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-2"
+    title="manifest-item-presentation"
+  >
+    <table>
+      <tbody />
+    </table>
+  </ManifestSection>
+  <ManifestSection
+    key="manifest-section-3"
+    title="manifest-item-icons"
+  >
+    <table>
       <tbody>
-        <ManifestItem
-          key="1x1"
-          label="1x1"
-        >
-          something.png
-        </ManifestItem>
+        <ManifestIconItem
+          key="0"
+          label={
+            Object {
+              "contentType": "image/png",
+              "sizes": "1x1",
+            }
+          }
+          value={
+            Object {
+              "purpose": "any",
+              "src": "something.png",
+            }
+          }
+        />
+        <ManifestIconItem
+          key="1"
+          label={
+            Object {
+              "contentType": "",
+              "sizes": "",
+            }
+          }
+          value={
+            Object {
+              "purpose": "any maskable",
+              "src": "something.svg",
+            }
+          }
+        />
       </tbody>
     </table>
   </ManifestSection>
