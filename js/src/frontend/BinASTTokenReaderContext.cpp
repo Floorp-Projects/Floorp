@@ -1491,7 +1491,7 @@ BinASTTokenReaderContext::readSkippableSubTree(const FieldContext&) {
   return raiseError("Not Yet Implemented");
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
+JS::Result<Ok> BinASTTokenReaderContext::enterSum(
     BinASTKind& tag, const FieldOrRootContext& context) {
   return context.match(
       [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
@@ -1507,7 +1507,7 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
       });
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
+JS::Result<Ok> BinASTTokenReaderContext::enterSum(
     BinASTKind& tag, const FieldOrListContext& context) {
   return context.match(
       [this, &tag](const BinASTTokenReaderBase::FieldContext& asFieldContext)
@@ -1524,22 +1524,22 @@ JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
       });
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const RootContext& context) {
+JS::Result<Ok> BinASTTokenReaderContext::enterSum(BinASTKind& tag,
+                                                  const RootContext& context) {
   // For the moment, the format hardcodes `Script` as root.
   tag = BinASTKind::Script;
   return Ok();
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const ListContext& context) {
+JS::Result<Ok> BinASTTokenReaderContext::enterSum(BinASTKind& tag,
+                                                  const ListContext& context) {
   // This tuple is an element in a list we're currently reading.
   MOZ_TRY_VAR(tag, readTagFromTable(context.position));
   return Ok();
 }
 
-JS::Result<Ok> BinASTTokenReaderContext::enterTaggedTuple(
-    BinASTKind& tag, const FieldContext& context) {
+JS::Result<Ok> BinASTTokenReaderContext::enterSum(BinASTKind& tag,
+                                                  const FieldContext& context) {
   // This tuple is the value of the field we're currently reading.
   MOZ_TRY_VAR(tag, readTagFromTable(context.position));
   return Ok();
@@ -2037,9 +2037,11 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::initWithSingleValue(JSContext* cx,
                                                                 T&& value) {
   MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
   if (MOZ_UNLIKELY(!values.emplaceBack(0, 0, std::move(value)))) {
+    ReportOutOfMemory(cx);
     return cx->alreadyReportedError();
   }
   if (MOZ_UNLIKELY(!saturated.emplaceBack(0))) {
+    ReportOutOfMemory(cx);
     return cx->alreadyReportedError();
   }
   this->largestBitLength = 0;
