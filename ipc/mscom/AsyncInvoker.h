@@ -282,7 +282,7 @@ class MOZ_RAII AsyncInvoker final : public WaitPolicy<AsyncInterface> {
    */
   template <typename SyncMethod, typename AsyncMethod, typename... Args>
   HRESULT Invoke(SyncMethod aSyncMethod, AsyncMethod aAsyncMethod,
-                 Args... aArgs) {
+                 Args&&... aArgs) {
     if (mSyncObj) {
       return (mSyncObj->*aSyncMethod)(std::forward<Args>(aArgs)...);
     }
