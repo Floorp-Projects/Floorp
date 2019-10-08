@@ -3206,8 +3206,17 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   return YES;
 }
 
-- (NSView*)hitTest:(NSPoint)aPoint {
-  return nil;
+- (void)mouseUp:(NSEvent*)event {
+  if ([event clickCount] == 2) {
+    // Handle titlebar double click. We don't get the window's default behavior here because the
+    // window uses NSFullSizeContentViewWindowMask, and this view (the titlebar gradient view) is
+    // technically part of the window "contents" (it's a subview of the content view).
+    if (nsCocoaUtils::ShouldZoomOnTitlebarDoubleClick()) {
+      [[self window] performZoom:nil];
+    } else if (nsCocoaUtils::ShouldMinimizeOnTitlebarDoubleClick()) {
+      [[self window] performMiniaturize:nil];
+    }
+  }
 }
 
 @end
