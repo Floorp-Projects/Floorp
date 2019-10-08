@@ -12,7 +12,7 @@ import * as I from "immutable";
 // $FlowIgnore
 const BreakpointsComponent = Breakpoints.WrappedComponent;
 
-function generateDefaults(overrides) {
+function generateDefaults(overrides): any {
   const sourceId = "server1.conn1.child1/source1";
   const matchingBreakpoints = { id1: { location: { sourceId } } };
 

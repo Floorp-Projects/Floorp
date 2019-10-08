@@ -33,7 +33,7 @@ const reasons = {
   other: "whyPaused.other",
 };
 
-export function getPauseReason(why?: Why): string | null {
+export function getPauseReason(why?: ?Why): string | null {
   if (!why) {
     return null;
   }

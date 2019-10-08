@@ -22,7 +22,7 @@ import type {
 
 type Props = {
   cx: ThreadContext,
-  selectedSource: Source,
+  selectedSource: ?Source,
   breakpoints: BreakpointType[],
   editor: Object,
   breakpointActions: BreakpointItemActions,
@@ -40,7 +40,7 @@ class Breakpoints extends Component<Props> {
       editorActions,
     } = this.props;
 
-    if (!breakpoints || selectedSource.isBlackBoxed) {
+    if (!selectedSource || !breakpoints || selectedSource.isBlackBoxed) {
       return null;
     }
 

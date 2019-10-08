@@ -27,7 +27,10 @@ import {
 
 import type { Action, ThunkArgs } from "./types";
 import type { Context } from "../types";
-import type { SearchOperation } from "../reducers/project-text-search";
+import type {
+  SearchOperation,
+  StatusType,
+} from "../reducers/project-text-search";
 
 export function addSearchQuery(cx: Context, query: string): Action {
   return { type: "ADD_QUERY", cx, query };
@@ -61,7 +64,7 @@ export function clearSearch(cx: Context): Action {
   return { type: "CLEAR_SEARCH", cx };
 }
 
-export function updateSearchStatus(cx: Context, status: string): Action {
+export function updateSearchStatus(cx: Context, status: StatusType): Action {
   return { type: "UPDATE_STATUS", cx, status };
 }
 

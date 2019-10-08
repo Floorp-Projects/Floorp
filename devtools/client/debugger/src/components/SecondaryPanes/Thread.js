@@ -57,7 +57,7 @@ export class Thread extends Component<Props> {
   }
 }
 
-const mapStateToProps = (state, props: Props) => ({
+const mapStateToProps = (state, props) => ({
   cx: getContext(state),
   currentThread: getCurrentThread(state),
   isPaused: getIsPaused(state, props.thread.actor),

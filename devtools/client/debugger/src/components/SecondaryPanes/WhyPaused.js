@@ -13,14 +13,14 @@ import {
   getPaneCollapse,
   getPauseReason as getWhy,
 } from "../../selectors";
-import type { Grip, ExceptionReason } from "../../types";
+import type { Grip, Why } from "../../types";
 
 import "./WhyPaused.css";
 
 type Props = {
   endPanelCollapsed: boolean,
-  delay: ?number,
-  why: ExceptionReason,
+  +delay: ?number,
+  why: ?Why,
 };
 
 type State = {
@@ -28,7 +28,7 @@ type State = {
 };
 
 class WhyPaused extends PureComponent<Props, State> {
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
     this.state = { hideWhyPaused: "" };
   }
@@ -58,13 +58,12 @@ class WhyPaused extends PureComponent<Props, State> {
     return `${preview.name}: ${preview.message}`;
   }
 
-  renderMessage(why: ExceptionReason) {
+  renderMessage(why: Why) {
     if (why.type == "exception" && why.exception) {
-      return (
-        <div className="message warning">
-          {this.renderExceptionSummary(why.exception)}
-        </div>
-      );
+      // Our types for 'Why' are too general because 'type' can be 'string'.
+      // $FlowFixMe - We should have a proper discriminating union of reasons.
+      const summary = this.renderExceptionSummary(why.exception);
+      return <div className="message warning">{summary}</div>;
     }
 
     if (typeof why.message == "string") {
@@ -78,7 +77,7 @@ class WhyPaused extends PureComponent<Props, State> {
     const { endPanelCollapsed, why } = this.props;
     const reason = getPauseReason(why);
 
-    if (!reason || endPanelCollapsed) {
+    if (!why || !reason || endPanelCollapsed) {
       return <div className={this.state.hideWhyPaused} />;
     }
 

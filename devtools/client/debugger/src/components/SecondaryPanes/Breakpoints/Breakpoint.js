@@ -47,7 +47,7 @@ type Props = {
   cx: Context,
   breakpoint: BreakpointType,
   breakpoints: BreakpointType[],
-  selectedSource: Source,
+  selectedSource: ?Source,
   source: Source,
   frame: FormattedFrame,
   editor: SourceEditor,
@@ -65,7 +65,7 @@ type Props = {
 };
 
 class Breakpoint extends PureComponent<Props> {
-  onContextMenu = e => {
+  onContextMenu = (e: SyntheticEvent<HTMLElement>) => {
     showContextMenu({ ...this.props, contextMenuEvent: e });
   };
 
@@ -83,13 +83,13 @@ class Breakpoint extends PureComponent<Props> {
     }
   };
 
-  selectBreakpoint = event => {
+  selectBreakpoint = (event: SyntheticEvent<>) => {
     event.preventDefault();
     const { cx, selectSpecificLocation } = this.props;
     selectSpecificLocation(cx, this.selectedLocation);
   };
 
-  removeBreakpoint = event => {
+  removeBreakpoint = (event: SyntheticEvent<>) => {
     const { cx, removeBreakpoint, breakpoint } = this.props;
     event.stopPropagation();
     removeBreakpoint(cx, breakpoint);
@@ -139,7 +139,7 @@ class Breakpoint extends PureComponent<Props> {
   }
 
   highlightText = memoize(
-    (text = "", editor) => {
+    (text: string = "", editor: SourceEditor) => {
       const node = document.createElement("div");
       editor.CodeMirror.runMode(text, "application/javascript", node);
       return { __html: node.innerHTML };

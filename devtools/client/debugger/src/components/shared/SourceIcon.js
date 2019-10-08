@@ -21,11 +21,11 @@ import "./SourceIcon.css";
 
 type Props = {
   source: Source,
+  shouldHide?: string => boolean,
+
   // symbols will provide framework information
-  symbols: Symbols,
-  // An additional validator for the icon returned
-  shouldHide?: Function,
-  framework?: string,
+  symbols: ?Symbols,
+  framework: ?string,
 };
 
 class SourceIcon extends PureComponent<Props> {

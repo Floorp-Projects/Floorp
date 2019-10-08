@@ -14,7 +14,6 @@ import Breakpoint from "./Breakpoint";
 import BreakpointHeading from "./BreakpointHeading";
 
 import actions from "../../../actions";
-import { getDisplayPath } from "../../../utils/source";
 import { getSelectedLocation } from "../../../utils/selected-location";
 import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
@@ -33,7 +32,7 @@ import "./Breakpoints.css";
 
 type Props = {
   breakpointSources: BreakpointSources,
-  selectedSource: Source,
+  selectedSource: ?Source,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
   pauseOnExceptions: Function,
@@ -111,19 +110,13 @@ class Breakpoints extends Component<Props> {
     return (
       <div className="pane breakpoints-list">
         {breakpointSources.map(({ source, breakpoints, i }) => {
-          const path = getDisplayPath(source, sources);
           const sortedBreakpoints = sortSelectedBreakpoints(
             breakpoints,
             selectedSource
           );
 
           return [
-            <BreakpointHeading
-              source={source}
-              sources={sources}
-              path={path}
-              key={source.url}
-            />,
+            <BreakpointHeading source={source} sources={sources} />,
             ...sortedBreakpoints.map(breakpoint => (
               <Breakpoint
                 breakpoint={breakpoint}

@@ -14,11 +14,9 @@ import {
   getActiveSearch,
   getSelectedSource,
   getSourceContent,
-  getSelectedLocation,
   getFileSearchQuery,
   getFileSearchModifiers,
   getFileSearchResults,
-  getHighlightedLineRange,
   getContext,
 } from "../../selectors";
 
@@ -60,7 +58,7 @@ type State = {
 type Props = {
   cx: Context,
   editor: SourceEditor,
-  selectedSource?: Source,
+  selectedSource: ?Source,
   selectedContentLoaded: boolean,
   searchOn: boolean,
   searchResults: SearchResults,
@@ -375,11 +373,9 @@ const mapStateToProps = state => {
     selectedSource,
     selectedContentLoaded: selectedSource
       ? !!getSourceContent(state, selectedSource.id)
-      : null,
-    selectedLocation: getSelectedLocation(state),
+      : false,
     query: getFileSearchQuery(state),
     modifiers: getFileSearchModifiers(state),
-    highlightedLineRange: getHighlightedLineRange(state),
     searchResults: getFileSearchResults(state),
   };
 };

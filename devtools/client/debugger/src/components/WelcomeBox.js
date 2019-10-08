@@ -19,7 +19,7 @@ type Props = {
   horizontal: boolean,
   endPanelCollapsed: boolean,
   togglePaneCollapse: Function,
-  setActiveSearch: (?ActiveSearchType) => any,
+  setActiveSearch: (ActiveSearchType | void) => any,
   openQuickOpen: typeof actions.openQuickOpen,
   toggleShortcutsModal: () => void,
 };

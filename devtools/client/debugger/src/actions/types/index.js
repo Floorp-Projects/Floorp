@@ -15,7 +15,10 @@ import type {
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
 import type { TreeNode } from "../../utils/sources-tree/types";
-import type { SearchOperation } from "../../reducers/project-text-search";
+import type {
+  SearchOperation,
+  StatusType,
+} from "../../reducers/project-text-search";
 
 import type { BreakpointAction } from "./BreakpointAction";
 import type { SourceAction } from "./SourceAction";
@@ -99,7 +102,7 @@ export type ProjectTextSearchAction =
       +cx: Context,
       +result: ProjectTextSearchResult,
     |}
-  | {| +type: "UPDATE_STATUS", +cx: Context, +status: string |}
+  | {| +type: "UPDATE_STATUS", +cx: Context, +status: StatusType |}
   | {| +type: "CLEAR_SEARCH_RESULTS", +cx: Context |}
   | {|
       +type: "ADD_ONGOING_SEARCH",
@@ -175,8 +178,11 @@ export type { panelPositionType } from "./UIAction";
 export type { ASTAction } from "./ASTAction";
 
 type ActiveEventListener = string;
-type EventListenerEvent = { name: string, id: ActiveEventListener };
-type EventListenerCategory = { name: string, events: EventListenerEvent[] };
+export type EventListenerEvent = { name: string, id: ActiveEventListener };
+export type EventListenerCategory = {
+  name: string,
+  events: EventListenerEvent[],
+};
 
 export type EventListenerActiveList = ActiveEventListener[];
 export type EventListenerCategoryList = EventListenerCategory[];

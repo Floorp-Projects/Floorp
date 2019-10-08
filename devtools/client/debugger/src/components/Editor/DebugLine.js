@@ -26,8 +26,8 @@ import {
 import type { SourceLocation, Why, SourceWithContent } from "../../types";
 
 type Props = {
-  location: SourceLocation,
-  why: Why,
+  location: ?SourceLocation,
+  why: ?Why,
   source: ?SourceWithContent,
 };
 
@@ -36,7 +36,10 @@ type TextClasses = {
   lineClass: string,
 };
 
-function isDocumentReady(source: ?SourceWithContent, location) {
+function isDocumentReady(
+  source: ?SourceWithContent,
+  location: ?SourceLocation
+) {
   return location && source && source.content && hasDocument(location.sourceId);
 }
 
@@ -62,8 +65,12 @@ export class DebugLine extends PureComponent<Props> {
     endOperation();
   }
 
-  setDebugLine(why: Why, location: SourceLocation, source: ?SourceWithContent) {
-    if (!isDocumentReady(source, location)) {
+  setDebugLine(
+    why: ?Why,
+    location: ?SourceLocation,
+    source: ?SourceWithContent
+  ) {
+    if (!location || !isDocumentReady(source, location)) {
       return;
     }
     const { sourceId } = location;
@@ -92,11 +99,11 @@ export class DebugLine extends PureComponent<Props> {
   }
 
   clearDebugLine(
-    why: Why,
-    location: SourceLocation,
+    why: ?Why,
+    location: ?SourceLocation,
     source: ?SourceWithContent
   ) {
-    if (!isDocumentReady(source, location)) {
+    if (!location || !isDocumentReady(source, location)) {
       return;
     }
 
@@ -110,7 +117,7 @@ export class DebugLine extends PureComponent<Props> {
     doc.removeLineClass(line, "line", lineClass);
   }
 
-  getTextClasses(why: Why): TextClasses {
+  getTextClasses(why: ?Why): TextClasses {
     if (why && isException(why)) {
       return {
         markTextClass: "debug-expression-error",

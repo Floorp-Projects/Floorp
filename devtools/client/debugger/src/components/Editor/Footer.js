@@ -40,7 +40,7 @@ type CursorPosition = {
 type Props = {
   cx: Context,
   selectedSource: ?SourceWithContent,
-  mappedSource: Source,
+  mappedSource: ?Source,
   endPanelCollapsed: boolean,
   horizontal: boolean,
   canPrettyPrint: boolean,
@@ -223,7 +223,7 @@ class SourceFooter extends PureComponent<Props, State> {
     );
   }
 
-  onCursorChange = event => {
+  onCursorChange = (event: any) => {
     const { line, ch } = event.doc.getCursor();
     this.setState({ cursorPosition: { line, column: ch } });
   };

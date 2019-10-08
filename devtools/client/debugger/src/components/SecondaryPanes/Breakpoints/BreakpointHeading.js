@@ -36,7 +36,7 @@ type Props = {
 };
 
 class BreakpointHeading extends PureComponent<Props> {
-  onContextMenu = e => {
+  onContextMenu = (e: SyntheticEvent<HTMLElement>) => {
     showContextMenu({ ...this.props, contextMenuEvent: e });
   };
 
