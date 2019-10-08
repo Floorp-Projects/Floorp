@@ -6912,14 +6912,14 @@
 # Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
 # not allowed for Firefox Desktop in firefox.js
 - name: security.allow_eval_with_system_principal
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
 # Allowed by default so it doesn't affect Thunderbird/SeaMonkey, but
 # not allowed for Firefox Desktop in firefox.js
 - name: security.allow_eval_in_parent_process
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 

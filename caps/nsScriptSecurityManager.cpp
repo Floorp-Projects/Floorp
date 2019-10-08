@@ -452,8 +452,8 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   }
 
 #if !defined(ANDROID)
-  if (!nsContentSecurityUtils::IsEvalAllowed(cx, subjectPrincipal,
-                                             scriptSample)) {
+  if (!nsContentSecurityUtils::IsEvalAllowed(
+          cx, subjectPrincipal->IsSystemPrincipal(), scriptSample)) {
     return false;
   }
 #endif

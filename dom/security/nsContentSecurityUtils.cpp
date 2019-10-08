@@ -15,6 +15,7 @@
 
 /*
  * Performs a Regular Expression match, optionally returning the results.
+ * This function is not safe to use OMT.
  *
  * @param aPattern      The regex pattern
  * @param aString       The string to compare against
@@ -27,6 +28,7 @@
 nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
                    bool aOnlyMatch, bool& aMatchResult,
                    nsTArray<nsString>* aRegexResults = nullptr) {
+  MOZ_ASSERT(NS_IsMainThread());
   aMatchResult = false;
 
   AutoJSAPI jsapi;
@@ -147,6 +149,7 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
   static NS_NAMED_LITERAL_CSTRING(kSuspectedUserChromeJS,
                                   "suspectedUserChromeJS");
   static NS_NAMED_LITERAL_CSTRING(kOther, "other");
+  static NS_NAMED_LITERAL_CSTRING(kOtherWorker, "other-on-worker");
   static NS_NAMED_LITERAL_CSTRING(kRegexFailure, "regexfailure");
 
   static NS_NAMED_LITERAL_STRING(kUCJSRegex, "(.+).uc.js\\?*[0-9]*$");
@@ -159,6 +162,11 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
   }
   if (StringBeginsWith(fileName, NS_LITERAL_STRING("resource://"))) {
     return FilenameType(kResourceURI, Some(fileName));
+  }
+
+  if (!NS_IsMainThread()) {
+    // We can't do Regex matching off the main thread; so just report.
+    return FilenameType(kOtherWorker, Nothing());
   }
 
   // Extension
@@ -201,12 +209,41 @@ FilenameType nsContentSecurityUtils::FilenameToEvalType(
   return FilenameType(kOther, Nothing());
 }
 
+class EvalUsageNotificationRunnable final : public Runnable {
+ public:
+  EvalUsageNotificationRunnable(bool aIsSystemPrincipal,
+                                NS_ConvertUTF8toUTF16& aFileNameA,
+                                uint64_t aWindowID, uint32_t aLineNumber,
+                                uint32_t aColumnNumber)
+      : mozilla::Runnable("EvalUsageNotificationRunnable"),
+        mIsSystemPrincipal(aIsSystemPrincipal),
+        mFileNameA(aFileNameA),
+        mWindowID(aWindowID),
+        mLineNumber(aLineNumber),
+        mColumnNumber(aColumnNumber) {}
+
+  NS_IMETHOD Run() override {
+    nsContentSecurityUtils::NotifyEvalUsage(
+        mIsSystemPrincipal, mFileNameA, mWindowID, mLineNumber, mColumnNumber);
+    return NS_OK;
+  }
+
+  void Revoke() {}
+
+ private:
+  bool mIsSystemPrincipal;
+  NS_ConvertUTF8toUTF16 mFileNameA;
+  uint64_t mWindowID;
+  uint32_t mLineNumber;
+  uint32_t mColumnNumber;
+};
+
 /* static */
 bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
-                                           nsIPrincipal* aSubjectPrincipal,
+                                           bool aIsSystemPrincipal,
                                            const nsAString& aScript) {
   // This allowlist contains files that are permanently allowed to use
-  // eval()-like functions. It is supposed to be restricted to files that are
+  // eval()-like functions. It will ideally be restricted to files that are
   // exclusively used in testing contexts.
   static nsLiteralCString evalAllowlist[] = {
       // Test-only third-party library
@@ -215,6 +252,16 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
       NS_LITERAL_CSTRING("resource://testing-common/ajv-4.1.1.js"),
       // Test-only utility
       NS_LITERAL_CSTRING("resource://testing-common/content-task.js"),
+
+      // Tracked by Bug 1584605
+      NS_LITERAL_CSTRING("resource:///modules/translation/cld-worker.js"),
+
+      // require.js implements a script loader for workers. It uses eval
+      // to load the script; but injection is only possible in situations
+      // that you could otherwise control script that gets executed, so
+      // it is okay to allow eval() as it adds no additional attack surface.
+      // Bug 1584564 tracks requiring safe usage of require.js
+      NS_LITERAL_CSTRING("resource://gre/modules/workers/require.js"),
 
       // The Browser Toolbox/Console
       NS_LITERAL_CSTRING("debugger"),
@@ -227,14 +274,13 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   static NS_NAMED_LITERAL_STRING(sAllowedEval2,
                                  "function anonymous(\n) {\nreturn this\n}");
 
-  bool systemPrincipal = aSubjectPrincipal->IsSystemPrincipal();
-  if (systemPrincipal &&
+  if (aIsSystemPrincipal &&
       StaticPrefs::security_allow_eval_with_system_principal()) {
     MOZ_LOG(
         sCSMLog, LogLevel::Debug,
         ("Allowing eval() %s because allowing pref is "
          "enabled",
-         (systemPrincipal ? "with System Principal" : "in parent process")));
+         (aIsSystemPrincipal ? "with System Principal" : "in parent process")));
     return true;
   }
 
@@ -246,40 +292,51 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
     return true;
   }
 
-  if (!systemPrincipal && !XRE_IsE10sParentProcess()) {
+  if (!aIsSystemPrincipal && !XRE_IsE10sParentProcess()) {
     // Usage of eval we are unconcerned with.
     return true;
   }
 
-  // This preference is a file used for autoconfiguration of Firefox
-  // by administrators. It has also been (ab)used by the userChromeJS
-  // project to run legacy-style 'extensions', some of which use eval,
-  // all of which run in the System Principal context.
-  nsAutoString jsConfigPref;
-  Preferences::GetString("general.config.filename", jsConfigPref);
-  if (!jsConfigPref.IsEmpty()) {
-    MOZ_LOG(
-        sCSMLog, LogLevel::Debug,
-        ("Allowing eval() %s because of "
-         "general.config.filename",
-         (systemPrincipal ? "with System Principal" : "in parent process")));
-    return true;
-  }
+  // We only perform checks of these two preferences on the Main Thread
+  // (because a String-based preference checks is only safe on Main Thread.)
+  // The consequence of this is that if a user is using userChromeJS _and_
+  // the scripts they use start a worker and that worker uses eval - we will
+  // enter this function, skip over these pref checks that would normally cause
+  // us to allow the eval usage - and we will block it.
+  // While not ideal, we do not officially support userChromeJS, and hopefully
+  // the usage of workers and eval in workers is even lower that userChromeJS
+  // usage.
+  if (NS_IsMainThread()) {
+    // This preference is a file used for autoconfiguration of Firefox
+    // by administrators. It has also been (ab)used by the userChromeJS
+    // project to run legacy-style 'extensions', some of which use eval,
+    // all of which run in the System Principal context.
+    nsAutoString jsConfigPref;
+    Preferences::GetString("general.config.filename", jsConfigPref);
+    if (!jsConfigPref.IsEmpty()) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug,
+              ("Allowing eval() %s because of "
+               "general.config.filename",
+               (aIsSystemPrincipal ? "with System Principal"
+                                   : "in parent process")));
+      return true;
+    }
 
-  // This preference is better known as userchrome.css which allows
-  // customization of the Firefox UI. Believe it or not, you can also
-  // use XBL bindings to get it to run Javascript in the same manner
-  // as userChromeJS above, so even though 99.9% of people using
-  // userchrome.css aren't doing that, we're still going to need to
-  // disable the eval() assertion for them.
-  if (Preferences::GetBool(
-          "toolkit.legacyUserProfileCustomizations.stylesheets")) {
-    MOZ_LOG(
-        sCSMLog, LogLevel::Debug,
-        ("Allowing eval() %s because of "
-         "toolkit.legacyUserProfileCustomizations.stylesheets",
-         (systemPrincipal ? "with System Principal" : "in parent process")));
-    return true;
+    // This preference is better known as userchrome.css which allows
+    // customization of the Firefox UI. Believe it or not, you can also
+    // use XBL bindings to get it to run Javascript in the same manner
+    // as userChromeJS above, so even though 99.9% of people using
+    // userchrome.css aren't doing that, we're still going to need to
+    // disable the eval() assertion for them.
+    if (Preferences::GetBool(
+            "toolkit.legacyUserProfileCustomizations.stylesheets")) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug,
+              ("Allowing eval() %s because of "
+               "toolkit.legacyUserProfileCustomizations.stylesheets",
+               (aIsSystemPrincipal ? "with System Principal"
+                                   : "in parent process")));
+      return true;
+    }
   }
 
   // We permit these two common idioms to get access to the global JS object
@@ -289,7 +346,7 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
         sCSMLog, LogLevel::Debug,
         ("Allowing eval() %s because a key string is "
          "provided",
-         (systemPrincipal ? "with System Principal" : "in parent process")));
+         (aIsSystemPrincipal ? "with System Principal" : "in parent process")));
     return true;
   }
 
@@ -318,28 +375,60 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   NS_ConvertUTF8toUTF16 fileNameA(fileName);
   for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
     if (fileName.Equals(allowlistEntry)) {
-      MOZ_LOG(
-          sCSMLog, LogLevel::Debug,
-          ("Allowing eval() %s because the containing "
-           "file is in the allowlist",
-           (systemPrincipal ? "with System Principal" : "in parent process")));
+      MOZ_LOG(sCSMLog, LogLevel::Debug,
+              ("Allowing eval() %s because the containing "
+               "file is in the allowlist",
+               (aIsSystemPrincipal ? "with System Principal"
+                                   : "in parent process")));
       return true;
     }
+  }
+
+  // Send Telemetry and Log to the Console
+  uint64_t windowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
+  if (NS_IsMainThread()) {
+    nsContentSecurityUtils::NotifyEvalUsage(aIsSystemPrincipal, fileNameA,
+                                            windowID, lineNumber, columnNumber);
+  } else {
+    auto runnable = new EvalUsageNotificationRunnable(
+        aIsSystemPrincipal, fileNameA, windowID, lineNumber, columnNumber);
+    NS_DispatchToMainThread(runnable);
   }
 
   // Log to MOZ_LOG
   MOZ_LOG(sCSMLog, LogLevel::Warning,
           ("Blocking eval() %s from file %s and script "
            "provided %s",
-           (systemPrincipal ? "with System Principal" : "in parent process"),
+           (aIsSystemPrincipal ? "with System Principal" : "in parent process"),
            fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
 
+  // Maybe Crash
+#ifdef DEBUG
+  MOZ_CRASH_UNSAFE_PRINTF(
+      "Blocking eval() %s from file %s and script provided "
+      "%s",
+      (aIsSystemPrincipal ? "with System Principal" : "in parent process"),
+      fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
+#endif
+
+  // Do not enforce eval usage blocking on Worker threads; because this is
+  // new behavior and we want to be conservative so we don't accidently break
+  // Nightly. Bug 1584602 will enforce things.
+  return !NS_IsMainThread();
+}
+
+/* static */
+void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
+                                             NS_ConvertUTF8toUTF16& aFileNameA,
+                                             uint64_t aWindowID,
+                                             uint32_t aLineNumber,
+                                             uint32_t aColumnNumber) {
   // Send Telemetry
   Telemetry::EventID eventType =
-      systemPrincipal ? Telemetry::EventID::Security_Evalusage_Systemcontext
-                      : Telemetry::EventID::Security_Evalusage_Parentprocess;
+      aIsSystemPrincipal ? Telemetry::EventID::Security_Evalusage_Systemcontext
+                         : Telemetry::EventID::Security_Evalusage_Parentprocess;
 
-  FilenameType fileNameType = FilenameToEvalType(fileNameA);
+  FilenameType fileNameType = FilenameToEvalType(aFileNameA);
   mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
   if (fileNameType.second().isSome()) {
     extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
@@ -358,52 +447,40 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
   nsCOMPtr<nsIConsoleService> console(
       do_GetService(NS_CONSOLESERVICE_CONTRACTID));
   if (!console) {
-    return false;
+    return;
   }
   nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
   if (!error) {
-    return false;
+    return;
   }
   nsCOMPtr<nsIStringBundle> bundle;
   nsCOMPtr<nsIStringBundleService> stringService =
       mozilla::services::GetStringBundleService();
   if (!stringService) {
-    return false;
+    return;
   }
   stringService->CreateBundle(
       "chrome://global/locale/security/security.properties",
       getter_AddRefs(bundle));
   if (!bundle) {
-    return false;
+    return;
   }
   nsAutoString message;
-  AutoTArray<nsString, 1> formatStrings = {fileNameA};
+  AutoTArray<nsString, 1> formatStrings = {aFileNameA};
   nsresult rv = bundle->FormatStringFromName("RestrictBrowserEvalUsage",
                                              formatStrings, message);
   if (NS_FAILED(rv)) {
-    return false;
+    return;
   }
 
-  uint64_t windowID = nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(cx);
-  rv = error->InitWithWindowID(message, fileNameA, EmptyString(), lineNumber,
-                               columnNumber, nsIScriptError::errorFlag,
-                               "BrowserEvalUsage", windowID,
+  rv = error->InitWithWindowID(message, aFileNameA, EmptyString(), aLineNumber,
+                               aColumnNumber, nsIScriptError::errorFlag,
+                               "BrowserEvalUsage", aWindowID,
                                true /* From chrome context */);
   if (NS_FAILED(rv)) {
-    return false;
+    return;
   }
   console->LogMessage(error);
-
-  // Maybe Crash
-#ifdef DEBUG
-  MOZ_CRASH_UNSAFE_PRINTF(
-      "Blocking eval() %s from file %s and script provided "
-      "%s",
-      (systemPrincipal ? "with System Principal" : "in parent process"),
-      fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
-#endif
-
-  return false;
 }
 
 #if defined(DEBUG)

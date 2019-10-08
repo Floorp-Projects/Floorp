@@ -1708,6 +1708,8 @@ security:
         otherextension - Another extension not from Mozilla
         suspectedUserChromeJS - A filepath ending in .uc.js
         other - Unknown
+        other-on-worker - We cannot do a regex; it is not chromeuri or resourceuri, but
+                          could be any other.
         regexfailure - Our Regex Matching code threw an error
       The fileinfo key may contain additional information about the file that caused the eval()
       depending on the above value. Resource, Chrome, and SingleString will contain the full value.
