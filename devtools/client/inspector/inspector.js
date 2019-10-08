@@ -1791,13 +1791,13 @@ Inspector.prototype = {
     if (this.selection.isElementNode()) {
       const node = this.selection.nodeFront;
       if (node.hasPseudoClassLock(pseudo)) {
-        return this.walker.removePseudoClassLock(node, pseudo, {
+        return node.walkerFront.removePseudoClassLock(node, pseudo, {
           parents: true,
         });
       }
 
       const hierarchical = pseudo == ":hover" || pseudo == ":active";
-      return this.walker.addPseudoClassLock(node, pseudo, {
+      return node.walkerFront.addPseudoClassLock(node, pseudo, {
         parents: hierarchical,
       });
     }
