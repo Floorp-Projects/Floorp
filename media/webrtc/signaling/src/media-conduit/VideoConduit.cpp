@@ -2305,4 +2305,17 @@ bool WebrtcVideoConduit::RequiresNewSendStream(
       ;
 }
 
+bool WebrtcVideoConduit::HasH264Hardware() {
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+  if (!gfxInfo) {
+    return false;
+  }
+  int32_t status;
+  nsCString discardFailureId;
+  return NS_SUCCEEDED(gfxInfo->GetFeatureStatus(
+             nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264, discardFailureId,
+             &status)) &&
+         status == nsIGfxInfo::FEATURE_STATUS_OK;
+}
+
 }  // namespace mozilla
