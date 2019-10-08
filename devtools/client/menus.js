@@ -64,7 +64,7 @@ loader.lazyImporter(
 loader.lazyImporter(
   this,
   "ProfilerMenuButton",
-  "resource://devtools/client/performance-new/popup/menu-button.jsm"
+  "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
 );
 loader.lazyRequireGetter(
   this,
