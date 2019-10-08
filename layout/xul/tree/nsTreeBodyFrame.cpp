@@ -3092,7 +3092,6 @@ ImgDrawResult nsTreeBodyFrame::PaintCell(
     if (dirtyRect.IntersectRect(aDirtyRect, elementRect)) {
       switch (aColumn->GetType()) {
         case TreeColumn_Binding::TYPE_TEXT:
-        case TreeColumn_Binding::TYPE_PASSWORD:
           result &= PaintText(aRowIndex, aColumn, elementRect, aPresContext,
                               aRenderingContext, aDirtyRect, currX);
           break;
@@ -3376,18 +3375,6 @@ ImgDrawResult nsTreeBodyFrame::PaintImage(
   return result;
 }
 
-static void FillBufWithPWChars(nsAString* aOutString, int32_t aLength) {
-  MOZ_ASSERT(aOutString);
-
-  // change the output to the platform password character
-  char16_t passwordChar = LookAndFeel::GetPasswordCharacter();
-
-  aOutString->Truncate();
-  for (int32_t i = 0; i < aLength; i++) {
-    aOutString->Append(passwordChar);
-  }
-}
-
 ImgDrawResult nsTreeBodyFrame::PaintText(
     int32_t aRowIndex, nsTreeColumn* aColumn, const nsRect& aTextRect,
     nsPresContext* aPresContext, gfxContext& aRenderingContext,
@@ -3399,10 +3386,6 @@ ImgDrawResult nsTreeBodyFrame::PaintText(
   // Now obtain the text for our cell.
   nsAutoString text;
   mView->GetCellText(aRowIndex, aColumn, text);
-
-  if (aColumn->Type() == TreeColumn_Binding::TYPE_PASSWORD) {
-    FillBufWithPWChars(&text, text.Length());
-  }
 
   // We're going to paint this text so we need to ensure bidi is enabled if
   // necessary

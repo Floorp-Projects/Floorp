@@ -23,7 +23,6 @@ interface TreeColumn {
 
   const short TYPE_TEXT                = 1;
   const short TYPE_CHECKBOX            = 2;
-  const short TYPE_PASSWORD            = 3;
   readonly attribute short type;
 
   TreeColumn? getNext();

@@ -1288,10 +1288,7 @@
       if (row < 0 || row >= this.view.rowCount || !column) {
         return false;
       }
-      if (
-        column.type != window.TreeColumn.TYPE_TEXT &&
-        column.type != window.TreeColumn.TYPE_PASSWORD
-      ) {
+      if (column.type !== window.TreeColumn.TYPE_TEXT) {
         return false;
       }
       if (column.cycler || !this.view.isEditable(row, column)) {
