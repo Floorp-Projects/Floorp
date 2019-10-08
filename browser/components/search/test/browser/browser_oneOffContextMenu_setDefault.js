@@ -10,35 +10,46 @@ const SEARCHBAR_BASE_ID = "searchbar-engine-one-off-item-";
 const URLBAR_BASE_ID = "urlbar-engine-one-off-item-";
 const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
-const urlbar = document.getElementById("urlbar");
-const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const searchOneOff = searchPopup.oneOffButtons;
-const urlBarOneOff = UrlbarTestUtils.getOneOffSearchButtons(window);
+let originalEngine;
+let originalPrivateEngine;
 
-var originalEngine;
-
-async function resetEngine() {
+async function resetEngines() {
   await Services.search.setDefault(originalEngine);
+  await Services.search.setDefaultPrivate(originalPrivateEngine);
 }
 
-registerCleanupFunction(resetEngine);
-
-let searchIcon;
+registerCleanupFunction(resetEngines);
 
 add_task(async function init() {
-  originalEngine = await Services.search.getDefault();
-  let searchbar = await gCUITestUtils.addSearchBar();
-  registerCleanupFunction(() => {
-    gCUITestUtils.removeSearchBar();
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["browser.search.separatePrivateDefault", true],
+      ["browser.search.widget.inNavBar", true],
+    ],
   });
-  searchIcon = searchbar.querySelector(".searchbar-search-button");
+  originalEngine = await Services.search.getDefault();
+  originalPrivateEngine = await Services.search.getDefaultPrivate();
+  registerCleanupFunction(async () => {
+    await resetEngines();
+  });
 
   await promiseNewEngine(TEST_ENGINE_BASENAME, {
     setAsCurrent: false,
   });
 });
 
-add_task(async function test_searchBarChangeEngine() {
+async function testSearchBarChangeEngine(win, testPrivate, isPrivateWindow) {
+  info(
+    `Testing search bar with testPrivate: ${testPrivate} isPrivateWindow: ${isPrivateWindow}`
+  );
+
+  const searchPopup = win.document.getElementById("PopupSearchAutoComplete");
+  const searchOneOff = searchPopup.oneOffButtons;
+
+  // Ensure the engine is reset.
+  await resetEngines();
+
   let oneOffButton = await openPopupAndGetEngineButton(
     true,
     searchPopup,
@@ -48,43 +59,71 @@ add_task(async function test_searchBarChangeEngine() {
   );
 
   const setDefaultEngineMenuItem = searchOneOff.querySelector(
-    ".search-one-offs-context-set-default"
+    ".search-one-offs-context-set-default" + (testPrivate ? "-private" : "")
   );
 
   // Click the set default engine menu item.
-  let promise = promisedefaultEngineChanged();
-  EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {});
+  let promise = promiseDefaultEngineChanged(testPrivate);
+  EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {}, win);
 
   // This also checks the engine correctly changed.
   await promise;
 
-  Assert.equal(
-    oneOffButton.id,
-    SEARCHBAR_BASE_ID + originalEngine.name,
-    "Should now have the original engine's id for the button"
-  );
-  Assert.equal(
-    oneOffButton.getAttribute("tooltiptext"),
-    originalEngine.name,
-    "Should now have the original engine's name for the tooltip"
-  );
-  Assert.equal(
-    oneOffButton.image,
-    originalEngine.iconURI.spec,
-    "Should now have the original engine's uri for the image"
-  );
+  if (testPrivate == isPrivateWindow) {
+    let expectedName = originalEngine.name;
+    let expectedImage = originalEngine.iconURI.spec;
+    if (isPrivateWindow) {
+      expectedName = originalPrivateEngine.name;
+      expectedImage = originalPrivateEngine.iconURI.spec;
+    }
+
+    Assert.equal(
+      oneOffButton.id,
+      SEARCHBAR_BASE_ID + expectedName,
+      "Should now have the original engine's id for the button"
+    );
+    Assert.equal(
+      oneOffButton.getAttribute("tooltiptext"),
+      expectedName,
+      "Should now have the original engine's name for the tooltip"
+    );
+    Assert.equal(
+      oneOffButton.image,
+      expectedImage,
+      "Should now have the original engine's uri for the image"
+    );
+  }
 
   await promiseClosePopup(searchPopup);
+}
+
+add_task(async function test_searchBarChangeEngine() {
+  await testSearchBarChangeEngine(window, false, false);
+  await testSearchBarChangeEngine(window, true, false);
 });
 
-add_task(async function test_urlBarChangeEngine() {
+add_task(async function test_searchBarChangeEngine_privateWindow() {
+  const win = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await testSearchBarChangeEngine(win, true, true);
+  await BrowserTestUtils.closeWindow(win);
+});
+
+async function testUrlBarChangeEngine(win, testPrivate, isPrivateWindow) {
+  info(
+    `Testing urlbar with testPrivate: ${testPrivate} isPrivateWindow: ${isPrivateWindow}`
+  );
   Services.prefs.setBoolPref(ONEOFF_URLBAR_PREF, true);
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
   });
 
   // Ensure the engine is reset.
-  resetEngine();
+  await resetEngines();
+
+  const urlbar = win.document.getElementById("urlbar");
+  const urlBarOneOff = UrlbarTestUtils.getOneOffSearchButtons(win);
 
   let oneOffButton = await openPopupAndGetEngineButton(
     false,
@@ -95,17 +134,19 @@ add_task(async function test_urlBarChangeEngine() {
   );
 
   const setDefaultEngineMenuItem = urlBarOneOff.querySelector(
-    ".search-one-offs-context-set-default"
+    ".search-one-offs-context-set-default" + (testPrivate ? "-private" : "")
   );
 
   // Click the set default engine menu item.
-  let promise = promisedefaultEngineChanged();
-  EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {});
+  let promise = promiseDefaultEngineChanged(testPrivate);
+  EventUtils.synthesizeMouseAtCenter(setDefaultEngineMenuItem, {}, win);
 
   // This also checks the engine correctly changed.
   await promise;
 
-  let defaultEngine = await Services.search.getDefault();
+  let defaultEngine = await Services.search[
+    testPrivate ? "getDefaultPrivate" : "getDefault"
+  ]();
 
   // For the urlbar, we should keep the new engine's icon.
   Assert.equal(
@@ -124,14 +165,32 @@ add_task(async function test_urlBarChangeEngine() {
     "Should now have the original engine's uri for the image"
   );
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  await UrlbarTestUtils.promisePopupClose(win);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
   await EventUtils.synthesizeNativeMouseMove(urlbar);
+}
+
+add_task(async function test_urlBarChangeEngine_normal() {
+  await testUrlBarChangeEngine(window, false, false);
+  await testUrlBarChangeEngine(window, true, false);
 });
 
-add_task(async function test_urlBarEngineDefaultDisabled() {
-  const originalDefault = await Services.search.getDefault();
+add_task(async function test_urlBarChangeEngine_private() {
+  const win = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+  await testUrlBarChangeEngine(win, true, true);
+  await BrowserTestUtils.closeWindow(win);
+});
+
+async function testUrlbarEngineDefaultDisabled(isPrivate) {
+  const originalDefault = await Services.search[
+    isPrivate ? "getDefaultPrivate" : "getDefault"
+  ]();
+
+  const urlBarOneOff = UrlbarTestUtils.getOneOffSearchButtons(window);
+
   const oneOffButton = await openPopupAndGetEngineButton(
     false,
     null,
@@ -147,7 +206,7 @@ add_task(async function test_urlBarEngineDefaultDisabled() {
   );
 
   const setDefaultEngineMenuItem = urlBarOneOff.querySelector(
-    ".search-one-offs-context-set-default"
+    ".search-one-offs-context-set-default" + (isPrivate ? "-private" : "")
   );
   Assert.equal(
     setDefaultEngineMenuItem.disabled,
@@ -156,20 +215,35 @@ add_task(async function test_urlBarEngineDefaultDisabled() {
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
+}
+
+add_task(async function test_urlBarEngineDefaultDisabled_normal() {
+  await testUrlbarEngineDefaultDisabled(false);
+});
+
+add_task(async function test_urlBarEngineDefaultDisabled_private() {
+  await testUrlbarEngineDefaultDisabled(true);
 });
 
 /**
  * Promises that an engine change has happened for the current engine, which
  * has resulted in the test engine now being the current engine.
  *
+ * @param {boolean} testPrivate
+ *   Set to true if we're testing the private default engine.
  * @returns {Promise} Resolved once the test engine is set as the current engine.
  */
-function promisedefaultEngineChanged() {
+function promiseDefaultEngineChanged(testPrivate) {
+  const expectedNotification = testPrivate
+    ? "engine-default-private"
+    : "engine-default";
   return new Promise(resolve => {
     function observer(aSub, aTopic, aData) {
-      if (aData == "engine-default") {
+      if (aData == expectedNotification) {
         Assert.equal(
-          Services.search.defaultEngine.name,
+          Services.search[
+            testPrivate ? "defaultPrivateEngine" : "defaultEngine"
+          ].name,
           TEST_ENGINE_NAME,
           "defaultEngine set"
         );
@@ -203,18 +277,20 @@ async function openPopupAndGetEngineButton(
   baseId,
   engineName
 ) {
-  info("Opening panel");
-
+  const win = oneOffInstance.container.ownerGlobal;
   // We have to open the popups in differnt ways.
   if (isSearch) {
     // Open the popup.
+    win.gURLBar.blur();
     let promise = promiseEvent(popup, "popupshown");
+    let searchbar = win.document.getElementById("searchbar");
+    let searchIcon = searchbar.querySelector(".searchbar-search-button");
     // Use the search icon to avoid hitting the network.
-    EventUtils.synthesizeMouseAtCenter(searchIcon, {});
+    EventUtils.synthesizeMouseAtCenter(searchIcon, {}, win);
     await promise;
   } else {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
+      window: win,
       waitForFocus,
       value: "a",
     });
@@ -256,10 +332,14 @@ async function openPopupAndGetEngineButton(
 
   // Open the context menu on the one-off.
   let promise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
-  EventUtils.synthesizeMouseAtCenter(oneOffButton, {
-    type: "contextmenu",
-    button: 2,
-  });
+  EventUtils.synthesizeMouseAtCenter(
+    oneOffButton,
+    {
+      type: "contextmenu",
+      button: 2,
+    },
+    win
+  );
   await promise;
 
   return oneOffButton;
@@ -273,9 +353,15 @@ async function openPopupAndGetEngineButton(
 async function promiseClosePopup(popup) {
   // close the panel using the escape key.
   let promise = promiseEvent(popup, "popuphidden");
-  EventUtils.synthesizeKey("KEY_Escape");
+  EventUtils.synthesizeKey("KEY_Escape", {}, popup.ownerGlobal);
   await promise;
 
   // Move the cursor out of the panel area to avoid messing with other tests.
-  await EventUtils.synthesizeNativeMouseMove(popup);
+  await EventUtils.synthesizeNativeMouseMove(
+    popup,
+    undefined,
+    undefined,
+    undefined,
+    popup.ownerGlobal
+  );
 }
