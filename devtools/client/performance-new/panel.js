@@ -1,10 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
 "use strict";
-
-// @ts-ignore - No support yet for lazyRequireGetter.
-loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 /**
  * This file contains the PerformancePanel, which uses a common API for DevTools to
@@ -14,9 +12,9 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  */
 
 /**
- * @typedef {import("./types").PanelWindow} PanelWindow
- * @typedef {import("./types").Toolbox} Toolbox
- * @typedef {import("./types").Target} Target
+ * @typedef {import("./@types/perf").PanelWindow} PanelWindow
+ * @typedef {import("./@types/perf").Toolbox} Toolbox
+ * @typedef {import("./@types/perf").Target} Target
  */
 
 class PerformancePanel {
@@ -28,7 +26,7 @@ class PerformancePanel {
     this.panelWin = iframeWindow;
     this.toolbox = toolbox;
 
-    // @ts-ignore - No support yet for lazyRequireGetter.
+    const EventEmitter = require("devtools/shared/event-emitter");
     EventEmitter.decorate(this);
   }
 

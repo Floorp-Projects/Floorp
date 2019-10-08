@@ -93,7 +93,7 @@ exports.changeEntries = entries =>
 
 /**
  * Updates the recording settings for the features.
- * @param {Object} features
+ * @param {object} features
  * @return {ThunkAction<void>}
  */
 exports.changeFeatures = features =>

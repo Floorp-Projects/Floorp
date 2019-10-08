@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
 "use strict";
 
 /**
@@ -10,28 +11,63 @@
  * access to any UI, and need to be loaded independent of the popup.
  */
 
-// The following are not lazily loaded as they are needed during initialization.f
+// The following are not lazily loaded as they are needed during initialization.
+
+/** @type {import("resource://gre/modules/Services.jsm")} */
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+/** @type {import("resource://gre/modules/AppConstants.jsm")} */
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+
+/**
+ * @typedef {import("../@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
+ * @typedef {import("../@types/perf").PopupBackgroundFeatures} PopupBackgroundFeatures
+ * @typedef {import("../@types/perf").SymbolTableAsTuple} SymbolTableAsTuple
+ */
 
 // The following utilities are lazily loaded as they are not needed when controlling the
 // global state of the profiler, and only are used during specific funcationality like
 // symbolication or capturing a profile.
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "ProfilerGetSymbols",
-  "resource://gre/modules/ProfilerGetSymbols.jsm"
+
+/**
+ * TS-TODO
+ *
+ * This function replaces lazyRequireGetter, and TypeScript can understand it. It's
+ * currently duplicated until we have consensus that TypeScript is a good idea.
+ *
+ * @template T
+ * @type {(callback: () => T) => () => T}
+ */
+function requireLazy(callback) {
+  /** @type {T | undefined} */
+  let cache;
+  return () => {
+    if (cache === undefined) {
+      cache = callback();
+    }
+    return cache;
+  };
+}
+
+const lazyOS = requireLazy(() =>
+  /** @type {import("resource://gre/modules/osfile.jsm")} */
+  (ChromeUtils.import("resource://gre/modules/osfile.jsm"))
 );
-loader.lazyRequireGetter(
-  this,
-  "receiveProfile",
-  "devtools/client/performance-new/browser",
-  true
+
+const lazyProfilerGetSymbols = requireLazy(() =>
+  /** @type {import("resource://gre/modules/ProfilerGetSymbols.jsm")} */
+  (ChromeUtils.import("resource://gre/modules/ProfilerGetSymbols.jsm"))
 );
+
+const lazyReceiveProfile = requireLazy(() => {
+  const { require } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
+  /** @type {import("devtools/client/performance-new/browser")} */
+  const browserModule = require("devtools/client/performance-new/browser");
+  return browserModule.receiveProfile;
+});
 
 // This pref contains the JSON serialization of the popup's profiler state with
 // a string key based off of the debug name and breakpad id.
@@ -42,15 +78,35 @@ const DEFAULT_BUFFER_SIZE = 10000000; // 90MB
 const DEFAULT_THREADS = "GeckoMain,Compositor";
 const DEFAULT_STACKWALK_FEATURE = true;
 
-// This Map caches the symbols from the shared libraries.
+/**
+ * This Map caches the symbols from the shared libraries.
+ * @type {Map<string, { path: string, debugPath: string }>}
+ */
 const symbolCache = new Map();
 
+/**
+ * @typedef {{
+ *   path: string,
+ *   debugName: string,
+ *   debugPath: string,
+ *   breakpadId: string
+ * }} Libs
+ *
+ * @type {(libs: Libs[]) => void}
+ */
 const primeSymbolStore = libs => {
   for (const { path, debugName, debugPath, breakpadId } of libs) {
     symbolCache.set(`${debugName}/${breakpadId}`, { path, debugPath });
   }
 };
 
+/**
+ * @typedef {import("../@types/perf").PopupBackgroundState} PopupBackgroundState
+ */
+
+/**
+ * @type {PopupBackgroundState}
+ */
 const state = initializeState();
 
 const forTestsOnly = {
@@ -66,6 +122,9 @@ const forTestsOnly = {
   },
 };
 
+/**
+ * @param {Partial<PopupBackgroundState>} newState
+ */
 function adjustState(newState) {
   // Deep clone the object, since this can be called through popup.xhtml,
   // which can be unloaded thus leaving this object dead.
@@ -80,6 +139,10 @@ function adjustState(newState) {
   }
 }
 
+/**
+ * TS-TODO - Fix any.
+ * @type {(debugName: string, breakpadId: string) => Promise<SymbolTableAsTuple>}
+ */
 async function getSymbolsFromThisBrowser(debugName, breakpadId) {
   if (symbolCache.size === 0) {
     primeSymbolStore(Services.profiler.sharedLibraries);
@@ -98,6 +161,7 @@ async function getSymbolsFromThisBrowser(debugName, breakpadId) {
   }
 
   const { path, debugPath } = cachedLibInfo;
+  const { OS } = lazyOS();
   if (!OS.Path.split(path).absolute) {
     throw new Error(
       "Services.profiler.sharedLibraries did not contain an absolute path for " +
@@ -106,9 +170,13 @@ async function getSymbolsFromThisBrowser(debugName, breakpadId) {
     );
   }
 
+  const { ProfilerGetSymbols } = lazyProfilerGetSymbols();
   return ProfilerGetSymbols.getSymbolTable(path, debugPath, breakpadId);
 }
 
+/**
+ * @type {() => Promise<void>}
+ */
 async function captureProfile() {
   if (!state.isRunning) {
     // The profiler is not active, ignore this shortcut.
@@ -120,11 +188,14 @@ async function captureProfile() {
 
   const profile = await Services.profiler
     .getProfileDataAsGzippedArrayBuffer()
-    .catch(e => {
-      console.error(e);
-      return {};
-    });
+    .catch(
+      /** @type {(e: any) => {}} */ e => {
+        console.error(e);
+        return {};
+      }
+    );
 
+  const receiveProfile = lazyReceiveProfile();
   receiveProfile(profile, getSymbolsFromThisBrowser);
 
   Services.profiler.StopProfiler();
@@ -133,6 +204,9 @@ async function captureProfile() {
 /**
  * Not all features are supported on every version of Firefox. Get the list of checked
  * features, add a few defaults, and filter for what is actually supported.
+ * @param {PopupBackgroundFeatures} features
+ * @param {string[]} threads
+ * @returns {string[]}
  */
 function getEnabledFeatures(features, threads) {
   const enabledFeatures = Object.keys(features).filter(f => features[f]);
@@ -160,10 +234,16 @@ function startProfiler() {
   );
 }
 
+/**
+ * @type {() => void}
+ */
 function stopProfiler() {
   Services.profiler.StopProfiler();
 }
 
+/**
+ * @type {() => void}
+ */
 function toggleProfiler() {
   if (state.isRunning) {
     stopProfiler();
@@ -172,6 +252,9 @@ function toggleProfiler() {
   }
 }
 
+/**
+ * @type {() => void}
+ */
 function restartProfiler() {
   stopProfiler();
   startProfiler();
@@ -181,6 +264,11 @@ function restartProfiler() {
 const isRunningObserver = {
   _observers: new Set(),
 
+  /**
+   * @param {string} subject
+   * @param {string} topic
+   * @param {unknown} data
+   */
   observe(subject, topic, data) {
     switch (topic) {
       case "profiler-started":
@@ -204,6 +292,9 @@ const isRunningObserver = {
     Services.obs.removeObserver(this, "profiler-stopped");
   },
 
+  /**
+   * @param {(isActive: boolean) => any} observer
+   */
   addObserver(observer) {
     if (this._observers.size === 0) {
       this._startListening();
@@ -214,6 +305,9 @@ const isRunningObserver = {
     Promise.resolve(Services.profiler.IsActive()).then(observer);
   },
 
+  /**
+   * @param {(isActive: boolean) => any} observer
+   */
   removeObserver(observer) {
     if (this._observers.delete(observer) && this._observers.size === 0) {
       this._stopListening();
@@ -221,6 +315,9 @@ const isRunningObserver = {
   },
 };
 
+/**
+ * @returns {PopupBackgroundState | null}
+ */
 function getStoredStateOrNull() {
   // Pull out the stored state from preferences, it is a raw string.
   const storedStateString = Services.prefs.getStringPref(
@@ -242,7 +339,11 @@ function getStoredStateOrNull() {
   }
   return null;
 }
-
+/**
+ * @param {string} prefName
+ * @param {string[]} defaultValue
+ * @return {string[]}
+ */
 function _getArrayOfStringsPref(prefName, defaultValue) {
   let array;
   try {
@@ -262,6 +363,11 @@ function _getArrayOfStringsPref(prefName, defaultValue) {
   return defaultValue;
 }
 
+/**
+ * @param {string} prefName
+ * @param {string[]} defaultValue
+ * @return {string[]}
+ */
 function _getArrayOfStringsHostPref(prefName, defaultValue) {
   let array;
   try {
@@ -284,7 +390,11 @@ function _getArrayOfStringsHostPref(prefName, defaultValue) {
   return defaultValue;
 }
 
-function getRecordingPreferencesFromBrowser(defaultSettings = {}) {
+/**
+ * @param {RecordingStateFromPreferences} defaultSettings
+ * @return {RecordingStateFromPreferences}
+ */
+function getRecordingPreferencesFromBrowser(defaultSettings) {
   const [entries, interval, features, threads, objdirs] = [
     Services.prefs.getIntPref(
       `devtools.performance.recording.entries`,
@@ -313,6 +423,9 @@ function getRecordingPreferencesFromBrowser(defaultSettings = {}) {
   return { entries, interval: newInterval, features, threads, objdirs };
 }
 
+/**
+ * @param {RecordingStateFromPreferences} settings
+ */
 function setRecordingPreferencesOnBrowser(settings) {
   Services.prefs.setIntPref(
     `devtools.performance.recording.entries`,
@@ -337,6 +450,9 @@ function setRecordingPreferencesOnBrowser(settings) {
   );
 }
 
+/**
+ * @returns {PopupBackgroundState}
+ */
 function initializeState() {
   const features = {
     java: false,
@@ -368,18 +484,28 @@ function initializeState() {
     // Validate the stored state. It's possible a feature was added or removed
     // since the profiler was last run.
     for (const key of Object.keys(features)) {
-      features[key] =
-        key in storedFeatures ? Boolean(storedFeatures[key]) : features[key];
+      /** @type {{[key: string]: boolean}} */
+      const featureAsObjMap = features;
+      featureAsObjMap[key] =
+        key in storedFeatures
+          ? Boolean(storedFeatures[key])
+          : featureAsObjMap[key];
     }
   }
 
-  // This function is created inline to make it easy to validate
-  // the stored state using the captured storedState value.
+  /**
+   *  This function is created inline to make it easy to validate
+   * the stored state using the captured storedState value.
+   * @template Value
+   * @type {(key: string, type: string, defaultValue: Value) => Value}
+   */
   function validateStoredState(key, type, defaultValue) {
     if (!storedState) {
       return defaultValue;
     }
-    const storedValue = storedState[key];
+    /** @type {object} */
+    const storedStateAsObjMap = storedState;
+    const storedValue = storedStateAsObjMap[key];
     return typeof storedValue === type ? storedValue : defaultValue;
   }
 

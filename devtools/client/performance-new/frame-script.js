@@ -1,8 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+// @ts-check
+/// <reference path="./@types/frame-script.d.ts" />
+/* global content */
 "use strict";
-/* global addMessageListener, addEventListener, content, sendAsyncMessage */
+
+/**
+ * @typedef {import("./@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
+ * @typedef {import("./@types/perf").ContentFrameMessageManager} ContentFrameMessageManager
+ */
 
 /**
  * This frame script injects itself into profiler.firefox.com and injects the profile
@@ -13,19 +20,33 @@ const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
 const SYMBOL_TABLE_REQUEST_EVENT = "devtools:perf-html-request-symbol-table";
 const SYMBOL_TABLE_RESPONSE_EVENT = "devtools:perf-html-reply-symbol-table";
 
+/** @type {null | Object} */
 let gProfile = null;
 const symbolReplyPromiseMap = new Map();
 
-addMessageListener(TRANSFER_EVENT, e => {
+/**
+ * TypeScript wants to use the DOM library definition, which conflicts with our
+ * own definitions for the frame message manager. Instead, coerce the `this`
+ * variable into the proper interface.
+ *
+ * @type {ContentFrameMessageManager}
+ */
+let frameScript;
+{
+  const any = /** @type {any} */ (this);
+  frameScript = any;
+}
+
+frameScript.addMessageListener(TRANSFER_EVENT, e => {
   gProfile = e.data;
   // Eagerly try and see if the framescript was evaluated after perf loaded its scripts.
   connectToPage();
   // If not try again at DOMContentLoaded which should be called after the script
   // tag was synchronously loaded in.
-  addEventListener("DOMContentLoaded", connectToPage);
+  frameScript.addEventListener("DOMContentLoaded", connectToPage);
 });
 
-addMessageListener(SYMBOL_TABLE_RESPONSE_EVENT, e => {
+frameScript.addMessageListener(SYMBOL_TABLE_RESPONSE_EVENT, e => {
   const { debugName, breakpadId, status, result, error } = e.data;
   const promiseKey = [debugName, breakpadId].join(":");
   const { resolve, reject } = symbolReplyPromiseMap.get(promiseKey);
@@ -55,9 +76,13 @@ function connectToPage() {
   }
 }
 
+/** @type {GetSymbolTableCallback} */
 function getSymbolTable(debugName, breakpadId) {
   return new Promise((resolve, reject) => {
-    sendAsyncMessage(SYMBOL_TABLE_REQUEST_EVENT, { debugName, breakpadId });
+    frameScript.sendAsyncMessage(SYMBOL_TABLE_REQUEST_EVENT, {
+      debugName,
+      breakpadId,
+    });
     symbolReplyPromiseMap.set([debugName, breakpadId].join(":"), {
       resolve,
       reject,
@@ -72,11 +97,23 @@ function getSymbolTable(debugName, breakpadId) {
 
 /**
  * Create a promise that can be used in the page.
+ *
+ * @template T
+ * @param {(resolve: Function, reject: Function) => Promise<T>} fun
+ * @param {object} contentGlobal
+ * @returns Promise<T>
  */
 function createPromiseInPage(fun, contentGlobal) {
+  /**
+   * Use the any type here, as this is pretty dynamic, and probably not worth typing.
+   * @param {any} resolve
+   * @param {any} reject
+   */
   function funThatClonesObjects(resolve, reject) {
     return fun(
+      /** @type {(result: any) => any} */
       result => resolve(Cu.cloneInto(result, contentGlobal)),
+      /** @type {(result: any) => any} */
       error => reject(Cu.cloneInto(error, contentGlobal))
     );
   }
@@ -88,9 +125,13 @@ function createPromiseInPage(fun, contentGlobal) {
 /**
  * Returns a function that calls the original function and tries to make the
  * return value available to the page.
+ * @param {Function} fun
+ * @param {object} contentGlobal
+ * @return {Function}
  */
 function wrapFunction(fun, contentGlobal) {
   return function() {
+    // @ts-ignore - Ignore the use of `this`.
     const result = fun.apply(this, arguments);
     if (typeof result === "object") {
       if ("then" in result && typeof result.then === "function") {
@@ -110,12 +151,18 @@ function wrapFunction(fun, contentGlobal) {
  * Pass a simple object containing values that are objects or functions.
  * The objects or functions are wrapped in such a way that they can be
  * consumed by the page.
+ * @template T
+ * @param {T} obj
+ * @param {object} contentGlobal
+ * @return {T}
  */
 function makeAccessibleToPage(obj, contentGlobal) {
+  /** @type {any} - This value is probably too dynamic to type. */
   const result = Cu.createObjectIn(contentGlobal);
   for (const field in obj) {
     switch (typeof obj[field]) {
       case "function":
+        // @ts-ignore - Ignore the obj[field] call. This code is too dynamic.
         Cu.exportFunction(wrapFunction(obj[field], contentGlobal), result, {
           defineAs: field,
         });

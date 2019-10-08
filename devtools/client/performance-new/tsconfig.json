@@ -13,6 +13,7 @@
     "target": "esnext",
     "lib": ["esnext", "dom"]
   },
+  "files": ["./@types/gecko.d.ts"],
   // Add a @ts-check comment to a JS file to start type checking it.
-  "include": ["./**/*.js", "./@types/*"]
+  "include": ["./**/*.js"]
 }
