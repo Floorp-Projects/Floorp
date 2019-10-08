@@ -346,13 +346,12 @@ bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   aGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                                     LOCAL_GL_COLOR_ATTACHMENT0,
                                     LOCAL_GL_TEXTURE_2D, texture, 0);
-  aGLContext->fDeleteTextures(1, &texture);
-
-  bool ret = (aGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) !=
+  bool ret = (aGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
               LOCAL_GL_FRAMEBUFFER_COMPLETE);
   if (!ret) {
     NS_WARNING("WaylandDMABufSurface - FBO creation failed");
   }
+  aGLContext->fDeleteTextures(1, &texture);
 
   aGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
 
