@@ -5,11 +5,13 @@
 package org.mozilla.samples.browser
 
 import android.app.Application
+import mozilla.components.browser.session.Session
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.facts.processor.LogFactProcessor
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
+import mozilla.components.support.webextensions.WebExtensionSupport
 
 class SampleApplication : Application() {
     val components by lazy { Components(this) }
@@ -26,5 +28,9 @@ class SampleApplication : Application() {
         Facts.registerProcessor(LogFactProcessor())
 
         components.engine.warmUp()
+
+        WebExtensionSupport.initialize(components.engine, components.store, onNewTabOverride = {
+            _, engineSession, url -> components.sessionManager.add(Session(url), true, engineSession)
+        })
     }
 }

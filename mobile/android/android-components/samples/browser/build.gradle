@@ -101,6 +101,7 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':feature-downloads')
     implementation project(':support-ktx')
+    implementation project(':support-webextensions')
 
     geckoNightlyImplementation project(':browser-engine-gecko-nightly')
     geckoBetaImplementation project(':browser-engine-gecko-beta')

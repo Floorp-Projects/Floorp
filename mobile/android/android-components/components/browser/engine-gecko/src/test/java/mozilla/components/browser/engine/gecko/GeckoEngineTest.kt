@@ -15,6 +15,8 @@ import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -353,6 +355,25 @@ class GeckoEngineTest {
 
         assertTrue(onErrorCalled)
         assertEquals(expected, throwable)
+    }
+
+    @Test
+    fun `register web extension delegate`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        // Verify we notify onInstalled
+        val result = GeckoResult<Void>()
+        whenever(runtime.registerWebExtension(any())).thenReturn(result)
+        engine.installWebExtension("test-webext", "resource://android/assets/extensions/test")
+        result.complete(null)
+
+        val extCaptor = argumentCaptor<WebExtension>()
+        verify(webExtensionsDelegate).onInstalled(extCaptor.capture())
+        assertEquals("test-webext", extCaptor.value.id)
+        assertEquals("resource://android/assets/extensions/test", extCaptor.value.url)
     }
 
     @Test(expected = RuntimeException::class)
