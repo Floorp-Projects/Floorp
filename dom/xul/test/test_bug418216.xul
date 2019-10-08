@@ -34,9 +34,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418216
   ]]></script>
 
 <box id="container">
-<textbox id="item">
+<box id="item">
     <observes element="broadcaster" attribute="disabled"/>
-</textbox>
+</box>
 </box>
 
 <broadcasterset>

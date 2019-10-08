@@ -19,7 +19,7 @@
   <groupbox orient="horizontal">
     <caption label="test description file" />
     <label value=""/><!-- needed, otherwise groupbox is broken :-( -->
-    <textbox id="config" persist="value" readonly="true"/>
+    <input xmlns="http://www.w3.org/1999/xhtml" id="config" persist="value" readonly="true"/>
     <button label="browse..." oncommand="view.browseForConfig();" />
   </groupbox>
   <groupbox orient="horizontal">
@@ -40,7 +40,7 @@
   </groupbox>
 </hbox>
 <hbox>
-  <textbox id="currentStatus" readonly="true" flex="1"/>
+  <input xmlns="http://www.w3.org/1999/xhtml" id="currentStatus" readonly="true" flex="1"/>
   <progressmeter id="currentProgress" mode="normal" value="0" flex="2"/>
   <progressmeter id="totalProgress" mode="normal" value="0" flex="2"/>
 </hbox>

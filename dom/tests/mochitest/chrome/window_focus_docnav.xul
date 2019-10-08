@@ -6,15 +6,15 @@
 
 <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-<textbox id="textbox1"/>
-<textbox id="textbox2"/>
+<input xmlns="http://www.w3.org/1999/xhtml" id="textbox1"/>
+<input xmlns="http://www.w3.org/1999/xhtml" id="textbox2"/>
 
 <panel id="panel" onpopupshown="runTests(this, 1);"
                   onpopuphidden="noChildrenTest()">
-  <textbox id="p1textbox" value="Popup1"/>
+  <input xmlns="http://www.w3.org/1999/xhtml" id="p1textbox" value="Popup1"/>
 </panel>
 <panel id="panel2" onpopupshown="runTests(this, 2);" onpopuphidden="document.getElementById('panel').hidePopup()">
-  <textbox id="p2textbox" value="Popup2"/>
+  <input xmlns="http://www.w3.org/1999/xhtml" id="p2textbox" value="Popup2"/>
 </panel>
 
 <browser id="browser" type="content" src="focus_frameset.html" width="500" height="400"/>
@@ -39,12 +39,12 @@ function noChildrenTest()
   let textbox2 = document.getElementById("textbox2");
 
   textbox2.focus();
-  next(window, textbox1.inputField, "Focus forward when no child documents");
-  next(window, textbox1.inputField, "Focus forward again when no child documents");
+  next(window, textbox1, "Focus forward when no child documents");
+  next(window, textbox1, "Focus forward again when no child documents");
 
   textbox2.focus();
-  previous(window, textbox1.inputField, "Focus backward when no child documents");
-  previous(window, textbox1.inputField, "Focus backward again when no child documents");
+  previous(window, textbox1, "Focus backward when no child documents");
+  previous(window, textbox1, "Focus backward again when no child documents");
 
   done();
 }
@@ -82,10 +82,10 @@ function runTests(panel, popupCount)
   var childwin = document.getElementById("browser").contentWindow;
 
   if (popupCount) {
-    next(window, document.getElementById("p1textbox").inputField, "First into popup 1 with " + popupCount);
+    next(window, document.getElementById("p1textbox"), "First into popup 1 with " + popupCount);
 
     if (popupCount == 2) {
-      next(window, document.getElementById("p2textbox").inputField, "First into popup 2 with " + popupCount);
+      next(window, document.getElementById("p2textbox"), "First into popup 2 with " + popupCount);
     }
   }
 
@@ -95,13 +95,13 @@ function runTests(panel, popupCount)
 
   if (popupCount) {
     if (popupCount == 2) {
-      previous(window, document.getElementById("p2textbox").inputField, "First back from popup 2 with " + popupCount);
+      previous(window, document.getElementById("p2textbox"), "First back from popup 2 with " + popupCount);
     }
 
-    previous(window, document.getElementById("p1textbox").inputField, "First back from popup 1 with " + popupCount);
+    previous(window, document.getElementById("p1textbox"), "First back from popup 1 with " + popupCount);
   }
 
-  previous(window, document.getElementById("textbox1").inputField, "First back with " + popupCount);
+  previous(window, document.getElementById("textbox1"), "First back with " + popupCount);
 
   if (panel == document.getElementById("panel"))
     document.getElementById("panel2").openPopup(null, "after_start", 100, 20);
