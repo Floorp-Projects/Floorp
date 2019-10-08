@@ -230,7 +230,7 @@ function plInit() {
         let remoteType = E10SUtils.getRemoteTypeForURI(
           pageUrls[0],
           /* remote */ true,
-          /* fission */ false
+          /* fission */ Services.prefs.getBoolPref("fission.autostart")
         );
         let tabbrowser = browserWindow.gBrowser;
         if (remoteType) {
