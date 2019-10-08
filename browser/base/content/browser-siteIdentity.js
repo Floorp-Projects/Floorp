@@ -1303,6 +1303,9 @@ var gIdentityHandler = {
     dt.setData("text/plain", value);
     dt.setData("text/html", htmlString);
     dt.setDragImage(canvas, 16, 16);
+
+    // Make sure we don't cover the tab bar or other potential drop targets.
+    gURLBar.endLayoutExtend(true);
   },
 
   onLocationChange() {
