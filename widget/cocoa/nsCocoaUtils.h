@@ -389,6 +389,18 @@ class nsCocoaUtils {
   static mozilla::TimeStamp GetEventTimeStamp(NSTimeInterval aEventTime);
 
   /**
+   * Check whether double clicking on the titlebar should cause the window to
+   * zoom (maximize).
+   */
+  static bool ShouldZoomOnTitlebarDoubleClick();
+
+  /**
+   * Check whether double clicking on the titlebar should cause the window to
+   * minimize.
+   */
+  static bool ShouldMinimizeOnTitlebarDoubleClick();
+
+  /**
    * Get the current video capture permission status.
    * Returns NS_ERROR_NOT_IMPLEMENTED on 10.13 and earlier macOS versions.
    */

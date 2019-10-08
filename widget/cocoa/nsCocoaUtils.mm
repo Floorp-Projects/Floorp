@@ -1086,6 +1086,45 @@ TimeStamp nsCocoaUtils::GetEventTimeStamp(NSTimeInterval aEventTime) {
   return TimeStamp::FromSystemTime(tick);
 }
 
+static NSString* ActionOnDoubleClickSystemPref() {
+  NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+  NSString* kAppleActionOnDoubleClickKey = @"AppleActionOnDoubleClick";
+  id value = [userDefaults objectForKey:kAppleActionOnDoubleClickKey];
+  if ([value isKindOfClass:[NSString class]]) {
+    return value;
+  }
+  return nil;
+}
+
+@interface NSWindow (NSWindowShouldZoomOnDoubleClick)
++ (BOOL)_shouldZoomOnDoubleClick;  // present on 10.7 and above
+@end
+
+bool nsCocoaUtils::ShouldZoomOnTitlebarDoubleClick() {
+  if ([NSWindow respondsToSelector:@selector(_shouldZoomOnDoubleClick)]) {
+    return [NSWindow _shouldZoomOnDoubleClick];
+  }
+  if (nsCocoaFeatures::OnElCapitanOrLater()) {
+    return [ActionOnDoubleClickSystemPref() isEqualToString:@"Maximize"];
+  }
+  return false;
+}
+
+bool nsCocoaUtils::ShouldMinimizeOnTitlebarDoubleClick() {
+  // Check the system preferences.
+  // We could also check -[NSWindow _shouldMiniaturizeOnDoubleClick]. It's not clear to me which
+  // approach would be preferable; neither is public API.
+  if (nsCocoaFeatures::OnElCapitanOrLater()) {
+    return [ActionOnDoubleClickSystemPref() isEqualToString:@"Minimize"];
+  }
+
+  // Pre-10.11:
+  NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+  NSString* kAppleMiniaturizeOnDoubleClickKey = @"AppleMiniaturizeOnDoubleClick";
+  id value1 = [userDefaults objectForKey:kAppleMiniaturizeOnDoubleClickKey];
+  return [value1 isKindOfClass:[NSValue class]] && [value1 boolValue];
+}
+
 // AVAuthorizationStatus is not needed unless we are running on 10.14.
 // However, on pre-10.14 SDK's, AVAuthorizationStatus and its enum values
 // are both defined and prohibited from use by compile-time checks. We

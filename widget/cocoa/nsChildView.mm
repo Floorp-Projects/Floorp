@@ -226,10 +226,6 @@ static NSMutableDictionary* sNativeKeyEventsMap = [NSMutableDictionary dictionar
 - (float)roundedCornerRadius;
 @end
 
-@interface NSWindow (NSWindowShouldZoomOnDoubleClick)
-+ (BOOL)_shouldZoomOnDoubleClick;  // present on 10.7 and above
-@end
-
 // Starting with 10.7 the bottom corners of all windows are rounded.
 // Unfortunately, the standard rounding that OS X applies to OpenGL views
 // does not use anti-aliasing and looks very crude. Since we want a smooth,
@@ -4316,11 +4312,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Check to see if we are double-clicking in draggable parts of the window.
   if (!defaultPrevented && [theEvent clickCount] == 2 &&
       !mGeckoChild->GetNonDraggableRegion().Contains(pos.x, pos.y)) {
-    if ([self shouldZoomOnDoubleClick]) {
+    if (nsCocoaUtils::ShouldZoomOnTitlebarDoubleClick()) {
       [[self window] performZoom:nil];
-    } else if ([self shouldMinimizeOnTitlebarDoubleClick]) {
-      NSButton* minimizeButton = [[self window] standardWindowButton:NSWindowMiniaturizeButton];
-      [minimizeButton performClick:self];
+    } else if (nsCocoaUtils::ShouldMinimizeOnTitlebarDoubleClick()) {
+      [[self window] performMiniaturize:nil];
     }
   }
 
@@ -4861,33 +4856,6 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN
   sIsTabletPointerActivated = [theEvent isEnteringProximity];
   NS_OBJC_END_TRY_ABORT_BLOCK
-}
-
-- (BOOL)shouldZoomOnDoubleClick {
-  if ([NSWindow respondsToSelector:@selector(_shouldZoomOnDoubleClick)]) {
-    return [NSWindow _shouldZoomOnDoubleClick];
-  }
-  return nsCocoaFeatures::OnYosemiteOrLater();
-}
-
-- (BOOL)shouldMinimizeOnTitlebarDoubleClick {
-  // Check the system preferences.
-  // We could also check -[NSWindow _shouldMiniaturizeOnDoubleClick]. It's not clear to me which
-  // approach would be preferable; neither is public API.
-  NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-
-  // Pre-10.11:
-  NSString* kAppleMiniaturizeOnDoubleClickKey = @"AppleMiniaturizeOnDoubleClick";
-  id value1 = [userDefaults objectForKey:kAppleMiniaturizeOnDoubleClickKey];
-  if ([value1 isKindOfClass:[NSValue class]] && [value1 boolValue]) {
-    return YES;
-  }
-
-  // 10.11+:
-  NSString* kAppleActionOnDoubleClickKey = @"AppleActionOnDoubleClick";
-  NSString* kMinimizeValue = @"Minimize";
-  id value2 = [userDefaults objectForKey:kAppleActionOnDoubleClickKey];
-  return ([value2 isKindOfClass:[NSString class]] && [value2 isEqualToString:kMinimizeValue]);
 }
 
 #pragma mark -
