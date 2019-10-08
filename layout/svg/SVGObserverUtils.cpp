@@ -28,6 +28,7 @@
 #include "nsTHashtable.h"
 #include "nsURIHashKey.h"
 #include "SVGGeometryElement.h"
+#include "SVGTextFrame.h"
 #include "SVGTextPathElement.h"
 #include "SVGUseElement.h"
 
@@ -386,7 +387,7 @@ class SVGTextPathObserver final : public nsSVGRenderingObserverProperty {
   SVGTextPathObserver(URLAndReferrerInfo* aURI, nsIFrame* aFrame,
                       bool aReferenceImage)
       : nsSVGRenderingObserverProperty(aURI, aFrame, aReferenceImage),
-        mValid(true) {}
+        mValid(TargetIsValid()) {}
 
  protected:
   void OnRenderingChange() override;
@@ -433,11 +434,21 @@ void SVGTextPathObserver::OnRenderingChange() {
   }
   mValid = nowValid;
 
-  // Repaint asynchronously in case the path frame is being torn down
-  nsChangeHint changeHint =
-      nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
+  MOZ_ASSERT(frame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
+             "expected frame for a <textPath> element");
+
+  // Repaint asynchronously text in case the path frame is being torn down
   frame->PresContext()->RestyleManager()->PostRestyleEvent(
-      frame->GetContent()->AsElement(), RestyleHint{0}, changeHint);
+      frame->GetContent()->AsElement(), RestyleHint{0},
+      nsChangeHint_RepaintFrame);
+
+  nsIFrame* text =
+      nsLayoutUtils::GetClosestFrameOfType(frame, LayoutFrameType::SVGText);
+  MOZ_ASSERT(text, "expected to find an ancestor SVGTextFrame");
+  if (text) {
+    // This also does async work.
+    static_cast<SVGTextFrame*>(text)->NotifyGlyphMetricsChange();
+  }
 }
 
 class SVGMarkerObserver final : public nsSVGRenderingObserverProperty {
