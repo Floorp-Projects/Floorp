@@ -1335,6 +1335,21 @@ option('--enable-bundled-fonts', default=bundled_fonts_default,
 set_define('MOZ_BUNDLED_FONTS',
            depends_if('--enable-bundled-fonts', when=allow_bundled_fonts)(lambda _: True))
 
+# XBL
+# ==============================================================
+
+@depends(build_project)
+def xbl_default(project):
+    return project != 'mobile/android'
+
+option('--enable-xbl', default=xbl_default,
+       when='--enable-compile-environment',
+       help='{Enable|Disable} support for XBL (XML Binding Language)')
+set_define('MOZ_XBL',
+           depends_if('--enable-xbl', when='--enable-compile-environment')(lambda _: True))
+set_config('MOZ_XBL',
+           depends_if('--enable-xbl', when='--enable-compile-environment')(lambda _: True))
+
 # Verify MAR signatures
 # ==============================================================
 
