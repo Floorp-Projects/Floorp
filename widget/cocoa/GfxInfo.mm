@@ -51,6 +51,10 @@ static OperatingSystem OSXVersionToOperatingSystem(uint32_t aOSXVersion) {
         return OperatingSystem::OSX10_12;
       case 13:
         return OperatingSystem::OSX10_13;
+      case 14:
+        return OperatingSystem::OSX10_14;
+      case 15:
+        return OperatingSystem::OSX10_15;
     }
   }
 
@@ -282,6 +286,11 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsIvyBridge),
         nsIGfxInfo::FEATURE_GL_SWIZZLE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_MAC_INTELHD4000_NO_SWIZZLE");
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
+        OperatingSystem::OSX10_15, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorATI),
+        (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll), GfxDriverInfo::allDevices,
+        nsIGfxInfo::FEATURE_GL_SWIZZLE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_MAC_10_15_AMD_NO_SWIZZLE");
   }
   return *sDriverInfo;
 }
