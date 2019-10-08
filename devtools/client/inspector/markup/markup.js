@@ -117,10 +117,12 @@ const shortcutHandlers = {
   // Localizable keys
   "markupView.hide.key": markupView => {
     const node = markupView._selectedContainer.node;
+    const walkerFront = node.walkerFront;
+
     if (node.hidden) {
-      markupView.walker.unhideNode(node);
+      walkerFront.unhideNode(node);
     } else {
-      markupView.walker.hideNode(node);
+      walkerFront.hideNode(node);
     }
   },
   "markupView.edit.key": markupView => {
