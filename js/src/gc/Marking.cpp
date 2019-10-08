@@ -3293,12 +3293,27 @@ static inline void CheckIsMarkedThing(T* thingp) {
 #ifdef DEBUG
   MOZ_ASSERT(thingp);
   MOZ_ASSERT(*thingp);
-  JSRuntime* rt = (*thingp)->runtimeFromAnyThread();
-  MOZ_ASSERT_IF(
-      !ThingIsPermanentAtomOrWellKnownSymbol(*thingp),
-      CurrentThreadCanAccessRuntime(rt) ||
-          CurrentThreadCanAccessZone((*thingp)->zoneFromAnyThread()) ||
-          (JS::RuntimeHeapIsCollecting() && rt->gc.state() == State::Sweep));
+
+  // Allow any thread access to uncollected things.
+  T thing = *thingp;
+  if (ThingIsPermanentAtomOrWellKnownSymbol(thing)) {
+    return;
+  }
+
+  // Allow the current thread access if it is sweeping, but try to check the
+  // zone. Some threads have access to all zones when sweeping.
+  JSContext* cx = TlsContext.get();
+  if (cx->gcSweeping) {
+    Zone* zone = thing->zoneFromAnyThread();
+    MOZ_ASSERT_IF(cx->gcSweepingZone,
+                  cx->gcSweepingZone == zone || zone->isAtomsZone());
+    return;
+  }
+
+  // Otherwise only allow access from the main thread or this zone's associated
+  // thread.
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()) ||
+             CurrentThreadCanAccessZone(thing->zoneFromAnyThread()));
 #endif
 }
 

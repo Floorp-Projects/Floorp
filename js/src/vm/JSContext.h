@@ -537,13 +537,17 @@ struct JSContext : public JS::RootingContext,
    */
   js::ContextData<int32_t> suppressGC;
 
-  // Whether this thread is currently sweeping GC things.  This thread could
-  // be the main thread or a helper thread while the main thread is running
-  // the mutator.  This is used to assert that destruction of GCPtr only
-  // happens when we are sweeping.
+#ifdef DEBUG
+  // Whether this thread is currently sweeping GC things. This thread could be
+  // the main thread or a helper thread while the main thread is running the
+  // mutator. This is used to assert that destruction of GCPtrs only happens
+  // when we are sweeping, among other things.
   js::ContextData<bool> gcSweeping;
 
-#ifdef DEBUG
+  // The specific zone currently being swept, if any. Setting this restricts
+  // IsAboutToBeFinalized and IsMarked calls to this zone.
+  js::ContextData<JS::Zone*> gcSweepingZone;
+
   // Whether this thread is currently manipulating possibly-gray GC things.
   js::ContextData<size_t> isTouchingGrayThings;
 
@@ -1308,15 +1312,28 @@ class MOZ_RAII AutoSetThreadIsPerformingGC {
 
 // In debug builds, set/reset the GC sweeping flag for the current thread.
 struct MOZ_RAII AutoSetThreadIsSweeping {
-  AutoSetThreadIsSweeping() : cx(TlsContext.get()), prevState(cx->gcSweeping) {
+#ifndef DEBUG
+  explicit AutoSetThreadIsSweeping(Zone* zone = nullptr) {}
+#else
+  explicit AutoSetThreadIsSweeping(Zone* zone = nullptr)
+      : cx(TlsContext.get()),
+        prevState(cx->gcSweeping),
+        prevZone(cx->gcSweepingZone) {
     cx->gcSweeping = true;
+    cx->gcSweepingZone = zone;
   }
 
-  ~AutoSetThreadIsSweeping() { cx->gcSweeping = prevState; }
+  ~AutoSetThreadIsSweeping() {
+    cx->gcSweeping = prevState;
+    cx->gcSweepingZone = prevZone;
+    MOZ_ASSERT_IF(!cx->gcSweeping, !cx->gcSweepingZone);
+  }
 
  private:
   JSContext* cx;
   bool prevState;
+  JS::Zone* prevZone;
+#endif
 };
 
 }  // namespace gc

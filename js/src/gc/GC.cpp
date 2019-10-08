@@ -1274,8 +1274,8 @@ void GCRuntime::finish() {
 
   // Delete all remaining zones.
   if (rt->gcInitialized) {
-    AutoSetThreadIsSweeping threadIsSweeping;
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+      AutoSetThreadIsSweeping threadIsSweeping(zone);
       for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         for (RealmsInCompartmentIter realm(comp); !realm.done(); realm.next()) {
           js_delete(realm.get());
@@ -3232,6 +3232,8 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks) {
     Zone* zone = zones.removeFront();
     Arena* emptyArenas = nullptr;
 
+    AutoSetThreadIsSweeping threadIsSweeping(zone);
+
     // We must finalize thing kinds in the order specified by
     // BackgroundFinalizePhases.
     for (auto phase : BackgroundFinalizePhases) {
@@ -3299,7 +3301,6 @@ void BackgroundSweepTask::run() {
                            TraceLogger_GCSweeping);
 
   AutoLockHelperThreadState lock;
-  AutoSetThreadIsSweeping threadIsSweeping;
 
   runtime()->gc.sweepFromBackgroundThread(lock);
 
@@ -3554,6 +3555,7 @@ void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
           zone->arenas.arenaListsAreEmpty() && !zone->hasMarkedRealms();
       MOZ_ASSERT_IF(destroyingRuntime, zoneIsDead);
       if (zoneIsDead) {
+        AutoSetThreadIsSweeping threadIsSweeping(zone);
         zone->arenas.checkEmptyFreeLists();
         zone->sweepCompartments(fop, false, destroyingRuntime);
         MOZ_ASSERT(zone->compartments().empty());
@@ -5042,18 +5044,25 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
 // Causes the given WeakCache to be swept when run.
 class ImmediateSweepWeakCacheTask
     : public GCParallelTaskHelper<ImmediateSweepWeakCacheTask> {
+  Zone* zone;
   JS::detail::WeakCacheBase& cache;
 
   ImmediateSweepWeakCacheTask(const ImmediateSweepWeakCacheTask&) = delete;
 
  public:
-  ImmediateSweepWeakCacheTask(JSRuntime* rt, JS::detail::WeakCacheBase& wc)
-      : GCParallelTaskHelper(rt), cache(wc) {}
+  ImmediateSweepWeakCacheTask(JSRuntime* runtime, Zone* zone,
+                              JS::detail::WeakCacheBase& wc)
+      : GCParallelTaskHelper(runtime), zone(zone), cache(wc) {}
 
   ImmediateSweepWeakCacheTask(ImmediateSweepWeakCacheTask&& other)
-      : GCParallelTaskHelper(std::move(other)), cache(other.cache) {}
+      : GCParallelTaskHelper(std::move(other)),
+        zone(other.zone),
+        cache(other.cache) {}
 
-  void run() { cache.sweep(); }
+  void run() {
+    AutoSetThreadIsSweeping threadIsSweeping(zone);
+    cache.sweep();
+  }
 };
 
 static void UpdateAtomsBitmap(JSRuntime* runtime) {
@@ -5079,7 +5088,7 @@ static void UpdateAtomsBitmap(JSRuntime* runtime) {
 }
 
 static void SweepCCWrappers(GCParallelTask* task) {
-  AutoSetThreadIsSweeping threadIsSweeping;
+  AutoSetThreadIsSweeping threadIsSweeping;  // This can touch all zones.
   JSRuntime* runtime = task->runtime();
   for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
     zone->sweepAllCrossCompartmentWrappers();
@@ -5087,17 +5096,17 @@ static void SweepCCWrappers(GCParallelTask* task) {
 }
 
 static void SweepObjectGroups(GCParallelTask* task) {
-  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupRealmsIter r(runtime); !r.done(); r.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(r->zone());
     r->sweepObjectGroups();
   }
 }
 
 static void SweepMisc(GCParallelTask* task) {
-  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupRealmsIter r(runtime); !r.done(); r.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(r->zone());
     r->sweepGlobalObject();
     r->sweepTemplateObjects();
     r->sweepSavedStacks();
@@ -5108,7 +5117,6 @@ static void SweepMisc(GCParallelTask* task) {
 }
 
 static void SweepCompressionTasks(GCParallelTask* task) {
-  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
 
   // Attach finished compression tasks.
@@ -5125,9 +5133,9 @@ static void SweepCompressionTasks(GCParallelTask* task) {
 }
 
 void js::gc::SweepLazyScripts(GCParallelTask* task) {
-  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(zone);
     for (auto i = zone->cellIter<LazyScript>(); !i.done(); i.next()) {
       WeakHeapPtrScript* edge = &i.unbarrieredGet()->script_;
       if (*edge && IsAboutToBeFinalized(edge)) {
@@ -5138,7 +5146,7 @@ void js::gc::SweepLazyScripts(GCParallelTask* task) {
 }
 
 static void SweepWeakMaps(GCParallelTask* task) {
-  AutoSetThreadIsSweeping threadIsSweeping;
+  AutoSetThreadIsSweeping threadIsSweeping;  // This may touch any zone.
   JSRuntime* runtime = task->runtime();
   for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
     /* No need to look up any more weakmap keys from this sweep group. */
@@ -5152,8 +5160,8 @@ static void SweepWeakMaps(GCParallelTask* task) {
 }
 
 static void SweepUniqueIds(GCParallelTask* task) {
-  AutoSetThreadIsSweeping threadIsSweeping;
   for (SweepGroupZonesIter zone(task->runtime()); !zone.done(); zone.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(zone);
     zone->sweepUniqueIds();
   }
 }
@@ -5257,22 +5265,20 @@ void GCRuntime::sweepJitDataOnMainThread(JSFreeOp* fop) {
 using WeakCacheTaskVector =
     mozilla::Vector<ImmediateSweepWeakCacheTask, 0, SystemAllocPolicy>;
 
-enum WeakCacheLocation { RuntimeWeakCache, ZoneWeakCache };
-
 // Call a functor for all weak caches that need to be swept in the current
 // sweep group.
 template <typename Functor>
 static inline bool IterateWeakCaches(JSRuntime* rt, Functor f) {
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     for (JS::detail::WeakCacheBase* cache : zone->weakCaches()) {
-      if (!f(cache, ZoneWeakCache)) {
+      if (!f(cache, zone.get())) {
         return false;
       }
     }
   }
 
   for (JS::detail::WeakCacheBase* cache : rt->weakCaches()) {
-    if (!f(cache, RuntimeWeakCache)) {
+    if (!f(cache, nullptr)) {
       return false;
     }
   }
@@ -5287,19 +5293,19 @@ static bool PrepareWeakCacheTasks(JSRuntime* rt,
 
   MOZ_ASSERT(immediateTasks->empty());
 
-  bool ok = IterateWeakCaches(rt, [&](JS::detail::WeakCacheBase* cache,
-                                      WeakCacheLocation location) {
-    if (!cache->needsSweep()) {
-      return true;
-    }
+  bool ok =
+      IterateWeakCaches(rt, [&](JS::detail::WeakCacheBase* cache, Zone* zone) {
+        if (!cache->needsSweep()) {
+          return true;
+        }
 
-    // Caches that support incremental sweeping will be swept later.
-    if (location == ZoneWeakCache && cache->setNeedsIncrementalBarrier(true)) {
-      return true;
-    }
+        // Caches that support incremental sweeping will be swept later.
+        if (zone && cache->setNeedsIncrementalBarrier(true)) {
+          return true;
+        }
 
-    return immediateTasks->emplaceBack(rt, *cache);
-  });
+        return immediateTasks->emplaceBack(rt, zone, *cache);
+      });
 
   if (!ok) {
     immediateTasks->clearAndFree();
@@ -5311,14 +5317,13 @@ static bool PrepareWeakCacheTasks(JSRuntime* rt,
 static void SweepWeakCachesOnMainThread(JSRuntime* rt) {
   // If we ran out of memory, do all the work on the main thread.
   gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::SWEEP_WEAK_CACHES);
-  IterateWeakCaches(
-      rt, [&](JS::detail::WeakCacheBase* cache, WeakCacheLocation location) {
-        if (cache->needsIncrementalBarrier()) {
-          cache->setNeedsIncrementalBarrier(false);
-        }
-        cache->sweep();
-        return true;
-      });
+  IterateWeakCaches(rt, [&](JS::detail::WeakCacheBase* cache, Zone* zone) {
+    if (cache->needsIncrementalBarrier()) {
+      cache->setNeedsIncrementalBarrier(false);
+    }
+    cache->sweep();
+    return true;
+  });
 }
 
 IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
@@ -5380,6 +5385,8 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JSFreeOp* fop,
     AutoPhase ap(stats(), PhaseKind::UPDATE_ATOMS_BITMAP);
     UpdateAtomsBitmap(rt);
   }
+
+  AutoSetThreadIsSweeping threadIsSweeping;
 
   sweepDebuggerOnMainThread(fop);
 
@@ -5509,8 +5516,6 @@ void GCRuntime::beginSweepPhase(JS::GCReason reason, AutoGCSession& session) {
    */
 
   MOZ_ASSERT(!abortSweepAfterCurrentGroup);
-
-  AutoSetThreadIsSweeping threadIsSweeping;
 
   releaseHeldRelocatedArenas();
 
@@ -5707,8 +5712,17 @@ IncrementalProgress GCRuntime::sweepAtomsTable(JSFreeOp* fop,
 }
 
 class js::gc::WeakCacheSweepIterator {
+ public:
+  using WeakCacheBase = JS::detail::WeakCacheBase;
+
+  struct Item {
+    WeakCacheBase* cache;
+    Zone* zone;
+  };
+
+ private:
   JS::Zone*& sweepZone;
-  JS::detail::WeakCacheBase*& sweepCache;
+  WeakCacheBase*& sweepCache;
 
  public:
   explicit WeakCacheSweepIterator(GCRuntime* gc)
@@ -5726,12 +5740,12 @@ class js::gc::WeakCacheSweepIterator {
 
   bool empty(AutoLockHelperThreadState& lock) { return !sweepZone; }
 
-  JS::detail::WeakCacheBase* next(AutoLockHelperThreadState& lock) {
+  Item next(AutoLockHelperThreadState& lock) {
     if (empty(lock)) {
-      return nullptr;
+      return {nullptr, nullptr};
     }
 
-    JS::detail::WeakCacheBase* result = sweepCache;
+    Item result{sweepCache, sweepZone};
     sweepCache = sweepCache->getNext();
     settle();
     checkState();
@@ -5767,7 +5781,7 @@ class IncrementalSweepWeakCacheTask
   WeakCacheSweepIterator& work_;
   SliceBudget& budget_;
   AutoLockHelperThreadState& lock_;
-  JS::detail::WeakCacheBase* cache_;
+  WeakCacheSweepIterator::Item item_;
 
  public:
   IncrementalSweepWeakCacheTask(JSRuntime* rt, WeakCacheSweepIterator& work,
@@ -5777,8 +5791,8 @@ class IncrementalSweepWeakCacheTask
         work_(work),
         budget_(budget),
         lock_(lock),
-        cache_(work.next(lock)) {
-    MOZ_ASSERT(cache_);
+        item_(work.next(lock)) {
+    MOZ_ASSERT(item_.cache);
     runtime()->gc.startTask(*this, gcstats::PhaseKind::SWEEP_WEAK_CACHES,
                             lock_);
   }
@@ -5788,11 +5802,13 @@ class IncrementalSweepWeakCacheTask
   }
 
   void run() {
-    AutoSetThreadIsSweeping threadIsSweeping;
     do {
-      MOZ_ASSERT(cache_->needsIncrementalBarrier());
-      size_t steps = cache_->sweep();
-      cache_->setNeedsIncrementalBarrier(false);
+      JS::detail::WeakCacheBase* cache = item_.cache;
+      AutoSetThreadIsSweeping threadIsSweeping(item_.zone);
+
+      MOZ_ASSERT(cache->needsIncrementalBarrier());
+      size_t steps = cache->sweep();
+      cache->setNeedsIncrementalBarrier(false);
 
       AutoLockHelperThreadState lock;
       budget_.step(steps);
@@ -5800,8 +5816,8 @@ class IncrementalSweepWeakCacheTask
         break;
       }
 
-      cache_ = work_.next(lock);
-    } while (cache_);
+      item_ = work_.next(lock);
+    } while (item_.cache);
   }
 };
 
@@ -5839,6 +5855,8 @@ IncrementalProgress GCRuntime::finalizeAllocKind(JSFreeOp* fop,
   size_t thingsPerArena = Arena::thingsPerArena(sweepAllocKind);
   auto& sweepList = incrementalSweepList.ref();
   sweepList.setThingsPerArena(thingsPerArena);
+
+  AutoSetThreadIsSweeping threadIsSweeping(sweepZone);
 
   if (!sweepZone->arenas.foregroundFinalize(fop, sweepAllocKind, budget,
                                             sweepList)) {
@@ -6181,8 +6199,6 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   // actions should not perform any recorded events.
   mozilla::recordreplay::AutoDisallowThreadEvents disallow;
 
-  AutoSetThreadIsSweeping threadIsSweeping;
-
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
   JSFreeOp fop(rt);
 
@@ -6227,8 +6243,6 @@ bool GCRuntime::allCCVisibleZonesWereCollected() const {
 
 void GCRuntime::endSweepPhase(bool destroyingRuntime) {
   sweepActions->assertFinished();
-
-  AutoSetThreadIsSweeping threadIsSweeping;
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
   JSFreeOp fop(rt);
@@ -6760,7 +6774,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
         // finished to actually remove and free dead zones.
         gcstats::AutoPhase ap1(stats(), gcstats::PhaseKind::SWEEP);
         gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::DESTROY);
-        AutoSetThreadIsSweeping threadIsSweeping;
         JSFreeOp fop(rt);
         sweepZones(&fop, destroyingRuntime);
       }
