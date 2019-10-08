@@ -626,13 +626,12 @@ def handle_suite_category(config, tests):
 def setup_talos(config, tests):
     """Add options that are specific to talos jobs (identified by suite=talos)"""
     for test in tests:
-        if test['suite'] not in ['talos', 'raptor']:
+        if test['suite'] != 'talos':
             yield test
             continue
 
-        if test['suite'] == 'talos':
-            extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
-            extra_options.append('--use-talos-json')
+        extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
+        extra_options.append('--use-talos-json')
 
         # win7 needs to test skip
         if test['build-platform'].startswith('win32'):
