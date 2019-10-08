@@ -27,6 +27,7 @@ const PREFS_WHITELIST = [
   "accessibility.",
   "apz.",
   "browser.cache.",
+  "browser.contentblocking.category",
   "browser.display.",
   "browser.download.folderList",
   "browser.download.hide_plugins_without_extensions",
