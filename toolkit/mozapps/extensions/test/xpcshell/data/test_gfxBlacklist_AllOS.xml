@@ -140,7 +140,7 @@
         <device>0x1234</device>
         <device>0x2782</device>
       </devices>
-      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <feature> WEBRTC_HW_ACCELERATION_H264 </feature>
       <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
     </gfxBlacklistEntry>
 
@@ -346,7 +346,7 @@
         <device>0x1234</device>
         <device>0x2782</device>
       </devices>
-      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <feature> WEBRTC_HW_ACCELERATION_H264 </feature>
       <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
     </gfxBlacklistEntry>
 
@@ -552,7 +552,7 @@
         <device>0x1234</device>
         <device>0x2782</device>
       </devices>
-      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <feature> WEBRTC_HW_ACCELERATION_H264 </feature>
       <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
     </gfxBlacklistEntry>
 
@@ -758,7 +758,7 @@
         <device>0x1234</device>
         <device>0x2782</device>
       </devices>
-      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <feature> WEBRTC_HW_ACCELERATION_H264 </feature>
       <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
     </gfxBlacklistEntry>
 

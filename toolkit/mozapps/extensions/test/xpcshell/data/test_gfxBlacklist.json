@@ -218,7 +218,7 @@
       "0x1234",
       "0x2782"
     ],
-    "feature": " WEBRTC_HW_ACCELERATION ",
+    "feature": " WEBRTC_HW_ACCELERATION_H264 ",
     "featureStatus": " BLOCKED_DRIVER_VERSION ",
     "driverVersion": " 8.52.322.1112 ",
     "driverVersionMax": " 9.52.322.1300 ",

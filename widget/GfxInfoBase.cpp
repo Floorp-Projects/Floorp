@@ -150,8 +150,8 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_STAGEFRIGHT:
       name = BLACKLIST_PREF_BRANCH "stagefright";
       break;
-    case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION:
-      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration";
+    case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264:
+      name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.h264";
       break;
     case nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE:
       name = BLACKLIST_PREF_BRANCH "webrtc.hw.acceleration.encode";
@@ -348,8 +348,8 @@ static int32_t BlacklistFeatureToGfxFeature(const nsAString& aFeature) {
     return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_ENCODE;
   else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION_DECODE"))
     return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE;
-  else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION"))
-    return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION;
+  else if (aFeature.EqualsLiteral("WEBRTC_HW_ACCELERATION_H264"))
+    return nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264;
   else if (aFeature.EqualsLiteral("CANVAS2D_ACCELERATION"))
     return nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION;
   else if (aFeature.EqualsLiteral("DX_INTEROP2"))
@@ -1016,7 +1016,7 @@ void GfxInfoBase::EvaluateDownloadedBlacklist(
                         nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_DECODE,
                         nsIGfxInfo::FEATURE_WEBGL_MSAA,
                         nsIGfxInfo::FEATURE_STAGEFRIGHT,
-                        nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION,
+                        nsIGfxInfo::FEATURE_WEBRTC_HW_ACCELERATION_H264,
                         nsIGfxInfo::FEATURE_CANVAS2D_ACCELERATION,
                         nsIGfxInfo::FEATURE_VP8_HW_DECODE,
                         nsIGfxInfo::FEATURE_VP9_HW_DECODE,
