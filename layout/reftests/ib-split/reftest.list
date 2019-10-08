@@ -25,7 +25,8 @@
 == insert-into-split-inline-3-ref.html insert-into-split-inline-3-noib-ref.html
 == insert-into-split-inline-4.html insert-into-split-inline-4-ref.html
 == insert-into-split-inline-4-ref.html insert-into-split-inline-4-noib-ref.html
-== insert-into-split-inline-5.html insert-into-split-inline-5-ref.html
+== insert-into-split-inline-5-shadow.html insert-into-split-inline-5-ref.html
+skip-if(!xbl) == insert-into-split-inline-5.html insert-into-split-inline-5-ref.html
 == insert-into-split-inline-5-ref.html insert-into-split-inline-5-noib-ref.html
 == insert-into-split-inline-6.html insert-into-split-inline-6-ref.html
 == insert-into-split-inline-6-ref.html insert-into-split-inline-6-noib-ref.html

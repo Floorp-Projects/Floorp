@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for base URIs</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <base href="/tests/dom/base/" />
+  <style>
+    #bound { -moz-binding: url("test/file_base_xbl.xml#test"); }
+  </style>
+</head>
+<body>
+<div id="bound"/>
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var svgExpected =
+    ["http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
+     "http://mochi.test:8888/tests/dom/base/",
+     ];
+  let node = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById("bound"))[0];
+  while(node) {
+    is(node.baseURI, svgExpected.shift(), "node base");
+    node = node.firstChild;
+  }
+  is(svgExpected.length, 0, "found all expected nodes");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
