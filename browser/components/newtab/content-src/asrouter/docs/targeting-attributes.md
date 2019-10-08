@@ -39,6 +39,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [earliestFirefoxVersion](#earliestfirefoxversion)
 * [isFxABadgeEnabled](#isfxabadgeenabled)
 * [totalBlockedCount](#totalblockedcount)
+* [userPrefs](#userprefs)
 
 ## Detailed usage
 
@@ -528,4 +529,23 @@ Total number of events from the content blocking database
 
 ```ts
 declare const totalBlockedCount: number;
+```
+
+### `userPrefs`
+
+Information about user facing prefs configurable from `about:preferences`.
+
+#### Examples
+```java
+userPrefs.cfrFeatures == false
+```
+
+#### Definition
+
+```ts
+declare const userPrefs: {
+  cfrFeatures: boolean;
+  cfrAddons: boolean;
+  snippets: boolean;
+}
 ```
