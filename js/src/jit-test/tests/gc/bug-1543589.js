@@ -2,6 +2,7 @@
 // This test times out in ARM64 simulator builds.
 
 gczeal(0);
+gcparam('maxNurseryBytes', 16 * 1024 * 1024);
 gcparam('minNurseryBytes', 16 * 1024 * 1024);
 
 let a = [];
