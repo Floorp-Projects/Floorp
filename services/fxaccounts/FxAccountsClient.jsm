@@ -251,6 +251,78 @@ this.FxAccountsClient.prototype = {
   },
 
   /**
+   * Retrieves an OAuth authorization code.
+   *
+   * @param String sessionTokenHex
+   *        The session token encoded in hex
+   * @param {Object} options
+   * @param options.client_id
+   * @param options.state
+   * @param options.scope
+   * @param options.access_type
+   * @param options.code_challenge_method
+   * @param options.code_challenge
+   * @param [options.keys_jwe]
+   * @returns {Promise<Object>} Object containing `code` and `state`.
+   */
+  async oauthAuthorize(sessionTokenHex, options) {
+    const credentials = await deriveHawkCredentials(
+      sessionTokenHex,
+      "sessionToken"
+    );
+    const body = {
+      client_id: options.client_id,
+      response_type: "code",
+      state: options.state,
+      scope: options.scope,
+      access_type: options.access_type,
+      code_challenge: options.code_challenge,
+      code_challenge_method: options.code_challenge_method,
+    };
+    if (options.keys_jwe) {
+      body.keys_jwe = options.keys_jwe;
+    }
+    return this._request("/oauth/authorization", "POST", credentials, body);
+  },
+
+  /**
+   * Obtain an OAuth access token by authenticating using a session token.
+   *
+   * @param String sessionTokenHex
+   *        The session token encoded in hex
+   * @param String clientId
+   * @param String scopeString
+   *        List of space-separated scopes.
+   * @return {Promise<Object>} Object containing an `access_token`.
+   */
+  async oauthToken(sessionTokenHex, clientId, scopeString) {
+    const credentials = await deriveHawkCredentials(
+      sessionTokenHex,
+      "sessionToken"
+    );
+    const body = {
+      client_id: clientId,
+      grant_type: "fxa-credentials",
+      scope: scopeString,
+    };
+    return this._request("/oauth/token", "POST", credentials, body);
+  },
+
+  /**
+   * Destroy an OAuth access token or refresh token.
+   *
+   * @param String clientId
+   * @param String token The token to be revoked.
+   */
+  async oauthDestroy(clientId, token) {
+    const body = {
+      client_id: clientId,
+      token,
+    };
+    return this._request("/oauth/destroy", "POST", null, body);
+  },
+
+  /**
    * Query for the information required to derive
    * scoped encryption keys requested by the specified OAuth client.
    *

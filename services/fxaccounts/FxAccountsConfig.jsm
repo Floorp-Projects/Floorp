@@ -40,7 +40,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "REQUIRES_HTTPS",
-  // Also used in FxAccountsOAuthGrantClient.jsm.
   "identity.fxaccounts.allowHttp",
   false,
   null,
