@@ -200,6 +200,63 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
                                                const FieldContext&) {
     return enterTaggedTuple(tag);
   }
+  MOZ_MUST_USE JS::Result<Ok> enterInterface(BinASTKind& tag,
+                                             const FieldOrRootContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterInterface(BinASTKind& tag,
+                                             const FieldOrListContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterInterface(BinASTKind& tag,
+                                             const RootContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterInterface(BinASTKind& tag,
+                                             const ListContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterInterface(BinASTKind& tag,
+                                             const FieldContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterSum(BinASTKind& tag,
+                                       const FieldOrRootContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterSum(BinASTKind& tag,
+                                       const FieldOrListContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterSum(BinASTKind& tag, const RootContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterSum(BinASTKind& tag, const ListContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterSum(BinASTKind& tag, const FieldContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterOptionalInterface(
+      BinASTKind& tag, const FieldOrRootContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterOptionalInterface(
+      BinASTKind& tag, const FieldOrListContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterOptionalInterface(BinASTKind& tag,
+                                                     const RootContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterOptionalInterface(BinASTKind& tag,
+                                                     const ListContext&) {
+    return enterTaggedTuple(tag);
+  }
+  MOZ_MUST_USE JS::Result<Ok> enterOptionalInterface(BinASTKind& tag,
+                                                     const FieldContext&) {
+    return enterTaggedTuple(tag);
+  }
 
   /**
    * Read a single unsigned long.

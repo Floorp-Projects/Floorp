@@ -1466,6 +1466,7 @@ impl CPPExporter {
         let kind_limit = node_names.len();
         buffer.push_str(&format!("
 #define FOR_EACH_BIN_KIND(F) \\
+    F(_Uninitialized, \"Uninitialized\", UNINITIALIZED) \\
 {nodes}
 ",
             nodes = node_names.iter()
@@ -1604,6 +1605,9 @@ const size_t BINAST_SUM_{sum_macro_name}_LIMIT = {limit};
 // - STRING_ENUM: wrapper for non-optional string enum types - called as `STRING_ENUNM(typename)`
 // - OPTIONAL_STRING_ENUM: wrapper for optional string enum type names - called as `OPTIONAL_STRING_ENUM(typename)` where
 //      `typename` is the name of the string enum (e.g. no `Maybe` prefix)
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_UNINITIALIZED(                    \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)
 ");
         for (interface_name, interface) in self.syntax.interfaces_by_name().iter().sorted_by_key(|a| a.0) {
             let interface_enum_name = interface_name.to_cpp_enum_case();
@@ -2095,12 +2099,12 @@ impl CPPExporter {
             buffer.push_str(&format!("{bnf}
 {first_line}
 {{
-    BinASTKind kind;
+    BinASTKind kind = BinASTKind::_Uninitialized;
     AutoTaggedTuple guard(*tokenizer_);
     const auto start = tokenizer_->offset();
 
     guard.init();
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
+    MOZ_TRY(tokenizer_->enterSum(kind, context));
 
 {call}
 
@@ -2328,11 +2332,11 @@ impl CPPExporter {
             NamedType::Interface(_) => {
                 buffer.push_str(&format!("{first_line}
 {{
-    BinASTKind kind;
+    BinASTKind kind = BinASTKind::_Uninitialized;
     AutoTaggedTuple guard(*tokenizer_);
 
     guard.init();
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
+    MOZ_TRY(tokenizer_->enterOptionalInterface(kind, context));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -2385,11 +2389,11 @@ impl CPPExporter {
                     &TypeSpec::TypeSum(_) => {
                 buffer.push_str(&format!("{first_line}
 {{
-    BinASTKind kind;
+    BinASTKind kind = BinASTKind::_Uninitialized;
     AutoTaggedTuple guard(*tokenizer_);
 
     guard.init();
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
+    MOZ_TRY(tokenizer_->enterSum(kind, context));
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
@@ -2542,14 +2546,11 @@ impl CPPExporter {
             // Generate public method
             buffer.push_str(&format!("{first_line}
 {{
-    BinASTKind kind;
+    BinASTKind kind = BinASTKind::{kind};
     AutoTaggedTuple guard(*tokenizer_);
 
     guard.init();
-    MOZ_TRY(tokenizer_->enterTaggedTuple(kind, context));
-    if (MOZ_UNLIKELY(kind != BinASTKind::{kind})) {{
-        return raiseInvalidKind(\"{kind}\", kind);
-    }}
+    MOZ_TRY(tokenizer_->enterInterface(kind, context));
     const auto start = tokenizer_->offset();
 {call}
     MOZ_TRY(guard.done());

@@ -62,6 +62,7 @@ namespace frontend {
  * (sorted by alphabetical order)
  */
 #define FOR_EACH_BIN_KIND(F)                                                  \
+  F(_Uninitialized, "Uninitialized", UNINITIALIZED)                           \
   F(_Null, "", NULL)                                                          \
   F(ArrayAssignmentTarget, "ArrayAssignmentTarget", ARRAY_ASSIGNMENT_TARGET)  \
   F(ArrayBinding, "ArrayBinding", ARRAY_BINDING)                              \
@@ -1763,6 +1764,9 @@ const size_t BINAST_SUM_STATEMENT_LIMIT = 24;
 // - OPTIONAL_STRING_ENUM: wrapper for optional string enum type names - called
 // as `OPTIONAL_STRING_ENUM(typename)` where
 //      `typename` is the name of the string enum (e.g. no `Maybe` prefix)
+#define FOR_EACH_BIN_FIELD_IN_INTERFACE_UNINITIALIZED(                    \
+    F, PRIMITIVE, INTERFACE, OPTIONAL_INTERFACE, LIST, SUM, OPTIONAL_SUM, \
+    STRING_ENUM, OPTIONAL_STRING_ENUM)
 
 // Strongly typed iteration through the fields of interface _Null.
 #define FOR_EACH_BIN_FIELD_IN_INTERFACE_NULL(                             \
