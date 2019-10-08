@@ -4910,6 +4910,15 @@ impl Renderer {
                                 results,
                             );
                         } else {
+                            if clear_framebuffer {
+                                let clear_color = self.clear_color.map(|color| color.to_array());
+                                self.device.bind_draw_target(draw_target);
+                                self.device.enable_depth_write();
+                                self.device.clear_target(clear_color,
+                                                         Some(1.0),
+                                                         None);
+                            }
+
                             self.draw_color_target(
                                 draw_target,
                                 main_target,
