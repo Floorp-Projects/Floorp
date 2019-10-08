@@ -9,6 +9,7 @@
 
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Variant.h"
 
 namespace mozilla {
 namespace ipc {
@@ -347,6 +348,75 @@ struct IPDLParamTraits<Tuple<Ts...>> {
                            IProtocol* aActor, Tuple<Ts...>& aResult,
                            std::index_sequence<Is...>) {
     return ReadIPDLParamList(aMsg, aIter, aActor, &Get<Is>(aResult)...);
+  }
+};
+
+template <class... Ts>
+struct IPDLParamTraits<mozilla::Variant<Ts...>> {
+  typedef mozilla::Variant<Ts...> paramType;
+  using Tag = typename mozilla::detail::VariantTag<Ts...>::Type;
+
+  static void Write(IPC::Message* aMsg, IProtocol* aActor,
+                    const paramType& aParam) {
+    WriteIPDLParam(aMsg, aActor, aParam.tag);
+    aParam.match(
+        [aMsg, aActor](const auto& t) { WriteIPDLParam(aMsg, aActor, t); });
+  }
+
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam) {
+    WriteIPDLParam(aMsg, aActor, aParam.tag);
+    aParam.match([aMsg, aActor](auto& t) {
+      WriteIPDLParam(aMsg, aActor, std::move(t));
+    });
+  }
+
+  // Because VariantReader is a nested struct, we need the dummy template
+  // parameter to avoid making VariantReader<0> an explicit specialization,
+  // which is not allowed for a nested class template
+  template <size_t N, typename dummy = void>
+  struct VariantReader {
+    using Next = VariantReader<N - 1>;
+
+    static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                     IProtocol* aActor, Tag aTag, paramType* aResult) {
+      // Since the VariantReader specializations start at N , we need to
+      // subtract one to look at N - 1, the first valid tag.  This means our
+      // comparisons are off by 1.  If we get to N = 0 then we have failed to
+      // find a match to the tag.
+      if (aTag == N - 1) {
+        // Recall, even though the template parameter is N, we are
+        // actually interested in the N - 1 tag.
+        // Default construct our field within the result outparameter and
+        // directly deserialize into the variant. Note that this means that
+        // every type in Ts needs to be default constructible.
+        return ReadIPDLParam(aMsg, aIter, aActor,
+                             &aResult->template emplace<N - 1>());
+      }
+      return Next::Read(aMsg, aIter, aActor, aTag, aResult);
+    }
+
+  };  // VariantReader<N>
+
+  // Since we are conditioning on tag = N - 1 in the preceding specialization,
+  // if we get to `VariantReader<0, dummy>` we have failed to find
+  // a matching tag.
+  template <typename dummy>
+  struct VariantReader<0, dummy> {
+    static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                     IProtocol* aActor, Tag aTag, paramType* aResult) {
+      return false;
+    }
+  };
+
+  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
+                   IProtocol* aActor, paramType* aResult) {
+    Tag tag;
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &tag)) {
+      return false;
+    }
+
+    return VariantReader<sizeof...(Ts)>::Read(aMsg, aIter, aActor, tag,
+                                              aResult);
   }
 };
 
