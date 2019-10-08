@@ -13,13 +13,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
 
     <menu id="menu" label="Menu">
       <menupopup id="file-popup">
-        <!-- <textbox id="some-text" maxlength="10" value="some text"/> -->
+        <!-- <input xmlns="http://www.w3.org/1999/xhtml" id="some-text" maxlength="10" value="some text"/> -->
         <menu label="submenu">
           <menupopup id="file-popup-inner">
 
             <menuitem label="Item1"/>
             <menuitem label="Item2"/>
-            <textbox id="some-text" maxlength="10" value="some more text"/>
+            <input xmlns="http://www.w3.org/1999/xhtml" id="some-text" maxlength="10" value="some more text"/>
           </menupopup>
         </menu>
         <menuitem label="Item3"/>
