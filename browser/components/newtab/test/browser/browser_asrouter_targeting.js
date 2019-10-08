@@ -823,6 +823,22 @@ add_task(async function check_hasAccessedFxAPanel() {
   );
 });
 
+add_task(async function check_isFxABadgeEnabled() {
+  is(
+    await ASRouterTargeting.Environment.isFxABadgeEnabled,
+    true,
+    "Default pref value is true"
+  );
+
+  await pushPrefs(["browser.messaging-system.fxatoolbarbadge.enabled", false]);
+
+  is(
+    await ASRouterTargeting.Environment.isFxABadgeEnabled,
+    false,
+    "Value should be false according to pref"
+  );
+});
+
 add_task(async function check_isWhatsNewPanelEnabled() {
   is(
     await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
@@ -836,6 +852,42 @@ add_task(async function check_isWhatsNewPanelEnabled() {
     await ASRouterTargeting.Environment.isWhatsNewPanelEnabled,
     false,
     "Should update based on pref, e.g., for holdback"
+  );
+});
+
+add_task(async function checkCFRFeaturesUserPref() {
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
+    false,
+  ]);
+  is(
+    ASRouterTargeting.Environment.userPrefs.cfrFeatures,
+    false,
+    "cfrFeature should be false according to pref"
+  );
+  const message = { id: "foo", targeting: "userPrefs.cfrFeatures == false" };
+  is(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "should select correct item by cfrFeature"
+  );
+});
+
+add_task(async function checkCFRAddonsUserPref() {
+  await pushPrefs([
+    "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
+    false,
+  ]);
+  is(
+    ASRouterTargeting.Environment.userPrefs.cfrAddons,
+    false,
+    "cfrFeature should be false according to pref"
+  );
+  const message = { id: "foo", targeting: "userPrefs.cfrAddons == false" };
+  is(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "should select correct item by cfrAddons"
   );
 });
 
