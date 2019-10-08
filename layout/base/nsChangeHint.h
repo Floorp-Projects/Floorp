@@ -147,16 +147,10 @@ enum nsChangeHint : uint32_t {
   nsChangeHint_BorderStyleNoneChange = 1 << 17,
 
   /**
-   * SVG textPath needs to be recomputed because the path has changed.
-   * This means that the glyph positions of the text need to be recomputed.
-   */
-  nsChangeHint_UpdateTextPath = 1 << 18,
-
-  /**
    * This will schedule an invalidating paint. This is useful if something
    * has changed which will be invalidated by DLBI.
    */
-  nsChangeHint_SchedulePaint = 1 << 19,
+  nsChangeHint_SchedulePaint = 1 << 18,
 
   /**
    * A hint reflecting that style data changed with no change handling
@@ -172,12 +166,12 @@ enum nsChangeHint : uint32_t {
    * different data would be cached information that would be re-calculated
    * to the same values, such as nsStyleBorder::mSubImages.)
    */
-  nsChangeHint_NeutralChange = 1 << 20,
+  nsChangeHint_NeutralChange = 1 << 19,
 
   /**
    * This will cause rendering observers to be invalidated.
    */
-  nsChangeHint_InvalidateRenderingObservers = 1 << 21,
+  nsChangeHint_InvalidateRenderingObservers = 1 << 20,
 
   /**
    * Indicates that the reflow changes the size or position of the
@@ -185,13 +179,13 @@ enum nsChangeHint : uint32_t {
    * parent.  Must be not be set without also setting nsChangeHint_NeedReflow.
    * And consider adding nsChangeHint_ClearAncestorIntrinsics if needed.
    */
-  nsChangeHint_ReflowChangesSizeOrPosition = 1 << 22,
+  nsChangeHint_ReflowChangesSizeOrPosition = 1 << 21,
 
   /**
    * Indicates that the style changes the computed BSize --- e.g. 'height'.
    * Must not be set without also setting nsChangeHint_NeedReflow.
    */
-  nsChangeHint_UpdateComputedBSize = 1 << 23,
+  nsChangeHint_UpdateComputedBSize = 1 << 22,
 
   /**
    * Indicates that the 'opacity' property changed between 1 and non-1.
@@ -201,7 +195,7 @@ enum nsChangeHint : uint32_t {
    * Note that we do not send this hint if the non-1 value was 0.99 or
    * greater, since in that case we send a RepaintFrame hint instead.
    */
-  nsChangeHint_UpdateUsesOpacity = 1 << 24,
+  nsChangeHint_UpdateUsesOpacity = 1 << 23,
 
   /**
    * Indicates that the 'background-position' property changed.
@@ -210,13 +204,13 @@ enum nsChangeHint : uint32_t {
    * the frame does not build individual background image display items
    * for each background layer.
    */
-  nsChangeHint_UpdateBackgroundPosition = 1 << 25,
+  nsChangeHint_UpdateBackgroundPosition = 1 << 24,
 
   /**
    * Indicates that a frame has changed to or from having the CSS
    * transform property set.
    */
-  nsChangeHint_AddOrRemoveTransform = 1 << 26,
+  nsChangeHint_AddOrRemoveTransform = 1 << 25,
 
   /**
    * Indicates that the presence of scrollbars might have changed.
@@ -228,19 +222,19 @@ enum nsChangeHint : uint32_t {
    * scrollframe, this is instead equivalent to nsChangeHint_AllReflowHints
    * (because the viewport always has an associated scrollframe).
    */
-  nsChangeHint_ScrollbarChange = 1 << 27,
+  nsChangeHint_ScrollbarChange = 1 << 26,
 
   /**
    * Indicates that nsIFrame::UpdateWidgetProperties needs to be called.
    * This is used for -moz-window-* properties.
    */
-  nsChangeHint_UpdateWidgetProperties = 1 << 28,
+  nsChangeHint_UpdateWidgetProperties = 1 << 27,
 
   /**
    *  Indicates that there has been a colspan or rowspan attribute change
    *  on the cells of a table.
    */
-  nsChangeHint_UpdateTableCellSpans = 1 << 29,
+  nsChangeHint_UpdateTableCellSpans = 1 << 28,
 
   /**
    * Indicates that the visiblity property changed.
@@ -248,7 +242,7 @@ enum nsChangeHint : uint32_t {
    * visibility:hidden elements in the case where the elements have no visible
    * descendants.
    */
-  nsChangeHint_VisibilityChange = 1u << 30,
+  nsChangeHint_VisibilityChange = 1u << 29,
 
   // IMPORTANT NOTE: When adding a new hint, you will need to add it to
   // one of:
@@ -265,7 +259,7 @@ enum nsChangeHint : uint32_t {
   /**
    * Dummy hint value for all hints. It exists for compile time check.
    */
-  nsChangeHint_AllHints = uint32_t((1ull << 31) - 1),
+  nsChangeHint_AllHints = uint32_t((1ull << 30) - 1),
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -334,7 +328,7 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight) {
    nsChangeHint_NeutralChange | nsChangeHint_ReconstructFrame |            \
    nsChangeHint_RepaintFrame | nsChangeHint_SchedulePaint |                \
    nsChangeHint_UpdateCursor | nsChangeHint_UpdateSubtreeOverflow |        \
-   nsChangeHint_UpdateTextPath | nsChangeHint_VisibilityChange)
+   nsChangeHint_VisibilityChange)
 
 // The change hints that are never handled for descendants.
 #define nsChangeHint_Hints_NeverHandledForDescendants                         \

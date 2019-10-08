@@ -554,7 +554,6 @@ nsCString RestyleManager::ChangeHintToString(nsChangeHint aHint) {
                          "RecomputePosition",
                          "UpdateContainingBlock",
                          "BorderStyleNoneChange",
-                         "UpdateTextPath",
                          "SchedulePaint",
                          "NeutralChange",
                          "InvalidateRenderingObservers",
@@ -1052,19 +1051,6 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       }
 
       ActiveLayerTracker::NotifyNeedsRepaint(aFrame);
-    }
-    if (aChange & nsChangeHint_UpdateTextPath) {
-      if (nsSVGUtils::IsInSVGTextSubtree(aFrame)) {
-        // Invalidate and reflow the entire SVGTextFrame:
-        NS_ASSERTION(aFrame->GetContent()->IsSVGElement(nsGkAtoms::textPath),
-                     "expected frame for a <textPath> element");
-        nsIFrame* text = nsLayoutUtils::GetClosestFrameOfType(
-            aFrame, LayoutFrameType::SVGText);
-        NS_ASSERTION(text, "expected to find an ancestor SVGTextFrame");
-        static_cast<SVGTextFrame*>(text)->NotifyGlyphMetricsChange();
-      } else {
-        MOZ_ASSERT(false, "unexpected frame got nsChangeHint_UpdateTextPath");
-      }
     }
     if (aChange & nsChangeHint_UpdateOpacityLayer) {
       // FIXME/bug 796697: we can get away with empty transactions for
