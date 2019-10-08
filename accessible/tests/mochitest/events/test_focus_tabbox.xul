@@ -4,6 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="Tabbox focus testing">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -34,11 +35,11 @@
       // Test focus events.
       gQueue = new eventQueue();
 
-      var textbox = getNode("textbox").inputField;
+      var input = getNode("input");
       gQueue.push(new synthClick("tab1", new focusChecker("tab1")));
       gQueue.push(new synthTab("tab1", new focusChecker("checkbox1")));
       gQueue.push(new synthKey("tab1", "VK_TAB", { ctrlKey: true },
-                               new focusChecker(textbox)));
+                               new focusChecker(input)));
       gQueue.push(new synthKey("tab2", "VK_TAB", { ctrlKey: true },
                                new focusChecker("tab3")));
       gQueue.push(new synthKey("tab3", "VK_TAB", { ctrlKey: true },
@@ -87,7 +88,7 @@
             <label value="Label After checkboxes" />
           </tabpanel>
           <tabpanel orient="vertical">
-            <textbox id="textbox" />
+            <html:input id="input" />
           </tabpanel>
           <tabpanel orient="vertical">
             <description>Tab 3 content</description>
