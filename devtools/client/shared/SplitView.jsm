@@ -50,7 +50,6 @@ this.SplitView = function SplitView(aRoot) {
     if (
       aEvent.target.ownerDocument != this._nav.ownerDocument ||
       aEvent.target.tagName == "input" ||
-      aEvent.target.tagName == "textbox" ||
       aEvent.target.tagName == "textarea" ||
       aEvent.target.classList.contains("textbox")
     ) {

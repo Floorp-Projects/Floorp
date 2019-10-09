@@ -527,24 +527,8 @@ void Element::ClearStyleStateLocks() {
 
 #ifdef MOZ_XBL
 static bool MayNeedToLoadXBLBinding(const Element& aElement) {
-  if (!aElement.IsAnyOfXULElements(nsGkAtoms::textbox)) {
-    // Other elements no longer have XBL bindings. Please don't add to the list
-    // above unless completely necessary.
-    return false;
-  }
-  if (!aElement.IsInComposedDoc()) {
-    return false;
-  }
-  // If we have a frame, the frame has already loaded the binding.
-  if (aElement.GetPrimaryFrame() || !aElement.OwnerDoc()->GetPresShell()) {
-    return false;
-  }
-  // If we have a binding, well..
-  if (aElement.GetXBLBinding()) {
-    return false;
-  }
-  // We need to try.
-  return true;
+  // Clean this up in https://bugzilla.mozilla.org/show_bug.cgi?id=1585823
+  return false;
 }
 #endif
 

@@ -441,13 +441,6 @@ const Preferences = (window.Preferences = (function() {
       }
       if (aElement.localName == "checkbox") {
         setValue(aElement, "checked", val);
-      } else if (aElement.localName == "textbox") {
-        // XXXmano Bug 303998: Avoid a caret placement issue if either the
-        // preference observer or its setter calls updateElements as a result
-        // of the input event handler.
-        if (aElement.value !== val) {
-          setValue(aElement, "value", val);
-        }
       } else {
         setValue(aElement, "value", val);
       }
@@ -499,7 +492,6 @@ const Preferences = (window.Preferences = (function() {
         case "input":
         case "radiogroup":
         case "textarea":
-        case "textbox":
         case "menulist":
           return true;
       }

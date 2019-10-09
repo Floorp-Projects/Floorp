@@ -225,7 +225,7 @@ xul|label[disabled="true"] {
 }
 
 html|input {
-  margin: 2px 4px; /* matches xul <textbox> default margin */
+  margin: 2px 4px;
 }
 
 xul|popupnotificationcontent {
