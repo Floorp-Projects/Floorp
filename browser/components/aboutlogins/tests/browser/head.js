@@ -87,6 +87,13 @@ add_task(async function setup() {
       // Ignore warnings and non-errors.
       return;
     }
+    if (
+      msg.errorMessage == "Refreshing device list failed." ||
+      msg.errorMessage == "Skipping device list refresh; not signed in"
+    ) {
+      // Ignore errors from browser-sync.js.
+      return;
+    }
     ok(false, msg.message || msg.errorMessage);
   });
 
