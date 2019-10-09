@@ -46,6 +46,12 @@ function TargetMixin(parentClass) {
       this.activeConsole = null;
       this.threadFront = null;
 
+      // By default, we close the DebuggerClient of local tabs which
+      // are instanciated from TargetFactory module.
+      // This flag will also be set on local targets opened from about:debugging,
+      // for which a dedicated DebuggerClient is also created.
+      this.shouldCloseClient = this.isLocalTab;
+
       this._client = client;
 
       // Cache of already created targed-scoped fronts
@@ -453,16 +459,12 @@ function TargetMixin(parentClass) {
 
         this.threadFront = null;
 
-        if (this.isLocalTab || this.shouldCloseClient) {
-          // Local tab targets are typically instantiated from TargetFactory.
-          // And we ought to destroy their client at some point. We do it from here.
-          // There is also the clients created by about:debugging toolboxes opened
-          // for local Firefox's targets, which sets the `shouldCloseClient` attribute.
-          // Ignore any errors while closing, since there is not much that can be done
-          // at this point.
+        if (this.shouldCloseClient) {
           try {
             await this._client.close();
           } catch (e) {
+            // Ignore any errors while closing, since there is not much that can be done
+            // at this point.
             console.warn(`Error while closing client: ${e.message}`);
           }
 
