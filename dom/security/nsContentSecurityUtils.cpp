@@ -555,6 +555,8 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
     NS_LITERAL_CSTRING("about:sync-log"),
     // about:printpreview displays plain text only -> no CSP
     NS_LITERAL_CSTRING("about:printpreview"),
+    // about:logo just displays the firefox logo -> no CSP
+    NS_LITERAL_CSTRING("about:logo"),
 #  if defined(ANDROID)
     NS_LITERAL_CSTRING("about:config"),
 #  endif

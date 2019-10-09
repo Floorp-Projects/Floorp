@@ -1488,8 +1488,6 @@ class Element : public FragmentOrElement {
    */
   static CORSMode AttrValueToCORSMode(const nsAttrValue* aValue);
 
-  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
-
   nsINode* GetScopeChainParent() const override;
 
   /**

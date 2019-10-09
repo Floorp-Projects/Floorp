@@ -50,10 +50,11 @@ void TraceCallbackFunc::Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
   }
 }
 
-void TraceCallbackFunc::Trace(JSObject** aPtr, const char* aName,
+void TraceCallbackFunc::Trace(nsWrapperCache* aPtr, const char* aName,
                               void* aClosure) const {
-  if (*aPtr) {
-    mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
+  JSObject* obj = aPtr->GetWrapperPreserveColor();
+  if (obj) {
+    mCallback(JS::GCCellPtr(obj), aName, aClosure);
   }
 }
 

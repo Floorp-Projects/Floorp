@@ -562,6 +562,15 @@ MarkupContainer.prototype = {
       event.preventDefault();
     }
 
+    // Middle clicks will trigger the scroll lock feature to turn on.
+    // The toolbox is normally responsible for calling preventDefault when
+    // needed, but we prevent markup-view mousedown events from bubbling up (via
+    // stopPropagation). So we have to preventDefault here as well in order to
+    // avoid this issue.
+    if (isMiddleClick) {
+      event.preventDefault();
+    }
+
     // Follow attribute links if middle or meta click.
     if (isMiddleClick || isMetaClick) {
       const link = target.dataset.link;

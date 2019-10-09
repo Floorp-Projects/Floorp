@@ -37,7 +37,7 @@ void MozillaUnRegisterDebugFILE(FILE* aFile);
 
 MOZ_END_EXTERN_C
 
-#if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(__MINGW32__))
+#if defined(XP_MACOSX) || defined(XP_WIN)
 
 #  ifdef __cplusplus
 namespace mozilla {
@@ -74,7 +74,7 @@ void ClearPoisonIOInterposer();
 }  // namespace mozilla
 #  endif /* __cplusplus */
 
-#else /* defined(XP_MACOSX) || (defined(XP_WIN) && !defined(__MINGW32__)) */
+#else /* defined(XP_MACOSX) || defined(XP_WIN) */
 
 #  ifdef __cplusplus
 namespace mozilla {
