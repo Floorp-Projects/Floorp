@@ -837,6 +837,22 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
   return NS_OK;
 }
 
+void BrowsingContext::DisplayLoadError(const nsAString& aURI) {
+  MOZ_LOG(GetLog(), LogLevel::Debug, ("DisplayLoadError"));
+  MOZ_DIAGNOSTIC_ASSERT(!IsDiscarded());
+  MOZ_DIAGNOSTIC_ASSERT(mDocShell || XRE_IsParentProcess());
+
+  if (mDocShell) {
+    bool didDisplayLoadError = false;
+    mDocShell->DisplayLoadError(NS_ERROR_MALFORMED_URI, nullptr,
+                                PromiseFlatString(aURI).get(), nullptr,
+                                &didDisplayLoadError);
+  } else {
+    Unused << Canonical()->GetCurrentWindowGlobal()->SendDisplayLoadError(
+        PromiseFlatString(aURI));
+  }
+}
+
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   // FIXME We need to set mClosed, but only once we're sending the
   //       DOMWindowClose event (which happens in the process where the
