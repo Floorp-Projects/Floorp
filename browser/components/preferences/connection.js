@@ -469,9 +469,7 @@ var gConnectionsDialog = {
       return;
     }
     let [menu, customInput] = this.getDnsOverHttpsControls();
-    let dohUIContainer = document.getElementById(
-      "dnsOverHttps-grid"
-    );
+    let dohUIContainer = document.getElementById("dnsOverHttps-grid");
     let customURI = Preferences.get("network.trr.custom_uri").value;
     let currentURI = Preferences.get("network.trr.uri").value;
     let resolvers = this.dnsOverHttpsResolvers;
