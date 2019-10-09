@@ -53,7 +53,7 @@ child:
    */
   async GetSecurityInfo() returns(nsCString? serializedSecInfo);
 
-  async LoadURIInChild(nsDocShellLoadState aLoadState);
+  async LoadURIInChild(nsDocShellLoadState aLoadState, bool aSetNavigating);
 
 both:
   async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData);
@@ -62,7 +62,7 @@ parent:
   // Load the given URI load state into the current owner process of the given
   // BrowsingContext. aTargetBC must be in the same BrowsingContextGroup as this
   // window global.
-  async LoadURI(BrowsingContext aTargetBC, nsDocShellLoadState aLoadState);
+  async LoadURI(BrowsingContext aTargetBC, nsDocShellLoadState aLoadState, bool aSetNavigating);
 
   /// Update the URI of the document in this WindowGlobal.
   async UpdateDocumentURI(nsIURI aUri);
