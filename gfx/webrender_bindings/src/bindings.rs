@@ -1203,10 +1203,6 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         ColorF::new(0.0, 0.0, 0.0, 0.0)
     };
 
-    if !enable_picture_caching {
-        info!("WebRender - picture-caching cannot be disabled until bug 1587084 is resolved.");
-    }
-
     let opts = RendererOptions {
         enable_aa: true,
         enable_subpixel_aa: cfg!(not(target_os = "android")),
@@ -1238,7 +1234,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         clear_color: Some(color),
         precache_flags,
         namespace_alloc_by_client: true,
-        enable_picture_caching: true,
+        enable_picture_caching,
         allow_pixel_local_storage_support: false,
         start_debug_server,
         ..Default::default()
