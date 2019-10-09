@@ -210,7 +210,8 @@ function CreateProfileWizard() {
     "chrome://mozapps/content/profile/createProfileWizard.xul",
     "",
     "centerscreen,chrome,modal,titlebar",
-    gProfileService
+    gProfileService,
+    { CreateProfile }
   );
 }
 
