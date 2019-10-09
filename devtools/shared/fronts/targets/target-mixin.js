@@ -333,7 +333,7 @@ function TargetMixin(parentClass) {
     }
 
     get canRewind() {
-      return this.traits.canRewind;
+      return this.traits && this.traits.canRewind;
     }
 
     isReplayEnabled() {

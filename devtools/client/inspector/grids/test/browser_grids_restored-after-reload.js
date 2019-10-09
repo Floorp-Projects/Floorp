@@ -70,7 +70,12 @@ add_task(async function() {
     store,
     state => state.grids.length == 1 && state.grids[0].highlighted
   );
+
+  const onReloaded = inspector.once("reloaded");
   await refreshTab();
+  info("Wait for inspector to be reloaded after page reload");
+  await onReloaded;
+
   let { restored } = await onStateRestored;
   await onGridListRestored;
 

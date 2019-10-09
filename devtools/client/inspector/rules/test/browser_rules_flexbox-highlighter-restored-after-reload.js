@@ -43,7 +43,12 @@ add_task(async function() {
 
   info("Reload the page, expect the highlighter to be displayed once again");
   let onStateRestored = highlighters.once("flexbox-state-restored");
+
+  const onReloaded = inspector.once("reloaded");
   await refreshTab();
+  info("Wait for inspector to be reloaded after page reload");
+  await onReloaded;
+
   let { restored } = await onStateRestored;
   ok(restored, "The highlighter state was restored");
 
