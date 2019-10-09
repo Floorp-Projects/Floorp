@@ -342,8 +342,10 @@ TimerManager.prototype = {
   /**
    * See nsIUpdateTimerManager.idl
    */
-  registerTimer: function TM_registerTimer(id, callback, interval) {
-    LOG(`TimerManager:registerTimer - timerID: ${id} interval: ${interval}`);
+  registerTimer: function TM_registerTimer(id, callback, interval, skipFirst) {
+    LOG(
+      `TimerManager:registerTimer - timerID: ${id} interval: ${interval} skipFirst: ${skipFirst}`
+    );
     if (this._timers === null) {
       // Use normal logging since reportError is not available while shutting
       // down.
@@ -370,6 +372,9 @@ TimerManager.prototype = {
       lastUpdateTime = 0;
     }
     if (lastUpdateTime == 0) {
+      if (skipFirst) {
+        lastUpdateTime = now;
+      }
       Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
     }
     this._timers[id] = { callback, interval, lastUpdateTime };

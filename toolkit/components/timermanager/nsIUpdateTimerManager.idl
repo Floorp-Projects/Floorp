@@ -19,7 +19,8 @@ interface nsIUpdateTimerManager : nsISupports
    * Register an interval with the timer manager. The timer manager
    * periodically checks to see if the interval has expired and if it has
    * calls the specified callback. This is persistent across application
-   * restarts and can handle intervals of long durations.
+   * restarts and can handle intervals of long durations. The callback will be
+   * called soon after the first registration unless you ask to skip it.
    * @param   id
    *          An id that identifies the interval, used for persistence
    * @param   callback
@@ -27,6 +28,8 @@ interface nsIUpdateTimerManager : nsISupports
    *          expires
    * @param   interval
    *          The length of time, in seconds, of the interval
+   * @param   skipFirst
+   *          Whether to skip the initial callback on first registration.
    *
    * Note: to avoid having to instantiate a component to call registerTimer
    * the component can intead register an update-timer category with comma
@@ -46,7 +49,8 @@ interface nsIUpdateTimerManager : nsISupports
    */
   void registerTimer(in AString id,
                      in nsITimerCallback callback,
-                     in unsigned long interval);
+                     in unsigned long interval,
+                     [optional] in boolean skipFirst);
 
   /**
    * Unregister an existing interval from the timer manager.
