@@ -332,6 +332,13 @@ interface nsIXPCComponents_Utils : nsISupports
     [implicit_jscontext]
     jsval getJSTestingFunctions();
 
+    /**
+     * Returns an object containing `filename` and `lineNumber` properties
+     * describing the source location of the given function.
+     */
+    [implicit_jscontext]
+    jsval getFunctionSourceLocation(in jsval func);
+
     /*
      * To be called from JS only.
      *
