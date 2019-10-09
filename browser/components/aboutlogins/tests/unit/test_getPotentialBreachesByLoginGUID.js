@@ -121,7 +121,6 @@ add_task(async function test_notBreachedLogin() {
 
 add_task(async function test_breachedLogin() {
   Services.logins.addLogin(BREACHED_LOGIN);
-
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(
     [NOT_BREACHED_LOGIN, BREACHED_LOGIN],
     TEST_BREACHES
@@ -130,6 +129,11 @@ add_task(async function test_breachedLogin() {
     breachesByLoginGUID.size,
     1,
     "Should be 1 breached login: " + BREACHED_LOGIN.origin
+  );
+  Assert.strictEqual(
+    breachesByLoginGUID.get(BREACHED_LOGIN.guid).breachAlertURL,
+    "https://monitor.firefox.com/breach-details/Breached?utm_source=firefox-desktop&utm_medium=referral&utm_campaign=about-logins&utm_content=about-logins",
+    "Breach alert link should be equal to the breachAlertURL"
   );
 });
 

@@ -116,6 +116,10 @@ this.LoginBreaches = {
         }
 
         let breachAlertURL = new URL(breach.Name, baseBreachAlertURL);
+        breachAlertURL.searchParams.set("utm_source", "firefox-desktop");
+        breachAlertURL.searchParams.set("utm_medium", "referral");
+        breachAlertURL.searchParams.set("utm_campaign", "about-logins");
+        breachAlertURL.searchParams.set("utm_content", "about-logins");
         breach.breachAlertURL = breachAlertURL.href;
         breachesByLoginGUID.set(login.guid, breach);
       }
