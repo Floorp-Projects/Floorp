@@ -1942,7 +1942,7 @@ dom::MediaCapabilities* Navigator::MediaCapabilities() {
 
 dom::MediaSession* Navigator::MediaSession() {
   if (!mMediaSession) {
-    mMediaSession = new dom::MediaSession();
+    mMediaSession = new dom::MediaSession(GetWindow());
   }
   return mMediaSession;
 }
