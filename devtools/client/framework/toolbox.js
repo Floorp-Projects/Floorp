@@ -299,15 +299,6 @@ function Toolbox(
 
   EventEmitter.decorate(this);
 
-  this._target.on("will-navigate", this._onWillNavigate);
-  this._target.on("navigate", this._refreshHostTitle);
-  this._target.on("frame-update", this._updateFrames);
-  this._target.on("inspect-object", this._onInspectObject);
-
-  this._target.onFront("inspector", async inspectorFront => {
-    registerWalkerListeners(this.store, inspectorFront.walker);
-  });
-
   this.on("host-changed", this._refreshHostTitle);
   this.on("select", this._onToolSelected);
 
@@ -484,6 +475,39 @@ Toolbox.prototype = {
   },
 
   /**
+   * Instruct the toolbox to switch to a new top-level target.
+   * It means that the currently debugged target is destroyed in favor of a new one.
+   * This typically happens when navigating to a new URL which has to be loaded
+   * in a distinct process.
+   */
+  async switchToTarget(newTarget) {
+    // First unregister the current target
+    this.detachTarget();
+
+    this._target = newTarget;
+
+    // Notify gDevTools that the toolbox is now hooked to another tab target.
+    this.emit("switch-target", newTarget);
+
+    // Attach the toolbox to this new target
+    await this._attachTargets(newTarget);
+    await this._listFrames();
+    await this.initPerformance();
+
+    // Notify all the tools that the target has changed
+    await Promise.all(
+      [...this._toolPanels.values()].map(panel => {
+        if (panel.switchToTarget) {
+          return panel.switchToTarget(newTarget);
+        }
+        return Promise.resolve();
+      })
+    );
+
+    this.emit("switched-target", newTarget);
+  },
+
+  /**
    * Get/alter the target of a Toolbox so we're debugging something different.
    * See Target.jsm for more details.
    * TODO: Do we allow |toolbox.target = null;| ?
@@ -584,6 +608,16 @@ Toolbox.prototype = {
    * additional targets we may care about.
    */
   async _attachTargets(target) {
+    // For now, register these event listeners only on the top level target
+    this._target.on("will-navigate", this._onWillNavigate);
+    this._target.on("navigate", this._refreshHostTitle);
+    this._target.on("frame-update", this._updateFrames);
+    this._target.on("inspect-object", this._onInspectObject);
+
+    this._target.onFront("inspector", async inspectorFront => {
+      registerWalkerListeners(this.store, inspectorFront.walker);
+    });
+
     this._threadFront = await this._attachTarget(target);
 
     const fissionSupport = Services.prefs.getBoolPref(
@@ -696,7 +730,6 @@ Toolbox.prototype = {
 
       // Optimization: fire up a few other things before waiting on
       // the iframe being ready (makes startup faster)
-
       await this._attachTargets(this.target);
 
       await domReady;
@@ -847,6 +880,17 @@ Toolbox.prototype = {
         // passing `e` to console.error, it is not on the stdout, so print it via dump.
         dump(e.stack + "\n");
       });
+  },
+
+  detachTarget() {
+    this._target.off("inspect-object", this._onInspectObject);
+    this._target.off("will-navigate", this._onWillNavigate);
+    this._target.off("navigate", this._refreshHostTitle);
+    this._target.off("frame-update", this._updateFrames);
+
+    // Detach the thread
+    this._stopThreadFrontListeners();
+    this._threadFront = null;
   },
 
   /**
@@ -3469,10 +3513,6 @@ Toolbox.prototype = {
   _destroyToolbox: async function() {
     this.emit("destroy");
 
-    this._target.off("inspect-object", this._onInspectObject);
-    this._target.off("will-navigate", this._onWillNavigate);
-    this._target.off("navigate", this._refreshHostTitle);
-    this._target.off("frame-update", this._updateFrames);
     this.off("select", this._onToolSelected);
     this.off("host-changed", this._refreshHostTitle);
 
@@ -3549,9 +3589,7 @@ Toolbox.prototype = {
     // Reset preferences set by the toolbox
     outstanding.push(this.resetPreference());
 
-    // Detach the thread
-    this._stopThreadFrontListeners();
-    this._threadFront = null;
+    this.detachTarget();
 
     // Unregister buttons listeners
     this.toolbarButtons.forEach(button => {
