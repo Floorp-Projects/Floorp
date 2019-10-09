@@ -80,6 +80,8 @@ class VRDisplay;
 class VRServiceTest;
 class StorageManager;
 class MediaCapabilities;
+struct ShareData;
+class WindowGlobalChild;
 
 class Navigator final : public nsISupports, public nsWrapperCache {
  public:
@@ -130,6 +132,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   void GetDoNotTrack(nsAString& aResult);
   Geolocation* GetGeolocation(ErrorResult& aRv);
   Promise* GetBattery(ErrorResult& aRv);
+
+  Promise* Share(const ShareData& aData, ErrorResult& aRv);
 
   static void AppName(nsAString& aAppName, nsIPrincipal* aCallerPrincipal,
                       bool aUsePrefOverriddenValue);
@@ -276,6 +280,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   RefPtr<dom::MediaCapabilities> mMediaCapabilities;
   RefPtr<AddonManager> mAddonManager;
   RefPtr<webgpu::Instance> mWebGpu;
+  RefPtr<Promise> mSharePromise;  // Web Share API related
 };
 
 }  // namespace dom
