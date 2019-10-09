@@ -211,19 +211,8 @@
     function recvDomTest(message) {
       savedElement = message.objects.element;
 
-      is(savedElement.QueryInterface(Ci.nsISupports), savedElement,
-         "QI to nsISupports works");
-
-      function testNoInterface(savedElement, i) {
-        try {
-          savedElement.QueryInterface(i);
-          ok(false, "should have thrown an exception");
-        } catch (e) {
-          is(e.result, Cr.NS_ERROR_NO_INTERFACE, "threw the right exception");
-        }
-      }
-
-      testNoInterface(savedElement, Ci.nsIClassInfo);
+      is(savedElement.QueryInterface, undefined,
+         "Should not have a QueryInterface");
 
       // Test to ensure that we don't pass CPOWs to C++-implemented interfaces.
       // See bug 1072980.
