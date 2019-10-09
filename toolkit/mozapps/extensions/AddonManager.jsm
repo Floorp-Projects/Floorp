@@ -2300,10 +2300,15 @@ var AddonManagerInternal = {
     }
 
     try {
-      if (topBrowser.ownerGlobal.fullScreen) {
-        // Addon installation and the resulting notifications should be blocked in fullscreen for security and usability reasons.
-        // Installation prompts in fullscreen can trick the user into installing unwanted addons.
-        // In fullscreen the notification box does not have a clear visual association with its parent anymore.
+      // Use fullscreenElement to check for DOM fullscreen, while still allowing
+      // macOS fullscreen, which still has a browser chrome.
+      if (topBrowser.ownerDocument.fullscreenElement) {
+        // Addon installation and the resulting notifications should be
+        // blocked in DOM fullscreen for security and usability reasons.
+        // Installation prompts in fullscreen can trick the user into
+        // installing unwanted addons.
+        // In fullscreen the notification box does not have a clear
+        // visual association with its parent anymore.
         aInstall.cancel();
 
         this.installNotifyObservers(
