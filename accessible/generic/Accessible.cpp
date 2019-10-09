@@ -809,32 +809,6 @@ void Accessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
   }
 
   aName.CompressWhitespace();
-  if (!aName.IsEmpty()) return;
-
-  // Can get text from title of <toolbaritem> if we're a child of a
-  // <toolbaritem>
-  nsIContent* bindingParent = aElm->GetBindingParent();
-  nsIContent* parent =
-      bindingParent ? bindingParent->GetParent() : aElm->GetParent();
-  nsAutoString ancestorTitle;
-  while (parent) {
-    if (parent->IsXULElement(nsGkAtoms::toolbaritem) &&
-        parent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::title,
-                                     ancestorTitle)) {
-      // Before returning this, check if the element itself has a tooltip:
-      if (aElm->IsElement() &&
-          aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext,
-                                     aName)) {
-        aName.CompressWhitespace();
-        return;
-      }
-
-      aName.Assign(ancestorTitle);
-      aName.CompressWhitespace();
-      return;
-    }
-    parent = parent->GetParent();
-  }
 }
 
 nsresult Accessible::HandleAccEvent(AccEvent* aEvent) {
