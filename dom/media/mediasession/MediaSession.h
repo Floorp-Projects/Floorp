@@ -10,12 +10,13 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/MediaMetadata.h"
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-class nsIGlobalObject;
+class nsPIDOMWindowInner;
 
 namespace mozilla {
 namespace dom {
@@ -26,10 +27,10 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaSession)
 
-  MediaSession() = default;
+  explicit MediaSession(nsPIDOMWindowInner* aParent);
 
   // WebIDL methods
-  nsIGlobalObject* GetParentObject() const;
+  nsPIDOMWindowInner* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -43,6 +44,10 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
 
  private:
   ~MediaSession() = default;
+
+  nsCOMPtr<nsPIDOMWindowInner> mParent;
+
+  RefPtr<MediaMetadata> mMediaMetadata;
 };
 
 }  // namespace dom

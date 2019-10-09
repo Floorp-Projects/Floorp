@@ -57,8 +57,22 @@ class MediaMetadata final : public nsISupports, public nsWrapperCache {
                   ErrorResult& aRv);
 
  private:
-  MediaMetadata() = default;
+  MediaMetadata(nsIGlobalObject* aParent, const nsString& aTitle,
+                const nsString& aArtist, const nsString& aAlbum);
+
   ~MediaMetadata() = default;
+
+  // Perform `convert artwork algorithm`. Set `mArtwork` to a converted
+  // `aArtwork` if the conversion works, otherwise throw a type error in `aRv`.
+  void SetArtworkInternal(const Sequence<MediaImage>& aArtwork,
+                          ErrorResult& aRv);
+
+  nsCOMPtr<nsIGlobalObject> mParent;
+
+  nsString mTitle;
+  nsString mArtist;
+  nsString mAlbum;
+  nsTArray<MediaImage> mArtwork;
 };
 
 }  // namespace dom
