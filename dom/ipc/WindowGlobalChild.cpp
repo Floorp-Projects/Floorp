@@ -310,6 +310,16 @@ static nsresult ChangeFrameRemoteness(WindowGlobalChild* aWgc,
   return NS_OK;
 }
 
+mozilla::ipc::IPCResult WindowGlobalChild::RecvDisplayLoadError(
+    const nsAString& aURI) {
+  bool didDisplayLoadError = false;
+  mWindowGlobal->GetDocShell()->DisplayLoadError(
+      NS_ERROR_MALFORMED_URI, nullptr, PromiseFlatString(aURI).get(), nullptr,
+      &didDisplayLoadError);
+  mWindowGlobal->GetBrowserChild()->NotifyNavigationFinished();
+  return IPC_OK();
+}
+
 IPCResult WindowGlobalChild::RecvChangeFrameRemoteness(
     dom::BrowsingContext* aBc, const nsString& aRemoteType,
     uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver) {

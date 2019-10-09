@@ -55,6 +55,8 @@ child:
 
   async LoadURIInChild(nsDocShellLoadState aLoadState, bool aSetNavigating);
 
+  async DisplayLoadError(nsString aURI);
+
 both:
   async RawMessage(JSWindowActorMessageMeta aMetadata, ClonedMessageData aData);
 
