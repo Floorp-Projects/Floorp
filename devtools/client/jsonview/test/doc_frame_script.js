@@ -3,27 +3,11 @@
 
 "use strict";
 
-/* globals Services, sendAsyncMessage, addMessageListener */
+/* globals sendAsyncMessage, addMessageListener */
 
 // XXX Some helper API could go to:
 // testing/mochitest/tests/SimpleTest/AsyncContentUtils.js
 // (or at least to share test API in devtools)
-
-// Set up a dummy environment so that EventUtils works. We need to be careful to
-// pass a window object into each EventUtils method we call rather than having
-// it rely on the |window| global.
-const EventUtils = {};
-EventUtils.window = content;
-EventUtils.parent = EventUtils.window;
-EventUtils._EU_Ci = Ci; // eslint-disable-line
-EventUtils._EU_Cc = Cc; // eslint-disable-line
-EventUtils.navigator = content.navigator;
-EventUtils.KeyboardEvent = content.KeyboardEvent;
-
-Services.scriptloader.loadSubScript(
-  "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
-  EventUtils
-);
 
 /**
  * When the ready state of the JSON View app changes, it triggers custom event
