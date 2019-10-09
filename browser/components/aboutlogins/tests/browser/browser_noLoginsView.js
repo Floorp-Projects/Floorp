@@ -28,7 +28,9 @@ add_task(async function test_no_logins_class() {
       "login-list should be in no logins view"
     );
 
-    let loginIntro = content.document.querySelector("login-intro");
+    let loginIntro = Cu.waiveXrays(
+      content.document.querySelector("login-intro")
+    );
     let loginItem = content.document.querySelector("login-item");
     let loginListIntro = loginList.shadowRoot.querySelector(".intro");
     let loginListList = loginList.shadowRoot.querySelector("ol");
@@ -49,6 +51,23 @@ add_task(async function test_no_logins_class() {
     ok(
       isElementHidden(loginListList),
       "login-list logins list should be hidden in no logins view"
+    );
+    is(
+      content.document.l10n.getAttributes(
+        loginIntro.shadowRoot.querySelector(".heading")
+      ).id,
+      "login-intro-heading",
+      "The default message should be the non-logged-in message"
+    );
+
+    loginIntro.updateState(Cu.cloneInto({ loggedIn: true }, content));
+
+    is(
+      content.document.l10n.getAttributes(
+        loginIntro.shadowRoot.querySelector(".heading")
+      ).id,
+      "about-logins-login-intro-heading-logged-in",
+      "When logged in the message should update"
     );
   });
 });
