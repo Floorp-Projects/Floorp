@@ -411,7 +411,7 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     for (let i = 1; i < childCount; i++) {
       const child = Services.ppmm.getChildAt(i);
       if (child == mm) {
-        processId = i;
+        processId = mm.osPid;
         break;
       }
     }

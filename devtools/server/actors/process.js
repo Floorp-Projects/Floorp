@@ -24,12 +24,12 @@ ProcessActorList.prototype = {
   getList: function() {
     const processes = [];
     for (let i = 0; i < ppmm.childCount; i++) {
+      const mm = ppmm.getChildAt(i);
       processes.push({
-        // XXX: may not be a perfect id, but process message manager doesn't
-        // expose anything...
-        id: i,
-        // XXX Weak, but appear to be stable
-        parent: i == 0,
+        // An ID of zero is always used for the parent. It would be nice to fix
+        // this so that the pid is also used for the parent, see bug 1587443.
+        id: mm.isInProcess ? 0 : mm.osPid,
+        parent: mm.isInProcess,
         // TODO: exposes process message manager on frameloaders in order to compute this
         tabCount: undefined,
       });
