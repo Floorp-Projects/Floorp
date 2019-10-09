@@ -56,12 +56,11 @@ class RangeBoundaryBase {
  public:
   RangeBoundaryBase(nsINode* aContainer, nsIContent* aRef)
       : mParent(aContainer), mRef(aRef) {
-    if (!mRef) {
-      mOffset = mozilla::Some(0);
-    } else {
+    if (mRef) {
       NS_WARNING_ASSERTION(mRef->GetParentNode() == mParent,
                            "Initializing RangeBoundary with invalid value");
-      mOffset.reset();
+    } else {
+      mOffset.emplace(0);
     }
   }
 
@@ -69,18 +68,18 @@ class RangeBoundaryBase {
       : mParent(aContainer), mRef(nullptr), mOffset(mozilla::Some(aOffset)) {
     if (mParent && mParent->IsContainerNode()) {
       // Find a reference node
-      if (aOffset == static_cast<int32_t>(aContainer->GetChildCount())) {
-        mRef = aContainer->GetLastChild();
+      if (aOffset == static_cast<int32_t>(mParent->GetChildCount())) {
+        mRef = mParent->GetLastChild();
       } else if (aOffset != 0) {
         mRef = mParent->GetChildAt_Deprecated(aOffset - 1);
       }
 
       NS_WARNING_ASSERTION(mRef || aOffset == 0,
                            "Constructing RangeBoundary with invalid value");
-    }
 
-    NS_WARNING_ASSERTION(!mRef || mRef->GetParentNode() == mParent,
-                         "Constructing RangeBoundary with invalid value");
+      NS_WARNING_ASSERTION(!mRef || mRef->GetParentNode() == mParent,
+                           "Constructing RangeBoundary with invalid value");
+    }
   }
 
   RangeBoundaryBase() : mParent(nullptr), mRef(nullptr) {}
