@@ -175,7 +175,8 @@ bool WindowGlobalParent::IsProcessRoot() {
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
-    dom::BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState) {
+    dom::BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState,
+    bool aSetNavigating) {
   if (!aTargetBC || aTargetBC->IsDiscarded()) {
     MOZ_LOG(
         BrowsingContext::GetLog(), LogLevel::Debug,
@@ -200,7 +201,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvLoadURI(
     return IPC_OK();
   }
 
-  Unused << wgp->SendLoadURIInChild(aLoadState);
+  Unused << wgp->SendLoadURIInChild(aLoadState, aSetNavigating);
   return IPC_OK();
 }
 

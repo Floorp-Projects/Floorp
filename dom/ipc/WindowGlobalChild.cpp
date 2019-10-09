@@ -234,8 +234,11 @@ void WindowGlobalChild::Destroy() {
 }
 
 mozilla::ipc::IPCResult WindowGlobalChild::RecvLoadURIInChild(
-    nsDocShellLoadState* aLoadState) {
-  mWindowGlobal->GetDocShell()->LoadURI(aLoadState);
+    nsDocShellLoadState* aLoadState, bool aSetNavigating) {
+  mWindowGlobal->GetDocShell()->LoadURI(aLoadState, aSetNavigating);
+  if (aSetNavigating) {
+    mWindowGlobal->GetBrowserChild()->NotifyNavigationFinished();
+  }
   return IPC_OK();
 }
 
