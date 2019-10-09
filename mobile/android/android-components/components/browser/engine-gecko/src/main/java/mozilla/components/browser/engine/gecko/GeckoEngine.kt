@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
@@ -39,8 +40,8 @@ class GeckoEngine(
     executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) }
 ) : Engine {
     private val executor by lazy { executorProvider.invoke() }
-
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
+    private var webExtensionDelegate: WebExtensionDelegate? = null
 
     init {
         runtime.delegate = GeckoRuntime.Delegate {
@@ -97,6 +98,7 @@ class GeckoEngine(
     ) {
         GeckoWebExtension(id, url, allowContentMessaging).also { ext ->
             runtime.registerWebExtension(ext.nativeExtension).then({
+                webExtensionDelegate?.onInstalled(ext)
                 onSuccess(ext)
                 GeckoResult<Void>()
             }, {
@@ -104,6 +106,15 @@ class GeckoEngine(
                 GeckoResult<Void>()
             })
         }
+    }
+
+    /**
+     * See [Engine.registerWebExtensionDelegate].
+     */
+    override fun registerWebExtensionDelegate(
+        webExtensionDelegate: WebExtensionDelegate
+    ) {
+        this.webExtensionDelegate = webExtensionDelegate
     }
 
     /**

@@ -18,7 +18,8 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
-import mozilla.components.concept.engine.webextension.WebExtensionTabDelegate
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -420,64 +421,6 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `fetch trackers logged successfully`() {
-        val runtime = mock<GeckoRuntime>()
-        val engine = GeckoEngine(context, runtime = runtime)
-        var onSuccessCalled = false
-        var onErrorCalled = false
-        val mockSession = mock<GeckoEngineSession>()
-        var trackersLog: List<TrackerLog>? = null
-
-        val mockContentBlockingController = mock<ContentBlockingController>()
-        var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
-
-        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
-        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
-
-        engine.getTrackersLog(
-            mockSession,
-            onSuccess = {
-                trackersLog = it
-                onSuccessCalled = true
-            },
-            onError = { onErrorCalled = true }
-        )
-
-        logEntriesResult.complete(createDummyLogEntryList())
-
-        val trackerLog = trackersLog!!.first()
-        assertTrue(trackerLog.cookiesHasBeenBlocked)
-        assertEquals("www.tracker.com", trackerLog.url)
-        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
-        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.FINGERPRINTING))
-        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.CRYPTOMINING))
-        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
-
-        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
-        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.FINGERPRINTING))
-        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.CRYPTOMINING))
-        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
-
-        assertTrue(onSuccessCalled)
-        assertFalse(onErrorCalled)
-
-        logEntriesResult = GeckoResult()
-        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
-        logEntriesResult.completeExceptionally(Exception())
-
-        engine.getTrackersLog(
-            mockSession,
-            onSuccess = {
-                trackersLog = it
-                onSuccessCalled = true
-            },
-            onError = { onErrorCalled = true }
-        )
-
-        assertTrue(onErrorCalled)
-    }
-
-    @Test
     fun `install web extension successfully but do not allow content messaging`() {
         val runtime = mock<GeckoRuntime>()
         val engine = GeckoEngine(context, runtime = runtime)
@@ -525,25 +468,27 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `register web extension tab delegate`() {
+    fun `register web extension delegate`() {
         val runtime: GeckoRuntime = mock()
         val webExtensionController: WebExtensionController = mock()
         whenever(runtime.webExtensionController).thenReturn(webExtensionController)
 
-        val webExtensionsTabDelegate: WebExtensionTabDelegate = mock()
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
         val engine = GeckoEngine(context, runtime = runtime)
-        engine.registerWebExtensionTabDelegate(webExtensionsTabDelegate)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        // Verify we set the delegate and notify onNewTab
         val captor = argumentCaptor<WebExtensionController.TabDelegate>()
         verify(webExtensionController).tabDelegate = captor.capture()
 
         val engineSessionCaptor = argumentCaptor<GeckoEngineSession>()
         captor.value.onNewTab(null, null)
-        verify(webExtensionsTabDelegate).onNewTab(eq(null), eq(""), engineSessionCaptor.capture())
+        verify(webExtensionsDelegate).onNewTab(eq(null), eq(""), engineSessionCaptor.capture())
         assertNotNull(engineSessionCaptor.value)
         assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
 
         captor.value.onNewTab(null, "https://www.mozilla.org")
-        verify(webExtensionsTabDelegate).onNewTab(eq(null), eq("https://www.mozilla.org"),
+        verify(webExtensionsDelegate).onNewTab(eq(null), eq("https://www.mozilla.org"),
             engineSessionCaptor.capture())
         assertNotNull(engineSessionCaptor.value)
         assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
@@ -551,12 +496,23 @@ class GeckoEngineTest {
         val webExt = org.mozilla.geckoview.WebExtension("test")
         val geckoExtCap = argumentCaptor<mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension>()
         captor.value.onNewTab(webExt, "https://test-moz.org")
-        verify(webExtensionsTabDelegate).onNewTab(geckoExtCap.capture(), eq("https://test-moz.org"),
+        verify(webExtensionsDelegate).onNewTab(geckoExtCap.capture(), eq("https://test-moz.org"),
             engineSessionCaptor.capture())
         assertNotNull(geckoExtCap.value)
         assertEquals(geckoExtCap.value.id, webExt.id)
         assertNotNull(engineSessionCaptor.value)
         assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
+
+        // Verify we notify onInstalled
+        val result = GeckoResult<Void>()
+        whenever(runtime.registerWebExtension(any())).thenReturn(result)
+        engine.installWebExtension("test-webext", "resource://android/assets/extensions/test")
+        result.complete(null)
+
+        val extCaptor = argumentCaptor<WebExtension>()
+        verify(webExtensionsDelegate).onInstalled(extCaptor.capture())
+        assertEquals("test-webext", extCaptor.value.id)
+        assertEquals("resource://android/assets/extensions/test", extCaptor.value.url)
     }
 
     @Test(expected = RuntimeException::class)
@@ -678,6 +634,64 @@ class GeckoEngineTest {
         GeckoEngine(context, runtime = runtime, trackingProtectionExceptionStore = mockStore)
 
         verify(mockStore).restore()
+    }
+
+    @Test
+    fun `fetch trackers logged successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        val mockSession = mock<GeckoEngineSession>()
+        var trackersLog: List<TrackerLog>? = null
+
+        val mockContentBlockingController = mock<ContentBlockingController>()
+        var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
+
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+                onSuccessCalled = true
+            },
+            onError = { onErrorCalled = true }
+        )
+
+        logEntriesResult.complete(createDummyLogEntryList())
+
+        val trackerLog = trackersLog!!.first()
+        assertTrue(trackerLog.cookiesHasBeenBlocked)
+        assertEquals("www.tracker.com", trackerLog.url)
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.FINGERPRINTING))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.CRYPTOMINING))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
+
+        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.FINGERPRINTING))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.CRYPTOMINING))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingCategory.MOZILLA_SOCIAL))
+
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+
+        logEntriesResult = GeckoResult()
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+        logEntriesResult.completeExceptionally(Exception())
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+                onSuccessCalled = true
+            },
+            onError = { onErrorCalled = true }
+        )
+
+        assertTrue(onErrorCalled)
     }
 
     private fun createDummyLogEntryList(): List<ContentBlockingController.LogEntry> {

@@ -24,7 +24,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
-import mozilla.components.concept.engine.webextension.WebExtensionTabDelegate
+import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import org.json.JSONObject
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -50,6 +50,7 @@ class GeckoEngine(
 ) : Engine {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
+    private var webExtensionDelegate: WebExtensionDelegate? = null
 
     init {
         runtime.delegate = GeckoRuntime.Delegate {
@@ -138,6 +139,7 @@ class GeckoEngine(
     ) {
         GeckoWebExtension(id, url, allowContentMessaging).also { ext ->
             runtime.registerWebExtension(ext.nativeExtension).then({
+                webExtensionDelegate?.onInstalled(ext)
                 onSuccess(ext)
                 GeckoResult<Void>()
             }, {
@@ -148,11 +150,13 @@ class GeckoEngine(
     }
 
     /**
-     * See [Engine.registerWebExtensionTabDelegate].
+     * See [Engine.registerWebExtensionDelegate].
      */
-    override fun registerWebExtensionTabDelegate(
-        webExtensionTabDelegate: WebExtensionTabDelegate
+    override fun registerWebExtensionDelegate(
+        webExtensionDelegate: WebExtensionDelegate
     ) {
+        this.webExtensionDelegate = webExtensionDelegate
+
         val tabsDelegate = object : WebExtensionController.TabDelegate {
             override fun onNewTab(
                 webExtension: org.mozilla.geckoview.WebExtension?,
@@ -160,7 +164,7 @@ class GeckoEngine(
             ): GeckoResult<GeckoSession>? {
                 val geckoEngineSession = GeckoEngineSession(runtime, openGeckoSession = false)
                 val geckoWebExtension = webExtension?.let { GeckoWebExtension(it.id, it.location) }
-                webExtensionTabDelegate.onNewTab(geckoWebExtension, url ?: "", geckoEngineSession)
+                webExtensionDelegate.onNewTab(geckoWebExtension, url ?: "", geckoEngineSession)
 
                 return GeckoResult.fromValue(geckoEngineSession.geckoSession)
             }

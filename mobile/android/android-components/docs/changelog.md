@@ -24,6 +24,30 @@ permalink: /changelog/
   val job = crashReporter.submitCaughtException(e)
   ```
 
+* **engine**, **engine-gecko-nightly**, **engine-gecko-beta**, **engine-gecko**
+  * ⚠️ **This is a breaking change**: Renamed `WebExtensionTabDelegate` to `WebExtensionDelegate` to handle various web extensions related engine events:
+  ```kotlin
+  GeckoEngine(applicationContext, engineSettings).also {
+    it.registerWebExtensionDelegate(object : WebExtensionDelegate {
+        override fun onNewTab(webExtension: WebExtension?, url: String, engineSession: EngineSession) {
+          sessionManager.add(Session(url), true, engineSession)
+        }
+    })
+  }
+  ```
+
+* **support-webextensions**
+  * Added functionality to make sure web extension related events in the engine are reflected in the browser state / store. Instead of attaching a `WebExtensionDelegate` to the engine, and manually reacting to all events, it's now possible to initialize `WebExtensionSupport`, which provides overridable default behaviour for all web extension related engine events:
+  ```kotlin
+  // Makes sure web extension related events (e.g. an extension is installed, or opens a new tab) are dispatched to the browser store.
+  WebExtensionSupport.initialize(components.engine, components.store)
+
+  // If dispatching to the browser store is not desired, all actions / behaviour can be overridden:
+  WebExtensionSupport.initialize(components.engine, components.store, onNewTabOverride = {
+        _, engineSession, url -> components.sessionManager.add(Session(url), true, engineSession)
+  })
+  ```
+
 # 16.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v15.0.0...v16.0.0)

@@ -11,7 +11,7 @@ import mozilla.components.concept.engine.content.blocking.TrackingProtectionExce
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
-import mozilla.components.concept.engine.webextension.WebExtensionTabDelegate
+import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import org.json.JSONObject
 import java.lang.UnsupportedOperationException
 
@@ -131,12 +131,13 @@ interface Engine {
     ): Unit = onError(id, UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
-     * Registers a [WebExtensionTabDelegate] to be notified when web extensions attempt to open/close tabs.
+     * Registers a [WebExtensionDelegate] to be notified of engine events
+     * related to web extensions
      *
-     * @param webExtensionTabDelegate callback is invoked when a web extension opens a new tab.
+     * @param webExtensionDelegate callback to be invoked for web extension events.
      */
-    fun registerWebExtensionTabDelegate(
-        webExtensionTabDelegate: WebExtensionTabDelegate
+    fun registerWebExtensionDelegate(
+        webExtensionDelegate: WebExtensionDelegate
     ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
 
     /**

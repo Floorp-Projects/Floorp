@@ -29,6 +29,7 @@ android {
 
 dependencies {
     implementation project(':concept-engine')
+    implementation project(':browser-state')
     implementation project(':support-base')
     implementation Dependencies.kotlin_stdlib
 
