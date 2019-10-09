@@ -13,7 +13,12 @@ createHTML({
   visible: true
 });
 
-runNetworkTest(() => {
+runNetworkTest(async () => {
+  // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+  if (navigator.userAgent.includes("Android")) {
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false]);
+  }
+
   var test = new PeerConnectionTest();
   var mediaElement;
   var h = new CaptureStreamTestHelper2D();
