@@ -5,12 +5,12 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-textbox,
 search-textbox {
-  -moz-appearance: textfield;
+  -moz-appearance: searchfield;
+  font-size: 12px;
   cursor: text;
-  margin: 4px;
-  padding: 0px;
+  margin: 4px; /* matches <input> global.css margin */
+  padding: 1px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
@@ -26,36 +26,21 @@ html|*.textbox-input {
   text-shadow: inherit;
   box-sizing: border-box;
   -moz-box-flex: 1;
-}
-
-html|*.textbox-input {
   text-align: inherit;
 }
 
-.textbox-contextmenu {
-  cursor: default;
-}
-
-textbox[readonly="true"],
 search-textbox[readonly="true"] {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
 }
 
-textbox[disabled="true"],
 search-textbox[disabled="true"] {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
 }
 
-/* ::::: search box ::::: */
-
-search-textbox {
-  -moz-appearance: searchfield;
-  padding: 1px;
-  font-size: 12px;
-}
+/* ::::: icons ::::: */
 
 .textbox-search-clear {
   list-style-image: url(chrome://global/skin/icons/searchfield-cancel.svg);

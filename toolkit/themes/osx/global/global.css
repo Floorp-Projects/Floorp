@@ -173,7 +173,7 @@ xul|label[disabled="true"] {
 }
 
 html|input {
-  margin: 4px; /* matches xul <textbox> default margin */
+  margin: 4px;
 }
 
 xul|notification > xul|hbox > xul|button {

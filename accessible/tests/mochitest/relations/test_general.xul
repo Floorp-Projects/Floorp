@@ -99,9 +99,6 @@
       testRelation("flowfrom1", RELATION_FLOWS_FROM, "flowto1");
       testRelation("flowfrom2", RELATION_FLOWS_FROM, "flowto1");
 
-      // 'default button' relation
-      testRelation("textbox", RELATION_DEFAULT_BUTTON, "submit");
-
       // 'labelled by'/'label for' relation for xul:groupbox and xul:label
       var groupboxAcc = getAccessible("groupbox");
       var labelAcc = groupboxAcc.firstChild;
@@ -205,9 +202,6 @@
     <description id="flowto" aria-flowto="flowfrom">flow to</description>
     <description id="flowfrom">flow from</description>
 
-    <textbox id="textbox"/>
-    <button id="submit" default="true" label="Default"/>
-
     <groupbox id="groupbox">
       <label value="caption"/>
     </groupbox>
@@ -233,4 +227,3 @@
 
  </vbox>
 </window>
-

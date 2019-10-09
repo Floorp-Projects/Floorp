@@ -434,8 +434,7 @@ tooltip[titletip="true"] {
 
 /********** textbox **********/
 
-textbox {
-  -moz-binding: url("chrome://global/content/bindings/textbox.xml#textbox");
+search-textbox {
   -moz-user-select: text;
   text-shadow: none;
 }
@@ -451,10 +450,6 @@ textbox {
        in a -moz-box being emulated by modified modern flex. */
     display: block;
   }
-}
-
-.textbox-contextmenu:-moz-locale-dir(rtl) {
-  direction: rtl;
 }
 
 /********** autocomplete textbox **********/

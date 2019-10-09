@@ -4,6 +4,7 @@
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         title="Accessible focus event testing">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -29,7 +30,7 @@
       gQueue = new eventQueue();
 
       gQueue.push(new synthFocus("textbox",
-                                 new focusChecker(getNode("textbox").inputField)));
+                                 new focusChecker(getNode("textbox"))));
       gQueue.push(new synthFocusOnFrame("editabledoc"));
       gQueue.push(new synthFocus("radioclothes",
                                  new focusChecker("radiosweater")));
@@ -83,7 +84,7 @@
     </body>
 
     <vbox flex="1">
-      <textbox id="textbox" value="hello"/>
+      <html:input id="textbox" value="hello"/>
       <iframe id="editabledoc" src="focus.html"/>
       <radiogroup id="radioclothes">
         <radio id="radiosweater" label="radiosweater"/>
