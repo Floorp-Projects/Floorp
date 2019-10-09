@@ -85,7 +85,7 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
    */
   async _childProcessConnect() {
     const { id } = this;
-    const mm = Services.ppmm.getChildAt(id);
+    const mm = this._lookupMessageManager(id);
     if (!mm) {
       return {
         error: "noProcess",
@@ -98,6 +98,18 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       this.destroy
     );
     return childTargetForm;
+  },
+
+  _lookupMessageManager(id) {
+    for (let i = 0; i < Services.ppmm.childCount; i++) {
+      const mm = Services.ppmm.getChildAt(i);
+
+      // A zero id is used for the parent process, instead of its actual pid.
+      if (id ? mm.osPid == id : mm.isInProcess) {
+        return mm;
+      }
+    }
+    return null;
   },
 
   /**
