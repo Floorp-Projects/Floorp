@@ -532,7 +532,7 @@ void ParseTask::trace(JSTracer* trc) {
     return;
   }
 
-  TraceManuallyBarrieredEdge(trc, &parseGlobal, "ParseTask::parseGlobal");
+  TraceRoot(trc, &parseGlobal, "ParseTask::parseGlobal");
   scripts.trace(trc);
   sourceObjects.trace(trc);
 }

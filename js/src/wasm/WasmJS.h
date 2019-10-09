@@ -281,7 +281,8 @@ class WasmInstanceObject : public NativeObject {
   static WasmFunctionScope* getFunctionScope(
       JSContext* cx, HandleWasmInstanceObject instanceObj, uint32_t funcIndex);
 
-  using GlobalObjectVector = GCVector<WasmGlobalObject*, 0, ZoneAllocPolicy>;
+  using GlobalObjectVector =
+      GCVector<HeapPtr<WasmGlobalObject*>, 0, ZoneAllocPolicy>;
   GlobalObjectVector& indirectGlobals() const;
 };
 
