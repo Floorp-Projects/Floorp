@@ -45,6 +45,7 @@ DIRS += [
     'mediacontrol',
     'mediasink',
     'mediasource',
+    'mediasession',
     'mp3',
     'ogg',
     'platforms',
