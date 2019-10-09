@@ -1323,6 +1323,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchIfInterpreted(Register fun, bool isConstructing,
                                   Label* label);
 
+  inline void branchIfScriptHasJitScript(Register script, Label* label);
+  inline void branchIfScriptHasNoJitScript(Register script, Label* label);
+  inline void loadJitScript(Register script, Register dest);
+
   inline void branchFunctionKind(Condition cond,
                                  FunctionFlags::FunctionKind kind, Register fun,
                                  Register scratch, Label* label);

@@ -55,6 +55,9 @@ JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
   uint8_t* base = reinterpret_cast<uint8_t*>(this);
   DefaultInitializeElements<StackTypeSet>(base + typeSetOffset, numTypeSets());
 
+  // Initialize the warm-up count from the count stored in the script.
+  warmUpCount_ = script->getWarmUpCount();
+
   // Ensure the baselineScript_ and ionScript_ fields match the BaselineDisabled
   // and IonDisabled script flags.
   if (!script->canBaselineCompile()) {
@@ -142,7 +145,7 @@ bool JSScript::createJitScript(JSContext* cx) {
 
   MOZ_ASSERT(!hasJitScript());
   prepareForDestruction.release();
-  jitScript_ = jitScript.release();
+  warmUpData_.setJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 
   // We have a JitScript so we can set the script's jitCodeRaw_ pointer to the
@@ -191,7 +194,7 @@ void JSScript::releaseJitScript(JSFreeOp* fop) {
   fop->removeCellMemory(this, jitScript()->allocBytes(), MemoryUse::JitScript);
 
   JitScript::Destroy(zone(), jitScript());
-  jitScript_ = nullptr;
+  warmUpData_.clearJitScript();
   updateJitCodeRaw(fop->runtime());
 }
 
