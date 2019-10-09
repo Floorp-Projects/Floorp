@@ -75,7 +75,7 @@ static void block4(G722EncoderState *s, int band, int d)
     /* Block 4, UPPOL2 */
     for (i = 0;  i < 3;  i++)
         s->band[band].sg[i] = s->band[band].p[i] >> 15;
-    wd1 = saturate(s->band[band].a[1] << 2);
+    wd1 = saturate(s->band[band].a[1] * 4);
 
     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
     if (wd2 > 32767)
