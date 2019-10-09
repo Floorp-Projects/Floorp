@@ -2254,6 +2254,7 @@ this.LoginManagerContent = {
       ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
       (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
       aField.nodePrincipal.isNullPrincipal ||
+      aField.nodePrincipal.schemeIs("about") ||
       !aField.ownerDocument
     ) {
       return null;
