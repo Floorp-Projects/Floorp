@@ -43,6 +43,7 @@ struct StandardURLParams
   StandardURLSegment query;
   StandardURLSegment ref;
   bool supportsFileURL;
+  bool isSubstituting;
 };
 
 struct JARURIParams
