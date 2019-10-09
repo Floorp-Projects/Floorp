@@ -914,6 +914,10 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
                                      const Sequence<JSObject*>& aTransfer,
                                      nsIPrincipal& aSubjectPrincipal,
                                      ErrorResult& aError) {
+  if (mIsDiscarded) {
+    return;
+  }
+
   RefPtr<BrowsingContext> sourceBc;
   PostMessageData data;
   data.targetOrigin() = aTargetOrigin;

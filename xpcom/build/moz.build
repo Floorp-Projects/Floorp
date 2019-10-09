@@ -30,14 +30,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS.mozilla += [
         'perfprobe.h',
     ]
-    SOURCES += ['perfprobe.cpp']
-    if CONFIG['CC_TYPE'] not in ('gcc', 'clang'):
-        SOURCES += [
-            'PoisonIOInterposerBase.cpp',
-            'PoisonIOInterposerWin.cpp',
-        ]
-    else:
-        SOURCES += ['PoisonIOInterposerStub.cpp']
+    SOURCES += [
+        'perfprobe.cpp',
+        'PoisonIOInterposerBase.cpp',
+        'PoisonIOInterposerWin.cpp',
+    ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     UNIFIED_SOURCES += [
         'PoisonIOInterposerBase.cpp',

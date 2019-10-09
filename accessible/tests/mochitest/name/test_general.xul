@@ -109,34 +109,6 @@
 
 
       //////////////////////////////////////////////////////////////////////////
-      // Name from the label element in anonymous content (see bug 362365).
-
-      // Get the name from anonymous label element for anonymous textbox
-      // (@anonid is used).
-      var ID = "box_label_anon1";
-      var box1Acc = testName(ID, null);
-      if (box1Acc) {
-        var textboxAcc = box1Acc.firstChild;
-        is(textboxAcc.name, "Label",
-           "Wrong label for anonymous textbox of " + ID);
-      }
-
-      // Get the name from anonymous label element for anonymous textbox
-      // (@anonid is used). Nested bindings.
-      ID = "box_label_anon2";
-      var box2Acc = testName(ID, null);
-      if (box2Acc) {
-        var textboxAcc = box2Acc.firstChild;
-        is(textboxAcc.name, "Label",
-           "Wrong label for anonymous textbox of " + ID);
-
-        var topTextboxAcc = box2Acc.lastChild;
-        is(topTextboxAcc.name, "Top textbox",
-           "Wrong label for anonymous textbox of " + ID);
-      }
-
-
-      //////////////////////////////////////////////////////////////////////////
       // tooltiptext (if nothing above isn't presented then tooltiptext is used)
       testName("box_tooltiptext", "tooltiptext label");
 
@@ -306,15 +278,6 @@
     <label control="btn_label_4">label5</label>
     <button id="btn_label_4"/>
   </hbox>
-
-  <!-- label element, anonymous content -->
-  <box id="box_label_anon1"
-       class="first"
-       role="group"/>
-
-  <box id="box_label_anon2"
-       class="second"
-       role="group"/>
 
   <!-- tooltiptext -->
   <box id="box_tooltiptext"

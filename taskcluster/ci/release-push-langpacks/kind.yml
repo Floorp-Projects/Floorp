@@ -24,8 +24,8 @@ job-template:
     description: Sends {locales} XPIs for platform to addons.mozilla.org
     worker-type:
         by-release-level:
-            production: scriptworker-prov-v1/addon-v1
-            staging: scriptworker-prov-v1/addon-dev
+            production: scriptworker-k8s/gecko-3-addon
+            staging: scriptworker-k8s/gecko-1-addon
     worker:
         implementation: push-addons
         channel:
