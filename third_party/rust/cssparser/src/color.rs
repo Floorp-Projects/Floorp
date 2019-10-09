@@ -530,9 +530,9 @@ pub fn parse_color_keyword(ident: &str) -> Result<Color, ()> {
 #[inline]
 fn from_hex(c: u8) -> Result<u8, ()> {
     match c {
-        b'0'...b'9' => Ok(c - b'0'),
-        b'a'...b'f' => Ok(c - b'a' + 10),
-        b'A'...b'F' => Ok(c - b'A' + 10),
+        b'0'..=b'9' => Ok(c - b'0'),
+        b'a'..=b'f' => Ok(c - b'a' + 10),
+        b'A'..=b'F' => Ok(c - b'A' + 10),
         _ => Err(()),
     }
 }

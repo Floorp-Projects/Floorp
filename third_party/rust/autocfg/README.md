@@ -43,7 +43,20 @@ should only be used when the compiler supports it.
 
 ## Release Notes
 
-- 0.1.2 (2018-01-16)
+- 0.1.6 (2019-08-19)
+  - Add `probe`/`emit_sysroot_crate`, by @leo60228
+
+- 0.1.5 (2019-07-16)
+  - Mask some warnings from newer rustc.
+
+- 0.1.4 (2019-05-22)
+  - Relax `std`/`no_std` probing to a warning instead of an error.
+  - Improve `rustc` bootstrap compatibility.
+
+- 0.1.3 (2019-05-21)
+  - Auto-detects if `#![no_std]` is needed for the `$TARGET`
+
+- 0.1.2 (2019-01-16)
   - Add `rerun_env(ENV)` to print `cargo:rerun-if-env-changed=ENV`
   - Add `rerun_path(PATH)` to print `cargo:rerun-if-changed=PATH`
 
