@@ -4434,16 +4434,19 @@ nsSize ScrollFrameHelper::GetLineScrollAmount() const {
 }
 
 /**
- * Compute the scrollport size excluding any fixed-pos headers and
- * footers. A header or footer is an box that spans that entire width
- * of the viewport and touches the top (or bottom, respectively) of the
- * viewport. We also want to consider fixed elements that stack or overlap
- * to effectively create a larger header or footer. Headers and footers that
- * cover more than a third of the the viewport are ignored since they
+ * Compute the scrollport size excluding any fixed-pos and sticky-pos (that are
+ * stuck) headers and footers. A header or footer is an box that spans that
+ * entire width of the viewport and touches the top (or bottom, respectively) of
+ * the viewport. We also want to consider fixed/sticky elements that stack or
+ * overlap to effectively create a larger header or footer. Headers and footers
+ * that cover more than a third of the the viewport are ignored since they
  * probably aren't true headers and footers and we don't want to restrict
  * scrolling too much in such cases. This is a bit conservative --- some
  * pages use elements as headers or footers that don't span the entire width
  * of the viewport --- but it should be a good start.
+ *
+ * If aViewportFrame is non-null then the scroll frame is the root scroll
+ * frame and we should consider fixed-pos items.
  */
 struct TopAndBottom {
   TopAndBottom(nscoord aTop, nscoord aBottom) : top(aTop), bottom(aBottom) {}
@@ -4466,20 +4469,46 @@ struct ReverseBottomComparator {
     return A.bottom > B.bottom;
   }
 };
+
+static void AddToListIfHeaderFooter(nsIFrame* aFrame,
+                                    nsIFrame* aScrollPortFrame,
+                                    const nsRect& aScrollPort,
+                                    nsTArray<TopAndBottom>& aList) {
+  nsRect r = aFrame->GetRectRelativeToSelf();
+  r = nsLayoutUtils::TransformFrameRectToAncestor(aFrame, r, aScrollPortFrame);
+  r = r.Intersect(aScrollPort);
+  if ((r.width >= aScrollPort.width / 2 ||
+       r.width >= NSIntPixelsToAppUnits(800, AppUnitsPerCSSPixel())) &&
+      r.height <= aScrollPort.height / 3) {
+    aList.AppendElement(TopAndBottom(r.y, r.YMost()));
+  }
+}
+
 static nsSize GetScrollPortSizeExcludingHeadersAndFooters(
-    nsIFrame* aViewportFrame, const nsRect& aScrollPort) {
-  AutoTArray<TopAndBottom, 50> list;
-  nsFrameList fixedFrames = aViewportFrame->GetChildList(nsIFrame::kFixedList);
-  for (nsFrameList::Enumerator iterator(fixedFrames); !iterator.AtEnd();
-       iterator.Next()) {
-    nsIFrame* f = iterator.get();
-    nsRect r = f->GetRectRelativeToSelf();
-    r = nsLayoutUtils::TransformFrameRectToAncestor(f, r, aViewportFrame);
-    r = r.Intersect(aScrollPort);
-    if ((r.width >= aScrollPort.width / 2 ||
-         r.width >= NSIntPixelsToAppUnits(800, AppUnitsPerCSSPixel())) &&
-        r.height <= aScrollPort.height / 3) {
-      list.AppendElement(TopAndBottom(r.y, r.YMost()));
+    nsIFrame* aScrollFrame, nsIFrame* aViewportFrame,
+    const nsRect& aScrollPort) {
+  AutoTArray<TopAndBottom, 10> list;
+  if (aViewportFrame) {
+    nsFrameList fixedFrames =
+        aViewportFrame->GetChildList(nsIFrame::kFixedList);
+    for (nsFrameList::Enumerator iterator(fixedFrames); !iterator.AtEnd();
+         iterator.Next()) {
+      AddToListIfHeaderFooter(iterator.get(), aViewportFrame, aScrollPort,
+                              list);
+    }
+  }
+
+  // Add sticky frames that are currently in "fixed" positions
+  StickyScrollContainer* ssc =
+      StickyScrollContainer::GetStickyScrollContainerForScrollFrame(
+          aScrollFrame);
+  if (ssc) {
+    const nsTArray<nsIFrame*>& stickyFrames = ssc->GetFrames();
+    for (nsIFrame* f : stickyFrames) {
+      // If it's acting like fixed position.
+      if (ssc->IsStuckInYDirection(f)) {
+        AddToListIfHeaderFooter(f, aScrollFrame, aScrollPort, list);
+      }
     }
   }
 
@@ -4507,16 +4536,13 @@ static nsSize GetScrollPortSizeExcludingHeadersAndFooters(
 
 nsSize ScrollFrameHelper::GetPageScrollAmount() const {
   nsSize lineScrollAmount = GetLineScrollAmount();
-  nsSize effectiveScrollPortSize;
-  if (mIsRoot) {
-    // Reduce effective scrollport height by the height of any fixed-pos
-    // headers or footers
-    nsIFrame* root = mOuter->PresShell()->GetRootFrame();
-    effectiveScrollPortSize =
-        GetScrollPortSizeExcludingHeadersAndFooters(root, mScrollPort);
-  } else {
-    effectiveScrollPortSize = mScrollPort.Size();
-  }
+
+  // Reduce effective scrollport height by the height of any
+  // fixed-pos/sticky-pos headers or footers
+  nsSize effectiveScrollPortSize = GetScrollPortSizeExcludingHeadersAndFooters(
+      mOuter, mIsRoot ? mOuter->PresShell()->GetRootFrame() : nullptr,
+      mScrollPort);
+
   // The page increment is the size of the page, minus the smaller of
   // 10% of the size or 2 lines.
   return nsSize(effectiveScrollPortSize.width -
