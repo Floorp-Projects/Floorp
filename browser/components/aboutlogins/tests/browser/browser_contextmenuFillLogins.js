@@ -74,11 +74,6 @@ async function openContextMenuForPasswordInput(browser) {
   );
 
   let passwordInputCoords = await ContentTask.spawn(browser, null, async () => {
-    // XXX: Temporary workaround for bug 1574873
-    let footer = content.document.querySelector("login-footer");
-    if (footer) {
-      footer.style.display = "none";
-    }
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
 
     let passwordInput = loginItem.shadowRoot.querySelector(
