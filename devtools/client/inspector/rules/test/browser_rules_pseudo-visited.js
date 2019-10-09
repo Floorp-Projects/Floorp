@@ -5,29 +5,31 @@
 
 // Tests for visited/unvisited rule.
 
-const VISISTED_URI = URL_ROOT + "doc_variables_1.html";
-
-const TEST_URI = `
-  <style type='text/css'>
-    a:visited { color: lime; }
-    a:link { color: blue; }
-    a { color: pink; }
-  </style>
-  <a href="${VISISTED_URI}" id="visited">visited link</a>
-  <a href="#" id="unvisited">unvisited link</a>
-`;
+const TEST_URI = URL_ROOT + "doc_visited.html";
 
 add_task(async () => {
-  info("Open a particular url to make a visited link");
-  const tab = await addTab(VISISTED_URI);
+  info("Open a url which has a visited and an unvisited link");
+  const tab = await addTab(TEST_URI);
 
-  info("Open tested page in the same tab");
-  tab.linkedBrowser.loadURI(
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI),
-    {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    }
-  );
+  info("Wait until the visited link is available");
+  await asyncWaitUntil(async () => {
+    const isVisitedLinkAvailable = await ContentTask.spawn(
+      tab.linkedBrowser,
+      {},
+      () => {
+        const NS_EVENT_STATE_VISITED = 1 << 24;
+        const target = content.wrappedJSObject.document.getElementById(
+          "visited"
+        );
+
+        return (
+          target &&
+          InspectorUtils.getContentState(target) & NS_EVENT_STATE_VISITED
+        );
+      }
+    );
+    return isVisitedLinkAvailable;
+  });
 
   info("Open the inspector");
   const { inspector, view } = await openRuleView();
