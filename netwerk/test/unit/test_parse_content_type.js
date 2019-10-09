@@ -421,6 +421,17 @@ function makeChan(url, type = Ci.nsIContentPolicy.TYPE_STYLESHEET) {
 
 add_task(async function check_channels() {
   do_get_profile();
+  // This test uses a histogram which isn't enabled on for all products
+  // (Thunderbird is missing it in this case).
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+  registerCleanupFunction(function() {
+    Services.prefs.clearUserPref(
+      "toolkit.telemetry.testing.overrideProductsCheck"
+    );
+  });
 
   let contentType = "text/css;hi";
   let content = `.identity-color-blue {
