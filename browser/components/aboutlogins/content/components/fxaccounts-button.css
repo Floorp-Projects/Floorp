@@ -48,18 +48,9 @@
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  border: 1px solid var(--in-content-border-color);
   border-radius: 1000px;
   width: 32px;
   height: 32px;
-}
-
-.fxaccounts-avatar-button:hover .fxaccount-avatar {
-  border-color: var(--in-content-border-hover);
-}
-
-.fxaccounts-avatar-button:hover:active .fxaccount-avatar {
-  border-color: var(--in-content-border-active);
 }
 
 .fxaccounts-avatar-button:hover {
