@@ -52,6 +52,7 @@ var navigateTo = async function(inspector, url) {
   const markuploaded = inspector.once("markuploaded");
   const onNewRoot = inspector.once("new-root");
   const onUpdated = inspector.once("inspector-updated");
+  const onReloaded = inspector.once("reloaded");
 
   info("Navigating to: " + url);
   const target = inspector.toolbox.target;
@@ -65,6 +66,9 @@ var navigateTo = async function(inspector, url) {
 
   info("Waiting for inspector to update after new-root event.");
   await onUpdated;
+
+  info("Waiting for inspector updates after page reload");
+  await onReloaded;
 };
 
 /**

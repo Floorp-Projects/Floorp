@@ -7,6 +7,21 @@ const URL_2 =
   encodeURIComponent('<div id="remote-page">foo</div>');
 
 add_task(async function() {
+  // Test twice.
+  // Once without target switching, where the toolbox closes and reopens
+  // And a second time, with target switching, where the toolbox stays open
+  await navigateBetweenProcesses(false);
+  await navigateBetweenProcesses(true);
+});
+
+async function navigateBetweenProcesses(enableTargetSwitching) {
+  info(
+    `Testing navigation between processes ${
+      enableTargetSwitching ? "with" : "without"
+    } target switching`
+  );
+  await pushPref("devtools.target-switching.enabled", enableTargetSwitching);
+
   info("Open a tab on a URL supporting only running in parent process");
   const tab = await addTab(URL_1);
   is(
@@ -24,6 +39,7 @@ add_task(async function() {
 
   const onToolboxDestroyed = toolbox.once("destroyed");
   const onToolboxCreated = gDevTools.once("toolbox-created");
+  const onToolboxSwitchedToTarget = toolbox.once("switched-target");
 
   info("Navigate to a URL supporting remote process");
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -36,14 +52,19 @@ add_task(async function() {
     "Navigated to a data: URI and switching to remote"
   );
 
-  info("Waiting for the toolbox to be destroyed");
-  await onToolboxDestroyed;
+  if (enableTargetSwitching) {
+    info("Waiting for the toolbox to be switched to the new target");
+    await onToolboxSwitchedToTarget;
+  } else {
+    info("Waiting for the toolbox to be destroyed");
+    await onToolboxDestroyed;
 
-  info("Waiting for a new toolbox to be created");
-  toolbox = await onToolboxCreated;
+    info("Waiting for a new toolbox to be created");
+    toolbox = await onToolboxCreated;
 
-  info("Waiting for the new toolbox to be ready");
-  await toolbox.once("ready");
+    info("Waiting for the new toolbox to be ready");
+    await toolbox.once("ready");
+  }
 
   info("Veryify we are inspecting the new document");
   const console = await toolbox.selectTool("webconsole");
@@ -56,4 +77,8 @@ add_task(async function() {
     url.textContent.includes(URL_2),
     "The console inspects the second document"
   );
-});
+
+  const { client } = toolbox.target;
+  await toolbox.destroy();
+  ok(client._closed, "The client is closed after closing the toolbox");
+}

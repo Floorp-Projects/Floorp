@@ -89,6 +89,10 @@ WebConsolePanel.prototype = {
     return this;
   },
 
+  switchToTarget(newTarget) {
+    return this.hud.ui.switchToTarget(newTarget);
+  },
+
   get currentTarget() {
     return this._toolbox.target;
   },

@@ -484,7 +484,10 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   }
 
   clearNetworkRequests() {
-    this._networkRequests.clear();
+    // Prevent exception if the front has already been destroyed.
+    if (this._networkRequests) {
+      this._networkRequests.clear();
+    }
   }
 
   /**
