@@ -28,6 +28,8 @@
 
 typedef NSString* NSTouchBarItemIdentifier;
 __attribute__((weak_import)) @interface NSTouchBarItem : NSObject
+@property(readonly) NSView* view;
+@property(readonly) NSString* customizationLabel;
 - (instancetype)initWithIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 @end
 
