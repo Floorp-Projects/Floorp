@@ -112,4 +112,11 @@ class StringTest {
 
         assertEquals("8de545c123907e9f886ba2313560a0abef530594", "ßüöä@!§\$".sha1())
     }
+
+    @Test
+    fun `Try Get Host From Url`() {
+        val urlTest = "http://www.example.com:1080/docs/resource1.html"
+        val new = urlTest.tryGetHostFromUrl()
+        assertEquals(new, "www.example.com")
+    }
 }

@@ -5,6 +5,8 @@
 package mozilla.components.support.ktx.kotlin
 
 import mozilla.components.support.utils.URLStringUtils
+import java.net.MalformedURLException
+import java.net.URL
 import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -85,4 +87,14 @@ fun String.toDate(
         }
     }
     return null
+}
+
+/**
+ * Tries to parse and get host part if this [String] is valid URL.
+ * Otherwise returns the string.
+ */
+fun String.tryGetHostFromUrl(): String = try {
+    URL(this).host
+} catch (e: MalformedURLException) {
+    this
 }
