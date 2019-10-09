@@ -211,6 +211,10 @@
       "type": "boolean"
     },
 
+    "DisablePasswordReveal": {
+      "type": "boolean"
+    },
+
     "DisablePocket": {
       "type": "boolean"
     },
