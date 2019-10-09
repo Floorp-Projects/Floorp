@@ -1482,5 +1482,5 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   loadState->SetCsp(csp);
 
   // Time to initiate a document load
-  return aFrameDS->LoadURI(loadState);
+  return aFrameDS->LoadURI(loadState, false);
 }
