@@ -12,6 +12,9 @@ import io.sentry.SentryClientFactory
 import io.sentry.android.AndroidSentryClientFactory
 import io.sentry.event.Breadcrumb
 import io.sentry.event.BreadcrumbBuilder
+import io.sentry.event.Event
+import io.sentry.event.EventBuilder
+import io.sentry.event.interfaces.ExceptionInterface
 import mozilla.components.Build
 import mozilla.components.lib.crash.Crash
 
@@ -56,7 +59,11 @@ class SentryService(
         crash.breadcrumbs.forEach {
             client.context.recordBreadcrumb(it.toSentryBreadcrumb())
         }
-        client.sendException(crash.throwable)
+
+        val eventBuilder = EventBuilder().withMessage(createMessage(crash))
+                .withLevel(Event.Level.FATAL)
+                .withSentryInterface(ExceptionInterface(crash.throwable))
+        client.sendEvent(eventBuilder)
     }
 
     override fun report(crash: Crash.NativeCodeCrash) {
@@ -66,6 +73,13 @@ class SentryService(
             }
             client.sendMessage(createMessage(crash))
         }
+    }
+
+    override fun report(throwable: Throwable) {
+        val eventBuilder = EventBuilder().withMessage(createMessage(throwable))
+                .withLevel(Event.Level.ERROR)
+                .withSentryInterface(ExceptionInterface(throwable))
+        client.sendEvent(eventBuilder)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -103,4 +117,12 @@ private fun createMessage(crash: Crash.NativeCodeCrash): String {
     val minidumpSuccess = crash.minidumpSuccess
 
     return "NativeCodeCrash(fatal=$fatal, minidumpSuccess=$minidumpSuccess)"
+}
+
+private fun createMessage(crash: Crash.UncaughtExceptionCrash): String {
+    return crash.throwable.message ?: ""
+}
+
+private fun createMessage(throwable: Throwable): String {
+    return "$INFO_PREFIX ${throwable.message}"
 }

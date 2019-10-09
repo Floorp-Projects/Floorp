@@ -107,6 +107,44 @@ class GleanCrashReporterServiceTest {
     }
 
     @Test
+    fun `GleanCrashReporterService records caught exceptions`() {
+        // Because of how Glean is implemented, it can potentially persist information between
+        // tests or even between test classes, so we compensate by capturing the initial value
+        // to compare to.
+        val initialValue = try {
+            CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()
+        } catch (e: NullPointerException) {
+            0
+        }
+
+        run {
+            val service = spy(GleanCrashReporterService(context))
+
+            assertFalse("No previous persisted crashes must exist", service.file.exists())
+
+            val throwable = RuntimeException("Test")
+            service.report(throwable)
+            verify(service).report(throwable)
+
+            assertTrue("Persistence file must exist", service.file.exists())
+            val lines = service.file.readLines()
+            assertEquals("Must be caught exception",
+                    GleanCrashReporterService.CAUGHT_EXCEPTION_KEY, lines.first())
+        }
+
+        // Initialize a fresh GleanCrashReporterService and ensure metrics are recorded in Glean
+        run {
+            GleanCrashReporterService(context)
+
+            assertTrue("Glean must record a value",
+                    CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testHasValue())
+            assertEquals("Glean must record correct value",
+                    1,
+                    CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue() - initialValue)
+        }
+    }
+
+    @Test
     fun `GleanCrashReporterService correctly handles multiple crashes in a single file`() {
         val initialExceptionValue = try {
             CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()

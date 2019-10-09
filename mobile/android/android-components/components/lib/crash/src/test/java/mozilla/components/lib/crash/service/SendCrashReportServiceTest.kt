@@ -45,6 +45,9 @@ class SendCrashReportServiceTest {
 
                     override fun report(crash: Crash.NativeCodeCrash) {
                     }
+
+                    override fun report(throwable: Throwable) {
+                    }
                 }))
         ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(

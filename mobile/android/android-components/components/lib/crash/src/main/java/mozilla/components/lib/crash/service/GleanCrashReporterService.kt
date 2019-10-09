@@ -14,8 +14,8 @@ import java.io.File
 
 /**
  * A [CrashReporterService] implementation for recording metrics with Glean.  The purpose of this
- * crash reporter is to collect crash count metrics by capturing [Crash.UncaughtExceptionCrash] and
- * [Crash.NativeCodeCrash] events and record to the respective
+ * crash reporter is to collect crash count metrics by capturing [Crash.UncaughtExceptionCrash],
+ * [Throwable] and [Crash.NativeCodeCrash] events and record to the respective
  * [mozilla.components.service.glean.private.CounterMetricType].
  */
 class GleanCrashReporterService(
@@ -34,6 +34,7 @@ class GleanCrashReporterService(
         // These keys correspond to the labels found for crashCount metric in metrics.yaml as well
         // as the persisted crashes in the crash count file (see above comment)
         const val UNCAUGHT_EXCEPTION_KEY = "uncaught_exception"
+        const val CAUGHT_EXCEPTION_KEY = "caught_exception"
         const val NATIVE_CODE_CRASH_KEY = "native_code_crash"
     }
 
@@ -89,8 +90,8 @@ class GleanCrashReporterService(
 
     /**
      * Parses the crashes collected in the persisted crash file.  The format of this file is simple,
-     * each line may contain either [UNCAUGHT_EXCEPTION_KEY], or [NATIVE_CODE_CRASH_KEY] followed by
-     * a newline character.
+     * each line may contain [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY], or [NATIVE_CODE_CRASH_KEY]
+     * followed by a newline character.
      *
      * Example:
      *
@@ -99,6 +100,7 @@ class GleanCrashReporterService(
      * uncaught_exception\n
      * native_code_crash\n
      * uncaught_exception\n
+     * caught_exception\n
      * <--End of file-->
      *
      * It is unlikely that there will be more than one crash in a file, but not impossible.  This
@@ -109,6 +111,7 @@ class GleanCrashReporterService(
     internal fun parseCrashFile() {
         val lines = file.readLines()
         var uncaughtExceptionCount = 0
+        var caughtExceptionCount = 0
         var nativeCodeCrashCount = 0
 
         // It's possible that there was more than one crash recorded in the file so process each
@@ -116,12 +119,14 @@ class GleanCrashReporterService(
         lines.forEach { line ->
             when (line) {
                 UNCAUGHT_EXCEPTION_KEY -> ++uncaughtExceptionCount
+                CAUGHT_EXCEPTION_KEY -> ++caughtExceptionCount
                 NATIVE_CODE_CRASH_KEY -> ++nativeCodeCrashCount
             }
         }
 
         // Now, record the crash counts into Glean
         CrashMetrics.crashCount[UNCAUGHT_EXCEPTION_KEY].add(uncaughtExceptionCount)
+        CrashMetrics.crashCount[CAUGHT_EXCEPTION_KEY].add(caughtExceptionCount)
         CrashMetrics.crashCount[NATIVE_CODE_CRASH_KEY].add(nativeCodeCrashCount)
     }
 
@@ -133,8 +138,8 @@ class GleanCrashReporterService(
      * [report] functions are called synchronously, and from lib-crash's own process, it is unlikely
      * that this would be called from more than one place at the same time.
      *
-     * @param crash Pass in the correct crash label to write to the file,
-     *              either [UNCAUGHT_EXCEPTION_KEY] or [NATIVE_CODE_CRASH_KEY]
+     * @param crash Pass in the correct crash label to write to the file
+     * [UNCAUGHT_EXCEPTION_KEY], [CAUGHT_EXCEPTION_KEY] or [NATIVE_CODE_CRASH_KEY]
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun reportCrash(crash: String) {
@@ -158,5 +163,9 @@ class GleanCrashReporterService(
 
     override fun report(crash: Crash.NativeCodeCrash) {
         reportCrash(NATIVE_CODE_CRASH_KEY)
+    }
+
+    override fun report(throwable: Throwable) {
+        reportCrash(CAUGHT_EXCEPTION_KEY)
     }
 }

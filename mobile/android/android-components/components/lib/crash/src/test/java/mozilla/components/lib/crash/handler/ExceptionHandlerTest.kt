@@ -34,6 +34,10 @@ class ExceptionHandlerTest {
             override fun report(crash: Crash.NativeCodeCrash) {
                 fail("Did not expect native crash")
             }
+
+            override fun report(throwable: Throwable) {
+                fail("Did not expect caught exception")
+            }
         }
 
         val crashReporter = spy(CrashReporter(
@@ -69,6 +73,9 @@ class ExceptionHandlerTest {
                     }
 
                     override fun report(crash: Crash.NativeCodeCrash) {
+                    }
+
+                    override fun report(throwable: Throwable) {
                     }
                 })
         ).install(testContext)
