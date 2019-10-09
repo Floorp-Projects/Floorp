@@ -1737,7 +1737,7 @@ void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
 
   if (!(CanUseExtraThreads() && startWithLockHeld(lock))) {
     AutoUnlockHelperThreadState unlock(lock);
-    runFromMainThread(runtime());
+    runFromMainThread();
   }
 }
 
@@ -1769,19 +1769,19 @@ static inline TimeDuration TimeSince(TimeStamp prev) {
   return now - prev;
 }
 
-void GCParallelTask::joinAndRunFromMainThread(JSRuntime* rt) {
+void GCParallelTask::joinAndRunFromMainThread() {
   {
     AutoLockHelperThreadState lock;
     MOZ_ASSERT(!isRunningWithLockHeld(lock));
     joinWithLockHeld(lock);
   }
 
-  runFromMainThread(rt);
+  runFromMainThread();
 }
 
-void js::GCParallelTask::runFromMainThread(JSRuntime* rt) {
+void js::GCParallelTask::runFromMainThread() {
   assertNotStarted();
-  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
+  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
   TimeStamp timeStart = ReallyNow();
   runTask();
   duration_ = TimeSince(timeStart);
@@ -1793,7 +1793,7 @@ void js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock) {
   {
     AutoUnlockHelperThreadState parallelSection(lock);
     AutoSetHelperThreadContext usesContext;
-    AutoSetContextRuntime ascr(runtime());
+    AutoSetContextRuntime ascr(gc->rt);
     gc::AutoSetThreadIsPerformingGC performingGC;
     TimeStamp timeStart = ReallyNow();
     runTask();
