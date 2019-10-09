@@ -28,6 +28,13 @@ struct JSWindowActorMessageMeta {
   JSWindowActorMessageKind kind;
 };
 
+struct IPCWebShareData
+{
+  nsCString title;
+  nsCString text;
+  nsIURI url;
+};
+
 /**
  * A PWindowGlobal actor has a lifetime matching that of a single Window Global,
  * specifically a |nsGlobalWindowInner|. These actors will form a parent/child
@@ -76,6 +83,9 @@ parent:
 
   /// Notify the parent that this PWindowGlobal is now the current global.
   async BecomeCurrentWindowGlobal();
+
+  // Attempts to perform a "Web Share".
+  async Share(IPCWebShareData aData) returns (nsresult rv);
 
   async Destroy();
 };
