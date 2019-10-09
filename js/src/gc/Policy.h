@@ -44,9 +44,10 @@ struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
     }
   }
   static void trace(JSTracer* trc, T* vp, const char* name) {
-    if (*vp) {
-      TraceManuallyBarrieredEdge(trc, vp, name);
-    }
+    // It's not safe to trace unbarriered pointers except as part of root
+    // marking. If you get an assertion here you probably need to add a barrier,
+    // e.g. HeapPtr<T>.
+    TraceNullableRoot(trc, vp, name);
   }
 };
 
