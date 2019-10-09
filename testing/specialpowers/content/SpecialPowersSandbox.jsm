@@ -44,13 +44,6 @@ class SpecialPowersSandbox {
     }
   }
 
-  static getCallerInfo(frame) {
-    return {
-      filename: frame.filename,
-      lineNumber: frame.lineNumber,
-    };
-  }
-
   get Assert() {
     if (!this._Assert) {
       this._Assert = new Assert((err, message, stack) => {
