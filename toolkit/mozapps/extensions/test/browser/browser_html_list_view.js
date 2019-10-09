@@ -8,11 +8,6 @@ AddonTestUtils.initMochitest(this);
 
 let promptService;
 
-const SUPPORT_URL = Services.urlFormatter.formatURL(
-  Services.prefs.getStringPref("app.support.baseURL")
-);
-const REMOVE_SUMO_URL = SUPPORT_URL + "cant-remove-addon";
-
 const SECTION_INDEXES = {
   enabled: 0,
   disabled: 1,
@@ -39,10 +34,7 @@ function waitForThemeChange(list) {
   return BrowserTestUtils.waitForEvent(list, "move", () => ++moveCount == 2);
 }
 
-let mockProvider;
-
-add_task(async function setup() {
-  mockProvider = new MockProvider();
+add_task(async function enableHtmlViews() {
   promptService = mockPromptService();
   Services.telemetry.clearEvents();
 });
@@ -136,9 +128,6 @@ add_task(async function testExtensionList() {
     "remove-addon-button",
     "The button has the remove label"
   );
-  // There is a support link when the add-on isn't removeable, verify we don't
-  // always include one.
-  ok(!removeButton.querySelector("a"), "There isn't a link in the item");
 
   // Remove but cancel.
   let cancelled = BrowserTestUtils.waitForEvent(card, "remove-cancelled");
@@ -747,48 +736,6 @@ add_task(async function testBuiltInThemeButtons() {
   await closeView(win);
 });
 
-add_task(async function testSideloadRemoveButton() {
-  const id = "sideload@mochi.test";
-  mockProvider.createAddons([
-    {
-      id,
-      name: "Sideloaded",
-      permissions: 0,
-    },
-  ]);
-
-  let win = await loadInitialView("extension");
-  let doc = win.document;
-
-  let card = getCardByAddonId(doc, id);
-
-  let moreOptionsPanel = card.querySelector("panel-list");
-  let panelOpened = BrowserTestUtils.waitForEvent(moreOptionsPanel, "shown");
-  moreOptionsPanel.show();
-  await panelOpened;
-
-  // Verify the remove button is visible with a SUMO link.
-  let removeButton = card.querySelector('[action="remove"]');
-  ok(removeButton.disabled, "Remove is disabled");
-  ok(!removeButton.hidden, "Remove is visible");
-
-  let sumoLink = removeButton.querySelector("a");
-  ok(sumoLink, "There's a link");
-  is(
-    doc.l10n.getAttributes(removeButton).id,
-    "remove-addon-disabled-button",
-    "The can't remove text is shown"
-  );
-  sumoLink.focus();
-  is(doc.activeElement, sumoLink, "The link can be focused");
-
-  let newTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, REMOVE_SUMO_URL);
-  sumoLink.click();
-  BrowserTestUtils.removeTab(await newTabOpened);
-
-  await closeView(win);
-});
-
 add_task(async function testOnlyTypeIsShown() {
   let win = await loadInitialView("theme");
   let doc = win.document;
@@ -862,6 +809,8 @@ add_task(async function testExtensionGenericIcon() {
 });
 
 add_task(async function testSectionHeadingKeys() {
+  let mockProvider = new MockProvider();
+
   mockProvider.createAddons([
     {
       id: "test-theme",
