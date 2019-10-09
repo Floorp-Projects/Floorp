@@ -140,8 +140,7 @@ class WindowGlobalParent final : public WindowGlobalActor,
 
   // IPC messages
   mozilla::ipc::IPCResult RecvLoadURI(dom::BrowsingContext* aTargetBC,
-                                      nsDocShellLoadState* aLoadState,
-                                      bool aSetNavigating);
+                                      nsDocShellLoadState* aLoadState);
   mozilla::ipc::IPCResult RecvUpdateDocumentURI(nsIURI* aURI);
   mozilla::ipc::IPCResult RecvSetIsInitialDocument(bool aIsInitialDocument) {
     mIsInitialDocument = aIsInitialDocument;

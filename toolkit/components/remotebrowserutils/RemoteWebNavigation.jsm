@@ -10,8 +10,18 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "Utils",
+  "resource://gre/modules/sessionstore/Utils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "E10SUtils",
+  "resource://gre/modules/E10SUtils.jsm"
 );
 
 function RemoteWebNavigation() {
@@ -126,8 +136,28 @@ RemoteWebNavigation.prototype = {
       Ci.nsIRemoteTab.NAVIGATE_URL,
       { uri, epoch: cancelContentJSEpoch }
     );
-    aLoadURIOptions.cancelContentJSEpoch = cancelContentJSEpoch;
-    this._browser.frameLoader.browsingContext.loadURI(aURI, aLoadURIOptions);
+    this._sendMessage("WebNavigation:LoadURI", {
+      uri: aURI,
+      loadFlags: aLoadURIOptions.loadFlags,
+      referrerInfo: E10SUtils.serializeReferrerInfo(
+        aLoadURIOptions.referrerInfo
+      ),
+      postData: aLoadURIOptions.postData
+        ? Utils.serializeInputStream(aLoadURIOptions.postData)
+        : null,
+      headers: aLoadURIOptions.headers
+        ? Utils.serializeInputStream(aLoadURIOptions.headers)
+        : null,
+      baseURI: aLoadURIOptions.baseURI ? aLoadURIOptions.baseURI.spec : null,
+      triggeringPrincipal: E10SUtils.serializePrincipal(
+        aLoadURIOptions.triggeringPrincipal ||
+          Services.scriptSecurityManager.createNullPrincipal({})
+      ),
+      csp: aLoadURIOptions.csp
+        ? E10SUtils.serializeCSP(aLoadURIOptions.csp)
+        : null,
+      cancelContentJSEpoch,
+    });
   },
   setOriginAttributesBeforeLoading(aOriginAttributes) {
     this._sendMessage("WebNavigation:SetOriginAttributes", {

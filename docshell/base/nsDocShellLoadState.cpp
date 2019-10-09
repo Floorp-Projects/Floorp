@@ -11,7 +11,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIChildChannel.h"
 #include "ReferrerInfo.h"
-#include "mozilla/dom/LoadURIOptionsBinding.h"
 
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/NullPrincipal.h"
@@ -67,8 +66,6 @@ nsDocShellLoadState::nsDocShellLoadState(
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
   mCsp = aLoadState.Csp();
-  mOriginalURIString = aLoadState.OriginalURIString();
-  mCancelContentJSEpoch = aLoadState.CancelContentJSEpoch();
   mPostDataStream = aLoadState.PostDataStream();
   mHeadersStream = aLoadState.HeadersStream();
 }
@@ -106,142 +103,6 @@ nsresult nsDocShellLoadState::CreateFromPendingChannel(
   loadState->SetTriggeringPrincipal(loadInfo->TriggeringPrincipal());
 
   // Return the newly created loadState.
-  loadState.forget(aResult);
-  return NS_OK;
-}
-
-nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
-    nsISupports* aConsumer, nsIURIFixup* aURIFixup, const nsAString& aURI,
-    const LoadURIOptions& aLoadURIOptions, nsDocShellLoadState** aResult) {
-  uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
-
-  NS_ASSERTION(
-      (loadFlags & nsDocShell::INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0,
-      "Unexpected flags");
-
-  nsCOMPtr<nsIURI> uri;
-  nsCOMPtr<nsIInputStream> postData(aLoadURIOptions.mPostData);
-  nsresult rv = NS_OK;
-
-  NS_ConvertUTF16toUTF8 uriString(aURI);
-  // Cleanup the empty spaces that might be on each end.
-  uriString.Trim(" ");
-  // Eliminate embedded newlines, which single-line text fields now allow:
-  uriString.StripCRLF();
-  NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIURIFixupInfo> fixupInfo;
-  if (aURIFixup) {
-    uint32_t fixupFlags;
-    rv = aURIFixup->WebNavigationFlagsToFixupFlags(uriString, loadFlags,
-                                                   &fixupFlags);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-
-    // If we don't allow keyword lookups for this URL string, make sure to
-    // update loadFlags to indicate this as well.
-    if (!(fixupFlags & nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
-      loadFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    }
-
-    nsCOMPtr<nsIInputStream> fixupStream;
-    rv = aURIFixup->GetFixupURIInfo(uriString, fixupFlags,
-                                    getter_AddRefs(fixupStream),
-                                    getter_AddRefs(fixupInfo));
-
-    if (NS_SUCCEEDED(rv)) {
-      fixupInfo->GetPreferredURI(getter_AddRefs(uri));
-      fixupInfo->SetConsumer(aConsumer);
-    }
-
-    if (fixupStream) {
-      // GetFixupURIInfo only returns a post data stream if it succeeded
-      // and changed the URI, in which case we should override the
-      // passed-in post data.
-      postData = fixupStream;
-    }
-
-    if (loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
-      nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-      if (serv) {
-        serv->NotifyObservers(fixupInfo, "keyword-uri-fixup",
-                              PromiseFlatString(aURI).get());
-      }
-    }
-  } else {
-    // No fixup service so just create a URI and see what happens...
-    rv = NS_NewURI(getter_AddRefs(uri), uriString);
-    loadFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-  }
-
-  if (rv == NS_ERROR_MALFORMED_URI) {
-    MOZ_ASSERT(!uri);
-    return rv;
-  }
-
-  if (NS_FAILED(rv) || !uri) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint64_t available;
-  if (postData) {
-    rv = postData->Available(&available);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (available == 0) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  if (aLoadURIOptions.mHeaders) {
-    rv = aLoadURIOptions.mHeaders->Available(&available);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (available == 0) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-
-  bool forceAllowDataURI =
-      loadFlags & nsIWebNavigation::LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
-
-  // Don't pass certain flags that aren't needed and end up confusing
-  // ConvertLoadTypeToDocShellInfoLoadType.  We do need to ensure that they are
-  // passed to LoadURI though, since it uses them.
-  uint32_t extraFlags = (loadFlags & EXTRA_LOAD_FLAGS);
-  loadFlags &= ~EXTRA_LOAD_FLAGS;
-
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(uri);
-  loadState->SetReferrerInfo(aLoadURIOptions.mReferrerInfo);
-
-  /*
-   * If the user "Disables Protection on This Page", we have to make sure to
-   * remember the users decision when opening links in child tabs [Bug 906190]
-   */
-  if (loadFlags & nsIWebNavigation::LOAD_FLAGS_ALLOW_MIXED_CONTENT) {
-    loadState->SetLoadType(
-        MAKE_LOAD_TYPE(LOAD_NORMAL_ALLOW_MIXED_CONTENT, loadFlags));
-  } else {
-    loadState->SetLoadType(MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags));
-  }
-
-  loadState->SetLoadFlags(extraFlags);
-  loadState->SetFirstParty(true);
-  loadState->SetPostDataStream(postData);
-  loadState->SetHeadersStream(aLoadURIOptions.mHeaders);
-  loadState->SetBaseURI(aLoadURIOptions.mBaseURI);
-  loadState->SetTriggeringPrincipal(aLoadURIOptions.mTriggeringPrincipal);
-  loadState->SetCsp(aLoadURIOptions.mCsp);
-  loadState->SetForceAllowDataURI(forceAllowDataURI);
-  loadState->SetOriginalURIString(uriString);
-  if (aLoadURIOptions.mCancelContentJSEpoch) {
-    loadState->SetCancelContentJSEpoch(aLoadURIOptions.mCancelContentJSEpoch);
-  }
-
-  if (fixupInfo) {
-    nsAutoString searchProvider, keyword;
-    fixupInfo->GetKeywordProviderName(searchProvider);
-    fixupInfo->GetKeywordAsSent(keyword);
-    nsDocShell::MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
-  }
-
   loadState.forget(aResult);
   return NS_OK;
 }
@@ -619,8 +480,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;
   loadState.Csp() = mCsp;
-  loadState.OriginalURIString() = mOriginalURIString;
-  loadState.CancelContentJSEpoch() = mCancelContentJSEpoch;
   loadState.ReferrerInfo() = mReferrerInfo;
   loadState.PostDataStream() = mPostDataStream;
   loadState.HeadersStream() = mHeadersStream;
