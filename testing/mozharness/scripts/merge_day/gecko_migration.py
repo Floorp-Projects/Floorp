@@ -50,7 +50,7 @@ class GeckoMigration(MercurialScript, VirtualenvMixin,
             "action": "store",
             "dest": "ssh_user",
             "type": "string",
-            "default": None,
+            "default": "ffxbld-merge",
             "help": "The user to push to hg.mozilla.org as.",
         }],
         [['--remove-locale', ], {
