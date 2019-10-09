@@ -1134,6 +1134,10 @@ nsresult ContentChild::ProvideWindowCommon(
       }
     }
 
+    if (!urlToLoad.IsEmpty()) {
+      newChild->RecvLoadURL(urlToLoad, showInfo);
+    }
+
     if (xpc::IsInAutomation()) {
       if (nsCOMPtr<nsPIDOMWindowOuter> outer =
               do_GetInterface(newChild->WebNavigation())) {
