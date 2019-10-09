@@ -389,9 +389,13 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   // Window ID with different URIs because when a Browsing context is first
   // loaded, the first url loaded in it will be about:blank. This call keeps the
   // first non-about:blank registration of window and discards the previous one.
+  uint64_t embedderInnerWindowID = 0;
+  if (mBrowsingContext->GetParent()) {
+    embedderInnerWindowID = mBrowsingContext->GetEmbedderInnerWindowId();
+  }
   profiler_register_page(mBrowsingContext->Id(), mInnerWindowId,
                          aDocumentURI->GetSpecOrDefault(),
-                         mBrowsingContext->GetParent() != nullptr);
+                         embedderInnerWindowID);
 #endif
   mDocumentURI = aDocumentURI;
   SendUpdateDocumentURI(aDocumentURI);

@@ -17,11 +17,12 @@ namespace baseprofiler {
 
 PageInformation::PageInformation(uint64_t aBrowsingContextID,
                                  uint64_t aInnerWindowID,
-                                 const std::string& aUrl, bool aIsSubFrame)
+                                 const std::string& aUrl,
+                                 uint64_t aEmbedderInnerWindowID)
     : mBrowsingContextID(aBrowsingContextID),
       mInnerWindowID(aInnerWindowID),
       mUrl(aUrl),
-      mIsSubFrame(aIsSubFrame),
+      mEmbedderInnerWindowID(aEmbedderInnerWindowID),
       mRefCnt(0) {}
 
 bool PageInformation::Equals(PageInformation* aOtherPageInfo) const {
@@ -39,7 +40,7 @@ void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   aWriter.DoubleProperty("browsingContextID", BrowsingContextID());
   aWriter.DoubleProperty("innerWindowID", InnerWindowID());
   aWriter.StringProperty("url", Url().c_str());
-  aWriter.BoolProperty("isSubFrame", IsSubFrame());
+  aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());
   aWriter.EndObject();
 }
 

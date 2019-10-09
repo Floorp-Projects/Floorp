@@ -25,7 +25,7 @@ class PageInformation final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PageInformation)
   PageInformation(uint64_t aBrowsingContextID, uint64_t aInnerWindowID,
-                  const nsCString& aUrl, bool aIsSubFrame);
+                  const nsCString& aUrl, uint64_t aEmbedderInnerWindowID);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   bool Equals(PageInformation* aOtherPageInfo) const;
@@ -34,7 +34,7 @@ class PageInformation final {
   uint64_t InnerWindowID() const { return mInnerWindowID; }
   uint64_t BrowsingContextID() const { return mBrowsingContextID; }
   const nsCString& Url() const { return mUrl; }
-  bool IsSubFrame() const { return mIsSubFrame; }
+  uint64_t EmbedderInnerWindowID() const { return mEmbedderInnerWindowID; }
 
   mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() const {
     return mBufferPositionWhenUnregistered;
@@ -48,7 +48,7 @@ class PageInformation final {
   const uint64_t mBrowsingContextID;
   const uint64_t mInnerWindowID;
   const nsCString mUrl;
-  const bool mIsSubFrame;
+  const uint64_t mEmbedderInnerWindowID;
 
   // Holds the buffer position when page is unregistered.
   // It's used to determine if we still use this page in the profiler or

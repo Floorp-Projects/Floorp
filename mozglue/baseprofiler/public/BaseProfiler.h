@@ -333,16 +333,18 @@ MFBT_API void profiler_unregister_thread();
 // loaded in it will be about:blank. Because of that, this call keeps the first
 // non-about:blank registration of window and discards the previous one.
 //
-//   "aBrowsingContextID" is the ID of the browsing context that document
-//                        belongs to. That's used to determine the tab of that
-//                        page.
-//   "aInnerWindowID"     is the ID of the `window` global object of that
-//                        document.
-//   "aUrl"               is the URL of the page.
-//   "aIsSubFrame"        is true if the page is a sub frame.
+//   "aBrowsingContextID"     is the ID of the browsing context that document
+//                            belongs to. That's used to determine the tab of
+//                            that page.
+//   "aInnerWindowID"         is the ID of the `window` global object of that
+//                            document.
+//   "aUrl"                   is the URL of the page.
+//   "aEmbedderInnerWindowID" is the inner window id of embedder. It's used to
+//                            determine sub documents of a page.
 MFBT_API void profiler_register_page(uint64_t aBrowsingContextID,
                                      uint64_t aInnerWindowID,
-                                     const std::string& aUrl, bool aIsSubFrame);
+                                     const std::string& aUrl,
+                                     uint64_t aEmbedderInnerWindowID);
 // Unregister page with the profiler.
 //
 // Take a Inner Window ID and unregister the page entry that has the same ID.
