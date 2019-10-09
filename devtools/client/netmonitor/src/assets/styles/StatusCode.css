@@ -27,21 +27,34 @@
   background-color: var(--status-code-color-4xx);
 }
 
-.status-code[data-code^="5"], .status-code[data-code^="6"], .status-code[data-code^="7"],
-.status-code[data-code^="8"], .status-code[data-code^="9"] {
+.status-code[data-code^="5"],
+.status-code[data-code^="6"],
+.status-code[data-code^="7"],
+.status-code[data-code^="8"],
+.status-code[data-code^="9"] {
   background-color: var(--status-code-color-5xx);
 }
 
-.status-code img.blocked {
-  display: inline-block;
-  height: 12px;
-  width: 12px;
-  vertical-align: text-bottom;
-  margin-inline-start: 4px;
-  -moz-context-properties: fill;
-  fill: var(--timing-blocked-color);
+.status-code:not([data-code^="3"]):not(.status-code-blocked) {
+  color: var(--theme-body-background);
 }
 
-.status-code:not([data-code^="3"]) {
-  color: var(--theme-body-background);
+.status-code-blocked {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 24px;
+  width: 24px;
+  color: var(--theme-icon-error-color);
+}
+
+.request-list-item.selected .status-code-blocked {
+  color: var(--theme-selection-color);
+}
+
+.status-code-blocked img {
+  height: 12px;
+  width: 12px;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
