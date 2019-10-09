@@ -72,43 +72,37 @@ impl Core {
 
 impl ParseAttribute for Core {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
-        match mi.name().to_string().as_str() {
-            "default" => {
-                if self.default.is_some() {
-                    Err(Error::duplicate_field("default").with_span(mi))
-                } else {
-                    self.default = FromMeta::from_meta(mi)?;
-                    Ok(())
-                }
+        let path = mi.path();
+
+        if path.is_ident("default") {
+            if self.default.is_some() {
+                return Err(Error::duplicate_field("default").with_span(mi))
             }
-            "rename_all" => {
-                // WARNING: This may have been set based on body shape previously,
-                // so an overwrite may be permissible.
-                self.rename_rule = FromMeta::from_meta(mi)?;
-                Ok(())
+
+            self.default = FromMeta::from_meta(mi)?;
+        } else if path.is_ident("rename_all") {
+            // WARNING: This may have been set based on body shape previously,
+            // so an overwrite may be permissible.
+            self.rename_rule = FromMeta::from_meta(mi)?;
+        } else if path.is_ident("map") {
+            if self.map.is_some() {
+                return Err(Error::duplicate_field("map").with_span(mi))
             }
-            "map" => {
-                if self.map.is_some() {
-                    Err(Error::duplicate_field("map").with_span(mi))
-                } else {
-                    self.map = FromMeta::from_meta(mi)?;
-                    Ok(())
-                }
+
+            self.map = FromMeta::from_meta(mi)?;
+        } else if path.is_ident("bound") {
+            self.bound = FromMeta::from_meta(mi)?;
+        } else if path.is_ident("allow_unknown_fields") {
+            if self.allow_unknown_fields.is_some() {
+                return Err(Error::duplicate_field("allow_unknown_fields").with_span(mi))
             }
-            "bound" => {
-                self.bound = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            "allow_unknown_fields" => {
-                if self.allow_unknown_fields.is_some() {
-                    Err(Error::duplicate_field("allow_unknown_fields").with_span(mi))
-                } else {
-                    self.allow_unknown_fields = FromMeta::from_meta(mi)?;
-                    Ok(())
-                }
-            }
-            n => Err(Error::unknown_field(n).with_span(mi)),
+
+            self.allow_unknown_fields = FromMeta::from_meta(mi)?;
+        } else {
+            return Err(Error::unknown_field_path(&path).with_span(mi))
         }
+
+        Ok(())
     }
 }
 

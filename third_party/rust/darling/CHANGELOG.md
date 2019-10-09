@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.10.1 (September 25, 2019)
+- Fix test compilation errors [#81](https://github.com/TedDriggs/darling/pull/81)
+
+## v0.10.0 (August 15, 2019)
+- Bump syn and quote to 1.0 [#79](https://github.com/TedDriggs/darling/pull/79)
+- Increase rust version to 1.31
+
 ## v0.9.0 (March 20, 2019)
 - Enable "did you mean" suggestions by default
 - Make `darling_core::{codegen, options}` private [#58](https://github.com/TedDriggs/darling/issues/58)

@@ -3,7 +3,7 @@ Darling
 
 [![Build Status](https://travis-ci.org/TedDriggs/darling.svg?branch=master)](https://travis-ci.org/TedDriggs/darling)
 [![Latest Version](https://img.shields.io/crates/v/darling.svg)](https://crates.io/crates/darling)
-[![Rustc Version 1.18+](https://img.shields.io/badge/rustc-1.18+-lightgray.svg)](https://blog.rust-lang.org/2017/06/08/Rust-1.18.html)
+[![Rustc Version 1.31+](https://img.shields.io/badge/rustc-1.31+-lightgray.svg)](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html)
 
 `darling` is a crate for proc macro authors, which enables parsing attributes into structs. It is heavily inspired by `serde` both in its internals and in its API.
 

@@ -4,7 +4,7 @@ use syn::{self, Ident};
 
 use codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
 use options::ForwardAttrs;
-use util::IdentList;
+use util::PathList;
 
 pub struct FromTypeParamImpl<'a> {
     pub base: TraitImpl<'a>,
@@ -12,7 +12,7 @@ pub struct FromTypeParamImpl<'a> {
     pub attrs: Option<&'a Ident>,
     pub bounds: Option<&'a Ident>,
     pub default: Option<&'a Ident>,
-    pub attr_names: &'a IdentList,
+    pub attr_names: &'a PathList,
     pub forward_attrs: Option<&'a ForwardAttrs>,
     pub from_ident: bool,
 }
@@ -74,7 +74,7 @@ impl<'a> ToTokens for FromTypeParamImpl<'a> {
 }
 
 impl<'a> ExtractAttribute for FromTypeParamImpl<'a> {
-    fn attr_names(&self) -> &IdentList {
+    fn attr_names(&self) -> &PathList {
         &self.attr_names
     }
 

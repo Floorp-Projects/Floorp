@@ -42,12 +42,11 @@ impl<'a> From<&'a FromVariantOptions> for FromVariantImpl<'a> {
 
 impl ParseAttribute for FromVariantOptions {
     fn parse_nested(&mut self, mi: &Meta) -> Result<()> {
-        match mi.name().to_string().as_str() {
-            "supports" => {
-                self.supports = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            _ => self.base.parse_nested(mi),
+        if mi.path().is_ident("supports") {
+            self.supports = FromMeta::from_meta(mi)?;
+            Ok(())
+        } else {
+            self.base.parse_nested(mi)
         }
     }
 }

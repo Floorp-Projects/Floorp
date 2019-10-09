@@ -13,10 +13,10 @@ pub extern crate quote;
 
 pub use proc_macro2::{Span, TokenStream as TokenStream2};
 
-pub use span::IntoSpans;
+pub use crate::span::IntoSpans;
 
 #[cfg(all(
-    not(all(target_arch = "wasm32", target_os = "unknown")),
+    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
     feature = "proc-macro"
 ))]
 pub use proc_macro::TokenStream;

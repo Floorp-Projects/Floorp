@@ -44,7 +44,7 @@ use {Error, Result};
 pub trait FromMeta: Sized {
     fn from_nested_meta(item: &NestedMeta) -> Result<Self> {
         (match *item {
-            NestedMeta::Literal(ref lit) => Self::from_value(lit),
+            NestedMeta::Lit(ref lit) => Self::from_value(lit),
             NestedMeta::Meta(ref mi) => Self::from_meta(mi),
         })
         .map_err(|e| e.with_span(item))
@@ -60,7 +60,7 @@ pub trait FromMeta: Sized {
     /// source code.
     fn from_meta(item: &Meta) -> Result<Self> {
         (match *item {
-            Meta::Word(_) => Self::from_word(),
+            Meta::Path(_) => Self::from_word(),
             Meta::List(ref value) => Self::from_list(
                 &value
                     .nested
@@ -168,7 +168,7 @@ macro_rules! from_meta_num {
             fn from_value(value: &Lit) -> Result<Self> {
                 (match *value {
                     Lit::Str(ref s) => Self::from_string(&s.value()),
-                    Lit::Int(ref s) => Ok(s.value() as $ty),
+                    Lit::Int(ref s) => Ok(s.base10_parse::<$ty>().unwrap()),
                     _ => Err(Error::unexpected_lit_type(value)),
                 })
                 .map_err(|e| e.with_span(value))
@@ -200,7 +200,7 @@ macro_rules! from_meta_float {
             fn from_value(value: &Lit) -> Result<Self> {
                 (match *value {
                     Lit::Str(ref s) => Self::from_string(&s.value()),
-                    Lit::Float(ref s) => Ok(s.value() as $ty),
+                    Lit::Float(ref s) => Ok(s.base10_parse::<$ty>().unwrap()),
                     _ => Err(Error::unexpected_lit_type(value)),
                 })
                 .map_err(|e| e.with_span(value))
@@ -276,7 +276,7 @@ from_meta_lit!(syn::LitByte, Lit::Byte);
 from_meta_lit!(syn::LitByteStr, Lit::ByteStr);
 from_meta_lit!(syn::LitChar, Lit::Char);
 from_meta_lit!(syn::LitBool, Lit::Bool);
-from_meta_lit!(syn::LitVerbatim, Lit::Verbatim);
+from_meta_lit!(proc_macro2::Literal, Lit::Verbatim);
 
 impl FromMeta for syn::Meta {
     fn from_meta(value: &syn::Meta) -> Result<Self> {
@@ -354,16 +354,18 @@ impl<V: FromMeta, S: BuildHasher + Default> FromMeta for HashMap<String, V, S> {
         let mut map = HashMap::with_capacity_and_hasher(nested.len(), Default::default());
         for item in nested {
             if let syn::NestedMeta::Meta(ref inner) = *item {
-                match map.entry(inner.name().to_string()) {
+                let path = inner.path();
+                let name = path.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::");
+                match map.entry(name) {
                     Entry::Occupied(_) => {
                         return Err(
-                            Error::duplicate_field(&inner.name().to_string()).with_span(inner)
+                            Error::duplicate_field_path(&path).with_span(inner)
                         );
                     }
                     Entry::Vacant(entry) => {
                         // In the error case, extend the error's path, but assume the inner `from_meta`
                         // set the span, and that subsequently we don't have to.
-                        entry.insert(FromMeta::from_meta(inner).map_err(|e| e.at(inner.name()))?);
+                        entry.insert(FromMeta::from_meta(inner).map_err(|e| e.at_path(&path))?);
                     }
                 }
             }
@@ -385,7 +387,7 @@ mod tests {
     /// parse a string as a syn::Meta instance.
     fn pm(tokens: TokenStream) -> ::std::result::Result<syn::Meta, String> {
         let attribute: syn::Attribute = parse_quote!(#[#tokens]);
-        attribute.interpret_meta().ok_or("Unable to parse".into())
+        attribute.parse_meta().map_err(|_| "Unable to parse".into())
     }
 
     fn fm<T: FromMeta>(tokens: TokenStream) -> T {

@@ -1,68 +1,68 @@
 use std::ops::Deref;
 use std::string::ToString;
 
-use syn::{Ident, Meta, NestedMeta};
+use syn::{Meta, NestedMeta, Path};
 
 use {Error, FromMeta, Result};
 
-/// A list of `syn::Ident` instances. This type is used to extract a list of words from an
+/// A list of `syn::Path` instances. This type is used to extract a list of paths from an
 /// attribute.
 ///
 /// # Usage
-/// An `IdentList` field on a struct implementing `FromMeta` will turn `#[builder(derive(Debug, Clone))]` into:
+/// An `PathList` field on a struct implementing `FromMeta` will turn `#[builder(derive(serde::Debug, Clone))]` into:
 ///
 /// ```rust,ignore
 /// StructOptions {
-///     derive: IdentList(vec![syn::Ident::new("Debug"), syn::Ident::new("Clone")])
+///     derive: PathList(vec![syn::Path::new("serde::Debug"), syn::Path::new("Clone")])
 /// }
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct IdentList(Vec<Ident>);
+pub struct PathList(Vec<Path>);
 
-impl IdentList {
+impl PathList {
     /// Create a new list.
-    pub fn new<T: Into<Ident>>(vals: Vec<T>) -> Self {
-        IdentList(vals.into_iter().map(T::into).collect())
+    pub fn new<T: Into<Path>>(vals: Vec<T>) -> Self {
+        PathList(vals.into_iter().map(T::into).collect())
     }
 
-    /// Create a new `Vec` containing the string representation of each ident.
+    /// Create a new `Vec` containing the string representation of each path.
     pub fn to_strings(&self) -> Vec<String> {
-        self.0.iter().map(ToString::to_string).collect()
+        self.0.iter().map(|p| p.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::")).collect()
     }
 }
 
-impl Deref for IdentList {
-    type Target = Vec<Ident>;
+impl Deref for PathList {
+    type Target = Vec<Path>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<Vec<Ident>> for IdentList {
-    fn from(v: Vec<Ident>) -> Self {
-        IdentList(v)
+impl From<Vec<Path>> for PathList {
+    fn from(v: Vec<Path>) -> Self {
+        PathList(v)
     }
 }
 
-impl FromMeta for IdentList {
+impl FromMeta for PathList {
     fn from_list(v: &[NestedMeta]) -> Result<Self> {
-        let mut idents = Vec::with_capacity(v.len());
+        let mut paths = Vec::with_capacity(v.len());
         for nmi in v {
-            if let NestedMeta::Meta(Meta::Word(ref ident)) = *nmi {
-                idents.push(ident.clone());
+            if let NestedMeta::Meta(Meta::Path(ref path)) = *nmi {
+                paths.push(path.clone());
             } else {
                 return Err(Error::unexpected_type("non-word").with_span(nmi));
             }
         }
 
-        Ok(IdentList(idents))
+        Ok(PathList(paths))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::IdentList;
+    use super::PathList;
     use proc_macro2::TokenStream;
     use syn::{Attribute, Meta};
     use FromMeta;
@@ -70,7 +70,7 @@ mod tests {
     /// parse a string as a syn::Meta instance.
     fn pm(tokens: TokenStream) -> ::std::result::Result<Meta, String> {
         let attribute: Attribute = parse_quote!(#[#tokens]);
-        attribute.interpret_meta().ok_or("Unable to parse".into())
+        attribute.parse_meta().map_err(|_| "Unable to parse".into())
     }
 
     fn fm<T: FromMeta>(tokens: TokenStream) -> T {
@@ -80,9 +80,9 @@ mod tests {
 
     #[test]
     fn succeeds() {
-        let idents = fm::<IdentList>(quote!(ignore(Debug, Clone, Eq)));
+        let paths = fm::<PathList>(quote!(ignore(Debug, Clone, Eq)));
         assert_eq!(
-            idents.to_strings(),
+            paths.to_strings(),
             vec![
                 String::from("Debug"),
                 String::from("Clone"),
@@ -95,7 +95,7 @@ mod tests {
     /// has an associated span.
     #[test]
     fn fails_non_word() {
-        let input = IdentList::from_meta(&pm(quote!(ignore(Debug, Clone = false))).unwrap());
+        let input = PathList::from_meta(&pm(quote!(ignore(Debug, Clone = false))).unwrap());
         let err = input.unwrap_err();
         assert!(err.has_span());
     }
