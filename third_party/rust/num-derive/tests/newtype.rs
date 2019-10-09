@@ -2,7 +2,7 @@ extern crate num as num_renamed;
 #[macro_use]
 extern crate num_derive;
 
-use num_renamed::{Float, FromPrimitive, Num, NumCast, One, ToPrimitive, Zero};
+use crate::num_renamed::{Float, FromPrimitive, Num, NumCast, One, ToPrimitive, Zero};
 use std::ops::Neg;
 
 #[derive(
@@ -35,7 +35,6 @@ fn test_from_primitive() {
 }
 
 #[test]
-#[cfg(has_i128)]
 fn test_from_primitive_128() {
     assert_eq!(
         MyFloat::from_i128(std::i128::MIN),
@@ -49,7 +48,6 @@ fn test_to_primitive() {
 }
 
 #[test]
-#[cfg(has_i128)]
 fn test_to_primitive_128() {
     let f = MyFloat::from_f32(std::f32::MAX).unwrap();
     assert_eq!(f.to_i128(), None);
