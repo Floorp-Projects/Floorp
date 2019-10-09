@@ -9,28 +9,6 @@ var EXPORTED_SYMBOLS = ["WebNavigationChild"];
 const { ActorChild } = ChromeUtils.import(
   "resource://gre/modules/ActorChild.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "CrashReporter",
-  "@mozilla.org/xre/app-info;1",
-  "nsICrashReporter"
-);
 
 class WebNavigationChild extends ActorChild {
   get webNavigation() {
@@ -47,9 +25,6 @@ class WebNavigationChild extends ActorChild {
         break;
       case "WebNavigation:GotoIndex":
         this.gotoIndex(message.data);
-        break;
-      case "WebNavigation:LoadURI":
-        this.loadURI(message.data);
         break;
       case "WebNavigation:SetOriginAttributes":
         this.setOriginAttributes(message.data.originAttributes);
@@ -92,80 +67,6 @@ class WebNavigationChild extends ActorChild {
     let { index, cancelContentJSEpoch } = params || {};
     this.mm.docShell.setCancelContentJSEpoch(cancelContentJSEpoch);
     this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(index));
-  }
-
-  loadURI(params) {
-    let {
-      uri,
-      loadFlags,
-      referrerInfo,
-      postData,
-      headers,
-      baseURI,
-      triggeringPrincipal,
-      csp,
-      cancelContentJSEpoch,
-    } = params || {};
-
-    if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
-      let annotation = uri;
-      try {
-        let url = Services.io.newURI(uri);
-        // If the current URI contains a username/password, remove it.
-        url = url
-          .mutate()
-          .setUserPass("")
-          .finalize();
-        annotation = url.spec;
-      } catch (ex) {
-        /* Ignore failures to parse and failures
-                      on about: URIs. */
-      }
-      CrashReporter.annotateCrashReport("URL", annotation);
-    }
-    if (postData) {
-      postData = E10SUtils.makeInputStream(postData);
-    }
-    if (headers) {
-      headers = E10SUtils.makeInputStream(headers);
-    }
-    if (baseURI) {
-      baseURI = Services.io.newURI(baseURI);
-    }
-    this._assert(
-      triggeringPrincipal,
-      "We need a triggering principal to continue loading",
-      new Error().lineNumber
-    );
-
-    triggeringPrincipal = E10SUtils.deserializePrincipal(
-      triggeringPrincipal,
-      () => {
-        this._assert(
-          false,
-          "Unable to deserialize passed triggering principal",
-          new Error().lineNumber
-        );
-        return Services.scriptSecurityManager.getSystemPrincipal({});
-      }
-    );
-    if (csp) {
-      csp = E10SUtils.deserializeCSP(csp);
-    }
-
-    let loadURIOptions = {
-      triggeringPrincipal,
-      csp,
-      loadFlags,
-      referrerInfo: E10SUtils.deserializeReferrerInfo(referrerInfo),
-      postData,
-      headers,
-      baseURI,
-    };
-    this.mm.docShell.setCancelContentJSEpoch(cancelContentJSEpoch);
-    this._wrapURIChangeCall(() => {
-      return this.webNavigation.loadURI(uri, loadURIOptions);
-    });
   }
 
   _assert(condition, msg, line = 0) {
