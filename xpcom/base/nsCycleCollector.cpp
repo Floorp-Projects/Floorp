@@ -2490,9 +2490,9 @@ class SnowWhiteKiller : public TraceCallbacks {
     AppendJSObjectToPurpleBuffer(aObject->unbarrieredGet());
   }
 
-  virtual void Trace(JSObject** aObject, const char* aName,
+  virtual void Trace(nsWrapperCache* aWrapperCache, const char* aName,
                      void* aClosure) const override {
-    AppendJSObjectToPurpleBuffer(*aObject);
+    AppendJSObjectToPurpleBuffer(aWrapperCache->GetWrapperPreserveColor());
   }
 
   virtual void Trace(JS::TenuredHeap<JSObject*>* aObject, const char* aName,
