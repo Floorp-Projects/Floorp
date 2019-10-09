@@ -18,13 +18,11 @@ namespace mozilla {
 class MOZ_RAII AutoProfilerStyleMarker {
  public:
   explicit AutoProfilerStyleMarker(UniqueProfilerBacktrace aCause,
-                                   const Maybe<nsID>& aDocShellId,
-                                   const Maybe<uint32_t>& aDocShellHistoryId)
+                                   const Maybe<uint64_t>& aInnerWindowID)
       : mActive(profiler_can_accept_markers()),
         mStartTime(TimeStamp::Now()),
         mCause(std::move(aCause)),
-        mDocShellId(aDocShellId),
-        mDocShellHistoryId(aDocShellHistoryId) {
+        mInnerWindowID(aInnerWindowID) {
     if (!mActive) {
       return;
     }
@@ -42,16 +40,14 @@ class MOZ_RAII AutoProfilerStyleMarker {
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
         "Styles", LAYOUT, StyleMarkerPayload,
         (mStartTime, TimeStamp::Now(), std::move(mCause),
-         ServoTraversalStatistics::sSingleton, mDocShellId,
-         mDocShellHistoryId));
+         ServoTraversalStatistics::sSingleton, mInnerWindowID));
   }
 
  private:
   bool mActive;
   TimeStamp mStartTime;
   UniqueProfilerBacktrace mCause;
-  Maybe<nsID> mDocShellId;
-  Maybe<uint32_t> mDocShellHistoryId;
+  Maybe<uint64_t> mInnerWindowID;
 };
 
 }  // namespace mozilla
