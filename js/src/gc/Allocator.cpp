@@ -722,8 +722,8 @@ Chunk* GCRuntime::pickChunk(AutoLockGCBgAlloc& lock) {
   return chunk;
 }
 
-BackgroundAllocTask::BackgroundAllocTask(JSRuntime* rt, ChunkPool& pool)
-    : GCParallelTaskHelper(rt),
+BackgroundAllocTask::BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool)
+    : GCParallelTaskHelper(gc),
       chunkPool_(pool),
       enabled_(CanUseExtraThreads() && GetCPUCount() >= 2) {}
 
@@ -731,9 +731,8 @@ void BackgroundAllocTask::run() {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
   AutoTraceLog logAllocation(logger, TraceLogger_GCAllocation);
 
-  GCRuntime* gc = &runtime()->gc;
   AutoLockGC lock(gc);
-  while (!cancel_ && runtime()->gc.wantBackgroundAllocation(lock)) {
+  while (!cancel_ && gc->wantBackgroundAllocation(lock)) {
     Chunk* chunk;
     {
       AutoUnlockGC unlock(lock);
