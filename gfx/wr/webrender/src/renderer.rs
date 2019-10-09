@@ -6112,6 +6112,7 @@ impl Renderer {
                 CaptureConfig::save_png(
                     root.join(format!("textures/{}-{}.png", name, layer_id)),
                     rect_size, format,
+                    None,
                     data_ref,
                 );
             }
@@ -6235,6 +6236,7 @@ impl Renderer {
                         config.root.join(&short_path).with_extension("png"),
                         def.descriptor.size,
                         def.descriptor.format,
+                        def.descriptor.stride,
                         &bytes,
                     );
                 }
