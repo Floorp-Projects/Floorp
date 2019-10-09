@@ -406,15 +406,6 @@ IndexedDBShutdownTimeout:
     This annotation is present if IndexedDB shutdown was not finished in time
     and the browser was crashed instead of waiting for IndexedDB shutdown to
     finish. The condition that caused the hang is contained in the annotation.
-    The condition is constructed by stringifying status of objects which blocked
-    IndexedDB shutdown. Objects are divided into three groups:
-    FactoryOperations, LiveDatabases and DatabaseMaintenances. Each group is
-    reported separately and contains the number of objects in the group and
-    status of individual objects in the group (duplicit entries are removed):
-    "GroupName: N (objectStatus1, objectStatus2, ...)" where N is the number of
-    objects in the group. Status of individual objects is constructed by taking
-    selected object properties. Properties which contain origin strings are
-    anonymized.
   type: string
   content: false
   ping: true
@@ -561,15 +552,16 @@ LocalStorageShutdownTimeout:
     This annotation is present if LocalStorage shutdown was not finished in time
     and the browser was crashed instead of waiting for LocalStorage shutdown to
     finish. The condition that caused the hang is contained in the annotation.
-    The condition is constructed by stringifying status of objects which blocked
-    LocalStorage shutdown. Objects are divided into three groups:
-    PrepareDatastoreOperations, Datastores and LiveDatabases. Each group is
-    reported separately and contains the number of objects in the group and
-    status of individual objects in the group (duplicit entries are removed):
-    "GroupName: N (objectStatus1, objectStatus2, ...)" where N is the number of
-    objects in the group. Status of individual objects is constructed by taking
-    selected object properties. Properties which contain origin strings are
-    anonymized.
+    The condition is constructed by stringifying status of global arrays and
+    hash tables that blocked LocalStorage shutdown (gPrepareDatastoreOps,
+    gDatastores and gLiveDatabases). gDatastores and gLiveDatabases currently
+    only report the number of elements. gPrepareDatastoreOps reports the number
+    of elements and status of individual elements (duplicit entries are removed):
+    "gPrepareDatastoreOps: N (element1, element2, elementN)" where N is the
+    number of elements. Status of individual elements is constructed by taking
+    PrepareDatastoreOp's sanitized origin string, stringified state and
+    stringified nested state. A full example:
+    "gPrepareDatastoreOps: 1 (http://aaa.aaa.aaa*Nesting*DatabaseWorkOpen)"
   type: string
   content: false
   ping: true

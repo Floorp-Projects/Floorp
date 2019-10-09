@@ -14,12 +14,18 @@ namespace {
 
 LazyLogModule gLogger("QuotaManager");
 
-void AnonymizeCString(nsACString& aCString, uint32_t aStart) {
-  MOZ_ASSERT(!aCString.IsEmpty());
-  MOZ_ASSERT(aStart < aCString.Length());
+}  // namespace
 
-  char* iter = aCString.BeginWriting() + aStart;
-  char* end = aCString.EndWriting();
+#ifdef NIGHTLY_BUILD
+NS_NAMED_LITERAL_CSTRING(kQuotaInternalError, "internal");
+NS_NAMED_LITERAL_CSTRING(kQuotaExternalError, "external");
+#endif
+
+LogModule* GetQuotaManagerLogger() { return gLogger; }
+
+void SanitizeCString(nsACString& aString) {
+  char* iter = aString.BeginWriting();
+  char* end = aString.EndWriting();
 
   while (iter != end) {
     char c = *iter;
@@ -34,35 +40,21 @@ void AnonymizeCString(nsACString& aCString, uint32_t aStart) {
   }
 }
 
-}  // namespace
+void SanitizeOrigin(nsACString& aOrigin) {
+  int32_t colonPos = aOrigin.FindChar(':');
+  if (colonPos >= 0) {
+    const nsACString& prefix(Substring(aOrigin, 0, colonPos));
 
-const char kQuotaGenericDelimiter = '|';
+    nsCString normSuffix(Substring(aOrigin, colonPos));
+    SanitizeCString(normSuffix);
 
-#ifdef NIGHTLY_BUILD
-NS_NAMED_LITERAL_CSTRING(kQuotaInternalError, "internal");
-NS_NAMED_LITERAL_CSTRING(kQuotaExternalError, "external");
-#endif
+    aOrigin = prefix + normSuffix;
+  } else {
+    nsCString origin(aOrigin);
+    SanitizeCString(origin);
 
-LogModule* GetQuotaManagerLogger() { return gLogger; }
-
-void AnonymizeCString(nsACString& aCString) {
-  if (aCString.IsEmpty()) {
-    return;
+    aOrigin = origin;
   }
-  AnonymizeCString(aCString, /* aStart */ 0);
-}
-
-void AnonymizeOriginString(nsACString& aOriginString) {
-  if (aOriginString.IsEmpty()) {
-    return;
-  }
-
-  int32_t start = aOriginString.FindChar(':');
-  if (start < 0) {
-    start = 0;
-  }
-
-  AnonymizeCString(aOriginString, start);
 }
 
 }  // namespace quota

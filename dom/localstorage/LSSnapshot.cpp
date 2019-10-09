@@ -23,7 +23,8 @@ const uint32_t kSnapshotTimeoutMs = 20000;
  * when a Snapshot Checkpoints. (This can only be done when there are no
  * observers for other content processes.)
  */
-class SnapshotWriteOptimizer final : public LSWriteOptimizer<LSValue> {
+class SnapshotWriteOptimizer final
+    : public LSWriteOptimizer<LSValue> {
  public:
   void Enumerate(nsTArray<LSWriteInfo>& aWriteInfos);
 };
