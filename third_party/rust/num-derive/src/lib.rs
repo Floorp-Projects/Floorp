@@ -9,7 +9,7 @@
 // except according to those terms.
 
 #![crate_type = "proc-macro"]
-#![doc(html_root_url = "https://docs.rs/num-derive/0.2")]
+#![doc(html_root_url = "https://docs.rs/num-derive/0.3")]
 #![recursion_limit = "512"]
 
 //! Procedural macros to derive numeric traits in Rust.
@@ -21,7 +21,7 @@
 //! ```toml
 //! [dependencies]
 //! num-traits = "0.2"
-//! num-derive = "0.2"
+//! num-derive = "0.3"
 //! ```
 //!
 //! Then you can derive traits on your own types:
@@ -41,14 +41,9 @@
 
 extern crate proc_macro;
 
-extern crate proc_macro2;
-#[macro_use]
-extern crate quote;
-extern crate syn;
-
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-
+use quote::quote;
 use syn::{Data, Fields, Ident};
 
 // Within `exp`, you can bring things into scope with `extern crate`.
@@ -78,10 +73,9 @@ fn dummy_const_trick<T: quote::ToTokens>(
         Span::call_site(),
     );
     quote! {
-        #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
+        #[allow(non_upper_case_globals, unused_qualifications)]
         const #dummy_const: () = {
-            #[allow(unknown_lints)]
-            #[cfg_attr(feature = "cargo-clippy", allow(useless_attribute))]
+            #[allow(clippy::useless_attribute)]
             #[allow(rust_2018_idioms)]
             extern crate num_traits as _num_traits;
             #exp
@@ -89,12 +83,8 @@ fn dummy_const_trick<T: quote::ToTokens>(
     }
 }
 
-#[allow(deprecated)]
 fn unraw(ident: &proc_macro2::Ident) -> String {
-    // str::trim_start_matches was added in 1.30, trim_left_matches deprecated
-    // in 1.33. We currently support rustc back to 1.15 so we need to continue
-    // to use the deprecated one.
-    ident.to_string().trim_left_matches("r#").to_owned()
+    ident.to_string().trim_start_matches("r#").to_owned()
 }
 
 // If `data` is a newtype, return the type it's wrapping.
@@ -177,19 +167,6 @@ pub fn from_primitive(input: TokenStream) -> TokenStream {
     let name = &ast.ident;
 
     let impl_ = if let Some(inner_ty) = newtype_inner(&ast.data) {
-        let i128_fns = if cfg!(has_i128) {
-            quote! {
-                fn from_i128(n: i128) -> Option<Self> {
-                    <#inner_ty as _num_traits::FromPrimitive>::from_i128(n).map(#name)
-                }
-                fn from_u128(n: u128) -> Option<Self> {
-                    <#inner_ty as _num_traits::FromPrimitive>::from_u128(n).map(#name)
-                }
-            }
-        } else {
-            quote! {}
-        };
-
         quote! {
             impl _num_traits::FromPrimitive for #name {
                 fn from_i64(n: i64) -> Option<Self> {
@@ -210,6 +187,9 @@ pub fn from_primitive(input: TokenStream) -> TokenStream {
                 fn from_i32(n: i32) -> Option<Self> {
                     <#inner_ty as _num_traits::FromPrimitive>::from_i32(n).map(#name)
                 }
+                fn from_i128(n: i128) -> Option<Self> {
+                    <#inner_ty as _num_traits::FromPrimitive>::from_i128(n).map(#name)
+                }
                 fn from_usize(n: usize) -> Option<Self> {
                     <#inner_ty as _num_traits::FromPrimitive>::from_usize(n).map(#name)
                 }
@@ -222,13 +202,15 @@ pub fn from_primitive(input: TokenStream) -> TokenStream {
                 fn from_u32(n: u32) -> Option<Self> {
                     <#inner_ty as _num_traits::FromPrimitive>::from_u32(n).map(#name)
                 }
+                fn from_u128(n: u128) -> Option<Self> {
+                    <#inner_ty as _num_traits::FromPrimitive>::from_u128(n).map(#name)
+                }
                 fn from_f32(n: f32) -> Option<Self> {
                     <#inner_ty as _num_traits::FromPrimitive>::from_f32(n).map(#name)
                 }
                 fn from_f64(n: f64) -> Option<Self> {
                     <#inner_ty as _num_traits::FromPrimitive>::from_f64(n).map(#name)
                 }
-                #i128_fns
             }
         }
     } else {
@@ -341,19 +323,6 @@ pub fn to_primitive(input: TokenStream) -> TokenStream {
     let name = &ast.ident;
 
     let impl_ = if let Some(inner_ty) = newtype_inner(&ast.data) {
-        let i128_fns = if cfg!(has_i128) {
-            quote! {
-                fn to_i128(&self) -> Option<i128> {
-                    <#inner_ty as _num_traits::ToPrimitive>::to_i128(&self.0)
-                }
-                fn to_u128(&self) -> Option<u128> {
-                    <#inner_ty as _num_traits::ToPrimitive>::to_u128(&self.0)
-                }
-            }
-        } else {
-            quote! {}
-        };
-
         quote! {
             impl _num_traits::ToPrimitive for #name {
                 fn to_i64(&self) -> Option<i64> {
@@ -374,6 +343,9 @@ pub fn to_primitive(input: TokenStream) -> TokenStream {
                 fn to_i32(&self) -> Option<i32> {
                     <#inner_ty as _num_traits::ToPrimitive>::to_i32(&self.0)
                 }
+                fn to_i128(&self) -> Option<i128> {
+                    <#inner_ty as _num_traits::ToPrimitive>::to_i128(&self.0)
+                }
                 fn to_usize(&self) -> Option<usize> {
                     <#inner_ty as _num_traits::ToPrimitive>::to_usize(&self.0)
                 }
@@ -386,13 +358,15 @@ pub fn to_primitive(input: TokenStream) -> TokenStream {
                 fn to_u32(&self) -> Option<u32> {
                     <#inner_ty as _num_traits::ToPrimitive>::to_u32(&self.0)
                 }
+                fn to_u128(&self) -> Option<u128> {
+                    <#inner_ty as _num_traits::ToPrimitive>::to_u128(&self.0)
+                }
                 fn to_f32(&self) -> Option<f32> {
                     <#inner_ty as _num_traits::ToPrimitive>::to_f32(&self.0)
                 }
                 fn to_f64(&self) -> Option<f64> {
                     <#inner_ty as _num_traits::ToPrimitive>::to_f64(&self.0)
                 }
-                #i128_fns
             }
         }
     } else {
@@ -452,9 +426,7 @@ pub fn to_primitive(input: TokenStream) -> TokenStream {
     dummy_const_trick("ToPrimitive", &name, impl_).into()
 }
 
-#[allow(renamed_and_removed_lints)]
-#[cfg_attr(feature = "cargo-clippy", allow(const_static_lifetime))]
-const NEWTYPE_ONLY: &'static str = "This trait can only be derived for newtypes";
+const NEWTYPE_ONLY: &str = "This trait can only be derived for newtypes";
 
 /// Derives [`num_traits::NumOps`][num_ops] for newtypes.  The inner type must already implement
 /// `NumOps`.

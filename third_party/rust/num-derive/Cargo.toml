@@ -11,10 +11,10 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "num-derive"
-version = "0.2.5"
+version = "0.3.0"
 authors = ["The Rust Project Developers"]
-build = "build.rs"
 exclude = ["/ci/*", "/.travis.yml", "/bors.toml"]
 description = "Numeric syntax extensions"
 homepage = "https://github.com/rust-num/num-derive"
@@ -29,14 +29,22 @@ repository = "https://github.com/rust-num/num-derive"
 name = "num_derive"
 test = false
 proc-macro = true
+
+[[test]]
+name = "newtype-2015"
+edition = "2015"
+
+[[test]]
+name = "trivial-2015"
+edition = "2015"
 [dependencies.proc-macro2]
-version = "0.4.2"
+version = "1"
 
 [dependencies.quote]
-version = "0.6"
+version = "1"
 
 [dependencies.syn]
-version = "0.15"
+version = "1"
 [dev-dependencies.num]
 version = "0.2"
 
