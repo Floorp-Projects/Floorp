@@ -22,7 +22,6 @@ internal class PingMaker(
     private val applicationContext: Context
 ) {
     private val logger = Logger("glean/PingMaker")
-    private val pingStartTimes: MutableMap<String, String> = mutableMapOf()
     private val objectStartTime = getISOTimeString()
     internal val sharedPreferences: SharedPreferences? by lazy {
         applicationContext.getSharedPreferences(
@@ -56,12 +55,51 @@ internal class PingMaker(
     }
 
     /**
-     * Reset all ping sequence numbers.
+     * Reset all ping sequence numbers and start times.
      */
-    internal fun resetPingSequenceNumbers() {
+    internal fun resetPingMakerStorage() {
         sharedPreferences?.let {
             it.edit().clear().apply()
         }
+    }
+
+    /**
+     * Get the start time for a given ping.
+     * This is always equal to the end time of the last time the ping was sent.
+     *
+     * @param pingName The name of the ping
+     * @return start time
+     */
+    internal fun getPingStartTime(pingName: String): String {
+        sharedPreferences?.let {
+            val key = "${pingName}_start_time"
+            val currentValue = it.getString(key, objectStartTime)!!
+            return currentValue
+        }
+
+        // This clause should happen in testing only, where a sharedPreferences object
+        // isn't guaranteed to exist if using a mocked ApplicationContext
+        logger.error("Couldn't get SharedPreferences object for ping start times")
+        return objectStartTime
+    }
+
+    /**
+     * Set the start time for a given ping.
+     *
+     * @param pingName The name of the ping
+     * @param startTime The start time to set for the ping
+     */
+    internal fun setPingStartTime(pingName: String, startTime: String) {
+        sharedPreferences?.let {
+            val key = "${pingName}_start_time"
+            val editor = it.edit()
+            editor.putString(key, startTime)
+            editor.apply()
+        }
+
+        // This clause should happen in testing only, where a sharedPreferences object
+        // isn't guaranteed to exist if using a mocked ApplicationContext
+        logger.error("Couldn't get SharedPreferences object for ping start times")
     }
 
     /**
@@ -83,12 +121,12 @@ internal class PingMaker(
         // This needs to be a bit more involved for start-end times. "start_time" is
         // the time the ping was generated the last time. If not available, we use the
         // date the object was initialized.
-        val startTime = if (pingName in pingStartTimes) pingStartTimes[pingName] else objectStartTime
+        val startTime = getPingStartTime(pingName)
         pingInfo.put("start_time", startTime)
         val endTime = getISOTimeString()
         pingInfo.put("end_time", endTime)
         // Update the start time with the current time.
-        pingStartTimes[pingName] = endTime
+        setPingStartTime(pingName, endTime)
         return pingInfo
     }
 

@@ -283,7 +283,7 @@ open class GleanInternalAPI internal constructor () {
 
         pingStorageEngine.clearPendingPings()
         storageEngineManager.clearAllStores()
-        pingMaker.resetPingSequenceNumbers()
+        pingMaker.resetPingMakerStorage()
 
         // This does not clear the experiments store (which isn't managed by the
         // StorageEngineManager), since doing so would mean we would have to have the
