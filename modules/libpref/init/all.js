@@ -1551,6 +1551,13 @@ pref("network.http.proxy.version", "1.1");    // default
 // pref("network.http.proxy.version", "1.0"); // uncomment this out in case of problems
                                               // (required if using junkbuster proxy)
 
+// Whether we should respect the BE_CONSERVATIVE (aka nsIHttpChannelInternal.beConservative)
+// flag when connecting to a proxy.  If the configured proxy accepts only TLS 1.3, system
+// requests like updates will not pass through.  Setting this pref to false will fix that
+// problem.
+// Default at true to preserve the behavior we had before for backward compat.
+pref("network.http.proxy.respect-be-conservative", true);
+
 // this preference can be set to override the socket type used for normal
 // HTTP traffic.  an empty value indicates the normal TCP/IP socket type.
 pref("network.http.default-socket-type", "");

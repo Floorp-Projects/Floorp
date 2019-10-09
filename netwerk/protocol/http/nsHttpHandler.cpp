@@ -1329,6 +1329,16 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
+  if (PREF_CHANGED(HTTP_PREF("proxy.respect-be-conservative"))) {
+    rv =
+        Preferences::GetBool(HTTP_PREF("proxy.respect-be-conservative"), &cVar);
+    if (NS_SUCCEEDED(rv) && mConnMgr) {
+      Unused << mConnMgr->UpdateParam(
+          nsHttpConnectionMgr::PROXY_BE_CONSERVATIVE,
+          static_cast<int32_t>(cVar));
+    }
+  }
+
   if (PREF_CHANGED(HTTP_PREF("qos"))) {
     rv = Preferences::GetInt(HTTP_PREF("qos"), &val);
     if (NS_SUCCEEDED(rv)) mQoSBits = (uint8_t)clamped(val, 0, 0xff);

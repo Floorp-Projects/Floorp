@@ -126,6 +126,7 @@ nsHttpConnectionMgr::nsHttpConnectionMgr()
       mThrottleReadInterval(0),
       mThrottleHoldTime(0),
       mThrottleMaxTime(0),
+      mBeConservativeForProxy(true),
       mIsShuttingDown(false),
       mNumActiveConns(0),
       mNumIdleConns(0),
@@ -2985,6 +2986,9 @@ void nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase*) {
     case THROTTLING_MAX_TIME:
       mThrottleMaxTime = TimeDuration::FromMilliseconds(value);
       break;
+    case PROXY_BE_CONSERVATIVE:
+      mBeConservativeForProxy = !!value;
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected parameter name");
   }
@@ -3995,6 +3999,24 @@ nsHttpConnectionMgr::nsHalfOpenSocket::~nsHalfOpenSocket() {
   if (mEnt) mEnt->RemoveHalfOpen(this);
 }
 
+bool nsHttpConnectionMgr::BeConservativeIfProxied(nsIProxyInfo* proxy) {
+  if (mBeConservativeForProxy) {
+    // The pref says to be conservative for proxies.
+    return true;
+  }
+
+  if (!proxy) {
+    // There is no proxy, so be conservative by default.
+    return true;
+  }
+
+  // Be conservative only if there is no proxy host set either.
+  // This logic was copied from nsSSLIOLayerAddToSocket.
+  nsAutoCString proxyHost;
+  proxy->GetHost(proxyHost);
+  return proxyHost.IsEmpty();
+}
+
 nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
     nsISocketTransport** transport, nsIAsyncInputStream** instream,
     nsIAsyncOutputStream** outstream, bool isBackup) {
@@ -4067,7 +4089,8 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
     tmpFlags |= nsISocketTransport::DONT_TRY_ESNI;
   }
 
-  if ((mCaps & NS_HTTP_BE_CONSERVATIVE) || ci->GetBeConservative()) {
+  if (((mCaps & NS_HTTP_BE_CONSERVATIVE) || ci->GetBeConservative()) &&
+      gHttpHandler->ConnMgr()->BeConservativeIfProxied(ci->ProxyInfo())) {
     LOG(("Setting Socket to BE_CONSERVATIVE"));
     tmpFlags |= nsISocketTransport::BE_CONSERVATIVE;
   }
