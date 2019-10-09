@@ -423,17 +423,28 @@ class CorePS {
 
   static void AppendRegisteredPage(PSLockRef,
                                    RefPtr<PageInformation>&& aRegisteredPage) {
-    // Disabling this assertion for now until we fix the same page registration
-    // issue. See Bug 1542918.
-#if 0
     struct RegisteredPageComparator {
       PageInformation* aA;
       bool operator()(PageInformation* aB) const { return aA->Equals(aB); }
     };
-    MOZ_RELEASE_ASSERT(std::none_of(
+
+    auto foundPageIter = std::find_if(
         sInstance->mRegisteredPages.begin(), sInstance->mRegisteredPages.end(),
-        RegisteredPageComparator{aRegisteredPage.get()}));
-#endif
+        RegisteredPageComparator{aRegisteredPage.get()});
+
+    if (foundPageIter != sInstance->mRegisteredPages.end()) {
+      if ((*foundPageIter)->Url().EqualsLiteral("about:blank")) {
+        // When a BrowsingContext is loaded, the first url loaded in it will be
+        // about:blank, and if the principal matches, the first document loaded
+        // in it will share an inner window. That's why we should delete the
+        // intermittent about:blank if they share the inner window.
+        sInstance->mRegisteredPages.erase(foundPageIter);
+      } else {
+        // Do not register the same page again.
+        return;
+      }
+    }
+
     MOZ_RELEASE_ASSERT(
         sInstance->mRegisteredPages.append(std::move(aRegisteredPage)));
   }
@@ -3994,6 +4005,9 @@ void profiler_register_page(uint64_t aBrowsingContextID,
 
   PSAutoLock lock(gPSMutex);
 
+  // When a Browsing context is first loaded, the first url loaded in it will be
+  // about:blank. Because of that, this call keeps the first non-about:blank
+  // registration of window and discards the previous one.
   RefPtr<PageInformation> pageInfo = new PageInformation(
       aBrowsingContextID, aInnerWindowID, aUrl, aIsSubFrame);
   CorePS::AppendRegisteredPage(lock, std::move(pageInfo));

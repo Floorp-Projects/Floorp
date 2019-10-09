@@ -363,7 +363,9 @@ void profiler_unregister_thread();
 //
 // We register pages for each navigations but we do not register
 // history.pushState or history.replaceState since they correspond to the same
-// Inner Window ID.
+// Inner Window ID. When a Browsing context is first loaded, the first url
+// loaded in it will be about:blank. Because of that, this call keeps the first
+// non-about:blank registration of window and discards the previous one.
 //
 //   "aBrowsingContextID" is the ID of the browsing context that document
 //                        belongs to. That's used to determine the tab of that
