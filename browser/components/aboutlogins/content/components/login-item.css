@@ -302,7 +302,7 @@ input[name="password"] {
 .breach-alert-link {
   color: inherit;
   text-decoration: underline;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .breach-icon {
