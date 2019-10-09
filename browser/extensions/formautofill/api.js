@@ -23,6 +23,11 @@ ChromeUtils.defineModuleGetter(
   "formAutofillParent",
   "resource://formautofill/FormAutofillParent.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AutoCompleteParent",
+  "resource://gre/actors/AutoCompleteParent.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -50,8 +55,7 @@ function insertStyleSheet(domWindow, url) {
   }
 }
 
-function onMaybeOpenPopup(evt) {
-  let domWindow = evt.target.ownerGlobal;
+function onMaybeOpenPopup(domWindow) {
   if (CACHED_STYLESHEETS.has(domWindow)) {
     // This window already has autofill stylesheets.
     return;
@@ -164,10 +168,7 @@ this.formautofill = class extends ExtensionAPI {
     }
 
     // Listen for the autocomplete popup message to lazily append our stylesheet related to the popup.
-    Services.mm.addMessageListener(
-      "FormAutoComplete:MaybeOpenPopup",
-      onMaybeOpenPopup
-    );
+    AutoCompleteParent.addPopupStateListener(onMaybeOpenPopup);
 
     formAutofillParent.init().catch(Cu.reportError);
     Services.mm.loadFrameScript(
@@ -193,10 +194,7 @@ this.formautofill = class extends ExtensionAPI {
       );
     }
 
-    Services.mm.removeMessageListener(
-      "FormAutoComplete:MaybeOpenPopup",
-      onMaybeOpenPopup
-    );
+    AutoCompleteParent.removePopupStateListener(onMaybeOpenPopup);
 
     for (let win of Services.wm.getEnumerator("navigator:browser")) {
       let cachedStyleSheets = CACHED_STYLESHEETS.get(win);
