@@ -30,13 +30,21 @@ Before you attempt to make a contribution please read the [Community Participati
 # Maven repository
 
 All components are getting published on [maven.mozilla.org](https://maven.mozilla.org/).
-To use them, you need to add the following to your projects top-level build file, in the `allprojects` block (see e.g. the [reference-browser](https://github.com/mozilla-mobile/reference-browser/blob/master/build.gradle)):
+To use them, you need to add the following to your project's top-level build file, in the `allprojects` block (see e.g. the [reference-browser](https://github.com/mozilla-mobile/reference-browser/blob/master/build.gradle)):
 
 ```groovy
 repositories {
     maven {
        url "https://maven.mozilla.org/maven2"
     }
+}
+```
+
+Each module that uses a component needs to specify it in its build file, in the `dependencies` block.  For example, to use the `Base` component (in the `support`) collection, you need:
+
+```groovy
+dependencies {
+    implementation 'org.mozilla.components:support-base:+'
 }
 ```
 
@@ -273,6 +281,15 @@ If the environment variable `JAVA_HOME` is not defined, you will need to set it.
 5. Restart Android Studio.
 
 Once the environment variable is set, you can import the project into Android Studio with the default wizard options.
+
+## Style ##
+We follow the style enforced by [ktlint](https://ktlint.github.io/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
+
+To check your style, run:
+
+```
+./gradlew ktlint
+```
 
 # License
 
