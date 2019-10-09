@@ -69,7 +69,7 @@ class BytecodeLocation {
   // bytecode for a given script.
   bool isInBounds(const JSScript* script) const;
 
-  uint32_t bytecodeToOffset(JSScript* script);
+  uint32_t bytecodeToOffset(const JSScript* script) const;
 
   PropertyName* getPropertyName(const JSScript* script) const;
 
@@ -119,6 +119,8 @@ class BytecodeLocation {
   bool isJumpTarget() const { return BytecodeIsJumpTarget(getOp()); }
 
   bool isJump() const { return IsJumpOpcode(getOp()); }
+
+  bool opHasTypeSet() const { return BytecodeOpHasTypeSet(getOp()); }
 
   bool fallsThrough() const { return BytecodeFallsThrough(getOp()); }
 
