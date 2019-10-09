@@ -1592,6 +1592,7 @@ ProcessMessageManager* nsFrameMessageManager::NewProcessMessageManager(
         new ProcessMessageManager(new SameParentProcessMessageManagerCallback(),
                                   nsFrameMessageManager::sParentProcessManager,
                                   MessageManagerFlags::MM_OWNSCALLBACK);
+    mm->SetOsPid(base::GetCurrentProcId());
     sSameProcessParentManager = mm;
   }
   return mm;
