@@ -13,9 +13,22 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <!-- Allows changing locales -->
-    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"
+            tools:ignore="ProtectedPermissions" />
 
     <application
             tools:replace="android:name"
-            android:name="org.mozilla.fenix.DebugFenixApplication"/>
+            android:name="org.mozilla.fenix.DebugFenixApplication">
+
+        <service android:name=".customtabs.CustomTabsService">
+            <!-- Trusted Web Activities are currently only supported in nightly. -->
+            <intent-filter tools:node="removeAll" />
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+                <category android:name="androidx.browser.trusted.category.TrustedWebActivities" />
+            </intent-filter>
+        </service>
+
+    </application>
+
 </manifest>

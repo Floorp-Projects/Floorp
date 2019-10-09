@@ -31,7 +31,14 @@ class Components(private val context: Context) {
         )
     }
     val intentProcessors by lazy {
-        IntentProcessors(context, core.sessionManager, useCases.sessionUseCases, useCases.searchUseCases)
+        IntentProcessors(
+            context,
+            core.sessionManager,
+            useCases.sessionUseCases,
+            useCases.searchUseCases,
+            core.client,
+            core.customTabsStore
+        )
     }
     val analytics by lazy { Analytics(context) }
     val publicSuffixList by lazy { PublicSuffixList(context) }
