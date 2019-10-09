@@ -101,6 +101,8 @@ pub enum CachedImageData {
     /// An image owned by the embedding, and referenced by WebRender. This may
     /// take the form of a texture or a heap-allocated buffer.
     External(ExternalImageData),
+    /// The image data is only transparent pixels, we can skip rendering it.
+    Empty,
 }
 
 impl From<ImageData> for CachedImageData {
@@ -131,8 +133,9 @@ impl CachedImageData {
                 ExternalImageType::TextureHandle(_) => false,
                 ExternalImageType::Buffer => true,
             },
-            CachedImageData::Blob => true,
-            CachedImageData::Raw(_) => true,
+            CachedImageData::Blob
+            | CachedImageData::Raw(_)
+            | CachedImageData::Empty => true,
         }
     }
 }
@@ -223,6 +226,7 @@ struct CachedImageInfo {
     texture_cache_handle: TextureCacheHandle,
     dirty_rect: ImageDirtyRect,
     manual_eviction: bool,
+    is_fully_transparent: bool
 }
 
 impl CachedImageInfo {
@@ -456,6 +460,27 @@ pub struct AsyncBlobImageInfo {
     pub clear_requests: Vec<BlobImageClearParams>,
 }
 
+#[must_use]
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum ImageRequestStatus {
+    Requested,
+    FullyTransparent,
+    Error,
+}
+
+impl ImageRequestStatus {
+    pub fn should_render(self) -> bool {
+        match self {
+            Self::Requested => true,    
+            _ => false,
+        }
+    }
+
+    pub fn should_skip(self) -> bool {
+        !self.should_render()
+    }
+}
+
 /// High-level container for resources managed by the `RenderBackend`.
 ///
 /// This includes a variety of things, including images, fonts, and glyphs,
@@ -549,7 +574,9 @@ impl ResourceCache {
     fn should_tile(limit: i32, descriptor: &ImageDescriptor, data: &CachedImageData) -> bool {
         let size_check = descriptor.size.width > limit || descriptor.size.height > limit;
         match *data {
-            CachedImageData::Raw(_) | CachedImageData::Blob => size_check,
+            CachedImageData::Raw(_)
+            | CachedImageData::Blob
+            | CachedImageData::Empty => size_check,
             CachedImageData::External(info) => {
                 // External handles already represent existing textures so it does
                 // not make sense to tile them into smaller ones.
@@ -782,6 +809,20 @@ impl ResourceCache {
             let image = self.rasterized_blob_images.entry(request.key).or_insert_with(
                 || { RasterizedBlob::Tiled(FastHashMap::default()) }
             );
+
+            if data.data.is_none() {
+                let entry = ensure_cached_image_entry(
+                    &mut self.cached_images,
+                    ImageRequest {
+                        key: request.key.as_image(),
+                        tile: request.tile,
+                        rendering: ImageRendering::Auto,
+                    },
+                );
+
+                // Mark the cached image as empty to skip rendering it later.
+                entry.is_fully_transparent = true;
+            }
 
             if let Some(tile) = request.tile {
                 if let RasterizedBlob::NonTiled(..) = *image {
@@ -1110,11 +1151,13 @@ impl ResourceCache {
         self.active_image_keys.insert(image_key);
     }
 
+    // Returns false if the image should not be rendered, either due to an error,
+    // or if the image only contains fully transparent pixels.
     pub fn request_image(
         &mut self,
         request: ImageRequest,
         gpu_cache: &mut GpuCache,
-    ) {
+    ) -> ImageRequestStatus {
         debug_assert_eq!(self.state, State::AddResources);
 
         let template = match self.resources.image_templates.get(request.key) {
@@ -1122,13 +1165,13 @@ impl ResourceCache {
             None => {
                 warn!("ERROR: Trying to render deleted / non-existent key");
                 debug!("key={:?}", request.key);
-                return
+                return ImageRequestStatus::Error;
             }
         };
 
         // Images that don't use the texture cache can early out.
         if !template.data.uses_texture_cache() {
-            return;
+            return ImageRequestStatus::Requested;
         }
 
         let side_size =
@@ -1139,76 +1182,27 @@ impl ResourceCache {
             warn!("Dropping image, image:(w:{},h:{}, tile:{}) is too big for hardware!",
                   template.descriptor.size.width, template.descriptor.size.height, template.tiling.unwrap_or(0));
             self.cached_images.insert(request.key, ImageResult::Err(ImageCacheError::OverLimitSize));
-            return;
+            return ImageRequestStatus::Error;
         }
 
-        let storage = match self.cached_images.entry(request.key) {
-            Occupied(e) => {
-                // We might have an existing untiled entry, and need to insert
-                // a second entry. In such cases we need to move the old entry
-                // out first, replacing it with a dummy entry, and then creating
-                // the tiled/multi-entry variant.
-                let entry = e.into_mut();
-                if !request.is_untiled_auto() {
-                    let untiled_entry = match entry {
-                        &mut ImageResult::UntiledAuto(ref mut entry) => {
-                            Some(mem::replace(entry, CachedImageInfo {
-                                texture_cache_handle: TextureCacheHandle::invalid(),
-                                dirty_rect: DirtyRect::All,
-                                manual_eviction: false,
-                            }))
-                        }
-                        _ => None
-                    };
-
-                    if let Some(untiled_entry) = untiled_entry {
-                        let mut entries = ResourceClassCache::new();
-                        let untiled_key = CachedImageKey {
-                            rendering: ImageRendering::Auto,
-                            tile: None,
-                        };
-                        entries.insert(untiled_key, untiled_entry);
-                        *entry = ImageResult::Multi(entries);
-                    }
-                }
-                entry
-            }
-            Vacant(entry) => {
-                entry.insert(if request.is_untiled_auto() {
-                    ImageResult::UntiledAuto(CachedImageInfo {
-                        texture_cache_handle: TextureCacheHandle::invalid(),
-                        dirty_rect: DirtyRect::All,
-                        manual_eviction: false,
-                    })
-                } else {
-                    ImageResult::Multi(ResourceClassCache::new())
-                })
-            }
-        };
-
-        // If this image exists in the texture cache, *and* the dirty rect
-        // in the cache is empty, then it is valid to use as-is.
-        let entry = match *storage {
-            ImageResult::UntiledAuto(ref mut entry) => entry,
-            ImageResult::Multi(ref mut entries) => {
-                entries.entry(request.into())
-                    .or_insert(CachedImageInfo {
-                        texture_cache_handle: TextureCacheHandle::invalid(),
-                        dirty_rect: DirtyRect::All,
-                        manual_eviction: false,
-                    })
-            },
-            ImageResult::Err(_) => panic!("Errors should already have been handled"),
-        };
+        let entry = ensure_cached_image_entry(&mut self.cached_images, request);
 
         let needs_upload = self.texture_cache.request(&entry.texture_cache_handle, gpu_cache);
 
+
+        if entry.is_fully_transparent {
+            // Empty tile, skip rendering.
+            return ImageRequestStatus::FullyTransparent;
+        }
+
+        // If this image exists in the texture cache, *and* the dirty rect
+        // in the cache is empty, then it is valid to use as-is.
         if !needs_upload && entry.dirty_rect.is_empty() {
-            return
+            return ImageRequestStatus::Requested;
         }
 
         if !self.pending_image_requests.insert(request) {
-            return
+            return ImageRequestStatus::Requested;
         }
 
         // By this point, we know that the image request is considered dirty, and will
@@ -1256,6 +1250,8 @@ impl ResourceCache {
                 );
             }
         }
+
+        return ImageRequestStatus::Requested;
     }
 
     pub fn create_blob_scene_builder_requests(
@@ -1583,6 +1579,14 @@ impl ResourceCache {
     pub fn get_cached_image(&self, request: ImageRequest) -> Result<CacheItem, ()> {
         debug_assert_eq!(self.state, State::QueryResources);
         let image_info = self.get_image_info(request)?;
+        if image_info.is_fully_transparent {
+            // TODO(nical): Ideally we should have discarded the primitive already.
+            // If a blob image was not rasterized before frame building we end up
+            // knowing whether its content is transparent after the culling phase
+            // so we have to check again here. The plan is to remove the late blob
+            // rasterization code, after which we can simplify this.
+            return Err(())
+        }
         Ok(self.get_texture_cache_item(&image_info.texture_cache_handle))
     }
 
@@ -1620,7 +1624,9 @@ impl ResourceCache {
                     ExternalImageType::Buffer => None,
                 },
                 // raw and blob image are all using resource_cache.
-                CachedImageData::Raw(..) | CachedImageData::Blob => None,
+                CachedImageData::Raw(..)
+                | CachedImageData::Blob
+                | CachedImageData::Empty => None,
             };
 
             ImageProperties {
@@ -1727,7 +1733,9 @@ impl ResourceCache {
             let mut updates: SmallVec<[(CachedImageData, Option<DeviceIntRect>); 1]> = SmallVec::new();
 
             match image_template.data {
-                CachedImageData::Raw(..) | CachedImageData::External(..) => {
+                CachedImageData::Raw(..)
+                | CachedImageData::External(..)
+                | CachedImageData::Empty => {
                     // Safe to clone here since the Raw image data is an
                     // Arc, and the external image data is small.
                     updates.push((image_template.data.clone(), None));
@@ -1738,17 +1746,29 @@ impl ResourceCache {
                     match (blob_image, request.tile) {
                         (RasterizedBlob::Tiled(ref tiles), Some(tile)) => {
                             let img = &tiles[&tile];
-                            updates.push((
-                                CachedImageData::Raw(Arc::clone(&img.data)),
-                                Some(img.rasterized_rect)
-                            ));
+                            updates.push(
+                                if let Some(ref data) = img.data {
+                                    (
+                                        CachedImageData::Raw(Arc::clone(data)),
+                                        Some(img.rasterized_rect)
+                                    )
+                                } else {
+                                    (CachedImageData::Empty, None)
+                                }
+                            );
                         }
                         (RasterizedBlob::NonTiled(ref mut queue), None) => {
                             for img in queue.drain(..) {
-                                updates.push((
-                                    CachedImageData::Raw(img.data),
-                                    Some(img.rasterized_rect)
-                                ));
+                                updates.push(
+                                    if let Some(data) = img.data {
+                                        (
+                                            CachedImageData::Raw(data),
+                                            Some(img.rasterized_rect)
+                                        )
+                                    } else {
+                                        (CachedImageData::Empty, None)
+                                    }
+                                );
                             }
                         }
                         _ =>  {
@@ -1926,7 +1946,9 @@ impl ResourceCache {
         for (_, image) in self.resources.image_templates.images.iter() {
             report.images += match image.data {
                 CachedImageData::Raw(ref v) => unsafe { op(v.as_ptr() as *const c_void) },
-                CachedImageData::Blob | CachedImageData::External(..) => 0,
+                CachedImageData::Blob
+                | CachedImageData::External(..)
+                | CachedImageData::Empty => 0,
             }
         }
 
@@ -1970,6 +1992,72 @@ impl Drop for ResourceCache {
         self.clear_images(|_| true);
     }
 }
+
+
+fn ensure_cached_image_entry(cached_images: &mut ImageCache, request: ImageRequest) -> &mut CachedImageInfo {
+    let storage = match cached_images.entry(request.key) {
+        Occupied(e) => {
+            // We might have an existing untiled entry, and need to insert
+            // a second entry. In such cases we need to move the old entry
+            // out first, replacing it with a dummy entry, and then creating
+            // the tiled/multi-entry variant.
+            let entry = e.into_mut();
+            if !request.is_untiled_auto() {
+                let untiled_entry = match entry {
+                    &mut ImageResult::UntiledAuto(ref mut entry) => {
+                        Some(mem::replace(entry, CachedImageInfo {
+                            texture_cache_handle: TextureCacheHandle::invalid(),
+                            dirty_rect: DirtyRect::All,
+                            manual_eviction: false,
+                            is_fully_transparent: false,
+                        }))
+                    }
+                    _ => None
+                };
+
+                if let Some(untiled_entry) = untiled_entry {
+                    let mut entries = ResourceClassCache::new();
+                    let untiled_key = CachedImageKey {
+                        rendering: ImageRendering::Auto,
+                        tile: None,
+                    };
+                    entries.insert(untiled_key, untiled_entry);
+                    *entry = ImageResult::Multi(entries);
+                }
+            }
+            entry
+        }
+        Vacant(entry) => {
+            entry.insert(
+                if request.is_untiled_auto() {
+                    ImageResult::UntiledAuto(CachedImageInfo {
+                        texture_cache_handle: TextureCacheHandle::invalid(),
+                        dirty_rect: DirtyRect::All,
+                        manual_eviction: false,
+                        is_fully_transparent: false,
+                    })
+                } else {
+                    ImageResult::Multi(ResourceClassCache::new())
+                }
+            )
+        }
+    };
+
+    match *storage {
+        ImageResult::UntiledAuto(ref mut entry) => entry,
+        ImageResult::Multi(ref mut entries) => {
+            entries.entry(request.into())
+                .or_insert(CachedImageInfo {
+                    texture_cache_handle: TextureCacheHandle::invalid(),
+                    dirty_rect: DirtyRect::All,
+                    manual_eviction: false,
+                    is_fully_transparent: false,
+                })
+        },
+        ImageResult::Err(_) => panic!("Errors should already have been handled"),
+    }
+}
+
 
 pub fn get_blob_tiling(
     tiling: Option<TileSize>,
@@ -2153,7 +2241,7 @@ impl ResourceCache {
                         warn!("Tiled blob images aren't supported yet");
                         RasterizedBlobImage {
                             rasterized_rect: desc.size.into(),
-                            data: Arc::new(vec![0; desc.compute_total_size() as usize])
+                            data: None,
                         }
                     } else {
                         let blob_handler = self.blob_image_handler.as_mut().unwrap();
@@ -2163,25 +2251,26 @@ impl ResourceCache {
                         result.expect("Blob rasterization failed")
                     };
 
-                    assert_eq!(result.rasterized_rect.size, desc.size);
-                    assert_eq!(result.data.len(), desc.compute_total_size() as usize);
-
                     num_blobs += 1;
-                    #[cfg(feature = "png")]
-                    CaptureConfig::save_png(
-                        root.join(format!("blobs/{}.png", num_blobs)),
-                        desc.size,
-                        desc.format,
-                        &result.data,
-                    );
-                    let file_name = format!("{}.raw", num_blobs);
-                    let short_path = format!("blobs/{}", file_name);
-                    let full_path = path_blobs.clone().join(&file_name);
-                    fs::File::create(full_path)
-                        .expect(&format!("Unable to create {}", short_path))
-                        .write_all(&result.data)
-                        .unwrap();
-                    other_paths.insert(key, short_path);
+                    assert_eq!(result.rasterized_rect.size, desc.size);
+                    if let Some(ref data) = result.data {
+                        assert_eq!(data.len(), desc.compute_total_size() as usize);
+                        #[cfg(feature = "png")]
+                        CaptureConfig::save_png(
+                            root.join(format!("blobs/{}.png", num_blobs)),
+                            desc.size,
+                            desc.format,
+                            data,
+                        );
+                        let file_name = format!("{}.raw", num_blobs);
+                        let short_path = format!("blobs/{}", file_name);
+                        let full_path = path_blobs.clone().join(&file_name);
+                        fs::File::create(full_path)
+                            .expect(&format!("Unable to create {}", short_path))
+                            .write_all(data)
+                            .unwrap();
+                        other_paths.insert(key, short_path);
+                    }
                 }
                 CachedImageData::External(ref ext) => {
                     let short_path = format!("externals/{}", external_images.len() + 1);
@@ -2192,6 +2281,7 @@ impl ResourceCache {
                         external: ext.clone(),
                     });
                 }
+                CachedImageData::Empty => {}
             }
         }
 

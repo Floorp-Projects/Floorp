@@ -17,7 +17,7 @@ use crate::prim_store::{
     PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData,
     PrimitiveStore, InternablePrimitive,
 };
-use crate::resource_cache::{ImageRequest, ResourceCache};
+use crate::resource_cache::{ImageRequest, ResourceCache, ImageRequestStatus};
 use crate::storage;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -260,11 +260,11 @@ impl ImageBorderData {
         &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-    ) {
+    ) -> ImageRequestStatus {
         resource_cache.request_image(
             self.request,
             gpu_cache,
-        );
+        )
     }
 
     fn write_prim_gpu_blocks(

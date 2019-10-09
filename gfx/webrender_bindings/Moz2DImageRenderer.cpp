@@ -333,25 +333,26 @@ struct Reader {
   layers::BlobFont ReadBlobFont() { return Read<layers::BlobFont>(); }
 };
 
-static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
-                                gfx::SurfaceFormat aFormat,
-                                const mozilla::wr::DeviceIntRect* aVisibleRect,
-                                const mozilla::wr::LayoutIntRect* aRenderRect,
-                                const uint16_t* aTileSize,
-                                const mozilla::wr::TileOffset* aTileOffset,
-                                const mozilla::wr::LayoutIntRect* aDirtyRect,
-                                Range<uint8_t> aOutput) {
+static wr::BlobRenderStatus
+Moz2DRenderCallback(const Range<const uint8_t> aBlob,
+                    gfx::SurfaceFormat aFormat,
+                    const mozilla::wr::DeviceIntRect* aVisibleRect,
+                    const mozilla::wr::LayoutIntRect* aRenderRect,
+                    const uint16_t* aTileSize,
+                    const mozilla::wr::TileOffset* aTileOffset,
+                    const mozilla::wr::LayoutIntRect* aDirtyRect,
+                    Range<uint8_t> aOutput) {
   IntSize size(aRenderRect->size.width, aRenderRect->size.height);
   AUTO_PROFILER_TRACING("WebRender", "RasterizeSingleBlob", GRAPHICS);
   MOZ_RELEASE_ASSERT(size.width > 0 && size.height > 0);
   if (size.width <= 0 || size.height <= 0) {
-    return false;
+    return BlobRenderStatus::Error;
   }
 
   auto stride = size.width * gfx::BytesPerPixel(aFormat);
 
   if (aOutput.length() < static_cast<size_t>(size.height * stride)) {
-    return false;
+    return BlobRenderStatus::Error;
   }
 
   // In bindings.rs we allocate a buffer filled with opaque white.
@@ -362,7 +363,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
       uninitialized);
 
   if (!dt) {
-    return false;
+    return BlobRenderStatus::Error;
   }
 
   // We try hard to not have empty blobs but we can end up with
@@ -392,7 +393,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
                 aDirtyRect->size.width, aDirtyRect->size.height));
   }
 
-  bool ret = true;
+  wr::BlobRenderStatus status = wr::BlobRenderStatus::Empty;
   size_t offset = 0;
   auto absBounds = IntRectAbsolute::FromRect(bounds);
   while (reader.pos < reader.len) {
@@ -407,6 +408,8 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
       continue;
     }
 
+    status = BlobRenderStatus::Ok;
+
     layers::WebRenderTranslator translator(dt);
     Reader fontReader(aBlob.begin().get() + end, extra_end - end);
     size_t count = fontReader.ReadSize();
@@ -418,9 +421,10 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
     }
 
     Range<const uint8_t> blob(aBlob.begin() + offset, aBlob.begin() + end);
-    ret =
+    bool ok =
         translator.TranslateRecording((char*)blob.begin().get(), blob.length());
-    if (!ret) {
+    if (!ok) {
+      status = BlobRenderStatus::Error;
       gfxCriticalNote << "Replay failure: " << translator.GetError();
       MOZ_RELEASE_ASSERT(false);
     }
@@ -447,7 +451,7 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
   gfxUtils::WriteAsPNG(dt, filename);
 #endif
 
-  return ret;
+  return status;
 }
 
 }  // namespace wr
@@ -455,14 +459,15 @@ static bool Moz2DRenderCallback(const Range<const uint8_t> aBlob,
 
 extern "C" {
 
-bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob,
-                        mozilla::wr::ImageFormat aFormat,
-                        const mozilla::wr::LayoutIntRect* aRenderRect,
-                        const mozilla::wr::DeviceIntRect* aVisibleRect,
-                        const uint16_t* aTileSize,
-                        const mozilla::wr::TileOffset* aTileOffset,
-                        const mozilla::wr::LayoutIntRect* aDirtyRect,
-                        mozilla::wr::MutByteSlice output) {
+mozilla::wr::BlobRenderStatus
+wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob,
+                   mozilla::wr::ImageFormat aFormat,
+                   const mozilla::wr::LayoutIntRect* aRenderRect,
+                   const mozilla::wr::DeviceIntRect* aVisibleRect,
+                   const uint16_t* aTileSize,
+                   const mozilla::wr::TileOffset* aTileOffset,
+                   const mozilla::wr::LayoutIntRect* aDirtyRect,
+                   mozilla::wr::MutByteSlice output) {
   return mozilla::wr::Moz2DRenderCallback(
       mozilla::wr::ByteSliceToRange(blob),
       mozilla::wr::ImageFormatToSurfaceFormat(aFormat), aVisibleRect,
