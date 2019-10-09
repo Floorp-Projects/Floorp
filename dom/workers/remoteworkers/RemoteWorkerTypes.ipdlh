@@ -10,20 +10,13 @@ include URIParams;
 include DOMTypes;
 include ProtocolTypes;
 
-using struct IPC::Permission from "mozilla/net/NeckoMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::StorageAccess from "mozilla/dom/ClientIPCUtils.h";
 
 namespace mozilla {
 namespace dom {
 
-struct KeyAndPermissions {
-  nsCString key;
-  Permission[] permissions;
-};
-
 struct ServiceWorkerData {
-  KeyAndPermissions[] permissionsByKey;
   IPCServiceWorkerDescriptor descriptor;
   IPCServiceWorkerRegistrationDescriptor registrationDescriptor;
   nsString cacheName;

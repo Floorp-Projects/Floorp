@@ -416,14 +416,6 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
     MOZ_ASSERT(!data.id().IsEmpty());
     workerPrivateId = std::move(data.id());
 
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-        services::GetPermissionManager();
-
-    for (auto& keyAndPermissions : data.permissionsByKey()) {
-      permissionManager->SetPermissionsWithKey(keyAndPermissions.key(),
-                                               keyAndPermissions.permissions());
-    }
-
     info.mServiceWorkerCacheName = data.cacheName();
     info.mServiceWorkerDescriptor.emplace(data.descriptor());
     info.mServiceWorkerRegistrationDescriptor.emplace(
@@ -471,9 +463,27 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   RefPtr<InitializeWorkerRunnable> runnable =
       new InitializeWorkerRunnable(std::move(workerPrivate), SelfHolder(this));
 
-  if (NS_WARN_IF(!runnable->Dispatch())) {
-    rv = NS_ERROR_FAILURE;
-    return rv;
+  if (mIsServiceWorker) {
+    SelfHolder self = this;
+
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__, [initializeWorkerRunnable = std::move(runnable),
+                   self = std::move(self)] {
+          if (NS_WARN_IF(!initializeWorkerRunnable->Dispatch())) {
+            self->TransitionStateToTerminated();
+            self->CreationFailedOnAnyThread();
+          }
+        });
+
+    nsCOMPtr<nsIPermissionManager> permissionManager =
+        services::GetPermissionManager();
+    MOZ_ALWAYS_SUCCEEDS(
+        permissionManager->WhenPermissionsAvailable(principal, r));
+  } else {
+    if (NS_WARN_IF(!runnable->Dispatch())) {
+      rv = NS_ERROR_FAILURE;
+      return rv;
+    }
   }
 
   scopeExit.release();
