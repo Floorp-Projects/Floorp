@@ -495,7 +495,7 @@ class EditorDOMPointBase final {
     nsINode* parent;
     for (parent = mParent->GetParentNode();
          parent && parent->IsInNativeAnonymousSubtree();
-         parent = mParent->GetParentNode()) {
+         parent = parent->GetParentNode()) {
     }
     if (!parent) {
       return EditorRawDOMPoint();
