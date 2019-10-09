@@ -23,15 +23,9 @@ internal class PingMaker(
 ) {
     private val logger = Logger("glean/PingMaker")
     private val objectStartTime = getISOTimeString()
-    internal val sharedPreferencesSeq: SharedPreferences? by lazy {
+    internal val sharedPreferences: SharedPreferences? by lazy {
         applicationContext.getSharedPreferences(
             this.javaClass.canonicalName,
-            Context.MODE_PRIVATE
-        )
-    }
-    val sharedPreferencesStartTimes: SharedPreferences? by lazy {
-        applicationContext.getSharedPreferences(
-            "{this.javaClass.canonicalName}StartTimes",
             Context.MODE_PRIVATE
         )
     }
@@ -45,7 +39,7 @@ internal class PingMaker(
      * @return sequence number
      */
     internal fun getPingSeq(pingName: String): Int {
-        sharedPreferencesSeq?.let {
+        sharedPreferences?.let {
             val key = "${pingName}_seq"
             val currentValue = it.getInt(key, 0)
             val editor = it.edit()
@@ -61,10 +55,10 @@ internal class PingMaker(
     }
 
     /**
-     * Reset all ping sequence numbers.
+     * Reset all ping sequence numbers and start times.
      */
-    internal fun resetPingSequenceNumbers() {
-        sharedPreferencesSeq?.let {
+    internal fun resetPingMakerStorage() {
+        sharedPreferences?.let {
             it.edit().clear().apply()
         }
     }
@@ -77,7 +71,7 @@ internal class PingMaker(
      * @return start time
      */
     internal fun getPingStartTime(pingName: String): String {
-        sharedPreferencesStartTimes?.let {
+        sharedPreferences?.let {
             val key = "${pingName}_start_time"
             val currentValue = it.getString(key, objectStartTime)!!
             return currentValue
@@ -96,7 +90,7 @@ internal class PingMaker(
      * @param startTime The start time to set for the ping
      */
     internal fun setPingStartTime(pingName: String, startTime: String) {
-        sharedPreferencesStartTimes?.let {
+        sharedPreferences?.let {
             val key = "${pingName}_start_time"
             val editor = it.edit()
             editor.putString(key, startTime)

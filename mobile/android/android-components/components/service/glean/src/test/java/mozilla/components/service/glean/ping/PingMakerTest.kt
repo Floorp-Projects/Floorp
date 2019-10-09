@@ -235,7 +235,7 @@ class PingMakerTest {
 
         // Clear the sharedPreferences on the PingMaker so we can test that the
         // numbers start at zero.
-        maker.sharedPreferencesSeq?.let {
+        maker.sharedPreferences?.let {
             val editor = it.edit()
             editor.clear()
             editor.apply()
