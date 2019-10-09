@@ -56,6 +56,27 @@ class AllBytecodesIterable {
   BytecodeIterator end();
 };
 
+// Construct a range based iterator that will visit all bytecode locations
+// between two given bytecode locations.
+// `beginLoc_` is the bytecode location where the iterator will start, and
+// `endLoc_` is the bytecode location where the iterator will end.
+class BytecodeLocationRange {
+  BytecodeLocation beginLoc_;
+  BytecodeLocation endLoc_;
+
+ public:
+  explicit BytecodeLocationRange(BytecodeLocation beginLoc,
+                                 BytecodeLocation endLoc)
+      : beginLoc_(beginLoc), endLoc_(endLoc) {
+#ifdef DEBUG
+    MOZ_ASSERT(beginLoc.hasSameScript(endLoc));
+#endif
+  }
+
+  BytecodeIterator begin();
+  BytecodeIterator end();
+};
+
 }  // namespace js
 
 #endif

@@ -73,6 +73,12 @@ class BytecodeLocation {
 
   PropertyName* getPropertyName(const JSScript* script) const;
 
+#ifdef DEBUG
+  bool hasSameScript(const BytecodeLocation& other) const {
+    return debugOnlyScript_ == other.debugOnlyScript_;
+  }
+#endif
+
   bool operator==(const BytecodeLocation& other) const {
     MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
     return rawBytecode_ == other.rawBytecode_;
