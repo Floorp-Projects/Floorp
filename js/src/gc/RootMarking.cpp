@@ -338,7 +338,7 @@ void js::gc::GCRuntime::traceKeptAtoms(JSTracer* trc) {
   // We don't have exact rooting information for atoms while parsing. When
   // this is happeninng we set a flag on the zone and trace all atoms in the
   // zone's cache.
-  for (GCZonesIter zone(trc->runtime()); !zone.done(); zone.next()) {
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     if (zone->hasKeptAtoms()) {
       zone->traceAtomCache(trc);
     }
@@ -392,7 +392,7 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
   // Zone::traceScriptTableRoots() for justification re: calling this only
   // during major (non-nursery) collections.
   if (!JS::RuntimeHeapIsMinorCollecting()) {
-    for (ZonesIter zone(rt, ZoneSelector::SkipAtoms); !zone.done();
+    for (ZonesIter zone(this, ZoneSelector::SkipAtoms); !zone.done();
          zone.next()) {
       zone->traceScriptTableRoots(trc);
     }
@@ -527,7 +527,7 @@ void js::gc::GCRuntime::bufferGrayRoots() {
   // Precondition: the state has been reset to "unused" after the last GC
   //               and the zone's buffers have been cleared.
   MOZ_ASSERT(grayBufferState == GrayBufferState::Unused);
-  for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     MOZ_ASSERT(zone->gcGrayRoots().IsEmpty());
   }
 
@@ -601,11 +601,11 @@ void GCRuntime::markBufferedGrayRoots(JS::Zone* zone) {
   }
 }
 
-void GCRuntime::resetBufferedGrayRoots() const {
+void GCRuntime::resetBufferedGrayRoots() {
   MOZ_ASSERT(
       grayBufferState != GrayBufferState::Okay,
       "Do not clear the gray buffers unless we are Failed or becoming Unused");
-  for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     zone->gcGrayRoots().Clear();
   }
 }
