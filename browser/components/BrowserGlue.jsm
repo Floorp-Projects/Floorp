@@ -230,16 +230,6 @@ let LEGACY_ACTORS = {
     },
   },
 
-  ContextMenuSpecialProcess: {
-    child: {
-      module: "resource:///actors/ContextMenuSpecialProcessChild.jsm",
-      events: {
-        contextmenu: { mozSystemGroup: true },
-      },
-    },
-    allFrames: true,
-  },
-
   DOMFullscreen: {
     child: {
       module: "resource:///actors/DOMFullscreenChild.jsm",

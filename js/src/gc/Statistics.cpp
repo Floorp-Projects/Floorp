@@ -153,6 +153,10 @@ using PhaseKindTable =
 
 static double t(TimeDuration duration) { return duration.ToMilliseconds(); }
 
+inline JSContext* Statistics::context() {
+  return gc->rt->mainContextFromOwnThread();
+}
+
 inline Phase Statistics::currentPhase() const {
   return phaseStack.empty() ? Phase::NONE : phaseStack.back();
 }
@@ -570,13 +574,13 @@ UniqueChars Statistics::renderJsonSlice(size_t sliceNum) const {
   return printer.release();
 }
 
-UniqueChars Statistics::renderNurseryJson(JSRuntime* rt) const {
+UniqueChars Statistics::renderNurseryJson() const {
   Sprinter printer(nullptr, false);
   if (!printer.init()) {
     return UniqueChars(nullptr);
   }
   JSONPrinter json(printer);
-  rt->gc.nursery().renderProfileJSON(json);
+  gc->nursery().renderProfileJSON(json);
   return printer.release();
 }
 
@@ -750,8 +754,8 @@ void Statistics::formatJsonPhaseTimes(const PhaseTimeTable& phaseTimes,
   }
 }
 
-Statistics::Statistics(JSRuntime* rt)
-    : runtime(rt),
+Statistics::Statistics(GCRuntime* gc)
+    : gc(gc),
       gcTimerFile(nullptr),
       gcDebugFile(nullptr),
       nonincrementalReason_(gc::AbortReason::None),
@@ -989,22 +993,21 @@ void Statistics::beginGC(JSGCInvocationKind kind,
   gckind = kind;
   nonincrementalReason_ = gc::AbortReason::None;
 
-  GCRuntime& gc = runtime->gc;
-  preTotalHeapBytes = gc.heapSize.bytes();
+  preTotalHeapBytes = gc->heapSize.bytes();
 
   preCollectedHeapBytes = 0;
 
-  startingMajorGCNumber = gc.majorGCCount();
-  startingSliceNumber = gc.gcNumber();
+  startingMajorGCNumber = gc->majorGCCount();
+  startingSliceNumber = gc->gcNumber();
 
-  if (gc.lastGCEndTime()) {
-    timeSinceLastGC = currentTime - gc.lastGCEndTime();
+  if (gc->lastGCEndTime()) {
+    timeSinceLastGC = currentTime - gc->lastGCEndTime();
   }
 }
 
 void Statistics::measureInitialHeapSize() {
   MOZ_ASSERT(preCollectedHeapBytes == 0);
-  for (GCZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
+  for (GCZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
     preCollectedHeapBytes += zone->gcHeapSize.bytes();
   }
 }
@@ -1012,12 +1015,12 @@ void Statistics::measureInitialHeapSize() {
 void Statistics::adoptHeapSizeDuringIncrementalGC(Zone* mergedZone) {
   // A zone is being merged into a zone that's currently being collected so we
   // need to adjust our record of the total size of heap for collected zones.
-  MOZ_ASSERT(runtime->gc.isIncrementalGCInProgress());
+  MOZ_ASSERT(gc->isIncrementalGCInProgress());
   preCollectedHeapBytes += mergedZone->gcHeapSize.bytes();
 }
 
 void Statistics::endGC() {
-  postTotalHeapBytes = runtime->gc.heapSize.bytes();
+  postTotalHeapBytes = gc->heapSize.bytes();
 
   sendGCTelemetry();
 
@@ -1025,17 +1028,18 @@ void Statistics::endGC() {
 }
 
 void Statistics::sendGCTelemetry() {
+  JSRuntime* runtime = gc->rt;
   runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC,
                         !zoneStats.isFullCollection());
   TimeDuration markTotal = SumPhase(PhaseKind::MARK, phaseTimes);
   TimeDuration markRootsTotal = SumPhase(PhaseKind::MARK_ROOTS, phaseTimes);
   double markTime = t(markTotal);
-  size_t markCount = runtime->gc.marker.getMarkCount();
+  size_t markCount = gc->marker.getMarkCount();
   double markRate = markCount / markTime;
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_MS, markTime);
   runtime->addTelemetry(JS_TELEMETRY_GC_MARK_RATE, markRate);
   runtime->addTelemetry(JS_TELEMETRY_GC_SWEEP_MS, t(phaseTimes[Phase::SWEEP]));
-  if (runtime->gc.isCompactingGc()) {
+  if (gc->isCompactingGc()) {
     runtime->addTelemetry(JS_TELEMETRY_GC_COMPACT_MS,
                           t(phaseTimes[Phase::COMPACT]));
   }
@@ -1062,7 +1066,7 @@ void Statistics::sendGCTelemetry() {
   }
 
   runtime->addTelemetry(JS_TELEMETRY_GC_INCREMENTAL_DISABLED,
-                        !runtime->gc.isIncrementalGCAllowed());
+                        !gc->isIncrementalGCAllowed());
 
   TimeDuration sccTotal, sccLongest;
   sccDurations(&sccTotal, &sccLongest);
@@ -1115,19 +1119,17 @@ void Statistics::sendGCTelemetry() {
 
 void Statistics::beginNurseryCollection(JS::GCReason reason) {
   count(COUNT_MINOR_GC);
-  startingMinorGCNumber = runtime->gc.minorGCCount();
+  startingMinorGCNumber = gc->minorGCCount();
   if (nurseryCollectionCallback) {
     (*nurseryCollectionCallback)(
-        runtime->mainContextFromOwnThread(),
-        JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START, reason);
+        context(), JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START, reason);
   }
 }
 
 void Statistics::endNurseryCollection(JS::GCReason reason) {
   if (nurseryCollectionCallback) {
     (*nurseryCollectionCallback)(
-        runtime->mainContextFromOwnThread(),
-        JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END, reason);
+        context(), JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END, reason);
   }
 
   allocsSinceMinorGC = {0, 0};
@@ -1143,11 +1145,12 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
 
   TimeStamp currentTime = ReallyNow();
 
-  bool first = !runtime->gc.isIncrementalGCInProgress();
+  bool first = !gc->isIncrementalGCInProgress();
   if (first) {
     beginGC(gckind, currentTime);
   }
 
+  JSRuntime* runtime = gc->rt;
   if (!runtime->parentRuntime && !slices_.empty()) {
     TimeDuration timeSinceLastSlice = currentTime - slices_.back().end;
     runtime->addTelemetry(JS_TELEMETRY_GC_TIME_BETWEEN_SLICES_MS,
@@ -1155,7 +1158,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
   }
 
   if (!slices_.emplaceBack(budget, reason, currentTime, GetPageFaultCount(),
-                           runtime->gc.state())) {
+                           gc->state())) {
     // If we are OOM, set a flag to indicate we have missing slice data.
     aborted = true;
     return;
@@ -1166,7 +1169,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats,
   // Slice callbacks should only fire for the outermost level.
   bool wasFullGC = zoneStats.isFullCollection();
   if (sliceCallback) {
-    JSContext* cx = runtime->mainContextFromOwnThread();
+    JSContext* cx = context();
     JS::GCDescription desc(!wasFullGC, false, gckind, reason);
     if (first) {
       (*sliceCallback)(cx, JS::GC_CYCLE_BEGIN, desc);
@@ -1185,7 +1188,7 @@ void Statistics::endSlice() {
     auto& slice = slices_.back();
     slice.end = ReallyNow();
     slice.endFaults = GetPageFaultCount();
-    slice.finalState = runtime->gc.state();
+    slice.finalState = gc->state();
 
     writeLogMessage("end slice");
 
@@ -1194,7 +1197,7 @@ void Statistics::endSlice() {
     sliceCount_++;
   }
 
-  bool last = !runtime->gc.isIncrementalGCInProgress();
+  bool last = !gc->isIncrementalGCInProgress();
   if (last) {
     if (gcTimerFile) {
       printStats();
@@ -1214,7 +1217,7 @@ void Statistics::endSlice() {
   if (!aborted) {
     bool wasFullGC = zoneStats.isFullCollection();
     if (sliceCallback) {
-      JSContext* cx = runtime->mainContextFromOwnThread();
+      JSContext* cx = context();
       JS::GCDescription desc(!wasFullGC, last, gckind, slices_.back().reason);
       (*sliceCallback)(cx, JS::GC_SLICE_END, desc);
       if (last) {
@@ -1256,6 +1259,7 @@ void Statistics::endSlice() {
 }
 
 void Statistics::sendSliceTelemetry(const SliceData& slice) {
+  JSRuntime* runtime = gc->rt;
   TimeDuration sliceTime = slice.end - slice.start;
   runtime->addTelemetry(JS_TELEMETRY_GC_SLICE_MS, t(sliceTime));
 
@@ -1291,6 +1295,7 @@ void Statistics::sendSliceTelemetry(const SliceData& slice) {
 
 void Statistics::reportLongestPhaseInMajorGC(PhaseKind longest,
                                              int telemetryId) {
+  JSRuntime* runtime = gc->rt;
   if (longest != PhaseKind::NONE) {
     uint8_t bucket = phaseKinds[longest].telemetryBucket;
     runtime->addTelemetry(telemetryId, bucket);
@@ -1371,7 +1376,7 @@ void Statistics::beginPhase(PhaseKind phaseKind) {
 }
 
 void Statistics::recordPhaseBegin(Phase phase) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
 
   // Guard against any other re-entry.
   MOZ_ASSERT(!phaseStartTimes[phase]);
@@ -1398,7 +1403,7 @@ void Statistics::recordPhaseBegin(Phase phase) {
 }
 
 void Statistics::recordPhaseEnd(Phase phase) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
 
   MOZ_ASSERT(phaseStartTimes[phase]);
 
@@ -1470,7 +1475,7 @@ void Statistics::endPhase(PhaseKind phaseKind) {
 
 void Statistics::recordParallelPhase(PhaseKind phaseKind,
                                      TimeDuration duration) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
 
   Phase phase = lookupChildPhase(phaseKind);
 
@@ -1542,7 +1547,7 @@ void Statistics::maybePrintProfileHeaders() {
   static int printedHeader = 0;
   if ((printedHeader++ % 200) == 0) {
     printProfileHeader();
-    if (runtime->gc.nursery().enableProfiling()) {
+    if (gc->nursery().enableProfiling()) {
       Nursery::printProfileHeader();
     }
   }

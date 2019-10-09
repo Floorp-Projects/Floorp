@@ -12101,7 +12101,7 @@ already_AddRefed<Document> Document::CreateStaticClone(
 
       clonedDoc->mReferrerInfo =
           static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
-      clonedDoc->mPreloadReferrerInfo = clonedDoc->mPreloadReferrerInfo;
+      clonedDoc->mPreloadReferrerInfo = clonedDoc->mReferrerInfo;
     }
   }
   mCreatingStaticClone = false;

@@ -38,9 +38,10 @@ this.specialpowers = class extends ExtensionAPI {
       includeChrome: true,
       child: {
         moduleURI: "resource://specialpowers/SpecialPowersChild.jsm",
-        events: {
-          DOMWindowCreated: {},
-        },
+        observers: [
+          "chrome-document-global-created",
+          "content-document-global-created",
+        ],
       },
       parent: {
         moduleURI: "resource://specialpowers/SpecialPowersParent.jsm",
