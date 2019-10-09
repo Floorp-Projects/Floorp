@@ -6,6 +6,7 @@
 #define nsTouchBarUpdater_h_
 
 #include "nsITouchBarUpdater.h"
+#include "nsCocoaWindow.h"
 
 class nsTouchBarUpdater : public nsITouchBarUpdater {
  public:
@@ -16,6 +17,7 @@ class nsTouchBarUpdater : public nsITouchBarUpdater {
 
  protected:
   virtual ~nsTouchBarUpdater() {}
+  BaseWindow* GetCocoaWindow(nsIBaseWindow* aWindow);
 };
 
 #endif  // nsTouchBarUpdater_h_
