@@ -2353,7 +2353,9 @@ class ScriptWarmUpData {
   uintptr_t data_ = 0 | WarmUpCountTag;
 
   void setWarmUpCount(uint32_t count) {
-    count = std::min(count, MaxWarmUpCount);
+    if (count > MaxWarmUpCount) {
+      count = MaxWarmUpCount;
+    }
     data_ = (uintptr_t(count) << NumTagBits) | WarmUpCountTag;
   }
 
