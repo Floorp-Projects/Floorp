@@ -1036,7 +1036,7 @@ add_task(async function testExtensionControlledProxyConfig() {
             ...manualControlContainer.querySelectorAll(
               "label[data-l10n-id]:not([control=networkProxyNone])"
             ),
-            ...manualControlContainer.querySelectorAll("textbox"),
+            ...manualControlContainer.querySelectorAll("input"),
             ...manualControlContainer.querySelectorAll("checkbox"),
             ...doc.querySelectorAll("#networkProxySOCKSVersion > radio"),
           ],
