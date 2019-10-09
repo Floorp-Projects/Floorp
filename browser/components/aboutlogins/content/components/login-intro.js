@@ -22,5 +22,19 @@ export default class LoginIntro extends HTMLElement {
   set supportURL(val) {
     this.shadowRoot.querySelector(".intro-help-link").setAttribute("href", val);
   }
+
+  updateState(syncState) {
+    let l10nId = syncState.loggedIn
+      ? "about-logins-login-intro-heading-logged-in"
+      : "login-intro-heading";
+    document.l10n.setAttributes(
+      this.shadowRoot.querySelector(".heading"),
+      l10nId
+    );
+
+    this.shadowRoot
+      .querySelector(".illustration")
+      .classList.toggle("logged-in", syncState.loggedIn);
+  }
 }
 customElements.define("login-intro", LoginIntro);

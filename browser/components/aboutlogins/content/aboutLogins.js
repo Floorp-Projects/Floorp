@@ -35,6 +35,7 @@ function handleAllLogins(logins) {
 function handleSyncState(syncState) {
   gElements.fxAccountsButton.updateState(syncState);
   gElements.loginFooter.hidden = syncState.hideMobileFooter;
+  gElements.loginIntro.updateState(syncState);
 }
 
 window.addEventListener("AboutLoginsChromeToContent", event => {

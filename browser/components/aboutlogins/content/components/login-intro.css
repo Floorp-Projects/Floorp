@@ -21,3 +21,7 @@ section {
   font-weight: 600;
   margin-bottom: 0;
 }
+
+.illustration.logged-in {
+  opacity: .5;
+}
