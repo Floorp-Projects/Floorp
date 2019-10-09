@@ -95,6 +95,14 @@ add_task(async function setup() {
       // Ignore errors from browser-sync.js.
       return;
     }
+    if (
+      msg.errorMessage.includes(
+        "ReferenceError: MigrationWizard is not defined"
+      )
+    ) {
+      // todo(Bug 1587237): Ignore error when loading the Migration Wizard in automation.
+      return;
+    }
     if (msg.errorMessage.includes(EXPECTED_ERROR_MESSAGE)) {
       return;
     }
