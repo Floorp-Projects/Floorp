@@ -1995,6 +1995,8 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 pref("devtools.inspector.showUserAgentShadowRoots", false);
 // Enable the new Rules View
 pref("devtools.inspector.new-rulesview.enabled", false);
+// Enable the compatibility tool in the inspector.
+pref("devtools.inspector.compatibility.enabled", false);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);

@@ -969,6 +969,12 @@ Inspector.prototype = {
         );
         panel = new ChangesView(this, this.panelWin);
         break;
+      case "compatibilityview":
+        const CompatibilityView = this.browserRequire(
+          "devtools/client/inspector/compatibility/CompatibilityView"
+        );
+        panel = new CompatibilityView(this, this.panelWin);
+        break;
       case "computedview":
         const { ComputedViewTool } = this.browserRequire(
           "devtools/client/inspector/computed/computed"
@@ -1080,6 +1086,17 @@ Inspector.prototype = {
       sidebarPanels.push({
         id: "newruleview",
         title: INSPECTOR_L10N.getStr("inspector.sidebar.ruleViewTitle"),
+      });
+    }
+
+    if (
+      Services.prefs.getBoolPref("devtools.inspector.compatibility.enabled")
+    ) {
+      sidebarPanels.push({
+        id: "compatibilityview",
+        title: INSPECTOR_L10N.getStr(
+          "inspector.sidebar.compatibilityViewTitle"
+        ),
       });
     }
 
