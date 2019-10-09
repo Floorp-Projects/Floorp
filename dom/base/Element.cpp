@@ -525,66 +525,6 @@ void Element::ClearStyleStateLocks() {
   NotifyStyleStateChange(locks.mLocks);
 }
 
-#ifdef MOZ_XBL
-static bool MayNeedToLoadXBLBinding(const Element& aElement) {
-  // Clean this up in https://bugzilla.mozilla.org/show_bug.cgi?id=1585823
-  return false;
-}
-#endif
-
-JSObject* Element::WrapObject(JSContext* aCx,
-                              JS::Handle<JSObject*> aGivenProto) {
-  JS::Rooted<JSObject*> obj(aCx, nsINode::WrapObject(aCx, aGivenProto));
-  if (!obj) {
-    return nullptr;
-  }
-
-#ifdef MOZ_XBL
-  if (!MayNeedToLoadXBLBinding(*this)) {
-    return obj;
-  }
-
-  {
-    RefPtr<ComputedStyle> style =
-        nsComputedDOMStyle::GetComputedStyleNoFlush(this, nullptr);
-    if (!style) {
-      return obj;
-    }
-
-    // We have a binding that must be installed.
-    const StyleUrlOrNone& computedBinding = style->StyleDisplay()->mBinding;
-    if (!computedBinding.IsUrl()) {
-      return obj;
-    }
-
-    auto& url = computedBinding.AsUrl();
-    nsCOMPtr<nsIURI> uri = url.GetURI();
-    nsCOMPtr<nsIPrincipal> principal = url.ExtraData().Principal();
-
-    nsXBLService* xblService = nsXBLService::GetInstance();
-    if (!xblService) {
-      dom::Throw(aCx, NS_ERROR_NOT_AVAILABLE);
-      return nullptr;
-    }
-
-    RefPtr<nsXBLBinding> binding;
-    xblService->LoadBindings(this, uri, principal, getter_AddRefs(binding));
-
-    if (binding) {
-      if (nsContentUtils::IsSafeToRunScript()) {
-        binding->ExecuteAttachedHandler();
-      } else {
-        nsContentUtils::AddScriptRunner(
-            NewRunnableMethod("nsXBLBinding::ExecuteAttachedHandler", binding,
-                              &nsXBLBinding::ExecuteAttachedHandler));
-      }
-    }
-  }
-#endif
-
-  return obj;
-}
-
 /* virtual */
 nsINode* Element::GetScopeChainParent() const { return OwnerDoc(); }
 
