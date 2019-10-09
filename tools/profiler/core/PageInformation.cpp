@@ -10,11 +10,11 @@
 
 PageInformation::PageInformation(uint64_t aBrowsingContextID,
                                  uint64_t aInnerWindowID, const nsCString& aUrl,
-                                 bool aIsSubFrame)
+                                 uint64_t aEmbedderInnerWindowID)
     : mBrowsingContextID(aBrowsingContextID),
       mInnerWindowID(aInnerWindowID),
       mUrl(aUrl),
-      mIsSubFrame(aIsSubFrame) {}
+      mEmbedderInnerWindowID(aEmbedderInnerWindowID) {}
 
 bool PageInformation::Equals(PageInformation* aOtherPageInfo) const {
   // It's enough to check inner window IDs because they are unique for each
@@ -31,7 +31,7 @@ void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   aWriter.DoubleProperty("browsingContextID", BrowsingContextID());
   aWriter.DoubleProperty("innerWindowID", InnerWindowID());
   aWriter.StringProperty("url", Url().get());
-  aWriter.BoolProperty("isSubFrame", IsSubFrame());
+  aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());
   aWriter.EndObject();
 }
 

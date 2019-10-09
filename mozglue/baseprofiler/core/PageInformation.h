@@ -28,7 +28,7 @@ class SpliceableJSONWriter;
 class PageInformation final {
  public:
   PageInformation(uint64_t aBrowsingContextID, uint64_t aInnerWindowID,
-                  const std::string& aUrl, bool aIsSubFrame);
+                  const std::string& aUrl, uint64_t aEmbedderInnerWindowID);
 
   // Using hand-rolled ref-counting, because RefCounted.h macros don't produce
   // the same code between mozglue and libxul, see bug 1536656.
@@ -47,7 +47,7 @@ class PageInformation final {
   uint64_t InnerWindowID() const { return mInnerWindowID; }
   uint64_t BrowsingContextID() const { return mBrowsingContextID; }
   const std::string& Url() const { return mUrl; }
-  bool IsSubFrame() const { return mIsSubFrame; }
+  uint64_t EmbedderInnerWindowID() const { return mEmbedderInnerWindowID; }
 
   Maybe<uint64_t> BufferPositionWhenUnregistered() const {
     return mBufferPositionWhenUnregistered;
@@ -61,7 +61,7 @@ class PageInformation final {
   const uint64_t mBrowsingContextID;
   const uint64_t mInnerWindowID;
   const std::string mUrl;
-  const bool mIsSubFrame;
+  const uint64_t mEmbedderInnerWindowID;
 
   // Holds the buffer position when page is unregistered.
   // It's used to determine if we still use this page in the profiler or
