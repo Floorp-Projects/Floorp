@@ -238,7 +238,7 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
   loadState->SetSourceDocShell(docShell);
   loadState->SetLoadFlags(nsIWebNavigation::LOAD_FLAGS_NONE);
   loadState->SetFirstParty(true);
-  rv = docShell->LoadURI(loadState, false);
+  rv = docShell->LoadURI(loadState);
   if (NS_FAILED(rv)) {
     return ClientOpPromise::CreateAndReject(rv, __func__);
   }

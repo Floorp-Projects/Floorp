@@ -812,6 +812,14 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
         if (NS_SUCCEEDED(rv) && newBC) {
           nsCOMPtr<nsIDocShell> newDocShell = newBC->GetDocShell();
+          if (windowIsNew && newDocShell) {
+            // Make sure to stop any loads happening in this window that the
+            // window provider might have started.  Otherwise if our caller
+            // manipulates the window it just opened and then the load
+            // completes their stuff will get blown away.
+            nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(newDocShell);
+            webNav->Stop(nsIWebNavigation::STOP_NETWORK);
+          }
 
           // If this is a new window, but it's incompatible with the current
           // userContextId, we ignore it and we pretend that nothing has been
