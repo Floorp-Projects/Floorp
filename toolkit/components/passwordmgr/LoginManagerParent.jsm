@@ -19,11 +19,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 ChromeUtils.defineModuleGetter(
   this,
-  "AutoCompletePopup",
-  "resource://gre/modules/AutoCompletePopup.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm"
 );
@@ -186,7 +181,7 @@ this.LoginManagerParent = {
 
       case "PasswordManager:removeLogin": {
         let login = LoginHelper.vanillaObjectToLogin(data.login);
-        AutoCompletePopup.removeLogin(login);
+        Services.logins.removeLogin(login);
         break;
       }
 

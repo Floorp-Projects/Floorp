@@ -14,6 +14,25 @@
     "resource://gre/modules/Services.jsm"
   );
 
+  function sendMessageToBrowser(msgName, data) {
+    let { AutoCompleteParent } = ChromeUtils.import(
+      "resource://gre/actors/AutoCompleteParent.jsm"
+    );
+
+    let browser = AutoCompleteParent.getCurrentBrowser();
+    if (!browser) {
+      return;
+    }
+
+    if (browser.messageManager) {
+      browser.messageManager.sendAsyncMessage(msgName, data);
+    } else {
+      Cu.reportError(
+        `customElements.js: No messageManager for message "${msgName}"`
+      );
+    }
+  }
+
   class MozAutocompleteProfileListitemBase extends MozElements.MozRichlistitem {
     constructor() {
       super();
@@ -111,10 +130,7 @@
         this.removeAttribute("selected");
       }
 
-      let { AutoCompletePopup } = ChromeUtils.import(
-        "resource://gre/modules/AutoCompletePopup.jsm"
-      );
-      AutoCompletePopup.sendMessageToBrowser("FormAutofill:PreviewProfile");
+      sendMessageToBrowser("FormAutofill:PreviewProfile");
 
       return val;
     }
@@ -350,10 +366,7 @@
           return;
         }
 
-        let { AutoCompletePopup } = ChromeUtils.import(
-          "resource://gre/modules/AutoCompletePopup.jsm"
-        );
-        AutoCompletePopup.sendMessageToBrowser("FormAutofill:ClearForm");
+        sendMessageToBrowser("FormAutofill:ClearForm");
       });
     }
 

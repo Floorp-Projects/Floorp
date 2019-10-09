@@ -350,24 +350,17 @@ let ProfileAutocomplete = {
     }
   },
 
-  _frameMMFromWindow(contentWindow) {
-    return contentWindow.docShell.messageManager;
+  getActorFromWindow(contentWindow) {
+    return contentWindow.getWindowGlobalChild().getActor("AutoComplete");
   },
 
   _getSelectedIndex(contentWindow) {
-    let mm = this._frameMMFromWindow(contentWindow);
-    let selectedIndexResult = mm.sendSyncMessage(
-      "FormAutoComplete:GetSelectedIndex",
-      {}
-    );
-    if (
-      selectedIndexResult.length != 1 ||
-      !Number.isInteger(selectedIndexResult[0])
-    ) {
+    let actor = this.getActorFromWindow(contentWindow);
+    if (!actor) {
       throw new Error("Invalid autocomplete selectedIndex");
     }
 
-    return selectedIndexResult[0];
+    return actor.selectedIndex;
   },
 
   _fillFromAutocompleteRow(focusedInput) {
