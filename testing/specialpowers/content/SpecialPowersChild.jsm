@@ -1668,7 +1668,7 @@ class SpecialPowersChild extends JSWindowActorChild {
       browsingContext,
       args,
       task: String(task),
-      caller: SpecialPowersSandbox.getCallerInfo(Components.stack.caller),
+      caller: Cu.getFunctionSourceLocation(task),
       hasHarness: typeof this.SimpleTest === "object",
     });
   }
