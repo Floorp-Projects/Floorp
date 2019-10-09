@@ -124,7 +124,6 @@ class SearchFragment : Fragment(), BackHandler {
         return view
     }
 
-    @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     @SuppressWarnings("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

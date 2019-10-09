@@ -21,7 +21,6 @@ import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EventSource
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class PerformedSearchTest {

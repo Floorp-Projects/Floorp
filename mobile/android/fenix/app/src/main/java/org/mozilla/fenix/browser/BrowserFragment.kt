@@ -65,7 +65,6 @@ import org.mozilla.fenix.quickactionsheet.QuickActionSheetView
 /**
  * Fragment used for browsing the web within the main app.
  */
-@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @Suppress("TooManyFunctions", "LargeClass")
 class BrowserFragment : BaseBrowserFragment(), BackHandler {

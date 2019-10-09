@@ -22,7 +22,6 @@ import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
 import org.mozilla.fenix.components.toolbar.QuickActionSheetAction
 
 @ExperimentalCoroutinesApi
-@ObsoleteCoroutinesApi
 class QuickActionSheetSessionObserverTest {
 
     private lateinit var components: Components

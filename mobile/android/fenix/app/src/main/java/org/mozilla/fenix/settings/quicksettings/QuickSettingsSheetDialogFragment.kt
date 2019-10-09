@@ -48,7 +48,6 @@ import com.google.android.material.R as MaterialR
 
 private const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4
 
-@ObsoleteCoroutinesApi
 @SuppressWarnings("TooManyFunctions")
 class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private val safeArguments get() = requireNotNull(arguments)
@@ -161,7 +160,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     }
 
     @ExperimentalCoroutinesApi
-    @ObsoleteCoroutinesApi
     override fun onResume() {
         super.onResume()
         getAutoDisposeObservable<QuickSettingsAction>()

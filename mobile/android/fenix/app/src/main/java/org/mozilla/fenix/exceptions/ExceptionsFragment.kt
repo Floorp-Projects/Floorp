@@ -55,7 +55,6 @@ class ExceptionsFragment : Fragment() {
         return view
     }
 
-    @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

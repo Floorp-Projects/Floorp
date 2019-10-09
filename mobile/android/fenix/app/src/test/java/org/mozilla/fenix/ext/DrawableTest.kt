@@ -13,7 +13,6 @@ import android.graphics.Rect
 import android.graphics.Canvas
 import android.graphics.ColorFilter
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 

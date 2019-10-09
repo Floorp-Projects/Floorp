@@ -16,7 +16,6 @@ import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class WhatsNewStorageTest {

@@ -20,7 +20,6 @@ import org.mockito.Mockito.verify
 import org.mozilla.fenix.TestApplication
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 internal class BreadcrumbRecorderTest {

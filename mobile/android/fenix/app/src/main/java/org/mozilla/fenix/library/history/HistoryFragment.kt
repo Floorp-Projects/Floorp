@@ -108,7 +108,6 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
         }
     }
 
-    @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

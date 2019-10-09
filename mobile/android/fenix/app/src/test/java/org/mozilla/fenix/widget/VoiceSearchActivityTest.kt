@@ -35,7 +35,6 @@ import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowActivity
 
-@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)

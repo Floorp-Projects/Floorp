@@ -18,7 +18,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.Locale
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class SupportUtilsTest {

@@ -110,7 +110,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler {
         return view
     }
 
-    @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

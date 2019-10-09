@@ -19,7 +19,6 @@ import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class SpeechProcessingIntentProcessorTest {

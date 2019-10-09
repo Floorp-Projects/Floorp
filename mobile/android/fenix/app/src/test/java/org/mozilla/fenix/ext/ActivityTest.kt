@@ -14,7 +14,6 @@ import android.view.View
 import android.view.WindowManager
 import org.robolectric.Shadows.shadowOf
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 

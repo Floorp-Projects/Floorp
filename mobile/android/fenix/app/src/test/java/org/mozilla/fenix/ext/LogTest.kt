@@ -12,7 +12,6 @@ import io.mockk.verify
 import android.util.Log
 import org.mozilla.fenix.BuildConfig
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 

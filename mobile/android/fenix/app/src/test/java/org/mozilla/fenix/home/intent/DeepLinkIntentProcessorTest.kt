@@ -24,7 +24,6 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class DeepLinkIntentProcessorTest {

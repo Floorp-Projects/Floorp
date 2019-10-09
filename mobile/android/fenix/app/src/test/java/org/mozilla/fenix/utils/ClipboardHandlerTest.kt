@@ -17,7 +17,6 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class ClipboardHandlerTest {

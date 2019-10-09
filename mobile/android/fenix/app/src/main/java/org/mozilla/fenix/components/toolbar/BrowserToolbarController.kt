@@ -106,7 +106,6 @@ class DefaultBrowserToolbarController(
     }
 
     @ExperimentalCoroutinesApi
-    @ObsoleteCoroutinesApi
     @SuppressWarnings("ComplexMethod", "LongMethod")
     override fun handleToolbarItemInteraction(item: ToolbarMenu.Item) {
         val sessionUseCases = activity.components.useCases.sessionUseCases

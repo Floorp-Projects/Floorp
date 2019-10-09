@@ -20,7 +20,6 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class StartSearchIntentProcessorTest {

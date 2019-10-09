@@ -24,7 +24,6 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavController
 import androidx.navigation.Navigator.Extras
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 

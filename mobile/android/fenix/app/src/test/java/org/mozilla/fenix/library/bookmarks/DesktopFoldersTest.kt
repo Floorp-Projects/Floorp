@@ -27,7 +27,6 @@ import org.mozilla.fenix.ext.components
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class DesktopFoldersTest {

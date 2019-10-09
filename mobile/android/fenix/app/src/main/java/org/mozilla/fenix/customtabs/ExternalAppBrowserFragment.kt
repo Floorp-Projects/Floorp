@@ -35,7 +35,6 @@ import org.mozilla.fenix.ext.requireComponents
 /**
  * Fragment used for browsing the web within external apps.
  */
-@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
 

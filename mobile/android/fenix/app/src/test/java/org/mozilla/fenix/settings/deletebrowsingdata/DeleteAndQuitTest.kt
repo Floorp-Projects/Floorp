@@ -34,7 +34,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
