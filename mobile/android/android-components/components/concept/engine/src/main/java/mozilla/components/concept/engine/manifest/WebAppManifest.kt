@@ -60,7 +60,8 @@ data class WebAppManifest(
     val scope: String? = null,
     @ColorInt val themeColor: Int? = null,
     val relatedApplications: List<ExternalApplicationResource> = emptyList(),
-    val preferRelatedApplications: Boolean = false
+    val preferRelatedApplications: Boolean = false,
+    val shareTarget: ShareTarget? = null
 ) {
     /**
      * Defines the developers’ preferred display mode for the website.
@@ -190,5 +191,63 @@ data class WebAppManifest(
             val type: String,
             val value: String
         )
+    }
+
+    /**
+     * Used to define how the web app receives share data.
+     * If present, a share target should be created so that other Android apps can share to this web app.
+     *
+     * @property action URL to open on share
+     * @property method Method to use with [action]. Either "GET" or "POST".
+     * @property encType MIME type to specify how the params are encoded.
+     * @property params Specifies what query parameters correspond to share data.
+     */
+    data class ShareTarget(
+        val action: String,
+        val method: RequestMethod = RequestMethod.GET,
+        val encType: EncodingType = EncodingType.URL_ENCODED,
+        val params: Params = Params()
+    ) {
+
+        /**
+         * Specifies what query parameters correspond to share data.
+         *
+         * @property title Name of the query parameter used for the title of the data being shared.
+         * @property text Name of the query parameter used for the body of the data being shared.
+         * @property url Name of the query parameter used for a URL referring to a shared resource.
+         * @property files Form fields used to share files.
+         */
+        data class Params(
+            val title: String? = null,
+            val text: String? = null,
+            val url: String? = null,
+            val files: List<Files> = emptyList()
+        )
+
+        /**
+         * Specifies a form field member used to share files.
+         *
+         * @property name Name of the form field.
+         * @property accept Accepted MIME types or file extensions.
+         */
+        data class Files(
+            val name: String,
+            val accept: List<String>
+        )
+
+        /**
+         * Valid HTTP methods for [ShareTarget.method].
+         */
+        enum class RequestMethod {
+            GET, POST
+        }
+
+        /**
+         * Valid encoding MIME types for [ShareTarget.encType].
+         */
+        enum class EncodingType(val type: String) {
+            URL_ENCODED("application/x-www-form-urlencoded"),
+            MULTIPART("multipart/form-data")
+        }
     }
 }

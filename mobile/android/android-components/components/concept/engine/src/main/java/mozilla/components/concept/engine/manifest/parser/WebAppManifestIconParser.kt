@@ -4,13 +4,16 @@
 
 @file:Suppress("TooManyFunctions")
 
-package mozilla.components.concept.engine.manifest
+package mozilla.components.concept.engine.manifest.parser
 
+import mozilla.components.concept.engine.manifest.Size
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.ktx.android.org.json.asSequence
 import mozilla.components.support.ktx.android.org.json.tryGet
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 
 private val whitespace = "\\s+".toRegex()
 
@@ -48,17 +51,19 @@ private fun parseStringSet(set: Any?): Sequence<String>? = when (set) {
 }
 
 private fun parseIconSizes(json: JSONObject): List<Size> {
-    val sizes = parseStringSet(json.tryGet("sizes")) ?: return emptyList()
+    val sizes = parseStringSet(json.tryGet("sizes"))
+        ?: return emptyList()
 
     return sizes.mapNotNull { Size.parse(it) }.toList()
 }
 
 private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
-    val purpose = parseStringSet(json.tryGet("purpose")) ?: return setOf(WebAppManifest.Icon.Purpose.ANY)
+    val purpose = parseStringSet(json.tryGet("purpose"))
+        ?: return setOf(WebAppManifest.Icon.Purpose.ANY)
 
     return purpose
         .mapNotNull {
-            when (it.toLowerCase()) {
+            when (it.toLowerCase(Locale.ROOT)) {
                 "badge" -> WebAppManifest.Icon.Purpose.BADGE
                 "maskable" -> WebAppManifest.Icon.Purpose.MASKABLE
                 "any" -> WebAppManifest.Icon.Purpose.ANY
@@ -68,7 +73,7 @@ private fun parsePurposes(json: JSONObject): Set<WebAppManifest.Icon.Purpose> {
         .toSet()
 }
 
-internal fun serializeEnumName(name: String) = name.toLowerCase().replace('_', '-')
+internal fun serializeEnumName(name: String) = name.toLowerCase(Locale.ROOT).replace('_', '-')
 
 internal fun serializeIcons(icons: List<WebAppManifest.Icon>): JSONArray {
     val list = icons.map { icon ->

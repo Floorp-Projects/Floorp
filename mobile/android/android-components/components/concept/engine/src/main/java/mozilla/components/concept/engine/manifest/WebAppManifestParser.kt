@@ -8,6 +8,10 @@ package mozilla.components.concept.engine.manifest
 
 import android.graphics.Color
 import androidx.annotation.ColorInt
+import mozilla.components.concept.engine.manifest.parser.ShareTargetParser
+import mozilla.components.concept.engine.manifest.parser.parseIcons
+import mozilla.components.concept.engine.manifest.parser.serializeEnumName
+import mozilla.components.concept.engine.manifest.parser.serializeIcons
 import mozilla.components.support.ktx.android.org.json.asSequence
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
@@ -61,7 +65,8 @@ class WebAppManifestParser {
                 lang = json.tryGetString("lang"),
                 orientation = parseOrientation(json),
                 relatedApplications = parseRelatedApplications(json),
-                preferRelatedApplications = json.optBoolean("prefer_related_applications", false)
+                preferRelatedApplications = json.optBoolean("prefer_related_applications", false),
+                shareTarget = ShareTargetParser.parse(json.optJSONObject("share_target"))
             ))
         } catch (e: JSONException) {
             Result.Failure(e)
@@ -94,6 +99,7 @@ class WebAppManifestParser {
         putOpt("orientation", serializeEnumName(manifest.orientation.name))
         put("related_applications", serializeRelatedApplications(manifest.relatedApplications))
         put("prefer_related_applications", manifest.preferRelatedApplications)
+        putOpt("share_target", ShareTargetParser.serialize(manifest.shareTarget))
     }
 }
 

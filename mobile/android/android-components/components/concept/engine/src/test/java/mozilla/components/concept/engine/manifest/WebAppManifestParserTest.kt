@@ -300,6 +300,83 @@ class WebAppManifestParserTest {
     }
 
     @Test
+    fun `Parsing manifest from Squoosh`() {
+        val json = loadManifest("squoosh.json")
+        val result = WebAppManifestParser().parse(json)
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        val manifest = (result as WebAppManifestParser.Result.Success).manifest
+
+        assertNotNull(manifest)
+        assertEquals("Squoosh", manifest.name)
+        assertEquals("Squoosh", manifest.shortName)
+        assertEquals("/", manifest.startUrl)
+        assertEquals(WebAppManifest.DisplayMode.STANDALONE, manifest.display)
+        assertEquals(Color.WHITE, manifest.backgroundColor)
+        assertEquals(WebAppManifest.TextDirection.AUTO, manifest.dir)
+        assertEquals(WebAppManifest.Orientation.ANY, manifest.orientation)
+        assertNull(manifest.scope)
+        assertEquals(rgb(247, 143, 33), manifest.themeColor)
+
+        assertEquals(1, manifest.icons.size)
+
+        manifest.icons[0].apply {
+            assertEquals("/assets/icon-large.png", src)
+            assertEquals("image/png", type)
+            assertEquals(listOf(Size(1024, 1024)), sizes)
+            assertEquals(setOf(WebAppManifest.Icon.Purpose.ANY), purpose)
+        }
+
+        manifest.shareTarget!!.apply {
+            assertEquals("/?share-target", action)
+            assertEquals(WebAppManifest.ShareTarget.RequestMethod.POST, method)
+            assertEquals(WebAppManifest.ShareTarget.EncodingType.MULTIPART, encType)
+            assertEquals(
+                WebAppManifest.ShareTarget.Params(
+                    title = "title",
+                    text = "body",
+                    url = "uri",
+                    files = listOf(
+                        WebAppManifest.ShareTarget.Files(
+                            name = "file",
+                            accept = listOf("image/*")
+                        )
+                    )
+                ),
+                params
+            )
+        }
+    }
+
+    @Test
+    fun `Parsing minimal manifest with share target`() {
+        val json = loadManifest("minimal_share_target.json")
+        val result = WebAppManifestParser().parse(json)
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        val manifest = (result as WebAppManifestParser.Result.Success).manifest
+
+        assertNotNull(manifest)
+        assertEquals("Minimal", manifest.name)
+        assertEquals("/", manifest.startUrl)
+
+        manifest.shareTarget!!.apply {
+            assertEquals("/share-target", action)
+            assertEquals(WebAppManifest.ShareTarget.RequestMethod.GET, method)
+            assertEquals(WebAppManifest.ShareTarget.EncodingType.URL_ENCODED, encType)
+            assertEquals(
+                WebAppManifest.ShareTarget.Params(
+                    files = listOf(
+                        WebAppManifest.ShareTarget.Files(
+                            name = "file",
+                            accept = listOf("image/*")
+                        )
+                    )
+                ),
+                params
+            )
+        }
+    }
+
+    @Test
     fun `Parsing invalid JSON`() {
         val json = loadManifest("invalid_json.json")
         val result = WebAppManifestParser().parse(json)
@@ -321,6 +398,62 @@ class WebAppManifestParserTest {
         val result = WebAppManifestParser().parse(json)
 
         assertTrue(result is WebAppManifestParser.Result.Failure)
+    }
+
+    @Test
+    fun `Ignore missing share target action`() {
+        val json = loadManifest("minimal.json").apply {
+            put("share_target", JSONObject().apply {
+                put("method", "POST")
+            })
+        }
+        val result = WebAppManifestParser().parse(json)
+
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        assertNull(result.getOrNull()!!.shareTarget)
+    }
+
+    @Test
+    fun `Ignore invalid share target method`() {
+        val json = loadManifest("minimal.json").apply {
+            put("share_target", JSONObject().apply {
+                put("action", "https://mozilla.com/target")
+                put("method", "PATCH")
+            })
+        }
+        val result = WebAppManifestParser().parse(json)
+
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        assertNull(result.getOrNull()!!.shareTarget)
+    }
+
+    @Test
+    fun `Ignore invalid share target encoding type`() {
+        val json = loadManifest("minimal.json").apply {
+            put("share_target", JSONObject().apply {
+                put("action", "https://mozilla.com/target")
+                put("enctype", "text/plain")
+            })
+        }
+        val result = WebAppManifestParser().parse(json)
+
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        assertNull(result.getOrNull()!!.shareTarget)
+    }
+
+    @Test
+    fun `Ignore invalid share target method and encoding type combo`() {
+        val json = loadManifest("minimal.json").apply {
+            put("share_target", JSONObject().apply {
+                put("action", "https://mozilla.com/target")
+                put("method", "GET")
+                put("enctype", "multipart/form-data")
+            })
+        }
+        val result = WebAppManifestParser().parse(json)
+
+        assertTrue(result is WebAppManifestParser.Result.Success)
+        assertNull(result.getOrNull()!!.shareTarget)
     }
 
     @Test
