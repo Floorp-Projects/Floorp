@@ -64,6 +64,18 @@ var gSync = {
   },
 
   getSendTabTargets() {
+    // If sync is not enabled, then there's no point looking for sync clients.
+    // If sync is simply not ready or hasn't yet synced the clients engine, we
+    // just assume the fxa device doesn't have a sync record - in practice,
+    // that just means we don't attempt to fall back to the "old" sendtab should
+    // "new" sendtab fail.
+    // We should just kill "old" sendtab now all our mobile browsers support
+    // "new".
+    let getClientRecord = () => undefined;
+    if (UIState.get().syncEnabled && Weave.Service.clientsEngine) {
+      getClientRecord = id =>
+        Weave.Service.clientsEngine.getClientByFxaDeviceId(id);
+    }
     let targets = [];
     if (!fxAccounts.device.recentDeviceList) {
       return targets;
@@ -72,9 +84,8 @@ var gSync = {
       if (d.isCurrentDevice) {
         continue;
       }
-      let clientRecord = Weave.Service.clientsEngine.getClientByFxaDeviceId(
-        d.id
-      );
+
+      let clientRecord = getClientRecord(d.id);
       if (clientRecord || fxAccounts.commands.sendTab.isDeviceCompatible(d)) {
         targets.push({
           clientRecord,
@@ -933,7 +944,7 @@ var gSync = {
       } else {
         // For phones, FxA uses "mobile" and Sync clients uses "phone".
         type = target.type == "mobile" ? "phone" : target.type;
-        lastModified = null;
+        lastModified = new Date(target.lastAccessTime);
       }
       addTargetDevice(target.id, target.name, type, lastModified);
     }
