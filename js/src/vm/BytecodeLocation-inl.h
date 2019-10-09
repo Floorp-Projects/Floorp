@@ -22,8 +22,7 @@ inline bool BytecodeLocation::isValid(const JSScript* script) const {
 inline bool BytecodeLocation::isInBounds(const JSScript* script) const {
   return script->contains(*this);
 }
-inline uint32_t BytecodeLocation::bytecodeToOffset(
-    const JSScript* script) const {
+inline uint32_t BytecodeLocation::bytecodeToOffset(JSScript* script) {
   return script->pcToOffset(this->rawBytecode_);
 }
 
