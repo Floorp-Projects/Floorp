@@ -411,6 +411,9 @@ var AboutLoginsParent = {
             syncState,
             selectedBadgeLanguages,
             masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
+            passwordRevealVisible: Services.policies.isAllowed(
+              "passwordReveal"
+            ),
           });
 
           await this._sendAllLoginRelatedObjects(logins, messageManager);

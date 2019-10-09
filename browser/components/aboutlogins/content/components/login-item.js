@@ -727,6 +727,14 @@ export default class LoginItem extends HTMLElement {
   }
 
   _updatePasswordRevealState() {
+    if (
+      window.AboutLoginsUtils &&
+      !window.AboutLoginsUtils.passwordRevealVisible
+    ) {
+      this._revealCheckbox.hidden = true;
+      return;
+    }
+
     let titleId = this._revealCheckbox.checked
       ? "login-item-password-reveal-checkbox-hide"
       : "login-item-password-reveal-checkbox-show";
