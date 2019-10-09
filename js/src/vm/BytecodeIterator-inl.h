@@ -10,6 +10,7 @@
 #include "vm/BytecodeIterator.h"
 
 #include "vm/JSScript.h"
+
 namespace js {
 
 inline BytecodeIterator::BytecodeIterator(const JSScript* script)
