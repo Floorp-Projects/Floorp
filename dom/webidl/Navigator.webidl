@@ -17,6 +17,7 @@
  * https://w3c.github.io/webappsec-credential-management/#framework-credential-management
  * https://w3c.github.io/webdriver/webdriver-spec.html#interface
  * https://wicg.github.io/media-capabilities/#idl-index
+ * https://w3c.github.io/mediasession/#idl-index
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -333,4 +334,11 @@ dictionary ShareData {
   USVString title;
   USVString text;
   USVString url;
+};
+
+// https://w3c.github.io/mediasession/#idl-index
+[Exposed=Window]
+partial interface Navigator {
+  [Pref="dom.media.mediasession.enabled", SameObject]
+  readonly attribute MediaSession mediaSession;
 };
