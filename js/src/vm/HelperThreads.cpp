@@ -1612,8 +1612,10 @@ static bool IonBuilderHasHigherPriority(jit::IonBuilder* first,
   }
 
   // A higher warm-up counter indicates a higher priority.
-  return first->script()->getWarmUpCount() / first->script()->length() >
-         second->script()->getWarmUpCount() / second->script()->length();
+  jit::JitScript* firstJitScript = first->script()->jitScript();
+  jit::JitScript* secondJitScript = second->script()->jitScript();
+  return firstJitScript->warmUpCount() / first->script()->length() >
+         secondJitScript->warmUpCount() / second->script()->length();
 }
 
 bool GlobalHelperThreadState::canStartIonCompile(

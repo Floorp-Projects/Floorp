@@ -9,6 +9,8 @@
 #include "jit/Ion.h"
 #include "vm/JSScript.h"
 
+#include "vm/JSScript-inl.h"
+
 using namespace js;
 using namespace js::jit;
 
