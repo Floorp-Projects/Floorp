@@ -73,6 +73,48 @@ class PingMakerTest {
     }
 
     @Test
+    fun `ping_info must persist start_time`() {
+        val applicationContext = ApplicationProvider.getApplicationContext<Context>()
+        val maker = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine2" to MockStorageEngine(JSONObject(mapOf("a.b" to "foo")))
+                ),
+                applicationContext = applicationContext
+            ),
+            applicationContext
+        )
+
+        // Insert a dummy value into the first maker to make sure it's picked up by
+        // the second maker
+        maker.setPingStartTime(customPing.name, "2100-01-01")
+
+        val maker2 = PingMaker(
+            StorageEngineManager(
+                storageEngines = mapOf(
+                    "engine2" to MockStorageEngine(JSONObject(mapOf("a.b" to "foo")))
+                ),
+                applicationContext = applicationContext
+            ),
+            applicationContext
+        )
+
+        // Gather the data. We expect an empty ping with the "ping_info" information
+        val data = maker2.collect(customPing).orEmpty()
+        assertTrue("We expect a non-empty JSON blob", "{}" != data)
+
+        // Parse the data so that we can easily check the other fields
+        val jsonData = JSONObject(data)
+        val pingInfo = jsonData["ping_info"] as JSONObject
+        assertNotNull(pingInfo)
+
+        // "start_time" and "end_time" must be valid ISO8601 dates. DateTimeFormatter would
+        // throw otherwise.
+        assertEquals("2100-01-01", pingInfo.getString("start_time"))
+        DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(pingInfo.getString("end_time"))
+    }
+
+    @Test
     fun `getPingInfo() must report all the required fields`() {
         val maker = PingMaker(
             StorageEngineManager(
@@ -193,7 +235,7 @@ class PingMakerTest {
 
         // Clear the sharedPreferences on the PingMaker so we can test that the
         // numbers start at zero.
-        maker.sharedPreferences?.let {
+        maker.sharedPreferencesSeq?.let {
             val editor = it.edit()
             editor.clear()
             editor.apply()
