@@ -128,8 +128,6 @@ class GCVector {
     return vector.sizeOfIncludingThis(mallocSizeOf);
   }
 
-  static void trace(GCVector* vec, JSTracer* trc) { vec->trace(trc); }
-
   void trace(JSTracer* trc) {
     for (auto& elem : vector) {
       GCPolicy<T>::trace(trc, &elem, "vector element");

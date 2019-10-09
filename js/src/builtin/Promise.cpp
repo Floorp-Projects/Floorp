@@ -150,9 +150,6 @@ struct PromiseCapability {
 
   PromiseCapability() = default;
 
-  static void trace(PromiseCapability* self, JSTracer* trc) {
-    self->trace(trc);
-  }
   void trace(JSTracer* trc);
 };
 
