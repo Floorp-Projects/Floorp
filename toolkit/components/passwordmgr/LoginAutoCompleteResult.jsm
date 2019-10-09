@@ -405,6 +405,10 @@ LoginAutoComplete.prototype = {
    */
   startSearch(aSearchString, aPreviousResult, aElement, aCallback) {
     let { isNullPrincipal } = aElement.nodePrincipal;
+    if (aElement.nodePrincipal.schemeIs("about")) {
+      // Don't show autocomplete results for about: pages.
+      return;
+    }
     // Show the insecure login warning in the passwords field on null principal documents.
     let isSecure = !isNullPrincipal;
     // Avoid loading InsecurePasswordUtils.jsm in a sandboxed document (e.g. an ad. frame) if we
