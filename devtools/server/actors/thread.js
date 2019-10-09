@@ -394,7 +394,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // returning it), because we're going to start a nested event
       // loop here.
       this.conn.send({ from: this.actorID });
-      this.conn.sendActorEvent(this.actorID, "paused", packet);
+      this.emit("paused", packet);
 
       // Start a nested event loop.
       this._pushThreadPause();
@@ -661,7 +661,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._debuggerSourcesSeen = null;
 
     dumpn("ThreadActor.prototype.onDetach: returning 'detached' packet");
-    this.conn.sendActorEvent(this.actorID, "detached");
+    this.emit("detached");
     return {};
   },
 
@@ -823,7 +823,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       const pkt = onPacket(packet);
 
       this._priorPause = pkt;
-      this.conn.sendActorEvent(this.actorID, "paused", pkt);
+      this.emit("paused", pkt);
       this.showOverlay();
     } catch (error) {
       reportException("DBG-SERVER", error);
@@ -1246,7 +1246,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._popThreadPause();
     // Tell anyone who cares of the resume (as of now, that's the xpcshell harness and
     // devtools-startup.js when handling the --wait-for-jsdebugger flag)
-    this.conn.sendActorEvent(this.actorID, "resumed");
+    this.emit("resumed");
     this.hideOverlay();
 
     if (Services.obs) {
@@ -1425,7 +1425,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return { type: "exited" };
     } else if (this.state == "paused") {
       // TODO: return the actual reason for the existing pause.
-      this.conn.sendActorEvent(this.actorID, "paused", {
+      this.emit("paused", {
         why: { type: "alreadyPaused" },
       });
       return {};
@@ -1444,7 +1444,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         };
         this.dbg.onEnterFrame = onEnterFrame;
 
-        this.conn.sendActorEvent(this.actorID, "willInterrupt");
+        this.emit("willInterrupt");
         return {};
       }
       if (this.dbg.replaying) {
@@ -1466,7 +1466,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       // returning it), because we're going to start a nested event loop
       // here.
       this.conn.send({ from: this.actorID, type: "interrupt" });
-      this.conn.sendActorEvent(this.actorID, "paused", packet);
+      this.emit("paused", packet);
 
       // Start a nested event loop.
       this._pushThreadPause();
@@ -1519,8 +1519,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Send off the paused packet and spin an event loop.
     const packet = {
-      from: this.actorID,
-      type: "paused",
       actor: this._pauseActor.actorID,
     };
     if (frame) {
@@ -1843,9 +1841,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         const executionPoint = this.dbg.replayCurrentExecutionPoint();
         const unscannedRegions = this.dbg.replayUnscannedRegions();
         const cachedPoints = this.dbg.replayCachedPoints();
-        this.conn.send({
-          type: "progress",
-          from: this.actorID,
+        this.emit("progress", {
           recording,
           executionPoint,
           unscannedRegions,
@@ -1871,9 +1867,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       if (!packet) {
         return;
       }
-      packet.why = "replayForcedPause";
+      packet.why = { type: "replayForcedPause" };
 
-      this.conn.send(packet);
+      this.emit("paused", packet);
       this._pushThreadPause();
     }
   },
@@ -1943,7 +1939,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         type: "exception",
         exception: createValueGrip(value, this._pausePool, this.objectGrip),
       };
-      this.conn.send(packet);
+      this.emit("paused", packet);
 
       this._pushThreadPause();
     } catch (e) {
@@ -1978,9 +1974,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // We use executeSoon because we don't want to block those operations
     // by sending packets in the middle of them.
     DevToolsUtils.executeSoon(() => {
-      this.conn.send({
-        from: this.actorID,
-        type: "newSource",
+      this.emit("newSource", {
         source: source.form(),
       });
     });
