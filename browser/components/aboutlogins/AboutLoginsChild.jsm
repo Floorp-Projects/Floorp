@@ -109,6 +109,10 @@ class AboutLoginsChild extends ActorChild {
         });
         break;
       }
+      case "AboutLoginsGetHelp": {
+        this.mm.sendAsyncMessage("AboutLogins:GetHelp");
+        break;
+      }
       case "AboutLoginsHideFooter": {
         this.mm.sendAsyncMessage("AboutLogins:HideFooter");
         break;
@@ -127,10 +131,6 @@ class AboutLoginsChild extends ActorChild {
         this.mm.sendAsyncMessage("AboutLogins:OpenMobileIos", {
           source: event.detail,
         });
-        break;
-      }
-      case "AboutLoginsGetHelp": {
-        this.mm.sendAsyncMessage("AboutLogins:GetHelp");
         break;
       }
       case "AboutLoginsOpenPreferences": {
@@ -178,6 +178,10 @@ class AboutLoginsChild extends ActorChild {
             "AboutLoginsChild: error recording telemetry event: " + ex.message
           );
         }
+        break;
+      }
+      case "AboutLoginsSortChanged": {
+        this.mm.sendAsyncMessage("AboutLogins:SortChanged", event.detail);
         break;
       }
       case "AboutLoginsSyncEnable": {
