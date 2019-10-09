@@ -25,10 +25,10 @@ using namespace mozilla::dom;
   NSString* mType;
   NSColor* mColor;
   BOOL mDisabled;
+  NSTouchBarItemIdentifier mNativeIdentifier;
   nsCOMPtr<nsITouchBarInputCallback> mCallback;
   RefPtr<Document> mDocument;
   BOOL mIsIconPositionSet;
-  NSMutableArray<TouchBarInput*>* mChildren;
 }
 
 - (NSString*)key;
@@ -42,7 +42,6 @@ using namespace mozilla::dom;
 - (nsCOMPtr<nsITouchBarInputCallback>)callback;
 - (RefPtr<Document>)document;
 - (BOOL)isIconPositionSet;
-- (NSMutableArray<TouchBarInput*>*)children;
 - (void)setKey:(NSString*)aKey;
 - (void)setTitle:(NSString*)aTitle;
 - (void)setImageURI:(nsCOMPtr<nsIURI>)aImageURI;
@@ -50,10 +49,10 @@ using namespace mozilla::dom;
 - (void)setType:(NSString*)aType;
 - (void)setColor:(NSColor*)aColor;
 - (void)setDisabled:(BOOL)aDisabled;
+- (void)setNativeIdentifier:(NSString*)aNativeIdentifier;
 - (void)setCallback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback;
 - (void)setDocument:(RefPtr<Document>)aDocument;
 - (void)setIconPositionSet:(BOOL)aIsIconPositionSet;
-- (void)setChildren:(NSMutableArray<TouchBarInput*>*)aChildren;
 
 - (id)initWithKey:(NSString*)aKey
             title:(NSString*)aTitle
@@ -62,21 +61,11 @@ using namespace mozilla::dom;
          callback:(nsCOMPtr<nsITouchBarInputCallback>)aCallback
             color:(uint32_t)aColor
          disabled:(BOOL)aDisabled
-         document:(RefPtr<Document>)aDocument
-         children:(nsCOMPtr<nsIArray>)aChildren;
+         document:(RefPtr<Document>)aDocument;
 
 - (TouchBarInput*)initWithXPCOM:(nsCOMPtr<nsITouchBarInput>)aInput;
 
-- (void)releaseJSObjects;
-
 - (void)dealloc;
-
-/**
- * We make this helper method static so that other classes can query a
- * TouchBarInput's nativeIdentifier (e.g. nsTouchBarUpdater looking up a
- * popover in mappedLayoutItems).
- */
-+ (NSTouchBarItemIdentifier)nativeIdentifierWithType:(NSString*)aType withKey:(NSString*)aKey;
 
 @end
 
@@ -104,24 +93,10 @@ using namespace mozilla::dom;
 @property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, TouchBarInput*>* mappedLayoutItems;
 
 /**
- * Stores buttons displayed in a NSScrollView. They must be stored separately
- * because they are generic NSButtons and not NSTouchBarItems. As such, they
- * cannot be retrieved with [NSTouchBar itemForIdentifier].
- */
-@property(strong) NSMutableDictionary<NSTouchBarItemIdentifier, NSButton*>* scrollViewButtons;
-
-/**
  * Returns an instance of nsTouchBar based on implementation details
  * fetched from the frontend through nsTouchBarHelper.
  */
 - (instancetype)init;
-
-/**
- * If aInputs is not nil, a nsTouchBar containing the inputs specified is
- * initialized. Otherwise, a nsTouchBar is initialized containing a default set
- * of inputs.
- */
-- (instancetype)initWithInputs:(NSMutableArray<TouchBarInput*>*)aInputs;
 
 - (void)dealloc;
 
@@ -137,45 +112,18 @@ using namespace mozilla::dom;
 /**
  * Updates an input on the Touch Bar by redirecting to one of the specific
  * TouchBarItem types updaters.
- * Returns true if the input was successfully updated.
  */
-- (bool)updateItem:(TouchBarInput*)aInput;
-
-/**
- * Helper function for updateItem. Checks to see if a given input exists within
- * any of this Touch Bar's popovers and updates it if it exists.
- */
-- (bool)maybeUpdatePopoverChild:(TouchBarInput*)aInput;
-
-/**
- * Helper function for updateItem. Checks to see if a given input exists within
- * any of this Touch Bar's scroll views and updates it if it exists.
- */
-- (bool)maybeUpdateScrollViewChild:(TouchBarInput*)aInput;
-
-/**
- * Helper function for updateItem. Replaces an item in the
- * self.mappedLayoutItems dictionary.
- */
-- (void)replaceMappedLayoutItem:(TouchBarInput*)aItem;
+- (void)updateItem:(TouchBarInput*)aInput;
 
 /**
  * Update or create various subclasses of TouchBarItem.
  */
-- (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput;
-- (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput;
-- (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem input:(TouchBarInput*)aInput;
-- (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem input:(TouchBarInput*)aInput;
-- (void)updateLabel:(NSTextField*)aLabel input:(TouchBarInput*)aInput;
+- (NSTouchBarItem*)updateButton:(NSCustomTouchBarItem*)aButton input:(TouchBarInput*)aInput;
+- (NSTouchBarItem*)updateMainButton:(NSCustomTouchBarItem*)aMainButton input:(TouchBarInput*)aInput;
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 
 /**
- * If aShowing is true, aPopover is shown. Otherwise, it is hidden.
- */
-- (void)showPopover:(TouchBarInput*)aPopover showing:(bool)aShowing;
-
-/**
- *  Redirects button actions to the appropriate handler.
+ *  Redirects button actions to the appropriate handler and handles telemetry.
  */
 - (void)touchBarAction:(id)aSender;
 
