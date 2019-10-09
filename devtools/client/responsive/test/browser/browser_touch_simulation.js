@@ -11,8 +11,6 @@ const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 addRDMTask(TEST_URL, async function({ ui }) {
   reloadOnTouchChange(true);
 
-  await injectEventUtilsInContentTask(ui.getViewportBrowser());
-
   await waitBootstrap(ui);
   await testWithNoTouch(ui);
   await toggleTouchSimulation(ui);
