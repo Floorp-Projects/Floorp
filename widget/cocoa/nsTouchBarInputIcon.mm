@@ -22,14 +22,10 @@ using namespace mozilla;
 static const uint32_t kIconSize = 16;
 static const CGFloat kHiDPIScalingFactor = 2.0f;
 
-nsTouchBarInputIcon::nsTouchBarInputIcon(RefPtr<Document> aDocument, NSButton* aButton,
-                                         NSSharingServicePickerTouchBarItem* aShareScrubber,
-                                         NSPopoverTouchBarItem* aPopoverItem)
-    : mDocument(aDocument),
-      mSetIcon(false),
-      mButton(aButton),
-      mShareScrubber(aShareScrubber),
-      mPopoverItem(aPopoverItem) {
+nsTouchBarInputIcon::nsTouchBarInputIcon(RefPtr<Document> aDocument,
+                                         NSButton* aButton,
+                                         NSSharingServicePickerTouchBarItem* aShareScrubber)
+    : mDocument(aDocument), mSetIcon(false), mButton(aButton), mShareScrubber(aShareScrubber) {
   MOZ_COUNT_CTOR(nsTouchBarInputIcon);
 }
 
@@ -49,14 +45,13 @@ void nsTouchBarInputIcon::Destroy() {
 
   mButton = nil;
   mShareScrubber = nil;
-  mPopoverItem = nil;
 }
 
 nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // Still don't have one, then something is wrong, get out of here.
-  if (!(mButton || mShareScrubber || mPopoverItem)) {
+  if (!(mButton || mShareScrubber)) {
     NS_ERROR("No Touch Bar button");
     return NS_ERROR_FAILURE;
   }
@@ -75,7 +70,6 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
     // Load placeholder icon.
     [mButton setImage:mIconLoader->GetNativeIconImage()];
     [mShareScrubber setButtonImage:mIconLoader->GetNativeIconImage()];
-    [mPopoverItem setCollapsedRepresentationImage:mIconLoader->GetNativeIconImage()];
   }
 
   nsresult rv = mIconLoader->LoadIcon(aIconURI);
@@ -85,7 +79,6 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
     // been set.  Clear it.
     [mButton setImage:nil];
     [mShareScrubber setButtonImage:nil];
-    [mPopoverItem setCollapsedRepresentationImage:nil];
   }
 
   mSetIcon = true;
@@ -102,7 +95,6 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
 nsresult nsTouchBarInputIcon::OnComplete(NSImage* aImage) {
   [mButton setImage:aImage];
   [mShareScrubber setButtonImage:aImage];
-  [mPopoverItem setCollapsedRepresentationImage:aImage];
 
   [aImage release];
   return NS_OK;
