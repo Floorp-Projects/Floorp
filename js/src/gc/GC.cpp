@@ -854,7 +854,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       systemZone(nullptr),
       atomsZone(nullptr),
-      stats_(rt),
+      stats_(this),
       marker(rt),
       heapSize(nullptr),
       rootsHash(256),
@@ -8349,7 +8349,7 @@ JS::UniqueChars JS::GCDescription::formatJSONProfiler(JSContext* cx) const {
 
 JS_PUBLIC_API JS::UniqueChars JS::MinorGcToJSON(JSContext* cx) {
   JSRuntime* rt = cx->runtime();
-  return rt->gc.stats().renderNurseryJson(rt);
+  return rt->gc.stats().renderNurseryJson();
 }
 
 JS_PUBLIC_API JS::GCSliceCallback JS::SetGCSliceCallback(
