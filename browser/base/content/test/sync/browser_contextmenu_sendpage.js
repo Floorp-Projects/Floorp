@@ -355,11 +355,6 @@ function checkPopup(expectedItems = null) {
     return;
   }
   const menuItems = popup.children;
-  is(
-    menuItems.length,
-    expectedItems.length,
-    "Popup has the expected children count."
-  );
   for (let i = 0; i < menuItems.length; i++) {
     const menuItem = menuItems[i];
     const expectedItem = expectedItems[i];
@@ -380,6 +375,12 @@ function checkPopup(expectedItems = null) {
       "Correct menu item disabled state"
     );
   }
+  // check the length last - the above loop might have given us other clues...
+  is(
+    menuItems.length,
+    expectedItems.length,
+    "Popup has the expected children count."
+  );
 }
 
 async function openContentContextMenu(selector, openSubmenuId = null) {
