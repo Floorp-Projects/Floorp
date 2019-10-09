@@ -1,6 +1,5 @@
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.mozilla.fenix.TestApplication
 import org.junit.Test
 import org.junit.runner.RunWith

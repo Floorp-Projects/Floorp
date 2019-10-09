@@ -7,7 +7,6 @@ package org.mozilla.fenix.library.bookmarks
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before

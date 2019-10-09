@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.metrics
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService

@@ -1,6 +1,5 @@
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test

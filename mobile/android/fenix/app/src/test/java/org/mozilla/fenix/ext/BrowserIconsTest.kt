@@ -3,7 +3,6 @@ package org.mozilla.fenix.ext
 import android.widget.ImageView
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest

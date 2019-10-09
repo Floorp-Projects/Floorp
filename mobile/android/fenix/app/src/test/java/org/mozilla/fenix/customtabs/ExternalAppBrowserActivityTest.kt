@@ -5,7 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Intent
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.utils.toSafeIntent
 import org.junit.Assert.assertEquals
 import org.junit.Test

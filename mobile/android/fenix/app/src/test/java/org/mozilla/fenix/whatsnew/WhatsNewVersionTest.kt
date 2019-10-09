@@ -5,7 +5,6 @@ package org.mozilla.fenix.whatsnew
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

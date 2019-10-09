@@ -8,7 +8,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before

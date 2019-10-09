@@ -23,7 +23,6 @@ import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFrom

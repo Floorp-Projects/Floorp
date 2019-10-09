@@ -11,7 +11,6 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.manifest.getOrNull

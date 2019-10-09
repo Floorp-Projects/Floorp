@@ -10,7 +10,6 @@ import androidx.navigation.NavController
 import io.mockk.Called
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before

@@ -11,7 +11,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.app.links.AppLinkRedirect
 import mozilla.components.feature.app.links.AppLinksUseCases

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.utils
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED

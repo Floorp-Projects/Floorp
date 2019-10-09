@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components
 
 import androidx.fragment.app.Fragment
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store

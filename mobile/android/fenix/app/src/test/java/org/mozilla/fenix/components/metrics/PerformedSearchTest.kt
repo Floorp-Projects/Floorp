@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.metrics
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider

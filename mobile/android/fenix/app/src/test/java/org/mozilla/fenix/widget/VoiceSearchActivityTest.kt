@@ -14,7 +14,6 @@ import android.speech.RecognizerIntent.EXTRA_RESULTS
 import android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
 import androidx.appcompat.app.AppCompatActivity.RESULT_OK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
