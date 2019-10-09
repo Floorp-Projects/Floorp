@@ -5,6 +5,11 @@ const appinfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
 const { FluentBundle, FluentResource } = ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+ChromeUtils.defineModuleGetter(
+  this,
+  "NetUtil",
+  "resource://gre/modules/NetUtil.jsm"
+);
 
 const isParentProcess = appinfo.processType === appinfo.PROCESS_TYPE_DEFAULT;
 /**
@@ -754,8 +759,30 @@ this.L10nRegistry.loadSync = function(uri) {
     let data = Cu.readUTF8URI(url);
     return data;
   } catch (e) {
-    return false;
+    if (
+      e.result == Cr.NS_ERROR_INVALID_ARG ||
+      e.result == Cr.NS_ERROR_NOT_INITIALIZED
+    ) {
+      try {
+        // The preloader doesn't support this url or isn't initialized
+        // (xpcshell test). Try a synchronous channel load.
+        let stream = NetUtil.newChannel({
+          uri,
+          loadUsingSystemPrincipal: true,
+        }).open();
+
+        return NetUtil.readInputStreamToString(stream, stream.available(), {
+          charset: "UTF-8",
+        });
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    } else {
+      Cu.reportError(e);
+    }
   }
+
+  return false;
 };
 
 this.FileSource = FileSource;

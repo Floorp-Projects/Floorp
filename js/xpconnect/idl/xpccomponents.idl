@@ -678,6 +678,7 @@ interface nsIXPCComponents_Utils : nsISupports
     /*
      * Reads the given local file URL and returns its contents. This has the
      * same semantics of readUTF8File.
+     * Only supports file URLs or URLs that point into one of the omnijars.
      */
     AUTF8String readUTF8URI(in nsIURI url);
 
