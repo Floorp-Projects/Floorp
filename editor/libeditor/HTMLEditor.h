@@ -3955,11 +3955,9 @@ class HTMLEditor final : public TextEditor,
   /**
    * Helper routines for inline style.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult SetInlinePropertyOnTextNode(Text& aData, int32_t aStartOffset,
-                                       int32_t aEndOffset, nsAtom& aProperty,
-                                       nsAtom* aAttribute,
-                                       const nsAString& aValue);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult SetInlinePropertyOnTextNode(
+      Text& aData, uint32_t aStartOffset, uint32_t aEndOffset,
+      nsAtom& aProperty, nsAtom* aAttribute, const nsAString& aValue);
 
   nsresult PromoteInlineRange(nsRange& aRange);
   nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange& aRange);
@@ -3967,10 +3965,26 @@ class HTMLEditor final : public TextEditor,
   /**
    * RemoveStyleInside() removes elements which represent aProperty/aAttribute
    * and removes CSS style.  This handles aElement and all its descendants
-   * recursively.
+   * (including leaf text nodes) recursively.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
   RemoveStyleInside(Element& aElement, nsAtom* aProperty, nsAtom* aAttribute);
+
+  /**
+   * CollectEditableLeafTextNodes() collects text nodes in aElement.
+   */
+  void CollectEditableLeafTextNodes(
+      Element& aElement, nsTArray<OwningNonNull<Text>>& aLeafTextNodes) const;
+
+  /**
+   * IsRemovableParentStyleWithNewSpanElement() checks whether
+   * aProperty/aAttribute of parent block can be removed from aContent with
+   * creating `<span>` element.  Note that this does NOT check whether the
+   * specified style comes from parent block or not.
+   */
+  static bool IsRemovableParentStyleWithNewSpanElement(nsIContent& aContent,
+                                                       nsAtom* aProperty,
+                                                       nsAtom* aAttribute);
 
   bool IsAtFrontOfNode(nsINode& aNode, int32_t aOffset);
   bool IsAtEndOfNode(nsINode& aNode, int32_t aOffset);
