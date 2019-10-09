@@ -323,9 +323,6 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
         print(FZF_NOT_FOUND)
         return 1
 
-    if show_estimates:
-        download_task_history_data()
-
     check_working_directory(push)
     tg = generate_tasks(parameters, full)
     all_tasks = sorted(tg.tasks.keys())
@@ -335,6 +332,7 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
     dep_cache = os.path.join(cache_dir, 'target_task_dependencies')
 
     if show_estimates:
+        download_task_history_data()
         make_trimmed_taskgraph_cache(graph_cache, dep_cache)
 
     if not full:
