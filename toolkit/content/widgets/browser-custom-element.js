@@ -87,6 +87,11 @@
             return;
           }
 
+          // shift + F7 is the default DevTools shortcut for the Style Editor.
+          if (event.shiftKey) {
+            return;
+          }
+
           if (event.defaultPrevented || !event.isTrusted) {
             return;
           }
