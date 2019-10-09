@@ -82,8 +82,8 @@ pref("extensions.langpacks.signatures.required", true);
 pref("xpinstall.signatures.required", true);
 pref("xpinstall.signatures.devInfoURL", "https://wiki.mozilla.org/Addons/Extension_Signing");
 
-// Disable extensionStorage storage actor by default
-pref("devtools.storage.extensionStorage.enabled", false);
+// Enable extensionStorage storage actor by default
+pref("devtools.storage.extensionStorage.enabled", true);
 
 // Dictionary download preference
 pref("browser.dictionaries.download.url", "https://addons.mozilla.org/%LOCALE%/firefox/language-tools/");
