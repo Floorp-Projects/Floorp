@@ -490,7 +490,10 @@ pub struct RasterizedBlobImage {
     /// image or tile.
     pub rasterized_rect: DeviceIntRect,
     /// Backing store. The format is stored out of band in `BlobImageDescriptor`.
-    pub data: Arc<Vec<u8>>,
+    ///
+    /// None means the image only has fully transparent content. We can skip storing
+    /// and rendering it.
+    pub data: Option<Arc<Vec<u8>>>,
 }
 
 /// Error code for when blob rasterization failed.
