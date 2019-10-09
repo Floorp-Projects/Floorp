@@ -2,7 +2,7 @@
 
 # isDefaultBrowser
 
-`val isDefaultBrowser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L177)
+`val isDefaultBrowser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L178)
 
 Is **this** application the default browser?
 

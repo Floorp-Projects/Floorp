@@ -2,7 +2,7 @@
 
 # SAMSUNG_INTERNET_BETA
 
-`SAMSUNG_INTERNET_BETA` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L68)
+`SAMSUNG_INTERNET_BETA` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L69)
 
 ### Inherited Properties
 

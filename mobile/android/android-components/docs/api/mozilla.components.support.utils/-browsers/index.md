@@ -2,7 +2,7 @@
 
 # Browsers
 
-`class Browsers` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L25)
+`class Browsers` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L26)
 
 Helpful tools for dealing with other browsers on this device.
 

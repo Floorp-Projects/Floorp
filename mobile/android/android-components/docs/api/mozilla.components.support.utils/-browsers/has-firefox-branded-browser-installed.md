@@ -2,7 +2,7 @@
 
 # hasFirefoxBrandedBrowserInstalled
 
-`val hasFirefoxBrandedBrowserInstalled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L116)
+`val hasFirefoxBrandedBrowserInstalled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L117)
 
 Is there a Firefox browser installed on this device?
 

@@ -2,7 +2,7 @@
 
 # DOLPHIN_BROWSER
 
-`DOLPHIN_BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L74)
+`DOLPHIN_BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L75)
 
 ### Inherited Properties
 

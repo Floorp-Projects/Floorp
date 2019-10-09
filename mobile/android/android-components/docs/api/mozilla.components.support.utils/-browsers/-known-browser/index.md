@@ -2,7 +2,7 @@
 
 # KnownBrowser
 
-`enum class KnownBrowser` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L32)
+`enum class KnownBrowser` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L33)
 
 Enum of known browsers and their package names.
 

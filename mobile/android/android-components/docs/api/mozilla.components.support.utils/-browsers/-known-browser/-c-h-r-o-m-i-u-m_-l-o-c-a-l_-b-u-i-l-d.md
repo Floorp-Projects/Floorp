@@ -2,7 +2,7 @@
 
 # CHROMIUM_LOCAL_BUILD
 
-`CHROMIUM_LOCAL_BUILD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L55)
+`CHROMIUM_LOCAL_BUILD` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L56)
 
 ### Inherited Properties
 

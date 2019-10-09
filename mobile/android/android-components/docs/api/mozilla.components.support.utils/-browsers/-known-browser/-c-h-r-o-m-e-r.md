@@ -2,7 +2,7 @@
 
 # CHROMER
 
-`CHROMER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L78)
+`CHROMER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L79)
 
 ### Inherited Properties
 

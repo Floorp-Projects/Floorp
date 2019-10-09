@@ -2,7 +2,7 @@
 
 # ADBLOCK_BROWSER
 
-`ADBLOCK_BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L77)
+`ADBLOCK_BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L78)
 
 ### Inherited Properties
 

@@ -2,7 +2,7 @@
 
 # all
 
-`fun all(context: <ERROR CLASS>): `[`Browsers`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L281)
+`fun all(context: <ERROR CLASS>): `[`Browsers`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L288)
 
 Collect information about all installed browsers and return a [Browsers](index.md) object containing that data.
 

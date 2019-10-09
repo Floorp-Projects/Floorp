@@ -2,7 +2,7 @@
 
 # FLYNX
 
-`FLYNX` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L79)
+`FLYNX` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L80)
 
 ### Inherited Properties
 
