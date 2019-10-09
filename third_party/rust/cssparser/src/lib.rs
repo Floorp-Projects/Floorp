@@ -82,7 +82,7 @@ extern crate encoding_rs;
 #[doc(hidden)]
 pub extern crate phf as _internal__phf;
 #[cfg(test)]
-extern crate rustc_serialize;
+extern crate serde_json;
 #[cfg(feature = "serde")]
 extern crate serde;
 #[cfg(feature = "heapsize")]
