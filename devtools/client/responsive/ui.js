@@ -308,6 +308,8 @@ class ResponsiveUI {
       this.rdmFrame.remove();
 
       this.browserContainerEl.classList.remove("responsive-mode");
+      this.browserStackEl.style.maxWidth = this.browserStackEl.style.minWidth = null;
+      this.browserStackEl.style.maxHeight = this.browserStackEl.style.minHeight = null;
     }
 
     if (!this.isBrowserUIEnabled && !isTabContentDestroying) {
