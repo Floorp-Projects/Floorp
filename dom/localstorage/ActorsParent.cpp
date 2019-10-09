@@ -1805,8 +1805,6 @@ class Datastore final
 
   void NoteChangedObserverArray(const nsTArray<Observer*>& aObservers);
 
-  void Stringify(nsACString& aResult) const;
-
   NS_INLINE_DECL_REFCOUNTING(Datastore)
 
  private:
@@ -1962,8 +1960,6 @@ class Database final
   }
 
   void RequestAllowToClose();
-
-  void Stringify(nsACString& aResult) const;
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Database)
 
@@ -2265,13 +2261,9 @@ class LSRequestBase : public DatastoreOperationBase,
                 const LSRequestParams& aParams,
                 const Maybe<ContentParentId>& aContentParentId);
 
+  void StringifyState(nsCString& aResult) const;
+
   void Dispatch();
-
-  void StringifyState(nsACString& aResult) const;
-
-  virtual void Stringify(nsACString& aResult) const;
-
-  virtual void Log();
 
  protected:
   ~LSRequestBase() override;
@@ -2283,6 +2275,10 @@ class LSRequestBase : public DatastoreOperationBase,
   virtual void GetResponse(LSRequestResponse& aResponse) = 0;
 
   virtual void Cleanup() {}
+
+  void LogState();
+
+  virtual void LogNestedState() {}
 
  private:
   bool VerifyRequestParams();
@@ -2418,6 +2414,8 @@ class PrepareDatastoreOp
     return mOrigin;
   }
 
+  void StringifyNestedState(nsCString& aResult) const;
+
   bool RequestedDirectoryLock() const {
     AssertIsOnOwningThread();
 
@@ -2429,12 +2427,6 @@ class PrepareDatastoreOp
 
     mInvalidated = true;
   }
-
-  void StringifyNestedState(nsACString& aResult) const;
-
-  void Stringify(nsACString& aResult) const override;
-
-  void Log() override;
 
  private:
   ~PrepareDatastoreOp() override;
@@ -2484,6 +2476,8 @@ class PrepareDatastoreOp
   void ConnectionClosedCallback();
 
   void CleanupMetadata();
+
+  void LogNestedState() override;
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -5408,49 +5402,6 @@ void Datastore::NoteChangedObserverArray(
   }
 }
 
-void Datastore::Stringify(nsACString& aResult) const {
-  AssertIsOnBackgroundThread();
-
-  aResult.AppendLiteral("DirectoryLock:");
-  aResult.AppendInt(!!mDirectoryLock);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("Connection:");
-  aResult.AppendInt(!!mConnection);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("QuotaObject:");
-  aResult.AppendInt(!!mQuotaObject);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("PrepareDatastoreOps:");
-  aResult.AppendInt(mPrepareDatastoreOps.Count());
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("PreparedDatastores:");
-  aResult.AppendInt(mPreparedDatastores.Count());
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("Databases:");
-  aResult.AppendInt(mDatabases.Count());
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("ActiveDatabases:");
-  aResult.AppendInt(mActiveDatabases.Count());
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("Origin:");
-  aResult.Append(AnonymizedOriginString(mOrigin));
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("PrivateBrowsingId:");
-  aResult.AppendInt(mPrivateBrowsingId);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("Closed:");
-  aResult.AppendInt(mClosed);
-}
-
 bool Datastore::UpdateUsage(int64_t aDelta) {
   AssertIsOnBackgroundThread();
 
@@ -5673,37 +5624,6 @@ void Database::RequestAllowToClose() {
     // registered snapshot.
     AllowToClose();
   }
-}
-
-void Database::Stringify(nsACString& aResult) const {
-  AssertIsOnBackgroundThread();
-
-  aResult.AppendLiteral("SnapshotRegistered:");
-  aResult.AppendInt(!!mSnapshot);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("OtherProcessActor:");
-  aResult.AppendInt(BackgroundParent::IsOtherProcessActor(Manager()));
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("Origin:");
-  aResult.Append(AnonymizedOriginString(mOrigin));
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("PrivateBrowsingId:");
-  aResult.AppendInt(mPrivateBrowsingId);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("AllowedToClose:");
-  aResult.AppendInt(mAllowedToClose);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("ActorDestroyed:");
-  aResult.AppendInt(mActorDestroyed);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("RequestedAllowToClose:");
-  aResult.AppendInt(mRequestedAllowToClose);
 }
 
 void Database::AllowToClose() {
@@ -6407,6 +6327,43 @@ LSRequestBase::~LSRequestBase() {
                 mState == State::Initial || mState == State::Completed);
 }
 
+void LSRequestBase::StringifyState(nsCString& aResult) const {
+  AssertIsOnOwningThread();
+
+  switch (mState) {
+    case State::Initial:
+      aResult.AssignLiteral("Initial");
+      return;
+
+    case State::StartingRequest:
+      aResult.AssignLiteral("StartingRequest");
+      return;
+
+    case State::Nesting:
+      aResult.AssignLiteral("Nesting");
+      return;
+
+    case State::SendingReadyMessage:
+      aResult.AssignLiteral("SendingReadyMessage");
+      return;
+
+    case State::WaitingForFinish:
+      aResult.AssignLiteral("WaitingForFinish");
+      return;
+
+    case State::SendingResults:
+      aResult.AssignLiteral("SendingResults");
+      return;
+
+    case State::Completed:
+      aResult.AssignLiteral("Completed");
+      return;
+
+    default:
+      MOZ_CRASH("Bad state!");
+  }
+}
+
 void LSRequestBase::Dispatch() {
   AssertIsOnOwningThread();
 
@@ -6415,51 +6372,9 @@ void LSRequestBase::Dispatch() {
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
 }
 
-void LSRequestBase::StringifyState(nsACString& aResult) const {
-  AssertIsOnOwningThread();
+nsresult LSRequestBase::NestedRun() { return NS_OK; }
 
-  switch (mState) {
-    case State::Initial:
-      aResult.AppendLiteral("Initial");
-      return;
-
-    case State::StartingRequest:
-      aResult.AppendLiteral("StartingRequest");
-      return;
-
-    case State::Nesting:
-      aResult.AppendLiteral("Nesting");
-      return;
-
-    case State::SendingReadyMessage:
-      aResult.AppendLiteral("SendingReadyMessage");
-      return;
-
-    case State::WaitingForFinish:
-      aResult.AppendLiteral("WaitingForFinish");
-      return;
-
-    case State::SendingResults:
-      aResult.AppendLiteral("SendingResults");
-      return;
-
-    case State::Completed:
-      aResult.AppendLiteral("Completed");
-      return;
-
-    default:
-      MOZ_CRASH("Bad state!");
-  }
-}
-
-void LSRequestBase::Stringify(nsACString& aResult) const {
-  AssertIsOnOwningThread();
-
-  aResult.AppendLiteral("State:");
-  StringifyState(aResult);
-}
-
-void LSRequestBase::Log() {
+void LSRequestBase::LogState() {
   AssertIsOnOwningThread();
 
   if (!LS_LOG_TEST()) {
@@ -6472,9 +6387,15 @@ void LSRequestBase::Log() {
   StringifyState(state);
 
   LS_LOG(("  mState: %s", state.get()));
-}
 
-nsresult LSRequestBase::NestedRun() { return NS_OK; }
+  switch (mState) {
+    case State::Nesting:
+      LogNestedState();
+      break;
+
+    default:;
+  }
+}
 
 bool LSRequestBase::VerifyRequestParams() {
   AssertIsOnBackgroundThread();
@@ -6731,7 +6652,7 @@ void LSRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
   AssertIsOnOwningThread();
 
-  Log();
+  LogState();
 
   const char* crashOnCancel = PR_GetEnv("LSNG_CRASH_ON_CANCEL");
   if (crashOnCancel) {
@@ -6792,112 +6713,52 @@ PrepareDatastoreOp::~PrepareDatastoreOp() {
   MOZ_ASSERT(!mLoadDataOp);
 }
 
-void PrepareDatastoreOp::StringifyNestedState(nsACString& aResult) const {
+void PrepareDatastoreOp::StringifyNestedState(nsCString& aResult) const {
   AssertIsOnOwningThread();
 
   switch (mNestedState) {
     case NestedState::BeforeNesting:
-      aResult.AppendLiteral("BeforeNesting");
+      aResult.AssignLiteral("BeforeNesting");
       return;
 
     case NestedState::CheckExistingOperations:
-      aResult.AppendLiteral("CheckExistingOperations");
+      aResult.AssignLiteral("CheckExistingOperations");
       return;
 
     case NestedState::CheckClosingDatastore:
-      aResult.AppendLiteral("CheckClosingDatastore");
+      aResult.AssignLiteral("CheckClosingDatastore");
       return;
 
     case NestedState::PreparationPending:
-      aResult.AppendLiteral("PreparationPending");
+      aResult.AssignLiteral("PreparationPending");
       return;
 
     case NestedState::QuotaManagerPending:
-      aResult.AppendLiteral("QuotaManagerPending");
+      aResult.AssignLiteral("QuotaManagerPending");
       return;
 
     case NestedState::DirectoryOpenPending:
-      aResult.AppendLiteral("DirectoryOpenPending");
+      aResult.AssignLiteral("DirectoryOpenPending");
       return;
 
     case NestedState::DatabaseWorkOpen:
-      aResult.AppendLiteral("DatabaseWorkOpen");
+      aResult.AssignLiteral("DatabaseWorkOpen");
       return;
 
     case NestedState::BeginLoadData:
-      aResult.AppendLiteral("BeginLoadData");
+      aResult.AssignLiteral("BeginLoadData");
       return;
 
     case NestedState::DatabaseWorkLoadData:
-      aResult.AppendLiteral("DatabaseWorkLoadData");
+      aResult.AssignLiteral("DatabaseWorkLoadData");
       return;
 
     case NestedState::AfterNesting:
-      aResult.AppendLiteral("AfterNesting");
+      aResult.AssignLiteral("AfterNesting");
       return;
 
     default:
       MOZ_CRASH("Bad state!");
-  }
-}
-
-void PrepareDatastoreOp::Stringify(nsACString& aResult) const {
-  AssertIsOnOwningThread();
-
-  LSRequestBase::Stringify(aResult);
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("Origin:");
-  aResult.Append(AnonymizedOriginString(mOrigin));
-  aResult.Append(kQuotaGenericDelimiter);
-
-  aResult.AppendLiteral("NestedState:");
-  StringifyNestedState(aResult);
-}
-
-void PrepareDatastoreOp::Log() {
-  AssertIsOnOwningThread();
-
-  LSRequestBase::Log();
-
-  if (!LS_LOG_TEST()) {
-    return;
-  }
-
-  nsCString nestedState;
-  StringifyNestedState(nestedState);
-
-  LS_LOG(("  mNestedState: %s", nestedState.get()));
-
-  switch (mNestedState) {
-    case NestedState::CheckClosingDatastore: {
-      for (uint32_t index = gPrepareDatastoreOps->Length(); index > 0;
-           index--) {
-        PrepareDatastoreOp* existingOp = (*gPrepareDatastoreOps)[index - 1];
-
-        if (existingOp->mDelayedOp == this) {
-          LS_LOG(("  mDelayedBy: [%p]", existingOp));
-
-          existingOp->Log();
-
-          break;
-        }
-      }
-
-      break;
-    }
-
-    case NestedState::DirectoryOpenPending: {
-      MOZ_ASSERT(mPendingDirectoryLock);
-
-      LS_LOG(("  mPendingDirectoryLock: [%p]", mPendingDirectoryLock.get()));
-
-      mPendingDirectoryLock->Log();
-
-      break;
-    }
-
-    default:;
   }
 }
 
@@ -7931,6 +7792,46 @@ void PrepareDatastoreOp::CleanupMetadata() {
 
   if (gPrepareDatastoreOps->IsEmpty()) {
     gPrepareDatastoreOps = nullptr;
+  }
+}
+
+void PrepareDatastoreOp::LogNestedState() {
+  AssertIsOnOwningThread();
+
+  nsCString nestedState;
+  StringifyNestedState(nestedState);
+
+  LS_LOG(("  mNestedState: %s", nestedState.get()));
+
+  switch (mNestedState) {
+    case NestedState::CheckClosingDatastore: {
+      for (uint32_t index = gPrepareDatastoreOps->Length(); index > 0;
+           index--) {
+        PrepareDatastoreOp* existingOp = (*gPrepareDatastoreOps)[index - 1];
+
+        if (existingOp->mDelayedOp == this) {
+          LS_LOG(("  mDelayedBy: [%p]", existingOp));
+
+          existingOp->LogState();
+
+          break;
+        }
+      }
+
+      break;
+    }
+
+    case NestedState::DirectoryOpenPending: {
+      MOZ_ASSERT(mPendingDirectoryLock);
+
+      LS_LOG(("  mPendingDirectoryLock: [%p]", mPendingDirectoryLock.get()));
+
+      mPendingDirectoryLock->LogState();
+
+      break;
+    }
+
+    default:;
   }
 }
 
@@ -9241,66 +9142,61 @@ void QuotaClient::ShutdownTimedOut() {
   nsCString data;
 
   if (gPrepareDatastoreOps) {
-    data.Append("PrepareDatastoreOperations: ");
+    data.Append("gPrepareDatastoreOps: ");
     data.AppendInt(static_cast<uint32_t>(gPrepareDatastoreOps->Length()));
-    data.Append(" (");
 
     nsTHashtable<nsCStringHashKey> ids;
+    for (uint32_t index = 0; index < gPrepareDatastoreOps->Length(); index++) {
+      CheckedUnsafePtr<PrepareDatastoreOp>& prepareDatastoreOp =
+          (*gPrepareDatastoreOps)[index];
 
-    for (const auto& prepareDatastoreOp : *gPrepareDatastoreOps) {
-      MOZ_ASSERT(prepareDatastoreOp);
+      nsCString origin;
+      if (prepareDatastoreOp->OriginIsKnown()) {
+        origin = prepareDatastoreOp->Origin();
+        SanitizeOrigin(origin);
+      }
 
-      nsCString id;
-      prepareDatastoreOp->Stringify(id);
+      nsCString state;
+      prepareDatastoreOp->StringifyState(state);
+
+      nsCString nestedState;
+      prepareDatastoreOp->StringifyNestedState(nestedState);
+
+      NS_NAMED_LITERAL_CSTRING(delimiter, "*");
+
+      nsCString id = origin + delimiter + state + delimiter + nestedState;
 
       ids.PutEntry(id);
     }
 
-    StringifyTableKeys(ids, data);
+    data.Append(" (");
+
+    bool first = true;
+    for (auto iter = ids.ConstIter(); !iter.Done(); iter.Next()) {
+      if (first) {
+        first = false;
+      } else {
+        data.Append(", ");
+      }
+
+      const nsACString& id = iter.Get()->GetKey();
+
+      data.Append(id);
+    }
 
     data.Append(")\n");
   }
 
   if (gDatastores) {
-    data.Append("Datastores: ");
+    data.Append("gDatastores: ");
     data.AppendInt(gDatastores->Count());
-    data.Append(" (");
-
-    nsTHashtable<nsCStringHashKey> ids;
-
-    for (const auto& entry : *gDatastores) {
-      MOZ_ASSERT(entry.GetData());
-
-      nsCString id;
-      entry.GetData()->Stringify(id);
-
-      ids.PutEntry(id);
-    }
-
-    StringifyTableKeys(ids, data);
-
-    data.Append(")\n");
+    data.Append("\n");
   }
 
   if (gLiveDatabases) {
-    data.Append("LiveDatabases: ");
+    data.Append("gLiveDatabases: ");
     data.AppendInt(static_cast<uint32_t>(gLiveDatabases->Length()));
-    data.Append(" (");
-
-    nsTHashtable<nsCStringHashKey> ids;
-
-    for (const auto& database : *gLiveDatabases) {
-      MOZ_ASSERT(database);
-
-      nsCString id;
-      database->Stringify(id);
-
-      ids.PutEntry(id);
-    }
-
-    StringifyTableKeys(ids, data);
-
-    data.Append(")\n");
+    data.Append("\n");
   }
 
   CrashReporter::AnnotateCrashReport(

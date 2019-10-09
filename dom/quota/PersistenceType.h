@@ -48,13 +48,6 @@ inline void PersistenceTypeToText(PersistenceType aPersistenceType,
   }
 }
 
-class PersistenceTypeString : public nsCString {
- public:
-  explicit PersistenceTypeString(PersistenceType aPersistenceType) {
-    PersistenceTypeToText(aPersistenceType, *this);
-  }
-};
-
 inline PersistenceType PersistenceTypeFromText(const nsACString& aText) {
   if (aText.EqualsLiteral("persistent")) {
     return PERSISTENCE_TYPE_PERSISTENT;

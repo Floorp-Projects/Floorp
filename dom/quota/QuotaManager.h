@@ -63,7 +63,7 @@ class DirectoryLock : public RefCountedObject {
   friend class DirectoryLockImpl;
 
  public:
-  virtual void Log() = 0;
+  virtual void LogState() = 0;
 
  private:
   DirectoryLock() {}
