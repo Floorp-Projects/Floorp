@@ -163,11 +163,11 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
       nsPrintfCString marker(
           "Document %s loaded after %dms, load event duration %dms", spec.get(),
           int(elapsed.ToMilliseconds()), int(duration.ToMilliseconds()));
-      DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
       PAGELOAD_LOG(("%s", marker.get()));
-      PROFILER_ADD_MARKER_WITH_PAYLOAD("DocumentLoad", DOM, TextMarkerPayload,
-                                       (marker, mNavigationStart, mLoadEventEnd,
-                                        docShellId, docShellHistoryId));
+      PROFILER_ADD_MARKER_WITH_PAYLOAD(
+          "DocumentLoad", DOM, TextMarkerPayload,
+          (marker, mNavigationStart, mLoadEventEnd,
+           profiler_get_inner_window_id_from_docshell(mDocShell)));
     }
 #endif
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
@@ -358,10 +358,10 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
                            int(elapsed.ToMilliseconds()),
                            int(elapsedLongTask.ToMilliseconds()), spec.get());
 
-    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
         "TTFI", DOM, TextMarkerPayload,
-        (marker, mNavigationStart, mTTFI, docShellId, docShellHistoryId));
+        (marker, mNavigationStart, mTTFI,
+         profiler_get_inner_window_id_from_docshell(mDocShell)));
   }
 #endif
   return;
@@ -392,11 +392,10 @@ void nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument() {
             : "this tab was inactive some of the time between navigation start "
               "and first non-blank paint");
     PAGELOAD_LOG(("%s", marker.get()));
-    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
-    PROFILER_ADD_MARKER_WITH_PAYLOAD("FirstNonBlankPaint", DOM,
-                                     TextMarkerPayload,
-                                     (marker, mNavigationStart, mNonBlankPaint,
-                                      docShellId, docShellHistoryId));
+    PROFILER_ADD_MARKER_WITH_PAYLOAD(
+        "FirstNonBlankPaint", DOM, TextMarkerPayload,
+        (marker, mNavigationStart, mNonBlankPaint,
+         profiler_get_inner_window_id_from_docshell(mDocShell)));
   }
 #endif
 
@@ -441,12 +440,11 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument(
             ? "foreground tab"
             : "this tab was inactive some of the time between navigation start "
               "and first non-blank paint");
-    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     PAGELOAD_LOG(("%s", marker.get()));
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
         "FirstContentfulPaint", DOM, TextMarkerPayload,
-        (marker, mNavigationStart, mContentfulPaint, docShellId,
-         docShellHistoryId));
+        (marker, mNavigationStart, mContentfulPaint,
+         profiler_get_inner_window_id_from_docshell(mDocShell)));
   }
 #endif
 
@@ -491,12 +489,11 @@ void nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument() {
             ? "foreground tab"
             : "this tab was inactive some of the time between navigation start "
               "and DOMContentFlushed");
-    DECLARE_DOCSHELL_AND_HISTORY_ID(mDocShell);
     PAGELOAD_LOG(("%s", marker.get()));
     PROFILER_ADD_MARKER_WITH_PAYLOAD(
         "DOMContentFlushed", DOM, TextMarkerPayload,
-        (marker, mNavigationStart, mDOMContentFlushed, docShellId,
-         docShellHistoryId));
+        (marker, mNavigationStart, mDOMContentFlushed,
+         profiler_get_inner_window_id_from_docshell(mDocShell)));
   }
 #endif
 }
