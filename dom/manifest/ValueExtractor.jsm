@@ -13,21 +13,25 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
-function ValueExtractor(errors, aBundle) {
-  this.errors = errors;
-  this.domBundle = aBundle;
-}
+class ValueExtractor {
+  constructor(errors, aBundle) {
+    this.errors = errors;
+    this.domBundle = aBundle;
+  }
 
-ValueExtractor.prototype = {
-  // This function takes a 'spec' object and destructures
-  // it to extract a value. If the value is of th wrong type, it
-  // warns the developer and returns undefined.
-  //  expectType: is the type of a JS primitive (string, number, etc.)
-  //  object: is the object from which to extract the value.
-  //  objectName: string used to construct the developer warning.
-  //  property: the name of the property being extracted.
-  //  trim: boolean, if the value should be trimmed (used by string type).
-  //  throwTypeError: boolean, throw a TypeError if the type is incorrect.
+  /**
+   * @param options
+   *        The 'spec' object.
+   * @note  This function takes a 'spec' object and destructures it to extract
+   *        a value. If the value is of the wrong type, it warns the developer
+   *        and returns undefined.
+   *        expectedType: is the type of a JS primitive (string, number, etc.)
+   *        object: is the object from which to extract the value.
+   *        objectName: string used to construct the developer warning.
+   *        property: the name of the property being extracted.
+   *        throwTypeError: boolean, throw a TypeError if the type is incorrect.
+   *        trim: boolean, if the value should be trimmed (used by string type).
+   */
   extractValue(options) {
     const {
       expectedType,
@@ -39,6 +43,7 @@ ValueExtractor.prototype = {
     } = options;
     const value = object[property];
     const isArray = Array.isArray(value);
+
     // We need to special-case "array", as it's not a JS primitive.
     const type = isArray ? "array" : typeof value;
     if (type !== expectedType) {
@@ -54,13 +59,15 @@ ValueExtractor.prototype = {
       }
       return undefined;
     }
+
     // Trim string and returned undefined if the empty string.
     const shouldTrim = expectedType === "string" && value && trim;
     if (shouldTrim) {
       return value.trim() || undefined;
     }
     return value;
-  },
+  }
+
   extractColorValue(spec) {
     const value = this.extractValue(spec);
     let color;
@@ -75,7 +82,8 @@ ValueExtractor.prototype = {
       this.errors.push({ warn });
     }
     return color;
-  },
+  }
+
   extractLanguageValue(spec) {
     let langTag;
     const value = this.extractValue(spec);
@@ -91,6 +99,7 @@ ValueExtractor.prototype = {
       }
     }
     return langTag;
-  },
-};
-var EXPORTED_SYMBOLS = ["ValueExtractor"]; // jshint ignore:line
+  }
+}
+
+const EXPORTED_SYMBOLS = ["ValueExtractor"];
