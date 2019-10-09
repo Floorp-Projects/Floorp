@@ -547,9 +547,9 @@
     <string name="tracking_protection_off">關閉</string>
 
     <!-- Label that indicates video and audio autoplay is blocked -->
-    <string name="preference_option_autoplay_blocked">已封鎖影音內容</string>
+    <string name="preference_option_autoplay_blocked">封鎖影音內容</string>
     <!-- Label that indicates video and audio autoplay is allowed -->
-    <string name="preference_option_autoplay_allowed">已允許影音內容</string>
+    <string name="preference_option_autoplay_allowed">允許影音內容</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
@@ -726,7 +726,7 @@
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookie</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies_subtitle">您將從大多數網站登出</string>
+    <string name="preferences_delete_browsing_data_cookies_subtitle">將從大多數網站登出</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">快取圖片與檔案</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->

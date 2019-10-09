@@ -20,6 +20,15 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Jelenleg privát munkamenetben van</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">
+         A %1$s törli a keresési és böngészési előzményeit, ha kilép az alkalmazásból, vagy bezárja az összes privát böngészési lapot. Ugyan ez nem teszi névtelenné a weboldalak vagy a szolgáltatója felé, könnyebbé teszi, 
+        hogy bizalmasan kezelje az online tevékenységét, és más ne tudjon róla, aki ezt az eszközt használja.
+    </string>
+    <string name="private_browsing_common_myths">
+       Gyakori tévhitek a privát böngészésről
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Munkamenet törlése</string>
 
@@ -30,6 +39,12 @@
     <string name="cfr_pos_button_text">Parancsikon hozzáadása</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Köszönöm, nem</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Új lap</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Új privát lap</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -575,6 +590,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Küldés és megosztás</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Megosztás</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Megosztás</string>
@@ -787,6 +804,10 @@
     <string name="sync_sent_tabs_snackbar">Lapok elküldve.</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Lap elküldve.</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Nem sikerült elküldeni</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ÚJRAPRÓBÁLKOZÁS</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Olvassa le a kódot</string>
 
@@ -825,10 +846,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Szokásos (ajánlott)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Kiegyensúlyozott védelem és teljesítmény.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">A lapok normálisan betöltenek, de néhány nyomkövető blokkolása.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Szigorú</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">Szigorú (Alapértelmezett)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Erősebb követésvédelem és jobb teljesítmény, de előfordulhat, hogy egyes oldalak nem fognak megfelelően működni.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Szigorú (ajánlott)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -902,6 +927,8 @@
     <string name="preferences_passwords_logins_and_passwords">Bejelentkezések és jelszavak</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
     <string name="preferences_passwords_save_logins">Bejelentkezések és jelszavak mentése</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Kérdés mentés előtt</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Soha ne mentse</string>
     <!-- Preference for autofilling saved logins in Fenix -->
@@ -920,16 +947,35 @@
     <string name="preferences_passwords_saved_logins">Mentett bejelentkezések</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Kivételek</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Itt jelennek meg a nem mentett bejelentkezések és jelszavak.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">A bejelentkezéseket és a jelszavak nem lesznek elmentve ezeknél a webhelyeknél.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Bejelentkezések keresése</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
     <string name="preferences_passwords_saved_logins_alphabetically">Betűrendben</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Nemrég használt</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Webhely</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Felhasználónév</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Jelszó</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Adja meg újra a PIN-kódot</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Feloldás a mentett bejelentkezések megtekintéshez</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Ez a kapcsolat nem biztonságos. Az itt megadott adatok lehallgathatók.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">További tudnivalók</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Biztos, hogy elmenti ezt a bejelentkezést a %s böngészőben?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Mentés</string>
-    </resources>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Ne mentse</string>
+
+</resources>

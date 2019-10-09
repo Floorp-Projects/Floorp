@@ -602,11 +602,27 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Rozumiem</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Do tejto aplikácie nie je možné zdieľať</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">Odoslať do zariadenia</string>
 
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Žiadne pripojené zariadenia</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Ďalšie informácie o odosielaní kariet…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Pripojiť ďalšie zariadenie…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Súkromné prehliadanie</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Odstrániť súkromné karty</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
     <string name="notification_pbm_action_open">Otvoriť</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Odstrániť a otvoriť aplikáciu</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Kolekcia bola odstránená</string>
     <!-- Text shown in snackbar when user renames a collection -->

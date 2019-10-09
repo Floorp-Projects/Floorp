@@ -21,13 +21,9 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">ਤੁਸੀਂ ਪ੍ਰਾਈਵੇਟ ਸ਼ੈਸ਼ਨ ‘ਚ ਹੋ</string>
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">
-         ਜਦੋਂ ਤੁਸੀਂ ਐਪ ਤੋਂ ਬਾਹਰ ਜਾਂਦੇ ਹੋ ਜਾਂ ਸਾਰੀਆਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰਦੇ ਹੋ ਤਾਂ %1$s ਤੁਹਾਡੀ ਖੋਜ ਅਤੇ ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ ਨੂੰ ਸਾਫ ਕਰਦਾ ਹੈ। ਹਾਲਾਂਕਿ ਇਹ ਤੁਹਾਨੂੰ ਵੈਬਸਾਈਟਾਂ ਜਾਂ ਤੁਹਾਡੇ ਇੰਟਰਨੈੱਟ ਦੇਣ ਵਾਲੇ ਲਈ ਅਣਪਛਾਤਾ ਨਹੀਂ ਬਣਾਉਂਦਾ, ਪਰ ਇਸ ਨਾਲ
-        ਇਸ ਡਿਵਾਈਸ ਨੂੰ ਵਰਤੇ ਵਾਲੇ ਕਿਸੇ ਤੋਂ ਵੀ ਤੁਹਾਡੇ ਵਲੋਂ ਆਨਲਾਈਨ ਕੀਤੇ ਨੂੰ ਪ੍ਰਾਈਵੇਟ ਰੱਖਣਾ ਹੋਰ ਸੌਖਾ ਹੋ ਜਾਂਦਾ ਹੈ।\n\nਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ ਕਰ ਬਾਰੇ ਆਮ ਭਰਮ
-    
-    </string>
+    <string name="private_browsing_common_myths">
+       ਪ੍ਰਾਈਵੇਟ ਟੈਬਾਂ ਬਾਰੇ ਆਮ ਫ਼ਰਜ਼ੀ ਗੱਲਾਂ
+    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">ਸ਼ੈਸ਼ਨ ਹਟਾਓ</string>
 
@@ -41,9 +37,9 @@
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
-    <string name="home_screen_shortcut_open_new_tab">ਨਵੀਂ ਟੈਬ ਖੋਲ੍ਹੋ</string>
+    <string name="home_screen_shortcut_open_new_tab_2">ਨਵੀਂ ਟੈਬ</string>
     <!-- Shortcut action to open new private tab -->
-    <string name="home_screen_shortcut_open_new_private_tab">ਨਵੀਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬ ਖੋਲ੍ਹੋ</string>
+    <string name="home_screen_shortcut_open_new_private_tab_2">ਨਵੀਂ ਪ੍ਰਾਈਵੇਟ ਟੈਬ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -593,6 +589,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">ਭੇਜੋ ਅਤੇ ਸਾਂਝਾ ਕਰੋ</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">ਸਾਂਝਾ ਕਰੋ</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">ਸਾਂਝਾ ਕਰੋ</string>
@@ -716,6 +714,8 @@
     <string name="preferences_delete_browsing_data_on_quit">ਬੰਦ ਕਰਨ ‘ਤੇ ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਓ</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">ਜਦੋਂ ਤੁਸੀਂ ਮੁੱਖ ਮੇਨੂ ਤੋਂ &quot;ਬਾਹਰ&quot; ਨੂੰ ਚੁਣਦੇ ਹੋ ਤਾਂ ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਆਪਣੇ-ਆਪ ਹਟਾਇਆ ਜਾਂਦਾ ਹੈ</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">ਜਦੋਂ ਤੁਸੀਂ ਮੁੱਖ ਮੇਨੂ ਰਾਹੀਂ \&quot;ਬਾਹਰ\&quot; ਨੂੰ ਚੁਣਦੇ ਹੋ ਤਾਂ ਬਰਾਊਜ਼ ਕੀਤੇ ਡਾਟੇ ਨੂੰ ਆਪਣੇ-ਆਪ ਹਟਾਇਆ ਜਾਂਦਾ ਹੈ</string>
     <!-- Category for history items to delete on quit in delete browsing data on quit -->
     <string name="preferences_delete_browsing_data_on_quit_browsing_history">ਬਰਾਊਜ਼ਿੰਗ ਅਤੀਤ</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -803,6 +803,10 @@
     <string name="sync_sent_tabs_snackbar">ਟੈਬਾਂ ਭੇਜੀਆਂ!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">ਟੈਬ ਭੇਜੀ!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">ਭੇਜਣ ਲਈ ਅਸਮਰੱਥ</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ਮੁੜ-ਭੇਜੋ</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">ਕੋਡ ਸਕੈਨ ਕਰੋ</string>
     <!-- Instructions on how to access pairing -->
@@ -839,10 +843,14 @@
     <string name="preference_enhanced_tracking_protection_standard">ਮਿਆਰੀ (ਸਿਫਾਰਸ਼ੀ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">ਸੁਰੱਖਿਆ ਅਤੇ ਕਾਰਗੁਜ਼ਾਰੀ ਲਈ ਸੰਤੁਲਿਤ ਕੀਤਾ।</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">ਸਫ਼ਿਆਂ ਨੂੰ ਆਮ ਵਾਂਗ ਲੋਡ ਕੀਤਾ ਜਾਂਦਾ ਹੈ, ਪਰ ਕੁਝ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ।</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ਸਖ਼ਤ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">ਸਖ਼ਤ (ਮੂਲ)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">ਮਜ਼ਬੂਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਅਤੇ ਵੱਧ ਤੇਜ਼ ਕਾਰਗੁਜ਼ਜਾਰੀ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਹੀਂ ਕਰਨਗੀਆਂ।</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">ਸਖ਼ਤ (ਸਿਫਾਰਸ਼ੀ)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -935,6 +943,10 @@
     <string name="preferences_passwords_saved_logins">ਸੰਭਾਲੇ ਹੋਏ ਲਾਗਇਨ</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">ਛੋਟਾਂ</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">ਨਾ ਸੰਭਾਲੇ ਹੋਏ ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਇੱਥੇ ਸੰਭਾਲਿਆ ਜਾਵੇਗਾ।</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">ਇਹਨਾਂ ਸਾਈਟਾਂ ਲਈ ਲਾਗਇਨ ਅਤੇ ਪਾਸਵਰਡ ਨਹੀਂ ਸੰਭਾਲੇ ਜਾਣਗੇ।</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">ਲਾਗਇਨ ਖੋਜੋ</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
@@ -951,6 +963,8 @@
     <string name="preferences_passwords_saved_logins_enter_pin">ਆਪਣਾ ਪਿੰਨ ਮੁੜ ਦਿਓ</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">ਆਪਣੇ ਸੰਭਾਲੇ ਹੋਏ ਲਾਗਇਨ ਵੇਖਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">ਇਹ ਕਨੈਕਸ਼ਨ ਸੁਰੱਖਿਅਤ ਨਹੀਂ ਹੈ। ਇੱਥੇ ਦਿੱਤੇ ਗਏ ਲਾਗਇਨਾਂ ਨਾਲ ਠੱਗੀ ਵੱਜ ਸਕਦੀ ਹੈ।</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->

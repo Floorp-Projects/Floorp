@@ -902,7 +902,7 @@
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Dina rättigheter</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Öppen källkodsbibliotek vi använder</string>
+    <string name="about_open_source_licenses">Öppna källkodsbibliotek vi använder</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Vad är nytt i %s</string>
     <!-- Open source licenses page title
