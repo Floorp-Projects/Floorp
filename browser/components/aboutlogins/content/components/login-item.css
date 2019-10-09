@@ -325,9 +325,16 @@ input[name="password"] {
   line-height: 0;
 }
 
-.dismiss-breach-alert,
-.dismiss-breach-alert:hover {
+.dismiss-breach-alert {
   background-color: transparent;
+}
+
+.dismiss-breach-alert:enabled:hover {
+  background-color: var(--grey-90-a20);
+}
+
+.dismiss-breach-alert:enabled:hover:active {
+  background-color: var(--grey-90-a30);
 }
 
 .dismiss-breach-alert-icon {
