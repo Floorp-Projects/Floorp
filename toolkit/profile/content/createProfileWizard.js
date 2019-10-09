@@ -253,11 +253,9 @@ function onFinish(event) {
     return;
   }
 
-  // window.opener is false if the Create Profile Wizard was opened from the
-  // command line.
-  if (window.opener) {
+  if (window.arguments && window.arguments[1]) {
     // Add new profile to the list in the Profile Manager.
-    window.opener.CreateProfile(profile);
+    window.arguments[1].CreateProfile(profile);
   } else {
     // Use the newly created Profile.
     var profileLock = profile.lock(null);
