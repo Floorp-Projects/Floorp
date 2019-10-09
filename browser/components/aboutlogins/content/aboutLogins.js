@@ -81,6 +81,7 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
         event.detail.value.selectedBadgeLanguages
       );
       handleSyncState(event.detail.value.syncState);
+      gElements.loginList.setSortDirection(event.detail.value.selectedSort);
       document.documentElement.classList.add("initialized");
       break;
     }

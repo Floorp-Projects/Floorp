@@ -1784,6 +1784,7 @@ pref("signon.privateBrowsingCapture.enabled", true);
 pref("signon.showAutoCompleteFooter", true);
 pref("signon.management.page.enabled", true);
 pref("signon.management.page.breach-alerts.enabled", true);
+pref("signon.management.page.sort", "name");
 pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
 #ifdef NIGHTLY_BUILD
   // Bug 1563330 tracks shipping this by default.
