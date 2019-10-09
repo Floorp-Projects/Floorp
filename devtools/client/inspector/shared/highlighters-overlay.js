@@ -1104,7 +1104,8 @@ class HighlightersOverlay {
     }
 
     try {
-      const isInTree = await this.walker.isInDOMTree(node);
+      const isInTree =
+        node.walkerFront && (await node.walkerFront.isInDOMTree(node));
       if (!isInTree) {
         hideHighlighter(node);
       }
