@@ -1279,18 +1279,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "privacy.popups.maxReported"
 );
 
-function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
-  let deserializeURI = url => {
-    if (url instanceof Ci.nsIURI) {
-      return url;
-    }
-    return url ? makeURI(url) : null;
-  };
-
+function doURIFixup(browser, fixupInfo) {
   // We get called irrespective of whether we did a keyword search, or
   // whether the original input would be vaguely interpretable as a URL,
   // so figure that out first.
-  let alternativeURI = deserializeURI(fixupInfo.fixedURI);
+  let alternativeURI = fixupInfo.fixedURI;
   if (
     !fixupInfo.keywordProviderName ||
     !alternativeURI ||
@@ -1310,7 +1303,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   // We keep track of the currentURI to detect case (1) in the DNS lookup
   // callback.
   let previousURI = browser.currentURI;
-  let preferredURI = deserializeURI(fixupInfo.preferredURI);
+  let preferredURI = fixupInfo.preferredURI;
 
   // now swap for a weak ref so we don't hang on to browser needlessly
   // even if the DNS query takes forever
@@ -1434,6 +1427,35 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
       Cu.reportError(ex);
     }
   }
+}
+
+function gKeywordURIFixupObs(fixupInfo, topic, data) {
+  fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
+
+  if (!fixupInfo.consumer || fixupInfo.consumer.ownerGlobal != window) {
+    return;
+  }
+
+  doURIFixup(fixupInfo.consumer, {
+    fixedURI: fixupInfo.fixedURI,
+    keywordProviderName: fixupInfo.keywordProviderName,
+    preferredURI: fixupInfo.preferredURI,
+  });
+}
+
+function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
+  let deserializeURI = url => {
+    if (url instanceof Ci.nsIURI) {
+      return url;
+    }
+    return url ? makeURI(url) : null;
+  };
+
+  doURIFixup(browser, {
+    fixedURI: deserializeURI(fixupInfo.fixedURI),
+    keywordProviderName: fixupInfo.keywordProviderName,
+    preferredURI: deserializeURI(fixupInfo.preferredURI),
+  });
 }
 
 function serializeInputStream(aStream) {
@@ -2054,6 +2076,7 @@ var gBrowserInit = {
       "Browser:URIFixup",
       gKeywordURIFixup
     );
+    Services.obs.addObserver(gKeywordURIFixupObs, "keyword-uri-fixup");
 
     BrowserOffline.init();
     IndexedDBPromptHelper.init();
@@ -2589,6 +2612,7 @@ var gBrowserInit = {
         "Browser:URIFixup",
         gKeywordURIFixup
       );
+      Services.obs.removeObserver(gKeywordURIFixupObs, "keyword-uri-fixup");
       window.messageManager.removeMessageListener(
         "Browser:LoadURI",
         RedirectLoad
