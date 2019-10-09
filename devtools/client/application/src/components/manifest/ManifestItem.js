@@ -18,7 +18,7 @@ const {
 class ManifestItem extends PureComponent {
   static get propTypes() {
     return {
-      label: PropTypes.string.isRequired,
+      label: PropTypes.node.isRequired,
       children: PropTypes.node,
     };
   }
