@@ -81,7 +81,17 @@ add_task(async function setup() {
       { data: { current: [EXPECTED_BREACH] } }
     );
   }
+
+  SpecialPowers.registerConsoleListener(function onConsoleMessage(msg) {
+    if (msg.isWarning || !msg.errorMessage) {
+      // Ignore warnings and non-errors.
+      return;
+    }
+    ok(false, msg.message || msg.errorMessage);
+  });
+
   registerCleanupFunction(async () => {
     await collection.clear();
+    SpecialPowers.postConsoleSentinel();
   });
 });
