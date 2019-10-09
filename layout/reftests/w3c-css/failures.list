@@ -168,10 +168,11 @@ fails css-writing-modes/vertical-alignment-vlr-025.xht
 fails css-writing-modes/vertical-alignment-vrl-022.xht
 fails css-writing-modes/vertical-alignment-vrl-024.xht
 
-# Bug 1102175
-fails css-writing-modes/wm-propagation-body-*.xht
-
 css-writing-modes/text-combine-upright-layout-rules-001.html
+
+# Bug 1580385 - Fix failing writing-mode tests because of propagating WritingMode from <body>
+fails css-writing-modes/normal-flow-overconstrained-vlr-005.xht
+fails css-writing-modes/normal-flow-overconstrained-vrl-004.xht
 
 #### CSS Multi-column 1 ##############################################
 
