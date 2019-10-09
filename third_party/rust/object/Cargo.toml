@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "object"
-version = "0.13.0"
+version = "0.14.0"
 authors = ["Nick Fitzgerald <fitzgen@gmail.com>", "Philip Craig <philipjcraig@gmail.com>"]
 exclude = ["/.coveralls.yml", "/.travis.yml"]
 description = "A unified interface for parsing object file formats."
@@ -50,7 +50,7 @@ version = "0.9"
 default-features = false
 
 [dependencies.target-lexicon]
-version = "0.4"
+version = "0.8"
 
 [dependencies.uuid]
 version = "0.7"
