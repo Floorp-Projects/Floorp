@@ -245,6 +245,10 @@ ReplayDebugger.prototype = {
     return this._control.lastPausePoint();
   },
 
+  replayFramePositions(point) {
+    return this._control.findFrameSteps(point);
+  },
+
   replayRecordingEndpoint() {
     return this._control.recordingEndpoint();
   },
