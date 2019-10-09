@@ -10,10 +10,10 @@
 //!   entry points that may be useful to procedural macros including
 //!   [`syn::Item`], [`syn::Expr`] and [`syn::Type`].
 //!
-//! - **Custom derives** — Of particular interest to custom derives is
+//! - **Derives** — Of particular interest to derive macros is
 //!   [`syn::DeriveInput`] which is any of the three legal input items to a
 //!   derive macro. An example below shows using this type in a library that can
-//!   derive implementations of a trait of your own.
+//!   derive implementations of a user-defined trait.
 //!
 //! - **Parsing** — Parsing in Syn is built around [parser functions] with the
 //!   signature `fn(ParseStream) -> Result<T>`. Every syntax tree node defined
@@ -38,14 +38,11 @@
 //! [`syn::DeriveInput`]: struct.DeriveInput.html
 //! [parser functions]: parse/index.html
 //!
-//! *Version requirement: Syn supports any compiler version back to Rust's very
-//! first support for procedural macros in Rust 1.15.0. Some features especially
-//! around error reporting are only available in newer compilers or on the
-//! nightly channel.*
+//! <br>
 //!
-//! ## Example of a custom derive
+//! # Example of a derive macro
 //!
-//! The canonical custom derive using Syn looks like this. We write an ordinary
+//! The canonical derive macro using Syn looks like this. We write an ordinary
 //! Rust function tagged with a `proc_macro_derive` attribute and the name of
 //! the trait we are deriving. Any time that derive appears in the user's code,
 //! the Rust compiler passes their data structure as tokens into our macro. We
@@ -57,14 +54,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! syn = "0.15"
-//! quote = "0.6"
+//! syn = "1.0"
+//! quote = "1.0"
 //!
 //! [lib]
 //! proc-macro = true
 //! ```
 //!
-//! ```edition2018
+//! ```
 //! extern crate proc_macro;
 //!
 //! use proc_macro::TokenStream;
@@ -88,24 +85,24 @@
 //! }
 //! ```
 //!
-//! The [`heapsize`] example directory shows a complete working Macros 1.1
-//! implementation of a custom derive. It works on any Rust compiler 1.15+.
-//! The example derives a `HeapSize` trait which computes an estimate of the
-//! amount of heap memory owned by a value.
+//! The [`heapsize`] example directory shows a complete working implementation
+//! of a derive macro. It works on any Rust compiler 1.31+. The example derives
+//! a `HeapSize` trait which computes an estimate of the amount of heap memory
+//! owned by a value.
 //!
 //! [`heapsize`]: https://github.com/dtolnay/syn/tree/master/examples/heapsize
 //!
-//! ```edition2018
+//! ```
 //! pub trait HeapSize {
 //!     /// Total number of bytes of heap memory owned by `self`.
 //!     fn heap_size_of_children(&self) -> usize;
 //! }
 //! ```
 //!
-//! The custom derive allows users to write `#[derive(HeapSize)]` on data
+//! The derive macro allows users to write `#[derive(HeapSize)]` on data
 //! structures in their program.
 //!
-//! ```edition2018
+//! ```
 //! # const IGNORE_TOKENS: &str = stringify! {
 //! #[derive(HeapSize)]
 //! # };
@@ -117,13 +114,15 @@
 //! }
 //! ```
 //!
-//! ## Spans and error reporting
+//! <p><br></p>
+//!
+//! # Spans and error reporting
 //!
 //! The token-based procedural macro API provides great control over where the
 //! compiler's error messages are displayed in user code. Consider the error the
 //! user sees if one of their field types does not implement `HeapSize`.
 //!
-//! ```edition2018
+//! ```
 //! # const IGNORE_TOKENS: &str = stringify! {
 //! #[derive(HeapSize)]
 //! # };
@@ -146,7 +145,9 @@
 //!   |     ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `HeapSize` is not implemented for `Thread`
 //! ```
 //!
-//! ## Parsing a custom syntax
+//! <br>
+//!
+//! # Parsing a custom syntax
 //!
 //! The [`lazy-static`] example directory shows the implementation of a
 //! `functionlike!(...)` procedural macro in which the input tokens are parsed
@@ -157,7 +158,7 @@
 //! The example reimplements the popular `lazy_static` crate from crates.io as a
 //! procedural macro.
 //!
-//! ```edition2018
+//! ```
 //! # macro_rules! lazy_static {
 //! #     ($($tt:tt)*) => {}
 //! # }
@@ -178,7 +179,24 @@
 //!    |                ^^^
 //! ```
 //!
-//! ## Debugging
+//! <br>
+//!
+//! # Testing
+//!
+//! When testing macros, we often care not just that the macro can be used
+//! successfully but also that when the macro is provided with invalid input it
+//! produces maximally helpful error messages. Consider using the [`trybuild`]
+//! crate to write tests for errors that are emitted by your macro or errors
+//! detected by the Rust compiler in the expanded code following misuse of the
+//! macro. Such tests help avoid regressions from later refactors that
+//! mistakenly make an error no longer trigger or be less helpful than it used
+//! to be.
+//!
+//! [`trybuild`]: https://github.com/dtolnay/trybuild
+//!
+//! <br>
+//!
+//! # Debugging
 //!
 //! When developing a procedural macro it can be helpful to look at what the
 //! generated code looks like. Use `cargo rustc -- -Zunstable-options
@@ -196,14 +214,16 @@
 //!
 //! [debugging]: https://quodlibetor.github.io/posts/debugging-rusts-new-custom-derive-system/
 //!
-//! ## Optional features
+//! <br>
+//!
+//! # Optional features
 //!
 //! Syn puts a lot of functionality behind optional features in order to
 //! optimize compile time for the most common use cases. The following features
 //! are available.
 //!
 //! - **`derive`** *(enabled by default)* — Data structures for representing the
-//!   possible input to a custom derive, including structs and enums and types.
+//!   possible input to a derive macro, including structs and enums and types.
 //! - **`full`** — Data structures for representing the syntax tree of all valid
 //!   Rust source code, including items and expressions.
 //! - **`parsing`** *(enabled by default)* — Ability to parse input tokens into
@@ -222,47 +242,39 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/0.15.30")]
-#![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
-#![cfg_attr(feature = "cargo-clippy", deny(clippy, clippy_pedantic))]
+#![doc(html_root_url = "https://docs.rs/syn/1.0.5")]
+#![deny(clippy::all, clippy::pedantic)]
 // Ignored clippy lints.
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
-        block_in_if_condition_stmt,
-        cognitive_complexity,
-        const_static_lifetime,
-        deprecated_cfg_attr,
-        doc_markdown,
-        eval_order_dependence,
-        large_enum_variant,
-        needless_pass_by_value,
-        never_loop,
-        redundant_field_names,
-        too_many_arguments,
-    )
+#![allow(
+    clippy::block_in_if_condition_stmt,
+    clippy::cognitive_complexity,
+    clippy::doc_markdown,
+    clippy::eval_order_dependence,
+    clippy::inherent_to_string,
+    clippy::large_enum_variant,
+    clippy::needless_pass_by_value,
+    clippy::never_loop,
+    clippy::suspicious_op_assign_impl,
+    clippy::too_many_arguments,
+    clippy::trivially_copy_pass_by_ref
 )]
 // Ignored clippy_pedantic lints.
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(
-        cast_possible_truncation,
-        cast_possible_wrap,
-        empty_enum,
-        if_not_else,
-        items_after_statements,
-        module_name_repetitions,
-        shadow_unrelated,
-        similar_names,
-        single_match_else,
-        unseparated_literal_suffix,
-        use_self,
-        used_underscore_binding,
-    )
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::empty_enum,
+    clippy::if_not_else,
+    clippy::items_after_statements,
+    clippy::module_name_repetitions,
+    clippy::shadow_unrelated,
+    clippy::similar_names,
+    clippy::single_match_else,
+    clippy::unseparated_literal_suffix,
+    clippy::use_self,
+    clippy::used_underscore_binding
 )]
 
 #[cfg(all(
-    not(all(target_arch = "wasm32", target_os = "unknown")),
+    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
     feature = "proc-macro"
 ))]
 extern crate proc_macro;
@@ -272,6 +284,7 @@ extern crate unicode_xid;
 #[cfg(feature = "printing")]
 extern crate quote;
 
+#[cfg(any(feature = "full", feature = "derive"))]
 #[macro_use]
 mod macros;
 
@@ -285,109 +298,120 @@ pub mod group;
 pub mod token;
 
 mod ident;
-pub use ident::Ident;
+pub use crate::ident::Ident;
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod attr;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use attr::{AttrStyle, Attribute, AttributeArgs, Meta, MetaList, MetaNameValue, NestedMeta};
+pub use crate::attr::{
+    AttrStyle, Attribute, AttributeArgs, Meta, MetaList, MetaNameValue, NestedMeta,
+};
+
+#[cfg(any(feature = "full", feature = "derive"))]
+mod bigint;
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod data;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use data::{
+pub use crate::data::{
     Field, Fields, FieldsNamed, FieldsUnnamed, Variant, VisCrate, VisPublic, VisRestricted,
     Visibility,
 };
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod expr;
-#[cfg(any(feature = "full", feature = "derive"))]
-pub use expr::{
-    Expr, ExprArray, ExprAssign, ExprAssignOp, ExprAsync, ExprBinary, ExprBlock, ExprBox,
-    ExprBreak, ExprCall, ExprCast, ExprClosure, ExprContinue, ExprField, ExprForLoop, ExprGroup,
-    ExprIf, ExprInPlace, ExprIndex, ExprLet, ExprLit, ExprLoop, ExprMacro, ExprMatch,
-    ExprMethodCall, ExprParen, ExprPath, ExprRange, ExprReference, ExprRepeat, ExprReturn,
-    ExprStruct, ExprTry, ExprTryBlock, ExprTuple, ExprType, ExprUnary, ExprUnsafe, ExprVerbatim,
-    ExprWhile, ExprYield, Index, Member,
-};
-
 #[cfg(feature = "full")]
-pub use expr::{
-    Arm, Block, FieldPat, FieldValue, GenericMethodArgument, Label, Local, MethodTurbofish, Pat,
-    PatBox, PatIdent, PatLit, PatMacro, PatPath, PatRange, PatRef, PatSlice, PatStruct, PatTuple,
-    PatTupleStruct, PatVerbatim, PatWild, RangeLimits, Stmt,
+pub use crate::expr::{
+    Arm, FieldValue, GenericMethodArgument, Label, MethodTurbofish, RangeLimits,
+};
+#[cfg(any(feature = "full", feature = "derive"))]
+pub use crate::expr::{
+    Expr, ExprArray, ExprAssign, ExprAssignOp, ExprAsync, ExprAwait, ExprBinary, ExprBlock,
+    ExprBox, ExprBreak, ExprCall, ExprCast, ExprClosure, ExprContinue, ExprField, ExprForLoop,
+    ExprGroup, ExprIf, ExprIndex, ExprLet, ExprLit, ExprLoop, ExprMacro, ExprMatch, ExprMethodCall,
+    ExprParen, ExprPath, ExprRange, ExprReference, ExprRepeat, ExprReturn, ExprStruct, ExprTry,
+    ExprTryBlock, ExprTuple, ExprType, ExprUnary, ExprUnsafe, ExprWhile, ExprYield, Index, Member,
 };
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod generics;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use generics::{
+pub use crate::generics::{
     BoundLifetimes, ConstParam, GenericParam, Generics, LifetimeDef, PredicateEq,
     PredicateLifetime, PredicateType, TraitBound, TraitBoundModifier, TypeParam, TypeParamBound,
     WhereClause, WherePredicate,
 };
 #[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
-pub use generics::{ImplGenerics, Turbofish, TypeGenerics};
+pub use crate::generics::{ImplGenerics, Turbofish, TypeGenerics};
 
 #[cfg(feature = "full")]
 mod item;
 #[cfg(feature = "full")]
-pub use item::{
-    ArgCaptured, ArgSelf, ArgSelfRef, FnArg, FnDecl, ForeignItem, ForeignItemFn, ForeignItemMacro,
-    ForeignItemStatic, ForeignItemType, ForeignItemVerbatim, ImplItem, ImplItemConst,
-    ImplItemExistential, ImplItemMacro, ImplItemMethod, ImplItemType, ImplItemVerbatim, Item,
-    ItemConst, ItemEnum, ItemExistential, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl,
-    ItemMacro, ItemMacro2, ItemMod, ItemStatic, ItemStruct, ItemTrait, ItemTraitAlias, ItemType,
-    ItemUnion, ItemUse, ItemVerbatim, MethodSig, TraitItem, TraitItemConst, TraitItemMacro,
-    TraitItemMethod, TraitItemType, TraitItemVerbatim, UseGlob, UseGroup, UseName, UsePath,
-    UseRename, UseTree,
+pub use crate::item::{
+    FnArg, ForeignItem, ForeignItemFn, ForeignItemMacro, ForeignItemStatic, ForeignItemType,
+    ImplItem, ImplItemConst, ImplItemMacro, ImplItemMethod, ImplItemType, Item, ItemConst,
+    ItemEnum, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl, ItemMacro, ItemMacro2, ItemMod,
+    ItemStatic, ItemStruct, ItemTrait, ItemTraitAlias, ItemType, ItemUnion, ItemUse, Receiver,
+    Signature, TraitItem, TraitItemConst, TraitItemMacro, TraitItemMethod, TraitItemType, UseGlob,
+    UseGroup, UseName, UsePath, UseRename, UseTree,
 };
 
 #[cfg(feature = "full")]
 mod file;
 #[cfg(feature = "full")]
-pub use file::File;
+pub use crate::file::File;
 
 mod lifetime;
-pub use lifetime::Lifetime;
+pub use crate::lifetime::Lifetime;
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod lit;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use lit::{
-    FloatSuffix, IntSuffix, Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr,
-    LitVerbatim, StrStyle,
+pub use crate::lit::{
+    Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr, StrStyle,
 };
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod mac;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use mac::{Macro, MacroDelimiter};
+pub use crate::mac::{Macro, MacroDelimiter};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod derive;
 #[cfg(feature = "derive")]
-pub use derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
+pub use crate::derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod op;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use op::{BinOp, UnOp};
+pub use crate::op::{BinOp, UnOp};
+
+#[cfg(feature = "full")]
+mod stmt;
+#[cfg(feature = "full")]
+pub use crate::stmt::{Block, Local, Stmt};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod ty;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use ty::{
-    Abi, BareFnArg, BareFnArgName, ReturnType, Type, TypeArray, TypeBareFn, TypeGroup,
-    TypeImplTrait, TypeInfer, TypeMacro, TypeNever, TypeParen, TypePath, TypePtr, TypeReference,
-    TypeSlice, TypeTraitObject, TypeTuple, TypeVerbatim,
+pub use crate::ty::{
+    Abi, BareFnArg, ReturnType, Type, TypeArray, TypeBareFn, TypeGroup, TypeImplTrait, TypeInfer,
+    TypeMacro, TypeNever, TypeParen, TypePath, TypePtr, TypeReference, TypeSlice, TypeTraitObject,
+    TypeTuple, Variadic,
+};
+
+#[cfg(feature = "full")]
+mod pat;
+#[cfg(feature = "full")]
+pub use crate::pat::{
+    FieldPat, Pat, PatBox, PatIdent, PatLit, PatMacro, PatOr, PatPath, PatRange, PatReference,
+    PatRest, PatSlice, PatStruct, PatTuple, PatTupleStruct, PatType, PatWild,
 };
 
 #[cfg(any(feature = "full", feature = "derive"))]
 mod path;
 #[cfg(any(feature = "full", feature = "derive"))]
-pub use path::{
+pub use crate::path::{
     AngleBracketedGenericArguments, Binding, Constraint, GenericArgument,
     ParenthesizedGenericArguments, Path, PathArguments, PathSegment, QSelf,
 };
@@ -407,7 +431,7 @@ pub mod parse_quote;
 
 // Not public API except the `parse_macro_input!` macro.
 #[cfg(all(
-    not(all(target_arch = "wasm32", target_os = "unknown")),
+    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
     feature = "parsing",
     feature = "proc-macro"
 ))]
@@ -425,21 +449,16 @@ mod gen {
     /// default, every method recursively visits the substructure of the input
     /// by invoking the right visitor method of each of its fields.
     ///
-    /// [`Visit`]: trait.Visit.html
+    /// [`Visit`]: visit::Visit
     ///
-    /// ```edition2018
+    /// ```
     /// # use syn::{Attribute, BinOp, Expr, ExprBinary};
     /// #
     /// pub trait Visit<'ast> {
     ///     /* ... */
     ///
     ///     fn visit_expr_binary(&mut self, node: &'ast ExprBinary) {
-    ///         for attr in &node.attrs {
-    ///             self.visit_attribute(attr);
-    ///         }
-    ///         self.visit_expr(&*node.left);
-    ///         self.visit_bin_op(&node.op);
-    ///         self.visit_expr(&*node.right);
+    ///         visit_expr_binary(self, node);
     ///     }
     ///
     ///     /* ... */
@@ -447,10 +466,100 @@ mod gen {
     ///     # fn visit_expr(&mut self, node: &'ast Expr);
     ///     # fn visit_bin_op(&mut self, node: &'ast BinOp);
     /// }
+    ///
+    /// pub fn visit_expr_binary<'ast, V>(v: &mut V, node: &'ast ExprBinary)
+    /// where
+    ///     V: Visit<'ast> + ?Sized,
+    /// {
+    ///     for attr in &node.attrs {
+    ///         v.visit_attribute(attr);
+    ///     }
+    ///     v.visit_expr(&*node.left);
+    ///     v.visit_bin_op(&node.op);
+    ///     v.visit_expr(&*node.right);
+    /// }
+    ///
+    /// /* ... */
     /// ```
     ///
     /// *This module is available if Syn is built with the `"visit"` feature.*
+    ///
+    /// <br>
+    ///
+    /// # Example
+    ///
+    /// This visitor will print the name of every freestanding function in the
+    /// syntax tree, including nested functions.
+    ///
+    /// ```
+    /// // [dependencies]
+    /// // quote = "1.0"
+    /// // syn = { version = "1.0", features = ["full", "visit"] }
+    ///
+    /// use quote::quote;
+    /// use syn::visit::{self, Visit};
+    /// use syn::{File, ItemFn};
+    ///
+    /// struct FnVisitor;
+    ///
+    /// impl<'ast> Visit<'ast> for FnVisitor {
+    ///     fn visit_item_fn(&mut self, node: &'ast ItemFn) {
+    ///         println!("Function with name={}", node.sig.ident);
+    ///
+    ///         // Delegate to the default impl to visit any nested functions.
+    ///         visit::visit_item_fn(self, node);
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let code = quote! {
+    ///         pub fn f() {
+    ///             fn g() {}
+    ///         }
+    ///     };
+    ///
+    ///     let syntax_tree: File = syn::parse2(code).unwrap();
+    ///     FnVisitor.visit_file(&syntax_tree);
+    /// }
+    /// ```
+    ///
+    /// The `'ast` lifetime on the input references means that the syntax tree
+    /// outlives the complete recursive visit call, so the visitor is allowed to
+    /// hold on to references into the syntax tree.
+    ///
+    /// ```
+    /// use quote::quote;
+    /// use syn::visit::{self, Visit};
+    /// use syn::{File, ItemFn};
+    ///
+    /// struct FnVisitor<'ast> {
+    ///     functions: Vec<&'ast ItemFn>,
+    /// }
+    ///
+    /// impl<'ast> Visit<'ast> for FnVisitor<'ast> {
+    ///     fn visit_item_fn(&mut self, node: &'ast ItemFn) {
+    ///         self.functions.push(node);
+    ///         visit::visit_item_fn(self, node);
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let code = quote! {
+    ///         pub fn f() {
+    ///             fn g() {}
+    ///         }
+    ///     };
+    ///
+    ///     let syntax_tree: File = syn::parse2(code).unwrap();
+    ///     let mut visitor = FnVisitor { functions: Vec::new() };
+    ///     visitor.visit_file(&syntax_tree);
+    ///     for f in visitor.functions {
+    ///         println!("Function with name={}", f.sig.ident);
+    ///     }
+    /// }
+    /// ```
     #[cfg(feature = "visit")]
+    #[rustfmt::skip]
     pub mod visit;
 
     /// Syntax tree traversal to mutate an exclusive borrow of a syntax tree in
@@ -461,21 +570,16 @@ mod gen {
     /// By default, every method recursively visits the substructure of the
     /// input by invoking the right visitor method of each of its fields.
     ///
-    /// [`VisitMut`]: trait.VisitMut.html
+    /// [`VisitMut`]: visit_mut::VisitMut
     ///
-    /// ```edition2018
+    /// ```
     /// # use syn::{Attribute, BinOp, Expr, ExprBinary};
     /// #
     /// pub trait VisitMut {
     ///     /* ... */
     ///
     ///     fn visit_expr_binary_mut(&mut self, node: &mut ExprBinary) {
-    ///         for attr in &mut node.attrs {
-    ///             self.visit_attribute_mut(attr);
-    ///         }
-    ///         self.visit_expr_mut(&mut *node.left);
-    ///         self.visit_bin_op_mut(&mut node.op);
-    ///         self.visit_expr_mut(&mut *node.right);
+    ///         visit_expr_binary_mut(self, node);
     ///     }
     ///
     ///     /* ... */
@@ -483,11 +587,75 @@ mod gen {
     ///     # fn visit_expr_mut(&mut self, node: &mut Expr);
     ///     # fn visit_bin_op_mut(&mut self, node: &mut BinOp);
     /// }
+    ///
+    /// pub fn visit_expr_binary_mut<V>(v: &mut V, node: &mut ExprBinary)
+    /// where
+    ///     V: VisitMut + ?Sized,
+    /// {
+    ///     for attr in &mut node.attrs {
+    ///         v.visit_attribute_mut(attr);
+    ///     }
+    ///     v.visit_expr_mut(&mut *node.left);
+    ///     v.visit_bin_op_mut(&mut node.op);
+    ///     v.visit_expr_mut(&mut *node.right);
+    /// }
+    ///
+    /// /* ... */
     /// ```
     ///
     /// *This module is available if Syn is built with the `"visit-mut"`
     /// feature.*
+    ///
+    /// <br>
+    ///
+    /// # Example
+    ///
+    /// This mut visitor replace occurrences of u256 suffixed integer literals
+    /// like `999u256` with a macro invocation `bigint::u256!(999)`.
+    ///
+    /// ```
+    /// // [dependencies]
+    /// // quote = "1.0"
+    /// // syn = { version = "1.0", features = ["full", "visit-mut"] }
+    ///
+    /// use quote::quote;
+    /// use syn::visit_mut::{self, VisitMut};
+    /// use syn::{parse_quote, Expr, File, Lit, LitInt};
+    ///
+    /// struct BigintReplace;
+    ///
+    /// impl VisitMut for BigintReplace {
+    ///     fn visit_expr_mut(&mut self, node: &mut Expr) {
+    ///         if let Expr::Lit(expr) = &node {
+    ///             if let Lit::Int(int) = &expr.lit {
+    ///                 if int.suffix() == "u256" {
+    ///                     let digits = int.base10_digits();
+    ///                     let unsuffixed: LitInt = syn::parse_str(digits).unwrap();
+    ///                     *node = parse_quote!(bigint::u256!(#unsuffixed));
+    ///                     return;
+    ///                 }
+    ///             }
+    ///         }
+    ///
+    ///         // Delegate to the default impl to visit nested expressions.
+    ///         visit_mut::visit_expr_mut(self, node);
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let code = quote! {
+    ///         fn main() {
+    ///             let _ = 999u256;
+    ///         }
+    ///     };
+    ///
+    ///     let mut syntax_tree: File = syn::parse2(code).unwrap();
+    ///     BigintReplace.visit_file_mut(&mut syntax_tree);
+    ///     println!("{}", quote!(#syntax_tree));
+    /// }
+    /// ```
     #[cfg(feature = "visit-mut")]
+    #[rustfmt::skip]
     pub mod visit_mut;
 
     /// Syntax tree traversal to transform the nodes of an owned syntax tree.
@@ -497,24 +665,16 @@ mod gen {
     /// By default, every method recursively visits the substructure of the
     /// input by invoking the right visitor method of each of its fields.
     ///
-    /// [`Fold`]: trait.Fold.html
+    /// [`Fold`]: fold::Fold
     ///
-    /// ```edition2018
+    /// ```
     /// # use syn::{Attribute, BinOp, Expr, ExprBinary};
     /// #
     /// pub trait Fold {
     ///     /* ... */
     ///
     ///     fn fold_expr_binary(&mut self, node: ExprBinary) -> ExprBinary {
-    ///         ExprBinary {
-    ///             attrs: node.attrs
-    ///                        .into_iter()
-    ///                        .map(|attr| self.fold_attribute(attr))
-    ///                        .collect(),
-    ///             left: Box::new(self.fold_expr(*node.left)),
-    ///             op: self.fold_bin_op(node.op),
-    ///             right: Box::new(self.fold_expr(*node.right)),
-    ///         }
+    ///         fold_expr_binary(self, node)
     ///     }
     ///
     ///     /* ... */
@@ -522,23 +682,81 @@ mod gen {
     ///     # fn fold_expr(&mut self, node: Expr) -> Expr;
     ///     # fn fold_bin_op(&mut self, node: BinOp) -> BinOp;
     /// }
+    ///
+    /// pub fn fold_expr_binary<V>(v: &mut V, node: ExprBinary) -> ExprBinary
+    /// where
+    ///     V: Fold + ?Sized,
+    /// {
+    ///     ExprBinary {
+    ///         attrs: node
+    ///             .attrs
+    ///             .into_iter()
+    ///             .map(|attr| v.fold_attribute(attr))
+    ///             .collect(),
+    ///         left: Box::new(v.fold_expr(*node.left)),
+    ///         op: v.fold_bin_op(node.op),
+    ///         right: Box::new(v.fold_expr(*node.right)),
+    ///     }
+    /// }
+    ///
+    /// /* ... */
     /// ```
     ///
     /// *This module is available if Syn is built with the `"fold"` feature.*
+    ///
+    /// <br>
+    ///
+    /// # Example
+    ///
+    /// This fold inserts parentheses to fully parenthesizes any expression.
+    ///
+    /// ```
+    /// // [dependencies]
+    /// // quote = "1.0"
+    /// // syn = { version = "1.0", features = ["fold", "full"] }
+    ///
+    /// use quote::quote;
+    /// use syn::fold::{fold_expr, Fold};
+    /// use syn::{token, Expr, ExprParen};
+    ///
+    /// struct ParenthesizeEveryExpr;
+    ///
+    /// impl Fold for ParenthesizeEveryExpr {
+    ///     fn fold_expr(&mut self, expr: Expr) -> Expr {
+    ///         Expr::Paren(ExprParen {
+    ///             attrs: Vec::new(),
+    ///             expr: Box::new(fold_expr(self, expr)),
+    ///             paren_token: token::Paren::default(),
+    ///         })
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let code = quote! { a() + b(1) * c.d };
+    ///     let expr: Expr = syn::parse2(code).unwrap();
+    ///     let parenthesized = ParenthesizeEveryExpr.fold_expr(expr);
+    ///     println!("{}", quote!(#parenthesized));
+    ///
+    ///     // Output: (((a)()) + (((b)((1))) * ((c).d)))
+    /// }
+    /// ```
     #[cfg(feature = "fold")]
+    #[rustfmt::skip]
     pub mod fold;
 
     #[cfg(any(feature = "full", feature = "derive"))]
     #[path = "../gen_helper.rs"]
     mod helper;
 }
-pub use gen::*;
+pub use crate::gen::*;
 
 // Not public API.
 #[doc(hidden)]
 pub mod export;
 
-mod keyword;
+mod custom_keyword;
+mod custom_punctuation;
+mod sealed;
 
 #[cfg(feature = "parsing")]
 mod lookahead;
@@ -555,14 +773,19 @@ mod thread;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#[cfg(any(feature = "parsing", feature = "full", feature = "derive"))]
-#[allow(non_camel_case_types)]
+#[allow(dead_code, non_camel_case_types)]
 struct private;
+
+// https://github.com/rust-lang/rust/issues/62830
+#[cfg(feature = "parsing")]
+mod rustdoc_workaround {
+    pub use crate::parse::{self as parse_module};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 mod error;
-pub use error::{Error, Result};
+pub use crate::error::{Error, Result};
 
 /// Parse tokens of source code into the chosen syntax tree node.
 ///
@@ -575,14 +798,14 @@ pub use error::{Error, Result};
 /// interop with the compiler in a procedural macro. To parse a
 /// `proc_macro2::TokenStream`, use [`syn::parse2`] instead.
 ///
-/// [`syn::parse2`]: fn.parse2.html
+/// [`syn::parse2`]: parse2
 ///
 /// *This function is available if Syn is built with both the `"parsing"` and
 /// `"proc-macro"` features.*
 ///
 /// # Examples
 ///
-/// ```edition2018
+/// ```
 /// extern crate proc_macro;
 ///
 /// use proc_macro::TokenStream;
@@ -606,7 +829,7 @@ pub use error::{Error, Result};
 /// }
 /// ```
 #[cfg(all(
-    not(all(target_arch = "wasm32", target_os = "unknown")),
+    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
     feature = "parsing",
     feature = "proc-macro"
 ))]
@@ -617,13 +840,12 @@ pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T> {
 /// Parse a proc-macro2 token stream into the chosen syntax tree node.
 ///
 /// This function parses a `proc_macro2::TokenStream` which is commonly useful
-/// when the input comes from a node of the Syn syntax tree, for example the tts
-/// of a [`Macro`] node. When in a procedural macro parsing the
+/// when the input comes from a node of the Syn syntax tree, for example the
+/// body tokens of a [`Macro`] node. When in a procedural macro parsing the
 /// `proc_macro::TokenStream` provided by the compiler, use [`syn::parse`]
 /// instead.
 ///
-/// [`Macro`]: struct.Macro.html
-/// [`syn::parse`]: fn.parse.html
+/// [`syn::parse`]: parse()
 ///
 /// *This function is available if Syn is built with the `"parsing"` feature.*
 #[cfg(feature = "parsing")]
@@ -642,7 +864,7 @@ pub fn parse2<T: parse::Parse>(tokens: proc_macro2::TokenStream) -> Result<T> {
 ///
 /// # Examples
 ///
-/// ```edition2018
+/// ```
 /// use syn::{Expr, Result};
 ///
 /// fn run() -> Result<()> {
@@ -677,7 +899,7 @@ pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
 ///
 /// # Examples
 ///
-/// ```edition2018,no_run
+/// ```no_run
 /// use std::error::Error;
 /// use std::fs::File;
 /// use std::io::Read;
@@ -703,7 +925,7 @@ pub fn parse_str<T: parse::Parse>(s: &str) -> Result<T> {
 #[cfg(all(feature = "parsing", feature = "full"))]
 pub fn parse_file(mut content: &str) -> Result<File> {
     // Strip the BOM if it is present
-    const BOM: &'static str = "\u{feff}";
+    const BOM: &str = "\u{feff}";
     if content.starts_with(BOM) {
         content = &content[BOM.len()..];
     }

@@ -5,17 +5,17 @@ use std::ops::{BitAnd, BitOr, Deref, Not};
 use syn;
 use {FromMeta, Result};
 
-mod ident_list;
 mod ident_string;
 mod ignored;
 mod over_ride;
+mod path_list;
 mod with_original;
 mod spanned_value;
 
-pub use self::ident_list::IdentList;
 pub use self::ident_string::IdentString;
 pub use self::ignored::Ignored;
 pub use self::over_ride::Override;
+pub use self::path_list::PathList;
 pub use self::spanned_value::SpannedValue;
 pub use self::with_original::WithOriginal;
 

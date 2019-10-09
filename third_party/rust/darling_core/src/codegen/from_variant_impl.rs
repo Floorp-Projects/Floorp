@@ -4,14 +4,14 @@ use syn::{self, Ident};
 
 use codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
 use options::{DataShape, ForwardAttrs};
-use util::IdentList;
+use util::PathList;
 
 pub struct FromVariantImpl<'a> {
     pub base: TraitImpl<'a>,
     pub ident: Option<&'a Ident>,
     pub fields: Option<&'a Ident>,
     pub attrs: Option<&'a Ident>,
-    pub attr_names: &'a IdentList,
+    pub attr_names: &'a PathList,
     pub forward_attrs: Option<&'a ForwardAttrs>,
     pub from_ident: bool,
     pub supports: Option<&'a DataShape>,
@@ -86,7 +86,7 @@ impl<'a> ExtractAttribute for FromVariantImpl<'a> {
         self.base.immutable_declarations()
     }
 
-    fn attr_names(&self) -> &IdentList {
+    fn attr_names(&self) -> &PathList {
         &self.attr_names
     }
 

@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "quote"
-version = "0.6.11"
+version = "1.0.2"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["Cargo.toml", "src/**/*.rs", "tests/**/*.rs", "README.md", "LICENSE-APACHE", "LICENSE-MIT"]
 description = "Quasi-quoting macro quote!(...)"
@@ -20,11 +21,19 @@ documentation = "https://docs.rs/quote/"
 readme = "README.md"
 keywords = ["syn"]
 categories = ["development-tools::procedural-macro-helpers"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/quote"
+
+[lib]
+name = "quote"
 [dependencies.proc-macro2]
-version = "0.4.21"
+version = "1.0"
 default-features = false
+[dev-dependencies.rustversion]
+version = "0.1"
+
+[dev-dependencies.trybuild]
+version = "1.0"
 
 [features]
 default = ["proc-macro"]

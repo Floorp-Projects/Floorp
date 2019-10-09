@@ -15,8 +15,6 @@ use test::Bencher;
 #[cfg(feature = "bench")]
 use std::prelude::v1::*;
 
-use super::UnicodeXID;
-
 #[cfg(feature = "bench")]
 #[bench]
 fn cargo_is_xid_start(b: &mut Bencher) {
@@ -24,7 +22,7 @@ fn cargo_is_xid_start(b: &mut Bencher) {
 
     b.bytes = string.len() as u64;
     b.iter(|| {
-        string.chars().all(UnicodeXID::is_xid_start)
+        string.chars().all(super::UnicodeXID::is_xid_start)
     });
 }
 
@@ -46,7 +44,7 @@ fn cargo_xid_continue(b: &mut Bencher) {
 
     b.bytes = string.len() as u64;
     b.iter(|| {
-        string.chars().all(UnicodeXID::is_xid_continue)
+        string.chars().all(super::UnicodeXID::is_xid_continue)
     });
 }
 
@@ -69,7 +67,7 @@ fn test_is_xid_start() {
     ];
 
     for ch in &chars {
-        assert!(UnicodeXID::is_xid_start(*ch), "{}", ch);
+        assert!(super::UnicodeXID::is_xid_start(*ch), "{}", ch);
     }
 }
 
@@ -83,7 +81,7 @@ fn test_is_not_xid_start() {
     ];
 
     for ch in &chars {
-        assert!(!UnicodeXID::is_xid_start(*ch), "{}", ch);
+        assert!(!super::UnicodeXID::is_xid_start(*ch), "{}", ch);
     }
 }
 
@@ -95,7 +93,7 @@ fn test_is_xid_continue() {
     ];
 
     for ch in &chars {
-        assert!(UnicodeXID::is_xid_continue(*ch), "{}", ch);
+        assert!(super::UnicodeXID::is_xid_continue(*ch), "{}", ch);
     }
 }
 
@@ -108,6 +106,6 @@ fn test_is_not_xid_continue() {
     ];
 
     for &ch in &chars {
-        assert!(!UnicodeXID::is_xid_continue(ch), "{}", ch);
+        assert!(!super::UnicodeXID::is_xid_continue(ch), "{}", ch);
     }
 }

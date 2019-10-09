@@ -176,7 +176,8 @@ impl UsesLifetimes for Type {
             Type::ImplTrait(ref v) => v.uses_lifetimes(options, lifetimes),
             Type::Macro(_) | Type::Verbatim(_) | Type::Infer(_) | Type::Never(_) => {
                 Default::default()
-            }
+            },
+            _ => panic!("Unknown syn::Type: {:?}", self)
         }
     }
 }
