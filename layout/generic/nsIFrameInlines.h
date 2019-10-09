@@ -144,11 +144,11 @@ nscoord nsIFrame::BaselineBOffset(mozilla::WritingMode aWM,
   return SynthesizeBaselineBOffsetFromBorderBox(aWM, aBaselineGroup);
 }
 
-void nsIFrame::PropagateRootElementWritingMode(
-    mozilla::WritingMode aRootElemWM) {
+void nsIFrame::PropagateWritingModeToSelfAndAncestors(
+    mozilla::WritingMode aWM) {
   MOZ_ASSERT(IsCanvasFrame());
   for (auto f = this; f; f = f->GetParent()) {
-    f->mWritingMode = aRootElemWM;
+    f->mWritingMode = aWM;
   }
 }
 

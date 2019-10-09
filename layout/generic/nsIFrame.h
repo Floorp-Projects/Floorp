@@ -894,8 +894,12 @@ class nsIFrame : public nsQueryFrame {
    * It's usually the 'writing-mode' computed value, but there are exceptions:
    *   * inner table frames copy the value from the table frame
    *     (@see nsTableRowGroupFrame::Init, nsTableRowFrame::Init etc)
-   *   * the root element frame propagates its value to its ancestors
-   *     (@see nsCanvasFrame::MaybePropagateRootElementWritingMode)
+   *   * the root element frame propagates its value to its ancestors.
+   *     The value may obtain from the principal <body> element.
+   *     (@see nsCSSFrameConstructor::ConstructDocElementFrame)
+   *   * the internal anonymous frames of the root element copy their value
+   *     from the parent.
+   *     (@see nsFrame::Init)
    *   * a scrolled frame propagates its value to its ancestor scroll frame
    *     (@see nsHTMLScrollFrame::ReloadChildFrames)
    */
@@ -4255,6 +4259,11 @@ class nsIFrame : public nsQueryFrame {
   mozilla::gfx::CompositorHitTestInfo GetCompositorHitTestInfo(
       nsDisplayListBuilder* aBuilder);
 
+  /**
+   * Copies aWM to mWritingMode on 'this' and all its ancestors.
+   */
+  inline void PropagateWritingModeToSelfAndAncestors(mozilla::WritingMode aWM);
+
  protected:
   static void DestroyAnonymousContent(nsPresContext* aPresContext,
                                       already_AddRefed<nsIContent>&& aContent);
@@ -4309,11 +4318,6 @@ class nsIFrame : public nsQueryFrame {
   }
 
  protected:
-  /**
-   * Copies aRootElemWM to mWritingMode on 'this' and all its ancestors.
-   */
-  inline void PropagateRootElementWritingMode(mozilla::WritingMode aRootElemWM);
-
   void MarkInReflow() {
 #ifdef DEBUG_dbaron_off
     // bug 81268
