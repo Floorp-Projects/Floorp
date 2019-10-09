@@ -19,7 +19,7 @@ enum Volume {
 #[allow(dead_code)]
 enum Emphasis<T> {
     Constant(Volume),
-    Variable(darling::util::IdentList),
+    Variable(darling::util::PathList),
     #[darling(skip)]
     PerPhoneme(Option<T>),
     Strided {

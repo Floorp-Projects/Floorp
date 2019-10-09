@@ -25,7 +25,7 @@
 //!
 //! [`parse_macro_input!`]: ../macro.parse_macro_input.html
 //!
-//! ```edition2018
+//! ```
 //! extern crate proc_macro;
 //!
 //! use proc_macro::TokenStream;
@@ -101,7 +101,7 @@
 //! [`syn::parse_str`]: ../fn.parse_str.html
 //! [`Parse`]: trait.Parse.html
 //!
-//! ```edition2018
+//! ```
 //! use syn::Type;
 //!
 //! # fn run_parser() -> syn::Result<()> {
@@ -132,7 +132,7 @@
 //! The `Parse` trait is not implemented in these cases because there is no good
 //! behavior to consider the default.
 //!
-//! ```edition2018,compile_fail
+//! ```compile_fail
 //! # extern crate proc_macro;
 //! #
 //! # use syn::punctuated::Punctuated;
@@ -154,7 +154,7 @@
 //!
 //! [`Parser`]: trait.Parser.html
 //!
-//! ```edition2018
+//! ```
 //! extern crate proc_macro;
 //!
 //! use proc_macro::TokenStream;
@@ -188,6 +188,9 @@
 //!
 //! *This module is available if Syn is built with the `"parsing"` feature.*
 
+#[path = "discouraged.rs"]
+pub mod discouraged;
+
 use std::cell::Cell;
 use std::fmt::{self, Debug, Display};
 use std::marker::PhantomData;
@@ -197,21 +200,20 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 #[cfg(all(
-    not(all(target_arch = "wasm32", target_os = "unknown")),
+    not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
     feature = "proc-macro"
 ))]
-use proc_macro;
+use crate::proc_macro;
 use proc_macro2::{self, Delimiter, Group, Literal, Punct, Span, TokenStream, TokenTree};
 
-use buffer::{Cursor, TokenBuffer};
-use error;
-use lookahead;
-use private;
-use punctuated::Punctuated;
-use token::Token;
+use crate::buffer::{Cursor, TokenBuffer};
+use crate::error;
+use crate::lookahead;
+use crate::punctuated::Punctuated;
+use crate::token::Token;
 
-pub use error::{Error, Result};
-pub use lookahead::{Lookahead1, Peek};
+pub use crate::error::{Error, Result};
+pub use crate::lookahead::{Lookahead1, Peek};
 
 /// Parsing interface implemented by all types that can be parsed in a default
 /// way from a token stream.
@@ -224,7 +226,7 @@ pub trait Parse: Sized {
 /// See the methods of this type under the documentation of [`ParseBuffer`]. For
 /// an overview of parsing in Syn, refer to the [module documentation].
 ///
-/// [module documentation]: index.html
+/// [module documentation]: self
 pub type ParseStream<'a> = &'a ParseBuffer<'a>;
 
 /// Cursor position within a buffered token stream.
@@ -245,7 +247,6 @@ pub type ParseStream<'a> = &'a ParseBuffer<'a>;
 /// - One of [the `syn::parse*` functions][syn-parse]; or
 /// - A method of the [`Parser`] trait.
 ///
-/// [`parse_macro_input!`]: ../macro.parse_macro_input.html
 /// [syn-parse]: index.html#the-synparse-functions
 pub struct ParseBuffer<'a> {
     scope: Span,
@@ -289,11 +290,11 @@ impl<'a> Debug for ParseBuffer<'a> {
 ///
 /// This type is the input of the closure provided to [`ParseStream::step`].
 ///
-/// [`ParseStream::step`]: struct.ParseBuffer.html#method.step
+/// [`ParseStream::step`]: ParseBuffer::step
 ///
 /// # Example
 ///
-/// ```edition2018
+/// ```
 /// use proc_macro2::TokenTree;
 /// use syn::Result;
 /// use syn::parse::ParseStream;
@@ -305,8 +306,8 @@ impl<'a> Debug for ParseBuffer<'a> {
 ///     input.step(|cursor| {
 ///         let mut rest = *cursor;
 ///         while let Some((tt, next)) = rest.token_tree() {
-///             match tt {
-///                 TokenTree::Punct(ref punct) if punct.as_char() == '@' => {
+///             match &tt {
+///                 TokenTree::Punct(punct) if punct.as_char() == '@' => {
 ///                     return Ok(((), next));
 ///                 }
 ///                 _ => rest = next,
@@ -365,15 +366,13 @@ impl<'c, 'a> StepCursor<'c, 'a> {
     }
 }
 
-impl private {
-    pub fn advance_step_cursor<'c, 'a>(proof: StepCursor<'c, 'a>, to: Cursor<'c>) -> Cursor<'a> {
-        // Refer to the comments within the StepCursor definition. We use the
-        // fact that a StepCursor<'c, 'a> exists as proof that 'c outlives 'a.
-        // Cursor is covariant in its lifetime parameter so we can cast a
-        // Cursor<'c> to one with the shorter lifetime Cursor<'a>.
-        let _ = proof;
-        unsafe { mem::transmute::<Cursor<'c>, Cursor<'a>>(to) }
-    }
+pub(crate) fn advance_step_cursor<'c, 'a>(proof: StepCursor<'c, 'a>, to: Cursor<'c>) -> Cursor<'a> {
+    // Refer to the comments within the StepCursor definition. We use the
+    // fact that a StepCursor<'c, 'a> exists as proof that 'c outlives 'a.
+    // Cursor is covariant in its lifetime parameter so we can cast a
+    // Cursor<'c> to one with the shorter lifetime Cursor<'a>.
+    let _ = proof;
+    unsafe { mem::transmute::<Cursor<'c>, Cursor<'a>>(to) }
 }
 
 fn skip(input: ParseStream) -> bool {
@@ -390,24 +389,22 @@ fn skip(input: ParseStream) -> bool {
         .unwrap()
 }
 
-impl private {
-    pub fn new_parse_buffer(
-        scope: Span,
-        cursor: Cursor,
-        unexpected: Rc<Cell<Option<Span>>>,
-    ) -> ParseBuffer {
-        ParseBuffer {
-            scope: scope,
-            // See comment on `cell` in the struct definition.
-            cell: Cell::new(unsafe { mem::transmute::<Cursor, Cursor<'static>>(cursor) }),
-            marker: PhantomData,
-            unexpected: unexpected,
-        }
+pub(crate) fn new_parse_buffer(
+    scope: Span,
+    cursor: Cursor,
+    unexpected: Rc<Cell<Option<Span>>>,
+) -> ParseBuffer {
+    ParseBuffer {
+        scope,
+        // See comment on `cell` in the struct definition.
+        cell: Cell::new(unsafe { mem::transmute::<Cursor, Cursor<'static>>(cursor) }),
+        marker: PhantomData,
+        unexpected,
     }
+}
 
-    pub fn get_unexpected(buffer: &ParseBuffer) -> Rc<Cell<Option<Span>>> {
-        buffer.unexpected.clone()
-    }
+pub(crate) fn get_unexpected(buffer: &ParseBuffer) -> Rc<Cell<Option<Span>>> {
+    buffer.unexpected.clone()
 }
 
 impl<'a> ParseBuffer<'a> {
@@ -425,9 +422,9 @@ impl<'a> ParseBuffer<'a> {
     /// The parser below invokes [`Attribute::parse_outer`] to parse a vector of
     /// zero or more outer attributes.
     ///
-    /// [`Attribute::parse_outer`]: ../struct.Attribute.html#method.parse_outer
+    /// [`Attribute::parse_outer`]: crate::Attribute::parse_outer
     ///
-    /// ```edition2018
+    /// ```
     /// use syn::{Attribute, Ident, Result, Token};
     /// use syn::parse::{Parse, ParseStream};
     ///
@@ -469,7 +466,8 @@ impl<'a> ParseBuffer<'a> {
     ///
     /// - `input.peek(Token![struct])`
     /// - `input.peek(Token![==])`
-    /// - `input.peek(Ident)`
+    /// - `input.peek(Ident)`&emsp;*(does not accept keywords)*
+    /// - `input.peek(Ident::peek_any)`
     /// - `input.peek(Lifetime)`
     /// - `input.peek(token::Brace)`
     ///
@@ -478,7 +476,7 @@ impl<'a> ParseBuffer<'a> {
     /// In this example we finish parsing the list of supertraits when the next
     /// token in the input is either `where` or an opening curly brace.
     ///
-    /// ```edition2018
+    /// ```
     /// use syn::{braced, token, Generics, Ident, Result, Token, TypeParamBound};
     /// use syn::parse::{Parse, ParseStream};
     /// use syn::punctuated::Punctuated;
@@ -518,11 +516,11 @@ impl<'a> ParseBuffer<'a> {
     ///         let empty_brace_token = braced!(content in input);
     ///
     ///         Ok(MarkerTrait {
-    ///             trait_token: trait_token,
-    ///             ident: ident,
-    ///             generics: generics,
-    ///             colon_token: colon_token,
-    ///             supertraits: supertraits,
+    ///             trait_token,
+    ///             ident,
+    ///             generics,
+    ///             colon_token,
+    ///             supertraits,
     ///             brace_token: empty_brace_token,
     ///         })
     ///     }
@@ -545,7 +543,7 @@ impl<'a> ParseBuffer<'a> {
     /// union` and a macro invocation that looks like `union::some_macro! { ...
     /// }`. In other words `union` is a contextual keyword.
     ///
-    /// ```edition2018
+    /// ```
     /// use syn::{Ident, ItemUnion, Macro, Result, Token};
     /// use syn::parse::{Parse, ParseStream};
     ///
@@ -586,7 +584,7 @@ impl<'a> ParseBuffer<'a> {
     ///
     /// # Example
     ///
-    /// ```edition2018
+    /// ```
     /// # use quote::quote;
     /// #
     /// use syn::{parenthesized, token, Ident, Result, Token, Type};
@@ -638,7 +636,7 @@ impl<'a> ParseBuffer<'a> {
     ///
     /// # Example
     ///
-    /// ```edition2018
+    /// ```
     /// use syn::{braced, token, Ident, Item, Result, Token};
     /// use syn::parse::{Parse, ParseStream};
     ///
@@ -677,7 +675,7 @@ impl<'a> ParseBuffer<'a> {
     ///
     /// # Example
     ///
-    /// ```edition2018
+    /// ```
     /// use syn::{ConstParam, Ident, Lifetime, LifetimeDef, Result, Token, TypeParam};
     /// use syn::parse::{Parse, ParseStream};
     ///
@@ -727,7 +725,7 @@ impl<'a> ParseBuffer<'a> {
     /// is if your macro ends up parsing a large amount of content more than
     /// once.
     ///
-    /// ```edition2018
+    /// ```
     /// # use syn::{Expr, Result};
     /// # use syn::parse::ParseStream;
     /// #
@@ -744,10 +742,16 @@ impl<'a> ParseBuffer<'a> {
     /// parse stream. Only use a fork when the amount of work performed against
     /// the fork is small and bounded.
     ///
-    /// For a lower level but occasionally more performant way to perform
-    /// speculative parsing, consider using [`ParseStream::step`] instead.
+    /// When complex speculative parsing against the forked stream is
+    /// unavoidable, use [`parse::discouraged::Speculative`] to advance the
+    /// original stream once the fork's parse is determined to have been
+    /// successful.
     ///
-    /// [`ParseStream::step`]: #method.step
+    /// For a lower level way to perform speculative parsing at the token level,
+    /// consider using [`ParseStream::step`] instead.
+    ///
+    /// [`parse::discouraged::Speculative`]: discouraged::Speculative
+    /// [`ParseStream::step`]: ParseBuffer::step
     ///
     /// # Example
     ///
@@ -764,7 +768,7 @@ impl<'a> ParseBuffer<'a> {
     /// needs to distinguish parentheses that specify visibility restrictions
     /// from parentheses that form part of a tuple type.
     ///
-    /// ```edition2018
+    /// ```
     /// # struct A;
     /// # struct B;
     /// # struct C;
@@ -781,7 +785,7 @@ impl<'a> ParseBuffer<'a> {
     /// parentheses after the `pub` keyword. This is a small bounded amount of
     /// work performed against the forked parse stream.
     ///
-    /// ```edition2018
+    /// ```
     /// use syn::{parenthesized, token, Ident, Path, Result, Token};
     /// use syn::ext::IdentExt;
     /// use syn::parse::{Parse, ParseStream};
@@ -811,7 +815,7 @@ impl<'a> ParseBuffer<'a> {
     ///                 || content.peek(Token![super])
     ///             {
     ///                 return Ok(PubVisibility {
-    ///                     pub_token: pub_token,
+    ///                     pub_token,
     ///                     restricted: Some(Restricted {
     ///                         paren_token: parenthesized!(content in input),
     ///                         in_token: None,
@@ -820,7 +824,7 @@ impl<'a> ParseBuffer<'a> {
     ///                 });
     ///             } else if content.peek(Token![in]) {
     ///                 return Ok(PubVisibility {
-    ///                     pub_token: pub_token,
+    ///                     pub_token,
     ///                     restricted: Some(Restricted {
     ///                         paren_token: parenthesized!(content in input),
     ///                         in_token: Some(content.parse()?),
@@ -831,7 +835,7 @@ impl<'a> ParseBuffer<'a> {
     ///         }
     ///
     ///         Ok(PubVisibility {
-    ///             pub_token: pub_token,
+    ///             pub_token,
     ///             restricted: None,
     ///         })
     ///     }
@@ -852,7 +856,7 @@ impl<'a> ParseBuffer<'a> {
     ///
     /// # Example
     ///
-    /// ```edition2018
+    /// ```
     /// use syn::{Expr, Result, Token};
     /// use syn::parse::{Parse, ParseStream};
     ///
@@ -889,7 +893,7 @@ impl<'a> ParseBuffer<'a> {
     ///
     /// # Example
     ///
-    /// ```edition2018
+    /// ```
     /// use proc_macro2::TokenTree;
     /// use syn::Result;
     /// use syn::parse::ParseStream;
@@ -901,8 +905,8 @@ impl<'a> ParseBuffer<'a> {
     ///     input.step(|cursor| {
     ///         let mut rest = *cursor;
     ///         while let Some((tt, next)) = rest.token_tree() {
-    ///             match tt {
-    ///                 TokenTree::Punct(ref punct) if punct.as_char() == '@' => {
+    ///             match &tt {
+    ///                 TokenTree::Punct(punct) if punct.as_char() == '@' => {
     ///                     return Ok(((), next));
     ///                 }
     ///                 _ => rest = next,
@@ -944,10 +948,10 @@ impl<'a> ParseBuffer<'a> {
         // the Cell intended to hold Cursor<'a>.
         //
         // In some cases it may be necessary for R to contain a Cursor<'a>.
-        // Within Syn we solve this using `private::advance_step_cursor` which
-        // uses the existence of a StepCursor<'c, 'a> as proof that it is safe
-        // to cast from Cursor<'c> to Cursor<'a>. If needed outside of Syn, it
-        // would be safe to expose that API as a method on StepCursor.
+        // Within Syn we solve this using `advance_step_cursor` which uses the
+        // existence of a StepCursor<'c, 'a> as proof that it is safe to cast
+        // from Cursor<'c> to Cursor<'a>. If needed outside of Syn, it would be
+        // safe to expose that API as a method on StepCursor.
         let (node, rest) = function(StepCursor {
             scope: self.scope,
             cursor: self.cell.get(),
@@ -1042,7 +1046,7 @@ impl Parse for Literal {
 ///
 /// Refer to the [module documentation] for details about parsing in Syn.
 ///
-/// [module documentation]: index.html
+/// [module documentation]: self
 ///
 /// *This trait is available if Syn is built with the `"parsing"` feature.*
 pub trait Parser: Sized {
@@ -1062,7 +1066,7 @@ pub trait Parser: Sized {
     /// *This method is available if Syn is built with both the `"parsing"` and
     /// `"proc-macro"` features.*
     #[cfg(all(
-        not(all(target_arch = "wasm32", target_os = "unknown")),
+        not(all(target_arch = "wasm32", any(target_os = "unknown", target_os = "wasi"))),
         feature = "proc-macro"
     ))]
     fn parse(self, tokens: proc_macro::TokenStream) -> Result<Self::Output> {
@@ -1081,13 +1085,26 @@ pub trait Parser: Sized {
     fn parse_str(self, s: &str) -> Result<Self::Output> {
         self.parse2(proc_macro2::TokenStream::from_str(s)?)
     }
+
+    // Not public API.
+    #[doc(hidden)]
+    fn __parse_scoped(self, scope: Span, tokens: TokenStream) -> Result<Self::Output> {
+        let _ = scope;
+        self.parse2(tokens)
+    }
+
+    // Not public API.
+    #[doc(hidden)]
+    fn __parse_stream(self, input: ParseStream) -> Result<Self::Output> {
+        input.parse().and_then(|tokens| self.parse2(tokens))
+    }
 }
 
 fn tokens_to_parse_buffer(tokens: &TokenBuffer) -> ParseBuffer {
     let scope = Span::call_site();
     let cursor = tokens.begin();
     let unexpected = Rc::new(Cell::new(None));
-    private::new_parse_buffer(scope, cursor, unexpected)
+    new_parse_buffer(scope, cursor, unexpected)
 }
 
 impl<F, T> Parser for F
@@ -1106,5 +1123,71 @@ where
         } else {
             Err(state.error("unexpected token"))
         }
+    }
+
+    #[doc(hidden)]
+    fn __parse_scoped(self, scope: Span, tokens: TokenStream) -> Result<Self::Output> {
+        let buf = TokenBuffer::new2(tokens);
+        let cursor = buf.begin();
+        let unexpected = Rc::new(Cell::new(None));
+        let state = new_parse_buffer(scope, cursor, unexpected);
+        let node = self(&state)?;
+        state.check_unexpected()?;
+        if state.is_empty() {
+            Ok(node)
+        } else {
+            Err(state.error("unexpected token"))
+        }
+    }
+
+    #[doc(hidden)]
+    fn __parse_stream(self, input: ParseStream) -> Result<Self::Output> {
+        self(input)
+    }
+}
+
+pub(crate) fn parse_scoped<F: Parser>(f: F, scope: Span, tokens: TokenStream) -> Result<F::Output> {
+    f.__parse_scoped(scope, tokens)
+}
+
+pub(crate) fn parse_stream<F: Parser>(f: F, input: ParseStream) -> Result<F::Output> {
+    f.__parse_stream(input)
+}
+
+/// An empty syntax tree node that consumes no tokens when parsed.
+///
+/// This is useful for attribute macros that want to ensure they are not
+/// provided any attribute args.
+///
+/// ```
+/// extern crate proc_macro;
+///
+/// use proc_macro::TokenStream;
+/// use syn::parse_macro_input;
+/// use syn::parse::Nothing;
+///
+/// # const IGNORE: &str = stringify! {
+/// #[proc_macro_attribute]
+/// # };
+/// pub fn my_attr(args: TokenStream, input: TokenStream) -> TokenStream {
+///     parse_macro_input!(args as Nothing);
+///
+///     /* ... */
+/// #   "".parse().unwrap()
+/// }
+/// ```
+///
+/// ```text
+/// error: unexpected token
+///  --> src/main.rs:3:19
+///   |
+/// 3 | #[my_attr(asdf)]
+///   |           ^^^^
+/// ```
+pub struct Nothing;
+
+impl Parse for Nothing {
+    fn parse(_input: ParseStream) -> Result<Self> {
+        Ok(Nothing)
     }
 }

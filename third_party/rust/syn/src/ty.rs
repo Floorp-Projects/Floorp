@@ -1,10 +1,10 @@
 use super::*;
+use crate::punctuated::Punctuated;
+#[cfg(feature = "extra-traits")]
+use crate::tt::TokenStreamHelper;
 use proc_macro2::TokenStream;
-use punctuated::Punctuated;
 #[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
-#[cfg(feature = "extra-traits")]
-use tt::TokenStreamHelper;
 
 ast_enum_of_structs! {
     /// The possible types that a Rust value could have.
@@ -17,174 +17,327 @@ ast_enum_of_structs! {
     /// This type is a [syntax tree enum].
     ///
     /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
-    pub enum Type {
-        /// A dynamically sized slice type: `[T]`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Slice(TypeSlice {
-            pub bracket_token: token::Bracket,
-            pub elem: Box<Type>,
-        }),
-
+    //
+    // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
+    // blocked on https://github.com/rust-lang/rust/issues/62833
+    pub enum Type #manual_extra_traits {
         /// A fixed size array type: `[T; n]`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Array(TypeArray {
-            pub bracket_token: token::Bracket,
-            pub elem: Box<Type>,
-            pub semi_token: Token![;],
-            pub len: Expr,
-        }),
-
-        /// A raw pointer type: `*const T` or `*mut T`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Ptr(TypePtr {
-            pub star_token: Token![*],
-            pub const_token: Option<Token![const]>,
-            pub mutability: Option<Token![mut]>,
-            pub elem: Box<Type>,
-        }),
-
-        /// A reference type: `&'a T` or `&'a mut T`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Reference(TypeReference {
-            pub and_token: Token![&],
-            pub lifetime: Option<Lifetime>,
-            pub mutability: Option<Token![mut]>,
-            pub elem: Box<Type>,
-        }),
+        Array(TypeArray),
 
         /// A bare function type: `fn(usize) -> bool`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub BareFn(TypeBareFn {
-            pub lifetimes: Option<BoundLifetimes>,
-            pub unsafety: Option<Token![unsafe]>,
-            pub abi: Option<Abi>,
-            pub fn_token: Token![fn],
-            pub paren_token: token::Paren,
-            pub inputs: Punctuated<BareFnArg, Token![,]>,
-            pub variadic: Option<Token![...]>,
-            pub output: ReturnType,
-        }),
+        BareFn(TypeBareFn),
 
-        /// The never type: `!`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Never(TypeNever {
-            pub bang_token: Token![!],
-        }),
-
-        /// A tuple type: `(A, B, C, String)`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Tuple(TypeTuple {
-            pub paren_token: token::Paren,
-            pub elems: Punctuated<Type, Token![,]>,
-        }),
-
-        /// A path like `std::slice::Iter`, optionally qualified with a
-        /// self-type as in `<Vec<T> as SomeTrait>::Associated`.
-        ///
-        /// Type arguments are stored in the Path itself.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Path(TypePath {
-            pub qself: Option<QSelf>,
-            pub path: Path,
-        }),
-
-        /// A trait object type `Bound1 + Bound2 + Bound3` where `Bound` is a
-        /// trait or a lifetime.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub TraitObject(TypeTraitObject {
-            pub dyn_token: Option<Token![dyn]>,
-            pub bounds: Punctuated<TypeParamBound, Token![+]>,
-        }),
+        /// A type contained within invisible delimiters.
+        Group(TypeGroup),
 
         /// An `impl Bound1 + Bound2 + Bound3` type where `Bound` is a trait or
         /// a lifetime.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub ImplTrait(TypeImplTrait {
-            pub impl_token: Token![impl],
-            pub bounds: Punctuated<TypeParamBound, Token![+]>,
-        }),
-
-        /// A parenthesized type equivalent to the inner type.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Paren(TypeParen {
-            pub paren_token: token::Paren,
-            pub elem: Box<Type>,
-        }),
-
-        /// A type contained within invisible delimiters.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Group(TypeGroup {
-            pub group_token: token::Group,
-            pub elem: Box<Type>,
-        }),
+        ImplTrait(TypeImplTrait),
 
         /// Indication that a type should be inferred by the compiler: `_`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Infer(TypeInfer {
-            pub underscore_token: Token![_],
-        }),
+        Infer(TypeInfer),
 
         /// A macro in the type position.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Macro(TypeMacro {
-            pub mac: Macro,
-        }),
+        Macro(TypeMacro),
+
+        /// The never type: `!`.
+        Never(TypeNever),
+
+        /// A parenthesized type equivalent to the inner type.
+        Paren(TypeParen),
+
+        /// A path like `std::slice::Iter`, optionally qualified with a
+        /// self-type as in `<Vec<T> as SomeTrait>::Associated`.
+        Path(TypePath),
+
+        /// A raw pointer type: `*const T` or `*mut T`.
+        Ptr(TypePtr),
+
+        /// A reference type: `&'a T` or `&'a mut T`.
+        Reference(TypeReference),
+
+        /// A dynamically sized slice type: `[T]`.
+        Slice(TypeSlice),
+
+        /// A trait object type `Bound1 + Bound2 + Bound3` where `Bound` is a
+        /// trait or a lifetime.
+        TraitObject(TypeTraitObject),
+
+        /// A tuple type: `(A, B, C, String)`.
+        Tuple(TypeTuple),
 
         /// Tokens in type position not interpreted by Syn.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Verbatim(TypeVerbatim #manual_extra_traits {
-            pub tts: TokenStream,
-        }),
+        Verbatim(TokenStream),
+
+        #[doc(hidden)]
+        __Nonexhaustive,
+    }
+}
+
+ast_struct! {
+    /// A fixed size array type: `[T; n]`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeArray {
+        pub bracket_token: token::Bracket,
+        pub elem: Box<Type>,
+        pub semi_token: Token![;],
+        pub len: Expr,
+    }
+}
+
+ast_struct! {
+    /// A bare function type: `fn(usize) -> bool`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeBareFn {
+        pub lifetimes: Option<BoundLifetimes>,
+        pub unsafety: Option<Token![unsafe]>,
+        pub abi: Option<Abi>,
+        pub fn_token: Token![fn],
+        pub paren_token: token::Paren,
+        pub inputs: Punctuated<BareFnArg, Token![,]>,
+        pub variadic: Option<Variadic>,
+        pub output: ReturnType,
+    }
+}
+
+ast_struct! {
+    /// A type contained within invisible delimiters.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeGroup {
+        pub group_token: token::Group,
+        pub elem: Box<Type>,
+    }
+}
+
+ast_struct! {
+    /// An `impl Bound1 + Bound2 + Bound3` type where `Bound` is a trait or
+    /// a lifetime.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeImplTrait {
+        pub impl_token: Token![impl],
+        pub bounds: Punctuated<TypeParamBound, Token![+]>,
+    }
+}
+
+ast_struct! {
+    /// Indication that a type should be inferred by the compiler: `_`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeInfer {
+        pub underscore_token: Token![_],
+    }
+}
+
+ast_struct! {
+    /// A macro in the type position.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeMacro {
+        pub mac: Macro,
+    }
+}
+
+ast_struct! {
+    /// The never type: `!`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeNever {
+        pub bang_token: Token![!],
+    }
+}
+
+ast_struct! {
+    /// A parenthesized type equivalent to the inner type.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeParen {
+        pub paren_token: token::Paren,
+        pub elem: Box<Type>,
+    }
+}
+
+ast_struct! {
+    /// A path like `std::slice::Iter`, optionally qualified with a
+    /// self-type as in `<Vec<T> as SomeTrait>::Associated`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypePath {
+        pub qself: Option<QSelf>,
+        pub path: Path,
+    }
+}
+
+ast_struct! {
+    /// A raw pointer type: `*const T` or `*mut T`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypePtr {
+        pub star_token: Token![*],
+        pub const_token: Option<Token![const]>,
+        pub mutability: Option<Token![mut]>,
+        pub elem: Box<Type>,
+    }
+}
+
+ast_struct! {
+    /// A reference type: `&'a T` or `&'a mut T`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeReference {
+        pub and_token: Token![&],
+        pub lifetime: Option<Lifetime>,
+        pub mutability: Option<Token![mut]>,
+        pub elem: Box<Type>,
+    }
+}
+
+ast_struct! {
+    /// A dynamically sized slice type: `[T]`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeSlice {
+        pub bracket_token: token::Bracket,
+        pub elem: Box<Type>,
+    }
+}
+
+ast_struct! {
+    /// A trait object type `Bound1 + Bound2 + Bound3` where `Bound` is a
+    /// trait or a lifetime.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeTraitObject {
+        pub dyn_token: Option<Token![dyn]>,
+        pub bounds: Punctuated<TypeParamBound, Token![+]>,
+    }
+}
+
+ast_struct! {
+    /// A tuple type: `(A, B, C, String)`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct TypeTuple {
+        pub paren_token: token::Paren,
+        pub elems: Punctuated<Type, Token![,]>,
     }
 }
 
 #[cfg(feature = "extra-traits")]
-impl Eq for TypeVerbatim {}
+impl Eq for Type {}
 
 #[cfg(feature = "extra-traits")]
-impl PartialEq for TypeVerbatim {
+impl PartialEq for Type {
     fn eq(&self, other: &Self) -> bool {
-        TokenStreamHelper(&self.tts) == TokenStreamHelper(&other.tts)
+        match (self, other) {
+            (Type::Array(this), Type::Array(other)) => this == other,
+            (Type::BareFn(this), Type::BareFn(other)) => this == other,
+            (Type::Group(this), Type::Group(other)) => this == other,
+            (Type::ImplTrait(this), Type::ImplTrait(other)) => this == other,
+            (Type::Infer(this), Type::Infer(other)) => this == other,
+            (Type::Macro(this), Type::Macro(other)) => this == other,
+            (Type::Never(this), Type::Never(other)) => this == other,
+            (Type::Paren(this), Type::Paren(other)) => this == other,
+            (Type::Path(this), Type::Path(other)) => this == other,
+            (Type::Ptr(this), Type::Ptr(other)) => this == other,
+            (Type::Reference(this), Type::Reference(other)) => this == other,
+            (Type::Slice(this), Type::Slice(other)) => this == other,
+            (Type::TraitObject(this), Type::TraitObject(other)) => this == other,
+            (Type::Tuple(this), Type::Tuple(other)) => this == other,
+            (Type::Verbatim(this), Type::Verbatim(other)) => {
+                TokenStreamHelper(this) == TokenStreamHelper(other)
+            }
+            _ => false,
+        }
     }
 }
 
 #[cfg(feature = "extra-traits")]
-impl Hash for TypeVerbatim {
-    fn hash<H>(&self, state: &mut H)
+impl Hash for Type {
+    fn hash<H>(&self, hash: &mut H)
     where
         H: Hasher,
     {
-        TokenStreamHelper(&self.tts).hash(state);
+        match self {
+            Type::Array(ty) => {
+                hash.write_u8(0);
+                ty.hash(hash);
+            }
+            Type::BareFn(ty) => {
+                hash.write_u8(1);
+                ty.hash(hash);
+            }
+            Type::Group(ty) => {
+                hash.write_u8(2);
+                ty.hash(hash);
+            }
+            Type::ImplTrait(ty) => {
+                hash.write_u8(3);
+                ty.hash(hash);
+            }
+            Type::Infer(ty) => {
+                hash.write_u8(4);
+                ty.hash(hash);
+            }
+            Type::Macro(ty) => {
+                hash.write_u8(5);
+                ty.hash(hash);
+            }
+            Type::Never(ty) => {
+                hash.write_u8(6);
+                ty.hash(hash);
+            }
+            Type::Paren(ty) => {
+                hash.write_u8(7);
+                ty.hash(hash);
+            }
+            Type::Path(ty) => {
+                hash.write_u8(8);
+                ty.hash(hash);
+            }
+            Type::Ptr(ty) => {
+                hash.write_u8(9);
+                ty.hash(hash);
+            }
+            Type::Reference(ty) => {
+                hash.write_u8(10);
+                ty.hash(hash);
+            }
+            Type::Slice(ty) => {
+                hash.write_u8(11);
+                ty.hash(hash);
+            }
+            Type::TraitObject(ty) => {
+                hash.write_u8(12);
+                ty.hash(hash);
+            }
+            Type::Tuple(ty) => {
+                hash.write_u8(13);
+                ty.hash(hash);
+            }
+            Type::Verbatim(ty) => {
+                hash.write_u8(14);
+                TokenStreamHelper(ty).hash(hash);
+            }
+            Type::__Nonexhaustive => unreachable!(),
+        }
     }
 }
 
@@ -205,21 +358,30 @@ ast_struct! {
     /// *This type is available if Syn is built with the `"derive"` or `"full"`
     /// feature.*
     pub struct BareFnArg {
-        pub name: Option<(BareFnArgName, Token![:])>,
+        pub attrs: Vec<Attribute>,
+        pub name: Option<(Ident, Token![:])>,
         pub ty: Type,
     }
 }
 
-ast_enum! {
-    /// Name of an argument in a function type: the `n` in `fn(n: usize)`.
+ast_struct! {
+    /// The variadic argument of a foreign function.
+    ///
+    /// ```rust
+    /// # struct c_char;
+    /// # struct c_int;
+    /// #
+    /// extern "C" {
+    ///     fn printf(format: *const c_char, ...) -> c_int;
+    ///     //                               ^^^
+    /// }
+    /// ```
     ///
     /// *This type is available if Syn is built with the `"derive"` or `"full"`
     /// feature.*
-    pub enum BareFnArgName {
-        /// Argument given a name.
-        Named(Ident),
-        /// Argument not given a name, matched with `_`.
-        Wild(Token![_]),
+    pub struct Variadic {
+        pub attrs: Vec<Attribute>,
+        pub dots: Token![...],
     }
 }
 
@@ -242,8 +404,9 @@ ast_enum! {
 pub mod parsing {
     use super::*;
 
-    use parse::{Parse, ParseStream, Result};
-    use path;
+    use crate::ext::IdentExt;
+    use crate::parse::{Parse, ParseStream, Result};
+    use crate::path;
 
     impl Parse for Type {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -290,13 +453,13 @@ pub mod parsing {
             let paren_token = parenthesized!(content in input);
             if content.is_empty() {
                 return Ok(Type::Tuple(TypeTuple {
-                    paren_token: paren_token,
+                    paren_token,
                     elems: Punctuated::new(),
                 }));
             }
             if content.peek(Lifetime) {
                 return Ok(Type::Paren(TypeParen {
-                    paren_token: paren_token,
+                    paren_token,
                     elem: Box::new(Type::TraitObject(content.parse()?)),
                 }));
             }
@@ -317,10 +480,10 @@ pub mod parsing {
                     },
                 }));
             }
-            let first: Type = content.parse()?;
+            let mut first: Type = content.parse()?;
             if content.peek(Token![,]) {
                 return Ok(Type::Tuple(TypeTuple {
-                    paren_token: paren_token,
+                    paren_token,
                     elems: {
                         let mut elems = Punctuated::new();
                         elems.push_value(first);
@@ -340,29 +503,28 @@ pub mod parsing {
                                 paren_token: Some(paren_token),
                                 modifier: TraitBoundModifier::None,
                                 lifetimes: None,
-                                path: path,
+                                path,
                             })
                         }
                         Type::TraitObject(TypeTraitObject {
                             dyn_token: None,
-                            ref bounds,
+                            bounds,
                         }) => {
                             if bounds.len() > 1 || bounds.trailing_punct() {
+                                first = Type::TraitObject(TypeTraitObject {
+                                    dyn_token: None,
+                                    bounds,
+                                });
                                 break;
                             }
-                            match first {
-                                Type::TraitObject(TypeTraitObject { bounds, .. }) => {
-                                    match bounds.into_iter().next().unwrap() {
-                                        TypeParamBound::Trait(trait_bound) => {
-                                            TypeParamBound::Trait(TraitBound {
-                                                paren_token: Some(paren_token),
-                                                ..trait_bound
-                                            })
-                                        }
-                                        other => other,
-                                    }
+                            match bounds.into_iter().next().unwrap() {
+                                TypeParamBound::Trait(trait_bound) => {
+                                    TypeParamBound::Trait(TraitBound {
+                                        paren_token: Some(paren_token),
+                                        ..trait_bound
+                                    })
                                 }
-                                _ => unreachable!(),
+                                other => other,
                             }
                         }
                         _ => break,
@@ -382,7 +544,7 @@ pub mod parsing {
                 }
             }
             Ok(Type::Paren(TypeParen {
-                paren_token: paren_token,
+                paren_token,
                 elem: Box::new(first),
             }))
         } else if lookahead.peek(Token![fn])
@@ -404,8 +566,8 @@ pub mod parsing {
             if input.peek(Token![dyn]) {
                 let mut trait_object: TypeTraitObject = input.parse()?;
                 if lifetimes.is_some() {
-                    match *trait_object.bounds.iter_mut().next().unwrap() {
-                        TypeParamBound::Trait(ref mut trait_bound) => {
+                    match trait_object.bounds.iter_mut().next().unwrap() {
+                        TypeParamBound::Trait(trait_bound) => {
                             trait_bound.lifetimes = lifetimes;
                         }
                         TypeParamBound::Lifetime(_) => unreachable!(),
@@ -432,13 +594,13 @@ pub mod parsing {
 
                 if !contains_arguments {
                     let bang_token: Token![!] = input.parse()?;
-                    let (delimiter, tts) = mac::parse_delimiter(input)?;
+                    let (delimiter, tokens) = mac::parse_delimiter(input)?;
                     return Ok(Type::Macro(TypeMacro {
                         mac: Macro {
                             path: ty.path,
-                            bang_token: bang_token,
-                            delimiter: delimiter,
-                            tts: tts,
+                            bang_token,
+                            delimiter,
+                            tokens,
                         },
                     }));
                 }
@@ -449,7 +611,7 @@ pub mod parsing {
                 bounds.push_value(TypeParamBound::Trait(TraitBound {
                     paren_token: None,
                     modifier: TraitBoundModifier::None,
-                    lifetimes: lifetimes,
+                    lifetimes,
                     path: ty.path,
                 }));
                 if allow_plus {
@@ -463,7 +625,7 @@ pub mod parsing {
                 }
                 return Ok(Type::TraitObject(TypeTraitObject {
                     dyn_token: None,
-                    bounds: bounds,
+                    bounds,
                 }));
             }
 
@@ -474,14 +636,14 @@ pub mod parsing {
             let elem: Type = content.parse()?;
             if content.peek(Token![;]) {
                 Ok(Type::Array(TypeArray {
-                    bracket_token: bracket_token,
+                    bracket_token,
                     elem: Box::new(elem),
                     semi_token: content.parse()?,
                     len: content.parse()?,
                 }))
             } else {
                 Ok(Type::Slice(TypeSlice {
-                    bracket_token: bracket_token,
+                    bracket_token,
                     elem: Box::new(elem),
                 }))
             }
@@ -491,7 +653,7 @@ pub mod parsing {
             input.parse().map(Type::Reference)
         } else if lookahead.peek(Token![!]) && !input.peek(Token![=]) {
             input.parse().map(Type::Never)
-        } else if lookahead.peek(Token![impl ]) {
+        } else if lookahead.peek(Token![impl]) {
             input.parse().map(Type::ImplTrait)
         } else if lookahead.peek(Token![_]) {
             input.parse().map(Type::Infer)
@@ -538,9 +700,9 @@ pub mod parsing {
             };
 
             Ok(TypePtr {
-                star_token: star_token,
-                const_token: const_token,
-                mutability: mutability,
+                star_token,
+                const_token,
+                mutability,
                 elem: Box::new(input.call(Type::without_plus)?),
             })
         }
@@ -582,7 +744,10 @@ pub mod parsing {
                 },
                 variadic: {
                     if allow_variadic && args.peek(Token![...]) {
-                        Some(args.parse()?)
+                        Some(Variadic {
+                            attrs: Vec::new(),
+                            dots: args.parse()?,
+                        })
                     } else {
                         None
                     }
@@ -630,18 +795,13 @@ pub mod parsing {
         fn parse(input: ParseStream) -> Result<Self> {
             let (qself, mut path) = path::parsing::qpath(input, false)?;
 
-            if path.segments.last().unwrap().value().arguments.is_empty()
-                && input.peek(token::Paren)
-            {
+            if path.segments.last().unwrap().arguments.is_empty() && input.peek(token::Paren) {
                 let args: ParenthesizedGenericArguments = input.parse()?;
                 let parenthesized = PathArguments::Parenthesized(args);
-                path.segments.last_mut().unwrap().value_mut().arguments = parenthesized;
+                path.segments.last_mut().unwrap().arguments = parenthesized;
             }
 
-            Ok(TypePath {
-                qself: qself,
-                path: path,
-            })
+            Ok(TypePath { qself, path })
         }
     }
 
@@ -740,7 +900,7 @@ pub mod parsing {
 
     impl Parse for TypeGroup {
         fn parse(input: ParseStream) -> Result<Self> {
-            let group = private::parse_group(input)?;
+            let group = crate::group::parse_group(input)?;
             Ok(TypeGroup {
                 group_token: group.token,
                 elem: group.content.parse()?,
@@ -767,12 +927,13 @@ pub mod parsing {
     impl Parse for BareFnArg {
         fn parse(input: ParseStream) -> Result<Self> {
             Ok(BareFnArg {
+                attrs: input.call(Attribute::parse_outer)?,
                 name: {
                     if (input.peek(Ident) || input.peek(Token![_]))
-                        && !input.peek2(Token![::])
                         && input.peek2(Token![:])
+                        && !input.peek2(Token![::])
                     {
-                        let name: BareFnArgName = input.parse()?;
+                        let name = input.call(Ident::parse_any)?;
                         let colon: Token![:] = input.parse()?;
                         Some((name, colon))
                     } else {
@@ -781,19 +942,6 @@ pub mod parsing {
                 },
                 ty: input.parse()?,
             })
-        }
-    }
-
-    impl Parse for BareFnArgName {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let lookahead = input.lookahead1();
-            if lookahead.peek(Ident) {
-                input.parse().map(BareFnArgName::Named)
-            } else if lookahead.peek(Token![_]) {
-                input.parse().map(BareFnArgName::Wild)
-            } else {
-                Err(lookahead.error())
-            }
         }
     }
 
@@ -822,9 +970,10 @@ mod printing {
     use super::*;
 
     use proc_macro2::TokenStream;
-    use quote::ToTokens;
+    use quote::{ToTokens, TokenStreamExt};
 
-    use print::TokensOrDefault;
+    use crate::attr::FilterAttrs;
+    use crate::print::TokensOrDefault;
 
     impl ToTokens for TypeSlice {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -847,8 +996,8 @@ mod printing {
     impl ToTokens for TypePtr {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             self.star_token.to_tokens(tokens);
-            match self.mutability {
-                Some(ref tok) => tok.to_tokens(tokens),
+            match &self.mutability {
+                Some(tok) => tok.to_tokens(tokens),
                 None => {
                     TokensOrDefault(&self.const_token).to_tokens(tokens);
                 }
@@ -874,9 +1023,9 @@ mod printing {
             self.fn_token.to_tokens(tokens);
             self.paren_token.surround(tokens, |tokens| {
                 self.inputs.to_tokens(tokens);
-                if let Some(ref variadic) = self.variadic {
+                if let Some(variadic) = &self.variadic {
                     if !self.inputs.empty_or_trailing() {
-                        let span = variadic.spans[0];
+                        let span = variadic.dots.spans[0];
                         Token![,](span).to_tokens(tokens);
                     }
                     variadic.to_tokens(tokens);
@@ -948,17 +1097,11 @@ mod printing {
         }
     }
 
-    impl ToTokens for TypeVerbatim {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.tts.to_tokens(tokens);
-        }
-    }
-
     impl ToTokens for ReturnType {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            match *self {
+            match self {
                 ReturnType::Default => {}
-                ReturnType::Type(ref arrow, ref ty) => {
+                ReturnType::Type(arrow, ty) => {
                     arrow.to_tokens(tokens);
                     ty.to_tokens(tokens);
                 }
@@ -968,7 +1111,8 @@ mod printing {
 
     impl ToTokens for BareFnArg {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            if let Some((ref name, ref colon)) = self.name {
+            tokens.append_all(self.attrs.outer());
+            if let Some((name, colon)) = &self.name {
                 name.to_tokens(tokens);
                 colon.to_tokens(tokens);
             }
@@ -976,12 +1120,10 @@ mod printing {
         }
     }
 
-    impl ToTokens for BareFnArgName {
+    impl ToTokens for Variadic {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            match *self {
-                BareFnArgName::Named(ref t) => t.to_tokens(tokens),
-                BareFnArgName::Wild(ref t) => t.to_tokens(tokens),
-            }
+            tokens.append_all(self.attrs.outer());
+            self.dots.to_tokens(tokens);
         }
     }
 

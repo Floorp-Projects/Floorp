@@ -1,5 +1,5 @@
 use super::*;
-use punctuated::Punctuated;
+use crate::punctuated::Punctuated;
 
 ast_struct! {
     /// Data structure sent to a `proc_macro_derive` macro.
@@ -33,45 +33,63 @@ ast_enum_of_structs! {
     /// This type is a [syntax tree enum].
     ///
     /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
+    //
+    // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
+    // blocked on https://github.com/rust-lang/rust/issues/62833
     pub enum Data {
         /// A struct input to a `proc_macro_derive` macro.
-        ///
-        /// *This type is available if Syn is built with the `"derive"`
-        /// feature.*
-        pub Struct(DataStruct {
-            pub struct_token: Token![struct],
-            pub fields: Fields,
-            pub semi_token: Option<Token![;]>,
-        }),
+        Struct(DataStruct),
 
         /// An enum input to a `proc_macro_derive` macro.
-        ///
-        /// *This type is available if Syn is built with the `"derive"`
-        /// feature.*
-        pub Enum(DataEnum {
-            pub enum_token: Token![enum],
-            pub brace_token: token::Brace,
-            pub variants: Punctuated<Variant, Token![,]>,
-        }),
+        Enum(DataEnum),
 
-        /// A tagged union input to a `proc_macro_derive` macro.
-        ///
-        /// *This type is available if Syn is built with the `"derive"`
-        /// feature.*
-        pub Union(DataUnion {
-            pub union_token: Token![union],
-            pub fields: FieldsNamed,
-        }),
+        /// An untagged union input to a `proc_macro_derive` macro.
+        Union(DataUnion),
     }
 
     do_not_generate_to_tokens
+}
+
+ast_struct! {
+    /// A struct input to a `proc_macro_derive` macro.
+    ///
+    /// *This type is available if Syn is built with the `"derive"`
+    /// feature.*
+    pub struct DataStruct {
+        pub struct_token: Token![struct],
+        pub fields: Fields,
+        pub semi_token: Option<Token![;]>,
+    }
+}
+
+ast_struct! {
+    /// An enum input to a `proc_macro_derive` macro.
+    ///
+    /// *This type is available if Syn is built with the `"derive"`
+    /// feature.*
+    pub struct DataEnum {
+        pub enum_token: Token![enum],
+        pub brace_token: token::Brace,
+        pub variants: Punctuated<Variant, Token![,]>,
+    }
+}
+
+ast_struct! {
+    /// An untagged union input to a `proc_macro_derive` macro.
+    ///
+    /// *This type is available if Syn is built with the `"derive"`
+    /// feature.*
+    pub struct DataUnion {
+        pub union_token: Token![union],
+        pub fields: FieldsNamed,
+    }
 }
 
 #[cfg(feature = "parsing")]
 pub mod parsing {
     use super::*;
 
-    use parse::{Parse, ParseStream, Result};
+    use crate::parse::{Parse, ParseStream, Result};
 
     impl Parse for DeriveInput {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -85,16 +103,16 @@ pub mod parsing {
                 let generics = input.parse::<Generics>()?;
                 let (where_clause, fields, semi) = data_struct(input)?;
                 Ok(DeriveInput {
-                    attrs: attrs,
-                    vis: vis,
-                    ident: ident,
+                    attrs,
+                    vis,
+                    ident,
                     generics: Generics {
-                        where_clause: where_clause,
+                        where_clause,
                         ..generics
                     },
                     data: Data::Struct(DataStruct {
-                        struct_token: struct_token,
-                        fields: fields,
+                        struct_token,
+                        fields,
                         semi_token: semi,
                     }),
                 })
@@ -104,17 +122,17 @@ pub mod parsing {
                 let generics = input.parse::<Generics>()?;
                 let (where_clause, brace, variants) = data_enum(input)?;
                 Ok(DeriveInput {
-                    attrs: attrs,
-                    vis: vis,
-                    ident: ident,
+                    attrs,
+                    vis,
+                    ident,
                     generics: Generics {
-                        where_clause: where_clause,
+                        where_clause,
                         ..generics
                     },
                     data: Data::Enum(DataEnum {
-                        enum_token: enum_token,
+                        enum_token,
                         brace_token: brace,
-                        variants: variants,
+                        variants,
                     }),
                 })
             } else if lookahead.peek(Token![union]) {
@@ -123,16 +141,16 @@ pub mod parsing {
                 let generics = input.parse::<Generics>()?;
                 let (where_clause, fields) = data_union(input)?;
                 Ok(DeriveInput {
-                    attrs: attrs,
-                    vis: vis,
-                    ident: ident,
+                    attrs,
+                    vis,
+                    ident,
                     generics: Generics {
-                        where_clause: where_clause,
+                        where_clause,
                         ..generics
                     },
                     data: Data::Union(DataUnion {
-                        union_token: union_token,
-                        fields: fields,
+                        union_token,
+                        fields,
                     }),
                 })
             } else {
@@ -207,8 +225,8 @@ mod printing {
     use proc_macro2::TokenStream;
     use quote::ToTokens;
 
-    use attr::FilterAttrs;
-    use print::TokensOrDefault;
+    use crate::attr::FilterAttrs;
+    use crate::print::TokensOrDefault;
 
     impl ToTokens for DeriveInput {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -216,20 +234,20 @@ mod printing {
                 attr.to_tokens(tokens);
             }
             self.vis.to_tokens(tokens);
-            match self.data {
-                Data::Struct(ref d) => d.struct_token.to_tokens(tokens),
-                Data::Enum(ref d) => d.enum_token.to_tokens(tokens),
-                Data::Union(ref d) => d.union_token.to_tokens(tokens),
+            match &self.data {
+                Data::Struct(d) => d.struct_token.to_tokens(tokens),
+                Data::Enum(d) => d.enum_token.to_tokens(tokens),
+                Data::Union(d) => d.union_token.to_tokens(tokens),
             }
             self.ident.to_tokens(tokens);
             self.generics.to_tokens(tokens);
-            match self.data {
-                Data::Struct(ref data) => match data.fields {
-                    Fields::Named(ref fields) => {
+            match &self.data {
+                Data::Struct(data) => match &data.fields {
+                    Fields::Named(fields) => {
                         self.generics.where_clause.to_tokens(tokens);
                         fields.to_tokens(tokens);
                     }
-                    Fields::Unnamed(ref fields) => {
+                    Fields::Unnamed(fields) => {
                         fields.to_tokens(tokens);
                         self.generics.where_clause.to_tokens(tokens);
                         TokensOrDefault(&data.semi_token).to_tokens(tokens);
@@ -239,13 +257,13 @@ mod printing {
                         TokensOrDefault(&data.semi_token).to_tokens(tokens);
                     }
                 },
-                Data::Enum(ref data) => {
+                Data::Enum(data) => {
                     self.generics.where_clause.to_tokens(tokens);
                     data.brace_token.surround(tokens, |tokens| {
                         data.variants.to_tokens(tokens);
                     });
                 }
-                Data::Union(ref data) => {
+                Data::Union(data) => {
                     self.generics.where_clause.to_tokens(tokens);
                     data.fields.to_tokens(tokens);
                 }

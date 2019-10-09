@@ -1,12 +1,12 @@
 use super::*;
+use crate::punctuated::Punctuated;
+#[cfg(feature = "extra-traits")]
+use crate::tt::TokenStreamHelper;
 use proc_macro2::{Span, TokenStream};
-use punctuated::Punctuated;
 #[cfg(feature = "extra-traits")]
 use std::hash::{Hash, Hasher};
 #[cfg(all(feature = "parsing", feature = "full"))]
 use std::mem;
-#[cfg(feature = "extra-traits")]
-use tt::TokenStreamHelper;
 
 ast_enum_of_structs! {
     /// A Rust expression.
@@ -19,7 +19,7 @@ ast_enum_of_structs! {
     /// This type is a syntax tree enum. In Syn this and other syntax tree enums
     /// are designed to be traversed using the following rebinding idiom.
     ///
-    /// ```edition2018
+    /// ```
     /// # use syn::Expr;
     /// #
     /// # fn example(expr: Expr) {
@@ -36,9 +36,10 @@ ast_enum_of_structs! {
     ///     Expr::If(expr) => {
     ///         /* ... */
     ///     }
+    ///
     ///     /* ... */
     ///     # _ => {}
-    /// }
+    /// # }
     /// # }
     /// ```
     ///
@@ -50,28 +51,15 @@ ast_enum_of_structs! {
     /// `expr.receiver`, `expr.args` etc; if we ended up in the `If` case we get
     /// to use `expr.cond`, `expr.then_branch`, `expr.else_branch`.
     ///
-    /// The pattern is similar if the input expression is borrowed:
-    ///
-    /// ```edition2018
-    /// # use syn::Expr;
-    /// #
-    /// # fn example(expr: &Expr) {
-    /// match *expr {
-    ///     Expr::MethodCall(ref expr) => {
-    /// #   }
-    /// #   _ => {}
-    /// # }
-    /// # }
-    /// ```
-    ///
     /// This approach avoids repeating the variant names twice on every line.
     ///
-    /// ```edition2018
+    /// ```
     /// # use syn::{Expr, ExprMethodCall};
     /// #
     /// # fn example(expr: Expr) {
-    /// # match expr {
-    /// Expr::MethodCall(ExprMethodCall { method, args, .. }) => { // repetitive
+    /// // Repetitive; recommend not doing this.
+    /// match expr {
+    ///     Expr::MethodCall(ExprMethodCall { method, args, .. }) => {
     /// # }
     /// # _ => {}
     /// # }
@@ -81,13 +69,13 @@ ast_enum_of_structs! {
     /// In general, the name to which a syntax tree enum variant is bound should
     /// be a suitable name for the complete syntax tree enum type.
     ///
-    /// ```edition2018
+    /// ```
     /// # use syn::{Expr, ExprField};
     /// #
-    /// # fn example(discriminant: &ExprField) {
+    /// # fn example(discriminant: ExprField) {
     /// // Binding is called `base` which is the name I would use if I were
     /// // assigning `*discriminant.base` without an `if let`.
-    /// if let Expr::Tuple(ref base) = *discriminant.base {
+    /// if let Expr::Tuple(base) = *discriminant.base {
     /// # }
     /// # }
     /// ```
@@ -95,494 +83,911 @@ ast_enum_of_structs! {
     /// A sign that you may not be choosing the right variable names is if you
     /// see names getting repeated in your code, like accessing
     /// `receiver.receiver` or `pat.pat` or `cond.cond`.
-    pub enum Expr {
-        /// A box expression: `box f`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Box(ExprBox #full {
-            pub attrs: Vec<Attribute>,
-            pub box_token: Token![box],
-            pub expr: Box<Expr>,
-        }),
-
-        /// A placement expression: `place <- value`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub InPlace(ExprInPlace #full {
-            pub attrs: Vec<Attribute>,
-            pub place: Box<Expr>,
-            pub arrow_token: Token![<-],
-            pub value: Box<Expr>,
-        }),
-
+    pub enum Expr #manual_extra_traits {
         /// A slice literal expression: `[a, b, c, d]`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Array(ExprArray #full {
-            pub attrs: Vec<Attribute>,
-            pub bracket_token: token::Bracket,
-            pub elems: Punctuated<Expr, Token![,]>,
-        }),
-
-        /// A function call expression: `invoke(a, b)`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Call(ExprCall {
-            pub attrs: Vec<Attribute>,
-            pub func: Box<Expr>,
-            pub paren_token: token::Paren,
-            pub args: Punctuated<Expr, Token![,]>,
-        }),
-
-        /// A method call expression: `x.foo::<T>(a, b)`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub MethodCall(ExprMethodCall #full {
-            pub attrs: Vec<Attribute>,
-            pub receiver: Box<Expr>,
-            pub dot_token: Token![.],
-            pub method: Ident,
-            pub turbofish: Option<MethodTurbofish>,
-            pub paren_token: token::Paren,
-            pub args: Punctuated<Expr, Token![,]>,
-        }),
-
-        /// A tuple expression: `(a, b, c, d)`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Tuple(ExprTuple #full {
-            pub attrs: Vec<Attribute>,
-            pub paren_token: token::Paren,
-            pub elems: Punctuated<Expr, Token![,]>,
-        }),
-
-        /// A binary operation: `a + b`, `a * b`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Binary(ExprBinary {
-            pub attrs: Vec<Attribute>,
-            pub left: Box<Expr>,
-            pub op: BinOp,
-            pub right: Box<Expr>,
-        }),
-
-        /// A unary operation: `!x`, `*x`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Unary(ExprUnary {
-            pub attrs: Vec<Attribute>,
-            pub op: UnOp,
-            pub expr: Box<Expr>,
-        }),
-
-        /// A literal in place of an expression: `1`, `"foo"`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Lit(ExprLit {
-            pub attrs: Vec<Attribute>,
-            pub lit: Lit,
-        }),
-
-        /// A cast expression: `foo as f64`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Cast(ExprCast {
-            pub attrs: Vec<Attribute>,
-            pub expr: Box<Expr>,
-            pub as_token: Token![as],
-            pub ty: Box<Type>,
-        }),
-
-        /// A type ascription expression: `foo: f64`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Type(ExprType #full {
-            pub attrs: Vec<Attribute>,
-            pub expr: Box<Expr>,
-            pub colon_token: Token![:],
-            pub ty: Box<Type>,
-        }),
-
-        /// A `let` guard: `let Some(x) = opt`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Let(ExprLet #full {
-            pub attrs: Vec<Attribute>,
-            pub let_token: Token![let],
-            pub pats: Punctuated<Pat, Token![|]>,
-            pub eq_token: Token![=],
-            pub expr: Box<Expr>,
-        }),
-
-        /// An `if` expression with an optional `else` block: `if expr { ... }
-        /// else { ... }`.
-        ///
-        /// The `else` branch expression may only be an `If` or `Block`
-        /// expression, not any of the other types of expression.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub If(ExprIf #full {
-            pub attrs: Vec<Attribute>,
-            pub if_token: Token![if],
-            pub cond: Box<Expr>,
-            pub then_branch: Block,
-            pub else_branch: Option<(Token![else], Box<Expr>)>,
-        }),
-
-        /// A while loop: `while expr { ... }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub While(ExprWhile #full {
-            pub attrs: Vec<Attribute>,
-            pub label: Option<Label>,
-            pub while_token: Token![while],
-            pub cond: Box<Expr>,
-            pub body: Block,
-        }),
-
-        /// A for loop: `for pat in expr { ... }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub ForLoop(ExprForLoop #full {
-            pub attrs: Vec<Attribute>,
-            pub label: Option<Label>,
-            pub for_token: Token![for],
-            pub pat: Box<Pat>,
-            pub in_token: Token![in],
-            pub expr: Box<Expr>,
-            pub body: Block,
-        }),
-
-        /// Conditionless loop: `loop { ... }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Loop(ExprLoop #full {
-            pub attrs: Vec<Attribute>,
-            pub label: Option<Label>,
-            pub loop_token: Token![loop],
-            pub body: Block,
-        }),
-
-        /// A `match` expression: `match n { Some(n) => {}, None => {} }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Match(ExprMatch #full {
-            pub attrs: Vec<Attribute>,
-            pub match_token: Token![match],
-            pub expr: Box<Expr>,
-            pub brace_token: token::Brace,
-            pub arms: Vec<Arm>,
-        }),
-
-        /// A closure expression: `|a, b| a + b`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Closure(ExprClosure #full {
-            pub attrs: Vec<Attribute>,
-            pub asyncness: Option<Token![async]>,
-            pub movability: Option<Token![static]>,
-            pub capture: Option<Token![move]>,
-            pub or1_token: Token![|],
-            pub inputs: Punctuated<FnArg, Token![,]>,
-            pub or2_token: Token![|],
-            pub output: ReturnType,
-            pub body: Box<Expr>,
-        }),
-
-        /// An unsafe block: `unsafe { ... }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Unsafe(ExprUnsafe #full {
-            pub attrs: Vec<Attribute>,
-            pub unsafe_token: Token![unsafe],
-            pub block: Block,
-        }),
-
-        /// A blocked scope: `{ ... }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Block(ExprBlock #full {
-            pub attrs: Vec<Attribute>,
-            pub label: Option<Label>,
-            pub block: Block,
-        }),
+        Array(ExprArray),
 
         /// An assignment expression: `a = compute()`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Assign(ExprAssign #full {
-            pub attrs: Vec<Attribute>,
-            pub left: Box<Expr>,
-            pub eq_token: Token![=],
-            pub right: Box<Expr>,
-        }),
+        Assign(ExprAssign),
 
         /// A compound assignment expression: `counter += 1`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub AssignOp(ExprAssignOp #full {
-            pub attrs: Vec<Attribute>,
-            pub left: Box<Expr>,
-            pub op: BinOp,
-            pub right: Box<Expr>,
-        }),
+        AssignOp(ExprAssignOp),
 
-        /// Access of a named struct field (`obj.k`) or unnamed tuple struct
-        /// field (`obj.0`).
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Field(ExprField {
-            pub attrs: Vec<Attribute>,
-            pub base: Box<Expr>,
-            pub dot_token: Token![.],
-            pub member: Member,
-        }),
+        /// An async block: `async { ... }`.
+        Async(ExprAsync),
 
-        /// A square bracketed indexing expression: `vector[2]`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Index(ExprIndex {
-            pub attrs: Vec<Attribute>,
-            pub expr: Box<Expr>,
-            pub bracket_token: token::Bracket,
-            pub index: Box<Expr>,
-        }),
+        /// An await expression: `fut.await`.
+        Await(ExprAwait),
 
-        /// A range expression: `1..2`, `1..`, `..2`, `1..=2`, `..=2`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Range(ExprRange #full {
-            pub attrs: Vec<Attribute>,
-            pub from: Option<Box<Expr>>,
-            pub limits: RangeLimits,
-            pub to: Option<Box<Expr>>,
-        }),
+        /// A binary operation: `a + b`, `a * b`.
+        Binary(ExprBinary),
 
-        /// A path like `std::mem::replace` possibly containing generic
-        /// parameters and a qualified self-type.
-        ///
-        /// A plain identifier like `x` is a path of length 1.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Path(ExprPath {
-            pub attrs: Vec<Attribute>,
-            pub qself: Option<QSelf>,
-            pub path: Path,
-        }),
+        /// A blocked scope: `{ ... }`.
+        Block(ExprBlock),
 
-        /// A referencing operation: `&a` or `&mut a`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Reference(ExprReference #full {
-            pub attrs: Vec<Attribute>,
-            pub and_token: Token![&],
-            pub mutability: Option<Token![mut]>,
-            pub expr: Box<Expr>,
-        }),
+        /// A box expression: `box f`.
+        Box(ExprBox),
 
         /// A `break`, with an optional label to break and an optional
         /// expression.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Break(ExprBreak #full {
-            pub attrs: Vec<Attribute>,
-            pub break_token: Token![break],
-            pub label: Option<Lifetime>,
-            pub expr: Option<Box<Expr>>,
-        }),
+        Break(ExprBreak),
+
+        /// A function call expression: `invoke(a, b)`.
+        Call(ExprCall),
+
+        /// A cast expression: `foo as f64`.
+        Cast(ExprCast),
+
+        /// A closure expression: `|a, b| a + b`.
+        Closure(ExprClosure),
 
         /// A `continue`, with an optional label.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Continue(ExprContinue #full {
-            pub attrs: Vec<Attribute>,
-            pub continue_token: Token![continue],
-            pub label: Option<Lifetime>,
-        }),
+        Continue(ExprContinue),
 
-        /// A `return`, with an optional value to be returned.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Return(ExprReturn #full {
-            pub attrs: Vec<Attribute>,
-            pub return_token: Token![return],
-            pub expr: Option<Box<Expr>>,
-        }),
+        /// Access of a named struct field (`obj.k`) or unnamed tuple struct
+        /// field (`obj.0`).
+        Field(ExprField),
 
-        /// A macro invocation expression: `format!("{}", q)`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Macro(ExprMacro #full {
-            pub attrs: Vec<Attribute>,
-            pub mac: Macro,
-        }),
-
-        /// A struct literal expression: `Point { x: 1, y: 1 }`.
-        ///
-        /// The `rest` provides the value of the remaining fields as in `S { a:
-        /// 1, b: 1, ..rest }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Struct(ExprStruct #full {
-            pub attrs: Vec<Attribute>,
-            pub path: Path,
-            pub brace_token: token::Brace,
-            pub fields: Punctuated<FieldValue, Token![,]>,
-            pub dot2_token: Option<Token![..]>,
-            pub rest: Option<Box<Expr>>,
-        }),
-
-        /// An array literal constructed from one repeated element: `[0u8; N]`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Repeat(ExprRepeat #full {
-            pub attrs: Vec<Attribute>,
-            pub bracket_token: token::Bracket,
-            pub expr: Box<Expr>,
-            pub semi_token: Token![;],
-            pub len: Box<Expr>,
-        }),
-
-        /// A parenthesized expression: `(a + b)`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Paren(ExprParen {
-            pub attrs: Vec<Attribute>,
-            pub paren_token: token::Paren,
-            pub expr: Box<Expr>,
-        }),
+        /// A for loop: `for pat in expr { ... }`.
+        ForLoop(ExprForLoop),
 
         /// An expression contained within invisible delimiters.
         ///
         /// This variant is important for faithfully representing the precedence
         /// of expressions and is related to `None`-delimited spans in a
         /// `TokenStream`.
+        Group(ExprGroup),
+
+        /// An `if` expression with an optional `else` block: `if expr { ... }
+        /// else { ... }`.
         ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Group(ExprGroup #full {
-            pub attrs: Vec<Attribute>,
-            pub group_token: token::Group,
-            pub expr: Box<Expr>,
-        }),
+        /// The `else` branch expression may only be an `If` or `Block`
+        /// expression, not any of the other types of expression.
+        If(ExprIf),
+
+        /// A square bracketed indexing expression: `vector[2]`.
+        Index(ExprIndex),
+
+        /// A `let` guard: `let Some(x) = opt`.
+        Let(ExprLet),
+
+        /// A literal in place of an expression: `1`, `"foo"`.
+        Lit(ExprLit),
+
+        /// Conditionless loop: `loop { ... }`.
+        Loop(ExprLoop),
+
+        /// A macro invocation expression: `format!("{}", q)`.
+        Macro(ExprMacro),
+
+        /// A `match` expression: `match n { Some(n) => {}, None => {} }`.
+        Match(ExprMatch),
+
+        /// A method call expression: `x.foo::<T>(a, b)`.
+        MethodCall(ExprMethodCall),
+
+        /// A parenthesized expression: `(a + b)`.
+        Paren(ExprParen),
+
+        /// A path like `std::mem::replace` possibly containing generic
+        /// parameters and a qualified self-type.
+        ///
+        /// A plain identifier like `x` is a path of length 1.
+        Path(ExprPath),
+
+        /// A range expression: `1..2`, `1..`, `..2`, `1..=2`, `..=2`.
+        Range(ExprRange),
+
+        /// A referencing operation: `&a` or `&mut a`.
+        Reference(ExprReference),
+
+        /// An array literal constructed from one repeated element: `[0u8; N]`.
+        Repeat(ExprRepeat),
+
+        /// A `return`, with an optional value to be returned.
+        Return(ExprReturn),
+
+        /// A struct literal expression: `Point { x: 1, y: 1 }`.
+        ///
+        /// The `rest` provides the value of the remaining fields as in `S { a:
+        /// 1, b: 1, ..rest }`.
+        Struct(ExprStruct),
 
         /// A try-expression: `expr?`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Try(ExprTry #full {
-            pub attrs: Vec<Attribute>,
-            pub expr: Box<Expr>,
-            pub question_token: Token![?],
-        }),
-
-        /// An async block: `async { ... }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Async(ExprAsync #full {
-            pub attrs: Vec<Attribute>,
-            pub async_token: Token![async],
-            pub capture: Option<Token![move]>,
-            pub block: Block,
-        }),
+        Try(ExprTry),
 
         /// A try block: `try { ... }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub TryBlock(ExprTryBlock #full {
-            pub attrs: Vec<Attribute>,
-            pub try_token: Token![try],
-            pub block: Block,
-        }),
+        TryBlock(ExprTryBlock),
 
-        /// A yield expression: `yield expr`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Yield(ExprYield #full {
-            pub attrs: Vec<Attribute>,
-            pub yield_token: Token![yield],
-            pub expr: Option<Box<Expr>>,
-        }),
+        /// A tuple expression: `(a, b, c, d)`.
+        Tuple(ExprTuple),
+
+        /// A type ascription expression: `foo: f64`.
+        Type(ExprType),
+
+        /// A unary operation: `!x`, `*x`.
+        Unary(ExprUnary),
+
+        /// An unsafe block: `unsafe { ... }`.
+        Unsafe(ExprUnsafe),
 
         /// Tokens in expression position not interpreted by Syn.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Verbatim(ExprVerbatim #manual_extra_traits {
-            pub tts: TokenStream,
-        }),
+        Verbatim(TokenStream),
+
+        /// A while loop: `while expr { ... }`.
+        While(ExprWhile),
+
+        /// A yield expression: `yield expr`.
+        Yield(ExprYield),
+
+        #[doc(hidden)]
+        __Nonexhaustive,
+    }
+}
+
+ast_struct! {
+    /// A slice literal expression: `[a, b, c, d]`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprArray #full {
+        pub attrs: Vec<Attribute>,
+        pub bracket_token: token::Bracket,
+        pub elems: Punctuated<Expr, Token![,]>,
+    }
+}
+
+ast_struct! {
+    /// An assignment expression: `a = compute()`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprAssign #full {
+        pub attrs: Vec<Attribute>,
+        pub left: Box<Expr>,
+        pub eq_token: Token![=],
+        pub right: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A compound assignment expression: `counter += 1`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprAssignOp #full {
+        pub attrs: Vec<Attribute>,
+        pub left: Box<Expr>,
+        pub op: BinOp,
+        pub right: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// An async block: `async { ... }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprAsync #full {
+        pub attrs: Vec<Attribute>,
+        pub async_token: Token![async],
+        pub capture: Option<Token![move]>,
+        pub block: Block,
+    }
+}
+
+ast_struct! {
+    /// An await expression: `fut.await`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprAwait #full {
+        pub attrs: Vec<Attribute>,
+        pub base: Box<Expr>,
+        pub dot_token: Token![.],
+        pub await_token: token::Await,
+    }
+}
+
+ast_struct! {
+    /// A binary operation: `a + b`, `a * b`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct ExprBinary {
+        pub attrs: Vec<Attribute>,
+        pub left: Box<Expr>,
+        pub op: BinOp,
+        pub right: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A blocked scope: `{ ... }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprBlock #full {
+        pub attrs: Vec<Attribute>,
+        pub label: Option<Label>,
+        pub block: Block,
+    }
+}
+
+ast_struct! {
+    /// A box expression: `box f`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprBox #full {
+        pub attrs: Vec<Attribute>,
+        pub box_token: Token![box],
+        pub expr: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A `break`, with an optional label to break and an optional
+    /// expression.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprBreak #full {
+        pub attrs: Vec<Attribute>,
+        pub break_token: Token![break],
+        pub label: Option<Lifetime>,
+        pub expr: Option<Box<Expr>>,
+    }
+}
+
+ast_struct! {
+    /// A function call expression: `invoke(a, b)`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct ExprCall {
+        pub attrs: Vec<Attribute>,
+        pub func: Box<Expr>,
+        pub paren_token: token::Paren,
+        pub args: Punctuated<Expr, Token![,]>,
+    }
+}
+
+ast_struct! {
+    /// A cast expression: `foo as f64`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct ExprCast {
+        pub attrs: Vec<Attribute>,
+        pub expr: Box<Expr>,
+        pub as_token: Token![as],
+        pub ty: Box<Type>,
+    }
+}
+
+ast_struct! {
+    /// A closure expression: `|a, b| a + b`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprClosure #full {
+        pub attrs: Vec<Attribute>,
+        pub asyncness: Option<Token![async]>,
+        pub movability: Option<Token![static]>,
+        pub capture: Option<Token![move]>,
+        pub or1_token: Token![|],
+        pub inputs: Punctuated<Pat, Token![,]>,
+        pub or2_token: Token![|],
+        pub output: ReturnType,
+        pub body: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A `continue`, with an optional label.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprContinue #full {
+        pub attrs: Vec<Attribute>,
+        pub continue_token: Token![continue],
+        pub label: Option<Lifetime>,
+    }
+}
+
+ast_struct! {
+    /// Access of a named struct field (`obj.k`) or unnamed tuple struct
+    /// field (`obj.0`).
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprField {
+        pub attrs: Vec<Attribute>,
+        pub base: Box<Expr>,
+        pub dot_token: Token![.],
+        pub member: Member,
+    }
+}
+
+ast_struct! {
+    /// A for loop: `for pat in expr { ... }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprForLoop #full {
+        pub attrs: Vec<Attribute>,
+        pub label: Option<Label>,
+        pub for_token: Token![for],
+        pub pat: Pat,
+        pub in_token: Token![in],
+        pub expr: Box<Expr>,
+        pub body: Block,
+    }
+}
+
+ast_struct! {
+    /// An expression contained within invisible delimiters.
+    ///
+    /// This variant is important for faithfully representing the precedence
+    /// of expressions and is related to `None`-delimited spans in a
+    /// `TokenStream`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprGroup #full {
+        pub attrs: Vec<Attribute>,
+        pub group_token: token::Group,
+        pub expr: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// An `if` expression with an optional `else` block: `if expr { ... }
+    /// else { ... }`.
+    ///
+    /// The `else` branch expression may only be an `If` or `Block`
+    /// expression, not any of the other types of expression.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprIf #full {
+        pub attrs: Vec<Attribute>,
+        pub if_token: Token![if],
+        pub cond: Box<Expr>,
+        pub then_branch: Block,
+        pub else_branch: Option<(Token![else], Box<Expr>)>,
+    }
+}
+
+ast_struct! {
+    /// A square bracketed indexing expression: `vector[2]`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct ExprIndex {
+        pub attrs: Vec<Attribute>,
+        pub expr: Box<Expr>,
+        pub bracket_token: token::Bracket,
+        pub index: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A `let` guard: `let Some(x) = opt`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprLet #full {
+        pub attrs: Vec<Attribute>,
+        pub let_token: Token![let],
+        pub pat: Pat,
+        pub eq_token: Token![=],
+        pub expr: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A literal in place of an expression: `1`, `"foo"`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct ExprLit {
+        pub attrs: Vec<Attribute>,
+        pub lit: Lit,
+    }
+}
+
+ast_struct! {
+    /// Conditionless loop: `loop { ... }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprLoop #full {
+        pub attrs: Vec<Attribute>,
+        pub label: Option<Label>,
+        pub loop_token: Token![loop],
+        pub body: Block,
+    }
+}
+
+ast_struct! {
+    /// A macro invocation expression: `format!("{}", q)`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprMacro #full {
+        pub attrs: Vec<Attribute>,
+        pub mac: Macro,
+    }
+}
+
+ast_struct! {
+    /// A `match` expression: `match n { Some(n) => {}, None => {} }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprMatch #full {
+        pub attrs: Vec<Attribute>,
+        pub match_token: Token![match],
+        pub expr: Box<Expr>,
+        pub brace_token: token::Brace,
+        pub arms: Vec<Arm>,
+    }
+}
+
+ast_struct! {
+    /// A method call expression: `x.foo::<T>(a, b)`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprMethodCall #full {
+        pub attrs: Vec<Attribute>,
+        pub receiver: Box<Expr>,
+        pub dot_token: Token![.],
+        pub method: Ident,
+        pub turbofish: Option<MethodTurbofish>,
+        pub paren_token: token::Paren,
+        pub args: Punctuated<Expr, Token![,]>,
+    }
+}
+
+ast_struct! {
+    /// A parenthesized expression: `(a + b)`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprParen {
+        pub attrs: Vec<Attribute>,
+        pub paren_token: token::Paren,
+        pub expr: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A path like `std::mem::replace` possibly containing generic
+    /// parameters and a qualified self-type.
+    ///
+    /// A plain identifier like `x` is a path of length 1.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct ExprPath {
+        pub attrs: Vec<Attribute>,
+        pub qself: Option<QSelf>,
+        pub path: Path,
+    }
+}
+
+ast_struct! {
+    /// A range expression: `1..2`, `1..`, `..2`, `1..=2`, `..=2`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprRange #full {
+        pub attrs: Vec<Attribute>,
+        pub from: Option<Box<Expr>>,
+        pub limits: RangeLimits,
+        pub to: Option<Box<Expr>>,
+    }
+}
+
+ast_struct! {
+    /// A referencing operation: `&a` or `&mut a`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprReference #full {
+        pub attrs: Vec<Attribute>,
+        pub and_token: Token![&],
+        pub raw: Reserved,
+        pub mutability: Option<Token![mut]>,
+        pub expr: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// An array literal constructed from one repeated element: `[0u8; N]`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprRepeat #full {
+        pub attrs: Vec<Attribute>,
+        pub bracket_token: token::Bracket,
+        pub expr: Box<Expr>,
+        pub semi_token: Token![;],
+        pub len: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// A `return`, with an optional value to be returned.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprReturn #full {
+        pub attrs: Vec<Attribute>,
+        pub return_token: Token![return],
+        pub expr: Option<Box<Expr>>,
+    }
+}
+
+ast_struct! {
+    /// A struct literal expression: `Point { x: 1, y: 1 }`.
+    ///
+    /// The `rest` provides the value of the remaining fields as in `S { a:
+    /// 1, b: 1, ..rest }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprStruct #full {
+        pub attrs: Vec<Attribute>,
+        pub path: Path,
+        pub brace_token: token::Brace,
+        pub fields: Punctuated<FieldValue, Token![,]>,
+        pub dot2_token: Option<Token![..]>,
+        pub rest: Option<Box<Expr>>,
+    }
+}
+
+ast_struct! {
+    /// A try-expression: `expr?`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprTry #full {
+        pub attrs: Vec<Attribute>,
+        pub expr: Box<Expr>,
+        pub question_token: Token![?],
+    }
+}
+
+ast_struct! {
+    /// A try block: `try { ... }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprTryBlock #full {
+        pub attrs: Vec<Attribute>,
+        pub try_token: Token![try],
+        pub block: Block,
+    }
+}
+
+ast_struct! {
+    /// A tuple expression: `(a, b, c, d)`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprTuple #full {
+        pub attrs: Vec<Attribute>,
+        pub paren_token: token::Paren,
+        pub elems: Punctuated<Expr, Token![,]>,
+    }
+}
+
+ast_struct! {
+    /// A type ascription expression: `foo: f64`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprType #full {
+        pub attrs: Vec<Attribute>,
+        pub expr: Box<Expr>,
+        pub colon_token: Token![:],
+        pub ty: Box<Type>,
+    }
+}
+
+ast_struct! {
+    /// A unary operation: `!x`, `*x`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct ExprUnary {
+        pub attrs: Vec<Attribute>,
+        pub op: UnOp,
+        pub expr: Box<Expr>,
+    }
+}
+
+ast_struct! {
+    /// An unsafe block: `unsafe { ... }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprUnsafe #full {
+        pub attrs: Vec<Attribute>,
+        pub unsafe_token: Token![unsafe],
+        pub block: Block,
+    }
+}
+
+ast_struct! {
+    /// A while loop: `while expr { ... }`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprWhile #full {
+        pub attrs: Vec<Attribute>,
+        pub label: Option<Label>,
+        pub while_token: Token![while],
+        pub cond: Box<Expr>,
+        pub body: Block,
+    }
+}
+
+ast_struct! {
+    /// A yield expression: `yield expr`.
+    ///
+    /// *This type is available if Syn is built with the `"full"` feature.*
+    pub struct ExprYield #full {
+        pub attrs: Vec<Attribute>,
+        pub yield_token: Token![yield],
+        pub expr: Option<Box<Expr>>,
     }
 }
 
 #[cfg(feature = "extra-traits")]
-impl Eq for ExprVerbatim {}
+impl Eq for Expr {}
 
 #[cfg(feature = "extra-traits")]
-impl PartialEq for ExprVerbatim {
+impl PartialEq for Expr {
     fn eq(&self, other: &Self) -> bool {
-        TokenStreamHelper(&self.tts) == TokenStreamHelper(&other.tts)
+        match (self, other) {
+            (Expr::Array(this), Expr::Array(other)) => this == other,
+            (Expr::Assign(this), Expr::Assign(other)) => this == other,
+            (Expr::AssignOp(this), Expr::AssignOp(other)) => this == other,
+            (Expr::Async(this), Expr::Async(other)) => this == other,
+            (Expr::Await(this), Expr::Await(other)) => this == other,
+            (Expr::Binary(this), Expr::Binary(other)) => this == other,
+            (Expr::Block(this), Expr::Block(other)) => this == other,
+            (Expr::Box(this), Expr::Box(other)) => this == other,
+            (Expr::Break(this), Expr::Break(other)) => this == other,
+            (Expr::Call(this), Expr::Call(other)) => this == other,
+            (Expr::Cast(this), Expr::Cast(other)) => this == other,
+            (Expr::Closure(this), Expr::Closure(other)) => this == other,
+            (Expr::Continue(this), Expr::Continue(other)) => this == other,
+            (Expr::Field(this), Expr::Field(other)) => this == other,
+            (Expr::ForLoop(this), Expr::ForLoop(other)) => this == other,
+            (Expr::Group(this), Expr::Group(other)) => this == other,
+            (Expr::If(this), Expr::If(other)) => this == other,
+            (Expr::Index(this), Expr::Index(other)) => this == other,
+            (Expr::Let(this), Expr::Let(other)) => this == other,
+            (Expr::Lit(this), Expr::Lit(other)) => this == other,
+            (Expr::Loop(this), Expr::Loop(other)) => this == other,
+            (Expr::Macro(this), Expr::Macro(other)) => this == other,
+            (Expr::Match(this), Expr::Match(other)) => this == other,
+            (Expr::MethodCall(this), Expr::MethodCall(other)) => this == other,
+            (Expr::Paren(this), Expr::Paren(other)) => this == other,
+            (Expr::Path(this), Expr::Path(other)) => this == other,
+            (Expr::Range(this), Expr::Range(other)) => this == other,
+            (Expr::Reference(this), Expr::Reference(other)) => this == other,
+            (Expr::Repeat(this), Expr::Repeat(other)) => this == other,
+            (Expr::Return(this), Expr::Return(other)) => this == other,
+            (Expr::Struct(this), Expr::Struct(other)) => this == other,
+            (Expr::Try(this), Expr::Try(other)) => this == other,
+            (Expr::TryBlock(this), Expr::TryBlock(other)) => this == other,
+            (Expr::Tuple(this), Expr::Tuple(other)) => this == other,
+            (Expr::Type(this), Expr::Type(other)) => this == other,
+            (Expr::Unary(this), Expr::Unary(other)) => this == other,
+            (Expr::Unsafe(this), Expr::Unsafe(other)) => this == other,
+            (Expr::Verbatim(this), Expr::Verbatim(other)) => {
+                TokenStreamHelper(this) == TokenStreamHelper(other)
+            }
+            (Expr::While(this), Expr::While(other)) => this == other,
+            (Expr::Yield(this), Expr::Yield(other)) => this == other,
+            _ => false,
+        }
     }
 }
 
 #[cfg(feature = "extra-traits")]
-impl Hash for ExprVerbatim {
-    fn hash<H>(&self, state: &mut H)
+impl Hash for Expr {
+    fn hash<H>(&self, hash: &mut H)
     where
         H: Hasher,
     {
-        TokenStreamHelper(&self.tts).hash(state);
+        match self {
+            Expr::Array(expr) => {
+                hash.write_u8(0);
+                expr.hash(hash);
+            }
+            Expr::Assign(expr) => {
+                hash.write_u8(1);
+                expr.hash(hash);
+            }
+            Expr::AssignOp(expr) => {
+                hash.write_u8(2);
+                expr.hash(hash);
+            }
+            Expr::Async(expr) => {
+                hash.write_u8(3);
+                expr.hash(hash);
+            }
+            Expr::Await(expr) => {
+                hash.write_u8(4);
+                expr.hash(hash);
+            }
+            Expr::Binary(expr) => {
+                hash.write_u8(5);
+                expr.hash(hash);
+            }
+            Expr::Block(expr) => {
+                hash.write_u8(6);
+                expr.hash(hash);
+            }
+            Expr::Box(expr) => {
+                hash.write_u8(7);
+                expr.hash(hash);
+            }
+            Expr::Break(expr) => {
+                hash.write_u8(8);
+                expr.hash(hash);
+            }
+            Expr::Call(expr) => {
+                hash.write_u8(9);
+                expr.hash(hash);
+            }
+            Expr::Cast(expr) => {
+                hash.write_u8(10);
+                expr.hash(hash);
+            }
+            Expr::Closure(expr) => {
+                hash.write_u8(11);
+                expr.hash(hash);
+            }
+            Expr::Continue(expr) => {
+                hash.write_u8(12);
+                expr.hash(hash);
+            }
+            Expr::Field(expr) => {
+                hash.write_u8(13);
+                expr.hash(hash);
+            }
+            Expr::ForLoop(expr) => {
+                hash.write_u8(14);
+                expr.hash(hash);
+            }
+            Expr::Group(expr) => {
+                hash.write_u8(15);
+                expr.hash(hash);
+            }
+            Expr::If(expr) => {
+                hash.write_u8(16);
+                expr.hash(hash);
+            }
+            Expr::Index(expr) => {
+                hash.write_u8(17);
+                expr.hash(hash);
+            }
+            Expr::Let(expr) => {
+                hash.write_u8(18);
+                expr.hash(hash);
+            }
+            Expr::Lit(expr) => {
+                hash.write_u8(19);
+                expr.hash(hash);
+            }
+            Expr::Loop(expr) => {
+                hash.write_u8(20);
+                expr.hash(hash);
+            }
+            Expr::Macro(expr) => {
+                hash.write_u8(21);
+                expr.hash(hash);
+            }
+            Expr::Match(expr) => {
+                hash.write_u8(22);
+                expr.hash(hash);
+            }
+            Expr::MethodCall(expr) => {
+                hash.write_u8(23);
+                expr.hash(hash);
+            }
+            Expr::Paren(expr) => {
+                hash.write_u8(24);
+                expr.hash(hash);
+            }
+            Expr::Path(expr) => {
+                hash.write_u8(25);
+                expr.hash(hash);
+            }
+            Expr::Range(expr) => {
+                hash.write_u8(26);
+                expr.hash(hash);
+            }
+            Expr::Reference(expr) => {
+                hash.write_u8(27);
+                expr.hash(hash);
+            }
+            Expr::Repeat(expr) => {
+                hash.write_u8(28);
+                expr.hash(hash);
+            }
+            Expr::Return(expr) => {
+                hash.write_u8(29);
+                expr.hash(hash);
+            }
+            Expr::Struct(expr) => {
+                hash.write_u8(30);
+                expr.hash(hash);
+            }
+            Expr::Try(expr) => {
+                hash.write_u8(31);
+                expr.hash(hash);
+            }
+            Expr::TryBlock(expr) => {
+                hash.write_u8(32);
+                expr.hash(hash);
+            }
+            Expr::Tuple(expr) => {
+                hash.write_u8(33);
+                expr.hash(hash);
+            }
+            Expr::Type(expr) => {
+                hash.write_u8(34);
+                expr.hash(hash);
+            }
+            Expr::Unary(expr) => {
+                hash.write_u8(35);
+                expr.hash(hash);
+            }
+            Expr::Unsafe(expr) => {
+                hash.write_u8(36);
+                expr.hash(hash);
+            }
+            Expr::Verbatim(expr) => {
+                hash.write_u8(37);
+                TokenStreamHelper(expr).hash(hash);
+            }
+            Expr::While(expr) => {
+                hash.write_u8(38);
+                expr.hash(hash);
+            }
+            Expr::Yield(expr) => {
+                hash.write_u8(39);
+                expr.hash(hash);
+            }
+            Expr::__Nonexhaustive => unreachable!(),
+        }
     }
 }
 
 impl Expr {
     #[cfg(all(feature = "parsing", feature = "full"))]
-    fn replace_attrs(&mut self, new: Vec<Attribute>) -> Vec<Attribute> {
-        match *self {
-            Expr::Box(ExprBox { ref mut attrs, .. })
-            | Expr::InPlace(ExprInPlace { ref mut attrs, .. })
-            | Expr::Array(ExprArray { ref mut attrs, .. })
-            | Expr::Call(ExprCall { ref mut attrs, .. })
-            | Expr::MethodCall(ExprMethodCall { ref mut attrs, .. })
-            | Expr::Tuple(ExprTuple { ref mut attrs, .. })
-            | Expr::Binary(ExprBinary { ref mut attrs, .. })
-            | Expr::Unary(ExprUnary { ref mut attrs, .. })
-            | Expr::Lit(ExprLit { ref mut attrs, .. })
-            | Expr::Cast(ExprCast { ref mut attrs, .. })
-            | Expr::Type(ExprType { ref mut attrs, .. })
-            | Expr::Let(ExprLet { ref mut attrs, .. })
-            | Expr::If(ExprIf { ref mut attrs, .. })
-            | Expr::While(ExprWhile { ref mut attrs, .. })
-            | Expr::ForLoop(ExprForLoop { ref mut attrs, .. })
-            | Expr::Loop(ExprLoop { ref mut attrs, .. })
-            | Expr::Match(ExprMatch { ref mut attrs, .. })
-            | Expr::Closure(ExprClosure { ref mut attrs, .. })
-            | Expr::Unsafe(ExprUnsafe { ref mut attrs, .. })
-            | Expr::Block(ExprBlock { ref mut attrs, .. })
-            | Expr::Assign(ExprAssign { ref mut attrs, .. })
-            | Expr::AssignOp(ExprAssignOp { ref mut attrs, .. })
-            | Expr::Field(ExprField { ref mut attrs, .. })
-            | Expr::Index(ExprIndex { ref mut attrs, .. })
-            | Expr::Range(ExprRange { ref mut attrs, .. })
-            | Expr::Path(ExprPath { ref mut attrs, .. })
-            | Expr::Reference(ExprReference { ref mut attrs, .. })
-            | Expr::Break(ExprBreak { ref mut attrs, .. })
-            | Expr::Continue(ExprContinue { ref mut attrs, .. })
-            | Expr::Return(ExprReturn { ref mut attrs, .. })
-            | Expr::Macro(ExprMacro { ref mut attrs, .. })
-            | Expr::Struct(ExprStruct { ref mut attrs, .. })
-            | Expr::Repeat(ExprRepeat { ref mut attrs, .. })
-            | Expr::Paren(ExprParen { ref mut attrs, .. })
-            | Expr::Group(ExprGroup { ref mut attrs, .. })
-            | Expr::Try(ExprTry { ref mut attrs, .. })
-            | Expr::Async(ExprAsync { ref mut attrs, .. })
-            | Expr::TryBlock(ExprTryBlock { ref mut attrs, .. })
-            | Expr::Yield(ExprYield { ref mut attrs, .. }) => mem::replace(attrs, new),
+    pub(crate) fn replace_attrs(&mut self, new: Vec<Attribute>) -> Vec<Attribute> {
+        match self {
+            Expr::Box(ExprBox { attrs, .. })
+            | Expr::Array(ExprArray { attrs, .. })
+            | Expr::Call(ExprCall { attrs, .. })
+            | Expr::MethodCall(ExprMethodCall { attrs, .. })
+            | Expr::Tuple(ExprTuple { attrs, .. })
+            | Expr::Binary(ExprBinary { attrs, .. })
+            | Expr::Unary(ExprUnary { attrs, .. })
+            | Expr::Lit(ExprLit { attrs, .. })
+            | Expr::Cast(ExprCast { attrs, .. })
+            | Expr::Type(ExprType { attrs, .. })
+            | Expr::Let(ExprLet { attrs, .. })
+            | Expr::If(ExprIf { attrs, .. })
+            | Expr::While(ExprWhile { attrs, .. })
+            | Expr::ForLoop(ExprForLoop { attrs, .. })
+            | Expr::Loop(ExprLoop { attrs, .. })
+            | Expr::Match(ExprMatch { attrs, .. })
+            | Expr::Closure(ExprClosure { attrs, .. })
+            | Expr::Unsafe(ExprUnsafe { attrs, .. })
+            | Expr::Block(ExprBlock { attrs, .. })
+            | Expr::Assign(ExprAssign { attrs, .. })
+            | Expr::AssignOp(ExprAssignOp { attrs, .. })
+            | Expr::Field(ExprField { attrs, .. })
+            | Expr::Index(ExprIndex { attrs, .. })
+            | Expr::Range(ExprRange { attrs, .. })
+            | Expr::Path(ExprPath { attrs, .. })
+            | Expr::Reference(ExprReference { attrs, .. })
+            | Expr::Break(ExprBreak { attrs, .. })
+            | Expr::Continue(ExprContinue { attrs, .. })
+            | Expr::Return(ExprReturn { attrs, .. })
+            | Expr::Macro(ExprMacro { attrs, .. })
+            | Expr::Struct(ExprStruct { attrs, .. })
+            | Expr::Repeat(ExprRepeat { attrs, .. })
+            | Expr::Paren(ExprParen { attrs, .. })
+            | Expr::Group(ExprGroup { attrs, .. })
+            | Expr::Try(ExprTry { attrs, .. })
+            | Expr::Async(ExprAsync { attrs, .. })
+            | Expr::Await(ExprAwait { attrs, .. })
+            | Expr::TryBlock(ExprTryBlock { attrs, .. })
+            | Expr::Yield(ExprYield { attrs, .. }) => mem::replace(attrs, new),
             Expr::Verbatim(_) => Vec::new(),
+            Expr::__Nonexhaustive => unreachable!(),
         }
     }
 }
@@ -636,6 +1041,14 @@ impl PartialEq for Index {
 impl Hash for Index {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.index.hash(state);
+    }
+}
+
+#[cfg(feature = "full")]
+ast_struct! {
+    #[derive(Default)]
+    pub struct Reserved {
+        private: (),
     }
 }
 
@@ -703,215 +1116,11 @@ ast_struct! {
 
 #[cfg(feature = "full")]
 ast_struct! {
-    /// A braced block containing Rust statements.
-    ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
-    pub struct Block {
-        pub brace_token: token::Brace,
-        /// Statements in a block
-        pub stmts: Vec<Stmt>,
-    }
-}
-
-#[cfg(feature = "full")]
-ast_enum! {
-    /// A statement, usually ending in a semicolon.
-    ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
-    pub enum Stmt {
-        /// A local (let) binding.
-        Local(Local),
-
-        /// An item definition.
-        Item(Item),
-
-        /// Expr without trailing semicolon.
-        Expr(Expr),
-
-        /// Expression with trailing semicolon.
-        Semi(Expr, Token![;]),
-    }
-}
-
-#[cfg(feature = "full")]
-ast_struct! {
-    /// A local `let` binding: `let x: u64 = s.parse()?`.
-    ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
-    pub struct Local {
-        pub attrs: Vec<Attribute>,
-        pub let_token: Token![let],
-        pub pats: Punctuated<Pat, Token![|]>,
-        pub ty: Option<(Token![:], Box<Type>)>,
-        pub init: Option<(Token![=], Box<Expr>)>,
-        pub semi_token: Token![;],
-    }
-}
-
-#[cfg(feature = "full")]
-ast_enum_of_structs! {
-    /// A pattern in a local binding, function signature, match expression, or
-    /// various other places.
-    ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
-    ///
-    /// # Syntax tree enum
-    ///
-    /// This type is a [syntax tree enum].
-    ///
-    /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
-    pub enum Pat {
-        /// A pattern that matches any value: `_`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Wild(PatWild {
-            pub underscore_token: Token![_],
-        }),
-
-        /// A pattern that binds a new variable: `ref mut binding @ SUBPATTERN`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Ident(PatIdent {
-            pub by_ref: Option<Token![ref]>,
-            pub mutability: Option<Token![mut]>,
-            pub ident: Ident,
-            pub subpat: Option<(Token![@], Box<Pat>)>,
-        }),
-
-        /// A struct or struct variant pattern: `Variant { x, y, .. }`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Struct(PatStruct {
-            pub path: Path,
-            pub brace_token: token::Brace,
-            pub fields: Punctuated<FieldPat, Token![,]>,
-            pub dot2_token: Option<Token![..]>,
-        }),
-
-        /// A tuple struct or tuple variant pattern: `Variant(x, y, .., z)`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub TupleStruct(PatTupleStruct {
-            pub path: Path,
-            pub pat: PatTuple,
-        }),
-
-        /// A path pattern like `Color::Red`, optionally qualified with a
-        /// self-type.
-        ///
-        /// Unqualified path patterns can legally refer to variants, structs,
-        /// constants or associated constants. Qualified path patterns like
-        /// `<A>::B::C` and `<A as Trait>::B::C` can only legally refer to
-        /// associated constants.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Path(PatPath {
-            pub qself: Option<QSelf>,
-            pub path: Path,
-        }),
-
-        /// A tuple pattern: `(a, b)`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Tuple(PatTuple {
-            pub paren_token: token::Paren,
-            pub front: Punctuated<Pat, Token![,]>,
-            pub dot2_token: Option<Token![..]>,
-            pub comma_token: Option<Token![,]>,
-            pub back: Punctuated<Pat, Token![,]>,
-        }),
-
-        /// A box pattern: `box v`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Box(PatBox {
-            pub box_token: Token![box],
-            pub pat: Box<Pat>,
-        }),
-
-        /// A reference pattern: `&mut (first, second)`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Ref(PatRef {
-            pub and_token: Token![&],
-            pub mutability: Option<Token![mut]>,
-            pub pat: Box<Pat>,
-        }),
-
-        /// A literal pattern: `0`.
-        ///
-        /// This holds an `Expr` rather than a `Lit` because negative numbers
-        /// are represented as an `Expr::Unary`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Lit(PatLit {
-            pub expr: Box<Expr>,
-        }),
-
-        /// A range pattern: `1..=2`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Range(PatRange {
-            pub lo: Box<Expr>,
-            pub limits: RangeLimits,
-            pub hi: Box<Expr>,
-        }),
-
-        /// A dynamically sized slice pattern: `[a, b, i.., y, z]`.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Slice(PatSlice {
-            pub bracket_token: token::Bracket,
-            pub front: Punctuated<Pat, Token![,]>,
-            pub middle: Option<Box<Pat>>,
-            pub dot2_token: Option<Token![..]>,
-            pub comma_token: Option<Token![,]>,
-            pub back: Punctuated<Pat, Token![,]>,
-        }),
-
-        /// A macro in expression position.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Macro(PatMacro {
-            pub mac: Macro,
-        }),
-
-        /// Tokens in pattern position not interpreted by Syn.
-        ///
-        /// *This type is available if Syn is built with the `"full"` feature.*
-        pub Verbatim(PatVerbatim #manual_extra_traits {
-            pub tts: TokenStream,
-        }),
-    }
-}
-
-#[cfg(all(feature = "full", feature = "extra-traits"))]
-impl Eq for PatVerbatim {}
-
-#[cfg(all(feature = "full", feature = "extra-traits"))]
-impl PartialEq for PatVerbatim {
-    fn eq(&self, other: &Self) -> bool {
-        TokenStreamHelper(&self.tts) == TokenStreamHelper(&other.tts)
-    }
-}
-
-#[cfg(all(feature = "full", feature = "extra-traits"))]
-impl Hash for PatVerbatim {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        TokenStreamHelper(&self.tts).hash(state);
-    }
-}
-
-#[cfg(feature = "full")]
-ast_struct! {
     /// One arm of a `match` expression: `0...10 => { return true; }`.
     ///
     /// As in:
     ///
-    /// ```edition2018
+    /// ```
     /// # fn f() -> bool {
     /// #     let n = 0;
     /// match n {
@@ -928,8 +1137,7 @@ ast_struct! {
     /// *This type is available if Syn is built with the `"full"` feature.*
     pub struct Arm {
         pub attrs: Vec<Attribute>,
-        pub leading_vert: Option<Token![|]>,
-        pub pats: Punctuated<Pat, Token![|]>,
+        pub pat: Pat,
         pub guard: Option<(Token![if], Box<Expr>)>,
         pub fat_arrow_token: Token![=>],
         pub body: Box<Expr>,
@@ -951,25 +1159,9 @@ ast_enum! {
     }
 }
 
-#[cfg(feature = "full")]
-ast_struct! {
-    /// A single field in a struct pattern.
-    ///
-    /// Patterns like the fields of Foo `{ x, ref y, ref mut z }` are treated
-    /// the same as `x: x, y: ref y, z: ref mut z` but there is no colon token.
-    ///
-    /// *This type is available if Syn is built with the `"full"` feature.*
-    pub struct FieldPat {
-        pub attrs: Vec<Attribute>,
-        pub member: Member,
-        pub colon_token: Option<Token![:]>,
-        pub pat: Box<Pat>,
-    }
-}
-
 #[cfg(any(feature = "parsing", feature = "printing"))]
 #[cfg(feature = "full")]
-fn requires_terminator(expr: &Expr) -> bool {
+pub(crate) fn requires_terminator(expr: &Expr) -> bool {
     // see https://github.com/rust-lang/rust/blob/eb8f2586e/src/libsyntax/parse/classify.rs#L17-L37
     match *expr {
         Expr::Unsafe(..)
@@ -986,13 +1178,11 @@ fn requires_terminator(expr: &Expr) -> bool {
 }
 
 #[cfg(feature = "parsing")]
-pub mod parsing {
+pub(crate) mod parsing {
     use super::*;
 
-    #[cfg(feature = "full")]
-    use ext::IdentExt;
-    use parse::{Parse, ParseStream, Result};
-    use path;
+    use crate::parse::{Parse, ParseStream, Result};
+    use crate::path;
 
     // When we're parsing expressions which occur before blocks, like in an if
     // statement's condition, we cannot parse a struct literal.
@@ -1006,7 +1196,6 @@ pub mod parsing {
     enum Precedence {
         Any,
         Assign,
-        Placement,
         Range,
         Or,
         And,
@@ -1091,14 +1280,14 @@ pub mod parsing {
                     Expr::AssignOp(ExprAssignOp {
                         attrs: Vec::new(),
                         left: Box::new(lhs),
-                        op: op,
+                        op,
                         right: Box::new(rhs),
                     })
                 } else {
                     Expr::Binary(ExprBinary {
                         attrs: Vec::new(),
                         left: Box::new(lhs),
-                        op: op,
+                        op,
                         right: Box::new(rhs),
                     })
                 };
@@ -1120,25 +1309,8 @@ pub mod parsing {
                 lhs = Expr::Assign(ExprAssign {
                     attrs: Vec::new(),
                     left: Box::new(lhs),
-                    eq_token: eq_token,
+                    eq_token,
                     right: Box::new(rhs),
-                });
-            } else if Precedence::Placement >= base && input.peek(Token![<-]) {
-                let arrow_token: Token![<-] = input.parse()?;
-                let mut rhs = unary_expr(input, allow_struct)?;
-                loop {
-                    let next = peek_precedence(input);
-                    if next > Precedence::Placement {
-                        rhs = parse_expr(input, rhs, allow_struct, next)?;
-                    } else {
-                        break;
-                    }
-                }
-                lhs = Expr::InPlace(ExprInPlace {
-                    attrs: Vec::new(),
-                    place: Box::new(lhs),
-                    arrow_token: arrow_token,
-                    value: Box::new(rhs),
                 });
             } else if Precedence::Range >= base && input.peek(Token![..]) {
                 let limits: RangeLimits = input.parse()?;
@@ -1163,7 +1335,7 @@ pub mod parsing {
                 lhs = Expr::Range(ExprRange {
                     attrs: Vec::new(),
                     from: Some(Box::new(lhs)),
-                    limits: limits,
+                    limits,
                     to: rhs.map(Box::new),
                 });
             } else if Precedence::Cast >= base && input.peek(Token![as]) {
@@ -1172,7 +1344,7 @@ pub mod parsing {
                 lhs = Expr::Cast(ExprCast {
                     attrs: Vec::new(),
                     expr: Box::new(lhs),
-                    as_token: as_token,
+                    as_token,
                     ty: Box::new(ty),
                 });
             } else if Precedence::Cast >= base && input.peek(Token![:]) && !input.peek(Token![::]) {
@@ -1181,7 +1353,7 @@ pub mod parsing {
                 lhs = Expr::Type(ExprType {
                     attrs: Vec::new(),
                     expr: Box::new(lhs),
-                    colon_token: colon_token,
+                    colon_token,
                     ty: Box::new(ty),
                 });
             } else {
@@ -1219,7 +1391,7 @@ pub mod parsing {
                 lhs = Expr::Binary(ExprBinary {
                     attrs: Vec::new(),
                     left: Box::new(lhs),
-                    op: op,
+                    op,
                     right: Box::new(rhs),
                 });
             } else if Precedence::Cast >= base && input.peek(Token![as]) {
@@ -1228,7 +1400,7 @@ pub mod parsing {
                 lhs = Expr::Cast(ExprCast {
                     attrs: Vec::new(),
                     expr: Box::new(lhs),
-                    as_token: as_token,
+                    as_token,
                     ty: Box::new(ty),
                 });
             } else {
@@ -1243,8 +1415,6 @@ pub mod parsing {
             Precedence::of(&op)
         } else if input.peek(Token![=]) && !input.peek(Token![=>]) {
             Precedence::Assign
-        } else if input.peek(Token![<-]) {
-            Precedence::Placement
         } else if input.peek(Token![..]) {
             Precedence::Range
         } else if input.peek(Token![as]) || input.peek(Token![:]) && !input.peek(Token![::]) {
@@ -1266,6 +1436,7 @@ pub mod parsing {
     // box <trailer>
     #[cfg(feature = "full")]
     fn unary_expr(input: ParseStream, allow_struct: AllowStruct) -> Result<Expr> {
+        // TODO: optimize using advance_to
         let ahead = input.fork();
         ahead.call(Attribute::parse_outer)?;
         if ahead.peek(Token![&])
@@ -1277,20 +1448,21 @@ pub mod parsing {
             let attrs = input.call(Attribute::parse_outer)?;
             if input.peek(Token![&]) {
                 Ok(Expr::Reference(ExprReference {
-                    attrs: attrs,
+                    attrs,
                     and_token: input.parse()?,
+                    raw: Reserved::default(),
                     mutability: input.parse()?,
                     expr: Box::new(unary_expr(input, allow_struct)?),
                 }))
             } else if input.peek(Token![box]) {
                 Ok(Expr::Box(ExprBox {
-                    attrs: attrs,
+                    attrs,
                     box_token: input.parse()?,
                     expr: Box::new(unary_expr(input, allow_struct)?),
                 }))
             } else {
                 Ok(Expr::Unary(ExprUnary {
-                    attrs: attrs,
+                    attrs,
                     op: input.parse()?,
                     expr: Box::new(unary_expr(input, allow_struct)?),
                 }))
@@ -1302,6 +1474,7 @@ pub mod parsing {
 
     #[cfg(not(feature = "full"))]
     fn unary_expr(input: ParseStream, allow_struct: AllowStruct) -> Result<Expr> {
+        // TODO: optimize using advance_to
         let ahead = input.fork();
         ahead.call(Attribute::parse_outer)?;
         if ahead.peek(Token![*]) || ahead.peek(Token![!]) || ahead.peek(Token![-]) {
@@ -1351,6 +1524,17 @@ pub mod parsing {
                 });
             } else if input.peek(Token![.]) && !input.peek(Token![..]) {
                 let dot_token: Token![.] = input.parse()?;
+
+                if input.peek(token::Await) {
+                    e = Expr::Await(ExprAwait {
+                        attrs: Vec::new(),
+                        base: Box::new(e),
+                        dot_token,
+                        await_token: input.parse()?,
+                    });
+                    continue;
+                }
+
                 let member: Member = input.parse()?;
                 let turbofish = if member.is_named() && input.peek(Token![::]) {
                     Some(MethodTurbofish {
@@ -1384,9 +1568,9 @@ pub mod parsing {
                         e = Expr::MethodCall(ExprMethodCall {
                             attrs: Vec::new(),
                             receiver: Box::new(e),
-                            dot_token: dot_token,
-                            method: method,
-                            turbofish: turbofish,
+                            dot_token,
+                            method,
+                            turbofish,
                             paren_token: parenthesized!(content in input),
                             args: content.parse_terminated(Expr::parse)?,
                         });
@@ -1397,8 +1581,8 @@ pub mod parsing {
                 e = Expr::Field(ExprField {
                     attrs: Vec::new(),
                     base: Box::new(e),
-                    dot_token: dot_token,
-                    member: member,
+                    dot_token,
+                    member,
                 });
             } else if input.peek(token::Bracket) {
                 let content;
@@ -1434,7 +1618,8 @@ pub mod parsing {
                     paren_token: parenthesized!(content in input),
                     args: content.parse_terminated(Expr::parse)?,
                 });
-            } else if input.peek(Token![.]) {
+            } else if input.peek(Token![.]) && !input.peek(Token![..]) && !input.peek2(token::Await)
+            {
                 e = Expr::Field(ExprField {
                     attrs: Vec::new(),
                     base: Box::new(e),
@@ -1464,7 +1649,7 @@ pub mod parsing {
         if input.peek(token::Group) {
             input.call(expr_group).map(Expr::Group)
         } else if input.peek(Lit) {
-            input.call(expr_lit).map(Expr::Lit)
+            input.parse().map(Expr::Lit)
         } else if input.peek(Token![async])
             && (input.peek2(token::Brace) || input.peek2(Token![move]) && input.peek3(token::Brace))
         {
@@ -1500,13 +1685,13 @@ pub mod parsing {
         } else if input.peek(Token![let]) {
             input.call(expr_let).map(Expr::Let)
         } else if input.peek(Token![if]) {
-            input.call(expr_if).map(Expr::If)
+            input.parse().map(Expr::If)
         } else if input.peek(Token![while]) {
-            input.call(expr_while).map(Expr::While)
+            input.parse().map(Expr::While)
         } else if input.peek(Token![for]) {
-            input.call(expr_for_loop).map(Expr::ForLoop)
+            input.parse().map(Expr::ForLoop)
         } else if input.peek(Token![loop]) {
-            input.call(expr_loop).map(Expr::Loop)
+            input.parse().map(Expr::Loop)
         } else if input.peek(Token![match]) {
             input.parse().map(Expr::Match)
         } else if input.peek(Token![yield]) {
@@ -1520,21 +1705,21 @@ pub mod parsing {
         } else if input.peek(Lifetime) {
             let the_label: Label = input.parse()?;
             let mut expr = if input.peek(Token![while]) {
-                Expr::While(input.call(expr_while)?)
+                Expr::While(input.parse()?)
             } else if input.peek(Token![for]) {
-                Expr::ForLoop(input.call(expr_for_loop)?)
+                Expr::ForLoop(input.parse()?)
             } else if input.peek(Token![loop]) {
-                Expr::Loop(input.call(expr_loop)?)
+                Expr::Loop(input.parse()?)
             } else if input.peek(token::Brace) {
                 Expr::Block(input.call(expr_block)?)
             } else {
                 return Err(input.error("expected loop or block expression"));
             };
-            match expr {
-                Expr::While(ExprWhile { ref mut label, .. })
-                | Expr::ForLoop(ExprForLoop { ref mut label, .. })
-                | Expr::Loop(ExprLoop { ref mut label, .. })
-                | Expr::Block(ExprBlock { ref mut label, .. }) => *label = Some(the_label),
+            match &mut expr {
+                Expr::While(ExprWhile { label, .. })
+                | Expr::ForLoop(ExprForLoop { label, .. })
+                | Expr::Loop(ExprLoop { label, .. })
+                | Expr::Block(ExprBlock { label, .. }) => *label = Some(the_label),
                 _ => unreachable!(),
             }
             Ok(expr)
@@ -1546,7 +1731,7 @@ pub mod parsing {
     #[cfg(not(feature = "full"))]
     fn atom_expr(input: ParseStream, _allow_struct: AllowStruct) -> Result<Expr> {
         if input.peek(Lit) {
-            input.call(expr_lit).map(Expr::Lit)
+            input.parse().map(Expr::Lit)
         } else if input.peek(token::Paren) {
             input.call(expr_paren).map(Expr::Paren)
         } else if input.peek(Ident)
@@ -1584,14 +1769,14 @@ pub mod parsing {
 
             if !contains_arguments {
                 let bang_token: Token![!] = input.parse()?;
-                let (delimiter, tts) = mac::parse_delimiter(input)?;
+                let (delimiter, tokens) = mac::parse_delimiter(input)?;
                 return Ok(Expr::Macro(ExprMacro {
                     attrs: Vec::new(),
                     mac: Macro {
                         path: expr.path,
-                        bang_token: bang_token,
-                        delimiter: delimiter,
-                        tts: tts,
+                        bang_token,
+                        delimiter,
+                        tokens,
                     },
                 }));
             }
@@ -1613,7 +1798,7 @@ pub mod parsing {
         if content.is_empty() {
             return Ok(Expr::Tuple(ExprTuple {
                 attrs: inner_attrs,
-                paren_token: paren_token,
+                paren_token,
                 elems: Punctuated::new(),
             }));
         }
@@ -1622,7 +1807,7 @@ pub mod parsing {
         if content.is_empty() {
             return Ok(Expr::Paren(ExprParen {
                 attrs: inner_attrs,
-                paren_token: paren_token,
+                paren_token,
                 expr: Box::new(first),
             }));
         }
@@ -1640,8 +1825,8 @@ pub mod parsing {
         }
         Ok(Expr::Tuple(ExprTuple {
             attrs: inner_attrs,
-            paren_token: paren_token,
-            elems: elems,
+            paren_token,
+            elems,
         }))
     }
 
@@ -1653,7 +1838,7 @@ pub mod parsing {
         if content.is_empty() {
             return Ok(Expr::Array(ExprArray {
                 attrs: inner_attrs,
-                bracket_token: bracket_token,
+                bracket_token,
                 elems: Punctuated::new(),
             }));
         }
@@ -1673,17 +1858,17 @@ pub mod parsing {
             }
             Ok(Expr::Array(ExprArray {
                 attrs: inner_attrs,
-                bracket_token: bracket_token,
-                elems: elems,
+                bracket_token,
+                elems,
             }))
         } else if content.peek(Token![;]) {
             let semi_token: Token![;] = content.parse()?;
             let len: Expr = content.parse()?;
             Ok(Expr::Repeat(ExprRepeat {
                 attrs: inner_attrs,
-                bracket_token: bracket_token,
+                bracket_token,
                 expr: Box::new(first),
-                semi_token: semi_token,
+                semi_token,
                 len: Box::new(len),
             }))
         } else {
@@ -1692,16 +1877,16 @@ pub mod parsing {
     }
 
     #[cfg(feature = "full")]
-    fn expr_early(input: ParseStream) -> Result<Expr> {
+    pub(crate) fn expr_early(input: ParseStream) -> Result<Expr> {
         let mut attrs = input.call(Attribute::parse_outer)?;
         let mut expr = if input.peek(Token![if]) {
-            Expr::If(input.call(expr_if)?)
+            Expr::If(input.parse()?)
         } else if input.peek(Token![while]) {
-            Expr::While(input.call(expr_while)?)
+            Expr::While(input.parse()?)
         } else if input.peek(Token![for]) {
-            Expr::ForLoop(input.call(expr_for_loop)?)
+            Expr::ForLoop(input.parse()?)
         } else if input.peek(Token![loop]) {
-            Expr::Loop(input.call(expr_loop)?)
+            Expr::Loop(input.parse()?)
         } else if input.peek(Token![match]) {
             Expr::Match(input.parse()?)
         } else if input.peek(Token![try]) && input.peek2(token::Brace) {
@@ -1735,16 +1920,18 @@ pub mod parsing {
         Ok(expr)
     }
 
-    pub fn expr_lit(input: ParseStream) -> Result<ExprLit> {
-        Ok(ExprLit {
-            attrs: Vec::new(),
-            lit: input.parse()?,
-        })
+    impl Parse for ExprLit {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(ExprLit {
+                attrs: Vec::new(),
+                lit: input.parse()?,
+            })
+        }
     }
 
     #[cfg(feature = "full")]
     fn expr_group(input: ParseStream) -> Result<ExprGroup> {
-        let group = private::parse_group(input)?;
+        let group = crate::group::parse_group(input)?;
         Ok(ExprGroup {
             attrs: Vec::new(),
             group_token: group.token,
@@ -1773,18 +1960,31 @@ pub mod parsing {
         Ok(ExprLet {
             attrs: Vec::new(),
             let_token: input.parse()?,
-            pats: {
-                let mut pats = Punctuated::new();
-                input.parse::<Option<Token![|]>>()?;
-                let value: Pat = input.parse()?;
-                pats.push_value(value);
-                while input.peek(Token![|]) && !input.peek(Token![||]) && !input.peek(Token![|=]) {
-                    let punct = input.parse()?;
-                    pats.push_punct(punct);
-                    let value: Pat = input.parse()?;
-                    pats.push_value(value);
+            pat: {
+                let leading_vert: Option<Token![|]> = input.parse()?;
+                let pat: Pat = input.parse()?;
+                if leading_vert.is_some()
+                    || input.peek(Token![|]) && !input.peek(Token![||]) && !input.peek(Token![|=])
+                {
+                    let mut cases = Punctuated::new();
+                    cases.push_value(pat);
+                    while input.peek(Token![|])
+                        && !input.peek(Token![||])
+                        && !input.peek(Token![|=])
+                    {
+                        let punct = input.parse()?;
+                        cases.push_punct(punct);
+                        let pat: Pat = input.parse()?;
+                        cases.push_value(pat);
+                    }
+                    Pat::Or(PatOr {
+                        attrs: Vec::new(),
+                        leading_vert,
+                        cases,
+                    })
+                } else {
+                    pat
                 }
-                pats
             },
             eq_token: input.parse()?,
             expr: Box::new(input.call(expr_no_struct)?),
@@ -1792,20 +1992,22 @@ pub mod parsing {
     }
 
     #[cfg(feature = "full")]
-    fn expr_if(input: ParseStream) -> Result<ExprIf> {
-        Ok(ExprIf {
-            attrs: Vec::new(),
-            if_token: input.parse()?,
-            cond: Box::new(input.call(expr_no_struct)?),
-            then_branch: input.parse()?,
-            else_branch: {
-                if input.peek(Token![else]) {
-                    Some(input.call(else_block)?)
-                } else {
-                    None
-                }
-            },
-        })
+    impl Parse for ExprIf {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(ExprIf {
+                attrs: Vec::new(),
+                if_token: input.parse()?,
+                cond: Box::new(input.call(expr_no_struct)?),
+                then_branch: input.parse()?,
+                else_branch: {
+                    if input.peek(Token![else]) {
+                        Some(input.call(else_block)?)
+                    } else {
+                        None
+                    }
+                },
+            })
+        }
     }
 
     #[cfg(feature = "full")]
@@ -1814,7 +2016,7 @@ pub mod parsing {
 
         let lookahead = input.lookahead1();
         let else_branch = if input.peek(Token![if]) {
-            input.call(expr_if).map(Expr::If)?
+            input.parse().map(Expr::If)?
         } else if input.peek(token::Brace) {
             Expr::Block(ExprBlock {
                 attrs: Vec::new(),
@@ -1829,51 +2031,67 @@ pub mod parsing {
     }
 
     #[cfg(feature = "full")]
-    fn expr_for_loop(input: ParseStream) -> Result<ExprForLoop> {
-        let label: Option<Label> = input.parse()?;
-        let for_token: Token![for] = input.parse()?;
-        let pat: Pat = input.parse()?;
-        let in_token: Token![in] = input.parse()?;
-        let expr: Expr = input.call(expr_no_struct)?;
+    impl Parse for ExprForLoop {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let label: Option<Label> = input.parse()?;
+            let for_token: Token![for] = input.parse()?;
 
-        let content;
-        let brace_token = braced!(content in input);
-        let inner_attrs = content.call(Attribute::parse_inner)?;
-        let stmts = content.call(Block::parse_within)?;
+            let leading_vert: Option<Token![|]> = input.parse()?;
+            let mut pat: Pat = input.parse()?;
+            if leading_vert.is_some() || input.peek(Token![|]) {
+                let mut cases = Punctuated::new();
+                cases.push_value(pat);
+                while input.peek(Token![|]) {
+                    let punct = input.parse()?;
+                    cases.push_punct(punct);
+                    let pat: Pat = input.parse()?;
+                    cases.push_value(pat);
+                }
+                pat = Pat::Or(PatOr {
+                    attrs: Vec::new(),
+                    leading_vert,
+                    cases,
+                });
+            }
 
-        Ok(ExprForLoop {
-            attrs: inner_attrs,
-            label: label,
-            for_token: for_token,
-            pat: Box::new(pat),
-            in_token: in_token,
-            expr: Box::new(expr),
-            body: Block {
-                brace_token: brace_token,
-                stmts: stmts,
-            },
-        })
+            let in_token: Token![in] = input.parse()?;
+            let expr: Expr = input.call(expr_no_struct)?;
+
+            let content;
+            let brace_token = braced!(content in input);
+            let inner_attrs = content.call(Attribute::parse_inner)?;
+            let stmts = content.call(Block::parse_within)?;
+
+            Ok(ExprForLoop {
+                attrs: inner_attrs,
+                label,
+                for_token,
+                pat,
+                in_token,
+                expr: Box::new(expr),
+                body: Block { brace_token, stmts },
+            })
+        }
     }
 
     #[cfg(feature = "full")]
-    fn expr_loop(input: ParseStream) -> Result<ExprLoop> {
-        let label: Option<Label> = input.parse()?;
-        let loop_token: Token![loop] = input.parse()?;
+    impl Parse for ExprLoop {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let label: Option<Label> = input.parse()?;
+            let loop_token: Token![loop] = input.parse()?;
 
-        let content;
-        let brace_token = braced!(content in input);
-        let inner_attrs = content.call(Attribute::parse_inner)?;
-        let stmts = content.call(Block::parse_within)?;
+            let content;
+            let brace_token = braced!(content in input);
+            let inner_attrs = content.call(Attribute::parse_inner)?;
+            let stmts = content.call(Block::parse_within)?;
 
-        Ok(ExprLoop {
-            attrs: inner_attrs,
-            label: label,
-            loop_token: loop_token,
-            body: Block {
-                brace_token: brace_token,
-                stmts: stmts,
-            },
-        })
+            Ok(ExprLoop {
+                attrs: inner_attrs,
+                label,
+                loop_token,
+                body: Block { brace_token, stmts },
+            })
+        }
     }
 
     #[cfg(feature = "full")]
@@ -1893,12 +2111,69 @@ pub mod parsing {
 
             Ok(ExprMatch {
                 attrs: inner_attrs,
-                match_token: match_token,
+                match_token,
                 expr: Box::new(expr),
-                brace_token: brace_token,
-                arms: arms,
+                brace_token,
+                arms,
             })
         }
+    }
+
+    macro_rules! impl_by_parsing_expr {
+        (
+            $(
+                $expr_type:ty, $variant:ident, $msg:expr,
+            )*
+        ) => {
+            $(
+                #[cfg(all(feature = "full", feature = "printing"))]
+                impl Parse for $expr_type {
+                    fn parse(input: ParseStream) -> Result<Self> {
+                        let mut expr: Expr = input.parse()?;
+                        loop {
+                            match expr {
+                                Expr::$variant(inner) => return Ok(inner),
+                                Expr::Group(next) => expr = *next.expr,
+                                _ => return Err(Error::new_spanned(expr, $msg)),
+                            }
+                        }
+                    }
+                }
+            )*
+        };
+    }
+
+    impl_by_parsing_expr! {
+        ExprBox, Box, "expected box expression",
+        ExprArray, Array, "expected slice literal expression",
+        ExprCall, Call, "expected function call expression",
+        ExprMethodCall, MethodCall, "expected method call expression",
+        ExprTuple, Tuple, "expected tuple expression",
+        ExprBinary, Binary, "expected binary operation",
+        ExprUnary, Unary, "expected unary operation",
+        ExprCast, Cast, "expected cast expression",
+        ExprType, Type, "expected type ascription expression",
+        ExprLet, Let, "expected let guard",
+        ExprClosure, Closure, "expected closure expression",
+        ExprUnsafe, Unsafe, "expected unsafe block",
+        ExprBlock, Block, "expected blocked scope",
+        ExprAssign, Assign, "expected assignment expression",
+        ExprAssignOp, AssignOp, "expected compound assignment expression",
+        ExprField, Field, "expected struct field access",
+        ExprIndex, Index, "expected indexing expression",
+        ExprRange, Range, "expected range expression",
+        ExprReference, Reference, "expected referencing operation",
+        ExprBreak, Break, "expected break expression",
+        ExprContinue, Continue, "expected continue expression",
+        ExprReturn, Return, "expected return expression",
+        ExprMacro, Macro, "expected macro invocation expression",
+        ExprStruct, Struct, "expected struct literal expression",
+        ExprRepeat, Repeat, "expected array literal constructed from one repeated element",
+        ExprParen, Paren, "expected parenthesized expression",
+        ExprTry, Try, "expected try expression",
+        ExprAsync, Async, "expected async block",
+        ExprTryBlock, TryBlock, "expected try block",
+        ExprYield, Yield, "expected yield expression",
     }
 
     #[cfg(feature = "full")]
@@ -1941,7 +2216,7 @@ pub mod parsing {
             if input.peek(Token![|]) {
                 break;
             }
-            let value = fn_arg(input)?;
+            let value = closure_arg(input)?;
             inputs.push_value(value);
             if input.peek(Token![|]) {
                 break;
@@ -1970,13 +2245,13 @@ pub mod parsing {
 
         Ok(ExprClosure {
             attrs: Vec::new(),
-            asyncness: asyncness,
-            movability: movability,
-            capture: capture,
-            or1_token: or1_token,
-            inputs: inputs,
-            or2_token: or2_token,
-            output: output,
+            asyncness,
+            movability,
+            capture,
+            or1_token,
+            inputs,
+            or2_token,
+            output,
             body: Box::new(body),
         })
     }
@@ -1992,41 +2267,61 @@ pub mod parsing {
     }
 
     #[cfg(feature = "full")]
-    fn fn_arg(input: ParseStream) -> Result<FnArg> {
-        let pat: Pat = input.parse()?;
+    fn closure_arg(input: ParseStream) -> Result<Pat> {
+        let attrs = input.call(Attribute::parse_outer)?;
+        let mut pat: Pat = input.parse()?;
 
         if input.peek(Token![:]) {
-            Ok(FnArg::Captured(ArgCaptured {
-                pat: pat,
+            Ok(Pat::Type(PatType {
+                attrs,
+                pat: Box::new(pat),
                 colon_token: input.parse()?,
                 ty: input.parse()?,
             }))
         } else {
-            Ok(FnArg::Inferred(pat))
+            match &mut pat {
+                Pat::Box(pat) => pat.attrs = attrs,
+                Pat::Ident(pat) => pat.attrs = attrs,
+                Pat::Lit(pat) => pat.attrs = attrs,
+                Pat::Macro(pat) => pat.attrs = attrs,
+                Pat::Or(pat) => pat.attrs = attrs,
+                Pat::Path(pat) => pat.attrs = attrs,
+                Pat::Range(pat) => pat.attrs = attrs,
+                Pat::Reference(pat) => pat.attrs = attrs,
+                Pat::Rest(pat) => pat.attrs = attrs,
+                Pat::Slice(pat) => pat.attrs = attrs,
+                Pat::Struct(pat) => pat.attrs = attrs,
+                Pat::Tuple(pat) => pat.attrs = attrs,
+                Pat::TupleStruct(pat) => pat.attrs = attrs,
+                Pat::Type(_) => unreachable!(),
+                Pat::Verbatim(_) => {}
+                Pat::Wild(pat) => pat.attrs = attrs,
+                Pat::__Nonexhaustive => unreachable!(),
+            }
+            Ok(pat)
         }
     }
 
     #[cfg(feature = "full")]
-    fn expr_while(input: ParseStream) -> Result<ExprWhile> {
-        let label: Option<Label> = input.parse()?;
-        let while_token: Token![while] = input.parse()?;
-        let cond = expr_no_struct(input)?;
+    impl Parse for ExprWhile {
+        fn parse(input: ParseStream) -> Result<Self> {
+            let label: Option<Label> = input.parse()?;
+            let while_token: Token![while] = input.parse()?;
+            let cond = expr_no_struct(input)?;
 
-        let content;
-        let brace_token = braced!(content in input);
-        let inner_attrs = content.call(Attribute::parse_inner)?;
-        let stmts = content.call(Block::parse_within)?;
+            let content;
+            let brace_token = braced!(content in input);
+            let inner_attrs = content.call(Attribute::parse_inner)?;
+            let stmts = content.call(Block::parse_within)?;
 
-        Ok(ExprWhile {
-            attrs: inner_attrs,
-            label: label,
-            while_token: while_token,
-            cond: Box::new(cond),
-            body: Block {
-                brace_token: brace_token,
-                stmts: stmts,
-            },
-        })
+            Ok(ExprWhile {
+                attrs: inner_attrs,
+                label,
+                while_token,
+                cond: Box::new(cond),
+                body: Block { brace_token, stmts },
+            })
+        }
     }
 
     #[cfg(feature = "full")]
@@ -2109,7 +2404,7 @@ pub mod parsing {
                 let colon_token: Token![:] = input.parse()?;
                 let value: Expr = input.parse()?;
                 (Some(colon_token), value)
-            } else if let Member::Named(ref ident) = member {
+            } else if let Member::Named(ident) = &member {
                 let value = Expr::Path(ExprPath {
                     attrs: Vec::new(),
                     qself: None,
@@ -2122,8 +2417,8 @@ pub mod parsing {
 
             Ok(FieldValue {
                 attrs: Vec::new(),
-                member: member,
-                colon_token: colon_token,
+                member,
+                colon_token,
                 expr: value,
             })
         }
@@ -2142,6 +2437,7 @@ pub mod parsing {
         let mut fields = Punctuated::new();
         loop {
             let attrs = content.call(Attribute::parse_outer)?;
+            // TODO: optimize using advance_to
             if content.fork().parse::<Member>().is_err() {
                 if attrs.is_empty() {
                     break;
@@ -2151,7 +2447,7 @@ pub mod parsing {
             }
 
             fields.push(FieldValue {
-                attrs: attrs,
+                attrs,
                 ..content.parse()?
             });
 
@@ -2172,11 +2468,11 @@ pub mod parsing {
 
         Ok(ExprStruct {
             attrs: private::attrs(outer_attrs, inner_attrs),
-            brace_token: brace_token,
-            path: path,
-            fields: fields,
-            dot2_token: dot2_token,
-            rest: rest,
+            brace_token,
+            path,
+            fields,
+            dot2_token,
+            rest,
         })
     }
 
@@ -2191,11 +2487,8 @@ pub mod parsing {
 
         Ok(ExprUnsafe {
             attrs: inner_attrs,
-            unsafe_token: unsafe_token,
-            block: Block {
-                brace_token: brace_token,
-                stmts: stmts,
-            },
+            unsafe_token,
+            block: Block { brace_token, stmts },
         })
     }
 
@@ -2210,11 +2503,8 @@ pub mod parsing {
 
         Ok(ExprBlock {
             attrs: inner_attrs,
-            label: label,
-            block: Block {
-                brace_token: brace_token,
-                stmts: stmts,
-            },
+            label,
+            block: Block { brace_token, stmts },
         })
     }
 
@@ -2265,455 +2555,8 @@ pub mod parsing {
 
             let (qself, path) = path::parsing::qpath(input, true)?;
 
-            Ok(ExprPath {
-                attrs: attrs,
-                qself: qself,
-                path: path,
-            })
+            Ok(ExprPath { attrs, qself, path })
         }
-    }
-
-    #[cfg(feature = "full")]
-    impl Parse for Block {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let content;
-            Ok(Block {
-                brace_token: braced!(content in input),
-                stmts: content.call(Block::parse_within)?,
-            })
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl Block {
-        /// Parse the body of a block as zero or more statements, possibly
-        /// including one trailing expression.
-        ///
-        /// *This function is available if Syn is built with the `"parsing"`
-        /// feature.*
-        ///
-        /// # Example
-        ///
-        /// ```edition2018
-        /// use syn::{braced, token, Attribute, Block, Ident, Result, Stmt, Token};
-        /// use syn::parse::{Parse, ParseStream};
-        ///
-        /// // Parse a function with no generics or parameter list.
-        /// //
-        /// //     fn playground {
-        /// //         let mut x = 1;
-        /// //         x += 1;
-        /// //         println!("{}", x);
-        /// //     }
-        /// struct MiniFunction {
-        ///     attrs: Vec<Attribute>,
-        ///     fn_token: Token![fn],
-        ///     name: Ident,
-        ///     brace_token: token::Brace,
-        ///     stmts: Vec<Stmt>,
-        /// }
-        ///
-        /// impl Parse for MiniFunction {
-        ///     fn parse(input: ParseStream) -> Result<Self> {
-        ///         let outer_attrs = input.call(Attribute::parse_outer)?;
-        ///         let fn_token: Token![fn] = input.parse()?;
-        ///         let name: Ident = input.parse()?;
-        ///
-        ///         let content;
-        ///         let brace_token = braced!(content in input);
-        ///         let inner_attrs = content.call(Attribute::parse_inner)?;
-        ///         let stmts = content.call(Block::parse_within)?;
-        ///
-        ///         Ok(MiniFunction {
-        ///             attrs: {
-        ///                 let mut attrs = outer_attrs;
-        ///                 attrs.extend(inner_attrs);
-        ///                 attrs
-        ///             },
-        ///             fn_token: fn_token,
-        ///             name: name,
-        ///             brace_token: brace_token,
-        ///             stmts: stmts,
-        ///         })
-        ///     }
-        /// }
-        /// ```
-        pub fn parse_within(input: ParseStream) -> Result<Vec<Stmt>> {
-            let mut stmts = Vec::new();
-            loop {
-                while input.peek(Token![;]) {
-                    input.parse::<Token![;]>()?;
-                }
-                if input.is_empty() {
-                    break;
-                }
-                let s = parse_stmt(input, true)?;
-                let requires_semicolon = if let Stmt::Expr(ref s) = s {
-                    requires_terminator(s)
-                } else {
-                    false
-                };
-                stmts.push(s);
-                if input.is_empty() {
-                    break;
-                } else if requires_semicolon {
-                    return Err(input.error("unexpected token"));
-                }
-            }
-            Ok(stmts)
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl Parse for Stmt {
-        fn parse(input: ParseStream) -> Result<Self> {
-            parse_stmt(input, false)
-        }
-    }
-
-    #[cfg(feature = "full")]
-    fn parse_stmt(input: ParseStream, allow_nosemi: bool) -> Result<Stmt> {
-        let ahead = input.fork();
-        ahead.call(Attribute::parse_outer)?;
-
-        if {
-            let ahead = ahead.fork();
-            // Only parse braces here; paren and bracket will get parsed as
-            // expression statements
-            ahead.call(Path::parse_mod_style).is_ok()
-                && ahead.parse::<Token![!]>().is_ok()
-                && (ahead.peek(token::Brace) || ahead.peek(Ident))
-        } {
-            stmt_mac(input)
-        } else if ahead.peek(Token![let]) {
-            stmt_local(input).map(Stmt::Local)
-        } else if ahead.peek(Token![pub])
-            || ahead.peek(Token![crate]) && !ahead.peek2(Token![::])
-            || ahead.peek(Token![extern]) && !ahead.peek2(Token![::])
-            || ahead.peek(Token![use])
-            || ahead.peek(Token![static]) && (ahead.peek2(Token![mut]) || ahead.peek2(Ident))
-            || ahead.peek(Token![const])
-            || ahead.peek(Token![unsafe]) && !ahead.peek2(token::Brace)
-            || ahead.peek(Token![async]) && (ahead.peek2(Token![extern]) || ahead.peek2(Token![fn]))
-            || ahead.peek(Token![fn])
-            || ahead.peek(Token![mod])
-            || ahead.peek(Token![type])
-            || ahead.peek(Token![existential]) && ahead.peek2(Token![type])
-            || ahead.peek(Token![struct])
-            || ahead.peek(Token![enum])
-            || ahead.peek(Token![union]) && ahead.peek2(Ident)
-            || ahead.peek(Token![auto]) && ahead.peek2(Token![trait])
-            || ahead.peek(Token![trait])
-            || ahead.peek(Token![default])
-                && (ahead.peek2(Token![unsafe]) || ahead.peek2(Token![impl ]))
-            || ahead.peek(Token![impl ])
-            || ahead.peek(Token![macro])
-        {
-            input.parse().map(Stmt::Item)
-        } else {
-            stmt_expr(input, allow_nosemi)
-        }
-    }
-
-    #[cfg(feature = "full")]
-    fn stmt_mac(input: ParseStream) -> Result<Stmt> {
-        let attrs = input.call(Attribute::parse_outer)?;
-        let path = input.call(Path::parse_mod_style)?;
-        let bang_token: Token![!] = input.parse()?;
-        let ident: Option<Ident> = input.parse()?;
-        let (delimiter, tts) = mac::parse_delimiter(input)?;
-        let semi_token: Option<Token![;]> = input.parse()?;
-
-        Ok(Stmt::Item(Item::Macro(ItemMacro {
-            attrs: attrs,
-            ident: ident,
-            mac: Macro {
-                path: path,
-                bang_token: bang_token,
-                delimiter: delimiter,
-                tts: tts,
-            },
-            semi_token: semi_token,
-        })))
-    }
-
-    #[cfg(feature = "full")]
-    fn stmt_local(input: ParseStream) -> Result<Local> {
-        Ok(Local {
-            attrs: input.call(Attribute::parse_outer)?,
-            let_token: input.parse()?,
-            pats: {
-                let mut pats = Punctuated::new();
-                let value: Pat = input.parse()?;
-                pats.push_value(value);
-                while input.peek(Token![|]) && !input.peek(Token![||]) && !input.peek(Token![|=]) {
-                    let punct = input.parse()?;
-                    pats.push_punct(punct);
-                    let value: Pat = input.parse()?;
-                    pats.push_value(value);
-                }
-                pats
-            },
-            ty: {
-                if input.peek(Token![:]) {
-                    let colon_token: Token![:] = input.parse()?;
-                    let ty: Type = input.parse()?;
-                    Some((colon_token, Box::new(ty)))
-                } else {
-                    None
-                }
-            },
-            init: {
-                if input.peek(Token![=]) {
-                    let eq_token: Token![=] = input.parse()?;
-                    let init: Expr = input.parse()?;
-                    Some((eq_token, Box::new(init)))
-                } else {
-                    None
-                }
-            },
-            semi_token: input.parse()?,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn stmt_expr(input: ParseStream, allow_nosemi: bool) -> Result<Stmt> {
-        let mut attrs = input.call(Attribute::parse_outer)?;
-        let mut e = expr_early(input)?;
-
-        attrs.extend(e.replace_attrs(Vec::new()));
-        e.replace_attrs(attrs);
-
-        if input.peek(Token![;]) {
-            return Ok(Stmt::Semi(e, input.parse()?));
-        }
-
-        if allow_nosemi || !requires_terminator(&e) {
-            Ok(Stmt::Expr(e))
-        } else {
-            Err(input.error("expected semicolon"))
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl Parse for Pat {
-        fn parse(input: ParseStream) -> Result<Self> {
-            let lookahead = input.lookahead1();
-            if lookahead.peek(Token![_]) {
-                input.call(pat_wild).map(Pat::Wild)
-            } else if lookahead.peek(Token![box]) {
-                input.call(pat_box).map(Pat::Box)
-            } else if lookahead.peek(Token![-]) || lookahead.peek(Lit) {
-                pat_lit_or_range(input)
-            } else if input.peek(Ident)
-                && ({
-                    input.peek2(Token![::])
-                        || input.peek2(Token![!])
-                        || input.peek2(token::Brace)
-                        || input.peek2(token::Paren)
-                        || input.peek2(Token![..])
-                            && !{
-                                let ahead = input.fork();
-                                ahead.parse::<Ident>()?;
-                                ahead.parse::<RangeLimits>()?;
-                                ahead.is_empty() || ahead.peek(Token![,])
-                            }
-                })
-                || input.peek(Token![self]) && input.peek2(Token![::])
-                || input.peek(Token![::])
-                || input.peek(Token![<])
-                || input.peek(Token![Self])
-                || input.peek(Token![super])
-                || input.peek(Token![extern])
-                || input.peek(Token![crate])
-            {
-                pat_path_or_macro_or_struct_or_range(input)
-            } else if input.peek(Token![ref])
-                || input.peek(Token![mut])
-                || input.peek(Token![self])
-                || input.peek(Ident)
-            {
-                input.call(pat_ident).map(Pat::Ident)
-            } else if lookahead.peek(token::Paren) {
-                input.call(pat_tuple).map(Pat::Tuple)
-            } else if lookahead.peek(Token![&]) {
-                input.call(pat_ref).map(Pat::Ref)
-            } else if lookahead.peek(token::Bracket) {
-                input.call(pat_slice).map(Pat::Slice)
-            } else {
-                Err(lookahead.error())
-            }
-        }
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_path_or_macro_or_struct_or_range(input: ParseStream) -> Result<Pat> {
-        let (qself, path) = path::parsing::qpath(input, true)?;
-
-        if input.peek(Token![..]) {
-            return pat_range(input, qself, path).map(Pat::Range);
-        }
-
-        if qself.is_some() {
-            return Ok(Pat::Path(PatPath {
-                qself: qself,
-                path: path,
-            }));
-        }
-
-        if input.peek(Token![!]) && !input.peek(Token![!=]) {
-            let mut contains_arguments = false;
-            for segment in &path.segments {
-                match segment.arguments {
-                    PathArguments::None => {}
-                    PathArguments::AngleBracketed(_) | PathArguments::Parenthesized(_) => {
-                        contains_arguments = true;
-                    }
-                }
-            }
-
-            if !contains_arguments {
-                let bang_token: Token![!] = input.parse()?;
-                let (delimiter, tts) = mac::parse_delimiter(input)?;
-                return Ok(Pat::Macro(PatMacro {
-                    mac: Macro {
-                        path: path,
-                        bang_token: bang_token,
-                        delimiter: delimiter,
-                        tts: tts,
-                    },
-                }));
-            }
-        }
-
-        if input.peek(token::Brace) {
-            pat_struct(input, path).map(Pat::Struct)
-        } else if input.peek(token::Paren) {
-            pat_tuple_struct(input, path).map(Pat::TupleStruct)
-        } else if input.peek(Token![..]) {
-            pat_range(input, qself, path).map(Pat::Range)
-        } else {
-            Ok(Pat::Path(PatPath {
-                qself: qself,
-                path: path,
-            }))
-        }
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_wild(input: ParseStream) -> Result<PatWild> {
-        Ok(PatWild {
-            underscore_token: input.parse()?,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_box(input: ParseStream) -> Result<PatBox> {
-        Ok(PatBox {
-            box_token: input.parse()?,
-            pat: input.parse()?,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_ident(input: ParseStream) -> Result<PatIdent> {
-        Ok(PatIdent {
-            by_ref: input.parse()?,
-            mutability: input.parse()?,
-            ident: input.call(Ident::parse_any)?,
-            subpat: {
-                if input.peek(Token![@]) {
-                    let at_token: Token![@] = input.parse()?;
-                    let subpat: Pat = input.parse()?;
-                    Some((at_token, Box::new(subpat)))
-                } else {
-                    None
-                }
-            },
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_tuple_struct(input: ParseStream, path: Path) -> Result<PatTupleStruct> {
-        Ok(PatTupleStruct {
-            path: path,
-            pat: input.call(pat_tuple)?,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_struct(input: ParseStream, path: Path) -> Result<PatStruct> {
-        let content;
-        let brace_token = braced!(content in input);
-
-        let mut fields = Punctuated::new();
-        while !content.is_empty() && !content.peek(Token![..]) {
-            let value = content.call(field_pat)?;
-            fields.push_value(value);
-            if !content.peek(Token![,]) {
-                break;
-            }
-            let punct: Token![,] = content.parse()?;
-            fields.push_punct(punct);
-        }
-
-        let dot2_token = if fields.empty_or_trailing() && content.peek(Token![..]) {
-            Some(content.parse()?)
-        } else {
-            None
-        };
-
-        Ok(PatStruct {
-            path: path,
-            brace_token: brace_token,
-            fields: fields,
-            dot2_token: dot2_token,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn field_pat(input: ParseStream) -> Result<FieldPat> {
-        let boxed: Option<Token![box]> = input.parse()?;
-        let by_ref: Option<Token![ref]> = input.parse()?;
-        let mutability: Option<Token![mut]> = input.parse()?;
-        let member: Member = input.parse()?;
-
-        if boxed.is_none() && by_ref.is_none() && mutability.is_none() && input.peek(Token![:])
-            || member.is_unnamed()
-        {
-            return Ok(FieldPat {
-                attrs: Vec::new(),
-                member: member,
-                colon_token: input.parse()?,
-                pat: input.parse()?,
-            });
-        }
-
-        let ident = match member {
-            Member::Named(ident) => ident,
-            Member::Unnamed(_) => unreachable!(),
-        };
-
-        let mut pat = Pat::Ident(PatIdent {
-            by_ref: by_ref,
-            mutability: mutability,
-            ident: ident.clone(),
-            subpat: None,
-        });
-
-        if let Some(boxed) = boxed {
-            pat = Pat::Box(PatBox {
-                pat: Box::new(pat),
-                box_token: boxed,
-            });
-        }
-
-        Ok(FieldPat {
-            member: Member::Named(ident),
-            pat: Box::new(pat),
-            attrs: Vec::new(),
-            colon_token: None,
-        })
     }
 
     impl Parse for Member {
@@ -2734,21 +2577,26 @@ pub mod parsing {
             let requires_comma;
             Ok(Arm {
                 attrs: input.call(Attribute::parse_outer)?,
-                leading_vert: input.parse()?,
-                pats: {
-                    let mut pats = Punctuated::new();
-                    let value: Pat = input.parse()?;
-                    pats.push_value(value);
-                    loop {
-                        if !input.peek(Token![|]) {
-                            break;
+                pat: {
+                    let leading_vert: Option<Token![|]> = input.parse()?;
+                    let pat: Pat = input.parse()?;
+                    if leading_vert.is_some() || input.peek(Token![|]) {
+                        let mut cases = Punctuated::new();
+                        cases.push_value(pat);
+                        while input.peek(Token![|]) {
+                            let punct = input.parse()?;
+                            cases.push_punct(punct);
+                            let pat: Pat = input.parse()?;
+                            cases.push_value(pat);
                         }
-                        let punct = input.parse()?;
-                        pats.push_punct(punct);
-                        let value: Pat = input.parse()?;
-                        pats.push_value(value);
+                        Pat::Or(PatOr {
+                            attrs: Vec::new(),
+                            leading_vert,
+                            cases,
+                        })
+                    } else {
+                        pat
                     }
-                    pats
                 },
                 guard: {
                     if input.peek(Token![if]) {
@@ -2779,184 +2627,18 @@ pub mod parsing {
     impl Parse for Index {
         fn parse(input: ParseStream) -> Result<Self> {
             let lit: LitInt = input.parse()?;
-            if let IntSuffix::None = lit.suffix() {
+            if lit.suffix().is_empty() {
                 Ok(Index {
-                    index: lit.value() as u32,
+                    index: lit
+                        .base10_digits()
+                        .parse()
+                        .map_err(|err| Error::new(lit.span(), err))?,
                     span: lit.span(),
                 })
             } else {
                 Err(Error::new(lit.span(), "expected unsuffixed integer"))
             }
         }
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_range(input: ParseStream, qself: Option<QSelf>, path: Path) -> Result<PatRange> {
-        Ok(PatRange {
-            lo: Box::new(Expr::Path(ExprPath {
-                attrs: Vec::new(),
-                qself: qself,
-                path: path,
-            })),
-            limits: input.parse()?,
-            hi: input.call(pat_lit_expr)?,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_tuple(input: ParseStream) -> Result<PatTuple> {
-        let content;
-        let paren_token = parenthesized!(content in input);
-
-        let mut front = Punctuated::new();
-        let mut dot2_token = None::<Token![..]>;
-        let mut comma_token = None::<Token![,]>;
-        loop {
-            if content.is_empty() {
-                break;
-            }
-            if content.peek(Token![..]) {
-                dot2_token = Some(content.parse()?);
-                comma_token = content.parse()?;
-                break;
-            }
-            let value: Pat = content.parse()?;
-            front.push_value(value);
-            if content.is_empty() {
-                break;
-            }
-            let punct = content.parse()?;
-            front.push_punct(punct);
-        }
-
-        let mut back = Punctuated::new();
-        while !content.is_empty() {
-            let value: Pat = content.parse()?;
-            back.push_value(value);
-            if content.is_empty() {
-                break;
-            }
-            let punct = content.parse()?;
-            back.push_punct(punct);
-        }
-
-        Ok(PatTuple {
-            paren_token: paren_token,
-            front: front,
-            dot2_token: dot2_token,
-            comma_token: comma_token,
-            back: back,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_ref(input: ParseStream) -> Result<PatRef> {
-        Ok(PatRef {
-            and_token: input.parse()?,
-            mutability: input.parse()?,
-            pat: input.parse()?,
-        })
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_lit_or_range(input: ParseStream) -> Result<Pat> {
-        let lo = input.call(pat_lit_expr)?;
-        if input.peek(Token![..]) {
-            Ok(Pat::Range(PatRange {
-                lo: lo,
-                limits: input.parse()?,
-                hi: input.call(pat_lit_expr)?,
-            }))
-        } else {
-            Ok(Pat::Lit(PatLit { expr: lo }))
-        }
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_lit_expr(input: ParseStream) -> Result<Box<Expr>> {
-        let neg: Option<Token![-]> = input.parse()?;
-
-        let lookahead = input.lookahead1();
-        let expr = if lookahead.peek(Lit) {
-            Expr::Lit(input.call(expr_lit)?)
-        } else if lookahead.peek(Ident)
-            || lookahead.peek(Token![::])
-            || lookahead.peek(Token![<])
-            || lookahead.peek(Token![self])
-            || lookahead.peek(Token![Self])
-            || lookahead.peek(Token![super])
-            || lookahead.peek(Token![extern])
-            || lookahead.peek(Token![crate])
-        {
-            Expr::Path(input.parse()?)
-        } else {
-            return Err(lookahead.error());
-        };
-
-        Ok(Box::new(if let Some(neg) = neg {
-            Expr::Unary(ExprUnary {
-                attrs: Vec::new(),
-                op: UnOp::Neg(neg),
-                expr: Box::new(expr),
-            })
-        } else {
-            expr
-        }))
-    }
-
-    #[cfg(feature = "full")]
-    fn pat_slice(input: ParseStream) -> Result<PatSlice> {
-        let content;
-        let bracket_token = bracketed!(content in input);
-
-        let mut front = Punctuated::new();
-        let mut middle = None;
-        loop {
-            if content.is_empty() || content.peek(Token![..]) {
-                break;
-            }
-            let value: Pat = content.parse()?;
-            if content.peek(Token![..]) {
-                middle = Some(Box::new(value));
-                break;
-            }
-            front.push_value(value);
-            if content.is_empty() {
-                break;
-            }
-            let punct = content.parse()?;
-            front.push_punct(punct);
-        }
-
-        let dot2_token: Option<Token![..]> = content.parse()?;
-        let mut comma_token = None::<Token![,]>;
-        let mut back = Punctuated::new();
-        if dot2_token.is_some() {
-            comma_token = content.parse()?;
-            if comma_token.is_some() {
-                loop {
-                    if content.is_empty() {
-                        break;
-                    }
-                    let value: Pat = content.parse()?;
-                    back.push_value(value);
-                    if content.is_empty() {
-                        break;
-                    }
-                    let punct = content.parse()?;
-                    back.push_punct(punct);
-                }
-            }
-        }
-
-        Ok(PatSlice {
-            bracket_token: bracket_token,
-            front: front,
-            middle: middle,
-            dot2_token: dot2_token,
-            comma_token: comma_token,
-            back: back,
-        })
     }
 
     #[cfg(feature = "full")]
@@ -2967,27 +2649,20 @@ pub mod parsing {
                 Member::Unnamed(_) => false,
             }
         }
-
-        fn is_unnamed(&self) -> bool {
-            match *self {
-                Member::Named(_) => false,
-                Member::Unnamed(_) => true,
-            }
-        }
     }
 }
 
 #[cfg(feature = "printing")]
-mod printing {
+pub(crate) mod printing {
     use super::*;
 
     use proc_macro2::{Literal, TokenStream};
     use quote::{ToTokens, TokenStreamExt};
 
     #[cfg(feature = "full")]
-    use attr::FilterAttrs;
+    use crate::attr::FilterAttrs;
     #[cfg(feature = "full")]
-    use print::TokensOrDefault;
+    use crate::print::TokensOrDefault;
 
     // If the given expression is a bare `ExprStruct`, wraps it in parenthesis
     // before appending it to `TokenStream`.
@@ -3003,7 +2678,7 @@ mod printing {
     }
 
     #[cfg(feature = "full")]
-    fn outer_attrs_to_tokens(attrs: &[Attribute], tokens: &mut TokenStream) {
+    pub(crate) fn outer_attrs_to_tokens(attrs: &[Attribute], tokens: &mut TokenStream) {
         tokens.append_all(attrs.outer());
     }
 
@@ -3013,7 +2688,7 @@ mod printing {
     }
 
     #[cfg(not(feature = "full"))]
-    fn outer_attrs_to_tokens(_attrs: &[Attribute], _tokens: &mut TokenStream) {}
+    pub(crate) fn outer_attrs_to_tokens(_attrs: &[Attribute], _tokens: &mut TokenStream) {}
 
     #[cfg(not(feature = "full"))]
     fn inner_attrs_to_tokens(_attrs: &[Attribute], _tokens: &mut TokenStream) {}
@@ -3024,16 +2699,6 @@ mod printing {
             outer_attrs_to_tokens(&self.attrs, tokens);
             self.box_token.to_tokens(tokens);
             self.expr.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for ExprInPlace {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            outer_attrs_to_tokens(&self.attrs, tokens);
-            self.place.to_tokens(tokens);
-            self.arrow_token.to_tokens(tokens);
-            self.value.to_tokens(tokens);
         }
     }
 
@@ -3085,9 +2750,9 @@ mod printing {
     #[cfg(feature = "full")]
     impl ToTokens for GenericMethodArgument {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            match *self {
-                GenericMethodArgument::Type(ref t) => t.to_tokens(tokens),
-                GenericMethodArgument::Const(ref c) => c.to_tokens(tokens),
+            match self {
+                GenericMethodArgument::Type(t) => t.to_tokens(tokens),
+                GenericMethodArgument::Const(c) => c.to_tokens(tokens),
             }
         }
     }
@@ -3153,7 +2818,7 @@ mod printing {
 
     #[cfg(feature = "full")]
     fn maybe_wrap_else(tokens: &mut TokenStream, else_: &Option<(Token![else], Box<Expr>)>) {
-        if let Some((ref else_token, ref else_)) = *else_ {
+        if let Some((else_token, else_)) = else_ {
             else_token.to_tokens(tokens);
 
             // If we are not one of the valid expressions to exist in an else
@@ -3176,7 +2841,7 @@ mod printing {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             outer_attrs_to_tokens(&self.attrs, tokens);
             self.let_token.to_tokens(tokens);
-            self.pats.to_tokens(tokens);
+            self.pat.to_tokens(tokens);
             self.eq_token.to_tokens(tokens);
             wrap_bare_struct(tokens, &self.expr);
         }
@@ -3268,6 +2933,16 @@ mod printing {
     }
 
     #[cfg(feature = "full")]
+    impl ToTokens for ExprAwait {
+        fn to_tokens(&self, tokens: &mut TokenStream) {
+            outer_attrs_to_tokens(&self.attrs, tokens);
+            self.base.to_tokens(tokens);
+            self.dot_token.to_tokens(tokens);
+            self.await_token.to_tokens(tokens);
+        }
+    }
+
+    #[cfg(feature = "full")]
     impl ToTokens for ExprTryBlock {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             outer_attrs_to_tokens(&self.attrs, tokens);
@@ -3293,19 +2968,7 @@ mod printing {
             self.movability.to_tokens(tokens);
             self.capture.to_tokens(tokens);
             self.or1_token.to_tokens(tokens);
-            for input in self.inputs.pairs() {
-                match **input.value() {
-                    FnArg::Captured(ArgCaptured {
-                        ref pat,
-                        ty: Type::Infer(_),
-                        ..
-                    }) => {
-                        pat.to_tokens(tokens);
-                    }
-                    _ => input.value().to_tokens(tokens),
-                }
-                input.punct().to_tokens(tokens);
-            }
+            self.inputs.to_tokens(tokens);
             self.or2_token.to_tokens(tokens);
             self.output.to_tokens(tokens);
             self.body.to_tokens(tokens);
@@ -3367,9 +3030,9 @@ mod printing {
 
     impl ToTokens for Member {
         fn to_tokens(&self, tokens: &mut TokenStream) {
-            match *self {
-                Member::Named(ref ident) => ident.to_tokens(tokens),
-                Member::Unnamed(ref index) => index.to_tokens(tokens),
+            match self {
+                Member::Named(ident) => ident.to_tokens(tokens),
+                Member::Unnamed(index) => index.to_tokens(tokens),
             }
         }
     }
@@ -3397,9 +3060,9 @@ mod printing {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             outer_attrs_to_tokens(&self.attrs, tokens);
             self.from.to_tokens(tokens);
-            match self.limits {
-                RangeLimits::HalfOpen(ref t) => t.to_tokens(tokens),
-                RangeLimits::Closed(ref t) => t.to_tokens(tokens),
+            match &self.limits {
+                RangeLimits::HalfOpen(t) => t.to_tokens(tokens),
+                RangeLimits::Closed(t) => t.to_tokens(tokens),
             }
             self.to.to_tokens(tokens);
         }
@@ -3516,12 +3179,6 @@ mod printing {
         }
     }
 
-    impl ToTokens for ExprVerbatim {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.tts.to_tokens(tokens);
-        }
-    }
-
     #[cfg(feature = "full")]
     impl ToTokens for Label {
         fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -3535,7 +3192,7 @@ mod printing {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             outer_attrs_to_tokens(&self.attrs, tokens);
             self.member.to_tokens(tokens);
-            if let Some(ref colon_token) = self.colon_token {
+            if let Some(colon_token) = &self.colon_token {
                 colon_token.to_tokens(tokens);
                 self.expr.to_tokens(tokens);
             }
@@ -3546,223 +3203,14 @@ mod printing {
     impl ToTokens for Arm {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(&self.attrs);
-            self.leading_vert.to_tokens(tokens);
-            self.pats.to_tokens(tokens);
-            if let Some((ref if_token, ref guard)) = self.guard {
+            self.pat.to_tokens(tokens);
+            if let Some((if_token, guard)) = &self.guard {
                 if_token.to_tokens(tokens);
                 guard.to_tokens(tokens);
             }
             self.fat_arrow_token.to_tokens(tokens);
             self.body.to_tokens(tokens);
             self.comma.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatWild {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.underscore_token.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatIdent {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.by_ref.to_tokens(tokens);
-            self.mutability.to_tokens(tokens);
-            self.ident.to_tokens(tokens);
-            if let Some((ref at_token, ref subpat)) = self.subpat {
-                at_token.to_tokens(tokens);
-                subpat.to_tokens(tokens);
-            }
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatStruct {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.path.to_tokens(tokens);
-            self.brace_token.surround(tokens, |tokens| {
-                self.fields.to_tokens(tokens);
-                // NOTE: We need a comma before the dot2 token if it is present.
-                if !self.fields.empty_or_trailing() && self.dot2_token.is_some() {
-                    <Token![,]>::default().to_tokens(tokens);
-                }
-                self.dot2_token.to_tokens(tokens);
-            });
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatTupleStruct {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.path.to_tokens(tokens);
-            self.pat.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatPath {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            private::print_path(tokens, &self.qself, &self.path);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatTuple {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.paren_token.surround(tokens, |tokens| {
-                self.front.to_tokens(tokens);
-                if let Some(ref dot2_token) = self.dot2_token {
-                    if !self.front.empty_or_trailing() {
-                        // Ensure there is a comma before the .. token.
-                        <Token![,]>::default().to_tokens(tokens);
-                    }
-                    dot2_token.to_tokens(tokens);
-                    self.comma_token.to_tokens(tokens);
-                    if self.comma_token.is_none() && !self.back.is_empty() {
-                        // Ensure there is a comma after the .. token.
-                        <Token![,]>::default().to_tokens(tokens);
-                    }
-                }
-                self.back.to_tokens(tokens);
-            });
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatBox {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.box_token.to_tokens(tokens);
-            self.pat.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatRef {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.and_token.to_tokens(tokens);
-            self.mutability.to_tokens(tokens);
-            self.pat.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatLit {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.expr.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatRange {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.lo.to_tokens(tokens);
-            match self.limits {
-                RangeLimits::HalfOpen(ref t) => t.to_tokens(tokens),
-                RangeLimits::Closed(ref t) => Token![...](t.spans).to_tokens(tokens),
-            }
-            self.hi.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatSlice {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.bracket_token.surround(tokens, |tokens| {
-                self.front.to_tokens(tokens);
-
-                // If we need a comma before the middle or standalone .. token,
-                // then make sure it's present.
-                if !self.front.empty_or_trailing()
-                    && (self.middle.is_some() || self.dot2_token.is_some())
-                {
-                    <Token![,]>::default().to_tokens(tokens);
-                }
-
-                // If we have an identifier, we always need a .. token.
-                if self.middle.is_some() {
-                    self.middle.to_tokens(tokens);
-                    TokensOrDefault(&self.dot2_token).to_tokens(tokens);
-                } else if self.dot2_token.is_some() {
-                    self.dot2_token.to_tokens(tokens);
-                }
-
-                // Make sure we have a comma before the back half.
-                if !self.back.is_empty() {
-                    TokensOrDefault(&self.comma_token).to_tokens(tokens);
-                    self.back.to_tokens(tokens);
-                } else {
-                    self.comma_token.to_tokens(tokens);
-                }
-            })
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatMacro {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.mac.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for PatVerbatim {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.tts.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for FieldPat {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            if let Some(ref colon_token) = self.colon_token {
-                self.member.to_tokens(tokens);
-                colon_token.to_tokens(tokens);
-            }
-            self.pat.to_tokens(tokens);
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for Block {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            self.brace_token.surround(tokens, |tokens| {
-                tokens.append_all(&self.stmts);
-            });
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for Stmt {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            match *self {
-                Stmt::Local(ref local) => local.to_tokens(tokens),
-                Stmt::Item(ref item) => item.to_tokens(tokens),
-                Stmt::Expr(ref expr) => expr.to_tokens(tokens),
-                Stmt::Semi(ref expr, ref semi) => {
-                    expr.to_tokens(tokens);
-                    semi.to_tokens(tokens);
-                }
-            }
-        }
-    }
-
-    #[cfg(feature = "full")]
-    impl ToTokens for Local {
-        fn to_tokens(&self, tokens: &mut TokenStream) {
-            outer_attrs_to_tokens(&self.attrs, tokens);
-            self.let_token.to_tokens(tokens);
-            self.pats.to_tokens(tokens);
-            if let Some((ref colon_token, ref ty)) = self.ty {
-                colon_token.to_tokens(tokens);
-                ty.to_tokens(tokens);
-            }
-            if let Some((ref eq_token, ref init)) = self.init {
-                eq_token.to_tokens(tokens);
-                init.to_tokens(tokens);
-            }
-            self.semi_token.to_tokens(tokens);
         }
     }
 }

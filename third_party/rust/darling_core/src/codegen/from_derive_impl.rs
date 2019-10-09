@@ -5,7 +5,7 @@ use syn::{self, Ident};
 use ast::Data;
 use codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
 use options::{ForwardAttrs, Shape};
-use util::IdentList;
+use util::PathList;
 
 pub struct FromDeriveInputImpl<'a> {
     pub ident: Option<&'a Ident>,
@@ -14,7 +14,7 @@ pub struct FromDeriveInputImpl<'a> {
     pub attrs: Option<&'a Ident>,
     pub data: Option<&'a Ident>,
     pub base: TraitImpl<'a>,
-    pub attr_names: &'a IdentList,
+    pub attr_names: &'a PathList,
     pub forward_attrs: Option<&'a ForwardAttrs>,
     pub from_ident: bool,
     pub supports: Option<&'a Shape>,
@@ -106,7 +106,7 @@ impl<'a> ToTokens for FromDeriveInputImpl<'a> {
 }
 
 impl<'a> ExtractAttribute for FromDeriveInputImpl<'a> {
-    fn attr_names(&self) -> &IdentList {
+    fn attr_names(&self) -> &PathList {
         &self.attr_names
     }
 

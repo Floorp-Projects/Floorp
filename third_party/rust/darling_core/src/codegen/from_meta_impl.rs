@@ -99,7 +99,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                             0 => ::darling::export::Err(::darling::Error::too_few_items(1)),
                             1 => {
                                 if let ::syn::NestedMeta::Meta(ref __nested) = __outer[0] {
-                                    match __nested.name().to_string().as_ref() {
+                                    match __nested.path().segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::").as_ref() {
                                         #(#struct_arms)*
                                         __other => ::darling::export::Err(::darling::Error::#unknown_variant_err.with_span(__nested))
                                     }
