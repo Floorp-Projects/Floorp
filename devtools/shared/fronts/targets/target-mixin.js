@@ -451,8 +451,12 @@ function TargetMixin(parentClass) {
         this.emit("close");
 
         for (let [, front] of this.fronts) {
-          front = await front;
-          await front.destroy();
+          // If a Front with an async initialize method is still being instantiated,
+          // we should wait for completion before trying to destroy it.
+          if (front instanceof Promise) {
+            front = await front;
+          }
+          front.destroy();
         }
 
         this._teardownRemoteListeners();
