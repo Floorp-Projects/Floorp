@@ -7,6 +7,8 @@ DevToolsModules(
 	'ManifestColorItem.css',
     'ManifestColorItem.js',
     'ManifestEmpty.js',
+    'ManifestIconItem.css',
+    'ManifestIconItem.js',
 	'ManifestIssue.css',
 	'ManifestIssue.js',
 	'ManifestIssueList.css',

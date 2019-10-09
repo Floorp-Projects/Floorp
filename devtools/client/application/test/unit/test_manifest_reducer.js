@@ -11,7 +11,7 @@ const {
   MANIFEST_MEMBER_VALUE_TYPES,
 } = require("devtools/client/application/src/constants.js");
 
-const { STRING, COLOR } = MANIFEST_MEMBER_VALUE_TYPES;
+const { ICON, COLOR, STRING } = MANIFEST_MEMBER_VALUE_TYPES;
 
 const {
   manifestReducer,
@@ -71,14 +71,33 @@ const MANIFEST_PROCESSING = [
           src: "another.svg",
           type: "image/svg",
           sizes: ["any"],
+          purpose: ["any maskable"],
+        },
+        {
+          src: "something.png",
+          type: undefined,
+          sizes: undefined,
           purpose: ["any"],
         },
       ],
     },
     processed: {
       icons: [
-        { key: "16x16 32x32", value: "something.png" },
-        { key: "any", value: "another.svg" },
+        {
+          key: { sizes: "16x16 32x32", contentType: "image/png" },
+          value: { src: "something.png", purpose: "any" },
+          type: ICON,
+        },
+        {
+          key: { sizes: "any", contentType: "image/svg" },
+          value: { src: "another.svg", purpose: "any maskable" },
+          type: ICON,
+        },
+        {
+          key: { sizes: undefined, contentType: undefined },
+          value: { src: "something.png", purpose: "any" },
+          type: ICON,
+        },
       ],
     },
   },

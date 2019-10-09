@@ -115,6 +115,24 @@ manifest-non-existing = No manifest found to inspect.
 # thus we cannot link to it.
 manifest-json-link-data-url = The manifest is embedded in a Data URL.
 
+# Text displayed at manifest icons to label their purpose, as declared
+# in the manifest.
+manifest-icon-purpose = Purpose: <code>{$purpose}</code>
+
+# Text displayed as the alt attribute for <img> tags showing the icons in the
+# manifest.
+manifest-icon-img =
+  .alt = Icon
+
+# Text displayed as the title attribute for <img> tags showing the icons in the
+# manifest. `$sizes` is a user-dependent string that has been parsed as a
+# space-separated list of `<width>x<height>` sizes or the keyword `any`.
+manifest-icon-img-title = Icon with sizes: {$sizes}
+
+# Text displayed as the title attribute for <img> tags showing the icons in the
+# manifest, in case there's no icon size specified by the user
+manifest-icon-img-title-no-sizes = Unspecified size icon
+
 # Sidebar navigation item for Manifest sidebar item section
 sidebar-item-manifest = Manifest
   .alt = Manifest Icon
