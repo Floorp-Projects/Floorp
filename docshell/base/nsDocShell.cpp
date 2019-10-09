@@ -689,7 +689,7 @@ nsDocShell::SetCancelContentJSEpoch(int32_t aEpoch) {
 }
 
 NS_IMETHODIMP
-nsDocShell::LoadURI(nsDocShellLoadState* aLoadState) {
+nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
   MOZ_ASSERT(aLoadState, "Must have a valid load state!");
   MOZ_ASSERT(
       (aLoadState->LoadFlags() & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0,
@@ -702,6 +702,13 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState) {
     if (mUseStrictSecurityChecks) {
       return NS_ERROR_FAILURE;
     }
+  }
+
+  bool oldIsNavigating = mIsNavigating;
+  auto cleanupIsNavigating =
+      MakeScopeExit([&]() { mIsNavigating = oldIsNavigating; });
+  if (aSetNavigating) {
+    mIsNavigating = true;
   }
 
   PopupBlocker::PopupControlState popupState;
@@ -3848,8 +3855,7 @@ nsresult nsDocShell::LoadURI(const nsAString& aURI,
     return NS_ERROR_FAILURE;
   }
 
-  rv = LoadURI(loadState);
-  return rv;
+  return LoadURI(loadState, true);
 }
 
 NS_IMETHODIMP
@@ -5740,7 +5746,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
    * LoadURI(...) will cancel all refresh timers... This causes the
    * Timer and its refreshData instance to be released...
    */
-  LoadURI(loadState);
+  LoadURI(loadState, false);
 
   return NS_OK;
 }
