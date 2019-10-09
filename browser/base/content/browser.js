@@ -6456,7 +6456,8 @@ nsBrowserAccess.prototype = {
     aTriggeringPrincipal = null,
     aNextRemoteTabId = 0,
     aName = "",
-    aCsp = null
+    aCsp = null,
+    aSkipLoad = false
   ) {
     let win, needToFocusWin;
 
@@ -6495,6 +6496,7 @@ nsBrowserAccess.prototype = {
       nextRemoteTabId: aNextRemoteTabId,
       name: aName,
       csp: aCsp,
+      skipLoad: aSkipLoad,
     });
     let browser = win.gBrowser.getBrowserForTab(tab);
 
@@ -6519,7 +6521,8 @@ nsBrowserAccess.prototype = {
       aWhere,
       aFlags,
       aTriggeringPrincipal,
-      aCsp
+      aCsp,
+      true
     );
   },
 
@@ -6534,7 +6537,8 @@ nsBrowserAccess.prototype = {
       aWhere,
       aFlags,
       aTriggeringPrincipal,
-      aCsp
+      aCsp,
+      false
     );
   },
 
@@ -6544,7 +6548,8 @@ nsBrowserAccess.prototype = {
     aWhere,
     aFlags,
     aTriggeringPrincipal,
-    aCsp
+    aCsp,
+    aSkipLoad
   ) {
     // This function should only ever be called if we're opening a URI
     // from a non-remote browser window (via nsContentTreeOwner).
@@ -6674,7 +6679,8 @@ nsBrowserAccess.prototype = {
           aTriggeringPrincipal,
           0,
           "",
-          aCsp
+          aCsp,
+          aSkipLoad
         );
         if (browser) {
           browsingContext = browser.browsingContext;
@@ -6712,14 +6718,17 @@ nsBrowserAccess.prototype = {
     aNextRemoteTabId,
     aName
   ) {
-    // Passing a null-URI to only create the content window.
+    // Passing a null-URI to only create the content window,
+    // and pass true for aSkipLoad to prevent loading of
+    // about:blank
     return this.getContentWindowOrOpenURIInFrame(
       null,
       aParams,
       aWhere,
       aFlags,
       aNextRemoteTabId,
-      aName
+      aName,
+      true
     );
   },
 
@@ -6737,7 +6746,8 @@ nsBrowserAccess.prototype = {
       aWhere,
       aFlags,
       aNextRemoteTabId,
-      aName
+      aName,
+      false
     );
   },
 
@@ -6747,7 +6757,8 @@ nsBrowserAccess.prototype = {
     aWhere,
     aFlags,
     aNextRemoteTabId,
-    aName
+    aName,
+    aSkipLoad
   ) {
     if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
       dump("Error: openURIInFrame can only open in new tabs");
@@ -6774,7 +6785,8 @@ nsBrowserAccess.prototype = {
       aParams.triggeringPrincipal,
       aNextRemoteTabId,
       aName,
-      aParams.csp
+      aParams.csp,
+      aSkipLoad
     );
   },
 
