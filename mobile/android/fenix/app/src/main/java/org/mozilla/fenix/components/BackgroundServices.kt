@@ -30,6 +30,8 @@ import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.manager.SCOPE_SESSION
+import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Experiments
@@ -161,12 +163,16 @@ class BackgroundServices(
         serverConfig,
         deviceConfig,
         syncConfig,
-        // We don't need to specify this explicitly, but `syncConfig` may be disabled due to an 'experiments'
-        // flag. In that case, sync scope necessary for syncing won't be acquired during authentication
-        // unless we explicitly specify it below.
-        // This is a good example of an information leak at the API level.
-        // See https://github.com/mozilla-mobile/android-components/issues/3732
-        setOf("https://identity.mozilla.com/apps/oldsync")
+        setOf(
+            // We don't need to specify sync scope explicitly, but `syncConfig` may be disabled due to
+            // an 'experiments' flag. In that case, sync scope necessary for syncing won't be acquired
+            // during authentication unless we explicitly specify it below.
+            // This is a good example of an information leak at the API level.
+            // See https://github.com/mozilla-mobile/android-components/issues/3732
+            SCOPE_SYNC,
+            // Necessary to enable "Manage Account" functionality.
+            SCOPE_SESSION
+        )
     ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
         context.settings().fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
