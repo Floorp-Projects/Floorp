@@ -1827,7 +1827,7 @@ BrowserGlue.prototype = {
       "saveas_download",
       "speculative",
     ].forEach(type => {
-      Services.telemetry.keyedScalarAdd(
+      Services.telemetry.keyedScalarSet(
         "security.contentblocker_permissions",
         type,
         Services.perms.getAllWithTypePrefix(type).length
