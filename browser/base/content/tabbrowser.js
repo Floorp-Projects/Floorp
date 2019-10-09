@@ -1612,7 +1612,6 @@
       var aFocusUrlBar;
       var aName;
       var aCsp;
-      var aSkipLoad;
       if (
         arguments.length == 2 &&
         typeof arguments[1] == "object" &&
@@ -1643,7 +1642,6 @@
         aFocusUrlBar = params.focusUrlBar;
         aName = params.name;
         aCsp = params.csp;
-        aSkipLoad = params.skipLoad;
       }
 
       // all callers of loadOneTab need to pass a valid triggeringPrincipal.
@@ -1684,7 +1682,6 @@
         focusUrlBar: aFocusUrlBar,
         name: aName,
         csp: aCsp,
-        skipLoad: aSkipLoad,
       });
       if (!bgLoad) {
         this.selectedTab = tab;
@@ -2097,7 +2094,6 @@
       sameProcessAsFrameLoader,
       uriIsAboutBlank,
       userContextId,
-      skipLoad,
     } = {}) {
       let b = document.createXULElement("browser");
       // Use the JSM global to create the permanentKey, so that if the
@@ -2214,7 +2210,7 @@
 
       // Prevent the superfluous initial load of a blank document
       // if we're going to load something other than about:blank.
-      if (!uriIsAboutBlank || skipLoad) {
+      if (!uriIsAboutBlank) {
         b.setAttribute("nodefaultsrc", "true");
       }
 
@@ -2581,7 +2577,6 @@
         recordExecution,
         replayExecution,
         csp,
-        skipLoad,
       } = {}
     ) {
       // all callers of addTab that pass a params object need to pass
@@ -2815,7 +2810,6 @@
             name,
             recordExecution,
             replayExecution,
-            skipLoad,
           });
         }
 
@@ -2909,8 +2903,7 @@
       // then let's just continue loading the page normally.
       if (
         !usingPreloadedContent &&
-        (!uriIsAboutBlank || !allowInheritPrincipal) &&
-        !skipLoad
+        (!uriIsAboutBlank || !allowInheritPrincipal)
       ) {
         // pretend the user typed this so it'll be available till
         // the document successfully loads
