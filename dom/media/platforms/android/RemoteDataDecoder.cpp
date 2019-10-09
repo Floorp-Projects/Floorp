@@ -298,7 +298,7 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
       RefPtr<VideoData> v = VideoData::CreateFromImage(
           inputInfo.mDisplaySize, offset,
           TimeUnit::FromMicroseconds(presentationTimeUs),
-          TimeUnit::FromMicroseconds(inputInfo.mDurationUs), img,
+          TimeUnit::FromMicroseconds(inputInfo.mDurationUs), img.forget(),
           !!(flags & MediaCodec::BUFFER_FLAG_SYNC_FRAME),
           TimeUnit::FromMicroseconds(presentationTimeUs));
 
