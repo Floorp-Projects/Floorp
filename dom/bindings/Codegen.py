@@ -10244,11 +10244,13 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
                    "tryNext = true;\n"
                    "return true;\n" % (prefix, name))
 
+    sourceDescription = "member of %s" % unionType
+
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
         isDefinitelyObject=not type.isDictionary(),
         isMember=("OwningUnion" if ownsMembers else None),
-        sourceDescription="member of %s" % unionType)
+        sourceDescription=sourceDescription)
 
     if conversionInfo.holderType is not None:
         assert not ownsMembers
@@ -10279,13 +10281,15 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
         # It's a bit sketchy to do the security check after setting the value,
         # but it keeps the code cleaner and lets us avoid rooting |obj| over the
         # call to CallerSubsumes().
-        body = body + dedent("""
+        body = body + fill(
+            """
             if (passedToJSImpl && !CallerSubsumes(obj)) {
-              ThrowErrorMessage(cx, MSG_PERMISSION_DENIED_TO_PASS_ARG, "%s");
+              ThrowErrorMessage(cx, MSG_PERMISSION_DENIED_TO_PASS_ARG, "${sourceDescription}");
               return false;
             }
             return true;
-            """)
+            """,
+            sourceDescription=sourceDescription)
 
         setter = ClassMethod("SetToObject", "bool",
                              [Argument("JSContext*", "cx"),
