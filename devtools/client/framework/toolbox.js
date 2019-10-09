@@ -270,6 +270,7 @@ function Toolbox(
   this._onNewSelectedNodeFront = this._onNewSelectedNodeFront.bind(this);
   this._onToolSelected = this._onToolSelected.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
+  this._onMouseDown = this._onMouseDown.bind(this);
   this.updateToolboxButtonsVisibility = this.updateToolboxButtonsVisibility.bind(
     this
   );
@@ -939,6 +940,7 @@ Toolbox.prototype = {
       "contextmenu",
       this._onContextMenu
     );
+    this._chromeEventHandler.addEventListener("mousedown", this._onMouseDown);
   },
 
   _removeChromeEventHandlerEvents: function() {
@@ -959,6 +961,10 @@ Toolbox.prototype = {
     this._chromeEventHandler.removeEventListener(
       "contextmenu",
       this._onContextMenu
+    );
+    this._chromeEventHandler.removeEventListener(
+      "mousedown",
+      this._onMouseDown
     );
 
     this._chromeEventHandler = null;
@@ -1137,6 +1143,17 @@ Toolbox.prototype = {
 
     if (isInInput) {
       this.openTextBoxContextMenu(e.screenX, e.screenY);
+    }
+  },
+
+  _onMouseDown: function(e) {
+    const isMiddleClick = e.button === 1;
+    if (isMiddleClick) {
+      // Middle clicks will trigger the scroll lock feature to turn on.
+      // When the DevTools toolbox was running in an <iframe>, this behavior was
+      // disabled by default. When running in a <browser> element, we now need
+      // to catch and preventDefault() on those events.
+      e.preventDefault();
     }
   },
 
