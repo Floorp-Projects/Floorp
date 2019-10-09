@@ -116,7 +116,7 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
   void Terminated() override;
 
   // Refreshes only the parts of mRemoteWorkerData that may change over time.
-  nsresult RefreshRemoteWorkerData(
+  void RefreshRemoteWorkerData(
       const RefPtr<ServiceWorkerRegistrationInfo>& aRegistration);
 
   nsresult SendPushEventInternal(
