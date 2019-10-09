@@ -94,6 +94,11 @@ SubstitutingURL::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
   return NS_OK;
 }
 
+void SubstitutingURL::Serialize(ipc::URIParams& aParams) {
+  nsStandardURL::Serialize(aParams);
+  aParams.get_StandardURLParams().isSubstituting() = true;
+}
+
 // SubstitutingJARURI
 
 SubstitutingJARURI::SubstitutingJARURI(nsIURL* source, nsIJARURI* resolved)
