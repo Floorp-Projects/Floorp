@@ -153,6 +153,43 @@ class DownloadsFeatureTest {
     }
 
     @Test
+    fun `Adding a Download with skipConfirmation flag will start download immediately`() {
+        val fragmentManager: FragmentManager = mockFragmentManager()
+
+        grantPermissions()
+
+        val downloadManager: DownloadManager = mock()
+        doReturn(
+            arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
+        ).`when`(downloadManager).permissions
+
+        val feature = DownloadsFeature(
+            testContext,
+            store,
+            useCases = mock(),
+            fragmentManager = fragmentManager,
+            downloadManager = downloadManager
+        )
+
+        feature.start()
+
+        verify(fragmentManager, never()).beginTransaction()
+
+        val download = DownloadState(
+            url = "https://www.mozilla.org",
+            skipConfirmation = true
+        )
+
+        store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
+            .joinBlocking()
+
+        testDispatcher.advanceUntilIdle()
+
+        verify(fragmentManager, never()).beginTransaction()
+        verify(downloadManager).download(eq(download), anyString())
+    }
+
+    @Test
     fun `When starting the feature will reattach to already existing dialog`() {
         grantPermissions()
 

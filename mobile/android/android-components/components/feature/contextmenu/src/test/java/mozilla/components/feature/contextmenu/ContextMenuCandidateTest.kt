@@ -382,6 +382,8 @@ class ContextMenuCandidateTest {
         assertEquals(
             "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
             store.state.tabs.first().content.download!!.url)
+        assertTrue(
+            store.state.tabs.first().content.download!!.skipConfirmation)
     }
 
     @Test

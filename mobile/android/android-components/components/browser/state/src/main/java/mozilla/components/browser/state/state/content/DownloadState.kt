@@ -26,5 +26,6 @@ data class DownloadState(
     val userAgent: String? = null,
     val destinationDirectory: String = Environment.DIRECTORY_DOWNLOADS,
     val referrerUrl: String? = null,
+    val skipConfirmation: Boolean = false,
     val id: String = UUID.randomUUID().toString()
 )
