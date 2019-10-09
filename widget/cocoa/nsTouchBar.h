@@ -166,6 +166,7 @@ using namespace mozilla::dom;
 - (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput;
 - (void)updatePopover:(NSPopoverTouchBarItem*)aPopoverItem input:(TouchBarInput*)aInput;
 - (void)updateScrollView:(NSCustomTouchBarItem*)aScrollViewItem input:(TouchBarInput*)aInput;
+- (void)updateLabel:(NSTextField*)aLabel input:(TouchBarInput*)aInput;
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 
 /**

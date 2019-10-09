@@ -28,6 +28,7 @@ static const NSArray<NSString*>* kAllowedInputTypes = @[
   @"scrubber",
   @"popover",
   @"scrollView",
+  @"label",
 ];
 
 // The default space between inputs, used where layout is not automatic.
@@ -179,6 +180,11 @@ static const uint32_t kInputIconSize = 16;
   if ([[input type] hasSuffix:@"scrollView"]) {
     [self updateScrollView:newItem input:input];
     return newItem;
+  } else if ([[input type] hasSuffix:@"label"]) {
+    NSTextField* label = [NSTextField labelWithString:@""];
+    [self updateLabel:label input:input];
+    newItem.view = label;
+    return newItem;
   }
 
   // The cases of a button or main button require the same setup.
@@ -224,6 +230,8 @@ static const uint32_t kInputIconSize = 16;
   } else if ([[aInput type] hasSuffix:@"popover"]) {
     [(NSPopoverTouchBarItem*)item setCustomizationLabel:[aInput title]];
     [self updatePopover:(NSPopoverTouchBarItem*)item input:aInput];
+  } else if ([[aInput type] hasSuffix:@"label"]) {
+    [self updateLabel:(NSTextField*)item.view input:aInput];
   }
 
   [self replaceMappedLayoutItem:aInput];
@@ -398,6 +406,13 @@ static const uint32_t kInputIconSize = 16;
   scrollView.documentView = documentView;
 
   aScrollViewItem.view = scrollView;
+}
+
+- (void)updateLabel:(NSTextField*)aLabel input:aInput {
+  if (!aLabel || ![aInput title]) {
+    return;
+  }
+  [aLabel setStringValue:[aInput title]];
 }
 
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier {
