@@ -1371,19 +1371,13 @@ Document::Document(const char* aContentType)
   mReferrerInfo = new dom::ReferrerInfo(nullptr);
 }
 
-bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
-                                             JSObject* aObject) {
-  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
-  if (NS_WARN_IF(!principal)) {
+static bool IsAboutErrorPage(nsGlobalWindowInner* aWin, const char* aSpec) {
+  if (NS_WARN_IF(!aWin)) {
     return false;
   }
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_OK;
-  rv = principal->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!uri) {
+  nsIURI* uri = aWin->GetDocumentURI();
+  if (NS_WARN_IF(!uri)) {
     return false;
   }
 
@@ -1394,10 +1388,16 @@ bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
   }
 
   nsAutoCString aboutSpec;
-  rv = uri->GetSpec(aboutSpec);
+  nsresult rv = NS_GetAboutModuleName(uri, aboutSpec);
   NS_ENSURE_SUCCESS(rv, false);
 
-  return StringBeginsWith(aboutSpec, NS_LITERAL_CSTRING("about:certerror"));
+  return aboutSpec.EqualsASCII(aSpec);
+}
+
+bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
+                                             JSObject* aObject) {
+  nsGlobalWindowInner* win = xpc::WindowOrNull(aObject);
+  return IsAboutErrorPage(win, "certerror");
 }
 
 void Document::GetFailedCertSecurityInfo(
@@ -14419,7 +14419,6 @@ void Document::SetCssUseCounterBits() {
     }
   }
 }
-
 
 void Document::PropagateUseCountersToPage() {
   if (mDisplayDocument) {
