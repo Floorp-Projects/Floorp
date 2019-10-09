@@ -638,6 +638,15 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     PresContext()->ConstructedFrame();
   }
   if (GetParent()) {
+    if (MOZ_UNLIKELY(mContent == PresContext()->Document()->GetRootElement() &&
+                     mContent == GetParent()->GetContent())) {
+      // Our content is the root element and we have the same content as our
+      // parent. That is, we are the internal anonymous frame of the root
+      // element. Copy the used mWritingMode from our parent because
+      // mDocElementContainingBlock gets its mWritingMode from <body>.
+      mWritingMode = GetParent()->GetWritingMode();
+    }
+
     // Copy some state bits from our parent (the bits that should apply
     // recursively throughout a subtree). The bits are sorted according to their
     // order in nsFrameStateBits.h.

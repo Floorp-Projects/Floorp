@@ -118,10 +118,6 @@ class nsCanvasFrame final : public nsContainerFrame,
   nsRect CanvasArea() const;
 
  protected:
-  // Utility function to propagate the WritingMode from our first child to
-  // 'this' and all its ancestors.
-  void MaybePropagateRootElementWritingMode();
-
   // Data members
   bool mDoPaintFocus;
   bool mAddedScrollPositionListener;
