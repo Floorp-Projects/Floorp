@@ -32,20 +32,27 @@ add_task(async function test_profile_multi_frame_page_info() {
     // Parent page
     if (page.url == url) {
       Assert.equal(page.url, url);
-      Assert.equal(typeof page.docshellId, "string");
-      Assert.equal(typeof page.historyId, "number");
+      Assert.equal(typeof page.browsingContextID, "number");
+      Assert.equal(typeof page.innerWindowID, "number");
       Assert.equal(page.isSubFrame, false);
       foundPage++;
+      break;
     }
+  }
 
+  Assert.notEqual(typeof parentPage, "undefined");
+
+  for (const page of contentProcess.pages) {
     // Child page (iframe)
     if (page.url == BASE_URL + "single_frame.html") {
       Assert.equal(page.url, BASE_URL + "single_frame.html");
-      Assert.equal(typeof page.docshellId, "string");
-      Assert.equal(typeof page.historyId, "number");
+      Assert.equal(typeof page.browsingContextID, "number");
+      Assert.equal(typeof page.innerWindowID, "number");
       Assert.equal(page.isSubFrame, true);
       foundPage++;
+      break;
     }
   }
+
   Assert.equal(foundPage, 2);
 });
