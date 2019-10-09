@@ -80,6 +80,10 @@
       this.mIconURL = null;
       this.lastURI = null;
 
+      // Track progress listeners added to this <browser>. These need to persist
+      // between calls to destroy().
+      this.progressListeners = [];
+
       this.addEventListener(
         "keypress",
         event => {
@@ -1059,11 +1063,40 @@
       if (!aNotifyMask) {
         aNotifyMask = Ci.nsIWebProgress.NOTIFY_ALL;
       }
+
+      this.progressListeners.push({
+        weakListener: Cu.getWeakReference(aListener),
+        mask: aNotifyMask,
+      });
+
       this.webProgress.addProgressListener(aListener, aNotifyMask);
     }
 
     removeProgressListener(aListener) {
       this.webProgress.removeProgressListener(aListener);
+
+      // Remove aListener from our progress listener list, and clear out dead
+      // weak references while we're at it.
+      this.progressListeners = this.progressListeners.filter(
+        ({ weakListener }) =>
+          weakListener.get() && weakListener.get() !== aListener
+      );
+    }
+
+    /**
+     * Move the previously-tracked web progress listeners to this <browser>'s
+     * current WebProgress.
+     */
+    restoreProgressListeners() {
+      let listeners = this.progressListeners;
+      this.progressListeners = [];
+
+      for (let { weakListener, mask } of listeners) {
+        let listener = weakListener.get();
+        if (listener) {
+          this.addProgressListener(listener, mask);
+        }
+      }
     }
 
     onPageHide(aEvent) {
@@ -1268,6 +1301,13 @@
 
         this._remoteWebProgress = this._remoteWebProgressManager.topLevelWebProgress;
 
+        if (!oldManager) {
+          // If we didn't have a manager, then we're transitioning from local to
+          // remote. Add all listeners from the previous <browser> to the new
+          // RemoteWebProgress.
+          this.restoreProgressListeners();
+        }
+
         this.messageManager.loadFrameScript(
           "chrome://global/content/browser-child.js",
           true
@@ -1332,10 +1372,12 @@
       }
 
       if (!this.isRemoteBrowser) {
-        // If we've transitioned from remote to non-remote, we'll give up trying to
-        // keep the web progress listeners persisted during the transition.
-        delete this._remoteWebProgressManager;
-        delete this._remoteWebProgress;
+        // If we've transitioned from remote to non-remote, we no longer need
+        // our RemoteWebProgress or its associated manager, but we'll need to
+        // add the progress listeners to the new non-remote WebProgress.
+        this._remoteWebProgressManager = null;
+        this._remoteWebProgress = null;
+        this.restoreProgressListeners();
 
         this.addEventListener("pagehide", this.onPageHide, true);
       }
