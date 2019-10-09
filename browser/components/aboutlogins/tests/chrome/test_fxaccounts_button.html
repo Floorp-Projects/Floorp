@@ -45,6 +45,7 @@ add_task(async function test_default_state() {
 
 add_task(async function test_logged_in_without_login_syncing() {
   gFxAccountsButton.updateState({
+    fxAccountsEnabled: true,
     loggedIn: true,
     loginSyncingEnabled: false,
   });
@@ -60,6 +61,7 @@ add_task(async function test_logged_in_without_login_syncing() {
   const TEST_AVATAR_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
 
   gFxAccountsButton.updateState({
+    fxAccountsEnabled: true,
     loggedIn: true,
     loginSyncingEnabled: true,
     email: TEST_EMAIL,
@@ -73,10 +75,18 @@ add_task(async function test_logged_in_without_login_syncing() {
   is(gFxAccountsButton.shadowRoot.querySelector(".fxaccount-email").textContent,
     TEST_EMAIL,
     "email should be shown");
-  info(gFxAccountsButton.shadowRoot.querySelector(".fxaccounts-avatar-button").outerHTML);
   is(gFxAccountsButton.shadowRoot.querySelector(".fxaccounts-avatar-button").style.getPropertyValue("--avatar-url"),
     `url(${TEST_AVATAR_URL})`,
     "--avatar-url should be set");
+});
+
+add_task(async function test_fxaccounts_disabled() {
+  gFxAccountsButton.updateState({
+    fxAccountsEnabled: false,
+  });
+
+  ok(isHidden(gFxAccountsButton),
+    "the whole button is hidden when fxaccounts are disabled");
 });
 
 </script>

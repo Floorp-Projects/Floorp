@@ -64,7 +64,7 @@ export default class FxAccountsButton extends HTMLElement {
    *                              be empty if `loggedIn` is false.
    */
   updateState(state) {
-    this.hidden = false;
+    this.hidden = !state.fxAccountsEnabled;
     this._loggedIn = state.loggedIn;
     this._email = state.email;
     this._avatarURL = state.avatarURL;
