@@ -45,6 +45,10 @@ const threadSpec = generateActorSpec({
       unscannedRegions: Option(0, "json"),
       cachedPoints: Option(0, "json"),
     },
+    replayFramePositions: {
+      positions: Option(0, "array:json"),
+      frame: Option(0, "string"),
+    },
   },
 
   methods: {
