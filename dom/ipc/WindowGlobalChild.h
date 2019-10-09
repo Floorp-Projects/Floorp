@@ -116,6 +116,10 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   mozilla::ipc::IPCResult RecvLoadURIInChild(nsDocShellLoadState* aLoadState);
 
+  mozilla::ipc::IPCResult RecvChangeFrameRemoteness(
+      dom::BrowsingContext* aBc, const nsString& aRemoteType,
+      uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvDrawSnapshot(const Maybe<IntRect>& aRect,
                                            const float& aScale,
                                            const nscolor& aBackgroundColor,
