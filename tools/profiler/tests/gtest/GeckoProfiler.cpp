@@ -599,8 +599,7 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER("M3", OTHER);
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "M4", OTHER, TracingMarkerPayload,
-      ("C", TRACING_EVENT, mozilla::Nothing(), mozilla::Nothing(),
-       profiler_get_backtrace()));
+      ("C", TRACING_EVENT, mozilla::Nothing(), profiler_get_backtrace()));
 
   for (int i = 0; i < 10; i++) {
     PROFILER_ADD_MARKER_WITH_PAYLOAD("M5", OTHER, GTestMarkerPayload, (i));
@@ -659,7 +658,7 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "DOMEventMarkerPayload marker", OTHER, DOMEventMarkerPayload,
       (NS_LITERAL_STRING("dom event"), ts1, "category", TRACING_EVENT,
-       mozilla::Nothing(), mozilla::Nothing()));
+       mozilla::Nothing()));
 
   {
     const char gcMajorJSON[] = "42";
@@ -729,16 +728,14 @@ TEST(GeckoProfiler, Markers)
                                    TextMarkerPayload,
                                    (NS_LITERAL_CSTRING("text"), ts1, ts2));
 
-  PROFILER_ADD_MARKER_WITH_PAYLOAD("UserTimingMarkerPayload marker mark", OTHER,
-                                   UserTimingMarkerPayload,
-                                   (NS_LITERAL_STRING("mark name"), ts1,
-                                    mozilla::Nothing(), mozilla::Nothing()));
+  PROFILER_ADD_MARKER_WITH_PAYLOAD(
+      "UserTimingMarkerPayload marker mark", OTHER, UserTimingMarkerPayload,
+      (NS_LITERAL_STRING("mark name"), ts1, mozilla::Nothing()));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD(
       "UserTimingMarkerPayload marker measure", OTHER, UserTimingMarkerPayload,
       (NS_LITERAL_STRING("measure name"), Some(NS_LITERAL_STRING("start mark")),
-       Some(NS_LITERAL_STRING("end mark")), ts1, ts2, mozilla::Nothing(),
-       mozilla::Nothing()));
+       Some(NS_LITERAL_STRING("end mark")), ts1, ts2, mozilla::Nothing()));
 
   PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncMarkerPayload marker", OTHER,
                                    VsyncMarkerPayload, (ts1));
