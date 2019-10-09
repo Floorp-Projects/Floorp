@@ -37,6 +37,7 @@ fn main() {
     };
 
     let mut out_object = write::Object::new(in_object.format(), in_object.architecture());
+    out_object.mangling = write::Mangling::None;
 
     let mut out_sections = HashMap::new();
     for in_section in in_object.sections() {

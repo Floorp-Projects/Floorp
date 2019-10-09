@@ -10,7 +10,7 @@ use goblin::{elf, strtab};
 use scroll::ctx::TryFromCtx;
 use scroll::{self, Pread};
 use std::{iter, slice};
-use target_lexicon::Architecture;
+use target_lexicon::{Aarch64Architecture, Architecture, ArmArchitecture};
 
 use crate::read::{
     self, Object, ObjectSection, ObjectSegment, Relocation, RelocationEncoding, RelocationKind,
@@ -89,8 +89,8 @@ where
 
     fn architecture(&self) -> Architecture {
         match self.elf.header.e_machine {
-            elf::header::EM_ARM => Architecture::Arm,
-            elf::header::EM_AARCH64 => Architecture::Aarch64,
+            elf::header::EM_ARM => Architecture::Arm(ArmArchitecture::Arm),
+            elf::header::EM_AARCH64 => Architecture::Aarch64(Aarch64Architecture::Aarch64),
             elf::header::EM_386 => Architecture::I386,
             elf::header::EM_X86_64 => Architecture::X86_64,
             elf::header::EM_MIPS => Architecture::Mips,

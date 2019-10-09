@@ -58,8 +58,8 @@ impl Object {
 
     fn elf_has_relocation_addend(&self) -> Result<bool, String> {
         Ok(match self.architecture {
-            Architecture::Arm => false,
-            Architecture::Aarch64 => false,
+            Architecture::Arm(_) => false,
+            Architecture::Aarch64(_) => false,
             Architecture::I386 => false,
             Architecture::X86_64 => true,
             _ => {
@@ -294,8 +294,8 @@ impl Object {
 
         // Write file header.
         let e_machine = match self.architecture {
-            Architecture::Arm => elf::EM_ARM,
-            Architecture::Aarch64 => elf::EM_AARCH64,
+            Architecture::Arm(_) => elf::EM_ARM,
+            Architecture::Aarch64(_) => elf::EM_AARCH64,
             Architecture::I386 => elf::EM_386,
             Architecture::X86_64 => elf::EM_X86_64,
             _ => {
