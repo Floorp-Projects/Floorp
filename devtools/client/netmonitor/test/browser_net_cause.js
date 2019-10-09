@@ -16,8 +16,7 @@ const EXPECTED_REQUESTS = [
     url: CAUSE_URL,
     causeType: "document",
     causeUri: null,
-    // The document load has internal privileged JS code on the stack
-    stack: true,
+    stack: false,
   },
   {
     method: "GET",
