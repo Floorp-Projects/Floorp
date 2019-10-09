@@ -6,6 +6,7 @@ DIRS += [
     'animation',
     'boxmodel',
     'changes',
+    'compatibility',
     'components',
     'computed',
     'extensions',
