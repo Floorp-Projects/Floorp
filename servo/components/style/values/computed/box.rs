@@ -64,7 +64,7 @@ pub enum Float {
 impl Float {
     /// Returns true if `self` is not `None`.
     pub fn is_floating(self) -> bool {
-        self != Self::None
+        self != Float::None
     }
 }
 
