@@ -69,6 +69,7 @@ class AboutLoginsChild extends ActorChild {
           },
           // Default to enabled just in case a search is attempted before we get a response.
           masterPasswordEnabled: true,
+          passwordRevealVisible: true,
         };
         waivedContent.AboutLoginsUtils = Cu.cloneInto(
           AboutLoginsUtils,
@@ -230,6 +231,8 @@ class AboutLoginsChild extends ActorChild {
         this.sendToContent("Setup", message.data);
         Cu.waiveXrays(this.content).AboutLoginsUtils.masterPasswordEnabled =
           message.data.masterPasswordEnabled;
+        Cu.waiveXrays(this.content).AboutLoginsUtils.passwordRevealVisible =
+          message.data.passwordRevealVisible;
         break;
       case "AboutLogins:ShowLoginItemError":
         this.sendToContent("ShowLoginItemError", message.data);
