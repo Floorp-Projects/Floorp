@@ -54,6 +54,8 @@ policy-DisableFormHistory = Don’t remember search and form history.
 
 policy-DisableMasterPasswordCreation = If true, a master password can’t be created.
 
+policy-DisablePasswordReveal = Do not allow passwords to be revealed in saved logins.
+
 policy-DisablePocket = Disable the feature to save webpages to Pocket.
 
 policy-DisablePrivateBrowsing = Disable Private Browsing.
