@@ -65,4 +65,10 @@ interface nsITouchBarInput : nsISupports
    * an imgLoader to load our SVG icons.
    */
   readonly attribute Document document;
+
+  /**
+   * An array containing an input's children.
+   * Available for  type = ("scrollView" || "popover").
+   */
+  attribute nsIArray children;
 };
