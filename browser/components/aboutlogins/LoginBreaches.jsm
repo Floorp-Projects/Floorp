@@ -116,8 +116,6 @@ this.LoginBreaches = {
         }
 
         let breachAlertURL = new URL(breach.Name, baseBreachAlertURL);
-        breachAlertURL.searchParams.set("utm_campaign", "Desktop");
-        breachAlertURL.searchParams.set("utm_medium", "InProduct");
         breach.breachAlertURL = breachAlertURL.href;
         breachesByLoginGUID.set(login.guid, breach);
       }
