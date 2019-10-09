@@ -1528,8 +1528,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     if (this.dbg.replaying) {
-      packet.executionPoint = this.dbg.replayCurrentExecutionPoint();
+      const point = this.dbg.replayCurrentExecutionPoint();
+      packet.executionPoint = point;
       packet.recordingEndpoint = this.dbg.replayRecordingEndpoint();
+      this.onFramePositions(point, frame);
     }
 
     if (poppedFrames) {
@@ -1537,6 +1539,38 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     return packet;
+  },
+
+  onFramePositions: function(point, frame) {
+    if (!point) {
+      return;
+    }
+
+    this.dbg.replayFramePositions(point).then(positions => {
+      if (!positions) {
+        return;
+      }
+
+      const mappedPositions = positions.map(mappedPoint => {
+        let location = {};
+        if (mappedPoint.position.kind === "OnStep") {
+          const offsetLocation = this.sources.getScriptOffsetLocation(
+            frame.script,
+            mappedPoint.position.offset
+          );
+          location = {
+            line: offsetLocation.line,
+            column: offsetLocation.column,
+          };
+        }
+        return { ...mappedPoint, location };
+      });
+
+      this.emit("replayFramePositions", {
+        positions: mappedPositions,
+        frame: frame.actor.actorID,
+      });
+    });
   },
 
   /**
