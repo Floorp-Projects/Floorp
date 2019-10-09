@@ -137,7 +137,8 @@ sealed class Event {
             context.getString(R.string.pref_key_tracking_protection),
             context.getString(R.string.pref_key_search_bookmarks),
             context.getString(R.string.pref_key_search_browsing_history),
-            context.getString(R.string.pref_key_show_clipboard_suggestions)
+            context.getString(R.string.pref_key_show_clipboard_suggestions),
+            context.getString(R.string.pref_key_show_search_shortcuts)
         )
 
         override val extras: Map<Events.preferenceToggledKeys, String>?
