@@ -50,16 +50,18 @@ class GCZonesIter {
   ZonesIter zone;
 
  public:
-  explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms)
-      : zone(rt, selector) {
+  explicit GCZonesIter(GCRuntime* gc, ZoneSelector selector = WithAtoms)
+      : zone(gc, selector) {
     MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-    MOZ_ASSERT_IF(rt->gc.atomsZone->isCollectingFromAnyThread(),
-                  !rt->hasHelperThreadZones());
+    MOZ_ASSERT_IF(gc->atomsZone->isCollectingFromAnyThread(),
+                  !gc->rt->hasHelperThreadZones());
 
     if (!done() && !zone->isCollectingFromAnyThread()) {
       next();
     }
   }
+  explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms)
+      : GCZonesIter(&rt->gc, selector) {}
 
   bool done() const { return zone.done(); }
 
@@ -89,12 +91,14 @@ class SweepGroupZonesIter {
   ZoneSelector selector;
 
  public:
-  explicit SweepGroupZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms)
+  explicit SweepGroupZonesIter(GCRuntime* gc, ZoneSelector selector = WithAtoms)
       : selector(selector) {
     MOZ_ASSERT(CurrentThreadIsPerformingGC());
-    current = rt->gc.getCurrentSweepGroup();
+    current = gc->getCurrentSweepGroup();
     maybeSkipAtomsZone();
   }
+  explicit SweepGroupZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms)
+      : SweepGroupZonesIter(&rt->gc, selector) {}
 
   void maybeSkipAtomsZone() {
     if (selector == SkipAtoms && current && current->isAtomsZone()) {

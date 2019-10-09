@@ -1091,7 +1091,7 @@ void js::Nursery::doCollection(JS::GCReason reason,
   startProfile(ProfileKey::CheckHashTables);
 #ifdef JS_GC_ZEAL
   if (gc->hasZealMode(ZealMode::CheckHashTablesOnMinorGC)) {
-    CheckHashTablesAfterMovingGC(rt);
+    gc->checkHashTablesAfterMovingGC();
   }
 #endif
   endProfile(ProfileKey::CheckHashTables);
