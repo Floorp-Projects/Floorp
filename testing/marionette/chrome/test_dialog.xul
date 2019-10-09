@@ -29,7 +29,7 @@
     <checkbox id="check-box" label="Test Mode 2" />
     <hbox align="center">
       <label id="text-box-label" control="text-box">Name:</label>
-      <textbox id="text-box" flex="1" />
+      <input xmlns="http://www.w3.org/1999/xhtml" id="text-box" style="-moz-box-flex: 1;" />
     </hbox>
   </vbox>
 

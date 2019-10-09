@@ -11,9 +11,9 @@
 
   <vbox id="things">
     <checkbox id="testBox"  label="box" />
-    <textbox id="textInput"  size="6" value="test" label="input" />
-    <textbox id="textInput2"  size="6" value="test" label="input" />
-    <textbox id="textInput3" class="asdf" size="6" value="test" label="input" />
+    <input xmlns="http://www.w3.org/1999/xhtml" id="textInput"  size="6" value="test" label="input" />
+    <input xmlns="http://www.w3.org/1999/xhtml" id="textInput2"  size="6" value="test" label="input" />
+    <input xmlns="http://www.w3.org/1999/xhtml" id="textInput3" class="asdf" size="6" value="test" label="input" />
   </vbox>
      
 </dialog>
