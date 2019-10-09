@@ -2184,8 +2184,14 @@ WebRenderCommandBuilder::GenerateFallbackData(
   if (visibleSize.IsEmpty()) {
     return nullptr;
   }
-  // Display item bounds should be unscaled
-  aImageRect = visibleRect / layerScale;
+
+  if (useBlobImage) {
+    // Display item bounds should be unscaled
+    aImageRect = visibleRect / layerScale;
+  } else {
+    // Display item bounds should be unscaled
+    aImageRect = dtRect / layerScale;
+  }
 
   // We always paint items at 0,0 so the visibleRect that we use inside the blob
   // is needs to be adjusted by the display item bounds top left.
@@ -2328,7 +2334,7 @@ WebRenderCommandBuilder::GenerateFallbackData(
 
       {
         UpdateImageHelper helper(imageContainer, imageClient,
-                                 visibleSize.ToUnknownSize(), format);
+                                 dtRect.Size().ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
           if (!dt) {
