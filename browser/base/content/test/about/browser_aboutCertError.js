@@ -518,16 +518,28 @@ add_task(async function checkSandboxedIframe() {
   let tab = await openErrorPage(BAD_CERT, useFrame, sandboxed);
   let browser = tab.linkedBrowser;
 
-  let titleContent = await ContentTask.spawn(browser, {}, async function() {
-    // Cannot test for error in the Advanced section since it's currently not present
-    // in a sandboxed iframe.
+  await ContentTask.spawn(browser, {}, async function() {
     let doc = content.document.querySelector("iframe").contentDocument;
+
     let titleText = doc.querySelector(".title-text");
-    return titleText.textContent;
+    ok(
+      titleText.textContent.endsWith("Security Issue"),
+      "Title shows Did Not Connect: Potential Security Issue"
+    );
+
+    // Wait until fluent sets the errorCode inner text.
+    let el;
+    await ContentTaskUtils.waitForCondition(() => {
+      el = doc.getElementById("errorCode");
+      return el.textContent != "";
+    }, "error code has been set inside the advanced button panel");
+
+    is(
+      el.textContent,
+      "SEC_ERROR_EXPIRED_CERTIFICATE",
+      "Correct error message found"
+    );
+    is(el.tagName, "a", "Error message is a link");
   });
-  ok(
-    titleContent.endsWith("Security Issue"),
-    "Did Not Connect: Potential Security Issue"
-  );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
