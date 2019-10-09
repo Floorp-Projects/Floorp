@@ -22,6 +22,7 @@ add_task(async function test_showLoginItemErrors() {
     "pass2"
   );
   LOGIN_TO_UPDATE = Services.logins.addLogin(LOGIN_TO_UPDATE);
+  EXPECTED_ERROR_MESSAGE = "This login already exists.";
 
   await ContentTask.spawn(
     browser,
@@ -129,4 +130,5 @@ add_task(async function test_showLoginItemErrors() {
       );
     }
   );
+  EXPECTED_ERROR_MESSAGE = null;
 });
