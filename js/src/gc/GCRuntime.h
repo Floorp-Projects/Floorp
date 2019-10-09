@@ -118,13 +118,13 @@ class ChunkPool {
 
 class BackgroundSweepTask : public GCParallelTaskHelper<BackgroundSweepTask> {
  public:
-  explicit BackgroundSweepTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
+  explicit BackgroundSweepTask(GCRuntime* gc) : GCParallelTaskHelper(gc) {}
   void run();
 };
 
 class BackgroundFreeTask : public GCParallelTaskHelper<BackgroundFreeTask> {
  public:
-  explicit BackgroundFreeTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
+  explicit BackgroundFreeTask(GCRuntime* gc) : GCParallelTaskHelper(gc) {}
   void run();
 };
 
@@ -137,7 +137,7 @@ class BackgroundAllocTask : public GCParallelTaskHelper<BackgroundAllocTask> {
   const bool enabled_;
 
  public:
-  BackgroundAllocTask(JSRuntime* rt, ChunkPool& pool);
+  BackgroundAllocTask(GCRuntime* gc, ChunkPool& pool);
   bool enabled() const { return enabled_; }
 
   void run();
@@ -149,7 +149,7 @@ class BackgroundDecommitTask
  public:
   using ChunkVector = mozilla::Vector<Chunk*>;
 
-  explicit BackgroundDecommitTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
+  explicit BackgroundDecommitTask(GCRuntime* gc) : GCParallelTaskHelper(gc) {}
   void setChunksToScan(ChunkVector& chunks);
 
   void run();

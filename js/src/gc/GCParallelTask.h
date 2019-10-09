@@ -26,8 +26,9 @@ class GCParallelTask : public RunnableTask {
  public:
   using TaskFunc = void (*)(GCParallelTask*);
 
+  gc::GCRuntime* const gc;
+
  private:
-  JSRuntime* const runtime_;
   TaskFunc func_;
 
   // The state of the parallel computation.
@@ -46,14 +47,14 @@ class GCParallelTask : public RunnableTask {
       cancel_;
 
  public:
-  explicit GCParallelTask(JSRuntime* runtime, TaskFunc func)
-      : runtime_(runtime),
+  explicit GCParallelTask(gc::GCRuntime* gc, TaskFunc func)
+      : gc(gc),
         func_(func),
         state_(State::NotStarted),
         duration_(nullptr),
         cancel_(false) {}
   GCParallelTask(GCParallelTask&& other)
-      : runtime_(other.runtime_),
+      : gc(other.gc),
         func_(other.func_),
         state_(other.state_),
         duration_(nullptr),
@@ -62,8 +63,6 @@ class GCParallelTask : public RunnableTask {
   // Derived classes must override this to ensure that join() gets called
   // before members get destructed.
   virtual ~GCParallelTask();
-
-  JSRuntime* runtime() { return runtime_; }
 
   // Time spent in the most recent invocation of this task.
   mozilla::TimeDuration duration() const { return duration_; }
@@ -78,8 +77,8 @@ class GCParallelTask : public RunnableTask {
   void joinWithLockHeld(AutoLockHelperThreadState& locked);
 
   // Instead of dispatching to a helper, run the task on the current thread.
-  void runFromMainThread(JSRuntime* rt);
-  void joinAndRunFromMainThread(JSRuntime* rt);
+  void runFromMainThread();
+  void joinAndRunFromMainThread();
 
   // If the task is not already running, either start it or run it on the main
   // thread if that fails.
@@ -151,8 +150,8 @@ class GCParallelTask : public RunnableTask {
 template <typename Derived>
 class GCParallelTaskHelper : public GCParallelTask {
  public:
-  explicit GCParallelTaskHelper(JSRuntime* runtime)
-      : GCParallelTask(runtime, &runTaskTyped) {}
+  explicit GCParallelTaskHelper(gc::GCRuntime* gc)
+      : GCParallelTask(gc, &runTaskTyped) {}
   GCParallelTaskHelper(GCParallelTaskHelper&& other)
       : GCParallelTask(std::move(other)) {}
 
