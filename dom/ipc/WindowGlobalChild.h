@@ -117,6 +117,8 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvLoadURIInChild(nsDocShellLoadState* aLoadState,
                                              bool aSetNavigating);
 
+  mozilla::ipc::IPCResult RecvDisplayLoadError(const nsAString& aURI);
+
   mozilla::ipc::IPCResult RecvChangeFrameRemoteness(
       dom::BrowsingContext* aBc, const nsString& aRemoteType,
       uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver);
