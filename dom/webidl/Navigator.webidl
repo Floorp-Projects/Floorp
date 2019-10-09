@@ -322,3 +322,15 @@ partial interface Navigator {
   [Pref="dom.events.asyncClipboard", SecureContext, SameObject]
   readonly attribute Clipboard clipboard;
 };
+
+// https://wicg.github.io/web-share/#navigator-interface
+partial interface Navigator {
+  [SecureContext, Throws, Pref="dom.webshare.enabled"]
+  Promise<void> share(optional ShareData data = {});
+};
+// https://wicg.github.io/web-share/#sharedata-dictionary
+dictionary ShareData {
+  USVString title;
+  USVString text;
+  USVString url;
+};

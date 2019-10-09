@@ -2693,6 +2693,12 @@
   value: true
   mirror: always
 
+# WebShare API - exposes navigator.share()
+- name: dom.webshare.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
