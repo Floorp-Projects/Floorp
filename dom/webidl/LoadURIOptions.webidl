@@ -61,4 +61,10 @@ dictionary LoadURIOptions {
    * and cannot be used to resolve aURI.
    */
   URI? baseURI = null;
+
+  /**
+   * If non-0, a value to pass to nsIDocShell::setCancelContentJSEpoch
+   * when initiating the load.
+   */
+  long cancelContentJSEpoch = 0;
 };

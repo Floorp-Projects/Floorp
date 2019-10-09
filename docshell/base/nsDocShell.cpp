@@ -704,6 +704,16 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState) {
     }
   }
 
+  if (aLoadState->GetOriginalURIString().isSome()) {
+    // Save URI string in case it's needed later when
+    // sending to search engine service in EndPageLoad()
+    mOriginalUriString = *aLoadState->GetOriginalURIString();
+  }
+
+  if (aLoadState->GetCancelContentJSEpoch().isSome()) {
+    SetCancelContentJSEpoch(*aLoadState->GetCancelContentJSEpoch());
+  }
+
   // Note: we allow loads to get through here even if mFiredUnloadEvent is
   // true; that case will get handled in LoadInternal or LoadHistoryEntry,
   // so we pass false as the second parameter to IsNavigationAllowed.
