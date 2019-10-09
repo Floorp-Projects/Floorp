@@ -136,8 +136,8 @@ using namespace mozilla::dom;
 /**
  * Update or create various subclasses of TouchBarItem.
  */
-- (NSTouchBarItem*)updateButton:(NSCustomTouchBarItem*)aButton input:(TouchBarInput*)aInput;
-- (NSTouchBarItem*)updateMainButton:(NSCustomTouchBarItem*)aMainButton input:(TouchBarInput*)aInput;
+- (void)updateButton:(NSButton*)aButton input:(TouchBarInput*)aInput;
+- (void)updateMainButton:(NSButton*)aMainButton input:(TouchBarInput*)aInput;
 - (NSTouchBarItem*)makeShareScrubberForIdentifier:(NSTouchBarItemIdentifier)aIdentifier;
 
 /**
