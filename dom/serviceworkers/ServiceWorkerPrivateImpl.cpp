@@ -22,10 +22,8 @@
 #include "nsILoadInfo.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIObserverService.h"
-#include "nsIPermissionManager.h"
 #include "nsIURI.h"
 #include "nsIUploadChannel2.h"
-#include "nsPermissionManager.h"
 #include "nsThreadUtils.h"
 
 #include "ServiceWorkerManager.h"
@@ -351,11 +349,7 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
   mRemoteWorkerData.agentClusterId() = regInfo->AgentClusterId();
 
   // This fills in the rest of mRemoteWorkerData.serviceWorkerData().
-  rv = RefreshRemoteWorkerData(regInfo);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  RefreshRemoteWorkerData(regInfo);
 
   return NS_OK;
 }
@@ -388,43 +382,17 @@ RefPtr<GenericPromise> ServiceWorkerPrivateImpl::SetSkipWaitingFlag() {
   return promise;
 }
 
-nsresult ServiceWorkerPrivateImpl::RefreshRemoteWorkerData(
+void ServiceWorkerPrivateImpl::RefreshRemoteWorkerData(
     const RefPtr<ServiceWorkerRegistrationInfo>& aRegistration) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mOuter);
   MOZ_ASSERT(mOuter->mInfo);
 
-  nsTArray<KeyAndPermissions> permissions;
-  nsCOMPtr<nsIPermissionManager> permManager = services::GetPermissionManager();
-  nsTArray<nsCString> keys =
-      nsPermissionManager::GetAllKeysForPrincipal(mOuter->mInfo->Principal());
-  MOZ_ASSERT(!keys.IsEmpty());
-
-  for (auto& key : keys) {
-    nsTArray<IPC::Permission> perms;
-    nsresult rv = permManager->GetPermissionsWithKey(key, perms);
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    KeyAndPermissions kp;
-    kp.key() = nsCString(key);
-    kp.permissions() = std::move(perms);
-
-    permissions.AppendElement(std::move(kp));
-  }
-
-  MOZ_ASSERT(!permissions.IsEmpty());
-
   ServiceWorkerData& serviceWorkerData =
       mRemoteWorkerData.serviceWorkerData().get_ServiceWorkerData();
-  serviceWorkerData.permissionsByKey() = std::move(permissions);
   serviceWorkerData.descriptor() = mOuter->mInfo->Descriptor().ToIPC();
   serviceWorkerData.registrationDescriptor() =
       aRegistration->Descriptor().ToIPC();
-
-  return NS_OK;
 }
 
 nsresult ServiceWorkerPrivateImpl::SpawnWorkerIfNeeded() {
@@ -455,11 +423,7 @@ nsresult ServiceWorkerPrivateImpl::SpawnWorkerIfNeeded() {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsresult rv = RefreshRemoteWorkerData(regInfo);
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  RefreshRemoteWorkerData(regInfo);
 
   RefPtr<RemoteWorkerControllerChild> controllerChild =
       new RemoteWorkerControllerChild(this);

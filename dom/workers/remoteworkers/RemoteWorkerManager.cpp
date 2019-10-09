@@ -14,6 +14,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/RemoteWorkerParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "nsCOMPtr.h"
 #include "nsIXULRuntime.h"
@@ -36,6 +37,16 @@ RemoteWorkerManager* sRemoteWorkerManager;
 bool IsServiceWorker(const RemoteWorkerData& aData) {
   return aData.serviceWorkerData().type() ==
          OptionalServiceWorkerData::TServiceWorkerData;
+}
+
+void TransmitPermissionsForPrincipalInfo(ContentParent* aContentParent,
+                                         const PrincipalInfo& aPrincipalInfo) {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aContentParent);
+
+  nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
+  MOZ_ALWAYS_SUCCEEDS(
+      aContentParent->TransmitPermissionsForPrincipal(principal));
 }
 
 }  // namespace
@@ -129,7 +140,7 @@ void RemoteWorkerManager::Launch(RemoteWorkerController* aController,
     pending->mController = aController;
     pending->mData = aData;
 
-    LaunchNewContentProcess();
+    LaunchNewContentProcess(aData);
     return;
   }
 
@@ -197,10 +208,12 @@ void RemoteWorkerManager::AsyncCreationFailed(
  * content process will not shutdown.
  */
 RemoteWorkerServiceParent*
-RemoteWorkerManager::SelectTargetActorForServiceWorker() const {
+RemoteWorkerManager::SelectTargetActorForServiceWorker(
+    const RemoteWorkerData& aData) const {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mChildActors.IsEmpty());
+  MOZ_ASSERT(IsServiceWorker(aData));
 
   nsTArray<RefPtr<ContentParent>> contentParents;
 
@@ -231,6 +244,19 @@ RemoteWorkerManager::SelectTargetActorForServiceWorker() const {
 
       if (lock->mCount || !lock->mShutdownStarted) {
         ++lock->mCount;
+
+        // This won't cause any race conditions because the content process
+        // should wait for the permissions to be received before executing the
+        // Service Worker.
+        nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+            __func__, [contentParent = std::move(contentParent),
+                       principalInfo = aData.principalInfo()] {
+              TransmitPermissionsForPrincipalInfo(contentParent, principalInfo);
+            });
+
+        MOZ_ALWAYS_SUCCEEDS(
+            SystemGroup::Dispatch(TaskCategory::Other, r.forget()));
+
         return actor;
       }
     }
@@ -266,7 +292,7 @@ RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActor(
   }
 
   if (IsServiceWorker(aData)) {
-    return SelectTargetActorForServiceWorker();
+    return SelectTargetActorForServiceWorker(aData);
   }
 
   for (RemoteWorkerServiceParent* actor : mChildActors) {
@@ -281,16 +307,22 @@ RemoteWorkerServiceParent* RemoteWorkerManager::SelectTargetActor(
   return mChildActors[id];
 }
 
-void RemoteWorkerManager::LaunchNewContentProcess() {
+void RemoteWorkerManager::LaunchNewContentProcess(
+    const RemoteWorkerData& aData) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
   // This runnable will spawn a new process if it doesn't exist yet.
-  nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("LaunchNewContentProcess", []() {
-        RefPtr<ContentParent> unused =
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      __func__, [isServiceWorker = IsServiceWorker(aData),
+                 principalInfo = aData.principalInfo()] {
+        RefPtr<ContentParent> contentParent =
             ContentParent::GetNewOrUsedBrowserProcess(
                 nullptr, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+
+        if (isServiceWorker) {
+          TransmitPermissionsForPrincipalInfo(contentParent, principalInfo);
+        }
       });
 
   nsCOMPtr<nsIEventTarget> target =
