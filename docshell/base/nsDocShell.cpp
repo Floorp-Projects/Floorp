@@ -689,7 +689,7 @@ nsDocShell::SetCancelContentJSEpoch(int32_t aEpoch) {
 }
 
 NS_IMETHODIMP
-nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
+nsDocShell::LoadURI(nsDocShellLoadState* aLoadState) {
   MOZ_ASSERT(aLoadState, "Must have a valid load state!");
   MOZ_ASSERT(
       (aLoadState->LoadFlags() & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0,
@@ -702,31 +702,6 @@ nsDocShell::LoadURI(nsDocShellLoadState* aLoadState, bool aSetNavigating) {
     if (mUseStrictSecurityChecks) {
       return NS_ERROR_FAILURE;
     }
-  }
-
-  bool oldIsNavigating = mIsNavigating;
-  auto cleanupIsNavigating =
-      MakeScopeExit([&]() { mIsNavigating = oldIsNavigating; });
-  if (aSetNavigating) {
-    mIsNavigating = true;
-  }
-
-  PopupBlocker::PopupControlState popupState;
-  if (aLoadState->LoadFlags() & LOAD_FLAGS_ALLOW_POPUPS) {
-    popupState = PopupBlocker::openAllowed;
-  } else {
-    popupState = PopupBlocker::openOverridden;
-  }
-  AutoPopupStatePusher statePusher(popupState);
-
-  if (aLoadState->GetOriginalURIString().isSome()) {
-    // Save URI string in case it's needed later when
-    // sending to search engine service in EndPageLoad()
-    mOriginalUriString = *aLoadState->GetOriginalURIString();
-  }
-
-  if (aLoadState->GetCancelContentJSEpoch().isSome()) {
-    SetCancelContentJSEpoch(*aLoadState->GetCancelContentJSEpoch());
   }
 
   // Note: we allow loads to get through here even if mFiredUnloadEvent is
@@ -3834,28 +3809,141 @@ nsDocShell::GotoIndex(int32_t aIndex) {
 
 nsresult nsDocShell::LoadURI(const nsAString& aURI,
                              const LoadURIOptions& aLoadURIOptions) {
+  uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
+
+  NS_ASSERTION((loadFlags & INTERNAL_LOAD_FLAGS_LOADURI_SETUP_FLAGS) == 0,
+               "Unexpected flags");
+
   if (!IsNavigationAllowed()) {
     return NS_OK;  // JS may not handle returning of an error code
   }
 
-  RefPtr<nsDocShellLoadState> loadState;
-  nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
-      GetAsSupports(this), sURIFixup, aURI, aLoadURIOptions,
-      getter_AddRefs(loadState));
+  auto cleanupIsNavigating = MakeScopeExit([&]() { mIsNavigating = false; });
+  mIsNavigating = true;
 
-  uint32_t loadFlags = aLoadURIOptions.mLoadFlags;
+  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIInputStream> postData(aLoadURIOptions.mPostData);
+  nsresult rv = NS_OK;
+
+  NS_ConvertUTF16toUTF8 uriString(aURI);
+  // Cleanup the empty spaces that might be on each end.
+  uriString.Trim(" ");
+  // Eliminate embedded newlines, which single-line text fields now allow:
+  uriString.StripCRLF();
+  NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
+
+  if (mUseStrictSecurityChecks && !aLoadURIOptions.mTriggeringPrincipal) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURIFixupInfo> fixupInfo;
+  if (sURIFixup) {
+    uint32_t fixupFlags;
+    rv = sURIFixup->WebNavigationFlagsToFixupFlags(uriString, loadFlags,
+                                                   &fixupFlags);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // If we don't allow keyword lookups for this URL string, make sure to
+    // update loadFlags to indicate this as well.
+    if (!(fixupFlags & nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
+      loadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    }
+
+    nsCOMPtr<nsIInputStream> fixupStream;
+    rv = sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
+                                    getter_AddRefs(fixupStream),
+                                    getter_AddRefs(fixupInfo));
+
+    if (NS_SUCCEEDED(rv)) {
+      fixupInfo->GetPreferredURI(getter_AddRefs(uri));
+      fixupInfo->SetConsumer(GetAsSupports(this));
+    }
+
+    if (fixupStream) {
+      // GetFixupURIInfo only returns a post data stream if it succeeded
+      // and changed the URI, in which case we should override the
+      // passed-in post data.
+      postData = fixupStream;
+    }
+
+    if (loadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
+      nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
+      if (serv) {
+        serv->NotifyObservers(fixupInfo, "keyword-uri-fixup",
+                              PromiseFlatString(aURI).get());
+      }
+    }
+  } else {
+    // No fixup service so just create a URI and see what happens...
+    rv = NS_NewURI(getter_AddRefs(uri), uriString);
+    loadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+  }
+
   if (NS_ERROR_MALFORMED_URI == rv) {
-    if (DisplayLoadError(rv, nullptr, PromiseFlatString(aURI).get(), nullptr) &&
+    if (DisplayLoadError(rv, uri, PromiseFlatString(aURI).get(), nullptr) &&
         (loadFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
       return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
     }
   }
 
-  if (NS_FAILED(rv) || !loadState) {
+  if (NS_FAILED(rv) || !uri) {
     return NS_ERROR_FAILURE;
   }
 
-  return LoadURI(loadState, true);
+  PopupBlocker::PopupControlState popupState;
+  if (loadFlags & LOAD_FLAGS_ALLOW_POPUPS) {
+    popupState = PopupBlocker::openAllowed;
+    loadFlags &= ~LOAD_FLAGS_ALLOW_POPUPS;
+  } else {
+    popupState = PopupBlocker::openOverridden;
+  }
+  AutoPopupStatePusher statePusher(popupState);
+
+  bool forceAllowDataURI = loadFlags & LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+
+  // Don't pass certain flags that aren't needed and end up confusing
+  // ConvertLoadTypeToDocShellInfoLoadType.  We do need to ensure that they are
+  // passed to LoadURI though, since it uses them.
+  uint32_t extraFlags = (loadFlags & EXTRA_LOAD_FLAGS);
+  loadFlags &= ~EXTRA_LOAD_FLAGS;
+
+  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(uri);
+  loadState->SetReferrerInfo(aLoadURIOptions.mReferrerInfo);
+
+  /*
+   * If the user "Disables Protection on This Page", we have to make sure to
+   * remember the users decision when opening links in child tabs [Bug 906190]
+   */
+  if (loadFlags & LOAD_FLAGS_ALLOW_MIXED_CONTENT) {
+    loadState->SetLoadType(
+        MAKE_LOAD_TYPE(LOAD_NORMAL_ALLOW_MIXED_CONTENT, loadFlags));
+  } else {
+    loadState->SetLoadType(MAKE_LOAD_TYPE(LOAD_NORMAL, loadFlags));
+  }
+
+  loadState->SetLoadFlags(extraFlags);
+  loadState->SetFirstParty(true);
+  loadState->SetPostDataStream(postData);
+  loadState->SetHeadersStream(aLoadURIOptions.mHeaders);
+  loadState->SetBaseURI(aLoadURIOptions.mBaseURI);
+  loadState->SetTriggeringPrincipal(aLoadURIOptions.mTriggeringPrincipal);
+  loadState->SetCsp(aLoadURIOptions.mCsp);
+  loadState->SetForceAllowDataURI(forceAllowDataURI);
+
+  if (fixupInfo) {
+    nsAutoString searchProvider, keyword;
+    fixupInfo->GetKeywordProviderName(searchProvider);
+    fixupInfo->GetKeywordAsSent(keyword);
+    MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
+  }
+
+  rv = LoadURI(loadState);
+
+  // Save URI string in case it's needed later when
+  // sending to search engine service in EndPageLoad()
+  mOriginalUriString = uriString;
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -5746,7 +5834,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
    * LoadURI(...) will cancel all refresh timers... This causes the
    * Timer and its refreshData instance to be released...
    */
-  LoadURI(loadState, false);
+  LoadURI(loadState);
 
   return NS_OK;
 }
@@ -13407,7 +13495,6 @@ void nsDocShell::NotifyJSRunToCompletionStop() {
   }
 }
 
-/* static */
 void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
                                                  const nsString& aKeyword) {
   if (aProvider.IsEmpty()) {

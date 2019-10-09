@@ -7,6 +7,12 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
 const Services = require("Services");
+const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
+const { E10SUtils } = require("resource://gre/modules/E10SUtils.jsm");
+
+function readInputStreamToString(stream) {
+  return NetUtil.readInputStreamToString(stream, stream.available());
+}
 
 /**
  * This object aims to provide the nsIWebNavigation interface for mozbrowser elements.
@@ -73,18 +79,22 @@ BrowserElementWebNavigation.prototype = {
     triggeringPrincipal
   ) {
     // No equivalent in the current BrowserElement API
-    const referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
+    let referrerInfo = Cc["@mozilla.org/referrer-info;1"].createInstance(
       Ci.nsIReferrerInfo
     );
     referrerInfo.init(referrerPolicy, true, referrer);
-
-    this._browser.frameLoader.browsingContext.loadURI(uri, {
-      loadFlags: flags,
+    referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
+    this._sendMessage("WebNavigation:LoadURI", {
+      uri,
+      flags,
       referrerInfo,
-      postData,
-      headers,
-      baseURI,
-      triggeringPrincipal,
+      postData: postData ? readInputStreamToString(postData) : null,
+      headers: headers ? readInputStreamToString(headers) : null,
+      baseURI: baseURI ? baseURI.spec : null,
+      triggeringPrincipal: E10SUtils.serializePrincipal(
+        triggeringPrincipal ||
+          Services.scriptSecurityManager.createNullPrincipal({})
+      ),
     });
   },
 

@@ -114,10 +114,7 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvRawMessage(const JSWindowActorMessageMeta& aMeta,
                                          const ClonedMessageData& aData);
 
-  mozilla::ipc::IPCResult RecvLoadURIInChild(nsDocShellLoadState* aLoadState,
-                                             bool aSetNavigating);
-
-  mozilla::ipc::IPCResult RecvDisplayLoadError(const nsAString& aURI);
+  mozilla::ipc::IPCResult RecvLoadURIInChild(nsDocShellLoadState* aLoadState);
 
   mozilla::ipc::IPCResult RecvChangeFrameRemoteness(
       dom::BrowsingContext* aBc, const nsString& aRemoteType,
