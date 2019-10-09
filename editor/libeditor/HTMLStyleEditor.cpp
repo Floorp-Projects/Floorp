@@ -208,9 +208,6 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
             MOZ_KnownLive(*startOfRange.GetContainerAsText()),
             startOfRange.Offset(), endOfRange.Offset(), aProperty, aAttribute,
             aAttributeValue);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -242,9 +239,6 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
             MOZ_KnownLive(*startOfRange.GetContainerAsText()),
             startOfRange.Offset(), startOfRange.GetContainer()->Length(),
             aProperty, aAttribute, aAttributeValue);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -267,9 +261,6 @@ nsresult HTMLEditor::SetInlinePropertyInternal(
         nsresult rv = SetInlinePropertyOnTextNode(
             MOZ_KnownLive(*endOfRange.GetContainerAsText()), 0,
             endOfRange.Offset(), aProperty, aAttribute, aAttributeValue);
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -349,7 +340,7 @@ bool HTMLEditor::IsSimpleModifiableNode(nsIContent* aContent, nsAtom* aProperty,
 }
 
 nsresult HTMLEditor::SetInlinePropertyOnTextNode(
-    Text& aText, int32_t aStartOffset, int32_t aEndOffset, nsAtom& aProperty,
+    Text& aText, uint32_t aStartOffset, uint32_t aEndOffset, nsAtom& aProperty,
     nsAtom* aAttribute, const nsAString& aValue) {
   if (!aText.GetParentNode() ||
       !CanContainTag(*aText.GetParentNode(), aProperty)) {
@@ -383,6 +374,9 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
     // We need to split off back of text node
     ErrorResult error;
     textNodeForTheRange = SplitNodeWithTransaction(atEnd, error);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -394,6 +388,9 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
     // We need to split off front of text node
     ErrorResult error;
     nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atStart, error);
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
@@ -405,19 +402,37 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
     nsCOMPtr<nsIContent> sibling = GetPriorHTMLSibling(textNodeForTheRange);
     if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
       // Previous sib is already right kind of inline node; slide this over
-      return MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
+      nsresult rv =
+          MoveNodeToEndWithTransaction(*textNodeForTheRange, *sibling);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "MoveNodeToEndWithTransaction() failed");
+      return rv;
     }
     sibling = GetNextHTMLSibling(textNodeForTheRange);
     if (IsSimpleModifiableNode(sibling, &aProperty, aAttribute, &aValue)) {
       // Following sib is already right kind of inline node; slide this over
-      return MoveNodeWithTransaction(*textNodeForTheRange,
-                                     EditorDOMPoint(sibling, 0));
+      nsresult rv = MoveNodeWithTransaction(*textNodeForTheRange,
+                                            EditorDOMPoint(sibling, 0));
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "MoveNodeWithTransaction() failed");
+      return rv;
     }
   }
 
   // Reparent the node inside inline node with appropriate {attribute,value}
-  return SetInlinePropertyOnNode(*textNodeForTheRange, aProperty, aAttribute,
-                                 aValue);
+  nsresult rv = SetInlinePropertyOnNode(*textNodeForTheRange, aProperty,
+                                        aAttribute, aValue);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetInlinePropertyOnNode() failed");
+  return rv;
 }
 
 nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aNode,
@@ -1636,36 +1651,27 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
             return rv;
           }
         }
-        // If parent block has the removing style, we should create `<span>`
-        // element to remove the style even in HTML mode since Chrome does it.
-        if (!CSSEditUtils::IsCSSEditableProperty(content, aProperty,
-                                                 aAttribute)) {
+
+        if (!HTMLEditor::IsRemovableParentStyleWithNewSpanElement(
+                content, aProperty, aAttribute)) {
           continue;
         }
-        if (!CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
-                content, aProperty, aAttribute, EmptyString(),
-                CSSEditUtils::eComputed)) {
-          continue;
-        }
-        // startOfRange's computed style indicates the CSS equivalence to
-        // the HTML style to remove is applied; but we found no element
-        // in the ancestors of startOfRange carrying specified styles;
-        // assume it comes from a rule and let's try to insert a span
-        // "inverting" the style
-        if (!CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
-          continue;
-        }
+
         if (!content->IsText()) {
+          // XXX Do we need to call this even when data node or something?  If
+          //     so, for what?
           DebugOnly<nsresult> rvIgnored = SetInlinePropertyOnNode(
               content, *aProperty, aAttribute,
               NS_LITERAL_STRING("-moz-editor-invert-value"));
           if (NS_WARN_IF(Destroyed())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
-          NS_WARNING_ASSERTION(NS_FAILED(rvIgnored),
-                               "SetInlinePropertyOnNode() failed, but ignored");
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                               "SetInlinePropertyOnNode() "
+                               "failed, but ignored");
           continue;
         }
+
         // If current node is a text node, we need to create `<span>` element
         // for it to overwrite parent style.  Unfortunately, all browsers
         // don't join text nodes when removing a style.  Therefore, there
@@ -1680,11 +1686,33 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
             MOZ_KnownLive(*content->AsText()), startOffset, endOffset,
             *aProperty, aAttribute,
             NS_LITERAL_STRING("-moz-editor-invert-value"));
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
+        }
+      }
+
+      // For avoiding unnecessary loop cost, check whether the style is
+      // invertible first.
+      if (aProperty && CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
+        // Finally, we should remove the style from all leaf text nodes if they
+        // still have the style.
+        AutoTArray<OwningNonNull<Text>, 32> leafTextNodes;
+        for (auto& content : arrayOfContents) {
+          if (content->IsElement()) {
+            CollectEditableLeafTextNodes(*content->AsElement(), leafTextNodes);
+          }
+        }
+        for (auto& textNode : leafTextNodes) {
+          if (!HTMLEditor::IsRemovableParentStyleWithNewSpanElement(
+                  textNode, aProperty, aAttribute)) {
+            continue;
+          }
+          nsresult rv = SetInlinePropertyOnTextNode(
+              textNode, 0, textNode->TextLength(), *aProperty, aAttribute,
+              NS_LITERAL_STRING("-moz-editor-invert-value"));
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
         }
       }
     }
@@ -1692,6 +1720,50 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(nsAtom* aProperty,
 
   // Restoring `Selection` may cause destroying us.
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
+}
+
+// static
+bool HTMLEditor::IsRemovableParentStyleWithNewSpanElement(nsIContent& aContent,
+                                                          nsAtom* aProperty,
+                                                          nsAtom* aAttribute) {
+  // We don't support to remove all inline styles with this path.
+  if (!aProperty) {
+    return false;
+  }
+
+  // First check whether the style is invertible since this is the fastest
+  // check.
+  if (!CSSEditUtils::IsCSSInvertible(*aProperty, aAttribute)) {
+    return false;
+  }
+
+  // If parent block has the removing style, we should create `<span>`
+  // element to remove the style even in HTML mode since Chrome does it.
+  if (!CSSEditUtils::IsCSSEditableProperty(&aContent, aProperty, aAttribute)) {
+    return false;
+  }
+
+  // aContent's computed style indicates the CSS equivalence to
+  // the HTML style to remove is applied; but we found no element
+  // in the ancestors of aContent carrying specified styles;
+  // assume it comes from a rule and let's try to insert a span
+  // "inverting" the style
+  return CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(
+      &aContent, aProperty, aAttribute, EmptyString(), CSSEditUtils::eComputed);
+}
+
+void HTMLEditor::CollectEditableLeafTextNodes(
+    Element& aElement, nsTArray<OwningNonNull<Text>>& aLeafTextNodes) const {
+  for (nsIContent* child = aElement.GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    if (child->IsElement()) {
+      CollectEditableLeafTextNodes(*child->AsElement(), aLeafTextNodes);
+      continue;
+    }
+    if (child->IsText()) {
+      aLeafTextNodes.AppendElement(*child->AsText());
+    }
+  }
 }
 
 NS_IMETHODIMP
