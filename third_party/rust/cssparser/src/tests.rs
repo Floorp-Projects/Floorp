@@ -6,7 +6,7 @@
 extern crate test;
 
 use encoding_rs;
-use rustc_serialize::json::{self, Json, ToJson};
+use serde_json::{self, Value, json, Map};
 
 #[cfg(feature = "bench")]
 use self::test::Bencher;
@@ -21,40 +21,39 @@ use super::{
 
 macro_rules! JArray {
     ($($e: expr,)*) => { JArray![ $( $e ),* ] };
-    ($($e: expr),*) => { Json::Array(vec!( $( $e.to_json() ),* )) }
+    ($($e: expr),*) => { Value::Array(vec!( $( $e.to_json() ),* )) }
 }
 
-fn almost_equals(a: &Json, b: &Json) -> bool {
+fn almost_equals(a: &Value, b: &Value) -> bool {
     match (a, b) {
-        (&Json::I64(a), _) => almost_equals(&Json::F64(a as f64), b),
-        (&Json::U64(a), _) => almost_equals(&Json::F64(a as f64), b),
-        (_, &Json::I64(b)) => almost_equals(a, &Json::F64(b as f64)),
-        (_, &Json::U64(b)) => almost_equals(a, &Json::F64(b as f64)),
+        (&Value::Number(ref a), &Value::Number(ref b)) => {
+            let a = a.as_f64().unwrap();
+            let b = b.as_f64().unwrap();
+            (a - b).abs() <= a.abs() * 1e-6
+        },
 
-        (&Json::F64(a), &Json::F64(b)) => (a - b).abs() <= a.abs() * 1e-6,
-
-        (&Json::Boolean(a), &Json::Boolean(b)) => a == b,
-        (&Json::String(ref a), &Json::String(ref b)) => a == b,
-        (&Json::Array(ref a), &Json::Array(ref b)) => {
+        (&Value::Bool(a), &Value::Bool(b)) => a == b,
+        (&Value::String(ref a), &Value::String(ref b)) => a == b,
+        (&Value::Array(ref a), &Value::Array(ref b)) => {
             a.len() == b.len()
                 && a.iter()
                     .zip(b.iter())
                     .all(|(ref a, ref b)| almost_equals(*a, *b))
         }
-        (&Json::Object(_), &Json::Object(_)) => panic!("Not implemented"),
-        (&Json::Null, &Json::Null) => true,
+        (&Value::Object(_), &Value::Object(_)) => panic!("Not implemented"),
+        (&Value::Null, &Value::Null) => true,
         _ => false,
     }
 }
 
-fn normalize(json: &mut Json) {
+fn normalize(json: &mut Value) {
     match *json {
-        Json::Array(ref mut list) => {
+        Value::Array(ref mut list) => {
             for item in list.iter_mut() {
                 normalize(item)
             }
         }
-        Json::String(ref mut s) => {
+        Value::String(ref mut s) => {
             if *s == "extra-input" || *s == "empty" {
                 *s = "invalid".to_string()
             }
@@ -63,14 +62,14 @@ fn normalize(json: &mut Json) {
     }
 }
 
-fn assert_json_eq(results: json::Json, mut expected: json::Json, message: &str) {
+fn assert_json_eq(results: Value, mut expected: Value, message: &str) {
     normalize(&mut expected);
     if !almost_equals(&results, &expected) {
         println!(
             "{}",
             ::difference::Changeset::new(
-                &results.pretty().to_string(),
-                &expected.pretty().to_string(),
+                &serde_json::to_string_pretty(&results).unwrap(),
+                &serde_json::to_string_pretty(&expected).unwrap(),
                 "\n",
             )
         );
@@ -78,9 +77,9 @@ fn assert_json_eq(results: json::Json, mut expected: json::Json, message: &str) 
     }
 }
 
-fn run_raw_json_tests<F: Fn(Json, Json) -> ()>(json_data: &str, run: F) {
-    let items = match Json::from_str(json_data) {
-        Ok(Json::Array(items)) => items,
+fn run_raw_json_tests<F: Fn(Value, Value) -> ()>(json_data: &str, run: F) {
+    let items = match serde_json::from_str(json_data) {
+        Ok(Value::Array(items)) => items,
         _ => panic!("Invalid JSON"),
     };
     assert!(items.len() % 2 == 0);
@@ -96,9 +95,9 @@ fn run_raw_json_tests<F: Fn(Json, Json) -> ()>(json_data: &str, run: F) {
     }
 }
 
-fn run_json_tests<F: Fn(&mut Parser) -> Json>(json_data: &str, parse: F) {
+fn run_json_tests<F: Fn(&mut Parser) -> Value>(json_data: &str, parse: F) {
     run_raw_json_tests(json_data, |input, expected| match input {
-        Json::String(input) => {
+        Value::String(input) => {
             let mut parse_input = ParserInput::new(&input);
             let result = parse(&mut Parser::new(&mut parse_input));
             assert_json_eq(result, expected, &input);
@@ -111,7 +110,7 @@ fn run_json_tests<F: Fn(&mut Parser) -> Json>(json_data: &str, parse: F) {
 fn component_value_list() {
     run_json_tests(
         include_str!("css-parsing-tests/component_value_list.json"),
-        |input| Json::Array(component_values_to_json(input)),
+        |input| Value::Array(component_values_to_json(input)),
     );
 }
 
@@ -120,7 +119,7 @@ fn one_component_value() {
     run_json_tests(
         include_str!("css-parsing-tests/one_component_value.json"),
         |input| {
-            let result: Result<Json, ParseError<()>> = input.parse_entirely(|input| {
+            let result: Result<Value, ParseError<()>> = input.parse_entirely(|input| {
                 Ok(one_component_value_to_json(input.next()?.clone(), input))
             });
             result.unwrap_or(JArray!["error", "invalid"])
@@ -133,7 +132,7 @@ fn declaration_list() {
     run_json_tests(
         include_str!("css-parsing-tests/declaration_list.json"),
         |input| {
-            Json::Array(
+            Value::Array(
                 DeclarationListParser::new(input, JsonParser)
                     .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                     .collect(),
@@ -155,7 +154,7 @@ fn one_declaration() {
 #[test]
 fn rule_list() {
     run_json_tests(include_str!("css-parsing-tests/rule_list.json"), |input| {
-        Json::Array(
+        Value::Array(
             RuleListParser::new_for_nested_rule(input, JsonParser)
                 .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                 .collect(),
@@ -166,7 +165,7 @@ fn rule_list() {
 #[test]
 fn stylesheet() {
     run_json_tests(include_str!("css-parsing-tests/stylesheet.json"), |input| {
-        Json::Array(
+        Value::Array(
             RuleListParser::new_for_stylesheet(input, JsonParser)
                 .map(|result| result.unwrap_or(JArray!["error", "invalid"]))
                 .collect(),
@@ -205,7 +204,7 @@ fn stylesheet_from_bytes() {
         include_str!("css-parsing-tests/stylesheet_bytes.json"),
         |input, expected| {
             let map = match input {
-                Json::Object(map) => map,
+                Value::Object(map) => map,
                 _ => panic!("Unexpected JSON"),
             };
 
@@ -237,14 +236,14 @@ fn stylesheet_from_bytes() {
                     .collect::<Vec<_>>();
                 JArray![rules, used_encoding.name().to_lowercase()]
             };
-            assert_json_eq(result, expected, &Json::Object(map).to_string());
+            assert_json_eq(result, expected, &Value::Object(map).to_string());
         },
     );
 
-    fn get_string<'a>(map: &'a json::Object, key: &str) -> Option<&'a str> {
+    fn get_string<'a>(map: &'a Map<String, Value>, key: &str) -> Option<&'a str> {
         match map.get(key) {
-            Some(&Json::String(ref s)) => Some(s),
-            Some(&Json::Null) => None,
+            Some(&Value::String(ref s)) => Some(s),
+            Some(&Value::Null) => None,
             None => None,
             _ => panic!("Unexpected JSON"),
         }
@@ -354,7 +353,7 @@ fn test_expect_url() {
     assert!(parse(&mut input).is_err());
 }
 
-fn run_color_tests<F: Fn(Result<Color, ()>) -> Json>(json_data: &str, to_json: F) {
+fn run_color_tests<F: Fn(Result<Color, ()>) -> Value>(json_data: &str, to_json: F) {
     run_json_tests(json_data, |input| {
         let result: Result<_, ParseError<()>> =
             input.parse_entirely(|i| Color::parse(i).map_err(Into::into));
@@ -365,14 +364,14 @@ fn run_color_tests<F: Fn(Result<Color, ()>) -> Json>(json_data: &str, to_json: F
 #[test]
 fn color3() {
     run_color_tests(include_str!("css-parsing-tests/color3.json"), |c| {
-        c.ok().to_json()
+        c.ok().map(|v| v.to_json()).unwrap_or(Value::Null)
     })
 }
 
 #[test]
 fn color3_hsl() {
     run_color_tests(include_str!("css-parsing-tests/color3_hsl.json"), |c| {
-        c.ok().to_json()
+        c.ok().map(|v| v.to_json()).unwrap_or(Value::Null)
     })
 }
 
@@ -381,7 +380,7 @@ fn color3_hsl() {
 fn color3_keywords() {
     run_color_tests(
         include_str!("css-parsing-tests/color3_keywords.json"),
-        |c| c.ok().to_json(),
+        |c| c.ok().map(|v| v.to_json()).unwrap_or(Value::Null),
     )
 }
 
@@ -394,7 +393,8 @@ fn nth() {
                 result
             })
             .ok()
-            .to_json()
+            .map(|(v0, v1)| json!([v0, v1]))
+            .unwrap_or(Value::Null)
     });
 }
 
@@ -410,7 +410,17 @@ fn unicode_range() {
                 Ok(None)
             }
         });
-        result.unwrap().to_json()
+        result.unwrap()
+            .iter()
+            .map(|v|
+                if let Some((v0, v1)) = v{
+                    json!([v0, v1])
+                } else {
+                    Value::Null
+                }
+            )
+            .collect::<Vec<_>>()
+            .to_json()
     });
 }
 
@@ -475,7 +485,7 @@ fn serializer(preserve_comments: bool) {
             );
             let mut input = ParserInput::new(&serialized);
             let parser = &mut Parser::new(&mut input);
-            Json::Array(component_values_to_json(parser))
+            Value::Array(component_values_to_json(parser))
         },
     );
 }
@@ -795,12 +805,29 @@ fn identifier_serialization() {
     );
 }
 
+trait ToJson {
+    fn to_json(&self) -> Value;
+}
+
+impl<T> ToJson for T where T: Clone, Value: From<T> {
+    fn to_json(&self) -> Value {
+        Value::from(self.clone())
+    }
+}
+
 impl ToJson for Color {
-    fn to_json(&self) -> json::Json {
+    fn to_json(&self) -> Value {
         match *self {
-            Color::RGBA(ref rgba) => [rgba.red, rgba.green, rgba.blue, rgba.alpha].to_json(),
+            Color::RGBA(ref rgba) => json!([rgba.red, rgba.green, rgba.blue, rgba.alpha]),
             Color::CurrentColor => "currentcolor".to_json(),
         }
+    }
+}
+
+impl<'a> ToJson for CowRcStr<'a> {
+    fn to_json(&self) -> Value {
+        let s: &str = &*self;
+        s.to_json()
     }
 }
 
@@ -851,14 +878,14 @@ fn no_stack_overflow_multiple_nested_blocks() {
 }
 
 impl<'i> DeclarationParser<'i> for JsonParser {
-    type Declaration = Json;
+    type Declaration = Value;
     type Error = ();
 
     fn parse_value<'t>(
         &mut self,
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
-    ) -> Result<Json, ParseError<'i, ()>> {
+    ) -> Result<Value, ParseError<'i, ()>> {
         let mut value = vec![];
         let mut important = false;
         loop {
@@ -889,20 +916,20 @@ impl<'i> DeclarationParser<'i> for JsonParser {
 }
 
 impl<'i> AtRuleParser<'i> for JsonParser {
-    type PreludeNoBlock = Vec<Json>;
-    type PreludeBlock = Vec<Json>;
-    type AtRule = Json;
+    type PreludeNoBlock = Vec<Value>;
+    type PreludeBlock = Vec<Value>;
+    type AtRule = Value;
     type Error = ();
 
     fn parse_prelude<'t>(
         &mut self,
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
-    ) -> Result<AtRuleType<Vec<Json>, Vec<Json>>, ParseError<'i, ()>> {
+    ) -> Result<AtRuleType<Vec<Value>, Vec<Value>>, ParseError<'i, ()>> {
         let prelude = vec![
             "at-rule".to_json(),
             name.to_json(),
-            Json::Array(component_values_to_json(input)),
+            Value::Array(component_values_to_json(input)),
         ];
         match_ignore_ascii_case! { &*name,
             "media" | "foo-with-block" => Ok(AtRuleType::WithBlock(prelude)),
@@ -913,40 +940,40 @@ impl<'i> AtRuleParser<'i> for JsonParser {
         }
     }
 
-    fn rule_without_block(&mut self, mut prelude: Vec<Json>, _location: SourceLocation) -> Json {
-        prelude.push(Json::Null);
-        Json::Array(prelude)
+    fn rule_without_block(&mut self, mut prelude: Vec<Value>, _location: SourceLocation) -> Value {
+        prelude.push(Value::Null);
+        Value::Array(prelude)
     }
 
     fn parse_block<'t>(
         &mut self,
-        mut prelude: Vec<Json>,
+        mut prelude: Vec<Value>,
         _location: SourceLocation,
         input: &mut Parser<'i, 't>,
-    ) -> Result<Json, ParseError<'i, ()>> {
-        prelude.push(Json::Array(component_values_to_json(input)));
-        Ok(Json::Array(prelude))
+    ) -> Result<Value, ParseError<'i, ()>> {
+        prelude.push(Value::Array(component_values_to_json(input)));
+        Ok(Value::Array(prelude))
     }
 }
 
 impl<'i> QualifiedRuleParser<'i> for JsonParser {
-    type Prelude = Vec<Json>;
-    type QualifiedRule = Json;
+    type Prelude = Vec<Value>;
+    type QualifiedRule = Value;
     type Error = ();
 
     fn parse_prelude<'t>(
         &mut self,
         input: &mut Parser<'i, 't>,
-    ) -> Result<Vec<Json>, ParseError<'i, ()>> {
+    ) -> Result<Vec<Value>, ParseError<'i, ()>> {
         Ok(component_values_to_json(input))
     }
 
     fn parse_block<'t>(
         &mut self,
-        prelude: Vec<Json>,
+        prelude: Vec<Value>,
         _location: SourceLocation,
         input: &mut Parser<'i, 't>,
-    ) -> Result<Json, ParseError<'i, ()>> {
+    ) -> Result<Value, ParseError<'i, ()>> {
         Ok(JArray![
             "qualified rule",
             prelude,
@@ -955,7 +982,7 @@ impl<'i> QualifiedRuleParser<'i> for JsonParser {
     }
 }
 
-fn component_values_to_json(input: &mut Parser) -> Vec<Json> {
+fn component_values_to_json(input: &mut Parser) -> Vec<Value> {
     let mut values = vec![];
     while let Ok(token) = input.next_including_whitespace().map(|t| t.clone()) {
         values.push(one_component_value_to_json(token, input));
@@ -963,8 +990,8 @@ fn component_values_to_json(input: &mut Parser) -> Vec<Json> {
     values
 }
 
-fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
-    fn numeric(value: f32, int_value: Option<i32>, has_sign: bool) -> Vec<json::Json> {
+fn one_component_value_to_json(token: Token, input: &mut Parser) -> Value {
+    fn numeric(value: f32, int_value: Option<i32>, has_sign: bool) -> Vec<Value> {
         vec![
             Token::Number {
                 value: value,
@@ -985,7 +1012,7 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
         ]
     }
 
-    fn nested(input: &mut Parser) -> Vec<Json> {
+    fn nested(input: &mut Parser) -> Vec<Value> {
         let result: Result<_, ParseError<()>> =
             input.parse_nested_block(|input| Ok(component_values_to_json(input)));
         result.unwrap()
@@ -1005,7 +1032,7 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
             value,
             int_value,
             has_sign,
-        } => Json::Array({
+        } => Value::Array({
             let mut v = vec!["number".to_json()];
             v.extend(numeric(value, int_value, has_sign));
             v
@@ -1014,7 +1041,7 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
             unit_value,
             int_value,
             has_sign,
-        } => Json::Array({
+        } => Value::Array({
             let mut v = vec!["percentage".to_json()];
             v.extend(numeric(unit_value * 100., int_value, has_sign));
             v
@@ -1024,7 +1051,7 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
             int_value,
             has_sign,
             unit,
-        } => Json::Array({
+        } => Value::Array({
             let mut v = vec!["dimension".to_json()];
             v.extend(numeric(value, int_value, has_sign));
             v.push(unit.to_json());
@@ -1044,22 +1071,22 @@ fn one_component_value_to_json(token: Token, input: &mut Parser) -> Json {
         Token::CDO => "<!--".to_json(),
         Token::CDC => "-->".to_json(),
 
-        Token::Function(name) => Json::Array({
+        Token::Function(name) => Value::Array({
             let mut v = vec!["function".to_json(), name.to_json()];
             v.extend(nested(input));
             v
         }),
-        Token::ParenthesisBlock => Json::Array({
+        Token::ParenthesisBlock => Value::Array({
             let mut v = vec!["()".to_json()];
             v.extend(nested(input));
             v
         }),
-        Token::SquareBracketBlock => Json::Array({
+        Token::SquareBracketBlock => Value::Array({
             let mut v = vec!["[]".to_json()];
             v.extend(nested(input));
             v
         }),
-        Token::CurlyBracketBlock => Json::Array({
+        Token::CurlyBracketBlock => Value::Array({
             let mut v = vec!["{}".to_json()];
             v.extend(nested(input));
             v

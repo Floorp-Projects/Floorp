@@ -207,7 +207,7 @@ where
             dest.write_str("-")?;
             value = &value[1..];
         }
-        if let digit @ b'0'...b'9' = value.as_bytes()[0] {
+        if let digit @ b'0'..=b'9' = value.as_bytes()[0] {
             hex_escape(digit, dest)?;
             value = &value[1..];
         }
@@ -226,7 +226,7 @@ where
     let mut chunk_start = 0;
     for (i, b) in value.bytes().enumerate() {
         let escaped = match b {
-            b'0'...b'9' | b'A'...b'Z' | b'a'...b'z' | b'_' | b'-' => continue,
+            b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'_' | b'-' => continue,
             _ if !b.is_ascii() => continue,
             b'\0' => Some("\u{FFFD}"),
             _ => None,
@@ -251,7 +251,7 @@ where
     let mut chunk_start = 0;
     for (i, b) in value.bytes().enumerate() {
         let hex = match b {
-            b'\0'...b' ' | b'\x7F' => true,
+            b'\0'..=b' ' | b'\x7F' => true,
             b'(' | b')' | b'"' | b'\'' | b'\\' => false,
             _ => continue,
         };
@@ -318,7 +318,7 @@ where
                 b'"' => Some("\\\""),
                 b'\\' => Some("\\\\"),
                 b'\0' => Some("\u{FFFD}"),
-                b'\x01'...b'\x1F' | b'\x7F' => None,
+                b'\x01'..=b'\x1F' | b'\x7F' => None,
                 _ => continue,
             };
             self.inner.write_str(&s[chunk_start..i])?;
