@@ -32,7 +32,8 @@ add_task(async function test_profile_single_frame_page_info() {
       Assert.equal(page.url, url);
       Assert.equal(typeof page.browsingContextID, "number");
       Assert.equal(typeof page.innerWindowID, "number");
-      Assert.equal(page.isSubFrame, false);
+      // Top level document will have no embedder.
+      Assert.equal(page.embedderInnerWindowID, 0);
       pageFound = true;
       break;
     }
