@@ -2,7 +2,7 @@
 
 # FIREFOX_FDROID
 
-`FIREFOX_FDROID` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L40)
+`FIREFOX_FDROID` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L41)
 
 ### Inherited Properties
 

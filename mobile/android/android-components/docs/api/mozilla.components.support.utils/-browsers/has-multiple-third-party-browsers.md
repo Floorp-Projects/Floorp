@@ -2,7 +2,7 @@
 
 # hasMultipleThirdPartyBrowsers
 
-`val hasMultipleThirdPartyBrowsers: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L146)
+`val hasMultipleThirdPartyBrowsers: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L147)
 
 Does this device have multiple third-party browser installed?
 

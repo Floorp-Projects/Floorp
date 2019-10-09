@@ -2,7 +2,7 @@
 
 # CHROME
 
-`CHROME` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L50)
+`CHROME` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L51)
 
 ### Inherited Properties
 

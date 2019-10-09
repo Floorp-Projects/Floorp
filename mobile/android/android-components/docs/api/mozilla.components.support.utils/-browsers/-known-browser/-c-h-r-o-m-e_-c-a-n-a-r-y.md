@@ -2,7 +2,7 @@
 
 # CHROME_CANARY
 
-`CHROME_CANARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L53)
+`CHROME_CANARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L54)
 
 ### Inherited Properties
 

@@ -2,7 +2,7 @@
 
 # SAMSUNG_INTERNET
 
-`SAMSUNG_INTERNET` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L67)
+`SAMSUNG_INTERNET` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L68)
 
 ### Inherited Properties
 

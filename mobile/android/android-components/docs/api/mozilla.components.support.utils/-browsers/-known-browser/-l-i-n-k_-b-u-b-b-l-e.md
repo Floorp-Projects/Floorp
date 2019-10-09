@@ -2,7 +2,7 @@
 
 # LINK_BUBBLE
 
-`LINK_BUBBLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L76)
+`LINK_BUBBLE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L77)
 
 ### Inherited Properties
 

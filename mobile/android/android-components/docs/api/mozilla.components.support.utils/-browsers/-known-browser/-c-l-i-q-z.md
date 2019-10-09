@@ -2,7 +2,7 @@
 
 # CLIQZ
 
-`CLIQZ` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L82)
+`CLIQZ` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L83)
 
 ### Inherited Properties
 

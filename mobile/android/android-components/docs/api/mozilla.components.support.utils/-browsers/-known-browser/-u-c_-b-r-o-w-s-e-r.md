@@ -2,7 +2,7 @@
 
 # UC_BROWSER
 
-`UC_BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L62)
+`UC_BROWSER` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L63)
 
 ### Inherited Properties
 

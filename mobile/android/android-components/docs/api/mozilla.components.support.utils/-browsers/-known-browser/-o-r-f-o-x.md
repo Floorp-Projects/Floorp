@@ -2,7 +2,7 @@
 
 # ORFOX
 
-`ORFOX` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L70)
+`ORFOX` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L71)
 
 ### Inherited Properties
 

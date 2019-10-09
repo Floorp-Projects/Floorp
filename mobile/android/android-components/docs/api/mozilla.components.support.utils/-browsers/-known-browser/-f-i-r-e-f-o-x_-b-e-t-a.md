@@ -2,7 +2,7 @@
 
 # FIREFOX_BETA
 
-`FIREFOX_BETA` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L37)
+`FIREFOX_BETA` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L38)
 
 ### Inherited Properties
 

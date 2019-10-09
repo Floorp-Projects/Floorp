@@ -2,7 +2,7 @@
 
 # defaultBrowser
 
-`val defaultBrowser: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L104)
+`val defaultBrowser: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L105)
 
 The [ActivityInfo](#) of the default browser of the user (or null if none could be found).
 

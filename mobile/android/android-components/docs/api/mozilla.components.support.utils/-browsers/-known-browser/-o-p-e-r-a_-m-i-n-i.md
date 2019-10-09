@@ -2,7 +2,7 @@
 
 # OPERA_MINI
 
-`OPERA_MINI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L59)
+`OPERA_MINI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/Browsers.kt#L60)
 
 ### Inherited Properties
 
