@@ -15150,7 +15150,7 @@
     "n_buckets": 50,
     "description": "WebRender scene swap time in milliseconds"
   },
-  "WR_RENDER_TIME": {
+  "WR_FRAMEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["kgupta@mozilla.com"],
