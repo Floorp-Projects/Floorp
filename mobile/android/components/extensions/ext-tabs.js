@@ -411,12 +411,8 @@ this.tabs = class extends ExtensionAPI {
             nativeTab.browser.loadURI(url, options);
           }
 
-          if (updateProperties.active !== null) {
-            if (updateProperties.active) {
-              BrowserApp.selectTab(nativeTab);
-            } else {
-              // Not sure what to do here? Which tab should we select?
-            }
+          if (updateProperties.active) {
+            BrowserApp.selectTab(nativeTab);
           }
           // FIXME: highlighted/selected, muted, pinned, openerTabId, successorTabId
 
