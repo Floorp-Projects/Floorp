@@ -711,14 +711,7 @@ nsContextMenu.prototype = {
       this.setItemAttr("context-frameOsPid", "label", "PID: " + frameOsPid);
     }
 
-    let showSearchSelect =
-      !this.inAboutDevtoolsToolbox &&
-      (this.isTextSelected || this.onLink) &&
-      !this.onImage;
-    this.showItem("context-searchselect", showSearchSelect);
-    if (showSearchSelect) {
-      this.formatSearchContextItem();
-    }
+    this.showAndFormatSearchContextItem();
 
     // srcdoc cannot be opened separately due to concerns about web
     // content with about:srcdoc in location bar masquerading as trusted
@@ -1973,16 +1966,39 @@ nsContextMenu.prototype = {
   },
 
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
-  formatSearchContextItem() {
-    var menuItem = document.getElementById("context-searchselect");
+  showAndFormatSearchContextItem() {
+    const docIsPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
+    const privatePref = "browser.search.separatePrivateDefault.ui.enabled";
+    let showSearchSelect =
+      !this.inAboutDevtoolsToolbox &&
+      (this.isTextSelected || this.onLink) &&
+      !this.onImage;
+    // Don't show the private search item when we're already in a private
+    // browsing window.
+    let showPrivateSearchSelect =
+      showSearchSelect &&
+      !docIsPrivate &&
+      Services.prefs.getBoolPref(privatePref);
+
+    let menuItem = document.getElementById("context-searchselect");
+    let menuItemPrivate = document.getElementById(
+      "context-searchselect-private"
+    );
+    menuItem.hidden = !showSearchSelect;
+    menuItemPrivate.hidden = !showPrivateSearchSelect;
+    // If we're not showing the menu items, we can skip formatting the labels.
+    if (!showSearchSelect) {
+      return;
+    }
+
     let selectedText = this.isTextSelected
       ? this.textSelected
       : this.linkTextStr;
 
     // Store searchTerms in context menu item so we know what to search onclick
-    menuItem.searchTerms = selectedText;
-    menuItem.principal = this.principal;
-    menuItem.csp = this.csp;
+    menuItem.searchTerms = menuItemPrivate.searchTerms = selectedText;
+    menuItem.principal = menuItemPrivate.principal = this.principal;
+    menuItem.csp = menuItemPrivate.csp = this.csp;
 
     // Copied to alert.js' prefillAlertInfo().
     // If the JS character after our truncation point is a trail surrogate,
@@ -1997,19 +2013,34 @@ nsContextMenu.prototype = {
     }
 
     // format "Search <engine> for <selection>" string to show in menu
-    const docIsPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
-    let engineName =
-      Services.search[docIsPrivate ? "defaultPrivateEngine" : "defaultEngine"]
-        .name;
+    let engineName = Services.search.defaultEngine.name;
+    let privateEngineName = Services.search.defaultPrivateEngine.name;
     menuItem.usePrivate = docIsPrivate;
-    var menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch", [
-      engineName,
+    let menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch", [
+      docIsPrivate ? privateEngineName : engineName,
       selectedText,
     ]);
     menuItem.label = menuLabel;
     menuItem.accessKey = gNavigatorBundle.getString(
       "contextMenuSearch.accesskey"
     );
+
+    if (showPrivateSearchSelect) {
+      let otherEngine = engineName != privateEngineName;
+      let accessKey = "contextMenuPrivateSearch.accesskey";
+      if (otherEngine) {
+        menuItemPrivate.label = gNavigatorBundle.getFormattedString(
+          "contextMenuPrivateSearchOtherEngine",
+          [privateEngineName]
+        );
+        accessKey = "contextMenuPrivateSearchOtherEngine.accesskey";
+      } else {
+        menuItemPrivate.label = gNavigatorBundle.getString(
+          "contextMenuPrivateSearch"
+        );
+      }
+      menuItemPrivate.accessKey = gNavigatorBundle.getString(accessKey);
+    }
   },
 
   createContainerMenu(aEvent) {
