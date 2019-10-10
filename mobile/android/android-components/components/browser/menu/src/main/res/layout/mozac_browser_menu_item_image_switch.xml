@@ -23,6 +23,7 @@
         style="@style/Mozac.Browser.Menu.Item.Text"
         android:layout_width="match_parent"
         android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
         android:orientation="vertical"
         android:paddingStart="@dimen/mozac_browser_menu_item_image_text_label_padding_start"
         android:paddingEnd="0dp"/>

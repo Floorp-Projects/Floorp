@@ -48,6 +48,9 @@ permalink: /changelog/
   })
   ```
 
+* **browser-menu**
+   * Fixes background ripple of Switch in BrowserMenuImageSwitch
+
 # 16.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v15.0.0...v16.0.0)
