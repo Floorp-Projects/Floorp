@@ -65,7 +65,7 @@ linux64-hfsplus:
         fetch:
             - hfsplus-tools
         toolchain:
-            - linux64-clang-8
+            - linux64-clang-9
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"

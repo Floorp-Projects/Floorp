@@ -8,11 +8,11 @@ diff --git a/clang/lib/AST/ItaniumMangle.cpp b/clang/lib/AST/ItaniumMangle.cpp
 index b483187394..fb01348ebb 100644
 --- a/clang/lib/AST/ItaniumMangle.cpp
 +++ b/clang/lib/AST/ItaniumMangle.cpp
-@@ -3557,20 +3557,21 @@ recurse:
-   case Expr::AsTypeExprClass:
-   case Expr::PseudoObjectExprClass:
+@@ -3623,20 +3623,21 @@ recurse:
    case Expr::AtomicExprClass:
+   case Expr::SourceLocExprClass:
    case Expr::FixedPointLiteralClass:
+   case Expr::BuiltinBitCastExprClass:
    {
      if (!NullOut) {
        // As bad as this diagnostic is, it's better than crashing.

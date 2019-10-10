@@ -1061,7 +1061,7 @@ linux64-ccov/debug:
         need-xvfb: true
     fetches:
         toolchain:
-            - linux64-clang-8
+            - linux64-clang-9
             - linux64-rust
             - linux64-gcc
             - linux64-grcov
@@ -1100,7 +1100,7 @@ linux64-ccov/opt:
         need-xvfb: true
     fetches:
         toolchain:
-            - linux64-clang-8
+            - linux64-clang-9
             - linux64-rust
             - linux64-gcc
             - linux64-cbindgen
