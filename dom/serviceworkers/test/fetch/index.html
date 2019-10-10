@@ -127,32 +127,39 @@
   });
 
   gExpected++;
-  var xmlDoc = document.implementation.createDocument(null, null, null);
-  xmlDoc.load('load_cross_origin_xml_document_synthetic.xml');
-  xmlDoc.onload = function(evt) {
-    var content = new XMLSerializer().serializeToString(evt.target);
-    my_ok(!content.includes('parsererror'), "Load synthetic cross origin XML Document should be allowed");
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener("load", function(evt) {
+    my_ok(evt.target.responseXML === null, "Load synthetic cross origin XML Document should be allowed");
     finish();
-  };
+  });
+  xhr.responseType = "document";
+  xhr.open("GET", "load_cross_origin_xml_document_synthetic.xml");
+  xhr.send();
 
   gExpected++;
-  var xmlDoc = document.implementation.createDocument(null, null, null);
-  xmlDoc.load('load_cross_origin_xml_document_cors.xml');
-  xmlDoc.onload = function(evt) {
-    var content = new XMLSerializer().serializeToString(evt.target);
+  fetch(
+    "load_cross_origin_xml_document_cors.xml",
+    {mode: "same-origin"}
+  ).then(function(response) {
     // issue: https://github.com/whatwg/fetch/issues/629
-    my_ok(content.includes('parsererror'), "Load CORS cross origin XML Document should not be allowed");
+    my_ok(false, "Load CORS cross origin XML Document should not be allowed");
     finish();
-  };
+  }, function(error) {
+    my_ok(true, "Load CORS cross origin XML Document should not be allowed");
+    finish();
+  });
 
   gExpected++;
-  var xmlDoc = document.implementation.createDocument(null, null, null);
-  xmlDoc.load('load_cross_origin_xml_document_opaque.xml');
-  xmlDoc.onload = function(evt) {
-    var content = new XMLSerializer().serializeToString(evt.target);
-    my_ok(content.includes('parsererror'), "Load opaque cross origin XML Document should not be allowed");
+  fetch(
+    "load_cross_origin_xml_document_opaque.xml",
+    {mode: "same-origin"}
+  ).then(function(response) {
+    my_ok(false, "Load opaque cross origin XML Document should not be allowed");
     finish();
-  };
+  }, function(error) {
+    my_ok(true, "Load opaque cross origin XML Document should not be allowed");
+    finish();
+  });
 
   gExpected++;
   var worker = new Worker('nonexistent_worker_script.js');

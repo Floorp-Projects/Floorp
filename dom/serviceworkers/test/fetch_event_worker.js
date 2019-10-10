@@ -312,11 +312,6 @@ onfetch = function(ev) {
   } else if (
     ev.request.url.includes("load_cross_origin_xml_document_synthetic.xml")
   ) {
-    if (ev.request.mode != "same-origin") {
-      ev.respondWith(Promise.reject());
-      return;
-    }
-
     ev.respondWith(
       Promise.resolve(
         new Response("<response>body</response>", {
