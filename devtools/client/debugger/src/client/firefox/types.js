@@ -256,6 +256,7 @@ export type DebuggerClient = {
     traits: any,
     getFront: string => Promise<*>,
     listProcesses: () => Promise<{ processes: ProcessDescriptor }>,
+    on: (string, Function) => void,
   },
   connect: () => Promise<*>,
   request: (packet: Object) => Promise<*>,
