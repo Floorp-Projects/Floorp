@@ -36,6 +36,7 @@
 #include "js/Symbol.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "vm/BytecodeLocation.h"
 #include "vm/CodeCoverage.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSAtom.h"
@@ -48,6 +49,8 @@
 #include "vm/Shape.h"
 
 #include "gc/PrivateIterators-inl.h"
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
@@ -3028,16 +3031,16 @@ bool js::GetSuccessorBytecodes(JSScript* script, jsbytecode* pc,
 
 bool js::GetPredecessorBytecodes(JSScript* script, jsbytecode* pc,
                                  PcVector& predecessors) {
-  jsbytecode* end = script->code() + script->length();
-  MOZ_ASSERT(pc >= script->code() && pc < end);
-  for (jsbytecode* npc = script->code(); npc < end; npc = GetNextPc(npc)) {
+  MOZ_ASSERT(js::BytecodeLocation(script, pc).isInBounds(script));
+
+  for (const BytecodeLocation& loc : js::AllBytecodesIterable(script)) {
     PcVector successors;
-    if (!GetSuccessorBytecodes(script, npc, successors)) {
+    if (!GetSuccessorBytecodes(script, loc.toRawBytecode(), successors)) {
       return false;
     }
     for (size_t i = 0; i < successors.length(); i++) {
       if (successors[i] == pc) {
-        if (!predecessors.append(npc)) {
+        if (!predecessors.append(loc.toRawBytecode())) {
           return false;
         }
         break;
