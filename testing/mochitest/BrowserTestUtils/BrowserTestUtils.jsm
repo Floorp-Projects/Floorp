@@ -31,21 +31,21 @@ const { ContentTask } = ChromeUtils.import(
   "resource://testing-common/ContentTask.jsm"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserWindowTracker",
-  "resource:///modules/BrowserWindowTracker.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+});
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  ProtocolProxyService: [
+    "@mozilla.org/network/protocol-proxy-service;1",
+    "nsIProtocolProxyService",
+  ],
+});
 
 Services.mm.loadFrameScript(
   "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js",
   true
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "E10SUtils",
-  "resource://gre/modules/E10SUtils.jsm"
 );
 
 const PROCESSSELECTOR_CONTRACTID = "@mozilla.org/ipc/processselector;1";
@@ -90,7 +90,6 @@ function registerActor() {
     child: {
       moduleURI: "resource://testing-common/BrowserTestUtilsChild.jsm",
     },
-
     allFrames: true,
     includeChrome: true,
   };
@@ -797,7 +796,10 @@ var BrowserTestUtils = {
     // would try to insert the preloaded browser, which would only break things.
     await ContentTask.spawn(gBrowser.preloadedBrowser, null, async () => {
       await ContentTaskUtils.waitForCondition(() => {
-        return content.document && content.document.readyState == "complete";
+        return (
+          this.content.document &&
+          this.content.document.readyState == "complete"
+        );
       });
     });
   },
@@ -1324,97 +1326,71 @@ var BrowserTestUtils = {
 
   /**
    * Waits for the next top-level document load in the current browser.  The URI
-   * of the document is compared against aExpectedURL.  The load is then stopped
+   * of the document is compared against expectedURL.  The load is then stopped
    * before it actually starts.
    *
    * @param {string} expectedURL
    *        The URL of the document that is expected to load.
    * @param {object} browser
    *        The browser to wait for.
-   * @param {boolean} [stopFromProgressListener]
-   *        Whether to cancel the load directly from the progress listener. Defaults to true.
-   *        If you're using this method to avoid hitting the network, you want the default (true).
-   *        However, the browser UI will behave differently for loads stopped directly from
-   *        the progress listener (effectively in the middle of a call to loadURI) and so there
-   *        are cases where you may want to avoid stopping the load directly from within the
-   *        progress listener callback.
    * @returns {Promise}
    */
-  waitForDocLoadAndStopIt(
-    expectedURL,
-    browser,
-    stopFromProgressListener = true
-  ) {
-    function content_script(contentStopFromProgressListener) {
-      /* eslint-env mozilla/frame-script */
-      let wp = docShell.QueryInterface(Ci.nsIWebProgress);
-
-      function stopContent(now, uri) {
-        if (now) {
-          /* Hammer time. */
-          content.stop();
-
-          /* Let the parent know we're done. */
-          sendAsyncMessage("Test:WaitForDocLoadAndStopIt", { uri });
-        } else {
-          /* eslint-disable-next-line no-undef */
-          setTimeout(stopContent.bind(null, true, uri), 0);
-        }
-      }
-
-      let progressListener = {
-        onStateChange(webProgress, req, flags, status) {
-          dump(
-            `waitForDocLoadAndStopIt: onStateChange ${flags.toString(16)}:${
-              req.name
-            }\n`
-          );
-
-          if (
-            webProgress.isTopLevel &&
-            flags & Ci.nsIWebProgressListener.STATE_START
-          ) {
-            wp.removeProgressListener(progressListener);
-            let chan = req.QueryInterface(Ci.nsIChannel);
-            dump(`waitForDocLoadAndStopIt: Document start: ${chan.URI.spec}\n`);
-            stopContent(contentStopFromProgressListener, chan.originalURI.spec);
-          }
-        },
-        QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
-      };
-      wp.addProgressListener(progressListener, wp.NOTIFY_STATE_WINDOW);
-
-      /**
-       * As |this| is undefined and we can't extend |docShell|, adding an unload
-       * event handler is the easiest way to ensure the weakly referenced
-       * progress listener is kept alive as long as necessary.
-       */
-      addEventListener("unload", function() {
-        try {
-          wp.removeProgressListener(progressListener);
-        } catch (e) {
-          /* Will most likely fail. */
-        }
-      });
-    }
+  waitForDocLoadAndStopIt(expectedURL, browser) {
+    let isHttp = url => /^https?:/.test(url);
 
     let stoppedDocLoadPromise = () => {
-      return new Promise((resolve, reject) => {
-        function complete({ data }) {
-          if (data.uri != expectedURL) {
-            reject(new Error(`An expected URL was loaded: ${data.uri}`));
-          }
-          mm.removeMessageListener("Test:WaitForDocLoadAndStopIt", complete);
-          resolve();
+      return new Promise(resolve => {
+        // Redirect non-http URIs to http://mochi.test:8888/, so we can still
+        // use http-on-before-connect to listen for loads. Since we're
+        // aborting the load as early as possible, it doesn't matter whether the
+        // server handles it sensibly or not. However, this also means that this
+        // helper shouldn't be used to load local URIs (about pages, chrome://
+        // URIs, etc).
+        let proxyFilter;
+        if (!isHttp(expectedURL)) {
+          proxyFilter = {
+            proxyInfo: ProtocolProxyService.newProxyInfo(
+              "http",
+              "mochi.test",
+              8888,
+              "",
+              "",
+              0,
+              4096,
+              null
+            ),
+
+            applyFilter(service, channel, defaultProxyInfo, callback) {
+              callback.onProxyFilterResult(
+                isHttp(channel.URI.spec) ? defaultProxyInfo : this.proxyInfo
+              );
+            },
+          };
+
+          ProtocolProxyService.registerChannelFilter(proxyFilter, 0);
         }
 
-        let mm = browser.messageManager;
-        mm.loadFrameScript(
-          `data:,(${content_script.toString()})(${stopFromProgressListener});`,
-          true
-        );
-        mm.addMessageListener("Test:WaitForDocLoadAndStopIt", complete);
-        dump(`waitForDocLoadAndStopIt: Waiting for URL: ${expectedURL}\n`);
+        function observer(chan) {
+          chan.QueryInterface(Ci.nsIHttpChannel);
+          if (!chan.originalURI || chan.originalURI.spec !== expectedURL) {
+            return;
+          }
+
+          // TODO: We should check that the channel's BrowsingContext matches
+          // the browser's. See bug 1587114.
+
+          try {
+            chan.cancel(Cr.NS_BINDING_ABORTED);
+          } finally {
+            if (proxyFilter) {
+              ProtocolProxyService.unregisterChannelFilter(proxyFilter);
+            }
+            Services.obs.removeObserver(observer, "http-on-before-connect");
+            resolve();
+          }
+        }
+
+        Services.obs.addObserver(observer, "http-on-before-connect");
       });
     };
 
