@@ -66,7 +66,7 @@ add_task(async function() {
   );
 
   // Wait for all tree sections updated by react
-  wait = waitForDOM(document, "#params-panel .tree-section", 3);
+  const wait = waitForDOM(document, "#params-panel .tree-section", 3);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]

@@ -37,7 +37,7 @@ add_task(async function() {
   await onNetMonitor;
 
   // Reload debugee.
-  wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   tab.linkedBrowser.reload();
   await wait;
 

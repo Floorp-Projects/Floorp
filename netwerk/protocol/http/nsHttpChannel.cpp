@@ -8107,6 +8107,11 @@ void nsHttpChannel::ReportContentTypeTelemetryForCrossOriginStylesheets() {
     return;
   }
 
+  if (!mLoadInfo->LoadingPrincipal()) {
+    // No loading principal to check if it's same-origin
+    return;
+  }
+
   nsCOMPtr<nsIURI> docURI = mLoadInfo->LoadingPrincipal()->GetURI();
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   bool isPrivateWin = mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;

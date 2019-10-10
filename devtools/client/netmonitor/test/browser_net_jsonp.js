@@ -64,7 +64,7 @@ add_task(async function() {
   );
 
   info("Testing first request");
-  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
+  let wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
