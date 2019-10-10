@@ -6904,7 +6904,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
 
   uint32_t begin = metadata.toStringStart;
   uint32_t end = metadata.srcEndAfterCurly();
-  Rooted<JSFlatString*> src(cx, source->substringDontDeflate(cx, begin, end));
+  Rooted<JSLinearString*> src(cx, source->substringDontDeflate(cx, begin, end));
   if (!src) {
     return false;
   }
@@ -7249,7 +7249,7 @@ JSString* js::AsmJSModuleToString(JSContext* cx, HandleFunction fun,
       return nullptr;
     }
   } else {
-    Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
+    Rooted<JSLinearString*> src(cx, source->substring(cx, begin, end));
     if (!src) {
       return nullptr;
     }
@@ -7299,7 +7299,7 @@ JSString* js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun) {
       return nullptr;
     }
   } else {
-    Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
+    Rooted<JSLinearString*> src(cx, source->substring(cx, begin, end));
     if (!src) {
       return nullptr;
     }
