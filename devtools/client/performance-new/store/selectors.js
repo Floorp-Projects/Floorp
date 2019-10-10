@@ -59,6 +59,8 @@ const getRecordingSettings = state => {
     features: getFeatures(state),
     threads: getThreads(state),
     objdirs: getObjdirs(state),
+    // The client doesn't implement durations yet. See Bug 1587165.
+    duration: 0,
   };
 };
 

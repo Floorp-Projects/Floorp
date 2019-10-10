@@ -151,6 +151,8 @@ export interface RecordingStateFromPreferences {
   features: string[];
   threads: string[];
   objdirs: string[];
+  // The duration is currently not wired up to the UI yet. See Bug 1587165.
+  duration: number;
 }
 
 /**
@@ -225,8 +227,6 @@ export type PopupBackgroundFeatures = { [feature: string]: boolean };
  * The state of the profiler popup.
  */
 export interface PopupBackgroundState {
-  isRunning: boolean;
-  settingsOpen: boolean;
   features: PopupBackgroundFeatures;
   buffersize: number;
   windowLength: number;
@@ -239,4 +239,60 @@ export interface ContentFrameMessageManager {
   addMessageListener: (event: string, listener: (event: any) => void) => void;
   addEventListener: (event: string, listener: (event: any) => void) => void;
   sendAsyncMessage: (name: string, data: any) => void;
+}
+
+/**
+ * This interface serves as documentation for all of the prefs used by the
+ * performance-new client. Each preference access string access can be coerced to
+ * one of the properties of this interface.
+ */
+export interface PerformancePref {
+  /**
+   * Stores the total number of entries to be used in the profile buffer.
+   */
+  Entries: "devtools.performance.recording.entries";
+  /**
+   * The recording interval, stored in microseconds. Note that the StartProfiler
+   * interface uses milliseconds, but this lets us store higher precision numbers
+   * inside of an integer preference store.
+   */
+  Interval: "devtools.performance.recording.interval";
+  /**
+   * The features enabled for the profiler, stored as a comma-separated list.
+   */
+  Features: "devtools.performance.recording.features";
+  /**
+   * The threads to profile, stored as a comma-separated list.
+   */
+  Threads: "devtools.performance.recording.threads";
+  /**
+   * The location of the objdirs to use, stored as a comma-separated list.
+   */
+  ObjDirs: "devtools.performance.recording.objdirs";
+  /**
+   * The duration of the profiling window to use in seconds. Setting this to 0
+   * will cause no profile window to be used, and the values will naturally roll
+   * off from the profiling buffer.
+   *
+   * This is currently not hooked up to any UI. See Bug 1587165.
+   */
+  Duration: "devtools.performance.recording.duration";
+  /**
+   * Normally this defaults to https://profiler.firefox.com, but this can be overridden
+   * to point the profiler to a different URL, such as http://localhost:4242/ for
+   * local development workflows.
+   */
+  UIBaseUrl: "devtools.performance.recording.ui-base-url";
+  /**
+   * This pref allows tests to override the /from-addon in order to more easily
+   * test the profile injection mechanism.
+   */
+  UIBaseUrlPathPref: "devtools.performance.recording.ui-base-url-path";
+  /**
+   * The profiler's menu button and its popup can be enabled/disabled by the user.
+   * This pref controls whether the user has turned it on or not. Note that this
+   * preference is also used outside of the type-checked files, so make sure
+   * and update it elsewhere.
+   */
+  PopupEnabled: "devtools.performance.popup.enabled";
 }
