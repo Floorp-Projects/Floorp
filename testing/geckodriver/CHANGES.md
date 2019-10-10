@@ -4,70 +4,8 @@ Change log
 All notable changes to this program is documented in this file.
 
 
-0.26.0
-------
-
-Note that with this release the minimum recommended Firefox version
-has changed to Firefox ≥60.
-
-### Added
-
-- Support for Firefox on Android
-
-  Starting with this release geckodriver is able to connect to
-  Firefox on Android systems, and to control packages based on
-  [GeckoView].
-
-  Support for Android works by the geckodriver process running on
-  a host system and Firefox running within either an emulator or
-  on a physical device connected to the host system.  This requires
-  you to first [enable remote debugging on the Android device].
-
-  The WebDriver client must set the [`platformName` capability] to
-  "`android`" and the `androidPackage` capability within
-  [`moz:firefoxOptions`] to the Android package name of the Firefox
-  application.
-
-  The full list of new capabilities specific to Android, instructions
-  how to use them, and examples can be found in the [`moz:firefoxOptions`]
-  documentation on MDN.
-
-  When the session is created, the `platformName` capability will
-  return "`android`" instead of reporting the platform of the host
-  system.
-
-### Changed
-
-- Continued Marionette refactoring changes
-
-  0.25.0 came with a series of internal changes for how geckodriver
-  communicates with Firefox over the Marionette protocol.  This
-  release contains the second half of the refactoring work.
-
-### Fixed
-
-- Connection attempts to Firefox made more reliable
-
-  geckodriver now waits for the Marionette handshake before assuming
-  the session has been established.  This should improve reliability
-  in creating new WebDriver sessions.
-
-- Corrected error codes used during session creation
-
-  When a new session was being configured with invalid input data,
-  the error codes returned was not always consistent.  Attempting
-  to start a session with a malformed capabilities configuration
-  will now return the [`invalid argument`] error consistently.
-
-
 0.25.0 (2019-09-09, `bdb64cf16b68`)
 -----------------------------------
-
-__Note to Windows users!__
-With this release you must have the [Microsoft Visual Studio redistributable runtime]
-installed on your system for the binary to run.
-This is a [known bug](https://github.com/mozilla/geckodriver/issues/1617)
-with this particular release that we intend to release a fix for soon.
 
 ### Added
 
@@ -1255,12 +1193,6 @@ and greater.
 [Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
 [WebDriver conformance]: https://wpt.fyi/results/webdriver/tests?label=experimental
 [`moz:firefoxOptions`]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions
-[Microsoft Visual Studio redistributable runtime]: https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
-[GeckoView]: https://wiki.mozilla.org/Mobile/GeckoView
-[Firefox Preview]: https://play.google.com/store/apps/details?id=org.mozilla.fenix
-[Firefox Reality]: https://play.google.com/store/apps/details?id=org.mozilla.vrbrowser
-[Capabilities]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html
-[enable remote debugging on the Android device]: https://developers.google.com/web/tools/chrome-devtools/remote-debugging
 
 [`CloseWindowResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CloseWindowResponse.html
 [`CookieResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CookieResponse.html
@@ -1292,7 +1224,6 @@ and greater.
 [script timeout]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Errors/ScriptTimeout
 [timeout]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Errors/Timeout
 [timeout object]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Timeouts
-[`platformName` capability]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities#platformName
 
 [hyper]: https://hyper.rs/
 [mozrunner crate]: https://crates.io/crates/mozrunner
