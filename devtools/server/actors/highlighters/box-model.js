@@ -101,6 +101,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     super(highlighterEnv);
 
     this.ID_CLASS_PREFIX = "box-model-";
+
     this.markup = new CanvasFrameAnonymousContentHelper(
       this.highlighterEnv,
       this._buildMarkup.bind(this)
