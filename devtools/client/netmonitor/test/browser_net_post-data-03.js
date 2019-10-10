@@ -22,7 +22,7 @@ add_task(async function() {
   await performRequests(monitor, tab, 1);
 
   // Wait for all tree view updated by react
-  wait = waitForDOM(document, "#headers-panel .tree-section .treeLabel", 3);
+  let wait = waitForDOM(document, "#headers-panel .tree-section .treeLabel", 3);
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },

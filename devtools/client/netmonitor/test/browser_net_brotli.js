@@ -49,7 +49,7 @@ add_task(async function() {
     }
   );
 
-  wait = waitForDOM(document, ".CodeMirror-code");
+  const wait = waitForDOM(document, ".CodeMirror-code");
   const onResponseContent = monitor.panelWin.api.once(
     EVENTS.RECEIVED_RESPONSE_CONTENT
   );

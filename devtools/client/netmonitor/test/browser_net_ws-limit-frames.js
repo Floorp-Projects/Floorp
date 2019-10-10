@@ -30,7 +30,7 @@ add_task(async function() {
   is(requests.length, 1, "There should be one request");
 
   // Wait for truncated message notification to appear
-  wait = waitForDOM(document, "#messages-panel .truncated-message");
+  const wait = waitForDOM(document, "#messages-panel .truncated-message");
 
   // Select the first request
   EventUtils.sendMouseEvent({ type: "mousedown" }, requests[0]);
