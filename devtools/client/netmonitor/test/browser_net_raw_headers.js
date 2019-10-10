@@ -22,7 +22,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  wait = waitForDOM(document, "#headers-panel .tree-section", 2);
+  let wait = waitForDOM(document, "#headers-panel .tree-section", 2);
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]

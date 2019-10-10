@@ -30,7 +30,7 @@ add_task(async function() {
   is(requests.length, 2, "There should be two requests");
 
   // Wait for all sent/received messages to be displayed in DevTools
-  wait = waitForDOM(
+  let wait = waitForDOM(
     document,
     "#messages-panel .ws-frames-list-table .ws-frame-list-item",
     4

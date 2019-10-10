@@ -1959,12 +1959,11 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
   MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableCopy);
   MOZ_ASSERT(dstMemOrTableIndex != srcMemOrTableIndex);
 
-  // We use (dest, src) everywhere in code but the spec requires (src, dest)
-  // encoding order for the immediates.
-  if (!readMemOrTableIndex(isMem, srcMemOrTableIndex)) {
+  // Spec requires (dest, src) as of 2019-10-04.
+  if (!readMemOrTableIndex(isMem, dstMemOrTableIndex)) {
     return false;
   }
-  if (!readMemOrTableIndex(isMem, dstMemOrTableIndex)) {
+  if (!readMemOrTableIndex(isMem, srcMemOrTableIndex)) {
     return false;
   }
 

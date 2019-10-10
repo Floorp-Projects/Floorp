@@ -43,12 +43,13 @@ function getVisibleColumns(columns) {
 
 const getColumns = createSelector(
   state => state.ui,
-  ui => {
+  state => state.search,
+  (ui, search) => {
     if (
-      (ui.networkDetailsOpen &&
+      ((ui.networkDetailsOpen || search.panelOpen) &&
         getVisibleColumns(ui.columns).length === 1 &&
         ui.columns.waterfall) ||
-      !ui.networkDetailsOpen
+      (!ui.networkDetailsOpen && !search.panelOpen)
     ) {
       return ui.columns;
     }
