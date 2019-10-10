@@ -757,14 +757,14 @@ public class GeckoView extends FrameLayout {
             structure.setHtmlInfo(htmlBuilder.build());
         }
 
+        structure.setChildCount(element.children.size());
         int childCount = 0;
+
         for (final AutofillElement child : element.children) {
             final ViewStructure childStructure = structure.newChild(childCount);
             fillViewStructure(child, childStructure, flags);
             childCount++;
         }
-
-        structure.setChildCount(childCount);
 
         switch (element.tag) {
             case "input":
