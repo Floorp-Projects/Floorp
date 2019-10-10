@@ -1375,12 +1375,14 @@ impl Device {
             ext_framebuffer_fetch &&
             ext_pixel_local_storage;
 
+        let is_adreno = renderer_name.starts_with("Adreno");
+
         // KHR_blend_equation_advanced renders incorrectly on Adreno
         // devices. This has only been confirmed up to Adreno 5xx, and has been
         // fixed for Android 9, so this condition could be made more specific.
         let supports_advanced_blend_equation =
             supports_extension(&extensions, "GL_KHR_blend_equation_advanced") &&
-            !renderer_name.starts_with("Adreno");
+            !is_adreno;
 
         let supports_texture_swizzle = allow_texture_swizzling &&
             (gl.get_type() == gl::GlType::Gles || supports_extension(&extensions, "GL_ARB_texture_storage"));
@@ -1390,7 +1392,8 @@ impl Device {
         // Other platforms may have similar requirements and should be added
         // here.
         // The default value should be 4.
-        let optimal_pbo_stride = if renderer_name.contains("Adreno") {
+        let is_amd_macos = cfg!(target_os = "macos") && renderer_name.starts_with("AMD");
+        let optimal_pbo_stride = if is_adreno || is_amd_macos {
             NonZeroUsize::new(256).unwrap()
         } else {
             NonZeroUsize::new(4).unwrap()
@@ -1489,7 +1492,7 @@ impl Device {
         }
     }
 
-    pub fn get_optimal_pbo_stride(&self) -> NonZeroUsize {
+    pub fn optimal_pbo_stride(&self) -> NonZeroUsize {
         self.optimal_pbo_stride
     }
 
