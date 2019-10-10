@@ -8,11 +8,10 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
-      "workaround-issue38586.patch",
       "unpoison-thread-stacks.patch",
       "downgrade-mangling-error.patch",
-      "r357725-asan-vs2019.patch",
-      "loosen-msvc-detection.patch",
-      "revert-r355311.patch"
+      "r372020-r372182-profiler-linkage.patch",
+      "revert-r359260-due-to-bug41817.patch",
+      "loosen-msvc-detection.patch"
     ]
 }
