@@ -2333,8 +2333,17 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     Element* body = mDocument->GetBodyElement();
     if (body) {
       RefPtr<ComputedStyle> bodyStyle = ResolveComputedStyle(body);
+      WritingMode bodyWM(bodyStyle);
+
+      if (bodyWM != mDocElementContainingBlock->GetWritingMode()) {
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"),
+            mDocument, nsContentUtils::eLAYOUT_PROPERTIES,
+            "PrincipalWritingModePropagationWarning");
+      }
+
       mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
-          WritingMode(bodyStyle));
+          bodyWM);
     } else {
       mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
           mDocElementContainingBlock->GetWritingMode());
