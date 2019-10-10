@@ -20,18 +20,18 @@ from raptor.raptor import RaptorDesktopFirefox, RaptorDesktopChrome, RaptorAndro
 
 
 class TestBrowserThread(threading.Thread):
-        def __init__(self, raptor_instance, tests, names):
-            super(TestBrowserThread, self).__init__()
-            self.raptor_instance = raptor_instance
-            self.tests = tests
-            self.names = names
-            self.exc = None
+    def __init__(self, raptor_instance, tests, names):
+        super(TestBrowserThread, self).__init__()
+        self.raptor_instance = raptor_instance
+        self.tests = tests
+        self.names = names
+        self.exc = None
 
-        def run(self):
-            try:
-                self.raptor_instance.run_tests(self.tests, self.names)
-            except BaseException:
-                self.exc = sys.exc_info()
+    def run(self):
+        try:
+            self.raptor_instance.run_tests(self.tests, self.names)
+        except BaseException:
+            self.exc = sys.exc_info()
 
 
 @pytest.mark.parametrize("raptor_class, app_name", [

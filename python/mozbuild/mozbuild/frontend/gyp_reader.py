@@ -202,8 +202,8 @@ def process_gyp_result(gyp_result, gyp_dir_attrs, path, config, output,
             if not ('actions' in spec or 'copies' in spec):
                 continue
         elif spec['type'] in ('static_library', 'shared_library', 'executable'):
-                # Remove leading 'lib' from the target_name if any, and use as
-                # library name.
+            # Remove leading 'lib' from the target_name if any, and use as
+            # library name.
             name = spec['target_name']
             if spec['type'] in ('static_library', 'shared_library'):
                 if name.startswith('lib'):

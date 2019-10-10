@@ -42,12 +42,12 @@ class GeckoDriver(MachCommandBase):
         try:
             binpath = self.get_binary_path("geckodriver")
         except Exception as e:
-                print("It looks like geckodriver isn't built. "
-                      "Add ac_add_options --enable-geckodriver to your "
-                      "mozconfig ",
-                      "and run |mach build| to build it.")
-                print(e)
-                return 1
+            print("It looks like geckodriver isn't built. "
+                  "Add ac_add_options --enable-geckodriver to your "
+                  "mozconfig ",
+                  "and run |mach build| to build it.")
+            print(e)
+            return 1
 
         args = [binpath]
 
