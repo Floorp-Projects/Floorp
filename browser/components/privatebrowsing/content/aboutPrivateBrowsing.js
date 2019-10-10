@@ -24,6 +24,52 @@ document.addEventListener("DOMContentLoaded", function() {
       RPMGetFormatURLPref("app.support.baseURL") + "private-browsing-myths"
     );
 
+  // Set up the private search banner.
+  const privateSearchBanner = document.getElementById("search-banner");
+
+  RPMAddMessageListener("ShowSearchBanner", msg => {
+    if (msg.data.show) {
+      document.l10n.setAttributes(
+        document.getElementById("about-private-browsing-search-banner-title"),
+        "about-private-browsing-search-banner-title",
+        { engineName: msg.data.engineName }
+      );
+      privateSearchBanner.removeAttribute("hidden");
+      document.body.classList.add("showBanner");
+    }
+
+    // We set this attribute so that tests know when we are done.
+    document.documentElement.setAttribute("SearchBannerInitialized", true);
+  });
+  RPMSendAsyncMessage("ShouldShowSearchBanner");
+
+  function hideSearchBanner() {
+    privateSearchBanner.setAttribute("hidden", "true");
+    document.body.classList.remove("showBanner");
+    RPMSendAsyncMessage("SearchBannerDismissed");
+  }
+
+  document
+    .getElementById("search-banner-close-button")
+    .addEventListener("click", () => {
+      hideSearchBanner();
+    });
+
+  let openSearchOptions = document.getElementById(
+    "about-private-browsing-search-banner-description"
+  );
+  let openSearchOptionsEvtHandler = evt => {
+    if (
+      evt.target.id == "open-search-options-link" &&
+      (evt.keyCode == evt.DOM_VK_RETURN || evt.type == "click")
+    ) {
+      RPMSendAsyncMessage("OpenSearchPreferences");
+      hideSearchBanner();
+    }
+  };
+  openSearchOptions.addEventListener("click", openSearchOptionsEvtHandler);
+  openSearchOptions.addEventListener("keypress", openSearchOptionsEvtHandler);
+
   // Setup the search hand-off box.
   let btn = document.getElementById("search-handoff-button");
   let editable = document.getElementById("fake-editable");

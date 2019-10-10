@@ -10,11 +10,33 @@ html.private {
   --in-content-page-background: #25003e;
   --in-content-link-color-hover: white;
   --in-content-link-color-active: white;
+  --in-content-banner-background: #f9f9fe;
+  --in-content-banner-text-color: #0c0c0d;
+  --in-content-button-background-hover: rgba(12,12,13,.1);
+  --in-content-button-background-active: rgba(12,12,13,.15);
+}
+
+/**
+ * When the showBanner class is applied, the banner is displayed at the top
+ * of the page, and we need to adjust the padding, so that the banner is
+ * spread across the full page width.
+ */
+body.showBanner {
+  padding: 0px 0px 40px;
+  min-height: 0;
+}
+
+.showBanner > .showPrivate {
+  padding: 40px 48px 0px;
 }
 
 a:link {
   color: inherit;
   text-decoration: underline;
+}
+
+a:link:hover {
+  color: inherit;
 }
 
 .container {
@@ -145,6 +167,38 @@ p {
   display: none;
 }
 
+.search-banner {
+  width: 100%;
+  background-color: var(--in-content-banner-background);
+  color: var(--in-content-banner-text-color);
+}
+
+.banner-body {
+  margin: auto;
+  width: max-content;
+  background-image: url("chrome://browser/skin/preferences/in-content/general.svg");
+  background-position: left 0 top 50px;
+  background-repeat: no-repeat;
+  background-size: 32px;
+  letter-spacing: -.2px;
+  padding: 50px 0;
+  padding-inline-start: 44px;
+}
+
+.banner-body h1 {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--in-content-banner-text-color);
+  line-height: 1em;
+  margin: 7px 0;
+}
+
+.banner-body p {
+  font-size: 15px;
+  line-height: 1em;
+  margin: 4px 0;
+}
+
 .info {
   background-color: rgba(0, 0, 0, 0.2);
   background-image: url("chrome://browser/skin/privatebrowsing/private-browsing.svg");
@@ -170,4 +224,20 @@ p {
 .info p {
   font-size: 15px;
   line-height: 25px;
+}
+
+.search-banner-close-button {
+  float: right;
+  min-width: 20px;
+  min-height: 20px;
+  margin: 16px;
+  padding: 0;
+  background-color: inherit;
+}
+
+.search-banner-close-image {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0;
+  width: 28px;
 }
