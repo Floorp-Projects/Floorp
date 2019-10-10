@@ -121,6 +121,10 @@ const POLICIES_TESTS = [
           SPNEGO: true,
           NTLM: true,
         },
+        AllowProxies: {
+          SPNEGO: false,
+          NTLM: false,
+        },
       },
     },
     lockedPrefs: {
@@ -129,6 +133,8 @@ const POLICIES_TESTS = [
       "network.automatic-ntlm-auth.trusted-uris": "a.com, b.com",
       "network.automatic-ntlm-auth.allow-non-fqdn": true,
       "network.negotiate-auth.allow-non-fqdn": true,
+      "network.automatic-ntlm-auth.allow-proxies": false,
+      "network.negotiate-auth.allow-proxies": false,
     },
   },
 
