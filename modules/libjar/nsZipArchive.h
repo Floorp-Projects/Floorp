@@ -22,21 +22,6 @@
 #include "mozilla/FileLocation.h"
 #include "mozilla/UniquePtr.h"
 
-#ifdef HAVE_SEH_EXCEPTIONS
-#  define MOZ_WIN_MEM_TRY_BEGIN __try {
-#  define MOZ_WIN_MEM_TRY_CATCH(cmd)                        \
-    }                                                       \
-    __except (GetExceptionCode() == EXCEPTION_IN_PAGE_ERROR \
-                  ? EXCEPTION_EXECUTE_HANDLER               \
-                  : EXCEPTION_CONTINUE_SEARCH) {            \
-      NS_WARNING("unexpected EXCEPTION_IN_PAGE_ERROR");     \
-      cmd;                                                  \
-    }
-#else
-#  define MOZ_WIN_MEM_TRY_BEGIN {
-#  define MOZ_WIN_MEM_TRY_CATCH(cmd) }
-#endif
-
 class nsZipFind;
 struct PRFileDesc;
 #ifdef MOZ_JAR_BROTLI
@@ -381,7 +366,12 @@ class nsZipItemPtr final : public nsZipItemPtr_base {
 
 class nsZipHandle final {
   friend class nsZipArchive;
+  friend class nsZipFind;
   friend class mozilla::FileLocation;
+  friend class nsJARInputStream;
+#if defined(XP_UNIX) && !defined(XP_DARWIN)
+  friend class MmapAccessScope;
+#endif
 
  public:
   static nsresult Init(nsIFile* file, nsZipHandle** ret,
