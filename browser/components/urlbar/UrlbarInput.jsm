@@ -1772,6 +1772,8 @@ class UrlbarInput {
     if (this.getAttribute("pageproxystate") != "valid") {
       this.window.UpdatePopupNotificationsVisibility();
     }
+
+    Services.obs.notifyObservers(null, "urlbar-blur");
   }
 
   _on_click(event) {
@@ -1814,6 +1816,8 @@ class UrlbarInput {
     if (this.getAttribute("pageproxystate") != "valid") {
       this.window.UpdatePopupNotificationsVisibility();
     }
+
+    Services.obs.notifyObservers(null, "urlbar-focus");
   }
 
   _on_mouseover(event) {
