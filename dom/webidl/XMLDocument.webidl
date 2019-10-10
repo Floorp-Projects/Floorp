@@ -11,15 +11,3 @@
 // http://dom.spec.whatwg.org/#xmldocument
 [Exposed=Window]
 interface XMLDocument : Document {};
-
-// http://www.whatwg.org/specs/web-apps/current-work/#xmldocument
-partial interface XMLDocument {
-  [Throws, NeedsCallerType, Pref="dom.xmldocument.load.enabled"]
-  boolean load(DOMString url);
-};
-
-// Gecko extensions?
-partial interface XMLDocument {
-  [UseCounter, Pref="dom.xmldocument.async.enabled"]
-  attribute boolean async;
-};
