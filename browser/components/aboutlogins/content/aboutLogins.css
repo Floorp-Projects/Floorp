@@ -54,10 +54,6 @@ login-item {
   grid-area: login;
 }
 
-login-item {
-  max-width: 700px;
-}
-
 #branding-logo {
   flex-basis: var(--sidebar-width);
   flex-shrink: 0;
