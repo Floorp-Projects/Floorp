@@ -204,6 +204,21 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
     return true;
   }
 
+  // Clear window by transparent black when compositor window is used in GPU
+  // process and non-client area rendering by DWM is enabled.
+  // It is for showing non-client area rendering. See nsWindow::UpdateGlass().
+  if (HasGlass() && GetLayerManager()->AsKnowsCompositor() &&
+      GetLayerManager()->AsKnowsCompositor()->GetUseCompositorWnd()) {
+    HDC hdc;
+    RECT rect;
+    hdc = ::GetWindowDC(mWnd);
+    ::GetWindowRect(mWnd, &rect);
+    ::MapWindowPoints(nullptr, mWnd, (LPPOINT)&rect, 2);
+    ::FillRect(hdc, &rect,
+               reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
+    ReleaseDC(mWnd, hdc);
+  }
+
   if (GetLayerManager()->AsKnowsCompositor() &&
       !mBounds.IsEqualEdges(mLastPaintBounds)) {
     // Do an early async composite so that we at least have something on the

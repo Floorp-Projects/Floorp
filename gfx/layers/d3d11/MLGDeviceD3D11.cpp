@@ -1272,10 +1272,13 @@ bool MLGDeviceD3D11::InitInputLayout(D3D11_INPUT_ELEMENT_DESC* aDesc,
   return true;
 }
 
-TextureFactoryIdentifier MLGDeviceD3D11::GetTextureFactoryIdentifier() const {
+TextureFactoryIdentifier MLGDeviceD3D11::GetTextureFactoryIdentifier(
+    widget::CompositorWidget* aWidget) const {
   TextureFactoryIdentifier ident(GetLayersBackend(), XRE_GetProcessType(),
                                  GetMaxTextureSize());
-
+  if (aWidget) {
+    ident.mUseCompositorWnd = !!aWidget->AsWindows()->GetCompositorHwnd();
+  }
   if (mSyncObject) {
     ident.mSyncHandle = mSyncObject->GetSyncHandle();
   }

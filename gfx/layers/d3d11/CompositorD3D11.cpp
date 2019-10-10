@@ -328,6 +328,9 @@ TextureFactoryIdentifier CompositorD3D11::GetTextureFactoryIdentifier() {
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentProcessType = XRE_GetProcessType();
   ident.mParentBackend = LayersBackend::LAYERS_D3D11;
+  if (mWidget) {
+    ident.mUseCompositorWnd = !!mWidget->AsWindows()->GetCompositorHwnd();
+  }
   if (mAttachments->mSyncObject) {
     ident.mSyncHandle = mAttachments->mSyncObject->GetSyncHandle();
   }

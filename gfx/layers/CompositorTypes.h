@@ -176,6 +176,7 @@ struct TextureFactoryIdentifier {
   bool mSupportsTextureDirectMapping;
   bool mCompositorUseANGLE;
   bool mCompositorUseDComp;
+  bool mUseCompositorWnd;
   bool mSupportsTextureBlitting;
   bool mSupportsPartialUploads;
   bool mSupportsComponentAlpha;
@@ -188,7 +189,7 @@ struct TextureFactoryIdentifier {
       int32_t aMaxTextureSize = 4096,
       bool aSupportsTextureDirectMapping = false,
       bool aCompositorUseANGLE = false, bool aCompositorUseDComp = false,
-      bool aSupportsTextureBlitting = false,
+      bool aUseCompositorWnd = false, bool aSupportsTextureBlitting = false,
       bool aSupportsPartialUploads = false, bool aSupportsComponentAlpha = true,
       SyncHandle aSyncHandle = 0)
       : mParentBackend(aLayersBackend),
@@ -197,6 +198,7 @@ struct TextureFactoryIdentifier {
         mSupportsTextureDirectMapping(aSupportsTextureDirectMapping),
         mCompositorUseANGLE(aCompositorUseANGLE),
         mCompositorUseDComp(aCompositorUseDComp),
+        mUseCompositorWnd(aUseCompositorWnd),
         mSupportsTextureBlitting(aSupportsTextureBlitting),
         mSupportsPartialUploads(aSupportsPartialUploads),
         mSupportsComponentAlpha(aSupportsComponentAlpha),
@@ -211,6 +213,7 @@ struct TextureFactoryIdentifier {
                aOther.mSupportsTextureDirectMapping &&
            mCompositorUseANGLE == aOther.mCompositorUseANGLE &&
            mCompositorUseDComp == aOther.mCompositorUseDComp &&
+           mUseCompositorWnd == aOther.mUseCompositorWnd &&
            mSupportsTextureBlitting == aOther.mSupportsTextureBlitting &&
            mSupportsPartialUploads == aOther.mSupportsPartialUploads &&
            mSupportsComponentAlpha == aOther.mSupportsComponentAlpha &&

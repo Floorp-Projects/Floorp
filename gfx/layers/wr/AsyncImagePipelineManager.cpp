@@ -41,8 +41,9 @@ AsyncImagePipelineManager::PipelineUpdates::PipelineUpdates(
       mRendered(aRendered) {}
 
 AsyncImagePipelineManager::AsyncImagePipelineManager(
-    nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis)
+    nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis, bool aUseCompositorWnd)
     : mApis(aApis),
+      mUseCompositorWnd(aUseCompositorWnd),
       mIdNamespace(mApis[0]->GetNamespace()),
       mUseTripleBuffering(mApis[0]->GetUseTripleBuffering()),
       mResourceId(0),

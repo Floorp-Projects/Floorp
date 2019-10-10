@@ -1833,7 +1833,12 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
     clonedApis.AppendElement(api->Clone());
   }
 
-  mAsyncImageManager = new AsyncImagePipelineManager(std::move(clonedApis));
+  bool useCompositorWnd = false;
+#ifdef XP_WIN
+  useCompositorWnd = !!mWidget->AsWindows()->GetCompositorHwnd();
+#endif
+  mAsyncImageManager =
+      new AsyncImagePipelineManager(std::move(clonedApis), useCompositorWnd);
   RefPtr<AsyncImagePipelineManager> asyncMgr = mAsyncImageManager;
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr,

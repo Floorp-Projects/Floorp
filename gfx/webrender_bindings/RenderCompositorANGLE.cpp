@@ -51,7 +51,8 @@ RenderCompositorANGLE::RenderCompositorANGLE(
     : RenderCompositor(std::move(aWidget)),
       mEGLConfig(nullptr),
       mEGLSurface(nullptr),
-      mUseTripleBuffering(false) {}
+      mUseTripleBuffering(false),
+      mUseAlpha(false) {}
 
 RenderCompositorANGLE::~RenderCompositorANGLE() {
   DestroyEGLSurface();
@@ -295,9 +296,47 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
     return;
   }
 
-  RefPtr<IDXGISwapChain1> swapChain1;
   bool useTripleBuffering = gfx::gfxVars::UseWebRenderTripleBufferingWin();
+  bool useAlpha = mUseAlpha;
+  RefPtr<IDXGISwapChain1> swapChain1 =
+      CreateSwapChainForDComp(useTripleBuffering, useAlpha);
+  if (swapChain1) {
+    mSwapChain = swapChain1;
+    mVisual->SetContent(swapChain1);
+    mCompositionTarget->SetRoot(mVisual);
+    mCompositionDevice = dCompDevice;
+    mUseTripleBuffering = useTripleBuffering;
+    mUseAlpha = useAlpha;
+  } else {
+    // Clear on failure
+    mVisual = nullptr;
+    mCompositionTarget = nullptr;
+  }
+}
 
+RefPtr<IDXGISwapChain1> RenderCompositorANGLE::CreateSwapChainForDComp(
+    bool aUseTripleBuffering, bool aUseAlpha) {
+  HRESULT hr;
+  RefPtr<IDXGIDevice> dxgiDevice;
+  mDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
+
+  RefPtr<IDXGIFactory> dxgiFactory;
+  {
+    RefPtr<IDXGIAdapter> adapter;
+    dxgiDevice->GetAdapter(getter_AddRefs(adapter));
+
+    adapter->GetParent(
+        IID_PPV_ARGS((IDXGIFactory**)getter_AddRefs(dxgiFactory)));
+  }
+
+  RefPtr<IDXGIFactory2> dxgiFactory2;
+  hr = dxgiFactory->QueryInterface(
+      (IDXGIFactory2**)getter_AddRefs(dxgiFactory2));
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  RefPtr<IDXGISwapChain1> swapChain1;
   DXGI_SWAP_CHAIN_DESC1 desc{};
   // DXGI does not like 0x0 swapchains. Swap chain creation failed when 0x0 was
   // set.
@@ -309,7 +348,7 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
   // DXGI_USAGE_SHADER_INPUT is set for improving performanc of copying from
   // framebuffer to texture on intel gpu.
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;
-  if (useTripleBuffering) {
+  if (aUseTripleBuffering) {
     desc.BufferCount = 3;
   } else {
     desc.BufferCount = 2;
@@ -317,25 +356,49 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
   // DXGI_SCALING_NONE caused swap chain creation failure.
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-  desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+  if (aUseAlpha) {
+    // This could degrade performance. Use it only when it is necessary.
+    desc.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+  } else {
+    desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
+  }
   desc.Flags = 0;
 
-  hr = aDXGIFactory2->CreateSwapChainForComposition(mDevice, &desc, nullptr,
-                                                    getter_AddRefs(swapChain1));
+  hr = dxgiFactory2->CreateSwapChainForComposition(mDevice, &desc, nullptr,
+                                                   getter_AddRefs(swapChain1));
   if (SUCCEEDED(hr) && swapChain1) {
     DXGI_RGBA color = {1.0f, 1.0f, 1.0f, 1.0f};
     swapChain1->SetBackgroundColor(&color);
-    mSwapChain = swapChain1;
-    mVisual->SetContent(swapChain1);
-    mCompositionTarget->SetRoot(mVisual);
-    mCompositionDevice = dCompDevice;
-    mUseTripleBuffering = useTripleBuffering;
+    return swapChain1;
   }
+
+  return nullptr;
 }
 
 bool RenderCompositorANGLE::BeginFrame(layers::NativeLayer* aNativeLayer) {
   MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
   mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
+
+  if (mCompositionDevice) {
+    bool useAlpha = mWidget->AsWindows()->HasGlass();
+    // When Alpha usage is changed, SwapChain needs to be recreatd.
+    if (useAlpha != mUseAlpha) {
+      DestroyEGLSurface();
+      mBufferSize.reset();
+
+      RefPtr<IDXGISwapChain1> swapChain1 =
+          CreateSwapChainForDComp(mUseTripleBuffering, useAlpha);
+      if (swapChain1) {
+        mSwapChain = swapChain1;
+        mUseAlpha = useAlpha;
+        mVisual->SetContent(swapChain1);
+      } else {
+        gfxCriticalNote << "Failed to re-create SwapChain";
+        RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+        return false;
+      }
+    }
+  }
 
   if (!ResizeBufferIfNeeded()) {
     return false;

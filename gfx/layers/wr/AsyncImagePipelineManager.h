@@ -36,14 +36,16 @@ class AsyncImagePipelineManager final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncImagePipelineManager)
 
-  explicit AsyncImagePipelineManager(
-      nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis);
+  explicit AsyncImagePipelineManager(nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis,
+                                     bool aUseCompositorWnd);
 
  protected:
   ~AsyncImagePipelineManager();
 
  public:
   void Destroy();
+
+  bool UseCompositorWnd() const { return mUseCompositorWnd; }
 
   void AddPipeline(const wr::PipelineId& aPipelineId,
                    WebRenderBridgeParent* aWrBridge);
@@ -213,6 +215,8 @@ class AsyncImagePipelineManager final {
   void CheckForTextureHostsNotUsedByGPU();
 
   nsTArray<RefPtr<wr::WebRenderAPI>> mApis;
+  bool mUseCompositorWnd;
+
   const wr::IdNamespace mIdNamespace;
   const bool mUseTripleBuffering;
   uint32_t mResourceId;
