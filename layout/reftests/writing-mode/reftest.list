@@ -24,7 +24,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1091058-1.html 1091058-1
 == 1094914-1b.html 1094914-1-ref.html
 == 1096224-1a.html 1096224-1-ref.html
 == 1096224-1b.html 1096224-1-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1a.html 1102175-1-ref.html # Bug 1392106
+fails random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1a.html 1102175-1-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1102175-1b.html 1102175-1-ref.html # Bug 1392106
 == 1103613-1.html 1103613-1-ref.html
 == 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html

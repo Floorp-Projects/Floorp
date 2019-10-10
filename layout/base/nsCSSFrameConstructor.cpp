@@ -2314,33 +2314,6 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     return nullptr;
   }
 
-  if (aDocElement->IsHTMLElement() &&
-      mDocElementContainingBlock->IsCanvasFrame()) {
-    // This implements "The Principal Writing Mode".
-    // https://drafts.csswg.org/css-writing-modes-3/#principal-flow
-    //
-    // If there's a <body> element, its writing-mode, direction, and
-    // text-orientation override the root element's used value.
-    //
-    // We need to copy <body>'s WritingMode to mDocElementContainingBlock before
-    // construct mRootElementFrame so that anonymous internal frames such as
-    // <html> with table style can copy their parent frame's mWritingMode in
-    // nsFrame::Init().
-    MOZ_ASSERT(!mRootElementFrame,
-               "We need to copy <body>'s principal writing-mode before "
-               "constructing mRootElementFrame.");
-
-    Element* body = mDocument->GetBodyElement();
-    if (body) {
-      RefPtr<ComputedStyle> bodyStyle = ResolveComputedStyle(body);
-      mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
-          WritingMode(bodyStyle));
-    } else {
-      mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
-          mDocElementContainingBlock->GetWritingMode());
-    }
-  }
-
   nsFrameConstructorSaveState docElementContainingBlockAbsoluteSaveState;
   if (mHasRootAbsPosContainingBlock) {
     // Push the absolute containing block now so we can absolutely position
@@ -6840,7 +6813,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
-  if (WipeInsertionParent(parentFrame, aFirstNewContent, nullptr)) {
+  if (WipeInsertionParent(parentFrame)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -7241,7 +7214,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
-  if (WipeInsertionParent(insertion.mParentFrame, aStartChild, aEndChild)) {
+  if (WipeInsertionParent(insertion.mParentFrame)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -8440,17 +8413,6 @@ bool nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
   MOZ_ASSERT(inFlowFrame == inFlowFrame->FirstContinuation(),
              "placeholder for primary frame has previous continuations?");
   nsIFrame* parent = inFlowFrame->GetParent();
-
-  if (aFrame->GetContent() == mDocument->GetBodyElement()) {
-    // If the frame of the canonical body element is removed (either because of
-    // removing of the element, or removing for frame construction like
-    // writing-mode changed), we need to reframe the root element so that the
-    // root element's frames has the correct writing-mode propagated from body
-    // element. (See nsCSSFrameConstructor::ConstructDocElementFrame.)
-    TRACE("Root");
-    RecreateFramesForContent(mDocument->GetRootElement(), InsertionKind::Async);
-    return true;
-  }
 
   if (inFlowFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
     nsIFrame* grandparent = parent->GetParent();
@@ -11382,33 +11344,12 @@ static bool IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame,
   return true;
 }
 
-bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame,
-                                                nsIContent* aStartChild,
-                                                nsIContent* aEndChild) {
+bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
 #define TRACE(reason)                                                \
   PROFILER_TRACING("Layout", "WipeInsertionParent: " reason, LAYOUT, \
                    TRACING_EVENT)
 
-  MOZ_ASSERT(aStartChild, "Must always pass aStartChild!");
-
   const LayoutFrameType frameType = aFrame->Type();
-
-  if (aFrame->GetContent() == mDocument->GetRootElement()) {
-    // If we insert a content that becomes the canonical body element, we need
-    // to reframe the root element so that the root element's frames has the
-    // correct writing-mode propagated from body element. (See
-    // nsCSSFrameConstructor::ConstructDocElementFrame.)
-    nsIContent* bodyElement = mDocument->GetBodyElement();
-    for (nsIContent* child = aStartChild; child != aEndChild;
-         child = child->GetNextSibling()) {
-      if (child == bodyElement) {
-        TRACE("Root");
-        RecreateFramesForContent(mDocument->GetRootElement(),
-                                 InsertionKind::Async);
-        return true;
-      }
-    }
-  }
 
   // FIXME(emilio): This looks terribly inefficient if you insert elements deep
   // in a MathML subtree.
