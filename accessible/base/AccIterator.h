@@ -97,7 +97,6 @@ class RelatedAccIterator : public AccIterable {
   DocAccessible* mDocument;
   nsAtom* mRelAttr;
   DocAccessible::AttrRelProviders* mProviders;
-  nsIContent* mBindingParent;
   uint32_t mIndex;
 };
 
