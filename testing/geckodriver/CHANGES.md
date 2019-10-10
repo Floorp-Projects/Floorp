@@ -7,6 +7,12 @@ All notable changes to this program is documented in this file.
 0.25.0 (2019-09-09, `bdb64cf16b68`)
 -----------------------------------
 
+__Note to Windows users!__
+With this release you must have the [Microsoft Visual Studio redistributable runtime]
+installed on your system for the binary to run.
+This is a [known bug](https://github.com/mozilla/geckodriver/issues/1617)
+with this particular release that we intend to release a fix for soon.
+
 ### Added
 
 - Added support for HTTP `HEAD` requests to the HTTPD
@@ -1193,6 +1199,7 @@ and greater.
 [Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
 [WebDriver conformance]: https://wpt.fyi/results/webdriver/tests?label=experimental
 [`moz:firefoxOptions`]: https://developer.mozilla.org/en-US/docs/Web/WebDriver/Capabilities/firefoxOptions
+[Microsoft Visual Studio redistributable runtime]: https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads
 
 [`CloseWindowResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CloseWindowResponse.html
 [`CookieResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CookieResponse.html
