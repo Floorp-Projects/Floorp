@@ -4799,21 +4799,31 @@ const BrowserSearch = {
    * @param searchText
    *        The search terms to use for the search.
    *
-   * @param useNewTab
-   *        Boolean indicating whether or not the search should load in a new
-   *        tab.
+   * @param where
+   *        String indicating where the search should load. Most commonly used
+   *        are 'tab' or 'window', defaults to 'current'.
+   *
+   * @param usePrivate
+   *        Whether to use the Private Browsing mode default search engine.
+   *        Defaults to `false`.
    *
    * @param purpose [optional]
    *        A string meant to indicate the context of the search request. This
    *        allows the search service to provide a different nsISearchSubmission
    *        depending on e.g. where the search is triggered in the UI.
    *
+   * @param triggeringPrincipal
+   *        The principal to use for a new window or tab.
+   *
+   * @param csp
+   *        The content security policy to use for a new window or tab.
+   *
    * @return engine The search engine used to perform a search, or null if no
    *                search was performed.
    */
   _loadSearch(
     searchText,
-    useNewTab,
+    where,
     usePrivate,
     purpose,
     triggeringPrincipal,
@@ -4841,7 +4851,8 @@ const BrowserSearch = {
     let inBackground = Services.prefs.getBoolPref(
       "browser.search.context.loadInBackground"
     );
-    openLinkIn(submission.uri.spec, useNewTab ? "tab" : "current", {
+    openLinkIn(submission.uri.spec, where || "current", {
+      private: usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window),
       postData: submission.postData,
       inBackground,
       relatedToCurrent: true,
@@ -4861,7 +4872,9 @@ const BrowserSearch = {
   loadSearchFromContext(terms, usePrivate, triggeringPrincipal, csp) {
     let engine = BrowserSearch._loadSearch(
       terms,
-      true,
+      usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window)
+        ? "window"
+        : "tab",
       usePrivate,
       "contextmenu",
       triggeringPrincipal,
