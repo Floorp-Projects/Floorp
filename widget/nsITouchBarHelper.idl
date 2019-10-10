@@ -23,6 +23,11 @@ interface nsITouchBarHelper : nsISupports
   readonly attribute AString activeTitle;
 
   /**
+   * Return true if the Urlbar has focus.
+   */
+  readonly attribute boolean isUrlbarFocused;
+
+  /**
    * Returns all available Touch Bar Inputs in an nsIArray
    * of nsITouchBarInput objects.
    */
