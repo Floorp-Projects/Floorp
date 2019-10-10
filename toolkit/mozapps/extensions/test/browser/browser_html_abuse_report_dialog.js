@@ -98,3 +98,62 @@ add_task(async function test_report_dialog_window_closed_by_user() {
 
   await extension.unload();
 });
+
+add_task(async function test_amo_details_for_not_installed_addon() {
+  const addonId = "not-installed-addon@mochi.test";
+  const fakeAMODetails = {
+    name: "fake name",
+    current_version: { version: "1.0" },
+    type: "extension",
+    icon_url: "http://test.addons.org/asserts/fake-icon-url.png",
+    homepage: "http://fake.url/homepage",
+    support_url: "http://fake.url/support",
+    authors: [
+      { name: "author1", url: "http://fake.url/author1" },
+      { name: "author2", url: "http://fake.url/author2" },
+    ],
+    is_recommended: true,
+  };
+
+  AbuseReportTestUtils.amoAddonDetailsMap.set(addonId, fakeAMODetails);
+  registerCleanupFunction(() =>
+    AbuseReportTestUtils.amoAddonDetailsMap.clear()
+  );
+
+  const reportDialog = await AbuseReporter.openDialog(
+    addonId,
+    "menu",
+    gBrowser.selectedBrowser
+  );
+
+  const reportEl = await reportDialog.promiseReportPanel;
+
+  // Assert that the panel has been able to retrieve from AMO
+  // all the addon details needed to render the panel correctly.
+  is(reportEl.addonId, addonId, "Got the expected addonId");
+  is(reportEl.addonName, fakeAMODetails.name, "Got the expected addon name");
+  is(reportEl.addonType, fakeAMODetails.type, "Got the expected addon type");
+  is(
+    reportEl.authorName,
+    fakeAMODetails.authors[0].name,
+    "Got the first author name as expected"
+  );
+  is(
+    reportEl.authorURL,
+    fakeAMODetails.authors[0].url,
+    "Got the first author url as expected"
+  );
+  is(reportEl.iconURL, fakeAMODetails.icon_url, "Got the expected icon url");
+  is(
+    reportEl.supportURL,
+    fakeAMODetails.support_url,
+    "Got the expected support url"
+  );
+  is(
+    reportEl.homepageURL,
+    fakeAMODetails.homepage,
+    "Got the expected homepage url"
+  );
+
+  reportDialog.close();
+});

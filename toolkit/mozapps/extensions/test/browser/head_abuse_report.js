@@ -131,6 +131,10 @@ const AbuseReportTestUtils = {
       set: [
         ["extensions.abuseReport.enabled", true],
         ["extensions.abuseReport.url", "http://test.addons.org/api/report/"],
+        [
+          "extensions.abuseReport.amoDetailsURL",
+          "http://test.addons.org/api/addons/addon/",
+        ],
       ],
     });
 
@@ -566,6 +570,25 @@ const AbuseReportTestUtils = {
         ok(false, `Unexpected request: ${request.path} ${data}`);
       }
     });
+
+    server.registerPrefixHandler("/api/addons/addon/", (request, response) => {
+      const addonId = request.path.split("/").pop();
+      if (!this.amoAddonDetailsMap.has(addonId)) {
+        response.setStatusLine(request.httpVersion, 404, "Not Found");
+        response.write(JSON.stringify({ detail: "Not found." }));
+      } else {
+        response.setStatusLine(request.httpVersion, 200, "Success");
+        response.write(JSON.stringify(this.amoAddonDetailsMap.get(addonId)));
+      }
+    });
+    server.registerPathHandler(
+      "/assets/fake-icon-url.png",
+      (request, response) => {
+        response.setStatusLine(request.httpVersion, 200, "Success");
+        response.write("");
+        response.finish();
+      }
+    );
   },
 };
 
