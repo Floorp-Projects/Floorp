@@ -860,6 +860,10 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
     MOZ_DIAGNOSTIC_ASSERT(aAccessor);
     MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
 
+    if (!aAccessor->CanAccess(this)) {
+      return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+    }
+
     nsCOMPtr<nsPIDOMWindowOuter> win(aAccessor->GetDOMWindow());
     MOZ_DIAGNOSTIC_ASSERT(win);
     if (WindowGlobalChild* wgc =
