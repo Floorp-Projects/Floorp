@@ -175,7 +175,7 @@ function gen_config_files {
   local ASM_CONV=ads2gas.pl
 
   # Generate vpx_config.asm.
-  if [[ "$1" == *x64* ]] || [[ "$1" == *ia32* ]] || [[ "$1" == *mingw* ]]; then
+  if [[ "$1" == *x64* ]] || [[ "$1" == *ia32* ]]; then
     egrep "#define [A-Z0-9_]+ [01]" vpx_config.h | awk '{print "%define " $2 " " $3}' > vpx_config.asm
   else
     egrep "#define [A-Z0-9_]+ [01]" vpx_config.h | awk '{print $2 " EQU " $3}' | perl $BASE_DIR/$LIBVPX_SRC_DIR/build/make/$ASM_CONV > vpx_config.asm
@@ -208,17 +208,11 @@ gen_config_files mac/x64 "--target=x86_64-darwin9-gcc ${all_platforms} ${x86_pla
 gen_config_files mac/ia32 "--target=x86-darwin9-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files win/x64 "--target=x86_64-win64-vs12 ${all_platforms} ${x86_platforms}"
 gen_config_files win/ia32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
-gen_config_files win/mingw32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
-gen_config_files win/aarch64 "--target=aarch64-win64-vs12 ${all_platforms} ${arm64_platforms}"
 
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
 gen_config_files linux/arm64 "--target=arm64-linux-gcc ${all_platforms} ${arm64_platforms}"
 
 gen_config_files generic "--target=generic-gnu ${all_platforms}"
-
-# vpx doesn't know if mingw32 has winpthreads or not, and doesn't try to detect it.
-sed -i 's/HAVE_PTHREAD_H 0/HAVE_PTHREAD_H 1/' $BASE_DIR/$LIBVPX_CONFIG_DIR/win/mingw32/vpx_config.asm
-sed -i 's/HAVE_PTHREAD_H 0/HAVE_PTHREAD_H 1/' $BASE_DIR/$LIBVPX_CONFIG_DIR/win/mingw32/vpx_config.h
 
 echo "Remove temporary directory."
 cd $BASE_DIR
@@ -236,7 +230,6 @@ gen_rtcd_header mac/x64 x86_64
 gen_rtcd_header mac/ia32 x86
 gen_rtcd_header win/x64 x86_64
 gen_rtcd_header win/ia32 x86
-gen_rtcd_header win/mingw32 x86
 gen_rtcd_header win/aarch64 aarch64
 
 
