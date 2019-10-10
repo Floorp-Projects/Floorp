@@ -165,7 +165,6 @@ EXTRA_JS_MODULES += [
     'ActorManagerParent.jsm',
     'AppMenuNotifications.jsm',
     'AsyncPrefs.jsm',
-    'AutoCompletePopupContent.jsm',
     'AutoScrollController.jsm',
     'BinarySearch.jsm',
     'BrowserUtils.jsm',

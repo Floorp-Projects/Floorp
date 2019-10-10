@@ -246,9 +246,6 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
    */
   bool parse(MutableHandleValue vp);
 
-  static void trace(JSONParser<CharT>* parser, JSTracer* trc) {
-    parser->trace(trc);
-  }
   void trace(JSTracer* trc) { JSONParserBase::trace(trc); }
 
  private:

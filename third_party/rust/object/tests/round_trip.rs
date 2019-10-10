@@ -51,12 +51,14 @@ fn coff_x86_64() {
     assert_eq!(text.kind(), SectionKind::Text);
     assert_eq!(text.address(), 0);
     assert_eq!(text.size(), 62);
+    assert_eq!(&text.data()[..30], &[1; 30]);
+    assert_eq!(&text.data()[32..62], &[1; 30]);
 
     let mut symbols = object.symbols();
 
     let (func1_symbol, symbol) = symbols.next().unwrap();
     println!("{:?}", symbol);
-    assert_eq!(symbol.name(), Some("func1"));
+    assert_eq!(symbol.name(), Some("_func1"));
     assert_eq!(symbol.address(), func1_offset);
     assert_eq!(symbol.kind(), SymbolKind::Text);
     assert_eq!(symbol.section_index(), Some(text_index));
@@ -132,6 +134,8 @@ fn elf_x86_64() {
     assert_eq!(text.kind(), SectionKind::Text);
     assert_eq!(text.address(), 0);
     assert_eq!(text.size(), 62);
+    assert_eq!(&text.data()[..30], &[1; 30]);
+    assert_eq!(&text.data()[32..62], &[1; 30]);
 
     let mut symbols = object.symbols();
 
@@ -201,6 +205,19 @@ fn macho_x86_64() {
             },
         )
         .unwrap();
+    object
+        .add_relocation(
+            text,
+            write::Relocation {
+                offset: 16,
+                size: 32,
+                kind: RelocationKind::Relative,
+                encoding: RelocationEncoding::Generic,
+                symbol: func1_symbol,
+                addend: -4,
+            },
+        )
+        .unwrap();
 
     let bytes = object.write().unwrap();
     let object = read::File::parse(&bytes).unwrap();
@@ -217,12 +234,14 @@ fn macho_x86_64() {
     assert_eq!(text.kind(), SectionKind::Text);
     assert_eq!(text.address(), 0);
     assert_eq!(text.size(), 62);
+    assert_eq!(&text.data()[..30], &[1; 30]);
+    assert_eq!(&text.data()[32..62], &[1; 30]);
 
     let mut symbols = object.symbols();
 
     let (func1_symbol, symbol) = symbols.next().unwrap();
     println!("{:?}", symbol);
-    assert_eq!(symbol.name(), Some("func1"));
+    assert_eq!(symbol.name(), Some("_func1"));
     assert_eq!(symbol.address(), func1_offset);
     assert_eq!(symbol.kind(), SymbolKind::Text);
     assert_eq!(symbol.section_index(), Some(text_index));
@@ -243,4 +262,16 @@ fn macho_x86_64() {
         read::RelocationTarget::Symbol(func1_symbol)
     );
     assert_eq!(relocation.addend(), 0);
+
+    let (offset, relocation) = relocations.next().unwrap();
+    println!("{:?}", relocation);
+    assert_eq!(offset, 16);
+    assert_eq!(relocation.kind(), RelocationKind::Relative);
+    assert_eq!(relocation.encoding(), RelocationEncoding::X86RipRelative);
+    assert_eq!(relocation.size(), 32);
+    assert_eq!(
+        relocation.target(),
+        read::RelocationTarget::Symbol(func1_symbol)
+    );
+    assert_eq!(relocation.addend(), -4);
 }

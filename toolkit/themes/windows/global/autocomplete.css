@@ -103,10 +103,3 @@ html|span.ac-tag {
   padding: 0 !important;
   margin: 0 !important;
 }
-
-/* ::::: textboxes inside toolbarpaletteitems ::::: */
-
-toolbarpaletteitem > toolbaritem > textbox > moz-input-box > html|*.textbox-input,
-toolbarpaletteitem > toolbaritem > * > textbox > moz-input-box  > html|*.textbox-input {
-  visibility: hidden;
-}

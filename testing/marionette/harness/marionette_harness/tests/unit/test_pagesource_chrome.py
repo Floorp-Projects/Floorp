@@ -22,4 +22,4 @@ class TestPageSourceChrome(WindowManagerMixin, MarionetteTestCase):
 
     def testShouldReturnXULDetails(self):
         source = self.marionette.page_source
-        self.assertTrue('<textbox id="textInput"' in source)
+        self.assertTrue('<input xmlns="http://www.w3.org/1999/xhtml" id="textInput"' in source)

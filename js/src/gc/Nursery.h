@@ -75,7 +75,7 @@ class MacroAssembler;
 
 class NurseryDecommitTask : public GCParallelTaskHelper<NurseryDecommitTask> {
  public:
-  explicit NurseryDecommitTask(JSRuntime* rt) : GCParallelTaskHelper(rt) {}
+  explicit NurseryDecommitTask(gc::GCRuntime* gc) : GCParallelTaskHelper(gc) {}
 
   void queueChunk(NurseryChunk* chunk, const AutoLockHelperThreadState& lock);
 

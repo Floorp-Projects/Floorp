@@ -61,7 +61,6 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
   explicit GCHashMap(size_t length) : Base(length) {}
   GCHashMap(AllocPolicy a, size_t length) : Base(std::move(a), length) {}
 
-  static void trace(GCHashMap* map, JSTracer* trc) { map->trace(trc); }
   void trace(JSTracer* trc) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       GCPolicy<Value>::trace(trc, &e.front().value(), "hashmap value");
@@ -237,7 +236,6 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy> {
   explicit GCHashSet(size_t length) : Base(length) {}
   GCHashSet(AllocPolicy a, size_t length) : Base(std::move(a), length) {}
 
-  static void trace(GCHashSet* set, JSTracer* trc) { set->trace(trc); }
   void trace(JSTracer* trc) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       GCPolicy<T>::trace(trc, &e.mutableFront(), "hashset element");

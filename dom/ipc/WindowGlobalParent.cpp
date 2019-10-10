@@ -31,6 +31,10 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsSerializationHelper.h"
 #include "nsITransportSecurityInfo.h"
+#include "nsISharePicker.h"
+
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 
 #include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/JSWindowActorParent.h"
@@ -300,6 +304,78 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
 
 bool WindowGlobalParent::IsCurrentGlobal() {
   return CanSend() && mBrowsingContext->GetCurrentWindowGlobal() == this;
+}
+
+namespace {
+
+class ShareHandler final : public PromiseNativeHandler {
+ public:
+  explicit ShareHandler(
+      mozilla::dom::WindowGlobalParent::ShareResolver&& aResolver)
+      : mResolver(std::move(aResolver)) {}
+
+  NS_DECL_ISUPPORTS
+
+ public:
+  virtual void ResolvedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    mResolver(NS_OK);
+  }
+
+  virtual void RejectedCallback(JSContext* aCx,
+                                JS::Handle<JS::Value> aValue) override {
+    if (NS_WARN_IF(!aValue.isObject())) {
+      mResolver(NS_ERROR_FAILURE);
+      return;
+    }
+
+    // nsresult is stored as Exception internally in Promise
+    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+    RefPtr<DOMException> unwrapped;
+    nsresult rv = UNWRAP_OBJECT(DOMException, &obj, unwrapped);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mResolver(NS_ERROR_FAILURE);
+      return;
+    }
+
+    mResolver(unwrapped->GetResult());
+  }
+
+ private:
+  ~ShareHandler() = default;
+
+  mozilla::dom::WindowGlobalParent::ShareResolver mResolver;
+};
+
+NS_IMPL_ISUPPORTS0(ShareHandler)
+
+}  // namespace
+
+mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
+    IPCWebShareData&& aData, WindowGlobalParent::ShareResolver&& aResolver) {
+  // Widget Layer handoff...
+  nsCOMPtr<nsISharePicker> sharePicker =
+      do_GetService("@mozilla.org/sharepicker;1");
+
+  if (!sharePicker) {
+    aResolver(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return IPC_OK();
+  }
+
+  // And finally share the data...
+  RefPtr<Promise> promise;
+  nsresult rv = sharePicker->Share(aData.title(), aData.text(), aData.url(),
+                                   getter_AddRefs(promise));
+  if (NS_FAILED(rv)) {
+    aResolver(rv);
+    return IPC_OK();
+  }
+
+  // Handler finally awaits response...
+  RefPtr<ShareHandler> handler = new ShareHandler(std::move(aResolver));
+  promise->AppendNativeHandler(handler);
+
+  return IPC_OK();
 }
 
 already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(

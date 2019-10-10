@@ -8,8 +8,8 @@ where
     T: ToTokens + Default,
 {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        match *self.0 {
-            Some(ref t) => t.to_tokens(tokens),
+        match self.0 {
+            Some(t) => t.to_tokens(tokens),
             None => T::default().to_tokens(tokens),
         }
     }

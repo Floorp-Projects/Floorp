@@ -115,33 +115,24 @@ impl InputField {
 
 impl ParseAttribute for InputField {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
-        let name = mi.name().to_string();
-        match name.as_str() {
-            "rename" => {
-                self.attr_name = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            "default" => {
-                self.default = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            "with" => {
-                self.with = Some(FromMeta::from_meta(mi)?);
-                Ok(())
-            }
-            "skip" => {
-                self.skip = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            "map" => {
-                self.map = Some(FromMeta::from_meta(mi)?);
-                Ok(())
-            }
-            "multiple" => {
-                self.multiple = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            n => Err(Error::unknown_field(n).with_span(mi)),
+        let path = mi.path();
+
+        if path.is_ident("rename") {
+            self.attr_name = FromMeta::from_meta(mi)?;
+        } else if path.is_ident("default") {
+            self.default = FromMeta::from_meta(mi)?;
+        } else if path.is_ident("with") {
+            self.with = Some(FromMeta::from_meta(mi)?);
+        } else if path.is_ident("skip") {
+            self.skip = FromMeta::from_meta(mi)?;
+        } else if path.is_ident("map") {
+            self.map = Some(FromMeta::from_meta(mi)?);
+        } else if path.is_ident("multiple") {
+            self.multiple = FromMeta::from_meta(mi)?;
+        } else {
+            return Err(Error::unknown_field_path(path).with_span(mi))
         }
+
+        Ok(())
     }
 }

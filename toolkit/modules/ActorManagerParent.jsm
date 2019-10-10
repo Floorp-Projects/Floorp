@@ -116,6 +116,50 @@ let ACTORS = {
     allFrames: true,
   },
 
+  AutoComplete: {
+    parent: {
+      moduleURI: "resource://gre/actors/AutoCompleteParent.jsm",
+      messages: [
+        "FormAutoComplete:SelectBy",
+        "FormAutoComplete:SetSelectedIndex",
+        "FormAutoComplete:MaybeOpenPopup",
+        "FormAutoComplete:Invalidate",
+        "FormAutoComplete:ClosePopup",
+        "FormAutoComplete:Disconnect",
+        // These two messages are also used, but are currently synchronous calls
+        // through the per-process message manager.
+        // "FormAutoComplete:GetSelectedIndex",
+        // "FormAutoComplete:SelectBy"
+      ],
+    },
+
+    child: {
+      moduleURI: "resource://gre/actors/AutoCompleteChild.jsm",
+      events: {
+        DOMContentLoaded: {},
+        pageshow: { capture: true },
+        pagehide: { capture: true },
+        unload: { capture: true },
+        focus: { capture: true },
+        blur: { capture: true },
+        mousedown: { capture: true },
+        input: { capture: true },
+        keydown: { capture: true },
+        keypress: { capture: true, mozSystemGroup: true },
+        compositionstart: { capture: true },
+        compositionend: { capture: true },
+        contextmenu: { capture: true },
+      },
+      messages: [
+        "FormAutoComplete:HandleEnter",
+        "FormAutoComplete:PopupClosed",
+        "FormAutoComplete:PopupOpened",
+      ],
+    },
+
+    allFrames: true,
+  },
+
   Autoplay: {
     parent: {
       moduleURI: "resource://gre/actors/AutoplayParent.jsm",

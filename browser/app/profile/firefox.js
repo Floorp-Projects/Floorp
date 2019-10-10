@@ -1784,6 +1784,7 @@ pref("signon.privateBrowsingCapture.enabled", true);
 pref("signon.showAutoCompleteFooter", true);
 pref("signon.management.page.enabled", true);
 pref("signon.management.page.breach-alerts.enabled", true);
+pref("signon.management.page.sort", "name");
 pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
 #ifdef NIGHTLY_BUILD
   // Bug 1563330 tracks shipping this by default.
@@ -1959,6 +1960,15 @@ pref("devtools.toolbox.tabsOrder", "");
 // information).
 // ⚠ This is a work in progress. Expect weirdness when the pref is enabled. ⚠
 pref("devtools.browsertoolbox.fission", false);
+
+// This pref is also related to fission, but not only. It allows the toolbox
+// to stay open even if the debugged tab switches to another process.
+// It can happen between two documents, one running in the parent process like
+// about:sessionrestore and another one running in the content process like
+// any web page. Or between two distinct domain when running with fission turned
+// on. See bug 1565263.
+// ⚠ This is a work in progress. Expect weirdness when the pref is flipped on ⚠
+pref("devtools.target-switching.enabled", false);
 
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);

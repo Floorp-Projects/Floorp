@@ -383,7 +383,6 @@ class WebConsoleConnectionProxy {
 
     this.client = null;
     this.webConsoleClient = null;
-    this.webConsoleUI = null;
   }
 }
 

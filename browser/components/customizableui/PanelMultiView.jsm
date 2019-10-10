@@ -1519,7 +1519,6 @@ var PanelView = class extends AssociatedToNode {
     let tag = element.localName;
     return (
       tag == "menulist" ||
-      tag == "textbox" ||
       tag == "input" ||
       tag == "textarea" ||
       // Allow tab to reach embedded documents.

@@ -265,6 +265,11 @@ nsPoint StickyScrollContainer::ComputePosition(nsIFrame* aFrame) const {
   return position;
 }
 
+bool StickyScrollContainer::IsStuckInYDirection(nsIFrame* aFrame) const {
+  nsPoint position = ComputePosition(aFrame);
+  return position.y != aFrame->GetNormalPosition().y;
+}
+
 void StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame,
                                             nsRectAbsolute* aOuter,
                                             nsRectAbsolute* aInner) const {

@@ -4109,10 +4109,12 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     if (MOZ_LIKELY(!mIsDestroying)) {
       nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-      nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
-      DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
+      Maybe<uint64_t> innerWindowID;
+      if (auto* window = mDocument->GetInnerWindow()) {
+        innerWindowID = Some(window->WindowID());
+      }
       AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
-                                                docShellId, docShellHistoryId);
+                                                innerWindowID);
 #endif
       PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
 
@@ -4138,10 +4140,12 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     if (MOZ_LIKELY(!mIsDestroying)) {
       nsAutoScriptBlocker scriptBlocker;
 #ifdef MOZ_GECKO_PROFILER
-      nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
-      DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
+      Maybe<uint64_t> innerWindowID;
+      if (auto* window = mDocument->GetInnerWindow()) {
+        innerWindowID = Some(window->WindowID());
+      }
       AutoProfilerStyleMarker tracingStyleFlush(std::move(mStyleCause),
-                                                docShellId, docShellHistoryId);
+                                                innerWindowID);
 #endif
       PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
 
@@ -9127,10 +9131,13 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   }
 
 #ifdef MOZ_GECKO_PROFILER
-  DECLARE_DOCSHELL_AND_HISTORY_ID(docShell);
+  Maybe<uint64_t> innerWindowID;
+  if (auto* window = mDocument->GetInnerWindow()) {
+    innerWindowID = Some(window->WindowID());
+  }
   AutoProfilerTracing tracingLayoutFlush(
       "Paint", "Reflow", JS::ProfilingCategoryPair::LAYOUT,
-      std::move(mReflowCause), docShellId, docShellHistoryId);
+      std::move(mReflowCause), innerWindowID);
   mReflowCause = nullptr;
 #endif
 

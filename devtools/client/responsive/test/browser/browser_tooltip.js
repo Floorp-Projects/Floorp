@@ -9,8 +9,6 @@ const TEST_URL = `data:text/html;charset=utf-8,${TEST_CONTENT}`;
 // Test for the tooltip coordinate on the browsing document in RDM.
 
 addRDMTask(TEST_URL, async ({ ui }) => {
-  await injectEventUtilsInContentTask(ui.getViewportBrowser());
-
   info("Show a tooltip");
   await spawnViewportTask(ui, {}, async () => {
     const target = content.document.querySelector("h1");

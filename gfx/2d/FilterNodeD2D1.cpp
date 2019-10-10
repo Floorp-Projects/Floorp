@@ -648,6 +648,9 @@ already_AddRefed<FilterNode> FilterNodeD2D1::Create(ID2D1DeviceContext* aDC,
 
 void FilterNodeD2D1::InitUnmappedProperties() {
   switch (mType) {
+    case FilterType::COLOR_MATRIX:
+      mEffect->SetValue(D2D1_COLORMATRIX_PROP_CLAMP_OUTPUT, TRUE);
+      break;
     case FilterType::TRANSFORM:
       mEffect->SetValue(D2D1_2DAFFINETRANSFORM_PROP_BORDER_MODE,
                         D2D1_BORDER_MODE_HARD);

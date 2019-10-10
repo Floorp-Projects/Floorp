@@ -11,8 +11,10 @@
   width: calc(var(--base-unit) * 28);
   font-weight: var(--title-10-font-weight);
   text-align: right;
+  vertical-align: top;
 }
 
 .manifest-item__value {
   word-break: break-all;
+  vertical-align: top;
 }

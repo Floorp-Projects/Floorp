@@ -1238,13 +1238,7 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
     // possible.
 
     // Make an array to store the new data. We can read up to 8 bytes
-    mozilla::Array<uint8_t, 8> bytes;
-    // Cast `bytes` to a uint64_t * to later combine with `bits`
-    uint64_t* newBits = reinterpret_cast<uint64_t*>(bytes.begin());
-    static_assert(sizeof(bytes) == sizeof(*newBits),
-                  "Expecting bytes array to match size of *newBits");
-    *newBits = 0;
-
+    uint8_t bytes[8] = {};
     // Determine the number of bytes in `bits` rounded up to the nearest byte.
     uint32_t bytesInBits =
         (this->bitLength + BIT_BUFFER_READ_UNIT - 1) / BIT_BUFFER_READ_UNIT;
@@ -1255,40 +1249,39 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
     // readLen` indices contain zeros. Since the most significant bytes of the
     // data are stored in the lowest indices, `bytes` is big endian.
     MOZ_TRY((owner.readBuf<Compression::No, EndOfFilePolicy::BestEffort>(
-        bytes.begin(), readLen)));
-#if MOZ_LITTLE_ENDIAN
-    // Reverse the order of the bytes in `*newBits` if we need little endian
-    *newBits = (((*newBits & 0x00000000000000ffULL) << 56) |
-                ((*newBits & 0x000000000000ff00ULL) << 40) |
-                ((*newBits & 0x0000000000ff0000ULL) << 24) |
-                ((*newBits & 0x00000000ff000000ULL) << 8) |
-                ((*newBits & 0x000000ff00000000ULL) >> 8) |
-                ((*newBits & 0x0000ff0000000000ULL) >> 24) |
-                ((*newBits & 0x00ff000000000000ULL) >> 40) |
-                ((*newBits & 0xff00000000000000ULL) >> 56));
-#endif
+        bytes, readLen)));
+    // Combine `bytes` array into `newBits`
+    uint64_t newBits = (static_cast<uint64_t>(bytes[0]) << 56) |
+                       (static_cast<uint64_t>(bytes[1]) << 48) |
+                       (static_cast<uint64_t>(bytes[2]) << 40) |
+                       (static_cast<uint64_t>(bytes[3]) << 32) |
+                       (static_cast<uint64_t>(bytes[4]) << 24) |
+                       (static_cast<uint64_t>(bytes[5]) << 16) |
+                       (static_cast<uint64_t>(bytes[6]) << 8) |
+                       static_cast<uint64_t>(bytes[7]);
+    static_assert(sizeof(bytes) == sizeof(newBits),
+                  "Expecting bytes array to match size of newBits");
     // After reading `readLen` bytes in our example, `bytes` will contain
-    // `{0, 0, 0, 0, 0, 0, 0b_6543_21ZY, 0b_XWSU_TSRQ}` for little endian and
-    // `{0b_XWSU_TSRQ, 0b_6543_21ZY, 0, 0, 0, 0, 0, 0}` for big endian.
-    // In both cases `*newBits` contains zeros in the lower 32 bits and
+    // `{0b_XWSU_TSRQ, 0b_6543_21ZY, 0, 0, 0, 0, 0, 0}`
+    // and `newBits` contains zeros in the lower 32 bits and
     // `0b_XWSU_TSRQ__6543_21ZY__0000_0000__0000_0000` in the upper 32 bits
 
     // Remove any zeros if we read less than 8 bytes
-    *newBits >>= (BIT_BUFFER_READ_UNIT * (sizeof(bytes) - readLen));
-    // Now the upper 32 bits of `*newBits` are all zero and the lower 32 bits
+    newBits >>= (BIT_BUFFER_READ_UNIT * (sizeof(bytes) - readLen));
+    // Now the upper 32 bits of `newBits` are all zero and the lower 32 bits
     // contain `0b_0000_0000__0000_0000__XWSU_TSRQ__6543_21ZY`
 
     // Let's reverse the bits in each of the 8 bytes in `newBits` in place
     // First swap alternating bits
-    *newBits = ((*newBits >> 1) & 0x5555555555555555) |
-               ((*newBits & 0x5555555555555555) << 1);
+    newBits = ((newBits >> 1) & 0x5555555555555555) |
+              ((newBits & 0x5555555555555555) << 1);
     // Then swap alternating groups of 2 bits
-    *newBits = ((*newBits >> 2) & 0x3333333333333333) |
-               ((*newBits & 0x3333333333333333) << 2);
+    newBits = ((newBits >> 2) & 0x3333333333333333) |
+              ((newBits & 0x3333333333333333) << 2);
     // Finally swap alternating nibbles
-    *newBits = ((*newBits >> 4) & 0x0F0F0F0F0F0F0F0F) |
-               ((*newBits & 0x0F0F0F0F0F0F0F0F) << 4);
-    // Now the lower 32 bits of `*newBits` contain
+    newBits = ((newBits >> 4) & 0x0F0F0F0F0F0F0F0F) |
+              ((newBits & 0x0F0F0F0F0F0F0F0F) << 4);
+    // Now the lower 32 bits of `newBits` contain
     // `0b_0000_0000__0000_0000__QRST_UVWX__YZ12_3456`
 
     this->bitLength += (BIT_BUFFER_READ_UNIT * readLen);
@@ -1299,11 +1292,11 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
       this->bits <<= (BIT_BUFFER_READ_UNIT * readLen);
       // Finally, combine `newBits` with `bits` to get
       // `0b_ABCD_EFGH__IJKL_MNOP__QRST_UVWX__YZ12_3456`
-      this->bits += *newBits;
+      this->bits += newBits;
     }
     // If read 8 bytes just set `bits` to the new data
     else {
-      this->bits = *newBits;
+      this->bits = newBits;
     }
     // Now, we may prepare a `HuffmanLookup` with up to 32 bits.
     if (this->bitLength <= MAX_PREFIX_BIT_LENGTH) {

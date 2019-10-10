@@ -3,19 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* ===== textbox.css ==================================================
-  == Styles used by the XUL textbox element.
+  == Styles used by the XUL search-textbox element.
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-/* ::::: textbox ::::: */
+/* ::::: search textbox ::::: */
 
-textbox,
 search-textbox {
   -moz-appearance: textfield;
   cursor: text;
-  margin: 2px 4px;
+  margin: 2px 4px; /* matches <input> global.css margin */
   padding: 2px 2px 3px;
   padding-inline-start: 4px;
   background-color: -moz-Field;
@@ -36,13 +35,8 @@ html|*.textbox-input {
   text-align: inherit;
 }
 
-.textbox-contextmenu {
-  cursor: default;
-}
-
 /* ..... readonly state ..... */
 
-textbox[readonly="true"],
 search-textbox[readonly="true"] {
   background-color: -moz-Dialog;
   color: -moz-DialogText;
@@ -50,14 +44,13 @@ search-textbox[readonly="true"] {
 
 /* ..... disabled state ..... */
 
-textbox[disabled="true"],
 search-textbox[disabled="true"] {
   cursor: default;
   background-color: -moz-Dialog;
   color: GrayText;
 }
 
-/* ::::: search textbox ::::: */
+/* ::::: icons ::::: */
 
 search-textbox:not([searchbutton]) > .textbox-search-sign {
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
@@ -72,13 +65,7 @@ search-textbox:not([searchbutton]) > .textbox-search-sign {
   list-style-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
 }
 
-.textbox-search-icon[searchbutton]:not([disabled]) ,
+.textbox-search-icon[searchbutton]:not([disabled]),
 .textbox-search-clear:not([disabled]) {
   cursor: pointer;
-}
-
-/* ::::: textboxes inside toolbarpaletteitems ::::: */
-
-toolbarpaletteitem > toolbaritem > textbox > moz-input-box > html|*.textbox-input {
-  visibility: hidden;
 }

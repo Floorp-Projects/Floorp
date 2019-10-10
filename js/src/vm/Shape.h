@@ -1629,10 +1629,7 @@ struct StackShape {
         mozilla::HashGeneric(base, attrs, maybeSlot(), rawGetter, rawSetter));
   }
 
-  // Traceable implementation.
-  static void trace(StackShape* stackShape, JSTracer* trc) {
-    stackShape->trace(trc);
-  }
+  // StructGCPolicy implementation.
   void trace(JSTracer* trc);
 };
 

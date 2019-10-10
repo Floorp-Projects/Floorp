@@ -132,7 +132,7 @@ add_task(async function test_breachedLogin() {
   );
   Assert.strictEqual(
     breachesByLoginGUID.get(BREACHED_LOGIN.guid).breachAlertURL,
-    "https://monitor.firefox.com/breach-details/Breached?utm_campaign=Desktop&utm_medium=InProduct",
+    "https://monitor.firefox.com/breach-details/Breached?utm_source=firefox-desktop&utm_medium=referral&utm_campaign=about-logins&utm_content=about-logins",
     "Breach alert link should be equal to the breachAlertURL"
   );
 });

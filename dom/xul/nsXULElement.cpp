@@ -109,12 +109,6 @@ uint32_t nsXULPrototypeAttribute::gNumCacheFills;
 nsXULElement::nsXULElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsStyledElement(std::move(aNodeInfo)), mBindingParent(nullptr) {
   XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
-
-  // We may be READWRITE by default; check.
-  if (IsReadWriteTextElement()) {
-    AddStatesSilently(NS_EVENT_STATE_MOZ_READWRITE);
-    RemoveStatesSilently(NS_EVENT_STATE_MOZ_READONLY);
-  }
 }
 
 nsXULElement::~nsXULElement() {}
@@ -525,8 +519,7 @@ bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
         }
       }
     }
-    if (aKeyCausesActivation &&
-        !content->IsAnyOfXULElements(nsGkAtoms::textbox, nsGkAtoms::menulist)) {
+    if (aKeyCausesActivation && !content->IsXULElement(nsGkAtoms::menulist)) {
       elm->ClickWithInputSource(MouseEvent_Binding::MOZ_SOURCE_KEYBOARD,
                                 aIsTrustedEvent);
     }
@@ -1190,17 +1183,6 @@ nsresult nsXULElement::AddPopupListener(nsAtom* aName) {
                                     TrustedEventsAtSystemGroupBubble());
   }
   return NS_OK;
-}
-
-EventStates nsXULElement::IntrinsicState() const {
-  EventStates state = nsStyledElement::IntrinsicState();
-
-  if (IsReadWriteTextElement()) {
-    state |= NS_EVENT_STATE_MOZ_READWRITE;
-    state &= ~NS_EVENT_STATE_MOZ_READONLY;
-  }
-
-  return state;
 }
 
 //----------------------------------------------------------------------

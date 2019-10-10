@@ -361,7 +361,6 @@ class nsXULElement : public nsStyledElement {
 
   virtual nsresult Clone(mozilla::dom::NodeInfo*,
                          nsINode** aResult) const override;
-  virtual mozilla::EventStates IntrinsicState() const override;
 
   virtual void RecompileScriptEventListeners() override;
 
@@ -607,11 +606,6 @@ class nsXULElement : public nsStyledElement {
   static already_AddRefed<nsXULElement> CreateFromPrototype(
       nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo* aNodeInfo,
       bool aIsScriptable, bool aIsRoot);
-
-  bool IsReadWriteTextElement() const {
-    return IsAnyOfXULElements(nsGkAtoms::textbox, nsGkAtoms::textarea) &&
-           !HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
-  }
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;

@@ -4,7 +4,8 @@
 
 "use strict";
 
-var { Cc } = require("chrome");
+const { Cc } = require("chrome");
+const Services = require("Services");
 
 loader.lazyGetter(this, "ppmm", () => {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService();
@@ -14,22 +15,19 @@ function ProcessActorList() {
   this._actors = new Map();
   this._onListChanged = null;
   this._mustNotify = false;
-
-  this._onMessage = this._onMessage.bind(this);
-  this._processScript =
-    "resource://devtools/server/startup/debug-new-process.js";
+  this._hasObserver = false;
 }
 
 ProcessActorList.prototype = {
   getList: function() {
     const processes = [];
     for (let i = 0; i < ppmm.childCount; i++) {
+      const mm = ppmm.getChildAt(i);
       processes.push({
-        // XXX: may not be a perfect id, but process message manager doesn't
-        // expose anything...
-        id: i,
-        // XXX Weak, but appear to be stable
-        parent: i == 0,
+        // An ID of zero is always used for the parent. It would be nice to fix
+        // this so that the pid is also used for the parent, see bug 1587443.
+        id: mm.isInProcess ? 0 : mm.osPid,
+        parent: mm.isInProcess,
         // TODO: exposes process message manager on frameloaders in order to compute this
         tabCount: undefined,
       });
@@ -58,30 +56,23 @@ ProcessActorList.prototype = {
 
   _checkListening: function() {
     if (this._onListChanged !== null && this._mustNotify) {
-      this._knownProcesses = [];
-      for (let i = 0; i < ppmm.childCount; i++) {
-        this._knownProcesses.push(ppmm.getChildAt(i));
+      if (!this._hasObserver) {
+        Services.obs.addObserver(this, "ipc:content-created");
+        Services.obs.addObserver(this, "ipc:content-shutdown");
+        this._hasObserver = true;
       }
-      ppmm.addMessageListener("debug:new-process", this._onMessage);
-      ppmm.loadProcessScript(this._processScript, true);
-    } else {
-      ppmm.removeMessageListener("debug:new-process", this._onMessage);
-      ppmm.removeDelayedProcessScript(this._processScript);
+    } else if (this._hasObserver) {
+      Services.obs.removeObserver(this, "ipc:content-created");
+      Services.obs.removeObserver(this, "ipc:content-shutdown");
+      this._hasObserver = false;
     }
   },
 
-  _notifyListChanged: function() {
+  observe() {
     if (this._mustNotify) {
       this._onListChanged();
       this._mustNotify = false;
     }
-  },
-
-  _onMessage: function({ target }) {
-    if (this._knownProcesses.includes(target)) {
-      return;
-    }
-    this._notifyListChanged();
   },
 };
 

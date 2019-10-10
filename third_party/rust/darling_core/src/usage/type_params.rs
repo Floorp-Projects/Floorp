@@ -161,7 +161,8 @@ impl UsesTypeParams for Type {
             Type::ImplTrait(ref v) => v.uses_type_params(options, type_set),
             Type::Macro(_) | Type::Verbatim(_) | Type::Infer(_) | Type::Never(_) => {
                 Default::default()
-            }
+            },
+            _ => panic!("Unknown syn::Type: {:?}", self)
         }
     }
 }

@@ -1,14 +1,14 @@
 /// Quasi-quotation macro that accepts input like the [`quote!`] macro but uses
 /// type inference to figure out a return type for those tokens.
 ///
-/// [`quote!`]: https://docs.rs/quote/0.6/quote/index.html
+/// [`quote!`]: https://docs.rs/quote/1.0/quote/index.html
 ///
 /// The return type can be any syntax tree node that implements the [`Parse`]
 /// trait.
 ///
-/// [`Parse`]: parse/trait.Parse.html
+/// [`Parse`]: parse::Parse
 ///
-/// ```edition2018
+/// ```
 /// use quote::quote;
 /// use syn::{parse_quote, Stmt};
 ///
@@ -33,13 +33,13 @@
 /// The following helper function adds a bound `T: HeapSize` to every type
 /// parameter `T` in the input generics.
 ///
-/// ```edition2018
+/// ```
 /// use syn::{parse_quote, Generics, GenericParam};
 ///
 /// // Add a bound `T: HeapSize` to every type parameter T.
 /// fn add_trait_bounds(mut generics: Generics) -> Generics {
 ///     for param in &mut generics.params {
-///         if let GenericParam::Type(ref mut type_param) = *param {
+///         if let GenericParam::Type(type_param) = param {
 ///             type_param.bounds.push(parse_quote!(HeapSize));
 ///         }
 ///     }
@@ -57,44 +57,31 @@
 /// - [`Punctuated<T, P>`] — parses zero or more `T` separated by punctuation
 ///   `P` with optional trailing punctuation
 ///
-/// [`Attribute`]: struct.Attribute.html
-/// [`Punctuated<T, P>`]: punctuated/struct.Punctuated.html
+/// [`Punctuated<T, P>`]: punctuated::Punctuated
 ///
 /// # Panics
 ///
 /// Panics if the tokens fail to parse as the expected syntax tree type. The
 /// caller is responsible for ensuring that the input tokens are syntactically
 /// valid.
+//
+// TODO: allow Punctuated to be inferred as intra doc link, currently blocked on
+// https://github.com/rust-lang/rust/issues/62834
 #[macro_export(local_inner_macros)]
 macro_rules! parse_quote {
     ($($tt:tt)*) => {
-        $crate::parse_quote::parse($crate::export::From::from(quote_impl!($($tt)*)))
-    };
-}
-
-#[cfg(not(syn_can_call_macro_by_path))]
-#[doc(hidden)]
-#[macro_export]
-macro_rules! quote_impl {
-    ($($tt:tt)*) => {
-        // Require caller to have their own `#[macro_use] extern crate quote`.
-        quote!($($tt)*)
-    };
-}
-
-#[cfg(syn_can_call_macro_by_path)]
-#[doc(hidden)]
-#[macro_export]
-macro_rules! quote_impl {
-    ($($tt:tt)*) => {
-        $crate::export::quote::quote!($($tt)*)
+        $crate::parse_quote::parse(
+            $crate::export::From::from(
+                $crate::export::quote::quote!($($tt)*)
+            )
+        )
     };
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Can parse any type that implements Parse.
 
-use parse::{Parse, ParseStream, Parser, Result};
+use crate::parse::{Parse, ParseStream, Parser, Result};
 use proc_macro2::TokenStream;
 
 // Not public API.
@@ -122,9 +109,9 @@ impl<T: Parse> ParseQuote for T {
 ////////////////////////////////////////////////////////////////////////////////
 // Any other types that we want `parse_quote!` to be able to parse.
 
-use punctuated::Punctuated;
+use crate::punctuated::Punctuated;
 #[cfg(any(feature = "full", feature = "derive"))]
-use {attr, Attribute};
+use crate::{attr, Attribute};
 
 #[cfg(any(feature = "full", feature = "derive"))]
 impl ParseQuote for Attribute {

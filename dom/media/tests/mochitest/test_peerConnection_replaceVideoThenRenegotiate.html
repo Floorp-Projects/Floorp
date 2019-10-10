@@ -12,8 +12,13 @@
     title: "Renegotiation: replaceTrack followed by adding a second video stream"
   });
 
-  runNetworkTest(function (options) {
-   pushPrefs(['media.peerconnection.video.min_bitrate_estimate', 180*1000]).then(() => {
+  runNetworkTest(async (options) => {
+    await pushPrefs(['media.peerconnection.video.min_bitrate_estimate', 180*1000]);
+    // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+    if (navigator.userAgent.includes("Android")) {
+      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false]);
+    }
+
     const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{video:true}], [{video:true}]);
     const helper = new VideoStreamHelper();
@@ -60,7 +65,6 @@
     );
 
     test.run();
-   });
   });
 
 </script>

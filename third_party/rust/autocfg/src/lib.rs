@@ -36,13 +36,20 @@
 
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
+// allow future warnings that can't be fixed while keeping 1.0 compatibility
+#![allow(unknown_lints)]
+#![allow(bare_trait_objects)]
+#![allow(ellipsis_inclusive_range_patterns)]
 
 use std::env;
 use std::ffi::OsString;
 use std::fs;
-use std::io::Write;
+use std::io::{stderr, Write};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+#[allow(deprecated)]
+use std::sync::atomic::ATOMIC_USIZE_INIT;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 mod error;
 pub use error::Error;
@@ -60,6 +67,7 @@ pub struct AutoCfg {
     rustc: PathBuf,
     rustc_version: Version,
     target: Option<OsString>,
+    no_std: bool,
 }
 
 /// Writes a config flag for rustc on standard out.
@@ -137,12 +145,25 @@ impl AutoCfg {
             return Err(error::from_str("output path is not a writable directory"));
         }
 
-        Ok(AutoCfg {
+        let mut ac = AutoCfg {
             out_dir: dir,
             rustc: rustc,
             rustc_version: rustc_version,
             target: env::var_os("TARGET"),
-        })
+            no_std: false,
+        };
+
+        // Sanity check with and without `std`.
+        if !ac.probe("").unwrap_or(false) {
+            ac.no_std = true;
+            if !ac.probe("").unwrap_or(false) {
+                // Neither worked, so assume nothing...
+                ac.no_std = false;
+                let warning = b"warning: autocfg could not probe for `std`\n";
+                stderr().write_all(warning).ok();
+            }
+        }
+        Ok(ac)
     }
 
     /// Test whether the current `rustc` reports a version greater than
@@ -160,14 +181,14 @@ impl AutoCfg {
     }
 
     fn probe<T: AsRef<[u8]>>(&self, code: T) -> Result<bool, Error> {
-        use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
-
+        #[allow(deprecated)]
         static ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
         let id = ID.fetch_add(1, Ordering::Relaxed);
         let mut command = Command::new(&self.rustc);
         command
-            .arg(format!("--crate-name=probe{}", id))
+            .arg("--crate-name")
+            .arg(format!("probe{}", id))
             .arg("--crate-type=lib")
             .arg("--out-dir")
             .arg(&self.out_dir)
@@ -179,17 +200,35 @@ impl AutoCfg {
 
         command.arg("-").stdin(Stdio::piped());
         let mut child = try!(command.spawn().map_err(error::from_io));
-        try!(
-            child
-                .stdin
-                .take()
-                .expect("rustc stdin")
-                .write_all(code.as_ref())
-                .map_err(error::from_io)
-        );
+        let mut stdin = child.stdin.take().expect("rustc stdin");
+
+        if self.no_std {
+            try!(stdin.write_all(b"#![no_std]\n").map_err(error::from_io));
+        }
+        try!(stdin.write_all(code.as_ref()).map_err(error::from_io));
+        drop(stdin);
 
         let status = try!(child.wait().map_err(error::from_io));
         Ok(status.success())
+    }
+
+    /// Tests whether the given sysroot crate can be used.
+    ///
+    /// The test code is subject to change, but currently looks like:
+    ///
+    /// ```ignore
+    /// extern crate CRATE as probe;
+    /// ```
+    pub fn probe_sysroot_crate(&self, name: &str) -> bool {
+        self.probe(format!("extern crate {} as probe;", name)) // `as _` wasn't stabilized until Rust 1.33
+            .unwrap_or(false)
+    }
+
+    /// Emits a config value `has_CRATE` if `probe_sysroot_crate` returns true.
+    pub fn emit_sysroot_crate(&self, name: &str) {
+        if self.probe_sysroot_crate(name) {
+            emit(&format!("has_{}", mangle(name)));
+        }
     }
 
     /// Tests whether the given path can be used.
@@ -284,5 +323,6 @@ fn mangle(s: &str) -> String {
         .map(|c| match c {
             'A'...'Z' | 'a'...'z' | '0'...'9' => c,
             _ => '_',
-        }).collect()
+        })
+        .collect()
 }

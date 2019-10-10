@@ -95,8 +95,6 @@ window.addEventListener(
 // Support context menus on html textareas in the parent process:
 window.addEventListener("contextmenu", e => {
   const HTML_NS = "http://www.w3.org/1999/xhtml";
-  // Note that there's not a risk of e.target being XBL anonymous content for <textbox> (which manages
-  // its own context menu), because e.target will be the XBL binding parent in that case.
   let needsContextMenu =
     e.target.ownerDocument == document &&
     !e.defaultPrevented &&

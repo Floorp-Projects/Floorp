@@ -2315,17 +2315,37 @@ var gMainPane = {
           }
           break;
         case Ci.nsIHandlerInfo.useSystemDefault:
-          menu.selectedItem = defaultMenuItem;
+          // We might not have a default item if we're not aware of an
+          // OS-default handler for this type:
+          menu.selectedItem = defaultMenuItem || askMenuItem;
           break;
         case Ci.nsIHandlerInfo.useHelperApp:
           if (preferredApp) {
-            menu.selectedItem = possibleAppMenuItems.filter(v =>
+            let preferredItem = possibleAppMenuItems.find(v =>
               v.handlerApp.equals(preferredApp)
-            )[0];
+            );
+            if (preferredItem) {
+              menu.selectedItem = preferredItem;
+            } else {
+              // This shouldn't happen, but let's make sure we end up with a
+              // selected item:
+              let possible = possibleAppMenuItems
+                .map(v => v.handlerApp && v.handlerApp.name)
+                .join(", ");
+              Cu.reportError(
+                new Error(
+                  `Preferred handler for ${
+                    handlerInfo.type
+                  } not in list of possible handlers!? (List: ${possible})`
+                )
+              );
+              menu.selectedItem = askMenuItem;
+            }
           }
           break;
         case kActionUsePlugin:
-          menu.selectedItem = pluginMenuItem;
+          // The plugin may have been removed, if so, select 'always ask':
+          menu.selectedItem = pluginMenuItem || askMenuItem;
           break;
         case Ci.nsIHandlerInfo.saveToDisk:
           menu.selectedItem = saveMenuItem;
@@ -3069,6 +3089,10 @@ class HandlerListItem {
       ],
     ]);
     const selectedItem = this.node.querySelector("[selected=true]");
+    if (!selectedItem) {
+      Cu.reportError("No selected item for " + this.handlerInfoWrapper.type);
+      return;
+    }
     const { id, args } = document.l10n.getAttributes(selectedItem);
     localizeElement(this.node.querySelector(".actionDescription"), {
       id: id + "-label",
@@ -3168,11 +3192,12 @@ class HandlerInfoWrapper {
     if (this.disambiguateDescription) {
       const description = this.description;
       if (description.id) {
+        // Pass through the arguments:
+        let { args = {} } = description;
+        args.type = this.type;
         return {
           id: description.id + "-with-type",
-          args: {
-            type: this.type,
-          },
+          args,
         };
       }
 

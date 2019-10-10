@@ -99,9 +99,6 @@ bool L10nOverlays::IsAttrNameLocalizable(
     if (elemName == nsGkAtoms::label) {
       return nameAtom == nsGkAtoms::value;
     }
-    if (elemName == nsGkAtoms::textbox) {
-      return nameAtom == nsGkAtoms::placeholder || nameAtom == nsGkAtoms::value;
-    }
   }
 
   return false;

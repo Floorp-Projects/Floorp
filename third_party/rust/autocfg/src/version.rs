@@ -24,12 +24,10 @@ impl Version {
 
     pub fn from_rustc(rustc: &Path) -> Result<Self, Error> {
         // Get rustc's verbose version
-        let output = try!(
-            Command::new(rustc)
-                .args(&["--version", "--verbose"])
-                .output()
-                .map_err(error::from_io)
-        );
+        let output = try!(Command::new(rustc)
+            .args(&["--version", "--verbose"])
+            .output()
+            .map_err(error::from_io));
         if !output.status.success() {
             return Err(error::from_str("could not execute rustc"));
         }

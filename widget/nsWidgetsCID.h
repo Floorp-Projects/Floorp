@@ -51,6 +51,14 @@
     }                                                \
   }
 
+/*1201d357-8417-4926-a694-e6408fbedcf8*/
+#define NS_SHAREPICKER_CID                           \
+  {                                                  \
+    0x1201d357, 0x8417, 0x4926, {                    \
+      0xa6, 0x94, 0xe6, 0x40, 0x8f, 0xbe, 0xdc, 0xf8 \
+    }                                                \
+  }
+
 /* XXX the following CID's are not in order. This needs
    to be fixed. */
 
