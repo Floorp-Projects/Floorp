@@ -84,8 +84,6 @@ class nsBindingManager final : public nsStubMutationObserver {
   nsINodeList* GetAnonymousNodesFor(nsIContent* aContent);
 
   nsresult ClearBinding(mozilla::dom::Element* aElement);
-  nsresult LoadBindingDocument(mozilla::dom::Document* aBoundDoc, nsIURI* aURL,
-                               nsIPrincipal* aOriginPrincipal);
 
   nsresult AddToAttachedQueue(nsXBLBinding* aBinding);
   void RemoveFromAttachedQueue(nsXBLBinding* aBinding);
