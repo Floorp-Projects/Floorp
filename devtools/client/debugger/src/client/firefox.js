@@ -31,7 +31,7 @@ export async function onConnect(connection: any, actions: Object) {
     debuggerClient,
   });
 
-  setupEvents({ threadFront, tabTarget, actions });
+  setupEvents({ threadFront, tabTarget, actions, debuggerClient });
 
   tabTarget.on("will-navigate", actions.willNavigate);
   tabTarget.on("navigate", actions.navigated);
