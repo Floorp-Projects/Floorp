@@ -1614,24 +1614,6 @@ devtools.inspector:
     record_in_processes:
       - 'main'
 
-  element_picker_used:
-    bug_numbers:
-      - 1529883
-    description: >
-      Number of times the element picker is used to select an element from the page.
-    expires: "70"
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-      - mbalfanz@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-
   node_selection_count:
     bug_numbers:
       - 1550794
