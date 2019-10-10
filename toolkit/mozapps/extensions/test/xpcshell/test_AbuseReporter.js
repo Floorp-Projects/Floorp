@@ -13,6 +13,9 @@ const { TelemetryController } = ChromeUtils.import(
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
+const { L10nRegistry, FileSource } = ChromeUtils.import(
+  "resource://gre/modules/L10nRegistry.jsm"
+);
 
 const APPNAME = "XPCShell";
 const APPVERSION = "1";
@@ -22,16 +25,29 @@ const FAKE_INSTALL_INFO = {
   source: "fake-Install:Source",
   method: "fake:install method",
 };
+const PREF_REQUIRED_LOCALE = "intl.locale.requested";
 const REPORT_OPTIONS = { reportEntryPoint: "menu" };
 const TELEMETRY_EVENTS_FILTERS = {
   category: "addonsManager",
   method: "report",
 };
 
+const FAKE_AMO_DETAILS = {
+  name: {
+    "en-US": "fake name",
+    "it-IT": "fake it-IT name",
+  },
+  current_version: { version: "1.0" },
+  type: "extension",
+  is_recommended: true,
+};
+
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "49");
 
-let apiRequestHandler;
 const server = createHttpServer({ hosts: ["test.addons.org"] });
+
+// Mock abuse report API endpoint.
+let apiRequestHandler;
 server.registerPathHandler("/api/report/", (request, response) => {
   const stream = request.bodyInputStream;
   const buffer = NetUtil.readInputStream(stream, stream.available());
@@ -39,13 +55,33 @@ server.registerPathHandler("/api/report/", (request, response) => {
   apiRequestHandler({ data, request, response });
 });
 
+// Mock addon details API endpoint.
+const amoAddonDetailsMap = new Map();
+server.registerPrefixHandler("/api/addons/addon/", (request, response) => {
+  const addonId = request.path.split("/").pop();
+  if (!amoAddonDetailsMap.has(addonId)) {
+    response.setStatusLine(request.httpVersion, 404, "Not Found");
+    response.write(JSON.stringify({ detail: "Not found." }));
+  } else {
+    response.setStatusLine(request.httpVersion, 200, "Success");
+    response.write(JSON.stringify(amoAddonDetailsMap.get(addonId)));
+  }
+});
+
+function getProperties(obj, propNames) {
+  return propNames.reduce((acc, el) => {
+    acc[el] = obj[el];
+    return acc;
+  }, {});
+}
+
 function handleSubmitRequest({ request, response }) {
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/json", false);
   response.write("{}");
 }
 
-async function clearAbuseReportState() {
+function clearAbuseReportState() {
   // Clear the timestamp of the last submission.
   AbuseReporter._lastReportTimestamp = null;
 }
@@ -161,6 +197,12 @@ add_task(async function test_setup() {
     "extensions.abuseReport.url",
     "http://test.addons.org/api/report/"
   );
+
+  Services.prefs.setCharPref(
+    "extensions.abuseReport.amoDetailsURL",
+    "http://test.addons.org/api/addons/addon"
+  );
+
   await promiseStartupManager();
   // Telemetry test setup needed to ensure that the builtin events are defined
   // and they can be collected and verified.
@@ -174,6 +216,16 @@ add_task(async function test_setup() {
   registerCleanupFunction(() => {
     Services.telemetry.canRecordBase = oldCanRecordBase;
   });
+
+  // Register a fake it-IT locale (used to test localized AMO details in some
+  // of the test case defined in this test file).
+  L10nRegistry.registerSource(
+    new FileSource(
+      "mock",
+      ["it-IT", "fr-FR"],
+      "resource://fake/locales/{locale}"
+    )
+  );
 });
 
 add_task(async function test_addon_report_data() {
@@ -210,6 +262,10 @@ add_task(async function test_addon_report_data() {
 add_task(async function test_report_on_not_installed_addon() {
   Services.telemetry.clearEvents();
 
+  // Make sure that the AMO addons details API endpoint is going to
+  // return a 404 status for the not installed addon.
+  amoAddonDetailsMap.delete(ADDON_ID);
+
   await assertRejectsAbuseReportError(
     AbuseReporter.createAbuseReport(ADDON_ID, REPORT_OPTIONS),
     "ERROR_ADDON_NOTFOUND"
@@ -220,11 +276,18 @@ add_task(async function test_report_on_not_installed_addon() {
       {
         object: REPORT_OPTIONS.reportEntryPoint,
         value: ADDON_ID,
+        extra: { error_type: "ERROR_AMODETAILS_NOTFOUND" },
+      },
+      {
+        object: REPORT_OPTIONS.reportEntryPoint,
+        value: ADDON_ID,
         extra: { error_type: "ERROR_ADDON_NOTFOUND" },
       },
     ],
     TELEMETRY_EVENTS_FILTERS
   );
+
+  Services.telemetry.clearEvents();
 });
 
 // This tests verifies how the addon installTelemetryInfo values are being
@@ -359,7 +422,7 @@ add_task(async function test_report_create_and_submit() {
 
 add_task(async function test_error_recent_submit() {
   Services.telemetry.clearEvents();
-  await clearAbuseReportState();
+  clearAbuseReportState();
 
   let reportSubmitted;
   apiRequestHandler = ({ data, request, response }) => {
@@ -431,7 +494,7 @@ add_task(async function test_submission_server_error() {
       `Test expected AbuseReportError on response status "${responseStatus}"`
     );
     Services.telemetry.clearEvents();
-    await clearAbuseReportState();
+    clearAbuseReportState();
 
     let requestReceived = false;
     apiRequestHandler = ({ request, response }) => {
@@ -537,7 +600,7 @@ add_task(async function set_test_abusereport_url() {
 
 add_task(async function test_submission_aborting() {
   Services.telemetry.clearEvents();
-  await clearAbuseReportState();
+  clearAbuseReportState();
 
   const { extension } = await installTestExtension();
 
@@ -686,7 +749,7 @@ add_task(async function test_report_recommended() {
   };
 
   async function checkReportedSignature(addonId, expectedAddonSignature) {
-    await clearAbuseReportState();
+    clearAbuseReportState();
     const report = await AbuseReporter.createAbuseReport(
       addonId,
       REPORT_OPTIONS
@@ -706,4 +769,97 @@ add_task(async function test_report_recommended() {
 
   await nonRecommended.unload();
   await recommended.unload();
+});
+
+add_task(async function test_query_amo_details() {
+  async function assertReportOnAMODetails({
+    addonId,
+    addonType = "extension",
+    expectedReport,
+  } = {}) {
+    // Clear last report timestamp and any telemetry event recorded so far.
+    clearAbuseReportState();
+    Services.telemetry.clearEvents();
+
+    const report = await AbuseReporter.createAbuseReport(addonId, {
+      reportEntryPoint: "menu",
+    });
+
+    let reportSubmitted;
+    apiRequestHandler = ({ data, request, response }) => {
+      reportSubmitted = JSON.parse(data);
+      handleSubmitRequest({ request, response });
+    };
+
+    report.setMessage("fake message");
+    report.setReason("reason1");
+    await report.submit();
+
+    Assert.deepEqual(
+      expectedReport,
+      getProperties(reportSubmitted, Object.keys(expectedReport)),
+      "Got the expected report properties"
+    );
+
+    // Telemetry recorded for the successfully submitted report.
+    TelemetryTestUtils.assertEvents(
+      [
+        {
+          object: "menu",
+          value: addonId,
+          extra: { addon_type: FAKE_AMO_DETAILS.type },
+        },
+      ],
+      TELEMETRY_EVENTS_FILTERS
+    );
+
+    clearAbuseReportState();
+  }
+
+  // Add the expected AMO addons details.
+  const addonId = "not-installed-addon@mochi.test";
+  amoAddonDetailsMap.set(addonId, FAKE_AMO_DETAILS);
+
+  // Test on the default en-US locale.
+  Services.prefs.setCharPref(PREF_REQUIRED_LOCALE, "en-US");
+  let locale = Services.locale.appLocaleAsLangTag;
+  equal(locale, "en-US", "Got the expected app locale set");
+
+  let expectedReport = {
+    addon: addonId,
+    addon_name: FAKE_AMO_DETAILS.name[locale],
+    addon_version: FAKE_AMO_DETAILS.current_version.version,
+    addon_install_source: "not_installed",
+    addon_install_method: null,
+    addon_signature: "curated",
+  };
+
+  await assertReportOnAMODetails({ addonId, expectedReport });
+
+  // Test with a non-default locale also available in the AMO details.
+  Services.prefs.setCharPref(PREF_REQUIRED_LOCALE, "it-IT");
+  locale = Services.locale.appLocaleAsLangTag;
+  equal(locale, "it-IT", "Got the expected app locale set");
+
+  expectedReport = {
+    ...expectedReport,
+    addon_name: FAKE_AMO_DETAILS.name[locale],
+  };
+  await assertReportOnAMODetails({ addonId, expectedReport });
+
+  // Test with a non-default locale not available in the AMO details.
+  Services.prefs.setCharPref(PREF_REQUIRED_LOCALE, "fr-FR");
+  locale = Services.locale.appLocaleAsLangTag;
+  equal(locale, "fr-FR", "Got the expected app locale set");
+
+  expectedReport = {
+    ...expectedReport,
+    // Fallbacks on en-US for non available locales.
+    addon_name: FAKE_AMO_DETAILS.name["en-US"],
+  };
+  await assertReportOnAMODetails({ addonId, expectedReport });
+
+  Services.prefs.clearUserPref(PREF_REQUIRED_LOCALE);
+
+  amoAddonDetailsMap.clear();
 });
