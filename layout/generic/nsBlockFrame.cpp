@@ -7104,19 +7104,23 @@ void nsBlockFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 
   // A display:flow-root box establishes a block formatting context.
-  // If a box has a different block flow direction than its containing block:
+  //
+  // If a box has a different writing-mode value than its containing block:
   // ...
   //   If the box is a block container, then it establishes a new block
   //   formatting context.
-  // (http://dev.w3.org/csswg/css-writing-modes/#block-flow)
+  // (https://drafts.csswg.org/css-writing-modes/#block-flow)
   //
   // If the box has contain: paint or contain:layout (or contain:strict),
   // then it should also establish a formatting context.
   //
   // Per spec, a column-span always establishes a new block formatting context.
   if (StyleDisplay()->mDisplay == mozilla::StyleDisplay::FlowRoot ||
-      (GetParent() && StyleVisibility()->mWritingMode !=
-                          GetParent()->StyleVisibility()->mWritingMode) ||
+      (GetParent() &&
+       (GetWritingMode().GetBlockDir() !=
+            GetParent()->GetWritingMode().GetBlockDir() ||
+        GetWritingMode().IsVerticalSideways() !=
+            GetParent()->GetWritingMode().IsVerticalSideways())) ||
       StyleDisplay()->IsContainPaint() || StyleDisplay()->IsContainLayout() ||
       (StaticPrefs::layout_css_column_span_enabled() && IsColumnSpan())) {
     AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
