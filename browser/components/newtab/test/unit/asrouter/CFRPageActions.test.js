@@ -15,6 +15,7 @@ describe("CFRPageActions", () => {
 
   const elementIDs = [
     "urlbar",
+    "urlbar-input",
     "contextual-feature-recommendation",
     "cfr-button",
     "cfr-label",
