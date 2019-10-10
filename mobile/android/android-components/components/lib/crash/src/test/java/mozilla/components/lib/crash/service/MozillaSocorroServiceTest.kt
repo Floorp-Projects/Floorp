@@ -11,6 +11,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -189,16 +190,83 @@ class MozillaSocorroServiceTest {
         val file = File(getResource("TestExtrasFile").file)
         val extrasMap = service.readExtrasFromFile(file)
 
-        assert(extrasMap.size == 9)
-        assert(extrasMap["InstallTime"] == "1569440259")
-        assert(extrasMap["ProductName"] == "Test Product")
-        assert(extrasMap["StartupCrash"] == "0")
-        assert(extrasMap["StartupTime"] == "1569642043")
-        assert(extrasMap["useragent_locale"] == "en-US")
-        assert(extrasMap["CrashTime"] == "1569642098")
-        assert(extrasMap["UptimeTS"] == "56.3663876")
-        assert(extrasMap["SecondsSinceLastCrash"] == "104")
-        assert(extrasMap["TextureUsage"] == "12345678")
+        assertEquals(extrasMap.size, 27)
+        assertEquals(extrasMap["ContentSandboxLevel"], "2")
+        assertEquals(extrasMap["TelemetryEnvironment"], "{\"EscapedField\":\"EscapedData\n\nfoo\"}")
+        assertEquals(extrasMap["EMCheckCompatibility"], "true")
+        assertEquals(extrasMap["ProductName"], "Firefox")
+        assertEquals(extrasMap["ContentSandboxCapabilities"], "119")
+        assertEquals(extrasMap["TelemetryClientId"], "")
+        assertEquals(extrasMap["Vendor"], "Mozilla")
+        assertEquals(extrasMap["InstallTime"], "1000000000")
+        assertEquals(extrasMap["Theme"], "classic/1.0")
+        assertEquals(extrasMap["ReleaseChannel"], "default")
+        assertEquals(extrasMap["ServerURL"], "https://crash-reports.mozilla.com")
+        assertEquals(extrasMap["SafeMode"], "0")
+        assertEquals(extrasMap["ContentSandboxCapable"], "1")
+        assertEquals(extrasMap["useragent_locale"], "en-US")
+        assertEquals(extrasMap["Version"], "55.0a1")
+        assertEquals(extrasMap["BuildID"], "20170512114708")
+        assertEquals(extrasMap["ProductID"], "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}")
+        assertEquals(extrasMap["TelemetryServerURL"], "")
+        assertEquals(extrasMap["DOMIPCEnabled"], "1")
+        assertEquals(extrasMap["Add-ons"], "")
+        assertEquals(extrasMap["CrashTime"], "1494582646")
+        assertEquals(extrasMap["UptimeTS"], "14.9179586")
+        assertEquals(extrasMap["ThreadIdNameMapping"], "")
+        assertEquals(extrasMap["ContentSandboxEnabled"], "1")
+        assertEquals(extrasMap["StartupTime"], "1000000000")
+        assertEquals(extrasMap["URL"], "about:home")
+    }
+
+    @Test
+    fun `MozillaSocorroService parses legacyExtraFile correctly`() {
+        val service = spy(MozillaSocorroService(
+                testContext,
+                "Test App"
+        ))
+        val file = File(getResource("TestLegacyExtrasFile").file)
+        val extrasMap = service.readExtrasFromFile(file)
+
+        assertEquals(extrasMap.size, 27)
+        assertEquals(extrasMap["ContentSandboxLevel"], "2")
+        assertEquals(extrasMap["TelemetryEnvironment"], "{\"EscapedField\":\"EscapedData\n\nfoo\"}")
+        assertEquals(extrasMap["EMCheckCompatibility"], "true")
+        assertEquals(extrasMap["ProductName"], "Firefox")
+        assertEquals(extrasMap["ContentSandboxCapabilities"], "119")
+        assertEquals(extrasMap["TelemetryClientId"], "")
+        assertEquals(extrasMap["Vendor"], "Mozilla")
+        assertEquals(extrasMap["InstallTime"], "1000000000")
+        assertEquals(extrasMap["Theme"], "classic/1.0")
+        assertEquals(extrasMap["ReleaseChannel"], "default")
+        assertEquals(extrasMap["ServerURL"], "https://crash-reports.mozilla.com")
+        assertEquals(extrasMap["SafeMode"], "0")
+        assertEquals(extrasMap["ContentSandboxCapable"], "1")
+        assertEquals(extrasMap["useragent_locale"], "en-US")
+        assertEquals(extrasMap["Version"], "55.0a1")
+        assertEquals(extrasMap["BuildID"], "20170512114708")
+        assertEquals(extrasMap["ProductID"], "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}")
+        assertEquals(extrasMap["TelemetryServerURL"], "")
+        assertEquals(extrasMap["DOMIPCEnabled"], "1")
+        assertEquals(extrasMap["Add-ons"], "")
+        assertEquals(extrasMap["CrashTime"], "1494582646")
+        assertEquals(extrasMap["UptimeTS"], "14.9179586")
+        assertEquals(extrasMap["ThreadIdNameMapping"], "")
+        assertEquals(extrasMap["ContentSandboxEnabled"], "1")
+        assertEquals(extrasMap["StartupTime"], "1000000000")
+        assertEquals(extrasMap["URL"], "about:home")
+    }
+
+    @Test
+    fun `MozillaSocorroService handles bad extrasFile correctly`() {
+        val service = spy(MozillaSocorroService(
+                testContext,
+                "Test App"
+        ))
+        val file = File(getResource("BadTestExtrasFile").file)
+        val extrasMap = service.readExtrasFromFile(file)
+
+        assertEquals(extrasMap.size, 0)
     }
 
     @Test

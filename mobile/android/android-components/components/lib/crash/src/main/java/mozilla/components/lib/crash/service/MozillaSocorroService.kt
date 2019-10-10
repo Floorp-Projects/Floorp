@@ -11,10 +11,13 @@ import android.os.Build
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.log.logger.Logger
+import org.json.JSONException
+import org.json.JSONObject
 import org.mozilla.geckoview.BuildConfig
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.FileReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -26,6 +29,7 @@ import java.net.URL
 import java.nio.channels.Channels
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPOutputStream
+import kotlin.collections.HashMap
 import kotlin.random.Random
 
 private const val DEFAULT_SERVER_URL = "https://crash-reports.mozilla.com/submit?" +
@@ -244,7 +248,12 @@ class MozillaSocorroService(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun readExtrasFromFile(file: File): HashMap<String, String> {
+    internal fun jsonUnescape(string: String): String {
+        return string.replace("""\\\\""", "\\").replace("""\n""", "\n").replace("""\t""", "\t")
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun readExtrasFromLegacyFile(file: File): HashMap<String, String> {
         var fileReader: FileReader? = null
         var bufReader: BufferedReader? = null
         var line: String?
@@ -275,6 +284,37 @@ class MozillaSocorroService(
         }
 
         return map
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun readExtrasFromFile(file: File): HashMap<String, String> {
+        var resultMap = HashMap<String, String>()
+        var notJson = false
+
+        try {
+            FileReader(file).use { fileReader ->
+                val input = fileReader.readLines().firstOrNull()
+                        ?: throw JSONException("failed to read json file")
+
+                val jsonObject = JSONObject(input)
+                for (key in jsonObject.keys()) {
+                    resultMap[key] = jsonUnescape(jsonObject.getString(key))
+                }
+            }
+        } catch (e: FileNotFoundException) {
+            Logger.error("failed to find extra file", e)
+        } catch (e: IOException) {
+            Logger.error("failed read the extra file", e)
+        } catch (e: JSONException) {
+            Logger.info("extras file JSON syntax error, trying legacy format")
+            notJson = true
+        }
+
+        if (notJson) {
+            resultMap = readExtrasFromLegacyFile(file)
+        }
+
+        return resultMap
     }
 
     private fun getExceptionStackTrace(throwable: Throwable, isCaughtException: Boolean): String {
