@@ -111,6 +111,11 @@ nsNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNetworkLinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #ifndef SA_SIZE
 #  define SA_SIZE(sa)                                 \
     ((!(sa) || ((struct sockaddr*)(sa))->sa_len == 0) \

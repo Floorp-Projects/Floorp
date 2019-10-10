@@ -81,6 +81,7 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
 
   mozilla::Mutex mMutex;
   nsCString mNetworkId;
+  nsTArray<nsCString> mDnsSuffixList;
 
   HANDLE mCheckEvent;
 

@@ -161,6 +161,14 @@ nsNotifyAddrListener::GetNetworkID(nsACString& aNetworkID) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNotifyAddrListener::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
+  aDnsSuffixList.Clear();
+  MutexAutoLock lock(mMutex);
+  aDnsSuffixList.AppendElements(mDnsSuffixList);
+  return NS_OK;
+}
+
 //
 // Hash the sorted network ids
 //
@@ -592,6 +600,8 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   //
   ULONG sumAll = 0;
 
+  nsTArray<nsCString> dnsSuffixList;
+
   if (ret == ERROR_SUCCESS) {
     bool linkUp = false;
     ULONG sum = 0;
@@ -619,6 +629,15 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
           sum += (reinterpret_cast<unsigned char*>(sockAddr->lpSockaddr))[i];
         }
       }
+
+      if (StaticPrefs::network_notify_dnsSuffixList()) {
+        nsCString suffix = NS_ConvertUTF16toUTF8(adapter->DnsSuffix);
+        if (!suffix.IsEmpty()) {
+          LOG(("  found DNS suffix=%s\n", suffix.get()));
+          dnsSuffixList.AppendElement(suffix);
+        }
+      }
+
       linkUp = true;
       sumAll ^= sum;
     }
@@ -633,6 +652,11 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
   }
 
   CoUninitialize();
+
+  if (StaticPrefs::network_notify_dnsSuffixList()) {
+    MutexAutoLock lock(mMutex);
+    mDnsSuffixList.SwapElements(dnsSuffixList);
+  }
 
   calculateNetworkId();
 
