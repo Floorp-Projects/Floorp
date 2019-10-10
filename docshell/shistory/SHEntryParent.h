@@ -56,6 +56,7 @@ class LegacySHEntry final : public nsSHEntry, public CrossProcessSHEntry {
 
   using nsSHEntry::AbandonBFCacheEntry;
   void AbandonBFCacheEntry(uint64_t aNewSharedID);
+  NS_IMETHODIMP GetBfcacheID(uint64_t* aBFCacheID) override;
 
   uint64_t GetSharedStateID() const { return mShared->GetID(); }
 

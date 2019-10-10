@@ -52,6 +52,12 @@ void LegacySHEntry::AbandonBFCacheEntry(uint64_t aNewSharedID) {
   mShared = shared.forget();
 }
 
+NS_IMETHODIMP
+LegacySHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
+  *aBFCacheID = mShared->GetID();
+  return NS_OK;
+}
+
 void SHEntryParent::ActorDestroy(ActorDestroyReason aWhy) {
   mEntry->mActor = nullptr;
 }
