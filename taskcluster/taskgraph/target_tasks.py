@@ -405,9 +405,9 @@ def target_tasks_ship_desktop(full_task_graph, parameters, graph_config):
             return False
 
         if 'secondary' in task.kind:
-                return is_rc
+            return is_rc
         else:
-                return not is_rc
+            return not is_rc
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
