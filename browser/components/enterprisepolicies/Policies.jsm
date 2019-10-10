@@ -104,16 +104,30 @@ var Policies = {
         );
       }
       if ("AllowNonFQDN" in param) {
-        if (param.AllowNonFQDN.NTLM) {
+        if ("NTLM" in param.AllowNonFQDN) {
           setAndLockPref(
             "network.automatic-ntlm-auth.allow-non-fqdn",
             param.AllowNonFQDN.NTLM
           );
         }
-        if (param.AllowNonFQDN.SPNEGO) {
+        if ("SPNEGO" in param.AllowNonFQDN) {
           setAndLockPref(
             "network.negotiate-auth.allow-non-fqdn",
             param.AllowNonFQDN.SPNEGO
+          );
+        }
+      }
+      if ("AllowProxies" in param) {
+        if ("NTLM" in param.AllowProxies) {
+          setAndLockPref(
+            "network.automatic-ntlm-auth.allow-proxies",
+            param.AllowProxies.NTLM
+          );
+        }
+        if ("SPNEGO" in param.AllowProxies) {
+          setAndLockPref(
+            "network.negotiate-auth.allow-proxies",
+            param.AllowProxies.SPNEGO
           );
         }
       }
