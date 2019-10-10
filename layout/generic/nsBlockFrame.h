@@ -730,8 +730,7 @@ class nsBlockFrame : public nsContainerFrame {
   //----------------------------------------
   // Methods for individual frame reflow
 
-  bool ShouldApplyBStartMargin(BlockReflowInput& aState, nsLineBox* aLine,
-                               nsIFrame* aChildFrame);
+  bool ShouldApplyBStartMargin(BlockReflowInput& aState, nsLineBox* aLine);
 
   void ReflowBlockFrame(BlockReflowInput& aState, LineIterator aLine,
                         bool* aKeepGoing);

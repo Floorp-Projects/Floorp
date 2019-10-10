@@ -3261,16 +3261,13 @@ bool nsBlockFrame::IsEmpty() {
 }
 
 bool nsBlockFrame::ShouldApplyBStartMargin(BlockReflowInput& aState,
-                                           nsLineBox* aLine,
-                                           nsIFrame* aChildFrame) {
+                                           nsLineBox* aLine) {
   if (aState.mFlags.mShouldApplyBStartMargin) {
     // Apply short-circuit check to avoid searching the line list
     return true;
   }
 
-  if (!aState.IsAdjacentWithTop() ||
-      aChildFrame->StyleBorder()->mBoxDecorationBreak ==
-          StyleBoxDecorationBreak::Clone) {
+  if (!aState.IsAdjacentWithTop()) {
     // If we aren't at the start block-coordinate then something of non-zero
     // height must have been placed. Therefore the childs block-start margin
     // applies.
@@ -3329,12 +3326,9 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
   // See if we should apply the block-start margin. If the block frame being
   // reflowed is a continuation, then we don't apply its block-start margin
-  // because it's not significant unless it has 'box-decoration-break:clone'.
-  // Otherwise, dig deeper.
-  bool applyBStartMargin = (frame->StyleBorder()->mBoxDecorationBreak ==
-                                StyleBoxDecorationBreak::Clone ||
-                            !frame->GetPrevContinuation()) &&
-                           ShouldApplyBStartMargin(aState, aLine, frame);
+  // because it's not significant. Otherwise, dig deeper.
+  bool applyBStartMargin =
+      !frame->GetPrevContinuation() && ShouldApplyBStartMargin(aState, aLine);
   if (applyBStartMargin) {
     // The HasClearance setting is only valid if ShouldApplyBStartMargin
     // returned false (in which case the block-start margin-root set our
@@ -3984,7 +3978,7 @@ void nsBlockFrame::ReflowInlineFrames(BlockReflowInput& aState,
 
   // Setup initial coordinate system for reflowing the inline frames
   // into. Apply a previous block frame's block-end margin first.
-  if (ShouldApplyBStartMargin(aState, aLine, aLine->mFirstChild)) {
+  if (ShouldApplyBStartMargin(aState, aLine)) {
     aState.mBCoord += aState.mPrevBEndMargin.get();
   }
   nsFlowAreaRect floatAvailableSpace = aState.GetFloatAvailableSpace();
@@ -7367,23 +7361,22 @@ void nsBlockFrame::CheckFloats(BlockReflowInput& aState) {
 
 void nsBlockFrame::IsMarginRoot(bool* aBStartMarginRoot,
                                 bool* aBEndMarginRoot) {
+  nsIFrame* parent = GetParent();
   if (!(GetStateBits() & NS_BLOCK_MARGIN_ROOT)) {
-    nsIFrame* parent = GetParent();
     if (!parent || parent->IsFloatContainingBlock()) {
       *aBStartMarginRoot = false;
       *aBEndMarginRoot = false;
       return;
     }
-    // Bug 1499281: The following margin root calculation is for legacy
-    // multi-column container. Remove it after removing the column-span
-    // preference.
-    if (parent->IsColumnSetFrame()) {
-      MOZ_ASSERT(!StaticPrefs::layout_css_column_span_enabled(),
-                 "Column contents always have BFC set!");
-      *aBStartMarginRoot = GetPrevInFlow() == nullptr;
-      *aBEndMarginRoot = GetNextInFlow() == nullptr;
-      return;
-    }
+  }
+
+  if (parent && parent->IsColumnSetFrame()) {
+    // The first column is a start margin root and the last column is an end
+    // margin root.  (If the column-set is split by a column-span:all box then
+    // the first and last column in each column-set fragment are margin roots.)
+    *aBStartMarginRoot = GetPrevInFlow() == nullptr;
+    *aBEndMarginRoot = GetNextInFlow() == nullptr;
+    return;
   }
 
   *aBStartMarginRoot = true;
