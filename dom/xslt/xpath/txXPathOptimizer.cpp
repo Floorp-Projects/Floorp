@@ -159,9 +159,8 @@ nsresult txXPathOptimizer::optimizePath(Expr* aInExpr, Expr** aOutExpr) {
     if (step->getAxisIdentifier() == LocationStep::SELF_AXIS &&
         !step->getSubExprAt(0)) {
       txNodeTest* test = step->getNodeTest();
-      txNodeTypeTest* typeTest;
       if (test->getType() == txNodeTest::NODETYPE_TEST &&
-          (typeTest = static_cast<txNodeTypeTest*>(test))->getNodeTestType() ==
+          (static_cast<txNodeTypeTest*>(test))->getNodeTestType() ==
               txNodeTypeTest::NODE_TYPE) {
         // We have a '.' as first step followed by a single '/'.
 
