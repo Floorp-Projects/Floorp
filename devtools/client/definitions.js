@@ -107,6 +107,18 @@ loader.lazyImporter(
   "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
 );
 
+loader.lazyRequireGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "DevToolsFissionPrefs",
+  "devtools/client/devtools-fission-prefs"
+);
+
 const { MultiLocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new MultiLocalizationHelper(
   "devtools/client/locales/startup.properties",
@@ -566,6 +578,13 @@ exports.ToolboxButtons = [
     isTargetSupported: target => target.canRewind && target.isLocalTab,
     onClick: () => reloadAndStopRecordingTab(),
     isChecked: () => true,
+  },
+  {
+    id: "command-button-fission-prefs",
+    description: "DevTools Fission preferences",
+    isTargetSupported: target => !AppConstants.MOZILLA_OFFICIAL,
+    onClick: (event, toolbox) => DevToolsFissionPrefs.showTooltip(toolbox),
+    isChecked: () => DevToolsFissionPrefs.isAnyPreferenceEnabled(),
   },
   {
     id: "command-button-responsive",
