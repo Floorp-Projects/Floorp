@@ -40,7 +40,7 @@ add_task(async function() {
     }
   );
 
-  wait = waitForDOM(document, "#headers-panel");
+  let wait = waitForDOM(document, "#headers-panel");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]

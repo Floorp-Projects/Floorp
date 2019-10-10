@@ -54,7 +54,7 @@ add_task(async function() {
   testCustomItemChanged(customItem, origItem);
 
   // send the new request
-  wait = waitForNetworkEvents(monitor, 1);
+  const wait = waitForNetworkEvents(monitor, 1);
   store.dispatch(Actions.sendCustomRequest(connector));
   await wait;
 

@@ -3704,9 +3704,6 @@ static AstMemOrTableCopy* ParseMemOrTableCopy(WasmParseContext& c,
   // (table.copy dest-table dest src-table src len)
   // (table.copy dest src len)
   // (memory.copy dest src len)
-  //
-  // Note that while the instruction *encoding* has src-table before dest-table,
-  // we use the normal (dest, src) order in text.
 
   AstRef targetMemOrTable = AstRef(0);
   bool requireSource = false;
@@ -6615,8 +6612,8 @@ static bool EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s) {
   return EncodeExpr(e, s.dest()) && EncodeExpr(e, s.src()) &&
          EncodeExpr(e, s.len()) &&
          e.writeOp(s.isMem() ? MiscOp::MemCopy : MiscOp::TableCopy) &&
-         e.writeVarU32(s.isMem() ? 0 : s.srcTable().index()) &&
-         e.writeVarU32(s.isMem() ? 0 : s.destTable().index());
+         e.writeVarU32(s.isMem() ? 0 : s.destTable().index()) &&
+         e.writeVarU32(s.isMem() ? 0 : s.srcTable().index());
 }
 
 static bool EncodeDataOrElemDrop(Encoder& e, AstDataOrElemDrop& s) {

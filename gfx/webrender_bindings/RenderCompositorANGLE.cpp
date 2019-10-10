@@ -273,7 +273,8 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
   MOZ_ASSERT(XRE_IsGPUProcess());
 
   bool useTripleBuffering = gfx::gfxVars::UseWebRenderTripleBufferingWin();
-  bool useAlpha = true;
+  // Non Glass window is common since Windows 10.
+  bool useAlpha = false;
   RefPtr<IDXGISwapChain1> swapChain1 =
       CreateSwapChainForDComp(useTripleBuffering, useAlpha);
   if (swapChain1) {

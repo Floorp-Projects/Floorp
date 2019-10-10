@@ -303,15 +303,22 @@ class MOZ_RAII PSAutoLock {
 // fields.
 typedef const PSAutoLock& PSLockRef;
 
-#define PS_GET(type_, name_) \
-  static type_ name_(PSLockRef) { return sInstance->m##name_; }
+#define PS_GET(type_, name_)      \
+  static type_ name_(PSLockRef) { \
+    MOZ_ASSERT(sInstance);        \
+    return sInstance->m##name_;   \
+  }
 
 #define PS_GET_LOCKLESS(type_, name_) \
-  static type_ name_() { return sInstance->m##name_; }
+  static type_ name_() {              \
+    MOZ_ASSERT(sInstance);            \
+    return sInstance->m##name_;       \
+  }
 
 #define PS_GET_AND_SET(type_, name_)                  \
   PS_GET(type_, name_)                                \
   static void Set##name_(PSLockRef, type_ a##name_) { \
+    MOZ_ASSERT(sInstance);                            \
     sInstance->m##name_ = a##name_;                   \
   }
 
@@ -355,9 +362,13 @@ class CorePS {
   ~CorePS() {}
 
  public:
-  static void Create(PSLockRef aLock) { sInstance = new CorePS(); }
+  static void Create(PSLockRef aLock) {
+    MOZ_ASSERT(!sInstance);
+    sInstance = new CorePS();
+  }
 
   static void Destroy(PSLockRef aLock) {
+    MOZ_ASSERT(sInstance);
     delete sInstance;
     sInstance = nullptr;
   }
@@ -369,6 +380,8 @@ class CorePS {
 
   static void AddSizeOf(PSLockRef, MallocSizeOf aMallocSizeOf,
                         size_t& aProfSize, size_t& aLulSize) {
+    MOZ_ASSERT(sInstance);
+
     aProfSize += aMallocSizeOf(sInstance);
 
     for (auto& registeredThread : sInstance->mRegisteredThreads) {
@@ -404,12 +417,14 @@ class CorePS {
 
   static void AppendRegisteredThread(
       PSLockRef, UniquePtr<RegisteredThread>&& aRegisteredThread) {
+    MOZ_ASSERT(sInstance);
     MOZ_RELEASE_ASSERT(
         sInstance->mRegisteredThreads.append(std::move(aRegisteredThread)));
   }
 
   static void RemoveRegisteredThread(PSLockRef,
                                      RegisteredThread* aRegisteredThread) {
+    MOZ_ASSERT(sInstance);
     // Remove aRegisteredThread from mRegisteredThreads.
     for (UniquePtr<RegisteredThread>& rt : sInstance->mRegisteredThreads) {
       if (rt.get() == aRegisteredThread) {
@@ -423,6 +438,7 @@ class CorePS {
 
   static void AppendRegisteredPage(PSLockRef,
                                    RefPtr<PageInformation>&& aRegisteredPage) {
+    MOZ_ASSERT(sInstance);
     struct RegisteredPageComparator {
       PageInformation* aA;
       bool operator()(PageInformation* aB) const { return aA->Equals(aB); }
@@ -451,6 +467,7 @@ class CorePS {
 
   static void RemoveRegisteredPage(PSLockRef,
                                    uint64_t aRegisteredInnerWindowID) {
+    MOZ_ASSERT(sInstance);
     // Remove RegisteredPage from mRegisteredPages by given inner window ID.
     sInstance->mRegisteredPages.eraseIf([&](const RefPtr<PageInformation>& rd) {
       return rd->InnerWindowID() == aRegisteredInnerWindowID;
@@ -458,12 +475,14 @@ class CorePS {
   }
 
   static void ClearRegisteredPages(PSLockRef) {
+    MOZ_ASSERT(sInstance);
     sInstance->mRegisteredPages.clear();
   }
 
   PS_GET(const Vector<BaseProfilerCount*>&, Counters)
 
   static void AppendCounter(PSLockRef, BaseProfilerCount* aCounter) {
+    MOZ_ASSERT(sInstance);
     // we don't own the counter; they may be stored in static objects
     MOZ_RELEASE_ASSERT(sInstance->mCounters.append(aCounter));
   }
@@ -480,8 +499,12 @@ class CorePS {
   }
 
 #ifdef USE_LUL_STACKWALK
-  static lul::LUL* Lul(PSLockRef) { return sInstance->mLul.get(); }
+  static lul::LUL* Lul(PSLockRef) {
+    MOZ_ASSERT(sInstance);
+    return sInstance->mLul.get();
+  }
   static void SetLul(PSLockRef, UniquePtr<lul::LUL> aLul) {
+    MOZ_ASSERT(sInstance);
     sInstance->mLul = std::move(aLul);
   }
 #endif
@@ -569,9 +592,8 @@ class ActivePS {
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
         // 8 bytes per entry.
-        mProfileBuffer(
-            MakeUnique<ProfileBuffer>(CorePS::CoreBlocksRingBuffer(),
-                                      PowerOfTwo32(aCapacity.Value() * 8))),
+        mProfileBuffer(CorePS::CoreBlocksRingBuffer(),
+                       PowerOfTwo32(aCapacity.Value() * 8)),
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
@@ -632,8 +654,6 @@ class ActivePS {
   }
 
   bool ThreadSelected(const char* aThreadName) {
-    MOZ_RELEASE_ASSERT(sInstance);
-
     if (mFilters.empty()) {
       return true;
     }
@@ -666,11 +686,13 @@ class ActivePS {
   static void Create(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
                      uint32_t aFilterCount, const Maybe<double>& aDuration) {
+    MOZ_ASSERT(!sInstance);
     sInstance = new ActivePS(aLock, aCapacity, aInterval, aFeatures, aFilters,
                              aFilterCount, aDuration);
   }
 
   static MOZ_MUST_USE SamplerThread* Destroy(PSLockRef aLock) {
+    MOZ_ASSERT(sInstance);
     auto samplerThread = sInstance->mSamplerThread;
     delete sInstance;
     sInstance = nullptr;
@@ -684,6 +706,7 @@ class ActivePS {
                      const Maybe<double>& aDuration, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
                      uint32_t aFilterCount) {
+    MOZ_ASSERT(sInstance);
     if (sInstance->mCapacity != aCapacity ||
         sInstance->mDuration != aDuration ||
         sInstance->mInterval != aInterval ||
@@ -701,9 +724,11 @@ class ActivePS {
   }
 
   static size_t SizeOf(PSLockRef, MallocSizeOf aMallocSizeOf) {
+    MOZ_ASSERT(sInstance);
+
     size_t n = aMallocSizeOf(sInstance);
 
-    n += sInstance->mProfileBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    n += sInstance->mProfileBuffer.SizeOfIncludingThis(aMallocSizeOf);
 
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:
@@ -715,8 +740,7 @@ class ActivePS {
   }
 
   static bool ShouldProfileThread(PSLockRef aLock, ThreadInfo* aInfo) {
-    MOZ_RELEASE_ASSERT(sInstance);
-
+    MOZ_ASSERT(sInstance);
     return ((aInfo->IsMainThread() || FeatureThreads(aLock)) &&
             sInstance->ThreadSelected(aInfo->Name()));
   }
@@ -733,6 +757,7 @@ class ActivePS {
 
 #define PS_GET_FEATURE(n_, str_, Name_, desc_)                \
   static bool Feature##Name_(PSLockRef) {                     \
+    MOZ_ASSERT(sInstance);                                    \
     return ProfilerFeature::Has##Name_(sInstance->mFeatures); \
   }
 
@@ -758,9 +783,13 @@ class ActivePS {
 
   PS_GET(const Vector<std::string>&, Filters)
 
-  static ProfileBuffer& Buffer(PSLockRef) { return *sInstance->mProfileBuffer; }
+  static ProfileBuffer& Buffer(PSLockRef) {
+    MOZ_ASSERT(sInstance);
+    return sInstance->mProfileBuffer;
+  }
 
   static const Vector<LiveProfiledThreadData>& LiveProfiledThreads(PSLockRef) {
+    MOZ_ASSERT(sInstance);
     return sInstance->mLiveProfiledThreads;
   }
 
@@ -775,6 +804,7 @@ class ActivePS {
   // restarts.
   static Vector<Pair<RegisteredThread*, ProfiledThreadData*>> ProfiledThreads(
       PSLockRef) {
+    MOZ_ASSERT(sInstance);
     Vector<Pair<RegisteredThread*, ProfiledThreadData*>> array;
     MOZ_RELEASE_ASSERT(
         array.initCapacity(sInstance->mLiveProfiledThreads.length() +
@@ -798,6 +828,7 @@ class ActivePS {
   }
 
   static Vector<RefPtr<PageInformation>> ProfiledPages(PSLockRef aLock) {
+    MOZ_ASSERT(sInstance);
     Vector<RefPtr<PageInformation>> array;
     for (auto& d : CorePS::RegisteredPages(aLock)) {
       MOZ_RELEASE_ASSERT(array.append(d));
@@ -814,6 +845,7 @@ class ActivePS {
   // ProfiledThreadData object for a RegisteredThread.
   static ProfiledThreadData* GetProfiledThreadData(
       PSLockRef, RegisteredThread* aRegisteredThread) {
+    MOZ_ASSERT(sInstance);
     for (const LiveProfiledThreadData& thread :
          sInstance->mLiveProfiledThreads) {
       if (thread.mRegisteredThread == aRegisteredThread) {
@@ -826,6 +858,7 @@ class ActivePS {
   static ProfiledThreadData* AddLiveProfiledThread(
       PSLockRef, RegisteredThread* aRegisteredThread,
       UniquePtr<ProfiledThreadData>&& aProfiledThreadData) {
+    MOZ_ASSERT(sInstance);
     MOZ_RELEASE_ASSERT(
         sInstance->mLiveProfiledThreads.append(LiveProfiledThreadData{
             aRegisteredThread, std::move(aProfiledThreadData)}));
@@ -836,6 +869,8 @@ class ActivePS {
 
   static void UnregisterThread(PSLockRef aLockRef,
                                RegisteredThread* aRegisteredThread) {
+    MOZ_ASSERT(sInstance);
+
     DiscardExpiredDeadProfiledThreads(aLockRef);
 
     // Find the right entry in the mLiveProfiledThreads array and remove the
@@ -846,7 +881,7 @@ class ActivePS {
       LiveProfiledThreadData& thread = sInstance->mLiveProfiledThreads[i];
       if (thread.mRegisteredThread == aRegisteredThread) {
         thread.mProfiledThreadData->NotifyUnregistered(
-            sInstance->mProfileBuffer->BufferRangeEnd());
+            sInstance->mProfileBuffer.BufferRangeEnd());
         MOZ_RELEASE_ASSERT(sInstance->mDeadProfiledThreads.append(
             std::move(thread.mProfiledThreadData)));
         sInstance->mLiveProfiledThreads.erase(
@@ -863,7 +898,8 @@ class ActivePS {
 #endif
 
   static void DiscardExpiredDeadProfiledThreads(PSLockRef) {
-    uint64_t bufferRangeStart = sInstance->mProfileBuffer->BufferRangeStart();
+    MOZ_ASSERT(sInstance);
+    uint64_t bufferRangeStart = sInstance->mProfileBuffer.BufferRangeStart();
     // Discard any dead threads that were unregistered before bufferRangeStart.
     sInstance->mDeadProfiledThreads.eraseIf(
         [bufferRangeStart](
@@ -878,11 +914,12 @@ class ActivePS {
 
   static void UnregisterPage(PSLockRef aLock,
                              uint64_t aRegisteredInnerWindowID) {
+    MOZ_ASSERT(sInstance);
     auto& registeredPages = CorePS::RegisteredPages(aLock);
     for (size_t i = 0; i < registeredPages.length(); i++) {
       RefPtr<PageInformation>& page = registeredPages[i];
       if (page->InnerWindowID() == aRegisteredInnerWindowID) {
-        page->NotifyUnregistered(sInstance->mProfileBuffer->BufferRangeEnd());
+        page->NotifyUnregistered(sInstance->mProfileBuffer.BufferRangeEnd());
         MOZ_RELEASE_ASSERT(
             sInstance->mDeadProfiledPages.append(std::move(page)));
         registeredPages.erase(&registeredPages[i--]);
@@ -891,7 +928,8 @@ class ActivePS {
   }
 
   static void DiscardExpiredPages(PSLockRef) {
-    uint64_t bufferRangeStart = sInstance->mProfileBuffer->BufferRangeStart();
+    MOZ_ASSERT(sInstance);
+    uint64_t bufferRangeStart = sInstance->mProfileBuffer.BufferRangeStart();
     // Discard any dead pages that were unregistered before
     // bufferRangeStart.
     sInstance->mDeadProfiledPages.eraseIf(
@@ -905,11 +943,13 @@ class ActivePS {
   }
 
   static void ClearUnregisteredPages(PSLockRef) {
+    MOZ_ASSERT(sInstance);
     sInstance->mDeadProfiledPages.clear();
   }
 
 #if !defined(RELEASE_OR_BETA)
   static void UnregisterIOInterposer(PSLockRef) {
+    MOZ_ASSERT(sInstance);
     if (!sInstance->mInterposeObserver) {
       return;
     }
@@ -921,6 +961,7 @@ class ActivePS {
   }
 
   static void PauseIOInterposer(PSLockRef) {
+    MOZ_ASSERT(sInstance);
     if (!sInstance->mInterposeObserver) {
       return;
     }
@@ -930,6 +971,7 @@ class ActivePS {
   }
 
   static void ResumeIOInterposer(PSLockRef) {
+    MOZ_ASSERT(sInstance);
     if (!sInstance->mInterposeObserver) {
       return;
     }
@@ -940,7 +982,8 @@ class ActivePS {
 #endif
 
   static void ClearExpiredExitProfiles(PSLockRef) {
-    uint64_t bufferRangeStart = sInstance->mProfileBuffer->BufferRangeStart();
+    MOZ_ASSERT(sInstance);
+    uint64_t bufferRangeStart = sInstance->mProfileBuffer.BufferRangeStart();
     // Discard exit profiles that were gathered before our buffer RangeStart.
 #ifdef MOZ_BASE_PROFILER
     if (bufferRangeStart != 0 && sInstance->mBaseProfileThreads) {
@@ -956,10 +999,13 @@ class ActivePS {
 #ifdef MOZ_BASE_PROFILER
   static void AddBaseProfileThreads(PSLockRef aLock,
                                     UniquePtr<char[]> aBaseProfileThreads) {
+    MOZ_ASSERT(sInstance);
     sInstance->mBaseProfileThreads = std::move(aBaseProfileThreads);
   }
 
   static UniquePtr<char[]> MoveBaseProfileThreads(PSLockRef aLock) {
+    MOZ_ASSERT(sInstance);
+
     ClearExpiredExitProfiles(aLock);
 
     return std::move(sInstance->mBaseProfileThreads);
@@ -967,13 +1013,17 @@ class ActivePS {
 #endif
 
   static void AddExitProfile(PSLockRef aLock, const nsCString& aExitProfile) {
+    MOZ_ASSERT(sInstance);
+
     ClearExpiredExitProfiles(aLock);
 
-    MOZ_RELEASE_ASSERT(sInstance->mExitProfiles.append(ExitProfile{
-        aExitProfile, sInstance->mProfileBuffer->BufferRangeEnd()}));
+    MOZ_RELEASE_ASSERT(sInstance->mExitProfiles.append(
+        ExitProfile{aExitProfile, sInstance->mProfileBuffer.BufferRangeEnd()}));
   }
 
   static Vector<nsCString> MoveExitProfiles(PSLockRef aLock) {
+    MOZ_ASSERT(sInstance);
+
     ClearExpiredExitProfiles(aLock);
 
     Vector<nsCString> profiles;
@@ -1025,9 +1075,8 @@ class ActivePS {
   // Substrings of names of threads we want to profile.
   Vector<std::string> mFilters;
 
-  // The buffer into which all samples are recorded. Always non-null. Always
-  // used in conjunction with CorePS::m{Live,Dead}Threads.
-  const UniquePtr<ProfileBuffer> mProfileBuffer;
+  // The buffer into which all samples are recorded.
+  ProfileBuffer mProfileBuffer;
 
   // ProfiledThreadData objects for any threads that were profiled at any point
   // during this run of the profiler:

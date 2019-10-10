@@ -89,8 +89,8 @@ fn impl_fns(ast: &syn::DeriveInput) -> Result<Fns, String> {
             continue;
         }
 
-        match attr.interpret_meta() {
-            Some(Meta::List(list)) => {
+        match attr.parse_meta() {
+            Ok(Meta::List(list)) => {
                 for meta in &list.nested {
                     match meta {
                         /*
@@ -100,7 +100,7 @@ fn impl_fns(ast: &syn::DeriveInput) -> Result<Fns, String> {
                         },
                         */
 
-                        NestedMeta::Meta(Meta::NameValue(ref kv)) if kv.ident == "name_const" => {
+                        NestedMeta::Meta(Meta::NameValue(ref kv)) if kv.path.is_ident("name_const") => {
                             if name.is_some() {
                                 return Err("repeated 'name_const' option in #[header] attribute".into());
                             }
@@ -119,15 +119,15 @@ fn impl_fns(ast: &syn::DeriveInput) -> Result<Fns, String> {
                 }
 
             },
-            Some(Meta::NameValue(_)) => {
+            Ok(Meta::NameValue(_)) => {
                 return Err("illegal #[header = ..] attribute".into())
             },
-            Some(Meta::Word(_)) => {
+            Ok(Meta::Path(_)) => {
                 return Err("empty #[header] attributes do nothing".into())
             },
-            None => {
+            Err(e) => {
                 // TODO stringify attribute to return better error
-                return Err("illegal #[header ??] attribute".into())
+                return Err(format!("illegal #[header ??] attribute: {:?}", e))
             }
         }
     }
