@@ -1140,7 +1140,7 @@ class TestEmitterBasic(unittest.TestCase):
             reader = self.reader('xpidl-module-no-sources')
             self.read_topsrcdir(reader)
 
-    def test_xpidl_module_no_sources(self):
+    def test_xpidl_module_missing_sources(self):
         """Missing XPIDL_SOURCES should be rejected."""
         with self.assertRaisesRegexp(SandboxValidationError, 'File .* '
                                      'from XPIDL_SOURCES does not exist'):

@@ -98,10 +98,6 @@ class SandboxDependsFunction(object):
     def __ge__(self, other):
         raise ConfigureError('Cannot compare @depends functions.')
 
-    def __nonzero__(self):
-        raise ConfigureError('Cannot use @depends functions in '
-                             'e.g. conditionals.')
-
     def __getattr__(self, key):
         return self._getattr(key).sandboxed
 
