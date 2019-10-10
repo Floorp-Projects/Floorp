@@ -26,6 +26,9 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Oturumu sil</string>
 
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Ana ekranınızdan gizli sekme açmak için bir kısayol ekleyin.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Kısayol ekle</string>
     <!-- Text for the negative button -->
@@ -829,10 +832,14 @@
     <string name="preference_enhanced_tracking_protection_standard">Standart (önerilen)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Dengeli koruma ve performans.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Sayfalar normal şekilde yüklenecek ama daha az takipçi engellenecek.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Sıkı</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
     <string name="preference_enhanced_tracking_protection_strict_default">Sıkı (Varsayılan)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Daha güçlü izleme koruması ve daha hızlı performans, ancak bazı siteler düzgün çalışmayabilir.</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_recommended">Sıkı (önerilen)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
@@ -894,6 +901,8 @@
   
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Ana ekrana ekle</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">İptal</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">Ekle</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
@@ -935,6 +944,14 @@
     <string name="preferences_passwords_saved_logins_username">Kullanıcı adı</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Parola</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">PIN’inizi tekrar girin</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Kayıtlı hesaplarınızı görmek için kilidi açın</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Bu bağlantı güvenli değil. Buraya yazdığınız hesap bilgileri ele geçirilebilir.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Daha fazla bilgi al</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
     <string name="logins_doorhanger_save">%s bu hesabı kaydetsin mi?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
