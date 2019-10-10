@@ -59,28 +59,26 @@ add_task(async function test_reader_mode() {
       });
 
       browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-        if (tab.url !== "about:blank") {
-          if (changeInfo.status === "complete") {
-            testState.url = tab.url;
-            let urlOk = expected.isInReaderMode
-              ? testState.url.startsWith("about:reader")
-              : expected.url == testState.url;
-            if (urlOk && expected.isArticle == testState.isArticle) {
-              browser.test.sendMessage("tabUpdated", tab);
-            }
-            return;
+        if (changeInfo.status === "complete") {
+          testState.url = tab.url;
+          let urlOk = expected.isInReaderMode
+            ? testState.url.startsWith("about:reader")
+            : expected.url == testState.url;
+          if (urlOk && expected.isArticle == testState.isArticle) {
+            browser.test.sendMessage("tabUpdated", tab);
           }
-          if (
-            changeInfo.isArticle == expected.isArticle &&
-            changeInfo.isArticle != testState.isArticle
-          ) {
-            testState.isArticle = changeInfo.isArticle;
-            let urlOk = expected.isInReaderMode
-              ? testState.url.startsWith("about:reader")
-              : expected.url == testState.url;
-            if (urlOk && expected.isArticle == testState.isArticle) {
-              browser.test.sendMessage("isArticle", tab);
-            }
+          return;
+        }
+        if (
+          changeInfo.isArticle == expected.isArticle &&
+          changeInfo.isArticle != testState.isArticle
+        ) {
+          testState.isArticle = changeInfo.isArticle;
+          let urlOk = expected.isInReaderMode
+            ? testState.url.startsWith("about:reader")
+            : expected.url == testState.url;
+          if (urlOk && expected.isArticle == testState.isArticle) {
+            browser.test.sendMessage("isArticle", tab);
           }
         }
       });
