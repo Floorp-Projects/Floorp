@@ -23,13 +23,15 @@ import android.os.Build.VERSION.SDK_INT
  */
 object PrivateShortcutCreateManager {
 
-    fun doesPrivateBrowsingPinnedShortcutExist(context: Context) : Boolean {
+    fun doesPrivateBrowsingPinnedShortcutExist(context: Context): Boolean {
         return if (SDK_INT >= Build.VERSION_CODES.N_MR1) {
             val pinnedShortcuts = context.getSystemService(ShortcutManager::class.java).pinnedShortcuts
-            for (s in pinnedShortcuts) {
-                if (s.intent?.extras?.getString(HomeActivity.OPEN_TO_SEARCH) ==
-                    StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT) {
-                    return true
+            if (pinnedShortcuts.any()) {
+                for (s in pinnedShortcuts) {
+                    if (s.intent?.extras?.getString(HomeActivity.OPEN_TO_SEARCH) ==
+                        StartSearchIntentProcessor.PRIVATE_BROWSING_PINNED_SHORTCUT) {
+                        return true
+                    }
                 }
             }
             false

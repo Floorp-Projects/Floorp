@@ -133,7 +133,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         findPreference<Preference>(getPreferenceKey(R.string.pref_key_add_private_browsing_shortcut))?.apply {
-            isVisible = !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(requireContext())
+            isVisible = !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(context)
         }
 
         setupPreferences()
