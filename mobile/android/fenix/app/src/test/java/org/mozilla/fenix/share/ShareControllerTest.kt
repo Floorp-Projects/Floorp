@@ -25,7 +25,6 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.TabData
@@ -45,7 +44,6 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class ShareControllerTest {
