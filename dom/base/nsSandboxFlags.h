@@ -29,8 +29,7 @@ const unsigned long SANDBOXED_NAVIGATION = 0x1;
 
 /**
  * This flag prevents content from creating new auxiliary browsing contexts,
- * e.g. using the target attribute, the window.open() method, or the
- * showModalDialog() method.
+ * e.g. using the target attribute, or the window.open() method.
  */
 const unsigned long SANDBOXED_AUXILIARY_NAVIGATION = 0x2;
 
