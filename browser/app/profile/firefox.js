@@ -1981,6 +1981,9 @@ pref("devtools.command-button-screenshot.enabled", false);
 pref("devtools.command-button-rulers.enabled", false);
 pref("devtools.command-button-measure.enabled", false);
 pref("devtools.command-button-noautohide.enabled", false);
+#ifndef MOZILLA_OFFICIAL
+  pref("devtools.command-button-fission-prefs.enabled", true);
+#endif
 
 // Inspector preferences
 // Enable the Inspector

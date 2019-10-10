@@ -38,5 +38,10 @@ DevToolsModules(
     'menus.js',
 )
 
+if not CONFIG['MOZILLA_OFFICIAL']:
+    DevToolsModules(
+        'devtools-fission-prefs.js',
+    )
+
 with Files('**'):
     BUG_COMPONENT = ('DevTools', 'General')

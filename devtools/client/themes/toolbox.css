@@ -312,6 +312,22 @@
   background-image: url("chrome://devtools/skin/images/command-replay.svg");
 }
 
+#command-button-fission-prefs::before {
+  content: "FIS";
+  font-weight: bold;
+}
+
+.fission-pref-icon::before {
+  content: "";
+  background-image: url("chrome://devtools/skin/images/help.svg");
+  -moz-context-properties: fill;
+  fill: var(--theme-body-color);
+  display: block;
+  background-size: 12px;
+  width: 12px;
+  height: 12px;
+}
+
 #command-button-replay,
 #command-button-stop-replay {
   background-color: transparent;

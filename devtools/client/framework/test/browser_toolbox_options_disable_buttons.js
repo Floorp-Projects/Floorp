@@ -117,23 +117,27 @@ async function testButtonStateOnClick() {
     }
   }
 }
-function testToggleToolboxButtons() {
+async function testToggleToolboxButtons() {
   const checkNodes = [
     ...panelWin.document.querySelectorAll(
       "#enabled-toolbox-buttons-box input[type=checkbox]"
     ),
   ];
 
-  const visibleToolbarButtons = toolbox.toolbarButtons.filter(
-    tool => tool.isVisible
+  // Filter out all the buttons which are not supported on the current target.
+  // (WebReplay, DevTools Fission Preferences etc...)
+  const target = await TargetFactory.forTab(gBrowser.selectedTab);
+  const toolbarButtons = toolbox.toolbarButtons.filter(tool =>
+    tool.isTargetSupported(target)
   );
+
+  const visibleToolbarButtons = toolbarButtons.filter(tool => tool.isVisible);
 
   const toolbarButtonNodes = [...doc.querySelectorAll(".command-button")];
 
-  // NOTE: the web-replay buttons only appear if the feature is enabled.
   is(
-    checkNodes.length + 1,
-    toolbox.toolbarButtons.length,
+    checkNodes.length,
+    toolbarButtons.length,
     "All of the buttons are toggleable."
   );
   is(
@@ -142,7 +146,7 @@ function testToggleToolboxButtons() {
     "All of the DOM buttons are toggleable."
   );
 
-  for (const tool of toolbox.toolbarButtons) {
+  for (const tool of toolbarButtons) {
     const id = tool.id;
     const matchedCheckboxes = checkNodes.filter(node => node.id === id);
     const matchedButtons = toolbarButtonNodes.filter(
@@ -179,14 +183,14 @@ function testToggleToolboxButtons() {
   }
 
   // Store modified pref names so that they can be cleared on error.
-  for (const tool of toolbox.toolbarButtons) {
+  for (const tool of toolbarButtons) {
     const pref = tool.visibilityswitch;
     modifiedPrefs.push(pref);
   }
 
   // Try checking each checkbox, making sure that it changes the preference
   for (const node of checkNodes) {
-    const tool = toolbox.toolbarButtons.filter(
+    const tool = toolbarButtons.filter(
       commandButton => commandButton.id === node.id
     )[0];
     const isVisible = getBoolPref(tool.visibilityswitch);
