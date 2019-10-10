@@ -321,6 +321,8 @@
                 oncommand="AddKeywordForSearchField();"/>
       <menuitem id="context-searchselect"
                 oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, this.usePrivate, this.principal, this.csp);"/>
+      <menuitem id="context-searchselect-private"
+                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, true, this.principal, this.csp);"/>
       <menuseparator id="context-sep-sendlinktodevice" class="sync-ui-item"
                      hidden="true"/>
       <menu id="context-sendlinktodevice"
