@@ -18,6 +18,7 @@ add_task(async function setup() {
       // We want select events to be fired.
       ["dom.select_events.enabled", true],
       ["browser.search.separatePrivateDefault", true],
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
     ],
   });
 
@@ -61,7 +62,12 @@ add_task(async function setup() {
   });
 });
 
-async function checkContextMenu(win, expectedName, expectedBaseUrl) {
+async function checkContextMenu(
+  win,
+  expectedName,
+  expectedBaseUrl,
+  expectedPrivateName
+) {
   let contextMenu = win.document.getElementById("contentAreaContextMenu");
   Assert.ok(contextMenu, "Got context menu XUL");
 
@@ -123,6 +129,25 @@ async function checkContextMenu(win, expectedName, expectedBaseUrl) {
     "Checking context menu search URL"
   );
 
+  searchItem = contextMenu.getElementsByAttribute(
+    "id",
+    "context-searchselect-private"
+  )[0];
+  Assert.ok(searchItem, "Got search in private window context menu item");
+  if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+    Assert.ok(searchItem.hidden, "Search in private window should be hidden");
+  } else {
+    let expectedLabel = expectedPrivateName
+      ? "Search with " + expectedPrivateName + " in a Private Window"
+      : "Search in a Private Window";
+    Assert.equal(searchItem.label, expectedLabel, "Check context menu label");
+    Assert.equal(
+      searchItem.disabled,
+      false,
+      "Check that search context menu item is enabled"
+    );
+  }
+
   contextMenu.hidePopup();
 
   BrowserTestUtils.removeTab(searchTab);
@@ -133,7 +158,8 @@ add_task(async function test_normalWindow() {
   await checkContextMenu(
     window,
     ENGINE_NAME,
-    "https://example.com/browser/browser/components/search/test/browser/"
+    "https://example.com/browser/browser/components/search/test/browser/",
+    PRIVATE_ENGINE_NAME
   );
 });
 
@@ -148,6 +174,18 @@ add_task(async function test_privateWindow() {
     win,
     PRIVATE_ENGINE_NAME,
     "https://example.com/browser/"
+  );
+});
+
+add_task(async function test_normalWindow_sameDefaults() {
+  // Set the private default engine to be the same as the current default engine
+  // in 'normal' mode.
+  await Services.search.setDefaultPrivate(await Services.search.getDefault());
+
+  await checkContextMenu(
+    window,
+    ENGINE_NAME,
+    "https://example.com/browser/browser/components/search/test/browser/"
   );
 });
 
