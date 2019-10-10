@@ -1,6 +1,6 @@
 browsermob-proxy >= 0.8.0
 manifestparser >= 1.1
-marionette-driver >= 2.8.0
+marionette-driver >= 3.0.0
 mozcrash >= 1.1.0
 mozdevice >= 3.0.1
 mozinfo >= 1.0.0
