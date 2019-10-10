@@ -142,10 +142,25 @@ class PerftestOutput(object):
             results_path = os.path.join(os.getcwd(), 'raptor.json')
             screenshot_path = os.path.join(os.getcwd(), 'screenshots.html')
 
+        success = True
         if self.summarized_results == {}:
+            success = False
             LOG.error("no summarized raptor results found for %s" %
                       ', '.join(test_names))
         else:
+            for suite in self.summarized_results['suites']:
+                tname = suite['name']
+                # Since test names might have been modified, check if
+                # part of the test name exists in the test_names list entries
+                found = False
+                for test in test_names:
+                    if tname in test:
+                        found = True
+                        break
+                if not found:
+                    success = False
+                    LOG.error("no summarized raptor results found for %s" % tname)
+
             with open(results_path, 'w') as f:
                 for result in self.summarized_results:
                     f.write("%s\n" % result)
@@ -159,7 +174,7 @@ class PerftestOutput(object):
         # now that we've checked for screen captures too, if there were no actual
         # test results we can bail out here
         if self.summarized_results == {}:
-            return False, 0
+            return success, 0
 
         # when gecko_profiling, we don't want results ingested by Perfherder
         extra_opts = self.summarized_results['suites'][0].get('extraOptions', [])
@@ -192,7 +207,7 @@ class PerftestOutput(object):
                   sort_keys=True)
         LOG.info("results can also be found locally at: %s" % results_path)
 
-        return True, total_perfdata
+        return success, total_perfdata
 
     def output_supporting_data(self, test_names):
         '''
