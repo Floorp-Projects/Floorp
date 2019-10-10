@@ -52,17 +52,12 @@ class XMLDocument : public Document {
       nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from Document.
 
-  // WebIDL API
-  bool Load(const nsAString& aUrl, CallerType aCallerType, ErrorResult& aRv);
-  bool Async() const { return mAsync; }
-  void SetAsync(bool aAsync) { mAsync = aAsync; }
-
   // .location is [Unforgeable], so we have to make it clear that the Document
   // version applies to us (it's shadowed by the XPCOM thing on Document).
   using Document::GetLocation;
 
  protected:
-  virtual ~XMLDocument();
+  virtual ~XMLDocument() = default;
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
@@ -70,14 +65,11 @@ class XMLDocument : public Document {
   friend nsresult(::NS_NewXMLDocument)(Document**, bool, bool);
 
   // mChannelIsPending indicates whether we're currently asynchronously loading
-  // data from mChannel (via document.load() or normal load).  It's set to true
-  // when we first find out about the channel (StartDocumentLoad) and set to
-  // false in EndLoad or if ResetToURI() is called.  In the latter case our
-  // mChannel is also cancelled.  Note that if this member is true, mChannel
-  // cannot be null.
+  // data from mChannel.  It's set to true when we first find out about the
+  // channel (StartDocumentLoad) and set to false in EndLoad or if ResetToURI()
+  // is called.  In the latter case our mChannel is also cancelled.  Note that
+  // if this member is true, mChannel cannot be null.
   bool mChannelIsPending;
-  bool mAsync;
-  bool mLoopingForSyncLoad;
 
   // If true. we're really a Document, not an XMLDocument
   bool mIsPlainDocument;

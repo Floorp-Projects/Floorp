@@ -2664,18 +2664,6 @@
   value: true
   mirror: always
 
-# Is support for XMLDocument.async enabled?
-- name: dom.xmldocument.async.enabled
-  type: bool
-  value: false
-  mirror: always
-
-# Is support for XMLDocument.load enabled?
-- name: dom.xmldocument.load.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # When this pref is set, parent documents may consider child iframes have
 # loaded while they are still loading.
 - name: dom.cross_origin_iframes_loaded_in_background
