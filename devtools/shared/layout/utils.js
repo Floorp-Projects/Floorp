@@ -154,12 +154,7 @@ exports.getFrameOffsets = getFrameOffsets;
  *        An array of objects that have the same structure as quads returned by
  *        getBoxQuads. An empty array if the node has no quads or is invalid.
  */
-function getAdjustedQuads(
-  boundaryWindow,
-  node,
-  region,
-  { ignoreZoom, ignoreScroll } = {}
-) {
+function getAdjustedQuads(boundaryWindow, node, region, { ignoreZoom } = {}) {
   if (!node || !node.getBoxQuads) {
     return [];
   }
@@ -175,9 +170,7 @@ function getAdjustedQuads(
   }
 
   const scale = ignoreZoom ? 1 : getCurrentZoom(node);
-  const { scrollX, scrollY } = ignoreScroll
-    ? { scrollX: 0, scrollY: 0 }
-    : boundaryWindow;
+  const { scrollX, scrollY } = boundaryWindow;
 
   const xOffset = scrollX * scale;
   const yOffset = scrollY * scale;
