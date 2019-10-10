@@ -365,6 +365,7 @@ bool js::Nursery::isEmpty() const {
 #ifdef JS_GC_ZEAL
 void js::Nursery::enterZealMode() {
   if (isEnabled()) {
+    MOZ_ASSERT(isEmpty());
     if (isSubChunkMode()) {
       // The poisoning call below must not race with background decommit,
       // which could be attempting to decommit the currently-unused part of this
