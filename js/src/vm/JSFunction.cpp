@@ -1555,7 +1555,7 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
     // requires a non-lazy script.  Note that if this ever changes,
     // XDRRelazificationInfo will have to be fixed.
     bool isBinAST = lazy->scriptSource()->hasBinASTSource();
-    bool canRelazify = !lazy->numInnerFunctions() && !lazy->hasDirectEval();
+    bool canRelazify = !lazy->hasInnerFunctions() && !lazy->hasDirectEval();
 
     if (script) {
       // This function is non-canonical function, and the canonical

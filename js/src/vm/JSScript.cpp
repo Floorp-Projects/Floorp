@@ -268,7 +268,7 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
                                        HandleScope enclosingScope,
                                        MutableHandle<LazyScript*> lazy) {
   MOZ_ASSERT_IF(mode == XDR_ENCODE, script->maybeLazyScript());
-  MOZ_ASSERT_IF(mode == XDR_ENCODE, !lazy->numInnerFunctions());
+  MOZ_ASSERT_IF(mode == XDR_ENCODE, !lazy->hasInnerFunctions());
 
   JSContext* cx = xdr->cx();
 
@@ -295,7 +295,7 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
       // We can assert we have no inner functions because we don't
       // relazify scripts with inner functions.  See
       // JSFunction::createScriptForLazilyInterpretedFunction.
-      MOZ_ASSERT(lazy->numInnerFunctions() == 0);
+      MOZ_ASSERT(!lazy->hasInnerFunctions());
       if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         numFieldInitializers =
             (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
@@ -5282,6 +5282,9 @@ LazyScript* LazyScript::Create(
   uint32_t immutableFlags = 0;
   if (parseGoal == frontend::ParseGoal::Module) {
     immutableFlags |= uint32_t(ImmutableFlags::IsModule);
+  }
+  if (!innerFunctionBoxes.empty()) {
+    immutableFlags |= uint32_t(ImmutableFlags::HasInnerFunctions);
   }
 
   LazyScript* res = LazyScript::CreateRaw(
