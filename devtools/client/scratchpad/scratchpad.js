@@ -1781,7 +1781,7 @@ var Scratchpad = {
           deprecationFragment,
           "scratchpad.deprecated",
           null,
-          this.notificationBox.PRIORITY_WARNING_HIGH
+          this.notificationBox.PRIORITY_WARNING_LOW
         );
 
         this.editor.on("change", this._onChanged);
