@@ -18,6 +18,7 @@ DevToolsModules(
     'flexbox.js',
     'fonts.js',
     'geometry-editor.js',
+    'highlighter-renderer.js',
     'measuring-tool.js',
     'paused-debugger.js',
     'rulers.js',
