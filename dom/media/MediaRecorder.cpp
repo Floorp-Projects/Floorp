@@ -940,7 +940,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // Pull encoded media data from MediaEncoder and put into MutableBlobStorage.
   // If the bool aForceFlush is true, we will force a dispatch of a blob to
   // main thread.
-  void Extract(bool aForceFlush) {
+  void Extract(TimeStamp aNow, bool aForceFlush) {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
     LOG(LogLevel::Debug, ("Session.Extract %p", this));
@@ -964,14 +964,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     // need a flush.
     bool pushBlob = aForceFlush;
     if (!pushBlob && !mLastBlobTimeStamp.IsNull() &&
-        (TimeStamp::Now() - mLastBlobTimeStamp) > mTimeslice) {
+        (aNow - mLastBlobTimeStamp) > mTimeslice) {
       pushBlob = true;
     }
     if (pushBlob) {
-      if (!mLastBlobTimeStamp.IsNull()) {
-        // Only update the timestamp if the encoder has been initialized.
-        mLastBlobTimeStamp = TimeStamp::Now();
-      }
+      MOZ_ASSERT(!mLastBlobTimeStamp.IsNull(),
+                 "The encoder must have been initialized if there's data");
+      mLastBlobTimeStamp = aNow;
       InvokeAsync(mMainThread, this, __func__, &Session::GatherBlob)
           ->Then(mMainThread, __func__,
                  [this, self = RefPtr<Session>(this)](
@@ -1202,7 +1201,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     MOZ_ASSERT(mLastBlobTimeStamp.IsNull());
     mLastBlobTimeStamp = TimeStamp::Now();
 
-    Extract(false);
+    Extract(mLastBlobTimeStamp, false);
 
     NS_DispatchToMainThread(NewRunnableFrom([self = RefPtr<Session>(this), this,
                                              mime = mEncoder->MimeType()]() {
@@ -1227,7 +1226,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   void MediaEncoderDataAvailable() {
     MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
-    Extract(false);
+    Extract(TimeStamp::Now(), false);
   }
 
   void MediaEncoderError() {
