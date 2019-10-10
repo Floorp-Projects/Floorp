@@ -445,7 +445,7 @@ def load_tests(options, requested_paths, excluded_paths):
             xul_info = manifest.XULInfo.create(options.js_shell)
         else:
             xul_abi, xul_os, xul_debug = options.xul_info_src.split(r':')
-            xul_debug = xul_debug.lower() is 'true'
+            xul_debug = xul_debug.lower() == 'true'
             xul_info = manifest.XULInfo(xul_abi, xul_os, xul_debug)
         feature_args = shlex.split(options.feature_args)
         xul_tester = manifest.XULInfoTester(xul_info, options.js_shell, feature_args)

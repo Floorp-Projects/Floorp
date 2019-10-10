@@ -31,7 +31,7 @@ class MozillaVersionCompareMixin():
                 has_esr.issuperset(set(['other', 'self'])):
             #  If both had esr string or neither, then cmp() was accurate
             return val
-        elif val is not 0:
+        elif val != 0:
             # cmp is accurate here even if esr is present in only 1 compare, since
             # versions are not equal
             return val

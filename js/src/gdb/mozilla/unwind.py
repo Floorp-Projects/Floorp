@@ -498,7 +498,7 @@ class x64UnwinderState(UnwinderState):
             data = sp.dereference()
             sp = sp + 1
             unwind_info.add_saved_register(reg, data)
-            if reg is "rbp":
+            if reg == "rbp":
                 unwind_info.add_saved_register(self.SP_REGISTER, sp)
 
 
