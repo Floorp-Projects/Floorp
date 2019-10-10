@@ -10,6 +10,7 @@ import type {
   ThreadFront,
   Actions,
   Target,
+  DebuggerClient,
 } from "./types";
 
 import { createPause, prepareSourcePayload } from "./create";
@@ -22,6 +23,7 @@ type Dependencies = {
   threadFront: ThreadFront,
   tabTarget: Target,
   actions: Actions,
+  debuggerClient: DebuggerClient,
 };
 
 let actions: Actions;
@@ -34,13 +36,15 @@ function addThreadEventListeners(thread: ThreadFront) {
 }
 
 function setupEvents(dependencies: Dependencies) {
-  const { tabTarget, threadFront } = dependencies;
+  const { tabTarget, threadFront, debuggerClient } = dependencies;
   actions = dependencies.actions;
   sourceQueue.initialize(actions);
 
   addThreadEventListeners(threadFront);
   tabTarget.on("workerListChanged", () => threadListChanged("worker"));
-  tabTarget.on("processListChanged", () => threadListChanged("contentProcess"));
+  debuggerClient.mainRoot.on("processListChanged", () =>
+    threadListChanged("contentProcess")
+  );
 }
 
 async function paused(threadFront: ThreadFront, packet: PausedPacket) {
