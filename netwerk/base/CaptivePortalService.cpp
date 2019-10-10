@@ -77,7 +77,7 @@ nsresult CaptivePortalService::PerformCheck() {
   nsresult rv;
   if (!mCaptivePortalDetector) {
     mCaptivePortalDetector =
-        do_GetService("@mozilla.org/toolkit/captive-detector;1", &rv);
+        do_CreateInstance("@mozilla.org/toolkit/captive-detector;1", &rv);
     if (NS_FAILED(rv)) {
       LOG(("Unable to get a captive portal detector\n"));
       return rv;
@@ -202,6 +202,7 @@ nsresult CaptivePortalService::Stop() {
   mTimer = nullptr;
   mRequestInProgress = false;
   mStarted = false;
+  mEverBeenCaptive = false;
   if (mCaptivePortalDetector) {
     mCaptivePortalDetector->Abort(kInterfaceName);
   }
