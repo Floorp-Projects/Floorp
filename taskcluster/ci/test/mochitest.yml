@@ -217,7 +217,7 @@ mochitest-devtools-webreplay:
     treeherder-symbol: M(dt-wr)
     loopback-video: true
     tier: 2
-    max-run-time: 900
+    max-run-time: 1800
     mozharness:
         mochitest-flavor: chrome
         extra-options:
