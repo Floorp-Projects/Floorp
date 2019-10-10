@@ -224,7 +224,7 @@ def uninstall(install_folder):
             try:
                 cmdArgs = ['%s\\uninstall\helper.exe' % install_folder, '/S']
                 result = subprocess.call(cmdArgs)
-                if result is not 0:
+                if result != 0:
                     raise Exception('Execution of uninstaller failed.')
 
                 # The uninstaller spawns another process so the subprocess call

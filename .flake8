@@ -93,7 +93,7 @@ exclude =
 #   - http://pep8.readthedocs.io/en/latest/intro.html#configuration
 ignore =
     # These should be triaged and either fixed or moved to the list below.
-    F632, F633, F811, E117, W504, W605, W606,
+    F633, F811, E117, W504, W605, W606,
     # These are intentionally disabled (not necessarily for good reason).
     #   F723: syntax error in type comment
     #       text contains quotes which breaks our custom JSON formatter
