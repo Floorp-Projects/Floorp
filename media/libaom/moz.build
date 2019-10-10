@@ -15,17 +15,12 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     SOURCES += files['X64_SOURCES']
     USE_YASM = True
     if CONFIG['OS_TARGET'] == 'WINNT':
-        if CONFIG['CC_TYPE'] == 'gcc':
-            ASFLAGS += [ '-I%s/media/libaom/config/win/mingw64/' % TOPSRCDIR ]
-            LOCAL_INCLUDES += [ '/media/libaom/config/win/mingw64/' ]
-            EXPORTS.aom += [ 'config/win/mingw64/config/aom_config.h' ]
-        else:
-            ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
-            LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
-            EXPORTS.aom += [ 'config/win/x64/config/aom_config.h' ]
-            # This code is not included in our PGO profile, and pointlessly
-            # PGO-optimizing it slows down our builds a lot.
-            NO_PGO = True
+        ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/win/x64/' ]
+        EXPORTS.aom += [ 'config/win/x64/config/aom_config.h' ]
+        # This code is not included in our PGO profile, and pointlessly
+        # PGO-optimizing it slows down our builds a lot.
+        NO_PGO = True
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/mac/x64/' ]
@@ -39,15 +34,10 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     SOURCES += files['IA32_SOURCES']
     USE_YASM = True
     if CONFIG['OS_TARGET'] == 'WINNT':
-        if CONFIG['CC_TYPE'] == 'gcc':
-            ASFLAGS += [ '-I%s/media/libaom/config/win/mingw32/' % TOPSRCDIR ]
-            LOCAL_INCLUDES += [ '/media/libaom/config/win/mingw32/' ]
-            EXPORTS.aom += [ 'config/win/mingw32/config/aom_config.h' ]
-        else:
-            ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
-            LOCAL_INCLUDES += [ '/media/libaom/config/win/ia32/' ]
-            EXPORTS.aom += [ 'config/win/ia32/config/aom_config.h' ]
-            NO_PGO = True # Compiler OOMs, bug 1445922
+        ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+        LOCAL_INCLUDES += [ '/media/libaom/config/win/ia32/' ]
+        EXPORTS.aom += [ 'config/win/ia32/config/aom_config.h' ]
+        NO_PGO = True # Compiler OOMs, bug 1445922
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
         LOCAL_INCLUDES += [ '/media/libaom/config/linux/ia32/' ]

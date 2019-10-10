@@ -90,12 +90,10 @@ if __name__ == '__main__':
         ('armv7', 'linux', 'arm', True),
         ('generic', '', 'generic', True),
         ('x86', 'linux', 'ia32', True),
-        ('x86', 'win', 'mingw32', False),
         ('x86', 'win', 'ia32', False),
         ('x86_64', 'linux', 'x64', True),
         ('x86_64', 'mac', 'x64', False),
         ('x86_64', 'win', 'x64', False),
-        ('x86_64', 'win', 'mingw64', False),
     ]
     for cpu, system, arch, generate_sources in platforms:
         print('Running CMake for %s (%s)' % (cpu, system))
@@ -109,7 +107,7 @@ if __name__ == '__main__':
             variables['CONFIG_PIC'] = 1
         if cpu == 'armv7':
             variables['CONFIG_PIC'] = 1
-        if system == 'win' and not arch.startswith('mingw'):
+        if system == 'win':
             variables['MSVC'] = 1
 
         cache_variables = []
