@@ -7,8 +7,11 @@
 #include "jit/BytecodeAnalysis.h"
 
 #include "jit/JitSpewer.h"
-#include "vm/BytecodeUtil.h"
 
+#include "vm/BytecodeLocation.h"
+
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/JSScript-inl.h"
 
@@ -215,10 +218,8 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
     result.usesEnvironmentChain = true;
   }
 
-  jsbytecode const* pcEnd = script->codeEnd();
-  for (jsbytecode* pc = script->code(); pc < pcEnd; pc = GetNextPc(pc)) {
-    JSOp op = JSOp(*pc);
-    switch (op) {
+  for (const BytecodeLocation& loc : js::AllBytecodesIterable(script)) {
+    switch (loc.getOp()) {
       case JSOP_SETARG:
         result.modifiesArguments = true;
         break;
