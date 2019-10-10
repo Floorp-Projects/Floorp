@@ -26,7 +26,7 @@ def parser(request):
     return parser.MochitestArgumentParser(app=app)
 
 
-@pytest.fixture(scope='function')  # noqa: F811
+@pytest.fixture(scope='function')
 def runtests(setup_test_harness, binary, parser, request):
     """Creates an easy to use entry point into the mochitest harness.
 
@@ -82,14 +82,14 @@ def runtests(setup_test_harness, binary, parser, request):
     return inner
 
 
-@pytest.fixture  # noqa: F811
+@pytest.fixture
 def build_obj(setup_test_harness):
     setup_test_harness(*setup_args)
     mochitest_options = pytest.importorskip('mochitest_options')
     return mochitest_options.build_obj
 
 
-@pytest.fixture(autouse=True)  # noqa: F811
+@pytest.fixture(autouse=True)
 def skip_using_mozinfo(request, setup_test_harness):
     """Gives tests the ability to skip based on values from mozinfo.
 
