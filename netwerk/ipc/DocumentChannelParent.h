@@ -207,6 +207,9 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   // helper from being installed, but we need to restore the value
   // later.
   bool mOldApplyConversion = false;
+  // Set to true if any previous channel that we redirected away
+  // from had a COOP mismatch.
+  bool mHasCrossOriginOpenerPolicyMismatch = false;
 
   typedef MozPromise<uint64_t, nsresult, true /* exclusive */>
       ContentProcessIdPromise;
