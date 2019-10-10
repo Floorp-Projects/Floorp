@@ -2687,13 +2687,6 @@ void nsGlobalWindowOuter::PoisonOuterWindowProxy(JSObject* aObject) {
 nsresult nsGlobalWindowOuter::SetArguments(nsIArray* aArguments) {
   nsresult rv;
 
-  // Historically, we've used the same machinery to handle openDialog arguments
-  // (exposed via window.arguments) and showModalDialog arguments (exposed via
-  // window.dialogArguments), even though the former is XUL-only and uses an
-  // XPCOM array while the latter is web-exposed and uses an arbitrary JS value.
-  // Moreover, per-spec |dialogArguments| is a property of the browsing context
-  // (outer), whereas |arguments| lives on the inner.
-  //
   // We've now mostly separated them, but the difference is still opaque to
   // nsWindowWatcher (the caller of SetArguments in this little back-and-forth
   // embedding waltz we do here).
