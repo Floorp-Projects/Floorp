@@ -29,7 +29,8 @@ object SupportUtils {
         YOUR_RIGHTS("your-rights"),
         TRACKING_PROTECTION("tracking-protection-firefox-preview"),
         WHATS_NEW("whats-new-firefox-preview"),
-        SEND_TABS("send-tab-preview")
+        SEND_TABS("send-tab-preview"),
+        SET_AS_DEFAULT_BROWSER("set-firefox-preview-default")
     }
 
     /**

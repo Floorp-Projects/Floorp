@@ -9,8 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -94,11 +92,6 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         updateAccountUIState(context!!, requireComponents.backgroundServices.accountManager.accountProfile())
 
         preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
-
-        if (SDK_INT <= Build.VERSION_CODES.M) {
-            findPreference<Preference>(getPreferenceKey(pref_key_make_default_browser))?.isVisible =
-                false
-        }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -159,7 +152,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
                 ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "220")
             }
             resources.getString(pref_key_make_default_browser) -> {
-                navigateToDefaultBrowserFragment()
+                navigateToDefaultBrowserSettingsFragment()
             }
             resources.getString(pref_key_data_choices) -> {
                 navigateToDataChoices()
@@ -281,8 +274,8 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         Navigation.findNavController(view!!).navigate(directions)
     }
 
-    private fun navigateToDefaultBrowserFragment() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserFragment()
+    private fun navigateToDefaultBrowserSettingsFragment() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToDefaultBrowserSettingsFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 

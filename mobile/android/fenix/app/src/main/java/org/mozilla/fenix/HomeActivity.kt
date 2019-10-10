@@ -54,6 +54,7 @@ import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.AboutFragmentDirections
+import org.mozilla.fenix.settings.DefaultBrowserSettingsFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 import org.mozilla.fenix.settings.TrackingProtectionFragmentDirections
 import org.mozilla.fenix.theme.DefaultThemeManager
@@ -273,6 +274,10 @@ open class HomeActivity : AppCompatActivity() {
             AboutFragmentDirections.actionAboutFragmentToBrowserFragment(customTabSessionId)
         BrowserDirection.FromTrackingProtection ->
             TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToBrowserFragment(
+                customTabSessionId
+            )
+        BrowserDirection.FromDefaultBrowserSettingsFragment ->
+            DefaultBrowserSettingsFragmentDirections.actionDefaultBrowserSettingsFragmentToBrowserFragment(
                 customTabSessionId
             )
     }

@@ -22,5 +22,6 @@ enum class BrowserDirection(@IdRes val fragmentId: Int) {
     FromHistory(R.id.historyFragment),
     FromExceptions(R.id.exceptionsFragment),
     FromAbout(R.id.aboutFragment),
-    FromTrackingProtection(R.id.trackingProtectionFragment)
+    FromTrackingProtection(R.id.trackingProtectionFragment),
+    FromDefaultBrowserSettingsFragment(R.id.defaultBrowserSettingsFragment)
 }

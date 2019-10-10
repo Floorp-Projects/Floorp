@@ -161,7 +161,6 @@ object Deps {
     const val leanplum = "com.leanplum:leanplum-core:${Versions.leanplum}"
     const val leanplumMessaging = "com.leanplum:leanplum-fcm:${Versions.leanplum}"
 
-
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.androidx_annotation}"
     const val androidx_fragment = "androidx.fragment:fragment-ktx:${Versions.androidx_fragment}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"
