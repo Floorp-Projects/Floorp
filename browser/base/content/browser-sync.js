@@ -167,9 +167,6 @@ var gSync = {
       // setting this._initialized, so we don't attempt to remove observers.
       return;
     }
-    let syncNow = document.getElementById("PanelUI-remotetabs-syncnow");
-    let label = this.syncStrings.GetStringFromName("syncnow.label");
-    syncNow.setAttribute("label", label);
     // We start with every menuitem hidden (except for the "setup sync" state),
     // so that we don't need to init the sync UI on windows like pageInfo.xul
     // (see bug 1384856).
@@ -645,7 +642,7 @@ var gSync = {
   },
 
   updateSyncStatus(state) {
-    let syncNow = document.getElementById("PanelUI-remotetabs-syncnow");
+    let syncNow = document.querySelector(".syncNowBtn");
     const syncingUI = syncNow.getAttribute("syncstatus") == "active";
     if (state.syncing != syncingUI) {
       // Do we need to update the UI?
@@ -1171,26 +1168,11 @@ var gSync = {
   onActivityStart() {
     clearTimeout(this._syncAnimationTimer);
     this._syncStartTime = Date.now();
-
-    let label = this.syncStrings.GetStringFromName("syncingtabs.label");
-    let remotetabsSyncNowEl = document.getElementById(
-      "PanelUI-remotetabs-syncnow"
-    );
-    let fxaMenuSyncNowEl = document.getElementById(
-      "PanelUI-fxa-menu-syncnow-button"
-    );
-    let syncElements = [remotetabsSyncNowEl, fxaMenuSyncNowEl];
-
-    syncElements.forEach(el => {
+    document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.setAttribute("syncstatus", "active");
       el.setAttribute("disabled", "true");
+      document.l10n.setAttributes(el, el.getAttribute("syncinglabel"));
     });
-
-    remotetabsSyncNowEl.setAttribute("label", label);
-    fxaMenuSyncNowEl.setAttribute(
-      "label",
-      fxaMenuSyncNowEl.getAttribute("syncinglabel")
-    );
   },
 
   _onActivityStop() {
@@ -1198,16 +1180,10 @@ var gSync = {
       return;
     }
 
-    let label = this.syncStrings.GetStringFromName("syncnow.label");
-    let syncElements = [
-      document.getElementById("PanelUI-remotetabs-syncnow"),
-      document.getElementById("PanelUI-fxa-menu-syncnow-button"),
-    ];
-
-    syncElements.forEach(el => {
+    document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.removeAttribute("syncstatus");
       el.removeAttribute("disabled");
-      el.setAttribute("label", label);
+      document.l10n.setAttributes(el, "fxa-toolbar-sync-now");
     });
 
     Services.obs.notifyObservers(null, "test:browser-sync:activity-stop");
@@ -1378,14 +1354,13 @@ var gSync = {
       tooltiptext = this.formatLastSyncDate(state.lastSync);
     }
 
-    if (this.appMenuLabel) {
-      let syncNow = document.getElementById("PanelUI-remotetabs-syncnow");
+    document.querySelectorAll(".syncNowBtn").forEach(el => {
       if (tooltiptext) {
-        syncNow.setAttribute("tooltiptext", tooltiptext);
+        el.setAttribute("tooltiptext", tooltiptext);
       } else {
-        syncNow.removeAttribute("tooltiptext");
+        el.removeAttribute("tooltiptext");
       }
-    }
+    });
   },
 
   get relativeTimeFormat() {

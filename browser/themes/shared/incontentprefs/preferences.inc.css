@@ -694,6 +694,11 @@ button > hbox > label {
   height: auto;
 }
 
+dialog > .sync-engines-list > div,
+dialog > .sync-engines-list + hbox {
+  padding-top: 0px;
+}
+
 .sync-engines-list checkbox .checkbox-icon,
 .sync-engine-image {
   margin-inline-start: 4px;
