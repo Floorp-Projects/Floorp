@@ -41,7 +41,6 @@
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/GamepadServiceTest.h"
 #include "mozilla/dom/MediaCapabilities.h"
-#include "mozilla/dom/MediaSession.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/MIDIAccessManager.h"
@@ -161,7 +160,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaDevices)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorkerContainer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaCapabilities)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaSession)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAddonManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebGpu)
 
@@ -235,7 +233,6 @@ void Navigator::Invalidate() {
   }
 
   mMediaCapabilities = nullptr;
-  mMediaSession = nullptr;
 
   mAddonManager = nullptr;
 
@@ -1938,13 +1935,6 @@ dom::MediaCapabilities* Navigator::MediaCapabilities() {
     mMediaCapabilities = new dom::MediaCapabilities(GetWindow()->AsGlobal());
   }
   return mMediaCapabilities;
-}
-
-dom::MediaSession* Navigator::MediaSession() {
-  if (!mMediaSession) {
-    mMediaSession = new dom::MediaSession();
-  }
-  return mMediaSession;
 }
 
 Clipboard* Navigator::Clipboard() {
