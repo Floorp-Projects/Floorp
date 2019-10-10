@@ -35,6 +35,7 @@ class BytecodeLocation {
 #ifdef DEBUG
   const JSScript* debugOnlyScript_;
 #endif
+
   // Construct a new BytecodeLocation, while borrowing scriptIdentity
   // from some other BytecodeLocation.
   BytecodeLocation(const BytecodeLocation& loc, RawBytecode pc)
@@ -48,9 +49,6 @@ class BytecodeLocation {
   }
 
  public:
-  // Disallow the creation of an uninitialized location.
-  BytecodeLocation() = delete;
-
   BytecodeLocation(const JSScript* script, RawBytecode pc)
       : rawBytecode_(pc)
 #ifdef DEBUG
@@ -74,12 +72,6 @@ class BytecodeLocation {
   uint32_t bytecodeToOffset(const JSScript* script) const;
 
   PropertyName* getPropertyName(const JSScript* script) const;
-
-#ifdef DEBUG
-  bool hasSameScript(const BytecodeLocation& other) const {
-    return debugOnlyScript_ == other.debugOnlyScript_;
-  }
-#endif
 
   bool operator==(const BytecodeLocation& other) const {
     MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
@@ -130,15 +122,9 @@ class BytecodeLocation {
 
   bool opHasTypeSet() const { return BytecodeOpHasTypeSet(getOp()); }
 
-  bool opHasTypeSet() const { return BytecodeOpHasTypeSet(getOp()); }
-
   bool fallsThrough() const { return BytecodeFallsThrough(getOp()); }
 
   uint32_t icIndex() const { return GET_ICINDEX(rawBytecode_); }
-
-  uint32_t local() const { return GET_LOCALNO(rawBytecode_); }
-
-  uint16_t arg() const { return GET_ARGNO(rawBytecode_); }
 
   bool isEqualityOp() const { return IsEqualityOp(getOp()); }
 

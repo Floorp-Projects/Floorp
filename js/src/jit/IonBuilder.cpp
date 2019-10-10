@@ -22,8 +22,6 @@
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/BytecodeIterator.h"
-#include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/Instrumentation.h"
@@ -35,8 +33,6 @@
 #include "gc/Nursery-inl.h"
 #include "jit/CompileInfo-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
-#include "vm/BytecodeIterator-inl.h"
-#include "vm/BytecodeLocation-inl.h"
 #include "vm/BytecodeUtil-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSScript-inl.h"
@@ -630,54 +626,49 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
     }
   }
 
-  // Get the start and end bytecode locations of this loop.
-  BytecodeLocation start(script_, loopEntryBlock->stopPc());
-  start = start.next();
-  BytecodeLocation end(script_, loopEntry->loopStopPc());
+  // Get the start and end pc of this loop.
+  jsbytecode* start = loopEntryBlock->stopPc();
+  start += GetBytecodeLength(start);
+  jsbytecode* end = loopEntry->loopStopPc();
 
   // Iterate the bytecode quickly to seed possible types in the loopheader.
-  BytecodeLocation last = start;
-  BytecodeLocation earlier = last;
-
-  for (auto it : BytecodeLocationRange(start, end)) {
-    // Keeping track of previous BytecodeLocation values
-    earlier = last;
-    last = it;
-
+  jsbytecode* last = nullptr;
+  jsbytecode* earlier = nullptr;
+  for (jsbytecode* pc = start; pc != end;
+       earlier = last, last = pc, pc += GetBytecodeLength(pc)) {
     uint32_t slot;
-
-    if (it.is(JSOP_SETLOCAL)) {
-      slot = info().localSlot(it.local());
-    } else if (it.is(JSOP_SETARG)) {
-      slot = info().argSlotUnchecked(it.arg());
+    if (*pc == JSOP_SETLOCAL) {
+      slot = info().localSlot(GET_LOCALNO(pc));
+    } else if (*pc == JSOP_SETARG) {
+      slot = info().argSlotUnchecked(GET_ARGNO(pc));
     } else {
       continue;
     }
     if (slot >= info().firstStackSlot()) {
       continue;
     }
-    if (!last.isValid(script_)) {
+    if (!last) {
       continue;
     }
 
     MPhi* phi = entry->getSlot(slot)->toPhi();
 
-    if (last.is(JSOP_POS) || last.is(JSOP_TONUMERIC)) {
+    if (*last == JSOP_POS || *last == JSOP_TONUMERIC) {
       last = earlier;
     }
 
-    if (last.opHasTypeSet()) {
-      TemporaryTypeSet* typeSet = bytecodeTypes(last.toRawBytecode());
+    if (BytecodeOpHasTypeSet(JSOp(*last))) {
+      TemporaryTypeSet* typeSet = bytecodeTypes(last);
       if (!typeSet->empty()) {
         MIRType type = typeSet->getKnownMIRType();
         if (!phi->addBackedgeType(alloc(), type, typeSet)) {
           return abort(AbortReason::Alloc);
         }
       }
-    } else if (last.is(JSOP_GETLOCAL) || last.is(JSOP_GETARG)) {
-      uint32_t slot = (last.is(JSOP_GETLOCAL))
-                          ? info().localSlot(last.local())
-                          : info().argSlotUnchecked(last.arg());
+    } else if (*last == JSOP_GETLOCAL || *last == JSOP_GETARG) {
+      uint32_t slot = (*last == JSOP_GETLOCAL)
+                          ? info().localSlot(GET_LOCALNO(last))
+                          : info().argSlotUnchecked(GET_ARGNO(last));
       if (slot < info().firstStackSlot()) {
         MPhi* otherPhi = entry->getSlot(slot)->toPhi();
         if (otherPhi->hasBackedgeType()) {
@@ -689,7 +680,7 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
       }
     } else {
       MIRType type = MIRType::None;
-      switch (last.getOp()) {
+      switch (*last) {
         case JSOP_VOID:
         case JSOP_UNDEFINED:
           type = MIRType::Undefined;
@@ -755,7 +746,7 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
         case JSOP_NEG:
         case JSOP_INC:
         case JSOP_DEC:
-          type = inspector->expectedResultType(last.toRawBytecode());
+          type = inspector->expectedResultType(last);
           break;
         case JSOP_BIGINT:
           type = MIRType::BigInt;
