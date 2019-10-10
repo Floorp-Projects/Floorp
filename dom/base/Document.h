@@ -3708,9 +3708,6 @@ class Document : public nsINode,
                                           const nsAString& aAttrValue);
   Element* GetBindingParent(nsINode& aNode);
 
-  void LoadBindingDocument(const nsAString& aURI,
-                           nsIPrincipal& aSubjectPrincipal, ErrorResult& rv);
-
   XPathExpression* CreateExpression(const nsAString& aExpression,
                                     XPathNSResolver* aResolver,
                                     ErrorResult& rv);
