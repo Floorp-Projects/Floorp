@@ -2,7 +2,7 @@
 
 # MINIMAL_UI
 
-`MINIMAL_UI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L85)
+`MINIMAL_UI` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L86)
 
 The application will look and feel like a standalone application, but will have a minimal set of UI elements
 for controlling navigation. The elements will vary by browser.

@@ -2,7 +2,7 @@
 
 # ExternalApplicationResource
 
-`data class ExternalApplicationResource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L177)
+`data class ExternalApplicationResource` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L178)
 
 An external native application that is related to the web app.
 

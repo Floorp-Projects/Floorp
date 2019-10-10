@@ -2,7 +2,7 @@
 
 # Fingerprint
 
-`data class Fingerprint` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L189)
+`data class Fingerprint` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L190)
 
 Represents a set of cryptographic fingerprints used for verifying the application.
 The syntax and semantics of [type](type.md) and [value](value.md) are platform-defined.
