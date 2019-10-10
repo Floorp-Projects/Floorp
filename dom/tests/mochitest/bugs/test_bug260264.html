@@ -23,29 +23,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=260264
 
 /** Test for Bug 260264 **/
 
-SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
 var a = $("link"),
     checkOpened = function() { ok(window.open("http://example.com"), "not properly opened") },
     checkBlocked = function() { ok(!window.open("http://example.com"), "not properly blocked") };
 
+add_task(async function check_sanity() {
+  await new Promise(resolve => setTimeout(resolve, 200));
 
-function run_tests() {
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'remove': true, 'context': document}]);
+  ok(SpecialPowers.testPermission('popup', UNKNOWN_ACTION, document), 'popup value should have UNKNOWN permission');
+
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': true, 'context': document}]);
+  ok(SpecialPowers.testPermission('popup', ALLOW_ACTION, document), 'popup value should have ALLOW permission');
+
+  await SpecialPowers.pushPrefEnv({"set": [["dom.disable_open_during_load", true],
+                                     ["dom.popup_allowed_events", "click mouseup"],
+                                     ["dom.popup_maximum", 3]]});
+
+  // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
+  await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}]);
+});
+
+add_task(function run_tests() {
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
-  window.open.close().then(() => {
-    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]}, run_tests2);
+  return window.open.close().then(() => {
+    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]});
   });
-}
+});
 
-function run_tests2() {
+add_task(function run_tests2() {
   for (var count = 0, n = 0; n < 3; n++)
     send(a, "mouseup", function() { if (window.open("http://example.com")) count++ });
   send(a, "mouseup", checkBlocked);
-  window.open.close(1).then(() => {
+  return window.open.close(1).then(() => {
     send(a, "mouseup", checkOpened);
     send(a, "mouseup", checkBlocked);
     send(a, "mouseup", checkBlocked);
@@ -58,26 +73,26 @@ function run_tests2() {
     return window.open.close();
   }).then(() => {
 
-    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]}, run_tests3);
+    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]});
   });
-}
+});
 
-function run_tests3() {
+add_task(function run_tests3() {
   send(a, "mouseover", checkBlocked);
-  window.open.close().then(() => {
+  return window.open.close().then(() => {
     SpecialPowers.pushPermissions([{'type': 'popup', 'allow': ALLOW_ACTION, 'context': document}], function() {
-      SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]}, run_tests4);
+      SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]});
     });
   });
-}
+});
 
-function run_tests4() {
+add_task(function run_tests4() {
   var count;
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
-  window.open.close().then(() => {
+  return window.open.close().then(() => {
     send(a, "mouseup", checkOpened);
     send(a, "mouseup", checkOpened);
     send(a, "mouseup", checkOpened);
@@ -100,43 +115,43 @@ function run_tests4() {
     send(a, "mouseover", checkBlocked);
     return window.open.close();
   }).then(() => {
-    SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events", "click"]]}, run_tests5);
+    SpecialPowers.pushPrefEnv({"set": [["dom.popup_allowed_events", "click"]]});
   });
-}
+});
 
-function run_tests5() {
-  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}], run_tests6);
-}
+add_task(function run_tests5() {
+  return SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}]);
+});
 
-function run_tests6() {
+add_task(function run_tests6() {
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
-  window.open.close().then(() => {
-    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]}, run_tests7);
+  return window.open.close().then(() => {
+    SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 2]]});
   });
-}
+});
 
-function run_tests7() {
+add_task(function run_tests7() {
   send(a, "mouseup", checkBlocked);
-  window.open.close().then(() => {
+  return window.open.close().then(() => {
     send(a, "mouseover", checkBlocked);
     return window.open.close();
   }).then(() => {
     SpecialPowers.pushPermissions([{'type': 'popup', 'allow': ALLOW_ACTION, 'context': document}], function() {
-      SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]}, run_tests8);
+      SpecialPowers.pushPrefEnv({"set": [["dom.popup_maximum", 3]]});
     });
   });
-}
+});
 
-function run_tests8() {
+add_task(function run_tests8() {
   var count;
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
   send(a, "click", checkOpened);
-  window.open.close().then(() => {
+  return window.open.close().then(() => {
     for (count = 0, n = 0; n < 3; n++)
       send(a, "mouseup", function() { if (window.open("http://example.com")) count++ });
     send(a, "mouseup", checkBlocked);
@@ -168,29 +183,8 @@ function run_tests8() {
       send(a, "mouseover", checkOpened);
     send(a, "mouseover", checkBlocked);
     return window.open.close();
-  }).then(() => {
-    SimpleTest.finish();
   });
-}
-
-function check_sanity() {
-  ok(SpecialPowers.testPermission('popup', UNKNOWN_ACTION, document), 'popup value should have UNKNOWN permission');
-  SpecialPowers.pushPermissions([{'type': 'popup', 'allow': true, 'context': document}], check_sanity2);
-}
-
-function check_sanity2() {
-  ok(SpecialPowers.testPermission('popup', ALLOW_ACTION, document), 'popup value should have ALLOW permission');
-  SpecialPowers.pushPrefEnv({"set": [["dom.disable_open_during_load", true],
-                                     ["dom.popup_allowed_events", "click mouseup"],
-                                     ["dom.popup_maximum", 3]]}, function() {
-    // Note: UNKNOWN_ACTION is the same as DENY_ACTION.
-    SpecialPowers.pushPermissions([{'type': 'popup', 'allow': DENY_ACTION, 'context': document}], run_tests);
-  });
-}
-
-setTimeout(function() {
-  SpecialPowers.pushPermissions([{'type': 'popup', 'remove': true, 'context': document}], check_sanity);
-}, 200);
+});
 
 </script>
 </pre>
