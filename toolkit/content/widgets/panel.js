@@ -255,13 +255,17 @@
 
       function doFocus() {
         // Focus was set on an element inside this panel,
-        // so we need to move it back to where it was previously
+        // so we need to move it back to where it was previously.
+        // Elements can use refocused-by-panel to change their focus behaviour
+        // when re-focused by a panel hiding.
+        prevFocus.setAttribute("refocused-by-panel", true);
         try {
           let fm = Services.focus;
           fm.setFocus(prevFocus, fm.FLAG_NOSCROLL);
         } catch (e) {
           prevFocus.focus();
         }
+        prevFocus.removeAttribute("refocused-by-panel");
       }
       var currentFocus = this._currentFocus;
       var prevFocus = this._prevFocus ? this._prevFocus.get() : null;

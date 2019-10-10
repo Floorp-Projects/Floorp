@@ -1801,6 +1801,8 @@ class UrlbarInput {
     // We handle mouse-based expansion events separately in _on_click.
     if (this._focusedViaMousedown) {
       this._focusedViaMousedown = false;
+    } else if (this.inputField.hasAttribute("refocused-by-panel")) {
+      this._maybeSelectAll(true);
     } else {
       this.startLayoutExtend();
     }
