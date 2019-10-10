@@ -66,6 +66,11 @@ ChromeUtils.defineModuleGetter(
   "ContentDOMReference",
   "resource://gre/modules/ContentDOMReference.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AutoCompleteChild",
+  "resource://gre/actors/AutoCompleteChild.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -262,6 +267,76 @@ const observer = {
 // Add this observer once for the process.
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
+let gAutoCompleteListener = {
+  // Input element on which enter keydown event was fired.
+  keyDownEnterForInput: null,
+
+  added: false,
+
+  init() {
+    if (!this.added) {
+      AutoCompleteChild.addPopupStateListener((...args) => {
+        this.popupStateListener(...args);
+      });
+      this.added = true;
+    }
+  },
+
+  popupStateListener(messageName, data, target) {
+    switch (messageName) {
+      case "FormAutoComplete:PopupOpened": {
+        let { chromeEventHandler } = target.docShell;
+        chromeEventHandler.addEventListener("keydown", this, true);
+        break;
+      }
+
+      case "FormAutoComplete:PopupClosed": {
+        this.onPopupClosed(
+          data.selectedRowStyle,
+          target.docShell.messageManager
+        );
+        let { chromeEventHandler } = target.docShell;
+        chromeEventHandler.removeEventListener("keydown", this, true);
+        break;
+      }
+    }
+  },
+
+  handleEvent(event) {
+    if (event.type != "keydown") {
+      return;
+    }
+
+    let focusedElement = LoginManagerContent._formFillService.focusedInput;
+    if (
+      event.keyCode != event.DOM_VK_RETURN ||
+      focusedElement != event.target
+    ) {
+      this.keyDownEnterForInput = null;
+      return;
+    }
+    this.keyDownEnterForInput = focusedElement;
+  },
+
+  onPopupClosed(selectedRowStyle, mm) {
+    let focusedElement = LoginManagerContent._formFillService.focusedInput;
+    let eventTarget = this.keyDownEnterForInput;
+    if (
+      !eventTarget ||
+      eventTarget !== focusedElement ||
+      selectedRowStyle != "loginsFooter"
+    ) {
+      this.keyDownEnterForInput = null;
+      return;
+    }
+    let hostname = eventTarget.ownerDocument.documentURIObject.host;
+    mm.sendAsyncMessage("PasswordManager:OpenPreferences", {
+      hostname,
+      entryPoint: "autocomplete",
+    });
+  },
+};
+
 // This object maps to the "child" process (even in the single-process case).
 this.LoginManagerContent = {
   __formFillService: null, // FormFillController, for username autocompleting
@@ -313,9 +388,6 @@ this.LoginManagerContent = {
 
   // Number of outstanding requests to each manager.
   _managers: new Map(),
-
-  // Input element on which enter keydown event was fired.
-  _keyDownEnterForInput: null,
 
   _takeRequest(msg) {
     let data = msg.data;
@@ -400,36 +472,6 @@ this.LoginManagerContent = {
     return false;
   },
 
-  _onKeyDown(event) {
-    let focusedElement = LoginManagerContent._formFillService.focusedInput;
-    if (
-      event.keyCode != event.DOM_VK_RETURN ||
-      focusedElement != event.target
-    ) {
-      this._keyDownEnterForInput = null;
-      return;
-    }
-    LoginManagerContent._keyDownEnterForInput = focusedElement;
-  },
-
-  _onPopupClosed(selectedRowStyle, mm) {
-    let focusedElement = LoginManagerContent._formFillService.focusedInput;
-    let eventTarget = LoginManagerContent._keyDownEnterForInput;
-    if (
-      !eventTarget ||
-      eventTarget !== focusedElement ||
-      selectedRowStyle != "loginsFooter"
-    ) {
-      this._keyDownEnterForInput = null;
-      return;
-    }
-    let hostname = eventTarget.ownerDocument.documentURIObject.host;
-    mm.sendAsyncMessage("PasswordManager:OpenPreferences", {
-      hostname,
-      entryPoint: "autocomplete",
-    });
-  },
-
   receiveMessage(msg, topWindow) {
     if (msg.name == "PasswordManager:fillForm") {
       this.fillForm({
@@ -493,23 +535,6 @@ this.LoginManagerContent = {
         } else {
           log("Could not resolve inputElementIdentifier to a living element.");
         }
-        break;
-      }
-
-      case "FormAutoComplete:PopupOpened": {
-        let { chromeEventHandler } = msg.target.docShell;
-        chromeEventHandler.addEventListener("keydown", this._onKeyDown, true);
-        break;
-      }
-
-      case "FormAutoComplete:PopupClosed": {
-        this._onPopupClosed(msg.data.selectedRowStyle, msg.target);
-        let { chromeEventHandler } = msg.target.docShell;
-        chromeEventHandler.removeEventListener(
-          "keydown",
-          this._onKeyDown,
-          true
-        );
         break;
       }
     }
@@ -580,8 +605,7 @@ this.LoginManagerContent = {
     };
 
     if (LoginHelper.showAutoCompleteFooter) {
-      messageManager.addMessageListener("FormAutoComplete:PopupOpened", this);
-      messageManager.addMessageListener("FormAutoComplete:PopupClosed", this);
+      gAutoCompleteListener.init();
     }
 
     return this._sendRequest(

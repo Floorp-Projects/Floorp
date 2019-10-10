@@ -48,7 +48,7 @@ to focus on just one subtest run:
 ## How to run it on try?
 
 ```bash
-./mach try -b o -p linux64 -u none -t damp --rebuild-talos 6
+./mach try fuzzy --query "'linux64/ 'damp" --rebuild 6 --artifact
 ```
 * Linux appears to build and run quickly, and offers quite stable results over the other OSes.
 The vast majority of performance issues for DevTools are OS agnostic, so it doesn't really matter which one you run them on.

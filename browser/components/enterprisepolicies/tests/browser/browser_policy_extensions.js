@@ -16,7 +16,7 @@ async function isExtensionLocked(win, addonID) {
     'panel-item[action="toggle-disabled"]'
   );
   let removeBtn = addonCard.querySelector('panel-item[action="remove"]');
-  ok(removeBtn.hidden, "Remove button should be hidden");
+  ok(removeBtn.disabled, "Remove button should be disabled");
   ok(disableBtn.hidden, "Disable button should be hidden");
 }
 

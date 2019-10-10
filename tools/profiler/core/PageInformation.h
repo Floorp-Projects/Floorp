@@ -9,7 +9,6 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsID.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 
@@ -25,19 +24,19 @@ class SpliceableJSONWriter;
 class PageInformation final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PageInformation)
-  PageInformation(const nsID& aDocShellId, uint32_t aDocShellHistoryId,
-                  const nsCString& aUrl, bool aIsSubFrame);
+  PageInformation(uint64_t aBrowsingContextID, uint64_t aInnerWindowID,
+                  const nsCString& aUrl, uint64_t aEmbedderInnerWindowID);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-  bool Equals(PageInformation* aOtherDocShellInfo);
-  void StreamJSON(SpliceableJSONWriter& aWriter);
+  bool Equals(PageInformation* aOtherPageInfo) const;
+  void StreamJSON(SpliceableJSONWriter& aWriter) const;
 
-  uint32_t DocShellHistoryId() { return mDocShellHistoryId; }
-  const nsID& DocShellId() { return mDocShellId; }
-  const nsCString& Url() { return mUrl; }
-  bool IsSubFrame() { return mIsSubFrame; }
+  uint64_t InnerWindowID() const { return mInnerWindowID; }
+  uint64_t BrowsingContextID() const { return mBrowsingContextID; }
+  const nsCString& Url() const { return mUrl; }
+  uint64_t EmbedderInnerWindowID() const { return mEmbedderInnerWindowID; }
 
-  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() {
+  mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() const {
     return mBufferPositionWhenUnregistered;
   }
 
@@ -46,13 +45,13 @@ class PageInformation final {
   }
 
  private:
-  const nsID mDocShellId;
-  const uint32_t mDocShellHistoryId;
+  const uint64_t mBrowsingContextID;
+  const uint64_t mInnerWindowID;
   const nsCString mUrl;
-  const bool mIsSubFrame;
+  const uint64_t mEmbedderInnerWindowID;
 
-  // Holds the buffer position when DocShell is unregistered.
-  // It's used to determine if we still use this DocShell in the profiler or
+  // Holds the buffer position when page is unregistered.
+  // It's used to determine if we still use this page in the profiler or
   // not.
   mozilla::Maybe<uint64_t> mBufferPositionWhenUnregistered;
 

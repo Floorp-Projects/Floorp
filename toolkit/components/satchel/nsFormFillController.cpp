@@ -67,7 +67,7 @@ static nsIFormAutoComplete* GetFormAutoComplete() {
 }
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mLoginManagerAC,
-                         mLoginReputationService, mFocusedPopup, mDocShells,
+                         mLoginReputationService, mFocusedPopup,
                          mPopups, mLastListener, mLastFormAutoComplete)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
@@ -75,7 +75,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteInput)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIFormAutoCompleteObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
 NS_INTERFACE_MAP_END
@@ -114,13 +113,6 @@ nsFormFillController::~nsFormFillController() {
     mFocusedInput = nullptr;
   }
   RemoveForDocument(nullptr);
-
-  // Remove ourselves as a focus listener from all cached docShells
-  uint32_t count = mDocShells.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsPIDOMWindowOuter> window = GetWindowForDocShell(mDocShells[i]);
-    RemoveWindowListeners(window);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -217,18 +209,13 @@ void nsFormFillController::MaybeRemoveMutationObserver(nsINode* aNode) {
 //// nsIFormFillController
 
 NS_IMETHODIMP
-nsFormFillController::AttachToBrowser(nsIDocShell* aDocShell,
-                                      nsIAutoCompletePopup* aPopup) {
+nsFormFillController::AttachToDocument(Document* aDocument,
+                                       nsIAutoCompletePopup* aPopup) {
   MOZ_LOG(sLogger, LogLevel::Debug,
-          ("AttachToBrowser for docShell %p with popup %p", aDocShell, aPopup));
-  NS_ENSURE_TRUE(aDocShell && aPopup, NS_ERROR_ILLEGAL_VALUE);
+          ("AttachToDocument for document %p with popup %p", aDocument, aPopup));
+  NS_ENSURE_TRUE(aDocument && aPopup, NS_ERROR_ILLEGAL_VALUE);
 
-  mDocShells.AppendElement(aDocShell);
-  mPopups.AppendElement(aPopup);
-
-  // Listen for focus events on the domWindow of the docShell
-  nsCOMPtr<nsPIDOMWindowOuter> window = GetWindowForDocShell(aDocShell);
-  AddWindowListeners(window);
+  mPopups.Put(aDocument, aPopup);
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
@@ -241,32 +228,22 @@ nsFormFillController::AttachToBrowser(nsIDocShell* aDocShell,
 }
 
 NS_IMETHODIMP
-nsFormFillController::AttachPopupElementToBrowser(nsIDocShell* aDocShell,
-                                                  dom::Element* aPopupEl) {
+nsFormFillController::AttachPopupElementToDocument(Document* aDocument,
+                                                   dom::Element* aPopupEl) {
   MOZ_LOG(sLogger, LogLevel::Debug,
-          ("AttachPopupElementToBrowser for docShell %p with popup %p",
-           aDocShell, aPopupEl));
-  NS_ENSURE_TRUE(aDocShell && aPopupEl, NS_ERROR_ILLEGAL_VALUE);
+          ("AttachPopupElementToDocument for document %p with popup %p",
+           aDocument, aPopupEl));
+  NS_ENSURE_TRUE(aDocument && aPopupEl, NS_ERROR_ILLEGAL_VALUE);
 
   nsCOMPtr<nsIAutoCompletePopup> popup = aPopupEl->AsAutoCompletePopup();
   NS_ENSURE_STATE(popup);
 
-  return AttachToBrowser(aDocShell, popup);
+  return AttachToDocument(aDocument, popup);
 }
 
 NS_IMETHODIMP
-nsFormFillController::DetachFromBrowser(nsIDocShell* aDocShell) {
-  int32_t index = GetIndexOfDocShell(aDocShell);
-  NS_ENSURE_TRUE(index >= 0, NS_ERROR_FAILURE);
-
-  // Stop listening for focus events on the domWindow of the docShell
-  nsCOMPtr<nsPIDOMWindowOuter> window =
-      GetWindowForDocShell(mDocShells.SafeElementAt(index));
-  RemoveWindowListeners(window);
-
-  mDocShells.RemoveElementAt(index);
-  mPopups.RemoveElementAt(index);
-
+nsFormFillController::DetachFromDocument(Document* aDocument) {
+  mPopups.Remove(aDocument);
   return NS_OK;
 }
 
@@ -836,7 +813,7 @@ nsFormFillController::OnSearchCompletion(nsIAutoCompleteResult* aResult) {
 //// nsIDOMEventListener
 
 NS_IMETHODIMP
-nsFormFillController::HandleEvent(Event* aEvent) {
+nsFormFillController::HandleFormEvent(Event* aEvent) {
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   NS_ENSURE_STATE(internalEvent);
 
@@ -1239,115 +1216,21 @@ NS_IMETHODIMP nsFormFillController::GetPasswordPopupAutomaticallyOpened(
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-//// nsFormFillController
-
-void nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow) {
-  MOZ_LOG(sLogger, LogLevel::Debug,
-          ("AddWindowListeners for window %p", aWindow));
-  if (!aWindow) {
-    return;
-  }
-
-  EventTarget* target = aWindow->GetChromeEventHandler();
-  if (!target) {
-    return;
-  }
-
-  EventListenerManager* elm = target->GetOrCreateListenerManager();
-  if (NS_WARN_IF(!elm)) {
-    return;
-  }
-
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("focus"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("blur"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("mousedown"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("input"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("keydown"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("keypress"),
-                              TrustedEventsAtSystemGroupCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("compositionstart"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("compositionend"),
-                              TrustedEventsAtCapture());
-  elm->AddEventListenerByType(this, NS_LITERAL_STRING("contextmenu"),
-                              TrustedEventsAtCapture());
-
-  // Note that any additional listeners added should ensure that they ignore
-  // untrusted events, which might be sent by content that's up to no good.
-}
-
-void nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow) {
-  MOZ_LOG(sLogger, LogLevel::Debug,
-          ("RemoveWindowListeners for window %p", aWindow));
-  if (!aWindow) {
-    return;
-  }
-
-  StopControllingInput();
-
-  RefPtr<Document> doc = aWindow->GetDoc();
-  RemoveForDocument(doc);
-
-  EventTarget* target = aWindow->GetChromeEventHandler();
-  if (!target) {
-    return;
-  }
-
-  EventListenerManager* elm = target->GetOrCreateListenerManager();
-  if (NS_WARN_IF(!elm)) {
-    return;
-  }
-
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("focus"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("blur"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("mousedown"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("input"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("keydown"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("keypress"),
-                                 TrustedEventsAtSystemGroupCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("compositionstart"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("compositionend"),
-                                 TrustedEventsAtCapture());
-  elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("contextmenu"),
-                                 TrustedEventsAtCapture());
-}
-
 void nsFormFillController::StartControllingInput(HTMLInputElement* aInput) {
   MOZ_LOG(sLogger, LogLevel::Verbose, ("StartControllingInput for %p", aInput));
   // Make sure we're not still attached to an input
   StopControllingInput();
 
-  if (!mController) {
+  if (!mController || !aInput) {
     return;
   }
 
-  // Find the currently focused docShell
-  nsCOMPtr<nsIDocShell> docShell = GetDocShellForInput(aInput);
-  int32_t index = GetIndexOfDocShell(docShell);
-  if (index < 0) {
+  nsCOMPtr<nsIAutoCompletePopup> popup = mPopups.Get(aInput->OwnerDoc());
+  if (!popup) {
     return;
   }
 
-  MOZ_ASSERT(aInput, "How did we get a docshell index??");
-
-  // Cache the popup for the focused docShell
-  mFocusedPopup = mPopups.SafeElementAt(index);
+  mFocusedPopup = popup;
 
   aInput->AddMutationObserverUnlessExists(this);
   mFocusedInput = aInput;
@@ -1409,41 +1292,4 @@ nsIDocShell* nsFormFillController::GetDocShellForInput(
   NS_ENSURE_TRUE(win, nullptr);
 
   return win->GetDocShell();
-}
-
-nsPIDOMWindowOuter* nsFormFillController::GetWindowForDocShell(
-    nsIDocShell* aDocShell) {
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  aDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-  NS_ENSURE_TRUE(contentViewer, nullptr);
-
-  RefPtr<Document> doc = contentViewer->GetDocument();
-  NS_ENSURE_TRUE(doc, nullptr);
-
-  return doc->GetWindow();
-}
-
-int32_t nsFormFillController::GetIndexOfDocShell(nsIDocShell* aDocShell) {
-  if (!aDocShell) {
-    return -1;
-  }
-
-  // Loop through our cached docShells looking for the given docShell
-  uint32_t count = mDocShells.Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    if (mDocShells[i] == aDocShell) {
-      return i;
-    }
-  }
-
-  // Recursively check the parent docShell of this one
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = aDocShell;
-  nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  treeItem->GetInProcessParent(getter_AddRefs(parentItem));
-  if (parentItem) {
-    nsCOMPtr<nsIDocShell> parentShell = do_QueryInterface(parentItem);
-    return GetIndexOfDocShell(parentShell);
-  }
-
-  return -1;
 }

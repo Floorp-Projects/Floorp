@@ -24,7 +24,12 @@ createHTML({
   title: "Canvas(WebGL)::CaptureStream as video-only input to peerconnection"
 });
 
-runNetworkTest(() => {
+runNetworkTest(async () => {
+  // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+  if (navigator.userAgent.includes("Android")) {
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false]);
+  }
+
   var test = new PeerConnectionTest();
   var vremote;
   var h = new CaptureStreamTestHelperWebGL();

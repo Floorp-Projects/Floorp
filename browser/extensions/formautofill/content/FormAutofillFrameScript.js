@@ -31,6 +31,11 @@ ChromeUtils.defineModuleGetter(
   "FormAutofillUtils",
   "resource://formautofill/FormAutofillUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AutoCompleteChild",
+  "resource://gre/actors/AutoCompleteChild.jsm"
+);
 
 /**
  * Handles content's interactions for the frame.
@@ -40,6 +45,38 @@ var FormAutofillFrameScript = {
   _alreadyDOMContentLoaded: false,
   _hasDOMContentLoadedHandler: false,
   _hasPendingTask: false,
+
+  popupStateListener(messageName, data, target) {
+    if (!content || !FormAutofill.isAutofillEnabled) {
+      return;
+    }
+
+    const doc = target.document;
+    const { chromeEventHandler } = doc.ownerGlobal.docShell;
+
+    switch (messageName) {
+      case "FormAutoComplete:PopupClosed": {
+        FormAutofillContent.onPopupClosed(data.selectedRowStyle);
+        Services.tm.dispatchToMainThread(() => {
+          chromeEventHandler.removeEventListener(
+            "keydown",
+            FormAutofillContent._onKeyDown,
+            true
+          );
+        });
+
+        break;
+      }
+      case "FormAutoComplete:PopupOpened": {
+        chromeEventHandler.addEventListener(
+          "keydown",
+          FormAutofillContent._onKeyDown,
+          true
+        );
+        break;
+      }
+    }
+  },
 
   _doIdentifyAutofillFields() {
     if (this._hasPendingTask) {
@@ -61,26 +98,36 @@ var FormAutofillFrameScript = {
   init() {
     addEventListener("focusin", this);
     addEventListener("DOMFormBeforeSubmit", this);
+    addEventListener("unload", this, { once: true });
     addMessageListener("FormAutofill:PreviewProfile", this);
     addMessageListener("FormAutofill:ClearForm", this);
-    addMessageListener("FormAutoComplete:PopupClosed", this);
-    addMessageListener("FormAutoComplete:PopupOpened", this);
+
+    AutoCompleteChild.addPopupStateListener(this.popupStateListener);
   },
 
   handleEvent(evt) {
-    if (!evt.isTrusted || !FormAutofill.isAutofillEnabled) {
+    if (!evt.isTrusted) {
       return;
     }
 
     switch (evt.type) {
       case "focusin": {
-        this.onFocusIn(evt);
+        if (FormAutofill.isAutofillEnabled) {
+          this.onFocusIn(evt);
+        }
         break;
       }
       case "DOMFormBeforeSubmit": {
-        this.onDOMFormBeforeSubmit(evt);
+        if (FormAutofill.isAutofillEnabled) {
+          this.onDOMFormBeforeSubmit(evt);
+        }
         break;
       }
+      case "unload": {
+        AutoCompleteChild.removePopupStateListener(this.popupStateListener);
+        break;
+      }
+
       default: {
         throw new Error("Unexpected event type");
       }
@@ -135,7 +182,6 @@ var FormAutofillFrameScript = {
     }
 
     const doc = content.document;
-    const { chromeEventHandler } = doc.ownerGlobal.docShell;
 
     switch (message.name) {
       case "FormAutofill:PreviewProfile": {
@@ -144,26 +190,6 @@ var FormAutofillFrameScript = {
       }
       case "FormAutofill:ClearForm": {
         FormAutofillContent.clearForm();
-        break;
-      }
-      case "FormAutoComplete:PopupClosed": {
-        FormAutofillContent.onPopupClosed(message.data.selectedRowStyle);
-        Services.tm.dispatchToMainThread(() => {
-          chromeEventHandler.removeEventListener(
-            "keydown",
-            FormAutofillContent._onKeyDown,
-            true
-          );
-        });
-
-        break;
-      }
-      case "FormAutoComplete:PopupOpened": {
-        chromeEventHandler.addEventListener(
-          "keydown",
-          FormAutofillContent._onKeyDown,
-          true
-        );
         break;
       }
     }

@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.194';
-const pdfjsBuild = 'cd909c53';
+const pdfjsVersion = '2.4.15';
+const pdfjsBuild = 'cead77ef';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -225,7 +225,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.3.194';
+    const workerVersion = '2.4.15';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -707,7 +707,7 @@ Object.defineProperty(exports, "ReadableStream", {
     return _streams_polyfill.ReadableStream;
   }
 });
-exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = void 0;
+exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = exports.BaseException = void 0;
 
 __w_pdfjs_require__(3);
 
@@ -1090,97 +1090,66 @@ function shadow(obj, prop, value) {
   return value;
 }
 
-const PasswordException = function PasswordExceptionClosure() {
-  function PasswordException(msg, code) {
-    this.name = 'PasswordException';
-    this.message = msg;
+const BaseException = function BaseExceptionClosure() {
+  function BaseException(message) {
+    if (this.constructor === BaseException) {
+      unreachable('Cannot initialize BaseException.');
+    }
+
+    this.message = message;
+    this.name = this.constructor.name;
+  }
+
+  BaseException.prototype = new Error();
+  BaseException.constructor = BaseException;
+  return BaseException;
+}();
+
+exports.BaseException = BaseException;
+
+class PasswordException extends BaseException {
+  constructor(msg, code) {
+    super(msg);
     this.code = code;
   }
 
-  PasswordException.prototype = new Error();
-  PasswordException.constructor = PasswordException;
-  return PasswordException;
-}();
+}
 
 exports.PasswordException = PasswordException;
 
-const UnknownErrorException = function UnknownErrorExceptionClosure() {
-  function UnknownErrorException(msg, details) {
-    this.name = 'UnknownErrorException';
-    this.message = msg;
+class UnknownErrorException extends BaseException {
+  constructor(msg, details) {
+    super(msg);
     this.details = details;
   }
 
-  UnknownErrorException.prototype = new Error();
-  UnknownErrorException.constructor = UnknownErrorException;
-  return UnknownErrorException;
-}();
+}
 
 exports.UnknownErrorException = UnknownErrorException;
 
-const InvalidPDFException = function InvalidPDFExceptionClosure() {
-  function InvalidPDFException(msg) {
-    this.name = 'InvalidPDFException';
-    this.message = msg;
-  }
-
-  InvalidPDFException.prototype = new Error();
-  InvalidPDFException.constructor = InvalidPDFException;
-  return InvalidPDFException;
-}();
+class InvalidPDFException extends BaseException {}
 
 exports.InvalidPDFException = InvalidPDFException;
 
-const MissingPDFException = function MissingPDFExceptionClosure() {
-  function MissingPDFException(msg) {
-    this.name = 'MissingPDFException';
-    this.message = msg;
-  }
-
-  MissingPDFException.prototype = new Error();
-  MissingPDFException.constructor = MissingPDFException;
-  return MissingPDFException;
-}();
+class MissingPDFException extends BaseException {}
 
 exports.MissingPDFException = MissingPDFException;
 
-const UnexpectedResponseException = function UnexpectedResponseExceptionClosure() {
-  function UnexpectedResponseException(msg, status) {
-    this.name = 'UnexpectedResponseException';
-    this.message = msg;
+class UnexpectedResponseException extends BaseException {
+  constructor(msg, status) {
+    super(msg);
     this.status = status;
   }
 
-  UnexpectedResponseException.prototype = new Error();
-  UnexpectedResponseException.constructor = UnexpectedResponseException;
-  return UnexpectedResponseException;
-}();
+}
 
 exports.UnexpectedResponseException = UnexpectedResponseException;
 
-const FormatError = function FormatErrorClosure() {
-  function FormatError(msg) {
-    this.message = msg;
-  }
-
-  FormatError.prototype = new Error();
-  FormatError.prototype.name = 'FormatError';
-  FormatError.constructor = FormatError;
-  return FormatError;
-}();
+class FormatError extends BaseException {}
 
 exports.FormatError = FormatError;
 
-const AbortException = function AbortExceptionClosure() {
-  function AbortException(msg) {
-    this.name = 'AbortException';
-    this.message = msg;
-  }
-
-  AbortException.prototype = new Error();
-  AbortException.constructor = AbortException;
-  return AbortException;
-}();
+class AbortException extends BaseException {}
 
 exports.AbortException = AbortException;
 const NullCharactersRegExp = /\x00/g;
@@ -2719,44 +2688,22 @@ function getLookupTableFactory(initializer) {
   };
 }
 
-const MissingDataException = function MissingDataExceptionClosure() {
-  function MissingDataException(begin, end) {
+class MissingDataException extends _util.BaseException {
+  constructor(begin, end) {
+    super(`Missing data [${begin}, ${end})`);
     this.begin = begin;
     this.end = end;
-    this.message = `Missing data [${begin}, ${end})`;
   }
 
-  MissingDataException.prototype = new Error();
-  MissingDataException.prototype.name = 'MissingDataException';
-  MissingDataException.constructor = MissingDataException;
-  return MissingDataException;
-}();
+}
 
 exports.MissingDataException = MissingDataException;
 
-const XRefEntryException = function XRefEntryExceptionClosure() {
-  function XRefEntryException(msg) {
-    this.message = msg;
-  }
-
-  XRefEntryException.prototype = new Error();
-  XRefEntryException.prototype.name = 'XRefEntryException';
-  XRefEntryException.constructor = XRefEntryException;
-  return XRefEntryException;
-}();
+class XRefEntryException extends _util.BaseException {}
 
 exports.XRefEntryException = XRefEntryException;
 
-const XRefParseException = function XRefParseExceptionClosure() {
-  function XRefParseException(msg) {
-    this.message = msg;
-  }
-
-  XRefParseException.prototype = new Error();
-  XRefParseException.prototype.name = 'XRefParseException';
-  XRefParseException.constructor = XRefParseException;
-  return XRefParseException;
-}();
+class XRefParseException extends _util.BaseException {}
 
 exports.XRefParseException = XRefParseException;
 
@@ -9217,16 +9164,12 @@ var _arithmetic_decoder = __w_pdfjs_require__(18);
 
 var _ccitt = __w_pdfjs_require__(15);
 
-let Jbig2Error = function Jbig2ErrorClosure() {
-  function Jbig2Error(msg) {
-    this.message = 'JBIG2 error: ' + msg;
+class Jbig2Error extends _util.BaseException {
+  constructor(msg) {
+    super(`JBIG2 error: ${msg}`);
   }
 
-  Jbig2Error.prototype = new Error();
-  Jbig2Error.prototype.name = 'Jbig2Error';
-  Jbig2Error.constructor = Jbig2Error;
-  return Jbig2Error;
-}();
+}
 
 var Jbig2Image = function Jbig2ImageClosure() {
   function ContextCache() {}
@@ -11891,39 +11834,22 @@ exports.JpegImage = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-let JpegError = function JpegErrorClosure() {
-  function JpegError(msg) {
-    this.message = 'JPEG error: ' + msg;
+class JpegError extends _util.BaseException {
+  constructor(msg) {
+    super(`JPEG error: ${msg}`);
   }
 
-  JpegError.prototype = new Error();
-  JpegError.prototype.name = 'JpegError';
-  JpegError.constructor = JpegError;
-  return JpegError;
-}();
+}
 
-let DNLMarkerError = function DNLMarkerErrorClosure() {
-  function DNLMarkerError(message, scanLines) {
-    this.message = message;
+class DNLMarkerError extends _util.BaseException {
+  constructor(message, scanLines) {
+    super(message);
     this.scanLines = scanLines;
   }
 
-  DNLMarkerError.prototype = new Error();
-  DNLMarkerError.prototype.name = 'DNLMarkerError';
-  DNLMarkerError.constructor = DNLMarkerError;
-  return DNLMarkerError;
-}();
+}
 
-let EOIMarkerError = function EOIMarkerErrorClosure() {
-  function EOIMarkerError(message) {
-    this.message = message;
-  }
-
-  EOIMarkerError.prototype = new Error();
-  EOIMarkerError.prototype.name = 'EOIMarkerError';
-  EOIMarkerError.constructor = EOIMarkerError;
-  return EOIMarkerError;
-}();
+class EOIMarkerError extends _util.BaseException {}
 
 var JpegImage = function JpegImageClosure() {
   var dctZigZag = new Uint8Array([0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5, 12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63]);
@@ -13167,16 +13093,12 @@ var _util = __w_pdfjs_require__(2);
 
 var _arithmetic_decoder = __w_pdfjs_require__(18);
 
-let JpxError = function JpxErrorClosure() {
-  function JpxError(msg) {
-    this.message = 'JPX error: ' + msg;
+class JpxError extends _util.BaseException {
+  constructor(msg) {
+    super(`JPX error: ${msg}`);
   }
 
-  JpxError.prototype = new Error();
-  JpxError.prototype.name = 'JpxError';
-  JpxError.constructor = JpxError;
-  return JpxError;
-}();
+}
 
 var JpxImage = function JpxImageClosure() {
   var SubbandsGainLog2 = {
@@ -21806,7 +21728,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       });
     },
 
-    _buildSimpleFontToUnicode(properties) {
+    _buildSimpleFontToUnicode(properties, forceGlyphs = false) {
       (0, _util.assert)(!properties.composite, 'Must be a simple font.');
       let toUnicode = [],
           charcode,
@@ -21852,8 +21774,19 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
             case 'C':
             case 'c':
-              if (glyphName.length >= 3) {
-                code = +glyphName.substring(1);
+              if (glyphName.length >= 3 && glyphName.length <= 4) {
+                const codeStr = glyphName.substring(1);
+
+                if (forceGlyphs) {
+                  code = parseInt(codeStr, 16);
+                  break;
+                }
+
+                code = +codeStr;
+
+                if (Number.isNaN(code) && Number.isInteger(parseInt(codeStr, 16))) {
+                  return this._buildSimpleFontToUnicode(properties, true);
+                }
               }
 
               break;
@@ -44723,7 +44656,7 @@ const StreamKind = {
 };
 
 function wrapReason(reason) {
-  if (typeof reason !== 'object') {
+  if (typeof reason !== 'object' || reason === null) {
     return reason;
   }
 
@@ -45014,14 +44947,6 @@ MessageHandler.prototype = {
     const streamId = data.streamId;
     const comObj = this.comObj;
 
-    let deleteStreamController = () => {
-      Promise.all([this.streamControllers[streamId].startCall, this.streamControllers[streamId].pullCall, this.streamControllers[streamId].cancelCall].map(function (capability) {
-        return capability && capability.promise.catch(function () {});
-      })).then(() => {
-        delete this.streamControllers[streamId];
-      });
-    };
-
     switch (data.stream) {
       case StreamKind.START_COMPLETE:
         if (data.success) {
@@ -45101,13 +45026,17 @@ MessageHandler.prototype = {
 
         this.streamControllers[streamId].isClosed = true;
         this.streamControllers[streamId].controller.close();
-        deleteStreamController();
+
+        this._deleteStreamController(streamId);
+
         break;
 
       case StreamKind.ERROR:
         (0, _util.assert)(this.streamControllers[streamId], 'error should have stream controller');
         this.streamControllers[streamId].controller.error(wrapReason(data.reason));
-        deleteStreamController();
+
+        this._deleteStreamController(streamId);
+
         break;
 
       case StreamKind.CANCEL_COMPLETE:
@@ -45117,7 +45046,8 @@ MessageHandler.prototype = {
           this.streamControllers[streamId].cancelCall.reject(wrapReason(data.reason));
         }
 
-        deleteStreamController();
+        this._deleteStreamController(streamId);
+
         break;
 
       case StreamKind.CANCEL:
@@ -45155,6 +45085,13 @@ MessageHandler.prototype = {
       default:
         throw new Error('Unexpected stream case');
     }
+  },
+
+  async _deleteStreamController(streamId) {
+    await Promise.all([this.streamControllers[streamId].startCall, this.streamControllers[streamId].pullCall, this.streamControllers[streamId].cancelCall].map(function (capability) {
+      return capability && capability.promise.catch(function () {});
+    }));
+    delete this.streamControllers[streamId];
   },
 
   postMessage(message, transfers) {

@@ -1712,7 +1712,7 @@ void TestProfiler() {
     baseprofiler::profiler_add_marker(
         "UserTimingMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,
         baseprofiler::UserTimingMarkerPayload("name", TimeStamp::NowUnfuzzed(),
-                                              Nothing{}, Nothing{}));
+                                              Nothing{}));
 
     baseprofiler::profiler_add_marker(
         "HangMarkerPayload", baseprofiler::ProfilingCategoryPair::OTHER,

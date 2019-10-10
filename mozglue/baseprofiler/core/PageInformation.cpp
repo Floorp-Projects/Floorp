@@ -15,27 +15,32 @@
 namespace mozilla {
 namespace baseprofiler {
 
-PageInformation::PageInformation(const std::string& aDocShellId,
-                                 uint32_t aDocShellHistoryId,
-                                 const std::string& aUrl, bool aIsSubFrame)
-    : mDocShellId(aDocShellId),
-      mDocShellHistoryId(aDocShellHistoryId),
+PageInformation::PageInformation(uint64_t aBrowsingContextID,
+                                 uint64_t aInnerWindowID,
+                                 const std::string& aUrl,
+                                 uint64_t aEmbedderInnerWindowID)
+    : mBrowsingContextID(aBrowsingContextID),
+      mInnerWindowID(aInnerWindowID),
       mUrl(aUrl),
-      mIsSubFrame(aIsSubFrame),
+      mEmbedderInnerWindowID(aEmbedderInnerWindowID),
       mRefCnt(0) {}
 
-bool PageInformation::Equals(PageInformation* aOtherPageInfo) {
-  return DocShellHistoryId() == aOtherPageInfo->DocShellHistoryId() &&
-         DocShellId() == aOtherPageInfo->DocShellId() &&
-         IsSubFrame() == aOtherPageInfo->IsSubFrame();
+bool PageInformation::Equals(PageInformation* aOtherPageInfo) const {
+  // It's enough to check inner window IDs because they are unique for each
+  // page. Therefore, we don't have to check browsing context ID or url.
+  return InnerWindowID() == aOtherPageInfo->InnerWindowID();
 }
 
-void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) {
+void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   aWriter.StartObjectElement();
-  aWriter.StringProperty("docshellId", DocShellId().c_str());
-  aWriter.DoubleProperty("historyId", DocShellHistoryId());
+  // Here, we are converting uint64_t to double. Both Browsing Context and Inner
+  // Window IDs are creating using `nsContentUtils::GenerateProcessSpecificId`,
+  // which is specifically designed to only use 53 of the 64 bits to be lossless
+  // when passed into and out of JS as a double.
+  aWriter.DoubleProperty("browsingContextID", BrowsingContextID());
+  aWriter.DoubleProperty("innerWindowID", InnerWindowID());
   aWriter.StringProperty("url", Url().c_str());
-  aWriter.BoolProperty("isSubFrame", IsSubFrame());
+  aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());
   aWriter.EndObject();
 }
 

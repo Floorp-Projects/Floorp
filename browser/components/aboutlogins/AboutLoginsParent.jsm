@@ -251,6 +251,10 @@ var AboutLoginsParent = {
         Services.prefs.setBoolPref(HIDE_MOBILE_FOOTER_PREF, true);
         break;
       }
+      case "AboutLogins:SortChanged": {
+        Services.prefs.setCharPref("signon.management.page.sort", message.data);
+        break;
+      }
       case "AboutLogins:SyncEnable": {
         message.target.ownerGlobal.gSync.openFxAEmailFirstPage(
           "password-manager"
@@ -408,9 +412,16 @@ var AboutLoginsParent = {
 
           messageManager.sendAsyncMessage("AboutLogins:Setup", {
             logins,
+            selectedSort: Services.prefs.getCharPref(
+              "signon.management.page.sort",
+              "name"
+            ),
             syncState,
             selectedBadgeLanguages,
             masterPasswordEnabled: LoginHelper.isMasterPasswordSet(),
+            passwordRevealVisible: Services.policies.isAllowed(
+              "passwordReveal"
+            ),
           });
 
           await this._sendAllLoginRelatedObjects(logins, messageManager);

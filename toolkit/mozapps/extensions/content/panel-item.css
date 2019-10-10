@@ -1,3 +1,12 @@
+:host {
+  display: flex;
+  align-items: center;
+}
+
+::slotted(a) {
+  margin-inline-end: 12px;
+}
+
 :host([checked]) {
   --icon: url("chrome://global/skin/icons/check.svg");
   -moz-context-properties: fill;

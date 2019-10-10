@@ -18,7 +18,6 @@ async function showPermissionPrompt(browser) {
     E10SUtils.wrapHandlingUserInput(content, true, () => {
       // We need to synthesize the click instead of calling .click(),
       // otherwise the document will not correctly register the user gesture.
-      let EventUtils = ContentTaskUtils.getEventUtils(content);
       let notificationButton = content.document.getElementById(
         "desktop-notification"
       );

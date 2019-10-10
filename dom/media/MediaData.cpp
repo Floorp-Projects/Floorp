@@ -224,25 +224,6 @@ VideoData::VideoData(int64_t aOffset, const TimeUnit& aTime,
 
 VideoData::~VideoData() {}
 
-void VideoData::SetListener(UniquePtr<Listener> aListener) {
-  MOZ_ASSERT(!mSentToCompositor,
-             "Listener should be registered before sending data");
-
-  mListener = std::move(aListener);
-}
-
-void VideoData::MarkSentToCompositor() {
-  if (mSentToCompositor) {
-    return;
-  }
-
-  mSentToCompositor = true;
-  if (mListener != nullptr) {
-    mListener->OnSentToCompositor();
-    mListener = nullptr;
-  }
-}
-
 size_t VideoData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t size = aMallocSizeOf(this);
 

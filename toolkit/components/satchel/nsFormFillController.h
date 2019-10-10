@@ -15,6 +15,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "nsIDocShell.h"
 #include "nsILoginAutoCompleteSearch.h"
 #include "nsIMutationObserver.h"
@@ -40,7 +41,6 @@ class HTMLInputElement;
 class nsFormFillController final : public nsIFormFillController,
                                    public nsIAutoCompleteInput,
                                    public nsIAutoCompleteSearch,
-                                   public nsIDOMEventListener,
                                    public nsIFormAutoCompleteObserver,
                                    public nsIMutationObserver {
  public:
@@ -49,7 +49,6 @@ class nsFormFillController final : public nsIFormFillController,
   NS_DECL_NSIAUTOCOMPLETESEARCH
   NS_DECL_NSIAUTOCOMPLETEINPUT
   NS_DECL_NSIFORMAUTOCOMPLETEOBSERVER
-  NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIMUTATIONOBSERVER
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsFormFillController,
@@ -96,8 +95,6 @@ class nsFormFillController final : public nsIFormFillController,
 
   inline nsIDocShell* GetDocShellForInput(
       mozilla::dom::HTMLInputElement* aInput);
-  inline nsPIDOMWindowOuter* GetWindowForDocShell(nsIDocShell* aDocShell);
-  inline int32_t GetIndexOfDocShell(nsIDocShell* aDocShell);
 
   void MaybeRemoveMutationObserver(nsINode* aNode);
 
@@ -119,8 +116,7 @@ class nsFormFillController final : public nsIFormFillController,
   nsINode* mListNode;
   nsCOMPtr<nsIAutoCompletePopup> mFocusedPopup;
 
-  nsTArray<nsCOMPtr<nsIDocShell> > mDocShells;
-  nsTArray<nsCOMPtr<nsIAutoCompletePopup> > mPopups;
+  nsInterfaceHashtable<nsRefPtrHashKey<mozilla::dom::Document>, nsIAutoCompletePopup> mPopups;
 
   // The observer passed to StartSearch. It will be notified when the search is
   // complete or the data from a datalist changes.

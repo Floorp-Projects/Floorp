@@ -4,10 +4,11 @@
 
 #include "nsISupports.idl"
 
-interface nsIDocShell;
 interface nsIAutoCompletePopup;
 
+webidl Document;
 webidl Element;
+webidl Event;
 webidl HTMLInputElement;
 
 /*
@@ -34,22 +35,22 @@ interface nsIFormFillController : nsISupports
   readonly attribute boolean passwordPopupAutomaticallyOpened;
 
   /*
-   * Start controlling form fill behavior for the given browser
+   * Start controlling form fill behavior for the given document
    *
-   * @param docShell - The docShell to attach to
+   * @param document - The document to attach to
    * @param popup - The popup to show when autocomplete results are available
    */
   [can_run_script]
-  void attachToBrowser(in nsIDocShell docShell, in nsIAutoCompletePopup popup);
+  void attachToDocument(in Document document, in nsIAutoCompletePopup popup);
   [can_run_script]
-  void attachPopupElementToBrowser(in nsIDocShell docShell, in Element popup);
+  void attachPopupElementToDocument(in Document document, in Element popup);
 
   /*
    * Stop controlling form fill behavior for the given browser
    *
-   * @param docShell - The docShell to detach from
+   * @param document - The document to detach from
    */
-  [can_run_script] void detachFromBrowser(in nsIDocShell docShell);
+  [can_run_script] void detachFromDocument(in Document document);
 
   /*
    * Mark the specified <input> element as being managed by password manager.
@@ -72,4 +73,6 @@ interface nsIFormFillController : nsISupports
    * Open the autocomplete popup, if possible.
    */
   [can_run_script] void showPopup();
+
+  [can_run_script] void handleFormEvent(in Event aEvent);
 };
