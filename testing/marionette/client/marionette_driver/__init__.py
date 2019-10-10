@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-__version__ = '2.8.0'
+__version__ = '3.0.0'
 
 from marionette_driver import (
     addons,
