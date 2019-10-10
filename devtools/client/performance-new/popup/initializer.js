@@ -74,11 +74,8 @@ async function gInit() {
     actions.initializeStore({
       perfFront: perfFrontInterface,
       receiveProfile,
-      // Pull the default recording settings from the reducer, and update them according
-      // to what's in the browser's preferences.
-      recordingSettingsFromPreferences: getRecordingPreferencesFromBrowser(
-        selectors.getRecordingSettings(store.getState())
-      ),
+      // Get the preferences from the current browser
+      recordingSettingsFromPreferences: getRecordingPreferencesFromBrowser(),
       // In the popup, the preferences are stored directly on the current browser.
       setRecordingPreferences: () =>
         setRecordingPreferencesOnBrowser(

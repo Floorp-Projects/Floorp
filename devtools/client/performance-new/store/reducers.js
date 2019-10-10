@@ -80,10 +80,10 @@ function interval(state = 1000, action) {
 }
 
 /**
- * The number of entries in the profiler's circular buffer. Defaults to 90mb.
+ * The number of entries in the profiler's circular buffer.
  * @type {Reducer<number>}
  */
-function entries(state = 10000000, action) {
+function entries(state = 0, action) {
   switch (action.type) {
     case "CHANGE_ENTRIES":
       return action.entries;
@@ -98,7 +98,7 @@ function entries(state = 10000000, action) {
  * The features that are enabled for the profiler.
  * @type {Reducer<string[]>}
  */
-function features(state = ["js", "stackwalk", "responsiveness"], action) {
+function features(state = [], action) {
   switch (action.type) {
     case "CHANGE_FEATURES":
       return action.features;
@@ -113,7 +113,7 @@ function features(state = ["js", "stackwalk", "responsiveness"], action) {
  * The current threads list.
  * @type {Reducer<string[]>}
  */
-function threads(state = ["GeckoMain", "Compositor"], action) {
+function threads(state = [], action) {
   switch (action.type) {
     case "CHANGE_THREADS":
       return action.threads;
