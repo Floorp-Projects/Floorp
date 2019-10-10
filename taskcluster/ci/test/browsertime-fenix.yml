@@ -1,0 +1,46 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    max-run-time: 1800
+    suite: raptor
+    workdir: /builds/worker
+    run-on-projects: []
+    tier: 3
+    target:
+        by-test-platform:
+            android-hw.*-aarch64.*/.*:
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
+                name: target.apk
+            default:
+                index: project.mobile.fenix.v2.performance-test.latest.arm
+                name: target.apk
+    e10s: true
+    virtualization: hardware
+    mozharness:
+        script: raptor_script.py
+        config:
+            - raptor/android_hw_config.py
+
+browsertime-tp6m-1-fenix:
+    description: "Raptor (browsertime) tp6m-1 on Fenix"
+    treeherder-symbol: Btime-fenix(tp6m-1)
+    mozharness:
+        extra-options:
+            - --browsertime
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+            - --test=raptor-tp6m-1
+
+browsertime-tp6m-1-fenix-cold:
+    description: "Raptor (browsertime) tp6m-1 cold page-load on Fenix"
+    treeherder-symbol: Btime-fenix(tp6m-c-1)
+    mozharness:
+        extra-options:
+            - --browsertime
+            - --app=fenix
+            - --binary-path=org.mozilla.fenix.performancetest
+            - --activity=org.mozilla.fenix.IntentReceiverActivity
+            - --test=raptor-tp6m-cold-1
