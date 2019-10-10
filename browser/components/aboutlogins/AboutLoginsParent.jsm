@@ -599,6 +599,7 @@ var AboutLoginsParent = {
         browser.reload();
       },
     });
+    this.messageSubscribers("AboutLogins:MasterPasswordAuthRequired");
   },
 
   showPasswordSyncNotifications() {

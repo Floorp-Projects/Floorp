@@ -73,3 +73,21 @@ login-item {
 :root:not(.official-branding) #branding-logo {
   display: none;
 }
+
+:root:not(.master-password-auth-required) #master-password-required-overlay {
+  display: none;
+}
+
+.master-password-auth-required > body > header,
+.master-password-auth-required > body > login-list,
+.master-password-auth-required > body > login-intro {
+  filter: blur(2px)
+}
+
+#master-password-required-overlay {
+  z-index: 1;
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.2);
+}

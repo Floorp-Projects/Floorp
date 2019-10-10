@@ -216,6 +216,9 @@ class AboutLoginsChild extends ActorChild {
       case "AboutLogins:LoginRemoved":
         this.sendToContent("LoginRemoved", message.data);
         break;
+      case "AboutLogins:MasterPasswordAuthRequired":
+        this.sendToContent("MasterPasswordAuthRequired", message.data);
+        break;
       case "AboutLogins:MasterPasswordResponse":
         if (masterPasswordPromise) {
           masterPasswordPromise.resolve(message.data);

@@ -17,3 +17,36 @@ export function recordTelemetryEvent(event) {
     })
   );
 }
+
+export function setKeyboardAccessForNonDialogElements(enableKeyboardAccess) {
+  const pageElements = document.querySelectorAll(
+    "login-item, login-list, menu-button, login-filter, fxaccounts-button, [tabindex]"
+  );
+
+  if (
+    !enableKeyboardAccess &&
+    document.activeElement &&
+    !document.activeElement.closest("confirmation-dialog")
+  ) {
+    let { activeElement } = document;
+    if (activeElement.shadowRoot && activeElement.shadowRoot.activeElement) {
+      activeElement.shadowRoot.activeElement.blur();
+    } else {
+      document.activeElement.blur();
+    }
+  }
+
+  pageElements.forEach(el => {
+    if (!enableKeyboardAccess) {
+      if (el.tabIndex > -1) {
+        el.dataset.oldTabIndex = el.tabIndex;
+      }
+      el.tabIndex = "-1";
+    } else if (el.dataset.oldTabIndex) {
+      el.tabIndex = el.dataset.oldTabIndex;
+      delete el.dataset.oldTabIndex;
+    } else {
+      el.removeAttribute("tabindex");
+    }
+  });
+}
