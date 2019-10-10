@@ -93,7 +93,7 @@ exclude =
 #   - http://pep8.readthedocs.io/en/latest/intro.html#configuration
 ignore =
     # These should be triaged and either fixed or moved to the list below.
-    F633, F811, E117, W504, W605, W606,
+    F811, E117, W504, W605, W606,
     # These are intentionally disabled (not necessarily for good reason).
     #   F723: syntax error in type comment
     #       text contains quotes which breaks our custom JSON formatter
@@ -109,9 +109,11 @@ per-file-ignores =
 
     # These paths contain Python-2 only syntax which cause errors since flake8
     # is run with Python 3.
-    build/**: F821
-    config/**: F821
-    js/**: F821
+    browser/app/macversion.py: F633
+    build/**: F633, F821
+    config/**: F633, F821
+    ipc/pull-chromium.py: F633
+    js/**: F633, F821
     memory/**: F821
     mozglue/**: F821
     python/mozbuild/**: F821
@@ -123,7 +125,8 @@ per-file-ignores =
     toolkit/components/telemetry/**: F821
     tools/tryselect/**: F821
     testing/firefox-ui/tests/functional/safebrowsing/test_initial_download.py: F821
+    testing/gtest/rungtests.py: F633
     testing/marionette/**: F821
     testing/mochitest/**: F821
-    testing/xpcshell/**: F821
-    xpcom/idl-parser/xpidl/**: F821
+    testing/xpcshell/**: F633, F821
+    xpcom/idl-parser/xpidl/**: F633, F821
