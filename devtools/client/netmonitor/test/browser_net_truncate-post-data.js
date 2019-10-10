@@ -21,13 +21,13 @@ add_task(async function() {
   requestLongerTimeout(2);
 
   info("Perform requests");
-  await performRequestsAndWait();
+  await performRequestsAndWait(monitor, tab);
 
   await waitUntil(() => document.querySelector(".request-list-item"));
   const item = document.querySelectorAll(".request-list-item")[0];
   await waitUntil(() => item.querySelector(".requests-list-type").title);
 
-  wait = waitForDOM(document, "#params-panel .tree-section", 1);
+  const wait = waitForDOM(document, "#params-panel .tree-section", 1);
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
@@ -59,11 +59,12 @@ add_task(async function() {
   );
 
   return teardown(monitor);
-  async function performRequestsAndWait() {
-    const wait = waitForNetworkEvents(monitor, 1);
-    await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
-      content.wrappedJSObject.performLargePostDataRequest();
-    });
-    await wait;
-  }
 });
+
+async function performRequestsAndWait(monitor, tab) {
+  const wait = waitForNetworkEvents(monitor, 1);
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    content.wrappedJSObject.performLargePostDataRequest();
+  });
+  await wait;
+}

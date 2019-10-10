@@ -52,7 +52,7 @@ add_task(async function() {
     }
   );
 
-  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
+  const wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
