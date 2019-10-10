@@ -12,6 +12,8 @@
  * @typedef {import("./@types/perf").RecordingState} RecordingState
  * @typedef {import("./@types/perf").GetSymbolTableCallback} GetSymbolTableCallback
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
+ * @typedef {import("./@types/perf").PerformancePref} PerformancePref
+ * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  */
 
 /**
@@ -47,11 +49,25 @@ const lazyProfilerGetSymbols = requireLazy(() =>
 const TRANSFER_EVENT = "devtools:perf-html-transfer-profile";
 const SYMBOL_TABLE_REQUEST_EVENT = "devtools:perf-html-request-symbol-table";
 const SYMBOL_TABLE_RESPONSE_EVENT = "devtools:perf-html-reply-symbol-table";
+
+/** @type {PerformancePref["Entries"]} */
+const ENTRIES_PREF = "devtools.performance.recording.entries";
+/** @type {PerformancePref["Interval"]} */
+const INTERVAL_PREF = "devtools.performance.recording.interval";
+/** @type {PerformancePref["Features"]} */
+const FEATURES_PREF = "devtools.performance.recording.features";
+/** @type {PerformancePref["Threads"]} */
+const THREADS_PREF = "devtools.performance.recording.threads";
+
+/** @type {PerformancePref["ObjDirs"]} */
+const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
+/** @type {PerformancePref["UIBaseUrl"]} */
 const UI_BASE_URL_PREF = "devtools.performance.recording.ui-base-url";
+/** @type {PerformancePref["UIBaseUrlPathPref"]} */
 const UI_BASE_URL_PATH_PREF = "devtools.performance.recording.ui-base-url-path";
+
 const UI_BASE_URL_DEFAULT = "https://profiler.firefox.com";
 const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
-const OBJDIRS_PREF = "devtools.performance.recording.objdirs";
 
 /**
  * This file contains all of the privileged browser-specific functionality. This helps
@@ -211,12 +227,11 @@ async function _getIntPref(preferenceFront, prefName, defaultValue) {
  * different features or configurations.
  *
  * @param {PreferenceFront} preferenceFront
- * @param {object} defaultSettings See the getRecordingSettings selector for the shape
- *                                 of the object and how it gets defined.
+ * @param {RecordingStateFromPreferences} defaultSettings
  */
 async function getRecordingPreferencesFromDebuggee(
   preferenceFront,
-  defaultSettings = {}
+  defaultSettings
 ) {
   const [entries, interval, features, threads, objdirs] = await Promise.all([
     _getIntPref(
@@ -253,29 +268,19 @@ async function getRecordingPreferencesFromDebuggee(
  * and some of them on the host browser instance.
  *
  * @param {PreferenceFront} preferenceFront
- * @param {object} settings See the getRecordingSettings selector for the shape
- *                                 of the object and how it gets defined.
+ * @param {RecordingStateFromPreferences} settings
  */
 async function setRecordingPreferencesOnDebuggee(preferenceFront, settings) {
   const { Services } = lazyServices();
   await Promise.all([
-    preferenceFront.setIntPref(
-      `devtools.performance.recording.entries`,
-      settings.entries
-    ),
-    preferenceFront.setIntPref(
-      `devtools.performance.recording.interval`,
-      // The pref stores the value in usec.
-      settings.interval * 1000
-    ),
+    preferenceFront.setIntPref(ENTRIES_PREF, settings.entries),
+    // The interval pref stores the value in usec.
+    preferenceFront.setIntPref(INTERVAL_PREF, settings.interval * 1000),
     preferenceFront.setCharPref(
-      `devtools.performance.recording.features`,
+      FEATURES_PREF,
       JSON.stringify(settings.features)
     ),
-    preferenceFront.setCharPref(
-      `devtools.performance.recording.threads`,
-      JSON.stringify(settings.threads)
-    ),
+    preferenceFront.setCharPref(THREADS_PREF, JSON.stringify(settings.threads)),
     Services.prefs.setCharPref(OBJDIRS_PREF, JSON.stringify(settings.objdirs)),
   ]);
 }

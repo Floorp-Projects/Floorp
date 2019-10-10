@@ -5,6 +5,9 @@
 "use strict";
 
 /**
+ * @typedef {import("../@types/perf").PerformancePref} PerformancePref
+ * */
+/**
  * This file controls the enabling and disabling of the menu button for the profiler.
  * Care should be taken to keep it minimal as it can be run with browser initialization.
  */
@@ -41,11 +44,7 @@ const lazyCustomizableWidgets = requireLazy(() =>
   /** @type {import("resource:///modules/CustomizableWidgets.jsm")} */
   ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm")
 );
-
-// The profiler's menu button and its popup can be enabled/disabled by the user.
-// This is the pref to control whether the user has turned it on or not.
-// This pref is repeated across many files in order to avoid loading this file if
-// it's not needed. Make sure and search the rest of the codebase for other uses.
+/** @type {PerformancePref["PopupEnabled"]} */
 const BUTTON_ENABLED_PREF = "devtools.performance.popup.enabled";
 const WIDGET_ID = "profiler-button";
 

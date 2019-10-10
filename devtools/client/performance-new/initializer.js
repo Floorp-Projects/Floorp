@@ -32,6 +32,10 @@ const {
   createMultiModalGetSymbolTableFn,
 } = require("devtools/client/performance-new/browser");
 
+const { getDefaultRecordingSettings } = ChromeUtils.import(
+  "resource://devtools/client/performance-new/popup/background.jsm.js"
+);
+
 /**
  * This file initializes the DevTools Panel UI. It is in charge of initializing
  * the DevTools specific environment, and then passing those requirements into
@@ -53,13 +57,13 @@ async function gInit(perfFront, preferenceFront) {
     actions.initializeStore({
       perfFront,
       receiveProfile,
-      // Pull the default recording settings from the reducer, and update them according
-      // to what's in the target's preferences. This way the preferences are stored
-      // on the target. This could be useful for something like Android where you might
-      // want to tweak the settings.
+      // Pull the default recording settings from the background.jsm module. Update them
+      // according to what's in the target's preferences. This way the preferences are
+      // stored on the target. This could be useful for something like Android where you
+      // might want to tweak the settings.
       recordingSettingsFromPreferences: await getRecordingPreferencesFromDebuggee(
         preferenceFront,
-        selectors.getRecordingSettings(store.getState())
+        getDefaultRecordingSettings()
       ),
 
       // Go ahead and hide the implementation details for the component on how the
