@@ -383,30 +383,8 @@ void ScrollbarActivity::CancelFadeBeginTimer() {
 }
 
 void ScrollbarActivity::HoveredScrollbar(Element* aScrollbar) {
-  Element* vertScrollbar = GetVerticalScrollbar();
-  Element* horzScrollbar = GetHorizontalScrollbar();
-  bool vertHasHover = vertScrollbar && vertScrollbar->HasAttr(kNameSpaceID_None,
-                                                              nsGkAtoms::hover);
-  bool horzHasHover = horzScrollbar && horzScrollbar->HasAttr(kNameSpaceID_None,
-                                                              nsGkAtoms::hover);
-
-  bool vertWillHaveHover = (aScrollbar == vertScrollbar);
-  bool horzWillHaveHover = (aScrollbar == horzScrollbar);
-
-  if (vertHasHover != vertWillHaveHover) {
-    if (nsIFrame* f = vertScrollbar->GetPrimaryFrame()) {
-      f->SchedulePaint();
-    }
-  }
-
-  if (horzHasHover != horzWillHaveHover) {
-    if (nsIFrame* f = horzScrollbar->GetPrimaryFrame()) {
-      f->SchedulePaint();
-    }
-  }
-
-  SetBooleanAttribute(horzScrollbar, nsGkAtoms::hover, false);
-  SetBooleanAttribute(vertScrollbar, nsGkAtoms::hover, false);
+  SetBooleanAttribute(GetHorizontalScrollbar(), nsGkAtoms::hover, false);
+  SetBooleanAttribute(GetVerticalScrollbar(), nsGkAtoms::hover, false);
   SetBooleanAttribute(aScrollbar, nsGkAtoms::hover, true);
 }
 
