@@ -476,17 +476,24 @@ Now you can listen to events on a front:
     });
     front.giveGoodNews().then(() => { console.log("request returned.") });
 
-You might want to update your front's state when an event is fired, before emitting it against the front.  You can use `preEvent` in the front definition for that:
+If you want to modify the argument that will be passed to event listeners callbacks, you
+can use `before(eventName, fn)` in the front definition. This can only be used once for a
+given `eventName`. The `fn` function will be called before emitting the event via
+the EventEmitter API on the Front, and its return value will be passed to the event 
+listener callbacks. If `fn` is async, the event will only be emitted after `fn` call resolves.
 
-    countGoodNews: protocol.preEvent("good-news", function (news) {
-        this.amountOfGoodNews++;
+    // In front file, most probably in the constructor:
+    this.before("good-news", function(news) {
+      return news.join(" - ");
     });
 
-You can have events wait until an asynchronous action completes before firing by returning a promise. If you have multiple preEvents defined for a specific event, and at least one fires asynchronously, then all preEvents most resolve before all events are fired.
-
-    countGoodNews: protocol.preEvent("good-news", function (news) {
-        return this.updateGoodNews().then(() => this.amountOfGoodNews++);
+    // In any consumer
+    front.on("good-news", function(news) {
+      console.log(news);
     });
+
+So if the server sent the following array: `[1, 2, 3]`, the console.log in the consumer
+would print `1 - 2 - 3`.
 
 On a somewhat related note, not every method needs to be request/response.  Just like an actor can emit a one-way event, a method can be marked as a one-way request.  Maybe we don't care about giveGoodNews returning anything:
 

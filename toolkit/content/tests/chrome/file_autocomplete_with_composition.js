@@ -68,12 +68,17 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     }
     test.execute(this._window);
 
-    waitForCondition(() => {
-      return (
-        this._controller.searchStatus >=
-        Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH
+    if (test.popup) {
+      waitForCondition(
+        () => this._controller.input.popupOpen,
+        this._checkResult.bind(this)
       );
-    }, this._checkResult.bind(this));
+    } else {
+      waitForCondition(() => {
+        this._controller.searchStatus >=
+          Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+      }, this._checkResult.bind(this));
+    }
   },
 
   _checkResult() {

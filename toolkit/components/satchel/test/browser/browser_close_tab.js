@@ -35,24 +35,6 @@ add_task(async function test() {
       return autoCompletePopup.popupOpen;
     });
 
-    let listener;
-    let errorLogPromise = new Promise(resolve => {
-      listener = ({ message }) => {
-        const ERROR_MSG =
-          "AutoCompletePopup: No messageManager for " +
-          'message "FormAutoComplete:PopupClosed"';
-        if (message.includes(ERROR_MSG)) {
-          Assert.ok(
-            true,
-            "Got the error message for inexistent messageManager."
-          );
-          Services.console.unregisterListener(listener);
-          resolve();
-        }
-      };
-    });
-    Services.console.registerListener(listener);
-
     gBrowser.removeCurrentTab();
 
     await TestUtils.waitForCondition(() => {
@@ -60,7 +42,5 @@ add_task(async function test() {
     });
 
     Assert.ok(!autoCompletePopup.popupOpen, "Ensure the popup is closed.");
-
-    await errorLogPromise;
   });
 });

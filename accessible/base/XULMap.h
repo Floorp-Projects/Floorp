@@ -82,10 +82,6 @@ XULMAP(popup, [](Element* aElement, Accessible* aContext) {
   return CreateMenupopupAccessible(aElement, aContext);
 })
 
-XULMAP(textbox, [](Element* aElement, Accessible* aContext) -> Accessible* {
-  return new EnumRoleAccessible<roles::SECTION>(aElement, aContext->Document());
-})
-
 XULMAP(tree, [](Element* aElement, Accessible* aContext) -> Accessible* {
   nsIContent* child =
       nsTreeUtils::GetDescendantChild(aElement, nsGkAtoms::treechildren);

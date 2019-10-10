@@ -390,6 +390,36 @@ void MacroAssembler::branchIfInterpreted(Register fun, bool isConstructing,
   branchTestFunctionFlags(fun, flags, Assembler::NonZero, label);
 }
 
+void MacroAssembler::branchIfScriptHasJitScript(Register script, Label* label) {
+  static_assert(ScriptWarmUpData::JitScriptTag == 0,
+                "Code below depends on tag value");
+  branchTestPtr(Assembler::Zero,
+                Address(script, JSScript::offsetOfWarmUpData()),
+                Imm32(ScriptWarmUpData::TagMask), label);
+}
+
+void MacroAssembler::branchIfScriptHasNoJitScript(Register script,
+                                                  Label* label) {
+  static_assert(ScriptWarmUpData::JitScriptTag == 0,
+                "Code below depends on tag value");
+  branchTestPtr(Assembler::NonZero,
+                Address(script, JSScript::offsetOfWarmUpData()),
+                Imm32(ScriptWarmUpData::TagMask), label);
+}
+
+void MacroAssembler::loadJitScript(Register script, Register dest) {
+#ifdef DEBUG
+  Label ok;
+  branchIfScriptHasJitScript(script, &ok);
+  assumeUnreachable("Script has no JitScript!");
+  bind(&ok);
+#endif
+
+  static_assert(ScriptWarmUpData::JitScriptTag == 0,
+                "Code below depends on tag value");
+  loadPtr(Address(script, JSScript::offsetOfWarmUpData()), dest);
+}
+
 void MacroAssembler::branchIfObjectEmulatesUndefined(Register objReg,
                                                      Register scratch,
                                                      Label* slowCheck,

@@ -34,8 +34,9 @@ const MANIFEST_CATEGORIES = {
 };
 
 const MANIFEST_MEMBER_VALUE_TYPES = {
-  STRING: "string",
   COLOR: "color",
+  ICON: "icon",
+  STRING: "string",
 };
 
 const MANIFEST_ISSUE_LEVELS = {

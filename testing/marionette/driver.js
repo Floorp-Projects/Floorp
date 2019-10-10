@@ -3019,6 +3019,7 @@ GeckoDriver.prototype.deleteSession = function() {
  */
 GeckoDriver.prototype.takeScreenshot = async function(cmd) {
   let win = assert.open(this.getCurrentWindow());
+  await this._handleUserPrompts();
 
   let { id, full, hash, scroll } = cmd.parameters;
   let format = hash ? capture.Format.Hash : capture.Format.Base64;

@@ -84,17 +84,15 @@ impl InputVariant {
 
 impl ParseAttribute for InputVariant {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
-        let name = mi.name().to_string();
-        match name.as_str() {
-            "rename" => {
-                self.attr_name = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            "skip" => {
-                self.skip = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            n => Err(Error::unknown_field(n).with_span(mi)),
+        let path = mi.path();
+        if path.is_ident("rename") {
+            self.attr_name = FromMeta::from_meta(mi)?;
+            Ok(())
+        } else if path.is_ident("skip") {
+            self.skip = FromMeta::from_meta(mi)?;
+            Ok(())
+        } else {
+            Err(Error::unknown_field_path(&path).with_span(mi))
         }
     }
 }

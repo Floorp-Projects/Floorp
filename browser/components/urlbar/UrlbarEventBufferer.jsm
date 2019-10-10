@@ -123,7 +123,7 @@ class UrlbarEventBufferer {
 
   /**
    * Handles DOM events.
-   * @param {Event} event DOM event from the <textbox>.
+   * @param {Event} event DOM event from the input.
    */
   handleEvent(event) {
     if (event.type == "blur") {
@@ -141,7 +141,7 @@ class UrlbarEventBufferer {
   /**
    * Receives DOM events, eventually queues them up, and calls back when it's
    * the right time to handle the event.
-   * @param {Event} event DOM event from the <textbox>.
+   * @param {Event} event DOM event from the input.
    * @param {Function} callback to be invoked when it's the right time to handle
    *        the event.
    */

@@ -24,8 +24,15 @@ exports[`ManifestPage renders the expected snapshot when there is a manifest 1`]
     icons={
       Array [
         Object {
-          "key": "1x1",
-          "value": "something.png",
+          "key": Object {
+            "contentType": "image/png",
+            "sizes": "1x1",
+          },
+          "type": "icon",
+          "value": Object {
+            "purpose": "any",
+            "src": "something.png",
+          },
         },
       ]
     }

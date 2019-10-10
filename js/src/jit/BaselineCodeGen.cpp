@@ -1126,7 +1126,7 @@ void BaselineInterpreterCodeGen::emitInitFrameFields(Register nonFunctionEnv) {
   masm.storePtr(scratch1, frame.addressOfInterpreterScript());
 
   // Initialize interpreterICEntry.
-  masm.loadPtr(Address(scratch1, JSScript::offsetOfJitScript()), scratch2);
+  masm.loadJitScript(scratch1, scratch2);
   masm.computeEffectiveAddress(
       Address(scratch2, JitScript::offsetOfICEntries()), scratch2);
   masm.storePtr(scratch2, frame.addressOfInterpreterICEntry());
@@ -1284,9 +1284,12 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
   Register scriptReg = R2.scratchReg();
   Register countReg = R0.scratchReg();
-  Address warmUpCounterAddr(scriptReg, JSScript::offsetOfWarmUpCounter());
 
-  masm.movePtr(ImmGCPtr(script), scriptReg);
+  // Load the JitScript* in scriptReg.
+  masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
+
+  // Bump warm-up counter.
+  Address warmUpCounterAddr(scriptReg, JitScript::offsetOfWarmUpCount());
   masm.load32(warmUpCounterAddr, countReg);
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
@@ -1313,7 +1316,6 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
   // Do nothing if Ion is already compiling this script off-thread or if Ion has
   // been disabled for this script.
-  masm.movePtr(ImmPtr(script->jitScript()), scriptReg);
   masm.loadPtr(Address(scriptReg, JitScript::offsetOfIonScript()), scriptReg);
   masm.branchPtr(Assembler::Equal, scriptReg, ImmPtr(IonCompilingScriptPtr),
                  &done);
@@ -1419,9 +1421,12 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   Register scriptReg = R2.scratchReg();
   Register countReg = R0.scratchReg();
 
-  // Bump warm-up counter.
-  Address warmUpCounterAddr(scriptReg, JSScript::offsetOfWarmUpCounter());
+  // Load the JitScript* in scriptReg.
   loadScript(scriptReg);
+  masm.loadJitScript(scriptReg, scriptReg);
+
+  // Bump warm-up counter.
+  Address warmUpCounterAddr(scriptReg, JitScript::offsetOfWarmUpCount());
   masm.load32(warmUpCounterAddr, countReg);
   masm.add32(Imm32(1), countReg);
   masm.store32(countReg, warmUpCounterAddr);
@@ -1431,7 +1436,6 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   Label done;
   masm.branch32(Assembler::BelowOrEqual, countReg,
                 Imm32(JitOptions.baselineJitWarmUpThreshold), &done);
-  masm.loadPtr(Address(scriptReg, JSScript::offsetOfJitScript()), scriptReg);
   masm.branchPtr(Assembler::Equal,
                  Address(scriptReg, JitScript::offsetOfBaselineScript()),
                  ImmPtr(BaselineDisabledScriptPtr), &done);
@@ -6051,7 +6055,7 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
                 "Comparison below requires specific sentinel encoding");
 
   Label noBaselineScript;
-  masm.loadPtr(Address(script, JSScript::offsetOfJitScript()), scratch);
+  masm.loadJitScript(script, scratch);
   masm.loadPtr(Address(scratch, JitScript::offsetOfBaselineScript()), scratch);
   masm.branchPtr(Assembler::BelowOrEqual, scratch,
                  ImmPtr(BaselineDisabledScriptPtr), &noBaselineScript);
@@ -6109,15 +6113,13 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   Label interpret;
   Register scratch1 = regs.takeAny();
   masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
-  masm.branchPtr(Assembler::Equal,
-                 Address(scratch1, JSScript::offsetOfJitScript()),
-                 ImmPtr(nullptr), &interpret);
+  masm.branchIfScriptHasNoJitScript(scratch1, &interpret);
 
 #ifdef JS_TRACE_LOGGING
   if (JS::TraceLoggerSupported()) {
     // TODO (bug 1565788): add Baseline Interpreter support.
     MOZ_CRASH("Unimplemented Baseline Interpreter TraceLogger support");
-    masm.loadPtr(Address(scratch1, JSScript::offsetOfJitScript()), scratch1);
+    masm.loadJitScript(scratch1, scratch1);
     Address baselineAddr(scratch1, JitScript::offsetOfBaselineScript());
     masm.loadPtr(baselineAddr, scratch1);
     if (!emitTraceLoggerResume(scratch1, regs)) {
@@ -6432,7 +6434,7 @@ bool BaselineInterpreterCodeGen::emit_JSOP_JUMPTARGET() {
 
   // Compute ICEntry* and store to frame->interpreterICEntry.
   loadScript(scratch2);
-  masm.loadPtr(Address(scratch2, JSScript::offsetOfJitScript()), scratch2);
+  masm.loadJitScript(scratch2, scratch2);
   masm.computeEffectiveAddress(
       BaseIndex(scratch2, scratch1, TimesOne, JitScript::offsetOfICEntries()),
       scratch2);

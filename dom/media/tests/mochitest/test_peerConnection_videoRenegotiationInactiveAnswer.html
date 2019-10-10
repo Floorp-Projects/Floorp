@@ -14,7 +14,12 @@
   });
 
   var test;
-  runNetworkTest(function (options) {
+  runNetworkTest(async (options) => {
+    // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+    if (navigator.userAgent.includes("Android")) {
+      await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false]);
+    }
+
     const emitter = new VideoFrameEmitter();
     const helper = new VideoStreamHelper();
 

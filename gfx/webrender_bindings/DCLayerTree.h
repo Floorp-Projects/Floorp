@@ -12,15 +12,18 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 
-struct IDCompositionDevice;
+struct IDCompositionDevice2;
 struct IDCompositionTarget;
-struct IDCompositionVisual;
+struct IDCompositionVisual2;
 struct IDXGISwapChain1;
 
 namespace mozilla {
 
 namespace wr {
 
+// Currently, MinGW build environment does not handle IDCompositionDesktopDevice
+// and IDCompositionDevice2
+#if !defined(__MINGW32__)
 /**
  * DCLayerTree manages direct composition layers.
  * It does not manage gecko's layers::Layer.
@@ -28,7 +31,7 @@ namespace wr {
 class DCLayerTree {
  public:
   static UniquePtr<DCLayerTree> Create(HWND aHwnd);
-  explicit DCLayerTree(IDCompositionDevice* aCompositionDevice);
+  explicit DCLayerTree(IDCompositionDevice2* aCompositionDevice);
   ~DCLayerTree();
 
   void SetDefaultSwapChain(IDXGISwapChain1* aSwapChain);
@@ -36,11 +39,18 @@ class DCLayerTree {
  protected:
   bool Initialize(HWND aHwnd);
 
-  RefPtr<IDCompositionDevice> mCompositionDevice;
+  RefPtr<IDCompositionDevice2> mCompositionDevice;
   RefPtr<IDCompositionTarget> mCompositionTarget;
-  RefPtr<IDCompositionVisual> mRootVisual;
-  RefPtr<IDCompositionVisual> mDefaultSwapChainVisual;
+  RefPtr<IDCompositionVisual2> mRootVisual;
+  RefPtr<IDCompositionVisual2> mDefaultSwapChainVisual;
 };
+#else
+class DCLayerTree {
+ public:
+  static UniquePtr<DCLayerTree> Create(HWND aHwnd) { return nullptr; }
+  void SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {}
+};
+#endif
 
 }  // namespace wr
 }  // namespace mozilla

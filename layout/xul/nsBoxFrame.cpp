@@ -1145,8 +1145,8 @@ void nsBoxFrame::RegUnregAccessKey(bool aDoReg) {
 
   // only support accesskeys for the following elements
   if (!mContent->IsAnyOfXULElements(nsGkAtoms::button, nsGkAtoms::toolbarbutton,
-                                    nsGkAtoms::checkbox, nsGkAtoms::textbox,
-                                    nsGkAtoms::tab, nsGkAtoms::radio)) {
+                                    nsGkAtoms::checkbox, nsGkAtoms::tab,
+                                    nsGkAtoms::radio)) {
     return;
   }
 

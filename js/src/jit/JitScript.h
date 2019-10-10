@@ -7,6 +7,8 @@
 #ifndef jit_JitScript_h
 #define jit_JitScript_h
 
+#include "mozilla/Atomics.h"
+
 #include "jit/BaselineIC.h"
 #include "js/UniquePtr.h"
 #include "vm/TypeInference.h"
@@ -177,6 +179,13 @@ class alignas(uintptr_t) JitScript final {
   // Ion code for this script. Either nullptr, IonDisabledScriptPtr,
   // IonCompilingScriptPtr or a valid IonScript*.
   IonScript* ionScript_ = nullptr;
+
+  // Number of times the script has been called or has had backedges taken.
+  // Reset if the script's JIT code is forcibly discarded. See also the
+  // ScriptWarmUpData class.
+  mozilla::Atomic<uint32_t, mozilla::Relaxed,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      warmUpCount_ = {};
 
   // Offset of the StackTypeSet array.
   uint32_t typeSetOffset_ = 0;
@@ -392,10 +401,20 @@ class alignas(uintptr_t) JitScript final {
   static constexpr size_t offsetOfJitCodeSkipArgCheck() {
     return offsetof(JitScript, jitCodeSkipArgCheck_);
   }
-  static size_t offsetOfBaselineScript() {
+  static constexpr size_t offsetOfBaselineScript() {
     return offsetof(JitScript, baselineScript_);
   }
-  static size_t offsetOfIonScript() { return offsetof(JitScript, ionScript_); }
+  static constexpr size_t offsetOfIonScript() {
+    return offsetof(JitScript, ionScript_);
+  }
+  static constexpr size_t offsetOfWarmUpCount() {
+    return offsetof(JitScript, warmUpCount_);
+  }
+
+  uint32_t warmUpCount() const { return warmUpCount_; }
+  uint32_t* addressOfWarmUpCount() {
+    return reinterpret_cast<uint32_t*>(&warmUpCount_);
+  }
 
 #ifdef DEBUG
   void printTypes(JSContext* cx, HandleScript script);

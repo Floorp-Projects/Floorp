@@ -28,24 +28,36 @@ add_task(async function test_profile_multi_frame_page_info() {
   let contentProcess = profile.processes.find(
     p => p.threads[0].pid == contentPid
   );
+  let parentPage;
   for (const page of contentProcess.pages) {
     // Parent page
     if (page.url == url) {
       Assert.equal(page.url, url);
-      Assert.equal(typeof page.docshellId, "string");
-      Assert.equal(typeof page.historyId, "number");
-      Assert.equal(page.isSubFrame, false);
+      Assert.equal(typeof page.browsingContextID, "number");
+      Assert.equal(typeof page.innerWindowID, "number");
+      // Top level document will have no embedder.
+      Assert.equal(page.embedderInnerWindowID, 0);
+      parentPage = page;
       foundPage++;
+      break;
     }
+  }
 
+  Assert.notEqual(typeof parentPage, "undefined");
+
+  for (const page of contentProcess.pages) {
     // Child page (iframe)
     if (page.url == BASE_URL + "single_frame.html") {
       Assert.equal(page.url, BASE_URL + "single_frame.html");
-      Assert.equal(typeof page.docshellId, "string");
-      Assert.equal(typeof page.historyId, "number");
-      Assert.equal(page.isSubFrame, true);
+      Assert.equal(typeof page.browsingContextID, "number");
+      Assert.equal(typeof page.innerWindowID, "number");
+      Assert.equal(typeof page.embedderInnerWindowID, "number");
+      Assert.notEqual(typeof parentPage, "undefined");
+      Assert.equal(page.embedderInnerWindowID, parentPage.innerWindowID);
       foundPage++;
+      break;
     }
   }
+
   Assert.equal(foundPage, 2);
 });

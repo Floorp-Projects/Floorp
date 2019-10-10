@@ -29,15 +29,17 @@ exports.TargetFactory = {
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new target.
+   * @param {DebuggerClient} client
+   *        Optional client to fetch the target actor from.
    *
    * @return A target object
    */
-  forTab: async function(tab) {
+  forTab: async function(tab, client) {
     let target = targets.get(tab);
     if (target) {
       return target;
     }
-    const promise = this.createTargetForTab(tab);
+    const promise = this.createTargetForTab(tab, client);
     // Immediately set the target's promise in cache to prevent race
     targets.set(tab, promise);
     target = await promise;
@@ -53,17 +55,19 @@ exports.TargetFactory = {
    * Instantiate a target for the given tab.
    *
    * This will automatically:
-   * - spawn a DebuggerServer in the parent process,
-   * - create a DebuggerClient and connect it to this local DebuggerServer,
+   * - if no client is passed, spawn a DebuggerServer in the parent process,
+   *   and create a DebuggerClient and connect it to this local DebuggerServer,
    * - call RootActor's `getTab` request to retrieve the FrameTargetActor's form,
    * - instantiate a Target instance.
    *
    * @param {XULTab} tab
    *        The tab to use in creating a new target.
+   * @param {DebuggerClient} client
+   *        Optional client to fetch the target actor from.
    *
    * @return A target object
    */
-  async createTargetForTab(tab) {
+  async createTargetForTab(tab, client) {
     function createLocalServer() {
       // Since a remote protocol connection will be made, let's start the
       // DebuggerServer here, once and for all tools.
@@ -81,14 +85,16 @@ exports.TargetFactory = {
     }
 
     function createLocalClient() {
+      createLocalServer();
       return new DebuggerClient(DebuggerServer.connectPipe());
     }
 
-    createLocalServer();
-    const client = createLocalClient();
+    if (!client) {
+      client = createLocalClient();
 
-    // Connect the local client to the local server
-    await client.connect();
+      // Connect the local client to the local server
+      await client.connect();
+    }
 
     // Fetch the FrameTargetActor's Front which is a BrowsingContextTargetFront
     return client.mainRoot.getTab({ tab });

@@ -753,63 +753,6 @@ function createTestHTTPServer() {
   return server;
 }
 
-/**
- * Inject `EventUtils` helpers into ContentTask scope.
- *
- * This helper is automatically exposed to mochitest browser tests,
- * but is missing from content task scope.
- * You should call this method only once per <browser> tag
- *
- * @param {xul:browser} browser
- *        Reference to the browser in which we load content task
- */
-async function injectEventUtilsInContentTask(browser) {
-  await ContentTask.spawn(browser, {}, async function() {
-    if ("EventUtils" in this) {
-      return;
-    }
-
-    const EventUtils = (this.EventUtils = {});
-
-    EventUtils.window = {};
-    EventUtils.parent = EventUtils.window;
-    /* eslint-disable camelcase */
-    EventUtils._EU_Ci = Ci;
-    EventUtils._EU_Cc = Cc;
-    /* eslint-enable camelcase */
-    // EventUtils' `sendChar` function relies on the navigator to synthetize events.
-    EventUtils.navigator = content.navigator;
-    EventUtils.KeyboardEvent = content.KeyboardEvent;
-
-    EventUtils.synthesizeClick = element =>
-      new Promise(resolve => {
-        element.addEventListener(
-          "click",
-          function() {
-            resolve();
-          },
-          { once: true }
-        );
-
-        EventUtils.synthesizeMouseAtCenter(
-          element,
-          { type: "mousedown", isSynthesized: false },
-          content
-        );
-        EventUtils.synthesizeMouseAtCenter(
-          element,
-          { type: "mouseup", isSynthesized: false },
-          content
-        );
-      });
-
-    Services.scriptloader.loadSubScript(
-      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
-      EventUtils
-    );
-  });
-}
-
 /*
  * Register an actor in the content process of the current tab.
  *

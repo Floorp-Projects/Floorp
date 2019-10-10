@@ -10,7 +10,7 @@ ast_struct! {
     /// Parse a Rust source file into a `syn::File` and print out a debug
     /// representation of the syntax tree.
     ///
-    /// ```edition2018
+    /// ```
     /// use std::env;
     /// use std::fs::File;
     /// use std::io::Read;
@@ -78,7 +78,7 @@ ast_struct! {
 pub mod parsing {
     use super::*;
 
-    use parse::{Parse, ParseStream, Result};
+    use crate::parse::{Parse, ParseStream, Result};
 
     impl Parse for File {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -100,7 +100,7 @@ pub mod parsing {
 #[cfg(feature = "printing")]
 mod printing {
     use super::*;
-    use attr::FilterAttrs;
+    use crate::attr::FilterAttrs;
     use proc_macro2::TokenStream;
     use quote::{ToTokens, TokenStreamExt};
 

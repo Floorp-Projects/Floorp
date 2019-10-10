@@ -37,12 +37,11 @@ impl FdiOptions {
 
 impl ParseAttribute for FdiOptions {
     fn parse_nested(&mut self, mi: &syn::Meta) -> Result<()> {
-        match mi.name().to_string().as_str() {
-            "supports" => {
-                self.supports = FromMeta::from_meta(mi)?;
-                Ok(())
-            }
-            _ => self.base.parse_nested(mi),
+        if mi.path().is_ident("supports") {
+            self.supports = FromMeta::from_meta(mi)?;
+            Ok(())
+        } else {
+            self.base.parse_nested(mi)
         }
     }
 }

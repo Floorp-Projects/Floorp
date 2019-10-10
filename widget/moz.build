@@ -117,6 +117,7 @@ XPIDL_SOURCES += [
     'nsIPrintSettingsService.idl',
     'nsIScreen.idl',
     'nsIScreenManager.idl',
+    'nsISharePicker.idl',
     'nsISound.idl',
     'nsITransferable.idl',
 ]

@@ -109,9 +109,9 @@ struct GCPointerPolicy {
                 "Non-pointer type not allowed for GCPointerPolicy");
 
   static void trace(JSTracer* trc, T* vp, const char* name) {
-    if (*vp) {
-      js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
-    }
+    // It's not safe to trace unbarriered pointers except as part of root
+    // marking.
+    UnsafeTraceRoot(trc, vp, name);
   }
   static bool needsSweep(T* vp) {
     if (*vp) {

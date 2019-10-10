@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const Services = require("Services");
 loader.lazyRequireGetter(
   this,
   "gDevTools",
@@ -126,13 +127,53 @@ class LocalTabTargetFront extends BrowsingContextTargetFront {
 
     const toolbox = gDevTools.getToolbox(this);
 
-    // Force destroying the toolbox as the target will be destroyed,
-    // but not the toolbox.
-    await toolbox.destroy();
+    const targetSwitchingEnabled = Services.prefs.getBoolPref(
+      "devtools.target-switching.enabled",
+      false
+    );
 
-    // Recreate a fresh target instance as the current one is now destroyed
-    const newTarget = await TargetFactory.forTab(this.tab);
-    gDevTools.showToolbox(newTarget);
+    // Cache the client as this property will be nullified when the target is closed
+    const client = this.client;
+
+    if (targetSwitchingEnabled) {
+      // By default, we do close the DebuggerClient when the target is destroyed.
+      // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
+      // or when the tab is closes, the server emits tabDetached and the target
+      // destroy itself.
+      // Here, in the context of the process switch, the current target will be destroyed
+      // due to a tabDetached event and a we will create a new one. But we want to reuse
+      // the same client.
+      this.shouldCloseClient = false;
+
+      // If we support target switching, only wait for the target to be
+      // destroyed so that TargetFactory clears its memoized target for this tab
+      await this.once("close");
+    } else {
+      // Otherwise, if we don't support target switching, ensure the toolbox is destroyed.
+      // We need to wait for the toolbox destruction because the TargetFactory memoized the targets,
+      // and only cleans up the cache after the target is destroyed via toolbox destruction.
+      await toolbox.destroy();
+    }
+
+    // Fetch the new target for this tab
+    // Only try to fetch the the target from the existing client when target switching
+    // is enabled. We keep the toolbox open with the original client we created it from.
+    const newTarget = await TargetFactory.forTab(
+      this.tab,
+      targetSwitchingEnabled ? client : null
+    );
+
+    // Depending on if we support target switching or not, we should either
+    // reopen a brand new toolbox against the new target we switched to, or
+    // only communicate the new target to the toolbox.
+    if (targetSwitchingEnabled) {
+      // Restore automatic destruction of the client on target destroy
+      // so that the client is closed when the toolbox closes.
+      this.shouldCloseClient = true;
+      toolbox.switchToTarget(newTarget);
+    } else {
+      gDevTools.showToolbox(newTarget);
+    }
   }
 }
 exports.LocalTabTargetFront = LocalTabTargetFront;

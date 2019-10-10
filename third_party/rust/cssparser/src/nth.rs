@@ -105,7 +105,7 @@ fn parse_n_dash_digits(string: &str) -> Result<i32, ()> {
     let bytes = string.as_bytes();
     if bytes.len() >= 3
         && bytes[..2].eq_ignore_ascii_case(b"n-")
-        && bytes[2..].iter().all(|&c| matches!(c, b'0'...b'9'))
+        && bytes[2..].iter().all(|&c| matches!(c, b'0'..=b'9'))
     {
         Ok(parse_number_saturate(&string[1..]).unwrap()) // Include the minus sign
     } else {

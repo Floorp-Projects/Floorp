@@ -543,7 +543,7 @@ var FullScreen = {
     // fullscreen window is refocused.
     window.addEventListener("activate", this);
 
-    // Addon installation should be cancelled when entering fullscreen for security and usability reasons.
+    // Addon installation should be cancelled when entering DOM fullscreen for security and usability reasons.
     // Installation prompts in fullscreen can trick the user into installing unwanted addons.
     // In fullscreen the notification box does not have a clear visual association with its parent anymore.
     if (gXPInstallObserver.removeAllNotifications(aBrowser)) {

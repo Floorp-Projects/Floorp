@@ -1030,13 +1030,13 @@ add_task(async function testExtensionControlledProxyConfig() {
       }
       function getProxyControls() {
         let controlGroup = doc.getElementById("networkProxyType");
-        let manualControlContainer = controlGroup.querySelector("grid");
+        let manualControlContainer = controlGroup.querySelector("#proxy-grid");
         return {
           manualControls: [
             ...manualControlContainer.querySelectorAll(
               "label[data-l10n-id]:not([control=networkProxyNone])"
             ),
-            ...manualControlContainer.querySelectorAll("textbox"),
+            ...manualControlContainer.querySelectorAll("input"),
             ...manualControlContainer.querySelectorAll("checkbox"),
             ...doc.querySelectorAll("#networkProxySOCKSVersion > radio"),
           ],

@@ -94,13 +94,23 @@ class WebConsoleUI {
    * Return all the proxies we're currently managing (i.e. the "main" one, and the
    * possible additional ones).
    *
+   * @param {Boolean} filterDisconnectedProxies: True by default, if false, this
+   *   function also returns not-already-connected or already disconnected proxies.
+   *
    * @returns {Array<WebConsoleConnectionProxy>}
    */
-  getAllProxies() {
+  getAllProxies(filterDisconnectedProxies = true) {
     let proxies = [this.getProxy()];
 
     if (this.additionalProxies) {
       proxies = proxies.concat(this.additionalProxies);
+    }
+
+    // Ignore Fronts that are already destroyed
+    if (filterDisconnectedProxies) {
+      proxies = proxies.filter(proxy => {
+        return proxy.webConsoleClient && !!proxy.webConsoleClient.actorID;
+      });
     }
 
     return proxies;
@@ -118,7 +128,7 @@ class WebConsoleUI {
 
     this._initializer = (async () => {
       this._initUI();
-      await this._initConnection();
+      await this._attachTargets();
       await this.wrapper.init();
 
       const id = WebConsoleUtils.supportsString(this.hudId);
@@ -167,6 +177,31 @@ class WebConsoleUI {
 
     // Nullify `hud` last as it nullify also target which is used on destroy
     this.window = this.hud = this.wrapper = null;
+  }
+
+  async switchToTarget(newTarget) {
+    // Fake a will-navigate and navigate event packets
+    // The only three attribute being used are the following:
+    const packet = {
+      url: newTarget.url,
+      title: newTarget.title,
+      // We always pass true here as the warning message will
+      // be logged when calling `connect`. This flag is also returned
+      // by `startListeners` request
+      nativeConsoleAPI: true,
+    };
+    this.handleTabWillNavigate(packet);
+
+    // Disconnect all previous proxies, including the top level one
+    for (const proxy of this.getAllProxies()) {
+      proxy.disconnect();
+    }
+    this.proxy = null;
+    this.additionalProxies = [];
+
+    await this._attachTargets();
+
+    this.handleTabNavigated(packet);
   }
 
   /**
@@ -270,7 +305,7 @@ class WebConsoleUI {
    * @return object
    *         A promise object that is resolved/reject based on the proxies connections.
    */
-  async _initConnection() {
+  async _attachTargets() {
     const target = this.hud.currentTarget;
     const fissionSupport = Services.prefs.getBoolPref(
       PREFS.FEATURES.BROWSER_TOOLBOX_FISSION
@@ -312,7 +347,7 @@ class WebConsoleUI {
       }
     }
 
-    return Promise.all(this.getAllProxies().map(proxy => proxy.connect()));
+    return Promise.all(this.getAllProxies(false).map(proxy => proxy.connect()));
   }
 
   _initUI() {

@@ -41,6 +41,15 @@ class ProcessMessageManager final : public MessageSender {
                                 mozilla::ErrorResult& aError) {
     GetDelayedScripts(aCx, aScripts, aError);
   }
+
+  void SetOsPid(int32_t aPid) { mPid = aPid; }
+  int32_t OsPid() const { return mPid; }
+
+  bool IsInProcess() const { return mInProcess; }
+
+ private:
+  int32_t mPid;
+  bool mInProcess;
 };
 
 }  // namespace dom

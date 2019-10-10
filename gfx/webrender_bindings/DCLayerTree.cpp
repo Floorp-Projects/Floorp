@@ -7,9 +7,12 @@
 #include "DCLayerTree.h"
 
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/StaticPrefs_gfx.h"
 
+#undef _WIN32_WINNT
+#define _WIN32_WINNT _WIN32_WINNT_WINBLUE
 #undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WIN8
+#define NTDDI_VERSION NTDDI_WINBLUE
 
 #include <d3d11.h>
 #include <dcomp.h>
@@ -18,9 +21,13 @@
 namespace mozilla {
 namespace wr {
 
+// Currently, MinGW build environment does not handle IDCompositionDesktopDevice
+// and IDCompositionDevice2
+#if !defined(__MINGW32__)
+
 /* static */
 UniquePtr<DCLayerTree> DCLayerTree::Create(HWND aHwnd) {
-  RefPtr<IDCompositionDevice> dCompDevice =
+  RefPtr<IDCompositionDevice2> dCompDevice =
       gfx::DeviceManagerDx::Get()->GetDirectCompositionDevice();
   if (!dCompDevice) {
     return nullptr;
@@ -34,14 +41,25 @@ UniquePtr<DCLayerTree> DCLayerTree::Create(HWND aHwnd) {
   return layerTree;
 }
 
-DCLayerTree::DCLayerTree(IDCompositionDevice* aCompositionDevice)
+DCLayerTree::DCLayerTree(IDCompositionDevice2* aCompositionDevice)
     : mCompositionDevice(aCompositionDevice) {}
 
 DCLayerTree::~DCLayerTree() {}
 
 bool DCLayerTree::Initialize(HWND aHwnd) {
-  HRESULT hr = mCompositionDevice->CreateTargetForHwnd(
-      aHwnd, TRUE, getter_AddRefs(mCompositionTarget));
+  HRESULT hr;
+
+  RefPtr<IDCompositionDesktopDevice> desktopDevice;
+  hr = mCompositionDevice->QueryInterface(
+      (IDCompositionDesktopDevice**)getter_AddRefs(desktopDevice));
+  if (FAILED(hr)) {
+    gfxCriticalNote << "Failed to get IDCompositionDesktopDevice: "
+                    << gfx::hexa(hr);
+    return false;
+  }
+
+  hr = desktopDevice->CreateTargetForHwnd(aHwnd, TRUE,
+                                          getter_AddRefs(mCompositionTarget));
   if (FAILED(hr)) {
     gfxCriticalNote << "Could not create DCompositionTarget: " << gfx::hexa(hr);
     return false;
@@ -58,6 +76,18 @@ bool DCLayerTree::Initialize(HWND aHwnd) {
   if (FAILED(hr)) {
     gfxCriticalNote << "Failed to create DCompositionVisual: " << gfx::hexa(hr);
     return false;
+  }
+
+  if (StaticPrefs::gfx_webrender_dcomp_win_debug_counter_enabled_AtStartup()) {
+    RefPtr<IDCompositionDeviceDebug> debugDevice;
+    hr = mCompositionDevice->QueryInterface(
+        (IDCompositionDeviceDebug**)getter_AddRefs(debugDevice));
+    if (SUCCEEDED(hr)) {
+      debugDevice->EnableDebugCounters();
+    } else {
+      gfxCriticalNote << "Failed to get IDCompositionDesktopDevice: "
+                      << gfx::hexa(hr);
+    }
   }
 
   mCompositionTarget->SetRoot(mRootVisual);
@@ -79,5 +109,6 @@ void DCLayerTree::SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {
   mCompositionDevice->Commit();
 }
 
+#endif
 }  // namespace wr
 }  // namespace mozilla

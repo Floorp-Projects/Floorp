@@ -16,6 +16,13 @@ packages = [
     "core-graphics",
     "core-text",
     "yaml-rust",
+
+    # These are tracked in bug 1587468, see there for pending work.
+    "syn",
+    "quote",
+    "unicode-xid",
+    "synstructure",
+    "proc-macro2",
 ]
 
 # Files that are ignored for all tidy and lint checks.

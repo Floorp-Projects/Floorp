@@ -2,17 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[macro_use] extern crate procedural_masquerade;
+#[macro_use]
+extern crate procedural_masquerade;
 extern crate phf_codegen;
 extern crate proc_macro;
 extern crate proc_macro2;
-#[macro_use] extern crate quote;
+#[macro_use]
+extern crate quote;
 extern crate syn;
 
-#[allow(unused_imports)] use std::ascii::AsciiExt;
+use proc_macro2::{TokenStream, TokenTree};
 use quote::TokenStreamExt;
 use std::iter;
-use proc_macro2::{TokenStream, TokenTree};
 
 define_proc_macros! {
     /// Input: the arms of a `match` expression.
@@ -28,7 +29,12 @@ define_proc_macros! {
             syn::Expr::Match(syn::ExprMatch { arms, .. }) => arms,
             _ => panic!("expected a match expression, got {:?}", expr)
         };
-        max_len(arms.into_iter().flat_map(|arm| arm.pats).filter_map(|pattern| {
+        max_len(arms.into_iter().flat_map(|ref arm| {
+            match arm.pat {
+                syn::Pat::Or(ref p) => p.cases.iter().cloned().collect(),
+                ref p => vec![p.clone()]
+            }
+        }).filter_map(|pattern| {
             let expr = match pattern {
                 syn::Pat::Lit(expr) => expr,
                 syn::Pat::Wild(_) => return None,
@@ -88,12 +94,13 @@ define_proc_macros! {
     }
 }
 
-fn max_len<I: Iterator<Item=usize>>(lengths: I) -> String {
+fn max_len<I: Iterator<Item = usize>>(lengths: I) -> String {
     let max_length = lengths.max().expect("expected at least one string");
     quote!( const MAX_LENGTH: usize = #max_length; ).to_string()
 }
 
 fn string_literal(token: &TokenTree) -> String {
-    let lit: syn::LitStr = syn::parse2(iter::once(token.clone()).collect()).expect(&format!("expected string literal, got {:?}", token));
+    let lit: syn::LitStr = syn::parse2(iter::once(token.clone()).collect())
+        .expect(&format!("expected string literal, got {:?}", token));
     lit.value()
 }

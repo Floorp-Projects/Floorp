@@ -19,6 +19,9 @@ const UPDATED_STATUS_PROPS = [
   "statusText",
 ];
 
+const BLOCKED_ICON =
+  "chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg";
+
 /**
  * Status code component
  * Displays HTTP status code icon
@@ -48,7 +51,6 @@ class StatusCode extends Component {
       statusText,
       blockedReason,
     } = item;
-    let statusContent = status;
     let code;
 
     if (status) {
@@ -62,13 +64,17 @@ class StatusCode extends Component {
     }
 
     if (blockedReason) {
-      statusContent = img({
-        src:
-          "chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg",
-        alt: L10N.getStr("networkMenu.blocked"),
-        title: L10N.getStr("networkMenu.blocked"),
-        className: "blocked",
-      });
+      return div(
+        {
+          className:
+            "requests-list-status-code status-code status-code-blocked",
+          title: L10N.getStr("networkMenu.blocked"),
+        },
+        img({
+          src: BLOCKED_ICON,
+          alt: L10N.getStr("networkMenu.blocked"),
+        })
+      );
     }
 
     // `data-code` refers to the status-code
@@ -87,7 +93,7 @@ class StatusCode extends Component {
         "data-status-code": code,
         "data-code": status,
       },
-      statusContent
+      status
     );
   }
 }

@@ -31,6 +31,10 @@
   color: var(--in-content-text-color) !important;
 }
 
+#login-sort:hover {
+  background-color: var(--in-content-button-background);
+}
+
 #login-sort > option {
   font-weight: normal;
 }

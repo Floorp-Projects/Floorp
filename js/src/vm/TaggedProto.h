@@ -51,8 +51,10 @@ class TaggedProto {
   HashNumber hashCode() const;
 
   void trace(JSTracer* trc) {
+    // It's not safe to trace unbarriered pointers except as part of root
+    // marking.
     if (isObject()) {
-      TraceManuallyBarrieredEdge(trc, &proto, "TaggedProto");
+      TraceRoot(trc, &proto, "TaggedProto");
     }
   }
 

@@ -36,18 +36,15 @@ class UniqueStacks;
 class ProfilerMarkerPayload {
  public:
   explicit ProfilerMarkerPayload(
-      const Maybe<std::string>& aDocShellId = Nothing(),
-      const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
+      const Maybe<uint64_t>& aInnerWindowID = Nothing(),
       UniqueProfilerBacktrace aStack = nullptr)
       : mCommonProps{TimeStamp{}, TimeStamp{}, std::move(aStack),
-                     std::move(aDocShellId), std::move(aDocShellHistoryId)} {}
+                     aInnerWindowID} {}
 
   ProfilerMarkerPayload(const TimeStamp& aStartTime, const TimeStamp& aEndTime,
-                        const Maybe<std::string>& aDocShellId = Nothing(),
-                        const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
+                        const Maybe<uint64_t>& aInnerWindowID = Nothing(),
                         UniqueProfilerBacktrace aStack = nullptr)
-      : mCommonProps{aStartTime, aEndTime, std::move(aStack),
-                     std::move(aDocShellId), std::move(aDocShellHistoryId)} {}
+      : mCommonProps{aStartTime, aEndTime, std::move(aStack), aInnerWindowID} {}
 
   virtual ~ProfilerMarkerPayload() {}
 
@@ -130,8 +127,7 @@ class ProfilerMarkerPayload {
     TimeStamp mStartTime;
     TimeStamp mEndTime;
     UniqueProfilerBacktrace mStack;
-    Maybe<std::string> mDocShellId;
-    Maybe<uint32_t> mDocShellHistoryId;
+    Maybe<uint64_t> mInnerWindowID;
   };
 
   // Deserializers can use this base constructor.
@@ -178,14 +174,13 @@ class ProfilerMarkerPayload {
   MFBT_API void SerializeTagAndPayload(                                        \
       BlocksRingBuffer::EntryWriter& aEntryWriter) const override;
 
-// TODO: Increase the coverage of tracing markers that include DocShell
+// TODO: Increase the coverage of tracing markers that include InnerWindowID
 // information
 class TracingMarkerPayload : public ProfilerMarkerPayload {
  public:
   MFBT_API TracingMarkerPayload(
       const char* aCategory, TracingKind aKind,
-      const Maybe<std::string>& aDocShellId = Nothing(),
-      const Maybe<uint32_t>& aDocShellHistoryId = Nothing(),
+      const Maybe<uint64_t>& aInnerWindowID = Nothing(),
       UniqueProfilerBacktrace aCause = nullptr);
 
   MFBT_API ~TracingMarkerPayload() override;
@@ -226,16 +221,14 @@ class UserTimingMarkerPayload : public ProfilerMarkerPayload {
  public:
   MFBT_API UserTimingMarkerPayload(const std::string& aName,
                                    const TimeStamp& aStartTime,
-                                   const Maybe<std::string>& aDocShellId,
-                                   const Maybe<uint32_t>& aDocShellHistoryId);
+                                   const Maybe<uint64_t>& aInnerWindowID);
 
   MFBT_API UserTimingMarkerPayload(const std::string& aName,
                                    const Maybe<std::string>& aStartMark,
                                    const Maybe<std::string>& aEndMark,
                                    const TimeStamp& aStartTime,
                                    const TimeStamp& aEndTime,
-                                   const Maybe<std::string>& aDocShellId,
-                                   const Maybe<uint32_t>& aDocShellHistoryId);
+                                   const Maybe<uint64_t>& aInnerWindowID);
 
   MFBT_API ~UserTimingMarkerPayload() override;
 
@@ -291,14 +284,12 @@ class TextMarkerPayload : public ProfilerMarkerPayload {
 
   MFBT_API TextMarkerPayload(const std::string& aText,
                              const TimeStamp& aStartTime,
-                             const Maybe<std::string>& aDocShellId,
-                             const Maybe<uint32_t>& aDocShellHistoryId);
+                             const Maybe<uint64_t>& aInnerWindowID);
 
   MFBT_API TextMarkerPayload(const std::string& aText,
                              const TimeStamp& aStartTime,
                              const TimeStamp& aEndTime,
-                             const Maybe<std::string>& aDocShellId,
-                             const Maybe<uint32_t>& aDocShellHistoryId,
+                             const Maybe<uint64_t>& aInnerWindowID,
                              UniqueProfilerBacktrace aCause = nullptr);
 
   MFBT_API ~TextMarkerPayload() override;

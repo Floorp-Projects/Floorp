@@ -309,6 +309,240 @@ raptor-tp6-4-chromium-cold:
             - --test=raptor-tp6-cold-4
             - --app=chromium
 
+raptor-tp6-5-chromium-cold:
+    description: "Raptor tp6-5 cold page-load on Chromium"
+    try-name: raptor-tp6-5-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-5)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-5
+            - --app=chromium
+
+raptor-tp6-6-chromium-cold:
+    description: "Raptor tp6-6 cold page-load on Chromium"
+    try-name: raptor-tp6-6-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-6)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-6
+            - --app=chromium
+
+raptor-tp6-7-chromium-cold:
+    description: "Raptor tp6-7 cold page-load on Chromium"
+    try-name: raptor-tp6-7-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-7)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-7
+            - --app=chromium
+
+raptor-tp6-8-chromium-cold:
+    description: "Raptor tp6-8 cold page-load on Chromium"
+    try-name: raptor-tp6-8-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-8)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-8
+            - --app=chromium
+
+raptor-tp6-9-chromium-cold:
+    description: "Raptor tp6-9 cold page-load on Chromium"
+    try-name: raptor-tp6-9-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-9)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-9
+            - --app=chromium
+
+raptor-tp6-10-chromium-cold:
+    description: "Raptor tp6-10 cold page-load on Chromium"
+    try-name: raptor-tp6-10-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-10)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-10
+            - --app=chromium
+
+raptor-tp6-11-chromium-cold:
+    description: "Raptor tp6-11 cold page-load on Chromium"
+    try-name: raptor-tp6-11-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-11)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-11
+            - --app=chromium
+
+raptor-tp6-12-chromium-cold:
+    description: "Raptor tp6-12 cold page-load on Chromium"
+    try-name: raptor-tp6-12-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-12)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-12
+            - --app=chromium
+
+raptor-tp6-13-chromium-cold:
+    description: "Raptor tp6-13 cold page-load on Chromium"
+    try-name: raptor-tp6-13-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-13)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-13
+            - --app=chromium
+
+raptor-tp6-14-chromium-cold:
+    description: "Raptor tp6-14 cold page-load on Chromium"
+    try-name: raptor-tp6-14-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-14)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-14
+            - --app=chromium
+
+raptor-tp6-15-chromium-cold:
+    description: "Raptor tp6-15 cold page-load on Chromium"
+    try-name: raptor-tp6-15-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-15)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-15
+            - --app=chromium
+
+raptor-tp6-16-chromium-cold:
+    description: "Raptor tp6-16 cold page-load on Chromium"
+    try-name: raptor-tp6-16-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-16)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-16
+            - --app=chromium
+
+raptor-tp6-17-chromium-cold:
+    description: "Raptor tp6-17 cold page-load on Chromium"
+    try-name: raptor-tp6-17-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-17)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-17
+            - --app=chromium
+
+raptor-tp6-18-chromium-cold:
+    description: "Raptor tp6-18 cold page-load on Chromium"
+    try-name: raptor-tp6-18-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-18)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-18
+            - --app=chromium
+
+raptor-tp6-19-chromium-cold:
+    description: "Raptor tp6-19 cold page-load on Chromium"
+    try-name: raptor-tp6-19-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-19)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-19
+            - --app=chromium
+
+raptor-tp6-20-chromium-cold:
+    description: "Raptor tp6-20 cold page-load on Chromium"
+    try-name: raptor-tp6-20-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-20)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-20
+            - --app=chromium
+
+raptor-tp6-21-chromium-cold:
+    description: "Raptor tp6-21 cold page-load on Chromium"
+    try-name: raptor-tp6-21-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-21)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-21
+            - --app=chromium
+
+raptor-tp6-22-chromium-cold:
+    description: "Raptor tp6-22 cold page-load on Chromium"
+    try-name: raptor-tp6-22-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-22)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-22
+            - --app=chromium
+
+raptor-tp6-23-chromium-cold:
+    description: "Raptor tp6-23 cold page-load on Chromium"
+    try-name: raptor-tp6-23-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-23)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-23
+            - --app=chromium
+
+raptor-tp6-24-chromium-cold:
+    description: "Raptor tp6-24 cold page-load on Chromium"
+    try-name: raptor-tp6-24-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-24)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-24
+            - --app=chromium
+
+raptor-tp6-25-chromium-cold:
+    description: "Raptor tp6-25 cold page-load on Chromium"
+    try-name: raptor-tp6-25-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-25)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-25
+            - --app=chromium
+
+raptor-tp6-26-chromium-cold:
+    description: "Raptor tp6-26 cold page-load on Chromium"
+    try-name: raptor-tp6-26-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-26)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-26
+            - --app=chromium
+
+raptor-tp6-27-chromium-cold:
+    description: "Raptor tp6-27 cold page-load on Chromium"
+    try-name: raptor-tp6-27-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-27)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-27
+            - --app=chromium
+
+raptor-tp6-28-chromium-cold:
+    description: "Raptor tp6-28 cold page-load on Chromium"
+    try-name: raptor-tp6-28-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-28)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-28
+            - --app=chromium
+
+raptor-tp6-29-chromium-cold:
+    description: "Raptor tp6-29 cold page-load on Chromium"
+    try-name: raptor-tp6-29-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-29)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-29
+            - --app=chromium
+
+raptor-tp6-30-chromium-cold:
+    description: "Raptor tp6-30 cold page-load on Chromium"
+    try-name: raptor-tp6-30-chromium-cold
+    treeherder-symbol: Rap-Cr(tp6-c-30)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-cold-30
+            - --app=chromium
+
 raptor-ares6-chromium:
     description: "Raptor Ares6 on Chromium"
     try-name: raptor-ares6-chromium
