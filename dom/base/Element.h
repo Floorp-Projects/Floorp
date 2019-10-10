@@ -1468,7 +1468,11 @@ class Element : public FragmentOrElement {
    *
    * If you change this, change also the similar method in Link.
    */
-  virtual void NodeInfoChanged(Document* aOldDoc) {}
+  virtual void NodeInfoChanged(Document* aOldDoc) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    AssertInvariantsOnNodeInfoChange();
+#endif
+  }
 
   /**
    * Parse a string into an nsAttrValue for a CORS attribute.  This
@@ -1917,6 +1921,10 @@ class Element : public FragmentOrElement {
                        ReparseAttributes = ReparseAttributes::Yes);
 
  private:
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  void AssertInvariantsOnNodeInfoChange();
+#endif
+
   /**
    * Slow path for GetClasses, this should only be called for SVG elements.
    */
