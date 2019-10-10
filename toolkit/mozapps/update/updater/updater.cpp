@@ -374,7 +374,7 @@ bool GetSecureID(char* outBuf) {
     return false;
   }
 
-  outBuf[UUID_LEN] = '\0';
+  outBuf[UUID_LEN - 1] = '\0';
   return true;
 }
 #endif
