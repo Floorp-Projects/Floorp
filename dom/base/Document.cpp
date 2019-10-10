@@ -11988,8 +11988,8 @@ void Document::RegisterPendingLinkUpdate(Link* aLink) {
 
   if (!mHasLinksToUpdateRunnable && !mFlushingPendingLinkUpdates) {
     nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("Document::FlushPendingLinkUpdatesFromRunnable", this,
-                          &Document::FlushPendingLinkUpdatesFromRunnable);
+        NewRunnableMethod("Document::FlushPendingLinkUpdates", this,
+                          &Document::FlushPendingLinkUpdates);
     // Do this work in a second in the worst case.
     nsresult rv = NS_DispatchToCurrentThreadQueue(event.forget(), 1000,
                                                   EventQueuePriority::Idle);
@@ -12004,16 +12004,10 @@ void Document::RegisterPendingLinkUpdate(Link* aLink) {
   mLinksToUpdate.InfallibleAppend(aLink);
 }
 
-void Document::FlushPendingLinkUpdatesFromRunnable() {
+void Document::FlushPendingLinkUpdates() {
+  MOZ_DIAGNOSTIC_ASSERT(!mFlushingPendingLinkUpdates);
   MOZ_ASSERT(mHasLinksToUpdateRunnable);
   mHasLinksToUpdateRunnable = false;
-  FlushPendingLinkUpdates();
-}
-
-void Document::FlushPendingLinkUpdates() {
-  if (mFlushingPendingLinkUpdates) {
-    return;
-  }
 
   auto restore = MakeScopeExit([&] { mFlushingPendingLinkUpdates = false; });
   mFlushingPendingLinkUpdates = true;
