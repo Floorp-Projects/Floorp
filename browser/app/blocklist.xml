@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570441214263">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570701652245">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3489,6 +3489,22 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="bd51d01b-20bf-4682-a588-c03e988eb746" id="/^((web@MapsNewTab)|(ext@WhatsMySpeed)|(ext@MyEmailCenter)|(ext@TemplateHelper)|(ext@FreeLiveRadio)|(ext@FreeFormsNow)|(web@ConverterNewTab)|(web@EmailAccountNewTab)|(spweb@EmailNewTab)|(web@PackagesNewTab)|(web@ManualsNewTab)|(web@ClassifiedsNewTab)|(web@FormsNewTab)|(web@AncestryNewTab)|(web@RecipesNewTab)|(web@TVNewTab)|(web@WeatherNewTab)|(web@translationsNewTab)|(web@SportsNewTab)|(web@CouponsNewTab)|(web@FlightsNewTab)|(test@InstaFormsFinder)|(web@NewsNewTab)|(web@SpeedTestNewTab)|(web@TransitNewTab)|(web@BibleNewTab)|(web@RadioNewTab)|(web@TemplateNewTab)|(web@PhotoEditorNewTab)|(web@AudioConverterNewTab)|(web@GamesNewTab)|(web@VideoConverterNewTab)|(test@TheWeatherChecker)|(web@InterestsNewTab)|(test@SearchHub)|(web@CalendarNewTab)|(web@TaxesNewTab)|(web@BankNewTab)|(web@CrimeReportNewTab)|(web@CryptoNewTab)|(web@eBooksNewTab)|(web@FinanceNewTab)|(web@FitnessNewTab)|(web@JobsNewTab)|(web@MoviesNewTab)|(web@NotepadNewTab)|(web@OfficeNewTab)|(web@PCTextingNewTab)|(web@PhotoNewTab)|(web@ScrapbookNewTab)|(web@UtilityNewTab)|(test@FlightTrackerUpdate)|(test@FreeForms)|(test@UniversalConverter)|(test@MyEmailCenter)|(test@TemplateHelper)|(test@FreeLiveRadio)|(test@FreeFormsNow)|(ext@FormsHub)|(webext@WhatsMySpeed)|(webext@WatchTelevision)|(webext@EmailExpressTab)|(webext@MyConverterTab)|(webext@TemplateCreatorTab)|(webext@LocalForecastTab)|(webext@EZDirectionsandMapsTab)|(webext@MapsNDirectionsTab)|(webext@MyEmailCenter)|(webext@TemplateHelper)|(webext@FreeLiveRadio)|(webext@FreeFormsNow)|(webext@InstaFormsFinder)|(webext@TheWeatherChecker)|(webext@FlightTrackerUpdate)|(webext@FreeForms)|(webext@UniversalConverter)|(webext@FormsHub)|(webext@SearchHub)|(ds@DirectSearchPro)|(webext@AppDiscoveryTools)|(webext@LiveRadioProTab)|(webext@TheWeatherPilotTab)|(webext@ExpressPackageFinderTab)|(webext@LoginAssistantTab)|(webext@SelectSearch)|(addon@SelectSearch)|(webext@ExpressSpeedChecker)|(webext@BreakingNewsPlus)|(webext@WorldEventsToday)|(addon@WorldEventsToday)|(webext@OnlineTVAccess)|(webext@FindingFormsPro)|(webext@EasyClassifieds)|(webext@SpeedCheckerPlus)|(webext@GetFreeCoupons)|(addon@MyEmailChecker)|(app@FlightTrackerUpdate)|(app@WatchTelevision)|(app@WhatsMySpeed)|(app@MyEmailCenter)|(app@TemplateCreatorTab)|(app@FreeLiveRadio)|(app@FreeFormsNow)|(app@InstaFormsFinder)|(app@SearchHub)|(app@TheWeatherChecker)|(app@FormsHub)|(webtab@Maps)|(app@FreeForms)|(app@UniversalConverter)|(app@EmailExpressTab)|(app@MyConverterTab)|(app@TemplateHelper)|(app@LocalForecastTab)|(app@EZDirectionsandMapsTab)|(app@MapsNDirectionsTab)|(app@AppDiscoveryTools)|(app@LiveRadioProTab)|(app@TheWeatherPilotTab)|(app@ExpressPackageFinderTab)|(app@WorldEventsToday)|(app@OnlineTVAccess)|(app@SpeedCheckerPlus)|(app@EasyClassifieds)|(app@GetFreeCoupons)|(app@FindingFormsPro)|(app@TemplatesHereTab)|(webtab@Packages)|(webtab@Forms)|(webtab@Email)|(webtab@Radio)|(app@MyEmailChecker)|(webtab@TV)|(webtab@Classifieds)|(webtab@Ancestry)|(webtab@Weather)|(webtab@Manuals)|(webtab@SpeedTest)|(app@MyDailyCalendar)|(webtab@Transit)|(webtab@Converter)|(webtab@Coupons)|(webtab@Recipes)|(webtab@News)|(webtab@Sports)|(webtab@translations)|(webtab@Template)|(webtab@AudioConverter)|(webtab@Flights)|(webtab@Photo)|(webtab@Bible)|(webtab@PhotoEditor)|(app@MyVideoConverter)|(webtab@Games)|(app@MyLoginHelper)|(app@QuickEmailAccess)|(app@MyRecipeFinder)|(app@MyFlightFinder)|(webtab@Fitness)|(webtab@VideoConverter)|(webtab@Taxes)|(webtab@Bank)|(webtab@Calendar)|(webtab@CrimeReport)|(webtab@Crypto)|(webtab@eBooks)|(webtab@Finance)|(webtab@Interests)|(webtab@Jobs)|(webtab@Notepad)|(webtab@Movies)|(webtab@Office)|(webtab@PCTexting)|(webtab@Scrapbook)|(webtab@Utility))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3ece7523-cdec-46cf-ac20-9e939a4d4802" id="/^((oigfsj9434lavvv@oigfsj9434lavvv\.com)|(mity82900jf2@mity82900jf2\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ab0b6868-6077-4d47-bd58-1df3f572c04d" id="{2e106fa4-ee23-4b4a-9ed0-f93edee539b5}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="bb76b262-7087-4cf2-a82f-12cfbf91239a" id="{2a78ab07-91b2-4086-889d-619e43d5e5f8}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -3524,12 +3540,12 @@
     <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
       <match name="filename" exp="libflashplayer\.so"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.223" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.238" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
       <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.223" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.238" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
