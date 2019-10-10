@@ -10,6 +10,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.support.ktx.android.view.findViewInHierarchy
 
 /**
  * A [CoordinatorLayout.Behavior] implementation to be used with [EngineView] when placing a toolbar at the
@@ -37,8 +38,13 @@ class EngineViewBottomBehavior(
         return super.layoutDependsOn(parent, child, dependency)
     }
 
+    /**
+     * Apply vertical clipping to [EngineView]. This requires [EngineViewBottomBehavior] to be set
+     * in/on the [EngineView] or its parent. Must be a direct descending child of [CoordinatorLayout].
+     */
     override fun onDependentViewChanged(parent: CoordinatorLayout, child: View, dependency: View): Boolean {
-        (child as EngineView).setVerticalClipping(dependency.height - dependency.translationY.toInt())
+        val engineView = child.findViewInHierarchy { it is EngineView } as EngineView?
+        engineView?.setVerticalClipping(dependency.height - dependency.translationY.toInt())
         return true
     }
 }

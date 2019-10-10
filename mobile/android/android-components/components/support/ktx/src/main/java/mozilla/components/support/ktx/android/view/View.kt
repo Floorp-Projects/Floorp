@@ -9,6 +9,7 @@ import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.MainThread
@@ -103,6 +104,22 @@ fun View.toScope(): CoroutineScope {
     })
 
     return scope
+}
+
+/**
+ * Finds the first a view in the hierarchy, for which the provided predicate is true.
+ */
+fun View.findViewInHierarchy(predicate: (View) -> Boolean): View? {
+    if (predicate(this)) return this
+
+    if (this is ViewGroup) {
+        for (i in 0 until this.childCount) {
+            val childView = this.getChildAt(i).findViewInHierarchy(predicate)
+            if (childView != null) return childView
+        }
+    }
+
+    return null
 }
 
 /**

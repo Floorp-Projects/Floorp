@@ -5,9 +5,12 @@
 package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
+import android.content.Context
 import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +26,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -183,4 +187,31 @@ class ViewTest {
         assertFalse(latch.await(5, TimeUnit.SECONDS))
         assertFalse(coroutineExecuted)
     }
+
+    @Test
+    fun `correct view is found in the hierarchy matching the predicate`() {
+        val root = LinearLayout(testContext)
+        val layout = RelativeLayout(testContext)
+        val testView = TestView(testContext)
+
+        layout.addView(testView)
+        root.addView(layout)
+
+        val rootFound = root.findViewInHierarchy { it is LinearLayout }
+
+        assertNotNull(rootFound)
+        assertTrue(rootFound is LinearLayout)
+
+        val layoutFound = root.findViewInHierarchy { it is RelativeLayout }
+
+        assertNotNull(layoutFound)
+        assertTrue(layoutFound is RelativeLayout)
+
+        val testViewFound = root.findViewInHierarchy { it is TestView }
+
+        assertNotNull(testViewFound)
+        assertTrue(testViewFound is TestView)
+    }
+
+    private class TestView(context: Context) : View(context)
 }
