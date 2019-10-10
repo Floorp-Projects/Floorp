@@ -71,8 +71,14 @@
       // eslint-disable-next-line no-eval
       let message = eval(event.data);
 
-      is(message.source, "iframe", "Good source");
-      is(message.result, testData[testIndex].expectedResult, "Good result");
+      // TODO: This is an ad-hoc solution to get a useful assertion message.
+      // It would be desirable that the test framework provides the ability
+      // to capture context information and provide it on assertion failures,
+      // automatically stringified.
+      let testContext = `testData[${testIndex}] == ${JSON.stringify(testData[testIndex])}`;
+
+      is(message.source, "iframe", `Good source for ${testContext}`);
+      is(message.result, testData[testIndex].expectedResult, `Good result for ${testContext}`);
 
       openedWindow.close();
 
