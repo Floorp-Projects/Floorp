@@ -420,12 +420,6 @@ class nsAttrValue {
   bool ParseDoubleValue(const nsAString& aString);
 
   /**
-   * Parse a lazy URI.  This just sets up the storage for the URI; it
-   * doesn't actually allocate it.
-   */
-  bool ParseLazyURIValue(const nsAString& aString);
-
-  /**
    * Parse a margin string of format 'top, right, bottom, left' into
    * an nsIntMargin.
    *

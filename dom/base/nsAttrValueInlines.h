@@ -14,8 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ServoUtils.h"
 
-struct MiscContainer;
-
 struct MiscContainer final {
   typedef nsAttrValue::ValueType ValueType;
 
