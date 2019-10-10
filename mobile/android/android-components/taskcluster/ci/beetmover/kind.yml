@@ -35,8 +35,6 @@ job-template:
                 snapshot: BM-Snap
                 default: BM-B
         kind: build
-        platform: android-all/opt
-        tier: 2
     worker:
         action: push-to-maven
         bucket:
