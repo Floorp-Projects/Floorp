@@ -40,21 +40,21 @@ impl FromMeta for Shape {
     fn from_list(items: &[NestedMeta]) -> Result<Self> {
         let mut new = Shape::default();
         for item in items {
-            if let NestedMeta::Meta(Meta::Word(ref ident)) = *item {
+            if let NestedMeta::Meta(Meta::Path(ref path)) = *item {
+                let ident = &path.segments.first().unwrap().ident;
                 let word = ident.to_string();
-                let word = word.as_str();
                 if word == "any" {
                     new.any = true;
                 } else if word.starts_with("enum_") {
                     new.enum_values
-                        .set_word(word)
-                        .map_err(|e| e.with_span(ident))?;
+                        .set_word(&word)
+                        .map_err(|e| e.with_span(&ident))?;
                 } else if word.starts_with("struct_") {
                     new.struct_values
-                        .set_word(word)
-                        .map_err(|e| e.with_span(ident))?;
+                        .set_word(&word)
+                        .map_err(|e| e.with_span(&ident))?;
                 } else {
-                    return Err(Error::unknown_value(word).with_span(ident));
+                    return Err(Error::unknown_value(&word).with_span(&ident));
                 }
             } else {
                 return Err(Error::unsupported_format("non-word").with_span(item));
@@ -166,9 +166,9 @@ impl FromMeta for DataShape {
         let mut new = DataShape::default();
 
         for item in items {
-            if let NestedMeta::Meta(Meta::Word(ref ident)) = *item {
-                if let Err(e) = new.set_word(&ident.to_string()) {
-                    errors.push(e.with_span(ident));
+            if let NestedMeta::Meta(Meta::Path(ref path)) = *item {
+                if let Err(e) = new.set_word(&path.segments.first().unwrap().ident.to_string()) {
+                    errors.push(e.with_span(&path));
                 }
             } else {
                 errors.push(Error::unsupported_format("non-word").with_span(item));

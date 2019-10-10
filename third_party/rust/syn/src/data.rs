@@ -1,5 +1,5 @@
 use super::*;
-use punctuated::Punctuated;
+use crate::punctuated::Punctuated;
 
 ast_struct! {
     /// An enum variant.
@@ -32,28 +32,42 @@ ast_enum_of_structs! {
     /// This type is a [syntax tree enum].
     ///
     /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
+    //
+    // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
+    // blocked on https://github.com/rust-lang/rust/issues/62833
     pub enum Fields {
         /// Named fields of a struct or struct variant such as `Point { x: f64,
         /// y: f64 }`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Named(FieldsNamed {
-            pub brace_token: token::Brace,
-            pub named: Punctuated<Field, Token![,]>,
-        }),
+        Named(FieldsNamed),
 
         /// Unnamed fields of a tuple struct or tuple variant such as `Some(T)`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Unnamed(FieldsUnnamed {
-            pub paren_token: token::Paren,
-            pub unnamed: Punctuated<Field, Token![,]>,
-        }),
+        Unnamed(FieldsUnnamed),
 
         /// Unit struct or unit variant such as `None`.
-        pub Unit,
+        Unit,
+    }
+}
+
+ast_struct! {
+    /// Named fields of a struct or struct variant such as `Point { x: f64,
+    /// y: f64 }`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct FieldsNamed {
+        pub brace_token: token::Brace,
+        pub named: Punctuated<Field, Token![,]>,
+    }
+}
+
+ast_struct! {
+    /// Unnamed fields of a tuple struct or tuple variant such as `Some(T)`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct FieldsUnnamed {
+        pub paren_token: token::Paren,
+        pub unnamed: Punctuated<Field, Token![,]>,
     }
 }
 
@@ -61,26 +75,35 @@ impl Fields {
     /// Get an iterator over the borrowed [`Field`] items in this object. This
     /// iterator can be used to iterate over a named or unnamed struct or
     /// variant's fields uniformly.
-    ///
-    /// [`Field`]: struct.Field.html
     pub fn iter(&self) -> punctuated::Iter<Field> {
-        match *self {
-            Fields::Unit => private::empty_punctuated_iter(),
-            Fields::Named(ref f) => f.named.iter(),
-            Fields::Unnamed(ref f) => f.unnamed.iter(),
+        match self {
+            Fields::Unit => crate::punctuated::empty_punctuated_iter(),
+            Fields::Named(f) => f.named.iter(),
+            Fields::Unnamed(f) => f.unnamed.iter(),
         }
     }
 
     /// Get an iterator over the mutably borrowed [`Field`] items in this
     /// object. This iterator can be used to iterate over a named or unnamed
     /// struct or variant's fields uniformly.
-    ///
-    /// [`Field`]: struct.Field.html
     pub fn iter_mut(&mut self) -> punctuated::IterMut<Field> {
-        match *self {
-            Fields::Unit => private::empty_punctuated_iter_mut(),
-            Fields::Named(ref mut f) => f.named.iter_mut(),
-            Fields::Unnamed(ref mut f) => f.unnamed.iter_mut(),
+        match self {
+            Fields::Unit => crate::punctuated::empty_punctuated_iter_mut(),
+            Fields::Named(f) => f.named.iter_mut(),
+            Fields::Unnamed(f) => f.unnamed.iter_mut(),
+        }
+    }
+}
+
+impl IntoIterator for Fields {
+    type Item = Field;
+    type IntoIter = punctuated::IntoIter<Field>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            Fields::Unit => Punctuated::<Field, ()>::new().into_iter(),
+            Fields::Named(f) => f.named.into_iter(),
+            Fields::Unnamed(f) => f.unnamed.into_iter(),
         }
     }
 }
@@ -139,37 +162,56 @@ ast_enum_of_structs! {
     /// This type is a [syntax tree enum].
     ///
     /// [syntax tree enum]: enum.Expr.html#syntax-tree-enums
+    //
+    // TODO: change syntax-tree-enum link to an intra rustdoc link, currently
+    // blocked on https://github.com/rust-lang/rust/issues/62833
     pub enum Visibility {
         /// A public visibility level: `pub`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Public(VisPublic {
-            pub pub_token: Token![pub],
-        }),
+        Public(VisPublic),
 
         /// A crate-level visibility: `crate`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Crate(VisCrate {
-            pub crate_token: Token![crate],
-        }),
+        Crate(VisCrate),
 
         /// A visibility level restricted to some path: `pub(self)` or
         /// `pub(super)` or `pub(crate)` or `pub(in some::module)`.
-        ///
-        /// *This type is available if Syn is built with the `"derive"` or
-        /// `"full"` feature.*
-        pub Restricted(VisRestricted {
-            pub pub_token: Token![pub],
-            pub paren_token: token::Paren,
-            pub in_token: Option<Token![in]>,
-            pub path: Box<Path>,
-        }),
+        Restricted(VisRestricted),
 
         /// An inherited visibility, which usually means private.
-        pub Inherited,
+        Inherited,
+    }
+}
+
+ast_struct! {
+    /// A public visibility level: `pub`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct VisPublic {
+        pub pub_token: Token![pub],
+    }
+}
+
+ast_struct! {
+    /// A crate-level visibility: `crate`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct VisCrate {
+        pub crate_token: Token![crate],
+    }
+}
+
+ast_struct! {
+    /// A visibility level restricted to some path: `pub(self)` or
+    /// `pub(super)` or `pub(crate)` or `pub(in some::module)`.
+    ///
+    /// *This type is available if Syn is built with the `"derive"` or
+    /// `"full"` feature.*
+    pub struct VisRestricted {
+        pub pub_token: Token![pub],
+        pub paren_token: token::Paren,
+        pub in_token: Option<Token![in]>,
+        pub path: Box<Path>,
     }
 }
 
@@ -177,8 +219,8 @@ ast_enum_of_structs! {
 pub mod parsing {
     use super::*;
 
-    use ext::IdentExt;
-    use parse::{Parse, ParseStream, Result};
+    use crate::ext::IdentExt;
+    use crate::parse::{Parse, ParseStream, Result};
 
     impl Parse for Variant {
         fn parse(input: ParseStream) -> Result<Self> {
@@ -268,6 +310,7 @@ pub mod parsing {
             let pub_token = input.parse::<Token![pub]>()?;
 
             if input.peek(token::Paren) {
+                // TODO: optimize using advance_to
                 let ahead = input.fork();
                 let mut content;
                 parenthesized!(content in ahead);
@@ -277,14 +320,14 @@ pub mod parsing {
                     || content.peek(Token![super])
                 {
                     return Ok(Visibility::Restricted(VisRestricted {
-                        pub_token: pub_token,
+                        pub_token,
                         paren_token: parenthesized!(content in input),
                         in_token: None,
                         path: Box::new(Path::from(content.call(Ident::parse_any)?)),
                     }));
                 } else if content.peek(Token![in]) {
                     return Ok(Visibility::Restricted(VisRestricted {
-                        pub_token: pub_token,
+                        pub_token,
                         paren_token: parenthesized!(content in input),
                         in_token: Some(content.parse()?),
                         path: Box::new(content.call(Path::parse_mod_style)?),
@@ -292,9 +335,7 @@ pub mod parsing {
                 }
             }
 
-            Ok(Visibility::Public(VisPublic {
-                pub_token: pub_token,
-            }))
+            Ok(Visibility::Public(VisPublic { pub_token }))
         }
 
         fn parse_crate(input: ParseStream) -> Result<Self> {
@@ -316,14 +357,14 @@ mod printing {
     use proc_macro2::TokenStream;
     use quote::{ToTokens, TokenStreamExt};
 
-    use print::TokensOrDefault;
+    use crate::print::TokensOrDefault;
 
     impl ToTokens for Variant {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(&self.attrs);
             self.ident.to_tokens(tokens);
             self.fields.to_tokens(tokens);
-            if let Some((ref eq_token, ref disc)) = self.discriminant {
+            if let Some((eq_token, disc)) = &self.discriminant {
                 eq_token.to_tokens(tokens);
                 disc.to_tokens(tokens);
             }
@@ -350,7 +391,7 @@ mod printing {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             tokens.append_all(&self.attrs);
             self.vis.to_tokens(tokens);
-            if let Some(ref ident) = self.ident {
+            if let Some(ident) = &self.ident {
                 ident.to_tokens(tokens);
                 TokensOrDefault(&self.colon_token).to_tokens(tokens);
             }

@@ -19,6 +19,27 @@ types.addDictType("available-breakpoint-event", {
   id: "string",
   name: "string",
 });
+types.addDictType("paused-reason", {
+  type: "string",
+
+  // Used for any pause type that wants to describe why the pause happened.
+  message: "nullable:string",
+
+  // Used for the stepping pause types.
+  frameFinished: "nullable:json",
+
+  // Used for the "exception" pause type.
+  exception: "nullable:json",
+
+  // Used for the "interrupted" pause type.
+  onNext: "nullable:boolean",
+
+  // Used for the "eventBreakpoint" pause type.
+  breakpoint: "nullable:json",
+
+  // Used for the "mutationBreakpoint" pause type.
+  mutationType: "nullable:string",
+});
 
 const threadSpec = generateActorSpec({
   typeName: "thread",
@@ -27,7 +48,7 @@ const threadSpec = generateActorSpec({
     paused: {
       actor: Option(0, "nullable:string"),
       frame: Option(0, "nullable:json"),
-      why: Option(0, "nullable:json"),
+      why: Option(0, "paused-reason"),
       poppedFrames: Option(0, "nullable:json"),
       error: Option(0, "nullable:json"),
       recordingEndpoint: Option(0, "nullable:json"),
@@ -44,6 +65,10 @@ const threadSpec = generateActorSpec({
       executionPoint: Option(0, "json"),
       unscannedRegions: Option(0, "json"),
       cachedPoints: Option(0, "json"),
+    },
+    replayFramePositions: {
+      positions: Option(0, "array:json"),
+      frame: Option(0, "string"),
     },
   },
 

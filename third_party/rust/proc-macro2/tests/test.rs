@@ -1,11 +1,9 @@
-extern crate proc_macro2;
-
 use std::str::{self, FromStr};
 
 use proc_macro2::{Ident, Literal, Spacing, Span, TokenStream, TokenTree};
 
 #[test]
-fn terms() {
+fn idents() {
     assert_eq!(
         Ident::new("String", Span::call_site()).to_string(),
         "String"
@@ -16,7 +14,7 @@ fn terms() {
 
 #[test]
 #[cfg(procmacro2_semver_exempt)]
-fn raw_terms() {
+fn raw_idents() {
     assert_eq!(
         Ident::new_raw("String", Span::call_site()).to_string(),
         "r#String"
@@ -27,37 +25,37 @@ fn raw_terms() {
 
 #[test]
 #[should_panic(expected = "Ident is not allowed to be empty; use Option<Ident>")]
-fn term_empty() {
+fn ident_empty() {
     Ident::new("", Span::call_site());
 }
 
 #[test]
 #[should_panic(expected = "Ident cannot be a number; use Literal instead")]
-fn term_number() {
+fn ident_number() {
     Ident::new("255", Span::call_site());
 }
 
 #[test]
 #[should_panic(expected = "\"a#\" is not a valid Ident")]
-fn term_invalid() {
+fn ident_invalid() {
     Ident::new("a#", Span::call_site());
 }
 
 #[test]
 #[should_panic(expected = "not a valid Ident")]
-fn raw_term_empty() {
+fn raw_ident_empty() {
     Ident::new("r#", Span::call_site());
 }
 
 #[test]
 #[should_panic(expected = "not a valid Ident")]
-fn raw_term_number() {
+fn raw_ident_number() {
     Ident::new("r#255", Span::call_site());
 }
 
 #[test]
 #[should_panic(expected = "\"r#a#\" is not a valid Ident")]
-fn raw_term_invalid() {
+fn raw_ident_invalid() {
     Ident::new("r#a#", Span::call_site());
 }
 
@@ -80,10 +78,38 @@ fn lifetime_invalid() {
 }
 
 #[test]
-fn literals() {
+fn literal_string() {
     assert_eq!(Literal::string("foo").to_string(), "\"foo\"");
     assert_eq!(Literal::string("\"").to_string(), "\"\\\"\"");
+    assert_eq!(Literal::string("didn't").to_string(), "\"didn't\"");
+}
+
+#[test]
+fn literal_character() {
+    assert_eq!(Literal::character('x').to_string(), "'x'");
+    assert_eq!(Literal::character('\'').to_string(), "'\\''");
+    assert_eq!(Literal::character('"').to_string(), "'\"'");
+}
+
+#[test]
+fn literal_float() {
     assert_eq!(Literal::f32_unsuffixed(10.0).to_string(), "10.0");
+}
+
+#[test]
+fn literal_suffix() {
+    fn token_count(p: &str) -> usize {
+        p.parse::<TokenStream>().unwrap().into_iter().count()
+    }
+
+    assert_eq!(token_count("999u256"), 1);
+    assert_eq!(token_count("999r#u256"), 3);
+    assert_eq!(token_count("1."), 1);
+    assert_eq!(token_count("1.f32"), 3);
+    assert_eq!(token_count("1.0_0"), 1);
+    assert_eq!(token_count("1._0"), 3);
+    assert_eq!(token_count("1._m"), 3);
+    assert_eq!(token_count("\"\"s"), 1);
 }
 
 #[test]
@@ -113,6 +139,9 @@ fn roundtrip() {
         9
         0
         0xffffffffffffffffffffffffffffffff
+        1x
+        1u80
+        1f320
     ",
     );
     roundtrip("'a");
@@ -129,9 +158,6 @@ fn fail() {
             panic!("should have failed to parse: {}\n{:#?}", p, s);
         }
     }
-    fail("1x");
-    fail("1u80");
-    fail("1f320");
     fail("' static");
     fail("r#1");
     fail("r#_");
@@ -339,6 +365,27 @@ TokenStream [
         delimiter: Bracket,
         stream: TokenStream [
             Ident {
+                sym: a,
+            },
+            Punct {
+                op: '+',
+                spacing: Alone,
+            },
+            Literal {
+                lit: 1,
+            },
+        ],
+    },
+]\
+    ";
+
+    #[cfg(not(procmacro2_semver_exempt))]
+    let expected_before_trailing_commas = "\
+TokenStream [
+    Group {
+        delimiter: Bracket,
+        stream: TokenStream [
+            Ident {
                 sym: a
             },
             Punct {
@@ -355,6 +402,31 @@ TokenStream [
 
     #[cfg(procmacro2_semver_exempt)]
     let expected = "\
+TokenStream [
+    Group {
+        delimiter: Bracket,
+        stream: TokenStream [
+            Ident {
+                sym: a,
+                span: bytes(2..3),
+            },
+            Punct {
+                op: '+',
+                spacing: Alone,
+                span: bytes(4..5),
+            },
+            Literal {
+                lit: 1,
+                span: bytes(6..7),
+            },
+        ],
+        span: bytes(1..8),
+    },
+]\
+    ";
+
+    #[cfg(procmacro2_semver_exempt)]
+    let expected_before_trailing_commas = "\
 TokenStream [
     Group {
         delimiter: Bracket,
@@ -378,7 +450,12 @@ TokenStream [
 ]\
     ";
 
-    assert_eq!(expected, format!("{:#?}", tts));
+    let actual = format!("{:#?}", tts);
+    if actual.ends_with(",\n]") {
+        assert_eq!(expected, actual);
+    } else {
+        assert_eq!(expected_before_trailing_commas, actual);
+    }
 }
 
 #[test]

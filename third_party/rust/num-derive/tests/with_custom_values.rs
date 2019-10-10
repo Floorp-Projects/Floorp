@@ -64,7 +64,7 @@ fn test_reflexive_for_enum_with_custom_value() {
         .map(|&x| -> Option<Color> { num_renamed::FromPrimitive::from_u64(x) })
         .map(|x| x.and_then(|x| num_renamed::ToPrimitive::to_u64(&x)))
         .collect();
-    let before = before.into_iter().cloned().map(Some).collect::<Vec<_>>();
+    let before = before.iter().cloned().map(Some).collect::<Vec<_>>();
 
     assert_eq!(before, after);
 }

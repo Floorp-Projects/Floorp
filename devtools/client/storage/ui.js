@@ -1278,10 +1278,7 @@ class StorageUI {
       event.keyCode == KeyCodes.DOM_VK_BACK_SPACE ||
       event.keyCode == KeyCodes.DOM_VK_DELETE
     ) {
-      if (
-        this.table.selectedRow &&
-        !["input", "textbox"].includes(event.target.localName)
-      ) {
+      if (this.table.selectedRow && event.target.localName != "input") {
         this.onRemoveItem();
         event.stopPropagation();
         event.preventDefault();

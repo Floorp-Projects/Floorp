@@ -985,10 +985,9 @@ struct JsGcTracer : public TraceCallbacks {
                      void* aClosure) const override {
     JS::TraceEdge(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
-  virtual void Trace(JSObject** aPtr, const char* aName,
+  virtual void Trace(nsWrapperCache* aPtr, const char* aName,
                      void* aClosure) const override {
-    js::UnsafeTraceManuallyBarrieredEdge(static_cast<JSTracer*>(aClosure), aPtr,
-                                         aName);
+    aPtr->TraceWrapper(static_cast<JSTracer*>(aClosure), aName);
   }
   virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                      void* aClosure) const override {
@@ -1055,9 +1054,9 @@ struct ClearJSHolder : public TraceCallbacks {
     *aPtr = nullptr;
   }
 
-  virtual void Trace(JSObject** aPtr, const char* aName,
+  virtual void Trace(nsWrapperCache* aPtr, const char* aName,
                      void* aClosure) const override {
-    *aPtr = nullptr;
+    aPtr->ClearWrapper();
   }
 
   virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char*,

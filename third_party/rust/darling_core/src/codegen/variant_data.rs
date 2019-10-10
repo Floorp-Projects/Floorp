@@ -46,6 +46,7 @@ impl<'a> FieldsGen<'a> {
                 quote!(unknown_field(__other))
             } else {
                 let names = self.fields.as_ref().map(Field::as_name);
+                let names = names.iter();
                 quote!(unknown_field_with_alts(__other, &[#(#names),*]))
             };
 
@@ -53,11 +54,12 @@ impl<'a> FieldsGen<'a> {
                 __errors.push(::darling::Error::#err_fn.with_span(__inner));
             }
         };
+        let arms = arms.iter();
 
         quote!(
             for __item in __items {
                 if let ::syn::NestedMeta::Meta(ref __inner) = *__item {
-                    let __name = __inner.name().to_string();
+                    let __name = __inner.path().segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::");
                     match __name.as_str() {
                         #(#arms)*
                         __other => { #handle_unknown }
@@ -82,6 +84,7 @@ impl<'a> FieldsGen<'a> {
 
     pub(in codegen) fn initializers(&self) -> TokenStream {
         let inits = self.fields.as_ref().map(Field::as_initializer);
+        let inits = inits.iter();
 
         quote!(#(#inits),*)
     }

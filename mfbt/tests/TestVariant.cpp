@@ -281,6 +281,52 @@ static void testConstructionWithVariantIndex() {
   MOZ_RELEASE_ASSERT(v.extract<2>() == 2);
 }
 
+static void testEmplaceWithType() {
+  printf("testEmplaceWithType\n");
+  Variant<uint32_t, uint64_t, uint32_t> v1(mozilla::VariantIndex<0>{}, 0);
+  v1.emplace<uint64_t>(3);
+  MOZ_RELEASE_ASSERT(v1.is<uint64_t>());
+  MOZ_RELEASE_ASSERT(v1.as<uint64_t>() == 3);
+
+  Variant<UniquePtr<int>, char> v2('a');
+  v2.emplace<UniquePtr<int>>();
+  MOZ_RELEASE_ASSERT(v2.is<UniquePtr<int>>());
+  MOZ_RELEASE_ASSERT(!v2.as<UniquePtr<int>>().get());
+
+  Variant<UniquePtr<int>, char> v3('a');
+  v3.emplace<UniquePtr<int>>(MakeUnique<int>(4));
+  MOZ_RELEASE_ASSERT(v3.is<UniquePtr<int>>());
+  MOZ_RELEASE_ASSERT(*v3.as<UniquePtr<int>>().get() == 4);
+}
+
+static void testEmplaceWithIndex() {
+  printf("testEmplaceWithIndex\n");
+  Variant<uint32_t, uint64_t, uint32_t> v1(mozilla::VariantIndex<1>{}, 0);
+  v1.emplace<2>(2);
+  MOZ_RELEASE_ASSERT(!v1.is<uint64_t>());
+  MOZ_RELEASE_ASSERT(!v1.is<1>());
+  MOZ_RELEASE_ASSERT(!v1.is<0>());
+  MOZ_RELEASE_ASSERT(v1.is<2>());
+  MOZ_RELEASE_ASSERT(v1.as<2>() == 2);
+  MOZ_RELEASE_ASSERT(v1.extract<2>() == 2);
+
+  Variant<UniquePtr<int>, char> v2('a');
+  v2.emplace<0>();
+  MOZ_RELEASE_ASSERT(v2.is<UniquePtr<int>>());
+  MOZ_RELEASE_ASSERT(!v2.is<1>());
+  MOZ_RELEASE_ASSERT(v2.is<0>());
+  MOZ_RELEASE_ASSERT(!v2.as<0>().get());
+  MOZ_RELEASE_ASSERT(!v2.extract<0>().get());
+
+  Variant<UniquePtr<int>, char> v3('a');
+  v3.emplace<0>(MakeUnique<int>(4));
+  MOZ_RELEASE_ASSERT(v3.is<UniquePtr<int>>());
+  MOZ_RELEASE_ASSERT(!v3.is<1>());
+  MOZ_RELEASE_ASSERT(v3.is<0>());
+  MOZ_RELEASE_ASSERT(*v3.as<0>().get() == 4);
+  MOZ_RELEASE_ASSERT(*v3.extract<0>().get() == 4);
+}
+
 static void testCopy() {
   printf("testCopy\n");
   Variant<uint32_t, uint64_t> v1(uint64_t(1));
@@ -328,15 +374,26 @@ static void testDestructor() {
     Destroyer d;
 
     {
-      Variant<char, UniquePtr<char[]>, Destroyer> v(d);
+      Variant<char, UniquePtr<char[]>, Destroyer> v1(d);
       MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 0);  // None detroyed yet.
     }
 
     MOZ_RELEASE_ASSERT(Destroyer::destroyedCount ==
-                       1);  // v's copy of d is destroyed.
+                       1);  // v1's copy of d is destroyed.
+
+    {
+      Variant<char, UniquePtr<char[]>, Destroyer> v2(
+          mozilla::VariantIndex<2>{});
+      v2.emplace<Destroyer>(d);
+      MOZ_RELEASE_ASSERT(Destroyer::destroyedCount ==
+                         2);  // v2's initial value is destroyed.
+    }
+
+    MOZ_RELEASE_ASSERT(Destroyer::destroyedCount ==
+                       3);  // v2's second value is destroyed.
   }
 
-  MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 2);  // d is destroyed.
+  MOZ_RELEASE_ASSERT(Destroyer::destroyedCount == 4);  // d is destroyed.
 }
 
 static void testEquality() {
@@ -510,6 +567,8 @@ int main() {
   testDuplicate();
   testConstructionWithVariantType();
   testConstructionWithVariantIndex();
+  testEmplaceWithType();
+  testEmplaceWithIndex();
   testCopy();
   testMove();
   testDestructor();

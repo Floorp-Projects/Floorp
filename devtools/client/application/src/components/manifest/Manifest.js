@@ -21,6 +21,7 @@ const Localized = createFactory(FluentReact.Localized);
 const { l10n } = require("../../modules/l10n");
 
 const ManifestColorItem = createFactory(require("./ManifestColorItem"));
+const ManifestIconItem = createFactory(require("./ManifestIconItem"));
 const ManifestItem = createFactory(require("./ManifestItem"));
 const ManifestIssueList = createFactory(require("./ManifestIssueList"));
 const ManifestSection = createFactory(require("./ManifestSection"));
@@ -59,13 +60,19 @@ class Manifest extends PureComponent {
       : null;
   }
 
-  renderMember({ key, value, type }) {
+  renderMember({ key, value, type }, index) {
+    let domKey = key;
     switch (type) {
       case MANIFEST_MEMBER_VALUE_TYPES.COLOR:
-        return ManifestColorItem({ label: key, key, value });
+        return ManifestColorItem({ label: key, key: domKey, value });
+      case MANIFEST_MEMBER_VALUE_TYPES.ICON:
+        // since the manifest may have keys with empty size/contentType,
+        // we cannot use them as unique IDs
+        domKey = index;
+        return ManifestIconItem({ label: key, key: domKey, value });
       case MANIFEST_MEMBER_VALUE_TYPES.STRING:
       default:
-        return ManifestItem({ label: key, key }, value);
+        return ManifestItem({ label: key, key: domKey }, value);
     }
   }
 

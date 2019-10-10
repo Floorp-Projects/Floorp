@@ -169,6 +169,9 @@ add_task(async function test_telemetry_events() {
     loginSort.dispatchEvent(new content.Event("change", { bubbles: true }));
   });
   await LoginTestUtils.telemetry.waitForEventCount(14);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.management.page.sort");
+  });
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginFilter = content.document.querySelector("login-filter");

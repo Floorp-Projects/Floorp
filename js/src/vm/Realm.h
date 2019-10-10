@@ -334,7 +334,8 @@ class JS::Realm : public JS::shadow::Realm {
   // Names are only removed from this list by a |delete IdentifierReference|
   // that successfully removes that global property.
   using VarNamesSet =
-      JS::GCHashSet<JSAtom*, js::DefaultHasher<JSAtom*>, js::ZoneAllocPolicy>;
+      GCHashSet<js::HeapPtr<JSAtom*>, js::DefaultHasher<JSAtom*>,
+                js::ZoneAllocPolicy>;
   VarNamesSet varNames_;
 
   friend class js::AutoSetNewObjectMetadata;

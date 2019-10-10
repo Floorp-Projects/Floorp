@@ -53,6 +53,16 @@
     });
 
     is(result, "Hello there.", "Got correct element text from browsing context");
+
+    let line = 58; // Keep this in sync with the line number where the callback function starts.
+    let callback = () => {
+      let e = new Error("Hello.");
+      return { filename: e.fileName, lineNumber: e.lineNumber };
+    };
+
+    let loc = await SpecialPowers.spawn(frame, [], callback);
+    is(loc.filename, location.href, "Error should have correct script filename");
+    is(loc.lineNumber, line + 2, "Error should have correct script line number");
   });
 </script>
 </body>

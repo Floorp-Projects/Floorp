@@ -10,7 +10,6 @@ const TEST_URL = `${URL_ROOT}hover.html`;
 addRDMTask(TEST_URL, async function({ ui }) {
   reloadOnTouchChange(true);
 
-  await injectEventUtilsInContentTask(ui.getViewportBrowser());
   await toggleTouchSimulation(ui);
 
   info("Test element hover states when touch is enabled.");

@@ -1,9 +1,5 @@
 // rustc-cfg emitted by the build script:
 //
-// "u128"
-//     Include u128 and i128 constructors for proc_macro2::Literal. Enabled on
-//     any compiler 1.26+.
-//
 // "use_proc_macro"
 //     Link to extern crate proc_macro. Available on any compiler and any target
 //     except wasm32. Requires "proc-macro" Cargo cfg to be enabled (default is
@@ -18,15 +14,11 @@
 //     procmacro2_semver_exempt surface area is implemented by using the
 //     nightly-only proc_macro API.
 //
-// "slow_extend"
-//     Fallback when `impl Extend for TokenStream` is not available. These impls
-//     were added one version later than the rest of the proc_macro token API.
-//     Enabled on rustc 1.29 only.
-//
-// "nightly"
-//     Enable the Span::unwrap method. This is to support proc_macro_span and
-//     proc_macro_diagnostic use on the nightly channel without requiring the
-//     semver exemption opt-in. Enabled when building with nightly.
+// "proc_macro_span"
+//     Enable non-dummy behavior of Span::start and Span::end methods which
+//     requires an unstable compiler feature. Enabled when building with
+//     nightly, unless `-Z allow-feature` in RUSTFLAGS disallows unstable
+//     features.
 //
 // "super_unstable"
 //     Implement the semver exempt API in terms of the nightly-only proc_macro
@@ -39,21 +31,20 @@
 //     location inside spans is a performance hit.
 
 use std::env;
-use std::process::Command;
+use std::process::{self, Command};
 use std::str;
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
-
-    let target = env::var("TARGET").unwrap();
 
     let version = match rustc_version() {
         Some(version) => version,
         None => return,
     };
 
-    if version.minor >= 26 {
-        println!("cargo:rustc-cfg=u128");
+    if version.minor < 31 {
+        eprintln!("Minimum supported rustc version is 1.31");
+        process::exit(1);
     }
 
     let semver_exempt = cfg!(procmacro2_semver_exempt);
@@ -66,23 +57,19 @@ fn main() {
         println!("cargo:rustc-cfg=span_locations");
     }
 
+    let target = env::var("TARGET").unwrap();
     if !enable_use_proc_macro(&target) {
         return;
     }
 
     println!("cargo:rustc-cfg=use_proc_macro");
 
-    // Rust 1.29 stabilized the necessary APIs in the `proc_macro` crate
-    if version.nightly || version.minor >= 29 && !semver_exempt {
+    if version.nightly || !semver_exempt {
         println!("cargo:rustc-cfg=wrap_proc_macro");
     }
 
-    if version.minor == 29 {
-        println!("cargo:rustc-cfg=slow_extend");
-    }
-
-    if version.nightly {
-        println!("cargo:rustc-cfg=nightly");
+    if version.nightly && feature_allowed("proc_macro_span") {
+        println!("cargo:rustc-cfg=proc_macro_span");
     }
 
     if semver_exempt && version.nightly {
@@ -106,28 +93,37 @@ struct RustcVersion {
 }
 
 fn rustc_version() -> Option<RustcVersion> {
-    macro_rules! otry {
-        ($e:expr) => {
-            match $e {
-                Some(e) => e,
-                None => return None,
-            }
-        };
-    }
-
-    let rustc = otry!(env::var_os("RUSTC"));
-    let output = otry!(Command::new(rustc).arg("--version").output().ok());
-    let version = otry!(str::from_utf8(&output.stdout).ok());
-    let nightly = version.contains("nightly");
+    let rustc = env::var_os("RUSTC")?;
+    let output = Command::new(rustc).arg("--version").output().ok()?;
+    let version = str::from_utf8(&output.stdout).ok()?;
+    let nightly = version.contains("nightly") || version.contains("dev");
     let mut pieces = version.split('.');
     if pieces.next() != Some("rustc 1") {
         return None;
     }
-    let minor = otry!(pieces.next());
-    let minor = otry!(minor.parse().ok());
+    let minor = pieces.next()?.parse().ok()?;
+    Some(RustcVersion { minor, nightly })
+}
 
-    Some(RustcVersion {
-        minor: minor,
-        nightly: nightly,
-    })
+fn feature_allowed(feature: &str) -> bool {
+    // Recognized formats:
+    //
+    //     -Z allow-features=feature1,feature2
+    //
+    //     -Zallow-features=feature1,feature2
+
+    if let Some(rustflags) = env::var_os("RUSTFLAGS") {
+        for mut flag in rustflags.to_string_lossy().split(' ') {
+            if flag.starts_with("-Z") {
+                flag = &flag["-Z".len()..];
+            }
+            if flag.starts_with("allow-features=") {
+                flag = &flag["allow-features=".len()..];
+                return flag.split(',').any(|allowed| allowed == feature);
+            }
+        }
+    }
+
+    // No allow-features= flag, allowed by default.
+    true
 }

@@ -194,14 +194,18 @@ nsLoadGroup::Cancel(nsresult status) {
   mIsCanceling = true;
 
   nsresult firstError = NS_OK;
-
   while (count > 0) {
-    nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(--count));
+    nsCOMPtr<nsIRequest> request = requests.ElementAt(--count);
 
     NS_ASSERTION(request, "NULL request found in list.");
 
     if (!mRequests.Search(request)) {
       // |request| was removed already
+      // We need to null out the entry in the request array so we don't try
+      // to notify the observers for this request.
+      nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(count));
+      requests.ElementAt(count) = nullptr;
+
       continue;
     }
 
@@ -212,19 +216,27 @@ nsLoadGroup::Cancel(nsresult status) {
            nameStr.get()));
     }
 
-    //
-    // Remove the request from the load group...  This may cause
-    // the OnStopRequest notification to fire...
-    //
-    // XXX: What should the context be?
-    //
-    (void)RemoveRequest(request, nullptr, status);
-
     // Cancel the request...
     rv = request->Cancel(status);
 
     // Remember the first failure and return it...
     if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) firstError = rv;
+
+    if (NS_FAILED(RemoveRequestFromHashtable(request, status))) {
+      // It's possible that request->Cancel causes the request to be removed
+      // from the loadgroup causing RemoveRequestFromHashtable to fail.
+      // In that case we shouldn't call NotifyRemovalObservers or decrement
+      // mForegroundCount since that has already happened.
+      nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(count));
+      requests.ElementAt(count) = nullptr;
+
+      continue;
+    }
+  }
+
+  for (count = requests.Length(); count > 0;) {
+    nsCOMPtr<nsIRequest> request = dont_AddRef(requests.ElementAt(--count));
+    (void)NotifyRemovalObservers(request, status);
   }
 
   if (mRequestContext) {
@@ -478,6 +490,20 @@ nsLoadGroup::AddRequest(nsIRequest* request, nsISupports* ctxt) {
 NS_IMETHODIMP
 nsLoadGroup::RemoveRequest(nsIRequest* request, nsISupports* ctxt,
                            nsresult aStatus) {
+  // Make sure we have a owning reference to the request we're about
+  // to remove.
+  nsCOMPtr<nsIRequest> kungFuDeathGrip(request);
+
+  nsresult rv = RemoveRequestFromHashtable(request, aStatus);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NotifyRemovalObservers(request, aStatus);
+}
+
+nsresult nsLoadGroup::RemoveRequestFromHashtable(nsIRequest* request,
+                                                 nsresult aStatus) {
   NS_ENSURE_ARG_POINTER(request);
   nsresult rv;
 
@@ -489,11 +515,6 @@ nsLoadGroup::RemoveRequest(nsIRequest* request, nsISupports* ctxt,
          this, request, nameStr.get(), static_cast<uint32_t>(aStatus),
          mRequests.EntryCount() - 1));
   }
-
-  // Make sure we have a owning reference to the request we're about
-  // to remove.
-
-  nsCOMPtr<nsIRequest> kungFuDeathGrip(request);
 
   //
   // Remove the request from the group.  If this fails, it means that
@@ -546,11 +567,17 @@ nsLoadGroup::RemoveRequest(nsIRequest* request, nsISupports* ctxt,
     TelemetryReport();
   }
 
+  return NS_OK;
+}
+
+nsresult nsLoadGroup::NotifyRemovalObservers(nsIRequest* request,
+                                             nsresult aStatus) {
+  NS_ENSURE_ARG_POINTER(request);
   // Undo any group priority delta...
   if (mPriority != 0) RescheduleRequest(request, -mPriority);
 
   nsLoadFlags flags;
-  rv = request->GetLoadFlags(&flags);
+  nsresult rv = request->GetLoadFlags(&flags);
   if (NS_FAILED(rv)) return rv;
 
   if (!(flags & nsIRequest::LOAD_BACKGROUND)) {

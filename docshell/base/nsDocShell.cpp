@@ -431,10 +431,6 @@ nsDocShell::~nsDocShell() {
   // Avoid notifying observers while we're in the dtor.
   mIsBeingDestroyed = true;
 
-#ifdef MOZ_GECKO_PROFILER
-  profiler_unregister_pages(mHistoryID);
-#endif
-
   Destroy();
 
   if (mSessionHistory) {
@@ -8259,7 +8255,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
         TimeStamp now = TimeStamp::Now();
         profiler_add_text_marker("Background Iframe", marker,
                                  JS::ProfilingCategoryPair::DOM, now, now,
-                                 Nothing(), Nothing());
+                                 Nothing());
 #endif
         SetBackgroundLoadIframe();
       }
@@ -11085,22 +11081,6 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     }
   }
 
-#ifdef MOZ_GECKO_PROFILER
-  // We register the page load only if the load updates the history and it's
-  // not a refresh. This also registers the iframes in shift-reload case, but
-  // it's reasonable to register since we are updating the historyId in that
-  // case.
-  if (updateSHistory) {
-    uint32_t id = 0;
-    nsAutoCString spec;
-    if (mLSHE) {
-      mLSHE->GetID(&id);
-    }
-    aURI->GetSpec(spec);
-    profiler_register_page(mHistoryID, id, spec, IsFrame());
-  }
-#endif
-
   // If this is a POST request, we do not want to include this in global
   // history.
   if (updateGHistory && aAddToGlobalHistory && !ChannelIsPost(aChannel)) {
@@ -11421,14 +11401,6 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
     // we'll just set mOSHE here.
     mOSHE = newSHEntry;
-
-#ifdef MOZ_GECKO_PROFILER
-    uint32_t id = 0;
-    GetOSHEId(&id);
-    profiler_register_page(mHistoryID, id, aNewURI->GetSpecOrDefault(),
-                           IsFrame());
-#endif
-
   } else {
     // Step 3.
     newSHEntry = mOSHE;

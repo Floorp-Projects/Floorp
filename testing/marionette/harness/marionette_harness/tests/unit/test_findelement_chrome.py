@@ -41,14 +41,14 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
     def test_child_element(self):
         el = self.marionette.find_element(By.ID, "textInput")
         parent = self.marionette.find_element(By.ID, "things")
-        found_el = parent.find_element(By.TAG_NAME, "textbox")
+        found_el = parent.find_element(By.TAG_NAME, "input")
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
 
     def test_child_elements(self):
         el = self.marionette.find_element(By.ID, "textInput3")
         parent = self.marionette.find_element(By.ID, "things")
-        found_els = parent.find_elements(By.TAG_NAME, "textbox")
+        found_els = parent.find_elements(By.TAG_NAME, "input")
         self.assertTrue(el.id in [found_el.id for found_el in found_els])
 
     def test_tag_name(self):

@@ -13,7 +13,7 @@ use std::iter::{self, Iterator};
 use std::string::ToString;
 use std::vec;
 use syn::spanned::Spanned;
-use syn::{Lit, LitStr};
+use syn::{Lit, LitStr, Path};
 
 mod kind;
 
@@ -33,6 +33,11 @@ pub struct Error {
     locations: Vec<String>,
     /// The span to highlight in the emitted diagnostic.
     span: Option<Span>,
+}
+
+/// Transform a syn::Path to a readable String
+fn path_to_string(path: &syn::Path) -> String {
+    path.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<String>>().join("::")
 }
 
 /// Error creation functions
@@ -55,6 +60,12 @@ impl Error {
         Error::new(ErrorKind::DuplicateField(name.into()))
     }
 
+    /// Creates a new error for a field that appears twice in the input. Helper to avoid repeating
+    /// the syn::Path to String conversion.
+    pub fn duplicate_field_path(path: &Path) -> Self {
+        Error::duplicate_field(&path_to_string(path))
+    }
+
     /// Creates a new error for a non-optional field that does not appear in the input.
     pub fn missing_field(name: &str) -> Self {
         Error::new(ErrorKind::MissingField(name.into()))
@@ -64,6 +75,12 @@ impl Error {
     /// to a known field.
     pub fn unknown_field(name: &str) -> Self {
         Error::new(ErrorKind::UnknownField(name.into()))
+    }
+
+    /// Creates a new error for a field name that appears in the input but does not correspond
+    /// to a known field. Helper to avoid repeating the syn::Path to String conversion.
+    pub fn unknown_field_path(path: &Path) -> Self {
+        Error::unknown_field(&path_to_string(path))
     }
 
     /// Creates a new error for a field name that appears in the input but does not correspond to
@@ -225,6 +242,13 @@ impl Error {
     pub fn at<T: fmt::Display>(mut self, location: T) -> Self {
         self.locations.insert(0, location.to_string());
         self
+    }
+
+    /// Adds a location to the error, such as a field or variant.
+    /// Locations must be added in reverse order of specificity. This is a helper function to avoid
+    /// repeating path to string logic.
+    pub fn at_path(self, path: &Path) -> Self {
+        self.at(path_to_string(path))
     }
 
     /// Gets the number of individual errors in this error.

@@ -252,7 +252,7 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   incrementalState = State::Mark;
   marker.start();
 
-  for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     MOZ_ASSERT(!zone->usedByHelperThread());
     zone->setNeedsIncrementalBarrier(true);
     zone->arenas.clearFreeLists();
@@ -346,7 +346,7 @@ void gc::GCRuntime::endVerifyPreBarriers() {
   bool compartmentCreated = false;
 
   /* We need to disable barriers before tracing, which may invoke barriers. */
-  for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+  for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     if (!zone->needsIncrementalBarrier()) {
       compartmentCreated = true;
     }

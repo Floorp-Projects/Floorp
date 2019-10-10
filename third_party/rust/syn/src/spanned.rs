@@ -4,6 +4,8 @@
 //! *This module is available if Syn is built with both the `"parsing"` and
 //! `"printing"` features.*
 //!
+//! <br>
+//!
 //! # Example
 //!
 //! Suppose in a procedural macro we have a [`Type`] that we want to assert
@@ -20,7 +22,7 @@
 //! The following macro code takes a variable `ty` of type `Type` and produces a
 //! static assertion that `Sync` is implemented for that type.
 //!
-//! ```edition2018
+//! ```
 //! # extern crate proc_macro;
 //! #
 //! use proc_macro::TokenStream;
@@ -63,82 +65,50 @@
 //!
 //! In this technique, using the `Type`'s span for the error message makes the
 //! error appear in the correct place underlining the right type.
+//!
+//! <br>
+//!
+//! # Limitations
+//!
+//! The underlying [`proc_macro::Span::join`] method is nightly-only. When
+//! called from within a procedural macro in a nightly compiler, `Spanned` will
+//! use `join` to produce the intended span. When not using a nightly compiler,
+//! only the span of the *first token* of the syntax tree node is returned.
+//!
+//! In the common case of wanting to use the joined span as the span of a
+//! `syn::Error`, consider instead using [`syn::Error::new_spanned`] which is
+//! able to span the error correctly under the complete syntax tree node without
+//! needing the unstable `join`.
+//!
+//! [`syn::Error::new_spanned`]: crate::Error::new_spanned
 
-use proc_macro2::{Span, TokenStream};
-use quote::ToTokens;
+use proc_macro2::Span;
+use quote::spanned::Spanned as ToTokens;
 
 /// A trait that can provide the `Span` of the complete contents of a syntax
 /// tree node.
 ///
 /// This trait is automatically implemented for all types that implement
-/// [`ToTokens`] from the `quote` crate. It is sealed and cannot be implemented
-/// outside of the Syn crate other than by implementing `ToTokens`.
+/// [`ToTokens`] from the `quote` crate, as well as for `Span` itself.
 ///
-/// [`ToTokens`]: https://docs.rs/quote/0.6/quote/trait.ToTokens.html
+/// [`ToTokens`]: quote::ToTokens
 ///
 /// See the [module documentation] for an example.
 ///
-/// [module documentation]: index.html
+/// [module documentation]: self
 ///
 /// *This trait is available if Syn is built with both the `"parsing"` and
 /// `"printing"` features.*
-pub trait Spanned: private::Sealed {
+pub trait Spanned {
     /// Returns a `Span` covering the complete contents of this syntax tree
     /// node, or [`Span::call_site()`] if this node is empty.
     ///
-    /// [`Span::call_site()`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.Span.html#method.call_site
+    /// [`Span::call_site()`]: proc_macro2::Span::call_site
     fn span(&self) -> Span;
 }
 
-mod private {
-    use quote::ToTokens;
-    pub trait Sealed {}
-    impl<T: ToTokens> Sealed for T {}
-}
-
-impl<T> Spanned for T
-where
-    T: ToTokens,
-{
+impl<T: ?Sized + ToTokens> Spanned for T {
     fn span(&self) -> Span {
-        join_spans(self.into_token_stream())
+        self.__span()
     }
-}
-
-fn join_spans(tokens: TokenStream) -> Span {
-    let mut iter = tokens.into_iter().filter_map(|tt| {
-        // FIXME: This shouldn't be required, since optimally spans should
-        // never be invalid. This filter_map can probably be removed when
-        // https://github.com/rust-lang/rust/issues/43081 is resolved.
-        let span = tt.span();
-        let debug = format!("{:?}", span);
-        if debug.ends_with("bytes(0..0)") {
-            None
-        } else {
-            Some(span)
-        }
-    });
-
-    let mut joined = match iter.next() {
-        Some(span) => span,
-        None => return Span::call_site(),
-    };
-
-    #[cfg(procmacro2_semver_exempt)]
-    {
-        for next in iter {
-            if let Some(span) = joined.join(next) {
-                joined = span;
-            }
-        }
-    }
-
-    #[cfg(not(procmacro2_semver_exempt))]
-    {
-        // We can't join spans without procmacro2_semver_exempt so just grab the
-        // first one.
-        joined = joined;
-    }
-
-    joined
 }

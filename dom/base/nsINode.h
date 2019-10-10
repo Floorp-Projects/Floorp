@@ -439,8 +439,7 @@ class nsINode : public mozilla::dom::EventTarget {
   inline mozilla::dom::DocumentFragment* AsDocumentFragment();
   inline const mozilla::dom::DocumentFragment* AsDocumentFragment() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) final;
 
   /**
    * Hook for constructing JS::ubi::Concrete specializations for memory

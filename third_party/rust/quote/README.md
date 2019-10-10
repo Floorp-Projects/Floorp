@@ -8,13 +8,13 @@ Rust Quasi-Quoting
 This crate provides the [`quote!`] macro for turning Rust syntax tree data
 structures into tokens of source code.
 
-[`quote!`]: https://docs.rs/quote/0.6/quote/macro.quote.html
+[`quote!`]: https://docs.rs/quote/1.0/quote/macro.quote.html
 
 Procedural macros in Rust receive a stream of tokens as input, execute arbitrary
 Rust code to determine how to manipulate those tokens, and produce a stream of
 tokens to hand back to the compiler to compile into the caller's crate.
-Quasi-quoting is a solution to one piece of that -- producing tokens to return
-to the compiler.
+Quasi-quoting is a solution to one piece of that &mdash; producing tokens to
+return to the compiler.
 
 The idea of quasi-quoting is that we write *code* that we treat as *data*.
 Within the `quote!` macro, we can write what looks like code to our text editor
@@ -35,7 +35,7 @@ first support for procedural macros in Rust 1.15.0.*
 
 ```toml
 [dependencies]
-quote = "0.6"
+quote = "1.0"
 ```
 
 ## Syntax
@@ -44,13 +44,13 @@ The quote crate provides a [`quote!`] macro within which you can write Rust code
 that gets packaged into a [`TokenStream`] and can be treated as data. You should
 think of `TokenStream` as representing a fragment of Rust source code.
 
-[`TokenStream`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.TokenStream.html
+[`TokenStream`]: https://docs.rs/proc-macro2/1.0/proc_macro2/struct.TokenStream.html
 
 Within the `quote!` macro, interpolation is done with `#var`. Any type
 implementing the [`quote::ToTokens`] trait can be interpolated. This includes
 most Rust primitive types as well as most of the syntax tree types from [`syn`].
 
-[`quote::ToTokens`]: https://docs.rs/quote/0.6/quote/trait.ToTokens.html
+[`quote::ToTokens`]: https://docs.rs/quote/1.0/quote/trait.ToTokens.html
 [`syn`]: https://github.com/dtolnay/syn
 
 ```rust
@@ -148,8 +148,20 @@ quote! {
 }
 ```
 
-The solution is to perform token-level manipulations using the APIs provided by
-Syn and proc-macro2.
+The solution is to build a new identifier token with the correct value. As this
+is such a common case, the `format_ident!` macro provides a convenient utility
+for doing so correctly.
+
+```rust
+let varname = format_ident!("_{}", ident);
+quote! {
+    let mut #varname = 0;
+}
+```
+
+Alternatively, the APIs provided by Syn and proc-macro2 can be used to directly
+build the identifier. This is roughly equivalent to the above, but will not
+handle `ident` being a raw identifier.
 
 ```rust
 let concatenated = format!("_{}", ident);
@@ -200,42 +212,26 @@ Any interpolated tokens preserve the `Span` information provided by their
 `ToTokens` implementation. Tokens that originate within a `quote!` invocation
 are spanned with [`Span::call_site()`].
 
-[`Span::call_site()`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.Span.html#method.call_site
+[`Span::call_site()`]: https://docs.rs/proc-macro2/1.0/proc_macro2/struct.Span.html#method.call_site
 
 A different span can be provided explicitly through the [`quote_spanned!`]
 macro.
 
-[`quote_spanned!`]: https://docs.rs/quote/0.6/quote/macro.quote_spanned.html
+[`quote_spanned!`]: https://docs.rs/quote/1.0/quote/macro.quote_spanned.html
 
-### Limitations
+<br>
 
-- A non-repeating variable may not be interpolated inside of a repeating block
-  ([#7]).
-- The same variable may not be interpolated more than once inside of a repeating
-  block ([#8]).
+#### License
 
-[#7]: https://github.com/dtolnay/quote/issues/7
-[#8]: https://github.com/dtolnay/quote/issues/8
+<sup>
+Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
+2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
+</sup>
 
-### Recursion limit
+<br>
 
-The `quote!` macro relies on deep recursion so some large invocations may fail
-with "recursion limit reached" when you compile. If it fails, bump up the
-recursion limit by adding `#![recursion_limit = "128"]` to your crate. An even
-higher limit may be necessary for especially large invocations. You don't need
-this unless the compiler tells you that you need it.
-
-## License
-
-Licensed under either of
-
- * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-### Contribution
-
+<sub>
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
 be dual licensed as above, without any additional terms or conditions.
+</sub>

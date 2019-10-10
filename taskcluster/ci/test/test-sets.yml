@@ -104,6 +104,32 @@ raptor-firefox:
     - raptor-tp6-2-firefox-cold
     - raptor-tp6-3-firefox-cold
     - raptor-tp6-4-firefox-cold
+    - raptor-tp6-5-firefox-cold
+    - raptor-tp6-6-firefox-cold
+    - raptor-tp6-7-firefox-cold
+    - raptor-tp6-8-firefox-cold
+    - raptor-tp6-9-firefox-cold
+    - raptor-tp6-10-firefox-cold
+    - raptor-tp6-11-firefox-cold
+    - raptor-tp6-12-firefox-cold
+    - raptor-tp6-13-firefox-cold
+    - raptor-tp6-14-firefox-cold
+    - raptor-tp6-15-firefox-cold
+    - raptor-tp6-16-firefox-cold
+    - raptor-tp6-17-firefox-cold
+    - raptor-tp6-18-firefox-cold
+    - raptor-tp6-19-firefox-cold
+    - raptor-tp6-20-firefox-cold
+    - raptor-tp6-21-firefox-cold
+    - raptor-tp6-22-firefox-cold
+    - raptor-tp6-23-firefox-cold
+    - raptor-tp6-24-firefox-cold
+    - raptor-tp6-25-firefox-cold
+    - raptor-tp6-26-firefox-cold
+    - raptor-tp6-27-firefox-cold
+    - raptor-tp6-28-firefox-cold
+    - raptor-tp6-29-firefox-cold
+    - raptor-tp6-30-firefox-cold
     - raptor-ares6-firefox
     - raptor-jetstream2-firefox
 
@@ -129,6 +155,32 @@ raptor-chrome:
     - raptor-tp6-2-chrome-cold
     - raptor-tp6-3-chrome-cold
     - raptor-tp6-4-chrome-cold
+    - raptor-tp6-5-chrome-cold
+    - raptor-tp6-6-chrome-cold
+    - raptor-tp6-7-chrome-cold
+    - raptor-tp6-8-chrome-cold
+    - raptor-tp6-9-chrome-cold
+    - raptor-tp6-10-chrome-cold
+    - raptor-tp6-11-chrome-cold
+    - raptor-tp6-12-chrome-cold
+    - raptor-tp6-13-chrome-cold
+    - raptor-tp6-14-chrome-cold
+    - raptor-tp6-15-chrome-cold
+    - raptor-tp6-16-chrome-cold
+    - raptor-tp6-17-chrome-cold
+    - raptor-tp6-18-chrome-cold
+    - raptor-tp6-19-chrome-cold
+    - raptor-tp6-20-chrome-cold
+    - raptor-tp6-21-chrome-cold
+    - raptor-tp6-22-chrome-cold
+    - raptor-tp6-23-chrome-cold
+    - raptor-tp6-24-chrome-cold
+    - raptor-tp6-25-chrome-cold
+    - raptor-tp6-26-chrome-cold
+    - raptor-tp6-27-chrome-cold
+    - raptor-tp6-28-chrome-cold
+    - raptor-tp6-29-chrome-cold
+    - raptor-tp6-30-chrome-cold
     - raptor-ares6-chrome
     - raptor-jetstream2-chrome
 
@@ -175,6 +227,32 @@ raptor-chromium:
     - raptor-tp6-2-chromium-cold
     - raptor-tp6-3-chromium-cold
     - raptor-tp6-4-chromium-cold
+    - raptor-tp6-5-chromium-cold
+    - raptor-tp6-6-chromium-cold
+    - raptor-tp6-7-chromium-cold
+    - raptor-tp6-8-chromium-cold
+    - raptor-tp6-9-chromium-cold
+    - raptor-tp6-10-chromium-cold
+    - raptor-tp6-11-chromium-cold
+    - raptor-tp6-12-chromium-cold
+    - raptor-tp6-13-chromium-cold
+    - raptor-tp6-14-chromium-cold
+    - raptor-tp6-15-chromium-cold
+    - raptor-tp6-16-chromium-cold
+    - raptor-tp6-17-chromium-cold
+    - raptor-tp6-18-chromium-cold
+    - raptor-tp6-19-chromium-cold
+    - raptor-tp6-20-chromium-cold
+    - raptor-tp6-21-chromium-cold
+    - raptor-tp6-22-chromium-cold
+    - raptor-tp6-23-chromium-cold
+    - raptor-tp6-24-chromium-cold
+    - raptor-tp6-25-chromium-cold
+    - raptor-tp6-26-chromium-cold
+    - raptor-tp6-27-chromium-cold
+    - raptor-tp6-28-chromium-cold
+    - raptor-tp6-29-chromium-cold
+    - raptor-tp6-30-chromium-cold
     - raptor-ares6-chromium
     - raptor-jetstream2-chromium
 

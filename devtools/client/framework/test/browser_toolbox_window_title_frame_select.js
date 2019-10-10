@@ -87,12 +87,12 @@ add_task(async function() {
 
   // Only select the iframe after we are able to select an element from the top
   // level document.
-  const newRoot = toolbox.getPanel("inspector").once("new-root");
+  const onInspectorReloaded = toolbox.getPanel("inspector").once("reloaded");
   info("Select the iframe");
   iframeBtn.click();
 
   await willNavigate;
-  await newRoot;
+  await onInspectorReloaded;
   await onTitleChanged;
 
   info("Navigation to the iframe is done, the inspector should be back up");

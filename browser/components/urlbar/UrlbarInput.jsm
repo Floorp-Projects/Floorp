@@ -40,15 +40,14 @@ let getBoundsWithoutFlushing = element =>
 let px = number => number.toFixed(2) + "px";
 
 /**
- * Represents the urlbar <textbox>.
- * Also forwards important textbox properties and methods.
+ * Implements the text input part of the address bar UI.
  */
 class UrlbarInput {
   /**
    * @param {object} options
    *   The initial options for UrlbarInput.
    * @param {object} options.textbox
-   *   The <textbox> element.
+   *   The container element.
    */
   constructor(options = {}) {
     this.textbox = options.textbox;
@@ -356,9 +355,8 @@ class UrlbarInput {
   }
 
   /**
-   * Passes DOM events for the textbox to the _on_<event type> methods.
+   * Passes DOM events to the _on_<event type> methods.
    * @param {Event} event
-   *   DOM event from the <textbox>.
    */
   handleEvent(event) {
     let methodName = "_on_" + event.type;

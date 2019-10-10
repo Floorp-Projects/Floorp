@@ -992,12 +992,10 @@ struct ParamTraits<mozilla::Variant<Ts...>> {
       if (tag == N - 1) {
         // Recall, even though the template parameter is N, we are
         // actually interested in the N - 1 tag.
-        typename mozilla::detail::Nth<N - 1, Ts...>::Type val;
-        if (ReadParam(msg, iter, &val)) {
-          *result = mozilla::AsVariant(val);
-          return true;
-        }
-        return false;
+        // Default construct our field within the result outparameter and
+        // directly deserialize into the variant. Note that this means that
+        // every type in Ts needs to be default constructible
+        return ReadParam(msg, iter, &result->template emplace<N - 1>());
       } else {
         return Next::Read(msg, iter, tag, result);
       }

@@ -4826,6 +4826,15 @@ void RuntimeScriptData::markForCrossZone(JSContext* cx) {
   }
 }
 
+void ScriptWarmUpData::trace(JSTracer* trc) {
+  if (isJitScript()) {
+    toJitScript()->trace(trc);
+    return;
+  }
+
+  MOZ_ASSERT(isWarmUpCount());
+}
+
 void JSScript::traceChildren(JSTracer* trc) {
   // NOTE: this JSScript may be partially initialized at this point.  E.g. we
   // may have created it and partially initialized it with
@@ -4847,9 +4856,7 @@ void JSScript::traceChildren(JSTracer* trc) {
     scriptData()->traceChildren(trc);
   }
 
-  if (jit::JitScript* jitScript = maybeJitScript()) {
-    jitScript->trace(trc);
-  }
+  warmUpData_.trace(trc);
 
   if (maybeLazyScript()) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
@@ -5387,9 +5394,14 @@ void JSScript::resetWarmUpCounterToDelayIonCompilation() {
   // because we don't want scripts to get stuck in the (Baseline) interpreter in
   // pathological cases.
 
-  if (warmUpCount > jit::JitOptions.baselineJitWarmUpThreshold) {
+  if (getWarmUpCount() > jit::JitOptions.baselineJitWarmUpThreshold) {
     incWarmUpResetCounter();
-    warmUpCount = jit::JitOptions.baselineJitWarmUpThreshold;
+    uint32_t newCount = jit::JitOptions.baselineJitWarmUpThreshold;
+    if (warmUpData_.isWarmUpCount()) {
+      warmUpData_.resetWarmUpCount(newCount);
+    } else {
+      warmUpData_.toJitScript()->warmUpCount_ = newCount;
+    }
   }
 }
 

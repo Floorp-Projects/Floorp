@@ -38,15 +38,17 @@ class ZonesIter {
   JS::Zone** end;
 
  public:
-  ZonesIter(JSRuntime* rt, ZoneSelector selector)
-      : iterMarker(&rt->gc),
-        atomsZone(selector == WithAtoms ? rt->gc.atomsZone.ref() : nullptr),
-        it(rt->gc.zones().begin()),
-        end(rt->gc.zones().end()) {
+  ZonesIter(gc::GCRuntime* gc, ZoneSelector selector)
+      : iterMarker(gc),
+        atomsZone(selector == WithAtoms ? gc->atomsZone.ref() : nullptr),
+        it(gc->zones().begin()),
+        end(gc->zones().end()) {
     if (!atomsZone) {
       skipHelperThreadZones();
     }
   }
+  ZonesIter(JSRuntime* rt, ZoneSelector selector)
+      : ZonesIter(&rt->gc, selector) {}
 
   bool done() const { return !atomsZone && it == end; }
 
@@ -184,12 +186,14 @@ class CompartmentsOrRealmsIterT {
   mozilla::Maybe<InnerIterT> inner;
 
  public:
-  explicit CompartmentsOrRealmsIterT(JSRuntime* rt)
-      : iterMarker(&rt->gc), zone(rt, SkipAtoms) {
+  explicit CompartmentsOrRealmsIterT(gc::GCRuntime* gc)
+      : iterMarker(gc), zone(gc, SkipAtoms) {
     if (!zone.done()) {
       inner.emplace(zone);
     }
   }
+  explicit CompartmentsOrRealmsIterT(JSRuntime* rt)
+      : CompartmentsOrRealmsIterT(&rt->gc) {}
 
   bool done() const { return zone.done(); }
 

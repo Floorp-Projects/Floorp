@@ -158,6 +158,10 @@ class WindowGlobalParent final : public WindowGlobalActor,
                             const Maybe<IntRect>& aRect, float aScale,
                             nscolor aBackgroundColor, uint32_t aFlags);
 
+  // WebShare API - try to share
+  mozilla::ipc::IPCResult RecvShare(IPCWebShareData&& aData,
+                                    ShareResolver&& aResolver);
+
  private:
   ~WindowGlobalParent();
 

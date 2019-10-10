@@ -30,5 +30,15 @@ to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-unicode-xid = "0.0.4"
+unicode-xid = "0.1.0"
 ```
+
+# changelog
+
+## 0.2.0
+
+- Update to Unicode 12.1.0.
+
+## 0.1.0
+
+- Initial release.

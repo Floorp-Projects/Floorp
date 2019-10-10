@@ -881,8 +881,8 @@ struct MOZ_STACK_CLASS ExceptionArgParser {
     }
 
     RootedObject stackObj(cx, &v.toObject());
-    return NS_SUCCEEDED(xpc->WrapJS(
-        cx, stackObj, NS_GET_IID(nsIStackFrame), getter_AddRefs(eStack)));
+    return NS_SUCCEEDED(xpc->WrapJS(cx, stackObj, NS_GET_IID(nsIStackFrame),
+                                    getter_AddRefs(eStack)));
   }
 
   bool parseData(HandleValue v) {
@@ -893,8 +893,8 @@ struct MOZ_STACK_CLASS ExceptionArgParser {
     }
 
     RootedObject obj(cx, &v.toObject());
-    return NS_SUCCEEDED(xpc->WrapJS(cx, obj, NS_GET_IID(nsISupports),
-                                    getter_AddRefs(eData)));
+    return NS_SUCCEEDED(
+        xpc->WrapJS(cx, obj, NS_GET_IID(nsISupports), getter_AddRefs(eData)));
   }
 
   bool parseOptionsObject(HandleObject obj) {
@@ -1746,6 +1746,46 @@ nsXPCComponents_Utils::GetJSTestingFunctions(JSContext* cx,
     return NS_ERROR_XPC_JAVASCRIPT_ERROR;
   }
   retval.setObject(*obj);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetFunctionSourceLocation(HandleValue funcValue,
+                                                 JSContext* cx,
+                                                 MutableHandleValue retval) {
+  NS_ENSURE_TRUE(funcValue.isObject(), NS_ERROR_INVALID_ARG);
+
+  nsAutoString filename;
+  uint32_t lineNumber;
+  {
+    RootedObject funcObj(cx, UncheckedUnwrap(&funcValue.toObject()));
+    JSAutoRealm ar(cx, funcObj);
+
+    Rooted<JSFunction*> func(cx, JS_GetObjectFunction(funcObj));
+    NS_ENSURE_TRUE(func, NS_ERROR_INVALID_ARG);
+
+    RootedScript script(cx, JS_GetFunctionScript(cx, func));
+    NS_ENSURE_TRUE(func, NS_ERROR_FAILURE);
+
+    AppendUTF8toUTF16(nsDependentCString(JS_GetScriptFilename(script)),
+                      filename);
+    lineNumber = JS_GetScriptBaseLineNumber(cx, script) + 1;
+  }
+
+  RootedObject res(cx, JS_NewPlainObject(cx));
+  NS_ENSURE_TRUE(res, NS_ERROR_OUT_OF_MEMORY);
+
+  RootedValue filenameVal(cx);
+  if (!xpc::NonVoidStringToJsval(cx, filename, &filenameVal) ||
+      !JS_DefineProperty(cx, res, "filename", filenameVal, JSPROP_ENUMERATE)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!JS_DefineProperty(cx, res, "lineNumber", lineNumber, JSPROP_ENUMERATE)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  retval.setObject(*res);
   return NS_OK;
 }
 

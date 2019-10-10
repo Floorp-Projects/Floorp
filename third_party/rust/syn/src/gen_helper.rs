@@ -1,8 +1,8 @@
 #[cfg(feature = "fold")]
 pub mod fold {
-    use fold::Fold;
+    use crate::fold::Fold;
+    use crate::punctuated::{Pair, Punctuated};
     use proc_macro2::Span;
-    use punctuated::{Pair, Punctuated};
 
     pub trait FoldHelper {
         type Item;
@@ -73,38 +73,38 @@ pub mod fold {
 
 #[cfg(feature = "visit")]
 pub mod visit {
+    use crate::visit::Visit;
     use proc_macro2::Span;
-    use visit::Visit;
 
-    pub fn tokens_helper<'ast, V: Visit<'ast> + ?Sized, S: Spans>(visitor: &mut V, spans: &'ast S) {
+    pub fn tokens_helper<'ast, V: Visit<'ast> + ?Sized, S: Spans>(visitor: &mut V, spans: &S) {
         spans.visit(visitor);
     }
 
     pub trait Spans {
-        fn visit<'ast, V: Visit<'ast> + ?Sized>(&'ast self, visitor: &mut V);
+        fn visit<'ast, V: Visit<'ast> + ?Sized>(&self, visitor: &mut V);
     }
 
     impl Spans for Span {
-        fn visit<'ast, V: Visit<'ast> + ?Sized>(&'ast self, visitor: &mut V) {
+        fn visit<'ast, V: Visit<'ast> + ?Sized>(&self, visitor: &mut V) {
             visitor.visit_span(self);
         }
     }
 
     impl Spans for [Span; 1] {
-        fn visit<'ast, V: Visit<'ast> + ?Sized>(&'ast self, visitor: &mut V) {
+        fn visit<'ast, V: Visit<'ast> + ?Sized>(&self, visitor: &mut V) {
             visitor.visit_span(&self[0]);
         }
     }
 
     impl Spans for [Span; 2] {
-        fn visit<'ast, V: Visit<'ast> + ?Sized>(&'ast self, visitor: &mut V) {
+        fn visit<'ast, V: Visit<'ast> + ?Sized>(&self, visitor: &mut V) {
             visitor.visit_span(&self[0]);
             visitor.visit_span(&self[1]);
         }
     }
 
     impl Spans for [Span; 3] {
-        fn visit<'ast, V: Visit<'ast> + ?Sized>(&'ast self, visitor: &mut V) {
+        fn visit<'ast, V: Visit<'ast> + ?Sized>(&self, visitor: &mut V) {
             visitor.visit_span(&self[0]);
             visitor.visit_span(&self[1]);
             visitor.visit_span(&self[2]);
@@ -114,8 +114,8 @@ pub mod visit {
 
 #[cfg(feature = "visit-mut")]
 pub mod visit_mut {
+    use crate::visit_mut::VisitMut;
     use proc_macro2::Span;
-    use visit_mut::VisitMut;
 
     pub fn tokens_helper<V: VisitMut + ?Sized, S: Spans>(visitor: &mut V, spans: &mut S) {
         spans.visit_mut(visitor);

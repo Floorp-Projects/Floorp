@@ -95,10 +95,45 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-function checkManifestMember(doc, member, expectedValue) {
-  const itemEl = [...doc.querySelectorAll(".js-manifest-item")].find(x =>
+add_task(async function() {
+  info("Test that we are displaying correctly a manifest with icons");
+  const url = URL_ROOT + "resources/manifest/load-ok-icons.html";
+
+  await enableApplicationPanel();
+  const { panel, tab } = await openNewTabAndApplicationPanel(url);
+  const doc = panel.panelWin.document;
+
+  selectPage(panel, "manifest");
+
+  info("Waiting for the manifest to be displayed");
+  await waitUntil(() => doc.querySelector(".js-manifest") !== null);
+  ok(true, "Manifest is being displayed");
+
+  // assert manifest icon is being displayed
+  const iconEl = findMemberByLabel(doc, "128x128image/svg");
+  ok(iconEl !== null, "Icon label is being displayed with size and image type");
+  const imgEl = iconEl.querySelector(".js-manifest-item-content img");
+  ok(
+    imgEl && imgEl.src === URL_ROOT + "resources/manifest/icon.svg",
+    "An image is being displayed with the icon url as source"
+  );
+  const iconTextContent = iconEl.querySelector(".js-manifest-item-content")
+    .textContent;
+  ok(iconTextContent.includes("any"), "Purpose is being displayed");
+
+  // close the tab
+  info("Closing the tab.");
+  await BrowserTestUtils.removeTab(tab);
+});
+
+function findMemberByLabel(doc, member) {
+  return [...doc.querySelectorAll(".js-manifest-item")].find(x =>
     x.querySelector(".js-manifest-item-label").textContent.startsWith(member)
   );
+}
+
+function checkManifestMember(doc, member, expectedValue) {
+  const itemEl = findMemberByLabel(doc, member);
   ok(
     itemEl.querySelector(".js-manifest-item-content").textContent ===
       expectedValue,

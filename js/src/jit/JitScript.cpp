@@ -13,6 +13,8 @@
 
 #include "jit/BaselineIC.h"
 #include "jit/BytecodeAnalysis.h"
+#include "vm/BytecodeIterator.h"
+#include "vm/BytecodeLocation.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSScript.h"
 #include "vm/Stack.h"
@@ -21,6 +23,8 @@
 
 #include "gc/FreeOp-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/TypeInference-inl.h"
 
@@ -54,6 +58,9 @@ JitScript::JitScript(JSScript* script, uint32_t typeSetOffset,
 
   uint8_t* base = reinterpret_cast<uint8_t*>(this);
   DefaultInitializeElements<StackTypeSet>(base + typeSetOffset, numTypeSets());
+
+  // Initialize the warm-up count from the count stored in the script.
+  warmUpCount_ = script->getWarmUpCount();
 
   // Ensure the baselineScript_ and ionScript_ fields match the BaselineDisabled
   // and IonDisabled script flags.
@@ -142,7 +149,7 @@ bool JSScript::createJitScript(JSContext* cx) {
 
   MOZ_ASSERT(!hasJitScript());
   prepareForDestruction.release();
-  jitScript_ = jitScript.release();
+  warmUpData_.setJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 
   // We have a JitScript so we can set the script's jitCodeRaw_ pointer to the
@@ -191,7 +198,7 @@ void JSScript::releaseJitScript(JSFreeOp* fop) {
   fop->removeCellMemory(this, jitScript()->allocBytes(), MemoryUse::JitScript);
 
   JitScript::Destroy(zone(), jitScript());
-  jitScript_ = nullptr;
+  warmUpData_.clearJitScript();
   updateJitCodeRaw(fop->runtime());
 }
 
@@ -276,7 +283,7 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
   fprintf(stderr, "\n    this:");
   thisTypes(sweep, script)->print();
 
-  for (unsigned i = 0; script->functionNonDelazifying() &&
+  for (uint32_t i = 0; script->functionNonDelazifying() &&
                        i < script->functionNonDelazifying()->nargs();
        i++) {
     fprintf(stderr, "\n    arg%u:", i);
@@ -284,21 +291,21 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
   }
   fprintf(stderr, "\n");
 
-  for (jsbytecode* pc = script->code(); pc < script->codeEnd();
-       pc += GetBytecodeLength(pc)) {
+  for (BytecodeLocation it : AllBytecodesIterable(script)) {
     {
       fprintf(stderr, "%p:", script.get());
       Sprinter sprinter(cx);
       if (!sprinter.init()) {
         return;
       }
-      Disassemble1(cx, script, pc, script->pcToOffset(pc), true, &sprinter);
+      Disassemble1(cx, script, it.toRawBytecode(), it.bytecodeToOffset(script),
+                   true, &sprinter);
       fprintf(stderr, "%s", sprinter.string());
     }
 
-    if (BytecodeOpHasTypeSet(JSOp(*pc))) {
-      StackTypeSet* types = bytecodeTypes(sweep, script, pc);
-      fprintf(stderr, "  typeset %u:", unsigned(types - typeArray(sweep)));
+    if (it.opHasTypeSet()) {
+      StackTypeSet* types = bytecodeTypes(sweep, script, it.toRawBytecode());
+      fprintf(stderr, "  typeset %u:", uint32_t(types - typeArray(sweep)));
       types->print();
       fprintf(stderr, "\n");
     }

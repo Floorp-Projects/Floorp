@@ -1,5 +1,5 @@
 #![deny(trivial_numeric_casts)]
-extern crate num;
+
 #[macro_use]
 extern crate num_derive;
 

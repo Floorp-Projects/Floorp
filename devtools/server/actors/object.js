@@ -139,6 +139,12 @@ const proto = {
           desc.value = v;
         }),
         get: this.obj.makeDebuggeeValue(() => {
+          const frame = this.thread.dbg.getNewestFrame();
+
+          if (!this.thread.hasMoved(frame, "getWatchpoint")) {
+            return false;
+          }
+
           pauseAndRespond("getWatchpoint");
           return desc.value;
         }),
@@ -150,6 +156,12 @@ const proto = {
         configurable: desc.configurable,
         enumerable: desc.enumerable,
         set: this.obj.makeDebuggeeValue(v => {
+          const frame = this.thread.dbg.getNewestFrame();
+
+          if (!this.thread.hasMoved(frame, "setWatchpoint")) {
+            return;
+          }
+
           pauseAndRespond("setWatchpoint");
           desc.value = v;
         }),
