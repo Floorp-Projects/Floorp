@@ -37,6 +37,10 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
+#ifdef XP_WIN
+#  include "mozilla/widget/WinCompositorWidget.h"
+#endif
+
 #ifdef MOZ_GECKO_PROFILER
 #  include "ProfilerMarkerPayload.h"
 #endif
@@ -2696,7 +2700,8 @@ TextureFactoryIdentifier WebRenderBridgeParent::GetTextureFactoryIdentifier() {
       LayersBackend::LAYERS_WR, XRE_GetProcessType(),
       mApis[wr::RenderRoot::Default]->GetMaxTextureSize(), false,
       mApis[wr::RenderRoot::Default]->GetUseANGLE(),
-      mApis[wr::RenderRoot::Default]->GetUseDComp(), false, false, false,
+      mApis[wr::RenderRoot::Default]->GetUseDComp(),
+      mAsyncImageManager->UseCompositorWnd(), false, false, false,
       mApis[wr::RenderRoot::Default]->GetSyncHandle());
 }
 

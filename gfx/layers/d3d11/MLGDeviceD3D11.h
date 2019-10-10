@@ -153,7 +153,8 @@ class MLGDeviceD3D11 final : public MLGDevice {
   void GetDiagnostics(GPUStats* aStats) override;
 
   MLGDeviceD3D11* AsD3D11() override { return this; }
-  TextureFactoryIdentifier GetTextureFactoryIdentifier() const override;
+  TextureFactoryIdentifier GetTextureFactoryIdentifier(
+      widget::CompositorWidget* aWidget) const override;
 
   RefPtr<MLGSwapChain> CreateSwapChainForWidget(
       widget::CompositorWidget* aWidget) override;

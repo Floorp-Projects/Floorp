@@ -193,7 +193,7 @@ already_AddRefed<CanvasLayer> LayerManagerMLGPU::CreateCanvasLayer() {
 TextureFactoryIdentifier LayerManagerMLGPU::GetTextureFactoryIdentifier() {
   TextureFactoryIdentifier ident;
   if (mDevice) {
-    ident = mDevice->GetTextureFactoryIdentifier();
+    ident = mDevice->GetTextureFactoryIdentifier(mWidget);
   }
   ident.mUsingAdvancedLayers = true;
   return ident;
