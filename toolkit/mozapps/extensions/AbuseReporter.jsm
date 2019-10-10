@@ -12,6 +12,7 @@ Cu.importGlobalProperties(["fetch"]);
 
 const PREF_ABUSE_REPORT_URL = "extensions.abuseReport.url";
 const PREF_ABUSE_REPORT_OPEN_DIALOG = "extensions.abuseReport.openDialog";
+const PREF_AMO_DETAILS_API_URL = "extensions.abuseReport.amoDetailsURL";
 
 // Maximum length of the string properties sent to the API endpoint.
 const MAX_STRING_LENGTH = 255;
@@ -35,6 +36,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "AMO_DETAILS_API_URL",
+  PREF_AMO_DETAILS_API_URL
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "SHOULD_OPEN_DIALOG",
   PREF_ABUSE_REPORT_OPEN_DIALOG,
   false
@@ -50,6 +57,8 @@ const ERROR_TYPES = Object.freeze([
   "ERROR_UNKNOWN",
   "ERROR_RECENT_SUBMIT",
   "ERROR_SERVER",
+  "ERROR_AMODETAILS_NOTFOUND",
+  "ERROR_AMODETAILS_FAILURE",
 ]);
 
 class AbuseReportError extends Error {
@@ -65,6 +74,22 @@ class AbuseReportError extends Error {
     this.errorType = errorType;
     this.errorInfo = errorInfo;
   }
+}
+
+/**
+ * Create an error info string from a fetch response object.
+ *
+ * @param {Response} response
+ *        A fetch response object to convert into an errorInfo string.
+ *
+ * @returns {Promise<string>}
+ *          The errorInfo string to be included in an AbuseReportError.
+ */
+async function responseToErrorInfo(response) {
+  return JSON.stringify({
+    status: response.status,
+    responseText: await response.text().catch(err => ""),
+  });
 }
 
 /**
@@ -102,12 +127,17 @@ const AbuseReporter = {
    * @param {string} options.reportEntryPoint
    *        An identifier that represent the entry point for the report flow.
    *
-   * @returns {AbuseReport}
-   *          An instance of the AbuseReport class, which represent an ongoing
-   *          report.
+   * @returns {Promise<AbuseReport>}
+   *          Returns a promise that resolves to an instance of the AbuseReport
+   *          class, which represent an ongoing report.
    */
   async createAbuseReport(addonId, { reportEntryPoint } = {}) {
-    const addon = await AddonManager.getAddonByID(addonId);
+    let addon = await AddonManager.getAddonByID(addonId);
+
+    if (!addon) {
+      // The addon isn't installed, query the details from the AMO API endpoint.
+      addon = await this.queryAMOAddonDetails(addonId, reportEntryPoint);
+    }
 
     if (!addon) {
       AMTelemetry.recordReportEvent({
@@ -125,6 +155,121 @@ const AbuseReporter = {
       reportData,
       reportEntryPoint,
     });
+  },
+
+  /**
+   * Retrieves the addon details from the AMO API endpoint, used to create
+   * abuse reports on non-installed addon-ons.
+   *
+   * For the addon details that may be translated (e.g. addon name, description etc.)
+   * the function will try to retrieve the string localized in the same locale used
+   * by Gecko (and fallback to "en-US" if that locale is unavailable).
+   *
+   * The addon creator properties are set to the first author available.
+   *
+   * @param {string} addonId
+   *        The id of the addon to retrieve the details available on AMO.
+   * @param {string} reportEntryPoint
+   *        The entry point for the report flow (to be included in the telemetry
+   *        recorded in case of failures).
+   *
+   * @returns {Promise<AMOAddonDetails|null>}
+   *          Returns a promise that resolves to an AMOAddonDetails object,
+   *          which has the subset of the AddonWrapper properties which are
+   *          needed by the abuse report panel or the report data sent to
+   *          the abuse report API endpoint), or null if it fails to
+   *          retrieve the details from AMO.
+   *
+   * @typedef {object} AMOAddonDetails
+   *   @prop  {string} id
+   *   @prop  {string} name
+   *   @prop  {string} version
+   *   @prop  {string} description
+   *   @prop  {string} type
+   *   @prop  {string} iconURL
+   *   @prop  {string} homepageURL
+   *   @prop  {string} supportURL
+   *   @prop  {AMOAddonCreator} creator
+   *   @prop  {boolean} isRecommended
+   *   @prop  {number} signedState=AddonManager.SIGNEDSTATE_UNKNOWN
+   *   @prop  {object} installTelemetryInfo={ source: "not_installed" }
+   *
+   * @typedef {object} AMOAddonCreator
+   *   @prop  {string} name
+   *   @prop  {string} url
+   */
+  async queryAMOAddonDetails(addonId, reportEntryPoint) {
+    let details;
+    try {
+      // This should be the API endpoint documented at:
+      // https://addons-server.readthedocs.io/en/latest/topics/api/addons.html#detail
+      details = await fetch(`${AMO_DETAILS_API_URL}/${addonId}`, {
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        headers: { "Content-Type": "application/json" },
+      }).then(async response => {
+        if (response.status === 200) {
+          return response.json();
+        }
+
+        let errorInfo = await responseToErrorInfo(response).catch(
+          err => undefined
+        );
+
+        if (response.status === 404) {
+          // Record a different telemetry event for 404 errors.
+          throw new AbuseReportError("ERROR_AMODETAILS_NOTFOUND", errorInfo);
+        }
+
+        throw new AbuseReportError("ERROR_AMODETAILS_FAILURE", errorInfo);
+      });
+    } catch (err) {
+      // Log the original error in the browser console.
+      Cu.reportError(err);
+
+      AMTelemetry.recordReportEvent({
+        addonId,
+        errorType: err.errorType || "ERROR_AMODETAILS_FAILURE",
+        reportEntryPoint,
+      });
+
+      return null;
+    }
+
+    const locale = Services.locale.appLocaleAsLangTag;
+
+    // Get a string value from a translated value
+    // (https://addons-server.readthedocs.io/en/latest/topics/api/overview.html#api-overview-translations)
+    const getTranslatedValue = value => {
+      if (typeof value === "string") {
+        return value;
+      }
+      return value && (value[locale] || value["en-US"]);
+    };
+
+    const getAuthorField = fieldName =>
+      details.authors && details.authors[0] && details.authors[0][fieldName];
+
+    return {
+      id: addonId,
+      name: getTranslatedValue(details.name),
+      version: details.current_version.version,
+      description: getTranslatedValue(details.summary),
+      type: details.type,
+      iconURL: details.icon_url,
+      homepageURL: getTranslatedValue(details.homepage),
+      supportURL: getTranslatedValue(details.support_url),
+      // Set the addon creator to the first author in the AMO details.
+      creator: {
+        name: getAuthorField("name"),
+        url: getAuthorField("url"),
+      },
+      isRecommended: details.is_recommended,
+      // Set signed state to unknown because it isn't installed.
+      signedState: AddonManager.SIGNEDSTATE_UNKNOWN,
+      // Set the installTelemetryInfo.source to "not_installed".
+      installTelemetryInfo: { source: "not_installed" },
+    };
   },
 
   /**
@@ -403,17 +548,12 @@ class AbuseReport {
     const rejectReportError = async (errorType, { response } = {}) => {
       this.recordTelemetry(errorType);
 
-      let errorInfo;
-      if (response) {
-        try {
-          errorInfo = JSON.stringify({
-            status: response.status,
-            responseText: await response.text().catch(err => ""),
-          });
-        } catch (err) {
-          // leave the errorInfo empty if we failed to stringify it.
-        }
-      }
+      // Leave errorInfo empty if there is no response or fails to
+      // be converted into an error info object.
+      const errorInfo = response
+        ? await responseToErrorInfo(response).catch(err => undefined)
+        : undefined;
+
       throw new AbuseReportError(errorType, errorInfo);
     };
 
