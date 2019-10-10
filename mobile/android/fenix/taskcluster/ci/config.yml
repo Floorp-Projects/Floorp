@@ -8,7 +8,6 @@ treeherder:
         'I': 'Docker Image Builds'
         'nightly': 'Nightly-related tasks'
         'nightlyFennec': 'Nightly-related tasks with same APK configuration as Fennec'
-        'nightlyLegacy': 'Nightly-related tasks that ship to https://play.google.com/store/apps/details?id=org.mozilla.fenix'
         'production': 'Release-related tasks'
         'Rap': 'Raptor tests'
         'Rap-P': 'Raptor power tests'

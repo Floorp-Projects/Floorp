@@ -16,7 +16,7 @@ job-template:
     description: Sign Fenix
     worker-type:
         by-build-type:
-            (fennec-production|nightly|nightly-legacy|production):
+            (fennec-production|nightly|production):
                 by-level:
                     '3': signing
                     default: dep-signing
@@ -31,10 +31,6 @@ job-template:
                 nightly:
                     by-level:
                         '3': nightly-signing
-                        default: dep-signing
-                nightly-legacy:
-                    by-level:
-                        '3': production-signing
                         default: dep-signing
                 performance-test: dep-signing
                 production:

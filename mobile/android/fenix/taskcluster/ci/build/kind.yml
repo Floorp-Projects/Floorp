@@ -63,17 +63,6 @@ jobs:
         treeherder:
             symbol: nightly(B)
 
-    nightly-legacy:
-        attributes:
-            nightly: true
-        include-nightly-version: true
-        include-shippable-secrets: true
-        run:
-            geckoview-engine: geckoNightly
-            gradle-build-type: fenixNightlyLegacy
-        treeherder:
-            symbol: nightlyLegacy(B)
-
     fennec-production:
         attributes:
             nightly: true
