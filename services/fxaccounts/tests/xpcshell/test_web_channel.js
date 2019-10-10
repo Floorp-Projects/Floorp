@@ -445,6 +445,7 @@ add_task(async function test_helpers_login_with_customize_sync() {
 
 add_task(
   async function test_helpers_login_with_customize_sync_and_declined_engines() {
+    let configured = false;
     let helpers = new FxAccountsWebChannelHelpers({
       fxAccounts: {
         _internal: {
@@ -465,7 +466,9 @@ add_task(
         whenLoaded() {},
         Weave: {
           Service: {
-            configure() {},
+            configure() {
+              configured = true;
+            },
           },
         },
       },
@@ -530,11 +533,13 @@ add_task(
       false
     );
     Assert.equal(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
+    Assert.ok(configured, "sync was configured");
   }
 );
 
 add_task(async function test_helpers_login_with_offered_sync_engines() {
   let helpers;
+  let configured = false;
   const setSignedInUserCalled = new Promise(resolve => {
     helpers = new FxAccountsWebChannelHelpers({
       fxAccounts: {
@@ -548,7 +553,9 @@ add_task(async function test_helpers_login_with_offered_sync_engines() {
         whenLoaded() {},
         Weave: {
           Service: {
-            configure() {},
+            configure() {
+              configured = true;
+            },
           },
         },
       },
@@ -581,6 +588,64 @@ add_task(async function test_helpers_login_with_offered_sync_engines() {
   equal(Services.prefs.getBoolPref("services.sync.engine.creditcards"), true);
   // addresses was offered and explicitely declined.
   equal(Services.prefs.getBoolPref("services.sync.engine.addresses"), false);
+  ok(configured);
+});
+
+add_task(async function test_helpers_login_nothing_offered() {
+  let helpers;
+  let configured = false;
+  const setSignedInUserCalled = new Promise(resolve => {
+    helpers = new FxAccountsWebChannelHelpers({
+      fxAccounts: {
+        _internal: {
+          async setSignedInUser(accountData) {
+            resolve(accountData);
+          },
+        },
+      },
+      weaveXPCOM: {
+        whenLoaded() {},
+        Weave: {
+          Service: {
+            configure() {
+              configured = true;
+            },
+          },
+        },
+      },
+    });
+  });
+
+  // doesn't really matter if it's *all* engines...
+  const allEngines = [
+    "addons",
+    "addresses",
+    "bookmarks",
+    "creditcards",
+    "history",
+    "passwords",
+    "prefs",
+  ];
+  for (let name of allEngines) {
+    Services.prefs.clearUserPref("services.sync.engine." + name);
+  }
+
+  await helpers.login({
+    email: "testuser@testuser.com",
+    verifiedCanLinkAccount: true,
+    services: {
+      sync: {},
+    },
+  });
+
+  const accountData = await setSignedInUserCalled;
+  // ensure fxAccounts is informed of the new user being signed in.
+  equal(accountData.email, "testuser@testuser.com");
+
+  for (let name of allEngines) {
+    Assert.ok(!Services.prefs.prefHasUserValue("services.sync.engine." + name));
+  }
+  Assert.ok(configured);
 });
 
 add_test(function test_helpers_open_sync_preferences() {
