@@ -14,6 +14,9 @@ const PREF_ABUSE_REPORT_URL = "extensions.abuseReport.url";
 const PREF_ABUSE_REPORT_OPEN_DIALOG = "extensions.abuseReport.openDialog";
 const PREF_AMO_DETAILS_API_URL = "extensions.abuseReport.amoDetailsURL";
 
+// Name associated with the report dialog window.
+const DIALOG_WINDOW_NAME = "addons-abuse-report-dialog";
+
 // Maximum length of the string properties sent to the API endpoint.
 const MAX_STRING_LENGTH = 255;
 
@@ -356,6 +359,16 @@ const AbuseReporter = {
   },
 
   /**
+   * Helper function that returns a reference to a report dialog window
+   * already opened (if any).
+   *
+   * @returns {Window?}
+   */
+  getOpenDialog() {
+    return Services.ww.getWindowByName(DIALOG_WINDOW_NAME, null);
+  },
+
+  /**
    * Helper function that opens an abuse report form in a new dialog window.
    *
    * @param {string} addonId
@@ -388,8 +401,7 @@ const AbuseReporter = {
       throw new Error("Abuse Reporter dialog cancelled, opener tab closed");
     }
 
-    const windowName = "addons-abuse-report-dialog";
-    const dialogWin = Services.ww.getWindowByName(windowName, null);
+    const dialogWin = this.getOpenDialog();
 
     if (dialogWin) {
       // If an abuse report dialog is already open, cancel the
@@ -455,7 +467,7 @@ const AbuseReporter = {
     win = Services.ww.openWindow(
       chromeWin,
       "chrome://mozapps/content/extensions/abuse-report-frame.html",
-      windowName,
+      DIALOG_WINDOW_NAME,
       // Set the dialog window options (including a reasonable initial
       // window height size, eventually adjusted by the panel once it
       // has been rendered its content).
