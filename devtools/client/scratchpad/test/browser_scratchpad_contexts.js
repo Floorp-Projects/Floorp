@@ -108,14 +108,14 @@ function runTests() {
 
         is(
           allNotifications[0].messageText.textContent,
-          "This scratchpad executes in the Browser context.",
-          "There is a notification in browser context"
+          "Scratchpad will be disabled in a future release. Learn more…",
+          "The deprecation warning is displayed"
         );
 
         is(
           allNotifications[1].messageText.textContent,
-          "Scratchpad will be disabled in a future release. Learn more…",
-          "The deprecation warning is displayed"
+          "This scratchpad executes in the Browser context.",
+          "There is a notification in browser context"
         );
 
         const [from, to] = sp.editor.getPosition(31, 32);
