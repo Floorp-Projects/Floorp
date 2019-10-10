@@ -131,6 +131,12 @@ nsAndroidNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsAndroidNetworkLinkService::GetDnsSuffixList(
+    nsTArray<nsCString>& aDnsSuffixList) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void nsAndroidNetworkLinkService::OnNetworkChanged() {
   if (mozilla::StaticPrefs::network_notify_changed()) {
     if (!mNetworkChangeTime.IsNull()) {
