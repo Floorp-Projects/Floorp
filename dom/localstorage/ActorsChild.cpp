@@ -234,7 +234,8 @@ LSSimpleRequestChild::~LSSimpleRequestChild() {
   MOZ_COUNT_DTOR(LSSimpleRequestChild);
 }
 
-void LSSimpleRequestChild::SetCallback(LSSimpleRequestChildCallback* aCallback) {
+void LSSimpleRequestChild::SetCallback(
+    LSSimpleRequestChildCallback* aCallback) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(!mCallback);
