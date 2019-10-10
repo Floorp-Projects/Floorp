@@ -192,16 +192,6 @@ class RangeBoundaryBase {
                          "Setting RangeBoundary to invalid value");
   }
 
-  void SetAfterRef(nsINode* aParent, nsIContent* aRef) {
-    mParent = aParent;
-    mRef = aRef;
-    if (!mRef) {
-      mOffset = mozilla::Some(0);
-    } else {
-      mOffset.reset();
-    }
-  }
-
   bool IsSet() const { return mParent && (mRef || mOffset.isSome()); }
 
   bool IsSetAndValid() const {
