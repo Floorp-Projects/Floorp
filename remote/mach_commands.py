@@ -218,8 +218,7 @@ class PuppeteerRunner(MozbuildObject):
         if params.get("jobs"):
             env["PPTR_PARALLEL_TESTS"] = str(params["jobs"])
 
-        if params.get("headless"):
-            env["MOZ_HEADLESS"] = "1"
+        env["HEADLESS"] = str(params.get("headless", False))
 
         prefs = params.get("extra_prefs", {})
         for k, v in params.get("extra_prefs", {}).items():
@@ -264,7 +263,7 @@ class PuppeteerTest(MachCommandBase):
                      metavar="<N>",
                      help="Optionally run tests in parallel.")
     @CommandArgument("tests", nargs="*")
-    def puppeteer_test(self, binary=None, headless=True, extra_prefs=None,
+    def puppeteer_test(self, binary=None, headless=False, extra_prefs=None,
                        jobs=1, tests=None, **kwargs):
         # moztest calls this programmatically with test objects or manifests
         if "test_objects" in kwargs and tests is not None:
