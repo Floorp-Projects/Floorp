@@ -2,7 +2,7 @@
 
 # recordCrashBreadcrumb
 
-`fun recordCrashBreadcrumb(breadcrumb: `[`Breadcrumb`](../-breadcrumb/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L98)
+`fun recordCrashBreadcrumb(breadcrumb: `[`Breadcrumb`](../-breadcrumb/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/crash/src/main/java/mozilla/components/lib/crash/CrashReporter.kt#L115)
 
 Add a crash breadcrumb to all registered services with breadcrumb support.
 

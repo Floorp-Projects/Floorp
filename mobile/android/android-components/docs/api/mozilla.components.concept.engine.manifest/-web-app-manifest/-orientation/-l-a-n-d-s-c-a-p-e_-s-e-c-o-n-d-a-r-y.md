@@ -2,4 +2,4 @@
 
 # LANDSCAPE_SECONDARY
 
-`LANDSCAPE_SECONDARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L140)
+`LANDSCAPE_SECONDARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L141)

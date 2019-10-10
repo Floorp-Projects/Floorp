@@ -2,7 +2,7 @@
 
 # STANDALONE
 
-`STANDALONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L79)
+`STANDALONE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L80)
 
 The application will look and feel like a standalone application. This can include the application having a
 different window, its own icon in the application launcher, etc. In this mode, the user agent will exclude

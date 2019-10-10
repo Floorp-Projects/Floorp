@@ -2,7 +2,7 @@
 
 # DisplayMode
 
-`enum class DisplayMode` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L68)
+`enum class DisplayMode` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L69)
 
 Defines the developers’ preferred display mode for the website.
 

@@ -2,7 +2,7 @@
 
 # Icon
 
-`data class Icon` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L104)
+`data class Icon` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L105)
 
 An image file that can serve as application icon.
 

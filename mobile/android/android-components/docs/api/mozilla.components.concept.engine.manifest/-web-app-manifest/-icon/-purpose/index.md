@@ -2,7 +2,7 @@
 
 # Purpose
 
-`enum class Purpose` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L110)
+`enum class Purpose` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L111)
 
 ### Enum Values
 

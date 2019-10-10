@@ -2,4 +2,4 @@
 
 # PORTRAIT_SECONDARY
 
-`PORTRAIT_SECONDARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L143)
+`PORTRAIT_SECONDARY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L144)
