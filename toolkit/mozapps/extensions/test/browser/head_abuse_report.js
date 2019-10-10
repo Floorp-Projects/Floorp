@@ -4,7 +4,7 @@
 /* eslint max-len: ["error", 80] */
 
 /* exported installTestExtension, addCommonAbuseReportTestTasks,
- *          waitClosedWindow,
+ *          handleSubmitRequest, waitForNewWindow, waitClosedWindow,
  *          AbuseReporter, AbuseReporterTestUtils, AddonTestUtils */
 
 /* global mockPromptService, MockProvider, loadInitialView, closeView */
@@ -112,6 +112,12 @@ async function installTestExtension(
   });
   await extension.startup();
   return extension;
+}
+
+function handleSubmitRequest({ request, response }) {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "application/json", false);
+  response.write("{}");
 }
 
 const AbuseReportTestUtils = {

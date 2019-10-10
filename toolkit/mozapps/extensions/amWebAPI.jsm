@@ -20,6 +20,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "AMO_ABUSEREPORT",
+  "extensions.abuseReport.amWebAPI.enabled",
+  false
+);
+
 const MSG_PROMISE_REQUEST = "WebAPIPromiseRequest";
 const MSG_PROMISE_RESULT = "WebAPIPromiseResult";
 const MSG_INSTALL_EVENT = "WebAPIInstallEvent";
@@ -260,8 +267,16 @@ class WebAPI extends APIObject {
     });
   }
 
+  reportAbuse(id) {
+    return this._apiTask("addonReportAbuse", [id]);
+  }
+
   get permissionPromptsEnabled() {
     return WEBEXT_PERMISSION_PROMPTS;
+  }
+
+  get abuseReportPanelEnabled() {
+    return AMO_ABUSEREPORT;
   }
 
   eventListenerAdded(type) {

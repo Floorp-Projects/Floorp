@@ -28,6 +28,7 @@ const MOZ_COMPATIBILITY_NIGHTLY = ![
   "esr",
 ].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
+const PREF_AMO_ABUSEREPORT = "extensions.abuseReport.amWebAPI.enabled";
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_EM_UPDATE_ENABLED = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION = "extensions.lastAppVersion";
@@ -73,6 +74,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["Element"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AbuseReporter: "resource://gre/modules/AbuseReporter.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
 });
 
@@ -3459,6 +3461,53 @@ var AddonManagerInternal = {
           this.forgetInstall(id);
         }
       }
+    },
+
+    async addonReportAbuse(target, id) {
+      if (!Services.prefs.getBoolPref(PREF_AMO_ABUSEREPORT, false)) {
+        return Promise.reject({
+          message: "amWebAPI reportAbuse not supported",
+        });
+      }
+
+      if (AbuseReporter.getOpenDialog()) {
+        return Promise.reject({
+          message: "An abuse report is already in progress",
+        });
+      }
+
+      const dialog = await AbuseReporter.openDialog(id, "amo", target).catch(
+        err => {
+          Cu.reportError(err);
+          return Promise.reject({
+            message: "Error creating abuse report",
+          });
+        }
+      );
+
+      return dialog.promiseReport.then(
+        async report => {
+          if (!report) {
+            return false;
+          }
+
+          await report.submit().catch(err => {
+            Cu.reportError(err);
+            return Promise.reject({
+              message: "Error submitting abuse report",
+            });
+          });
+
+          return true;
+        },
+        err => {
+          Cu.reportError(err);
+          dialog.close();
+          return Promise.reject({
+            message: "Error creating abuse report",
+          });
+        }
+      );
     },
   },
 };
