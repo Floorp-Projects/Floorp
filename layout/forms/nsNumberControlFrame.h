@@ -67,6 +67,10 @@ class nsNumberControlFrame final : public nsContainerFrame,
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aGroup,
+                                 nscoord* aBaseline) const override;
+
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(
       nsTArray<ContentInfo>& aElements) override;
@@ -116,7 +120,7 @@ class nsNumberControlFrame final : public nsContainerFrame,
     mHandlingInputEvent = aHandlingEvent;
   }
 
-  HTMLInputElement* GetAnonTextControl();
+  HTMLInputElement* GetAnonTextControl() const;
 
   /**
    * If the frame is the frame for an nsNumberControlFrame's anonymous text
