@@ -22,6 +22,7 @@ struct IDCompositionTarget;
 struct IDCompositionVisual;
 struct IDXGIFactory2;
 struct IDXGISwapChain;
+struct IDXGISwapChain1;
 
 namespace mozilla {
 namespace gl {
@@ -66,6 +67,8 @@ class RenderCompositorANGLE : public RenderCompositor {
   void DestroyEGLSurface();
   ID3D11Device* GetDeviceOfEGLDisplay();
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
+  RefPtr<IDXGISwapChain1> CreateSwapChainForDComp(bool aUseTripleBuffering,
+                                                  bool aUseAlpha);
   bool SutdownEGLLibraryIfNecessary();
   RefPtr<ID3D11Query> GetD3D11Query();
 
@@ -73,6 +76,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   EGLSurface mEGLSurface;
 
   int mUseTripleBuffering;
+  bool mUseAlpha;
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mCtx;

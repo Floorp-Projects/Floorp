@@ -9,6 +9,8 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/Compositor.h"
+#include "mozilla/layers/CompositorThread.h"
+#include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
 #include "VsyncDispatcher.h"
@@ -245,6 +247,15 @@ void WinCompositorWidget::UpdateTransparency(nsTransparencyMode aMode) {
   if (mTransparencyMode == eTransparencyTransparent) {
     EnsureTransparentSurface();
   }
+}
+
+bool WinCompositorWidget::HasGlass() const {
+  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread() ||
+             wr::RenderThread::IsInRenderThread());
+
+  nsTransparencyMode transparencyMode = mTransparencyMode;
+  return transparencyMode == eTransparencyGlass ||
+         transparencyMode == eTransparencyBorderlessGlass;
 }
 
 void WinCompositorWidget::ClearTransparentWindow() {

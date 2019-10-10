@@ -222,7 +222,8 @@ class MLGDevice {
 
   virtual bool Initialize();
 
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() const = 0;
+  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier(
+      widget::CompositorWidget* aWidget) const = 0;
   virtual int32_t GetMaxTextureSize() const = 0;
   virtual LayersBackend GetLayersBackend() const = 0;
 
