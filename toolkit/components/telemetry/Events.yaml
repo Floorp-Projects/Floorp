@@ -253,6 +253,7 @@ addonsManager:
       An abuse report submitted by a user for a given extension. The object of the event
       represent the report entry point, the value is the id of the addon being reported.
     objects:
+      - amo
       - menu
       - toolbar_context_menu
       - uninstall

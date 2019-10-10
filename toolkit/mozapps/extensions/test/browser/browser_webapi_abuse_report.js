@@ -6,6 +6,10 @@
 loadTestSubscript("head_abuse_report.js");
 
 const TESTPAGE = `${SECURE_TESTROOT}webapi_checkavailable.html`;
+const TELEMETRY_EVENTS_FILTERS = {
+  category: "addonsManager",
+  method: "report",
+};
 const REPORT_PROP_NAMES = [
   "addon",
   "addon_signature",
@@ -68,6 +72,8 @@ add_task(async function setup() {
 });
 
 add_task(async function test_report_installed_addon_cancelled() {
+  Services.telemetry.clearEvents();
+
   await BrowserTestUtils.withNewTab(TESTPAGE, async browser => {
     const extension = await installTestExtension(ADDON_ID);
 
@@ -104,9 +110,14 @@ add_task(async function test_report_installed_addon_cancelled() {
 
     await extension.unload();
   });
+
+  // Expect no telemetry events collected for user cancelled reports.
+  TelemetryTestUtils.assertEvents([], TELEMETRY_EVENTS_FILTERS);
 });
 
 add_task(async function test_report_installed_addon_submitted() {
+  Services.telemetry.clearEvents();
+
   await BrowserTestUtils.withNewTab(TESTPAGE, async browser => {
     const extension = await installTestExtension(ADDON_ID);
 
@@ -134,10 +145,22 @@ add_task(async function test_report_installed_addon_submitted() {
 
     await extension.unload();
   });
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "amo",
+        value: ADDON_ID,
+        extra: { addon_type: "extension" },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 });
 
 add_task(async function test_report_unknown_not_installed_addon() {
   const addonId = "unknown-addon@mochi.test";
+  Services.telemetry.clearEvents();
 
   await BrowserTestUtils.withNewTab(TESTPAGE, async browser => {
     let promiseWebAPIResult = SpecialPowers.spawn(browser, [addonId], id =>
@@ -154,10 +177,27 @@ add_task(async function test_report_unknown_not_installed_addon() {
 
     ok(!AbuseReportTestUtils.getReportDialog(), "No report dialog is open");
   });
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "amo",
+        value: addonId,
+        extra: { error_type: "ERROR_AMODETAILS_NOTFOUND" },
+      },
+      {
+        object: "amo",
+        value: addonId,
+        extra: { error_type: "ERROR_ADDON_NOTFOUND" },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 });
 
 add_task(async function test_report_not_installed_addon() {
   const addonId = "not-installed-addon@mochi.test";
+  Services.telemetry.clearEvents();
 
   await BrowserTestUtils.withNewTab(TESTPAGE, async browser => {
     const fakeAMODetails = {
@@ -198,6 +238,17 @@ add_task(async function test_report_not_installed_addon() {
       "Expect reportAbuse to resolve to true on submitted report"
     );
   });
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "amo",
+        value: addonId,
+        extra: { addon_type: "extension" },
+      },
+    ],
+    TELEMETRY_EVENTS_FILTERS
+  );
 });
 
 add_task(async function test_amo_report_on_report_already_inprogress() {
