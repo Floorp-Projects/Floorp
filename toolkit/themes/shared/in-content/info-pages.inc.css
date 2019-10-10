@@ -142,7 +142,7 @@ table {
 th, td {
   border: 1px solid var(--in-content-border-color);
   padding: 4px;
-  text-align: start;
+  text-align: match-parent;
 }
 
 thead th {
@@ -162,6 +162,11 @@ th.column {
 td {
   border-color: var(--in-content-table-border-dark-color);
   unicode-bidi: plaintext; /* Make sure file paths will be LTR */
+}
+
+#update-row > td:dir(rtl),
+#profile-row > td:dir(rtl) {
+  unicode-bidi: normal;
 }
 
 /* Illustrated Info Pages */
