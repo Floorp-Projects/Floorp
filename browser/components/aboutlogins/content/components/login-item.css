@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
+  overflow: auto;
 
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
@@ -24,6 +22,13 @@
   :host {
     --in-content-deemphasized-text: #737373;
   }
+}
+
+.container {
+  max-width: 700px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
 }
 
 form {
