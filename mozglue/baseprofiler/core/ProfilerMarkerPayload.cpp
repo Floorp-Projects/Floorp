@@ -112,8 +112,7 @@ ProfilerMarkerPayload::CommonPropsTagAndSerializationBytes() const {
   return sizeof(DeserializerTag) +
          BlocksRingBuffer::SumBytes(mCommonProps.mStartTime,
                                     mCommonProps.mEndTime, mCommonProps.mStack,
-                                    mCommonProps.mDocShellId,
-                                    mCommonProps.mDocShellHistoryId);
+                                    mCommonProps.mInnerWindowID);
 }
 
 void ProfilerMarkerPayload::SerializeTagAndCommonProps(
@@ -123,8 +122,7 @@ void ProfilerMarkerPayload::SerializeTagAndCommonProps(
   aEntryWriter.WriteObject(mCommonProps.mStartTime);
   aEntryWriter.WriteObject(mCommonProps.mEndTime);
   aEntryWriter.WriteObject(mCommonProps.mStack);
-  aEntryWriter.WriteObject(mCommonProps.mDocShellId);
-  aEntryWriter.WriteObject(mCommonProps.mDocShellHistoryId);
+  aEntryWriter.WriteObject(mCommonProps.mInnerWindowID);
 }
 
 // static
@@ -135,8 +133,7 @@ ProfilerMarkerPayload::DeserializeCommonProps(
   aEntryReader.ReadIntoObject(props.mStartTime);
   aEntryReader.ReadIntoObject(props.mEndTime);
   aEntryReader.ReadIntoObject(props.mStack);
-  aEntryReader.ReadIntoObject(props.mDocShellId);
-  aEntryReader.ReadIntoObject(props.mDocShellHistoryId);
+  aEntryReader.ReadIntoObject(props.mInnerWindowID);
   return props;
 }
 
@@ -146,12 +143,13 @@ void ProfilerMarkerPayload::StreamCommonProps(
   StreamType(aMarkerType, aWriter);
   WriteTime(aWriter, aProcessStartTime, mCommonProps.mStartTime, "startTime");
   WriteTime(aWriter, aProcessStartTime, mCommonProps.mEndTime, "endTime");
-  if (mCommonProps.mDocShellId) {
-    aWriter.StringProperty("docShellId", mCommonProps.mDocShellId->c_str());
-  }
-  if (mCommonProps.mDocShellHistoryId) {
-    aWriter.DoubleProperty("docshellHistoryId",
-                           mCommonProps.mDocShellHistoryId.ref());
+  if (mCommonProps.mInnerWindowID) {
+    // Here, we are converting uint64_t to double. Both Browsing Context and
+    // Inner Window IDs are creating using
+    // `nsContentUtils::GenerateProcessSpecificId`, which is specifically
+    // designed to only use 53 of the 64 bits to be lossless when passed into
+    // and out of JS as a double.
+    aWriter.DoubleProperty("innerWindowID", mCommonProps.mInnerWindowID.ref());
   }
   if (mCommonProps.mStack) {
     aWriter.StartObjectProperty("stack");
@@ -165,9 +163,8 @@ void ProfilerMarkerPayload::StreamCommonProps(
 
 TracingMarkerPayload::TracingMarkerPayload(
     const char* aCategory, TracingKind aKind,
-    const Maybe<std::string>& aDocShellId,
-    const Maybe<uint32_t>& aDocShellHistoryId, UniqueProfilerBacktrace aCause)
-    : ProfilerMarkerPayload(aDocShellId, aDocShellHistoryId, std::move(aCause)),
+    const Maybe<uint64_t>& aInnerWindowID, UniqueProfilerBacktrace aCause)
+    : ProfilerMarkerPayload(aInnerWindowID, std::move(aCause)),
       mCategory(aCategory),
       mKind(aKind) {}
 
@@ -228,8 +225,7 @@ FileIOMarkerPayload::FileIOMarkerPayload(const char* aOperation,
                                          const TimeStamp& aStartTime,
                                          const TimeStamp& aEndTime,
                                          UniqueProfilerBacktrace aStack)
-    : ProfilerMarkerPayload(aStartTime, aEndTime, Nothing(), Nothing(),
-                            std::move(aStack)),
+    : ProfilerMarkerPayload(aStartTime, aEndTime, Nothing(), std::move(aStack)),
       mSource(aSource),
       mOperation(aOperation ? strdup(aOperation) : nullptr),
       mFilename(aFilename ? strdup(aFilename) : nullptr) {
@@ -287,20 +283,16 @@ void FileIOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
 
 UserTimingMarkerPayload::UserTimingMarkerPayload(
     const std::string& aName, const TimeStamp& aStartTime,
-    const Maybe<std::string>& aDocShellId,
-    const Maybe<uint32_t>& aDocShellHistoryId)
-    : ProfilerMarkerPayload(aStartTime, aStartTime, aDocShellId,
-                            aDocShellHistoryId),
+    const Maybe<uint64_t>& aInnerWindowID)
+    : ProfilerMarkerPayload(aStartTime, aStartTime, aInnerWindowID),
       mEntryType("mark"),
       mName(aName) {}
 
 UserTimingMarkerPayload::UserTimingMarkerPayload(
     const std::string& aName, const Maybe<std::string>& aStartMark,
     const Maybe<std::string>& aEndMark, const TimeStamp& aStartTime,
-    const TimeStamp& aEndTime, const Maybe<std::string>& aDocShellId,
-    const Maybe<uint32_t>& aDocShellHistoryId)
-    : ProfilerMarkerPayload(aStartTime, aEndTime, aDocShellId,
-                            aDocShellHistoryId),
+    const TimeStamp& aEndTime, const Maybe<uint64_t>& aInnerWindowID)
+    : ProfilerMarkerPayload(aStartTime, aEndTime, aInnerWindowID),
       mEntryType("measure"),
       mName(aName),
       mStartMark(aStartMark),
@@ -378,20 +370,17 @@ TextMarkerPayload::TextMarkerPayload(const std::string& aText,
 
 TextMarkerPayload::TextMarkerPayload(const std::string& aText,
                                      const TimeStamp& aStartTime,
-                                     const Maybe<std::string>& aDocShellId,
-                                     const Maybe<uint32_t>& aDocShellHistoryId)
-    : ProfilerMarkerPayload(aStartTime, aStartTime, aDocShellId,
-                            aDocShellHistoryId),
+                                     const Maybe<uint64_t>& aInnerWindowID)
+    : ProfilerMarkerPayload(aStartTime, aStartTime, aInnerWindowID),
       mText(aText) {}
 
 TextMarkerPayload::TextMarkerPayload(const std::string& aText,
                                      const TimeStamp& aStartTime,
                                      const TimeStamp& aEndTime,
-                                     const Maybe<std::string>& aDocShellId,
-                                     const Maybe<uint32_t>& aDocShellHistoryId,
+                                     const Maybe<uint64_t>& aInnerWindowID,
                                      UniqueProfilerBacktrace aCause)
-    : ProfilerMarkerPayload(aStartTime, aEndTime, aDocShellId,
-                            aDocShellHistoryId, std::move(aCause)),
+    : ProfilerMarkerPayload(aStartTime, aEndTime, aInnerWindowID,
+                            std::move(aCause)),
       mText(aText) {}
 
 TextMarkerPayload::TextMarkerPayload(CommonProps&& aCommonProps,

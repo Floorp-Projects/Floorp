@@ -72,6 +72,54 @@ fn get_byte_from_expr_lit(expr: &Box<syn::Expr>) -> u8 {
     }
 }
 
+/// Parse a pattern and fill the table accordingly
+fn parse_pat_to_table<'a>(pat: &'a syn::Pat, case_id: u8, wildcard: &mut Option<&'a syn::Ident>, table: &mut [u8; 256]) {
+    match pat {
+        &syn::Pat::Lit(syn::PatLit { ref expr, .. }) => {
+            let value = get_byte_from_expr_lit(expr);
+            if table[value as usize] == 0 {
+                table[value as usize] = case_id;
+            }
+        }
+        &syn::Pat::Range(syn::PatRange { ref lo, ref hi, .. }) => {
+            let lo = get_byte_from_expr_lit(lo);
+            let hi = get_byte_from_expr_lit(hi);
+            for value in lo..hi {
+                if table[value as usize] == 0 {
+                    table[value as usize] = case_id;
+                }
+            }
+            if table[hi as usize] == 0 {
+                table[hi as usize] = case_id;
+            }
+        }
+        &syn::Pat::Wild(_) => {
+            for byte in table.iter_mut() {
+                if *byte == 0 {
+                    *byte = case_id;
+                }
+            }
+        }
+        &syn::Pat::Ident(syn::PatIdent { ref ident, .. }) => {
+            assert_eq!(*wildcard, None);
+            *wildcard = Some(ident);
+            for byte in table.iter_mut() {
+                if *byte == 0 {
+                    *byte = case_id;
+                }
+            }
+        },
+        &syn::Pat::Or(syn::PatOr { ref cases, .. }) => {
+            for case in cases {
+                parse_pat_to_table(case, case_id, wildcard, table);
+            }
+        }
+        _ => {
+            panic!("Unexpected pattern: {:?}. Buggy code ?", pat);
+        }
+    }
+}
+
 /// Expand a TokenStream corresponding to the `match_byte` macro.
 ///
 /// ## Example
@@ -97,48 +145,8 @@ fn expand_match_byte(body: &TokenStream) -> syn::Expr {
         let case_id = i + 1;
         let index = case_id as isize;
         let name = syn::Ident::new(&format!("Case{}", case_id), Span::call_site());
+        parse_pat_to_table(&arm.pat, case_id as u8, &mut wildcard, &mut table);
 
-        for pat in &arm.pats {
-            match pat {
-                &syn::Pat::Lit(syn::PatLit { ref expr }) => {
-                    let value = get_byte_from_expr_lit(expr);
-                    if table[value as usize] == 0 {
-                        table[value as usize] = case_id as u8;
-                    }
-                }
-                &syn::Pat::Range(syn::PatRange { ref lo, ref hi, .. }) => {
-                    let lo = get_byte_from_expr_lit(lo);
-                    let hi = get_byte_from_expr_lit(hi);
-                    for value in lo..hi {
-                        if table[value as usize] == 0 {
-                            table[value as usize] = case_id as u8;
-                        }
-                    }
-                    if table[hi as usize] == 0 {
-                        table[hi as usize] = case_id as u8;
-                    }
-                }
-                &syn::Pat::Wild(_) => {
-                    for byte in table.iter_mut() {
-                        if *byte == 0 {
-                            *byte = case_id as u8;
-                        }
-                    }
-                }
-                &syn::Pat::Ident(syn::PatIdent { ref ident, .. }) => {
-                    assert_eq!(wildcard, None);
-                    wildcard = Some(ident);
-                    for byte in table.iter_mut() {
-                        if *byte == 0 {
-                            *byte = case_id as u8;
-                        }
-                    }
-                }
-                _ => {
-                    panic!("Unexpected pattern: {:?}. Buggy code ?", pat);
-                }
-            }
-        }
         cases.push(quote!(#name = #index));
         let body = &arm.body;
         match_body.push(quote!(Case::#name => { #body }))
@@ -170,7 +178,7 @@ impl Fold for MatchByteParser {
                 if mac.path == parse_quote!(match_byte) {
                     return syn::fold::fold_stmt(
                         self,
-                        syn::Stmt::Expr(expand_match_byte(&mac.tts)),
+                        syn::Stmt::Expr(expand_match_byte(&mac.tokens)),
                     );
                 }
             }
@@ -184,7 +192,7 @@ impl Fold for MatchByteParser {
         match expr {
             syn::Expr::Macro(syn::ExprMacro { ref mac, .. }) => {
                 if mac.path == parse_quote!(match_byte) {
-                    return syn::fold::fold_expr(self, expand_match_byte(&mac.tts));
+                    return syn::fold::fold_expr(self, expand_match_byte(&mac.tokens));
                 }
             }
             _ => {}

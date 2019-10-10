@@ -85,6 +85,14 @@ class StickyScrollContainer final : public nsIScrollPositionListener {
 
   ~StickyScrollContainer();
 
+  const nsTArray<nsIFrame*>& GetFrames() const { return mFrames; }
+
+  /**
+   * Returns true if the frame is "stuck" in the y direction, ie it's acting
+   * like fixed position. aFrame should be in GetFrames().
+   */
+  bool IsStuckInYDirection(nsIFrame* aFrame) const;
+
  private:
   explicit StickyScrollContainer(nsIScrollableFrame* aScrollFrame);
 

@@ -16,7 +16,12 @@ createHTML({
 /**
  * Test to verify using multiple capture streams concurrently.
  */
-runNetworkTest(() => {
+runNetworkTest(async () => {
+  // [TODO] re-enable HW decoder after bug 1526207 is fixed.
+  if (navigator.userAgent.includes("Android")) {
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false]);
+  }
+
   var test = new PeerConnectionTest();
   var h = new CaptureStreamTestHelper2D(50, 50);
 

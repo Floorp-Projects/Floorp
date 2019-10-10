@@ -1251,13 +1251,13 @@ class SpecialPowersChild extends JSWindowActorChild {
     );
   }
   attachFormFillControllerTo(window) {
-    this.getFormFillController().attachPopupElementToBrowser(
-      window.docShell,
+    this.getFormFillController().attachPopupElementToDocument(
+      window.document,
       this._getAutoCompletePopup(window)
     );
   }
   detachFormFillControllerFrom(window) {
-    this.getFormFillController().detachFromBrowser(window.docShell);
+    this.getFormFillController().detachFromDocument(window.document);
   }
   isBackButtonEnabled(window) {
     return !this._getTopChromeWindow(window)
@@ -1668,7 +1668,7 @@ class SpecialPowersChild extends JSWindowActorChild {
       browsingContext,
       args,
       task: String(task),
-      caller: SpecialPowersSandbox.getCallerInfo(Components.stack.caller),
+      caller: Cu.getFunctionSourceLocation(task),
       hasHarness: typeof this.SimpleTest === "object",
     });
   }

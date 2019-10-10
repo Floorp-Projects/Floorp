@@ -1514,6 +1514,7 @@ void ContentParent::ShutDownMessageManager() {
       mMessageManager, nullptr, CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr,
       nullptr, nullptr, nullptr, IgnoreErrors());
 
+  mMessageManager->SetOsPid(-1);
   mMessageManager->Disconnect();
   mMessageManager = nullptr;
 }
@@ -2556,6 +2557,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   // Initialize the message manager (and load delayed scripts) now that we
   // have established communications with the child.
   mMessageManager->InitWithCallback(this);
+  mMessageManager->SetOsPid(Pid());
 
   // Set the subprocess's priority.  We do this early on because we're likely
   // /lowering/ the process's CPU and memory priority, which it has inherited

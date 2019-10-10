@@ -727,6 +727,7 @@ linux64-fuzzing-ccov/opt:
             PERFHERDER_EXTRA_OPTIONS: fuzzing-ccov
             FORCE_GCC: '1'
             ASAN_OPTIONS: "detect_leaks=0"
+            RUSTC_BOOTSTRAP: '1'
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -743,7 +744,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-clang
             - linux64-gcc
             - linux64-cbindgen
-            - linux64-rust-nightly
+            - linux64-rust
             - linux64-rust-size
             - linux64-sccache
             - linux64-nasm
@@ -1001,6 +1002,7 @@ linux64-tup/opt:
         max-run-time: 3600
         env:
             PERFHERDER_EXTRA_OPTIONS: tup
+            RUSTC_BOOTSTRAP: '1'
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -1018,7 +1020,7 @@ linux64-tup/opt:
         toolchain:
             - linux64-binutils
             - linux64-clang
-            - linux64-rust-nightly
+            - linux64-rust
             - linux64-cbindgen
             - linux64-sccache
             - linux64-tup
@@ -1044,6 +1046,7 @@ linux64-ccov/debug:
         max-run-time: 7200
         env:
             FORCE_GCC: '1'
+            RUSTC_BOOTSTRAP: '1'
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -1059,7 +1062,7 @@ linux64-ccov/debug:
     fetches:
         toolchain:
             - linux64-clang-8
-            - linux64-rust-nightly
+            - linux64-rust
             - linux64-gcc
             - linux64-grcov
             - linux64-cbindgen
@@ -1082,6 +1085,7 @@ linux64-ccov/opt:
         max-run-time: 7200
         env:
             FORCE_GCC: '1'
+            RUSTC_BOOTSTRAP: '1'
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -1097,7 +1101,7 @@ linux64-ccov/opt:
     fetches:
         toolchain:
             - linux64-clang-8
-            - linux64-rust-nightly
+            - linux64-rust
             - linux64-gcc
             - linux64-cbindgen
             - linux64-sccache

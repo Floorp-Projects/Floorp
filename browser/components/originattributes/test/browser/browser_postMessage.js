@@ -43,7 +43,7 @@ async function runTestWithOptions(
     senderURL,
     true
   );
-  ContentTask.spawn(tab.linkedBrowser, senderURL, aSenderPath => {
+  SpecialPowers.spawn(tab.linkedBrowser, [senderURL], aSenderPath => {
     content.open(aSenderPath, "_blank");
   });
 
@@ -56,18 +56,18 @@ async function runTestWithOptions(
   // 'privacy.firstparty.isolate.block_post_message' is true.
   let shouldBlock = aDifferentFPD && (!aStarTargetOrigin || aBlockAcrossFPD);
 
-  await ContentTask.spawn(tab.linkedBrowser, shouldBlock, async aValue => {
+  await SpecialPowers.spawn(tab.linkedBrowser, [shouldBlock], async aValue => {
     await new Promise(resolve => {
       content.addEventListener("message", function eventHandler(aEvent) {
         if (aEvent.data === "Self") {
           if (aValue) {
-            is(
+            Assert.equal(
               content.document.getElementById("display").innerHTML,
               "",
               "It should not get a message from other OA."
             );
           } else {
-            is(
+            Assert.equal(
               content.document.getElementById("display").innerHTML,
               "Message",
               "It should get a message from the same OA."

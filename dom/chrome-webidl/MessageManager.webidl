@@ -611,5 +611,10 @@ ChromeMessageSender includes FrameScriptLoader;
 [ChromeOnly, Exposed=Window]
 interface ProcessMessageManager : MessageSender
 {
+  // PID of the process being communicated with.
+  readonly attribute long osPid;
+
+  // Whether this is message manager for the current process.
+  readonly attribute boolean isInProcess;
 };
 ProcessMessageManager includes ProcessScriptLoader;

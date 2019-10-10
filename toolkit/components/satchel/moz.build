@@ -28,7 +28,6 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_JS_MODULES += [
-    'AutoCompletePopup.jsm',
     'FormAutoComplete.jsm',
     'FormHistory.jsm',
     'FormHistoryStartup.jsm',

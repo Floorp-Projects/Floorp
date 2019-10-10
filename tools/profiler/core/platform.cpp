@@ -63,6 +63,7 @@
 #include "BaseProfiler.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsIDocShell.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIObserverService.h"
 #include "nsIPropertyBag2.h"
@@ -422,26 +423,37 @@ class CorePS {
 
   static void AppendRegisteredPage(PSLockRef,
                                    RefPtr<PageInformation>&& aRegisteredPage) {
-    // Disabling this assertion for now until we fix the same page registration
-    // issue. See Bug 1542918.
-#if 0
     struct RegisteredPageComparator {
       PageInformation* aA;
       bool operator()(PageInformation* aB) const { return aA->Equals(aB); }
     };
-    MOZ_RELEASE_ASSERT(std::none_of(
+
+    auto foundPageIter = std::find_if(
         sInstance->mRegisteredPages.begin(), sInstance->mRegisteredPages.end(),
-        RegisteredPageComparator{aRegisteredPage.get()}));
-#endif
+        RegisteredPageComparator{aRegisteredPage.get()});
+
+    if (foundPageIter != sInstance->mRegisteredPages.end()) {
+      if ((*foundPageIter)->Url().EqualsLiteral("about:blank")) {
+        // When a BrowsingContext is loaded, the first url loaded in it will be
+        // about:blank, and if the principal matches, the first document loaded
+        // in it will share an inner window. That's why we should delete the
+        // intermittent about:blank if they share the inner window.
+        sInstance->mRegisteredPages.erase(foundPageIter);
+      } else {
+        // Do not register the same page again.
+        return;
+      }
+    }
+
     MOZ_RELEASE_ASSERT(
         sInstance->mRegisteredPages.append(std::move(aRegisteredPage)));
   }
 
-  static void RemoveRegisteredPages(PSLockRef,
-                                    const nsID& aRegisteredDocShellId) {
-    // Remove RegisteredPage from mRegisteredPages by given DocShell Id.
+  static void RemoveRegisteredPage(PSLockRef,
+                                   uint64_t aRegisteredInnerWindowID) {
+    // Remove RegisteredPage from mRegisteredPages by given inner window ID.
     sInstance->mRegisteredPages.eraseIf([&](const RefPtr<PageInformation>& rd) {
-      return rd->DocShellId().Equals(aRegisteredDocShellId);
+      return rd->InnerWindowID() == aRegisteredInnerWindowID;
     });
   }
 
@@ -499,7 +511,7 @@ class CorePS {
   Vector<UniquePtr<RegisteredThread>> mRegisteredThreads;
 
   // Info on all the registered pages.
-  // DocShellId and DocShellHistoryId pairs in mRegisteredPages are unique.
+  // InnerWindowIDs in mRegisteredPages are unique.
   Vector<RefPtr<PageInformation>> mRegisteredPages;
 
   // Non-owning pointers to all active counters
@@ -793,7 +805,7 @@ class ActivePS {
     for (auto& d : sInstance->mDeadProfiledPages) {
       MOZ_RELEASE_ASSERT(array.append(d));
     }
-    // We don't need to sort the DocShells like threads since we won't show them
+    // We don't need to sort the pages like threads since we won't show them
     // as a list.
     return array;
   }
@@ -864,12 +876,12 @@ class ActivePS {
         });
   }
 
-  static void UnregisterPages(PSLockRef aLock,
-                              const nsID& aRegisteredDocShellId) {
+  static void UnregisterPage(PSLockRef aLock,
+                             uint64_t aRegisteredInnerWindowID) {
     auto& registeredPages = CorePS::RegisteredPages(aLock);
     for (size_t i = 0; i < registeredPages.length(); i++) {
       RefPtr<PageInformation>& page = registeredPages[i];
-      if (page->DocShellId().Equals(aRegisteredDocShellId)) {
+      if (page->InnerWindowID() == aRegisteredInnerWindowID) {
         page->NotifyUnregistered(sInstance->mProfileBuffer->BufferRangeEnd());
         MOZ_RELEASE_ASSERT(
             sInstance->mDeadProfiledPages.append(std::move(page)));
@@ -1952,7 +1964,7 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
                                      bool aIsShuttingDown) {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 16);
+  aWriter.IntProperty("version", 17);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
@@ -3983,24 +3995,22 @@ void profiler_unregister_thread() {
   }
 }
 
-void profiler_register_page(const nsID& aDocShellId, uint32_t aHistoryId,
-                            const nsCString& aUrl, bool aIsSubFrame) {
-  DEBUG_LOG("profiler_register_page(%s, %u, %s, %d)",
-            nsIDToCString(aDocShellId).get(), aHistoryId, aUrl.get(),
-            aIsSubFrame);
+void profiler_register_page(uint64_t aBrowsingContextID,
+                            uint64_t aInnerWindowID, const nsCString& aUrl,
+                            uint64_t aEmbedderInnerWindowID) {
+  DEBUG_LOG("profiler_register_page(%" PRIu64 ", %" PRIu64 ", %s, %" PRIu64 ")",
+            aBrowsingContextID, aInnerWindowID, aUrl.get(),
+            aEmbedderInnerWindowID);
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
 
-  // If profiler is not active, delete all the previous page entries of the
-  // given DocShell since we won't need those.
-  if (!ActivePS::Exists(lock)) {
-    CorePS::RemoveRegisteredPages(lock, aDocShellId);
-  }
-
-  RefPtr<PageInformation> pageInfo =
-      new PageInformation(aDocShellId, aHistoryId, aUrl, aIsSubFrame);
+  // When a Browsing context is first loaded, the first url loaded in it will be
+  // about:blank. Because of that, this call keeps the first non-about:blank
+  // registration of window and discards the previous one.
+  RefPtr<PageInformation> pageInfo = new PageInformation(
+      aBrowsingContextID, aInnerWindowID, aUrl, aEmbedderInnerWindowID);
   CorePS::AppendRegisteredPage(lock, std::move(pageInfo));
 
   // After appending the given page to CorePS, look for the expired
@@ -4010,7 +4020,7 @@ void profiler_register_page(const nsID& aDocShellId, uint32_t aHistoryId,
   }
 }
 
-void profiler_unregister_pages(const nsID& aRegisteredDocShellId) {
+void profiler_unregister_page(uint64_t aRegisteredInnerWindowID) {
   PSAutoLock lock(gPSMutex);
 
   if (!CorePS::Exists()) {
@@ -4023,9 +4033,9 @@ void profiler_unregister_pages(const nsID& aRegisteredDocShellId) {
   // page. But if profiler is not active. we have no reason to keep the
   // page information here because there can't be any marker associated with it.
   if (ActivePS::Exists(lock)) {
-    ActivePS::UnregisterPages(lock, aRegisteredDocShellId);
+    ActivePS::UnregisterPage(lock, aRegisteredInnerWindowID);
   } else {
-    CorePS::RemoveRegisteredPages(lock, aRegisteredDocShellId);
+    CorePS::RemoveRegisteredPage(lock, aRegisteredInnerWindowID);
   }
 }
 
@@ -4047,6 +4057,21 @@ void profiler_clear_all_pages() {
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
   ProfilerParent::ClearAllPages();
+}
+
+Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
+    nsIDocShell* aDocshell) {
+  Maybe<uint64_t> innerWindowID = Nothing();
+  if (aDocshell) {
+    auto outerWindow = aDocshell->GetWindow();
+    if (outerWindow) {
+      auto innerWindow = outerWindow->GetCurrentInnerWindow();
+      if (innerWindow) {
+        innerWindowID = Some(innerWindow->WindowID());
+      }
+    }
+  }
+  return innerWindowID;
 }
 
 void profiler_thread_sleep() {
@@ -4312,8 +4337,8 @@ void profiler_add_marker_for_thread(int aThreadId,
 
 void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
                       JS::ProfilingCategoryPair aCategoryPair,
-                      TracingKind aKind, const Maybe<nsID>& aDocShellId,
-                      const Maybe<uint32_t>& aDocShellHistoryId) {
+                      TracingKind aKind,
+                      const Maybe<uint64_t>& aInnerWindowID) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   VTUNE_TRACING(aMarkerName, aKind);
@@ -4324,16 +4349,15 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
   }
 
   AUTO_PROFILER_STATS(add_marker_with_TracingMarkerPayload);
-  profiler_add_marker(aMarkerName, aCategoryPair,
-                      TracingMarkerPayload(aCategoryString, aKind, aDocShellId,
-                                           aDocShellHistoryId));
+  profiler_add_marker(
+      aMarkerName, aCategoryPair,
+      TracingMarkerPayload(aCategoryString, aKind, aInnerWindowID));
 }
 
 void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
                       JS::ProfilingCategoryPair aCategoryPair,
                       TracingKind aKind, UniqueProfilerBacktrace aCause,
-                      const Maybe<nsID>& aDocShellId,
-                      const Maybe<uint32_t>& aDocShellHistoryId) {
+                      const Maybe<uint64_t>& aInnerWindowID) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   VTUNE_TRACING(aMarkerName, aKind);
@@ -4343,25 +4367,21 @@ void profiler_tracing(const char* aCategoryString, const char* aMarkerName,
     return;
   }
 
-  AUTO_PROFILER_STATS(add_marker_with_TracingMarkerPayload);
-  profiler_add_marker(
-      aMarkerName, aCategoryPair,
-      TracingMarkerPayload(aCategoryString, aKind, aDocShellId,
-                           aDocShellHistoryId, std::move(aCause)));
+  profiler_add_marker(aMarkerName, aCategoryPair,
+                      TracingMarkerPayload(aCategoryString, aKind,
+                                           aInnerWindowID, std::move(aCause)));
 }
 
-void profiler_add_text_marker(
-    const char* aMarkerName, const nsACString& aText,
-    JS::ProfilingCategoryPair aCategoryPair,
-    const mozilla::TimeStamp& aStartTime, const mozilla::TimeStamp& aEndTime,
-    const mozilla::Maybe<nsID>& aDocShellId,
-    const mozilla::Maybe<uint32_t>& aDocShellHistoryId,
-    UniqueProfilerBacktrace aCause) {
+void profiler_add_text_marker(const char* aMarkerName, const nsACString& aText,
+                              JS::ProfilingCategoryPair aCategoryPair,
+                              const mozilla::TimeStamp& aStartTime,
+                              const mozilla::TimeStamp& aEndTime,
+                              const mozilla::Maybe<uint64_t>& aInnerWindowID,
+                              UniqueProfilerBacktrace aCause) {
   AUTO_PROFILER_STATS(add_marker_with_TextMarkerPayload);
-  profiler_add_marker(
-      aMarkerName, aCategoryPair,
-      TextMarkerPayload(aText, aStartTime, aEndTime, aDocShellId,
-                        aDocShellHistoryId, std::move(aCause)));
+  profiler_add_marker(aMarkerName, aCategoryPair,
+                      TextMarkerPayload(aText, aStartTime, aEndTime,
+                                        aInnerWindowID, std::move(aCause)));
 }
 
 void profiler_set_js_context(JSContext* aCx) {

@@ -69,6 +69,7 @@ class AboutLoginsChild extends ActorChild {
           },
           // Default to enabled just in case a search is attempted before we get a response.
           masterPasswordEnabled: true,
+          passwordRevealVisible: true,
         };
         waivedContent.AboutLoginsUtils = Cu.cloneInto(
           AboutLoginsUtils,
@@ -109,6 +110,10 @@ class AboutLoginsChild extends ActorChild {
         });
         break;
       }
+      case "AboutLoginsGetHelp": {
+        this.mm.sendAsyncMessage("AboutLogins:GetHelp");
+        break;
+      }
       case "AboutLoginsHideFooter": {
         this.mm.sendAsyncMessage("AboutLogins:HideFooter");
         break;
@@ -127,10 +132,6 @@ class AboutLoginsChild extends ActorChild {
         this.mm.sendAsyncMessage("AboutLogins:OpenMobileIos", {
           source: event.detail,
         });
-        break;
-      }
-      case "AboutLoginsGetHelp": {
-        this.mm.sendAsyncMessage("AboutLogins:GetHelp");
         break;
       }
       case "AboutLoginsOpenPreferences": {
@@ -180,6 +181,10 @@ class AboutLoginsChild extends ActorChild {
         }
         break;
       }
+      case "AboutLoginsSortChanged": {
+        this.mm.sendAsyncMessage("AboutLogins:SortChanged", event.detail);
+        break;
+      }
       case "AboutLoginsSyncEnable": {
         this.mm.sendAsyncMessage("AboutLogins:SyncEnable");
         break;
@@ -226,6 +231,8 @@ class AboutLoginsChild extends ActorChild {
         this.sendToContent("Setup", message.data);
         Cu.waiveXrays(this.content).AboutLoginsUtils.masterPasswordEnabled =
           message.data.masterPasswordEnabled;
+        Cu.waiveXrays(this.content).AboutLoginsUtils.passwordRevealVisible =
+          message.data.passwordRevealVisible;
         break;
       case "AboutLogins:ShowLoginItemError":
         this.sendToContent("ShowLoginItemError", message.data);

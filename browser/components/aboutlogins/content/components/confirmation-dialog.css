@@ -1,4 +1,8 @@
-.overlay {
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+ .overlay {
   position: fixed;
   z-index: 1;
   top: 0;
@@ -72,6 +76,7 @@
 
 .buttons {
   display: flex;
+  justify-content: space-between;
 }
 
 .buttons.macosx > .confirm-button {
