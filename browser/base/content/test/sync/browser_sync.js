@@ -91,7 +91,7 @@ add_task(async function test_ui_state_syncing() {
 
   gSync.updateAllUI(state);
 
-  checkSyncNowButtons(true);
+  checkSyncNowButton("PanelUI-remotetabs-syncnow", true);
 
   // Be good citizens and remove the "syncing" state.
   gSync.updateAllUI({
@@ -285,7 +285,7 @@ function checkRemoteTabsPanel(expectedShownItemId, syncing, syncNowTooltip) {
   );
 
   if (syncing != undefined && syncNowTooltip != undefined) {
-    checkSyncNowButtons(syncing, syncNowTooltip);
+    checkSyncNowButton("PanelUI-remotetabs-syncnow", syncing, syncNowTooltip);
   }
 }
 
@@ -302,41 +302,43 @@ function checkMenuBarItem(expectedShownItemId) {
   );
 }
 
-function checkSyncNowButtons(syncing, tooltip = null) {
-  const syncButtons = document.querySelectorAll(".syncNowBtn");
+function checkSyncNowButton(buttonId, syncing, tooltip = null) {
+  const remoteTabsButton = document.getElementById(buttonId);
 
-  for (const syncButton of syncButtons) {
+  is(
+    remoteTabsButton.getAttribute("syncstatus"),
+    syncing ? "active" : "",
+    "button active has the right value"
+  );
+  if (tooltip) {
     is(
-      syncButton.getAttribute("syncstatus"),
-      syncing ? "active" : "",
-      "button active has the right value"
+      remoteTabsButton.getAttribute("tooltiptext"),
+      tooltip,
+      "button tooltiptext is set to the right value"
     );
-    if (tooltip) {
-      is(
-        syncButton.getAttribute("tooltiptext"),
-        tooltip,
-        "button tooltiptext is set to the right value"
-      );
-    }
+  }
 
+  if (buttonId.endsWith("-fxa-icon")) {
+    return;
+  }
+
+  is(
+    remoteTabsButton.hasAttribute("disabled"),
+    syncing,
+    "disabled has the right value"
+  );
+  if (syncing) {
     is(
-      syncButton.hasAttribute("disabled"),
-      syncing,
-      "disabled has the right value"
+      remoteTabsButton.getAttribute("label"),
+      gSync.syncStrings.GetStringFromName("syncingtabs.label"),
+      "label is set to the right value"
     );
-    if (syncing) {
-      is(
-        document.l10n.getAttributes(syncButton).id,
-        syncButton.getAttribute("syncinglabel"),
-        "label is set to the right value"
-      );
-    } else {
-      is(
-        document.l10n.getAttributes(syncButton).id,
-        "fxa-toolbar-sync-now",
-        "label is set to the right value"
-      );
-    }
+  } else {
+    is(
+      remoteTabsButton.getAttribute("label"),
+      gSync.syncStrings.GetStringFromName("syncnow.label"),
+      "label is set to the right value"
+    );
   }
 }
 
