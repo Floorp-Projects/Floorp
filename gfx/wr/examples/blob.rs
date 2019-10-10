@@ -19,7 +19,7 @@ use std::sync::Arc;
 use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, PrimitiveFlags, RenderApi, Transaction};
 use webrender::api::{ColorF, CommonItemProperties, SpaceAndClipInfo};
 use webrender::api::units::*;
-use webrender::euclid::{size2, rect};
+use webrender::euclid::size2;
 
 // This example shows how to implement a very basic BlobImageHandler that can only render
 // a checkerboard pattern.
@@ -206,24 +206,6 @@ impl Example for App {
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
-        let blob_img1 = api.generate_blob_image_key();
-        txn.add_blob_image(
-            blob_img1,
-            api::ImageDescriptor::new(500, 500, api::ImageFormat::BGRA8, true, false),
-            serialize_blob(api::ColorU::new(50, 50, 150, 255)),
-            rect(0, 0, 500, 500),
-            Some(128),
-        );
-
-        let blob_img2 = api.generate_blob_image_key();
-        txn.add_blob_image(
-            blob_img2,
-            api::ImageDescriptor::new(200, 200, api::ImageFormat::BGRA8, true, false),
-            serialize_blob(api::ColorU::new(50, 150, 50, 255)),
-            rect(0, 0, 200, 200),
-            None,
-        );
-
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
@@ -232,7 +214,16 @@ impl Example for App {
             PrimitiveFlags::IS_BACKFACE_VISIBLE,
         );
 
-        let bounds = (30, 30).by(500, 500);
+        let size1 = DeviceIntSize::new(500, 500);
+        let blob_img1 = api.generate_blob_image_key();
+        txn.add_blob_image(
+            blob_img1,
+            api::ImageDescriptor::new(size1.width, size1.height, api::ImageFormat::BGRA8, true, false),
+            serialize_blob(api::ColorU::new(50, 50, 150, 255)),
+            size1.into(),
+            Some(128),
+        );
+        let bounds = (30, 30).by(size1.width, size1.height);
         builder.push_image(
             &CommonItemProperties::new(bounds, space_and_clip),
             bounds,
@@ -242,7 +233,16 @@ impl Example for App {
             ColorF::WHITE,
         );
 
-        let bounds = (600, 600).by(200, 200);
+        let size2 = DeviceIntSize::new(256, 256);
+        let blob_img2 = api.generate_blob_image_key();
+        txn.add_blob_image(
+            blob_img2,
+            api::ImageDescriptor::new(size2.width, size2.height, api::ImageFormat::BGRA8, true, false),
+            serialize_blob(api::ColorU::new(50, 150, 50, 255)),
+            size2.into(),
+            None,
+        );
+        let bounds = (600, 600).by(size2.width, size2.height);
         builder.push_image(
             &CommonItemProperties::new(bounds, space_and_clip),
             bounds,
