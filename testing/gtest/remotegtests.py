@@ -50,6 +50,7 @@ class RemoteGTests(object):
         env["MOZ_GTEST_CWD"] = self.remote_profile
         env["MOZ_GTEST_MINIDUMPS_PATH"] = self.remote_minidumps
         env["MOZ_IN_AUTOMATION"] = "1"
+        env["MOZ_ANDROID_LIBDIR_OVERRIDE"] = posixpath.join(self.remote_libdir, 'libxul.so')
         if shuffle:
             env["GTEST_SHUFFLE"] = "True"
         if test_filter:
@@ -77,20 +78,23 @@ class RemoteGTests(object):
         self.remote_profile = posixpath.join(root, 'gtest-profile')
         self.remote_minidumps = posixpath.join(root, 'gtest-minidumps')
         self.remote_log = posixpath.join(root, 'gtest.log')
+        self.remote_libdir = posixpath.join('/data', 'local', 'gtest')
+
         self.package = package
         self.cleanup()
         self.device.mkdir(self.remote_profile, parents=True)
         self.device.mkdir(self.remote_minidumps, parents=True)
+        self.device.mkdir(self.remote_libdir, parents=True)
 
         log.info("Running Android gtest")
         if not self.device.is_app_installed(self.package):
             raise Exception("%s is not installed on this device" % self.package)
-        if not self.device._have_root_shell:
-            raise Exception("a device with a root shell is required to run Android gtest")
 
+        # Push the gtest libxul.so to the device. The harness assumes an architecture-
+        # appropriate library is specified and pushes it to the arch-agnostic remote
+        # directory.
         # TODO -- consider packaging the gtest libxul.so in an apk
-        remote = "/data/app/%s-1/lib/x86_64/" % self.package
-        self.device.push(libxul_path, remote)
+        self.device.push(libxul_path, self.remote_libdir)
 
         # Push support files to device. Avoid sub-directories so that libxul.so
         # is not included.
@@ -202,6 +206,7 @@ class RemoteGTests(object):
             self.device.rm(self.remote_log, force=True, root=True)
             self.device.rm(self.remote_profile, recursive=True, force=True, root=True)
             self.device.rm(self.remote_minidumps, recursive=True, force=True, root=True)
+            self.device.rm(self.remote_libdir, recursive=True, force=True, root=True)
 
 
 class AppWaiter(object):
