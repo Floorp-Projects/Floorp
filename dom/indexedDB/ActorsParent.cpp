@@ -5843,6 +5843,8 @@ class Database final
     return mConnection;
   }
 
+  void Stringify(nsACString& aResult) const;
+
  private:
   // Reference counted.
   ~Database() override {
@@ -6621,9 +6623,9 @@ class FactoryOp
     return mDatabaseFilePath;
   }
 
-  void StringifyPersistenceType(nsCString& aResult) const;
+  void StringifyState(nsACString& aResult) const;
 
-  void StringifyState(nsCString& aResult) const;
+  void Stringify(nsACString& aResult) const;
 
  protected:
   FactoryOp(Factory* aFactory, already_AddRefed<ContentParent> aContentParent,
@@ -8096,6 +8098,8 @@ class Maintenance final : public Runnable, public OpenDirectoryListener {
     return result.forget();
   }
 
+  void Stringify(nsACString& aResult) const;
+
  private:
   ~Maintenance() override {
     MOZ_ASSERT(mState == State::Complete);
@@ -8239,6 +8243,8 @@ class DatabaseMaintenance final : public Runnable {
 
     mCompleteCallback = aCallback;
   }
+
+  void Stringify(nsACString& aResult) const;
 
  private:
   ~DatabaseMaintenance() override = default;
@@ -12648,6 +12654,46 @@ void Database::MapBlob(const IPCBlob& aIPCBlob, FileInfo* aFileInfo) {
   actor->SetCallback(callback);
 }
 
+void Database::Stringify(nsACString& aResult) const {
+  AssertIsOnBackgroundThread();
+
+  aResult.AppendLiteral("DirectoryLock:");
+  aResult.AppendInt(!!mDirectoryLock);
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("Transactions:");
+  aResult.AppendInt(mTransactions.Count());
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("OtherProcessActor:");
+  aResult.AppendInt(
+      BackgroundParent::IsOtherProcessActor(GetBackgroundParent()));
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("Origin:");
+  aResult.Append(AnonymizedOriginString(mOrigin));
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("PersistenceType:");
+  aResult.Append(PersistenceTypeString(mPersistenceType));
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("Closed:");
+  aResult.AppendInt(mClosed);
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("Invalidated:");
+  aResult.AppendInt(mInvalidated);
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("ActorWasAlive:");
+  aResult.AppendInt(mActorWasAlive);
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("ActorDestroyed:");
+  aResult.AppendInt(mActorDestroyed);
+}
+
 already_AddRefed<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
   AssertIsOnBackgroundThread();
 
@@ -16320,55 +16366,56 @@ void QuotaClient::ShutdownTimedOut() {
   nsCString data;
 
   if (gFactoryOps && !gFactoryOps->IsEmpty()) {
-    data.Append("gFactoryOps: ");
+    data.Append("FactoryOperations: ");
     data.AppendInt(static_cast<uint32_t>(gFactoryOps->Length()));
+    data.Append(" (");
 
     nsTHashtable<nsCStringHashKey> ids;
-    for (uint32_t index = 0; index < gFactoryOps->Length(); index++) {
-      CheckedUnsafePtr<FactoryOp>& factoryOp = (*gFactoryOps)[index];
 
-      nsCString persistenceType;
-      factoryOp->StringifyPersistenceType(persistenceType);
+    for (auto const& factoryOp : *gFactoryOps) {
+      MOZ_ASSERT(factoryOp);
 
-      nsCString origin(factoryOp->Origin());
-      SanitizeOrigin(origin);
-
-      nsCString state;
-      factoryOp->StringifyState(state);
-
-      NS_NAMED_LITERAL_CSTRING(delimiter, "*");
-
-      nsCString id = persistenceType + delimiter + origin + delimiter + state;
+      nsCString id;
+      factoryOp->Stringify(id);
 
       ids.PutEntry(id);
     }
 
-    data.Append(" (");
-
-    bool first = true;
-    for (auto iter = ids.ConstIter(); !iter.Done(); iter.Next()) {
-      if (first) {
-        first = false;
-      } else {
-        data.Append(", ");
-      }
-
-      const nsACString& id = iter.Get()->GetKey();
-
-      data.Append(id);
-    }
+    StringifyTableKeys(ids, data);
 
     data.Append(")\n");
   }
 
   if (gLiveDatabaseHashtable && gLiveDatabaseHashtable->Count()) {
-    data.Append("gLiveDatabaseHashtable: ");
+    data.Append("LiveDatabases: ");
     data.AppendInt(gLiveDatabaseHashtable->Count());
-    data.Append("\n");
+    data.Append(" (");
+
+    nsTHashtable<nsCStringHashKey> ids;
+
+    for (auto iter = gLiveDatabaseHashtable->ConstIter(); !iter.Done();
+         iter.Next()) {
+      MOZ_ASSERT(iter.Data());
+
+      for (const auto& database : iter.Data()->mLiveDatabases) {
+        MOZ_ASSERT(database);
+
+        nsCString id;
+        database->Stringify(id);
+
+        ids.PutEntry(id);
+      }
+    }
+
+    StringifyTableKeys(ids, data);
+
+    data.Append(")\n");
   }
 
   if (mCurrentMaintenance) {
-    data.Append("mCurrentMaintenance\n");
+    data.Append("IdleMaintenance: 1 (");
+    mCurrentMaintenance->Stringify(data);
+    data.Append(")\n");
   }
 
   CrashReporter::AnnotateCrashReport(
@@ -16851,6 +16898,30 @@ void Maintenance::UnregisterDatabaseMaintenance(
 
   mState = State::Finishing;
   Finish();
+}
+
+void Maintenance::Stringify(nsACString& aResult) const {
+  AssertIsOnBackgroundThread();
+
+  aResult.Append("DatabaseMaintenances: ");
+  aResult.AppendInt(mDatabaseMaintenances.Count());
+  aResult.Append(" (");
+
+  nsTHashtable<nsCStringHashKey> ids;
+
+  for (auto iter = mDatabaseMaintenances.ConstIter(); !iter.Done();
+       iter.Next()) {
+    MOZ_ASSERT(iter.Data());
+
+    nsCString id;
+    iter.Data()->Stringify(id);
+
+    ids.PutEntry(id);
+  }
+
+  StringifyTableKeys(ids, aResult);
+
+  aResult.Append(")");
 }
 
 nsresult Maintenance::Start() {
@@ -17414,6 +17485,21 @@ void Maintenance::DirectoryLockFailed() {
 
   mState = State::Finishing;
   Finish();
+}
+
+void DatabaseMaintenance::Stringify(nsACString& aResult) const {
+  AssertIsOnBackgroundThread();
+
+  aResult.AppendLiteral("Origin:");
+  aResult.Append(AnonymizedOriginString(mOrigin));
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("PersistenceType:");
+  aResult.Append(PersistenceTypeString(mPersistenceType));
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("Duration:");
+  aResult.AppendInt((PR_Now() - mMaintenance->StartTime()) / PR_USEC_PER_MSEC);
 }
 
 void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
@@ -19141,77 +19227,85 @@ FactoryOp::FactoryOp(Factory* aFactory,
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 }
 
-void FactoryOp::StringifyPersistenceType(nsCString& aResult) const {
-  AssertIsOnOwningThread();
-
-  PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
-
-  PersistenceTypeToText(persistenceType, aResult);
-}
-
-void FactoryOp::StringifyState(nsCString& aResult) const {
+void FactoryOp::StringifyState(nsACString& aResult) const {
   AssertIsOnOwningThread();
 
   switch (mState) {
     case State::Initial:
-      aResult.AssignLiteral("Initial");
+      aResult.AppendLiteral("Initial");
       return;
 
     case State::PermissionChallenge:
-      aResult.AssignLiteral("PermissionChallenge");
+      aResult.AppendLiteral("PermissionChallenge");
       return;
 
     case State::PermissionRetry:
-      aResult.AssignLiteral("PermissionRetry");
+      aResult.AppendLiteral("PermissionRetry");
       return;
 
     case State::FinishOpen:
-      aResult.AssignLiteral("FinishOpen");
+      aResult.AppendLiteral("FinishOpen");
       return;
 
     case State::QuotaManagerPending:
-      aResult.AssignLiteral("QuotaManagerPending");
+      aResult.AppendLiteral("QuotaManagerPending");
       return;
 
     case State::DirectoryOpenPending:
-      aResult.AssignLiteral("DirectoryOpenPending");
+      aResult.AppendLiteral("DirectoryOpenPending");
       return;
 
     case State::DatabaseOpenPending:
-      aResult.AssignLiteral("DatabaseOpenPending");
+      aResult.AppendLiteral("DatabaseOpenPending");
       return;
 
     case State::DatabaseWorkOpen:
-      aResult.AssignLiteral("DatabaseWorkOpen");
+      aResult.AppendLiteral("DatabaseWorkOpen");
       return;
 
     case State::BeginVersionChange:
-      aResult.AssignLiteral("BeginVersionChange");
+      aResult.AppendLiteral("BeginVersionChange");
       return;
 
     case State::WaitingForOtherDatabasesToClose:
-      aResult.AssignLiteral("WaitingForOtherDatabasesToClose");
+      aResult.AppendLiteral("WaitingForOtherDatabasesToClose");
       return;
 
     case State::WaitingForTransactionsToComplete:
-      aResult.AssignLiteral("WaitingForTransactionsToComplete");
+      aResult.AppendLiteral("WaitingForTransactionsToComplete");
       return;
 
     case State::DatabaseWorkVersionChange:
-      aResult.AssignLiteral("DatabaseWorkVersionChange");
+      aResult.AppendLiteral("DatabaseWorkVersionChange");
       return;
 
     case State::SendingResults:
-      aResult.AssignLiteral("SendingResults");
+      aResult.AppendLiteral("SendingResults");
       return;
 
     case State::Completed:
-      aResult.AssignLiteral("Completed");
+      aResult.AppendLiteral("Completed");
       return;
 
     default:
       MOZ_CRASH("Bad state!");
   }
+}
+
+void FactoryOp::Stringify(nsACString& aResult) const {
+  AssertIsOnOwningThread();
+
+  aResult.AppendLiteral("PersistenceType:");
+  aResult.Append(
+      PersistenceTypeString(mCommonParams.metadata().persistenceType()));
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("Origin:");
+  aResult.Append(AnonymizedOriginString(mOrigin));
+  aResult.Append(kQuotaGenericDelimiter);
+
+  aResult.AppendLiteral("State:");
+  StringifyState(aResult);
 }
 
 nsresult FactoryOp::Open() {

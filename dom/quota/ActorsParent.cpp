@@ -747,7 +747,7 @@ class DirectoryLockImpl final : public DirectoryLock {
 
   NS_INLINE_DECL_REFCOUNTING(DirectoryLockImpl, override)
 
-  void LogState() override;
+  void Log() override;
 
  private:
   ~DirectoryLockImpl();
@@ -2763,7 +2763,7 @@ void DirectoryLockImpl::NotifyOpenListener() {
   mQuotaManager->RemovePendingDirectoryLock(this);
 }
 
-void DirectoryLockImpl::LogState() {
+void DirectoryLockImpl::Log() {
   AssertIsOnOwningThread();
 
   if (!QM_LOG_TEST()) {
@@ -2819,7 +2819,7 @@ void DirectoryLockImpl::LogState() {
   QM_LOG(("  mInvalidated: %d", mInvalidated));
 
   for (auto blockedOn : mBlockedOn) {
-    blockedOn->LogState();
+    blockedOn->Log();
   }
 }
 
