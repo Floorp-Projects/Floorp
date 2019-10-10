@@ -827,12 +827,8 @@ this.tabs = class extends ExtensionAPI {
             nativeTab.linkedBrowser.loadURI(url, options);
           }
 
-          if (updateProperties.active !== null) {
-            if (updateProperties.active) {
-              tabbrowser.selectedTab = nativeTab;
-            } else {
-              // Not sure what to do here? Which tab should we select?
-            }
+          if (updateProperties.active) {
+            tabbrowser.selectedTab = nativeTab;
           }
           if (updateProperties.highlighted !== null) {
             if (!gMultiSelectEnabled) {
