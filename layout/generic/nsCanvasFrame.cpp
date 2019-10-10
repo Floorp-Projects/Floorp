@@ -247,6 +247,7 @@ void nsCanvasFrame::SetInitialChildList(ChildListID aListID,
                    aChildList.OnlyChild(),
                "Primary child list can have at most one frame in it");
   nsContainerFrame::SetInitialChildList(aListID, aChildList);
+  MaybePropagateRootElementWritingMode();
 }
 
 void nsCanvasFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
@@ -263,6 +264,7 @@ void nsCanvasFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
   nsFrame::VerifyDirtyBitSet(aFrameList);
 #endif
   nsContainerFrame::AppendFrames(aListID, aFrameList);
+  MaybePropagateRootElementWritingMode();
 }
 
 void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
@@ -272,6 +274,7 @@ void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   // as appending
   MOZ_ASSERT(!aPrevFrame, "unexpected previous sibling frame");
   AppendFrames(aListID, aFrameList);
+  MaybePropagateRootElementWritingMode();
 }
 
 #ifdef DEBUG
@@ -827,6 +830,15 @@ nsresult nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent,
   }
 
   return rv;
+}
+
+void nsCanvasFrame::MaybePropagateRootElementWritingMode() {
+  nsIFrame* child = PrincipalChildList().FirstChild();
+  if (child && child->GetContent() &&
+      child->GetContent() == PresContext()->Document()->GetRootElement()) {
+    nsIFrame* childPrimary = child->GetContent()->GetPrimaryFrame();
+    PropagateRootElementWritingMode(childPrimary->GetWritingMode());
+  }
 }
 
 #ifdef DEBUG_FRAME_DUMP
