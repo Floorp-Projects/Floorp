@@ -594,12 +594,12 @@ void nsRange::ContentAppended(nsIContent* aFirstNewContent) {
     // A splitText has occurred, if any mNext*Ref was set, we need to adjust
     // the range boundaries.
     if (mNextStartRef) {
-      mStart.SetAfterRef(mStart.Container(), mNextStartRef);
+      mStart = {mStart.Container(), mNextStartRef};
       MOZ_ASSERT(mNextStartRef == aFirstNewContent);
       mNextStartRef = nullptr;
     }
     if (mNextEndRef) {
-      mEnd.SetAfterRef(mEnd.Container(), mNextEndRef);
+      mEnd = {mEnd.Container(), mNextEndRef};
       MOZ_ASSERT(mNextEndRef == aFirstNewContent);
       mNextEndRef = nullptr;
     }
@@ -642,12 +642,12 @@ void nsRange::ContentInserted(nsIContent* aChild) {
 
   if (mNextStartRef || mNextEndRef) {
     if (mNextStartRef) {
-      newStart.SetAfterRef(mStart.Container(), mNextStartRef);
+      newStart = {mStart.Container(), mNextStartRef};
       MOZ_ASSERT(mNextStartRef == aChild);
       mNextStartRef = nullptr;
     }
     if (mNextEndRef) {
-      newEnd.SetAfterRef(mEnd.Container(), mNextEndRef);
+      newEnd = {mEnd.Container(), mNextEndRef};
       MOZ_ASSERT(mNextEndRef == aChild);
       mNextEndRef = nullptr;
     }
@@ -681,7 +681,7 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
     // We're only interested if our boundary reference was removed, otherwise
     // we can just invalidate the offset.
     if (aChild == mStart.Ref()) {
-      newStart.SetAfterRef(container, aPreviousSibling);
+      newStart = {container, aPreviousSibling};
     } else {
       newStart = mStart;
       newStart.InvalidateOffset();
@@ -689,14 +689,14 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
   } else {
     gravitateStart = Some(mStart.Container()->IsInclusiveDescendantOf(aChild));
     if (gravitateStart.value()) {
-      newStart.SetAfterRef(container, aPreviousSibling);
+      newStart = {container, aPreviousSibling};
     }
   }
 
   // Do same thing for end boundry.
   if (container == mEnd.Container()) {
     if (aChild == mEnd.Ref()) {
-      newEnd.SetAfterRef(container, aPreviousSibling);
+      newEnd = {container, aPreviousSibling};
     } else {
       newEnd = mEnd;
       newEnd.InvalidateOffset();
@@ -708,7 +708,7 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
       gravitateEnd = mEnd.Container()->IsInclusiveDescendantOf(aChild);
     }
     if (gravitateEnd) {
-      newEnd.SetAfterRef(container, aPreviousSibling);
+      newEnd = {container, aPreviousSibling};
     }
   }
 
