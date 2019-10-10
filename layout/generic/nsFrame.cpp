@@ -1237,27 +1237,23 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
     if (mInScrollAnchorChain) {
       const nsStylePosition* oldPosition = aOldComputedStyle->StylePosition();
-      if (oldPosition->mOffset != StylePosition()->mOffset ||
-          oldPosition->mWidth != StylePosition()->mWidth ||
-          oldPosition->mMinWidth != StylePosition()->mMinWidth ||
-          oldPosition->mMaxWidth != StylePosition()->mMaxWidth ||
-          oldPosition->mHeight != StylePosition()->mHeight ||
-          oldPosition->mMinHeight != StylePosition()->mMinHeight ||
-          oldPosition->mMaxHeight != StylePosition()->mMaxHeight) {
+      if (!needAnchorSuppression &&
+          (oldPosition->mOffset != StylePosition()->mOffset ||
+           oldPosition->mWidth != StylePosition()->mWidth ||
+           oldPosition->mMinWidth != StylePosition()->mMinWidth ||
+           oldPosition->mMaxWidth != StylePosition()->mMaxWidth ||
+           oldPosition->mHeight != StylePosition()->mHeight ||
+           oldPosition->mMinHeight != StylePosition()->mMinHeight ||
+           oldPosition->mMaxHeight != StylePosition()->mMaxHeight ||
+           oldDisp->mPosition != StyleDisplay()->mPosition ||
+           oldDisp->mTransform != StyleDisplay()->mTransform)) {
         needAnchorSuppression = true;
       }
 
-      // TODO(emilio): Should this do something about other transform-like
-      // properties?
-      if (oldDisp->mPosition != StyleDisplay()->mPosition ||
-          oldDisp->mTransform != StyleDisplay()->mTransform) {
-        needAnchorSuppression = true;
+      if (needAnchorSuppression &&
+          StaticPrefs::layout_css_scroll_anchoring_suppressions_enabled()) {
+        ScrollAnchorContainer::FindFor(this)->SuppressAdjustments();
       }
-    }
-
-    if (mInScrollAnchorChain && needAnchorSuppression &&
-        StaticPrefs::layout_css_scroll_anchoring_suppressions_enabled()) {
-      ScrollAnchorContainer::FindFor(this)->SuppressAdjustments();
     }
   }
 
