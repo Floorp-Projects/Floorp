@@ -20,7 +20,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  wait = waitForDOM(document, "#response-panel .CodeMirror-code");
+  const wait = waitForDOM(document, "#response-panel .CodeMirror-code");
   store.dispatch(Actions.toggleNetworkDetails());
   EventUtils.sendMouseEvent(
     { type: "click" },
