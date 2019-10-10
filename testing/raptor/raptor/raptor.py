@@ -542,6 +542,11 @@ class BrowsertimeAndroid(Browsertime):
         self.profile.merge(path)
         self.profile.set_preferences({'browser.tabs.remote.autostart': self.config['e10s']})
 
+        # There's no great way to have "after" advice in Python, so we do this
+        # in super and then again here since the profile merging re-introduces
+        # the "#MozRunner" delimiters.
+        self.remove_mozprofile_delimiters_from_profile()
+
 
 class Raptor(Perftest):
     """Container class for Raptor"""
