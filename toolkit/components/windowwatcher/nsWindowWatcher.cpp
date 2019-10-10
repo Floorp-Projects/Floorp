@@ -593,7 +593,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   bool windowNeedsName = false;
   bool windowIsModal = false;
   bool uriToLoadIsChrome = false;
-  bool windowIsModalContentDialog = false;
 
   uint32_t chromeFlags;
   nsAutoString name;           // string version of aName
@@ -697,8 +696,6 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   } else {
     chromeFlags = CalculateChromeFlagsForChild(features);
 
-    // Until ShowModalDialog is removed, it's still possible for content to
-    // request dialogs, but only in single-process mode.
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
       chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
@@ -1029,7 +1026,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     MaybeDisablePersistence(features, newTreeOwner);
   }
 
-  if ((aDialog || windowIsModalContentDialog) && aArgv) {
+  if (aDialog && aArgv) {
     MOZ_ASSERT(win);
     NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
 
@@ -1271,8 +1268,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     SizeOpenedWindow(newTreeOwner, aParent, isCallerChrome, sizeSpec);
   }
 
-  // XXXbz isn't windowIsModal always true when windowIsModalContentDialog?
-  if (windowIsModal || windowIsModalContentDialog) {
+  if (windowIsModal) {
     NS_ENSURE_TRUE(newDocShell, NS_ERROR_NOT_IMPLEMENTED);
 
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
