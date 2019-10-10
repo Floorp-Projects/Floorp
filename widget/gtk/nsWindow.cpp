@@ -3850,6 +3850,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
         mGtkWindowRoleName = "Toplevel";
         SetDefaultIcon();
 
+        if (mIsPIPWindow) {
+          gtk_window_set_type_hint(GTK_WINDOW(mShell),
+                                   GDK_WINDOW_TYPE_HINT_UTILITY);
+        }
+
         // each toplevel window gets its own window group
         GtkWindowGroup* group = gtk_window_group_new();
         gtk_window_group_add_window(group, GTK_WINDOW(mShell));
