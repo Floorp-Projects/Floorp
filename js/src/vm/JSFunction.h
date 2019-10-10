@@ -756,11 +756,9 @@ class JSFunction : public js::NativeObject {
                         uint16_t* length);
 
   js::LazyScript* lazyScript() const {
-    MOZ_ASSERT(hasLazyScript() && u.scripted.s.lazy_);
-    return u.scripted.s.lazy_;
-  }
-  js::LazyScript* maybeLazyScript() const {
     MOZ_ASSERT(hasLazyScript());
+    MOZ_ASSERT(u.scripted.s.lazy_,
+               "JSFunction::lazy_ should also be valid when hasLazyScript()");
     return u.scripted.s.lazy_;
   }
 
