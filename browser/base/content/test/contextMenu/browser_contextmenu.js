@@ -46,9 +46,12 @@ function getThisFrameSubMenu(base_menu) {
 }
 
 add_task(async function init() {
-  // Ensure screenshots is really disabled (bug 1498738)
+  // Ensure screenshots is really disabled (bug 1498738).
   const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
   await addon.disable({ allowSystemAddons: true });
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.separatePrivateDefault.ui.enabled", true]],
+  });
 });
 
 // Below are test cases for XUL element
@@ -84,6 +87,8 @@ add_task(async function test_xul_text_link_label() {
     true,
     "context-searchselect",
     true,
+    "context-searchselect-private",
+    true,
     "---",
     null,
     "context-sendlinktodevice",
@@ -92,12 +97,12 @@ add_task(async function test_xul_text_link_label() {
     null,
   ]);
 
-  // Clean up so won't affect HTML element test cases
+  // Clean up so won't affect HTML element test cases.
   lastElementSelector = null;
   gBrowser.removeCurrentTab();
 });
 
-// Below are test cases for HTML element
+// Below are test cases for HTML element.
 
 add_task(async function test_setup_html() {
   let url = example_base + "subtst_contextmenu.html";
@@ -203,6 +208,8 @@ add_task(async function test_link() {
     true,
     "context-searchselect",
     true,
+    "context-searchselect-private",
+    true,
     "---",
     null,
     "context-sendlinktodevice",
@@ -237,6 +244,8 @@ add_task(async function test_link_in_shadow_dom() {
       true,
       "context-searchselect",
       true,
+      "context-searchselect-private",
+      true,
       "---",
       null,
       "context-sendlinktodevice",
@@ -256,6 +265,8 @@ add_task(async function test_mailto() {
     "context-copyemail",
     true,
     "context-searchselect",
+    true,
+    "context-searchselect-private",
     true,
   ]);
 });
@@ -1396,6 +1407,8 @@ add_task(async function test_select_text() {
       null,
       "context-searchselect",
       true,
+      "context-searchselect-private",
+      true,
       "context-viewpartialsource-selection",
       true,
     ],
@@ -1438,6 +1451,8 @@ add_task(async function test_select_text_link() {
       "---",
       null,
       "context-searchselect",
+      true,
+      "context-searchselect-private",
       true,
       "---",
       null,
@@ -1521,17 +1536,18 @@ add_task(async function test_select_input_text() {
 
   /*
   yield test_contextmenu("#test-select-input-text",
-    ["context-undo",         false,
-     "---",                  null,
-     "context-cut",          true,
-     "context-copy",         true,
-     "context-paste",        null, // ignore clipboard state
-     "context-delete",       true,
-     "---",                  null,
-     "context-selectall",    true,
-     "context-searchselect", true,
-     "---",                  null,
-     "spell-check-enabled",  true
+    ["context-undo",                 false,
+     "---",                          null,
+     "context-cut",                  true,
+     "context-copy",                 true,
+     "context-paste",                null, // ignore clipboard state
+     "context-delete",               true,
+     "---",                          null,
+     "context-selectall",            true,
+     "context-searchselect",         true,
+     "context-searchselect-private", true,
+     "---",                          null,
+     "spell-check-enabled",          true
     ].concat(LOGIN_FILL_ITEMS),
     {
       *preCheckContextMenuFn() {
@@ -1775,6 +1791,8 @@ add_task(async function test_svg_link() {
     true,
     "context-searchselect",
     true,
+    "context-searchselect-private",
+    true,
     "---",
     null,
     "context-sendlinktodevice",
@@ -1805,6 +1823,8 @@ add_task(async function test_svg_link() {
     true,
     "context-searchselect",
     true,
+    "context-searchselect-private",
+    true,
     "---",
     null,
     "context-sendlinktodevice",
@@ -1834,6 +1854,8 @@ add_task(async function test_svg_link() {
     "context-copylink",
     true,
     "context-searchselect",
+    true,
+    "context-searchselect-private",
     true,
     "---",
     null,
@@ -1867,6 +1889,8 @@ add_task(async function test_svg_relative_link() {
     true,
     "context-searchselect",
     true,
+    "context-searchselect-private",
+    true,
     "---",
     null,
     "context-sendlinktodevice",
@@ -1897,6 +1921,8 @@ add_task(async function test_svg_relative_link() {
     true,
     "context-searchselect",
     true,
+    "context-searchselect-private",
+    true,
     "---",
     null,
     "context-sendlinktodevice",
@@ -1926,6 +1952,8 @@ add_task(async function test_svg_relative_link() {
     "context-copylink",
     true,
     "context-searchselect",
+    true,
+    "context-searchselect-private",
     true,
     "---",
     null,
