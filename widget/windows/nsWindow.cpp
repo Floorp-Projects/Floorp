@@ -132,6 +132,7 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "nsIAppStartup.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/TextEvents.h"  // For WidgetKeyboardEvent
@@ -7469,6 +7470,14 @@ void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode) {
     ::FillRect(hdc, &rect,
                reinterpret_cast<HBRUSH>(GetStockObject(BLACK_BRUSH)));
     ReleaseDC(mWnd, hdc);
+  }
+
+  // Disable double buffering with D3D compositor for disabling compositor
+  // window usage.
+  if (HasGlass() && !gfxVars::UseWebRender() &&
+      gfxVars::UseDoubleBufferingWithCompositor()) {
+    gfxVars::SetUseDoubleBufferingWithCompositor(false);
+    GPUProcessManager::Get()->ResetCompositors();
   }
 }
 
