@@ -10,6 +10,5 @@
     "cxx": "{MOZ_FETCHES_DIR}/gcc/bin/g++",
     "as": "{MOZ_FETCHES_DIR}/gcc/bin/gcc",
     "patches": [
-      "clang-tidy-8.patch"
     ]
 }

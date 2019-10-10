@@ -24,7 +24,7 @@ job-defaults:
         - try
     fetches:
         fetch:
-            - clang-8
+            - clang-9
 
 linux64-clang-tidy:
     index:
@@ -39,6 +39,7 @@ linux64-clang-tidy:
             - 'build/build-clang/clang-tidy-linux64.json'
     fetches:
         toolchain:
+            - linux64-binutils
             - linux64-gcc-6
 
 macosx64-clang-tidy:
@@ -61,8 +62,9 @@ macosx64-clang-tidy:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
     fetches:
         toolchain:
+            - linux64-binutils
             - linux64-cctools-port
-            - linux64-clang-8
+            - linux64-clang-9
             - linux64-gcc-6
             - linux64-node
 
