@@ -10,7 +10,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import copy_attributes_from_dependent_job
 from taskgraph.util.signed_artifacts import generate_specifications_of_artifacts_to_sign
-from taskgraph.util.taskcluster import get_artifact_path
 
 
 transforms = TransformSequence()
@@ -49,7 +48,6 @@ def add_signed_routes(config, jobs):
 def define_upstream_artifacts(config, jobs):
     for job in jobs:
         dep_job = job['primary-dependency']
-        build_platform = dep_job.attributes.get('build_platform')
 
         job['attributes'] = copy_attributes_from_dependent_job(dep_job)
 
@@ -59,12 +57,6 @@ def define_upstream_artifacts(config, jobs):
             keep_locale_template=False,
             kind=config.kind,
         )
-
-        if 'android' in build_platform:
-            # We're in the job that creates both multilocale and en-US APKs
-            artifacts_specifications[0]['artifacts'].append(
-                get_artifact_path(dep_job, 'en-US/target.apk')
-            )
 
         job['upstream-artifacts'] = [{
             'taskId': {'task-reference': '<build>'},

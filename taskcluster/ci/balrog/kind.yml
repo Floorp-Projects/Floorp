@@ -11,8 +11,6 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - beetmover
-    - beetmover-l10n
     - beetmover-repackage
 
 only-for-attributes:
