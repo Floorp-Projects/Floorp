@@ -62,6 +62,9 @@ class WebConsoleUI {
     this._onChangeSplitConsoleState = this._onChangeSplitConsoleState.bind(
       this
     );
+    this._listProcessesAndCreateProxies = this._listProcessesAndCreateProxies.bind(
+      this
+    );
 
     EventEmitter.decorate(this);
   }
@@ -167,6 +170,14 @@ class WebConsoleUI {
       toolbox.off("webconsole-selected", this._onPanelSelected);
       toolbox.off("split-console", this._onChangeSplitConsoleState);
       toolbox.off("select", this._onChangeSplitConsoleState);
+    }
+
+    const target = this.hud.currentTarget;
+    if (target) {
+      target.client.mainRoot.off(
+        "processListChanged",
+        this._listProcessesAndCreateProxies
+      );
     }
 
     for (const proxy of this.getAllProxies()) {
@@ -319,35 +330,59 @@ class WebConsoleUI {
       needContentProcessMessagesListener
     );
 
+    const onConnect = this.proxy.connect();
+
     if (fissionSupport && target.isParentProcess && !target.isAddon) {
-      const { mainRoot } = target.client;
-      const { processes } = await mainRoot.listProcesses();
-
       this.additionalProxies = [];
-      for (const processDescriptor of processes) {
-        const targetFront = await processDescriptor.getTarget();
 
-        // Don't create a proxy for the "main" target,
-        // as we already created it in this.proxy.
-        if (targetFront === target) {
-          continue;
-        }
-
-        if (!targetFront) {
-          console.warn(
-            "Can't retrieve the target front for process",
-            processDescriptor
-          );
-          continue;
-        }
-
-        this.additionalProxies.push(
-          new WebConsoleConnectionProxy(this, targetFront)
-        );
-      }
+      await this._listProcessesAndCreateProxies();
+      target.client.mainRoot.on(
+        "processListChanged",
+        this._listProcessesAndCreateProxies
+      );
     }
 
-    return Promise.all(this.getAllProxies(false).map(proxy => proxy.connect()));
+    await onConnect;
+  }
+
+  async _listProcessesAndCreateProxies() {
+    const target = this.hud.currentTarget;
+    const { mainRoot } = target.client;
+    const { processes } = await mainRoot.listProcesses();
+
+    if (!this.additionalProxies) {
+      return;
+    }
+
+    const newProxies = [];
+    for (const processDescriptor of processes) {
+      const targetFront = await processDescriptor.getTarget();
+
+      // Don't create a proxy for the "main" target,
+      // as we already created it in this.proxy.
+      if (targetFront === target) {
+        continue;
+      }
+
+      if (!targetFront) {
+        console.warn(
+          "Can't retrieve the target front for process",
+          processDescriptor
+        );
+        continue;
+      }
+
+      if (this.additionalProxies.some(proxy => proxy.target == targetFront)) {
+        continue;
+      }
+
+      const proxy = new WebConsoleConnectionProxy(this, targetFront);
+
+      newProxies.push(proxy);
+      this.additionalProxies.push(proxy);
+    }
+
+    await Promise.all(newProxies.map(proxy => proxy.connect()));
   }
 
   _initUI() {
