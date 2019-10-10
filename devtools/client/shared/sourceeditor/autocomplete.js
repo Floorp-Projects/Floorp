@@ -369,6 +369,9 @@ function onEditorKeypress({ ed, Editor }, cm, event) {
       break;
     case KeyCodes.DOM_VK_ESCAPE:
       if (autocompleteOpts.popup.isOpen) {
+        // Prevent the Console input to open, but still remove the autocomplete popup.
+        autocompleteOpts.doNotAutocomplete = true;
+        autocompleteOpts.popup.hidePopup();
         event.preventDefault();
       }
       break;
