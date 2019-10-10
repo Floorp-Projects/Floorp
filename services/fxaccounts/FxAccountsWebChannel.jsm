@@ -454,20 +454,26 @@ this.FxAccountsWebChannelHelpers.prototype = {
       // User has enabled Sync.
       if (requestedServices.sync) {
         const { offeredEngines, declinedEngines } = requestedServices.sync;
-        EXTRA_ENGINES.forEach(engine => {
-          if (
-            offeredEngines.includes(engine) &&
-            !declinedEngines.includes(engine)
-          ) {
-            // These extra engines are disabled by default.
-            Services.prefs.setBoolPref(`services.sync.engine.${engine}`, true);
-          }
-        });
-        log.debug("Received declined engines", declinedEngines);
-        Weave.Service.engineManager.setDeclined(declinedEngines);
-        declinedEngines.forEach(engine => {
-          Services.prefs.setBoolPref(`services.sync.engine.${engine}`, false);
-        });
+        if (offeredEngines && declinedEngines) {
+          EXTRA_ENGINES.forEach(engine => {
+            if (
+              offeredEngines.includes(engine) &&
+              !declinedEngines.includes(engine)
+            ) {
+              // These extra engines are disabled by default.
+              Services.prefs.setBoolPref(
+                `services.sync.engine.${engine}`,
+                true
+              );
+            }
+          });
+          log.debug("Received declined engines", declinedEngines);
+          Weave.Service.engineManager.setDeclined(declinedEngines);
+          declinedEngines.forEach(engine => {
+            Services.prefs.setBoolPref(`services.sync.engine.${engine}`, false);
+          });
+        }
+        log.debug("Webchannel is enabling sync");
         await xps.Weave.Service.configure();
       }
     }
