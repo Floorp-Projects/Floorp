@@ -28,6 +28,14 @@ function isEventForOneOffButton(event) {
   return event.accessible.role == ROLE_PUSHBUTTON;
 }
 
+function isEventForMenuPopup(event) {
+  return event.accessible.role == ROLE_MENUPOPUP;
+}
+
+function isEventForMenuItem(event) {
+  return event.accessible.role == ROLE_MENUITEM;
+}
+
 /**
  * Wait for an autocomplete search to finish.
  * This is necessary to ensure predictable results, as these searches are
@@ -199,6 +207,34 @@ async function runTests() {
     event = await focused;
     testStates(event.accessible, STATE_FOCUSED);
   }
+
+  info(
+    "Ensuring context menu gets menu event on launch, item focus on down, and address bar focus on escape."
+  );
+  let menuEvent = waitForEvent(
+    nsIAccessibleEvent.EVENT_MENUPOPUP_START,
+    isEventForMenuPopup
+  );
+  EventUtils.sendMouseEvent(
+    { type: "contextmenu" },
+    gURLBar.querySelector("moz-input-box")
+  );
+  await menuEvent;
+
+  focused = waitForEvent(EVENT_FOCUS, isEventForMenuItem);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  focused = waitForEvent(EVENT_FOCUS, textBox);
+  let closed = waitForEvent(
+    nsIAccessibleEvent.EVENT_MENUPOPUP_END,
+    isEventForMenuPopup
+  );
+  EventUtils.synthesizeKey("KEY_Escape");
+  await closed;
+  await focused;
+  testStates(textBox, STATE_FOCUSED);
 }
 
 addAccessibleTask(``, runTests);

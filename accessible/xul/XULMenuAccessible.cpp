@@ -390,8 +390,11 @@ ENameValueFlag XULMenupopupAccessible::NativeName(nsString& aName) const {
 }
 
 role XULMenupopupAccessible::NativeRole() const {
-  // If accessible is not bound to the tree (this happens while children are
-  // cached) return general role.
+  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
+  if (menuPopupFrame && menuPopupFrame->IsContextMenu()) {
+    return roles::MENUPOPUP;
+  }
+
   if (mParent) {
     if (mParent->IsCombobox() || mParent->IsAutoComplete())
       return roles::COMBOBOX_LIST;
@@ -404,6 +407,8 @@ role XULMenupopupAccessible::NativeRole() const {
     }
   }
 
+  // If accessible is not bound to the tree (this happens while children are
+  // cached) return general role.
   return roles::MENUPOPUP;
 }
 
