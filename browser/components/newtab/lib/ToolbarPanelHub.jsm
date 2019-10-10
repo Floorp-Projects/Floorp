@@ -158,7 +158,14 @@ class _ToolbarPanelHub {
     const messages = (await this.messages).sort(this._sortWhatsNewMessages);
     const container = doc.getElementById(containerId);
 
-    if (messages && !container.querySelector(".whatsNew-message")) {
+    if (messages) {
+      // Targeting attribute state might have changed making new messages
+      // available and old messages invalid, we need to refresh
+      for (const prevMessageEl of container.querySelectorAll(
+        ".whatsNew-message"
+      )) {
+        container.removeChild(prevMessageEl);
+      }
       let previousDate = 0;
       // Get and store any variable part of the message content
       this.state.contentArguments = await this._contentArguments();
