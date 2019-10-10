@@ -2010,8 +2010,6 @@ pref("devtools.inspector.showUserAgentShadowRoots", false);
 pref("devtools.inspector.new-rulesview.enabled", false);
 // Enable the compatibility tool in the inspector.
 pref("devtools.inspector.compatibility.enabled", false);
-// Enable the new Box Model Highlighter with renderer in parent process
-pref("devtools.inspector.use-new-box-model-highlighter", false);
 
 // Grid highlighter preferences
 pref("devtools.gridinspector.gridOutlineMaxColumns", 50);
