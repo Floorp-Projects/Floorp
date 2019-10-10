@@ -1343,12 +1343,9 @@ def xbl_default(project):
     return project != 'mobile/android'
 
 option('--enable-xbl', default=xbl_default,
-       when='--enable-compile-environment',
        help='{Enable|Disable} support for XBL (XML Binding Language)')
-set_define('MOZ_XBL',
-           depends_if('--enable-xbl', when='--enable-compile-environment')(lambda _: True))
-set_config('MOZ_XBL',
-           depends_if('--enable-xbl', when='--enable-compile-environment')(lambda _: True))
+set_define('MOZ_XBL', depends_if('--enable-xbl')(lambda _: True))
+set_config('MOZ_XBL', depends_if('--enable-xbl')(lambda _: True))
 
 # Verify MAR signatures
 # ==============================================================
