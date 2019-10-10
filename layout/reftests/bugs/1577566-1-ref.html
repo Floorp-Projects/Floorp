@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Bug 1577566, reference: The alpha channel should be clamped at the right time so that it doesn't bright colors.</title>
+
+<style>
+
+#box {
+  width: 100px;
+  height: 100px;
+  background-color: rgb(0, 204, 0); /* 0, 0.8, 0 */
+}
+
+</style>
+
+<div id="box"></div>

@@ -109,7 +109,53 @@ add_task(async function() {
 });
 
 /**
- * This test verifies that registries are able to load and return
+ * This test verifies that registries are able to load and synchronously return
+ * correct strings available in the language pack.
+ */
+add_task(async function() {
+  let [, { addon }] = await Promise.all([
+    promiseLangpackStartup(),
+    AddonTestUtils.promiseInstallXPI(ADDONS.langpack_1),
+  ]);
+
+  {
+    // Toolkit string
+    let bundles = L10nRegistry.generateBundlesSync(
+      ["und"],
+      ["toolkit_test.ftl"]
+    );
+    let bundle0 = bundles.next().value;
+    ok(bundle0);
+    equal(bundle0.hasMessage("message-id1"), true);
+  }
+
+  {
+    // Browser string
+    let bundles = L10nRegistry.generateBundlesSync(["und"], ["browser.ftl"]);
+    let bundle0 = bundles.next().value;
+    ok(bundle0);
+    equal(bundle0.hasMessage("message-browser"), true);
+  }
+
+  {
+    // Test chrome package
+    let reqLocs = Services.locale.requestedLocales;
+    Services.locale.requestedLocales = ["und"];
+
+    let bundle = Services.strings.createBundle(
+      "chrome://global/locale/test.properties"
+    );
+    let entry = bundle.GetStringFromName("message");
+    equal(entry, "Value from .properties");
+
+    Services.locale.requestedLocales = reqLocs;
+  }
+
+  await addon.uninstall();
+});
+
+/**
+ * This test verifies that registries are able to load and asynchronously return
  * correct strings available in the language pack.
  */
 add_task(async function() {
@@ -130,20 +176,6 @@ add_task(async function() {
     let bundles = L10nRegistry.generateBundles(["und"], ["browser.ftl"]);
     let bundle0 = (await bundles.next()).value;
     equal(bundle0.hasMessage("message-browser"), true);
-  }
-
-  {
-    // Test chrome package
-    let reqLocs = Services.locale.requestedLocales;
-    Services.locale.requestedLocales = ["und"];
-
-    let bundle = Services.strings.createBundle(
-      "chrome://global/locale/test.properties"
-    );
-    let entry = bundle.GetStringFromName("message");
-    equal(entry, "Value from .properties");
-
-    Services.locale.requestedLocales = reqLocs;
   }
 
   await addon.uninstall();

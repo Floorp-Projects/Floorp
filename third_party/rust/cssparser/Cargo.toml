@@ -12,7 +12,7 @@
 
 [package]
 name = "cssparser"
-version = "0.25.7"
+version = "0.25.9"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
@@ -56,16 +56,19 @@ version = "2.0"
 [dev-dependencies.encoding_rs]
 version = "0.8"
 
-[dev-dependencies.rustc-serialize]
-version = "0.3"
+[dev-dependencies.serde_json]
+version = "1.0"
+[build-dependencies.autocfg]
+version = "0.1.4"
+
 [build-dependencies.proc-macro2]
-version = "0.4"
+version = "1"
 
 [build-dependencies.quote]
-version = "0.6"
+version = "1"
 
 [build-dependencies.syn]
-version = "0.15.12"
+version = "1"
 features = ["extra-traits", "fold", "full"]
 
 [features]

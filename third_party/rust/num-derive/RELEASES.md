@@ -1,3 +1,10 @@
+# Release 0.3.0 (2019-09-27)
+
+- [Updated the `proc-macro2`, `quote`, and `syn` dependencies to 1.0][28],
+  which raises the minimum supported rustc to 1.31.
+
+[28]: https://github.com/rust-num/num-derive/pull/28
+
 # Release 0.2.5 (2019-04-23)
 
 - [Improved the masking of lints in derived code][23].

@@ -2425,6 +2425,7 @@ exports.isValidScrollMode = isValidScrollMode;
 exports.isValidSpreadMode = isValidSpreadMode;
 exports.isPortraitOrientation = isPortraitOrientation;
 exports.getGlobalEventBus = getGlobalEventBus;
+exports.clamp = clamp;
 exports.getPDFFileNameFromURL = getPDFFileNameFromURL;
 exports.noContextMenuHandler = noContextMenuHandler;
 exports.parseQueryString = parseQueryString;
@@ -7460,12 +7461,6 @@ class PDFSidebarResizer {
     this.resizer = options.resizer;
     this.eventBus = eventBus;
     this.l10n = l10n;
-
-    if (typeof CSS === 'undefined' || typeof CSS.supports !== 'function' || !CSS.supports(SIDEBAR_WIDTH_VAR, `calc(-1 * ${SIDEBAR_MIN_WIDTH}px)`)) {
-      console.warn('PDFSidebarResizer: ' + 'The browser does not support resizing of the sidebar.');
-      return;
-    }
-
     this.enabled = true;
     this.resizer.classList.remove('hidden');
     this.l10n.getDirection().then(dir => {
@@ -7488,22 +7483,14 @@ class PDFSidebarResizer {
       return false;
     }
 
-    const maxWidth = Math.floor(this.outerContainerWidth / 2);
+    const newWidth = (0, _ui_utils.clamp)(width, SIDEBAR_MIN_WIDTH, Math.floor(this.outerContainerWidth / 2));
 
-    if (width > maxWidth) {
-      width = maxWidth;
-    }
-
-    if (width < SIDEBAR_MIN_WIDTH) {
-      width = SIDEBAR_MIN_WIDTH;
-    }
-
-    if (width === this._width) {
+    if (newWidth === this._width) {
       return false;
     }
 
-    this._width = width;
-    this.doc.style.setProperty(SIDEBAR_WIDTH_VAR, `${width}px`);
+    this._width = newWidth;
+    this.doc.style.setProperty(SIDEBAR_WIDTH_VAR, `${newWidth}px`);
     return true;
   }
 
@@ -7548,29 +7535,35 @@ class PDFSidebarResizer {
       this.sidebarOpen = !!(evt && evt.view);
     });
     this.eventBus.on('resize', evt => {
-      if (evt && evt.source === window) {
-        this._outerContainerWidth = null;
-
-        if (this._width) {
-          if (this.sidebarOpen) {
-            this.outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
-
-            let updated = this._updateWidth(this._width);
-
-            Promise.resolve().then(() => {
-              this.outerContainer.classList.remove(SIDEBAR_RESIZING_CLASS);
-
-              if (updated) {
-                this.eventBus.dispatch('resize', {
-                  source: this
-                });
-              }
-            });
-          } else {
-            this._updateWidth(this._width);
-          }
-        }
+      if (!evt || evt.source !== window) {
+        return;
       }
+
+      this._outerContainerWidth = null;
+
+      if (!this._width) {
+        return;
+      }
+
+      if (!this.sidebarOpen) {
+        this._updateWidth(this._width);
+
+        return;
+      }
+
+      this.outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
+
+      let updated = this._updateWidth(this._width);
+
+      Promise.resolve().then(() => {
+        this.outerContainer.classList.remove(SIDEBAR_RESIZING_CLASS);
+
+        if (updated) {
+          this.eventBus.dispatch('resize', {
+            source: this
+          });
+        }
+      });
     });
   }
 

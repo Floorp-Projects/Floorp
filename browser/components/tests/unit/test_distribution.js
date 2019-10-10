@@ -39,7 +39,10 @@ add_task(async function setup() {
 // AddonManager shuts down BrowserGlue will then try to uninit which will
 // cause AutoComplete.jsm to throw an error.
 // TODO: Fix in https://bugzilla.mozilla.org/show_bug.cgi?id=1543112.
-PromiseTestUtils.whitelistRejectionsGlobally(/Component returned failure code/);
+PromiseTestUtils.whitelistRejectionsGlobally(/A request was aborted/);
+PromiseTestUtils.whitelistRejectionsGlobally(
+  /The operation failed for reasons unrelated/
+);
 
 const TOPICDATA_DISTRIBUTION_CUSTOMIZATION = "force-distribution-customization";
 const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";

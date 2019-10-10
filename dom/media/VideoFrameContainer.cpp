@@ -5,8 +5,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VideoFrameContainer.h"
-#include "mozilla/Telemetry.h"
+
+#ifdef MOZ_WIDGET_ANDROID
+#include "GLImages.h"  // for SurfaceTextureImage
+#endif
 #include "MediaDecoderOwner.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla::layers;
 
@@ -78,9 +82,27 @@ void VideoFrameContainer::UpdatePrincipalHandleForFrameIDLocked(
   mFrameIDForPendingPrincipalHandle = aFrameID;
 }
 
+#ifdef MOZ_WIDGET_ANDROID
+static void NotifySetCurrent(Image* aImage) {
+  if (aImage == nullptr) {
+    return;
+  }
+
+  SurfaceTextureImage* image = aImage->AsSurfaceTextureImage();
+  if (image == nullptr) {
+    return;
+  }
+
+  image->OnSetCurrent();
+}
+#endif
+
 void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
                                           Image* aImage,
                                           const TimeStamp& aTargetTime) {
+#ifdef MOZ_WIDGET_ANDROID
+    NotifySetCurrent(aImage);
+#endif
   if (aImage) {
     MutexAutoLock lock(mMutex);
     AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
@@ -95,6 +117,15 @@ void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
 void VideoFrameContainer::SetCurrentFrames(
     const gfx::IntSize& aIntrinsicSize,
     const nsTArray<ImageContainer::NonOwningImage>& aImages) {
+#ifdef MOZ_WIDGET_ANDROID
+  // When there are multiple frames, only the last one is effective
+  // (see bug 1299068 comment 4). Here I just count on VideoSink and VideoOutput
+  // to send one frame at a time and warn if not.
+  Unused << NS_WARN_IF(aImages.Length() > 1);
+  for (auto& image : aImages) {
+    NotifySetCurrent(image.mImage);
+  }
+#endif
   MutexAutoLock lock(mMutex);
   SetCurrentFramesLocked(aIntrinsicSize, aImages);
 }

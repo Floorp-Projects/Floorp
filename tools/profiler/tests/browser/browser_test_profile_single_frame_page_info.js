@@ -30,9 +30,10 @@ add_task(async function test_profile_single_frame_page_info() {
   for (const page of contentProcess.pages) {
     if (page.url == url) {
       Assert.equal(page.url, url);
-      Assert.equal(typeof page.docshellId, "string");
-      Assert.equal(typeof page.historyId, "number");
-      Assert.equal(page.isSubFrame, false);
+      Assert.equal(typeof page.browsingContextID, "number");
+      Assert.equal(typeof page.innerWindowID, "number");
+      // Top level document will have no embedder.
+      Assert.equal(page.embedderInnerWindowID, 0);
       pageFound = true;
       break;
     }

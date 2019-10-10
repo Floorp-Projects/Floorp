@@ -160,6 +160,7 @@ export default class LoginItem extends HTMLElement {
     }
 
     this._title.textContent = this._login.title;
+    this._title.title = this._login.title;
     this._originInput.defaultValue = this._login.origin || "";
     this._usernameInput.defaultValue = this._login.username || "";
     if (this._login.password) {
@@ -727,6 +728,14 @@ export default class LoginItem extends HTMLElement {
   }
 
   _updatePasswordRevealState() {
+    if (
+      window.AboutLoginsUtils &&
+      window.AboutLoginsUtils.passwordRevealVisible === false
+    ) {
+      this._revealCheckbox.hidden = true;
+      return;
+    }
+
     let titleId = this._revealCheckbox.checked
       ? "login-item-password-reveal-checkbox-hide"
       : "login-item-password-reveal-checkbox-show";

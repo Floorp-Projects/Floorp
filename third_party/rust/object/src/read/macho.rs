@@ -4,7 +4,7 @@ use goblin::container;
 use goblin::mach;
 use goblin::mach::load_command::CommandVariant;
 use std::{fmt, iter, ops, slice};
-use target_lexicon::Architecture;
+use target_lexicon::{Aarch64Architecture, Architecture, ArmArchitecture};
 use uuid::Uuid;
 
 use crate::read::{
@@ -77,8 +77,8 @@ where
 
     fn architecture(&self) -> Architecture {
         match self.macho.header.cputype {
-            mach::cputype::CPU_TYPE_ARM => Architecture::Arm,
-            mach::cputype::CPU_TYPE_ARM64 => Architecture::Aarch64,
+            mach::cputype::CPU_TYPE_ARM => Architecture::Arm(ArmArchitecture::Arm),
+            mach::cputype::CPU_TYPE_ARM64 => Architecture::Aarch64(Aarch64Architecture::Aarch64),
             mach::cputype::CPU_TYPE_X86 => Architecture::I386,
             mach::cputype::CPU_TYPE_X86_64 => Architecture::X86_64,
             mach::cputype::CPU_TYPE_MIPS => Architecture::Mips,
@@ -529,30 +529,30 @@ impl<'data, 'file> Iterator for MachORelocationIterator<'data, 'file> {
         self.relocations.next()?.ok().map(|reloc| {
             let mut encoding = RelocationEncoding::Generic;
             let kind = match self.file.macho.header.cputype {
-                mach::cputype::CPU_TYPE_ARM => match reloc.r_type() {
-                    mach::relocation::ARM_RELOC_VANILLA => RelocationKind::Absolute,
+                mach::cputype::CPU_TYPE_ARM => match (reloc.r_type(), reloc.r_pcrel()) {
+                    (mach::relocation::ARM_RELOC_VANILLA, 0) => RelocationKind::Absolute,
                     _ => RelocationKind::Other(reloc.r_info),
                 },
-                mach::cputype::CPU_TYPE_ARM64 => match reloc.r_type() {
-                    mach::relocation::ARM64_RELOC_UNSIGNED => RelocationKind::Absolute,
+                mach::cputype::CPU_TYPE_ARM64 => match (reloc.r_type(), reloc.r_pcrel()) {
+                    (mach::relocation::ARM64_RELOC_UNSIGNED, 0) => RelocationKind::Absolute,
                     _ => RelocationKind::Other(reloc.r_info),
                 },
-                mach::cputype::CPU_TYPE_X86 => match reloc.r_type() {
-                    mach::relocation::GENERIC_RELOC_VANILLA => RelocationKind::Absolute,
+                mach::cputype::CPU_TYPE_X86 => match (reloc.r_type(), reloc.r_pcrel()) {
+                    (mach::relocation::GENERIC_RELOC_VANILLA, 0) => RelocationKind::Absolute,
                     _ => RelocationKind::Other(reloc.r_info),
                 },
-                mach::cputype::CPU_TYPE_X86_64 => match reloc.r_type() {
-                    mach::relocation::X86_64_RELOC_UNSIGNED => RelocationKind::Absolute,
-                    mach::relocation::X86_64_RELOC_SIGNED => {
+                mach::cputype::CPU_TYPE_X86_64 => match (reloc.r_type(), reloc.r_pcrel()) {
+                    (mach::relocation::X86_64_RELOC_UNSIGNED, 0) => RelocationKind::Absolute,
+                    (mach::relocation::X86_64_RELOC_SIGNED, 1) => {
                         encoding = RelocationEncoding::X86RipRelative;
                         RelocationKind::Relative
                     }
-                    mach::relocation::X86_64_RELOC_BRANCH => {
+                    (mach::relocation::X86_64_RELOC_BRANCH, 1) => {
                         encoding = RelocationEncoding::X86Branch;
                         RelocationKind::Relative
                     }
-                    mach::relocation::X86_64_RELOC_GOT => RelocationKind::GotRelative,
-                    mach::relocation::X86_64_RELOC_GOT_LOAD => {
+                    (mach::relocation::X86_64_RELOC_GOT, 1) => RelocationKind::GotRelative,
+                    (mach::relocation::X86_64_RELOC_GOT_LOAD, 1) => {
                         encoding = RelocationEncoding::X86RipRelativeMovq;
                         RelocationKind::GotRelative
                     }
