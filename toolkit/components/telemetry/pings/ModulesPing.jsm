@@ -63,13 +63,15 @@ var TelemetryModules = Object.freeze({
     }
 
     // Use nsIUpdateTimerManager for a long-duration timer that survives across sessions.
+    let interval = Preferences.get(
+      MODULES_PING_INTERVAL_PREFERENCE,
+      MODULES_PING_INTERVAL_SECONDS
+    );
     gUpdateTimerManager.registerTimer(
       "telemetry_modules_ping",
       this,
-      Preferences.get(
-        MODULES_PING_INTERVAL_PREFERENCE,
-        MODULES_PING_INTERVAL_SECONDS
-      )
+      interval,
+      interval != 0 // only skip the first interval if the interval is non-0
     );
   },
 
