@@ -53,7 +53,7 @@ ${helpers.single_keyword(
 >
 impl computed_value::T {
     pub fn is_absolutely_positioned(self) -> bool {
-        matches!(self, computed_value::T::Absolute | computed_value::T::Fixed)
+        matches!(self, Self::Absolute | Self::Fixed)
     }
 }
 </%helpers:single_keyword>
