@@ -70,6 +70,10 @@ class PageAction {
   constructor(win, dispatchToASRouter) {
     this.window = win;
     this.urlbar = win.document.getElementById("urlbar");
+    // `this.urlbar` is the larger container that holds both the urlbar input
+    // and the page action buttons. The focus event will be triggered by the
+    // `urlbar-input`.
+    this.urlbarinput = win.document.getElementById("urlbar-input");
     this.container = win.document.getElementById(
       "contextual-feature-recommendation"
     );
@@ -189,7 +193,7 @@ class PageAction {
     this.container.addEventListener("click", this._showPopupOnClick);
     // Collapse the recommendation on url bar focus in order to free up more
     // space to display and edit the url
-    this.urlbar.addEventListener("focus", this._collapse);
+    this.urlbarinput.addEventListener("focus", this._collapse);
 
     if (shouldExpand) {
       this._clearScheduledStateChanges();
