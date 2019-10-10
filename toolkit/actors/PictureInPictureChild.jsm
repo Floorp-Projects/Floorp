@@ -947,21 +947,8 @@ class PictureInPictureChild extends ActorChild {
     }
 
     let doc = this.content.document;
-    // Clone the original video to get its MediaInfo (specifically, it's dimensions)
-    // set right away, but also pause the video since we don't need two copies of it
-    // playing at the same time. The originating video will be "projected" onto the
-    // cloned Picture-in-Picture player video via cloneElementVisually.
-    let playerVideo = originatingVideo.cloneNode();
-    playerVideo.pause();
-    playerVideo.removeAttribute("controls");
+    let playerVideo = doc.createElement("video");
 
-    // Mute the video and rely on the originating video's audio playback.
-    // This way, we sidestep the AutoplayPolicy blocking stuff.
-    playerVideo.muted = true;
-
-    // Strip any inline styles off of the video, and try to get rid of any surrounding
-    // whitespace.
-    playerVideo.setAttribute("style", "");
     doc.body.style.overflow = "hidden";
     doc.body.style.margin = "0";
 
