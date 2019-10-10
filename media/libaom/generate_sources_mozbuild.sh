@@ -68,8 +68,6 @@ gen_rtcd_header linux/ia32 x86
 gen_rtcd_header mac/x64 x86_64
 gen_rtcd_header win/x64 x86_64
 gen_rtcd_header win/ia32 x86
-gen_rtcd_header win/mingw32 x86
-gen_rtcd_header win/mingw64 x86_64
 
 gen_rtcd_header linux/arm armv7
 
