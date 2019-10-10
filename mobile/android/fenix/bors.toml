@@ -1,0 +1,21 @@
+status = [
+  "build-debug",
+  "test-debug",
+  "test-ui",
+  "lint-compare-locales",
+  "lint-detekt",
+  "lint-ktlint",
+  "lint-lint"
+]
+block_labels = [
+  "needs:data-review",
+  "do not land",
+  "pr:work-in-progress",
+  "pr:needs-changes"
+]
+required_approvals = 1
+delete_merged_branches = true
+cut_body_after = "---"
+[committer]
+name = "MozLando"
+email = "skaspari+mozlando@mozilla.com"
