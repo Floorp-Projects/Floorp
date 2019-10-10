@@ -2,9 +2,6 @@
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
-<?xml-stylesheet href="general.css"
-                 type="text/css"?>
-
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -46,10 +43,6 @@
       testName("rememberHistoryDays", "Remember 3 days");
       testName("historyDays", "Remember 3 days");
       testName("rememberAfter", "days");
-
-      // Anonymous content (see name.xbl#third)
-      var anonBtn = getAccessible("labelledby_box_anon").lastChild;
-      testName(anonBtn, "It's a cool button");
 
       //////////////////////////////////////////////////////////////////////////
       // Name from subtree (single relation labelled_by).
@@ -196,9 +189,6 @@
   <description id="labelledby_text2">text2</description>
   <button id="btn_labelledby_texts"
           aria-labelledby="labelledby_text1 labelledby_text2"/>
-
-  <!-- aria-labelledby, multiple relations -->
-  <box class="third" id="labelledby_box_anon" role="group" />
 
   <!-- trick aria-labelledby -->
   <checkbox id="rememberHistoryDays"
