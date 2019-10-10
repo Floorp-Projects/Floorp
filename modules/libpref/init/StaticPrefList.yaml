@@ -6547,6 +6547,12 @@
 # endif
   mirror: always
 
+# Whether to check the dnsSuffix on network changes
+- name: network.notify.dnsSuffixList
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # IP addresses that are used by netlink service to check whether default route
 # is used for outgoing traffic. They are used just to check routing rules,
 # no packets are sent to those hosts. Initially, addresses of host

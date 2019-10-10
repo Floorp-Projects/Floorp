@@ -51,6 +51,11 @@ interface nsINetworkLinkService : nsISupports
    * Empty when there are no active network interfaces.
    */
   readonly attribute ACString networkID;
+
+  /**
+   * The list of DNS suffixes for the currently active network interfaces.
+   */
+  readonly attribute Array<ACString> dnsSuffixList;
 };
 
 %{C++
