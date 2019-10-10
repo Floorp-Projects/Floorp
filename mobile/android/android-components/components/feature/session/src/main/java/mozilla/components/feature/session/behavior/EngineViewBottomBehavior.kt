@@ -44,7 +44,7 @@ class EngineViewBottomBehavior(
      */
     override fun onDependentViewChanged(parent: CoordinatorLayout, child: View, dependency: View): Boolean {
         val engineView = child.findViewInHierarchy { it is EngineView } as EngineView?
-        engineView?.setVerticalClipping(dependency.height - dependency.translationY.toInt())
+        engineView?.setVerticalClipping(-dependency.translationY.toInt())
         return true
     }
 }
