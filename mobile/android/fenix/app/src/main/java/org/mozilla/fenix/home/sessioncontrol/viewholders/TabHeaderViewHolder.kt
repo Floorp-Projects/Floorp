@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import android.content.Context
 import android.view.View
+import android.widget.PopupWindow
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -55,10 +56,19 @@ class TabHeaderViewHolder(
             }
 
             tabs_overflow_button.run {
+                var menu: PopupWindow? = null
                 setOnClickListener {
-                    tabsMenu.menuBuilder
-                        .build(view.context)
-                        .show(anchor = it, orientation = BrowserMenu.Orientation.DOWN)
+                    if (menu == null) {
+                        menu = tabsMenu.menuBuilder
+                            .build(view.context)
+                            .show(
+                                anchor = it,
+                                orientation = BrowserMenu.Orientation.DOWN,
+                                onDismiss = { menu = null }
+                            )
+                    } else {
+                        menu?.dismiss()
+                    }
                 }
             }
         }

@@ -245,11 +245,19 @@ class HomeFragment : Fragment() {
             }
         }
 
-        view.menuButton.setOnClickListener {
-            homeMenu?.menuBuilder?.build(requireContext())?.show(
-                anchor = it,
-                orientation = BrowserMenu.Orientation.DOWN
-            )
+        with(view.menuButton) {
+            var menu: PopupWindow? = null
+            setOnClickListener {
+                if (menu == null) {
+                    menu = homeMenu?.menuBuilder?.build(requireContext())?.show(
+                        anchor = it,
+                        orientation = BrowserMenu.Orientation.DOWN,
+                        onDismiss = { menu = null }
+                    )
+                } else {
+                    menu?.dismiss()
+                }
+            }
         }
         view.toolbar.compoundDrawablePadding =
             view.resources.getDimensionPixelSize(R.dimen.search_bar_search_engine_icon_padding)
