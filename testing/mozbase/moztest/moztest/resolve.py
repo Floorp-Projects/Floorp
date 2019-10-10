@@ -151,7 +151,7 @@ TEST_SUITES = {
     'puppeteer': {
         'aliases': ('remote/test/puppeteer',),
         'mach_command': 'puppeteer-test',
-        'kwargs': {},
+        'kwargs': {'headless': False},
     },
     'python': {
         'mach_command': 'python-test',
