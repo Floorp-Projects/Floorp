@@ -1018,6 +1018,7 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
 
   ZealMode zealMode = ZealMode(zeal);
   if (zealMode == ZealMode::GenerationalGC) {
+    evictNursery(JS::GCReason::DEBUG_GC);
     nursery().enterZealMode();
   }
 
