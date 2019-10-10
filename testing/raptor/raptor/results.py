@@ -175,18 +175,24 @@ class RaptorResultsHandler(PerftestResultsHandler):
         # cycles, and if so need to combine results from all cycles into one overall result
         output.combine_browser_cycles()
         output.summarize_screenshots(self.images)
+
         # only dump out supporting data (i.e. power) if actual Raptor test completed
         out_sup_perfdata = 0
+        sup_success = True
         if self.supporting_data is not None and len(self.results) != 0:
             output.summarize_supporting_data()
-            res, out_sup_perfdata = output.output_supporting_data(test_names)
-        res, out_perfdata = output.output(test_names)
-        if not self.gecko_profile:
-            # res will remain True if no problems are encountered
-            # during schema validation and perferder_data counting
-            res = self._validate_treeherder_data(output, out_sup_perfdata + out_perfdata)
+            sup_success, out_sup_perfdata = output.output_supporting_data(test_names)
 
-        return res
+        success, out_perfdata = output.output(test_names)
+
+        validate_success = True
+        if not self.gecko_profile:
+            validate_success = self._validate_treeherder_data(
+                output,
+                out_sup_perfdata + out_perfdata
+            )
+
+        return sup_success and success and validate_success
 
 
 class RaptorTestResult():
@@ -404,11 +410,10 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                                    test_config['subtest_alert_on'])
 
         output.summarize(test_names)
-        res, out_perfdata = output.output(test_names)
+        success, out_perfdata = output.output(test_names)
 
+        validate_success = True
         if not self.gecko_profile:
-            # res will remain True if no problems are encountered
-            # during schema validation and perferder_data counting
-            res = self._validate_treeherder_data(output, out_perfdata)
+            validate_success = self._validate_treeherder_data(output, out_perfdata)
 
-        return res
+        return success and validate_success
