@@ -22,6 +22,23 @@
     <p class="showNormal" data-l10n-id="about-private-browsing-not-private"></p>
     <button id="startPrivateBrowsing"
             class="showNormal" data-l10n-id="privatebrowsingpage-open-private-window-label"></button>
+    <div id="search-banner" class="search-banner"
+         hidden="true">
+      <button id="search-banner-close-button"
+              class="search-banner-close-button"
+              data-l10n-id="about-private-browsing-search-banner-close-button">
+        <img class="search-banner-close-image" src="chrome://global/skin/icons/close.svg"/>
+      </button>
+      <div class="banner-body">
+        <h1 id="about-private-browsing-search-banner-title"
+            data-l10n-id="about-private-browsing-search-banner-title"
+            data-l10n-args='{"engineName": ""}'></h1>
+        <p id="about-private-browsing-search-banner-description"
+           data-l10n-id="about-private-browsing-search-banner-description">
+          <a href="" id="open-search-options-link" data-l10n-name="link-options" />
+        </p>
+      </div>
+    </div>
     <div class="showPrivate showSearch container">
       <div class="logo-and-wordmark">
         <div class="logo" />
