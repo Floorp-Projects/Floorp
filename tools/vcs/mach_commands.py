@@ -105,7 +105,7 @@ class PullRequestImporter(MachCommandBase):
             patch_cmd.stdin.write(patch['diff'])
             patch_cmd.stdin.close()
             patch_cmd.wait()
-            if patch_cmd.returncode is not 0:
+            if patch_cmd.returncode != 0:
                 self.log(logging.ERROR, 'commit_fail', {},
                          'Error applying diff from commit via "patch -p1 -s". Aborting...')
                 sys.exit(patch_cmd.returncode)

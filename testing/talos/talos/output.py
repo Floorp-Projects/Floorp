@@ -157,7 +157,7 @@ class Output(object):
 
                     # responsiveness has it's own metric, not the mean
                     # TODO: consider doing this for all counters
-                    if 'responsiveness' is name:
+                    if 'responsiveness' == name:
                         subtest = {
                             'name': name,
                             'value': filter.responsiveness_Metric(vals)
