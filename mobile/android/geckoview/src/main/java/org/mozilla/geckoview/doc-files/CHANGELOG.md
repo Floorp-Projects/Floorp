@@ -54,6 +54,8 @@ exclude: true
 - Added [`GeckoView.setAutofillEnabled`][71.21] for controlling whether or not the `GeckoView`
   instance participates in Android autofill. When enabled, this connects an `AutofillDelegate`
   to the session it holds.
+- Changed [`AutofillElement.children`][71.20] interface to `Collection` to provide
+  an efficient way to pre-allocate memory when filling `ViewStructure`.
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -397,4 +399,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: ed4a802bc348a8df4b2103cf0dd8d63e76e841bb
+[api-version]: ee3ceb65db78c3a801f525465ff3c6e9eca22ae9
