@@ -30,6 +30,7 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'MmapFaultHandler.cpp',
     'nsJAR.cpp',
     'nsJARChannel.cpp',
     'nsJARInputStream.cpp',
