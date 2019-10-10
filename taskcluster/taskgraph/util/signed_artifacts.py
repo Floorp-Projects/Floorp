@@ -37,11 +37,6 @@ def generate_specifications_of_artifacts_to_sign(
         }]
     elif 'android' in build_platform:
         artifacts_specifications = [{
-            'artifacts': [
-                get_artifact_path(job, '{locale}/target.apk'),
-            ],
-            'formats': ['autograph_apk_fennec_sha1'],
-        }, {
             'artifacts': get_geckoview_artifacts_to_sign(config, job),
             'formats': ['autograph_gpg'],
         }]

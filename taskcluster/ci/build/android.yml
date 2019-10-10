@@ -109,7 +109,6 @@ android-x86-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -175,7 +174,6 @@ android-api-16-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -262,7 +260,6 @@ android-aarch64-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:
@@ -308,7 +305,6 @@ android-x86_64-nightly/opt:
     attributes:
         enable-full-crashsymbols: true
         nightly: true
-        disable-build-signing: true
     shipping-phase: build
     shipping-product: fennec
     index:

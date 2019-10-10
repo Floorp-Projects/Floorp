@@ -10,7 +10,6 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - beetmover
     - beetmover-repackage
 
 only-for-attributes:
@@ -23,11 +22,5 @@ job-template:
         artifact_prefix: public
         artifact_map:
             by-release-type:
-                beta|release.*|esr.*:
-                    by-platform:
-                        android.*: taskcluster/taskgraph/manifests/fennec_candidates_checksums.yml
-                        default: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
-                default:
-                    by-platform:
-                        android.*: taskcluster/taskgraph/manifests/fennec_nightly_checksums.yml
-                        default: taskcluster/taskgraph/manifests/firefox_nightly_checksums.yml
+                beta|release.*|esr.*: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
+                default: taskcluster/taskgraph/manifests/firefox_nightly_checksums.yml
