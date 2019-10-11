@@ -2552,7 +2552,7 @@ bool nsPIDOMWindowInner::IsCurrentInnerWindow() const {
   auto* bc = GetBrowsingContext();
   MOZ_ASSERT(bc);
 
-  nsCOMPtr<nsPIDOMWindowOuter> outer;
+  nsPIDOMWindowOuter* outer;
   // When a BC is discarded, it stops returning outer windows altogether. That
   // doesn't work for this check, since we still want current inner window to be
   // treated as current after that point. Simply falling back to `mOuterWindow`
