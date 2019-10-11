@@ -6287,7 +6287,7 @@
 
 # Force less-secure NTLMv1 when needed (NTLMv2 is the default).
 - name: network.auth.force-generic-ntlm-v1
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
