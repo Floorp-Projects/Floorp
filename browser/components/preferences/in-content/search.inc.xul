@@ -66,6 +66,8 @@
         <checkbox id="urlBarSuggestion" data-l10n-id="search-show-suggestions-url-bar-option" />
         <checkbox id="showSearchSuggestionsFirstCheckbox"
                   data-l10n-id="search-show-suggestions-above-history-option"/>
+        <checkbox id="showSearchSuggestionsPrivateWindows"
+                  data-l10n-id="search-show-suggestions-private-windows"/>
         <hbox id="urlBarSuggestionPermanentPBLabel"
               align="center" class="indent">
           <label flex="1" data-l10n-id="search-suggestions-cant-show" />

@@ -20,6 +20,7 @@ const SEARCH_RESPONSE_SUGGESTION_JSON = "application/x-suggestions+json";
 const DEFAULT_FORM_HISTORY_PARAM = "searchbar-history";
 const HTTP_OK = 200;
 const BROWSER_SUGGEST_PREF = "browser.search.suggest.enabled";
+const BROWSER_SUGGEST_PRIVATE_PREF = "browser.search.suggest.enabled.private";
 const REMOTE_TIMEOUT_PREF = "browser.search.suggest.timeout";
 const REMOTE_TIMEOUT_DEFAULT = 500; // maximum time (ms) to wait before giving up on a remote suggestions
 
@@ -29,21 +30,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator"
 );
-
-/**
- * Remote search suggestions will be shown if gRemoteSuggestionsEnabled
- * is true. Global because only one pref observer is needed for all instances.
- */
-var gRemoteSuggestionsEnabled = Services.prefs.getBoolPref(
-  BROWSER_SUGGEST_PREF
-);
-Services.prefs.addObserver(BROWSER_SUGGEST_PREF, function(
-  aSubject,
-  aTopic,
-  aData
-) {
-  gRemoteSuggestionsEnabled = Services.prefs.getBoolPref(BROWSER_SUGGEST_PREF);
-});
 
 /**
  * Generates an UUID.
@@ -178,7 +164,8 @@ this.SearchSuggestionController.prototype = {
     // Remote results
     if (
       searchTerm &&
-      gRemoteSuggestionsEnabled &&
+      this.suggestionsEnabled &&
+      (!privateMode || this.suggestionsInPrivateBrowsingEnabled) &&
       this.maxRemoteResults &&
       engine.supportsResponseType(SEARCH_RESPONSE_SUGGESTION_JSON)
     ) {
@@ -525,4 +512,24 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "remoteTimeout",
   REMOTE_TIMEOUT_PREF,
   REMOTE_TIMEOUT_DEFAULT
+);
+
+/**
+ * Whether or not remote suggestions are turned on.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(
+  this.SearchSuggestionController.prototype,
+  "suggestionsEnabled",
+  BROWSER_SUGGEST_PREF,
+  true
+);
+
+/**
+ * Whether or not remote suggestions are turned on in private browsing mode.
+ */
+XPCOMUtils.defineLazyPreferenceGetter(
+  this.SearchSuggestionController.prototype,
+  "suggestionsInPrivateBrowsingEnabled",
+  BROWSER_SUGGEST_PRIVATE_PREF,
+  false
 );
