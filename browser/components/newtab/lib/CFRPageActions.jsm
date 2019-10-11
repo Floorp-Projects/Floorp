@@ -47,6 +47,8 @@ const CATEGORY_ICONS = {
  * profile directory.
  */
 const RS_DOWNLOADED_FILE_SUBDIR = "settings/main/ms-language-packs";
+const USE_REMOTE_L10N_PREF =
+  "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
 
 /**
  * A WeakMap from browsers to {host, recommendation} pairs. Recommendations are
@@ -122,10 +124,22 @@ class PageAction {
 
   /**
    * Creates a new DOMLocalization instance with the Fluent file from Remote Settings.
-   * Note that it still uses the packaged Fluent file as the fallback if the remote one
-   * is not available.
+   *
+   * Note: it will use the local Fluent file in any of following cases:
+   *   * the remote Fluent file is not available
+   *   * it was told to use the local Fluent file
    */
   _createDOML10n() {
+    const ftlResourceIDs = [
+      "browser/newtab/asrouter.ftl",
+      "browser/branding/brandings.ftl",
+      "browser/branding/sync-brand.ftl",
+      "branding/brand.ftl",
+    ];
+    if (!Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true)) {
+      return new DOMLocalization(ftlResourceIDs);
+    }
+
     async function* generateBundles(resourceIds) {
       const appLocale = Services.locale.appLocaleAsBCP47;
       const appLocales = Services.locale.appLocalesAsBCP47;
@@ -155,15 +169,11 @@ class PageAction {
       }
     }
 
-    return new DOMLocalization(
-      [
-        "browser/newtab/asrouter.ftl",
-        "browser/branding/brandings.ftl",
-        "browser/branding/sync-brand.ftl",
-        "branding/brand.ftl",
-      ],
-      generateBundles
-    );
+    return new DOMLocalization(ftlResourceIDs, generateBundles);
+  }
+
+  reloadL10n() {
+    this._l10n = this._createDOML10n();
   }
 
   async showAddressBarNotifier(recommendation, shouldExpand = false) {
@@ -933,6 +943,18 @@ const CFRPageActions = {
     RecommendationMap = new WeakMap();
     this.PageActionMap = PageActionMap;
     this.RecommendationMap = RecommendationMap;
+  },
+
+  /**
+   * Reload the l10n Fluent files for all PageActions
+   */
+  reloadL10n() {
+    for (const win of Services.wm.getEnumerator("navigator:browser")) {
+      if (win.closed || !PageActionMap.has(win)) {
+        continue;
+      }
+      PageActionMap.get(win).reloadL10n();
+    }
   },
 };
 

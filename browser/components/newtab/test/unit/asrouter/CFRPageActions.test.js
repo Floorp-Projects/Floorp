@@ -748,6 +748,42 @@ describe("CFRPageActions", () => {
         );
       });
     });
+
+    describe("#_createDOML10n", () => {
+      let domL10nStub;
+      beforeEach(() => {
+        domL10nStub = sandbox.stub();
+
+        globals.set("DOMLocalization", domL10nStub);
+      });
+      it("should load the remote Fluent file if USE_REMOTE_L10N_PREF is true", () => {
+        sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+        pageAction._createDOML10n();
+
+        assert.calledOnce(domL10nStub);
+        const { args } = domL10nStub.firstCall;
+        // The first arg is the resource array, and the second one is the bundle generator.
+        assert.equal(args.length, 2);
+        assert.deepEqual(args[0], [
+          "browser/newtab/asrouter.ftl",
+          "browser/branding/brandings.ftl",
+          "browser/branding/sync-brand.ftl",
+          "branding/brand.ftl",
+        ]);
+      });
+      it("should load the local Fluent file if USE_REMOTE_L10N_PREF is false", () => {
+        sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
+        pageAction._createDOML10n();
+
+        assert.calledOnce(domL10nStub);
+        assert.calledWith(domL10nStub, [
+          "browser/newtab/asrouter.ftl",
+          "browser/branding/brandings.ftl",
+          "browser/branding/sync-brand.ftl",
+          "branding/brand.ftl",
+        ]);
+      });
+    });
   });
 
   describe("CFRPageActions", () => {
@@ -1066,6 +1102,32 @@ describe("CFRPageActions", () => {
         for (const browser of browsers) {
           assert.isFalse(CFRPageActions.RecommendationMap.has(browser));
         }
+      });
+    });
+
+    describe("reloadL10n", () => {
+      const createFakePageAction = () => ({
+        hideAddressBarNotifier() {},
+        reloadL10n: sandbox.stub(),
+      });
+      const windows = [{}, {}, { closed: true }];
+
+      beforeEach(() => {
+        CFRPageActions.PageActionMap.set(windows[0], createFakePageAction());
+        CFRPageActions.PageActionMap.set(windows[2], createFakePageAction());
+        globals.set({ Services: { wm: { getEnumerator: () => windows } } });
+      });
+
+      it("should call reloadL10n for all the PageActions of any existing, non-closed windows", () => {
+        const pageActions = windows.map(win =>
+          CFRPageActions.PageActionMap.get(win)
+        );
+        CFRPageActions.reloadL10n();
+
+        // Only the first window had a PageAction and wasn't closed
+        assert.calledOnce(pageActions[0].reloadL10n);
+        assert.isUndefined(pageActions[1]);
+        assert.notCalled(pageActions[2].reloadL10n);
       });
     });
   });
