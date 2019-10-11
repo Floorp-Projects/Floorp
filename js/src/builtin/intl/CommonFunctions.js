@@ -569,82 +569,6 @@ function parseLanguageTag(locale) {
 }
 
 /**
- * Returns the input normalized to lower case if it matches the
- * 'unicode_language_subtag' production. Otherwise returns null.
- */
-function parseStandaloneLanguage(language) {
-    // unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
-    var length = language.length;
-    if (length < 2 || length === 4 || length > 8 || !IsASCIIAlphaString(language)) {
-        // Four character language subtags are not allowed in Unicode BCP 47
-        // locale identifiers. Also see the comparison to Unicode CLDR locale
-        // identifiers in <https://unicode.org/reports/tr35/#BCP_47_Conformance>.
-        return null;
-    }
-
-    return callFunction(std_String_toLowerCase, language);
-}
-
-/**
- * Returns the input normalized to title case if it matches the
- * 'unicode_script_subtag' production. Otherwise returns null.
- */
-function parseStandaloneScript(script) {
-    // unicode_script_subtag = alpha{4} ;
-    if (script.length !== 4 || !IsASCIIAlphaString(script)) {
-        return null;
-    }
-
-    // The first character of a script code needs to be capitalized.
-    // "hans" -> "Hans"
-    return callFunction(std_String_toUpperCase, script[0]) +
-           callFunction(std_String_toLowerCase, Substring(script, 1, script.length - 1));
-}
-
-/**
- * Returns the input normalized to upper case if it matches the
- * 'unicode_region_subtag' production. Otherwise returns null.
- */
-function parseStandaloneRegion(region) {
-    // unicode_region_subtag = (alpha{2} | digit{3}) ;
-    var length = region.length;
-    if ((length !== 2 || !IsASCIIAlphaString(region)) &&
-        (length !== 3 || !IsASCIIDigitString(region)))
-    {
-        return null;
-    }
-
-    // Region codes need to be in upper-case. "bu" -> "BU"
-    return callFunction(std_String_toUpperCase, region);
-}
-
-/**
- * Returns the input normalized to lower case if it can be parsed as a
- * '(3*8alphanum) *("-" (3*8alphanum))' subtag sequence. Otherwise returns
- * null.
- */
-function parseStandaloneUnicodeExtensionType(type) {
-    // Reuse the BCP 47 parser for Unicode extension types.
-    var ts = new BCP47TokenStream(type);
-    NEXT_TOKEN_OR_RETURN_NULL(ts);
-
-    // Unicode extension 'type' subtags must match the following ABNF.
-    //
-    // type     = (3*8alphanum) *("-" (3*8alphanum))
-    // alphanum = (ALPHA / DIGIT)       ; letters and numbers
-    // ALPHA    = %x41-5A / %x61-7A     ; A-Z / a-z
-    // DIGIT    = %x30-39               ; 0-9
-    do {
-        if (ts.tokenLength < 3 || ts.tokenLength > 8)
-            return null;
-
-        NEXT_TOKEN_OR_RETURN_NULL(ts);
-    } while (ts.token !== NONE);
-
-    return ts.localeLowercase;
-}
-
-/**
  * Return the locale and fields components of the given valid Transform
  * extension subtag.
  */
@@ -1237,20 +1161,6 @@ function IsASCIIAlphaString(s) {
 }
 
 /**
- * Returns true if the input contains only ASCII digit characters.
- */
-function IsASCIIDigitString(s) {
-    assert(typeof s === "string", "IsASCIIDigitString");
-
-    for (var i = 0; i < s.length; i++) {
-        var c = callFunction(std_String_charCodeAt, s, i);
-        if (!(0x30 <= c && c <= 0x39))
-            return false;
-    }
-    return true;
-}
-
-/**
  * Validates and canonicalizes the given language tag.
  */
 function ValidateAndCanonicalizeLanguageTag(locale) {
@@ -1443,9 +1353,9 @@ function CanonicalizeLocaleList(locales) {
     if (typeof locales === "string")
         return [ValidateAndCanonicalizeLanguageTag(locales)];
 
-    var unboxedLocale = callFunction(unboxLocaleOrNull, locales);
+    var unboxedLocale = LocaleToStringOrNull(locales);
     if (unboxedLocale !== null)
-        return [StringFromLanguageTagObject(unboxedLocale.locale)]
+        return [unboxedLocale];
 
     // Step 2.
     var seen = [];
@@ -1471,9 +1381,9 @@ function CanonicalizeLocaleList(locales) {
                 ThrowTypeError(JSMSG_INVALID_LOCALES_ELEMENT);
 
             // Steps 7.c.iii-iv.
-            var unboxedLocale = callFunction(unboxLocaleOrNull, kValue);
+            var unboxedLocale = LocaleToStringOrNull(kValue);
             var tag = unboxedLocale !== null
-                      ? StringFromLanguageTagObject(unboxedLocale.locale)
+                      ? unboxedLocale
                       : ValidateAndCanonicalizeLanguageTag(ToString(kValue));
 
             // Step 7.c.v.

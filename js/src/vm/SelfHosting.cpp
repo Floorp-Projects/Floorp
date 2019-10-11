@@ -2080,6 +2080,35 @@ static bool intrinsic_ToNumeric(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool intrinsic_LocaleToStringOrNull(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  if (!args[0].isObject()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  JSObject* unwrapped = CheckedUnwrapStatic(&args[0].toObject());
+  if (!unwrapped) {
+    ReportAccessDenied(cx);
+    return false;
+  }
+
+  if (!unwrapped->is<NativeLocaleObject>()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  RootedString str(cx, unwrapped->as<NativeLocaleObject>().languageTag());
+  if (!cx->compartment()->wrap(cx, &str)) {
+    return false;
+  }
+  args.rval().setString(str);
+  return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2455,18 +2484,12 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4, 0),
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2, 0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2, 0),
-    JS_FN("intl_CreateUninitializedLocale", intl_CreateUninitializedLocale, 0,
-          0),
-    JS_FN("intl_AddLikelySubtags", intl_AddLikelySubtags, 3, 0),
-    JS_FN("intl_RemoveLikelySubtags", intl_RemoveLikelySubtags, 3, 0),
 
     JS_INLINABLE_FN("GuardToCollator", intrinsic_GuardToBuiltin<CollatorObject>,
                     1, 0, IntlGuardToCollator),
     JS_INLINABLE_FN("GuardToDateTimeFormat",
                     intrinsic_GuardToBuiltin<DateTimeFormatObject>, 1, 0,
                     IntlGuardToDateTimeFormat),
-    JS_INLINABLE_FN("GuardToLocale", intrinsic_GuardToBuiltin<LocaleObject>, 1,
-                    0, IntlGuardToLocale),
     JS_INLINABLE_FN("GuardToNumberFormat",
                     intrinsic_GuardToBuiltin<NumberFormatObject>, 1, 0,
                     IntlGuardToNumberFormat),
@@ -2479,8 +2502,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsWrappedDateTimeFormat",
           intrinsic_IsWrappedInstanceOfBuiltin<DateTimeFormatObject>, 1, 0),
-    JS_FN("IsWrappedLocale", intrinsic_IsWrappedInstanceOfBuiltin<LocaleObject>,
-          1, 0),
     JS_FN("IsWrappedNumberFormat",
           intrinsic_IsWrappedInstanceOfBuiltin<NumberFormatObject>, 1, 0),
 
@@ -2488,8 +2509,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<CollatorObject>>, 2, 0),
     JS_FN("CallDateTimeFormatMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<DateTimeFormatObject>>, 2, 0),
-    JS_FN("CallLocaleMethodIfWrapped",
-          CallNonGenericSelfhostedMethod<Is<LocaleObject>>, 2, 0),
     JS_FN("CallNumberFormatMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<NumberFormatObject>>, 2, 0),
     JS_FN("CallPluralRulesMethodIfWrapped",
@@ -2508,6 +2527,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0, 0),
     JS_FN("IsRuntimeDefaultLocale", intrinsic_IsRuntimeDefaultLocale, 1, 0),
 #endif  // ENABLE_INTL_API
+
+    JS_FN("LocaleToStringOrNull", intrinsic_LocaleToStringOrNull, 1, 0),
 
     JS_FN("GetOwnPropertyDescriptorToArray", GetOwnPropertyDescriptorToArray, 2,
           0),
