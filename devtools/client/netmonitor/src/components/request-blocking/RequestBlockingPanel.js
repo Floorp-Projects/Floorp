@@ -21,6 +21,7 @@ const {
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const Actions = require("../../actions/index");
 const { L10N } = require("../../utils/l10n");
+const { PANELS } = require("../../constants");
 
 const ENABLE_BLOCKING_LABEL = L10N.getStr(
   "netmonitor.actionbar.enableBlocking"
@@ -36,6 +37,7 @@ class RequestBlockingPanel extends Component {
     return {
       blockedUrls: PropTypes.array.isRequired,
       addBlockedUrl: PropTypes.func.isRequired,
+      isDisplaying: PropTypes.bool.isRequired,
       removeBlockedUrl: PropTypes.func.isRequired,
       toggleBlockingEnabled: PropTypes.func.isRequired,
       toggleBlockedUrl: PropTypes.func.isRequired,
@@ -52,10 +54,16 @@ class RequestBlockingPanel extends Component {
     };
   }
 
+  componentDidMount() {
+    this.refs.addInput.focus();
+  }
+
   componentDidUpdate(prevProps) {
     if (this.state.editingUrl) {
       this.refs.editInput.focus();
       this.refs.editInput.select();
+    } else if (this.props.isDisplaying && !prevProps.isDisplaying) {
+      this.refs.addInput.focus();
     }
   }
 
@@ -231,6 +239,7 @@ module.exports = connect(
   state => ({
     blockedUrls: state.requestBlocking.blockedUrls,
     blockingEnabled: state.requestBlocking.blockingEnabled,
+    isDisplaying: state.ui.selectedActionBarTabId === PANELS.BLOCKING,
   }),
   dispatch => ({
     toggleBlockingEnabled: checked =>
