@@ -3103,45 +3103,12 @@ nsresult Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor) {
 
 void Element::GetLinkTarget(nsAString& aTarget) { aTarget.Truncate(); }
 
-static void nsDOMTokenListPropertyDestructor(void* aObject, nsAtom* aProperty,
-                                             void* aPropertyValue,
-                                             void* aData) {
-  nsDOMTokenList* list = static_cast<nsDOMTokenList*>(aPropertyValue);
-  NS_RELEASE(list);
-}
-
 static nsStaticAtom* const sPropertiesToTraverseAndUnlink[] = {
-    nsGkAtoms::sandbox, nsGkAtoms::sizes, nsGkAtoms::dirAutoSetBy, nullptr};
+    nsGkAtoms::dirAutoSetBy, nullptr};
 
 // static
 nsStaticAtom* const* Element::HTMLSVGPropertiesToTraverseAndUnlink() {
   return sPropertiesToTraverseAndUnlink;
-}
-
-nsDOMTokenList* Element::GetTokenList(
-    nsAtom* aAtom, const DOMTokenListSupportedTokenArray aSupportedTokens) {
-#ifdef DEBUG
-  const nsStaticAtom* const* props = HTMLSVGPropertiesToTraverseAndUnlink();
-  bool found = false;
-  for (uint32_t i = 0; props[i]; ++i) {
-    if (props[i] == aAtom) {
-      found = true;
-      break;
-    }
-  }
-  MOZ_ASSERT(found, "Trying to use an unknown tokenlist!");
-#endif
-
-  nsDOMTokenList* list = nullptr;
-  if (HasProperties()) {
-    list = static_cast<nsDOMTokenList*>(GetProperty(aAtom));
-  }
-  if (!list) {
-    list = new nsDOMTokenList(this, aAtom, aSupportedTokens);
-    NS_ADDREF(list);
-    SetProperty(aAtom, list, nsDOMTokenListPropertyDestructor);
-  }
-  return list;
 }
 
 nsresult Element::CopyInnerTo(Element* aDst, ReparseAttributes aReparse) {
