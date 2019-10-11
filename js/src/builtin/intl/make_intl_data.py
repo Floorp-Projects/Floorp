@@ -50,13 +50,22 @@ from operator import attrgetter, itemgetter
 from zipfile import ZipFile
 
 if sys.version_info.major == 2:
-    from itertools import ifilter as filter, ifilterfalse as filterfalse, imap as map
+    from itertools import ifilter as filter, ifilterfalse as filterfalse, imap as map,\
+                          izip_longest as zip_longest
     from urllib2 import urlopen, Request as UrlRequest
     from urlparse import urlsplit, urlunsplit
 else:
-    from itertools import filterfalse
+    from itertools import filterfalse, zip_longest
     from urllib.request import urlopen, Request as UrlRequest
     from urllib.parse import urlsplit, urlunsplit
+
+
+# From https://docs.python.org/3/library/itertools.html
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
 
 
 def writeMappingHeader(println, description, source, url):
@@ -383,6 +392,419 @@ function updateGrandfatheredMappings(tag) {
 }""".lstrip("\n"))
 
 
+def writeMappingsBinarySearch(println, fn_name, type_name, name, validate_fn, mappings,
+                              tag_maxlength, description, source, url):
+    """ Emit code to perform a binary search on language tag subtags.
+
+        Uses the contents of |mapping|, which can either be a dictionary or set,
+        to emit a mapping function to find subtag replacements.
+    """
+    println(u"")
+    writeMappingHeader(println, description, source, url)
+    println(u"""
+bool js::intl::LanguageTag::{0}({1} {2}) {{
+  MOZ_ASSERT({3}({2}.range()));
+""".format(fn_name, type_name, name, validate_fn).strip())
+
+    def write_array(subtags, name, length, fixed):
+        if fixed:
+            println(u"    static const char {}[{}][{}] = {{".format(name, len(subtags),
+                                                                    length + 1))
+        else:
+            println(u"    static const char* {}[{}] = {{".format(name, len(subtags)))
+
+        # Group in pairs of ten to not exceed the 80 line column limit.
+        for entries in grouper(subtags, 10):
+            entries = (u"\"{}\"".format(tag).rjust(length + 2)
+                       for tag in entries if tag is not None)
+            println(u"      {},".format(u", ".join(entries)))
+
+        println(u"    };")
+
+    trailing_return = True
+
+    # Sort the subtags by length. That enables using an optimized comparator
+    # for the binary search, which only performs a single |memcmp| for multiple
+    # of two subtag lengths.
+    mappings_keys = mappings.keys() if type(mappings) == dict else mappings
+    for (length, subtags) in groupby(sorted(mappings_keys, key=len), len):
+        # Omit the length check if the current length is the maximum length.
+        if length != tag_maxlength:
+            println(u"""
+  if ({}.length() == {}) {{
+""".format(name, length).rstrip("\n"))
+        else:
+            trailing_return = False
+            println(u"""
+  {
+""".rstrip("\n"))
+
+        # The subtags need to be sorted for binary search to work.
+        subtags = sorted(subtags)
+
+        def equals(subtag):
+            return u"""{}.equalTo("{}")""".format(name, subtag)
+
+        # Don't emit a binary search for short lists.
+        if len(subtags) == 1:
+            if type(mappings) == dict:
+                println(u"""
+    if ({}) {{
+      {}.set("{}");
+      return true;
+    }}
+    return false;
+""".format(equals(subtags[0]), name, mappings[subtags[0]]).strip("\n"))
+            else:
+                println(u"""
+    return {};
+""".format(equals(subtags[0])).strip("\n"))
+        elif len(subtags) <= 4:
+            if type(mappings) == dict:
+                for subtag in subtags:
+                    println(u"""
+    if ({}) {{
+      {}.set("{}");
+      return true;
+    }}
+""".format(equals(subtag), name, mappings[subtag]).strip("\n"))
+
+                println(u"""
+    return false;
+""".strip("\n"))
+            else:
+                cond = (equals(subtag) for subtag in subtags)
+                cond = (u" ||\n" + u" " * (4 + len("return "))).join(cond)
+                println(u"""
+    return {};
+""".format(cond).strip("\n"))
+        else:
+            write_array(subtags, name + "s", length, True)
+
+            if type(mappings) == dict:
+                write_array([mappings[k] for k in subtags], u"aliases", length, False)
+
+                println(u"""
+    if (const char* replacement = SearchReplacement({0}s, aliases, {0})) {{
+      {0}.set(ConstCharRange(replacement, strlen(replacement)));
+      return true;
+    }}
+    return false;
+""".format(name).rstrip())
+            else:
+                println(u"""
+    return HasReplacement({0}s, {0});
+""".format(name).rstrip())
+
+        println(u"""
+  }
+""".strip("\n"))
+
+    if trailing_return:
+        println(u"""
+  return false;""")
+
+    println(u"""
+}""".lstrip("\n"))
+
+
+def writeComplexLanguageTagMappingsNative(println, complex_language_mappings,
+                                          description, source, url):
+    println(u"")
+    writeMappingHeader(println, description, source, url)
+    println(u"""
+void js::intl::LanguageTag::performComplexLanguageMappings() {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+""".lstrip())
+
+    # Merge duplicate language entries.
+    language_aliases = {}
+    for (deprecated_language, (language, script, region)) in (
+        sorted(complex_language_mappings.items(), key=itemgetter(0))
+    ):
+        key = (language, script, region)
+        if key not in language_aliases:
+            language_aliases[key] = []
+        else:
+            language_aliases[key].append(deprecated_language)
+
+    first_language = True
+    for (deprecated_language, (language, script, region)) in (
+        sorted(complex_language_mappings.items(), key=itemgetter(0))
+    ):
+        key = (language, script, region)
+        if deprecated_language in language_aliases[key]:
+            continue
+
+        if_kind = u"if" if first_language else u"else if"
+        first_language = False
+
+        cond = (u"language().equalTo(\"{}\")".format(lang)
+                for lang in [deprecated_language] + language_aliases[key])
+        cond = (u" ||\n" + u" " * (2 + len(if_kind) + 2)).join(cond)
+
+        println(u"""
+  {} ({}) {{""".format(if_kind, cond).strip("\n"))
+
+        println(u"""
+    setLanguage("{}");""".format(language).strip("\n"))
+
+        if script is not None:
+            println(u"""
+    if (script().length() == 0) {{
+      setScript("{}");
+    }}""".format(script).strip("\n"))
+        if region is not None:
+            println(u"""
+    if (region().length() == 0) {{
+      setRegion("{}");
+    }}""".format(region).strip("\n"))
+        println(u"""
+  }""".strip("\n"))
+
+    println(u"""
+}
+""".strip("\n"))
+
+
+def writeComplexRegionTagMappingsNative(println, complex_region_mappings,
+                                        description, source, url):
+    println(u"")
+    writeMappingHeader(println, description, source, url)
+    println(u"""
+void js::intl::LanguageTag::performComplexRegionMappings() {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region().range()));
+""".lstrip())
+
+    # |non_default_replacements| is a list and hence not hashable. Convert it
+    # to a string to get a proper hashable value.
+    def hash_key(default, non_default_replacements):
+        return (default, str(sorted(str(v) for v in non_default_replacements)))
+
+    # Merge duplicate region entries.
+    region_aliases = {}
+    for (deprecated_region, (default, non_default_replacements)) in (
+        sorted(complex_region_mappings.items(), key=itemgetter(0))
+    ):
+        key = hash_key(default, non_default_replacements)
+        if key not in region_aliases:
+            region_aliases[key] = []
+        else:
+            region_aliases[key].append(deprecated_region)
+
+    first_region = True
+    for (deprecated_region, (default, non_default_replacements)) in (
+        sorted(complex_region_mappings.items(), key=itemgetter(0))
+    ):
+        key = hash_key(default, non_default_replacements)
+        if deprecated_region in region_aliases[key]:
+            continue
+
+        if_kind = u"if" if first_region else u"else if"
+        first_region = False
+
+        cond = (u"region().equalTo(\"{}\")".format(region)
+                for region in [deprecated_region] + region_aliases[key])
+        cond = (u" ||\n" + u" " * (2 + len(if_kind) + 2)).join(cond)
+
+        println(u"""
+  {} ({}) {{""".format(if_kind, cond).strip("\n"))
+
+        replacement_regions = sorted({region for (_, _, region) in non_default_replacements})
+
+        first_case = True
+        for replacement_region in replacement_regions:
+            replacement_language_script = sorted(((language, script)
+                                                  for (language, script, region) in (
+                                                      non_default_replacements
+                                                  )
+                                                  if region == replacement_region),
+                                                 key=itemgetter(0))
+
+            if_kind = u"if" if first_case else u"else if"
+            first_case = False
+
+            def compare_tags(language, script):
+                if script is None:
+                    return u"language().equalTo(\"{}\")".format(language)
+                return u"(language().equalTo(\"{}\") && script().equalTo(\"{}\"))".format(
+                    language, script)
+
+            cond = (compare_tags(language, script)
+                    for (language, script) in replacement_language_script)
+            cond = (u" ||\n" + u" " * (4 + len(if_kind) + 2)).join(cond)
+
+            println(u"""
+    {} ({}) {{
+      setRegion("{}");
+    }}""".format(if_kind, cond, replacement_region).rstrip().strip("\n"))
+
+        println(u"""
+    else {{
+      setRegion("{}");
+    }}
+  }}""".format(default).rstrip().strip("\n"))
+
+    println(u"""
+}
+""".strip("\n"))
+
+
+def writeGrandfatheredMappingsFunctionNative(println, grandfathered_mappings,
+                                             description, source, url):
+    """ Writes a function definition that maps grandfathered language tags. """
+    println(u"")
+    writeMappingHeader(println, description, source, url)
+    println(u"""\
+bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
+  // We're mapping regular grandfathered tags to non-grandfathered form here.
+  // Other tags remain unchanged.
+  //
+  // regular       = "art-lojban"
+  //               / "cel-gaulish"
+  //               / "no-bok"
+  //               / "no-nyn"
+  //               / "zh-guoyu"
+  //               / "zh-hakka"
+  //               / "zh-min"
+  //               / "zh-min-nan"
+  //               / "zh-xiang"
+  //
+  // Therefore we can quickly exclude most tags by checking every
+  // |unicode_locale_id| subcomponent for characteristics not shared by any of
+  // the regular grandfathered (RG) tags:
+  //
+  //   * Real-world |unicode_language_subtag|s are all two or three letters,
+  //     so don't waste time running a useless |language.length > 3| fast-path.
+  //   * No RG tag has a "script"-looking component.
+  //   * No RG tag has a "region"-looking component.
+  //   * The RG tags that match |unicode_locale_id| (art-lojban, cel-gaulish,
+  //     zh-guoyu, zh-hakka, zh-xiang) have exactly one "variant". (no-bok,
+  //     no-nyn, zh-min, and zh-min-nan require BCP47's extlang subtag
+  //     that |unicode_locale_id| doesn't support.)
+  //   * No RG tag contains |extensions| or |pu_extensions|.
+  if (script().length() != 0 ||
+      region().length() != 0 ||
+      variants().length() != 1 ||
+      extensions().length() != 0 ||
+      privateuse()) {
+    return true;
+  }
+
+  auto variantEqualTo = [this](const char* variant) {
+    return strcmp(variants()[0].get(), variant) == 0;
+  };""")
+
+    # From Unicode BCP 47 locale identifier <https://unicode.org/reports/tr35/>.
+    #
+    # Doesn't allow any 'extensions' subtags.
+    re_unicode_locale_id = re.compile(
+        r"""
+        ^
+        # unicode_language_id = unicode_language_subtag
+        #     unicode_language_subtag = alpha{2,3} | alpha{5,8}
+        (?P<language>[a-z]{2,3}|[a-z]{5,8})
+
+        # (sep unicode_script_subtag)?
+        #     unicode_script_subtag = alpha{4}
+        (?:-(?P<script>[a-z]{4}))?
+
+        # (sep unicode_region_subtag)?
+        #     unicode_region_subtag = (alpha{2} | digit{3})
+        (?:-(?P<region>([a-z]{2}|[0-9]{3})))?
+
+        # (sep unicode_variant_subtag)*
+        #     unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3})
+        (?P<variants>(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))+)?
+
+        # pu_extensions?
+        #     pu_extensions = sep [xX] (sep alphanum{1,8})+
+        (?:-(?P<privateuse>x(-[a-z0-9]{1,8})+))?
+        $
+        """, re.IGNORECASE | re.VERBOSE)
+
+    is_first = True
+
+    for (tag, modern) in sorted(grandfathered_mappings.items(), key=itemgetter(0)):
+        tag_match = re_unicode_locale_id.match(tag)
+        assert tag_match is not None
+
+        tag_language = tag_match.group("language")
+        assert tag_match.group("script") is None, (
+               "{} does not contain a script subtag".format(tag))
+        assert tag_match.group("region") is None, (
+               "{} does not contain a region subtag".format(tag))
+        tag_variants = tag_match.group("variants")
+        assert tag_variants is not None, (
+               "{} contains a variant subtag".format(tag))
+        assert tag_match.group("privateuse") is None, (
+               "{} does not contain a privateuse subtag".format(tag))
+
+        tag_variant = tag_variants[1:]
+        assert "-" not in tag_variant, (
+               "{} contains only a single variant".format(tag))
+
+        modern_match = re_unicode_locale_id.match(modern)
+        assert modern_match is not None
+
+        modern_language = modern_match.group("language")
+        modern_script = modern_match.group("script")
+        modern_region = modern_match.group("region")
+        modern_variants = modern_match.group("variants")
+        modern_privateuse = modern_match.group("privateuse")
+
+        println(u"""
+  // {} -> {}
+""".format(tag, modern).rstrip())
+
+        println(u"""
+  {}if (language().equalTo("{}") && variantEqualTo("{}")) {{
+        """.format("" if is_first else "else ",
+                   tag_language,
+                   tag_variant).rstrip().strip("\n"))
+
+        is_first = False
+
+        println(u"""
+    setLanguage("{}");
+        """.format(modern_language).rstrip().strip("\n"))
+
+        if modern_script is not None:
+            println(u"""
+    setScript("{}");
+            """.format(modern_script).rstrip().strip("\n"))
+
+        if modern_region is not None:
+            println(u"""
+    setRegion("{}");
+            """.format(modern_region).rstrip().strip("\n"))
+
+        assert modern_variants is None, (
+            "all regular grandfathered tags' modern forms do not contain variant subtags")
+
+        println(u"""
+    clearVariants();
+        """.rstrip().strip("\n"))
+
+        if modern_privateuse is not None:
+            println(u"""
+    auto privateuse = DuplicateString(cx, "{}");
+    if (!privateuse) {{
+      return false;
+    }}
+    setPrivateuse(std::move(privateuse));
+        """.format(modern_privateuse).rstrip().rstrip("\n"))
+
+        println(u"""
+    return true;
+  }""".rstrip().strip("\n"))
+
+    println(u"""
+  return true;
+}""")
+
+
 @contextlib.contextmanager
 def TemporaryDirectory():
     tmpDir = tempfile.mkdtemp()
@@ -674,6 +1096,106 @@ def writeCLDRLanguageTagData(println, data, url):
                                        source, url)
 
 
+def writeCLDRLanguageTagDataNative(println, data, url):
+    """ Writes the language tag data to the Intl data file. """
+
+    println(generatedFileWarning)
+
+    println(u"""
+#include "mozilla/Assertions.h"
+#include "mozilla/Range.h"
+#include "mozilla/TextUtils.h"
+
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
+#include <iterator>
+#include <type_traits>
+
+#include "builtin/intl/LanguageTag.h"
+#include "util/Text.h"
+#include "vm/JSContext.h"
+
+using ConstCharRange = mozilla::Range<const char>;
+
+template <size_t Length, size_t TagLength, size_t SubtagLength>
+static inline bool HasReplacement(
+    const char (&subtags)[Length][TagLength],
+    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+  MOZ_ASSERT(subtag.length() == TagLength - 1,
+             "subtag must have the same length as the list of subtags");
+
+  const char* ptr = subtag.range().begin().get();
+  return std::binary_search(std::begin(subtags), std::end(subtags), ptr,
+                            [](const char* a, const char* b) {
+    return memcmp(a, b, TagLength - 1) < 0;
+  });
+}
+
+template <size_t Length, size_t TagLength, size_t SubtagLength>
+static inline const char* SearchReplacement(
+    const char (&subtags)[Length][TagLength],
+    const char* (&aliases)[Length],
+    const js::intl::LanguageTagSubtag<SubtagLength>& subtag) {
+  MOZ_ASSERT(subtag.length() == TagLength - 1,
+             "subtag must have the same length as the list of subtags");
+
+  const char* ptr = subtag.range().begin().get();
+  auto p = std::lower_bound(std::begin(subtags), std::end(subtags), ptr,
+                            [](const char* a, const char* b) {
+    return memcmp(a, b, TagLength - 1) < 0;
+  });
+  if (p != std::end(subtags) && memcmp(*p, ptr, TagLength - 1) == 0) {
+    return aliases[std::distance(std::begin(subtags), p)];
+  }
+  return nullptr;
+}
+""".rstrip())
+
+    source = u"CLDR Supplemental Data, version {}".format(data["version"])
+    grandfathered_mappings = data["grandfatheredMappings"]
+    language_mappings = data["languageMappings"]
+    complex_language_mappings = data["complexLanguageMappings"]
+    region_mappings = data["regionMappings"]
+    complex_region_mappings = data["complexRegionMappings"]
+
+    # unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
+    language_maxlength = 8
+
+    # unicode_region_subtag = (alpha{2} | digit{3}) ;
+    region_maxlength = 3
+
+    writeMappingsBinarySearch(println, "languageMapping",
+                              "LanguageSubtag&", "language",
+                              "IsStructurallyValidLanguageTag",
+                              language_mappings, language_maxlength,
+                              "Mappings from language subtags to preferred values.", source, url)
+    writeMappingsBinarySearch(println, "complexLanguageMapping",
+                              "const LanguageSubtag&", "language",
+                              "IsStructurallyValidLanguageTag",
+                              complex_language_mappings.keys(), language_maxlength,
+                              "Language subtags with complex mappings.", source, url)
+    writeMappingsBinarySearch(println, "regionMapping",
+                              "RegionSubtag&", "region",
+                              "IsStructurallyValidRegionTag",
+                              region_mappings, region_maxlength,
+                              "Mappings from region subtags to preferred values.", source, url)
+    writeMappingsBinarySearch(println, "complexRegionMapping",
+                              "const RegionSubtag&", "region",
+                              "IsStructurallyValidRegionTag",
+                              complex_region_mappings.keys(), region_maxlength,
+                              "Region subtags with complex mappings.", source, url)
+
+    writeComplexLanguageTagMappingsNative(println, complex_language_mappings,
+                                          "Language subtags with complex mappings.", source, url)
+    writeComplexRegionTagMappingsNative(println, complex_region_mappings,
+                                        "Region subtags with complex mappings.", source, url)
+
+    writeGrandfatheredMappingsFunctionNative(println, grandfathered_mappings,
+                                             "Canonicalize grandfathered locale identifiers.", source,
+                                             url)
+
+
 def writeCLDRLanguageTagLikelySubtagsTest(println, data, url):
     """ Writes the likely-subtags test file. """
 
@@ -886,6 +1408,13 @@ def updateCLDRLangTags(args):
         println(u"// Generated by make_intl_data.py. DO NOT EDIT.")
         writeCLDRLanguageTagData(println, data, url)
 
+    print("Writing Intl data...")
+    native_out = "LanguageTagGenerated.cpp"
+    # native_out = os.path.splitext(out)[0] + ".cpp"
+    with io.open(native_out, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+        writeCLDRLanguageTagDataNative(println, data, url)
+
     print("Writing Intl test data...")
     test_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "../../tests/non262/Intl/Locale/likely-subtags-generated.js")
@@ -894,7 +1423,7 @@ def updateCLDRLangTags(args):
 
         println(u"// |reftest| skip-if(!this.hasOwnProperty('Intl')||"
                 u"(!this.Intl.Locale&&!this.hasOwnProperty('addIntlExtras')))")
-        println(u"// Generated by make_intl_data.py. DO NOT EDIT.")
+        println(generatedFileWarning)
         writeCLDRLanguageTagLikelySubtagsTest(println, data, url)
 
 
@@ -1779,6 +2308,179 @@ def writeUnicodeExtensionsFile(version, url, mapping, out):
                 println(u"        \"{}\": \"{}\",".format(type, mapped["preferred"]))
             println(u"    },")
         println(u"};")
+
+    with io.open(os.path.splitext(out)[0] + ".cpp", mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(generatedFileWarning)
+        println(u"// Version: CLDR-{}".format(version))
+        println(u"// URL: {}".format(url))
+
+        println(u"""
+#include "mozilla/Assertions.h"
+#include "mozilla/Range.h"
+#include "mozilla/TextUtils.h"
+
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
+
+#include "builtin/intl/LanguageTag.h"
+
+using namespace js::intl::LanguageTagLimits;
+
+using ConstCharRange = mozilla::Range<const char>;
+
+template <size_t Length>
+static inline bool IsUnicodeKey(const ConstCharRange& key,
+                                const char (&str)[Length]) {
+  static_assert(Length == UnicodeKeyLength + 1,
+                "Unicode extension key is two characters long");
+  return memcmp(key.begin().get(), str, Length - 1) == 0;
+}
+
+template <size_t Length>
+static inline bool IsUnicodeType(const ConstCharRange& type,
+                                 const char (&str)[Length]) {
+  static_assert(Length > UnicodeKeyLength + 1,
+                "Unicode extension type contains more than two characters");
+  return type.length() == (Length - 1) &&
+         memcmp(type.begin().get(), str, Length - 1) == 0;
+}
+
+static int32_t CompareUnicodeType(const char* a, const ConstCharRange& b) {
+#ifdef DEBUG
+  auto isNull = [](char c) {
+    return c == '\\0';
+  };
+#endif
+
+  MOZ_ASSERT(std::none_of(b.begin().get(), b.end().get(), isNull),
+             "unexpected null-character in string");
+
+  using UnsignedChar = unsigned char;
+  for (size_t i = 0; i < b.length(); i++) {
+    // |a| is zero-terminated and |b| doesn't contain a null-terminator. So if
+    // we've reached the end of |a|, the below if-statement will always be true.
+    // That ensures we don't read past the end of |a|.
+    if (int32_t r = UnsignedChar(a[i]) - UnsignedChar(b[i])) {
+      return r;
+    }
+  }
+
+  // Return zero if both strings are equal or a negative number if |b| is a
+  // prefix of |a|.
+  return -int32_t(UnsignedChar(a[b.length()]));
+};
+
+template <size_t Length>
+static inline const char* SearchReplacement(const char* (&types)[Length],
+                                            const char* (&aliases)[Length],
+                                            const ConstCharRange& type) {
+
+  auto p = std::lower_bound(std::begin(types), std::end(types), type,
+                            [](const auto& a, const auto& b) {
+    return CompareUnicodeType(a, b) < 0;
+  });
+  if (p != std::end(types) && CompareUnicodeType(*p, type) == 0) {
+    return aliases[std::distance(std::begin(types), p)];
+  }
+  return nullptr;
+}
+""".rstrip("\n"))
+
+        println(u"""
+/**
+ * Mapping from deprecated BCP 47 Unicode extension types to their preferred
+ * values.
+ *
+ * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
+ */
+const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
+    const ConstCharRange& key, const ConstCharRange& type) {
+#ifdef DEBUG
+  static auto isAsciiLowercaseAlphanumeric = [](char c) {
+    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
+  };
+
+  static auto isAsciiLowercaseAlphanumericOrDash = [](char c) {
+    return isAsciiLowercaseAlphanumeric(c) || c == '-';
+  };
+#endif
+
+  MOZ_ASSERT(key.length() == UnicodeKeyLength);
+  MOZ_ASSERT(std::all_of(key.begin().get(), key.end().get(),
+                         isAsciiLowercaseAlphanumeric));
+
+  MOZ_ASSERT(type.length() > UnicodeKeyLength);
+  MOZ_ASSERT(std::all_of(type.begin().get(), type.end().get(),
+                         isAsciiLowercaseAlphanumericOrDash));
+""")
+
+        def to_hash_key(replacements):
+            return str(sorted([str((k, v["preferred"])) for (k, v) in replacements.items()]))
+
+        def write_array(subtags, name, length):
+            max_entries = (80 - len("    ")) // (length + len('"", '))
+
+            println(u"    static const char* {}[{}] = {{".format(name, len(subtags)))
+
+            for entries in grouper(subtags, max_entries):
+                entries = (u"\"{}\"".format(tag).rjust(length + 2)
+                           for tag in entries if tag is not None)
+                println(u"      {},".format(u", ".join(entries)))
+
+            println(u"    };")
+
+        # Merge duplicate keys.
+        key_aliases = {}
+        for (key, replacements) in sorted(mapping.items(), key=itemgetter(0)):
+            hash_key = to_hash_key(replacements)
+            if hash_key not in key_aliases:
+                key_aliases[hash_key] = []
+            else:
+                key_aliases[hash_key].append(key)
+
+        first_key = True
+        for (key, replacements) in sorted(mapping.items(), key=itemgetter(0)):
+            hash_key = to_hash_key(replacements)
+            if key in key_aliases[hash_key]:
+                continue
+
+            cond = (u"IsUnicodeKey(key, \"{}\")".format(k) for k in [key] + key_aliases[hash_key])
+
+            if_kind = u"if" if first_key else u"else if"
+            cond = (u" ||\n" + u" " * (2 + len(if_kind) + 2)).join(cond)
+            println(u"""
+  {} ({}) {{""".format(if_kind, cond).strip("\n"))
+            first_key = False
+
+            replacements = sorted(replacements.items(), key=itemgetter(0))
+
+            if len(replacements) > 4:
+                types = [t for (t, _) in replacements]
+                preferred = [r["preferred"] for (_, r) in replacements]
+                max_len = max(len(k) for k in types + preferred)
+
+                write_array(types, "types", max_len)
+                write_array(preferred, "aliases", max_len)
+                println(u"""
+    return SearchReplacement(types, aliases, type);
+""".strip("\n"))
+            else:
+                for (type, replacement) in replacements:
+                    println(u"""
+    if (IsUnicodeType(type, "{}")) {{
+      return "{}";
+    }}""".format(type, replacement["preferred"]).strip("\n"))
+
+            println(u"""
+  }""".lstrip("\n"))
+
+        println(u"""
+  return nullptr;
+}
+""".strip("\n"))
 
 
 def updateUnicodeExtensions(args):
