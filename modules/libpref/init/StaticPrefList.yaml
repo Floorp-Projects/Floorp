@@ -1771,6 +1771,12 @@
   value: 1000
   mirror: always
 
+# Are missing-property use counters for certain DOM attributes enabled?
+- name: dom.missing_prop_counters.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Is support for module scripts (<script type="module">) enabled for content?
 - name: dom.moduleScripts.enabled
   type: bool
