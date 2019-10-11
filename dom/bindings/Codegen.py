@@ -2344,6 +2344,36 @@ class MethodDefiner(PropertyDefiner):
         self.chrome = []
         self.regular = []
         for m in methods:
+            if m.identifier.name == 'QueryInterface':
+                # QueryInterface is special, because instead of generating an
+                # impl we just call out directly to our shared one.
+                if m.isStatic():
+                    raise TypeError("Legacy QueryInterface member shouldn't be static")
+                signatures = m.signatures()
+
+                if (len(signatures) > 1 or len(signatures[0][1]) > 1 or
+                    not signatures[0][1][0].type.isAny()):
+                    raise TypeError("There should be only one QueryInterface method with 1 argument of type any")
+
+                # Make sure to not stick QueryInterface on abstract interfaces.
+                if (not self.descriptor.interface.hasInterfacePrototypeObject() or
+                    not self.descriptor.concrete):
+                    raise TypeError("QueryInterface is only supported on "
+                                    "interfaces that are concrete: " +
+                                    self.descriptor.name)
+
+                if not isChromeOnly(m):
+                    raise TypeError("QueryInterface must be ChromeOnly")
+
+                self.chrome.append({
+                    "name": 'QueryInterface',
+                    "methodInfo": False,
+                    "length": 1,
+                    "flags": "0",
+                    "condition": PropertyDefiner.getControllingCondition(m, descriptor)
+                })
+                continue
+
             method = self.methodData(m, descriptor)
 
             if m.isStatic():
