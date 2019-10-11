@@ -2548,6 +2548,26 @@ bool nsPIDOMWindowInner::HasOpenWebSockets() const {
          (mTopInnerWindow && mTopInnerWindow->mNumOfOpenWebSockets);
 }
 
+bool nsPIDOMWindowInner::IsCurrentInnerWindow() const {
+  auto* bc = GetBrowsingContext();
+  MOZ_ASSERT(bc);
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer;
+  // When a BC is discarded, it stops returning outer windows altogether. That
+  // doesn't work for this check, since we still want current inner window to be
+  // treated as current after that point. Simply falling back to `mOuterWindow`
+  // here isn't ideal, since it will start returning true for inner windows
+  // which were current before a remoteness switch once a BrowsingContext has
+  // been discarded, but it's not incorrect in a way which should cause
+  // significant issues.
+  if (!bc->IsDiscarded()) {
+    outer = bc->GetDOMWindow();
+  } else {
+    outer = mOuterWindow;
+  }
+  return outer && outer->GetCurrentInnerWindow() == this;
+}
+
 void nsPIDOMWindowInner::SetAudioCapture(bool aCapture) {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
