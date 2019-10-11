@@ -617,6 +617,9 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun onRestoreInstanceState(state: Parcelable?) {
+            if (geckoSession.isOpen) {
+                geckoSession.close()
+            }
             restored = true
             super.onRestoreInstanceState(state)
         }
