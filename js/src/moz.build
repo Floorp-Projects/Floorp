@@ -387,7 +387,6 @@ if CONFIG['ENABLE_INTL_API']:
         'builtin/intl/PluralRules.cpp',
         'builtin/intl/RelativeTimeFormat.cpp',
         'builtin/intl/SharedIntlData.cpp',
-        'builtin/intl/UnicodeExtensionsGenerated.cpp',
     ]
 
 if CONFIG['MOZ_INSTRUMENTS']:
