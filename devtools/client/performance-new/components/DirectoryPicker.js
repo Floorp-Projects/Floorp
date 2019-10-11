@@ -82,12 +82,14 @@ class DirectoryPicker extends PureComponent {
         { className: "perf-settings-dir-list-button-group" },
         input({
           type: "button",
+          className: `perf-photon-button perf-photon-button-default perf-button`,
           value: "+",
           title: "Add a directory",
           onClick: this._handleAddButtonClick,
         }),
         input({
           type: "button",
+          className: `perf-photon-button perf-photon-button-default perf-button`,
           value: "-",
           title: "Remove the selected directory from the list",
           onClick: this._handleRemoveButtonClick,
