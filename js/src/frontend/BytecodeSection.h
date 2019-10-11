@@ -18,6 +18,7 @@
 #include "frontend/BytecodeOffset.h"   // BytecodeOffset
 #include "frontend/JumpList.h"         // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
+#include "frontend/ParseNode.h"        // BigIntLiteral
 #include "frontend/SourceNotes.h"      // jssrcnote
 #include "gc/Barrier.h"                // GCPtrObject, GCPtrScope, GCPtrValue
 #include "gc/Rooting.h"                // JS::Rooted
@@ -37,10 +38,11 @@ using BigIntVector = JS::GCVector<js::BigInt*>;
 
 namespace frontend {
 
+class BigIntLiteral;
 class ObjectBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  using ListType = mozilla::Variant<StackGCCellPtr>;
+  using ListType = mozilla::Variant<StackGCCellPtr, BigIntCreationData>;
   JS::RootedVector<ListType> vector;
 
   // Last emitted object.
@@ -62,14 +64,18 @@ struct MOZ_STACK_CLASS GCThingList {
     }
     return true;
   }
-  MOZ_MUST_USE bool append(BigInt* bi, uint32_t* index) {
+  MOZ_MUST_USE bool append(BigIntLiteral* literal, uint32_t* index) {
     *index = vector.length();
-    return vector.append(mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(bi))));
+    if (literal->isDeferred()) {
+      return vector.append(mozilla::AsVariant(literal->creationData()));
+    }
+    return vector.append(
+        mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(literal->value()))));
   }
   MOZ_MUST_USE bool append(ObjectBox* obj, uint32_t* index);
 
   uint32_t length() const { return vector.length(); }
-  void finish(mozilla::Span<JS::GCCellPtr> array);
+  MOZ_MUST_USE bool finish(JSContext* cx, mozilla::Span<JS::GCCellPtr> array);
   void finishInnerFunctions();
 
   Scope* getScope(size_t index) const {
@@ -368,5 +374,11 @@ class PerScriptData {
 
 } /* namespace frontend */
 } /* namespace js */
+
+namespace JS {
+template <>
+struct GCPolicy<js::frontend::BigIntCreationData>
+    : JS::IgnoreGCPolicy<js::frontend::BigIntCreationData> {};
+}  // namespace JS
 
 #endif /* frontend_BytecodeSection_h */
