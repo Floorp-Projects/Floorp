@@ -82,26 +82,30 @@ async function doTests(private, container) {
     }
 
     // Check that the name matches.
-    await ContentTask.spawn(
+    await SpecialPowers.spawn(
       tab.linkedBrowser,
       [test, container, testid],
-      async ([test, container, testid]) => {
-        if (container) {
-          is(content.document.nodePrincipal.originAttributes.userContextId, 1);
-        } else {
-          is(content.document.nodePrincipal.originAttributes.userContextId, 0);
-        }
+      async (test, container, testid) => {
+        Assert.equal(
+          content.document.nodePrincipal.originAttributes.userContextId,
+          container ? 1 : 0,
+          `User context ID should match for ${testid}`
+        );
 
-        is(content.window.name, test.name, "Name should match for " + testid);
+        Assert.equal(
+          content.window.name,
+          test.name,
+          `Name should match for ${testid}`
+        );
         if (test.opener) {
-          ok(
+          Assert.ok(
             content.window.opener,
-            "Opener should have been set for " + testid
+            `Opener should have been set for ${testid}`
           );
         } else {
-          ok(
+          Assert.ok(
             !content.window.opener,
-            "Opener should not have been set for " + testid
+            `Opener should not have been set for ${testid}`
           );
         }
       }

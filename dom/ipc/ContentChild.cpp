@@ -885,10 +885,16 @@ nsresult ContentChild::ProvideWindowCommon(
     sNoopenerNewProcessInited = true;
   }
 
-  // Check if we should load in a different process. We always want to load in a
+  bool useRemoteSubframes =
+      aChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW;
+
+  // Check if we should load in a different process. Under Fission, we never
+  // want to do this, since the Fission process selection logic will handle
+  // everything for us. Outside of Fission, we always want to load in a
   // different process if we have noopener set, but we also might if we can't
   // load in the current process.
-  bool loadInDifferentProcess = aForceNoOpener && sNoopenerNewProcess;
+  bool loadInDifferentProcess =
+      aForceNoOpener && sNoopenerNewProcess && !useRemoteSubframes;
   if (aTabOpener && !loadInDifferentProcess && aURI) {
     nsCOMPtr<nsILoadContext> context;
     if (aParent) {
