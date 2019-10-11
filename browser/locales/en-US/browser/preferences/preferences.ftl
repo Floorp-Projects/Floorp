@@ -658,6 +658,9 @@ search-show-suggestions-url-bar-option =
 search-show-suggestions-above-history-option =
     .label = Show search suggestions ahead of browsing history in address bar results
 
+search-show-suggestions-private-windows =
+    .label = Show search suggestions in Private Windows
+
 suggestions-addressbar-settings = Change preferences for browsing history, bookmarks, and tab suggestions
 
 search-suggestions-cant-show = Search suggestions will not be shown in location bar results because you have configured { -brand-short-name } to never remember history.

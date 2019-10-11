@@ -26,28 +26,21 @@ var formHistoryStartup = Cc[
 ].getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
 
-var httpServer = new HttpServer();
 var getEngine, postEngine, unresolvableEngine, alternateJSONEngine;
 
-function run_test() {
+add_task(async function setup() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
   let server = useHttpServer();
   server.registerContentType("sjs", "sjs");
 
-  registerCleanupFunction(() =>
-    (async function cleanup() {
-      // Remove added form history entries
-      await updateSearchHistory("remove", null);
-      Services.prefs.clearUserPref("browser.search.suggest.enabled");
-    })()
-  );
-
-  run_next_test();
-}
-
-add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
+
+  registerCleanupFunction(async () => {
+    // Remove added form history entries
+    await updateSearchHistory("remove", null);
+    Services.prefs.clearUserPref("browser.search.suggest.enabled");
+  });
 });
 
 add_task(async function add_test_engines() {
@@ -432,12 +425,10 @@ add_task(
     Assert.equal(result.local[0], "letter A");
     Assert.equal(result.remote.length, 1);
     Assert.equal(result.remote[0], "letter B");
+
+    Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   }
 );
-
-add_task(async function reset_suggestions_pref() {
-  Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
-});
 
 add_task(async function one_local_zero_remote() {
   let controller = new SearchSuggestionController();
