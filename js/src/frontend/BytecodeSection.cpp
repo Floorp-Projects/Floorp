@@ -28,7 +28,8 @@ bool GCThingList::append(ObjectBox* objbox, uint32_t* index) {
   lastbox = objbox;
 
   *index = vector.length();
-  return vector.append(JS::GCCellPtr(objbox->object()));
+  return vector.append(
+      mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(objbox->object()))));
 }
 
 void GCThingList::finishInnerFunctions() {
@@ -46,7 +47,7 @@ void GCThingList::finish(mozilla::Span<JS::GCCellPtr> array) {
   MOZ_ASSERT(length() == array.size());
 
   for (uint32_t i = 0; i < length(); i++) {
-    array[i] = vector[i].get().get();
+    array[i] = vector[i].get().as<StackGCCellPtr>().get();
   }
 }
 
