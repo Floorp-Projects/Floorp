@@ -1043,10 +1043,9 @@ void NrIceCtx::GenerateObfuscatedAddress(nr_ice_candidate* candidate,
                                          std::string* mdns_address,
                                          std::string* actual_address) {
   if (candidate->type == HOST && obfuscate_host_addresses_) {
-    int r;
     char addr[64];
-    if ((r = nr_transport_addr_get_addrstring(&candidate->addr, addr,
-                                              sizeof(addr)))) {
+    if (nr_transport_addr_get_addrstring(&candidate->addr, addr,
+                                         sizeof(addr))) {
       return;
     }
 
