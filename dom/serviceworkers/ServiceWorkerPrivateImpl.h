@@ -29,12 +29,6 @@ namespace mozilla {
 template <typename T>
 class Maybe;
 
-namespace ipc {
-
-class AutoIPCStream;
-
-}  // namespace ipc
-
 namespace dom {
 
 class ClientInfoAndState;
@@ -126,8 +120,7 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
   nsresult SendFetchEventInternal(
       RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
       ServiceWorkerFetchEventOpArgs&& aArgs,
-      nsCOMPtr<nsIInterceptedChannel>&& aChannel,
-      UniquePtr<mozilla::ipc::AutoIPCStream>&& aAutoStream);
+      nsCOMPtr<nsIInterceptedChannel>&& aChannel);
 
   void Shutdown();
 
@@ -170,8 +163,7 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
     PendingFetchEvent(ServiceWorkerPrivateImpl* aOwner,
                       RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
                       ServiceWorkerFetchEventOpArgs&& aArgs,
-                      nsCOMPtr<nsIInterceptedChannel>&& aChannel,
-                      UniquePtr<AutoIPCStream>&& aAutoStream);
+                      nsCOMPtr<nsIInterceptedChannel>&& aChannel);
 
     nsresult Send() override;
 
@@ -180,7 +172,6 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
    private:
     ServiceWorkerFetchEventOpArgs mArgs;
     nsCOMPtr<nsIInterceptedChannel> mChannel;
-    UniquePtr<mozilla::ipc::AutoIPCStream> mAutoStream;
   };
 
   nsTArray<UniquePtr<PendingFunctionalEvent>> mPendingFunctionalEvents;
