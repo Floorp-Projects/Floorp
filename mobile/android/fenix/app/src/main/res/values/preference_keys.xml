@@ -105,6 +105,6 @@
     <!-- Quick Action Sheet -->
     <string name="pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>
     <string name="pref_key_reader_mode_notification" translatable="false">pref_key_reader_mode_notification</string>
-
     <string name="pref_key_adjust_campaign" translatable="false">pref_key_adjust_campaign</string>
+    <string name="pref_key_testing_stage" translatable="false">pref_key_testing_stage</string>
 </resources>

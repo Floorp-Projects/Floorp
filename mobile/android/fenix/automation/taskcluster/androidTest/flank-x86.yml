@@ -37,6 +37,9 @@ gcloud:
     - /sdcard/screenshots
   performance-metrics: true
 
+  test-targets:
+   - package org.mozilla.fenix.ui
+
   device:
    - model: Nexus6 
      version: 25
