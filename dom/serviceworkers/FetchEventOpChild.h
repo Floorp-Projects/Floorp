@@ -30,7 +30,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
   friend class PFetchEventOpChild;
 
  public:
-  static RefPtr<GenericPromise> Create(
+  static RefPtr<GenericPromise> SendFetchEvent(
       PRemoteWorkerControllerChild* aManager,
       ServiceWorkerFetchEventOpArgs&& aArgs,
       nsCOMPtr<nsIInterceptedChannel> aInterceptedChannel,
