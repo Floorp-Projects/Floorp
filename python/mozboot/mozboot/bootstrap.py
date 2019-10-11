@@ -256,9 +256,9 @@ class Bootstrapper(object):
                 for line in open('/etc/os-release'):
                     k, v = line.rstrip().split("=")
                     d[k] = v.strip('"')
-                distro = d["NAME"]
-                version = d["VERSION_ID"]
-                dist_id = d["ID"]
+                distro = d.get("NAME")
+                version = d.get("VERSION_ID")
+                dist_id = d.get("ID")
 
             if distro in ('CentOS', 'CentOS Linux', 'Fedora'):
                 cls = CentOSFedoraBootstrapper
