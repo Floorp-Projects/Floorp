@@ -252,13 +252,6 @@ var PointerLock = {
 };
 
 var FullScreen = {
-  _MESSAGES: [
-    "DOMFullscreen:Request",
-    "DOMFullscreen:NewOrigin",
-    "DOMFullscreen:Exit",
-    "DOMFullscreen:Painted",
-  ],
-
   _permissionNotificationIDs: Object.values(PermissionUI)
     .filter(value => value.prototype && value.prototype.notificationID)
     .map(value => value.prototype.notificationID)
@@ -272,25 +265,15 @@ var FullScreen = {
       "permissions.fullscreen.allowed"
     );
 
-    // called when we go into full screen, even if initiated by a web page script
-    window.addEventListener("fullscreen", this, true);
-    window.addEventListener("willenterfullscreen", this, true);
-    window.addEventListener("willexitfullscreen", this, true);
-    window.addEventListener(
-      "MozDOMFullscreen:Entered",
-      this,
-      /* useCapture */ true,
-      /* wantsUntrusted */ false
-    );
-    window.addEventListener(
-      "MozDOMFullscreen:Exited",
-      this,
-      /* useCapture */ true,
-      /* wantsUntrusted */ false
-    );
-    for (let type of this._MESSAGES) {
-      window.messageManager.addMessageListener(type, this);
-    }
+    // Called when the Firefox window go into fullscreen.
+    addEventListener("fullscreen", this, true);
+
+    // Called only when fullscreen is requested
+    // by the parent (eg: via the browser-menu).
+    // Should not be called when the request comes from
+    // the content.
+    addEventListener("willenterfullscreen", this, true);
+    addEventListener("willexitfullscreen", this, true);
 
     if (window.fullScreen) {
       this.toggle();
@@ -298,9 +281,6 @@ var FullScreen = {
   },
 
   uninit() {
-    for (let type of this._MESSAGES) {
-      window.messageManager.removeMessageListener(type, this);
-    }
     this.cleanup();
   },
 
@@ -396,28 +376,6 @@ var FullScreen = {
       case "fullscreen":
         this.toggle();
         break;
-      case "MozDOMFullscreen:Entered": {
-        // The event target is the element which requested the DOM
-        // fullscreen. If we were entering DOM fullscreen for a remote
-        // browser, the target would be the browser which was the parameter of
-        // `remoteFrameFullscreenChanged` call. If the fullscreen
-        // request was initiated from an in-process browser, we need
-        // to get its corresponding browser here.
-        let browser;
-        if (event.target.ownerGlobal == window) {
-          browser = event.target;
-        } else {
-          browser = event.target.ownerGlobal.docShell.chromeEventHandler;
-        }
-
-        TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
-        this.enterDomFullscreen(browser);
-        break;
-      }
-      case "MozDOMFullscreen:Exited":
-        TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
-        this.cleanupDomFullscreen();
-        break;
     }
   },
 
@@ -454,33 +412,7 @@ var FullScreen = {
     }
   },
 
-  receiveMessage(aMessage) {
-    let browser = aMessage.target;
-    switch (aMessage.name) {
-      case "DOMFullscreen:Request": {
-        window.windowUtils.remoteFrameFullscreenChanged(browser);
-        break;
-      }
-      case "DOMFullscreen:NewOrigin": {
-        // Don't show the warning if we've already exited fullscreen.
-        if (document.fullscreen) {
-          PointerlockFsWarning.showFullScreen(aMessage.data.originNoSuffix);
-        }
-        break;
-      }
-      case "DOMFullscreen:Exit": {
-        window.windowUtils.remoteFrameFullscreenReverted();
-        break;
-      }
-      case "DOMFullscreen:Painted": {
-        Services.obs.notifyObservers(window, "fullscreen-painted");
-        TelemetryStopwatch.finish("FULLSCREEN_CHANGE_MS");
-        break;
-      }
-    }
-  },
-
-  enterDomFullscreen(aBrowser) {
+  enterDomFullscreen(aBrowser, aActor) {
     if (!document.fullscreenElement) {
       return;
     }
@@ -498,7 +430,7 @@ var FullScreen = {
     // before the check is fine since we also check the activeness of
     // the requesting document in content-side handling code.
     if (this._isRemoteBrowser(aBrowser)) {
-      aBrowser.messageManager.sendAsyncMessage("DOMFullscreen:Entered");
+      aActor.sendAsyncMessage("DOMFullscreen:Entered", {});
     }
 
     // If we've received a fullscreen notification, we have to ensure that the
@@ -538,11 +470,6 @@ var FullScreen = {
     // Exit DOM full-screen mode when switching to a different tab.
     gBrowser.tabContainer.addEventListener("TabSelect", this.exitDomFullScreen);
 
-    // Add listener to detect when the fullscreen window is re-focused.
-    // If a fullscreen window loses focus, we show a warning when the
-    // fullscreen window is refocused.
-    window.addEventListener("activate", this);
-
     // Addon installation should be cancelled when entering DOM fullscreen for security and usability reasons.
     // Installation prompts in fullscreen can trick the user into installing unwanted addons.
     // In fullscreen the notification box does not have a clear visual association with its parent anymore.
@@ -567,20 +494,19 @@ var FullScreen = {
     }
   },
 
-  cleanupDomFullscreen() {
+  cleanupDomFullscreen(aActor) {
     PopupNotifications.panel.removeEventListener(
       "popupshowing",
       () => this._handlePermPromptShow(),
       true
     );
-    window.messageManager.broadcastAsyncMessage("DOMFullscreen:CleanUp");
+    aActor.sendAsyncMessage("DOMFullscreen:CleanUp", {});
 
     PointerlockFsWarning.close();
     gBrowser.tabContainer.removeEventListener(
       "TabSelect",
       this.exitDomFullScreen
     );
-    window.removeEventListener("activate", this);
 
     document.documentElement.removeAttribute("inDOMFullscreen");
   },
@@ -597,9 +523,11 @@ var FullScreen = {
   _expandCallback() {
     FullScreen.showNavToolbox();
   },
+
   onMouseEnter() {
-    FullScreen.hideNavToolbox();
+    this.hideNavToolbox();
   },
+
   _keyToggleCallback(aEvent) {
     // if we can use the keyboard (eg Ctrl+L or Ctrl+E) to open the toolbars, we
     // should provide a way to collapse them too.
