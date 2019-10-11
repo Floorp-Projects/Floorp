@@ -8329,6 +8329,7 @@ class DatabaseMaintenance final : public Runnable {
   enum class MaintenanceAction { Nothing = 0, IncrementalVacuum, FullVacuum };
 
   RefPtr<Maintenance> mMaintenance;
+  RefPtr<DirectoryLock> mDirectoryLock;
   const nsCString mGroup;
   const nsCString mOrigin;
   const nsString mDatabasePath;
@@ -8336,11 +8337,12 @@ class DatabaseMaintenance final : public Runnable {
   const PersistenceType mPersistenceType;
 
  public:
-  DatabaseMaintenance(Maintenance* aMaintenance,
+  DatabaseMaintenance(Maintenance* aMaintenance, DirectoryLock* aDirectoryLock,
                       PersistenceType aPersistenceType, const nsCString& aGroup,
                       const nsCString& aOrigin, const nsString& aDatabasePath)
       : Runnable("dom::indexedDB::DatabaseMaintenance"),
         mMaintenance(aMaintenance),
+        mDirectoryLock(aDirectoryLock),
         mGroup(aGroup),
         mOrigin(aOrigin),
         mDatabasePath(aDatabasePath),
@@ -17412,11 +17414,20 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
   RefPtr<nsThreadPool> threadPool;
 
   for (DirectoryInfo& directoryInfo : mDirectoryInfos) {
+    RefPtr<DirectoryLock> directoryLock;
+
     for (const nsString& databasePath : directoryInfo.mDatabasePaths) {
       if (Helper::IsSafeToRunMaintenance(databasePath)) {
+        if (!directoryLock) {
+          directoryLock = mDirectoryLock->Specialize(
+              directoryInfo.mPersistenceType, directoryInfo.mGroup,
+              directoryInfo.mOrigin, Client::IDB);
+          MOZ_ASSERT(directoryLock);
+        }
+
         const auto databaseMaintenance = MakeRefPtr<DatabaseMaintenance>(
-            this, directoryInfo.mPersistenceType, directoryInfo.mGroup,
-            directoryInfo.mOrigin, databasePath);
+            this, directoryLock, directoryInfo.mPersistenceType,
+            directoryInfo.mGroup, directoryInfo.mOrigin, databasePath);
 
         if (!threadPool) {
           threadPool = mQuotaClient->GetOrCreateThreadPool();
@@ -17433,6 +17444,8 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
 
   mDirectoryInfos.Clear();
 
+  mDirectoryLock = nullptr;
+
   if (mDatabaseMaintenances.Count()) {
     mState = State::WaitingForDatabaseMaintenancesToComplete;
   } else {
@@ -17445,6 +17458,7 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
 
 void Maintenance::Finish() {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mDirectoryLock);
   MOZ_ASSERT(mState == State::Finishing);
 
   if (NS_FAILED(mResultCode)) {
@@ -17453,8 +17467,6 @@ void Maintenance::Finish() {
 
     IDB_WARNING("Maintenance finished with error: %s", errorName.get());
   }
-
-  mDirectoryLock = nullptr;
 
   // It can happen that we are only referenced by mCurrentMaintenance which is
   // cleared in NoteFinishedMaintenance()
@@ -17575,6 +17587,7 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(mMaintenance);
   MOZ_ASSERT(mMaintenance->StartTime());
+  MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(!mDatabasePath.IsEmpty());
   MOZ_ASSERT(!mGroup.IsEmpty());
   MOZ_ASSERT(!mOrigin.IsEmpty());
@@ -18045,6 +18058,8 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection* aConnection,
 
 void DatabaseMaintenance::RunOnOwningThread() {
   AssertIsOnBackgroundThread();
+
+  mDirectoryLock = nullptr;
 
   if (mCompleteCallback) {
     MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mCompleteCallback.forget()));
