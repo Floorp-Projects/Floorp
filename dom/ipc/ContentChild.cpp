@@ -97,6 +97,7 @@
 #include "mozilla/WebBrowserPersistDocumentChild.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/UnderrunHandler.h"
 #include "nsIChildProcessChannelListener.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "nsQueryObject.h"
@@ -1781,6 +1782,9 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
       if (atp_set_real_time_limit(0, 48000)) {
         NS_WARNING("could not set real-time limit at process startup");
       }
+      InstallSoftRealTimeLimitHandler();
+    } else {
+      Unused << CubebUtils::GetCubebContext();
     }
   }
 
