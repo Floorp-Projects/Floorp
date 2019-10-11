@@ -171,6 +171,25 @@ JSObject* js::CreateLocalePrototype(JSContext* cx, HandleObject Intl,
   }
 
   global->setReservedSlot(LOCALE_PROTO, ObjectValue(*localeProto));
+
+  {
+    const Value& proto = global->getReservedSlot(NATIVE_LOCALE_PROTO);
+    if (!proto.isUndefined()) {
+      MOZ_ASSERT(proto.isObject());
+      JS_ReportErrorASCII(
+          cx,
+          "the Locale constructor can't be added multiple times in the"
+          "same global");
+      return false;
+    }
+  }
+
+  localeProto = CreateNativeLocalePrototype(cx, intl, global);
+  if (!localeProto) {
+    return false;
+  }
+
+  global->setReservedSlot(NATIVE_LOCALE_PROTO, ObjectValue(*localeProto));
   return true;
 }
 

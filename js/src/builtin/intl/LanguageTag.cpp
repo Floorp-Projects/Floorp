@@ -56,6 +56,11 @@ bool IsStructurallyValidLanguageTag(
          std::all_of(str, str + length, mozilla::IsAsciiLowercaseAlpha<CharT>);
 }
 
+template bool IsStructurallyValidLanguageTag(
+    const mozilla::Range<const Latin1Char>& language);
+template bool IsStructurallyValidLanguageTag(
+    const mozilla::Range<const char16_t>& language);
+
 template <typename CharT>
 bool IsStructurallyValidScriptTag(const mozilla::Range<const CharT>& script) {
   // Tell the analysis the |std::all_of| function can't GC.
@@ -68,6 +73,11 @@ bool IsStructurallyValidScriptTag(const mozilla::Range<const CharT>& script) {
          std::all_of(str + 1, str + length,
                      mozilla::IsAsciiLowercaseAlpha<CharT>);
 }
+
+template bool IsStructurallyValidScriptTag(
+    const mozilla::Range<const Latin1Char>& script);
+template bool IsStructurallyValidScriptTag(
+    const mozilla::Range<const char16_t>& script);
 
 template <typename CharT>
 bool IsStructurallyValidRegionTag(const mozilla::Range<const CharT>& region) {
@@ -82,6 +92,11 @@ bool IsStructurallyValidRegionTag(const mozilla::Range<const CharT>& region) {
          (length == 3 &&
           std::all_of(str, str + length, mozilla::IsAsciiDigit<CharT>));
 }
+
+template bool IsStructurallyValidRegionTag(
+    const mozilla::Range<const Latin1Char>& region);
+template bool IsStructurallyValidRegionTag(
+    const mozilla::Range<const char16_t>& region);
 
 bool IsStructurallyValidVariantTag(const ConstCharRange& variant) {
   // unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3}) ;
@@ -1494,6 +1509,88 @@ bool LanguageTagParser::canParseUnicodeExtensionType(
 
   // Return true if the complete input was successfully parsed.
   return tok.isNone();
+}
+
+bool ParseStandaloneLanguagTag(HandleLinearString str, LanguageSubtag& result) {
+  auto isLanguage = [](const auto* language, size_t length) {
+    // Tell the analysis the |std::all_of| function can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    using T = std::remove_pointer_t<decltype(language)>;
+    return length >= 2 && length != 4 && length <= 8 &&
+           std::all_of(language, language + length, mozilla::IsAsciiAlpha<T>);
+  };
+
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    if (!isLanguage(str->latin1Chars(nogc), str->length())) {
+      return false;
+    }
+    result.set(str->latin1Range(nogc));
+  } else {
+    if (!isLanguage(str->twoByteChars(nogc), str->length())) {
+      return false;
+    }
+    result.set(str->twoByteRange(nogc));
+  }
+  result.toLowerCase();
+  return true;
+}
+
+bool ParseStandaloneScriptTag(HandleLinearString str, ScriptSubtag& result) {
+  auto isScript = [](const auto* script, size_t length) {
+    // Tell the analysis the |std::all_of| function can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    using T = std::remove_pointer_t<decltype(script)>;
+    return length == ScriptLength &&
+           std::all_of(script, script + ScriptLength, mozilla::IsAsciiAlpha<T>);
+  };
+
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    if (!isScript(str->latin1Chars(nogc), str->length())) {
+      return false;
+    }
+    result.set(str->latin1Range(nogc));
+  } else {
+    if (!isScript(str->twoByteChars(nogc), str->length())) {
+      return false;
+    }
+    result.set(str->twoByteRange(nogc));
+  }
+  result.toTitleCase();
+  return true;
+}
+
+bool ParseStandaloneRegionTag(HandleLinearString str, RegionSubtag& result) {
+  auto isRegion = [](const auto* region, size_t length) {
+    // Tell the analysis the |std::all_of| function can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    using T = std::remove_pointer_t<decltype(region)>;
+    return (length == AlphaRegionLength &&
+            std::all_of(region, region + AlphaRegionLength,
+                        mozilla::IsAsciiAlpha<T>)) ||
+           (length == DigitRegionLength &&
+            std::all_of(region, region + DigitRegionLength,
+                        mozilla::IsAsciiDigit<T>));
+  };
+
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    if (!isRegion(str->latin1Chars(nogc), str->length())) {
+      return false;
+    }
+    result.set(str->latin1Range(nogc));
+  } else {
+    if (!isRegion(str->twoByteChars(nogc), str->length())) {
+      return false;
+    }
+    result.set(str->twoByteRange(nogc));
+  }
+  result.toUpperCase();
+  return true;
 }
 
 }  // namespace intl
