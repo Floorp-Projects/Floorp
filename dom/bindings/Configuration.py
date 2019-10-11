@@ -433,6 +433,7 @@ class Descriptor(DescriptorProvider):
 
         if self.concrete:
             self.proxy = False
+            self.instrumentedProps = []
             iface = self.interface
             for m in iface.members:
                 # Don't worry about inheriting legacycallers either: in
@@ -446,6 +447,13 @@ class Descriptor(DescriptorProvider):
                                         "legacycaller.\n%s" % m.location)
                     addOperation('LegacyCaller', m)
             while iface:
+                instrumentedProps = iface.getExtendedAttribute("InstrumentedProps")
+                if instrumentedProps:
+                    # It's actually a one-element list, with the list
+                    # we want as the only element.
+                    for prop in instrumentedProps[0]:
+                        self.instrumentedProps.append((iface.identifier.name,
+                                                       prop))
                 for m in iface.members:
                     if not m.isMethod():
                         continue
@@ -471,6 +479,21 @@ class Descriptor(DescriptorProvider):
 
                 iface.setUserData('hasConcreteDescendant', True)
                 iface = iface.parent
+
+            # Check that we don't have duplicated instrumented props.
+            uniqueInstrumentedProps = set(prop[1] for prop in self.instrumentedProps)
+            if len(uniqueInstrumentedProps) != len(self.instrumentedProps):
+                for prop in self.instrumentedProps:
+                    name = prop[1]
+                    if name in uniqueInstrumentedProps:
+                        uniqueInstrumentedProps.remove(name)
+                    else:
+                        ifaces = list(
+                            entry[0] for entry in self.instrumentedProps if
+                            entry[1] == name)
+                        raise TypeError(
+                            "Duplicated instrumented property '%s' defined on "
+                            "these interfaces: %s." % (name, str(ifaces)))
 
             self.proxy = (self.supportsIndexedProperties() or
                           (self.supportsNamedProperties() and
