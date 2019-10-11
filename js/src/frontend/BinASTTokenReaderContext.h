@@ -156,33 +156,6 @@ struct HuffmanKey {
   const uint8_t bitLength_;
 };
 
-// A Huffman key represented as a single `uint32_t`.
-struct FlatHuffmanKey {
-  explicit FlatHuffmanKey(HuffmanKey key);
-  explicit FlatHuffmanKey(const HuffmanKey* key);
-
-  // 0b0000000L_LLLLCCCC_CCCCCCCC_CCCCCCCC
-  // Where:
-  // - `LLLLL` store `key.bitLength_`
-  // - `CCCC_CCCCCCCC_CCCCCCCC` store `key.bits_`
-  //
-  // While `key.bits_` is nominally 32 bits, it is in fact
-  // `MAX_CODE_BIT_LENGTH` bits, padded with 0s in the
-  // highest bits.
-  const uint32_t representation_;
-
-  // -- Implementing HashPolicy
-  using Lookup = FlatHuffmanKey;
-  using Key = Lookup;
-  static HashNumber hash(const Lookup& lookup) {
-    return mozilla::DefaultHasher<uint32_t>::hash(lookup.representation_);
-  }
-  static bool match(const Key& key, const Lookup& lookup) {
-    return mozilla::DefaultHasher<uint32_t>::match(key.representation_,
-                                                   lookup.representation_);
-  }
-};
-
 // An entry in a Huffman table.
 template <typename T>
 struct HuffmanEntry {
@@ -1229,12 +1202,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
                                                    uint32_t& len);
 
  private:
-  // A mapping string index => BinASTVariant as extracted from the [STRINGS]
-  // section of the file. Populated lazily.
-  js::HashMap<FlatHuffmanKey, BinASTVariant, DefaultHasher<uint32_t>,
-              SystemAllocPolicy>
-      variantsTable_;
-
   enum class MetadataOwnership { Owned, Unowned };
   MetadataOwnership metadataOwned_ = MetadataOwnership::Owned;
   BinASTSourceMetadata* metadata_;

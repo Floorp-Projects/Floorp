@@ -1602,22 +1602,6 @@ HuffmanKey::HuffmanKey(const uint32_t bits, const uint8_t bitLength)
   MOZ_ASSERT_IF(bitLength_ != 32 /* >> 32 is UB */, bits >> bitLength == 0);
 }
 
-FlatHuffmanKey::FlatHuffmanKey(HuffmanKey key)
-    : representation_((key.bitLength_ << MAX_CODE_BIT_LENGTH) | key.bits_) {
-  static_assert(MAX_CODE_BIT_LENGTH + MAX_BIT_LENGTH_BIT_LENGTH <= 32,
-                "32 bits MUST be sufficient to store bits and bitLength");
-  MOZ_ASSERT(key.bits_ >> MAX_CODE_BIT_LENGTH == 0);
-  MOZ_ASSERT(key.bitLength_ >> MAX_BIT_LENGTH_BIT_LENGTH == 0);
-}
-
-FlatHuffmanKey::FlatHuffmanKey(const HuffmanKey* key)
-    : representation_((key->bitLength_ << MAX_CODE_BIT_LENGTH) | key->bits_) {
-  static_assert(MAX_CODE_BIT_LENGTH + MAX_BIT_LENGTH_BIT_LENGTH <= 32,
-                "32 bits MUST be sufficient to store bits and bitLength");
-  MOZ_ASSERT(key->bits_ >> MAX_CODE_BIT_LENGTH == 0);
-  MOZ_ASSERT(key->bitLength_ >> MAX_BIT_LENGTH_BIT_LENGTH == 0);
-}
-
 // ---- Implementation of Huffman Tables
 
 template <typename T>
