@@ -242,6 +242,16 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvLoadURIInChild(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WindowGlobalChild::RecvDisplayLoadError(
+    const nsAString& aURI) {
+  bool didDisplayLoadError = false;
+  mWindowGlobal->GetDocShell()->DisplayLoadError(
+      NS_ERROR_MALFORMED_URI, nullptr, PromiseFlatString(aURI).get(), nullptr,
+      &didDisplayLoadError);
+  mWindowGlobal->GetBrowserChild()->NotifyNavigationFinished();
+  return IPC_OK();
+}
+
 static nsresult ChangeFrameRemoteness(WindowGlobalChild* aWgc,
                                       BrowsingContext* aBc,
                                       const nsString& aRemoteType,
