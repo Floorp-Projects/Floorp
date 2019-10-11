@@ -53,7 +53,7 @@ with Files("test/performance/browser_appmenu.js"):
     BUG_COMPONENT = ("Firefox", "Menus")
 
 with Files("test/permissions/**"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("test/plugins/**"):
     BUG_COMPONENT = ("Core", "Plug-ins")
@@ -62,7 +62,7 @@ with Files("test/popupNotifications/**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
 with Files("test/popups/**"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("test/referrer/**"):
     BUG_COMPONENT = ("Core", "Document Navigation")
@@ -71,7 +71,7 @@ with Files("test/sanitize/**"):
     BUG_COMPONENT = ("Toolkit", "Data Sanitization")
 
 with Files("test/siteIdentity/**"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Identity")
 
 with Files("test/sidebar/**"):
     BUG_COMPONENT = ("Firefox", "General")
@@ -98,7 +98,7 @@ with Files("test/touch/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 with Files("test/trackingUI/**"):
-    BUG_COMPONENT = ("Firefox", "Tracking Protection")
+    BUG_COMPONENT = ("Firefox", "Protections UI")
 
 with Files("test/webextensions/**"):
     BUG_COMPONENT = ("WebExtensions", "Untriaged")
@@ -149,7 +149,7 @@ with Files("contentSearch*"):
     BUG_COMPONENT = ("Firefox", "Search")
 
 with Files("hiddenWindowMac.xhtml"):
-    BUG_COMPONENT = ("Firefox", "Device Permissions")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("macWindow.inc.xul"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
@@ -164,4 +164,4 @@ with Files("webext-panels*"):
     BUG_COMPONENT = ("WebExtensions", "Frontend")
 
 with Files("webrtcIndicator*"):
-    BUG_COMPONENT = ("Firefox", "Device Permissions")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")

@@ -21,7 +21,7 @@ with Files("mac/*LocationProvider*"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("mac/*OSPermissionRequest*"):
-    BUG_COMPONENT = ("Firefox", "Device Permissions")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("linux/*LocationProvider*"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
