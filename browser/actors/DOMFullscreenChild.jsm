@@ -6,24 +6,28 @@
 
 var EXPORTED_SYMBOLS = ["DOMFullscreenChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class DOMFullscreenChild extends ActorChild {
+class DOMFullscreenChild extends JSWindowActorChild {
   receiveMessage(aMessage) {
-    let windowUtils = this.content && this.content.windowUtils;
+    let window = this.contentWindow;
+    let windowUtils = window && window.windowUtils;
+
+    if (!windowUtils) {
+      return;
+    }
+
     switch (aMessage.name) {
       case "DOMFullscreen:Entered": {
         this._lastTransactionId = windowUtils.lastTransactionId;
         if (
           !windowUtils.handleFullscreenRequests() &&
-          !this.content.document.fullscreenElement
+          !this.document.fullscreenElement
         ) {
           // If we don't actually have any pending fullscreen request
           // to handle, neither we have been in fullscreen, tell the
           // parent to just exit.
-          this.mm.sendAsyncMessage("DOMFullscreen:Exit");
+          this.sendAsyncMessage("DOMFullscreen:Exit", {});
         }
         break;
       }
@@ -32,10 +36,14 @@ class DOMFullscreenChild extends ActorChild {
         // transaction id or call exit fullscreen. This is especially
         // important for non-e10s, since in that case, it is possible
         // that no more paint would be triggered after this point.
-        if (this.content.document.fullscreenElement && windowUtils) {
+        if (this.document.fullscreenElement) {
           this._lastTransactionId = windowUtils.lastTransactionId;
           windowUtils.exitFullscreen();
         }
+        break;
+      }
+      case "DOMFullscreen:Painted": {
+        Services.obs.notifyObservers(this.contentWindow, "fullscreen-painted");
         break;
       }
     }
@@ -44,27 +52,28 @@ class DOMFullscreenChild extends ActorChild {
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "MozDOMFullscreen:Request": {
-        this.mm.sendAsyncMessage("DOMFullscreen:Request");
+        this.sendAsyncMessage("DOMFullscreen:Request", {});
         break;
       }
       case "MozDOMFullscreen:NewOrigin": {
-        this.mm.sendAsyncMessage("DOMFullscreen:NewOrigin", {
+        this.sendAsyncMessage("DOMFullscreen:NewOrigin", {
           originNoSuffix: aEvent.target.nodePrincipal.originNoSuffix,
         });
         break;
       }
       case "MozDOMFullscreen:Exit": {
-        this.mm.sendAsyncMessage("DOMFullscreen:Exit");
+        this.sendAsyncMessage("DOMFullscreen:Exit", {});
         break;
       }
       case "MozDOMFullscreen:Entered":
       case "MozDOMFullscreen:Exited": {
-        this.mm.addEventListener("MozAfterPaint", this);
-        if (!this.content || !this.content.document.fullscreenElement) {
+        let rootWindow = this.contentWindow.windowRoot;
+        rootWindow.addEventListener("MozAfterPaint", this);
+        if (!this.document || !this.document.fullscreenElement) {
           // If we receive any fullscreen change event, and find we are
           // actually not in fullscreen, also ask the parent to exit to
           // ensure that the parent always exits fullscreen when we do.
-          this.mm.sendAsyncMessage("DOMFullscreen:Exit");
+          this.sendAsyncMessage("DOMFullscreen:Exit", {});
         }
         break;
       }
@@ -77,8 +86,9 @@ class DOMFullscreenChild extends ActorChild {
           !this._lastTransactionId ||
           aEvent.transactionId > this._lastTransactionId
         ) {
-          this.mm.removeEventListener("MozAfterPaint", this);
-          this.mm.sendAsyncMessage("DOMFullscreen:Painted");
+          let rootWindow = this.contentWindow.windowRoot;
+          rootWindow.removeEventListener("MozAfterPaint", this);
+          this.sendAsyncMessage("DOMFullscreen:Painted", {});
         }
         break;
       }

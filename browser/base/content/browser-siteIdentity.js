@@ -1170,29 +1170,19 @@ var gIdentityHandler = {
     }
 
     // If we are in DOM full-screen, exit it before showing the identity popup
+    // (see bug 1557041)
     if (document.fullscreen) {
       // Open the identity popup after DOM full-screen exit
       // We need to wait for the exit event and after that wait for the fullscreen exit transition to complete
       // If we call _openPopup before the full-screen transition ends it can get cancelled
       // Only waiting for painted is not sufficient because we could still be in the full-screen enter transition.
-      let exitedEventReceived = false;
-      window.messageManager.addMessageListener(
-        "DOMFullscreen:Painted",
-        function listener() {
-          if (!exitedEventReceived) {
-            return;
-          }
-          window.messageManager.removeMessageListener(
-            "DOMFullscreen:Painted",
-            listener
-          );
-          gIdentityHandler._openPopup(event);
-        }
-      );
+      this._exitedEventReceived = false;
+      this._event = event;
+      Services.obs.addObserver(this, "fullscreen-painted");
       window.addEventListener(
         "MozDOMFullscreen:Exited",
         () => {
-          exitedEventReceived = true;
+          this._exitedEventReceived = true;
         },
         { once: true }
       );
@@ -1260,16 +1250,29 @@ var gIdentityHandler = {
   },
 
   observe(subject, topic, data) {
-    // Exclude permissions which do not appear in the UI in order to avoid
-    // doing extra work here.
-    if (
-      topic == "perm-changed" &&
-      subject &&
-      SitePermissions.listPermissions().includes(
-        subject.QueryInterface(Ci.nsIPermission).type
-      )
-    ) {
-      this.refreshIdentityBlock();
+    switch (topic) {
+      case "perm-changed": {
+        // Exclude permissions which do not appear in the UI in order to avoid
+        // doing extra work here.
+        if (
+          subject &&
+          SitePermissions.listPermissions().includes(
+            subject.QueryInterface(Ci.nsIPermission).type
+          )
+        ) {
+          this.refreshIdentityBlock();
+        }
+        break;
+      }
+      case "fullscreen-painted": {
+        if (subject != window || !this._exitedEventReceived) {
+          return;
+        }
+        Services.obs.removeObserver(this, "fullscreen-painted");
+        this._openPopup(this._event);
+        delete this._event;
+        break;
+      }
     }
   },
 

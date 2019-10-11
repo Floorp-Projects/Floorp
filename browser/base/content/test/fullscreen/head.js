@@ -6,21 +6,19 @@ const { ContentTask } = ChromeUtils.import(
 );
 
 function waitForFullScreenState(browser, state) {
+  info("inside waitforfullscreenstate");
   return new Promise(resolve => {
     let eventReceived = false;
-    window.messageManager.addMessageListener(
-      "DOMFullscreen:Painted",
-      function listener() {
-        if (!eventReceived) {
-          return;
-        }
-        window.messageManager.removeMessageListener(
-          "DOMFullscreen:Painted",
-          listener
-        );
-        resolve();
+
+    let observe = (subject, topic, data) => {
+      if (!eventReceived) {
+        return;
       }
-    );
+      Services.obs.removeObserver(observe, "fullscreen-painted");
+      resolve();
+    };
+    Services.obs.addObserver(observe, "fullscreen-painted");
+
     window.addEventListener(
       `MozDOMFullscreen:${state ? "Entered" : "Exited"}`,
       () => {
