@@ -587,7 +587,8 @@ nsSHEntry::GetChildCount(int32_t* aCount) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset) {
+nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset,
+                    bool aUseRemoteSubframes) {
   if (aChild) {
     NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
   }
@@ -667,7 +668,16 @@ nsSHEntry::AddChild(nsISHEntry* aChild, int32_t aOffset) {
     if (aOffset < mChildren.Count()) {
       nsISHEntry* oldChild = mChildren[aOffset];
       if (oldChild && oldChild != aChild) {
-        NS_ERROR(
+        // Under Fission, this can happen when a network-created iframe starts
+        // out in-process, moves out-of-process, and then switches back. At that
+        // point, we'll create a new network-created DocShell at the same index
+        // where we already have an entry for the original network-created
+        // DocShell.
+        //
+        // This should ideally stop being an issue once the Fission-aware
+        // session history rewrite is complete.
+        NS_ASSERTION(
+            aUseRemoteSubframes,
             "Adding a child where we already have a child? This may misbehave");
         oldChild->SetParent(nullptr);
       }
