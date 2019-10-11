@@ -383,7 +383,8 @@ interface nsISHEntry : nsISupports
     /**
      * Add a new child SHEntry. If offset is -1 adds to the end of the list.
      */
-    void AddChild(in nsISHEntry aChild, in long aOffset);
+    void AddChild(in nsISHEntry aChild, in long aOffset,
+                  [optional,default(false)] in bool aUseRemoteSubframes);
 
     /**
      * Remove a child SHEntry.
