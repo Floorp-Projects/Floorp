@@ -188,7 +188,7 @@ const kBasePage =
 var gNextTest;
 var gUsingDocumentChannel;
 
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   gBackgroundTab = BrowserTestUtils.addTab(gBrowser);
@@ -221,7 +221,13 @@ function test() {
   ];
   BrowserTestUtils.loadURI(gBackgroundBrowser, kBasePage);
   BrowserTestUtils.loadURI(gForegroundBrowser, kBasePage);
-  Promise.all(promises).then(startTest1);
+  await Promise.all(promises);
+  // If we process switched, the tabbrowser may still be processing the state_stop
+  // notification here because of how microtasks work. Ensure that that has
+  // happened before starting to test (which would add listeners to the tabbrowser
+  // which would get confused by being called about kBasePage loading).
+  await new Promise(executeSoon);
+  startTest1();
 }
 
 function runTest(browser, url, next) {
