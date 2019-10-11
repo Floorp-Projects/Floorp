@@ -7,6 +7,7 @@ const ENGINE_NAME = "engine-suggestions.xml";
 const SERVER_PORT = 9000;
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
+const PRIVATE_ENABLED_PREF = "browser.search.suggest.enabled.private";
 
 var suggestionsFn;
 var previousSuggestionsFn;
@@ -83,6 +84,7 @@ add_task(async function disabled_allSuggestions() {
 add_task(async function disabled_privateWindow() {
   Services.prefs.setBoolPref(SUGGEST_PREF, true);
   Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  Services.prefs.setBoolPref(PRIVATE_ENABLED_PREF, false);
   await check_autocomplete({
     search: "hello",
     searchParam: "private-window enable-actions",
@@ -91,6 +93,45 @@ add_task(async function disabled_privateWindow() {
     ],
   });
   await cleanUpSuggestions();
+});
+
+add_task(async function enabled_by_pref_privateWindow() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  Services.prefs.setBoolPref(PRIVATE_ENABLED_PREF, true);
+
+  await check_autocomplete({
+    search: "hello",
+    searchParam: "private-window enable-actions",
+    matches: [
+      makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          searchQuery: "hello",
+          input: "hello foo",
+          searchSuggestion: "hello foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI("searchengine", {
+          engineName: ENGINE_NAME,
+          input: "hello bar",
+          searchQuery: "hello",
+          searchSuggestion: "hello bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine", "suggestion"],
+        icon: "",
+      },
+    ],
+  });
+  await cleanUpSuggestions();
+
+  Services.prefs.clearUserPref(PRIVATE_ENABLED_PREF);
 });
 
 add_task(async function singleWordQuery() {

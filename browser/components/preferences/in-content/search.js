@@ -19,6 +19,7 @@ ChromeUtils.defineModuleGetter(
 Preferences.addAll([
   { id: "browser.search.suggest.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.searches", type: "bool" },
+  { id: "browser.search.suggest.enabled.private", type: "bool" },
   { id: "browser.search.hiddenOneOffs", type: "unichar" },
   { id: "browser.search.widget.inNavBar", type: "bool" },
   { id: "browser.urlbar.matchBuckets", type: "string" },
@@ -76,6 +77,9 @@ var gSearchPane = {
 
     let suggestsPref = Preferences.get("browser.search.suggest.enabled");
     let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
+    let privateSuggestsPref = Preferences.get(
+      "browser.search.suggest.enabled.private"
+    );
     let updateSuggestionCheckboxes = this._updateSuggestionCheckboxes.bind(
       this
     );
@@ -84,6 +88,12 @@ var gSearchPane = {
     let urlbarSuggests = document.getElementById("urlBarSuggestion");
     urlbarSuggests.addEventListener("command", () => {
       urlbarSuggestsPref.value = urlbarSuggests.checked;
+    });
+    let privateWindowCheckbox = document.getElementById(
+      "showSearchSuggestionsPrivateWindows"
+    );
+    privateWindowCheckbox.addEventListener("command", () => {
+      privateSuggestsPref.value = privateWindowCheckbox.checked;
     });
 
     setEventListener(
@@ -199,8 +209,18 @@ var gSearchPane = {
     let positionCheckbox = document.getElementById(
       "showSearchSuggestionsFirstCheckbox"
     );
+    let privateWindowCheckbox = document.getElementById(
+      "showSearchSuggestionsPrivateWindows"
+    );
 
     urlbarSuggests.disabled = !suggestsPref.value || permanentPB;
+    privateWindowCheckbox.disabled = !suggestsPref.value;
+    privateWindowCheckbox.checked = Preferences.get(
+      "browser.search.suggest.enabled.private"
+    ).value;
+    if (privateWindowCheckbox.disabled) {
+      privateWindowCheckbox.checked = false;
+    }
 
     let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
     urlbarSuggests.checked = urlbarSuggestsPref.value;

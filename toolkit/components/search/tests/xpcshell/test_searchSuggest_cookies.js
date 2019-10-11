@@ -20,8 +20,6 @@ var formHistoryStartup = Cc[
 ].getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
 
-var httpServer = new HttpServer();
-
 function countCacheEntries() {
   info("Enumerating cache entries");
   return new Promise(resolve => {
@@ -62,17 +60,17 @@ function countCookieEntries() {
 
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
-});
 
-add_task(async function setup() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
+  Services.prefs.setBoolPref("browser.search.suggest.enabled.private", true);
 
-  registerCleanupFunction(async function cleanup() {
+  registerCleanupFunction(async () => {
     // Clean up all the data.
     await new Promise(resolve =>
       Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, resolve)
     );
     Services.prefs.clearUserPref("browser.search.suggest.enabled");
+    Services.prefs.clearUserPref("browser.search.suggest.enabled.private");
   });
 
   let server = useHttpServer();
@@ -114,11 +112,12 @@ add_task(async function setup() {
 });
 
 async function test_engine(engines, privateMode) {
+  info(`Testing ${privateMode ? "private" : "normal"} mode`);
   let controller;
   await new Promise(resolve => {
     controller = new SearchSuggestionController(result => {
-      Assert.equal(result.local.length, 0);
-      Assert.equal(result.remote.length, 0);
+      Assert.equal(result.local.length, 0, "Should have no local suggestions");
+      Assert.equal(result.remote.length, 0, "Should have no remte suggestions");
       if (result.term == "cookie") {
         resolve();
       }

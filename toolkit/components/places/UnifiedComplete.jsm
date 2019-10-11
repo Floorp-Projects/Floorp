@@ -1016,7 +1016,8 @@ Search.prototype = {
     if (
       this._enableActions &&
       this.hasBehavior("search") &&
-      !this._inPrivateWindow
+      (!this._inPrivateWindow ||
+        UrlbarPrefs.get("browser.search.suggest.enabled.private"))
     ) {
       let query = this._searchEngineAliasMatch
         ? this._searchEngineAliasMatch.query

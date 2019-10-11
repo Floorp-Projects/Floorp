@@ -153,6 +153,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
   ["browser.search.suggest.enabled", true],
+  ["browser.search.suggest.enabled.private", false],
   ["ui.popup.disable_autohide", false],
   ["browser.fixup.dns_first_for_single_words", false],
 ]);
