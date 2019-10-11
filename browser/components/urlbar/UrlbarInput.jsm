@@ -942,24 +942,17 @@ class UrlbarInput {
    * This is used by Activity Stream and about:privatebrowsing for search hand-off.
    */
   setHiddenFocus() {
-    this._hideFocus = true;
-    if (this.focused) {
-      this.removeAttribute("focused");
-    } else {
-      this.focus();
-    }
+    this.textbox.classList.add("hidden-focus");
+    this.focus();
   }
 
   /**
-   * Restore focus styles.
+   * Remove the hidden focus styles.
    * This is used by Activity Stream and about:privatebrowsing for search hand-off.
    */
   removeHiddenFocus() {
-    this._hideFocus = false;
-    if (this.focused) {
-      this.setAttribute("focused", "true");
-      this.startLayoutExtend();
-    }
+    this.textbox.classList.remove("hidden-focus");
+    this.startLayoutExtend();
   }
 
   // Getters and Setters below.
@@ -1038,8 +1031,14 @@ class UrlbarInput {
     ) {
       return;
     }
-    // The Urlbar is unfocused and the view is closed
-    if (this.getAttribute("focused") != "true" && !this.view.isOpen) {
+    // The Urlbar is unfocused or the view is closed
+    if (
+      !(
+        (this.getAttribute("focused") == "true" &&
+          !this.textbox.classList.contains("hidden-focus")) ||
+        this.view.isOpen
+      )
+    ) {
       return;
     }
 
@@ -1071,7 +1070,10 @@ class UrlbarInput {
   endLayoutExtend(force) {
     if (
       !this.hasAttribute("breakout-extend") ||
-      (!force && (this.view.isOpen || this.getAttribute("focused") == "true"))
+      (!force &&
+        (this.view.isOpen ||
+          (this.getAttribute("focused") == "true" &&
+            !this.textbox.classList.contains("hidden-focus"))))
     ) {
       return;
     }
@@ -1804,9 +1806,7 @@ class UrlbarInput {
   }
 
   _on_focus(event) {
-    if (!this._hideFocus) {
-      this.setAttribute("focused", "true");
-    }
+    this.setAttribute("focused", "true");
 
     // We handle mouse-based expansion events separately in _on_click.
     if (this._focusedViaMousedown) {
