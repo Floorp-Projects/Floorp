@@ -3373,6 +3373,7 @@ void nsStandardURL::Serialize(URIParams& aParams) {
   params.query() = ToIPCSegment(mQuery);
   params.ref() = ToIPCSegment(mRef);
   params.supportsFileURL() = !!mSupportsFileURL;
+  params.isSubstituting() = false;
   // mDisplayHost is just a cache that can be recovered as needed.
 
   aParams = params;
