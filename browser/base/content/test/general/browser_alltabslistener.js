@@ -2,6 +2,10 @@ const gCompleteState =
   Ci.nsIWebProgressListener.STATE_STOP +
   Ci.nsIWebProgressListener.STATE_IS_NETWORK;
 
+function getOriginalURL(request) {
+  return request && request.QueryInterface(Ci.nsIChannel).originalURI.spec;
+}
+
 var gFrontProgressListener = {
   onProgressChange(
     aWebProgress,
@@ -13,17 +17,17 @@ var gFrontProgressListener = {
   ) {},
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (
-      aRequest &&
-      aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank"
-    ) {
-      // ignore initial about blank
+    var url = getOriginalURL(aRequest);
+    if (url == "about:blank") {
       return;
     }
     var state = "onStateChange";
-    info("FrontProgress: " + state + " 0x" + aStateFlags.toString(16));
-    ok(
-      gFrontNotificationsPos < gFrontNotifications.length,
+    info(
+      "FrontProgress (" + url + "): " + state + " 0x" + aStateFlags.toString(16)
+    );
+    Assert.less(
+      gFrontNotificationsPos,
+      gFrontNotifications.length,
       "Got an expected notification for the front notifications listener"
     );
     is(
@@ -35,17 +39,15 @@ var gFrontProgressListener = {
   },
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
-    if (
-      aRequest &&
-      aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank"
-    ) {
-      // ignore initial about blank
+    var url = getOriginalURL(aRequest);
+    if (url == "about:blank") {
       return;
     }
     var state = "onLocationChange";
     info("FrontProgress: " + state + " " + aLocationURI.spec);
-    ok(
-      gFrontNotificationsPos < gFrontNotifications.length,
+    Assert.less(
+      gFrontNotificationsPos,
+      gFrontNotifications.length,
       "Got an expected notification for the front notifications listener"
     );
     is(
@@ -57,17 +59,15 @@ var gFrontProgressListener = {
   },
 
   onSecurityChange(aWebProgress, aRequest, aState) {
-    if (
-      aRequest &&
-      aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank"
-    ) {
-      // ignore initial about blank
+    var url = getOriginalURL(aRequest);
+    if (url == "about:blank") {
       return;
     }
     var state = "onSecurityChange";
-    info("FrontProgress: " + state + " 0x" + aState.toString(16));
-    ok(
-      gFrontNotificationsPos < gFrontNotifications.length,
+    info("FrontProgress (" + url + "): " + state + " 0x" + aState.toString(16));
+    Assert.less(
+      gFrontNotificationsPos,
+      gFrontNotifications.length,
       "Got an expected notification for the front notifications listener"
     );
     is(
@@ -81,21 +81,22 @@ var gFrontProgressListener = {
 
 var gAllProgressListener = {
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-    if (
-      aRequest &&
-      aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank"
-    ) {
+    var url = getOriginalURL(aRequest);
+    if (url == "about:blank") {
       // ignore initial about blank
       return;
     }
     var state = "onStateChange";
-    info("AllProgress: " + state + " 0x" + aStateFlags.toString(16));
+    info(
+      "AllProgress (" + url + "): " + state + " 0x" + aStateFlags.toString(16)
+    );
     ok(
       aBrowser == gTestBrowser,
       state + " notification came from the correct browser"
     );
-    ok(
-      gAllNotificationsPos < gAllNotifications.length,
+    Assert.less(
+      gAllNotificationsPos,
+      gAllNotifications.length,
       "Got an expected notification for the all notifications listener"
     );
     is(
@@ -106,12 +107,14 @@ var gAllProgressListener = {
     gAllNotificationsPos++;
 
     if ((aStateFlags & gCompleteState) == gCompleteState) {
-      ok(
-        gAllNotificationsPos == gAllNotifications.length,
+      is(
+        gAllNotificationsPos,
+        gAllNotifications.length,
         "Saw the expected number of notifications"
       );
-      ok(
-        gFrontNotificationsPos == gFrontNotifications.length,
+      is(
+        gFrontNotificationsPos,
+        gFrontNotifications.length,
         "Saw the expected number of frontnotifications"
       );
       executeSoon(gNextTest);
@@ -119,10 +122,8 @@ var gAllProgressListener = {
   },
 
   onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI, aFlags) {
-    if (
-      aRequest &&
-      aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank"
-    ) {
+    var url = getOriginalURL(aRequest);
+    if (url == "about:blank") {
       // ignore initial about blank
       return;
     }
@@ -132,8 +133,9 @@ var gAllProgressListener = {
       aBrowser == gTestBrowser,
       state + " notification came from the correct browser"
     );
-    ok(
-      gAllNotificationsPos < gAllNotifications.length,
+    Assert.less(
+      gAllNotificationsPos,
+      gAllNotifications.length,
       "Got an expected notification for the all notifications listener"
     );
     is(
@@ -145,21 +147,20 @@ var gAllProgressListener = {
   },
 
   onSecurityChange(aBrowser, aWebProgress, aRequest, aState) {
-    if (
-      aRequest &&
-      aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank"
-    ) {
+    var url = getOriginalURL(aRequest);
+    if (url == "about:blank") {
       // ignore initial about blank
       return;
     }
     var state = "onSecurityChange";
-    info("AllProgress: " + state + " 0x" + aState.toString(16));
+    info("AllProgress (" + url + "): " + state + " 0x" + aState.toString(16));
     ok(
       aBrowser == gTestBrowser,
       state + " notification came from the correct browser"
     );
-    ok(
-      gAllNotificationsPos < gAllNotifications.length,
+    Assert.less(
+      gAllNotificationsPos,
+      gAllNotifications.length,
       "Got an expected notification for the all notifications listener"
     );
     is(
