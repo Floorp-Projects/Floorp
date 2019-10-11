@@ -188,6 +188,8 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   nsresult LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState,
                    bool aSetNavigating = false);
 
+  void DisplayLoadError(const nsAString& aURI);
+
   // Determine if the current BrowsingContext was 'cached' by the logic in
   // CacheChildren.
   bool IsCached();
