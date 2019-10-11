@@ -24,7 +24,7 @@ use crate::render_task::{BlitSource, RenderTask};
 use crate::render_task_cache::{
     RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind
 };
-use crate::resource_cache::{ImageRequest, ResourceCache, ImageRequestStatus};
+use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::pack_as_float;
 
 #[derive(Debug)]
@@ -457,11 +457,11 @@ impl YuvImageData {
         &mut self,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-    ) -> ImageRequestStatus {
+    ) {
         let channel_num = self.format.get_plane_num();
         debug_assert!(channel_num <= 3);
         for channel in 0 .. channel_num {
-            let status = resource_cache.request_image(
+            resource_cache.request_image(
                 ImageRequest {
                     key: self.yuv_key[channel],
                     rendering: self.image_rendering,
@@ -469,13 +469,7 @@ impl YuvImageData {
                 },
                 gpu_cache,
             );
-
-            if status != ImageRequestStatus::Requested {
-                return status;
-            }
         }
-
-        ImageRequestStatus::Requested
     }
 
     pub fn write_prim_gpu_blocks(&self, request: &mut GpuDataRequest) {

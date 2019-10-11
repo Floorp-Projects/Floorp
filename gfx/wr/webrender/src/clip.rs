@@ -403,26 +403,21 @@ impl ClipNodeInfo {
                             tile_size as i32,
                         );
                         for tile in tiles {
-                            let mut render = true;
                             if request_resources {
-                                render = resource_cache.request_image(
+                                resource_cache.request_image(
                                     request.with_tile(tile.offset),
                                     gpu_cache,
-                                ).should_render();
+                                );
                             }
-                            if render {
-                                mask_tiles.push(VisibleMaskImageTile {
-                                    tile_offset: tile.offset,
-                                    tile_rect: tile.rect,
-                                });
-                            }
+                            mask_tiles.push(VisibleMaskImageTile {
+                                tile_offset: tile.offset,
+                                tile_rect: tile.rect,
+                            });
                         }
                     }
                     visible_tiles = Some(mask_tiles);
                 } else if request_resources {
-                    if resource_cache.request_image(request, gpu_cache).should_skip() {
-                        return None;
-                    }
+                    resource_cache.request_image(request, gpu_cache);
                 }
             } else {
                 // If the supplied image key doesn't exist in the resource cache,

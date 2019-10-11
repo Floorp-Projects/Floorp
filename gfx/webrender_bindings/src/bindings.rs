@@ -3263,24 +3263,20 @@ pub unsafe extern "C" fn wr_dec_ref_arc(arc: *const VecU8) {
     Arc::from_raw(arc);
 }
 
-#[repr(u32)]
-pub enum BlobRenderStatus {
-    Ok,
-    Empty,
-    Error,
-}
-
+// TODO: nical
+// Update for the new blob image interface changes.
+//
 extern "C" {
-    // TODO: figure out the API for tiled blob images.
-    pub fn wr_moz2d_render_cb(blob: ByteSlice,
-                              format: ImageFormat,
-                              render_rect: &LayoutIntRect,
-                              visible_rect: &DeviceIntRect,
-                              tile_size: Option<&u16>,
-                              tile_offset: Option<&TileOffset>,
-                              dirty_rect: Option<&LayoutIntRect>,
-                              output: MutByteSlice)
-                              -> BlobRenderStatus;
+     // TODO: figure out the API for tiled blob images.
+     pub fn wr_moz2d_render_cb(blob: ByteSlice,
+                               format: ImageFormat,
+                               render_rect: &LayoutIntRect,
+                               visible_rect: &DeviceIntRect,
+                               tile_size: Option<&u16>,
+                               tile_offset: Option<&TileOffset>,
+                               dirty_rect: Option<&LayoutIntRect>,
+                               output: MutByteSlice)
+                               -> bool;
 }
 
 #[no_mangle]

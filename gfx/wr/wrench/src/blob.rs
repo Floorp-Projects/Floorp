@@ -98,7 +98,7 @@ fn render_blob(
     }
 
     Ok(RasterizedBlobImage {
-        data: Some(Arc::new(texels)),
+        data: Arc::new(texels),
         rasterized_rect,
     })
 }
