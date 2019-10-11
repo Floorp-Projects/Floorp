@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "audio_thread_priority"
-version = "0.19.1"
+version = "0.20.2"
 authors = ["Paul Adenot <paul@paul.cx>"]
 description = "Bump a thread to real-time priority, for audio work, on Linux, Windows and macOS"
 license = "MPL-2.0"
@@ -31,6 +31,8 @@ version = "0.4"
 [dependencies.simple_logger]
 version = "0.4"
 optional = true
+[dev-dependencies.nix]
+version = "0.15.0"
 
 [features]
 terminal-logging = ["simple_logger"]
