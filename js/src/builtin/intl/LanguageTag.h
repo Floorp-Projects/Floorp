@@ -707,6 +707,14 @@ MOZ_MUST_USE bool ParseStandaloneScriptTag(JS::Handle<JSLinearString*> str,
 MOZ_MUST_USE bool ParseStandaloneRegionTag(JS::Handle<JSLinearString*> str,
                                            RegionSubtag& result);
 
+/**
+ * Parse a string as an ISO-639 language code. Return |nullptr| in the result if
+ * the input could not be parsed or the canonical form of the resulting language
+ * tag contains more than a single language subtag.
+ */
+JS::Result<JSString*> ParseStandaloneISO639LanguageTag(
+    JSContext* cx, JS::Handle<JSLinearString*> str);
+
 }  // namespace intl
 
 }  // namespace js

@@ -2080,35 +2080,6 @@ static bool intrinsic_ToNumeric(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool intrinsic_LocaleToStringOrNull(JSContext* cx, unsigned argc,
-                                           Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-
-  if (!args[0].isObject()) {
-    args.rval().setNull();
-    return true;
-  }
-
-  JSObject* unwrapped = CheckedUnwrapStatic(&args[0].toObject());
-  if (!unwrapped) {
-    ReportAccessDenied(cx);
-    return false;
-  }
-
-  if (!unwrapped->is<LocaleObject>()) {
-    args.rval().setNull();
-    return true;
-  }
-
-  RootedString str(cx, unwrapped->as<LocaleObject>().languageTag());
-  if (!cx->compartment()->wrap(cx, &str)) {
-    return false;
-  }
-  args.rval().setString(str);
-  return true;
-}
-
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2484,6 +2455,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4, 0),
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2, 0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2, 0),
+    JS_FN("intl_ValidateAndCanonicalizeLanguageTag",
+          intl_ValidateAndCanonicalizeLanguageTag, 2, 0),
+    JS_FN("intl_TryValidateAndCanonicalizeLanguageTag",
+          intl_TryValidateAndCanonicalizeLanguageTag, 1, 0),
 
     JS_INLINABLE_FN("GuardToCollator", intrinsic_GuardToBuiltin<CollatorObject>,
                     1, 0, IntlGuardToCollator),
@@ -2527,8 +2502,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0, 0),
     JS_FN("IsRuntimeDefaultLocale", intrinsic_IsRuntimeDefaultLocale, 1, 0),
 #endif  // ENABLE_INTL_API
-
-    JS_FN("LocaleToStringOrNull", intrinsic_LocaleToStringOrNull, 1, 0),
 
     JS_FN("GetOwnPropertyDescriptorToArray", GetOwnPropertyDescriptorToArray, 2,
           0),

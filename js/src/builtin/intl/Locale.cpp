@@ -487,6 +487,29 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
   return tag.setUnicodeExtension(std::move(newExtensionChars));
 }
 
+static JS::Result<JSString*> LanguageTagFromMaybeWrappedLocale(JSContext* cx,
+                                                               JSObject* obj) {
+  if (obj->is<LocaleObject>()) {
+    return obj->as<LocaleObject>().languageTag();
+  }
+
+  JSObject* unwrapped = CheckedUnwrapStatic(obj);
+  if (!unwrapped) {
+    ReportAccessDenied(cx);
+    return cx->alreadyReportedError();
+  }
+
+  if (!unwrapped->is<LocaleObject>()) {
+    return nullptr;
+  }
+
+  RootedString tagStr(cx, unwrapped->as<LocaleObject>().languageTag());
+  if (!cx->compartment()->wrap(cx, &tagStr)) {
+    return cx->alreadyReportedError();
+  }
+  return tagStr.get();
+}
+
 /**
  * Intl.Locale( tag[, options] )
  */
@@ -504,40 +527,25 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Step 7.
-  if (args.length() == 0 || (!args[0].isString() && !args[0].isObject())) {
+  // Steps 7-9.
+  HandleValue tagValue = args.get(0);
+  JSString* tagStr;
+  if (tagValue.isObject()) {
+    JS_TRY_VAR_OR_RETURN_FALSE(
+        cx, tagStr,
+        LanguageTagFromMaybeWrappedLocale(cx, &tagValue.toObject()));
+    if (!tagStr) {
+      tagStr = ToString(cx, tagValue);
+      if (!tagStr) {
+        return false;
+      }
+    }
+  } else if (tagValue.isString()) {
+    tagStr = tagValue.toString();
+  } else {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INVALID_LOCALES_ELEMENT);
     return false;
-  }
-
-  // Steps 8-9.
-  RootedString tagStr(cx);
-  if (args[0].isObject()) {
-    JSObject* obj = &args[0].toObject();
-    if (obj->is<LocaleObject>()) {
-      tagStr = obj->as<LocaleObject>().languageTag();
-    } else {
-      JSObject* unwrapped = CheckedUnwrapStatic(obj);
-      if (!unwrapped) {
-        ReportAccessDenied(cx);
-        return false;
-      }
-
-      if (unwrapped->is<LocaleObject>()) {
-        tagStr = unwrapped->as<LocaleObject>().languageTag();
-        if (!cx->compartment()->wrap(cx, &tagStr)) {
-          return false;
-        }
-      } else {
-        tagStr = ToString(cx, args[0]);
-        if (!tagStr) {
-          return false;
-        }
-      }
-    }
-  } else {
-    tagStr = args[0].toString();
   }
 
   RootedLinearString tagLinearStr(cx, tagStr->ensureLinear(cx));
@@ -1284,4 +1292,111 @@ JSObject* js::CreateLocalePrototype(JSContext* cx, HandleObject Intl,
 
 bool js::AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl) {
   return GlobalObject::addLocaleConstructor(cx, intl);
+}
+
+bool js::intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx, unsigned argc,
+                                                 Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+
+  HandleValue tagValue = args[0];
+  bool applyToString = args[1].toBoolean();
+
+  if (tagValue.isObject()) {
+    JSString* tagStr;
+    JS_TRY_VAR_OR_RETURN_FALSE(
+        cx, tagStr,
+        LanguageTagFromMaybeWrappedLocale(cx, &tagValue.toObject()));
+    if (tagStr) {
+      args.rval().setString(tagStr);
+      return true;
+    }
+  }
+
+  if (!applyToString && !tagValue.isString()) {
+    args.rval().setNull();
+    return true;
+  }
+
+  JSString* tagStr = ToString(cx, tagValue);
+  if (!tagStr) {
+    return false;
+  }
+
+  RootedLinearString tagLinearStr(cx, tagStr->ensureLinear(cx));
+  if (!tagLinearStr) {
+    return false;
+  }
+
+  // Handle the common case (a standalone language) first.
+  // Only the following Unicode BCP 47 locale identifier subset is accepted:
+  //   unicode_locale_id = unicode_language_id
+  //   unicode_language_id = unicode_language_subtag
+  //   unicode_language_subtag = alpha{2,3}
+  JSString* language;
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, language, intl::ParseStandaloneISO639LanguageTag(cx, tagLinearStr));
+  if (language) {
+    args.rval().setString(language);
+    return true;
+  }
+
+  LanguageTag tag(cx);
+  if (!LanguageTagParser::parse(cx, tagLinearStr, tag)) {
+    return false;
+  }
+
+  if (!tag.canonicalize(cx, LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+    return false;
+  }
+
+  JSStringBuilder sb(cx);
+  if (!tag.appendTo(cx, sb)) {
+    return false;
+  }
+
+  JSString* resultStr = sb.finishString();
+  if (!resultStr) {
+    return false;
+  }
+  args.rval().setString(resultStr);
+  return true;
+}
+
+bool js::intl_TryValidateAndCanonicalizeLanguageTag(JSContext* cx,
+                                                    unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  RootedLinearString linear(cx, args[0].toString()->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  LanguageTag tag(cx);
+  bool ok;
+  JS_TRY_VAR_OR_RETURN_FALSE(cx, ok,
+                             LanguageTagParser::tryParse(cx, linear, tag));
+
+  // The caller handles invalid inputs.
+  if (!ok) {
+    args.rval().setNull();
+    return true;
+  }
+
+  if (!tag.canonicalize(cx, LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+    return false;
+  }
+
+  JSStringBuilder sb(cx);
+  if (!tag.appendTo(cx, sb)) {
+    return false;
+  }
+
+  JSString* resultStr = sb.finishString();
+  if (!resultStr) {
+    return false;
+  }
+  args.rval().setString(resultStr);
+  return true;
 }
