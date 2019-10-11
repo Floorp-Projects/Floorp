@@ -1558,6 +1558,8 @@ class BigIntCreationData {
 class BigIntLiteral : public ParseNode {
   mozilla::Variant<mozilla::Nothing, BigIntCreationData, BigIntBox*> data_;
 
+  BigIntBox* box() const { return data_.as<BigIntBox*>(); }
+
  public:
   BigIntLiteral(BigIntBox* bibox, const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos),
@@ -1589,8 +1591,7 @@ class BigIntLiteral : public ParseNode {
 #endif
 
   bool publish(JSContext* cx, ParserSharedBase* parser);
-
-  BigIntBox* box() const { return data_.as<BigIntBox*>(); }
+  BigInt* value();
 
   bool isZero();
 };
