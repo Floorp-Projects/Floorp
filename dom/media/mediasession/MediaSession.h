@@ -42,12 +42,17 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   void SetActionHandler(MediaSessionAction aAction,
                         MediaSessionActionHandler* aHandler);
 
+  MOZ_CAN_RUN_SCRIPT
+  void NotifyHandler(const MediaSessionActionDetails& aDetails);
+
  private:
   ~MediaSession() = default;
 
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 
   RefPtr<MediaMetadata> mMediaMetadata;
+  static const size_t ACTIONS = ArrayLength(MediaSessionActionValues::strings);
+  RefPtr<MediaSessionActionHandler> mActionHandlers[ACTIONS] = {nullptr};
 };
 
 }  // namespace dom

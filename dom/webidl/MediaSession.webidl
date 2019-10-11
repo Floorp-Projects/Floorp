@@ -29,6 +29,10 @@ interface MediaSession {
   void setActionHandler(MediaSessionAction action, MediaSessionActionHandler? handler);
 
   // TODO: void setPositionState(optional MediaPositionState? state); (bug 1582509)
+
+  // Fire the action handler. It's test-only for now.
+  [ChromeOnly]
+  void notifyHandler(MediaSessionActionDetails details);
 };
 
 [Exposed=Window, Pref="dom.media.mediasession.enabled"]
