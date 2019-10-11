@@ -66,7 +66,11 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
     SetHTMLAttr(nsGkAtoms::name, aName, aError);
   }
   nsDOMTokenList* Sandbox() {
-    return GetTokenList(nsGkAtoms::sandbox, sSupportedSandboxTokens);
+    if (!mSandbox) {
+      mSandbox =
+          new nsDOMTokenList(this, nsGkAtoms::sandbox, sSupportedSandboxTokens);
+    }
+    return mSandbox;
   }
   bool AllowFullscreen() const {
     return GetBoolAttr(nsGkAtoms::allowfullscreen);
@@ -196,7 +200,8 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
    */
   void AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName, bool aNotify);
 
-  RefPtr<mozilla::dom::FeaturePolicy> mFeaturePolicy;
+  RefPtr<dom::FeaturePolicy> mFeaturePolicy;
+  RefPtr<nsDOMTokenList> mSandbox;
 };
 
 }  // namespace dom

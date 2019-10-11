@@ -11,6 +11,7 @@
 #include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStyleLinkElement.h"
+#include "nsDOMTokenList.h"
 
 namespace mozilla {
 class EventChainPostVisitor;
@@ -124,7 +125,12 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   static void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
   static nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
 
-  nsDOMTokenList* Sizes() { return GetTokenList(nsGkAtoms::sizes); }
+  nsDOMTokenList* Sizes() {
+    if (!mSizes) {
+      mSizes = new nsDOMTokenList(this, nsGkAtoms::sizes);
+    }
+    return mSizes;
+  }
   void GetType(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::type, aValue); }
   void SetType(const nsAString& aType, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::type, aType, aRv);
@@ -183,6 +189,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   Maybe<SheetInfo> GetStyleSheetInfo() final;
 
   RefPtr<nsDOMTokenList> mRelList;
+  RefPtr<nsDOMTokenList> mSizes;
 
   // The "explicitly enabled" flag. This flag is set whenever the `disabled`
   // attribute is explicitly unset, and makes alternate stylesheets not be
