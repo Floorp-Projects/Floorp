@@ -96,9 +96,9 @@ class Table : public ShareableBase<Table> {
 
   void setNull(uint32_t index);
 
-  // Copy entry from |srcTable| at |srcIndex| to this table at |dstIndex|.
-  // Used by table.copy.
-  void copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex);
+  // Copy entry from |srcTable| at |srcIndex| to this table at |dstIndex|.  Used
+  // by table.copy.  May OOM if it needs to box up a function during an upcast.
+  bool copy(const Table& srcTable, uint32_t dstIndex, uint32_t srcIndex);
 
   // grow() returns (uint32_t)-1 if it could not grow.
   uint32_t grow(uint32_t delta);

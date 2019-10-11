@@ -1979,6 +1979,11 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
         *srcMemOrTableIndex >= env_.tables.length()) {
       return fail("table index out of range for table.copy");
     }
+    ValType dstElemType = ToElemValType(env_.tables[*dstMemOrTableIndex].kind);
+    ValType srcElemType = ToElemValType(env_.tables[*srcMemOrTableIndex].kind);
+    if (!checkIsSubtypeOf(srcElemType, dstElemType)) {
+      return false;
+    }
   }
 
   if (!popWithType(ValType::I32, len)) {
