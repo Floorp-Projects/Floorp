@@ -36,19 +36,19 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   // Part of variant `Context`
   // Reading an element from a list.
   struct ListContext {
-    const BinASTInterfaceAndField position;
-    const BinASTList content;
+    const BinASTInterfaceAndField position_;
+    const BinASTList content_;
     ListContext(const BinASTInterfaceAndField position,
                 const BinASTList content)
-        : position(position), content(content) {}
+        : position_(position), content_(content) {}
   };
 
   // Part of variant `Context`
   // Reading a field from an interface.
   struct FieldContext {
-    const BinASTInterfaceAndField position;
+    const BinASTInterfaceAndField position_;
     explicit FieldContext(const BinASTInterfaceAndField position)
-        : position(position) {}
+        : position_(position) {}
   };
 
   // The context in which we read a token.
@@ -72,12 +72,12 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
     void operator()(const RootContext&) { fprintf(stderr, "<Root context>"); }
     void operator()(const ListContext& context) {
       fprintf(stderr, "<List context>: %s => %s",
-              describeBinASTInterfaceAndField(context.position),
-              describeBinASTList(context.content));
+              describeBinASTInterfaceAndField(context.position_),
+              describeBinASTList(context.content_));
     }
     void operator()(const FieldContext& context) {
       fprintf(stderr, "<Field context>: %s",
-              describeBinASTInterfaceAndField(context.position));
+              describeBinASTInterfaceAndField(context.position_));
     }
   };
 #endif  // DEBUG
