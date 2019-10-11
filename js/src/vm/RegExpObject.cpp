@@ -485,7 +485,7 @@ JSAtom* js::EscapeRegExpPattern(JSContext* cx, HandleAtom src) {
 }
 
 // ES6 draft rev32 21.2.5.14. Optimized for RegExpObject.
-JSFlatString* RegExpObject::toString(JSContext* cx) const {
+JSLinearString* RegExpObject::toString(JSContext* cx) const {
   // Steps 3-4.
   RootedAtom src(cx, getSource());
   if (!src) {
