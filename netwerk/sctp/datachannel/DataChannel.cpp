@@ -1450,16 +1450,21 @@ void DataChannelConnection::HandleOpenRequestMessage(
             channel.get()));
   channel->AnnounceOpen();
 
-  int error = SendOpenAckMessage(stream);
+  // Note that any message can be buffered; SendOpenAckMessage may
+  // error later than this check.
+  const auto error = SendOpenAckMessage(channel->mStream);
   if (error) {
     DC_ERROR(("SendOpenRequest failed, error = %d", error));
-    // Close the channel, inform the user
-    CloseInt(channel);
-    // XXX send error via DataChannelOnMessageAvailable (bug 843625)
+    Dispatch(NS_NewRunnableFunction(
+        "DataChannelConnection::HandleOpenRequestMessage",
+        [channel, connection = RefPtr<DataChannelConnection>(this)]() {
+          MutexAutoLock mLock(connection->mLock);
+          // Close the channel on failure
+          connection->CloseInt(channel);
+        }));
     return;
   }
-
-  DeliverQueuedData(stream);
+  DeliverQueuedData(channel->mStream);
 }
 
 // NOTE: the updated spec from the IETF says we should set in-order until we
