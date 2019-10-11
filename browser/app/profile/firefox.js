@@ -391,7 +391,11 @@ pref("browser.search.widget.inNavBar", false);
 
 // Enables display of the options for the user using a separate default search
 // engine in private browsing mode.
-pref("browser.search.separatePrivateDefault.ui.enabled", false);
+#ifdef EARLY_BETA_OR_EARLIER
+  pref("browser.search.separatePrivateDefault.ui.enabled", true);
+#else
+  pref("browser.search.separatePrivateDefault.ui.enabled", false);
+#endif
 
 pref("browser.sessionhistory.max_entries", 50);
 
