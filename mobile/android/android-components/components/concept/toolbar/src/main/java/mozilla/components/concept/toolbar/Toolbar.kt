@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.appcompat.widget.AppCompatImageView
@@ -246,6 +247,7 @@ interface Toolbar {
         override fun createView(parent: ViewGroup): View = AppCompatImageButton(parent.context).also { imageButton ->
             view = WeakReference(imageButton)
 
+            imageButton.scaleType = ImageView.ScaleType.CENTER
             imageButton.setOnClickListener { toggle() }
             imageButton.isSelected = selected
 

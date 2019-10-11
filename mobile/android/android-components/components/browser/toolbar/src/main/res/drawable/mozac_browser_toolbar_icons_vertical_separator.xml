@@ -5,5 +5,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <size android:width="@dimen/mozac_browser_toolbar_icons_separator_width"
             android:height="@dimen/mozac_browser_toolbar_icons_separator_height" />
-    <solid android:color="@color/mozac_ui_icons_fill" />
+    <solid android:color="#aaaaaa" />
 </shape>

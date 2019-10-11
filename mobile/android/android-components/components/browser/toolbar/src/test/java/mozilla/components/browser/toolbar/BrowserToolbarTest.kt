@@ -16,8 +16,6 @@ import android.view.accessibility.AccessibilityManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import androidx.core.view.inputmethod.EditorInfoCompat
-import androidx.core.view.isGone
-import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDING_DP
@@ -25,7 +23,6 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_OFF_FOR_A_SITE
 import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
 import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_ON_TRACKERS_BLOCKED
-import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection

@@ -12,22 +12,6 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:browser-toolbar:{latest-version}"
 ```
 
-### XML attributes
-
-| Attribute                               |  Format   | Description                                             |
-|-----------------------------------------|-----------|---------------------------------------------------------|
-| browserToolbarHintColor                 | color     | Color of the text displayed when the URL is empty.      |
-| browserToolbarTextColor                 | dimension | Color of the displayed URL.                             |
-| browserToolbarTextSize                  | color     | Text size for the displayed URL and editable text.      |
-| browserToolbarSecureColor               | color     | Color tint of the "secure" (lock) icon.                 |
-| browserToolbarInsecureColor             | color     | Color tint of the "insecure" (globe) icon.              |
-| browserToolbarMenuColor                 | color     | Color of the overflow menu button.                      |
-| browserToolbarClearColor                | color     | Color of the editing clear text button.                 |
-| browserToolbarSuggestionBackgroundColor | color     | Background color of the autocomplete suggestion.        |
-| browserToolbarSuggestionForegroundColor | color     | Foreground (text) color of the autocomplete suggestion. |
-| browserToolbarFadingEdgeSize            | dimension | Size of the fading edge shown when the URL is too long. |
-| browserToolbarProgressBarGravity        | int       | Enum with options `bottom` (0, default) or `top` (1)    |
-
 ## Facts
 
 This component emits the following [Facts](../../support/base/README.md#Facts):

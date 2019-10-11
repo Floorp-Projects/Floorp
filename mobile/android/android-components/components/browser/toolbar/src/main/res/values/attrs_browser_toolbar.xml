@@ -32,4 +32,8 @@
   <declare-styleable name="BrowserToolbarSiteSecurityState">
     <attr name="state_site_secure" format="boolean"/>
   </declare-styleable>
+
+  <declare-styleable name="ActionContainer">
+    <attr name="actionContainerItemSize" format="dimension" />
+  </declare-styleable>
 </resources>

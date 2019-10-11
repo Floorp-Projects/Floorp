@@ -18,4 +18,11 @@
     <dimen name="mozac_browser_toolbar_url_horizontal_padding">8dp</dimen>
     <dimen name="mozac_browser_toolbar_url_vertical_padding">0dp</dimen>
     <dimen name="mozac_browser_toolbar_cancel_padding">16dp</dimen>
+
+    <dimen name="mozac_browser_toolbar_url_textsize">15sp</dimen>
+    <dimen name="mozac_browser_toolbar_title_textsize">15sp</dimen>
+    <dimen name="mozac_browser_toolbar_url_with_title_textsize">12sp</dimen>
+
+    <dimen name="mozac_browser_toolbar_pageaction_size">48dp</dimen>
+    <dimen name="mozac_browser_toolbar_browseraction_size">48dp</dimen>
 </resources>
