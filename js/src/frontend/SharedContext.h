@@ -277,15 +277,11 @@ struct LazyScriptCreationData {
 
   // This is traced by the functionbox which owns this LazyScriptCreationData
   FunctionBoxVector innerFunctionBoxes;
-  bool strict;
+  bool strict = false;
 
   mozilla::Maybe<FieldInitializers> fieldInitializers;
 
-  explicit LazyScriptCreationData(JSContext* cx)
-      : closedOverBindings(),
-        innerFunctionBoxes(cx),
-        strict(false),
-        fieldInitializers() {}
+  explicit LazyScriptCreationData(JSContext* cx) : innerFunctionBoxes(cx) {}
 
   bool init(JSContext* cx, const frontend::AtomVector& COB,
             FunctionBoxVector& innerBoxes, bool isStrict) {
@@ -735,11 +731,11 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void setFieldInitializers(FieldInitializers fi) {
     if (hasObject()) {
       MOZ_ASSERT(function()->lazyScript());
-      function()->lazyScript()->setFieldInitializers(std::move(fi));
+      function()->lazyScript()->setFieldInitializers(fi);
       return;
     }
     MOZ_ASSERT(lazyScriptData());
-    lazyScriptData()->fieldInitializers.emplace(std::move(fi));
+    lazyScriptData()->fieldInitializers.emplace(fi);
   }
 
   void trace(JSTracer* trc) override;
