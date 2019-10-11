@@ -66,17 +66,11 @@ add_task(async function test_myths_link() {
 });
 
 function urlBarHasHiddenFocus(win) {
-  return (
-    win.gURLBar.hasAttribute("focused") &&
-    win.gURLBar.textbox.classList.contains("hidden-focus")
-  );
+  return win.gURLBar.focused && !win.gURLBar.hasAttribute("focused");
 }
 
 function urlBarHasNormalFocus(win) {
-  return (
-    win.gURLBar.hasAttribute("focused") &&
-    !win.gURLBar.textbox.classList.contains("hidden-focus")
-  );
+  return win.gURLBar.hasAttribute("focused");
 }
 
 /**
