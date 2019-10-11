@@ -1045,7 +1045,12 @@ void AudioCallbackDriver::DeviceChangedCallback() {
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
   GraphImpl()->DeviceChanged();
 #ifdef XP_MACOSX
-  PanOutputIfNeeded(mInputChannelCount);
+  RefPtr<AudioCallbackDriver> self(this);
+  bool hasInput = mInputChannelCount;
+  NS_DispatchToBackgroundThread(NS_NewRunnableFunction(
+      "PanOutputIfNeeded", [self{std::move(self)}, hasInput]() {
+        self->PanOutputIfNeeded(hasInput);
+      }));
 #endif
 }
 
