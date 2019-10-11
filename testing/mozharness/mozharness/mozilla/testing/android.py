@@ -586,6 +586,7 @@ class AndroidMixin(object):
         self.delete_tombstones()
         # Get a post-boot device process list for diagnostics
         self.info(self.shell_output('ps'))
+        self.info("verify_device complete")
 
     @PreScriptAction('run-tests')
     def timed_screenshots(self, action, success=None):
