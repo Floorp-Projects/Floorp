@@ -466,7 +466,6 @@ let LEGACY_ACTORS = {
         "WebNavigation:GoBack",
         "WebNavigation:GoForward",
         "WebNavigation:GotoIndex",
-        "WebNavigation:LoadURI",
         "WebNavigation:Reload",
         "WebNavigation:SetOriginAttributes",
         "WebNavigation:Stop",
