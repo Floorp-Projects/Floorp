@@ -92,46 +92,46 @@ impl PulseContext {
         }))
     }
 
-    fn new(name: Option<&CStr>) -> Result<Box<Self>> {
-        fn server_info_cb(
-            context: &pulse::Context,
-            info: Option<&pulse::ServerInfo>,
+    fn server_info_cb(
+        context: &pulse::Context,
+        info: Option<&pulse::ServerInfo>,
+        u: *mut c_void,
+    ) {
+        fn sink_info_cb(
+            _: &pulse::Context,
+            i: *const pulse::SinkInfo,
+            eol: i32,
             u: *mut c_void,
         ) {
-            fn sink_info_cb(
-                _: &pulse::Context,
-                i: *const pulse::SinkInfo,
-                eol: i32,
-                u: *mut c_void,
-            ) {
-                let ctx = unsafe { &mut *(u as *mut PulseContext) };
-                if eol == 0 {
-                    let info = unsafe { &*i };
-                    let flags = pulse::SinkFlags::from_bits_truncate(info.flags);
-                    ctx.default_sink_info = Some(DefaultInfo {
-                        sample_spec: info.sample_spec,
-                        channel_map: info.channel_map,
-                        flags: flags,
-                    });
-                }
-                ctx.mainloop.signal();
+            let ctx = unsafe { &mut *(u as *mut PulseContext) };
+            if eol == 0 {
+                let info = unsafe { &*i };
+                let flags = pulse::SinkFlags::from_bits_truncate(info.flags);
+                ctx.default_sink_info = Some(DefaultInfo {
+                    sample_spec: info.sample_spec,
+                    channel_map: info.channel_map,
+                    flags: flags,
+                });
             }
-
-            if let Some(info) = info {
-                let _ = context.get_sink_info_by_name(
-                    try_cstr_from(info.default_sink_name),
-                    sink_info_cb,
-                    u,
-                );
-            } else {
-                // If info is None, then an error occured.
-                let ctx = unsafe { &mut *(u as *mut PulseContext) };
-                ctx.mainloop.signal();
-            }
+            ctx.mainloop.signal();
         }
 
+        if let Some(info) = info {
+            let _ = context.get_sink_info_by_name(
+                try_cstr_from(info.default_sink_name),
+                sink_info_cb,
+                u,
+            );
+        } else {
+            // If info is None, then an error occured.
+            let ctx = unsafe { &mut *(u as *mut PulseContext) };
+            ctx.mainloop.signal();
+        }
+    }
+
+    fn new(name: Option<&CStr>) -> Result<Box<Self>> {
         let name = name.map(|s| s.to_owned());
-        let mut ctx = try!(PulseContext::_new(name));
+        let mut ctx = PulseContext::_new(name)?;
 
         if ctx.mainloop.start().is_err() {
             ctx.destroy();
@@ -149,11 +149,16 @@ impl PulseContext {
          * and signalling the mainloop to end the wait. */
         let user_data: *mut c_void = ctx.as_mut() as *mut _ as *mut _;
         if let Some(ref context) = ctx.context {
-            if let Ok(o) = context.get_server_info(server_info_cb, user_data) {
+            if let Ok(o) = context.get_server_info(PulseContext::server_info_cb, user_data) {
                 ctx.operation_wait(None, &o);
             }
         }
         ctx.mainloop.unlock();
+
+        /* Update `default_sink_info` when the default device changes. */
+        if let Err(e) = ctx.subscribe_notifications(pulse::SubscriptionMask::SERVER) {
+            cubeb_log!("subscribe_notifications ignored failure: {}", e);
+        }
 
         // Return the result.
         Ok(ctx)
@@ -166,11 +171,98 @@ impl PulseContext {
             self.mainloop.stop();
         }
     }
+
+    fn subscribe_notifications(&mut self, mask: pulse::SubscriptionMask) -> Result<()> {
+        fn update_collection(
+            _: &pulse::Context,
+            event: pulse::SubscriptionEvent,
+            index: u32,
+            user_data: *mut c_void,
+        ) {
+            let ctx = unsafe { &mut *(user_data as *mut PulseContext) };
+
+            let (f, t) = (event.event_facility(), event.event_type());
+            if (f == pulse::SubscriptionEventFacility::Source)
+                | (f == pulse::SubscriptionEventFacility::Sink)
+            {
+                if (t == pulse::SubscriptionEventType::Remove)
+                    | (t == pulse::SubscriptionEventType::New)
+                {
+                    if log_enabled() {
+                        let op = if t == pulse::SubscriptionEventType::New {
+                            "Adding"
+                        } else {
+                            "Removing"
+                        };
+                        let dev = if f == pulse::SubscriptionEventFacility::Sink {
+                            "sink"
+                        } else {
+                            "source "
+                        };
+                        cubeb_log!("{} {} index {}", op, dev, index);
+                    }
+
+                    if f == pulse::SubscriptionEventFacility::Source {
+                        unsafe {
+                            ctx.input_collection_changed_callback.unwrap()(
+                                ctx as *mut _ as *mut _,
+                                ctx.input_collection_changed_user_ptr,
+                            );
+                        }
+                    }
+                    if f == pulse::SubscriptionEventFacility::Sink {
+                        unsafe {
+                            ctx.output_collection_changed_callback.unwrap()(
+                                ctx as *mut _ as *mut _,
+                                ctx.output_collection_changed_user_ptr,
+                            );
+                        }
+                    }
+                }
+            } else if (f == pulse::SubscriptionEventFacility::Server)
+                       && (t == pulse::SubscriptionEventType::Change) {
+                cubeb_log!("Server changed {}", index as i32);
+                let user_data: *mut c_void = ctx as *mut _ as *mut _;
+                if let Some(ref context) = ctx.context {
+                    if let Err(e) = context.get_server_info(PulseContext::server_info_cb, user_data) {
+                        cubeb_log!("get_server_info ignored failure: {}", e);
+                    }
+                }
+            }
+        }
+
+        fn success(_: &pulse::Context, success: i32, user_data: *mut c_void) {
+            let ctx = unsafe { &*(user_data as *mut PulseContext) };
+            if success != 1 {
+                cubeb_log!("subscribe_success ignored failure: {}", success);
+            }
+            ctx.mainloop.signal();
+        }
+
+        let user_data: *mut c_void = self as *const _ as *mut _;
+        if let Some(ref context) = self.context {
+            self.mainloop.lock();
+
+            context.set_subscribe_callback(update_collection, user_data);
+
+            if let Ok(o) = context.subscribe(mask, success, self as *const _ as *mut _) {
+                self.operation_wait(None, &o);
+            } else {
+                self.mainloop.unlock();
+                cubeb_log!("Context subscribe failed");
+                return Err(Error::error());
+            }
+
+            self.mainloop.unlock();
+        }
+
+        Ok(())
+    }
 }
 
 impl ContextOps for PulseContext {
     fn init(context_name: Option<&CStr>) -> Result<Context> {
-        let ctx = try!(PulseContext::new(context_name));
+        let ctx = PulseContext::new(context_name)?;
         Ok(unsafe { Context::from_ptr(Box::into_raw(ctx) as *mut _) })
     }
 
@@ -428,10 +520,10 @@ impl ContextOps for PulseContext {
         user_ptr: *mut c_void,
     ) -> Result<Stream> {
         if self.error {
-            let _ = try!(self.context_init());
+            let _ = self.context_init()?;
         }
 
-        let stm = try!(PulseStream::new(
+        let stm = PulseStream::new(
             self,
             stream_name,
             input_device,
@@ -442,7 +534,7 @@ impl ContextOps for PulseContext {
             data_callback,
             state_callback,
             user_ptr,
-        ));
+        )?;
         Ok(unsafe { Stream::from_ptr(Box::into_raw(stm) as *mut _) })
     }
 
@@ -452,63 +544,6 @@ impl ContextOps for PulseContext {
         cb: ffi::cubeb_device_collection_changed_callback,
         user_ptr: *mut c_void,
     ) -> Result<()> {
-        fn update_collection(
-            _: &pulse::Context,
-            event: pulse::SubscriptionEvent,
-            index: u32,
-            user_data: *mut c_void,
-        ) {
-            let ctx = unsafe { &mut *(user_data as *mut PulseContext) };
-
-            let (f, t) = (event.event_facility(), event.event_type());
-            if (f == pulse::SubscriptionEventFacility::Source)
-                | (f == pulse::SubscriptionEventFacility::Sink)
-            {
-                if (t == pulse::SubscriptionEventType::Remove)
-                    | (t == pulse::SubscriptionEventType::New)
-                {
-                    if log_enabled() {
-                        let op = if t == pulse::SubscriptionEventType::New {
-                            "Adding"
-                        } else {
-                            "Removing"
-                        };
-                        let dev = if f == pulse::SubscriptionEventFacility::Sink {
-                            "sink"
-                        } else {
-                            "source "
-                        };
-                        cubeb_log!("{} {} index {}", op, dev, index);
-                    }
-
-                    if f == pulse::SubscriptionEventFacility::Source {
-                        unsafe {
-                            ctx.input_collection_changed_callback.unwrap()(
-                                ctx as *mut _ as *mut _,
-                                ctx.input_collection_changed_user_ptr,
-                            );
-                        }
-                    }
-                    if f == pulse::SubscriptionEventFacility::Sink {
-                        unsafe {
-                            ctx.output_collection_changed_callback.unwrap()(
-                                ctx as *mut _ as *mut _,
-                                ctx.output_collection_changed_user_ptr,
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        fn success(_: &pulse::Context, success: i32, user_data: *mut c_void) {
-            let ctx = unsafe { &*(user_data as *mut PulseContext) };
-            if success != 1 {
-                cubeb_log!("subscribe_success ignored failure: {}", success);
-            }
-            ctx.mainloop.signal();
-        }
-
         if devtype.contains(DeviceType::INPUT) {
             self.input_collection_changed_callback = cb;
             self.input_collection_changed_user_ptr = user_ptr;
@@ -525,32 +560,11 @@ impl ContextOps for PulseContext {
         if self.output_collection_changed_callback.is_some() {
             mask |= pulse::SubscriptionMask::SINK;
         }
+        /* Default device changed, this is always registered in order to update the
+         * `default_sink_info` when the default device changes. */
+        mask |= pulse::SubscriptionMask::SERVER;
 
-        let user_data: *mut c_void = self as *const _ as *mut _;
-        if let Some(ref context) = self.context {
-            self.mainloop.lock();
-
-            if cb.is_none() {
-                if mask.is_empty() {
-                    // Unregister subscription
-                    context.clear_subscribe_callback();
-                }
-            } else {
-                context.set_subscribe_callback(update_collection, user_data);
-            }
-
-            if let Ok(o) = context.subscribe(mask, success, self as *const _ as *mut _) {
-                self.operation_wait(None, &o);
-            } else {
-                self.mainloop.unlock();
-                cubeb_log!("Context subscribe failed");
-                return Err(Error::error());
-            }
-
-            self.mainloop.unlock();
-        }
-
-        Ok(())
+        self.subscribe_notifications(mask)
     }
 }
 
