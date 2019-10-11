@@ -98,6 +98,7 @@ class TabViewHolder(
         updateSelected(tab.selected ?: false)
         updatePlayPauseButton(tab.mediaState ?: MediaState.None)
         item_tab.transitionName = "$TAB_ITEM_TRANSITION_NAME${tab.sessionId}"
+        updateCloseButtonDescription(tab.title)
     }
 
     internal fun updatePlayPauseButton(mediaState: MediaState) {
@@ -141,6 +142,10 @@ class TabViewHolder(
 
     internal fun updateSelected(selected: Boolean) {
         selected_border.visibility = if (selected) View.VISIBLE else View.GONE
+    }
+    private fun updateCloseButtonDescription(title: String) {
+        close_tab_button.contentDescription =
+            close_tab_button.context.getString(R.string.close_tab_title, title)
     }
 
     companion object {
