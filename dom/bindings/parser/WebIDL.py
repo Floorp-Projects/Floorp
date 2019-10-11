@@ -1775,6 +1775,11 @@ class IDLInterface(IDLInterfaceOrNamespace):
                 if not attr.hasValue():
                     raise WebIDLError("[%s] must have a value" % identifier,
                                       [attr.location])
+            elif identifier == "InstrumentedProps":
+                # Known extended attributes that take a list
+                if not attr.hasArgs():
+                    raise WebIDLError("[%s] must have arguments" % identifier,
+                                      [attr.location])
             else:
                 raise WebIDLError("Unknown extended attribute %s on interface" % identifier,
                                   [attr.location])
