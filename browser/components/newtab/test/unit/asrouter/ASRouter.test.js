@@ -40,6 +40,9 @@ const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 const FAKE_RESPONSE_HEADERS = { get() {} };
 
+const USE_REMOTE_L10N_PREF =
+  "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
+
 // Creates a message object that looks like messages returned by
 // RemotePageManager listeners
 function fakeAsyncMessage(action) {
@@ -329,6 +332,17 @@ describe("ASRouter", () => {
       assert.equal(
         global.Services.obs.addObserver.args[0][1],
         "intl:app-locales-changed"
+      );
+    });
+    it("should add a pref observer", async () => {
+      sandbox.spy(global.Services.prefs, "addObserver");
+      await createRouterAndInit();
+
+      assert.calledOnce(global.Services.prefs.addObserver);
+      assert.calledWithExactly(
+        global.Services.prefs.addObserver,
+        USE_REMOTE_L10N_PREF,
+        Router
       );
     });
     describe("lazily loading local test providers", () => {
@@ -1111,6 +1125,14 @@ describe("ASRouter", () => {
         global.Services.obs.removeObserver.args[0][1],
         "intl:app-locales-changed"
       );
+    });
+    it("should remove the pref observer for `USE_REMOTE_L10N_PREF`", async () => {
+      sandbox.spy(global.Services.prefs, "removeObserver");
+      Router.uninit();
+
+      // Grab the last call as #uninit() also involves multiple calls of `Services.prefs.removeObserver`.
+      const call = global.Services.prefs.removeObserver.lastCall;
+      assert.calledWithExactly(call, USE_REMOTE_L10N_PREF, Router);
     });
   });
 
@@ -3242,6 +3264,23 @@ describe("ASRouter", () => {
 
       assert.notCalled(Router.setState);
       assert.notCalled(Router.loadMessagesFromAllProviders);
+    });
+  });
+
+  describe("#observe", () => {
+    it("should reload l10n for CFRPageActions when the `USE_REMOTE_L10N_PREF` pref is changed", () => {
+      sandbox.spy(CFRPageActions, "reloadL10n");
+
+      Router.observe("", "", USE_REMOTE_L10N_PREF);
+
+      assert.calledOnce(CFRPageActions.reloadL10n);
+    });
+    it("should not react to other pref changes", () => {
+      sandbox.spy(CFRPageActions, "reloadL10n");
+
+      Router.observe("", "", "foo");
+
+      assert.notCalled(CFRPageActions.reloadL10n);
     });
   });
 });

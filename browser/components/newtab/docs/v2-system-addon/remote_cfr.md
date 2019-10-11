@@ -58,3 +58,6 @@ There should be a "cfr-remote" provider listed.
 
 If your message is published in the staging environment the easiest way to test is using the [Remote Settings Devtools](https://github.com/mozilla/remote-settings-devtools/releases) addon. You can install this by going to `about:debugging` and using the `Load Temporary Addon` feature.
 The devtools allow you to switch your profile between production and staging and takes care of correctly flipping all the required preferences.
+
+## Remote l10n
+By default, all CFR messages are localized with the remote Fluent files hosted in `ms-language-packs` on Remote Settings. For local test and development, you can force ASRouter to use the local Fluent files by flipping the pref `browser.newtabpage.activity-stream.asrouter.useRemoteL10n`.

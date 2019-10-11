@@ -1323,6 +1323,10 @@ pref("browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel", "{
 // repackager of this code using an alternate snippet url, please keep your users safe
 pref("browser.newtabpage.activity-stream.asrouter.providers.snippets", "{\"id\":\"snippets\",\"enabled\":true,\"type\":\"remote\",\"url\":\"https://snippets.cdn.mozilla.net/%STARTPAGE_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/\",\"updateCycleInMs\":14400000}");
 
+// The pref that controls if ASRouter uses the remote fluent files.
+// It's enabled by default, but could be disabled to force ASRouter to use the local files.
+pref("browser.newtabpage.activity-stream.asrouter.useRemoteL10n", true);
+
 // These prefs control if Discovery Stream is enabled.
 pref("browser.newtabpage.activity-stream.discoverystream.enabled", true);
 pref("browser.newtabpage.activity-stream.discoverystream.hardcoded-basic-layout", false);
