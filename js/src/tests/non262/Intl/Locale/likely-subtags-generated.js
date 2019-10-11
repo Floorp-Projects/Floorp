@@ -3,7 +3,7 @@
 
 // Extracted from likelySubtags.xml.
 // Derived from CLDR Supplemental Data, version 35.1.
-// https://github.com/unicode-org/cldr.git
+// https://unicode.org/Public/cldr/35.1/core.zip
 var maxLikelySubtags = {
     "aa": "aa-Latn-ET",
     "aai": "aai-Latn-ZZ",
@@ -1842,7 +1842,7 @@ var maxLikelySubtags = {
 
 // Extracted from likelySubtags.xml.
 // Derived from CLDR Supplemental Data, version 35.1.
-// https://github.com/unicode-org/cldr.git
+// https://unicode.org/Public/cldr/35.1/core.zip
 var minLikelySubtags = {
     "aa-Latn-DJ": "aa-DJ",
     "aa-Latn-ET": "aa",
