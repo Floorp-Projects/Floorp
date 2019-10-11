@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.whenStarted
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -403,9 +404,11 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
         context?.let {
             engineView.captureThumbnail { bitmap ->
                 lifecycleScope.launch {
-                    swipeRefresh?.background = bitmap?.toDrawable(it.resources)
-                    engineView.asView().visibility = View.GONE
-                    findNavController().nav(R.id.browserFragment, directions)
+                    whenStarted {
+                        swipeRefresh?.background = bitmap?.toDrawable(it.resources)
+                        engineView?.asView()?.visibility = View.GONE
+                        findNavController().nav(R.id.browserFragment, directions)
+                    }
                 }
             }
         }
