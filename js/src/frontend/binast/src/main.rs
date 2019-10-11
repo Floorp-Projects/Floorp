@@ -2243,7 +2243,7 @@ impl CPPExporter {
     AutoList guard(*tokenizer_);
 
     const auto start = tokenizer_->offset();
-    const auto childContext = ListContext(context.position, BinASTList::{content_kind});
+    const auto childContext = ListContext(context.position_, BinASTList::{content_kind});
     guard.init();
     MOZ_TRY(tokenizer_->enterList(length, childContext));{empty_check}
 {init}
