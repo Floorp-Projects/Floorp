@@ -14,9 +14,9 @@
 
     Target "langtags":
     This script extracts information about mappings between deprecated and
-    current Unicode BCP 47 locale identifiers from CLDR and converts it to
-    JavaScript object definitions in LangTagMappingsGenerated.js. The
-    definitions are used in Intl.js.
+    current Unicode BCP 47 locale identifiers from CLDR and converts it to C++
+    mapping code in LanguageTagGenerated.cpp. The code is used in
+    LanguageTag.cpp.
 
 
     Target "tzdata":
@@ -103,293 +103,6 @@ def writeMappingsVar(println, mapping, name, description, source, url):
             value = '"{0}"'.format(prefix)
         println(u'    "{0}": {1},'.format(key, value))
     println(u"};")
-
-
-def writeUpdateLocaleIdMappingsFunction(println,
-                                        complex_language_mappings,
-                                        complex_region_mappings,
-                                        description, source, url):
-    """ Writes a function definition that performs language tag mapping. """
-    println(u"")
-    writeMappingHeader(println, description, source, url)
-    println(u"""\
-/* eslint-disable complexity */
-function updateLocaleIdMappings(tag) {
-    assert(IsObject(tag), "tag is an object");
-
-    // Replace deprecated language tags with their preferred values.
-    var language = tag.language;
-    if (hasOwn(language, languageMappings)) {
-        tag.language = languageMappings[language];
-    } else if (hasOwn(language, complexLanguageMappings)) {
-        switch (language) {""")
-
-    # Merge duplicate language entries.
-    language_aliases = {}
-    for (deprecated_language, (language, script, region)) in (
-        sorted(complex_language_mappings.items(), key=itemgetter(0))
-    ):
-        key = (language, script, region)
-        if key not in language_aliases:
-            language_aliases[key] = []
-        else:
-            language_aliases[key].append(deprecated_language)
-
-    for (deprecated_language, (language, script, region)) in (
-        sorted(complex_language_mappings.items(), key=itemgetter(0))
-    ):
-        key = (language, script, region)
-        if deprecated_language in language_aliases[key]:
-            continue
-
-        for lang in [deprecated_language] + language_aliases[key]:
-            println(u"""
-          case "{}":
-            """.format(lang).rstrip().strip("\n"))
-
-        println(u"""
-            tag.language = "{}";
-        """.format(language).rstrip().strip("\n"))
-        if script is not None:
-            println(u"""
-            if (tag.script === undefined)
-                tag.script = "{}";
-            """.format(script).rstrip().strip("\n"))
-        if region is not None:
-            println(u"""
-            if (tag.region === undefined)
-                tag.region = "{}";
-            """.format(region).rstrip().strip("\n"))
-        println(u"""
-            break;
-        """.rstrip().strip("\n"))
-
-    println(u"""
-          default:
-            assert(false, "language not handled: " + language);
-        }
-    }
-
-    // No script replacements are currently present.
-
-    // Replace deprecated subtags with their preferred values.
-    var region = tag.region;
-    if (region !== undefined) {
-        if (hasOwn(region, regionMappings)) {
-            tag.region = regionMappings[region];
-        } else if (hasOwn(region, complexRegionMappings)) {
-            switch (region) {""".lstrip("\n"))
-
-    # |non_default_replacements| is a list and hence not hashable. Convert it
-    # to a string to get a proper hashable value.
-    def hash_key(default, non_default_replacements):
-        return (default, str(sorted(str(v) for v in non_default_replacements)))
-
-    # Merge duplicate region entries.
-    region_aliases = {}
-    for (deprecated_region, (default, non_default_replacements)) in (
-        sorted(complex_region_mappings.items(), key=itemgetter(0))
-    ):
-        key = hash_key(default, non_default_replacements)
-        if key not in region_aliases:
-            region_aliases[key] = []
-        else:
-            region_aliases[key].append(deprecated_region)
-
-    for (deprecated_region, (default, non_default_replacements)) in (
-        sorted(complex_region_mappings.items(), key=itemgetter(0))
-    ):
-        key = hash_key(default, non_default_replacements)
-        if deprecated_region in region_aliases[key]:
-            continue
-
-        for region in [deprecated_region] + region_aliases[key]:
-            println(u"""
-              case "{}":
-            """.format(region).rstrip().strip("\n"))
-
-        for (language, script, region) in sorted(non_default_replacements, key=itemgetter(0)):
-            if script is None:
-                println(u"""
-                if (tag.language === "{}") {{
-                """.format(language).rstrip().strip("\n"))
-            else:
-                println(u"""
-                if (tag.language === "{}" && tag.script === "{}") {{
-                """.format(language, script).rstrip().strip("\n"))
-            println(u"""
-                    tag.region = "{}";
-                    break;
-                }}
-            """.format(region).rstrip().strip("\n"))
-
-        println(u"""
-                tag.region = "{}";
-                break;
-        """.format(default).rstrip().strip("\n"))
-
-    println(u"""
-              default:
-                assert(false, "region not handled: " + region);
-            }
-        }
-
-        // No variant replacements are currently present.
-        // No extension replacements are currently present.
-        // Private use sequences are left as is.
-
-    }
-}
-/* eslint-enable complexity */
-""".strip("\n"))
-
-
-def writeGrandfatheredMappingsFunction(println,
-                                       grandfathered_mappings,
-                                       description, source, url):
-    """ Writes a function definition that maps grandfathered language tags. """
-    println(u"")
-    writeMappingHeader(println, description, source, url)
-    println(u"""\
-function updateGrandfatheredMappings(tag) {
-    assert(IsObject(tag), "tag is an object");
-
-    // We're mapping regular grandfathered tags to non-grandfathered form here.
-    // Other tags remain unchanged.
-    //
-    // regular       = "art-lojban"
-    //               / "cel-gaulish"
-    //               / "no-bok"
-    //               / "no-nyn"
-    //               / "zh-guoyu"
-    //               / "zh-hakka"
-    //               / "zh-min"
-    //               / "zh-min-nan"
-    //               / "zh-xiang"
-    //
-    // Therefore we can quickly exclude most tags by checking every
-    // |unicode_locale_id| subcomponent for characteristics not shared by any of
-    // the regular grandfathered (RG) tags:
-    //
-    //   * Real-world |unicode_language_subtag|s are all two or three letters,
-    //     so don't waste time running a useless |language.length > 3| fast-path.
-    //   * No RG tag has a "script"-looking component.
-    //   * No RG tag has a "region"-looking component.
-    //   * The RG tags that match |unicode_locale_id| (art-lojban, cel-gaulish,
-    //     zh-guoyu, zh-hakka, zh-xiang) have exactly one "variant". (no-bok,
-    //     no-nyn, zh-min, and zh-min-nan require BCP47's extlang subtag
-    //     that |unicode_locale_id| doesn't support.)
-    //   * No RG tag contains |extensions| or |pu_extensions|.
-    if (tag.script !== undefined ||
-        tag.region !== undefined ||
-        tag.variants.length !== 1 ||
-        tag.extensions.length !== 0 ||
-        tag.privateuse !== undefined)
-    {
-        return;
-    }""")
-
-    # From Unicode BCP 47 locale identifier <https://unicode.org/reports/tr35/>.
-    #
-    # Doesn't allow any 'extensions' subtags.
-    re_unicode_locale_id = re.compile(
-        r"""
-        ^
-        # unicode_language_id = unicode_language_subtag
-        #     unicode_language_subtag = alpha{2,3} | alpha{5,8}
-        (?P<language>[a-z]{2,3}|[a-z]{5,8})
-
-        # (sep unicode_script_subtag)?
-        #     unicode_script_subtag = alpha{4}
-        (?:-(?P<script>[a-z]{4}))?
-
-        # (sep unicode_region_subtag)?
-        #     unicode_region_subtag = (alpha{2} | digit{3})
-        (?:-(?P<region>([a-z]{2}|[0-9]{3})))?
-
-        # (sep unicode_variant_subtag)*
-        #     unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3})
-        (?P<variants>(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))+)?
-
-        # pu_extensions?
-        #     pu_extensions = sep [xX] (sep alphanum{1,8})+
-        (?:-(?P<privateuse>x(-[a-z0-9]{1,8})+))?
-        $
-        """, re.IGNORECASE | re.VERBOSE)
-
-    is_first = True
-
-    for (tag, modern) in sorted(grandfathered_mappings.items(), key=itemgetter(0)):
-        tag_match = re_unicode_locale_id.match(tag)
-        assert tag_match is not None
-
-        tag_language = tag_match.group("language")
-        assert tag_match.group("script") is None, (
-               "{} does not contain a script subtag".format(tag))
-        assert tag_match.group("region") is None, (
-               "{} does not contain a region subtag".format(tag))
-        tag_variants = tag_match.group("variants")
-        assert tag_variants is not None, (
-               "{} contains a variant subtag".format(tag))
-        assert tag_match.group("privateuse") is None, (
-               "{} does not contain a privateuse subtag".format(tag))
-
-        tag_variant = tag_variants[1:]
-        assert "-" not in tag_variant, (
-               "{} contains only a single variant".format(tag))
-
-        modern_match = re_unicode_locale_id.match(modern)
-        assert modern_match is not None
-
-        modern_language = modern_match.group("language")
-        modern_script = modern_match.group("script")
-        modern_region = modern_match.group("region")
-        modern_variants = modern_match.group("variants")
-        modern_privateuse = modern_match.group("privateuse")
-
-        println(u"""
-    // {} -> {}
-""".format(tag, modern).rstrip())
-
-        println(u"""
-    {}if (tag.language === "{}" && tag.variants[0] === "{}") {{
-        """.format("" if is_first else "else ", tag_language, tag_variant).rstrip().strip("\n"))
-
-        is_first = False
-
-        println(u"""
-        tag.language = "{}";
-        """.format(modern_language).rstrip().strip("\n"))
-
-        if modern_script is not None:
-            println(u"""
-        tag.script = "{}";
-        """.format(modern_script).rstrip().strip("\n"))
-
-        if modern_region is not None:
-            println(u"""
-        tag.region = "{}";
-        """.format(modern_region).rstrip().strip("\n"))
-
-        if modern_variants is not None:
-            println(u"""
-        tag.variants = {};
-        """.format(sorted(modern_variants[1:].split("-"))).rstrip().strip("\n"))
-        else:
-            println(u"""
-        tag.variants.length = 0;
-        """.rstrip().strip("\n"))
-
-        if modern_privateuse is not None:
-            println(u"""
-        tag.privateuse = "{}";
-        """.format(modern_privateuse).rstrip().strip("\n"))
-
-        println(u"""
-    }""".rstrip().strip("\n"))
-
-    println(u"""
-}""".lstrip("\n"))
 
 
 def writeMappingsBinarySearch(println, fn_name, type_name, name, validate_fn, mappings,
@@ -508,8 +221,8 @@ bool js::intl::LanguageTag::{0}({1} {2}) {{
 }""".lstrip("\n"))
 
 
-def writeComplexLanguageTagMappingsNative(println, complex_language_mappings,
-                                          description, source, url):
+def writeComplexLanguageTagMappings(println, complex_language_mappings,
+                                    description, source, url):
     println(u"")
     writeMappingHeader(println, description, source, url)
     println(u"""
@@ -567,8 +280,8 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
 """.strip("\n"))
 
 
-def writeComplexRegionTagMappingsNative(println, complex_region_mappings,
-                                        description, source, url):
+def writeComplexRegionTagMappings(println, complex_region_mappings,
+                                  description, source, url):
     println(u"")
     writeMappingHeader(println, description, source, url)
     println(u"""
@@ -651,8 +364,8 @@ void js::intl::LanguageTag::performComplexRegionMappings() {
 """.strip("\n"))
 
 
-def writeGrandfatheredMappingsFunctionNative(println, grandfathered_mappings,
-                                             description, source, url):
+def writeGrandfatheredMappingsFunction(println, grandfathered_mappings,
+                                       description, source, url):
     """ Writes a function definition that maps grandfathered language tags. """
     println(u"")
     writeMappingHeader(println, description, source, url)
@@ -1067,38 +780,6 @@ def readSupplementalData(supplemental_dtd_file, supplemental_metadata_file, like
 def writeCLDRLanguageTagData(println, data, url):
     """ Writes the language tag data to the Intl data file. """
 
-    source = u"CLDR Supplemental Data, version {}".format(data["version"])
-    grandfathered_mappings = data["grandfatheredMappings"]
-    language_mappings = data["languageMappings"]
-    complex_language_mappings = data["complexLanguageMappings"]
-    region_mappings = data["regionMappings"]
-    complex_region_mappings = data["complexRegionMappings"]
-
-    writeMappingsVar(println, grandfathered_mappings, "grandfatheredMappings",
-                     "Mappings from grandfathered tags to preferred values.", source, url)
-    writeMappingsVar(println, language_mappings, "languageMappings",
-                     "Mappings from language subtags to preferred values.", source, url)
-    writeMappingsVar(println, {key: True for key in complex_language_mappings},
-                     "complexLanguageMappings",
-                     "Language subtags with complex mappings.", source, url)
-    writeMappingsVar(println, region_mappings, "regionMappings",
-                     "Mappings from region subtags to preferred values.", source, url)
-    writeMappingsVar(println, {key: True for key in complex_region_mappings},
-                     "complexRegionMappings",
-                     "Region subtags with complex mappings.", source, url)
-
-    writeUpdateLocaleIdMappingsFunction(println, complex_language_mappings,
-                                        complex_region_mappings,
-                                        "Canonicalize Unicode BCP 47 locale identifiers.",
-                                        source, url)
-    writeGrandfatheredMappingsFunction(println, grandfathered_mappings,
-                                       "Canonicalize grandfathered locale identifiers.",
-                                       source, url)
-
-
-def writeCLDRLanguageTagDataNative(println, data, url):
-    """ Writes the language tag data to the Intl data file. """
-
     println(generatedFileWarning)
 
     println(u"""
@@ -1186,14 +867,14 @@ static inline const char* SearchReplacement(
                               complex_region_mappings.keys(), region_maxlength,
                               "Region subtags with complex mappings.", source, url)
 
-    writeComplexLanguageTagMappingsNative(println, complex_language_mappings,
-                                          "Language subtags with complex mappings.", source, url)
-    writeComplexRegionTagMappingsNative(println, complex_region_mappings,
-                                        "Region subtags with complex mappings.", source, url)
+    writeComplexLanguageTagMappings(println, complex_language_mappings,
+                                    "Language subtags with complex mappings.", source, url)
+    writeComplexRegionTagMappings(println, complex_region_mappings,
+                                  "Region subtags with complex mappings.", source, url)
 
-    writeGrandfatheredMappingsFunctionNative(println, grandfathered_mappings,
-                                             "Canonicalize grandfathered locale identifiers.", source,
-                                             url)
+    writeGrandfatheredMappingsFunction(println, grandfathered_mappings,
+                                       "Canonicalize grandfathered locale identifiers.", source,
+                                       url)
 
 
 def writeCLDRLanguageTagLikelySubtagsTest(println, data, url):
@@ -1322,7 +1003,7 @@ if (typeof reportCompare === "function")
 
 
 def updateCLDRLangTags(args):
-    """ Update the LangTagMappingsCLDRGenerated.js file. """
+    """ Update the LanguageTagGenerated.cpp file. """
     url = args.url
     branch = args.branch
     revision = args.revision
@@ -1404,16 +1085,7 @@ def updateCLDRLangTags(args):
     print("Writing Intl data...")
     with io.open(out, mode="w", encoding="utf-8", newline="") as f:
         println = partial(print, file=f)
-
-        println(u"// Generated by make_intl_data.py. DO NOT EDIT.")
         writeCLDRLanguageTagData(println, data, url)
-
-    print("Writing Intl data...")
-    native_out = "LanguageTagGenerated.cpp"
-    # native_out = os.path.splitext(out)[0] + ".cpp"
-    with io.open(native_out, mode="w", encoding="utf-8", newline="") as f:
-        println = partial(print, file=f)
-        writeCLDRLanguageTagDataNative(println, data, url)
 
     print("Writing Intl test data...")
     test_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -2696,7 +2368,7 @@ if __name__ == "__main__":
     parser_cldr_tags.add_argument("--revision", default="HEAD",
                                   help="Git revision (default: %(default)s)")
     parser_cldr_tags.add_argument("--out",
-                                  default="LangTagMappingsGenerated.js",
+                                  default="LanguageTagGenerated.cpp",
                                   help="Output file (default: %(default)s)")
     parser_cldr_tags.add_argument("files",
                                   nargs="*",
