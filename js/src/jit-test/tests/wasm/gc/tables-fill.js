@@ -2,28 +2,28 @@
 
 const N = 8;
 
-function testTableFill(type, obj) {
+function testTableFill(tbl_type, val_type, obj) {
   assertEq(obj.length, N);
 
   let ins
      = wasmEvalText(
         `(module
-           (table 8 ${type})     ;; table 0
-           (table $t 10 ${type}) ;; table 1
+           (table 8 ${tbl_type})     ;; table 0
+           (table $t 10 ${tbl_type}) ;; table 1
 
            ;; fill/get for table 0, referenced implicitly
-           (func (export "fill0") (param $i i32) (param $r ${type}) (param $n i32)
+           (func (export "fill0") (param $i i32) (param $r ${val_type}) (param $n i32)
              (table.fill (local.get $i) (local.get $r) (local.get $n))
            )
-           (func (export "get0") (param $i i32) (result ${type})
+           (func (export "get0") (param $i i32) (result ${tbl_type})
              (table.get (local.get $i))
            )
 
            ;; fill/get for table 1, referenced explicitly
-           (func (export "fill1") (param $i i32) (param $r ${type}) (param $n i32)
+           (func (export "fill1") (param $i i32) (param $r ${val_type}) (param $n i32)
              (table.fill $t (local.get $i) (local.get $r) (local.get $n))
            )
-           (func (export "get1") (param $i i32) (result ${type})
+           (func (export "get1") (param $i i32) (result ${tbl_type})
              (table.get $t (local.get $i))
            )
          )`);
@@ -133,12 +133,13 @@ function testTableFill(type, obj) {
 var objs = [];
 for (var i = 0; i < N; i++)
   objs[i] = {n:i};
-testTableFill('anyref', objs);
+testTableFill('anyref', 'anyref', objs);
 
 var funcs = [];
 for (var i = 0; i < N; i++)
   funcs[i] = wasmEvalText(`(module (func (export "x") (result i32) (i32.const ${i})))`).exports.x;
-testTableFill('funcref', funcs);
+testTableFill('funcref', 'funcref', funcs);
+testTableFill('anyref', 'funcref', funcs);  // funcref <: anyref so implicit upcast on fill
 
 
 // Type errors.  Required sig is: (i32, anyref, i32) -> void
@@ -202,3 +203,12 @@ assertErrorMessage(() => wasmEvalText(
      ))`),
      WebAssembly.CompileError,
      /popping value from empty stack/);
+
+assertErrorMessage(() => wasmEvalText(
+    `(module
+       (table 8 funcref)
+       (func (param $v anyref)
+         (table.fill (i32.const 0) (local.get $v) (i32.const 0)))
+     )`),
+     WebAssembly.CompileError,
+     /expression has type anyref but expected funcref/);
