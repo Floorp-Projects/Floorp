@@ -124,6 +124,8 @@ EXPORTS.mozilla = [
 
 EXPORTS["double-conversion"] = [
     'double-conversion/double-conversion/double-conversion.h',
+    'double-conversion/double-conversion/double-to-string.h',
+    'double-conversion/double-conversion/string-to-double.h',
     'double-conversion/double-conversion/utils.h',
 ]
 
@@ -146,10 +148,10 @@ UNIFIED_SOURCES += [
     'double-conversion/double-conversion/bignum-dtoa.cc',
     'double-conversion/double-conversion/bignum.cc',
     'double-conversion/double-conversion/cached-powers.cc',
-    'double-conversion/double-conversion/diy-fp.cc',
-    'double-conversion/double-conversion/double-conversion.cc',
+    'double-conversion/double-conversion/double-to-string.cc',
     'double-conversion/double-conversion/fast-dtoa.cc',
     'double-conversion/double-conversion/fixed-dtoa.cc',
+    'double-conversion/double-conversion/string-to-double.cc',
     'double-conversion/double-conversion/strtod.cc',
     'FloatingPoint.cpp',
     'HashFunctions.cpp',
