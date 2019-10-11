@@ -487,7 +487,7 @@ this.FxAccountsClient.prototype = {
       .then(
         resp => resp.cert,
         err => {
-          log.error("HAWK.signCertificate error: " + JSON.stringify(err));
+          log.error("HAWK.signCertificate error", err);
           throw err;
         }
       );
@@ -533,7 +533,7 @@ this.FxAccountsClient.prototype = {
         return result.exists;
       },
       error => {
-        log.error("accountStatus failed with: " + error);
+        log.error("accountStatus failed", error);
         return Promise.reject(error);
       }
     );
@@ -796,9 +796,7 @@ this.FxAccountsClient.prototype = {
         jsonPayload
       );
     } catch (error) {
-      log.error(
-        "error " + method + "ing " + path + ": " + JSON.stringify(error)
-      );
+      log.error(`error ${method}ing ${path}`, error);
       if (error.retryAfter) {
         log.debug("Received backoff response; caching error as flag.");
         this.backoffError = error;
