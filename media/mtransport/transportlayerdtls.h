@@ -25,6 +25,7 @@
 #include "dtlsidentity.h"
 #include "transportlayer.h"
 #include "ssl.h"
+#include "sslproto.h"
 
 namespace mozilla {
 
@@ -67,6 +68,13 @@ class TransportLayerDtls final : public TransportLayer {
   // DTLS-specific operations
   void SetRole(Role role) { role_ = role; }
   Role role() { return role_; }
+
+  enum class Version : uint16_t {
+    DTLS_1_0 = SSL_LIBRARY_VERSION_DTLS_1_0,
+    DTLS_1_2 = SSL_LIBRARY_VERSION_DTLS_1_2,
+    DTLS_1_3 = SSL_LIBRARY_VERSION_DTLS_1_3
+  };
+  void SetMinMaxVersion(Version min_version, Version max_version);
 
   void SetIdentity(const RefPtr<DtlsIdentity>& identity) {
     identity_ = identity;
@@ -159,6 +167,9 @@ class TransportLayerDtls final : public TransportLayer {
   Role role_ = CLIENT;
   Verification verification_mode_ = VERIFY_UNSET;
   std::vector<DtlsDigest> digests_;
+
+  Version minVersion_ = Version::DTLS_1_0;
+  Version maxVersion_ = Version::DTLS_1_2;
 
   // Must delete nspr_io_adapter after ssl_fd_ b/c ssl_fd_ causes an alert
   // (ssl_fd_ contains an un-owning pointer to nspr_io_adapter_)

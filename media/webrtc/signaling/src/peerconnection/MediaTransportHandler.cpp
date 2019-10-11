@@ -160,6 +160,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   RefPtr<NrIceResolver> mDNSResolver;
   std::map<std::string, Transport> mTransports;
   bool mObfuscateHostAddresses = false;
+  uint32_t minDtlsVersion = 0;
+  uint32_t maxDtlsVersion = 0;
 
   std::set<std::string> mSignaledAddresses;
 
@@ -426,6 +428,13 @@ nsresult MediaTransportHandlerSTS::CreateIceCtx(
           return InitPromise::CreateAndReject("Failed to get dns resolver",
                                               __func__);
         }
+
+        // We are reading these here, because when we setup the DTLS transport
+        // we are on the wrong thread to read prefs
+        minDtlsVersion =
+            Preferences::GetUint("media.peerconnection.dtls.version.min");
+        maxDtlsVersion =
+            Preferences::GetUint("media.peerconnection.dtls.version.max");
 
         CSFLogDebug(LOGTAG, "%s done", __func__);
         return InitPromise::CreateAndResolve(true, __func__);
@@ -1149,6 +1158,10 @@ RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
                             : TransportLayerDtls::SERVER);
 
   dtls->SetIdentity(aDtlsIdentity);
+
+  dtls->SetMinMaxVersion(
+      static_cast<TransportLayerDtls::Version>(minDtlsVersion),
+      static_cast<TransportLayerDtls::Version>(maxDtlsVersion));
 
   for (const auto& digest : aDigests) {
     rv = dtls->SetVerificationDigest(digest);
