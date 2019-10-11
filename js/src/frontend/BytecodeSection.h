@@ -21,6 +21,7 @@
 #include "frontend/SourceNotes.h"      // jssrcnote
 #include "gc/Barrier.h"                // GCPtrObject, GCPtrScope, GCPtrValue
 #include "gc/Rooting.h"                // JS::Rooted
+#include "js/GCVariant.h"              // GCPolicy<mozilla::Variant>
 #include "js/GCVector.h"               // GCVector
 #include "js/TypeDecls.h"              // jsbytecode, JSContext
 #include "js/Value.h"                  // JS::Vector
@@ -39,7 +40,8 @@ namespace frontend {
 class ObjectBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  JS::RootedVector<StackGCCellPtr> vector;
+  using ListType = mozilla::Variant<StackGCCellPtr>;
+  JS::RootedVector<ListType> vector;
 
   // Last emitted object.
   ObjectBox* lastbox = nullptr;
@@ -51,7 +53,8 @@ struct MOZ_STACK_CLASS GCThingList {
 
   MOZ_MUST_USE bool append(Scope* scope, uint32_t* index) {
     *index = vector.length();
-    if (!vector.append(JS::GCCellPtr(scope))) {
+    if (!vector.append(
+            mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(scope))))) {
       return false;
     }
     if (!firstScopeIndex) {
@@ -61,7 +64,7 @@ struct MOZ_STACK_CLASS GCThingList {
   }
   MOZ_MUST_USE bool append(BigInt* bi, uint32_t* index) {
     *index = vector.length();
-    return vector.append(JS::GCCellPtr(bi));
+    return vector.append(mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(bi))));
   }
   MOZ_MUST_USE bool append(ObjectBox* obj, uint32_t* index);
 
@@ -70,7 +73,7 @@ struct MOZ_STACK_CLASS GCThingList {
   void finishInnerFunctions();
 
   Scope* getScope(size_t index) const {
-    return &vector[index].get().get().as<Scope>();
+    return &vector[index].get().as<StackGCCellPtr>().get().as<Scope>();
   }
 
   Scope* firstScope() const {
