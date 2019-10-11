@@ -49,6 +49,13 @@ extern JSObject* CreateLocalePrototype(JSContext* cx,
                                        JS::Handle<JSObject*> Intl,
                                        JS::Handle<GlobalObject*> global);
 
+extern MOZ_MUST_USE bool intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx,
+                                                                 unsigned argc,
+                                                                 Value* vp);
+
+extern MOZ_MUST_USE bool intl_TryValidateAndCanonicalizeLanguageTag(
+    JSContext* cx, unsigned argc, Value* vp);
+
 }  // namespace js
 
 #endif /* builtin_intl_Locale_h */

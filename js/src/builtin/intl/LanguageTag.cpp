@@ -1593,5 +1593,88 @@ bool ParseStandaloneRegionTag(HandleLinearString str, RegionSubtag& result) {
   return true;
 }
 
+template <typename CharT>
+static bool IsAsciiLowercaseAlpha(const mozilla::Range<const CharT>& range) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  const CharT* ptr = range.begin().get();
+  size_t length = range.length();
+  return std::all_of(ptr, ptr + length, mozilla::IsAsciiLowercaseAlpha<CharT>);
+}
+
+static bool IsAsciiLowercaseAlpha(JSLinearString* str) {
+  JS::AutoCheckCannotGC nogc;
+  return str->hasLatin1Chars() ? IsAsciiLowercaseAlpha(str->latin1Range(nogc))
+                               : IsAsciiLowercaseAlpha(str->twoByteRange(nogc));
+}
+
+template <typename CharT>
+static bool IsAsciiAlpha(const mozilla::Range<const CharT>& range) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  const CharT* ptr = range.begin().get();
+  size_t length = range.length();
+  return std::all_of(ptr, ptr + length, mozilla::IsAsciiAlpha<CharT>);
+}
+
+static bool IsAsciiAlpha(JSLinearString* str) {
+  JS::AutoCheckCannotGC nogc;
+  return str->hasLatin1Chars() ? IsAsciiAlpha(str->latin1Range(nogc))
+                               : IsAsciiAlpha(str->twoByteRange(nogc));
+}
+
+JS::Result<JSString*> ParseStandaloneISO639LanguageTag(JSContext* cx,
+                                                       HandleLinearString str) {
+  // ISO-639 language codes contain either two or three characters.
+  size_t length = str->length();
+  if (length != 2 && length != 3) {
+    return nullptr;
+  }
+
+  // We can directly the return the input below if it's in the correct case.
+  bool isLowerCase = IsAsciiLowercaseAlpha(str);
+  if (!isLowerCase) {
+    // Must be an ASCII alpha string.
+    if (!IsAsciiAlpha(str)) {
+      return nullptr;
+    }
+  }
+
+  LanguageSubtag languageTag;
+  if (str->hasLatin1Chars()) {
+    JS::AutoCheckCannotGC nogc;
+    languageTag.set(str->latin1Range(nogc));
+  } else {
+    JS::AutoCheckCannotGC nogc;
+    languageTag.set(str->twoByteRange(nogc));
+  }
+
+  if (!isLowerCase) {
+    // The language subtag is canonicalized to lower case.
+    languageTag.toLowerCase();
+  }
+
+  // Reject the input if the canonical tag contains more than just a single
+  // language subtag.
+  if (LanguageTag::complexLanguageMapping(languageTag)) {
+    return nullptr;
+  }
+
+  // Take care to replace deprecated subtags with their preferred values.
+  JSString* result;
+  if (LanguageTag::languageMapping(languageTag) || !isLowerCase) {
+    auto range = languageTag.range();
+    result = NewStringCopyN<CanGC>(cx, range.begin().get(), range.length());
+  } else {
+    result = str;
+  }
+  if (!result) {
+    return cx->alreadyReportedOOM();
+  }
+  return result;
+}
+
 }  // namespace intl
 }  // namespace js
