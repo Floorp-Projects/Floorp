@@ -3800,7 +3800,9 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
-    bce->perScriptData().gcThingList().finish(data->gcthings());
+    if (!bce->perScriptData().gcThingList().finish(cx, data->gcthings())) {
+      return false;
+    }
   }
 
   return true;

@@ -271,10 +271,6 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   // Root atoms and objects allocated for the parsed tree.
   AutoKeepAtoms keepAtoms_;
 
-  ParseInfo::DeferredAllocationVector& deferredAllocations() {
-    return getParseInfo().deferredAllocations;
-  }
-
  private:
   // This is needed to cast a parser to JS::AutoGCRooter.
   friend void js::frontend::TraceParser(JSTracer* trc,
@@ -346,15 +342,11 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   bool publishLazyScripts(FunctionTree* root);
   bool publishDeferredFunctions(FunctionTree* root);
-  bool publishDeferredAllocations();
 
  public:
   FunctionTreeHolder& getTreeHolder() { return treeHolder_; }
 
   MOZ_MUST_USE bool publishDeferredItems() {
-    if (!publishDeferredAllocations()) {
-      return false;
-    }
     return publishDeferredItems(getTreeHolder().getFunctionTree());
   }
 

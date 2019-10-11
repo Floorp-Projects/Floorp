@@ -5015,7 +5015,7 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
   return true;
 }
 
-bool BytecodeEmitter::emitBigIntOp(BigInt* bigint) {
+bool BytecodeEmitter::emitBigIntOp(BigIntLiteral* bigint) {
   uint32_t index;
   if (!perScriptData().gcThingList().append(bigint, &index)) {
     return false;
@@ -9475,7 +9475,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::BigIntExpr:
-      if (!emitBigIntOp(pn->as<BigIntLiteral>().value())) {
+      if (!emitBigIntOp(&pn->as<BigIntLiteral>())) {
         return false;
       }
       break;
