@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sts=4 et sw=4 tw=99:
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -32,6 +32,38 @@ class LocaleObject : public NativeObject {
 extern JSObject* CreateLocalePrototype(JSContext* cx,
                                        JS::Handle<JSObject*> Intl,
                                        JS::Handle<GlobalObject*> global);
+
+class NativeLocaleObject : public NativeObject {
+ public:
+  static const JSClass class_;
+
+  static constexpr uint32_t LANGUAGE_TAG_SLOT = 0;
+  static constexpr uint32_t BASENAME_SLOT = 1;
+  static constexpr uint32_t UNICODE_EXTENSION_SLOT = 2;
+  static constexpr uint32_t SLOT_COUNT = 3;
+
+  /**
+   * Returns the complete language tag, including any extensions and privateuse
+   * subtags.
+   */
+  JSString* languageTag() const {
+    return getFixedSlot(LANGUAGE_TAG_SLOT).toString();
+  }
+
+  /**
+   * Returns the basename subtags, i.e. excluding any extensions and privateuse
+   * subtags.
+   */
+  JSString* baseName() const { return getFixedSlot(BASENAME_SLOT).toString(); }
+
+  const Value& unicodeExtension() const {
+    return getFixedSlot(UNICODE_EXTENSION_SLOT);
+  }
+};
+
+extern JSObject* CreateNativeLocalePrototype(JSContext* cx,
+                                             JS::Handle<JSObject*> Intl,
+                                             JS::Handle<GlobalObject*> global);
 
 /**
  * Creates an uninitialized Intl.Locale object.

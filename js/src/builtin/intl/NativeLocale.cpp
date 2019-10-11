@@ -1,0 +1,1261 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=8 sts=2 et sw=2 tw=80:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Intl.Locale implementation. */
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/Range.h"
+#include "mozilla/TextUtils.h"
+
+#include <algorithm>
+#include <iterator>
+#include <string>
+#include <string.h>
+#include <utility>
+
+#include "jsapi.h"
+#include "jsfriendapi.h"
+
+#include "builtin/intl/CommonFunctions.h"
+#include "builtin/intl/LanguageTag.h"
+#include "builtin/intl/Locale.h"
+#include "gc/Rooting.h"
+#include "js/Conversions.h"
+#include "js/TypeDecls.h"
+#include "js/Wrapper.h"
+#include "util/StringBuffer.h"
+#include "vm/GlobalObject.h"
+#include "vm/JSContext.h"
+#include "vm/StringType.h"
+
+#include "vm/JSObject-inl.h"
+#include "vm/NativeObject-inl.h"
+
+using namespace js;
+using namespace js::intl::LanguageTagLimits;
+
+using intl::LanguageTag;
+using intl::LanguageTagParser;
+
+const JSClass NativeLocaleObject::class_ = {
+    js_Object_str,
+    JSCLASS_HAS_RESERVED_SLOTS(NativeLocaleObject::SLOT_COUNT),
+};
+
+static inline bool IsLocale(HandleValue v) {
+  return v.isObject() && v.toObject().is<NativeLocaleObject>();
+}
+
+// Return the length of the base-name subtags.
+static size_t BaseNameLength(const LanguageTag& tag) {
+  size_t baseNameLength = tag.language().length();
+  if (tag.script().length() > 0) {
+    baseNameLength += 1 + tag.script().length();
+  }
+  if (tag.region().length() > 0) {
+    baseNameLength += 1 + tag.region().length();
+  }
+  for (const auto& variant : tag.variants()) {
+    baseNameLength += 1 + strlen(variant.get());
+  }
+  return baseNameLength;
+}
+
+struct IndexAndLength {
+  size_t index;
+  size_t length;
+
+  IndexAndLength(size_t index, size_t length) : index(index), length(length){};
+
+  template <typename T>
+  mozilla::Range<const T> rangeOf(const T* ptr) const {
+    return {ptr + index, length};
+  }
+};
+
+// Compute the Unicode extension's index and length in the extension subtag.
+static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
+    const LanguageTag& tag) {
+  size_t index = 0;
+  for (const auto& extension : tag.extensions()) {
+    size_t extensionLength = strlen(extension.get());
+    if (extension[0] == 'u') {
+      return mozilla::Some(IndexAndLength{index, extensionLength});
+    }
+
+    // Add +1 to skip over the preceding separator.
+    index += 1 + extensionLength;
+  }
+  return mozilla::Nothing();
+}
+
+static NativeLocaleObject* CreateLocaleNativeObject(JSContext* cx,
+                                                    HandleObject prototype,
+                                                    const LanguageTag& tag) {
+  RootedObject proto(cx, prototype);
+  if (!proto) {
+    proto = GlobalObject::getOrCreateLocaleNativePrototype(cx, cx->global());
+    if (!proto) {
+      return nullptr;
+    }
+  }
+
+  JSStringBuilder sb(cx);
+  if (!tag.appendTo(cx, sb)) {
+    return nullptr;
+  }
+
+  RootedString tagStr(cx, sb.finishString());
+  if (!tagStr) {
+    return nullptr;
+  }
+
+  size_t baseNameLength = BaseNameLength(tag);
+
+  RootedString baseName(cx, NewDependentString(cx, tagStr, 0, baseNameLength));
+  if (!baseName) {
+    return nullptr;
+  }
+
+  RootedValue unicodeExtension(cx, UndefinedValue());
+  if (auto result = UnicodeExtensionPosition(tag)) {
+    JSString* str = NewDependentString(
+        cx, tagStr, baseNameLength + 1 + result->index, result->length);
+    if (!str) {
+      return nullptr;
+    }
+
+    unicodeExtension.setString(str);
+  }
+
+  auto* locale = NewObjectWithGivenProto<NativeLocaleObject>(cx, proto);
+  if (!locale) {
+    return nullptr;
+  }
+
+  locale->setFixedSlot(NativeLocaleObject::LANGUAGE_TAG_SLOT,
+                       StringValue(tagStr));
+  locale->setFixedSlot(NativeLocaleObject::BASENAME_SLOT,
+                       StringValue(baseName));
+  locale->setFixedSlot(NativeLocaleObject::UNICODE_EXTENSION_SLOT,
+                       unicodeExtension);
+
+  return locale;
+}
+
+static inline bool IsValidUnicodeExtensionValue(JSLinearString* linear) {
+  return linear->length() > 0 &&
+         LanguageTagParser::canParseUnicodeExtensionType(linear);
+}
+
+/** Iterate through (sep keyword) in a valid, lowercased Unicode extension. */
+template <typename CharT>
+class SepKeywordIterator {
+  const CharT* iter_;
+  const CharT* const end_;
+
+ public:
+  SepKeywordIterator(const CharT* unicodeExtensionBegin,
+                     const CharT* unicodeExtensionEnd)
+      : iter_(unicodeExtensionBegin), end_(unicodeExtensionEnd) {}
+
+  /**
+   * Return (sep keyword) in the Unicode locale extension from begin to end.
+   * The first call after all (sep keyword) are consumed returns |nullptr|; no
+   * further calls are allowed.
+   */
+  const CharT* next() {
+    MOZ_ASSERT(iter_ != nullptr,
+               "can't call next() once it's returned nullptr");
+
+    constexpr size_t SepKeyLength = 1 + UnicodeKeyLength;  // "-co"/"-nu"/etc.
+
+    MOZ_ASSERT(iter_ + SepKeyLength <= end_,
+               "overall Unicode locale extension or non-leading subtags must "
+               "be at least key-sized");
+
+    MOZ_ASSERT((iter_[0] == 'u' && iter_[1] == '-') || iter_[0] == '-');
+
+    while (true) {
+      // Skip past '-' so |std::char_traits::find| makes progress. Skipping
+      // 'u' is harmless -- skip or not, |find| returns the first '-'.
+      iter_++;
+
+      // Find the next separator.
+      iter_ = std::char_traits<CharT>::find(
+          iter_, mozilla::PointerRangeSize(iter_, end_), CharT('-'));
+      if (!iter_) {
+        return nullptr;
+      }
+
+      MOZ_ASSERT(iter_ + SepKeyLength <= end_,
+                 "non-leading subtags in a Unicode locale extension are all "
+                 "at least as long as a key");
+
+      if (iter_ + SepKeyLength == end_ ||  // key is terminal subtag
+          iter_[SepKeyLength] == '-') {    // key is followed by more subtags
+        break;
+      }
+    }
+
+    MOZ_ASSERT(iter_[0] == '-');
+    MOZ_ASSERT(mozilla::IsAsciiLowercaseAlpha(iter_[1]) ||
+               mozilla::IsAsciiDigit(iter_[1]));
+    MOZ_ASSERT(mozilla::IsAsciiLowercaseAlpha(iter_[2]));
+    MOZ_ASSERT_IF(iter_ + SepKeyLength < end_, iter_[SepKeyLength] == '-');
+    return iter_;
+  }
+};
+
+/**
+ * 9.2.10 GetOption ( options, property, type, values, fallback )
+ *
+ * If the requested property is present and not-undefined, set the result string
+ * to |ToString(value)|. Otherwise set the result string to nullptr.
+ */
+static bool GetStringOption(JSContext* cx, HandleObject options,
+                            HandlePropertyName name,
+                            MutableHandle<JSLinearString*> string) {
+  // Step 1.
+  RootedValue option(cx);
+  if (!GetProperty(cx, options, options, name, &option)) {
+    return false;
+  }
+
+  // Step 2.
+  JSLinearString* linear = nullptr;
+  if (!option.isUndefined()) {
+    // Steps 2.a-b, 2.d (not applicable).
+
+    // Steps 2.c, 2.e.
+    JSString* str = ToString(cx, option);
+    if (!str) {
+      return false;
+    }
+    linear = str->ensureLinear(cx);
+    if (!linear) {
+      return false;
+    }
+  }
+
+  // Step 3.
+  string.set(linear);
+  return true;
+}
+
+/**
+ * 9.2.10 GetOption ( options, property, type, values, fallback )
+ *
+ * If the requested property is present and not-undefined, set the result string
+ * to |ToString(ToBoolean(value))|. Otherwise set the result string to nullptr.
+ */
+static bool GetBooleanOption(JSContext* cx, HandleObject options,
+                             HandlePropertyName name,
+                             MutableHandle<JSLinearString*> string) {
+  // Step 1.
+  RootedValue option(cx);
+  if (!GetProperty(cx, options, options, name, &option)) {
+    return false;
+  }
+
+  // Step 2.
+  JSLinearString* linear = nullptr;
+  if (!option.isUndefined()) {
+    // Steps 2.a, 2.c-d (not applicable).
+
+    // Steps 2.c, 2.e.
+    JSString* str = BooleanToString(cx, ToBoolean(option));
+    MOZ_ALWAYS_TRUE(linear = str->ensureLinear(cx));
+  }
+
+  // Step 3.
+  string.set(linear);
+  return true;
+}
+
+/**
+ * ApplyOptionsToTag ( tag, options )
+ */
+static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
+                              HandleObject options) {
+  // Steps 1-2 (Already performed in caller).
+
+  RootedLinearString option(cx);
+
+  // Step 3.
+  if (!GetStringOption(cx, options, cx->names().language, &option)) {
+    return false;
+  }
+
+  // Step 4.
+  intl::LanguageSubtag language;
+  if (option && !intl::ParseStandaloneLanguagTag(option, language)) {
+    if (UniqueChars str = StringToNewUTF8CharsZ(cx, *option)) {
+      JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "language",
+                               str.get());
+    }
+    return false;
+  }
+
+  // Step 5.
+  if (!GetStringOption(cx, options, cx->names().script, &option)) {
+    return false;
+  }
+
+  // Step 6.
+  intl::ScriptSubtag script;
+  if (option && !intl::ParseStandaloneScriptTag(option, script)) {
+    if (UniqueChars str = StringToNewUTF8CharsZ(cx, *option)) {
+      JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "script", str.get());
+    }
+    return false;
+  }
+
+  // Step 7.
+  if (!GetStringOption(cx, options, cx->names().region, &option)) {
+    return false;
+  }
+
+  // Step 8.
+  intl::RegionSubtag region;
+  if (option && !intl::ParseStandaloneRegionTag(option, region)) {
+    if (UniqueChars str = StringToNewUTF8CharsZ(cx, *option)) {
+      JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "region", str.get());
+    }
+    return false;
+  }
+
+  // Step 9 (Already performed in caller).
+
+  // Skip steps 10-13 when no subtags were modified.
+  if (language.length() > 0 || script.length() > 0 || region.length() > 0) {
+    // Step 10.
+    if (language.length() > 0) {
+      tag.setLanguage(language);
+    }
+
+    // Step 11.
+    if (script.length() > 0) {
+      tag.setScript(script);
+    }
+
+    // Step 12.
+    if (region.length() > 0) {
+      tag.setRegion(region);
+    }
+
+    // Step 13.
+    // Optimized to only canonicalize the base-name subtags. All other
+    // canonicalization steps will happen later.
+    if (!tag.canonicalizeBaseName(cx)) {
+      return true;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * ApplyUnicodeExtensionToTag( tag, options, relevantExtensionKeys )
+ */
+static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
+                                       HandleLinearString calendar,
+                                       HandleLinearString collation,
+                                       HandleLinearString hourCycle,
+                                       HandleLinearString caseFirst,
+                                       HandleLinearString numeric,
+                                       HandleLinearString numberingSystem) {
+  // If no Unicode extensions were present in the options object, we can skip
+  // everything below and directly return.
+  if (!calendar && !collation && !caseFirst && !hourCycle && !numeric &&
+      !numberingSystem) {
+    return true;
+  }
+
+  Vector<char, 32> newExtension(cx);
+  if (!newExtension.append('u')) {
+    return false;
+  }
+
+  // Check if there's an existing Unicode extension subtag. (The extension
+  // subtags aren't necessarily sorted, so we can't use binary search here.)
+  const UniqueChars* existingUnicodeExtension =
+      std::find_if(tag.extensions().begin(), tag.extensions().end(),
+                   [](const auto& extension) { return extension[0] == 'u'; });
+
+  const char* unicodeExtensionEnd = nullptr;
+  const char* unicodeExtensionKeywords = nullptr;
+  if (existingUnicodeExtension != tag.extensions().end()) {
+    const char* unicodeExtension = existingUnicodeExtension->get();
+    unicodeExtensionEnd = unicodeExtension + strlen(unicodeExtension);
+
+    SepKeywordIterator<char> iter(unicodeExtension, unicodeExtensionEnd);
+
+    // Find the start of the first keyword.
+    unicodeExtensionKeywords = iter.next();
+
+    // Copy any attributes present before the first keyword.
+    const char* attributesEnd = unicodeExtensionKeywords
+                                    ? unicodeExtensionKeywords
+                                    : unicodeExtensionEnd;
+    if (!newExtension.append(unicodeExtension + 1, attributesEnd)) {
+      return false;
+    }
+  }
+
+  using UnicodeKeyWithSeparator = const char(&)[UnicodeKeyLength + 3];
+
+  auto appendKeyword = [&newExtension](UnicodeKeyWithSeparator key,
+                                       JSLinearString* value) {
+    if (!newExtension.append(key, UnicodeKeyLength + 2)) {
+      return false;
+    }
+
+    JS::AutoCheckCannotGC nogc;
+    return value->hasLatin1Chars()
+               ? newExtension.append(value->latin1Chars(nogc), value->length())
+               : newExtension.append(value->twoByteChars(nogc),
+                                     value->length());
+  };
+
+  // Append the new keywords before any existing keywords. That way any previous
+  // keyword with the same key is detected as a duplicate when canonicalizing
+  // the Unicode extension subtag and gets discarded.
+
+  size_t startNewKeywords = newExtension.length();
+
+  if (calendar) {
+    if (!appendKeyword("-ca-", calendar)) {
+      return false;
+    }
+  }
+  if (collation) {
+    if (!appendKeyword("-co-", collation)) {
+      return false;
+    }
+  }
+  if (hourCycle) {
+    if (!appendKeyword("-hc-", hourCycle)) {
+      return false;
+    }
+  }
+  if (caseFirst) {
+    if (!appendKeyword("-kf-", caseFirst)) {
+      return false;
+    }
+  }
+  if (numeric) {
+    if (!appendKeyword("-kn-", numeric)) {
+      return false;
+    }
+  }
+  if (numberingSystem) {
+    if (!appendKeyword("-nu-", numberingSystem)) {
+      return false;
+    }
+  }
+
+  // Normalize the case of the new keywords.
+  std::transform(newExtension.begin() + startNewKeywords, newExtension.end(),
+                 newExtension.begin() + startNewKeywords, [](char c) {
+                   return mozilla::IsAsciiUppercaseAlpha(c) ? (c | 0x20) : c;
+                 });
+
+  // Append the remaining keywords from the previous Unicode extension subtag.
+  if (unicodeExtensionKeywords) {
+    if (!newExtension.append(unicodeExtensionKeywords, unicodeExtensionEnd)) {
+      return false;
+    }
+  }
+
+  // Null-terminate the new Unicode extension string.
+  if (!newExtension.append('\0')) {
+    return false;
+  }
+
+  // Insert the new Unicode extension string into the language tag.
+  UniqueChars newExtensionChars(newExtension.extractOrCopyRawBuffer());
+  if (!newExtensionChars) {
+    return false;
+  }
+  return tag.setUnicodeExtension(std::move(newExtensionChars));
+}
+
+/**
+ * Intl.Locale( tag[, options] )
+ */
+static bool NativeLocale(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  if (!ThrowIfNotConstructing(cx, args, "Intl.Locale")) {
+    return false;
+  }
+
+  // Steps 2-6 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Null, &proto)) {
+    return false;
+  }
+
+  // Step 7.
+  if (args.length() == 0 || (!args[0].isString() && !args[0].isObject())) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_LOCALES_ELEMENT);
+    return false;
+  }
+
+  // Steps 8-9.
+  RootedString tagStr(cx);
+  if (args[0].isObject()) {
+    JSObject* obj = &args[0].toObject();
+    if (obj->is<NativeLocaleObject>()) {
+      tagStr = obj->as<NativeLocaleObject>().languageTag();
+    } else {
+      JSObject* unwrapped = CheckedUnwrapStatic(obj);
+      if (!unwrapped) {
+        ReportAccessDenied(cx);
+        return false;
+      }
+
+      if (unwrapped->is<NativeLocaleObject>()) {
+        tagStr = unwrapped->as<NativeLocaleObject>().languageTag();
+        if (!cx->compartment()->wrap(cx, &tagStr)) {
+          return false;
+        }
+      } else {
+        tagStr = ToString(cx, args[0]);
+        if (!tagStr) {
+          return false;
+        }
+      }
+    }
+  } else {
+    tagStr = args[0].toString();
+  }
+
+  RootedLinearString tagLinearStr(cx, tagStr->ensureLinear(cx));
+  if (!tagLinearStr) {
+    return false;
+  }
+
+  // ApplyOptionsToTag, steps 2 and 9.
+  LanguageTag tag(cx);
+  if (!LanguageTagParser::parse(cx, tagLinearStr, tag)) {
+    return false;
+  }
+
+  if (!tag.canonicalizeBaseName(cx)) {
+    return false;
+  }
+
+  // Steps 10-11.
+  if (args.hasDefined(1)) {
+    RootedObject options(cx, ToObject(cx, args[1]));
+    if (!options) {
+      return false;
+    }
+
+    // Step 12.
+    if (!ApplyOptionsToTag(cx, tag, options)) {
+      return false;
+    }
+
+    // Step 13 (not applicable).
+
+    // Steps 14, 16.
+    RootedLinearString calendar(cx);
+    if (!GetStringOption(cx, options, cx->names().calendar, &calendar)) {
+      return false;
+    }
+
+    // Step 15.
+    if (calendar) {
+      if (!IsValidUnicodeExtensionValue(calendar)) {
+        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *calendar)) {
+          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                                   JSMSG_INVALID_OPTION_VALUE, "calendar",
+                                   str.get());
+        }
+        return false;
+      }
+    }
+
+    // Steps 17, 19.
+    RootedLinearString collation(cx);
+    if (!GetStringOption(cx, options, cx->names().collation, &collation)) {
+      return false;
+    }
+
+    // Step 18.
+    if (collation) {
+      if (!IsValidUnicodeExtensionValue(collation)) {
+        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *collation)) {
+          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                                   JSMSG_INVALID_OPTION_VALUE, "collation",
+                                   str.get());
+        }
+        return false;
+      }
+    }
+
+    // Steps 20-21.
+    RootedLinearString hourCycle(cx);
+    if (!GetStringOption(cx, options, cx->names().hourCycle, &hourCycle)) {
+      return false;
+    }
+
+    if (hourCycle) {
+      if (!StringEqualsLiteral(hourCycle, "h11") &&
+          !StringEqualsLiteral(hourCycle, "h12") &&
+          !StringEqualsLiteral(hourCycle, "h23") &&
+          !StringEqualsLiteral(hourCycle, "h24")) {
+        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *hourCycle)) {
+          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                                   JSMSG_INVALID_OPTION_VALUE, "hourCycle",
+                                   str.get());
+        }
+        return false;
+      }
+    }
+
+    // Steps 22-23.
+    RootedLinearString caseFirst(cx);
+    if (!GetStringOption(cx, options, cx->names().caseFirst, &caseFirst)) {
+      return false;
+    }
+
+    if (caseFirst) {
+      if (!StringEqualsLiteral(caseFirst, "upper") &&
+          !StringEqualsLiteral(caseFirst, "lower") &&
+          !StringEqualsLiteral(caseFirst, "false")) {
+        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *caseFirst)) {
+          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                                   JSMSG_INVALID_OPTION_VALUE, "caseFirst",
+                                   str.get());
+        }
+        return false;
+      }
+    }
+
+    // Steps 24-26.
+    RootedLinearString numeric(cx);
+    if (!GetBooleanOption(cx, options, cx->names().numeric, &numeric)) {
+      return false;
+    }
+
+    // Steps 27, 29.
+    RootedLinearString numberingSystem(cx);
+    if (!GetStringOption(cx, options, cx->names().numberingSystem,
+                         &numberingSystem)) {
+      return false;
+    }
+
+    // Step 28.
+    if (numberingSystem) {
+      if (!IsValidUnicodeExtensionValue(numberingSystem)) {
+        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *numberingSystem)) {
+          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                                   JSMSG_INVALID_OPTION_VALUE,
+                                   "numberingSystem", str.get());
+        }
+        return false;
+      }
+    }
+
+    // Step 30.
+    if (!ApplyUnicodeExtensionToTag(cx, tag, calendar, collation, hourCycle,
+                                    caseFirst, numeric, numberingSystem)) {
+      return false;
+    }
+  }
+
+  // ApplyOptionsToTag, steps 9 and 13.
+  // ApplyUnicodeExtensionToTag, step 8.
+  if (!tag.canonicalizeExtensions(
+          cx, LanguageTag::UnicodeExtensionCanonicalForm::Yes)) {
+    return false;
+  }
+
+  // Steps 6, 31-37.
+  JSObject* obj = CreateLocaleNativeObject(cx, proto, tag);
+  if (!obj) {
+    return false;
+  }
+
+  // Step 38.
+  args.rval().setObject(*obj);
+  return true;
+}
+
+using UnicodeKey = const char (&)[UnicodeKeyLength + 1];
+
+// Returns the tuple [index, length] of the `type` in the `keyword` in Unicode
+// locale extension |extension| that has |key| as its `key`. If `keyword` lacks
+// a type, the returned |index| will be where `type` would have been, and
+// |length| will be set to zero.
+template <typename CharT>
+static mozilla::Maybe<IndexAndLength> FindUnicodeExtensionType(
+    const CharT* extension, size_t length, UnicodeKey key) {
+  MOZ_ASSERT(extension[0] == 'u');
+  MOZ_ASSERT(extension[1] == '-');
+
+  const CharT* end = extension + length;
+
+  SepKeywordIterator<CharT> iter(extension, end);
+
+  // Search all keywords until a match was found.
+  const CharT* beginKey;
+  while (true) {
+    beginKey = iter.next();
+    if (!beginKey) {
+      return mozilla::Nothing();
+    }
+
+    // Add +1 to skip over the separator preceding the keyword.
+    MOZ_ASSERT(beginKey[0] == '-');
+    beginKey++;
+
+    // Exit the loop on the first match.
+    if (std::equal(beginKey, beginKey + UnicodeKeyLength, key)) {
+      break;
+    }
+  }
+
+  // Skip over the key.
+  const CharT* beginType = beginKey + UnicodeKeyLength;
+
+  // Find the start of the next keyword.
+  const CharT* endType = iter.next();
+
+  // No further keyword present, the current keyword ends the Unicode extension.
+  if (!endType) {
+    endType = end;
+  }
+
+  // If the keyword has a type, skip over the separator preceding the type.
+  if (beginType != endType) {
+    MOZ_ASSERT(beginType[0] == '-');
+    beginType++;
+  }
+  return mozilla::Some(IndexAndLength{size_t(beginType - extension),
+                                      size_t(endType - beginType)});
+}
+
+static inline auto FindUnicodeExtensionType(JSLinearString* unicodeExtension,
+                                            UnicodeKey key) {
+  JS::AutoCheckCannotGC nogc;
+  return unicodeExtension->hasLatin1Chars()
+             ? FindUnicodeExtensionType(unicodeExtension->latin1Chars(nogc),
+                                        unicodeExtension->length(), key)
+             : FindUnicodeExtensionType(unicodeExtension->twoByteChars(nogc),
+                                        unicodeExtension->length(), key);
+}
+
+// Return the sequence of types for the Unicode extension keyword specified by
+// key or undefined when the keyword isn't present.
+static bool GetUnicodeExtension(JSContext* cx, NativeLocaleObject* locale,
+                                UnicodeKey key, MutableHandleValue value) {
+  // Return undefined when no Unicode extension subtag is present.
+  const Value& unicodeExtensionValue = locale->unicodeExtension();
+  if (unicodeExtensionValue.isUndefined()) {
+    value.setUndefined();
+    return true;
+  }
+
+  JSLinearString* unicodeExtension =
+      unicodeExtensionValue.toString()->ensureLinear(cx);
+  if (!unicodeExtension) {
+    return false;
+  }
+
+  // Find the type of the requested key in the Unicode extension subtag.
+  auto result = FindUnicodeExtensionType(unicodeExtension, key);
+
+  // Return undefined if the requested key isn't present in the extension.
+  if (!result) {
+    value.setUndefined();
+    return true;
+  }
+
+  size_t index = result->index;
+  size_t length = result->length;
+
+  // Otherwise return the type value of the found keyword.
+  JSString* str = NewDependentString(cx, unicodeExtension, index, length);
+  if (!str) {
+    return false;
+  }
+  value.setString(str);
+  return true;
+}
+
+struct BaseNamePartsResult {
+  IndexAndLength language;
+  mozilla::Maybe<IndexAndLength> script;
+  mozilla::Maybe<IndexAndLength> region;
+};
+
+// Returns [language-length, script-index, region-index, region-length].
+template <typename CharT>
+static BaseNamePartsResult BaseNameParts(const CharT* baseName, size_t length) {
+  size_t languageLength;
+  size_t scriptIndex = 0;
+  size_t regionIndex = 0;
+  size_t regionLength = 0;
+
+  // Search the first separator to find the end of the language subtag.
+  if (const CharT* sep = std::char_traits<CharT>::find(baseName, length, '-')) {
+    languageLength = sep - baseName;
+
+    // Add +1 to skip over the separator character.
+    size_t nextSubtag = languageLength + 1;
+
+    // Script subtags are always four characters long, but take care for a four
+    // character long variant subtag. These start with a digit.
+    if ((nextSubtag + ScriptLength == length ||
+         (nextSubtag + ScriptLength < length &&
+          baseName[nextSubtag + ScriptLength] == '-')) &&
+        mozilla::IsAsciiAlpha(baseName[nextSubtag])) {
+      scriptIndex = nextSubtag;
+      nextSubtag = scriptIndex + ScriptLength + 1;
+    }
+
+    // Region subtags can be either two or three characters long.
+    if (nextSubtag < length) {
+      for (size_t rlen : {AlphaRegionLength, DigitRegionLength}) {
+        MOZ_ASSERT(nextSubtag + rlen <= length);
+        if (nextSubtag + rlen == length || baseName[nextSubtag + rlen] == '-') {
+          regionIndex = nextSubtag;
+          regionLength = rlen;
+          break;
+        }
+      }
+    }
+  } else {
+    // No separator found, the base-name consists of just a language subtag.
+    languageLength = length;
+  }
+
+  IndexAndLength language{0, languageLength};
+  MOZ_ASSERT(intl::IsStructurallyValidLanguageTag(language.rangeOf(baseName)));
+
+  mozilla::Maybe<IndexAndLength> script{};
+  if (scriptIndex) {
+    script.emplace(scriptIndex, ScriptLength);
+    MOZ_ASSERT(intl::IsStructurallyValidScriptTag(script->rangeOf(baseName)));
+  }
+
+  mozilla::Maybe<IndexAndLength> region{};
+  if (regionIndex) {
+    region.emplace(regionIndex, regionLength);
+    MOZ_ASSERT(intl::IsStructurallyValidRegionTag(region->rangeOf(baseName)));
+  }
+
+  return {language, script, region};
+}
+
+static inline auto BaseNameParts(JSLinearString* baseName) {
+  JS::AutoCheckCannotGC nogc;
+  return baseName->hasLatin1Chars()
+             ? BaseNameParts(baseName->latin1Chars(nogc), baseName->length())
+             : BaseNameParts(baseName->twoByteChars(nogc), baseName->length());
+}
+
+// Intl.Locale.prototype.maximize ()
+static bool Locale_maximize(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  RootedLinearString tagStr(cx, locale->languageTag()->ensureLinear(cx));
+  if (!tagStr) {
+    return false;
+  }
+
+  LanguageTag tag(cx);
+  if (!LanguageTagParser::parse(cx, tagStr, tag)) {
+    return false;
+  }
+
+  if (!tag.addLikelySubtags(cx)) {
+    return false;
+  }
+
+  // Step 4.
+  auto* result = CreateLocaleNativeObject(cx, nullptr, tag);
+  if (!result) {
+    return false;
+  }
+  args.rval().setObject(*result);
+  return true;
+}
+
+// Intl.Locale.prototype.maximize ()
+static bool Locale_maximize(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_maximize>(cx, args);
+}
+
+// Intl.Locale.prototype.minimize ()
+static bool Locale_minimize(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  RootedLinearString tagStr(cx, locale->languageTag()->ensureLinear(cx));
+  if (!tagStr) {
+    return false;
+  }
+
+  LanguageTag tag(cx);
+  if (!LanguageTagParser::parse(cx, tagStr, tag)) {
+    return false;
+  }
+
+  if (!tag.removeLikelySubtags(cx)) {
+    return false;
+  }
+
+  // Step 4.
+  auto* result = CreateLocaleNativeObject(cx, nullptr, tag);
+  if (!result) {
+    return false;
+  }
+  args.rval().setObject(*result);
+  return true;
+}
+
+// Intl.Locale.prototype.minimize ()
+static bool Locale_minimize(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_minimize>(cx, args);
+}
+
+// Intl.Locale.prototype.toString ()
+static bool Locale_toString(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  args.rval().setString(locale->languageTag());
+  return true;
+}
+
+// Intl.Locale.prototype.toString ()
+static bool Locale_toString(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_toString>(cx, args);
+}
+
+// get Intl.Locale.prototype.baseName
+static bool Locale_baseName(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // FIXME: spec bug - invalid assertion in step 4.
+  // FIXME: spec bug - subtag production names not updated.
+
+  // Steps 3, 5.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  args.rval().setString(locale->baseName());
+  return true;
+}
+
+// get Intl.Locale.prototype.baseName
+static bool Locale_baseName(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_baseName>(cx, args);
+}
+
+// get Intl.Locale.prototype.calendar
+static bool Locale_calendar(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  return GetUnicodeExtension(cx, locale, "ca", args.rval());
+}
+
+// get Intl.Locale.prototype.calendar
+static bool Locale_calendar(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_calendar>(cx, args);
+}
+
+// get Intl.Locale.prototype.collation
+static bool Locale_collation(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  return GetUnicodeExtension(cx, locale, "co", args.rval());
+}
+
+// get Intl.Locale.prototype.collation
+static bool Locale_collation(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_collation>(cx, args);
+}
+
+// get Intl.Locale.prototype.hourCycle
+static bool Locale_hourCycle(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  return GetUnicodeExtension(cx, locale, "hc", args.rval());
+}
+
+// get Intl.Locale.prototype.hourCycle
+static bool Locale_hourCycle(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_hourCycle>(cx, args);
+}
+
+// get Intl.Locale.prototype.caseFirst
+static bool Locale_caseFirst(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  return GetUnicodeExtension(cx, locale, "kf", args.rval());
+}
+
+// get Intl.Locale.prototype.caseFirst
+static bool Locale_caseFirst(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_caseFirst>(cx, args);
+}
+
+// get Intl.Locale.prototype.numeric
+static bool Locale_numeric(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  RootedValue value(cx);
+  if (!GetUnicodeExtension(cx, locale, "kn", &value)) {
+    return false;
+  }
+
+  // FIXME: spec bug - comparison should be against the empty string, too.
+  MOZ_ASSERT(value.isUndefined() || value.isString());
+  args.rval().setBoolean(value.isString() && value.toString()->empty());
+  return true;
+}
+
+// get Intl.Locale.prototype.numeric
+static bool Locale_numeric(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_numeric>(cx, args);
+}
+
+// get Intl.Locale.prototype.numberingSystem
+static bool Intl_Locale_numberingSystem(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  return GetUnicodeExtension(cx, locale, "nu", args.rval());
+}
+
+// get Intl.Locale.prototype.numberingSystem
+static bool Locale_numberingSystem(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Intl_Locale_numberingSystem>(cx, args);
+}
+
+// get Intl.Locale.prototype.language
+static bool Locale_language(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  JSLinearString* baseName = locale->baseName()->ensureLinear(cx);
+  if (!baseName) {
+    return false;
+  }
+
+  // Step 4 (Unnecessary assertion).
+
+  auto language = BaseNameParts(baseName).language;
+
+  size_t index = language.index;
+  size_t length = language.length;
+
+  // Step 5.
+  // FIXME: spec bug - not all production names updated.
+  JSString* str = NewDependentString(cx, baseName, index, length);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+// get Intl.Locale.prototype.language
+static bool Locale_language(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_language>(cx, args);
+}
+
+// get Intl.Locale.prototype.script
+static bool Locale_script(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  JSLinearString* baseName = locale->baseName()->ensureLinear(cx);
+  if (!baseName) {
+    return false;
+  }
+
+  // Step 4 (Unnecessary assertion).
+
+  auto script = BaseNameParts(baseName).script;
+
+  // Step 5.
+  // FIXME: spec bug - not all production names updated.
+  if (!script) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  size_t index = script->index;
+  size_t length = script->length;
+
+  // Step 6.
+  JSString* str = NewDependentString(cx, baseName, index, length);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+// get Intl.Locale.prototype.script
+static bool Locale_script(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_script>(cx, args);
+}
+
+// get Intl.Locale.prototype.region
+static bool Locale_region(JSContext* cx, const CallArgs& args) {
+  MOZ_ASSERT(IsLocale(args.thisv()));
+
+  // Step 3.
+  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  JSLinearString* baseName = locale->baseName()->ensureLinear(cx);
+  if (!baseName) {
+    return false;
+  }
+
+  // Step 4 (Unnecessary assertion).
+
+  auto region = BaseNameParts(baseName).region;
+
+  // Step 5.
+  if (!region) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  size_t index = region->index;
+  size_t length = region->length;
+
+  // Step 6.
+  JSString* str = NewDependentString(cx, baseName, index, length);
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+// get Intl.Locale.prototype.region
+static bool Locale_region(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsLocale, Locale_region>(cx, args);
+}
+
+static bool Locale_toSource(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setString(cx->names().Locale);
+  return true;
+}
+
+static const JSFunctionSpec locale_native_methods[] = {
+    JS_FN("maximize", Locale_maximize, 0, 0),
+    JS_FN("minimize", Locale_minimize, 0, 0),
+    JS_FN(js_toString_str, Locale_toString, 0, 0),
+    JS_FN(js_toSource_str, Locale_toSource, 0, 0), JS_FS_END};
+
+static const JSPropertySpec locale_native_properties[] = {
+    JS_PSG("baseName", Locale_baseName, 0),
+    JS_PSG("calendar", Locale_calendar, 0),
+    JS_PSG("collation", Locale_collation, 0),
+    JS_PSG("hourCycle", Locale_hourCycle, 0),
+    JS_PSG("caseFirst", Locale_caseFirst, 0),
+    JS_PSG("numeric", Locale_numeric, 0),
+    JS_PSG("numberingSystem", Locale_numberingSystem, 0),
+    JS_PSG("language", Locale_language, 0),
+    JS_PSG("script", Locale_script, 0),
+    JS_PSG("region", Locale_region, 0),
+    JS_STRING_SYM_PS(toStringTag, "Intl.Locale", JSPROP_READONLY),
+    JS_PS_END};
+
+JSObject* js::CreateNativeLocalePrototype(JSContext* cx, HandleObject Intl,
+                                          Handle<GlobalObject*> global) {
+  RootedFunction ctor(cx, GlobalObject::createConstructor(
+                              cx, &NativeLocale, cx->names().Locale, 1));
+  if (!ctor) {
+    return nullptr;
+  }
+
+  RootedObject proto(
+      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
+  if (!proto) {
+    return nullptr;
+  }
+
+  if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
+    return nullptr;
+  }
+
+  if (!DefinePropertiesAndFunctions(cx, proto, locale_native_properties,
+                                    locale_native_methods)) {
+    return nullptr;
+  }
+
+  RootedValue ctorValue(cx, ObjectValue(*ctor));
+  if (!DefineDataProperty(cx, Intl, cx->names().locale, ctorValue, 0)) {
+    return nullptr;
+  }
+
+  return proto;
+}

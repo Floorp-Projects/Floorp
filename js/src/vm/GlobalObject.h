@@ -96,6 +96,7 @@ class GlobalObject : public NativeObject {
     PLURAL_RULES_PROTO,
     RELATIVE_TIME_FORMAT_PROTO,
     LOCALE_PROTO,
+    NATIVE_LOCALE_PROTO,
     MODULE_PROTO,
     IMPORT_ENTRY_PROTO,
     EXPORT_ENTRY_PROTO,
@@ -548,6 +549,11 @@ class GlobalObject : public NativeObject {
     return getOrCreateObject(cx, global, LOCALE_PROTO, initIntlObject);
   }
 #endif  // ENABLE_INTL_API
+
+  static JSObject* getOrCreateLocaleNativePrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    return getOrCreateObject(cx, global, NATIVE_LOCALE_PROTO, initIntlObject);
+  }
 
   static bool ensureModulePrototypesCreated(JSContext* cx,
                                             Handle<GlobalObject*> global);

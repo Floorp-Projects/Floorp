@@ -24,6 +24,7 @@
 #include "js/AllocPolicy.h"
 #include "js/GCAPI.h"
 #include "js/Result.h"
+#include "js/RootingAPI.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 
@@ -681,6 +682,30 @@ class MOZ_STACK_CLASS LanguageTagParser final {
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LanguageTagParser::TokenKind)
+
+/**
+ * Parse a string as a standalone |language| tag. If |str| is a standalone
+ * language tag, store it in case-normalized form in |result| and return true.
+ * Otherwise return false.
+ */
+MOZ_MUST_USE bool ParseStandaloneLanguagTag(JS::Handle<JSLinearString*> str,
+                                            LanguageSubtag& result);
+
+/**
+ * Parse a string as a standalone |script| tag. If |str| is a standalone script
+ * tag, store it in case-normalized form in |result| and return true. Otherwise
+ * return false.
+ */
+MOZ_MUST_USE bool ParseStandaloneScriptTag(JS::Handle<JSLinearString*> str,
+                                           ScriptSubtag& result);
+
+/**
+ * Parse a string as a standalone |region| tag. If |str| is a standalone region
+ * tag, store it in case-normalized form in |result| and return true. Otherwise
+ * return false.
+ */
+MOZ_MUST_USE bool ParseStandaloneRegionTag(JS::Handle<JSLinearString*> str,
+                                           RegionSubtag& result);
 
 }  // namespace intl
 

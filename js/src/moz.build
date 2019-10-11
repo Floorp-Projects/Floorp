@@ -383,6 +383,7 @@ if CONFIG['ENABLE_INTL_API']:
         'builtin/intl/LanguageTag.cpp',
         'builtin/intl/LanguageTagGenerated.cpp',
         'builtin/intl/Locale.cpp',
+        'builtin/intl/NativeLocale.cpp',
         'builtin/intl/NumberFormat.cpp',
         'builtin/intl/PluralRules.cpp',
         'builtin/intl/RelativeTimeFormat.cpp',
