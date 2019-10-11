@@ -9,6 +9,7 @@
 #include "HTMLEditUtils.h"
 #include "WSRunObject.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditAction.h"
@@ -53,6 +54,7 @@
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
+
 #include <algorithm>
 
 // Workaround for windows headers
@@ -7524,8 +7526,9 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
   bool isEmptyNode = false;
   IsEmptyNode(block, &isEmptyNode, true, false);
   if (isEmptyNode) {
-    aStartRef.Set(block, 0);
-    aEndRef.Set(block, block->Length());
+    aStartRef = {block, 0};
+    const CheckedInt<int32_t> offset{block->Length()};
+    aEndRef = {block, offset.value()};
   }
 }
 

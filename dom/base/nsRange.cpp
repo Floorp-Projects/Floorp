@@ -20,6 +20,8 @@
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -458,7 +460,7 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
       NS_ASSERTION(mStart.Offset() <= aInfo.mChangeEnd + 1,
                    "mStart.Offset() is beyond the end of this node");
       int32_t newStartOffset = mStart.Offset() - aInfo.mChangeStart;
-      newStart.Set(aInfo.mDetails->mNextSibling, newStartOffset);
+      newStart = {aInfo.mDetails->mNextSibling, newStartOffset};
       if (MOZ_UNLIKELY(aContent == mRoot)) {
         newRoot = RangeUtils::ComputeRootNode(newStart.Container());
       }
@@ -482,7 +484,7 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
                                    : mStart.Offset() + aInfo.mChangeStart -
                                          aInfo.mChangeEnd +
                                          aInfo.mReplaceLength;
-      newStart.Set(mStart.Container(), newStartOffset);
+      newStart = {mStart.Container(), newStartOffset};
     }
   }
 
@@ -495,10 +497,12 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
       NS_ASSERTION(
           aInfo.mDetails->mType == CharacterDataChangeInfo::Details::eSplit,
           "only a split can start before the end");
-      NS_ASSERTION(mEnd.Offset() <= aInfo.mChangeEnd + 1,
-                   "mEnd.Offset() is beyond the end of this node");
-      newEnd.Set(aInfo.mDetails->mNextSibling,
-                 mEnd.Offset() - aInfo.mChangeStart);
+      MOZ_ASSERT(mEnd.Offset() <= aInfo.mChangeEnd + 1,
+                 "mEnd.Offset() is beyond the end of this node");
+
+      const CheckedInt<int32_t> newEndOffset{mEnd.Offset() -
+                                             aInfo.mChangeStart};
+      newEnd = {aInfo.mDetails->mNextSibling, newEndOffset.value()};
 
       bool isCommonAncestor =
           IsInSelection() && mStart.Container() == mEnd.Container();
@@ -516,7 +520,7 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
                                  ? aInfo.mChangeStart
                                  : mEnd.Offset() + aInfo.mChangeStart -
                                        aInfo.mChangeEnd + aInfo.mReplaceLength;
-      newEnd.Set(mEnd.Container(), newEndOffset);
+      newEnd = {mEnd.Container(), newEndOffset};
     }
   }
 
@@ -526,13 +530,18 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
     // that will be removed
     nsIContent* removed = aInfo.mDetails->mNextSibling;
     if (removed == mStart.Container()) {
-      newStart.Set(aContent, mStart.Offset() + aInfo.mChangeStart);
+      const CheckedInt<int32_t> newStartOffset{mStart.Offset() +
+                                               aInfo.mChangeStart};
+      newStart = {aContent, newStartOffset.value()};
       if (MOZ_UNLIKELY(removed == mRoot)) {
         newRoot = RangeUtils::ComputeRootNode(newStart.Container());
       }
     }
     if (removed == mEnd.Container()) {
-      newEnd.Set(aContent, mEnd.Offset() + aInfo.mChangeStart);
+      const CheckedInt<int32_t> newEndOffset{mEnd.Offset() +
+                                             aInfo.mChangeStart};
+
+      newEnd = {aContent, newEndOffset.value()};
       if (MOZ_UNLIKELY(removed == mRoot)) {
         newRoot = RangeUtils::ComputeRootNode(newEnd.Container());
       }
@@ -547,12 +556,14 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
     if (parentNode == mStart.Container() && mStart.Offset() > 0 &&
         mStart.Offset() < parentNode->GetChildCount() &&
         removed == mStart.GetChildAtOffset()) {
-      newStart.Set(aContent, aInfo.mChangeStart);
+      const CheckedInt<int32_t> newStartOffset{aInfo.mChangeStart};
+      newStart = {aContent, newStartOffset.value()};
     }
     if (parentNode == mEnd.Container() && mEnd.Offset() > 0 &&
         mEnd.Offset() < parentNode->GetChildCount() &&
         removed == mEnd.GetChildAtOffset()) {
-      newEnd.Set(aContent, aInfo.mChangeEnd);
+      const CheckedInt<int32_t> newEndOffset{aInfo.mChangeEnd};
+      newEnd = {aContent, newEndOffset.value()};
     }
   }
 
