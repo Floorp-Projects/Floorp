@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<bindings id="chromeTestBindings" xmlns="http://www.mozilla.org/xbl">
+  <binding id="testBinding" bindToUntrustedContent="true">
+    <implementation implements="nsIObserver">
+      <constructor>
+      <![CDATA[
+        var win = window;
+        var SpecialPowers = win.SpecialPowers;
+        var ok = SpecialPowers.unwrap(SpecialPowers.wrap(window).parent.ok);
+
+        // Generate an XPCWrappedJS for the reflector. We need to do this
+        // explicitly with a testing helper, because we're converging on
+        // removing XPConnect from the web, which means that it won't be
+        // possible to generate an XPCWrappedJS from content (or XBL) code.
+        var scope = {};
+        var holder = SpecialPowers.Cu.generateXPCWrappedJS(this, scope);
+
+        // Now, QI |this|, which will generate an aggregated native.
+        SpecialPowers.wrap(this).QueryInterface(SpecialPowers.Ci.nsIObserver);
+
+        ok(true, "Didn't assert or crash");
+
+        SpecialPowers.wrap(window).parent.SimpleTest.finish();
+      ]]>
+      </constructor>
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[]]></body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

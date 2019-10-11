@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=827546
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 827546</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 827546 **/
+
+  var notImage = document.createElement("div");
+  var thrown;
+  try {
+    thrown = false;
+    SpecialPowers.do_QueryInterface(notImage, "nsIImageLoadingContent");
+  } catch (e) {
+    thrown = true;
+  }
+  ok(thrown,
+     "QI to nsIImageLoadingContent on a non-image element should fail");
+
+  var image = document.createElement("img");
+  ok(SpecialPowers.do_QueryInterface(image, "nsIImageLoadingContent"),
+     "Image  element needs to support QI to nsIImageLoadingContent");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827546">Mozilla Bug 827546</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
