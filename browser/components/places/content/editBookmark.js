@@ -328,7 +328,7 @@ var gEditItemOverlay = {
       // The focusedElement possible values are:
       //  * preferred: focus the field that the user touched first the last
       //    time the pane was shown (either namePicker or tagsField)
-      //  * first: focus the first non collapsed textbox
+      //  * first: focus the first non collapsed input
       // Note: since all controls are collapsed by default, we don't get the
       // default XUL dialog behavior, that selects the first control, so we set
       // the focus explicitly.
@@ -340,7 +340,7 @@ var gEditItemOverlay = {
           )
         );
       } else if (focusedElement === "first") {
-        elt = document.querySelector("textbox:not([collapsed=true])");
+        elt = document.querySelector("vbox:not([collapsed=true]) > input");
       }
       if (elt) {
         elt.focus();
