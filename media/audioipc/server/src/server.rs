@@ -30,6 +30,8 @@ use std::rc::Rc;
 use std::{panic, slice};
 use tokio::reactor;
 use tokio::runtime::current_thread;
+#[cfg(target_os = "linux")]
+use audio_thread_priority::{RtPriorityThreadInfo, promote_thread_to_real_time};
 
 use crate::errors::*;
 
@@ -167,6 +169,7 @@ where
             } else {
                 None
             };
+            audioipc::server_platform_init();
             let context = cubeb::Context::init(context_name, backend_name);
             let manager = CubebDeviceCollectionManager::new();
             *state = Some(CubebContextState { context, manager });
@@ -283,7 +286,7 @@ impl Drop for ServerStream {
     }
 }
 
-type StreamSlab = slab::Slab<ServerStream, usize>;
+type StreamSlab = slab::Slab<ServerStream>;
 
 struct CubebServerCallbacks {
     rpc: rpc::ClientProxy<DeviceCollectionReq, DeviceCollectionResp>,
@@ -442,12 +445,6 @@ impl CubebServer {
                 .map(|_| ClientMessage::StreamVolumeSet)
                 .unwrap_or_else(error),
 
-            ServerMessage::StreamSetPanning(stm_tok, panning) => self.streams[stm_tok]
-                .stream
-                .set_panning(panning)
-                .map(|_| ClientMessage::StreamPanningSet)
-                .unwrap_or_else(error),
-
             ServerMessage::StreamGetCurrentDevice(stm_tok) => self.streams[stm_tok]
                 .stream
                 .current_device()
@@ -515,14 +512,30 @@ impl CubebServer {
                 }
             }
 
-            ServerMessage::ContextRegisterDeviceCollectionChanged(device_type, enable) => self
-                .process_register_device_collection_changed(
+            ServerMessage::ContextRegisterDeviceCollectionChanged(device_type, enable) => {
+                self.process_register_device_collection_changed(
                     context,
                     manager,
                     cubeb::DeviceType::from_bits_truncate(device_type),
                     enable,
                 )
-                .unwrap_or_else(error),
+                .unwrap_or_else(error)
+            },
+
+            #[cfg(target_os = "linux")]
+            ServerMessage::PromoteThreadToRealTime(thread_info) => {
+                let info = RtPriorityThreadInfo::deserialize(thread_info);
+                match promote_thread_to_real_time(info, 0, 48000) {
+                    Ok(_) => {
+                        info!("Promotion of content process thread to real-time OK");
+                    }
+                    Err(_) => {
+                        warn!("Promotion of content process thread to real-time error");
+                    }
+                }
+                ClientMessage::ThreadPromoted
+            },
+
         };
 
         trace!("process_msg: req={:?}, resp={:?}", msg, resp);
@@ -653,7 +666,7 @@ impl CubebServer {
                     user_ptr,
                 )
                 .and_then(|stream| {
-                    if !self.streams.has_available() {
+                    if self.streams.len() == self.streams.capacity() {
                         trace!(
                             "server connection ran out of stream slots. reserving {} more.",
                             STREAM_CONN_CHUNK_SIZE
@@ -661,25 +674,17 @@ impl CubebServer {
                         self.streams.reserve_exact(STREAM_CONN_CHUNK_SIZE);
                     }
 
-                    let stm_tok = match self.streams.vacant_entry() {
-                        Some(entry) => {
-                            debug!("Registering stream {:?}", entry.index(),);
+                    let entry = self.streams.vacant_entry();
+                    let key = entry.key();
+                    debug!("Registering stream {:?}", key);
 
-                            entry
-                                .insert(ServerStream {
-                                    stream: ManuallyDrop::new(stream),
-                                    cbs: ManuallyDrop::new(cbs),
-                                })
-                                .index()
-                        }
-                        None => {
-                            // TODO: Turn into error
-                            panic!("Failed to insert stream into slab. No entries")
-                        }
-                    };
+                    entry.insert(ServerStream {
+                        stream: ManuallyDrop::new(stream),
+                        cbs: ManuallyDrop::new(cbs),
+                    });
 
                     Ok(ClientMessage::StreamCreated(StreamCreate {
-                        token: stm_tok,
+                        token: key,
                         platform_handles: [
                             PlatformHandle::from(stm1),
                             PlatformHandle::from(input_file),
