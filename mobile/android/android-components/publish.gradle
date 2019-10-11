@@ -8,7 +8,7 @@ def libVcsUrl = properties.libVcsUrl
 def libLicense = properties.libLicense
 def libLicenseUrl = properties.libLicenseUrl
 
-def getTimestamp() {
+static def getLocalPublicationTimestamp() {
     def date = new Date()
     return date.format('yyyyMMddHHmmss')
 }
@@ -32,7 +32,7 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
                     artifactId = artifactIdArg
                     description = descriptionArg
                     // 'local' is for streamlining local publication workflow.
-                    version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : (project.hasProperty('local') ? '-local' + getTimestamp() : ''))
+                    version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : (project.hasProperty('local') ? '-local' + getLocalPublicationTimestamp() : ''))
 
                     licenses {
                         license {
