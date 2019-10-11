@@ -14,10 +14,10 @@ with Files("test/browser/*ContentSearch*"):
     BUG_COMPONENT = ("Firefox", "Search")
 
 with Files("test/browser/*PermissionUI*"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("test/browser/*SitePermissions*"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("test/browser/browser_UnsubmittedCrashHandler.js"):
     BUG_COMPONENT = ("Toolkit", "Crash Reporting")
@@ -35,7 +35,7 @@ with Files("test/unit/test_LaterRun.js"):
     BUG_COMPONENT = ("Firefox", "Tours")
 
 with Files("test/unit/test_SitePermissions.js"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("AboutNewTab.jsm"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
@@ -77,10 +77,10 @@ with Files("OpenInTabsUtils.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("PermissionUI.jsm"):
-   BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+   BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("PermissionUITelemetry.jsm"):
-   BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+   BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("ProcessHangMonitor.jsm"):
     BUG_COMPONENT = ("Core", "DOM: Content Processes")
@@ -98,7 +98,7 @@ with Files("SiteDataManager.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
 with Files("SitePermissions.jsm"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("TabsList.jsm"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
@@ -119,7 +119,7 @@ with Files("WindowsPreviewPerTab.jsm"):
     BUG_COMPONENT = ("Core", "Widget: Win32")
 
 with Files("webrtcUI.jsm"):
-    BUG_COMPONENT = ("Firefox", "Device Permissions")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("ZoomUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
