@@ -15,12 +15,15 @@ EXPECTED_BREACH = {
 };
 
 add_task(async function setup() {
+  Services.prefs.setCharPref("signon.management.page.sort", "last-changed");
   TEST_LOGIN3 = await addLogin(TEST_LOGIN3);
+  TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
     url: "about:logins",
   });
   registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.management.page.sort");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     Services.logins.removeAllLogins();
   });
