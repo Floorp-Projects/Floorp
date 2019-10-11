@@ -2096,12 +2096,12 @@ static bool intrinsic_LocaleToStringOrNull(JSContext* cx, unsigned argc,
     return false;
   }
 
-  if (!unwrapped->is<NativeLocaleObject>()) {
+  if (!unwrapped->is<LocaleObject>()) {
     args.rval().setNull();
     return true;
   }
 
-  RootedString str(cx, unwrapped->as<NativeLocaleObject>().languageTag());
+  RootedString str(cx, unwrapped->as<LocaleObject>().languageTag());
   if (!cx->compartment()->wrap(cx, &str)) {
     return false;
   }

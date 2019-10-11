@@ -45,11 +45,11 @@ using intl::LanguageTagParser;
 
 const JSClass NativeLocaleObject::class_ = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(NativeLocaleObject::SLOT_COUNT),
+    JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT),
 };
 
 static inline bool IsLocale(HandleValue v) {
-  return v.isObject() && v.toObject().is<NativeLocaleObject>();
+  return v.isObject() && v.toObject().is<LocaleObject>();
 }
 
 // Return the length of the base-name subtags.
@@ -95,12 +95,11 @@ static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
   return mozilla::Nothing();
 }
 
-static NativeLocaleObject* CreateLocaleNativeObject(JSContext* cx,
-                                                    HandleObject prototype,
+static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
                                                     const LanguageTag& tag) {
   RootedObject proto(cx, prototype);
   if (!proto) {
-    proto = GlobalObject::getOrCreateLocaleNativePrototype(cx, cx->global());
+    proto = GlobalObject::getOrCreateLocalePrototype(cx, cx->global());
     if (!proto) {
       return nullptr;
     }
@@ -134,17 +133,14 @@ static NativeLocaleObject* CreateLocaleNativeObject(JSContext* cx,
     unicodeExtension.setString(str);
   }
 
-  auto* locale = NewObjectWithGivenProto<NativeLocaleObject>(cx, proto);
+  auto* locale = NewObjectWithGivenProto<LocaleObject>(cx, proto);
   if (!locale) {
     return nullptr;
   }
 
-  locale->setFixedSlot(NativeLocaleObject::LANGUAGE_TAG_SLOT,
-                       StringValue(tagStr));
-  locale->setFixedSlot(NativeLocaleObject::BASENAME_SLOT,
-                       StringValue(baseName));
-  locale->setFixedSlot(NativeLocaleObject::UNICODE_EXTENSION_SLOT,
-                       unicodeExtension);
+  locale->setFixedSlot(LocaleObject::LANGUAGE_TAG_SLOT, StringValue(tagStr));
+  locale->setFixedSlot(LocaleObject::BASENAME_SLOT, StringValue(baseName));
+  locale->setFixedSlot(LocaleObject::UNICODE_EXTENSION_SLOT, unicodeExtension);
 
   return locale;
 }
@@ -493,7 +489,7 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
 /**
  * Intl.Locale( tag[, options] )
  */
-static bool NativeLocale(JSContext* cx, unsigned argc, Value* vp) {
+static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
@@ -518,8 +514,8 @@ static bool NativeLocale(JSContext* cx, unsigned argc, Value* vp) {
   RootedString tagStr(cx);
   if (args[0].isObject()) {
     JSObject* obj = &args[0].toObject();
-    if (obj->is<NativeLocaleObject>()) {
-      tagStr = obj->as<NativeLocaleObject>().languageTag();
+    if (obj->is<LocaleObject>()) {
+      tagStr = obj->as<LocaleObject>().languageTag();
     } else {
       JSObject* unwrapped = CheckedUnwrapStatic(obj);
       if (!unwrapped) {
@@ -527,8 +523,8 @@ static bool NativeLocale(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
 
-      if (unwrapped->is<NativeLocaleObject>()) {
-        tagStr = unwrapped->as<NativeLocaleObject>().languageTag();
+      if (unwrapped->is<LocaleObject>()) {
+        tagStr = unwrapped->as<LocaleObject>().languageTag();
         if (!cx->compartment()->wrap(cx, &tagStr)) {
           return false;
         }
@@ -687,7 +683,7 @@ static bool NativeLocale(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 6, 31-37.
-  JSObject* obj = CreateLocaleNativeObject(cx, proto, tag);
+  JSObject* obj = CreateLocaleObject(cx, proto, tag);
   if (!obj) {
     return false;
   }
@@ -763,7 +759,7 @@ static inline auto FindUnicodeExtensionType(JSLinearString* unicodeExtension,
 
 // Return the sequence of types for the Unicode extension keyword specified by
 // key or undefined when the keyword isn't present.
-static bool GetUnicodeExtension(JSContext* cx, NativeLocaleObject* locale,
+static bool GetUnicodeExtension(JSContext* cx, LocaleObject* locale,
                                 UnicodeKey key, MutableHandleValue value) {
   // Return undefined when no Unicode extension subtag is present.
   const Value& unicodeExtensionValue = locale->unicodeExtension();
@@ -876,7 +872,7 @@ static bool Locale_maximize(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   RootedLinearString tagStr(cx, locale->languageTag()->ensureLinear(cx));
   if (!tagStr) {
     return false;
@@ -892,7 +888,7 @@ static bool Locale_maximize(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  auto* result = CreateLocaleNativeObject(cx, nullptr, tag);
+  auto* result = CreateLocaleObject(cx, nullptr, tag);
   if (!result) {
     return false;
   }
@@ -912,7 +908,7 @@ static bool Locale_minimize(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   RootedLinearString tagStr(cx, locale->languageTag()->ensureLinear(cx));
   if (!tagStr) {
     return false;
@@ -928,7 +924,7 @@ static bool Locale_minimize(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 4.
-  auto* result = CreateLocaleNativeObject(cx, nullptr, tag);
+  auto* result = CreateLocaleObject(cx, nullptr, tag);
   if (!result) {
     return false;
   }
@@ -948,7 +944,7 @@ static bool Locale_toString(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   args.rval().setString(locale->languageTag());
   return true;
 }
@@ -968,7 +964,7 @@ static bool Locale_baseName(JSContext* cx, const CallArgs& args) {
   // FIXME: spec bug - subtag production names not updated.
 
   // Steps 3, 5.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   args.rval().setString(locale->baseName());
   return true;
 }
@@ -985,7 +981,7 @@ static bool Locale_calendar(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   return GetUnicodeExtension(cx, locale, "ca", args.rval());
 }
 
@@ -1001,7 +997,7 @@ static bool Locale_collation(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   return GetUnicodeExtension(cx, locale, "co", args.rval());
 }
 
@@ -1017,7 +1013,7 @@ static bool Locale_hourCycle(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   return GetUnicodeExtension(cx, locale, "hc", args.rval());
 }
 
@@ -1033,7 +1029,7 @@ static bool Locale_caseFirst(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   return GetUnicodeExtension(cx, locale, "kf", args.rval());
 }
 
@@ -1049,7 +1045,7 @@ static bool Locale_numeric(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   RootedValue value(cx);
   if (!GetUnicodeExtension(cx, locale, "kn", &value)) {
     return false;
@@ -1073,7 +1069,7 @@ static bool Intl_Locale_numberingSystem(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   return GetUnicodeExtension(cx, locale, "nu", args.rval());
 }
 
@@ -1089,7 +1085,7 @@ static bool Locale_language(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   JSLinearString* baseName = locale->baseName()->ensureLinear(cx);
   if (!baseName) {
     return false;
@@ -1125,7 +1121,7 @@ static bool Locale_script(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   JSLinearString* baseName = locale->baseName()->ensureLinear(cx);
   if (!baseName) {
     return false;
@@ -1167,7 +1163,7 @@ static bool Locale_region(JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(IsLocale(args.thisv()));
 
   // Step 3.
-  auto* locale = &args.thisv().toObject().as<NativeLocaleObject>();
+  auto* locale = &args.thisv().toObject().as<LocaleObject>();
   JSLinearString* baseName = locale->baseName()->ensureLinear(cx);
   if (!baseName) {
     return false;
@@ -1209,13 +1205,13 @@ static bool Locale_toSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static const JSFunctionSpec locale_native_methods[] = {
+static const JSFunctionSpec locale_methods[] = {
     JS_FN("maximize", Locale_maximize, 0, 0),
     JS_FN("minimize", Locale_minimize, 0, 0),
     JS_FN(js_toString_str, Locale_toString, 0, 0),
     JS_FN(js_toSource_str, Locale_toSource, 0, 0), JS_FS_END};
 
-static const JSPropertySpec locale_native_properties[] = {
+static const JSPropertySpec locale_properties[] = {
     JS_PSG("baseName", Locale_baseName, 0),
     JS_PSG("calendar", Locale_calendar, 0),
     JS_PSG("collation", Locale_collation, 0),
@@ -1229,10 +1225,10 @@ static const JSPropertySpec locale_native_properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Intl.Locale", JSPROP_READONLY),
     JS_PS_END};
 
-JSObject* js::CreateNativeLocalePrototype(JSContext* cx, HandleObject Intl,
+JSObject* js::CreateLocalePrototype(JSContext* cx, HandleObject Intl,
                                           Handle<GlobalObject*> global) {
-  RootedFunction ctor(cx, GlobalObject::createConstructor(
-                              cx, &NativeLocale, cx->names().Locale, 1));
+  RootedFunction ctor(
+      cx, GlobalObject::createConstructor(cx, &Locale, cx->names().Locale, 1));
   if (!ctor) {
     return nullptr;
   }
@@ -1247,8 +1243,8 @@ JSObject* js::CreateNativeLocalePrototype(JSContext* cx, HandleObject Intl,
     return nullptr;
   }
 
-  if (!DefinePropertiesAndFunctions(cx, proto, locale_native_properties,
-                                    locale_native_methods)) {
+  if (!DefinePropertiesAndFunctions(cx, proto, locale_properties,
+                                    locale_methods)) {
     return nullptr;
   }
 
@@ -1258,4 +1254,33 @@ JSObject* js::CreateNativeLocalePrototype(JSContext* cx, HandleObject Intl,
   }
 
   return proto;
+}
+
+/* static */ bool js::GlobalObject::addLocaleConstructor(JSContext* cx,
+                                                         HandleObject intl) {
+  Handle<GlobalObject*> global = cx->global();
+
+  {
+    const Value& proto = global->getReservedSlot(LOCALE_PROTO);
+    if (!proto.isUndefined()) {
+      MOZ_ASSERT(proto.isObject());
+      JS_ReportErrorASCII(
+          cx,
+          "the Locale constructor can't be added multiple times in the"
+          "same global");
+      return false;
+    }
+  }
+
+  JSObject* localeProto = CreateLocalePrototype(cx, intl, global);
+  if (!localeProto) {
+    return false;
+  }
+
+  global->setReservedSlot(LOCALE_PROTO, ObjectValue(*localeProto));
+  return true;
+}
+
+bool js::AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl) {
+  return GlobalObject::addLocaleConstructor(cx, intl);
 }

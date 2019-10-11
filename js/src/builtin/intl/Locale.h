@@ -17,7 +17,7 @@ namespace js {
 
 class GlobalObject;
 
-class NativeLocaleObject : public NativeObject {
+class LocaleObject : public NativeObject {
  public:
   static const JSClass class_;
 
@@ -45,9 +45,9 @@ class NativeLocaleObject : public NativeObject {
   }
 };
 
-extern JSObject* CreateNativeLocalePrototype(JSContext* cx,
-                                             JS::Handle<JSObject*> Intl,
-                                             JS::Handle<GlobalObject*> global);
+extern JSObject* CreateLocalePrototype(JSContext* cx,
+                                       JS::Handle<JSObject*> Intl,
+                                       JS::Handle<GlobalObject*> global);
 
 }  // namespace js
 
