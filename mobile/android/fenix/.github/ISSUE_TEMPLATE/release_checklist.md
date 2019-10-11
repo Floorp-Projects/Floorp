@@ -4,8 +4,8 @@ Soft code freeze for a release is the *second Wednesday of the sprint*, and most
 | Monday       | Tuesday                   | Wednesday                    | Thursday       | Friday      |
 |--------------|---------------------------|------------------------------|----------------|-------------|
 | Sprint Start | Sprint Work/String Freeze | Sprint Work                  | Sprint Work    | Sprint Work |
-| Sprint Work  | Sprint Work               | Sprint Work/Soft Code Freeze | Sprint Work/QA | Planning    |
-|              | Release to Play Store     |                              |                |             |
+| Sprint Work  | Sprint Work               | Sprint Work/Soft Code Freeze | Sprint Work/QA | Hard Code Freeze/Localization Due 
+|              | Release to Play Store     |                              |                |Planning|            |
 
 ## Start of sprint [Monday, 1st week of sprint]
 - [ ] Create an issue in the *upcoming* milestone: "What's New Entry for [release]" to track work for the SUMO page and Google Play release notes.
