@@ -4,7 +4,9 @@ build/clang-plugin/.*
 config/gcc-stl-wrapper.template.h
 config/msvc-stl-wrapper.template.h
 # Generated code
+js/src/builtin/intl/LanguageTagGenerated.cpp
 js/src/builtin/intl/TimeZoneDataGenerated.h
+js/src/builtin/intl/UnicodeExtensionsGenerated.cpp
 
 # Don't want to reformat irregexp. bug 1510128
 js/src/irregexp/.*
