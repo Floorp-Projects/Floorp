@@ -486,6 +486,10 @@ class nsDocShell final : public nsDocLoader,
                                    const nsString* aInitiatorType,
                                    uint32_t aLoadType, uint32_t aCacheKey);
 
+  // Notify consumers of a search being loaded through the observer service:
+  static void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
+                                              const nsString& aKeyword);
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
@@ -955,10 +959,6 @@ class nsDocShell final : public nsDocLoader,
   // Helper assertion to enforce that mInPrivateBrowsing is in sync with
   // OriginAttributes.mPrivateBrowsingId
   void AssertOriginAttributesMatchPrivateBrowsing();
-
-  // Notify consumers of a search being loaded through the observer service:
-  void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
-                                       const nsString& aKeyword);
 
   // Internal implementation of nsIDocShell::FirePageHideNotification.
   // If aSkipCheckingDynEntries is true, it will not try to remove dynamic
