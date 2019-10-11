@@ -37,6 +37,7 @@ const {
   FXA_PWDMGR_SECURE_FIELDS,
   FX_OAUTH_CLIENT_ID,
   KEY_LIFETIME,
+  ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
   ONLOGIN_NOTIFICATION,
   ONLOGOUT_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
@@ -1785,23 +1786,26 @@ FxAccountsInternal.prototype = {
     return state.updateUserAccountData(updateData);
   },
 
-  _handleTokenError(err) {
+  async _handleTokenError(err) {
     if (!err || err.code != 401 || err.errno != ERRNO_INVALID_AUTH_TOKEN) {
       throw err;
     }
-    log.warn("recovering from invalid token error", err);
-    return this.accountStatus()
-      .then(exists => {
-        if (!exists) {
-          // Delete all local account data. Since the account no longer
-          // exists, we can skip the remote calls.
-          log.info("token invalidated because the account no longer exists");
-          return this.signOut(true);
-        }
-        log.info("clearing credentials to handle invalid token error");
-        return this.dropCredentials(this.currentAccountState);
-      })
-      .then(() => Promise.reject(err));
+    log.warn("handling invalid token error", err);
+    let exists = await this.accountStatus();
+    if (!exists) {
+      // Delete all local account data. Since the account no longer
+      // exists, we can skip the remote calls.
+      log.info("token invalidated because the account no longer exists");
+      await this.signOut(true);
+    } else {
+      // Account still exists - presumably a password change, so force a reauth.
+      log.info("clearing credentials to handle invalid token error");
+      await this.dropCredentials(this.currentAccountState);
+      // Notify the account state has changed so the UI updates.
+      await this.notifyObservers(ON_ACCOUNT_STATE_CHANGE_NOTIFICATION);
+    }
+    // always re-throw the error.
+    throw err;
   },
 };
 

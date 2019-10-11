@@ -67,6 +67,11 @@ let mockFxa = function() {
       withCurrentAccountState(cb) {
         return cb(this.currentAccountState);
       },
+
+      async _handleTokenError(err) {
+        // handleTokenError always rethrows.
+        throw err;
+      },
     }
   );
   return fxa;
