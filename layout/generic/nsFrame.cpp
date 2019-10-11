@@ -9908,7 +9908,12 @@ ComputedStyle* nsFrame::DoGetParentComputedStyle(
           /* if next is true then it's really a request for the table frame's
              parent context, see nsTable[Outer]Frame::GetParentComputedStyle. */
           pseudo == PseudoStyleType::tableWrapper) {
-        if (Servo_Element_IsDisplayContents(parentElement)) {
+        // In some edge cases involving display: contents, we may end up here
+        // for something that's pending to be reframed. In this case we return
+        // the wrong style from here (because we've already lost track of it!),
+        // but it's not a big deal as we're going to be reframed anyway.
+        if (MOZ_LIKELY(parentElement->HasServoData()) &&
+            Servo_Element_IsDisplayContents(parentElement)) {
           RefPtr<ComputedStyle> style =
               ServoStyleSet::ResolveServoStyle(*parentElement);
           // NOTE(emilio): we return a weak reference because the element also
