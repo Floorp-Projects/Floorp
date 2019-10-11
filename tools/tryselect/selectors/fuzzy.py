@@ -328,8 +328,12 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
     all_tasks = sorted(tg.tasks.keys())
 
     cache_dir = os.path.join(get_state_dir(srcdir=True), 'cache', 'taskgraph')
-    graph_cache = os.path.join(cache_dir, 'target_task_graph')
-    dep_cache = os.path.join(cache_dir, 'target_task_dependencies')
+    if full:
+        graph_cache = os.path.join(cache_dir, 'full_task_graph')
+        dep_cache = os.path.join(cache_dir, 'full_task_dependencies')
+    else:
+        graph_cache = os.path.join(cache_dir, 'target_task_graph')
+        dep_cache = os.path.join(cache_dir, 'target_task_dependencies')
 
     if show_estimates:
         download_task_history_data()
