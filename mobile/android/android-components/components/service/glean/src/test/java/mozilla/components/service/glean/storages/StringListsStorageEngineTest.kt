@@ -203,7 +203,7 @@ class StringListsStorageEngineTest {
     }
 
     @Test
-    fun `set() records an error and returns when passed an empty list`() {
+    fun `set() doesn't record an error when passed an empty list`() {
         val metric = StringListMetricType(
             disabled = false,
             category = "telemetry",
@@ -214,14 +214,10 @@ class StringListsStorageEngineTest {
 
         StringListsStorageEngine.set(metricData = metric, value = listOf())
 
-        // If nothing was stored, then the snapshot should be null
-        val snapshot = StringListsStorageEngine.getSnapshot(
-            storeName = "store1",
-            clearStore = false)
-        assertNull("Empty list must not be stored", snapshot)
+        assertEquals(listOf<String>(), metric.testGetValue())
 
-        // Verify the error was recorded
-        assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
+        // Verify the error was not recorded
+        assertEquals(0, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 
     @Test
