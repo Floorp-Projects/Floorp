@@ -890,6 +890,14 @@ void BrowsingContext::DisplayLoadError(const nsAString& aURI) {
   }
 }
 
+WindowProxyHolder BrowsingContext::Window() {
+  return WindowProxyHolder(Self());
+}
+
+WindowProxyHolder BrowsingContext::GetFrames(ErrorResult& aError) {
+  return Window();
+}
+
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   // FIXME We need to set mClosed, but only once we're sending the
   //       DOMWindowClose event (which happens in the process where the
