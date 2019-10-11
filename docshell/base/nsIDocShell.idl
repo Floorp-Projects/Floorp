@@ -84,9 +84,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * however, the URL dispatcher will go through its normal process of content
    * loading.
    *
-   * @param loadState   - This is the extended load info for this load.
+   * @param aLoadState This is the extended load info for this load.
+   * @param aSetNavigating If we should set isNavigating to true while initiating
+   *                       the load.
    */
-  [noscript]void loadURI(in nsDocShellLoadStatePtr loadState);
+  [noscript]void loadURI(in nsDocShellLoadStatePtr aLoadState, in boolean aSetNavigating);
 
   /**
    * Do either a history.pushState() or history.replaceState() operation,

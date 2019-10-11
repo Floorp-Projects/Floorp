@@ -806,7 +806,8 @@ void BrowsingContext::Location(JSContext* aCx,
 }
 
 nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
-                                  nsDocShellLoadState* aLoadState) {
+                                  nsDocShellLoadState* aLoadState,
+                                  bool aSetNavigating) {
   // Per spec, most load attempts are silently ignored when a BrowsingContext is
   // null (which in our code corresponds to discarded), so we simply fail
   // silently in those cases. Regardless, we cannot trigger loads in/from
@@ -816,12 +817,12 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
   }
 
   if (mDocShell) {
-    return mDocShell->LoadURI(aLoadState);
+    return mDocShell->LoadURI(aLoadState, aSetNavigating);
   }
 
   if (!aAccessor && XRE_IsParentProcess()) {
     Unused << Canonical()->GetCurrentWindowGlobal()->SendLoadURIInChild(
-        aLoadState);
+        aLoadState, aSetNavigating);
   } else {
     MOZ_DIAGNOSTIC_ASSERT(aAccessor);
     MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
@@ -830,7 +831,7 @@ nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
     MOZ_DIAGNOSTIC_ASSERT(win);
     if (WindowGlobalChild* wgc =
             win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
-      wgc->SendLoadURI(this, aLoadState);
+      wgc->SendLoadURI(this, aLoadState, aSetNavigating);
     }
   }
   return NS_OK;
