@@ -412,7 +412,9 @@ class RequestListContent extends Component {
 
 module.exports = connect(
   state => ({
-    blockedUrls: state.requestBlocking.blockedUrls.map(({ url }) => url),
+    blockedUrls: state.requestBlocking.blockedUrls
+      .map(({ enabled, url }) => (enabled ? url : null))
+      .filter(Boolean),
     columns: getColumns(state),
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkDetailsWidth: state.ui.networkDetailsWidth,
