@@ -103,6 +103,9 @@ enum class JSInstrumentationFlags {
 // Record an exit profile from a child process.
 void profiler_received_exit_profile(const nsCString& aExitProfile);
 
+// Write out the information of the active profiling configuration.
+void profiler_write_active_configuration(mozilla::JSONWriter& aWriter);
+
 // Extract all received exit profiles that have not yet expired (i.e., they
 // still intersect with this process' buffer range).
 mozilla::Vector<nsCString> profiler_move_exit_profiles();

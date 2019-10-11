@@ -224,6 +224,30 @@ nsProfiler::GetSharedLibraries(JSContext* aCx,
 }
 
 NS_IMETHODIMP
+nsProfiler::GetActiveConfiguration(JSContext* aCx,
+                                   JS::MutableHandle<JS::Value> aResult) {
+  JS::RootedValue jsValue(aCx);
+  {
+    nsString buffer;
+    JSONWriter writer(MakeUnique<StringWriteFunc>(buffer));
+    profiler_write_active_configuration(writer);
+    MOZ_ALWAYS_TRUE(JS_ParseJSON(aCx,
+                                 static_cast<const char16_t*>(buffer.get()),
+                                 buffer.Length(), &jsValue));
+  }
+  if (jsValue.isNull()) {
+    aResult.setNull();
+  } else {
+    JS::RootedObject obj(aCx, &jsValue.toObject());
+    if (!obj) {
+      return NS_ERROR_FAILURE;
+    }
+    aResult.setObject(*obj);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProfiler::DumpProfileToFile(const char* aFilename) {
   profiler_save_profile_to_file(aFilename);
   return NS_OK;
