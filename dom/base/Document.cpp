@@ -13463,7 +13463,7 @@ nsresult Document::RemoteFrameFullscreenChanged(Element* aFrameElement) {
   // If the frame element is already the fullscreen element in this document,
   // this has no effect.
   auto request = FullscreenRequest::CreateForRemote(aFrameElement);
-  RequestFullscreen(std::move(request));
+  RequestFullscreen(std::move(request), XRE_IsContentProcess());
   return NS_OK;
 }
 
@@ -13617,14 +13617,15 @@ static bool ShouldApplyFullscreenDirectly(Document* aDoc,
   }
 }
 
-void Document::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest) {
+void Document::RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
+                                 bool applyFullScreenDirectly) {
   nsCOMPtr<nsPIDOMWindowOuter> rootWin = GetRootWindow(this);
   if (!rootWin) {
     aRequest->MayRejectPromise();
     return;
   }
 
-  if (ShouldApplyFullscreenDirectly(this, rootWin)) {
+  if (applyFullScreenDirectly || ShouldApplyFullscreenDirectly(this, rootWin)) {
     ApplyFullscreen(std::move(aRequest));
     return;
   }

@@ -414,6 +414,7 @@ var FullScreen = {
 
   enterDomFullscreen(aBrowser, aActor) {
     if (!document.fullscreenElement) {
+      aActor.requestOrigin = null;
       return;
     }
 
@@ -425,14 +426,21 @@ var FullScreen = {
     // to enter fullscreen state. We don't need to do so if it is an
     // in-process browser, since all related document should have
     // entered fullscreen state at this point.
+    // Additionally, in Fission world, we may need to notify the
+    // frames in the middle (content frames that embbed the oop iframe where
+    // the element requesting fullscreen lives) to enter fullscreen
+    // first.
     // This should be done before the active tab check below to ensure
     // that the content document handles the pending request. Doing so
     // before the check is fine since we also check the activeness of
     // the requesting document in content-side handling code.
     if (this._isRemoteBrowser(aBrowser)) {
-      aActor.sendAsyncMessage("DOMFullscreen:Entered", {});
+      if (
+        !this._sendMessageToTheRightContent(aActor, "DOMFullscreen:Entered")
+      ) {
+        return;
+      }
     }
-
     // If we've received a fullscreen notification, we have to ensure that the
     // element that's requesting fullscreen belongs to the browser that's currently
     // active. If not, we exit fullscreen since the "full-screen document" isn't
@@ -495,12 +503,15 @@ var FullScreen = {
   },
 
   cleanupDomFullscreen(aActor) {
+    if (!this._sendMessageToTheRightContent(aActor, "DOMFullscreen:CleanUp")) {
+      return;
+    }
+
     PopupNotifications.panel.removeEventListener(
       "popupshowing",
       () => this._handlePermPromptShow(),
       true
     );
-    aActor.sendAsyncMessage("DOMFullscreen:CleanUp", {});
 
     PointerlockFsWarning.close();
     gBrowser.tabContainer.removeEventListener(
@@ -509,6 +520,54 @@ var FullScreen = {
     );
 
     document.documentElement.removeAttribute("inDOMFullscreen");
+  },
+
+  /**
+   * Search for the first ancestor of aActor that lives in a different process.
+   * If found, that ancestor is sent the message. Otherwise, the recipient should
+   * be the actor of the request origin.
+   *
+   * @param {JSWindowActorParent} aActor
+   *        The actor that called this function.
+   * @param {String} message
+   *        Message to be sent.
+   *
+   * @return {boolean}
+   *         Return true if the message is sent to the request source
+   *         or false otherwise.
+   */
+  _sendMessageToTheRightContent(aActor, aMessage) {
+    let childBC = aActor.browsingContext;
+    let parentBC = childBC.parent;
+
+    while (parentBC) {
+      let childPid = childBC.currentWindowGlobal.osPid;
+      let parentPid = parentBC.currentWindowGlobal.osPid;
+
+      if (childPid == parentPid) {
+        childBC = parentBC;
+        parentBC = childBC.parent;
+      } else {
+        break;
+      }
+    }
+
+    if (parentBC) {
+      let parentActor = parentBC.currentWindowGlobal.getActor("DOMFullscreen");
+      parentActor.sendAsyncMessage(aMessage, {
+        remoteFrameBC: childBC,
+      });
+      return false;
+    }
+
+    // All content frames living outside the process where
+    // the element requesting fullscreen lives should
+    // have entered or exited fullscreen at this point.
+    // So let's notify the process where the original request
+    // comes from.
+    aActor.requestOrigin.sendAsyncMessage(aMessage, {});
+    aActor.requestOrigin = null;
+    return true;
   },
 
   _isRemoteBrowser(aBrowser) {

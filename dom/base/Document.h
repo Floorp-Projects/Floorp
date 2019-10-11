@@ -2150,7 +2150,8 @@ class Document : public nsINode,
 
   // This is called asynchronously by Document::AsyncRequestFullscreen()
   // to move this document into fullscreen mode if allowed.
-  void RequestFullscreen(UniquePtr<FullscreenRequest> aRequest);
+  void RequestFullscreen(UniquePtr<FullscreenRequest> aRequest,
+                         bool applyFullScreenDirectly = false);
 
   // Removes all elements from the fullscreen stack, removing full-scren
   // styles from the top element in the stack.
