@@ -14,7 +14,7 @@ with Files("tests/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 with Files("tests/browser/browser_contentpermissionprompt.js"):
-    BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
+    BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 with Files("tests/unit/test_distribution.js"):
     BUG_COMPONENT = ("Firefox", "Distributions")
