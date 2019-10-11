@@ -15,13 +15,16 @@ import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.util.Callbacks
+import org.junit.Assume.assumeThat
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ContentBlockingControllerTest : BaseSessionTest() {
     @GeckoSessionTestRule.Setting(key = GeckoSessionTestRule.Setting.Key.USE_TRACKING_PROTECTION, value = "true")
+// disable test on debug for frequently failing #Bug 1580223
     @Test
     fun trackingProtectionException() {
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         val category = ContentBlocking.AntiTracking.TEST
         sessionRule.runtime.settings.contentBlocking.setAntiTracking(category)
         sessionRule.session.loadTestPath(TRACKERS_PATH)
