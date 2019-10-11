@@ -69,10 +69,30 @@
 
 .network-monitor .request-blocking-list button {
   visibility: hidden;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  padding: 1px;
+  margin-top: 3px;
 }
 
-.network-monitor .request-blocking-list button::before {
+.network-monitor .request-blocking-list .devtools-button:empty::before {
+  width: 12px;
+  height: 12px;
+  margin: 0;
   background-image: url("chrome://devtools/skin/images/close.svg");
+  background-size: 12px 12px;
+  background-position: 0 -1px;
+}
+
+.network-monitor .request-blocking-list .devtools-button:empty:hover,
+.network-monitor .request-blocking-list .devtools-button:empty:focus {
+  background-color: var(--theme-selection-background) !important;
+}
+
+.network-monitor .request-blocking-list button:hover::before,
+.network-monitor .request-blocking-list button:focus::before {
+  fill: #fff;
 }
 
 .network-monitor .request-blocking-list li:hover button,
