@@ -106,7 +106,7 @@ fn render_blob(
     }
 
     Ok(api::RasterizedBlobImage {
-        data: Some(Arc::new(texels)),
+        data: Arc::new(texels),
         rasterized_rect: size2(w, h).into(),
     })
 }

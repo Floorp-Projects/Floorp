@@ -2364,12 +2364,11 @@ impl PrimitiveStore {
 
                 match image_properties {
                     Some(ImageProperties { tiling: None, .. }) => {
-                        if frame_state.resource_cache.request_image(
+
+                        frame_state.resource_cache.request_image(
                             request,
                             frame_state.gpu_cache,
-                        ).should_skip() {
-                            prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                        }
+                        );
                     }
                     Some(ImageProperties { tiling: Some(tile_size), visible_rect, .. }) => {
                         image_instance.visible_tiles.clear();
@@ -2434,17 +2433,17 @@ impl PrimitiveStore {
                             );
 
                             for tile in tiles {
-                                if frame_state.resource_cache.request_image(
+                                frame_state.resource_cache.request_image(
                                     request.with_tile(tile.offset),
                                     frame_state.gpu_cache,
-                                ).should_render() {
-                                    image_instance.visible_tiles.push(VisibleImageTile {
-                                        tile_offset: tile.offset,
-                                        edge_flags: tile.edge_flags & edge_flags,
-                                        local_rect: tile.rect,
-                                        local_clip_rect: tight_clip_rect,
-                                    });
-                                }
+                                );
+
+                                image_instance.visible_tiles.push(VisibleImageTile {
+                                    tile_offset: tile.offset,
+                                    edge_flags: tile.edge_flags & edge_flags,
+                                    local_rect: tile.rect,
+                                    local_clip_rect: tight_clip_rect,
+                                });
                             }
                         }
 
@@ -2458,21 +2457,17 @@ impl PrimitiveStore {
             }
             PrimitiveInstanceKind::ImageBorder { data_handle, .. } => {
                 let prim_data = &mut frame_state.data_stores.image_border[data_handle];
-                if prim_data.kind.request_resources(
+                prim_data.kind.request_resources(
                     frame_state.resource_cache,
                     frame_state.gpu_cache,
-                ).should_skip() {
-                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                }
+                );
             }
             PrimitiveInstanceKind::YuvImage { data_handle, .. } => {
                 let prim_data = &mut frame_state.data_stores.yuv_image[data_handle];
-                if prim_data.kind.request_resources(
+                prim_data.kind.request_resources(
                     frame_state.resource_cache,
                     frame_state.gpu_cache,
-                ).should_skip() {
-                    prim_instance.visibility_info = PrimitiveVisibilityIndex::INVALID;
-                }
+                );
             }
             _ => {}
         }
