@@ -72,13 +72,18 @@ function removeBlockedUrl(state, action) {
 
 function updateBlockedUrl(state, action) {
   const { oldUrl, newUrl } = action;
+  let { blockedUrls } = state;
 
-  const blockedUrls = state.blockedUrls.map(item => {
-    if (item.url === oldUrl) {
-      return { ...item, url: newUrl };
-    }
-    return item;
-  });
+  if (!blockedUrls.find(item => item.url === newUrl)) {
+    blockedUrls = blockedUrls.map(item => {
+      if (item.url === oldUrl) {
+        return { ...item, url: newUrl };
+      }
+      return item;
+    });
+  } else {
+    blockedUrls = blockedUrls.filter(item => item.url != oldUrl);
+  }
 
   return {
     ...state,
