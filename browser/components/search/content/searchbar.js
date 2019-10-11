@@ -83,7 +83,6 @@
 
       this._menupopup = null;
       this._pasteAndSearchMenuItem = null;
-      this._suggestMenuItem = null;
 
       this._setupTextboxEventListeners();
       this._initTextbox();
@@ -677,11 +676,6 @@
 
         BrowserSearch.searchBar._textbox.closePopup();
 
-        let suggestEnabled = Services.prefs.getBoolPref(
-          "browser.search.suggest.enabled"
-        );
-        this._suggestMenuItem.setAttribute("checked", suggestEnabled);
-
         let controller = document.commandDispatcher.getControllerForCommand(
           "cmd_paste"
         );
@@ -854,7 +848,6 @@
         <menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll"/>
         <menuseparator/>
         <menuitem class="searchbar-clear-history"/>
-        <menuitem class="searchbar-toggle-suggest" type="checkbox" autocheck="false"/>
       `;
 
       this._menupopup = this.querySelector(".textbox-contextmenu");
@@ -882,16 +875,6 @@
         this._stringBundle.getString("cmd_clearHistory_accesskey")
       );
 
-      this._suggestMenuItem = frag.querySelector(".searchbar-toggle-suggest");
-      this._suggestMenuItem.setAttribute(
-        "label",
-        this._stringBundle.getString("cmd_showSuggestions")
-      );
-      this._suggestMenuItem.setAttribute(
-        "accesskey",
-        this._stringBundle.getString("cmd_showSuggestions_accesskey")
-      );
-
       this._menupopup.appendChild(frag);
 
       this._menupopup.addEventListener("command", event => {
@@ -906,15 +889,6 @@
               null
             );
             this.textbox.value = "";
-            break;
-          case this._suggestMenuItem:
-            let enabled = Services.prefs.getBoolPref(
-              "browser.search.suggest.enabled"
-            );
-            Services.prefs.setBoolPref(
-              "browser.search.suggest.enabled",
-              !enabled
-            );
             break;
           default:
             let cmd = event.originalTarget.getAttribute("cmd");
