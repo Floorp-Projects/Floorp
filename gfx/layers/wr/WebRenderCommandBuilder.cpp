@@ -86,15 +86,12 @@ struct BlobItemData {
   UniquePtr<nsDisplayItemGeometry> mGeometry;
   DisplayItemClip mClip;
   bool mUsed;  // initialized near construction
+  // XXX: only used for debugging
+  bool mInvalid;
 
   // a weak pointer to the group that owns this item
   // we use this to track whether group for a particular item has changed
   struct DIGroup* mGroup;
-
-  // XXX: only used for debugging
-  bool mInvalid;
-  bool mInvalidRegion;
-  bool mEmpty;
 
   // properties that are used to emulate layer tree invalidation
   Matrix mMatrix;  // updated to track the current transform to device space
@@ -106,13 +103,10 @@ struct BlobItemData {
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
 
   IntRect mImageRect;
-  LayerIntPoint mGroupOffset;
 
   BlobItemData(DIGroup* aGroup, nsDisplayItem* aItem)
       : mUsed(false), mGroup(aGroup) {
     mInvalid = false;
-    mInvalidRegion = false;
-    mEmpty = false;
     mDisplayItemKey = aItem->GetPerFrameKey();
     AddFrame(aItem->Frame());
   }
@@ -384,7 +378,6 @@ struct DIGroup {
     /*if (aItem->IsReused() && aData->mGeometry) {
       return;
     }*/
-    aData->mInvalidRegion = false;
 
     GP("pre mInvalidRect: %s %p-%d - inv: %d %d %d %d\n", aItem->Name(),
        aItem->Frame(), aItem->GetPerFrameKey(), mInvalidRect.x, mInvalidRect.y,
@@ -459,7 +452,6 @@ struct DIGroup {
         InvalidateRect(aData->mRect);
 
         aData->mInvalid = true;
-        aData->mInvalidRegion = true;
       } else {
         if (aData->mClip != clip) {
           UniquePtr<nsDisplayItemGeometry> geometry(
@@ -793,22 +785,7 @@ struct DIGroup {
         dirty = false;
         BlobItemData* data = GetBlobItemData(item);
         if (data->mInvalid) {
-          if (item->GetType() == DisplayItemType::TYPE_TRANSFORM) {
-            nsDisplayTransform* transformItem =
-                static_cast<nsDisplayTransform*>(item);
-            const Matrix4x4Flagged& t = transformItem->GetTransform();
-            Matrix t2d;
-            bool is2D = t.Is2D(&t2d);
-            gfxCriticalError()
-                << "DIT-" << is2D << "-r-" << data->mInvalidRegion << "-"
-                << bounds.x << "-" << bounds.y << "-" << bounds.width << "-"
-                << bounds.height << "," << mInvalidRect.x << "-"
-                << mInvalidRect.y << "-" << mInvalidRect.width << "-"
-                << mInvalidRect.height << "-sbi";
-          } else {
-            gfxCriticalError() << "DisplayItem" << item->Name() << "-region-"
-                               << data->mInvalidRegion << "-should be invalid";
-          }
+          gfxCriticalError() << "DisplayItem" << item->Name() << "-should be invalid";
         }
         // if the item is invalid it needs to be fully contained
         MOZ_RELEASE_ASSERT(!data->mInvalid);
