@@ -8,7 +8,6 @@ import android.content.Context
 import android.graphics.ColorFilter
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.view.View
 import android.view.ViewGroup
 import android.widget.ActionMenuView
 import android.widget.ImageButton
@@ -21,9 +20,11 @@ import androidx.core.view.forEach
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.library_site_item.view.*
-import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
+import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.ext.hideAndDisable
+import org.mozilla.fenix.ext.showAndEnable
 
 open class LibraryPageView(
     override val containerView: ViewGroup
@@ -40,8 +41,9 @@ open class LibraryPageView(
             context.getColorFromAttr(R.attr.primaryText),
             context.getColorFromAttr(R.attr.foundation)
         )
-        libraryItemsList.children.forEach { item ->
-            item.overflow_menu.visibility = View.VISIBLE
+        libraryItemsList.setItemViewCacheSize(0)
+        libraryItemsList.children.forEach {
+                item -> item.overflow_menu.showAndEnable()
         }
     }
 
@@ -54,8 +56,9 @@ open class LibraryPageView(
             ContextCompat.getColor(context, R.color.white_color),
             context.getColorFromAttr(R.attr.accentHighContrast)
         )
-        libraryItemsList.children.forEach { item ->
-            item.overflow_menu.visibility = View.INVISIBLE
+        libraryItemsList.setItemViewCacheSize(0)
+        libraryItemsList.children.forEach {
+            item -> item.overflow_menu.hideAndDisable()
         }
     }
 

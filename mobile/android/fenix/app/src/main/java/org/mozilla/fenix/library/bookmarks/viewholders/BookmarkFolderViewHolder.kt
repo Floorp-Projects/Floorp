@@ -9,6 +9,8 @@ import androidx.core.content.ContextCompat
 import mozilla.components.concept.storage.BookmarkNode
 import org.jetbrains.anko.image
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.hideAndDisable
+import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
@@ -31,9 +33,10 @@ class BookmarkFolderViewHolder(
 
         if (!item.inRoots()) {
             setupMenu(item)
-            containerView.overflowView.visibility = when (selectionHolder.selectedItems.isEmpty()) {
-                true -> View.VISIBLE
-                false -> View.INVISIBLE
+            if (selectionHolder.selectedItems.isEmpty()) {
+                containerView.overflowView.showAndEnable()
+            } else {
+                containerView.overflowView.hideAndDisable()
             }
         } else {
             containerView.overflowView.visibility = View.GONE

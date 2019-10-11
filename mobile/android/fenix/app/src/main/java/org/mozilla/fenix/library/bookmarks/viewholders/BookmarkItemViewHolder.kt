@@ -4,8 +4,9 @@
 
 package org.mozilla.fenix.library.bookmarks.viewholders
 
-import android.view.View
 import mozilla.components.concept.storage.BookmarkNode
+import org.mozilla.fenix.ext.hideAndDisable
+import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
@@ -23,9 +24,10 @@ class BookmarkItemViewHolder(
 
         containerView.displayAs(LibrarySiteItemView.ItemType.SITE)
 
-        containerView.overflowView.visibility = when (selectionHolder.selectedItems.isEmpty()) {
-            true -> View.VISIBLE
-            false -> View.INVISIBLE
+        if (selectionHolder.selectedItems.isEmpty()) {
+            containerView.overflowView.showAndEnable()
+        } else {
+            containerView.overflowView.hideAndDisable()
         }
         setupMenu(item)
         containerView.titleView.text = if (item.title.isNullOrBlank()) item.url else item.title

@@ -7,7 +7,10 @@ package org.mozilla.fenix.library.history.viewholders
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.history_list_item.view.*
+import kotlinx.android.synthetic.main.library_site_item.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.hideAndDisable
+import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItem
@@ -55,6 +58,11 @@ class HistoryListItemViewHolder(
         itemView.history_layout.setSelectionInteractor(item, selectionHolder, historyInteractor)
         itemView.history_layout.changeSelected(item in selectionHolder.selectedItems)
         itemView.history_layout.loadFavicon(item.url)
+        if (mode === HistoryFragmentState.Mode.Normal) {
+            itemView.overflow_menu.showAndEnable()
+        } else {
+            itemView.overflow_menu.hideAndDisable()
+        }
     }
 
     private fun toggleHeader(headerText: String?) {
