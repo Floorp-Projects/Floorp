@@ -405,6 +405,8 @@ bool BigIntLiteral::isZero() {
   return data_.as<BigIntCreationData>().isZero();
 }
 
+BigInt* BigIntLiteral::value() { return box()->value(); }
+
 // Allocate an actual GC'd BigInt
 bool BigIntLiteral::publish(JSContext* cx, ParserSharedBase* parser) {
   BigInt* bi = data_.as<BigIntCreationData>().createBigInt(cx);

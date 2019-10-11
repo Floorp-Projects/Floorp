@@ -4426,7 +4426,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
       vp.setNumber(as<NumericLiteral>().value());
       return true;
     case ParseNodeKind::BigIntExpr:
-      vp.setBigInt(as<BigIntLiteral>().box()->value());
+      vp.setBigInt(as<BigIntLiteral>().value());
       return true;
     case ParseNodeKind::TemplateStringExpr:
     case ParseNodeKind::StringExpr:
@@ -9475,7 +9475,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::BigIntExpr:
-      if (!emitBigIntOp(pn->as<BigIntLiteral>().box()->value())) {
+      if (!emitBigIntOp(pn->as<BigIntLiteral>().value())) {
         return false;
       }
       break;
