@@ -106,7 +106,10 @@ def generate_tasks(params=None, full=False):
 
     tg_full = generate('full_task_set')
     tg_target = generate('target_task_set')
-    generate('target_task_graph')  # discard results, we only need cache.
+    # discard results from these, we only need cache.
+    if full:
+        generate('full_task_graph')
+    generate('target_task_graph')
 
     os.chdir(cwd)
     if full:
