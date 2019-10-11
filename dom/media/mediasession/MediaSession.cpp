@@ -37,7 +37,18 @@ void MediaSession::SetMetadata(MediaMetadata* aMetadata) {
 }
 
 void MediaSession::SetActionHandler(MediaSessionAction aAction,
-                                    MediaSessionActionHandler* aHandler) {}
+                                    MediaSessionActionHandler* aHandler) {
+  size_t index = static_cast<size_t>(aAction);
+  mActionHandlers[index] = aHandler;
+}
+
+void MediaSession::NotifyHandler(const MediaSessionActionDetails& aDetails) {
+  size_t index = static_cast<size_t>(aDetails.mAction);
+  RefPtr<MediaSessionActionHandler> handler = mActionHandlers[index];
+  if (handler) {
+    handler->Call(aDetails);
+  }
+}
 
 }  // namespace dom
 }  // namespace mozilla
