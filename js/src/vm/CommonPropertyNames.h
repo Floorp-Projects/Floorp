@@ -64,6 +64,7 @@
   MACRO(byteOffset, byteOffset, "byteOffset")                                  \
   MACRO(bytes, bytes, "bytes")                                                 \
   MACRO(BYTES_PER_ELEMENT, BYTES_PER_ELEMENT, "BYTES_PER_ELEMENT")             \
+  MACRO(calendar, calendar, "calendar")                                        \
   MACRO(call, call, "call")                                                    \
   MACRO(callContentFunction, callContentFunction, "callContentFunction")       \
   MACRO(callee, callee, "callee")                                              \
@@ -77,6 +78,7 @@
   MACRO(catch, catch_, "catch")                                                \
   MACRO(class, class_, "class")                                                \
   MACRO(close, close, "close")                                                 \
+  MACRO(collation, collation, "collation")                                     \
   MACRO(Collator, Collator, "Collator")                                        \
   MACRO(collections, collections, "collections")                               \
   MACRO(columnNumber, columnNumber, "columnNumber")                            \
@@ -208,6 +210,7 @@
   MACRO(hasOwnProperty, hasOwnProperty, "hasOwnProperty")                      \
   MACRO(highWaterMark, highWaterMark, "highWaterMark")                         \
   MACRO(hour, hour, "hour")                                                    \
+  MACRO(hourCycle, hourCycle, "hourCycle")                                     \
   MACRO(if, if_, "if")                                                         \
   MACRO(ignoreCase, ignoreCase, "ignoreCase")                                  \
   MACRO(ignorePunctuation, ignorePunctuation, "ignorePunctuation")             \
@@ -257,6 +260,7 @@
   MACRO(js, js, "js")                                                          \
   MACRO(keys, keys, "keys")                                                    \
   MACRO(label, label, "label")                                                 \
+  MACRO(language, language, "language")                                        \
   MACRO(lastIndex, lastIndex, "lastIndex")                                     \
   MACRO(length, length, "length")                                              \
   MACRO(let, let, "let")                                                       \
@@ -313,6 +317,7 @@
   MACRO(notation, notation, "notation")                                        \
   MACRO(notes, notes, "notes")                                                 \
   MACRO(NumberFormat, NumberFormat, "NumberFormat")                            \
+  MACRO(numberingSystem, numberingSystem, "numberingSystem")                   \
   MACRO(numeric, numeric, "numeric")                                           \
   MACRO(objectArguments, objectArguments, "[object Arguments]")                \
   MACRO(objectArray, objectArray, "[object Array]")                            \
@@ -363,6 +368,7 @@
   MACRO(RegExpStringIterator, RegExpStringIterator, "RegExp String Iterator")  \
   MACRO(RegExpTester, RegExpTester, "RegExpTester")                            \
   MACRO(RegExp_prototype_Exec, RegExp_prototype_Exec, "RegExp_prototype_Exec") \
+  MACRO(region, region, "region")                                              \
   MACRO(Reify, Reify, "Reify")                                                 \
   MACRO(reject, reject, "reject")                                              \
   MACRO(rejected, rejected, "rejected")                                        \
