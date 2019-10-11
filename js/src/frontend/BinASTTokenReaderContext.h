@@ -355,6 +355,43 @@ class MapBasedHuffmanTable {
   friend class HuffmanPreludeReader;
 };
 
+// An implementation of Huffman Tables for single-entry table.
+template <typename T>
+class SingleEntryHuffmanTable {
+ public:
+  explicit SingleEntryHuffmanTable(T&& value) : value_(std::move(value)) {}
+  SingleEntryHuffmanTable(SingleEntryHuffmanTable&& other) = default;
+
+  SingleEntryHuffmanTable() = delete;
+  SingleEntryHuffmanTable(SingleEntryHuffmanTable&) = delete;
+
+  // Lookup a value in the table.
+  // The key is 0-bit length and this always suceeds.
+  HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
+
+  // The number of values in the table.
+  size_t length() const { return 1; }
+
+  // Iterating in the order of insertion.
+  struct Iterator {
+    explicit Iterator(const T* position);
+    void operator++();
+    const T* operator*() const;
+    bool operator==(const Iterator& other) const;
+    bool operator!=(const Iterator& other) const;
+
+   private:
+    const T* position;
+  };
+  Iterator begin() const { return Iterator(&value_); }
+  Iterator end() const { return Iterator(nullptr); }
+
+ private:
+  T value_;
+
+  friend class HuffmanPreludeReader;
+};
+
 // An implementation of Huffman Tables as a vector designed to allow
 // constant-time lookups at the expense of high space complexity.
 //
@@ -441,9 +478,6 @@ class SingleLookupHuffmanTable {
   explicit SingleLookupHuffmanTable(JSContext* cx)
       : values(cx), saturated(cx), largestBitLength(-1) {}
   SingleLookupHuffmanTable(SingleLookupHuffmanTable&& other) = default;
-
-  // Initialize a Huffman table containing a single value.
-  JS::Result<Ok> initWithSingleValue(JSContext* cx, T&& value);
 
   // Initialize a Huffman table containing `numberOfSymbols`.
   // Symbols must be added with `addSymbol`.
@@ -770,6 +804,7 @@ struct GenericHuffmanTable {
   size_t length() const;
 
   struct Iterator {
+    explicit Iterator(typename SingleEntryHuffmanTable<T>::Iterator&&);
     explicit Iterator(typename SingleLookupHuffmanTable<T>::Iterator&&);
     explicit Iterator(typename TwoLookupsHuffmanTable<T>::Iterator&&);
     explicit Iterator(typename ThreeLookupsHuffmanTable<T>::Iterator&&);
@@ -781,7 +816,8 @@ struct GenericHuffmanTable {
     bool operator!=(const Iterator& other) const;
 
    private:
-    mozilla::Variant<typename SingleLookupHuffmanTable<T>::Iterator,
+    mozilla::Variant<typename SingleEntryHuffmanTable<T>::Iterator,
+                     typename SingleLookupHuffmanTable<T>::Iterator,
                      typename TwoLookupsHuffmanTable<T>::Iterator,
                      typename ThreeLookupsHuffmanTable<T>::Iterator>
         implementation;
@@ -805,8 +841,9 @@ struct GenericHuffmanTable {
   HuffmanEntry<const T*> lookup(HuffmanLookup key) const;
 
  private:
-  mozilla::Variant<SingleLookupHuffmanTable<T>, TwoLookupsHuffmanTable<T>,
-                   ThreeLookupsHuffmanTable<T>, HuffmanTableUnreachable>
+  mozilla::Variant<SingleEntryHuffmanTable<T>, SingleLookupHuffmanTable<T>,
+                   TwoLookupsHuffmanTable<T>, ThreeLookupsHuffmanTable<T>,
+                   HuffmanTableUnreachable>
       implementation;
 };
 
