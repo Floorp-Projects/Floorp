@@ -77,8 +77,9 @@ button.case-sensitive-btn {
 
 /* Color for query matches */
 .search-panel .resultCell .query-match {
-  background-color: var(--yellow-70);
-  color: white;
+  background-color: var(--theme-contrast-background);
+  color: var(--theme-contrast-color);
+  border-bottom: 1px solid var(--theme-contrast-border);
 }
 
 .search-modifiers {
