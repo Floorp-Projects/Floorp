@@ -264,6 +264,11 @@ const uint32_t kShadowMaxWALSize = 512 * 1024;
 const uint32_t kShadowJournalSizeLimit = kShadowMaxWALSize * 3;
 
 /**
+ * Automatically kill database actors if LocalStorage shutdown takes this long.
+ */
+#define SHUTDOWN_FORCE_KILL_TIMEOUT_MS 5000
+
+/**
  * Automatically crash the browser if LocalStorage shutdown takes this long.
  * We've chosen a value that is longer than the value for QuotaManager shutdown
  * timer which is currently set to 30 seconds.  We've also chosen a value that
@@ -275,7 +280,7 @@ const uint32_t kShadowJournalSizeLimit = kShadowMaxWALSize * 3;
  * value is less than 60 seconds which is used by nsTerminator to crash a hung
  * main process.
  */
-#define SHUTDOWN_TIMEOUT_MS 50000
+#define SHUTDOWN_FORCE_CRASH_TIMEOUT_MS 45000
 
 bool IsOnConnectionThread();
 
@@ -1963,6 +1968,8 @@ class Database final
 
   void RequestAllowToClose();
 
+  void ForceKill();
+
   void Stringify(nsACString& aResult) const;
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::Database)
@@ -3149,23 +3156,48 @@ void ClientValidationPrefChangedCallback(const char* aPrefName,
 }
 
 template <typename P>
-void RequestAllowToCloseIf(P aPredicate) {
+void CollectDatabases(P aPredicate, nsTArray<RefPtr<Database>>& aDatabases) {
   AssertIsOnBackgroundThread();
 
   if (!gLiveDatabases) {
     return;
   }
 
-  nsTArray<RefPtr<Database>> databases;
-
-  for (Database* database : *gLiveDatabases) {
+  for (const auto& database : *gLiveDatabases) {
     if (aPredicate(database)) {
-      databases.AppendElement(database);
+      aDatabases.AppendElement(database);
     }
   }
+}
 
-  for (Database* database : databases) {
+template <typename P>
+void RequestAllowToCloseIf(P aPredicate) {
+  AssertIsOnBackgroundThread();
+
+  nsTArray<RefPtr<Database>> databases;
+
+  CollectDatabases(aPredicate, databases);
+
+  for (const auto& database : databases) {
+    MOZ_ASSERT(database);
+
     database->RequestAllowToClose();
+  }
+
+  databases.Clear();
+}
+
+void ForceKillDatabases() {
+  AssertIsOnBackgroundThread();
+
+  nsTArray<RefPtr<Database>> databases;
+
+  CollectDatabases([](const Database* const) { return true; }, databases);
+
+  for (const auto& database : databases) {
+    MOZ_ASSERT(database);
+
+    database->ForceKill();
   }
 
   databases.Clear();
@@ -5673,6 +5705,17 @@ void Database::RequestAllowToClose() {
     // registered snapshot.
     AllowToClose();
   }
+}
+
+void Database::ForceKill() {
+  AssertIsOnBackgroundThread();
+
+  if (mActorDestroyed) {
+    MOZ_ASSERT(mAllowedToClose);
+    return;
+  }
+
+  Unused << PBackgroundLSDatabaseParent::Send__delete__(this);
 }
 
 void Database::Stringify(nsACString& aResult) const {
@@ -9210,12 +9253,19 @@ void QuotaClient::ShutdownWorkThreads() {
 
   MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
       [](nsITimer* aTimer, void* aClosure) {
-        auto quotaClient = static_cast<QuotaClient*>(aClosure);
+        ForceKillDatabases();
 
-        quotaClient->ShutdownTimedOut();
+        MOZ_ALWAYS_SUCCEEDS(aTimer->InitWithNamedFuncCallback(
+            [](nsITimer* aTimer, void* aClosure) {
+              auto quotaClient = static_cast<QuotaClient*>(aClosure);
+
+              quotaClient->ShutdownTimedOut();
+            },
+            aClosure, SHUTDOWN_FORCE_CRASH_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
+            "localstorage::QuotaClient::ShutdownWorkThreads::ForceCrashTimer"));
       },
-      this, SHUTDOWN_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
-      "localstorage::QuotaClient::ShutdownWorkThreads::SpinEventLoopTimer"));
+      this, SHUTDOWN_FORCE_KILL_TIMEOUT_MS, nsITimer::TYPE_ONE_SHOT,
+      "localstorage::QuotaClient::ShutdownWorkThreads::ForceKillTimer"));
 
   // This should release any local storage related quota objects or directory
   // locks.
