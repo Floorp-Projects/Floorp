@@ -185,7 +185,6 @@ class HuffmanPreludeReader {
   // A string.
   // May be a literal string, identifier name or property key. May not be null.
   struct String : EntryExplicit {
-    using SymbolType = JSAtom*;
     using Table = HuffmanTableIndexedSymbolsLiteralString;
     explicit String(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
@@ -196,7 +195,6 @@ class HuffmanPreludeReader {
   // An optional string.
   // May be a literal string, identifier name or property key.
   struct MaybeString : EntryExplicit {
-    using SymbolType = JSAtom*;
     using Table = HuffmanTableIndexedSymbolsOptionalLiteralString;
     explicit MaybeString(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
@@ -206,7 +204,6 @@ class HuffmanPreludeReader {
 
   // A JavaScript number. May not be null.
   struct Number : EntryExplicit {
-    using SymbolType = double;
     using Table = HuffmanTableExplicitSymbolsF64;
     explicit Number(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
@@ -214,7 +211,6 @@ class HuffmanPreludeReader {
 
   // A 32-bit integer. May not be null.
   struct UnsignedLong : EntryExplicit {
-    using SymbolType = uint32_t;
     using Table = HuffmanTableExplicitSymbolsU32;
     explicit UnsignedLong(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
@@ -222,7 +218,6 @@ class HuffmanPreludeReader {
 
   // A boolean. May not be null.
   struct Boolean : EntryIndexed {
-    using SymbolType = bool;
     using Table = HuffmanTableIndexedSymbolsBool;
 
     explicit Boolean(const NormalizedInterfaceAndField identity)
@@ -246,8 +241,6 @@ class HuffmanPreludeReader {
 
   // A value of a given interface. May not be null.
   struct Interface : EntryIndexed {
-    using SymbolType = BinASTKind;
-
     // The kind of the interface.
     const BinASTKind kind_;
     Interface(const NormalizedInterfaceAndField identity, BinASTKind kind)
@@ -266,7 +259,6 @@ class HuffmanPreludeReader {
 
   // An optional value of a given interface.
   struct MaybeInterface : EntryIndexed {
-    using SymbolType = BinASTKind;
     using Table = HuffmanTableIndexedSymbolsMaybeInterface;
     // The kind of the interface.
     const BinASTKind kind_;
@@ -303,9 +295,6 @@ class HuffmanPreludeReader {
   // Once we have read the model for the length of the list, we push a
   // `ListContents` to read the model for the contents of the list.
   struct List : EntryExplicit {
-    // The symbol type for the length of the list.
-    using SymbolType = uint32_t;
-
     // The table for the length of the list.
     using Table = HuffmanTableExplicitSymbolsListLength;
 
@@ -335,7 +324,6 @@ class HuffmanPreludeReader {
 
   // A choice between several interfaces. May not be null.
   struct Sum : EntryIndexed {
-    using SymbolType = BinASTKind;
     // The type of table used for this entry.
     using Table = HuffmanTableIndexedSymbolsSum;
 
@@ -376,14 +364,12 @@ class HuffmanPreludeReader {
 
   // An optional choice between several interfaces.
   struct MaybeSum : EntryIndexed {
-    // The type of symbols for this entry.
-    // We use `BinASTKind::_Null` to represent the null case.
-    using SymbolType = BinASTKind;
     // The type of table used for this entry.
     // We use `BinASTKind::_Null` to represent the null case.
     using Table = HuffmanTableIndexedSymbolsSum;
 
     // The type of values in the sum.
+    // We use `BinASTKind::_Null` to represent the null case.
     const BinASTSum contents_;
 
     inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
@@ -419,7 +405,6 @@ class HuffmanPreludeReader {
 
   // A choice between several strings. May not be null.
   struct StringEnum : EntryIndexed {
-    using SymbolType = BinASTVariant;
     using Table = HuffmanTableIndexedSymbolsStringEnum;
 
     // Comparing string enums alphabetically.
@@ -519,7 +504,7 @@ class HuffmanPreludeReader {
     auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
     bool empty = true;
     for (auto iter : lengthTable) {
-      if (*iter > 0) {
+      if (iter->toListLength() > 0) {
         empty = false;
         break;
       }
@@ -559,7 +544,8 @@ class HuffmanPreludeReader {
     if (table.is<HuffmanTableUnreachable>()) {
       // Effectively, an `Interface` is a sum with a single entry.
       HuffmanTableIndexedSymbolsSum sum(cx_);
-      MOZ_TRY(sum.initWithSingleValue(cx_, BinASTKind(interface.kind_)));
+      MOZ_TRY(sum.initWithSingleValue(
+          cx_, BinASTSymbol::fromKind(BinASTKind(interface.kind_))));
       table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
                std::move(sum)};
     }
@@ -634,8 +620,7 @@ class HuffmanPreludeReader {
   // For an indexed type, the symbol is fetched from the grammar using `index`.
   // We have a guarantee that `index` is always in [0, numberOfSymbols).
   template <typename Entry>
-  MOZ_MUST_USE JS::Result<typename Entry::SymbolType> readSymbol(const Entry&,
-                                                                 size_t index);
+  MOZ_MUST_USE JS::Result<BinASTSymbol> readSymbol(const Entry&, size_t index);
 
   // Read the number of symbols in an entry.
   // For an indexed type, theis number is fetched from the grammar.
@@ -676,7 +661,7 @@ class HuffmanPreludeReader {
       BINJS_MOZ_TRY_DECL(
           symbol, readSymbol<Entry>(entry, /* First and only value */ 0));
 
-      MOZ_TRY(table.initWithSingleValue(cx_, std::move(symbol)));
+      MOZ_TRY(table.initWithSingleValue(cx_, symbol));
       return Ok();
     }
 
@@ -741,7 +726,7 @@ class HuffmanPreludeReader {
       // Read and add symbol.
       BINJS_MOZ_TRY_DECL(
           symbol, readSymbol<Entry>(entry, i));  // Symbol is read from disk.
-      MOZ_TRY(table.addSymbol(code, bitLength, std::move(symbol)));
+      MOZ_TRY(table.addSymbol(code, bitLength, symbol));
 
       // Prepare next code.
       code = (code + 1) << (nextBitLength - bitLength);
@@ -824,7 +809,7 @@ class HuffmanPreludeReader {
               entry,
               auxStorageLength_[i].index_));  // Symbol is read from memory.
 
-      MOZ_TRY(table.addSymbol(code, bitLength, std::move(symbol)));
+      MOZ_TRY(table.addSymbol(code, bitLength, symbol));
 
       // Prepare next code.
       code = (code + 1) << (nextBitLength - bitLength);
@@ -968,7 +953,7 @@ class HuffmanPreludeReader {
 
       for (auto iter : tableRef) {
         MOZ_TRY(owner.pushValue(entry.identity_,
-                                Interface(entry.identity_, *iter)));
+                                Interface(entry.identity_, iter->toKind())));
       }
       return Ok();
     }
@@ -992,7 +977,7 @@ class HuffmanPreludeReader {
 
       for (auto iter : tableRef) {
         MOZ_TRY(owner.pushValue(entry.identity_,
-                                Interface(entry.identity_, *iter)));
+                                Interface(entry.identity_, iter->toKind())));
       }
       return Ok();
     }
@@ -1300,8 +1285,7 @@ JS::Result<HuffmanLookup> BinASTTokenReaderContext::BitBuffer::getHuffmanLookup(
 
   // Keep only 32 bits. We perform the operation on 64 bits to avoid any
   // arithmetics surprise.
-  const uint64_t bitPrefix =
-      bits_ >> (bitLength_ - MAX_PREFIX_BIT_LENGTH);
+  const uint64_t bitPrefix = bits_ >> (bitLength_ - MAX_PREFIX_BIT_LENGTH);
   MOZ_ASSERT(bitPrefix <= uint32_t(-1));
   return HuffmanLookup(bitPrefix, MAX_PREFIX_BIT_LENGTH);
 }
@@ -1316,13 +1300,11 @@ void BinASTTokenReaderContext::BitBuffer::advanceBitBuffer<Compression::No>(
   bitLength_ -= bitLength;
 
   // Now zero out the bits that are beyond `bitLength_`.
-  const uint64_t mask =
-      bitLength_ == 0
-          ? 0  // >> 64 is UB for a uint64_t
-          : uint64_t(-1) >> (BIT_BUFFER_SIZE - bitLength_);
+  const uint64_t mask = bitLength_ == 0
+                            ? 0  // >> 64 is UB for a uint64_t
+                            : uint64_t(-1) >> (BIT_BUFFER_SIZE - bitLength_);
   bits_ &= mask;
-  MOZ_ASSERT_IF(bitLength_ != BIT_BUFFER_SIZE,
-                bits_ >> bitLength_ == 0);
+  MOZ_ASSERT_IF(bitLength_ != BIT_BUFFER_SIZE, bits_ >> bitLength_ == 0);
 }
 
 void BinASTTokenReaderContext::traceMetadata(JSTracer* trc) {
@@ -1370,29 +1352,28 @@ JS::Result<BinASTKind> BinASTTokenReaderContext::readTagFromTable(
     const auto& specialized = table.as<HuffmanTableIndexedSymbolsSum>();
 
     // We're entering either a single interface or a sum.
-    const auto lookup = specialized.lookup(bits_);
-    bitBuffer.advanceBitBuffer<Compression::No>(lookup.key_.bitLength_);
-    if (MOZ_UNLIKELY(!lookup.value_)) {
+    const auto result = specialized.lookup(bits_);
+    if (MOZ_UNLIKELY(!result.isFound())) {
       return raiseInvalidValue();
     }
-    return *lookup.value_;
+    bitBuffer.advanceBitBuffer<Compression::No>(result.bitLength());
+    return result.value().toKind();
   }
 
   MOZ_ASSERT(table.is<HuffmanTableIndexedSymbolsMaybeInterface>());
   const auto& specialized =
       table.as<HuffmanTableIndexedSymbolsMaybeInterface>();
   // We're entering an optional interface.
-  const auto lookup = specialized.lookup(bits_);
-  bitBuffer.advanceBitBuffer<Compression::No>(lookup.key_.bitLength_);
-  if (MOZ_UNLIKELY(!lookup.value_)) {
+  const auto result = specialized.lookup(bits_);
+  if (MOZ_UNLIKELY(!result.isFound())) {
     return raiseInvalidValue();
   }
-  return *lookup.value_;
+  bitBuffer.advanceBitBuffer<Compression::No>(result.bitLength());
+  return result.value().toKind();
 }
 
 template <typename Table>
-JS::Result<typename Table::Contents>
-BinASTTokenReaderContext::readFieldFromTable(
+JS::Result<BinASTSymbol> BinASTTokenReaderContext::readFieldFromTable(
     const BinASTInterfaceAndField& identity) {
   // Extract the table.
   const auto& table =
@@ -1401,35 +1382,43 @@ BinASTTokenReaderContext::readFieldFromTable(
     return raiseNotInPrelude();
   }
   BINJS_MOZ_TRY_DECL(bits_, bitBuffer.getHuffmanLookup<Compression::No>(*this));
-  const auto lookup = table.as<Table>().lookup(bits_);
-
-  bitBuffer.advanceBitBuffer<Compression::No>(lookup.key_.bitLength_);
-  if (MOZ_UNLIKELY(!lookup.value_)) {
+  const auto result = table.as<Table>().lookup(bits_);
+  if (MOZ_UNLIKELY(!result.isFound())) {
     return raiseInvalidValue();
   }
-  return *lookup.value_;
+  bitBuffer.advanceBitBuffer<Compression::No>(result.bitLength());
+  return result.value();
 }
 
 JS::Result<bool> BinASTTokenReaderContext::readBool(
     const FieldContext& context) {
-  return readFieldFromTable<HuffmanTableIndexedSymbolsBool>(context.position_);
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable<HuffmanTableIndexedSymbolsBool>(
+                                 context.position_));
+  return result.toBool();
 }
 
 JS::Result<double> BinASTTokenReaderContext::readDouble(
     const FieldContext& context) {
-  return readFieldFromTable<HuffmanTableExplicitSymbolsF64>(context.position_);
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable<HuffmanTableExplicitSymbolsF64>(
+                                 context.position_));
+  return result.toDouble();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom(
     const FieldContext& context) {
-  return readFieldFromTable<HuffmanTableIndexedSymbolsOptionalLiteralString>(
-      context.position_);
+  BINJS_MOZ_TRY_DECL(
+      result,
+      readFieldFromTable<HuffmanTableIndexedSymbolsOptionalLiteralString>(
+          context.position_));
+  return result.toAtom();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(
     const FieldContext& context) {
-  return readFieldFromTable<HuffmanTableIndexedSymbolsLiteralString>(
-      context.position_);
+  BINJS_MOZ_TRY_DECL(
+      result, readFieldFromTable<HuffmanTableIndexedSymbolsLiteralString>(
+                  context.position_));
+  return result.toAtom();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeIdentifierName(
@@ -1457,7 +1446,7 @@ JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
   BINJS_MOZ_TRY_DECL(result,
                      readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(
                          context.position_));
-  return result;
+  return result.toVariant();
 }
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
@@ -1465,12 +1454,14 @@ JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
   BINJS_MOZ_TRY_DECL(result,
                      readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(
                          context.position_));
-  return result;
+  return result.toVariant();
 }
 
 JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
     const FieldContext& context) {
-  return readFieldFromTable<HuffmanTableExplicitSymbolsU32>(context.position_);
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable<HuffmanTableExplicitSymbolsU32>(
+                                 context.position_));
+  return result.toUnsignedLong();
 }
 
 JS::Result<BinASTTokenReaderBase::SkippableSubTree>
@@ -1539,12 +1530,12 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   BINJS_MOZ_TRY_DECL(bits_, bitBuffer.getHuffmanLookup<Compression::No>(*this));
   const auto& tableForLookup =
       table.as<HuffmanTableExplicitSymbolsListLength>();
-  const auto lookup = tableForLookup.lookup(bits_);
-  bitBuffer.advanceBitBuffer<Compression::No>(lookup.key_.bitLength_);
-  if (MOZ_UNLIKELY(!lookup.value_)) {
+  const auto result = tableForLookup.lookup(bits_);
+  if (MOZ_UNLIKELY(!result.isFound())) {
     return raiseInvalidValue();
   }
-  items = *lookup.value_;
+  bitBuffer.advanceBitBuffer<Compression::No>(result.bitLength());
+  items = result.value().toListLength();
   return Ok();
 }
 
@@ -1598,127 +1589,135 @@ HuffmanKey::HuffmanKey(const uint32_t bits, const uint8_t bitLength)
 
 // ---- Implementation of Huffman Tables
 
-template <typename T>
-GenericHuffmanTable<T>::Iterator::Iterator(
-    typename SingleEntryHuffmanTable<T>::Iterator&& iterator)
+GenericHuffmanTable::Iterator::Iterator(
+    typename SingleEntryHuffmanTable::Iterator&& iterator)
     : implementation_(std::move(iterator)) {}
 
-template <typename T>
-GenericHuffmanTable<T>::Iterator::Iterator(
-    typename SingleLookupHuffmanTable<T>::Iterator&& iterator)
+GenericHuffmanTable::Iterator::Iterator(
+    typename SingleLookupHuffmanTable::Iterator&& iterator)
     : implementation_(std::move(iterator)) {}
 
-template <typename T>
-GenericHuffmanTable<T>::Iterator::Iterator(
-    typename TwoLookupsHuffmanTable<T>::Iterator&& iterator)
+GenericHuffmanTable::Iterator::Iterator(
+    typename TwoLookupsHuffmanTable::Iterator&& iterator)
     : implementation_(std::move(iterator)) {}
 
-template <typename T>
-GenericHuffmanTable<T>::Iterator::Iterator(
-    typename ThreeLookupsHuffmanTable<T>::Iterator&& iterator)
+GenericHuffmanTable::Iterator::Iterator(
+    typename ThreeLookupsHuffmanTable::Iterator&& iterator)
     : implementation_(std::move(iterator)) {}
 
-template <typename T>
-void GenericHuffmanTable<T>::Iterator::operator++() {
+void GenericHuffmanTable::Iterator::operator++() {
   implementation_.match(
-      [](typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
+      [](typename SingleEntryHuffmanTable::Iterator& iterator) {
         iterator.operator++();
       },
-      [](typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
+      [](typename SingleLookupHuffmanTable::Iterator& iterator) {
         iterator.operator++();
       },
-      [](typename TwoLookupsHuffmanTable<T>::Iterator& iterator) {
+      [](typename TwoLookupsHuffmanTable::Iterator& iterator) {
         iterator.operator++();
       },
-      [](typename ThreeLookupsHuffmanTable<T>::Iterator& iterator) {
+      [](typename ThreeLookupsHuffmanTable::Iterator& iterator) {
         iterator.operator++();
       });
 }
 
-template <typename T>
-bool GenericHuffmanTable<T>::Iterator::operator==(
-    const GenericHuffmanTable<T>::Iterator& other) const {
+bool GenericHuffmanTable::Iterator::operator==(
+    const GenericHuffmanTable::Iterator& other) const {
   return implementation_.match(
-      [other](const typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
-        return iterator == other.implementation_.template as<
-                               typename SingleEntryHuffmanTable<T>::Iterator>();
-      },
-      [other](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
-        return iterator ==
-               other.implementation_.template as<
-                   typename SingleLookupHuffmanTable<T>::Iterator>();
-      },
-      [other](const typename TwoLookupsHuffmanTable<T>::Iterator& iterator) {
+      [other](const typename SingleEntryHuffmanTable::Iterator& iterator) {
         return iterator ==
                other.implementation_
-                   .template as<typename TwoLookupsHuffmanTable<T>::Iterator>();
+                   .template as<typename SingleEntryHuffmanTable::Iterator>();
       },
-      [other](const typename ThreeLookupsHuffmanTable<T>::Iterator& iterator) {
+      [other](const typename SingleLookupHuffmanTable::Iterator& iterator) {
         return iterator ==
-               other.implementation_.template as<
-                   typename ThreeLookupsHuffmanTable<T>::Iterator>();
+               other.implementation_
+                   .template as<typename SingleLookupHuffmanTable::Iterator>();
+      },
+      [other](const typename TwoLookupsHuffmanTable::Iterator& iterator) {
+        return iterator ==
+               other.implementation_
+                   .template as<typename TwoLookupsHuffmanTable::Iterator>();
+      },
+      [other](const typename ThreeLookupsHuffmanTable::Iterator& iterator) {
+        return iterator ==
+               other.implementation_
+                   .template as<typename ThreeLookupsHuffmanTable::Iterator>();
       });
 }
 
-template <typename T>
-bool GenericHuffmanTable<T>::Iterator::operator!=(
-    const GenericHuffmanTable<T>::Iterator& other) const {
+bool GenericHuffmanTable::Iterator::operator!=(
+    const GenericHuffmanTable::Iterator& other) const {
   return implementation_.match(
-      [other](const typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
-        return iterator != other.implementation_.template as<
-                               typename SingleEntryHuffmanTable<T>::Iterator>();
-      },
-      [other](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
-        return iterator !=
-               other.implementation_.template as<
-                   typename SingleLookupHuffmanTable<T>::Iterator>();
-      },
-      [other](const typename TwoLookupsHuffmanTable<T>::Iterator& iterator) {
+      [other](const typename SingleEntryHuffmanTable::Iterator& iterator) {
         return iterator !=
                other.implementation_
-                   .template as<typename TwoLookupsHuffmanTable<T>::Iterator>();
+                   .template as<typename SingleEntryHuffmanTable::Iterator>();
       },
-      [other](const typename ThreeLookupsHuffmanTable<T>::Iterator& iterator) {
+      [other](const typename SingleLookupHuffmanTable::Iterator& iterator) {
         return iterator !=
-               other.implementation_.template as<
-                   typename ThreeLookupsHuffmanTable<T>::Iterator>();
+               other.implementation_
+                   .template as<typename SingleLookupHuffmanTable::Iterator>();
+      },
+      [other](const typename TwoLookupsHuffmanTable::Iterator& iterator) {
+        return iterator !=
+               other.implementation_
+                   .template as<typename TwoLookupsHuffmanTable::Iterator>();
+      },
+      [other](const typename ThreeLookupsHuffmanTable::Iterator& iterator) {
+        return iterator !=
+               other.implementation_
+                   .template as<typename ThreeLookupsHuffmanTable::Iterator>();
       });
 }
 
-template <typename T>
-const T* GenericHuffmanTable<T>::Iterator::operator*() const {
+const BinASTSymbol* GenericHuffmanTable::Iterator::operator*() const {
   return implementation_.match(
-      [](const typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
+      [](const typename SingleEntryHuffmanTable::Iterator& iterator) {
         return iterator.operator*();
       },
-      [](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
+      [](const typename SingleLookupHuffmanTable::Iterator& iterator) {
         return iterator.operator*();
       },
-      [](const typename TwoLookupsHuffmanTable<T>::Iterator& iterator) {
+      [](const typename TwoLookupsHuffmanTable::Iterator& iterator) {
         return iterator.operator*();
       },
-      [](const typename ThreeLookupsHuffmanTable<T>::Iterator& iterator) {
+      [](const typename ThreeLookupsHuffmanTable::Iterator& iterator) {
         return iterator.operator*();
       });
 }
 
-template <typename T>
-GenericHuffmanTable<T>::GenericHuffmanTable(JSContext*)
+const BinASTSymbol* GenericHuffmanTable::Iterator::operator->() const {
+  return implementation_.match(
+      [](const typename SingleEntryHuffmanTable::Iterator& iterator) {
+        return iterator.operator->();
+      },
+      [](const typename SingleLookupHuffmanTable::Iterator& iterator) {
+        return iterator.operator->();
+      },
+      [](const typename TwoLookupsHuffmanTable::Iterator& iterator) {
+        return iterator.operator->();
+      },
+      [](const typename ThreeLookupsHuffmanTable::Iterator& iterator) {
+        return iterator.operator->();
+      });
+}
+
+GenericHuffmanTable::GenericHuffmanTable(JSContext*)
     : implementation_(HuffmanTableUnreachable{}) {}
 
-template <typename T>
-JS::Result<Ok> GenericHuffmanTable<T>::initComplete() {
+JS::Result<Ok> GenericHuffmanTable::initComplete() {
   return implementation_.match(
-      [](SingleEntryHuffmanTable<T>& implementation) -> JS::Result<Ok> {
+      [](SingleEntryHuffmanTable& implementation) -> JS::Result<Ok> {
         MOZ_CRASH("SingleEntryHuffmanTable shouldn't have multiple entries!");
       },
-      [](SingleLookupHuffmanTable<T>& implementation) -> JS::Result<Ok> {
+      [](SingleLookupHuffmanTable& implementation) -> JS::Result<Ok> {
         return implementation.initComplete();
       },
-      [](TwoLookupsHuffmanTable<T>& implementation) -> JS::Result<Ok> {
+      [](TwoLookupsHuffmanTable& implementation) -> JS::Result<Ok> {
         return implementation.initComplete();
       },
-      [](ThreeLookupsHuffmanTable<T>& implementation) -> JS::Result<Ok> {
+      [](ThreeLookupsHuffmanTable& implementation) -> JS::Result<Ok> {
         return implementation.initComplete();
       },
       [](HuffmanTableUnreachable&) -> JS::Result<Ok> {
@@ -1726,126 +1725,118 @@ JS::Result<Ok> GenericHuffmanTable<T>::initComplete() {
       });
 }
 
-template <typename T>
-typename GenericHuffmanTable<T>::Iterator GenericHuffmanTable<T>::begin()
-    const {
+typename GenericHuffmanTable::Iterator GenericHuffmanTable::begin() const {
   return implementation_.match(
-      [](const SingleEntryHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const SingleEntryHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const SingleLookupHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const SingleLookupHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const TwoLookupsHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const TwoLookupsHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const ThreeLookupsHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const ThreeLookupsHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable<T>::Iterator {
+      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable::Iterator {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
 
-template <typename T>
-typename GenericHuffmanTable<T>::Iterator GenericHuffmanTable<T>::end() const {
+typename GenericHuffmanTable::Iterator GenericHuffmanTable::end() const {
   return implementation_.match(
-      [](const SingleEntryHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const SingleEntryHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.end());
       },
-      [](const SingleLookupHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const SingleLookupHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.end());
       },
-      [](const TwoLookupsHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const TwoLookupsHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.end());
       },
-      [](const ThreeLookupsHuffmanTable<T>& implementation)
-          -> GenericHuffmanTable<T>::Iterator {
+      [](const ThreeLookupsHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.end());
       },
-      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable<T>::Iterator {
+      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable::Iterator {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
 
-template <typename T>
-JS::Result<Ok> GenericHuffmanTable<T>::initWithSingleValue(JSContext* cx,
-                                                           T&& value) {
+JS::Result<Ok> GenericHuffmanTable::initWithSingleValue(
+    JSContext* cx, const BinASTSymbol& value) {
   // Only one value: use HuffmanImplementationSaturated
   MOZ_ASSERT(implementation_.template is<
              HuffmanTableUnreachable>());  // Make sure that we're initializing.
 
-  implementation_ = {mozilla::VariantType<SingleEntryHuffmanTable<T>>{},
-                     std::move(value)};
+  implementation_ = {mozilla::VariantType<SingleEntryHuffmanTable>{}, value};
   return Ok();
 }
 
-template <typename T>
-JS::Result<Ok> GenericHuffmanTable<T>::initStart(JSContext* cx,
-                                                 size_t numberOfSymbols,
-                                                 uint8_t largestBitLength) {
+JS::Result<Ok> GenericHuffmanTable::initStart(JSContext* cx,
+                                              size_t numberOfSymbols,
+                                              uint8_t largestBitLength) {
   // Make sure that we have a way to represent all legal bit lengths.
-  static_assert(
-      MAX_CODE_BIT_LENGTH <= ThreeLookupsHuffmanTable<T>::MAX_BIT_LENGTH,
-      "ThreeLookupsHuffmanTable cannot hold all bit lengths");
+  static_assert(MAX_CODE_BIT_LENGTH <= ThreeLookupsHuffmanTable::MAX_BIT_LENGTH,
+                "ThreeLookupsHuffmanTable cannot hold all bit lengths");
   // Make sure that we're initializing.
   MOZ_ASSERT(implementation_.template is<HuffmanTableUnreachable>());
 
   // Find the (hopefully) fastest implementation of HuffmanTable for
   // `largestBitLength`.
   // ...hopefully, only one lookup.
-  if (largestBitLength <= SingleLookupHuffmanTable<T>::MAX_BIT_LENGTH) {
-    implementation_ = {mozilla::VariantType<SingleLookupHuffmanTable<T>>{}, cx};
-    return implementation_.template as<SingleLookupHuffmanTable<T>>().initStart(
+  if (largestBitLength <= SingleLookupHuffmanTable::MAX_BIT_LENGTH) {
+    implementation_ = {mozilla::VariantType<SingleLookupHuffmanTable>{}, cx};
+    return implementation_.template as<SingleLookupHuffmanTable>().initStart(
         cx, numberOfSymbols, largestBitLength);
   }
 
   // ...if a single-lookup table would be too large, let's see if
   // we can fit in a two-lookup table.
-  if (largestBitLength <= TwoLookupsHuffmanTable<T>::MAX_BIT_LENGTH) {
-    implementation_ = {mozilla::VariantType<TwoLookupsHuffmanTable<T>>{}, cx};
-    return implementation_.template as<TwoLookupsHuffmanTable<T>>().initStart(
+  if (largestBitLength <= TwoLookupsHuffmanTable::MAX_BIT_LENGTH) {
+    implementation_ = {mozilla::VariantType<TwoLookupsHuffmanTable>{}, cx};
+    return implementation_.template as<TwoLookupsHuffmanTable>().initStart(
         cx, numberOfSymbols, largestBitLength);
   }
 
   // ...otherwise, we'll need three lookups.
-  implementation_ = {mozilla::VariantType<ThreeLookupsHuffmanTable<T>>{}, cx};
-  return implementation_.template as<ThreeLookupsHuffmanTable<T>>().initStart(
+  implementation_ = {mozilla::VariantType<ThreeLookupsHuffmanTable>{}, cx};
+  return implementation_.template as<ThreeLookupsHuffmanTable>().initStart(
       cx, numberOfSymbols, largestBitLength);
 }
 
-template <typename T>
-JS::Result<Ok> GenericHuffmanTable<T>::addSymbol(uint32_t bits,
-                                                 uint8_t bitLength, T&& value) {
+JS::Result<Ok> GenericHuffmanTable::addSymbol(uint32_t bits, uint8_t bitLength,
+                                              const BinASTSymbol& value) {
   return implementation_.match(
-      [](SingleEntryHuffmanTable<T>&) -> JS::Result<Ok> {
+      [](SingleEntryHuffmanTable&) -> JS::Result<Ok> {
         MOZ_CRASH("SingleEntryHuffmanTable shouldn't have multiple entries!");
         return Ok();
       },
-      [bits, bitLength, value = std::move(value)](
-          SingleLookupHuffmanTable<T>&
-              implementation) mutable /* discard implicit const */
+      [bits, bitLength,
+       value](SingleLookupHuffmanTable&
+                  implementation) mutable /* discard implicit const */
       -> JS::Result<Ok> {
-        return implementation.addSymbol(bits, bitLength, std::move(value));
+        return implementation.addSymbol(bits, bitLength, value);
       },
-      [bits, bitLength, value = std::move(value)](
-          TwoLookupsHuffmanTable<T>&
-              implementation) mutable /* discard implicit const */
+      [bits, bitLength,
+       value](TwoLookupsHuffmanTable&
+                  implementation) mutable /* discard implicit const */
       -> JS::Result<Ok> {
-        return implementation.addSymbol(bits, bitLength, std::move(value));
+        return implementation.addSymbol(bits, bitLength, value);
       },
-      [bits, bitLength, value = std::move(value)](
-          ThreeLookupsHuffmanTable<T>&
-              implementation) mutable /* discard implicit const */
+      [bits, bitLength,
+       value = value](ThreeLookupsHuffmanTable&
+                          implementation) mutable /* discard implicit const */
       -> JS::Result<Ok> {
-        return implementation.addSymbol(bits, bitLength, std::move(value));
+        return implementation.addSymbol(bits, bitLength, value);
       },
       [](HuffmanTableUnreachable&) -> JS::Result<Ok> {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
@@ -1853,37 +1844,35 @@ JS::Result<Ok> GenericHuffmanTable<T>::addSymbol(uint32_t bits,
       });
 }
 
-template <typename T>
-HuffmanEntry<const T*> GenericHuffmanTable<T>::lookup(
-    HuffmanLookup lookup) const {
+HuffmanLookupResult GenericHuffmanTable::lookup(HuffmanLookup key) const {
   return implementation_.match(
-      [lookup](const SingleEntryHuffmanTable<T>& implementation)
-          -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
-      [lookup](const SingleLookupHuffmanTable<T>& implementation)
-          -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
-      [lookup](const TwoLookupsHuffmanTable<T>& implementation)
-          -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
-      [lookup](const ThreeLookupsHuffmanTable<T>& implementation)
-          -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
-      [](const HuffmanTableUnreachable&) -> HuffmanEntry<const T*> {
+      [key](const SingleEntryHuffmanTable& implementation)
+          -> HuffmanLookupResult { return implementation.lookup(key); },
+      [key](const SingleLookupHuffmanTable& implementation)
+          -> HuffmanLookupResult { return implementation.lookup(key); },
+      [key](const TwoLookupsHuffmanTable& implementation)
+          -> HuffmanLookupResult { return implementation.lookup(key); },
+      [key](const ThreeLookupsHuffmanTable& implementation)
+          -> HuffmanLookupResult { return implementation.lookup(key); },
+      [](const HuffmanTableUnreachable&) -> HuffmanLookupResult {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
 
-template <typename T, int N>
-JS::Result<Ok> NaiveHuffmanTable<T, N>::initWithSingleValue(JSContext* cx,
-                                                            T&& value) {
+template <int N>
+JS::Result<Ok> NaiveHuffmanTable<N>::initWithSingleValue(
+    JSContext* cx, const BinASTSymbol& value) {
   MOZ_ASSERT(values_.empty());  // Make sure that we're initializing.
-  if (MOZ_UNLIKELY(!values_.append(HuffmanEntry<T>(0, 0, std::move(value))))) {
+  if (MOZ_UNLIKELY(!values_.append(HuffmanEntry(0, 0, value)))) {
     return cx->alreadyReportedError();
   }
   return Ok();
 }
 
-template <typename T, int N>
-JS::Result<Ok> NaiveHuffmanTable<T, N>::initStart(JSContext* cx,
-                                                  size_t numberOfSymbols,
-                                                  uint8_t) {
+template <int N>
+JS::Result<Ok> NaiveHuffmanTable<N>::initStart(JSContext* cx,
+                                               size_t numberOfSymbols,
+                                               uint8_t) {
   MOZ_ASSERT(values_.empty());  // Make sure that we're initializing.
   if (MOZ_UNLIKELY(!values_.initCapacity(numberOfSymbols))) {
     return cx->alreadyReportedError();
@@ -1891,113 +1880,102 @@ JS::Result<Ok> NaiveHuffmanTable<T, N>::initStart(JSContext* cx,
   return Ok();
 }
 
-template <typename T, int N>
-JS::Result<Ok> NaiveHuffmanTable<T, N>::initComplete() {
+template <int N>
+JS::Result<Ok> NaiveHuffmanTable<N>::initComplete() {
   MOZ_ASSERT(values_.length() <= N);
   return Ok();
 }
 
-template <typename T, int N>
-JS::Result<Ok> NaiveHuffmanTable<T, N>::addSymbol(uint32_t bits,
-                                                  uint8_t bitLength,
-                                                  T&& value) {
+template <int N>
+JS::Result<Ok> NaiveHuffmanTable<N>::addSymbol(uint32_t bits, uint8_t bitLength,
+                                               const BinASTSymbol& value) {
   MOZ_ASSERT(bitLength != 0,
              "Adding a symbol with a bitLength of 0 doesn't make sense.");
-  MOZ_ASSERT(values_.empty() || values_.back().key_.bitLength_ <= bitLength,
+  MOZ_ASSERT(values_.empty() || values_.back().key().bitLength_ <= bitLength,
              "Symbols must be ranked by increasing bits length");
   MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
   // Memory was reserved in `init()`.
-  MOZ_ALWAYS_TRUE(values_.emplaceBack(bits, bitLength, std::move(value)));
+  MOZ_ALWAYS_TRUE(values_.emplaceBack(bits, bitLength, value));
 
   return Ok();
 }
 
-template <typename T, int N>
-HuffmanEntry<const T*> NaiveHuffmanTable<T, N>::lookup(
-    HuffmanLookup key) const {
+template <int N>
+HuffmanLookupResult NaiveHuffmanTable<N>::lookup(HuffmanLookup key) const {
   // This current implementation is O(length) and designed mostly for testing.
   // Future versions will presumably adapt the underlying data structure to
   // provide bounded-time lookup.
   for (const auto& iter : values_) {
-    if (iter.key_.bitLength_ > key.bitLength_) {
+    if (iter.key().bitLength_ > key.bitLength_) {
       // We can't find the entry.
       break;
     }
 
-    const uint32_t keyBits = key.leadingBits(iter.key_.bitLength_);
-    if (keyBits == iter.key_.bits_) {
-      // Entry found.
-      return HuffmanEntry<const T*>(iter.key_.bits_, iter.key_.bitLength_,
-                                    &iter.value_);
+    const uint32_t keyBits = key.leadingBits(iter.key().bitLength_);
+    if (keyBits == iter.key().bits_) {
+      return HuffmanLookupResult::found(iter.key().bitLength_, &iter.value());
     }
   }
 
-  // Error: no entry found.
-  return HuffmanEntry<const T*>(0, 0, nullptr);
+  return HuffmanLookupResult::notFound();
 }
 
-template <typename T>
-SingleEntryHuffmanTable<T>::Iterator::Iterator(const T* position)
+SingleEntryHuffmanTable::Iterator::Iterator(const BinASTSymbol* position)
     : position_(position) {}
 
-template <typename T>
-void SingleEntryHuffmanTable<T>::Iterator::operator++() {
+void SingleEntryHuffmanTable::Iterator::operator++() {
   // There's only one entry, and `nullptr` means `end`.
   position_ = nullptr;
 }
 
-template <typename T>
-const T* SingleEntryHuffmanTable<T>::Iterator::operator*() const {
+const BinASTSymbol* SingleEntryHuffmanTable::Iterator::operator*() const {
   return position_;
 }
 
-template <typename T>
-bool SingleEntryHuffmanTable<T>::Iterator::operator==(
+const BinASTSymbol* SingleEntryHuffmanTable::Iterator::operator->() const {
+  return position_;
+}
+
+bool SingleEntryHuffmanTable::Iterator::operator==(
     const Iterator& other) const {
   return position_ == other.position_;
 }
 
-template <typename T>
-bool SingleEntryHuffmanTable<T>::Iterator::operator!=(
+bool SingleEntryHuffmanTable::Iterator::operator!=(
     const Iterator& other) const {
   return position_ != other.position_;
 }
 
-template <typename T>
-HuffmanEntry<const T*> SingleEntryHuffmanTable<T>::lookup(
-    HuffmanLookup key) const {
-  return HuffmanEntry<const T*>(0, 0, &value_);
+HuffmanLookupResult SingleEntryHuffmanTable::lookup(HuffmanLookup key) const {
+  return HuffmanLookupResult::found(0, &value_);
 }
 
-template <typename T>
-SingleLookupHuffmanTable<T>::Iterator::Iterator(const HuffmanEntry<T>* position)
+SingleLookupHuffmanTable::Iterator::Iterator(const HuffmanEntry* position)
     : position_(position) {}
 
-template <typename T>
-void SingleLookupHuffmanTable<T>::Iterator::operator++() {
-  position_++;
+void SingleLookupHuffmanTable::Iterator::operator++() { position_++; }
+
+const BinASTSymbol* SingleLookupHuffmanTable::Iterator::operator*() const {
+  return &position_->value();
 }
 
-template <typename T>
-const T* SingleLookupHuffmanTable<T>::Iterator::operator*() const {
-  return &position_->value_;
+const BinASTSymbol* SingleLookupHuffmanTable::Iterator::operator->() const {
+  return &position_->value();
 }
 
-template <typename T>
-bool SingleLookupHuffmanTable<T>::Iterator::operator==(
+bool SingleLookupHuffmanTable::Iterator::operator==(
     const Iterator& other) const {
   return position_ == other.position_;
 }
 
-template <typename T>
-bool SingleLookupHuffmanTable<T>::Iterator::operator!=(
+bool SingleLookupHuffmanTable::Iterator::operator!=(
     const Iterator& other) const {
   return position_ != other.position_;
 }
 
-template <typename T>
-JS::Result<Ok> SingleLookupHuffmanTable<T>::initStart(
-    JSContext* cx, size_t numberOfSymbols, uint8_t largestBitLength) {
+JS::Result<Ok> SingleLookupHuffmanTable::initStart(JSContext* cx,
+                                                   size_t numberOfSymbols,
+                                                   uint8_t largestBitLength) {
   MOZ_ASSERT_IF(largestBitLength != 32,
                 (uint32_t(1) << largestBitLength) - 1 <=
                     mozilla::MaxValue<InternalIndex>::value);
@@ -2020,8 +1998,7 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::initStart(
   return Ok();
 }
 
-template <typename T>
-JS::Result<Ok> SingleLookupHuffmanTable<T>::initComplete() {
+JS::Result<Ok> SingleLookupHuffmanTable::initComplete() {
   // Double-check that we've initialized properly.
   MOZ_ASSERT(largestBitLength_ <= MAX_CODE_BIT_LENGTH);
 
@@ -2036,8 +2013,8 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::initComplete() {
   bool foundMaxBitLength = false;
   for (size_t i = 0; i < saturated_.length(); ++i) {
     const uint8_t index = saturated_[i];
-    MOZ_ASSERT(values_[index].key_.bitLength_ <= largestBitLength_);
-    if (values_[index].key_.bitLength_ == largestBitLength_) {
+    MOZ_ASSERT(values_[index].key().bitLength_ <= largestBitLength_);
+    if (values_[index].key().bitLength_ == largestBitLength_) {
       foundMaxBitLength = true;
     }
   }
@@ -2046,10 +2023,9 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::initComplete() {
   return Ok();
 }
 
-template <typename T>
-JS::Result<Ok> SingleLookupHuffmanTable<T>::addSymbol(uint32_t bits,
-                                                      uint8_t bitLength,
-                                                      T&& value) {
+JS::Result<Ok> SingleLookupHuffmanTable::addSymbol(uint32_t bits,
+                                                   uint8_t bitLength,
+                                                   const BinASTSymbol& value) {
   MOZ_ASSERT_IF(largestBitLength_ != 0, bitLength != 0);
   MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
   MOZ_ASSERT(bitLength <= largestBitLength_);
@@ -2058,7 +2034,7 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::addSymbol(uint32_t bits,
 
   // First add the value to `values_`.
   // Memory was reserved in `init()`.
-  values_.infallibleEmplaceBack(bits, bitLength, std::move(value));
+  values_.infallibleEmplaceBack(bits, bitLength, value);
 
   // Notation: in the following, unless otherwise specified, we consider
   // values with `largestBitLength_` bits exactly.
@@ -2080,12 +2056,10 @@ JS::Result<Ok> SingleLookupHuffmanTable<T>::addSymbol(uint32_t bits,
   return Ok();
 }
 
-template <typename T>
-HuffmanEntry<const T*> SingleLookupHuffmanTable<T>::lookup(
-    HuffmanLookup key) const {
+HuffmanLookupResult SingleLookupHuffmanTable::lookup(HuffmanLookup key) const {
   if (values_.length() == 0) {
     // If the table is empty, any lookup fails.
-    return HuffmanEntry<const T*>(0, 0, nullptr);
+    return HuffmanLookupResult::notFound();
   }
   // ...otherwise, all lookups succeed.
 
@@ -2100,41 +2074,46 @@ HuffmanEntry<const T*> SingleLookupHuffmanTable<T>::lookup(
 
   // Invariants: `saturated_[i] < values_.length()`.
   const auto& entry = values_[index];
-  return HuffmanEntry<const T*>(entry.key_.bits_, entry.key_.bitLength_,
-                                &entry.value_);
+  return HuffmanLookupResult::found(entry.key().bitLength_, &entry.value());
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::Iterator::Iterator(
-    const HuffmanEntry<T>* position)
+template <typename Subtable, uint8_t PrefixBitLength>
+MultiLookupHuffmanTable<Subtable, PrefixBitLength>::Iterator::Iterator(
+    const HuffmanEntry* position)
     : position_(position) {}
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-void MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::Iterator::
-operator++() {
+template <typename Subtable, uint8_t PrefixBitLength>
+void MultiLookupHuffmanTable<Subtable,
+                             PrefixBitLength>::Iterator::operator++() {
   position_++;
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-const T* MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::Iterator::
-operator*() const {
-  return &position_->value_;
+template <typename Subtable, uint8_t PrefixBitLength>
+const BinASTSymbol* MultiLookupHuffmanTable<
+    Subtable, PrefixBitLength>::Iterator::operator*() const {
+  return &position_->value();
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-bool MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::Iterator::
-operator==(const Iterator& other) const {
+template <typename Subtable, uint8_t PrefixBitLength>
+const BinASTSymbol* MultiLookupHuffmanTable<
+    Subtable, PrefixBitLength>::Iterator::operator->() const {
+  return &position_->value();
+}
+
+template <typename Subtable, uint8_t PrefixBitLength>
+bool MultiLookupHuffmanTable<Subtable, PrefixBitLength>::Iterator::operator==(
+    const Iterator& other) const {
   return position_ == other.position_;
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-bool MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::Iterator::
-operator!=(const Iterator& other) const {
+template <typename Subtable, uint8_t PrefixBitLength>
+bool MultiLookupHuffmanTable<Subtable, PrefixBitLength>::Iterator::operator!=(
+    const Iterator& other) const {
   return position_ != other.position_;
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-JS::Result<Ok> MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initStart(
+template <typename Subtable, uint8_t PrefixBitLength>
+JS::Result<Ok> MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initStart(
     JSContext* cx, size_t numberOfSymbols, uint8_t largestBitLength) {
   static_assert(PrefixBitLength < MAX_CODE_BIT_LENGTH,
                 "Invalid PrefixBitLength");
@@ -2150,22 +2129,22 @@ JS::Result<Ok> MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initStart(
   return Ok();
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-JS::Result<Ok> MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::addSymbol(
-    uint32_t bits, uint8_t bitLength, T&& value) {
+template <typename Subtable, uint8_t PrefixBitLength>
+JS::Result<Ok> MultiLookupHuffmanTable<Subtable, PrefixBitLength>::addSymbol(
+    uint32_t bits, uint8_t bitLength, const BinASTSymbol& value) {
   MOZ_ASSERT_IF(largestBitLength_ != 0, bitLength != 0);
-  MOZ_ASSERT(values_.empty() || values_.back().key_.bitLength_ <= bitLength,
+  MOZ_ASSERT(values_.empty() || values_.back().key().bitLength_ <= bitLength,
              "Symbols must be ranked by increasing bits length");
   MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
 
-  values_.infallibleEmplaceBack(bits, bitLength, std::move(value));
+  values_.infallibleEmplaceBack(bits, bitLength, value);
 
   return Ok();
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
+template <typename Subtable, uint8_t PrefixBitLength>
 JS::Result<Ok>
-MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initComplete() {
+MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initComplete() {
   // First, we need to collect the `largestBitLength_`
   // and `numberofSymbols` for each subtable.
   struct Bucket {
@@ -2177,7 +2156,7 @@ MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initComplete() {
   BINJS_TRY(buckets.resize(1 << PrefixBitLength));
 
   for (const auto& entry : values_) {
-    const HuffmanLookup lookup(entry.key_.bits_, entry.key_.bitLength_);
+    const HuffmanLookup lookup(entry.key().bits_, entry.key().bitLength_);
     const auto split = lookup.split(PrefixBitLength);
     MOZ_ASSERT_IF(split.suffix_.bitLength_ != 32,
                   split.suffix_.bits_ >> split.suffix_.bitLength_ == 0);
@@ -2210,7 +2189,7 @@ MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initComplete() {
     const auto& entry = values_[i];
 
     // Find the relevant subtables.
-    const HuffmanLookup lookup(entry.key_.bits_, entry.key_.bitLength_);
+    const HuffmanLookup lookup(entry.key().bits_, entry.key().bitLength_);
     const auto split = lookup.split(PrefixBitLength);
     MOZ_ASSERT_IF(split.suffix_.bitLength_ != 32,
                   split.suffix_.bits_ >> split.suffix_.bitLength_ == 0);
@@ -2219,7 +2198,7 @@ MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initComplete() {
 
       // We may now add a reference to `entry` into the sybtable.
       MOZ_TRY(sub.addSymbol(split.suffix_.bits_, split.suffix_.bitLength_,
-                            std::move(i)));
+                            BinASTSymbol::fromSubtableIndex(i)));
     }
   }
 
@@ -2231,29 +2210,25 @@ MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::initComplete() {
   return Ok();
 }
 
-template <typename T, typename Subtable, uint8_t PrefixBitLength>
-HuffmanEntry<const T*>
-MultiLookupHuffmanTable<T, Subtable, PrefixBitLength>::lookup(
+template <typename Subtable, uint8_t PrefixBitLength>
+HuffmanLookupResult MultiLookupHuffmanTable<Subtable, PrefixBitLength>::lookup(
     HuffmanLookup key) const {
   const auto split = key.split(PrefixBitLength);
   if (split.prefix_.bits_ >= subTables_.length()) {
-    return HuffmanEntry<const T*>(0, 0, nullptr);
+    return HuffmanLookupResult::notFound();
   }
   const Subtable& subtable = subTables_[split.prefix_.bits_];
 
-  auto found = subtable.lookup(split.suffix_);
-
-  if (found.value_ == nullptr) {
+  auto subResult = subtable.lookup(split.suffix_);
+  if (!subResult.isFound()) {
     // Propagate "not found".
-    return {0, 0, nullptr};
+    return HuffmanLookupResult::notFound();
   }
 
   // Otherwise, restore the entire `HuffmanEntry`.
-  const auto& result = values_[*found.value_];
+  const auto& result = values_[subResult.value().toSubtableIndex()];
 
-  return /* HuffmanEntry */ {/* bits */ result.key_.bits_,
-                             /* bitLength */ result.key_.bitLength_,
-                             /* value */ std::move(&result.value_)};
+  return HuffmanLookupResult::found(result.key().bitLength_, &result.value());
 }
 
 // -----
@@ -2350,10 +2325,10 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Extract symbol from the grammar.
 template <>
-MOZ_MUST_USE JS::Result<bool> HuffmanPreludeReader::readSymbol(const Boolean&,
-                                                               size_t index) {
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
+    const Boolean&, size_t index) {
   MOZ_ASSERT(index < 2);
-  return index != 0;
+  return BinASTSymbol::fromBool(index != 0);
 }
 
 // Reading a single-value table of booleans
@@ -2366,7 +2341,8 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Boolean>(
     return raiseInvalidTableData(entry.identity_);
   }
 
-  MOZ_TRY(table.initWithSingleValue(cx_, indexByte != 0));
+  MOZ_TRY(
+      table.initWithSingleValue(cx_, BinASTSymbol::fromBool(indexByte != 0)));
   return Ok();
 }
 
@@ -2384,10 +2360,10 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Extract symbol from the grammar.
 template <>
-MOZ_MUST_USE JS::Result<BinASTKind> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const MaybeInterface& entry, size_t index) {
   MOZ_ASSERT(index < 2);
-  return index == 0 ? BinASTKind::_Null : entry.kind_;
+  return BinASTSymbol::fromKind(index == 0 ? BinASTKind::_Null : entry.kind_);
 }
 
 // Reading a single-value table of optional interfaces
@@ -2402,7 +2378,8 @@ HuffmanPreludeReader::readSingleValueTable<MaybeInterface>(
   }
 
   MOZ_TRY(table.initWithSingleValue(
-      cx_, indexByte == 0 ? BinASTKind::_Null : entry.kind_));
+      cx_, BinASTSymbol::fromKind(indexByte == 0 ? BinASTKind::_Null
+                                                 : entry.kind_)));
   return Ok();
 }
 
@@ -2419,10 +2396,10 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Extract symbol from the grammar.
 template <>
-MOZ_MUST_USE JS::Result<BinASTKind> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const Sum& entry, size_t index) {
   MOZ_ASSERT(index < entry.maxNumberOfSymbols());
-  return entry.interfaceAt(index);
+  return BinASTSymbol::fromKind(entry.interfaceAt(index));
 }
 
 // Reading a single-value table of sums of interfaces.
@@ -2434,7 +2411,8 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Sum>(
     return raiseInvalidTableData(sum.identity_);
   }
 
-  MOZ_TRY(table.initWithSingleValue(cx_, sum.interfaceAt(index)));
+  MOZ_TRY(table.initWithSingleValue(
+      cx_, BinASTSymbol::fromKind(sum.interfaceAt(index))));
   return Ok();
 }
 
@@ -2452,10 +2430,10 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Extract symbol from the grammar.
 template <>
-MOZ_MUST_USE JS::Result<BinASTKind> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const MaybeSum& sum, size_t index) {
   MOZ_ASSERT(index < sum.maxNumberOfSymbols());
-  return sum.interfaceAt(index);
+  return BinASTSymbol::fromKind(sum.interfaceAt(index));
 }
 
 // Reading a single-value table of sums of interfaces.
@@ -2468,7 +2446,8 @@ HuffmanPreludeReader::readSingleValueTable<MaybeSum>(
     return raiseInvalidTableData(sum.identity_);
   }
 
-  MOZ_TRY(table.initWithSingleValue(cx_, sum.interfaceAt(index)));
+  MOZ_TRY(table.initWithSingleValue(
+      cx_, BinASTSymbol::fromKind(sum.interfaceAt(index))));
   return Ok();
 }
 
@@ -2488,7 +2467,7 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Read a single symbol from the stream.
 template <>
-MOZ_MUST_USE JS::Result<double> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const Number& number, size_t) {
   uint8_t bytes[8];
   MOZ_ASSERT(sizeof(bytes) == sizeof(double));
@@ -2502,7 +2481,8 @@ MOZ_MUST_USE JS::Result<double> HuffmanPreludeReader::readSymbol(
 
   // Canonicalize NaN, just to make sure another form of signalling NaN
   // doesn't slip past us.
-  return JS::CanonicalizeNaN(mozilla::BitwiseCast<double>(asInt));
+  return BinASTSymbol::fromDouble(
+      JS::CanonicalizeNaN(mozilla::BitwiseCast<double>(asInt)));
 }
 
 // Reading a single-value table of numbers.
@@ -2510,11 +2490,7 @@ template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Number>(
     HuffmanTableExplicitSymbolsF64& table, const Number& number) {
   BINJS_MOZ_TRY_DECL(value, readSymbol(number, 0 /* ignored */));
-  // Note: The `std::move` is useless for performance, but necessary to keep
-  // a consistent API.
-  MOZ_TRY(table.initWithSingleValue(
-      cx_,
-      /* NOLINT(performance-move-const-arg) */ std::move(value)));
+  MOZ_TRY(table.initWithSingleValue(cx_, value));
   return Ok();
 }
 
@@ -2534,13 +2510,13 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Read a single symbol from the stream.
 template <>
-MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const List& list, size_t) {
   BINJS_MOZ_TRY_DECL(length, reader_.readUnpackedLong());
   if (MOZ_UNLIKELY(length > MAX_LIST_LENGTH)) {
     return raiseInvalidTableData(list.identity_);
   }
-  return length;
+  return BinASTSymbol::fromListLength(length);
 }
 
 // Reading a single-value table of list lengths.
@@ -2551,7 +2527,7 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<List>(
   if (MOZ_UNLIKELY(length > MAX_LIST_LENGTH)) {
     return raiseInvalidTableData(list.identity_);
   }
-  MOZ_TRY(table.initWithSingleValue(cx_, std::move(length)));
+  MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::fromListLength(length)));
   return Ok();
 }
 
@@ -2572,13 +2548,13 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Read a single symbol from the stream.
 template <>
-MOZ_MUST_USE JS::Result<JSAtom*> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const String& entry, size_t) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings())) {
     return raiseInvalidTableData(entry.identity_);
   }
-  return reader_.metadata_->getAtom(index);
+  return BinASTSymbol::fromAtom(reader_.metadata_->getAtom(index));
 }
 
 // Reading a single-value table of string indices.
@@ -2589,12 +2565,8 @@ MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<String>(
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings())) {
     return raiseInvalidTableData(entry.identity_);
   }
-  // Note: The `std::move` is useless for performance, but necessary to keep
-  // a consistent API.
   JSAtom* value = reader_.metadata_->getAtom(index);
-  MOZ_TRY(table.initWithSingleValue(
-      cx_,
-      /* NOLINT(performance-move-const-arg) */ std::move(value)));
+  MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::fromAtom(value)));
   return Ok();
 }
 
@@ -2616,16 +2588,16 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Read a single symbol from the stream.
 template <>
-MOZ_MUST_USE JS::Result<JSAtom*> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const MaybeString& entry, size_t) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
   if (index == 0) {
-    return nullptr;
+    return BinASTSymbol::fromAtom(nullptr);
   }
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings() + 1)) {
     return raiseInvalidTableData(entry.identity_);
   }
-  return reader_.metadata_->getAtom(index - 1);
+  return BinASTSymbol::fromAtom(reader_.metadata_->getAtom(index - 1));
 }
 
 // Reading a single-value table of string indices.
@@ -2639,11 +2611,7 @@ HuffmanPreludeReader::readSingleValueTable<MaybeString>(
     return raiseInvalidTableData(entry.identity_);
   }
   JSAtom* symbol = index == 0 ? nullptr : reader_.metadata_->getAtom(index - 1);
-  // Note: The `std::move` is useless for performance, but necessary to keep
-  // a consistent API.
-  MOZ_TRY(table.initWithSingleValue(
-      cx_,
-      /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
+  MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::fromAtom(symbol)));
   return Ok();
 }
 
@@ -2659,9 +2627,9 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Read a single symbol from the grammar.
 template <>
-MOZ_MUST_USE JS::Result<BinASTVariant> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const StringEnum& entry, size_t index) {
-  return entry.variantAt(index);
+  return BinASTSymbol::fromVariant(entry.variantAt(index));
 }
 
 // Reading a single-value table of string indices.
@@ -2675,11 +2643,7 @@ HuffmanPreludeReader::readSingleValueTable<StringEnum>(
   }
 
   BinASTVariant symbol = entry.variantAt(index);
-  // Note: The `std::move` is useless for performance, but necessary to keep
-  // a consistent API.
-  MOZ_TRY(table.initWithSingleValue(
-      cx_,
-      /* NOLINT(performance-move-const-arg) */ std::move(symbol)));
+  MOZ_TRY(table.initWithSingleValue(cx_, BinASTSymbol::fromVariant(symbol)));
   return Ok();
 }
 
@@ -2699,9 +2663,10 @@ MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readNumberOfSymbols(
 
 // Read a single symbol from the stream.
 template <>
-MOZ_MUST_USE JS::Result<uint32_t> HuffmanPreludeReader::readSymbol(
+MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
     const UnsignedLong& entry, size_t) {
-  return reader_.readUnpackedLong();
+  BINJS_MOZ_TRY_DECL(result, reader_.readUnpackedLong());
+  return BinASTSymbol::fromUnsignedLong(result);
 }
 
 // Reading a single-value table of string indices.
@@ -2710,11 +2675,8 @@ MOZ_MUST_USE JS::Result<Ok>
 HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
     HuffmanTableExplicitSymbolsU32& table, const UnsignedLong& entry) {
   BINJS_MOZ_TRY_DECL(index, reader_.readUnpackedLong());
-  // Note: The `std::move` is useless for performance, but necessary to keep
-  // a consistent API.
-  MOZ_TRY(table.initWithSingleValue(
-      cx_,
-      /* NOLINT(performance-move-const-arg) */ std::move(index)));
+  MOZ_TRY(
+      table.initWithSingleValue(cx_, BinASTSymbol::fromUnsignedLong(index)));
   return Ok();
 }
 
