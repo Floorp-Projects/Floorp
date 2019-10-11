@@ -762,15 +762,15 @@ bool LanguageTag::appendTo(JSContext* cx, StringBuffer& sb) const {
 using LocaleId =
     js::Vector<char, LanguageLength + 1 + ScriptLength + 1 + RegionLength + 1>;
 
-enum class LikelySubtags2 : bool { Add, Remove };
+enum class LikelySubtags : bool { Add, Remove };
 
 // Return true iff the language tag is already maximized resp. minimized.
-static bool HasLikelySubtags(LikelySubtags2 likelySubtags,
+static bool HasLikelySubtags(LikelySubtags likelySubtags,
                              const LanguageTag& tag) {
   // The language tag is already maximized if the language, script, and region
   // subtags are present and no placeholder subtags ("und", "Zzzz", "ZZ") are
   // used.
-  if (likelySubtags == LikelySubtags2::Add) {
+  if (likelySubtags == LikelySubtags::Add) {
     return !tag.language().equalTo("und") &&
            (tag.script().length() > 0 && !tag.script().equalTo("Zzzz")) &&
            (tag.region().length() > 0 && !tag.region().equalTo("ZZ"));
@@ -860,8 +860,8 @@ static bool AssignFromLocaleId(JSContext* cx, LocaleId& localeId,
 }
 
 template <decltype(uloc_addLikelySubtags) likelySubtagsFn>
-static bool CallLikelySubtags2(JSContext* cx, const LocaleId& localeId,
-                               LocaleId& result) {
+static bool CallLikelySubtags(JSContext* cx, const LocaleId& localeId,
+                              LocaleId& result) {
   // Locale ID must be zero-terminated before passing it to ICU.
   MOZ_ASSERT(localeId.back() == '\0');
   MOZ_ASSERT(result.length() == 0);
@@ -906,8 +906,8 @@ static bool CallLikelySubtags2(JSContext* cx, const LocaleId& localeId,
 // calls if we implement them ourselves, see CreateLocaleForLikelySubtags() and
 // AssignFromLocaleId(). (Where "slow" means about 50% of the execution time of
 // |Intl.Locale.prototype.maximize|.)
-static bool LikelySubtags2(JSContext* cx, LikelySubtags2 likelySubtags,
-                           LanguageTag& tag) {
+static bool LikelySubtags(JSContext* cx, LikelySubtags likelySubtags,
+                          LanguageTag& tag) {
   // Return early if the input is already maximized/minimized.
   if (HasLikelySubtags(likelySubtags, tag)) {
     return true;
@@ -929,18 +929,18 @@ static bool LikelySubtags2(JSContext* cx, LikelySubtags2 likelySubtags,
   // Add likely subtags to the locale ID. When minimizing we can skip adding the
   // likely subtags for already maximized tags. (When maximizing we've already
   // verified above that the tag is missing likely subtags.)
-  bool addLikelySubtags = likelySubtags == LikelySubtags2::Add ||
-                          !HasLikelySubtags(LikelySubtags2::Add, tag);
+  bool addLikelySubtags = likelySubtags == LikelySubtags::Add ||
+                          !HasLikelySubtags(LikelySubtags::Add, tag);
 
   if (addLikelySubtags) {
-    if (!CallLikelySubtags2<uloc_addLikelySubtags>(cx, locale,
-                                                   localeLikelySubtags)) {
+    if (!CallLikelySubtags<uloc_addLikelySubtags>(cx, locale,
+                                                  localeLikelySubtags)) {
       return false;
     }
   }
 
   // Now that we've succesfully maximized the locale, we can minimize it.
-  if (likelySubtags == LikelySubtags2::Remove) {
+  if (likelySubtags == LikelySubtags::Remove) {
     if (addLikelySubtags) {
       // Copy the maximized subtags back into |locale|.
       locale = std::move(localeLikelySubtags);
@@ -948,8 +948,8 @@ static bool LikelySubtags2(JSContext* cx, LikelySubtags2 likelySubtags,
     }
 
     // Remove likely subtags from the locale ID.
-    if (!CallLikelySubtags2<uloc_minimizeSubtags>(cx, locale,
-                                                  localeLikelySubtags)) {
+    if (!CallLikelySubtags<uloc_minimizeSubtags>(cx, locale,
+                                                 localeLikelySubtags)) {
       return false;
     }
   }
@@ -964,11 +964,11 @@ static bool LikelySubtags2(JSContext* cx, LikelySubtags2 likelySubtags,
 }
 
 bool LanguageTag::addLikelySubtags(JSContext* cx) {
-  return LikelySubtags2(cx, LikelySubtags2::Add, *this);
+  return LikelySubtags(cx, LikelySubtags::Add, *this);
 }
 
 bool LanguageTag::removeLikelySubtags(JSContext* cx) {
-  return LikelySubtags2(cx, LikelySubtags2::Remove, *this);
+  return LikelySubtags(cx, LikelySubtags::Remove, *this);
 }
 
 LanguageTagParser::Token LanguageTagParser::nextToken() {
