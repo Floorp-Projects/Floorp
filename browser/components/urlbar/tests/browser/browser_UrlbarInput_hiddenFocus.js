@@ -10,12 +10,21 @@ add_task(async function() {
   });
 
   gURLBar.blur();
-  ok(!gURLBar.focused, "url bar is not focused");
-  ok(!gURLBar.hasAttribute("focused"), "url bar is not visibly focused");
+  ok(
+    !gURLBar.hasAttribute("focused") &&
+      !gURLBar.textbox.classList.contains("hidden-focus"),
+    "url bar is not focused or hidden"
+  );
   gURLBar.setHiddenFocus();
-  ok(gURLBar.focused, "url bar is focused");
-  ok(!gURLBar.hasAttribute("focused"), "url bar is not visibly focused");
+  ok(
+    gURLBar.hasAttribute("focused") &&
+      gURLBar.textbox.classList.contains("hidden-focus"),
+    "url bar is focused and hidden"
+  );
   gURLBar.removeHiddenFocus();
-  ok(gURLBar.focused, "url bar is focused");
-  ok(gURLBar.hasAttribute("focused"), "url bar is visibly focused");
+  ok(
+    gURLBar.hasAttribute("focused") &&
+      !gURLBar.textbox.classList.contains("hidden-focus"),
+    "url bar is focused and not hidden"
+  );
 });
