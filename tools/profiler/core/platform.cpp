@@ -745,6 +745,55 @@ class ActivePS {
             sInstance->ThreadSelected(aInfo->Name()));
   }
 
+  // Writes out the current active configuration of the profile.
+  static void WriteActiveConfiguration(PSLockRef aLock, JSONWriter& aWriter,
+                                       const char* aPropertyName = nullptr) {
+    if (!sInstance) {
+      if (aPropertyName) {
+        aWriter.NullProperty(aPropertyName);
+      } else {
+        aWriter.NullElement();
+      }
+      return;
+    };
+
+    if (aPropertyName) {
+      aWriter.StartObjectProperty(aPropertyName);
+    } else {
+      aWriter.StartObjectElement();
+    }
+
+    {
+      aWriter.StartArrayProperty("features", aWriter.SingleLineStyle);
+#define WRITE_ACTIVE_FEATURES(n_, str_, Name_, desc_)    \
+  if (profiler_feature_active(ProfilerFeature::Name_)) { \
+    aWriter.StringElement(str_);                         \
+  }
+
+      PROFILER_FOR_EACH_FEATURE(WRITE_ACTIVE_FEATURES)
+#undef WRITE_ACTIVE_FEATURES
+      aWriter.EndArray();
+    }
+    {
+      aWriter.StartArrayProperty("threads", aWriter.SingleLineStyle);
+      for (const auto& filter : sInstance->mFilters) {
+        aWriter.StringElement(filter.c_str());
+      }
+      aWriter.EndArray();
+    }
+    {
+      // Now write all the simple values.
+
+      // The interval is also available on profile.meta.interval
+      aWriter.DoubleProperty("interval", sInstance->mInterval);
+      aWriter.IntProperty("capacity", sInstance->mCapacity.Value());
+      if (sInstance->mDuration) {
+        aWriter.DoubleProperty("duration", sInstance->mDuration.value());
+      }
+    }
+    aWriter.EndObject();
+  }
+
   PS_GET(uint32_t, Generation)
 
   PS_GET(PowerOfTwo32, Capacity)
@@ -2035,6 +2084,8 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
   aWriter.StartArrayProperty("categories");
   StreamCategories(aWriter);
   aWriter.EndArray();
+
+  ActivePS::WriteActiveConfiguration(aLock, aWriter, "configuration");
 
   if (!NS_IsMainThread()) {
     // Leave the rest of the properties out if we're not on the main thread.
@@ -3968,6 +4019,12 @@ bool profiler_feature_active(uint32_t aFeature) {
 
   // This function is hot enough that we use RacyFeatures, not ActivePS.
   return RacyFeatures::IsActiveWithFeature(aFeature);
+}
+
+void profiler_write_active_configuration(JSONWriter& aWriter) {
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+  PSAutoLock lock(gPSMutex);
+  ActivePS::WriteActiveConfiguration(lock, aWriter);
 }
 
 void profiler_add_sampled_counter(BaseProfilerCount* aCounter) {
