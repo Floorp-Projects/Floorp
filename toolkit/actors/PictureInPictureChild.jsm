@@ -114,10 +114,6 @@ class PictureInPictureToggleChild extends ActorChild {
         // This is a DeferredTask to hide the toggle after a period of mouse
         // inactivity.
         hideToggleDeferredTask: null,
-        // If we reach a point where we're tracking videos for mouse movements,
-        // then this will be true. If there are no videos worth tracking, then
-        // this is false.
-        isTrackingVideos: false,
       };
       this.weakDocStates.set(this.content.document, state);
     }
@@ -166,14 +162,6 @@ class PictureInPictureToggleChild extends ActorChild {
       }
       case "mousemove": {
         this.onMouseMove(event);
-        break;
-      }
-      case "pageshow": {
-        this.onPageShow(event);
-        break;
-      }
-      case "pagehide": {
-        this.onPageHide(event);
         break;
       }
     }
@@ -342,14 +330,7 @@ class PictureInPictureToggleChild extends ActorChild {
       mozSystemGroup: true,
       capture: true,
     });
-    this.content.addEventListener("pageshow", this, {
-      mozSystemGroup: true,
-    });
-    this.content.addEventListener("pagehide", this, {
-      mozSystemGroup: true,
-    });
     this.addMouseButtonListeners();
-    state.isTrackingVideos = true;
   }
 
   /**
@@ -364,49 +345,10 @@ class PictureInPictureToggleChild extends ActorChild {
       mozSystemGroup: true,
       capture: true,
     });
-    this.content.removeEventListener("pageshow", this, {
-      mozSystemGroup: true,
-    });
-    this.content.removeEventListener("pagehide", this, {
-      mozSystemGroup: true,
-    });
     this.removeMouseButtonListeners();
     let oldOverVideo = state.weakOverVideo && state.weakOverVideo.get();
     if (oldOverVideo) {
       this.onMouseLeaveVideo(oldOverVideo);
-    }
-    state.isTrackingVideos = false;
-  }
-
-  /**
-   * This pageshow event handler will get called if and when we complete a tab
-   * tear out or in. If we happened to be tracking videos before the tear
-   * occurred, we re-add the mouse event listeners so that they're attached to
-   * the right WindowRoot.
-   *
-   * @param {Event} event The pageshow event fired when completing a tab tear
-   * out or in.
-   */
-  onPageShow(event) {
-    let state = this.docState;
-    if (state.isTrackingVideos) {
-      this.addMouseButtonListeners();
-    }
-  }
-
-  /**
-   * This pagehide event handler will get called if and when we start a tab
-   * tear out or in. If we happened to be tracking videos before the tear
-   * occurred, we remove the mouse event listeners. We'll re-add them when the
-   * pageshow event fires.
-   *
-   * @param {Event} event The pagehide event fired when starting a tab tear
-   * out or in.
-   */
-  onPageHide(event) {
-    let state = this.docState;
-    if (state.isTrackingVideos) {
-      this.removeMouseButtonListeners();
     }
   }
 
