@@ -167,31 +167,6 @@ class RangeBoundaryBase {
     mOffset.reset();
   }
 
-  void Set(nsINode* aContainer, int32_t aOffset) {
-    mParent = aContainer;
-    if (mParent && mParent->IsContainerNode()) {
-      // Find a reference node
-      if (aOffset == static_cast<int32_t>(aContainer->GetChildCount())) {
-        mRef = aContainer->GetLastChild();
-      } else if (aOffset == 0) {
-        mRef = nullptr;
-      } else {
-        mRef = mParent->GetChildAt_Deprecated(aOffset - 1);
-        MOZ_ASSERT(mRef);
-      }
-
-      NS_WARNING_ASSERTION(mRef || aOffset == 0,
-                           "Setting RangeBoundary to invalid value");
-    } else {
-      mRef = nullptr;
-    }
-
-    mOffset = mozilla::Some(aOffset);
-
-    NS_WARNING_ASSERTION(!mRef || mRef->GetParentNode() == mParent,
-                         "Setting RangeBoundary to invalid value");
-  }
-
   bool IsSet() const { return mParent && (mRef || mOffset.isSome()); }
 
   bool IsSetAndValid() const {
