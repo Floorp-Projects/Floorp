@@ -1253,7 +1253,7 @@ JSObject* js::CreateNativeLocalePrototype(JSContext* cx, HandleObject Intl,
   }
 
   RootedValue ctorValue(cx, ObjectValue(*ctor));
-  if (!DefineDataProperty(cx, Intl, cx->names().locale, ctorValue, 0)) {
+  if (!DefineDataProperty(cx, Intl, cx->names().Locale, ctorValue, 0)) {
     return nullptr;
   }
 
