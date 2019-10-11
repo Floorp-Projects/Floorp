@@ -215,7 +215,7 @@ TEST(cubeb, configure_stream)
 
   params.format = STREAM_FORMAT;
   params.rate = STREAM_RATE;
-  params.channels = 2; // panning
+  params.channels = 2;
   params.layout = CUBEB_LAYOUT_STEREO;
   params.prefs = CUBEB_STREAM_PREF_NONE;
 
@@ -225,9 +225,6 @@ TEST(cubeb, configure_stream)
   ASSERT_NE(stream, nullptr);
 
   r = cubeb_stream_set_volume(stream, 1.0f);
-  ASSERT_TRUE(r == 0 || r == CUBEB_ERROR_NOT_SUPPORTED);
-
-  r = cubeb_stream_set_panning(stream, 0.0f);
   ASSERT_TRUE(r == 0 || r == CUBEB_ERROR_NOT_SUPPORTED);
 
   cubeb_stream_destroy(stream);
@@ -247,7 +244,7 @@ TEST(cubeb, configure_stream_undefined_layout)
 
   params.format = STREAM_FORMAT;
   params.rate = STREAM_RATE;
-  params.channels = 2; // panning
+  params.channels = 2;
   params.layout = CUBEB_LAYOUT_UNDEFINED;
   params.prefs = CUBEB_STREAM_PREF_NONE;
 
