@@ -57,6 +57,11 @@ class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
 
   // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED event
   mozilla::TimeStamp mNetworkChangeTime;
+
+  // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED_1MIN event
+  mozilla::TimeStamp mChangeTime_1min;
+  // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED_5MIN event
+  mozilla::TimeStamp mChangeTime_5min;
 };
 
 #endif /* NSNETWORKLINKSERVICEMAC_H_ */
