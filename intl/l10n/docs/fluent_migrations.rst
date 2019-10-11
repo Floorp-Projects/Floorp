@@ -7,9 +7,9 @@
 .. role:: python(code)
    :language: python
 
-==================================
-Migrating Legacy Strings to Fluent
-==================================
+=============================================
+Migrating Strings From Legacy or Fluent Files
+=============================================
 
 Firefox is a project localized in over 100 languages. As the code for existing
 features moves away from the old localization systems and starts using
@@ -22,6 +22,11 @@ it allows to migrate legacy translations from `.dtd` and `.properties` files,
 not only moving strings and transforming them as needed to adapt to the `FTL`
 syntax, but also replicating "blame" for each string in VCS.
 
+The library also includes basic support for migrating existing Fluent messages
+without interpolations (e.g. variable replacements). The typical use cases
+would be messages moving as-is to a different file, or changes to the
+morphology of existing messages (e.g move content from an attribute to the
+value of the message).
 
 Migration Recipes and Their Lifecycle
 =====================================
@@ -151,7 +156,7 @@ repeating the same path multiple times, making the recipe more readable. Without
       transforms_from(
   """
   findbar-next =
-  .tooltiptext = { COPY("toolkit/chrome/global/findbar.dtd", "next.tooltip") }
+      .tooltiptext = { COPY("toolkit/chrome/global/findbar.dtd", "next.tooltip") }
   """))
 
 
@@ -645,6 +650,68 @@ new elements are:
    :python:`REPLACE` evaluate to Fluent Patterns.
  - A :python:`SelectExpression` is defined, with an array of :python:`Variant`
    objects.
+
+Fluent to Fluent (FTL2FTL) Migrations
+-------------------------------------
+
+It’s possible to migrate existing Fluent messages using :python:`COPY_PATTERN`
+in a migration recipe. Unlike migrations from legacy content, it’s not possible
+to interpolate the text, only to copy existing content without changes.
+
+Consider for example a patch modifying an existing message to move the original
+value to a :js:`alt` attribute.
+
+Original message:
+
+
+.. code-block:: fluent
+
+  about-logins-icon = Warning icon
+      .title = Breached website
+
+
+New message:
+
+
+.. code-block:: fluent
+
+  about-logins-breach-icon =
+      .alt = Warning icon
+      .title = Breached website
+
+
+This type of changes requires a new message identifier, which in turn causes
+existing translations to be lost. It’s possible to migrate the existing
+translated content with:
+
+
+.. code-block:: python
+
+    from fluent.migrate import COPY_PATTERN
+
+    ctx.add_transforms(
+        "browser/browser/aboutLogins.ftl",
+        "browser/browser/aboutLogins.ftl",
+        transforms_from(
+    """
+    about-logins-breach-icon =
+        .alt = {COPY_PATTERN(from_path, "about-logins-icon")}
+        .title = {COPY_PATTERN(from_path, "about-logins-icon.title")}
+    """,from_path="browser/browser/aboutLogins.ftl"),
+    )
+
+
+In this specific case, the destination and source files are the same. The dot
+notation is used to access attributes: :js:`about-logins-icon.title` matches
+the :js:`title` attribute of the message with identifier
+:js:`about-logins-icon`, while :js:`about-logins-icon` alone matches the value
+of the message.
+
+
+.. warning::
+
+  Using the message identifier in :python:`COPY_PATTERN` will not migrate the
+  message as a whole, with all its attributes, only its value.
 
 
 How to Test Migration Recipes
