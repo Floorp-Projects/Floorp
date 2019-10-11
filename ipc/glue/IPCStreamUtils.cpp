@@ -302,22 +302,13 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
 }
 
 AutoIPCStream::AutoIPCStream(bool aDelayedStart)
-    : mValue(nullptr),
-      mOptionalValue(&mInlineValue),
-      mTaken(false),
-      mDelayedStart(aDelayedStart) {}
+    : mOptionalValue(&mInlineValue), mDelayedStart(aDelayedStart) {}
 
 AutoIPCStream::AutoIPCStream(IPCStream& aTarget, bool aDelayedStart)
-    : mValue(&aTarget),
-      mOptionalValue(nullptr),
-      mTaken(false),
-      mDelayedStart(aDelayedStart) {}
+    : mValue(&aTarget), mDelayedStart(aDelayedStart) {}
 
 AutoIPCStream::AutoIPCStream(Maybe<IPCStream>& aTarget, bool aDelayedStart)
-    : mValue(nullptr),
-      mOptionalValue(&aTarget),
-      mTaken(false),
-      mDelayedStart(aDelayedStart) {
+    : mOptionalValue(&aTarget), mDelayedStart(aDelayedStart) {
   mOptionalValue->reset();
 }
 
