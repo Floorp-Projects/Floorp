@@ -6,6 +6,8 @@
 
 /* Intl.Locale implementation. */
 
+#include "builtin/intl/Locale.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
@@ -24,7 +26,6 @@
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/Locale.h"
 #include "gc/Rooting.h"
 #include "js/Conversions.h"
 #include "js/TypeDecls.h"
@@ -43,7 +44,7 @@ using namespace js::intl::LanguageTagLimits;
 using intl::LanguageTag;
 using intl::LanguageTagParser;
 
-const JSClass NativeLocaleObject::class_ = {
+const JSClass LocaleObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT),
 };
@@ -96,7 +97,7 @@ static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
 }
 
 static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
-                                                    const LanguageTag& tag) {
+                                        const LanguageTag& tag) {
   RootedObject proto(cx, prototype);
   if (!proto) {
     proto = GlobalObject::getOrCreateLocalePrototype(cx, cx->global());
@@ -1226,7 +1227,7 @@ static const JSPropertySpec locale_properties[] = {
     JS_PS_END};
 
 JSObject* js::CreateLocalePrototype(JSContext* cx, HandleObject Intl,
-                                          Handle<GlobalObject*> global) {
+                                    Handle<GlobalObject*> global) {
   RootedFunction ctor(
       cx, GlobalObject::createConstructor(cx, &Locale, cx->names().Locale, 1));
   if (!ctor) {
