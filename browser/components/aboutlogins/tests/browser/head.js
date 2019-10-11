@@ -103,6 +103,10 @@ add_task(async function setup() {
       // todo(Bug 1587237): Ignore error when loading the Migration Wizard in automation.
       return;
     }
+    if (msg.errorMessage.includes("Can't find profile directory.")) {
+      // Ignore error messages for no profile found in old XULStore.jsm
+      return;
+    }
     if (msg.errorMessage.includes(EXPECTED_ERROR_MESSAGE)) {
       return;
     }
