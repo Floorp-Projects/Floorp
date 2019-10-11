@@ -204,6 +204,7 @@
   /* Flashing colors used to highlight updates */
   --theme-contrast-background: #fff697;
   --theme-contrast-color: black;
+  --theme-contrast-border: var(--yellow-60);
 }
 
 /*
@@ -319,4 +320,5 @@
   /* Flashing colors used to highlight updates */
   --theme-contrast-background: #605913; /* slightly desaturated Yellow 80 */
   --theme-contrast-color: white;
+  --theme-contrast-border: var(--yellow-65);
 }
