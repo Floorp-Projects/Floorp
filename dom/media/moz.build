@@ -302,6 +302,11 @@ UNIFIED_SOURCES += [
     'XiphExtradata.cpp',
 ]
 
+if CONFIG['OS_TARGET'] == 'Linux':
+    UNIFIED_SOURCES += [ 'UnderrunHandlerLinux.cpp' ]
+else:
+    UNIFIED_SOURCES += [ 'UnderrunHandlerNoop.cpp']
+
 if CONFIG['OS_TARGET'] == 'WINNT':
   EXPORTS.mozilla.audio += [
       'AudioNotificationReceiver.h',
