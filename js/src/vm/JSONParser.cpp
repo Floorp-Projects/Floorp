@@ -122,9 +122,10 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
     if (*current == '"') {
       size_t length = current - start;
       current++;
-      JSFlatString* str = (ST == JSONParser::PropertyName)
-                              ? AtomizeChars(cx, start.get(), length)
-                              : NewStringCopyN<CanGC>(cx, start.get(), length);
+      JSLinearString* str =
+          (ST == JSONParser::PropertyName)
+              ? AtomizeChars(cx, start.get(), length)
+              : NewStringCopyN<CanGC>(cx, start.get(), length);
       if (!str) {
         return token(OOM);
       }
@@ -158,9 +159,9 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
 
     char16_t c = *current++;
     if (c == '"') {
-      JSFlatString* str = (ST == JSONParser::PropertyName)
-                              ? buffer.finishAtom()
-                              : buffer.finishString();
+      JSLinearString* str = (ST == JSONParser::PropertyName)
+                                ? buffer.finishAtom()
+                                : buffer.finishString();
       if (!str) {
         return token(OOM);
       }
