@@ -876,9 +876,9 @@ fuzzy-if(OSX||winWidget,0-213,0-1540) random-if(/^Windows\x20NT\x206\.1/.test(ht
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/margin-vlr-003.xht css-writing-modes/margin-vrl-002-ref.xht
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/margin-vrl-002.xht css-writing-modes/margin-vrl-002-ref.xht
 == css-writing-modes/normal-flow-overconstrained-vlr-003.xht css-writing-modes/abs-pos-non-replaced-vlr-007-ref.xht
-== css-writing-modes/normal-flow-overconstrained-vlr-005.xht css-writing-modes/abs-pos-non-replaced-vlr-013-ref.xht
+fails == css-writing-modes/normal-flow-overconstrained-vlr-005.xht css-writing-modes/abs-pos-non-replaced-vlr-013-ref.xht
 == css-writing-modes/normal-flow-overconstrained-vrl-002.xht css-writing-modes/abs-pos-non-replaced-vrl-006-ref.xht
-== css-writing-modes/normal-flow-overconstrained-vrl-004.xht css-writing-modes/abs-pos-non-replaced-vrl-012-ref.xht
+fails == css-writing-modes/normal-flow-overconstrained-vrl-004.xht css-writing-modes/abs-pos-non-replaced-vrl-012-ref.xht
 == css-writing-modes/ortho-htb-alongside-vrl-floats-002.xht css-writing-modes/ortho-htb-alongside-vrl-floats-002-ref.xht
 == css-writing-modes/ortho-htb-alongside-vrl-floats-006.xht css-writing-modes/ortho-htb-alongside-vrl-floats-006-ref.xht
 == css-writing-modes/ortho-htb-alongside-vrl-floats-010.xht css-writing-modes/ortho-htb-alongside-vrl-floats-010-ref.xht
@@ -1156,11 +1156,11 @@ fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random
 fails == css-writing-modes/vertical-alignment-vrl-022.xht css-writing-modes/vertical-alignment-vrl-022-ref.xht
 fails == css-writing-modes/vertical-alignment-vrl-024.xht css-writing-modes/vertical-alignment-vrl-022-ref.xht
 fuzzy-if(winWidget,0-223,0-720) fuzzy-if(!webrender&&OSX,255-255,120-200) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/vertical-alignment-vrl-026.xht css-writing-modes/vertical-alignment-vrl-026-ref.xht
-fails == css-writing-modes/wm-propagation-body-006.xht css-writing-modes/block-flow-direction-025-ref.xht
-fails == css-writing-modes/wm-propagation-body-008.xht css-writing-modes/block-flow-direction-025-ref.xht
-fails == css-writing-modes/wm-propagation-body-010.xht css-writing-modes/wm-propagation-body-003-ref.xht
-fails == css-writing-modes/wm-propagation-body-011.xht css-writing-modes/wm-propagation-body-003-ref.xht
-fails == css-writing-modes/wm-propagation-body-015.xht css-writing-modes/block-flow-direction-025-ref.xht
+== css-writing-modes/wm-propagation-body-006.xht css-writing-modes/block-flow-direction-025-ref.xht
+== css-writing-modes/wm-propagation-body-008.xht css-writing-modes/block-flow-direction-025-ref.xht
+== css-writing-modes/wm-propagation-body-010.xht css-writing-modes/wm-propagation-body-003-ref.xht
+== css-writing-modes/wm-propagation-body-011.xht css-writing-modes/wm-propagation-body-003-ref.xht
+== css-writing-modes/wm-propagation-body-015.xht css-writing-modes/block-flow-direction-025-ref.xht
 == css-writing-modes/writing-mode-horizontal-001l.html css-writing-modes/reference/writing-mode-horizontal-001l-ref.html
 == css-writing-modes/writing-mode-horizontal-001r.html css-writing-modes/reference/writing-mode-horizontal-001r-ref.html
 fuzzy-if(winWidget,0-158,0-624) fuzzy-if(!webrender&&OSX,255-255,480-520) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/writing-mode-vertical-lr-002.xht css-writing-modes/reftest/writing-mode-vertical-lr-002-ref.xht
