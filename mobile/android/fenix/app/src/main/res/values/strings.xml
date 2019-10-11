@@ -539,6 +539,10 @@
     <string name="preference_option_autoplay_blocked">Video and audio blocked</string>
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video and audio allowed</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">On</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Off</string>
 
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->

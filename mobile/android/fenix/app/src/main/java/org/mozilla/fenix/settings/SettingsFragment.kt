@@ -122,6 +122,16 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         val appName = getString(R.string.app_name)
         aboutPreference?.title = getString(R.string.preferences_about, appName)
 
+        val deleteBrowsingDataPreference =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_delete_browsing_data_on_quit_preference))
+        deleteBrowsingDataPreference?.summary = context?.let {
+            if (it.settings().shouldDeleteBrowsingDataOnQuit) {
+                getString(R.string.delete_browsing_data_quit_on)
+            } else {
+                getString(R.string.delete_browsing_data_quit_off)
+            }
+        }
+
         setupPreferences()
 
         updateAccountUIState(context!!, requireComponents.backgroundServices.accountManager.accountProfile())
