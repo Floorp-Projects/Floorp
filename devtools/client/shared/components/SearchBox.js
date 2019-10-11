@@ -46,6 +46,7 @@ class SearchBox extends PureComponent {
       summary: PropTypes.string,
       summaryTooltip: PropTypes.string,
       type: PropTypes.string,
+      value: PropTypes.string,
     };
   }
 
@@ -53,7 +54,7 @@ class SearchBox extends PureComponent {
     super(props);
 
     this.state = {
-      value: "",
+      value: props.value || "",
       focused: false,
     };
 

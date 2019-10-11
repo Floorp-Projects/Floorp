@@ -40,6 +40,7 @@ class Toolbar extends Component {
       caseSensitive: PropTypes.bool.isRequired,
       toggleCaseSensitiveSearch: PropTypes.func.isRequired,
       connector: PropTypes.object.isRequired,
+      query: PropTypes.string,
     };
   }
 
@@ -124,6 +125,7 @@ class Toolbar extends Component {
       addSearchQuery,
       clearSearchResultAndCancel,
       connector,
+      query,
     } = this.props;
     return SearchBox({
       keyShortcut: "CmdOrCtrl+Shift+F",
@@ -131,8 +133,9 @@ class Toolbar extends Component {
       type: "search",
       delay: FILTER_SEARCH_DELAY,
       ref: this.props.searchboxRef,
+      value: query,
       onClearButtonClick: () => clearSearchResultAndCancel(),
-      onChange: query => addSearchQuery(query),
+      onChange: newQuery => addSearchQuery(newQuery),
       onKeyDown: event => this.onKeyDown(event, connector),
     });
   }
@@ -153,6 +156,7 @@ class Toolbar extends Component {
 module.exports = connect(
   state => ({
     caseSensitive: state.search.caseSensitive,
+    query: state.search.query,
   }),
   dispatch => ({
     closeSearch: () => dispatch(Actions.closeSearch()),
