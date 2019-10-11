@@ -1908,10 +1908,6 @@ class Element : public FragmentOrElement {
    */
   virtual void GetLinkTarget(nsAString& aTarget);
 
-  nsDOMTokenList* GetTokenList(
-      nsAtom* aAtom,
-      const DOMTokenListSupportedTokenArray aSupportedTokens = nullptr);
-
   enum class ReparseAttributes { No, Yes };
   /**
    * Copy attributes and state to another element
