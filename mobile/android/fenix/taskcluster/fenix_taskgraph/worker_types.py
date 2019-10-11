@@ -72,7 +72,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
         Required("certificate-alias"): text_type,
         Required("channel"): text_type,
         Required("commit"): bool,
-        Optional("google-play-track"): text_type,
         Required("product"): text_type,
         Required("dep"): bool,
     },
@@ -88,9 +87,6 @@ def build_push_apk_payload(config, task, task_def):
         "commit": worker["commit"],
         "upstreamArtifacts": worker["upstream-artifacts"],
     }
-
-    if worker.get("google-play-track"):
-        task_def["payload"]["google_play_track"] = worker["google-play-track"]
 
     scope_prefix = config.graph_config["scriptworker"]["scope-prefix"]
     task_def["scopes"].append(

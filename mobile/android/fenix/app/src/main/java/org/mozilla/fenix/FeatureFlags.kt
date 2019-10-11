@@ -11,9 +11,9 @@ object FeatureFlags {
     private val production by lazy { BuildConfig.BUILD_TYPE == "fenixProduction" }
     // A convenience flag for beta builds.
     private val beta by lazy { BuildConfig.BUILD_TYPE == "fenixBeta" }
-    // A convenience flag for the nightly build and (legacy) nightly channel in Google Play.
+    // A convenience flag for the nightly build in Google Play.
     private val nightly by lazy {
-        BuildConfig.BUILD_TYPE == "fenixNightly" || BuildConfig.BUILD_TYPE == "fenixNightlyLegacy"
+        BuildConfig.BUILD_TYPE == "fenixNightly"
     }
     // A convenience flag for debug builds.
     private val debug by lazy { BuildConfig.BUILD_TYPE == "debug" }

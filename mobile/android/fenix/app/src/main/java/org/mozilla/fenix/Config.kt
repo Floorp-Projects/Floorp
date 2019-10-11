@@ -19,7 +19,6 @@ object Config {
         "production" -> ReleaseChannel.Production
         "beta" -> ReleaseChannel.Beta
         "nightly" -> ReleaseChannel.Nightly
-        "nightlyLegacy" -> ReleaseChannel.Nightly
         "debug" -> ReleaseChannel.Debug
         else -> ReleaseChannel.Production // Performance-test builds should test production behaviour
     }

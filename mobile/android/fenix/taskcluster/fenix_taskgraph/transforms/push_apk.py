@@ -18,7 +18,7 @@ transforms = TransformSequence()
 @transforms.add
 def resolve_keys(config, tasks):
     for task in tasks:
-        for key in ("worker.channel", "worker.dep", "worker.google-play-track"):
+        for key in ("worker.channel", "worker.dep"):
             resolve_keyed_by(
                 task,
                 key,

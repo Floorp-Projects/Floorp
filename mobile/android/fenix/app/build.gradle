@@ -53,10 +53,6 @@ android {
             applicationIdSuffix ".fenix.performancetest"
             debuggable true
         }
-        fenixNightlyLegacy releaseTemplate >> {
-            applicationIdSuffix ".fenix"
-            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
-        }
         fenixNightly releaseTemplate >> {
             applicationIdSuffix ".fenix.nightly"
             buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
@@ -96,7 +92,6 @@ android {
         // |--------------------|---------------|-----------|
         // | debug              | ✅            | ✅       | Both variants for testing and development.
         // | forPerformanceTest | ✅            | ✅       | Both variants unless the perf team only cares about Nightly (TBD).
-        // | fenixNightlyLegacy | ✅            | ✅       | Release type will be decommissioned soon.
         // | fenixNightly       | ✅            | ✅       | Built with both, but only the "geckoNightly" one is published to Google Play
         // | fenixBeta          | ❌            | ✅       | Fenix Beta ships with GV Beta
         // | fenixProduction    | ❌            | ✅       | Fenix Production ships with GV Beta

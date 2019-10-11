@@ -39,4 +39,4 @@ jobs:
         treeherder:
             symbol: nimbledroid
         dependencies:
-            build: build-nightly-legacy
+            build: build-nightly
