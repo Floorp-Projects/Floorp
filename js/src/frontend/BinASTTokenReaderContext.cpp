@@ -1160,11 +1160,6 @@ JS::Result<Ok> BinASTTokenReaderContext::readStringPrelude() {
   // strings there. We can overrun to the model part, and in that case put
   // unused part back to `decodedBuffer_`.
 
-  // This buffer holds partially-read string, as Latin1Char.  This doesn't match
-  // to the actual encoding of the strings that is WTF-8, but the validation
-  // should be done later by `AtomizeWTF8Chars`, not immediately.
-  StringBuffer buf(cx_);
-
   RootedAtom atom(cx_);
 
   for (uint32_t stringIndex = 0; stringIndex < stringsNumberOfEntries;
@@ -1197,7 +1192,6 @@ JS::Result<Ok> BinASTTokenReaderContext::readStringPrelude() {
   // used for later read.
 
   MOZ_ASSERT(!metadata_);
-  MOZ_ASSERT(buf.empty());
   se.release();
   metadata_ = metadata;
   metadataOwned_ = MetadataOwnership::Owned;
