@@ -12,7 +12,6 @@
 #ifdef ENABLE_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
-#  include "builtin/intl/Locale.h"
 #  include "builtin/intl/NumberFormat.h"
 #  include "builtin/intl/PluralRules.h"
 #  include "builtin/intl/RelativeTimeFormat.h"
@@ -111,7 +110,6 @@ static bool CanInlineCrossRealm(InlinableNative native) {
 
     case InlinableNative::IntlGuardToCollator:
     case InlinableNative::IntlGuardToDateTimeFormat:
-    case InlinableNative::IntlGuardToLocale:
     case InlinableNative::IntlGuardToNumberFormat:
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
@@ -319,8 +317,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineGuardToClass(callInfo, &CollatorObject::class_);
     case InlinableNative::IntlGuardToDateTimeFormat:
       return inlineGuardToClass(callInfo, &DateTimeFormatObject::class_);
-    case InlinableNative::IntlGuardToLocale:
-      return inlineGuardToClass(callInfo, &LocaleObject::class_);
     case InlinableNative::IntlGuardToNumberFormat:
       return inlineGuardToClass(callInfo, &NumberFormatObject::class_);
     case InlinableNative::IntlGuardToPluralRules:
@@ -330,7 +326,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
 #else
     case InlinableNative::IntlGuardToCollator:
     case InlinableNative::IntlGuardToDateTimeFormat:
-    case InlinableNative::IntlGuardToLocale:
     case InlinableNative::IntlGuardToNumberFormat:
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
