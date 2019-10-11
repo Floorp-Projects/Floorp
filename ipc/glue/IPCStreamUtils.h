@@ -121,14 +121,6 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
 //       array of RAII AutoIPCStream objects or build your own wrapping
 //       RAII object to handle other actors that need to be cleaned up.
 class AutoIPCStream final {
-  Maybe<IPCStream> mInlineValue;
-  IPCStream* mValue;
-  Maybe<IPCStream>* mOptionalValue;
-  bool mTaken;
-  bool mDelayedStart;
-
-  bool IsSet() const;
-
  public:
   // Implicitly create an Maybe<IPCStream> value.  Either
   // TakeValue() or TakeOptionalValue() can be used.
@@ -142,6 +134,12 @@ class AutoIPCStream final {
   // Wrap an existing Maybe<IPCStream>.  Either TakeValue()
   // or TakeOptionalValue can be used.
   explicit AutoIPCStream(Maybe<IPCStream>& aTarget, bool aDelayedStart = false);
+
+  AutoIPCStream(const AutoIPCStream&) = delete;
+  AutoIPCStream(AutoIPCStream&&) = delete;
+
+  AutoIPCStream& operator=(const AutoIPCStream&) = delete;
+  AutoIPCStream& operator=(AutoIPCStream&&) = delete;
 
   ~AutoIPCStream();
 
@@ -175,9 +173,13 @@ class AutoIPCStream final {
   Maybe<IPCStream>& TakeOptionalValue();
 
  private:
-  AutoIPCStream(const AutoIPCStream& aOther) = delete;
-  AutoIPCStream& operator=(const AutoIPCStream& aOther) = delete;
-  AutoIPCStream& operator=(const AutoIPCStream&& aOther) = delete;
+  bool IsSet() const;
+
+  Maybe<IPCStream> mInlineValue;
+  IPCStream* const mValue = nullptr;
+  Maybe<IPCStream>* const mOptionalValue = nullptr;
+  bool mTaken = false;
+  const bool mDelayedStart;
 };
 
 template <>
