@@ -12,5 +12,3 @@ interface mixin LegacyQueryInterface {
   [Exposed=Window, ChromeOnly]
   nsISupports QueryInterface(any iid);
 };
-
-Element includes LegacyQueryInterface;
