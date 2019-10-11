@@ -362,6 +362,11 @@ static const uint32_t kInputIconSize = 16;
 
   // Special handling to show/hide the search popover if the Urlbar is focused.
   if ([[aInput nativeIdentifier] isEqualToString:SearchPopoverIdentifier]) {
+    // We can reach this code during window shutdown. We only want to toggle
+    // showPopover if we are in a normal running state.
+    if (!mTouchBarHelper) {
+      return;
+    }
     bool urlbarIsFocused = false;
     mTouchBarHelper->GetIsUrlbarFocused(&urlbarIsFocused);
     if (urlbarIsFocused) {

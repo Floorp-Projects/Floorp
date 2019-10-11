@@ -293,6 +293,9 @@ class TouchBarHelper {
   }
 
   get isUrlbarFocused() {
+    if (!TouchBarHelper.window || !TouchBarHelper.window.gURLBar) {
+      return false;
+    }
     return TouchBarHelper.window.gURLBar.focused;
   }
 
