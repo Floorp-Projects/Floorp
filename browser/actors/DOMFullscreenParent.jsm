@@ -15,6 +15,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
     let window = browser.ownerGlobal;
     switch (aMessage.name) {
       case "DOMFullscreen:Request": {
+        this.requestOrigin = this;
         this.addListeners(window);
         window.windowUtils.remoteFrameFullscreenChanged(browser);
         break;
@@ -78,6 +79,9 @@ class DOMFullscreenParent extends JSWindowActorParent {
       }
       case "MozDOMFullscreen:Exited":
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
+        if (!this.requestOrigin) {
+          this.requestOrigin = this;
+        }
         window.FullScreen.cleanupDomFullscreen(this);
         this.removeListeners(window);
         break;
@@ -103,5 +107,29 @@ class DOMFullscreenParent extends JSWindowActorParent {
   removeListeners(aWindow) {
     aWindow.removeEventListener("MozDOMFullscreen:Entered", this, true);
     aWindow.removeEventListener("MozDOMFullscreen:Exited", this, true);
+  }
+
+  /**
+   * Get the actor where the original fullscreen
+   * enter or exit request comes from.
+   */
+  get requestOrigin() {
+    let requestOrigin = this.browsingContext.top.fullscreenRequestOrigin;
+    return requestOrigin && requestOrigin.get();
+  }
+
+  /**
+   * Store the actor where the original fullscreen
+   * enter or exit request comes from in the top level
+   * browsing context.
+   */
+  set requestOrigin(aActor) {
+    if (aActor) {
+      this.browsingContext.top.fullscreenRequestOrigin = Cu.getWeakReference(
+        aActor
+      );
+    } else {
+      delete this.browsingContext.top.fullscreenRequestOrigin;
+    }
   }
 }
