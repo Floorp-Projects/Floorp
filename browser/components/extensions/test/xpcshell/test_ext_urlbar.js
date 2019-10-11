@@ -29,6 +29,10 @@ add_task(async function startup() {
   Services.prefs.setCharPref("browser.search.region", "US");
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
   Services.prefs.setIntPref("browser.search.addonLoadTimeout", 0);
+  Services.prefs.setBoolPref(
+    "browser.search.separatePrivateDefault.ui.enabled",
+    false
+  );
   await AddonTestUtils.promiseStartupManager();
 
   // Add a test engine and make it default so that when we do searches below,
