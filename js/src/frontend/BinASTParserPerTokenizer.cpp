@@ -207,11 +207,8 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(body, handler_.newLexicalScope(*lexicalScopeData, tmpBody));
 
-  auto binASTKind = isExpr ? BinASTKind::LazyFunctionExpression
-                           : BinASTKind::LazyFunctionDeclaration;
-
   BINJS_MOZ_TRY_DECL(result,
-                     makeEmptyFunctionNode(firstOffset, binASTKind, funbox));
+                     makeEmptyFunctionNode(firstOffset, syntaxKind, funbox));
   MOZ_TRY(setFunctionParametersAndBody(result, params, body));
   MOZ_TRY(finishEagerFunction(funbox, nargs));
   return result;
@@ -295,41 +292,12 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   return funbox;
 }
 
-FunctionSyntaxKind BinASTKindToFunctionSyntaxKind(const BinASTKind kind) {
-  // FIXME: this doesn't cover FunctionSyntaxKind::ClassConstructor and
-  // FunctionSyntaxKind::DerivedClassConstructor.
-  switch (kind) {
-    case BinASTKind::EagerFunctionDeclaration:
-    case BinASTKind::LazyFunctionDeclaration:
-      return FunctionSyntaxKind::Statement;
-    case BinASTKind::EagerFunctionExpression:
-    case BinASTKind::LazyFunctionExpression:
-      return FunctionSyntaxKind::Expression;
-    case BinASTKind::EagerArrowExpressionWithFunctionBody:
-    case BinASTKind::LazyArrowExpressionWithFunctionBody:
-    case BinASTKind::EagerArrowExpressionWithExpression:
-    case BinASTKind::LazyArrowExpressionWithExpression:
-      return FunctionSyntaxKind::Arrow;
-    case BinASTKind::EagerMethod:
-    case BinASTKind::LazyMethod:
-      return FunctionSyntaxKind::Method;
-    case BinASTKind::EagerGetter:
-    case BinASTKind::LazyGetter:
-      return FunctionSyntaxKind::Getter;
-    case BinASTKind::EagerSetter:
-    case BinASTKind::LazySetter:
-      return FunctionSyntaxKind::Setter;
-    default:
-      MOZ_CRASH("Invalid/ kind");
-  }
-}
-
 template <typename Tok>
 JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
-    const size_t start, const BinASTKind kind, FunctionBox* funbox) {
+    const size_t start, const FunctionSyntaxKind syntaxKind,
+    FunctionBox* funbox) {
   // LazyScript compilation requires basically none of the fields filled out.
   TokenPos pos = tokenizer_->pos(start);
-  FunctionSyntaxKind syntaxKind = BinASTKindToFunctionSyntaxKind(kind);
 
   BINJS_TRY_DECL(result, handler_.newFunction(syntaxKind, pos));
 
