@@ -48,14 +48,8 @@ bool nsPIDOMWindowInner::IsHandlingResizeEvent() const {
   return mIsHandlingResizeEvent;
 }
 
-bool nsPIDOMWindowInner::IsCurrentInnerWindow() const {
-  return mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this;
-}
-
 bool nsPIDOMWindowInner::HasActiveDocument() {
-  return IsCurrentInnerWindow() ||
-         (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() &&
-          mOuterWindow->GetCurrentInnerWindow()->GetDoc() == mDoc);
+  return IsCurrentInnerWindow();
 }
 
 bool nsPIDOMWindowInner::IsTopInnerWindow() const {
