@@ -488,9 +488,11 @@
                            <observes element="sidebar-box" attribute="positionend"/>
             </toolbarbutton>
             <toolbarbutton id="PanelUI-remotetabs-syncnow"
-                           onmouseover="gSync.refreshSyncButtonsTooltip();"
-                           class="subviewbutton subviewbutton-iconic"
+                           lazy-data-l10n-id="fxa-toolbar-sync-now"
+                           syncinglabel="fxa-toolbar-sync-syncing-tabs"
+                           class="syncNowBtn subviewbutton subviewbutton-iconic"
                            oncommand="gSync.doSync();"
+                           onmouseover="gSync.refreshSyncButtonsTooltip();"
                            closemenu="none"/>
             <menuseparator id="PanelUI-remotetabs-separator"/>
           </vbox>
@@ -750,10 +752,11 @@
         <toolbarseparator/>
         <!-- The `Sync Now` button is hidden by default until the user logs into Sync. -->
         <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
-                        label="&syncSyncNowItem.label;"
-                        syncinglabel="&syncSyncNowItemSyncing.label;"
+                        lazy-data-l10n-id="fxa-toolbar-sync-now"
+                        syncinglabel="fxa-toolbar-sync-syncing"
                         hidden="true"
-                        class="subviewbutton subviewbutton-iconic"
+                        class="syncNowBtn subviewbutton subviewbutton-iconic"
+                        onmouseover="gSync.refreshSyncButtonsTooltip();"
                         oncommand="gSync.doSyncFromFxaMenu(this);"
                         closemenu="none"/>
         <toolbarbutton id="PanelUI-fxa-menu-setup-sync-button"
