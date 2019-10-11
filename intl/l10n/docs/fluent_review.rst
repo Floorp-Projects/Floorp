@@ -249,15 +249,19 @@ Firefox.
 
   Currently, there’s an `issue`__ preventing warnings to be displayed in
   Phabricator. Checks can be run locally using :bash:`./mach lint -l l10n -W`.
-	
-  __ https://github.com/mozilla/code-review/issues/32
-	
 
-Migrating Legacy Strings
-========================
+  __ https://github.com/mozilla/code-review/issues/32
+
+
+Migrating Strings From Legacy or Fluent Files
+=============================================
 
 If a patch is moving legacy strings (.properties, .DTD) to Fluent, it should
-also include a recipe to migrate existing strings to FTL messages.
+also include a recipe to migrate existing strings to FTL messages. The same is
+applicable if a patch moves existing Fluent messages to a different file, or
+changes the morphology of existing messages without actual changes to the
+content.
+
 Documentation on how to write and test migration recipes is available in `this
 page`__.
 
