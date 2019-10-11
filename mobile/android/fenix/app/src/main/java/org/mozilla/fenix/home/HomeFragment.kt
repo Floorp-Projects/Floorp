@@ -394,14 +394,14 @@ class HomeFragment : Fragment() {
             }
             is TabAction.Close -> {
                 if (pendingSessionDeletion?.deletionJob == null) {
-                    removeTabWithUndo(action.sessionId)
+                    removeTabWithUndo(action.sessionId, browsingModeManager.mode.isPrivate)
                 } else {
                     pendingSessionDeletion?.deletionJob?.let {
                         viewLifecycleOwner.lifecycleScope.launch {
                             it.invoke()
                         }.invokeOnCompletion {
                             pendingSessionDeletion = null
-                            removeTabWithUndo(action.sessionId)
+                            removeTabWithUndo(action.sessionId, browsingModeManager.mode.isPrivate)
                         }
                     }
                 }
@@ -727,9 +727,9 @@ class HomeFragment : Fragment() {
         deleteAllSessionsJob = deleteOperation
 
         val snackbarMessage = if (private) {
-            getString(R.string.snackbar_private_tabs_deleted)
+            getString(R.string.snackbar_private_tabs_closed)
         } else {
-            getString(R.string.snackbar_tab_deleted)
+            getString(R.string.snackbar_tabs_closed)
         }
 
         viewLifecycleOwner.lifecycleScope.allowUndo(
@@ -747,7 +747,7 @@ class HomeFragment : Fragment() {
         )
     }
 
-    private fun removeTabWithUndo(sessionId: String) {
+    private fun removeTabWithUndo(sessionId: String, private: Boolean) {
         val sessionManager = requireComponents.core.sessionManager
         val deleteOperation: (suspend () -> Unit) = {
             sessionManager.findSessionById(sessionId)
@@ -759,9 +759,15 @@ class HomeFragment : Fragment() {
 
         pendingSessionDeletion = PendingSessionDeletion(deleteOperation, sessionId)
 
+        val snackbarMessage = if (private) {
+            getString(R.string.snackbar_private_tab_closed)
+        } else {
+            getString(R.string.snackbar_tab_closed)
+        }
+
         viewLifecycleOwner.lifecycleScope.allowUndo(
             view!!,
-            getString(R.string.snackbar_tab_deleted),
+            snackbarMessage,
             getString(R.string.snackbar_deleted_undo), {
                 pendingSessionDeletion = null
                 emitSessionChanges()
