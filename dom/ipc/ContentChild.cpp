@@ -1779,11 +1779,6 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
     if (!Preferences::GetBool("media.cubeb.sandbox")) {
       Unused << CubebUtils::GetCubebContext();
     }
-#    if defined(XP_LINUX)
-    else {
-      CubebUtils::InitAudioThreads();
-    }
-#    endif
   }
 
   if (sandboxEnabled) {
