@@ -25,5 +25,15 @@ inline BytecodeIterator AllBytecodesIterable::end() {
   return BytecodeIterator(BytecodeLocation(script_, script_->codeEnd()));
 }
 
+// BytecodeLocationRange
+
+inline BytecodeIterator BytecodeLocationRange::begin() {
+  return BytecodeIterator(beginLoc_);
+}
+
+inline BytecodeIterator BytecodeLocationRange::end() {
+  return BytecodeIterator(endLoc_);
+}
+
 }  // namespace js
 #endif
