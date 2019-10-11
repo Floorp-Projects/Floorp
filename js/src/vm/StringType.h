@@ -1420,17 +1420,18 @@ class StaticStrings {
     return nullptr;
   }
 
+  MOZ_ALWAYS_INLINE JSAtom* lookup(const char* chars, size_t length) {
+    // Collapse calls for |const char*| into |const Latin1Char char*| to avoid
+    // excess instantiations.
+    return lookup(reinterpret_cast<const Latin1Char*>(chars), length);
+  }
+
   template <typename CharT, typename = typename std::enable_if<
-                                std::is_same<CharT, char>::value ||
-                                std::is_same<CharT, const char>::value ||
                                 !std::is_const<CharT>::value>::type>
   MOZ_ALWAYS_INLINE JSAtom* lookup(CharT* chars, size_t length) {
-    // Collapse calls for |char*| or |const char*| into |const unsigned char*|
-    // to avoid excess instantiations.  Collapse the remaining |CharT*| to
-    // |const CharT*| for the same reason.
-    using UnsignedCharT = typename std::make_unsigned<CharT>::type;
-    UnsignedCharT* unsignedChars = reinterpret_cast<UnsignedCharT*>(chars);
-    return lookup(const_cast<const UnsignedCharT*>(unsignedChars), length);
+    // Collapse the remaining |CharT*| to |const CharT*| to avoid excess
+    // instantiations.
+    return lookup(const_cast<const CharT*>(chars), length);
   }
 
  private:
