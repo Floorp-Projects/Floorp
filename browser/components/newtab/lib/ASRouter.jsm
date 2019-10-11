@@ -105,6 +105,9 @@ const RS_DOWNLOAD_MAX_RETRIES = 2;
 
 // To observe the app locale change notification.
 const TOPIC_INTL_LOCALE_CHANGED = "intl:app-locales-changed";
+// To observe the pref that controls if ASRouter should use the remote Fluent files for l10n.
+const USE_REMOTE_L10N_PREF =
+  "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
 
 /**
  * chooseBranch<T> -  Choose an item from a list of "branches" pseudorandomly using a seed / ratio configuration
@@ -759,6 +762,14 @@ class _ASRouter {
     await this._maybeUpdateL10nAttachment();
   }
 
+  observe(aSubject, aTopic, aPrefName) {
+    switch (aPrefName) {
+      case USE_REMOTE_L10N_PREF:
+        CFRPageActions.reloadL10n();
+        break;
+    }
+  }
+
   /**
    * init - Initializes the MessageRouter.
    * It is ready when it has been connected to a RemotePageManager instance.
@@ -833,6 +844,7 @@ class _ASRouter {
     );
 
     Services.obs.addObserver(this._onLocaleChanged, TOPIC_INTL_LOCALE_CHANGED);
+    Services.prefs.addObserver(USE_REMOTE_L10N_PREF, this);
     // sets .initialized to true and resolves .waitForInitialized promise
     this._finishInitializing();
   }
@@ -864,6 +876,7 @@ class _ASRouter {
       this._onLocaleChanged,
       TOPIC_INTL_LOCALE_CHANGED
     );
+    Services.prefs.removeObserver(USE_REMOTE_L10N_PREF, this);
     // If we added any CFR recommendations, they need to be removed
     CFRPageActions.clearRecommendations();
     this._resetInitialization();
