@@ -342,6 +342,7 @@ export default class LoginList extends HTMLElement {
     breachedSortOptionElement.hidden = false;
     this._sortSelect.selectedIndex = breachedSortOptionElement.index;
     this._applySortAndScrollToTop();
+    this._selectFirstVisibleLogin();
   }
 
   /**
