@@ -338,7 +338,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   }
 
   // Window APIs that are cross-origin-accessible (from the HTML spec).
-  BrowsingContext* Window() { return Self(); }
+  WindowProxyHolder Window();
   BrowsingContext* Self() { return this; }
   void Location(JSContext* aCx, JS::MutableHandle<JSObject*> aLocation,
                 ErrorResult& aError);
@@ -346,7 +346,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   bool GetClosed(ErrorResult&) { return mClosed; }
   void Focus(ErrorResult& aError);
   void Blur(ErrorResult& aError);
-  BrowsingContext* GetFrames(ErrorResult& aError) { return Self(); }
+  WindowProxyHolder GetFrames(ErrorResult& aError);
   int32_t Length() const { return mChildren.Length(); }
   Nullable<WindowProxyHolder> GetTop(ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aOpener,
