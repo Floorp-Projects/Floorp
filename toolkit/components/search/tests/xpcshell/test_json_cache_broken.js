@@ -82,6 +82,12 @@ const enginesCache = {
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
+  // Allow telemetry probes which may otherwise be disabled for some applications (e.g. Thunderbird)
+  Services.prefs.setBoolPref(
+    "toolkit.telemetry.testing.overrideProductsCheck",
+    true
+  );
+
   useTestEngineConfig();
   Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + "region", "US");
   Services.locale.availableLocales = ["en-US"];
