@@ -977,7 +977,7 @@ EagerFunctionExpression:
                    NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
     BINJS_TRY_DECL(bodyScope,
                    handler_.newLexicalScope(*lexicalScopeData, body));
-    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, syntax, funbox));
     MOZ_TRY(setFunctionParametersAndBody(result, params, bodyScope));
     MOZ_TRY(finishEagerFunction(funbox, nargs));
 
@@ -1012,7 +1012,7 @@ LazyFunctionExpression:
 
     forceStrictIfNecessary(funbox, directives);
 
-    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, kind, funbox));
+    BINJS_MOZ_TRY_DECL(result, makeEmptyFunctionNode(start, syntax, funbox));
 
     auto skipStart = contentsSkip.startOffset();
     auto skipEnd = skipStart + contentsSkip.length();
@@ -1039,7 +1039,7 @@ EagerMethod:
                    NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
     BINJS_TRY_DECL(bodyScope,
                    handler_.newLexicalScope(*lexicalScopeData, body));
-    BINJS_MOZ_TRY_DECL(method, makeEmptyFunctionNode(start, kind, funbox));
+    BINJS_MOZ_TRY_DECL(method, makeEmptyFunctionNode(start, syntax, funbox));
     MOZ_TRY(setFunctionParametersAndBody(method, params, bodyScope));
     BINJS_TRY_DECL(result,
                    handler_.newObjectMethodOrPropertyDefinition(name, method,
@@ -1369,7 +1369,7 @@ ReturnStatement:
   init: |
     if (!pc_->isFunctionBox()) {
       // Return statements are permitted only inside functions.
-      return raiseInvalidKind("Toplevel Statement", kind);
+      return raiseInvalidKind("Toplevel Statement", BinASTKind::ReturnStatement);
     }
 
     pc_->functionBox()->usesReturn = true;

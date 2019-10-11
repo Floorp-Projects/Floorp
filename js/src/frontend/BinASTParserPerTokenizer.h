@@ -141,9 +141,9 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
                                             FunctionSyntaxKind syntax,
                                             ParseNode* name);
 
-  JS::Result<FunctionNode*> makeEmptyFunctionNode(const size_t start,
-                                                  const BinASTKind kind,
-                                                  FunctionBox* funbox);
+  JS::Result<FunctionNode*> makeEmptyFunctionNode(
+      const size_t start, const FunctionSyntaxKind syntaxKind,
+      FunctionBox* funbox);
   MOZ_MUST_USE JS::Result<Ok> setFunctionParametersAndBody(FunctionNode* fun,
                                                            ListNode* params,
                                                            ParseNode* body);
