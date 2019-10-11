@@ -1622,6 +1622,11 @@ FlatHuffmanKey::FlatHuffmanKey(const HuffmanKey* key)
 
 template <typename T>
 GenericHuffmanTable<T>::Iterator::Iterator(
+    typename SingleEntryHuffmanTable<T>::Iterator&& iterator)
+    : implementation(std::move(iterator)) {}
+
+template <typename T>
+GenericHuffmanTable<T>::Iterator::Iterator(
     typename SingleLookupHuffmanTable<T>::Iterator&& iterator)
     : implementation(std::move(iterator)) {}
 
@@ -1638,6 +1643,9 @@ GenericHuffmanTable<T>::Iterator::Iterator(
 template <typename T>
 void GenericHuffmanTable<T>::Iterator::operator++() {
   implementation.match(
+      [](typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
+        iterator.operator++();
+      },
       [](typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
         iterator.operator++();
       },
@@ -1653,6 +1661,10 @@ template <typename T>
 bool GenericHuffmanTable<T>::Iterator::operator==(
     const GenericHuffmanTable<T>::Iterator& other) const {
   return implementation.match(
+      [other](const typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
+        return iterator == other.implementation.template as<
+                               typename SingleEntryHuffmanTable<T>::Iterator>();
+      },
       [other](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
         return iterator ==
                other.implementation.template as<
@@ -1674,6 +1686,10 @@ template <typename T>
 bool GenericHuffmanTable<T>::Iterator::operator!=(
     const GenericHuffmanTable<T>::Iterator& other) const {
   return implementation.match(
+      [other](const typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
+        return iterator != other.implementation.template as<
+                               typename SingleEntryHuffmanTable<T>::Iterator>();
+      },
       [other](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
         return iterator !=
                other.implementation.template as<
@@ -1694,6 +1710,9 @@ bool GenericHuffmanTable<T>::Iterator::operator!=(
 template <typename T>
 const T* GenericHuffmanTable<T>::Iterator::operator*() const {
   return implementation.match(
+      [](const typename SingleEntryHuffmanTable<T>::Iterator& iterator) {
+        return iterator.operator*();
+      },
       [](const typename SingleLookupHuffmanTable<T>::Iterator& iterator) {
         return iterator.operator*();
       },
@@ -1712,6 +1731,9 @@ GenericHuffmanTable<T>::GenericHuffmanTable(JSContext*)
 template <typename T>
 JS::Result<Ok> GenericHuffmanTable<T>::initComplete() {
   return this->implementation.match(
+      [](SingleEntryHuffmanTable<T>& implementation) -> JS::Result<Ok> {
+        MOZ_CRASH("SingleEntryHuffmanTable shouldn't have multiple entries!");
+      },
       [](SingleLookupHuffmanTable<T>& implementation) -> JS::Result<Ok> {
         return implementation.initComplete();
       },
@@ -1730,6 +1752,10 @@ template <typename T>
 typename GenericHuffmanTable<T>::Iterator GenericHuffmanTable<T>::begin()
     const {
   return this->implementation.match(
+      [](const SingleEntryHuffmanTable<T>& implementation)
+          -> GenericHuffmanTable<T>::Iterator {
+        return Iterator(implementation.begin());
+      },
       [](const SingleLookupHuffmanTable<T>& implementation)
           -> GenericHuffmanTable<T>::Iterator {
         return Iterator(implementation.begin());
@@ -1750,6 +1776,10 @@ typename GenericHuffmanTable<T>::Iterator GenericHuffmanTable<T>::begin()
 template <typename T>
 typename GenericHuffmanTable<T>::Iterator GenericHuffmanTable<T>::end() const {
   return this->implementation.match(
+      [](const SingleEntryHuffmanTable<T>& implementation)
+          -> GenericHuffmanTable<T>::Iterator {
+        return Iterator(implementation.end());
+      },
       [](const SingleLookupHuffmanTable<T>& implementation)
           -> GenericHuffmanTable<T>::Iterator {
         return Iterator(implementation.end());
@@ -1774,11 +1804,8 @@ JS::Result<Ok> GenericHuffmanTable<T>::initWithSingleValue(JSContext* cx,
   MOZ_ASSERT(this->implementation.template is<
              HuffmanTableUnreachable>());  // Make sure that we're initializing.
 
-  this->implementation = {mozilla::VariantType<SingleLookupHuffmanTable<T>>{},
-                          cx};
-
-  MOZ_TRY(this->implementation.template as<SingleLookupHuffmanTable<T>>()
-              .initWithSingleValue(cx, std::move(value)));
+  this->implementation = {mozilla::VariantType<SingleEntryHuffmanTable<T>>{},
+                          std::move(value)};
   return Ok();
 }
 
@@ -1823,6 +1850,10 @@ template <typename T>
 JS::Result<Ok> GenericHuffmanTable<T>::addSymbol(uint32_t bits,
                                                  uint8_t bitLength, T&& value) {
   return this->implementation.match(
+      [](SingleEntryHuffmanTable<T>&) -> JS::Result<Ok> {
+        MOZ_CRASH("SingleEntryHuffmanTable shouldn't have multiple entries!");
+        return Ok();
+      },
       [bits, bitLength, value = std::move(value)](
           SingleLookupHuffmanTable<T>&
               implementation) mutable /* discard implicit const */
@@ -1851,6 +1882,8 @@ template <typename T>
 HuffmanEntry<const T*> GenericHuffmanTable<T>::lookup(
     HuffmanLookup lookup) const {
   return this->implementation.match(
+      [lookup](const SingleEntryHuffmanTable<T>& implementation)
+          -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
       [lookup](const SingleLookupHuffmanTable<T>& implementation)
           -> HuffmanEntry<const T*> { return implementation.lookup(lookup); },
       [lookup](const TwoLookupsHuffmanTable<T>& implementation)
@@ -2000,6 +2033,39 @@ HuffmanEntry<const T*> MapBasedHuffmanTable<T>::lookup(
 }
 
 template <typename T>
+SingleEntryHuffmanTable<T>::Iterator::Iterator(const T* position)
+    : position(position) {}
+
+template <typename T>
+void SingleEntryHuffmanTable<T>::Iterator::operator++() {
+  // There's only one entry, and `nullptr` means `end`.
+  position = nullptr;
+}
+
+template <typename T>
+const T* SingleEntryHuffmanTable<T>::Iterator::operator*() const {
+  return position;
+}
+
+template <typename T>
+bool SingleEntryHuffmanTable<T>::Iterator::operator==(
+    const Iterator& other) const {
+  return position == other.position;
+}
+
+template <typename T>
+bool SingleEntryHuffmanTable<T>::Iterator::operator!=(
+    const Iterator& other) const {
+  return position != other.position;
+}
+
+template <typename T>
+HuffmanEntry<const T*> SingleEntryHuffmanTable<T>::lookup(
+    HuffmanLookup key) const {
+  return HuffmanEntry<const T*>(0, 0, &value_);
+}
+
+template <typename T>
 SingleLookupHuffmanTable<T>::Iterator::Iterator(const HuffmanEntry<T>* position)
     : position(position) {}
 
@@ -2023,22 +2089,6 @@ template <typename T>
 bool SingleLookupHuffmanTable<T>::Iterator::operator!=(
     const Iterator& other) const {
   return position != other.position;
-}
-
-template <typename T>
-JS::Result<Ok> SingleLookupHuffmanTable<T>::initWithSingleValue(JSContext* cx,
-                                                                T&& value) {
-  MOZ_ASSERT(values.empty());  // Make sure that we're initializing.
-  if (MOZ_UNLIKELY(!values.emplaceBack(0, 0, std::move(value)))) {
-    ReportOutOfMemory(cx);
-    return cx->alreadyReportedError();
-  }
-  if (MOZ_UNLIKELY(!saturated.emplaceBack(0))) {
-    ReportOutOfMemory(cx);
-    return cx->alreadyReportedError();
-  }
-  this->largestBitLength = 0;
-  return Ok();
 }
 
 template <typename T>
