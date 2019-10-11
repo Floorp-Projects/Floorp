@@ -6,6 +6,8 @@
 
 #include "ContentEventHandler.h"
 
+#include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/IMEStateManager.h"
@@ -1472,7 +1474,7 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
       int32_t offsetInNode =
           node == aRawRange.GetStartContainer() ? aRawRange.StartOffset() : 0;
       if (static_cast<uint32_t>(offsetInNode) < node->Length()) {
-        nodePosition.Set(node, offsetInNode);
+        nodePosition = {node, offsetInNode};
         break;
       }
       continue;
@@ -1482,7 +1484,7 @@ ContentEventHandler::GetFirstFrameInRangeForTextRect(
     // node causing text.
     if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
         IsPaddingBR(node->AsContent())) {
-      nodePosition.Set(node, 0);
+      nodePosition = {node, 0};
     }
   }
 
@@ -1549,13 +1551,14 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
     }
 
     if (node->IsText()) {
-      uint32_t offset;
+      CheckedInt<int32_t> offset;
       if (node == aRawRange.GetEndContainer()) {
         offset = aRawRange.EndOffset();
       } else {
         offset = node->Length();
       }
-      nodePosition.Set(node, offset);
+
+      nodePosition = {node, offset.value()};
 
       // If the text node is empty or the last node of the range but the index
       // is 0, we should store current position but continue looking for
@@ -1569,7 +1572,7 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
 
     if (ShouldBreakLineBefore(node->AsContent(), mRootContent) ||
         IsPaddingBR(node->AsContent())) {
-      nodePosition.Set(node, 0);
+      nodePosition = {node, 0};
       break;
     }
   }
@@ -1603,7 +1606,9 @@ ContentEventHandler::GetLastFrameInRangeForTextRect(const RawRange& aRawRange) {
   // at least one text frame.
   if (nodePosition.Offset() &&
       nodePosition.Offset() == static_cast<uint32_t>(start)) {
-    nodePosition.Set(nodePosition.Container(), nodePosition.Offset() - 1);
+    const CheckedInt<int32_t> newNodePositionOffset{nodePosition.Offset() - 1};
+
+    nodePosition = {nodePosition.Container(), newNodePositionOffset.value()};
     GetFrameForTextRect(nodePosition.Container(), nodePosition.Offset(), true,
                         &lastFrame);
     if (NS_WARN_IF(!lastFrame)) {
