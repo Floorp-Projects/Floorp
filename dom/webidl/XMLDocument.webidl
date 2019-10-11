@@ -5,7 +5,6 @@
  *
  * The origin of this IDL file is:
  * http://dom.spec.whatwg.org/#xmldocument
- * http://www.whatwg.org/specs/web-apps/current-work/#xmldocument
  */
 
 // http://dom.spec.whatwg.org/#xmldocument
