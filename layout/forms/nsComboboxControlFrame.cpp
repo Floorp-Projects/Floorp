@@ -719,9 +719,16 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(
 
   const bool isContainSize = StyleDisplay()->IsContainSize();
   nscoord displayISize = 0;
-  if (MOZ_LIKELY(mDisplayFrame) && !isContainSize) {
-    displayISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                                        mDisplayFrame, aType);
+  if (MOZ_LIKELY(mDisplayFrame)) {
+    if (isContainSize) {
+      // Note: the "h" in "hPadding" here really means "inline-axis".
+      // Its struct uses "h" prefixes for historical reasons, but they're all
+      // for the inline-axis, not (necessarily) the horizontal axis.
+      displayISize = mDisplayFrame->IntrinsicISizeOffsets().hPadding;
+    } else {
+      displayISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                                                          mDisplayFrame, aType);
+    }
   }
 
   if (mDropdownFrame) {
@@ -988,9 +995,16 @@ void nsComboboxControlFrame::HandleRedisplayTextEvent() {
 void nsComboboxControlFrame::ActuallyDisplayText(bool aNotify) {
   RefPtr<nsTextNode> displayContent = mDisplayContent;
   if (mDisplayedOptionTextOrPreview.IsEmpty()) {
-    // Have to use a non-breaking space for line-block-size calculations
-    // to be right
-    static const char16_t space = 0xA0;
+    // Have to use a space character of some sort for line-block-size
+    // calculations to be right. Also, the space character must be zero-width
+    // in order for the the inline-size calculations to be consistent between
+    // size-contained comboboxes vs. empty comboboxes.
+    //
+    // XXXdholbert Does this space need to be "non-breaking"? I'm not sure
+    // if it matters, but we previously had a comment here (added in 2002)
+    // saying "Have to use a non-breaking space for line-height calculations
+    // to be right". So I'll stick with a non-breaking space for now...
+    static const char16_t space = 0xFEFF;
     displayContent->SetText(&space, 1, aNotify);
   } else {
     displayContent->SetText(mDisplayedOptionTextOrPreview, aNotify);
