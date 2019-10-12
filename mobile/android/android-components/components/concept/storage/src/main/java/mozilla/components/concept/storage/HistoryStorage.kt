@@ -12,9 +12,9 @@ interface HistoryStorage : Storage {
     /**
      * Records a visit to a page.
      * @param uri of the page which was visited.
-     * @param visitType type of the visit, see [VisitType].
+     * @param visit Information about the visit; see [PageVisit].
      */
-    suspend fun recordVisit(uri: String, visitType: VisitType)
+    suspend fun recordVisit(uri: String, visit: PageVisit)
 
     /**
      * Records an observation about a page.
@@ -117,6 +117,30 @@ interface HistoryStorage : Storage {
      * Prune history storage, removing stale history.
      */
     suspend fun prune()
+}
+
+/**
+ * Information to record about a visit.
+ *
+ * @property visitType The transition type for this visit. See [VisitType].
+ * @property redirectSource If this visit is redirecting to another page,
+ *  what kind of redirect is it? See [RedirectSource] for the options.
+ */
+data class PageVisit(
+    val visitType: VisitType,
+    val redirectSource: RedirectSource
+)
+
+/**
+ * A redirect source describes how a page redirected to another page.
+ */
+enum class RedirectSource {
+    // The page didn't redirect to another page.
+    NOT_A_SOURCE,
+    // The page temporarily redirected to another page.
+    TEMPORARY,
+    // The page permanently redirected to another page.
+    PERMANENT,
 }
 
 data class PageObservation(val title: String?)

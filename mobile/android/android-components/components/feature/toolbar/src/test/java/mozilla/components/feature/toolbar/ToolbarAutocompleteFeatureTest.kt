@@ -11,6 +11,8 @@ import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompletePro
 import mozilla.components.browser.domains.autocomplete.DomainList
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.concept.storage.PageVisit
+import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
@@ -132,7 +134,7 @@ class ToolbarAutocompleteFeatureTest {
 
         // Can autocomplete with a non-empty history provider.
         runBlocking {
-            history.recordVisit("https://www.mozilla.org", VisitType.TYPED)
+            history.recordVisit("https://www.mozilla.org", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
         }
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
@@ -192,7 +194,7 @@ class ToolbarAutocompleteFeatureTest {
         )
 
         runBlocking {
-            history.recordVisit("https://www.mozilla.org", VisitType.TYPED)
+            history.recordVisit("https://www.mozilla.org", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
         }
 
         verifyAutocompleteResult(toolbar, autocompleteDelegate, "mo",

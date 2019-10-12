@@ -55,6 +55,8 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.storage.PageVisit
+import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import mozilla.components.support.utils.DownloadUtils
@@ -152,7 +154,8 @@ class SystemEngineView @JvmOverloads constructor(
             }
 
             runBlocking {
-                session?.settings?.historyTrackingDelegate?.onVisited(url, visitType)
+                session?.settings?.historyTrackingDelegate?.onVisited(url,
+                    PageVisit(visitType, RedirectSource.NOT_A_SOURCE))
             }
         }
 

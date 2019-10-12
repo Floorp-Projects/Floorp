@@ -25,6 +25,8 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.storage.PageVisit
+import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.util.Base64
 import mozilla.components.support.ktx.kotlin.isEmail
@@ -488,13 +490,30 @@ class GeckoEngineSession(
             val visitType = if (isReload) {
                 VisitType.RELOAD
             } else {
-                if (flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE_PERMANENT != 0) {
+                // Note the difference between `VISIT_REDIRECT_PERMANENT`,
+                // `VISIT_REDIRECT_TEMPORARY`, `VISIT_REDIRECT_SOURCE`, and
+                // `VISIT_REDIRECT_SOURCE_PERMANENT`.
+                //
+                // The former two indicate if the visited page is the *target*
+                // of a redirect; that is, another page redirected to it.
+                //
+                // The latter two indicate if the visited page is the *source*
+                // of a redirect: it's redirecting to another page, because the
+                // server returned an HTTP 3xy status code.
+                if (flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_PERMANENT != 0) {
                     VisitType.REDIRECT_PERMANENT
-                } else if (flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE != 0) {
+                } else if (flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_TEMPORARY != 0) {
                     VisitType.REDIRECT_TEMPORARY
                 } else {
                     VisitType.LINK
                 }
+            }
+            val redirectSource = when {
+                flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE_PERMANENT != 0 ->
+                    RedirectSource.PERMANENT
+                flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE != 0 ->
+                    RedirectSource.TEMPORARY
+                else -> RedirectSource.NOT_A_SOURCE
             }
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)
@@ -505,7 +524,7 @@ class GeckoEngineSession(
             }
 
             return launchGeckoResult {
-                delegate.onVisited(url, visitType)
+                delegate.onVisited(url, PageVisit(visitType, redirectSource))
                 true
             }
         }
