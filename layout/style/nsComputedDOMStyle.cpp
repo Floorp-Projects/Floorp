@@ -1548,30 +1548,19 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetGridTemplateColumnsRows(
     const StyleGridTemplateComponent& aTrackList,
     const ComputedGridTrackInfo& aTrackInfo) {
-  if (aTrackList.IsSubgrid()) {
-    // XXX TODO: add support for repeat(auto-fill) for 'subgrid' (bug 1234311)
+  if (aTrackInfo.mIsSubgrid) {
     RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-    auto& subgrid = *aTrackList.AsSubgrid();
-
     RefPtr<nsROCSSPrimitiveValue> subgridKeyword = new nsROCSSPrimitiveValue;
     subgridKeyword->SetIdent(eCSSKeyword_subgrid);
     valueList->AppendCSSValue(subgridKeyword.forget());
-
-    auto names = subgrid.names.AsSpan();
-    for (auto i : IntegerRange(names.Length())) {
-      if (MOZ_UNLIKELY(i == subgrid.fill_idx)) {
-        RefPtr<nsROCSSPrimitiveValue> start = new nsROCSSPrimitiveValue;
-        start->SetString(NS_LITERAL_STRING("repeat(auto-fill,"));
-        valueList->AppendCSSValue(start.forget());
-      }
-      AppendGridLineNames(valueList, names[i].AsSpan(),
-                          /*aSuppressEmptyList*/ false);
-      if (MOZ_UNLIKELY(i == subgrid.fill_idx)) {
-        RefPtr<nsROCSSPrimitiveValue> end = new nsROCSSPrimitiveValue;
-        end->SetString(NS_LITERAL_STRING(")"));
-        valueList->AppendCSSValue(end.forget());
-      }
+    for (const auto& lineNames : aTrackInfo.mResolvedLineNames) {
+      AppendGridLineNames(valueList, lineNames, /*aSuppressEmptyList*/ false);
+    }
+    uint32_t line = aTrackInfo.mResolvedLineNames.Length();
+    uint32_t lastLine = aTrackInfo.mNumExplicitTracks + 1;
+    const Span<const StyleCustomIdent> empty;
+    for (; line < lastLine; ++line) {
+      AppendGridLineNames(valueList, empty, /*aSuppressEmptyList*/ false);
     }
     return valueList.forget();
   }
