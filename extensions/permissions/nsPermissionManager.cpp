@@ -3149,7 +3149,7 @@ nsPermissionManager::SetPermissionsWithKey(const nsACString& aPermissionKey,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<GenericPromise::Private> promise;
+  RefPtr<GenericNonExclusivePromise::Private> promise;
   bool foundKey =
       mPermissionKeyPromiseMap.Get(aPermissionKey, getter_AddRefs(promise));
   if (promise) {
@@ -3310,7 +3310,7 @@ bool nsPermissionManager::PermissionAvailable(nsIPrincipal* aPrincipal,
 
     // If we have a pending promise for the permission key in question, we don't
     // have the permission available, so report a warning and return false.
-    RefPtr<GenericPromise::Private> promise;
+    RefPtr<GenericNonExclusivePromise::Private> promise;
     if (!mPermissionKeyPromiseMap.Get(permissionKey, getter_AddRefs(promise)) ||
         promise) {
       // Emit a useful diagnostic warning with the permissionKey for the process
@@ -3335,17 +3335,17 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  nsTArray<RefPtr<GenericPromise>> promises;
+  nsTArray<RefPtr<GenericNonExclusivePromise>> promises;
   for (auto& key : GetAllKeysForPrincipal(aPrincipal)) {
-    RefPtr<GenericPromise::Private> promise;
+    RefPtr<GenericNonExclusivePromise::Private> promise;
     if (!mPermissionKeyPromiseMap.Get(key, getter_AddRefs(promise))) {
       // In this case we have found a permission which isn't available in the
       // content process and hasn't been requested yet. We need to create a new
       // promise, and send the request to the parent (if we have not already
       // done so).
-      promise = new GenericPromise::Private(__func__);
+      promise = new GenericNonExclusivePromise::Private(__func__);
       mPermissionKeyPromiseMap.Put(
-          key, RefPtr<GenericPromise::Private>(promise).forget());
+          key, RefPtr<GenericNonExclusivePromise::Private>(promise).forget());
     }
 
     if (promise) {
@@ -3364,7 +3364,7 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
   auto* thread = SystemGroup::AbstractMainThreadFor(TaskCategory::Other);
 
   RefPtr<nsIRunnable> runnable = aRunnable;
-  GenericPromise::All(thread, promises)
+  GenericNonExclusivePromise::All(thread, promises)
       ->Then(
           thread, __func__, [runnable]() { runnable->Run(); },
           []() {
