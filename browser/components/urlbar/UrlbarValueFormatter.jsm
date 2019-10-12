@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -111,6 +112,9 @@ class UrlbarValueFormatter {
     let flags =
       Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
       Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    if (PrivateBrowsingUtils.isWindowPrivate(this.window)) {
+      flags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+    }
     let uriInfo;
     try {
       uriInfo = Services.uriFixup.getFixupURIInfo(url, flags);
