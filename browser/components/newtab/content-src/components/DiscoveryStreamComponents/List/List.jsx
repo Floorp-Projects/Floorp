@@ -116,6 +116,7 @@ export class ListItem extends React.PureComponent {
             pocket_id={this.props.pocket_id}
             shim={this.props.shim}
             bookmarkGuid={this.props.bookmarkGuid}
+            campaignId={this.props.campaignId}
           />
         )}
       </li>

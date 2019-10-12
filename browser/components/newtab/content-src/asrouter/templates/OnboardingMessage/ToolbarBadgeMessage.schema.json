@@ -1,7 +1,7 @@
 {
   "title": "ToolbarBadgeMessage",
   "description": "A template that specifies to which element in the browser toolbar to add a notification.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "object",
   "properties": {
     "target": {
@@ -21,6 +21,17 @@
     "delay": {
       "type": "number",
       "description": "Optional delay in ms after which to show the notification"
+    },
+    "badgeDescription": {
+      "type": "object",
+      "description": "This is used in combination with the badged button to offer a text based alternative to the visual badging. Example 'New Feature: What's New'",
+      "properties": {
+        "string_id": {
+          "type": "string",
+          "description": "Fluent string id"
+        }
+      },
+      "required": ["string_id"]
     }
   },
   "additionalProperties": false,
