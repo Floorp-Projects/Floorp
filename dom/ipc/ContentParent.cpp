@@ -4262,8 +4262,9 @@ nsresult ContentParent::DoSendAsyncMessage(JSContext* aCx,
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
-    const nsCString& aKeyword, nsString* aProviderName,
-    RefPtr<nsIInputStream>* aPostData, Maybe<URIParams>* aURI) {
+    const nsCString& aKeyword, const bool& aIsPrivateContext,
+    nsString* aProviderName, RefPtr<nsIInputStream>* aPostData,
+    Maybe<URIParams>* aURI) {
   *aPostData = nullptr;
   *aURI = Nothing();
 
@@ -4274,7 +4275,8 @@ mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
 
   nsCOMPtr<nsIURIFixupInfo> info;
 
-  if (NS_FAILED(fixup->KeywordToURI(aKeyword, getter_AddRefs(*aPostData),
+  if (NS_FAILED(fixup->KeywordToURI(aKeyword, aIsPrivateContext,
+                                    getter_AddRefs(*aPostData),
                                     getter_AddRefs(info)))) {
     return IPC_OK();
   }

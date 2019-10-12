@@ -29,9 +29,9 @@ To test telemetry pings, complete the the following steps:
 - In about:config, set:
   - `browser.newtabpage.activity-stream.telemetry` to `true`
   - `browser.ping-centre.log` to `true`
-- Open the Browser Toolbox devtools (Tools > Developer > Browser Toolbox) and switch to the console tab. Add a filter for for `activity-stream-router` to only display relevant pings:
+- Open the Browser Toolbox devtools (Tools > Web Developer > Browser Toolbox) and switch to the console tab. Add a filter for for `activity-stream` to only display relevant pings:
 
-![Devtools telemetry pong](./telemetry-screenshot.png)
+![Devtools telemetry ping](./telemetry-screenshot.png)
 
 You should now see pings show up as you view/interact with ASR messages/templates.
 

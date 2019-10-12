@@ -12,6 +12,7 @@ describe("ASRouterTriggerListeners", () => {
   const bookmarkedURLListener = ASRouterTriggerListeners.get(
     "openBookmarkedURL"
   );
+  const openArticleURLListener = ASRouterTriggerListeners.get("openArticleURL");
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
 
   beforeEach(async () => {
@@ -87,6 +88,75 @@ describe("ASRouterTriggerListeners", () => {
         assert.calledWithExactly(newTriggerHandler, subject, {
           id: bookmarkedURLListener.id,
         });
+      });
+    });
+  });
+
+  describe("openArticleURL", () => {
+    describe("#init", () => {
+      beforeEach(() => {
+        globals.set(
+          "MatchPatternSet",
+          sandbox.stub().callsFake(patterns => ({
+            patterns: new Set(patterns),
+            matches: url => patterns.includes(url),
+          }))
+        );
+        sandbox.stub(global.Services.mm, "addMessageListener");
+        sandbox.stub(global.Services.mm, "removeMessageListener");
+      });
+      afterEach(() => {
+        openArticleURLListener.uninit();
+      });
+      it("setup an event listener on init", () => {
+        openArticleURLListener.init(sandbox.stub(), hosts, hosts);
+
+        assert.calledOnce(global.Services.mm.addMessageListener);
+        assert.calledWithExactly(
+          global.Services.mm.addMessageListener,
+          openArticleURLListener.readerModeEvent,
+          sinon.match.object
+        );
+      });
+      it("should call triggerHandler correctly for matches [host match]", () => {
+        const stub = sandbox.stub();
+        const target = { currentURI: { host: hosts[0], spec: hosts[1] } };
+        openArticleURLListener.init(stub, hosts, hosts);
+
+        const [
+          ,
+          { receiveMessage },
+        ] = global.Services.mm.addMessageListener.firstCall.args;
+        receiveMessage({ data: { isArticle: true }, target });
+
+        assert.calledOnce(stub);
+        assert.calledWithExactly(stub, target, {
+          id: openArticleURLListener.id,
+          param: { host: hosts[0], url: hosts[1] },
+        });
+      });
+      it("should call triggerHandler correctly for matches [pattern match]", () => {
+        const stub = sandbox.stub();
+        const target = { currentURI: { host: null, spec: hosts[1] } };
+        openArticleURLListener.init(stub, hosts, hosts);
+
+        const [
+          ,
+          { receiveMessage },
+        ] = global.Services.mm.addMessageListener.firstCall.args;
+        receiveMessage({ data: { isArticle: true }, target });
+
+        assert.calledOnce(stub);
+        assert.calledWithExactly(stub, target, {
+          id: openArticleURLListener.id,
+          param: { host: null, url: hosts[1] },
+        });
+      });
+      it("should remove the message listener", () => {
+        openArticleURLListener.init(sandbox.stub(), hosts, hosts);
+        openArticleURLListener.uninit();
+
+        assert.calledOnce(global.Services.mm.removeMessageListener);
       });
     });
   });

@@ -1,6 +1,6 @@
 # Metrics we collect
 
-By default, the about:newtab and about:home pages in Firefox (the pages you see when you open a new tab and when you start the browser), will send data back to Mozilla servers about usage of these pages.  The intent is to collect data in order to improve the user's experience while using Activity Stream.  Data about your specific browsing behaior or the sites you visit is **never transmitted to any Mozilla server**.  At any time, it is easy to **turn off** this data collection by [opting out of Firefox telemetry](https://support.mozilla.org/kb/share-telemetry-data-mozilla-help-improve-firefox).
+By default, the about:newtab, about:welcome and about:home pages in Firefox (the pages you see when you open a new tab and when you start the browser), will send data back to Mozilla servers about usage of these pages.  The intent is to collect data in order to improve the user's experience while using Activity Stream.  Data about your specific browsing behaior or the sites you visit is **never transmitted to any Mozilla server**.  At any time, it is easy to **turn off** this data collection by [opting out of Firefox telemetry](https://support.mozilla.org/kb/share-telemetry-data-mozilla-help-improve-firefox).
 
 Data is sent to our servers in the form of discreet HTTPS 'pings' or messages whenever you do some action on the Activity Stream about:home, about:newtab or about:welcome pages.  We try to minimize the amount and frequency of pings by batching them together.  Pings are sent in [JSON serialized format](http://www.json.org/).
 
@@ -157,6 +157,43 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
   "value": {
     "search_vendor": "google"
   }
+
+  // Basic metadata
+  "action": "activity_stream_event",
+  "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7
+}
+```
+
+#### Showing privacy information
+
+```js
+{
+  "event": "SHOW_PRIVACY_INFO",
+  "source": "TOP_SITES",
+  "action_position": 2,
+
+  // Basic metadata
+  "action": "activity_stream_event",
+  "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "session_id": "005deed0-e3e4-4c02-a041-17405fd703f6",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7
+}
+```
+
+#### Clicking on privacy information link
+
+```js
+{
+  "event": "CLICK_PRIVACY_INFO",
+  "source": "DS_PRIVACY_MODAL",
 
   // Basic metadata
   "action": "activity_stream_event",
@@ -409,7 +446,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
 
 ```js
 {
-  "event": ["SUBMIT_EMAIL" | "SKIPPED_SIGNIN"],
+  "event": ["SUBMIT_EMAIL" | "SUBMIT_SIGNIN" | "SKIPPED_SIGNIN"],
   "value": {
     "has_flow_params": false,
   }

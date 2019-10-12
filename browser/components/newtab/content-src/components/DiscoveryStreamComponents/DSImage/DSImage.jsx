@@ -60,7 +60,7 @@ export class DSImage extends React.PureComponent {
   }
 
   componentDidMount() {
-    this.idleCallbackId = window.requestIdleCallback(
+    this.idleCallbackId = this.props.windowObj.requestIdleCallback(
       this.onIdleCallback.bind(this)
     );
     this.observer = new IntersectionObserver(this.onSeen.bind(this), {
@@ -76,6 +76,9 @@ export class DSImage extends React.PureComponent {
     // Remove observer on unmount
     if (this.observer) {
       this.observer.unobserve(ReactDOM.findDOMNode(this));
+    }
+    if (this.idleCallbackId) {
+      this.props.windowObj.cancelIdleCallback(this.idleCallbackId);
     }
   }
 
@@ -160,4 +163,5 @@ DSImage.defaultProps = {
   extraClassNames: null, // Additional classnames to append to component
   optimize: true, // Measure parent container to request exact sizes
   alt_text: null,
+  windowObj: window, // Added to support unit tests
 };
