@@ -684,17 +684,26 @@ static bool IsBreakElement(nsINode* aNode) {
   }
 
   dom::Element* element = aNode->AsElement();
-
-  if (element->IsHTMLElement(nsGkAtoms::br)) return true;
+  if (element->IsHTMLElement(nsGkAtoms::br)) {
+    return true;
+  }
 
   // If we don't have a frame, we don't consider ourselves a break
   // element.  In particular, words can span us.
-  if (!element->GetPrimaryFrame()) return false;
+  nsIFrame* frame = element->GetPrimaryFrame();
+  if (!frame) {
+    return false;
+  }
 
+  auto* disp = frame->StyleDisplay();
   // Anything that's not an inline element is a break element.
   // XXXbz should replaced inlines be break elements, though?
-  return element->GetPrimaryFrame()->StyleDisplay()->mDisplay !=
-         StyleDisplay::Inline;
+  // Also should inline-block and such be break elements?
+  //
+  // FIXME(emilio): We should teach the spell checker to deal with generated
+  // content (it doesn't at all), then remove the IsListItem() check, as there
+  // could be no marker, etc...
+  return !disp->IsInlineFlow() || disp->IsListItem();
 }
 
 struct CheckLeavingBreakElementClosure {

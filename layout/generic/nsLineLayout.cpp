@@ -710,8 +710,9 @@ static bool IsPercentageAware(const nsIFrame* aFrame, WritingMode aWM) {
     // We need to check for frames that shrink-wrap when they're auto
     // width.
     const nsStyleDisplay* disp = aFrame->StyleDisplay();
-    if (disp->mDisplay == StyleDisplay::InlineBlock ||
-        disp->mDisplay == StyleDisplay::InlineTable ||
+    if ((disp->DisplayOutside() == StyleDisplayOutside::Inline &&
+         (disp->DisplayInside() == StyleDisplayInside::FlowRoot ||
+          disp->DisplayInside() == StyleDisplayInside::Table)) ||
         fType == LayoutFrameType::HTMLButtonControl ||
         fType == LayoutFrameType::GfxButtonControl ||
         fType == LayoutFrameType::FieldSet ||
