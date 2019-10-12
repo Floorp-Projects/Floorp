@@ -798,6 +798,12 @@ var BrowserUtils = {
     }
     let urlWithoutProtocol = url.substring(7);
 
+    // It doesn't really matter which search engine is used here, thus it's ok
+    // to ignore whether we are in a private context. The keyword lookup is only
+    // used to differentiate between whitelisted and not whitelisted hosts.
+    // For example, if "someword" is not a whitelisted host, setting the urlbar
+    // value to "http://someword" should not trim it, because otherwise
+    // confirming the urlbar value would end up searching for "someword".
     let flags =
       Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
       Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;

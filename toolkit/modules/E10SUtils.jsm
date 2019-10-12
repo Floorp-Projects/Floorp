@@ -11,6 +11,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "useSeparateFileUriProcess",
@@ -565,6 +571,9 @@ var E10SUtils = {
       }
       if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS) {
         fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+      }
+      if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+        fixupFlags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
       }
       uriObject = Services.uriFixup.createFixupURI(uri, fixupFlags);
       // Note that I had thought that we could set uri = uriObject.spec here, to
