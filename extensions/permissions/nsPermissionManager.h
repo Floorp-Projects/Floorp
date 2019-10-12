@@ -529,7 +529,8 @@ class nsPermissionManager final : public nsIPermissionManager,
    */
   bool PermissionAvailable(nsIPrincipal* aPrincipal, const nsACString& aType);
 
-  nsRefPtrHashtable<nsCStringHashKey, mozilla::GenericPromise::Private>
+  nsRefPtrHashtable<nsCStringHashKey,
+                    mozilla::GenericNonExclusivePromise::Private>
       mPermissionKeyPromiseMap;
 
   nsCOMPtr<mozIStorageConnection> mDBConn;
