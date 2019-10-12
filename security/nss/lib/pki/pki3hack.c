@@ -1002,20 +1002,19 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
                    &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
     nssItem_Create(arena,
                    &c->subject, cc->derSubject.len, cc->derSubject.data);
-    if (PR_TRUE) {
-        /* CERTCertificate stores serial numbers decoded.  I need the DER
-        * here.  sigh.
-        */
-        SECItem derSerial;
-        SECStatus secrv;
-        secrv = CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
-        if (secrv == SECFailure) {
-            nssArena_Destroy(arena);
-            return NULL;
-        }
-        nssItem_Create(arena, &c->serial, derSerial.len, derSerial.data);
-        PORT_Free(derSerial.data);
+    /* CERTCertificate stores serial numbers decoded.  I need the DER
+    * here.  sigh.
+    */
+    SECItem derSerial;
+    SECStatus secrv;
+    secrv = CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
+    if (secrv == SECFailure) {
+        nssArena_Destroy(arena);
+        return NULL;
     }
+    nssItem_Create(arena, &c->serial, derSerial.len, derSerial.data);
+    PORT_Free(derSerial.data);
+
     if (cc->emailAddr && cc->emailAddr[0]) {
         c->email = nssUTF8_Create(arena,
                                   nssStringType_PrintableString,

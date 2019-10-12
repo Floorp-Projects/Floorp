@@ -652,7 +652,7 @@ TEST_P(TlsExtensionTest12, SignatureAlgorithmDisableDSA) {
       MakeTlsFilter<TlsExtensionCapture>(client_, ssl_signature_algorithms_xtn);
   client_->SetSignatureSchemes(schemes.data(), schemes.size());
   ConnectExpectAlert(server_, kTlsAlertHandshakeFailure);
-  server_->CheckErrorCode(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM);
+  server_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
   client_->CheckErrorCode(SSL_ERROR_NO_CYPHER_OVERLAP);
 
   // Check if no DSA algorithms are advertised.

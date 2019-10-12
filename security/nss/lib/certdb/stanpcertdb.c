@@ -412,18 +412,17 @@ CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
                    cc->derIssuer.data);
     nssItem_Create(c->object.arena, &c->subject, cc->derSubject.len,
                    cc->derSubject.data);
-    if (PR_TRUE) {
-        /* CERTCertificate stores serial numbers decoded.  I need the DER
-        * here.  sigh.
-        */
-        SECItem derSerial = { 0 };
-        CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
-        if (!derSerial.data)
-            goto loser;
-        nssItem_Create(c->object.arena, &c->serial, derSerial.len,
-                       derSerial.data);
-        PORT_Free(derSerial.data);
-    }
+    /* CERTCertificate stores serial numbers decoded.  I need the DER
+    * here.  sigh.
+    */
+    SECItem derSerial = { 0 };
+    CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
+    if (!derSerial.data)
+        goto loser;
+    nssItem_Create(c->object.arena, &c->serial, derSerial.len,
+                   derSerial.data);
+    PORT_Free(derSerial.data);
+
     if (nickname) {
         c->object.tempName =
             nssUTF8_Create(c->object.arena, nssStringType_UTF8String,

@@ -15,6 +15,20 @@
 
 namespace nss_test {
 
+const std::vector<uint8_t> kValidP256Key = {
+    0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86,
+    0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d,
+    0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02, 0x01, 0x01, 0x04, 0x20,
+    0xc9, 0xaf, 0xa9, 0xd8, 0x45, 0xba, 0x75, 0x16, 0x6b, 0x5c, 0x21, 0x57,
+    0x67, 0xb1, 0xd6, 0x93, 0x4e, 0x50, 0xc3, 0xdb, 0x36, 0xe8, 0x9b, 0x12,
+    0x7b, 0x8a, 0x62, 0x2b, 0x12, 0x0f, 0x67, 0x21, 0xa1, 0x44, 0x03, 0x42,
+    0x00, 0x04, 0x60, 0xfe, 0xd4, 0xba, 0x25, 0x5a, 0x9d, 0x31, 0xc9, 0x61,
+    0xeb, 0x74, 0xc6, 0x35, 0x6d, 0x68, 0xc0, 0x49, 0xb8, 0x92, 0x3b, 0x61,
+    0xfa, 0x6c, 0xe6, 0x69, 0x62, 0x2e, 0x60, 0xf2, 0x9f, 0xb6, 0x79, 0x03,
+    0xfe, 0x10, 0x08, 0xb8, 0xbc, 0x99, 0xa4, 0x1a, 0xe9, 0xe9, 0x56, 0x28,
+    0xbc, 0x64, 0xf2, 0xf1, 0xb2, 0x0c, 0x2d, 0x7e, 0x9f, 0x51, 0x77, 0xa3,
+    0xc2, 0x94, 0xd4, 0x46, 0x22, 0x99};
+
 const std::vector<uint8_t> kValidRSAKey = {
     // 512-bit RSA private key (PKCS#8)
     0x30, 0x82, 0x01, 0x54, 0x02, 0x01, 0x00, 0x30, 0x0d, 0x06, 0x09, 0x2a,
@@ -73,38 +87,76 @@ const std::vector<uint8_t> kInvalidZeroLengthKey = {
 
 class DERPrivateKeyImportTest : public ::testing::Test {
  public:
-  bool ParsePrivateKey(const std::vector<uint8_t>& data) {
-    ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
-    EXPECT_TRUE(slot);
-
+  bool ParsePrivateKey(const std::vector<uint8_t>& data, bool expect_success) {
     SECKEYPrivateKey* key = nullptr;
+    SECStatus rv = SECFailure;
+    std::string nick_str =
+        ::testing::UnitTest::GetInstance()->current_test_info()->name() +
+        std::to_string(rand());
     SECItem item = {siBuffer, const_cast<unsigned char*>(data.data()),
-                    (unsigned int)data.size()};
+                    static_cast<unsigned int>(data.size())};
+    SECItem nick = {siBuffer, reinterpret_cast<unsigned char*>(
+                                  const_cast<char*>(nick_str.data())),
+                    static_cast<unsigned int>(nick_str.length())};
 
-    SECStatus rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
-        slot.get(), &item, nullptr, nullptr, false, false, KU_ALL, &key,
-        nullptr);
+    ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+    EXPECT_TRUE(slot);
+    if (!slot) {
+      return false;
+    }
 
+    if (PK11_NeedUserInit(slot.get())) {
+      if (PK11_InitPin(slot.get(), nullptr, nullptr) != SECSuccess) {
+        EXPECT_EQ(rv, SECSuccess) << "PK11_InitPin failed";
+      }
+    }
+    rv = PK11_Authenticate(slot.get(), PR_TRUE, nullptr);
+    EXPECT_EQ(rv, SECSuccess);
+
+    rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
+        slot.get(), &item, &nick, nullptr, true, false, KU_ALL, &key, nullptr);
     EXPECT_EQ(rv == SECSuccess, key != nullptr);
-    SECKEY_DestroyPrivateKey(key);
+
+    if (expect_success) {
+      // Try to find the key via its label
+      ScopedSECKEYPrivateKeyList list(PK11_ListPrivKeysInSlot(
+          slot.get(), const_cast<char*>(nick_str.c_str()), nullptr));
+      EXPECT_FALSE(!list);
+    }
+
+    if (key) {
+      rv = PK11_DeleteTokenPrivateKey(key, true);
+      EXPECT_EQ(SECSuccess, rv);
+
+      // PK11_DeleteTokenPrivateKey leaves an errorCode set when there's
+      // no cert. This is expected, so clear it.
+      if (PORT_GetError() == SSL_ERROR_NO_CERTIFICATE) {
+        PORT_SetError(0);
+      }
+    }
 
     return rv == SECSuccess;
   }
 };
 
 TEST_F(DERPrivateKeyImportTest, ImportPrivateRSAKey) {
-  EXPECT_TRUE(ParsePrivateKey(kValidRSAKey));
-  EXPECT_FALSE(PORT_GetError());
+  EXPECT_TRUE(ParsePrivateKey(kValidRSAKey, true));
+  EXPECT_FALSE(PORT_GetError()) << PORT_GetError();
+}
+
+TEST_F(DERPrivateKeyImportTest, ImportEcdsaKey) {
+  EXPECT_TRUE(ParsePrivateKey(kValidP256Key, true));
+  EXPECT_FALSE(PORT_GetError()) << PORT_GetError();
 }
 
 TEST_F(DERPrivateKeyImportTest, ImportInvalidPrivateKey) {
-  EXPECT_FALSE(ParsePrivateKey(kInvalidLengthKey));
-  EXPECT_EQ(PORT_GetError(), SEC_ERROR_BAD_DER);
+  EXPECT_FALSE(ParsePrivateKey(kInvalidLengthKey, false));
+  EXPECT_EQ(PORT_GetError(), SEC_ERROR_BAD_DER) << PORT_GetError();
 }
 
 TEST_F(DERPrivateKeyImportTest, ImportZeroLengthPrivateKey) {
-  EXPECT_FALSE(ParsePrivateKey(kInvalidZeroLengthKey));
-  EXPECT_EQ(PORT_GetError(), SEC_ERROR_BAD_KEY);
+  EXPECT_FALSE(ParsePrivateKey(kInvalidZeroLengthKey, false));
+  EXPECT_EQ(PORT_GetError(), SEC_ERROR_BAD_KEY) << PORT_GetError();
 }
 
 }  // namespace nss_test

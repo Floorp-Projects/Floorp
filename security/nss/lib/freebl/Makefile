@@ -120,7 +120,24 @@ else
 endif
 endif
 ifeq ($(CPU_ARCH),aarch64)
-    EXTRA_SRCS += gcm-aarch64.c
+    DEFINES += -DUSE_HW_AES
+    EXTRA_SRCS += aes-armv8.c gcm-aarch64.c
+endif
+ifeq ($(CPU_ARCH),arm)
+    ifdef CC_IS_CLANG
+        DEFINES += -DUSE_HW_AES
+        EXTRA_SRCS += aes-armv8.c
+    else ifeq (1,$(CC_IS_GCC))
+        # Old compiler doesn't support ARM AES.
+        ifneq (,$(filter 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
+            DEFINES += -DUSE_HW_AES
+            EXTRA_SRCS += aes-armv8.c
+        endif
+        ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
+            DEFINES += -DUSE_HW_AES
+            EXTRA_SRCS += aes-armv8.c
+        endif
+    endif
 endif
 
 ifeq ($(OS_TARGET),OSF1)
@@ -761,6 +778,10 @@ ifdef INTEL_GCM_CLANG_CL
 $(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): CFLAGS += -mssse3
 endif
 
+ifeq ($(CPU_ARCH),arm)
+$(OBJDIR)/$(PROG_PREFIX)aes-armv8$(OBJ_SUFFIX): CFLAGS += -march=armv8-a -mfpu=crypto-neon-fp-armv8
+endif
 ifeq ($(CPU_ARCH),aarch64)
+$(OBJDIR)/$(PROG_PREFIX)aes-armv8$(OBJ_SUFFIX): CFLAGS += -march=armv8-a+crypto
 $(OBJDIR)/$(PROG_PREFIX)gcm-aarch64$(OBJ_SUFFIX): CFLAGS += -march=armv8-a+crypto
 endif

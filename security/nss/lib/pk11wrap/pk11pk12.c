@@ -499,6 +499,10 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
             PK11_SETATTRS(attrs, CKA_DERIVE, (keyUsage & KU_KEY_AGREEMENT) ? &cktrue : &ckfalse,
                           sizeof(CK_BBOOL));
             attrs++;
+            if (nickname) {
+                PK11_SETATTRS(attrs, CKA_LABEL, nickname->data, nickname->len);
+                attrs++;
+            }
             ck_id = PK11_MakeIDFromPubKey(&lpk->u.ec.publicValue);
             if (ck_id == NULL) {
                 goto loser;
