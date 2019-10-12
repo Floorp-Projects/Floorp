@@ -472,4 +472,4 @@ TEST_P(TlsConnectTls13, EsniButTLS12Server) {
   ASSERT_FALSE(SSLInt_ExtensionNegotiated(server_->ssl_fd(),
                                           ssl_tls13_encrypted_sni_xtn));
 }
-}
+}  // namespace nss_test

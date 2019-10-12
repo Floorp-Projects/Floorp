@@ -252,4 +252,4 @@ INSTANTIATE_TEST_CASE_P(
     FuzzDatagram, TlsFuzzTest,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsDatagram,
                        TlsConnectTestBase::kTlsV11Plus));
-}
+}  // namespace nss_test

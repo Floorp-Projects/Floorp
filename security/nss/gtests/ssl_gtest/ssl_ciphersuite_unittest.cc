@@ -56,6 +56,9 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
 
     if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
       std::vector<SSLNamedGroup> groups = {group_};
+      if (cert_group_ != ssl_grp_none) {
+        groups.push_back(cert_group_);
+      }
       client_->ConfigNamedGroups(groups);
       server_->ConfigNamedGroups(groups);
       kea_type_ = SSLInt_GetKEAType(group_);
@@ -69,34 +72,47 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
     if (version_ >= SSL_LIBRARY_VERSION_TLS_1_3) {
       switch (sig_scheme_) {
         case ssl_sig_rsa_pss_rsae_sha256:
+          std::cerr << "Signature scheme: rsa_pss_rsae_sha256" << std::endl;
+          Reset(TlsAgent::kServerRsaSign);
+          auth_type_ = ssl_auth_rsa_sign;
+          break;
         case ssl_sig_rsa_pss_rsae_sha384:
+          std::cerr << "Signature scheme: rsa_pss_rsae_sha384" << std::endl;
           Reset(TlsAgent::kServerRsaSign);
           auth_type_ = ssl_auth_rsa_sign;
           break;
         case ssl_sig_rsa_pss_rsae_sha512:
           // You can't fit SHA-512 PSS in a 1024-bit key.
+          std::cerr << "Signature scheme: rsa_pss_rsae_sha512" << std::endl;
           Reset(TlsAgent::kRsa2048);
           auth_type_ = ssl_auth_rsa_sign;
           break;
         case ssl_sig_rsa_pss_pss_sha256:
+          std::cerr << "Signature scheme: rsa_pss_pss_sha256" << std::endl;
           Reset(TlsAgent::kServerRsaPss);
           auth_type_ = ssl_auth_rsa_pss;
           break;
         case ssl_sig_rsa_pss_pss_sha384:
+          std::cerr << "Signature scheme: rsa_pss_pss_sha384" << std::endl;
           Reset("rsa_pss384");
           auth_type_ = ssl_auth_rsa_pss;
           break;
         case ssl_sig_rsa_pss_pss_sha512:
+          std::cerr << "Signature scheme: rsa_pss_pss_sha512" << std::endl;
           Reset("rsa_pss512");
           auth_type_ = ssl_auth_rsa_pss;
           break;
         case ssl_sig_ecdsa_secp256r1_sha256:
+          std::cerr << "Signature scheme: ecdsa_secp256r1_sha256" << std::endl;
           Reset(TlsAgent::kServerEcdsa256);
           auth_type_ = ssl_auth_ecdsa;
+          cert_group_ = ssl_grp_ec_secp256r1;
           break;
         case ssl_sig_ecdsa_secp384r1_sha384:
+          std::cerr << "Signature scheme: ecdsa_secp384r1_sha384" << std::endl;
           Reset(TlsAgent::kServerEcdsa384);
           auth_type_ = ssl_auth_ecdsa;
+          cert_group_ = ssl_grp_ec_secp384r1;
           break;
         default:
           ADD_FAILURE() << "Unsupported signature scheme: " << sig_scheme_;
@@ -112,9 +128,11 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
           break;
         case ssl_auth_ecdsa:
           Reset(TlsAgent::kServerEcdsa256);
+          cert_group_ = ssl_grp_ec_secp256r1;
           break;
         case ssl_auth_ecdh_ecdsa:
           Reset(TlsAgent::kServerEcdhEcdsa);
+          cert_group_ = ssl_grp_ec_secp256r1;
           break;
         case ssl_auth_ecdh_rsa:
           Reset(TlsAgent::kServerEcdhRsa);
@@ -192,6 +210,7 @@ class TlsCipherSuiteTestBase : public TlsConnectTestBase {
   SSLAuthType auth_type_;
   SSLKEAType kea_type_;
   SSLNamedGroup group_;
+  SSLNamedGroup cert_group_ = ssl_grp_none;
   SSLSignatureScheme sig_scheme_;
   SSLCipherSuiteInfo csinfo_;
 };

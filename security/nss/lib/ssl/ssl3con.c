@@ -737,7 +737,7 @@ ssl_KEAEnabled(const sslSocket *ss, SSLKEAType keaType)
 }
 
 static PRBool
-ssl_HasCert(const sslSocket *ss, SSLAuthType authType)
+ssl_HasCert(const sslSocket *ss, PRUint16 maxVersion, SSLAuthType authType)
 {
     PRCList *cursor;
     if (authType == ssl_auth_null || authType == ssl_auth_psk || authType == ssl_auth_tls13_any) {
@@ -757,8 +757,13 @@ ssl_HasCert(const sslSocket *ss, SSLAuthType authType)
          * enabled, so this will essentially do nothing (unless we implement
          * curve configuration).  However, once we have seen the
          * supported_groups extension and this is called from config_match(),
-         * this will filter out certificates with an unsupported curve. */
-        if ((authType == ssl_auth_ecdsa ||
+         * this will filter out certificates with an unsupported curve.
+         *
+         * If we might negotiate TLS 1.3, skip this test as group configuration
+         * doesn't affect choices in TLS 1.3.
+         */
+        if (maxVersion < SSL_LIBRARY_VERSION_TLS_1_3 &&
+            (authType == ssl_auth_ecdsa ||
              authType == ssl_auth_ecdh_ecdsa ||
              authType == ssl_auth_ecdh_rsa) &&
             !ssl_NamedGroupEnabled(ss, cert->namedCurve)) {
@@ -767,7 +772,114 @@ ssl_HasCert(const sslSocket *ss, SSLAuthType authType)
         return PR_TRUE;
     }
     if (authType == ssl_auth_rsa_sign) {
-        return ssl_HasCert(ss, ssl_auth_rsa_pss);
+        return ssl_HasCert(ss, maxVersion, ssl_auth_rsa_pss);
+    }
+    return PR_FALSE;
+}
+
+/* Check that a signature scheme is accepted.
+ * Both by policy and by having a token that supports it. */
+static PRBool
+ssl_SignatureSchemeAccepted(PRUint16 minVersion,
+                            SSLSignatureScheme scheme)
+{
+    /* Disable RSA-PSS schemes if there are no tokens to verify them. */
+    if (ssl_IsRsaPssSignatureScheme(scheme)) {
+        if (!PK11_TokenExists(auth_alg_defs[ssl_auth_rsa_pss])) {
+            return PR_FALSE;
+        }
+    } else if (ssl_IsRsaPkcs1SignatureScheme(scheme)) {
+        /* Disable PKCS#1 signatures if we are limited to TLS 1.3. */
+        if (minVersion >= SSL_LIBRARY_VERSION_TLS_1_3) {
+            return PR_FALSE;
+        }
+    } else if (ssl_IsDsaSignatureScheme(scheme)) {
+        /* DSA: not in TLS 1.3, and check policy. */
+        if (minVersion >= SSL_LIBRARY_VERSION_TLS_1_3) {
+            return PR_FALSE;
+        }
+        PRUint32 dsaPolicy;
+        SECStatus rv = NSS_GetAlgorithmPolicy(SEC_OID_ANSIX9_DSA_SIGNATURE,
+                                              &dsaPolicy);
+        if (rv == SECSuccess && (dsaPolicy & NSS_USE_ALG_IN_SSL_KX) == 0) {
+            return PR_FALSE;
+        }
+    }
+
+    /* Hash policy. */
+    PRUint32 hashPolicy;
+    SSLHashType hashType = ssl_SignatureSchemeToHashType(scheme);
+    SECOidTag hashOID = ssl3_HashTypeToOID(hashType);
+    SECStatus rv = NSS_GetAlgorithmPolicy(hashOID, &hashPolicy);
+    if (rv == SECSuccess && (hashPolicy & NSS_USE_ALG_IN_SSL_KX) == 0) {
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+static SECStatus
+ssl_CheckSignatureSchemes(sslSocket *ss)
+{
+    if (ss->vrange.max < SSL_LIBRARY_VERSION_TLS_1_2) {
+        return SECSuccess;
+    }
+
+    /* If this is a server using TLS 1.3, we just need to have one signature
+     * scheme for which we have a usable certificate.
+     *
+     * Note: Certificates for earlier TLS versions are checked along with the
+     * cipher suite in ssl3_config_match_init. */
+    if (ss->sec.isServer && ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        PRBool foundCert = PR_FALSE;
+        for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
+            SSLAuthType authType =
+                ssl_SignatureSchemeToAuthType(ss->ssl3.signatureSchemes[i]);
+            if (ssl_HasCert(ss, ss->vrange.max, authType)) {
+                foundCert = PR_TRUE;
+                break;
+            }
+        }
+        if (!foundCert) {
+            PORT_SetError(SSL_ERROR_NO_SUPPORTED_SIGNATURE_ALGORITHM);
+            return SECFailure;
+        }
+    }
+
+    /* Ensure that there is a signature scheme that can be accepted.*/
+    for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
+        if (ssl_SignatureSchemeAccepted(ss->vrange.min,
+                                        ss->ssl3.signatureSchemes[i])) {
+            return SECSuccess;
+        }
+    }
+    PORT_SetError(SSL_ERROR_NO_SUPPORTED_SIGNATURE_ALGORITHM);
+    return SECFailure;
+}
+
+/* For a server, check that a signature scheme that can be used with the
+ * provided authType is both enabled and usable. */
+static PRBool
+ssl_HasSignatureScheme(const sslSocket *ss, SSLAuthType authType)
+{
+    PORT_Assert(ss->sec.isServer);
+    PORT_Assert(ss->ssl3.hs.preliminaryInfo & ssl_preinfo_version);
+    PORT_Assert(authType != ssl_auth_null);
+    PORT_Assert(authType != ssl_auth_tls13_any);
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_2 ||
+        authType == ssl_auth_rsa_decrypt ||
+        authType == ssl_auth_ecdh_rsa ||
+        authType == ssl_auth_ecdh_ecdsa) {
+        return PR_TRUE;
+    }
+    for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
+        SSLSignatureScheme scheme = ss->ssl3.signatureSchemes[i];
+        SSLAuthType schemeAuthType = ssl_SignatureSchemeToAuthType(scheme);
+        PRBool acceptable = authType == schemeAuthType ||
+                            (schemeAuthType == ssl_auth_rsa_pss &&
+                             authType == ssl_auth_rsa_sign);
+        if (acceptable && ssl_SignatureSchemeAccepted(ss->version, scheme)) {
+            return PR_TRUE;
+        }
     }
     return PR_FALSE;
 }
@@ -798,6 +910,9 @@ ssl3_config_match_init(sslSocket *ss)
     if (SSL_ALL_VERSIONS_DISABLED(&ss->vrange)) {
         return 0;
     }
+    if (ssl_CheckSignatureSchemes(ss) != SECSuccess) {
+        return 0; /* Code already set. */
+    }
 
     ssl_FilterSupportedGroups(ss);
     for (i = 0; i < ssl_V3_SUITES_IMPLEMENTED; i++) {
@@ -820,10 +935,11 @@ ssl3_config_match_init(sslSocket *ss)
 
             authType = kea_defs[cipher_def->key_exchange_alg].authKeyType;
             if (authType != ssl_auth_null && authType != ssl_auth_tls13_any) {
-                if (ss->sec.isServer && !ssl_HasCert(ss, authType)) {
+                if (ss->sec.isServer &&
+                    !(ssl_HasCert(ss, ss->vrange.max, authType) &&
+                      ssl_HasSignatureScheme(ss, authType))) {
                     suite->isPresent = PR_FALSE;
-                }
-                if (!PK11_TokenExists(auth_alg_defs[authType])) {
+                } else if (!PK11_TokenExists(auth_alg_defs[authType])) {
                     suite->isPresent = PR_FALSE;
                 }
             }
@@ -887,7 +1003,7 @@ ssl3_config_match(const ssl3CipherSuiteCfg *suite, PRUint8 policy,
         return PR_FALSE;
     }
 
-    if (ss->sec.isServer && !ssl_HasCert(ss, kea_def->authKeyType)) {
+    if (ss->sec.isServer && !ssl_HasCert(ss, vrange->max, kea_def->authKeyType)) {
         return PR_FALSE;
     }
 
@@ -4156,6 +4272,9 @@ ssl_SignatureSchemeValid(SSLSignatureScheme scheme, SECOidTag spkiOid,
         if (ssl_IsRsaPkcs1SignatureScheme(scheme)) {
             return PR_FALSE;
         }
+        if (ssl_IsDsaSignatureScheme(scheme)) {
+            return PR_FALSE;
+        }
         /* With TLS 1.3, EC keys should have been selected based on calling
          * ssl_SignatureSchemeFromSpki(), reject them otherwise. */
         return spkiOid != SEC_OID_ANSIX962_EC_PUBLIC_KEY;
@@ -4270,6 +4389,7 @@ ssl_SignatureSchemeFromSpki(const CERTSubjectPublicKeyInfo *spki,
     return SECSuccess;
 }
 
+/* Check that a signature scheme is enabled by configuration. */
 PRBool
 ssl_SignatureSchemeEnabled(const sslSocket *ss, SSLSignatureScheme scheme)
 {
@@ -8052,6 +8172,7 @@ ssl3_NegotiateCipherSuiteInner(sslSocket *ss, const SECItem *suites,
             }
         }
     }
+    PORT_SetError(SSL_ERROR_NO_CYPHER_OVERLAP);
     return SECFailure;
 }
 
@@ -8075,6 +8196,14 @@ ssl3_NegotiateCipherSuite(sslSocket *ss, const SECItem *suites,
 {
     PRUint16 selected;
     SECStatus rv;
+
+    /* Ensure that only valid cipher suites are enabled. */
+    if (ssl3_config_match_init(ss) == 0) {
+        /* No configured cipher is both supported by PK11 and allowed.
+         * This is a configuration error, so report handshake failure.*/
+        FATAL_ERROR(ss, PORT_GetError(), handshake_failure);
+        return SECFailure;
+    }
 
     rv = ssl3_NegotiateCipherSuiteInner(ss, suites, ss->version, &selected);
     if (rv != SECSuccess) {
@@ -8202,13 +8331,6 @@ ssl3_ServerCallSNICallback(sslSocket *ss)
                 if (rv != SECSuccess) {
                     errCode = SSL_ERROR_INTERNAL_ERROR_ALERT;
                     desc = internal_error;
-                    ret = SSL_SNI_SEND_ALERT;
-                    break;
-                }
-                if (ssl3_config_match_init(ss) == 0) {
-                    /* no ciphers are working/supported */
-                    errCode = PORT_GetError();
-                    desc = handshake_failure;
                     ret = SSL_SNI_SEND_ALERT;
                     break;
                 }
@@ -8845,9 +8967,7 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
     if (sid)
         do {
             ssl3CipherSuiteCfg *suite;
-#ifdef PARANOID
             SSLVersionRange vrange = { ss->version, ss->version };
-#endif
 
             suite = ss->cipherSuites;
             /* Find the entry for the cipher suite used in the cached session. */
@@ -8858,18 +8978,18 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
             PORT_Assert(j > 0);
             if (j == 0)
                 break;
-#ifdef PARANOID
+
             /* Double check that the cached cipher suite is still enabled,
              * implemented, and allowed by policy.  Might have been disabled.
-             * The product policy won't change during the process lifetime.
-             * Implemented ("isPresent") shouldn't change for servers.
              */
+            if (ssl3_config_match_init(ss) == 0) {
+                desc = handshake_failure;
+                errCode = PORT_GetError();
+                goto alert_loser;
+            }
             if (!ssl3_config_match(suite, ss->ssl3.policy, &vrange, ss))
                 break;
-#else
-            if (!suite->enabled)
-                break;
-#endif
+
             /* Double check that the cached cipher suite is in the client's
              * list.  If it isn't, fall through and start a new session. */
             for (i = 0; i + 1 < suites->len; i += 2) {
@@ -8887,21 +9007,12 @@ ssl3_HandleClientHelloPart2(sslSocket *ss,
                 }
             }
         } while (0);
-/* START A NEW SESSION */
-
-#ifndef PARANOID
-    /* Look for a matching cipher suite. */
-    if (ssl3_config_match_init(ss) == 0) {
-        desc = internal_error;
-        errCode = PORT_GetError(); /* error code is already set. */
-        goto alert_loser;
-    }
-#endif
+    /* START A NEW SESSION */
 
     rv = ssl3_NegotiateCipherSuite(ss, suites, PR_TRUE);
     if (rv != SECSuccess) {
         desc = handshake_failure;
-        errCode = SSL_ERROR_NO_CYPHER_OVERLAP;
+        errCode = PORT_GetError();
         goto alert_loser;
     }
 
@@ -9669,10 +9780,9 @@ ssl3_SendServerKeyExchange(sslSocket *ss)
 }
 
 SECStatus
-ssl3_EncodeSigAlgs(const sslSocket *ss, sslBuffer *buf)
+ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, sslBuffer *buf)
 {
     unsigned int lengthOffset;
-    unsigned int i;
     PRBool found = PR_FALSE;
     SECStatus rv;
 
@@ -9681,33 +9791,13 @@ ssl3_EncodeSigAlgs(const sslSocket *ss, sslBuffer *buf)
         return SECFailure;
     }
 
-    for (i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
-        PRUint32 policy = 0;
-        SSLHashType hashType = ssl_SignatureSchemeToHashType(
-            ss->ssl3.signatureSchemes[i]);
-        SECOidTag hashOID = ssl3_HashTypeToOID(hashType);
-
-        /* Skip RSA-PSS schemes if there are no tokens to verify them. */
-        if (ssl_IsRsaPssSignatureScheme(ss->ssl3.signatureSchemes[i]) &&
-            !PK11_TokenExists(auth_alg_defs[ssl_auth_rsa_pss])) {
-            continue;
-        }
-
-        /* Skip DSA scheme if it is disabled by policy. */
-        if (ssl_IsDsaSignatureScheme(ss->ssl3.signatureSchemes[i]) &&
-            (NSS_GetAlgorithmPolicy(SEC_OID_ANSIX9_DSA_SIGNATURE, &policy) ==
-             SECSuccess) &&
-            !(policy & NSS_USE_ALG_IN_SSL_KX)) {
-            continue;
-        }
-
-        if ((NSS_GetAlgorithmPolicy(hashOID, &policy) != SECSuccess) ||
-            (policy & NSS_USE_ALG_IN_SSL_KX)) {
+    for (unsigned int i = 0; i < ss->ssl3.signatureSchemeCount; ++i) {
+        if (ssl_SignatureSchemeAccepted(minVersion,
+                                        ss->ssl3.signatureSchemes[i])) {
             rv = sslBuffer_AppendNumber(buf, ss->ssl3.signatureSchemes[i], 2);
             if (rv != SECSuccess) {
                 return SECFailure;
             }
-
             found = PR_TRUE;
         }
     }
@@ -9753,7 +9843,7 @@ ssl3_SendCertificateRequest(sslSocket *ss)
 
     length = 1 + certTypesLength + 2 + calen;
     if (isTLS12) {
-        rv = ssl3_EncodeSigAlgs(ss, &sigAlgsBuf);
+        rv = ssl3_EncodeSigAlgs(ss, ss->version, &sigAlgsBuf);
         if (rv != SECSuccess) {
             return rv;
         }
