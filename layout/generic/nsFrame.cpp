@@ -546,8 +546,7 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
   nsIContent* content = aFrame->GetContent();
   LayoutFrameType frameType = aFrame->Type();
   bool isInline =
-      (nsStyleDisplay::DisplayInside(aFrame->GetDisplay()) ==
-           StyleDisplayInside::Inline ||
+      (nsStyleDisplay::IsInlineFlow(aFrame->GetDisplay()) ||
        RubyUtils::IsRubyBox(frameType) ||
        (aFrame->IsFloating() && frameType == LayoutFrameType::Letter) ||
        // Given multiple frames for the same node, only the
@@ -5317,8 +5316,7 @@ static nsIFrame::ContentOffsets OffsetsForSingleFrame(nsIFrame* aFrame,
   // Figure out whether the offsets should be over, after, or before the frame
   nsRect rect(nsPoint(0, 0), aFrame->GetSize());
 
-  bool isBlock = nsStyleDisplay::DisplayInside(aFrame->GetDisplay()) !=
-                 StyleDisplayInside::Inline;
+  bool isBlock = !aFrame->StyleDisplay()->IsInlineFlow();
   bool isRtl =
       (aFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL);
   if ((isBlock && rect.y < aPoint.y) ||

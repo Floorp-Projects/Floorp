@@ -1328,7 +1328,7 @@ void ReflowInput::CalculateHypotheticalPosition(
   // the element had been in the flow
   nscoord boxISize;
   bool knowBoxISize = false;
-  if ((StyleDisplay::Inline == mStyleDisplay->mOriginalDisplay) &&
+  if (mStyleDisplay->IsOriginalDisplayInlineOutside() &&
       !NS_FRAME_IS_REPLACED(mFrameType)) {
     // For non-replaced inline-level elements the 'inline size' property
     // doesn't apply, so we don't know what the inline size would have
