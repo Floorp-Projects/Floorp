@@ -76,6 +76,7 @@ export class DSLinkMenu extends React.PureComponent {
               pocket_id: this.props.pocket_id,
               shim: this.props.shim,
               bookmarkGuid: this.props.bookmarkGuid,
+              campaign_id: this.props.campaignId,
             }}
           />
         </ContextMenuButton>

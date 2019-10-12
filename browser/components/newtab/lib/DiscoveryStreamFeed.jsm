@@ -62,6 +62,7 @@ const PREF_TOPSTORIES = "feeds.section.topstories";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
 const PREF_SPOC_IMPRESSIONS = "discoverystream.spoc.impressions";
+const PREF_CAMPAIGN_BLOCKS = "discoverystream.campaign.blocks";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
 
 let defaultLayoutResp;
@@ -773,8 +774,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   filterBlocked(data) {
     const filtered = [];
     if (data && data.length) {
+      let campaigns = this.readDataPref(PREF_CAMPAIGN_BLOCKS);
       const filteredItems = data.filter(item => {
-        const blocked = NewTabUtils.blockedLinks.isBlocked({ url: item.url });
+        const blocked =
+          NewTabUtils.blockedLinks.isBlocked({ url: item.url }) ||
+          campaigns[item.campaign_id];
         if (blocked) {
           filtered.push(item);
         }
@@ -838,7 +842,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   //                   `filterItems` as the frequency capped items.
   frequencyCapSpocs(spocs) {
     if (spocs && spocs.length) {
-      const impressions = this.readImpressionsPref(PREF_SPOC_IMPRESSIONS);
+      const impressions = this.readDataPref(PREF_SPOC_IMPRESSIONS);
       const caps = [];
       const result = spocs.filter(s => {
         const isBelow = this.isBelowFrequencyCap(impressions, s);
@@ -1009,7 +1013,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       recsExpireTime * 1000 || DEFAULT_RECS_EXPIRE_TIME,
       DEFAULT_RECS_EXPIRE_TIME
     );
-    const impressions = this.readImpressionsPref(PREF_REC_IMPRESSIONS);
+    const impressions = this.readDataPref(PREF_REC_IMPRESSIONS);
     const expired = [];
     const active = [];
     for (const item of recommendations) {
@@ -1122,7 +1126,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   async reset() {
-    this.resetImpressionPrefs();
+    this.resetDataPrefs();
     await this.resetCache();
     if (this.loaded) {
       Services.obs.removeObserver(this, "idle-daily");
@@ -1137,9 +1141,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     await this.cache.set("affinities", {});
   }
 
-  resetImpressionPrefs() {
-    this.writeImpressionsPref(PREF_SPOC_IMPRESSIONS, {});
-    this.writeImpressionsPref(PREF_REC_IMPRESSIONS, {});
+  resetDataPrefs() {
+    this.writeDataPref(PREF_SPOC_IMPRESSIONS, {});
+    this.writeDataPref(PREF_REC_IMPRESSIONS, {});
+    this.writeDataPref(PREF_CAMPAIGN_BLOCKS, {});
   }
 
   resetState() {
@@ -1164,20 +1169,28 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   recordCampaignImpression(campaignId) {
-    let impressions = this.readImpressionsPref(PREF_SPOC_IMPRESSIONS);
+    let impressions = this.readDataPref(PREF_SPOC_IMPRESSIONS);
 
     const timeStamps = impressions[campaignId] || [];
     timeStamps.push(Date.now());
     impressions = { ...impressions, [campaignId]: timeStamps };
 
-    this.writeImpressionsPref(PREF_SPOC_IMPRESSIONS, impressions);
+    this.writeDataPref(PREF_SPOC_IMPRESSIONS, impressions);
   }
 
   recordTopRecImpressions(recId) {
-    let impressions = this.readImpressionsPref(PREF_REC_IMPRESSIONS);
+    let impressions = this.readDataPref(PREF_REC_IMPRESSIONS);
     if (!impressions[recId]) {
       impressions = { ...impressions, [recId]: Date.now() };
-      this.writeImpressionsPref(PREF_REC_IMPRESSIONS, impressions);
+      this.writeDataPref(PREF_REC_IMPRESSIONS, impressions);
+    }
+  }
+
+  recordBlockCampaignId(campaignId) {
+    const campaigns = this.readDataPref(PREF_CAMPAIGN_BLOCKS);
+    if (!campaigns[campaignId]) {
+      campaigns[campaignId] = 1;
+      this.writeDataPref(PREF_CAMPAIGN_BLOCKS, campaigns);
     }
   }
 
@@ -1214,17 +1227,17 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     );
   }
 
-  writeImpressionsPref(pref, impressions) {
+  writeDataPref(pref, impressions) {
     this.store.dispatch(ac.SetPref(pref, JSON.stringify(impressions)));
   }
 
-  readImpressionsPref(pref) {
+  readDataPref(pref) {
     const prefVal = this.store.getState().Prefs.values[pref];
     return prefVal ? JSON.parse(prefVal) : {};
   }
 
   cleanUpImpressionPref(isExpired, pref) {
-    const impressions = this.readImpressionsPref(pref);
+    const impressions = this.readDataPref(pref);
     let changed = false;
 
     Object.keys(impressions).forEach(id => {
@@ -1235,7 +1248,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     });
 
     if (changed) {
-      this.writeImpressionsPref(pref, impressions);
+      this.writeDataPref(pref, impressions);
     }
   }
 
@@ -1331,6 +1344,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           }
         }
         break;
+      // This is fired from the browser, it has no concept of spocs, campaign or pocket.
+      // We match the blocked url with our available spoc urls to see if there is a match.
+      // I suspect we *could* instead do this in BLOCK_URL but I'm not sure.
       case at.PLACES_LINK_BLOCKED:
         if (this.showSpocs) {
           const spocsState = this.store.getState().DiscoveryStream.spocs;
@@ -1346,6 +1362,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             this._sendSpocsFill({ blocked_by_user: filtered }, false);
 
             // If we're blocking a spoc, we want a slightly different treatment for open tabs.
+            // AlsoToPreloaded updates the source data and preloaded tabs with a new spoc.
+            // BroadcastToContent updates open tabs with a non spoc instead of a new spoc.
             this.store.dispatch(
               ac.AlsoToPreloaded({
                 type: at.DISCOVERY_STREAM_LINK_BLOCKED,
@@ -1372,6 +1390,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         // When this feed is shutting down:
         this.uninitPrefs();
         break;
+      case at.BLOCK_URL: {
+        // If we block a story that also has a campaign_id
+        // we want to record that as blocked too.
+        // This is because a single campaign might have slightly different urls.
+        const { campaign_id } = action.data;
+        if (campaign_id) {
+          this.recordBlockCampaignId(campaign_id);
+        }
+        break;
+      }
       case at.PREF_CHANGED:
         switch (action.data.name) {
           case PREF_CONFIG:

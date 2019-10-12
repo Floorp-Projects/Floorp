@@ -4,6 +4,7 @@
   $benefit-icon-size-small: 40px;
   $benefit-icon-spacing-small: $benefit-icon-size-small + 12px;
   $responsive-breakpoint: 850px;
+  $logo-size: 100px;
 
   background: url('#{$image-path}trailhead/accounts-form-bg.jpg') bottom / cover;
   color: $white;
@@ -45,6 +46,13 @@
         margin-inline-start: $benefit-icon-spacing;
       }
     }
+  }
+
+  .trailhead-join-form {
+    background: url('#{$image-path}trailhead/firefox-logo.png') top center / $logo-size no-repeat;
+    color: $white;
+    min-width: 260px;
+    padding-top: $logo-size;
   }
 
   &.syncCohort {
@@ -138,103 +146,6 @@
       font-size: 15px;
       line-height: 22px;
       margin: 4px 0 15px;
-    }
-  }
-
-  .trailheadForm {
-    $logo-size: 100px;
-
-    background: url('#{$image-path}trailhead/firefox-logo.png') top center / $logo-size no-repeat;
-    min-width: 260px;
-    padding-top: $logo-size;
-    text-align: center;
-
-    h3 {
-      font-size: 36px;
-      font-weight: 200;
-      line-height: 46px;
-      margin: 12px 0 4px;
-    }
-
-    p {
-      color: $white;
-      font-size: 15px;
-      line-height: 22px;
-      margin: 0 0 20px;
-    }
-
-    .trailheadTerms {
-      margin: 4px 30px 20px;
-
-      a,
-      & {
-        color: $white-70;
-        font-size: 12px;
-        line-height: 20px;
-      }
-    }
-
-    form {
-      position: relative;
-
-      .error.active {
-        inset-inline-start: 0;
-        z-index: 0;
-      }
-    }
-
-    button,
-    input {
-      width: 100%;
-    }
-
-    input {
-      background-color: $white;
-      border: 1px solid $grey-50;
-      box-shadow: none;
-      color: $grey-70;
-      font-size: 15px;
-      transition: border-color 150ms, box-shadow 150ms;
-
-      &:hover {
-        border-color: $grey-90;
-      }
-
-      &:focus {
-        border-color: $blue-50;
-        box-shadow: 0 0 0 3px $email-input-focus;
-      }
-
-      &.invalid {
-        border-color: $red-60;
-      }
-
-      &.invalid:focus {
-        box-shadow: 0 0 0 3px $email-input-invalid;
-      }
-    }
-
-    button {
-      background-color: $blue-60;
-      border: 0;
-      cursor: pointer;
-      display: block;
-      font-size: 15px;
-      font-weight: 400;
-      padding: 14px;
-
-      &:hover,
-      &:focus {
-        background-color: $trailhead-blue-60;
-      }
-
-      &:focus {
-        outline: dotted 1px;
-      }
-
-      &:active {
-        background-color: $trailhead-blue-70;
-      }
     }
   }
 
@@ -482,21 +393,5 @@
   100% {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-.firstrun-title {
-  background: url('chrome://branding/content/about-logo.png') top left no-repeat;
-  background-size: 90px 90px;
-  margin: 40px 0 10px;
-  padding-top: 110px;
-
-  @media screen and (max-width: 790px) {
-    background: url('chrome://branding/content/about-logo.png') top center no-repeat;
-    background-size: 90px 90px;
-  }
-
-  &:dir(rtl) {
-    background-position: top right;
   }
 }

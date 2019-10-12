@@ -21,6 +21,7 @@ const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
 const TEMPLATES_ABOVE_PAGE = [
   "trailhead",
+  "full_page_interrupt",
   "return_to_amo_overlay",
   "extended_triplets",
 ];
