@@ -1011,7 +1011,7 @@ parent:
 
     async DeviceReset();
 
-    sync KeywordToURI(nsCString keyword)
+    sync KeywordToURI(nsCString keyword, bool isPrivateContext)
         returns (nsString providerName, nsIInputStream postData, URIParams? uri);
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);

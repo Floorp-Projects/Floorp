@@ -389,7 +389,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                  nsIContent* aContent,
                                  bool aSuppressWhiteSpaceOptimizations,
                                  const InsertionPoint& aInsertion,
-                                 FrameConstructionItemList& aItems);
+                                 FrameConstructionItemList& aItems,
+                                 uint32_t aFlags = 0);
 
   // Helper method for AddFrameConstructionItems etc.
   // Unsets the need-frame/restyle bits on aContent.
@@ -405,7 +406,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                    ComputedStyle* aComputedStyle,
                                    bool aSuppressWhiteSpaceOptimizations,
                                    nsContainerFrame* aParentFrame,
-                                   FrameConstructionItemList& aItems);
+                                   FrameConstructionItemList& aItems,
+                                   uint32_t aFlags = 0);
 
   // Construct the frames for the document element.  This can return null if the
   // document element is display:none, or if the document element has a

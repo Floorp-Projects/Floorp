@@ -180,6 +180,7 @@ export class FirstRun extends React.PureComponent {
         {isInterruptVisible ? (
           <Interrupt
             document={props.document}
+            cards={triplets}
             message={interrupt}
             onNextScene={this.closeInterrupt}
             UTMTerm={UTMTerm}

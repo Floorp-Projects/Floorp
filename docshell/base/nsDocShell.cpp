@@ -6631,7 +6631,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
           nsCOMPtr<nsIURIFixupInfo> info;
           // only send non-qualified hosts to the keyword server
           if (!mOriginalUriString.IsEmpty()) {
-            sURIFixup->KeywordToURI(mOriginalUriString,
+            sURIFixup->KeywordToURI(mOriginalUriString, UsePrivateBrowsing(),
                                     getter_AddRefs(newPostData),
                                     getter_AddRefs(info));
           } else {
@@ -6651,10 +6651,12 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                 do_GetService(NS_IDNSERVICE_CONTRACTID);
             if (idnSrv && NS_SUCCEEDED(idnSrv->IsACE(host, &isACE)) && isACE &&
                 NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
-              sURIFixup->KeywordToURI(utf8Host, getter_AddRefs(newPostData),
+              sURIFixup->KeywordToURI(utf8Host, UsePrivateBrowsing(),
+                                      getter_AddRefs(newPostData),
                                       getter_AddRefs(info));
             } else {
-              sURIFixup->KeywordToURI(host, getter_AddRefs(newPostData),
+              sURIFixup->KeywordToURI(host, UsePrivateBrowsing(),
+                                      getter_AddRefs(newPostData),
                                       getter_AddRefs(info));
             }
           }

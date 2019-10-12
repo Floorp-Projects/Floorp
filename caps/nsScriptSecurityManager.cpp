@@ -1068,7 +1068,11 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(
                           nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI};
 
   for (uint32_t i = 0; i < ArrayLength(flags); ++i) {
-    rv = fixup->CreateFixupURI(aTargetURIStr, flags[i], nullptr,
+    uint32_t fixupFlags = flags[i];
+    if (aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0) {
+      fixupFlags |= nsIURIFixup::FIXUP_FLAG_PRIVATE_CONTEXT;
+    }
+    rv = fixup->CreateFixupURI(aTargetURIStr, fixupFlags, nullptr,
                                getter_AddRefs(target));
     NS_ENSURE_SUCCESS(rv, rv);
 

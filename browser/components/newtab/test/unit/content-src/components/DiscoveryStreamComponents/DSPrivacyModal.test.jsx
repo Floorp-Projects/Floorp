@@ -1,11 +1,20 @@
 import { DSPrivacyModal } from "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal";
 import { shallow, mount } from "enzyme";
+import { actionCreators as ac } from "common/Actions.jsm";
 import React from "react";
 
 describe("Discovery Stream <DSPrivacyModal>", () => {
   let sandbox;
+  let dispatch;
+  let wrapper;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    dispatch = sandbox.stub();
+    wrapper = shallow(<DSPrivacyModal dispatch={dispatch} />);
+  });
+
+  afterEach(() => {
+    sandbox.restore();
   });
 
   it("should contain a privacy notice", () => {
@@ -16,10 +25,20 @@ describe("Discovery Stream <DSPrivacyModal>", () => {
   });
 
   it("should call dispatch when modal is closed", () => {
-    let dispatch = sandbox.stub();
-    let wrapper = shallow(<DSPrivacyModal dispatch={dispatch} />);
-
     wrapper.instance().closeModal();
     assert.calledOnce(dispatch);
+  });
+
+  it("should call dispatch with the correct events", () => {
+    wrapper.instance().onLinkClick();
+
+    assert.calledOnce(dispatch);
+    assert.calledWith(
+      dispatch,
+      ac.UserEvent({
+        event: "CLICK_PRIVACY_INFO",
+        source: "DS_PRIVACY_MODAL",
+      })
+    );
   });
 });

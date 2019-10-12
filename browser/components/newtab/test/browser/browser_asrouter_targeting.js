@@ -37,6 +37,11 @@ ChromeUtils.defineModuleGetter(
   "TelemetryEnvironment",
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "AppConstants",
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 // ASRouterTargeting.isMatch
 add_task(async function should_do_correct_targeting() {
@@ -442,6 +447,18 @@ add_task(async function checkdevToolsOpenedCount() {
     await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
     message,
     "should select correct item by devToolsOpenedCount"
+  );
+});
+
+add_task(async function check_platformName() {
+  const message = {
+    id: "foo",
+    targeting: `platformName == "${AppConstants.platform}"`,
+  };
+  is(
+    await ASRouterTargeting.findMatchingMessage({ messages: [message] }),
+    message,
+    "should select correct item by platformName"
   );
 });
 

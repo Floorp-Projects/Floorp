@@ -1794,11 +1794,8 @@ pref("signon.management.page.enabled", true);
 pref("signon.management.page.breach-alerts.enabled", true);
 pref("signon.management.page.sort", "name");
 pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
-#ifdef NIGHTLY_BUILD
-  // Bug 1563330 tracks shipping this by default.
-  pref("signon.showAutoCompleteOrigins", true);
-  pref("signon.includeOtherSubdomainsInLookup", true);
-#endif
+pref("signon.showAutoCompleteOrigins", true);
+pref("signon.includeOtherSubdomainsInLookup", true);
 // The utm_creative value is appended within the code (specific to the location on
 // where it is clicked). Be sure that if these two prefs are updated, that
 // the utm_creative param be last.

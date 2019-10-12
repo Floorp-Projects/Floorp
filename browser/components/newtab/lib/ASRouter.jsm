@@ -1893,6 +1893,20 @@ class _ASRouter {
       case ra.OPEN_APPLICATIONS_MENU:
         UITour.showMenu(target.browser.ownerGlobal, action.data.args);
         break;
+      case ra.HIGHLIGHT_FEATURE:
+        const highlight = await UITour.getTarget(
+          target.browser.ownerGlobal,
+          action.data.args
+        );
+        if (highlight) {
+          await UITour.showHighlight(
+            target.browser.ownerGlobal,
+            highlight,
+            "none",
+            { autohide: true }
+          );
+        }
+        break;
       case ra.INSTALL_ADDON_FROM_URL:
         this._updateOnboardingState();
         await MessageLoaderUtils.installAddonFromURL(
