@@ -7521,7 +7521,8 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
         0, col, std::move(colTrackPositions), std::move(colTrackSizes),
         std::move(colTrackStates), std::move(colRemovedRepeatTracks),
         gridReflowInput.mColFunctions.mRepeatAutoStart,
-        colLineNameMap.GetResolvedLineNamesForComputedGridTrackInfo());
+        colLineNameMap.GetResolvedLineNamesForComputedGridTrackInfo(),
+        IsSubgrid(eLogicalAxisInline));
     SetProperty(GridColTrackInfo(), colInfo);
 
     const auto* subgridRowRange = subgrid && IsSubgrid(eLogicalAxisBlock)
@@ -7561,7 +7562,8 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
         std::move(rowTrackSizes), std::move(rowTrackStates),
         std::move(rowRemovedRepeatTracks),
         gridReflowInput.mRowFunctions.mRepeatAutoStart,
-        rowLineNameMap.GetResolvedLineNamesForComputedGridTrackInfo());
+        rowLineNameMap.GetResolvedLineNamesForComputedGridTrackInfo(),
+        IsSubgrid(eLogicalAxisBlock));
     SetProperty(GridRowTrackInfo(), rowInfo);
 
     if (prevInFlow) {
@@ -7590,7 +7592,8 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
           std::move(priorRowInfo->mSizes), std::move(priorRowInfo->mStates),
           std::move(priorRowInfo->mRemovedRepeatTracks),
           priorRowInfo->mRepeatFirstTrack,
-          std::move(priorRowInfo->mResolvedLineNames));
+          std::move(priorRowInfo->mResolvedLineNames),
+          priorRowInfo->mIsSubgrid);
       prevInFlow->SetProperty(GridRowTrackInfo(), revisedPriorRowInfo);
     }
 
