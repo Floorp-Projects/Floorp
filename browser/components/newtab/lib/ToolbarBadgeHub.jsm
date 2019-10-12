@@ -3,56 +3,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "EveryWindow",
-  "resource:///modules/EveryWindow.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "ToolbarPanelHub",
-  "resource://activity-stream/lib/ToolbarPanelHub.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "setTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "clearTimeout",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "setInterval",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "clearInterval",
-  "resource://gre/modules/Timer.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "requestIdleCallback",
-  "resource://gre/modules/Timer.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EveryWindow: "resource:///modules/EveryWindow.jsm",
+  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+});
+
+const {
+  setInterval,
+  clearInterval,
+  requestIdleCallback,
+  setTimeout,
+  clearTimeout,
+} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 // Frequency at which to check for new messages
 const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;
@@ -151,6 +119,10 @@ class _ToolbarBadgeHub {
     }
   }
 
+  maybeInsertFTL(win) {
+    win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
+  }
+
   executeAction({ id, data, message_id }) {
     switch (id) {
       case "show-whatsnew-button":
@@ -234,6 +206,15 @@ class _ToolbarBadgeHub {
       .querySelector(".toolbarbutton-badge")
       .classList.remove("feature-callout");
     toolbarButton.removeAttribute("badged");
+    // Remove id used for for aria-label badge description
+    const notificationDescription = toolbarButton.querySelector(
+      "#toolbarbutton-notification-description"
+    );
+    if (notificationDescription) {
+      notificationDescription.remove();
+      toolbarButton.removeAttribute("aria-labelledby");
+      toolbarButton.removeAttribute("aria-describedby");
+    }
   }
 
   addToolbarNotification(win, message) {
@@ -243,11 +224,40 @@ class _ToolbarBadgeHub {
     }
     let toolbarbutton = document.getElementById(message.content.target);
     if (toolbarbutton) {
+      const badge = toolbarbutton.querySelector(".toolbarbutton-badge");
+      badge.classList.add("feature-callout");
       toolbarbutton.setAttribute("badged", true);
-      toolbarbutton
-        .querySelector(".toolbarbutton-badge")
-        .classList.add("feature-callout");
-
+      // If we have additional aria-label information for the notification
+      // we add this content to the hidden `toolbarbutton-text` node.
+      // We then use `aria-labelledby` to link this description to the button
+      // that received the notification badge.
+      if (message.content.badgeDescription) {
+        // Insert strings as soon as we know we're showing them
+        this.maybeInsertFTL(win);
+        toolbarbutton.setAttribute(
+          "aria-labelledby",
+          `toolbarbutton-notification-description ${message.content.target}`
+        );
+        // Because tooltiptext is different to the label, it gets duplicated as
+        // the description. Setting `describedby` to the same value as
+        // `labelledby` will be detected by the a11y code and the description
+        // will be removed.
+        toolbarbutton.setAttribute(
+          "aria-describedby",
+          `toolbarbutton-notification-description ${message.content.target}`
+        );
+        const descriptionEl = document.createElement("span");
+        descriptionEl.setAttribute(
+          "id",
+          "toolbarbutton-notification-description"
+        );
+        descriptionEl.setAttribute("hidden", true);
+        document.l10n.setAttributes(
+          descriptionEl,
+          message.content.badgeDescription.string_id
+        );
+        toolbarbutton.appendChild(descriptionEl);
+      }
       // `mousedown` event required because of the `onmousedown` defined on
       // the button that prevents `click` events from firing
       toolbarbutton.addEventListener("mousedown", this.removeAllNotifications);

@@ -5,12 +5,14 @@
 import React from "react";
 import { Trailhead } from "../Trailhead/Trailhead";
 import { ReturnToAMO } from "../ReturnToAMO/ReturnToAMO";
+import { FullPageInterrupt } from "../FullPageInterrupt/FullPageInterrupt";
 import { LocalizationProvider } from "fluent-react";
 import { generateBundles } from "../../rich-text-strings";
 
 export class Interrupt extends React.PureComponent {
   render() {
     const {
+      cards,
       onDismiss,
       onNextScene,
       message,
@@ -37,6 +39,21 @@ export class Interrupt extends React.PureComponent {
               sendUserActionTelemetry={sendUserActionTelemetry}
             />
           </LocalizationProvider>
+        );
+      case "full_page_interrupt":
+        return (
+          <FullPageInterrupt
+            document={this.props.document}
+            cards={cards}
+            message={message}
+            onBlock={onDismiss}
+            onAction={executeAction}
+            dispatch={dispatch}
+            fxaEndpoint={fxaEndpoint}
+            sendUserActionTelemetry={sendUserActionTelemetry}
+            UTMTerm={UTMTerm}
+            flowParams={flowParams}
+          />
         );
       case "trailhead":
         return (

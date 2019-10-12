@@ -255,6 +255,9 @@ class PlacesFeed {
   /**
    * observe - An observer for the LINK_BLOCKED_EVENT.
    *           Called when a link is blocked.
+   *           Links can be blocked outside of newtab,
+   *           which is why we need to listen to this
+   *           on such a generic level.
    *
    * @param  {null} subject
    * @param  {str} topic   The name of the event

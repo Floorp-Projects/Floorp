@@ -4,6 +4,7 @@
 
 import { actionCreators as ac } from "common/Actions.jsm";
 import { ModalOverlayWrapper } from "../../components/ModalOverlay/ModalOverlay";
+import { FxASignupForm } from "../../components/FxASignupForm/FxASignupForm";
 import { addUtmParams } from "../FirstRun/addUtmParams";
 import React from "react";
 
@@ -22,14 +23,7 @@ export class Trailhead extends React.PureComponent {
   constructor(props) {
     super(props);
     this.closeModal = this.closeModal.bind(this);
-    this.onInputChange = this.onInputChange.bind(this);
     this.onStartBlur = this.onStartBlur.bind(this);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.onInputInvalid = this.onInputInvalid.bind(this);
-
-    this.state = {
-      emailInput: "",
-    };
   }
 
   get dialog() {
@@ -44,18 +38,6 @@ export class Trailhead extends React.PureComponent {
     this.props.document
       .getElementById("root")
       .setAttribute("aria-hidden", "true");
-    // Start with focus in the email input box
-    const input = this.dialog.querySelector("input[name=email]");
-    if (input) {
-      input.focus();
-    }
-  }
-
-  onInputChange(e) {
-    let error = e.target.previousSibling;
-    this.setState({ emailInput: e.target.value });
-    error.classList.remove("active");
-    e.target.classList.remove("invalid");
   }
 
   onStartBlur(event) {
@@ -70,24 +52,6 @@ export class Trailhead extends React.PureComponent {
     ) {
       dialog.querySelector(FOCUSABLE_SELECTOR).focus();
     }
-  }
-
-  onSubmit(event) {
-    // Dynamically require the email on submission so screen readers don't read
-    // out it's always required because there's also ways to skip the modal
-    const { email } = event.target.elements;
-    if (!email.value.length) {
-      email.required = true;
-      email.checkValidity();
-      event.preventDefault();
-      return;
-    }
-
-    this.props.dispatch(
-      ac.UserEvent({ event: "SUBMIT_EMAIL", ...this._getFormInfo() })
-    );
-
-    global.addEventListener("visibilitychange", this.closeModal);
   }
 
   closeModal(ev) {
@@ -114,14 +78,6 @@ export class Trailhead extends React.PureComponent {
   _getFormInfo() {
     const value = { has_flow_params: !!this.props.flowParams.flowId.length };
     return { value };
-  }
-
-  onInputInvalid(e) {
-    let error = e.target.previousSibling;
-    error.classList.add("active");
-    e.target.classList.add("invalid");
-    e.preventDefault(); // Override built-in form validation popup
-    e.target.focus();
   }
 
   render() {
@@ -162,90 +118,16 @@ export class Trailhead extends React.PureComponent {
               rel="noopener noreferrer"
             />
           </div>
-          <div
-            role="group"
-            aria-labelledby="joinFormHeader"
-            aria-describedby="joinFormBody"
-            className="trailheadForm"
-          >
-            <h3
-              id="joinFormHeader"
-              data-l10n-id={content.form.title.string_id}
+          <div className="trailhead-join-form">
+            <FxASignupForm
+              document={this.props.document}
+              content={content}
+              dispatch={this.props.dispatch}
+              fxaEndpoint={this.props.fxaEndpoint}
+              UTMTerm={UTMTerm}
+              flowParams={this.props.flowParams}
+              onClose={this.closeModal}
             />
-            <p id="joinFormBody" data-l10n-id={content.form.text.string_id} />
-            <form
-              method="get"
-              action={this.props.fxaEndpoint}
-              target="_blank"
-              rel="noopener noreferrer"
-              onSubmit={this.onSubmit}
-            >
-              <input name="service" type="hidden" value="sync" />
-              <input name="action" type="hidden" value="email" />
-              <input name="context" type="hidden" value="fx_desktop_v3" />
-              <input
-                name="entrypoint"
-                type="hidden"
-                value="activity-stream-firstrun"
-              />
-              <input name="utm_source" type="hidden" value="activity-stream" />
-              <input name="utm_campaign" type="hidden" value="firstrun" />
-              <input name="utm_term" type="hidden" value={UTMTerm} />
-              <input
-                name="device_id"
-                type="hidden"
-                value={this.props.flowParams.deviceId}
-              />
-              <input
-                name="flow_id"
-                type="hidden"
-                value={this.props.flowParams.flowId}
-              />
-              <input
-                name="flow_begin_time"
-                type="hidden"
-                value={this.props.flowParams.flowBeginTime}
-              />
-              <input name="style" type="hidden" value="trailhead" />
-              <p
-                data-l10n-id="onboarding-join-form-email-error"
-                className="error"
-              />
-              <input
-                data-l10n-id={content.form.email.string_id}
-                name="email"
-                type="email"
-                onInvalid={this.onInputInvalid}
-                onChange={this.onInputChange}
-              />
-              <p
-                className="trailheadTerms"
-                data-l10n-id="onboarding-join-form-legal"
-              >
-                <a
-                  data-l10n-name="terms"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={addUtmParams(
-                    "https://accounts.firefox.com/legal/terms",
-                    UTMTerm
-                  )}
-                />
-                <a
-                  data-l10n-name="privacy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={addUtmParams(
-                    "https://accounts.firefox.com/legal/privacy",
-                    UTMTerm
-                  )}
-                />
-              </p>
-              <button
-                data-l10n-id={content.form.button.string_id}
-                type="submit"
-              />
-            </form>
           </div>
         </div>
 

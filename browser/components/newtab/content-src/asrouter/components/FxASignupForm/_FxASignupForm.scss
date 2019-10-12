@@ -1,0 +1,126 @@
+.fxaSignupForm {
+  min-width: 260px;
+  text-align: center;
+
+  a {
+    color: $white;
+    text-decoration: underline;
+  }
+
+  input,
+  button {
+    border-radius: 4px;
+    padding: 10px;
+  }
+
+  h3 {
+    font-size: 36px;
+    font-weight: 200;
+    line-height: 46px;
+    margin: 12px 0 4px;
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 22px;
+    margin: 0 0 20px;
+  }
+
+  .fxa-terms {
+    margin: 4px 30px 20px;
+
+    a,
+    & {
+      color: $white-70;
+      font-size: 12px;
+      line-height: 20px;
+    }
+  }
+
+  .fxa-signin {
+    font-size: 16px;
+    margin-top: 19px;
+
+    span {
+      margin-inline-end: 5px;
+    }
+
+    button {
+      background-color: initial;
+      text-decoration: underline;
+      color: $white;
+      display: inline;
+      padding: 0;
+      width: auto;
+
+      &:hover,
+      &:focus,
+      &:active {
+        background-color: initial;
+      }
+    }
+  }
+
+  form {
+    position: relative;
+
+    .error.active {
+      inset-inline-start: 0;
+      z-index: 0;
+    }
+  }
+
+  button,
+  input {
+    width: 100%;
+  }
+
+  input {
+    background-color: $white;
+    border: 1px solid $grey-50;
+    box-shadow: none;
+    color: $grey-70;
+    font-size: 15px;
+    transition: border-color 150ms, box-shadow 150ms;
+
+    &:hover {
+      border-color: $grey-90;
+    }
+
+    &:focus {
+      border-color: $blue-50;
+      box-shadow: 0 0 0 3px $email-input-focus;
+    }
+
+    &.invalid {
+      border-color: $red-60;
+    }
+
+    &.invalid:focus {
+      box-shadow: 0 0 0 3px $email-input-invalid;
+    }
+  }
+
+  button {
+    background-color: $blue-60;
+    border: 0;
+    cursor: pointer;
+    display: block;
+    font-size: 15px;
+    font-weight: 400;
+    padding: 14px;
+
+    &:hover,
+    &:focus {
+      background-color: $trailhead-blue-60;
+    }
+
+    &:focus {
+      outline: dotted 1px;
+    }
+
+    &:active {
+      background-color: $trailhead-blue-70;
+    }
+  }
+}

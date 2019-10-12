@@ -111,4 +111,23 @@ describe("Discovery Stream <DSImage>", () => {
 
     assert.calledOnce(observer.unobserve);
   });
+  describe("DSImage with Idle Callback", () => {
+    let wrapper;
+    let windowStub = {
+      requestIdleCallback: sinon.stub().returns(1),
+      cancelIdleCallback: sinon.stub(),
+    };
+    beforeEach(() => {
+      wrapper = mount(<DSImage windowObj={windowStub} />);
+    });
+
+    it("should call requestIdleCallback on componentDidMount", () => {
+      assert.calledOnce(windowStub.requestIdleCallback);
+    });
+
+    it("should call cancelIdleCallback on componentWillUnmount", () => {
+      wrapper.instance().componentWillUnmount();
+      assert.calledOnce(windowStub.cancelIdleCallback);
+    });
+  });
 });

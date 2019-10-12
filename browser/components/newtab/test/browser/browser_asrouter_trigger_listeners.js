@@ -20,6 +20,41 @@ async function openURLInWindow(window, url) {
   await BrowserTestUtils.browserLoaded(selectedBrowser, false, url);
 }
 
+add_task(async function check_openArticleURL() {
+  const TEST_URL =
+    "https://example.com/browser/browser/components/newtab/test/browser/red_page.html";
+  const articleTrigger = ASRouterTriggerListeners.get("openArticleURL");
+
+  // Previously initialized by the Router
+  articleTrigger.uninit();
+
+  // Initialize the trigger with a new triggerHandler that resolves a promise
+  // with the URL match
+  const listenerTriggered = new Promise(resolve =>
+    articleTrigger.init((browser, match) => resolve(match), ["example.com"])
+  );
+
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  await openURLInWindow(win, TEST_URL);
+  // Send a message from the content page (the TEST_URL) to the parent
+  // This should trigger the `receiveMessage` cb in the articleTrigger
+  await ContentTask.spawn(win.gBrowser.selectedBrowser, null, async () => {
+    sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: true });
+  });
+
+  await listenerTriggered.then(data =>
+    is(
+      data.param.url,
+      TEST_URL,
+      "We should match on the TEST_URL as a website article"
+    )
+  );
+
+  // Cleanup
+  articleTrigger.uninit();
+  await BrowserTestUtils.closeWindow(win);
+});
+
 add_task(async function check_openURL_listener() {
   const TEST_URL =
     "https://example.com/browser/browser/components/newtab/test/browser/red_page.html";
