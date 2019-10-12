@@ -120,7 +120,7 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
   NS_ENSURE_ARG(!aStringURI.IsEmpty());
 
   nsresult rv;
-
+  bool isPrivateContext = aFixupFlags & FIXUP_FLAG_PRIVATE_CONTEXT;
   nsAutoCString uriString(aStringURI);
 
   // Eliminate embedded newlines, which single-line text fields now allow:
@@ -279,7 +279,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
       if (!handlerExists) {
         bool hasUserPassword = HasUserPassword(uriString);
         if (!hasUserPassword) {
-          TryKeywordFixupForURIInfo(uriString, info, aPostData);
+          TryKeywordFixupForURIInfo(uriString, info, isPrivateContext,
+                                    aPostData);
         } else {
           // If the given URL has a user:password we can't just pass it to the
           // external protocol handler; we'll try using it with http instead
@@ -335,7 +336,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
   if (StaticPrefs::keyword_enabled() &&
       (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) &&
       !inputHadDuffProtocol) {
-    if (NS_SUCCEEDED(KeywordURIFixup(uriString, info, aPostData)) &&
+    if (NS_SUCCEEDED(
+            KeywordURIFixup(uriString, info, isPrivateContext, aPostData)) &&
         info->mPreferredURI) {
       return NS_OK;
     }
@@ -357,7 +359,8 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
   // keyword match.  This catches search strings with '.' or ':' in them.
   if (StaticPrefs::keyword_enabled() &&
       (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
-    rv = TryKeywordFixupForURIInfo(aStringURI, info, aPostData);
+    rv = TryKeywordFixupForURIInfo(aStringURI, info, isPrivateContext,
+                                   aPostData);
   }
 
   return rv;
@@ -386,6 +389,7 @@ nsDefaultURIFixup::WebNavigationFlagsToFixupFlags(const nsACString& aStringURI,
 
 NS_IMETHODIMP
 nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
+                                bool aIsPrivateContext,
                                 nsIInputStream** aPostData,
                                 nsIURIFixupInfo** aInfo) {
   RefPtr<nsDefaultURIFixupInfo> info = new nsDefaultURIFixupInfo(aKeyword);
@@ -412,8 +416,8 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     RefPtr<nsIInputStream> postData;
     Maybe<ipc::URIParams> uri;
     nsAutoString providerName;
-    if (!contentChild->SendKeywordToURI(keyword, &providerName, &postData,
-                                        &uri)) {
+    if (!contentChild->SendKeywordToURI(keyword, aIsPrivateContext,
+                                        &providerName, &postData, &uri)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -433,8 +437,14 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
   nsCOMPtr<nsISearchService> searchSvc =
       do_GetService("@mozilla.org/browser/search-service;1");
   if (searchSvc) {
+    // We must use an appropriate search engine depending on the private
+    // context.
     nsCOMPtr<nsISearchEngine> defaultEngine;
-    searchSvc->GetDefaultEngine(getter_AddRefs(defaultEngine));
+    if (aIsPrivateContext) {
+      searchSvc->GetDefaultPrivateEngine(getter_AddRefs(defaultEngine));
+    } else {
+      searchSvc->GetDefaultEngine(getter_AddRefs(defaultEngine));
+    }
     if (defaultEngine) {
       nsCOMPtr<nsISearchSubmission> submission;
       nsAutoString responseType;
@@ -481,10 +491,10 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
 // Helper to deal with passing around uri fixup stuff
 nsresult nsDefaultURIFixup::TryKeywordFixupForURIInfo(
     const nsACString& aURIString, nsDefaultURIFixupInfo* aFixupInfo,
-    nsIInputStream** aPostData) {
+    bool aIsPrivateContext, nsIInputStream** aPostData) {
   nsCOMPtr<nsIURIFixupInfo> keywordInfo;
-  nsresult rv =
-      KeywordToURI(aURIString, aPostData, getter_AddRefs(keywordInfo));
+  nsresult rv = KeywordToURI(aURIString, aIsPrivateContext, aPostData,
+                             getter_AddRefs(keywordInfo));
   if (NS_SUCCEEDED(rv)) {
     keywordInfo->GetKeywordProviderName(aFixupInfo->mKeywordProviderName);
     keywordInfo->GetKeywordAsSent(aFixupInfo->mKeywordAsSent);
@@ -763,6 +773,7 @@ bool nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString& aUrl) {
 
 nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
                                             nsDefaultURIFixupInfo* aFixupInfo,
+                                            bool aIsPrivateContext,
                                             nsIInputStream** aPostData) {
   // These are keyword formatted strings
   // "what is mozilla"
@@ -906,14 +917,14 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
        (firstSpaceLoc < firstQMarkLoc || firstQuoteLoc < firstQMarkLoc)) ||
       firstQMarkLoc == 0) {
     rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo,
-                                   aPostData);
+                                   aIsPrivateContext, aPostData);
     // ... or when the asciiHost is the same as displayHost and there are no
     // characters from [a-z][A-Z]
   } else if (isValidHost && isValidDisplayHost && !hasAsciiAlpha &&
              asciiHost.EqualsIgnoreCase(displayHost.get())) {
     if (!StaticPrefs::browser_fixup_dns_first_for_single_words()) {
       rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo,
-                                     aPostData);
+                                     aIsPrivateContext, aPostData);
     }
   }
   // ... or if there is no question mark or colon, and there is either no
@@ -937,7 +948,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const nsACString& aURIString,
     // If we get here, we don't have a valid URI, or we did but the
     // host is not whitelisted, so we do a keyword search *anyway*:
     rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo,
-                                   aPostData);
+                                   aIsPrivateContext, aPostData);
   }
   return rv;
 }

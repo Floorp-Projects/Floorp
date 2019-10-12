@@ -18,6 +18,9 @@ let refreshButton = null;
 let stopButton = null;
 
 let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 window.addEventListener(
   "DOMContentLoaded",
@@ -140,6 +143,9 @@ function setupUrlBar() {
       let flags =
         Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
         Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        flags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+      }
 
       let uriToLoad = Services.uriFixup.createFixupURI(valueToFixUp, flags);
 

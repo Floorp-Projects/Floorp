@@ -7,6 +7,8 @@ const { AppConstants } = ChromeUtils.import(
 
 const kSearchEngineID = "test_urifixup_search_engine";
 const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
+const kPrivateSearchEngineID = "test_urifixup_search_engine_private";
+const kPrivateSearchEngineURL = "http://www.example.org/?private={searchTerms}";
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
 
 AddonTestUtils.init(this);
@@ -22,8 +24,13 @@ AddonTestUtils.createAppInfo(
 // combinations of the following flags.
 var flagInputs = [
   Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP,
+  Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
+    Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT,
   Services.uriFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
   Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
+  // This should not really generate a search, but it does, see Bug 1588118.
+  Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+    Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT,
 ];
 
 /*
@@ -606,6 +613,7 @@ add_task(async function setup() {
     "browser.fixup.typo.scheme",
     "keyword.enabled",
     "browser.fixup.domainwhitelist.whitelisted",
+    "browser.search.separatePrivateDefault",
   ];
   for (let pref of prefList) {
     Services.prefs.setBoolPref(pref, true);
@@ -621,15 +629,26 @@ add_task(async function setup() {
       Services.io.newURI("chrome://mozapps/locale/searchextensions/")
     );
 
-  await Services.search.addEngineWithDetails(kSearchEngineID, {
-    method: "get",
-    template: kSearchEngineURL,
-  });
-
   var oldCurrentEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
+  var oldPrivateEngine = await Services.search.getDefaultPrivate();
+
+  let newCurrentEngine = await Services.search.addEngineWithDetails(
+    kSearchEngineID,
+    {
+      method: "get",
+      template: kSearchEngineURL,
+    }
   );
+  await Services.search.setDefault(newCurrentEngine);
+
+  let newPrivateEngine = await Services.search.addEngineWithDetails(
+    kPrivateSearchEngineID,
+    {
+      method: "get",
+      template: kPrivateSearchEngineURL,
+    }
+  );
+  await Services.search.setDefaultPrivate(newPrivateEngine);
 
   var selectedName = (await Services.search.getDefault()).name;
   Assert.equal(selectedName, kSearchEngineID);
@@ -638,13 +657,15 @@ add_task(async function setup() {
     if (oldCurrentEngine) {
       await Services.search.setDefault(oldCurrentEngine);
     }
-    let engine = Services.search.getEngineByName(kSearchEngineID);
-    if (engine) {
-      await Services.search.removeEngine(engine);
+    if (oldPrivateEngine) {
+      await Services.search.setDefault(oldPrivateEngine);
     }
+    await Services.search.removeEngine(newCurrentEngine);
+    await Services.search.removeEngine(newPrivateEngine);
     Services.prefs.clearUserPref("keyword.enabled");
     Services.prefs.clearUserPref("browser.fixup.typo.scheme");
     Services.prefs.clearUserPref(kForceHostLookup);
+    Services.prefs.clearUserPref("browser.search.separatePrivateDefault");
   });
 });
 
@@ -783,12 +804,31 @@ function do_single_test_run() {
             if (urlparamInput.startsWith("%3F")) {
               urlparamInput = urlparamInput.replace("%3F", "");
             }
-            let searchURL = kSearchEngineURL.replace(
+            let isPrivate =
+              flags & Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+            let searchEngineUrl = isPrivate
+              ? kPrivateSearchEngineURL
+              : kSearchEngineURL;
+            let searchURL = searchEngineUrl.replace(
               "{searchTerms}",
               urlparamInput
             );
             let spec = URIInfo.preferredURI.spec.replace(/%27/g, "'");
             Assert.equal(spec, searchURL, "should get correct search URI");
+            let providerName = isPrivate
+              ? kPrivateSearchEngineID
+              : kSearchEngineID;
+            Assert.equal(
+              URIInfo.keywordProviderName,
+              providerName,
+              "should get correct provider name"
+            );
+            // Also check keywordToURI() uses the right engine.
+            let kwInfo = Services.uriFixup.keywordToURI(
+              urlparamInput,
+              isPrivate
+            );
+            Assert.equal(kwInfo.providerName, URIInfo.providerName);
           } else {
             Assert.equal(
               URIInfo.preferredURI,

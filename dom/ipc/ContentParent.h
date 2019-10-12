@@ -1041,6 +1041,7 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvDeviceReset();
 
   mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
+                                           const bool& aIsPrivateContext,
                                            nsString* aProviderName,
                                            RefPtr<nsIInputStream>* aPostData,
                                            Maybe<URIParams>* aURI);

@@ -30,9 +30,10 @@ class nsDefaultURIFixup : public nsIURIFixup {
                             nsDefaultURIFixupInfo* aFixupInfo, nsIURI** aURI);
   nsresult KeywordURIFixup(const nsACString& aStringURI,
                            nsDefaultURIFixupInfo* aFixupInfo,
-                           nsIInputStream** aPostData);
+                           bool aIsPrivateContext, nsIInputStream** aPostData);
   nsresult TryKeywordFixupForURIInfo(const nsACString& aStringURI,
                                      nsDefaultURIFixupInfo* aFixupInfo,
+                                     bool aIsPrivateContext,
                                      nsIInputStream** aPostData);
   bool PossiblyHostPortUrl(const nsACString& aUrl);
   bool MakeAlternateURI(nsCOMPtr<nsIURI>& aURI);

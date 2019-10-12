@@ -72,6 +72,9 @@ ContentAreaDropListener.prototype = {
           //       Add the entire text as a single entry, so that the entire
           //       text is searched.
           let hasURI = false;
+          // We don't care whether we are in a private context, because we are
+          // only using fixedURI and thus there's no risk to use the wrong
+          // search engine.
           let flags =
             Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
             Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
@@ -129,6 +132,9 @@ ContentAreaDropListener.prototype = {
     // Apply URI fixup so that this validation prevents bad URIs even if the
     // similar fixup is applied later, especialy fixing typos up will convert
     // non-URI to URI.
+    // We don't know if the uri comes from a private context, but luckily we
+    // are only using fixedURI, so there's no risk to use the wrong search
+    // engine.
     let fixupFlags =
       Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
       Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
