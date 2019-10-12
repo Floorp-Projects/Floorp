@@ -75,7 +75,6 @@ class nsWebBrowserPersist final : public nsIInterfaceRequestor,
   struct UploadData;
   struct URIData;
   struct WalkData;
-  struct URIFixupData;
 
   class OnWalk;
   class OnWrite;

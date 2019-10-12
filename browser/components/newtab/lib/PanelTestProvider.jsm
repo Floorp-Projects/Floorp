@@ -240,6 +240,110 @@ const MESSAGES = () => [
       patterns: ["*://*/*.pdf"],
     },
   },
+  {
+    id: "SEND_TAB_CFR",
+    template: "cfr_doorhanger",
+    content: {
+      layout: "icon_and_message",
+      category: "cfrFeatures",
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
+      heading_text: { string_id: "cfr-doorhanger-send-tab-header" },
+      info_icon: {
+        label: { string_id: "cfr-doorhanger-extension-sumo-link" },
+        sumo_path: "https://example.com",
+      },
+      text: { string_id: "cfr-doorhanger-send-tab-body" },
+      icon: "chrome://branding/content/icon64.png",
+      buttons: {
+        primary: {
+          label: { string_id: "cfr-doorhanger-send-tab-ok-button" },
+          action: {
+            type: "HIGHLIGHT_FEATURE",
+            data: { args: "pageAction-sendToDevice" },
+          },
+        },
+        secondary: [
+          {
+            label: { string_id: "cfr-doorhanger-extension-cancel-button" },
+            action: { type: "CANCEL" },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-never-show-recommendation",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-manage-settings-button",
+            },
+            action: {
+              type: "OPEN_PREFERENCES_PAGE",
+              data: { category: "general-cfrfeatures" },
+            },
+          },
+        ],
+      },
+    },
+    targeting: "true",
+    trigger: {
+      // Match any URL that has a Reader Mode icon
+      id: "openArticleURL",
+      patterns: ["*://*/*"],
+    },
+  },
+  {
+    id: "SEND_RECIPE_TAB_CFR",
+    template: "cfr_doorhanger",
+    // Higher priority because this has the same targeting rules as
+    // SEND_TAB_CFR but is more specific
+    priority: 1,
+    content: {
+      layout: "icon_and_message",
+      category: "cfrFeatures",
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
+      heading_text: { string_id: "cfr-doorhanger-send-tab-recipe-header" },
+      info_icon: {
+        label: { string_id: "cfr-doorhanger-extension-sumo-link" },
+        sumo_path: "https://example.com",
+      },
+      text: { string_id: "cfr-doorhanger-send-tab-body" },
+      icon: "chrome://branding/content/icon64.png",
+      buttons: {
+        primary: {
+          label: { string_id: "cfr-doorhanger-send-tab-ok-button" },
+          action: {
+            type: "HIGHLIGHT_FEATURE",
+            data: { args: "pageAction-sendToDevice" },
+          },
+        },
+        secondary: [
+          {
+            label: { string_id: "cfr-doorhanger-extension-cancel-button" },
+            action: { type: "CANCEL" },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-never-show-recommendation",
+            },
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-extension-manage-settings-button",
+            },
+            action: {
+              type: "OPEN_PREFERENCES_PAGE",
+              data: { category: "general-cfrfeatures" },
+            },
+          },
+        ],
+      },
+    },
+    targeting: "true",
+    trigger: {
+      id: "openArticleURL",
+      params: ["www.allrecipes.com", "allrecipes.com"],
+    },
+  },
 ];
 
 const PanelTestProvider = {

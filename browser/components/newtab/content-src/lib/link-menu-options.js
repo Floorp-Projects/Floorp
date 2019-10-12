@@ -28,6 +28,7 @@ export const LinkMenuOptions = {
     action: {
       type: at.SHOW_PRIVACY_INFO,
     },
+    userEvent: "SHOW_PRIVACY_INFO",
   }),
   RemoveBookmark: site => ({
     id: "newtab-menu-remove-bookmark",
@@ -60,12 +61,20 @@ export const LinkMenuOptions = {
     }),
     userEvent: "OPEN_NEW_WINDOW",
   }),
+  // This blocks the url for regular stories,
+  // but also sends a message to DiscoveryStream with campaign_id.
+  // If DiscoveryStream sees this message for a campaign_id
+  // it also blocks it on the campaign_id.
   BlockUrl: (site, index, eventSource) => ({
     id: "newtab-menu-dismiss",
     icon: "dismiss",
     action: ac.AlsoToMain({
       type: at.BLOCK_URL,
-      data: { url: site.open_url || site.url, pocket_id: site.pocket_id },
+      data: {
+        url: site.open_url || site.url,
+        pocket_id: site.pocket_id,
+        ...(site.campaign_id ? { campaign_id: site.campaign_id } : {}),
+      },
     }),
     impression: ac.ImpressionStats({
       source: eventSource,

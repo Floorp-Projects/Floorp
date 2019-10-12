@@ -1,4 +1,5 @@
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
+import { FxASignupForm } from "content-src/asrouter/components/FxASignupForm/FxASignupForm";
 import { mount } from "enzyme";
 import { OnboardingMessageProvider } from "lib/OnboardingMessageProvider.jsm";
 import React from "react";
@@ -73,6 +74,10 @@ describe("<Trailhead>", () => {
 
   afterEach(() => {
     sandbox.restore();
+  });
+
+  it("should render FxASignupForm with signup email", () => {
+    assert.lengthOf(wrapper.find(FxASignupForm), 1);
   });
 
   it("should emit UserEvent SKIPPED_SIGNIN and call nextScene when you click the start browsing button", () => {

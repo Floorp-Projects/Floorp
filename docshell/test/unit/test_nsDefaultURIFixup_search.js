@@ -7,6 +7,8 @@ const { AddonTestUtils } = ChromeUtils.import(
 
 const kSearchEngineID = "test_urifixup_search_engine";
 const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
+const kPrivateSearchEngineID = "test_urifixup_search_engine_private";
+const kPrivateSearchEngineURL = "http://www.example.org/?private={searchTerms}";
 
 var isWin = AppConstants.platform == "win";
 
@@ -23,6 +25,16 @@ var data = [
       "{searchTerms}",
       encodeURIComponent("whatever://this/is/a/test.html")
     ),
+  },
+
+  {
+    // Unrecognized protocols should be changed.
+    wrong: "whatever://this/is/a/test.html",
+    fixed: kPrivateSearchEngineURL.replace(
+      "{searchTerms}",
+      encodeURIComponent("whatever://this/is/a/test.html")
+    ),
+    inPrivateBrowsing: true,
   },
 
   // The following tests check that when a user:password is present in the URL
@@ -106,6 +118,8 @@ add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
   Services.prefs.setBoolPref("keyword.enabled", true);
+  Services.prefs.setBoolPref("browser.search.separatePrivateDefault", true);
+
   Services.io
     .getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler)
@@ -114,28 +128,38 @@ add_task(async function setup() {
       Services.io.newURI("chrome://mozapps/locale/searchextensions/")
     );
 
-  await Services.search.addEngineWithDetails(kSearchEngineID, {
-    method: "get",
-    template: kSearchEngineURL,
-  });
-
   var oldCurrentEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
-  );
+  var oldPrivateEngine = await Services.search.getDefaultPrivate();
 
-  var selectedName = (await Services.search.getDefault()).name;
-  Assert.equal(selectedName, kSearchEngineID);
+  let newCurrentEngine = await Services.search.addEngineWithDetails(
+    kSearchEngineID,
+    {
+      method: "get",
+      template: kSearchEngineURL,
+    }
+  );
+  await Services.search.setDefault(newCurrentEngine);
+
+  let newPrivateEngine = await Services.search.addEngineWithDetails(
+    kPrivateSearchEngineID,
+    {
+      method: "get",
+      template: kPrivateSearchEngineURL,
+    }
+  );
+  await Services.search.setDefaultPrivate(newPrivateEngine);
 
   registerCleanupFunction(async function() {
     if (oldCurrentEngine) {
       await Services.search.setDefault(oldCurrentEngine);
     }
-    let engine = Services.search.getEngineByName(kSearchEngineID);
-    if (engine) {
-      await Services.search.removeEngine(engine);
+    if (oldPrivateEngine) {
+      await Services.search.setDefault(oldPrivateEngine);
     }
+    await Services.search.removeEngine(newCurrentEngine);
+    await Services.search.removeEngine(newPrivateEngine);
     Services.prefs.clearUserPref("keyword.enabled");
+    Services.prefs.clearUserPref("browser.search.separatePrivateDefault");
   });
 });
 
@@ -143,10 +167,11 @@ add_task(async function setup() {
 add_task(function test_fix_unknown_schemes() {
   for (let i = 0; i < len; ++i) {
     let item = data[i];
-    let result = Services.uriFixup.createFixupURI(
-      item.wrong,
-      Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
-    ).spec;
+    let flags = Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+    if (item.inPrivateBrowsing) {
+      flags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+    }
+    let result = Services.uriFixup.createFixupURI(item.wrong, flags).spec;
     Assert.equal(result, item.fixed);
   }
 });

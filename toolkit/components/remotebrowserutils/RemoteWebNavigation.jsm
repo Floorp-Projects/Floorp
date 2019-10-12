@@ -88,6 +88,12 @@ RemoteWebNavigation.prototype = {
         aURI,
         aLoadURIOptions.loadFlags
       );
+      let isBrowserPrivate = PrivateBrowsingUtils.isBrowserPrivate(
+        this._browser
+      );
+      if (isBrowserPrivate) {
+        fixupFlags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+      }
       uri = fixup.createFixupURI(aURI, fixupFlags);
 
       // We know the url is going to be loaded, let's start requesting network
@@ -103,11 +109,7 @@ RemoteWebNavigation.prototype = {
         if (!principal || principal.isSystemPrincipal) {
           let attrs = {
             userContextId: this._browser.getAttribute("usercontextid") || 0,
-            privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(
-              this._browser
-            )
-              ? 1
-              : 0,
+            privateBrowsingId: isBrowserPrivate ? 1 : 0,
           };
           principal = Services.scriptSecurityManager.createContentPrincipal(
             uri,

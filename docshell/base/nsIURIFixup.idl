@@ -90,11 +90,16 @@ interface nsIURIFixup : nsISupports
     const unsigned long FIXUP_FLAGS_MAKE_ALTERNATE_URI = 2;
 
     /*
+     * Set when the fixup happens in a private context, the used search engine
+     * may differ in this case. Not all consumers care about this, because they
+     * may not want the url to be transformed in a search.
+     */
+    const unsigned long FIXUP_FLAG_PRIVATE_CONTEXT = 4;
+
+    /*
      * Fix common scheme typos.
      */
     const unsigned long FIXUP_FLAG_FIX_SCHEME_TYPOS = 8;
-
-    /* NB: If adding an extra flag, 4 is free (again) */
 
     /**
      * Converts an internal URI (e.g. one that has a username and password in
@@ -152,6 +157,7 @@ interface nsIURIFixup : nsISupports
      * whether aKeyword is a sensible keyword.
      *
      * @param aKeyword  The keyword string to convert into a URI
+     * @param aIsPrivateContext Whether this is invoked from a private context.
      * @param aPostData The POST data to submit to the returned URI
      *                  (see nsISearchSubmission).
      *
@@ -159,6 +165,7 @@ interface nsIURIFixup : nsISupports
      *         data and aPostData is null.
      */
     nsIURIFixupInfo keywordToURI(in AUTF8String aKeyword,
+                                 [optional] in boolean aIsPrivateContext,
                                  [optional] out nsIInputStream aPostData);
 
     /**

@@ -2304,9 +2304,17 @@ describe("ASRouter", () => {
 
   describe("#UITour", () => {
     let showMenuStub;
+    const highlightTarget = { target: "target" };
     beforeEach(() => {
       showMenuStub = sandbox.stub();
-      globals.set("UITour", { showMenu: showMenuStub });
+      globals.set("UITour", {
+        showMenu: showMenuStub,
+        getTarget: sandbox
+          .stub()
+          .withArgs(sinon.match.object, "pageAaction-sendToDevice")
+          .resolves(highlightTarget),
+        showHighlight: sandbox.stub(),
+      });
     });
     it("should call UITour.showMenu with the correct params on OPEN_APPLICATIONS_MENU", async () => {
       const msg = fakeExecuteUserAction({
@@ -2320,6 +2328,21 @@ describe("ASRouter", () => {
         showMenuStub,
         msg.target.browser.ownerGlobal,
         "appMenu"
+      );
+    });
+    it("should call UITour.showHighlight with the correct params on HIGHLIGHT_FEATURE", async () => {
+      const msg = fakeExecuteUserAction({
+        type: "HIGHLIGHT_FEATURE",
+        data: { args: "pageAction-sendToDevice" },
+      });
+      await Router.onMessage(msg);
+
+      assert.calledOnce(UITour.getTarget);
+      assert.calledOnce(UITour.showHighlight);
+      assert.calledWith(
+        UITour.showHighlight,
+        msg.target.browser.ownerGlobal,
+        highlightTarget
       );
     });
   });

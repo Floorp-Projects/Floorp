@@ -32,10 +32,21 @@ onboarding-join-form-email-error = Valid email required
 onboarding-join-form-legal = By proceeding, you agree to the <a data-l10n-name="terms">Terms of Service</a> and <a data-l10n-name="privacy">Privacy Notice</a>.
 onboarding-join-form-continue = Continue
 
+# This message is followed by a link using onboarding-join-form-signin ("Sign In") as text.
+onboarding-join-form-signin-label = Already have an account?
+# Text for link to submit the sign in form
+onboarding-join-form-signin = Sign In
+
 onboarding-start-browsing-button-label = Start Browsing
 onboarding-cards-dismiss =
     .title = Dismiss
     .aria-label = Dismiss
+
+## Welcome full page string
+
+onboarding-fullpage-welcome-subheader = Let’s start exploring everything you can do.
+onboarding-fullpage-form-email =
+    .placeholder = Your email address…
 
 ## Firefox Sync modal dialog strings.
 
@@ -98,7 +109,7 @@ onboarding-data-sync-text2 = Sync your bookmarks, passwords, and more everywhere
 onboarding-data-sync-button2 = Sign in to { -sync-brand-short-name }
 
 onboarding-firefox-monitor-title = Stay Alert to Data Breaches
-onboarding-firefox-monitor-text = { -monitor-brand-name } monitors if your email has appeared in a data breach and alerts you if it appears in a new breach.
+onboarding-firefox-monitor-text2 = { -monitor-brand-name } monitors if your email has appeared in a known data breach and alerts you if it appears in a new breach.
 onboarding-firefox-monitor-button = Sign up for Alerts
 
 onboarding-browse-privately-title = Browse Privately

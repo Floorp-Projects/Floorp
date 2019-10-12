@@ -2,7 +2,7 @@ import { DSDismiss } from "content-src/components/DiscoveryStreamComponents/DSDi
 import React from "react";
 import { shallow } from "enzyme";
 
-describe("<DSTextPromo>", () => {
+describe("<DSDismiss>", () => {
   const fakeSpoc = {
     url: "https://foo.com",
     guid: "1234",

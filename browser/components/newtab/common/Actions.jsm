@@ -123,6 +123,7 @@ for (const type of [
   "SNIPPETS_RESET",
   "SNIPPET_BLOCKED",
   "SUBMIT_EMAIL",
+  "SUBMIT_SIGNIN",
   "SYSTEM_TICK",
   "TELEMETRY_IMPRESSION_STATS",
   "TELEMETRY_PERFORMANCE_EVENT",
@@ -154,6 +155,7 @@ for (const type of [
 // as call-to-action buttons in snippets, onboarding tour, etc.
 const ASRouterActions = {};
 for (const type of [
+  "HIGHLIGHT_FEATURE",
   "INSTALL_ADDON_FROM_URL",
   "OPEN_APPLICATIONS_MENU",
   "OPEN_PRIVATE_BROWSER_WINDOW",

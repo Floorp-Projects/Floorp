@@ -2728,6 +2728,7 @@ main {
       border-radius: 4px;
       height: 32px;
       font-size: 14px;
+      font-weight: 600;
       padding: 5px 8px 7px;
       border: 0;
       color: #0C0C0D;
@@ -2750,6 +2751,7 @@ main {
           box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5); }
     .ds-card .meta .cta-link {
       font-size: 15px;
+      font-weight: 600;
       line-height: 24px;
       height: 24px;
       width: auto;
@@ -3939,6 +3941,84 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     align-self: flex-end;
     display: flex; }
 
+.fxaSignupForm {
+  min-width: 260px;
+  text-align: center; }
+  .fxaSignupForm a {
+    color: #FFF;
+    text-decoration: underline; }
+  .fxaSignupForm input,
+  .fxaSignupForm button {
+    border-radius: 4px;
+    padding: 10px; }
+  .fxaSignupForm h3 {
+    font-size: 36px;
+    font-weight: 200;
+    line-height: 46px;
+    margin: 12px 0 4px; }
+  .fxaSignupForm p {
+    font-size: 15px;
+    line-height: 22px;
+    margin: 0 0 20px; }
+  .fxaSignupForm .fxa-terms {
+    margin: 4px 30px 20px; }
+    .fxaSignupForm .fxa-terms a, .fxaSignupForm .fxa-terms {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+      line-height: 20px; }
+  .fxaSignupForm .fxa-signin {
+    font-size: 16px;
+    margin-top: 19px; }
+    .fxaSignupForm .fxa-signin span {
+      margin-inline-end: 5px; }
+    .fxaSignupForm .fxa-signin button {
+      background-color: initial;
+      text-decoration: underline;
+      color: #FFF;
+      display: inline;
+      padding: 0;
+      width: auto; }
+      .fxaSignupForm .fxa-signin button:hover, .fxaSignupForm .fxa-signin button:focus, .fxaSignupForm .fxa-signin button:active {
+        background-color: initial; }
+  .fxaSignupForm form {
+    position: relative; }
+    .fxaSignupForm form .error.active {
+      inset-inline-start: 0;
+      z-index: 0; }
+  .fxaSignupForm button,
+  .fxaSignupForm input {
+    width: 100%; }
+  .fxaSignupForm input {
+    background-color: #FFF;
+    border: 1px solid #737373;
+    box-shadow: none;
+    color: #38383D;
+    font-size: 15px;
+    transition: border-color 150ms, box-shadow 150ms; }
+    .fxaSignupForm input:hover {
+      border-color: #0C0C0D; }
+    .fxaSignupForm input:focus {
+      border-color: #0A84FF;
+      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3); }
+    .fxaSignupForm input.invalid {
+      border-color: #D70022; }
+    .fxaSignupForm input.invalid:focus {
+      box-shadow: 0 0 0 3px rgba(215, 0, 34, 0.3); }
+  .fxaSignupForm button {
+    background-color: #0060DF;
+    border: 0;
+    cursor: pointer;
+    display: block;
+    font-size: 15px;
+    font-weight: 400;
+    padding: 14px; }
+    .fxaSignupForm button:hover, .fxaSignupForm button:focus {
+      background-color: #0250BB; }
+    .fxaSignupForm button:focus {
+      outline: dotted 1px; }
+    .fxaSignupForm button:active {
+      background-color: #054096; }
+
 .trailhead {
   background: url("../data/content/assets/trailhead/accounts-form-bg.jpg") bottom/cover;
   color: #FFF;
@@ -3966,6 +4046,11 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     @media (min-width: 850px) {
       .trailhead .trailheadContent .trailheadLearn {
         margin-inline-start: 74px; } }
+  .trailhead .trailhead-join-form {
+    background: url("../data/content/assets/trailhead/firefox-logo.png") top center/100px no-repeat;
+    color: #FFF;
+    min-width: 260px;
+    padding-top: 100px; }
   .trailhead.syncCohort {
     left: calc(50% - 430px);
     width: 860px; }
@@ -4026,65 +4111,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       font-size: 15px;
       line-height: 22px;
       margin: 4px 0 15px; }
-  .trailhead .trailheadForm {
-    background: url("../data/content/assets/trailhead/firefox-logo.png") top center/100px no-repeat;
-    min-width: 260px;
-    padding-top: 100px;
-    text-align: center; }
-    .trailhead .trailheadForm h3 {
-      font-size: 36px;
-      font-weight: 200;
-      line-height: 46px;
-      margin: 12px 0 4px; }
-    .trailhead .trailheadForm p {
-      color: #FFF;
-      font-size: 15px;
-      line-height: 22px;
-      margin: 0 0 20px; }
-    .trailhead .trailheadForm .trailheadTerms {
-      margin: 4px 30px 20px; }
-      .trailhead .trailheadForm .trailheadTerms a, .trailhead .trailheadForm .trailheadTerms {
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 12px;
-        line-height: 20px; }
-    .trailhead .trailheadForm form {
-      position: relative; }
-      .trailhead .trailheadForm form .error.active {
-        inset-inline-start: 0;
-        z-index: 0; }
-    .trailhead .trailheadForm button,
-    .trailhead .trailheadForm input {
-      width: 100%; }
-    .trailhead .trailheadForm input {
-      background-color: #FFF;
-      border: 1px solid #737373;
-      box-shadow: none;
-      color: #38383D;
-      font-size: 15px;
-      transition: border-color 150ms, box-shadow 150ms; }
-      .trailhead .trailheadForm input:hover {
-        border-color: #0C0C0D; }
-      .trailhead .trailheadForm input:focus {
-        border-color: #0A84FF;
-        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3); }
-      .trailhead .trailheadForm input.invalid {
-        border-color: #D70022; }
-      .trailhead .trailheadForm input.invalid:focus {
-        box-shadow: 0 0 0 3px rgba(215, 0, 34, 0.3); }
-    .trailhead .trailheadForm button {
-      background-color: #0060DF;
-      border: 0;
-      cursor: pointer;
-      display: block;
-      font-size: 15px;
-      font-weight: 400;
-      padding: 14px; }
-      .trailhead .trailheadForm button:hover, .trailhead .trailheadForm button:focus {
-        background-color: #0250BB; }
-      .trailhead .trailheadForm button:focus {
-        outline: dotted 1px; }
-      .trailhead .trailheadForm button:active {
-        background-color: #054096; }
   .trailhead .trailheadStart {
     border: 1px solid rgba(255, 255, 255, 0.5);
     cursor: pointer;
@@ -4261,14 +4287,172 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     opacity: 1;
     transform: translateY(0); } }
 
-.firstrun-title {
-  background: url("chrome://branding/content/about-logo.png") top left no-repeat;
-  background-size: 90px 90px;
-  margin: 40px 0 10px;
-  padding-top: 110px; }
-  @media screen and (max-width: 790px) {
-    .firstrun-title {
-      background: url("chrome://branding/content/about-logo.png") top center no-repeat;
-      background-size: 90px 90px; } }
-  .firstrun-title:dir(rtl) {
-    background-position: top right; }
+.activity-stream.welcome {
+  overflow: hidden; }
+
+.activity-stream:not(.welcome) .fullpage-wrapper {
+  display: none; }
+
+.fullpage-wrapper {
+  align-content: center;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 21000;
+  background-color: #FAFAFC; }
+  .fullpage-wrapper + div {
+    opacity: 0; }
+  .fullpage-wrapper .fullpage-icon {
+    background-position-x: left;
+    background-repeat: no-repeat;
+    background-size: contain; }
+    .fullpage-wrapper .fullpage-icon:dir(rtl) {
+      background-position-x: right; }
+    @media screen and (max-width: 850px) {
+      .fullpage-wrapper .fullpage-icon {
+        background-position: center; } }
+  .fullpage-wrapper .brand-logo {
+    background-image: url("chrome://branding/content/about-logo.png");
+    margin: 20px 10px 10px 20px;
+    padding-bottom: 50px; }
+  .fullpage-wrapper .welcome-title,
+  .fullpage-wrapper .welcome-subtitle {
+    align-self: center;
+    margin: 0; }
+    @media screen and (max-width: 850px) {
+      .fullpage-wrapper .welcome-title,
+      .fullpage-wrapper .welcome-subtitle {
+        text-align: center; } }
+  .fullpage-wrapper .welcome-title {
+    color: #36296D;
+    font-size: 46px;
+    font-weight: 600;
+    line-height: 62px; }
+  .fullpage-wrapper .welcome-subtitle {
+    color: #7542E5;
+    font-size: 20px;
+    line-height: 27px; }
+  .fullpage-wrapper .container {
+    display: flex;
+    align-self: center;
+    padding: 50px 0; }
+    @media screen and (max-width: 850px) {
+      .fullpage-wrapper .container {
+        flex-direction: column;
+        width: 352px;
+        text-align: center; } }
+  .fullpage-wrapper .fullpage-left-section {
+    position: relative;
+    width: 538px;
+    font-size: 18px;
+    line-height: 30px; }
+    @media screen and (max-width: 850px) {
+      .fullpage-wrapper .fullpage-left-section {
+        width: 352px; } }
+    .fullpage-wrapper .fullpage-left-section .fullpage-left-content {
+      color: #4A4A4F;
+      display: inline;
+      margin: 0;
+      margin-inline-end: 2px; }
+    .fullpage-wrapper .fullpage-left-section .fullpage-left-link {
+      color: #0060DF;
+      display: block;
+      text-decoration: underline;
+      margin-bottom: 30px; }
+      .fullpage-wrapper .fullpage-left-section .fullpage-left-link:hover, .fullpage-wrapper .fullpage-left-section .fullpage-left-link:active, .fullpage-wrapper .fullpage-left-section .fullpage-left-link:focus {
+        color: #0060DF; }
+    .fullpage-wrapper .fullpage-left-section .fullpage-left-title {
+      margin: 0;
+      color: #36296D;
+      font-size: 36px;
+      line-height: 48px; }
+    .fullpage-wrapper .fullpage-left-section .fx-systems-icons {
+      height: 33px;
+      display: block;
+      background-image: url("../data/content/assets/trailhead/firefox-systems.png");
+      margin-bottom: 20px; }
+  .fullpage-wrapper .fullpage-form {
+    position: relative;
+    text-align: center;
+    margin-inline-start: 36px; }
+    @media screen and (max-width: 850px) {
+      .fullpage-wrapper .fullpage-form {
+        margin-inline-start: 0; } }
+    .fullpage-wrapper .fullpage-form .fxaSignupForm {
+      width: 356px;
+      padding: 25px;
+      box-shadow: 0 0 16px 0 rgba(0, 0, 0, 0.15);
+      border-radius: 6px;
+      background: #FFF; }
+    .fullpage-wrapper .fullpage-form .fxa-terms {
+      margin: 4px 0 20px; }
+      .fullpage-wrapper .fullpage-form .fxa-terms a, .fullpage-wrapper .fullpage-form .fxa-terms {
+        color: #4A4A4F;
+        font-size: 12px;
+        line-height: 16px; }
+    .fullpage-wrapper .fullpage-form .fxa-signin {
+      color: #4A4A4F;
+      line-height: 30px;
+      opacity: 0.77; }
+      .fullpage-wrapper .fullpage-form .fxa-signin button {
+        color: #0060DF; }
+    .fullpage-wrapper .fullpage-form h3 {
+      color: #36296D;
+      font-weight: 400;
+      font-size: 36px;
+      line-height: 36px;
+      margin: 0;
+      padding: 8px; }
+    .fullpage-wrapper .fullpage-form h3 + p {
+      color: #4A4A4F;
+      font-size: 16px;
+      line-height: 20px;
+      opacity: 0.77; }
+    .fullpage-wrapper .fullpage-form input {
+      background: #FFF;
+      border: 1px solid #D7D7DB;
+      border-radius: 2px; }
+      .fullpage-wrapper .fullpage-form input:hover {
+        border-color: #737373; }
+      .fullpage-wrapper .fullpage-form input.invalid {
+        border-color: #D70022; }
+    .fullpage-wrapper .fullpage-form button {
+      color: #FFF;
+      font-size: 16px; }
+      .fullpage-wrapper .fullpage-form button:focus {
+        outline: dotted 1px #737373; }
+  .fullpage-wrapper .section-divider::after {
+    content: '';
+    display: block;
+    border-bottom: 0.5px solid #D7D7DB; }
+  .fullpage-wrapper .trailheadCard {
+    box-shadow: none;
+    background: none;
+    text-align: center;
+    width: 320px;
+    padding: 18px; }
+    .fullpage-wrapper .trailheadCard .onboardingTitle {
+      color: #0C0C0D; }
+    .fullpage-wrapper .trailheadCard .onboardingText {
+      font-weight: normal;
+      color: #4A4A4F;
+      margin-top: 4px; }
+    .fullpage-wrapper .trailheadCard .onboardingButton {
+      color: #4A4A4F;
+      background: rgba(12, 12, 13, 0.1); }
+      .fullpage-wrapper .trailheadCard .onboardingButton:focus, .fullpage-wrapper .trailheadCard .onboardingButton:hover {
+        background: rgba(12, 12, 13, 0.2); }
+      .fullpage-wrapper .trailheadCard .onboardingButton:active {
+        background: rgba(12, 12, 13, 0.3); }
+    .fullpage-wrapper .trailheadCard .onboardingMessageImage {
+      height: 112px;
+      width: 154px;
+      background-size: 154px; }
+    @media screen and (max-width: 850px) {
+      .fullpage-wrapper .trailheadCard {
+        width: 352px; } }

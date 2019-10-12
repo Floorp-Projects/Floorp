@@ -54,6 +54,20 @@ const TRAILHEAD_MODAL_VARIANT_CONTENT = {
   skipButton: { string_id: "onboarding-start-browsing-button-label" },
 };
 
+const TRAILHEAD_FULL_PAGE_CONTENT = {
+  title: { string_id: "onboarding-welcome-body" },
+  learn: {
+    text: { string_id: "onboarding-welcome-learn-more" },
+    url: "https://www.mozilla.org/firefox/accounts/",
+  },
+  form: {
+    title: { string_id: "onboarding-welcome-form-header" },
+    text: { string_id: "onboarding-join-form-body" },
+    email: { string_id: "onboarding-fullpage-form-email" },
+    button: { string_id: "onboarding-join-form-continue" },
+  },
+};
+
 const JOIN_CONTENT = {
   className: "joinCohort",
   title: { string_id: "onboarding-welcome-body" },
@@ -159,6 +173,27 @@ const ONBOARDING_MESSAGES = () => [
     },
   },
   {
+    id: "FULL_PAGE_1",
+    targeting: "trailheadInterrupt == 'full_page_d'",
+    utm_term: "trailhead-full_page_d",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      ...TRAILHEAD_FULL_PAGE_CONTENT,
+    },
+    template: "full_page_interrupt",
+  },
+  {
+    id: "FULL_PAGE_2",
+    targeting: "trailheadInterrupt == 'full_page_e'",
+    utm_term: "trailhead-full_page_e",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      className: "fullPageCardsAtTop",
+      ...TRAILHEAD_FULL_PAGE_CONTENT,
+    },
+    template: "full_page_interrupt",
+  },
+  {
     id: "EXTENDED_TRIPLETS_1",
     template: "extended_triplets",
     campaign: "firstrun_triplets",
@@ -233,7 +268,7 @@ const ONBOARDING_MESSAGES = () => [
     order: 2,
     content: {
       title: { string_id: "onboarding-firefox-monitor-title" },
-      text: { string_id: "onboarding-firefox-monitor-text" },
+      text: { string_id: "onboarding-firefox-monitor-text2" },
       icon: "ffmonitor",
       primary_button: {
         label: { string_id: "onboarding-firefox-monitor-button" },
@@ -461,6 +496,7 @@ const ONBOARDING_MESSAGES = () => [
       delay: 5 * ONE_MINUTE,
       target: "whats-new-menu-button",
       action: { id: "show-whatsnew-button" },
+      badgeDescription: { string_id: "cfr-badge-reader-label-newfeature" },
     },
     priority: 1,
     trigger: { id: "toolbarBadgeUpdate" },

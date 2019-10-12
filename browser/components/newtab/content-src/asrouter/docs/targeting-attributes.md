@@ -40,6 +40,8 @@ Please note that some targeting attributes require stricter controls on the tele
 * [totalBlockedCount](#totalblockedcount)
 * [recentBookmarks](#recentbookmarks)
 * [userPrefs](#userprefs)
+* [attachedFxAOAuthClients](#attachedfxaoauthclients)
+* [platformName](#platformname)
 
 ## Detailed usage
 
@@ -554,4 +556,40 @@ declare const userPrefs: {
   cfrAddons: boolean;
   snippets: boolean;
 }
+```
+
+### `attachedFxAOAuthClients`
+
+Information about connected services associated with the FxA Account.
+
+#### Definition
+
+```
+interface OAuthClient {
+  id: string;
+  // FxA service name
+  name: string;
+  lastAccessTime: UnixEpochNumber;
+}
+
+declare const attachedFxAOAuthClients: Array<OAuthClient>
+```
+
+#### Examples
+```javascript
+{
+  id: "7377719276ad44ee",
+  name: "Pocket",
+  lastAccessTime: 1513599164000
+}
+```
+
+### `platformName`
+
+[Platform information](https://searchfox.org/mozilla-central/rev/05a22d864814cb1e4352faa4004e1f975c7d2eb9/toolkit/modules/AppConstants.jsm#156).
+
+#### Definition
+
+```
+declare const platformName = "linux" | "win" | "macosx" | "android" | "other";
 ```

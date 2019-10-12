@@ -1919,6 +1919,9 @@ Search.prototype = {
     let flags =
       Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
       Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    if (this._inPrivateWindow) {
+      flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
+    }
     let fixupInfo = null;
     let searchUrl = this._trimmedOriginalSearchString;
     try {
