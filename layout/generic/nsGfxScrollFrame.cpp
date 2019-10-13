@@ -2026,6 +2026,10 @@ void ScrollFrameHelper::AsyncScroll::InitSmoothScroll(
   mAnimationPhysics->Update(aTime, aDestination, aCurrentVelocity);
 }
 
+bool ScrollFrameHelper::IsSmoothScrollingEnabled() {
+  return StaticPrefs::general_smoothScroll();
+}
+
 class ScrollFrameActivityTracker final
     : public nsExpirationTracker<ScrollFrameHelper, 4> {
  public:
@@ -2343,7 +2347,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
           ? presContext->RefreshDriver()->MostRecentRefresh()
           : TimeStamp::Now();
   bool isSmoothScroll =
-      aMode == ScrollMode::Smooth && nsLayoutUtils::IsSmoothScrollingEnabled();
+      aMode == ScrollMode::Smooth && IsSmoothScrollingEnabled();
 
   nsSize currentVelocity(0, 0);
 
@@ -7184,10 +7188,6 @@ bool ScrollFrameHelper::SmoothScrollVisual(
 }
 
 bool ScrollFrameHelper::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
-  if (!nsLayoutUtils::IsSmoothScrollingEnabled()) {
-    return false;
-  }
-
   if (aBehavior == dom::ScrollBehavior::Smooth) {
     return true;
   }

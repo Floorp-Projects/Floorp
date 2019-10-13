@@ -11,7 +11,6 @@
 #include "nsLookAndFeel.h"
 #include "HeadlessLookAndFeel.h"
 #include "nsCRT.h"
-#include "nsLayoutUtils.h"
 #include "nsFont.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
@@ -994,8 +993,6 @@ void nsXPLookAndFeel::RefreshImpl() {
   for (i = 0; i < uint32_t(ColorID::End); ++i) {
     InitColorFromPref(i);
   }
-
-  nsLayoutUtils::RecomputeSmoothScrollingEnabled();
 }
 
 nsTArray<LookAndFeelInt> nsXPLookAndFeel::GetIntCacheImpl() {
