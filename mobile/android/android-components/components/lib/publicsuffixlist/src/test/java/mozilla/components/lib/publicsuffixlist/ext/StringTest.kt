@@ -24,4 +24,11 @@ class StringTest {
         val new = urlTest.urlToTrimmedHost(publicSuffixList).await()
         assertEquals(new, "example")
     }
+
+    @Test
+    fun `Malformed Url to Trimmed Host`() = runBlocking {
+        val urlTest = "notarealurl"
+        val new = urlTest.urlToTrimmedHost(publicSuffixList).await()
+        assertEquals(new, "notarealurl")
+    }
 }

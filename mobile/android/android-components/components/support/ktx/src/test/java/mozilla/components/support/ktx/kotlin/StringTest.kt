@@ -119,4 +119,11 @@ class StringTest {
         val new = urlTest.tryGetHostFromUrl()
         assertEquals(new, "www.example.com")
     }
+
+    @Test
+    fun `Try Get Host From Malformed Url`() {
+        val urlTest = "notarealurl"
+        val new = urlTest.tryGetHostFromUrl()
+        assertEquals(new, "notarealurl")
+    }
 }
