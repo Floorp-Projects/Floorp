@@ -272,12 +272,6 @@ struct TilePreUpdateContext {
 
 // Immutable context passed to picture cache tiles during post_update
 struct TilePostUpdateContext<'a> {
-    /// Current set of WR debug flags
-    debug_flags: DebugFlags,
-
-    /// The global scale factor from world -> device coords.
-    global_device_pixel_scale: DevicePixelScale,
-
     /// The visible part of the screen in world coords.
     global_screen_world_rect: WorldRect,
 
@@ -290,26 +284,14 @@ struct TilePostUpdateContext<'a> {
     /// Information about opacity bindings from the picture cache.
     opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
 
-    /// Helper to map picture coordinates to world space
-    pic_to_world_mapper: SpaceMapper<PicturePixel, WorldPixel>,
-
     /// Current size in device pixels of tiles for this cache
     current_tile_size: DeviceIntSize,
 }
 
 // Mutable state passed to picture cache tiles during post_update
 struct TilePostUpdateState<'a> {
-    /// Scratch buffer for drawing debug information.
-    scratch: &'a mut PrimitiveScratchBuffer,
-
-    /// Current dirty region of this cache.
-    dirty_region: &'a mut DirtyRegion,
-
     /// Allow access to the texture cache for requesting tiles
-    resource_cache: &'a mut ResourceCache,
-
-    /// Needed when requesting tile cache handles.
-    gpu_cache: &'a mut GpuCache,
+    resource_cache: &'a ResourceCache,
 }
 
 /// Information about the dependencies of a single primitive instance.
@@ -660,7 +642,7 @@ impl Tile {
         let is_simple_prim = self.current_descriptor.prims.len() == 1 && self.is_opaque;
 
         // Set up the backing surface for this tile.
-        let mut surface = if is_simple_prim {
+        let surface = if is_simple_prim {
             // If we determine the tile can be represented by a color, set the
             // surface unconditionally (this will drop any previously used
             // texture cache backing surface).
@@ -691,90 +673,6 @@ impl Tile {
                 }
             }
         };
-
-        if let TileSurface::Texture { ref handle, .. } = surface {
-            // Invalidate if the backing texture was evicted.
-            if state.resource_cache.texture_cache.is_allocated(handle) {
-                // Request the backing texture so it won't get evicted this frame.
-                // We specifically want to mark the tile texture as used, even
-                // if it's detected not visible below and skipped. This is because
-                // we maintain the set of tiles we care about based on visibility
-                // during pre_update. If a tile still exists after that, we are
-                // assuming that it's either visible or we want to retain it for
-                // a while in case it gets scrolled back onto screen soon.
-                // TODO(gw): Consider switching to manual eviction policy?
-                state.resource_cache.texture_cache.request(handle, state.gpu_cache);
-            } else {
-                // If the texture was evicted on a previous frame, we need to assume
-                // that the entire tile rect is dirty.
-                self.is_valid = false;
-                self.dirty_rect = self.rect;
-            }
-        }
-
-        // Update the world dirty rect
-        self.world_dirty_rect = ctx.pic_to_world_mapper.map(&self.dirty_rect).expect("bug");
-
-        if ctx.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
-            self.root.draw_debug_rects(
-                &ctx.pic_to_world_mapper,
-                self.is_opaque,
-                state.scratch,
-                ctx.global_device_pixel_scale,
-            );
-
-            let label_offset = DeviceVector2D::new(20.0, 30.0);
-            let tile_device_rect = self.world_rect * ctx.global_device_pixel_scale;
-            if tile_device_rect.size.height >= label_offset.y {
-                state.scratch.push_debug_string(
-                    tile_device_rect.origin + label_offset,
-                    debug_colors::RED,
-                    format!("{:?}: is_opaque={} surface={}",
-                            self.id,
-                            self.is_opaque,
-                            surface.kind(),
-                    ),
-                );
-            }
-        }
-
-        // Decide how to handle this tile when drawing this frame.
-        if !self.is_valid {
-            // Ensure that this texture is allocated.
-            if let TileSurface::Texture { ref mut handle, ref mut visibility_mask } = surface {
-                if !state.resource_cache.texture_cache.is_allocated(handle) {
-                    state.resource_cache.texture_cache.update_picture_cache(
-                        ctx.current_tile_size,
-                        handle,
-                        state.gpu_cache,
-                    );
-                }
-
-                *visibility_mask = PrimitiveVisibilityMask::empty();
-                let dirty_region_index = state.dirty_region.dirty_rects.len();
-
-                // If we run out of dirty regions, then force the last dirty region to
-                // be a union of any remaining regions. This is an inefficiency, in that
-                // we'll add items to batches later on that are redundant / outside this
-                // tile, but it's really rare except in pathological cases (even on a
-                // 4k screen, the typical dirty region count is < 16).
-                if dirty_region_index < PrimitiveVisibilityMask::MAX_DIRTY_REGIONS {
-                    visibility_mask.set_visible(dirty_region_index);
-
-                    state.dirty_region.push(
-                        self.world_dirty_rect,
-                        *visibility_mask,
-                    );
-                } else {
-                    visibility_mask.set_visible(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1);
-
-                    state.dirty_region.include_rect(
-                        PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1,
-                        self.world_dirty_rect,
-                    );
-                }
-            }
-        }
 
         // Store the current surface backing info for use during batching.
         self.surface = Some(surface);
@@ -1808,29 +1706,16 @@ impl TileCacheInstance {
             });
         }
 
-        let pic_to_world_mapper = SpaceMapper::new_with_target(
-            ROOT_SPATIAL_NODE_INDEX,
-            self.spatial_node_index,
-            frame_context.global_screen_world_rect,
-            frame_context.clip_scroll_tree,
-        );
-
         let ctx = TilePostUpdateContext {
-            debug_flags: frame_context.debug_flags,
-            global_device_pixel_scale: frame_context.global_device_pixel_scale,
             global_screen_world_rect: frame_context.global_screen_world_rect,
             backdrop: self.backdrop,
             spatial_nodes: &self.spatial_nodes,
             opacity_bindings: &self.opacity_bindings,
-            pic_to_world_mapper,
             current_tile_size: self.current_tile_size,
         };
 
         let mut state = TilePostUpdateState {
             resource_cache: frame_state.resource_cache,
-            gpu_cache: frame_state.gpu_cache,
-            scratch: frame_state.scratch,
-            dirty_region: &mut self.dirty_region,
         };
 
         // Step through each tile and invalidate if the dependencies have changed.
@@ -2736,6 +2621,7 @@ impl PicturePrimitive {
         parent_subpixel_mode: SubpixelMode,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
+        scratch: &mut PrimitiveScratchBuffer,
     ) -> Option<(PictureContext, PictureState, PrimitiveList)> {
         if !self.is_visible() {
             return None;
@@ -3080,12 +2966,92 @@ impl PicturePrimitive {
                                 frame_state.resource_cache.set_image_active(*image_key);
                             }
 
+                            let surface = tile.surface.as_mut().expect("no tile surface set!");
+
+                            if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
+                                tile.root.draw_debug_rects(
+                                    &map_pic_to_world,
+                                    tile.is_opaque,
+                                    scratch,
+                                    frame_context.global_device_pixel_scale,
+                                );
+
+                                let label_offset = DeviceVector2D::new(20.0, 30.0);
+                                let tile_device_rect = tile.world_rect * frame_context.global_device_pixel_scale;
+                                if tile_device_rect.size.height >= label_offset.y {
+                                    scratch.push_debug_string(
+                                        tile_device_rect.origin + label_offset,
+                                        debug_colors::RED,
+                                        format!("{:?}: is_opaque={} surface={}",
+                                                tile.id,
+                                                tile.is_opaque,
+                                                surface.kind(),
+                                        ),
+                                    );
+                                }
+                            }
+
+                            if let TileSurface::Texture { ref handle, .. } = surface {
+                                // Invalidate if the backing texture was evicted.
+                                if frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                    // Request the backing texture so it won't get evicted this frame.
+                                    // We specifically want to mark the tile texture as used, even
+                                    // if it's detected not visible below and skipped. This is because
+                                    // we maintain the set of tiles we care about based on visibility
+                                    // during pre_update. If a tile still exists after that, we are
+                                    // assuming that it's either visible or we want to retain it for
+                                    // a while in case it gets scrolled back onto screen soon.
+                                    // TODO(gw): Consider switching to manual eviction policy?
+                                    frame_state.resource_cache.texture_cache.request(handle, frame_state.gpu_cache);
+                                } else {
+                                    // If the texture was evicted on a previous frame, we need to assume
+                                    // that the entire tile rect is dirty.
+                                    tile.is_valid = false;
+                                    tile.dirty_rect = tile.rect;
+                                }
+                            }
+
+                            // Update the world dirty rect
+                            tile.world_dirty_rect = map_pic_to_world.map(&tile.dirty_rect).expect("bug");
+
                             if tile.is_valid {
                                 continue;
                             }
 
-                            let surface = tile.surface.as_ref().expect("no tile surface set!");
-                            if let TileSurface::Texture { ref handle, visibility_mask } = surface {
+                            // Ensure that this texture is allocated.
+                            if let TileSurface::Texture { ref mut handle, ref mut visibility_mask } = surface {
+                                if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                    frame_state.resource_cache.texture_cache.update_picture_cache(
+                                        tile_cache.current_tile_size,
+                                        handle,
+                                        frame_state.gpu_cache,
+                                    );
+                                }
+
+                                *visibility_mask = PrimitiveVisibilityMask::empty();
+                                let dirty_region_index = tile_cache.dirty_region.dirty_rects.len();
+
+                                // If we run out of dirty regions, then force the last dirty region to
+                                // be a union of any remaining regions. This is an inefficiency, in that
+                                // we'll add items to batches later on that are redundant / outside this
+                                // tile, but it's really rare except in pathological cases (even on a
+                                // 4k screen, the typical dirty region count is < 16).
+                                if dirty_region_index < PrimitiveVisibilityMask::MAX_DIRTY_REGIONS {
+                                    visibility_mask.set_visible(dirty_region_index);
+
+                                    tile_cache.dirty_region.push(
+                                        tile.world_dirty_rect,
+                                        *visibility_mask,
+                                    );
+                                } else {
+                                    visibility_mask.set_visible(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1);
+
+                                    tile_cache.dirty_region.include_rect(
+                                        PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1,
+                                        tile.world_dirty_rect,
+                                    );
+                                }
+
                                 let content_origin_f = tile.world_rect.origin * device_pixel_scale;
                                 let content_origin = content_origin_f.round();
                                 debug_assert!((content_origin_f.x - content_origin.x).abs() < 0.01);
