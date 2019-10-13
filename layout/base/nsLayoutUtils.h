@@ -2998,7 +2998,16 @@ class nsLayoutUtils {
   static bool FrameIsMostlyScrolledOutOfViewInCrossProcess(
       const nsIFrame* aFrame, nscoord aMargin);
 
+  static bool IsSmoothScrollingEnabled() {
+    return gSmoothScrollingEnabled;
+  }
+
+  static void RecomputeSmoothScrollingEnabled();
+
  private:
+
+  static mozilla::RelaxedAtomicBool gSmoothScrollingEnabled;
+
   /**
    * Helper function for LogTestDataForPaint().
    */
