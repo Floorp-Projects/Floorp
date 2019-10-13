@@ -27,7 +27,6 @@
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_font.h"
-#include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -7977,27 +7976,9 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
   return total;
 }
 
-RelaxedAtomicBool nsLayoutUtils::gSmoothScrollingEnabled;
-
-void nsLayoutUtils::RecomputeSmoothScrollingEnabled() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread(),
-                     "You don't really want to call into widget "
-                     "off the main thread, do you?");
-  gSmoothScrollingEnabled =
-      StaticPrefs::general_smoothScroll_DoNotUseDirectly() &&
-      !LookAndFeel::GetInt(LookAndFeel::eIntID_PrefersReducedMotion, 0);
-}
-
-static void SmoothScrollPrefChanged(const char*, void*) {
-  nsLayoutUtils::RecomputeSmoothScrollingEnabled();
-}
-
 /* static */
 void nsLayoutUtils::Initialize() {
   nsComputedDOMStyle::RegisterPrefChangeCallbacks();
-  Preferences::RegisterCallbackAndCall(
-      SmoothScrollPrefChanged,
-      nsDependentCString(StaticPrefs::GetPrefName_general_smoothScroll()));
 }
 
 /* static */

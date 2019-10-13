@@ -2006,7 +2006,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
       MaybeAdjustDestinationForScrollSnapping(aEvent, destination);
 
   // If smooth scrolling is disabled, then scroll immediately to the destination
-  if (!nsLayoutUtils::IsSmoothScrollingEnabled()) {
+  if (!StaticPrefs::general_smoothScroll()) {
     CancelAnimation();
 
     ParentLayerPoint startPoint, endPoint;
