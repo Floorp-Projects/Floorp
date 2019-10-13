@@ -15,11 +15,13 @@
 // This file defines content scripts.
 /* eslint-env mozilla/frame-script */
 
+const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+
 add_task(async function test_contentscript_cache() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       content_scripts: [{
-        "matches": ["http://example.com/"],
+        "matches": ["http://mochi.test/*/file_sample.html"],
         "js": ["content_script.js"],
         "run_at": "document_start",
       }],
@@ -52,7 +54,7 @@ add_task(async function test_contentscript_cache() {
   ext.staticScripts.expiryTimeout = 3000;
   is(ext.staticScripts.size, 0, "Should have no cached scripts");
 
-  let win = window.open("http://example.com/");
+  let win = window.open(`${BASE}/file_sample.html`);
   await extension.awaitMessage("content-script-loaded");
 
   if (AppConstants.platform !== "android") {
@@ -91,8 +93,7 @@ add_task(async function test_contentscript_cache() {
 
   win.close();
 
-
-  win = window.open("http://example.com/");
+  win = window.open(`${BASE}/file_sample.html`);
   await extension.awaitMessage("content-script-loaded");
 
   is(ext.staticScripts.size, 1, "Should have one cached script");
