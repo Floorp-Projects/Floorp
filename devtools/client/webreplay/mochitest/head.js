@@ -27,6 +27,14 @@ async function attachDebugger(tab) {
   return { ...dbg, tab, threadFront };
 }
 
+async function openRecordingTab(url) {
+  const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
+  gBrowser.selectedTab = tab;
+  await once(Services.ppmm, "RecordingInitialized");
+  openTrustedLinkIn(EXAMPLE_URL + url, "current");
+  return tab;
+}
+
 async function attachRecordingDebugger(
   url,
   { waitForRecording, disableLogging, skipInterrupt } = {}
@@ -35,9 +43,7 @@ async function attachRecordingDebugger(
     await pushPref("devtools.recordreplay.logging", true);
   }
 
-  const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
-  gBrowser.selectedTab = tab;
-  openTrustedLinkIn(EXAMPLE_URL + url, "current");
+  const tab = await openRecordingTab(url);
 
   if (waitForRecording) {
     await once(Services.ppmm, "RecordingFinished");

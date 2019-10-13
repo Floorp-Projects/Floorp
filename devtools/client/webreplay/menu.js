@@ -44,8 +44,11 @@ function ReloadAndRecordTab() {
     newFrameloader: true,
     remoteType: E10SUtils.DEFAULT_REMOTE_TYPE,
   });
-  gBrowser.loadURI(url, {
-    triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
+  Services.ppmm.addMessageListener("RecordingInitialized", function listener() {
+    Services.ppmm.removeMessageListener("RecordingInitialized", listener);
+    gBrowser.loadURI(url, {
+      triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
+    });
   });
   Services.telemetry.scalarAdd("devtools.webreplay.reload_recording", 1);
 }
