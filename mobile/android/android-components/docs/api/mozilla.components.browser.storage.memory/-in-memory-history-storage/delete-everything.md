@@ -2,7 +2,7 @@
 
 # deleteEverything
 
-`suspend fun deleteEverything(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-memory/src/main/java/mozilla/components/browser/storage/memory/InMemoryHistoryStorage.kt#L121)
+`suspend fun deleteEverything(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-memory/src/main/java/mozilla/components/browser/storage/memory/InMemoryHistoryStorage.kt#L126)
 
 Overrides [HistoryStorage.deleteEverything](../../mozilla.components.concept.storage/-history-storage/delete-everything.md)
 

@@ -2,7 +2,7 @@
 
 # EngineViewBottomBehavior
 
-`class EngineViewBottomBehavior : Behavior<<ERROR CLASS>>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/behavior/EngineViewBottomBehavior.kt#L23)
+`class EngineViewBottomBehavior : Behavior<<ERROR CLASS>>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/src/main/java/mozilla/components/feature/session/behavior/EngineViewBottomBehavior.kt#L24)
 
 A [CoordinatorLayout.Behavior](#) implementation to be used with [EngineView](../../mozilla.components.concept.engine/-engine-view/index.md) when placing a toolbar at the
 bottom of the screen.
@@ -23,4 +23,4 @@ be drawn above the native toolbar.
 | Name | Summary |
 |---|---|
 | [layoutDependsOn](layout-depends-on.md) | `fun layoutDependsOn(parent: CoordinatorLayout, child: <ERROR CLASS>, dependency: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [onDependentViewChanged](on-dependent-view-changed.md) | `fun onDependentViewChanged(parent: CoordinatorLayout, child: <ERROR CLASS>, dependency: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+| [onDependentViewChanged](on-dependent-view-changed.md) | `fun onDependentViewChanged(parent: CoordinatorLayout, child: <ERROR CLASS>, dependency: <ERROR CLASS>): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Apply vertical clipping to [EngineView](../../mozilla.components.concept.engine/-engine-view/index.md). This requires [EngineViewBottomBehavior](./index.md) to be set in/on the [EngineView](../../mozilla.components.concept.engine/-engine-view/index.md) or its parent. Must be a direct descending child of [CoordinatorLayout](#). |

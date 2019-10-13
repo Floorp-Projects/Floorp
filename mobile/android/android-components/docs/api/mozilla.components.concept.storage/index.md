@@ -13,6 +13,8 @@
 | [HistoryAutocompleteResult](-history-autocomplete-result/index.md) | `data class HistoryAutocompleteResult`<br>Describes an autocompletion result against history storage. |
 | [HistoryStorage](-history-storage/index.md) | `interface HistoryStorage : `[`Storage`](-storage/index.md)<br>An interface which defines read/write methods for history data. |
 | [PageObservation](-page-observation/index.md) | `data class PageObservation` |
+| [PageVisit](-page-visit/index.md) | `data class PageVisit`<br>Information to record about a visit. |
+| [RedirectSource](-redirect-source/index.md) | `enum class RedirectSource`<br>A redirect source describes how a page redirected to another page. |
 | [SearchResult](-search-result/index.md) | `data class SearchResult`<br>Encapsulates a set of properties which define a result of querying history storage. |
 | [Storage](-storage/index.md) | `interface Storage`<br>An interface which provides generic operations for storing browser data like history and bookmarks. |
 | [VisitInfo](-visit-info/index.md) | `data class VisitInfo`<br>Information about a history visit. |

@@ -2,7 +2,7 @@
 
 # Action
 
-`interface Action` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L168)
+`interface Action` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L174)
 
 Generic interface for actions to be added to the toolbar.
 
@@ -28,3 +28,4 @@ Generic interface for actions to be added to the toolbar.
 | [ActionSpace](../-action-space/index.md) | `open class ActionSpace : `[`Action`](./index.md)<br>An "empty" action with a desired width to be used as "placeholder". |
 | [ActionToggleButton](../-action-toggle-button/index.md) | `open class ActionToggleButton : `[`Action`](./index.md)<br>An action button with two states, selected and unselected. When the button is pressed, the state changes automatically. |
 | [TabCounterToolbarButton](../../../mozilla.components.feature.tabs.toolbar/-tab-counter-toolbar-button/index.md) | `class TabCounterToolbarButton : `[`Action`](./index.md)<br>A [Toolbar.Action](./index.md) implementation that shows a [TabCounter](../../../mozilla.components.ui.tabcounter/-tab-counter/index.md). |
+| [WebExtensionToolbarAction](../../../mozilla.components.feature.toolbar/-web-extension-toolbar-action/index.md) | `open class WebExtensionToolbarAction : `[`Action`](./index.md)<br>An action button that represents an web extension item to be added to the toolbar. |
