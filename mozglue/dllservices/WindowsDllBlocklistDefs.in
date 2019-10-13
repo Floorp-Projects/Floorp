@@ -194,8 +194,8 @@ ALL_PROCESSES += [
     # Bug 1268470 - crashes with Kaspersky Lab on Windows 8
     DllBlocklistEntry("klsihk64.dll", (14, 0, 456, 0xffff), BLOCK_WIN8_ONLY),
 
-    # Bug 1407337, crashes with OpenSC < 0.16.0
-    DllBlocklistEntry("onepin-opensc-pkcs11.dll", (0, 15, 0xffff, 0xffff)),
+    # Bug 1579758, crashes with OpenSC nightly version 0.19.0.448 and lower
+    DllBlocklistEntry("onepin-opensc-pkcs11.dll", (0, 19, 0, 448)),
 
     # Avecto Privilege Guard causes crashes, bug 1385542
     DllBlocklistEntry("pghook.dll", ALL_VERSIONS),
