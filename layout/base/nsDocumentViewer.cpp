@@ -3176,6 +3176,12 @@ nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
     prefWidth = aMaxWidth;
   }
 
+  // We should never intentionally get here with this sentinel value, but it's
+  // possible that a document with huge sizes might inadvertently have a
+  // prefWidth that exactly matches NS_UNCONSTRAINEDSIZE.
+  // Just bail if that happens.
+  NS_ENSURE_TRUE(prefWidth != NS_UNCONSTRAINEDSIZE, NS_ERROR_FAILURE);
+
   nsresult rv = presShell->ResizeReflow(prefWidth, aMaxHeight,
                                         ResizeReflowOptions::BSizeLimit);
   NS_ENSURE_SUCCESS(rv, rv);

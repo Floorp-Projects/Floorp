@@ -247,6 +247,11 @@ class FragmentOrElement : public nsIContent {
      * An object implementing the .classList property for this element.
      */
     RefPtr<nsDOMTokenList> mClassList;
+
+    /**
+     * An object implementing the .part property for this element.
+     */
+    RefPtr<nsDOMTokenList> mPart;
   };
 
   /**

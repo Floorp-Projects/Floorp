@@ -40,8 +40,6 @@ enum class StyleDisplay : uint16_t {
       StyleDisplayFrom(StyleDisplayOutside::None, StyleDisplayInside::Contents),
   Inline =
       StyleDisplayFrom(StyleDisplayOutside::Inline, StyleDisplayInside::Inline),
-  InlineBlock = StyleDisplayFrom(StyleDisplayOutside::Inline,
-                                 StyleDisplayInside::FlowRoot),
   Block =
       StyleDisplayFrom(StyleDisplayOutside::Block, StyleDisplayInside::Block),
   FlowRoot = StyleDisplayFrom(StyleDisplayOutside::Block,
