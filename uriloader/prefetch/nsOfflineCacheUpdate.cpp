@@ -154,8 +154,7 @@ nsresult nsManifestCheck::Begin() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = NS_NewChannel(getter_AddRefs(mChannel), mURI, mLoadingPrincipal,
                      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
-                     nsIContentPolicy::TYPE_OTHER,
-                     nullptr,  // nsICookieSettings
+                     nsIContentPolicy::TYPE_OTHER, mUpdate->CookieSettings(),
                      nullptr,  // PerformanceStorage
                      nullptr,  // loadGroup
                      nullptr,  // aCallbacks
@@ -322,8 +321,7 @@ nsresult nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate* aUpdate) {
 
   rv = NS_NewChannel(getter_AddRefs(mChannel), mURI, mLoadingPrincipal,
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                     nsIContentPolicy::TYPE_OTHER,
-                     nullptr,  // nsICookieSettings
+                     nsIContentPolicy::TYPE_OTHER, aUpdate->CookieSettings(),
                      nullptr,  // PerformanceStorage
                      nullptr,  // aLoadGroup
                      this,     // aCallbacks
@@ -1183,6 +1181,10 @@ nsresult nsOfflineCacheUpdate::Init(nsIURI* aManifestURI, nsIURI* aDocumentURI,
 
   mDocumentURI = aDocumentURI;
 
+  if (aDocument) {
+    mCookieSettings = aDocument->CookieSettings();
+  }
+
   if (aCustomProfileDir) {
     rv = cacheService->BuildGroupIDForSuffix(aManifestURI, originSuffix,
                                              mGroupID);
@@ -1277,7 +1279,8 @@ nsresult nsOfflineCacheUpdate::InitForUpdateCheck(
 nsresult nsOfflineCacheUpdate::InitPartial(nsIURI* aManifestURI,
                                            const nsACString& clientID,
                                            nsIURI* aDocumentURI,
-                                           nsIPrincipal* aLoadingPrincipal) {
+                                           nsIPrincipal* aLoadingPrincipal,
+                                           nsICookieSettings* aCookieSettings) {
   nsresult rv;
 
   // Make sure the service has been initialized
@@ -1323,6 +1326,8 @@ nsresult nsOfflineCacheUpdate::InitPartial(nsIURI* aManifestURI,
   rv = nsOfflineCacheUpdateService::OfflineAppPinnedForURI(aDocumentURI,
                                                            &mPinned);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mCookieSettings = aCookieSettings;
 
   mState = STATE_INITIALIZED;
   return NS_OK;
@@ -1625,6 +1630,8 @@ void nsOfflineCacheUpdate::ManifestCheckCompleted(
     // document instances.
     newUpdate->Init(mManifestURI, mDocumentURI, mLoadingPrincipal, nullptr,
                     mCustomProfileDir);
+
+    newUpdate->SetCookieSettings(mCookieSettings);
 
     // In a rare case the manifest will not be modified on the next refetch
     // transfer all master document URIs to the new update to ensure that
@@ -1932,7 +1939,7 @@ nsresult nsOfflineCacheUpdate::ScheduleImplicit() {
   }
 
   rv = update->InitPartial(mManifestURI, clientID, mDocumentURI,
-                           mLoadingPrincipal);
+                           mLoadingPrincipal, mCookieSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (int32_t i = 0; i < mDocumentURIs.Count(); i++) {
@@ -2291,6 +2298,19 @@ nsOfflineCacheUpdate::UpdateStateChanged(nsIOfflineCacheUpdate* aUpdate,
     aUpdate->RemoveObserver(this);
 
   return NS_OK;
+}
+
+void nsOfflineCacheUpdate::SetCookieSettings(
+    nsICookieSettings* aCookieSettings) {
+  mCookieSettings = aCookieSettings;
+}
+
+void nsOfflineCacheUpdate::SetCookieSettingsArgs(
+    const CookieSettingsArgs& aCookieSettingsArgs) {
+  MOZ_ASSERT(!mCookieSettings);
+
+  CookieSettings::Deserialize(aCookieSettingsArgs,
+                              getter_AddRefs(mCookieSettings));
 }
 
 NS_IMETHODIMP

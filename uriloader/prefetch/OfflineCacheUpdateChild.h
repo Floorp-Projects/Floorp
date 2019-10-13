@@ -66,6 +66,7 @@ class OfflineCacheUpdateChild : public nsIOfflineCacheUpdate,
   nsCOMPtr<nsIURI> mManifestURI;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
+  nsCOMPtr<nsICookieSettings> mCookieSettings;
 
   nsCOMPtr<nsIObserverService> mObserverService;
 

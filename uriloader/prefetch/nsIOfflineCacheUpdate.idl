@@ -13,6 +13,7 @@ interface nsIPrefBranch;
 interface nsIApplicationCache;
 interface nsIFile;
 interface nsIObserver;
+interface nsICookieSettings;
 webidl Document;
 
 [scriptable, uuid(47360d57-8ef4-4a5d-8865-1a27a739ad1a)]
@@ -126,9 +127,13 @@ interface nsIOfflineCacheUpdate : nsISupports {
    * @param aDocumentURI
    *        The page that is requesting the update. May be null
    *        when this information is unknown.
+   * @param aCookieSettings
+   *        The cookie settings belonging to the page that is requesting
+   *        the update.
    */
   void initPartial(in nsIURI aManifestURI, in ACString aClientID,
-                   in nsIURI aDocumentURI, in nsIPrincipal aPrincipal);
+                   in nsIURI aDocumentURI, in nsIPrincipal aPrincipal,
+                   in nsICookieSettings aCookieSettings);
 
   /**
    * Initialize the update to only check whether there is an update
