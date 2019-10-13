@@ -197,7 +197,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
                               const mozilla::StyleTrackBreadth&);
   already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
       const mozilla::StyleGridTemplateComponent& aTrackList,
-      const mozilla::ComputedGridTrackInfo* aTrackInfo);
+      const mozilla::ComputedGridTrackInfo& aTrackInfo);
 
   bool GetLineHeightCoord(nscoord& aCoord);
 
