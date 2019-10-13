@@ -393,6 +393,7 @@ impl FrameBuilder {
                 SubpixelMode::Allow,
                 &mut frame_state,
                 &frame_context,
+                scratch,
             )
             .unwrap();
 
