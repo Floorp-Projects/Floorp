@@ -200,14 +200,14 @@ class nsDocShellLoadState final {
   void SetOriginalURIString(const nsCString& aOriginalURI) {
     mOriginalURIString.emplace(aOriginalURI);
   }
-  const Maybe<nsCString>& GetOriginalURIString() const {
+  const mozilla::Maybe<nsCString>& GetOriginalURIString() const {
     return mOriginalURIString;
   }
 
   void SetCancelContentJSEpoch(int32_t aCancelEpoch) {
     mCancelContentJSEpoch.emplace(aCancelEpoch);
   }
-  const Maybe<int32_t>& GetCancelContentJSEpoch() const {
+  const mozilla::Maybe<int32_t>& GetCancelContentJSEpoch() const {
     return mCancelContentJSEpoch;
   }
 
@@ -361,11 +361,11 @@ class nsDocShellLoadState final {
   // An optional string representation of mURI, before any
   // fixups were applied, so that we can send it to a search
   // engine service if needed.
-  Maybe<nsCString> mOriginalURIString;
+  mozilla::Maybe<nsCString> mOriginalURIString;
 
   // An optional value to pass to nsIDocShell::setCancelJSEpoch
   // when initiating the load.
-  Maybe<int32_t> mCancelContentJSEpoch;
+  mozilla::Maybe<int32_t> mCancelContentJSEpoch;
 };
 
 #endif /* nsDocShellLoadState_h__ */
