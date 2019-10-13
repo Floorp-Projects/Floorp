@@ -597,6 +597,9 @@ void FragmentOrElement::nsDOMSlots::Traverse(
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mClassList");
   aCb.NoteXPCOMChild(mClassList.get());
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mPart");
+  aCb.NoteXPCOMChild(mPart.get());
 }
 
 void FragmentOrElement::nsDOMSlots::Unlink() {
@@ -608,6 +611,7 @@ void FragmentOrElement::nsDOMSlots::Unlink() {
   }
   mChildrenList = nullptr;
   mClassList = nullptr;
+  mPart = nullptr;
 }
 
 size_t FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(

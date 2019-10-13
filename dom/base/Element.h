@@ -1030,6 +1030,8 @@ class Element : public FragmentOrElement {
   }
 
   nsDOMTokenList* ClassList();
+  nsDOMTokenList* Part();
+
   nsDOMAttributeMap* Attributes() {
     nsDOMSlots* slots = DOMSlots();
     if (!slots->mAttributeMap) {

@@ -539,6 +539,16 @@ nsDOMTokenList* Element::ClassList() {
   return slots->mClassList;
 }
 
+nsDOMTokenList* Element::Part() {
+  Element::nsDOMSlots* slots = DOMSlots();
+
+  if (!slots->mPart) {
+    slots->mPart = new nsDOMTokenList(this, nsGkAtoms::part);
+  }
+
+  return slots->mPart;
+}
+
 void Element::GetAttributeNames(nsTArray<nsString>& aResult) {
   uint32_t count = mAttrs.AttrCount();
   for (uint32_t i = 0; i < count; ++i) {
