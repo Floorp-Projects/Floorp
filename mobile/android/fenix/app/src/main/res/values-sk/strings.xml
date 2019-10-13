@@ -21,12 +21,22 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">Ste v súkromnom prehliadaní</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">
+         %1$s vymaže históriu vyhľadávania a navštívených stránok po zavretí aplikácie alebo všetkých súkromných kariet a okien.
+        S touto funkciou nie ste na internete neviditeľní a napríklad váš poskytovateľ pripojenia na internet môže stále zistiť, aké stránky navštevujete. Vaša aktivita na internete ale zostane utajená pred ďalšími používateľmi na tomto počítači.
+        
+    </string>
     <string name="private_browsing_common_myths">
        Časté mýty o súkromnom prehliadaní
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Vymazať reláciu</string>
 
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Pridať odkaz na otvorenie súkromného prehliadania na domovskú obrazovku.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">Pridať skratku</string>
     <!-- Text for the negative button -->
@@ -137,6 +147,10 @@
 
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Povolenia stránok</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">Spúšťať odkazy v súkromnom prehliadaní</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Pridať odkaz na súkromné prehliadanie</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Zjednodušenie ovládania</string>
     <!-- Preference category for account information -->
@@ -259,7 +273,7 @@
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Zapnúť synchronizáciu</string>
+    <string name="preferences_sync">Zapnite si synchronizáciu</string>
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair">Naskenujte párovací kód zobrazený vo Firefoxe na počítači</string>
     <!-- Preference for account login -->
@@ -345,7 +359,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Otvorené karty</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Súkromná relácia</string>
+    <string name="tabs_header_private_title">Súkromné prehliadanie</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Pridať kartu</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -531,6 +545,11 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Vypnutá</string>
 
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">Blokované pre videá a zvuky</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">Povolené pre videá a zvuky</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Ukladajte si stránky a karty, na ktorých vám záleží, do kolekcií.</string>
@@ -691,7 +710,7 @@
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Príde k vášmu odhláseniu z väčšiny webových stránok</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cached_files">Obrázky a súbory v medzipamäti</string>
+    <string name="preferences_delete_browsing_data_cached_files">Obrázky a súbory vo vyrovnávacej pamäti</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Uvolní priestor v zariadení</string>
     <!-- Title for the site permissions item in Delete browsing data -->
@@ -703,6 +722,10 @@
     <string name="preferences_delete_browsing_data_on_quit">Odstrániť údaje o prehliadaní pri ukončení aplikácie</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">Automaticky odstráni údaje o prehliadaní po stlačení tlačidla „Ukončiť“ v hlavnej ponuke</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Automaticky odstráni údaje o prehliadaní po stlačení tlačidla „Ukončiť“ v hlavnej ponuke</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">História prehliadania</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ukončiť</string>
 
@@ -789,6 +812,8 @@
     <string name="sync_sent_tabs_snackbar">Karty boli odoslané!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">Karta bola odoslaná!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Odoslanie sa nepodarilo</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">ZNOVA</string>
     <!-- Title of QR Pairing Fragment -->
@@ -798,7 +823,7 @@
     <!-- Text shown for sign in pairing when ready -->
     <string name="sign_in_ready_for_scan">Skenovanie je pripravené</string>
     <!-- Text shown for settings option for sign with pairing -->
-    <string name="sign_in_with_camera">Prihlásiť sa pomocou fotoaparátu</string>
+    <string name="sign_in_with_camera">Prihláste sa pomocou fotoaparátu</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Použiť radšej e-mailovú adresu</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
@@ -821,12 +846,56 @@
     <string name="preference_enhanced_tracking_protection_explanation">%s vás chráni pred mnohými sledovacími prvkami, ktoré zbierajú informácie o tom, čo robíte na internete.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ďalšie informácie</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_option">Štandardná</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard">Štandardná (odporúčaná)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">Vyvážená ochrana a výkon.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">Stránky sa budú načítavať normálne, no budú obsahovať menej sledovacích prvkov.</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Prísna</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">Prísna (predvolená)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">Silnejšia ochrana, ktorá zrýchľuje načítavanie stránok. Môže však obmedziť ich fungovanie.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">Prísna (odporúčaná)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">Viac blokovaného obsahu zvyšuje pravdepodobnosť, že niektoré stránky nebudú správne fungovať.</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Blokované</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Povolené</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Sledovacie prvky sociálnych sietí</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Obmedzuje schopnosť sociálnych sietí sledovať vašu aktivitu na internete.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Sledovacie cookies</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Blokuje cookies, ktoré používajú reklamné siete a firmy na zber údajov z mnohých stránok.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Ťažba kryptomien</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Bráni skriptom v prístupe k vášmu zariadeniu za účelom ťažby digitálnych mien.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Odtlačok prehliadača</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Zastaví zhromažďovanie údajov o vašom zariadení, ktoré my mohli byť použité na vašu identifikáciu alebo sledovanie.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Sledovací obsah</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Blokuje načítanie reklám, videí a ďalšieho obsahu, ktorý obsahuje sledovací kód. To môže ovplyvniť fungovanie niektorých webových stránok.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message">Zmena farby ikony štítu znamená, že %s na stránke blokuje nejaké sledovacie prvky. Ťuknutím zobrazíte zoznam blokovaných prvkov.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Ochrana je na tejto stránke zapnutá</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Ochrana je na tejto stránke vypnutá</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Rozšírená ochrana pred sledovaním je na týchto stránkach vypnutá</string>
     <!-- About page Your rights link text -->
     <string name="about_your_rights">Vaše práva</string>
     <!-- About page link text to open open source licenses screen -->
@@ -861,16 +930,57 @@
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prihlasovacie údaje</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Ukladanie prihlasovacích údajov</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Pred uložením sa spýtať</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Neukladať</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">Automatické vypĺňanie</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Synchronizácia prihlasovacích údajov</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">Zapnutá</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">Vypnutá</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Znova pripojiť</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Prihlásiť sa k službe Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Uložené prihlasovacie údaje</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Výnimky</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Tu sa zobrazia prihlasovacie údaje, ktoré sa nebudú ukladať.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Pre nasledujúce stránky sa nebudú ukladať prihlasovacie údaje.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Hľadať</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Abecedne</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">Naposledy použité</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stránka</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Používateľské meno</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Heslo</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Zadajte znova svoj PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Pre zobrazenie prihlasovacích údajov odomknite zariadenie</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Toto pripojenie nie je zabezpečené. Zadané prihlasovacie údaje môžu byť skompromitované.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Ďalšie informácie</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">Chcete uložiť tieto prihlasovacie údaje v aplikácii %s?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
     <string name="logins_doorhanger_save_confirmation">Uložiť</string>
-    </resources>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Neuložiť</string>
+
+</resources>
