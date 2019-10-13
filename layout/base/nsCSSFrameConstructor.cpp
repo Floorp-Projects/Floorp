@@ -5656,7 +5656,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
         // pseudos.
         ((bits & FCDATA_IS_TABLE_PART) &&
          (!aParentFrame ||  // No aParentFrame means inline
-          aParentFrame->StyleDisplay()->mDisplay == StyleDisplay::Inline)) ||
+          aParentFrame->StyleDisplay()->IsInlineFlow())) ||
         // Things that are inline-outside but aren't inline frames are inline
         display.IsInlineOutsideStyle() ||
         // Popups that are certainly out of flow.

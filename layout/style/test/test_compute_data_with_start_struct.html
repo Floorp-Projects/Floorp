@@ -33,28 +33,7 @@
  * style system code, and property cascading no longer relies on hand
  * written functions, so this particular failure mode isn't as likely to
  * happen.
- *
- * The test works by maintaining one style rule that has every CSS
- * property specified, and a second style rule that has different values
- * for every property, an element that matches only the first rule (so
- * that we'll have a cached struct), and *later* an element that matches
- * both rules (for whose computation we'll find the struct cached from
- * the first element).  (It does this twice, once with the overriding in
- * each direction, because one of the cases might match the incorrect
- * overwriting.)  Then, in the second style rule, it unsets each
- * property, one at a time, and checks that the computation works
- * correctly.  (The reason to want every property set is to hit a case
- * where we can store the data in the rule tree... though this isn't
- * guaranteed.)
  */
-
-function xfail_computecheck(prop, roundnum) {
-    return false;
-}
-
-function xfail_test(prop, roundnum) {
-    return false;
-}
 
 var gStyleSheet = document.getElementById("stylesheet").sheet;
 var gRule1 = gStyleSheet.cssRules[gStyleSheet.insertRule("#base, #test {}", gStyleSheet.cssRules.length)];
@@ -63,46 +42,44 @@ var gRule2 = gStyleSheet.cssRules[gStyleSheet.insertRule("#test {}", gStyleSheet
 var gBase = getComputedStyle(document.getElementById("base"), "");
 var gTest = getComputedStyle(document.getElementById("test"), "");
 
-function round(lower_set, higher_set, roundnum) {
+function test_property(prop, lower_set, higher_set) {
+  var info = gCSSProperties[prop];
+  if (info.subproperties || info.logical)
+    return;
 
-  for (var prop in gCSSProperties) {
-    var info = gCSSProperties[prop];
-    if (info.subproperties || info.logical)
-      continue;
-    gRule1.style.setProperty(prop, info[lower_set][0], "");
-    gRule2.style.setProperty(prop, info[higher_set][0], "");
+  gRule1.style.setProperty(prop, info[lower_set][0]);
+  gRule2.style.setProperty(prop, info[higher_set][0]);
+
+  if ("prerequisites" in info) {
+    for (var prereq in info.prerequisites) {
+      gRule2.style.setProperty(prereq, info.prerequisites[prereq], "");
+    }
   }
 
-  for (var prop in gCSSProperties) {
-    var info = gCSSProperties[prop];
-    if (info.subproperties || info.logical)
-      continue;
+  gBase.getPropertyValue(prop);
+  var higher_set_val = gTest.getPropertyValue(prop);
+  gRule2.style.setProperty(prop, info[lower_set][0], "");
+  var lower_set_val = gTest.getPropertyValue(prop);
+  isnot(higher_set_val, lower_set_val, "initial and other values of " + prop + " are different");
 
-    if ("prerequisites" in info) {
-      for (var prereq in info.prerequisites) {
-        gRule2.style.setProperty(prereq, info.prerequisites[prereq], "");
-      }
-    }
+  gRule2.style.removeProperty(prop);
+  is(gTest.getPropertyValue(prop), lower_set_val, prop + " is not touched when its value comes from aStartStruct");
 
-    gBase.getPropertyValue(prop);
-    var higher_set_val = gTest.getPropertyValue(prop);
-    gRule2.style.setProperty(prop, info[lower_set][0], "");
-    var lower_set_val = gTest.getPropertyValue(prop);
-    (xfail_computecheck(prop, roundnum) ? todo_isnot : isnot)(higher_set_val, lower_set_val, "initial and other values of " + prop + " are different");
-    gRule2.style.removeProperty(prop);
-    (xfail_test(prop, roundnum) ? todo_is : is)(gTest.getPropertyValue(prop), lower_set_val, prop + " is not touched when its value comes from aStartStruct");
-
-    gRule2.style.setProperty(prop, info[higher_set][0], "");
-    if ("prerequisites" in info) {
-      for (var prereq in info.prerequisites) {
-        gRule2.style.setProperty(prereq, gCSSProperties[prereq][higher_set][0], "");
-      }
+  gRule1.style.removeProperty(prop);
+  if ("prerequisites" in info) {
+    for (var prereq in info.prerequisites) {
+      gRule2.style.removeProperty(prereq);
     }
   }
 }
 
-round("other_values", "initial_values", 1);
-round("initial_values", "other_values", 2);
+function round(lower_set, higher_set) {
+  for (var prop in gCSSProperties)
+    test_property(prop, lower_set, higher_set);
+}
+
+round("other_values", "initial_values");
+round("initial_values", "other_values");
 
 </script>
 </pre>
