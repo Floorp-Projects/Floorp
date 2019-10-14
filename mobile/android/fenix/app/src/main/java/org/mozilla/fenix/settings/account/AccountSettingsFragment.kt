@@ -17,7 +17,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.ConstellationState
@@ -80,7 +79,6 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         requireComponents.analytics.metrics.track(Event.SyncAccountClosed)
     }
 
-    @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

@@ -5,7 +5,6 @@ package org.mozilla.fenix.whatsnew
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Before
@@ -16,7 +15,6 @@ import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class WhatsNewStorageTest {

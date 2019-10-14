@@ -5,7 +5,6 @@
 package org.mozilla.fenix.ext
 
 import androidx.core.content.ContextCompat
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -19,7 +18,6 @@ import org.mozilla.fenix.TestApplication
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class TabCollectionTest {

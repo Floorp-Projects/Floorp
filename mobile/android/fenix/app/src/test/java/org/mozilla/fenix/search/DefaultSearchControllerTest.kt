@@ -10,7 +10,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -34,7 +33,6 @@ import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.whatsnew.clear
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class DefaultSearchControllerTest {

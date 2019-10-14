@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.metrics
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
@@ -21,7 +20,6 @@ import org.mozilla.fenix.components.metrics.Event.PerformedSearch.EventSource
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class PerformedSearchTest {

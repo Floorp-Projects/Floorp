@@ -14,7 +14,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,7 +23,6 @@ import org.mozilla.fenix.share.viewholders.AppViewHolder
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class AppShareAdapterTest {

@@ -53,7 +53,7 @@ import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
 
 @ExperimentalCoroutinesApi
-@ObsoleteCoroutinesApi
+@UseExperimental(ObsoleteCoroutinesApi::class)
 class DefaultBrowserToolbarControllerTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")

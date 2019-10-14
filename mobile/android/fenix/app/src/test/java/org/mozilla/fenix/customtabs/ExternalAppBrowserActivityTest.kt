@@ -5,7 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Intent
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.utils.toSafeIntent
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -15,7 +14,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class ExternalAppBrowserActivityTest {

@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.metrics
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.CrashReporterService
@@ -20,7 +19,6 @@ import org.mockito.Mockito.verify
 import org.mozilla.fenix.TestApplication
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 internal class BreadcrumbRecorderTest {

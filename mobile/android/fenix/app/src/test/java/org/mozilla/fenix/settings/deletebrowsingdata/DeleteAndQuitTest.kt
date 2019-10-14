@@ -34,8 +34,8 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
+@UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class DeleteAndQuitTest {

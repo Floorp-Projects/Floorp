@@ -27,7 +27,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.sitepermissions.SitePermissions
@@ -48,7 +47,6 @@ import com.google.android.material.R as MaterialR
 
 private const val REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS = 4
 
-@ObsoleteCoroutinesApi
 @SuppressWarnings("TooManyFunctions")
 class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private val safeArguments get() = requireNotNull(arguments)
@@ -161,7 +159,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     }
 
     @ExperimentalCoroutinesApi
-    @ObsoleteCoroutinesApi
     override fun onResume() {
         super.onResume()
         getAutoDisposeObservable<QuickSettingsAction>()

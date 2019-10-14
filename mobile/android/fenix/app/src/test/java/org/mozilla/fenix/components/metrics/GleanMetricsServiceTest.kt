@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.metrics
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -21,7 +20,6 @@ import org.mozilla.fenix.TestApplication
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class GleanMetricsServiceTest {

@@ -15,7 +15,6 @@ import kotlinx.android.synthetic.main.fragment_exceptions.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
@@ -55,7 +54,6 @@ class ExceptionsFragment : Fragment() {
         return view
     }
 
-    @ObsoleteCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

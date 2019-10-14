@@ -28,8 +28,8 @@ import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.components
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
+@UseExperimental(ObsoleteCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class DefaultDeleteBrowsingDataControllerTest {

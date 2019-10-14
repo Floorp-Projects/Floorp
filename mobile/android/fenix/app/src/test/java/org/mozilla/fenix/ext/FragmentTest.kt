@@ -1,6 +1,5 @@
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.support.test.robolectric.testContext
 import org.mozilla.fenix.TestApplication
 import org.junit.Test
@@ -24,7 +23,6 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavController
 import androidx.navigation.Navigator.Extras
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 

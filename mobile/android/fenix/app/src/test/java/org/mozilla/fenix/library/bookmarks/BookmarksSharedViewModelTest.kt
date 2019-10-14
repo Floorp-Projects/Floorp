@@ -8,7 +8,6 @@ import androidx.lifecycle.LifecycleOwner
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.mock
@@ -21,7 +20,6 @@ import org.mozilla.fenix.TestApplication
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 internal class BookmarksSharedViewModelTest {

@@ -1,6 +1,5 @@
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.mozilla.fenix.TestApplication
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,7 +12,6 @@ import android.graphics.Rect
 import android.graphics.Canvas
 import android.graphics.ColorFilter
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 

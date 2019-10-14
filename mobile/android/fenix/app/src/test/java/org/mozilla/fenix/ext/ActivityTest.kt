@@ -1,6 +1,5 @@
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.mozilla.fenix.TestApplication
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,7 +13,6 @@ import android.view.View
 import android.view.WindowManager
 import org.robolectric.Shadows.shadowOf
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 

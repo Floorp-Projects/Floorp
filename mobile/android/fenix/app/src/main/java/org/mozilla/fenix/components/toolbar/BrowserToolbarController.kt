@@ -20,7 +20,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
@@ -106,7 +105,6 @@ class DefaultBrowserToolbarController(
     }
 
     @ExperimentalCoroutinesApi
-    @ObsoleteCoroutinesApi
     @SuppressWarnings("ComplexMethod", "LongMethod")
     override fun handleToolbarItemInteraction(item: ToolbarMenu.Item) {
         val sessionUseCases = activity.components.useCases.sessionUseCases

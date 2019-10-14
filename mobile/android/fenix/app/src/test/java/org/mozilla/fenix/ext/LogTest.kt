@@ -1,6 +1,5 @@
 package org.mozilla.fenix.ext
 
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.mozilla.fenix.TestApplication
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -12,7 +11,6 @@ import io.mockk.verify
 import android.util.Log
 import org.mozilla.fenix.BuildConfig
 
-@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 
