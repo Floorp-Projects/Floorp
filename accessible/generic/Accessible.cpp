@@ -5,8 +5,6 @@
 
 #include "Accessible-inl.h"
 
-#include "nsIXBLAccessible.h"
-
 #include "EmbeddedObjCollector.h"
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
@@ -139,12 +137,6 @@ ENameValueFlag Accessible::Name(nsString& aName) const {
 
   ARIAName(aName);
   if (!aName.IsEmpty()) return eNameOK;
-
-  nsCOMPtr<nsIXBLAccessible> xblAccessible(do_QueryInterface(mContent));
-  if (xblAccessible) {
-    xblAccessible->GetAccessibleName(aName);
-    if (!aName.IsEmpty()) return eNameOK;
-  }
 
   ENameValueFlag nameFlag = NativeName(aName);
   if (!aName.IsEmpty()) return nameFlag;
