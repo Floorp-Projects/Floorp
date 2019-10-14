@@ -9,14 +9,36 @@
     <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <script src="/resources/testdriver.js"></script>
+    <script src="/resources/testdriver-actions.js"></script>
+    <script src="/resources/testdriver-vendor.js"></script>
     <script type="text/javascript" src="../pointerevent_support.js"></script>
     <script type="text/javascript">
       var event_log = [];
       var active_pointers = 0;
+      var actions_promise;
 
       function resetTestState() {
         event_log = [];
         active_pointers = 0;
+      }
+
+      function twoFingerDrag(target) {
+        return new test_driver.Actions()
+                      .addPointer("touchPointer1", "touch")
+                      .addPointer("touchPointer2", "touch")
+                      .pointerMove(0, 0, {origin: target, sourceName: "touchPointer1"})
+                      .pointerMove(10, 0, {origin: target, sourceName: "touchPointer2"})
+                      .pointerDown({sourceName: "touchPointer1"})
+                      .pointerDown({sourceName: "touchPointer2"})
+                      .pointerMove(0, 10, {origin: target, sourceName: "touchPointer1"})
+                      .pointerMove(10, 10, {origin: target, sourceName: "touchPointer2"})
+                      .pointerMove(0, 20, {origin: target, sourceName: "touchPointer1"})
+                      .pointerMove(10, 20, {origin: target, sourceName: "touchPointer2"})
+                      .pause(100)
+                      .pointerUp({sourceName: "touchPointer1"})
+                      .pointerUp({sourceName: "touchPointer2"})
+                      .send();
       }
 
       function run() {
@@ -29,18 +51,29 @@
           "pointerdown@grey, pointerdown@grey, pointercancel@grey, pointercancel@grey"
         ];
         var current_test_index = 0;
+        var black = document.getElementById("black");
+        var grey = document.getElementById("grey");
+        var done = document.getElementById("done");
 
-        on_event(document.getElementById("done"), "click", function() {
+        on_event(done, "click", function() {
           test_pointer_events[current_test_index].step(function () {
             assert_equals(active_pointers, 0);
             assert_equals(event_log.join(", "), expected_events[current_test_index]);
           });
           event_log = [];
 
-          test_pointer_events[current_test_index++].done();
+          // Make sure the test finishes after all the input actions are completed.
+          actions_promise.then( () => {
+            test_pointer_events[current_test_index++].done();
+            if (current_test_index < 2) {
+              actions_promise = twoFingerDrag(grey).then(function() {
+                return clickInTarget("touch", done);
+              });
+            }
+          });
         });
 
-        var targets = [document.getElementById("black"), document.getElementById("grey")];
+        var targets = [black, grey];
 
         ["pointerdown", "pointerup", "pointercancel"].forEach(function(eventName) {
           targets.forEach(function(target){
@@ -49,12 +82,16 @@
 
               if (event.type == "pointerdown") {
                 active_pointers++;
-
               } else {
                 active_pointers--;
               }
             });
           });
+        });
+
+        // Inject touch inputs.
+        actions_promise = twoFingerDrag(black).then(function() {
+          return clickInTarget("touch", done);
         });
       }
     </script>
