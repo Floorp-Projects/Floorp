@@ -1347,18 +1347,17 @@ bool StaticStrings::init(JSContext* cx) {
   using Latin1Range = mozilla::Range<const Latin1Char>;
 
   for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
-    Latin1Char buffer[] = {Latin1Char(i), '\0'};
-    JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 1));
+    Latin1Char ch = Latin1Char(i);
+    JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(&ch, 1));
     if (!s) {
       return false;
     }
-    HashNumber hash = mozilla::HashString(buffer, 1);
+    HashNumber hash = mozilla::HashString(&ch, 1);
     unitStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
   }
 
   for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++) {
-    Latin1Char buffer[] = {FROM_SMALL_CHAR(i >> 6), FROM_SMALL_CHAR(i & 0x3F),
-                           '\0'};
+    Latin1Char buffer[] = {FROM_SMALL_CHAR(i >> 6), FROM_SMALL_CHAR(i & 0x3F)};
     JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 2));
     if (!s) {
       return false;
@@ -1377,7 +1376,7 @@ bool StaticStrings::init(JSContext* cx) {
     } else {
       Latin1Char buffer[] = {Latin1Char('0' + (i / 100)),
                              Latin1Char('0' + ((i / 10) % 10)),
-                             Latin1Char('0' + (i % 10)), '\0'};
+                             Latin1Char('0' + (i % 10))};
       JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 3));
       if (!s) {
         return false;
