@@ -3499,6 +3499,9 @@ bool SweepingTracer::onScopeEdge(Scope** scopep) { return sweepEdge(scopep); }
 bool SweepingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
   return sweepEdge(sharedp);
 }
+bool SweepingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
+  return sweepEdge(groupp);
+}
 bool SweepingTracer::onBigIntEdge(BigInt** bip) { return sweepEdge(bip); }
 
 namespace js {

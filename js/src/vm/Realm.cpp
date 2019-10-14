@@ -366,7 +366,7 @@ void Realm::sweepAfterMinorGC() {
   objects_.sweepAfterMinorGC();
 }
 
-void Realm::sweepSavedStacks() { savedStacks_.sweep(); }
+void Realm::traceWeakSavedStacks(JSTracer* trc) { savedStacks_.traceWeak(trc); }
 
 void Realm::traceWeakObjects(JSTracer* trc) {
   if (global_) {
