@@ -9,6 +9,7 @@
 #include "mozilla/Components.h"
 #include "SandboxTestingParent.h"
 #include "SandboxTestingChild.h"
+#include "mozilla/dom/ContentParent.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -55,6 +56,15 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
     }
 
     switch (type) {
+      case GeckoProcessType_Content: {
+        nsTArray<ContentParent*> parents;
+        ContentParent::GetAll(parents);
+        MOZ_ASSERT(parents.Length() > 0);
+        mSandboxTestingParents[type] =
+            InitializeSandboxTestingActors(parents[0]);
+        break;
+      }
+
       default:
         MOZ_ASSERT_UNREACHABLE(
             "SandboxTest does not yet support this process type");
