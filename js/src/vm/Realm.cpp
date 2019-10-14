@@ -425,7 +425,7 @@ void Realm::traceWeakObjectRealm(JSTracer* trc) {
   objects_.traceWeakNativeIterators(trc);
 }
 
-void Realm::sweepVarNames() { varNames_.sweep(); }
+void Realm::tracekWeakVarNames(JSTracer* trc) { varNames_.traceWeak(trc); }
 
 void Realm::traceWeakTemplateObjects(JSTracer* trc) {
   if (mappedArgumentsTemplate_) {
