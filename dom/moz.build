@@ -120,7 +120,6 @@ DIRS += ['presentation']
 
 TEST_DIRS += [
     'tests',
-    'imptests',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk', 'cocoa', 'windows'):
