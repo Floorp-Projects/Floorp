@@ -1255,7 +1255,8 @@ def make_unicode_file(version,
 
         # If the following assert fails, it means space character is added to
         # non-BMP area.  In that case the following code should be uncommented
-        # and the corresponding code should be added to frontend.
+        # and the corresponding code should be added to frontend.  (At least
+        # unicode::IsSpace will require updating to handle this.)
         assert len(non_bmp_space_set.keys()) == 0
 
         write_supplemental_identifier_method('IsIdentifierStartNonBMP', non_bmp_id_start_set,
