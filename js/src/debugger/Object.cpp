@@ -1145,14 +1145,14 @@ bool DebuggerObject::CallData::executeInGlobalWithBindingsMethod() {
 // Copy a narrow or wide string to a vector, appending a null terminator.
 template <typename T>
 static bool CopyStringToVector(JSContext* cx, JSString* str, Vector<T>& chars) {
-  JSFlatString* flat = str->ensureFlat(cx);
-  if (!flat) {
+  JSLinearString* linear = str->ensureLinear(cx);
+  if (!linear) {
     return false;
   }
-  if (!chars.appendN(0, flat->length() + 1)) {
+  if (!chars.appendN(0, linear->length() + 1)) {
     return false;
   }
-  CopyChars(chars.begin(), *flat);
+  CopyChars(chars.begin(), *linear);
   return true;
 }
 

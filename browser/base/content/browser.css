@@ -1347,3 +1347,24 @@ toolbarpaletteitem > toolbaritem {
 toolbar[keyNav=true]:not([collapsed=true]):not([customizing=true]) toolbartabstop {
   -moz-user-focus: normal;
 }
+
+/* Frame used for rendering the DevTools inspector highlighters */
+iframe.devtools-highlighter-renderer {
+  border: none;
+  pointer-events: none;
+}
+
+/* Highlighter for the Browser Toolbox */
+:root > iframe.devtools-highlighter-renderer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+/* Highlighter for web content */
+.browserStack > iframe.devtools-highlighter-renderer {
+  -moz-box-flex: 1;
+}
