@@ -405,13 +405,14 @@ void Realm::sweepDebugEnvironments() {
   }
 }
 
-void ObjectRealm::sweepNativeIterators() {
+void ObjectRealm::traceWeakNativeIterators(JSTracer* trc) {
   /* Sweep list of native iterators. */
   NativeIterator* ni = enumerators->next();
   while (ni != enumerators) {
     JSObject* iterObj = ni->iterObj();
     NativeIterator* next = ni->next();
-    if (gc::IsAboutToBeFinalizedUnbarriered(&iterObj)) {
+    if (!TraceManuallyBarrieredWeakEdge(trc, &iterObj,
+                                        "ObjectRealm::enumerators")) {
       ni->unlink();
     }
     MOZ_ASSERT_IF(ni->objectBeingIterated(),
@@ -420,7 +421,9 @@ void ObjectRealm::sweepNativeIterators() {
   }
 }
 
-void Realm::sweepObjectRealm() { objects_.sweepNativeIterators(); }
+void Realm::traceWeakObjectRealm(JSTracer* trc) {
+  objects_.traceWeakNativeIterators(trc);
+}
 
 void Realm::sweepVarNames() { varNames_.sweep(); }
 

@@ -2105,7 +2105,7 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
     r->traceWeakSelfHostingScriptSource(trc);
     r->sweepDebugEnvironments();
     r->traceWeakEdgesInJitRealm(trc);
-    r->sweepObjectRealm();
+    r->traceWeakObjectRealm(trc);
     r->traceWeakTemplateObjects(trc);
   }
 }
@@ -5109,7 +5109,7 @@ static void SweepMisc(GCParallelTask* task) {
     r->traceWeakTemplateObjects(&trc);
     r->sweepSavedStacks();
     r->traceWeakSelfHostingScriptSource(&trc);
-    r->sweepObjectRealm();
+    r->traceWeakObjectRealm(&trc);
     r->traceWeakRegExps(&trc);
   }
 }

@@ -650,7 +650,7 @@ NativeIterator::NativeIterator() {
                sizeof(*this), MemCheckKind::MakeUndefined);
 
   // These are the only two fields in sentinel NativeIterators that are
-  // examined, in ObjectRealm::sweepNativeIterators.  Everything else is
+  // examined, in ObjectRealm::traceWeakNativeIterators. Everything else is
   // only examined *if* it's a NativeIterator being traced by a
   // PropertyIteratorObject that owns it, and nothing owns this iterator.
   prev_ = next_ = this;
