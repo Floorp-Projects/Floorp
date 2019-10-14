@@ -1653,10 +1653,6 @@ pref("browser.contentblocking.report.tracker.url", "https://support.mozilla.org/
 pref("browser.contentblocking.report.fingerprinter.url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/fingerprinters-report");
 pref("browser.contentblocking.report.cryptominer.url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/cryptominers-report");
 
-pref("browser.contentblocking.cfr-milestone.enabled", true);
-pref("browser.contentblocking.cfr-milestone.milestone-achieved", 0);
-pref("browser.contentblocking.cfr-milestone.milestones", "[1000, 5000, 10000, 25000, 50000, 100000, 500000]");
-
 // Enables the new Protections Panel.
 #ifdef NIGHTLY_BUILD
   pref("browser.protections_panel.enabled", true);

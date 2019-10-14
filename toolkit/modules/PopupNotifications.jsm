@@ -1110,7 +1110,6 @@ PopupNotifications.prototype = {
             telemetryStatId++;
           }
         }
-        popupnotification.setAttribute("secondarybuttonhidden", "false");
       } else {
         popupnotification.setAttribute("secondarybuttonhidden", "true");
       }
