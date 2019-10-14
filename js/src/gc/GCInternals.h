@@ -188,6 +188,7 @@ struct SweepingTracer final : public JS::CallbackTracer {
   bool onScopeEdge(Scope** scopep) override;
   bool onRegExpSharedEdge(RegExpShared** sharedp) override;
   bool onBigIntEdge(BigInt** bip) override;
+  bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
   bool onChild(const JS::GCCellPtr& thing) override {
     MOZ_CRASH("unexpected edge.");
     return true;

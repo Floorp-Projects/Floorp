@@ -2093,13 +2093,13 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   }
 
   if (jit::JitZone* jitZone = zone->jitZone()) {
-    jitZone->sweep();
+    jitZone->traceWeak(trc);
   }
 
   for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-    r->sweepObjectGroups();
+    r->traceWeakObjectGroups(trc);
     r->traceWeakRegExps(trc);
-    r->sweepSavedStacks();
+    r->traceWeakSavedStacks(trc);
     r->sweepVarNames();
     r->traceWeakObjects(trc);
     r->traceWeakSelfHostingScriptSource(trc);
@@ -5095,9 +5095,10 @@ static void SweepCCWrappers(GCParallelTask* task) {
 }
 
 static void SweepObjectGroups(GCParallelTask* task) {
+  SweepingTracer trc(task->gc->rt);
   for (SweepGroupRealmsIter r(task->gc); !r.done(); r.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
-    r->sweepObjectGroups();
+    r->traceWeakObjectGroups(&trc);
   }
 }
 
@@ -5107,7 +5108,7 @@ static void SweepMisc(GCParallelTask* task) {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
     r->traceWeakObjects(&trc);
     r->traceWeakTemplateObjects(&trc);
-    r->sweepSavedStacks();
+    r->traceWeakSavedStacks(&trc);
     r->traceWeakSelfHostingScriptSource(&trc);
     r->traceWeakObjectRealm(&trc);
     r->traceWeakRegExps(&trc);
@@ -5245,7 +5246,7 @@ void GCRuntime::sweepJitDataOnMainThread(JSFreeOp* fop) {
 
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
       if (jit::JitZone* jitZone = zone->jitZone()) {
-        jitZone->sweep();
+        jitZone->traceWeak(&trc);
       }
     }
   }

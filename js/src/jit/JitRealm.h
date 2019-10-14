@@ -478,8 +478,8 @@ struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
 
 template <typename Key>
 struct IcStubCodeMapGCPolicy {
-  static bool needsSweep(Key*, WeakHeapPtrJitCode* value) {
-    return IsAboutToBeFinalized(value);
+  static bool traceWeak(JSTracer* trc, Key*, WeakHeapPtrJitCode* value) {
+    return TraceWeakEdge(trc, value, "traceWeak");
   }
 };
 
@@ -501,7 +501,7 @@ class JitZone {
   BaselineCacheIRStubCodeMap baselineCacheIRStubCodes_;
 
  public:
-  void sweep();
+  void traceWeak(JSTracer* trc);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* jitZone, size_t* baselineStubsOptimized,
