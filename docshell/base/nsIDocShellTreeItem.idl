@@ -93,39 +93,6 @@ interface nsIDocShellTreeItem : nsISupports
 	readonly attribute nsIDocShellTreeItem sameTypeRootTreeItem;
 
 	/*
-	Returns the docShellTreeItem with the specified name.  Search order is as
-	follows...
-	1.)  Check name of self, if it matches return it.
-	2.)  For each immediate child.
-		a.) Check name of child and if it matches return it.
-		b.)  Ask the child to perform the check
-			i.) Do not ask a child if it is the aRequestor
-			ii.) Do not ask a child if it is of a different item type.
-	3.)  If there is a parent of the same item type ask parent to perform the check
-		a.) Do not ask parent if it is the aRequestor
-	4.)  If there is a tab group ask the tab group to perform the check
-		a.)  Do not ask the tab group if aSkipTabGroup
-		b.)  This should only be done if there is no parent of the same type.
-
-	Return the child DocShellTreeItem with the specified name.
-	name - This is the name of the item that is trying to be found.
-	aRequestor - This is the object that is requesting the find.  This
-		parameter is used to identify when the child is asking its parent to find
-		a child with the specific name.  The parent uses this parameter to ensure
-		a resursive state does not occur by not again asking the requestor to find
-		a shell by the specified name.  Inversely the child uses it to ensure it
-		does not ask its parent to do the search if its parent is the one that
-		asked it to search.  Children also use this to test against the treeOwner;
-	aOriginalRequestor - The original treeitem that made the request, if any.
-		This is used to ensure that we don't run into cross-site issues.
-	aSkipTabGroup - Whether the tab group should be checked.
-	*/
-	nsIDocShellTreeItem findItemWithName(in AString name,
-	                                     in nsIDocShellTreeItem aRequestor,
-	                                     in nsIDocShellTreeItem aOriginalRequestor,
-	                                     in bool aSkipTabGroup);
-
-	/*
 	The owner of the DocShell Tree.  This interface will be called upon when
 	the docshell has things it needs to tell to the owner of the docshell.
 	Note that docShell tree ownership does not cross tree types.  Meaning
@@ -222,4 +189,3 @@ interface nsIDocShellTreeItem : nsISupports
   [noscript,nostdcall,notxpcom] Document getDocument();
   [noscript,nostdcall,notxpcom] nsPIDOMWindowOuter getWindow();
 };
-

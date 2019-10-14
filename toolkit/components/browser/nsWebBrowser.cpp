@@ -404,20 +404,6 @@ nsWebBrowser::GetInProcessSameTypeRootTreeItem(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebBrowser::FindItemWithName(const nsAString& aName,
-                               nsIDocShellTreeItem* aRequestor,
-                               nsIDocShellTreeItem* aOriginalRequestor,
-                               bool aSkipTabGroup,
-                               nsIDocShellTreeItem** aResult) {
-  NS_ENSURE_STATE(mDocShell);
-  NS_ASSERTION(mDocShellTreeOwner,
-               "This should always be set when in this situation");
-
-  return mDocShell->FindItemWithName(aName, aRequestor, aOriginalRequestor,
-                                     aSkipTabGroup, aResult);
-}
-
 dom::Document* nsWebBrowser::GetDocument() {
   return mDocShell ? mDocShell->GetDocument() : nullptr;
 }
