@@ -467,6 +467,10 @@ this.ASRouterTriggerListeners = new Map([
 
         if (!this._initialized) {
           Services.obs.addObserver(this, "SiteProtection:ContentBlockingEvent");
+          Services.obs.addObserver(
+            this,
+            "SiteProtection:ContentBlockingMilestone"
+          );
           this.onLocationChange = this._onLocationChange.bind(this);
           EveryWindow.registerCallback(
             this.id,
@@ -480,6 +484,10 @@ this.ASRouterTriggerListeners = new Map([
                 win.gBrowser.removeTabsProgressListener(this);
               }
             }
+          );
+          Services.obs.removeObserver(
+            this,
+            "SiteProtection:ContentBlockingMilestone"
           );
 
           this._initialized = true;
@@ -517,6 +525,23 @@ this.ASRouterTriggerListeners = new Map([
                   pageLoad: this._sessionPageLoad,
                 },
               });
+            }
+            break;
+          case "SiteProtection:ContentBlockingMilestone":
+            if (this._events.includes(aSubject.wrappedJSObject.event)) {
+              this._triggerHandler(
+                Services.wm.getMostRecentBrowserWindow().gBrowser
+                  .selectedBrowser,
+                {
+                  id: "trackingProtection",
+                  context: {
+                    pageLoad: this._sessionPageLoad,
+                  },
+                  param: {
+                    type: aSubject.wrappedJSObject.event,
+                  },
+                }
+              );
             }
             break;
         }
