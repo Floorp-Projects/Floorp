@@ -564,7 +564,7 @@ class JS::Realm : public JS::shadow::Realm {
 
   // Add a name to [[VarNames]].  Reports OOM on failure.
   MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
-  void sweepVarNames();
+  void tracekWeakVarNames(JSTracer* trc);
 
   void removeFromVarNames(JS::Handle<JSAtom*> name) { varNames_.remove(name); }
 
