@@ -371,8 +371,7 @@ bool CanRecordEvent(const StaticMutexAutoLock& lock, const EventKey& eventKey,
 bool IsExpired(const EventKey& key) { return key.id == kExpiredEventId; }
 
 EventRecordArray* GetEventRecordsForProcess(const StaticMutexAutoLock& lock,
-                                            ProcessID processType,
-                                            const EventKey& eventKey) {
+                                            ProcessID processType) {
   EventRecordArray* eventRecords = nullptr;
   if (!gEventRecords.Get(uint32_t(processType), &eventRecords)) {
     eventRecords = new EventRecordArray();
@@ -477,8 +476,7 @@ RecordEventResult RecordEvent(const StaticMutexAutoLock& lock,
     return RecordEventResult::Ok;
   }
 
-  EventRecordArray* eventRecords =
-      GetEventRecordsForProcess(lock, processType, *eventKey);
+  EventRecordArray* eventRecords = GetEventRecordsForProcess(lock, processType);
   eventRecords->AppendElement(EventRecord(timestamp, *eventKey, value, extra));
 
   // Notify observers when we hit the "event" ping event record limit.
