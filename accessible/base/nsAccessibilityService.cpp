@@ -1115,6 +1115,8 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
         // polyline and image. A 'use' and 'text' graphic elements require
         // special support.
         newAcc = new EnumRoleAccessible<roles::GRAPHIC>(content, document);
+      } else if (content->IsSVGElement(nsGkAtoms::text)) {
+        newAcc = new HyperTextAccessibleWrap(content->AsElement(), document);
       } else if (content->IsSVGElement(nsGkAtoms::svg)) {
         newAcc = new EnumRoleAccessible<roles::DIAGRAM>(content, document);
       }
