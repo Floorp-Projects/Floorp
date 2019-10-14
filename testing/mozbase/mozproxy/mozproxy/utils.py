@@ -98,7 +98,7 @@ def tooltool_download(manifest, run_local, raptor_dir):
             )
             if x is not None
         )
-        
+
         command = [
             sys.executable,
             tooltool_path,
