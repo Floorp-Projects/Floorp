@@ -68,6 +68,7 @@ function popupShown(event)
   if (waitSteps > 0 && navigator.platform.includes("Linux") &&
       panel.screenY == 210) {
     waitSteps--;
+    /* eslint-disable mozilla/no-arbitrary-setTimeout */
     setTimeout(popupShown, 10, event);
     return;
   }
