@@ -814,3 +814,25 @@ decorate_task(
     );
   }
 );
+
+// Test that the capabilities for context variables are generated correctly.
+decorate_task(async function testAutomaticCapabilities() {
+  const capabilities = await RecipeRunner.getCapabilities();
+
+  ok(
+    capabilities.has("jexl.context.env.country"),
+    "context variables from Normandy's client context should be included"
+  );
+  ok(
+    capabilities.has("jexl.context.env.version"),
+    "context variables from the superclass context should be included"
+  );
+  ok(
+    !capabilities.has("jexl.context.env.getClientClassification"),
+    "non-getter functions should not be included"
+  );
+  ok(
+    !capabilities.has("jexl.context.env.prototype"),
+    "built-in, non-enumerable properties should not be included"
+  );
+});
