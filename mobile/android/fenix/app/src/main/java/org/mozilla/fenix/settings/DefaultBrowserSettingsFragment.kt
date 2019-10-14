@@ -110,7 +110,7 @@ class DefaultBrowserSettingsFragment : PreferenceFragmentCompat() {
                         SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
                     ),
                     newTab = true,
-                    from = BrowserDirection.FromSettings
+                    from = BrowserDirection.FromDefaultBrowserSettingsFragment
                 )
                 true
             }
