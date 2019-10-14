@@ -32,6 +32,10 @@
   flex-direction: column;
 }
 
+button {
+  min-width: 100px;
+}
+
 form {
   flex-grow: 1;
 }
