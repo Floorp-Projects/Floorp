@@ -940,17 +940,14 @@ already_AddRefed<nsIPersistentProperties> Accessible::Attributes() {
   nsCOMPtr<nsIPersistentProperties> attributes = NativeAttributes();
   if (!HasOwnContent() || !mContent->IsElement()) return attributes.forget();
 
-  // 'xml-roles' attribute for landmark.
-  nsAtom* landmark = LandmarkRole();
-  if (landmark) {
+  // 'xml-roles' attribute coming from ARIA.
+  nsAutoString xmlRoles;
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role,
+                                     xmlRoles)) {
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
+  } else if (nsAtom* landmark = LandmarkRole()) {
+    // 'xml-roles' attribute for landmark.
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, landmark);
-
-  } else {
-    // 'xml-roles' attribute coming from ARIA.
-    nsAutoString xmlRoles;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role,
-                                       xmlRoles))
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
   }
 
   // Expose object attributes from ARIA attributes.
