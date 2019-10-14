@@ -735,6 +735,9 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
       // blocks yet
       !aDelegatingFrame->IsInlineFrame() &&
 
+      // Bug 1588623: Support splitting absolute positioned multicol containers.
+      !aKidFrame->IsColumnSetWrapperFrame() &&
+
       // Don't split things below the fold. (Ideally we shouldn't *have*
       // anything totally below the fold, but we can't position frames
       // across next-in-flow breaks yet.
