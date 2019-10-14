@@ -283,7 +283,7 @@ class ContentActionTest {
     @Test
     fun `ConsumeDownloadAction removes download`() {
         val download: DownloadState = mock()
-        doReturn("1337").`when`(download).id
+        doReturn(1337L).`when`(download).id
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(tab.id, download)
@@ -292,7 +292,7 @@ class ContentActionTest {
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "1337")
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = 1337)
         ).joinBlocking()
 
         assertNull(tab.content.download)
@@ -301,7 +301,7 @@ class ContentActionTest {
     @Test
     fun `ConsumeDownloadAction does not remove download with different id`() {
         val download: DownloadState = mock()
-        doReturn("1337").`when`(download).id
+        doReturn(1337L).`when`(download).id
 
         store.dispatch(
             ContentAction.UpdateDownloadAction(tab.id, download)
@@ -310,7 +310,7 @@ class ContentActionTest {
         assertEquals(download, tab.content.download)
 
         store.dispatch(
-            ContentAction.ConsumeDownloadAction(tab.id, downloadId = "4223")
+            ContentAction.ConsumeDownloadAction(tab.id, downloadId = 4223)
         ).joinBlocking()
 
         assertNotNull(tab.content.download)

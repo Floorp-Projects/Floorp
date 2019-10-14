@@ -23,7 +23,6 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.feature.downloads.ext.putDownloadExtra
-import kotlin.random.Random
 import kotlin.reflect.KClass
 
 /**
@@ -64,17 +63,15 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
 
         validatePermissionGranted(applicationContext)
 
-        val downloadID = Random.nextLong()
-        queuedDownloads[downloadID] = download
+        queuedDownloads[download.id] = download
 
         val intent = Intent(applicationContext, service.java)
-        intent.putExtra(EXTRA_DOWNLOAD_ID, downloadID)
         intent.putDownloadExtra(download)
         applicationContext.startService(intent)
 
         registerBroadcastReceiver()
 
-        return downloadID
+        return download.id
     }
 
     /**

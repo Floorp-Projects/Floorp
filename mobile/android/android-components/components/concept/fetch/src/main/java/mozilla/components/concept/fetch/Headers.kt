@@ -51,6 +51,8 @@ interface Headers : Iterable<Header> {
      */
     object Names {
         const val CONTENT_DISPOSITION = "Content-Disposition"
+        const val CONTENT_RANGE = "Content-Range"
+        const val RANGE = "Range"
         const val CONTENT_LENGTH = "Content-Length"
         const val CONTENT_TYPE = "Content-Type"
         const val COOKIE = "Cookie"

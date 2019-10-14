@@ -5,7 +5,9 @@
 package mozilla.components.feature.downloads
 
 import android.content.Context
+import android.os.Environment
 import android.widget.Toast
+import androidx.annotation.ColorRes
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.fragment.app.FragmentManager
@@ -29,6 +31,7 @@ import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import java.io.File
 
 /**
  * Feature implementation to provide download functionality for the selected
@@ -46,9 +49,11 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  * @property useCases [DownloadsUseCases] instance for consuming processed downloads.
  * @property fragmentManager a reference to a [FragmentManager]. If a fragment
  * manager is provided, a dialog will be shown before every download.
+ * @property promptsStyling styling properties for the dialog
  * @property dialog a reference to a [DownloadDialogFragment]. If not provided, an
  * instance of [SimpleDownloadDialogFragment] will be used.
  */
+@Suppress("TooManyFunctions")
 class DownloadsFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,
@@ -58,8 +63,11 @@ class DownloadsFeature(
     private val downloadManager: DownloadManager = AndroidDownloadManager(applicationContext),
     private val customTabId: String? = null,
     private val fragmentManager: FragmentManager? = null,
+    private val promptsStyling: PromptsStyling? = null,
     @VisibleForTesting(otherwise = PRIVATE)
-    internal var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance()
+    internal var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance(
+        promptsStyling = promptsStyling
+)
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadCompleted: OnDownloadCompleted
@@ -76,6 +84,7 @@ class DownloadsFeature(
      * Starts observing downloads on the selected session and sends them to the [DownloadManager]
      * to be processed.
      */
+    @Suppress("Deprecation")
     override fun start() {
         findPreviousDialogFragment()?.let {
             dialog = it
@@ -87,7 +96,15 @@ class DownloadsFeature(
                 .collect { state ->
                     val download = state.content.download
                     if (download != null) {
-                        processDownload(state, download)
+                        // Update the file name to ensure it doesn't collide with one already on disk]
+                        val downloadWithUniqueName = download.fileName?.let {
+                            download.copy(fileName = uniqueFileName(
+                                Environment.getExternalStoragePublicDirectory(download.destinationDirectory),
+                                it
+                            ))
+                        } ?: download
+
+                        processDownload(state, downloadWithUniqueName)
                     }
                 }
         }
@@ -107,6 +124,7 @@ class DownloadsFeature(
      */
     private fun processDownload(tab: SessionState, download: DownloadState): Boolean {
         return if (applicationContext.isPermissionGranted(downloadManager.permissions.asIterable())) {
+
             if (fragmentManager != null && !download.skipConfirmation) {
                 showDialog(tab, download)
                 false
@@ -193,4 +211,35 @@ class DownloadsFeature(
         val download = state.content.download ?: return
         block(Pair(state, download))
     }
+
+    /**
+     * Checks if the file exists so as not to overwrite one already in downloads
+     */
+    private fun uniqueFileName(directory: File, fileName: String): String {
+        val fileExtension = fileName.substringAfterLast(".")
+        val baseFileName = fileName.replace(fileExtension, "")
+
+        var potentialFileName = File(directory, fileName)
+        var copyVersionNumber = 1
+
+        while (potentialFileName.exists()) {
+            potentialFileName = File(directory, "$baseFileName($copyVersionNumber).$fileExtension")
+            copyVersionNumber += 1
+        }
+
+        return potentialFileName.name
+    }
+
+    /**
+     * Styling for the download dialog prompt
+     */
+    data class PromptsStyling(
+        val gravity: Int,
+        val shouldWidthMatchParent: Boolean = false,
+        @ColorRes
+        val positiveButtonBackgroundColor: Int? = null,
+        @ColorRes
+        val positiveButtonTextColor: Int? = null,
+        val positiveButtonRadius: Float? = null
+    )
 }
