@@ -35,6 +35,16 @@
         <item name="android:clickable">true</item>
     </style>
 
+    <!-- BrowserMenuCategory -->
+    <style name="Mozac.Browser.Menu.Item.Category" parent="">
+        <item name="android:layout_height">@dimen/mozac_browser_menu_category_layout_height</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_category_text_size</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_category_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_category_padding_end</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+    <!-- BrowserMenuCategory -->
+
     <!-- BrowserMenuImageText -->
     <style name="Mozac.Browser.Menu.Item.ImageText.Icon" parent="">
         <item name="android:layout_width">@dimen/mozac_browser_menu_item_image_text_icon_width</item>
