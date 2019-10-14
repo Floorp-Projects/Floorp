@@ -87,7 +87,7 @@ function getExtension() {
     }, {urls});
 
     async function onUpdated(tabId, tabInfo, tab) {
-      if (tabInfo.status !== "complete") {
+      if (tabInfo.status !== "complete" || tab.url === "about:blank") {
         return;
       }
       browser.tabs.remove(tabId);
