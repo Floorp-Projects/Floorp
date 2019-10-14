@@ -16,6 +16,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Location.h"
 #include "mozilla/dom/LocationBinding.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -461,8 +462,14 @@ void BrowsingContext::GetChildren(Children& aChildren) {
 //
 // See
 // https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-BrowsingContext* BrowsingContext::FindWithName(
-    const nsAString& aName, BrowsingContext& aRequestingContext) {
+BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
+  RefPtr<BrowsingContext> requestingContext = this;
+  if (nsCOMPtr<nsIDocShell> caller = do_GetInterface(GetEntryGlobal())) {
+    if (caller->GetBrowsingContext()) {
+      requestingContext = caller->GetBrowsingContext();
+    }
+  }
+
   BrowsingContext* found = nullptr;
   if (aName.IsEmpty()) {
     // You can't find a browsing context with an empty name.
@@ -472,9 +479,9 @@ BrowsingContext* BrowsingContext::FindWithName(
     // a blank name.
     found = nullptr;
   } else if (IsSpecialName(aName)) {
-    found = FindWithSpecialName(aName, aRequestingContext);
+    found = FindWithSpecialName(aName, *requestingContext);
   } else if (BrowsingContext* child =
-                 FindWithNameInSubtree(aName, aRequestingContext)) {
+                 FindWithNameInSubtree(aName, *requestingContext)) {
     found = child;
   } else {
     BrowsingContext* current = this;
@@ -488,7 +495,7 @@ BrowsingContext* BrowsingContext::FindWithName(
         // contexts in the same browsing context group.
         siblings = &mGroup->Toplevels();
       } else if (parent->NameEquals(aName) &&
-                 aRequestingContext.CanAccess(parent) &&
+                 requestingContext->CanAccess(parent) &&
                  parent->IsTargetable()) {
         found = parent;
         break;
@@ -502,7 +509,7 @@ BrowsingContext* BrowsingContext::FindWithName(
         }
 
         if (BrowsingContext* relative =
-                sibling->FindWithNameInSubtree(aName, aRequestingContext)) {
+                sibling->FindWithNameInSubtree(aName, *requestingContext)) {
           found = relative;
           // Breaks the outer loop
           parent = nullptr;
@@ -516,7 +523,7 @@ BrowsingContext* BrowsingContext::FindWithName(
 
   // Helpers should perform access control checks, which means that we
   // only need to assert that we can access found.
-  MOZ_DIAGNOSTIC_ASSERT(!found || aRequestingContext.CanAccess(found));
+  MOZ_DIAGNOSTIC_ASSERT(!found || requestingContext->CanAccess(found));
 
   return found;
 }

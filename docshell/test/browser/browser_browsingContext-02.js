@@ -110,11 +110,12 @@ add_task(async function() {
           // docShell.
           function findWithName(bc, name) {
             return content.SpecialPowers.spawn(bc, [bc, name], (bc, name) => {
-              return bc.findWithName(name, bc);
+              return bc.findWithName(name);
             });
           }
 
           async function reachable(start, target) {
+            info(start.name, target.name);
             is(
               await findWithName(start, target.name),
               target,
