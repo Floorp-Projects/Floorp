@@ -73,43 +73,35 @@ void MediaKeySystemAccessManager::Request(
   EME_LOG("MediaKeySystemAccessManager::Request %s",
           NS_ConvertUTF16toUTF8(aKeySystem).get());
 
-  bool isSupported = true;
-#ifdef XP_WIN
   // In Windows OS, some Firefox windows that host content cannot support
   // protected content, so check the status of support for this window.
-  RefPtr<BrowserChild> browser(BrowserChild::GetFrom(mWindow));
-  if (browser->RequiresIsWindowSupportingProtectedMediaCheck(isSupported)) {
-    int browserID = browser->ChromeOuterWindowID();
-
-    RefPtr<MediaKeySystemAccessManager> self(this);
-    nsString keySystem(aKeySystem);
-    RefPtr<DetailedPromise> promise(aPromise);
-    Sequence<MediaKeySystemConfiguration> configs(aConfigs);
-
-    browser->SendIsWindowSupportingProtectedMedia(browserID)->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
-        [self, browser, promise, keySystem, configs,
-         aType](bool isSupportedLambda) {
-          browser->UpdateIsWindowSupportingProtectedMedia(isSupportedLambda);
-          self->RequestCallback(isSupportedLambda, promise, keySystem, configs,
-                                aType);
-        },
-        [self, browser, promise, keySystem, configs,
-         aType](const mozilla::ipc::ResponseRejectReason reason) {
-          // We're likely here because the tab/window was closed as we were
-          // performing the check. Try to gracefully handle.
-          EME_LOG(
-              "Failed to make IPC call to IsWindowSupportingProtectedMedia: "
-              "reason=%d",
-              static_cast<int>(reason));
-          // Treat as failure.
-          self->RequestCallback(false, promise, keySystem, configs, aType);
-        });
-  } else {
-#endif
-    RequestCallback(isSupported, aPromise, aKeySystem, aConfigs, aType);
+  // On other platforms windows should always support protected media.
 #ifdef XP_WIN
-  }
+  RefPtr<BrowserChild> browser(BrowserChild::GetFrom(mWindow));
+
+  RefPtr<MediaKeySystemAccessManager> self(this);
+  nsString keySystem(aKeySystem);
+  RefPtr<DetailedPromise> promise(aPromise);
+  Sequence<MediaKeySystemConfiguration> configs(aConfigs);
+
+  browser->DoesWindowSupportProtectedMedia()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [self, promise, keySystem, configs, aType](bool isSupported) {
+        self->RequestCallback(isSupported, promise, keySystem, configs, aType);
+      },
+      [self, promise, keySystem, configs,
+       aType](const mozilla::ipc::ResponseRejectReason reason) {
+        // We're likely here because the tab/window was closed as we were
+        // performing the check. Try to gracefully handle.
+        EME_LOG(
+            "Failed to make IPC call to IsWindowSupportingProtectedMedia: "
+            "reason=%d",
+            static_cast<int>(reason));
+        // Treat as failure.
+        self->RequestCallback(false, promise, keySystem, configs, aType);
+      });
+#else
+  RequestCallback(true, aPromise, aKeySystem, aConfigs, aType);
 #endif
 }
 
