@@ -1248,31 +1248,25 @@ bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes,
 
 template <typename CharT>
 /* static */
-bool JSFlatString::isIndexSlow(const CharT* s, size_t length,
-                               uint32_t* indexp) {
-  CharT ch = *s;
-
-  if (!IsAsciiDigit(ch)) {
-    return false;
-  }
+bool JSLinearString::isIndexSlow(const CharT* s, size_t length,
+                                 uint32_t* indexp) {
+  MOZ_ASSERT(length > 0);
+  MOZ_ASSERT(IsAsciiDigit(*s),
+             "caller's fast path must have checked first char");
 
   if (length > UINT32_CHAR_BUFFER_LENGTH) {
     return false;
   }
 
-  /*
-   * Make sure to account for the '\0' at the end of characters, dereferenced
-   * in the loop below.
-   */
-  RangedPtr<const CharT> cp(s, length + 1);
-  const RangedPtr<const CharT> end(s + length, s, length + 1);
+  RangedPtr<const CharT> cp(s, length);
+  const RangedPtr<const CharT> end(s + length, s, length);
 
   uint32_t index = AsciiDigitToNumber(*cp++);
   uint32_t oldIndex = 0;
   uint32_t c = 0;
 
   if (index != 0) {
-    while (IsAsciiDigit(*cp)) {
+    while (cp < end && IsAsciiDigit(*cp)) {
       oldIndex = index;
       c = AsciiDigitToNumber(*cp);
       index = 10 * index + c;
@@ -1298,11 +1292,11 @@ bool JSFlatString::isIndexSlow(const CharT* s, size_t length,
   return false;
 }
 
-template bool JSFlatString::isIndexSlow(const Latin1Char* s, size_t length,
-                                        uint32_t* indexp);
+template bool JSLinearString::isIndexSlow(const Latin1Char* s, size_t length,
+                                          uint32_t* indexp);
 
-template bool JSFlatString::isIndexSlow(const char16_t* s, size_t length,
-                                        uint32_t* indexp);
+template bool JSLinearString::isIndexSlow(const char16_t* s, size_t length,
+                                          uint32_t* indexp);
 
 /*
  * Set up some tools to make it easier to generate large tables. After constant
