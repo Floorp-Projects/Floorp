@@ -254,15 +254,15 @@ ProgressTracker.STEPS = {
 class SyncedBookmarksMirror {
   constructor(
     db,
+    wasCorrupt = false,
     {
-      recordTelemetryEvent,
       recordStepTelemetry,
       recordValidationTelemetry,
       finalizeAt = PlacesUtils.history.shutdownClient.jsclient,
     } = {}
   ) {
     this.db = db;
-    this.recordTelemetryEvent = recordTelemetryEvent;
+    this.wasCorrupt = wasCorrupt;
     this.recordValidationTelemetry = recordValidationTelemetry;
 
     this.merger = new SyncedBookmarksMerger();
@@ -292,9 +292,6 @@ class SyncedBookmarksMirror {
    * @param  {String} options.path
    *         The path to the mirror database file, either absolute or relative
    *         to the profile path.
-   * @param  {Function} options.recordTelemetryEvent
-   *         A function with the signature `(object: String, method: String,
-   *         value: String?, extra: Object?)`, used to emit telemetry events.
    * @param  {Function} options.recordStepTelemetry
    *         A function with the signature `(name: String, took: Number,
    *         counts: Array?)`, where `name` is the name of the merge step,
@@ -315,46 +312,29 @@ class SyncedBookmarksMirror {
    */
   static async open(options) {
     let db = await PlacesUtils.promiseUnsafeWritableDBConnection();
-    let path = OS.Path.join(OS.Constants.Path.profileDir, options.path);
-    let whyFailed = "initialize";
-    try {
-      try {
-        await attachAndInitMirrorDatabase(db, path);
-      } catch (ex) {
-        if (isDatabaseCorrupt(ex)) {
-          MirrorLog.warn(
-            "Error attaching mirror to Places; removing and " +
-              "recreating mirror",
-            ex
-          );
-          options.recordTelemetryEvent("mirror", "open", "retry", {
-            why: "corrupt",
-          });
-
-          whyFailed = "remove";
-          await OS.File.remove(path);
-
-          whyFailed = "replace";
-          await attachAndInitMirrorDatabase(db, path);
-        } else {
-          MirrorLog.error("Unrecoverable error attaching mirror to Places", ex);
-          throw ex;
-        }
-      }
-      try {
-        let info = await OS.File.stat(path);
-        let size = Math.floor(info.size / 1024);
-        options.recordTelemetryEvent("mirror", "open", "success", { size });
-      } catch (ex) {
-        MirrorLog.warn("Error recording stats for mirror database size", ex);
-      }
-    } catch (ex) {
-      options.recordTelemetryEvent("mirror", "open", "error", {
-        why: whyFailed,
-      });
-      throw ex;
+    if (!db) {
+      throw new TypeError("Can't open mirror without Places connection");
     }
-    return new SyncedBookmarksMirror(db, options);
+    let path = OS.Path.join(OS.Constants.Path.profileDir, options.path);
+    let wasCorrupt = false;
+    try {
+      await attachAndInitMirrorDatabase(db, path);
+    } catch (ex) {
+      if (isDatabaseCorrupt(ex)) {
+        MirrorLog.warn(
+          "Error attaching mirror to Places; removing and " +
+            "recreating mirror",
+          ex
+        );
+        wasCorrupt = true;
+        await OS.File.remove(path);
+        await attachAndInitMirrorDatabase(db, path);
+      } else {
+        MirrorLog.error("Unrecoverable error attaching mirror to Places", ex);
+        throw ex;
+      }
+    }
+    return new SyncedBookmarksMirror(db, wasCorrupt, options);
   }
 
   /**

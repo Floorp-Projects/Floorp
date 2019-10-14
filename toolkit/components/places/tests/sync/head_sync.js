@@ -272,11 +272,6 @@ async function fetchAllKeywords(info) {
 async function openMirror(name, options = {}) {
   let buf = await SyncedBookmarksMirror.open({
     path: `${name}_buf.sqlite`,
-    recordTelemetryEvent(...args) {
-      if (options.recordTelemetryEvent) {
-        options.recordTelemetryEvent.call(this, ...args);
-      }
-    },
     recordStepTelemetry(...args) {
       if (options.recordStepTelemetry) {
         options.recordStepTelemetry.call(this, ...args);
