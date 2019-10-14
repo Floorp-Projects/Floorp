@@ -4,56 +4,30 @@
 
 @import url("chrome://browser/skin/error-pages.css");
 
-html {
-  background-color: #A4000F;
-}
-
-body {
-  color: white;
+:root {
+  --in-content-page-background: #A4000F;
+  --in-content-page-color: white;
+  --in-content-text-color: white;
+  --in-content-selected-text: black;
+  --in-content-button-background: transparent;
+  --in-content-button-background-hover: #5a0002;
+  --in-content-button-background-active: #3e0200;
+  --in-content-primary-button-background: white;
+  --in-content-primary-button-background-hover: rgba(255, 255, 255, 0.8);
+  --in-content-primary-button-background-active: rgba(255, 255, 255, 0.7);
 }
 
 .title {
   background-image: url("chrome://global/skin/icons/blocked.svg");
 }
 
-.title-text {
-  color: white;
-}
-
 .button-container button {
-  background-color: transparent;
-  /* !important overrides the common.css button color */
-  color: white !important;
   border: 1px solid white;
   margin-inline-end: 0;
   margin-top: 1.5em;
 }
 
-.button-container button:hover {
-  background-color: #5a0002;
-}
-
-.button-container button:hover:active {
-  background-color: #3e0200;
-}
-
-#goBackButton {
-  color: black !important;
-  background-color: white;
-}
-
-#goBackButton:hover {
-  background-color: white;
-  opacity: 0.8;
-}
-
-#goBackButton:active {
-  background-color: white;
-  opacity: 0.7;
-}
-
 #advisory_provider {
-  color: white;
   text-decoration: underline;
 }
 

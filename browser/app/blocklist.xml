@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570701652245">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570713923845">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3502,6 +3502,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="bb76b262-7087-4cf2-a82f-12cfbf91239a" id="{2a78ab07-91b2-4086-889d-619e43d5e5f8}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="986aac02-beba-40b2-b463-d8447a778a2e" id="/^((\{2B0EC7FF-F330-4e0c-8B33-EFFEC8D39E70\})|(\{f70c89b0-bbf3-41a9-bc1f-0912dcf53f33\})|(@Classifieds)|(@Converter)|(@Coupons)|(@Directions)|(@DownloadManager)|(@Email)|(@Fitness)|(@Flights)|(@FormsApp)|(@Games)|(@Maps)|(@News)|(@Package)|(@Photo)|(@Radio)|(@Recipes)|(@search-encrypt)|(@search-incognito)|(@searchencrypt-b)|(@searchencryptblocker)|(@Speedtest)|(@Sports)|(@Transit)|(@TV)|(@Weather)|(aweapps@Email)|(classified@jetpack)|(email@searchleasier\.com)|(foo-bar@example\.com)|(games@jetpack)|(JS@Converter)|(login@easier)|(maps-webext@jetpack)|(Maps@SSA)|(web-ext@games\.com)|(web@ShoppingNewTab)|(web@SocialNewTab)|(web@WebDesignNewTab)|(webapp@LoginAssistantTab)|(webex@Converter)|(webex@Email)|(webtab@Shopping)|(webtab@Social)|(webtab@WebDesign))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

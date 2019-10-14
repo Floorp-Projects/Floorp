@@ -28,7 +28,6 @@ struct AuxCPOWData {
   ObjectId id;
   bool isCallable;
   bool isConstructor;
-  bool isDOMObject;
 
   // The object tag is just some auxilliary information that clients can use
   // however they see fit.
@@ -38,11 +37,10 @@ struct AuxCPOWData {
   nsCString className;
 
   AuxCPOWData(ObjectId id, bool isCallable, bool isConstructor,
-              bool isDOMObject, const nsACString& objectTag)
+              const nsACString& objectTag)
       : id(id),
         isCallable(isCallable),
         isConstructor(isConstructor),
-        isDOMObject(isDOMObject),
         objectTag(objectTag) {}
 };
 
@@ -312,17 +310,6 @@ bool CPOWProxyHandler::get(JSContext* cx, HandleObject proxy,
   FORWARD(get, (cx, proxy, receiver, id, vp), false);
 }
 
-static bool CPOWDOMQI(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  if (!args.thisv().isObject() || !IsCPOW(&args.thisv().toObject())) {
-    JS_ReportErrorASCII(cx, "bad this object passed to special QI");
-    return false;
-  }
-
-  RootedObject proxy(cx, &args.thisv().toObject());
-  FORWARD(DOMQI, (cx, proxy, args), false);
-}
-
 static bool CPOWToString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject callee(cx, &args.callee());
@@ -379,41 +366,6 @@ bool WrapperOwner::toString(JSContext* cx, HandleObject cpow,
   return true;
 }
 
-bool WrapperOwner::DOMQI(JSContext* cx, JS::HandleObject proxy,
-                         JS::CallArgs& args) {
-  // Someone's calling us, handle nsISupports specially to avoid unnecessary
-  // CPOW traffic.
-  if (Maybe<nsID> id = xpc::JSValue2ID(cx, args[0])) {
-    if (id->Equals(NS_GET_IID(nsISupports))) {
-      args.rval().set(args.thisv());
-      return true;
-    }
-
-    // Webidl-implemented DOM objects never have nsIClassInfo.
-    if (id->Equals(NS_GET_IID(nsIClassInfo))) {
-      return Throw(cx, NS_ERROR_NO_INTERFACE);
-    }
-  }
-
-  // It wasn't nsISupports, call into the other process to do the QI for us
-  // (since we don't know what other interfaces our object supports). Note
-  // that we have to use JS_GetPropertyDescriptor here to avoid infinite
-  // recursion back into CPOWDOMQI via WrapperOwner::get().
-  // We could stash the actual QI function on our own function object to avoid
-  // if we're called multiple times, but since we're transient, there's no
-  // point right now.
-  JS::Rooted<PropertyDescriptor> propDesc(cx);
-  if (!JS_GetPropertyDescriptor(cx, proxy, "QueryInterface", &propDesc)) {
-    return false;
-  }
-
-  if (!propDesc.value().isObject()) {
-    MOZ_ASSERT_UNREACHABLE("We didn't get QueryInterface off a node");
-    return Throw(cx, NS_ERROR_UNEXPECTED);
-  }
-  return JS_CallFunctionValue(cx, proxy, propDesc.value(), args, args.rval());
-}
-
 bool WrapperOwner::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
                        HandleId id, MutableHandleValue vp) {
   ObjectId objId = idOf(proxy);
@@ -426,21 +378,6 @@ bool WrapperOwner::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
   JSIDVariant idVar;
   if (!toJSIDVariant(cx, id, &idVar)) {
     return false;
-  }
-
-  AuxCPOWData* data = AuxCPOWDataOf(proxy);
-  if (data->isDOMObject && idVar.type() == JSIDVariant::TnsString &&
-      idVar.get_nsString().EqualsLiteral("QueryInterface")) {
-    // Handle QueryInterface on DOM Objects specially since we can assume
-    // certain things about their implementation.
-    RootedFunction qi(cx,
-                      JS_NewFunction(cx, CPOWDOMQI, 1, 0, "QueryInterface"));
-    if (!qi) {
-      return false;
-    }
-
-    vp.set(ObjectValue(*JS_GetFunctionObject(qi)));
-    return true;
   }
 
   JSVariant val;
@@ -1146,9 +1083,8 @@ JSObject* WrapperOwner::fromRemoteObjectVariant(JSContext* cx,
     // Incref once we know the decref will be called.
     incref();
 
-    AuxCPOWData* aux =
-        new AuxCPOWData(objId, objVar.isCallable(), objVar.isConstructor(),
-                        objVar.isDOMObject(), objVar.objectTag());
+    AuxCPOWData* aux = new AuxCPOWData(
+        objId, objVar.isCallable(), objVar.isConstructor(), objVar.objectTag());
 
     SetProxyReservedSlot(obj, 0, PrivateValue(this));
     SetProxyReservedSlot(obj, 1, PrivateValue(aux));

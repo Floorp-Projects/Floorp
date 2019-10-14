@@ -1018,17 +1018,18 @@ bool WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    Rooted<JSFlatString*> flat(cx, str->ensureFlat(cx));
-    if (!flat) {
+    Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+    if (!linear) {
       return false;
     }
 
-    if (!name.initLengthUninitialized(JS::GetDeflatedUTF8StringLength(flat))) {
+    if (!name.initLengthUninitialized(
+            JS::GetDeflatedUTF8StringLength(linear))) {
       return false;
     }
 
     mozilla::Unused << JS::DeflateStringToUTF8Buffer(
-        flat, MakeSpan(name.begin(), name.length()));
+        linear, MakeSpan(name.begin(), name.length()));
   }
 
   RootedValueVector elems(cx);

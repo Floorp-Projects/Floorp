@@ -4,7 +4,6 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
   PureComponent,
@@ -28,20 +27,15 @@ const ManifestSection = createFactory(require("./ManifestSection"));
 const ManifestJsonLink = createFactory(require("./ManifestJsonLink"));
 
 const { MANIFEST_MEMBER_VALUE_TYPES } = require("../../constants");
+const Types = require("../../types/index");
 
 /**
  * A canonical manifest, splitted in different sections
  */
 class Manifest extends PureComponent {
   static get propTypes() {
-    // TODO: Use well-defined types
-    //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1576881
     return {
-      icons: PropTypes.array.isRequired,
-      identity: PropTypes.array.isRequired,
-      presentation: PropTypes.array.isRequired,
-      validation: PropTypes.array.isRequired,
-      url: PropTypes.string.isRequired,
+      ...Types.manifest, // { identity, presentation, icons, validation, url }
     };
   }
 
