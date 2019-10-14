@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.network-monitor .request-blocking-panel {
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+}
+
 /* The "Enable Blocking Requests" bar */
 .network-monitor .request-blocking-enable-bar {
   background: var(--theme-tab-toolbar-background);
@@ -37,11 +43,22 @@
   cursor: default;
 }
 
+.request-blocking-contents {
+  position: absolute;
+  bottom: 0;
+  top: 26px;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+}
+
+
 /* Blocked request list */
 .network-monitor .request-blocking-list {
   margin: 0;
   padding: 0;
   border-bottom: 1px solid var(--theme-splitter-color);
+  width: 100%;
 }
 
 .network-monitor .request-blocking-list li {
