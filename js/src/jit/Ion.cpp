@@ -574,9 +574,9 @@ bool JitRuntime::MarkJitcodeGlobalTableIteratively(GCMarker* marker) {
 }
 
 /* static */
-void JitRuntime::SweepJitcodeGlobalTable(JSRuntime* rt) {
+void JitRuntime::TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc) {
   if (rt->hasJitRuntime() && rt->jitRuntime()->hasJitcodeGlobalTable()) {
-    rt->jitRuntime()->getJitcodeGlobalTable()->sweep(rt);
+    rt->jitRuntime()->getJitcodeGlobalTable()->traceWeak(rt, trc);
   }
 }
 
