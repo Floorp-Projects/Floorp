@@ -263,8 +263,6 @@ class JS_FRIEND_API GCCellPtr {
       : ptr(checkedCast(p, JS::MapTypeToTraceKind<T>::kind)) {}
   explicit GCCellPtr(JSFunction* p)
       : ptr(checkedCast(p, JS::TraceKind::Object)) {}
-  explicit GCCellPtr(JSFlatString* str)
-      : ptr(checkedCast(str, JS::TraceKind::String)) {}
   explicit GCCellPtr(const Value& v);
 
   JS::TraceKind kind() const {

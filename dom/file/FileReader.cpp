@@ -209,9 +209,9 @@ void FileReader::OnLoadEndArrayBuffer() {
   }
 
   nsAutoString errorName;
-  JSFlatString* name = js::GetErrorTypeName(cx, er->exnType);
+  JSLinearString* name = js::GetErrorTypeName(cx, er->exnType);
   if (name) {
-    AssignJSFlatString(errorName, name);
+    AssignJSLinearString(errorName, name);
   }
 
   nsAutoCString errorMsg(er->message().c_str());

@@ -3358,15 +3358,15 @@ struct DisassembleOptionParser {
     /* Read options off early arguments */
     while (argc > 0 && argv[0].isString()) {
       JSString* str = argv[0].toString();
-      JSFlatString* flatStr = JS_FlattenString(cx, str);
-      if (!flatStr) {
+      JSLinearString* linearStr = JS_EnsureLinearString(cx, str);
+      if (!linearStr) {
         return false;
       }
-      if (JS_FlatStringEqualsLiteral(flatStr, "-l")) {
+      if (JS_LinearStringEqualsLiteral(linearStr, "-l")) {
         lines = true;
-      } else if (JS_FlatStringEqualsLiteral(flatStr, "-r")) {
+      } else if (JS_LinearStringEqualsLiteral(linearStr, "-r")) {
         recursive = true;
-      } else if (JS_FlatStringEqualsLiteral(flatStr, "-S")) {
+      } else if (JS_LinearStringEqualsLiteral(linearStr, "-S")) {
         sourceNotes = false;
       } else {
         break;
@@ -4542,13 +4542,13 @@ static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSFlatString* strArg = JS_FlattenString(cx, args[0].toString());
+  JSLinearString* strArg = JS_EnsureLinearString(cx, args[0].toString());
   if (!strArg) {
     return false;
   }
 
-#define JIT_COMPILER_MATCH(key, string)                      \
-  else if (JS_FlatStringEqualsLiteral(strArg, string)) opt = \
+#define JIT_COMPILER_MATCH(key, string)                        \
+  else if (JS_LinearStringEqualsLiteral(strArg, string)) opt = \
       JSJITCOMPILER_##key;
 
   JSJitCompilerOption opt = JSJITCOMPILER_NOT_AN_OPTION;

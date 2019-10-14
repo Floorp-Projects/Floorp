@@ -751,7 +751,7 @@ NPUTF8* _utf8fromidentifier(NPIdentifier id) {
 
   JSString* str = NPIdentifierToString(id);
   nsAutoString autoStr;
-  AssignJSFlatString(autoStr, JS_ASSERT_STRING_IS_FLAT(str));
+  AssignJSLinearString(autoStr, JS_ASSERT_STRING_IS_LINEAR(str));
 
   return ToNewUTF8String(autoStr);
 }
