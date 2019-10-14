@@ -991,7 +991,7 @@ void js::Nursery::collect(JS::GCReason reason) {
 void js::Nursery::doCollection(JS::GCReason reason,
                                TenureCountCache& tenureCounts) {
   JSRuntime* rt = runtime();
-  AutoGCSession session(rt, JS::HeapState::MinorCollecting);
+  AutoGCSession session(gc, JS::HeapState::MinorCollecting);
   AutoSetThreadIsPerformingGC performingGC;
   AutoStopVerifyingBarriers av(rt, false);
   AutoDisableProxyCheck disableStrictProxyChecking;
@@ -1155,11 +1155,11 @@ float js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
   mozilla::Maybe<AutoGCSession> session;
   uint32_t numStringsTenured = 0;
   uint32_t numNurseryStringRealmsDisabled = 0;
-  for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
+  for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
     if (pretenureStr && zone->allocNurseryStrings &&
         zone->tenuredStrings >= 30 * 1000) {
       if (!session.isSome()) {
-        session.emplace(rt, JS::HeapState::MinorCollecting);
+        session.emplace(gc, JS::HeapState::MinorCollecting);
       }
       CancelOffThreadIonCompile(zone);
       bool preserving = zone->isPreservingCode();

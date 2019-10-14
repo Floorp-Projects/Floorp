@@ -6417,22 +6417,22 @@ static const char* HeapStateToLabel(JS::HeapState heapState) {
 }
 
 /* Start a new heap session. */
-AutoHeapSession::AutoHeapSession(JSRuntime* rt, JS::HeapState heapState)
-    : runtime(rt),
-      prevState(rt->gc.heapState_),
-      profilingStackFrame(rt->mainContextFromOwnThread(),
+AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
+    : gc(gc),
+      prevState(gc->heapState_),
+      profilingStackFrame(gc->rt->mainContextFromOwnThread(),
                           HeapStateToLabel(heapState),
                           JS::ProfilingCategoryPair::GCCC) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
   MOZ_ASSERT(prevState == JS::HeapState::Idle);
   MOZ_ASSERT(heapState != JS::HeapState::Idle);
 
-  rt->gc.heapState_ = heapState;
+  gc->heapState_ = heapState;
 }
 
 AutoHeapSession::~AutoHeapSession() {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  runtime->gc.heapState_ = prevState;
+  gc->heapState_ = prevState;
 }
 
 JS_PUBLIC_API JS::HeapState JS::RuntimeHeapState() {
@@ -6447,7 +6447,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
     return IncrementalResult::Ok;
   }
 
-  AutoGCSession session(rt, JS::HeapState::MajorCollecting);
+  AutoGCSession session(this, JS::HeapState::MajorCollecting);
 
   switch (incrementalState) {
     case State::NotActive:
@@ -7121,7 +7121,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
     ++number;  // This otherwise happens in minorGC().
   }
 
-  AutoGCSession session(rt, JS::HeapState::MajorCollecting);
+  AutoGCSession session(this, JS::HeapState::MajorCollecting);
 
   majorGCTriggerReason = JS::GCReason::NO_REASON;
 

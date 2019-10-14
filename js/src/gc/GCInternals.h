@@ -50,21 +50,21 @@ class MOZ_RAII AutoHeapSession {
   ~AutoHeapSession();
 
  protected:
-  AutoHeapSession(JSRuntime* rt, JS::HeapState state);
+  AutoHeapSession(GCRuntime* gc, JS::HeapState state);
 
  private:
   AutoHeapSession(const AutoHeapSession&) = delete;
   void operator=(const AutoHeapSession&) = delete;
 
-  JSRuntime* runtime;
+  GCRuntime* gc;
   JS::HeapState prevState;
   AutoGeckoProfilerEntry profilingStackFrame;
 };
 
 class MOZ_RAII AutoGCSession : public AutoHeapSession {
  public:
-  explicit AutoGCSession(JSRuntime* rt, JS::HeapState state)
-      : AutoHeapSession(rt, state) {}
+  explicit AutoGCSession(GCRuntime* gc, JS::HeapState state)
+      : AutoHeapSession(gc, state) {}
 
   AutoCheckCanAccessAtomsDuringGC& checkAtomsAccess() {
     return maybeCheckAtomsAccess.ref();
@@ -79,7 +79,8 @@ class MOZ_RAII AutoTraceSession : public AutoLockAllAtoms,
                                   public AutoHeapSession {
  public:
   explicit AutoTraceSession(JSRuntime* rt)
-      : AutoLockAllAtoms(rt), AutoHeapSession(rt, JS::HeapState::Tracing) {}
+      : AutoLockAllAtoms(rt),
+        AutoHeapSession(&rt->gc, JS::HeapState::Tracing) {}
 };
 
 struct MOZ_RAII AutoFinishGC {
