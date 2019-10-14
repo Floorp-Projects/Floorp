@@ -2315,28 +2315,28 @@ extern JS_PUBLIC_API size_t JS_PutEscapedString(JSContext* cx, char* buffer,
  * The first case is for strings that have been atomized, e.g. directly by
  * JS_AtomizeAndPinString or implicitly because it is stored in a jsid.
  *
- * The second case is "flat" strings that have been explicitly prepared in a
- * fallible context by JS_FlattenString. To catch errors, a separate opaque
- * JSFlatString type is returned by JS_FlattenString and expected by
- * JS_GetFlatStringChars. Note, though, that this is purely a syntactic
- * distinction: the input and output of JS_FlattenString are the same actual
- * GC-thing. If a JSString is known to be flat, JS_ASSERT_STRING_IS_FLAT can be
- * used to make a debug-checked cast. Example:
+ * The second case is "linear" strings that have been explicitly prepared in a
+ * fallible context by JS_EnsureLinearString. To catch errors, a separate opaque
+ * JSLinearString type is returned by JS_EnsureLinearString and expected by
+ * JS_Get{Latin1,TwoByte}StringCharsAndLength. Note, though, that this is purely
+ * a syntactic distinction: the input and output of JS_EnsureLinearString are
+ * the same actual GC-thing. If a JSString is known to be linear,
+ * JS_ASSERT_STRING_IS_LINEAR can be used to make a debug-checked cast. Example:
  *
- *   // in a fallible context
- *   JSFlatString* fstr = JS_FlattenString(cx, str);
- *   if (!fstr) {
+ *   // In a fallible context.
+ *   JSLinearString* lstr = JS_EnsureLinearString(cx, str);
+ *   if (!lstr) {
  *     return false;
  *   }
- *   MOZ_ASSERT(fstr == JS_ASSERT_STRING_IS_FLAT(str));
+ *   MOZ_ASSERT(lstr == JS_ASSERT_STRING_IS_LINEAR(str));
  *
- *   // in an infallible context, for the same 'str'
+ *   // In an infallible context, for the same 'str'.
  *   AutoCheckCannotGC nogc;
- *   const char16_t* chars = JS_GetTwoByteFlatStringChars(nogc, fstr)
+ *   const char16_t* chars = JS_GetTwoByteLinearStringChars(nogc, lstr)
  *   MOZ_ASSERT(chars);
  *
- * Flat strings and interned strings are always null-terminated, so
- * JS_FlattenString can be used to get a null-terminated string.
+ * Note: JS strings (including linear strings and atoms) are not
+ * null-terminated!
  *
  * Additionally, string characters are stored as either Latin1Char (8-bit)
  * or char16_t (16-bit). Clients can use JS_StringHasLatin1Chars and can then
@@ -2347,7 +2347,7 @@ extern JS_PUBLIC_API size_t JS_PutEscapedString(JSContext* cx, char* buffer,
 
 extern JS_PUBLIC_API size_t JS_GetStringLength(JSString* str);
 
-extern JS_PUBLIC_API bool JS_StringIsFlat(JSString* str);
+extern JS_PUBLIC_API bool JS_StringIsLinear(JSString* str);
 
 /** Returns true iff the string's characters are stored as Latin1. */
 extern JS_PUBLIC_API bool JS_StringHasLatin1Chars(JSString* str);
@@ -2363,8 +2363,8 @@ extern JS_PUBLIC_API const char16_t* JS_GetTwoByteStringCharsAndLength(
 extern JS_PUBLIC_API bool JS_GetStringCharAt(JSContext* cx, JSString* str,
                                              size_t index, char16_t* res);
 
-extern JS_PUBLIC_API char16_t JS_GetFlatStringCharAt(JSFlatString* str,
-                                                     size_t index);
+extern JS_PUBLIC_API char16_t JS_GetLinearStringCharAt(JSLinearString* str,
+                                                       size_t index);
 
 extern JS_PUBLIC_API const char16_t* JS_GetTwoByteExternalStringChars(
     JSString* str);
@@ -2373,50 +2373,59 @@ extern JS_PUBLIC_API bool JS_CopyStringChars(JSContext* cx,
                                              mozilla::Range<char16_t> dest,
                                              JSString* str);
 
-extern JS_PUBLIC_API JSFlatString* JS_FlattenString(JSContext* cx,
-                                                    JSString* str);
+/**
+ * Copies the string's characters to a null-terminated char16_t buffer.
+ *
+ * Returns nullptr on OOM.
+ */
+extern JS_PUBLIC_API JS::UniqueTwoByteChars JS_CopyStringCharsZ(JSContext* cx,
+                                                                JSString* str);
 
-extern JS_PUBLIC_API const JS::Latin1Char* JS_GetLatin1FlatStringChars(
-    const JS::AutoRequireNoGC& nogc, JSFlatString* str);
+extern JS_PUBLIC_API JSLinearString* JS_EnsureLinearString(JSContext* cx,
+                                                           JSString* str);
 
-extern JS_PUBLIC_API const char16_t* JS_GetTwoByteFlatStringChars(
-    const JS::AutoRequireNoGC& nogc, JSFlatString* str);
+extern JS_PUBLIC_API const JS::Latin1Char* JS_GetLatin1LinearStringChars(
+    const JS::AutoRequireNoGC& nogc, JSLinearString* str);
 
-static MOZ_ALWAYS_INLINE JSFlatString* JSID_TO_FLAT_STRING(jsid id) {
+extern JS_PUBLIC_API const char16_t* JS_GetTwoByteLinearStringChars(
+    const JS::AutoRequireNoGC& nogc, JSLinearString* str);
+
+static MOZ_ALWAYS_INLINE JSLinearString* JSID_TO_LINEAR_STRING(jsid id) {
   MOZ_ASSERT(JSID_IS_STRING(id));
-  return (JSFlatString*)JSID_TO_STRING(id);
+  return reinterpret_cast<JSLinearString*>(JSID_TO_STRING(id));
 }
 
-static MOZ_ALWAYS_INLINE JSFlatString* JS_ASSERT_STRING_IS_FLAT(JSString* str) {
-  MOZ_ASSERT(JS_StringIsFlat(str));
-  return (JSFlatString*)str;
+static MOZ_ALWAYS_INLINE JSLinearString* JS_ASSERT_STRING_IS_LINEAR(
+    JSString* str) {
+  MOZ_ASSERT(JS_StringIsLinear(str));
+  return reinterpret_cast<JSLinearString*>(str);
 }
 
-static MOZ_ALWAYS_INLINE JSString* JS_FORGET_STRING_FLATNESS(
-    JSFlatString* fstr) {
-  return (JSString*)fstr;
+static MOZ_ALWAYS_INLINE JSString* JS_FORGET_STRING_LINEARNESS(
+    JSLinearString* str) {
+  return reinterpret_cast<JSString*>(str);
 }
 
 /*
- * Additional APIs that avoid fallibility when given a flat string.
+ * Additional APIs that avoid fallibility when given a linear string.
  */
 
-extern JS_PUBLIC_API bool JS_FlatStringEqualsAscii(JSFlatString* str,
-                                                   const char* asciiBytes);
-extern JS_PUBLIC_API bool JS_FlatStringEqualsAscii(JSFlatString* str,
-                                                   const char* asciiBytes,
-                                                   size_t length);
+extern JS_PUBLIC_API bool JS_LinearStringEqualsAscii(JSLinearString* str,
+                                                     const char* asciiBytes);
+extern JS_PUBLIC_API bool JS_LinearStringEqualsAscii(JSLinearString* str,
+                                                     const char* asciiBytes,
+                                                     size_t length);
 
 template <size_t N>
-bool JS_FlatStringEqualsLiteral(JSFlatString* str,
-                                const char (&asciiBytes)[N]) {
+bool JS_LinearStringEqualsLiteral(JSLinearString* str,
+                                  const char (&asciiBytes)[N]) {
   MOZ_ASSERT(asciiBytes[N - 1] == '\0');
-  return JS_FlatStringEqualsAscii(str, asciiBytes, N - 1);
+  return JS_LinearStringEqualsAscii(str, asciiBytes, N - 1);
 }
 
-extern JS_PUBLIC_API size_t JS_PutEscapedFlatString(char* buffer, size_t size,
-                                                    JSFlatString* str,
-                                                    char quote);
+extern JS_PUBLIC_API size_t JS_PutEscapedLinearString(char* buffer, size_t size,
+                                                      JSLinearString* str,
+                                                      char quote);
 
 /**
  * Create a dependent string, i.e., a string that owns no character storage,

@@ -362,7 +362,6 @@ static struct cubeb_ops const kai_ops = {
   /*.stream_get_position =*/ kai_stream_get_position,
   /*.stream_get_latency = */ kai_stream_get_latency,
   /*.stream_set_volume =*/ kai_stream_set_volume,
-  /*.stream_set_panning =*/ NULL,
   /*.stream_get_current_device =*/ NULL,
   /*.stream_device_destroy =*/ NULL,
   /*.stream_register_device_changed_callback=*/ NULL,

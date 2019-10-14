@@ -23,6 +23,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const { PAGE_TYPES } = require("../../constants");
+const Types = require("../../types/index");
 
 const ICONS = {
   [PAGE_TYPES.MANIFEST]:
@@ -39,7 +40,7 @@ const LOCALIZATION_IDS = {
 class SidebarItem extends PureComponent {
   static get propTypes() {
     return {
-      page: PropTypes.oneOf(Object.values(PAGE_TYPES)),
+      page: Types.page.isRequired,
       isSelected: PropTypes.bool.isRequired,
       // this prop is automatically injected via connect
       dispatch: PropTypes.func.isRequired,

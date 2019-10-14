@@ -621,9 +621,9 @@ class WasmTokenStream {
   void skipSpaces();
 
  public:
-  explicit WasmTokenStream(const char16_t* text)
+  explicit WasmTokenStream(const char16_t* text, size_t textLen)
       : cur_(text),
-        end_(text + js_strlen(text)),
+        end_(text + textLen),
         lineStart_(text),
         line_(1),
         lookaheadIndex_(0),
@@ -2303,9 +2303,9 @@ struct WasmParseContext {
   uint32_t nextSym;
   bool requiresDataCount;
 
-  WasmParseContext(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo,
-                   UniqueChars* error)
-      : ts(text),
+  WasmParseContext(const char16_t* text, size_t textLen, uintptr_t stackLimit,
+                   LifoAlloc& lifo, UniqueChars* error)
+      : ts(text, textLen),
         lifo(lifo),
         error(error),
         dtoaState(NewDtoaState()),
@@ -5271,10 +5271,10 @@ static AstModule* ParseBinaryModule(WasmParseContext& c, AstModule* module) {
   return module;
 }
 
-static AstModule* ParseModule(const char16_t* text, uintptr_t stackLimit,
-                              LifoAlloc& lifo, UniqueChars* error,
-                              bool* binary) {
-  WasmParseContext c(text, stackLimit, lifo, error);
+static AstModule* ParseModule(const char16_t* text, size_t textLen,
+                              uintptr_t stackLimit, LifoAlloc& lifo,
+                              UniqueChars* error, bool* binary) {
+  WasmParseContext c(text, textLen, stackLimit, lifo, error);
 
   *binary = false;
 
@@ -7630,13 +7630,14 @@ static bool EncodeBinaryModule(const AstModule& module, Bytes* bytes) {
 
 /*****************************************************************************/
 
-bool wasm::TextToBinary(const char16_t* text, uintptr_t stackLimit,
-                        Bytes* bytes, Uint32Vector* offsets,
-                        UniqueChars* error) {
+bool wasm::TextToBinary(const char16_t* text, size_t textLen,
+                        uintptr_t stackLimit, Bytes* bytes,
+                        Uint32Vector* offsets, UniqueChars* error) {
   LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
 
   bool binary = false;
-  AstModule* module = ParseModule(text, stackLimit, lifo, error, &binary);
+  AstModule* module =
+      ParseModule(text, textLen, stackLimit, lifo, error, &binary);
   if (!module) {
     return false;
   }

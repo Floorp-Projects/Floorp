@@ -23,7 +23,6 @@
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
 #include "cubeb_mixer.h"
-#include "cubeb_panner.h"
 #if !TARGET_OS_IPHONE
 #include "cubeb_osx_run_loop.h"
 #endif
@@ -242,7 +241,6 @@ struct cubeb_stream {
   uint32_t latency_frames = 0;
   atomic<uint32_t> current_latency_frames{ 0 };
   atomic<uint32_t> total_output_latency_frames { 0 };
-  atomic<float> panning{ 0 };
   unique_ptr<cubeb_resampler, decltype(&cubeb_resampler_destroy)> resampler;
   /* This is true if a device change callback is currently running.  */
   atomic<bool> switching_device{ false };
@@ -692,15 +690,16 @@ audiounit_output_callback(void * user_ptr,
   stm->frames_played = stm->frames_queued;
   stm->frames_queued += outframes;
 
-  AudioFormatFlags outaff = stm->output_desc.mFormatFlags;
-  float panning = (stm->output_desc.mChannelsPerFrame == 2) ?
-      stm->panning.load(memory_order_relaxed) : 0.0f;
-
   /* Post process output samples. */
   if (stm->draining) {
-    size_t outbpf = cubeb_sample_size(stm->output_stream_params.format);
     /* Clear missing frames (silence) */
-    memset((uint8_t*)output_buffer + outframes * outbpf, 0, (output_frames - outframes) * outbpf);
+    size_t channels = stm->output_stream_params.channels;
+    size_t missing_samples = (output_frames - outframes) * channels;
+    size_t size_sample = cubeb_sample_size(stm->output_stream_params.format);
+    /* number of bytes that have been filled with valid audio by the callback. */
+    size_t audio_byte_count = outframes * channels * size_sample;
+    PodZero((uint8_t*)output_buffer + audio_byte_count,
+            missing_samples * size_sample);
   }
 
   /* Mixing */
@@ -711,16 +710,6 @@ audiounit_output_callback(void * user_ptr,
                                 stm->temp_buffer_size,
                                 outBufferList->mBuffers[0].mData,
                                 outBufferList->mBuffers[0].mDataByteSize);
-  } else {
-    /* Pan stereo. */
-    if (panning != 0.0f) {
-      if (outaff & kAudioFormatFlagIsFloat) {
-        cubeb_pan_stereo_buffer_float(
-          (float*)output_buffer, outframes, panning);
-      } else if (outaff & kAudioFormatFlagIsSignedInteger) {
-        cubeb_pan_stereo_buffer_int((short*)output_buffer, outframes, panning);
-      }
-    }
   }
 
   return noErr;
@@ -3021,16 +3010,6 @@ audiounit_stream_set_volume(cubeb_stream * stm, float volume)
   return CUBEB_OK;
 }
 
-int audiounit_stream_set_panning(cubeb_stream * stm, float panning)
-{
-  if (stm->output_desc.mChannelsPerFrame > 2) {
-    return CUBEB_ERROR_INVALID_PARAMETER;
-  }
-
-  stm->panning.store(panning, memory_order_relaxed);
-  return CUBEB_OK;
-}
-
 unique_ptr<char[]> convert_uint32_into_string(UInt32 data)
 {
   // Simply create an empty string if no data.
@@ -3632,7 +3611,6 @@ cubeb_ops const audiounit_ops = {
   /*.stream_get_position =*/ audiounit_stream_get_position,
   /*.stream_get_latency =*/ audiounit_stream_get_latency,
   /*.stream_set_volume =*/ audiounit_stream_set_volume,
-  /*.stream_set_panning =*/ audiounit_stream_set_panning,
   /*.stream_get_current_device =*/ audiounit_stream_get_current_device,
   /*.stream_device_destroy =*/ audiounit_stream_device_destroy,
   /*.stream_register_device_changed_callback =*/ audiounit_stream_register_device_changed_callback,

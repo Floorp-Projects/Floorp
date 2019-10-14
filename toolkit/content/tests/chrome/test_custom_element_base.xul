@@ -302,12 +302,8 @@
        "No getCustomInterfaceCallback on non-custom element");
     is(typeof twoElement.getCustomInterfaceCallback, "function",
        "getCustomInterfaceCallback available on custom element when set");
-    try {
-      document.documentElement.QueryInterface(Ci.nsIDOMXULControlElement)
-      ok(false, "Non-custom element implements custom interface");
-    } catch (ex) {
-      ok(true, "Non-custom element implements custom interface");
-    }
+    is(document.documentElement.QueryInterface, undefined,
+       "Non-custom element should not have a QueryInterface implementation");
 
     // Try various ways to get the custom interface.
 

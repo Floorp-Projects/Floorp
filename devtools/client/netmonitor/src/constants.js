@@ -208,6 +208,7 @@ const PANELS = {
   SECURITY: "security",
   STACK_TRACE: "stack-trace",
   TIMINGS: "timings",
+  SEARCH: "network-action-bar-search",
   BLOCKING: "network-action-bar-blocked",
 };
 

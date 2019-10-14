@@ -17,7 +17,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/Promise.h"
 #include "builtin/TestingFunctions.h"
-#include "gc/GCInternals.h"
+#include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "gc/WeakMap.h"
 #include "js/CharacterEncoding.h"
@@ -1114,12 +1114,7 @@ void js::DumpHeap(JSContext* cx, FILE* fp,
   DumpHeapTracer dtrc(fp, cx, mallocSizeOf);
 
   fprintf(dtrc.output, "# Roots.\n");
-  {
-    JSRuntime* rt = cx->runtime();
-    js::gc::AutoTraceSession session(rt);
-    gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
-    rt->gc.traceRuntime(&dtrc, session);
-  }
+  TraceRuntimeWithoutEviction(&dtrc);
 
   fprintf(dtrc.output, "# Weak maps.\n");
   WeakMapBase::traceAllMappings(&dtrc);

@@ -275,9 +275,9 @@ class CGHelper(object):
                 'key_length': key_length,
             }
 
-    def gen_jsflatstr_getter(self, name, return_type=None,
-                             return_entry='return entry;'):
-        """Generate code for a specialized getter taking JSFlatStrings.
+    def gen_jslinearstr_getter(self, name, return_type=None,
+                               return_entry='return entry;'):
+        """Generate code for a specialized getter taking JSLinearStrings.
         This getter avoids copying the JS string, but only supports ASCII keys.
 
         @param name         Name for the entry getter function.
@@ -297,23 +297,22 @@ class CGHelper(object):
 
         return textwrap.dedent("""
             %(return_type)s
-            %(name)s(JSFlatString* aKey)
+            %(name)s(JSLinearString* aKey)
             {
               %(basis_table)s
 
-              size_t length = js::GetFlatStringLength(aKey);
-              JSLinearString* jsString = js::FlatStringToLinearString(aKey);
+              size_t length = js::GetLinearStringLength(aKey);
 
               JS::AutoCheckCannotGC nogc;
-              if (js::LinearStringHasLatin1Chars(jsString)) {
+              if (js::LinearStringHasLatin1Chars(aKey)) {
                 auto& entry = mozilla::perfecthash::Lookup(
-                  js::GetLatin1LinearStringChars(nogc, jsString),
+                  js::GetLatin1LinearStringChars(nogc, aKey),
                   length, BASES, %(entries_name)s);
 
                 %(return_entry)s
               } else {
                 auto& entry = mozilla::perfecthash::Lookup(
-                  js::GetTwoByteLinearStringChars(nogc, jsString),
+                  js::GetTwoByteLinearStringChars(nogc, aKey),
                   length, BASES, %(entries_name)s);
 
                 %(return_entry)s

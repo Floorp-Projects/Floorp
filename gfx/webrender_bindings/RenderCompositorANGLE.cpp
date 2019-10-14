@@ -406,6 +406,10 @@ void RenderCompositorANGLE::EndFrame() {
   }
 
   mSwapChain->Present(0, 0);
+
+  if (mDCLayerTree) {
+    mDCLayerTree->MaybeUpdateDebug();
+  }
 }
 
 bool RenderCompositorANGLE::WaitForGPU() {
