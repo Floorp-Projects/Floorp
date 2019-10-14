@@ -469,7 +469,8 @@ class SearchOneOffs {
     let headerText = this.header.querySelector(
       ".search-panel-one-offs-header-label"
     );
-    this.buttons.setAttribute("aria-label", headerText.value);
+    headerText.id = this.telemetryOrigin + "-one-offs-header-label";
+    this.buttons.setAttribute("aria-labelledby", headerText.id);
 
     let engines = await this.getEngines();
     let defaultEngine = PrivateBrowsingUtils.isWindowPrivate(window)
