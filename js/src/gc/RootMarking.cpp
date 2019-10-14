@@ -316,6 +316,15 @@ void js::TraceRuntime(JSTracer* trc) {
   rt->gc.traceRuntime(trc, prep);
 }
 
+void js::TraceRuntimeWithoutEviction(JSTracer* trc) {
+  MOZ_ASSERT(!trc->isMarkingTracer());
+
+  JSRuntime* rt = trc->runtime();
+  AutoTraceSession session(rt);
+  gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
+  rt->gc.traceRuntime(trc, session);
+}
+
 void js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoTraceSession& session) {
   MOZ_ASSERT(!rt->isBeingDestroyed());
 
