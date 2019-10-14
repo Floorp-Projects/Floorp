@@ -332,8 +332,6 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   PermissionHashKey* GetPermissionHashKey(nsIPrincipal* aPrincipal,
                                           uint32_t aType, bool aExactHostMatch);
-  PermissionHashKey* GetPermissionHashKey(nsIURI* aURI, uint32_t aType,
-                                          bool aExactHostMatch);
   PermissionHashKey* GetPermissionHashKey(
       nsIURI* aURI, const mozilla::OriginAttributes* aOriginAttributes,
       uint32_t aType, bool aExactHostMatch);
