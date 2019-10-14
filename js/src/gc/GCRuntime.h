@@ -40,6 +40,7 @@ using ZoneVector = Vector<JS::Zone*, 4, SystemAllocPolicy>;
 
 class AutoCallGCCallbacks;
 class AutoGCSession;
+class AutoHeapSession;
 class AutoRunParallelTask;
 class AutoTraceSession;
 class MarkingValidator;
@@ -243,6 +244,8 @@ class GCRuntime {
   MOZ_MUST_USE bool init(uint32_t maxbytes);
   void finishRoots();
   void finish();
+
+  JS::HeapState heapState() const { return heapState_; }
 
   inline bool hasZealMode(ZealMode mode);
   inline void clearZealMode(ZealMode mode);
@@ -739,6 +742,13 @@ class GCRuntime {
   WriteOnceData<Zone*> atomsZone;
 
  private:
+  // Any activity affecting the heap.
+  mozilla::Atomic<JS::HeapState, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      heapState_;
+  friend class AutoHeapSession;
+  friend class JS::AutoEnterCycleCollection;
+
   UnprotectedData<gcstats::Statistics> stats_;
 
  public:
