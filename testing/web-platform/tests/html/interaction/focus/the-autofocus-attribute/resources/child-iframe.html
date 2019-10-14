@@ -4,7 +4,7 @@
 
 <script>
   iframe.src =
-    get_host_info().ORIGIN + "/html/semantics/forms/autofocus/resources/grand-child-autofocus.html";
+    get_host_info().ORIGIN + "/html/interaction/focus/the-autofocus-attribute/resources/grand-child-autofocus.html";
   window.addEventListener("message", event => {
     if (event.data == "grand_child_loaded") {
       parent.postMessage("ready", "*");

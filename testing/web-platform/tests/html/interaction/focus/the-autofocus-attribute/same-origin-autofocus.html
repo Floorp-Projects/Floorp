@@ -1,6 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
+<meta charset=utf-8>
+<meta name="assert" content="`autofocus` should work in the same origin iframe even if there is a cross-origin iframe between the parent and the same origin iframe">
+<title>autofocus in the same origin grand child iframe</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/testdriver.js"></script>
@@ -8,16 +11,15 @@
 <script src="/common/get-host-info.sub.js"></script>
 </head>
 <body>
-  <h1>Autofocus shouldn't work in cross-origin iframe.</h1>
+  <h1>Autofocus should work in the same origin grand child iframe.</h1>
   <iframe id="child" width="200" height="100"></iframe>
-
   <script>
     let parent_loaded = false;
-    let child_loaded = false;
+    let grand_child_loaded = false;
 
     async_test(function(t) {
       function pingChildIfBothFramesLoaded() {
-        if (parent_loaded && child_loaded)
+        if (parent_loaded && grand_child_loaded)
           frames[0].postMessage("report_focus_state", "*");
       }
 
@@ -27,18 +29,18 @@
       }));
 
       window.addEventListener("message", t.step_func(event => {
-        if (event.data == "child_loaded") {
-          child_loaded = true;
+        if (event.data == "ready") {
+          grand_child_loaded = true;
           pingChildIfBothFramesLoaded();
-        } else if (event.data == "child_is_focused") {
-          assert_unreached("The iframe shouldn't get focus");
-        } else if (event.data == "child_is_not_focused") {
+        } else if (event.data == "grand_child_is_focused") {
           t.done();
+        } else if (event.data == "grand_child_is_not_focused") {
+          assert_unreached("The iframe shouldn't get focus");
         }
       }));
       document.getElementById("child").src =
-          get_host_info().HTTP_REMOTE_ORIGIN + "/html/semantics/forms/autofocus/resources/child-autofocus.html";
-    }, "Autofocus shouldn't work in cross-origin iframe");
+          get_host_info().HTTP_NOTSAMESITE_ORIGIN + "/html/interaction/focus/the-autofocus-attribute/resources/child-iframe.html";
+    }, "Autofocus should work in the same origin grand child iframe");
   </script>
 </body>
 </html>
