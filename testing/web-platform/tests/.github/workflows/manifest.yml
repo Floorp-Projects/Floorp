@@ -2,15 +2,16 @@ on:
   push:
     branches:
       - master
-name: Build & Release Manifest
+name: manifest
 jobs:
-  manifest-build-and-tag:
+  build-and-tag:
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout
+      uses: actions/checkout@v1
       with:
         fetch-depth: 50
-    - name: manifest-build-and-tag
+    - name: Run manifest_build.py
       uses: ./tools/docker/github
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
