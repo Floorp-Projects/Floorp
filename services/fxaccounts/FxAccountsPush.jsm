@@ -245,7 +245,7 @@ FxAccountsPushService.prototype = {
   _onPasswordChanged() {
     return this.fxai.withCurrentAccountState(async state => {
       if (!(await this.fxai.sessionStatus(state))) {
-        await this.fxai.dropCredentials();
+        await this.fxai.dropCredentials(state);
         Services.obs.notifyObservers(
           null,
           ON_ACCOUNT_STATE_CHANGE_NOTIFICATION

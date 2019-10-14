@@ -29,7 +29,6 @@ add_task(async function test_migrate_after_downgrade() {
   let dbFile = await setupFixtureFile("mirror_v5.sqlite");
   let oldBuf = await SyncedBookmarksMirror.open({
     path: dbFile.path,
-    recordTelemetryEvent(object, method, value, extra) {},
     recordStepTelemetry() {},
     recordValidationTelemetry() {},
   });
@@ -43,7 +42,6 @@ add_task(async function test_migrate_after_downgrade() {
 
   let buf = await SyncedBookmarksMirror.open({
     path: dbFile.path,
-    recordTelemetryEvent(object, method, value, extra) {},
     recordStepTelemetry() {},
     recordValidationTelemetry() {},
   });
@@ -71,7 +69,6 @@ add_task(async function test_migrate_from_5_to_current() {
   let dbFile = await setupFixtureFile("mirror_v5.sqlite");
   let buf = await SyncedBookmarksMirror.open({
     path: dbFile.path,
-    recordTelemetryEvent(object, method, value, extra) {},
     recordStepTelemetry() {},
     recordValidationTelemetry() {},
   });
@@ -143,56 +140,21 @@ add_task(async function test_migrate_from_5_to_current() {
 // Migrations between 1 and 2 discard the entire database.
 add_task(async function test_migrate_from_1_to_2() {
   let dbFile = await setupFixtureFile("mirror_v1.sqlite");
-  let telemetryEvents = [];
   let buf = await SyncedBookmarksMirror.open({
     path: dbFile.path,
-    recordTelemetryEvent(object, method, value, extra) {
-      telemetryEvents.push({ object, method, value, extra });
-    },
   });
-  let dbFileSize = Math.floor((await OS.File.stat(dbFile.path)).size / 1024);
-  deepEqual(telemetryEvents, [
-    {
-      object: "mirror",
-      method: "open",
-      value: "retry",
-      extra: { why: "corrupt" },
-    },
-    {
-      object: "mirror",
-      method: "open",
-      value: "success",
-      extra: { size: dbFileSize.toString(10) },
-    },
-  ]);
+  ok(
+    buf.wasCorrupt,
+    "Migrating from unsupported version should mark database as corrupt"
+  );
   await buf.finalize();
 });
 
 add_task(async function test_database_corrupt() {
   let corruptFile = await setupFixtureFile("mirror_corrupt.sqlite");
-  let telemetryEvents = [];
   let buf = await SyncedBookmarksMirror.open({
     path: corruptFile.path,
-    recordTelemetryEvent(object, method, value, extra) {
-      telemetryEvents.push({ object, method, value, extra });
-    },
   });
-  let dbFileSize = Math.floor(
-    (await OS.File.stat(corruptFile.path)).size / 1024
-  );
-  deepEqual(telemetryEvents, [
-    {
-      object: "mirror",
-      method: "open",
-      value: "retry",
-      extra: { why: "corrupt" },
-    },
-    {
-      object: "mirror",
-      method: "open",
-      value: "success",
-      extra: { size: dbFileSize.toString(10) },
-    },
-  ]);
+  ok(buf.wasCorrupt, "Opening corrupt database should mark it as such");
   await buf.finalize();
 });

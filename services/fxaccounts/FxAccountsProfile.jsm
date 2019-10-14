@@ -111,7 +111,14 @@ this.FxAccountsProfile.prototype = {
     try {
       const profileCache = await this._getProfileCache();
       const etag = profileCache ? profileCache.etag : null;
-      const response = await this.client.fetchProfile(etag);
+      let response;
+      try {
+        response = await this.client.fetchProfile(etag);
+      } catch (err) {
+        await this.fxai._handleTokenError(err);
+        // _handleTokenError always re-throws.
+        throw new Error("not reached!");
+      }
 
       // response may be null if the profile was not modified (same ETag).
       if (!response) {
