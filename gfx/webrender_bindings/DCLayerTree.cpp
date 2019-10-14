@@ -42,7 +42,9 @@ UniquePtr<DCLayerTree> DCLayerTree::Create(HWND aHwnd) {
 }
 
 DCLayerTree::DCLayerTree(IDCompositionDevice2* aCompositionDevice)
-    : mCompositionDevice(aCompositionDevice) {}
+    : mCompositionDevice(aCompositionDevice),
+      mDebugCounter(false),
+      mDebugVisualRedrawRegions(false) {}
 
 DCLayerTree::~DCLayerTree() {}
 
@@ -78,18 +80,6 @@ bool DCLayerTree::Initialize(HWND aHwnd) {
     return false;
   }
 
-  if (StaticPrefs::gfx_webrender_dcomp_win_debug_counter_enabled_AtStartup()) {
-    RefPtr<IDCompositionDeviceDebug> debugDevice;
-    hr = mCompositionDevice->QueryInterface(
-        (IDCompositionDeviceDebug**)getter_AddRefs(debugDevice));
-    if (SUCCEEDED(hr)) {
-      debugDevice->EnableDebugCounters();
-    } else {
-      gfxCriticalNote << "Failed to get IDCompositionDesktopDevice: "
-                      << gfx::hexa(hr);
-    }
-  }
-
   mCompositionTarget->SetRoot(mRootVisual);
   // Set interporation mode to Linear.
   // By default, a visual inherits the interpolation mode of the parent visual.
@@ -107,6 +97,62 @@ void DCLayerTree::SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {
   mDefaultSwapChainVisual->SetBitmapInterpolationMode(
       DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
   mCompositionDevice->Commit();
+}
+
+void DCLayerTree::MaybeUpdateDebug() {
+  bool updated = false;
+  updated |= MaybeUpdateDebugCounter();
+  updated |= MaybeUpdateDebugVisualRedrawRegions();
+  if (updated) {
+    mCompositionDevice->Commit();
+  }
+}
+
+bool DCLayerTree::MaybeUpdateDebugCounter() {
+  bool debugCounter = StaticPrefs::gfx_webrender_debug_dcomp_counter();
+  if (mDebugCounter == debugCounter) {
+    return false;
+  }
+
+  RefPtr<IDCompositionDeviceDebug> debugDevice;
+  HRESULT hr = mCompositionDevice->QueryInterface(
+      (IDCompositionDeviceDebug**)getter_AddRefs(debugDevice));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  if (debugCounter) {
+    debugDevice->EnableDebugCounters();
+  } else {
+    debugDevice->DisableDebugCounters();
+  }
+
+  mDebugCounter = debugCounter;
+  return true;
+}
+
+bool DCLayerTree::MaybeUpdateDebugVisualRedrawRegions() {
+  bool debugVisualRedrawRegions =
+      StaticPrefs::gfx_webrender_debug_dcomp_redraw_regions();
+  if (mDebugVisualRedrawRegions == debugVisualRedrawRegions) {
+    return false;
+  }
+
+  RefPtr<IDCompositionVisualDebug> visualDebug;
+  HRESULT hr = mRootVisual->QueryInterface(
+      (IDCompositionVisualDebug**)getter_AddRefs(visualDebug));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  if (debugVisualRedrawRegions) {
+    visualDebug->EnableRedrawRegions();
+  } else {
+    visualDebug->DisableRedrawRegions();
+  }
+
+  mDebugVisualRedrawRegions = debugVisualRedrawRegions;
+  return true;
 }
 
 #endif
