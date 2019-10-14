@@ -206,50 +206,6 @@ void TabGroup::MaybeDestroy() {
   }
 }
 
-nsresult TabGroup::FindItemWithName(const nsAString& aName,
-                                    nsIDocShellTreeItem* aRequestor,
-                                    nsIDocShellTreeItem* aOriginalRequestor,
-                                    nsIDocShellTreeItem** aFoundItem) {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG_POINTER(aFoundItem);
-  *aFoundItem = nullptr;
-
-  MOZ_ASSERT(!aName.LowerCaseEqualsLiteral("_blank") &&
-             !aName.LowerCaseEqualsLiteral("_top") &&
-             !aName.LowerCaseEqualsLiteral("_parent") &&
-             !aName.LowerCaseEqualsLiteral("_self"));
-
-  for (nsPIDOMWindowOuter* outerWindow : mWindows) {
-    // Ignore non-toplevel windows
-    if (outerWindow->GetInProcessScriptableParentOrNull()) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDocShellTreeItem> docshell = outerWindow->GetDocShell();
-    if (!docshell) {
-      continue;
-    }
-
-    BrowsingContext* bc = outerWindow->GetBrowsingContext();
-    if (!bc || !bc->IsTargetable()) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDocShellTreeItem> root;
-    docshell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
-    MOZ_RELEASE_ASSERT(docshell == root);
-    if (root && aRequestor != root) {
-      root->FindItemWithName(aName, aRequestor, aOriginalRequestor,
-                             /* aSkipTabGroup = */ true, aFoundItem);
-      if (*aFoundItem) {
-        break;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
 nsTArray<nsPIDOMWindowOuter*> TabGroup::GetTopLevelWindows() const {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<nsPIDOMWindowOuter*> array;
