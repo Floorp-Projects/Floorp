@@ -307,7 +307,27 @@ module.exports = {
     "rules": {
       "no-async-promise-executor": "off",
     }
-  },{
+  }, {
+    "files": [
+      "browser/base/content/test/chrome/test_aboutCrashed.xhtml",
+      "browser/base/content/test/chrome/test_aboutRestartRequired.xhtml",
+      "browser/base/content/test/general/browser_tab_dragdrop2_frame1.xhtml",
+      "browser/components/places/tests/chrome/test_0_bug510634.xhtml",
+      "browser/components/places/tests/chrome/test_bug1163447_selectItems_through_shortcut.xhtml",
+      "browser/components/places/tests/chrome/test_0_bug510634.xhtml",
+      "browser/components/places/tests/chrome/test_bug1163447_selectItems_through_shortcut.xhtml",
+      "browser/components/places/tests/chrome/test_bug549192.xhtml",
+      "browser/components/places/tests/chrome/test_bug549491.xhtml",
+      "browser/components/places/tests/chrome/test_selectItems_on_nested_tree.xhtml",
+      "browser/components/places/tests/chrome/test_treeview_date.xhtml",
+    ],
+    "rules": {
+      "mozilla/no-arbitrary-setTimeout": "off",
+      "object-shorthand": "off",
+      "no-undef": "off",
+      "no-unused-vars": "off",
+    }
+  }, {
     "files": [
       "toolkit/**",
       "browser/**",
