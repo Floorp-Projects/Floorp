@@ -3291,9 +3291,9 @@ nsCSSFrameConstructor::FindTextData(const Text& aTextContent,
       return nullptr;
     }
 
-    // Don't render stuff in display: contents / Shadow DOM subtrees, because
-    // TextCorrespondenceRecorder in the SVG text code doesn't really know how
-    // to deal with it. This kinda sucks. :(
+    // FIXME(bug 1588477) Don't render stuff in display: contents / Shadow DOM
+    // subtrees, because TextCorrespondenceRecorder in the SVG text code doesn't
+    // really know how to deal with it. This kinda sucks. :(
     if (aParentFrame->GetContent() != aTextContent.GetParent()) {
       return nullptr;
     }
@@ -5121,6 +5121,13 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   if (aIsWithinSVGText) {
     // If aIsWithinSVGText is true, then we know that the "SVG text uses
     // CSS frames" pref was true when this SVG fragment was first constructed.
+    //
+    // FIXME(bug 1588477) Don't render stuff in display: contents / Shadow DOM
+    // subtrees, because TextCorrespondenceRecorder in the SVG text code doesn't
+    // really know how to deal with it. This kinda sucks. :(
+    if (aParentFrame && aParentFrame->GetContent() != aElement.GetParent()) {
+      return nullptr;
+    }
 
     // We don't use ConstructInline because we want different behavior
     // for generated content.
@@ -5529,11 +5536,15 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     MOZ_ASSERT(!aContent->AsElement()->IsRootOfNativeAnonymousSubtree(),
                "display:contents on anonymous content is unsupported");
 
-    if (!withinSVGText) {
-      CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                                 *aComputedStyle, PseudoStyleType::before,
-                                 aItems);
+    // FIXME(bug 1588477): <svg:text>'s TextNodeCorrespondenceRecorder has
+    // trouble with everything that looks like display: contents.
+    if (withinSVGText) {
+      return;
     }
+
+    CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
+                               *aComputedStyle, PseudoStyleType::before,
+                               aItems);
 
     FlattenedChildIterator iter(aContent);
     InsertionPoint insertion(aParentFrame, aContent);
@@ -5544,11 +5555,9 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     }
     aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
-    if (!withinSVGText) {
-      CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                                 *aComputedStyle, PseudoStyleType::after,
-                                 aItems);
-    }
+    CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
+                               *aComputedStyle, PseudoStyleType::after,
+                               aItems);
     return;
   }
 
