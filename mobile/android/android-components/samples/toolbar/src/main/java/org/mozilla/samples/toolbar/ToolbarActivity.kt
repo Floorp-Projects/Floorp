@@ -324,7 +324,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         toolbar.edit.colors = toolbar.edit.colors.copy(
             text = 0xFF0c0c0d.toInt(),
-            cancel = 0xFF0c0c0d.toInt(),
+            clear = 0xFF0c0c0d.toInt(),
             icon = 0xFF0c0c0d.toInt()
         )
 

@@ -11,6 +11,8 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageView
 import androidx.annotation.ColorInt
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.core.content.ContextCompat
 import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.isVisible
@@ -54,7 +56,7 @@ class EditToolbar internal constructor(
     /**
      * Data class holding the customizable colors in "edit mode".
      *
-     * @property cancel Color tint used for the "cancel" icon to leave "edit mode".
+     * @property clear Color tint used for the "cancel" icon to leave "edit mode".
      * @property icon Color tint of the icon displayed in front of the URL.
      * @property hint Text color of the hint shown when the URL field is empty.
      * @property text Text color of the URL.
@@ -62,7 +64,7 @@ class EditToolbar internal constructor(
      * @property suggestionForeground The foreground color used for autocomplete suggestions.
      */
     data class Colors(
-        @ColorInt val cancel: Int,
+        @ColorInt val clear: Int,
         @ColorInt val icon: Int?,
         @ColorInt val hint: Int,
         @ColorInt val text: Int,
@@ -76,17 +78,17 @@ class EditToolbar internal constructor(
             logger.error("Error while processing autocomplete input", throwable)
         }
 
-    private val views = object {
-        val backgroundView = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_background)
-        val iconView = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_edit_icon)
-        val editActions = rootView.findViewById<ActionContainer>(R.id.mozac_browser_toolbar_edit_actions)
-        val cancelView = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_cancel_view).apply {
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val views = EditToolbarViews(
+        background = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_background),
+        icon = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_edit_icon),
+        editActions = rootView.findViewById<ActionContainer>(R.id.mozac_browser_toolbar_edit_actions),
+        clear = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_clear_view).apply {
             setOnClickListener {
-                // We set text to an empty string instead of using clear to avoid #3612.
-                urlView.setText("")
+                onClear()
             }
-        }
-        val urlView: InlineAutocompleteEditText = rootView.findViewById<InlineAutocompleteEditText>(
+        },
+        url = rootView.findViewById<InlineAutocompleteEditText>(
             R.id.mozac_browser_toolbar_edit_url_view
         ).apply {
             setOnCommitListener {
@@ -98,8 +100,7 @@ class EditToolbar internal constructor(
             }
 
             setOnTextChangeListener { text, _ ->
-                cancelView.isVisible = text.isNotBlank()
-                editListener?.onTextChanged(text)
+                onTextChanged(text)
             }
 
             setOnDispatchKeyEventPreImeListener { event ->
@@ -109,77 +110,77 @@ class EditToolbar internal constructor(
                 false
             }
         }
-    }
+    )
 
     /**
      * Customizable colors in "edit mode".
      */
     var colors: Colors = Colors(
-        cancel = ContextCompat.getColor(context, R.color.photonWhite),
+        clear = ContextCompat.getColor(context, R.color.photonWhite),
         icon = null,
-        hint = views.urlView.currentHintTextColor,
-        text = views.urlView.currentTextColor,
-        suggestionBackground = views.urlView.autoCompleteBackgroundColor,
-        suggestionForeground = views.urlView.autoCompleteForegroundColor
+        hint = views.url.currentHintTextColor,
+        text = views.url.currentTextColor,
+        suggestionBackground = views.url.autoCompleteBackgroundColor,
+        suggestionForeground = views.url.autoCompleteForegroundColor
     )
     set(value) {
         field = value
 
-        views.cancelView.setColorFilter(value.cancel)
+        views.clear.setColorFilter(value.clear)
 
         if (value.icon != null) {
-            views.iconView.setColorFilter(value.icon)
+            views.icon.setColorFilter(value.icon)
         }
 
-        views.urlView.setHintTextColor(value.hint)
-        views.urlView.setTextColor(value.text)
-        views.urlView.autoCompleteBackgroundColor = value.suggestionBackground
-        views.urlView.autoCompleteForegroundColor = value.suggestionForeground
+        views.url.setHintTextColor(value.hint)
+        views.url.setTextColor(value.text)
+        views.url.autoCompleteBackgroundColor = value.suggestionBackground
+        views.url.autoCompleteForegroundColor = value.suggestionForeground
     }
 
     /**
      * Sets the background that will be drawn behind the URL, icon and edit actions.
      */
     fun setUrlBackground(background: Drawable?) {
-        views.backgroundView.setImageDrawable(background)
+        views.background.setImageDrawable(background)
     }
 
     /**
      * Sets an icon that will be drawn in front of the URL.
      */
     fun setIcon(icon: Drawable, contentDescription: String) {
-        views.iconView.setImageDrawable(icon)
-        views.iconView.contentDescription = contentDescription
+        views.icon.setImageDrawable(icon)
+        views.icon.contentDescription = contentDescription
     }
 
     /**
      * Sets the text to be displayed when the URL of the toolbar is empty.
      */
     var hint: String
-        get() = views.urlView.hint.toString()
-        set(value) { views.urlView.hint = value }
+        get() = views.url.hint.toString()
+        set(value) { views.url.hint = value }
 
     /**
      * Sets the size of the text for the URL/search term displayed in the toolbar.
      */
     var textSize: Float
-        get() = views.urlView.textSize
+        get() = views.url.textSize
         set(value) {
-            views.urlView.textSize = value
+            views.url.textSize = value
         }
 
     /**
      * Sets the typeface of the text for the URL/search term displayed in the toolbar.
      */
     var typeface: Typeface
-        get() = views.urlView.typeface
-        set(value) { views.urlView.typeface = value }
+        get() = views.url.typeface
+        set(value) { views.url.typeface = value }
 
     /**
      * Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.
      */
     internal fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
-        views.urlView.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+        views.url.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
             listener.invoke(hasFocus)
         }
     }
@@ -188,7 +189,7 @@ class EditToolbar internal constructor(
      * Focuses the url input field.
      */
     fun focus() {
-        views.urlView.requestFocus()
+        views.url.requestFocus()
     }
 
     internal fun stopEditing() {
@@ -202,8 +203,8 @@ class EditToolbar internal constructor(
     internal var editListener: Toolbar.OnEditListener? = null
 
     internal fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
-        views.urlView.setOnFilterListener(
-            AsyncFilterListener(views.urlView, autocompleteDispatcher, filter)
+        views.url.setOnFilterListener(
+            AsyncFilterListener(views.url, autocompleteDispatcher, filter)
         )
     }
 
@@ -216,14 +217,14 @@ class EditToolbar internal constructor(
     }
 
     internal fun updateUrl(url: String, shouldAutoComplete: Boolean = false) {
-        views.urlView.setText(url, shouldAutoComplete)
+        views.url.setText(url, shouldAutoComplete)
     }
 
     /**
      * Select the entire text in the URL input field.
      */
     internal fun selectAll() {
-        views.urlView.selectAll()
+        views.url.selectAll()
     }
 
     /**
@@ -233,12 +234,33 @@ class EditToolbar internal constructor(
      * model based on what the user typed.
      */
     internal var private: Boolean
-        get() = (views.urlView.imeOptions and EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0
+        get() = (views.url.imeOptions and EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0
         set(value) {
-            views.urlView.imeOptions = if (value) {
-                views.urlView.imeOptions or EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+            views.url.imeOptions = if (value) {
+                views.url.imeOptions or EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
             } else {
-                views.urlView.imeOptions and (EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING.inv())
+                views.url.imeOptions and (EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING.inv())
             }
         }
+
+    private fun onClear() {
+        // We set text to an empty string instead of using clear to avoid #3612.
+        views.url.setText("")
+    }
+
+    private fun onTextChanged(text: String) {
+        views.clear.isVisible = text.isNotBlank()
+        editListener?.onTextChanged(text)
+    }
 }
+
+/**
+ * Internal holder for view references.
+ */
+internal class EditToolbarViews(
+    val background: ImageView,
+    val icon: ImageView,
+    val editActions: ActionContainer,
+    val clear: ImageView,
+    val url: InlineAutocompleteEditText
+)

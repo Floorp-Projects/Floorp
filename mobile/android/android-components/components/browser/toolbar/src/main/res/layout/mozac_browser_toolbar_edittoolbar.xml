@@ -59,12 +59,12 @@
         android:layout_height="40dp"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_cancel_view"
+        app:layout_constraintEnd_toStartOf="@id/mozac_browser_toolbar_clear_view"
         mozac:actionContainerItemSize="40dp"
         tools:layout_width="48dp" />
 
     <ImageView
-        android:id="@+id/mozac_browser_toolbar_cancel_view"
+        android:id="@+id/mozac_browser_toolbar_clear_view"
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:width="100dp"

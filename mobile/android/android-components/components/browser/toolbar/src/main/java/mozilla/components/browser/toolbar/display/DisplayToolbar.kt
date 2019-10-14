@@ -14,6 +14,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.annotation.ColorInt
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -132,31 +133,36 @@ class DisplayToolbar internal constructor(
         BOTTOM
     }
 
-    private val views = object {
-        val browserActions = rootView.findViewById<ActionContainer>(
-            R.id.mozac_browser_toolbar_browser_actions)
-        val pageActions = rootView.findViewById<ActionContainer>(
-            R.id.mozac_browser_toolbar_page_actions)
-        val navigationActions = rootView.findViewById<ActionContainer>(
-            R.id.mozac_browser_toolbar_navigation_actions)
-        val background = rootView.findViewById<ImageView>(
-            R.id.mozac_browser_toolbar_background)
-        val separator = rootView.findViewById<ImageView>(
-            R.id.mozac_browser_toolbar_separator)
-        val emptyIndicator = rootView.findViewById<ImageView>(
-            R.id.mozac_browser_toolbar_empty_indicator)
-        val menu = rootView.findViewById<MenuButton>(
-            R.id.mozac_browser_toolbar_menu)
-        val progress = rootView.findViewById<ProgressBar>(
-            R.id.mozac_browser_toolbar_progress)
-        val securityIndicator = rootView.findViewById<SiteSecurityIconView>(
-            R.id.mozac_browser_toolbar_security_indicator)
-        val trackingProtectionIndicator = rootView.findViewById<TrackingProtectionIconView>(
-            R.id.mozac_browser_toolbar_tracking_protection_indicator)
-        val originView = rootView.findViewById<OriginView>(R.id.mozac_browser_toolbar_origin_view).also {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val views = DisplayToolbarViews(
+        browserActions = rootView.findViewById(R.id.mozac_browser_toolbar_browser_actions),
+        pageActions = rootView.findViewById(R.id.mozac_browser_toolbar_page_actions),
+        navigationActions = rootView.findViewById(R.id.mozac_browser_toolbar_navigation_actions),
+        background = rootView.findViewById(R.id.mozac_browser_toolbar_background),
+        separator = rootView.findViewById(R.id.mozac_browser_toolbar_separator),
+        emptyIndicator = rootView.findViewById(R.id.mozac_browser_toolbar_empty_indicator),
+        menu = rootView.findViewById(R.id.mozac_browser_toolbar_menu),
+        securityIndicator = rootView.findViewById(R.id.mozac_browser_toolbar_security_indicator),
+        trackingProtectionIndicator = rootView.findViewById(
+            R.id.mozac_browser_toolbar_tracking_protection_indicator
+        ),
+        origin = rootView.findViewById<OriginView>(R.id.mozac_browser_toolbar_origin_view).also {
             it.toolbar = toolbar
+        },
+        progress = rootView.findViewById<ProgressBar>(R.id.mozac_browser_toolbar_progress).apply {
+            accessibilityDelegate = object : View.AccessibilityDelegate() {
+                override fun onInitializeAccessibilityEvent(host: View?, event: AccessibilityEvent?) {
+                    super.onInitializeAccessibilityEvent(host, event)
+                    if (event?.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+                        // Populate the scroll event with the current progress.
+                        // See accessibility note in `updateProgress()`.
+                        event.scrollY = progress
+                        event.maxScrollY = max
+                    }
+                }
+            }
         }
-    }
+    )
 
     /**
      * Customizable colors in "display mode".
@@ -166,9 +172,9 @@ class DisplayToolbar internal constructor(
         securityIconInsecure = ContextCompat.getColor(context, R.color.photonWhite),
         emptyIcon = ContextCompat.getColor(context, R.color.photonWhite),
         menu = ContextCompat.getColor(context, R.color.photonWhite),
-        hint = views.originView.hintColor,
-        title = views.originView.titleColor,
-        text = views.originView.textColor,
+        hint = views.origin.hintColor,
+        title = views.origin.titleColor,
+        text = views.origin.textColor,
         trackingProtection = null,
         separator = ContextCompat.getColor(context, R.color.photonGrey80)
     )
@@ -178,9 +184,9 @@ class DisplayToolbar internal constructor(
         updateSiteSecurityIcon()
         views.emptyIndicator.setColorFilter(value.emptyIcon)
         views.menu.setColorFilter(value.menu)
-        views.originView.hintColor = value.hint
-        views.originView.titleColor = value.title
-        views.originView.textColor = value.text
+        views.origin.hintColor = value.hint
+        views.origin.titleColor = value.title
+        views.origin.textColor = value.text
         views.separator.setColorFilter(value.separator)
 
         if (value.trackingProtection != null) {
@@ -318,45 +324,45 @@ class DisplayToolbar internal constructor(
      * <code>false</code> to not switch to editing mode and handle the click manually.
      */
     var onUrlClicked: () -> Boolean
-        get() = views.originView.onUrlClicked
+        get() = views.origin.onUrlClicked
         set(value) {
-            views.originView.onUrlClicked = value
+            views.origin.onUrlClicked = value
         }
 
     /**
      * Sets the text to be displayed when the URL of the toolbar is empty.
      */
     var hint: String
-        get() = views.originView.hint
+        get() = views.origin.hint
         set(value) {
-            views.originView.hint = value
+            views.origin.hint = value
         }
 
     /**
      * Sets the size of the text for the title displayed in the toolbar.
      */
     var titleTextSize: Float
-        get() = views.originView.titleTextSize
+        get() = views.origin.titleTextSize
         set(value) {
-            views.originView.titleTextSize = value
+            views.origin.titleTextSize = value
         }
 
     /**
      * Sets the size of the text for the URL/search term displayed in the toolbar.
      */
     var textSize: Float
-        get() = views.originView.textSize
+        get() = views.origin.textSize
         set(value) {
-            views.originView.textSize = value
+            views.origin.textSize = value
         }
 
     /**
      * Sets the typeface of the text for the URL/search term displayed in the toolbar.
      */
     var typeface: Typeface
-        get() = views.originView.typeface
+        get() = views.origin.typeface
         set(value) {
-            views.originView.typeface = value
+            views.origin.typeface = value
         }
 
     /**
@@ -373,7 +379,7 @@ class DisplayToolbar internal constructor(
      * Set a LongClickListener to the urlView of the toolbar.
      */
     fun setOnUrlLongClickListener(handler: ((View) -> Boolean)?) {
-        views.originView.setOnLongClickListener(handler)
+        views.origin.setOnLongClickListener(handler)
     }
 
     private fun updateIndicatorVisibility() {
@@ -385,19 +391,8 @@ class DisplayToolbar internal constructor(
             View.GONE
         }
 
-        views.trackingProtectionIndicator.visibility =
-            if (!urlEmpty && indicators.contains(Indicators.TRACKING_PROTECTION)) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
-
-        views.separator.visibility = if (displayIndicatorSeparator && !urlEmpty && indicators.containsAll(
-                listOf(
-                    Indicators.TRACKING_PROTECTION,
-                    Indicators.SECURITY
-                )
-            )
+        views.trackingProtectionIndicator.visibility = if (
+            !urlEmpty && indicators.contains(Indicators.TRACKING_PROTECTION)
         ) {
             View.VISIBLE
         } else {
@@ -409,24 +404,38 @@ class DisplayToolbar internal constructor(
         } else {
             View.GONE
         }
+
+        updateSeparatorVisibility()
+    }
+
+    private fun updateSeparatorVisibility() {
+        views.separator.visibility = if (
+            displayIndicatorSeparator &&
+            views.trackingProtectionIndicator.isVisible &&
+            views.securityIndicator.isVisible
+        ) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
     }
 
     /**
      * Updates the title to be displayed.
      */
     internal var title: String
-        get() = views.originView.title
+        get() = views.origin.title
         set(value) {
-            views.originView.title = value
+            views.origin.title = value
         }
 
     /**
      * Updates the URL to be displayed.
      */
     internal var url: CharSequence
-        get() = views.originView.url
+        get() = views.origin.url
         set(value) {
-            views.originView.url = value
+            views.origin.url = value
             updateIndicatorVisibility()
         }
 
@@ -459,6 +468,7 @@ class DisplayToolbar internal constructor(
         }
 
         views.trackingProtectionIndicator.siteTrackingProtection = state
+        updateSeparatorVisibility()
     }
 
     internal fun onStop() {
@@ -550,3 +560,20 @@ class DisplayToolbar internal constructor(
         views.navigationActions.addAction(action)
     }
 }
+
+/**
+ * Internal holder for view references.
+ */
+internal class DisplayToolbarViews(
+    val browserActions: ActionContainer,
+    val pageActions: ActionContainer,
+    val navigationActions: ActionContainer,
+    val background: ImageView,
+    val separator: ImageView,
+    val emptyIndicator: ImageView,
+    val menu: MenuButton,
+    val securityIndicator: SiteSecurityIconView,
+    val trackingProtectionIndicator: TrackingProtectionIconView,
+    val origin: OriginView,
+    val progress: ProgressBar
+)

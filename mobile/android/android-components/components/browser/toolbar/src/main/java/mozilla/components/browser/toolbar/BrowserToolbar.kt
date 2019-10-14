@@ -12,6 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.annotation.DrawableRes
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.core.view.forEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -62,7 +64,7 @@ class BrowserToolbar @JvmOverloads constructor(
     /**
      * Toolbar in "display mode".
      */
-    val display = DisplayToolbar(
+    var display = DisplayToolbar(
         context,
         this,
         LayoutInflater.from(context).inflate(
@@ -71,11 +73,12 @@ class BrowserToolbar @JvmOverloads constructor(
             false
         )
     )
+    @VisibleForTesting(otherwise = PRIVATE) internal set
 
     /**
      * Toolbar in "edit mode".
      */
-    val edit = EditToolbar(
+    var edit = EditToolbar(
         context,
         this,
         LayoutInflater.from(context).inflate(
@@ -84,6 +87,7 @@ class BrowserToolbar @JvmOverloads constructor(
             false
         )
     )
+    @VisibleForTesting(otherwise = PRIVATE) internal set
 
     override var title: String
         get() = display.title

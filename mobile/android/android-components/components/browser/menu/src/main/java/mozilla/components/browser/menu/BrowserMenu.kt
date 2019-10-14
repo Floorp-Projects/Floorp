@@ -111,7 +111,11 @@ class BrowserMenu internal constructor(
         /**
          * Determines the orientation to be used for a menu based on the positioning of the [parent] in the layout.
          */
-        fun determineMenuOrientation(parent: View): Orientation {
+        fun determineMenuOrientation(parent: View?): Orientation {
+            if (parent == null) {
+                return DOWN
+            }
+
             val params = parent.layoutParams
             return if (params is CoordinatorLayout.LayoutParams) {
                 if ((params.gravity and Gravity.BOTTOM) == Gravity.BOTTOM) {

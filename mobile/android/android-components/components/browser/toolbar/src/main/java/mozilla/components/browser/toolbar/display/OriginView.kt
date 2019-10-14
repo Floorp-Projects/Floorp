@@ -13,6 +13,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
@@ -37,7 +38,8 @@ internal class OriginView @JvmOverloads constructor(
     private val textSizeTitle = context.resources.getDimension(
         R.dimen.mozac_browser_toolbar_title_textsize)
 
-    private val urlView = TextView(context).apply {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val urlView = TextView(context).apply {
         id = R.id.mozac_browser_toolbar_url_view
         setTextSize(TypedValue.COMPLEX_UNIT_PX, textSizeUrlNormal)
         gravity = Gravity.CENTER_VERTICAL
@@ -60,7 +62,8 @@ internal class OriginView @JvmOverloads constructor(
         isHorizontalFadingEdgeEnabled = fadingEdgeSize > 0
     }
 
-    private val titleView = TextView(context).apply {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val titleView = TextView(context).apply {
         id = R.id.mozac_browser_toolbar_title_view
         visibility = View.GONE
 

@@ -56,7 +56,7 @@ internal class MenuButton @JvmOverloads constructor(
                 val endAlwaysVisible = menuBuilder?.endOfMenuAlwaysVisible ?: false
                 menu?.show(
                     anchor = this,
-                    orientation = BrowserMenu.determineMenuOrientation(parent as View),
+                    orientation = BrowserMenu.determineMenuOrientation(parent as View?),
                     endOfMenuAlwaysVisible = endAlwaysVisible
                 ) { menu = null }
 
