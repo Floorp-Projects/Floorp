@@ -115,7 +115,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
 
   // Determine which BrowsingContextGroup this context should be created in.
   RefPtr<BrowsingContextGroup> group =
-      BrowsingContextGroup::Select(aParent, aOpener);
+    (aType == Type::Chrome) ? do_AddRef(BrowsingContextGroup::GetChromeGroup())
+                            : BrowsingContextGroup::Select(aParent, aOpener);
 
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
@@ -478,7 +479,7 @@ BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
     // Just return null. Caller must handle creating a new window with
     // a blank name.
     found = nullptr;
-  } else if (IsSpecialName(aName)) {
+  } else if (nsContentUtils::IsSpecialName(aName)) {
     found = FindWithSpecialName(aName, *requestingContext);
   } else if (BrowsingContext* child =
                  FindWithNameInSubtree(aName, *requestingContext)) {
@@ -545,14 +546,6 @@ BrowsingContext* BrowsingContext::FindChildWithName(
   return nullptr;
 }
 
-/* static */
-bool BrowsingContext::IsSpecialName(const nsAString& aName) {
-  return (aName.LowerCaseEqualsLiteral("_self") ||
-          aName.LowerCaseEqualsLiteral("_parent") ||
-          aName.LowerCaseEqualsLiteral("_top") ||
-          aName.LowerCaseEqualsLiteral("_blank"));
-}
-
 BrowsingContext* BrowsingContext::FindWithSpecialName(
     const nsAString& aName, BrowsingContext& aRequestingContext) {
   // TODO(farre): Neither BrowsingContext nor nsDocShell checks if the
@@ -615,6 +608,11 @@ bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
   MOZ_DIAGNOSTIC_ASSERT(
       Group() == aTarget->Group(),
       "A BrowsingContext should never see a context from a different group");
+
+  if (IsChrome()) {
+    MOZ_DIAGNOSTIC_ASSERT(aTarget->IsChrome());
+    return true;
+  }
 
   // A frame can navigate itself and its own root.
   if (aTarget == this || aTarget == Top()) {

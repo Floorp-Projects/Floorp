@@ -261,7 +261,7 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of
   // transitively reachable browsing contexts. Performs access control
-  // with regards to this.
+  // checks with regard to this.
   // See
   // https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name.
   //
@@ -272,10 +272,17 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   // Find a browsing context in this context's list of
   // children. Doesn't consider the special names, '_self', '_parent',
-  // '_top', or '_blank'. Performs access control with regard to
+  // '_top', or '_blank'. Performs access control checks with regard to
   // 'this'.
   BrowsingContext* FindChildWithName(const nsAString& aName,
                                      BrowsingContext& aRequestingContext);
+
+  // Find a browsing context in the subtree rooted at 'this' Doesn't
+  // consider the special names, '_self', '_parent', '_top', or
+  // '_blank'. Performs access control checks with regard to
+  // 'aRequestingContext'.
+  BrowsingContext* FindWithNameInSubtree(const nsAString& aName,
+                                         BrowsingContext& aRequestingContext);
 
   nsISupports* GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx,
@@ -462,21 +469,10 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
                   uint64_t aBrowsingContextId, Type aType);
 
  private:
-  // Returns true if the given name is one of the "special" names, currently:
-  // "_self", "_parent", "_top", or "_blank".
-  static bool IsSpecialName(const nsAString& aName);
-
   // Find the special browsing context if aName is '_self', '_parent',
   // '_top', but not '_blank'. The latter is handled in FindWithName
   BrowsingContext* FindWithSpecialName(const nsAString& aName,
                                        BrowsingContext& aRequestingContext);
-
-  // Find a browsing context in the subtree rooted at 'this' Doesn't
-  // consider the special names, '_self', '_parent', '_top', or
-  // '_blank'. Performs access control with regard to
-  // 'aRequestingContext'.
-  BrowsingContext* FindWithNameInSubtree(const nsAString& aName,
-                                         BrowsingContext& aRequestingContext);
 
   friend class ::nsOuterWindowProxy;
   friend class ::nsGlobalWindowOuter;
