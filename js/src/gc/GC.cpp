@@ -854,6 +854,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       systemZone(nullptr),
       atomsZone(nullptr),
+      heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
       heapSize(nullptr),
@@ -6418,7 +6419,7 @@ static const char* HeapStateToLabel(JS::HeapState heapState) {
 /* Start a new heap session. */
 AutoHeapSession::AutoHeapSession(JSRuntime* rt, JS::HeapState heapState)
     : runtime(rt),
-      prevState(rt->heapState_),
+      prevState(rt->gc.heapState_),
       profilingStackFrame(rt->mainContextFromOwnThread(),
                           HeapStateToLabel(heapState),
                           JS::ProfilingCategoryPair::GCCC) {
@@ -6426,16 +6427,16 @@ AutoHeapSession::AutoHeapSession(JSRuntime* rt, JS::HeapState heapState)
   MOZ_ASSERT(prevState == JS::HeapState::Idle);
   MOZ_ASSERT(heapState != JS::HeapState::Idle);
 
-  rt->heapState_ = heapState;
+  rt->gc.heapState_ = heapState;
 }
 
 AutoHeapSession::~AutoHeapSession() {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  runtime->heapState_ = prevState;
+  runtime->gc.heapState_ = prevState;
 }
 
 JS_PUBLIC_API JS::HeapState JS::RuntimeHeapState() {
-  return TlsContext.get()->runtime()->heapState();
+  return TlsContext.get()->runtime()->gc.heapState();
 }
 
 GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
@@ -8099,12 +8100,12 @@ JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSRuntime* rt)
     : runtime_(rt) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-  runtime_->heapState_ = HeapState::CycleCollecting;
+  runtime_->gc.heapState_ = HeapState::CycleCollecting;
 }
 
 JS::AutoEnterCycleCollection::~AutoEnterCycleCollection() {
   MOZ_ASSERT(JS::RuntimeHeapIsCycleCollecting());
-  runtime_->heapState_ = HeapState::Idle;
+  runtime_->gc.heapState_ = HeapState::Idle;
 }
 
 JS::AutoAssertGCCallback::AutoAssertGCCallback() : AutoSuppressGCAnalysis() {

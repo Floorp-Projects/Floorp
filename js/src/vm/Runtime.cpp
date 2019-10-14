@@ -123,7 +123,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       activeThreadHasScriptDataAccess(false),
 #endif
       numActiveHelperThreadZones(0),
-      heapState_(JS::HeapState::Idle),
       numRealms(0),
       numDebuggeeRealms_(0),
       numDebuggeeRealmsObservingCoverage_(0),
