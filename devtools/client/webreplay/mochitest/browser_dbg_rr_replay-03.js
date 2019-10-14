@@ -10,11 +10,7 @@ add_task(async function() {
   await pushPref("devtools.recordreplay.enableRewinding", false);
 
   const recordingFile = newRecordingFile();
-  const recordingTab = BrowserTestUtils.addTab(gBrowser, null, {
-    recordExecution: "*",
-  });
-  gBrowser.selectedTab = recordingTab;
-  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
+  const recordingTab = await openRecordingTab("doc_rr_basic.html");
   await once(Services.ppmm, "RecordingFinished");
 
   const remoteTab = recordingTab.linkedBrowser.frameLoader.remoteTab;

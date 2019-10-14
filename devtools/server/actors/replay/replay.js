@@ -80,6 +80,18 @@ dbg.onNewGlobalObject = function(global) {
   }
 };
 
+// If we are recording, we need to notify the UI process when the content global
+// has been initialized in this process, which will allow URLs to be loaded.
+Services.obs.addObserver(
+  {
+    observe(subject, topic, data) {
+      assert(topic == "content-document-global-created");
+      Services.cpmm.sendAsyncMessage("RecordingInitialized");
+    },
+  },
+  "content-document-global-created"
+);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utilities
 ///////////////////////////////////////////////////////////////////////////////
