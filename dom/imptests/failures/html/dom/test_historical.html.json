@@ -1,0 +1,10 @@
+{
+  "Historical DOM features must be removed: CDATASection": true,
+  "Historical DOM features must be removed: createCDATASection": true,
+  "Historical DOM features must be removed: createAttribute": true,
+  "Historical DOM features must be removed: createAttributeNS": true,
+  "Historical DOM features must be removed: getAttributeNode": true,
+  "Historical DOM features must be removed: getAttributeNodeNS": true,
+  "Historical DOM features must be removed: setAttributeNode": true,
+  "Historical DOM features must be removed: removeAttributeNode": true
+}

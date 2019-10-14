@@ -1,0 +1,2 @@
+hg|https://dvcs.w3.org/hg/webapps|webapps
+XMLHttpRequest/tests/submissions/Ms2ger
