@@ -5,10 +5,14 @@
 "use strict";
 
 const manifestTypes = require("./manifest");
+const routingTypes = require("./routing");
+const workersTypes = require("./service-workers");
 
 module.exports = Object.assign(
   {},
   {
     ...manifestTypes,
+    ...routingTypes,
+    ...workersTypes,
   }
 );
