@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.15';
-const pdfjsBuild = 'cead77ef';
+const pdfjsVersion = '2.4.43';
+const pdfjsBuild = '16ae7c69';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -225,7 +225,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.15';
+    const workerVersion = '2.4.43';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -19969,7 +19969,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     },
 
     hasBlendModes: function PartialEvaluator_hasBlendModes(resources) {
-      if (!(0, _primitives.isDict)(resources)) {
+      if (!(resources instanceof _primitives.Dict)) {
         return false;
       }
 
@@ -19983,19 +19983,35 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           xref = this.xref;
 
       while (nodes.length) {
-        var key, i, ii;
         var node = nodes.shift();
         var graphicStates = node.get('ExtGState');
 
-        if ((0, _primitives.isDict)(graphicStates)) {
+        if (graphicStates instanceof _primitives.Dict) {
           var graphicStatesKeys = graphicStates.getKeys();
 
-          for (i = 0, ii = graphicStatesKeys.length; i < ii; i++) {
-            key = graphicStatesKeys[i];
-            var graphicState = graphicStates.get(key);
+          for (let i = 0, ii = graphicStatesKeys.length; i < ii; i++) {
+            const key = graphicStatesKeys[i];
+            let graphicState = graphicStates.getRaw(key);
+
+            if (graphicState instanceof _primitives.Ref) {
+              if (processed[graphicState.toString()]) {
+                continue;
+              }
+
+              graphicState = xref.fetch(graphicState);
+            }
+
+            if (!(graphicState instanceof _primitives.Dict)) {
+              continue;
+            }
+
+            if (graphicState.objId) {
+              processed[graphicState.objId] = true;
+            }
+
             var bm = graphicState.get('BM');
 
-            if ((0, _primitives.isName)(bm) && bm.name !== 'Normal') {
+            if (bm instanceof _primitives.Name && bm.name !== 'Normal') {
               return true;
             }
           }
@@ -20003,17 +20019,17 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
         var xObjects = node.get('XObject');
 
-        if (!(0, _primitives.isDict)(xObjects)) {
+        if (!(xObjects instanceof _primitives.Dict)) {
           continue;
         }
 
         var xObjectsKeys = xObjects.getKeys();
 
-        for (i = 0, ii = xObjectsKeys.length; i < ii; i++) {
-          key = xObjectsKeys[i];
+        for (let i = 0, ii = xObjectsKeys.length; i < ii; i++) {
+          const key = xObjectsKeys[i];
           var xObject = xObjects.getRaw(key);
 
-          if ((0, _primitives.isRef)(xObject)) {
+          if (xObject instanceof _primitives.Ref) {
             if (processed[xObject.toString()]) {
               continue;
             }
@@ -20035,7 +20051,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
           var xResources = xObject.dict.get('Resources');
 
-          if ((0, _primitives.isDict)(xResources) && (!xResources.objId || !processed[xResources.objId])) {
+          if (xResources instanceof _primitives.Dict && (!xResources.objId || !processed[xResources.objId])) {
             nodes.push(xResources);
 
             if (xResources.objId) {
@@ -20473,7 +20489,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
       if (font) {
         if (!(0, _primitives.isRef)(font)) {
-          throw new Error('The "font" object should be a reference.');
+          throw new _util.FormatError('The "font" object should be a reference.');
         }
 
         fontRef = font;
@@ -20482,15 +20498,26 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
 
         if (fontRes) {
           fontRef = fontRes.getRaw(fontName);
-        } else {
-          (0, _util.warn)('fontRes not available');
-          return errorFont();
         }
       }
 
       if (!fontRef) {
-        (0, _util.warn)('fontRef not available');
-        return errorFont();
+        const partialMsg = `Font "${fontName || font && font.toString()}" is not available`;
+
+        if (!this.options.ignoreErrors && !this.parsingType3Font) {
+          (0, _util.warn)(`${partialMsg}.`);
+          return errorFont();
+        }
+
+        this.handler.send('UnsupportedFeature', {
+          featureId: _util.UNSUPPORTED_FEATURES.font
+        });
+        (0, _util.warn)(`${partialMsg} -- attempting to fallback to a default font.`);
+        fontRef = new _primitives.Dict();
+        fontRef.set('BaseFont', _primitives.Name.get('PDFJS-FallbackFont'));
+        fontRef.set('Type', _primitives.Name.get('FallbackType'));
+        fontRef.set('Subtype', _primitives.Name.get('FallbackType'));
+        fontRef.set('Encoding', _primitives.Name.get('WinAnsiEncoding'));
       }
 
       if (this.fontCache.has(fontRef)) {
