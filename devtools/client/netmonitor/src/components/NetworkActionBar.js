@@ -68,7 +68,7 @@ class NetworkActionBar extends Component {
         showSearchPanel &&
           TabPanel(
             {
-              id: "network-action-bar-search",
+              id: PANELS.SEARCH,
               title: L10N.getStr("netmonitor.actionbar.search"),
               className: "network-action-bar-search",
             },
