@@ -58,17 +58,17 @@ struct NativeIterator;
 class DtoaCache {
   double d;
   int base;
-  JSFlatString* s;  // if s==nullptr, d and base are not valid
+  JSLinearString* s;  // if s==nullptr, d and base are not valid
 
  public:
   DtoaCache() : s(nullptr) {}
   void purge() { s = nullptr; }
 
-  JSFlatString* lookup(int base, double d) {
+  JSLinearString* lookup(int base, double d) {
     return this->s && base == this->base && d == this->d ? this->s : nullptr;
   }
 
-  void cache(int base, double d, JSFlatString* s) {
+  void cache(int base, double d, JSLinearString* s) {
     this->base = base;
     this->d = d;
     this->s = s;

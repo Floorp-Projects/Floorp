@@ -1550,7 +1550,7 @@ void CodeGenerator::visitIntToString(LIntToString* lir) {
   Register input = ToRegister(lir->input());
   Register output = ToRegister(lir->output());
 
-  using Fn = JSFlatString* (*)(JSContext*, int);
+  using Fn = JSLinearString* (*)(JSContext*, int);
   OutOfLineCode* ool = oolCallVM<Fn, Int32ToString<CanGC>>(
       lir, ArgList(input), StoreRegisterTo(output));
 

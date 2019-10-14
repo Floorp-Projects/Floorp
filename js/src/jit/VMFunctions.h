@@ -394,6 +394,11 @@ struct TypeToDataType<JSFlatString*> {
   static const DataType result = Type_Object;
 };
 template <>
+struct TypeToDataType<JSLinearString*> {
+  static const DataType result = Type_Object;
+};
+
+template <>
 struct TypeToDataType<HandleObject> {
   static const DataType result = Type_Handle;
 };

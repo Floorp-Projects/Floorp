@@ -138,7 +138,7 @@ inline bool IndexToId(JSContext* cx, uint32_t index, MutableHandleId idp) {
   return IndexToIdSlow(cx, index, idp);
 }
 
-static MOZ_ALWAYS_INLINE JSFlatString* IdToString(JSContext* cx, jsid id) {
+static MOZ_ALWAYS_INLINE JSLinearString* IdToString(JSContext* cx, jsid id) {
   if (JSID_IS_STRING(id)) {
     return JSID_TO_ATOM(id);
   }
@@ -153,7 +153,7 @@ static MOZ_ALWAYS_INLINE JSFlatString* IdToString(JSContext* cx, jsid id) {
     return nullptr;
   }
 
-  return str->ensureFlat(cx);
+  return str->ensureLinear(cx);
 }
 
 inline Handle<PropertyName*> TypeName(JSType type, const JSAtomState& names) {

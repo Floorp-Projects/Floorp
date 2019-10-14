@@ -810,12 +810,12 @@ int32_t GetIndexFromString(JSString* str) {
   // We shouldn't GC here as this is called directly from IC code.
   AutoUnsafeCallWithABI unsafe;
 
-  if (!str->isFlat()) {
+  if (!str->isLinear()) {
     return -1;
   }
 
   uint32_t index = UINT32_MAX;
-  if (!str->asFlat().isIndex(&index) || index > INT32_MAX) {
+  if (!str->asLinear().isIndex(&index) || index > INT32_MAX) {
     return -1;
   }
 
