@@ -4277,6 +4277,9 @@ pref("network.trr.max-fails", 5);
 // Comma separated list of domains that we should not use TRR for
 pref("network.trr.excluded-domains", "");
 pref("network.trr.builtin-excluded-domains", "localhost,local");
+// When true, the DNS+TRR cache will be cleared when a relevant TRR pref
+// changes. (uri, bootstrapAddress, excluded-domains)
+pref("network.trr.clear-cache-on-pref-change", true);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");
