@@ -6,6 +6,8 @@ package org.mozilla.fenix.browser
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,13 +15,11 @@ import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.whenStarted
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -402,15 +402,9 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
     private fun adjustBackgroundAndNavigate(directions: NavDirections) {
         context?.let {
-            engineView.captureThumbnail { bitmap ->
-                lifecycleScope.launch {
-                    whenStarted {
-                        swipeRefresh?.background = bitmap?.toDrawable(it.resources)
-                        engineView?.asView()?.visibility = View.GONE
-                        findNavController().nav(R.id.browserFragment, directions)
-                    }
-                }
-            }
+            swipeRefresh?.background = ColorDrawable(Color.TRANSPARENT)
+            engineView?.asView()?.visibility = View.GONE
+            findNavController().nav(R.id.browserFragment, directions)
         }
     }
 

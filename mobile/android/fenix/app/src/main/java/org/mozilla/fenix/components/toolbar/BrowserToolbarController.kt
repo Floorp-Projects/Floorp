@@ -6,10 +6,11 @@ package org.mozilla.fenix.components.toolbar
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavController
@@ -217,20 +218,16 @@ class DefaultBrowserToolbarController(
             browserLayout,
             "${TAB_ITEM_TRANSITION_NAME}${currentSession?.id}"
         ).build()
-        engineView.captureThumbnail { bitmap ->
-            scope.launch {
-                swipeRefresh.background = bitmap?.toDrawable(activity.resources)
-                engineView.asView().visibility = View.GONE
-                if (!navController.popBackStack(R.id.homeFragment, false)) {
-                    navController.nav(
-                        R.id.browserFragment,
-                        R.id.action_browserFragment_to_homeFragment,
-                        null,
-                        options,
-                        extras
-                    )
-                }
-            }
+        swipeRefresh.background = ColorDrawable(Color.TRANSPARENT)
+        engineView.asView().visibility = View.GONE
+        if (!navController.popBackStack(R.id.homeFragment, false)) {
+            navController.nav(
+                R.id.browserFragment,
+                R.id.action_browserFragment_to_homeFragment,
+                null,
+                options,
+                extras
+            )
         }
     }
 
