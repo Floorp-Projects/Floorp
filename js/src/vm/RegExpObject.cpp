@@ -1238,20 +1238,20 @@ ArrayObject* RegExpRealm::createMatchResultTemplateObject(JSContext* cx) {
   return matchResultTemplateObject_;
 }
 
-void RegExpRealm::sweep() {
-  if (matchResultTemplateObject_ &&
-      IsAboutToBeFinalized(&matchResultTemplateObject_)) {
-    matchResultTemplateObject_.set(nullptr);
+void RegExpRealm::traceWeak(JSTracer* trc) {
+  if (matchResultTemplateObject_) {
+    TraceWeakEdge(trc, &matchResultTemplateObject_,
+                  "RegExpRealm::matchResultTemplateObject_");
   }
 
-  if (optimizableRegExpPrototypeShape_ &&
-      IsAboutToBeFinalized(&optimizableRegExpPrototypeShape_)) {
-    optimizableRegExpPrototypeShape_.set(nullptr);
+  if (optimizableRegExpPrototypeShape_) {
+    TraceWeakEdge(trc, &optimizableRegExpPrototypeShape_,
+                  "RegExpRealm::optimizableRegExpPrototypeShape_");
   }
 
-  if (optimizableRegExpInstanceShape_ &&
-      IsAboutToBeFinalized(&optimizableRegExpInstanceShape_)) {
-    optimizableRegExpInstanceShape_.set(nullptr);
+  if (optimizableRegExpInstanceShape_) {
+    TraceWeakEdge(trc, &optimizableRegExpInstanceShape_,
+                  "RegExpRealm::optimizableRegExpInstanceShape_");
   }
 }
 

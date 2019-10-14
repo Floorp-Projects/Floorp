@@ -2098,15 +2098,15 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
 
   for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
     r->sweepObjectGroups();
-    r->sweepRegExps();
+    r->traceWeakRegExps(trc);
     r->sweepSavedStacks();
     r->sweepVarNames();
-    r->sweepGlobalObject();
-    r->sweepSelfHostingScriptSource();
+    r->traceWeakObjects(trc);
+    r->traceWeakSelfHostingScriptSource(trc);
     r->sweepDebugEnvironments();
     r->traceWeakEdgesInJitRealm(trc);
     r->sweepObjectRealm();
-    r->sweepTemplateObjects();
+    r->traceWeakTemplateObjects(trc);
   }
 }
 
@@ -5102,14 +5102,15 @@ static void SweepObjectGroups(GCParallelTask* task) {
 }
 
 static void SweepMisc(GCParallelTask* task) {
+  SweepingTracer trc(task->gc->rt);
   for (SweepGroupRealmsIter r(task->gc); !r.done(); r.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
-    r->sweepGlobalObject();
-    r->sweepTemplateObjects();
+    r->traceWeakObjects(&trc);
+    r->traceWeakTemplateObjects(&trc);
     r->sweepSavedStacks();
-    r->sweepSelfHostingScriptSource();
+    r->traceWeakSelfHostingScriptSource(&trc);
     r->sweepObjectRealm();
-    r->sweepRegExps();
+    r->traceWeakRegExps(&trc);
   }
 }
 
