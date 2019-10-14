@@ -103,9 +103,11 @@ class DownloadItem {
     return this.download.source.url;
   }
   get referrer() {
-    return this.download.source.referrerInfo
+    const uri = this.download.source.referrerInfo
       ? this.download.source.referrerInfo.originalReferrer
       : null;
+
+    return uri && uri.spec;
   }
   get filename() {
     return this.download.target.path;
