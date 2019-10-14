@@ -468,6 +468,19 @@ extern JS_PUBLIC_API void UnsafeTraceManuallyBarrieredEdge(JSTracer* trc,
                                                            T* edgep,
                                                            const char* name);
 
+// Not part of the public API, but declared here so we can use it in
+// GCPolicyAPI.h
+template <typename T>
+inline bool TraceManuallyBarrieredWeakEdge(JSTracer* trc, T* thingp,
+                                           const char* name);
+
+template <typename T>
+class BarrieredBase;
+
+template <typename T>
+inline bool TraceWeakEdge(JSTracer* trc, BarrieredBase<T>* thingp,
+                          const char* name);
+
 namespace gc {
 
 // Return true if the given edge is not live and is about to be swept.

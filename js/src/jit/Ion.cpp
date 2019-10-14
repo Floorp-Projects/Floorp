@@ -584,7 +584,7 @@ void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
   // Any outstanding compilations should have been cancelled by the GC.
   MOZ_ASSERT(!HasOffThreadIonCompile(realm));
 
-  stubCodes_->sweep();
+  stubCodes_->traceWeak(trc);
 
   for (WeakHeapPtrJitCode& stub : stubs_) {
     if (stub) {
@@ -593,7 +593,9 @@ void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
   }
 }
 
-void JitZone::sweep() { baselineCacheIRStubCodes_.sweep(); }
+void JitZone::traceWeak(JSTracer* trc) {
+  baselineCacheIRStubCodes_.traceWeak(trc);
+}
 
 size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);

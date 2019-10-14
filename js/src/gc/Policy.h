@@ -70,6 +70,9 @@ struct GCPolicy<js::HeapPtr<T>> {
   static bool needsSweep(js::HeapPtr<T>* thingp) {
     return js::gc::IsAboutToBeFinalized(thingp);
   }
+  static bool traceWeak(JSTracer* trc, js::HeapPtr<T>* thingp) {
+    return js::TraceWeakEdge(trc, thingp, "traceWeak");
+  }
 };
 
 template <typename T>
@@ -80,6 +83,9 @@ struct GCPolicy<js::WeakHeapPtr<T>> {
   }
   static bool needsSweep(js::WeakHeapPtr<T>* thingp) {
     return js::gc::IsAboutToBeFinalized(thingp);
+  }
+  static bool traceWeak(JSTracer* trc, js::WeakHeapPtr<T>* thingp) {
+    return js::TraceWeakEdge(trc, thingp, "traceWeak");
   }
 };
 

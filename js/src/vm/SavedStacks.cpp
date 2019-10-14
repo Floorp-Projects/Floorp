@@ -1322,9 +1322,9 @@ bool SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack,
   return true;
 }
 
-void SavedStacks::sweep() {
-  frames.sweep();
-  pcLocationMap.sweep();
+void SavedStacks::traceWeak(JSTracer* trc) {
+  frames.traceWeak(trc);
+  pcLocationMap.traceWeak(trc);
 }
 
 void SavedStacks::trace(JSTracer* trc) { pcLocationMap.trace(trc); }

@@ -547,7 +547,7 @@ class JS::Realm : public JS::shadow::Realm {
   void traceWeakSelfHostingScriptSource(JSTracer* trc);
   void traceWeakTemplateObjects(JSTracer* trc);
 
-  void sweepObjectGroups() { objectGroups_.sweep(); }
+  void traceWeakObjectGroups(JSTracer* trc) { objectGroups_.traceWeak(trc); }
 
   void clearScriptCounts();
   void clearScriptLCov();
@@ -798,7 +798,7 @@ class JS::Realm : public JS::shadow::Realm {
     savedStacks_.chooseSamplingProbability(this);
   }
 
-  void sweepSavedStacks();
+  void traceWeakSavedStacks(JSTracer* trc);
 
   static constexpr size_t offsetOfCompartment() {
     return offsetof(JS::Realm, compartment_);
