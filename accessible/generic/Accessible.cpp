@@ -1766,21 +1766,6 @@ Relation Accessible::RelationByType(RelationType aType) const {
               }
             }
           }
-          if (!buttonEl) {  // Check for anonymous accept button in <dialog>
-            dom::Element* rootElm = mContent->OwnerDoc()->GetRootElement();
-            if (rootElm) {
-              nsIContent* possibleButtonEl =
-                  rootElm->OwnerDoc()->GetAnonymousElementByAttribute(
-                      rootElm, nsGkAtoms::_default, NS_LITERAL_STRING("true"));
-              if (possibleButtonEl && possibleButtonEl->IsElement()) {
-                RefPtr<nsIDOMXULButtonElement> button =
-                    possibleButtonEl->AsElement()->AsXULButton();
-                if (button) {
-                  buttonEl = possibleButtonEl;
-                }
-              }
-            }
-          }
           return Relation(mDoc, buttonEl);
         }
       }
