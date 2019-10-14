@@ -2,7 +2,7 @@
 
 # content
 
-`val content: `[`ContentState`](../-content-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L19)
+`val content: `[`ContentState`](../-content-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabSessionState.kt#L21)
 
 Overrides [SessionState.content](../-session-state/content.md)
 

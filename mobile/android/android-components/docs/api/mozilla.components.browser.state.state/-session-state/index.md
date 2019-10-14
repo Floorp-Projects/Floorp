@@ -2,7 +2,7 @@
 
 # SessionState
 
-`interface SessionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L15)
+`interface SessionState` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/SessionState.kt#L17)
 
 Interface for states that contain a [ContentState](../-content-state/index.md) and can be accessed via an [id](id.md).
 
@@ -12,6 +12,7 @@ Interface for states that contain a [ContentState](../-content-state/index.md) a
 |---|---|
 | [content](content.md) | `abstract val content: `[`ContentState`](../-content-state/index.md)<br>the [ContentState](../-content-state/index.md) of this session. |
 | [engineState](engine-state.md) | `abstract val engineState: `[`EngineState`](../-engine-state/index.md)<br>the [EngineState](../-engine-state/index.md) of this session. |
+| [extensionState](extension-state.md) | `abstract val extensionState: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](../-web-extension-state/index.md)`>`<br>a map of extension id and web extension states specific to this [SessionState](./index.md). |
 | [id](id.md) | `abstract val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the unique id of the session. |
 | [trackingProtection](tracking-protection.md) | `abstract val trackingProtection: `[`TrackingProtectionState`](../-tracking-protection-state/index.md)<br>the [TrackingProtectionState](../-tracking-protection-state/index.md) of this session. |
 

@@ -17,10 +17,17 @@
 | [SessionState](-session-state/index.md) | `interface SessionState`<br>Interface for states that contain a [ContentState](-content-state/index.md) and can be accessed via an [id](-session-state/id.md). |
 | [TabSessionState](-tab-session-state/index.md) | `data class TabSessionState : `[`SessionState`](-session-state/index.md)<br>Value type that represents the state of a tab (private or normal). |
 | [TrackingProtectionState](-tracking-protection-state/index.md) | `data class TrackingProtectionState`<br>Value type that represents the state of tracking protection within a [SessionState](-session-state/index.md). |
+| [WebExtensionState](-web-extension-state/index.md) | `data class WebExtensionState`<br>Value type that represents the state of a web extension. |
+
+### Type Aliases
+
+| Name | Summary |
+|---|---|
+| [WebExtensionBrowserAction](-web-extension-browser-action.md) | `typealias WebExtensionBrowserAction = `[`BrowserAction`](../mozilla.components.concept.engine.webextension/-browser-action/index.md) |
 
 ### Functions
 
 | Name | Summary |
 |---|---|
 | [createCustomTab](create-custom-tab.md) | `fun createCustomTab(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), config: `[`CustomTabConfig`](-custom-tab-config/index.md)` = CustomTabConfig()): `[`CustomTabSessionState`](-custom-tab-session-state/index.md) |
-| [createTab](create-tab.md) | `fun createTab(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), parent: `[`TabSessionState`](-tab-session-state/index.md)`? = null): `[`TabSessionState`](-tab-session-state/index.md) |
+| [createTab](create-tab.md) | `fun createTab(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = UUID.randomUUID().toString(), parent: `[`TabSessionState`](-tab-session-state/index.md)`? = null, extensions: `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`WebExtensionState`](-web-extension-state/index.md)`> = emptyMap()): `[`TabSessionState`](-tab-session-state/index.md)<br>Convenient function for creating a tab. |

@@ -2,7 +2,7 @@
 
 # BOOKMARK
 
-`BOOKMARK` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L150)
+`BOOKMARK` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L174)
 
 ### Inherited Properties
 
