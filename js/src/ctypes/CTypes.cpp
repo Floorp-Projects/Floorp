@@ -5157,7 +5157,7 @@ bool PointerType::OffsetBy(JSContext* cx, const CallArgs& args, int offset,
 
   size_t elementSize = CType::GetSize(baseType);
   char* data = static_cast<char*>(*static_cast<void**>(CData::GetData(obj)));
-  void* address = data + offset * elementSize;
+  void* address = data + offset * ptrdiff_t(elementSize);
 
   // Create a PointerType CData object containing the new address.
   JSObject* result = CData::Create(cx, typeObj, nullptr, &address, true);
