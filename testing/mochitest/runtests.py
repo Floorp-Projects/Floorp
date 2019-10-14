@@ -1437,17 +1437,7 @@ toolbar#nav-bar {
 
             info = mozinfo.info
 
-            # Bug 1089034 - imptest failure expectations are encoded as
-            # test manifests, even though they aren't tests. This gross
-            # hack causes several problems in automation including
-            # throwing off the chunking numbers. Remove them manually
-            # until bug 1089034 is fixed.
-            def remove_imptest_failure_expectations(tests, values):
-                return (t for t in tests
-                        if 'imptests/failures' not in t['path'])
-
             filters = [
-                remove_imptest_failure_expectations,
                 subsuite(options.subsuite),
             ]
 
