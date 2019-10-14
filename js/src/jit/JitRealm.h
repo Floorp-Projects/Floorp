@@ -304,7 +304,7 @@ class JitRuntime {
   static void Trace(JSTracer* trc, const js::AutoAccessAtomsZone& access);
   static void TraceJitcodeGlobalTableForMinorGC(JSTracer* trc);
   static MOZ_MUST_USE bool MarkJitcodeGlobalTableIteratively(GCMarker* marker);
-  static void SweepJitcodeGlobalTable(JSRuntime* rt);
+  static void TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc);
 
   ExecutableAllocator& execAlloc() { return execAlloc_.ref(); }
 
