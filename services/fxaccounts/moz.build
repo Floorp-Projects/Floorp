@@ -30,6 +30,7 @@ EXTRA_JS_MODULES += [
   'FxAccountsProfileClient.jsm',
   'FxAccountsPush.jsm',
   'FxAccountsStorage.jsm',
+  'FxAccountsTelemetry.jsm',
   'FxAccountsWebChannel.jsm',
 ]
 

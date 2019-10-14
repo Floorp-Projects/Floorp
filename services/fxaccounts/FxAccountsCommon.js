@@ -78,7 +78,12 @@ exports.ON_PROFILE_CHANGE_NOTIFICATION = "fxaccounts:profilechange"; // WebChann
 exports.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION = "fxaccounts:statechange";
 exports.ON_NEW_DEVICE_ID = "fxaccounts:new_device_id";
 
-exports.COMMAND_SENDTAB = "https://identity.mozilla.com/cmd/open-uri";
+// The common prefix for all commands.
+exports.COMMAND_PREFIX = "https://identity.mozilla.com/cmd/";
+
+// The commands we support - only the _TAIL values are recorded in telemetry.
+exports.COMMAND_SENDTAB_TAIL = "open-uri";
+exports.COMMAND_SENDTAB = exports.COMMAND_PREFIX + exports.COMMAND_SENDTAB_TAIL;
 
 // OAuth
 exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
