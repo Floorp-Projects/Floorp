@@ -7,15 +7,16 @@ on:
       - 'docs/**'
       - 'resources/**'
       - 'tools/**'
-name: Build & Publish Documentation Website
+name: documentation
 jobs:
-  website-build-and-publish:
+  build-and-publish:
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v1
+    - name: Checkout
+      uses: actions/checkout@v1
       with:
         fetch-depth: 50
-    - name: website-build-and-publish
+    - name: Run website_build.sh
       uses: ./tools/docker/documentation
       env:
         DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
