@@ -709,16 +709,16 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
         return true;
       }
 
-      JSFlatString* flat = JS_FlattenString(cx, str);
-      if (!flat) {
+      JSLinearString* linear = JS_EnsureLinearString(cx, str);
+      if (!linear) {
         return false;
       }
 
-      size_t utf8Length = JS::GetDeflatedUTF8StringLength(flat);
+      size_t utf8Length = JS::GetDeflatedUTF8StringLength(linear);
       rs->SetLength(utf8Length);
 
       mozilla::DebugOnly<size_t> written = JS::DeflateStringToUTF8Buffer(
-          flat, mozilla::MakeSpan(rs->BeginWriting(), utf8Length));
+          linear, mozilla::MakeSpan(rs->BeginWriting(), utf8Length));
       MOZ_ASSERT(written == utf8Length);
 
       return true;

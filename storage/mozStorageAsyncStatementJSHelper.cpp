@@ -114,7 +114,7 @@ AsyncStatementJSHelper::Resolve(nsIXPConnectWrappedNative* aWrapper,
   }
 #endif
 
-  if (::JS_FlatStringEqualsLiteral(JSID_TO_FLAT_STRING(id), "params")) {
+  if (::JS_LinearStringEqualsLiteral(JSID_TO_LINEAR_STRING(id), "params")) {
     JS::RootedValue val(aCtx);
     nsresult rv = getParams(stmt, aCtx, scope, val.address());
     NS_ENSURE_SUCCESS(rv, rv);

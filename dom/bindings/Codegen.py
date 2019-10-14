@@ -11836,7 +11836,7 @@ def missingPropUseCountersForDescriptor(desc):
             # We're down to one string: just check whether we match it.
             return fill(
                 """
-                if (JS_FlatStringEqualsLiteral(str, "${name}")) {
+                if (JS_LinearStringEqualsLiteral(str, "${name}")) {
                   counter.emplace(eUseCounter_${iface}_${name});
                 }
                 """,
@@ -11846,7 +11846,7 @@ def missingPropUseCountersForDescriptor(desc):
         switch = dict()
         if charIndex == 0:
             switch['precondition'] = \
-                'StringIdChars chars(nogc, js::FlatStringToLinearString(str));\n'
+                'StringIdChars chars(nogc, str);\n'
         else:
             switch['precondition'] = ""
 
@@ -11874,7 +11874,7 @@ def missingPropUseCountersForDescriptor(desc):
         return switch
 
     lengths = set(len(prop[1]) for prop in instrumentedProps)
-    switchDesc = { 'condition': 'js::GetFlatStringLength(str)',
+    switchDesc = { 'condition': 'js::GetLinearStringLength(str)',
                    'precondition': '' }
     switchDesc['cases'] = dict()
     for length in sorted(lengths):
@@ -11890,7 +11890,7 @@ def missingPropUseCountersForDescriptor(desc):
           {
             // Scope for our no-GC section, so we don't need to rely on SetUseCounter not GCing.
             JS::AutoCheckCannotGC nogc;
-            JSFlatString* str = js::AtomToFlatString(JSID_TO_ATOM(id));
+            JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
             // Don't waste time fetching the chars until we've done the length switch.
             $*{switch}
           }
@@ -14536,11 +14536,11 @@ class CGGlobalNames(CGGeneric):
         phfCodegen = phf.codegen('WebIDLGlobalNameHash::sEntries',
                                  'WebIDLNameTableEntry')
         entries = phfCodegen.gen_entries(lambda e: e[1])
-        getter = phfCodegen.gen_jsflatstr_getter(
+        getter = phfCodegen.gen_jslinearstr_getter(
             name='WebIDLGlobalNameHash::GetEntry',
             return_type='const WebIDLNameTableEntry*',
             return_entry=dedent("""
-                if (JS_FlatStringEqualsAscii(aKey, sNames + entry.mNameOffset, entry.mNameLength)) {
+                if (JS_LinearStringEqualsAscii(aKey, sNames + entry.mNameOffset, entry.mNameLength)) {
                   return &entry;
                 }
                 return nullptr;
