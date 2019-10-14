@@ -859,7 +859,16 @@ bool ModuleGenerator::compileFuncDef(uint32_t funcIndex,
       threshold = JitOptions.wasmBatchBaselineThreshold;
       break;
     case Tier::Optimized:
-      threshold = JitOptions.wasmBatchIonThreshold;
+      switch (env_->optimizedBackend()) {
+        case OptimizedBackend::Ion:
+          threshold = JitOptions.wasmBatchIonThreshold;
+          break;
+        case OptimizedBackend::Cranelift:
+          threshold = JitOptions.wasmBatchCraneliftThreshold;
+          break;
+        default:
+          MOZ_CRASH("Invalid optimizedBackend value");
+      }
       break;
     default:
       MOZ_CRASH("Invalid tier value");
