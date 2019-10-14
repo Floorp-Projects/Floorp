@@ -122,6 +122,10 @@ object ErrorRecording {
             sendInPings = metricData.sendInPings
         )
 
-        return errorMetric.testGetValue(usePingName)
+        if (!errorMetric.testHasValue(usePingName)) {
+            return 0
+        } else {
+            return errorMetric.testGetValue(usePingName)
+        }
     }
 }
