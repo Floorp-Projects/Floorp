@@ -1,0 +1,6 @@
+{
+  "0,1: resulting range position for range [paras[0].firstChild, 0, paras[0].firstChild, 0], node paras[0].firstChild": true,
+  "4,2: resulting range position for range [paras[1].firstChild, 0, paras[1].firstChild, 0], node paras[1].firstChild": true,
+  "6,6: resulting range position for range [detachedPara1.firstChild, 0, detachedPara1.firstChild, 0], node detachedPara1.firstChild": true,
+  "8,4: resulting range position for range [foreignPara1.firstChild, 0, foreignPara1.firstChild, 0], node foreignPara1.firstChild": true
+}

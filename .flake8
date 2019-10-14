@@ -9,6 +9,7 @@ exclude =
     dom/browser-element,
     dom/canvas,
     dom/encoding,
+    dom/imptests,
     dom/security,
     dom/websocket,
     gfx/tests,

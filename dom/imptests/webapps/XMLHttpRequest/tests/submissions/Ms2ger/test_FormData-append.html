@@ -1,0 +1,14 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>FormData.append</title>
+<link rel=help href=http://xhr.spec.whatwg.org/#dom-formdata-append>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<div id=log></div>
+<script>
+test(function() {
+  var fd = new FormData();
+  fd.append("name", new String("value"));
+  // TODO: test that it actually worked.
+}, "Passing a String object to FormData.append should work.");
+</script>
