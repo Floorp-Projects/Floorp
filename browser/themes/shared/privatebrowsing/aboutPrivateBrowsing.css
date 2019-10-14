@@ -232,11 +232,14 @@ p {
 
 .search-banner-close-button {
   float: inline-end;
-  min-width: 20px;
-  min-height: 20px;
+  /* min-width and min-height override values set on button elements. */
+  min-width: 28px;
+  min-height: 28px;
+  height: 28px;
   margin: 16px;
   padding: 0;
   background-color: inherit;
+  border: 0;
 }
 
 .search-banner-close-image {
