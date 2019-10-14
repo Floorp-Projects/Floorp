@@ -7,7 +7,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
-    android:paddingTop="20dp"
     android:background="#FF0250BB">
 
     <ImageView
@@ -25,6 +24,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
+        android:paddingTop="20dp"
         android:ellipsize="none"
         android:letterSpacing="0.05"
         android:scrollHorizontally="false"
@@ -46,7 +46,7 @@
         android:scrollHorizontally="false"
         android:text="@string/preference_enhanced_tracking_protection_explanation"
         android:textColor="@color/primary_text_dark_theme"
-        android:textSize="12sp"
+        android:textSize="14sp"
         app:layout_constraintBottom_toTopOf="@id/learn_more"
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintHorizontal_bias="0.5"
@@ -61,7 +61,7 @@
         android:ellipsize="none"
         android:text="@string/preference_enhanced_tracking_protection_explanation_learn_more"
         android:textColor="@color/primary_text_dark_theme"
-        android:textSize="12sp"
+        android:textSize="14sp"
         app:layout_constraintEnd_toStartOf="@id/guideline"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@android:id/title"
