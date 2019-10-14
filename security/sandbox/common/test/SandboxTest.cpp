@@ -10,6 +10,8 @@
 #include "SandboxTestingParent.h"
 #include "SandboxTestingChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/gfx/GPUProcessManager.h"
+#include "mozilla/gfx/GPUChild.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -62,6 +64,22 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
         MOZ_ASSERT(parents.Length() > 0);
         mSandboxTestingParents[type] =
             InitializeSandboxTestingActors(parents[0]);
+        break;
+      }
+
+      case GeckoProcessType_GPU: {
+        gfx::GPUProcessManager* gpuProc = gfx::GPUProcessManager::Get();
+        gfx::GPUChild* gpuChild = gpuProc ? gpuProc->GetGPUChild() : nullptr;
+        if (!gpuChild) {
+          // There is no GPU process for this OS.  Report test done.
+          nsCOMPtr<nsIObserverService> observerService =
+              mozilla::services::GetObserverService();
+          MOZ_RELEASE_ASSERT(observerService);
+          observerService->NotifyObservers(nullptr, "sandbox-test-done", 0);
+          return NS_OK;
+        }
+
+        mSandboxTestingParents[type] = InitializeSandboxTestingActors(gpuChild);
         break;
       }
 

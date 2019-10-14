@@ -70,8 +70,11 @@ SOURCES += [
 
 IPDL_SOURCES = [
     'GraphicsMessages.ipdlh',
-    'PGPU.ipdl',
     'PVsyncBridge.ipdl',
+]
+
+PREPROCESSED_IPDL_SOURCES += [
+    'PGPU.ipdl',
 ]
 
 LOCAL_INCLUDES += [
