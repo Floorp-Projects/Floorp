@@ -20,6 +20,24 @@
           }
         ],
         "async": true
+      },
+      {
+        "name": "setCharPref",
+        "type": "function",
+        "description": "Set the value of a string Fennec SharedPreference",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "string",
+            "description": "The key name"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "description": "The new value"
+          }
+        ],
+        "async": true
       }
     ]
   }
