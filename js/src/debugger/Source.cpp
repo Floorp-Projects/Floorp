@@ -14,14 +14,13 @@
 #include <string.h>  // for memcpy
 #include <utility>   // for move
 
-#include "jsapi.h"        // for JS_ReportErrorNumberASCII
+#include "jsapi.h"        // for JS_ReportErrorNumberASCII, JS_CopyStringCharsZ
 #include "jsfriendapi.h"  // for GetErrorMessage, JS_NewUint8Array
 
 #include "debugger/Debugger.h"  // for DebuggerSourceReferent, Debugger
 #include "debugger/Script.h"    // for DebuggerScript
 #include "gc/Tracer.h"  // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CompilationAndEvaluation.h"  // for Compile
-#include "js/StableStringChars.h"         // for AutoStableStringChars
 #include "vm/BytecodeUtil.h"              // for JSDVG_SEARCH_STACK
 #include "vm/JSContext.h"                 // for JSContext (ptr only)
 #include "vm/JSObject.h"                  // for JSObject, RequireObject
@@ -44,7 +43,6 @@ class GlobalObject;
 
 using namespace js;
 
-using JS::AutoStableStringChars;
 using mozilla::AsVariant;
 using mozilla::Maybe;
 using mozilla::Nothing;
@@ -536,12 +534,12 @@ bool DebuggerSource::CallData::setSourceMapURL() {
     return false;
   }
 
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, str)) {
+  UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, str);
+  if (!chars) {
     return false;
   }
 
-  if (!ss->setSourceMapURL(cx, stableChars.twoByteChars())) {
+  if (!ss->setSourceMapURL(cx, std::move(chars))) {
     return false;
   }
 

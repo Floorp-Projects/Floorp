@@ -2243,34 +2243,20 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     if (displayURL && !script->scriptSource()->hasDisplayURL()) {
-      JSFlatString* flat = displayURL->ensureFlat(cx);
-      if (!flat) {
+      UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, displayURL);
+      if (!chars) {
         return false;
       }
-
-      AutoStableStringChars chars(cx);
-      if (!chars.initTwoByte(cx, flat)) {
-        return false;
-      }
-
-      const char16_t* durl = chars.twoByteRange().begin().get();
-      if (!script->scriptSource()->setDisplayURL(cx, durl)) {
+      if (!script->scriptSource()->setDisplayURL(cx, std::move(chars))) {
         return false;
       }
     }
     if (sourceMapURL && !script->scriptSource()->hasSourceMapURL()) {
-      JSFlatString* flat = sourceMapURL->ensureFlat(cx);
-      if (!flat) {
+      UniqueTwoByteChars chars = JS_CopyStringCharsZ(cx, sourceMapURL);
+      if (!chars) {
         return false;
       }
-
-      AutoStableStringChars chars(cx);
-      if (!chars.initTwoByte(cx, flat)) {
-        return false;
-      }
-
-      const char16_t* smurl = chars.twoByteRange().begin().get();
-      if (!script->scriptSource()->setSourceMapURL(cx, smurl)) {
+      if (!script->scriptSource()->setSourceMapURL(cx, std::move(chars))) {
         return false;
       }
     }
