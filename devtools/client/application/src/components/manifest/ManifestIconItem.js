@@ -4,7 +4,6 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
   PureComponent,
@@ -20,6 +19,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 const { l10n } = require("../../modules/l10n");
 
+const Types = require("../../types/index");
 const ManifestItem = createFactory(require("./ManifestItem"));
 
 /**
@@ -28,14 +28,11 @@ const ManifestItem = createFactory(require("./ManifestItem"));
 class ManifestIconItem extends PureComponent {
   static get propTypes() {
     return {
-      label: PropTypes.shape({
-        contentType: PropTypes.string,
-        sizes: PropTypes.string,
-      }).isRequired,
-      value: PropTypes.shape({
-        src: PropTypes.string.isRequired,
-        purpose: PropTypes.string.isRequired,
-      }).isRequired,
+      // {
+      //   label: { contentType, sizes },
+      //   value: { src, purpose }
+      // }
+      ...Types.manifestItemIcon,
     };
   }
 
