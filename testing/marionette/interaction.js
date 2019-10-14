@@ -63,7 +63,6 @@ const DISABLED_ATTRIBUTE_SUPPORTED_XUL = new Set([
   "SCALE",
   "TAB",
   "TABS",
-  "TEXTBOX",
   "TOOLBARBUTTON",
   "TREE",
 ]);

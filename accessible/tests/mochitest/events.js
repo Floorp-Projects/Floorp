@@ -1464,7 +1464,7 @@ function synthFocus(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, checkerOfEventSeq);
 
   this.invoke = function synthFocus_invoke() {
-    if (this.DOMNode.editor || this.DOMNode.localName == "textbox") {
+    if (this.DOMNode.editor) {
       this.DOMNode.selectionStart = this.DOMNode.selectionEnd = this.DOMNode.value.length;
     }
     this.DOMNode.focus();
@@ -1634,10 +1634,7 @@ function synthSelectAll(aNodeOrID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aNodeOrID, aCheckerOrEventSeq);
 
   this.invoke = function synthSelectAll_invoke() {
-    if (
-      ChromeUtils.getClassName(this.DOMNode) === "HTMLInputElement" ||
-      this.DOMNode.localName == "textbox"
-    ) {
+    if (ChromeUtils.getClassName(this.DOMNode) === "HTMLInputElement") {
       this.DOMNode.select();
     } else {
       window.getSelection().selectAllChildren(this.DOMNode);
