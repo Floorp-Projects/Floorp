@@ -404,6 +404,32 @@ var RecipeRunner = {
       capabilities.add(`jexl.transform.${transform}`);
     }
 
+    // Add two capabilities for each top level key available in the context: one
+    // for the `normandy.` namespace, and another for the `env.` namespace.
+    capabilities.add("jexl.context.env");
+    capabilities.add("jexl.context.normandy");
+    let env = ClientEnvironment;
+    while (env && env.name) {
+      // Walk up the class chain for ClientEnvironment, collecting applicable
+      // properties as we go. Stop when we get to an unnamed object, which is
+      // usually just a plain function is the super class of a class that doesn't
+      // extend anything. Also stop if we get to an undefined object, just in
+      // case.
+      for (const [name, descriptor] of Object.entries(
+        Object.getOwnPropertyDescriptors(env)
+      )) {
+        // All of the properties we are looking for are are static getters (so
+        // will have a truthy `get` property) and are defined on the class, so
+        // will be configurable
+        if (descriptor.configurable && descriptor.get) {
+          capabilities.add(`jexl.context.env.${name}`);
+          capabilities.add(`jexl.context.normandy.${name}`);
+        }
+      }
+      // Check for the next parent
+      env = Object.getPrototypeOf(env);
+    }
+
     return capabilities;
   },
 
