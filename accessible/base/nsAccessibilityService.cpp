@@ -1074,7 +1074,7 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
     }
   }
 
-  // Accessible XBL types and deck stuff are used in XUL only currently.
+  // XUL accessibles.
   if (!newAcc && content->IsXULElement()) {
     // No accessible for not selected deck panel and its children.
     if (!aContext->IsXULTabpanels()) {
