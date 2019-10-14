@@ -61,6 +61,7 @@ static auto BufferAsCString(const uint8_t (&aBuffer)[N]) {
                    N};
 }
 
+#if 0
 static void ExpectKeyIsBinary(const Key& aKey) {
   EXPECT_FALSE(aKey.IsUnset());
 
@@ -70,6 +71,7 @@ static void ExpectKeyIsBinary(const Key& aKey) {
   EXPECT_FALSE(aKey.IsFloat());
   EXPECT_FALSE(aKey.IsString());
 }
+#endif
 
 static void ExpectKeyIsString(const Key& aKey) {
   EXPECT_FALSE(aKey.IsUnset());
@@ -81,6 +83,7 @@ static void ExpectKeyIsString(const Key& aKey) {
   EXPECT_TRUE(aKey.IsString());
 }
 
+#if 0
 static void ExpectKeyIsArray(const Key& aKey) {
   EXPECT_FALSE(aKey.IsUnset());
 
@@ -90,7 +93,9 @@ static void ExpectKeyIsArray(const Key& aKey) {
   EXPECT_FALSE(aKey.IsFloat());
   EXPECT_FALSE(aKey.IsString());
 }
+#endif
 
+#if 0
 static JSObject& ExpectArrayBufferObject(const JS::Value& aValue) {
   EXPECT_TRUE(aValue.isObject());
   auto& object = aValue.toObject();
@@ -129,6 +134,7 @@ static void CheckString(JSContext* const aContext, const nsString& aExpected,
                                 aActual.toString(), &rv));
   EXPECT_EQ(0, rv);
 }
+#endif
 
 namespace {
 // TODO Using AutoTestJSContext causes rooting hazards. Disabling for now.
@@ -162,6 +168,15 @@ class TestWithParam_CString_ArrayBuffer_Pair
 
 class TestWithParam_CString_String_Pair
     : public ::testing::TestWithParam<std::pair<nsCString, nsLiteralString>> {};
+
+class TestWithParam_LiteralString
+    : public ::testing::TestWithParam<nsLiteralString> {};
+
+class TestWithParam_StringArray
+    : public ::testing::TestWithParam<std::vector<nsString>> {};
+
+class TestWithParam_ArrayBufferArray
+    : public ::testing::TestWithParam<std::vector<nsCString>> {};
 
 }  // namespace
 
@@ -213,3 +228,200 @@ INSTANTIATE_TEST_CASE_P(
                        NS_LITERAL_STRING("")),
         std::make_pair(BufferAsCString(nonZeroLengthStringEncodedBuffer),
                        NS_LITERAL_STRING("ab"))));
+
+TEST_P(TestWithParam_LiteralString, SetFromString) {
+  auto key = Key{};
+  mozilla::ErrorResult error;
+  const auto result = key.SetFromString(GetParam(), error);
+  EXPECT_FALSE(error.Failed());
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, error));
+
+  ExpectKeyIsString(key);
+
+  nsString rv;
+  key.ToString(rv);
+
+  EXPECT_EQ(GetParam(), rv);
+}
+
+INSTANTIATE_TEST_CASE_P(DOM_IndexedDB_Key, TestWithParam_LiteralString,
+                        ::testing::Values(NS_LITERAL_STRING(""),
+                                          NS_LITERAL_STRING(u"abc"),
+                                          NS_LITERAL_STRING(u"\u007f"),
+                                          NS_LITERAL_STRING(u"\u0080"),
+                                          NS_LITERAL_STRING(u"\u1fff"),
+                                          NS_LITERAL_STRING(u"\u7fff"),
+                                          NS_LITERAL_STRING(u"\u8000"),
+                                          NS_LITERAL_STRING(u"\uffff")));
+
+#if 0
+static JS::RootedValue CreateArrayBufferValue(JSContext* const aContext,
+                                              const size_t aSize,
+                                              char* const aData) {
+  auto&& arrayBuffer = JS::RootedObject{
+      aContext, JS::NewArrayBufferWithContents(aContext, aSize, aData)};
+  return {aContext, JS::ObjectValue(*arrayBuffer)};
+}
+
+// This tests calling SetFromJSVal with an ArrayBuffer scalar of length 0.
+// TODO Probably there should be more test cases for SetFromJSVal with other
+// ArrayBuffer scalars, which convert this into a parametrized test as well.
+TEST(DOM_IndexedDB_Key, SetFromJSVal_ZeroLengthArrayBuffer)
+{
+  AutoTestJSContext context;
+
+  auto key = Key{};
+  auto&& arrayBuffer = CreateArrayBufferValue(context, 0, nullptr);
+  auto rv1 = mozilla::ErrorResult{};
+  const auto result = key.SetFromJSVal(context, arrayBuffer, rv1);
+  EXPECT_FALSE(rv1.Failed());
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, rv1));
+
+  ExpectKeyIsBinary(key);
+
+  JS::Heap<JS::Value> rv2;
+  EXPECT_EQ(NS_OK, key.ToJSVal(context, rv2));
+
+  CheckArrayBuffer(NS_LITERAL_CSTRING(""), rv2);
+}
+
+template <typename CheckElement>
+static void CheckArray(JSContext* const context,
+                       const JS::Heap<JS::Value>& arrayValue,
+                       const size_t expectedLength,
+                       const CheckElement& checkElement) {
+  auto&& actualArray =
+      JS::RootedObject(context, &ExpectArrayObject(context, arrayValue));
+
+  uint32_t actualLength;
+  EXPECT_TRUE(JS_GetArrayLength(context, actualArray, &actualLength));
+  EXPECT_EQ(expectedLength, actualLength);
+  for (size_t i = 0; i < expectedLength; ++i) {
+    JS::RootedValue element(static_cast<JSContext*>(context));
+    EXPECT_TRUE(JS_GetElement(context, actualArray, i, &element));
+
+    checkElement(i, element);
+  }
+}
+
+static JS::RootedValue CreateArrayBufferArray(
+    JSContext* const context, const std::vector<nsCString>& elements) {
+  auto* const array = JS_NewArrayObject(context, elements.size());
+  auto&& arrayObject = JS::RootedObject{context, array};
+
+  for (size_t i = 0; i < elements.size(); ++i) {
+    // TODO strdup only works if the element is actually 0-terminated
+    auto&& arrayBuffer = CreateArrayBufferValue(
+        context, elements[i].Length(),
+        elements[i].Length() ? strdup(elements[i].get()) : nullptr);
+    EXPECT_TRUE(JS_SetElement(context, arrayObject, i, arrayBuffer));
+  }
+
+  return {context, JS::ObjectValue(*array)};
+}
+
+TEST_P(TestWithParam_ArrayBufferArray, SetFromJSVal) {
+  const auto& elements = GetParam();
+
+  AutoTestJSContext context;
+  auto&& arrayValue = CreateArrayBufferArray(context, elements);
+
+  auto rv1 = mozilla::ErrorResult{};
+  auto key = Key{};
+  const auto result = key.SetFromJSVal(context, arrayValue, rv1);
+  EXPECT_FALSE(rv1.Failed());
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, rv1));
+
+  ExpectKeyIsArray(key);
+
+  JS::Heap<JS::Value> rv2;
+  EXPECT_EQ(NS_OK, key.ToJSVal(context, rv2));
+
+  CheckArray(context, rv2, elements.size(),
+             [&elements](const size_t i, const JS::HandleValue& element) {
+               CheckArrayBuffer(elements[i], element);
+             });
+}
+
+const uint8_t element2[] = "foo";
+INSTANTIATE_TEST_CASE_P(
+    DOM_IndexedDB_Key, TestWithParam_ArrayBufferArray,
+    testing::Values(std::vector<nsCString>{},
+                    std::vector<nsCString>{NS_LITERAL_CSTRING("")},
+                    std::vector<nsCString>{NS_LITERAL_CSTRING(""),
+                                           BufferAsCString(element2)}));
+
+static JS::RootedValue CreateStringValue(JSContext* const context,
+                                         const nsString& string) {
+  return {context, JS::StringValue(JS_NewUCStringCopyZ(context, string.get()))};
+}
+
+static JS::RootedValue CreateStringArray(
+    JSContext* const context, const std::vector<nsString>& elements) {
+  auto* const array = JS_NewArrayObject(context, elements.size());
+  auto&& arrayObject = JS::RootedObject{context, array};
+
+  for (size_t i = 0; i < elements.size(); ++i) {
+    auto&& string = CreateStringValue(context, elements[i]);
+    EXPECT_TRUE(JS_SetElement(context, arrayObject, i, string));
+  }
+
+  return {context, JS::ObjectValue(*array)};
+}
+
+TEST_P(TestWithParam_StringArray, SetFromJSVal) {
+  const auto& elements = GetParam();
+
+  AutoTestJSContext context;
+  auto&& arrayValue = CreateStringArray(context, elements);
+
+  auto rv1 = mozilla::ErrorResult{};
+  auto key = Key{};
+  const auto result = key.SetFromJSVal(context, arrayValue, rv1);
+  EXPECT_FALSE(rv1.Failed());
+  EXPECT_TRUE(result.Is(mozilla::dom::indexedDB::Ok, rv1));
+
+  ExpectKeyIsArray(key);
+
+  JS::Heap<JS::Value> rv2;
+  EXPECT_EQ(NS_OK, key.ToJSVal(context, rv2));
+
+  CheckArray(
+      context, rv2, elements.size(),
+      [&elements, &context](const size_t i, const JS::HandleValue& element) {
+        CheckString(context, elements[i], element);
+      });
+}
+
+INSTANTIATE_TEST_CASE_P(
+    DOM_IndexedDB_Key, TestWithParam_StringArray,
+    testing::Values(std::vector<nsString>{NS_LITERAL_STRING(""),
+                                          NS_LITERAL_STRING("abc\u0080\u1fff")},
+                    std::vector<nsString>{
+                        NS_LITERAL_STRING("abc\u0080\u1fff"),
+                        NS_LITERAL_STRING("abc\u0080\u1fff")}));
+
+TEST(DOM_IndexedDB_Key, CompareKeys_NonZeroLengthArrayBuffer)
+{
+  AutoTestJSContext context;
+  const char buf[] = "abc\x80";
+
+  auto first = Key{};
+  auto rv1 = mozilla::ErrorResult{};
+  auto&& arrayBuffer1 =
+      CreateArrayBufferValue(context, sizeof buf, strdup(buf));
+  const auto result1 = first.SetFromJSVal(context, arrayBuffer1, rv1);
+  EXPECT_FALSE(rv1.Failed());
+  EXPECT_TRUE(result1.Is(mozilla::dom::indexedDB::Ok, rv1));
+
+  auto second = Key{};
+  auto rv2 = mozilla::ErrorResult{};
+  auto&& arrayBuffer2 =
+      CreateArrayBufferValue(context, sizeof buf, strdup(buf));
+  const auto result2 = second.SetFromJSVal(context, arrayBuffer2, rv2);
+  EXPECT_FALSE(rv2.Failed());
+  EXPECT_TRUE(result2.Is(mozilla::dom::indexedDB::Ok, rv2));
+
+  EXPECT_EQ(0, Key::CompareKeys(first, second));
+}
+#endif
