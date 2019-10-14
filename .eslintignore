@@ -152,7 +152,6 @@ devtools/server/tests/unit/xpcshell_debugging_script.js
 
 # Third-party
 dom/canvas/test/webgl-conf/
-dom/imptests/
 dom/media/webaudio/test/blink/
 dom/media/webvtt/
 dom/svg/test/test_nonAnimStrings.xhtml
