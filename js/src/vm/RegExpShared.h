@@ -301,7 +301,7 @@ class RegExpRealm {
  public:
   explicit RegExpRealm();
 
-  void sweep();
+  void traceWeak(JSTracer* trc);
 
   static const size_t MatchResultObjectIndexSlot = 0;
   static const size_t MatchResultObjectInputSlot = 1;

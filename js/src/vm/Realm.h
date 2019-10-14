@@ -526,7 +526,7 @@ class JS::Realm : public JS::shadow::Realm {
    */
   void traceGlobal(JSTracer* trc);
 
-  void sweepGlobalObject();
+  void traceWeakObjects(JSTracer* trc);
   void fixupGlobal();
 
   /*
@@ -543,9 +543,9 @@ class JS::Realm : public JS::shadow::Realm {
   void sweepAfterMinorGC();
   void sweepDebugEnvironments();
   void sweepObjectRealm();
-  void sweepRegExps();
-  void sweepSelfHostingScriptSource();
-  void sweepTemplateObjects();
+  void traceWeakRegExps(JSTracer* trc);
+  void traceWeakSelfHostingScriptSource(JSTracer* trc);
+  void traceWeakTemplateObjects(JSTracer* trc);
 
   void sweepObjectGroups() { objectGroups_.sweep(); }
 
