@@ -1319,9 +1319,6 @@ BufferedBookmarksStore.prototype = {
 
     return SyncedBookmarksMirror.open({
       path: mirrorPath,
-      recordTelemetryEvent: (object, method, value, extra) => {
-        this.engine.service.recordTelemetryEvent(object, method, value, extra);
-      },
       recordStepTelemetry: (name, took, counts) => {
         Observers.notify(
           "weave:engine:sync:step",

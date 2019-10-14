@@ -2546,3 +2546,66 @@ add_task(async function test_duplicate_url_rows() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_duplicate_local_tags() {
+  let buf = await openMirror("duplicate_local_tags");
+  let now = new Date();
+
+  info("Insert A");
+  await PlacesUtils.bookmarks.insert({
+    guid: "bookmarkAAAA",
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "A",
+    url: "http://example.com/a",
+    dateAdded: now,
+  });
+
+  // Each tag folder should have unique tag entries, but the tagging service
+  // doesn't enforce this. We should still sync the correct set of tags,
+  // though, even if there are duplicates for the same URL.
+  info("Manually insert local tags for A");
+  for (let [tag, dupes] of [["one", 2], ["two", 1], ["three", 2]]) {
+    let tagFolderInfo = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.tagsGuid,
+      title: tag,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    });
+    for (let i = 0; i < dupes; ++i) {
+      await PlacesUtils.bookmarks.insert({
+        parentGuid: tagFolderInfo.guid,
+        url: "http://example.com/a",
+      });
+    }
+  }
+
+  let tagsForA = PlacesUtils.tagging.getTagsForURI(
+    Services.io.newURI("http://example.com/a")
+  );
+  deepEqual(
+    tagsForA.sort(),
+    ["one", "one", "three", "three", "two"],
+    "Tagging service should return duplicate tags"
+  );
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply();
+  deepEqual(
+    changesToUpload.bookmarkAAAA.cleartext,
+    {
+      id: "bookmarkAAAA",
+      type: "bookmark",
+      parentid: "menu",
+      hasDupe: true,
+      parentName: BookmarksMenuTitle,
+      dateAdded: now.getTime(),
+      bmkUri: "http://example.com/a",
+      title: "A",
+      tags: ["one", "three", "two"],
+    },
+    "Should upload A with tags"
+  );
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});

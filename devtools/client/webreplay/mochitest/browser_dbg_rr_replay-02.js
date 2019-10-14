@@ -9,11 +9,7 @@ add_task(async function() {
   waitForExplicitFinish();
 
   const recordingFile = newRecordingFile();
-  const recordingTab = BrowserTestUtils.addTab(gBrowser, null, {
-    recordExecution: "*",
-  });
-  gBrowser.selectedTab = recordingTab;
-  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_continuous.html", "current");
+  const recordingTab = await openRecordingTab("doc_rr_continuous.html");
 
   let dbg = await attachDebugger(recordingTab);
 

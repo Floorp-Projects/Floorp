@@ -1103,7 +1103,7 @@ fn stage_items_to_upload(
     controller.err_if_aborted()?;
     db.exec(
         "
-        INSERT INTO tagsToUpload(id, tag)
+        INSERT OR IGNORE INTO tagsToUpload(id, tag)
         SELECT o.id, t.tag
         FROM localTags t
         JOIN itemsToUpload o ON o.placeId = t.placeId",

@@ -2893,15 +2893,7 @@ add_task(async function test_invalid_guid() {
 add_task(async function test_sync_status_mismatches() {
   let dateAdded = new Date();
 
-  let mergeTelemetryEvents = [];
-  let buf = await openMirror("sync_status_mismatches", {
-    recordTelemetryEvent(object, method, value, extra) {
-      equal(object, "mirror", "Wrong object for telemetry event");
-      if (method == "merge") {
-        mergeTelemetryEvents.push({ value, extra });
-      }
-    },
-  });
+  let buf = await openMirror("sync_status_mismatches");
 
   info("Ensure mirror is up-to-date with Places");
   let initialChangesToUpload = await buf.apply();
