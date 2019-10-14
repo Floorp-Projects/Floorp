@@ -185,6 +185,10 @@ p {
   padding-inline-start: 44px;
 }
 
+.banner-body:dir(rtl) {
+  background-position-x: right;
+}
+
 .banner-body h1 {
   font-size: 18px;
   font-weight: bold;
@@ -227,7 +231,7 @@ p {
 }
 
 .search-banner-close-button {
-  float: right;
+  float: inline-end;
   min-width: 20px;
   min-height: 20px;
   margin: 16px;
