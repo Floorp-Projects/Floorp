@@ -21,6 +21,28 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'sandbox'
 
+if CONFIG['MOZ_SANDBOX'] and CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
+    UNIFIED_SOURCES += [
+        'test/SandboxTest.cpp',
+        'test/SandboxTestingChild.cpp',
+        'test/SandboxTestingParent.cpp',
+    ]
+
+    EXPORTS.mozilla += [
+        'test/SandboxTestingChild.h',
+        'test/SandboxTestingParent.h',
+    ]
+
+    IPDL_SOURCES += [
+        "test/PSandboxTesting.ipdl",
+    ]
+    
+    XPIDL_SOURCES += [
+        'test/mozISandboxTest.idl',
+    ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
 
 EXPORTS.mozilla += [
