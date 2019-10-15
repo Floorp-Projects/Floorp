@@ -4,7 +4,7 @@
 Remote Settings
 ===============
 
-The `remote-settings.js <https://dxr.mozilla.org/mozilla-central/source/services/settings/remote-settings.js>`_ module offers the ability to fetch remote settings that are kept in sync with Mozilla servers.
+The `remote-settings.js <https://searchfox.org/mozilla-central/source/services/settings/remote-settings.js>`_ module offers the ability to fetch remote settings that are kept in sync with Mozilla servers.
 
 
 Usage

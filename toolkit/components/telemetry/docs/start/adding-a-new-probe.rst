@@ -129,7 +129,7 @@ Any data collection that you need to base decisions on needs to have test covera
 
 - for events, `snapshotEvents() <https://searchfox.org/mozilla-central/rev/f997bd6bbfc4773e774fdb6cd010142370d186f9/toolkit/components/telemetry/core/nsITelemetry.idl#542-558>`_
 
-If you need to test that pings were correctly passed to Telemetry, you can use `TelemetryArchiveTesting <https://dxr.mozilla.org/mozilla-central/search?q=TelemetryArchiveTesting&redirect=false>`_.
+If you need to test that pings were correctly passed to Telemetry, you can use `TelemetryArchiveTesting <https://searchfox.org/mozilla-central/search?q=TelemetryArchiveTesting&redirect=false>`_.
 
 Validation
 ----------
