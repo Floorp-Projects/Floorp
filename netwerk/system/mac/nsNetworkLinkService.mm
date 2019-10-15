@@ -583,32 +583,6 @@ void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
                                      mNetworkChangeTime);
     }
     mNetworkChangeTime = TimeStamp::Now();
-
-    // Telemetry probe if we coalesce network change events with period of 1min.
-    if (!mChangeTime_1min.IsNull()) {
-      double period = (TimeStamp::Now() - mChangeTime_1min).ToSeconds();
-      if (period >= 60) { // 1minute
-        Telemetry::AccumulateTimeDelta(
-            Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS_1MIN,
-            mChangeTime_1min);
-        mChangeTime_1min = TimeStamp::Now();
-      }
-    } else {
-      mChangeTime_1min = TimeStamp::Now();
-    }
-
-    // Telemetry probe if we coalesce network change events with period of 5min.
-    if (!mChangeTime_5min.IsNull()) {
-      double period = (TimeStamp::Now() - mChangeTime_5min).ToSeconds();
-      if (period >= 300) { // 5minutes.
-        Telemetry::AccumulateTimeDelta(
-            Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS_5min,
-            mChangeTime_5min);
-        mChangeTime_5min = TimeStamp::Now();
-      }
-    } else {
-      mChangeTime_5min = TimeStamp::Now();
-    }
   } else if (!mStatusKnown) {
     event = NS_NETWORK_LINK_DATA_UNKNOWN;
   } else {
