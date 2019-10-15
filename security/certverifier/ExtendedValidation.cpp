@@ -345,17 +345,6 @@ static const struct EVInfo kEVInfos[] = {
     "BAAAAAABFUtaw5Q=",
   },
   {
-    // CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R2
-    "2.23.140.1.1",
-    "CA/Browser Forum EV OID",
-    { 0xCA, 0x42, 0xDD, 0x41, 0x74, 0x5F, 0xD0, 0xB8, 0x1E, 0xB9, 0x02,
-      0x36, 0x2C, 0xF9, 0xD8, 0xBF, 0x71, 0x9D, 0xA1, 0xBD, 0x1B, 0x1E,
-      0xFC, 0x94, 0x6F, 0x5B, 0x4C, 0x99, 0xF4, 0x2C, 0x1B, 0x9E },
-    "MEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9vdCBDQSAtIFIyMRMwEQYDVQQKEwpH"
-    "bG9iYWxTaWduMRMwEQYDVQQDEwpHbG9iYWxTaWdu",
-    "BAAAAAABD4Ym5g0=",
-  },
-  {
     // CN=GlobalSign,O=GlobalSign,OU=GlobalSign Root CA - R3
     "2.23.140.1.1",
     "CA/Browser Forum EV OID",
