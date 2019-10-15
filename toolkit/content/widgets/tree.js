@@ -738,7 +738,8 @@
         this._touchY = -1;
       });
 
-      this.addEventListener("MozMousePixelScroll", event => {
+      // This event doesn't retarget, so listen on the shadow DOM directly
+      this.shadowRoot.addEventListener("MozMousePixelScroll", event => {
         if (
           !(
             this.getAttribute("allowunderflowscroll") == "true" &&
@@ -749,7 +750,8 @@
         }
       });
 
-      this.addEventListener("DOMMouseScroll", event => {
+      // This event doesn't retarget, so listen on the shadow DOM directly
+      this.shadowRoot.addEventListener("DOMMouseScroll", event => {
         if (
           !(
             this.getAttribute("allowunderflowscroll") == "true" &&
