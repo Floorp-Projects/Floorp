@@ -5,33 +5,19 @@
 
 // Test css properties that are inactive in :visited rule.
 
-const VISISTED_URI = URL_ROOT + "doc_variables_1.html";
-
-const TEST_URI = `
-  <style type='text/css'>
-    a:visited, #visited-and-other-matched-selector {
-      background-color: transparent;
-      border-color: lime;
-      color: rgba(0, 255, 0, 0.8);
-      font-size: 100px;
-      margin-left: 50px;
-    }
-  </style>
-  <a href="${VISISTED_URI}" id="visited-only">link1</a>
-  <a href="${VISISTED_URI}" id="visited-and-other-matched-selector">link2</a>
-`;
+const TEST_URI = URL_ROOT + "doc_visited.html";
 
 const TEST_DATA = [
   {
-    selector: "#visited-only",
+    selector: "#visited",
     inactiveDeclarations: [
       {
         declaration: { "font-size": "100px" },
-        ruleIndex: 1,
+        ruleIndex: 2,
       },
       {
         declaration: { "margin-left": "50px" },
-        ruleIndex: 1,
+        ruleIndex: 2,
       },
     ],
     activeDeclarations: [
@@ -41,7 +27,7 @@ const TEST_DATA = [
           "border-color": "lime",
           color: "rgba(0, 255, 0, 0.8)",
         },
-        ruleIndex: 1,
+        ruleIndex: 2,
       },
     ],
   },
@@ -63,16 +49,12 @@ const TEST_DATA = [
 ];
 
 add_task(async () => {
-  info("Open a particular url to make a visited link");
-  const tab = await addTab(VISISTED_URI);
+  info("Open a url which has visited links");
+  const tab = await addTab(TEST_URI);
 
-  info("Open tested page in the same tab");
-  tab.linkedBrowser.loadURI(
-    "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI),
-    {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    }
-  );
+  info("Wait until the visited links are available");
+  const selectors = TEST_DATA.map(t => t.selector);
+  await waitUntilVisitedState(tab, selectors);
 
   info("Open the inspector");
   const { inspector, view } = await openRuleView();
