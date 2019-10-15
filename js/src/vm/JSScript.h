@@ -3348,6 +3348,15 @@ class LazyScript : public BaseScript {
     return &functionOrGlobal_->as<JSFunction>();
   }
 
+  bool canRelazify() const {
+    // Only functions without inner functions or direct eval are re-lazified.
+    // Functions with either of those are on the static scope chain of their
+    // inner functions, or in the case of eval, possibly eval'd inner
+    // functions. Note that if this ever changes, XDRRelazificationInfo will
+    // have to be fixed.
+    return !hasInnerFunctions() && !hasDirectEval();
+  }
+
   void initScript(JSScript* script);
 
   JSScript* maybeScript() { return script_; }
