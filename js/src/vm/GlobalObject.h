@@ -88,7 +88,6 @@ class GlobalObject : public NativeObject {
     ASYNC_GENERATOR_PROTO,
     MAP_ITERATOR_PROTO,
     SET_ITERATOR_PROTO,
-    COLLATOR_PROTO,
     NUMBER_FORMAT,
     NUMBER_FORMAT_PROTO,
     DATE_TIME_FORMAT,
@@ -504,7 +503,10 @@ class GlobalObject : public NativeObject {
 #if ENABLE_INTL_API
   static JSObject* getOrCreateCollatorPrototype(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, COLLATOR_PROTO, initIntlObject);
+    if (!ensureConstructor(cx, global, JSProto_Collator)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_Collator).toObject();
   }
 
   static JSFunction* getOrCreateNumberFormatConstructor(
