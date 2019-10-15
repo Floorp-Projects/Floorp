@@ -52,6 +52,7 @@ const JSClassOps CollatorObject::classOps_ = {nullptr, /* addProperty */
 const JSClass CollatorObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(CollatorObject::SLOT_COUNT) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_Collator) |
         JSCLASS_FOREGROUND_FINALIZE,
     &CollatorObject::classOps_, &CollatorObject::classSpec_};
 
@@ -102,15 +103,8 @@ static bool Collator(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  if (!proto) {
-    proto = GlobalObject::getOrCreateCollatorPrototype(cx, cx->global());
-    if (!proto) {
-      return false;
-    }
-  }
-
   Rooted<CollatorObject*> collator(
-      cx, NewObjectWithGivenProto<CollatorObject>(cx, proto));
+      cx, NewObjectWithClassProto<CollatorObject>(cx, proto));
   if (!collator) {
     return false;
   }

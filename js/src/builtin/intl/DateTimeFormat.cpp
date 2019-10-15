@@ -63,6 +63,7 @@ const JSClassOps DateTimeFormatObject::classOps_ = {
 const JSClass DateTimeFormatObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(DateTimeFormatObject::SLOT_COUNT) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_DateTimeFormat) |
         JSCLASS_FOREGROUND_FINALIZE,
     &DateTimeFormatObject::classOps_, &DateTimeFormatObject::classSpec_};
 
@@ -120,15 +121,8 @@ static bool DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct,
     return false;
   }
 
-  if (!proto) {
-    proto = GlobalObject::getOrCreateDateTimeFormatPrototype(cx, cx->global());
-    if (!proto) {
-      return false;
-    }
-  }
-
   Rooted<DateTimeFormatObject*> dateTimeFormat(cx);
-  dateTimeFormat = NewObjectWithGivenProto<DateTimeFormatObject>(cx, proto);
+  dateTimeFormat = NewObjectWithClassProto<DateTimeFormatObject>(cx, proto);
   if (!dateTimeFormat) {
     return false;
   }
