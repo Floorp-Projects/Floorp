@@ -226,6 +226,11 @@ Connection::SetDefaultTransactionType(int32_t aType) {
 }
 
 NS_IMETHODIMP
+Connection::GetVariableLimit(int32_t* aResultOut) {
+  return mBase->GetVariableLimit(aResultOut);
+}
+
+NS_IMETHODIMP
 Connection::BeginTransaction() { return mBase->BeginTransaction(); }
 
 NS_IMETHODIMP

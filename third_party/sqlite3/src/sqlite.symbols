@@ -72,6 +72,7 @@ sqlite3_interrupt
 sqlite3_last_insert_rowid
 sqlite3_libversion
 sqlite3_libversion_number
+sqlite3_limit
 sqlite3_load_extension
 sqlite3_malloc
 sqlite3_memory_highwater

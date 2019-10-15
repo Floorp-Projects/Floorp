@@ -41,6 +41,40 @@ interface mozIStorageAsyncConnection : nsISupports {
   attribute int32_t defaultTransactionType;
 
   /**
+   * The maximum number of bound parameters for statements executed on this
+   * connection. If your statement has more params than this limit, you'll
+   * need to chunk them into multiple statements. See `PlacesUtils.chunkArray`
+   * and its callers in Places for examples of how to do this, or read on for
+   * an overview.
+   *
+   * Keep in mind that the variable limit is for the _total_ number of
+   * parameters, including ones bound by name (using the `:VVV`, `@VVV`, or
+   * `?VVV` syntax) and index (`?` and `?NNN`).
+   *
+   * This means, when chunking:
+   *
+   * - If you're binding 1 param per 1 value per chunk (for example, if you
+   *   have a list of GUIDs and a clause like `WHERE guid IN (?, ?, ?, ...)`,
+   *   your chunk length is just `variableLimit`.
+   * - If you're binding 1 param per 1 value per chunk, but using that
+   *   param in multiple positions in the query (for example, `WHERE url_hash
+   *   IN (hash(?1), hash(?2), ...) AND url IN (?1, ?2, ...)`), you can use the
+   *   `?NNN` syntax with a chunk length of `variableLimit`.
+   * - If you're binding N params per 1 value per chunk (for example, if you
+   *   have a list of items with GUIDs and parent GUIDs, and you want to bind
+   *   both), your chunk length is `variableLimit / N`, since you're binding
+   *   two params for each element.
+   * - If you're binding K params per L values per chunk, plus M fixed ones
+   *   (for example, `WHERE parentGuid = :parentGuid AND guid IN (?, ?, ...)`),
+   *   your chunk length is `variableLimit - M`, to ensure there's space for the
+   *   fixed variables.
+   *
+   * If you bind more params than this limit, `create{Async}Statement` will
+   * fail with a "too many SQL variables" error.
+   */
+  readonly attribute int32_t variableLimit;
+
+  /**
    * Close this database connection, allowing all pending statements
    * to complete first.
    *
