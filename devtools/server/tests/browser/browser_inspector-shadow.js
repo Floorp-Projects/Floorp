@@ -123,7 +123,11 @@ add_task(async function() {
 
   const slottedChildren = await walker.children(shadowChildren.nodes[1]);
   ok(slottedChildren.nodes[0].isBeforePseudoElement, "slot has ::before");
-  ok(slottedChildren.nodes[2].isAfterPseudoElement, "slot has ::after");
+  ok(
+    slottedChildren.nodes[slottedChildren.nodes.length - 1]
+      .isAfterPseudoElement,
+    "slot has ::after"
+  );
 });
 
 add_task(async function() {

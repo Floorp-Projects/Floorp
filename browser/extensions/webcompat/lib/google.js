@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* globals module */
+
 const GOOGLE_TLDS = [
   "com",
   "ac",
@@ -209,3 +211,5 @@ const GOOGLE_TLDS = [
 function getMatchPatternsForGoogleURL(url, path = "*") {
   return GOOGLE_TLDS.map(domain => `*://${url}.${domain}/${path}`);
 }
+
+module.exports = getMatchPatternsForGoogleURL;
