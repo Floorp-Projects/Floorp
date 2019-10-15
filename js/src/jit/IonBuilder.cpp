@@ -8681,6 +8681,11 @@ bool IonBuilder::checkTypedObjectIndexInBounds(
   return indexAsByteOffset->add(index, AssertedCast<int32_t>(elemSize));
 }
 
+static bool CheckTypedObjectSupportedType(Scalar::Type type) {
+  // FIXME: https://bugzil.la/1536699
+  return !Scalar::isBigIntType(type);
+}
+
 AbortReasonOr<Ok> IonBuilder::getElemTryScalarElemOfTypedObject(
     bool* emitted, MDefinition* obj, MDefinition* index,
     TypedObjectPrediction objPrediction, TypedObjectPrediction elemPrediction,
@@ -8690,6 +8695,10 @@ AbortReasonOr<Ok> IonBuilder::getElemTryScalarElemOfTypedObject(
   // Must always be loading the same scalar type
   ScalarTypeDescr::Type elemType = elemPrediction.scalarType();
   MOZ_ASSERT(elemSize == ScalarTypeDescr::alignment(elemType));
+
+  if (!CheckTypedObjectSupportedType(elemType)) {
+    return Ok();
+  }
 
   LinearSum indexAsByteOffset(alloc());
   if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction,
@@ -9774,6 +9783,10 @@ AbortReasonOr<Ok> IonBuilder::setElemTryScalarElemOfTypedObject(
   // Must always be loading the same scalar type
   ScalarTypeDescr::Type elemType = elemPrediction.scalarType();
   MOZ_ASSERT(elemSize == ScalarTypeDescr::alignment(elemType));
+
+  if (!CheckTypedObjectSupportedType(elemType)) {
+    return Ok();
+  }
 
   LinearSum indexAsByteOffset(alloc());
   if (!checkTypedObjectIndexInBounds(elemSize, index, objPrediction,
@@ -11348,6 +11361,10 @@ AbortReasonOr<Ok> IonBuilder::getPropTryScalarPropOfTypedObject(
   // Must always be loading the same scalar type
   Scalar::Type fieldType = fieldPrediction.scalarType();
 
+  if (!CheckTypedObjectSupportedType(fieldType)) {
+    return Ok();
+  }
+
   // Don't optimize if the typed object's underlying buffer may be detached.
   TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());
   if (globalKey->hasFlags(constraints(),
@@ -12371,6 +12388,10 @@ AbortReasonOr<Ok> IonBuilder::setPropTryScalarPropOfTypedObject(
     TypedObjectPrediction fieldPrediction) {
   // Must always be loading the same scalar type
   Scalar::Type fieldType = fieldPrediction.scalarType();
+
+  if (!CheckTypedObjectSupportedType(fieldType)) {
+    return Ok();
+  }
 
   // Don't optimize if the typed object's underlying buffer may be detached.
   TypeSet::ObjectKey* globalKey = TypeSet::ObjectKey::get(&script()->global());

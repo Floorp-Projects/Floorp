@@ -1694,6 +1694,13 @@ AttachDecision GetPropIRGenerator::tryAttachTypedObject(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  if (fieldDescr->is<ScalarTypeDescr>()) {
+    Scalar::Type type = fieldDescr->as<ScalarTypeDescr>().type();
+    if (Scalar::isBigIntType(type)) {
+      return AttachDecision::NoAction;
+    }
+  }
+
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
   uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
