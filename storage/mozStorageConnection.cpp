@@ -1943,6 +1943,19 @@ Connection::SetDefaultTransactionType(int32_t aType) {
 }
 
 NS_IMETHODIMP
+Connection::GetVariableLimit(int32_t* _limit) {
+  if (!connectionReady()) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  int limit = ::sqlite3_limit(mDBConn, SQLITE_LIMIT_VARIABLE_NUMBER, -1);
+  if (limit < 0) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  *_limit = limit;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 Connection::BeginTransaction() {
   if (!connectionReady()) {
     return NS_ERROR_NOT_INITIALIZED;
