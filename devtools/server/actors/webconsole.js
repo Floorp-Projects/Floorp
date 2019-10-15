@@ -1352,7 +1352,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   ) {
     let dbgObject = null;
     let environment = null;
-    let hadDebuggee = false;
     let matches = [];
     let matchProp;
     let isElementAccess;
@@ -1385,8 +1384,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           );
         }
       } else {
-        // This is the general case (non-paused debugger)
-        hadDebuggee = this.dbg.hasDebuggee(this.evalWindow);
         dbgObject = this.dbg.addDebuggee(this.evalWindow);
       }
 
@@ -1399,10 +1396,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
         selectedNodeActor,
         authorizedEvaluations,
       });
-
-      if (!hadDebuggee && dbgObject) {
-        this.dbg.removeDebuggee(this.evalWindow);
-      }
 
       if (result === null) {
         return {

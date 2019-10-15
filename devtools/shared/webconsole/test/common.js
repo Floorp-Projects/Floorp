@@ -83,9 +83,13 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
       }
     }
 
-    // Attach the Target in order to instantiate the console client
+    // Attach the Target and the target thread in order to instantiate the console client.
     await target.attach();
+    const [, threadFront] = await target.attachThread();
+    await threadFront.resume();
+
     const webConsoleClient = target.activeConsole;
+
     // By default the console isn't listening for anything,
     // request listeners from here
     const response = await webConsoleClient.startListeners(listeners);
