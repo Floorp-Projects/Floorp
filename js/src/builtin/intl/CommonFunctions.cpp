@@ -116,37 +116,3 @@ js::UniqueChars js::intl::EncodeLocale(JSContext* cx, JSString* locale) {
 
   return chars;
 }
-
-bool js::intl::GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
-                                   GetAvailable getAvailable,
-                                   JS::MutableHandle<JS::Value> result) {
-  RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-  if (!locales) {
-    return false;
-  }
-
-  RootedAtom a(cx);
-  uint32_t count = countAvailable();
-  for (uint32_t i = 0; i < count; i++) {
-    const char* locale = getAvailable(i);
-    auto lang = DuplicateString(cx, locale);
-    if (!lang) {
-      return false;
-    }
-    char* p;
-    while ((p = strchr(lang.get(), '_'))) {
-      *p = '-';
-    }
-    a = Atomize(cx, lang.get(), strlen(lang.get()));
-    if (!a) {
-      return false;
-    }
-    if (!DefineDataProperty(cx, locales, a->asPropertyName(),
-                            TrueHandleValue)) {
-      return false;
-    }
-  }
-
-  result.setObject(*locales);
-  return true;
-}

@@ -60,7 +60,6 @@ using mozilla::SpecificNaN;
 using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::FieldType;
-using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
 
 using JS::AutoStableStringChars;
@@ -211,15 +210,6 @@ JSObject* js::CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl,
 
   constructor.set(ctor);
   return proto;
-}
-
-bool js::intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-
-  return GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable,
-                             args.rval());
 }
 
 bool js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp) {

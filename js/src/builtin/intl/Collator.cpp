@@ -36,7 +36,6 @@ using namespace js;
 
 using JS::AutoStableStringChars;
 
-using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
 using js::intl::ReportInternalError;
 using js::intl::SharedIntlData;
@@ -176,15 +175,6 @@ JSObject* js::CreateCollatorPrototype(JSContext* cx, HandleObject Intl,
   }
 
   return proto;
-}
-
-bool js::intl_Collator_availableLocales(JSContext* cx, unsigned argc,
-                                        Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-
-  return GetAvailableLocales(cx, ucol_countAvailable, ucol_getAvailable,
-                             args.rval());
 }
 
 bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {

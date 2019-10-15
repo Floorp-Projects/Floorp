@@ -222,30 +222,6 @@ function DefaultLocale() {
 }
 
 /**
- * Add old-style language tags without script code for locales that in current
- * usage would include a script subtag.  Also add an entry for the last-ditch
- * locale, in case ICU doesn't directly support it (but does support it through
- * fallback, e.g. supporting "en-GB" indirectly using "en" support).
- */
-function addSpecialMissingLanguageTags(availableLocales) {
-    // Certain old-style language tags lack a script code, but in current usage
-    // they *would* include a script code.  Map these over to modern forms.
-    var oldStyleLocales = std_Object_getOwnPropertyNames(oldStyleLanguageTagMappings);
-    for (var i = 0; i < oldStyleLocales.length; i++) {
-        var oldStyleLocale = oldStyleLocales[i];
-        if (availableLocales[oldStyleLanguageTagMappings[oldStyleLocale]])
-            availableLocales[oldStyleLocale] = true;
-    }
-
-    // Also forcibly provide the last-ditch locale.
-    var lastDitch = lastDitchLocale();
-    assert(lastDitch === "en-GB" && availableLocales.en,
-           "shouldn't be a need to add every locale implied by the last-" +
-           "ditch locale, merely just the last-ditch locale");
-    availableLocales[lastDitch] = true;
-}
-
-/**
  * Canonicalizes a locale list.
  *
  * Spec: ECMAScript Internationalization API Specification, 9.2.1.

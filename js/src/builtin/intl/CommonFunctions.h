@@ -144,26 +144,6 @@ static JSString* CallICU(JSContext* cx, const ICUStringFunction& strFn) {
   return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
 }
 
-// CountAvailable and GetAvailable describe the signatures used for ICU API
-// to determine available locales for various functionality.
-using CountAvailable = int32_t (*)();
-using GetAvailable = const char* (*)(int32_t localeIndex);
-
-/**
- * Return an object whose own property names are the locales indicated as
- * available by |countAvailable| that provides an overall count, and by
- * |getAvailable| that when called passing a number less than that count,
- * returns the corresponding locale as a borrowed string.  For example:
- *
- *   RootedValue v(cx);
- *   if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable, &v)) {
- *       return false;
- *   }
- */
-extern bool GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
-                                GetAvailable getAvailable,
-                                JS::MutableHandle<JS::Value> result);
-
 }  // namespace intl
 
 }  // namespace js
