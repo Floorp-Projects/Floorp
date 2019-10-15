@@ -4311,6 +4311,12 @@ class HTMLEditor final : public TextEditor,
   }
 
  protected:
+  // Helper for Handle[CSS|HTML]IndentAtSelectionInternal
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  IndentListChild(RefPtr<Element>* aCurList,
+                  const EditorDOMPoint& aCurPoint,
+                  OwningNonNull<nsINode>& aCurNode);
+
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
 
