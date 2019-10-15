@@ -209,7 +209,7 @@ const PANELS = {
   STACK_TRACE: "stack-trace",
   TIMINGS: "timings",
   SEARCH: "network-action-bar-search",
-  BLOCKING: "network-action-bar-blocked",  
+  BLOCKING: "network-action-bar-blocked",
 };
 
 const RESPONSE_HEADERS = [
