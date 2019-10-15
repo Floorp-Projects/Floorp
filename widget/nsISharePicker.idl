@@ -8,9 +8,22 @@
 
 interface nsIURI;
 
+interface mozIDOMWindowProxy;
+
 [scriptable, uuid(1201d357-8417-4926-a694-e6408fbedcf8)]
 interface nsISharePicker : nsISupports
 {
+  /**
+   * Initialize the share picker widget.
+   * @param nsIDOMWindow openerWindow.
+   */
+  void init(in mozIDOMWindowProxy openerWindow);
+
+  /**
+   * Returns the parent window this was initialized with.
+   */
+  readonly attribute mozIDOMWindowProxy openerWindow;
+
   /**
    * XPCOM Analog of navigator.share() as per:
    * https://w3c.github.io/web-share/#share-method

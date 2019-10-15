@@ -357,11 +357,23 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
   // Widget Layer handoff...
   nsCOMPtr<nsISharePicker> sharePicker =
       do_GetService("@mozilla.org/sharepicker;1");
-
   if (!sharePicker) {
     aResolver(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return IPC_OK();
   }
+
+  // Initialize the ShareWidget
+  RefPtr<BrowserParent> parent = GetBrowserParent();
+  if (NS_WARN_IF(!parent)) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+  nsCOMPtr<mozIDOMWindowProxy> openerWindow = parent->GetParentWindowOuter();
+  if (!openerWindow) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+  sharePicker->Init(openerWindow);
 
   // And finally share the data...
   RefPtr<Promise> promise;
