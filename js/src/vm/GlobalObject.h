@@ -391,14 +391,12 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_SavedFrame).toObject();
   }
 
-  static JSFunction* getOrCreateArrayBufferConstructor(
+  static JSObject* getOrCreateArrayBufferConstructor(
       JSContext* cx, Handle<GlobalObject*> global) {
     if (!ensureConstructor(cx, global, JSProto_ArrayBuffer)) {
       return nullptr;
     }
-    return &global->getConstructor(JSProto_ArrayBuffer)
-                .toObject()
-                .as<JSFunction>();
+    return &global->getConstructor(JSProto_ArrayBuffer).toObject();
   }
 
   static JSObject* getOrCreateArrayBufferPrototype(
@@ -682,12 +680,12 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_DataView).toObject();
   }
 
-  static JSFunction* getOrCreatePromiseConstructor(
-      JSContext* cx, Handle<GlobalObject*> global) {
+  static JSObject* getOrCreatePromiseConstructor(JSContext* cx,
+                                                 Handle<GlobalObject*> global) {
     if (!ensureConstructor(cx, global, JSProto_Promise)) {
       return nullptr;
     }
-    return &global->getConstructor(JSProto_Promise).toObject().as<JSFunction>();
+    return &global->getConstructor(JSProto_Promise).toObject();
   }
 
   static NativeObject* getIntrinsicsHolder(JSContext* cx,
