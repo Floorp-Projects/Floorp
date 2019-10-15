@@ -45,6 +45,7 @@
 #include "nsILoadInfo.h"
 #include "nsIAuthPrompt2.h"
 #include "nsIFTPChannelParentInternal.h"
+#include "mozilla/Telemetry.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -1071,6 +1072,9 @@ nsFtpState::R_list() {
 
   if (mResponseCode / 100 == 2 && mRlist1xxReceived) {
     //(DONE)
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_LISTINGS, 1);
+
     mNextState = FTP_COMPLETE;
     mRlist1xxReceived = false;
     return FTP_COMPLETE;
@@ -1092,6 +1096,9 @@ FTP_STATE
 nsFtpState::R_retr() {
   if (mResponseCode / 100 == 2) {
     //(DONE)
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
+
     mNextState = FTP_COMPLETE;
     return FTP_COMPLETE;
   }
@@ -1167,6 +1174,9 @@ FTP_STATE
 nsFtpState::R_stor() {
   if (mResponseCode / 100 == 2) {
     //(DONE)
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
+
     mNextState = FTP_COMPLETE;
     mStorReplyReceived = true;
 

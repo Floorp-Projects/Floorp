@@ -898,6 +898,18 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   GraphImpl()->NotifyOutputData(aOutputBuffer, static_cast<size_t>(aFrames),
                                 mSampleRate, mOutputChannels);
 
+#ifdef XP_MACOSX
+  // This only happens when the output is on a macbookpro's external speaker,
+  // that are stereo, but let's just be safe.
+  if (mNeedsPanning && mOutputChannels == 2) {
+    // hard pan to the right
+    for (uint32_t i = 0; i < aFrames * 2; i += 2) {
+      aOutputBuffer[i + 1] += aOutputBuffer[i];
+      aOutputBuffer[i] = 0.0;
+    }
+  }
+#endif
+
   if (!stillProcessing) {
     // About to hand over control of the graph.  Do not start a new driver if
     // StateCallback() receives an error for this stream while the main thread
@@ -1013,19 +1025,12 @@ void AudioCallbackDriver::PanOutputIfNeeded(bool aMicrophoneActive) {
       // Check if we are currently outputing sound on external speakers.
       if (!strcmp(out->output_name, "ispk")) {
         // Pan everything to the right speaker.
-        if (aMicrophoneActive) {
-          if (cubeb_stream_set_panning(mAudioStream, 1.0) != CUBEB_OK) {
-            NS_WARNING("Could not pan audio output to the right.");
-          }
-        } else {
-          if (cubeb_stream_set_panning(mAudioStream, 0.0) != CUBEB_OK) {
-            NS_WARNING("Could not pan audio output to the center.");
-          }
-        }
+        LOG(LogLevel::Debug, ("Using the built-in speakers, with%s audio input",
+                              aMicrophoneActive ? "" : "out"));
+        mNeedsPanning = aMicrophoneActive;
       } else {
-        if (cubeb_stream_set_panning(mAudioStream, 0.0) != CUBEB_OK) {
-          NS_WARNING("Could not pan audio output to the center.");
-        }
+        LOG(LogLevel::Debug, ("Using an external output device"));
+        mNeedsPanning = false;
       }
       cubeb_stream_device_destroy(mAudioStream, out);
     }
@@ -1040,7 +1045,12 @@ void AudioCallbackDriver::DeviceChangedCallback() {
   MonitorAutoLock mon(mGraphImpl->GetMonitor());
   GraphImpl()->DeviceChanged();
 #ifdef XP_MACOSX
-  PanOutputIfNeeded(mInputChannelCount);
+  RefPtr<AudioCallbackDriver> self(this);
+  bool hasInput = mInputChannelCount;
+  NS_DispatchToBackgroundThread(NS_NewRunnableFunction(
+      "PanOutputIfNeeded", [self{std::move(self)}, hasInput]() {
+        self->PanOutputIfNeeded(hasInput);
+      }));
 #endif
 }
 

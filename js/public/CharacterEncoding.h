@@ -13,7 +13,7 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-class JSFlatString;
+class JSLinearString;
 
 namespace JS {
 
@@ -283,7 +283,7 @@ LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx, const ConstUTF8CharsZ& utf8,
  * Returns the length of the char buffer required to encode |s| as UTF8.
  * Does not include the null-terminator.
  */
-JS_PUBLIC_API size_t GetDeflatedUTF8StringLength(JSFlatString* s);
+JS_PUBLIC_API size_t GetDeflatedUTF8StringLength(JSLinearString* s);
 
 /*
  * Encode whole scalar values of |src| into |dst| as UTF-8 until |src| is
@@ -292,16 +292,16 @@ JS_PUBLIC_API size_t GetDeflatedUTF8StringLength(JSFlatString* s);
  * the number of bytes of |dst| that were filled.
  *
  * Use |JS_EncodeStringToUTF8BufferPartial| if your string isn't already
- * flat.
+ * linear.
  *
- * Given |JSString* str = JS_FORGET_STRING_FLATNESS(src)|,
+ * Given |JSString* str = JS_FORGET_STRING_LINEARNESS(src)|,
  * if |JS_StringHasLatin1Chars(str)|, then |src| is always fully converted
  * if |dst.Length() >= JS_GetStringLength(str) * 2|. Otherwise |src| is
  * always fully converted if |dst.Length() >= JS_GetStringLength(str) * 3|.
  *
  * The exact space required is always |GetDeflatedUTF8StringLength(str)|.
  */
-JS_PUBLIC_API size_t DeflateStringToUTF8Buffer(JSFlatString* src,
+JS_PUBLIC_API size_t DeflateStringToUTF8Buffer(JSLinearString* src,
                                                mozilla::Span<char> dst);
 
 /*

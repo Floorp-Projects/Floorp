@@ -33,6 +33,4 @@ fi
 
 echo "Applying gecko.patch on top of $rev"
 patch -p3 < gecko.patch
-echo "Applying disable-rt.patch on top of $rev"
-patch -p3 < disable-rt.patch
 

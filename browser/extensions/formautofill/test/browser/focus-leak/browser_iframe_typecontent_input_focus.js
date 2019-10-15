@@ -6,7 +6,7 @@
 const URL_ROOT =
   "chrome://mochitests/content/browser/browser/extensions/formautofill/test/browser/focus-leak/";
 
-const XUL_FRAME_URI = URL_ROOT + "doc_iframe_typecontent_input_focus.xul";
+const XUL_FRAME_URI = URL_ROOT + "doc_iframe_typecontent_input_focus.xhtml";
 const INNER_HTML_FRAME_URI =
   URL_ROOT + "doc_iframe_typecontent_input_focus_frame.html";
 

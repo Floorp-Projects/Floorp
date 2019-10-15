@@ -106,7 +106,7 @@ pub fn get_device_manufacturer(
 pub fn get_device_buffer_frame_size_range(
     id: AudioDeviceID,
     devtype: DeviceType,
-) -> std::result::Result<(f64, f64), OSStatus> {
+) -> std::result::Result<AudioValueRange, OSStatus> {
     assert_ne!(id, kAudioObjectUnknown);
 
     let address = get_property_address(Property::DeviceBufferFrameSizeRange, devtype);
@@ -114,35 +114,198 @@ pub fn get_device_buffer_frame_size_range(
     let mut range = AudioValueRange::default();
     let err = audio_object_get_property_data(id, &address, &mut size, &mut range);
     if err == NO_ERR {
-        Ok((range.mMinimum, range.mMaximum))
+        Ok(range)
     } else {
         Err(err)
     }
 }
 
-enum Property {
+pub fn get_device_latency(
+    id: AudioDeviceID,
+    devtype: DeviceType,
+) -> std::result::Result<u32, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::DeviceLatency, devtype);
+    let mut size = mem::size_of::<u32>();
+    let mut latency: u32 = 0;
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut latency);
+    if err == NO_ERR {
+        Ok(latency)
+    } else {
+        Err(err)
+    }
+}
+
+pub fn get_device_streams(
+    id: AudioDeviceID,
+    devtype: DeviceType,
+) -> std::result::Result<Vec<AudioStreamID>, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::DeviceStreams, devtype);
+
+    let mut size: usize = 0;
+    let err = audio_object_get_property_data_size(id, &address, &mut size);
+    if err != NO_ERR {
+        return Err(err);
+    }
+
+    let mut streams: Vec<AudioObjectID> = allocate_array_by_size(size);
+    let err = audio_object_get_property_data(id, &address, &mut size, streams.as_mut_ptr());
+    if err == NO_ERR {
+        Ok(streams)
+    } else {
+        Err(err)
+    }
+}
+
+pub fn get_device_sample_rate(
+    id: AudioDeviceID,
+    devtype: DeviceType,
+) -> std::result::Result<f64, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::DeviceSampleRate, devtype);
+    let mut size = mem::size_of::<f64>();
+    let mut rate: f64 = 0.0;
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut rate);
+    if err == NO_ERR {
+        Ok(rate)
+    } else {
+        Err(err)
+    }
+}
+
+pub fn get_ranges_of_device_sample_rate(
+    id: AudioDeviceID,
+    devtype: DeviceType,
+) -> std::result::Result<Vec<AudioValueRange>, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::DeviceSampleRates, devtype);
+
+    let mut size: usize = 0;
+    let err = audio_object_get_property_data_size(id, &address, &mut size);
+    if err != NO_ERR {
+        return Err(err);
+    }
+
+    let mut ranges: Vec<AudioValueRange> = allocate_array_by_size(size);
+    let err = audio_object_get_property_data(id, &address, &mut size, ranges.as_mut_ptr());
+    if err == NO_ERR {
+        Ok(ranges)
+    } else {
+        Err(err)
+    }
+}
+
+pub fn get_device_stream_format(
+    id: AudioDeviceID,
+    devtype: DeviceType,
+) -> std::result::Result<AudioStreamBasicDescription, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::DeviceStreamFormat, devtype);
+    let mut size = mem::size_of::<AudioStreamBasicDescription>();
+    let mut format = AudioStreamBasicDescription::default();
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut format);
+    if err == NO_ERR {
+        Ok(format)
+    } else {
+        Err(err)
+    }
+}
+
+pub fn get_device_stream_configuration(
+    id: AudioDeviceID,
+    devtype: DeviceType,
+) -> std::result::Result<Vec<AudioBuffer>, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::DeviceStreamConfiguration, devtype);
+    let mut size: usize = 0;
+    let err = audio_object_get_property_data_size(id, &address, &mut size);
+    if err != NO_ERR {
+        return Err(err);
+    }
+
+    let mut data: Vec<u8> = allocate_array_by_size(size);
+    let ptr = data.as_mut_ptr() as *mut AudioBufferList;
+    let err = audio_object_get_property_data(id, &address, &mut size, ptr);
+    if err != NO_ERR {
+        return Err(err);
+    }
+
+    let list = unsafe { &(*ptr) };
+    let ptr = list.mBuffers.as_ptr() as *const AudioBuffer;
+    let len = list.mNumberBuffers as usize;
+    let buffers = unsafe { slice::from_raw_parts(ptr, len) };
+    Ok(buffers.to_vec())
+}
+
+pub fn get_stream_latency(
+    id: AudioStreamID,
+    devtype: DeviceType,
+) -> std::result::Result<u32, OSStatus> {
+    assert_ne!(id, kAudioObjectUnknown);
+
+    let address = get_property_address(Property::StreamLatency, devtype);
+    let mut size = mem::size_of::<u32>();
+    let mut latency: u32 = 0;
+    let err = audio_object_get_property_data(id, &address, &mut size, &mut latency);
+    if err == NO_ERR {
+        Ok(latency)
+    } else {
+        Err(err)
+    }
+}
+
+pub enum Property {
     DeviceBufferFrameSizeRange,
+    DeviceIsAlive,
+    DeviceLatency,
     DeviceManufacturer,
     DeviceName,
+    DeviceSampleRate,
+    DeviceSampleRates,
     DeviceSource,
     DeviceSourceName,
+    DeviceStreamConfiguration,
+    DeviceStreamFormat,
+    DeviceStreams,
     DeviceUID,
+    HardwareDefaultInputDevice,
+    HardwareDefaultOutputDevice,
+    HardwareDevices,
+    StreamLatency,
 }
 
 impl From<Property> for AudioObjectPropertySelector {
     fn from(p: Property) -> Self {
         match p {
             Property::DeviceBufferFrameSizeRange => kAudioDevicePropertyBufferFrameSizeRange,
+            Property::DeviceIsAlive => kAudioDevicePropertyDeviceIsAlive,
+            Property::DeviceLatency => kAudioDevicePropertyLatency,
             Property::DeviceManufacturer => kAudioObjectPropertyManufacturer,
             Property::DeviceName => kAudioObjectPropertyName,
+            Property::DeviceSampleRate => kAudioDevicePropertyNominalSampleRate,
+            Property::DeviceSampleRates => kAudioDevicePropertyAvailableNominalSampleRates,
             Property::DeviceSource => kAudioDevicePropertyDataSource,
             Property::DeviceSourceName => kAudioDevicePropertyDataSourceNameForIDCFString,
+            Property::DeviceStreamConfiguration => kAudioDevicePropertyStreamConfiguration,
+            Property::DeviceStreamFormat => kAudioDevicePropertyStreamFormat,
+            Property::DeviceStreams => kAudioDevicePropertyStreams,
             Property::DeviceUID => kAudioDevicePropertyDeviceUID,
+            Property::HardwareDefaultInputDevice => kAudioHardwarePropertyDefaultInputDevice,
+            Property::HardwareDefaultOutputDevice => kAudioHardwarePropertyDefaultOutputDevice,
+            Property::HardwareDevices => kAudioHardwarePropertyDevices,
+            Property::StreamLatency => kAudioStreamPropertyLatency,
         }
     }
 }
 
-fn get_property_address(property: Property, devtype: DeviceType) -> AudioObjectPropertyAddress {
+pub fn get_property_address(property: Property, devtype: DeviceType) -> AudioObjectPropertyAddress {
     const GLOBAL: ffi::cubeb_device_type =
         ffi::CUBEB_DEVICE_TYPE_INPUT | ffi::CUBEB_DEVICE_TYPE_OUTPUT;
     let scope = match devtype.bits() {

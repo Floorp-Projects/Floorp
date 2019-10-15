@@ -181,9 +181,6 @@ JSErrorReport* js::ErrorObject::getOrCreateErrorReport(JSContext* cx) {
   if (!message) {
     message = cx->runtime()->emptyString;
   }
-  if (!message->ensureFlat(cx)) {
-    return nullptr;
-  }
 
   UniqueChars utf8 = StringToNewUTF8CharsZ(cx, *message);
   if (!utf8) {
