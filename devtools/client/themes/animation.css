@@ -114,7 +114,6 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   position: absolute;
   /* In order to click on edge of current-time-scrubber-controller element */
   width: calc(100% + 1px);
-  background: #f004;
 }
 
 .current-time-scrubber-area:dir(rtl)::before {
