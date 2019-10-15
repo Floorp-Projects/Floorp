@@ -698,7 +698,8 @@
   opacity: 0.5;
 }
 
-.webreplay-player #overlay .tick:hover ~ .tick {
+.webreplay-player #overlay .tick:hover ~ .tick,
+.webreplay-player #overlay .tick.highlight ~ .tick:not(.highlight) {
   opacity: 0.5;
 }
 
