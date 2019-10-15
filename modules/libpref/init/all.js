@@ -569,6 +569,10 @@ pref("media.cubeb.logging_level", "");
   pref("media.cubeb.sandbox", false);
 #endif
 
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  pref("media.cubeb.backend", "audiounit-rust");
+#endif
+
 // GraphRunner (fixed MediaTrackGraph thread) control
 pref("media.audiograph.single_thread.enabled", false);
 
