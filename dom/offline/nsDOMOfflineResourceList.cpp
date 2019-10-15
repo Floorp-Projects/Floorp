@@ -374,11 +374,8 @@ void nsDOMOfflineResourceList::MozAdd(const nsAString& aURI, ErrorResult& aRv) {
     return;
   }
 
-  RefPtr<Document> doc = GetOwner()->GetExtantDoc();
-  nsCOMPtr<nsICookieSettings> cs = doc ? doc->CookieSettings() : nullptr;
-
   rv = update->InitPartial(mManifestURI, clientID, mDocumentURI,
-                           mLoadingPrincipal, cs);
+                           mLoadingPrincipal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
     return;

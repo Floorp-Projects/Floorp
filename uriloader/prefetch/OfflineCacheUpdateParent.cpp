@@ -72,8 +72,7 @@ void OfflineCacheUpdateParent::ActorDestroy(ActorDestroyReason why) {
 
 nsresult OfflineCacheUpdateParent::Schedule(
     const URIParams& aManifestURI, const URIParams& aDocumentURI,
-    const PrincipalInfo& aLoadingPrincipalInfo, const bool& stickDocument,
-    const CookieSettingsArgs& aCookieSettingsArgs) {
+    const PrincipalInfo& aLoadingPrincipalInfo, const bool& stickDocument) {
   LOG(("OfflineCacheUpdateParent::RecvSchedule [%p]", this));
 
   nsresult rv;
@@ -117,8 +116,6 @@ nsresult OfflineCacheUpdateParent::Schedule(
                       nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    update->SetCookieSettingsArgs(aCookieSettingsArgs);
-
     // Must add before Schedule() call otherwise we would miss
     // oncheck event notification.
     update->AddObserver(this, false);
@@ -126,8 +123,6 @@ nsresult OfflineCacheUpdateParent::Schedule(
     rv = update->Schedule();
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    update->SetCookieSettingsArgs(aCookieSettingsArgs);
-
     update->AddObserver(this, false);
   }
 
