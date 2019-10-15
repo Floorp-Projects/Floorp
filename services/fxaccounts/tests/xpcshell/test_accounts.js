@@ -263,9 +263,6 @@ add_task(async function test_get_signed_in_user_initially_unset() {
   Assert.equal(result, null);
 
   await account._internal.setSignedInUser(credentials);
-  let histogram = Services.telemetry.getHistogramById("FXA_CONFIGURED");
-  Assert.equal(histogram.snapshot().sum, 1);
-  histogram.clear();
 
   // getSignedInUser only returns a subset.
   result = await account.getSignedInUser();
