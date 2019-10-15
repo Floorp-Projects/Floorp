@@ -2217,7 +2217,10 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
         );
 
         // Remove stale tombstones for new items.
-        for (let chunk of chunkArray(items, SQLITE_MAX_VARIABLE_NUMBER)) {
+        for (let chunk of PlacesUtils.chunkArray(
+          items,
+          SQLITE_MAX_VARIABLE_NUMBER
+        )) {
           await db.executeCached(
             `DELETE FROM moz_bookmarks_deleted WHERE guid IN (${new Array(
               chunk.length
@@ -2625,7 +2628,10 @@ function removeBookmarks(items, options) {
           }
         }
 
-        for (let chunk of chunkArray(items, SQLITE_MAX_VARIABLE_NUMBER)) {
+        for (let chunk of PlacesUtils.chunkArray(
+          items,
+          SQLITE_MAX_VARIABLE_NUMBER
+        )) {
           // We don't go through the annotations service for this cause otherwise
           // we'd get a pointless onItemChanged notification and it would also
           // set lastModified to an unexpected value.
@@ -3388,17 +3394,6 @@ function adjustSeparatorsSyncCounter(
       item_type: Bookmarks.TYPE_SEPARATOR,
     }
   );
-}
-
-function* chunkArray(array, chunkLength) {
-  if (array.length <= chunkLength) {
-    yield array;
-    return;
-  }
-  let startIndex = 0;
-  while (startIndex < array.length) {
-    yield array.slice(startIndex, (startIndex += chunkLength));
-  }
 }
 
 /**

@@ -1347,10 +1347,7 @@ BufferedBookmarksStore.prototype = {
 
   async applyIncomingBatch(records) {
     let buf = await this.ensureOpenMirror();
-    for (let [, chunk] of PlacesSyncUtils.chunkArray(
-      records,
-      this._batchChunkSize
-    )) {
+    for (let chunk of PlacesUtils.chunkArray(records, this._batchChunkSize)) {
       await buf.store(chunk);
     }
     // Array of failed records.
