@@ -123,22 +123,6 @@ mochitest-browser-chrome:
     instance-size: default
     allow-software-gl-layers: false
 
-browser-instrumentation:
-    description: "Extra instrumentation for a browser-chrome run (XUL, XBL, etc)"
-    suite:
-        name: mochitest-browser-chrome-instrumentation
-    treeherder-symbol: M(inst)
-    loopback-video: true
-    tier: 3
-    run-on-projects:
-        by-test-platform:
-            windows.*-(?:nightly|shippable)/.*: ["mozilla-central"]
-            default: []
-    max-run-time: 14400
-    mozharness:
-        mochitest-flavor: browser
-    allow-software-gl-layers: false
-
 browser-screenshots:
     description: "Browser Screenshots"
     suite:
