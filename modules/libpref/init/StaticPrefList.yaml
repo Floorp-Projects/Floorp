@@ -5240,19 +5240,6 @@
   value: false
   mirror: always
 
-# Is the CSS Scroll Snap Module Level 1 enabled?
-- name: layout.css.scroll-snap-v1.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Is support for the old unspecced scroll-snap enabled?
-# E.g. scroll-snap-points-{x,y}, scroll-snap-coordinate, etc.
-- name: layout.css.scroll-snap.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Are shared memory User Agent style sheets enabled?
 - name: layout.css.shared-memory-ua-sheets.enabled
   type: bool
