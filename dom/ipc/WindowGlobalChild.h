@@ -119,9 +119,13 @@ class WindowGlobalChild final : public WindowGlobalActor,
 
   mozilla::ipc::IPCResult RecvDisplayLoadError(const nsAString& aURI);
 
-  mozilla::ipc::IPCResult RecvChangeFrameRemoteness(
-      dom::BrowsingContext* aBc, const nsString& aRemoteType,
-      uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvMakeFrameLocal(
+      dom::BrowsingContext* aFrameContext, uint64_t aPendingSwitchId);
+
+  mozilla::ipc::IPCResult RecvMakeFrameRemote(
+      dom::BrowsingContext* aFrameContext,
+      ManagedEndpoint<PBrowserBridgeChild>&& aEndpoint, const TabId& aTabId,
+      MakeFrameRemoteResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvDrawSnapshot(const Maybe<IntRect>& aRect,
                                            const float& aScale,
