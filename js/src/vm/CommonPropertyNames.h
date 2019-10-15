@@ -181,7 +181,6 @@
   MACRO(futexTimedOut, futexTimedOut, "timed-out")                             \
   MACRO(gcCycleNumber, gcCycleNumber, "gcCycleNumber")                         \
   MACRO(Generator, Generator, "Generator")                                     \
-  MACRO(GeneratorFunction, GeneratorFunction, "GeneratorFunction")             \
   MACRO(GeneratorNext, GeneratorNext, "GeneratorNext")                         \
   MACRO(GeneratorReturn, GeneratorReturn, "GeneratorReturn")                   \
   MACRO(GeneratorThrow, GeneratorThrow, "GeneratorThrow")                      \
