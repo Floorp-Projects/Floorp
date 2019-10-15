@@ -136,7 +136,8 @@ class IndirectBindingMap {
     HeapPtr<Shape*> shape;
   };
 
-  typedef HashMap<jsid, Binding, DefaultHasher<jsid>, ZoneAllocPolicy> Map;
+  using Map = HashMap<PreBarrieredId, Binding, DefaultHasher<PreBarrieredId>,
+                      ZoneAllocPolicy>;
 
   mozilla::Maybe<Map> map_;
 };
