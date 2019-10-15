@@ -28,7 +28,6 @@
 #include "jsfriendapi.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"

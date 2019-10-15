@@ -65,7 +65,7 @@ struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 class JS_PUBLIC_API JSTracer;
 
-class JSFlatString;
+class JSLinearString;
 
 template <typename T>
 struct JSConstScalarSpec;

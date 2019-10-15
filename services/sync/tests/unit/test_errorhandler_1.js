@@ -63,8 +63,9 @@ add_task(async function test_401_logout() {
   Service._updateCachedURLs();
 
   _("Starting first sync.");
-  let ping = await sync_and_validate_telem(true);
-  deepEqual(ping.failureReason, { name: "httperror", code: 401 });
+  await sync_and_validate_telem(ping => {
+    deepEqual(ping.failureReason, { name: "httperror", code: 401 });
+  });
   _("First sync done.");
 
   await promiseErrors;
@@ -89,11 +90,12 @@ add_task(async function test_credentials_changed_logout() {
 
   await EHTestsCommon.generateCredentialsChangedFailure();
 
-  let ping = await sync_and_validate_telem(true);
-  equal(ping.status.sync, CREDENTIALS_CHANGED);
-  deepEqual(ping.failureReason, {
-    name: "unexpectederror",
-    error: "Error: Aborting sync, remote setup failed",
+  await sync_and_validate_telem(ping => {
+    equal(ping.status.sync, CREDENTIALS_CHANGED);
+    deepEqual(ping.failureReason, {
+      name: "unexpectederror",
+      error: "Error: Aborting sync, remote setup failed",
+    });
   });
 
   Assert.equal(Status.sync, CREDENTIALS_CHANGED);
@@ -135,11 +137,12 @@ add_task(async function test_sync_non_network_error() {
 
   await EHTestsCommon.generateCredentialsChangedFailure();
 
-  let ping = await sync_and_validate_telem(true);
-  equal(ping.status.sync, CREDENTIALS_CHANGED);
-  deepEqual(ping.failureReason, {
-    name: "unexpectederror",
-    error: "Error: Aborting sync, remote setup failed",
+  await sync_and_validate_telem(ping => {
+    equal(ping.status.sync, CREDENTIALS_CHANGED);
+    deepEqual(ping.failureReason, {
+      name: "unexpectederror",
+      error: "Error: Aborting sync, remote setup failed",
+    });
   });
 
   Assert.equal(Status.sync, CREDENTIALS_CHANGED);
@@ -252,11 +255,12 @@ add_task(async function test_sync_server_maintenance_error() {
 
   Assert.equal(Status.service, STATUS_OK);
 
-  let ping = await sync_and_validate_telem(true);
-  equal(ping.status.sync, SERVER_MAINTENANCE);
-  deepEqual(ping.engines.find(e => e.failureReason).failureReason, {
-    name: "httperror",
-    code: 503,
+  await sync_and_validate_telem(ping => {
+    equal(ping.status.sync, SERVER_MAINTENANCE);
+    deepEqual(ping.engines.find(e => e.failureReason).failureReason, {
+      name: "httperror",
+      code: 503,
+    });
   });
 
   Assert.equal(Status.service, SYNC_FAILED_PARTIAL);

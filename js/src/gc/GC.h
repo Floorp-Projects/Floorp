@@ -56,6 +56,9 @@ FOR_EACH_NONOBJECT_ALLOCKIND(EXPAND_MAPTYPETOFINALIZEKIND)
 
 extern void TraceRuntime(JSTracer* trc);
 
+// Trace roots but don't evict the nursery first; used from DumpHeap.
+extern void TraceRuntimeWithoutEviction(JSTracer* trc);
+
 extern void ReleaseAllJITCode(JSFreeOp* op);
 
 extern void PrepareForDebugGC(JSRuntime* rt);

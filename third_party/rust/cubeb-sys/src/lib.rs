@@ -16,7 +16,6 @@ mod error;
 mod format;
 mod log;
 mod mixer;
-mod panner;
 mod resampler;
 mod stream;
 
@@ -28,6 +27,5 @@ pub use error::*;
 pub use format::*;
 pub use log::*;
 pub use mixer::*;
-pub use panner::*;
 pub use resampler::*;
 pub use stream::*;

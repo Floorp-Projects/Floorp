@@ -130,11 +130,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CallbackTimeoutHandler)
     JSFunction* fun =
         JS_GetObjectFunction(js::UncheckedUnwrapWithoutExpose(obj));
     if (fun && JS_GetFunctionId(fun)) {
-      JSFlatString* funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
-      size_t size = 1 + JS_PutEscapedFlatString(nullptr, 0, funId, 0);
+      JSLinearString* funId = JS_ASSERT_STRING_IS_LINEAR(JS_GetFunctionId(fun));
+      size_t size = 1 + JS_PutEscapedLinearString(nullptr, 0, funId, 0);
       char* funIdName = new char[size];
       if (funIdName) {
-        JS_PutEscapedFlatString(funIdName, size, funId, 0);
+        JS_PutEscapedLinearString(funIdName, size, funId, 0);
         name.AppendLiteral(" [");
         name.Append(funIdName);
         delete[] funIdName;

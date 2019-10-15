@@ -15,6 +15,12 @@ this.sharedPreferences = class extends ExtensionAPI {
   getAPI(context) {
     return {
       sharedPreferences: {
+        async setCharPref(name, value) {
+          if (!Services.androidBridge || !Services.androidBridge.isFennec) {
+            return;
+          }
+          SharedPreferences.forApp().setCharPref(name, value);
+        },
         async setBoolPref(name, value) {
           if (!Services.androidBridge || !Services.androidBridge.isFennec) {
             return;
