@@ -69,4 +69,4 @@ browsertime-tp6m-1-cold:
             refbrow: 1800
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-1
+            - --test=raptor-tp6m-1-cold
