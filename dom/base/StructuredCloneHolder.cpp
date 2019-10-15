@@ -190,11 +190,17 @@ bool StructuredCloneHolderBase::Write(JSContext* aCx,
 
 bool StructuredCloneHolderBase::Read(JSContext* aCx,
                                      JS::MutableHandle<JS::Value> aValue) {
+  return Read(aCx, aValue, JS::CloneDataPolicy());
+}
+
+bool StructuredCloneHolderBase::Read(JSContext* aCx,
+                                     JS::MutableHandle<JS::Value> aValue,
+                                     JS::CloneDataPolicy aCloneDataPolicy) {
   MOZ_ASSERT(mBuffer, "Read() without Write() is not allowed.");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
-  bool ok =
-      mBuffer->read(aCx, aValue, &StructuredCloneHolder::sCallbacks, this);
+  bool ok = mBuffer->read(aCx, aValue, aCloneDataPolicy,
+                          &StructuredCloneHolder::sCallbacks, this);
   return ok;
 }
 
@@ -269,6 +275,13 @@ void StructuredCloneHolder::Write(JSContext* aCx, JS::Handle<JS::Value> aValue,
 void StructuredCloneHolder::Read(nsISupports* aParent, JSContext* aCx,
                                  JS::MutableHandle<JS::Value> aValue,
                                  ErrorResult& aRv) {
+  return Read(aParent, aCx, aValue, JS::CloneDataPolicy(), aRv);
+}
+
+void StructuredCloneHolder::Read(nsISupports* aParent, JSContext* aCx,
+                                 JS::MutableHandle<JS::Value> aValue,
+                                 JS::CloneDataPolicy aCloneDataPolicy,
+                                 ErrorResult& aRv) {
   MOZ_ASSERT_IF(
       mStructuredCloneScope == StructuredCloneScope::SameProcessSameThread,
       mCreationEventTarget->IsOnCurrentThread());
@@ -277,7 +290,7 @@ void StructuredCloneHolder::Read(nsISupports* aParent, JSContext* aCx,
   mozilla::AutoRestore<nsISupports*> guard(mParent);
   mParent = aParent;
 
-  if (!StructuredCloneHolderBase::Read(aCx, aValue)) {
+  if (!StructuredCloneHolderBase::Read(aCx, aValue, aCloneDataPolicy)) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
@@ -316,8 +329,8 @@ void StructuredCloneHolder::ReadFromBuffer(nsISupports* aParent, JSContext* aCx,
   mParent = aParent;
 
   if (!JS_ReadStructuredClone(aCx, aBuffer, aAlgorithmVersion,
-                              mStructuredCloneScope, aValue, &sCallbacks,
-                              this)) {
+                              mStructuredCloneScope, aValue,
+                              JS::CloneDataPolicy(), &sCallbacks, this)) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
   }
