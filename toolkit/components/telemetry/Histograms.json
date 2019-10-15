@@ -3092,8 +3092,9 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Successfully started HTTP channels",
-    "bug_numbers": [1473333],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+    "bug_numbers": [1473333,1587226],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"]
   },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
     "record_in_processes": ["main", "content"],
