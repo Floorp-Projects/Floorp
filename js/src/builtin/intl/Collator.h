@@ -53,8 +53,6 @@ class CollatorObject : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
-extern bool CreateCollator(JSContext* cx, JS::Handle<JSObject*> Intl);
-
 /**
  * Returns a new instance of the standard built-in Collator constructor.
  * Self-hosted code cannot cache this constructor (as it does for others in
