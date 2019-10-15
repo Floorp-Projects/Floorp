@@ -26,9 +26,9 @@
 
 #![allow(non_snake_case)]
 
-use std::{borrow::Cow, error, fmt, ops::Deref, result};
+use std::{borrow::Cow, convert::TryFrom, error, fmt, ops::Deref, result};
 
-use nserror::{nsresult, NS_ERROR_NO_INTERFACE};
+use nserror::{nsresult, NS_ERROR_NO_INTERFACE, NS_ERROR_UNEXPECTED};
 use nsstring::nsCString;
 use storage_variant::VariantType;
 use xpcom::{
@@ -66,6 +66,17 @@ impl Conn {
     #[inline]
     pub fn connection(&self) -> &mozIStorageConnection {
         &self.handle
+    }
+
+    /// Returns the maximum number of bound parameters for statements executed
+    /// on this connection.
+    pub fn variable_limit(&self) -> Result<usize> {
+        let mut limit = 0i32;
+        let rv = unsafe { self.handle.GetVariableLimit(&mut limit) };
+        if rv.failed() {
+            return Err(Error::Limit);
+        }
+        usize::try_from(limit).map_err(|_| Error::Limit)
     }
 
     /// Returns the async thread for this connection. This can be used
@@ -387,6 +398,9 @@ pub enum Error {
     /// closed, or the thread manager may have shut down.
     NoThread,
 
+    /// Failed to get a limit for a database connection.
+    Limit,
+
     /// A database operation failed. The error includes a SQLite result code,
     /// and an explanation string.
     Database {
@@ -453,6 +467,7 @@ impl From<Error> for nsresult {
     fn from(err: Error) -> nsresult {
         match err {
             Error::NoThread => NS_ERROR_NO_INTERFACE,
+            Error::Limit => NS_ERROR_UNEXPECTED,
             Error::Database { rv, .. }
             | Error::BindByIndex { rv, .. }
             | Error::BindByName { rv, .. }
@@ -468,6 +483,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::NoThread => f.write_str("Async thread unavailable for storage connection"),
+            Error::Limit => f.write_str("Failed to get limit for storage connection"),
             Error::Database {
                 op, code, message, ..
             } => {

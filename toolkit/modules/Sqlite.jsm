@@ -1350,6 +1350,16 @@ OpenedConnection.prototype = Object.freeze({
   },
 
   /**
+   * Returns the maximum number of bound parameters for statements executed
+   * on this connection.
+   *
+   * @type {number}
+   */
+  get variableLimit() {
+    return this.unsafeRawConnection.variableLimit;
+  },
+
+  /**
    * The integer schema version of the database.
    *
    * This is 0 if not schema version has been set.
