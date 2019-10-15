@@ -1311,6 +1311,40 @@ var Policies = {
             }
           );
         }
+        if (param.DefaultPrivate) {
+          await runOncePerModification(
+            "setDefaultPrivateSearchEngine",
+            param.DefaultPrivate,
+            async () => {
+              let defaultPrivateEngine;
+              try {
+                defaultPrivateEngine = Services.search.getEngineByName(
+                  param.DefaultPrivate
+                );
+                if (!defaultPrivateEngine) {
+                  throw new Error("No engine by that name could be found");
+                }
+              } catch (ex) {
+                log.error(
+                  `Search engine lookup failed when attempting to set ` +
+                    `the default private engine. Requested engine was ` +
+                    `"${param.DefaultPrivate}".`,
+                  ex
+                );
+              }
+              if (defaultPrivateEngine) {
+                try {
+                  await Services.search.setDefaultPrivate(defaultPrivateEngine);
+                } catch (ex) {
+                  log.error(
+                    "Unable to set the default private search engine",
+                    ex
+                  );
+                }
+              }
+            }
+          );
+        }
       });
     },
   },
