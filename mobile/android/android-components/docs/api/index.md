@@ -135,6 +135,7 @@
 | [mozilla.components.lib.jexl.parser](mozilla.components.lib.jexl.parser/index.md) |  |
 | [mozilla.components.lib.jexl.value](mozilla.components.lib.jexl.value/index.md) |  |
 | [mozilla.components.lib.publicsuffixlist](mozilla.components.lib.publicsuffixlist/index.md) |  |
+| [mozilla.components.lib.publicsuffixlist.ext](mozilla.components.lib.publicsuffixlist.ext/index.md) |  |
 | [mozilla.components.lib.push.amazon](mozilla.components.lib.push.amazon/index.md) |  |
 | [mozilla.components.lib.push.firebase](mozilla.components.lib.push.firebase/index.md) |  |
 | [mozilla.components.lib.state](mozilla.components.lib.state/index.md) |  |

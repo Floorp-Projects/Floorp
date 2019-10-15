@@ -541,6 +541,7 @@
 | [mozilla.components.concept.sync.StoreSyncStatus](../mozilla.components.concept.sync/-store-sync-status/index.md) |  |
 | [kotlin.String](../mozilla.components.browser.engine.system.matcher/kotlin.-string/index.md) (extensions in package mozilla.components.browser.engine.system.matcher) |  |
 | [kotlin.String](../mozilla.components.lib.jexl.ext/kotlin.-string/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
+| [kotlin.String](../mozilla.components.lib.publicsuffixlist.ext/kotlin.-string/index.md) (extensions in package mozilla.components.lib.publicsuffixlist.ext) |  |
 | [kotlin.String](../mozilla.components.service.fxa/kotlin.-string/index.md) (extensions in package mozilla.components.service.fxa) |  |
 | [kotlin.String](../mozilla.components.support.ktx.kotlin/kotlin.-string/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [kotlin.String](../mozilla.components.support.locale/kotlin.-string/index.md) (extensions in package mozilla.components.support.locale) |  |

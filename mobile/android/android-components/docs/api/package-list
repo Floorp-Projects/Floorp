@@ -11,6 +11,7 @@ $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.com
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Int)mozilla.components.lib.jexl.ext/kotlin.-int/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.String)mozilla.components.lib.jexl.ext/kotlin.-string/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexlArray(kotlin.collections.List((mozilla.components.lib.jexl.ext.toJexlArray.T)))mozilla.components.lib.jexl.ext/kotlin.collections.-list/to-jexl-array.md
+$dokka.location:mozilla.components.lib.publicsuffixlist.ext$urlToTrimmedHost(kotlin.String, mozilla.components.lib.publicsuffixlist.PublicSuffixList)mozilla.components.lib.publicsuffixlist.ext/kotlin.-string/url-to-trimmed-host.md
 $dokka.location:mozilla.components.lib.state.ext$consumeFrom(androidx.fragment.app.Fragment, mozilla.components.lib.state.Store((mozilla.components.lib.state.ext.consumeFrom.S, mozilla.components.lib.state.ext.consumeFrom.A)), kotlin.Function1((mozilla.components.lib.state.ext.consumeFrom.S, kotlin.Unit)))mozilla.components.lib.state.ext/androidx.fragment.app.-fragment/consume-from.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccessTokenInfo)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-access-token-info/into.md
 $dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccountEvent)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-account-event/into.md
@@ -54,6 +55,7 @@ $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArr
 $dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray, kotlin.Int)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toSha256Digest(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-sha256-digest.md
+$dokka.location:mozilla.components.support.ktx.kotlin$tryGetHostFromUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/try-get-host-from-url.md
 $dokka.location:mozilla.components.support.ktx.kotlinx.coroutines.flow$ifAnyChanged(kotlinx.coroutines.flow.Flow((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged.T)), kotlin.Function1((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged.T, kotlin.Array((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged.R)))))mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/if-any-changed.md
 $dokka.location:mozilla.components.support.ktx.kotlinx.coroutines.flow$ifChanged(kotlinx.coroutines.flow.Flow((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.T)))mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/if-changed.md
 $dokka.location:mozilla.components.support.ktx.kotlinx.coroutines.flow$ifChanged(kotlinx.coroutines.flow.Flow((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.T)), kotlin.Function1((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.T, mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.R)))mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/if-changed.md
@@ -190,6 +192,7 @@ mozilla.components.lib.jexl.lexer
 mozilla.components.lib.jexl.parser
 mozilla.components.lib.jexl.value
 mozilla.components.lib.publicsuffixlist
+mozilla.components.lib.publicsuffixlist.ext
 mozilla.components.lib.push.amazon
 mozilla.components.lib.push.firebase
 mozilla.components.lib.state
