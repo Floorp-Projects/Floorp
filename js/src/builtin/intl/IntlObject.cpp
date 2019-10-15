@@ -824,8 +824,7 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
 
   // Add the constructor properties, computing and returning the relevant
   // prototype objects needed below.
-  RootedObject collatorProto(cx, CreateCollatorPrototype(cx, intl, global));
-  if (!collatorProto) {
+  if (!CreateCollator(cx, intl)) {
     return false;
   }
   RootedObject dateTimeFormatProto(cx), dateTimeFormat(cx);
@@ -867,7 +866,6 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
   // |String.prototype| we have |JSProto_*| that enables
   // |getPrototype(JSProto_*)|, but that has global-object-property-related
   // baggage we don't need or want, so we use one-off reserved slots.
-  global->setReservedSlot(COLLATOR_PROTO, ObjectValue(*collatorProto));
   global->setReservedSlot(DATE_TIME_FORMAT, ObjectValue(*dateTimeFormat));
   global->setReservedSlot(DATE_TIME_FORMAT_PROTO,
                           ObjectValue(*dateTimeFormatProto));
