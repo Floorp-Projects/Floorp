@@ -5,7 +5,7 @@ const gTestRoot = getRootDirectory(gTestPath).replace(
 
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "about:blank" },
+    { gBrowser, url: gTestRoot + "file_bug839103.html" },
     async function(browser) {
       await ContentTask.spawn(browser, gTestRoot, testBody);
     }
@@ -17,10 +17,6 @@ add_task(async function test() {
 async function testBody(testRoot) {
   const gStyleSheet = "bug839103.css";
 
-  let loaded = ContentTaskUtils.waitForEvent(this, "load", true);
-  content.location = testRoot + "test_bug839103.html";
-
-  await loaded;
   function unexpectedContentEvent(event) {
     ok(false, "Received a " + event.type + " event on content");
   }
