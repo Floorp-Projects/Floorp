@@ -1166,7 +1166,17 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
     store32(src.high, HighWord(address));
   }
 
+  void store64(Register64 src, const BaseIndex& address) {
+    store32(src.low, LowWord(address));
+    store32(src.high, HighWord(address));
+  }
+
   void store64(Imm64 imm, Address address) {
+    store32(imm.low(), LowWord(address));
+    store32(imm.hi(), HighWord(address));
+  }
+
+  void store64(Imm64 imm, const BaseIndex& address) {
     store32(imm.low(), LowWord(address));
     store32(imm.hi(), HighWord(address));
   }

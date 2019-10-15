@@ -642,7 +642,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     }
   }
   void store64(Register64 src, Address address) { storePtr(src.reg, address); }
+  void store64(Register64 src, const BaseIndex& address) {
+    storePtr(src.reg, address);
+  }
   void store64(Imm64 imm, Address address) {
+    storePtr(ImmWord(imm.value), address);
+  }
+  void store64(Imm64 imm, const BaseIndex& address) {
     storePtr(ImmWord(imm.value), address);
   }
 
