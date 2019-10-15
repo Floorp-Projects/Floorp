@@ -1540,16 +1540,14 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   MOZ_ASSERT(!lazy->maybeScript(), "Script is already compiled!");
   MOZ_ASSERT(lazy->functionNonDelazifying() == fun);
 
-  bool isBinAST = lazy->scriptSource()->hasBinASTSource();
-  bool canRelazify = lazy->canRelazify();
+  ScriptSource* ss = lazy->scriptSource();
+  size_t sourceStart = lazy->sourceStart();
+  size_t sourceLength = lazy->sourceEnd() - lazy->sourceStart();
 
-  size_t lazyLength = lazy->sourceEnd() - lazy->sourceStart();
-  if (isBinAST) {
+  if (ss->hasBinASTSource()) {
 #if defined(JS_BUILD_BINAST)
     if (!frontend::CompileLazyBinASTFunction(
-            cx, lazy,
-            lazy->scriptSource()->binASTSource() + lazy->sourceStart(),
-            lazyLength)) {
+            cx, lazy, ss->binASTSource() + sourceStart, sourceLength)) {
       MOZ_ASSERT(fun->isInterpretedLazy());
       MOZ_ASSERT(fun->lazyScript() == lazy);
       MOZ_ASSERT(!lazy->hasScript());
@@ -1559,20 +1557,20 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
     MOZ_CRASH("Trying to delazify BinAST function in non-BinAST build");
 #endif /*JS_BUILD_BINAST */
   } else {
-    MOZ_ASSERT(lazy->scriptSource()->hasSourceText());
+    MOZ_ASSERT(ss->hasSourceText());
 
     // Parse and compile the script from source.
     UncompressedSourceCache::AutoHoldEntry holder;
 
-    if (lazy->scriptSource()->hasSourceType<Utf8Unit>()) {
+    if (ss->hasSourceType<Utf8Unit>()) {
       // UTF-8 source text.
-      ScriptSource::PinnedUnits<Utf8Unit> units(
-          cx, lazy->scriptSource(), holder, lazy->sourceStart(), lazyLength);
+      ScriptSource::PinnedUnits<Utf8Unit> units(cx, ss, holder, sourceStart,
+                                                sourceLength);
       if (!units.get()) {
         return false;
       }
 
-      if (!frontend::CompileLazyFunction(cx, lazy, units.get(), lazyLength)) {
+      if (!frontend::CompileLazyFunction(cx, lazy, units.get(), sourceLength)) {
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->isInterpretedLazy());
@@ -1581,16 +1579,16 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
         return false;
       }
     } else {
-      MOZ_ASSERT(lazy->scriptSource()->hasSourceType<char16_t>());
+      MOZ_ASSERT(ss->hasSourceType<char16_t>());
 
       // UTF-16 source text.
-      ScriptSource::PinnedUnits<char16_t> units(
-          cx, lazy->scriptSource(), holder, lazy->sourceStart(), lazyLength);
+      ScriptSource::PinnedUnits<char16_t> units(cx, ss, holder, sourceStart,
+                                                sourceLength);
       if (!units.get()) {
         return false;
       }
 
-      if (!frontend::CompileLazyFunction(cx, lazy, units.get(), lazyLength)) {
+      if (!frontend::CompileLazyFunction(cx, lazy, units.get(), sourceLength)) {
         // The frontend shouldn't fail after linking the function and the
         // non-lazy script together.
         MOZ_ASSERT(fun->isInterpretedLazy());
@@ -1609,12 +1607,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
     lazy->initScript(script);
   }
 
-  // Try to insert the newly compiled script into the lazy script cache.
-  if (canRelazify) {
-    // If an identical lazy script is encountered later a match can be
-    // determined based on line and column number.
-    MOZ_ASSERT(lazy->column() == script->column());
-
+  if (lazy->canRelazify()) {
     // Remember the lazy script on the compiled script, so it can be
     // stored on the function again in case of re-lazification.
     // Only functions without inner functions are re-lazified.
@@ -1631,9 +1624,9 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   }
 
   // XDR the newly delazified function.
-  if (script->scriptSource()->hasEncoder()) {
-    RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
-    if (!script->scriptSource()->xdrEncodeFunction(cx, fun, sourceObject)) {
+  if (ss->hasEncoder()) {
+    RootedScriptSourceObject sourceObject(cx, script->sourceObject());
+    if (!ss->xdrEncodeFunction(cx, fun, sourceObject)) {
       return false;
     }
   }
@@ -1655,15 +1648,13 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
     Rooted<LazyScript*> lazy(cx, fun->lazyScript());
     RootedScript script(cx, lazy->maybeScript());
 
-    bool canRelazify = lazy->canRelazify();
-
     if (script) {
-      // This function is non-canonical function, and the canonical
-      // function is already delazified.
+      // This function is a non-canonical function, and the canonical function
+      // is already delazified.
       fun->setUnlazifiedScript(script);
       // Remember the lazy script on the compiled script, so it can be
       // stored on the function again in case of re-lazification.
-      if (canRelazify) {
+      if (lazy->canRelazify()) {
         MOZ_RELEASE_ASSERT(script->maybeLazyScript() == lazy);
         script->setLazyScript(lazy);
       }
@@ -1671,9 +1662,8 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
     }
 
     if (fun != lazy->functionNonDelazifying()) {
-      // This function is non-canonical function, and the canonical
-      // function is lazy.
-      // Delazify the canonical function, which will result in calling
+      // This function is a non-canonical function, and the canonical function
+      // is lazy. Delazify the canonical function, which will result in calling
       // this function again with the canonical function.
       if (!LazyScript::functionDelazifying(cx, lazy)) {
         return false;
