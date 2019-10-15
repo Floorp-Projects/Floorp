@@ -397,5 +397,5 @@ interface nsIHttpChannelInternal : nsISupports
     nsILoadInfo_CrossOriginOpenerPolicy getCrossOriginOpenerPolicy(
         in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
 
-    [notxpcom, nostdcall] attribute boolean hasSandboxedAuxiliaryNavigations;
+    [notxpcom, nostdcall] attribute boolean hasNonEmptySandboxingFlag;
 };
