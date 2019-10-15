@@ -743,6 +743,35 @@ const CFR_MESSAGES = [
       params: [Ci.nsIWebProgressListener.STATE_BLOCKED_CRYPTOMINING_CONTENT],
     },
   },
+  {
+    id: "MILESTONE_MESSAGE",
+    template: "milestone_message",
+    content: {
+      layout: "short_message",
+      category: "cfrFeatures",
+      anchor_id: "tracking-protection-icon-box",
+      skip_address_bar_notifier: true,
+      bucket_id: "CFR_MILESTONE_MESSAGE",
+      heading_text: { string_id: "cfr-doorhanger-milestone-heading" },
+      notification_text: "",
+      text: "",
+      buttons: {
+        primary: {
+          label: { string_id: "cfr-doorhanger-milestone-ok-button" },
+          action: { type: "OPEN_PROTECTION_REPORT" },
+          event: "PROTECTION",
+        },
+      },
+    },
+    targeting: "pageLoad >= 4",
+    frequency: {
+      lifetime: 7, // Length of privacy.trackingprotection.cfr-milestone.milestones pref
+    },
+    trigger: {
+      id: "trackingProtection",
+      params: ["ContentBlockingMilestone"],
+    },
+  },
 ];
 
 const CFRMessageProvider = {

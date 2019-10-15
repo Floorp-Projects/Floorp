@@ -26,7 +26,7 @@
     "layout": {
       "type": "string",
       "description": "Attribute used for different groups of messages from the same provider",
-      "enum": ["message_and_animation", "icon_and_message", "addon_recommendation"]
+      "enum": ["short_message", "message_and_animation", "icon_and_message", "addon_recommendation"]
     },
     "anchor_id": {
       "type": "string",

@@ -1438,6 +1438,9 @@ class _ASRouter {
       case "update_action":
         ToolbarBadgeHub.registerBadgeNotificationListener(message, { force });
         break;
+      case "milestone_message":
+        CFRPageActions.showMilestone(target, message, this.dispatch, { force });
+        break;
       default:
         try {
           target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
@@ -1936,6 +1939,9 @@ class _ASRouter {
       case ra.OPEN_PROTECTION_PANEL:
         let { gProtectionsHandler } = target.browser.ownerGlobal;
         gProtectionsHandler.showProtectionsPopup({});
+        break;
+      case ra.OPEN_PROTECTION_REPORT:
+        target.browser.ownerGlobal.gProtectionsHandler.openProtections();
         break;
     }
   }
