@@ -775,7 +775,7 @@ function GetOption(options, property, type, values, fallback) {
 
         // Step 2.d.
         if (values !== undefined && callFunction(ArrayIndexOf, values, value) === -1)
-            ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, value);
+            ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, `"${value}"`);
 
         // Step 2.e.
         return value;

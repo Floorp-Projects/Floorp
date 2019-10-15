@@ -33,6 +33,7 @@
 #include "unicode/utypes.h"
 #include "util/StringBuffer.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 namespace js {
@@ -1314,9 +1315,9 @@ bool LanguageTagParser::parse(JSContext* cx, JSLinearString* locale,
   if (ok) {
     return true;
   }
-  if (UniqueChars localeChars = StringToNewUTF8CharsZ(cx, *locale)) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
+  if (UniqueChars localeChars = QuoteString(cx, locale, '"')) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
   }
   return false;
 }
@@ -1335,8 +1336,8 @@ bool LanguageTagParser::parseBaseName(JSContext* cx, ConstCharRange locale,
   }
   if (UniqueChars localeChars =
           DuplicateString(locale.begin().get(), locale.length())) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
   } else {
     JS_ReportOutOfMemory(cx);
   }

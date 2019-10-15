@@ -33,6 +33,7 @@
 #include "util/StringBuffer.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 #include "vm/JSObject-inl.h"
@@ -293,10 +294,10 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
   // Step 4.
   intl::LanguageSubtag language;
   if (option && !intl::ParseStandaloneLanguagTag(option, language)) {
-    if (UniqueChars str = StringToNewUTF8CharsZ(cx, *option)) {
-      JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                               JSMSG_INVALID_OPTION_VALUE, "language",
-                               str.get());
+    if (UniqueChars str = QuoteString(cx, option, '"')) {
+      JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                JSMSG_INVALID_OPTION_VALUE, "language",
+                                str.get());
     }
     return false;
   }
@@ -309,9 +310,10 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
   // Step 6.
   intl::ScriptSubtag script;
   if (option && !intl::ParseStandaloneScriptTag(option, script)) {
-    if (UniqueChars str = StringToNewUTF8CharsZ(cx, *option)) {
-      JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                               JSMSG_INVALID_OPTION_VALUE, "script", str.get());
+    if (UniqueChars str = QuoteString(cx, option, '"')) {
+      JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                JSMSG_INVALID_OPTION_VALUE, "script",
+                                str.get());
     }
     return false;
   }
@@ -324,9 +326,10 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
   // Step 8.
   intl::RegionSubtag region;
   if (option && !intl::ParseStandaloneRegionTag(option, region)) {
-    if (UniqueChars str = StringToNewUTF8CharsZ(cx, *option)) {
-      JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                               JSMSG_INVALID_OPTION_VALUE, "region", str.get());
+    if (UniqueChars str = QuoteString(cx, option, '"')) {
+      JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                JSMSG_INVALID_OPTION_VALUE, "region",
+                                str.get());
     }
     return false;
   }
@@ -586,10 +589,10 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
     // Step 15.
     if (calendar) {
       if (!IsValidUnicodeExtensionValue(calendar)) {
-        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *calendar)) {
-          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                                   JSMSG_INVALID_OPTION_VALUE, "calendar",
-                                   str.get());
+        if (UniqueChars str = QuoteString(cx, calendar, '"')) {
+          JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                    JSMSG_INVALID_OPTION_VALUE, "calendar",
+                                    str.get());
         }
         return false;
       }
@@ -604,10 +607,10 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
     // Step 18.
     if (collation) {
       if (!IsValidUnicodeExtensionValue(collation)) {
-        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *collation)) {
-          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                                   JSMSG_INVALID_OPTION_VALUE, "collation",
-                                   str.get());
+        if (UniqueChars str = QuoteString(cx, collation, '"')) {
+          JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                    JSMSG_INVALID_OPTION_VALUE, "collation",
+                                    str.get());
         }
         return false;
       }
@@ -624,10 +627,10 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
           !StringEqualsLiteral(hourCycle, "h12") &&
           !StringEqualsLiteral(hourCycle, "h23") &&
           !StringEqualsLiteral(hourCycle, "h24")) {
-        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *hourCycle)) {
-          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                                   JSMSG_INVALID_OPTION_VALUE, "hourCycle",
-                                   str.get());
+        if (UniqueChars str = QuoteString(cx, hourCycle, '"')) {
+          JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                    JSMSG_INVALID_OPTION_VALUE, "hourCycle",
+                                    str.get());
         }
         return false;
       }
@@ -643,10 +646,10 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
       if (!StringEqualsLiteral(caseFirst, "upper") &&
           !StringEqualsLiteral(caseFirst, "lower") &&
           !StringEqualsLiteral(caseFirst, "false")) {
-        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *caseFirst)) {
-          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                                   JSMSG_INVALID_OPTION_VALUE, "caseFirst",
-                                   str.get());
+        if (UniqueChars str = QuoteString(cx, caseFirst, '"')) {
+          JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                    JSMSG_INVALID_OPTION_VALUE, "caseFirst",
+                                    str.get());
         }
         return false;
       }
@@ -668,10 +671,10 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
     // Step 28.
     if (numberingSystem) {
       if (!IsValidUnicodeExtensionValue(numberingSystem)) {
-        if (UniqueChars str = StringToNewUTF8CharsZ(cx, *numberingSystem)) {
-          JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
-                                   JSMSG_INVALID_OPTION_VALUE,
-                                   "numberingSystem", str.get());
+        if (UniqueChars str = QuoteString(cx, numberingSystem, '"')) {
+          JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                                    JSMSG_INVALID_OPTION_VALUE,
+                                    "numberingSystem", str.get());
         }
         return false;
       }

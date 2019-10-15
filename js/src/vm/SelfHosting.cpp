@@ -343,7 +343,7 @@ static void ThrowErrorWithType(JSContext* cx, JSExnType type,
       if (!str) {
         return;
       }
-      errorArgs[i - 1] = StringToNewUTF8CharsZ(cx, *str);
+      errorArgs[i - 1] = QuoteString(cx, str);
     } else {
       errorArgs[i - 1] =
           DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
