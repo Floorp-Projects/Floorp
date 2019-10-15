@@ -171,9 +171,9 @@ config.
    }
 
 .. _JSON-e: https://taskcluster.github.io/json-e/
-.. _taskgraph module: https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/templates
+.. _taskgraph module: https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/templates
 .. _condition statements: https://taskcluster.github.io/json-e/#%60$if%60%20-%20%60then%60%20-%20%60else%60
-.. _existing templates: https://searchfox.org/mozilla-central/source/taskcluster/taskgraph/templates
+.. _existing templates: https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/templates
 .. _SCM Level: https://www.mozilla.org/en-US/about/governance/policies/commit/access-policy/
 
 

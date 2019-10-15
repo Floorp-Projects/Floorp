@@ -45,7 +45,7 @@ The first thing to note is that only files beneath :file:`locales/en-US` are
 exposed to localizers. The second thing to note is that only a few directories
 are exposed. Which directories are exposed is defined in files called
 ``l10n.ini``, which are at a
-`few places <https://searchfox.org/mozilla-central/search?q=path%3Al10n.ini&redirect=true>`_
+`few places <https://dxr.mozilla.org/mozilla-central/search?q=path%3Al10n.ini&redirect=true>`_
 in the source code.
 
 An example looks like this
