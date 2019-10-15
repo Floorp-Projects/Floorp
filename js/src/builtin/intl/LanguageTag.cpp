@@ -755,8 +755,13 @@ bool LanguageTag::canonicalizeTransformExtension(
   return true;
 }
 
-bool LanguageTag::appendTo(JSContext* cx, StringBuffer& sb) const {
-  return LanguageTagToString(cx, *this, sb);
+JSString* LanguageTag::toString(JSContext* cx) const {
+  JSStringBuilder sb(cx);
+  if (!LanguageTagToString(cx, *this, sb)) {
+    return nullptr;
+  }
+
+  return sb.finishString();
 }
 
 // Zero-terminated ICU Locale ID.
