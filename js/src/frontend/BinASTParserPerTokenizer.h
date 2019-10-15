@@ -199,6 +199,16 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   // a strict directive.
   void forceStrictIfNecessary(SharedContext* sc, ListNode* directives);
 
+  // Whether invalid BinASTKind/BinASTVariant can be encoded in the file.
+  // This is used to avoid generating unnecessary branches for more
+  // optimized format.
+  static constexpr bool isInvalidKindPossible() {
+    return mozilla::IsSame<Tok, BinASTTokenReaderMultipart>::value;
+  }
+  static constexpr bool isInvalidVariantPossible() {
+    return mozilla::IsSame<Tok, BinASTTokenReaderMultipart>::value;
+  }
+
  protected:
   // Implement ErrorReportMixin.
   const JS::ReadOnlyCompileOptions& options_;

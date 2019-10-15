@@ -203,6 +203,9 @@ hpp:
 
         using Base::forceStrictIfNecessary;
 
+        using Base::isInvalidKindPossible;
+        using Base::isInvalidVariantPossible;
+
        public:
     footer: |
       };
