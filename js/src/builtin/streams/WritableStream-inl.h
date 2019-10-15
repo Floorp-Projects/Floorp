@@ -13,6 +13,7 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
+#include "builtin/Promise.h"                              // js::PromiseObject
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "js/Value.h"                                     // JS::{,Object}Value
 
@@ -25,6 +26,12 @@ inline js::WritableStreamDefaultWriter* js::WritableStream::writer() const {
 
 inline void js::WritableStream::setWriter(WritableStreamDefaultWriter* writer) {
   setFixedSlot(Slot_Writer, JS::ObjectValue(*writer));
+}
+
+inline void js::WritableStream::setCloseRequest(PromiseObject* closeRequest) {
+  MOZ_ASSERT(!haveCloseRequestOrInFlightCloseRequest());
+  setFixedSlot(Slot_CloseRequest, JS::ObjectValue(*closeRequest));
+  MOZ_ASSERT(!haveInFlightCloseRequest());
 }
 
 #endif  // builtin_streams_WritableStream_inl_h
