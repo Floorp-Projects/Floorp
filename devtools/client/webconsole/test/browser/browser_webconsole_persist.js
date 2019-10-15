@@ -42,10 +42,9 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  await toggleConsoleSetting(
-    hud,
-    ".webconsole-console-settings-menu-item-persistentLogs"
-  );
+  hud.ui.outputNode
+    .querySelector(".webconsole-filterbar-primary .filter-checkbox")
+    .click();
 
   const INITIAL_LOGS_NUMBER = 5;
   await ContentTask.spawn(

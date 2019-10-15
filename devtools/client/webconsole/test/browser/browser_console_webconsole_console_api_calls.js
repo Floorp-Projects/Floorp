@@ -122,10 +122,10 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   const onContentMessagesHidden = waitFor(
     () => !findMessage(hud, contentArgs.log)
   );
-  await toggleConsoleSetting(
-    hud,
-    ".webconsole-console-settings-menu-item-contentMessages"
+  const checkbox = hud.ui.outputNode.querySelector(
+    ".webconsole-filterbar-primary .filter-checkbox"
   );
+  checkbox.click();
   await onContentMessagesHidden;
 
   for (const expectedMessage of expectedMessages) {
@@ -136,10 +136,7 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
   const onContentMessagesDisplayed = waitFor(() =>
     expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage))
   );
-  await toggleConsoleSetting(
-    hud,
-    ".webconsole-console-settings-menu-item-contentMessages"
-  );
+  checkbox.click();
   await onContentMessagesDisplayed;
 
   for (const expectedMessage of expectedMessages) {

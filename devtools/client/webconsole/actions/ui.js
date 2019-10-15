@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
 const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
 const { getMessage } = require("devtools/client/webconsole/selectors/messages");
 
@@ -55,29 +54,17 @@ function contentMessagesToggle() {
   };
 }
 
-function timestampsToggle() {
-  return ({ dispatch, getState, prefsService }) => {
-    dispatch({
-      type: TIMESTAMPS_TOGGLE,
-    });
-    const uiState = getAllUi(getState());
-    prefsService.setBoolPref(
-      PREFS.UI.MESSAGE_TIMESTAMP,
-      uiState.timestampsVisible
-    );
+function timestampsToggle(visible) {
+  return {
+    type: TIMESTAMPS_TOGGLE,
+    visible,
   };
 }
 
-function warningGroupsToggle() {
-  return ({ dispatch, getState, prefsService }) => {
-    dispatch({
-      type: WARNING_GROUPS_TOGGLE,
-    });
-    const prefsState = getAllPrefs(getState());
-    prefsService.setBoolPref(
-      PREFS.FEATURES.GROUP_WARNINGS,
-      prefsState.groupWarnings
-    );
+function warningGroupsToggle(value) {
+  return {
+    type: WARNING_GROUPS_TOGGLE,
+    value,
   };
 }
 

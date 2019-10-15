@@ -25,13 +25,11 @@ function prefs(state = PrefState(), action) {
   if (action.type === WARNING_GROUPS_TOGGLE) {
     return {
       ...state,
-      groupWarnings: !state.groupWarnings,
+      groupWarnings: action.value,
     };
   }
   return state;
 }
 
-module.exports = {
-  PrefState,
-  prefs,
-};
+exports.PrefState = PrefState;
+exports.prefs = prefs;
