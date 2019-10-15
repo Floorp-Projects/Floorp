@@ -226,6 +226,10 @@ class nsWindow final : public nsBaseWidget {
 
   void SetProgress(unsigned long progressPercent);
 
+#ifdef MOZ_WAYLAND
+  void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
+#endif
+
  private:
   void UpdateAlpha(mozilla::gfx::SourceSurface* aSourceSurface,
                    nsIntRect aBoundsRect);
