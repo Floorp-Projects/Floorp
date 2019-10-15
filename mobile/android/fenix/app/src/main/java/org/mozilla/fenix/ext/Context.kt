@@ -17,12 +17,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
+import androidx.annotation.DimenRes
 import androidx.annotation.StringRes
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import org.jetbrains.anko.dimen
+import org.jetbrains.anko.px2dip
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FenixApplication
@@ -109,3 +112,6 @@ fun Context.getColorFromAttr(@AttrRes attr: Int) = getColorFromAttr(attr)
 
 fun Context.settings(isCrashReportEnabledInBuild: Boolean = BuildConfig.CRASH_REPORTING && Config.channel.isReleased) =
     Settings.getInstance(this, isCrashReportEnabledInBuild)
+
+fun Context.getDimenInDip(@DimenRes resource: Int) =
+    this.px2dip(this.dimen(resource))
