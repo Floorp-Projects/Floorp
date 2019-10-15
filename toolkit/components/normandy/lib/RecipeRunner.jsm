@@ -30,13 +30,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
   ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
+  Kinto: "resource://services-common/kinto-offline-client.js",
 });
 
 var EXPORTED_SYMBOLS = ["RecipeRunner"];
 
 const log = LogManager.getLogger("recipe-runner");
 const TIMER_NAME = "recipe-client-addon-run";
-const REMOTE_SETTINGS_COLLECTION = "normandy-recipes";
+const REMOTE_SETTINGS_COLLECTION = "normandy-recipes-capabilities";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 const PREF_PREFIX = "app.normandy";
@@ -346,7 +347,7 @@ var RecipeRunner = {
     // Obtain the recipes from the Normandy server (legacy).
     let recipes;
     try {
-      recipes = await NormandyApi.fetchRecipes({ enabled: true });
+      recipes = await NormandyApi.fetchRecipes();
       log.debug(
         `Fetched ${recipes.length} recipes from the server: ` +
           recipes.map(r => r.name).join(", ")
@@ -514,5 +515,20 @@ var RecipeRunner = {
    */
   get _remoteSettingsClientForTesting() {
     return gRemoteSettingsClient;
+  },
+
+  migrations: {
+    /**
+     * Delete the now-unused collection of recipes, since we are using the
+     * "normandy-recipes-capabilities" collection now.
+     */
+    async migration01RemoveOldRecipesCollection() {
+      const kintoCollection = new Kinto({
+        bucket: "main",
+        adapter: Kinto.adapters.IDB,
+        adapterOptions: { dbName: "remote-settings" },
+      }).collection("normandy-recipes");
+      await kintoCollection.clear();
+    },
   },
 };
