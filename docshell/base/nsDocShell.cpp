@@ -9808,36 +9808,6 @@ static bool HasHttpScheme(nsIURI* aURI) {
     isc->SetBaseURI(baseURI);
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
-  if (csp) {
-    // Navigational requests that are same origin need to be upgraded in case
-    // upgrade-insecure-requests is present.
-    bool upgradeInsecureRequests = false;
-    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
-    if (upgradeInsecureRequests) {
-      // only upgrade if the navigation is same origin
-      nsCOMPtr<nsIPrincipal> resultPrincipal;
-      aRv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-          channel, getter_AddRefs(resultPrincipal));
-      NS_ENSURE_SUCCESS(aRv, false);
-      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
-                                       resultPrincipal)) {
-        aLoadInfo->SetUpgradeInsecureRequests();
-      }
-    }
-
-    // For document loads we store the CSP that potentially needs to
-    // be inherited by the new document, e.g. in case we are loading
-    // an opaque origin like a data: URI. The actual inheritance
-    // check happens within Document::InitCSP().
-    // Please create an actual copy of the CSP (do not share the same
-    // reference) otherwise a Meta CSP of an opaque origin will
-    // incorrectly be propagated to the embedding document.
-    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
-    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
-    aLoadInfo->SetCSPToInherit(cspToInherit);
-  }
-
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
       do_QueryInterface(channel);
   if (appCacheChannel) {
@@ -10065,6 +10035,34 @@ static bool HasHttpScheme(nsIURI* aURI) {
   if (csp) {
     nsCOMPtr<nsILoadInfo> loadInfo;
     MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
+
+    // Navigational requests that are same origin need to be upgraded in case
+    // upgrade-insecure-requests is present.
+    bool upgradeInsecureRequests = false;
+    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
+    if (upgradeInsecureRequests) {
+      // only upgrade if the navigation is same origin
+      nsCOMPtr<nsIPrincipal> resultPrincipal;
+      rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+          aChannel, getter_AddRefs(resultPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
+                                       resultPrincipal)) {
+        static_cast<LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
+      }
+    }
+
+    // For document loads we store the CSP that potentially needs to
+    // be inherited by the new document, e.g. in case we are loading
+    // an opaque origin like a data: URI. The actual inheritance
+    // check happens within Document::InitCSP().
+    // Please create an actual copy of the CSP (do not share the same
+    // reference) otherwise a Meta CSP of an opaque origin will
+    // incorrectly be propagated to the embedding document.
+    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
+    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
+    static_cast<LoadInfo*>(loadInfo.get())->SetCSPToInherit(cspToInherit);
+
     // Check CSP navigate-to
     bool allowsNavigateTo = false;
     rv = csp->GetAllowsNavigateTo(aLoadState->URI(), loadInfo,
