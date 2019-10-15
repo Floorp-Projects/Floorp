@@ -142,7 +142,18 @@ nsresult nsDocShellLoadState::CreateFromLoadURIOptions(
     if (!(fixupFlags & nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
       loadFlags &= ~nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     }
-
+    // The consumer is either a DocShell or an Element.
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(aConsumer);
+    if (!loadContext) {
+      if (RefPtr<Element> element = do_QueryObject(aConsumer)) {
+        loadContext = do_QueryInterface(element->OwnerDoc()->GetDocShell());
+      }
+    }
+    // Ensure URIFixup will use the right search engine in Private Browsing.
+    MOZ_ASSERT(loadContext, "We should always have a LoadContext here.");
+    if (loadContext && loadContext->UsePrivateBrowsing()) {
+      fixupFlags |= nsIURIFixup::FIXUP_FLAG_PRIVATE_CONTEXT;
+    }
     nsCOMPtr<nsIInputStream> fixupStream;
     rv = aURIFixup->GetFixupURIInfo(uriString, fixupFlags,
                                     getter_AddRefs(fixupStream),
