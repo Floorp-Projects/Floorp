@@ -92,6 +92,7 @@ class CustomTabsToolbarFeature(
 
             return true
         }
+
         return false
     }
 
