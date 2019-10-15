@@ -210,6 +210,7 @@ const PANELS = {
   TIMINGS: "timings",
   SEARCH: "network-action-bar-search",
   BLOCKING: "network-action-bar-blocked",
+  SEARCH: "network-action-bar-search",
 };
 
 const RESPONSE_HEADERS = [
