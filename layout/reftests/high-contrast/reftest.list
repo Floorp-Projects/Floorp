@@ -13,5 +13,5 @@ fuzzy-if(cocoaWidget,255-255,34-34) == backplate-bg-image-003.html backplate-bg-
 fuzzy-if(cocoaWidget,255-255,96-96) == backplate-bg-image-005.html backplate-bg-image-005-ref.html
 fuzzy-if(cocoaWidget,255-255,1384-1384) fuzzy-if(winWidget,30-48,48-48) == backplate-bg-image-006.html backplate-bg-image-006-ref.html # bug 1578917
 fuzzy-if(cocoaWidget,255-255,52-52) fuzzy-if(winWidget,15-15,48-48) == backplate-bg-image-007.html backplate-bg-image-007-ref.html
-fuzzy-if(cocoaWidget,255-255,2842-2842) fuzzy-if(gtkWidget,255-255,620-620) fuzzy-if(winWidget||Android,255-255,480-480) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
+fuzzy-if(cocoaWidget,255-255,2842-2842) fuzzy-if(gtkWidget,255-255,620-620) fuzzy-if(winWidget||Android,255-255,480-481) == backplate-bg-image-008.html backplate-bg-image-008-ref.html
 fuzzy-if(cocoaWidget,255-255,504-504) fuzzy-if(gtkWidget,255-255,1050-1050) fuzzy-if(winWidget||Android,255-255,480-480) == backplate-bg-image-009.html backplate-bg-image-009-ref.html
