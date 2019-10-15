@@ -88,8 +88,6 @@ class GlobalObject : public NativeObject {
     ASYNC_GENERATOR_PROTO,
     MAP_ITERATOR_PROTO,
     SET_ITERATOR_PROTO,
-    NUMBER_FORMAT,
-    NUMBER_FORMAT_PROTO,
     PLURAL_RULES_PROTO,
     RELATIVE_TIME_FORMAT_PROTO,
     MODULE_PROTO,
@@ -508,14 +506,20 @@ class GlobalObject : public NativeObject {
 
   static JSFunction* getOrCreateNumberFormatConstructor(
       JSContext* cx, Handle<GlobalObject*> global) {
-    JSObject* obj =
-        getOrCreateObject(cx, global, NUMBER_FORMAT, initIntlObject);
-    return obj ? &obj->as<JSFunction>() : nullptr;
+    if (!ensureConstructor(cx, global, JSProto_NumberFormat)) {
+      return nullptr;
+    }
+    return &global->getConstructor(JSProto_NumberFormat)
+                .toObject()
+                .as<JSFunction>();
   }
 
   static JSObject* getOrCreateNumberFormatPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, NUMBER_FORMAT_PROTO, initIntlObject);
+    if (!ensureConstructor(cx, global, JSProto_NumberFormat)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_NumberFormat).toObject();
   }
 
   static JSFunction* getOrCreateDateTimeFormatConstructor(
