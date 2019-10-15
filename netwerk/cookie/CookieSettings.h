@@ -113,10 +113,6 @@ class CookieSettings final : public nsICookieSettings {
 
   static already_AddRefed<nsICookieSettings> Create();
 
-  static CookieSettings* Cast(nsICookieSettings* aCS) {
-    return static_cast<CookieSettings*>(aCS);
-  }
-
   void Serialize(CookieSettingsArgs& aData);
 
   static void Deserialize(const CookieSettingsArgs& aData,

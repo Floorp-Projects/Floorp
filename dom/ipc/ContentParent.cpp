@@ -4537,8 +4537,7 @@ void ContentParent::NotifyRebuildFontList() {
 already_AddRefed<mozilla::docshell::POfflineCacheUpdateParent>
 ContentParent::AllocPOfflineCacheUpdateParent(
     const URIParams& aManifestURI, const URIParams& aDocumentURI,
-    const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument,
-    const CookieSettingsArgs& aCookieSettingsArgs) {
+    const PrincipalInfo& aLoadingPrincipalInfo, const bool& aStickDocument) {
   RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
       new mozilla::docshell::OfflineCacheUpdateParent();
   return update.forget();
@@ -4547,14 +4546,14 @@ ContentParent::AllocPOfflineCacheUpdateParent(
 mozilla::ipc::IPCResult ContentParent::RecvPOfflineCacheUpdateConstructor(
     POfflineCacheUpdateParent* aActor, const URIParams& aManifestURI,
     const URIParams& aDocumentURI, const PrincipalInfo& aLoadingPrincipal,
-    const bool& aStickDocument, const CookieSettingsArgs& aCookieSettingsArgs) {
+    const bool& aStickDocument) {
   MOZ_ASSERT(aActor);
 
   RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
       static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(aActor);
 
   nsresult rv = update->Schedule(aManifestURI, aDocumentURI, aLoadingPrincipal,
-                                 aStickDocument, aCookieSettingsArgs);
+                                 aStickDocument);
   if (NS_FAILED(rv) && IsAlive()) {
     // Inform the child of failure.
     Unused << update->SendFinish(false, false);
