@@ -101,6 +101,13 @@
   REAL(Symbol, InitSymbolClass, OCLASP(Symbol))                              \
   REAL(SharedArrayBuffer, InitViaClassSpec, OCLASP(SharedArrayBuffer))       \
   REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl))                             \
+  REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))                 \
+  REAL_IF_INTL(DateTimeFormat, InitViaClassSpec, OCLASP(DateTimeFormat))     \
+  REAL_IF_INTL(Locale, InitViaClassSpec, OCLASP(Locale))                     \
+  REAL_IF_INTL(NumberFormat, InitViaClassSpec, OCLASP(NumberFormat))         \
+  REAL_IF_INTL(PluralRules, InitViaClassSpec, OCLASP(PluralRules))           \
+  REAL_IF_INTL(RelativeTimeFormat, InitViaClassSpec,                         \
+               OCLASP(RelativeTimeFormat))                                   \
   REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject,                    \
                 OCLASP(TypedObjectModule))                                   \
   REAL(Reflect, InitReflect, nullptr)                                        \
@@ -129,14 +136,7 @@
   IMAGINARY(WasmInstance, dummy, dummy)                                      \
   IMAGINARY(WasmMemory, dummy, dummy)                                        \
   IMAGINARY(WasmTable, dummy, dummy)                                         \
-  IMAGINARY(WasmGlobal, dummy, dummy)                                        \
-  REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))                 \
-  REAL_IF_INTL(DateTimeFormat, InitViaClassSpec, OCLASP(DateTimeFormat))     \
-  REAL_IF_INTL(Locale, InitViaClassSpec, OCLASP(Locale))                     \
-  REAL_IF_INTL(NumberFormat, InitViaClassSpec, OCLASP(NumberFormat))         \
-  REAL_IF_INTL(PluralRules, InitViaClassSpec, OCLASP(PluralRules))           \
-  REAL_IF_INTL(RelativeTimeFormat, InitViaClassSpec,                         \
-               OCLASP(RelativeTimeFormat))
+  IMAGINARY(WasmGlobal, dummy, dummy)
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
