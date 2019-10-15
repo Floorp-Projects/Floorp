@@ -109,7 +109,9 @@ export default class MonitorClass {
    * @return URL to Monitor website.
    */
   buildMonitorUrl(email = null) {
-    return email ? `${MONITOR_SIGN_IN_URL}${email}` : MONITOR_URL;
+    return email
+      ? `${MONITOR_SIGN_IN_URL}${encodeURIComponent(email)}`
+      : MONITOR_URL;
   }
 
   renderContentForUserWithLogins(monitorData) {
