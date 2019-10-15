@@ -62,10 +62,10 @@
                     "hashValue": "2c80df83c84841477cf5489e4109a0913cf3ca801063d788e100a511c9226d46059e4d28ea76496c3208c046cc44c5ce0b5263b1bfda5b731f8461ce8ce7d1b7"
                 }
             },
-            "version": "1.8.1"
+            "version": "1.8.1.1"
         }
     },
     "hashFunction": "sha512",
-    "name": "OpenH264-1.8.1",
+    "name": "OpenH264-1.8.1.1",
     "schema_version": 1000
 }
