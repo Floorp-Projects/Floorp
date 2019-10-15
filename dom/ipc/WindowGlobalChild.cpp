@@ -13,7 +13,7 @@
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
-#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/ipc/InProcessChild.h"
@@ -272,85 +272,59 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvDisplayLoadError(
   return IPC_OK();
 }
 
-static nsresult ChangeFrameRemoteness(WindowGlobalChild* aWgc,
-                                      BrowsingContext* aBc,
-                                      const nsString& aRemoteType,
-                                      uint64_t aPendingSwitchId,
-                                      BrowserBridgeChild** aBridge) {
-  MOZ_ASSERT(XRE_IsContentProcess(), "This doesn't make sense in the parent");
+mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameLocal(
+    dom::BrowsingContext* aFrameContext, uint64_t aPendingSwitchId) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
 
-  // Get the target embedder's FrameLoaderOwner, and make sure we're in the
-  // right place.
-  RefPtr<Element> embedderElt = aBc->GetEmbedderElement();
-  if (!embedderElt) {
-    return NS_ERROR_NOT_AVAILABLE;
+  MOZ_LOG(aFrameContext->GetLog(), LogLevel::Debug,
+          ("RecvMakeFrameLocal ID=%" PRIx64, aFrameContext->Id()));
+
+  RefPtr<Element> embedderElt = aFrameContext->GetEmbedderElement();
+  if (NS_WARN_IF(!embedderElt)) {
+    return IPC_FAIL(this, "No embedder element in this process");
   }
 
-  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != aWgc->WindowGlobal())) {
-    return NS_ERROR_UNEXPECTED;
+  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != WindowGlobal())) {
+    return IPC_FAIL(this, "Wrong actor");
   }
 
   RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(embedderElt);
-  MOZ_ASSERT(flo, "Embedder must be a nsFrameLoaderOwner!");
+  MOZ_DIAGNOSTIC_ASSERT(flo, "Embedder must be a nsFrameLoaderOwner");
 
-  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
-
-  // Actually perform the remoteness swap.
+  // Trigger a process switch into the current process.
   RemotenessOptions options;
+  options.mRemoteType.Assign(VoidString());
   options.mPendingSwitchID.Construct(aPendingSwitchId);
-  options.mRemoteType.Assign(aRemoteType);
-
-  // Clear mRemoteType to VoidString() (for non-remote) if it matches the
-  // current process' remote type.
-  if (ContentChild::GetSingleton()->GetRemoteType().Equals(aRemoteType)) {
-    options.mRemoteType.Assign(VoidString());
-  }
-
-  ErrorResult error;
-  flo->ChangeRemoteness(options, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
-  }
-
-  // Make sure we successfully created either an in-process nsDocShell or a
-  // cross-process BrowserBridgeChild. If we didn't, produce an error.
-  RefPtr<nsFrameLoader> frameLoader = flo->GetFrameLoader();
-  if (NS_WARN_IF(!frameLoader)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  RefPtr<BrowserBridgeChild> bbc;
-  if (frameLoader->IsRemoteFrame()) {
-    bbc = frameLoader->GetBrowserBridgeChild();
-    if (NS_WARN_IF(!bbc)) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    nsDocShell* ds = frameLoader->GetDocShell(error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-
-    if (NS_WARN_IF(!ds)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  bbc.forget(aBridge);
-  return NS_OK;
+  flo->ChangeRemoteness(options, IgnoreErrors());
+  return IPC_OK();
 }
 
-IPCResult WindowGlobalChild::RecvChangeFrameRemoteness(
-    dom::BrowsingContext* aBc, const nsString& aRemoteType,
-    uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver) {
-  MOZ_ASSERT(XRE_IsContentProcess(), "This doesn't make sense in the parent");
+mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
+    dom::BrowsingContext* aFrameContext,
+    ManagedEndpoint<PBrowserBridgeChild>&& aEndpoint, const TabId& aTabId,
+    MakeFrameRemoteResolver&& aResolve) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
 
-  RefPtr<BrowserBridgeChild> bbc;
-  nsresult rv = ChangeFrameRemoteness(this, aBc, aRemoteType, aPendingSwitchId,
-                                      getter_AddRefs(bbc));
+  MOZ_LOG(aFrameContext->GetLog(), LogLevel::Debug,
+          ("RecvMakeFrameRemote ID=%" PRIx64, aFrameContext->Id()));
 
-  // To make the type system happy, we've gotta do some gymnastics.
-  aResolver(Tuple<const nsresult&, PBrowserBridgeChild*>(rv, bbc));
+  // Immediately resolve the promise, acknowledging the request.
+  aResolve(true);
+
+  RefPtr<Element> embedderElt = aFrameContext->GetEmbedderElement();
+  if (NS_WARN_IF(!embedderElt)) {
+    return IPC_FAIL(this, "No embedder element in this process");
+  }
+
+  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != WindowGlobal())) {
+    return IPC_FAIL(this, "Wrong actor");
+  }
+
+  RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(embedderElt);
+  MOZ_DIAGNOSTIC_ASSERT(flo, "Embedder must be a nsFrameLoaderOwner");
+
+  // Trgger a process switch into the specified process.
+  flo->ChangeRemotenessWithBridge(std::move(aEndpoint), aTabId, IgnoreErrors());
   return IPC_OK();
 }
 
