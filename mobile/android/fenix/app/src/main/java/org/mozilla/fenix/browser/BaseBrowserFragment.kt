@@ -243,7 +243,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                         )
                     ),
                     engineView = view.engineView,
-                    useCases = context.components.useCases.contextMenuUseCases
+                    useCases = context.components.useCases.contextMenuUseCases,
+                    customTabId = customTabSessionId
                 ),
                 owner = this,
                 view = view
