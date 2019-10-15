@@ -36,8 +36,6 @@
   MACRO(AsyncFunctionNext, AsyncFunctionNext, "AsyncFunctionNext")             \
   MACRO(AsyncFunctionThrow, AsyncFunctionThrow, "AsyncFunctionThrow")          \
   MACRO(AsyncGenerator, AsyncGenerator, "AsyncGenerator")                      \
-  MACRO(AsyncGeneratorFunction, AsyncGeneratorFunction,                        \
-        "AsyncGeneratorFunction")                                              \
   MACRO(AsyncGeneratorNext, AsyncGeneratorNext, "AsyncGeneratorNext")          \
   MACRO(AsyncGeneratorReturn, AsyncGeneratorReturn, "AsyncGeneratorReturn")    \
   MACRO(AsyncGeneratorThrow, AsyncGeneratorThrow, "AsyncGeneratorThrow")       \
