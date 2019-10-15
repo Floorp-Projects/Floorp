@@ -486,6 +486,8 @@ void MacroAssembler::neg32(Register reg) {
   Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
 }
 
+void MacroAssembler::neg64(Register64 reg) { negPtr(reg.reg); }
+
 void MacroAssembler::negPtr(Register reg) {
   Negs(ARMRegister(reg, 64), Operand(ARMRegister(reg, 64)));
 }
