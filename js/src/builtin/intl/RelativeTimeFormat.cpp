@@ -23,6 +23,7 @@
 #include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 #include "vm/NativeObject-inl.h"
@@ -401,10 +402,10 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
                StringEqualsLiteral(unit, "years")) {
       relDateTimeUnit = UDAT_REL_UNIT_YEAR;
     } else {
-      if (auto unitChars = StringToNewUTF8CharsZ(cx, *unit)) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_INVALID_OPTION_VALUE, "unit",
-                                 unitChars.get());
+      if (auto unitChars = QuoteString(cx, unit, '"')) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_INVALID_OPTION_VALUE, "unit",
+                                  unitChars.get());
       }
       return false;
     }
