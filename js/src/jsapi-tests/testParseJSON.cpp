@@ -79,7 +79,7 @@ BEGIN_TEST(testParseJSON_success) {
   expected.setDouble(std::numeric_limits<double>::infinity());
   CHECK(TryParse(cx, "9e99999", expected));
 
-  JS::Rooted<JSFlatString*> str(cx);
+  JS::Rooted<JSLinearString*> str(cx);
 
   const char16_t emptystr[] = {'\0'};
   str = js::NewStringCopyN<CanGC>(cx, emptystr, 0);
@@ -152,7 +152,7 @@ BEGIN_TEST(testParseJSON_success) {
 }
 
 template <size_t N>
-static JSFlatString* NewString(JSContext* cx, const char16_t (&chars)[N]) {
+static JSLinearString* NewString(JSContext* cx, const char16_t (&chars)[N]) {
   return js::NewStringCopyN<CanGC>(cx, chars, N);
 }
 

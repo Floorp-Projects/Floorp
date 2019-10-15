@@ -249,20 +249,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1432935-breitbart",
-    platform: "desktop",
-    domain: "breitbart.com",
-    bug: "1432935",
-    contentScripts: {
-      matches: ["*://*.breitbart.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1432935-breitbart.com-webkit-scrollbar.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1561371",
     platform: "android",
     domain: "mail.google.com",

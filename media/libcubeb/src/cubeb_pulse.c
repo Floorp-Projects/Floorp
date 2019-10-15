@@ -615,6 +615,9 @@ pulse_context_init(cubeb * ctx)
   return 0;
 }
 
+static int pulse_subscribe_notifications(cubeb * context,
+                                         pa_subscription_mask_t mask);
+
 /*static*/ int
 pulse_init(cubeb ** context, char const * context_name)
 {
@@ -627,7 +630,10 @@ pulse_init(cubeb ** context, char const * context_name)
 #ifndef DISABLE_LIBPULSE_DLOPEN
   libpulse = dlopen("libpulse.so.0", RTLD_LAZY);
   if (!libpulse) {
-    return CUBEB_ERROR;
+    libpulse = dlopen("libpulse.so", RTLD_LAZY);
+    if (!libpulse) {
+      return CUBEB_ERROR;
+    }
   }
 
 #define LOAD(x) {                               \
@@ -678,6 +684,9 @@ pulse_init(cubeb ** context, char const * context_name)
     WRAP(pa_operation_unref)(o);
   }
   WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+
+  /* Update `default_sink_info` when the default device changes. */
+  pulse_subscribe_notifications(ctx, PA_SUBSCRIPTION_MASK_SERVER);
 
   *context = ctx;
 
@@ -1184,53 +1193,6 @@ sink_input_info_cb(pa_context * c, pa_sink_input_info const * i, int eol, void *
   WRAP(pa_threaded_mainloop_signal)(r->mainloop, 0);
 }
 
-static int
-pulse_stream_set_panning(cubeb_stream * stm, float panning)
-{
-  const pa_channel_map * map;
-  pa_cvolume cvol;
-  uint32_t index;
-  pa_operation * op;
-
-  if (!stm->output_stream) {
-    return CUBEB_ERROR;
-  }
-
-  WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
-
-  map = WRAP(pa_stream_get_channel_map)(stm->output_stream);
-  if (!WRAP(pa_channel_map_can_balance)(map)) {
-    WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
-    return CUBEB_ERROR;
-  }
-
-  index = WRAP(pa_stream_get_index)(stm->output_stream);
-
-  struct sink_input_info_result r = { &cvol, stm->context->mainloop };
-  op = WRAP(pa_context_get_sink_input_info)(stm->context->context,
-                                            index,
-                                            sink_input_info_cb,
-                                            &r);
-  if (op) {
-    operation_wait(stm->context, stm->output_stream, op);
-    WRAP(pa_operation_unref)(op);
-  }
-
-  WRAP(pa_cvolume_set_balance)(&cvol, map, panning);
-
-  op = WRAP(pa_context_set_sink_input_volume)(stm->context->context,
-                                              index, &cvol, volume_success,
-                                              stm);
-  if (op) {
-    operation_wait(stm->context, stm->output_stream, op);
-    WRAP(pa_operation_unref)(op);
-  }
-
-  WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
-
-  return CUBEB_OK;
-}
-
 typedef struct {
   char * default_sink_name;
   char * default_source_name;
@@ -1529,6 +1491,12 @@ pulse_subscribe_callback(pa_context * ctx,
   cubeb * context = userdata;
 
   switch (t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) {
+  case PA_SUBSCRIPTION_EVENT_SERVER:
+    if ((t & PA_SUBSCRIPTION_EVENT_TYPE_MASK) == PA_SUBSCRIPTION_EVENT_CHANGE) {
+      LOG("Server changed %d", index);
+      WRAP(pa_context_get_server_info)(context->context, server_info_callback, context);
+    }
+    break;
   case PA_SUBSCRIPTION_EVENT_SOURCE:
   case PA_SUBSCRIPTION_EVENT_SINK:
 
@@ -1572,38 +1540,10 @@ subscribe_success(pa_context *c, int success, void *userdata)
 }
 
 static int
-pulse_register_device_collection_changed(cubeb * context,
-                                         cubeb_device_type devtype,
-                                         cubeb_device_collection_changed_callback collection_changed_callback,
-                                         void * user_ptr)
-{
-  if (devtype & CUBEB_DEVICE_TYPE_INPUT) {
-    context->input_collection_changed_callback = collection_changed_callback;
-    context->input_collection_changed_user_ptr = user_ptr;
-  }
-  if (devtype & CUBEB_DEVICE_TYPE_OUTPUT) {
-    context->output_collection_changed_callback = collection_changed_callback;
-    context->output_collection_changed_user_ptr = user_ptr;
-  }
-
+pulse_subscribe_notifications(cubeb * context, pa_subscription_mask_t mask) {
   WRAP(pa_threaded_mainloop_lock)(context->mainloop);
 
-  pa_subscription_mask_t mask = PA_SUBSCRIPTION_MASK_NULL;
-  if (context->input_collection_changed_callback) {
-    mask |= PA_SUBSCRIPTION_MASK_SOURCE;
-  }
-  if (context->output_collection_changed_callback) {
-    mask |= PA_SUBSCRIPTION_MASK_SINK;
-  }
-
-  if (collection_changed_callback == NULL) {
-    // Unregister subscription.
-    if (mask == PA_SUBSCRIPTION_MASK_NULL) {
-      WRAP(pa_context_set_subscribe_callback)(context->context, NULL, NULL);
-    }
-  } else {
-    WRAP(pa_context_set_subscribe_callback)(context->context, pulse_subscribe_callback, context);
-  }
+  WRAP(pa_context_set_subscribe_callback)(context->context, pulse_subscribe_callback, context);
 
   pa_operation * o;
   o = WRAP(pa_context_subscribe)(context->context, mask, subscribe_success, context);
@@ -1618,6 +1558,37 @@ pulse_register_device_collection_changed(cubeb * context,
   WRAP(pa_threaded_mainloop_unlock)(context->mainloop);
 
   return CUBEB_OK;
+}
+
+static int
+pulse_register_device_collection_changed(cubeb * context,
+                                         cubeb_device_type devtype,
+                                         cubeb_device_collection_changed_callback collection_changed_callback,
+                                         void * user_ptr)
+{
+  if (devtype & CUBEB_DEVICE_TYPE_INPUT) {
+    context->input_collection_changed_callback = collection_changed_callback;
+    context->input_collection_changed_user_ptr = user_ptr;
+  }
+  if (devtype & CUBEB_DEVICE_TYPE_OUTPUT) {
+    context->output_collection_changed_callback = collection_changed_callback;
+    context->output_collection_changed_user_ptr = user_ptr;
+  }
+
+  pa_subscription_mask_t mask = PA_SUBSCRIPTION_MASK_NULL;
+  if (context->input_collection_changed_callback) {
+    /* Input added or removed */
+    mask |= PA_SUBSCRIPTION_MASK_SOURCE;
+  }
+  if (context->output_collection_changed_callback) {
+    /* Output added or removed */
+    mask |= PA_SUBSCRIPTION_MASK_SINK;
+  }
+  /* Default device changed, this is always registered in order to update the
+   * `default_sink_info` when the default device changes. */
+  mask |= PA_SUBSCRIPTION_MASK_SERVER;
+
+  return pulse_subscribe_notifications(context, mask);
 }
 
 static struct cubeb_ops const pulse_ops = {
@@ -1637,7 +1608,6 @@ static struct cubeb_ops const pulse_ops = {
   .stream_get_position = pulse_stream_get_position,
   .stream_get_latency = pulse_stream_get_latency,
   .stream_set_volume = pulse_stream_set_volume,
-  .stream_set_panning = pulse_stream_set_panning,
   .stream_get_current_device = pulse_stream_get_current_device,
   .stream_device_destroy = pulse_stream_device_destroy,
   .stream_register_device_changed_callback = NULL,

@@ -23,9 +23,6 @@ typedef cubeb_devid AudioDeviceID;
 // Initialize Audio Library. Some Audio backends require initializing the
 // library before using it.
 void InitLibrary();
-#  ifdef XP_LINUX
-void InitAudioThreads();
-#  endif
 
 // Shutdown Audio Library. Some Audio backends require shutting down the
 // library after using it.

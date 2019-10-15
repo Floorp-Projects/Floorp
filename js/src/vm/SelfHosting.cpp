@@ -2875,7 +2875,7 @@ static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
   return true;
 }
 
-static JSString* CloneString(JSContext* cx, JSFlatString* selfHostedString) {
+static JSString* CloneString(JSContext* cx, JSLinearString* selfHostedString) {
   size_t len = selfHostedString->length();
   {
     JS::AutoCheckCannotGC nogc;
@@ -2999,10 +2999,10 @@ static JSObject* CloneObject(JSContext* cx,
         NumberObject::create(cx, selfHostedObject->as<NumberObject>().unbox());
   } else if (selfHostedObject->is<StringObject>()) {
     JSString* selfHostedString = selfHostedObject->as<StringObject>().unbox();
-    if (!selfHostedString->isFlat()) {
+    if (!selfHostedString->isLinear()) {
       MOZ_CRASH();
     }
-    RootedString str(cx, CloneString(cx, &selfHostedString->asFlat()));
+    RootedString str(cx, CloneString(cx, &selfHostedString->asLinear()));
     if (!str) {
       return nullptr;
     }
@@ -3040,10 +3040,10 @@ static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
     // Nothing to do here: these are represented inline in the value.
     vp.set(selfHostedValue);
   } else if (selfHostedValue.isString()) {
-    if (!selfHostedValue.toString()->isFlat()) {
+    if (!selfHostedValue.toString()->isLinear()) {
       MOZ_CRASH();
     }
-    JSFlatString* selfHostedString = &selfHostedValue.toString()->asFlat();
+    JSLinearString* selfHostedString = &selfHostedValue.toString()->asLinear();
     JSString* clone = CloneString(cx, selfHostedString);
     if (!clone) {
       return false;

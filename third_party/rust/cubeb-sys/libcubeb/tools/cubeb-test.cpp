@@ -17,7 +17,8 @@
 
 // Default values if none specified
 #define DEFAULT_RATE 44100
-#define DEFAULT_CHANNELS 2
+#define DEFAULT_OUTPUT_CHANNELS 2
+#define DEFAULT_INPUT_CHANNELS 1
 
 static const char* state_to_string(cubeb_state state) {
   switch (state) {
@@ -53,7 +54,10 @@ public:
   bool destroy_stream() const;
   bool destroy();
   bool activate_log(cubeb_log_level log_level) const;
+  void set_latency_testing(bool on);
+  void set_latency_frames(uint32_t latency_frames);
   uint64_t get_stream_position() const;
+  uint32_t get_stream_latency() const;
 
   long user_data_cb(cubeb_stream* stm, void* user, const void* input_buffer,
                     void* output_buffer, long nframes);
@@ -79,6 +83,9 @@ private:
   /* Accessed only from client and audio thread. */
   std::atomic<uint32_t> _rate = {0};
   std::atomic<uint32_t> _channels = {0};
+  std::atomic<bool> _latency_testing = {false};
+  std::atomic<uint32_t> _latency_frames = {0}; // if !0, override. Else, use min.
+
 
   /* Accessed only from audio thread. */
   uint32_t _total_frames = 0;
@@ -124,11 +131,27 @@ bool cubeb_client::init_stream() {
   _rate = has_output() ? output_params.rate : input_params.rate;
   _channels = has_output() ? output_params.channels : input_params.channels;
 
-  int rv =
+  cubeb_stream_params params;
+  params.rate = _rate;
+  params.channels = 2;
+  params.format = CUBEB_SAMPLE_FLOAT32NE;
+
+  uint32_t latency = 0;
+  int rv = cubeb_get_min_latency(context, &params, &latency);
+  if (rv != CUBEB_OK) {
+    fprintf(stderr, "Could not get min latency.");
+    return false;
+  }
+
+  if (_latency_frames) {
+    latency = _latency_frames.load();
+    printf("Opening a stream with a forced latency of %d frames\n", latency);
+  }
+
+  rv =
       cubeb_stream_init(context, &stream, "Stream", input_device,
                         has_input() ? &input_params : nullptr, output_device,
-                        has_output() ? &output_params : nullptr, 512,
-                        user_data_cb_s, user_state_cb_s, this);
+                        has_output() ? &output_params : nullptr, latency, user_data_cb_s, user_state_cb_s, this);
   if (rv != CUBEB_OK) {
     fprintf(stderr, "Could not open the stream\n");
     return false;
@@ -158,10 +181,20 @@ uint64_t cubeb_client::get_stream_position() const {
   uint64_t pos = 0;
   int rv = cubeb_stream_get_position(stream, &pos);
   if (rv != CUBEB_OK) {
-    fprintf(stderr, "Could not get the position the stream\n");
+    fprintf(stderr, "Could not get the position of the stream\n");
     return 0;
   }
   return pos;
+}
+
+uint32_t cubeb_client::get_stream_latency() const {
+  uint32_t latency = 0;
+  int rv = cubeb_stream_get_latency(stream, &latency);
+  if (rv != CUBEB_OK) {
+    fprintf(stderr, "Could not get the latency of the stream\n");
+    return 0;
+  }
+  return latency;
 }
 
 bool cubeb_client::destroy_stream() const {
@@ -187,6 +220,14 @@ bool cubeb_client::activate_log(cubeb_log_level log_level) const {
   return true;
 }
 
+void cubeb_client::set_latency_testing(bool on) {
+  _latency_testing = on;
+}
+
+void cubeb_client::set_latency_frames(uint32_t latency_frames) {
+  _latency_frames = latency_frames;
+}
+
 static void fill_with_sine_tone(float* buf, uint32_t num_of_frames,
                                uint32_t num_of_channels, uint32_t frame_rate,
                                uint32_t position) {
@@ -206,7 +247,28 @@ long cubeb_client::user_data_cb(cubeb_stream* stm, void* user,
   if (input_buffer && output_buffer) {
     const float* in = static_cast<const float*>(input_buffer);
     float* out = static_cast<float*>(output_buffer);
-    memcpy(out, in, sizeof(float) * nframes * _channels);
+    if (_latency_testing) {
+      for (uint32_t i = 0; i < nframes; i++) {
+        // Impulses every second, mixed with the input signal fed back at half
+        // gain, to measure the input-to-output latency via feedback.
+        uint32_t clock = ((_total_frames + i) % _rate);
+        if (!clock) {
+          for (uint32_t j = 0; j < _channels; j++) {
+            out[i * _channels + j] = 1.0 + in[i] * 0.5;
+          }
+        } else {
+          for (uint32_t j = 0; j < _channels; j++) {
+            out[i * _channels + j] = 0.0 + in[i] * 0.5;
+          }
+        }
+      }
+    } else {
+      for (uint32_t i = 0; i < nframes; i++) {
+        for (uint32_t j = 0; j < _channels; j++) {
+          out[i * _channels + j] = in[i];
+        }
+      }
+    }
   } else if (output_buffer && !input_buffer) {
     fill_with_sine_tone(static_cast<float*>(output_buffer), nframes, _channels,
                        _rate, _total_frames);
@@ -254,6 +316,7 @@ enum play_mode {
   RECORD,
   PLAYBACK,
   DUPLEX,
+  LATENCY_TESTING,
   COLLECTION_CHANGE,
 };
 
@@ -282,14 +345,17 @@ void print_help() {
   fprintf(stderr, "%s\n", msg);
 }
 
-bool choose_action(const cubeb_client& cl, operation_data * op, char c) {
+bool choose_action(const cubeb_client& cl, operation_data * op, int c) {
+  // Consume "enter" and "space"
   while (c == 10 || c == 32) {
-    // Consume "enter and "space"
     c = getchar();
+  }
+  if (c == EOF) {
+    c = 'q';
   }
 
   if (c == 'q') {
-    if (op->pm == PLAYBACK || op->pm == RECORD || op->pm == DUPLEX) {
+    if (op->pm == PLAYBACK || op->pm == RECORD || op->pm == DUPLEX || op->pm == LATENCY_TESTING) {
       bool res = cl.stop_stream();
       if (!res) {
         fprintf(stderr, "stop_stream failed\n");
@@ -334,7 +400,8 @@ bool choose_action(const cubeb_client& cl, operation_data * op, char c) {
     }
   } else if (c == 'c') {
     uint64_t pos = cl.get_stream_position();
-    fprintf(stderr, "stream position %" PRIu64 "\n", pos);
+    uint64_t latency = cl.get_stream_latency();
+    fprintf(stderr, "stream position %" PRIu64 " (latency %" PRIu64 ")\n", pos, latency);
   } else if (c == 'i') {
     op->collection_device_type = CUBEB_DEVICE_TYPE_INPUT;
     fprintf(stderr, "collection device type changed to INPUT\n");
@@ -362,7 +429,7 @@ bool choose_action(const cubeb_client& cl, operation_data * op, char c) {
       fprintf(stderr, "unregister_device_collection_changed failed\n");
     }
   } else {
-    fprintf(stderr, "Error: %c is not a valid entry\n", c);
+    fprintf(stderr, "Error: '%c' is not a valid entry\n", c);
   }
 
   return true; // Loop up
@@ -382,12 +449,18 @@ int main(int argc, char* argv[]) {
       op.pm = PLAYBACK;
     } else if ('d' == argv[1][0]) {
       op.pm = DUPLEX;
+    } else if ('l' == argv[1][0]) {
+      op.pm = LATENCY_TESTING;
     } else if ('c' == argv[1][0]) {
       op.pm = COLLECTION_CHANGE;
     }
   }
   op.rate = DEFAULT_RATE;
-  if (argc > 2) {
+  uint32_t latency_override = 0;
+  if (op.pm == LATENCY_TESTING && argc > 2) {
+    latency_override = strtoul(argv[2], NULL, 10);
+    printf("LATENCY_TESTING %d\n", latency_override);
+  } else if (argc > 2) {
     op.rate = strtoul(argv[2], NULL, 0);
   }
 
@@ -409,13 +482,18 @@ int main(int argc, char* argv[]) {
       fprintf(stderr, "register_device_collection_changed failed\n");
     }
   } else {
-    if (op.pm == PLAYBACK || op.pm == DUPLEX) {
-      cl.output_params = {CUBEB_SAMPLE_FLOAT32NE, op.rate, DEFAULT_CHANNELS,
-                          CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE};
+    if (op.pm == PLAYBACK || op.pm == DUPLEX || op.pm == LATENCY_TESTING) {
+      cl.output_params = {CUBEB_SAMPLE_FLOAT32NE, op.rate, DEFAULT_OUTPUT_CHANNELS,
+                          CUBEB_LAYOUT_STEREO, CUBEB_STREAM_PREF_NONE};
     }
-    if (op.pm == RECORD || op.pm == DUPLEX) {
-      cl.input_params = {CUBEB_SAMPLE_FLOAT32NE, op.rate, DEFAULT_CHANNELS,
-                         CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE};
+    if (op.pm == RECORD || op.pm == DUPLEX || op.pm == LATENCY_TESTING) {
+      cl.input_params = {CUBEB_SAMPLE_FLOAT32NE, op.rate, DEFAULT_INPUT_CHANNELS, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE};
+    }
+    if (op.pm == LATENCY_TESTING) {
+      cl.set_latency_testing(true);
+      if (latency_override) {
+        cl.set_latency_frames(latency_override);
+      }
     }
     res = cl.init_stream();
     if (!res) {

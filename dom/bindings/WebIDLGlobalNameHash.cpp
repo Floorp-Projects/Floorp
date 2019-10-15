@@ -62,9 +62,7 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
     JS::MutableHandle<JS::PropertyDescriptor> aDesc, bool* aFound) {
   MOZ_ASSERT(JSID_IS_STRING(aId), "Check for string id before calling this!");
 
-  const WebIDLNameTableEntry* entry;
-  { entry = GetEntry(JSID_TO_FLAT_STRING(aId)); }
-
+  const WebIDLNameTableEntry* entry = GetEntry(JSID_TO_LINEAR_STRING(aId));
   if (!entry) {
     *aFound = false;
     return true;
@@ -175,7 +173,7 @@ bool WebIDLGlobalNameHash::DefineIfEnabled(
 
 /* static */
 bool WebIDLGlobalNameHash::MayResolve(jsid aId) {
-  return GetEntry(JSID_TO_FLAT_STRING(aId)) != nullptr;
+  return GetEntry(JSID_TO_LINEAR_STRING(aId)) != nullptr;
 }
 
 /* static */
@@ -228,7 +226,7 @@ bool WebIDLGlobalNameHash::ResolveForSystemGlobal(JSContext* aCx,
   MOZ_ASSERT(!xpc::WrapperFactory::IsXrayWrapper(aObj), "Xrays not supported!");
 
   // Look up the corresponding entry in the name table, and resolve if enabled.
-  const WebIDLNameTableEntry* entry = GetEntry(JSID_TO_FLAT_STRING(aId));
+  const WebIDLNameTableEntry* entry = GetEntry(JSID_TO_LINEAR_STRING(aId));
   if (entry && (!entry->mEnabled || entry->mEnabled(aCx, aObj))) {
     if (NS_WARN_IF(!GetPerInterfaceObjectHandle(
             aCx, entry->mConstructorId, entry->mCreate,

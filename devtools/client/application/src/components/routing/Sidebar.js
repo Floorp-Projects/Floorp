@@ -12,19 +12,19 @@ const {
   aside,
   ul,
 } = require("devtools/client/shared/vendor/react-dom-factories");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const SidebarItem = createFactory(require("./SidebarItem"));
 
+const Types = require("../../types/index");
 const { PAGE_TYPES } = require("../../constants");
 
 class Sidebar extends PureComponent {
   static get propTypes() {
     return {
       // this prop is automatically injected via connect
-      selectedPage: PropTypes.oneOf(Object.values(PAGE_TYPES)),
+      selectedPage: Types.page.isRequired,
     };
   }
 

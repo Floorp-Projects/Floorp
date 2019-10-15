@@ -110,10 +110,14 @@ impl AggregateDevice {
         let mut cloned_condvar_pair = condvar_pair.clone();
         let data_ptr = &mut cloned_condvar_pair as *mut Arc<(Mutex<Vec<AudioObjectID>>, Condvar)>;
 
+        let address = get_property_address(
+            Property::HardwareDevices,
+            DeviceType::INPUT | DeviceType::OUTPUT,
+        );
         assert_eq!(
             audio_object_add_property_listener(
                 kAudioObjectSystemObject,
-                &DEVICES_PROPERTY_ADDRESS,
+                &address,
                 devices_changed_callback,
                 data_ptr as *mut c_void,
             ),
@@ -124,7 +128,7 @@ impl AggregateDevice {
             assert_eq!(
                 audio_object_remove_property_listener(
                     kAudioObjectSystemObject,
-                    &DEVICES_PROPERTY_ADDRESS,
+                    &address,
                     devices_changed_callback,
                     data_ptr as *mut c_void,
                 ),
@@ -554,53 +558,37 @@ impl AggregateDevice {
         let output_label = label.into_string();
 
         if input_label.contains("AirPods") && output_label.contains("AirPods") {
-            let mut input_min_rate = 0;
-            let mut input_max_rate = 0;
-            let mut input_nominal_rate = 0;
-            audiounit_get_available_samplerate(
-                input_id,
-                DeviceType::INPUT | DeviceType::OUTPUT,
-                &mut input_min_rate,
-                &mut input_max_rate,
-                &mut input_nominal_rate,
-            );
+            let input_rate =
+                get_device_sample_rate(input_id, DeviceType::INPUT | DeviceType::OUTPUT)?;
             cubeb_log!(
-                "Input device {}, name: {}, min: {}, max: {}, nominal rate: {}",
+                "The nominal rate of the input device {}: {}",
                 input_id,
-                input_label,
-                input_min_rate,
-                input_max_rate,
-                input_nominal_rate
+                input_rate
             );
 
-            let mut output_min_rate = 0;
-            let mut output_max_rate = 0;
-            let mut output_nominal_rate = 0;
-            audiounit_get_available_samplerate(
-                output_id,
-                DeviceType::INPUT | DeviceType::OUTPUT,
-                &mut output_min_rate,
-                &mut output_max_rate,
-                &mut output_nominal_rate,
-            );
+            let output_rate =
+                match get_device_sample_rate(output_id, DeviceType::INPUT | DeviceType::OUTPUT) {
+                    Ok(rate) => format!("{}", rate),
+                    Err(e) => format!("Error {}", e),
+                };
             cubeb_log!(
-                "Output device {}, name: {}, min: {}, max: {}, nominal rate: {}",
+                "The nominal rate of the output device {}: {}",
                 output_id,
-                output_label,
-                output_min_rate,
-                output_max_rate,
-                output_nominal_rate
+                output_rate
             );
 
-            let rate = f64::from(input_nominal_rate);
             let addr = AudioObjectPropertyAddress {
                 mSelector: kAudioDevicePropertyNominalSampleRate,
                 mScope: kAudioObjectPropertyScopeGlobal,
                 mElement: kAudioObjectPropertyElementMaster,
             };
 
-            let status =
-                audio_object_set_property_data(device_id, &addr, mem::size_of::<f64>(), &rate);
+            let status = audio_object_set_property_data(
+                device_id,
+                &addr,
+                mem::size_of::<f64>(),
+                &input_rate,
+            );
             if status != NO_ERR {
                 return Err(status);
             }

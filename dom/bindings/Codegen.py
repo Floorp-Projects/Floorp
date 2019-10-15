@@ -2344,36 +2344,6 @@ class MethodDefiner(PropertyDefiner):
         self.chrome = []
         self.regular = []
         for m in methods:
-            if m.identifier.name == 'QueryInterface':
-                # QueryInterface is special, because instead of generating an
-                # impl we just call out directly to our shared one.
-                if m.isStatic():
-                    raise TypeError("Legacy QueryInterface member shouldn't be static")
-                signatures = m.signatures()
-
-                if (len(signatures) > 1 or len(signatures[0][1]) > 1 or
-                    not signatures[0][1][0].type.isAny()):
-                    raise TypeError("There should be only one QueryInterface method with 1 argument of type any")
-
-                # Make sure to not stick QueryInterface on abstract interfaces.
-                if (not self.descriptor.interface.hasInterfacePrototypeObject() or
-                    not self.descriptor.concrete):
-                    raise TypeError("QueryInterface is only supported on "
-                                    "interfaces that are concrete: " +
-                                    self.descriptor.name)
-
-                if not isChromeOnly(m):
-                    raise TypeError("QueryInterface must be ChromeOnly")
-
-                self.chrome.append({
-                    "name": 'QueryInterface',
-                    "methodInfo": False,
-                    "length": 1,
-                    "flags": "0",
-                    "condition": PropertyDefiner.getControllingCondition(m, descriptor)
-                })
-                continue
-
             method = self.methodData(m, descriptor)
 
             if m.isStatic():
@@ -11836,7 +11806,7 @@ def missingPropUseCountersForDescriptor(desc):
             # We're down to one string: just check whether we match it.
             return fill(
                 """
-                if (JS_FlatStringEqualsLiteral(str, "${name}")) {
+                if (JS_LinearStringEqualsLiteral(str, "${name}")) {
                   counter.emplace(eUseCounter_${iface}_${name});
                 }
                 """,
@@ -11846,7 +11816,7 @@ def missingPropUseCountersForDescriptor(desc):
         switch = dict()
         if charIndex == 0:
             switch['precondition'] = \
-                'StringIdChars chars(nogc, js::FlatStringToLinearString(str));\n'
+                'StringIdChars chars(nogc, str);\n'
         else:
             switch['precondition'] = ""
 
@@ -11874,7 +11844,7 @@ def missingPropUseCountersForDescriptor(desc):
         return switch
 
     lengths = set(len(prop[1]) for prop in instrumentedProps)
-    switchDesc = { 'condition': 'js::GetFlatStringLength(str)',
+    switchDesc = { 'condition': 'js::GetLinearStringLength(str)',
                    'precondition': '' }
     switchDesc['cases'] = dict()
     for length in sorted(lengths):
@@ -11890,7 +11860,7 @@ def missingPropUseCountersForDescriptor(desc):
           {
             // Scope for our no-GC section, so we don't need to rely on SetUseCounter not GCing.
             JS::AutoCheckCannotGC nogc;
-            JSFlatString* str = js::AtomToFlatString(JSID_TO_ATOM(id));
+            JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
             // Don't waste time fetching the chars until we've done the length switch.
             $*{switch}
           }
@@ -14536,11 +14506,11 @@ class CGGlobalNames(CGGeneric):
         phfCodegen = phf.codegen('WebIDLGlobalNameHash::sEntries',
                                  'WebIDLNameTableEntry')
         entries = phfCodegen.gen_entries(lambda e: e[1])
-        getter = phfCodegen.gen_jsflatstr_getter(
+        getter = phfCodegen.gen_jslinearstr_getter(
             name='WebIDLGlobalNameHash::GetEntry',
             return_type='const WebIDLNameTableEntry*',
             return_entry=dedent("""
-                if (JS_FlatStringEqualsAscii(aKey, sNames + entry.mNameOffset, entry.mNameLength)) {
+                if (JS_LinearStringEqualsAscii(aKey, sNames + entry.mNameOffset, entry.mNameLength)) {
                   return &entry;
                 }
                 return nullptr;

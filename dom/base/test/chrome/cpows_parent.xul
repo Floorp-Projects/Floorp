@@ -211,28 +211,16 @@
     function recvDomTest(message) {
       savedElement = message.objects.element;
 
-      is(savedElement.QueryInterface(Ci.nsISupports), savedElement,
-         "QI to nsISupports works");
-
-      function testNoInterface(savedElement, i) {
-        try {
-          savedElement.QueryInterface(i);
-          ok(false, "should have thrown an exception");
-        } catch (e) {
-          is(e.result, Cr.NS_ERROR_NO_INTERFACE, "threw the right exception");
-        }
-      }
-
-      testNoInterface(savedElement, Ci.nsIClassInfo);
+      is(savedElement.QueryInterface, undefined,
+         "Should not have a QueryInterface");
 
       // Test to ensure that we don't pass CPOWs to C++-implemented interfaces.
       // See bug 1072980.
       if (test_state == "remote") {
-        // This doesn't work because we intercept toString and QueryInterface specially
+        // This doesn't work because we intercept toString specially
         // and don't cache the function pointer.
         // See bug 1140636.
         todo_is(savedElement.toString, savedElement.toString, "toString identity works");
-        todo_is(savedElement.QueryInterface, savedElement.QueryInterface, "toString identity works");
 
         is(Object.prototype.toString.call(savedElement), "[object HTMLDivElement]",
            "prove that this works (and doesn't leak)");
