@@ -17,10 +17,21 @@ class IssueItem extends PureComponent {
   }
 
   render() {
+    const { property, type } = this.props;
     return dom.li(
-      { key: `${this.props.property}:${this.props.type}` },
+      {
+        key: `${property}:${type}`,
+        "data-qa-property": property,
+      },
       Object.entries(this.props).map(([key, value]) =>
-        dom.div({ key }, `${key}:${value}`)
+        dom.div(
+          {
+            key,
+            "data-qa-key": key,
+            "data-qa-value": `${value}`,
+          },
+          `${key}:${value}`
+        )
       )
     );
   }
