@@ -32,8 +32,8 @@ import java.util.zip.GZIPOutputStream
 import kotlin.collections.HashMap
 import kotlin.random.Random
 
-private const val DEFAULT_SERVER_URL = "https://crash-reports.mozilla.com/submit?" +
-        "id=${BuildConfig.MOZ_APP_ID}&version=${BuildConfig.MOZILLA_VERSION}&${BuildConfig.MOZ_APP_BUILDID}"
+/* This ID is used for all Mozilla products.  Setting as default if no ID is passed in */
+private const val MOZILLA_PRODUCT_ID = "{eeb82917-e434-4870-8148-5c03d4caa81b}"
 
 /**
  * A [CrashReporterService] implementation uploading crash reports to crash-stats.mozilla.com.
@@ -48,7 +48,11 @@ private const val DEFAULT_SERVER_URL = "https://crash-reports.mozilla.com/submit
 class MozillaSocorroService(
     private val applicationContext: Context,
     private val appName: String,
-    private val serverUrl: String = DEFAULT_SERVER_URL
+    private val appId: String = MOZILLA_PRODUCT_ID,
+    private val version: String = BuildConfig.MOZILLA_VERSION,
+    private val buildId: String = BuildConfig.MOZ_APP_BUILDID,
+    private val vendor: String = BuildConfig.MOZ_APP_VENDOR,
+    private val serverUrl: String = "https://crash-reports.mozilla.com/submit?id=$appId&version=$version&$buildId"
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
@@ -72,12 +76,12 @@ class MozillaSocorroService(
         extrasFilePath: String?,
         isCaughtException: Boolean
     ) {
-        val serverUrl = URL(serverUrl)
+        val url = URL(serverUrl)
         val boundary = generateBoundary()
         var conn: HttpURLConnection? = null
 
         try {
-            conn = serverUrl.openConnection() as HttpURLConnection
+            conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
@@ -115,6 +119,10 @@ class MozillaSocorroService(
         val nameSet = mutableSetOf<String>()
         val gzipOs = GZIPOutputStream(os)
         sendPart(gzipOs, boundary, "ProductName", appName, nameSet)
+        sendPart(gzipOs, boundary, "ProductID", appId, nameSet)
+        sendPart(gzipOs, boundary, "Version", version, nameSet)
+        sendPart(gzipOs, boundary, "BuildID", buildId, nameSet)
+        sendPart(gzipOs, boundary, "Vendor", vendor, nameSet)
 
         extrasFilePath?.let {
             val extrasFile = File(it)
@@ -138,10 +146,6 @@ class MozillaSocorroService(
 
         sendPackageInstallTime(gzipOs, boundary, nameSet)
         sendProcessName(gzipOs, boundary, nameSet)
-        sendPart(gzipOs, boundary, "ProductID", BuildConfig.MOZ_APP_ID, nameSet)
-        sendPart(gzipOs, boundary, "Version", BuildConfig.MOZ_APP_VERSION, nameSet)
-        sendPart(gzipOs, boundary, "BuildID", BuildConfig.MOZ_APP_BUILDID, nameSet)
-        sendPart(gzipOs, boundary, "Vendor", BuildConfig.MOZ_APP_VENDOR, nameSet)
         sendPart(gzipOs, boundary, "ReleaseChannel", BuildConfig.MOZ_UPDATE_CHANNEL, nameSet)
         sendPart(gzipOs, boundary, "StartupTime",
                 TimeUnit.MILLISECONDS.toSeconds(startTime).toString(), nameSet)

@@ -82,7 +82,8 @@ class MozillaSocorroServiceTest {
         val service = spy(MozillaSocorroService(
                 testContext,
                 "Test App",
-                serverUrl.toString()
+                appId = "{aa3c5121-dab2-40e2-81ca-7ea25febc110}",
+                serverUrl = serverUrl.toString()
         ))
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
@@ -116,7 +117,7 @@ class MozillaSocorroServiceTest {
         val service = spy(MozillaSocorroService(
                 testContext,
                 "Test App",
-                serverUrl.toString()
+                serverUrl = serverUrl.toString()
         ))
 
         val throwable = RuntimeException("Test")
@@ -130,8 +131,48 @@ class MozillaSocorroServiceTest {
 
         assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
         assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
-        assert(request.contains("name=ProductID\r\n\r\n{aa3c5121-dab2-40e2-81ca-7ea25febc110}"))
+        assert(request.contains("name=ProductID\r\n\r\n{eeb82917-e434-4870-8148-5c03d4caa81b}"))
         assert(request.contains("name=Vendor\r\n\r\nMozilla"))
+        assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
+        assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
+        assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
+
+        verify(service).report(throwable)
+        verify(service).sendReport(throwable, null, null, true)
+    }
+
+    @Test
+    fun `MozillaSocorroService caught exception request app details are correct`() {
+        var mockWebServer = MockWebServer()
+        mockWebServer.enqueue(MockResponse().setResponseCode(200)
+                .setBody("CrashID=bp-924121d3-4de3-4b32-ab12-026fc0190928"))
+        mockWebServer.start()
+        val serverUrl = mockWebServer.url("/")
+        val service = spy(MozillaSocorroService(
+                testContext,
+                "Test App",
+                "{1234-1234-1234}",
+                "0.1",
+                "1.0",
+                "Mozilla Test",
+                serverUrl = serverUrl.toString()
+        ))
+
+        val throwable = RuntimeException("Test")
+        service.report(throwable)
+
+        val fileInputStream = ByteArrayInputStream(mockWebServer.takeRequest().body.inputStream().readBytes())
+        val inputStream = GZIPInputStream(fileInputStream)
+        val reader = InputStreamReader(inputStream)
+        val bufferedReader = BufferedReader(reader)
+        var request = bufferedReader.readText()
+
+        assert(request.contains("name=JavaStackTrace\r\n\r\n$INFO_PREFIX java.lang.RuntimeException: Test"))
+        assert(request.contains("name=Android_ProcessName\r\n\r\nmozilla.components.lib.crash.test"))
+        assert(request.contains("name=ProductID\r\n\r\n{1234-1234-1234}"))
+        assert(request.contains("name=Version\r\n\r\n0.1"))
+        assert(request.contains("name=BuildID\r\n\r\n1.0"))
+        assert(request.contains("name=Vendor\r\n\r\nMozilla Test"))
         assert(request.contains("name=ReleaseChannel\r\n\r\nnightly"))
         assert(request.contains("name=Android_PackageName\r\n\r\nmozilla.components.lib.crash.test"))
         assert(request.contains("name=Android_Device\r\n\r\nrobolectric"))
@@ -150,7 +191,7 @@ class MozillaSocorroServiceTest {
         val service = spy(MozillaSocorroService(
                 testContext,
                 "Test App",
-                serverUrl.toString()
+                serverUrl = serverUrl.toString()
         ))
 
         val crash = Crash.UncaughtExceptionCrash(RuntimeException("Test"), arrayListOf())
@@ -170,7 +211,7 @@ class MozillaSocorroServiceTest {
         val service = spy(MozillaSocorroService(
                 testContext,
                 "Test App",
-                serverUrl.toString()
+                serverUrl = serverUrl.toString()
         ))
 
         val crash = Crash.NativeCodeCrash(null, true, null, false, arrayListOf())
