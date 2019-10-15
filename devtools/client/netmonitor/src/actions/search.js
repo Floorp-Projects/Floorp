@@ -14,7 +14,9 @@ const {
   UPDATE_SEARCH_STATUS,
   SEARCH_STATUS,
   SET_TARGET_SEARCH_RESULT,
+  SELECT_ACTION_BAR_TAB,
   TOGGLE_SEARCH_CASE_SENSITIVE_SEARCH,
+  PANELS,
 } = require("../constants");
 
 const {
@@ -219,9 +221,15 @@ function toggleCaseSensitiveSearch() {
 function toggleSearchPanel() {
   return (dispatch, getState) => {
     const state = getState();
-    state.search.panelOpen
+
+    state.search.panelOpen && state.ui.selectedActionBarTabId === PANELS.SEARCH
       ? dispatch({ type: CLOSE_SEARCH })
       : dispatch({ type: OPEN_SEARCH });
+
+    dispatch({
+      type: SELECT_ACTION_BAR_TAB,
+      id: PANELS.SEARCH,
+    });
   };
 }
 
