@@ -4,22 +4,53 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from copy import deepcopy
+
 from voluptuous import (
+    Optional,
     Required,
     Extra,
 )
 
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.transforms.tests import test_description_schema
-from taskgraph.util.schema import Schema
+from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
+from taskgraph.util.treeherder import split_symbol, join_symbol
 
 transforms = TransformSequence()
 
 
 raptor_description_schema = Schema({
+    # Raptor specific configs.
+    Optional('apps'): optionally_keyed_by(
+        'test-platform',
+        [basestring]
+    ),
+    Optional('activity'): optionally_keyed_by(
+        'app',
+        basestring
+    ),
+    Optional('binary-path'): optionally_keyed_by(
+        'app',
+        basestring
+    ),
+    # Configs defined in the 'test_description_schema'.
+    Optional('max-run-time'): optionally_keyed_by(
+        'app',
+        test_description_schema['max-run-time']
+    ),
+    Optional('run-on-projects'): optionally_keyed_by(
+        'app',
+        test_description_schema['run-on-projects']
+    ),
+    Optional('target'): optionally_keyed_by(
+        'app',
+        test_description_schema['target']
+    ),
     Required('test-name'): test_description_schema['test-name'],
     Required('test-platform'): test_description_schema['test-platform'],
     Required('require-signed-extensions'): test_description_schema['require-signed-extensions'],
+    Required('treeherder-symbol'): test_description_schema['treeherder-symbol'],
     # Any unrecognized keys will be validated against the test_description_schema.
     Extra: object,
 })
@@ -28,9 +59,71 @@ transforms.add_validate(raptor_description_schema)
 
 
 @transforms.add
+def split_apps(config, tests):
+    app_symbols = {
+        'chrome': 'Chr',
+        'chromium': 'Cr',
+        'fenix': 'fenix',
+        'refbrow': 'refbrow',
+    }
+
+    for test in tests:
+        apps = test.pop('apps', None)
+        if not apps:
+            yield test
+            continue
+
+        for app in apps:
+            atest = deepcopy(test)
+            suffix = "-{}".format(app)
+            atest['app'] = app
+            atest['description'] += " on {}".format(app.capitalize())
+
+            name = atest['test-name']
+            if name.endswith('-cold'):
+                name = atest['test-name'][:-len('-cold')] + suffix + '-cold'
+            else:
+                name += suffix
+
+            atest['test-name'] = name
+            atest['try-name'] = name
+
+            if app in app_symbols:
+                group, symbol = split_symbol(atest['treeherder-symbol'])
+                group += "-{}".format(app_symbols[app])
+                atest['treeherder-symbol'] = join_symbol(group, symbol)
+
+            yield atest
+
+
+@transforms.add
+def handle_keyed_by_app(config, tests):
+    fields = [
+        'activity',
+        'binary-path',
+        'max-run-time',
+        'run-on-projects',
+        'target',
+    ]
+    for test in tests:
+        for field in fields:
+            resolve_keyed_by(test, field, item_name=test['test-name'])
+        yield test
+
+
+@transforms.add
 def add_extra_options(config, tests):
     for test in tests:
         extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
+
+        if 'app' in test:
+            extra_options.append('--app={}'.format(test.pop('app')))
+
+        if 'activity' in test:
+            extra_options.append('--activity={}'.format(test.pop('activity')))
+
+        if 'binary-path' in test:
+            extra_options.append('--binary-path={}'.format(test.pop('binary-path')))
 
         if test['require-signed-extensions']:
             extra_options.append('--is-release-build')

@@ -1,0 +1,72 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    max-run-time: 1800
+    suite: raptor
+    workdir: /builds/worker
+    run-on-projects:
+        by-app:
+            fenix: []
+            geckoview: ["integration", "try"]
+            refbrow: []
+    tier: 3
+    target:
+        by-app:
+            fenix:
+                by-test-platform:
+                    android-hw.*-aarch64.*/.*:
+                        index: project.mobile.fenix.v2.performance-test.latest.aarch64
+                        name: target.apk
+                    default:
+                        index: project.mobile.fenix.v2.performance-test.latest.arm
+                        name: target.apk
+            geckoview: geckoview_example.apk
+            refbrow:
+                by-test-platform:
+                    android-hw.*-aarch64.*/.*:
+                        index: project.mobile.reference-browser.v2.raptor.latest.aarch64
+                        name: target.apk
+                    default:
+                        index: project.mobile.reference-browser.v2.raptor.latest.arm
+                        name: target.apk
+    e10s: true
+    virtualization: hardware
+    activity:
+        by-app:
+            fenix: org.mozilla.fenix.IntentReceiverActivity
+            geckoview: org.mozilla.geckoview_example.GeckoViewActivity
+            refbrow: org.mozilla.reference.browser.BrowserTestActivity
+    binary-path:
+        by-app:
+            fenix: org.mozilla.fenix.performancetest
+            geckoview: org.mozilla.geckoview_example
+            refbrow: org.mozilla.reference.browser.raptor
+    mozharness:
+        script: raptor_script.py
+        config:
+            - raptor/android_hw_config.py
+        extra-options:
+            - --browsertime
+
+browsertime-tp6m-1:
+    description: "Raptor (browsertime) tp6m-1"
+    apps: ["fenix", "geckoview", "refbrow"]
+    treeherder-symbol: Btime(tp6m-1)
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-1
+
+browsertime-tp6m-1-cold:
+    description: "Raptor (browsertime) tp6m-1 cold page-load"
+    apps: ["fenix", "geckoview", "refbrow"]
+    treeherder-symbol: Btime(tp6m-c-1)
+    max-run-time:
+        by-app:
+            fenix: 1800
+            geckoview: 2700
+            refbrow: 1800
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-cold-1
