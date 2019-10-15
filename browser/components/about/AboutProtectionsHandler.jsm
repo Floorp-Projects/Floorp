@@ -225,6 +225,10 @@ var AboutProtectionsHandler = {
             logins
           );
         }
+        // Send back user's email so the protections report can direct them to the proper
+        // OAuth flow on Monitor.
+        const { email } = await fxAccounts.getSignedInUser();
+        userEmail = email;
       } else {
         // If no account exists, then the user is not logged in with an fxAccount.
         monitorData = {
