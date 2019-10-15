@@ -107,12 +107,5 @@ EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
   return (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
 }
 
-void GtkCompositorWidget::SetEGLNativeWindowSize(
-    const LayoutDeviceIntSize& aEGLWindowSize) {
-  if (mWidget) {
-    mWidget->SetEGLNativeWindowSize(aEGLWindowSize);
-  }
-}
-
 }  // namespace widget
 }  // namespace mozilla
