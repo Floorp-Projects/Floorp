@@ -2118,6 +2118,17 @@ describe("ASRouter", () => {
       });
     });
 
+    describe("#onMessage: OPEN_PROTECTION_REPORT", () => {
+      it("should open protection report", async () => {
+        const msg = fakeExecuteUserAction({ type: "OPEN_PROTECTION_REPORT" });
+        let { gProtectionsHandler } = msg.target.browser.ownerGlobal;
+
+        await Router.onMessage(msg);
+
+        assert.calledOnce(gProtectionsHandler.openProtections);
+      });
+    });
+
     describe("#dispatch(action, target)", () => {
       it("should an action and target to onMessage", async () => {
         // use the IMPRESSION action to make sure actions are actually getting processed
