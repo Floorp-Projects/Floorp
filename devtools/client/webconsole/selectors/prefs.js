@@ -3,15 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-function getAllPrefs(state) {
-  return state.prefs;
-}
-
 function getLogLimit(state) {
   return state.prefs.logLimit;
 }
 
-module.exports = {
-  getAllPrefs,
-  getLogLimit,
-};
+exports.getLogLimit = getLogLimit;

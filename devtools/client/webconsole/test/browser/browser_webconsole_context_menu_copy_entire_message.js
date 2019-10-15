@@ -51,10 +51,7 @@ add_task(async function() {
   await testMessagesCopy(hud, true);
 
   // Disable timestamp and wait until timestamp are not displayed anymore.
-  await toggleConsoleSetting(
-    hud,
-    ".webconsole-console-settings-menu-item-timestamps"
-  );
+  await pushPref(PREF_MESSAGE_TIMESTAMP, false);
   await waitFor(
     () => hud.ui.outputNode.querySelector(".message .timestamp") === null
   );
