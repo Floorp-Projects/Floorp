@@ -21,7 +21,8 @@
   text-align: start;
   white-space: nowrap;
   color: inherit;
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
