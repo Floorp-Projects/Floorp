@@ -832,6 +832,10 @@ static uint32_t GetTrimmableWhitespaceCount(const nsTextFragment* aFrag,
                                             int32_t aStartOffset,
                                             int32_t aLength,
                                             int32_t aDirection) {
+  if (!aLength) {
+    return 0;
+  }
+
   int32_t count = 0;
   if (aFrag->Is2b()) {
     const char16_t* str = aFrag->Get2b() + aStartOffset;
