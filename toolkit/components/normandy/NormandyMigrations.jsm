@@ -16,6 +16,11 @@ ChromeUtils.defineModuleGetter(
   "PreferenceExperiments",
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "RecipeRunner",
+  "resource://normandy/lib/RecipeRunner.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["NormandyMigrations"];
 
@@ -42,13 +47,14 @@ const NormandyMigrations = {
     for (let i = migrationsApplied; i < this.migrations.length; i++) {
       await this.applyOne(i);
       migrationsApplied++;
+      Services.prefs.setIntPref(PREF_MIGRATIONS_APPLIED, migrationsApplied);
     }
-
-    Services.prefs.setIntPref(PREF_MIGRATIONS_APPLIED, migrationsApplied);
   },
 
   async applyOne(id) {
-    await this.migrations[id]();
+    const migration = this.migrations[id];
+    log.debug(`Running Normandy migration ${migration.name}`);
+    await migration();
   },
 
   migrations: [
@@ -59,6 +65,7 @@ const NormandyMigrations = {
     PreferenceExperiments.migrations.migration02MultiPreference,
     PreferenceExperiments.migrations.migration03AddActionName,
     PreferenceExperiments.migrations.migration04RenameNameToSlug,
+    RecipeRunner.migrations.migration01RemoveOldRecipesCollection,
   ],
 };
 
