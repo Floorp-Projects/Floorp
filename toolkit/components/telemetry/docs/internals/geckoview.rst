@@ -10,8 +10,8 @@ GeckoView support is limited to :doc:`scalars <../collection/scalars>` and
 
 Overview
 --------
-GeckoView does not make use of the same `JavaScript modules <https://dxr.mozilla.org/mozilla-central/search?q=path%3Atoolkit%2Fcomponents%2Ftelemetry+ext%3Ajsm+-path%3Ageckoview&redirect=false>`_
-used in Firefox Desktop. Instead, Telemetry gets setup on this product by `GeckoViewTelemetryController.jsm <https://dxr.mozilla.org/mozilla-central/rev/1800b8895c08bc0c60302775dc0a4b5ea4deb310/toolkit/components/telemetry/geckoview/GeckoViewTelemetryController.jsm>`_ .
+GeckoView does not make use of the same `JavaScript modules <https://searchfox.org/mozilla-central/search?q=path%3Atoolkit%2Fcomponents%2Ftelemetry+ext%3Ajsm+-path%3Ageckoview&redirect=false>`_
+used in Firefox Desktop. Instead, Telemetry gets setup on this product by `GeckoViewTelemetryController.jsm <https://searchfox.org/mozilla-central/rev/1800b8895c08bc0c60302775dc0a4b5ea4deb310/toolkit/components/telemetry/geckoview/GeckoViewTelemetryController.jsm>`_ .
 
 More importantly, users do not need to worry about handling measurements' persistence across
 sessions: this means measurements accumulate across application sessions until cleared. In
