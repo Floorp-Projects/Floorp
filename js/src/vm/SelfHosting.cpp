@@ -1793,24 +1793,6 @@ static bool intrinsic_IsRuntimeDefaultLocale(JSContext* cx, unsigned argc,
   args.rval().setBoolean(equals);
   return true;
 }
-
-using GetOrCreateIntlConstructor = JSFunction* (*)(JSContext*,
-                                                   Handle<GlobalObject*>);
-
-template <GetOrCreateIntlConstructor getOrCreateIntlConstructor>
-static bool intrinsic_GetBuiltinIntlConstructor(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-
-  JSFunction* constructor = getOrCreateIntlConstructor(cx, cx->global());
-  if (!constructor) {
-    return false;
-  }
-
-  args.rval().setObject(*constructor);
-  return true;
-}
 #endif  // ENABLE_INTL_API
 
 static bool intrinsic_ThrowArgTypeNotObject(JSContext* cx, unsigned argc,
@@ -2484,14 +2466,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallRelativeTimeFormatMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<RelativeTimeFormatObject>>, 2, 0),
 
-    JS_FN("GetDateTimeFormatConstructor",
-          intrinsic_GetBuiltinIntlConstructor<
-              GlobalObject::getOrCreateDateTimeFormatConstructor>,
-          0, 0),
-    JS_FN("GetNumberFormatConstructor",
-          intrinsic_GetBuiltinIntlConstructor<
-              GlobalObject::getOrCreateNumberFormatConstructor>,
-          0, 0),
     JS_FN("RuntimeDefaultLocale", intrinsic_RuntimeDefaultLocale, 0, 0),
     JS_FN("IsRuntimeDefaultLocale", intrinsic_IsRuntimeDefaultLocale, 1, 0),
 #endif  // ENABLE_INTL_API
