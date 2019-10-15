@@ -15,19 +15,16 @@ const FilterButton = require("devtools/client/webconsole/components/FilterBar/Fi
 const FilterBar = createFactory(
   require("devtools/client/webconsole/components/FilterBar/FilterBar")
 );
-const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
 const {
   FILTERBAR_DISPLAY_MODES,
 } = require("devtools/client/webconsole/constants");
 const {
   MESSAGES_CLEAR,
   FILTERS,
-  PREFS,
 } = require("devtools/client/webconsole/constants");
 
 const {
   setupStore,
-  prefsService,
   clearPrefs,
 } = require("devtools/client/webconsole/test/node/helpers");
 const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
@@ -37,6 +34,10 @@ function getFilterBar(overrides = {}) {
     serviceContainer,
     hidePersistLogsCheckbox: false,
     attachRefToWebConsoleUI: () => {},
+    webConsoleUI: {
+      document,
+      wrapper: {},
+    },
     ...overrides,
   });
 }
@@ -86,8 +87,10 @@ describe("FilterBar component:", () => {
       "devtools-searchinput-clear"
     );
 
-    // "Persist logs" checkbox
-    expect(wrapper.find(".filter-checkbox input").length).toBe(1);
+    // Settings menu icon
+    expect(
+      wrapper.find(".webconsole-console-settings-menu-button").length
+    ).toBe(1);
   });
 
   it("displays the number of hidden messages when a search hide messages", () => {
@@ -220,32 +223,5 @@ describe("FilterBar component:", () => {
     const input = wrapper.find(".devtools-filterinput");
     input.simulate("change", { target: { value: "a" } });
     expect(store.getState().filters.text).toBe("a");
-  });
-
-  it("toggles persist logs when checkbox is clicked", () => {
-    const store = setupStore();
-
-    expect(getAllUi(store.getState()).persistLogs).toBe(false);
-    expect(prefsService.getBoolPref(PREFS.UI.PERSIST), false);
-
-    const wrapper = mount(Provider({ store }, getFilterBar()));
-    wrapper.find(".filter-checkbox input").simulate("change");
-
-    expect(getAllUi(store.getState()).persistLogs).toBe(true);
-    expect(prefsService.getBoolPref(PREFS.UI.PERSIST), true);
-  });
-
-  it(`doesn't render "Persist logs" input when "hidePersistLogsCheckbox" is true`, () => {
-    const store = setupStore();
-
-    const wrapper = render(
-      Provider(
-        { store },
-        getFilterBar({
-          hidePersistLogsCheckbox: true,
-        })
-      )
-    );
-    expect(wrapper.find(".filter-checkbox input").length).toBe(0);
   });
 });

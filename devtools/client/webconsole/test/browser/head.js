@@ -388,6 +388,14 @@ function loadDocument(url, browser = gBrowser.selectedBrowser) {
   return BrowserTestUtils.browserLoaded(browser);
 }
 
+async function toggleConsoleSetting(hud, node) {
+  const toolbox = hud.toolbox;
+  const doc = toolbox ? toolbox.doc : hud.chromeWindow.document;
+
+  const menuItem = doc.querySelector(node);
+  menuItem.click();
+}
+
 /**
  * Returns a promise that resolves when the node passed as an argument mutate
  * according to the passed configuration.

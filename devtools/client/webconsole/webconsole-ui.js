@@ -161,10 +161,6 @@ class WebConsoleUI {
       this.jsterm = null;
     }
 
-    if (this.wrapper) {
-      this.wrapper.destroy();
-    }
-
     const toolbox = this.hud.toolbox;
     if (toolbox) {
       toolbox.off("webconsole-selected", this._onPanelSelected);
