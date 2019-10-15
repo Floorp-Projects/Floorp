@@ -12,17 +12,23 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/TextUtils.h"
 
+#include <algorithm>
 #include <stdint.h>
 #include <utility>
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
+#include "builtin/String.h"
 #include "js/Utility.h"
+#include "js/Vector.h"
 #include "unicode/ucal.h"
 #include "unicode/ucol.h"
+#include "unicode/udat.h"
 #include "unicode/udatpg.h"
 #include "unicode/uenum.h"
+#include "unicode/uloc.h"
+#include "unicode/unum.h"
 #include "unicode/utypes.h"
 #include "vm/JSAtom.h"
 #include "vm/StringType.h"
@@ -279,7 +285,6 @@ bool js::intl::SharedIntlData::tryCanonicalizeTimeZoneConsistentWithIANA(
   return true;
 }
 
-#if DEBUG || MOZ_SYSTEM_ICU
 js::intl::SharedIntlData::LocaleHasher::Lookup::Lookup(JSLinearString* locale)
     : js::intl::SharedIntlData::LinearStringLookup(locale) {
   if (isLatin1) {
@@ -287,6 +292,12 @@ js::intl::SharedIntlData::LocaleHasher::Lookup::Lookup(JSLinearString* locale)
   } else {
     hash = mozilla::HashString(twoByteChars, length);
   }
+}
+
+js::intl::SharedIntlData::LocaleHasher::Lookup::Lookup(const char* chars,
+                                                       size_t length)
+    : js::intl::SharedIntlData::LinearStringLookup(chars, length) {
+  hash = mozilla::HashString(latin1Chars, length);
 }
 
 bool js::intl::SharedIntlData::LocaleHasher::match(Locale key,
@@ -310,6 +321,144 @@ bool js::intl::SharedIntlData::LocaleHasher::match(Locale key,
   return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
 }
 
+bool js::intl::SharedIntlData::getAvailableLocales(
+    JSContext* cx, LocaleSet& locales, CountAvailable countAvailable,
+    GetAvailable getAvailable) {
+  auto addLocale = [cx, &locales](const char* locale, size_t length) {
+    JSAtom* atom = Atomize(cx, locale, length);
+    if (!atom) {
+      return false;
+    }
+
+    LocaleHasher::Lookup lookup(atom);
+    LocaleSet::AddPtr p = locales.lookupForAdd(lookup);
+
+    // ICU shouldn't report any duplicate locales, but if it does, just
+    // ignore the duplicated locale.
+    if (!p && !locales.add(p, atom)) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+
+    return true;
+  };
+
+  js::Vector<char, 16> lang(cx);
+
+  int32_t count = countAvailable();
+  for (int32_t i = 0; i < count; i++) {
+    const char* locale = getAvailable(i);
+    size_t length = strlen(locale);
+
+    lang.clear();
+    if (!lang.append(locale, length)) {
+      return false;
+    }
+
+    std::replace(lang.begin(), lang.end(), '_', '-');
+
+    if (!addLocale(lang.begin(), length)) {
+      return false;
+    }
+  }
+
+  // Add old-style language tags without script code for locales that in current
+  // usage would include a script subtag. Also add an entry for the last-ditch
+  // locale, in case ICU doesn't directly support it (but does support it
+  // through fallback, e.g. supporting "en-GB" indirectly using "en" support).
+
+  // Certain old-style language tags lack a script code, but in current usage
+  // they *would* include a script code. Map these over to modern forms.
+  for (const auto& mapping : js::intl::oldStyleLanguageTagMappings) {
+    const char* oldStyle = mapping.oldStyle;
+    const char* modernStyle = mapping.modernStyle;
+
+    LocaleHasher::Lookup lookup(modernStyle, strlen(modernStyle));
+    if (locales.has(lookup)) {
+      if (!addLocale(oldStyle, strlen(oldStyle))) {
+        return false;
+      }
+    }
+  }
+
+  // Also forcibly provide the last-ditch locale.
+  {
+    const char* lastDitch = intl::LastDitchLocale();
+    MOZ_ASSERT(strcmp(lastDitch, "en-GB") == 0);
+
+#ifdef DEBUG
+    static constexpr char lastDitchParent[] = "en";
+
+    LocaleHasher::Lookup lookup(lastDitchParent, strlen(lastDitchParent));
+    MOZ_ASSERT(locales.has(lookup),
+               "shouldn't be a need to add every locale implied by the "
+               "last-ditch locale, merely just the last-ditch locale");
+#endif
+
+    if (!addLocale(lastDitch, strlen(lastDitch))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool js::intl::SharedIntlData::ensureSupportedLocales(JSContext* cx) {
+  if (supportedLocalesInitialized) {
+    return true;
+  }
+
+  // If ensureSupportedLocales() was called previously, but didn't complete due
+  // to OOM, clear all data and start from scratch.
+  supportedLocales.clearAndCompact();
+  collatorSupportedLocales.clearAndCompact();
+  dateTimeFormatSupportedLocales.clearAndCompact();
+  numberFormatSupportedLocales.clearAndCompact();
+
+  if (!getAvailableLocales(cx, supportedLocales, uloc_countAvailable,
+                           uloc_getAvailable)) {
+    return false;
+  }
+  if (!getAvailableLocales(cx, collatorSupportedLocales, ucol_countAvailable,
+                           ucol_getAvailable)) {
+    return false;
+  }
+  if (!getAvailableLocales(cx, dateTimeFormatSupportedLocales,
+                           udat_countAvailable, udat_getAvailable)) {
+    return false;
+  }
+  if (!getAvailableLocales(cx, numberFormatSupportedLocales,
+                           unum_countAvailable, unum_getAvailable)) {
+    return false;
+  }
+
+  MOZ_ASSERT(!supportedLocalesInitialized,
+             "ensureSupportedLocales is neither reentrant nor thread-safe");
+  supportedLocalesInitialized = true;
+
+  return true;
+}
+
+bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
+                                                 const LocaleSet& locales,
+                                                 HandleString locale,
+                                                 bool* supported) {
+  if (!ensureSupportedLocales(cx)) {
+    return false;
+  }
+
+  RootedLinearString localeLinear(cx, locale->ensureLinear(cx));
+  if (!localeLinear) {
+    return false;
+  }
+
+  LocaleHasher::Lookup lookup(localeLinear);
+  *supported = locales.has(lookup);
+
+  return true;
+}
+
+#if DEBUG || MOZ_SYSTEM_ICU
 bool js::intl::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx) {
   if (upperCaseFirstInitialized) {
     return true;
@@ -460,6 +609,10 @@ void js::intl::SharedIntlData::destroyInstance() {
   availableTimeZones.clearAndCompact();
   ianaZonesTreatedAsLinksByICU.clearAndCompact();
   ianaLinksCanonicalizedDifferentlyByICU.clearAndCompact();
+  supportedLocales.clearAndCompact();
+  collatorSupportedLocales.clearAndCompact();
+  dateTimeFormatSupportedLocales.clearAndCompact();
+  numberFormatSupportedLocales.clearAndCompact();
 #if DEBUG || MOZ_SYSTEM_ICU
   upperCaseFirstLocales.clearAndCompact();
 #endif
@@ -471,6 +624,10 @@ void js::intl::SharedIntlData::trace(JSTracer* trc) {
     availableTimeZones.trace(trc);
     ianaZonesTreatedAsLinksByICU.trace(trc);
     ianaLinksCanonicalizedDifferentlyByICU.trace(trc);
+    supportedLocales.trace(trc);
+    collatorSupportedLocales.trace(trc);
+    dateTimeFormatSupportedLocales.trace(trc);
+    numberFormatSupportedLocales.trace(trc);
 #if DEBUG || MOZ_SYSTEM_ICU
     upperCaseFirstLocales.trace(trc);
 #endif
@@ -483,6 +640,11 @@ size_t js::intl::SharedIntlData::sizeOfExcludingThis(
          ianaZonesTreatedAsLinksByICU.shallowSizeOfExcludingThis(mallocSizeOf) +
          ianaLinksCanonicalizedDifferentlyByICU.shallowSizeOfExcludingThis(
              mallocSizeOf) +
+         supportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
+         collatorSupportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
+         dateTimeFormatSupportedLocales.shallowSizeOfExcludingThis(
+             mallocSizeOf) +
+         numberFormatSupportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
 #if DEBUG || MOZ_SYSTEM_ICU
          upperCaseFirstLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
 #endif
