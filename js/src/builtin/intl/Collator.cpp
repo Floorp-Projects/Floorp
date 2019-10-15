@@ -53,7 +53,9 @@ const JSClass CollatorObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(CollatorObject::SLOT_COUNT) |
         JSCLASS_FOREGROUND_FINALIZE,
-    &CollatorObject::classOps_};
+    &CollatorObject::classOps_, &CollatorObject::classSpec_};
+
+const JSClass& CollatorObject::protoClass_ = PlainObject::class_;
 
 static bool collator_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -74,6 +76,18 @@ static const JSPropertySpec collator_properties[] = {
     JS_SELF_HOSTED_GET("compare", "$Intl_Collator_compare_get", 0),
     JS_STRING_SYM_PS(toStringTag, "Object", JSPROP_READONLY), JS_PS_END};
 
+static bool Collator(JSContext* cx, unsigned argc, Value* vp);
+
+const ClassSpec CollatorObject::classSpec_ = {
+    GenericCreateConstructor<Collator, 0, gc::AllocKind::FUNCTION>,
+    GenericCreatePrototype<CollatorObject>,
+    collator_static_methods,
+    nullptr,
+    collator_methods,
+    collator_properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
+
 /**
  * 10.1.2 Intl.Collator([ locales [, options]])
  *
@@ -84,7 +98,7 @@ static bool Collator(JSContext* cx, const CallArgs& args) {
 
   // Steps 2-5 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Null, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Collator, &proto)) {
     return false;
   }
 
@@ -135,46 +149,15 @@ void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-JSObject* js::CreateCollatorPrototype(JSContext* cx, HandleObject Intl,
-                                      Handle<GlobalObject*> global) {
-  RootedFunction ctor(cx, GlobalObject::createConstructor(
-                              cx, &Collator, cx->names().Collator, 0));
+bool js::CreateCollator(JSContext* cx, HandleObject Intl) {
+  JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, JSProto_Collator);
   if (!ctor) {
-    return nullptr;
-  }
-
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return nullptr;
-  }
-
-  if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
-    return nullptr;
-  }
-
-  // 10.2.2
-  if (!JS_DefineFunctions(cx, ctor, collator_static_methods)) {
-    return nullptr;
-  }
-
-  // 10.3.5
-  if (!JS_DefineFunctions(cx, proto, collator_methods)) {
-    return nullptr;
-  }
-
-  // 10.3.2 and 10.3.3
-  if (!JS_DefineProperties(cx, proto, collator_properties)) {
-    return nullptr;
+    return false;
   }
 
   // 8.1
   RootedValue ctorValue(cx, ObjectValue(*ctor));
-  if (!DefineDataProperty(cx, Intl, cx->names().Collator, ctorValue, 0)) {
-    return nullptr;
-  }
-
-  return proto;
+  return DefineDataProperty(cx, Intl, cx->names().Collator, ctorValue, 0);
 }
 
 bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
