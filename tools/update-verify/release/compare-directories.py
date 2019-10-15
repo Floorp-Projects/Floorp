@@ -39,16 +39,6 @@ TRANSFORMS = [
         'deletion': '//@line 6 "',
     },
     {
-        # warning comments from bug 1576546
-        'files': [
-            'defaults/pref/channel-prefs.js',
-            'Contents/Resources/defaults/pref/channel-prefs.js',
-        ],
-        'channel_prefix': ['aurora', 'beta', 'release', 'esr'],
-        'side': 'target',
-        'deletion': '//',
-    },
-    {
         # updates from a beta to an RC build, the latter specifies the release channel
         'files': [
             'defaults/pref/channel-prefs.js',
@@ -73,6 +63,20 @@ TRANSFORMS = [
             'pref("app.update.channel", "release");\n',
             'pref("app.update.channel", "beta");\n',
         ],
+    },
+    {
+        # Warning comments from bug 1576546
+        # When updating from a pre-70.0 build to 70.0+ this removes the new comments in
+        # the target side. In the 70.0+ --> 70.0+ case with a RC we won't need this, and
+        # the channel munging above will make channel-prefs.js identical, allowing the code
+        # to break before applying this transform.
+        'files': [
+            'defaults/pref/channel-prefs.js',
+            'Contents/Resources/defaults/pref/channel-prefs.js',
+        ],
+        'channel_prefix': ['aurora', 'beta', 'release', 'esr'],
+        'side': 'target',
+        'deletion': '//',
     },
     # update-settings.ini
     {
