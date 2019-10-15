@@ -1,0 +1,19 @@
+<script id="a">
+let count = 0;
+function go() {
+  if (count++ == 3)
+    return;
+  try { a.appendChild(c) } catch(e) { }
+  try { window.getSelection().getRangeAt(0).insertNode(b) } catch(e) { }
+  try { d.selectSubString(0,-1) } catch(e) { }
+  document.documentElement.style.display = "none"
+  document.documentElement.getBoundingClientRect()
+  document.documentElement.style.display = ""
+}
+</script>
+<pre id="b" style="display:contents">a</pre>
+<span id="c">
+<style onload="go()"></style>
+</span>
+<svg>
+<text id="d"><textPath xml:space="preserve">
