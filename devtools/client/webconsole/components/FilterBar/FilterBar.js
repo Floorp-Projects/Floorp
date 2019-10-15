@@ -3,29 +3,42 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+// React & Redux
 const {
   Component,
   createFactory,
 } = require("devtools/client/shared/vendor/react");
-const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const dom = require("devtools/client/shared/vendor/react-dom-factories");
+
+// Actions
+const actions = require("devtools/client/webconsole/actions/index");
+
+// Selectors
 const {
   getAllFilters,
 } = require("devtools/client/webconsole/selectors/filters");
 const {
   getFilteredMessagesCount,
 } = require("devtools/client/webconsole/selectors/messages");
+const { getAllPrefs } = require("devtools/client/webconsole/selectors/prefs");
 const { getAllUi } = require("devtools/client/webconsole/selectors/ui");
-const actions = require("devtools/client/webconsole/actions/index");
+
+// Utilities
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const { PluralForm } = require("devtools/shared/plural-form");
+
+// Constants
 const {
   FILTERS,
   FILTERBAR_DISPLAY_MODES,
 } = require("devtools/client/webconsole/constants");
 
+// Additional Components
 const FilterButton = require("devtools/client/webconsole/components/FilterBar/FilterButton");
-const FilterCheckbox = require("devtools/client/webconsole/components/FilterBar/FilterCheckbox");
+const ConsoleSettings = createFactory(
+  require("devtools/client/webconsole/components/FilterBar/ConsoleSettings")
+);
 const SearchBox = createFactory(
   require("devtools/client/shared/components/SearchBox")
 );
@@ -43,17 +56,20 @@ const disabledCssFilterButtonTitle = l10n.getStr(
 class FilterBar extends Component {
   static get propTypes() {
     return {
-      dispatch: PropTypes.func.isRequired,
-      filter: PropTypes.object.isRequired,
-      persistLogs: PropTypes.bool.isRequired,
-      hidePersistLogsCheckbox: PropTypes.bool.isRequired,
-      showContentMessages: PropTypes.bool.isRequired,
-      hideShowContentMessagesCheckbox: PropTypes.bool.isRequired,
-      filteredMessagesCount: PropTypes.object.isRequired,
       closeButtonVisible: PropTypes.bool,
       closeSplitConsole: PropTypes.func,
+      dispatch: PropTypes.func.isRequired,
       displayMode: PropTypes.oneOf([...Object.values(FILTERBAR_DISPLAY_MODES)])
         .isRequired,
+      filter: PropTypes.object.isRequired,
+      filteredMessagesCount: PropTypes.object.isRequired,
+      groupWarnings: PropTypes.bool.isRequired,
+      hidePersistLogsCheckbox: PropTypes.bool.isRequired,
+      hideShowContentMessagesCheckbox: PropTypes.bool.isRequired,
+      persistLogs: PropTypes.bool.isRequired,
+      showContentMessages: PropTypes.bool.isRequired,
+      timestampsVisible: PropTypes.bool.isRequired,
+      webConsoleUI: PropTypes.object.isRequired,
     };
   }
 
@@ -66,13 +82,7 @@ class FilterBar extends Component {
 
   constructor(props) {
     super(props);
-
-    this.onClickMessagesClear = this.onClickMessagesClear.bind(this);
-    this.onSearchBoxChange = this.onSearchBoxChange.bind(this);
-    this.onChangePersistToggle = this.onChangePersistToggle.bind(this);
-    this.onChangeShowContent = this.onChangeShowContent.bind(this);
     this.renderFiltersConfigBar = this.renderFiltersConfigBar.bind(this);
-
     this.maybeUpdateLayout = this.maybeUpdateLayout.bind(this);
     this.resizeObserver = new ResizeObserver(this.maybeUpdateLayout);
   }
@@ -96,23 +106,25 @@ class FilterBar extends Component {
 
   shouldComponentUpdate(nextProps, nextState) {
     const {
-      filter,
-      persistLogs,
-      showContentMessages,
-      filteredMessagesCount,
       closeButtonVisible,
       displayMode,
+      filter,
+      filteredMessagesCount,
+      groupWarnings,
+      persistLogs,
+      showContentMessages,
+      timestampsVisible,
     } = this.props;
 
-    if (nextProps.filter !== filter) {
-      return true;
-    }
-
-    if (nextProps.persistLogs !== persistLogs) {
-      return true;
-    }
-
-    if (nextProps.showContentMessages !== showContentMessages) {
+    if (
+      nextProps.closeButtonVisible !== closeButtonVisible ||
+      nextProps.displayMode !== displayMode ||
+      nextProps.filter !== filter ||
+      nextProps.groupWarnings !== groupWarnings ||
+      nextProps.persistLogs !== persistLogs ||
+      nextProps.showContentMessages !== showContentMessages ||
+      nextProps.timestampsVisible !== timestampsVisible
+    ) {
       return true;
     }
 
@@ -120,14 +132,6 @@ class FilterBar extends Component {
       JSON.stringify(nextProps.filteredMessagesCount) !==
       JSON.stringify(filteredMessagesCount)
     ) {
-      return true;
-    }
-
-    if (nextProps.closeButtonVisible != closeButtonVisible) {
-      return true;
-    }
-
-    if (nextProps.displayMode != displayMode) {
       return true;
     }
 
@@ -188,20 +192,18 @@ class FilterBar extends Component {
     }
   }
 
-  onClickMessagesClear() {
-    this.props.dispatch(actions.messagesClear());
+  renderSeparator() {
+    return dom.div({
+      className: "devtools-separator",
+    });
   }
 
-  onSearchBoxChange(text) {
-    this.props.dispatch(actions.filterTextSet(text));
-  }
-
-  onChangePersistToggle() {
-    this.props.dispatch(actions.persistToggle());
-  }
-
-  onChangeShowContent() {
-    this.props.dispatch(actions.contentMessagesToggle());
+  renderClearButton() {
+    return dom.button({
+      className: "devtools-button devtools-clear-icon",
+      title: l10n.getStr("webconsole.clearButton.tooltip"),
+      onClick: () => this.props.dispatch(actions.messagesClear()),
+    });
   }
 
   renderFiltersConfigBar() {
@@ -290,19 +292,8 @@ class FilterBar extends Component {
     );
   }
 
-  render() {
-    const {
-      persistLogs,
-      hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
-      closeSplitConsole,
-      displayMode,
-      showContentMessages,
-      filteredMessagesCount,
-    } = this.props;
-
-    const isNarrow = displayMode === FILTERBAR_DISPLAY_MODES.NARROW;
-    const isWide = displayMode === FILTERBAR_DISPLAY_MODES.WIDE;
+  renderSearchBox() {
+    const { dispatch, filteredMessagesCount } = this.props;
 
     let searchBoxSummary;
     let searchBoxSummaryTooltip;
@@ -322,6 +313,72 @@ class FilterBar extends Component {
       ).replace("#1", filteredMessagesCount.text);
     }
 
+    return SearchBox({
+      type: "filter",
+      placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
+      keyShortcut: l10n.getStr("webconsole.find.key"),
+      onChange: text => dispatch(actions.filterTextSet(text)),
+      summary: searchBoxSummary,
+      summaryTooltip: searchBoxSummaryTooltip,
+    });
+  }
+
+  renderSettingsButton() {
+    const {
+      dispatch,
+      groupWarnings,
+      hidePersistLogsCheckbox,
+      hideShowContentMessagesCheckbox,
+      persistLogs,
+      showContentMessages,
+      timestampsVisible,
+      webConsoleUI,
+    } = this.props;
+
+    return ConsoleSettings({
+      dispatch,
+      groupWarnings,
+      hidePersistLogsCheckbox,
+      hideShowContentMessagesCheckbox,
+      persistLogs,
+      showContentMessages,
+      timestampsVisible,
+      webConsoleUI,
+    });
+  }
+
+  renderCloseButton() {
+    const { closeSplitConsole } = this.props;
+
+    return dom.div(
+      {
+        className: "devtools-toolbar split-console-close-button-wrapper",
+        key: "wrapper",
+      },
+      dom.button({
+        id: "split-console-close-button",
+        key: "split-console-close-button",
+        className: "devtools-button",
+        title: l10n.getStr("webconsole.closeSplitConsoleButton.tooltip"),
+        onClick: () => {
+          closeSplitConsole();
+        },
+      })
+    );
+  }
+
+  render() {
+    const { closeButtonVisible, displayMode } = this.props;
+
+    const isNarrow = displayMode === FILTERBAR_DISPLAY_MODES.NARROW;
+    const isWide = displayMode === FILTERBAR_DISPLAY_MODES.WIDE;
+
+    const separator = this.renderSeparator();
+    const clearButton = this.renderClearButton();
+    const searchBox = this.renderSearchBox();
+    const filtersConfigBar = this.renderFiltersConfigBar();
+    const settingsButton = this.renderSettingsButton();
+
     const children = [
       dom.div(
         {
@@ -329,73 +386,22 @@ class FilterBar extends Component {
             "devtools-toolbar devtools-input-toolbar webconsole-filterbar-primary",
           key: "primary-bar",
         },
-        dom.button({
-          className: "devtools-button devtools-clear-icon",
-          title: l10n.getStr("webconsole.clearButton.tooltip"),
-          onClick: this.onClickMessagesClear,
-        }),
-        dom.div({
-          className: "devtools-separator",
-        }),
-        SearchBox({
-          type: "filter",
-          placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
-          keyShortcut: l10n.getStr("webconsole.find.key"),
-          onChange: this.onSearchBoxChange,
-          summary: searchBoxSummary,
-          summaryTooltip: searchBoxSummaryTooltip,
-        }),
-        isWide &&
-          dom.div({
-            className: "devtools-separator",
-          }),
-        isWide && this.renderFiltersConfigBar(),
-        !(hidePersistLogsCheckbox && hideShowContentMessagesCheckbox)
-          ? dom.div({
-              className: "devtools-separator",
-            })
-          : null,
-        !hidePersistLogsCheckbox &&
-          FilterCheckbox({
-            label: l10n.getStr("webconsole.enablePersistentLogs.label"),
-            title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),
-            onChange: this.onChangePersistToggle,
-            checked: persistLogs,
-          }),
-        !hideShowContentMessagesCheckbox &&
-          FilterCheckbox({
-            label: l10n.getStr("browserconsole.contentMessagesCheckbox.label"),
-            title: l10n.getStr(
-              "browserconsole.contentMessagesCheckbox.tooltip"
-            ),
-            onChange: this.onChangeShowContent,
-            checked: showContentMessages,
-          })
+        clearButton,
+        separator,
+        searchBox,
+        isWide && separator,
+        isWide && filtersConfigBar,
+        separator,
+        settingsButton
       ),
     ];
 
-    if (this.props.closeButtonVisible) {
-      children.push(
-        dom.div(
-          {
-            className: "devtools-toolbar split-console-close-button-wrapper",
-            key: "wrapper",
-          },
-          dom.button({
-            id: "split-console-close-button",
-            key: "split-console-close-button",
-            className: "devtools-button",
-            title: l10n.getStr("webconsole.closeSplitConsoleButton.tooltip"),
-            onClick: () => {
-              closeSplitConsole();
-            },
-          })
-        )
-      );
+    if (closeButtonVisible) {
+      children.push(this.renderCloseButton());
     }
 
     if (isNarrow) {
-      children.push(this.renderFiltersConfigBar());
+      children.push(filtersConfigBar);
     }
 
     return dom.div(
@@ -413,12 +419,15 @@ class FilterBar extends Component {
 
 function mapStateToProps(state) {
   const uiState = getAllUi(state);
+  const prefsState = getAllPrefs(state);
   return {
+    closeButtonVisible: uiState.closeButtonVisible,
     filter: getAllFilters(state),
+    filteredMessagesCount: getFilteredMessagesCount(state),
+    groupWarnings: prefsState.groupWarnings,
     persistLogs: uiState.persistLogs,
     showContentMessages: uiState.showContentMessages,
-    filteredMessagesCount: getFilteredMessagesCount(state),
-    closeButtonVisible: uiState.closeButtonVisible,
+    timestampsVisible: uiState.timestampsVisible,
   };
 }
 

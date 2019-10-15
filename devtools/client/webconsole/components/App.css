@@ -101,6 +101,20 @@ body {
   min-height: 19px;
 }
 
+/* webconsole.css | chrome://devtools/skin/webconsole.css */
+.webconsole-filteringbar-wrapper .devtools-toolbar {
+  padding-inline-end: 0;
+}
+
+.devtools-button.webconsole-console-settings-menu-button {
+  height: 100%;
+  margin: 0;
+}
+
+.webconsole-console-settings-menu-button::before {
+  background-image: url("chrome://devtools/skin/images/settings.svg");
+}
+
 .webconsole-app .jsterm-input-container {
   min-height: 28px;
   padding-block-start: 2px;
@@ -170,7 +184,7 @@ body {
 }
 
 .sidebar-close-button::before {
-  background-image: url(chrome://devtools/skin/images/close.svg);
+  background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
 .sidebar-contents .object-inspector {
@@ -249,7 +263,7 @@ body {
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton {
-  background-image: url(chrome://devtools/skin/images/webconsole/run.svg);
+  background-image: url("chrome://devtools/skin/images/webconsole/run.svg");
   -moz-context-properties: fill;
   fill: currentColor;
   padding-inline-start: 22px;
@@ -282,22 +296,22 @@ body {
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton::before {
-  background-image: url(chrome://devtools/skin/images/arrowhead-up.svg);
+  background-image: url("chrome://devtools/skin/images/arrowhead-up.svg");
   background-size: 16px;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-nextExpressionButton::before {
-  background-image: url(chrome://devtools/skin/images/arrowhead-down.svg);
+  background-image: url("chrome://devtools/skin/images/arrowhead-down.svg");
   background-size: 16px;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-reverseSearchButton::before {
-  background-image: url(chrome://devtools/skin/images/webconsole/reverse-search.svg);
+  background-image: url("chrome://devtools/skin/images/webconsole/reverse-search.svg");
   background-size: 14px;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton::before {
-  background-image: url(chrome://devtools/skin/images/close.svg);
+  background-image: url("chrome://devtools/skin/images/close.svg");
 }
 
 .jsterm-editor .webconsole-input-openEditorButton {

@@ -53,7 +53,7 @@ function ui(state = UiState(), action) {
     case SHOW_CONTENT_MESSAGES_TOGGLE:
       return { ...state, showContentMessages: !state.showContentMessages };
     case TIMESTAMPS_TOGGLE:
-      return { ...state, timestampsVisible: action.visible };
+      return { ...state, timestampsVisible: !state.timestampsVisible };
     case SELECT_NETWORK_MESSAGE_TAB:
       return { ...state, networkMessageActiveTabId: action.id };
     case SIDEBAR_CLOSE:
