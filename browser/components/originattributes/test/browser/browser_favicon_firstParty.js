@@ -206,7 +206,9 @@ async function assignCookiesUnderFirstParty(aURL, aFirstParty, aCookieValue) {
   let tabInfo = await openTabInFirstParty(aURL, aFirstParty);
 
   // Add cookies into the iframe.
-  await ContentTask.spawn(tabInfo.browser, aCookieValue, async function(value) {
+  await SpecialPowers.spawn(tabInfo.browser, [aCookieValue], async function(
+    value
+  ) {
     content.document.cookie = value;
   });
 
