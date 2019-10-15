@@ -368,7 +368,6 @@
   MACRO(reject, reject, "reject")                                              \
   MACRO(rejected, rejected, "rejected")                                        \
   MACRO(relatedYear, relatedYear, "relatedYear")                               \
-  MACRO(RelativeTimeFormat, RelativeTimeFormat, "RelativeTimeFormat")          \
   MACRO(RelativeTimeFormatFormat, RelativeTimeFormatFormat,                    \
         "Intl_RelativeTimeFormat_Format")                                      \
   MACRO(RequireObjectCoercible, RequireObjectCoercible,                        \
