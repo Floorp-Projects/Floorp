@@ -15,7 +15,7 @@
 
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
-#include "js/Promise.h"      // JS::ResolvePromise
+#include "js/Promise.h"      // JS::{Reject,Resolve}Promise
 #include "js/RootingAPI.h"   // JS::Handle, JS::Rooted
 #include "js/Value.h"        // JS::Value, JS::ObjecValue
 #include "vm/Compartment.h"  // JS::Compartment
@@ -29,6 +29,7 @@ using js::WritableStream;
 
 using JS::Handle;
 using JS::ObjectValue;
+using JS::RejectPromise;
 using JS::ResolvePromise;
 using JS::Rooted;
 using JS::Value;
@@ -230,6 +231,36 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightWrite(
   MOZ_ASSERT(!unwrappedStream->haveInFlightWriteRequest());
 
   return true;
+}
+
+/**
+ * Streams spec, 4.4.6.
+ *      WritableStreamFinishInFlightWriteWithError ( stream, error )
+ */
+MOZ_MUST_USE bool js::WritableStreamFinishInFlightWriteWithError(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream,
+    Handle<Value> error) {
+  // Step 1: Assert: stream.[[inFlightWriteRequest]] is not undefined.
+  MOZ_ASSERT(unwrappedStream->haveInFlightWriteRequest());
+
+  // Step 2:  Reject stream.[[inFlightWriteRequest]] with error.
+  Rooted<JSObject*> writeRequest(
+      cx, &unwrappedStream->inFlightWriteRequest().toObject());
+  if (!cx->compartment()->wrap(cx, &writeRequest)) {
+    return false;
+  }
+  if (!RejectPromise(cx, writeRequest, error)) {
+    return false;
+  }
+
+  // Step 3:  Set stream.[[inFlightWriteRequest]] to undefined.
+  unwrappedStream->clearInFlightWriteRequest(cx);
+
+  // Step 4:  Assert: stream.[[state]] is "writable" or "erroring".
+  MOZ_ASSERT(unwrappedStream->writable() ^ unwrappedStream->erroring());
+
+  // Step 5:  Perform ! WritableStreamDealWithRejection(stream, error).
+  return WritableStreamDealWithRejection(cx, unwrappedStream, error);
 }
 
 /**
