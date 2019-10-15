@@ -17,8 +17,6 @@ use crate::error::{Error, Result};
 
 pub const LMANNO_FEEDURI: &'static str = "livemark/feedURI";
 
-const SQLITE_MAX_VARIABLE_NUMBER: usize = 999;
-
 extern "C" {
     fn NS_NavBookmarksTotalSyncChanges() -> i64;
 }
@@ -487,7 +485,7 @@ fn update_local_items_in_places<'t>(
     // do this before inserting new remote items, since we need Place IDs for
     // both old and new URLs.
     debug!(driver, "Inserting Places for new items");
-    for chunk in ops.apply_remote_items.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in ops.apply_remote_items.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "INSERT OR IGNORE INTO moz_places(url, url_hash, rev_host, hidden,
                                               frecency, guid)
@@ -517,10 +515,7 @@ fn update_local_items_in_places<'t>(
 
     // Build a table of new and updated items.
     debug!(driver, "Staging apply remote item ops");
-    for chunk in ops
-        .apply_remote_items
-        .chunks(SQLITE_MAX_VARIABLE_NUMBER / 3)
-    {
+    for chunk in ops.apply_remote_items.chunks(db.variable_limit()? / 3) {
         // CTEs in `WITH` clauses aren't indexed, so this query needs a full
         // table scan on `ops`. But that's okay; a separate temp table for ops
         // would also need a full scan. Note that we need both the local _and_
@@ -594,7 +589,7 @@ fn update_local_items_in_places<'t>(
     }
 
     debug!(driver, "Staging change GUID ops");
-    for chunk in ops.change_guids.chunks(SQLITE_MAX_VARIABLE_NUMBER / 2) {
+    for chunk in ops.change_guids.chunks(db.variable_limit()? / 2) {
         let mut statement = db.prepare(format!(
             "INSERT INTO changeGuidOps(localGuid, mergedGuid, syncStatus, level,
                                        lastModifiedMicroseconds)
@@ -636,7 +631,7 @@ fn update_local_items_in_places<'t>(
     debug!(driver, "Staging apply new local structure ops");
     for chunk in ops
         .apply_new_local_structure
-        .chunks(SQLITE_MAX_VARIABLE_NUMBER / 2)
+        .chunks(db.variable_limit()? / 2)
     {
         let mut statement = db.prepare(format!(
             "INSERT INTO applyNewLocalStructureOps(mergedGuid, mergedParentGuid,
@@ -663,10 +658,7 @@ fn update_local_items_in_places<'t>(
     }
 
     debug!(driver, "Removing tombstones for revived items");
-    for chunk in ops
-        .delete_local_tombstones
-        .chunks(SQLITE_MAX_VARIABLE_NUMBER)
-    {
+    for chunk in ops.delete_local_tombstones.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "DELETE FROM moz_bookmarks_deleted
              WHERE guid IN ({})",
@@ -683,10 +675,7 @@ fn update_local_items_in_places<'t>(
         driver,
         "Inserting new tombstones for non-syncable and invalid items"
     );
-    for chunk in ops
-        .insert_local_tombstones
-        .chunks(SQLITE_MAX_VARIABLE_NUMBER)
-    {
+    for chunk in ops.insert_local_tombstones.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "INSERT INTO moz_bookmarks_deleted(guid, dateRemoved)
              VALUES {}",
@@ -703,7 +692,7 @@ fn update_local_items_in_places<'t>(
     }
 
     debug!(driver, "Removing local items");
-    for chunk in ops.delete_local_items.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in ops.delete_local_items.chunks(db.variable_limit()?) {
         remove_local_items(&db, driver, controller, chunk)?;
     }
 
@@ -729,7 +718,7 @@ fn update_local_items_in_places<'t>(
         driver,
         "Resetting change counters for items that shouldn't be uploaded"
     );
-    for chunk in ops.set_local_merged.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in ops.set_local_merged.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "UPDATE moz_bookmarks SET
                syncChangeCounter = 0
@@ -747,7 +736,7 @@ fn update_local_items_in_places<'t>(
         driver,
         "Bumping change counters for items that should be uploaded"
     );
-    for chunk in ops.set_local_unmerged.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in ops.set_local_unmerged.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "UPDATE moz_bookmarks SET
                syncChangeCounter = 1
@@ -762,7 +751,7 @@ fn update_local_items_in_places<'t>(
     }
 
     debug!(driver, "Flagging applied remote items as merged");
-    for chunk in ops.set_remote_merged.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in ops.set_remote_merged.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "UPDATE items SET
                needsMerge = 0
@@ -1032,7 +1021,7 @@ fn stage_items_to_upload(
     db.exec("DELETE FROM itemsToUpload")?;
 
     debug!(driver, "Staging weak uploads");
-    for chunk in weak_upload.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in weak_upload.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "INSERT INTO itemsToUpload(id, guid, syncChangeCounter, parentGuid,
                                        parentTitle, dateAdded, type, title,
@@ -1067,7 +1056,7 @@ fn stage_items_to_upload(
     ))?;
 
     debug!(driver, "Staging remaining locally changed items for upload");
-    for chunk in upload_items.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in upload_items.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "INSERT OR IGNORE INTO itemsToUpload(id, guid, syncChangeCounter,
                                                  parentGuid, parentTitle,
@@ -1112,7 +1101,7 @@ fn stage_items_to_upload(
     // Finally, stage tombstones for deleted items. Ignore conflicts if we have
     // tombstones for undeleted items; Places Maintenance should clean these up.
     debug!(driver, "Staging tombstones to upload");
-    for chunk in upload_tombstones.chunks(SQLITE_MAX_VARIABLE_NUMBER) {
+    for chunk in upload_tombstones.chunks(db.variable_limit()?) {
         let mut statement = db.prepare(format!(
             "INSERT OR IGNORE INTO itemsToUpload(guid, syncChangeCounter, isDeleted)
              VALUES {}",

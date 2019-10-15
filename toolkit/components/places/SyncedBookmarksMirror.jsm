@@ -80,8 +80,6 @@ const SyncedBookmarksMerger = Components.Constructor(
 const DB_URL_LENGTH_MAX = 65536;
 const DB_TITLE_LENGTH_MAX = 4096;
 
-const SQLITE_MAX_VARIABLE_NUMBER = 999;
-
 // The current mirror database schema version. Bump for migrations, then add
 // migration code to `migrateMirrorSchema`.
 const MIRROR_SCHEMA_VERSION = 7;
@@ -1008,7 +1006,7 @@ class SyncedBookmarksMirror {
       let offset = 0;
       for (let chunk of PlacesUtils.chunkArray(
         children,
-        SQLITE_MAX_VARIABLE_NUMBER - 1
+        this.db.variableLimit - 1
       )) {
         if (signal.aborted) {
           throw new SyncedBookmarksMirror.InterruptedError(

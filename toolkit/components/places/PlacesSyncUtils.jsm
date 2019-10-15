@@ -31,7 +31,6 @@ var PlacesSyncUtils = {};
 const { SOURCE_SYNC } = Ci.nsINavBookmarksService;
 
 const MICROSECONDS_PER_SECOND = 1000000;
-const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
 const MOBILE_BOOKMARKS_PREF = "browser.bookmarks.showMobileBookmarks";
 
@@ -238,10 +237,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
     // aren't stored in the database.
     let db = await PlacesUtils.promiseDBConnection();
     let nonSyncableGuids = [];
-    for (let chunk of PlacesUtils.chunkArray(
-      guids,
-      SQLITE_MAX_VARIABLE_NUMBER
-    )) {
+    for (let chunk of PlacesUtils.chunkArray(guids, db.variableLimit)) {
       let rows = await db.execute(
         `
         SELECT DISTINCT p.guid FROM moz_places p
