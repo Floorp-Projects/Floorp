@@ -4371,6 +4371,86 @@ TEST_F(JsepSessionTest, TestExtmapWithDuplicates) {
   ASSERT_EQ(9U, offerExtmap[5].entry);
 }
 
+TEST_F(JsepSessionTest, TestExtmapZeroId) {
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 6 2 IN IP4 1r\r\n"
+      "t=0 0a\r\n"
+      "a=ice-ufrag:Xp\r\n"
+      "a=ice-pwd:he\r\n"
+      "a=setup:actpass\r\n"
+      "a=fingerprint:sha-256 "
+      "DC:FC:25:56:2B:88:77:2F:E4:FA:97:4E:2E:F1:D6:34:A6:A0:11:E2:E4:38:B3:98:"
+      "08:D2:F7:9D:F5:E2:C1:15\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 100\r\n"
+      "c=IN IP4 0\r\n"
+      "a=rtpmap:100 VP8/90000\r\n"
+      "a=extmap:0 urn:ietf:params:rtp-hdrext:toffset\r\n";
+  auto result = mSessionAns->SetRemoteDescription(kJsepSdpOffer, sdp);
+  ASSERT_TRUE(result.mError == Some(dom::PCError::OperationError));
+  ASSERT_EQ(
+      "Description contains invalid extension id 0 on level 0 which is"
+      " unsupported until 2-byte rtp header extensions are supported in"
+      " webrtc.org",
+      mSessionAns->GetLastError());
+}
+
+TEST_F(JsepSessionTest, TestExtmapInvalidId) {
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 6 2 IN IP4 1r\r\n"
+      "t=0 0a\r\n"
+      "a=ice-ufrag:Xp\r\n"
+      "a=ice-pwd:he\r\n"
+      "a=setup:actpass\r\n"
+      "a=fingerprint:sha-256 "
+      "DC:FC:25:56:2B:88:77:2F:E4:FA:97:4E:2E:F1:D6:34:A6:A0:11:E2:E4:38:B3:98:"
+      "08:D2:F7:9D:F5:E2:C1:15\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 100\r\n"
+      "c=IN IP4 0\r\n"
+      "a=rtpmap:100 VP8/90000\r\n"
+      "a=extmap:15 urn:ietf:params:rtp-hdrext:toffset\r\n";
+  auto result = mSessionAns->SetRemoteDescription(kJsepSdpOffer, sdp);
+  ASSERT_TRUE(result.mError == Some(dom::PCError::OperationError));
+  ASSERT_EQ(
+      "Description contains invalid extension id 15 on level 0 which is"
+      " unsupported until 2-byte rtp header extensions are supported in"
+      " webrtc.org",
+      mSessionAns->GetLastError());
+}
+
+TEST_F(JsepSessionTest, TestExtmapDuplicateId) {
+  AddTracks(*mSessionOff, "video");
+  AddTracks(*mSessionAns, "video");
+
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 6 2 IN IP4 1r\r\n"
+      "t=0 0a\r\n"
+      "a=ice-ufrag:Xp\r\n"
+      "a=ice-pwd:he\r\n"
+      "a=setup:actpass\r\n"
+      "a=fingerprint:sha-256 "
+      "DC:FC:25:56:2B:88:77:2F:E4:FA:97:4E:2E:F1:D6:34:A6:A0:11:E2:E4:38:B3:98:"
+      "08:D2:F7:9D:F5:E2:C1:15\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 100\r\n"
+      "c=IN IP4 0\r\n"
+      "a=rtpmap:100 VP8/90000\r\n"
+      "a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r\n"
+      "a=extmap:2 "
+      "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n";
+  auto result = mSessionAns->SetRemoteDescription(kJsepSdpOffer, sdp);
+  ASSERT_TRUE(result.mError == Some(dom::PCError::OperationError));
+  ASSERT_EQ("Description contains duplicate extension id 2 on level 0",
+            mSessionAns->GetLastError());
+}
+
 TEST_F(JsepSessionTest, TestRtcpFbStar) {
   AddTracks(*mSessionOff, "video");
   AddTracks(*mSessionAns, "video");
