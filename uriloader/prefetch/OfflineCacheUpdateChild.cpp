@@ -20,7 +20,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/net/CookieSettings.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
 #include "nsIBrowserChild.h"
@@ -119,8 +118,6 @@ void OfflineCacheUpdateChild::SetDocument(Document* aDocument) {
   // implicit (which are the reasons we collect documents here).
   if (!aDocument) return;
 
-  mCookieSettings = aDocument->CookieSettings();
-
   nsIChannel* channel = aDocument->GetChannel();
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
       do_QueryInterface(channel);
@@ -205,8 +202,7 @@ NS_IMETHODIMP
 OfflineCacheUpdateChild::InitPartial(nsIURI* aManifestURI,
                                      const nsACString& clientID,
                                      nsIURI* aDocumentURI,
-                                     nsIPrincipal* aLoadingPrincipal,
-                                     nsICookieSettings* aCookieSettings) {
+                                     nsIPrincipal* aLoadingPrincipal) {
   MOZ_ASSERT_UNREACHABLE(
       "Not expected to do partial offline cache updates"
       " on the child process");
@@ -398,14 +394,8 @@ OfflineCacheUpdateChild::Schedule() {
   // See also nsOfflineCacheUpdate::ScheduleImplicit.
   bool stickDocument = mDocument != nullptr;
 
-  CookieSettingsArgs csArgs;
-  if (mCookieSettings) {
-    CookieSettings::Cast(mCookieSettings)->Serialize(csArgs);
-  }
-
   ContentChild::GetSingleton()->SendPOfflineCacheUpdateConstructor(
-      this, manifestURI, documentURI, loadingPrincipalInfo, stickDocument,
-      csArgs);
+      this, manifestURI, documentURI, loadingPrincipalInfo, stickDocument);
 
   return NS_OK;
 }
