@@ -125,6 +125,17 @@ extern MOZ_MUST_USE bool intl_ComputeDisplayNames(JSContext* cx, unsigned argc,
 extern MOZ_MUST_USE bool intl_BestAvailableLocale(JSContext* cx, unsigned argc,
                                                   JS::Value* vp);
 
+/**
+ * Returns the input locale in its canonicalized form if ICU supports that
+ * locale (perhaps via fallback, e.g. supporting "de-ZA" through "de" support
+ * implied by a "de-DE" locale). Otherwise uses the last-ditch locale.
+ *
+ * Usage: result = intl_supportedLocaleOrFallback(locale)
+ */
+extern MOZ_MUST_USE bool intl_supportedLocaleOrFallback(JSContext* cx,
+                                                        unsigned argc,
+                                                        JS::Value* vp);
+
 }  // namespace js
 
 #endif /* builtin_intl_IntlObject_h */

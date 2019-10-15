@@ -132,28 +132,6 @@ function IsASCIIAlphaString(s) {
     return true;
 }
 
-// The last-ditch locale is used if none of the available locales satisfies a
-// request. "en-GB" is used based on the assumptions that English is the most
-// common second language, that both en-GB and en-US are normally available in
-// an implementation, and that en-GB is more representative of the English used
-// in other locales.
-function lastDitchLocale() {
-    // Per bug 1177929, strings don't clone out of self-hosted code as atoms,
-    // breaking IonBuilder::constant.  Put this in a function for now.
-    return "en-GB";
-}
-
-// Certain old, commonly-used language tags that lack a script, are expected to
-// nonetheless imply one.  This object maps these old-style tags to modern
-// equivalents.
-var oldStyleLanguageTagMappings = {
-    "pa-PK": "pa-Arab-PK",
-    "zh-CN": "zh-Hans-CN",
-    "zh-HK": "zh-Hant-HK",
-    "zh-SG": "zh-Hans-SG",
-    "zh-TW": "zh-Hant-TW",
-};
-
 var localeCache = {
     runtimeDefaultLocale: undefined,
     defaultLocale: undefined,
@@ -169,46 +147,8 @@ function DefaultLocale() {
         return localeCache.defaultLocale;
 
     // If we didn't have a cache hit, compute the candidate default locale.
-    // Then use it as the actual default locale if ICU supports that locale
-    // (perhaps via fallback, e.g. supporting "de-ZA" through "de" support
-    // implied by a "de-DE" locale). Otherwise use the last-ditch locale.
     var runtimeDefaultLocale = RuntimeDefaultLocale();
-    var candidate = intl_TryValidateAndCanonicalizeLanguageTag(runtimeDefaultLocale);
-    if (candidate === null) {
-        candidate = lastDitchLocale();
-    } else {
-        // The default locale must be in [[AvailableLocales]], and that list
-        // must not contain any locales with Unicode extension sequences, so
-        // remove any present in the candidate.
-        candidate = removeUnicodeExtensions(candidate);
-
-        if (hasOwn(candidate, oldStyleLanguageTagMappings))
-            candidate = oldStyleLanguageTagMappings[candidate];
-    }
-
-    // 9.1 Internal slots of Service Constructors
-    //
-    // - [[AvailableLocales]] is a List [...]. The list must include the value
-    //   returned by the DefaultLocale abstract operation (6.2.4), [...].
-    //
-    // That implies we must ignore any candidate which isn't supported by all
-    // Intl service constructors.
-    //
-    // Note: We don't test the supported locales of either Intl.PluralRules or
-    // Intl.RelativeTimeFormat, because ICU doesn't provide the necessary API to
-    // return actual set of supported locales for these constructors. Instead it
-    // returns the complete set of available locales for ULocale, which is a
-    // superset of the locales supported by Collator, NumberFormat and
-    // DateTimeFormat.
-    var locale;
-    if (BestAvailableLocaleIgnoringDefault("Collator", candidate) &&
-        BestAvailableLocaleIgnoringDefault("NumberFormat", candidate) &&
-        BestAvailableLocaleIgnoringDefault("DateTimeFormat", candidate))
-    {
-        locale = candidate;
-    } else {
-        locale = lastDitchLocale();
-    }
+    var locale = intl_supportedLocaleOrFallback(runtimeDefaultLocale);
 
     assertIsValidAndCanonicalLanguageTag(locale, "the computed default locale");
     assert(startOfUnicodeExtensions(locale) < 0,

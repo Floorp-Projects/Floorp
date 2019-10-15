@@ -314,6 +314,11 @@ class MOZ_STACK_CLASS LanguageTag final {
   bool setUnicodeExtension(JS::UniqueChars extension);
 
   /**
+   * Remove any Unicode extension subtag if present.
+   */
+  void clearUnicodeExtension();
+
+  /**
    * Set the private-use subtag. The input must be a valid, case-normalized
    * private-use subtag or the empty string.
    */
