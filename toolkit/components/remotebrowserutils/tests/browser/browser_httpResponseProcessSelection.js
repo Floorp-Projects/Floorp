@@ -70,7 +70,7 @@ async function postFrom(start, target) {
       url: start,
     },
     async function(browser) {
-      info("Test tab ready: " + start);
+      info("Test tab ready: postFrom " + start);
 
       // Create the form element in our loaded URI.
       await ContentTask.spawn(browser, { target }, function({ target }) {
@@ -113,6 +113,90 @@ async function postFrom(start, target) {
     }
   );
 }
+
+async function loadAndGetProcessID(browser, target, expectedProcessSwitch) {
+  info(`Performing GET load: ${target}`);
+  await performLoad(
+    browser,
+    {
+      maybeErrorPage: true,
+    },
+    async () => {
+      BrowserTestUtils.loadURI(browser, target);
+      if (expectedProcessSwitch) {
+        await BrowserTestUtils.waitForEvent(
+          gBrowser.getTabForBrowser(browser),
+          "SSTabRestored"
+        );
+      }
+    }
+  );
+
+  info(`Navigated to: ${target}`);
+  browser = gBrowser.selectedBrowser;
+  let processID = await ContentTask.spawn(browser, null, () => {
+    return Services.appinfo.processID;
+  });
+  return processID;
+}
+
+async function testLoadAndRedirect(
+  target,
+  expectedProcessSwitch,
+  testRedirect
+) {
+  let start = httpURL(`dummy_page.html`);
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: start,
+    },
+    async function(_browser) {
+      info("Test tab ready: getFrom " + start);
+
+      let browser = gBrowser.selectedBrowser;
+      let firstProcessID = await ContentTask.spawn(browser, null, () => {
+        return Services.appinfo.processID;
+      });
+
+      info(`firstProcessID: ${firstProcessID}`);
+
+      let secondProcessID = await loadAndGetProcessID(
+        browser,
+        target,
+        expectedProcessSwitch
+      );
+
+      info(`secondProcessID: ${secondProcessID}`);
+      Assert.equal(firstProcessID != secondProcessID, expectedProcessSwitch);
+
+      if (!testRedirect) {
+        return;
+      }
+
+      let thirdProcessID = await loadAndGetProcessID(
+        browser,
+        add307(target),
+        expectedProcessSwitch
+      );
+
+      info(`thirdProcessID: ${thirdProcessID}`);
+      Assert.equal(firstProcessID != thirdProcessID, expectedProcessSwitch);
+      Assert.ok(secondProcessID == thirdProcessID);
+    }
+  );
+}
+
+// TODO: Currently no test framework for ftp://.
+add_task(async function test_protocol() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+
+  // TODO: Processes should be switched due to navigation of different origins.
+  await testLoadAndRedirect("data:,foo", false, true);
+
+  // Redirecting to file::// is not allowed.
+  await testLoadAndRedirect(FILE_DUMMY, true, false);
+});
 
 add_task(async function test_disabled() {
   await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, false]] });
