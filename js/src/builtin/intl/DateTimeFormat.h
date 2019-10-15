@@ -67,18 +67,6 @@ extern MOZ_MUST_USE bool intl_DateTimeFormat(JSContext* cx, unsigned argc,
                                              JS::Value* vp);
 
 /**
- * Returns an object indicating the supported locales for date and time
- * formatting by having a true-valued property for each such locale with the
- * canonicalized language tag as the property name. The object has no
- * prototype.
- *
- * Usage: availableLocales = intl_DateTimeFormat_availableLocales()
- */
-extern MOZ_MUST_USE bool intl_DateTimeFormat_availableLocales(JSContext* cx,
-                                                              unsigned argc,
-                                                              JS::Value* vp);
-
-/**
  * Returns an array with the calendar type identifiers per Unicode
  * Technical Standard 35, Unicode Locale Data Markup Language, for the
  * supported calendars for the given locale. The default calendar is
