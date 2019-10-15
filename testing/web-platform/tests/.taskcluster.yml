@@ -12,7 +12,7 @@ tasks:
             $flatten:
               $match: {
                 event.ref == "refs/heads/master": [{name: firefox, channel: nightly}, {name: chrome, channel: dev}],
-                event.ref == "refs/heads/epochs/daily": [{name: firefox, channel: stable}, {name: chrome, channel: stable}],
+                event.ref == "refs/heads/epochs/daily": [{name: firefox, channel: stable}, {name: chrome, channel: stable}, {name: webkitgtk_minibrowser, channel: stable}],
                 event.ref == "refs/heads/epochs/weekly": [{name: firefox, channel: beta}, {name: chrome, channel: beta}],
                 event.ref == "refs/heads/triggers/chrome_stable": [{name: chrome, channel: stable}],
                 event.ref == "refs/heads/triggers/chrome_beta": [{name: chrome, channel: beta}],
@@ -70,7 +70,12 @@ tasks:
                 owner: ${event.pusher.email}
                 source: ${event.repository.url}
               payload:
-                image: harjgam/web-platform-tests:0.33
+                image:
+                  $if: browser.name == 'webkitgtk_minibrowser'
+                  then:
+                    cl0p3z/web-platform-tests:0.1
+                  else:
+                    harjgam/web-platform-tests:0.33
                 maxRunTime: 7200
                 artifacts:
                   public/results:
