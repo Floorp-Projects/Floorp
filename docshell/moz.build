@@ -7,6 +7,9 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Document Navigation')
 
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    DEFINES['MOZ_BUILD_APP_IS_BROWSER'] = True
+
 DIRS += [
     'base',
     'shistory',

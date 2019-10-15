@@ -10586,11 +10586,6 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
       return null();
     }
 
-    if (!cx_->runtime()->moduleDynamicImportHook) {
-      error(JSMSG_NO_DYNAMIC_IMPORT);
-      return null();
-    }
-
     return handler_.newCallImport(importHolder, arg);
   } else {
     error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
