@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* import-globals-from ../../test/head.js */
+/* import-globals-from ../../../test/head.js */
 
 // Import the inspector's head.js first (which itself imports shared-head.js).
 Services.scriptloader.loadSubScript(
