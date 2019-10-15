@@ -689,6 +689,101 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  RootedLinearString locale(cx, args[0].toString()->ensureLinear(cx));
+  if (!locale) {
+    return false;
+  }
+
+  intl::LanguageTag tag(cx);
+  bool ok;
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, ok, intl::LanguageTagParser::tryParse(cx, locale, tag));
+
+  RootedLinearString candidate(cx);
+  if (!ok) {
+    candidate = NewStringCopyZ<CanGC>(cx, intl::LastDitchLocale());
+    if (!candidate) {
+      return false;
+    }
+  } else {
+    if (!tag.canonicalize(
+            cx, intl::LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+      return false;
+    }
+
+    // The default locale must be in [[AvailableLocales]], and that list must
+    // not contain any locales with Unicode extension sequences, so remove any
+    // present in the candidate.
+    tag.clearUnicodeExtension();
+
+    JSString* canonical = tag.toString(cx);
+    if (!canonical) {
+      return false;
+    }
+
+    candidate = canonical->ensureLinear(cx);
+    if (!candidate) {
+      return false;
+    }
+
+    for (const auto& mapping : js::intl::oldStyleLanguageTagMappings) {
+      const char* oldStyle = mapping.oldStyle;
+      const char* modernStyle = mapping.modernStyle;
+
+      if (StringEqualsAscii(candidate, oldStyle)) {
+        candidate = NewStringCopyZ<CanGC>(cx, modernStyle);
+        if (!candidate) {
+          return false;
+        }
+        break;
+      }
+    }
+  }
+
+  // 9.1 Internal slots of Service Constructors
+  //
+  // - [[AvailableLocales]] is a List [...]. The list must include the value
+  //   returned by the DefaultLocale abstract operation (6.2.4), [...].
+  //
+  // That implies we must ignore any candidate which isn't supported by all Intl
+  // service constructors.
+  //
+  // Note: We don't test the supported locales of either Intl.PluralRules or
+  // Intl.RelativeTimeFormat, because ICU doesn't provide the necessary API to
+  // return actual set of supported locales for these constructors. Instead it
+  // returns the complete set of available locales for ULocale, which is a
+  // superset of the locales supported by Collator, NumberFormat, and
+  // DateTimeFormat.
+  bool isSupported = true;
+  for (auto kind :
+       {SupportedLocaleKind::Collator, SupportedLocaleKind::DateTimeFormat,
+        SupportedLocaleKind::NumberFormat}) {
+    JSString* supported;
+    JS_TRY_VAR_OR_RETURN_FALSE(
+        cx, supported, BestAvailableLocale(cx, kind, candidate, nullptr));
+
+    if (!supported) {
+      isSupported = false;
+      break;
+    }
+  }
+
+  if (!isSupported) {
+    candidate = NewStringCopyZ<CanGC>(cx, intl::LastDitchLocale());
+    if (!candidate) {
+      return false;
+    }
+  }
+
+  args.rval().setString(candidate);
+  return true;
+}
+
 const JSClass js::IntlClass = {js_Object_str,
                                JSCLASS_HAS_CACHED_PROTO(JSProto_Intl)};
 
