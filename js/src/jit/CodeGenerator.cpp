@@ -9045,7 +9045,7 @@ void CodeGenerator::visitFromCharCode(LFromCharCode* lir) {
   Register code = ToRegister(lir->code());
   Register output = ToRegister(lir->output());
 
-  using Fn = JSFlatString* (*)(JSContext*, int32_t);
+  using Fn = JSLinearString* (*)(JSContext*, int32_t);
   OutOfLineCode* ool = oolCallVM<Fn, jit::StringFromCharCode>(
       lir, ArgList(code), StoreRegisterTo(output));
 
