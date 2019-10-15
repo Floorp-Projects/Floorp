@@ -403,6 +403,25 @@ bool js::intl::SharedIntlData::getAvailableLocales(
   return true;
 }
 
+#ifdef DEBUG
+template <typename CountAvailable, typename GetAvailable>
+static bool IsSameAvailableLocales(CountAvailable countAvailable1,
+                                   GetAvailable getAvailable1,
+                                   CountAvailable countAvailable2,
+                                   GetAvailable getAvailable2) {
+  int32_t count = countAvailable1();
+  if (count != countAvailable2()) {
+    return false;
+  }
+  for (int32_t i = 0; i < count; i++) {
+    if (getAvailable1(i) != getAvailable2(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
 bool js::intl::SharedIntlData::ensureSupportedLocales(JSContext* cx) {
   if (supportedLocalesInitialized) {
     return true;
@@ -412,8 +431,6 @@ bool js::intl::SharedIntlData::ensureSupportedLocales(JSContext* cx) {
   // to OOM, clear all data and start from scratch.
   supportedLocales.clearAndCompact();
   collatorSupportedLocales.clearAndCompact();
-  dateTimeFormatSupportedLocales.clearAndCompact();
-  numberFormatSupportedLocales.clearAndCompact();
 
   if (!getAvailableLocales(cx, supportedLocales, uloc_countAvailable,
                            uloc_getAvailable)) {
@@ -423,14 +440,12 @@ bool js::intl::SharedIntlData::ensureSupportedLocales(JSContext* cx) {
                            ucol_getAvailable)) {
     return false;
   }
-  if (!getAvailableLocales(cx, dateTimeFormatSupportedLocales,
-                           udat_countAvailable, udat_getAvailable)) {
-    return false;
-  }
-  if (!getAvailableLocales(cx, numberFormatSupportedLocales,
-                           unum_countAvailable, unum_getAvailable)) {
-    return false;
-  }
+
+  MOZ_ASSERT(IsSameAvailableLocales(uloc_countAvailable, uloc_getAvailable,
+                                    udat_countAvailable, udat_getAvailable));
+
+  MOZ_ASSERT(IsSameAvailableLocales(uloc_countAvailable, uloc_getAvailable,
+                                    unum_countAvailable, unum_getAvailable));
 
   MOZ_ASSERT(!supportedLocalesInitialized,
              "ensureSupportedLocales is neither reentrant nor thread-safe");
@@ -459,11 +474,7 @@ bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
       *supported = collatorSupportedLocales.has(lookup);
       return true;
     case SupportedLocaleKind::DateTimeFormat:
-      *supported = dateTimeFormatSupportedLocales.has(lookup);
-      return true;
     case SupportedLocaleKind::NumberFormat:
-      *supported = numberFormatSupportedLocales.has(lookup);
-      return true;
     case SupportedLocaleKind::PluralRules:
     case SupportedLocaleKind::RelativeTimeFormat:
       *supported = supportedLocales.has(lookup);
@@ -625,8 +636,6 @@ void js::intl::SharedIntlData::destroyInstance() {
   ianaLinksCanonicalizedDifferentlyByICU.clearAndCompact();
   supportedLocales.clearAndCompact();
   collatorSupportedLocales.clearAndCompact();
-  dateTimeFormatSupportedLocales.clearAndCompact();
-  numberFormatSupportedLocales.clearAndCompact();
 #if DEBUG || MOZ_SYSTEM_ICU
   upperCaseFirstLocales.clearAndCompact();
 #endif
@@ -640,8 +649,6 @@ void js::intl::SharedIntlData::trace(JSTracer* trc) {
     ianaLinksCanonicalizedDifferentlyByICU.trace(trc);
     supportedLocales.trace(trc);
     collatorSupportedLocales.trace(trc);
-    dateTimeFormatSupportedLocales.trace(trc);
-    numberFormatSupportedLocales.trace(trc);
 #if DEBUG || MOZ_SYSTEM_ICU
     upperCaseFirstLocales.trace(trc);
 #endif
@@ -656,9 +663,6 @@ size_t js::intl::SharedIntlData::sizeOfExcludingThis(
              mallocSizeOf) +
          supportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
          collatorSupportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
-         dateTimeFormatSupportedLocales.shallowSizeOfExcludingThis(
-             mallocSizeOf) +
-         numberFormatSupportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
 #if DEBUG || MOZ_SYSTEM_ICU
          upperCaseFirstLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
 #endif
