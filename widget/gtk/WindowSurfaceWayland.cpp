@@ -338,7 +338,7 @@ void WindowBackBufferShm::Create(int aWidth, int aHeight) {
       mWaylandBuffer ? wl_proxy_get_id((struct wl_proxy*)mWaylandBuffer) : -1));
 }
 
-void WindowBackBufferShm::Release() {
+void WindowBackBufferShm::ReleaseShmSurface() {
   LOGWAYLAND(("WindowBackBufferShm::Release [%p]\n", (void*)this));
 
   wl_buffer_destroy(mWaylandBuffer);
@@ -361,7 +361,7 @@ WindowBackBufferShm::WindowBackBufferShm(
   Create(aWidth, aHeight);
 }
 
-WindowBackBufferShm::~WindowBackBufferShm() { Release(); }
+WindowBackBufferShm::~WindowBackBufferShm() { ReleaseShmSurface(); }
 
 bool WindowBackBufferShm::Resize(int aWidth, int aHeight) {
   if (aWidth == mWidth && aHeight == mHeight) return true;
@@ -369,7 +369,7 @@ bool WindowBackBufferShm::Resize(int aWidth, int aHeight) {
   LOGWAYLAND(("WindowBackBufferShm::Resize [%p] %d %d\n", (void*)this, aWidth,
               aHeight));
 
-  Release();
+  ReleaseShmSurface();
   Create(aWidth, aHeight);
 
   return (mWaylandBuffer != nullptr);

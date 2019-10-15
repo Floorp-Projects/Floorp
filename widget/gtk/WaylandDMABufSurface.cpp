@@ -180,7 +180,7 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight,
       int ret = nsGbmLib::DrmPrimeHandleToFD(display->GetGbmDeviceFd(), handle,
                                              0, &mDmabufFds[i]);
       if (ret < 0 || mDmabufFds[i] < 0) {
-        Release();
+        ReleaseDMABufSurface();
         return false;
       }
       mStrides[i] = nsGbmLib::GetStrideForPlane(mGbmBufferObject, i);
@@ -191,7 +191,7 @@ bool WaylandDMABufSurface::Create(int aWidth, int aHeight,
     mStrides[0] = nsGbmLib::GetStride(mGbmBufferObject);
     mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject);
     if (mDmabufFds[0] < 0) {
-      Release();
+      ReleaseDMABufSurface();
       return false;
     }
   }
@@ -237,7 +237,7 @@ bool WaylandDMABufSurface::Create(const SurfaceDescriptor& aDesc) {
                        &importData, mGbmBufferFlags);
 
   if (!mGbmBufferObject) {
-    Release();
+    ReleaseDMABufSurface();
     return false;
   }
 
@@ -455,7 +455,7 @@ bool WaylandDMABufSurface::Resize(int aWidth, int aHeight) {
     return false;
   }
 
-  Release();
+  ReleaseDMABufSurface();
   if (Create(aWidth, aHeight, mSurfaceFlags)) {
     if (mSurfaceFlags & DMABUF_CREATE_WL_BUFFER) {
       return CreateWLBuffer();
