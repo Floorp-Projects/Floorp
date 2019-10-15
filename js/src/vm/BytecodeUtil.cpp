@@ -1156,7 +1156,7 @@ static UniqueChars ToDisassemblySource(JSContext* cx, HandleValue v) {
       if (!str) {
         return nullptr;
       }
-      return StringToNewUTF8CharsZ(cx, *str);
+      return QuoteString(cx, str);
     }
 
     if (obj.is<RegExpObject>()) {
@@ -1164,7 +1164,7 @@ static UniqueChars ToDisassemblySource(JSContext* cx, HandleValue v) {
       if (!source) {
         return nullptr;
       }
-      return StringToNewUTF8CharsZ(cx, *source);
+      return QuoteString(cx, source);
     }
   }
 

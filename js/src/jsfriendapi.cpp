@@ -29,6 +29,7 @@
 #include "vm/DateObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
+#include "vm/Printer.h"
 #include "vm/Realm.h"
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
@@ -710,7 +711,7 @@ static const char* FormatValue(JSContext* cx, HandleValue v,
     }
   }
 
-  bytes = StringToNewUTF8CharsZ(cx, *str);
+  bytes = QuoteString(cx, str, '"');
   return bytes.get();
 }
 
@@ -744,7 +745,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
 
   // print the frame number and function name
   if (funname) {
-    UniqueChars funbytes = StringToNewUTF8CharsZ(cx, *funname);
+    UniqueChars funbytes = QuoteString(cx, funname);
     if (!funbytes) {
       return false;
     }
@@ -846,7 +847,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
         cx->clearPendingException();
       }
       if (thisValStr) {
-        UniqueChars thisValBytes = StringToNewUTF8CharsZ(cx, *thisValStr);
+        UniqueChars thisValBytes = QuoteString(cx, thisValStr);
         if (!thisValBytes) {
           return false;
         }

@@ -1675,16 +1675,16 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
     } else if (StringEqualsLiteral(opt, "strict_mode")) {
       JS::ContextOptionsRef(cx).toggleStrictMode();
     } else {
-      UniqueChars optChars = JS_EncodeStringToUTF8(cx, opt);
+      UniqueChars optChars = QuoteString(cx, opt, '"');
       if (!optChars) {
         return false;
       }
 
-      JS_ReportErrorUTF8(cx,
-                         "unknown option name '%s'."
-                         " The valid names are strict,"
-                         " werror, and strict_mode.",
-                         optChars.get());
+      JS_ReportErrorASCII(cx,
+                          "unknown option name %s."
+                          " The valid names are strict,"
+                          " werror, and strict_mode.",
+                          optChars.get());
       return false;
     }
   }
@@ -2837,7 +2837,7 @@ static bool AssertEq(JSContext* cx, unsigned argc, Value* vp) {
                                JSSMSG_ASSERT_EQ_FAILED, actual, expected);
     } else {
       RootedString message(cx, args[2].toString());
-      UniqueChars bytes2 = JS_EncodeStringToUTF8(cx, message);
+      UniqueChars bytes2 = QuoteString(cx, message);
       if (!bytes2) {
         return false;
       }
@@ -5143,12 +5143,12 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
       } else if (StringEqualsLiteral(linearFormat, "context")) {
         mode = Context;
       } else {
-        UniqueChars printable = JS_EncodeStringToUTF8(cx, linearFormat);
+        UniqueChars printable = QuoteString(cx, linearFormat, '\'');
         if (!printable) {
           return false;
         }
 
-        JS_ReportErrorUTF8(
+        JS_ReportErrorASCII(
             cx,
             "Unknown value for option `format`, expected 'multipart', got %s",
             printable.get());
