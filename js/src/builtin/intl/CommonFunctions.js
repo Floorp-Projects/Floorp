@@ -154,52 +154,10 @@ var oldStyleLanguageTagMappings = {
     "zh-TW": "zh-Hant-TW",
 };
 
-var localeCandidateCache = {
-    runtimeDefaultLocale: undefined,
-    candidateDefaultLocale: undefined,
-};
-
 var localeCache = {
     runtimeDefaultLocale: undefined,
     defaultLocale: undefined,
 };
-
-/**
- * Compute the candidate default locale: the locale *requested* to be used as
- * the default locale.  We'll use it if and only if ICU provides support (maybe
- * fallback support, e.g. supporting "de-ZA" through "de" support implied by a
- * "de-DE" locale).
- */
-function DefaultLocaleIgnoringAvailableLocales() {
-    const runtimeDefaultLocale = RuntimeDefaultLocale();
-    if (runtimeDefaultLocale === localeCandidateCache.runtimeDefaultLocale)
-        return localeCandidateCache.candidateDefaultLocale;
-
-    // If we didn't get a cache hit, compute the candidate default locale and
-    // cache it.  Fall back on the last-ditch locale when necessary.
-    var candidate = intl_TryValidateAndCanonicalizeLanguageTag(runtimeDefaultLocale);
-    if (candidate === null) {
-        candidate = lastDitchLocale();
-    } else {
-        // The default locale must be in [[availableLocales]], and that list
-        // must not contain any locales with Unicode extension sequences, so
-        // remove any present in the candidate.
-        candidate = removeUnicodeExtensions(candidate);
-
-        if (hasOwn(candidate, oldStyleLanguageTagMappings))
-            candidate = oldStyleLanguageTagMappings[candidate];
-    }
-
-    // Cache the candidate locale until the runtime default locale changes.
-    localeCandidateCache.candidateDefaultLocale = candidate;
-    localeCandidateCache.runtimeDefaultLocale = runtimeDefaultLocale;
-
-    assertIsValidAndCanonicalLanguageTag(candidate, "the candidate locale");
-    assert(startOfUnicodeExtensions(candidate) < 0,
-           "the candidate must not contain a Unicode extension sequence");
-
-    return candidate;
-}
 
 /**
  * Returns the BCP 47 language tag for the host environment's current locale.
@@ -212,9 +170,36 @@ function DefaultLocale() {
 
     // If we didn't have a cache hit, compute the candidate default locale.
     // Then use it as the actual default locale if ICU supports that locale
-    // (perhaps via fallback).  Otherwise use the last-ditch locale.
+    // (perhaps via fallback, e.g. supporting "de-ZA" through "de" support
+    // implied by a "de-DE" locale). Otherwise use the last-ditch locale.
     var runtimeDefaultLocale = RuntimeDefaultLocale();
-    var candidate = DefaultLocaleIgnoringAvailableLocales();
+    var candidate = intl_TryValidateAndCanonicalizeLanguageTag(runtimeDefaultLocale);
+    if (candidate === null) {
+        candidate = lastDitchLocale();
+    } else {
+        // The default locale must be in [[AvailableLocales]], and that list
+        // must not contain any locales with Unicode extension sequences, so
+        // remove any present in the candidate.
+        candidate = removeUnicodeExtensions(candidate);
+
+        if (hasOwn(candidate, oldStyleLanguageTagMappings))
+            candidate = oldStyleLanguageTagMappings[candidate];
+    }
+
+    // 9.1 Internal slots of Service Constructors
+    //
+    // - [[AvailableLocales]] is a List [...]. The list must include the value
+    //   returned by the DefaultLocale abstract operation (6.2.4), [...].
+    //
+    // That implies we must ignore any candidate which isn't supported by all
+    // Intl service constructors.
+    //
+    // Note: We don't test the supported locales of either Intl.PluralRules or
+    // Intl.RelativeTimeFormat, because ICU doesn't provide the necessary API to
+    // return actual set of supported locales for these constructors. Instead it
+    // returns the complete set of available locales for ULocale, which is a
+    // superset of the locales supported by Collator, NumberFormat and
+    // DateTimeFormat.
     var locale;
     if (BestAvailableLocaleIgnoringDefault(callFunction(collatorInternalProperties.availableLocales,
                                                         collatorInternalProperties),
@@ -235,6 +220,7 @@ function DefaultLocale() {
     assert(startOfUnicodeExtensions(locale) < 0,
            "the computed default locale must not contain a Unicode extension sequence");
 
+    // Cache the computed locale until the runtime default locale changes.
     localeCache.defaultLocale = locale;
     localeCache.runtimeDefaultLocale = runtimeDefaultLocale;
 
