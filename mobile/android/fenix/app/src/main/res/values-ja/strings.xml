@@ -23,8 +23,25 @@
     <!-- Private Browsing -->
     <!-- Title for private session option -->
     <string name="private_browsing_title">プライベートセッションです</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description">%1$s を終了するかプライベートタブをすべて閉じると、検索履歴と閲覧履歴が消去されます。ウェブサイトやご利用のインターネットサービスプロバイダーに対しては匿名化されませんが、この端末を使う他のユーザーからあなたのオンライン行動の秘密を守るのに役立ちます。</string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">セッションを削除</string>
+
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">プライベートタブを開くショートカットをホーム画面に追加します。</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">ショートカットを追加</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">追加しない</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">新しいタブ</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">新しいプライベートタブ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -97,6 +114,10 @@
 
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">製品情報</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">既定の検索エンジン</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">検索</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">ヘルプ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -120,6 +141,8 @@
     <string name="preferences_category_privacy">プライバシー</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">サイトの許可設定</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">リンクをプライベートタブで開く</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">プライベートブラウジングショートカットを追加する</string>
     <!-- Preference for accessibility -->
@@ -212,6 +235,8 @@
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">すべてのサイトで有効化</string>
 
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">例外に追加したサイトはトラッキング防止が無効になります。</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">詳細情報</string>
 
@@ -514,6 +539,11 @@
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">オフ</string>
 
+    <!-- Label that indicates video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked">動画と音声の再生をブロックしました</string>
+    <!-- Label that indicates video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed">動画と音声の再生を許可しました</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">あなたにとって価値のあるものを収集します。開始するには、開いているタブを新しいコレクションに保存します。</string>
@@ -561,6 +591,8 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">送信して共有</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">共有</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">共有</string>
@@ -583,8 +615,17 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">OK</string>
 
+    <!-- Share error message -->
+    <string name="share_error_snackbar">このアプリとは共有できません</string>
     <!-- Add new device screen title -->
     <string name="sync_add_new_device_title">端末へ送信</string>
+
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">接続された端末がありません</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">タブの送信について...</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">別の端末を接続...</string>
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
@@ -677,6 +718,10 @@
     <string name="preferences_delete_browsing_data_on_quit">終了時にブラウジングデータを削除</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit">メインメニューから [終了] を選択すると、ブラウジングデータが自動的に削除されます</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">メインメニューから [終了] を選択すると、ブラウジングデータが自動的に削除されます</string>
+    <!-- Category for history items to delete on quit in delete browsing data on quit -->
+    <string name="preferences_delete_browsing_data_on_quit_browsing_history">ブラウジング履歴</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">終了</string>
 
@@ -758,6 +803,10 @@
     <string name="sync_sent_tabs_snackbar">複数のタブを送信しました！</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
     <string name="sync_sent_tab_snackbar">タブを送信しました！</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">送信できません</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">再試行</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">QR コードのスキャン</string>
     <!-- Instructions on how to access pairing -->
@@ -769,7 +818,7 @@
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">代わりにメールアドレスを使う</string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox はアカウントとの同期を停止しますが、この端末上の閲覧データは削除されません。</string>
+    <string name="sign_out_confirmation_message">Firefox はアカウントとの同期を停止しますが、この端末上のブラウジングデータは削除されません。</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">接続を解除</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -794,8 +843,16 @@
     <string name="preference_enhanced_tracking_protection_standard">標準 (推奨)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description">追跡防止とパフォーマンスを均等にします。</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">ページは正常に読み込まれますが、ブロックされるトラッカーが少なくなります。</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">厳格</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">厳格 (既定)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">トラッキング防止を強力にし、パフォーマンスを高速化します。ただし、一部のサイトが正常に機能しなくなる可能性があります。</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">厳格 (推奨)</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description">強力な追跡防止。ただし、一部のサイトまたはコンテンツが破損する可能性があります。</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -856,6 +913,57 @@
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">ホーム画面に追加</string>
 
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">キャンセル</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">追加</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">ショートカット名</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">ログイン情報とパスワード</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">ログイン情報を保存する</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">保存するか確認する</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">保存しない</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string name="preferences_passwords_autofill">自動補完</string>
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">ログイン情報を同期</string>
+    <!-- Syncing saved logins in Fenix is on -->
+    <string name="preferences_passwords_sync_logins_on">オン</string>
+    <!-- Syncing saved logins in Fenix is off -->
+    <string name="preferences_passwords_sync_logins_off">オフ</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">再接続</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Sync にログイン</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">保存されたログイン情報</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">例外</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">ログイン情報が保存されないサイトがここに表示されます。</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">これらのサイトではログイン情報が保存されません。</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">ログイン情報を検索</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">アルファベット順</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">最近使用</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">サイト</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">ユーザー名</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">パスワード</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">PIN を再入力してください</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">この接続は安全ではありません。ここに入力したログイン情報は漏洩する可能性があります。</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">詳細情報</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
