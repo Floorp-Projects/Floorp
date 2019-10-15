@@ -44,13 +44,6 @@ ObjectGroup::ObjectGroup(const JSClass* clasp, TaggedProto proto,
   MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
   MOZ_ASSERT(JS::StringIsASCII(clasp->name));
 
-#ifdef DEBUG
-  GlobalObject* global = realm->unsafeUnbarrieredMaybeGlobal();
-  if (global) {
-    AssertTargetIsNotGray(global);
-  }
-#endif
-
   setGeneration(zone()->types.generation);
 }
 
