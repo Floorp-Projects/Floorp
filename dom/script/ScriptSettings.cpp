@@ -29,7 +29,6 @@ namespace mozilla {
 namespace dom {
 
 static MOZ_THREAD_LOCAL(ScriptSettingsStackEntry*) sScriptSettingsTLS;
-static bool sScriptSettingsTLSInitialized;
 
 class ScriptSettingsStack {
  public:
@@ -118,14 +117,11 @@ void InitScriptSettings() {
   }
 
   sScriptSettingsTLS.set(nullptr);
-  sScriptSettingsTLSInitialized = true;
 }
 
 void DestroyScriptSettings() {
   MOZ_ASSERT(sScriptSettingsTLS.get() == nullptr);
 }
-
-bool ScriptSettingsInitialized() { return sScriptSettingsTLSInitialized; }
 
 ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject* aGlobal,
                                                    Type aType)
