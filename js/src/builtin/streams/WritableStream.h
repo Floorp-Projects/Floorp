@@ -273,6 +273,27 @@ class WritableStream : public NativeObject {
     return JS::UndefinedValue();
   }
 
+  bool haveCloseRequestOrInFlightCloseRequest() const {
+    // Slot_CloseRequest suffices to store both [[closeRequest]] and
+    // [[inFlightCloseRequest]], with the precisely-set field determined by
+    // |haveInFlightCloseRequest()|.  If both are undefined, then per above, for
+    // extra implementation rigor, |haveInFlightCloseRequest()| will be false,
+    // so additionally assert that.
+    if (getFixedSlot(Slot_CloseRequest).isUndefined()) {
+      MOZ_ASSERT(!haveInFlightCloseRequest());
+      return false;
+    }
+
+    return true;
+  }
+
+  void convertCloseRequestToInFlightCloseRequest() {
+    MOZ_ASSERT(stateIsInitialized());
+    MOZ_ASSERT(!haveInFlightCloseRequest());
+    setFlag(HaveInFlightCloseRequest, true);
+    MOZ_ASSERT(haveInFlightCloseRequest());
+  }
+
   ListObject* writeRequests() const {
     return &getFixedSlot(Slot_WriteRequests).toObject().as<ListObject>();
   }
