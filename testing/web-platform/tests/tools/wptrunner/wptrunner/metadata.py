@@ -358,14 +358,14 @@ class ExpectedUpdater(object):
         # * wptreport format; one run per line
         # * raw log format
 
-        # Try one wptreport file first
+        # Try reading a single json object in wptreport format
         self.run_info = None
         success = self.get_wptreport_data(log_file.read())
 
         if success:
             return
 
-        # Now try multiple wptreport files
+        # Try line-separated json objects in wptreport format
         log_file.seek(0)
         for line in log_file:
             success = self.get_wptreport_data(line)
@@ -374,6 +374,7 @@ class ExpectedUpdater(object):
         else:
             return
 
+        # Assume the file is a raw log
         log_file.seek(0)
         self.update_from_raw_log(log_file)
 
