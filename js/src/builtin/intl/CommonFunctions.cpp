@@ -88,6 +88,13 @@ void js::intl::ReportInternalError(JSContext* cx) {
                             JSMSG_INTERNAL_INTL_ERROR);
 }
 
+const js::intl::OldStyleLanguageTagMapping
+    js::intl::oldStyleLanguageTagMappings[] = {
+        {"pa-PK", "pa-Arab-PK"}, {"zh-CN", "zh-Hans-CN"},
+        {"zh-HK", "zh-Hant-HK"}, {"zh-SG", "zh-Hans-SG"},
+        {"zh-TW", "zh-Hant-TW"},
+};
+
 js::UniqueChars js::intl::EncodeLocale(JSContext* cx, JSString* locale) {
   MOZ_ASSERT(locale->length() > 0);
 
