@@ -34,6 +34,10 @@ extern MOZ_MUST_USE bool WritableStreamFinishErroring(
 extern MOZ_MUST_USE bool WritableStreamFinishInFlightWrite(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream);
 
+extern MOZ_MUST_USE bool WritableStreamFinishInFlightWriteWithError(
+    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
+    JS::Handle<JS::Value> error);
+
 extern bool WritableStreamCloseQueuedOrInFlight(
     const WritableStream* unwrappedStream);
 
