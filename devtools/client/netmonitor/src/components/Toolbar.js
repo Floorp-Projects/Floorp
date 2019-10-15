@@ -15,7 +15,7 @@ const {
   connect,
 } = require("devtools/client/shared/redux/visibility-handler-connect");
 const Actions = require("../actions/index");
-const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
+const { FILTER_SEARCH_DELAY, FILTER_TAGS, PANELS } = require("../constants");
 const {
   getDisplayedRequests,
   getRecordingState,
@@ -60,6 +60,7 @@ const TOOLBAR_TOGGLE_RECORDING = L10N.getStr(
   "netmonitor.toolbar.toggleRecording"
 );
 const TOOLBAR_SEARCH = L10N.getStr("netmonitor.toolbar.search");
+const TOOLBAR_BLOCKING = L10N.getStr("netmonitor.actionbar.requestBlocking");
 const TOOLBAR_HAR_BUTTON = L10N.getStr("netmonitor.label.har");
 const LEARN_MORE_TITLE = L10N.getStr(
   "netmonitor.toolbar.filterFreetext.learnMore"
@@ -143,7 +144,10 @@ class Toolbar extends Component {
       // Executed when throttling changes (through toolbar button).
       onChangeNetworkThrottling: PropTypes.func.isRequired,
       toggleSearchPanel: PropTypes.func.isRequired,
-      searchPanelOpen: PropTypes.bool.isRequired,
+      networkActionBarOpen: PropTypes.bool.isRequired,
+      toggleRequestBlockingPanel: PropTypes.func.isRequired,
+      networkActionBarSelectedPanel: PropTypes.string.isRequired,
+      hasBlockedRequests: PropTypes.bool.isRequired,
     };
   }
 
@@ -186,12 +190,15 @@ class Toolbar extends Component {
       this.props.persistentLogsEnabled !== nextProps.persistentLogsEnabled ||
       this.props.browserCacheDisabled !== nextProps.browserCacheDisabled ||
       this.props.recording !== nextProps.recording ||
-      this.props.searchPanelOpen !== nextProps.searchPanelOpen ||
+      this.props.networkActionBarOpen !== nextProps.networkActionBarOpen ||
       this.props.singleRow !== nextProps.singleRow ||
       !Object.is(this.props.requestFilterTypes, nextProps.requestFilterTypes) ||
       this.props.networkThrottling !== nextProps.networkThrottling ||
       // Filtered requests are useful only when searchbox is focused
-      !!(this.refs.searchbox && this.refs.searchbox.focused)
+      !!(this.refs.searchbox && this.refs.searchbox.focused) ||
+      this.props.networkActionBarSelectedPanel !==
+        nextProps.networkActionBarSelectedPanel ||
+      this.props.hasBlockedRequests !== nextProps.hasBlockedRequests
     );
   }
 
@@ -285,18 +292,53 @@ class Toolbar extends Component {
   }
 
   /**
-   * Render a search button.
+   * Render a blocking button.
    */
-  renderSearchButton(toggleSearchPanel) {
-    const { searchPanelOpen } = this.props;
+  renderBlockingButton(toggleSearchPanel) {
+    const {
+      networkActionBarOpen,
+      toggleRequestBlockingPanel,
+      networkActionBarSelectedPanel,
+      hasBlockedRequests,
+    } = this.props;
 
-    // The search and request blocking features are available behind a pref.
+    // The blocking feature is available behind a pref.
     if (
-      !Services.prefs.getBoolPref("devtools.netmonitor.features.search") &&
       !Services.prefs.getBoolPref(
         "devtools.netmonitor.features.requestBlocking"
       )
     ) {
+      return null;
+    }
+
+    const className = ["devtools-button", "requests-list-blocking-button"];
+    if (
+      networkActionBarOpen &&
+      networkActionBarSelectedPanel === PANELS.BLOCKING
+    ) {
+      className.push("checked");
+    }
+
+    if (hasBlockedRequests) {
+      className.push("requests-list-blocking-button-enabled");
+    }
+
+    return button({
+      className: className.join(" "),
+      title: TOOLBAR_BLOCKING,
+      "aria-pressed": networkActionBarOpen,
+      onClick: toggleRequestBlockingPanel,
+    });
+  }
+
+  /**
+   * Render a search button.
+   */
+  renderSearchButton(toggleSearchPanel) {
+    const { networkActionBarOpen, networkActionBarSelectedPanel } = this.props;
+
+    // The search feature is available behind a pref.
+    if (!Services.prefs.getBoolPref("devtools.netmonitor.features.search")) {
       return null;
     }
 
@@ -306,14 +348,17 @@ class Toolbar extends Component {
       "requests-list-search-button",
     ];
 
-    if (searchPanelOpen) {
+    if (
+      networkActionBarOpen &&
+      networkActionBarSelectedPanel === PANELS.SEARCH
+    ) {
       className.push("checked");
     }
 
     return button({
       className: className.join(" "),
       title: TOOLBAR_SEARCH,
-      "aria-pressed": searchPanelOpen,
+      "aria-pressed": networkActionBarOpen,
       onClick: toggleSearchPanel,
     });
   }
@@ -492,6 +537,7 @@ class Toolbar extends Component {
             this.renderSeparator(),
             this.renderToggleRecordingButton(recording, toggleRecording),
             this.renderSearchButton(toggleSearchPanel),
+            this.renderBlockingButton(toggleSearchPanel),
             this.renderSeparator(),
             this.renderFilterButtons(requestFilterTypes),
             this.renderSeparator(),
@@ -537,12 +583,16 @@ module.exports = connect(
   state => ({
     browserCacheDisabled: state.ui.browserCacheDisabled,
     displayedRequests: getDisplayedRequests(state),
+    hasBlockedRequests:
+      state.requestBlocking.blockingEnabled &&
+      state.requestBlocking.blockedUrls.some(({ enabled }) => enabled),
     filteredRequests: getTypeFilteredRequests(state),
     persistentLogsEnabled: state.ui.persistentLogsEnabled,
     recording: getRecordingState(state),
     requestFilterTypes: state.filters.requestFilterTypes,
     networkThrottling: state.networkThrottling,
-    searchPanelOpen: state.search.panelOpen,
+    networkActionBarOpen: state.search.panelOpen,
+    networkActionBarSelectedPanel: state.ui.selectedActionBarTabId || "",
   }),
   dispatch => ({
     clearRequests: () => dispatch(Actions.clearRequests()),
@@ -559,5 +609,7 @@ module.exports = connect(
     onChangeNetworkThrottling: (enabled, profile) =>
       dispatch(changeNetworkThrottling(enabled, profile)),
     toggleSearchPanel: () => dispatch(Actions.toggleSearchPanel()),
+    toggleRequestBlockingPanel: () =>
+      dispatch(Actions.toggleRequestBlockingPanel()),
   })
 )(Toolbar);
