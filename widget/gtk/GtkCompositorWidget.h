@@ -65,6 +65,9 @@ class GtkCompositorWidget : public CompositorWidget,
   Window XWindow() const { return mXWindow; }
 
   EGLNativeWindowType GetEGLNativeWindow();
+#ifdef MOZ_WAYLAND
+  void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
+#endif
 
   // PlatformCompositorWidgetDelegate Overrides
 
