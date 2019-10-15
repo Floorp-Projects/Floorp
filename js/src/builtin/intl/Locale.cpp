@@ -46,7 +46,9 @@ using intl::LanguageTag;
 using intl::LanguageTagParser;
 
 const JSClass LocaleObject::class_ = {
-    js_Object_str, JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT),
+    js_Object_str,
+    JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_Locale),
     JS_NULL_CLASS_OPS, &LocaleObject::classSpec_};
 
 const JSClass& LocaleObject::protoClass_ = PlainObject::class_;
@@ -100,14 +102,6 @@ static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
 
 static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
                                         const LanguageTag& tag) {
-  RootedObject proto(cx, prototype);
-  if (!proto) {
-    proto = GlobalObject::getOrCreateLocalePrototype(cx, cx->global());
-    if (!proto) {
-      return nullptr;
-    }
-  }
-
   RootedString tagStr(cx, tag.toString(cx));
   if (!tagStr) {
     return nullptr;
@@ -131,7 +125,7 @@ static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
     unicodeExtension.setString(str);
   }
 
-  auto* locale = NewObjectWithGivenProto<LocaleObject>(cx, proto);
+  auto* locale = NewObjectWithClassProto<LocaleObject>(cx, prototype);
   if (!locale) {
     return nullptr;
   }
