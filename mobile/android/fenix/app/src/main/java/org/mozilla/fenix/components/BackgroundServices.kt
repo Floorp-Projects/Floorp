@@ -30,7 +30,6 @@ import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import mozilla.components.service.fxa.manager.SCOPE_SESSION
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.logger.Logger
@@ -159,9 +158,7 @@ class BackgroundServices(
             // during authentication unless we explicitly specify it below.
             // This is a good example of an information leak at the API level.
             // See https://github.com/mozilla-mobile/android-components/issues/3732
-            SCOPE_SYNC,
-            // Necessary to enable "Manage Account" functionality.
-            SCOPE_SESSION
+            SCOPE_SYNC
         )
     ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
