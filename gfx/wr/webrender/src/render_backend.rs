@@ -701,7 +701,7 @@ pub struct RenderBackend {
 
     notifier: Box<dyn RenderNotifier>,
     recorder: Option<Box<dyn ApiRecordingReceiver>>,
-    logrecorder: Option<Box<dyn ApiRecordingReceiver>>,
+    logrecorder: Option<Box<LogRecorder>>,
     sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
     size_of_ops: Option<MallocSizeOfOps>,
     debug_flags: DebugFlags,
@@ -956,18 +956,6 @@ impl RenderBackend {
 
             status = match self.api_rx.recv() {
                 Ok(msg) => {
-                    if self.debug_flags.contains(DebugFlags::LOG_TRANSACTIONS) {
-                        if let None = self.logrecorder {
-                            let current_time = time::now_utc().to_local();
-                            let name = format!("wr-log-{}.log",
-                                current_time.strftime("%Y%m%d_%H%M%S").unwrap()
-                            );
-                            self.logrecorder = Some(Box::new(LogRecorder::new(&PathBuf::from(name))))
-                        }
-                    } else {
-                        self.logrecorder = None;
-                    }
-
                     if let Some(ref mut r) = self.logrecorder {
                         r.write_msg(frame_counter, &msg);
                     }
@@ -1178,6 +1166,21 @@ impl RenderBackend {
 
                         // Note: we can't pass `LoadCapture` here since it needs to arrive
                         // before the `PublishDocument` messages sent by `load_capture`.
+                        return RenderBackendStatus::Continue;
+                    }
+                    DebugCommand::SetTransactionLogging(value) => {
+                        match (value, self.logrecorder.as_ref()) {
+                            (true, None) => {
+                                    let current_time = time::now_utc().to_local();
+                                    let name = format!("wr-log-{}.log",
+                                        current_time.strftime("%Y%m%d_%H%M%S").unwrap()
+                                    );
+                                    self.logrecorder = LogRecorder::new(&PathBuf::from(name));
+                            },
+                            (false, _) => self.logrecorder = None,
+                            _ => (),
+                        };
+
                         return RenderBackendStatus::Continue;
                     }
                     DebugCommand::ClearCaches(mask) => {
