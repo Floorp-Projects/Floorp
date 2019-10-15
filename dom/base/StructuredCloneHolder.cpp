@@ -172,14 +172,14 @@ bool StructuredCloneHolderBase::Write(JSContext* aCx,
 bool StructuredCloneHolderBase::Write(JSContext* aCx,
                                       JS::Handle<JS::Value> aValue,
                                       JS::Handle<JS::Value> aTransfer,
-                                      JS::CloneDataPolicy cloneDataPolicy) {
+                                      JS::CloneDataPolicy aCloneDataPolicy) {
   MOZ_ASSERT(!mBuffer, "Double Write is not allowed");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
   mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>(
       mStructuredCloneScope, &StructuredCloneHolder::sCallbacks, this);
 
-  if (!mBuffer->write(aCx, aValue, aTransfer, cloneDataPolicy,
+  if (!mBuffer->write(aCx, aValue, aTransfer, aCloneDataPolicy,
                       &StructuredCloneHolder::sCallbacks, this)) {
     mBuffer = nullptr;
     return false;
@@ -353,10 +353,10 @@ JSObject* StructuredCloneHolder::ReadFullySerializableObjects(
       // the casting between JSPrincipals* and nsIPrincipal* we can't use
       // getter_AddRefs above and have to already_AddRefed here.
       nsCOMPtr<nsIPrincipal> principal =
-        already_AddRefed<nsIPrincipal>(nsJSPrincipals::get(prin));
+          already_AddRefed<nsIPrincipal>(nsJSPrincipals::get(prin));
 
       nsresult rv = nsContentUtils::WrapNative(
-        aCx, principal, &NS_GET_IID(nsIPrincipal), &result);
+          aCx, principal, &NS_GET_IID(nsIPrincipal), &result);
       if (NS_FAILED(rv)) {
         xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
         return nullptr;
@@ -838,7 +838,7 @@ JSObject* ReadInputStream(JSContext* aCx, uint32_t aIndex,
     nsCOMPtr<nsIInputStream> inputStream = aHolder->InputStreams()[aIndex];
 
     nsresult rv = nsContentUtils::WrapNative(
-      aCx, inputStream, &NS_GET_IID(nsIInputStream), &result);
+        aCx, inputStream, &NS_GET_IID(nsIInputStream), &result);
     if (NS_FAILED(rv)) {
       return nullptr;
     }
