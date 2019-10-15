@@ -131,7 +131,8 @@
   IMAGINARY(WasmTable, dummy, dummy)                                         \
   IMAGINARY(WasmGlobal, dummy, dummy)                                        \
   REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))                 \
-  REAL_IF_INTL(DateTimeFormat, InitViaClassSpec, OCLASP(DateTimeFormat))
+  REAL_IF_INTL(DateTimeFormat, InitViaClassSpec, OCLASP(DateTimeFormat))     \
+  REAL_IF_INTL(Locale, InitViaClassSpec, OCLASP(Locale))
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
