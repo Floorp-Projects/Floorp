@@ -183,18 +183,6 @@ void js::NumberFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-bool js::CreateNumberFormat(JSContext* cx, HandleObject Intl) {
-  JSObject* ctor =
-      GlobalObject::getOrCreateConstructor(cx, JSProto_NumberFormat);
-  if (!ctor) {
-    return false;
-  }
-
-  // 8.1
-  RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, Intl, cx->names().NumberFormat, ctorValue, 0);
-}
-
 bool js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
