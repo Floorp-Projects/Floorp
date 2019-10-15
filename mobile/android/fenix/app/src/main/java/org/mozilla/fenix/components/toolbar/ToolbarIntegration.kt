@@ -12,6 +12,7 @@ import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvide
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarFeature
@@ -40,7 +41,7 @@ class ToolbarIntegration(
     private var renderStyle: ToolbarFeature.RenderStyle = ToolbarFeature.RenderStyle.UncoloredUrl
 
     init {
-        toolbar.setMenuBuilder(toolbarMenu.menuBuilder)
+        toolbar.display.menuBuilder = toolbarMenu.menuBuilder
         toolbar.private = isPrivate
 
         run {
@@ -60,18 +61,33 @@ class ToolbarIntegration(
                 task.addListener { result ->
                     val lottieDrawable = LottieDrawable()
                     lottieDrawable.composition = result
-                    toolbar.displayTrackingProtectionIcon =
+
+                    toolbar.display.indicators = if (
                         context.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
-                    toolbar.displaySeparatorView =
+                    ) {
+                        listOf(
+                            DisplayToolbar.Indicators.TRACKING_PROTECTION,
+                            DisplayToolbar.Indicators.SECURITY,
+                            DisplayToolbar.Indicators.EMPTY)
+                    } else {
+                        listOf(DisplayToolbar.Indicators.SECURITY, DisplayToolbar.Indicators.EMPTY)
+                    }
+
+                    toolbar.display.displayIndicatorSeparator =
                         context.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
 
-                    toolbar.setTrackingProtectionIcons(
-                        iconOnNoTrackersBlocked = AppCompatResources.getDrawable(
+                    toolbar.display.icons = toolbar.display.icons.copy(
+                        emptyIcon = AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.ic_bookmark_filled
+                        )!!,
+                        trackingProtectionTrackersBlocked = lottieDrawable,
+                        trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
                             context,
                             R.drawable.ic_tracking_protection_enabled
+
                         )!!,
-                        iconOnTrackersBlocked = lottieDrawable,
-                        iconDisabledForSite = AppCompatResources.getDrawable(
+                        trackingProtectionException = AppCompatResources.getDrawable(
                             context,
                             R.drawable.ic_tracking_protection_disabled
                         )!!
@@ -107,6 +123,7 @@ class ToolbarIntegration(
             ThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle
         )
     )
+
     private var menuPresenter =
         MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
 

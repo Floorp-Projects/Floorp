@@ -14,6 +14,7 @@ import com.airbnb.lottie.LottieCompositionFactory
 import com.airbnb.lottie.LottieDrawable
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -63,17 +64,26 @@ class CustomTabsIntegration(
         task.addListener { result ->
             val lottieDrawable = LottieDrawable()
             lottieDrawable.composition = result
-            toolbar.displayTrackingProtectionIcon =
-                activity.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
-            toolbar.displaySeparatorView = false
 
-            toolbar.setTrackingProtectionIcons(
-                iconOnNoTrackersBlocked = AppCompatResources.getDrawable(
+            toolbar.display.displayIndicatorSeparator = false
+            if (activity.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories) {
+                toolbar.display.indicators = listOf(
+                    DisplayToolbar.Indicators.SECURITY,
+                    DisplayToolbar.Indicators.TRACKING_PROTECTION
+                )
+            } else {
+                toolbar.display.indicators = listOf(
+                    DisplayToolbar.Indicators.SECURITY
+                )
+            }
+
+            toolbar.display.icons = toolbar.display.icons.copy(
+                trackingProtectionTrackersBlocked = lottieDrawable,
+                trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
                     activity,
                     R.drawable.ic_tracking_protection_enabled
                 )!!,
-                iconOnTrackersBlocked = lottieDrawable,
-                iconDisabledForSite = AppCompatResources.getDrawable(
+                trackingProtectionException = AppCompatResources.getDrawable(
                     activity,
                     R.drawable.ic_tracking_protection_disabled
                 )!!

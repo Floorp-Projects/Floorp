@@ -222,11 +222,11 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 view = view
             )
 
-            browserToolbarView.view.setOnSiteSecurityClickedListener {
+            browserToolbarView.view.display.setOnSiteSecurityClickedListener {
                 showQuickSettingsDialog()
             }
 
-            browserToolbarView.view.setOnTrackingProtectionClickedListener {
+            browserToolbarView.view.display.setOnTrackingProtectionClickedListener {
                 context.metrics.track(Event.TrackingProtectionIconPressed)
                 showTrackingProtectionPanel()
             }

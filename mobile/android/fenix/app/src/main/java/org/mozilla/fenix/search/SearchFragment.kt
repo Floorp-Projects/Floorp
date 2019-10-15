@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Typeface.BOLD
 import android.graphics.Typeface.ITALIC
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.text.style.StyleSpan
 import android.view.LayoutInflater
@@ -30,7 +29,6 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
-import org.jetbrains.anko.backgroundDrawable
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -193,7 +191,6 @@ class SearchFragment : Fragment(), BackHandler {
         consumeFrom(searchStore) {
             awesomeBarView.update(it)
             toolbarView.update(it)
-            updateSearchEngineIcon(it)
             updateSearchWithLabel(it)
             updateClipboardSuggestion(it, requireContext().components.clipboardHandler.url)
         }
@@ -243,14 +240,6 @@ class SearchFragment : Fragment(), BackHandler {
             }
             else -> false
         }
-    }
-
-    private fun updateSearchEngineIcon(searchState: SearchFragmentState) {
-        val searchIcon = searchState.searchEngineSource.searchEngine.icon
-        val draw = BitmapDrawable(resources, searchIcon)
-        val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
-        draw.setBounds(0, 0, iconSize, iconSize)
-        searchEngineIcon?.backgroundDrawable = draw
     }
 
     private fun updateSearchWithLabel(searchState: SearchFragmentState) {

@@ -379,7 +379,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             val tpIcon =
                 browserToolbarView
                     .view
-                    .findViewById<AppCompatImageView>(R.id.mozac_browser_toolbar_tracking_protection_icon_view)
+                    .findViewById<AppCompatImageView>(R.id.mozac_browser_toolbar_tracking_protection_indicator)
 
             // Measure layout view
             val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)

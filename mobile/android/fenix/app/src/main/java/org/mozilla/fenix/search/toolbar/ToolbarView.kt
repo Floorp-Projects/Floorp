@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.search.toolbar
 
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -77,16 +79,20 @@ class ToolbarView(
 
             layoutParams.height = CoordinatorLayout.LayoutParams.MATCH_PARENT
 
-            hint = context.getString(R.string.search_hint)
+            edit.hint = context.getString(R.string.search_hint)
 
-            textColor = container.context.getColorFromAttr(R.attr.primaryText)
-
-            hintColor = container.context.getColorFromAttr(R.attr.secondaryText)
-
-            suggestionBackgroundColor = ContextCompat.getColor(
-                container.context,
-                R.color.suggestion_highlight_color
+            edit.colors = edit.colors.copy(
+                text = container.context.getColorFromAttr(R.attr.primaryText),
+                hint = container.context.getColorFromAttr(R.attr.secondaryText),
+                suggestionBackground = ContextCompat.getColor(
+                    container.context,
+                    R.color.suggestion_highlight_color
+                ),
+                clear = container.context.getColorFromAttr(R.attr.primaryText)
             )
+
+            edit.setUrlBackground(
+                ContextCompat.getDrawable(container.context, R.drawable.search_url_background))
 
             private = isPrivate
 
@@ -122,6 +128,18 @@ class ToolbarView(
             view.editMode()
             isInitialized = true
         }
+
+        val iconSize = container.resources.getDimensionPixelSize(R.dimen.preference_icon_drawable_size)
+
+        val scaledIcon = Bitmap.createScaledBitmap(
+            searchState.searchEngineSource.searchEngine.icon,
+            iconSize,
+            iconSize,
+            true)
+
+        val icon = BitmapDrawable(container.resources, scaledIcon)
+
+        view.edit.setIcon(icon, searchState.searchEngineSource.searchEngine.name)
     }
 
     companion object {

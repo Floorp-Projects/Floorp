@@ -17,8 +17,8 @@ import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.ktx.android.util.dpToFloat
-import mozilla.components.support.ktx.android.util.dpToPx
 import org.jetbrains.anko.dimen
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
@@ -54,7 +54,7 @@ class BrowserToolbarView(
     init {
         val isCustomTabSession = customTabSession != null
 
-        view.setOnUrlLongClickListener {
+        view.display.setOnUrlLongClickListener {
             val clipboard = view.context.components.clipboardHandler
             val customView = LayoutInflater.from(view.context)
                 .inflate(R.layout.browser_toolbar_popup_window, null)
@@ -109,34 +109,45 @@ class BrowserToolbarView(
             view.apply {
                 elevation = TOOLBAR_ELEVATION.dpToFloat(resources.displayMetrics)
 
-                onUrlClicked = {
+                if (!isCustomTabSession) {
+                    display.setUrlBackground(getDrawable(R.drawable.search_url_background))
+                }
+
+                display.onUrlClicked = {
                     interactor.onBrowserToolbarClicked()
                     false
                 }
 
-                browserActionMargin = browserActionMarginDp.dpToPx(resources.displayMetrics)
+                display.progressGravity = if (isCustomTabSession) {
+                    DisplayToolbar.Gravity.BOTTOM
+                } else {
+                    DisplayToolbar.Gravity.TOP
+                }
 
-                urlBoxView = if (isCustomTabSession) null else urlBackground
-                progressBarGravity = if (isCustomTabSession) PROGRESS_BOTTOM else PROGRESS_TOP
-
-                textColor = ContextCompat.getColor(context, R.color.photonGrey30)
-
-                hint = context.getString(R.string.search_hint)
-
-                suggestionBackgroundColor = ContextCompat.getColor(
-                    container.context,
-                    R.color.suggestion_highlight_color
-                )
-
-                textColor = ContextCompat.getColor(
+                val primaryTextColor = ContextCompat.getColor(
                     container.context,
                     ThemeManager.resolveAttribute(R.attr.primaryText, container.context)
                 )
-
-                hintColor = ContextCompat.getColor(
+                val secondaryTextColor = ContextCompat.getColor(
                     container.context,
                     ThemeManager.resolveAttribute(R.attr.secondaryText, container.context)
                 )
+                val separatorColor = ContextCompat.getColor(
+                    container.context,
+                    ThemeManager.resolveAttribute(R.attr.toolbarDivider, container.context)
+                )
+
+                display.colors = display.colors.copy(
+                    text = primaryTextColor,
+                    securityIconSecure = primaryTextColor,
+                    securityIconInsecure = primaryTextColor,
+                    menu = primaryTextColor,
+                    hint = secondaryTextColor,
+                    separator = separatorColor,
+                    trackingProtection = primaryTextColor
+                )
+
+                display.hint = context.getString(R.string.search_hint)
             }
 
             val menuToolbar = if (isCustomTabSession) {
@@ -180,8 +191,5 @@ class BrowserToolbarView(
 
     companion object {
         private const val TOOLBAR_ELEVATION = 16
-        private const val PROGRESS_BOTTOM = 0
-        private const val PROGRESS_TOP = 1
-        const val browserActionMarginDp = 8
     }
 }
