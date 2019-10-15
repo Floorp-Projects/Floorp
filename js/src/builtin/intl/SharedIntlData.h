@@ -184,10 +184,25 @@ class SharedIntlData {
 
   using LocaleSet = GCHashSet<Locale, LocaleHasher, SystemAllocPolicy>;
 
+  // Set of supported locales for all Intl service constructors except Collator,
+  // which uses its own set.
+  //
+  // UDateFormat:
+  // udat_[count,get]Available() return the same results as their
+  // uloc_[count,get]Available() counterparts.
+  //
+  // UNumberFormatter:
+  // unum_[count,get]Available() return the same results as their
+  // uloc_[count,get]Available() counterparts.
+  //
+  // UPluralRules and URelativeDateTimeFormatter:
+  // We're going to use ULocale availableLocales as per ICU recommendation:
+  // https://unicode-org.atlassian.net/browse/ICU-12756
   LocaleSet supportedLocales;
+
+  // ucol_[count,get]Available() return different results compared to
+  // uloc_[count,get]Available(), we can't use |supportedLocales| here.
   LocaleSet collatorSupportedLocales;
-  LocaleSet dateTimeFormatSupportedLocales;
-  LocaleSet numberFormatSupportedLocales;
 
   bool supportedLocalesInitialized = false;
 
