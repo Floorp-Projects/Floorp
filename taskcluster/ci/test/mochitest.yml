@@ -103,6 +103,7 @@ mochitest-browser-chrome:
             linux64-asan/opt: 16
             macosx.*64/debug: 12
             windows10-64-ccov/debug: 14
+            windows10.*-asan/opt: 9
             default: 7
     max-run-time:
         by-test-platform:
