@@ -975,7 +975,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void inc64(AbsoluteAddress dest) PER_ARCH;
 
   inline void neg32(Register reg) PER_SHARED_ARCH;
-  inline void neg64(Register64 reg) DEFINED_ON(x86, x64, arm, mips32, mips64);
+  inline void neg64(Register64 reg) PER_ARCH;
   inline void negPtr(Register reg) PER_ARCH;
 
   inline void negateFloat(FloatRegister reg) PER_SHARED_ARCH;
@@ -2543,6 +2543,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
    * Add |index| to |chars| so that |chars| now points at |chars[index]|.
    */
   void addToCharPtr(Register chars, Register index, CharEncoding encoding);
+
+  /**
+   * Load the first [u]int64 value from |bigInt| into |dest|.
+   */
+  void loadBigInt64(Register bigInt, Register64 dest);
 
   void loadJSContext(Register dest);
 
