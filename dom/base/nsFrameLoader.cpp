@@ -869,6 +869,8 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
 
   ScreenIntSize size = frame->GetSubdocumentSize();
   if (IsRemoteFrame()) {
+    // FIXME(bug 1588791): For fission iframes we need to pass down the
+    // scrollbar preferences.
     return ShowRemoteFrame(size, frame);
   }
 

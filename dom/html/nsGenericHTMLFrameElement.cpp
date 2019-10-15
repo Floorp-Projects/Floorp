@@ -294,9 +294,9 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::scrolling) {
       if (mFrameLoader) {
+        // FIXME(bug 1588791): This should work for fission iframes.
         nsIDocShell* docshell = mFrameLoader->GetExistingDocShell();
-        nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(docshell);
-        if (scrollable) {
+        if (nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(docshell)) {
           int32_t cur;
           scrollable->GetDefaultScrollbarPreferences(
               nsIScrollable::ScrollOrientation_X, &cur);
