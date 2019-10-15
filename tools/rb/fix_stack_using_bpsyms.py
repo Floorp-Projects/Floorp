@@ -8,7 +8,7 @@
 # NS_FormatCodeAddress(), which on TBPL builds often lack a file name and a
 # line number (and on Linux even the symbol is often bad).
 
-from __future__ import with_statement
+from __future__ import absolute_import, with_statement
 
 import bisect
 import collections
