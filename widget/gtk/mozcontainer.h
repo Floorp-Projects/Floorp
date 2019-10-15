@@ -105,6 +105,10 @@ void moz_container_scale_changed(MozContainer* container,
                                  GtkAllocation* aAllocation);
 void moz_container_set_initial_draw_callback(
     MozContainer* container, std::function<void(void)> inital_draw_cb);
+void moz_container_move_resize(MozContainer* container, int dx, int dy,
+                               int width, int height);
+void moz_container_egl_window_set_size(MozContainer* container, int width,
+                                       int height);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */
