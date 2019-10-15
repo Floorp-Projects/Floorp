@@ -61,10 +61,12 @@ ChromeUtils.defineModuleGetter(
  * For example, this number should NOT be changed when a new optional field is
  * added to a login entry.
  */
-const kDataVersion = 2;
+const kDataVersion = 3;
 
 // The permission type we store in the permission manager.
 const PERMISSION_SAVE_LOGINS = "login-saving";
+
+const MAX_DATE_MS = 8640000000000000;
 
 // LoginStore
 
@@ -104,6 +106,28 @@ LoginStore.prototype._dataPostProcessor = function(data) {
 
   if (!data.dismissedBreachAlertsByLoginGUID) {
     data.dismissedBreachAlertsByLoginGUID = {};
+  }
+
+  // sanitize dates in logins
+  if (data.version < 3) {
+    let dateProperties = ["timeCreated", "timeLastUsed", "timePasswordChanged"];
+    let now = Date.now();
+    function getEarliestDate(login, defaultDate) {
+      let earliestDate = dateProperties.reduce((earliest, pname) => {
+        let ts = login[pname];
+        return !ts ? earliest : Math.min(ts, earliest);
+      }, defaultDate);
+      return earliestDate;
+    }
+    for (let login of data.logins) {
+      for (let pname of dateProperties) {
+        let earliestDate;
+        if (!login[pname] || login[pname] > MAX_DATE_MS) {
+          login[pname] =
+            earliestDate || (earliestDate = getEarliestDate(login, now));
+        }
+      }
+    }
   }
 
   // Indicate that the current version of the code has touched the file.
