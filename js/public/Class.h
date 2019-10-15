@@ -582,7 +582,7 @@ typedef JSObject* (*ClassObjectCreationOp)(JSContext* cx, JSProtoKey key);
 typedef bool (*FinishClassInitOp)(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto);
 
-const size_t JSCLASS_CACHED_PROTO_WIDTH = 6;
+const size_t JSCLASS_CACHED_PROTO_WIDTH = 7;
 
 struct MOZ_STATIC_CLASS ClassSpec {
   ClassObjectCreationOp createConstructor;
@@ -715,22 +715,20 @@ static const uint32_t JSCLASS_INTERNAL_FLAG1 =
 static const uint32_t JSCLASS_IS_GLOBAL = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 1);
 static const uint32_t JSCLASS_INTERNAL_FLAG2 =
     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 2);
-static const uint32_t JSCLASS_INTERNAL_FLAG3 =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 3);
-static const uint32_t JSCLASS_IS_PROXY = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
+static const uint32_t JSCLASS_IS_PROXY = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 3);
 static const uint32_t JSCLASS_SKIP_NURSERY_FINALIZE =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 5);
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
 
 // Reserved for embeddings.
-static const uint32_t JSCLASS_USERBIT2 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 6);
-static const uint32_t JSCLASS_USERBIT3 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 7);
+static const uint32_t JSCLASS_USERBIT2 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 5);
+static const uint32_t JSCLASS_USERBIT3 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 6);
 
 static const uint32_t JSCLASS_BACKGROUND_FINALIZE =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 8);
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 7);
 static const uint32_t JSCLASS_FOREGROUND_FINALIZE =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 9);
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 8);
 
-// Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
+// Bits 25 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
 // below.
 
 // ECMA-262 requires that most constructors used internally create objects
@@ -759,10 +757,12 @@ static constexpr uint32_t JSCLASS_GLOBAL_FLAGS =
     JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0);
 
 // Fast access to the original value of each standard class's prototype.
-static const uint32_t JSCLASS_CACHED_PROTO_SHIFT =
-    JSCLASS_HIGH_FLAGS_SHIFT + 10;
+static const uint32_t JSCLASS_CACHED_PROTO_SHIFT = JSCLASS_HIGH_FLAGS_SHIFT + 9;
 static const uint32_t JSCLASS_CACHED_PROTO_MASK =
     JS_BITMASK(js::JSCLASS_CACHED_PROTO_WIDTH);
+
+static_assert(JSProto_LIMIT <= (JSCLASS_CACHED_PROTO_MASK + 1),
+              "JSProtoKey must not exceed the maximum cacheable proto-mask");
 
 static constexpr uint32_t JSCLASS_HAS_CACHED_PROTO(JSProtoKey key) {
   return uint32_t(key) << JSCLASS_CACHED_PROTO_SHIFT;
