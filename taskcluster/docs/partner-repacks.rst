@@ -30,7 +30,7 @@ Partner repacks have a number of parameters which control how they work:
 We split the repacks into two 'paths', EME-free and everything else, to retain some
 flexibility over enabling/disabling them separately. This costs us some duplication of the kinds
 in the repacking stack. The two enable parameters are booleans to turn these two paths
-on/off. We set them in release-runner3's `is_partner_enabled() <https://dxr.mozilla
+on/off. We set them in release-runner3's `is_partner_enabled() <https://searchfox
 .org/build-central/search?q=function%3Ais_partner_enabled&redirect=true>`_ when starting a
 release. They're both true for Firefox betas >= b8 and releases, but otherwise disabled.
 
@@ -38,7 +38,7 @@ release. They're both true for Firefox betas >= b8 and releases, but otherwise d
 logic. It's usually looked up during the release promotion action task, using the Github
 GraphQL API in the `get_partner_config_by_url()
 <python/taskgraph.util.html#taskgraph.util.partners.get_partner_config_by_url>`_ function, with the
-url defined in `taskcluster/ci/config.yml <https://dxr.mozilla
+url defined in `taskcluster/ci/config.yml <https://searchfox
 .org/mozilla-release/search?q=regexp%3A^partner+path%3Aconfig.yml&redirect=true>`_.
 
 ``release_partner_build_number`` is an integer used to create unique upload paths in the firefox

@@ -19,8 +19,8 @@ The serialized stack data is submitted with the :doc:`main pings <../data/main-p
 
 The API
 =======
-Capturing stacks is available either via the `nsITelemetry interface <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_
-or the `C++ API <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_.
+Capturing stacks is available either via the `nsITelemetry interface <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_
+or the `C++ API <https://searchfox.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_.
 Note that current implementation of the API is not thread safe. Also, capturing
 stacks in the content process is not supported yet.
 
@@ -41,7 +41,7 @@ walking.
 ``aKey`` is a string used primarily as an identifier for a captured stack. It can
 be used to identify stacks down the data processing pipeline and on ``about:telemetry``.
 
-For more technical information please refer to the `code documentation <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3ATelemetryScalar%3A%3A(Set%7CAdd)+file%3ATelemetryScalar.cpp&redirect=false>`_ .
+For more technical information please refer to the `code documentation <https://searchfox.org/mozilla-central/search?q=regexp%3ATelemetryScalar%3A%3A(Set%7CAdd)+file%3ATelemetryScalar.cpp&redirect=false>`_ .
 
 C++ API
 -------
