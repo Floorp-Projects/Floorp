@@ -578,7 +578,7 @@ bool CharCodeAt(JSContext* cx, HandleString str, int32_t index,
   return true;
 }
 
-JSFlatString* StringFromCharCode(JSContext* cx, int32_t code) {
+JSLinearString* StringFromCharCode(JSContext* cx, int32_t code) {
   char16_t c = char16_t(code);
 
   if (StaticStrings::hasUnit(c)) {
