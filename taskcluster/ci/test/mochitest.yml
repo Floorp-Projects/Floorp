@@ -191,7 +191,7 @@ mochitest-devtools-chrome:
             default: default
     max-run-time:
         by-test-platform:
-            windows10-64-ccov/debug: 7200
+            windows10-64-ccov/debug: 9000
             macosx.*64-ccov/debug: 9000
             linux64-ccov/debug: 7200
             default: 5400
