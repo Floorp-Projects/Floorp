@@ -1022,6 +1022,7 @@ namespace jit {
 class JitCode;
 }  // namespace jit
 
+using PreBarrieredId = PreBarriered<jsid>;
 using PreBarrieredObject = PreBarriered<JSObject*>;
 using PreBarrieredValue = PreBarriered<Value>;
 

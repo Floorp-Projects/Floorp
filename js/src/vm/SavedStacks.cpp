@@ -172,7 +172,7 @@ void LiveSavedFrameCache::findWithoutInvalidation(
   frame.set(nullptr);
 }
 
-struct SavedFrame::Lookup {
+struct MOZ_STACK_CLASS SavedFrame::Lookup {
   Lookup(JSAtom* source, uint32_t sourceId, uint32_t line, uint32_t column,
          JSAtom* functionDisplayName, JSAtom* asyncCause, SavedFrame* parent,
          JSPrincipals* principals,
@@ -227,18 +227,11 @@ struct SavedFrame::Lookup {
   Activation* activation;
 
   void trace(JSTracer* trc) {
-    TraceManuallyBarrieredEdge(trc, &source, "SavedFrame::Lookup::source");
-    if (functionDisplayName) {
-      TraceManuallyBarrieredEdge(trc, &functionDisplayName,
-                                 "SavedFrame::Lookup::functionDisplayName");
-    }
-    if (asyncCause) {
-      TraceManuallyBarrieredEdge(trc, &asyncCause,
-                                 "SavedFrame::Lookup::asyncCause");
-    }
-    if (parent) {
-      TraceManuallyBarrieredEdge(trc, &parent, "SavedFrame::Lookup::parent");
-    }
+    TraceRoot(trc, &source, "SavedFrame::Lookup::source");
+    TraceNullableRoot(trc, &functionDisplayName,
+                      "SavedFrame::Lookup::functionDisplayName");
+    TraceNullableRoot(trc, &asyncCause, "SavedFrame::Lookup::asyncCause");
+    TraceNullableRoot(trc, &parent, "SavedFrame::Lookup::parent");
   }
 };
 

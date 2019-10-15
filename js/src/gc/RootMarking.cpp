@@ -477,6 +477,10 @@ void js::gc::GCRuntime::finishRoots() {
     r->finishRoots();
   }
 
+#ifdef JS_GC_ZEAL
+  clearSelectedForMarking();
+#endif
+
   // Clear any remaining roots from the embedding (as otherwise they will be
   // left dangling after we shut down) and remove the callbacks.
   ClearEdgesTracer trc(rt);
