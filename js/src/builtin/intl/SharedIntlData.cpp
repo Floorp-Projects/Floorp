@@ -440,7 +440,7 @@ bool js::intl::SharedIntlData::ensureSupportedLocales(JSContext* cx) {
 }
 
 bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
-                                                 const LocaleSet& locales,
+                                                 SupportedLocaleKind kind,
                                                  HandleString locale,
                                                  bool* supported) {
   if (!ensureSupportedLocales(cx)) {
@@ -453,9 +453,23 @@ bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
   }
 
   LocaleHasher::Lookup lookup(localeLinear);
-  *supported = locales.has(lookup);
 
-  return true;
+  switch (kind) {
+    case SupportedLocaleKind::Collator:
+      *supported = collatorSupportedLocales.has(lookup);
+      return true;
+    case SupportedLocaleKind::DateTimeFormat:
+      *supported = dateTimeFormatSupportedLocales.has(lookup);
+      return true;
+    case SupportedLocaleKind::NumberFormat:
+      *supported = numberFormatSupportedLocales.has(lookup);
+      return true;
+    case SupportedLocaleKind::PluralRules:
+    case SupportedLocaleKind::RelativeTimeFormat:
+      *supported = supportedLocales.has(lookup);
+      return true;
+  }
+  MOZ_CRASH("Invalid Intl constructor");
 }
 
 #if DEBUG || MOZ_SYSTEM_ICU

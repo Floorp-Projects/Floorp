@@ -205,60 +205,22 @@ class SharedIntlData {
    */
   bool ensureSupportedLocales(JSContext* cx);
 
-  MOZ_MUST_USE bool isSupportedLocale(JSContext* cx, const LocaleSet& locales,
+ public:
+  enum class SupportedLocaleKind {
+    Collator,
+    DateTimeFormat,
+    NumberFormat,
+    PluralRules,
+    RelativeTimeFormat
+  };
+
+  /**
+   * Sets |supported| to true if |locale| is supported by the requested Intl
+   * service constructor. Otherwise sets |supported| to false.
+   */
+  MOZ_MUST_USE bool isSupportedLocale(JSContext* cx, SupportedLocaleKind kind,
                                       JS::Handle<JSString*> locale,
                                       bool* supported);
-
- public:
-  /**
-   * Sets |supported| to true if |locale| is supported by Intl.Collator.
-   */
-  MOZ_MUST_USE bool isCollatorSupportedLocale(JSContext* cx,
-                                              JS::Handle<JSString*> locale,
-                                              bool* supported) {
-    return isSupportedLocale(cx, collatorSupportedLocales, locale, supported);
-  }
-
-  /**
-   * Sets |supported| to true if |locale| is supported by Intl.DateTimeFormat.
-   */
-  MOZ_MUST_USE bool isDateTimeFormatSupportedLocale(
-      JSContext* cx, JS::Handle<JSString*> locale, bool* supported) {
-    return isSupportedLocale(cx, dateTimeFormatSupportedLocales, locale,
-                             supported);
-  }
-
-  /**
-   * Sets |supported| to true if |locale| is supported by Intl.NumberFormat.
-   */
-  MOZ_MUST_USE bool isNumberFormatSupportedLocale(JSContext* cx,
-                                                  JS::Handle<JSString*> locale,
-                                                  bool* supported) {
-    return isSupportedLocale(cx, numberFormatSupportedLocales, locale,
-                             supported);
-  }
-
-  /**
-   * Sets |supported| to true if |locale| is supported by Intl.PluralRules.
-   */
-  MOZ_MUST_USE bool isPluralRulesSupportedLocale(JSContext* cx,
-                                                 JS::Handle<JSString*> locale,
-                                                 bool* supported) {
-    // We're going to use ULocale availableLocales as per ICU recommendation:
-    // https://unicode-org.atlassian.net/browse/ICU-12756
-    return isSupportedLocale(cx, supportedLocales, locale, supported);
-  }
-
-  /**
-   * Sets |supported| to true if |locale| is supported by
-   * Intl.RelativeTimeFormat.
-   */
-  MOZ_MUST_USE bool isRelativeTimeFormatSupportedLocale(
-      JSContext* cx, JS::Handle<JSString*> locale, bool* supported) {
-    // We're going to use ULocale availableLocales as per ICU recommendation:
-    // https://unicode-org.atlassian.net/browse/ICU-12756
-    return isSupportedLocale(cx, supportedLocales, locale, supported);
-  }
 
  private:
   /**

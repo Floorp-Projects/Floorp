@@ -201,15 +201,9 @@ function DefaultLocale() {
     // superset of the locales supported by Collator, NumberFormat and
     // DateTimeFormat.
     var locale;
-    if (BestAvailableLocaleIgnoringDefault(callFunction(collatorInternalProperties.availableLocales,
-                                                        collatorInternalProperties),
-                                           candidate) &&
-        BestAvailableLocaleIgnoringDefault(callFunction(numberFormatInternalProperties.availableLocales,
-                                                        numberFormatInternalProperties),
-                                           candidate) &&
-        BestAvailableLocaleIgnoringDefault(callFunction(dateTimeFormatInternalProperties.availableLocales,
-                                                        dateTimeFormatInternalProperties),
-                                           candidate))
+    if (BestAvailableLocaleIgnoringDefault("Collator", candidate) &&
+        BestAvailableLocaleIgnoringDefault("NumberFormat", candidate) &&
+        BestAvailableLocaleIgnoringDefault("DateTimeFormat", candidate))
     {
         locale = candidate;
     } else {
@@ -310,48 +304,6 @@ function CanonicalizeLocaleList(locales) {
     return seen;
 }
 
-function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLocale) {
-    assertIsValidAndCanonicalLanguageTag(locale, "BestAvailableLocale locale");
-    assert(startOfUnicodeExtensions(locale) < 0, "locale must contain no Unicode extensions");
-
-    // In the spec, [[availableLocales]] is formally a list of all available
-    // locales.  But in our implementation, it's an *incomplete* list, not
-    // necessarily including the default locale (and all locales implied by it,
-    // e.g. "de" implied by "de-CH"), if that locale isn't in every
-    // [[availableLocales]] list (because that locale is supported through
-    // fallback, e.g. "de-CH" supported through "de").
-    //
-    // If we're considering the default locale, augment the spec loop with
-    // additional checks to also test whether the current prefix is a prefix of
-    // the default locale.
-
-    var defaultLocale;
-    if (considerDefaultLocale)
-        defaultLocale = DefaultLocale();
-
-    var candidate = locale;
-    while (true) {
-        if (availableLocales[candidate])
-            return candidate;
-
-        if (considerDefaultLocale && candidate.length <= defaultLocale.length) {
-            if (candidate === defaultLocale)
-                return candidate;
-            if (callFunction(std_String_startsWith, defaultLocale, candidate + "-"))
-                return candidate;
-        }
-
-        var pos = callFunction(std_String_lastIndexOf, candidate, "-");
-        if (pos === -1)
-            return undefined;
-
-        if (pos >= 2 && candidate[pos - 2] === "-")
-            pos -= 2;
-
-        candidate = callFunction(String_substring, candidate, 0, pos);
-    }
-}
-
 /**
  * Compares a BCP 47 language tag against the locales in availableLocales
  * and returns the best available match. Uses the fallback
@@ -361,7 +313,7 @@ function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLoca
  * Spec: RFC 4647, section 3.4.
  */
 function BestAvailableLocale(availableLocales, locale) {
-    return BestAvailableLocaleHelper(availableLocales, locale, true);
+    return intl_BestAvailableLocale(availableLocales, locale, DefaultLocale());
 }
 
 /**
@@ -369,7 +321,7 @@ function BestAvailableLocale(availableLocales, locale) {
  * during computation.
  */
 function BestAvailableLocaleIgnoringDefault(availableLocales, locale) {
-    return BestAvailableLocaleHelper(availableLocales, locale, false);
+    return intl_BestAvailableLocale(availableLocales, locale, null);
 }
 
 /**
