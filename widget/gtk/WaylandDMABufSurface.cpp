@@ -283,6 +283,7 @@ bool WaylandDMABufSurface::IsEGLSupported(mozilla::gl::GLContext* aGLContext) {
 bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   MOZ_ASSERT(mGbmBufferObject, "Can't create EGLImage, missing dmabuf object!");
   MOZ_ASSERT(mBufferPlaneCount == 1, "Modifiers are not supported yet!");
+  MOZ_ASSERT(!mEGLImage && !mGLFbo, "EGLImage is already created!");
 
   nsTArray<EGLint> attribs;
   attribs.AppendElement(LOCAL_EGL_WIDTH);
