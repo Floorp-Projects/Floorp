@@ -88,7 +88,6 @@ class GlobalObject : public NativeObject {
     ASYNC_GENERATOR_PROTO,
     MAP_ITERATOR_PROTO,
     SET_ITERATOR_PROTO,
-    PLURAL_RULES_PROTO,
     RELATIVE_TIME_FORMAT_PROTO,
     MODULE_PROTO,
     IMPORT_ENTRY_PROTO,
@@ -542,7 +541,10 @@ class GlobalObject : public NativeObject {
 
   static JSObject* getOrCreatePluralRulesPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, PLURAL_RULES_PROTO, initIntlObject);
+    if (!ensureConstructor(cx, global, JSProto_PluralRules)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_PluralRules).toObject();
   }
 
   static JSObject* getOrCreateRelativeTimeFormatPrototype(
