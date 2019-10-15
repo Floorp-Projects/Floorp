@@ -770,22 +770,18 @@ describe("CFRPageActions", () => {
           "browser/branding/sync-brand.ftl",
           "branding/brand.ftl",
         ]);
-        assert.isFunction(args[1]);
       });
       it("should load the local Fluent file if USE_REMOTE_L10N_PREF is false", () => {
         sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
         pageAction._createDOML10n();
 
-        const { args } = domL10nStub.firstCall;
-        // The first arg is the resource array, and the second one should be null.
-        assert.equal(args.length, 2);
-        assert.deepEqual(args[0], [
+        assert.calledOnce(domL10nStub);
+        assert.calledWith(domL10nStub, [
           "browser/newtab/asrouter.ftl",
           "browser/branding/brandings.ftl",
           "browser/branding/sync-brand.ftl",
           "branding/brand.ftl",
         ]);
-        assert.isUndefined(args[1]);
       });
     });
   });
