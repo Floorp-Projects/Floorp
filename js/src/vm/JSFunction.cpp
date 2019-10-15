@@ -1547,15 +1547,8 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
     Rooted<LazyScript*> lazy(cx, fun->lazyScript());
     RootedScript script(cx, lazy->maybeScript());
 
-    // Only functions without inner functions or direct eval are
-    // re-lazified. Functions with either of those are on the static scope
-    // chain of their inner functions, or in the case of eval, possibly
-    // eval'd inner functions. This prohibits re-lazification as
-    // StaticScopeIter queries needsCallObject of those functions, which
-    // requires a non-lazy script.  Note that if this ever changes,
-    // XDRRelazificationInfo will have to be fixed.
     bool isBinAST = lazy->scriptSource()->hasBinASTSource();
-    bool canRelazify = !lazy->hasInnerFunctions() && !lazy->hasDirectEval();
+    bool canRelazify = lazy->canRelazify();
 
     if (script) {
       // This function is non-canonical function, and the canonical
