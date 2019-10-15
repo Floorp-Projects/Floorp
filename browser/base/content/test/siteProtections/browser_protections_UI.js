@@ -9,50 +9,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ContentBlockingAllowList.jsm"
 );
 
-function checkClickTelemetry(objectName, value) {
-  let events = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
-  ).parent;
-  let buttonEvents = events.filter(
-    e =>
-      e[1] == "security.ui.protectionspopup" &&
-      e[2] == "click" &&
-      e[3] == objectName &&
-      (!value || e[4] == value)
-  );
-  is(buttonEvents.length, 1, `recorded ${objectName} telemetry event`);
-}
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "TrackingDBService",
-  "@mozilla.org/tracking-db-service;1",
-  "nsITrackingDBService"
-);
-
-XPCOMUtils.defineLazyGetter(this, "TRACK_DB_PATH", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, "protections.sqlite");
-});
-
-const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-
-async function addTrackerDataIntoDB(count) {
-  const insertSQL =
-    "INSERT INTO events (type, count, timestamp)" +
-    "VALUES (:type, :count, date(:timestamp));";
-
-  let db = await Sqlite.openConnection({ path: TRACK_DB_PATH });
-  let date = new Date().toISOString();
-
-  await db.execute(insertSQL, {
-    type: TrackingDBService.TRACKERS_ID,
-    count,
-    timestamp: date,
-  });
-
-  await db.close();
-}
-
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
