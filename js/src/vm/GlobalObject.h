@@ -79,8 +79,6 @@ class GlobalObject : public NativeObject {
     GENERATOR_OBJECT_PROTO,
     GENERATOR_FUNCTION_PROTO,
     GENERATOR_FUNCTION,
-    ASYNC_FUNCTION_PROTO,
-    ASYNC_FUNCTION,
     ASYNC_ITERATOR_PROTO,
     ASYNC_FROM_SYNC_ITERATOR_PROTO,
     ASYNC_GENERATOR,
@@ -599,13 +597,20 @@ class GlobalObject : public NativeObject {
 
   static NativeObject* getOrCreateAsyncFunctionPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return MaybeNativeObject(
-        getOrCreateObject(cx, global, ASYNC_FUNCTION_PROTO, initAsyncFunction));
+    if (!ensureConstructor(cx, global, JSProto_AsyncFunction)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_AsyncFunction)
+                .toObject()
+                .as<NativeObject>();
   }
 
   static JSObject* getOrCreateAsyncFunction(JSContext* cx,
                                             Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, ASYNC_FUNCTION, initAsyncFunction);
+    if (!ensureConstructor(cx, global, JSProto_AsyncFunction)) {
+      return nullptr;
+    }
+    return &global->getConstructor(JSProto_AsyncFunction).toObject();
   }
 
   static NativeObject* getOrCreateAsyncIteratorPrototype(
@@ -775,8 +780,6 @@ class GlobalObject : public NativeObject {
 
   // Implemented in vm/GeneratorObject.cpp.
   static bool initGenerators(JSContext* cx, Handle<GlobalObject*> global);
-
-  static bool initAsyncFunction(JSContext* cx, Handle<GlobalObject*> global);
 
   static bool initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
