@@ -45,9 +45,8 @@ class WritableStreamDefaultWriter : public NativeObject {
   }
 
   bool hasStream() const { return !getFixedSlot(Slot_Stream).isUndefined(); }
-  void setStream(JSObject* stream) {
-    setFixedSlot(Slot_Stream, JS::ObjectValue(*stream));
-  }
+  inline WritableStream* stream() const;
+  inline void setStream(WritableStream* stream);
   void clearStream() { setFixedSlot(Slot_Stream, JS::UndefinedValue()); }
 
   JSObject* readyPromise() const {

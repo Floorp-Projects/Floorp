@@ -10,10 +10,12 @@
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jsapi.h"  // JS_ReportErrorASCII
+#include "jsapi.h"        // JS_ReportErrorASCII, JS_ReportErrorNumberASCII
+#include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
+#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterGetDesiredSize
 #include "js/CallArgs.h"                              // JS::CallArgs{,FromVp}
 #include "js/Class.h"                        // js::ClassSpec, JS_NULL_CLASS_OPS
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END
@@ -31,9 +33,11 @@ using JS::Rooted;
 using JS::Value;
 
 using js::ClassSpec;
+using js::GetErrorMessage;
 using js::ReturnPromiseRejectedWithPendingError;
 using js::UnwrapAndTypeCheckThis;
 using js::WritableStreamDefaultWriter;
+using js::WritableStreamDefaultWriterGetDesiredSize;
 
 /*** 4.5. Class WritableStreamDefaultWriter *********************************/
 
@@ -81,8 +85,42 @@ static MOZ_MUST_USE bool WritableStream_closed(JSContext* cx, unsigned argc,
   return true;
 }
 
+/**
+ * Streams spec, 4.5.4.2. get desiredSize
+ */
+static MOZ_MUST_USE bool WritableStream_desiredSize(JSContext* cx,
+                                                    unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, throw a
+  //         TypeError exception.
+  Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+      cx, UnwrapAndTypeCheckThis<WritableStreamDefaultWriter>(
+              cx, args, "get desiredSize"));
+  if (!unwrappedWriter) {
+    return false;
+  }
+
+  // Step 2: If this.[[ownerWritableStream]] is undefined, throw a TypeError
+  //         exception.
+  if (!unwrappedWriter->hasStream()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAMWRITER_NOT_OWNED,
+                              "get desiredSize");
+    return false;
+  }
+
+  // Step 3: Return ! WritableStreamDefaultWriterGetDesiredSize(this).
+  Value v = WritableStreamDefaultWriterGetDesiredSize(unwrappedWriter);
+  MOZ_ASSERT(v.isNull() || v.isNumber(),
+             "expected a type that'll never require wrapping");
+  args.rval().set(v);
+  return true;
+}
+
 static const JSPropertySpec WritableStreamDefaultWriter_properties[] = {
-    JS_PSG("closed", WritableStream_closed, 0), JS_PS_END};
+    JS_PSG("closed", WritableStream_closed, 0),
+    JS_PSG("desiredSize", WritableStream_desiredSize, 0), JS_PS_END};
 
 static const JSFunctionSpec WritableStreamDefaultWriter_methods[] = {JS_FS_END};
 
