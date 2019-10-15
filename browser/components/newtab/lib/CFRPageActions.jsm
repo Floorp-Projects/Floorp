@@ -130,6 +130,16 @@ class PageAction {
    *   * it was told to use the local Fluent file
    */
   _createDOML10n() {
+    const ftlResourceIDs = [
+      "browser/newtab/asrouter.ftl",
+      "browser/branding/brandings.ftl",
+      "browser/branding/sync-brand.ftl",
+      "branding/brand.ftl",
+    ];
+    if (!Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true)) {
+      return new DOMLocalization(ftlResourceIDs);
+    }
+
     async function* generateBundles(resourceIds) {
       const appLocale = Services.locale.appLocaleAsBCP47;
       const appLocales = Services.locale.appLocalesAsBCP47;
@@ -142,35 +152,24 @@ class PageAction {
       // `fetchFile` will return `false` and fall back to the packaged Fluent file.
       const resource = await fs.fetchFile(appLocale, "asrouter.ftl");
       if (resource) {
-        // Override built-in messages with the resource loaded from remote settings for
-        // the app locale, i.e. the first item of `appLocales`.
+        // Skip the local `asrouter.ftl` (i.e. the first resource) to favor the remote one.
         // Other resources such as `branding.ftl`, `sync-brand.ftl`, and `branding/brand.ftl`
         // still need to be packed into this bundle because, otherwise, we can't reference
         // them across different Fluent bundles.
         for await (let bundle of L10nRegistry.generateBundles(
-          appLocales.slice(0, 1),
-          resourceIds
+          [appLocale],
+          resourceIds.slice(1)
         )) {
           // Override the old string ID if any as it's the last resource.
-          bundle.addResource(resource, { allowOverrides: true });
+          bundle.addResource(resource, true);
           yield bundle;
         }
+      } else {
+        yield* L10nRegistry.generateBundles(appLocales, resourceIds);
       }
-      // Now generating bundles for the rest of locales of `appLocales`.
-      yield* L10nRegistry.generateBundles(appLocales.slice(1), resourceIds);
     }
 
-    return new DOMLocalization(
-      [
-        "browser/newtab/asrouter.ftl",
-        "browser/branding/brandings.ftl",
-        "browser/branding/sync-brand.ftl",
-        "branding/brand.ftl",
-      ],
-      Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true)
-        ? generateBundles
-        : undefined
-    );
+    return new DOMLocalization(ftlResourceIDs, generateBundles);
   }
 
   reloadL10n() {
