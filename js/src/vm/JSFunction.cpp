@@ -1961,6 +1961,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
                                       parameterListEnd)) {
         return false;
       }
+      protoKey = JSProto_GeneratorFunction;
     } else {
       if (!CompileStandaloneFunction(cx, &fun, options, srcBuf,
                                      parameterListEnd)) {
