@@ -355,7 +355,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             val layout = LayoutInflater.from(it)
                 .inflate(R.layout.tracking_protection_onboarding_popup, null)
             layout.onboarding_message.text =
-                it.getString(R.string.etp_onboarding_message, getString(R.string.app_name))
+                it.getString(R.string.etp_onboarding_message_2, getString(R.string.app_name))
 
             val trackingOnboarding = PopupWindow(
                 layout,
