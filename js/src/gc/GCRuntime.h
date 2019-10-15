@@ -617,7 +617,6 @@ class GCRuntime {
   friend class AutoCallGCCallbacks;
   void maybeCallGCCallback(JSGCStatus status);
 
-  void pushZealSelectedObjects();
   void purgeRuntime();
   MOZ_MUST_USE bool beginMarkPhase(JS::GCReason reason, AutoGCSession& session);
   bool prepareZonesForCollection(JS::GCReason reason, bool* isFullOut);
@@ -1017,7 +1016,8 @@ class GCRuntime {
   MainThreadData<bool> deterministicOnly;
   MainThreadData<int> incrementalLimit;
 
-  MainThreadData<Vector<JSObject*, 0, SystemAllocPolicy>> selectedForMarking;
+  MainThreadData<PersistentRooted<GCVector<JSObject*, 0, SystemAllocPolicy>>>
+      selectedForMarking;
 #endif
 
   MainThreadData<bool> fullCompartmentChecks;

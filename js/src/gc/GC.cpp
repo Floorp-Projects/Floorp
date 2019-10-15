@@ -910,6 +910,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       nextScheduled(0),
       deterministicOnly(false),
       incrementalLimit(0),
+      selectedForMarking(rt),
 #endif
       fullCompartmentChecks(false),
       gcCallbackDepth(0),
@@ -6562,16 +6563,6 @@ AutoDisableBarriers::~AutoDisableBarriers() {
   }
 }
 
-void GCRuntime::pushZealSelectedObjects() {
-#ifdef JS_GC_ZEAL
-  /* Push selected objects onto the mark stack and clear the list. */
-  for (JSObject** obj = selectedForMarking.ref().begin();
-       obj != selectedForMarking.ref().end(); obj++) {
-    TraceManuallyBarrieredEdge(&marker, obj, "selected obj");
-  }
-#endif
-}
-
 static bool IsShutdownGC(JS::GCReason reason) {
   return reason == JS::GCReason::SHUTDOWN_CC ||
          reason == JS::GCReason::DESTROY_RUNTIME;
@@ -6678,10 +6669,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
         budget.makeUnlimited();
         isIncremental = false;
         stats().nonincremental(AbortReason::GrayRootBufferingFailed);
-      }
-
-      if (!destroyingRuntime) {
-        pushZealSelectedObjects();
       }
 
       incrementalState = State::Mark;
@@ -7155,7 +7142,6 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   chunkAllocationSinceLastGC = false;
 
 #ifdef JS_GC_ZEAL
-  /* Keeping these around after a GC is dangerous. */
   clearSelectedForMarking();
 #endif
 
@@ -7949,11 +7935,11 @@ void GCRuntime::notifyRootsRemoved() {
 #ifdef JS_GC_ZEAL
 bool GCRuntime::selectForMarking(JSObject* object) {
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
-  return selectedForMarking.ref().append(object);
+  return selectedForMarking.ref().get().append(object);
 }
 
 void GCRuntime::clearSelectedForMarking() {
-  selectedForMarking.ref().clearAndFree();
+  selectedForMarking.ref().get().clearAndFree();
 }
 
 void GCRuntime::setDeterministic(bool enabled) {

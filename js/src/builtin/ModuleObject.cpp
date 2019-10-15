@@ -6,6 +6,7 @@
 
 #include "builtin/ModuleObject.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/ScopeExit.h"
 
@@ -318,10 +319,9 @@ void IndirectBindingMap::trace(JSTracer* trc) {
     Binding& b = e.front().value();
     TraceEdge(trc, &b.environment, "module bindings environment");
     TraceEdge(trc, &b.shape, "module bindings shape");
-    jsid bindingName = e.front().key();
-    TraceManuallyBarrieredEdge(trc, &bindingName,
-                               "module bindings binding name");
-    MOZ_ASSERT(bindingName == e.front().key());
+    mozilla::DebugOnly<jsid> prev(e.front().key());
+    TraceEdge(trc, &e.front().mutableKey(), "module bindings binding name");
+    MOZ_ASSERT(e.front().key() == prev);
   }
 }
 
