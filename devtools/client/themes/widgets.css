@@ -565,45 +565,6 @@
   color: var(--theme-highlight-orange);
 }
 
-/* Bar graph widget */
-
-.bar-graph-widget-legend {
-  position: absolute;
-  top: 4px;
-  left: 8px;
-  color: #292e33;
-  font-size: 80%;
-  pointer-events: none;
-}
-
-.bar-graph-widget-legend-item {
-  float: left;
-  margin-inline-end: 8px;
-}
-
-.bar-graph-widget-legend-item > [view="color"],
-.bar-graph-widget-legend-item > [view="label"] {
-  vertical-align: middle;
-}
-
-.bar-graph-widget-legend-item > [view="color"] {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border: 1px solid #fff;
-  border-radius: 1px;
-  margin-inline-end: 4px;
-  pointer-events: all;
-  cursor: pointer;
-}
-
-.bar-graph-widget-legend-item > [view="label"] {
-  text-shadow: 1px  0px rgba(255,255,255,0.8),
-              -1px  0px rgba(255,255,255,0.8),
-               0px -1px rgba(255,255,255,0.8),
-               0px  1px rgba(255,255,255,0.8);
-}
-
 /* Table Widget */
 
 /* Table body */
