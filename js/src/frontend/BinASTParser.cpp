@@ -90,7 +90,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseSumAssertedMaybePositionalParameterName(
           "FIXME: Not implemented yet in this preview release "
           "(AssertedRestParameterName)");
     default:
-      return raiseInvalidKind("AssertedMaybePositionalParameterName", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("AssertedMaybePositionalParameterName", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -142,7 +147,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumAssignmentTarget(
                   parseInterfaceStaticMemberAssignmentTarget(start, context));
       break;
     default:
-      return raiseInvalidKind("AssignmentTarget", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("AssignmentTarget", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -200,7 +210,12 @@ BinASTParser<Tok>::parseSumAssignmentTargetOrForInOfBinding(
                   parseInterfaceStaticMemberAssignmentTarget(start, context));
       break;
     default:
-      return raiseInvalidKind("AssignmentTargetOrForInOfBinding", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("AssignmentTargetOrForInOfBinding", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -244,7 +259,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumBinding(
                               start, FieldOrListContext(context)));
       break;
     default:
-      return raiseInvalidKind("Binding", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("Binding", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -433,7 +453,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpression(
                               start, FieldOrListContext(context)));
       break;
     default:
-      return raiseInvalidKind("Expression", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("Expression", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -627,7 +652,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpressionOrSpreadElement(
                               start, FieldOrListContext(context)));
       break;
     default:
-      return raiseInvalidKind("ExpressionOrSpreadElement", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("ExpressionOrSpreadElement", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -820,7 +850,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpressionOrSuper(
                               start, FieldOrListContext(context)));
       break;
     default:
-      return raiseInvalidKind("ExpressionOrSuper", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("ExpressionOrSuper", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -964,7 +999,12 @@ BinASTParser<Tok>::parseSumExpressionOrVariableDeclaration(
                               start, FieldOrListContext(context)));
       break;
     default:
-      return raiseInvalidKind("ExpressionOrVariableDeclaration", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("ExpressionOrVariableDeclaration", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -1025,7 +1065,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumObjectProperty(
       MOZ_TRY_VAR(result, parseInterfaceShorthandProperty(start, context));
       break;
     default:
-      return raiseInvalidKind("ObjectProperty", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("ObjectProperty", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -1078,7 +1123,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumParameter(
       MOZ_TRY_VAR(result, parseInterfaceObjectBinding(start, context));
       break;
     default:
-      return raiseInvalidKind("Parameter", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("Parameter", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -1115,7 +1165,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumProgram(
       MOZ_TRY_VAR(result, parseInterfaceScript(start, context));
       break;
     default:
-      return raiseInvalidKind("Program", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("Program", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -1152,7 +1207,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumPropertyName(
       MOZ_TRY_VAR(result, parseInterfaceLiteralPropertyName(start, context));
       break;
     default:
-      return raiseInvalidKind("PropertyName", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("PropertyName", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -1197,7 +1257,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumSimpleAssignmentTarget(
                   parseInterfaceStaticMemberAssignmentTarget(start, context));
       break;
     default:
-      return raiseInvalidKind("SimpleAssignmentTarget", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("SimpleAssignmentTarget", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -1326,7 +1391,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumStatement(
       MOZ_TRY_VAR(result, parseInterfaceWithStatement(start, context));
       break;
     default:
-      return raiseInvalidKind("Statement", kind);
+      if (isInvalidKindPossible()) {
+        return raiseInvalidKind("Statement", kind);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTKind should not appear");
+      }
   }
   return result;
 }
@@ -4250,7 +4320,12 @@ BinASTParser<Tok>::parseAssertedDeclaredKind(const FieldContext& context) {
     case BinASTVariant::AssertedDeclaredKindConstLexical:
       return AssertedDeclaredKind::ConstLexical;
     default:
-      return raiseInvalidVariant("AssertedDeclaredKind", variant);
+      if (isInvalidVariantPossible()) {
+        return raiseInvalidVariant("AssertedDeclaredKind", variant);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTVariant should not appear");
+      }
   }
 }
 
@@ -4340,7 +4415,12 @@ BinASTParser<Tok>::parseBinaryOperator(const FieldContext& context) {
     case BinASTVariant::BinaryOperatorPow:
       return BinaryOperator::Pow;
     default:
-      return raiseInvalidVariant("BinaryOperator", variant);
+      if (isInvalidVariantPossible()) {
+        return raiseInvalidVariant("BinaryOperator", variant);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTVariant should not appear");
+      }
   }
 }
 
@@ -4392,7 +4472,12 @@ BinASTParser<Tok>::parseCompoundAssignmentOperator(
     case BinASTVariant::CompoundAssignmentOperatorBitAndAssign:
       return CompoundAssignmentOperator::BitAndAssign;
     default:
-      return raiseInvalidVariant("CompoundAssignmentOperator", variant);
+      if (isInvalidVariantPossible()) {
+        return raiseInvalidVariant("CompoundAssignmentOperator", variant);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTVariant should not appear");
+      }
   }
 }
 
@@ -4428,7 +4513,12 @@ BinASTParser<Tok>::parseUnaryOperator(const FieldContext& context) {
     case BinASTVariant::UnaryOperatorDelete:
       return UnaryOperator::Delete;
     default:
-      return raiseInvalidVariant("UnaryOperator", variant);
+      if (isInvalidVariantPossible()) {
+        return raiseInvalidVariant("UnaryOperator", variant);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTVariant should not appear");
+      }
   }
 }
 
@@ -4449,7 +4539,12 @@ BinASTParser<Tok>::parseUpdateOperator(const FieldContext& context) {
     case BinASTVariant::UpdateOperatorDecr:
       return UpdateOperator::Decr;
     default:
-      return raiseInvalidVariant("UpdateOperator", variant);
+      if (isInvalidVariantPossible()) {
+        return raiseInvalidVariant("UpdateOperator", variant);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTVariant should not appear");
+      }
   }
 }
 
@@ -4473,7 +4568,12 @@ BinASTParser<Tok>::parseVariableDeclarationKind(const FieldContext& context) {
     case BinASTVariant::VariableDeclarationKindConst:
       return VariableDeclarationKind::Const;
     default:
-      return raiseInvalidVariant("VariableDeclarationKind", variant);
+      if (isInvalidVariantPossible()) {
+        return raiseInvalidVariant("VariableDeclarationKind", variant);
+      } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+            "invalid BinASTVariant should not appear");
+      }
   }
 }
 
@@ -4800,12 +4900,18 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalBindingIdentifier(
   ParseNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
-  } else if (kind == BinASTKind::BindingIdentifier) {
+  } else if (!isInvalidKindPossible() ||
+             kind == BinASTKind::BindingIdentifier) {
     const auto start = tokenizer_->offset();
     MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(
                             start, FieldOrListContext(context)));
   } else {
-    return raiseInvalidKind("BindingIdentifier", kind);
+    if (isInvalidKindPossible()) {
+      return raiseInvalidKind("BindingIdentifier", kind);
+    } else {
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+          "invalid BinASTKind should not appear");
+    }
   }
   MOZ_TRY(guard.done());
 
@@ -4823,11 +4929,16 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseOptionalCatchClause(
   LexicalScopeNode* result;
   if (kind == BinASTKind::_Null) {
     result = nullptr;
-  } else if (kind == BinASTKind::CatchClause) {
+  } else if (!isInvalidKindPossible() || kind == BinASTKind::CatchClause) {
     const auto start = tokenizer_->offset();
     MOZ_TRY_VAR(result, parseInterfaceCatchClause(start, context));
   } else {
-    return raiseInvalidKind("CatchClause", kind);
+    if (isInvalidKindPossible()) {
+      return raiseInvalidKind("CatchClause", kind);
+    } else {
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+          "invalid BinASTKind should not appear");
+    }
   }
   MOZ_TRY(guard.done());
 
