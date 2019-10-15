@@ -48,7 +48,10 @@ const JSClass RelativeTimeFormatObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(RelativeTimeFormatObject::SLOT_COUNT) |
         JSCLASS_FOREGROUND_FINALIZE,
-    &RelativeTimeFormatObject::classOps_};
+    &RelativeTimeFormatObject::classOps_,
+    &RelativeTimeFormatObject::classSpec_};
+
+const JSClass& RelativeTimeFormatObject::protoClass_ = PlainObject::class_;
 
 static bool relativeTimeFormat_toSource(JSContext* cx, unsigned argc,
                                         Value* vp) {
@@ -76,6 +79,18 @@ static const JSPropertySpec relativeTimeFormat_properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Intl.RelativeTimeFormat", JSPROP_READONLY),
     JS_PS_END};
 
+static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp);
+
+const ClassSpec RelativeTimeFormatObject::classSpec_ = {
+    GenericCreateConstructor<RelativeTimeFormat, 0, gc::AllocKind::FUNCTION>,
+    GenericCreatePrototype<RelativeTimeFormatObject>,
+    relativeTimeFormat_static_methods,
+    nullptr,
+    relativeTimeFormat_methods,
+    relativeTimeFormat_properties,
+    nullptr,
+    ClassSpec::DontDefineConstructor};
+
 /**
  * RelativeTimeFormat constructor.
  * Spec: ECMAScript 402 API, RelativeTimeFormat, 1.1
@@ -90,7 +105,8 @@ static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 2 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Null, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_RelativeTimeFormat,
+                                          &proto)) {
     return false;
   }
 
@@ -132,45 +148,16 @@ void js::RelativeTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-JSObject* js::CreateRelativeTimeFormatPrototype(JSContext* cx,
-                                                HandleObject Intl,
-                                                Handle<GlobalObject*> global) {
-  RootedFunction ctor(cx);
-  ctor = global->createConstructor(cx, &RelativeTimeFormat,
-                                   cx->names().RelativeTimeFormat, 0);
+bool js::CreateRelativeTimeFormat(JSContext* cx, HandleObject Intl) {
+  JSObject* ctor =
+      GlobalObject::getOrCreateConstructor(cx, JSProto_RelativeTimeFormat);
   if (!ctor) {
-    return nullptr;
-  }
-
-  RootedObject proto(
-      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
-  if (!proto) {
-    return nullptr;
-  }
-
-  if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
-    return nullptr;
-  }
-
-  if (!JS_DefineFunctions(cx, ctor, relativeTimeFormat_static_methods)) {
-    return nullptr;
-  }
-
-  if (!JS_DefineFunctions(cx, proto, relativeTimeFormat_methods)) {
-    return nullptr;
-  }
-
-  if (!JS_DefineProperties(cx, proto, relativeTimeFormat_properties)) {
-    return nullptr;
+    return false;
   }
 
   RootedValue ctorValue(cx, ObjectValue(*ctor));
-  if (!DefineDataProperty(cx, Intl, cx->names().RelativeTimeFormat, ctorValue,
-                          0)) {
-    return nullptr;
-  }
-
-  return proto;
+  return DefineDataProperty(cx, Intl, cx->names().RelativeTimeFormat, ctorValue,
+                            0);
 }
 
 /**
