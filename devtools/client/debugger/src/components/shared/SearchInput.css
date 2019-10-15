@@ -58,7 +58,7 @@
 .search-field .img.loader {
   width: 24px;
   height: 24px;
-  margin-inline-end: 6px;
+  margin-inline-end: 4px;
   animation: search-loader-rotate 0.5s linear infinite;
 }
 
@@ -101,6 +101,13 @@
   text-align: center;
   user-select: none;
   color: var(--theme-text-color-alt);
+  /* Avoid layout jumps when we increment the result count quickly. With tabular
+     numbers, layout will only jump between 9 and 10, 99 and 100, etc. */
+  font-variant-numeric: tabular-nums;
+}
+
+.search-field.big .search-field-summary {
+  margin-inline-end: 4px;
 }
 
 .search-field .search-nav-buttons {
@@ -127,4 +134,8 @@
 
 .search-field.big .close-btn {
   margin-inline-end: 8px;
+}
+
+.search-field .close-btn::-moz-focus-inner {
+  border: none;
 }

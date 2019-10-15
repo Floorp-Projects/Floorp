@@ -7,12 +7,19 @@
   top: var(--editor-header-height);
   left: 0;
   width: calc(100% - 1px);
-  height: calc(100% - 31px);
+  height: calc(100% - var(--editor-header-height));
   display: flex;
   flex-direction: column;
   z-index: 20;
   background-color: var(--theme-body-background);
   overflow-y: hidden;
+
+  /* Using the same colors as the Netmonitor's --table-selection-background-hover */
+  --search-result-background-hover: rgba(209, 232, 255, 0.8);
+}
+
+.theme-dark .search-container {
+  --search-result-background-hover: rgba(53, 59, 72, 1);
 }
 
 .project-text-search {
@@ -26,41 +33,43 @@
 .project-text-search .result {
   display: contents;
   cursor: default;
-  padding: 4px 0 4px 5px;
   line-height: 16px;
-  font-size: 10px;
-  width: 100%;
+  font-size: 11px;
+  font-family: var(--monospace-font-family);
 }
 
-.project-text-search .matches-summary {
-  margin-left: 5px;
-}
-
-.project-text-search .result {
-  font-family: Menlo, monospace;
-}
-
-.project-text-search .result .query-match {
-  background-color: var(--theme-selection-background);
-  color: white;
-  padding: 1px 4px;
-  margin: 0 2px 0 2px;
-  border-radius: 2px;
+.project-text-search .result:hover > * {
+  background-color: var(--search-result-background-hover);
 }
 
 .project-text-search .result .line-number {
-  padding-left: 5px;
-  min-width: 33px;
+  grid-column: 1;
   width: 100%;
+  padding-block: 1px;
+  padding-inline-start: 4px;
+  padding-inline-end: 6px;
   text-align: end;
-  grid-column: 1/2;
+  color: var(--theme-text-color-alt);
 }
 
 .project-text-search .result .line-value {
-  grid-column: 2/3;
-  padding-left: 5px;
+  grid-column: 2;
+  padding-block: 1px;
+  padding-inline-end: 4px;
   text-overflow: ellipsis;
   overflow-x: hidden;
+}
+
+.project-text-search .result .query-match {
+  border-bottom: 1px solid var(--theme-contrast-border);
+  color: var(--theme-contrast-color);
+  background-color: var(--theme-contrast-background);
+}
+
+.project-text-search .result.focused .query-match {
+  border-bottom: none;
+  color: var(--theme-selection-background);
+  background-color: var(--theme-selection-color);
 }
 
 .project-text-search .tree-indent {
@@ -77,21 +86,33 @@
 }
 
 .project-text-search .file-result {
-  font-weight: bold;
-  line-height: 20px;
-  cursor: default;
-  padding: 2px 0 2px 5px;
-  font-size: 12px;
   grid-column: 1/3;
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  cursor: default;
+  min-height: 24px;
+  padding: 2px 4px;
+  font-size: 12px;
+  line-height: calc(16 / 12);
 }
 
-.project-text-search .file-result .arrow {
-  margin: 2px 0 2px 0;
+.project-text-search .file-result .img {
+  margin-inline: 2px;
 }
 
-.project-text-search .line-match {
-  display: "flex";
-  flex-grow: 1;
+.project-text-search .file-result .img.file {
+  margin-inline-end: 4px;
+}
+
+.project-text-search .file-path {
+  flex: 0 1 auto;
+  white-space: normal;
+  padding-inline-end: 4px;
+}
+
+.project-text-search .file-path:empty {
+  display: none;
 }
 
 .project-text-search .search-field {
@@ -110,8 +131,18 @@
 .project-text-search .managed-tree .tree {
   height: 100%;
   display: grid;
-  grid-template-columns: auto 1fr;
+  /* Align the second column to the search input's text value */
+  grid-template-columns: minmax(40px, auto) 1fr;
   overflow-x: hidden;
+  padding-top: 4px;
+}
+
+/* Fake padding-bottom using a pseudo-element because Gecko doesn't render the
+   padding-bottom in a scroll container */
+.project-text-search .tree::after {
+  content: "";
+  display: block;
+  height: 4px;
 }
 
 .project-text-search .managed-tree .tree .tree-node {
@@ -120,21 +151,13 @@
 
 /* Focus values */
 
-.project-text-search .file-result.focused .img.file {
-  background-color: white;
-}
-
 .project-text-search .file-result.focused,
-.project-text-search .result.focused .line-value {
-  background-color: var(--theme-selection-background);
-}
-
+.project-text-search .result.focused .line-value,
 .project-text-search .result.focused .line-number {
-  font-weight: bolder;
+  color: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
 }
 
-.project-text-search .result.focused .query-match {
-  background-color: #ffffff;
-  color: #000000;
+.project-text-search .file-result.focused .img {
+  background-color: currentColor;
 }
