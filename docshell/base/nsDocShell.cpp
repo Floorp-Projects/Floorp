@@ -10520,10 +10520,10 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
     loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
   }
 
-  if (mSandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION) {
+  if (mSandboxFlags) {
     nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
     if (httpChannel) {
-      httpChannel->SetHasSandboxedAuxiliaryNavigations(true);
+      httpChannel->SetHasNonEmptySandboxingFlag(true);
     }
   }
 
