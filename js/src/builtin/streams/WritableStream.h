@@ -26,6 +26,7 @@ struct JSContext;
 
 namespace js {
 
+class PromiseObject;
 class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 
@@ -253,6 +254,8 @@ class WritableStream : public NativeObject {
 
     return JS::UndefinedValue();
   }
+
+  inline void setCloseRequest(PromiseObject* closeRequest);
 
   JS::Value inFlightCloseRequest() const {
     JS::Value v = getFixedSlot(Slot_CloseRequest);
