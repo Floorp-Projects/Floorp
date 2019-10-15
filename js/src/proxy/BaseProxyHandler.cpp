@@ -326,10 +326,8 @@ bool BaseProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test,
 bool BaseProxyHandler::hasInstance(JSContext* cx, HandleObject proxy,
                                    MutableHandleValue v, bool* bp) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
-  RootedValue val(cx, ObjectValue(*proxy.get()));
-  ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, JSDVG_SEARCH_STACK, val,
-                   nullptr);
-  return false;
+  cx->check(proxy, v);
+  return JS::InstanceofOperator(cx, proxy, v, bp);
 }
 
 bool BaseProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
