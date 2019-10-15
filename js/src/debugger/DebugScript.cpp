@@ -246,7 +246,7 @@ bool DebugScript::incrementGeneratorObserverCount(JSContext* cx,
 
   // It is our caller's responsibility, before bumping the generator observer
   // count, to make sure that the baseline code includes the necessary
-  // JS_AFTERYIELD instrumentation by calling
+  // JSOP_AFTERYIELD instrumentation by calling
   // {ensure,update}ExecutionObservabilityOfScript.
   MOZ_ASSERT_IF(script->hasBaselineScript(),
                 script->baselineScript()->hasDebugInstrumentation());
