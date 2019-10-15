@@ -870,16 +870,17 @@ class JSLinearString : public JSString {
 
   bool isIndexSlow(uint32_t* indexp) const {
     MOZ_ASSERT(JSString::isLinear());
-    if (length() == 0) {
+    size_t len = length();
+    if (len == 0 || len > js::UINT32_CHAR_BUFFER_LENGTH) {
       return false;
     }
     JS::AutoCheckCannotGC nogc;
     if (hasLatin1Chars()) {
       const JS::Latin1Char* s = latin1Chars(nogc);
-      return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, length(), indexp);
+      return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, len, indexp);
     }
     const char16_t* s = twoByteChars(nogc);
-    return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, length(), indexp);
+    return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, len, indexp);
   }
 
   /*

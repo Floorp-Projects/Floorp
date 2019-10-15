@@ -1251,12 +1251,9 @@ template <typename CharT>
 bool JSLinearString::isIndexSlow(const CharT* s, size_t length,
                                  uint32_t* indexp) {
   MOZ_ASSERT(length > 0);
+  MOZ_ASSERT(length <= UINT32_CHAR_BUFFER_LENGTH);
   MOZ_ASSERT(IsAsciiDigit(*s),
              "caller's fast path must have checked first char");
-
-  if (length > UINT32_CHAR_BUFFER_LENGTH) {
-    return false;
-  }
 
   RangedPtr<const CharT> cp(s, length);
   const RangedPtr<const CharT> end(s + length, s, length);
