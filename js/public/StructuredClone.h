@@ -208,7 +208,7 @@ class CloneDataPolicy {
   bool sharedArrayBuffer_;
 
  public:
-  // The default is to allow all policy-controlled aspects.
+  // The default is to deny all policy-controlled aspects.
 
   CloneDataPolicy() : sharedArrayBuffer_(false) {}
 
