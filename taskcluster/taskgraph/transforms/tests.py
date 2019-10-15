@@ -1091,7 +1091,7 @@ def handle_run_on_projects(config, tests):
 @transforms.add
 def split_variants(config, tests):
     for test in tests:
-        variants = test.pop('variants') or []
+        variants = test.pop('variants', [])
 
         yield copy.deepcopy(test)
 

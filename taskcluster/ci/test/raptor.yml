@@ -1013,11 +1013,11 @@ raptor-jetstream2-firefox-profiling:
         fetch:
             - jetstream2
 
-browsertime-tp6-1-firefox:
-    description: "Raptor (browsertime) tp6-1 on Firefox"
+browsertime-tp6-1:
+    description: "Raptor (browsertime) tp6-1"
     run-on-projects: ['integration', 'try']
+    apps: ["firefox"]
     variants: ["fission"]
-    try-name: browsertime-tp6-1-firefox
     treeherder-symbol: Btime(tp6-1)
     max-run-time: 3000
     tier: 3
@@ -1026,11 +1026,11 @@ browsertime-tp6-1-firefox:
             - --browsertime
             - --test=raptor-tp6-1
 
-browsertime-tp6-1-firefox-cold:
-    description: "Raptor (browsertime) tp6-1 cold page-load on Firefox"
+browsertime-tp6-1-cold:
+    description: "Raptor (browsertime) tp6-1 cold page-load"
     run-on-projects: ['integration', 'try']
+    apps: ["firefox"]
     variants: ["fission"]
-    try-name: browsertime-tp6-1-firefox-cold
     treeherder-symbol: Btime(tp6-c-1)
     max-run-time: 3000
     tier: 3
