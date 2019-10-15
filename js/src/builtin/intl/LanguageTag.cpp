@@ -200,6 +200,15 @@ bool LanguageTag::setUnicodeExtension(UniqueChars extension) {
   return extensions_.append(std::move(extension));
 }
 
+void LanguageTag::clearUnicodeExtension() {
+  auto p = std::find_if(extensions().begin(), extensions().end(),
+                        [](const auto& ext) { return ext[0] == 'u'; });
+  if (p != extensions().end()) {
+    size_t index = std::distance(extensions().begin(), p);
+    extensions_.erase(extensions_.begin() + index);
+  }
+}
+
 template <size_t InitialCapacity>
 static bool SortAlphabetically(JSContext* cx,
                                Vector<UniqueChars, InitialCapacity>& subtags) {
