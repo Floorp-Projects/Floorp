@@ -21,6 +21,7 @@
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
 
+#include "builtin/streams/WritableStream-inl.h"  // js::WritableStream::writer
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
 #include "vm/JSObject-inl.h"     // js::NewObjectWithClassProto
 #include "vm/List-inl.h"         // js::StoreNewListInFixedSlot
@@ -261,6 +262,85 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightWriteWithError(
 
   // Step 5:  Perform ! WritableStreamDealWithRejection(stream, error).
   return WritableStreamDealWithRejection(cx, unwrappedStream, error);
+}
+
+/**
+ * Streams spec, 4.4.7.
+ *      WritableStreamFinishInFlightClose ( stream )
+ */
+MOZ_MUST_USE bool js::WritableStreamFinishInFlightClose(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream) {
+  // Step 1: Assert: stream.[[inFlightCloseRequest]] is not undefined.
+  MOZ_ASSERT(unwrappedStream->haveInFlightCloseRequest());
+
+  // Step 2: Resolve stream.[[inFlightCloseRequest]] with undefined.
+  {
+    Rooted<JSObject*> inFlightCloseRequest(
+        cx, &unwrappedStream->inFlightCloseRequest().toObject());
+    if (!cx->compartment()->wrap(cx, &inFlightCloseRequest)) {
+      return false;
+    }
+    if (!ResolvePromise(cx, inFlightCloseRequest, UndefinedHandleValue)) {
+      return false;
+    }
+  }
+
+  // Step 3: Set stream.[[inFlightCloseRequest]] to undefined.
+  unwrappedStream->clearInFlightCloseRequest();
+  MOZ_ASSERT(unwrappedStream->inFlightCloseRequest().isUndefined());
+
+  // Step 4: Let state be stream.[[state]].
+  // Step 5: Assert: stream.[[state]] is "writable" or "erroring".
+  MOZ_ASSERT(unwrappedStream->writable() ^ unwrappedStream->erroring());
+
+  // Step 6: If state is "erroring",
+  if (unwrappedStream->erroring()) {
+    // Step 6.a: Set stream.[[storedError]] to undefined.
+    unwrappedStream->clearStoredError();
+
+    // Step 6.b: If stream.[[pendingAbortRequest]] is not undefined,
+    if (unwrappedStream->hasPendingAbortRequest()) {
+      // Step 6.b.i: Resolve stream.[[pendingAbortRequest]].[[promise]] with
+      //             undefined.
+      Rooted<JSObject*> pendingAbortRequestPromise(
+          cx, unwrappedStream->pendingAbortRequestPromise());
+      if (!cx->compartment()->wrap(cx, &pendingAbortRequestPromise)) {
+        return false;
+      }
+      if (!ResolvePromise(cx, pendingAbortRequestPromise,
+                          UndefinedHandleValue)) {
+        return false;
+      }
+
+      // Step 6.b.ii: Set stream.[[pendingAbortRequest]] to undefined.
+      unwrappedStream->clearPendingAbortRequest();
+    }
+  }
+
+  // Step 7: Set stream.[[state]] to "closed".
+  unwrappedStream->setClosed();
+
+  // Step 8: Let writer be stream.[[writer]].
+  // Step 9: If writer is not undefined, resolve writer.[[closedPromise]] with
+  //         undefined.
+  if (unwrappedStream->hasWriter()) {
+    Rooted<JSObject*> closedPromise(cx,
+                                    unwrappedStream->writer()->closedPromise());
+    if (!cx->compartment()->wrap(cx, &closedPromise)) {
+      return false;
+    }
+    if (!ResolvePromise(cx, closedPromise, UndefinedHandleValue)) {
+      return false;
+    }
+  }
+
+  // Step 10: Assert: stream.[[pendingAbortRequest]] is undefined.
+  MOZ_ASSERT(!unwrappedStream->hasPendingAbortRequest());
+
+  // Step 11: Assert: stream.[[storedError]] is undefined.
+  MOZ_ASSERT(unwrappedStream->storedError().isUndefined());
+
+  return true;
 }
 
 /**
