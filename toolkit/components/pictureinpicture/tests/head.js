@@ -7,7 +7,12 @@ const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
 );
+const TEST_ROOT_2 = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "http://example.org"
+);
 const TEST_PAGE = TEST_ROOT + "test-page.html";
+const TEST_PAGE_WITH_IFRAME = TEST_ROOT_2 + "test-page-with-iframe.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_ID = "pictureInPictureToggleButton";
 const HOVER_VIDEO_OPACITY = 0.8;
@@ -18,7 +23,8 @@ const HOVER_TOGGLE_OPACITY = 1.0;
  * Picture-in-Picture for that <video>, and resolves with the
  * Picture-in-Picture window once it is ready to be used.
  *
- * @param {Element} browser The <xul:browser> hosting the <video>
+ * @param {Element,BrowsingContext} browser The <xul:browser> or
+ * BrowsingContext hosting the <video>
  *
  * @param {String} videoID The ID of the video to trigger
  * Picture-in-Picture on.
@@ -28,7 +34,7 @@ const HOVER_TOGGLE_OPACITY = 1.0;
  */
 async function triggerPictureInPicture(browser, videoID) {
   let domWindowOpened = BrowserTestUtils.domWindowOpened(null);
-  let videoReady = ContentTask.spawn(browser, videoID, async videoID => {
+  let videoReady = SpecialPowers.spawn(browser, [videoID], async videoID => {
     let video = content.document.getElementById(videoID);
     let event = new content.CustomEvent("MozTogglePictureInPicture", {
       bubbles: true,
@@ -49,7 +55,8 @@ async function triggerPictureInPicture(browser, videoID) {
  * video is showing the "This video is playing in Picture-in-Picture mode."
  * status message overlay.
  *
- * @param {Element} browser The <xul:browser> hosting the <video>
+ * @param {Element,BrowsingContext} browser The <xul:browser> or
+ * BrowsingContext hosting the <video>
  *
  * @param {String} videoID The ID of the video to trigger
  * Picture-in-Picture on.
@@ -60,11 +67,11 @@ async function triggerPictureInPicture(browser, videoID) {
  * @resolves When the checks have completed.
  */
 async function assertShowingMessage(browser, videoID, expected) {
-  let showing = await ContentTask.spawn(browser, videoID, async videoID => {
+  let showing = await SpecialPowers.spawn(browser, [videoID], async videoID => {
     let video = content.document.getElementById(videoID);
     let shadowRoot = video.openOrClosedShadowRoot;
     let pipOverlay = shadowRoot.querySelector(".pictureInPictureOverlay");
-    ok(pipOverlay, "Should be able to find Picture-in-Picture overlay.");
+    Assert.ok(pipOverlay, "Should be able to find Picture-in-Picture overlay.");
 
     let rect = pipOverlay.getBoundingClientRect();
     return rect.height > 0 && rect.width > 0;
