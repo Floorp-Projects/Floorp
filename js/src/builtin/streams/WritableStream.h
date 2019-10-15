@@ -186,6 +186,7 @@ class WritableStream : public NativeObject {
   bool writable() const { return state() == Writable; }
 
   bool closed() const { return state() == Closed; }
+  void setClosed() { setState(Closed); }
 
   bool erroring() const { return state() == Erroring; }
   void setErroring() { setState(Erroring); }
@@ -219,6 +220,9 @@ class WritableStream : public NativeObject {
   JS::Value storedError() const { return getFixedSlot(Slot_StoredError); }
   void setStoredError(JS::Handle<JS::Value> value) {
     setFixedSlot(Slot_StoredError, value);
+  }
+  void clearStoredError() {
+    setFixedSlot(Slot_StoredError, JS::UndefinedValue());
   }
 
   JS::Value inFlightWriteRequest() const {
@@ -297,6 +301,18 @@ class WritableStream : public NativeObject {
     MOZ_ASSERT(haveInFlightCloseRequest());
   }
 
+  void clearInFlightCloseRequest() {
+    MOZ_ASSERT(stateIsInitialized());
+    MOZ_ASSERT(haveInFlightCloseRequest());
+    MOZ_ASSERT(!getFixedSlot(Slot_CloseRequest).isUndefined());
+
+    // As noted above, for greater rigor we require HaveInFlightCloseRequest be
+    // unset when [[closeRequest]] and [[inFlightCloseRequest]] are both
+    // undefined.
+    setFlag(HaveInFlightCloseRequest, false);
+    setFixedSlot(Slot_CloseRequest, JS::UndefinedValue());
+  }
+
   ListObject* writeRequests() const {
     return &getFixedSlot(Slot_WriteRequests).toObject().as<ListObject>();
   }
@@ -323,6 +339,16 @@ class WritableStream : public NativeObject {
   bool pendingAbortRequestWasAlreadyErroring() const {
     MOZ_ASSERT(hasPendingAbortRequest());
     return flags() & PendingAbortRequestWasAlreadyErroring;
+  }
+
+  void clearPendingAbortRequest() {
+    MOZ_ASSERT(stateIsInitialized());
+    MOZ_ASSERT(hasPendingAbortRequest());
+
+    // [[pendingAbortRequest]] is { [[promise]], [[reason]] } in the spec but
+    // separate slots in our implementation, so both must be cleared.
+    setFixedSlot(Slot_PendingAbortRequestPromise, JS::UndefinedValue());
+    setFixedSlot(Slot_PendingAbortRequestReason, JS::UndefinedValue());
   }
 
   static MOZ_MUST_USE WritableStream* create(
