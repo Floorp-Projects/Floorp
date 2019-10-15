@@ -715,3 +715,39 @@ function openContextMenuAndGetAllItems(inspector, options) {
   const menu = inspector.markup.contextMenu._openMenu(options);
   return buildContextMenuItems(menu);
 }
+
+/**
+ * Wait until the elements the given selectors indicate come to have the visited state.
+ *
+ * @param {Tab} tab
+ *        The tab where the elements on.
+ * @param {Array} selectors
+ *        The selectors for the elements.
+ */
+async function waitUntilVisitedState(tab, selectors) {
+  await asyncWaitUntil(async () => {
+    const hasVisitedState = await ContentTask.spawn(
+      tab.linkedBrowser,
+      selectors,
+      args => {
+        const NS_EVENT_STATE_VISITED = 1 << 24;
+
+        for (const selector of args) {
+          const target = content.wrappedJSObject.document.querySelector(
+            selector
+          );
+          if (
+            !(
+              target &&
+              InspectorUtils.getContentState(target) & NS_EVENT_STATE_VISITED
+            )
+          ) {
+            return false;
+          }
+        }
+        return true;
+      }
+    );
+    return hasVisitedState;
+  });
+}
