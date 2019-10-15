@@ -29,8 +29,12 @@ TEST_F(APZCSnappingTester, Bug1265510) {
 
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
-  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
+    snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  } else {
+    snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
+  }
 
   ScrollMetadata metadata = root->GetScrollMetadata(0);
   metadata.SetSnapInfo(ScrollSnapInfo(snap));
@@ -101,8 +105,12 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch) {
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
 
-  snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
-  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
+    snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  } else {
+    snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
+  }
 
   // Save the scroll snap info on the root APZC.
   // Also mark the root APZC as "root content", since APZC only allows
