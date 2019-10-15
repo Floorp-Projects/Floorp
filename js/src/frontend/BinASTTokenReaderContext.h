@@ -433,31 +433,11 @@ class SingleLookupHuffmanTable {
   // used by the table.
   using InternalIndex = uint8_t;
 
-  // An enum used to represent how this table is used.
-  // Used to perform additional DEBUG assertions.
-  enum Use {
-    // Used as a `Subtable` argument of a `MultiLookupHuffmanTable`.
-    LeafOfMultiLookupHuffmanTable,
-    // Used as its own table.
-    ToplevelTable,
-    // Used as a `shortKeys_` in a `MultiLookupHuffmanTable`.
-    ShortKeys,
-  };
-
   // The largest bit length that may be represented by this table.
   static const uint8_t MAX_BIT_LENGTH = sizeof(InternalIndex) * 8;
 
-  explicit SingleLookupHuffmanTable(
-      JSContext* cx, Use use = Use::LeafOfMultiLookupHuffmanTable)
-      : values_(cx),
-        saturated_(cx),
-        largestBitLength_(-1)
-#ifdef DEBUG
-        ,
-        use_(use)
-#endif  // DEBUG
-  {
-  }
+  explicit SingleLookupHuffmanTable(JSContext* cx)
+      : values_(cx), saturated_(cx), largestBitLength_(-1) {}
   SingleLookupHuffmanTable(SingleLookupHuffmanTable&& other) = default;
 
   // Initialize a Huffman table containing `numberOfSymbols`.
@@ -528,10 +508,6 @@ class SingleLookupHuffmanTable {
   // - `largestBitLength_ <= MAX_CODE_BIT_LENGTH`
   uint8_t largestBitLength_;
 
-#ifdef DEBUG
-  Use use_;
-#endif  // DEBUG
-
   friend class HuffmanPreludeReader;
 };
 
@@ -545,13 +521,10 @@ class SingleLookupHuffmanTable {
 /// # Time complexity
 ///
 /// A lookup in `MultiLookupHuffmanTable` will also take constant time:
-
-/// - a constant-time lookup in a `SingleLookupHuffmanTable`, in case we only
-///   need to look for a small key;
-/// - if the above lookup fails:
-///   - a constant-time lookup to determine into which suffix table to perform
-///     the lookup;
-///   - a constant-time lookup into the suffix table;
+///
+/// - a constant-time lookup to determine into which sub-table to perform the
+/// lookup;
+/// - a constant-time lookup into the sub-table;
 /// - a constant-time lookup into the array of values.
 ///
 ///
@@ -575,100 +548,87 @@ class SingleLookupHuffmanTable {
 /// G      | 00           | 2
 /// H      | 01           | 2
 ///
-/// Let us assume that we have somehow determined that:
+/// With a prefix length of 3, we will precompute all possible 3-bit prefixes
+/// and split the table across such prefixes. Note that we have picked a
+/// length of 3 bits arbitrarily – in this case it is larger than the
+/// bit length of some symbols.
 ///
-/// - we wish to store all values with a bit length of 2
-///   or less in a fast access table.
-/// - we wish to use a prefix length of 4.
-///
-/// Note: These numbers of 2 and 4 are picked arbitrarily
-/// for the example. Actual numbers used may vary.
-///
-/// We first extract all values with a bit length of <= 2:
-///
-/// Symbol | Binary Code  | Bit Length
-/// ------ | ------------ | ----------
-/// G      | 00           | 2
-/// H      | 01           | 2
-///
-/// We store these values in a `SingleLookupHuffmanTable` for fast access.
-/// We are now done with these values. Let's deal with the remaining values.
-///
-/// Now, as our prefix length is 4, we precompute all possible 3-bit
-/// prefixes and split the table across such prefixes.
-///
-/// Prefix  | Int Value of Prefix | Symbols   | Max bit length
-/// ------- | ------------------- | --------- | --------------
-/// 0000    | 0                   |           | 0
-/// 0001    | 1                   |           | 0
-/// 0010    | 2                   |           | 0
-/// 0011    | 3                   |           | 0
-/// 0100    | 4                   |           | 0
-/// 0101    | 5                   |           | 0
-/// 0110    | 6                   |           | 0
-/// 0111    | 7                   |           | 0
-/// 1000    | 8                   | D         | 0
-/// 1001    | 9                   | D         | 0
-/// 1010    | 10                  | E         | 0
-/// 1011    | 11                  | E         | 0
-/// 1100    | 12                  | A, B      | 1
-/// 1101    | 13                  | C         | 0
-/// 1110    | 14                  | F         | 0
-/// 1111    | 15                  | F         | 0
+/// Prefix | Int Value of Prefix | Symbols   | Max bit length
+/// ------ | ------------------- | --------- | --------------
+/// 000    | 0                   | G         | 0
+/// 001    | 1                   | G         | 0
+/// 010    | 2                   | H         | 0
+/// 011    | 3                   | H         | 0
+/// 100    | 4                   | D         | 0
+/// 101    | 5                   | E         | 0
+/// 110    | 6                   | A, B, C   | 2
+/// 111    | 7                   | F         | 0
 ///
 /// For each prefix, we build the table containing the Symbols,
 /// stripping prefix from the Binary Code.
-/// - Prefixes 0000-01111
 ///
-/// Empty tables.
+/// - Prefix 000
 ///
-/// - Prefixes 1000, 1001
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// G      | (none)      | 0          | 2
+///
+/// - Prefix 001
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// G      | (none)      | 0          | 2
+///
+/// - Prefix 010
 ///
 /// Symbol | Binary Code | Bit Length | Total Bit Length
 /// ------ | ----------- | ---------- | --------------
+/// H      | (none)      | 0          | 2
+///
+/// - Prefix 11
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
+/// H      | (none)      | 0          | 2
+///
+/// - Prefix 100
+///
+/// Symbol | Binary Code | Bit Length | Total Bit Length
+/// ------ | ----------- | ---------- | ----------------
 /// D      | (none)      | 0          | 3
 ///
-/// - Prefixes 1010, 1011
+/// - Prefix 101
 ///
 /// Symbol | Binary Code | Bit Length | Total Bit Length
-/// ------ | ----------- | ---------- | --------------
+/// ------ | ----------- | ---------- | ----------------
 /// E      | (none)      | 0          | 3
 ///
-/// - Prefix 1100
+/// - Prefix 110
 ///
 /// Symbol | Binary Code | Bit Length | Total Bit Length
 /// ------ | ----------- | ---------- | ----------------
-/// A      | 0           | 1          | 5
-/// B      | 1           | 1          | 5
+/// A      | 00          | 2          | 5
+/// B      | 01          | 2          | 5
+/// C      | 1           | 1          | 4
 ///
-/// - Prefix 1101
-///
-/// Symbol | Binary Code | Bit Length | Total Bit Length
-/// ------ | ----------- | ---------- | ----------------
-/// C      | (none)      | 0          | 4
-///
-/// - Prefixes 1110, 1111
+/// - Prefix 111
 ///
 /// Symbol | Binary Code | Bit Length | Total Bit Length
 /// ------ | ----------- | ---------- | ----------------
-/// F      | (none)      | 0          | 4
-///
+/// F      | (none)      | 0          | 3
 ///
 /// With this transformation, we have represented one table
 /// with an initial max bit length of 5 as:
 ///
-/// - 1 SingleLookupValue table with a max bit length of 3;
-/// - 8 empty tables;
-/// - 7 tables with a max bit length of 0;
-/// - 1 table with a max bit length of 1;
+/// - 1 table with a max bit length of 2;
+/// - 7 tables with a max bit length of 0.
 ///
 /// Consequently, instead of storing 2^5 = 32 internal references,
 /// as we would have done with a SingleLookupHuffmanTable, we only
 /// need to store:
 ///
-/// - 1 subtable with 2^3 = 8 references;
 /// - 7 subtables with 1 reference each;
-/// - 1 subtable with 2^1 = 2 references.
+/// - 1 subtable with 2^2 = 4 references.
 template <typename Subtable, uint8_t PrefixBitLength>
 class MultiLookupHuffmanTable {
  public:
@@ -677,11 +637,7 @@ class MultiLookupHuffmanTable {
       PrefixBitLength + Subtable::MAX_BIT_LENGTH;
 
   explicit MultiLookupHuffmanTable(JSContext* cx)
-      : cx_(cx),
-        shortKeys_(cx, SingleLookupHuffmanTable::Use::ShortKeys),
-        values_(cx),
-        suffixTables_(cx),
-        largestBitLength_(-1) {}
+      : cx_(cx), values_(cx), subTables_(cx), largestBitLength_(-1) {}
   MultiLookupHuffmanTable(MultiLookupHuffmanTable&& other) = default;
 
   // Initialize a Huffman table containing `numberOfSymbols`.
@@ -740,10 +696,6 @@ class MultiLookupHuffmanTable {
  private:
   JSContext* cx_;
 
-  // Fast lookup for values whose keys fit within 8 bits.
-  // Such values are not added to `suffixTables`.
-  SingleLookupHuffmanTable shortKeys_;
-
   // The entries in this Huffman Table, sorted in the order of insertion.
   //
   // Invariant (once `init*` has been called):
@@ -761,7 +713,7 @@ class MultiLookupHuffmanTable {
   // Note that, to allow the use of smaller tables, keys
   // inside the subtables have been stripped
   // from the prefix `HuffmanKey(i, prefixBitLen)`.
-  Vector<Subtable> suffixTables_;
+  Vector<Subtable> subTables_;
 
   // The maximal bitlength of a value in this table.
   //
