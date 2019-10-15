@@ -42,7 +42,6 @@
 
 #include "TrustOverrideUtils.h"
 #include "TrustOverride-StartComAndWoSignData.inc"
-#include "TrustOverride-GlobalSignData.inc"
 #include "TrustOverride-SymantecData.inc"
 #include "TrustOverride-AppleGoogleDigiCertData.inc"
 
@@ -583,7 +582,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
 
   // Bug 991815: The BR allow OCSP for intermediates to be up to one year old.
   // Since this affects EV there is no reason why DV should be more strict
-  // so all intermediatates are allowed to have OCSP responses up to one year
+  // so all intermediates are allowed to have OCSP responses up to one year
   // old.
   uint16_t maxOCSPLifetimeInDays = 10;
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
@@ -774,7 +773,7 @@ Result NSSCertDBTrustDomain::CheckRevocation(
       cachedResponseResult == Result::ERROR_OCSP_UNKNOWN_CERT ||
       cachedResponseResult == Result::ERROR_OCSP_OLD_RESPONSE) {
     // Only send a request to, and process a response from, the server if we
-    // didn't have a cached indication of failure.  Also, ddon't keep requesting
+    // didn't have a cached indication of failure.  Also, don't keep requesting
     // responses from a failing server.
     return SynchronousCheckRevocationWithServer(
         certID, aiaLocation, time, maxOCSPLifetimeInDays, cachedResponseResult,
@@ -1040,52 +1039,6 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     }
     if (!chainHasValidPins) {
       return Result::ERROR_KEY_PINNING_FAILURE;
-    }
-  }
-
-  // See bug 1349762. If the root is "GlobalSign Root CA - R2", don't consider
-  // the end-entity valid for EV unless the
-  // "GlobalSign Extended Validation CA - SHA256 - G2" intermediate is in the
-  // chain as well. It should be possible to remove this workaround after
-  // January 2019 as per bug 1349727 comment 17.
-  if (requiredPolicy == sGlobalSignEVPolicy &&
-      CertMatchesStaticData(root.get(), sGlobalSignRootCAR2SubjectBytes,
-                            sGlobalSignRootCAR2SPKIBytes)) {
-    rootCert = nullptr;  // Clear the state for Segment...
-    nsCOMPtr<nsIX509CertList> intCerts;
-    nsCOMPtr<nsIX509Cert> eeCert;
-
-    nsrv = nssCertList->SegmentCertificateChain(rootCert, intCerts, eeCert);
-    if (NS_FAILED(nsrv)) {
-      // This is supposed to be a valid EV chain (where at least 3 certificates
-      // are required: end-entity, at least one intermediate, and a root), so
-      // this is an error.
-      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
-    }
-
-    bool foundRequiredIntermediate = false;
-    RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
-    nsrv = intCertList->ForEachCertificateInChain(
-        [&foundRequiredIntermediate](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
-                                     /* out */ bool& aContinue) {
-          // We need an owning handle when calling nsIX509Cert::GetCert().
-          UniqueCERTCertificate nssCert(aCert->GetCert());
-          if (CertMatchesStaticData(
-                  nssCert.get(),
-                  sGlobalSignExtendedValidationCASHA256G2SubjectBytes,
-                  sGlobalSignExtendedValidationCASHA256G2SPKIBytes)) {
-            foundRequiredIntermediate = true;
-            aContinue = false;
-          }
-          return NS_OK;
-        });
-
-    if (NS_FAILED(nsrv)) {
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
-    }
-
-    if (!foundRequiredIntermediate) {
-      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
   }
 
