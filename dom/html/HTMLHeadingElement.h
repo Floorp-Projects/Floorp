@@ -17,15 +17,17 @@ class HTMLHeadingElement final : public nsGenericHTMLElement {
  public:
   explicit HTMLHeadingElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {
+    MOZ_ASSERT(IsHTMLHeadingElement());
+  }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   void SetAlign(const nsAString& aAlign, ErrorResult& aError) {
     return SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
@@ -34,11 +36,12 @@ class HTMLHeadingElement final : public nsGenericHTMLElement {
     return GetHTMLAttr(nsGkAtoms::align, aAlign);
   }
 
+  NS_IMPL_FROMNODE_HELPER(HTMLHeadingElement, IsHTMLHeadingElement())
+
  protected:
   virtual ~HTMLHeadingElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
  private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
