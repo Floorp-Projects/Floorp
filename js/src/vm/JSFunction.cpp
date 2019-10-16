@@ -1941,13 +1941,14 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     return false;
   }
 
-  JSProtoKey protoKey = JSProto_Null;
+  JSProtoKey protoKey;
   if (isAsync) {
     if (isGenerator) {
       if (!CompileStandaloneAsyncGenerator(cx, &fun, options, srcBuf,
                                            parameterListEnd)) {
         return false;
       }
+      protoKey = JSProto_AsyncGeneratorFunction;
     } else {
       if (!CompileStandaloneAsyncFunction(cx, &fun, options, srcBuf,
                                           parameterListEnd)) {

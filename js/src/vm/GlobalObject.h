@@ -79,8 +79,6 @@ class GlobalObject : public NativeObject {
     GENERATOR_OBJECT_PROTO,
     ASYNC_ITERATOR_PROTO,
     ASYNC_FROM_SYNC_ITERATOR_PROTO,
-    ASYNC_GENERATOR,
-    ASYNC_GENERATOR_FUNCTION,
     ASYNC_GENERATOR_PROTO,
     MAP_ITERATOR_PROTO,
     SET_ITERATOR_PROTO,
@@ -624,34 +622,66 @@ class GlobalObject : public NativeObject {
     return &global->getConstructor(JSProto_AsyncFunction).toObject();
   }
 
+  void setAsyncIteratorPrototype(JSObject* obj) {
+    MOZ_ASSERT(getReservedSlot(ASYNC_ITERATOR_PROTO).isUndefined());
+    MOZ_ASSERT(obj != nullptr);
+    setSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*obj));
+  }
+
+  void setAsyncFromSyncIteratorPrototype(JSObject* obj) {
+    MOZ_ASSERT(getReservedSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO).isUndefined());
+    MOZ_ASSERT(obj != nullptr);
+    setSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO, ObjectValue(*obj));
+  }
+
   static NativeObject* getOrCreateAsyncIteratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return MaybeNativeObject(getOrCreateObject(cx, global, ASYNC_ITERATOR_PROTO,
-                                               initAsyncGenerators));
+    if (!ensureConstructor(cx, global, JSProto_AsyncGeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getSlot(ASYNC_ITERATOR_PROTO).toObject().as<NativeObject>();
   }
 
   static NativeObject* getOrCreateAsyncFromSyncIteratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return MaybeNativeObject(getOrCreateObject(
-        cx, global, ASYNC_FROM_SYNC_ITERATOR_PROTO, initAsyncGenerators));
+    if (!ensureConstructor(cx, global, JSProto_AsyncGeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO)
+                .toObject()
+                .as<NativeObject>();
   }
 
   static NativeObject* getOrCreateAsyncGenerator(JSContext* cx,
                                                  Handle<GlobalObject*> global) {
-    return MaybeNativeObject(
-        getOrCreateObject(cx, global, ASYNC_GENERATOR, initAsyncGenerators));
+    if (!ensureConstructor(cx, global, JSProto_AsyncGeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_AsyncGeneratorFunction)
+                .toObject()
+                .as<NativeObject>();
   }
 
   static JSObject* getOrCreateAsyncGeneratorFunction(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, ASYNC_GENERATOR_FUNCTION,
-                             initAsyncGenerators);
+    if (!ensureConstructor(cx, global, JSProto_AsyncGeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getConstructor(JSProto_AsyncGeneratorFunction).toObject();
+  }
+
+  void setAsyncGeneratorPrototype(JSObject* obj) {
+    setSlot(ASYNC_GENERATOR_PROTO, ObjectValue(*obj));
   }
 
   static NativeObject* getOrCreateAsyncGeneratorPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return MaybeNativeObject(getOrCreateObject(
-        cx, global, ASYNC_GENERATOR_PROTO, initAsyncGenerators));
+    if (!ensureConstructor(cx, global, JSProto_AsyncGeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getSlot(ASYNC_GENERATOR_PROTO)
+                .toObject()
+                .as<NativeObject>();
   }
 
   static JSObject* getOrCreateMapIteratorPrototype(
@@ -788,8 +818,6 @@ class GlobalObject : public NativeObject {
                                       Handle<GlobalObject*> global);
   static bool initRegExpStringIteratorProto(JSContext* cx,
                                             Handle<GlobalObject*> global);
-
-  static bool initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
   // Implemented in builtin/MapObject.cpp.
   static bool initMapIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
