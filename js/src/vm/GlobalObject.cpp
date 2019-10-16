@@ -17,6 +17,7 @@
 #ifdef ENABLE_INTL_API
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
+#  include "builtin/intl/Locale.h"
 #endif
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"

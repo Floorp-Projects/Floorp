@@ -92,7 +92,6 @@ class GlobalObject : public NativeObject {
     NUMBER_FORMAT_PROTO,
     PLURAL_RULES_PROTO,
     RELATIVE_TIME_FORMAT_PROTO,
-    LOCALE_PROTO,
     MODULE_PROTO,
     IMPORT_ENTRY_PROTO,
     EXPORT_ENTRY_PROTO,
@@ -550,7 +549,10 @@ class GlobalObject : public NativeObject {
 
   static JSObject* getOrCreateLocalePrototype(JSContext* cx,
                                               Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, LOCALE_PROTO, initIntlObject);
+    if (!ensureConstructor(cx, global, JSProto_Locale)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_Locale).toObject();
   }
 #endif  // ENABLE_INTL_API
 
@@ -856,9 +858,6 @@ class GlobalObject : public NativeObject {
 #ifdef ENABLE_INTL_API
   // Implemented in builtin/intl/IntlObject.cpp.
   static bool initIntlObject(JSContext* cx, Handle<GlobalObject*> global);
-
-  // Implemented in builtin/intl/Locale.cpp.
-  static bool addLocaleConstructor(JSContext* cx, HandleObject intl);
 #endif
 
   // Implemented in builtin/ModuleObject.cpp
