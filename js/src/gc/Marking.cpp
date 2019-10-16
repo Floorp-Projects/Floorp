@@ -222,10 +222,20 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   Zone* zone = thing->zoneFromAnyThread();
   JSRuntime* rt = trc->runtime();
 
-  if (!IsTracerKind(trc, JS::CallbackTracer::TracerKind::Moving) &&
-      !IsTracerKind(trc, JS::CallbackTracer::TracerKind::GrayBuffering) &&
-      !IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges) &&
-      !IsTracerKind(trc, JS::CallbackTracer::TracerKind::Sweeping)) {
+  bool isGcMarkingTracer = trc->isMarkingTracer();
+  bool isUnmarkGray =
+      IsTracerKind(trc, JS::CallbackTracer::TracerKind::UnmarkGray);
+  if (isUnmarkGray || isGcMarkingTracer) {
+    bool isMainThread = TlsContext.get()->isMainThreadContext();
+    MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessZone(zone));
+    MOZ_ASSERT_IF(isMainThread, CurrentThreadCanAccessRuntime(rt));
+    MOZ_ASSERT_IF(!isMainThread, CurrentThreadIsPerformingGC());
+    MOZ_ASSERT_IF(isGcMarkingTracer, zone->shouldMarkInZone());
+  } else if (!IsTracerKind(trc, JS::CallbackTracer::TracerKind::Moving) &&
+             !IsTracerKind(trc,
+                           JS::CallbackTracer::TracerKind::GrayBuffering) &&
+             !IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges) &&
+             !IsTracerKind(trc, JS::CallbackTracer::TracerKind::Sweeping)) {
     MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   }
@@ -242,8 +252,6 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
       MapTypeToTraceKind<typename mozilla::RemovePointer<T>::Type>::kind ==
       thing->getTraceKind());
 
-  bool isGcMarkingTracer = trc->isMarkingTracer();
-
   MOZ_ASSERT_IF(
       zone->requireGCTracer(),
       isGcMarkingTracer ||
@@ -255,7 +263,7 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
   if (isGcMarkingTracer) {
     GCMarker* gcMarker = GCMarker::fromTracer(trc);
     MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
-                  zone->isCollecting() || zone->isAtomsZone());
+                  zone->isCollectingFromAnyThread() || zone->isAtomsZone());
 
     MOZ_ASSERT_IF(gcMarker->markColor() == MarkColor::Gray,
                   !zone->isGCMarkingBlackOnly() || zone->isAtomsZone());
@@ -2733,7 +2741,8 @@ void gc::PushArena(GCMarker* gcmarker, Arena* arena) {
 void GCMarker::checkZone(void* p) {
   MOZ_ASSERT(started);
   DebugOnly<Cell*> cell = static_cast<Cell*>(p);
-  MOZ_ASSERT_IF(cell->isTenured(), cell->asTenured().zone()->isCollecting());
+  MOZ_ASSERT_IF(cell->isTenured(),
+                cell->asTenured().zone()->isCollectingFromAnyThread());
 }
 #endif
 
