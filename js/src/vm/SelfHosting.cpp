@@ -25,6 +25,7 @@
 #  include "builtin/intl/Collator.h"
 #  include "builtin/intl/DateTimeFormat.h"
 #  include "builtin/intl/IntlObject.h"
+#  include "builtin/intl/ListFormat.h"
 #  include "builtin/intl/Locale.h"
 #  include "builtin/intl/NumberFormat.h"
 #  include "builtin/intl/PluralRules.h"
@@ -2428,6 +2429,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 1, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2, 0),
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4, 0),
+    JS_FN("intl_FormatList", intl_FormatList, 3, 0),
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2, 0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2, 0),
     JS_FN("intl_ValidateAndCanonicalizeLanguageTag",
@@ -2440,6 +2442,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("GuardToDateTimeFormat",
                     intrinsic_GuardToBuiltin<DateTimeFormatObject>, 1, 0,
                     IntlGuardToDateTimeFormat),
+    JS_INLINABLE_FN("GuardToListFormat",
+                    intrinsic_GuardToBuiltin<ListFormatObject>, 1, 0,
+                    IntlGuardToListFormat),
     JS_INLINABLE_FN("GuardToNumberFormat",
                     intrinsic_GuardToBuiltin<NumberFormatObject>, 1, 0,
                     IntlGuardToNumberFormat),
@@ -2459,6 +2464,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<CollatorObject>>, 2, 0),
     JS_FN("CallDateTimeFormatMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<DateTimeFormatObject>>, 2, 0),
+    JS_FN("CallListFormatMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<ListFormatObject>>, 2, 0),
     JS_FN("CallNumberFormatMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<NumberFormatObject>>, 2, 0),
     JS_FN("CallPluralRulesMethodIfWrapped",

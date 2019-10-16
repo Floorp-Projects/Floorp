@@ -1276,6 +1276,10 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (!js::AddListFormatConstructor(cx, intl)) {
+    return false;
+  }
+
   args.rval().setUndefined();
   return true;
 }
