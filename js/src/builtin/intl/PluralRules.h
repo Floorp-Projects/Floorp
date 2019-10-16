@@ -78,8 +78,6 @@ class PluralRulesObject : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
-extern bool CreatePluralRules(JSContext* cx, JS::Handle<JSObject*> Intl);
-
 /**
  * Returns a plural rule for the number x according to the effective
  * locale and the formatting options of the given PluralRules.
