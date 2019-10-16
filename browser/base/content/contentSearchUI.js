@@ -687,7 +687,8 @@ this.ContentSearchUIController = (function() {
       );
       // We only show the engines icon for default engines, otherwise show
       // a default; default engines have an identifier
-      let icon = eng.identifier ? this.defaultEngine.icon : DEFAULT_INPUT_ICON;
+      let icon =
+        eng && eng.identifier ? this.defaultEngine.icon : DEFAULT_INPUT_ICON;
       document.body.style.setProperty(
         "--newtab-search-icon",
         "url(" + icon + ")"
