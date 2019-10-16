@@ -9120,8 +9120,8 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "ehsan+telemetry@mozilla.com"],
-    "bug_numbers": [1513309],
-    "expires_in_version": "73",
+    "bug_numbers": [1513309, 1588844],
+    "expires_in_version": "80",
     "kind": "categorical",
     "labels": ["Request", "AllowAutomatically", "Deny", "Allow", "AllowOnAnySite"],
     "description": "Storage Access API UI events."
