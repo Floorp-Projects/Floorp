@@ -118,6 +118,7 @@
   REAL(SavedFrame, InitViaClassSpec, &js::SavedFrame::class_)                \
   REAL(Promise, InitViaClassSpec, OCLASP(Promise))                           \
   REAL(AsyncFunction, InitAsyncFunction, nullptr)                            \
+  REAL(GeneratorFunction, InitGeneratorFunction, nullptr)                    \
   REAL(ReadableStream, InitViaClassSpec, &js::ReadableStream::class_)        \
   REAL(ReadableStreamDefaultReader, InitViaClassSpec,                        \
        &js::ReadableStreamDefaultReader::class_)                             \
