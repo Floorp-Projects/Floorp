@@ -4496,7 +4496,7 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
   // Optimize common cases like (2).toString() or "foo".valueOf() to not
   // create a wrapper object.
   if (v.isPrimitive() && !v.isNullOrUndefined()) {
-    JSObject* proto;
+    NativeObject* proto;
 
     switch (v.type()) {
       case ValueType::Double:

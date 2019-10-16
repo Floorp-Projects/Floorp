@@ -23,10 +23,11 @@ struct UNumberFormatter;
 
 namespace js {
 
+class ArrayObject;
+
 class NumberFormatObject : public NativeObject {
  public:
   static const JSClass class_;
-  static const JSClass& protoClass_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t UNUMBER_FORMATTER_SLOT = 1;
@@ -63,10 +64,13 @@ class NumberFormatObject : public NativeObject {
 
  private:
   static const JSClassOps classOps_;
-  static const ClassSpec classSpec_;
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
+
+extern JSObject* CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl,
+                                             Handle<GlobalObject*> global,
+                                             MutableHandleObject constructor);
 
 /**
  * Returns a new instance of the standard built-in NumberFormat constructor.

@@ -911,9 +911,7 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
   // If this class is anonymous, then it doesn't exist as a global
   // property, so we won't resolve anything.
   JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
-  if (key != JSProto_Null && key != JSProto_AsyncFunction &&
-      key != JSProto_GeneratorFunction &&
-      key != JSProto_AsyncGeneratorFunction) {
+  if (key != JSProto_Null) {
     const JSClass* clasp = ProtoKeyToClass(key);
     if (!clasp || clasp->specShouldDefineConstructor()) {
       if (!GlobalObject::ensureConstructor(cx, global, key)) {
@@ -986,12 +984,6 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
     }
 
     if (GlobalObject::skipDeselectedConstructor(cx, key)) {
-      continue;
-    }
-
-    // Async(Function|Generator) and Generator don't yet use ClassSpec.
-    if (key == JSProto_AsyncFunction || key == JSProto_GeneratorFunction ||
-        key == JSProto_AsyncGeneratorFunction) {
       continue;
     }
 

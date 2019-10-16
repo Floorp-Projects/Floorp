@@ -15,10 +15,11 @@
 
 namespace js {
 
+class GlobalObject;
+
 class LocaleObject : public NativeObject {
  public:
   static const JSClass class_;
-  static const JSClass& protoClass_;
 
   static constexpr uint32_t LANGUAGE_TAG_SLOT = 0;
   static constexpr uint32_t BASENAME_SLOT = 1;
@@ -42,10 +43,11 @@ class LocaleObject : public NativeObject {
   const Value& unicodeExtension() const {
     return getFixedSlot(UNICODE_EXTENSION_SLOT);
   }
-
- private:
-  static const ClassSpec classSpec_;
 };
+
+extern JSObject* CreateLocalePrototype(JSContext* cx,
+                                       JS::Handle<JSObject*> Intl,
+                                       JS::Handle<GlobalObject*> global);
 
 extern MOZ_MUST_USE bool intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx,
                                                                  unsigned argc,
