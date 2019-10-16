@@ -17,6 +17,12 @@ html|textarea {
   font: inherit;
 }
 
+/* Textbox context menu */
+
+.textbox-contextmenu:-moz-locale-dir(rtl) {
+  direction: rtl;
+}
+
 /* Close icon */
 
 .close-icon {
