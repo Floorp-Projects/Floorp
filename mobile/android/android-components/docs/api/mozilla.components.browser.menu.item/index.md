@@ -6,6 +6,7 @@
 
 | Name | Summary |
 |---|---|
+| [BrowserMenuCategory](-browser-menu-category/index.md) | `class BrowserMenuCategory : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A browser menu item displaying styleable text, usable for menu categories |
 | [BrowserMenuCheckbox](-browser-menu-checkbox/index.md) | `class BrowserMenuCheckbox : `[`BrowserMenuCompoundButton`](-browser-menu-compound-button/index.md)<br>A simple browser menu checkbox. |
 | [BrowserMenuCompoundButton](-browser-menu-compound-button/index.md) | `abstract class BrowserMenuCompoundButton : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A browser menu compound button. A basic sub-class would only have to provide a layout resource to satisfy [BrowserMenuItem.getLayoutResource](../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md) which contains a [View](#) that inherits from [CompoundButton](#). |
 | [BrowserMenuDivider](-browser-menu-divider/index.md) | `class BrowserMenuDivider : `[`BrowserMenuItem`](../mozilla.components.browser.menu/-browser-menu-item/index.md)<br>A browser menu item to display a horizontal divider. |

@@ -68,6 +68,7 @@
 | [mozilla.components.browser.icons.BrowserIcons](../mozilla.components.browser.icons/-browser-icons/index.md) | Entry point for loading icons for websites. |
 | [mozilla.components.browser.menu.BrowserMenu](../mozilla.components.browser.menu/-browser-menu/index.md) | A popup menu composed of BrowserMenuItem objects. |
 | [mozilla.components.browser.menu.BrowserMenuBuilder](../mozilla.components.browser.menu/-browser-menu-builder/index.md) | Helper class for building browser menus. |
+| [mozilla.components.browser.menu.item.BrowserMenuCategory](../mozilla.components.browser.menu.item/-browser-menu-category/index.md) | A browser menu item displaying styleable text, usable for menu categories |
 | [mozilla.components.browser.menu.item.BrowserMenuCheckbox](../mozilla.components.browser.menu.item/-browser-menu-checkbox/index.md) | A simple browser menu checkbox. |
 | [mozilla.components.browser.menu.item.BrowserMenuCompoundButton](../mozilla.components.browser.menu.item/-browser-menu-compound-button/index.md) | A browser menu compound button. A basic sub-class would only have to provide a layout resource to satisfy [BrowserMenuItem.getLayoutResource](../mozilla.components.browser.menu/-browser-menu-item/get-layout-resource.md) which contains a [View](#) that inherits from [CompoundButton](#). |
 | [mozilla.components.browser.menu.item.BrowserMenuDivider](../mozilla.components.browser.menu.item/-browser-menu-divider/index.md) | A browser menu item to display a horizontal divider. |
