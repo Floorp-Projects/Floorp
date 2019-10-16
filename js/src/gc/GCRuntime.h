@@ -883,7 +883,7 @@ class GCRuntime {
   MainThreadData<uint64_t> sliceNumber;
 
   /* Whether the currently running GC can finish in multiple slices. */
-  MainThreadData<bool> isIncremental;
+  MainThreadOrGCTaskData<bool> isIncremental;
 
   /* Whether all zones are being collected in first GC slice. */
   MainThreadData<bool> isFull;
@@ -904,7 +904,7 @@ class GCRuntime {
   MainThreadOrGCTaskData<State> incrementalState;
 
   /* The incremental state at the start of this slice. */
-  MainThreadData<State> initialState;
+  MainThreadOrGCTaskData<State> initialState;
 
 #ifdef JS_GC_ZEAL
   /* Whether to pay attention the zeal settings in this incremental slice. */
