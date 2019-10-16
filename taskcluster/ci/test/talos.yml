@@ -107,11 +107,7 @@ talos-flex:
     try-name: flex
     treeherder-symbol: T(f)
     tier: 3
-    run-on-projects:
-        by-test-platform:
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            windows10-aarch64/opt: ['mozilla-central', 'try']
-            default: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -229,11 +225,7 @@ talos-motionmark:
     description: "Talos motionmark"
     try-name: motionmark
     treeherder-symbol: T(mm)
-    run-on-projects:
-        by-test-platform:
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            windows10-aarch64/opt: ['mozilla-central', 'try']
-            default: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     tier:
         by-test-platform:
@@ -269,8 +261,6 @@ talos-sessionrestore-many-windows:
         by-test-platform:
             linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            windows10-aarch64/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     max-run-time: 1500
     mozharness:
