@@ -238,7 +238,7 @@ Tools.jsdebugger = {
     return l10n(
       "ToolboxDebugger.tooltip4",
       (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
-        l10n("jsdebugger.commandkey2")
+        l10n("jsdebugger.commandkey")
     );
   },
   inMenu: true,
