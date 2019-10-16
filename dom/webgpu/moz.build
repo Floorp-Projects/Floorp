@@ -5,11 +5,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'Canvas: WebGL')
+    BUG_COMPONENT = ('Core', 'Graphics: WebGPU')
 
 MOCHITEST_MANIFESTS += [
     'mochitest/mochitest-no-pref.ini',
     'mochitest/mochitest.ini',
+]
+
+DIRS += [
+    'thread',
 ]
 
 h_and_cpp = [
