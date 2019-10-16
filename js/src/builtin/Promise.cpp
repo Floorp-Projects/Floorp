@@ -2119,7 +2119,7 @@ static bool PromiseConstructor(JSContext* cx, unsigned argc, Value* vp) {
     {
       AutoRealm ar(cx, newTarget);
       Handle<GlobalObject*> global = cx->global();
-      JSObject* promiseCtor =
+      JSFunction* promiseCtor =
           GlobalObject::getOrCreatePromiseConstructor(cx, global);
       if (!promiseCtor) {
         return false;

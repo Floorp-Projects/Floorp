@@ -21,21 +21,27 @@ using namespace js;
 
 using mozilla::Maybe;
 
-JSObject* js::InitAsyncFunction(JSContext* cx, Handle<GlobalObject*> global) {
+/* static */
+bool GlobalObject::initAsyncFunction(JSContext* cx,
+                                     Handle<GlobalObject*> global) {
+  if (global->getReservedSlot(ASYNC_FUNCTION_PROTO).isObject()) {
+    return true;
+  }
+
   RootedObject asyncFunctionProto(
       cx, NewSingletonObjectWithFunctionPrototype(cx, global));
   if (!asyncFunctionProto) {
-    return nullptr;
+    return false;
   }
 
   if (!DefineToStringTag(cx, asyncFunctionProto, cx->names().AsyncFunction)) {
-    return nullptr;
+    return false;
   }
 
   RootedObject proto(
       cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
   if (!proto) {
-    return nullptr;
+    return false;
   }
   HandlePropertyName name = cx->names().AsyncFunction;
   RootedObject asyncFunction(
@@ -43,17 +49,18 @@ JSObject* js::InitAsyncFunction(JSContext* cx, Handle<GlobalObject*> global) {
       NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
                            FunctionFlags::NATIVE_CTOR, nullptr, name, proto));
   if (!asyncFunction) {
-    return nullptr;
+    return false;
   }
   if (!LinkConstructorAndPrototype(cx, asyncFunction, asyncFunctionProto,
                                    JSPROP_PERMANENT | JSPROP_READONLY,
                                    JSPROP_READONLY)) {
-    return nullptr;
+    return false;
   }
 
-  global->setConstructor(JSProto_AsyncFunction, ObjectValue(*asyncFunction));
-  global->setPrototype(JSProto_AsyncFunction, ObjectValue(*asyncFunctionProto));
-  return asyncFunction;
+  global->setReservedSlot(ASYNC_FUNCTION, ObjectValue(*asyncFunction));
+  global->setReservedSlot(ASYNC_FUNCTION_PROTO,
+                          ObjectValue(*asyncFunctionProto));
+  return true;
 }
 
 enum class ResumeKind { Normal, Throw };
