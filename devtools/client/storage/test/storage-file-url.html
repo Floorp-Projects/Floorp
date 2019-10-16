@@ -4,6 +4,8 @@
   <meta charset="utf-8" />
   <title>Storage Test</title>
   <script>
+    "use strict";
+    /* exported init */
     function init() {
       createIndexedDB();
       createCookies();
@@ -12,19 +14,17 @@
     }
 
     function createIndexedDB() {
-      var open = indexedDB.open("MyDatabase", 1);
+      const open = indexedDB.open("MyDatabase", 1);
 
       open.onupgradeneeded = function () {
-        var db = open.result;
-        var store = db.createObjectStore("MyObjectStore", {keyPath: "id"});
-        var index = store.createIndex("NameIndex", ["name.last", "name.first"]);
+        const db = open.result;
+        db.createObjectStore("MyObjectStore", {keyPath: "id"});
       };
 
       open.onsuccess = function () {
-        var db = open.result;
-        var tx = db.transaction("MyObjectStore", "readwrite");
-        var store = tx.objectStore("MyObjectStore");
-        var index = store.index("NameIndex");
+        const db = open.result;
+        const tx = db.transaction("MyObjectStore", "readwrite");
+        const store = tx.objectStore("MyObjectStore");
 
         store.put({id: 12345, name: {first: "John", last: "Doe"}, age: 42});
         store.put({id: 54321, name: {first: "Ralph", last: "Wood"}, age: 38});

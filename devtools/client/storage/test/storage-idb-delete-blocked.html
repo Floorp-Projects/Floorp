@@ -6,20 +6,15 @@
 </head>
 <body>
 <script type="application/javascript">
-
+"use strict";
 let db;
 
 window.setup = async function () {
   db = await new Promise((resolve, reject) => {
-    let request = indexedDB.open("idb", 1);
+    const request = indexedDB.open("idb", 1);
 
     request.onsuccess = e => resolve(e.target.result);
     request.onerror = e => reject(new Error("error opening db connection"));
-
-    request.onupgradeneeded = e => {
-      let db = e.target.result;
-      let store = db.createObjectStore("obj", { keyPath: "id" });
-    };
   });
 
   dump("opened indexedDB\n");
@@ -31,7 +26,7 @@ window.closeDb = function() {
 
 window.deleteDb = async function () {
   await new Promise((resolve, reject) => {
-    let request = indexedDB.deleteDatabase("idb");
+    const request = indexedDB.deleteDatabase("idb");
 
     request.onsuccess = resolve;
     request.onerror = e => reject(new Error("error deleting db"));
@@ -39,7 +34,7 @@ window.deleteDb = async function () {
 };
 
 window.clear = async function () {
-  for (let dbName of ["idb1", "idb2"]) {
+  for (const dbName of ["idb1", "idb2"]) {
     await new Promise(resolve => {
       indexedDB.deleteDatabase(dbName).onsuccess = resolve;
     });
