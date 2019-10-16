@@ -24,7 +24,7 @@ namespace {
 
 char* UnicodeToNative(JSContext* aCx, const char16_t* aSource,
                       size_t aSourceLen) {
-  nsDependentString unicode(aSource, aSourceLen);
+  nsDependentSubstring unicode(aSource, aSourceLen);
 
   nsAutoCString native;
   if (NS_FAILED(NS_CopyUnicodeToNative(unicode, native))) {

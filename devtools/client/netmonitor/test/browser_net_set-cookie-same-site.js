@@ -34,7 +34,7 @@ add_task(async function() {
   info("Checking the SameSite property");
   const expectedValues = [
     {
-      key: "Response cookies",
+      key: "Response Cookies",
       value: "",
     },
     {
@@ -50,7 +50,7 @@ add_task(async function() {
       value: "bar",
     },
     {
-      key: "Request cookies",
+      key: "Request Cookies",
       value: "",
     },
     {

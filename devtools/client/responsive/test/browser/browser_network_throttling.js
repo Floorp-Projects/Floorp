@@ -15,7 +15,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
   await waitUntilState(store, state => state.viewports.length == 1);
 
   // Test defaults
-  testNetworkThrottlingSelectorLabel(ui, "No throttling");
+  testNetworkThrottlingSelectorLabel(ui, "No Throttling");
   await testNetworkThrottlingState(ui, null);
 
   // Test a fast profile
@@ -25,8 +25,8 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
   await testThrottlingProfile(ui, "Regular 3G");
 
   // Test switching back to no throttling
-  await selectNetworkThrottling(ui, "No throttling");
-  testNetworkThrottlingSelectorLabel(ui, "No throttling");
+  await selectNetworkThrottling(ui, "No Throttling");
+  testNetworkThrottlingSelectorLabel(ui, "No Throttling");
   await testNetworkThrottlingState(ui, null);
 });
 

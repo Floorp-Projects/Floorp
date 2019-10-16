@@ -3328,8 +3328,9 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
         // also.
         JSString* sourceString = val.toString();
         size_t sourceLength = sourceString->length();
-        Rooted<JSFlatString*> sourceFlat(cx, sourceString->ensureFlat(cx));
-        if (!sourceFlat) {
+        Rooted<JSLinearString*> sourceLinear(cx,
+                                             sourceString->ensureLinear(cx));
+        if (!sourceLinear) {
           return false;
         }
 
@@ -3338,12 +3339,12 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
           case TYPE_signed_char:
           case TYPE_unsigned_char: {
             // Reject if unpaired surrogate characters are present.
-            if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat)) {
+            if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceLinear)) {
               return false;
             }
 
             // Convert from UTF-16 to UTF-8.
-            size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceFlat);
+            size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceLinear);
 
             char** charBuffer = static_cast<char**>(buffer);
             *charBuffer = cx->pod_malloc<char>(nbytes + 1);
@@ -3352,8 +3353,8 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
             }
 
             nbytes = JS::DeflateStringToUTF8Buffer(
-                sourceFlat, mozilla::MakeSpan(*charBuffer, nbytes));
-            (*charBuffer)[nbytes] = 0;
+                sourceLinear, mozilla::MakeSpan(*charBuffer, nbytes));
+            (*charBuffer)[nbytes] = '\0';
             *freePointer = true;
             break;
           }
@@ -3368,16 +3369,9 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
             }
 
             *freePointer = true;
-            if (sourceFlat->hasLatin1Chars()) {
-              AutoCheckCannotGC nogc;
-              CopyAndInflateChars(*char16Buffer, sourceFlat->latin1Chars(nogc),
-                                  sourceLength);
-            } else {
-              AutoCheckCannotGC nogc;
-              mozilla::PodCopy(*char16Buffer, sourceFlat->twoByteChars(nogc),
-                               sourceLength);
-            }
-            (*char16Buffer)[sourceLength] = 0;
+
+            CopyChars(*char16Buffer, *sourceLinear);
+            (*char16Buffer)[sourceLength] = '\0';
             break;
           }
           default:
@@ -3455,8 +3449,9 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
       if (val.isString()) {
         JSString* sourceString = val.toString();
         size_t sourceLength = sourceString->length();
-        Rooted<JSFlatString*> sourceFlat(cx, sourceString->ensureFlat(cx));
-        if (!sourceFlat) {
+        Rooted<JSLinearString*> sourceLinear(cx,
+                                             sourceString->ensureLinear(cx));
+        if (!sourceLinear) {
           return false;
         }
 
@@ -3465,12 +3460,12 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
           case TYPE_signed_char:
           case TYPE_unsigned_char: {
             // Reject if unpaired surrogate characters are present.
-            if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat)) {
+            if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceLinear)) {
               return false;
             }
 
             // Convert from UTF-16 or Latin1 to UTF-8.
-            size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceFlat);
+            size_t nbytes = JS::GetDeflatedUTF8StringLength(sourceLinear);
 
             if (targetLength < nbytes) {
               MOZ_ASSERT(!funObj);
@@ -3480,10 +3475,10 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
 
             char* charBuffer = static_cast<char*>(buffer);
             nbytes = JS::DeflateStringToUTF8Buffer(
-                sourceFlat, mozilla::MakeSpan(charBuffer, nbytes));
+                sourceLinear, mozilla::MakeSpan(charBuffer, nbytes));
 
             if (targetLength > nbytes) {
-              charBuffer[nbytes] = 0;
+              charBuffer[nbytes] = '\0';
             }
 
             break;
@@ -3498,18 +3493,10 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
             }
 
             char16_t* dest = static_cast<char16_t*>(buffer);
-            if (sourceFlat->hasLatin1Chars()) {
-              AutoCheckCannotGC nogc;
-              CopyAndInflateChars(dest, sourceFlat->latin1Chars(nogc),
-                                  sourceLength);
-            } else {
-              AutoCheckCannotGC nogc;
-              mozilla::PodCopy(dest, sourceFlat->twoByteChars(nogc),
-                               sourceLength);
-            }
+            CopyChars(dest, *sourceLinear);
 
             if (targetLength > sourceLength) {
-              dest[sourceLength] = 0;
+              dest[sourceLength] = '\0';
             }
 
             break;
@@ -5360,8 +5347,8 @@ bool ArrayType::ConstructData(JSContext* cx, HandleObject obj_,
       // including space for the terminator.
       JSString* sourceString = args[0].toString();
       size_t sourceLength = sourceString->length();
-      Rooted<JSFlatString*> sourceFlat(cx, sourceString->ensureFlat(cx));
-      if (!sourceFlat) {
+      Rooted<JSLinearString*> sourceLinear(cx, sourceString->ensureLinear(cx));
+      if (!sourceLinear) {
         return false;
       }
 
@@ -5370,12 +5357,12 @@ bool ArrayType::ConstructData(JSContext* cx, HandleObject obj_,
         case TYPE_signed_char:
         case TYPE_unsigned_char: {
           // Reject if unpaired surrogate characters are present.
-          if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceFlat)) {
+          if (!ReportErrorIfUnpairedSurrogatePresent(cx, sourceLinear)) {
             return false;
           }
 
           // Determine the UTF-8 length.
-          length = JS::GetDeflatedUTF8StringLength(sourceFlat);
+          length = JS::GetDeflatedUTF8StringLength(sourceLinear);
 
           ++length;
           break;
