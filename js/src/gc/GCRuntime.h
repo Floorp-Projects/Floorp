@@ -159,6 +159,17 @@ class BackgroundDecommitTask
   MainThreadOrGCTaskData<ChunkVector> toDecommit;
 };
 
+class SweepMarkTask : public GCParallelTaskHelper<SweepMarkTask> {
+ public:
+  explicit SweepMarkTask(GCRuntime* gc)
+      : GCParallelTaskHelper(gc), budget(SliceBudget::unlimited()) {}
+  void setBudget(const SliceBudget& budget) { this->budget = budget; }
+  void run();
+
+ private:
+  SliceBudget budget;
+};
+
 template <typename F>
 struct Callback {
   MainThreadOrGCTaskData<F> op;
@@ -637,6 +648,8 @@ class GCRuntime {
   void checkNoRuntimeRoots(AutoGCSession& session);
   void maybeDoCycleCollection();
   void findDeadCompartments();
+
+  friend class SweepMarkTask;
   IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget,
                                                gcstats::PhaseKind phase);
   void drainMarkStack();
@@ -934,6 +947,8 @@ class GCRuntime {
   MainThreadOrGCTaskData<JS::detail::WeakCacheBase*> sweepCache;
   MainThreadData<bool> hasMarkedGrayRoots;
   MainThreadData<bool> abortSweepAfterCurrentGroup;
+  MainThreadData<bool> sweepMarkTaskStarted;
+  MainThreadOrGCTaskData<IncrementalProgress> sweepMarkResult;
 
 #ifdef DEBUG
   // During gray marking, delay AssertCellIsNotGray checks by
@@ -1058,6 +1073,7 @@ class GCRuntime {
   BackgroundSweepTask sweepTask;
   BackgroundFreeTask freeTask;
   BackgroundDecommitTask decommitTask;
+  SweepMarkTask sweepMarkTask;
 
   /*
    * During incremental sweeping, this field temporarily holds the arenas of
