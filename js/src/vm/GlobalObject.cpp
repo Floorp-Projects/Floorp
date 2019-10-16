@@ -20,6 +20,7 @@
 #  include "builtin/intl/Locale.h"
 #  include "builtin/intl/NumberFormat.h"
 #  include "builtin/intl/PluralRules.h"
+#  include "builtin/intl/RelativeTimeFormat.h"
 #endif
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"

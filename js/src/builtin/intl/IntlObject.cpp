@@ -836,9 +836,7 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
   if (!CreatePluralRules(cx, intl)) {
     return false;
   }
-  RootedObject relativeTimeFmtProto(
-      cx, CreateRelativeTimeFormatPrototype(cx, intl, global));
-  if (!relativeTimeFmtProto) {
+  if (!CreateRelativeTimeFormat(cx, intl)) {
     return false;
   }
 
@@ -849,23 +847,9 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
     return false;
   }
 
-  // Now that the |Intl| object is successfully added, we can OOM-safely fill
-  // in all relevant reserved global slots.
-
-  // Cache the various prototypes, for use in creating instances of these
-  // objects with the proper [[Prototype]] as "the original value of
-  // |Intl.Collator.prototype|" and similar.  For builtin classes like
-  // |String.prototype| we have |JSProto_*| that enables
-  // |getPrototype(JSProto_*)|, but that has global-object-property-related
-  // baggage we don't need or want, so we use one-off reserved slots.
-  global->setReservedSlot(RELATIVE_TIME_FORMAT_PROTO,
-                          ObjectValue(*relativeTimeFmtProto));
-
   // Also cache |Intl| to implement spec language that conditions behavior
   // based on values being equal to "the standard built-in |Intl| object".
   // Use |setConstructor| to correspond with |JSProto_Intl|.
-  //
-  // XXX We should possibly do a one-off reserved slot like above.
   global->setConstructor(JSProto_Intl, ObjectValue(*intl));
   return true;
 }

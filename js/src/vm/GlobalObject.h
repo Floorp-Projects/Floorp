@@ -88,7 +88,6 @@ class GlobalObject : public NativeObject {
     ASYNC_GENERATOR_PROTO,
     MAP_ITERATOR_PROTO,
     SET_ITERATOR_PROTO,
-    RELATIVE_TIME_FORMAT_PROTO,
     MODULE_PROTO,
     IMPORT_ENTRY_PROTO,
     EXPORT_ENTRY_PROTO,
@@ -549,8 +548,10 @@ class GlobalObject : public NativeObject {
 
   static JSObject* getOrCreateRelativeTimeFormatPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, RELATIVE_TIME_FORMAT_PROTO,
-                             initIntlObject);
+    if (!ensureConstructor(cx, global, JSProto_RelativeTimeFormat)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_RelativeTimeFormat).toObject();
   }
 
   static JSObject* getOrCreateLocalePrototype(JSContext* cx,
