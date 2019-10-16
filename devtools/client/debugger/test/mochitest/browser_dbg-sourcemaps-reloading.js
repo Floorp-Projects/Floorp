@@ -38,6 +38,7 @@ add_task(async function() {
   await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
 
   await waitForPaused(dbg);
+  await waitForDispatch(dbg, "ADD_INLINE_PREVIEW");
   assertPausedLocation(dbg);
 
   await waitForBreakpointCount(dbg, 2);
