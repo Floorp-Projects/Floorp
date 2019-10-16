@@ -4003,9 +4003,10 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
 
   // Some situations where we don't cache anonymous content styles:
   //
-  // * when visibility is anything other than visible; we rely on visibility
-  //   inheriting into anonymous content, but don't bother adding this state
-  //   to the AnonymousContentKey, since it's not so common
+  // * when visibility or pointer-events is anything other than the initial
+  //   value; we rely on visibility and pointer-events inheriting into anonymous
+  //   content, but don't bother adding this state to the AnonymousContentKey,
+  //   since it's not so common
   //
   // * when the medium is anything other than screen; some UA style sheet rules
   //   apply in e.g. print medium, and will give different results from the
@@ -4014,6 +4015,7 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
       StaticPrefs::layout_css_cached_scrollbar_styles_enabled() &&
       aParentFrame->StyleVisibility()->mVisible ==
           NS_STYLE_VISIBILITY_VISIBLE &&
+      aParentFrame->StyleUI()->mPointerEvents == NS_STYLE_POINTER_EVENTS_AUTO &&
       mPresShell->GetPresContext()->Medium() == nsGkAtoms::screen;
 
   // Compute styles for the anonymous content tree.
