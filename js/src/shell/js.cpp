@@ -9251,26 +9251,15 @@ bool DefineConsole(JSContext* cx, HandleObject global) {
 #undef EXTERNAL_FUNCTION_COUNT
 
 static bool PrintHelpString(JSContext* cx, HandleValue v) {
-  JSString* str = v.toString();
+  RootedString str(cx, v.toString());
   MOZ_ASSERT(gOutFile->isOpen());
 
-  JSLinearString* linear = str->ensureLinear(cx);
-  if (!linear) {
+  UniqueChars bytes = JS_EncodeStringToUTF8(cx, str);
+  if (!bytes) {
     return false;
   }
 
-  JS::AutoCheckCannotGC nogc;
-  if (linear->hasLatin1Chars()) {
-    for (const Latin1Char* p = linear->latin1Chars(nogc); *p; p++) {
-      fprintf(gOutFile->fp, "%c", char(*p));
-    }
-  } else {
-    for (const char16_t* p = linear->twoByteChars(nogc); *p; p++) {
-      fprintf(gOutFile->fp, "%c", char(*p));
-    }
-  }
-  fprintf(gOutFile->fp, "\n");
-
+  fprintf(gOutFile->fp, "%s\n", bytes.get());
   return true;
 }
 
