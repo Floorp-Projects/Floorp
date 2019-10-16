@@ -22,3 +22,9 @@ Configuration
 -------------
 
 This linter is enabled on all C family files.
+
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/cpp-virtual-final.yml>`_
+

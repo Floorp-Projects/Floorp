@@ -20,3 +20,9 @@ Configuration
 
 This linter is enabled on the whole code base except WebRTC
 
+
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/mingw-capitalization.yml>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/cpp/mingw-capitalization.py>`_

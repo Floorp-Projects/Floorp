@@ -24,3 +24,9 @@ Autofix
 -------
 
 This linter provides a ``--fix`` option. The python script is doing the change itself.
+
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/file-whitespace.yml>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/file-whitespace/__init__.py>`_

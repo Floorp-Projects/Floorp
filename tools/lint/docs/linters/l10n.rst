@@ -37,3 +37,9 @@ The linter checks out the cross-channel localization files into your
 48 hours. There might be new strings anyway, if you want to ensure an
 updated clone, remove the marker file in
 ``~/.mozbuild/gecko-strings/.hg/l10n_pull_marker``.
+
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/l10n.yml>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/python/l10n_lint.py>`_

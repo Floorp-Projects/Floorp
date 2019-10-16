@@ -33,6 +33,12 @@ Autofix
 
 The eslint linter provides a ``--fix`` option. It is based on the upstream option.
 
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/eslint.yml>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/eslint/__init__.py>`_
+
 
 ESLint Plugin Mozilla
 ---------------------
