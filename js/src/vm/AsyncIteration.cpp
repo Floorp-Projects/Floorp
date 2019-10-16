@@ -406,17 +406,37 @@ static const JSFunctionSpec async_generator_methods[] = {
     JS_FN("throw", AsyncGeneratorThrow, 1, 0),
     JS_FN("return", AsyncGeneratorReturn, 1, 0), JS_FS_END};
 
-JSObject* js::InitAsyncGeneratorFunction(JSContext* cx,
-                                         Handle<GlobalObject*> global) {
+bool GlobalObject::initAsyncIteratorProto(JSContext* cx,
+                                          Handle<GlobalObject*> global) {
+  if (global->getReservedSlot(ASYNC_ITERATOR_PROTO).isObject()) {
+    return true;
+  }
+
   // 25.1.3 The %AsyncIteratorPrototype% Object
   RootedObject asyncIterProto(
       cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
   if (!asyncIterProto) {
-    return nullptr;
+    return false;
   }
   if (!DefinePropertiesAndFunctions(cx, asyncIterProto, nullptr,
                                     async_iterator_proto_methods)) {
-    return nullptr;
+    return false;
+  }
+
+  global->setReservedSlot(ASYNC_ITERATOR_PROTO, ObjectValue(*asyncIterProto));
+  return true;
+}
+
+bool GlobalObject::initAsyncFromSyncIteratorProto(
+    JSContext* cx, Handle<GlobalObject*> global) {
+  if (global->getReservedSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO).isObject()) {
+    return true;
+  }
+
+  RootedObject asyncIterProto(
+      cx, GlobalObject::getOrCreateAsyncIteratorPrototype(cx, global));
+  if (!asyncIterProto) {
+    return false;
   }
 
   // 25.1.4.2 The %AsyncFromSyncIteratorPrototype% Object
@@ -424,12 +444,25 @@ JSObject* js::InitAsyncGeneratorFunction(JSContext* cx,
       cx, GlobalObject::createBlankPrototypeInheriting(cx, &PlainObject::class_,
                                                        asyncIterProto));
   if (!asyncFromSyncIterProto) {
-    return nullptr;
+    return false;
   }
   if (!DefinePropertiesAndFunctions(cx, asyncFromSyncIterProto, nullptr,
                                     async_from_sync_iter_methods) ||
       !DefineToStringTag(cx, asyncFromSyncIterProto,
                          cx->names().AsyncFromSyncIterator)) {
+    return false;
+  }
+
+  global->setReservedSlot(ASYNC_FROM_SYNC_ITERATOR_PROTO,
+                          ObjectValue(*asyncFromSyncIterProto));
+  return true;
+}
+
+JSObject* js::InitAsyncGeneratorFunction(JSContext* cx,
+                                         Handle<GlobalObject*> global) {
+  RootedObject asyncIterProto(
+      cx, GlobalObject::getOrCreateAsyncIteratorPrototype(cx, global));
+  if (!asyncIterProto) {
     return nullptr;
   }
 
@@ -479,10 +512,7 @@ JSObject* js::InitAsyncGeneratorFunction(JSContext* cx,
     return nullptr;
   }
 
-  global->setAsyncIteratorPrototype(asyncIterProto);
-  global->setAsyncFromSyncIteratorPrototype(asyncFromSyncIterProto);
   global->setAsyncGeneratorPrototype(asyncGenProto);
-
   global->setConstructor(JSProto_AsyncGeneratorFunction,
                          ObjectValue(*asyncGenFunction));
   global->setPrototype(JSProto_AsyncGeneratorFunction,
