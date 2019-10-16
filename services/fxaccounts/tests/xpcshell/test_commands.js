@@ -7,6 +7,36 @@ const { FxAccountsCommands, SendTab } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommands.js"
 );
 
+const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+
+class TelemetryMock {
+  constructor() {
+    this._events = [];
+    this._uuid_counter = 0;
+  }
+
+  recordEvent(object, method, value, extra = undefined) {
+    this._events.push({ object, method, value, extra });
+  }
+
+  generateFlowID() {
+    this._uuid_counter += 1;
+    return this._uuid_counter.toString();
+  }
+
+  sanitizeDeviceId(id) {
+    return id + "-san";
+  }
+}
+
+function FxaInternalMock() {
+  return {
+    telemetry: new TelemetryMock(),
+  };
+}
+
 add_task(async function test_sendtab_isDeviceCompatible() {
   const sendTab = new SendTab(null, null);
   let device = { name: "My device" };
@@ -31,14 +61,19 @@ add_task(async function test_sendtab_send() {
       Assert.equal(payload.encrypted, "encryptedpayload");
     }),
   };
-  const sendTab = new SendTab(commands, null);
+  const fxai = FxaInternalMock();
+  const sendTab = new SendTab(commands, fxai);
   sendTab._encrypt = (bytes, device) => {
     if (device.name == "Device 2") {
       throw new Error("Encrypt error!");
     }
     return "encryptedpayload";
   };
-  const to = [{ name: "Device 1" }, { name: "Device 2" }, { name: "Device 3" }];
+  const to = [
+    { name: "Device 1" },
+    { name: "Device 2" },
+    { id: "dev3", name: "Device 3" },
+  ];
   const tab = { title: "Foo", url: "https://foo.bar/" };
   const report = await sendTab.send(to, tab);
   Assert.equal(report.succeeded.length, 1);
@@ -49,6 +84,62 @@ add_task(async function test_sendtab_send() {
   Assert.equal(report.failed[1].device.name, "Device 2");
   Assert.equal(report.failed[1].error.message, "Encrypt error!");
   Assert.ok(commands.invoke.calledTwice);
+  Assert.deepEqual(fxai.telemetry._events, [
+    {
+      object: "command-sent",
+      method: COMMAND_SENDTAB_TAIL,
+      value: "dev3-san",
+      extra: { flowID: "1" },
+    },
+  ]);
+});
+
+add_task(async function test_sendtab_receive() {
+  // We are testing 'receive' here, but might as well go through 'send'
+  // to package the data and for additional testing...
+  const commands = {
+    _invokes: [],
+    invoke(cmd, device, payload) {
+      this._invokes.push({ cmd, device, payload });
+    },
+  };
+
+  const fxai = FxaInternalMock();
+  const sendTab = new SendTab(commands, fxai);
+  sendTab._encrypt = (bytes, device) => {
+    return bytes;
+  };
+  sendTab._decrypt = bytes => {
+    return bytes;
+  };
+  const tab = { title: "tab title", url: "http://example.com" };
+  const to = [{ id: "devid", name: "The Device" }];
+
+  await sendTab.send(to, tab);
+  Assert.equal(commands._invokes.length, 1);
+
+  for (let { cmd, device, payload } of commands._invokes) {
+    Assert.equal(cmd, COMMAND_SENDTAB);
+    Assert.deepEqual(await sendTab.handle(device.id, payload), {
+      title: "tab title",
+      uri: "http://example.com",
+    });
+  }
+
+  Assert.deepEqual(fxai.telemetry._events, [
+    {
+      object: "command-sent",
+      method: COMMAND_SENDTAB_TAIL,
+      value: "devid-san",
+      extra: { flowID: "1" },
+    },
+    {
+      object: "command-received",
+      method: COMMAND_SENDTAB_TAIL,
+      value: "devid-san",
+      extra: { flowID: "1" },
+    },
+  ]);
 });
 
 add_task(async function test_commands_pollDeviceCommands_push() {

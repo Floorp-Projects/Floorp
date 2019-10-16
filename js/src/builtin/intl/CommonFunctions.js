@@ -132,74 +132,10 @@ function IsASCIIAlphaString(s) {
     return true;
 }
 
-// The last-ditch locale is used if none of the available locales satisfies a
-// request. "en-GB" is used based on the assumptions that English is the most
-// common second language, that both en-GB and en-US are normally available in
-// an implementation, and that en-GB is more representative of the English used
-// in other locales.
-function lastDitchLocale() {
-    // Per bug 1177929, strings don't clone out of self-hosted code as atoms,
-    // breaking IonBuilder::constant.  Put this in a function for now.
-    return "en-GB";
-}
-
-// Certain old, commonly-used language tags that lack a script, are expected to
-// nonetheless imply one.  This object maps these old-style tags to modern
-// equivalents.
-var oldStyleLanguageTagMappings = {
-    "pa-PK": "pa-Arab-PK",
-    "zh-CN": "zh-Hans-CN",
-    "zh-HK": "zh-Hant-HK",
-    "zh-SG": "zh-Hans-SG",
-    "zh-TW": "zh-Hant-TW",
-};
-
-var localeCandidateCache = {
-    runtimeDefaultLocale: undefined,
-    candidateDefaultLocale: undefined,
-};
-
 var localeCache = {
     runtimeDefaultLocale: undefined,
     defaultLocale: undefined,
 };
-
-/**
- * Compute the candidate default locale: the locale *requested* to be used as
- * the default locale.  We'll use it if and only if ICU provides support (maybe
- * fallback support, e.g. supporting "de-ZA" through "de" support implied by a
- * "de-DE" locale).
- */
-function DefaultLocaleIgnoringAvailableLocales() {
-    const runtimeDefaultLocale = RuntimeDefaultLocale();
-    if (runtimeDefaultLocale === localeCandidateCache.runtimeDefaultLocale)
-        return localeCandidateCache.candidateDefaultLocale;
-
-    // If we didn't get a cache hit, compute the candidate default locale and
-    // cache it.  Fall back on the last-ditch locale when necessary.
-    var candidate = intl_TryValidateAndCanonicalizeLanguageTag(runtimeDefaultLocale);
-    if (candidate === null) {
-        candidate = lastDitchLocale();
-    } else {
-        // The default locale must be in [[availableLocales]], and that list
-        // must not contain any locales with Unicode extension sequences, so
-        // remove any present in the candidate.
-        candidate = removeUnicodeExtensions(candidate);
-
-        if (hasOwn(candidate, oldStyleLanguageTagMappings))
-            candidate = oldStyleLanguageTagMappings[candidate];
-    }
-
-    // Cache the candidate locale until the runtime default locale changes.
-    localeCandidateCache.candidateDefaultLocale = candidate;
-    localeCandidateCache.runtimeDefaultLocale = runtimeDefaultLocale;
-
-    assertIsValidAndCanonicalLanguageTag(candidate, "the candidate locale");
-    assert(startOfUnicodeExtensions(candidate) < 0,
-           "the candidate must not contain a Unicode extension sequence");
-
-    return candidate;
-}
 
 /**
  * Returns the BCP 47 language tag for the host environment's current locale.
@@ -211,58 +147,18 @@ function DefaultLocale() {
         return localeCache.defaultLocale;
 
     // If we didn't have a cache hit, compute the candidate default locale.
-    // Then use it as the actual default locale if ICU supports that locale
-    // (perhaps via fallback).  Otherwise use the last-ditch locale.
     var runtimeDefaultLocale = RuntimeDefaultLocale();
-    var candidate = DefaultLocaleIgnoringAvailableLocales();
-    var locale;
-    if (BestAvailableLocaleIgnoringDefault(callFunction(collatorInternalProperties.availableLocales,
-                                                        collatorInternalProperties),
-                                           candidate) &&
-        BestAvailableLocaleIgnoringDefault(callFunction(numberFormatInternalProperties.availableLocales,
-                                                        numberFormatInternalProperties),
-                                           candidate) &&
-        BestAvailableLocaleIgnoringDefault(callFunction(dateTimeFormatInternalProperties.availableLocales,
-                                                        dateTimeFormatInternalProperties),
-                                           candidate))
-    {
-        locale = candidate;
-    } else {
-        locale = lastDitchLocale();
-    }
+    var locale = intl_supportedLocaleOrFallback(runtimeDefaultLocale);
 
     assertIsValidAndCanonicalLanguageTag(locale, "the computed default locale");
     assert(startOfUnicodeExtensions(locale) < 0,
            "the computed default locale must not contain a Unicode extension sequence");
 
+    // Cache the computed locale until the runtime default locale changes.
     localeCache.defaultLocale = locale;
     localeCache.runtimeDefaultLocale = runtimeDefaultLocale;
 
     return locale;
-}
-
-/**
- * Add old-style language tags without script code for locales that in current
- * usage would include a script subtag.  Also add an entry for the last-ditch
- * locale, in case ICU doesn't directly support it (but does support it through
- * fallback, e.g. supporting "en-GB" indirectly using "en" support).
- */
-function addSpecialMissingLanguageTags(availableLocales) {
-    // Certain old-style language tags lack a script code, but in current usage
-    // they *would* include a script code.  Map these over to modern forms.
-    var oldStyleLocales = std_Object_getOwnPropertyNames(oldStyleLanguageTagMappings);
-    for (var i = 0; i < oldStyleLocales.length; i++) {
-        var oldStyleLocale = oldStyleLocales[i];
-        if (availableLocales[oldStyleLanguageTagMappings[oldStyleLocale]])
-            availableLocales[oldStyleLocale] = true;
-    }
-
-    // Also forcibly provide the last-ditch locale.
-    var lastDitch = lastDitchLocale();
-    assert(lastDitch === "en-GB" && availableLocales.en,
-           "shouldn't be a need to add every locale implied by the last-" +
-           "ditch locale, merely just the last-ditch locale");
-    availableLocales[lastDitch] = true;
 }
 
 /**
@@ -324,48 +220,6 @@ function CanonicalizeLocaleList(locales) {
     return seen;
 }
 
-function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLocale) {
-    assertIsValidAndCanonicalLanguageTag(locale, "BestAvailableLocale locale");
-    assert(startOfUnicodeExtensions(locale) < 0, "locale must contain no Unicode extensions");
-
-    // In the spec, [[availableLocales]] is formally a list of all available
-    // locales.  But in our implementation, it's an *incomplete* list, not
-    // necessarily including the default locale (and all locales implied by it,
-    // e.g. "de" implied by "de-CH"), if that locale isn't in every
-    // [[availableLocales]] list (because that locale is supported through
-    // fallback, e.g. "de-CH" supported through "de").
-    //
-    // If we're considering the default locale, augment the spec loop with
-    // additional checks to also test whether the current prefix is a prefix of
-    // the default locale.
-
-    var defaultLocale;
-    if (considerDefaultLocale)
-        defaultLocale = DefaultLocale();
-
-    var candidate = locale;
-    while (true) {
-        if (availableLocales[candidate])
-            return candidate;
-
-        if (considerDefaultLocale && candidate.length <= defaultLocale.length) {
-            if (candidate === defaultLocale)
-                return candidate;
-            if (callFunction(std_String_startsWith, defaultLocale, candidate + "-"))
-                return candidate;
-        }
-
-        var pos = callFunction(std_String_lastIndexOf, candidate, "-");
-        if (pos === -1)
-            return undefined;
-
-        if (pos >= 2 && candidate[pos - 2] === "-")
-            pos -= 2;
-
-        candidate = callFunction(String_substring, candidate, 0, pos);
-    }
-}
-
 /**
  * Compares a BCP 47 language tag against the locales in availableLocales
  * and returns the best available match. Uses the fallback
@@ -375,7 +229,7 @@ function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLoca
  * Spec: RFC 4647, section 3.4.
  */
 function BestAvailableLocale(availableLocales, locale) {
-    return BestAvailableLocaleHelper(availableLocales, locale, true);
+    return intl_BestAvailableLocale(availableLocales, locale, DefaultLocale());
 }
 
 /**
@@ -383,7 +237,7 @@ function BestAvailableLocale(availableLocales, locale) {
  * during computation.
  */
 function BestAvailableLocaleIgnoringDefault(availableLocales, locale) {
-    return BestAvailableLocaleHelper(availableLocales, locale, false);
+    return intl_BestAvailableLocale(availableLocales, locale, null);
 }
 
 /**
@@ -775,7 +629,7 @@ function GetOption(options, property, type, values, fallback) {
 
         // Step 2.d.
         if (values !== undefined && callFunction(ArrayIndexOf, values, value) === -1)
-            ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, value);
+            ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, `"${value}"`);
 
         // Step 2.e.
         return value;

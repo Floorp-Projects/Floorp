@@ -13,20 +13,11 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-// BrowserChildGlobal
-var global = this;
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
   LoginFormFactory: "resource://gre/modules/LoginFormFactory.jsm",
+  LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(this, "LoginManagerContent", () => {
-  let tmp = {};
-  ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm", tmp);
-  tmp.LoginManagerContent.setupEventListeners(global);
-  return tmp.LoginManagerContent;
 });
 
 // NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.

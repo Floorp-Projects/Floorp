@@ -38,6 +38,23 @@
   background-size: 13px;
 }
 
+/* Request blocking button */
+.devtools-button.requests-list-blocking-button::before {
+  background-image: url("chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg");
+}
+
+.devtools-button.requests-list-blocking-button:empty::before {
+  fill: var(--theme-body-color);
+}
+
+.devtools-button.requests-list-blocking-button.checked:empty::before {
+  fill: var(--theme-icon-checked-color);
+}
+
+.devtools-button.requests-list-blocking-button.requests-list-blocking-button-enabled:empty::before {
+  fill: var(--timing-blocked-color);
+}
+
 /* HAR button */
 
 #devtools-har-button {

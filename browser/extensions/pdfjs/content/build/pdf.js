@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.15';
-var pdfjsBuild = 'cead77ef';
+var pdfjsVersion = '2.4.43';
+var pdfjsBuild = '16ae7c69';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1271,7 +1271,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.4.15',
+    apiVersion: '2.4.43',
     source: {
       data: source.data,
       url: source.url,
@@ -1331,8 +1331,7 @@ const PDFDocumentLoadingTask = function PDFDocumentLoadingTaskClosure() {
     }
 
     then(onFulfilled, onRejected) {
-      (0, _display_utils.deprecated)('PDFDocumentLoadingTask.then method, ' + 'use the `promise` getter instead.');
-      return this.promise.then.apply(this.promise, arguments);
+      throw new Error('Removed API method: ' + 'PDFDocumentLoadingTask.then, use the `promise` getter instead.');
     }
 
   }
@@ -3004,8 +3003,7 @@ class RenderTask {
   }
 
   then(onFulfilled, onRejected) {
-    (0, _display_utils.deprecated)('RenderTask.then method, use the `promise` getter instead.');
-    return this.promise.then.apply(this.promise, arguments);
+    throw new Error('Removed API method: ' + 'RenderTask.then, use the `promise` getter instead.');
   }
 
 }
@@ -3176,9 +3174,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.15';
+const version = '2.4.43';
 exports.version = version;
-const build = 'cead77ef';
+const build = '16ae7c69';
 exports.build = build;
 
 /***/ }),

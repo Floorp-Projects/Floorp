@@ -25,7 +25,7 @@ load chrome://reftest/content/crashtests/layout/generic/crashtests/321224.xul
 load chrome://reftest/content/crashtests/layout/generic/crashtests/322780-1.xul
 load 323381-1.html
 load 323381-2.html
-asserts-if(Android&&asyncPan,1) load 323386-1.html # Bug 718883
+load 323386-1.html
 load 323389-1.html
 load 323389-2.html
 load 323493-1.html
@@ -315,7 +315,7 @@ load 455171-3.html
 load 455643-1.xhtml
 load 457375.html
 load 457380-1.html
-asserts-if(!Android,1) load 459968.html # bug 1067022
+asserts(1) asserts-if(Android,0-1) load 459968.html # bug 1067022
 load 460910-1.xml
 load 461294-1.html
 load 462968.xhtml
@@ -509,7 +509,7 @@ load 790252-2.html
 load 790260-1.html
 test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml
 test-pref(font.size.inflation.minTwips,120) load 794693.html
-asserts-if(!Android,1) load 798020-1.html
+asserts(1) asserts-if(Android,0-1) load 798020-1.html
 load 798235-1.html
 load 799207-1.html
 load 799207-2.html
@@ -522,7 +522,7 @@ load 810726.html
 load 812822-1.html
 load 812879-1.html
 load 812879-2.html
-pref(layout.css.column-span.enabled,true) asserts(4-26) load 812893.html # bug 1581653
+pref(layout.css.column-span.enabled,true) asserts(4-26) asserts-if(Android,4-34) load 812893.html # bug 1581653
 load 814995.html
 load 822910.xhtml
 load 824297-1.html
@@ -581,10 +581,10 @@ load 1001258-1.html
 load 1001994.html
 load chrome://reftest/content/crashtests/layout/generic/crashtests/1003441.xul
 load 1015562.html
-asserts(1-2) load 1015563-1.html
+asserts(1-2) asserts-if(Android,1-3) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
-load 1015844.html
-pref(font.size.inflation.minTwips,200) load 1032450.html
+asserts-if(Android,18) load 1015844.html
+asserts-if(Android,0-24) pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
 load 1032613-2.html
 load 1037903.html
@@ -711,7 +711,7 @@ load 1474768.html
 load 1478178.html
 load 1483972.html
 load 1486457.html
-asserts(9) load 1488762-1.html # asserts from integer overflow & bogus sizes
+asserts(9) asserts-if(Android,14) load 1488762-1.html # asserts from integer overflow & bogus sizes
 load 1489287.html
 load 1489863.html
 load 1489770.html
@@ -755,4 +755,5 @@ pref(layout.css.column-span.enabled,true) load 1572901.html
 pref(layout.css.column-span.enabled,true) load 1573216.html
 load 1574552.html
 pref(layout.css.column-span.enabled,true) load 1574993.html
+pref(layout.css.column-span.enabled,true) load 1582019.html
 load 1586470.html

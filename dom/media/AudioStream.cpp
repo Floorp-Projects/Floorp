@@ -19,6 +19,7 @@
 #include "CubebUtils.h"
 #include "nsPrintfCString.h"
 #include "AudioConverter.h"
+#include "UnderrunHandler.h"
 #if defined(XP_WIN)
 #  include "nsXULAppAPI.h"
 #endif
@@ -565,6 +566,10 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
   TRACE_AUDIO_CALLBACK();
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
+
+  if (SoftRealTimeLimitReached()) {
+    DemoteThreadFromRealTime();
+  }
 
   auto writer = AudioBufferWriter(
       MakeSpan<AudioDataValue>(reinterpret_cast<AudioDataValue*>(aBuffer),

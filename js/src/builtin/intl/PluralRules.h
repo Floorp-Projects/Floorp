@@ -81,18 +81,6 @@ extern JSObject* CreatePluralRulesPrototype(JSContext* cx,
                                             JS::Handle<GlobalObject*> global);
 
 /**
- * Returns an object indicating the supported locales for plural rules
- * by having a true-valued property for each such locale with the
- * canonicalized language tag as the property name. The object has no
- * prototype.
- *
- * Usage: availableLocales = intl_PluralRules_availableLocales()
- */
-extern MOZ_MUST_USE bool intl_PluralRules_availableLocales(JSContext* cx,
-                                                           unsigned argc,
-                                                           JS::Value* vp);
-
-/**
  * Returns a plural rule for the number x according to the effective
  * locale and the formatting options of the given PluralRules.
  *

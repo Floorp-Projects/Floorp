@@ -316,6 +316,15 @@ void js::TraceRuntime(JSTracer* trc) {
   rt->gc.traceRuntime(trc, prep);
 }
 
+void js::TraceRuntimeWithoutEviction(JSTracer* trc) {
+  MOZ_ASSERT(!trc->isMarkingTracer());
+
+  JSRuntime* rt = trc->runtime();
+  AutoTraceSession session(rt);
+  gcstats::AutoPhase ap(rt->gc.stats(), gcstats::PhaseKind::TRACE_HEAP);
+  rt->gc.traceRuntime(trc, session);
+}
+
 void js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoTraceSession& session) {
   MOZ_ASSERT(!rt->isBeingDestroyed());
 
@@ -467,6 +476,10 @@ void js::gc::GCRuntime::finishRoots() {
   for (RealmsIter r(rt); !r.done(); r.next()) {
     r->finishRoots();
   }
+
+#ifdef JS_GC_ZEAL
+  clearSelectedForMarking();
+#endif
 
   // Clear any remaining roots from the embedding (as otherwise they will be
   // left dangling after we shut down) and remove the callbacks.

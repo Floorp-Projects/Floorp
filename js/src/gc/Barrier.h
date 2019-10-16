@@ -1022,6 +1022,7 @@ namespace jit {
 class JitCode;
 }  // namespace jit
 
+using PreBarrieredId = PreBarriered<jsid>;
 using PreBarrieredObject = PreBarriered<JSObject*>;
 using PreBarrieredValue = PreBarriered<Value>;
 
@@ -1032,6 +1033,7 @@ using GCPtrAtom = GCPtr<JSAtom*>;
 using GCPtrBigInt = GCPtr<BigInt*>;
 using GCPtrFlatString = GCPtr<JSFlatString*>;
 using GCPtrFunction = GCPtr<JSFunction*>;
+using GCPtrLinearString = GCPtr<JSLinearString*>;
 using GCPtrObject = GCPtr<JSObject*>;
 using GCPtrScript = GCPtr<JSScript*>;
 using GCPtrString = GCPtr<JSString*>;

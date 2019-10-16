@@ -3823,8 +3823,7 @@ void Debugger::traceForMovingGC(JSTracer* trc) {
   trace(trc);
 
   for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
-    TraceManuallyBarrieredEdge(trc, e.mutableFront().unsafeGet(),
-                               "Global Object");
+    TraceEdge(trc, &e.mutableFront(), "Global Object");
   }
 
   for (Breakpoint* bp = firstBreakpoint(); bp; bp = bp->nextInDebugger()) {

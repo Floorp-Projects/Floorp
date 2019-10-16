@@ -21,18 +21,18 @@ runInParent(function addLogins() {
                                            Ci.nsILoginInfo, "init");
 
   // We have two actual HTTPS to avoid autofill before the schemeUpgrades pref flips to true.
-  let login0 = new nsLoginInfo("https://example.org", "https://example.org", null,
+  let login0 = new nsLoginInfo("https://example.com", "https://example.com", null,
                                "name", "pass", "uname", "pword");
 
-  let login1 = new nsLoginInfo("https://example.org", "https://example.org", null,
+  let login1 = new nsLoginInfo("https://example.com", "https://example.com", null,
                                "name1", "pass1", "uname", "pword");
 
   // Same as above but HTTP instead of HTTPS (to test de-duping)
-  let login2 = new nsLoginInfo("http://example.org", "http://example.org", null,
+  let login2 = new nsLoginInfo("http://example.com", "http://example.com", null,
                                "name1", "pass1", "uname", "pword");
 
   // Different HTTP login to upgrade with secure formActionOrigin
-  let login3 = new nsLoginInfo("http://example.org", "https://example.org", null,
+  let login3 = new nsLoginInfo("http://example.com", "https://example.com", null,
                                "name2", "passHTTPtoHTTPS", "uname", "pword");
 
   try {
@@ -67,8 +67,7 @@ function restoreForm() {
   uname.focus();
 }
 
-const HTTPS_FORM_URL = "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
-const HTTP_FORM_URL = "http://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
+const HTTPS_FORM_URL = "https://example.com/tests/toolkit/components/passwordmgr/test/mochitest/form_basic.html";
 
 async function setup(formUrl = HTTPS_FORM_URL) {
   await SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
@@ -86,31 +85,7 @@ async function setup(formUrl = HTTPS_FORM_URL) {
   pword = iframeDoc.getElementById("form-basic-password");
 }
 
-add_task(async function test_autocomplete_http() {
-  info("test_autocomplete_http, setup with " + HTTP_FORM_URL);
-  await setup(HTTP_FORM_URL);
-
-  LoginManager.getAllLogins().then(logins => {
-    info("got logins: " + logins.map(l => l.origin));
-  });
-  // from a HTTP page, look for matching logins, we should never offer a login with an HTTPS scheme
-  // we're expecting just login2 as a match
-  // Make sure initial form is empty.
-  checkLoginForm(uname, "", pword, "");
-  // Trigger autocomplete popup
-  restoreForm();
-  let popupState = await getPopupState();
-  is(popupState.open, false, "Check popup is initially closed");
-  let shownPromise = promiseACShown();
-  synthesizeKey("KEY_ArrowDown");
-  let results = await shownPromise;
-  info("got results: " + results.join(", "));
-  popupState = await getPopupState();
-  is(popupState.selectedIndex, -1, "Check no entries are selected");
-  checkAutoCompleteResults(results, ["name1"], "http://example.org", "initial");
-});
-
-add_task(async function https_setup() {
+add_task(async function setup_https_frame() {
   await setup(HTTPS_FORM_URL);
 });
 
@@ -216,9 +191,9 @@ add_task(async function test_delete_duplicate_entry() {
   await deletionPromise;
   checkLoginForm(uname, "", pword, "");
 
-  is(await LoginManager.countLogins("http://example.org", "http://example.org", null), 1,
+  is(await LoginManager.countLogins("http://example.com", "http://example.com", null), 1,
      "Check that the HTTP login remains");
-  is(await LoginManager.countLogins("https://example.org", "https://example.org", null), 0,
+  is(await LoginManager.countLogins("https://example.com", "https://example.com", null), 0,
      "Check that the HTTPS login was deleted");
 
   // Two menu items should remain as the HTTPS login should have been deleted but

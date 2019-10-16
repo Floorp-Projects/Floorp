@@ -49,8 +49,6 @@ int64_t NS_NavBookmarksTotalSyncChanges() {
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsNavBookmarks, gBookmarksService)
 
-#define SQLITE_MAX_VARIABLE_NUMBER 999
-
 namespace {
 
 #define SKIP_TAGS(condition) ((condition) ? SkipTags : DontSkip)
@@ -1274,7 +1272,14 @@ nsresult nsNavBookmarks::InsertTombstones(
     return NS_OK;
   }
 
-  size_t maxRowsPerChunk = SQLITE_MAX_VARIABLE_NUMBER / 2;
+  nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
+  NS_ENSURE_STATE(conn);
+
+  int32_t variableLimit = 0;
+  nsresult rv = conn->GetVariableLimit(&variableLimit);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  size_t maxRowsPerChunk = variableLimit / 2;
   for (uint32_t startIndex = 0; startIndex < aTombstones.Length();
        startIndex += maxRowsPerChunk) {
     size_t rowsPerChunk =
@@ -1300,7 +1305,6 @@ nsresult nsNavBookmarks::InsertTombstones(
     mozStorageStatementScoper scoper(stmt);
 
     uint32_t paramIndex = 0;
-    nsresult rv;
     for (uint32_t i = 0; i < rowsPerChunk; ++i) {
       const TombstoneData& tombstone = aTombstones[startIndex + i];
       rv = stmt->BindUTF8StringByIndex(paramIndex++, tombstone.guid);

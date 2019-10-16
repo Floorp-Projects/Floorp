@@ -2183,9 +2183,9 @@ static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
   // eExcludesIgnorableWhitespace frames, where we know we'll be dropping them
   // all anyway, and involve an extra walk down the frame construction item
   // list.
-  if ((aParentFrame &&
-       (!aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
-        aParentFrame->IsGeneratedContentFrame())) ||
+  if (!aParentFrame ||
+      !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
+      aParentFrame->IsGeneratedContentFrame() ||
       !aChildContent->IsText()) {
     return true;
   }
@@ -3291,9 +3291,9 @@ nsCSSFrameConstructor::FindTextData(const Text& aTextContent,
       return nullptr;
     }
 
-    // Don't render stuff in display: contents / Shadow DOM subtrees, because
-    // TextCorrespondenceRecorder in the SVG text code doesn't really know how
-    // to deal with it. This kinda sucks. :(
+    // FIXME(bug 1588477) Don't render stuff in display: contents / Shadow DOM
+    // subtrees, because TextCorrespondenceRecorder in the SVG text code doesn't
+    // really know how to deal with it. This kinda sucks. :(
     if (aParentFrame->GetContent() != aTextContent.GetParent()) {
       return nullptr;
     }
@@ -5121,6 +5121,13 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
   if (aIsWithinSVGText) {
     // If aIsWithinSVGText is true, then we know that the "SVG text uses
     // CSS frames" pref was true when this SVG fragment was first constructed.
+    //
+    // FIXME(bug 1588477) Don't render stuff in display: contents / Shadow DOM
+    // subtrees, because TextCorrespondenceRecorder in the SVG text code doesn't
+    // really know how to deal with it. This kinda sucks. :(
+    if (aParentFrame && aParentFrame->GetContent() != aElement.GetParent()) {
+      return nullptr;
+    }
 
     // We don't use ConstructInline because we want different behavior
     // for generated content.
@@ -5529,11 +5536,15 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     MOZ_ASSERT(!aContent->AsElement()->IsRootOfNativeAnonymousSubtree(),
                "display:contents on anonymous content is unsupported");
 
-    if (!withinSVGText) {
-      CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                                 *aComputedStyle, PseudoStyleType::before,
-                                 aItems);
+    // FIXME(bug 1588477): <svg:text>'s TextNodeCorrespondenceRecorder has
+    // trouble with everything that looks like display: contents.
+    if (withinSVGText) {
+      return;
     }
+
+    CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
+                               *aComputedStyle, PseudoStyleType::before,
+                               aItems);
 
     FlattenedChildIterator iter(aContent);
     InsertionPoint insertion(aParentFrame, aContent);
@@ -5544,11 +5555,9 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     }
     aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
-    if (!withinSVGText) {
-      CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                                 *aComputedStyle, PseudoStyleType::after,
-                                 aItems);
-    }
+    CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
+                               *aComputedStyle, PseudoStyleType::after,
+                               aItems);
     return;
   }
 
@@ -11340,7 +11349,7 @@ void nsCSSFrameConstructor::BuildInlineChildItems(
                                aParentItem.mChildItems);
   }
 
-  uint32_t flags = ITEM_ALLOW_XBL_BASE | ITEM_ALLOW_PAGE_BREAK;
+  uint32_t flags = 0;
   if (aItemIsWithinSVGText) {
     flags |= ITEM_IS_WITHIN_SVG_TEXT;
   }
@@ -11352,18 +11361,8 @@ void nsCSSFrameConstructor::BuildInlineChildItems(
   FlattenedChildIterator iter(parentContent);
   for (nsIContent* content = iter.GetNextChild(); content;
        content = iter.GetNextChild()) {
-    // Manually check for comments/PIs, since we don't have a frame to pass to
-    // AddFrameConstructionItems.  We know our parent is a non-replaced inline,
-    // so there is no need to do the NeedFrameFor check.
-    content->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
-    if (content->IsComment() || content->IsProcessingInstruction()) {
-      continue;
-    }
-
-    RefPtr<ComputedStyle> childContext = ResolveComputedStyle(content);
-    AddFrameConstructionItemsInternal(aState, content, nullptr,
-                                      iter.XBLInvolved(), childContext, flags,
-                                      aParentItem.mChildItems);
+    AddFrameConstructionItems(aState, content, iter.XBLInvolved(),
+                              InsertionPoint(), aParentItem.mChildItems, flags);
   }
 
   if (!aItemIsWithinSVGText) {

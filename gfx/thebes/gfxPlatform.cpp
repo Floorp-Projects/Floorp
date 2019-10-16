@@ -600,7 +600,6 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".disable-gradient-prims",
                       wr::DebugFlags_DISABLE_GRADIENT_PRIMS)
   GFX_WEBRENDER_DEBUG(".obscure-images", wr::DebugFlags_OBSCURE_IMAGES)
-  GFX_WEBRENDER_DEBUG(".log-transactions", wr::DebugFlags_LOG_TRANSACTIONS)
 #undef GFX_WEBRENDER_DEBUG
 
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
@@ -3135,6 +3134,11 @@ void gfxPlatform::InitWebRenderConfig() {
   // The RemoveShaderCacheFromDiskIfNecessary() needs to be called after
   // WebRenderConfig initialization.
   gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
+}
+
+void gfxPlatform::InitWebGPUConfig() {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::WEBGPU);
+  feature.SetDefaultFromPref("dom.webgpu.enable", true, false);
 }
 
 void gfxPlatform::InitOMTPConfig() {

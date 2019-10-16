@@ -68,6 +68,10 @@ interface CanonicalBrowsingContext : BrowsingContext {
 
   void notifyStartDelayedAutoplayMedia();
   void notifyMediaMutedChanged(boolean muted);
+
+  [Throws]
+  Promise<unsigned long long> changeFrameRemoteness(
+      DOMString remoteType, unsigned long long pendingSwitchId);
 };
 
 [Exposed=Window, ChromeOnly]

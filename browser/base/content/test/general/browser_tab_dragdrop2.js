@@ -1,7 +1,7 @@
 "use strict";
 
 const ROOT = getRootDirectory(gTestPath);
-const URI = ROOT + "browser_tab_dragdrop2_frame1.xul";
+const URI = ROOT + "browser_tab_dragdrop2_frame1.xhtml";
 
 // Load the test page (which runs some child popup tests) in a new window.
 // After the tests were run, tear off the tab into a new window and run popup

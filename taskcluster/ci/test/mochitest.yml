@@ -52,7 +52,7 @@ mochitest:
             default: default
     chunks:
         by-test-platform:
-            android-em-7.*: 3
+            android-em-7.*: 4
             linux.*/debug: 16
             linux64-asan/opt: 10
             linux64-.*cov/opt: 10
@@ -103,6 +103,7 @@ mochitest-browser-chrome:
             linux64-asan/opt: 16
             macosx.*64/debug: 12
             windows10-64-ccov/debug: 14
+            windows10.*-asan/opt: 9
             default: 7
     max-run-time:
         by-test-platform:
@@ -120,22 +121,6 @@ mochitest-browser-chrome:
         chunked: true
     # Bug 1281241: migrating to m3.large instances
     instance-size: default
-    allow-software-gl-layers: false
-
-browser-instrumentation:
-    description: "Extra instrumentation for a browser-chrome run (XUL, XBL, etc)"
-    suite:
-        name: mochitest-browser-chrome-instrumentation
-    treeherder-symbol: M(inst)
-    loopback-video: true
-    tier: 3
-    run-on-projects:
-        by-test-platform:
-            windows.*-(?:nightly|shippable)/.*: ["mozilla-central"]
-            default: []
-    max-run-time: 14400
-    mozharness:
-        mochitest-flavor: browser
     allow-software-gl-layers: false
 
 browser-screenshots:
@@ -191,7 +176,7 @@ mochitest-devtools-chrome:
             default: default
     max-run-time:
         by-test-platform:
-            windows10-64-ccov/debug: 7200
+            windows10-64-ccov/debug: 9000
             macosx.*64-ccov/debug: 9000
             linux64-ccov/debug: 7200
             default: 5400

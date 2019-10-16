@@ -67,9 +67,8 @@ pub struct LogRecorder {
 }
 
 impl LogRecorder {
-    pub fn new(dest: &PathBuf) -> LogRecorder {
-        let file = File::create(dest).unwrap();
-        LogRecorder { file }
+    pub fn new(dest: &PathBuf) -> Option<Box<LogRecorder>> {
+        Some(Box::new(LogRecorder { file: File::create(dest).ok()? }))
     }
 }
 

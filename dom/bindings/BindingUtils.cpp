@@ -1238,58 +1238,6 @@ bool InitIds(JSContext* cx, const NativeProperties* nativeProperties) {
 
 #undef INIT_IDS_IF_DEFINED
 
-bool QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp) {
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  if (!args.thisv().isObject()) {
-    JS_ReportErrorASCII(cx, "QueryInterface called on incompatible non-object");
-    return false;
-  }
-
-  // Get the object. It might be a security wrapper, in which case we do a
-  // checked unwrap.
-  JS::Rooted<JSObject*> origObj(cx, &args.thisv().toObject());
-  JS::Rooted<JSObject*> obj(
-      cx, js::CheckedUnwrapDynamic(origObj, cx,
-                                   /* stopAtWindowProxy = */ false));
-  if (!obj) {
-    JS_ReportErrorASCII(cx, "Permission denied to access object");
-    return false;
-  }
-
-  nsCOMPtr<nsISupports> native = UnwrapDOMObjectToISupports(obj);
-  if (!native) {
-    return Throw(cx, NS_ERROR_FAILURE);
-  }
-
-  if (argc < 1) {
-    return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
-  }
-
-  Maybe<nsIID> iid = xpc::JSValue2ID(cx, args[0]);
-  if (!iid) {
-    return Throw(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
-  }
-
-  if (iid->Equals(NS_GET_IID(nsIClassInfo))) {
-    nsresult rv;
-    nsCOMPtr<nsIClassInfo> ci = do_QueryInterface(native, &rv);
-    if (NS_FAILED(rv)) {
-      return Throw(cx, rv);
-    }
-
-    return WrapObject(cx, ci, &NS_GET_IID(nsIClassInfo), args.rval());
-  }
-
-  nsCOMPtr<nsISupports> unused;
-  nsresult rv = native->QueryInterface(*iid, getter_AddRefs(unused));
-  if (NS_FAILED(rv)) {
-    return Throw(cx, rv);
-  }
-
-  args.rval().set(args.thisv());
-  return true;
-}
-
 void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
                       nsWrapperCache* aCache, JS::Handle<JS::Value> aIID,
                       JS::MutableHandle<JS::Value> aRetval,

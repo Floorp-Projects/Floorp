@@ -9,17 +9,6 @@
  */
 var relativeTimeFormatInternalProperties = {
     localeData: relativeTimeFormatLocaleData,
-    _availableLocales: null,
-    availableLocales: function() // eslint-disable-line object-shorthand
-    {
-        var locales = this._availableLocales;
-        if (locales)
-            return locales;
-
-        locales = intl_RelativeTimeFormat_availableLocales();
-        addSpecialMissingLanguageTags(locales);
-        return (this._availableLocales = locales);
-    },
     relevantExtensionKeys: ["nu"],
 };
 
@@ -43,7 +32,7 @@ function resolveRelativeTimeFormatInternals(lazyRelativeTimeFormatData) {
     var RelativeTimeFormat = relativeTimeFormatInternalProperties;
 
     // Steps 7-8.
-    const r = ResolveLocale(callFunction(RelativeTimeFormat.availableLocales, RelativeTimeFormat),
+    const r = ResolveLocale("RelativeTimeFormat",
                             lazyRelativeTimeFormatData.requestedLocales,
                             lazyRelativeTimeFormatData.opt,
                             RelativeTimeFormat.relevantExtensionKeys,
@@ -164,8 +153,8 @@ function Intl_RelativeTimeFormat_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
     // Step 1.
-    var availableLocales = callFunction(relativeTimeFormatInternalProperties.availableLocales,
-                                        relativeTimeFormatInternalProperties);
+    var availableLocales = "RelativeTimeFormat";
+
     // Step 2.
     let requestedLocales = CanonicalizeLocaleList(locales);
 

@@ -49,6 +49,7 @@ void GPUChild::Init() {
       gfxConfig::GetValue(Feature::OPENGL_COMPOSITING);
   devicePrefs.advancedLayers() = gfxConfig::GetValue(Feature::ADVANCED_LAYERS);
   devicePrefs.useD2D1() = gfxConfig::GetValue(Feature::DIRECT2D);
+  devicePrefs.webGPU() = gfxConfig::GetValue(Feature::WEBGPU);
 
   nsTArray<LayerTreeIdMapping> mappings;
   LayerTreeOwnerTracker::Get()->Iterate(

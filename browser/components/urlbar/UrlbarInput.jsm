@@ -97,7 +97,7 @@ class UrlbarInput {
     this._actionOverrideKeyCount = 0;
     this._autofillPlaceholder = "";
     this._lastSearchString = "";
-    this._textValueOnLastSearch = "";
+    this._valueOnLastSearch = "";
     this._resultForCurrentValue = null;
     this._suppressStartQuery = false;
     this._suppressPrimaryAdjustment = false;
@@ -206,6 +206,8 @@ class UrlbarInput {
     // recording abandonment events when the command causes a blur event.
     this.view.panel.addEventListener("command", this, true);
 
+    this.window.gBrowser.tabContainer.addEventListener("TabSelect", this);
+
     this._copyCutController = new CopyCutController(this);
     this.inputField.controllers.insertControllerAt(0, this._copyCutController);
 
@@ -236,6 +238,7 @@ class UrlbarInput {
     this.window.removeEventListener("mousedown", this);
     this.textbox.removeEventListener("mousedown", this);
     this._inputContainer.removeEventListener("click", this);
+    this.window.gBrowser.tabContainer.removeEventListener("TabSelect", this);
 
     this.view.panel.remove();
     this.endLayoutExtend(true);
@@ -754,7 +757,7 @@ class UrlbarInput {
       // This usually happens when there's no selected results (the user cycles
       // through results and there was no heuristic), and we reset the input
       // value to the previous text value.
-      this.value = this._textValueOnLastSearch;
+      this.value = this._valueOnLastSearch;
     } else {
       // For autofilled results, the value that should be canonized is not the
       // autofilled value but the value that the user typed.
@@ -890,7 +893,7 @@ class UrlbarInput {
     }
 
     this._lastSearchString = searchString;
-    this._textValueOnLastSearch = this.value;
+    this._valueOnLastSearch = this.value;
 
     // TODO (Bug 1522902): This promise is necessary for tests, because some
     // tests are not listening for completion when starting a query through
@@ -1001,12 +1004,11 @@ class UrlbarInput {
 
   get openViewOnFocusForCurrentTab() {
     return (
-      this._openViewOnFocusAndSearchString ||
-      (this._openViewOnFocus &&
-        !["about:newtab", "about:home"].includes(
-          this.window.gBrowser.currentURI.spec
-        ) &&
-        !this.isPrivate)
+      this._openViewOnFocus &&
+      !["about:newtab", "about:home"].includes(
+        this.window.gBrowser.currentURI.spec
+      ) &&
+      !this.isPrivate
     );
   }
 
@@ -1053,6 +1055,7 @@ class UrlbarInput {
     this.removeAttribute("breakout-extend-disabled");
 
     this.setAttribute("breakout-extend", "true");
+    this.view.reOpen();
 
     // Enable the animation only after the first extend call to ensure it
     // doesn't run when opening a new window.
@@ -1088,14 +1091,6 @@ class UrlbarInput {
   }
 
   // Private methods below.
-
-  get _openViewOnFocusAndSearchString() {
-    return (
-      this.megabar &&
-      this.value &&
-      this.getAttribute("pageproxystate") != "valid"
-    );
-  }
 
   async _updateLayoutBreakoutDimensions() {
     // When this method gets called a second time before the first call
@@ -1164,6 +1159,9 @@ class UrlbarInput {
     this.inputField.value = val;
     this.formatValue();
     this.removeAttribute("actiontype");
+    if (!this.view.isOpen) {
+      this.view.clear();
+    }
 
     // Dispatch ValueChange event for accessibility.
     let event = this.document.createEvent("Events");
@@ -1936,6 +1934,7 @@ class UrlbarInput {
 
     if (!value && this.view.isOpen) {
       this.view.close();
+      this.view.clear();
       return;
     }
 

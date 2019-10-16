@@ -34,8 +34,6 @@ class JSString;
 
 namespace js {
 
-class StringBuffer;
-
 namespace intl {
 
 #ifdef DEBUG
@@ -316,6 +314,11 @@ class MOZ_STACK_CLASS LanguageTag final {
   bool setUnicodeExtension(JS::UniqueChars extension);
 
   /**
+   * Remove any Unicode extension subtag if present.
+   */
+  void clearUnicodeExtension();
+
+  /**
    * Set the private-use subtag. The input must be a valid, case-normalized
    * private-use subtag or the empty string.
    */
@@ -374,10 +377,9 @@ class MOZ_STACK_CLASS LanguageTag final {
   }
 
   /**
-   * Append the string representation of this language tag to the given
-   * string buffer.
+   * Return the string representation of this language tag.
    */
-  bool appendTo(JSContext* cx, StringBuffer& sb) const;
+  JSString* toString(JSContext* cx) const;
 
   /**
    * Add likely-subtags to the language tag.

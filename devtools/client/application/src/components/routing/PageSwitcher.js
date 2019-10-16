@@ -9,9 +9,9 @@ const {
   PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const { PAGE_TYPES } = require("../../constants");
+const Types = require("../../types/index");
 
 const ManifestPage = createFactory(require("../manifest/ManifestPage"));
 const WorkersPage = createFactory(require("../service-workers/WorkersPage"));
@@ -19,7 +19,7 @@ const WorkersPage = createFactory(require("../service-workers/WorkersPage"));
 class PageSwitcher extends PureComponent {
   static get propTypes() {
     return {
-      page: PropTypes.oneOf(Object.values(PAGE_TYPES)),
+      page: Types.page.isRequired,
     };
   }
 

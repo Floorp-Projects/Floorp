@@ -322,12 +322,12 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetCrossOriginOpenerPolicy(
       nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
       nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) override;
-  virtual bool GetHasSandboxedAuxiliaryNavigations() override {
-    return mHasSandboxedNavigations;
+  virtual bool GetHasNonEmptySandboxingFlag() override {
+    return mHasNonEmptySandboxingFlag;
   }
-  virtual void SetHasSandboxedAuxiliaryNavigations(
-      bool aHasSandboxedAuxiliaryNavigations) override {
-    mHasSandboxedNavigations = aHasSandboxedAuxiliaryNavigations;
+  virtual void SetHasNonEmptySandboxingFlag(
+      bool aHasNonEmptySandboxingFlag) override {
+    mHasNonEmptySandboxingFlag = aHasNonEmptySandboxingFlag;
   }
 
   inline void CleanRedirectCacheChainIfNecessary() {
@@ -804,8 +804,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // to upgrade the request to a secure channel.
   uint32_t mUpgradableToSecure : 1;
 
-  // Is true if the docshell has the SANDBOXED_AUXILIARY_NAVIGATION flag set.
-  uint32_t mHasSandboxedNavigations : 1;
+  // True if the docshell's sandboxing flag set is not empty.
+  uint32_t mHasNonEmptySandboxingFlag : 1;
 
   // An opaque flags for non-standard behavior of the TLS system.
   // It is unlikely this will need to be set outside of telemetry studies

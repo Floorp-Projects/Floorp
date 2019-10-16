@@ -316,6 +316,15 @@ types.addActorType = function(name) {
       const actorID = typeof v === "string" ? v : v.actor;
       // `ctx.conn` is a DebuggerClient
       let front = ctx.conn.getFrontByID(actorID);
+
+      // When the type `${name}#actorid` is used, `v` is a string refering to the
+      // actor ID. We cannot read form information in this case and the actorID was
+      // already set when creating the front, so no need to do anything.
+      let form = null;
+      if (detail != "actorid") {
+        form = identityWrite(v);
+      }
+
       if (!front) {
         // If front isn't instantiated yet, create one.
         // Try lazy loading front if not already loaded.
@@ -333,14 +342,10 @@ types.addActorType = function(name) {
         const Class = type.frontClass;
         front = new Class(ctx.conn, targetFront, parentFront);
         front.actorID = actorID;
-        parentFront.manage(front);
-      }
 
-      // When the type `${name}#actorid` is used, `v` is a string refering to the
-      // actor ID. We only set the actorID just before and so do not need anything else.
-      if (detail != "actorid") {
-        v = identityWrite(v);
-        front.form(v, ctx);
+        parentFront.manage(front, form, ctx);
+      } else if (form) {
+        front.form(form, ctx);
       }
 
       return front;

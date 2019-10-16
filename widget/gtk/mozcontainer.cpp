@@ -141,6 +141,43 @@ void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
 }
 
 /* static methods */
+#if defined(MOZ_WAYLAND)
+static gint moz_container_get_scale(MozContainer* container) {
+  static auto sGdkWindowGetScaleFactorPtr =
+      (gint(*)(GdkWindow*))dlsym(RTLD_DEFAULT, "gdk_window_get_scale_factor");
+
+  if (sGdkWindowGetScaleFactorPtr) {
+    GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
+    return (*sGdkWindowGetScaleFactorPtr)(window);
+  }
+
+  return 1;
+}
+
+void moz_container_move(MozContainer* container, int dx, int dy) {
+  if (container->subsurface) {
+    wl_subsurface_set_position(container->subsurface, dx, dy);
+  }
+}
+
+void moz_container_scale_update(MozContainer* container) {
+  if (container->surface) {
+    gint scale = moz_container_get_scale(container);
+    wl_surface_set_buffer_scale(container->surface, scale);
+  }
+}
+
+// This is called from layout/compositor code only with
+// size equal to GL rendering context. Otherwise there are
+// rendering artifacts as wl_egl_window size does not match
+// GL rendering pipeline setup.
+void moz_container_egl_window_set_size(MozContainer* container, int width,
+                                       int height) {
+  if (container->eglwindow) {
+    wl_egl_window_resize(container->eglwindow, width, height, 0, 0);
+  }
+}
+#endif
 
 void moz_container_class_init(MozContainerClass* klass) {
   /*GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -290,43 +327,17 @@ static void moz_container_unmap_wayland(MozContainer* container) {
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
 
-static gint moz_container_get_scale(MozContainer* container) {
-  static auto sGdkWindowGetScaleFactorPtr =
-      (gint(*)(GdkWindow*))dlsym(RTLD_DEFAULT, "gdk_window_get_scale_factor");
-
-  if (sGdkWindowGetScaleFactorPtr) {
-    GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
-    return (*sGdkWindowGetScaleFactorPtr)(window);
-  }
-
-  return 1;
-}
-
 void moz_container_scale_changed(MozContainer* container,
                                  GtkAllocation* aAllocation) {
-  LOGWAYLAND(("%s [%p] surface %p eglwindow %p\n", __FUNCTION__,
-              (void*)container, (void*)container->surface,
-              (void*)container->eglwindow));
+  LOG(("moz_container_scale_changed [%p] surface %p eglwindow %p\n",
+       (void*)container, (void*)container->surface,
+       (void*)container->eglwindow));
 
   if (!container->surface) {
     return;
   }
 
-  // Set correct scaled/unscaled mozcontainer offset
-  // especially when wl_egl is used but we don't recreate it as Gtk+ does.
-  gint x, y;
-  gdk_window_get_position(gtk_widget_get_window(GTK_WIDGET(container)), &x, &y);
-  wl_subsurface_set_position(container->subsurface, x, y);
-
-  // Try to only resize wl_egl_window on scale factor change.
-  // It's a bit risky as Gtk+ recreates it at that event.
-  if (container->eglwindow) {
-    gint scale = moz_container_get_scale(container);
-    wl_surface_set_buffer_scale(container->surface,
-                                moz_container_get_scale(container));
-    wl_egl_window_resize(container->eglwindow, aAllocation->width * scale,
-                         aAllocation->height * scale, 0, 0);
-  }
+  moz_container_scale_update(container);
 }
 #endif
 
@@ -421,8 +432,8 @@ void moz_container_size_allocate(GtkWidget* widget, GtkAllocation* allocation) {
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
 
-  LOG(("%s [%p] %d %d %d %d\n", __FUNCTION__, (void*)widget, allocation->x,
-       allocation->y, allocation->width, allocation->height));
+  LOG(("moz_container_size_allocate [%p] %d,%d -> %d x %d\n", (void*)widget,
+       allocation->x, allocation->y, allocation->width, allocation->height));
 
   /* short circuit if you can */
   container = MOZ_CONTAINER(widget);
@@ -450,23 +461,14 @@ void moz_container_size_allocate(GtkWidget* widget, GtkAllocation* allocation) {
     gdk_window_move_resize(gtk_widget_get_window(widget), allocation->x,
                            allocation->y, allocation->width,
                            allocation->height);
-  }
-
 #if defined(MOZ_WAYLAND)
-  // We need to position our subsurface according to GdkWindow
-  // when offset changes (GdkWindow is maximized for instance).
-  // see gtk-clutter-embed.c for reference.
-  if (container->subsurface) {
-    gint x, y;
-    gdk_window_get_position(gtk_widget_get_window(widget), &x, &y);
-    wl_subsurface_set_position(container->subsurface, x, y);
-  }
-  if (container->eglwindow) {
-    gint scale = moz_container_get_scale(container);
-    wl_egl_window_resize(container->eglwindow, allocation->width * scale,
-                         allocation->height * scale, 0, 0);
-  }
+    // We need to position our subsurface according to GdkWindow
+    // when offset changes (GdkWindow is maximized for instance).
+    // see gtk-clutter-embed.c for reference.
+    moz_container_move(MOZ_CONTAINER(widget), allocation->x, allocation->y);
+    moz_container_scale_update(MOZ_CONTAINER(widget));
 #endif
+  }
 }
 
 void moz_container_remove(GtkContainer* container, GtkWidget* child_widget) {
@@ -583,10 +585,14 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
     // Available as of GTK 3.8+
     struct wl_compositor* compositor = waylandDisplay->GetCompositor();
     container->surface = wl_compositor_create_surface(compositor);
+    wl_surface* parent_surface =
+        moz_container_get_gtk_container_surface(container);
+    if (!container->surface || !parent_surface) {
+      return nullptr;
+    }
 
     container->subsurface = wl_subcompositor_get_subsurface(
-        waylandDisplay->GetSubcompositor(), container->surface,
-        moz_container_get_gtk_container_surface(container));
+        waylandDisplay->GetSubcompositor(), container->surface, parent_surface);
 
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
     gint x, y;

@@ -114,3 +114,23 @@ class ByteReader {
     return ptr[0] << 16 | ptr[1] << 8 | ptr[2];
   }
 };
+
+// In Bug 1248897 we've seen that Coverity thinks that json-cpp allocates
+// memmory for the strings that are used as indexes, this is wrong and this
+// model of CZString fixes this.
+namespace Json {
+class Value {
+ private:
+  class CZString {
+   private:
+    char const* cstr_;
+
+   public:
+    ~CZString() {
+      // Don't do anything since most of the time cstr_ only stores address of
+      // str
+      __coverity_escape__(static_cast<void*>(cstr_));
+    }
+  };
+};
+}  // namespace Json

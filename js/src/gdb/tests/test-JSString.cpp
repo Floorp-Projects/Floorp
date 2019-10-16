@@ -1,8 +1,8 @@
 #include "gdb-tests.h"
 
 #include "vm/JSContext.h"
-// When JSGC_ANALYSIS is #defined, Rooted<JSFlatString*> needs the definition
-// of JSFlatString in order to figure out its ThingRootKind
+// When JSGC_ANALYSIS is #defined, Rooted<JSLinearString*> needs the definition
+// of JSLinearString in order to figure out its ThingRootKind
 #include "vm/StringType.h"
 
 FRAGMENT(JSString, simple) {
@@ -53,12 +53,12 @@ FRAGMENT(JSString, null) {
 }
 
 FRAGMENT(JSString, subclasses) {
-  JS::Rooted<JSFlatString*> flat(
-      cx, JS_FlattenString(cx, JS_NewStringCopyZ(cx, "Hi!")));
+  JS::Rooted<JSLinearString*> linear(
+      cx, JS_EnsureLinearString(cx, JS_NewStringCopyZ(cx, "Hi!")));
 
   breakpoint();
 
-  use(flat);
+  use(linear);
 }
 
 FRAGMENT(JSString, atom) {

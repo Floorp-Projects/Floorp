@@ -46,6 +46,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FxAccounts.jsm"
 );
 
+const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommon.js"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "getRepairRequestor",
@@ -1215,10 +1219,16 @@ ClientsTracker.prototype = {
 
   onStart() {
     Svc.Obs.add("fxaccounts:new_device_id", this.asyncObserver);
-    Svc.Prefs.observe("client.name", this.asyncObserver);
+    Services.prefs.addObserver(
+      PREF_ACCOUNT_ROOT + "device.name",
+      this.asyncObserver
+    );
   },
   onStop() {
-    Svc.Prefs.ignore("client.name", this.asyncObserver);
+    Services.prefs.removeObserver(
+      PREF_ACCOUNT_ROOT + "device.name",
+      this.asyncObserver
+    );
     Svc.Obs.remove("fxaccounts:new_device_id", this.asyncObserver);
   },
 

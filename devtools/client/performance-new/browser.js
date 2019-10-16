@@ -437,12 +437,12 @@ async function getSymbolTableFromLocalBinary(objdirs, filename, breakpadId) {
  * it's dealing with a simpler situation.
  *
  * @param {object} profile - The raw profie (not gzipped).
- * @param {string[]} objdirs - An array of objdir paths on the host machine
- *   that should be searched for relevant build artifacts.
+ * @param {() => string[]} getObjdirs - A function that returns an array of objdir paths
+ *   on the host machine that should be searched for relevant build artifacts.
  * @param {PerfFront} perfFront
  * @return {GetSymbolTableCallback}
  */
-function createMultiModalGetSymbolTableFn(profile, objdirs, perfFront) {
+function createMultiModalGetSymbolTableFn(profile, getObjdirs, perfFront) {
   const libraryGetter = createLibraryMap(profile);
 
   return async function getSymbolTable(debugName, breakpadId) {
@@ -473,6 +473,7 @@ function createMultiModalGetSymbolTableFn(profile, objdirs, perfFront) {
       // We check the host machine first, because if this is a developer
       // build, then the objdir files will contain more symbol information
       // than the files that get pushed to the device.
+      const objdirs = getObjdirs();
       return await getSymbolTableFromLocalBinary(objdirs, name, breakpadId);
     } catch (e) {
       // No matching file was found on the host machine.

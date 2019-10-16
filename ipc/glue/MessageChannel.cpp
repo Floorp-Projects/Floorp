@@ -8,6 +8,7 @@
 #include "mozilla/ipc/MessageChannel.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -112,7 +113,6 @@ using namespace mozilla::ipc;
 using mozilla::MonitorAutoLock;
 using mozilla::MonitorAutoUnlock;
 using mozilla::dom::AutoNoJSAPI;
-using mozilla::dom::ScriptSettingsInitialized;
 
 #define IPC_ASSERT(_cond, ...)                                           \
   do {                                                                   \
@@ -2079,7 +2079,9 @@ void MessageChannel::DispatchMessage(Message&& aMsg) {
   RefPtr<ActorLifecycleProxy> listenerProxy = mListener->GetLifecycleProxy();
 
   Maybe<AutoNoJSAPI> nojsapi;
-  if (ScriptSettingsInitialized() && NS_IsMainThread()) nojsapi.emplace();
+  if (NS_IsMainThread() && CycleCollectedJSContext::Get()) {
+    nojsapi.emplace();
+  }
 
   nsAutoPtr<Message> reply;
 

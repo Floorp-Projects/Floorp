@@ -99,10 +99,7 @@ bool TreeWalker::Seek(nsIContent* aChildNode) {
   nsINode* parentNode = aChildNode;
   do {
     childNode = parentNode->AsContent();
-    parentNode = childNode->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) &&
-                         (mChildFilter & nsIContent::eAllButXBL)
-                     ? childNode->GetParentNode()
-                     : childNode->GetFlattenedTreeParent();
+    parentNode = childNode->GetFlattenedTreeParent();
 
     // Handle the special case of XBL binding child under a shadow root.
     if (parentNode && parentNode->IsShadowRoot()) {

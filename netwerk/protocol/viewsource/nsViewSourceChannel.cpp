@@ -1026,17 +1026,17 @@ void nsViewSourceChannel::SetIPv6Disabled() {
   }
 }
 
-bool nsViewSourceChannel::GetHasSandboxedAuxiliaryNavigations() {
+bool nsViewSourceChannel::GetHasNonEmptySandboxingFlag() {
   if (mHttpChannelInternal) {
-    return mHttpChannelInternal->GetHasSandboxedAuxiliaryNavigations();
+    return mHttpChannelInternal->GetHasNonEmptySandboxingFlag();
   }
   return false;
 }
 
-void nsViewSourceChannel::SetHasSandboxedAuxiliaryNavigations(
-    bool aHasSandboxedAuxiliaryNavigations) {
+void nsViewSourceChannel::SetHasNonEmptySandboxingFlag(
+    bool aHasNonEmptySandboxingFlag) {
   if (mHttpChannelInternal) {
-    mHttpChannelInternal->SetHasSandboxedAuxiliaryNavigations(
-        aHasSandboxedAuxiliaryNavigations);
+    mHttpChannelInternal->SetHasNonEmptySandboxingFlag(
+        aHasNonEmptySandboxingFlag);
   }
 }

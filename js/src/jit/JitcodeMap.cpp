@@ -734,7 +734,7 @@ bool JitcodeGlobalTable::markIteratively(GCMarker* marker) {
   return markedAny;
 }
 
-void JitcodeGlobalTable::sweep(JSRuntime* rt) {
+void JitcodeGlobalTable::traceWeak(JSRuntime* rt, JSTracer* trc) {
   AutoSuppressProfilerSampling suppressSampling(rt->mainContextFromOwnThread());
   for (Enum e(*this, rt); !e.empty(); e.popFront()) {
     JitcodeGlobalEntry* entry = e.front();
@@ -743,7 +743,9 @@ void JitcodeGlobalTable::sweep(JSRuntime* rt) {
       continue;
     }
 
-    if (entry->baseEntry().isJitcodeAboutToBeFinalized()) {
+    if (!TraceManuallyBarrieredWeakEdge(
+            trc, &entry->baseEntry().jitcode_,
+            "JitcodeGlobalTable::JitcodeGlobalEntry::jitcode_")) {
       e.removeFront();
     } else {
       entry->sweepChildren(rt);
@@ -764,10 +766,6 @@ bool JitcodeGlobalEntry::BaseEntry::traceJitcode(JSTracer* trc) {
 bool JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread(
     JSRuntime* rt) {
   return IsMarkedUnbarriered(rt, &jitcode_);
-}
-
-bool JitcodeGlobalEntry::BaseEntry::isJitcodeAboutToBeFinalized() {
-  return IsAboutToBeFinalizedUnbarriered(&jitcode_);
 }
 
 template <class ShouldTraceProvider>

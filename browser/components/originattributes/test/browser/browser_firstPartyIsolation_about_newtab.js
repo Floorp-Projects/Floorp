@@ -22,7 +22,10 @@ add_task(async function setup() {
  * first.
  **/
 add_task(async function test_aboutNewTab() {
-  let win = await BrowserTestUtils.openNewBrowserWindow({ remote: false });
+  // In Fission, we cannot open a non-remote window.
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    remote: SpecialPowers.useRemoteSubframes,
+  });
   let gbrowser = win.gBrowser;
   let tab = BrowserTestUtils.addTab(gbrowser, "about:newtab");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -30,8 +33,10 @@ add_task(async function test_aboutNewTab() {
   let attrs = {
     firstPartyDomain: "about.ef2a7dd5-93bc-417f-a698-142c3116864f.mozilla",
   };
-  await ContentTask.spawn(tab.linkedBrowser, { attrs }, async function(args) {
-    info("principal " + content.document.nodePrincipal.origin);
+  await SpecialPowers.spawn(tab.linkedBrowser, [{ attrs }], async function(
+    args
+  ) {
+    Assert.ok(true, "principal " + content.document.nodePrincipal.origin);
     Assert.equal(
       content.document.nodePrincipal.originAttributes.firstPartyDomain,
       args.attrs.firstPartyDomain,

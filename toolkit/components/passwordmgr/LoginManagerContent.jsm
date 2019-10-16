@@ -616,12 +616,6 @@ this.LoginManagerContent = {
     );
   },
 
-  setupEventListeners(global) {
-    global.addEventListener("pageshow", event => {
-      this.onPageShow(event);
-    });
-  },
-
   setupProgressListener(window) {
     if (!LoginHelper.formlessCaptureEnabled) {
       return;
@@ -838,8 +832,6 @@ this.LoginManagerContent = {
    */
   _fetchLoginsFromParentAndFillForm(form) {
     let window = form.ownerDocument.defaultView;
-    this._detectInsecureFormLikes(window.top);
-
     let messageManager = window.docShell.messageManager;
     messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
 
@@ -850,11 +842,6 @@ this.LoginManagerContent = {
     this._getLoginDataFromParent(form, { showMasterPassword: true })
       .then(this.loginsFound.bind(this))
       .catch(Cu.reportError);
-  },
-
-  onPageShow(event) {
-    let window = event.target.ownerGlobal;
-    this._detectInsecureFormLikes(window);
   },
 
   /**
@@ -884,39 +871,6 @@ this.LoginManagerContent = {
       this.loginFormStateByDocument.set(document, loginFormState);
     }
     return loginFormState;
-  },
-
-  /**
-   * Compute whether there is an insecure login form on any frame of the current page, and
-   * notify the parent process. This is used to control whether insecure password UI appears.
-   */
-  _detectInsecureFormLikes(topWindow) {
-    log("_detectInsecureFormLikes", topWindow.location.href);
-
-    // Returns true if this window or any subframes have insecure login forms.
-    let hasInsecureLoginForms = thisWindow => {
-      let doc = thisWindow.document;
-      let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(
-        doc
-      );
-      let hasLoginForm = !!ChromeUtils.nondeterministicGetWeakSetKeys(
-        rootElsWeakSet
-      ).filter(el => el.isConnected).length;
-      return (
-        (hasLoginForm && !thisWindow.isSecureContext) ||
-        Array.prototype.some.call(thisWindow.frames, frame =>
-          hasInsecureLoginForms(frame)
-        )
-      );
-    };
-
-    let messageManager = topWindow.docShell.messageManager;
-    messageManager.sendAsyncMessage(
-      "PasswordManager:insecureLoginFormPresent",
-      {
-        hasInsecureLoginForms: hasInsecureLoginForms(topWindow),
-      }
-    );
   },
 
   /**

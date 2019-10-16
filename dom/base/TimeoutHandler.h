@@ -23,11 +23,6 @@ namespace dom {
  */
 class TimeoutHandler : public nsISupports {
  public:
-  // TimeoutHandler doesn't actually contain cycles, but subclasses
-  // probably will.
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(TimeoutHandler)
-
   MOZ_CAN_RUN_SCRIPT virtual bool Call(const char* /* unused */);
   // Get the location of the script.
   // Note: The memory pointed to by aFileName is owned by the
@@ -62,8 +57,8 @@ class TimeoutHandler : public nsISupports {
 
 class ScriptTimeoutHandler : public TimeoutHandler {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(ScriptTimeoutHandler)
 
   ScriptTimeoutHandler(JSContext* aCx, nsIGlobalObject* aGlobal,
                        const nsAString& aExpression);
@@ -84,9 +79,8 @@ class ScriptTimeoutHandler : public TimeoutHandler {
 
 class CallbackTimeoutHandler final : public TimeoutHandler {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(CallbackTimeoutHandler,
-                                                         TimeoutHandler)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CallbackTimeoutHandler)
 
   CallbackTimeoutHandler(JSContext* aCx, nsIGlobalObject* aGlobal,
                          Function* aFunction,

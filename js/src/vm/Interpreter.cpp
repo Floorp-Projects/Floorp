@@ -47,6 +47,7 @@
 #include "vm/JSScript.h"
 #include "vm/Opcodes.h"
 #include "vm/PIC.h"
+#include "vm/Printer.h"
 #include "vm/Scope.h"
 #include "vm/Shape.h"
 #include "vm/StringType.h"
@@ -1661,7 +1662,7 @@ void js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
         return nullptr;
       }
     }
-    return StringToNewUTF8CharsZ(cx, *str);
+    return QuoteString(cx, str, '"');
   };
 
   if (lref.isString() && rref.isString()) {

@@ -49,11 +49,11 @@ bool document_resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
 
   if (v.isString()) {
     JSString* str = v.toString();
-    JSFlatString* flatStr = JS_FlattenString(cx, str);
-    if (!flatStr) {
+    JSLinearString* linearStr = JS_EnsureLinearString(cx, str);
+    if (!linearStr) {
       return false;
     }
-    if (JS_FlatStringEqualsLiteral(flatStr, "all")) {
+    if (JS_LinearStringEqualsLiteral(linearStr, "all")) {
       JS::Rooted<JSObject*> docAll(cx, JS_NewObject(cx, &DocumentAllClass));
       if (!docAll) {
         return false;

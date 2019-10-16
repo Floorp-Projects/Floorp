@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dlfcn.h>
 #include <assert.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
@@ -22,10 +23,35 @@
 #define DPR(...) do {} while(0)
 #endif
 
+#ifdef DISABLE_LIBSNDIO_DLOPEN
+#define WRAP(x) x
+#else
+#define WRAP(x) cubeb_##x
+#define LIBSNDIO_API_VISIT(X)                   \
+  X(sio_close)                               \
+  X(sio_eof)                                 \
+  X(sio_getpar)                              \
+  X(sio_initpar)                             \
+  X(sio_onmove)                              \
+  X(sio_open)                                \
+  X(sio_pollfd)                              \
+  X(sio_read)                                \
+  X(sio_revents)                             \
+  X(sio_setpar)                              \
+  X(sio_start)                               \
+  X(sio_stop)                                \
+  X(sio_write)                               \
+
+#define MAKE_TYPEDEF(x) static typeof(x) * cubeb_##x;
+LIBSNDIO_API_VISIT(MAKE_TYPEDEF);
+#undef MAKE_TYPEDEF
+#endif
+
 static struct cubeb_ops const sndio_ops;
 
 struct cubeb {
   struct cubeb_ops const * ops;
+  void * libsndio;
 };
 
 struct cubeb_stream {
@@ -119,7 +145,7 @@ sndio_mainloop(void *arg)
   DPR("sndio_mainloop()\n");
   s->state_cb(s, s->arg, CUBEB_STATE_STARTED);
   pthread_mutex_lock(&s->mtx);
-  if (!sio_start(s->hdl)) {
+  if (!WRAP(sio_start)(s->hdl)) {
     pthread_mutex_unlock(&s->mtx);
     return NULL;
   }
@@ -203,7 +229,7 @@ sndio_mainloop(void *arg)
       events |= POLLIN;
     if ((s->mode & SIO_PLAY) && pstart < pend)
       events |= POLLOUT;
-    nfds = sio_pollfd(s->hdl, pfds, events);
+    nfds = WRAP(sio_pollfd)(s->hdl, pfds, events);
 
     if (nfds > 0) {
       pthread_mutex_unlock(&s->mtx);
@@ -213,7 +239,7 @@ sndio_mainloop(void *arg)
         continue;
     }
 
-    revents = sio_revents(s->hdl, pfds);
+    revents = WRAP(sio_revents)(s->hdl, pfds);
 
     if (revents & POLLHUP) {
       state = CUBEB_STATE_ERROR;
@@ -221,8 +247,8 @@ sndio_mainloop(void *arg)
     }
 
     if (revents & POLLOUT) {
-      n = sio_write(s->hdl, s->pbuf + pstart, pend - pstart);
-      if (n == 0 && sio_eof(s->hdl)) {
+      n = WRAP(sio_write)(s->hdl, s->pbuf + pstart, pend - pstart);
+      if (n == 0 && WRAP(sio_eof)(s->hdl)) {
         DPR("sndio_mainloop() werr\n");
         state = CUBEB_STATE_ERROR;
         break;
@@ -231,8 +257,8 @@ sndio_mainloop(void *arg)
     }
 
     if (revents & POLLIN) {
-      n = sio_read(s->hdl, s->rbuf + rstart, rend - rstart);
-      if (n == 0 && sio_eof(s->hdl)) {
+      n = WRAP(sio_read)(s->hdl, s->rbuf + rstart, rend - rstart);
+      if (n == 0 && WRAP(sio_eof)(s->hdl)) {
         DPR("sndio_mainloop() rerr\n");
         state = CUBEB_STATE_ERROR;
         break;
@@ -244,7 +270,7 @@ sndio_mainloop(void *arg)
     if (prime > 0 && (s->mode & SIO_REC))
       rstart = rend;
   }
-  sio_stop(s->hdl);
+  WRAP(sio_stop)(s->hdl);
   s->hwpos = s->swpos;
   pthread_mutex_unlock(&s->mtx);
   s->state_cb(s, s->arg, state);
@@ -254,8 +280,34 @@ sndio_mainloop(void *arg)
 /*static*/ int
 sndio_init(cubeb **context, char const *context_name)
 {
+  void * libsndio = NULL;
+
+#ifndef DISABLE_LIBSNDIO_DLOPEN
+  libsndio = dlopen("libsndio.so.7.0", RTLD_LAZY);
+  if (!libsndio) {
+    libsndio = dlopen("libsndio.so", RTLD_LAZY);
+    if (!libsndio) {
+      DPR("sndio_init(%s) failed dlopen(libsndio.so)\n", context_name);
+      return CUBEB_ERROR;
+    }
+  }
+
+#define LOAD(x) {                               \
+    cubeb_##x = dlsym(libsndio, #x);            \
+    if (!cubeb_##x) {                           \
+      DPR("sndio_init(%s) failed dlsym(%s)\n", context_name, #x); \
+      dlclose(libsndio);                        \
+      return CUBEB_ERROR;                       \
+    }                                           \
+  }
+
+  LIBSNDIO_API_VISIT(LOAD);
+#undef LOAD
+#endif
+
   DPR("sndio_init(%s)\n", context_name);
   *context = malloc(sizeof(*context));
+  (*context)->libsndio = libsndio;
   (*context)->ops = &sndio_ops;
   (void)context_name;
   return CUBEB_OK;
@@ -271,6 +323,8 @@ static void
 sndio_destroy(cubeb *context)
 {
   DPR("sndio_destroy()\n");
+  if (context->libsndio)
+    dlclose(context->libsndio);
   free(context);
 }
 
@@ -323,12 +377,12 @@ sndio_stream_init(cubeb * context,
     goto err;
   }
   s->context = context;
-  s->hdl = sio_open(NULL, s->mode, 1);
+  s->hdl = WRAP(sio_open)(NULL, s->mode, 1);
   if (s->hdl == NULL) {
     DPR("sndio_stream_init(), sio_open() failed\n");
     goto err;
   }
-  sio_initpar(&wpar);
+  WRAP(sio_initpar)(&wpar);
   wpar.sig = 1;
   wpar.bits = 16;
   switch (format) {
@@ -351,7 +405,7 @@ sndio_stream_init(cubeb * context,
   if (s->mode & SIO_PLAY)
     wpar.pchan = output_stream_params->channels;
   wpar.appbufsz = latency_frames;
-  if (!sio_setpar(s->hdl, &wpar) || !sio_getpar(s->hdl, &rpar)) {
+  if (!WRAP(sio_setpar)(s->hdl, &wpar) || !WRAP(sio_getpar)(s->hdl, &rpar)) {
     DPR("sndio_stream_init(), sio_setpar() failed\n");
     goto err;
   }
@@ -362,7 +416,7 @@ sndio_stream_init(cubeb * context,
     DPR("sndio_stream_init() unsupported params\n");
     goto err;
   }
-  sio_onmove(s->hdl, sndio_onmove, s);
+  WRAP(sio_onmove)(s->hdl, sndio_onmove, s);
   s->active = 0;
   s->nfr = rpar.round;
   s->rbpf = rpar.bps * rpar.rchan;
@@ -400,7 +454,7 @@ sndio_stream_init(cubeb * context,
   return CUBEB_OK;
 err:
   if (s->hdl)
-    sio_close(s->hdl);
+    WRAP(sio_close)(s->hdl);
   if (s->pbuf)
     free(s->pbuf);
   if (s->rbuf)
@@ -446,7 +500,7 @@ static void
 sndio_stream_destroy(cubeb_stream *s)
 {
   DPR("sndio_stream_destroy()\n");
-  sio_close(s->hdl);
+  WRAP(sio_close)(s->hdl);
   if (s->mode & SIO_PLAY)
     free(s->pbuf);
   if (s->mode & SIO_REC)
@@ -572,7 +626,6 @@ static struct cubeb_ops const sndio_ops = {
   .stream_get_position = sndio_stream_get_position,
   .stream_get_latency = sndio_stream_get_latency,
   .stream_set_volume = sndio_stream_set_volume,
-  .stream_set_panning = NULL,
   .stream_get_current_device = NULL,
   .stream_device_destroy = NULL,
   .stream_register_device_changed_callback = NULL,

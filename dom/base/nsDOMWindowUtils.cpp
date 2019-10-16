@@ -4066,7 +4066,9 @@ nsDOMWindowUtils::SetCompositionRecording(bool aValue) {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SetTransactionLogging(bool aValue) {
-  Preferences::SetBool("gfx.webrender.debug.log-transactions", aValue);
+  if (WebRenderBridgeChild* wrbc = GetWebRenderBridge()) {
+    wrbc->SetTransactionLogging(aValue);
+  }
   return NS_OK;
 }
 

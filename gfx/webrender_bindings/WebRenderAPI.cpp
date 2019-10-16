@@ -584,6 +584,10 @@ void WebRenderAPI::Capture() {
   wr_api_capture(mDocHandle, path, bits);
 }
 
+void WebRenderAPI::SetTransactionLogging(bool aValue) {
+  wr_api_set_transaction_logging(mDocHandle, aValue);
+}
+
 void WebRenderAPI::SetCompositionRecorder(
     UniquePtr<layers::WebRenderCompositionRecorder> aRecorder) {
   class SetCompositionRecorderEvent final : public RendererEvent {

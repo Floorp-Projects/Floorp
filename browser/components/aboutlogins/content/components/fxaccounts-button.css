@@ -9,6 +9,13 @@
 }
 
 .fxaccounts-extra-text {
+  /* Only show at most 3 lines of text to limit the
+     text from overflowing the header. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+
   color: var(--in-content-deemphasized-text);
   text-align: end;
 }

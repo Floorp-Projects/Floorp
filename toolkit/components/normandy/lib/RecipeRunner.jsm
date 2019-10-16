@@ -30,13 +30,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
   Uptake: "resource://normandy/lib/Uptake.jsm",
   ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
+  Kinto: "resource://services-common/kinto-offline-client.js",
 });
 
 var EXPORTED_SYMBOLS = ["RecipeRunner"];
 
 const log = LogManager.getLogger("recipe-runner");
 const TIMER_NAME = "recipe-client-addon-run";
-const REMOTE_SETTINGS_COLLECTION = "normandy-recipes";
+const REMOTE_SETTINGS_COLLECTION = "normandy-recipes-capabilities";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 const PREF_PREFIX = "app.normandy";
@@ -346,7 +347,7 @@ var RecipeRunner = {
     // Obtain the recipes from the Normandy server (legacy).
     let recipes;
     try {
-      recipes = await NormandyApi.fetchRecipes({ enabled: true });
+      recipes = await NormandyApi.fetchRecipes();
       log.debug(
         `Fetched ${recipes.length} recipes from the server: ` +
           recipes.map(r => r.name).join(", ")
@@ -402,6 +403,32 @@ var RecipeRunner = {
     // Add a capability for each transform available to JEXL.
     for (const transform of FilterExpressions.getAvailableTransforms()) {
       capabilities.add(`jexl.transform.${transform}`);
+    }
+
+    // Add two capabilities for each top level key available in the context: one
+    // for the `normandy.` namespace, and another for the `env.` namespace.
+    capabilities.add("jexl.context.env");
+    capabilities.add("jexl.context.normandy");
+    let env = ClientEnvironment;
+    while (env && env.name) {
+      // Walk up the class chain for ClientEnvironment, collecting applicable
+      // properties as we go. Stop when we get to an unnamed object, which is
+      // usually just a plain function is the super class of a class that doesn't
+      // extend anything. Also stop if we get to an undefined object, just in
+      // case.
+      for (const [name, descriptor] of Object.entries(
+        Object.getOwnPropertyDescriptors(env)
+      )) {
+        // All of the properties we are looking for are are static getters (so
+        // will have a truthy `get` property) and are defined on the class, so
+        // will be configurable
+        if (descriptor.configurable && descriptor.get) {
+          capabilities.add(`jexl.context.env.${name}`);
+          capabilities.add(`jexl.context.normandy.${name}`);
+        }
+      }
+      // Check for the next parent
+      env = Object.getPrototypeOf(env);
     }
 
     return capabilities;
@@ -514,5 +541,20 @@ var RecipeRunner = {
    */
   get _remoteSettingsClientForTesting() {
     return gRemoteSettingsClient;
+  },
+
+  migrations: {
+    /**
+     * Delete the now-unused collection of recipes, since we are using the
+     * "normandy-recipes-capabilities" collection now.
+     */
+    async migration01RemoveOldRecipesCollection() {
+      const kintoCollection = new Kinto({
+        bucket: "main",
+        adapter: Kinto.adapters.IDB,
+        adapterOptions: { dbName: "remote-settings" },
+      }).collection("normandy-recipes");
+      await kintoCollection.clear();
+    },
   },
 };

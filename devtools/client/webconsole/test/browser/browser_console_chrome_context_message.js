@@ -30,10 +30,10 @@ add_task(async function() {
   ok(true, "Expected messages are displayed in the browser console");
 
   info("Uncheck the Show content messages checkbox");
-  const checkbox = hud.ui.outputNode.querySelector(
-    ".webconsole-filterbar-primary .filter-checkbox"
+  await toggleConsoleSetting(
+    hud,
+    ".webconsole-console-settings-menu-item-contentMessages"
   );
-  checkbox.click();
   await waitFor(() => !findMessage(hud, "hello from content"));
 
   info("Check the expected messages are still visiable in the browser console");

@@ -73,12 +73,19 @@ class SmartTrace extends Component {
           new Promise(resolve => {
             const { lineNumber, columnNumber, filename } = frame;
             const source = filename.split(" -> ").pop();
-            const subscribeCallback = (isSourceMapped, url, line, column) => {
+            const subscribeCallback = (
+              isSourceMapped,
+              url,
+              line,
+              column,
+              sourceId
+            ) => {
               this.onSourceMapServiceChange(
                 isSourceMapped,
                 url,
                 line,
                 column,
+                sourceId,
                 index
               );
               resolve();
@@ -171,6 +178,7 @@ class SmartTrace extends Component {
     filename,
     lineNumber,
     columnNumber,
+    sourceId,
     index
   ) {
     if (isSourceMapped) {
@@ -189,6 +197,7 @@ class SmartTrace extends Component {
             filename,
             lineNumber,
             columnNumber,
+            sourceId,
           })
           .concat(stacktrace.slice(index + 1));
 

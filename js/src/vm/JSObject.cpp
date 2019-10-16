@@ -4065,9 +4065,7 @@ void JSObject::traceChildren(JSTracer* trc) {
       // but the compiler has no way of knowing this.
       const uint32_t nslots = nobj->slotSpan();
       for (uint32_t i = 0; i < nslots; ++i) {
-        TraceManuallyBarrieredEdge(
-            trc, nobj->getSlotRef(i).unsafeUnbarrieredForTracing(),
-            "object slot");
+        TraceEdge(trc, &nobj->getSlotRef(i), "object slot");
         ++index;
       }
       MOZ_ASSERT(nslots == nobj->slotSpan());

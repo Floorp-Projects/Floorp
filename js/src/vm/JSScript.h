@@ -1006,14 +1006,15 @@ class ScriptSource {
     return data.match(UncompressedLengthMatcher());
   }
 
-  JSFlatString* substring(JSContext* cx, size_t start, size_t stop);
-  JSFlatString* substringDontDeflate(JSContext* cx, size_t start, size_t stop);
+  JSLinearString* substring(JSContext* cx, size_t start, size_t stop);
+  JSLinearString* substringDontDeflate(JSContext* cx, size_t start,
+                                       size_t stop);
 
   MOZ_MUST_USE bool appendSubstring(JSContext* cx, js::StringBuffer& buf,
                                     size_t start, size_t stop);
 
   bool isFunctionBody() { return parameterListEnd_ != 0; }
-  JSFlatString* functionBodyString(JSContext* cx);
+  JSLinearString* functionBodyString(JSContext* cx);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::ScriptSourceInfo* info) const;
@@ -2771,7 +2772,7 @@ class JSScript : public js::BaseScript {
   // directly, via lazy arguments or a rest parameter.
   bool mayReadFrameArgsDirectly();
 
-  static JSFlatString* sourceData(JSContext* cx, JS::HandleScript script);
+  static JSLinearString* sourceData(JSContext* cx, JS::HandleScript script);
 
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
@@ -3345,6 +3346,15 @@ class LazyScript : public BaseScript {
                                                 Handle<LazyScript*>);
   JSFunction* functionNonDelazifying() const {
     return &functionOrGlobal_->as<JSFunction>();
+  }
+
+  bool canRelazify() const {
+    // Only functions without inner functions or direct eval are re-lazified.
+    // Functions with either of those are on the static scope chain of their
+    // inner functions, or in the case of eval, possibly eval'd inner
+    // functions. Note that if this ever changes, XDRRelazificationInfo will
+    // have to be fixed.
+    return !hasInnerFunctions() && !hasDirectEval();
   }
 
   void initScript(JSScript* script);

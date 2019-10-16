@@ -21,15 +21,47 @@ var A11yUtils = {
    * can thus hinder rather than help users if used incorrectly.
    * Please only use this after consultation with the Mozilla accessibility
    * team.
-   * @param aMessage The message to announce.
-   * @param aSource The element with which the announcement is associated.
-   *        This should generally be something the user can interact with to
-   *        respond to the announcement.
-   *        For example, for an announcement indicating that Reader View is
-   *        available, this should be the Reader View button on the toolbar.
+   * @param {string} [options.id] The Fluent id of the message to announce. The
+   *        ftl file must already be included in browser.xhtml. This must be
+   *        specified unless a raw message is specified instead.
+   * @param {object} [options.args] Arguments for the Fluent message.
+   * @param {string} [options.raw] The raw, already localized message to
+   *        announce. You should generally prefer a Fluent id instead, but in
+   *        rare cases, this might not be feasible.
+   * @param {Element} [options.source] The element with which the announcement
+   *        is associated. This should generally be something the user can
+   *        interact with to respond to the announcement. For example, for an
+   *        announcement indicating that Reader View is available, this should
+   *        be the Reader View button on the toolbar.
    */
-  announce(aMessage, aSource = document) {
-    // For now, we don't use aSource, but it might be useful in future.
+  async announce({ id = null, args = {}, raw = null, source = document } = {}) {
+    if ((!id && !raw) || (id && raw)) {
+      throw new Error("One of raw or id must be specified.");
+    }
+
+    // Cancel a previous pending call if any.
+    if (this._cancelAnnounce) {
+      this._cancelAnnounce();
+      this._cancelAnnounce = null;
+    }
+
+    let message;
+    if (id) {
+      let cancel = false;
+      this._cancelAnnounce = () => (cancel = true);
+      message = await document.l10n.formatValue(id, args);
+      if (cancel) {
+        // announce() was called again while we were waiting for translation.
+        return;
+      }
+      // No more async operations from this point.
+      this._cancelAnnounce = null;
+    } else {
+      // We run fully synchronously if a raw message is provided.
+      message = raw;
+    }
+
+    // For now, we don't use source, but it might be useful in future.
     // For example, we might use it when we support announcement events on
     // more platforms or it could be used to have a keyboard shortcut which
     // focuses the last element to announce a message.
@@ -42,7 +74,7 @@ var A11yUtils = {
       live.firstChild.remove();
     }
     let label = document.createElement("label");
-    label.setAttribute("aria-label", aMessage);
+    label.setAttribute("aria-label", message);
     live.appendChild(label);
   },
 };

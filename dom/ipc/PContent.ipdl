@@ -1082,7 +1082,8 @@ parent:
      *   To identify which tab owns the app.
      */
     async POfflineCacheUpdate(URIParams manifestURI, URIParams documentURI,
-                              PrincipalInfo loadingPrincipal, bool stickDocument);
+                              PrincipalInfo loadingPrincipal, bool stickDocument,
+                              CookieSettingsArgs cookieSettings);
 
     /**
      * Sets "offline-app" permission for the principal.  Called when we hit

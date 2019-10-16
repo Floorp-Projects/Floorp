@@ -7,27 +7,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-with Files("html/webgl/**"):
-    BUG_COMPONENT = ("Core", "Canvas: 2D")
-
-with Files("html/typedarrays/**"):
-    BUG_COMPONENT = ("Core", "JavaScript: Standard Library")
-
-with Files("html/js/**"):
-    BUG_COMPONENT = ("Core", "JavaScript: Standard Library")
-
-with Files("html/html/**"):
-    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
-
-MOCHITEST_MANIFESTS += [
-    'html/mochitest.ini',
-    'webapps/mochitest.ini',
-]
-
-MOCHITEST_MANIFESTS += [
-    'failures/html/typedarrays/mochitest.ini',
-]
-
 TEST_HARNESS_FILES.testing.mochitest.resources += [
     'idlharness.js',
     'testharness.css',

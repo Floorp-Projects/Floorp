@@ -45,6 +45,21 @@ def run_one_clang_format_batch(args):
         return e
 
 
+def map_file_to_source(abs_path, source):
+    # We have as an input an absolute path for whom we verify if it's a symlink,
+    # if so, we follow that symlink and we match it with elements from source,
+    # If the match is done we return abs_path, otherwise None.
+    assert isinstance(source, (list, tuple))
+
+    if os.path.islink(abs_path):
+        abs_path = mozpath.realpath(abs_path)
+
+    # Look for abs_path in source
+    if abs_path in source:
+        return abs_path
+    return None
+
+
 class StaticAnalysisSubCommand(SubCommand):
     def __call__(self, func):
         after = SubCommand.__call__(self, func)
@@ -81,7 +96,8 @@ class StaticAnalysisMonitor(object):
         def on_warning(warning):
 
             # Output paths relative to repository root
-            warning['filename'] = os.path.relpath(warning['filename'], srcdir)
+            warning['filename'] = mozpath.relpath(
+                map_file_to_source(warning['filename']), self._srcdir)
 
             self._warnings_database.insert(warning)
 
@@ -114,7 +130,7 @@ class StaticAnalysisMonitor(object):
         if line.find('clang-tidy') != -1:
             filename = line.split(' ')[-1]
             if os.path.isfile(filename):
-                self._current = os.path.relpath(filename, self._srcdir)
+                self._current = mozpath.relpath(map_file_to_source(filename), self._srcdir)
             else:
                 self._current = None
             self._processed = self._processed + 1
@@ -540,7 +556,7 @@ class StaticAnalysis(MachCommandBase):
                 return dict_issue
 
             for issue in result['issues']:
-                path = self.cov_is_file_in_source(issue['strippedMainEventFilePathname'], source)
+                path = map_file_to_source(issue['strippedMainEventFilePathname'], source)
                 if path is None:
                     # Since we skip a result we should log it
                     self.log(logging.INFO, 'static-analysis', {},
@@ -685,17 +701,6 @@ class StaticAnalysis(MachCommandBase):
             return 1
 
         return 0
-
-    def cov_is_file_in_source(self, abs_path, source):
-        # We have as an input an absolute path for whom we verify if it's a symlink,
-        # if so, we follow that symlink and we match it with elements from source.
-        # If the match is done we return abs_path, otherwise None
-        assert isinstance(source, list)
-        if os.path.islink(abs_path):
-            abs_path = os.path.realpath(abs_path)
-        if abs_path in source:
-            return abs_path
-        return None
 
     def get_files_with_commands(self, source):
         '''

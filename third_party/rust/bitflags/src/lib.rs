@@ -128,7 +128,7 @@
 //! too: `Extend` adds the union of the instances of the `struct` iterated over,
 //! while `FromIterator` calculates the union.
 //!
-//! The `Binary`, `Debug`, `LowerExp`, `Octal` and `UpperExp` trait is also
+//! The `Binary`, `Debug`, `LowerHex`, `Octal` and `UpperHex` trait is also
 //! implemented by displaying the bits value of the internal struct.
 //!
 //! ## Operators
@@ -146,14 +146,18 @@
 //! The following methods are defined for the generated `struct`:
 //!
 //! - `empty`: an empty set of flags
-//! - `all`: the set of all flags
+//! - `all`: the set of all defined flags
 //! - `bits`: the raw value of the flags currently stored
 //! - `from_bits`: convert from underlying bit representation, unless that
-//!                representation contains bits that do not correspond to a flag
+//!                representation contains bits that do not correspond to a
+//!                defined flag
 //! - `from_bits_truncate`: convert from underlying bit representation, dropping
-//!                         any bits that do not correspond to flags
+//!                         any bits that do not correspond to defined flags
+//! - `from_bits_unchecked`: convert from underlying bit representation, keeping
+//!                          all bits (even those not corresponding to defined
+//!                          flags)
 //! - `is_empty`: `true` if no flags are currently stored
-//! - `is_all`: `true` if all flags are currently set
+//! - `is_all`: `true` if currently set flags exactly equal all defined flags
 //! - `intersects`: `true` if there are flags common to both `self` and `other`
 //! - `contains`: `true` all of the flags in `other` are contained within `self`
 //! - `insert`: inserts the specified flags in-place
@@ -247,7 +251,7 @@
 //! ```
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/bitflags/1.0.4")]
+#![doc(html_root_url = "https://docs.rs/bitflags/1.2.0")]
 
 #[cfg(test)]
 #[macro_use]
@@ -398,8 +402,8 @@ macro_rules! __bitflags {
             )+
         }
     ) => {
-        #[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
         $(#[$outer])*
+        #[derive(Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash)]
         $($vis)* struct $BitFlags {
             bits: $T,
         }
@@ -412,6 +416,60 @@ macro_rules! __bitflags {
                 )+
             }
         }
+    };
+}
+
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+#[cfg(bitflags_const_fn)]
+macro_rules! __fn_bitflags {
+    (
+        $(# $attr_args:tt)*
+        const fn $($item:tt)*
+    ) => {
+        $(# $attr_args)*
+        const fn $($item)*
+    };
+    (
+        $(# $attr_args:tt)*
+        pub const fn $($item:tt)*
+    ) => {
+        $(# $attr_args)*
+        pub const fn $($item)*
+    };
+    (
+        $(# $attr_args:tt)*
+        pub const unsafe fn $($item:tt)*
+    ) => {
+        $(# $attr_args)*
+        pub const unsafe fn $($item)*
+    };
+}
+
+#[macro_export(local_inner_macros)]
+#[doc(hidden)]
+#[cfg(not(bitflags_const_fn))]
+macro_rules! __fn_bitflags {
+    (
+        $(# $attr_args:tt)*
+        const fn $($item:tt)*
+    ) => {
+        $(# $attr_args)*
+        fn $($item)*
+    };
+    (
+        $(# $attr_args:tt)*
+        pub const fn $($item:tt)*
+    ) => {
+        $(# $attr_args)*
+        pub fn $($item)*
+    };
+    (
+        $(# $attr_args:tt)*
+        pub const unsafe fn $($item:tt)*
+    ) => {
+        $(# $attr_args)*
+        pub unsafe fn $($item)*
     };
 }
 
@@ -473,6 +531,15 @@ macro_rules! __impl_bitflags {
                         f.write_str(__bitflags_stringify!($Flag))?;
                     }
                 )+
+                let extra_bits = self.bits & !$BitFlags::all().bits();
+                if extra_bits != 0 {
+                    if !first {
+                        f.write_str(" | ")?;
+                    }
+                    first = false;
+                    f.write_str("0x")?;
+                    $crate::_core::fmt::LowerHex::fmt(&extra_bits, f)?;
+                }
                 if first {
                     f.write_str("(empty)")?;
                 }
@@ -507,40 +574,46 @@ macro_rules! __impl_bitflags {
                 pub const $Flag: $BitFlags = $BitFlags { bits: $value };
             )+
 
-            /// Returns an empty set of flags.
-            #[inline]
-            pub fn empty() -> $BitFlags {
-                $BitFlags { bits: 0 }
+            __fn_bitflags! {
+                /// Returns an empty set of flags
+                #[inline]
+                pub const fn empty() -> $BitFlags {
+                    $BitFlags { bits: 0 }
+                }
             }
 
-            /// Returns the set containing all flags.
-            #[inline]
-            pub fn all() -> $BitFlags {
-                // See `Debug::fmt` for why this approach is taken.
-                #[allow(non_snake_case)]
-                trait __BitFlags {
-                    $(
-                        #[inline]
-                        fn $Flag() -> $T { 0 }
-                    )+
-                }
-                impl __BitFlags for $BitFlags {
-                    $(
-                        __impl_bitflags! {
-                            #[allow(deprecated)]
+            __fn_bitflags! {
+                /// Returns the set containing all flags.
+                #[inline]
+                pub const fn all() -> $BitFlags {
+                    // See `Debug::fmt` for why this approach is taken.
+                    #[allow(non_snake_case)]
+                    trait __BitFlags {
+                        $(
                             #[inline]
-                            $(? #[$attr $($args)*])*
-                            fn $Flag() -> $T { Self::$Flag.bits }
-                        }
-                    )+
+                            const $Flag: $T = 0;
+                        )+
+                    }
+                    impl __BitFlags for $BitFlags {
+                        $(
+                            __impl_bitflags! {
+                                #[allow(deprecated)]
+                                #[inline]
+                                $(? #[$attr $($args)*])*
+                                const $Flag: $T = Self::$Flag.bits;
+                            }
+                        )+
+                    }
+                    $BitFlags { bits: $(<$BitFlags as __BitFlags>::$Flag)|+ }
                 }
-                $BitFlags { bits: $(<$BitFlags as __BitFlags>::$Flag())|+ }
             }
 
-            /// Returns the raw value of the flags currently stored.
-            #[inline]
-            pub fn bits(&self) -> $T {
-                self.bits
+            __fn_bitflags! {
+                /// Returns the raw value of the flags currently stored.
+                #[inline]
+                pub const fn bits(&self) -> $T {
+                    self.bits
+                }
             }
 
             /// Convert from underlying bit representation, unless that
@@ -554,35 +627,54 @@ macro_rules! __impl_bitflags {
                 }
             }
 
-            /// Convert from underlying bit representation, dropping any bits
-            /// that do not correspond to flags.
-            #[inline]
-            pub fn from_bits_truncate(bits: $T) -> $BitFlags {
-                $BitFlags { bits } & $BitFlags::all()
+            __fn_bitflags! {
+                /// Convert from underlying bit representation, dropping any bits
+                /// that do not correspond to flags.
+                #[inline]
+                pub const fn from_bits_truncate(bits: $T) -> $BitFlags {
+                    $BitFlags { bits: bits & $BitFlags::all().bits }
+                }
             }
 
-            /// Returns `true` if no flags are currently stored.
-            #[inline]
-            pub fn is_empty(&self) -> bool {
-                *self == $BitFlags::empty()
+            __fn_bitflags! {
+                /// Convert from underlying bit representation, preserving all
+                /// bits (even those not corresponding to a defined flag).
+                #[inline]
+                pub const unsafe fn from_bits_unchecked(bits: $T) -> $BitFlags {
+                    $BitFlags { bits }
+                }
             }
 
-            /// Returns `true` if all flags are currently set.
-            #[inline]
-            pub fn is_all(&self) -> bool {
-                *self == $BitFlags::all()
+            __fn_bitflags! {
+                /// Returns `true` if no flags are currently stored.
+                #[inline]
+                pub const fn is_empty(&self) -> bool {
+                    self.bits() == $BitFlags::empty().bits()
+                }
             }
 
-            /// Returns `true` if there are flags common to both `self` and `other`.
-            #[inline]
-            pub fn intersects(&self, other: $BitFlags) -> bool {
-                !(*self & other).is_empty()
+            __fn_bitflags! {
+                /// Returns `true` if all flags are currently set.
+                #[inline]
+                pub const fn is_all(&self) -> bool {
+                    self.bits == $BitFlags::all().bits
+                }
             }
 
-            /// Returns `true` all of the flags in `other` are contained within `self`.
-            #[inline]
-            pub fn contains(&self, other: $BitFlags) -> bool {
-                (*self & other) == other
+            __fn_bitflags! {
+                /// Returns `true` if there are flags common to both `self` and `other`.
+                #[inline]
+                pub const fn intersects(&self, other: $BitFlags) -> bool {
+                    !$BitFlags{ bits: self.bits & other.bits}.is_empty()
+                }
+            }
+
+            __fn_bitflags! {
+                /// Returns `true` all of the flags in `other` are contained within `self`.
+                #[inline]
+                pub const fn contains(&self, other: $BitFlags) -> bool {
+                    (self.bits & other.bits) == other.bits
+                }
             }
 
             /// Inserts the specified flags in-place.
@@ -769,6 +861,61 @@ macro_rules! __impl_bitflags {
         $(#[$filtered])*
         fn $($item)*
     };
+
+    // Every attribute that the user writes on a const is applied to the
+    // corresponding const that we generate, but within the implementation of
+    // Debug and all() we want to ignore everything but #[cfg] attributes. In
+    // particular, including a #[deprecated] attribute on those items would fail
+    // to compile.
+    // https://github.com/bitflags/bitflags/issues/109
+    //
+    // const version
+    //
+    // Input:
+    //
+    //     ? #[cfg(feature = "advanced")]
+    //     ? #[deprecated(note = "Use somthing else.")]
+    //     ? #[doc = r"High quality documentation."]
+    //     const f: i32 { /* ... */ }
+    //
+    // Output:
+    //
+    //     #[cfg(feature = "advanced")]
+    //     const f: i32 { /* ... */ }
+    (
+        $(#[$filtered:meta])*
+        ? #[cfg $($cfgargs:tt)*]
+        $(? #[$rest:ident $($restargs:tt)*])*
+        const $($item:tt)*
+    ) => {
+        __impl_bitflags! {
+            $(#[$filtered])*
+            #[cfg $($cfgargs)*]
+            $(? #[$rest $($restargs)*])*
+            const $($item)*
+        }
+    };
+    (
+        $(#[$filtered:meta])*
+        // $next != `cfg`
+        ? #[$next:ident $($nextargs:tt)*]
+        $(? #[$rest:ident $($restargs:tt)*])*
+        const $($item:tt)*
+    ) => {
+        __impl_bitflags! {
+            $(#[$filtered])*
+            // $next filtered out
+            $(? #[$rest $($restargs)*])*
+            const $($item)*
+        }
+    };
+    (
+        $(#[$filtered:meta])*
+        const $($item:tt)*
+    ) => {
+        $(#[$filtered])*
+        const $($item)*
+    };
 }
 
 // Same as std::stringify but callable from __impl_bitflags, which needs to use
@@ -808,12 +955,12 @@ mod tests {
 
     bitflags! {
         struct _CfgFlags: u32 {
-            #[cfg(windows)]
-            const _CFG_A = 0b01;
             #[cfg(unix)]
-            const _CFG_B = 0b01;
+            const _CFG_A = 0b01;
             #[cfg(windows)]
-            const _CFG_C = _CFG_A.bits | 0b10;
+            const _CFG_B = 0b01;
+            #[cfg(unix)]
+            const _CFG_C = Self::_CFG_A.bits | 0b10;
         }
     }
 
@@ -866,6 +1013,17 @@ mod tests {
             AnotherSetOfFlags::from_bits_truncate(0_i8),
             AnotherSetOfFlags::empty()
         );
+    }
+
+    #[test]
+    fn test_from_bits_unchecked() {
+        let extra = unsafe { Flags::from_bits_unchecked(0b1000) };
+        assert_eq!(unsafe { Flags::from_bits_unchecked(0) }, Flags::empty());
+        assert_eq!(unsafe { Flags::from_bits_unchecked(0b1) }, Flags::A);
+        assert_eq!(unsafe { Flags::from_bits_unchecked(0b10) }, Flags::B);
+        assert_eq!(unsafe { Flags::from_bits_unchecked(0b11) }, (Flags::A | Flags::B));
+        assert_eq!(unsafe { Flags::from_bits_unchecked(0b1000) }, (extra | Flags::empty()));
+        assert_eq!(unsafe { Flags::from_bits_unchecked(0b1001) }, (extra | Flags::A));
     }
 
     #[test]
@@ -970,6 +1128,22 @@ mod tests {
     }
 
     #[test]
+    fn test_operators_unchecked() {
+        let extra = unsafe { Flags::from_bits_unchecked(0b1000) };
+        let e1 = Flags::A | Flags::C | extra;
+        let e2 = Flags::B | Flags::C;
+        assert_eq!((e1 | e2), (Flags::ABC | extra)); // union
+        assert_eq!((e1 & e2), Flags::C); // intersection
+        assert_eq!((e1 - e2), (Flags::A | extra)); // set difference
+        assert_eq!(!e2, Flags::A); // set complement
+        assert_eq!(!e1, Flags::B); // set complement
+        assert_eq!(e1 ^ e2, Flags::A | Flags::B | extra); // toggle
+        let mut e3 = e1;
+        e3.toggle(e2);
+        assert_eq!(e3, Flags::A | Flags::B | extra);
+    }
+
+    #[test]
     fn test_set() {
         let mut e1 = Flags::A | Flags::C;
         e1.set(Flags::B, true);
@@ -994,6 +1168,19 @@ mod tests {
         // toggle
         m1 ^= e1;
         assert_eq!(m1, e1);
+    }
+
+
+    #[cfg(bitflags_const_fn)]
+    #[test]
+    fn test_const_fn() {
+        const _M1: Flags = Flags::empty();
+
+        const M2: Flags = Flags::A;
+        assert_eq!(M2, Flags::A);
+
+        const M3: Flags = Flags::C;
+        assert_eq!(M3, Flags::C);
     }
 
     #[test]
@@ -1079,30 +1266,46 @@ mod tests {
         assert_eq!(format!("{:?}", Flags::A | Flags::B), "A | B");
         assert_eq!(format!("{:?}", Flags::empty()), "(empty)");
         assert_eq!(format!("{:?}", Flags::ABC), "A | B | C | ABC");
+        let extra = unsafe { Flags::from_bits_unchecked(0xb8) };
+        assert_eq!(format!("{:?}", extra), "0xb8");
+        assert_eq!(format!("{:?}", Flags::A | extra), "A | 0xb8");
+        assert_eq!(format!("{:?}", Flags::ABC | extra), "A | B | C | ABC | 0xb8");
     }
 
     #[test]
     fn test_binary() {
         assert_eq!(format!("{:b}", Flags::ABC), "111");
         assert_eq!(format!("{:#b}", Flags::ABC), "0b111");
+        let extra = unsafe { Flags::from_bits_unchecked(0b1010000) };
+        assert_eq!(format!("{:b}", Flags::ABC | extra), "1010111");
+        assert_eq!(format!("{:#b}", Flags::ABC | extra), "0b1010111");
     }
 
     #[test]
     fn test_octal() {
         assert_eq!(format!("{:o}", LongFlags::LONG_A), "177777");
         assert_eq!(format!("{:#o}", LongFlags::LONG_A), "0o177777");
+        let extra = unsafe { LongFlags::from_bits_unchecked(0o5000000) };
+        assert_eq!(format!("{:o}", LongFlags::LONG_A | extra), "5177777");
+        assert_eq!(format!("{:#o}", LongFlags::LONG_A | extra), "0o5177777");
     }
 
     #[test]
     fn test_lowerhex() {
         assert_eq!(format!("{:x}", LongFlags::LONG_A), "ffff");
         assert_eq!(format!("{:#x}", LongFlags::LONG_A), "0xffff");
+        let extra = unsafe { LongFlags::from_bits_unchecked(0xe00000) };
+        assert_eq!(format!("{:x}", LongFlags::LONG_A | extra), "e0ffff");
+        assert_eq!(format!("{:#x}", LongFlags::LONG_A | extra), "0xe0ffff");
     }
 
     #[test]
     fn test_upperhex() {
         assert_eq!(format!("{:X}", LongFlags::LONG_A), "FFFF");
         assert_eq!(format!("{:#X}", LongFlags::LONG_A), "0xFFFF");
+        let extra = unsafe { LongFlags::from_bits_unchecked(0xe00000) };
+        assert_eq!(format!("{:X}", LongFlags::LONG_A | extra), "E0FFFF");
+        assert_eq!(format!("{:#X}", LongFlags::LONG_A | extra), "0xE0FFFF");
     }
 
     mod submodule {

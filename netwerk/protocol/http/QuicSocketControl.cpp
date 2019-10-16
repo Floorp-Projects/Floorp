@@ -64,9 +64,16 @@ void QuicSocketControl::HandshakeCompleted() {
   uint32_t state = nsIWebProgressListener::STATE_IS_SECURE;
 
   bool distrustImminent;
-  nsresult srv =
-      IsCertificateDistrustImminent(mSucceededCertChain, distrustImminent);
-  if (NS_SUCCEEDED(srv) && distrustImminent) {
+  nsCOMPtr<nsIX509CertList> succeededCertChain;
+  nsresult rv = TransportSecurityInfo::ConvertCertArrayToCertList(
+      mSucceededCertChain, getter_AddRefs(succeededCertChain));
+
+  nsresult srv;
+  if (NS_SUCCEEDED(rv)) {
+    srv = IsCertificateDistrustImminent(succeededCertChain, distrustImminent);
+  }
+
+  if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(srv) && distrustImminent) {
     state |= nsIWebProgressListener::STATE_CERT_DISTRUST_IMMINENT;
   }
 

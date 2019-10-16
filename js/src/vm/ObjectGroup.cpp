@@ -779,18 +779,18 @@ struct ObjectGroupRealm::ArrayObjectKey : public DefaultHasher<ArrayObjectKey> {
 
   bool operator!=(const ArrayObjectKey& other) { return !(*this == other); }
 
-  bool needsSweep() {
+  bool traceWeak(JSTracer* trc) {
     MOZ_ASSERT(type.isUnknown() || !type.isSingleton());
     if (!type.isUnknown() && type.isGroup()) {
       ObjectGroup* group = type.groupNoBarrier();
-      if (IsAboutToBeFinalizedUnbarriered(&group)) {
-        return true;
+      if (!TraceManuallyBarrieredWeakEdge(trc, &group, "ObjectGroup")) {
+        return false;
       }
       if (group != type.groupNoBarrier()) {
         type = TypeSet::ObjectType(group);
       }
     }
-    return false;
+    return true;
   }
 };
 
@@ -1060,13 +1060,14 @@ struct ObjectGroupRealm::PlainObjectKey {
     return true;
   }
 
-  bool needsSweep() {
+  bool traceWeak(JSTracer* trc) {
     for (unsigned i = 0; i < nproperties; i++) {
-      if (gc::IsAboutToBeFinalizedUnbarriered(&properties[i])) {
-        return true;
+      if (!TraceManuallyBarrieredWeakEdge(trc, &properties[i],
+                                          "PlainObjectKey::properties")) {
+        return false;
       }
     }
-    return false;
+    return true;
   }
 };
 
@@ -1075,26 +1076,27 @@ struct ObjectGroupRealm::PlainObjectEntry {
   WeakHeapPtrShape shape;
   TypeSet::Type* types;
 
-  bool needsSweep(unsigned nproperties) {
-    if (IsAboutToBeFinalized(&group)) {
-      return true;
+  bool traceWeak(JSTracer* trc, unsigned nproperties) {
+    if (!TraceWeakEdge(trc, &group, "PlainObjectEntry::group")) {
+      return false;
     }
-    if (IsAboutToBeFinalized(&shape)) {
-      return true;
+    if (!TraceWeakEdge(trc, &shape, "PlainObjectEntry::shape")) {
+      return false;
     }
     for (unsigned i = 0; i < nproperties; i++) {
       MOZ_ASSERT(!types[i].isSingleton());
       if (types[i].isGroup()) {
         ObjectGroup* group = types[i].groupNoBarrier();
-        if (IsAboutToBeFinalizedUnbarriered(&group)) {
-          return true;
+        if (!TraceManuallyBarrieredWeakEdge(trc, &group,
+                                            "PlainObjectEntry::types::group")) {
+          return false;
         }
         if (group != types[i].groupNoBarrier()) {
           types[i] = TypeSet::ObjectType(group);
         }
       }
     }
-    return false;
+    return true;
   }
 };
 
@@ -1783,34 +1785,33 @@ void ObjectGroupRealm::clearTables() {
 }
 
 /* static */
-bool ObjectGroupRealm::PlainObjectTableSweepPolicy::needsSweep(
-    PlainObjectKey* key, PlainObjectEntry* entry) {
-  if (!(JS::GCPolicy<PlainObjectKey>::needsSweep(key) ||
-        entry->needsSweep(key->nproperties))) {
-    return false;
+bool ObjectGroupRealm::PlainObjectTableSweepPolicy::traceWeak(
+    JSTracer* trc, PlainObjectKey* key, PlainObjectEntry* entry) {
+  if (JS::GCPolicy<PlainObjectKey>::traceWeak(trc, key) &&
+      entry->traceWeak(trc, key->nproperties)) {
+    return true;
   }
+
   js_free(key->properties);
   js_free(entry->types);
-  return true;
+  return false;
 }
 
-void ObjectGroupRealm::sweep() {
+void ObjectGroupRealm::traceWeak(JSTracer* trc) {
   /*
    * Iterate through the array/object group tables and remove all entries
    * referencing collected data. These tables only hold weak references.
    */
 
   if (arrayObjectTable) {
-    arrayObjectTable->sweep();
+    arrayObjectTable->traceWeak(trc);
   }
   if (plainObjectTable) {
-    plainObjectTable->sweep();
+    plainObjectTable->traceWeak(trc);
   }
   if (stringSplitStringGroup) {
-    if (JS::GCPolicy<WeakHeapPtrObjectGroup>::needsSweep(
-            &stringSplitStringGroup)) {
-      stringSplitStringGroup = nullptr;
-    }
+    JS::GCPolicy<WeakHeapPtrObjectGroup>::traceWeak(trc,
+                                                    &stringSplitStringGroup);
   }
 }
 

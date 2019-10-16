@@ -8,33 +8,48 @@ use std::os::windows::io::{AsRawHandle, FromRawHandle, IntoRawHandle, RawHandle}
 use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_named_pipes;
+use winapi::um::winbase::FILE_FLAG_OVERLAPPED;
+use std::os::windows::fs::*;
 
 #[derive(Debug)]
-pub struct MessageStream(mio_named_pipes::NamedPipe);
+pub struct MessageStream(miow::pipe::NamedPipe);
 pub struct AsyncMessageStream(tokio_named_pipes::NamedPipe);
 
 impl MessageStream {
-    fn new(stream: mio_named_pipes::NamedPipe) -> MessageStream {
+    fn new(stream: miow::pipe::NamedPipe) -> MessageStream {
         MessageStream(stream)
     }
 
     pub fn anonymous_ipc_pair(
     ) -> std::result::Result<(MessageStream, MessageStream), std::io::Error> {
-        let pipe1 = mio_named_pipes::NamedPipe::new(get_pipe_name())?;
-        let pipe2 = unsafe { mio_named_pipes::NamedPipe::from_raw_handle(pipe1.as_raw_handle()) };
+        let pipe_name = get_pipe_name();
+        let pipe1 = miow::pipe::NamedPipe::new(&pipe_name)?;
+        let pipe2 = {
+            let mut opts = std::fs::OpenOptions::new();
+            opts.read(true)
+                .write(true)
+                .custom_flags(FILE_FLAG_OVERLAPPED);
+            let file = opts.open(&pipe_name)?;
+            unsafe {
+                miow::pipe::NamedPipe::from_raw_handle(file.into_raw_handle())
+            }
+        };
         Ok((MessageStream::new(pipe1), MessageStream::new(pipe2)))
     }
 
     pub unsafe fn from_raw_fd(raw: super::PlatformHandleType) -> MessageStream {
-        MessageStream::new(mio_named_pipes::NamedPipe::from_raw_handle(raw))
+        MessageStream::new(miow::pipe::NamedPipe::from_raw_handle(raw))
     }
 
     pub fn into_tokio_ipc(
         self,
         handle: &tokio::reactor::Handle,
     ) -> std::result::Result<AsyncMessageStream, std::io::Error> {
+        let pipe = unsafe {
+            mio_named_pipes::NamedPipe::from_raw_handle(self.into_raw_handle())
+        };
         Ok(AsyncMessageStream::new(
-            tokio_named_pipes::NamedPipe::from_pipe(self.0, handle)?,
+            tokio_named_pipes::NamedPipe::from_pipe(pipe, handle)?,
         ))
     }
 }
@@ -84,8 +99,7 @@ impl AsRawHandle for AsyncMessageStream {
 
 impl IntoRawHandle for MessageStream {
     fn into_raw_handle(self) -> RawHandle {
-        // XXX: Ideally this would call into_raw_handle.
-        self.0.as_raw_handle()
+        self.0.into_raw_handle()
     }
 }
 

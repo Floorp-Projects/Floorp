@@ -379,7 +379,10 @@ add_task(async function test_client_name_change() {
   let changedIDs = await tracker.getChangedIDs();
   equal(Object.keys(changedIDs).length, 0);
 
-  Svc.Prefs.set("client.name", "new name");
+  Services.prefs.setStringPref(
+    "identity.fxaccounts.account.device.name",
+    "new name"
+  );
   await tracker.asyncObserver.promiseObserversComplete();
 
   _("new name: " + engine.localName);

@@ -41,8 +41,13 @@ uint32_t BitReader::ReadBits(size_t aNum) {
       m = mNumBitsLeft;
     }
 
-    result = (result << m) | (mReservoir >> (32 - m));
-    mReservoir <<= m;
+    if (m == 32) {
+      result = mReservoir;
+      mReservoir = 0;
+    } else {
+      result = (result << m) | (mReservoir >> (32 - m));
+      mReservoir <<= m;
+    }
     mNumBitsLeft -= m;
     mTotalBitsLeft -= m;
 

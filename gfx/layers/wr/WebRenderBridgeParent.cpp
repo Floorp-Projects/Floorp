@@ -2019,6 +2019,14 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvCapture() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetTransactionLogging(
+  const bool& aValue) {
+  if (!mDestroyed) {
+    mApis[wr::RenderRoot::Default]->SetTransactionLogging(aValue);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSyncWithCompositor() {
   FlushSceneBuilds();
   if (RefPtr<WebRenderBridgeParent> root = GetRootWebRenderBridgeParent()) {

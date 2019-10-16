@@ -4,43 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var { PrivateBrowsingUtils } = ChromeUtils.import(
-  "resource://gre/modules/PrivateBrowsingUtils.jsm"
-);
-var { BrowserUtils } = ChromeUtils.import(
-  "resource://gre/modules/BrowserUtils.jsm"
-);
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 XPCOMUtils.defineLazyModuleGetters(this, {
-  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
-  SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginManagerContextMenu: "resource://gre/modules/LoginManagerContextMenu.jsm",
-  WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
-  ContextualIdentityService:
-    "resource://gre/modules/ContextualIdentityService.jsm",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.jsm",
-  NetUtil: "resource://gre/modules/NetUtil.jsm",
 });
-
-XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
-  Components.Constructor(
-    "@mozilla.org/referrer-info;1",
-    "nsIReferrerInfo",
-    "init"
-  )
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "BrowserHandler",
-  "@mozilla.org/browser/clh;1",
-  "nsIBrowserHandler"
-);
 
 var gContextMenuContentData = null;
 

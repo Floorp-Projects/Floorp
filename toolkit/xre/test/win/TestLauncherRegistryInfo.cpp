@@ -8,556 +8,469 @@
 #include "mozilla/NativeNt.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
-#include "CmdLineAndEnvUtils.h"
 #include "nsWindowsHelpers.h"
 
 #include "LauncherRegistryInfo.cpp"
 
 #include <string>
 
-const char kFailFmt[] = "TEST-FAILED | LauncherRegistryInfo | %s | %S\n";
+static const char kMsgStart[] = "TEST-FAILED | LauncherRegistryInfo | ";
 
 static const wchar_t kRegKeyPath[] = L"SOFTWARE\\" EXPAND_STRING_MACRO(
     MOZ_APP_VENDOR) L"\\" EXPAND_STRING_MACRO(MOZ_APP_BASENAME) L"\\Launcher";
 static const wchar_t kBrowserSuffix[] = L"|Browser";
 static const wchar_t kLauncherSuffix[] = L"|Launcher";
 static const wchar_t kImageSuffix[] = L"|Image";
+static const wchar_t kTelemetrySuffix[] = L"|Telemetry";
 
 static std::wstring gBrowserValue;
 static std::wstring gLauncherValue;
 static std::wstring gImageValue;
+static std::wstring gTelemetryValue;
 
 static DWORD gMyImageTimestamp;
 
-using QWordResult = mozilla::Result<DWORD64, mozilla::WindowsError>;
-using DWordResult = mozilla::Result<DWORD, mozilla::WindowsError>;
-using VoidResult = mozilla::Result<mozilla::Ok, mozilla::WindowsError>;
-
-#define RUN_TEST(fn)                                        \
-  if ((vr = fn()).isErr()) {                                \
-    printf(kFailFmt, #fn, vr.unwrapErr().AsString().get()); \
-    return 1;                                               \
+#define RUN_TEST(result, fn)                                                 \
+  if ((result = fn()).isErr()) {                                             \
+    const mozilla::LauncherError& err = result.inspectErr();                 \
+    printf("%s%s | %08lx (%s:%d)\n", kMsgStart, #fn, err.mError.AsHResult(), \
+           err.mFile, err.mLine);                                            \
+    return 1;                                                                \
   }
 
-static QWordResult GetBrowserTimestamp() {
-  DWORD64 qword;
-  DWORD size = sizeof(qword);
-  LSTATUS status =
-      ::RegGetValueW(HKEY_CURRENT_USER, kRegKeyPath, gBrowserValue.c_str(),
-                     RRF_RT_QWORD, nullptr, &qword, &size);
-  if (status == ERROR_SUCCESS) {
-    return qword;
+#define EXPECT_COMMIT_IS_OK()                        \
+  do {                                               \
+    mozilla::LauncherVoidResult vr2 = info.Commit(); \
+    if (vr2.isErr()) {                               \
+      return vr2;                                    \
+    }                                                \
+  } while (0)
+
+#define EXPECT_CHECK_RESULT_IS(desired, expected)                       \
+  do {                                                                  \
+    mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> \
+        result = info.Check(mozilla::LauncherRegistryInfo::desired);    \
+    if (result.isErr()) {                                               \
+      return LAUNCHER_ERROR_FROM_RESULT(result);                        \
+    }                                                                   \
+    if (result.unwrap() != mozilla::LauncherRegistryInfo::expected) {   \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_FAIL);                       \
+    }                                                                   \
+  } while (0)
+
+#define EXPECT_ENABLED_STATE_IS(expected)                                \
+  do {                                                                   \
+    mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> \
+        enabled = info.IsEnabled();                                      \
+    if (enabled.isErr()) {                                               \
+      return LAUNCHER_ERROR_FROM_RESULT(enabled);                        \
+    }                                                                    \
+    if (enabled.unwrap() != mozilla::LauncherRegistryInfo::expected) {   \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);                  \
+    }                                                                    \
+  } while (0)
+
+#define EXPECT_TELEMETRY_IS_ENABLED(expected)                          \
+  do {                                                                 \
+    mozilla::LauncherResult<bool> enabled = info.IsTelemetryEnabled(); \
+    if (enabled.isErr()) {                                             \
+      return LAUNCHER_ERROR_FROM_RESULT(enabled);                      \
+    }                                                                  \
+    if (enabled.unwrap() != expected) {                                \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);                \
+    }                                                                  \
+  } while (0)
+
+#define EXPECT_REG_DWORD_EXISTS_AND_EQ(name, expected)      \
+  do {                                                      \
+    mozilla::LauncherResult<mozilla::Maybe<DWORD>> result = \
+        ReadRegistryValueData<DWORD>(name, REG_DWORD);      \
+    if (result.isErr()) {                                   \
+      return LAUNCHER_ERROR_FROM_RESULT(result);            \
+    }                                                       \
+    if (result.inspect().isNothing() ||                     \
+        result.inspect().value() != expected) {             \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);     \
+    }                                                       \
+  } while (0)
+
+#define EXPECT_REG_QWORD_EXISTS(name)                          \
+  do {                                                         \
+    mozilla::LauncherResult<mozilla::Maybe<uint64_t>> result = \
+        ReadRegistryValueData<uint64_t>(name, REG_QWORD);      \
+    if (result.isErr()) {                                      \
+      return LAUNCHER_ERROR_FROM_RESULT(result);               \
+    }                                                          \
+    if (result.inspect().isNothing()) {                        \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);        \
+    }                                                          \
+  } while (0)
+
+#define EXPECT_REG_QWORD_EXISTS_AND_EQ(name, expected)         \
+  do {                                                         \
+    mozilla::LauncherResult<mozilla::Maybe<uint64_t>> result = \
+        ReadRegistryValueData<uint64_t>(name, REG_QWORD);      \
+    if (result.isErr()) {                                      \
+      return LAUNCHER_ERROR_FROM_RESULT(result);               \
+    }                                                          \
+    if (result.inspect().isNothing() ||                        \
+        result.inspect().value() != expected) {                \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);        \
+    }                                                          \
+  } while (0)
+
+#define EXPECT_REG_DWORD_DOES_NOT_EXIST(name)               \
+  do {                                                      \
+    mozilla::LauncherResult<mozilla::Maybe<DWORD>> result = \
+        ReadRegistryValueData<DWORD>(name, REG_DWORD);      \
+    if (result.isErr()) {                                   \
+      return LAUNCHER_ERROR_FROM_RESULT(result);            \
+    }                                                       \
+    if (result.inspect().isSome()) {                        \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);     \
+    }                                                       \
+  } while (0)
+
+#define EXPECT_REG_QWORD_DOES_NOT_EXIST(name)                  \
+  do {                                                         \
+    mozilla::LauncherResult<mozilla::Maybe<uint64_t>> result = \
+        ReadRegistryValueData<uint64_t>(name, REG_QWORD);      \
+    if (result.isErr()) {                                      \
+      return LAUNCHER_ERROR_FROM_RESULT(result);               \
+    }                                                          \
+    if (result.inspect().isSome()) {                           \
+      return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);        \
+    }                                                          \
+  } while (0)
+
+template <typename T>
+static mozilla::LauncherResult<mozilla::Maybe<T>> ReadRegistryValueData(
+    const std::wstring& name, DWORD expectedType) {
+  T data;
+  DWORD dataLen = sizeof(data);
+  DWORD type;
+  LSTATUS status = ::RegGetValueW(HKEY_CURRENT_USER, kRegKeyPath, name.c_str(),
+                                  RRF_RT_ANY, &type, &data, &dataLen);
+  if (status == ERROR_FILE_NOT_FOUND) {
+    return mozilla::Maybe<T>();
   }
 
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
+  if (status != ERROR_SUCCESS) {
+    return LAUNCHER_ERROR_FROM_WIN32(status);
+  }
+
+  if (type != expectedType) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
+  }
+
+  return mozilla::Some(data);
 }
 
-static VoidResult SetBrowserTimestamp(DWORD64 aTimestamp) {
-  LSTATUS status =
-      ::RegSetKeyValueW(HKEY_CURRENT_USER, kRegKeyPath, gBrowserValue.c_str(),
-                        REG_QWORD, &aTimestamp, sizeof(aTimestamp));
-  if (status == ERROR_SUCCESS) {
-    return mozilla::Ok();
+template <typename T>
+static mozilla::LauncherVoidResult WriteRegistryValueData(
+    const std::wstring& name, DWORD type, T data) {
+  LSTATUS status = ::RegSetKeyValueW(HKEY_CURRENT_USER, kRegKeyPath,
+                                     name.c_str(), type, &data, sizeof(T));
+  if (status != ERROR_SUCCESS) {
+    return LAUNCHER_ERROR_FROM_WIN32(status);
   }
 
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
+  return mozilla::Ok();
 }
 
-static VoidResult DeleteBrowserTimestamp() {
-  LSTATUS status = ::RegDeleteKeyValueW(HKEY_CURRENT_USER, kRegKeyPath,
-                                        gBrowserValue.c_str());
+static mozilla::LauncherVoidResult DeleteRegistryValueData(
+    const std::wstring& name) {
+  LSTATUS status =
+      ::RegDeleteKeyValueW(HKEY_CURRENT_USER, kRegKeyPath, name.c_str());
   if (status == ERROR_SUCCESS || status == ERROR_FILE_NOT_FOUND) {
     return mozilla::Ok();
   }
 
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
+  return LAUNCHER_ERROR_FROM_WIN32(status);
 }
 
-static QWordResult GetLauncherTimestamp() {
-  DWORD64 qword;
-  DWORD size = sizeof(qword);
-  LSTATUS status =
-      ::RegGetValueW(HKEY_CURRENT_USER, kRegKeyPath, gLauncherValue.c_str(),
-                     RRF_RT_QWORD, nullptr, &qword, &size);
-  if (status == ERROR_SUCCESS) {
-    return qword;
-  }
-
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
-}
-
-static VoidResult SetLauncherTimestamp(DWORD64 aTimestamp) {
-  LSTATUS status =
-      ::RegSetKeyValueW(HKEY_CURRENT_USER, kRegKeyPath, gLauncherValue.c_str(),
-                        REG_QWORD, &aTimestamp, sizeof(aTimestamp));
-  if (status == ERROR_SUCCESS) {
-    return mozilla::Ok();
-  }
-
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
-}
-
-static VoidResult DeleteLauncherTimestamp() {
-  LSTATUS status = ::RegDeleteKeyValueW(HKEY_CURRENT_USER, kRegKeyPath,
-                                        gLauncherValue.c_str());
-  if (status == ERROR_SUCCESS || status == ERROR_FILE_NOT_FOUND) {
-    return mozilla::Ok();
-  }
-
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
-}
-
-static DWordResult GetImageTimestamp() {
-  DWORD dword;
-  DWORD size = sizeof(dword);
-  LSTATUS status =
-      ::RegGetValueW(HKEY_CURRENT_USER, kRegKeyPath, gImageValue.c_str(),
-                     RRF_RT_DWORD, nullptr, &dword, &size);
-  if (status == ERROR_SUCCESS) {
-    return dword;
-  }
-
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
-}
-
-static VoidResult SetImageTimestamp(DWORD aTimestamp) {
-  LSTATUS status =
-      ::RegSetKeyValueW(HKEY_CURRENT_USER, kRegKeyPath, gImageValue.c_str(),
-                        REG_DWORD, &aTimestamp, sizeof(aTimestamp));
-  if (status == ERROR_SUCCESS) {
-    return mozilla::Ok();
-  }
-
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
-}
-
-static VoidResult DeleteImageTimestamp() {
-  LSTATUS status =
-      ::RegDeleteKeyValueW(HKEY_CURRENT_USER, kRegKeyPath, gImageValue.c_str());
-  if (status == ERROR_SUCCESS || status == ERROR_FILE_NOT_FOUND) {
-    return mozilla::Ok();
-  }
-
-  return mozilla::Err(mozilla::WindowsError::FromWin32Error(status));
-}
-
-static VoidResult DeleteAllTimestamps() {
-  VoidResult vr = DeleteBrowserTimestamp();
+static mozilla::LauncherVoidResult DeleteAllRegstryValues() {
+  // Unblock commit via ReflectPrefToRegistry
+  // (We need to set false, and then true to bypass the early return)
+  mozilla::LauncherRegistryInfo info;
+  mozilla::LauncherVoidResult vr = info.ReflectPrefToRegistry(false);
+  vr = info.ReflectPrefToRegistry(true);
   if (vr.isErr()) {
     return vr;
   }
 
-  vr = DeleteLauncherTimestamp();
+  vr = DeleteRegistryValueData(gImageValue);
   if (vr.isErr()) {
     return vr;
   }
 
-  return DeleteImageTimestamp();
+  vr = DeleteRegistryValueData(gLauncherValue);
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  vr = DeleteRegistryValueData(gBrowserValue);
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  return DeleteRegistryValueData(gTelemetryValue);
 }
 
-static VoidResult SetupEnabledScenario() {
+static mozilla::LauncherVoidResult SetupEnabledScenario() {
   // Reset the registry state to an enabled state. First, we delete all existing
-  // timestamps (if any).
-  VoidResult vr = DeleteAllTimestamps();
+  // registry values (if any).
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
   if (vr.isErr()) {
     return vr;
   }
 
   // Now we run Check(Launcher)...
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Launcher);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
-  }
-
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Launcher) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+  EXPECT_COMMIT_IS_OK();
   // ...and Check(Browser)
-  result = info.Check(mozilla::LauncherRegistryInfo::ProcessType::Browser);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
-  }
-
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Browser) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
+  EXPECT_CHECK_RESULT_IS(ProcessType::Browser, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
 
   // By this point we are considered to be fully enabled.
-
   return mozilla::Ok();
 }
 
-static VoidResult TestEmptyRegistry() {
-  VoidResult vr = DeleteAllTimestamps();
+static mozilla::LauncherVoidResult TestEmptyRegistry() {
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
   if (vr.isErr()) {
     return vr;
   }
 
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Launcher);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
-  }
-
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Launcher) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+  EXPECT_COMMIT_IS_OK();
 
   // LauncherRegistryInfo should have created Launcher and Image values
-  QWordResult launcherTs = GetLauncherTimestamp();
-  if (launcherTs.isErr()) {
-    return mozilla::Err(launcherTs.unwrapErr());
-  }
+  EXPECT_REG_DWORD_EXISTS_AND_EQ(gImageValue, gMyImageTimestamp);
+  EXPECT_REG_QWORD_EXISTS(gLauncherValue);
+  EXPECT_REG_QWORD_DOES_NOT_EXIST(gBrowserValue);
 
-  DWordResult imageTs = GetImageTimestamp();
-  if (imageTs.isErr()) {
-    return mozilla::Err(imageTs.unwrapErr());
-  }
-
-  if (imageTs.unwrap() != gMyImageTimestamp) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  QWordResult browserTs = GetBrowserTimestamp();
-  if (browserTs.isOk()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  if (browserTs.unwrapErr() !=
-      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
-    return mozilla::Err(browserTs.unwrapErr());
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
 
   return mozilla::Ok();
 }
 
-// This test depends on the side effects from having just run TestEmptyRegistry
-static VoidResult TestNormal() {
-  mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Browser);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
+static mozilla::LauncherVoidResult TestNormal() {
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
+  if (vr.isErr()) {
+    return vr;
   }
-
-  QWordResult launcherTs = GetLauncherTimestamp();
-  if (launcherTs.isErr()) {
-    return mozilla::Err(launcherTs.unwrapErr());
+  vr = WriteRegistryValueData<DWORD>(gImageValue, REG_DWORD, gMyImageTimestamp);
+  if (vr.isErr()) {
+    return vr;
   }
-
-  QWordResult browserTs = GetBrowserTimestamp();
-  if (browserTs.isErr()) {
-    return mozilla::Err(browserTs.unwrapErr());
-  }
-
-  if (browserTs.unwrap() < launcherTs.unwrap()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
-      info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::Enabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  return mozilla::Ok();
-}
-
-// This test depends on the side effects from having just run TestNormal
-static VoidResult TestBrowserNoLauncher() {
-  VoidResult vr = DeleteLauncherTimestamp();
+  vr = WriteRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD, QPCNowRaw());
   if (vr.isErr()) {
     return vr;
   }
 
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Launcher);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
+  EXPECT_CHECK_RESULT_IS(ProcessType::Browser, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
+
+  // Make sure the browser timestamp is newer than the launcher's
+  mozilla::LauncherResult<mozilla::Maybe<uint64_t>> launcherTs =
+      ReadRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD);
+  if (launcherTs.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(launcherTs);
+  }
+  mozilla::LauncherResult<mozilla::Maybe<uint64_t>> browserTs =
+      ReadRegistryValueData<uint64_t>(gBrowserValue, REG_QWORD);
+  if (browserTs.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(browserTs);
+  }
+  if (launcherTs.inspect().isNothing() || browserTs.inspect().isNothing() ||
+      browserTs.inspect().value() <= launcherTs.inspect().value()) {
+    return LAUNCHER_ERROR_FROM_HRESULT(E_FAIL);
   }
 
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Browser) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
+  EXPECT_ENABLED_STATE_IS(EnabledState::Enabled);
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherVoidResult TestBrowserNoLauncher() {
+  mozilla::LauncherVoidResult vr = SetupEnabledScenario();
+  if (vr.isErr()) {
+    return vr;
   }
+  vr = DeleteRegistryValueData(gLauncherValue);
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  mozilla::LauncherRegistryInfo info;
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
 
   // Verify that we still don't have a launcher timestamp
-  QWordResult launcherTs = GetLauncherTimestamp();
-  if (launcherTs.isOk()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
-  if (launcherTs.unwrapErr() !=
-      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
-    return mozilla::Err(launcherTs.unwrapErr());
-  }
-
+  EXPECT_REG_QWORD_DOES_NOT_EXIST(gLauncherValue);
   // Verify that the browser timestamp is now zero
-  QWordResult browserTs = GetBrowserTimestamp();
-  if (browserTs.isErr()) {
-    return mozilla::Err(browserTs.unwrapErr());
-  }
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gBrowserValue, 0ULL);
 
-  if (browserTs.unwrap() != 0ULL) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
-      info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
 
   return mozilla::Ok();
 }
 
-static VoidResult TestLauncherNoBrowser() {
-  VoidResult vr = DeleteAllTimestamps();
+static mozilla::LauncherVoidResult TestLauncherNoBrowser() {
+  constexpr uint64_t launcherTs = 0x77777777;
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
   if (vr.isErr()) {
     return vr;
   }
-
-  vr = SetLauncherTimestamp(0x77777777);
+  vr = WriteRegistryValueData<DWORD>(gImageValue, REG_DWORD, gMyImageTimestamp);
   if (vr.isErr()) {
     return vr;
   }
-
-  vr = SetImageTimestamp(gMyImageTimestamp);
+  vr = WriteRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD, launcherTs);
   if (vr.isErr()) {
     return vr;
   }
 
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Launcher);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
-  }
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
 
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Browser) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
+  // Launcher's timestamps is kept intact while browser's is set to 0.
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gLauncherValue, launcherTs);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gBrowserValue, 0ULL);
 
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
-      info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::FailDisabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
 
   return mozilla::Ok();
 }
 
-static VoidResult TestBrowserLessThanLauncher() {
-  VoidResult vr = SetLauncherTimestamp(0x77777777);
+static mozilla::LauncherVoidResult TestBrowserLessThanLauncher() {
+  constexpr uint64_t launcherTs = 0x77777777, browserTs = 0x66666666;
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
   if (vr.isErr()) {
     return vr;
   }
-
-  vr = SetBrowserTimestamp(0ULL);
+  vr = WriteRegistryValueData<DWORD>(gImageValue, REG_DWORD, gMyImageTimestamp);
+  if (vr.isErr()) {
+    return vr;
+  }
+  vr = WriteRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD, launcherTs);
+  if (vr.isErr()) {
+    return vr;
+  }
+  vr = WriteRegistryValueData<uint64_t>(gBrowserValue, REG_QWORD, browserTs);
   if (vr.isErr()) {
     return vr;
   }
 
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Launcher);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
-  }
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
 
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Browser) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
+  // Launcher's timestamps is kept intact while browser's is set to 0.
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gLauncherValue, launcherTs);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gBrowserValue, 0ULL);
 
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
-      info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::FailDisabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
 
   return mozilla::Ok();
 }
 
-static VoidResult TestImageTimestampChange() {
+static mozilla::LauncherVoidResult TestImageTimestampChange() {
   // This should reset the timestamps and then essentially run like
   // TestEmptyRegistry
-  VoidResult vr = SetImageTimestamp(0x12345678);
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
   if (vr.isErr()) {
     return vr;
   }
-
-  vr = SetLauncherTimestamp(1ULL);
+  vr = WriteRegistryValueData<DWORD>(gImageValue, REG_DWORD, 0x12345678);
   if (vr.isErr()) {
     return vr;
   }
-
-  vr = SetBrowserTimestamp(2ULL);
+  vr = WriteRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD, 1ULL);
   if (vr.isErr()) {
     return vr;
   }
-
-  mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Launcher);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
-  }
-
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Launcher) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
-  QWordResult launcherTs = GetLauncherTimestamp();
-  if (launcherTs.isErr()) {
-    return mozilla::Err(launcherTs.unwrapErr());
-  }
-
-  DWordResult imageTs = GetImageTimestamp();
-  if (imageTs.isErr()) {
-    return mozilla::Err(imageTs.unwrapErr());
-  }
-
-  if (imageTs.unwrap() != gMyImageTimestamp) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
-  QWordResult browserTs = GetBrowserTimestamp();
-  if (browserTs.isOk()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  if (browserTs.unwrapErr() !=
-      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
-    return mozilla::Err(browserTs.unwrapErr());
-  }
-
-  return mozilla::Ok();
-}
-
-static VoidResult TestImageTimestampChangeWhenDisabled() {
-  VoidResult vr = SetImageTimestamp(0x12345678);
-  if (vr.isErr()) {
-    return vr;
-  }
-
-  vr = DeleteLauncherTimestamp();
-  if (vr.isErr()) {
-    return vr;
-  }
-
-  vr = SetBrowserTimestamp(0ULL);
+  vr = WriteRegistryValueData<uint64_t>(gBrowserValue, REG_QWORD, 2ULL);
   if (vr.isErr()) {
     return vr;
   }
 
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::ProcessType> result =
-      info.Check(mozilla::LauncherRegistryInfo::ProcessType::Launcher);
-  if (result.isErr()) {
-    return mozilla::Err(result.unwrapErr().mError);
-  }
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+  EXPECT_COMMIT_IS_OK();
 
-  if (result.unwrap() != mozilla::LauncherRegistryInfo::ProcessType::Browser) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
-      info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
+  EXPECT_REG_DWORD_EXISTS_AND_EQ(gImageValue, gMyImageTimestamp);
+  EXPECT_REG_QWORD_EXISTS(gLauncherValue);
+  EXPECT_REG_QWORD_DOES_NOT_EXIST(gBrowserValue);
 
   return mozilla::Ok();
 }
 
-static VoidResult TestDisableDueToFailure() {
-  VoidResult vr = SetupEnabledScenario();
+static mozilla::LauncherVoidResult TestImageTimestampChangeWhenDisabled() {
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
+  if (vr.isErr()) {
+    return vr;
+  }
+  vr = WriteRegistryValueData<DWORD>(gImageValue, REG_DWORD, 0x12345678);
+  if (vr.isErr()) {
+    return vr;
+  }
+  vr = WriteRegistryValueData<uint64_t>(gBrowserValue, REG_QWORD, 0ULL);
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  mozilla::LauncherRegistryInfo info;
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
+
+  EXPECT_REG_DWORD_EXISTS_AND_EQ(gImageValue, gMyImageTimestamp);
+  EXPECT_REG_QWORD_DOES_NOT_EXIST(gLauncherValue);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gBrowserValue, 0);
+
+  EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherVoidResult TestDisableDueToFailure() {
+  mozilla::LauncherVoidResult vr = SetupEnabledScenario();
   if (vr.isErr()) {
     return vr;
   }
 
   // Check that we are indeed enabled.
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
-      info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::Enabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::Enabled);
 
   // Now call DisableDueToFailure
   mozilla::LauncherVoidResult lvr = info.DisableDueToFailure();
   if (lvr.isErr()) {
-    return mozilla::Err(lvr.unwrapErr().mError);
+    return LAUNCHER_ERROR_FROM_RESULT(lvr);
   }
 
   // We should now be FailDisabled
-  enabled = info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::FailDisabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
 
   // If we delete the launcher timestamp, IsEnabled should then return
   // ForceDisabled.
-  vr = DeleteLauncherTimestamp();
+  vr = DeleteRegistryValueData(gLauncherValue);
   if (vr.isErr()) {
     return vr;
   }
-
-  enabled = info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
 
   return mozilla::Ok();
 }
 
-static VoidResult TestPrefReflection() {
+static mozilla::LauncherVoidResult TestPrefReflection() {
   // Reset the registry to a known good state.
-  VoidResult vr = SetupEnabledScenario();
+  mozilla::LauncherVoidResult vr = SetupEnabledScenario();
   if (vr.isErr()) {
     return vr;
   }
@@ -566,79 +479,251 @@ static VoidResult TestPrefReflection() {
   mozilla::LauncherRegistryInfo info;
   mozilla::LauncherVoidResult reflectOk = info.ReflectPrefToRegistry(false);
   if (reflectOk.isErr()) {
-    return mozilla::Err(reflectOk.unwrapErr().mError);
+    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
   }
 
   // Launcher timestamp should be non-existent.
-  QWordResult launcherTs = GetLauncherTimestamp();
-  if (launcherTs.isOk()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  if (launcherTs.unwrapErr() !=
-      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
-    return mozilla::Err(launcherTs.unwrapErr());
-  }
-
+  EXPECT_REG_QWORD_DOES_NOT_EXIST(gLauncherValue);
   // Browser timestamp should be zero
-  QWordResult browserTs = GetBrowserTimestamp();
-  if (browserTs.isErr()) {
-    return mozilla::Err(browserTs.unwrapErr());
-  }
-
-  if (browserTs.unwrap() != 0ULL) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gBrowserValue, 0ULL);
   // IsEnabled should give us ForceDisabled
-  mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
-      info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
-  }
-
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
 
   // Now test to see what happens when the pref is set to ON.
   reflectOk = info.ReflectPrefToRegistry(true);
   if (reflectOk.isErr()) {
-    return mozilla::Err(reflectOk.unwrapErr().mError);
+    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
   }
 
   // Launcher and browser timestamps should be non-existent.
-  launcherTs = GetLauncherTimestamp();
-  if (launcherTs.isOk()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  if (launcherTs.unwrapErr() !=
-      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
-    return mozilla::Err(launcherTs.unwrapErr());
-  }
-
-  browserTs = GetBrowserTimestamp();
-  if (browserTs.isOk()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  if (browserTs.unwrapErr() !=
-      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
-    return mozilla::Err(browserTs.unwrapErr());
-  }
+  EXPECT_REG_QWORD_DOES_NOT_EXIST(gLauncherValue);
+  EXPECT_REG_QWORD_DOES_NOT_EXIST(gBrowserValue);
 
   // IsEnabled should give us Enabled.
-  enabled = info.IsEnabled();
-  if (enabled.isErr()) {
-    return mozilla::Err(enabled.unwrapErr().mError);
+  EXPECT_ENABLED_STATE_IS(EnabledState::Enabled);
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherVoidResult TestTelemetryConfig() {
+  mozilla::LauncherVoidResult vr = DeleteAllRegstryValues();
+  if (vr.isErr()) {
+    return vr;
   }
 
-  if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::Enabled) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
+  mozilla::LauncherRegistryInfo info;
+  EXPECT_TELEMETRY_IS_ENABLED(false);
+
+  mozilla::LauncherVoidResult reflectOk =
+      info.ReflectTelemetryPrefToRegistry(false);
+  if (reflectOk.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
   }
+  EXPECT_TELEMETRY_IS_ENABLED(false);
+
+  reflectOk = info.ReflectTelemetryPrefToRegistry(true);
+  if (reflectOk.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(reflectOk);
+  }
+  EXPECT_TELEMETRY_IS_ENABLED(true);
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherVoidResult TestCommitAbort() {
+  mozilla::LauncherVoidResult vr = SetupEnabledScenario();
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  // Retrieve the current timestamps to compare later
+  mozilla::LauncherResult<mozilla::Maybe<uint64_t>> launcherValue =
+      ReadRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD);
+  if (launcherValue.isErr() || launcherValue.inspect().isNothing()) {
+    return LAUNCHER_ERROR_FROM_RESULT(launcherValue);
+  }
+  mozilla::LauncherResult<mozilla::Maybe<uint64_t>> browserValue =
+      ReadRegistryValueData<uint64_t>(gBrowserValue, REG_QWORD);
+  if (browserValue.isErr() || browserValue.inspect().isNothing()) {
+    return LAUNCHER_ERROR_FROM_RESULT(browserValue);
+  }
+  uint64_t launcherTs = launcherValue.inspect().value();
+  uint64_t browserTs = browserValue.inspect().value();
+
+  vr = []() -> mozilla::LauncherVoidResult {
+    mozilla::LauncherRegistryInfo info;
+    EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+    // No commit
+    return mozilla::Ok();
+  }();
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  // Exiting the scope discards the change.
+  mozilla::LauncherRegistryInfo info;
+  EXPECT_REG_DWORD_EXISTS_AND_EQ(gImageValue, gMyImageTimestamp);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gLauncherValue, launcherTs);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gBrowserValue, browserTs);
+
+  // Commit -> Check -> Abort -> Commit
+  EXPECT_COMMIT_IS_OK();
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+  info.Abort();
+  EXPECT_COMMIT_IS_OK();
+
+  // Nothing is changed.
+  EXPECT_REG_DWORD_EXISTS_AND_EQ(gImageValue, gMyImageTimestamp);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gLauncherValue, launcherTs);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gBrowserValue, browserTs);
+  EXPECT_ENABLED_STATE_IS(EnabledState::Enabled);
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherVoidResult TestDisableDuringLauncherLaunch() {
+  mozilla::LauncherVoidResult vr = SetupEnabledScenario();
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  mozilla::LauncherResult<mozilla::Maybe<uint64_t>> launcherTs =
+      ReadRegistryValueData<uint64_t>(gLauncherValue, REG_QWORD);
+  if (launcherTs.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(launcherTs);
+  }
+  if (launcherTs.inspect().isNothing()) {
+    return LAUNCHER_ERROR_FROM_HRESULT(E_UNEXPECTED);
+  }
+
+  vr = []() -> mozilla::LauncherVoidResult {
+    mozilla::LauncherRegistryInfo info;
+    EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+
+    // Call DisableDueToFailure with a different instance
+    mozilla::LauncherVoidResult vr = []() -> mozilla::LauncherVoidResult {
+      mozilla::LauncherRegistryInfo info;
+      mozilla::LauncherVoidResult vr = info.DisableDueToFailure();
+      if (vr.isErr()) {
+        return LAUNCHER_ERROR_FROM_RESULT(vr);
+      }
+      return mozilla::Ok();
+    }();
+    if (vr.isErr()) {
+      return vr;
+    }
+
+    // Commit after disable.
+    EXPECT_COMMIT_IS_OK();
+
+    return mozilla::Ok();
+  }();
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  // Make sure we're still FailDisabled and the launcher's timestamp is not
+  // updated
+  mozilla::LauncherRegistryInfo info;
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
+  EXPECT_REG_QWORD_EXISTS_AND_EQ(gLauncherValue, launcherTs.inspect().value());
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherVoidResult TestDisableDuringBrowserLaunch() {
+  mozilla::LauncherVoidResult vr = SetupEnabledScenario();
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  mozilla::LauncherRegistryInfo info;
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+  EXPECT_COMMIT_IS_OK();
+
+  vr = []() -> mozilla::LauncherVoidResult {
+    mozilla::LauncherRegistryInfo info;
+    EXPECT_CHECK_RESULT_IS(ProcessType::Browser, ProcessType::Browser);
+
+    // Call DisableDueToFailure with a different instance
+    mozilla::LauncherVoidResult vr = []() -> mozilla::LauncherVoidResult {
+      mozilla::LauncherRegistryInfo info;
+      mozilla::LauncherVoidResult vr = info.DisableDueToFailure();
+      if (vr.isErr()) {
+        return LAUNCHER_ERROR_FROM_RESULT(vr);
+      }
+      return mozilla::Ok();
+    }();
+    if (vr.isErr()) {
+      return vr;
+    }
+
+    // Commit after disable.
+    EXPECT_COMMIT_IS_OK();
+
+    return mozilla::Ok();
+  }();
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  // Make sure we're still FailDisabled
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherVoidResult TestReEnable() {
+  mozilla::LauncherVoidResult vr = SetupEnabledScenario();
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  // Make FailDisabled
+  mozilla::LauncherRegistryInfo info;
+  vr = info.DisableDueToFailure();
+  if (vr.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(vr);
+  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
+
+  // Attempt to launch when FailDisabled: Still be FailDisabled
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
+  EXPECT_ENABLED_STATE_IS(EnabledState::FailDisabled);
+
+  // Change the timestamp
+  vr = WriteRegistryValueData<DWORD>(gImageValue, REG_DWORD, 0x12345678);
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  // Attempt to launch again: Launcher comes back
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Launcher);
+  EXPECT_COMMIT_IS_OK();
+
+  // Make ForceDisabled
+  vr = info.ReflectPrefToRegistry(false);
+  if (vr.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(vr);
+  }
+  EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
+
+  // Attempt to launch when ForceDisabled: Still be ForceDisabled
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
+  EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
+
+  // Change the timestamp
+  vr = WriteRegistryValueData<DWORD>(gImageValue, REG_DWORD, 0x12345678);
+  if (vr.isErr()) {
+    return vr;
+  }
+
+  // Attempt to launch again: Still be ForceDisabled
+  EXPECT_CHECK_RESULT_IS(ProcessType::Launcher, ProcessType::Browser);
+  EXPECT_COMMIT_IS_OK();
+  EXPECT_ENABLED_STATE_IS(EnabledState::ForceDisabled);
 
   return mozilla::Ok();
 }
@@ -659,29 +744,34 @@ int main(int argc, char* argv[]) {
   gImageValue = fullPath.get();
   gImageValue += kImageSuffix;
 
-  mozilla::nt::PEHeaders myHeaders(::GetModuleHandleW(nullptr));
-  if (!myHeaders) {
-    return 1;
-  }
+  gTelemetryValue = fullPath.get();
+  gTelemetryValue += kTelemetrySuffix;
 
-  if (!myHeaders.GetTimeStamp(gMyImageTimestamp)) {
-    return 1;
-  }
+  mozilla::LauncherResult<DWORD> timestamp = 0;
+  RUN_TEST(timestamp, GetCurrentImageTimestamp);
+  gMyImageTimestamp = timestamp.unwrap();
 
   auto onExit = mozilla::MakeScopeExit(
-      []() { mozilla::Unused << DeleteAllTimestamps(); });
+      []() { mozilla::Unused << DeleteAllRegstryValues(); });
 
-  VoidResult vr = mozilla::Ok();
+  mozilla::LauncherVoidResult vr = mozilla::Ok();
 
-  RUN_TEST(TestEmptyRegistry);
-  RUN_TEST(TestNormal);
-  RUN_TEST(TestBrowserNoLauncher);
-  RUN_TEST(TestLauncherNoBrowser);
-  RUN_TEST(TestBrowserLessThanLauncher);
-  RUN_TEST(TestImageTimestampChange);
-  RUN_TEST(TestImageTimestampChangeWhenDisabled);
-  RUN_TEST(TestDisableDueToFailure);
-  RUN_TEST(TestPrefReflection);
+  // All testcases should call SetupEnabledScenario() or
+  // DeleteAllRegstryValues() to be order-independent
+  RUN_TEST(vr, TestEmptyRegistry);
+  RUN_TEST(vr, TestNormal);
+  RUN_TEST(vr, TestBrowserNoLauncher);
+  RUN_TEST(vr, TestLauncherNoBrowser);
+  RUN_TEST(vr, TestBrowserLessThanLauncher);
+  RUN_TEST(vr, TestImageTimestampChange);
+  RUN_TEST(vr, TestImageTimestampChangeWhenDisabled);
+  RUN_TEST(vr, TestDisableDueToFailure);
+  RUN_TEST(vr, TestPrefReflection);
+  RUN_TEST(vr, TestTelemetryConfig);
+  RUN_TEST(vr, TestCommitAbort);
+  RUN_TEST(vr, TestDisableDuringLauncherLaunch);
+  RUN_TEST(vr, TestDisableDuringBrowserLaunch);
+  RUN_TEST(vr, TestReEnable);
 
   return 0;
 }

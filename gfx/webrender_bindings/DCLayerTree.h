@@ -35,20 +35,27 @@ class DCLayerTree {
   ~DCLayerTree();
 
   void SetDefaultSwapChain(IDXGISwapChain1* aSwapChain);
+  void MaybeUpdateDebug();
 
  protected:
   bool Initialize(HWND aHwnd);
+  bool MaybeUpdateDebugCounter();
+  bool MaybeUpdateDebugVisualRedrawRegions();
 
   RefPtr<IDCompositionDevice2> mCompositionDevice;
   RefPtr<IDCompositionTarget> mCompositionTarget;
   RefPtr<IDCompositionVisual2> mRootVisual;
   RefPtr<IDCompositionVisual2> mDefaultSwapChainVisual;
+
+  bool mDebugCounter;
+  bool mDebugVisualRedrawRegions;
 };
 #else
 class DCLayerTree {
  public:
   static UniquePtr<DCLayerTree> Create(HWND aHwnd) { return nullptr; }
   void SetDefaultSwapChain(IDXGISwapChain1* aSwapChain) {}
+  void MaybeUpdateDebug() {}
 };
 #endif
 

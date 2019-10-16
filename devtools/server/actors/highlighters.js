@@ -46,6 +46,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/highlighters/box-model",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "BoxModelHighlighterObserver",
+  "devtools/server/actors/highlighters/box-model-observer",
+  true
+);
 
 const HIGHLIGHTER_PICKED_TIMER = 1000;
 const IS_OSX = Services.appinfo.OS === "Darwin";
@@ -110,7 +116,7 @@ exports.register = register;
  * The HighlighterActor class
  */
 exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
-  initialize: function(inspector, autohide) {
+  initialize: function(inspector, autohide, useNewBoxModelHighlighter = false) {
     protocol.Actor.prototype.initialize.call(this, null);
 
     this._autohide = autohide;
@@ -119,6 +125,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
     this._targetActor = this._inspector.targetActor;
     this._highlighterEnv = new HighlighterEnvironment();
     this._highlighterEnv.initFromTargetActor(this._targetActor);
+    this._useNewBoxModelHighlighter = useNewBoxModelHighlighter;
 
     this._onNavigate = this._onNavigate.bind(this);
 
@@ -146,6 +153,15 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
 
   _createHighlighter: function() {
     this._isPreviousWindowXUL = isXUL(this._targetActor.window);
+
+    if (this._useNewBoxModelHighlighter) {
+      this._highlighter = new BoxModelHighlighterObserver(
+        this._highlighterEnv,
+        this.conn
+      );
+
+      return;
+    }
 
     if (!this._isPreviousWindowXUL) {
       this._highlighter = new BoxModelHighlighter(

@@ -28,12 +28,8 @@ TEST_F(APZCSnappingOnMomentumTester, Snap_On_Momentum) {
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
 
-  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
-    snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
-  } else {
-    snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
-  }
+  snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
+  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
 
   ScrollMetadata metadata = root->GetScrollMetadata(0);
   metadata.SetSnapInfo(ScrollSnapInfo(snap));

@@ -26,10 +26,6 @@ class CalcSnapPoints final {
                  const nsPoint& aDestination, const nsPoint& aStartPos);
   void AddHorizontalEdge(nscoord aEdge);
   void AddVerticalEdge(nscoord aEdge);
-  void AddHorizontalEdgeInterval(const nsRect& aScrollRange, nscoord aInterval,
-                                 nscoord aOffset);
-  void AddVerticalEdgeInterval(const nsRect& aScrollRange, nscoord aInterval,
-                               nscoord aOffset);
   void AddEdge(nscoord aEdge, nscoord aDestination, nscoord aStartPos,
                nscoord aScrollingDirection, nscoord* aBestEdge,
                nscoord* aSecondBestEdge, bool* aEdgeFound);
@@ -100,22 +96,6 @@ void CalcSnapPoints::AddHorizontalEdge(nscoord aEdge) {
 void CalcSnapPoints::AddVerticalEdge(nscoord aEdge) {
   AddEdge(aEdge, mDestination.x, mStartPos.x, mScrollingDirection.x,
           &mBestEdge.x, &mSecondBestEdge.x, &mVerticalEdgeFound);
-}
-
-void CalcSnapPoints::AddHorizontalEdgeInterval(const nsRect& aScrollRange,
-                                               nscoord aInterval,
-                                               nscoord aOffset) {
-  AddEdgeInterval(aInterval, aScrollRange.y, aScrollRange.YMost(), aOffset,
-                  mDestination.y, mStartPos.y, mScrollingDirection.y,
-                  &mBestEdge.y, &mSecondBestEdge.y, &mHorizontalEdgeFound);
-}
-
-void CalcSnapPoints::AddVerticalEdgeInterval(const nsRect& aScrollRange,
-                                             nscoord aInterval,
-                                             nscoord aOffset) {
-  AddEdgeInterval(aInterval, aScrollRange.x, aScrollRange.XMost(), aOffset,
-                  mDestination.x, mStartPos.x, mScrollingDirection.x,
-                  &mBestEdge.x, &mSecondBestEdge.x, &mVerticalEdgeFound);
 }
 
 void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
@@ -258,19 +238,6 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
   }
 }
 
-static void ProcessScrollSnapCoordinates(
-    CalcSnapPoints& aCalcSnapPoint,
-    const nsTArray<nsPoint>& aScrollSnapCoordinates,
-    const nsPoint& aScrollSnapDestination) {
-  for (nsPoint snapCoords : aScrollSnapCoordinates) {
-    // Make them relative to the scroll snap destination.
-    snapCoords -= aScrollSnapDestination;
-
-    aCalcSnapPoint.AddVerticalEdge(snapCoords.x);
-    aCalcSnapPoint.AddHorizontalEdge(snapCoords.y);
-  }
-}
-
 Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     const ScrollSnapInfo& aSnapInfo, nsIScrollableFrame::ScrollUnit aUnit,
     const nsRect& aScrollRange, const nsPoint& aStartPos,
@@ -280,55 +247,37 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     return Nothing();
   }
 
-  if (StaticPrefs::layout_css_scroll_snap_v1_enabled() &&
-      !aSnapInfo.HasSnapPositions()) {
+  if (!aSnapInfo.HasSnapPositions()) {
     return Nothing();
   }
 
   CalcSnapPoints calcSnapPoints(aUnit, aDestination, aStartPos);
 
-  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    ProcessSnapPositions(calcSnapPoints, aSnapInfo);
+  ProcessSnapPositions(calcSnapPoints, aSnapInfo);
 
-    // If the distance between the first and the second candidate snap points
-    // is larger than the snapport size and the snapport is covered by larger
-    // elements, any points inside the covering area should be valid snap
-    // points.
-    // https://drafts.csswg.org/css-scroll-snap-1/#snap-overflow
-    // NOTE: |aDestination| sometimes points outside of the scroll range, e.g.
-    // by the APZC fling, so for the overflow checks we need to clamp it.
-    nsPoint clampedDestination = aScrollRange.ClampPoint(aDestination);
-    for (auto range : aSnapInfo.mXRangeWiderThanSnapport) {
-      if (range.IsValid(clampedDestination.x, aSnapInfo.mSnapportSize.width) &&
-          calcSnapPoints.XDistanceBetweenBestAndSecondEdge() >
-              aSnapInfo.mSnapportSize.width) {
-        calcSnapPoints.AddVerticalEdge(clampedDestination.x);
-        break;
-      }
+  // If the distance between the first and the second candidate snap points
+  // is larger than the snapport size and the snapport is covered by larger
+  // elements, any points inside the covering area should be valid snap
+  // points.
+  // https://drafts.csswg.org/css-scroll-snap-1/#snap-overflow
+  // NOTE: |aDestination| sometimes points outside of the scroll range, e.g.
+  // by the APZC fling, so for the overflow checks we need to clamp it.
+  nsPoint clampedDestination = aScrollRange.ClampPoint(aDestination);
+  for (auto range : aSnapInfo.mXRangeWiderThanSnapport) {
+    if (range.IsValid(clampedDestination.x, aSnapInfo.mSnapportSize.width) &&
+        calcSnapPoints.XDistanceBetweenBestAndSecondEdge() >
+            aSnapInfo.mSnapportSize.width) {
+      calcSnapPoints.AddVerticalEdge(clampedDestination.x);
+      break;
     }
-    for (auto range : aSnapInfo.mYRangeWiderThanSnapport) {
-      if (range.IsValid(clampedDestination.y, aSnapInfo.mSnapportSize.height) &&
-          calcSnapPoints.YDistanceBetweenBestAndSecondEdge() >
-              aSnapInfo.mSnapportSize.height) {
-        calcSnapPoints.AddHorizontalEdge(clampedDestination.y);
-        break;
-      }
+  }
+  for (auto range : aSnapInfo.mYRangeWiderThanSnapport) {
+    if (range.IsValid(clampedDestination.y, aSnapInfo.mSnapportSize.height) &&
+        calcSnapPoints.YDistanceBetweenBestAndSecondEdge() >
+            aSnapInfo.mSnapportSize.height) {
+      calcSnapPoints.AddHorizontalEdge(clampedDestination.y);
+      break;
     }
-  } else {
-    nsPoint destPos = aSnapInfo.mScrollSnapDestination;
-
-    if (aSnapInfo.mScrollSnapIntervalX.isSome()) {
-      nscoord interval = aSnapInfo.mScrollSnapIntervalX.value();
-      calcSnapPoints.AddVerticalEdgeInterval(aScrollRange, interval, destPos.x);
-    }
-    if (aSnapInfo.mScrollSnapIntervalY.isSome()) {
-      nscoord interval = aSnapInfo.mScrollSnapIntervalY.value();
-      calcSnapPoints.AddHorizontalEdgeInterval(aScrollRange, interval,
-                                               destPos.y);
-    }
-
-    ProcessScrollSnapCoordinates(calcSnapPoints,
-                                 aSnapInfo.mScrollSnapCoordinates, destPos);
   }
 
   bool snapped = false;

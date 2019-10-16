@@ -629,9 +629,9 @@ void CycleCollectedJSRuntime::DescribeGCThing(
       JSFunction* fun = JS_GetObjectFunction(obj);
       JSString* str = JS_GetFunctionDisplayId(fun);
       if (str) {
-        JSFlatString* flat = JS_ASSERT_STRING_IS_FLAT(str);
+        JSLinearString* linear = JS_ASSERT_STRING_IS_LINEAR(str);
         nsAutoString chars;
-        AssignJSFlatString(chars, flat);
+        AssignJSLinearString(chars, linear);
         NS_ConvertUTF16toUTF8 fname(chars);
         SprintfLiteral(name, "JS Object (Function - %s)", fname.get());
       } else {

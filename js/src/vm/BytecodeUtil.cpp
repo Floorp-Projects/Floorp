@@ -29,8 +29,6 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"
-#include "gc/FreeOp.h"
-#include "gc/GCInternals.h"
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "js/Symbol.h"
@@ -1158,7 +1156,7 @@ static UniqueChars ToDisassemblySource(JSContext* cx, HandleValue v) {
       if (!str) {
         return nullptr;
       }
-      return StringToNewUTF8CharsZ(cx, *str);
+      return QuoteString(cx, str);
     }
 
     if (obj.is<RegExpObject>()) {
@@ -1166,7 +1164,7 @@ static UniqueChars ToDisassemblySource(JSContext* cx, HandleValue v) {
       if (!source) {
         return nullptr;
       }
-      return StringToNewUTF8CharsZ(cx, *source);
+      return QuoteString(cx, source);
     }
   }
 
@@ -2862,14 +2860,30 @@ JS_FRIEND_API JSString* js::GetPCCountScriptContents(JSContext* cx,
   return NewStringCopyZ<CanGC>(cx, sp.string());
 }
 
+struct CollectedScripts {
+  MutableHandle<ScriptVector> scripts;
+  bool ok = true;
+
+  explicit CollectedScripts(MutableHandle<ScriptVector> scripts)
+      : scripts(scripts) {}
+
+  static void consider(JSRuntime* rt, void* data, JSScript* script,
+                       const JS::AutoRequireNoGC& nogc) {
+    auto self = static_cast<CollectedScripts*>(data);
+    if (!script->filename()) {
+      return;
+    }
+    if (!self->scripts.append(script)) {
+      self->ok = false;
+    }
+  }
+};
+
 static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
                              GenericPrinter& out) {
-  JSRuntime* rt = cx->runtime();
-
   AutoRealmUnchecked ar(cx, realm);
 
   // Collect the list of scripts which are part of the current realm.
-  { js::gc::AutoPrepareForTracing apft(cx); }
 
   // Hold the scripts that we have already flushed, to avoid flushing them
   // twice.
@@ -2877,16 +2891,12 @@ static bool GenerateLcovInfo(JSContext* cx, JS::Realm* realm,
   Rooted<JSScriptSet> scriptsDone(cx, JSScriptSet(cx));
 
   Rooted<ScriptVector> queue(cx, ScriptVector(cx));
-  for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-    for (auto script = zone->cellIter<JSScript>(); !script.done();
-         script.next()) {
-      if (script->realm() != realm || !script->filename()) {
-        continue;
-      }
 
-      if (!queue.append(script)) {
-        return false;
-      }
+  {
+    CollectedScripts result(&queue);
+    IterateScripts(cx, realm, &result, &CollectedScripts::consider);
+    if (!result.ok) {
+      return false;
     }
   }
 

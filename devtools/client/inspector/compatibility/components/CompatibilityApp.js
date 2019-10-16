@@ -4,18 +4,43 @@
 
 "use strict";
 
-const { PureComponent } = require("devtools/client/shared/vendor/react");
+const { connect } = require("devtools/client/shared/vendor/react-redux");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
+const Types = require("../types");
+
+const IssueList = createFactory(require("./IssueList"));
 
 class CompatibilityApp extends PureComponent {
+  static get propTypes() {
+    return {
+      selectedNodeIssues: PropTypes.arrayOf(PropTypes.shape(Types.issue))
+        .isRequired,
+    };
+  }
+
   render() {
+    const { selectedNodeIssues } = this.props;
+
     return dom.div(
       {
         className: "theme-sidebar inspector-tabpanel",
       },
-      "Compatibility View"
+      selectedNodeIssues.length
+        ? IssueList({ issues: selectedNodeIssues })
+        : null
     );
   }
 }
 
-module.exports = CompatibilityApp;
+const mapStateToProps = state => {
+  return {
+    selectedNodeIssues: state.compatibility.selectedNodeIssues,
+  };
+};
+module.exports = connect(mapStateToProps)(CompatibilityApp);

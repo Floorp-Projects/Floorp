@@ -1,5 +1,6 @@
 "use strict";
 
+const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
@@ -139,6 +140,17 @@ class DNSListener {
     return this.promise.then.apply(this.promise, arguments);
   }
 }
+
+add_task(async function test0_nodeExecute() {
+  // This test checks that moz-http2.js running in node is working.
+  // This should always be the first test in this file (except for setup)
+  // otherwise we may encounter random failures when the http2 server is down.
+  equal(
+    await NodeServer.execute(`"hello"`),
+    "hello",
+    "Check that moz-http2.js is running"
+  );
+});
 
 // verify basic A record
 add_task(async function test1() {
@@ -1041,4 +1053,41 @@ add_task(async function test_connection_closed_trr_first() {
   await new DNSListener("closeme.com", "127.0.0.1");
   // TRR should be back up again
   await new DNSListener("bar2.example.com", "9.9.9.9");
+});
+
+add_task(async function test_dnsSuffix() {
+  async function checkDnsSuffixInMode(mode) {
+    dns.clearCache(true);
+    Services.prefs.setIntPref("network.trr.mode", mode);
+    Services.prefs.setCharPref(
+      "network.trr.uri",
+      `https://localhost:${h2Port}/doh?responseIP=1.2.3.4`
+    );
+    await new DNSListener("test.com", "1.2.3.4");
+    dns.clearCache(true);
+    Services.prefs.setIntPref("network.trr.mode", mode);
+
+    dns.clearCache(true);
+    let networkLinkService = {
+      dnsSuffixList: ["test.com"],
+      QueryInterface: ChromeUtils.generateQI([Ci.nsINetworkLinkService]),
+    };
+    Services.obs.notifyObservers(
+      networkLinkService,
+      "network:link-status-changed",
+      "changed"
+    );
+    await new DNSListener("test.com", "127.0.0.1");
+
+    // Attempt to clean up, just in case
+    networkLinkService.dnsSuffixList = [];
+    Services.obs.notifyObservers(
+      networkLinkService,
+      "network:link-status-changed",
+      "changed"
+    );
+  }
+
+  await checkDnsSuffixInMode(2);
+  await checkDnsSuffixInMode(3);
 });

@@ -69,10 +69,6 @@ class EnterDebuggeeNoExecute;
 class TraceLoggerThread;
 #endif
 
-namespace gc {
-class AutoHeapSession;
-}
-
 }  // namespace js
 
 struct DtoaState;
@@ -510,11 +506,6 @@ struct JSRuntime {
                   mozilla::recordreplay::Behavior::DontPreserve>
       numActiveHelperThreadZones;
 
-  // Any activity affecting the heap.
-  mozilla::Atomic<JS::HeapState, mozilla::SequentiallyConsistent,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      heapState_;
-
   friend class js::AutoLockScriptData;
 
  public:
@@ -539,7 +530,7 @@ struct JSRuntime {
   }
 #endif
 
-  JS::HeapState heapState() const { return heapState_; }
+  JS::HeapState heapState() const { return gc.heapState(); }
 
   // How many realms there are across all zones. This number includes
   // off-thread context realms, so it isn't necessarily equal to the
@@ -970,10 +961,6 @@ struct JSRuntime {
     MOZ_ASSERT(format != js::StackFormat::Default);
     stackFormat_ = format;
   }
-
-  // For inherited heap state accessors.
-  friend class js::gc::AutoHeapSession;
-  friend class JS::AutoEnterCycleCollection;
 
  private:
   js::MainThreadData<js::RuntimeCaches> caches_;

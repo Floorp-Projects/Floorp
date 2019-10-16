@@ -24,6 +24,7 @@ const ChildActor = protocol.ActorClassWithSpec(childSpec, {
     return {
       actor: this.actorID,
       childID: this.childID,
+      foo: "bar",
     };
   },
 });
@@ -69,6 +70,7 @@ const RootActor = protocol.ActorClassWithSpec(rootSpec, {
 class ChildFront extends protocol.FrontClassWithSpec(childSpec) {
   form(form) {
     this.childID = form.childID;
+    this.foo = form.foo;
   }
 }
 protocol.registerFront(ChildFront);
@@ -94,6 +96,11 @@ add_task(async function run_test() {
 
   const fronts = [];
   rootFront.onFront("childActor", front => {
+    equal(
+      front.foo,
+      "bar",
+      "Front's form is set before onFront listeners are called"
+    );
     fronts.push(front);
   });
 

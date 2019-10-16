@@ -376,7 +376,7 @@ void ScrollAnchorContainer::ApplyAdjustments() {
     }
   }
 
-  MOZ_ASSERT(!mApplyingAnchorAdjustment);
+  MOZ_RELEASE_ASSERT(!mApplyingAnchorAdjustment);
   // We should use AutoRestore here, but that doesn't work with bitfields
   mApplyingAnchorAdjustment = true;
   mScrollFrame->ScrollTo(mScrollFrame->GetScrollPosition() + physicalAdjustment,

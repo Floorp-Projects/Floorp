@@ -1558,6 +1558,8 @@ class BigIntCreationData {
 class BigIntLiteral : public ParseNode {
   mozilla::Variant<mozilla::Nothing, BigIntCreationData, BigIntBox*> data_;
 
+  BigIntBox* box() const { return data_.as<BigIntBox*>(); }
+
  public:
   BigIntLiteral(BigIntBox* bibox, const TokenPos& pos)
       : ParseNode(ParseNodeKind::BigIntExpr, pos),
@@ -1571,6 +1573,11 @@ class BigIntLiteral : public ParseNode {
 
   void init(BigIntCreationData data) {
     data_ = mozilla::AsVariant(std::move(data));
+  }
+
+  bool isDeferred() {
+    MOZ_ASSERT(!data_.is<mozilla::Nothing>());
+    return data_.is<BigIntCreationData>();
   }
 
   static bool test(const ParseNode& node) {
@@ -1588,10 +1595,22 @@ class BigIntLiteral : public ParseNode {
   void dumpImpl(GenericPrinter& out, int indent);
 #endif
 
-  bool publish(JSContext* cx, ParserSharedBase* parser);
+  // Get the contained BigInt value: Assumes it was created with one,
+  // and cannot be used when deferred allocation mode is enabled.
+  BigInt* value();
 
-  BigIntBox* box() const { return data_.as<BigIntBox*>(); }
+  // Get the contained BigIntValue, or parse it from the creation data
+  // Can be used when deferred allocation mode is enabled.
+  BigInt* getOrCreateBigInt(JSContext* cx) {
+    if (data_.is<BigIntBox*>()) {
+      return value();
+    }
+    return data_.as<BigIntCreationData>().createBigInt(cx);
+  }
 
+  BigIntCreationData creationData() {
+    return std::move(data_.as<BigIntCreationData>());
+  }
   bool isZero();
 };
 

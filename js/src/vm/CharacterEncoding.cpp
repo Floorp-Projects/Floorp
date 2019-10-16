@@ -87,7 +87,7 @@ static size_t GetDeflatedUTF8StringLength(const CharT* chars, size_t nchars) {
   return nbytes;
 }
 
-JS_PUBLIC_API size_t JS::GetDeflatedUTF8StringLength(JSFlatString* s) {
+JS_PUBLIC_API size_t JS::GetDeflatedUTF8StringLength(JSLinearString* s) {
   JS::AutoCheckCannotGC nogc;
   return s->hasLatin1Chars()
              ? ::GetDeflatedUTF8StringLength(s->latin1Chars(nogc), s->length())
@@ -95,7 +95,7 @@ JS_PUBLIC_API size_t JS::GetDeflatedUTF8StringLength(JSFlatString* s) {
                                              s->length());
 }
 
-JS_PUBLIC_API size_t JS::DeflateStringToUTF8Buffer(JSFlatString* src,
+JS_PUBLIC_API size_t JS::DeflateStringToUTF8Buffer(JSLinearString* src,
                                                    mozilla::Span<char> dst) {
   JS::AutoCheckCannotGC nogc;
   if (src->hasLatin1Chars()) {

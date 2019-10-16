@@ -12,24 +12,7 @@ add_task(async () => {
   const tab = await addTab(TEST_URI);
 
   info("Wait until the visited link is available");
-  await asyncWaitUntil(async () => {
-    const isVisitedLinkAvailable = await ContentTask.spawn(
-      tab.linkedBrowser,
-      {},
-      () => {
-        const NS_EVENT_STATE_VISITED = 1 << 24;
-        const target = content.wrappedJSObject.document.getElementById(
-          "visited"
-        );
-
-        return (
-          target &&
-          InspectorUtils.getContentState(target) & NS_EVENT_STATE_VISITED
-        );
-      }
-    );
-    return isVisitedLinkAvailable;
-  });
+  await waitUntilVisitedState(tab, ["#visited"]);
 
   info("Open the inspector");
   const { inspector, view } = await openRuleView();
