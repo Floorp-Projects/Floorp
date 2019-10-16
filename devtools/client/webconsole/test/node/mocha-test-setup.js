@@ -8,9 +8,7 @@
 const mcRoot = `${__dirname}/../../../../../`;
 const getModule = mcPath => `module.exports = require("${mcRoot}${mcPath}");`;
 
-const {
-  Services: { pref },
-} = require("devtools-modules");
+const { pref } = require("devtools-services");
 pref("devtools.debugger.remote-timeout", 10000);
 pref("devtools.hud.loglimit", 10000);
 pref("devtools.webconsole.filter.error", true);
@@ -88,6 +86,8 @@ global.ChromeUtils = {
   defineModuleGetter: () => {},
 };
 
+global.define = function() {};
+
 // Point to vendored-in files and mocks when needed.
 const requireHacker = require("require-hacker");
 requireHacker.global_hook("default", (path, module) => {
@@ -112,9 +112,7 @@ requireHacker.global_hook("default", (path, module) => {
       ),
     "devtools/shared/plural-form": () =>
       getModule("devtools/client/webconsole/test/node/fixtures/PluralForm"),
-    Services: () => `module.exports = require("devtools-modules/src/Services")`,
-    "Services.default": () =>
-      `module.exports = require("devtools-modules/src/Services")`,
+    Services: () => `module.exports = require("devtools-services")`,
     "devtools/shared/client/object-client": () => `() => {}`,
     "devtools/shared/client/long-string-client": () => `() => {}`,
     "devtools/client/shared/components/SmartTrace": () => "{}",
@@ -128,7 +126,8 @@ requireHacker.global_hook("default", (path, module) => {
       `module.exports = require("devtools-modules/src/utils/event-emitter")`,
     "devtools/client/shared/unicode-url": () =>
       `module.exports = require("devtools-modules/src/unicode-url")`,
-    "devtools/shared/DevToolsUtils": () => "{}",
+    "devtools/shared/DevToolsUtils": () =>
+      getModule("devtools/client/webconsole/test/node/fixtures/DevToolsUtils"),
     "devtools/server/actors/reflow": () => "{}",
     "devtools/shared/layout/utils": () => "{getCurrentZoom = () => {}}",
   };

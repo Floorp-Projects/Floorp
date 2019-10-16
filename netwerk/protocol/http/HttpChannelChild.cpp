@@ -2920,8 +2920,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.forceMainDocumentChannel() = mForceMainDocumentChannel;
 
   openArgs.navigationStartTimeStamp() = navigationStartTimeStamp;
-  openArgs.hasSandboxedAuxiliaryNavigations() =
-      GetHasSandboxedAuxiliaryNavigations();
+  openArgs.hasNonEmptySandboxingFlag() = GetHasNonEmptySandboxingFlag();
 
   // This must happen before the constructor message is sent. Otherwise messages
   // from the parent could arrive quickly and be delivered to the wrong event

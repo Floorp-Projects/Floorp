@@ -390,9 +390,40 @@ async function wait_for_ping(callback, allowErrorPings, getFullPing = false) {
   return record.syncs[0];
 }
 
-// Short helper for wait_for_ping
-function sync_and_validate_telem(allowErrorPings, getFullPing = false) {
-  return wait_for_ping(() => Service.sync(), allowErrorPings, getFullPing);
+// Perform a sync and validate all telemetry caused by the sync. If fnValidate
+// is null, we just check the ping records success. If fnValidate is specified,
+// then the sync must have recorded just a single sync, and that sync will be
+// passed to the function to be checked.
+async function sync_and_validate_telem(fnValidate = null) {
+  let numErrors = 0;
+  let telem = get_sync_test_telemetry();
+  let oldSubmit = telem.submit;
+  try {
+    telem.submit = function(record) {
+      // This is called via an observer, so failures here don't cause the test
+      // to fail :(
+      try {
+        // All pings must be valid.
+        assert_valid_ping(record);
+        if (fnValidate) {
+          // for historical reasons these callbacks expect a "sync" record, not
+          // the entire ping.
+          Assert.equal(record.syncs.length, 1);
+          fnValidate(record.syncs[0]);
+        } else {
+          // no validation function means it must be a "success" ping.
+          assert_success_ping(record);
+        }
+      } catch (ex) {
+        print("Failure in ping validation callback", ex, "\n", ex.stack);
+        numErrors += 1;
+      }
+    };
+    await Service.sync();
+    Assert.ok(numErrors == 0, "There were telemetry validation errors");
+  } finally {
+    telem.submit = oldSubmit;
+  }
 }
 
 // Used for the (many) cases where we do a 'partial' sync, where only a single

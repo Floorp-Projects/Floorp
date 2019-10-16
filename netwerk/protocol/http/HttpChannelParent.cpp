@@ -156,7 +156,7 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.launchServiceWorkerEnd(), a.dispatchFetchEventStart(),
           a.dispatchFetchEventEnd(), a.handleFetchEventStart(),
           a.handleFetchEventEnd(), a.forceMainDocumentChannel(),
-          a.navigationStartTimeStamp(), a.hasSandboxedAuxiliaryNavigations());
+          a.navigationStartTimeStamp(), a.hasNonEmptySandboxingFlag());
     }
     case HttpChannelCreationArgs::THttpChannelConnectArgs: {
       const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
@@ -418,7 +418,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const TimeStamp& aHandleFetchEventEnd,
     const bool& aForceMainDocumentChannel,
     const TimeStamp& aNavigationStartTimeStamp,
-    const bool& hasSandboxedAuxiliaryNavigations) {
+    const bool& aHasNonEmptySandboxingFlag) {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
     // URIParams does MOZ_ASSERT if null, but we need to protect opt builds from
@@ -507,8 +507,8 @@ bool HttpChannelParent::DoAsyncOpen(
     httpChannel->SetIsMainDocumentChannel(true);
   }
 
-  if (hasSandboxedAuxiliaryNavigations) {
-    httpChannel->SetHasSandboxedAuxiliaryNavigations(true);
+  if (aHasNonEmptySandboxingFlag) {
+    httpChannel->SetHasNonEmptySandboxingFlag(true);
   }
 
   for (uint32_t i = 0; i < requestHeaders.Length(); i++) {
@@ -2114,16 +2114,6 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   return NS_OK;
 }
 
-void HttpChannelParent::CancelChildCrossProcessRedirect() {
-  MOZ_ASSERT(!mDoingCrossProcessRedirect, "Already redirected");
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mDoingCrossProcessRedirect = true;
-  if (!mIPCClosed) {
-    Unused << SendCancelRedirected();
-  }
-}
-
 NS_IMETHODIMP
 HttpChannelParent::CompleteRedirect(bool succeeded) {
   LOG(("HttpChannelParent::CompleteRedirect [this=%p succeeded=%d]\n", this,
@@ -2642,7 +2632,13 @@ HttpChannelParent::OnRedirectResult(bool succeeded) {
 
 nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
                                                       uint64_t aIdentifier) {
-  CancelChildCrossProcessRedirect();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Mark ourselves as performing a cross-process redirect. This will prevent
+  // messages being communicated to the underlying channel, allowing us to keep
+  // it open.
+  MOZ_ASSERT(!mDoingCrossProcessRedirect, "Already redirected");
+  mDoingCrossProcessRedirect = true;
 
   nsCOMPtr<nsIChannel> channel = aChannel;
   RefPtr<nsHttpChannel> httpChannel = do_QueryObject(channel);
@@ -2672,6 +2668,12 @@ nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
       GetMainThreadSerialEventTarget(), __func__,
       [=](uint64_t cpId) {
         nsresult rv;
+
+        // Cancel the channel in the original process, as the switch is
+        // happening in earnest.
+        if (!self->mIPCClosed) {
+          Unused << self->SendCancelRedirected();
+        }
 
         // Register the new channel and obtain id for it
         nsCOMPtr<nsIRedirectChannelRegistrar> registrar =
@@ -2742,8 +2744,14 @@ nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
                   self->CrossProcessRedirectDone(NS_ERROR_FAILURE, Nothing());
                 });
       },
-      [httpChannel](nsresult aStatus) {
+      [=](nsresult aStatus) {
         MOZ_ASSERT(NS_FAILED(aStatus), "Status should be error");
+
+        // We failed to do a process switch. Make sure the content process has
+        // canceled the channel, and then resume the load process with an error.
+        if (!self->mIPCClosed) {
+          Unused << self->SendCancelRedirected();
+        }
         httpChannel->OnRedirectVerifyCallback(aStatus);
       });
 

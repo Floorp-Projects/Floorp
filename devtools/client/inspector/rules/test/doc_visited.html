@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <style type='text/css'>
+    a:visited, #visited-and-other-matched-selector {
+      background-color: transparent;
+      border-color: lime;
+      color: rgba(0, 255, 0, 0.8);
+      font-size: 100px;
+      margin-left: 50px;
+    }
     a:visited { color: lime; }
     a:link { color: blue; }
     a { color: pink; }
@@ -11,5 +18,8 @@
   <body>
     <a href="./doc_visited.html" id="visited">visited link</a>
     <a href="#" id="unvisited">unvisited link</a>
+    <a href="./doc_visited.html" id="visited-and-other-matched-selector">
+      visited and other matched selector
+    </a>
   </body>
 </html>

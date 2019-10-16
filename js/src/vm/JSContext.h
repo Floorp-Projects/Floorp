@@ -1336,6 +1336,18 @@ struct MOZ_RAII AutoSetThreadIsSweeping {
 #endif
 };
 
+// Note that this class does not suppress buffer allocation/reallocation in the
+// nursery, only Cells themselves.
+class MOZ_RAII AutoSuppressNurseryCellAlloc {
+  JSContext* cx_;
+
+ public:
+  explicit AutoSuppressNurseryCellAlloc(JSContext* cx) : cx_(cx) {
+    cx_->nurserySuppressions_++;
+  }
+  ~AutoSuppressNurseryCellAlloc() { cx_->nurserySuppressions_--; }
+};
+
 }  // namespace gc
 
 } /* namespace js */

@@ -73,6 +73,9 @@ parent:
   // Save the frame capture to disk
   async Capture();
 
+  // Enable/Disable transaction logging
+  async SetTransactionLogging(bool aValue);
+
   // Replacement for PCompositorBridge::SyncWithCompositor, but for WR. We need
   // it on PWebRenderBridge because it associated with a particular top-level
   // window, and PCompositorBridge doesn't allow doing that in a secure manner.

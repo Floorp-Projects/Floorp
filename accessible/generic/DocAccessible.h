@@ -327,10 +327,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
 
   /**
    * Return true if the given ID is referred by relation attribute.
-   *
-   * @note Different elements may share the same ID if they are hosted inside
-   *       XBL bindings. Be careful the result of this method may be  senseless
-   *       while it's called for XUL elements (where XBL is used widely).
    */
   bool IsDependentID(dom::Element* aElement, const nsAString& aID) const {
     return GetRelProviders(aElement, aID);

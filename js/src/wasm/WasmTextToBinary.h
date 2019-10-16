@@ -25,10 +25,10 @@ namespace js {
 namespace wasm {
 
 // Translate the textual representation of a wasm module (given by a
-// null-terminated char16_t array) into serialized bytes. If there is an error
+// char16_t array + length) into serialized bytes. If there is an error
 // other than out-of-memory an error message string will be stored in 'error'.
 
-extern MOZ_MUST_USE bool TextToBinary(const char16_t* text,
+extern MOZ_MUST_USE bool TextToBinary(const char16_t* text, size_t textLen,
                                       uintptr_t stackLimit, Bytes* bytes,
                                       Uint32Vector* offsets,
                                       UniqueChars* error);

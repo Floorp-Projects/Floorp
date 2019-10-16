@@ -120,7 +120,7 @@ class RegExpObject : public NativeObject {
     setSlot(LAST_INDEX_SLOT, Int32Value(0));
   }
 
-  JSFlatString* toString(JSContext* cx) const;
+  JSLinearString* toString(JSContext* cx) const;
 
   JSAtom* getSource() const {
     return &getSlot(SOURCE_SLOT).toString()->asAtom();

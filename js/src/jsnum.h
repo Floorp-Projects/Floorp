@@ -60,9 +60,9 @@ extern JSString* NumberToStringHelperPure(JSContext* cx, double d);
 extern JSAtom* NumberToAtom(JSContext* cx, double d);
 
 template <AllowGC allowGC>
-extern JSFlatString* Int32ToString(JSContext* cx, int32_t i);
+extern JSLinearString* Int32ToString(JSContext* cx, int32_t i);
 
-extern JSFlatString* Int32ToStringHelperPure(JSContext* cx, int32_t i);
+extern JSLinearString* Int32ToStringHelperPure(JSContext* cx, int32_t i);
 
 extern JSAtom* Int32ToAtom(JSContext* cx, int32_t si);
 
@@ -76,7 +76,7 @@ extern bool IsInteger(const Value& val);
 extern MOZ_MUST_USE bool JS_FASTCALL
 NumberValueToStringBuffer(JSContext* cx, const Value& v, StringBuffer& sb);
 
-extern JSFlatString* IndexToString(JSContext* cx, uint32_t index);
+extern JSLinearString* IndexToString(JSContext* cx, uint32_t index);
 
 /*
  * Usually a small amount of static storage is enough, but sometimes we need

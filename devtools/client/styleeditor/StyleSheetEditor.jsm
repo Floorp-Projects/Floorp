@@ -493,8 +493,16 @@ StyleSheetEditor.prototype = {
         this._state.selection.end
       );
 
-      if (this.highlighter && this.walker) {
-        sourceEditor.container.addEventListener("mousemove", this._onMouseMove);
+      if (
+        this.highlighter &&
+        this.walker &&
+        sourceEditor.container &&
+        sourceEditor.container.contentWindow
+      ) {
+        sourceEditor.container.contentWindow.addEventListener(
+          "mousemove",
+          this._onMouseMove
+        );
       }
 
       // Add the commands controller for the source-editor.
@@ -836,8 +844,13 @@ StyleSheetEditor.prototype = {
       this._sourceEditor.off("dirty-change", this._onPropertyChange);
       this._sourceEditor.off("saveRequested", this.saveToFile);
       this._sourceEditor.off("change", this.updateStyleSheet);
-      if (this.highlighter && this.walker && this._sourceEditor.container) {
-        this._sourceEditor.container.removeEventListener(
+      if (
+        this.highlighter &&
+        this.walker &&
+        this._sourceEditor.container &&
+        this._sourceEditor.container.contentWindow
+      ) {
+        this._sourceEditor.container.contentWindow.removeEventListener(
           "mousemove",
           this._onMouseMove
         );

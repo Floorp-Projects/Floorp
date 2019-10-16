@@ -4,6 +4,7 @@
 
 :host {
   overflow: auto;
+  display: flex;
 
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
@@ -25,10 +26,14 @@
 }
 
 .container {
-  max-width: 700px;
+  flex-basis: 700px;
   padding: 40px;
   display: flex;
   flex-direction: column;
+}
+
+button {
+  min-width: 100px;
 }
 
 form {
@@ -85,7 +90,7 @@ input[type="url"][readOnly] {
 .header {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-bottom: 1px solid var(--in-content-border-color);
   margin-bottom: 40px;
 }
 
@@ -219,7 +224,7 @@ input[type="url"][readOnly]:hover:active {
   content: "";
   display: block;
   margin-bottom: 20px;
-  border-top: 1px solid var(--in-content-box-border-color);
+  border-top: 1px solid var(--in-content-border-color);
   width: 40px;
 }
 

@@ -4426,7 +4426,7 @@ bool ParseNode::getConstantValue(JSContext* cx,
       vp.setNumber(as<NumericLiteral>().value());
       return true;
     case ParseNodeKind::BigIntExpr:
-      vp.setBigInt(as<BigIntLiteral>().box()->value());
+      vp.setBigInt(as<BigIntLiteral>().value());
       return true;
     case ParseNodeKind::TemplateStringExpr:
     case ParseNodeKind::StringExpr:
@@ -5015,7 +5015,7 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
   return true;
 }
 
-bool BytecodeEmitter::emitBigIntOp(BigInt* bigint) {
+bool BytecodeEmitter::emitBigIntOp(BigIntLiteral* bigint) {
   uint32_t index;
   if (!perScriptData().gcThingList().append(bigint, &index)) {
     return false;
@@ -9475,7 +9475,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::BigIntExpr:
-      if (!emitBigIntOp(pn->as<BigIntLiteral>().box()->value())) {
+      if (!emitBigIntOp(&pn->as<BigIntLiteral>())) {
         return false;
       }
       break;

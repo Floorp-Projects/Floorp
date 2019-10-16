@@ -633,5 +633,9 @@ void WebRenderBridgeChild::DeallocResourceShmem(RefCountedShmem& aShm) {
 
 void WebRenderBridgeChild::Capture() { this->SendCapture(); }
 
+void WebRenderBridgeChild::SetTransactionLogging(bool aValue) {
+  this->SendSetTransactionLogging(aValue);
+}
+
 }  // namespace layers
 }  // namespace mozilla

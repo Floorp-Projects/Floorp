@@ -67,13 +67,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
       '-framework CoreFoundation',
       '-framework AudioToolbox',
     ]
-elif CONFIG['OS_TARGET'] == 'OpenBSD':
-    OS_LIBS += [
-        'sndio',
-    ]
-else:
-    OS_LIBS += CONFIG['MOZ_ALSA_LIBS']
-    OS_LIBS += CONFIG['MOZ_PULSEAUDIO_LIBS']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

@@ -6,6 +6,12 @@ UNIFIED_SOURCES = [
     'TestIDBResult.cpp',
 ]
 
+# not UNIFIED_SOURCES because TestKey.cpp has classes in an anonymous namespace
+# which result in a GCC error when used in tests, cf. gfx/tests/gtest/moz.build
+SOURCES = [
+    'TestKey.cpp',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul-gtest'

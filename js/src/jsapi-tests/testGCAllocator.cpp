@@ -7,7 +7,6 @@
 
 #include <cstdlib>
 
-#include "gc/GCInternals.h"
 #include "gc/Memory.h"
 #include "jsapi-tests/tests.h"
 

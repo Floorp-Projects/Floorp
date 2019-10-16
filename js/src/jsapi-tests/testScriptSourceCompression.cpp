@@ -14,7 +14,7 @@
 #include <stddef.h>   // size_t
 #include <stdint.h>   // uint32_t
 
-#include "jsapi.h"  // JS_FlattenString, JS_GC, JS_Get{Latin1,TwoByte}FlatStringChars, JS_GetStringLength, JS_ValueToFunction
+#include "jsapi.h"  // JS_EnsureLinearString, JS_GC, JS_Get{Latin1,TwoByte}LinearStringChars, JS_GetStringLength, JS_ValueToFunction
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate{,DontInflate}
 #include "js/CompileOptions.h"            // JS::CompileOptions
@@ -162,8 +162,8 @@ static JSString* DecompressSource(JSContext* cx, JS::Handle<JSFunction*> fun) {
 
 static bool IsExpectedFunctionString(JS::Handle<JSString*> str,
                                      char functionName, JSContext* cx) {
-  JSFlatString* fstr = JS_FlattenString(cx, str);
-  MOZ_RELEASE_ASSERT(fstr);
+  JSLinearString* lstr = JS_EnsureLinearString(cx, str);
+  MOZ_RELEASE_ASSERT(lstr);
 
   size_t len = JS_GetStringLength(str);
   if (len < FunctionStartLength || len < FunctionEndLength) {
@@ -194,10 +194,10 @@ static bool IsExpectedFunctionString(JS::Handle<JSString*> str,
 
   bool hasExpectedContents;
   if (JS_StringHasLatin1Chars(str)) {
-    const JS::Latin1Char* chars = JS_GetLatin1FlatStringChars(nogc, fstr);
+    const JS::Latin1Char* chars = JS_GetLatin1LinearStringChars(nogc, lstr);
     hasExpectedContents = CheckContents(chars);
   } else {
-    const char16_t* chars = JS_GetTwoByteFlatStringChars(nogc, fstr);
+    const char16_t* chars = JS_GetTwoByteLinearStringChars(nogc, lstr);
     hasExpectedContents = CheckContents(chars);
   }
 

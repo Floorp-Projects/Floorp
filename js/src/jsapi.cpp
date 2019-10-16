@@ -3273,7 +3273,7 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
                id);
   } else {
     MOZ_ASSERT(JSID_IS_STRING(id) &&
-               StringEqualsAscii(JSID_TO_FLAT_STRING(id), fs->name.string()));
+               StringEqualsAscii(JSID_TO_LINEAR_STRING(id), fs->name.string()));
   }
 #endif
 
@@ -4310,7 +4310,7 @@ JS_PUBLIC_API JSString* JS_AtomizeAndPinUCString(JSContext* cx,
 
 JS_PUBLIC_API size_t JS_GetStringLength(JSString* str) { return str->length(); }
 
-JS_PUBLIC_API bool JS_StringIsFlat(JSString* str) { return str->isFlat(); }
+JS_PUBLIC_API bool JS_StringIsLinear(JSString* str) { return str->isLinear(); }
 
 JS_PUBLIC_API bool JS_StringHasLatin1Chars(JSString* str) {
   return str->hasLatin1Chars();
@@ -4365,7 +4365,8 @@ JS_PUBLIC_API bool JS_GetStringCharAt(JSContext* cx, JSString* str,
   return true;
 }
 
-JS_PUBLIC_API char16_t JS_GetFlatStringCharAt(JSFlatString* str, size_t index) {
+JS_PUBLIC_API char16_t JS_GetLinearStringCharAt(JSLinearString* str,
+                                                size_t index) {
   return str->latin1OrTwoByteChar(index);
 }
 
@@ -4386,45 +4387,48 @@ JS_PUBLIC_API bool JS_CopyStringChars(JSContext* cx,
   return true;
 }
 
-JS_PUBLIC_API const Latin1Char* JS_GetLatin1InternedStringChars(
-    const JS::AutoRequireNoGC& nogc, JSString* str) {
-  MOZ_ASSERT(str->isAtom());
-  JSFlatString* flat = str->ensureFlat(nullptr);
-  if (!flat) {
-    return nullptr;
-  }
-  return flat->latin1Chars(nogc);
-}
-
-JS_PUBLIC_API const char16_t* JS_GetTwoByteInternedStringChars(
-    const JS::AutoRequireNoGC& nogc, JSString* str) {
-  MOZ_ASSERT(str->isAtom());
-  JSFlatString* flat = str->ensureFlat(nullptr);
-  if (!flat) {
-    return nullptr;
-  }
-  return flat->twoByteChars(nogc);
-}
-
-extern JS_PUBLIC_API JSFlatString* JS_FlattenString(JSContext* cx,
-                                                    JSString* str) {
+extern JS_PUBLIC_API JS::UniqueTwoByteChars JS_CopyStringCharsZ(JSContext* cx,
+                                                                JSString* str) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(str);
-  JSFlatString* flat = str->ensureFlat(cx);
-  if (!flat) {
+
+  JSLinearString* linear = str->ensureLinear(cx);
+  if (!linear) {
     return nullptr;
   }
-  return flat;
+
+  size_t len = linear->length();
+
+  static_assert(js::MaxStringLength < UINT32_MAX,
+                "len + 1 must not overflow on 32-bit platforms");
+
+  UniqueTwoByteChars chars(cx->pod_malloc<char16_t>(len + 1));
+  if (!chars) {
+    return nullptr;
+  }
+
+  CopyChars(chars.get(), *linear);
+  chars[len] = '\0';
+
+  return chars;
 }
 
-extern JS_PUBLIC_API const Latin1Char* JS_GetLatin1FlatStringChars(
-    const JS::AutoRequireNoGC& nogc, JSFlatString* str) {
+extern JS_PUBLIC_API JSLinearString* JS_EnsureLinearString(JSContext* cx,
+                                                           JSString* str) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(str);
+  return str->ensureLinear(cx);
+}
+
+extern JS_PUBLIC_API const Latin1Char* JS_GetLatin1LinearStringChars(
+    const JS::AutoRequireNoGC& nogc, JSLinearString* str) {
   return str->latin1Chars(nogc);
 }
 
-extern JS_PUBLIC_API const char16_t* JS_GetTwoByteFlatStringChars(
-    const JS::AutoRequireNoGC& nogc, JSFlatString* str) {
+extern JS_PUBLIC_API const char16_t* JS_GetTwoByteLinearStringChars(
+    const JS::AutoRequireNoGC& nogc, JSLinearString* str) {
   return str->twoByteChars(nogc);
 }
 
@@ -4463,19 +4467,20 @@ JS_PUBLIC_API bool JS_StringEqualsAscii(JSContext* cx, JSString* str,
   return true;
 }
 
-JS_PUBLIC_API bool JS_FlatStringEqualsAscii(JSFlatString* str,
-                                            const char* asciiBytes) {
+JS_PUBLIC_API bool JS_LinearStringEqualsAscii(JSLinearString* str,
+                                              const char* asciiBytes) {
   return StringEqualsAscii(str, asciiBytes);
 }
 
-JS_PUBLIC_API bool JS_FlatStringEqualsAscii(JSFlatString* str,
-                                            const char* asciiBytes,
-                                            size_t length) {
+JS_PUBLIC_API bool JS_LinearStringEqualsAscii(JSLinearString* str,
+                                              const char* asciiBytes,
+                                              size_t length) {
   return StringEqualsAscii(str, asciiBytes, length);
 }
 
-JS_PUBLIC_API size_t JS_PutEscapedFlatString(char* buffer, size_t size,
-                                             JSFlatString* str, char quote) {
+JS_PUBLIC_API size_t JS_PutEscapedLinearString(char* buffer, size_t size,
+                                               JSLinearString* str,
+                                               char quote) {
   return PutEscapedString(buffer, size, str, quote);
 }
 
@@ -4659,7 +4664,7 @@ JS_PUBLIC_API bool JS::PropertySpecNameEqualsId(JSPropertySpec::Name name,
 
   MOZ_ASSERT(!PropertySpecNameIsDigits(name));
   return JSID_IS_ATOM(id) &&
-         JS_FlatStringEqualsAscii(JSID_TO_ATOM(id), name.string());
+         JS_LinearStringEqualsAscii(JSID_TO_ATOM(id), name.string());
 }
 
 JS_PUBLIC_API bool JS_Stringify(JSContext* cx, MutableHandleValue vp,

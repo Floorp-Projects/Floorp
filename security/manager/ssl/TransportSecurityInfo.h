@@ -121,7 +121,11 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
  protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-  nsCOMPtr<nsIX509CertList> mSucceededCertChain;
+  nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain;
+
+  static nsresult ConvertCertArrayToCertList(
+      const nsTArray<RefPtr<nsIX509Cert>>& aCertArray,
+      nsIX509CertList** aCertList);
 
  private:
   uint32_t mSecurityState;
@@ -135,9 +139,12 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   nsCOMPtr<nsIX509Cert> mServerCert;
 
   /* Peer cert chain for failed connections (for error reporting) */
-  nsCOMPtr<nsIX509CertList> mFailedCertChain;
+  nsTArray<RefPtr<nsIX509Cert>> mFailedCertChain;
 
   nsresult ReadSSLStatus(nsIObjectInputStream* aStream);
+  static nsresult ConvertCertListToCertArray(
+      const nsCOMPtr<nsIX509CertList>& aCertList,
+      nsTArray<RefPtr<nsIX509Cert>>& aCertArray);
 };
 
 class RememberCertErrorsTable {

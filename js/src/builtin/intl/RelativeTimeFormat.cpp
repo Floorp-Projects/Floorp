@@ -23,6 +23,7 @@
 #include "unicode/utypes.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 #include "vm/NativeObject-inl.h"
@@ -30,7 +31,6 @@
 using namespace js;
 
 using js::intl::CallICU;
-using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
 
 /**************** RelativeTimeFormat *****************/
@@ -171,17 +171,6 @@ JSObject* js::CreateRelativeTimeFormatPrototype(JSContext* cx,
   }
 
   return proto;
-}
-
-bool js::intl_RelativeTimeFormat_availableLocales(JSContext* cx, unsigned argc,
-                                                  Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-
-  // We're going to use ULocale availableLocales as per ICU recommendation:
-  // https://ssl.icu-project.org/trac/ticket/12756
-  return GetAvailableLocales(cx, uloc_countAvailable, uloc_getAvailable,
-                             args.rval());
 }
 
 /**
@@ -401,10 +390,10 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
                StringEqualsLiteral(unit, "years")) {
       relDateTimeUnit = UDAT_REL_UNIT_YEAR;
     } else {
-      if (auto unitChars = StringToNewUTF8CharsZ(cx, *unit)) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_INVALID_OPTION_VALUE, "unit",
-                                 unitChars.get());
+      if (auto unitChars = QuoteString(cx, unit, '"')) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_INVALID_OPTION_VALUE, "unit",
+                                  unitChars.get());
       }
       return false;
     }

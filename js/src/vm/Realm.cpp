@@ -366,37 +366,37 @@ void Realm::sweepAfterMinorGC() {
   objects_.sweepAfterMinorGC();
 }
 
-void Realm::sweepSavedStacks() { savedStacks_.sweep(); }
+void Realm::traceWeakSavedStacks(JSTracer* trc) { savedStacks_.traceWeak(trc); }
 
-void Realm::sweepGlobalObject() {
-  if (global_ && IsAboutToBeFinalized(&global_)) {
-    global_.set(nullptr);
+void Realm::traceWeakObjects(JSTracer* trc) {
+  if (global_) {
+    TraceWeakEdge(trc, &global_, "Realm::global_");
   }
-  if (lexicalEnv_ && IsAboutToBeFinalized(&lexicalEnv_)) {
-    lexicalEnv_.set(nullptr);
-  }
-}
-
-void Realm::sweepSelfHostingScriptSource() {
-  if (selfHostingScriptSource.unbarrieredGet() &&
-      IsAboutToBeFinalized(&selfHostingScriptSource)) {
-    selfHostingScriptSource.set(nullptr);
+  if (lexicalEnv_) {
+    TraceWeakEdge(trc, &lexicalEnv_, "Realm::lexicalEnv_");
   }
 }
 
-void Realm::sweepJitRealm() {
+void Realm::traceWeakSelfHostingScriptSource(JSTracer* trc) {
+  if (selfHostingScriptSource.unbarrieredGet()) {
+    TraceWeakEdge(trc, &selfHostingScriptSource,
+                  "Realm::selfHostingScriptSource");
+  }
+}
+
+void Realm::traceWeakEdgesInJitRealm(JSTracer* trc) {
   if (jitRealm_) {
-    jitRealm_->sweep(this);
+    jitRealm_->traceWeak(trc, this);
   }
 }
 
-void Realm::sweepRegExps() {
+void Realm::traceWeakRegExps(JSTracer* trc) {
   /*
    * JIT code increments activeWarmUpCounter for any RegExpShared used by jit
    * code for the lifetime of the JIT script. Thus, we must perform
    * sweeping after clearing jit code.
    */
-  regExps.sweep();
+  regExps.traceWeak(trc);
 }
 
 void Realm::sweepDebugEnvironments() {
@@ -405,13 +405,14 @@ void Realm::sweepDebugEnvironments() {
   }
 }
 
-void ObjectRealm::sweepNativeIterators() {
+void ObjectRealm::traceWeakNativeIterators(JSTracer* trc) {
   /* Sweep list of native iterators. */
   NativeIterator* ni = enumerators->next();
   while (ni != enumerators) {
     JSObject* iterObj = ni->iterObj();
     NativeIterator* next = ni->next();
-    if (gc::IsAboutToBeFinalizedUnbarriered(&iterObj)) {
+    if (!TraceManuallyBarrieredWeakEdge(trc, &iterObj,
+                                        "ObjectRealm::enumerators")) {
       ni->unlink();
     }
     MOZ_ASSERT_IF(ni->objectBeingIterated(),
@@ -420,28 +421,30 @@ void ObjectRealm::sweepNativeIterators() {
   }
 }
 
-void Realm::sweepObjectRealm() { objects_.sweepNativeIterators(); }
+void Realm::traceWeakObjectRealm(JSTracer* trc) {
+  objects_.traceWeakNativeIterators(trc);
+}
 
-void Realm::sweepVarNames() { varNames_.sweep(); }
+void Realm::tracekWeakVarNames(JSTracer* trc) { varNames_.traceWeak(trc); }
 
-void Realm::sweepTemplateObjects() {
-  if (mappedArgumentsTemplate_ &&
-      IsAboutToBeFinalized(&mappedArgumentsTemplate_)) {
-    mappedArgumentsTemplate_.set(nullptr);
+void Realm::traceWeakTemplateObjects(JSTracer* trc) {
+  if (mappedArgumentsTemplate_) {
+    TraceWeakEdge(trc, &mappedArgumentsTemplate_,
+                  "Realm::mappedArgumentsTemplate_");
   }
 
-  if (unmappedArgumentsTemplate_ &&
-      IsAboutToBeFinalized(&unmappedArgumentsTemplate_)) {
-    unmappedArgumentsTemplate_.set(nullptr);
+  if (unmappedArgumentsTemplate_) {
+    TraceWeakEdge(trc, &unmappedArgumentsTemplate_,
+                  "Realm::unmappedArgumentsTemplate_");
   }
 
-  if (iterResultTemplate_ && IsAboutToBeFinalized(&iterResultTemplate_)) {
-    iterResultTemplate_.set(nullptr);
+  if (iterResultTemplate_) {
+    TraceWeakEdge(trc, &iterResultTemplate_, "Realm::iterResultTemplate_");
   }
 
-  if (iterResultWithoutPrototypeTemplate_ &&
-      IsAboutToBeFinalized(&iterResultWithoutPrototypeTemplate_)) {
-    iterResultWithoutPrototypeTemplate_.set(nullptr);
+  if (iterResultWithoutPrototypeTemplate_) {
+    TraceWeakEdge(trc, &iterResultWithoutPrototypeTemplate_,
+                  "Realm::iterResultWithoutPrototypeTemplate_");
   }
 }
 

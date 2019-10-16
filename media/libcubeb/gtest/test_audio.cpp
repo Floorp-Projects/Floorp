@@ -148,7 +148,7 @@ int run_test(int num_channels, int sampling_rate, int is_float)
   return r;
 }
 
-int run_panning_volume_test(int is_float)
+int run_volume_test(int is_float)
 {
   int r = CUBEB_OK;
 
@@ -203,29 +203,17 @@ int run_panning_volume_test(int is_float)
     delay(100);
   }
 
-  fprintf(stderr, "Testing: panning\n");
-  for(int i=-4;i <= 4; ++i)
-  {
-    fprintf(stderr, "Panning: %.2f\n", i/4.0f);
-
-    cubeb_stream_set_panning(stream, i/4.0f);
-    cubeb_stream_start(stream);
-    delay(400);
-    cubeb_stream_stop(stream);
-    delay(100);
-  }
-
   return r;
 }
 
-TEST(cubeb, run_panning_volume_test_short)
+TEST(cubeb, run_volume_test_short)
 {
-  ASSERT_EQ(run_panning_volume_test(0), CUBEB_OK);
+  ASSERT_EQ(run_volume_test(0), CUBEB_OK);
 }
 
-TEST(cubeb, run_panning_volume_test_float)
+TEST(cubeb, run_volume_test_float)
 {
-  ASSERT_EQ(run_panning_volume_test(1), CUBEB_OK);
+  ASSERT_EQ(run_volume_test(1), CUBEB_OK);
 }
 
 TEST(cubeb, run_channel_rate_test)

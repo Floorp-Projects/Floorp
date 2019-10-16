@@ -121,7 +121,11 @@ class Breakpoints extends Component<Props> {
           );
 
           return [
-            <BreakpointHeading source={source} sources={sources} />,
+            <BreakpointHeading
+              key={source.id}
+              source={source}
+              sources={sources}
+            />,
             ...sortedBreakpoints.map(breakpoint => (
               <Breakpoint
                 breakpoint={breakpoint}

@@ -367,8 +367,7 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
     }
   } else {
     PromiseDebugging::AddConsumedRejection(aPromise);
-    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled() &&
-        !aMutedErrors) {
+    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled()) {
       for (size_t i = 0; i < aboutToBeNotified.Length(); i++) {
         if (aboutToBeNotified[i] &&
             aboutToBeNotified[i]->PromiseObj() == aPromise) {
@@ -383,7 +382,7 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
       }
       RefPtr<Promise> promise;
       unhandled.Remove(promiseID, getter_AddRefs(promise));
-      if (!promise) {
+      if (!promise && !aMutedErrors) {
         nsIGlobalObject* global = xpc::NativeGlobal(aPromise);
         if (nsCOMPtr<EventTarget> owner = do_QueryInterface(global)) {
           RootedDictionary<PromiseRejectionEventInit> init(aCx);

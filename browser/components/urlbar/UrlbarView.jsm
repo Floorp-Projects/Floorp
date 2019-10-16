@@ -50,6 +50,9 @@ class UrlbarView {
     this._rows.addEventListener("overflow", this);
     this._rows.addEventListener("underflow", this);
 
+    this.window.addEventListener("deactivate", this);
+    this.window.gBrowser.tabContainer.addEventListener("TabSelect", this);
+
     this.controller.setView(this);
     this.controller.addQueryListener(this);
   }
@@ -366,6 +369,10 @@ class UrlbarView {
     this._setAccessibleFocus(null);
   }
 
+  clear() {
+    this._rows.textContent = "";
+  }
+
   /**
    * Closes the view, cancelling the query if necessary.
    */
@@ -384,13 +391,17 @@ class UrlbarView {
     this.input.removeAttribute("open");
     this.input.endLayoutExtend();
 
-    this._rows.textContent = "";
-
     this.window.removeEventListener("resize", this);
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
     if (this.contextualTip) {
       this.contextualTip.hide();
+    }
+  }
+
+  reOpen() {
+    if (this._rows.firstElementChild) {
+      this._openPanel();
     }
   }
 
@@ -416,6 +427,9 @@ class UrlbarView {
   onQueryResults(queryContext) {
     this._queryContext = queryContext;
 
+    if (!this.isOpen) {
+      this.clear();
+    }
     this._updateResults(queryContext);
 
     let isFirstPreselectedResult = false;
@@ -1026,6 +1040,7 @@ class UrlbarView {
   _getFirstSelectableElement() {
     let firstElementChild = this._rows.firstElementChild;
     if (
+      firstElementChild &&
       firstElementChild.result &&
       firstElementChild.result.type == UrlbarUtils.RESULT_TYPE.TIP
     ) {
@@ -1342,6 +1357,20 @@ class UrlbarView {
     // Close the popup as it would be wrongly sized. This can
     // happen when using special OS resize functions like Win+Arrow.
     this.close();
+  }
+
+  _on_deactivate() {
+    // When switching to another browser window, open tabs, history or other
+    // data sources are likely to change, so make sure we don't re-show stale
+    // results when switching back.
+    this.clear();
+  }
+
+  _on_TabSelect() {
+    // The input may retain focus when switching tabs in which case we
+    // need to close the view explicitly.
+    this.close();
+    this.clear();
   }
 }
 

@@ -214,10 +214,13 @@ PasswordStore.prototype = {
 
     info.QueryInterface(Ci.nsILoginMetaInfo);
     info.guid = record.id;
-    if (record.timeCreated) {
+    if (record.timeCreated && !isNaN(new Date(record.timeCreated).getTime())) {
       info.timeCreated = record.timeCreated;
     }
-    if (record.timePasswordChanged) {
+    if (
+      record.timePasswordChanged &&
+      !isNaN(new Date(record.timePasswordChanged).getTime())
+    ) {
       info.timePasswordChanged = record.timePasswordChanged;
     }
 

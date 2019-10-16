@@ -81,9 +81,6 @@ extern void audioipc_server_stop(void*);
 // These functions are provided by audioipc-client crate
 extern int audioipc_client_init(cubeb**, const char*,
                                 const AudioIpcInitParams*);
-#ifdef XP_LINUX
-extern void audioipc_init_threads(const AudioIpcInitParams*);
-#endif
 }
 
 namespace mozilla {
@@ -444,18 +441,6 @@ ipc::FileDescriptor CreateAudioIPCConnection() {
   return ipc::FileDescriptor();
 #endif
 }
-
-#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
-void InitAudioThreads() {
-  AudioIpcInitParams initParams;
-  initParams.mPoolSize = sAudioIPCPoolSize;
-  initParams.mStackSize = sAudioIPCStackSize;
-  initParams.mThreadCreateCallback = [](const char* aName) {
-    PROFILER_REGISTER_THREAD(aName);
-  };
-  audioipc_init_threads(&initParams);
-}
-#endif
 
 cubeb* GetCubebContextUnlocked() {
   sMutex.AssertCurrentThreadOwns();

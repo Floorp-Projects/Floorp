@@ -250,6 +250,7 @@ class App extends Component {
       filterBarDisplayMode,
       hidePersistLogsCheckbox,
       hideShowContentMessagesCheckbox,
+      webConsoleUI,
     } = this.props;
 
     return FilterBar({
@@ -258,6 +259,7 @@ class App extends Component {
       hideShowContentMessagesCheckbox,
       closeSplitConsole,
       displayMode: filterBarDisplayMode,
+      webConsoleUI,
     });
   }
 

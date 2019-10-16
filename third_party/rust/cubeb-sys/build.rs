@@ -68,6 +68,7 @@ fn main() {
         println!("cargo:rustc-link-lib=static=cubeb");
         println!("cargo:rustc-link-lib=dylib=stdc++");
         println!("cargo:rustc-link-search=native={}/lib", dst.display());
+        println!("cargo:rustc-link-search=native={}/lib64", dst.display());
 
         // Ignore the result of find_library. We don't care if the
         // libraries are missing.

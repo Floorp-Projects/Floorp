@@ -20,7 +20,6 @@ py3:
         - testing/tps
         - testing/web-platform
         - toolkit
-        - tools/rb
         - xpcom/idl-parser
     extensions: ['py']
     support-files:

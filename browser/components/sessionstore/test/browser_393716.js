@@ -8,10 +8,7 @@ const URL = "about:config";
 add_task(async function setup() {
   // Make sure that the field of which we restore the state is visible on load.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.aboutConfig.showWarning", false],
-      ["general.warnOnAboutConfig", false],
-    ],
+    set: [["browser.aboutConfig.showWarning", false]],
   });
 });
 
@@ -75,10 +72,11 @@ add_task(async function test_set_tabstate_and_duplicate() {
     "the tab's state was correctly restored"
   );
 
-  let inputID = AppConstants.NIGHTLY_BUILD ? "about-config-search" : "textbox";
-
   // add text data
-  await setInputValue(tab.linkedBrowser, { id: inputID, value: value3 });
+  await setInputValue(tab.linkedBrowser, {
+    id: "about-config-search",
+    value: value3,
+  });
 
   // duplicate the tab
   let tab2 = ss.duplicateTab(window, tab);
@@ -90,7 +88,9 @@ add_task(async function test_set_tabstate_and_duplicate() {
       tab2.linkedBrowser.currentURI.spec == URL,
     "correctly duplicated the tab's state"
   );
-  let textbox = await getInputValue(tab2.linkedBrowser, { id: inputID });
+  let textbox = await getInputValue(tab2.linkedBrowser, {
+    id: "about-config-search",
+  });
   is(textbox, value3, "also duplicated text data");
 
   // clean up

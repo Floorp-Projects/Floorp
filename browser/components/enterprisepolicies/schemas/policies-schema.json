@@ -952,6 +952,9 @@
         "Default": {
           "type": "string"
         },
+        "DefaultPrivate": {
+          "type": "string"
+        },
         "PreventInstalls": {
           "type": "boolean"
         },

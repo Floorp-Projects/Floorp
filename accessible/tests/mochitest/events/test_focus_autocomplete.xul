@@ -279,17 +279,13 @@
       // child.
       var localName = getNode(aID).localName;
 
-      // XUL autocomplete
-      if (localName == "textbox")
-        return getAccessible(aID).firstChild;
-
       // HTML form autocomplete
       if (localName == "input")
         return getAccessible(aID);
 
       // XUL searchbar
       if (localName == "searchbar")
-        return getAccessible(getNode(aID).textbox.inputField);
+        return getAccessible(getNode(aID).textbox);
 
       return null;
     }

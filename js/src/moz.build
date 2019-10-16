@@ -241,6 +241,7 @@ UNIFIED_SOURCES += [
     'builtin/streams/WritableStreamDefaultControllerOperations.cpp',
     'builtin/streams/WritableStreamDefaultWriter.cpp',
     'builtin/streams/WritableStreamOperations.cpp',
+    'builtin/streams/WritableStreamWriterOperations.cpp',
     'builtin/String.cpp',
     'builtin/Symbol.cpp',
     'builtin/TestingFunctions.cpp',

@@ -67,8 +67,8 @@ namespace gc {
     D(BASE_SHAPE,          BaseShape,    js::BaseShape,     js::BaseShape,     true,   false,  true) \
     D(OBJECT_GROUP,        ObjectGroup,  js::ObjectGroup,   js::ObjectGroup,   true,   false,  false) \
     D(EXTERNAL_STRING,     String,       JSExternalString,  JSExternalString,  true,   false,  true) \
-    D(FAT_INLINE_ATOM,     String,       js::FatInlineAtom, js::FatInlineAtom, true,   false,  true) \
-    D(ATOM,                String,       js::NormalAtom,    js::NormalAtom,    true,   false,  true) \
+    D(FAT_INLINE_ATOM,     String,       js::FatInlineAtom, js::FatInlineAtom, true,   false,  false) \
+    D(ATOM,                String,       js::NormalAtom,    js::NormalAtom,    true,   false,  false) \
     D(SYMBOL,              Symbol,       JS::Symbol,        JS::Symbol,        true,   false,  false) \
     D(BIGINT,              BigInt,       JS::BigInt,        JS::BigInt,        true,   false,  true) \
     D(JITCODE,             JitCode,      js::jit::JitCode,  js::jit::JitCode,  false,  false,  false) \

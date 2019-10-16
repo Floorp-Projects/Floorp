@@ -8,7 +8,6 @@
 
 #include "builtin/MapObject.h"
 #include "js/CharacterEncoding.h"
-#include "js/StableStringChars.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
 #include "vm/Printer.h"
@@ -1178,20 +1177,7 @@ JS_PUBLIC_API CountTypePtr ParseBreakdown(JSContext* cx,
         return nullptr;
       }
 
-      JSFlatString* flat = labelString->ensureFlat(cx);
-      if (!flat) {
-        return nullptr;
-      }
-
-      AutoStableStringChars chars(cx);
-      if (!chars.initTwoByte(cx, flat)) {
-        return nullptr;
-      }
-
-      // Since flat strings are null-terminated, and AutoStableStringChars
-      // null- terminates if it needs to make a copy, we know that
-      // chars.twoByteChars() is null-terminated.
-      labelUnique = DuplicateString(cx, chars.twoByteChars());
+      labelUnique = JS_CopyStringCharsZ(cx, labelString);
       if (!labelUnique) {
         return nullptr;
       }

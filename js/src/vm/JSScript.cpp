@@ -1914,7 +1914,7 @@ bool ScriptSource::loadSource(JSContext* cx, ScriptSource* ss, bool* loaded) {
 }
 
 /* static */
-JSFlatString* JSScript::sourceData(JSContext* cx, HandleScript script) {
+JSLinearString* JSScript::sourceData(JSContext* cx, HandleScript script) {
   MOZ_ASSERT(script->scriptSource()->hasSourceText());
   return script->scriptSource()->substring(cx, script->sourceStart(),
                                            script->sourceEnd());
@@ -2209,8 +2209,8 @@ ScriptSource::PinnedUnits<Unit>::PinnedUnits(
 template class ScriptSource::PinnedUnits<Utf8Unit>;
 template class ScriptSource::PinnedUnits<char16_t>;
 
-JSFlatString* ScriptSource::substring(JSContext* cx, size_t start,
-                                      size_t stop) {
+JSLinearString* ScriptSource::substring(JSContext* cx, size_t start,
+                                        size_t stop) {
   MOZ_ASSERT(start <= stop);
 
   size_t len = stop - start;
@@ -2239,8 +2239,8 @@ JSFlatString* ScriptSource::substring(JSContext* cx, size_t start,
   return NewStringCopyN<CanGC>(cx, units.asChars(), len);
 }
 
-JSFlatString* ScriptSource::substringDontDeflate(JSContext* cx, size_t start,
-                                                 size_t stop) {
+JSLinearString* ScriptSource::substringDontDeflate(JSContext* cx, size_t start,
+                                                   size_t stop) {
   MOZ_ASSERT(start <= stop);
 
   size_t len = stop - start;
@@ -2305,7 +2305,7 @@ bool ScriptSource::appendSubstring(JSContext* cx, StringBuffer& buf,
   }
 }
 
-JSFlatString* ScriptSource::functionBodyString(JSContext* cx) {
+JSLinearString* ScriptSource::functionBodyString(JSContext* cx) {
   MOZ_ASSERT(isFunctionBody());
 
   size_t start =
@@ -3800,7 +3800,9 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t ngcthings) {
 
   js::PrivateScriptData* data = script->data_;
   if (ngcthings) {
-    bce->perScriptData().gcThingList().finish(data->gcthings());
+    if (!bce->perScriptData().gcThingList().finish(cx, data->gcthings())) {
+      return false;
+    }
   }
 
   return true;

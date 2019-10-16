@@ -4,7 +4,6 @@
 
 "use strict";
 
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
   PureComponent,
@@ -12,6 +11,8 @@ const {
 const { ul } = require("devtools/client/shared/vendor/react-dom-factories");
 
 const { MANIFEST_ISSUE_LEVELS } = require("../../constants");
+const Types = require("../../types/index");
+
 const ManifestIssue = createFactory(require("./ManifestIssue"));
 
 /**
@@ -19,10 +20,8 @@ const ManifestIssue = createFactory(require("./ManifestIssue"));
  */
 class ManifestIssueList extends PureComponent {
   static get propTypes() {
-    // TODO: Use well-defined types
-    //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1576881
     return {
-      issues: PropTypes.array.isRequired,
+      issues: Types.manifestIssueArray.isRequired,
     };
   }
 

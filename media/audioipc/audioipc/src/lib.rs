@@ -184,3 +184,20 @@ pub use crate::messagestream_unix::*;
 pub mod messagestream_win;
 #[cfg(windows)]
 pub use messagestream_win::*;
+
+#[cfg(windows)]
+pub fn server_platform_init() {
+    use winapi::um::combaseapi;
+    use winapi::um::objbase;
+    use winapi::shared::winerror;
+
+    unsafe {
+        let r = combaseapi::CoInitializeEx(std::ptr::null_mut(),
+                                           objbase::COINIT_MULTITHREADED);
+        assert!(winerror::SUCCEEDED(r));
+    }
+}
+
+#[cfg(unix)]
+pub fn server_platform_init() {
+}

@@ -51,6 +51,10 @@ class DropHarHandler extends Component {
 
   onDragEnter(event) {
     event.preventDefault();
+    if (event.dataTransfer.files.length === 0) {
+      return;
+    }
+
     startDragging(findDOMNode(this));
   }
 

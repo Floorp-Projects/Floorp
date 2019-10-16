@@ -1266,6 +1266,28 @@ nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,
       return NS_ERROR_INVALID_ARG;
     }
 
+    if (mediaAttrs.HasAttribute(SdpAttribute::kExtmapAttribute)) {
+      std::set<uint16_t> extIds;
+      for (const auto& ext : mediaAttrs.GetExtmap().mExtmaps) {
+        uint16_t id = ext.entry;
+
+        if (id < 1 || id > 14) {
+          JSEP_SET_ERROR("Description contains invalid extension id "
+                         << id << " on level " << i
+                         << " which is unsupported until 2-byte rtp"
+                            " header extensions are supported in webrtc.org");
+          return NS_ERROR_INVALID_ARG;
+        }
+
+        if (extIds.find(id) != extIds.end()) {
+          JSEP_SET_ERROR("Description contains duplicate extension id "
+                         << id << " on level " << i);
+          return NS_ERROR_INVALID_ARG;
+        }
+        extIds.insert(id);
+      }
+    }
+
     static const std::bitset<128> forbidden = GetForbiddenSdpPayloadTypes();
     if (msection.GetMediaType() == SdpMediaSection::kAudio ||
         msection.GetMediaType() == SdpMediaSection::kVideo) {

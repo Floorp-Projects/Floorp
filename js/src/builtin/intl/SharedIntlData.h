@@ -56,6 +56,11 @@ class SharedIntlData {
         twoByteChars = string->twoByteChars(nogc);
       }
     }
+
+    LinearStringLookup(const char* chars, size_t length)
+        : isLatin1(true), length(length) {
+      latin1Chars = reinterpret_cast<const JS::Latin1Char*>(chars);
+    }
   };
 
  private:
@@ -165,6 +170,74 @@ class SharedIntlData {
       JS::MutableHandle<JSAtom*> result);
 
  private:
+  using Locale = JSAtom*;
+
+  struct LocaleHasher {
+    struct Lookup : LinearStringLookup {
+      explicit Lookup(JSLinearString* locale);
+      Lookup(const char* chars, size_t length);
+    };
+
+    static js::HashNumber hash(const Lookup& lookup) { return lookup.hash; }
+    static bool match(Locale key, const Lookup& lookup);
+  };
+
+  using LocaleSet = GCHashSet<Locale, LocaleHasher, SystemAllocPolicy>;
+
+  // Set of supported locales for all Intl service constructors except Collator,
+  // which uses its own set.
+  //
+  // UDateFormat:
+  // udat_[count,get]Available() return the same results as their
+  // uloc_[count,get]Available() counterparts.
+  //
+  // UNumberFormatter:
+  // unum_[count,get]Available() return the same results as their
+  // uloc_[count,get]Available() counterparts.
+  //
+  // UPluralRules and URelativeDateTimeFormatter:
+  // We're going to use ULocale availableLocales as per ICU recommendation:
+  // https://unicode-org.atlassian.net/browse/ICU-12756
+  LocaleSet supportedLocales;
+
+  // ucol_[count,get]Available() return different results compared to
+  // uloc_[count,get]Available(), we can't use |supportedLocales| here.
+  LocaleSet collatorSupportedLocales;
+
+  bool supportedLocalesInitialized = false;
+
+  // CountAvailable and GetAvailable describe the signatures used for ICU API
+  // to determine available locales for various functionality.
+  using CountAvailable = int32_t (*)();
+  using GetAvailable = const char* (*)(int32_t localeIndex);
+
+  static bool getAvailableLocales(JSContext* cx, LocaleSet& locales,
+                                  CountAvailable countAvailable,
+                                  GetAvailable getAvailable);
+
+  /**
+   * Precomputes the available locales sets.
+   */
+  bool ensureSupportedLocales(JSContext* cx);
+
+ public:
+  enum class SupportedLocaleKind {
+    Collator,
+    DateTimeFormat,
+    NumberFormat,
+    PluralRules,
+    RelativeTimeFormat
+  };
+
+  /**
+   * Sets |supported| to true if |locale| is supported by the requested Intl
+   * service constructor. Otherwise sets |supported| to false.
+   */
+  MOZ_MUST_USE bool isSupportedLocale(JSContext* cx, SupportedLocaleKind kind,
+                                      JS::Handle<JSString*> locale,
+                                      bool* supported);
+
+ private:
   /**
    * The case first parameter (BCP47 key "kf") allows to switch the order of
    * upper- and lower-case characters. ICU doesn't directly provide an API
@@ -189,19 +262,6 @@ class SharedIntlData {
    */
 
 #if DEBUG || MOZ_SYSTEM_ICU
-  using Locale = JSAtom*;
-
-  struct LocaleHasher {
-    struct Lookup : LinearStringLookup {
-      explicit Lookup(JSLinearString* locale);
-    };
-
-    static js::HashNumber hash(const Lookup& lookup) { return lookup.hash; }
-    static bool match(Locale key, const Lookup& lookup);
-  };
-
-  using LocaleSet = GCHashSet<Locale, LocaleHasher, SystemAllocPolicy>;
-
   LocaleSet upperCaseFirstLocales;
 
   bool upperCaseFirstInitialized = false;

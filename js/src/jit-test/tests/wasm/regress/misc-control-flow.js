@@ -202,7 +202,7 @@ wasmFailValidateText(`
         (br_table 1 0 (i32.const 15))
       )
     )
-)`, /br_table operand must be subtype of all target types/);
+)`, /br_table targets must all have the same arity/);
 
 wasmFailValidateText(`
 (module
@@ -212,7 +212,7 @@ wasmFailValidateText(`
       (br_table 1 0 (i32.const 15))
     )
   )
-)`, /br_table operand must be subtype of all target types/);
+)`, /br_table targets must all have the same arity/);
 
 wasmValidateText(`
 (module

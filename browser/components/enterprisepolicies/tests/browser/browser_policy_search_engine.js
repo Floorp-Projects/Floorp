@@ -13,6 +13,9 @@ registerCleanupFunction(() => {
     "browser.policies.runonce.setDefaultSearchEngine"
   );
   Services.prefs.clearUserPref(
+    "browser.policies.runonce.setDefaultPrivateSearchEngine"
+  );
+  Services.prefs.clearUserPref(
     "browser.policies.runOncePerModification.addSearchEngines"
   );
 });
@@ -108,6 +111,49 @@ add_task(async function test_install_and_set_default() {
 
   // Clean up
   await Services.search.removeEngine(await Services.search.getDefault());
+  EnterprisePolicyTesting.resetRunOnceState();
+});
+
+add_task(async function test_install_and_set_default_private() {
+  // Make sure we are starting in an expected state to avoid false positive
+  // test results.
+  isnot(
+    (await Services.search.getDefaultPrivate()).name,
+    "MozSearch",
+    "Default search engine should not be MozSearch when test starts"
+  );
+  is(
+    Services.search.getEngineByName("Foo"),
+    null,
+    'Engine "Foo" should not be present when test starts'
+  );
+
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "MozSearch",
+            URLTemplate: "http://example.com/?q={searchTerms}",
+          },
+        ],
+        DefaultPrivate: "MozSearch",
+      },
+    },
+  });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
+
+  // If this passes, it means that the new search engine was properly installed
+  // *and* was properly set as the default.
+  is(
+    (await Services.search.getDefaultPrivate()).name,
+    "MozSearch",
+    "Specified search engine should be the default private engine"
+  );
+
+  // Clean up
+  await Services.search.removeEngine(await Services.search.getDefaultPrivate());
   EnterprisePolicyTesting.resetRunOnceState();
 });
 

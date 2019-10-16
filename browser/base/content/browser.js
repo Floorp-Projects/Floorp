@@ -332,7 +332,6 @@ var gURLBarHandler = {
         this._urlbar.value = this._lastValue;
         delete this._lastValue;
       }
-      gBrowser.tabContainer.addEventListener("TabSelect", this._urlbar);
     }
     return this._urlbar;
   },
@@ -358,7 +357,6 @@ var gURLBarHandler = {
    */
   _reset() {
     if (this._urlbar) {
-      gBrowser.tabContainer.removeEventListener("TabSelect", this._urlbar);
       this._lastValue = this._urlbar.value;
       this._urlbar.uninit();
       delete this._urlbar;

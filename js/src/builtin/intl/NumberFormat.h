@@ -83,18 +83,6 @@ extern MOZ_MUST_USE bool intl_NumberFormat(JSContext* cx, unsigned argc,
                                            Value* vp);
 
 /**
- * Returns an object indicating the supported locales for number formatting
- * by having a true-valued property for each such locale with the
- * canonicalized language tag as the property name. The object has no
- * prototype.
- *
- * Usage: availableLocales = intl_NumberFormat_availableLocales()
- */
-extern MOZ_MUST_USE bool intl_NumberFormat_availableLocales(JSContext* cx,
-                                                            unsigned argc,
-                                                            Value* vp);
-
-/**
  * Returns the numbering system type identifier per Unicode
  * Technical Standard 35, Unicode Locale Data Markup Language, for the
  * default numbering system for the given locale.

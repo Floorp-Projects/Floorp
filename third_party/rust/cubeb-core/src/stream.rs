@@ -148,17 +148,6 @@ impl StreamRef {
         unsafe { call!(ffi::cubeb_stream_set_volume(self.as_ptr(), volume)) }
     }
 
-    /// If the stream is stereo, set the left/right panning. If the stream is mono,
-    /// this has no effect.
-    ///
-    /// panning a number from -1.0 to 1.0. -1.0 means that the stream is
-    /// fully mixed in the left channel, 1.0 means the stream is fully
-    /// mixed in the right channel. 0.0 is equal power in the right
-    /// and left channel (default).
-    pub fn set_panning(&self, panning: f32) -> Result<()> {
-        unsafe { call!(ffi::cubeb_stream_set_panning(self.as_ptr(), panning)) }
-    }
-
     /// Get the current output device for this stream.
     pub fn current_device(&self) -> Result<&DeviceRef> {
         let mut device: *mut ffi::cubeb_device = ptr::null_mut();

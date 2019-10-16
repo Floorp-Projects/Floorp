@@ -29,7 +29,7 @@ struct NativeIterator {
   GCPtrObject objectBeingIterated_ = {};
 
   // Internal iterator object.
-  JSObject* iterObj_ = nullptr;
+  GCPtrObject iterObj_ = {};
 
   // The end of HeapReceiverGuards that appear directly after |this|, as part
   // of an overall allocation that stores |*this|, receiver guards, and
@@ -41,13 +41,13 @@ struct NativeIterator {
   // HeapReceiverGuards that appear directly after |*this|, as part of an
   // overall allocation that stores |*this|, receiver guards, and iterated
   // strings.
-  GCPtrFlatString* propertyCursor_;  // initialized by constructor
+  GCPtrLinearString* propertyCursor_;  // initialized by constructor
 
   // The limit/end of properties to iterate (and, assuming no error occurred
   // while constructing this NativeIterator, the end of the full allocation
   // storing |*this|, receiver guards, and strings).  Beware!  This value may
   // change as properties are deleted from the observed object.
-  GCPtrFlatString* propertiesEnd_;  // initialized by constructor
+  GCPtrLinearString* propertiesEnd_;  // initialized by constructor
 
   uint32_t guardKey_;  // initialized by constructor
 
@@ -142,14 +142,14 @@ struct NativeIterator {
     return mozilla::PointerRangeSize(guardsBegin(), guardsEnd());
   }
 
-  GCPtrFlatString* propertiesBegin() const {
-    static_assert(alignof(HeapReceiverGuard) >= alignof(GCPtrFlatString),
-                  "GCPtrFlatStrings for properties must be able to appear "
+  GCPtrLinearString* propertiesBegin() const {
+    static_assert(alignof(HeapReceiverGuard) >= alignof(GCPtrLinearString),
+                  "GCPtrLinearStrings for properties must be able to appear "
                   "directly after any HeapReceiverGuards after this "
                   "NativeIterator, with no padding space required for "
                   "correct alignment");
-    static_assert(alignof(NativeIterator) >= alignof(GCPtrFlatString),
-                  "GCPtrFlatStrings for properties must be able to appear "
+    static_assert(alignof(NativeIterator) >= alignof(GCPtrLinearString),
+                  "GCPtrLinearStrings for properties must be able to appear "
                   "directly after this NativeIterator when no "
                   "HeapReceiverGuards are present, with no padding space "
                   "required for correct alignment");
@@ -163,12 +163,12 @@ struct NativeIterator {
                "isn't necessarily the start of properties and instead "
                "|propertyCursor_| instead is");
 
-    return reinterpret_cast<GCPtrFlatString*>(guardsEnd_);
+    return reinterpret_cast<GCPtrLinearString*>(guardsEnd_);
   }
 
-  GCPtrFlatString* propertiesEnd() const { return propertiesEnd_; }
+  GCPtrLinearString* propertiesEnd() const { return propertiesEnd_; }
 
-  GCPtrFlatString* nextProperty() const { return propertyCursor_; }
+  GCPtrLinearString* nextProperty() const { return propertyCursor_; }
 
   MOZ_ALWAYS_INLINE JS::Value nextIteratedValueAndAdvance() {
     if (propertyCursor_ >= propertiesEnd_) {
@@ -176,7 +176,7 @@ struct NativeIterator {
       return JS::MagicValue(JS_NO_ITER_VALUE);
     }
 
-    JSFlatString* str = *propertyCursor_;
+    JSLinearString* str = *propertyCursor_;
     incCursor();
     return JS::StringValue(str);
   }
@@ -194,7 +194,7 @@ struct NativeIterator {
     propertyCursor_ = propertiesBegin();
   }
 
-  bool previousPropertyWas(JS::Handle<JSFlatString*> str) {
+  bool previousPropertyWas(JS::Handle<JSLinearString*> str) {
     MOZ_ASSERT(isInitialized());
     return propertyCursor_ > propertiesBegin() && propertyCursor_[-1] == str;
   }
@@ -215,7 +215,7 @@ struct NativeIterator {
   }
 
   JSObject* iterObj() const { return iterObj_; }
-  GCPtrFlatString* currentProperty() const {
+  GCPtrLinearString* currentProperty() const {
     MOZ_ASSERT(propertyCursor_ < propertiesEnd());
     return propertyCursor_;
   }

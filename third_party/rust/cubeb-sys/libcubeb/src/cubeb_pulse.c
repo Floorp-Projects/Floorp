@@ -573,7 +573,9 @@ layout_to_channel_map(cubeb_channel_layout layout, pa_channel_map * cm)
     }
     channelMap = channelMap >> 1;
   }
-  cm->channels = cubeb_channel_layout_nb_channels(layout);
+  unsigned int channels_from_layout = cubeb_channel_layout_nb_channels(layout);
+  assert(channels_from_layout <= UINT8_MAX);
+  cm->channels = (uint8_t) channels_from_layout;
 }
 
 static void pulse_context_destroy(cubeb * ctx);
@@ -826,7 +828,9 @@ create_pa_stream(cubeb_stream * stm,
   if (ss.format == PA_SAMPLE_INVALID)
     return CUBEB_ERROR_INVALID_FORMAT;
   ss.rate = stream_params->rate;
-  ss.channels = stream_params->channels;
+  if (stream_params->channels > UINT8_MAX)
+    return CUBEB_ERROR_INVALID_FORMAT;
+  ss.channels = (uint8_t) stream_params->channels;
 
   if (stream_params->layout == CUBEB_LAYOUT_UNDEFINED) {
     pa_channel_map cm;
@@ -1178,53 +1182,6 @@ sink_input_info_cb(pa_context * c, pa_sink_input_info const * i, int eol, void *
     *r->cvol = i->volume;
   }
   WRAP(pa_threaded_mainloop_signal)(r->mainloop, 0);
-}
-
-static int
-pulse_stream_set_panning(cubeb_stream * stm, float panning)
-{
-  const pa_channel_map * map;
-  pa_cvolume cvol;
-  uint32_t index;
-  pa_operation * op;
-
-  if (!stm->output_stream) {
-    return CUBEB_ERROR;
-  }
-
-  WRAP(pa_threaded_mainloop_lock)(stm->context->mainloop);
-
-  map = WRAP(pa_stream_get_channel_map)(stm->output_stream);
-  if (!WRAP(pa_channel_map_can_balance)(map)) {
-    WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
-    return CUBEB_ERROR;
-  }
-
-  index = WRAP(pa_stream_get_index)(stm->output_stream);
-
-  struct sink_input_info_result r = { &cvol, stm->context->mainloop };
-  op = WRAP(pa_context_get_sink_input_info)(stm->context->context,
-                                            index,
-                                            sink_input_info_cb,
-                                            &r);
-  if (op) {
-    operation_wait(stm->context, stm->output_stream, op);
-    WRAP(pa_operation_unref)(op);
-  }
-
-  WRAP(pa_cvolume_set_balance)(&cvol, map, panning);
-
-  op = WRAP(pa_context_set_sink_input_volume)(stm->context->context,
-                                              index, &cvol, volume_success,
-                                              stm);
-  if (op) {
-    operation_wait(stm->context, stm->output_stream, op);
-    WRAP(pa_operation_unref)(op);
-  }
-
-  WRAP(pa_threaded_mainloop_unlock)(stm->context->mainloop);
-
-  return CUBEB_OK;
 }
 
 typedef struct {
@@ -1633,7 +1590,6 @@ static struct cubeb_ops const pulse_ops = {
   .stream_get_position = pulse_stream_get_position,
   .stream_get_latency = pulse_stream_get_latency,
   .stream_set_volume = pulse_stream_set_volume,
-  .stream_set_panning = pulse_stream_set_panning,
   .stream_get_current_device = pulse_stream_get_current_device,
   .stream_device_destroy = pulse_stream_device_destroy,
   .stream_register_device_changed_callback = NULL,

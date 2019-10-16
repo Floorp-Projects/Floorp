@@ -30,7 +30,9 @@ const TELEMETRY_EYEDROPPER_OPENED_MENU =
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF =
   "devtools.inspector.showAllAnonymousContent";
 const SHOW_UA_SHADOW_ROOTS_PREF = "devtools.inspector.showUserAgentShadowRoots";
-const FISSION_ENABLED = "devtools.browsertoolbox.fission";
+const FISSION_ENABLED_PREF = "devtools.browsertoolbox.fission";
+const USE_NEW_BOX_MODEL_HIGHLIGHTER_PREF =
+  "devtools.inspector.use-new-box-model-highlighter";
 
 const telemetry = new Telemetry();
 
@@ -531,7 +533,10 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
 
   async _getHighlighter() {
     const autohide = !flags.testing;
-    this.highlighter = await this.getHighlighter(autohide);
+    this.highlighter = await this.getHighlighter(
+      autohide,
+      Services.prefs.getBoolPref(USE_NEW_BOX_MODEL_HIGHLIGHTER_PREF)
+    );
   }
 
   hasHighlighter(type) {
@@ -604,7 +609,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
    * @return {Array} The list of InspectorFront instances.
    */
   async getChildInspectors() {
-    const fissionEnabled = Services.prefs.getBoolPref(FISSION_ENABLED);
+    const fissionEnabled = Services.prefs.getBoolPref(FISSION_ENABLED_PREF);
     const childInspectors = [];
     const target = this.targetFront;
     // this line can be removed when we are ready for fission frames

@@ -58,17 +58,12 @@ class Configuration(DescriptorProvider):
                 # different .webidl file than their LHS interface.  Make sure we
                 # don't have any of those.  See similar block below for partial
                 # interfaces!
-                #
-                # But whitelist a RHS that is LegacyQueryInterface,
-                # since people shouldn't be adding any of those.
-                if (thing.interface.filename() != thing.filename() and
-                    thing.mixin.identifier.name != "LegacyQueryInterface"):
+                if (thing.interface.filename() != thing.filename()):
                     raise TypeError(
                         "The binding build system doesn't really support "
                         "'includes' statements which don't appear in the "
                         "file in which the left-hand side of the statement is "
-                        "defined.  Don't do this unless your right-hand side "
-                        "is LegacyQueryInterface.\n"
+                        "defined.\n"
                         "%s\n"
                         "%s" %
                         (thing.location, thing.interface.location))

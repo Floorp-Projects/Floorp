@@ -3268,7 +3268,7 @@ void MacroAssembler::iteratorMore(Register obj, ValueOperand output,
   loadPtr(Address(temp, 0), temp);
 
   // Increase the cursor.
-  addPtr(Imm32(sizeof(GCPtrFlatString)), cursorAddr);
+  addPtr(Imm32(sizeof(GCPtrLinearString)), cursorAddr);
 
   tagValue(JSVAL_TYPE_STRING, temp, output);
   jump(&done);

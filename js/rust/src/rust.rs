@@ -283,7 +283,7 @@ impl RootKind for *mut JSObject {
     fn rootKind() -> JS::RootKind { JS::RootKind::Object }
 }
 
-impl RootKind for *mut JSFlatString {
+impl RootKind for *mut JSLinearString {
     #[inline(always)]
     fn rootKind() -> JS::RootKind { JS::RootKind::String }
 }

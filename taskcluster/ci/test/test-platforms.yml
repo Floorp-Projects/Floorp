@@ -229,7 +229,6 @@ windows10-64-shippable/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - desktop-instrumentation
         - windows-talos
         - marionette-gpu-tests
         - windows-tests

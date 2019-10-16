@@ -28,7 +28,8 @@ bool GCThingList::append(ObjectBox* objbox, uint32_t* index) {
   lastbox = objbox;
 
   *index = vector.length();
-  return vector.append(JS::GCCellPtr(objbox->object()));
+  return vector.append(
+      mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(objbox->object()))));
 }
 
 void GCThingList::finishInnerFunctions() {
@@ -41,13 +42,37 @@ void GCThingList::finishInnerFunctions() {
   }
 }
 
-void GCThingList::finish(mozilla::Span<JS::GCCellPtr> array) {
+bool GCThingList::finish(JSContext* cx, mozilla::Span<JS::GCCellPtr> array) {
   MOZ_ASSERT(length() <= INDEX_LIMIT);
   MOZ_ASSERT(length() == array.size());
 
+  struct Matcher {
+    JSContext* cx;
+    uint32_t i;
+    mozilla::Span<JS::GCCellPtr>& array;
+
+    bool operator()(StackGCCellPtr& value) {
+      array[i] = value.get();
+      return true;
+    }
+
+    bool operator()(BigIntCreationData& data) {
+      BigInt* bi = data.createBigInt(cx);
+      if (!bi) {
+        return false;
+      }
+      array[i] = JS::GCCellPtr(bi);
+      return true;
+    }
+  };
+
   for (uint32_t i = 0; i < length(); i++) {
-    array[i] = vector[i].get().get();
+    Matcher m{cx, i, array};
+    if (!vector[i].get().match(m)) {
+      return false;
+    }
   }
+  return true;
 }
 
 bool CGTryNoteList::append(JSTryNoteKind kind, uint32_t stackDepth,

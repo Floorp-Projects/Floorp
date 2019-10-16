@@ -2390,9 +2390,8 @@ Search.prototype = {
   },
 
   _addFilteredQueryMatch(row) {
-    let match = {};
-    match.placeId = row.getResultByIndex(QUERYINDEX_PLACEID);
-    let escapedURL = row.getResultByIndex(QUERYINDEX_URL);
+    let placeId = row.getResultByIndex(QUERYINDEX_PLACEID);
+    let url = row.getResultByIndex(QUERYINDEX_URL);
     let openPageCount = row.getResultByIndex(QUERYINDEX_SWITCHTAB) || 0;
     let historyTitle = row.getResultByIndex(QUERYINDEX_TITLE) || "";
     let bookmarked = row.getResultByIndex(QUERYINDEX_BOOKMARKED);
@@ -2402,69 +2401,38 @@ Search.prototype = {
     let tags = row.getResultByIndex(QUERYINDEX_TAGS) || "";
     let frecency = row.getResultByIndex(QUERYINDEX_FRECENCY);
 
-    // If actions are enabled and the page is open, add only the switch-to-tab
-    // result.  Otherwise, add the normal result.
-    let url = escapedURL;
-    let action = null;
+    let match = {
+      placeId,
+      value: url,
+      comment: bookmarkTitle || historyTitle,
+      icon: iconHelper(url),
+      frecency: frecency || FRECENCY_DEFAULT,
+    };
+
     if (
       this._enableActions &&
       openPageCount > 0 &&
       this.hasBehavior("openpage")
     ) {
-      url = PlacesUtils.mozActionURI("switchtab", { url: escapedURL });
-      action = "switchtab";
-      if (frecency == null) {
-        frecency = FRECENCY_DEFAULT;
-      }
-    }
-
-    // Always prefer the bookmark title unless it is empty
-    let title = bookmarkTitle || historyTitle;
-
-    // Return tags as part of the title, unless the match has an action, like
-    // switch-to-tab, that doesn't care about them.
-    let showTags = !!tags && !action;
-
-    // We'll act as if the page is not bookmarked when the user wants
-    // only history and not bookmarks and there are no tags.
-    if (
+      // Actions are enabled and the page is open.  Add a switch-to-tab result.
+      match.value = PlacesUtils.mozActionURI("switchtab", { url: match.value });
+      match.style = "action switchtab";
+    } else if (
       this.hasBehavior("history") &&
       !this.hasBehavior("bookmark") &&
-      !showTags
+      !tags
     ) {
-      showTags = false;
+      // The consumer wants only history and not bookmarks and there are no
+      // tags.  We'll act as if the page is not bookmarked.
       match.style = "favicon";
+    } else if (tags) {
+      // Store the tags in the title.  It's up to the consumer to extract them.
+      match.comment += UrlbarUtils.TITLE_TAGS_SEPARATOR + tags;
+      // If we're not suggesting bookmarks, then this shouldn't display as one.
+      match.style = this.hasBehavior("bookmark") ? "bookmark-tag" : "tag";
+    } else if (bookmarked) {
+      match.style = "bookmark";
     }
-
-    // If we have tags and should show them, we need to add them to the title.
-    if (showTags) {
-      title += UrlbarUtils.TITLE_TAGS_SEPARATOR + tags;
-    }
-
-    // We have to determine the right style to display.  Tags show the tag icon,
-    // bookmarks get the bookmark icon, and keywords get the keyword icon.  If
-    // the result does not fall into any of those, it just gets the favicon.
-    if (!match.style) {
-      // It is possible that we already have a style set (from a keyword
-      // search or because of the user's preferences), so only set it if we
-      // haven't already done so.
-      if (showTags) {
-        // If we're not suggesting bookmarks, then this shouldn't
-        // display as one.
-        match.style = this.hasBehavior("bookmark") ? "bookmark-tag" : "tag";
-      } else if (bookmarked) {
-        match.style = "bookmark";
-      }
-    }
-
-    if (action) {
-      match.style = "action " + action;
-    }
-
-    match.value = url;
-    match.comment = title;
-    match.icon = iconHelper(escapedURL);
-    match.frecency = frecency;
 
     this._addMatch(match);
   },

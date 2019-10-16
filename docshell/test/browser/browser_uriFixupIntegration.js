@@ -9,29 +9,46 @@ const { UrlbarTestUtils } = ChromeUtils.import(
 
 const kSearchEngineID = "browser_urifixup_search_engine";
 const kSearchEngineURL = "http://example.com/?search={searchTerms}";
+const kPrivateSearchEngineID = "browser_urifixup_search_engine_private";
+const kPrivateSearchEngineURL = "http://example.com/?private={searchTerms}";
 
 add_task(async function setup() {
-  // Add a new fake search engine.
-  await Services.search.addEngineWithDetails(kSearchEngineID, {
-    method: "get",
-    template: kSearchEngineURL,
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.separatePrivateDefault", true]],
   });
 
-  let oldDefaultEngine = await Services.search.getDefault();
-  await Services.search.setDefault(
-    Services.search.getEngineByName(kSearchEngineID)
+  let oldCurrentEngine = await Services.search.getDefault();
+  let oldPrivateEngine = await Services.search.getDefaultPrivate();
+
+  // Add new fake search engines.
+  let newCurrentEngine = await Services.search.addEngineWithDetails(
+    kSearchEngineID,
+    {
+      method: "get",
+      template: kSearchEngineURL,
+    }
   );
+  await Services.search.setDefault(newCurrentEngine);
 
-  // Remove the fake engine when done.
+  let newPrivateEngine = await Services.search.addEngineWithDetails(
+    kPrivateSearchEngineID,
+    {
+      method: "get",
+      template: kPrivateSearchEngineURL,
+    }
+  );
+  await Services.search.setDefaultPrivate(newPrivateEngine);
+
+  // Remove the fake engines when done.
   registerCleanupFunction(async () => {
-    if (oldDefaultEngine) {
-      await Services.search.setDefault(oldDefaultEngine);
+    if (oldCurrentEngine) {
+      await Services.search.setDefault(oldCurrentEngine);
     }
-
-    let engine = Services.search.getEngineByName(kSearchEngineID);
-    if (engine) {
-      await Services.search.removeEngine(engine);
+    if (oldPrivateEngine) {
+      await Services.search.setDefault(oldPrivateEngine);
     }
+    await Services.search.removeEngine(newCurrentEngine);
+    await Services.search.removeEngine(newPrivateEngine);
   });
 });
 
@@ -39,45 +56,50 @@ add_task(async function test() {
   // Test both directly setting a value and pressing enter, or setting the
   // value through input events, like the user would do.
   const setValueFns = [
-    value => {
-      gURLBar.value = value;
+    (value, win) => {
+      win.gURLBar.value = value;
     },
-    value => {
+    (value, win) => {
       return UrlbarTestUtils.promiseAutocompleteResultPopup({
-        window,
-        waitForFocus,
+        window: win,
+        waitForFocus: SimpleTest.waitForFocus,
         value,
       });
     },
   ];
 
-  for (let searchParams of ["foo bar", "brokenprotocol:somethingelse"]) {
+  for (let value of ["foo bar", "brokenprotocol:somethingelse"]) {
     for (let setValueFn of setValueFns) {
-      // Add a new blank tab.
-      gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
-      await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
-      // Enter search terms and start a search.
-      gURLBar.focus();
-      await setValueFn(searchParams);
-
-      EventUtils.synthesizeKey("KEY_Enter");
-      await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
-      // Check that we arrived at the correct URL.
-      let escapedParams = encodeURIComponent(searchParams).replace("%20", "+");
-      let expectedURL = kSearchEngineURL.replace(
-        "{searchTerms}",
-        escapedParams
-      );
-      is(
-        gBrowser.selectedBrowser.currentURI.spec,
-        expectedURL,
-        "New tab should have loaded with expected url."
-      );
-
-      // Cleanup.
-      gBrowser.removeCurrentTab();
+      for (let inPrivateWindow of [false, true]) {
+        await do_test(value, setValueFn, inPrivateWindow);
+      }
     }
   }
 });
+
+async function do_test(value, setValueFn, inPrivateWindow) {
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    private: inPrivateWindow,
+  });
+  // Enter search terms and start a search.
+  win.gURLBar.focus();
+  await setValueFn(value, win);
+
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  await BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+
+  // Check that we arrived at the correct URL.
+  let escapedValue = encodeURIComponent(value).replace("%20", "+");
+  let searchEngineUrl = inPrivateWindow
+    ? kPrivateSearchEngineURL
+    : kSearchEngineURL;
+  let expectedURL = searchEngineUrl.replace("{searchTerms}", escapedValue);
+  Assert.equal(
+    win.gBrowser.selectedBrowser.currentURI.spec,
+    expectedURL,
+    "New tab should have loaded with expected url."
+  );
+
+  // Cleanup.
+  await BrowserTestUtils.closeWindow(win);
+}

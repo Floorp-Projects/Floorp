@@ -15,16 +15,23 @@
 
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
-#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
-#include "js/Value.h"       // JS::Value, JS::ObjecValue
+#include "js/Promise.h"      // JS::{Reject,Resolve}Promise
+#include "js/RootingAPI.h"   // JS::Handle, JS::Rooted
+#include "js/Value.h"        // JS::Value, JS::ObjecValue
+#include "vm/Compartment.h"  // JS::Compartment
+#include "vm/JSContext.h"    // JSContext
 
-#include "vm/JSObject-inl.h"  // js::NewObjectWithClassProto
-#include "vm/List-inl.h"      // js::StoreNewListInFixedSlot
+#include "builtin/streams/WritableStream-inl.h"  // js::WritableStream::writer
+#include "vm/Compartment-inl.h"  // JS::Compartment::wrap
+#include "vm/JSObject-inl.h"     // js::NewObjectWithClassProto
+#include "vm/List-inl.h"         // js::StoreNewListInFixedSlot
 
 using js::WritableStream;
 
 using JS::Handle;
 using JS::ObjectValue;
+using JS::RejectPromise;
+using JS::ResolvePromise;
 using JS::Rooted;
 using JS::Value;
 
@@ -201,6 +208,153 @@ MOZ_MUST_USE bool js::WritableStreamFinishErroring(
   return false;
 }
 
+/**
+ * Streams spec, 4.4.5.
+ *      WritableStreamFinishInFlightWrite ( stream )
+ */
+MOZ_MUST_USE bool js::WritableStreamFinishInFlightWrite(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream) {
+  // Step 1: Assert: stream.[[inFlightWriteRequest]] is not undefined.
+  MOZ_ASSERT(unwrappedStream->haveInFlightWriteRequest());
+
+  // Step 2: Resolve stream.[[inFlightWriteRequest]] with undefined.
+  Rooted<JSObject*> writeRequest(
+      cx, &unwrappedStream->inFlightWriteRequest().toObject());
+  if (!cx->compartment()->wrap(cx, &writeRequest)) {
+    return false;
+  }
+  if (!ResolvePromise(cx, writeRequest, UndefinedHandleValue)) {
+    return false;
+  }
+
+  // Step 3: Set stream.[[inFlightWriteRequest]] to undefined.
+  unwrappedStream->clearInFlightWriteRequest(cx);
+  MOZ_ASSERT(!unwrappedStream->haveInFlightWriteRequest());
+
+  return true;
+}
+
+/**
+ * Streams spec, 4.4.6.
+ *      WritableStreamFinishInFlightWriteWithError ( stream, error )
+ */
+MOZ_MUST_USE bool js::WritableStreamFinishInFlightWriteWithError(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream,
+    Handle<Value> error) {
+  // Step 1: Assert: stream.[[inFlightWriteRequest]] is not undefined.
+  MOZ_ASSERT(unwrappedStream->haveInFlightWriteRequest());
+
+  // Step 2:  Reject stream.[[inFlightWriteRequest]] with error.
+  Rooted<JSObject*> writeRequest(
+      cx, &unwrappedStream->inFlightWriteRequest().toObject());
+  if (!cx->compartment()->wrap(cx, &writeRequest)) {
+    return false;
+  }
+  if (!RejectPromise(cx, writeRequest, error)) {
+    return false;
+  }
+
+  // Step 3:  Set stream.[[inFlightWriteRequest]] to undefined.
+  unwrappedStream->clearInFlightWriteRequest(cx);
+
+  // Step 4:  Assert: stream.[[state]] is "writable" or "erroring".
+  MOZ_ASSERT(unwrappedStream->writable() ^ unwrappedStream->erroring());
+
+  // Step 5:  Perform ! WritableStreamDealWithRejection(stream, error).
+  return WritableStreamDealWithRejection(cx, unwrappedStream, error);
+}
+
+/**
+ * Streams spec, 4.4.7.
+ *      WritableStreamFinishInFlightClose ( stream )
+ */
+MOZ_MUST_USE bool js::WritableStreamFinishInFlightClose(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream) {
+  // Step 1: Assert: stream.[[inFlightCloseRequest]] is not undefined.
+  MOZ_ASSERT(unwrappedStream->haveInFlightCloseRequest());
+
+  // Step 2: Resolve stream.[[inFlightCloseRequest]] with undefined.
+  {
+    Rooted<JSObject*> inFlightCloseRequest(
+        cx, &unwrappedStream->inFlightCloseRequest().toObject());
+    if (!cx->compartment()->wrap(cx, &inFlightCloseRequest)) {
+      return false;
+    }
+    if (!ResolvePromise(cx, inFlightCloseRequest, UndefinedHandleValue)) {
+      return false;
+    }
+  }
+
+  // Step 3: Set stream.[[inFlightCloseRequest]] to undefined.
+  unwrappedStream->clearInFlightCloseRequest();
+  MOZ_ASSERT(unwrappedStream->inFlightCloseRequest().isUndefined());
+
+  // Step 4: Let state be stream.[[state]].
+  // Step 5: Assert: stream.[[state]] is "writable" or "erroring".
+  MOZ_ASSERT(unwrappedStream->writable() ^ unwrappedStream->erroring());
+
+  // Step 6: If state is "erroring",
+  if (unwrappedStream->erroring()) {
+    // Step 6.a: Set stream.[[storedError]] to undefined.
+    unwrappedStream->clearStoredError();
+
+    // Step 6.b: If stream.[[pendingAbortRequest]] is not undefined,
+    if (unwrappedStream->hasPendingAbortRequest()) {
+      // Step 6.b.i: Resolve stream.[[pendingAbortRequest]].[[promise]] with
+      //             undefined.
+      Rooted<JSObject*> pendingAbortRequestPromise(
+          cx, unwrappedStream->pendingAbortRequestPromise());
+      if (!cx->compartment()->wrap(cx, &pendingAbortRequestPromise)) {
+        return false;
+      }
+      if (!ResolvePromise(cx, pendingAbortRequestPromise,
+                          UndefinedHandleValue)) {
+        return false;
+      }
+
+      // Step 6.b.ii: Set stream.[[pendingAbortRequest]] to undefined.
+      unwrappedStream->clearPendingAbortRequest();
+    }
+  }
+
+  // Step 7: Set stream.[[state]] to "closed".
+  unwrappedStream->setClosed();
+
+  // Step 8: Let writer be stream.[[writer]].
+  // Step 9: If writer is not undefined, resolve writer.[[closedPromise]] with
+  //         undefined.
+  if (unwrappedStream->hasWriter()) {
+    Rooted<JSObject*> closedPromise(cx,
+                                    unwrappedStream->writer()->closedPromise());
+    if (!cx->compartment()->wrap(cx, &closedPromise)) {
+      return false;
+    }
+    if (!ResolvePromise(cx, closedPromise, UndefinedHandleValue)) {
+      return false;
+    }
+  }
+
+  // Step 10: Assert: stream.[[pendingAbortRequest]] is undefined.
+  MOZ_ASSERT(!unwrappedStream->hasPendingAbortRequest());
+
+  // Step 11: Assert: stream.[[storedError]] is undefined.
+  MOZ_ASSERT(unwrappedStream->storedError().isUndefined());
+
+  return true;
+}
+
+/**
+ * Streams spec, 4.4.9.
+ *      WritableStreamCloseQueuedOrInFlight ( stream )
+ */
+bool js::WritableStreamCloseQueuedOrInFlight(
+    const WritableStream* unwrappedStream) {
+  // Step 1: If stream.[[closeRequest]] is undefined and
+  //         stream.[[inFlightCloseRequest]] is undefined, return false.
+  // Step 2: Return true.
+  return unwrappedStream->haveCloseRequestOrInFlightCloseRequest();
+}
+
 #ifdef DEBUG
 /**
  * Streams spec, 4.4.10.
@@ -215,6 +369,23 @@ bool WritableStreamHasOperationMarkedInFlight(
          unwrappedStream->haveInFlightCloseRequest();
 }
 #endif  // DEBUG
+
+/**
+ * Streams spec, 4.4.11.
+ *      WritableStreamMarkCloseRequestInFlight ( stream )
+ */
+void js::WritableStreamMarkCloseRequestInFlight(
+    WritableStream* unwrappedStream) {
+  // Step 1: Assert: stream.[[inFlightCloseRequest]] is undefined.
+  MOZ_ASSERT(!unwrappedStream->haveInFlightCloseRequest());
+
+  // Step 2: Assert: stream.[[closeRequest]] is not undefined.
+  MOZ_ASSERT(!unwrappedStream->closeRequest().isUndefined());
+
+  // Step 3: Set stream.[[inFlightCloseRequest]] to stream.[[closeRequest]].
+  // Step 4: Set stream.[[closeRequest]] to undefined.
+  unwrappedStream->convertCloseRequestToInFlightCloseRequest();
+}
 
 /**
  * Streams spec, 4.4.14.

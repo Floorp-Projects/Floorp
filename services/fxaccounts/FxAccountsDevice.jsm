@@ -16,14 +16,11 @@ const {
   ON_NEW_DEVICE_ID,
   ON_DEVICE_CONNECTED_NOTIFICATION,
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
+  PREF_ACCOUNT_ROOT,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 const { DEVICE_TYPE_DESKTOP } = ChromeUtils.import(
   "resource://services-sync/constants.js"
-);
-
-const { PREF_ACCOUNT_ROOT } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsCommon.js"
 );
 
 ChromeUtils.defineModuleGetter(

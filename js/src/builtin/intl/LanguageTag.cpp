@@ -33,6 +33,7 @@
 #include "unicode/utypes.h"
 #include "util/StringBuffer.h"
 #include "vm/JSContext.h"
+#include "vm/Printer.h"
 #include "vm/StringType.h"
 
 namespace js {
@@ -197,6 +198,15 @@ bool LanguageTag::setUnicodeExtension(UniqueChars extension) {
     return true;
   }
   return extensions_.append(std::move(extension));
+}
+
+void LanguageTag::clearUnicodeExtension() {
+  auto p = std::find_if(extensions().begin(), extensions().end(),
+                        [](const auto& ext) { return ext[0] == 'u'; });
+  if (p != extensions().end()) {
+    size_t index = std::distance(extensions().begin(), p);
+    extensions_.erase(extensions_.begin() + index);
+  }
 }
 
 template <size_t InitialCapacity>
@@ -754,8 +764,13 @@ bool LanguageTag::canonicalizeTransformExtension(
   return true;
 }
 
-bool LanguageTag::appendTo(JSContext* cx, StringBuffer& sb) const {
-  return LanguageTagToString(cx, *this, sb);
+JSString* LanguageTag::toString(JSContext* cx) const {
+  JSStringBuilder sb(cx);
+  if (!LanguageTagToString(cx, *this, sb)) {
+    return nullptr;
+  }
+
+  return sb.finishString();
 }
 
 // Zero-terminated ICU Locale ID.
@@ -1314,9 +1329,9 @@ bool LanguageTagParser::parse(JSContext* cx, JSLinearString* locale,
   if (ok) {
     return true;
   }
-  if (UniqueChars localeChars = StringToNewUTF8CharsZ(cx, *locale)) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
+  if (UniqueChars localeChars = QuoteString(cx, locale, '"')) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
   }
   return false;
 }
@@ -1335,8 +1350,8 @@ bool LanguageTagParser::parseBaseName(JSContext* cx, ConstCharRange locale,
   }
   if (UniqueChars localeChars =
           DuplicateString(locale.begin().get(), locale.length())) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
   } else {
     JS_ReportOutOfMemory(cx);
   }

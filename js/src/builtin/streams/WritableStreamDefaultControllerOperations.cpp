@@ -310,6 +310,21 @@ MOZ_MUST_USE bool js::SetUpWritableStreamDefaultControllerFromUnderlyingSink(
 }
 
 /**
+ * Streams spec, 4.8.5.
+ *      WritableStreamDefaultControllerClose ( controller )
+ */
+MOZ_MUST_USE bool js::WritableStreamDefaultControllerClose(
+    JSContext* cx,
+    Handle<WritableStreamDefaultController*> unwrappedController) {
+  // Step 1: Perform ! EnqueueValueWithSize(controller, "close", 0).
+  // Step 2: Perform
+  //         ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
+  // XXX jwalden fill me in!
+  JS_ReportErrorASCII(cx, "nope");
+  return false;
+}
+
+/**
  * Streams spec, 4.8.7.
  *      WritableStreamDefaultControllerGetDesiredSize ( controller )
  */

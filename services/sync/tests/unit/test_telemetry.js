@@ -132,7 +132,7 @@ add_task(async function test_basic() {
   let server = httpd_setup(handlers);
   await configureIdentity({ username: "johndoe" }, server);
 
-  let ping = await sync_and_validate_telem(true, true);
+  let ping = await wait_for_ping(() => Service.sync(), true, true);
 
   // Check the "os" block - we can't really check specific values, but can
   // check it smells sane.
@@ -426,11 +426,12 @@ add_task(async function test_generic_engine_fail() {
         changes
       )}`
     );
-    let ping = await sync_and_validate_telem(true);
-    equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
-      name: "unexpectederror",
-      error: String(e),
+    await sync_and_validate_telem(ping => {
+      equal(ping.status.service, SYNC_FAILED_PARTIAL);
+      deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
+        name: "unexpectederror",
+        error: String(e),
+      });
     });
   } finally {
     await cleanAndGo(engine, server);
@@ -448,18 +449,20 @@ add_task(async function test_engine_fail_weird_errors() {
   try {
     let msg = "Bad things happened!";
     engine._errToThrow = { message: msg };
-    let ping = await sync_and_validate_telem(true);
-    equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
-      name: "unexpectederror",
-      error: "Bad things happened!",
+    await sync_and_validate_telem(ping => {
+      equal(ping.status.service, SYNC_FAILED_PARTIAL);
+      deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
+        name: "unexpectederror",
+        error: "Bad things happened!",
+      });
     });
     let e = { msg };
     engine._errToThrow = e;
-    ping = await sync_and_validate_telem(true);
-    deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
-      name: "unexpectederror",
-      error: JSON.stringify(e),
+    await sync_and_validate_telem(ping => {
+      deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
+        name: "unexpectederror",
+        error: JSON.stringify(e),
+      });
     });
   } finally {
     await cleanAndGo(engine, server);
@@ -485,31 +488,32 @@ add_task(async function test_overrideTelemetryName() {
   try {
     info("Sync with validation problems");
     engine.problemsToReport = problemsToReport;
-    let ping = await sync_and_validate_telem(true);
-    let enginePing = ping.engines.find(e => e.name === "steam-but-better");
-    ok(enginePing);
-    ok(!ping.engines.find(e => e.name === "steam"));
-
-    deepEqual(
-      enginePing.validation,
-      {
-        version: 1,
-        checked: 0,
-        problems: problemsToReport,
-      },
-      "Should include validation report with overridden name"
-    );
+    await sync_and_validate_telem(ping => {
+      let enginePing = ping.engines.find(e => e.name === "steam-but-better");
+      ok(enginePing);
+      ok(!ping.engines.find(e => e.name === "steam"));
+      deepEqual(
+        enginePing.validation,
+        {
+          version: 1,
+          checked: 0,
+          problems: problemsToReport,
+        },
+        "Should include validation report with overridden name"
+      );
+    });
 
     info("Sync without validation problems");
     engine.problemsToReport = null;
-    ping = await sync_and_validate_telem(true);
-    enginePing = ping.engines.find(e => e.name === "steam-but-better");
-    ok(enginePing);
-    ok(!ping.engines.find(e => e.name === "steam"));
-    ok(
-      !enginePing.validation,
-      "Should not include validation report when there are no problems"
-    );
+    await sync_and_validate_telem(ping => {
+      let enginePing = ping.engines.find(e => e.name === "steam-but-better");
+      ok(enginePing);
+      ok(!ping.engines.find(e => e.name === "steam"));
+      ok(
+        !enginePing.validation,
+        "Should not include validation report when there are no problems"
+      );
+    });
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
@@ -542,17 +546,18 @@ add_task(async function test_engine_fail_ioerror() {
         changes
       )}`
     );
-    let ping = await sync_and_validate_telem(true);
-    equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    let failureReason = ping.engines.find(e => e.name === "steam")
-      .failureReason;
-    equal(failureReason.name, "unexpectederror");
-    // ensure the profile dir in the exception message has been stripped.
-    ok(
-      !failureReason.error.includes(OS.Constants.Path.profileDir),
-      failureReason.error
-    );
-    ok(failureReason.error.includes("[profileDir]"), failureReason.error);
+    await sync_and_validate_telem(ping => {
+      equal(ping.status.service, SYNC_FAILED_PARTIAL);
+      let failureReason = ping.engines.find(e => e.name === "steam")
+        .failureReason;
+      equal(failureReason.name, "unexpectederror");
+      // ensure the profile dir in the exception message has been stripped.
+      ok(
+        !failureReason.error.includes(OS.Constants.Path.profileDir),
+        failureReason.error
+      );
+      ok(failureReason.error.includes("[profileDir]"), failureReason.error);
+    });
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
@@ -574,23 +579,26 @@ add_task(async function test_clean_urls() {
   try {
     const changes = await engine._tracker.getChangedIDs();
     _(`test_clean_urls: Steam tracker contents: ${JSON.stringify(changes)}`);
-    let ping = await sync_and_validate_telem(true);
-    equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    let failureReason = ping.engines.find(e => e.name === "steam")
-      .failureReason;
-    equal(failureReason.name, "unexpectederror");
-    equal(failureReason.error, "<URL> is not a valid URL.");
+    await sync_and_validate_telem(ping => {
+      equal(ping.status.service, SYNC_FAILED_PARTIAL);
+      let failureReason = ping.engines.find(e => e.name === "steam")
+        .failureReason;
+      equal(failureReason.name, "unexpectederror");
+      equal(failureReason.error, "<URL> is not a valid URL.");
+    });
     // Handle other errors that include urls.
     engine._errToThrow =
       "Other error message that includes some:url/foo/bar/ in it.";
-    ping = await sync_and_validate_telem(true);
-    equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    failureReason = ping.engines.find(e => e.name === "steam").failureReason;
-    equal(failureReason.name, "unexpectederror");
-    equal(
-      failureReason.error,
-      "Other error message that includes <URL> in it."
-    );
+    await sync_and_validate_telem(ping => {
+      equal(ping.status.service, SYNC_FAILED_PARTIAL);
+      let failureReason = ping.engines.find(e => e.name === "steam")
+        .failureReason;
+      equal(failureReason.name, "unexpectederror");
+      equal(
+        failureReason.error,
+        "Other error message that includes <URL> in it."
+      );
+    });
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
@@ -659,15 +667,16 @@ add_task(async function test_nserror() {
   try {
     const changes = await engine._tracker.getChangedIDs();
     _(`test_nserror: Steam tracker contents: ${JSON.stringify(changes)}`);
-    let ping = await sync_and_validate_telem(true);
-    deepEqual(ping.status, {
-      service: SYNC_FAILED_PARTIAL,
-      sync: LOGIN_FAILED_NETWORK_ERROR,
-    });
-    let enginePing = ping.engines.find(e => e.name === "steam");
-    deepEqual(enginePing.failureReason, {
-      name: "nserror",
-      code: Cr.NS_ERROR_UNKNOWN_HOST,
+    await sync_and_validate_telem(ping => {
+      deepEqual(ping.status, {
+        service: SYNC_FAILED_PARTIAL,
+        sync: LOGIN_FAILED_NETWORK_ERROR,
+      });
+      let enginePing = ping.engines.find(e => e.name === "steam");
+      deepEqual(enginePing.failureReason, {
+        name: "nserror",
+        code: Cr.NS_ERROR_UNKNOWN_HOST,
+      });
     });
   } finally {
     await cleanAndGo(engine, server);
@@ -757,7 +766,7 @@ add_task(async function test_discarding() {
     }
     telem.submit = oldSubmit;
     telem.submissionInterval = -1;
-    let ping = await sync_and_validate_telem(true, true); // with this we've synced 6 times
+    let ping = await wait_for_ping(() => Service.sync(), true, true); // with this we've synced 6 times
     equal(ping.syncs.length, 2);
     equal(ping.discarded, 4);
   } finally {
@@ -767,6 +776,39 @@ add_task(async function test_discarding() {
     if (server) {
       await promiseStopServer(server);
     }
+  }
+});
+
+add_task(async function test_submit_interval() {
+  let telem = get_sync_test_telemetry();
+  let oldSubmit = telem.submit;
+  let numSubmissions = 0;
+  telem.submit = function() {
+    numSubmissions += 1;
+  };
+
+  function notify(what, data = null) {
+    Svc.Obs.notify(what, JSON.stringify(data));
+  }
+
+  try {
+    // submissionInterval is set such that each sync should submit
+    notify("weave:service:sync:start", { why: "testing" });
+    notify("weave:service:sync:finish");
+    Assert.equal(numSubmissions, 1, "should submit this ping due to interval");
+
+    // As should each event outside of a sync.
+    Service.recordTelemetryEvent("object", "method");
+    Assert.equal(numSubmissions, 2);
+
+    // But events while we are syncing should not.
+    notify("weave:service:sync:start", { why: "testing" });
+    Service.recordTelemetryEvent("object", "method");
+    Assert.equal(numSubmissions, 2, "no submission for this event");
+    notify("weave:service:sync:finish");
+    Assert.equal(numSubmissions, 3, "was submitted after sync finish");
+  } finally {
+    telem.submit = oldSubmit;
   }
 });
 
@@ -780,9 +822,10 @@ add_task(async function test_no_foreign_engines_in_error_ping() {
   engine._errToThrow = new Error("Oh no!");
   await SyncTestingInfrastructure(server);
   try {
-    let ping = await sync_and_validate_telem(true);
-    equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    ok(ping.engines.every(e => e.name !== "bogus"));
+    await sync_and_validate_telem(ping => {
+      equal(ping.status.service, SYNC_FAILED_PARTIAL);
+      ok(ping.engines.every(e => e.name !== "bogus"));
+    });
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
@@ -799,8 +842,9 @@ add_task(async function test_no_foreign_engines_in_success_ping() {
 
   await SyncTestingInfrastructure(server);
   try {
-    let ping = await sync_and_validate_telem();
-    ok(ping.engines.every(e => e.name !== "bogus"));
+    await sync_and_validate_telem(ping => {
+      ok(ping.engines.every(e => e.name !== "bogus"));
+    });
   } finally {
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
@@ -816,6 +860,10 @@ add_task(async function test_events() {
   let server = await serverForFoo(engine);
 
   await SyncTestingInfrastructure(server);
+
+  let telem = get_sync_test_telemetry();
+  telem.submissionInterval = Infinity;
+
   try {
     let serverTime = Resource.serverTime;
     Service.recordTelemetryEvent("object", "method", "value", { foo: "bar" });
@@ -828,28 +876,53 @@ add_task(async function test_events() {
     equal(object, "object");
     equal(value, "value");
     deepEqual(extra, { foo: "bar", serverTime: String(serverTime) });
-    // Test with optional values.
-    Service.recordTelemetryEvent("object", "method");
-    ping = await wait_for_ping(() => Service.sync(), false, true);
+    ping = await wait_for_ping(
+      () => {
+        // Test with optional values.
+        Service.recordTelemetryEvent("object", "method");
+      },
+      false,
+      true
+    );
     equal(ping.events.length, 1);
     equal(ping.events[0].length, 4);
 
-    Service.recordTelemetryEvent("object", "method", "extra");
-    ping = await wait_for_ping(() => Service.sync(), false, true);
+    ping = await wait_for_ping(
+      () => {
+        Service.recordTelemetryEvent("object", "method", "extra");
+      },
+      false,
+      true
+    );
     equal(ping.events.length, 1);
     equal(ping.events[0].length, 5);
 
-    Service.recordTelemetryEvent("object", "method", undefined, { foo: "bar" });
-    ping = await wait_for_ping(() => Service.sync(), false, true);
+    ping = await wait_for_ping(
+      () => {
+        Service.recordTelemetryEvent("object", "method", undefined, {
+          foo: "bar",
+        });
+      },
+      false,
+      true
+    );
     equal(ping.events.length, 1);
     equal(ping.events[0].length, 6);
     [timestamp, category, method, object, value, extra] = ping.events[0];
     equal(value, null);
 
-    Service.recordTelemetryEvent("object", "method", undefined, { foo: "bar" });
-    let telem = get_sync_test_telemetry();
     // Fake a submission due to shutdown.
-    ping = await wait_for_ping(() => telem.finish("shutdown"), false, true);
+    ping = await wait_for_ping(
+      () => {
+        telem.submissionInterval = Infinity;
+        Service.recordTelemetryEvent("object", "method", undefined, {
+          foo: "bar",
+        });
+        telem.finish("shutdown");
+      },
+      false,
+      true
+    );
     equal(ping.syncs.length, 0);
     equal(ping.events.length, 1);
     equal(ping.events[0].length, 6);

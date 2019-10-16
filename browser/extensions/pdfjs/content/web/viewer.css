@@ -67,8 +67,7 @@
   bottom: 0px;
   z-index: -1;
   cursor: default;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 
 .textLayer .endOfContent.active {
@@ -425,8 +424,7 @@ select {
   height: 100%;
   overflow: hidden;
   cursor: none;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 
 .pdfPresentationMode:fullscreen a:not(.internalLink) {
@@ -481,8 +479,7 @@ html[dir='rtl'] #sidebarContainer {
   /* Improve responsiveness and avoid visual glitches when the sidebar is resized. */
   transition-duration: 0s;
   /* Prevent e.g. the thumbnails being selected when the sidebar is resized. */
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 
 #outerContainer.sidebarMoving #sidebarContainer,
@@ -708,8 +705,7 @@ html[dir='rtl'] .findbar {
 }
 
 .findbar label {
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 
 #findInput {
@@ -980,8 +976,7 @@ html[dir='rtl'] .splitToolbarButtonSeparator {
   color: hsla(0,0%,100%,.8);
   font-size: 12px;
   line-height: 14px;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
   /* Opera does not support user-select, use <... unselectable="on"> instead */
   cursor: default;
   transition-property: background-color, border-color, box-shadow;
@@ -1436,8 +1431,7 @@ html[dir='rtl'] .verticalToolbarSeparator {
   font-size: 12px;
   line-height: 14px;
   text-align: left;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
   cursor: default;
 }
 
@@ -1530,8 +1524,7 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
   top: 0;
   bottom: 0;
   overflow: auto;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
 }
 
 #outlineView {
@@ -1564,8 +1557,7 @@ html[dir='rtl'] .outlineItem > .outlineItems {
   color: hsla(0,0%,100%,.8);
   font-size: 13px;
   line-height: 15px;
-  -moz-user-select: none;
-       user-select: none;
+  user-select: none;
   white-space: normal;
 }
 

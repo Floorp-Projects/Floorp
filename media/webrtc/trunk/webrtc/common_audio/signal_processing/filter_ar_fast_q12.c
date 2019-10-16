@@ -29,7 +29,7 @@ void WebRtcSpl_FilterARFastQ12(const int16_t* data_in,
     int32_t sum = 0;
 
     for (j = coefficients_length - 1; j > 0; j--) {
-      sum += coefficients[j] * data_out[i - j];
+      sum += coefficients[j] * data_out[(ptrdiff_t)i - (ptrdiff_t)j];
     }
 
     output = coefficients[0] * data_in[i];

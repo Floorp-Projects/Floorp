@@ -1765,17 +1765,6 @@ static inline bool AtomizeAndPinJSString(JSContext* cx, jsid& id,
 
 bool InitIds(JSContext* cx, const NativeProperties* properties);
 
-bool QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
-
-template <class T>
-struct WantsQueryInterface {
-  static_assert(IsBaseOf<nsISupports, T>::value,
-                "QueryInterface can't work without an nsISupports.");
-  static bool Enabled(JSContext* aCx, JSObject* aGlobal) {
-    return NS_IsMainThread() && IsChromeOrXBL(aCx, aGlobal);
-  }
-};
-
 void GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
                       nsWrapperCache* aCache, JS::Handle<JS::Value> aIID,
                       JS::MutableHandle<JS::Value> aRetval,

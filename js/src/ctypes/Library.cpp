@@ -107,18 +107,18 @@ JSObject* Library::Create(JSContext* cx, HandleValue path,
   }
 
   PRLibSpec libSpec;
-  RootedFlatString pathStr(cx, JS_FlattenString(cx, path.toString()));
+  RootedLinearString pathStr(cx, JS_EnsureLinearString(cx, path.toString()));
   if (!pathStr) {
     return nullptr;
   }
 #ifdef XP_WIN
   // On Windows, converting to native charset may corrupt path string.
   // So, we have to use Unicode path directly.
-  AutoStableStringChars pathStrChars(cx);
-  if (!pathStrChars.initTwoByte(cx, pathStr)) {
+  JS::UniqueTwoByteChars pathZeroTerminated(JS_CopyStringCharsZ(cx, pathStr));
+  if (!pathZeroTerminated) {
     return nullptr;
   }
-  char16ptr_t pathChars = pathStrChars.twoByteChars();
+  char16ptr_t pathChars = pathZeroTerminated.get();
   libSpec.value.pathname_u = pathChars;
   libSpec.type = PR_LibSpec_PathnameU;
 #else

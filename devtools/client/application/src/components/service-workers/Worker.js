@@ -31,6 +31,8 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const Types = require("../../types/index");
+
 const UIButton = createFactory(require("../ui/UIButton"));
 
 loader.lazyRequireGetter(
@@ -50,16 +52,7 @@ class Worker extends PureComponent {
   static get propTypes() {
     return {
       isDebugEnabled: PropTypes.bool.isRequired,
-      worker: PropTypes.shape({
-        active: PropTypes.bool,
-        name: PropTypes.string.isRequired,
-        scope: PropTypes.string.isRequired,
-        lastUpdateTime: PropTypes.number.isRequired,
-        url: PropTypes.string.isRequired,
-        // registrationFront can be missing in e10s.
-        registrationFront: PropTypes.object,
-        workerTargetFront: PropTypes.object,
-      }).isRequired,
+      worker: PropTypes.shape(Types.worker).isRequired,
     };
   }
 

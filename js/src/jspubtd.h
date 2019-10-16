@@ -65,7 +65,7 @@ struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 class JS_PUBLIC_API JSTracer;
 
-class JSFlatString;
+class JSLinearString;
 
 template <typename T>
 struct JSConstScalarSpec;
@@ -91,46 +91,6 @@ JS_FRIEND_API bool CurrentThreadIsPerformingGC();
 namespace JS {
 
 struct JS_PUBLIC_API PropertyDescriptor;
-
-enum class HeapState {
-  Idle,             // doing nothing with the GC heap
-  Tracing,          // tracing the GC heap without collecting, e.g.
-                    // IterateCompartments()
-  MajorCollecting,  // doing a GC of the major heap
-  MinorCollecting,  // doing a GC of the minor heap (nursery)
-  CycleCollecting   // in the "Unlink" phase of cycle collection
-};
-
-JS_PUBLIC_API HeapState RuntimeHeapState();
-
-static inline bool RuntimeHeapIsBusy() {
-  return RuntimeHeapState() != HeapState::Idle;
-}
-
-static inline bool RuntimeHeapIsTracing() {
-  return RuntimeHeapState() == HeapState::Tracing;
-}
-
-static inline bool RuntimeHeapIsMajorCollecting() {
-  return RuntimeHeapState() == HeapState::MajorCollecting;
-}
-
-static inline bool RuntimeHeapIsMinorCollecting() {
-  return RuntimeHeapState() == HeapState::MinorCollecting;
-}
-
-static inline bool RuntimeHeapIsCollecting(HeapState state) {
-  return state == HeapState::MajorCollecting ||
-         state == HeapState::MinorCollecting;
-}
-
-static inline bool RuntimeHeapIsCollecting() {
-  return RuntimeHeapIsCollecting(RuntimeHeapState());
-}
-
-static inline bool RuntimeHeapIsCycleCollecting() {
-  return RuntimeHeapState() == HeapState::CycleCollecting;
-}
 
 // Decorates the Unlinking phase of CycleCollection so that accidental use
 // of barriered accessors results in assertions instead of leaks.

@@ -61,6 +61,32 @@ static inline bool StringsAreEqual(const char* s1, const char* s2) {
   return !strcmp(s1, s2);
 }
 
+/**
+ * The last-ditch locale is used if none of the available locales satisfies a
+ * request. "en-GB" is used based on the assumptions that English is the most
+ * common second language, that both en-GB and en-US are normally available in
+ * an implementation, and that en-GB is more representative of the English used
+ * in other locales.
+ */
+static inline const char* LastDitchLocale() { return "en-GB"; }
+
+/**
+ * Certain old, commonly-used language tags that lack a script, are expected to
+ * nonetheless imply one. This object maps these old-style tags to modern
+ * equivalents.
+ */
+struct OldStyleLanguageTagMapping {
+  const char* const oldStyle;
+  const char* const modernStyle;
+
+  // Provide a constructor to catch missing initializers in the mappings array.
+  constexpr OldStyleLanguageTagMapping(const char* oldStyle,
+                                       const char* modernStyle)
+      : oldStyle(oldStyle), modernStyle(modernStyle) {}
+};
+
+extern const OldStyleLanguageTagMapping oldStyleLanguageTagMappings[5];
+
 static inline const char* IcuLocale(const char* locale) {
   if (StringsAreEqual(locale, "und")) {
     return "";  // ICU root locale
@@ -117,26 +143,6 @@ static JSString* CallICU(JSContext* cx, const ICUStringFunction& strFn) {
 
   return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
 }
-
-// CountAvailable and GetAvailable describe the signatures used for ICU API
-// to determine available locales for various functionality.
-using CountAvailable = int32_t (*)();
-using GetAvailable = const char* (*)(int32_t localeIndex);
-
-/**
- * Return an object whose own property names are the locales indicated as
- * available by |countAvailable| that provides an overall count, and by
- * |getAvailable| that when called passing a number less than that count,
- * returns the corresponding locale as a borrowed string.  For example:
- *
- *   RootedValue v(cx);
- *   if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable, &v)) {
- *       return false;
- *   }
- */
-extern bool GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
-                                GetAvailable getAvailable,
-                                JS::MutableHandle<JS::Value> result);
 
 }  // namespace intl
 

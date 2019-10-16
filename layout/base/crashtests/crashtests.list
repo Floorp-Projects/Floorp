@@ -391,7 +391,7 @@ load 668579.html
 load 668941.xhtml
 load 670226.html
 asserts(2) load 675246-1.xhtml # Bug 675713
-load 690247-1.html
+asserts-if(Android,0-2) load 690247-1.html
 load 690619-1.html
 load 691118-1.html
 load 695861.html
@@ -485,7 +485,7 @@ load 1308848-2.html
 load 1338772-1.html
 load 1340571.html
 pref(dom.animations-api.implicit-keyframes.enabled,true) load 1343139-1.html
-asserts(0-1) load 1343606.html # bug 1343948
+asserts(0-1) asserts-if(Android,1-4) load 1343606.html # bug 1343948
 load 1343937.html
 load 1352380.html
 load 1362423-1.html
@@ -546,7 +546,7 @@ load 1469354.html
 load 1470499.html
 pref(layout.accessiblecaret.enabled,true) load 1472020.html
 load 1472027.html
-load 1477847.html
+asserts-if(Android,0-2) load 1477847.html
 skip-if(verify&&Android) pref(layout.accessiblecaret.enabled,true) load 1486521.html
 load 1489149.html
 load 1490037.html
@@ -586,3 +586,4 @@ load 1578844-2.html
 pref(layout.css.column-span.enabled,true) load 1579953-1.html
 pref(layout.css.column-span.enabled,true) load 1580576.html
 load empty-mask.html
+load 1586600.html

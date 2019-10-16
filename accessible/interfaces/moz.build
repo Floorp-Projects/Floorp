@@ -36,7 +36,6 @@ XPIDL_SOURCES += [
     'nsIAccessibleTypes.idl',
     'nsIAccessibleValue.idl',
     'nsIAccessibleVirtualCursorChangeEvent.idl',
-    'nsIXBLAccessible.idl',
 ]
 
 XPIDL_MODULE = 'accessibility'

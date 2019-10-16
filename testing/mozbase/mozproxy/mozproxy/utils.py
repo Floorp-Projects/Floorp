@@ -110,17 +110,17 @@ def tooltool_download(manifest, run_local, raptor_dir):
             _cache,
         ]
 
-    proc = ProcessHandler(
-        command, processOutputLine=outputHandler, storeOutput=False, cwd=raptor_dir
-    )
-
-    proc.run()
-
     try:
+        proc = ProcessHandler(
+            command, processOutputLine=outputHandler, storeOutput=False, cwd=raptor_dir
+        )
+        proc.run()
         proc.wait()
-    except Exception:
+    except Exception as e:
+        LOG.critical("Error while downloading the hostutils from tooltool: {}".format(str(e)))
         if proc.poll() is None:
             proc.kill(signal.SIGTERM)
+        raise
 
 
 def archive_type(path):

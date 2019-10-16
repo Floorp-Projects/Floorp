@@ -11,17 +11,6 @@
  */
 var numberFormatInternalProperties = {
     localeData: numberFormatLocaleData,
-    _availableLocales: null,
-    availableLocales: function() // eslint-disable-line object-shorthand
-    {
-        var locales = this._availableLocales;
-        if (locales)
-            return locales;
-
-        locales = intl_NumberFormat_availableLocales();
-        addSpecialMissingLanguageTags(locales);
-        return (this._availableLocales = locales);
-    },
     relevantExtensionKeys: ["nu"],
 };
 
@@ -41,7 +30,7 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
     var localeData = NumberFormat.localeData;
 
     // Step 8.
-    var r = ResolveLocale(callFunction(NumberFormat.availableLocales, NumberFormat),
+    var r = ResolveLocale("NumberFormat",
                           lazyNumberFormatData.requestedLocales,
                           lazyNumberFormatData.opt,
                           NumberFormat.relevantExtensionKeys,
@@ -632,8 +621,7 @@ function Intl_NumberFormat_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
     // Step 1.
-    var availableLocales = callFunction(numberFormatInternalProperties.availableLocales,
-                                        numberFormatInternalProperties);
+    var availableLocales = "NumberFormat";
 
     // Step 2.
     var requestedLocales = CanonicalizeLocaleList(locales);

@@ -8,6 +8,8 @@
 # produced by NS_FormatCodeAddress(), which on Linux often lack a function
 # name, a file name and a line number.
 
+from __future__ import absolute_import
+
 import json
 import os
 import re

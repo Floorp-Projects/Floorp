@@ -2174,7 +2174,11 @@ impl CPPExporter {
     {type_ok} result;
     switch (kind) {{{cases}
       default:
-        return raiseInvalidKind(\"{kind}\", kind);
+        if (isInvalidKindPossible()) {{
+          return raiseInvalidKind(\"{kind}\", kind);
+        }} else {{
+          MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(\"invalid BinASTKind should not appear\");
+        }}
     }}
     return result;
 }}
@@ -2348,11 +2352,15 @@ impl CPPExporter {
     {type_ok} result;
     if (kind == BinASTKind::{null}) {{
 {none_block}
-    }} else if (kind == BinASTKind::{kind}) {{
+    }} else if (!isInvalidKindPossible() || kind == BinASTKind::{kind}) {{
         const auto start = tokenizer_->offset();
 {before}{call}{after}
     }} else {{
+      if (isInvalidKindPossible()) {{
         return raiseInvalidKind(\"{kind}\", kind);
+      }} else {{
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(\"invalid BinASTKind should not appear\");
+      }}
     }}
     MOZ_TRY(guard.done());
 
@@ -2855,7 +2863,11 @@ impl CPPExporter {
                 let convert = format!("    switch (variant) {{
 {cases}
       default:
-        return raiseInvalidVariant(\"{kind}\", variant);
+        if (isInvalidVariantPossible()) {{
+          return raiseInvalidVariant(\"{kind}\", variant);
+        }} else {{
+          MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(\"invalid BinASTVariant should not appear\");
+        }}
     }}",
                     kind = kind,
                     cases = enum_.strings()

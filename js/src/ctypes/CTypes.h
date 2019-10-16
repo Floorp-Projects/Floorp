@@ -325,8 +325,8 @@ static_assert(sizeof(UnbarrieredFieldInfo) == sizeof(FieldInfo),
               "unbarriered mType");
 
 // Hash policy for FieldInfos.
-struct FieldHashPolicy : DefaultHasher<JSFlatString*> {
-  typedef JSFlatString* Key;
+struct FieldHashPolicy : DefaultHasher<JSLinearString*> {
+  typedef JSLinearString* Key;
   typedef Key Lookup;
 
   template <typename CharT>
@@ -357,7 +357,7 @@ struct FieldHashPolicy : DefaultHasher<JSFlatString*> {
   }
 };
 
-using FieldInfoHash = GCHashMap<js::HeapPtr<JSFlatString*>, FieldInfo,
+using FieldInfoHash = GCHashMap<js::HeapPtr<JSLinearString*>, FieldInfo,
                                 FieldHashPolicy, ZoneAllocPolicy>;
 
 // Descriptor of ABI, return type, argument types, and variadicity for a
@@ -567,7 +567,8 @@ MOZ_MUST_USE bool DefineInternal(JSContext* cx, JSObject* typeObj,
                                  JSObject* fieldsObj);
 
 const FieldInfoHash* GetFieldInfo(JSObject* obj);
-const FieldInfo* LookupField(JSContext* cx, JSObject* obj, JSFlatString* name);
+const FieldInfo* LookupField(JSContext* cx, JSObject* obj,
+                             JSLinearString* name);
 JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
 UniquePtrFFIType BuildFFIType(JSContext* cx, JSObject* obj);
 }  // namespace StructType

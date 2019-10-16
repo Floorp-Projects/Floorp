@@ -46,7 +46,6 @@ using JS::TimeClip;
 
 using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
-using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
 using js::intl::INITIAL_CHAR_BUFFER_SIZE;
 using js::intl::SharedIntlData;
@@ -224,15 +223,6 @@ bool js::AddMozDateTimeFormatConstructor(JSContext* cx,
       CreateDateTimeFormatPrototype(cx, intl, global, &mozDateTimeFormat,
                                     DateTimeFormatOptions::EnableMozExtensions);
   return mozDateTimeFormatProto != nullptr;
-}
-
-bool js::intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 0);
-
-  return GetAvailableLocales(cx, udat_countAvailable, udat_getAvailable,
-                             args.rval());
 }
 
 static bool DefaultCalendar(JSContext* cx, const UniqueChars& locale,

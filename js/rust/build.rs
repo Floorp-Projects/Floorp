@@ -178,7 +178,7 @@ const WHITELIST_TYPES: &'static [&'static str] = &[
     "JSErrorFormatString",
     "JSErrorReport",
     "JSExnType",
-    "JSFlatString",
+    "JSLinearString",
     "JSFunction",
     "JSFunctionSpec",
     "JS::GCDescription",

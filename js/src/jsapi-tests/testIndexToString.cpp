@@ -69,7 +69,7 @@ END_TEST(testIndexToString)
 BEGIN_TEST(testStringIsIndex) {
   for (size_t i = 0, sz = ArrayLength(tests); i < sz; i++) {
     uint32_t u = tests[i].num;
-    JSFlatString* str = js::IndexToString(cx, u);
+    JSLinearString* str = js::IndexToString(cx, u);
     CHECK(str);
 
     uint32_t n;
@@ -85,21 +85,21 @@ BEGIN_TEST(testStringToPropertyName) {
   uint32_t index;
 
   static const char16_t hiChars[] = {'h', 'i'};
-  JSFlatString* hiStr = NewString(cx, hiChars);
+  JSLinearString* hiStr = NewString(cx, hiChars);
   CHECK(hiStr);
   CHECK(!hiStr->isIndex(&index));
   CHECK(hiStr->toPropertyName(cx) != nullptr);
 
   static const char16_t maxChars[] = {'4', '2', '9', '4', '9',
                                       '6', '7', '2', '9', '5'};
-  JSFlatString* maxStr = NewString(cx, maxChars);
+  JSLinearString* maxStr = NewString(cx, maxChars);
   CHECK(maxStr);
   CHECK(maxStr->isIndex(&index));
   CHECK(index == UINT32_MAX);
 
   static const char16_t maxPlusOneChars[] = {'4', '2', '9', '4', '9',
                                              '6', '7', '2', '9', '6'};
-  JSFlatString* maxPlusOneStr = NewString(cx, maxPlusOneChars);
+  JSLinearString* maxPlusOneStr = NewString(cx, maxPlusOneChars);
   CHECK(maxPlusOneStr);
   CHECK(!maxPlusOneStr->isIndex(&index));
   CHECK(maxPlusOneStr->toPropertyName(cx) != nullptr);
@@ -108,7 +108,7 @@ BEGIN_TEST(testStringToPropertyName) {
 }
 
 template <size_t N>
-static JSFlatString* NewString(JSContext* cx, const char16_t (&chars)[N]) {
+static JSLinearString* NewString(JSContext* cx, const char16_t (&chars)[N]) {
   return js::NewStringCopyN<js::CanGC>(cx, chars, N);
 }
 

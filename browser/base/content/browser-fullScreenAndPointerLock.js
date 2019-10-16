@@ -8,17 +8,6 @@
 
 ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "BrowserHandler",
-  "@mozilla.org/browser/clh;1",
-  "nsIBrowserHandler"
-);
-
 var PointerlockFsWarning = {
   _element: null,
   _origin: null,

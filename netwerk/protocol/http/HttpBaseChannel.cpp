@@ -210,7 +210,7 @@ HttpBaseChannel::HttpBaseChannel()
       mAddedAsNonTailRequest(false),
       mAsyncOpenWaitingForStreamLength(false),
       mUpgradableToSecure(true),
-      mHasSandboxedNavigations(false),
+      mHasNonEmptySandboxingFlag(false),
       mTlsFlags(0),
       mSuspendCount(0),
       mInitialRwin(0),

@@ -1088,6 +1088,9 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
 
 void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) {
+  LOG(("nsWindow::Resize [%p] %f %f repaint %d\n", (void*)this, aWidth, aHeight,
+       aRepaint));
+
   double scale =
       BoundsUseDesktopPixels() ? GetDesktopToDeviceScale().scale : 1.0;
   int32_t width = NSToIntRound(scale * aWidth);
@@ -1644,8 +1647,12 @@ LayoutDeviceIntRect nsWindow::GetScreenBounds() {
   // frame bounds, but mBounds.Size() is returned here for consistency
   // with Resize.
   rect.SizeTo(mBounds.Size());
-  LOG(("GetScreenBounds %d,%d | %dx%d\n", rect.x, rect.y, rect.width,
-       rect.height));
+#if MOZ_LOGGING
+  gint scale = GdkScaleFactor();
+  LOG(("GetScreenBounds %d,%d -> %d x %d, unscaled %d,%d -> %d x %d\n", rect.x,
+       rect.y, rect.width, rect.height, rect.x / scale, rect.y / scale,
+       rect.width / scale, rect.height / scale));
+#endif
   return rect;
 }
 
@@ -2511,8 +2518,9 @@ void nsWindow::OnContainerUnrealize() {
 }
 
 void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
-  LOG(("size_allocate [%p] %d %d %d %d\n", (void*)this, aAllocation->x,
-       aAllocation->y, aAllocation->width, aAllocation->height));
+  LOG(("nsWindow::OnSizeAllocate [%p] %d,%d -> %d x %d\n", (void*)this,
+       aAllocation->x, aAllocation->y, aAllocation->width,
+       aAllocation->height));
 
   LayoutDeviceIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
 
@@ -7370,3 +7378,13 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
          (void*)this));
   }
 }
+
+#ifdef MOZ_WAYLAND
+void nsWindow::SetEGLNativeWindowSize(
+    const LayoutDeviceIntSize& aEGLWindowSize) {
+  if (mContainer && !mIsX11Display) {
+    moz_container_egl_window_set_size(mContainer, aEGLWindowSize.width,
+                                      aEGLWindowSize.height);
+  }
+}
+#endif

@@ -168,7 +168,7 @@ class SavedStacks {
                                    HandleString asyncCause,
                                    MutableHandleSavedFrame adoptedStack,
                                    const mozilla::Maybe<size_t>& maxFrameCount);
-  void sweep();
+  void traceWeak(JSTracer* trc);
   void trace(JSTracer* trc);
   uint32_t count();
   void clear();
@@ -239,7 +239,9 @@ class SavedStacks {
 
     void trace(JSTracer* trc) { /* PCKey is weak. */
     }
-    bool needsSweep() { return IsAboutToBeFinalized(&script); }
+    bool traceWeak(JSTracer* trc) {
+      return TraceWeakEdge(trc, &script, "traceWeak");
+    }
   };
 
  public:
@@ -253,13 +255,11 @@ class SavedStacks {
       TraceNullableEdge(trc, &source, "SavedStacks::LocationValue::source");
     }
 
-    bool needsSweep() {
-      // LocationValue is always held strongly, but in a weak map.
-      // Assert that it has been marked already, but allow it to be
-      // ejected from the map when the key dies.
+    bool traceWeak(JSTracer* trc) {
       MOZ_ASSERT(source);
-      MOZ_ASSERT(!IsAboutToBeFinalized(&source));
-      return true;
+      // TODO: Bug 1501334: IsAboutToBeFinalized doesn't work for atoms.
+      // Otherwise we should assert TraceWeakEdge always returns true;
+      return TraceWeakEdge(trc, &source, "traceWeak");
     }
 
     HeapPtr<JSAtom*> source;

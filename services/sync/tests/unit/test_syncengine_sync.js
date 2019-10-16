@@ -812,10 +812,7 @@ add_task(async function test_processIncoming_previousFailed() {
     let sortedRecords = records.sort((a, b) => (a.id > b.id ? 1 : -1));
     let recordsToApply = [],
       recordsToFail = [];
-    let chunks = Array.from(
-      PlacesSyncUtils.chunkArray(sortedRecords, 2),
-      ([, chunk]) => chunk
-    );
+    let chunks = Array.from(PlacesUtils.chunkArray(sortedRecords, 2));
     for (let i = 0; i < chunks.length; i++) {
       (i % 2 === 0 ? recordsToFail : recordsToApply).push(...chunks[i]);
     }

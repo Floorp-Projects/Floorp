@@ -7,6 +7,7 @@ DIRS += [
     'components',
     'modules',
     'reducers',
+    'types',
 ]
 
 DevToolsModules(

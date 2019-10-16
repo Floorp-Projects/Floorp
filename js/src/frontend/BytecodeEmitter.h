@@ -418,7 +418,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitDouble(double dval);
   MOZ_MUST_USE bool emitNumberOp(double dval);
 
-  MOZ_MUST_USE bool emitBigIntOp(BigInt* bigint);
+  MOZ_MUST_USE bool emitBigIntOp(BigIntLiteral* bigint);
 
   MOZ_MUST_USE bool emitThisLiteral(ThisLiteral* pn);
   MOZ_MUST_USE bool emitGetFunctionThis(NameNode* thisName);

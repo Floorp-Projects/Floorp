@@ -68,18 +68,6 @@ extern MOZ_MUST_USE bool intl_Collator(JSContext* cx, unsigned argc,
                                        JS::Value* vp);
 
 /**
- * Returns an object indicating the supported locales for collation
- * by having a true-valued property for each such locale with the
- * canonicalized language tag as the property name. The object has no
- * prototype.
- *
- * Usage: availableLocales = intl_Collator_availableLocales()
- */
-extern MOZ_MUST_USE bool intl_Collator_availableLocales(JSContext* cx,
-                                                        unsigned argc,
-                                                        JS::Value* vp);
-
-/**
  * Returns an array with the collation type identifiers per Unicode
  * Technical Standard 35, Unicode Locale Data Markup Language, for the
  * collations supported for the given locale. "standard" and "search" are

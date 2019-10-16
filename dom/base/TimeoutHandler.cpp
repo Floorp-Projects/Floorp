@@ -34,15 +34,6 @@ void TimeoutHandler::GetDescription(nsACString& aOutString) {
                           mLineNo, mColumn);
 }
 
-NS_IMPL_CYCLE_COLLECTION_0(TimeoutHandler)
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(TimeoutHandler)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(TimeoutHandler)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TimeoutHandler)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 //-----------------------------------------------------------------------------
 // ScriptTimeoutHandler
 //-----------------------------------------------------------------------------
@@ -54,8 +45,7 @@ ScriptTimeoutHandler::ScriptTimeoutHandler(JSContext* aCx,
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptTimeoutHandler)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ScriptTimeoutHandler,
-                                                TimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptTimeoutHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -74,20 +64,19 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(ScriptTimeoutHandler)
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(ScriptTimeoutHandler, tmp->mRefCnt.get())
   }
 
-  nsISupports* s = static_cast<nsISupports*>(p);
-  if (NS_CYCLE_COLLECTION_CLASSNAME(TimeoutHandler)::TraverseNative(s, cb) ==
-      NS_SUCCESS_INTERRUPTED_TRAVERSE) {
-    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
-  }
+  // If we need to make TimeoutHandler CCed, don't call its Traverse method here,
+  // otherwise we ends up report same object twice if logging is on.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1588208.
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScriptTimeoutHandler)
-NS_INTERFACE_MAP_END_INHERITING(TimeoutHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
-NS_IMPL_RELEASE_INHERITED(ScriptTimeoutHandler, TimeoutHandler)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptTimeoutHandler)
 
 void ScriptTimeoutHandler::GetDescription(nsACString& aOutString) {
   if (mExpr.Length() > 15) {
@@ -116,8 +105,7 @@ CallbackTimeoutHandler::CallbackTimeoutHandler(
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(CallbackTimeoutHandler)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CallbackTimeoutHandler,
-                                                TimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackTimeoutHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFunction)
   tmp->ReleaseJSObjects();
@@ -130,11 +118,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CallbackTimeoutHandler)
     JSFunction* fun =
         JS_GetObjectFunction(js::UncheckedUnwrapWithoutExpose(obj));
     if (fun && JS_GetFunctionId(fun)) {
-      JSFlatString* funId = JS_ASSERT_STRING_IS_FLAT(JS_GetFunctionId(fun));
-      size_t size = 1 + JS_PutEscapedFlatString(nullptr, 0, funId, 0);
+      JSLinearString* funId = JS_ASSERT_STRING_IS_LINEAR(JS_GetFunctionId(fun));
+      size_t size = 1 + JS_PutEscapedLinearString(nullptr, 0, funId, 0);
       char* funIdName = new char[size];
       if (funIdName) {
-        JS_PutEscapedFlatString(funIdName, size, funId, 0);
+        JS_PutEscapedLinearString(funIdName, size, funId, 0);
         name.AppendLiteral(" [");
         name.Append(funIdName);
         delete[] funIdName;
@@ -147,28 +135,26 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CallbackTimeoutHandler)
                                       tmp->mRefCnt.get())
   }
 
-  nsISupports* s = static_cast<nsISupports*>(p);
-  if (NS_CYCLE_COLLECTION_CLASSNAME(TimeoutHandler)::TraverseNative(s, cb) ==
-      NS_SUCCESS_INTERRUPTED_TRAVERSE) {
-    return NS_SUCCESS_INTERRUPTED_TRAVERSE;
-  }
+  // If we need to make TimeoutHandler CCed, don't call its Traverse method here,
+  // otherwise we ends up report same object twice if logging is on.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1588208.
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFunction)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CallbackTimeoutHandler,
-                                               TimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackTimeoutHandler)
   for (size_t i = 0; i < tmp->mArgs.Length(); ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mArgs[i])
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CallbackTimeoutHandler)
-NS_INTERFACE_MAP_END_INHERITING(TimeoutHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(CallbackTimeoutHandler, TimeoutHandler)
-NS_IMPL_RELEASE_INHERITED(CallbackTimeoutHandler, TimeoutHandler)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CallbackTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CallbackTimeoutHandler)
 
 void CallbackTimeoutHandler::ReleaseJSObjects() {
   mArgs.Clear();

@@ -9,44 +9,26 @@ var EXPORTED_SYMBOLS = ["SyncTelemetry"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { AuthenticationError } = ChromeUtils.import(
-  "resource://services-sync/browserid_identity.js"
-);
-const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { Status } = ChromeUtils.import("resource://services-sync/status.js");
-const { Svc } = ChromeUtils.import("resource://services-sync/util.js");
-const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Async: "resource://services-common/async.js",
+  AuthenticationError: "resource://services-sync/browserid_identity.js",
+  Log: "resource://gre/modules/Log.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
+  Observers: "resource://services-common/observers.js",
+  OS: "resource://gre/modules/osfile.jsm",
+  Resource: "resource://services-sync/resource.js",
+  Services: "resource://gre/modules/Services.jsm",
+  Status: "resource://services-sync/status.js",
+  Svc: "resource://services-sync/util.js",
+  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
+  TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.jsm",
+  TelemetryUtils: "resource://gre/modules/TelemetryUtils.jsm",
+  Weave: "resource://services-sync/main.js",
+});
 
 let constants = {};
 ChromeUtils.import("resource://services-sync/constants.js", constants);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryController",
-  "resource://gre/modules/TelemetryController.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryUtils",
-  "resource://gre/modules/TelemetryUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryEnvironment",
-  "resource://gre/modules/TelemetryEnvironment.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ObjectUtils",
-  "resource://gre/modules/ObjectUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -74,6 +56,8 @@ const TOPICS = [
 
   "weave:telemetry:event",
   "weave:telemetry:histogram",
+  // and we are now used by FxA, so a custom event for that.
+  "fxa:telemetry:event",
 ];
 
 const PING_FORMAT_VERSION = 1;
@@ -696,6 +680,20 @@ class SyncTelemetryImpl {
     return false;
   }
 
+  maybeSubmitForInterval() {
+    // We want to submit the ping every `this.submissionInterval` but only when
+    // there's no current sync in progress, otherwise we may end up submitting
+    // the sync and the events caused by it in different pings.
+    if (
+      this.current == null &&
+      Telemetry.msSinceProcessStart() - this.lastSubmissionTime >
+        this.submissionInterval
+    ) {
+      this.finish("schedule");
+      this.lastSubmissionTime = Telemetry.msSinceProcessStart();
+    }
+  }
+
   onSyncFinished(error) {
     if (!this.current) {
       log.warn("onSyncFinished but we aren't recording");
@@ -724,13 +722,7 @@ class SyncTelemetryImpl {
       ++this.discarded;
     }
     this.current = null;
-    if (
-      Telemetry.msSinceProcessStart() - this.lastSubmissionTime >
-      this.submissionInterval
-    ) {
-      this.finish("schedule");
-      this.lastSubmissionTime = Telemetry.msSinceProcessStart();
-    }
+    this.maybeSubmitForInterval();
   }
 
   _addHistogram(hist) {
@@ -776,6 +768,7 @@ class SyncTelemetryImpl {
       event.push(extra);
     }
     this.events.push(event);
+    this.maybeSubmitForInterval();
   }
 
   observe(subject, topic, data) {
@@ -853,6 +846,7 @@ class SyncTelemetryImpl {
         break;
 
       case "weave:telemetry:event":
+      case "fxa:telemetry:event":
         this._recordEvent(subject);
         break;
 
