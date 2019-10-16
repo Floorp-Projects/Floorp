@@ -5364,12 +5364,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# Whether to disable subscriptshift and superscriptshift attributes.
-- name: mathml.script_shift_attributes.disabled
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 # Whether to disable support for XLink on MathML elements.
 - name: mathml.xlink.disabled
   type: bool
