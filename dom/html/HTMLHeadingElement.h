@@ -36,6 +36,27 @@ class HTMLHeadingElement final : public nsGenericHTMLElement {
     return GetHTMLAttr(nsGkAtoms::align, aAlign);
   }
 
+  int32_t AccessibilityLevel() const {
+    nsAtom* name = NodeInfo()->NameAtom();
+    if (name == nsGkAtoms::h1) {
+      return 1;
+    }
+    if (name == nsGkAtoms::h2) {
+      return 2;
+    }
+    if (name == nsGkAtoms::h3) {
+      return 3;
+    }
+    if (name == nsGkAtoms::h4) {
+      return 4;
+    }
+    if (name == nsGkAtoms::h5) {
+      return 5;
+    }
+    MOZ_ASSERT(name == nsGkAtoms::h6);
+    return 6;
+  }
+
   NS_IMPL_FROMNODE_HELPER(HTMLHeadingElement, IsHTMLHeadingElement())
 
  protected:
