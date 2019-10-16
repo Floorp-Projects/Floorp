@@ -149,17 +149,6 @@ void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-bool js::CreateCollator(JSContext* cx, HandleObject Intl) {
-  JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, JSProto_Collator);
-  if (!ctor) {
-    return false;
-  }
-
-  // 8.1
-  RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, Intl, cx->names().Collator, ctorValue, 0);
-}
-
 bool js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);

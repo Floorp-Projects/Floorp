@@ -68,8 +68,6 @@ class NumberFormatObject : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
-extern bool CreateNumberFormat(JSContext* cx, HandleObject Intl);
-
 /**
  * Returns a new instance of the standard built-in NumberFormat constructor.
  * Self-hosted code cannot cache this constructor (as it does for others in

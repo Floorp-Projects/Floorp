@@ -47,8 +47,6 @@ class LocaleObject : public NativeObject {
   static const ClassSpec classSpec_;
 };
 
-extern bool CreateLocale(JSContext* cx, JS::Handle<JSObject*> Intl);
-
 extern MOZ_MUST_USE bool intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx,
                                                                  unsigned argc,
                                                                  Value* vp);

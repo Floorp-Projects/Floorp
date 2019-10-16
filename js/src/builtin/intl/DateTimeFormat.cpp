@@ -182,18 +182,6 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-bool js::CreateDateTimeFormat(JSContext* cx, JS::Handle<JSObject*> Intl) {
-  JSObject* ctor =
-      GlobalObject::getOrCreateConstructor(cx, JSProto_DateTimeFormat);
-  if (!ctor) {
-    return false;
-  }
-
-  // 8.1
-  RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue, 0);
-}
-
 bool js::AddMozDateTimeFormatConstructor(JSContext* cx,
                                          JS::Handle<JSObject*> intl) {
   RootedObject ctor(

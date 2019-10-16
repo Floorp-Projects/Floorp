@@ -1243,18 +1243,14 @@ const ClassSpec LocaleObject::classSpec_ = {
     nullptr,
     ClassSpec::DontDefineConstructor};
 
-bool js::CreateLocale(JSContext* cx, HandleObject Intl) {
+bool js::AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl) {
   JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, JSProto_Locale);
   if (!ctor) {
     return false;
   }
 
   RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, Intl, cx->names().Locale, ctorValue, 0);
-}
-
-bool js::AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl) {
-  return CreateLocale(cx, intl);
+  return DefineDataProperty(cx, intl, cx->names().Locale, ctorValue, 0);
 }
 
 bool js::intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx, unsigned argc,
