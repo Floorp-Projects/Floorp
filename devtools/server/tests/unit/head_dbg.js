@@ -276,9 +276,7 @@ function setBreakpoint(threadFront, location) {
 function getPrototypeAndProperties(objClient) {
   dump("getting prototype and properties.\n");
 
-  return new Promise(resolve => {
-    objClient.getPrototypeAndProperties(response => resolve(response));
-  });
+  return objClient.getPrototypeAndProperties();
 }
 
 function dumpn(msg) {
