@@ -341,7 +341,6 @@
   MACRO(parseInt, parseInt, "parseInt")                                        \
   MACRO(pattern, pattern, "pattern")                                           \
   MACRO(pending, pending, "pending")                                           \
-  MACRO(PluralRules, PluralRules, "PluralRules")                               \
   MACRO(percentSign, percentSign, "percentSign")                               \
   MACRO(plusSign, plusSign, "plusSign")                                        \
   MACRO(public, public_, "public")                                             \
