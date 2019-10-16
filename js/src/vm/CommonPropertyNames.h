@@ -126,6 +126,7 @@
   MACRO(dotInitializers, dotInitializers, ".initializers")                     \
   MACRO(dotFieldKeys, dotFieldKeys, ".fieldKeys")                              \
   MACRO(each, each, "each")                                                    \
+  MACRO(element, element, "element")                                           \
   MACRO(elementType, elementType, "elementType")                               \
   MACRO(else, else_, "else")                                                   \
   MACRO(empty, empty, "")                                                      \
@@ -220,6 +221,7 @@
   MACRO(InitializeCollator, InitializeCollator, "InitializeCollator")          \
   MACRO(InitializeDateTimeFormat, InitializeDateTimeFormat,                    \
         "InitializeDateTimeFormat")                                            \
+  MACRO(InitializeListFormat, InitializeListFormat, "InitializeListFormat")    \
   MACRO(InitializeLocale, InitializeLocale, "InitializeLocale")                \
   MACRO(InitializeNumberFormat, InitializeNumberFormat,                        \
         "InitializeNumberFormat")                                              \
