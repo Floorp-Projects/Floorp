@@ -3709,7 +3709,9 @@ static bool UnmarkGrayGCThing(JSRuntime* rt, JS::GCCellPtr thing) {
       TlsContext.get(), "UnmarkGrayGCThing", JS::ProfilingCategoryPair::GCCC);
 
   UnmarkGrayTracer unmarker(rt);
-  gcstats::AutoPhase innerPhase(rt->gc.stats(),
+  // We don't record phaseTimes when we're running on a helper thread.
+  bool enable = TlsContext.get()->isMainThreadContext();
+  gcstats::AutoPhase innerPhase(rt->gc.stats(), enable,
                                 gcstats::PhaseKind::UNMARK_GRAY);
   unmarker.unmark(thing);
   return unmarker.unmarkedAny;

@@ -5594,8 +5594,10 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
   // and sweeping should not perform any recorded events.
   mozilla::recordreplay::AutoDisallowThreadEvents disallow;
 
-  /* Run a marking slice and return whether the stack is now empty. */
-  gcstats::AutoPhase ap(stats(), phase);
+  // Run a marking slice and return whether the stack is now empty.
+  // We don't record phaseTimes when we're running on a helper thread.
+  bool enable = TlsContext.get()->isMainThreadContext();
+  gcstats::AutoPhase ap(stats(), enable, phase);
 
 #ifdef DEBUG
   AutoSetThreadIsMarking threadIsMarking;
