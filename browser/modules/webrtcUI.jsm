@@ -953,6 +953,23 @@ function prompt(aBrowser, aRequest) {
             warning.textContent = pre;
             warning.appendChild(learnMore);
             warning.appendChild(chromeWin.document.createTextNode(post));
+
+            // On Catalina, we don't want to blow our chance to show the
+            // OS-level helper prompt to enable screen recording if the user
+            // intends to reject anyway. OTOH showing it when they click Allow
+            // is too late. A happy middle is to show it when the user makes a
+            // choice in the picker. This already happens implicitly if the
+            // user chooses "Entire desktop", as a side-effect of our preview,
+            // we just need to also do it if they choose "Firefox". These are
+            // the lone two options when permission is absent on Catalina.
+            // Ironically, these are the two sources marked "scary" from a
+            // web-sharing perspective, which is why this code resides here.
+            // A restart doesn't appear to be necessary in spite of OS wording.
+            let scrStatus = {};
+            OSPermissions.getScreenCapturePermissionState(scrStatus);
+            if (scrStatus.value == OSPermissions.PERMISSION_STATE_DENIED) {
+              OSPermissions.maybeRequestScreenCapturePermission();
+            }
           }
 
           let perms = Services.perms;
