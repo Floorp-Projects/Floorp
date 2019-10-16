@@ -12,7 +12,6 @@
       'type': 'executable',
       'sources': [
         'softoken_gtest.cc',
-        'softoken_nssckbi_testlib_gtest.cc',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
@@ -45,10 +44,6 @@
   'target_defaults': {
     'include_dirs': [
       '../../lib/util'
-    ],
-    'defines': [
-      'DLL_PREFIX=\"<(dll_prefix)\"',
-      'DLL_SUFFIX=\"<(dll_suffix)\"'
     ]
   },
   'variables': {
