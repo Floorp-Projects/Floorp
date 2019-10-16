@@ -151,6 +151,7 @@ class EditToolbar internal constructor(
     fun setIcon(icon: Drawable, contentDescription: String) {
         views.icon.setImageDrawable(icon)
         views.icon.contentDescription = contentDescription
+        views.icon.visibility = View.VISIBLE
     }
 
     /**
