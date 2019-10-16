@@ -17,6 +17,12 @@ Multiple paths are allowed:
 
     ./mach lint path/to/foo.js path/to/bar.py path/to/dir
 
+To force execution on a directory that would otherwise be excluded:
+
+.. parsed-literal::
+
+    ./mach lint -n path/in/the/exclude/list
+
 ``Mozlint`` will automatically determine which types of files exist, and which linters need to be run
 against them. For example, if the directory contains both JavaScript and Python files then mozlint
 will automatically run both ESLint and Flake8 against those files respectively.
