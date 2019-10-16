@@ -28,6 +28,12 @@ overridden by including an ``.eslintrc`` in the appropriate subdirectory. For an
 supported configuration, see `ESLint's documentation`_.
 
 
+Autofix
+-------
+
+The eslint linter provides a ``--fix`` option. It is based on the upstream option.
+
+
 ESLint Plugin Mozilla
 ---------------------
 
