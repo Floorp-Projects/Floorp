@@ -361,11 +361,14 @@ class App extends Component {
   }
 
   renderRootElement(children) {
-    const { editorMode, editorFeatureEnabled } = this.props;
+    const { editorMode, editorFeatureEnabled, serviceContainer } = this.props;
 
     const classNames = ["webconsole-app"];
     if (editorMode && editorFeatureEnabled) {
       classNames.push("jsterm-editor");
+    }
+    if (serviceContainer.canRewind()) {
+      classNames.push("can-rewind");
     }
 
     return div(
