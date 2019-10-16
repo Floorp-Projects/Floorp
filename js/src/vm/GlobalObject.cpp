@@ -14,6 +14,9 @@
 #include "builtin/BigInt.h"
 #include "builtin/DataViewObject.h"
 #include "builtin/Eval.h"
+#ifdef ENABLE_INTL_API
+#  include "builtin/intl/Collator.h"
+#endif
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
