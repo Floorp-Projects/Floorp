@@ -55,7 +55,7 @@ subprojects {
     afterEvaluate {
         if (it.hasProperty('android')) {
             jacoco {
-                toolVersion = "0.8.4"
+                toolVersion = "0.8.5"
             }
 
             // Format test output
