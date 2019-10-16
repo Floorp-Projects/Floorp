@@ -33,6 +33,7 @@ For users
    Bugs.md
    TraceLogs.md
    CrashReports.md
+   Notarization.md
 
 
 For developers
