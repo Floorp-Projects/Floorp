@@ -54,6 +54,7 @@ import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.getDimenInDip
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -385,11 +386,12 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
             layout.measure(spec, spec)
 
             val containerHeight = layout.measuredHeight
+            val triangleHeight = it.getDimenInDip(R.dimen.tp_onboarding_triangle_height).toInt()
 
             val xOffset = it.dimen(R.dimen.tp_onboarding_x_offset)
 
             // Positioning the popup above the tp anchor.
-            val yOffset = -containerHeight - (browserToolbarView.view.height / THREE * 2)
+            val yOffset = -containerHeight - (browserToolbarView.view.height / THREE * 2) + triangleHeight
 
             trackingOnboarding.showAsDropDown(tpIcon, xOffset, yOffset)
             it.settings().incrementTrackingProtectionOnboardingCount()

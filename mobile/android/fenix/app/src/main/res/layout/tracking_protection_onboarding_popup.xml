@@ -47,7 +47,7 @@
 
     <ImageView
         android:layout_width="16dp"
-        android:layout_height="16dp"
+        android:layout_height="@dimen/tp_onboarding_triangle_height"
         android:layout_marginStart="16dp"
         android:importantForAccessibility="no"
         android:rotation="180"
