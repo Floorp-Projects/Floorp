@@ -813,8 +813,10 @@ function getInternals(obj) {
         internalProps = resolveDateTimeFormatInternals(internals.lazyData);
     else if (type === "NumberFormat")
         internalProps = resolveNumberFormatInternals(internals.lazyData);
-    else
+    else if (type === "PluralRules")
         internalProps = resolvePluralRulesInternals(internals.lazyData);
+    else
+        internalProps = resolveRelativeTimeFormatInternals(internals.lazyData);
     setInternalProperties(internals, internalProps);
     return internalProps;
 }
