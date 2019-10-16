@@ -4,7 +4,7 @@ lintpref:
     include:
         - 'modules/libpref/init'
     exclude: []
-    extensions: ['js', 'yaml']
+    extensions: ['js']
     type: external
     payload: libpref:checkdupes
     support-files:
