@@ -17,6 +17,7 @@ import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.appservices.sync15.SyncTelemetryPing
+import mozilla.components.concept.sync.LockableStore
 
 /**
  * This type contains the set of information required to successfully
@@ -388,7 +389,7 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
 data class SyncableLoginsStore(
     val store: AsyncLoginsStorage,
     val key: () -> Deferred<String>
-) : SyncableStore {
+) : LockableStore {
     override suspend fun sync(authInfo: SyncAuthInfo): SyncStatus {
         return try {
             withUnlocked {
@@ -398,6 +399,14 @@ data class SyncableLoginsStore(
         } catch (e: LoginsStorageException) {
             SyncStatus.Error(e)
         }
+    }
+
+    override suspend fun ensureUnlocked(encryptionKey: String) {
+        store.ensureUnlocked(encryptionKey).await()
+    }
+
+    override suspend fun ensureLocked() {
+        store.ensureLocked().await()
     }
 
     override fun getHandle(): Long {

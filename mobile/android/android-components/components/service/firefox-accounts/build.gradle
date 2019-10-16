@@ -39,6 +39,7 @@ dependencies {
     api project(':support-base')
     implementation project(':support-sync-telemetry')
     implementation project(':support-ktx')
+    implementation project(':lib-dataprotect')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

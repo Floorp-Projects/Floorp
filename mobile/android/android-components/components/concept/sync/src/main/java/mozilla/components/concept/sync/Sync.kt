@@ -42,6 +42,11 @@ data class SyncAuthInfo(
     val tokenServerUrl: String
 )
 
+interface LockableStore : SyncableStore {
+    suspend fun ensureUnlocked(encryptionKey: String)
+    suspend fun ensureLocked()
+}
+
 /**
  * Describes a "sync" entry point for a storage layer.
  */
