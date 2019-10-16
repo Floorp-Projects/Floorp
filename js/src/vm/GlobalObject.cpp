@@ -42,6 +42,7 @@
 #include "gc/FreeOp.h"
 #include "js/ProtoKey.h"
 #include "vm/AsyncFunction.h"
+#include "vm/AsyncIteration.h"
 #include "vm/DateObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorObject.h"
@@ -402,7 +403,8 @@ bool GlobalObject::resolveOffThreadConstructor(JSContext* cx,
   MOZ_ASSERT(global->zone()->createdForHelperThread());
   MOZ_ASSERT(key == JSProto_Object || key == JSProto_Function ||
              key == JSProto_Array || key == JSProto_RegExp ||
-             key == JSProto_AsyncFunction || key == JSProto_GeneratorFunction);
+             key == JSProto_AsyncFunction || key == JSProto_GeneratorFunction ||
+             key == JSProto_AsyncGeneratorFunction);
 
   Rooted<OffThreadPlaceholderObject*> placeholder(cx);
   placeholder = OffThreadPlaceholderObject::New(cx, prototypeSlot(key));
@@ -439,9 +441,8 @@ JSObject* GlobalObject::createOffThreadObject(JSContext* cx,
   // compartment.
 
   MOZ_ASSERT(global->zone()->createdForHelperThread());
-  MOZ_ASSERT(slot == ASYNC_GENERATOR || slot == MODULE_PROTO ||
-             slot == IMPORT_ENTRY_PROTO || slot == EXPORT_ENTRY_PROTO ||
-             slot == REQUESTED_MODULE_PROTO);
+  MOZ_ASSERT(slot == MODULE_PROTO || slot == IMPORT_ENTRY_PROTO ||
+             slot == EXPORT_ENTRY_PROTO || slot == REQUESTED_MODULE_PROTO);
 
   auto placeholder = OffThreadPlaceholderObject::New(cx, slot);
   if (!placeholder) {
