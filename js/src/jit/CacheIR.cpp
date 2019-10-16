@@ -3441,8 +3441,8 @@ AttachDecision SetPropIRGenerator::tryAttachTypedObjectProperty(
 
       case Scalar::BigInt64:
       case Scalar::BigUint64:
-        // FIXME: https://bugzil.la/1536703
-        return AttachDecision::NoAction;
+        rhsValId.emplace(writer.guardToBigInt(rhsId));
+        break;
 
       case Scalar::MaxTypedArrayViewType:
       case Scalar::Int64:
@@ -3923,10 +3923,6 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
     return AttachDecision::NoAction;
   }
 
-  if (!rhsVal_.isNumber()) {
-    return AttachDecision::NoAction;
-  }
-
   bool handleOutOfBounds = false;
   if (obj->is<TypedArrayObject>()) {
     handleOutOfBounds = (index >= obj->as<TypedArrayObject>().length());
@@ -3947,9 +3943,15 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
   Scalar::Type elementType = TypedThingElementType(obj);
   TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
 
-  // bigIntArray[index] = rhsVal_ will throw as the RHS is a number.
+  // Don't attach if the input type doesn't match the guard added below.
   if (Scalar::isBigIntType(elementType)) {
-    return AttachDecision::NoAction;
+    if (!rhsVal_.isBigInt()) {
+      return AttachDecision::NoAction;
+    }
+  } else {
+    if (!rhsVal_.isNumber()) {
+      return AttachDecision::NoAction;
+    }
   }
 
   if (IsPrimitiveArrayTypedObject(obj)) {
@@ -3981,6 +3983,9 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedElement(
 
     case Scalar::BigInt64:
     case Scalar::BigUint64:
+      rhsValId.emplace(writer.guardToBigInt(rhsId));
+      break;
+
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
       MOZ_CRASH("Unsupported TypedArray type");
