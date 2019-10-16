@@ -344,7 +344,7 @@ UrlbarProviderExtension.SOURCE_TYPES = {
   history: UrlbarUtils.RESULT_SOURCE.HISTORY,
   local: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
   network: UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
-  search: UrlbarUtils.RESULT_SOURCE.SEARCH,
+  search: UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
   tabs: UrlbarUtils.RESULT_SOURCE.TABS,
 };
 
