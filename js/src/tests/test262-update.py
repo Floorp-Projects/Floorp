@@ -35,7 +35,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DateTimeFormat-datetimestyle",
     "Intl.DateTimeFormat-dayPeriod",
     "Intl.DateTimeFormat-formatRange",
-    "Intl.ListFormat",
     "Intl.Segmenter",
     "WeakRef",
     "FinalizationGroup",
@@ -418,7 +417,7 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
                                                                  "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
 
-    # Intl.Locale isn't yet enabled by default.
+    # Intl.Locale and Intl.ListFormat aren't yet enabled by default.
     localIncludesMap[os.path.join("intl402")] = ["test262-intl-locale.js"]
 
     # Process all test directories recursively.
