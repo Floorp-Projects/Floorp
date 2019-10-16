@@ -60,8 +60,7 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
       () => eventListener("pagehide"),
       {},
       checkFn,
-      false,
-      false
+      /* autoremove = */ false
     );
     rmvShow = BrowserTestUtils.addContentEventListener(
       browser,
@@ -69,8 +68,7 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
       () => eventListener("pageshow"),
       {},
       checkFn,
-      false,
-      false
+      /* autoremove = */ false
     );
   });
 }
