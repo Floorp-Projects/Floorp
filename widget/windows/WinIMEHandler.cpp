@@ -473,6 +473,10 @@ void IMEHandler::SetInputContext(nsWindow* aWindow, InputContext& aInputContext,
 
   // Assume that SetInputContext() is called only when aWindow has focus.
   sPluginHasFocus = (aInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
+  if (sPluginHasFocus) {
+    // Update some cached system settings in the plugin.
+    aWindow->DispatchPluginSettingEvents();
+  }
 
   if (aAction.UserMightRequestOpenVKB()) {
     IMEHandler::MaybeShowOnScreenKeyboard();
