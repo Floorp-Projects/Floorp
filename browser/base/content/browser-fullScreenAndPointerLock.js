@@ -6,8 +6,6 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
-ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
-
 var PointerlockFsWarning = {
   _element: null,
   _origin: null,
@@ -241,12 +239,6 @@ var PointerLock = {
 };
 
 var FullScreen = {
-  _permissionNotificationIDs: Object.values(PermissionUI)
-    .filter(value => value.prototype && value.prototype.notificationID)
-    .map(value => value.prototype.notificationID)
-    // Additionally include webRTC permission prompt which does not use PermissionUI
-    .concat(["webRTC-shareDevices"]),
-
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -789,7 +781,22 @@ var FullScreen = {
     fullscreenctls.hidden = !aEnterFS;
   },
 };
-XPCOMUtils.defineLazyGetter(FullScreen, "useLionFullScreen", function() {
+
+XPCOMUtils.defineLazyGetter(FullScreen, "_permissionNotificationIDs", () => {
+  let { PermissionUI } = ChromeUtils.import(
+    "resource:///modules/PermissionUI.jsm",
+    {}
+  );
+  return (
+    Object.values(PermissionUI)
+      .filter(value => value.prototype && value.prototype.notificationID)
+      .map(value => value.prototype.notificationID)
+      // Additionally include webRTC permission prompt which does not use PermissionUI
+      .concat(["webRTC-shareDevices"])
+  );
+});
+
+XPCOMUtils.defineLazyGetter(FullScreen, "useLionFullScreen", () => {
   // We'll only use OS X Lion full screen if we're
   // * on OS X
   // * on Lion or higher (Darwin 11+)
