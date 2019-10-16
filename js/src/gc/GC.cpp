@@ -5596,6 +5596,10 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
   /* Run a marking slice and return whether the stack is now empty. */
   gcstats::AutoPhase ap(stats(), phase);
 
+#ifdef DEBUG
+  AutoSetThreadIsMarking threadIsMarking;
+#endif  // DEBUG
+
   if (marker.processMarkQueue() == GCMarker::QueueYielded) {
     return NotFinished;
   }

@@ -3549,6 +3549,10 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS)
 #undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND
 #undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS
 
+#ifdef DEBUG
+bool CurrentThreadIsGCMarking() { return TlsContext.get()->gcMarking; }
+#endif  // DEBUG
+
 } /* namespace gc */
 } /* namespace js */
 
