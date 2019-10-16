@@ -48,6 +48,14 @@ Autofix
 The flake8 linter provides a ``--fix`` option. It is based on `autopep8`_.
 Please note that autopep8 does NOT fix all issues reported by flake8.
 
+
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/python/flake8.py>`_
+
+
 .. _Flake8: https://flake8.readthedocs.io/en/latest/
 .. _pep8: http://pep8.readthedocs.io/en/latest/
 .. _pyflakes: https://github.com/pyflakes/pyflakes
