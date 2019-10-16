@@ -12,12 +12,14 @@ import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
 import org.json.JSONObject
 import java.lang.UnsupportedOperationException
 
 /**
  * Entry point for interacting with the engine implementation.
  */
+@Suppress("TooManyFunctions")
 interface Engine {
 
     /**
@@ -139,6 +141,16 @@ interface Engine {
     fun registerWebExtensionDelegate(
         webExtensionDelegate: WebExtensionDelegate
     ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
+
+    /**
+     * Registers a [WebNotificationDelegate] to be notified of engine events
+     * related to web notifications
+     *
+     * @param webNotificationDelegate callback to be invoked for web notification events.
+     */
+    fun registerWebNotificationDelegate(
+        webNotificationDelegate: WebNotificationDelegate
+    ): Unit = throw UnsupportedOperationException("Web notification support is not available in this engine")
 
     /**
      * Clears browsing data stored by the engine.
