@@ -269,9 +269,12 @@ function makeUrlbarResult(tokens, info) {
             ? UrlbarUtils.KEYWORD_OFFER.HIDE
             : UrlbarUtils.KEYWORD_OFFER.SHOW;
         }
+        let source = action.params.searchSuggestion
+          ? UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK
+          : UrlbarUtils.RESULT_SOURCE.SEARCH_LOCAL;
         return new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
-          UrlbarUtils.RESULT_SOURCE.SEARCH,
+          source,
           ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
             engine: [action.params.engineName, UrlbarUtils.HIGHLIGHT.TYPED],
             suggestion: [
@@ -374,7 +377,7 @@ function makeUrlbarResult(tokens, info) {
   if (info.style.includes("priority-search")) {
     return new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.SEARCH_LOCAL,
       ...UrlbarResult.payloadAndSimpleHighlights(tokens, {
         engine: [info.comment, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: [info.icon],

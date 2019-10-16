@@ -316,7 +316,7 @@ add_task(async function test_nofilter_restrict() {
     ),
     new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.SEARCH,
-      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
       { engine: "noengine" }
     ),
   ];
@@ -331,9 +331,10 @@ add_task(async function test_nofilter_restrict() {
       return UrlbarUtils.PROVIDER_TYPE.IMMEDIATE;
     }
     isActive(context) {
-      Assert.equal(
-        context.acceptableSources.length,
-        1,
+      // For most restrictions there is only one acceptable source, but for
+      // some like SEARCH it may be 2 (LOCAL and NETWORK).
+      Assert.ok(
+        context.acceptableSources.length <= 2,
         "Check acceptableSources"
       );
       return true;
@@ -357,7 +358,7 @@ add_task(async function test_nofilter_restrict() {
     ["HISTORY", { source: "HISTORY", pref: "history" }],
     ["BOOKMARK", { source: "BOOKMARKS", pref: "bookmark" }],
     ["OPENPAGE", { source: "TABS", pref: "openpage" }],
-    ["SEARCH", { source: "SEARCH", pref: "searches" }],
+    ["SEARCH", { source: "SEARCH_NETWORK", pref: "searches" }],
   ]);
   for (let [type, token] of Object.entries(UrlbarTokenizer.RESTRICT)) {
     let properties = typeToPropertiesMap.get(type);

@@ -452,10 +452,18 @@ function getAcceptableMatchSources(context) {
           acceptedSources.push(source);
         }
         break;
-      case UrlbarUtils.RESULT_SOURCE.SEARCH:
+      case UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK:
         if (
           restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH ||
           (!restrictTokenType && UrlbarPrefs.get("suggest.searches"))
+        ) {
+          acceptedSources.push(source);
+        }
+        break;
+      case UrlbarUtils.RESULT_SOURCE.SEARCH_LOCAL:
+        if (
+          restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH ||
+          !restrictTokenType
         ) {
           acceptedSources.push(source);
         }

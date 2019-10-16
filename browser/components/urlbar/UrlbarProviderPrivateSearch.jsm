@@ -110,7 +110,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       this,
       new UrlbarResult(
         UrlbarUtils.RESULT_TYPE.SEARCH,
-        UrlbarUtils.RESULT_SOURCE.SEARCH,
+        UrlbarUtils.RESULT_SOURCE.SEARCH_LOCAL,
         ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
           query: [
