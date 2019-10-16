@@ -186,13 +186,13 @@ class MarkStack {
   MOZ_MUST_USE bool pushTaggedPtr(Tag tag, Cell* ptr);
 
   // Index of the top of the stack.
-  MainThreadData<size_t> topIndex_;
+  MainThreadOrGCTaskData<size_t> topIndex_;
 
   // The maximum stack capacity to grow to.
-  MainThreadData<size_t> maxCapacity_;
+  MainThreadOrGCTaskData<size_t> maxCapacity_;
 
   // Vector containing allocated stack memory. Unused beyond topIndex_.
-  MainThreadData<StackVector> stack_;
+  MainThreadOrGCTaskData<StackVector> stack_;
 
 #ifdef DEBUG
   mutable size_t iteratorCount_;
@@ -402,13 +402,13 @@ class GCMarker : public JSTracer {
   gc::MarkStack stack;
 
   /* Stack entries at positions below this are considered gray. */
-  MainThreadData<size_t> grayPosition;
+  MainThreadOrGCTaskData<size_t> grayPosition;
 
   /* The color is only applied to objects and functions. */
-  MainThreadData<gc::MarkColor> color;
+  MainThreadOrGCTaskData<gc::MarkColor> color;
 
   /* Pointer to the top of the stack of arenas we are delaying marking on. */
-  MainThreadData<js::gc::Arena*> delayedMarkingList;
+  MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;
 
   /* Whether more work has been added to the delayed marking list. */
   MainThreadData<bool> delayedMarkingWorkAdded;
@@ -427,7 +427,7 @@ class GCMarker : public JSTracer {
   MainThreadData<size_t> markLaterArenas;
 
   /* Assert that start and stop are called with correct ordering. */
-  MainThreadData<bool> started;
+  MainThreadOrGCTaskData<bool> started;
 
   /* The test marking queue might want to be marking a particular color. */
   mozilla::Maybe<js::gc::MarkColor> queueMarkColor;
@@ -436,7 +436,7 @@ class GCMarker : public JSTracer {
    * If this is true, all marked objects must belong to a compartment being
    * GCed. This is used to look for compartment bugs.
    */
-  MainThreadData<bool> strictCompartmentChecking;
+  MainThreadOrGCTaskData<bool> strictCompartmentChecking;
 
  public:
   /*
