@@ -29,8 +29,18 @@ add_task(async function() {
   const service = toolbox.sourceMapURLService;
 
   const cbCalls = [];
-  const cb = (...args) => cbCalls.push(args);
-  const expectedArgs = [true, ORIGINAL_URL, ORIGINAL_LINE, 0];
+  let sourceId;
+  const sourceIdIndex = 4;
+  const expectedArgs = [true, ORIGINAL_URL, ORIGINAL_LINE, 0, sourceId];
+  // There's no way we can know the sourceId, so we retrieve it from the subscribe
+  // callback.
+  const cb = (...args) => {
+    if (!sourceId) {
+      sourceId = args[sourceIdIndex];
+      expectedArgs[sourceIdIndex] = sourceId;
+    }
+    cbCalls.push(args);
+  };
 
   const unsubscribe1 = service.subscribe(JS_URL, GENERATED_LINE, 1, cb);
   await waitForSubscribtionsPromise(service);
