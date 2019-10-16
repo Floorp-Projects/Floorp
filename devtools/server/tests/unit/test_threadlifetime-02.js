@@ -44,26 +44,28 @@ function test_thread_lifetime() {
     });
     // Successful promotion won't return an error.
     Assert.equal(response.error, undefined);
-    gThreadFront.once("paused", function(packet) {
+    gThreadFront.once("paused", async function(packet) {
       // Verify that the promoted actor is returned again.
       Assert.equal(pauseGrip.actor, packet.frame.arguments[0].actor);
       // Now that we've resumed, release the thread-lifetime grip.
-      gClient.release(pauseGrip.actor, async function(response) {
-        try {
-          await gClient.request(
-            { to: pauseGrip.actor, type: "bogusRequest" },
-            function(response) {
-              Assert.equal(response.error, "noSuchActor");
-              gThreadFront.resume().then(function() {
-                finishClient(gClient);
-              });
-            }
-          );
-          ok(false, "bogusRequest should throw");
-        } catch (e) {
-          ok(true, "bogusRequest thrown");
-        }
-      });
+      const objFront = new ObjectClient(gClient, pauseGrip);
+      await objFront.release();
+      const objFront2 = new ObjectClient(gClient, pauseGrip);
+
+      try {
+        await objFront2
+          .request({ to: pauseGrip.actor, type: "bogusRequest" })
+          .catch(function(response) {
+            Assert.ok(!!response.match(/noSuchActor/));
+            gThreadFront.resume().then(function() {
+              finishClient(gClient);
+            });
+            throw new Error();
+          });
+        ok(false, "bogusRequest should throw");
+      } catch (e) {
+        ok(true, "bogusRequest thrown");
+      }
     });
     gThreadFront.resume();
   });
