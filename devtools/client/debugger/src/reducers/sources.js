@@ -374,33 +374,33 @@ function removeSourceActors(state: SourcesState, action) {
 function updateProjectDirectoryRoot(state: SourcesState, root: string) {
   prefs.projectDirectoryRoot = root;
 
-  return updateRootRelativeValues({
-    ...state,
-    projectDirectoryRoot: root,
-  });
+  return updateRootRelativeValues(state, undefined, root);
 }
 
 function updateRootRelativeValues(
   state: SourcesState,
-  sources?: $ReadOnlyArray<Source>
+  sources?: $ReadOnlyArray<Source>,
+  projectDirectoryRoot?: string = state.projectDirectoryRoot
 ) {
-  const ids = sources
-    ? sources.map(source => source.id)
+  const wrappedIdsOrIds: $ReadOnlyArray<Source> | Array<string> = sources
+    ? sources
     : getResourceIds(state.sources);
 
   state = {
     ...state,
+    projectDirectoryRoot,
   };
 
-  const relativeURLUpdates = [];
-  for (const id of ids) {
+  const relativeURLUpdates = wrappedIdsOrIds.map(wrappedIdOrId => {
+    const id =
+      typeof wrappedIdOrId === "string" ? wrappedIdOrId : wrappedIdOrId.id;
     const source = getResource(state.sources, id);
 
-    relativeURLUpdates.push({
+    return {
       id,
       relativeUrl: getRelativeUrl(source, state.projectDirectoryRoot),
-    });
-  }
+    };
+  });
 
   state.sources = updateResources(state.sources, relativeURLUpdates);
 

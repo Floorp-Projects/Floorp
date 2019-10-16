@@ -15688,7 +15688,7 @@ function extractSymbol(path, symbols, state) {
         }
       } = callee;
       symbols.callExpressions.push({
-        name: name,
+        name,
         values: args.filter(arg => arg.value).map(arg => arg.value),
         location: loc
       });
@@ -15929,8 +15929,7 @@ function getSnippet(path, prevPath, expression = "") {
       return expression;
     }
 
-    const name = node.name;
-    const prop = extendSnippet(name, expression, path, prevPath);
+    const prop = extendSnippet(node.name, expression, path, prevPath);
     return prop;
   }
 
@@ -15946,8 +15945,7 @@ function getSnippet(path, prevPath, expression = "") {
   }
 
   if (t.isIdentifier(path)) {
-    const node = path.node;
-    return `${node.name}.${expression}`;
+    return `${path.node.name}.${expression}`;
   }
 
   if (t.isObjectProperty(path)) {
@@ -42308,7 +42306,9 @@ const scopeCollectionVisitor = {
     // rather than jumping stright to 'parentScope'.
 
     for (let scope = currentScope; scope && scope !== parentScope; scope = scope.parent) {
-      const freeVariables = state.freeVariables;
+      const {
+        freeVariables
+      } = state;
       state.freeVariables = state.freeVariableStack.pop();
       const parentFreeVariables = state.freeVariables; // Match up any free variables that match this scope's bindings and
       // merge then into the refs.
@@ -43692,7 +43692,7 @@ function _getNextStep(statement, sourceId, position) {
 
   if (nextStatement) {
     return { ...nextStatement.node.loc.start,
-      sourceId: sourceId
+      sourceId
     };
   }
 

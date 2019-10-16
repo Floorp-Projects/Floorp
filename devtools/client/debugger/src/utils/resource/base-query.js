@@ -6,7 +6,7 @@
 
 import {
   getResourceValues,
-  getResourcePair,
+  getValidatedResource,
   makeIdentity,
   type ResourceBound,
   type Id,
@@ -152,12 +152,12 @@ function getCachedResource<R: ResourceBound, Args, Mapped>(
     context: QueryContext<Args>
   ) => Mapped
 ): Mapped {
-  const pair = getResourcePair(state, id);
-  if (!pair) {
+  const validatedState = getValidatedResource(state, id);
+  if (!validatedState) {
     throw new Error(`Resource ${id} does not exist`);
   }
 
-  return map(pair.value, pair.identity, context);
+  return map(validatedState.values[id], validatedState.identity[id], context);
 }
 
 function getIdentity(
