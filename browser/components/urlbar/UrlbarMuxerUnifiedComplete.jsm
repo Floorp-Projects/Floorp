@@ -53,7 +53,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    */
   sort(context) {
     // A Search in a Private Window result should only be shown when there are
-    // other results, and all of them are searches.
+    // other results, and all of them are searches. It should also not be shown
+    // if the user typed an alias, because it's an explicit search engine choice.
     let searchInPrivateWindowIndex = context.results.findIndex(
       r => r.type == UrlbarUtils.RESULT_TYPE.SEARCH && r.payload.inPrivateWindow
     );
@@ -62,7 +63,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       (context.results.length == 1 ||
         context.results.some(
           r =>
-            r.type != UrlbarUtils.RESULT_TYPE.SEARCH || r.payload.keywordOffer
+            r.type != UrlbarUtils.RESULT_TYPE.SEARCH ||
+            r.payload.keywordOffer ||
+            (r.heuristic && r.payload.keyword)
         ))
     ) {
       // Remove the result.
