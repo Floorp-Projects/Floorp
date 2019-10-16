@@ -487,7 +487,7 @@ class DisplayToolbarTest {
         }
 
         assertFalse(longUrlClicked)
-        displayToolbar.views.origin.performLongClick()
+        displayToolbar.views.origin.urlView.performLongClick()
         assertTrue(longUrlClicked)
     }
 
@@ -501,12 +501,12 @@ class DisplayToolbarTest {
             true
         }
 
-        displayToolbar.views.origin.performLongClick()
+        displayToolbar.views.origin.urlView.performLongClick()
         assertTrue(longClicked)
         longClicked = false
 
         displayToolbar.setOnUrlLongClickListener(null)
-        displayToolbar.views.origin.performLongClick()
+        displayToolbar.views.origin.urlView.performLongClick()
 
         assertFalse(longClicked)
     }

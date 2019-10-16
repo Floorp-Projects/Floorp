@@ -306,6 +306,10 @@ class ToolbarActivity : AppCompatActivity() {
 
         toolbar.display.setUrlBackground(getDrawable(R.drawable.fenix_url_background))
         toolbar.display.hint = "Search or enter address"
+        toolbar.display.setOnUrlLongClickListener {
+            Toast.makeText(this, "Long click!", Toast.LENGTH_SHORT).show()
+            true
+        }
 
         val share = SimpleBrowserMenuItem("Share…") { /* Do nothing */ }
         val homeScreen = SimpleBrowserMenuItem("Add to Home screen") { /* Do nothing */ }

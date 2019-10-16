@@ -116,6 +116,14 @@ internal class OriginView @JvmOverloads constructor(
 
     internal var onUrlClicked: () -> Boolean = { true }
 
+    fun setOnUrlLongClickListener(handler: ((View) -> Boolean)?) {
+        urlView.isLongClickable = true
+        titleView.isLongClickable = true
+
+        urlView.setOnLongClickListener(handler)
+        titleView.setOnLongClickListener(handler)
+    }
+
     internal var url: CharSequence
         get() = urlView.text
         set(value) { urlView.text = value }
