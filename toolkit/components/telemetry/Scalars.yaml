@@ -1773,12 +1773,13 @@ devtools.tool:
     bug_numbers:
       - 1447302
       - 1503568
+      - 1587985
     description: >
       Recorded on enable tool checkbox check/uncheck in Developer Tools options
       panel. Boolean stating if the tool was enabled or disabled by the user.
       Keyed by tool id. Current default tools with their id's are defined in
       https://dxr.mozilla.org/mozilla-central/source/devtools/client/definitions.js
-    expires: "70"
+    expires: never
     kind: boolean
     keyed: true
     notification_emails:
@@ -1797,10 +1798,11 @@ devtools.accessibility:
     bug_numbers:
       - 1447302
       - 1503568
+      - 1587985
     description: >
       Number of times a DOM node was inspected from within the Accessibility
       tool.
-    expires: "70"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1817,9 +1819,10 @@ devtools.accessibility:
     bug_numbers:
       - 1447302
       - 1503568
+      - 1587985
     description: >
       Number of times the DevTools Accessibility tool has been opened.
-    expires: "70"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1836,10 +1839,11 @@ devtools.accessibility:
     bug_numbers:
       - 1447302
       - 1503568
+      - 1587985
     description: >
       Number of times the picker tool has been used in DevTools Accessibility
       panel.
-    expires: "70"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1856,11 +1860,12 @@ devtools.accessibility:
     bug_numbers:
       - 1447302
       - 1503568
+      - 1587985
     description: >
       Number of times an accessible object was inspected from outside the
       Accessibility tool (navigation to Accessibility panel). Keyed by the
       source of user action (inspector context menu, browser context menu, etc).
-    expires: "70"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
@@ -1878,10 +1883,11 @@ devtools.accessibility:
     bug_numbers:
       - 1447302
       - 1503568
+      - 1587985
     description: >
       Number of times platform accessibility has been enabled in DevTools
       Accessibility panel.
-    expires: "70"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1897,10 +1903,11 @@ devtools.accessibility:
   accessible_context_menu_opened:
     bug_numbers:
       - 1507870
+      - 1587985
     description: >
       Number of times a context menu was opened for an accessible object in the
       accessibility tree.
-    expires: "70"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -1916,11 +1923,12 @@ devtools.accessibility:
   accessible_context_menu_item_activated:
     bug_numbers:
       - 1507870
+      - 1587985
     description: >
       Number of times a context menu item for an accessible object was activated (with
       mouse or keyboard) from the context menu opened in the accessibility tree. Keyed by
       the id of the context menu item.
-    expires: "70"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
@@ -1937,11 +1945,12 @@ devtools.accessibility:
   audit_activated:
     bug_numbers:
       - 1548241
+      - 1587985
     description: >
       Number of times accessibility audit was activated (with mouse or keyboard)
       from the accessibility panel's toolbar. Keyed by the audit filter type
       (e.g. "CONTRAST").
-    expires: "73"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
@@ -1958,11 +1967,12 @@ devtools.accessibility:
   simulation_activated:
     bug_numbers:
       - 1567200
+      - 1587985
     description: >
       Number of times accessibility simulation was activated (with mouse or keyboard)
       from the accessibility panel's toolbar. Keyed by the simulation type
       (e.g. "DEUTERANOMALY").
-    expires: "74"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
