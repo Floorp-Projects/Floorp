@@ -148,18 +148,6 @@ void js::RelativeTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   }
 }
 
-bool js::CreateRelativeTimeFormat(JSContext* cx, HandleObject Intl) {
-  JSObject* ctor =
-      GlobalObject::getOrCreateConstructor(cx, JSProto_RelativeTimeFormat);
-  if (!ctor) {
-    return false;
-  }
-
-  RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, Intl, cx->names().RelativeTimeFormat, ctorValue,
-                            0);
-}
-
 /**
  * Returns a new URelativeDateTimeFormatter with the locale and options of the
  * given RelativeTimeFormatObject.
