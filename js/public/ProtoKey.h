@@ -129,7 +129,8 @@
   IMAGINARY(WasmInstance, dummy, dummy)                                      \
   IMAGINARY(WasmMemory, dummy, dummy)                                        \
   IMAGINARY(WasmTable, dummy, dummy)                                         \
-  IMAGINARY(WasmGlobal, dummy, dummy)
+  IMAGINARY(WasmGlobal, dummy, dummy)                                        \
+  REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
