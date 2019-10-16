@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Reducer
@@ -42,7 +43,8 @@ class QuickSettingsFragmentStore(
         /**
          * String, Drawable & Drawable Tint color used to display that the current website connection is secured.
          */
-        private val getSecuredWebsiteUiValues = Triple(
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        val getSecuredWebsiteUiValues = Triple(
             R.string.quick_settings_sheet_secure_connection,
             R.drawable.mozac_ic_lock,
             R.color.photonGreen50
@@ -52,7 +54,8 @@ class QuickSettingsFragmentStore(
          * String, Drawable & Drawable Tint color used to display that the current website connection is
          * **not** secured.
          */
-        private val getInsecureWebsiteUiValues = Triple(
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        val getInsecureWebsiteUiValues = Triple(
             R.string.quick_settings_sheet_insecure_connection,
             R.drawable.mozac_ic_globe,
             R.color.photonRed50
@@ -97,7 +100,8 @@ class QuickSettingsFragmentStore(
          * tracking protection is enabled for the current website or not.
          * @param settings [Settings] application settings.
          */
-        private fun createTrackingProtectionState(
+        @VisibleForTesting
+        fun createTrackingProtectionState(
             websiteUrl: String,
             isTrackingProtectionOn: Boolean,
             settings: Settings
@@ -117,7 +121,8 @@ class QuickSettingsFragmentStore(
          * @param websiteUrl [String] the URL of the current web page.
          * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
          */
-        private fun createWebsiteInfoState(
+        @VisibleForTesting
+        fun createWebsiteInfoState(
             websiteUrl: String,
             isSecured: Boolean
         ): WebsiteInfoState {
@@ -138,7 +143,8 @@ class QuickSettingsFragmentStore(
          * @param permissions [SitePermissions]? list of website permissions and their status.
          * @param settings [Settings] application settings.
          */
-        private fun createWebsitePermissionState(
+        @VisibleForTesting
+        fun createWebsitePermissionState(
             context: Context,
             permissions: SitePermissions?,
             settings: Settings
@@ -158,7 +164,8 @@ class QuickSettingsFragmentStore(
         /**
          * [PhoneFeature] to a [WebsitePermission] mapper.
          */
-        private fun PhoneFeature.toWebsitePermission(
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        fun PhoneFeature.toWebsitePermission(
             context: Context,
             permissions: SitePermissions?,
             settings: Settings
@@ -185,7 +192,8 @@ class QuickSettingsFragmentStore(
         /**
          * Helper method for getting the [WebsitePermission] properties based on a specific [PhoneFeature].
          */
-        private fun PhoneFeature.getPermissionStatus(
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        fun PhoneFeature.getPermissionStatus(
             context: Context,
             permissions: SitePermissions?,
             settings: Settings
@@ -199,7 +207,8 @@ class QuickSettingsFragmentStore(
         /**
          * Helper class acting as a temporary container of [WebsitePermission] properties.
          */
-        private data class PermissionStatus(
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        data class PermissionStatus(
             val status: String,
             val isVisible: Boolean,
             val isEnabled: Boolean,

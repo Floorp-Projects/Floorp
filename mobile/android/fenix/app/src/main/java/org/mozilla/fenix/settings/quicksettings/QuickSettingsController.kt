@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings.quicksettings
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -197,7 +198,8 @@ class DefaultQuickSettingsController(
      *
      * @param requestedPermissions [Array]<[String]> runtime permissions needed to be requested.
      */
-    private fun handleAndroidPermissionRequest(requestedPermissions: Array<String>) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun handleAndroidPermissionRequest(requestedPermissions: Array<String>) {
         requestRuntimePermissions(requestedPermissions)
     }
 
@@ -207,7 +209,8 @@ class DefaultQuickSettingsController(
      *
      * @param updatedPermissions [SitePermissions] updated website permissions.
      */
-    private fun handlePermissionsChange(updatedPermissions: SitePermissions) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun handlePermissionsChange(updatedPermissions: SitePermissions) {
         coroutineScope.launch(Dispatchers.IO) {
             permissionStorage.updateSitePermissions(updatedPermissions)
             reload(session)
@@ -219,7 +222,8 @@ class DefaultQuickSettingsController(
      *
      * Get this [WebsitePermission]'s [PhoneFeature].
      */
-    private fun WebsitePermission.getBackingFeature(): PhoneFeature = when (this) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun WebsitePermission.getBackingFeature(): PhoneFeature = when (this) {
         is WebsitePermission.Camera -> PhoneFeature.CAMERA
         is WebsitePermission.Microphone -> PhoneFeature.MICROPHONE
         is WebsitePermission.Notification -> PhoneFeature.NOTIFICATION
@@ -232,7 +236,8 @@ class DefaultQuickSettingsController(
      * **The result only informs about the type of [WebsitePermission].
      * The resulting object's properties are just stubs and not dependable.**
      */
-    private fun PhoneFeature.getCorrespondingPermission(): WebsitePermission {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun PhoneFeature.getCorrespondingPermission(): WebsitePermission {
         val defaultStatus = ""
         val defaultEnabled = false
         val defaultVisible = false
