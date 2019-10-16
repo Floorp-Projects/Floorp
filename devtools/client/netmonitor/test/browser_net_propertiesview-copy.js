@@ -47,7 +47,7 @@ add_task(async function() {
   await waitForClipboardPromise(function setup() {
     getContextMenuItem(monitor, "properties-view-context-menu-copyall").click();
   }, `{"JSON":{"obj":{"type":"string"}},` +
-    `"Response payload":{"EDITOR_CONFIG":{"text":` +
+    `"Response Payload":{"EDITOR_CONFIG":{"text":` +
     `"{\\"obj\\": {\\"type\\": \\"string\\" }}","mode":"application/json"}}}`);
 
   /* Test for copy a single row */
