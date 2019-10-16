@@ -1040,6 +1040,7 @@ class UrlbarView {
   _getFirstSelectableElement() {
     let firstElementChild = this._rows.firstElementChild;
     if (
+      firstElementChild &&
       firstElementChild.result &&
       firstElementChild.result.type == UrlbarUtils.RESULT_TYPE.TIP
     ) {
