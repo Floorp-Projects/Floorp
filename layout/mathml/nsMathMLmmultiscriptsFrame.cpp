@@ -7,7 +7,6 @@
 #include "nsMathMLmmultiscriptsFrame.h"
 
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs_mathml.h"
 #include "nsPresContext.h"
 #include <algorithm>
 #include "gfxContext.h"
@@ -95,43 +94,41 @@ nsresult nsMathMLmmultiscriptsFrame::Place(DrawTarget* aDrawTarget,
   nscoord supScriptShift = 0;
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
 
-  if (!StaticPrefs::mathml_script_shift_attributes_disabled()) {
-    // subscriptshift
-    //
-    // "Specifies the minimum amount to shift the baseline of subscript down;
-    // the default is for the rendering agent to use its own positioning rules."
-    //
-    // values: length
-    // default: automatic
-    //
-    // We use 0 as the default value so unitless values can be ignored.
-    // As a minimum, negative values can be ignored.
-    //
-    nsAutoString value;
-    if (!mContent->IsMathMLElement(nsGkAtoms::msup_) &&
-        mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::subscriptshift_, value)) {
-      mContent->OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedScriptShiftAttributes);
+  // subscriptshift
+  //
+  // "Specifies the minimum amount to shift the baseline of subscript down; the
+  // default is for the rendering agent to use its own positioning rules."
+  //
+  // values: length
+  // default: automatic
+  //
+  // We use 0 as the default value so unitless values can be ignored.
+  // As a minimum, negative values can be ignored.
+  //
+  nsAutoString value;
+  if (!mContent->IsMathMLElement(nsGkAtoms::msup_)) {
+    mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                   nsGkAtoms::subscriptshift_, value);
+    if (!value.IsEmpty()) {
       ParseNumericValue(value, &subScriptShift, 0, PresContext(),
                         mComputedStyle, fontSizeInflation);
     }
-    // superscriptshift
-    //
-    // "Specifies the minimum amount to shift the baseline of superscript up;
-    // the default is for the rendering agent to use its own positioning rules."
-    //
-    // values: length
-    // default: automatic
-    //
-    // We use 0 as the default value so unitless values can be ignored.
-    // As a minimum, negative values can be ignored.
-    //
-    if (!mContent->IsMathMLElement(nsGkAtoms::msub_) &&
-        mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::superscriptshift_, value)) {
-      mContent->OwnerDoc()->WarnOnceAbout(
-          dom::Document::eMathML_DeprecatedScriptShiftAttributes);
+  }
+  // superscriptshift
+  //
+  // "Specifies the minimum amount to shift the baseline of superscript up; the
+  // default is for the rendering agent to use its own positioning rules."
+  //
+  // values: length
+  // default: automatic
+  //
+  // We use 0 as the default value so unitless values can be ignored.
+  // As a minimum, negative values can be ignored.
+  //
+  if (!mContent->IsMathMLElement(nsGkAtoms::msub_)) {
+    mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                   nsGkAtoms::superscriptshift_, value);
+    if (!value.IsEmpty()) {
       ParseNumericValue(value, &supScriptShift, 0, PresContext(),
                         mComputedStyle, fontSizeInflation);
     }
