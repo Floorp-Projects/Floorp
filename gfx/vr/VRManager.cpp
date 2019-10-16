@@ -305,9 +305,8 @@ void VRManager::TaskTimerCallback(nsITimer* aTimer, void* aClosure) {
 
   if (self->mAppPaused) {
     // When the apps goes the background (e.g. Android) we should stop the
-    // tasks and shutdown.
+    // tasks.
     self->StopTasks();
-    self->Shutdown();
   }
 }
 
