@@ -10,12 +10,16 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
+const { updateSelectedNode } = require("./actions/compatibility");
+
 const CompatibilityApp = createFactory(
   require("./components/CompatibilityApp")
 );
 
 class CompatibilityView {
   constructor(inspector, window) {
+    this.inspector = inspector;
+
     this._init();
   }
 
@@ -30,6 +34,10 @@ class CompatibilityView {
         id: "compatibilityview",
       },
       compatibilityApp
+    );
+
+    this.inspector.store.dispatch(
+      updateSelectedNode(this.inspector.selection.nodeFront)
     );
   }
 }
