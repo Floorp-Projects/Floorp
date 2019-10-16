@@ -2150,7 +2150,7 @@ class Matrix4x4TypedFlagged
       matrix._14 = _11 * aMatrix._14 + _12 * aMatrix._24;
       matrix._24 = _21 * aMatrix._14 + _22 * aMatrix._24;
       matrix._34 = aMatrix._34;
-      matrix._44 = _41 * aMatrix._14 + _42 * aMatrix._24;
+      matrix._44 = _41 * aMatrix._14 + _42 * aMatrix._24 + aMatrix._44;
       matrix.Analyze();
       return matrix;
     }
