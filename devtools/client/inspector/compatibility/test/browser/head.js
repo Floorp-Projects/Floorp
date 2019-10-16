@@ -10,3 +10,14 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/inspector/test/head.js",
   this
 );
+
+async function openCompatibilityView() {
+  info("Open the compatibility view");
+  await pushPref("devtools.inspector.compatibility.enabled", true);
+
+  const { inspector } = await openInspectorSidebarTab("compatibilityview");
+  const panel = inspector.panelDoc.querySelector(
+    "#compatibilityview-panel .inspector-tabpanel"
+  );
+  return { panel };
+}

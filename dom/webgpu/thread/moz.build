@@ -4,8 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DevToolsModules(
-    "CompatibilityApp.js",
-    "IssueItem.js",
-    "IssueList.js",
-)
+h_and_cpp = [
+    'WebGPUThreading',
+]
+EXPORTS.mozilla.webgpu += [x + '.h' for x in h_and_cpp]
+UNIFIED_SOURCES += [x + '.cpp' for x in h_and_cpp]
+
+
+LOCAL_INCLUDES += [
+    '/ipc/chromium/src',
+]
+
+FINAL_LIBRARY = 'xul'

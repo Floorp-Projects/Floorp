@@ -3136,6 +3136,11 @@ void gfxPlatform::InitWebRenderConfig() {
   gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
 }
 
+void gfxPlatform::InitWebGPUConfig() {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::WEBGPU);
+  feature.SetDefaultFromPref("dom.webgpu.enable", true, false);
+}
+
 void gfxPlatform::InitOMTPConfig() {
   ScopedGfxFeatureReporter reporter("OMTP");
 

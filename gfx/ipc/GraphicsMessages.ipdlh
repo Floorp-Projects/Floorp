@@ -34,6 +34,7 @@ struct DevicePrefs
   FeatureStatus oglCompositing;
   FeatureStatus advancedLayers;
   FeatureStatus useD2D1;
+  FeatureStatus webGPU;
 };
 
 struct ContentDeviceData
@@ -58,6 +59,7 @@ struct GPUDeviceData
   FeatureFailure? oglCompositing;
   FeatureFailure? advancedLayers;
   D3D11DeviceStatus? gpuDevice;
+  FeatureFailure? webGPU;
 };
 
 union GfxVarValue
