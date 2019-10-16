@@ -46,8 +46,8 @@ window.clear = function() {
 };
 
 window.onload = function() {
-  addCookie("c1", "1.2.3.4.5.6.7", "/browser");
-  addCookie("c2", "foobar", "/browser");
+  window.addCookie("c1", "1.2.3.4.5.6.7", "/browser");
+  window.addCookie("c2", "foobar", "/browser");
 
   // Some keys have to be set to strings that JSON.parse can parse successfully
   // instead of throwings (to verify the issue fixed by Bug 1578447 doesn't regress).
