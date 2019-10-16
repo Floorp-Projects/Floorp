@@ -290,6 +290,7 @@ LoginManager.prototype = {
       );
     }
 
+    login.QueryInterface(Ci.nsILoginMetaInfo);
     for (let pname of ["timeCreated", "timeLastUsed", "timePasswordChanged"]) {
       // Invalid dates
       if (login[pname] > MAX_DATE_MS) {
