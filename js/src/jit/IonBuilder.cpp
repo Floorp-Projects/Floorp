@@ -8430,12 +8430,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_getimport(PropertyName* name) {
   ModuleEnvironmentObject* targetEnv;
   MOZ_ALWAYS_TRUE(env->lookupImport(NameToId(name), &targetEnv, &shape));
 
-  TypeSet::ObjectKey* staticKey = TypeSet::ObjectKey::get(targetEnv);
   TemporaryTypeSet* types = bytecodeTypes(pc);
-  BarrierKind barrier = PropertyReadNeedsTypeBarrier(
-      analysisContext, alloc(), constraints(), staticKey, name, types,
-      /* updateObserved = */ true);
-
+  BarrierKind barrier = BarrierKind::TypeSet;
   MOZ_TRY(loadStaticSlot(targetEnv, barrier, types, shape->slot()));
 
   // In the rare case where this import hasn't been initialized already (we
