@@ -2159,14 +2159,10 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           break;
       }
       if (pluginEvent.event && initWParamWithCurrentState) {
+        // We created one of the messages caught above but didn't fill in wParam.
+        // Mark it with an invalid wParam value so that HandleEvent can figure it out.
         pPluginEvent = &pluginEvent;
-        pluginEvent.wParam = (::GetKeyState(VK_CONTROL) ? MK_CONTROL : 0) |
-                             (::GetKeyState(VK_SHIFT) ? MK_SHIFT : 0) |
-                             (::GetKeyState(VK_LBUTTON) ? MK_LBUTTON : 0) |
-                             (::GetKeyState(VK_MBUTTON) ? MK_MBUTTON : 0) |
-                             (::GetKeyState(VK_RBUTTON) ? MK_RBUTTON : 0) |
-                             (::GetKeyState(VK_XBUTTON1) ? MK_XBUTTON1 : 0) |
-                             (::GetKeyState(VK_XBUTTON2) ? MK_XBUTTON2 : 0);
+        pluginEvent.wParam = NPAPI_INVALID_WPARAM;
       }
     }
     if (pPluginEvent) {
