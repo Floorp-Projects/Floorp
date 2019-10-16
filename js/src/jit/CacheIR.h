@@ -2007,6 +2007,10 @@ class MOZ_RAII CacheIRReader {
     return SymbolOperandId(buffer_.readByte());
   }
 
+  BigIntOperandId bigIntOperandId() {
+    return BigIntOperandId(buffer_.readByte());
+  }
+
   Int32OperandId int32OperandId() { return Int32OperandId(buffer_.readByte()); }
 
   uint32_t stubOffset() { return buffer_.readByte() * sizeof(uintptr_t); }
