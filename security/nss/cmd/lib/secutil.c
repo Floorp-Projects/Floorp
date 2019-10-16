@@ -1108,36 +1108,33 @@ typedef struct secuPBEParamsStr {
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 
 /* SECOID_PKCS5_PBKDF2 */
-const SEC_ASN1Template secuKDF2Params[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(secuPBEParams) },
-      { SEC_ASN1_OCTET_STRING, offsetof(secuPBEParams, salt) },
-      { SEC_ASN1_INTEGER, offsetof(secuPBEParams, iterationCount) },
-      { SEC_ASN1_INTEGER, offsetof(secuPBEParams, keyLength) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(secuPBEParams, kdfAlg),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { 0 }
-    };
+const SEC_ASN1Template secuKDF2Params[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(secuPBEParams) },
+    { SEC_ASN1_OCTET_STRING, offsetof(secuPBEParams, salt) },
+    { SEC_ASN1_INTEGER, offsetof(secuPBEParams, iterationCount) },
+    { SEC_ASN1_INTEGER, offsetof(secuPBEParams, keyLength) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(secuPBEParams, kdfAlg),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { 0 }
+};
 
 /* PKCS5v1 & PKCS12 */
-const SEC_ASN1Template secuPBEParamsTemp[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(secuPBEParams) },
-      { SEC_ASN1_OCTET_STRING, offsetof(secuPBEParams, salt) },
-      { SEC_ASN1_INTEGER, offsetof(secuPBEParams, iterationCount) },
-      { 0 }
-    };
+const SEC_ASN1Template secuPBEParamsTemp[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(secuPBEParams) },
+    { SEC_ASN1_OCTET_STRING, offsetof(secuPBEParams, salt) },
+    { SEC_ASN1_INTEGER, offsetof(secuPBEParams, iterationCount) },
+    { 0 }
+};
 
 /* SEC_OID_PKCS5_PBES2, SEC_OID_PKCS5_PBMAC1 */
-const SEC_ASN1Template secuPBEV2Params[] =
-    {
-      { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(secuPBEParams) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(secuPBEParams, kdfAlg),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(secuPBEParams, cipherAlg),
-        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
-      { 0 }
-    };
+const SEC_ASN1Template secuPBEV2Params[] = {
+    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(secuPBEParams) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(secuPBEParams, kdfAlg),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN, offsetof(secuPBEParams, cipherAlg),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { 0 }
+};
 
 void
 secu_PrintRSAPSSParams(FILE *out, SECItem *value, char *m, int level)
@@ -2300,8 +2297,9 @@ SECU_PrintCertAttributes(FILE *out, CERTAttribute **attrs, char *m, int level)
     return rv;
 }
 
-int /* sometimes a PRErrorCode, other times a SECStatus.  Sigh. */
-    SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
+/* sometimes a PRErrorCode, other times a SECStatus.  Sigh. */
+int
+SECU_PrintCertificateRequest(FILE *out, SECItem *der, char *m, int level)
 {
     PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     CERTCertificateRequest *cr;
@@ -3249,6 +3247,26 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
     } else if (CERT_GetCertTrust(cert, &certTrust) == SECSuccess) {
         SECU_PrintTrustFlags(stdout, &certTrust,
                              "Certificate Trust Flags", 1);
+    }
+
+    /* The distrust fields are hard-coded in nssckbi and read-only.
+     * If verifying some cert, with vfychain, for instance, the certificate may
+     * not have a defined slot if not imported. */
+    if (cert->slot != NULL && cert->distrust != NULL) {
+        const unsigned int kDistrustFieldSize = 13;
+        fprintf(stdout, "\n");
+        SECU_Indent(stdout, 1);
+        fprintf(stdout, "%s:\n", "Certificate Distrust Dates");
+        if (cert->distrust->serverDistrustAfter.len == kDistrustFieldSize) {
+            SECU_PrintTimeChoice(stdout,
+                                 &cert->distrust->serverDistrustAfter,
+                                 "Server Distrust After", 2);
+        }
+        if (cert->distrust->emailDistrustAfter.len == kDistrustFieldSize) {
+            SECU_PrintTimeChoice(stdout,
+                                 &cert->distrust->emailDistrustAfter,
+                                 "E-mail Distrust After", 2);
+        }
     }
 
     printf("\n");
