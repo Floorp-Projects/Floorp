@@ -47,6 +47,7 @@ const JSClassOps RelativeTimeFormatObject::classOps_ = {
 const JSClass RelativeTimeFormatObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(RelativeTimeFormatObject::SLOT_COUNT) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_RelativeTimeFormat) |
         JSCLASS_FOREGROUND_FINALIZE,
     &RelativeTimeFormatObject::classOps_,
     &RelativeTimeFormatObject::classSpec_};
@@ -110,17 +111,9 @@ static bool RelativeTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!proto) {
-    proto =
-        GlobalObject::getOrCreateRelativeTimeFormatPrototype(cx, cx->global());
-    if (!proto) {
-      return false;
-    }
-  }
-
   Rooted<RelativeTimeFormatObject*> relativeTimeFormat(cx);
   relativeTimeFormat =
-      NewObjectWithGivenProto<RelativeTimeFormatObject>(cx, proto);
+      NewObjectWithClassProto<RelativeTimeFormatObject>(cx, proto);
   if (!relativeTimeFormat) {
     return false;
   }

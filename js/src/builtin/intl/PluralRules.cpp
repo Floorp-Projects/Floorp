@@ -48,6 +48,7 @@ const JSClassOps PluralRulesObject::classOps_ = {nullptr, /* addProperty */
 const JSClass PluralRulesObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(PluralRulesObject::SLOT_COUNT) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_PluralRules) |
         JSCLASS_FOREGROUND_FINALIZE,
     &PluralRulesObject::classOps_, &PluralRulesObject::classSpec_};
 
@@ -101,15 +102,8 @@ static bool PluralRules(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!proto) {
-    proto = GlobalObject::getOrCreatePluralRulesPrototype(cx, cx->global());
-    if (!proto) {
-      return false;
-    }
-  }
-
   Rooted<PluralRulesObject*> pluralRules(cx);
-  pluralRules = NewObjectWithGivenProto<PluralRulesObject>(cx, proto);
+  pluralRules = NewObjectWithClassProto<PluralRulesObject>(cx, proto);
   if (!pluralRules) {
     return false;
   }
