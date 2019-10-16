@@ -1426,12 +1426,15 @@ int16_t PluginInstanceParent::NPP_HandleEvent(void* event) {
         // which fires WM_KILLFOCUS. Delayed delivery causes Flash to
         // misinterpret the event, dropping back out of fullscreen. Trap
         // this event and drop it.
-        wchar_t szClass[26];
-        HWND hwnd = GetForegroundWindow();
-        if (hwnd && hwnd != mPluginHWND &&
-            GetClassNameW(hwnd, szClass, sizeof(szClass) / sizeof(char16_t)) &&
-            !wcscmp(szClass, kFlashFullscreenClass)) {
-          return 0;
+        // mPluginHWND is always NULL for non-windowed plugins.
+        if (mPluginHWND) {
+          wchar_t szClass[26];
+          HWND hwnd = GetForegroundWindow();
+          if (hwnd && hwnd != mPluginHWND &&
+              GetClassNameW(hwnd, szClass, sizeof(szClass) / sizeof(char16_t)) &&
+              !wcscmp(szClass, kFlashFullscreenClass)) {
+            return 0;
+          }
         }
       } break;
 
