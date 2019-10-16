@@ -8763,9 +8763,6 @@ Document* Document::Open(const Optional<nsAString>& /* unused */,
 
   // Step 5 -- if we have an active parser with a nonzero script nesting level,
   // just no-op.
-  //
-  // The mParserAborted check here is probably wrong.  Removing it is
-  // tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=1475000
   if ((mParser && mParser->HasNonzeroScriptNestingLevel()) || mParserAborted) {
     return this;
   }
