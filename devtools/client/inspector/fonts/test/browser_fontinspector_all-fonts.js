@@ -15,7 +15,7 @@ add_task(async function() {
   ok(allFontsAccordion, "There's an accordion in the panel");
   is(
     allFontsAccordion.textContent,
-    "All fonts on page",
+    "All Fonts on Page",
     "It has the right title"
   );
 
