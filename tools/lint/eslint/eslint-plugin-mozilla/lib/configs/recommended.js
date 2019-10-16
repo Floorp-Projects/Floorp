@@ -134,6 +134,7 @@ module.exports = {
     "mozilla/no-define-cc-etc": "error",
     "mozilla/no-useless-parameters": "error",
     "mozilla/no-useless-removeEventListener": "error",
+    "mozilla/prefer-boolean-length-check": "error",
     "mozilla/reject-importGlobalProperties": ["error", "allownonwebidl"],
     "mozilla/rejects-requires-await": "error",
     "mozilla/use-cc-etc": "error",
