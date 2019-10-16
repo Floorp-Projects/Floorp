@@ -796,8 +796,8 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
 
   /**
    * Removes the elements [|aBegin|, |aEnd|), which must fall in the bounds
-   * [begin, end), shifting existing elements from |aEnd + 1| onward to aBegin's
-   * old position.
+   * [begin, end), shifting existing elements from |aEnd| onward to aBegin's old
+   * position.
    */
   void erase(T* aBegin, T* aEnd);
 

@@ -33,12 +33,9 @@
   MACRO(Async, Async, "Async")                                                 \
   MACRO(AsyncFromSyncIterator, AsyncFromSyncIterator,                          \
         "Async-from-Sync Iterator")                                            \
-  MACRO(AsyncFunction, AsyncFunction, "AsyncFunction")                         \
   MACRO(AsyncFunctionNext, AsyncFunctionNext, "AsyncFunctionNext")             \
   MACRO(AsyncFunctionThrow, AsyncFunctionThrow, "AsyncFunctionThrow")          \
   MACRO(AsyncGenerator, AsyncGenerator, "AsyncGenerator")                      \
-  MACRO(AsyncGeneratorFunction, AsyncGeneratorFunction,                        \
-        "AsyncGeneratorFunction")                                              \
   MACRO(AsyncGeneratorNext, AsyncGeneratorNext, "AsyncGeneratorNext")          \
   MACRO(AsyncGeneratorReturn, AsyncGeneratorReturn, "AsyncGeneratorReturn")    \
   MACRO(AsyncGeneratorThrow, AsyncGeneratorThrow, "AsyncGeneratorThrow")       \
@@ -79,7 +76,6 @@
   MACRO(class, class_, "class")                                                \
   MACRO(close, close, "close")                                                 \
   MACRO(collation, collation, "collation")                                     \
-  MACRO(Collator, Collator, "Collator")                                        \
   MACRO(collections, collections, "collections")                               \
   MACRO(columnNumber, columnNumber, "columnNumber")                            \
   MACRO(comma, comma, ",")                                                     \
@@ -104,7 +100,6 @@
   MACRO(currency, currency, "currency")                                        \
   MACRO(currencyDisplay, currencyDisplay, "currencyDisplay")                   \
   MACRO(currencySign, currencySign, "currencySign")                            \
-  MACRO(DateTimeFormat, DateTimeFormat, "DateTimeFormat")                      \
   MACRO(day, day, "day")                                                       \
   MACRO(dayPeriod, dayPeriod, "dayPeriod")                                     \
   MACRO(debugger, debugger, "debugger")                                        \
@@ -184,7 +179,6 @@
   MACRO(futexTimedOut, futexTimedOut, "timed-out")                             \
   MACRO(gcCycleNumber, gcCycleNumber, "gcCycleNumber")                         \
   MACRO(Generator, Generator, "Generator")                                     \
-  MACRO(GeneratorFunction, GeneratorFunction, "GeneratorFunction")             \
   MACRO(GeneratorNext, GeneratorNext, "GeneratorNext")                         \
   MACRO(GeneratorReturn, GeneratorReturn, "GeneratorReturn")                   \
   MACRO(GeneratorThrow, GeneratorThrow, "GeneratorThrow")                      \
@@ -268,7 +262,6 @@
   MACRO(lineNumber, lineNumber, "lineNumber")                                  \
   MACRO(literal, literal, "literal")                                           \
   MACRO(loc, loc, "loc")                                                       \
-  MACRO(Locale, Locale, "Locale")                                              \
   MACRO(locale, locale, "locale")                                              \
   MACRO(lookupGetter, lookupGetter, "__lookupGetter__")                        \
   MACRO(lookupSetter, lookupSetter, "__lookupSetter__")                        \
@@ -316,7 +309,6 @@
   MACRO(noStack, noStack, "noStack")                                           \
   MACRO(notation, notation, "notation")                                        \
   MACRO(notes, notes, "notes")                                                 \
-  MACRO(NumberFormat, NumberFormat, "NumberFormat")                            \
   MACRO(numberingSystem, numberingSystem, "numberingSystem")                   \
   MACRO(numeric, numeric, "numeric")                                           \
   MACRO(objectArguments, objectArguments, "[object Arguments]")                \
@@ -345,7 +337,6 @@
   MACRO(parseInt, parseInt, "parseInt")                                        \
   MACRO(pattern, pattern, "pattern")                                           \
   MACRO(pending, pending, "pending")                                           \
-  MACRO(PluralRules, PluralRules, "PluralRules")                               \
   MACRO(percentSign, percentSign, "percentSign")                               \
   MACRO(plusSign, plusSign, "plusSign")                                        \
   MACRO(public, public_, "public")                                             \
@@ -373,7 +364,6 @@
   MACRO(reject, reject, "reject")                                              \
   MACRO(rejected, rejected, "rejected")                                        \
   MACRO(relatedYear, relatedYear, "relatedYear")                               \
-  MACRO(RelativeTimeFormat, RelativeTimeFormat, "RelativeTimeFormat")          \
   MACRO(RelativeTimeFormatFormat, RelativeTimeFormatFormat,                    \
         "Intl_RelativeTimeFormat_Format")                                      \
   MACRO(RequireObjectCoercible, RequireObjectCoercible,                        \

@@ -27,9 +27,7 @@ transforms:
 
 jobs-from:
     - awsy.yml
-    - browsertime-fenix.yml
-    - browsertime-gve.yml
-    - browsertime-refbrow.yml
+    - browsertime-mobile.yml
     - compiled.yml
     - firefox-ui.yml
     - marionette.yml
