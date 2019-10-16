@@ -79,7 +79,6 @@
   MACRO(class, class_, "class")                                                \
   MACRO(close, close, "close")                                                 \
   MACRO(collation, collation, "collation")                                     \
-  MACRO(Collator, Collator, "Collator")                                        \
   MACRO(collections, collections, "collections")                               \
   MACRO(columnNumber, columnNumber, "columnNumber")                            \
   MACRO(comma, comma, ",")                                                     \
