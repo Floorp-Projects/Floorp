@@ -842,7 +842,7 @@ static bool EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind) {
     return false;  // needed by regular expression literals
   }
 
-  if (!GlobalObject::initGenerators(cx, global)) {
+  if (!EnsureConstructor(cx, global, JSProto_GeneratorFunction)) {
     return false;  // needed by function*() {}
   }
 

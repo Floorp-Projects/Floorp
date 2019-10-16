@@ -77,8 +77,6 @@ class GlobalObject : public NativeObject {
     STRING_ITERATOR_PROTO,
     REGEXP_STRING_ITERATOR_PROTO,
     GENERATOR_OBJECT_PROTO,
-    GENERATOR_FUNCTION_PROTO,
-    GENERATOR_FUNCTION,
     ASYNC_ITERATOR_PROTO,
     ASYNC_FROM_SYNC_ITERATOR_PROTO,
     ASYNC_GENERATOR,
@@ -578,21 +576,34 @@ class GlobalObject : public NativeObject {
                                                initRegExpStringIteratorProto));
   }
 
+  void setGeneratorObjectPrototype(JSObject* obj) {
+    setSlot(GENERATOR_OBJECT_PROTO, ObjectValue(*obj));
+  }
+
   static NativeObject* getOrCreateGeneratorObjectPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return MaybeNativeObject(
-        getOrCreateObject(cx, global, GENERATOR_OBJECT_PROTO, initGenerators));
+    if (!ensureConstructor(cx, global, JSProto_GeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getSlot(GENERATOR_OBJECT_PROTO)
+                .toObject()
+                .as<NativeObject>();
   }
 
   static JSObject* getOrCreateGeneratorFunctionPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, GENERATOR_FUNCTION_PROTO,
-                             initGenerators);
+    if (!ensureConstructor(cx, global, JSProto_GeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_GeneratorFunction).toObject();
   }
 
   static JSObject* getOrCreateGeneratorFunction(JSContext* cx,
                                                 Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, GENERATOR_FUNCTION, initGenerators);
+    if (!ensureConstructor(cx, global, JSProto_GeneratorFunction)) {
+      return nullptr;
+    }
+    return &global->getConstructor(JSProto_GeneratorFunction).toObject();
   }
 
   static NativeObject* getOrCreateAsyncFunctionPrototype(
@@ -777,9 +788,6 @@ class GlobalObject : public NativeObject {
                                       Handle<GlobalObject*> global);
   static bool initRegExpStringIteratorProto(JSContext* cx,
                                             Handle<GlobalObject*> global);
-
-  // Implemented in vm/GeneratorObject.cpp.
-  static bool initGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
   static bool initAsyncGenerators(JSContext* cx, Handle<GlobalObject*> global);
 
