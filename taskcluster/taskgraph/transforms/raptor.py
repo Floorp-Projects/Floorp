@@ -26,6 +26,7 @@ raptor_description_schema = Schema({
         'test-platform',
         [basestring]
     ),
+    Optional('raptor-test'): basestring,
     Optional('activity'): optionally_keyed_by(
         'app',
         basestring
@@ -33,6 +34,10 @@ raptor_description_schema = Schema({
     Optional('binary-path'): optionally_keyed_by(
         'app',
         basestring
+    ),
+    Optional('cold'): optionally_keyed_by(
+        'test-platform', 'app',
+        bool,
     ),
     # Configs defined in the 'test_description_schema'.
     Optional('max-run-time'): optionally_keyed_by(
@@ -101,6 +106,7 @@ def handle_keyed_by_app(config, tests):
     fields = [
         'activity',
         'binary-path',
+        'cold',
         'max-run-time',
         'run-on-projects',
         'target',
@@ -108,6 +114,31 @@ def handle_keyed_by_app(config, tests):
     for test in tests:
         for field in fields:
             resolve_keyed_by(test, field, item_name=test['test-name'])
+        yield test
+
+
+@transforms.add
+def split_cold(config, tests):
+    for test in tests:
+        cold = test.pop('cold', False)
+
+        if not cold:
+            yield test
+            continue
+
+        orig = deepcopy(test)
+        yield orig
+
+        assert 'raptor-test' in test
+        test['description'] += " using cold pageload"
+        test['raptor-test'] += '-cold'
+        test['max-run-time'] = 3000
+        test['test-name'] += '-cold'
+        test['try-name'] += '-cold'
+
+        group, symbol = split_symbol(test['treeherder-symbol'])
+        symbol += '-c'
+        test['treeherder-symbol'] = join_symbol(group, symbol)
         yield test
 
 
@@ -124,6 +155,9 @@ def add_extra_options(config, tests):
 
         if 'binary-path' in test:
             extra_options.append('--binary-path={}'.format(test.pop('binary-path')))
+
+        if 'raptor-test' in test:
+            extra_options.append('--test={}'.format(test.pop('raptor-test')))
 
         if test['require-signed-extensions']:
             extra_options.append('--is-release-build')
