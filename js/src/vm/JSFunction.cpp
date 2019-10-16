@@ -1953,6 +1953,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
                                           parameterListEnd)) {
         return false;
       }
+      protoKey = JSProto_AsyncFunction;
     }
   } else {
     if (isGenerator) {
