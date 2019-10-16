@@ -313,7 +313,6 @@
   MACRO(noStack, noStack, "noStack")                                           \
   MACRO(notation, notation, "notation")                                        \
   MACRO(notes, notes, "notes")                                                 \
-  MACRO(NumberFormat, NumberFormat, "NumberFormat")                            \
   MACRO(numberingSystem, numberingSystem, "numberingSystem")                   \
   MACRO(numeric, numeric, "numeric")                                           \
   MACRO(objectArguments, objectArguments, "[object Arguments]")                \
