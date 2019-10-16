@@ -42,11 +42,12 @@
 
 scrollcorner, resizer, scrollbar, scrollbarbutton, slider {
   /* All scrollbar parts must not inherit any properties from the scrollable
-   * element (except for visibility), for the anonymous content style caching
-   * system to work.
+   * element (except for visibility and pointer-events), for the anonymous
+   * content style caching system to work.
    */
   all: initial;
   visibility: inherit;
+  pointer-events: inherit;
 
   /* These properties are not included in 'all'. */
   -moz-list-reversed: initial;
