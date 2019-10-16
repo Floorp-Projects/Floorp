@@ -40,3 +40,7 @@ user_pref("dom.animations-api.implicit-keyframes.enabled", true);
 // sometime wpt runs test even before the document becomes visible, which would
 // delay video.play() and cause play() running in wrong order.
 user_pref("media.block-autoplay-until-in-foreground", false);
+user_pref("media.block-autoplay-until-in-foreground", false);
+// Enable AppCache globally for now whilst it's being removed in Bug 1584984
+user_pref("browser.cache.offline.storage.enable", true);
+user_pref("browser.cache.offline.enable", true);
