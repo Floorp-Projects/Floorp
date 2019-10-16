@@ -26,8 +26,9 @@ from ``version-control-tools`` into the vendored locations.
 The locations are as follows:
 
 - In-tree: ``testing/mozharness/external_tools/robustcheckout.py``
-- Treescript: ``https://github.com/mozilla-releng/treescript/tree/master/treescript/py2/robustcheckout.py``
+- Treescript: ``https://github.com/mozilla-releng/scriptworker-scripts/blob/master/treescript/treescript/py2/robustcheckout.py``
 - build-puppet: ``https://github.com/mozilla-releng/build-puppet/blob/master/modules/mercurial/files/robustcheckout.py``
+- ronin_puppet: ``https://github.com/mozilla-platform-ops/ronin_puppet/blob/master/modules/mercurial/files/robustcheckout.py``
 - OpenCloudConfig: ``https://github.com/mozilla-releng/OpenCloudConfig/blob/master/userdata/Configuration/FirefoxBuildResources/robustcheckout.py``
 
 
