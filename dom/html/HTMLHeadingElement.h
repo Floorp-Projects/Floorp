@@ -36,7 +36,9 @@ class HTMLHeadingElement final : public nsGenericHTMLElement {
     return GetHTMLAttr(nsGkAtoms::align, aAlign);
   }
 
-  int32_t AccessibilityLevel() const {
+  int32_t AccessibilityLevel() const;
+
+  int32_t BaseAccessibilityLevel() const {
     nsAtom* name = NodeInfo()->NameAtom();
     if (name == nsGkAtoms::h1) {
       return 1;
