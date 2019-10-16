@@ -357,11 +357,30 @@ module.exports = {
     }
   }, {
     "files": [
-      "toolkit/**",
-      "browser/**",
+      "accessible/**",
+      "devtools/**",
+      "dom/**",
+      "docshell/**",
+      "editor/libeditor/tests/**",
+      "editor/spellchecker/tests/test_bug338427.html",
+      "gfx/**",
+      "image/test/browser/browser_image.js",
+      "js/src/builtin/**",
+      "layout/**",
+      "mobile/android/**",
+      "modules/**",
+      "netwerk/**",
+      "remote/**",
+      "security/manager/**",
+      "services/**",
+      "storage/test/unit/test_vacuum.js",
+      "taskcluster/docker/periodic-updates/scripts/**",
+      "testing/**",
+      "tools/**",
+      "widget/tests/test_assign_event_data.html",
     ],
     "rules": {
-      "mozilla/prefer-boolean-length-check": "error",
+      "mozilla/prefer-boolean-length-check": "off",
     }
   }]
 };
