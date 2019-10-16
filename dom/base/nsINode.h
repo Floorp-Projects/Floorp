@@ -746,6 +746,11 @@ class nsINode : public mozilla::dom::EventTarget {
     return isShadowRoot;
   }
 
+  bool IsHTMLHeadingElement() const {
+    return IsAnyOfHTMLElements(nsGkAtoms::h1, nsGkAtoms::h2, nsGkAtoms::h3,
+                               nsGkAtoms::h4, nsGkAtoms::h5, nsGkAtoms::h6);
+  }
+
   /**
    * Insert a content node before another or at the end.
    * This method handles calling BindToTree on the child appropriately.

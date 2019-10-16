@@ -125,7 +125,7 @@ function UnwrapNumberFormat(nf) {
     if (IsObject(nf) &&
         GuardToNumberFormat(nf) === null &&
         !IsWrappedNumberFormat(nf) &&
-        nf instanceof GetNumberFormatConstructor())
+        nf instanceof GetBuiltinConstructor("NumberFormat"))
     {
         nf = nf[intlFallbackSymbol()];
     }
@@ -583,7 +583,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // TODO: spec issue - The current spec doesn't have the IsObject check,
     // which means |Intl.NumberFormat.call(null)| is supposed to throw here.
     if (numberFormat !== thisValue && IsObject(thisValue) &&
-        thisValue instanceof GetNumberFormatConstructor())
+        thisValue instanceof GetBuiltinConstructor("NumberFormat"))
     {
         _DefineDataProperty(thisValue, intlFallbackSymbol(), numberFormat,
                             ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
