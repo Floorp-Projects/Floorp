@@ -27,7 +27,7 @@
 
 <!-- LOCALICATION NOTE  (mediaRules.label): This is shown above the list of @media rules
      in each stylesheet editor sidebar. -->
-<!ENTITY mediaRules.label           "@media rules">
+<!ENTITY mediaRules.label           "Media Queries">
 
 <!ENTITY editorTextbox.placeholder  "Type CSS here.">
 
