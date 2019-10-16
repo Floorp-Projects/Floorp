@@ -5,8 +5,6 @@
 
 CORE_DEPTH = ../../..
 
-DIRS = testlib
-
 MODULE = nss
 MAPFILE = $(OBJDIR)/nssckbi.def
 
