@@ -76,6 +76,7 @@ const JSClassOps NumberFormatObject::classOps_ = {nullptr, /* addProperty */
 const JSClass NumberFormatObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(NumberFormatObject::SLOT_COUNT) |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_NumberFormat) |
         JSCLASS_FOREGROUND_FINALIZE,
     &NumberFormatObject::classOps_, &NumberFormatObject::classSpec_};
 
@@ -129,15 +130,8 @@ static bool NumberFormat(JSContext* cx, const CallArgs& args, bool construct) {
     return false;
   }
 
-  if (!proto) {
-    proto = GlobalObject::getOrCreateNumberFormatPrototype(cx, cx->global());
-    if (!proto) {
-      return false;
-    }
-  }
-
   Rooted<NumberFormatObject*> numberFormat(cx);
-  numberFormat = NewObjectWithGivenProto<NumberFormatObject>(cx, proto);
+  numberFormat = NewObjectWithClassProto<NumberFormatObject>(cx, proto);
   if (!numberFormat) {
     return false;
   }
