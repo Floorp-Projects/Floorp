@@ -47,11 +47,8 @@ using intl::LanguageTagParser;
 
 const JSClass LocaleObject::class_ = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT) |
-        JSCLASS_HAS_CACHED_PROTO(JSProto_Locale),
-    JS_NULL_CLASS_OPS, &LocaleObject::classSpec_};
-
-const JSClass& LocaleObject::protoClass_ = PlainObject::class_;
+    JSCLASS_HAS_RESERVED_SLOTS(LocaleObject::SLOT_COUNT),
+};
 
 static inline bool IsLocale(HandleValue v) {
   return v.isObject() && v.toObject().is<LocaleObject>();
@@ -102,6 +99,14 @@ static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
 
 static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
                                         const LanguageTag& tag) {
+  RootedObject proto(cx, prototype);
+  if (!proto) {
+    proto = GlobalObject::getOrCreateLocalePrototype(cx, cx->global());
+    if (!proto) {
+      return nullptr;
+    }
+  }
+
   RootedString tagStr(cx, tag.toString(cx));
   if (!tagStr) {
     return nullptr;
@@ -125,7 +130,7 @@ static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
     unicodeExtension.setString(str);
   }
 
-  auto* locale = NewObjectWithClassProto<LocaleObject>(cx, prototype);
+  auto* locale = NewObjectWithGivenProto<LocaleObject>(cx, proto);
   if (!locale) {
     return nullptr;
   }
@@ -516,7 +521,7 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
 
   // Steps 2-6 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
   RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Locale, &proto)) {
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Null, &proto)) {
     return false;
   }
 
@@ -1227,24 +1232,64 @@ static const JSPropertySpec locale_properties[] = {
     JS_STRING_SYM_PS(toStringTag, "Intl.Locale", JSPROP_READONLY),
     JS_PS_END};
 
-const ClassSpec LocaleObject::classSpec_ = {
-    GenericCreateConstructor<Locale, 1, gc::AllocKind::FUNCTION>,
-    GenericCreatePrototype<LocaleObject>,
-    nullptr,
-    nullptr,
-    locale_methods,
-    locale_properties,
-    nullptr,
-    ClassSpec::DontDefineConstructor};
-
-bool js::AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl) {
-  JSObject* ctor = GlobalObject::getOrCreateConstructor(cx, JSProto_Locale);
+JSObject* js::CreateLocalePrototype(JSContext* cx, HandleObject Intl,
+                                    Handle<GlobalObject*> global) {
+  RootedFunction ctor(
+      cx, GlobalObject::createConstructor(cx, &Locale, cx->names().Locale, 1));
   if (!ctor) {
-    return false;
+    return nullptr;
+  }
+
+  RootedObject proto(
+      cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
+  if (!proto) {
+    return nullptr;
+  }
+
+  if (!LinkConstructorAndPrototype(cx, ctor, proto)) {
+    return nullptr;
+  }
+
+  if (!DefinePropertiesAndFunctions(cx, proto, locale_properties,
+                                    locale_methods)) {
+    return nullptr;
   }
 
   RootedValue ctorValue(cx, ObjectValue(*ctor));
-  return DefineDataProperty(cx, intl, cx->names().Locale, ctorValue, 0);
+  if (!DefineDataProperty(cx, Intl, cx->names().Locale, ctorValue, 0)) {
+    return nullptr;
+  }
+
+  return proto;
+}
+
+/* static */ bool js::GlobalObject::addLocaleConstructor(JSContext* cx,
+                                                         HandleObject intl) {
+  Handle<GlobalObject*> global = cx->global();
+
+  {
+    const Value& proto = global->getReservedSlot(LOCALE_PROTO);
+    if (!proto.isUndefined()) {
+      MOZ_ASSERT(proto.isObject());
+      JS_ReportErrorASCII(
+          cx,
+          "the Locale constructor can't be added multiple times in the"
+          "same global");
+      return false;
+    }
+  }
+
+  JSObject* localeProto = CreateLocalePrototype(cx, intl, global);
+  if (!localeProto) {
+    return false;
+  }
+
+  global->setReservedSlot(LOCALE_PROTO, ObjectValue(*localeProto));
+  return true;
+}
+
+bool js::AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl) {
+  return GlobalObject::addLocaleConstructor(cx, intl);
 }
 
 bool js::intl_ValidateAndCanonicalizeLanguageTag(JSContext* cx, unsigned argc,
