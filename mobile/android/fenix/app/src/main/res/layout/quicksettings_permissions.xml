@@ -12,86 +12,102 @@
     android:layout_height="wrap_content">
 
     <TextView
-        android:id="@+id/cameraActionLabel"
+        android:id="@+id/camerStatus"
         style="@style/QuickSettingsText.PermissionItemEnd"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/quicksettings_item_height"
-        app:layout_constraintBottom_toTopOf="@id/microphoneActionLabel"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/microphoneStatus"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/cameraIcon"
-        tools:text="Allowed" />
+        app:layout_constraintStart_toEndOf="@id/cameraLabel"
+        tools:text="Allowed"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/cameraIcon"
+        android:id="@+id/cameraLabel"
         style="@style/QuickSettingsText.Icon"
         android:layout_width="0dp"
         android:layout_height="@dimen/quicksettings_item_height"
         android:drawableStart="@drawable/ic_camera"
         android:text="@string/preference_phone_feature_camera"
-        app:layout_constraintBottom_toTopOf="@id/microphoneIcon"
-        app:layout_constraintEnd_toStartOf="@id/cameraActionLabel"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/microphoneLabel"
+        app:layout_constraintEnd_toStartOf="@id/camerStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/microphoneActionLabel"
+        android:id="@+id/microphoneStatus"
         style="@style/QuickSettingsText.PermissionItemEnd"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/quicksettings_item_height"
-        app:layout_constraintBottom_toTopOf="@id/notificationActionLabel"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/notificationStatus"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/microphoneIcon"
-        tools:text="Blocked by Android" />
+        app:layout_constraintStart_toEndOf="@id/microphoneLabel"
+        tools:text="Blocked by Android"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/microphoneIcon"
+        android:id="@+id/microphoneLabel"
         style="@style/QuickSettingsText.Icon"
         android:layout_width="0dp"
         android:layout_height="@dimen/quicksettings_item_height"
         android:drawableStart="@drawable/ic_microphone"
         android:text="@string/preference_phone_feature_microphone"
-        app:layout_constraintBottom_toTopOf="@id/notificationIcon"
-        app:layout_constraintEnd_toStartOf="@id/microphoneActionLabel"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/notificationLabel"
+        app:layout_constraintEnd_toStartOf="@id/microphoneStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/notificationActionLabel"
+        android:id="@+id/notificationStatus"
         style="@style/QuickSettingsText.PermissionItemEnd"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/quicksettings_item_height"
-        app:layout_constraintBottom_toTopOf="@id/locationActionLabel"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/locationStatus"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/notificationIcon"
-        tools:text="Blocked" />
+        app:layout_constraintStart_toEndOf="@id/notificationLabel"
+        tools:text="Blocked"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/notificationIcon"
+        android:id="@+id/notificationLabel"
         style="@style/QuickSettingsText.Icon"
         android:layout_width="0dp"
         android:layout_height="@dimen/quicksettings_item_height"
         android:drawableStart="@drawable/ic_notifications"
         android:text="@string/preference_phone_feature_notification"
-        app:layout_constraintBottom_toTopOf="@id/locationIcon"
-        app:layout_constraintEnd_toStartOf="@id/notificationActionLabel"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/locationLabel"
+        app:layout_constraintEnd_toStartOf="@id/notificationStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/locationActionLabel"
+        android:id="@+id/locationStatus"
         style="@style/QuickSettingsText.PermissionItemEnd"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/locationIcon"
-        tools:text="Blocked" />
+        app:layout_constraintStart_toEndOf="@id/locationLabel"
+        tools:text="Blocked"
+        tools:visibility="visible" />
 
     <TextView
-        android:id="@+id/locationIcon"
+        android:id="@+id/locationLabel"
         style="@style/QuickSettingsText.Icon"
         android:layout_width="0dp"
         android:layout_height="@dimen/quicksettings_item_height"
         android:drawableStart="@drawable/ic_location"
         android:text="@string/preference_phone_feature_location"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/locationActionLabel"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toStartOf="@id/locationStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

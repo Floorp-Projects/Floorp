@@ -6,6 +6,7 @@
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -57,12 +58,16 @@
             android:id="@+id/trackingProtectionGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:constraint_referenced_ids="trackingProtectionLayout,trackingProtectionDivider" />
+            android:visibility="gone"
+            app:constraint_referenced_ids="trackingProtectionLayout,trackingProtectionDivider"
+            tools:visibility="visible" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/websitePermissionsGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:constraint_referenced_ids="websitePermissionsLayout,webSitePermissionsDivider" />
+            android:visibility="gone"
+            app:constraint_referenced_ids="websitePermissionsLayout,webSitePermissionsDivider"
+            tools:visibility="visible" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

@@ -12,8 +12,14 @@ import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.R
 
+interface WebsitePermissionInteractor {
+    fun onPermissionsShown()
+    fun onPermissionToggled(permissionState: WebsitePermission)
+}
+
 class WebsitePermissionsView(
-    override val containerView: ViewGroup
+    override val containerView: ViewGroup,
+    val interactor: WebsitePermissionInteractor
 ) : LayoutContainer {
     private val context = containerView.context
 
@@ -21,22 +27,29 @@ class WebsitePermissionsView(
         .inflate(R.layout.quicksettings_permissions, containerView, true)
 
     fun update(state: WebsitePermissionsState) {
+        if (state.isVisible) {
+            interactor.onPermissionsShown()
+        }
+
+        // If more permissions are added into this View we can display them into a list
+        // and also use DiffUtil to only update one item in case of a permission change
         bindPermission(state.camera,
-                Pair(view.findViewById(R.id.cameraIcon), view.findViewById(R.id.cameraActionLabel)))
+                Pair(view.findViewById(R.id.cameraLabel), view.findViewById(R.id.camerStatus)))
         bindPermission(state.location,
-                Pair(view.findViewById(R.id.locationIcon), view.findViewById(R.id.locationActionLabel)))
+                Pair(view.findViewById(R.id.locationLabel), view.findViewById(R.id.locationStatus)))
         bindPermission(state.microphone,
-                Pair(view.findViewById(R.id.microphoneIcon), view.findViewById(R.id.microphoneActionLabel)))
+                Pair(view.findViewById(R.id.microphoneLabel), view.findViewById(R.id.microphoneStatus)))
         bindPermission(state.notification,
-                Pair(view.findViewById(R.id.notificationIcon), view.findViewById(R.id.notificationActionLabel)))
+                Pair(view.findViewById(R.id.notificationLabel), view.findViewById(R.id.notificationStatus)))
     }
 
     private fun bindPermission(permissionState: WebsitePermission, permissionViews: Pair<TextView, TextView>) {
-        val (icon, status) = permissionViews
+        val (label, status) = permissionViews
 
         status.text = permissionState.status
-        status.isEnabled = permissionState.enabled
-        icon.isVisible = permissionState.visible
-        status.isVisible = permissionState.visible
+        label.isEnabled = permissionState.isEnabled
+        label.isVisible = permissionState.isVisible
+        status.isVisible = permissionState.isVisible
+        status.setOnClickListener { interactor.onPermissionToggled(permissionState) }
     }
 }

@@ -25,7 +25,7 @@ class WebsiteInfoView(
         .inflate(R.layout.quicksettings_website_info, containerView, true)
 
     fun update(state: WebsiteInfoState) {
-        bindUrl(state.url)
+        bindUrl(state.websiteUrl)
         bindSecurityInfo(state.securityInfoRes, state.iconRes, state.iconTintRes)
     }
 
