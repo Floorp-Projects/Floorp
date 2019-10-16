@@ -895,6 +895,8 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepZone(nullptr),
       hasMarkedGrayRoots(false),
       abortSweepAfterCurrentGroup(false),
+      sweepMarkTaskStarted(false),
+      sweepMarkResult(IncrementalProgress::NotFinished),
       startedCompacting(false),
       relocatedArenasToRelease(nullptr),
 #ifdef JS_GC_ZEAL
@@ -921,6 +923,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       sweepTask(this),
       freeTask(this),
       decommitTask(this),
+      sweepMarkTask(this),
       nursery_(this),
       storeBuffer_(rt, nursery()) {
   setGCMode(JSGC_MODE_GLOBAL);
@@ -4977,6 +4980,12 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc) {
 
 IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
     JSFreeOp* fop, SliceBudget& budget) {
+  sweepMarkTask.join();
+
+  if (sweepMarkTaskStarted && (sweepMarkResult == NotFinished)) {
+    return NotFinished;
+  }
+
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
 
   if (hasMarkedGrayRoots) {
@@ -5021,6 +5030,12 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
 
 IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
                                                     SliceBudget& budget) {
+  sweepMarkTask.join();
+
+  if (sweepMarkTaskStarted && (sweepMarkResult == NotFinished)) {
+    return NotFinished;
+  }
+
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
   MOZ_ASSERT(!HasIncomingCrossCompartmentPointers(rt));
 
@@ -5565,6 +5580,11 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
       finalized.insertListWithCursorAtEnd(arenaLists(thingKind));
 
   return true;
+}
+
+void js::gc::SweepMarkTask::run() {
+  gc->sweepMarkResult = gc->markUntilBudgetExhausted(
+      this->budget, gcstats::PhaseKind::SWEEP_MARK);
 }
 
 IncrementalProgress GCRuntime::markUntilBudgetExhausted(
@@ -6208,14 +6228,25 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   if (initialState != State::Sweep) {
     MOZ_ASSERT(marker.isDrained());
   } else {
-    if (markUntilBudgetExhausted(budget, gcstats::PhaseKind::SWEEP_MARK) ==
-        NotFinished) {
-      return NotFinished;
-    }
+    MOZ_ASSERT(!sweepMarkTask.isRunning());
+    AutoLockHelperThreadState lock;
+    sweepMarkTask.setBudget(budget);
+    sweepMarkTask.startOrRunIfIdle(lock);
+    sweepMarkTaskStarted = true;
   }
 
   SweepAction::Args args{this, &fop, budget};
-  return sweepActions->run(args);
+  IncrementalProgress progress = sweepActions->run(args);
+
+  if (sweepMarkTaskStarted) {
+    sweepMarkTask.join();
+    sweepMarkTaskStarted = false;
+    if (sweepMarkResult == NotFinished) {
+      progress = NotFinished;
+    }
+  }
+
+  return progress;
 }
 
 bool GCRuntime::allCCVisibleZonesWereCollected() {
