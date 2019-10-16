@@ -9,6 +9,7 @@ import os
 import sys
 import yaml
 from mozlint import result
+from mozlint.pathutils import expand_exclusions
 
 # This simple linter checks for duplicates from
 # modules/libpref/init/StaticPrefList.yaml against modules/libpref/init/all.js
@@ -48,23 +49,25 @@ def get_names(pref_list_filename):
 # that has not previously been noted, add that name to the list of errors.
 # The checking process uses simple pattern matching rather than parsing, since
 # the entries in all.js are regular enough to do this.
-def check_against(js_file_to_check, pref_names):
-    with open(js_file_to_check) as source:
+def check_against(path, pref_names):
+    with open(path) as source:
         found_dupes = set()
         errors = []
         for lineno, line in enumerate(source, start=1):
             if 'pref(' in line:
-                errors.extend(check_name_for_pref(line.strip(), pref_names, found_dupes, lineno))
+                errors.extend(check_name_for_pref(line.strip(), pref_names,
+                                                  found_dupes, lineno, path))
         return errors
 
 
-def check_name_for_pref(pref, pref_names, found_dupes, lineno):
+def check_name_for_pref(pref, pref_names, found_dupes, lineno, path):
     groups = pref.split('"')
     errors = []
     if len(groups) > 1 and '//' not in groups[0]:
         if groups[1] in pref_names and groups[1] not in found_dupes:
             found_dupes.add(groups[1])
             errors.append({
+                'path': path,
                 'message': pref,
                 'lineno': lineno,
                 'hint': 'Remove the duplicate pref or add it to IGNORE_PREFS.',
@@ -75,9 +78,12 @@ def check_name_for_pref(pref, pref_names, found_dupes, lineno):
 
 def checkdupes(paths, config, **kwargs):
     results = []
+    errors = []
     topdir = os.path.join(kwargs['root'], "modules", "libpref", "init")
     pref_names = get_names(os.path.join(topdir, "StaticPrefList.yaml"))
-    errors = check_against(os.path.join(topdir, "all.js"), pref_names)
+    files = list(expand_exclusions(paths, config, kwargs['root']))
+    for file in files:
+        errors.extend(check_against(file, pref_names))
     for error in errors:
         results.append(result.from_config(config, **error))
     return results
