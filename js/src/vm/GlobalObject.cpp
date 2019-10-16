@@ -16,6 +16,7 @@
 #include "builtin/Eval.h"
 #ifdef ENABLE_INTL_API
 #  include "builtin/intl/Collator.h"
+#  include "builtin/intl/DateTimeFormat.h"
 #endif
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"

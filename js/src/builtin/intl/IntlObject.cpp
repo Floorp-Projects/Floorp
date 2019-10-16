@@ -827,10 +827,7 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
   if (!CreateCollator(cx, intl)) {
     return false;
   }
-  RootedObject dateTimeFormatProto(cx), dateTimeFormat(cx);
-  dateTimeFormatProto = CreateDateTimeFormatPrototype(
-      cx, intl, global, &dateTimeFormat, DateTimeFormatOptions::Standard);
-  if (!dateTimeFormatProto) {
+  if (!CreateDateTimeFormat(cx, intl)) {
     return false;
   }
   RootedObject numberFormatProto(cx), numberFormat(cx);
@@ -866,9 +863,6 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
   // |String.prototype| we have |JSProto_*| that enables
   // |getPrototype(JSProto_*)|, but that has global-object-property-related
   // baggage we don't need or want, so we use one-off reserved slots.
-  global->setReservedSlot(DATE_TIME_FORMAT, ObjectValue(*dateTimeFormat));
-  global->setReservedSlot(DATE_TIME_FORMAT_PROTO,
-                          ObjectValue(*dateTimeFormatProto));
   global->setReservedSlot(NUMBER_FORMAT, ObjectValue(*numberFormat));
   global->setReservedSlot(NUMBER_FORMAT_PROTO, ObjectValue(*numberFormatProto));
   global->setReservedSlot(PLURAL_RULES_PROTO, ObjectValue(*pluralRulesProto));

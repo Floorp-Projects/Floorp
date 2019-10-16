@@ -90,8 +90,6 @@ class GlobalObject : public NativeObject {
     SET_ITERATOR_PROTO,
     NUMBER_FORMAT,
     NUMBER_FORMAT_PROTO,
-    DATE_TIME_FORMAT,
-    DATE_TIME_FORMAT_PROTO,
     PLURAL_RULES_PROTO,
     RELATIVE_TIME_FORMAT_PROTO,
     LOCALE_PROTO,
@@ -523,15 +521,20 @@ class GlobalObject : public NativeObject {
 
   static JSFunction* getOrCreateDateTimeFormatConstructor(
       JSContext* cx, Handle<GlobalObject*> global) {
-    JSObject* obj =
-        getOrCreateObject(cx, global, DATE_TIME_FORMAT, initIntlObject);
-    return obj ? &obj->as<JSFunction>() : nullptr;
+    if (!ensureConstructor(cx, global, JSProto_DateTimeFormat)) {
+      return nullptr;
+    }
+    return &global->getConstructor(JSProto_DateTimeFormat)
+                .toObject()
+                .as<JSFunction>();
   }
 
   static JSObject* getOrCreateDateTimeFormatPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    return getOrCreateObject(cx, global, DATE_TIME_FORMAT_PROTO,
-                             initIntlObject);
+    if (!ensureConstructor(cx, global, JSProto_DateTimeFormat)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_DateTimeFormat).toObject();
   }
 
   static JSObject* getOrCreatePluralRulesPrototype(
