@@ -4698,6 +4698,7 @@ void GCRuntime::getNextSweepGroup() {
   }
 
   if (abortSweepAfterCurrentGroup) {
+    sweepMarkTask.join();
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
       MOZ_ASSERT(!zone->gcNextGraphComponent);
       zone->setNeedsIncrementalBarrier(false);
