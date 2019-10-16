@@ -664,6 +664,11 @@ class TestFileData(object):
                 expected_subtest = test.get_subtest(item)
                 if not self.is_disabled(expected_subtest):
                     rv.append(expected_subtest)
+            for name in seen_subtests:
+                subtest = test.get_subtest(name)
+                # If any of the items have children (ie subsubtests) we want to prune thes
+                if subtest.children:
+                    rv.extend(subtest.children)
 
         return rv
 
