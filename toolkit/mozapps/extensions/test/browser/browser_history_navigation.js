@@ -164,10 +164,9 @@ function wait_for_page_show(browser) {
       browser,
       "pageshow",
       listener,
-      false,
+      {},
       event => event.target.location == "http://example.com/",
-      false,
-      false
+      /* autoremove = */ false
     );
   });
   return promise;
