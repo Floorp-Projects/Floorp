@@ -12,7 +12,6 @@ import androidx.core.net.toUri
 import androidx.core.view.isGone
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_tracking_protection_panel.*
-import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.url
 import kotlinx.android.synthetic.main.switch_with_description.view.*
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import org.mozilla.fenix.R
@@ -163,11 +162,11 @@ class TrackingProtectionPanelView(
     }
 
     private fun bindTrackingProtectionInfo(isTrackingProtectionOn: Boolean) {
-        tracking_protection.switchItemDescription.text =
+        trackingProtectionSwitch.switchItemDescription.text =
             view.context.getString(if (isTrackingProtectionOn) R.string.etp_panel_on else R.string.etp_panel_off)
-        tracking_protection.switch_widget.isChecked = isTrackingProtectionOn
+        trackingProtectionSwitch.switch_widget.isChecked = isTrackingProtectionOn
 
-        tracking_protection.switch_widget.setOnCheckedChangeListener { _, isChecked ->
+        trackingProtectionSwitch.switch_widget.setOnCheckedChangeListener { _, isChecked ->
             interactor.trackingProtectionToggled(isChecked)
         }
     }

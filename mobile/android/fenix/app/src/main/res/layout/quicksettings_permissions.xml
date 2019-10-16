@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/permissions_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/cameraActionLabel"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:layout_constraintBottom_toTopOf="@id/microphoneActionLabel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/cameraIcon"
+        tools:text="Allowed" />
+
+    <TextView
+        android:id="@+id/cameraIcon"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:drawableStart="@drawable/ic_camera"
+        android:text="@string/preference_phone_feature_camera"
+        app:layout_constraintBottom_toTopOf="@id/microphoneIcon"
+        app:layout_constraintEnd_toStartOf="@id/cameraActionLabel"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/microphoneActionLabel"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:layout_constraintBottom_toTopOf="@id/notificationActionLabel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/microphoneIcon"
+        tools:text="Blocked by Android" />
+
+    <TextView
+        android:id="@+id/microphoneIcon"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:drawableStart="@drawable/ic_microphone"
+        android:text="@string/preference_phone_feature_microphone"
+        app:layout_constraintBottom_toTopOf="@id/notificationIcon"
+        app:layout_constraintEnd_toStartOf="@id/microphoneActionLabel"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/notificationActionLabel"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:layout_constraintBottom_toTopOf="@id/locationActionLabel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/notificationIcon"
+        tools:text="Blocked" />
+
+    <TextView
+        android:id="@+id/notificationIcon"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:drawableStart="@drawable/ic_notifications"
+        android:text="@string/preference_phone_feature_notification"
+        app:layout_constraintBottom_toTopOf="@id/locationIcon"
+        app:layout_constraintEnd_toStartOf="@id/notificationActionLabel"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/locationActionLabel"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/locationIcon"
+        tools:text="Blocked" />
+
+    <TextView
+        android:id="@+id/locationIcon"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:drawableStart="@drawable/ic_location"
+        android:text="@string/preference_phone_feature_location"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/locationActionLabel"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

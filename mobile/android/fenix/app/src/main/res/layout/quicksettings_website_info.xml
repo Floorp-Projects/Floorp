@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/website_info_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/url"
+        style="@style/QuickSettingsText"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="https://wikipedia.org" />
+
+    <TextView
+        android:id="@+id/securityInfo"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/url"
+        tools:drawableStart="@drawable/mozac_ic_lock"
+        tools:drawableTint="@color/photonGreen50"
+        tools:text="Secure connection" />
+</LinearLayout>

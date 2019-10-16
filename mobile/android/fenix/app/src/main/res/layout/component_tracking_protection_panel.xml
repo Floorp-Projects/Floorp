@@ -2,7 +2,9 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/panel_wrapper"
@@ -27,7 +29,7 @@
             tools:text="https://wikipedia.org" />
 
         <org.mozilla.fenix.trackingprotection.SwitchWithDescription
-            android:id="@+id/tracking_protection"
+            android:id="@+id/trackingProtectionSwitch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="@dimen/tracking_protection_item_height"
@@ -48,7 +50,7 @@
             android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
+            app:layout_constraintTop_toBottomOf="@id/trackingProtectionSwitch" />
 
         <TextView
             android:id="@+id/cross_site_tracking"

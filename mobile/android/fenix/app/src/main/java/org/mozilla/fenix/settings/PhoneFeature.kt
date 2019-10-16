@@ -37,25 +37,29 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
         }
     }
 
+    @Suppress("ComplexMethod")
     fun getActionLabel(
         context: Context,
         sitePermissions: SitePermissions? = null,
         settings: Settings? = null
     ): String {
         @StringRes val stringRes =
-            when (this) {
-                AUTOPLAY -> {
-                    when (getStatus(sitePermissions, settings)) {
-                        SitePermissions.Status.BLOCKED -> R.string.preference_option_autoplay_blocked
-                        SitePermissions.Status.ALLOWED -> R.string.preference_option_autoplay_allowed
-                        else -> R.string.preference_option_autoplay_allowed
+            when (isAndroidPermissionGranted(context)) {
+                false -> R.string.phone_feature_blocked_by_android
+                else -> when (this) {
+                    AUTOPLAY -> {
+                        when (getStatus(sitePermissions, settings)) {
+                            SitePermissions.Status.BLOCKED -> R.string.preference_option_autoplay_blocked
+                            SitePermissions.Status.ALLOWED -> R.string.preference_option_autoplay_allowed
+                            else -> R.string.preference_option_autoplay_allowed
+                        }
                     }
-                }
-                else -> {
-                    when (getStatus(sitePermissions, settings)) {
-                        SitePermissions.Status.BLOCKED -> R.string.preference_option_phone_feature_blocked
-                        SitePermissions.Status.NO_DECISION -> R.string.preference_option_phone_feature_ask_to_allow
-                        SitePermissions.Status.ALLOWED -> R.string.preference_option_phone_feature_allowed
+                    else -> {
+                        when (getStatus(sitePermissions, settings)) {
+                            SitePermissions.Status.BLOCKED -> R.string.preference_option_phone_feature_blocked
+                            SitePermissions.Status.NO_DECISION -> R.string.preference_option_phone_feature_ask_to_allow
+                            SitePermissions.Status.ALLOWED -> R.string.preference_option_phone_feature_allowed
+                        }
                     }
                 }
             }

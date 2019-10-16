@@ -3,9 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true">
@@ -17,174 +17,52 @@
         android:background="?foundation"
         android:contentDescription="@string/quick_settings_sheet">
 
-        <TextView
-            android:id="@+id/url"
-            style="@style/QuickSettingsText"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/quicksettings_item_height"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="https://wikipedia.org" />
+        <FrameLayout
+            android:id="@+id/websiteInfoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/trackingProtectionDivider" />
 
-        <TextView
-            android:id="@+id/security_info"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/quicksettings_item_height"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/url"
-            tools:drawableStart="@drawable/mozac_ic_lock"
-            tools:drawableTint="@color/photonGreen50"
-            tools:text="Secure connection" />
+        <FrameLayout
+            android:id="@+id/trackingProtectionLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/webSitePermissionsDivider" />
+
+        <FrameLayout
+            android:id="@+id/websitePermissionsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
         <View
-            android:id="@+id/line_divider_security"
+            android:id="@+id/webSitePermissionsDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:background="?neutralFaded"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/security_info" />
+            app:layout_constraintBottom_toTopOf="@id/websitePermissionsLayout" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/tracking_protection_view"
+        <View
+            android:id="@+id/trackingProtectionDivider"
             android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?neutralFaded"
+            app:layout_constraintBottom_toTopOf="@id/trackingProtectionLayout" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/trackingProtectionGroup"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toTopOf="@id/camera_icon"
-            app:layout_constraintTop_toBottomOf="@id/line_divider_security">
+            app:constraint_referenced_ids="trackingProtectionLayout,trackingProtectionDivider" />
 
-            <Switch
-                android:id="@+id/tracking_protection"
-                style="@style/QuickSettingsText.Icon"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/quicksettings_item_height"
-                android:paddingEnd="24dp"
-                android:text="@string/preferences_tracking_protection"
-                app:layout_constraintBottom_toTopOf="@id/tracking_protection_action"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:drawableStart="@drawable/ic_tracking_protection" />
-
-            <TextView
-                android:id="@+id/tracking_protection_action"
-                style="@style/QuickSettingsText.Icon"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/quicksettings_item_height"
-                android:gravity="top"
-                android:paddingStart="48dp"
-                android:paddingEnd="0dp"
-                android:text="@string/preferences_tracking_protection_turned_off_globally"
-                android:textColor="?accentBright"
-                android:visibility="gone"
-                app:layout_constraintBottom_toTopOf="@id/report_site_issue_action"
-                app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
-
-            <TextView
-                android:id="@+id/report_site_issue_action"
-                style="@style/QuickSettingsText.Icon"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/quicksettings_item_height"
-                android:gravity="top"
-                android:paddingStart="48dp"
-                android:paddingEnd="0dp"
-                android:text="@string/browser_menu_report_issue"
-                android:textColor="?accentUsedOnDarkBackground"
-                app:layout_constraintBottom_toTopOf="@id/line_divider"
-                app:layout_constraintTop_toBottomOf="@id/tracking_protection_action" />
-
-
-            <View
-                android:id="@+id/line_divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:background="?neutralFaded"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <TextView
-            android:id="@+id/camera_icon"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/quicksettings_item_height"
-            android:drawableStart="@drawable/ic_camera"
-            android:text="@string/preference_phone_feature_camera"
-            app:layout_constraintEnd_toStartOf="@+id/camera_action_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tracking_protection_view" />
-
-        <TextView
-            android:id="@+id/camera_action_label"
-            style="@style/QuickSettingsText.PermissionItemEnd"
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/websitePermissionsGroup"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/quicksettings_item_height"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tracking_protection_view"
-            tools:text="Allowed" />
-
-        <TextView
-            android:id="@+id/microphone_icon"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/quicksettings_item_height"
-            android:drawableStart="@drawable/ic_microphone"
-            android:text="@string/preference_phone_feature_microphone"
-            app:layout_constraintEnd_toStartOf="@+id/microphone_action_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/camera_icon" />
-
-        <TextView
-            android:id="@+id/microphone_action_label"
-            style="@style/QuickSettingsText.PermissionItemEnd"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/quicksettings_item_height"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/camera_action_label"
-            tools:text="Blocked by Android" />
-
-        <TextView
-            android:id="@+id/notification_icon"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/quicksettings_item_height"
-            android:drawableStart="@drawable/ic_notifications"
-            android:text="@string/preference_phone_feature_notification"
-            app:layout_constraintEnd_toStartOf="@+id/notification_action_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/microphone_icon" />
-
-        <TextView
-            android:id="@+id/notification_action_label"
-            style="@style/QuickSettingsText.PermissionItemEnd"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/quicksettings_item_height"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/microphone_action_label"
-            tools:text="Blocked" />
-
-        <TextView
-            android:id="@+id/location_icon"
-            style="@style/QuickSettingsText.Icon"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/quicksettings_item_height"
-            android:drawableStart="@drawable/ic_location"
-            android:text="@string/preference_phone_feature_location"
-            app:layout_constraintEnd_toStartOf="@+id/location_action_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/notification_icon" />
-
-        <TextView
-            android:id="@+id/location_action_label"
-            style="@style/QuickSettingsText.PermissionItemEnd"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/quicksettings_item_height"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/notification_action_label"
-            tools:text="Blocked" />
-
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="websitePermissionsLayout,webSitePermissionsDivider" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
