@@ -6,61 +6,66 @@
   * from the design documents and are maintained to make it
   * easier to map between the stylesheet and the design doc.
   */
- :root {
-    --num06: #FFFFFF;
-    --num07: #00B3E3;
-    --num08: #56D9F6;
-    --num09: #0968B6;
-    --num13: #2C3A50;
-    --num14: #596677;
-    --num16: #E7EAF0;
-    
-    --secure: #f7ce4d;
-  }
+:root {
+  --num03: #7D8896;
+  --num04: #B3BECC;
+  --num06: #FFFFFF;
+  --num07: #00B3E3;
+  --num08: #56D9F6;
+  --num09: #0968B6;
+  --num13: #2C3A50;
+  --num13_alpha: #2C3A5080;
+  --num14: #596677;
+  --num14_alpha: #59667780;
+  --num16: #E7EAF0;
+  --num19: #FFFFFF;
   
-  body {
-    background-color: var(--num06);
-  }
-  
-  .icon_container {
-    border-color: var(--num08);
-    background-color: var(--num06);
-    fill: var(--num08);
-  }
-  .icon_container:hover {
-    background-color: var(--num07);  
-    border-color: var(--num07);
-    fill: var(--num06);
-  }
-  .icon_container:active {
-    background-color: var(--num09);  
-    border-color: var(--num09);
-    fill: var(--num06);
-  }
-  .icon_container:disabled {
-    background-color: var(--num16);  
-    border-color: var(--num16);
-    fill: var(--num14);
-  }
-  
-  .urlbar_container {  
-    border-color:var(--num08);
-    background-color: var(--num06);
-  }
-  .urlbar_container:hover {
-    border-color:var(--num07);
-  }
-  .urlbar_container:focus-within {
-    border-color:var(--num08);
-  }
-  
-  .urlbar_secure_icon {
-    fill: var(--secure);
-  }
-  
-  .urlbar_input {  
-    color: var(--num13);
-  }
-  .urlbar_input::selection {
-    background-color: var(--num08);
-  }
+  --secure: #f7ce4d;
+}
+
+body {
+  background-color: var(--num06);
+}
+
+.icon_container {
+  border-color: var(--num08);
+  background-color: var(--num06);
+  fill: var(--num08);
+}
+.icon_container:hover {
+  background-color: var(--num07);  
+  border-color: var(--num07);
+  fill: var(--num06);
+}
+.icon_container:active {
+  background-color: var(--num09);  
+  border-color: var(--num09);
+  fill: var(--num06);
+}
+.icon_container:disabled {
+  background-color: var(--num16);  
+  border-color: var(--num16);
+  fill: var(--num14);
+}
+
+.urlbar_container {  
+  border-color:var(--num08);
+  background-color: var(--num06);
+}
+.urlbar_container:hover {
+  border-color:var(--num07);
+}
+.urlbar_container:focus-within {
+  border-color:var(--num08);
+}
+
+.urlbar_secure_icon {
+  fill: var(--secure);
+}
+
+.urlbar_input {  
+  color: var(--num13);
+}
+.urlbar_input::selection {
+  background-color: var(--num08);
+}

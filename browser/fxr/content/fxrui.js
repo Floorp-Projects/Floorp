@@ -3,8 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from common.js */
+
 // Configuration vars
 let homeURL = "https://www.mozilla.org/en-US/";
+// Bug 1586294 - Localize the privacy policy URL (Services.urlFormatter?)
+let privacyPolicyURL = "https://www.mozilla.org/en-US/privacy/firefox/";
+let reportIssueURL = "https://mzl.la/fxr";
+let licenseURL = "https://wiki.mozilla.org/Main_Page";
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/browser
 let browser = null;
@@ -20,6 +26,14 @@ let stopButton = null;
 let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
+  Services.scriptSecurityManager.getSystemPrincipal()
 );
 
 window.addEventListener(
@@ -47,10 +61,15 @@ function setupBrowser() {
     browser = document.createXULElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
+    browser.classList.add("browser_instance");
+
+    browser.loadUrlWithSystemPrincipal = function(url) {
+      this.loadURI(url, { triggeringPrincipal: gSystemPrincipal });
+    };
+
     document.getElementById("eBrowserContainer").appendChild(browser);
 
-    urlInput.value = homeURL;
-    browser.loadURI(homeURL);
+    browser.loadUrlWithSystemPrincipal(homeURL);
 
     browser.addProgressListener(
       {
@@ -97,7 +116,14 @@ function setupBrowser() {
 }
 
 function setupNavButtons() {
-  let aryNavButtons = ["eBack", "eForward", "eRefresh", "eStop", "eHome"];
+  let aryNavButtons = [
+    "eBack",
+    "eForward",
+    "eRefresh",
+    "eStop",
+    "eHome",
+    "ePrefs",
+  ];
 
   function navButtonHandler(e) {
     if (!this.disabled) {
@@ -119,7 +145,11 @@ function setupNavButtons() {
           break;
 
         case "eHome":
-          browser.loadURI(homeURL);
+          browser.loadUrlWithSystemPrincipal(homeURL);
+          break;
+
+        case "ePrefs":
+          openSettings();
           break;
       }
     }
@@ -149,7 +179,7 @@ function setupUrlBar() {
 
       let uriToLoad = Services.uriFixup.createFixupURI(valueToFixUp, flags);
 
-      browser.loadURI(uriToLoad.spec);
+      browser.loadUrlWithSystemPrincipal(uriToLoad.spec);
       browser.focus();
     }
   });
@@ -158,4 +188,35 @@ function setupUrlBar() {
   urlInput.addEventListener("focus", function() {
     urlInput.select();
   });
+}
+
+function openSettings() {
+  let browserSettingsUI = document.createXULElement("browser");
+  browserSettingsUI.setAttribute("type", "chrome");
+  browserSettingsUI.classList.add("browser_settings");
+
+  showModalContainer(browserSettingsUI);
+
+  browserSettingsUI.loadURI("chrome://fxr/content/prefs.html", {
+    triggeringPrincipal: gSystemPrincipal,
+  });
+}
+
+function closeSettings() {
+  clearModalContainer();
+}
+
+function showPrivacyPolicy() {
+  closeSettings();
+  browser.loadUrlWithSystemPrincipal(privacyPolicyURL);
+}
+
+function showLicenseInfo() {
+  closeSettings();
+  browser.loadUrlWithSystemPrincipal(licenseURL);
+}
+
+function showReportIssue() {
+  closeSettings();
+  browser.loadUrlWithSystemPrincipal(reportIssueURL);
 }
