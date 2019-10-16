@@ -29,25 +29,19 @@ add_task(async function() {
     "Messages should have no timestamp by default (element check)"
   );
 
-  info("Open the settings panel");
   const observer = new PrefObserver("");
-  const toolbox = hud.toolbox;
-  const { panelDoc, panelWin } = await toolbox.selectTool("options");
 
   info("Change Timestamp preference");
   const prefChanged = observer.once(PREF_MESSAGE_TIMESTAMP, () => {});
-  const checkbox = panelDoc.getElementById("webconsole-timestamp-messages");
 
-  // We use executeSoon here to ensure that the element is in view and clickable.
-  checkbox.scrollIntoView();
-  executeSoon(() => EventUtils.synthesizeMouseAtCenter(checkbox, {}, panelWin));
+  await toggleConsoleSetting(
+    hud,
+    ".webconsole-console-settings-menu-item-timestamps"
+  );
 
   await prefChanged;
   observer.destroy();
 
-  // Switch back to the console as it won't update when it is in background
-  info("Go back to console");
-  await toolbox.selectTool("webconsole");
   ok(
     message.node.querySelector(".timestamp"),
     "Messages should have timestamp"

@@ -159,7 +159,7 @@ class RootFront extends protocol.FrontClassWithSpec(rootSpec) {
   }
 }
 
-function run_test() {
+add_task(async function() {
   DebuggerServer.createRootActor = conn => {
     return RootActor(conn);
   };
@@ -190,180 +190,132 @@ function run_test() {
   );
   const trace = connectPipeTracing();
   const client = new DebuggerClient(trace);
-  let rootFront;
 
-  client.connect().then(([applicationType, traits]) => {
-    trace.expectReceive({
-      from: "<actorid>",
-      applicationType: "xpcshell-tests",
-      traits: [],
-    });
-    Assert.equal(applicationType, "xpcshell-tests");
-
-    rootFront = new RootFront(client);
-
-    rootFront
-      .simpleReturn()
-      .then(ret => {
-        trace.expectSend({ type: "simpleReturn", to: "<actorid>" });
-        trace.expectReceive({ value: 1, from: "<actorid>" });
-        Assert.equal(ret, 1);
-      })
-      .then(() => {
-        return rootFront.promiseReturn();
-      })
-      .then(ret => {
-        trace.expectSend({ type: "promiseReturn", to: "<actorid>" });
-        trace.expectReceive({ value: 1, from: "<actorid>" });
-        Assert.equal(ret, 1);
-      })
-      .then(() => {
-        Assert.throws(
-          () => rootFront.simpleArgs(5),
-          /undefined passed where a value is required/,
-          "Should throw if simpleArgs is missing an argument."
-        );
-
-        return rootFront.simpleArgs(5, 10);
-      })
-      .then(ret => {
-        trace.expectSend({
-          type: "simpleArgs",
-          firstArg: 5,
-          secondArg: 10,
-          to: "<actorid>",
-        });
-        trace.expectReceive({
-          firstResponse: 6,
-          secondResponse: 11,
-          from: "<actorid>",
-        });
-        Assert.equal(ret.firstResponse, 6);
-        Assert.equal(ret.secondResponse, 11);
-      })
-      .then(() => {
-        return rootFront.optionArgs({
-          option1: 5,
-          option2: 10,
-        });
-      })
-      .then(ret => {
-        trace.expectSend({
-          type: "optionArgs",
-          option1: 5,
-          option2: 10,
-          to: "<actorid>",
-        });
-        trace.expectReceive({ option1: 5, option2: 10, from: "<actorid>" });
-        Assert.equal(ret.option1, 5);
-        Assert.equal(ret.option2, 10);
-      })
-      .then(() => {
-        return rootFront.optionArgs({});
-      })
-      .then(ret => {
-        trace.expectSend({ type: "optionArgs", to: "<actorid>" });
-        trace.expectReceive({ from: "<actorid>" });
-        Assert.ok(typeof ret.option1 === "undefined");
-        Assert.ok(typeof ret.option2 === "undefined");
-      })
-      .then(() => {
-        // Explicitly call an optional argument...
-        return rootFront.optionalArgs(5, 10);
-      })
-      .then(ret => {
-        trace.expectSend({
-          type: "optionalArgs",
-          a: 5,
-          b: 10,
-          to: "<actorid>",
-        });
-        trace.expectReceive({ value: 10, from: "<actorid>" });
-        Assert.equal(ret, 10);
-      })
-      .then(() => {
-        // Now don't pass the optional argument, expect the default.
-        return rootFront.optionalArgs(5);
-      })
-      .then(ret => {
-        trace.expectSend({ type: "optionalArgs", a: 5, to: "<actorid>" });
-        trace.expectReceive({ value: 200, from: "<actorid>" });
-        Assert.equal(ret, 200);
-      })
-      .then(ret => {
-        return rootFront.arrayArgs([0, 1, 2, 3, 4, 5]);
-      })
-      .then(ret => {
-        trace.expectSend({
-          type: "arrayArgs",
-          a: [0, 1, 2, 3, 4, 5],
-          to: "<actorid>",
-        });
-        trace.expectReceive({
-          arrayReturn: [0, 1, 2, 3, 4, 5],
-          from: "<actorid>",
-        });
-        Assert.equal(ret[0], 0);
-        Assert.equal(ret[5], 5);
-      })
-      .then(() => {
-        return rootFront.arrayArgs([[5]]);
-      })
-      .then(ret => {
-        trace.expectSend({ type: "arrayArgs", a: [[5]], to: "<actorid>" });
-        trace.expectReceive({ arrayReturn: [[5]], from: "<actorid>" });
-        Assert.equal(ret[0][0], 5);
-      })
-      .then(() => {
-        return rootFront.renamedEcho("hello");
-      })
-      .then(str => {
-        trace.expectSend({ type: "echo", a: "hello", to: "<actorid>" });
-        trace.expectReceive({ value: "hello", from: "<actorid>" });
-
-        Assert.equal(str, "hello");
-
-        const deferred = defer();
-        rootFront.on("oneway", response => {
-          trace.expectSend({ type: "testOneWay", a: "hello", to: "<actorid>" });
-          trace.expectReceive({
-            type: "oneway",
-            a: "hello",
-            from: "<actorid>",
-          });
-
-          Assert.equal(response, "hello");
-          deferred.resolve();
-        });
-        Assert.ok(typeof rootFront.testOneWay("hello") === "undefined");
-        return deferred.promise;
-      })
-      .then(() => {
-        const deferred = defer();
-        rootFront.on("falsyOptions", res => {
-          trace.expectSend({ type: "emitFalsyOptions", to: "<actorid>" });
-          trace.expectReceive({
-            type: "falsyOptions",
-            farce: false,
-            zero: 0,
-            from: "<actorid>",
-          });
-
-          Assert.ok(res.zero === 0);
-          Assert.ok(res.farce === false);
-          deferred.resolve();
-        });
-        rootFront.emitFalsyOptions();
-        return deferred.promise;
-      })
-      .then(() => {
-        client.close().then(() => {
-          do_test_finished();
-        });
-      })
-      .catch(err => {
-        do_report_unexpected_exception(err, "Failure executing test");
-      });
+  const [applicationType] = await client.connect();
+  trace.expectReceive({
+    from: "<actorid>",
+    applicationType: "xpcshell-tests",
+    traits: [],
   });
-  do_test_pending();
-}
+  Assert.equal(applicationType, "xpcshell-tests");
+
+  const rootFront = new RootFront(client);
+
+  let ret = await rootFront.simpleReturn();
+  trace.expectSend({ type: "simpleReturn", to: "<actorid>" });
+  trace.expectReceive({ value: 1, from: "<actorid>" });
+  Assert.equal(ret, 1);
+
+  ret = await rootFront.promiseReturn();
+  trace.expectSend({ type: "promiseReturn", to: "<actorid>" });
+  trace.expectReceive({ value: 1, from: "<actorid>" });
+  Assert.equal(ret, 1);
+
+  Assert.throws(
+    () => rootFront.simpleArgs(5),
+    /undefined passed where a value is required/,
+    "Should throw if simpleArgs is missing an argument."
+  );
+
+  ret = await rootFront.simpleArgs(5, 10);
+  trace.expectSend({
+    type: "simpleArgs",
+    firstArg: 5,
+    secondArg: 10,
+    to: "<actorid>",
+  });
+  trace.expectReceive({
+    firstResponse: 6,
+    secondResponse: 11,
+    from: "<actorid>",
+  });
+  Assert.equal(ret.firstResponse, 6);
+  Assert.equal(ret.secondResponse, 11);
+
+  ret = await rootFront.optionArgs({
+    option1: 5,
+    option2: 10,
+  });
+  trace.expectSend({
+    type: "optionArgs",
+    option1: 5,
+    option2: 10,
+    to: "<actorid>",
+  });
+  trace.expectReceive({ option1: 5, option2: 10, from: "<actorid>" });
+  Assert.equal(ret.option1, 5);
+  Assert.equal(ret.option2, 10);
+
+  ret = await rootFront.optionArgs({});
+  trace.expectSend({ type: "optionArgs", to: "<actorid>" });
+  trace.expectReceive({ from: "<actorid>" });
+  Assert.ok(typeof ret.option1 === "undefined");
+  Assert.ok(typeof ret.option2 === "undefined");
+
+  // Explicitly call an optional argument...
+  ret = await rootFront.optionalArgs(5, 10);
+  trace.expectSend({
+    type: "optionalArgs",
+    a: 5,
+    b: 10,
+    to: "<actorid>",
+  });
+  trace.expectReceive({ value: 10, from: "<actorid>" });
+  Assert.equal(ret, 10);
+
+  // Now don't pass the optional argument, expect the default.
+  ret = await rootFront.optionalArgs(5);
+  trace.expectSend({ type: "optionalArgs", a: 5, to: "<actorid>" });
+  trace.expectReceive({ value: 200, from: "<actorid>" });
+  Assert.equal(ret, 200);
+
+  ret = await rootFront.arrayArgs([0, 1, 2, 3, 4, 5]);
+  trace.expectSend({
+    type: "arrayArgs",
+    a: [0, 1, 2, 3, 4, 5],
+    to: "<actorid>",
+  });
+  trace.expectReceive({
+    arrayReturn: [0, 1, 2, 3, 4, 5],
+    from: "<actorid>",
+  });
+  Assert.equal(ret[0], 0);
+  Assert.equal(ret[5], 5);
+
+  ret = await rootFront.arrayArgs([[5]]);
+  trace.expectSend({ type: "arrayArgs", a: [[5]], to: "<actorid>" });
+  trace.expectReceive({ arrayReturn: [[5]], from: "<actorid>" });
+  Assert.equal(ret[0][0], 5);
+
+  const str = await rootFront.renamedEcho("hello");
+  trace.expectSend({ type: "echo", a: "hello", to: "<actorid>" });
+  trace.expectReceive({ value: "hello", from: "<actorid>" });
+  Assert.equal(str, "hello");
+
+  const onOneWay = rootFront.once("oneway");
+  Assert.ok(typeof rootFront.testOneWay("hello") === "undefined");
+  const response = await onOneWay;
+  trace.expectSend({ type: "testOneWay", a: "hello", to: "<actorid>" });
+  trace.expectReceive({
+    type: "oneway",
+    a: "hello",
+    from: "<actorid>",
+  });
+  Assert.equal(response, "hello");
+
+  const onFalsyOptions = rootFront.once("falsyOptions");
+  rootFront.emitFalsyOptions();
+  const res = await onFalsyOptions;
+  trace.expectSend({ type: "emitFalsyOptions", to: "<actorid>" });
+  trace.expectReceive({
+    type: "falsyOptions",
+    farce: false,
+    zero: 0,
+    from: "<actorid>",
+  });
+
+  Assert.ok(res.zero === 0);
+  Assert.ok(res.farce === false);
+
+  await client.close();
+});

@@ -88,6 +88,13 @@ void js::intl::ReportInternalError(JSContext* cx) {
                             JSMSG_INTERNAL_INTL_ERROR);
 }
 
+const js::intl::OldStyleLanguageTagMapping
+    js::intl::oldStyleLanguageTagMappings[] = {
+        {"pa-PK", "pa-Arab-PK"}, {"zh-CN", "zh-Hans-CN"},
+        {"zh-HK", "zh-Hant-HK"}, {"zh-SG", "zh-Hans-SG"},
+        {"zh-TW", "zh-Hant-TW"},
+};
+
 js::UniqueChars js::intl::EncodeLocale(JSContext* cx, JSString* locale) {
   MOZ_ASSERT(locale->length() > 0);
 
@@ -108,38 +115,4 @@ js::UniqueChars js::intl::EncodeLocale(JSContext* cx, JSString* locale) {
 #endif
 
   return chars;
-}
-
-bool js::intl::GetAvailableLocales(JSContext* cx, CountAvailable countAvailable,
-                                   GetAvailable getAvailable,
-                                   JS::MutableHandle<JS::Value> result) {
-  RootedObject locales(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-  if (!locales) {
-    return false;
-  }
-
-  RootedAtom a(cx);
-  uint32_t count = countAvailable();
-  for (uint32_t i = 0; i < count; i++) {
-    const char* locale = getAvailable(i);
-    auto lang = DuplicateString(cx, locale);
-    if (!lang) {
-      return false;
-    }
-    char* p;
-    while ((p = strchr(lang.get(), '_'))) {
-      *p = '-';
-    }
-    a = Atomize(cx, lang.get(), strlen(lang.get()));
-    if (!a) {
-      return false;
-    }
-    if (!DefineDataProperty(cx, locales, a->asPropertyName(),
-                            TrueHandleValue)) {
-      return false;
-    }
-  }
-
-  result.setObject(*locales);
-  return true;
 }

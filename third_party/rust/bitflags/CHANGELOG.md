@@ -1,3 +1,38 @@
+# 1.2.0
+
+- Fix typo: {Lower, Upper}Exp - {Lower, Upper}Hex ([#183])
+
+- Add support for "unknown" bits ([#188])
+
+[#183]: https://github.com/rust-lang-nursery/bitflags/pull/183
+[#188]: https://github.com/rust-lang-nursery/bitflags/pull/188
+
+# 1.1.0
+
+This is a re-release of `1.0.5`, which was yanked due to a bug in the RLS.
+
+# 1.0.5
+
+- Use compiletest_rs flags supported by stable toolchain ([#171])
+
+- Put the user provided attributes first ([#173])
+
+- Make bitflags methods `const` on newer compilers ([#175])
+
+[#171]: https://github.com/rust-lang-nursery/bitflags/pull/171
+[#173]: https://github.com/rust-lang-nursery/bitflags/pull/173
+[#175]: https://github.com/rust-lang-nursery/bitflags/pull/175
+
+# 1.0.4
+
+- Support Rust 2018 style macro imports ([#165])
+
+  ```rust
+  use bitflags::bitflags;
+  ```
+
+[#165]: https://github.com/rust-lang-nursery/bitflags/pull/165
+
 # 1.0.3
 
 - Improve zero value flag handling and documentation ([#157])

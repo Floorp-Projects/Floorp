@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
+  --in-content-box-background-hover: var(--in-content-page-background);
   border-inline-end: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
   display: flex;
@@ -71,7 +72,7 @@
   padding: 1em;
   max-width: 50ch; /* This should be kept in sync with login-list-item username and title max-width */
   flex-grow: 1;
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-bottom: 1px solid var(--in-content-border-color);
 }
 
 .empty-search-message span,
@@ -104,7 +105,7 @@ ol {
   padding-inline-end: 18px;
   padding-inline-start: 12px;
   border-inline-start: 4px solid transparent;
-  border-bottom: 1px solid var(--in-content-box-border-color);
+  border-bottom: 1px solid var(--in-content-border-color);
   user-select: none;
 }
 

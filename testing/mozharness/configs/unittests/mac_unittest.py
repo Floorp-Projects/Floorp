@@ -136,7 +136,6 @@ config = {
         "mochitest-browser-chrome": ["--flavor=browser"],
         "mochitest-browser-chrome-chunked": ["--flavor=browser", "--chunk-by-runtime"],
         "mochitest-browser-chrome-screenshots": ["--flavor=browser", "--subsuite=screenshots"],
-        "mochitest-browser-chrome-instrumentation": ["--flavor=browser"],
         "mochitest-webgl1-core": ["--subsuite=webgl1-core"],
         "mochitest-webgl1-ext": ["--subsuite=webgl1-ext"],
         "mochitest-webgl2-core": ["--subsuite=webgl2-core"],

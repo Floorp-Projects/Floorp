@@ -1388,6 +1388,13 @@ function DoAssertionCheck(numAsserts)
         var minAsserts = g.urls[0].minAsserts;
         var maxAsserts = g.urls[0].maxAsserts;
 
+        if (numAsserts < minAsserts) {
+            ++g.testResults.AssertionUnexpectedFixed;
+        } else if (numAsserts > maxAsserts) {
+            ++g.testResults.AssertionUnexpected;
+        } else if (numAsserts != 0) {
+            ++g.testResults.AssertionKnown;
+        }
         logger.assertionCount(g.urls[0].identifier, numAsserts, minAsserts, maxAsserts);
     }
 

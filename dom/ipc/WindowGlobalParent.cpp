@@ -357,11 +357,23 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
   // Widget Layer handoff...
   nsCOMPtr<nsISharePicker> sharePicker =
       do_GetService("@mozilla.org/sharepicker;1");
-
   if (!sharePicker) {
     aResolver(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return IPC_OK();
   }
+
+  // Initialize the ShareWidget
+  RefPtr<BrowserParent> parent = GetBrowserParent();
+  if (NS_WARN_IF(!parent)) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+  nsCOMPtr<mozIDOMWindowProxy> openerWindow = parent->GetParentWindowOuter();
+  if (!openerWindow) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+  sharePicker->Init(openerWindow);
 
   // And finally share the data...
   RefPtr<Promise> promise;
@@ -377,73 +389,6 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvShare(
   promise->AppendNativeHandler(handler);
 
   return IPC_OK();
-}
-
-already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
-    dom::BrowsingContext* aBc, const nsAString& aRemoteType,
-    uint64_t aPendingSwitchId, ErrorResult& aRv) {
-  RefPtr<BrowserParent> embedderBrowserParent = GetBrowserParent();
-  if (NS_WARN_IF(!embedderBrowserParent)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsIGlobalObject* global = GetParentObject();
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  RefPtr<CanonicalBrowsingContext> browsingContext =
-      CanonicalBrowsingContext::Cast(aBc);
-
-  // When the reply comes back from content, either resolve or reject.
-  auto resolve =
-      [=](mozilla::Tuple<nsresult, PBrowserBridgeParent*>&& aResult) {
-        nsresult rv = Get<0>(aResult);
-        RefPtr<BrowserBridgeParent> bridge =
-            static_cast<BrowserBridgeParent*>(Get<1>(aResult));
-        if (NS_FAILED(rv)) {
-          promise->MaybeReject(rv);
-          return;
-        }
-
-        // If we got a `BrowserBridgeParent`, the frame is out-of-process, so we
-        // can get the target off of it. Otherwise, it's an in-process frame, so
-        // we can use the embedder `BrowserParent`.
-        RefPtr<BrowserParent> browserParent;
-        if (bridge) {
-          browserParent = bridge->GetBrowserParent();
-        } else {
-          browserParent = embedderBrowserParent;
-        }
-        MOZ_ASSERT(browserParent);
-
-        if (!browserParent || !browserParent->CanSend()) {
-          promise->MaybeReject(NS_ERROR_FAILURE);
-          return;
-        }
-
-        // Update our BrowsingContext to its new owner, if it hasn't been
-        // updated yet. This can happen when switching from a out-of-process to
-        // in-process frame. For remote frames, the BrowserBridgeParent::Init
-        // method should've already set up the OwnerProcessId.
-        uint64_t childId = browserParent->Manager()->ChildID();
-        MOZ_ASSERT_IF(bridge,
-                      browsingContext == browserParent->GetBrowsingContext());
-        MOZ_ASSERT_IF(bridge, browsingContext->IsOwnedByProcess(childId));
-        browsingContext->SetOwnerProcessId(childId);
-
-        promise->MaybeResolve(childId);
-      };
-
-  auto reject = [=](ResponseRejectReason aReason) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
-  };
-
-  SendChangeFrameRemoteness(aBc, PromiseFlatString(aRemoteType),
-                            aPendingSwitchId, resolve, reject);
-  return promise.forget();
 }
 
 already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(

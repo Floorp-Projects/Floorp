@@ -582,8 +582,8 @@ static bool GCParameter(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSFlatString* flatStr = JS_FlattenString(cx, str);
-  if (!flatStr) {
+  JSLinearString* linearStr = JS_EnsureLinearString(cx, str);
+  if (!linearStr) {
     return false;
   }
 
@@ -594,7 +594,7 @@ static bool GCParameter(JSContext* cx, unsigned argc, Value* vp) {
           cx, "the first argument must be one of:" GC_PARAMETER_ARGS_LIST);
       return false;
     }
-    if (JS_FlatStringEqualsAscii(flatStr, paramMap[paramIndex].name)) {
+    if (JS_LinearStringEqualsAscii(linearStr, paramMap[paramIndex].name)) {
       break;
     }
   }
@@ -845,6 +845,8 @@ static bool WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  size_t textLen = args[0].toString()->length();
+
   AutoStableStringChars twoByteChars(cx);
   if (!twoByteChars.initTwoByte(cx, args[0].toString())) {
     return false;
@@ -865,8 +867,8 @@ static bool WasmTextToBinary(JSContext* cx, unsigned argc, Value* vp) {
   wasm::Bytes bytes;
   UniqueChars error;
   wasm::Uint32Vector offsets;
-  if (!wasm::TextToBinary(twoByteChars.twoByteChars(), stackLimit, &bytes,
-                          &offsets, &error)) {
+  if (!wasm::TextToBinary(twoByteChars.twoByteChars(), textLen, stackLimit,
+                          &bytes, &offsets, &error)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_TEXT_FAIL,
                               error.get() ? error.get() : "out of memory");
@@ -1116,13 +1118,13 @@ static bool InternalConst(JSContext* cx, unsigned argc, Value* vp) {
   if (!str) {
     return false;
   }
-  JSFlatString* flat = JS_FlattenString(cx, str);
-  if (!flat) {
+  JSLinearString* linear = JS_EnsureLinearString(cx, str);
+  if (!linear) {
     return false;
   }
 
-  if (JS_FlatStringEqualsLiteral(flat,
-                                 "INCREMENTAL_MARK_STACK_BASE_CAPACITY")) {
+  if (JS_LinearStringEqualsLiteral(linear,
+                                   "INCREMENTAL_MARK_STACK_BASE_CAPACITY")) {
     args.rval().setNumber(uint32_t(js::INCREMENTAL_MARK_STACK_BASE_CAPACITY));
   } else {
     JS_ReportErrorASCII(cx, "unknown const name");

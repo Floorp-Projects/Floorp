@@ -545,7 +545,8 @@ class ObjectGroupRealm {
   struct PlainObjectKey;
   struct PlainObjectEntry;
   struct PlainObjectTableSweepPolicy {
-    static bool needsSweep(PlainObjectKey* key, PlainObjectEntry* entry);
+    static bool traceWeak(JSTracer* trc, PlainObjectKey* key,
+                          PlainObjectEntry* entry);
   };
   using PlainObjectTable =
       JS::GCHashMap<PlainObjectKey, PlainObjectEntry, PlainObjectKey,
@@ -642,7 +643,7 @@ class ObjectGroupRealm {
 
   void clearTables();
 
-  void sweep();
+  void traceWeak(JSTracer* trc);
 
   void purge() { defaultNewGroupCache.purge(); }
 

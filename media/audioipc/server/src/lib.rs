@@ -11,6 +11,7 @@ extern crate log;
 #[macro_use]
 extern crate lazy_static;
 
+use audio_thread_priority::promote_current_thread_to_real_time;
 use audioipc::core;
 use audioipc::platformhandle_passing::framed_with_platformhandles;
 use audioipc::rpc;
@@ -63,6 +64,12 @@ fn run() -> Result<ServerWrapper> {
     trace!("Starting up cubeb audio server event loop thread...");
 
     let callback_thread = core::spawn_thread("AudioIPC Callback RPC", || {
+        match promote_current_thread_to_real_time(0, 48000) {
+            Ok(_) => {}
+            Err(_) => {
+                debug!("Failed to promote audio callback thread to real-time.");
+            }
+        }
         trace!("Starting up cubeb audio callback event loop thread...");
         Ok(())
     })

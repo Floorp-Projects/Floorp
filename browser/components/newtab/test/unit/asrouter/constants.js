@@ -151,6 +151,7 @@ export class FakeRemotePageManager {
         },
         gProtectionsHandler: {
           showProtectionsPopup: sinon.stub(),
+          openProtections: sinon.stub(),
         },
       },
     };

@@ -38,6 +38,7 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/SelfHostingDefines.h"
 #include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeSection.h"
 #include "frontend/FoldConstants.h"
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
@@ -1779,20 +1780,6 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   // Eager Function tree mode, emit the lazy script now.
   return EmitLazyScript(cx_, funbox, sourceObject_, parseGoal());
-}
-
-bool ParserBase::publishDeferredAllocations() {
-  for (ParseInfo::DeferredAllocationType deferredAllocation :
-       deferredAllocations()) {
-    if (deferredAllocation.is<BigIntLiteral*>()) {
-      BigIntLiteral* lit = deferredAllocation.as<BigIntLiteral*>();
-      if (!lit->publish(this->cx_, this)) {
-        return false;
-      }
-    }
-  }
-  deferredAllocations().clearAndFree();
-  return true;
 }
 
 bool ParserBase::publishLazyScripts(FunctionTree* root) {
@@ -9655,9 +9642,6 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
     if (!lit) {
       return null();
     }
-    if (!this->deferredAllocations().append(AsVariant(lit))) {
-      return null();
-    }
     // Now that possible OOMs are done, move data into Lit. After this
     // point responsibility for cleanup lies with the cleanup of the
     // ParseInfo's deferred allocations list.
@@ -10583,11 +10567,6 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
     }
 
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_ARGS)) {
-      return null();
-    }
-
-    if (!cx_->runtime()->moduleDynamicImportHook) {
-      error(JSMSG_NO_DYNAMIC_IMPORT);
       return null();
     }
 

@@ -72,14 +72,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    // Test getter/setter lookup on Xray wrappers.
    ok(Object.prototype.__lookupGetter__.call(win.document, 'title'), 'found getter on document');
    ok(Object.prototype.__lookupGetter__.call(win.document, 'title'), 'found getter on document');
-
-   // Test QI on new dom bindings.
-   try {
-     var QIed = win.document.documentElement.QueryInterface(Ci.nsIClassInfo);
-     ok(false, "Should throw for new binding objects not having classinfo");
-   } catch(e) {
-     is(e.name, "NS_NOINTERFACE", "Threw while QI-ing on wrapper");
-   }
   }
 
   SimpleTest.waitForExplicitFinish();

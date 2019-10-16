@@ -6,6 +6,7 @@
 
 #include "builtin/ModuleObject.h"
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/ScopeExit.h"
 
@@ -318,10 +319,9 @@ void IndirectBindingMap::trace(JSTracer* trc) {
     Binding& b = e.front().value();
     TraceEdge(trc, &b.environment, "module bindings environment");
     TraceEdge(trc, &b.shape, "module bindings shape");
-    jsid bindingName = e.front().key();
-    TraceManuallyBarrieredEdge(trc, &bindingName,
-                               "module bindings binding name");
-    MOZ_ASSERT(bindingName == e.front().key());
+    mozilla::DebugOnly<jsid> prev(e.front().key());
+    TraceEdge(trc, &e.front().mutableKey(), "module bindings binding name");
+    MOZ_ASSERT(e.front().key() == prev);
   }
 }
 
@@ -1721,8 +1721,13 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
 
   JS::ModuleDynamicImportHook importHook =
       cx->runtime()->moduleDynamicImportHook;
+
   if (!importHook) {
-    JS_ReportErrorASCII(cx, "Dynamic module import is disabled");
+    // Dynamic import can be disabled by a pref and is not supported in all
+    // contexts (e.g. web workers).
+    JS_ReportErrorASCII(
+        cx,
+        "Dynamic module import is disabled or not supported in this context");
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;
     }

@@ -727,16 +727,23 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
 
   bool constrainBSize =
       (aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) &&
-      (aFlags & AbsPosReflowFlags::ConstrainHeight) &&
+
       // Don't split if told not to (e.g. for fixed frames)
-      !aDelegatingFrame->IsInlineFrame() &&
+      (aFlags & AbsPosReflowFlags::ConstrainHeight) &&
+
       // XXX we don't handle splitting frames for inline absolute containing
       // blocks yet
+      !aDelegatingFrame->IsInlineFrame() &&
+
+      // Bug 1588623: Support splitting absolute positioned multicol containers.
+      !aKidFrame->IsColumnSetWrapperFrame() &&
+
+      // Don't split things below the fold. (Ideally we shouldn't *have*
+      // anything totally below the fold, but we can't position frames
+      // across next-in-flow breaks yet.
       (aKidFrame->GetLogicalRect(aContainingBlock.Size()).BStart(wm) <=
        aReflowInput.AvailableBSize());
-  // Don't split things below the fold. (Ideally we shouldn't *have*
-  // anything totally below the fold, but we can't position frames
-  // across next-in-flow breaks yet.
+
   if (constrainBSize) {
     kidReflowInput.AvailableBSize() =
         aReflowInput.AvailableBSize() -

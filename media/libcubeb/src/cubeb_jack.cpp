@@ -130,7 +130,6 @@ static struct cubeb_ops const cbjack_ops = {
   .stream_get_position = cbjack_stream_get_position,
   .stream_get_latency = cbjack_get_latency,
   .stream_set_volume = cbjack_stream_set_volume,
-  .stream_set_panning = NULL,
   .stream_get_current_device = cbjack_stream_get_current_device,
   .stream_device_destroy = cbjack_stream_device_destroy,
   .stream_register_device_changed_callback = NULL,
@@ -212,6 +211,9 @@ load_jack_lib(cubeb * context)
 # endif
 #else
   context->libjack = dlopen("libjack.so.0", RTLD_LAZY);
+  if (!context->libjack) {
+    context->libjack = dlopen("libjack.so", RTLD_LAZY);
+  }
 #endif
   if (!context->libjack) {
     return CUBEB_ERROR;

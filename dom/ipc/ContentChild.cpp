@@ -97,6 +97,7 @@
 #include "mozilla/WebBrowserPersistDocumentChild.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/UnderrunHandler.h"
 #include "nsIChildProcessChannelListener.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "nsQueryObject.h"
@@ -108,6 +109,7 @@
 #include "nsGeolocation.h"
 #include "audio_thread_priority.h"
 #include "nsIConsoleService.h"
+#include "audio_thread_priority.h"
 
 #if !defined(XP_WIN)
 #  include "mozilla/Omnijar.h"
@@ -1776,14 +1778,14 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
     sandboxEnabled = false;
   } else {
     // Pre-start audio before sandboxing; see bug 1443612.
-    if (!Preferences::GetBool("media.cubeb.sandbox")) {
+    if (Preferences::GetBool("media.cubeb.sandbox")) {
+      if (atp_set_real_time_limit(0, 48000)) {
+        NS_WARNING("could not set real-time limit at process startup");
+      }
+      InstallSoftRealTimeLimitHandler();
+    } else {
       Unused << CubebUtils::GetCubebContext();
     }
-#    if defined(XP_LINUX)
-    else {
-      CubebUtils::InitAudioThreads();
-    }
-#    endif
   }
 
   if (sandboxEnabled) {
@@ -2124,30 +2126,11 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
   RefPtr<BrowserBridgeChild> browserBridge =
       new BrowserBridgeChild(aFrameLoader, aBrowsingContext, tabId);
 
-  nsDocShell::Cast(docShell)->OOPChildLoadStarted(browserBridge);
-
   browserChild->SendPBrowserBridgeConstructor(
       browserBridge, PromiseFlatString(aContext.PresentationURL()), aRemoteType,
       aBrowsingContext, chromeFlags, tabId);
-  browserBridge->mIPCOpen = true;
 
-#if defined(ACCESSIBILITY)
-  a11y::DocAccessible* docAcc =
-      a11y::GetExistingDocAccessible(owner->OwnerDoc());
-  if (docAcc) {
-    a11y::Accessible* ownerAcc = docAcc->GetAccessible(owner);
-    if (ownerAcc) {
-      a11y::OuterDocAccessible* outerAcc = ownerAcc->AsOuterDoc();
-      if (outerAcc) {
-        outerAcc->SendEmbedderAccessible(browserBridge);
-      }
-    }
-  }
-#endif  // defined(ACCESSIBILITY)
-
-  RefPtr<BrowserBridgeHost> browserBridgeHost =
-      new BrowserBridgeHost(browserBridge);
-  return browserBridgeHost.forget();
+  return browserBridge->FinishInit();
 }
 
 PScriptCacheChild* ContentChild::AllocPScriptCacheChild(

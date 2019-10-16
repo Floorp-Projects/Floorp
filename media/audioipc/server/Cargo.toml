@@ -9,13 +9,13 @@ description = "Remote cubeb server"
 edition = "2018"
 
 [dependencies]
-audio_thread_priority = "0.19.1"
+audio_thread_priority = "0.20.2"
 audioipc = { path = "../audioipc" }
-cubeb-core = "0.5.5"
+cubeb-core = "0.6.0"
 futures = "0.1.18"
 lazy_static = "1.2.0"
 log = "0.4"
-slab = "0.3.0"
+slab = "0.4"
 tokio = "0.1"
 
 [dependencies.error-chain]

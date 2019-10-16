@@ -105,8 +105,8 @@ BEGIN_TEST(testErrorInterceptor) {
 
     js::JSStringBuilder buffer(cx);
     CHECK(ValueToStringBuffer(cx, exn, buffer));
-    JS::Rooted<JSFlatString*> flat(cx, buffer.finishString());
-    CHECK(equalStrings(cx, flat, gLatestMessage));
+    JS::Rooted<JSLinearString*> linear(cx, buffer.finishString());
+    CHECK(equalStrings(cx, linear, gLatestMessage));
 
     // Cleanup.
     gLatestMessage = nullptr;
@@ -130,8 +130,8 @@ BEGIN_TEST(testErrorInterceptor) {
 
     js::JSStringBuilder buffer(cx);
     CHECK(ValueToStringBuffer(cx, exn, buffer));
-    JS::Rooted<JSFlatString*> flat(cx, buffer.finishString());
-    CHECK(js::StringEqualsAscii(flat, TO_STRING[i]));
+    JS::Rooted<JSLinearString*> linear(cx, buffer.finishString());
+    CHECK(js::StringEqualsAscii(linear, TO_STRING[i]));
 
     // Cleanup.
     gLatestMessage = nullptr;

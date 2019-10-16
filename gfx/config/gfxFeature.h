@@ -28,6 +28,7 @@ namespace gfx {
   _(WEBRENDER_QUALIFIED, Feature, "WebRender qualified")       \
   _(OMTP, Feature, "Off Main Thread Painting")                 \
   _(ADVANCED_LAYERS, Feature, "Advanced Layers")               \
+  _(WEBGPU, Feature, "WebGPU")                                 \
   /* Add new entries above this comment */
 
 enum class Feature : uint32_t {

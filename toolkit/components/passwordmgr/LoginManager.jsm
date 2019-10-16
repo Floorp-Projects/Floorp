@@ -5,6 +5,7 @@
 "use strict";
 
 const PERMISSION_SAVE_LOGINS = "login-saving";
+const MAX_DATE_MS = 8640000000000000;
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -287,6 +288,13 @@ LoginManager.prototype = {
       throw new Error(
         "Can't add a login without a httpRealm or formActionOrigin."
       );
+    }
+
+    for (let pname of ["timeCreated", "timeLastUsed", "timePasswordChanged"]) {
+      // Invalid dates
+      if (login[pname] > MAX_DATE_MS) {
+        throw new Error("Can't add a login with invalid date properties.");
+      }
     }
   },
 

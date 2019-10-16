@@ -3322,7 +3322,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   if (needTitlebarView && !mTitlebarGradientView) {
     mTitlebarGradientView = [[TitlebarGradientView alloc] initWithFrame:[self titlebarRect]];
     mTitlebarGradientView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
-    [self.contentView addSubview:mTitlebarGradientView];
+    [self.contentView addSubview:mTitlebarGradientView positioned:NSWindowBelow relativeTo:nil];
   } else if (!needTitlebarView && mTitlebarGradientView) {
     [mTitlebarGradientView removeFromSuperview];
     [mTitlebarGradientView release];

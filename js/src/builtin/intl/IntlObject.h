@@ -106,6 +106,35 @@ extern MOZ_MUST_USE bool intl_GetLocaleInfo(JSContext* cx, unsigned argc,
  */
 extern MOZ_MUST_USE bool intl_ComputeDisplayNames(JSContext* cx, unsigned argc,
                                                   JS::Value* vp);
+/**
+ * Compares a BCP 47 language tag against the locales in availableLocales and
+ * returns the best available match -- or |undefined| if no match was found.
+ * Uses the fallback mechanism of RFC 4647, section 3.4.
+ *
+ * The set of available locales consulted doesn't necessarily include the
+ * default locale or any generalized forms of it (e.g. "de" is a more-general
+ * form of "de-CH"). If you want to be sure to consider the default local and
+ * its generalized forms (you usually will), pass the default locale as the
+ * value of |defaultOrNull|; otherwise pass null.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.2.
+ * Spec: RFC 4647, section 3.4.
+ *
+ * Usage: result = intl_BestAvailableLocale("Collator", locale, defaultOrNull)
+ */
+extern MOZ_MUST_USE bool intl_BestAvailableLocale(JSContext* cx, unsigned argc,
+                                                  JS::Value* vp);
+
+/**
+ * Returns the input locale in its canonicalized form if ICU supports that
+ * locale (perhaps via fallback, e.g. supporting "de-ZA" through "de" support
+ * implied by a "de-DE" locale). Otherwise uses the last-ditch locale.
+ *
+ * Usage: result = intl_supportedLocaleOrFallback(locale)
+ */
+extern MOZ_MUST_USE bool intl_supportedLocaleOrFallback(JSContext* cx,
+                                                        unsigned argc,
+                                                        JS::Value* vp);
 
 }  // namespace js
 

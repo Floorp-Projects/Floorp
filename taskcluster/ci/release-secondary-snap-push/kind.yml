@@ -22,8 +22,8 @@ job-defaults:
         tier: 2
     worker-type:
         by-release-level:
-            production: scriptworker-prov-v1/pushsnap-v1
-            staging: scriptworker-prov-v1/dep-pushsnap
+            production: scriptworker-k8s/gecko-3-pushsnap
+            staging: scriptworker-k8s/gecko-1-pushsnap
     worker:
         implementation: push-snap
         channel:

@@ -61,7 +61,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     var localeData = DateTimeFormat.localeData;
 
     // Step 11.
-    var r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
+    var r = ResolveLocale("DateTimeFormat",
                           lazyDateTimeFormatData.requestedLocales,
                           lazyDateTimeFormatData.localeOpt,
                           DateTimeFormat.relevantExtensionKeys,
@@ -744,8 +744,7 @@ function Intl_DateTimeFormat_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
     // Step 1.
-    var availableLocales = callFunction(dateTimeFormatInternalProperties.availableLocales,
-                                        dateTimeFormatInternalProperties);
+    var availableLocales = "DateTimeFormat";
 
     // Step 2.
     var requestedLocales = CanonicalizeLocaleList(locales);
@@ -761,17 +760,6 @@ function Intl_DateTimeFormat_supportedLocalesOf(locales /*, options*/) {
  */
 var dateTimeFormatInternalProperties = {
     localeData: dateTimeFormatLocaleData,
-    _availableLocales: null,
-    availableLocales: function() // eslint-disable-line object-shorthand
-    {
-        var locales = this._availableLocales;
-        if (locales)
-            return locales;
-
-        locales = intl_DateTimeFormat_availableLocales();
-        addSpecialMissingLanguageTags(locales);
-        return (this._availableLocales = locales);
-    },
     relevantExtensionKeys: ["ca", "hc", "nu"],
 };
 

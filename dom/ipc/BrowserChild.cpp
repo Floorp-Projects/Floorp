@@ -393,13 +393,7 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mPendingLayersObserverEpoch{0},
       mPendingDocShellBlockers(0),
       mCancelContentJSEpoch(0),
-      mWidgetNativeData(0)
-#ifdef XP_WIN
-      ,
-      mWindowSupportsProtectedMedia(true),
-      mWindowSupportsProtectedMediaChecked(false)
-#endif
-{
+      mWidgetNativeData(0) {
   mozilla::HoldJSObjects(this);
 
   nsWeakPtr weakPtrThis(do_GetWeakReference(
@@ -581,9 +575,13 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
     window->SetInitialKeyboardIndicators(ShowFocusRings());
   }
 
-  nsContentUtils::SetScrollbarsVisibility(
-      window->GetDocShell(),
-      !!(mChromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS));
+  // Window scrollbar flags only affect top level remote frames, not fission
+  // frames.
+  if (mIsTopLevel) {
+    nsContentUtils::SetScrollbarsVisibility(
+        window->GetDocShell(),
+        !!(mChromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS));
+  }
 
   nsWeakPtr weakPtrThis = do_GetWeakReference(
       static_cast<nsIBrowserChild*>(this));  // for capture by the lambda
@@ -3918,23 +3916,38 @@ bool BrowserChild::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
 }
 
 #ifdef XP_WIN
-// Cache the response to the IPC call to IsWindowSupportingProtectedMedia,
-// since it will not change for the lifetime of this object
-void BrowserChild::UpdateIsWindowSupportingProtectedMedia(bool aIsSupported) {
-  mWindowSupportsProtectedMediaChecked = true;
-  mWindowSupportsProtectedMedia = aIsSupported;
-}
-
-// Reuse the cached response to the IPC call IsWindowSupportingProtectedMedia
-// when available
-bool BrowserChild::RequiresIsWindowSupportingProtectedMediaCheck(
-    bool& aIsSupported) {
-  if (mWindowSupportsProtectedMediaChecked) {
-    aIsSupported = mWindowSupportsProtectedMedia;
-    return false;
-  } else {
-    return true;
+RefPtr<PBrowserChild::IsWindowSupportingProtectedMediaPromise>
+BrowserChild::DoesWindowSupportProtectedMedia() {
+  MOZ_ASSERT(
+      NS_IsMainThread(),
+      "Protected media support check should be done on main thread only.");
+  if (mWindowSupportsProtectedMedia) {
+    // If we've already checked and have a cached result, resolve with that.
+    return IsWindowSupportingProtectedMediaPromise::CreateAndResolve(
+        mWindowSupportsProtectedMedia.value(), __func__);
   }
+  RefPtr<BrowserChild> self = this;
+  // We chain off the promise rather than passing it directly so we can cache
+  // the result and use that for future calls.
+  return SendIsWindowSupportingProtectedMedia(ChromeOuterWindowID())
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [self](bool isSupported) {
+            // If a result was cached while this check was inflight, ensure the
+            // results match.
+            MOZ_ASSERT_IF(
+                self->mWindowSupportsProtectedMedia,
+                self->mWindowSupportsProtectedMedia.value() == isSupported);
+            // Cache the response as it will not change during the lifetime
+            // of this object.
+            self->mWindowSupportsProtectedMedia = Some(isSupported);
+            return IsWindowSupportingProtectedMediaPromise::CreateAndResolve(
+                self->mWindowSupportsProtectedMedia.value(), __func__);
+          },
+          [](ResponseRejectReason reason) {
+            return IsWindowSupportingProtectedMediaPromise::CreateAndReject(
+                reason, __func__);
+          });
 }
 #endif
 

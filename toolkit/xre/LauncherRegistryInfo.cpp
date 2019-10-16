@@ -6,15 +6,94 @@
 
 #include "LauncherRegistryInfo.h"
 
+#include "mozilla/UniquePtr.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/NativeNt.h"
 
 #include <string>
 
 #define EXPAND_STRING_MACRO2(t) t
 #define EXPAND_STRING_MACRO(t) EXPAND_STRING_MACRO2(t)
+
+// This function is copied from Chromium base/time/time_win.cc
+// Returns the current value of the performance counter.
+static uint64_t QPCNowRaw() {
+  LARGE_INTEGER perf_counter_now = {};
+  // According to the MSDN documentation for QueryPerformanceCounter(), this
+  // will never fail on systems that run XP or later.
+  // https://docs.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancecounter
+  ::QueryPerformanceCounter(&perf_counter_now);
+  return perf_counter_now.QuadPart;
+}
+
+static mozilla::LauncherResult<DWORD> GetCurrentImageTimestamp() {
+  mozilla::nt::PEHeaders headers(::GetModuleHandleW(nullptr));
+  if (!headers) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
+  DWORD timestamp;
+  if (!headers.GetTimeStamp(timestamp)) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
+  }
+
+  return timestamp;
+}
+
+template <typename T>
+static mozilla::LauncherResult<mozilla::Maybe<T>> ReadRegistryValueData(
+    const nsAutoRegKey& key, const std::wstring& name, DWORD expectedType) {
+  static_assert(mozilla::IsPod<T>::value,
+                "Registry value type must be primitive.");
+  T data;
+  DWORD dataLen = sizeof(data);
+  DWORD type;
+  LSTATUS status = ::RegQueryValueExW(key.get(), name.c_str(), nullptr, &type,
+                                      reinterpret_cast<PBYTE>(&data), &dataLen);
+  if (status == ERROR_FILE_NOT_FOUND) {
+    return mozilla::Maybe<T>();
+  }
+
+  if (status != ERROR_SUCCESS) {
+    return LAUNCHER_ERROR_FROM_WIN32(status);
+  }
+
+  if (type != expectedType) {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
+  }
+
+  return mozilla::Some(data);
+}
+
+template <typename T>
+static mozilla::LauncherVoidResult WriteRegistryValueData(
+    const nsAutoRegKey& key, const std::wstring& name, DWORD type, T data) {
+  static_assert(mozilla::IsPod<T>::value,
+                "Registry value type must be primitive.");
+  LSTATUS status =
+      ::RegSetValueExW(key.get(), name.c_str(), 0, type,
+                       reinterpret_cast<PBYTE>(&data), sizeof(data));
+  if (status != ERROR_SUCCESS) {
+    return LAUNCHER_ERROR_FROM_WIN32(status);
+  }
+
+  return mozilla::Ok();
+}
+
+static mozilla::LauncherResult<bool> DeleteRegistryValueData(
+    const nsAutoRegKey& key, const std::wstring& name) {
+  LSTATUS status = ::RegDeleteValueW(key, name.c_str());
+  if (status == ERROR_FILE_NOT_FOUND) {
+    return false;
+  }
+
+  if (status != ERROR_SUCCESS) {
+    return LAUNCHER_ERROR_FROM_WIN32(status);
+  }
+
+  return true;
+}
 
 namespace mozilla {
 
@@ -25,6 +104,8 @@ const wchar_t LauncherRegistryInfo::kLauncherSuffix[] = L"|Launcher";
 const wchar_t LauncherRegistryInfo::kBrowserSuffix[] = L"|Browser";
 const wchar_t LauncherRegistryInfo::kImageTimestampSuffix[] = L"|Image";
 const wchar_t LauncherRegistryInfo::kTelemetrySuffix[] = L"|Telemetry";
+
+bool LauncherRegistryInfo::sAllowCommit = true;
 
 LauncherResult<LauncherRegistryInfo::Disposition> LauncherRegistryInfo::Open() {
   if (!!mRegKey) {
@@ -71,21 +152,22 @@ LauncherVoidResult LauncherRegistryInfo::ReflectPrefToRegistry(
   }
 
   // Always delete the launcher timestamp
-  LauncherResult<bool> clearedLauncherTimestamp =
-      ClearStartTimestamp(ProcessType::Launcher);
+  LauncherResult<bool> clearedLauncherTimestamp = ClearLauncherStartTimestamp();
   MOZ_ASSERT(clearedLauncherTimestamp.isOk());
   if (clearedLauncherTimestamp.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(clearedLauncherTimestamp);
   }
 
+  // Allow commit when we enable the launcher, otherwise block.
+  sAllowCommit = aEnable;
+
   if (!aEnable) {
     // Set the browser timestamp to 0 to indicate force-disabled
-    return WriteStartTimestamp(ProcessType::Browser, Some(0ULL));
+    return WriteBrowserStartTimestamp(0ULL);
   }
 
   // Otherwise we delete the browser timestamp to start over fresh
-  LauncherResult<bool> clearedBrowserTimestamp =
-      ClearStartTimestamp(ProcessType::Browser);
+  LauncherResult<bool> clearedBrowserTimestamp = ClearBrowserStartTimestamp();
   MOZ_ASSERT(clearedBrowserTimestamp.isOk());
   if (clearedBrowserTimestamp.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(clearedBrowserTimestamp);
@@ -101,18 +183,8 @@ LauncherVoidResult LauncherRegistryInfo::ReflectTelemetryPrefToRegistry(
     return LAUNCHER_ERROR_FROM_RESULT(disposition);
   }
 
-  std::wstring valueName(ResolveTelemetryValueName());
-
-  DWORD value = aEnable ? 1UL : 0UL;
-  DWORD len = sizeof(value);
-  LSTATUS result =
-      ::RegSetValueExW(mRegKey.get(), valueName.c_str(), 0, REG_DWORD,
-                       reinterpret_cast<PBYTE>(&value), len);
-  if (result != ERROR_SUCCESS) {
-    return LAUNCHER_ERROR_FROM_WIN32(result);
-  }
-
-  return Ok();
+  return WriteRegistryValueData(mRegKey, ResolveTelemetryValueName(), REG_DWORD,
+                                aEnable ? 1UL : 0UL);
 }
 
 LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
@@ -127,17 +199,15 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
     return LAUNCHER_ERROR_FROM_RESULT(ourImageTimestamp);
   }
 
-  LauncherResult<DWORD> savedImageTimestamp = GetSavedImageTimestamp();
-  if (savedImageTimestamp.isErr() &&
-      savedImageTimestamp.unwrapErr() !=
-          WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
+  LauncherResult<Maybe<DWORD>> savedImageTimestamp = GetSavedImageTimestamp();
+  if (savedImageTimestamp.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(savedImageTimestamp);
   }
 
   // If we don't have a saved timestamp, or we do but it doesn't match with
-  // our current timestamp, clear previous values.
-  if (savedImageTimestamp.isErr() ||
-      savedImageTimestamp.inspect() != ourImageTimestamp.inspect()) {
+  // our current timestamp, clear previous values unless we're force-disabled.
+  if (savedImageTimestamp.inspect().isNothing() ||
+      savedImageTimestamp.inspect().value() != ourImageTimestamp.inspect()) {
     LauncherVoidResult clearResult = ClearStartTimestamps();
     if (clearResult.isErr()) {
       return LAUNCHER_ERROR_FROM_RESULT(clearResult);
@@ -150,39 +220,53 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
     }
   }
 
-  ProcessType typeToRunAs = aDesiredType;
-
-  if (disposition.inspect() == Disposition::CreatedNew ||
-      aDesiredType == ProcessType::Browser) {
-    // No existing values to check, or we're going to be running as the browser
-    // process: just write our timestamp and return
-    LauncherVoidResult wroteTimestamp = WriteStartTimestamp(typeToRunAs);
-    if (wroteTimestamp.isErr()) {
-      return LAUNCHER_ERROR_FROM_RESULT(wroteTimestamp);
-    }
-
-    return typeToRunAs;
+  // If we're going to be running as the browser process, or there is no
+  // existing values to check, just write our timestamp and return.
+  if (aDesiredType == ProcessType::Browser) {
+    mBrowserTimestampToWrite = Some(QPCNowRaw());
+    return ProcessType::Browser;
   }
 
-  LauncherResult<uint64_t> lastLauncherTimestamp =
-      GetStartTimestamp(ProcessType::Launcher);
-  bool haveLauncherTs = lastLauncherTimestamp.isOk();
+  if (disposition.inspect() == Disposition::CreatedNew) {
+    mLauncherTimestampToWrite = Some(QPCNowRaw());
+    return ProcessType::Launcher;
+  }
 
-  LauncherResult<uint64_t> lastBrowserTimestamp =
-      GetStartTimestamp(ProcessType::Browser);
-  bool haveBrowserTs = lastBrowserTimestamp.isOk();
+  if (disposition.inspect() != Disposition::OpenedExisting) {
+    MOZ_ASSERT_UNREACHABLE("Invalid |disposition|");
+    return LAUNCHER_ERROR_GENERIC();
+  }
 
-  if (haveLauncherTs != haveBrowserTs) {
+  LauncherResult<Maybe<uint64_t>> lastLauncherTimestampResult =
+      GetLauncherStartTimestamp();
+  if (lastLauncherTimestampResult.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(lastLauncherTimestampResult);
+  }
+
+  LauncherResult<Maybe<uint64_t>> lastBrowserTimestampResult =
+      GetBrowserStartTimestamp();
+  if (lastBrowserTimestampResult.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(lastBrowserTimestampResult);
+  }
+
+  const Maybe<uint64_t>& lastLauncherTimestamp =
+      lastLauncherTimestampResult.inspect();
+  const Maybe<uint64_t>& lastBrowserTimestamp =
+      lastBrowserTimestampResult.inspect();
+
+  ProcessType typeToRunAs = aDesiredType;
+
+  if (lastLauncherTimestamp.isSome() != lastBrowserTimestamp.isSome()) {
     // If we have a launcher timestamp but no browser timestamp (or vice versa),
     // that's bad because it is indicating that the browser can't run with
     // the launcher process.
     typeToRunAs = ProcessType::Browser;
-  } else if (haveLauncherTs) {
+  } else if (lastLauncherTimestamp.isSome()) {
     // if we have both timestamps, we want to ensure that the launcher timestamp
     // is earlier than the browser timestamp.
     if (aDesiredType == ProcessType::Launcher) {
       bool areTimestampsOk =
-          lastLauncherTimestamp.inspect() < lastBrowserTimestamp.inspect();
+          lastLauncherTimestamp.value() < lastBrowserTimestamp.value();
       if (!areTimestampsOk) {
         typeToRunAs = ProcessType::Browser;
       }
@@ -202,18 +286,23 @@ LauncherResult<LauncherRegistryInfo::ProcessType> LauncherRegistryInfo::Check(
     typeToRunAs = aDesiredType;
   }
 
-  LauncherVoidResult wroteTimestamp = Ok();
-
-  if (typeToRunAs == ProcessType::Browser && aDesiredType != typeToRunAs) {
-    // We were hoping to run as the launcher, but some failure has caused us
-    // to run as the browser. Set the browser timestamp to zero as an indicator.
-    wroteTimestamp = WriteStartTimestamp(typeToRunAs, Some(0ULL));
-  } else {
-    wroteTimestamp = WriteStartTimestamp(typeToRunAs);
-  }
-
-  if (wroteTimestamp.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(wroteTimestamp);
+  switch (typeToRunAs) {
+    case ProcessType::Browser:
+      if (aDesiredType != typeToRunAs) {
+        // We were hoping to run as the launcher, but some failure has caused
+        // us to run as the browser. Set the browser timestamp to zero as an
+        // indicator.
+        mBrowserTimestampToWrite = Some(0ULL);
+      } else {
+        mBrowserTimestampToWrite = Some(QPCNowRaw());
+      }
+      break;
+    case ProcessType::Launcher:
+      mLauncherTimestampToWrite = Some(QPCNowRaw());
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid |typeToRunAs|");
+      return LAUNCHER_ERROR_GENERIC();
   }
 
   return typeToRunAs;
@@ -224,8 +313,70 @@ LauncherVoidResult LauncherRegistryInfo::DisableDueToFailure() {
   if (disposition.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(disposition);
   }
+  LauncherVoidResult result = WriteBrowserStartTimestamp(0ULL);
+  if (result.isOk()) {
+    // Block commit when we disable the launcher.  It could be allowed
+    // when the image timestamp is updated.
+    sAllowCommit = false;
+  }
+  return result;
+}
 
-  return WriteStartTimestamp(ProcessType::Browser, Some(0ULL));
+LauncherVoidResult LauncherRegistryInfo::Commit() {
+  if (!sAllowCommit) {
+    Abort();
+    return Ok();
+  }
+
+  LauncherResult<Disposition> disposition = Open();
+  if (disposition.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(disposition);
+  }
+
+  if (mLauncherTimestampToWrite.isSome()) {
+    LauncherVoidResult writeResult =
+        WriteLauncherStartTimestamp(mLauncherTimestampToWrite.value());
+    if (writeResult.isErr()) {
+      return LAUNCHER_ERROR_FROM_RESULT(writeResult);
+    }
+    mLauncherTimestampToWrite = Nothing();
+  }
+
+  if (mBrowserTimestampToWrite.isSome()) {
+    LauncherVoidResult writeResult =
+        WriteBrowserStartTimestamp(mBrowserTimestampToWrite.value());
+    if (writeResult.isErr()) {
+      return LAUNCHER_ERROR_FROM_RESULT(writeResult);
+    }
+    mBrowserTimestampToWrite = Nothing();
+  }
+
+  return Ok();
+}
+
+void LauncherRegistryInfo::Abort() {
+  mLauncherTimestampToWrite = mBrowserTimestampToWrite = Nothing();
+}
+
+LauncherRegistryInfo::EnabledState LauncherRegistryInfo::GetEnabledState(
+    const Maybe<uint64_t>& aLauncherTs, const Maybe<uint64_t>& aBrowserTs) {
+  if (aBrowserTs.isSome()) {
+    if (aLauncherTs.isSome()) {
+      if (aLauncherTs.value() < aBrowserTs.value()) {
+        // Both timestamps exist and the browser's timestamp is later.
+        return EnabledState::Enabled;
+      }
+    } else if (aBrowserTs.value() == 0ULL) {
+      // Only browser's timestamp exists and its value is 0.
+      return EnabledState::ForceDisabled;
+    }
+  } else if (aLauncherTs.isNothing()) {
+    // Neither timestamps exist.
+    return EnabledState::Enabled;
+  }
+
+  // Everything else is FailDisabled.
+  return EnabledState::FailDisabled;
 }
 
 LauncherResult<LauncherRegistryInfo::EnabledState>
@@ -235,32 +386,20 @@ LauncherRegistryInfo::IsEnabled() {
     return LAUNCHER_ERROR_FROM_RESULT(disposition);
   }
 
-  LauncherResult<uint64_t> launcherTimestamp =
-      GetStartTimestamp(ProcessType::Launcher);
-
-  LauncherResult<uint64_t> browserTimestamp =
-      GetStartTimestamp(ProcessType::Browser);
-
-  // In this function, we'll explictly search for the ForceDisabled and
-  // Enabled conditions. Everything else is FailDisabled.
-
-  bool isBrowserTimestampZero =
-      browserTimestamp.isOk() && browserTimestamp.inspect() == 0ULL;
-
-  if (isBrowserTimestampZero && launcherTimestamp.isErr()) {
-    return EnabledState::ForceDisabled;
+  LauncherResult<Maybe<uint64_t>> lastLauncherTimestamp =
+      GetLauncherStartTimestamp();
+  if (lastLauncherTimestamp.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(lastLauncherTimestamp);
   }
 
-  if (launcherTimestamp.isOk() && browserTimestamp.isOk() &&
-      launcherTimestamp.inspect() < browserTimestamp.inspect()) {
-    return EnabledState::Enabled;
+  LauncherResult<Maybe<uint64_t>> lastBrowserTimestamp =
+      GetBrowserStartTimestamp();
+  if (lastBrowserTimestamp.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(lastBrowserTimestamp);
   }
 
-  if (launcherTimestamp.isErr() && browserTimestamp.isErr()) {
-    return EnabledState::Enabled;
-  }
-
-  return EnabledState::FailDisabled;
+  return GetEnabledState(lastLauncherTimestamp.inspect(),
+                         lastBrowserTimestamp.inspect());
 }
 
 LauncherResult<bool> LauncherRegistryInfo::IsTelemetryEnabled() {
@@ -269,32 +408,40 @@ LauncherResult<bool> LauncherRegistryInfo::IsTelemetryEnabled() {
     return LAUNCHER_ERROR_FROM_RESULT(disposition);
   }
 
-  return GetTelemetrySetting();
-}
-
-LauncherResult<std::wstring> LauncherRegistryInfo::ResolveValueName(
-    LauncherRegistryInfo::ProcessType aProcessType) {
-  if (aProcessType == ProcessType::Launcher) {
-    if (mLauncherValueName.empty()) {
-      mLauncherValueName.assign(mBinPath);
-      mLauncherValueName.append(kLauncherSuffix,
-                                ArrayLength(kLauncherSuffix) - 1);
-    }
-
-    return mLauncherValueName;
-  } else if (aProcessType == ProcessType::Browser) {
-    if (mBrowserValueName.empty()) {
-      mBrowserValueName.assign(mBinPath);
-      mBrowserValueName.append(kBrowserSuffix, ArrayLength(kBrowserSuffix) - 1);
-    }
-
-    return mBrowserValueName;
+  LauncherResult<Maybe<DWORD>> result = ReadRegistryValueData<DWORD>(
+      mRegKey, ResolveTelemetryValueName(), REG_DWORD);
+  if (result.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(result);
   }
 
-  return LAUNCHER_ERROR_GENERIC();
+  if (result.inspect().isNothing()) {
+    // Value does not exist, treat as false
+    return false;
+  }
+
+  return result.inspect().value() != 0;
 }
 
-std::wstring LauncherRegistryInfo::ResolveImageTimestampValueName() {
+const std::wstring& LauncherRegistryInfo::ResolveLauncherValueName() {
+  if (mLauncherValueName.empty()) {
+    mLauncherValueName.assign(mBinPath);
+    mLauncherValueName.append(kLauncherSuffix,
+                              ArrayLength(kLauncherSuffix) - 1);
+  }
+
+  return mLauncherValueName;
+}
+
+const std::wstring& LauncherRegistryInfo::ResolveBrowserValueName() {
+  if (mBrowserValueName.empty()) {
+    mBrowserValueName.assign(mBinPath);
+    mBrowserValueName.append(kBrowserSuffix, ArrayLength(kBrowserSuffix) - 1);
+  }
+
+  return mBrowserValueName;
+}
+
+const std::wstring& LauncherRegistryInfo::ResolveImageTimestampValueName() {
   if (mImageValueName.empty()) {
     mImageValueName.assign(mBinPath);
     mImageValueName.append(kImageTimestampSuffix,
@@ -304,7 +451,7 @@ std::wstring LauncherRegistryInfo::ResolveImageTimestampValueName() {
   return mImageValueName;
 }
 
-std::wstring LauncherRegistryInfo::ResolveTelemetryValueName() {
+const std::wstring& LauncherRegistryInfo::ResolveTelemetryValueName() {
   if (mTelemetryValueName.empty()) {
     mTelemetryValueName.assign(mBinPath);
     mTelemetryValueName.append(kTelemetrySuffix,
@@ -314,83 +461,29 @@ std::wstring LauncherRegistryInfo::ResolveTelemetryValueName() {
   return mTelemetryValueName;
 }
 
-LauncherVoidResult LauncherRegistryInfo::WriteStartTimestamp(
-    LauncherRegistryInfo::ProcessType aProcessType,
-    const Maybe<uint64_t>& aValue) {
-  LauncherResult<std::wstring> name = ResolveValueName(aProcessType);
-  if (name.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(name);
-  }
-
-  ULARGE_INTEGER timestamp;
-  if (aValue.isSome()) {
-    timestamp.QuadPart = aValue.value();
-  } else {
-    // We need to use QPC here because millisecond granularity is too coarse
-    // to properly measure the times involved.
-    if (!::QueryPerformanceCounter(
-            reinterpret_cast<LARGE_INTEGER*>(&timestamp))) {
-      return LAUNCHER_ERROR_FROM_LAST();
-    }
-  }
-
-  DWORD len = sizeof(timestamp);
-  LSTATUS result =
-      ::RegSetValueExW(mRegKey.get(), name.inspect().c_str(), 0, REG_QWORD,
-                       reinterpret_cast<PBYTE>(&timestamp), len);
-  if (result != ERROR_SUCCESS) {
-    return LAUNCHER_ERROR_FROM_WIN32(result);
-  }
-
-  return Ok();
+LauncherVoidResult LauncherRegistryInfo::WriteLauncherStartTimestamp(
+    uint64_t aValue) {
+  return WriteRegistryValueData(mRegKey, ResolveLauncherValueName(), REG_QWORD,
+                                aValue);
 }
 
-LauncherResult<DWORD> LauncherRegistryInfo::GetCurrentImageTimestamp() {
-  nt::PEHeaders headers(::GetModuleHandleW(nullptr));
-  if (!headers) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
-  }
-
-  DWORD timestamp;
-  if (!headers.GetTimeStamp(timestamp)) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
-  }
-
-  return timestamp;
+LauncherVoidResult LauncherRegistryInfo::WriteBrowserStartTimestamp(
+    uint64_t aValue) {
+  return WriteRegistryValueData(mRegKey, ResolveBrowserValueName(), REG_QWORD,
+                                aValue);
 }
 
 LauncherVoidResult LauncherRegistryInfo::WriteImageTimestamp(DWORD aTimestamp) {
-  std::wstring imageTimestampValueName = ResolveImageTimestampValueName();
-
-  DWORD len = sizeof(aTimestamp);
-  LSTATUS result =
-      ::RegSetValueExW(mRegKey.get(), imageTimestampValueName.c_str(), 0,
-                       REG_DWORD, reinterpret_cast<PBYTE>(&aTimestamp), len);
-  if (result != ERROR_SUCCESS) {
-    return LAUNCHER_ERROR_FROM_WIN32(result);
-  }
-
-  return Ok();
+  return WriteRegistryValueData(mRegKey, ResolveImageTimestampValueName(),
+                                REG_DWORD, aTimestamp);
 }
 
-LauncherResult<bool> LauncherRegistryInfo::ClearStartTimestamp(
-    LauncherRegistryInfo::ProcessType aProcessType) {
-  LauncherResult<std::wstring> timestampName = ResolveValueName(aProcessType);
-  if (timestampName.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(timestampName);
-  }
+LauncherResult<bool> LauncherRegistryInfo::ClearLauncherStartTimestamp() {
+  return DeleteRegistryValueData(mRegKey, ResolveLauncherValueName());
+}
 
-  LSTATUS result =
-      ::RegDeleteValueW(mRegKey.get(), timestampName.inspect().c_str());
-  if (result == ERROR_SUCCESS) {
-    return true;
-  }
-
-  if (result == ERROR_FILE_NOT_FOUND) {
-    return false;
-  }
-
-  return LAUNCHER_ERROR_FROM_WIN32(result);
+LauncherResult<bool> LauncherRegistryInfo::ClearBrowserStartTimestamp() {
+  return DeleteRegistryValueData(mRegKey, ResolveBrowserValueName());
 }
 
 LauncherVoidResult LauncherRegistryInfo::ClearStartTimestamps() {
@@ -401,90 +494,40 @@ LauncherVoidResult LauncherRegistryInfo::ClearStartTimestamps() {
     return Ok();
   }
 
-  LauncherResult<bool> clearedLauncherTimestamp =
-      ClearStartTimestamp(ProcessType::Launcher);
+  LauncherResult<bool> clearedLauncherTimestamp = ClearLauncherStartTimestamp();
   if (clearedLauncherTimestamp.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(clearedLauncherTimestamp);
   }
 
-  LauncherResult<bool> clearedBrowserTimestamp =
-      ClearStartTimestamp(ProcessType::Browser);
+  LauncherResult<bool> clearedBrowserTimestamp = ClearBrowserStartTimestamp();
   if (clearedBrowserTimestamp.isErr()) {
     return LAUNCHER_ERROR_FROM_RESULT(clearedBrowserTimestamp);
   }
 
+  // Reset both timestamps to align with registry deletion
+  mLauncherTimestampToWrite = mBrowserTimestampToWrite = Nothing();
+
+  // Disablement is gone.  Let's allow commit.
+  sAllowCommit = true;
+
   return Ok();
 }
 
-LauncherResult<DWORD> LauncherRegistryInfo::GetSavedImageTimestamp() {
-  std::wstring imageTimestampValueName = ResolveImageTimestampValueName();
-
-  DWORD value;
-  DWORD valueLen = sizeof(value);
-  DWORD type;
-  LSTATUS result = ::RegQueryValueExW(
-      mRegKey.get(), imageTimestampValueName.c_str(), nullptr, &type,
-      reinterpret_cast<PBYTE>(&value), &valueLen);
-  // NB: If the value does not exist, result == ERROR_FILE_NOT_FOUND
-  if (result != ERROR_SUCCESS) {
-    return LAUNCHER_ERROR_FROM_WIN32(result);
-  }
-
-  if (type != REG_DWORD) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
-  }
-
-  return value;
+LauncherResult<Maybe<DWORD>> LauncherRegistryInfo::GetSavedImageTimestamp() {
+  return ReadRegistryValueData<DWORD>(mRegKey, ResolveImageTimestampValueName(),
+                                      REG_DWORD);
 }
 
-LauncherResult<bool> LauncherRegistryInfo::GetTelemetrySetting() {
-  std::wstring telemetryValueName = ResolveTelemetryValueName();
-
-  DWORD value;
-  DWORD valueLen = sizeof(value);
-  DWORD type;
-  LSTATUS result =
-      ::RegQueryValueExW(mRegKey.get(), telemetryValueName.c_str(), nullptr,
-                         &type, reinterpret_cast<PBYTE>(&value), &valueLen);
-  if (result == ERROR_FILE_NOT_FOUND) {
-    // Value does not exist, treat as false
-    return false;
-  }
-
-  if (result != ERROR_SUCCESS) {
-    return LAUNCHER_ERROR_FROM_WIN32(result);
-  }
-
-  if (type != REG_DWORD) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
-  }
-
-  return value != 0;
+LauncherResult<Maybe<uint64_t>>
+LauncherRegistryInfo::GetLauncherStartTimestamp() {
+  return ReadRegistryValueData<uint64_t>(mRegKey, ResolveLauncherValueName(),
+                                         REG_QWORD);
 }
 
-LauncherResult<uint64_t> LauncherRegistryInfo::GetStartTimestamp(
-    LauncherRegistryInfo::ProcessType aProcessType) {
-  LauncherResult<std::wstring> name = ResolveValueName(aProcessType);
-  if (name.isErr()) {
-    return LAUNCHER_ERROR_FROM_RESULT(name);
-  }
-
-  uint64_t value;
-  DWORD valueLen = sizeof(value);
-  DWORD type;
-  LSTATUS result =
-      ::RegQueryValueExW(mRegKey.get(), name.inspect().c_str(), nullptr, &type,
-                         reinterpret_cast<PBYTE>(&value), &valueLen);
-  // NB: If the value does not exist, result == ERROR_FILE_NOT_FOUND
-  if (result != ERROR_SUCCESS) {
-    return LAUNCHER_ERROR_FROM_WIN32(result);
-  }
-
-  if (type != REG_QWORD) {
-    return LAUNCHER_ERROR_FROM_WIN32(ERROR_DATATYPE_MISMATCH);
-  }
-
-  return value;
+LauncherResult<Maybe<uint64_t>>
+LauncherRegistryInfo::GetBrowserStartTimestamp() {
+  return ReadRegistryValueData<uint64_t>(mRegKey, ResolveBrowserValueName(),
+                                         REG_QWORD);
 }
 
 }  // namespace mozilla

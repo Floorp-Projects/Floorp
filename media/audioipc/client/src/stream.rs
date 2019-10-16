@@ -4,7 +4,7 @@
 // accompanying file LICENSE for details
 
 use crate::ClientContext;
-use crate::{assert_not_in_callback, set_in_callback};
+use crate::{assert_not_in_callback, run_in_callback};
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::frame::{framed, Framed};
 use audioipc::messages::{self, CallbackReq, CallbackResp, ClientMessage, ServerMessage};
@@ -108,19 +108,19 @@ impl rpc::Server for CallbackServer {
                         None => ptr::null_mut(),
                     };
 
-                    set_in_callback(true);
-                    let nframes = unsafe {
-                        cb(
-                            ptr::null_mut(),
-                            user_ptr as *mut c_void,
-                            input_ptr as *const _,
-                            output_ptr as *mut _,
-                            nframes as _,
-                        )
-                    };
-                    set_in_callback(false);
+                    run_in_callback(|| {
+                        let nframes = unsafe {
+                            cb(
+                                ptr::null_mut(),
+                                user_ptr as *mut c_void,
+                                input_ptr as *const _,
+                                output_ptr as *mut _,
+                                nframes as _,
+                            )
+                        };
 
-                    Ok(CallbackResp::Data(nframes as isize))
+                        Ok(CallbackResp::Data(nframes as isize))
+                    })
                 })
             }
             CallbackReq::State(state) => {
@@ -128,11 +128,11 @@ impl rpc::Server for CallbackServer {
                 let user_ptr = self.user_ptr;
                 let cb = self.state_cb.unwrap();
                 self.cpu_pool.spawn_fn(move || {
-                    set_in_callback(true);
-                    unsafe {
-                        cb(ptr::null_mut(), user_ptr as *mut _, state);
-                    }
-                    set_in_callback(false);
+                    run_in_callback(|| {
+                        unsafe {
+                            cb(ptr::null_mut(), user_ptr as *mut _, state);
+                        }
+                    });
 
                     Ok(CallbackResp::State)
                 })
@@ -141,16 +141,16 @@ impl rpc::Server for CallbackServer {
                 let cb = self.device_change_cb.clone();
                 let user_ptr = self.user_ptr;
                 self.cpu_pool.spawn_fn(move || {
-                    set_in_callback(true);
-                    let cb = cb.lock().unwrap();
-                    if let Some(cb) = *cb {
-                        unsafe {
-                            cb(user_ptr as *mut _);
+                    run_in_callback(|| {
+                        let cb = cb.lock().unwrap();
+                        if let Some(cb) = *cb {
+                            unsafe {
+                                cb(user_ptr as *mut _);
+                            }
+                        } else {
+                            warn!("DeviceChange received with null callback");
                         }
-                    } else {
-                        warn!("DeviceChange received with null callback");
-                    }
-                    set_in_callback(false);
+                    });
 
                     Ok(CallbackResp::DeviceChange)
                 })
@@ -282,12 +282,6 @@ impl<'ctx> StreamOps for ClientStream<'ctx> {
         assert_not_in_callback();
         let rpc = self.context.rpc();
         send_recv!(rpc, StreamSetVolume(self.token, volume) => StreamVolumeSet)
-    }
-
-    fn set_panning(&mut self, panning: f32) -> Result<()> {
-        assert_not_in_callback();
-        let rpc = self.context.rpc();
-        send_recv!(rpc, StreamSetPanning(self.token, panning) => StreamPanningSet)
     }
 
     fn current_device(&mut self) -> Result<&DeviceRef> {

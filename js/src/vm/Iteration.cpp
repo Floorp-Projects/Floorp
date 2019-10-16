@@ -63,12 +63,7 @@ static const gc::AllocKind ITERATOR_FINALIZE_KIND =
 // into this code.
 void NativeIterator::trace(JSTracer* trc) {
   TraceNullableEdge(trc, &objectBeingIterated_, "objectBeingIterated_");
-
-  // The SuppressDeletedPropertyHelper loop can GC, so make sure that if the
-  // GC removes any elements from the list, it won't remove this one.
-  if (iterObj_) {
-    TraceManuallyBarrieredEdge(trc, &iterObj_, "iterObj");
-  }
+  TraceNullableEdge(trc, &iterObj_, "iterObj");
 
   // The limits below are correct at every instant of |NativeIterator|
   // initialization, with the end-pointer incremented as each new guard is
@@ -86,9 +81,9 @@ void NativeIterator::trace(JSTracer* trc) {
   // Note that we must trace all properties (not just those not yet visited,
   // or just visited, due to |NativeIterator::previousPropertyWas|) for
   // |NativeIterator|s to be reusable.
-  GCPtrFlatString* begin =
+  GCPtrLinearString* begin =
       MOZ_LIKELY(isInitialized()) ? propertiesBegin() : propertyCursor_;
-  std::for_each(begin, propertiesEnd(), [trc](GCPtrFlatString& prop) {
+  std::for_each(begin, propertiesEnd(), [trc](GCPtrLinearString& prop) {
     // Properties begin life non-null and never *become*
     // null.  (Deletion-suppression will shift trailing
     // properties over a deleted property in the properties
@@ -593,10 +588,10 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
 }
 
 static inline size_t ExtraStringCount(size_t propertyCount, size_t guardCount) {
-  static_assert(sizeof(ReceiverGuard) == 2 * sizeof(GCPtrFlatString),
+  static_assert(sizeof(ReceiverGuard) == 2 * sizeof(GCPtrLinearString),
                 "NativeIterators are allocated in space for 1) themselves, "
                 "2) the properties a NativeIterator iterates (as "
-                "GCPtrFlatStrings), and 3) |numGuards| HeapReceiverGuard "
+                "GCPtrLinearStrings), and 3) |numGuards| HeapReceiverGuard "
                 "objects; the additional-length calculation below assumes "
                 "this size-relationship when determining the extra space to "
                 "allocate");
@@ -605,8 +600,8 @@ static inline size_t ExtraStringCount(size_t propertyCount, size_t guardCount) {
 }
 
 static inline size_t AllocationSize(size_t propertyCount, size_t guardCount) {
-  return sizeof(NativeIterator) +
-         ExtraStringCount(propertyCount, guardCount) * sizeof(GCPtrFlatString);
+  return sizeof(NativeIterator) + (ExtraStringCount(propertyCount, guardCount) *
+                                   sizeof(GCPtrLinearString));
 }
 
 static PropertyIteratorObject* CreatePropertyIterator(
@@ -617,7 +612,7 @@ static PropertyIteratorObject* CreatePropertyIterator(
     return nullptr;
   }
 
-  void* mem = cx->pod_malloc_with_extra<NativeIterator, GCPtrFlatString>(
+  void* mem = cx->pod_malloc_with_extra<NativeIterator, GCPtrLinearString>(
       ExtraStringCount(props.length(), numGuards));
   if (!mem) {
     return nullptr;
@@ -650,7 +645,7 @@ NativeIterator::NativeIterator() {
                sizeof(*this), MemCheckKind::MakeUndefined);
 
   // These are the only two fields in sentinel NativeIterators that are
-  // examined, in ObjectRealm::sweepNativeIterators.  Everything else is
+  // examined, in ObjectRealm::traceWeakNativeIterators. Everything else is
   // only examined *if* it's a NativeIterator being traced by a
   // PropertyIteratorObject that owns it, and nothing owns this iterator.
   prev_ = next_ = this;
@@ -685,7 +680,7 @@ NativeIterator::NativeIterator(JSContext* cx,
       guardsEnd_(guardsBegin()),
       // ...and no properties.
       propertyCursor_(
-          reinterpret_cast<GCPtrFlatString*>(guardsBegin() + numGuards)),
+          reinterpret_cast<GCPtrLinearString*>(guardsBegin() + numGuards)),
       propertiesEnd_(propertyCursor_),
       guardKey_(guardKey),
       flagsAndCount_(0)  // note: no Flags::Initialized
@@ -706,7 +701,7 @@ NativeIterator::NativeIterator(JSContext* cx,
   AddCellMemory(propIter, nbytes, MemoryUse::NativeIterator);
 
   for (size_t i = 0, len = props.length(); i < len; i++) {
-    JSFlatString* str = IdToString(cx, props[i]);
+    JSLinearString* str = IdToString(cx, props[i]);
     if (!str) {
       *hadError = true;
       return;
@@ -714,14 +709,14 @@ NativeIterator::NativeIterator(JSContext* cx,
 
     // Placement-new the next property string at the end of the currently
     // computed property strings.
-    GCPtrFlatString* loc = propertiesEnd_;
+    GCPtrLinearString* loc = propertiesEnd_;
 
     // Increase the overall property string count before initializing the
     // property string, so this construction isn't on a location not known
     // to the GC yet.
     propertiesEnd_++;
 
-    new (loc) GCPtrFlatString(str);
+    new (loc) GCPtrLinearString(str);
   }
 
   if (numGuards > 0) {
@@ -1323,7 +1318,7 @@ void js::UnwindIteratorForUncatchableException(JSObject* obj) {
 
 static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
                                     HandleObject obj,
-                                    Handle<JSFlatString*> str) {
+                                    Handle<JSLinearString*> str) {
   if (ni->objectBeingIterated() != obj) {
     return true;
   }
@@ -1344,9 +1339,9 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
     bool restart = false;
 
     // Check whether id is still to come.
-    GCPtrFlatString* const cursor = ni->nextProperty();
-    GCPtrFlatString* const end = ni->propertiesEnd();
-    for (GCPtrFlatString* idp = cursor; idp < end; ++idp) {
+    GCPtrLinearString* const cursor = ni->nextProperty();
+    GCPtrLinearString* const end = ni->propertiesEnd();
+    for (GCPtrLinearString* idp = cursor; idp < end; ++idp) {
       // Common case: both strings are atoms.
       if ((*idp)->isAtom() && str->isAtom()) {
         if (*idp != str) {
@@ -1394,7 +1389,7 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
       if (idp == cursor) {
         ni->incCursor();
       } else {
-        for (GCPtrFlatString* p = idp; p + 1 != end; p++) {
+        for (GCPtrLinearString* p = idp; p + 1 != end; p++) {
           *p = *(p + 1);
         }
 
@@ -1424,7 +1419,7 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
  * prototype chain. Only direct deletions on the object are handled.
  */
 static bool SuppressDeletedPropertyHelper(JSContext* cx, HandleObject obj,
-                                          Handle<JSFlatString*> str) {
+                                          Handle<JSLinearString*> str) {
   NativeIterator* enumeratorList = ObjectRealm::get(obj).enumerators;
   NativeIterator* ni = enumeratorList->next();
 
@@ -1447,7 +1442,7 @@ bool js::SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id) {
     return true;
   }
 
-  Rooted<JSFlatString*> str(cx, IdToString(cx, id));
+  Rooted<JSLinearString*> str(cx, IdToString(cx, id));
   if (!str) {
     return false;
   }
@@ -1465,7 +1460,7 @@ bool js::SuppressDeletedElement(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  Rooted<JSFlatString*> str(cx, IdToString(cx, id));
+  Rooted<JSLinearString*> str(cx, IdToString(cx, id));
   if (!str) {
     return false;
   }

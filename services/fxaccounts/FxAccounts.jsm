@@ -92,6 +92,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FxAccountsProfile.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "FxAccountsTelemetry",
+  "resource://gre/modules/FxAccountsTelemetry.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
 });
@@ -407,6 +413,10 @@ class FxAccounts {
 
   get keys() {
     return this._internal.keys;
+  }
+
+  get telemetry() {
+    return this._internal.telemetry;
   }
 
   _withCurrentAccountState(func) {
@@ -856,6 +866,14 @@ FxAccountsInternal.prototype = {
       this._device = new FxAccountsDevice(this);
     }
     return this._device;
+  },
+
+  _telemetry: null,
+  get telemetry() {
+    if (!this._telemetry) {
+      this._telemetry = new FxAccountsTelemetry();
+    }
+    return this._telemetry;
   },
 
   // A hook-point for tests who may want a mocked AccountState or mocked storage.

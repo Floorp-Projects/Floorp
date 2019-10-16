@@ -195,8 +195,16 @@ inline void TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp,
 // it is replaced by nullptr, and this method will return false to indicate that
 // the edge no longer exists.
 template <typename T>
-inline bool TraceWeakEdge(JSTracer* trc, T* thingp, const char* name) {
+inline bool TraceManuallyBarrieredWeakEdge(JSTracer* trc, T* thingp,
+                                           const char* name) {
   return gc::TraceEdgeInternal(trc, gc::ConvertToBase(thingp), name);
+}
+
+template <typename T>
+inline bool TraceWeakEdge(JSTracer* trc, BarrieredBase<T>* thingp,
+                          const char* name) {
+  return gc::TraceEdgeInternal(
+      trc, gc::ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
 }
 
 // Trace all edges contained in the given array.

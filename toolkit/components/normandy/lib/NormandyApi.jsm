@@ -180,12 +180,10 @@ var NormandyApi = {
 
   /**
    * Fetch an array of available actions from the server.
-   * @param filters
-   * @param filters.enabled {boolean} If true, only returns enabled
-   * recipes. Default true.
    * @resolves {Array}
    */
-  async fetchRecipes(filters = { enabled: true }) {
+  async fetchRecipes() {
+    const filters = { enabled: true, only_baseline_capabilities: false };
     return this.fetchSignedObjects("recipe", filters);
   },
 

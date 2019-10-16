@@ -212,7 +212,9 @@ pref("general.useragent.compatMode.firefox", false);
 
 pref("general.config.obscure_value", 13); // for MCD .cfg files
 
+#ifndef MOZ_BUILD_APP_IS_BROWSER
 pref("general.warnOnAboutConfig", true);
+#endif
 
 // maximum number of dated backups to keep at any time
 pref("browser.bookmarks.max_backups",       5);
@@ -567,6 +569,10 @@ pref("media.cubeb.logging_level", "");
   pref("media.cubeb.sandbox", false);
 #endif
 
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
+  pref("media.cubeb.backend", "audiounit-rust");
+#endif
+
 // GraphRunner (fixed MediaTrackGraph thread) control
 pref("media.audiograph.single_thread.enabled", false);
 
@@ -673,7 +679,6 @@ pref("gfx.webrender.debug.picture-caching", false);
 pref("gfx.webrender.debug.primitives", false);
 pref("gfx.webrender.debug.small-screen", false);
 pref("gfx.webrender.debug.obscure-images", false);
-pref("gfx.webrender.debug.log-transactions", false);
 
 pref("accessibility.warn_on_browsewithcaret", true);
 

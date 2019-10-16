@@ -13,7 +13,6 @@
 
 #include "builtin/Promise.h"
 #include "frontend/BytecodeCompilation.h"
-#include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/SourceText.h"

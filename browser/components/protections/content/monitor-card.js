@@ -22,9 +22,6 @@ export default class MonitorClass {
   }
 
   init() {
-    const monitorLinkTag = this.doc.getElementById("monitor-inline-link");
-    monitorLinkTag.href = MONITOR_URL;
-
     RPMAddMessageListener("SendUserLoginsData", ({ data }) => {
       // Wait for monitor data and display the card.
       this.getMonitorData(data);
@@ -109,7 +106,9 @@ export default class MonitorClass {
    * @return URL to Monitor website.
    */
   buildMonitorUrl(email = null) {
-    return email ? `${MONITOR_SIGN_IN_URL}${email}` : MONITOR_URL;
+    return email
+      ? `${MONITOR_SIGN_IN_URL}${encodeURIComponent(email)}`
+      : MONITOR_URL;
   }
 
   renderContentForUserWithLogins(monitorData) {
@@ -117,6 +116,9 @@ export default class MonitorClass {
       ".card.monitor-card .card-body"
     );
     monitorCardBody.classList.remove("hidden");
+
+    const monitorLinkTag = this.doc.getElementById("monitor-inline-link");
+    monitorLinkTag.href = this.buildMonitorUrl(monitorData.userEmail);
 
     const howItWorksLink = this.doc.getElementById("monitor-link");
     howItWorksLink.href = HOW_IT_WORKS_URL_PREF;

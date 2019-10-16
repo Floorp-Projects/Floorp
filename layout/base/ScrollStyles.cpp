@@ -10,59 +10,18 @@
 
 namespace mozilla {
 
-void ScrollStyles::InitializeScrollSnapStrictness(
-    WritingMode aWritingMode, const nsStyleDisplay* aDisplay) {
-  mScrollSnapStrictnessX = StyleScrollSnapStrictness::None;
-  mScrollSnapStrictnessY = StyleScrollSnapStrictness::None;
-
-  if (aDisplay->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {
-    return;
-  }
-
-  switch (aDisplay->mScrollSnapType.axis) {
-    case StyleScrollSnapAxis::X:
-      mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      break;
-    case StyleScrollSnapAxis::Y:
-      mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      break;
-    case StyleScrollSnapAxis::Block:
-      if (aWritingMode.IsVertical()) {
-        mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      } else {
-        mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      }
-      break;
-    case StyleScrollSnapAxis::Inline:
-      if (aWritingMode.IsVertical()) {
-        mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      } else {
-        mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      }
-      break;
-    case StyleScrollSnapAxis::Both:
-      mScrollSnapStrictnessX = aDisplay->mScrollSnapType.strictness;
-      mScrollSnapStrictnessY = aDisplay->mScrollSnapType.strictness;
-      break;
-  }
-}
-
 ScrollStyles::ScrollStyles(WritingMode aWritingMode, StyleOverflow aH,
                            StyleOverflow aV, const nsStyleDisplay* aDisplay)
     : mHorizontal(aH),
       mVertical(aV),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {
-  InitializeScrollSnapStrictness(aWritingMode, aDisplay);
-}
+      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {}
 
 ScrollStyles::ScrollStyles(WritingMode aWritingMode,
                            const nsStyleDisplay* aDisplay)
     : mHorizontal(aDisplay->mOverflowX),
       mVertical(aDisplay->mOverflowY),
       mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {
-  InitializeScrollSnapStrictness(aWritingMode, aDisplay);
-}
+      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {}
 
 }  // namespace mozilla

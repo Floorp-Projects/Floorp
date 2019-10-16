@@ -18,23 +18,47 @@ const EventEmitter = require("devtools/shared/event-emitter");
  */
 class InspectorStyleChangeTracker {
   constructor(inspector) {
-    this.walker = inspector.walker;
+    this.inspector = inspector;
     this.selection = inspector.selection;
 
     this.onMutations = this.onMutations.bind(this);
     this.onResized = this.onResized.bind(this);
 
-    this.walker.on("mutations", this.onMutations);
-    this.walker.on("resize", this.onResized);
+    this.init();
 
     EventEmitter.decorate(this);
   }
 
-  destroy() {
-    this.walker.off("mutations", this.onMutations);
-    this.walker.off("resize", this.onResized);
+  async init() {
+    if (!this.inspector) {
+      return;
+    }
 
-    this.walker = this.selection = null;
+    try {
+      // TODO: Bug 1588868 - Get all the inspector fronts whenever targets changes or
+      // are added or removed.
+      this.inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+    } catch (e) {
+      // This call might fail if called asynchrously after the toolbox is finished
+      // closing.
+      return;
+    }
+
+    for (const { walker } of this.inspectorFronts) {
+      walker.on("mutations", this.onMutations);
+      walker.on("resize", this.onResized);
+    }
+  }
+
+  destroy() {
+    for (const { walker } of this.inspectorFronts) {
+      walker.off("mutations", this.onMutations);
+      walker.off("resize", this.onResized);
+    }
+
+    this.inspector = null;
+    this.inspectorFronts = null;
+    this.selection = null;
   }
 
   /**

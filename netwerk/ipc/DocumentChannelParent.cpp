@@ -144,36 +144,22 @@ void DocumentChannelParent::ActorDestroy(ActorDestroyReason why) {
   }
 }
 
-void DocumentChannelParent::CancelChildForProcessSwitch() {
-  MOZ_ASSERT(!mDoingProcessSwitch, "Already in the middle of switching?");
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mDoingProcessSwitch = true;
-  if (CanSend()) {
-    Unused << SendCancelForProcessSwitch();
-  }
-}
-
 bool DocumentChannelParent::RecvCancel(const nsresult& aStatusCode) {
-  if (mDoingProcessSwitch) {
-    return IPC_OK();
-  }
-
-  if (mChannel) {
+  if (mChannel && !mDoingProcessSwitch) {
     mChannel->Cancel(aStatusCode);
   }
   return true;
 }
 
 bool DocumentChannelParent::RecvSuspend() {
-  if (mChannel) {
+  if (mChannel && !mDoingProcessSwitch) {
     mChannel->Suspend();
   }
   return true;
 }
 
 bool DocumentChannelParent::RecvResume() {
-  if (mChannel) {
+  if (mChannel && !mDoingProcessSwitch) {
     mChannel->Resume();
   }
   return true;
@@ -220,6 +206,10 @@ DocumentChannelParent::ReadyToVerify(nsresult aResultCode) {
 
 void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
   nsresult rv;
+
+  if (mDoingProcessSwitch && CanSend()) {
+    Unused << SendCancelForProcessSwitch();
+  }
 
   nsCOMPtr<nsIParentChannel> redirectChannel;
   if (mRedirectChannelId) {
@@ -360,7 +350,11 @@ void DocumentChannelParent::FinishReplacementChannelSetup(bool aSucceeded) {
 
 void DocumentChannelParent::TriggerCrossProcessSwitch() {
   MOZ_ASSERT(mRedirectContentProcessIdPromise);
-  CancelChildForProcessSwitch();
+  MOZ_ASSERT(!mDoingProcessSwitch, "Already in the middle of switching?");
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mDoingProcessSwitch = true;
+
   RefPtr<DocumentChannelParent> self = this;
   mRedirectContentProcessIdPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,

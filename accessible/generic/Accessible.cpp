@@ -5,8 +5,6 @@
 
 #include "Accessible-inl.h"
 
-#include "nsIXBLAccessible.h"
-
 #include "EmbeddedObjCollector.h"
 #include "AccGroupInfo.h"
 #include "AccIterator.h"
@@ -139,12 +137,6 @@ ENameValueFlag Accessible::Name(nsString& aName) const {
 
   ARIAName(aName);
   if (!aName.IsEmpty()) return eNameOK;
-
-  nsCOMPtr<nsIXBLAccessible> xblAccessible(do_QueryInterface(mContent));
-  if (xblAccessible) {
-    xblAccessible->GetAccessibleName(aName);
-    if (!aName.IsEmpty()) return eNameOK;
-  }
 
   ENameValueFlag nameFlag = NativeName(aName);
   if (!aName.IsEmpty()) return nameFlag;
@@ -948,17 +940,14 @@ already_AddRefed<nsIPersistentProperties> Accessible::Attributes() {
   nsCOMPtr<nsIPersistentProperties> attributes = NativeAttributes();
   if (!HasOwnContent() || !mContent->IsElement()) return attributes.forget();
 
-  // 'xml-roles' attribute for landmark.
-  nsAtom* landmark = LandmarkRole();
-  if (landmark) {
+  // 'xml-roles' attribute coming from ARIA.
+  nsAutoString xmlRoles;
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role,
+                                     xmlRoles)) {
+    nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
+  } else if (nsAtom* landmark = LandmarkRole()) {
+    // 'xml-roles' attribute for landmark.
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, landmark);
-
-  } else {
-    // 'xml-roles' attribute coming from ARIA.
-    nsAutoString xmlRoles;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role,
-                                       xmlRoles))
-      nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
   }
 
   // Expose object attributes from ARIA attributes.
@@ -1771,21 +1760,6 @@ Relation Accessible::RelationByType(RelationType aType) const {
                                     : nullptr;
               if (button) {
                 buttonEl = item;
-              }
-            }
-          }
-          if (!buttonEl) {  // Check for anonymous accept button in <dialog>
-            dom::Element* rootElm = mContent->OwnerDoc()->GetRootElement();
-            if (rootElm) {
-              nsIContent* possibleButtonEl =
-                  rootElm->OwnerDoc()->GetAnonymousElementByAttribute(
-                      rootElm, nsGkAtoms::_default, NS_LITERAL_STRING("true"));
-              if (possibleButtonEl && possibleButtonEl->IsElement()) {
-                RefPtr<nsIDOMXULButtonElement> button =
-                    possibleButtonEl->AsElement()->AsXULButton();
-                if (button) {
-                  buttonEl = possibleButtonEl;
-                }
               }
             }
           }

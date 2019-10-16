@@ -474,14 +474,14 @@ bool Zone::canCollect() {
 }
 
 void Zone::notifyObservingDebuggers() {
+  AutoAssertNoGC nogc;
   MOZ_ASSERT(JS::RuntimeHeapIsCollecting(),
              "This method should be called during GC.");
 
   JSRuntime* rt = runtimeFromMainThread();
-  JSContext* cx = rt->mainContextFromOwnThread();
 
   for (RealmsInZoneIter realms(this); !realms.done(); realms.next()) {
-    RootedGlobalObject global(cx, realms->unsafeUnbarrieredMaybeGlobal());
+    GlobalObject* global = realms->unsafeUnbarrieredMaybeGlobal();
     if (!global) {
       continue;
     }

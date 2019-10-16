@@ -20,13 +20,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530292
       ({} instanceof frames[0]);
       ok(false, "Should have thrown for same-process window");
     } catch (e) {
-      is(e.message, "frames[0] is not a function");
+      is(e.message, "frames[0] is not a function", "frames[0] is not a function");
     }
     try {
       ({} instanceof frames[1]);
       ok(false, "Should have thrown for maybe other-process window");
     } catch (e) {
-      is(e.message, "frames[1] is not a function");
+      is(e.message, "frames[1] is not a function", "frames[1] is not a function");
     }
     SimpleTest.finish();
   });

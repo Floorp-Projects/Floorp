@@ -12,6 +12,7 @@ const {
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { div, span } = dom;
 const Actions = require("devtools/client/netmonitor/src/actions/index");
+const { PANELS } = require("../../constants");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   connect,
@@ -47,6 +48,7 @@ class SearchPanel extends Component {
       query: PropTypes.string.isRequired,
       results: PropTypes.array,
       navigate: PropTypes.func.isRequired,
+      isDisplaying: PropTypes.bool.isRequired,
     };
   }
 
@@ -62,6 +64,12 @@ class SearchPanel extends Component {
 
   componentDidMount() {
     if (this.searchboxRef) {
+      this.searchboxRef.current.focus();
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.isDisplaying && !prevProps.isDisplaying) {
       this.searchboxRef.current.focus();
     }
   }
@@ -234,6 +242,7 @@ module.exports = connect(
     caseSensitive: state.search.caseSensitive,
     results: state.search.results,
     ongoingSearch: state.search.ongoingSearch,
+    isDisplaying: state.ui.selectedActionBarTabId === PANELS.SEARCH,
     status: state.search.status,
   }),
   dispatch => ({

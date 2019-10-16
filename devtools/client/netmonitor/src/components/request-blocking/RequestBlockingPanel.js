@@ -229,8 +229,11 @@ class RequestBlockingPanel extends Component {
     return div(
       { className: "request-blocking-panel" },
       this.renderEnableBar(),
-      this.renderBlockedList(),
-      this.renderAddForm()
+      div(
+        { className: "request-blocking-contents" },
+        this.renderBlockedList(),
+        this.renderAddForm()
+      )
     );
   }
 }

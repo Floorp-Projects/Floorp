@@ -101,7 +101,7 @@ EventTooltip.prototype = {
       } else {
         const location = this._parseLocation(text);
         if (location) {
-          const callback = (enabled, url, line, column) => {
+          const callback = (enabled, url, line, column, sourceId) => {
             // Do nothing if the tooltip was destroyed while we were
             // waiting for a response.
             if (this._tooltip) {

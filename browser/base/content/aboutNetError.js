@@ -393,7 +393,7 @@ async function setNetErrorMessageFromCode() {
   } catch (e) {
     console.error("No strings exist for this error type");
     document.l10n.setAttributes(desc, "ssl-connection-error", {
-      errorMsg: errorCodeStr,
+      errorMessage: errorCodeStr,
       hostname: hostString,
     });
   }

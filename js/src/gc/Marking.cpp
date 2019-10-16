@@ -224,7 +224,8 @@ void js::CheckTracedThing(JSTracer* trc, T* thing) {
 
   if (!IsTracerKind(trc, JS::CallbackTracer::TracerKind::Moving) &&
       !IsTracerKind(trc, JS::CallbackTracer::TracerKind::GrayBuffering) &&
-      !IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges)) {
+      !IsTracerKind(trc, JS::CallbackTracer::TracerKind::ClearEdges) &&
+      !IsTracerKind(trc, JS::CallbackTracer::TracerKind::Sweeping)) {
     MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   }
@@ -3463,9 +3464,12 @@ inline bool SweepingTracer::sweepEdge(T** thingp) {
     return true;
   }
 
+  // TODO: We should assert the zone of the tenured cell is in Sweeping state,
+  // however we need to fix atoms and JitcodeGlobalTable first.
+  // Bug 1501334 : IsAboutToBeFinalized doesn't work for atoms
+  // Bug 1071218 : Refactor Debugger::sweepAll and
+  //               JitRuntime::SweepJitcodeGlobalTable to work per sweep group
   TenuredCell& tenured = thing->asTenured();
-  MOZ_ASSERT(tenured.zoneFromAnyThread()->isGCSweeping(),
-             "Should be called during Sweeping.");
   if (!tenured.isMarkedAny()) {
     *thingp = nullptr;
     return false;
@@ -3488,9 +3492,15 @@ bool SweepingTracer::onLazyScriptEdge(LazyScript** lazyp) {
 bool SweepingTracer::onBaseShapeEdge(BaseShape** basep) {
   return sweepEdge(basep);
 }
+bool SweepingTracer::onJitCodeEdge(jit::JitCode** jitp) {
+  return sweepEdge(jitp);
+}
 bool SweepingTracer::onScopeEdge(Scope** scopep) { return sweepEdge(scopep); }
 bool SweepingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
   return sweepEdge(sharedp);
+}
+bool SweepingTracer::onObjectGroupEdge(ObjectGroup** groupp) {
+  return sweepEdge(groupp);
 }
 bool SweepingTracer::onBigIntEdge(BigInt** bip) { return sweepEdge(bip); }
 

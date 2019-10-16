@@ -56,7 +56,7 @@ add_task(async function init() {
 
 // Below are test cases for XUL element
 add_task(async function test_xul_text_link_label() {
-  let url = chrome_base + "subtst_contextmenu_xul.xul";
+  let url = chrome_base + "subtst_contextmenu_xul.xhtml";
 
   await BrowserTestUtils.openNewForegroundTab({
     gBrowser,

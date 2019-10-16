@@ -27,7 +27,6 @@
 
 #include "builtin/Promise.h"
 #include "gc/FreeOp.h"
-#include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
@@ -124,7 +123,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       activeThreadHasScriptDataAccess(false),
 #endif
       numActiveHelperThreadZones(0),
-      heapState_(JS::HeapState::Idle),
       numRealms(0),
       numDebuggeeRealms_(0),
       numDebuggeeRealmsObservingCoverage_(0),
@@ -473,12 +471,18 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
   // No need to set aside any pending exception here: ComputeStackString
   // already does that.
   JSString* stack = ComputeStackString(cx);
-  JSFlatString* flat = stack ? stack->ensureFlat(cx) : nullptr;
+
+  UniqueTwoByteChars stringChars;
+  if (stack) {
+    stringChars = JS_CopyStringCharsZ(cx, stack);
+    if (!stringChars) {
+      cx->recoverFromOutOfMemory();
+    }
+  }
 
   const char16_t* chars;
-  AutoStableStringChars stableChars(cx);
-  if (flat && stableChars.initTwoByte(cx, flat)) {
-    chars = stableChars.twoByteRange().begin().get();
+  if (stringChars) {
+    chars = stringChars.get();
   } else {
     chars = u"(stack not available)";
   }

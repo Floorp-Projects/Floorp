@@ -83,7 +83,6 @@ BrowserCLH.prototype = {
             "PasswordManager:onFormSubmit",
             "PasswordManager:autoCompleteLogins",
             "PasswordManager:removeLogin",
-            "PasswordManager:insecureLoginFormPresent",
             // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN
             // BrowserGlue.jsm
           ],

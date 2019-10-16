@@ -26,32 +26,11 @@ ChromeUtils.defineModuleGetter(
  * `nsINavBookmarksService`, with special handling for
  * tags, keywords, synced annotations, and missing parents.
  */
-var PlacesSyncUtils = {
-  /**
-   * Auxiliary generator function that yields an array in chunks
-   *
-   * @param  array
-   * @param  chunkLength
-   * @yields {Array}
-   *         New Array with the next chunkLength elements of array.
-   *         If the array has less than chunkLength elements, yields all of them
-   */
-  *chunkArray(array, chunkLength) {
-    if (!array.length || chunkLength <= 0) {
-      return;
-    }
-    let startIndex = 0;
-    while (startIndex < array.length) {
-      yield [startIndex, array.slice(startIndex, startIndex + chunkLength)];
-      startIndex += chunkLength;
-    }
-  },
-};
+var PlacesSyncUtils = {};
 
 const { SOURCE_SYNC } = Ci.nsINavBookmarksService;
 
 const MICROSECONDS_PER_SECOND = 1000000;
-const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
 const MOBILE_BOOKMARKS_PREF = "browser.bookmarks.showMobileBookmarks";
 
@@ -258,10 +237,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
     // aren't stored in the database.
     let db = await PlacesUtils.promiseDBConnection();
     let nonSyncableGuids = [];
-    for (let [, chunk] of PlacesSyncUtils.chunkArray(
-      guids,
-      SQLITE_MAX_VARIABLE_NUMBER
-    )) {
+    for (let chunk of PlacesUtils.chunkArray(guids, db.variableLimit)) {
       let rows = await db.execute(
         `
         SELECT DISTINCT p.guid FROM moz_places p

@@ -78,10 +78,6 @@ var ReaderParent = {
     let button = win.document.getElementById("reader-mode-button");
     let menuitem = win.document.getElementById("menu_readerModeItem");
     let key = win.document.getElementById("key_toggleReaderMode");
-    // aria-reader is not a real ARIA attribute. However, this will cause
-    // Gecko accessibility to expose the "reader" object attribute. We do this
-    // so that the reader state is easy for accessibility clients to access
-    // programmatically.
     if (browser.currentURI.spec.startsWith("about:reader")) {
       let closeText = gStringBundle.GetStringFromName("readerView.close");
 
@@ -98,7 +94,6 @@ var ReaderParent = {
 
       key.setAttribute("disabled", false);
 
-      browser.setAttribute("aria-reader", "active");
       Services.obs.notifyObservers(null, "reader-mode-available");
     } else {
       let enterText = gStringBundle.GetStringFromName("readerView.enter");
@@ -117,10 +112,11 @@ var ReaderParent = {
       key.setAttribute("disabled", !browser.isArticle);
 
       if (browser.isArticle) {
-        browser.setAttribute("aria-reader", "available");
+        win.A11yUtils.announce({
+          id: "reader-available-announcement",
+          source: button,
+        });
         Services.obs.notifyObservers(null, "reader-mode-available");
-      } else {
-        browser.removeAttribute("aria-reader");
       }
     }
   },

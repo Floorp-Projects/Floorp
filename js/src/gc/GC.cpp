@@ -854,6 +854,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
     : rt(rt),
       systemZone(nullptr),
       atomsZone(nullptr),
+      heapState_(JS::HeapState::Idle),
       stats_(this),
       marker(rt),
       heapSize(nullptr),
@@ -909,6 +910,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       nextScheduled(0),
       deterministicOnly(false),
       incrementalLimit(0),
+      selectedForMarking(rt),
 #endif
       fullCompartmentChecks(false),
       gcCallbackDepth(0),
@@ -2082,7 +2084,7 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
   zone->types.endSweep(rt);
 }
 
-void GCRuntime::sweepZoneAfterCompacting(Zone* zone) {
+void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isCollecting());
   JSFreeOp* fop = rt->defaultFreeOp();
   sweepTypesAfterCompacting(zone);
@@ -2093,20 +2095,20 @@ void GCRuntime::sweepZoneAfterCompacting(Zone* zone) {
   }
 
   if (jit::JitZone* jitZone = zone->jitZone()) {
-    jitZone->sweep();
+    jitZone->traceWeak(trc);
   }
 
   for (RealmsInZoneIter r(zone); !r.done(); r.next()) {
-    r->sweepObjectGroups();
-    r->sweepRegExps();
-    r->sweepSavedStacks();
-    r->sweepVarNames();
-    r->sweepGlobalObject();
-    r->sweepSelfHostingScriptSource();
+    r->traceWeakObjectGroups(trc);
+    r->traceWeakRegExps(trc);
+    r->traceWeakSavedStacks(trc);
+    r->tracekWeakVarNames(trc);
+    r->traceWeakObjects(trc);
+    r->traceWeakSelfHostingScriptSource(trc);
     r->sweepDebugEnvironments();
-    r->sweepJitRealm();
-    r->sweepObjectRealm();
-    r->sweepTemplateObjects();
+    r->traceWeakEdgesInJitRealm(trc);
+    r->traceWeakObjectRealm(trc);
+    r->traceWeakTemplateObjects(trc);
   }
 }
 
@@ -2468,7 +2470,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   }
 
   // Sweep everything to fix up weak pointers.
-  sweepZoneAfterCompacting(zone);
+  sweepZoneAfterCompacting(&trc, zone);
 
   // Call callbacks to get the rest of the system to fixup other untraced
   // pointers.
@@ -2507,7 +2509,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
 
   // Sweep everything to fix up weak pointers.
   DebugAPI::sweepAll(rt->defaultFreeOp());
-  jit::JitRuntime::SweepJitcodeGlobalTable(rt);
+  jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
   for (JS::detail::WeakCacheBase* cache : rt->weakCaches()) {
     cache->sweep();
   }
@@ -5082,8 +5084,9 @@ void GCRuntime::updateAtomsBitmap() {
   // For convenience sweep these tables non-incrementally as part of bitmap
   // sweeping; they are likely to be much smaller than the main atoms table.
   rt->symbolRegistry().sweep();
+  SweepingTracer trc(rt);
   for (RealmsIter realm(this); !realm.done(); realm.next()) {
-    realm->sweepVarNames();
+    realm->tracekWeakVarNames(&trc);
   }
 }
 
@@ -5095,21 +5098,23 @@ static void SweepCCWrappers(GCParallelTask* task) {
 }
 
 static void SweepObjectGroups(GCParallelTask* task) {
+  SweepingTracer trc(task->gc->rt);
   for (SweepGroupRealmsIter r(task->gc); !r.done(); r.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
-    r->sweepObjectGroups();
+    r->traceWeakObjectGroups(&trc);
   }
 }
 
 static void SweepMisc(GCParallelTask* task) {
+  SweepingTracer trc(task->gc->rt);
   for (SweepGroupRealmsIter r(task->gc); !r.done(); r.next()) {
     AutoSetThreadIsSweeping threadIsSweeping(r->zone());
-    r->sweepGlobalObject();
-    r->sweepTemplateObjects();
-    r->sweepSavedStacks();
-    r->sweepSelfHostingScriptSource();
-    r->sweepObjectRealm();
-    r->sweepRegExps();
+    r->traceWeakObjects(&trc);
+    r->traceWeakTemplateObjects(&trc);
+    r->traceWeakSavedStacks(&trc);
+    r->traceWeakSelfHostingScriptSource(&trc);
+    r->traceWeakObjectRealm(&trc);
+    r->traceWeakRegExps(&trc);
   }
 }
 
@@ -5207,6 +5212,7 @@ void GCRuntime::sweepDebuggerOnMainThread(JSFreeOp* fop) {
 }
 
 void GCRuntime::sweepJitDataOnMainThread(JSFreeOp* fop) {
+  SweepingTracer trc(rt);
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
 
@@ -5222,7 +5228,7 @@ void GCRuntime::sweepJitDataOnMainThread(JSFreeOp* fop) {
 
     // Sweep entries containing about-to-be-finalized JitCode and
     // update relocated TypeSet::Types inside the JitcodeGlobalTable.
-    jit::JitRuntime::SweepJitcodeGlobalTable(rt);
+    jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
   }
 
   if (initialState != State::NotActive) {
@@ -5238,12 +5244,12 @@ void GCRuntime::sweepJitDataOnMainThread(JSFreeOp* fop) {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
 
     for (SweepGroupRealmsIter r(rt); !r.done(); r.next()) {
-      r->sweepJitRealm();
+      r->traceWeakEdgesInJitRealm(&trc);
     }
 
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
       if (jit::JitZone* jitZone = zone->jitZone()) {
-        jitZone->sweep();
+        jitZone->traceWeak(&trc);
       }
     }
   }
@@ -6412,26 +6418,26 @@ static const char* HeapStateToLabel(JS::HeapState heapState) {
 }
 
 /* Start a new heap session. */
-AutoHeapSession::AutoHeapSession(JSRuntime* rt, JS::HeapState heapState)
-    : runtime(rt),
-      prevState(rt->heapState_),
-      profilingStackFrame(rt->mainContextFromOwnThread(),
+AutoHeapSession::AutoHeapSession(GCRuntime* gc, JS::HeapState heapState)
+    : gc(gc),
+      prevState(gc->heapState_),
+      profilingStackFrame(gc->rt->mainContextFromOwnThread(),
                           HeapStateToLabel(heapState),
                           JS::ProfilingCategoryPair::GCCC) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(gc->rt));
   MOZ_ASSERT(prevState == JS::HeapState::Idle);
   MOZ_ASSERT(heapState != JS::HeapState::Idle);
 
-  rt->heapState_ = heapState;
+  gc->heapState_ = heapState;
 }
 
 AutoHeapSession::~AutoHeapSession() {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  runtime->heapState_ = prevState;
+  gc->heapState_ = prevState;
 }
 
 JS_PUBLIC_API JS::HeapState JS::RuntimeHeapState() {
-  return TlsContext.get()->runtime()->heapState();
+  return TlsContext.get()->runtime()->gc.heapState();
 }
 
 GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
@@ -6442,7 +6448,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
     return IncrementalResult::Ok;
   }
 
-  AutoGCSession session(rt, JS::HeapState::MajorCollecting);
+  AutoGCSession session(this, JS::HeapState::MajorCollecting);
 
   switch (incrementalState) {
     case State::NotActive:
@@ -6557,16 +6563,6 @@ AutoDisableBarriers::~AutoDisableBarriers() {
   }
 }
 
-void GCRuntime::pushZealSelectedObjects() {
-#ifdef JS_GC_ZEAL
-  /* Push selected objects onto the mark stack and clear the list. */
-  for (JSObject** obj = selectedForMarking.ref().begin();
-       obj != selectedForMarking.ref().end(); obj++) {
-    TraceManuallyBarrieredEdge(&marker, obj, "selected obj");
-  }
-#endif
-}
-
 static bool IsShutdownGC(JS::GCReason reason) {
   return reason == JS::GCReason::SHUTDOWN_CC ||
          reason == JS::GCReason::DESTROY_RUNTIME;
@@ -6673,10 +6669,6 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
         budget.makeUnlimited();
         isIncremental = false;
         stats().nonincremental(AbortReason::GrayRootBufferingFailed);
-      }
-
-      if (!destroyingRuntime) {
-        pushZealSelectedObjects();
       }
 
       incrementalState = State::Mark;
@@ -7116,7 +7108,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
     ++number;  // This otherwise happens in minorGC().
   }
 
-  AutoGCSession session(rt, JS::HeapState::MajorCollecting);
+  AutoGCSession session(this, JS::HeapState::MajorCollecting);
 
   majorGCTriggerReason = JS::GCReason::NO_REASON;
 
@@ -7150,7 +7142,6 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   chunkAllocationSinceLastGC = false;
 
 #ifdef JS_GC_ZEAL
-  /* Keeping these around after a GC is dangerous. */
   clearSelectedForMarking();
 #endif
 
@@ -7944,11 +7935,11 @@ void GCRuntime::notifyRootsRemoved() {
 #ifdef JS_GC_ZEAL
 bool GCRuntime::selectForMarking(JSObject* object) {
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
-  return selectedForMarking.ref().append(object);
+  return selectedForMarking.ref().get().append(object);
 }
 
 void GCRuntime::clearSelectedForMarking() {
-  selectedForMarking.ref().clearAndFree();
+  selectedForMarking.ref().get().clearAndFree();
 }
 
 void GCRuntime::setDeterministic(bool enabled) {
@@ -8095,12 +8086,12 @@ JS::AutoEnterCycleCollection::AutoEnterCycleCollection(JSRuntime* rt)
     : runtime_(rt) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-  runtime_->heapState_ = HeapState::CycleCollecting;
+  runtime_->gc.heapState_ = HeapState::CycleCollecting;
 }
 
 JS::AutoEnterCycleCollection::~AutoEnterCycleCollection() {
   MOZ_ASSERT(JS::RuntimeHeapIsCycleCollecting());
-  runtime_->heapState_ = HeapState::Idle;
+  runtime_->gc.heapState_ = HeapState::Idle;
 }
 
 JS::AutoAssertGCCallback::AutoAssertGCCallback() : AutoSuppressGCAnalysis() {

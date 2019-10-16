@@ -12,19 +12,25 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Range.h"
 
+#include <algorithm>
+#include <iterator>
+
 #include "jsapi.h"
 
 #include "builtin/Array.h"
 #include "builtin/intl/Collator.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/DateTimeFormat.h"
+#include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/PluralRules.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "builtin/intl/ScopedICUObject.h"
+#include "builtin/intl/SharedIntlData.h"
 #include "js/CharacterEncoding.h"
 #include "js/Class.h"
 #include "js/PropertySpec.h"
+#include "js/Result.h"
 #include "js/StableStringChars.h"
 #include "unicode/ucal.h"
 #include "unicode/udat.h"
@@ -502,6 +508,279 @@ bool js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setObject(*info);
+  return true;
+}
+
+using SupportedLocaleKind = js::intl::SharedIntlData::SupportedLocaleKind;
+
+// 9.2.2 BestAvailableLocale ( availableLocales, locale )
+static JS::Result<JSString*> BestAvailableLocale(
+    JSContext* cx, SupportedLocaleKind kind, HandleLinearString locale,
+    HandleLinearString defaultLocale) {
+  // In the spec, [[availableLocales]] is formally a list of all available
+  // locales. But in our implementation, it's an *incomplete* list, not
+  // necessarily including the default locale (and all locales implied by it,
+  // e.g. "de" implied by "de-CH"), if that locale isn't in every
+  // [[availableLocales]] list (because that locale is supported through
+  // fallback, e.g. "de-CH" supported through "de").
+  //
+  // If we're considering the default locale, augment the spec loop with
+  // additional checks to also test whether the current prefix is a prefix of
+  // the default locale.
+
+  intl::SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+
+  auto findLast = [](const auto* chars, size_t length) {
+    auto rbegin = std::make_reverse_iterator(chars + length);
+    auto rend = std::make_reverse_iterator(chars);
+    auto p = std::find(rbegin, rend, '-');
+
+    // |dist(chars, p.base())| is equal to |dist(p, rend)|, pick whichever you
+    // find easier to reason about when using reserve iterators.
+    ptrdiff_t r = std::distance(chars, p.base());
+    MOZ_ASSERT(r == std::distance(p, rend));
+
+    // But always subtract one to convert from the reverse iterator result to
+    // the correspoding forward iterator value, because reserve iterators point
+    // to one element past the forward iterator value.
+    return r - 1;
+  };
+
+  // Step 1.
+  RootedLinearString candidate(cx, locale);
+
+  // Step 2.
+  while (true) {
+    // Step 2.a.
+    bool supported = false;
+    if (!sharedIntlData.isSupportedLocale(cx, kind, candidate, &supported)) {
+      return cx->alreadyReportedError();
+    }
+    if (supported) {
+      return candidate.get();
+    }
+
+    if (defaultLocale && candidate->length() <= defaultLocale->length()) {
+      if (EqualStrings(candidate, defaultLocale)) {
+        return candidate.get();
+      }
+
+      if (candidate->length() < defaultLocale->length() &&
+          HasSubstringAt(defaultLocale, candidate, 0) &&
+          defaultLocale->latin1OrTwoByteChar(candidate->length()) == '-') {
+        return candidate.get();
+      }
+    }
+
+    // Step 2.b.
+    ptrdiff_t pos;
+    if (candidate->hasLatin1Chars()) {
+      JS::AutoCheckCannotGC nogc;
+      pos = findLast(candidate->latin1Chars(nogc), candidate->length());
+    } else {
+      JS::AutoCheckCannotGC nogc;
+      pos = findLast(candidate->twoByteChars(nogc), candidate->length());
+    }
+
+    if (pos < 0) {
+      return nullptr;
+    }
+
+    // Step 2.c.
+    size_t length = size_t(pos);
+    if (length >= 2 && candidate->latin1OrTwoByteChar(length - 2) == '-') {
+      length -= 2;
+    }
+
+    // Step 2.d.
+    candidate = NewDependentString(cx, candidate, 0, length);
+    if (!candidate) {
+      return cx->alreadyReportedError();
+    }
+  }
+}
+
+// 9.2.2 BestAvailableLocale ( availableLocales, locale )
+//
+// Carries an additional third argument in our implementation to provide the
+// default locale. See the doc-comment in the header file.
+bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 3);
+
+  SupportedLocaleKind kind;
+  {
+    JSLinearString* typeStr = args[0].toString()->ensureLinear(cx);
+    if (!typeStr) {
+      return false;
+    }
+
+    if (StringEqualsLiteral(typeStr, "Collator")) {
+      kind = SupportedLocaleKind::Collator;
+    } else if (StringEqualsLiteral(typeStr, "DateTimeFormat")) {
+      kind = SupportedLocaleKind::DateTimeFormat;
+    } else if (StringEqualsLiteral(typeStr, "NumberFormat")) {
+      kind = SupportedLocaleKind::NumberFormat;
+    } else if (StringEqualsLiteral(typeStr, "PluralRules")) {
+      kind = SupportedLocaleKind::PluralRules;
+    } else {
+      MOZ_ASSERT(StringEqualsLiteral(typeStr, "RelativeTimeFormat"));
+      kind = SupportedLocaleKind::RelativeTimeFormat;
+    }
+  }
+
+  RootedLinearString locale(cx, args[1].toString()->ensureLinear(cx));
+  if (!locale) {
+    return false;
+  }
+
+#ifdef DEBUG
+  {
+    intl::LanguageTag tag(cx);
+    bool ok;
+    JS_TRY_VAR_OR_RETURN_FALSE(
+        cx, ok, intl::LanguageTagParser::tryParse(cx, locale, tag));
+    MOZ_ASSERT(ok, "locale is a structurally valid language tag");
+
+    auto isUnicodeExtension = [](const auto& extension) {
+      return extension[0] == 'u';
+    };
+    MOZ_ASSERT(std::none_of(tag.extensions().begin(), tag.extensions().end(),
+                            isUnicodeExtension),
+               "locale must contain no Unicode extensions");
+
+    if (!tag.canonicalize(
+            cx, intl::LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+      return false;
+    }
+
+    JSString* tagStr = tag.toString(cx);
+    if (!tagStr) {
+      return false;
+    }
+
+    bool canonical;
+    if (!EqualStrings(cx, locale, tagStr, &canonical)) {
+      return false;
+    }
+    MOZ_ASSERT(canonical, "locale is a canonicalized language tag");
+  }
+#endif
+
+  MOZ_ASSERT(args[2].isNull() || args[2].isString());
+
+  RootedLinearString defaultLocale(cx);
+  if (args[2].isString()) {
+    defaultLocale = args[2].toString()->ensureLinear(cx);
+    if (!defaultLocale) {
+      return false;
+    }
+  }
+
+  JSString* result;
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, result, BestAvailableLocale(cx, kind, locale, defaultLocale));
+
+  if (result) {
+    args.rval().setString(result);
+  } else {
+    args.rval().setUndefined();
+  }
+  return true;
+}
+
+bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+
+  RootedLinearString locale(cx, args[0].toString()->ensureLinear(cx));
+  if (!locale) {
+    return false;
+  }
+
+  intl::LanguageTag tag(cx);
+  bool ok;
+  JS_TRY_VAR_OR_RETURN_FALSE(
+      cx, ok, intl::LanguageTagParser::tryParse(cx, locale, tag));
+
+  RootedLinearString candidate(cx);
+  if (!ok) {
+    candidate = NewStringCopyZ<CanGC>(cx, intl::LastDitchLocale());
+    if (!candidate) {
+      return false;
+    }
+  } else {
+    if (!tag.canonicalize(
+            cx, intl::LanguageTag::UnicodeExtensionCanonicalForm::No)) {
+      return false;
+    }
+
+    // The default locale must be in [[AvailableLocales]], and that list must
+    // not contain any locales with Unicode extension sequences, so remove any
+    // present in the candidate.
+    tag.clearUnicodeExtension();
+
+    JSString* canonical = tag.toString(cx);
+    if (!canonical) {
+      return false;
+    }
+
+    candidate = canonical->ensureLinear(cx);
+    if (!candidate) {
+      return false;
+    }
+
+    for (const auto& mapping : js::intl::oldStyleLanguageTagMappings) {
+      const char* oldStyle = mapping.oldStyle;
+      const char* modernStyle = mapping.modernStyle;
+
+      if (StringEqualsAscii(candidate, oldStyle)) {
+        candidate = NewStringCopyZ<CanGC>(cx, modernStyle);
+        if (!candidate) {
+          return false;
+        }
+        break;
+      }
+    }
+  }
+
+  // 9.1 Internal slots of Service Constructors
+  //
+  // - [[AvailableLocales]] is a List [...]. The list must include the value
+  //   returned by the DefaultLocale abstract operation (6.2.4), [...].
+  //
+  // That implies we must ignore any candidate which isn't supported by all Intl
+  // service constructors.
+  //
+  // Note: We don't test the supported locales of either Intl.PluralRules or
+  // Intl.RelativeTimeFormat, because ICU doesn't provide the necessary API to
+  // return actual set of supported locales for these constructors. Instead it
+  // returns the complete set of available locales for ULocale, which is a
+  // superset of the locales supported by Collator, NumberFormat, and
+  // DateTimeFormat.
+  bool isSupported = true;
+  for (auto kind :
+       {SupportedLocaleKind::Collator, SupportedLocaleKind::DateTimeFormat,
+        SupportedLocaleKind::NumberFormat}) {
+    JSString* supported;
+    JS_TRY_VAR_OR_RETURN_FALSE(
+        cx, supported, BestAvailableLocale(cx, kind, candidate, nullptr));
+
+    if (!supported) {
+      isSupported = false;
+      break;
+    }
+  }
+
+  if (!isSupported) {
+    candidate = NewStringCopyZ<CanGC>(cx, intl::LastDitchLocale());
+    if (!candidate) {
+      return false;
+    }
+  }
+
+  args.rval().setString(candidate);
   return true;
 }
 

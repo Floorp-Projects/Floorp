@@ -7,7 +7,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 class SharePicker {
-  constructor() {}
+  constructor() {
+    this._initialized = false;
+  }
 
   get classDescription() {
     return "Web Share Picker";
@@ -23,6 +25,25 @@ class SharePicker {
 
   get QueryInterface() {
     return ChromeUtils.generateQI([Ci.nsISharePicker]);
+  }
+
+  /**
+   * Initializer.
+   *
+   * @param {nsIDOMWindow} openerWindow
+   */
+  init(openerWindow) {
+    if (this._initialized) {
+      throw new Error("Unexpected re-initialization. This is not allowed.");
+    }
+
+    this._initialized = true;
+
+    if (openerWindow instanceof Ci.nsIDOMWindow === false) {
+      throw new TypeError("Expected nsIDOMWindow");
+    }
+
+    this._openerWindow = openerWindow;
   }
 
   /**
@@ -49,6 +70,12 @@ class SharePicker {
     throw new DOMException("Not supported.", "AbortError");
   }
 
+  /**
+   * @returns mozIDOMWindowProxy
+   */
+  get openerWindow() {
+    return this._openerWindow;
+  }
   __init() {}
 }
 

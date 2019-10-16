@@ -640,12 +640,10 @@ void ClassifierDummyChannel::SetIPv4Disabled() {}
 
 void ClassifierDummyChannel::SetIPv6Disabled() {}
 
-bool ClassifierDummyChannel::GetHasSandboxedAuxiliaryNavigations() {
-  return false;
-}
+bool ClassifierDummyChannel::GetHasNonEmptySandboxingFlag() { return false; }
 
-void ClassifierDummyChannel::SetHasSandboxedAuxiliaryNavigations(
-    bool aHasSandboxedAuxiliaryNavigations) {}
+void ClassifierDummyChannel::SetHasNonEmptySandboxingFlag(
+    bool aHasNonEmptySandboxingFlag) {}
 
 NS_IMETHODIMP ClassifierDummyChannel::GetCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,

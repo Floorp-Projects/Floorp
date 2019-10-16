@@ -33,8 +33,13 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   // Initialize this actor after performing startup.
   nsresult Init(const nsString& aPresentationURL, const nsString& aRemoteType,
-                const WindowGlobalInit& aWindowInit,
-                const uint32_t& aChromeFlags, TabId aTabId);
+                const WindowGlobalInit& aWindowInit, uint32_t aChromeFlags,
+                TabId aTabId);
+
+  nsresult InitWithProcess(ContentParent* aContentParent,
+                           const nsString& aPresentationURL,
+                           const WindowGlobalInit& aWindowInit,
+                           uint32_t aChromeFlags, TabId aTabId);
 
   BrowserParent* GetBrowserParent() { return mBrowserParent; }
 
@@ -98,9 +103,8 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   RefPtr<BrowserParent> mBrowserParent;
 #if defined(ACCESSIBILITY)
   RefPtr<a11y::DocAccessibleParent> mEmbedderAccessibleDoc;
-  uint64_t mEmbedderAccessibleID;
+  uint64_t mEmbedderAccessibleID = 0;
 #endif  // defined(ACCESSIBILITY)
-  bool mIPCOpen;
 };
 
 }  // namespace dom

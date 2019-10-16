@@ -352,10 +352,6 @@ function test_custom_retention(controlToChange, expect, valueIncrement) {
       case "checkbox":
         controlToChange.checked = !controlToChange.checked;
         break;
-      case "textbox":
-        controlToChange.value =
-          parseInt(controlToChange.value) + valueIncrement;
-        break;
       case "menulist":
         controlToChange.value = valueIncrement;
         break;

@@ -205,7 +205,6 @@ class JitcodeGlobalEntry {
     template <class ShouldTraceProvider>
     bool traceJitcode(JSTracer* trc);
     bool isJitcodeMarkedFromAnyThread(JSRuntime* rt);
-    bool isJitcodeAboutToBeFinalized();
   };
 
   struct IonEntry : public BaseEntry {
@@ -1057,7 +1056,7 @@ class JitcodeGlobalTable {
   void setAllEntriesAsExpired();
   void traceForMinorGC(JSTracer* trc);
   MOZ_MUST_USE bool markIteratively(GCMarker* marker);
-  void sweep(JSRuntime* rt);
+  void traceWeak(JSRuntime* rt, JSTracer* trc);
 
  private:
   MOZ_MUST_USE bool addEntry(const JitcodeGlobalEntry& entry);

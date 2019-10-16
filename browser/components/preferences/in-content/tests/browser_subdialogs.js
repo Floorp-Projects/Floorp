@@ -7,8 +7,8 @@
  * Tests for the sub-dialog infrastructure, not for actual sub-dialog functionality.
  */
 
-const gDialogURL = getRootDirectory(gTestPath) + "subdialog.xul";
-const gDialogURL2 = getRootDirectory(gTestPath) + "subdialog2.xul";
+const gDialogURL = getRootDirectory(gTestPath) + "subdialog.xhtml";
+const gDialogURL2 = getRootDirectory(gTestPath) + "subdialog2.xhtml";
 
 function open_subdialog_and_test_generic_start_state(
   browser,

@@ -14,9 +14,24 @@ const {
   REMOVE_BLOCKED_URL,
   DISABLE_MATCHING_URLS,
   OPEN_SEARCH,
+  CLOSE_SEARCH,
   SELECT_ACTION_BAR_TAB,
   PANELS,
 } = require("../constants");
+
+function toggleRequestBlockingPanel() {
+  return (dispatch, getState) => {
+    const state = getState();
+    state.search.panelOpen &&
+    state.ui.selectedActionBarTabId === PANELS.BLOCKING
+      ? dispatch({ type: CLOSE_SEARCH })
+      : dispatch({ type: OPEN_SEARCH });
+    dispatch({
+      type: SELECT_ACTION_BAR_TAB,
+      id: PANELS.BLOCKING,
+    });
+  };
+}
 
 function toggleBlockingEnabled(enabled) {
   return {
@@ -90,6 +105,7 @@ function openRequestBlockingAndDisableUrls(url) {
 }
 
 module.exports = {
+  toggleRequestBlockingPanel,
   addBlockedUrl,
   toggleBlockingEnabled,
   toggleBlockedUrl,

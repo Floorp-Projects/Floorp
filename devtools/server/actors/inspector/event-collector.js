@@ -304,15 +304,22 @@ class MainEventCollector {
   }
 
   isChromeHandler(handler) {
-    const handlerPrincipal = Cu.getObjectPrincipal(handler);
+    try {
+      const handlerPrincipal = Cu.getObjectPrincipal(handler);
 
-    // Chrome codebase may register listeners on the page from a frame script or
-    // JSM <video> tags may also report internal listeners, but they won't be
-    // coming from the system principal. Instead, they will be using an expanded
-    // principal.
-    return (
-      handlerPrincipal.isSystemPrincipal || handlerPrincipal.isExpandedPrincipal
-    );
+      // Chrome codebase may register listeners on the page from a frame script or
+      // JSM <video> tags may also report internal listeners, but they won't be
+      // coming from the system principal. Instead, they will be using an expanded
+      // principal.
+      return (
+        handlerPrincipal.isSystemPrincipal ||
+        handlerPrincipal.isExpandedPrincipal
+      );
+    } catch (e) {
+      // Anything from a dead object to a CSP error can leave us here so let's
+      // return false so that we can fail gracefully.
+      return false;
+    }
   }
 }
 

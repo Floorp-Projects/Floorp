@@ -84,7 +84,7 @@
             </vbox>
             <toolbarbutton class="messageCloseButton close-icon popup-notification-closebutton tabbable" tooltiptext="&closeNotification.tooltip;"></toolbarbutton>
           </hbox>
-          <label class="popup-notification-learnmore-link" is="text-link">&learnMore;</label>
+          <label class="popup-notification-learnmore-link" is="text-link">&learnMoreNoEllipsis;</label>
           <checkbox class="popup-notification-checkbox" oncommand="PopupNotifications._onCheckboxCommand(event)"></checkbox>
           <description class="popup-notification-warning"></description>
         </vbox>

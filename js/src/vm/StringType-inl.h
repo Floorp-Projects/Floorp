@@ -303,7 +303,7 @@ MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(
   return str;
 }
 
-inline js::PropertyName* JSFlatString::toPropertyName(JSContext* cx) {
+inline js::PropertyName* JSLinearString::toPropertyName(JSContext* cx) {
 #ifdef DEBUG
   uint32_t dummy;
   MOZ_ASSERT(!isIndex(&dummy));

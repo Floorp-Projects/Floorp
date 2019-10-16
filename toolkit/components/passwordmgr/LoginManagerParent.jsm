@@ -169,11 +169,6 @@ this.LoginManagerParent = {
         break;
       }
 
-      case "PasswordManager:insecureLoginFormPresent": {
-        this.setHasInsecureLoginForms(msg.target, data.hasInsecureLoginForms);
-        break;
-      }
-
       case "PasswordManager:autoCompleteLogins": {
         this.doAutocompleteSearch(data, msg.target);
         break;
@@ -920,62 +915,6 @@ this.LoginManagerParent = {
       formLogin,
       true, // dismissed prompt
       shouldAutoSaveLogin // notifySaved
-    );
-  },
-
-  /**
-   * Maps all the <browser> elements for tabs in the parent process to the
-   * current state used to display tab-specific UI.
-   *
-   * This mapping is not updated in case a web page is moved to a different
-   * chrome window by the swapDocShells method. In this case, it is possible
-   * that a UI update just requested for the login fill doorhanger and then
-   * delayed by a few hundred milliseconds will be lost. Later requests would
-   * use the new browser reference instead.
-   *
-   * Given that the case above is rare, and it would not cause any origin
-   * mismatch at the time of filling because the origin is checked later in the
-   * content process, this case is left unhandled.
-   */
-  loginFormStateByBrowser: new WeakMap(),
-
-  /**
-   * Retrieves a reference to the state object associated with the given
-   * browser. This is initialized to an empty object.
-   */
-  stateForBrowser(browser) {
-    let loginFormState = this.loginFormStateByBrowser.get(browser);
-    if (!loginFormState) {
-      loginFormState = {};
-      this.loginFormStateByBrowser.set(browser, loginFormState);
-    }
-    return loginFormState;
-  },
-
-  /**
-   * Returns true if the page currently loaded in the given browser element has
-   * insecure login forms. This state may be updated asynchronously, in which
-   * case a custom event named InsecureLoginFormsStateChange will be dispatched
-   * on the browser element.
-   */
-  hasInsecureLoginForms(browser) {
-    return !!this.stateForBrowser(browser).hasInsecureLoginForms;
-  },
-
-  /**
-   * Called to indicate whether an insecure password field is present so
-   * insecure password UI can know when to show.
-   */
-  setHasInsecureLoginForms(browser, hasInsecureLoginForms) {
-    let state = this.stateForBrowser(browser);
-
-    // Update the data to use to the latest known values. Since messages are
-    // processed in order, this will always be the latest version to use.
-    state.hasInsecureLoginForms = hasInsecureLoginForms;
-
-    // Report the insecure login form state immediately.
-    browser.dispatchEvent(
-      new browser.ownerGlobal.CustomEvent("InsecureLoginFormsStateChange")
     );
   },
 };

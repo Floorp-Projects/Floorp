@@ -103,7 +103,7 @@ add_task(async function test_lastSync_not_updated_on_complete_failure() {
 
   // Do an initial sync that we expect to be successful.
   let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await sync_and_validate_telem(false);
+  await sync_and_validate_telem();
   await promiseObserved;
 
   Assert.equal(Status.service, STATUS_OK);
@@ -120,7 +120,7 @@ add_task(async function test_lastSync_not_updated_on_complete_failure() {
   );
 
   promiseObserved = promiseOneObserver("weave:service:reset-file-log");
-  await sync_and_validate_telem(true);
+  await sync_and_validate_telem(() => {});
   await promiseObserved;
 
   Assert.equal(Status.sync, SERVER_MAINTENANCE);
@@ -419,9 +419,10 @@ add_task(async function test_sync_engine_generic_fail() {
   });
 
   Assert.ok(await EHTestsCommon.setUp(server));
-  let ping = await sync_and_validate_telem(true);
-  deepEqual(ping.status.service, SYNC_FAILED_PARTIAL);
-  deepEqual(ping.engines.find(e => e.status).status, ENGINE_UNKNOWN_FAIL);
+  await sync_and_validate_telem(ping => {
+    deepEqual(ping.status.service, SYNC_FAILED_PARTIAL);
+    deepEqual(ping.engines.find(e => e.status).status, ENGINE_UNKNOWN_FAIL);
+  });
 
   await promiseObserved;
 

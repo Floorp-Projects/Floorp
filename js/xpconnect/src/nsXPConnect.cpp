@@ -380,10 +380,10 @@ void xpc::ErrorReport::ErrorReportToMessageString(JSErrorReport* aReport,
                                                   nsAString& aString) {
   aString.Truncate();
   if (aReport->message()) {
-    JSFlatString* name = js::GetErrorTypeName(
+    JSLinearString* name = js::GetErrorTypeName(
         CycleCollectedJSContext::Get()->Context(), aReport->exnType);
     if (name) {
-      AssignJSFlatString(aString, name);
+      AssignJSLinearString(aString, name);
       aString.AppendLiteral(": ");
     }
     aString.Append(NS_ConvertUTF8toUTF16(aReport->message().c_str()));
@@ -470,10 +470,11 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
 #endif
 
       const char* className = clasp->name;
-      AllocateProtoAndIfaceCache(global, (strcmp(className, "Window") == 0 ||
-                                          strcmp(className, "ChromeWindow") == 0)
-                                           ? ProtoAndIfaceCache::WindowLike
-                                           : ProtoAndIfaceCache::NonWindowLike);
+      AllocateProtoAndIfaceCache(global,
+                                 (strcmp(className, "Window") == 0 ||
+                                  strcmp(className, "ChromeWindow") == 0)
+                                     ? ProtoAndIfaceCache::WindowLike
+                                     : ProtoAndIfaceCache::NonWindowLike);
     }
   }
 

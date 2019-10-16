@@ -136,12 +136,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   nsresult TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
                                      uint64_t aIdentifier);
 
-  // Calling this method will cancel the HttpChannelChild because the consumer
-  // needs to be relocated to another process.
-  // Any OnStart/Stop/DataAvailable calls that follow will not be sent to the
-  // child channel.
-  void CancelChildCrossProcessRedirect();
-
  protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
@@ -186,7 +180,7 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const TimeStamp& aHandleFetchEventEnd,
       const bool& aForceMainDocumentChannel,
       const TimeStamp& aNavigationStartTimeStamp,
-      const bool& hasSandboxedAuxiliaryNavigations);
+      const bool& hasNonEmptySandboxingFlag);
 
   virtual mozilla::ipc::IPCResult RecvSetPriority(
       const int16_t& priority) override;

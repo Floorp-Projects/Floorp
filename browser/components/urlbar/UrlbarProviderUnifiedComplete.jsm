@@ -386,32 +386,44 @@ function makeUrlbarResult(tokens, info) {
   let source;
   let tags = [];
   let comment = info.comment;
+
   // UnifiedComplete may return "bookmark", "bookmark-tag" or "tag". In the last
   // case it should not be considered a bookmark, but an history item with tags.
   // We don't show tags for non bookmarked items though.
   if (info.style.includes("bookmark")) {
     source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
-    if (info.style.includes("tag")) {
-      // Split title and tags.
-      [comment, tags] = info.comment.split(UrlbarUtils.TITLE_TAGS_SEPARATOR);
-      // Tags are separated by a comma and in a random order.
-      // We should also just include tags that match the searchString.
-      tags = tags
-        .split(",")
-        .map(t => t.trim())
-        .filter(tag => {
-          let lowerCaseTag = tag.toLocaleLowerCase();
-          return tokens.some(token =>
-            lowerCaseTag.includes(token.lowerCaseValue)
-          );
-        })
-        .sort();
-    }
   } else if (info.style.includes("preloaded-top-sites")) {
     source = UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL;
   } else {
     source = UrlbarUtils.RESULT_SOURCE.HISTORY;
   }
+
+  // If the style indicates that the result is tagged, then the tags are
+  // included in the title, and we must extract them.
+  if (info.style.includes("tag")) {
+    [comment, tags] = info.comment.split(UrlbarUtils.TITLE_TAGS_SEPARATOR);
+
+    // However, as mentioned above, we don't want to show tags for non-
+    // bookmarked items, so we include tags in the final result only if it's
+    // bookmarked, and we drop the tags otherwise.
+    if (source != UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
+      tags = "";
+    }
+
+    // Tags are separated by a comma and in a random order.
+    // We should also just include tags that match the searchString.
+    tags = tags
+      .split(",")
+      .map(t => t.trim())
+      .filter(tag => {
+        let lowerCaseTag = tag.toLocaleLowerCase();
+        return tokens.some(token =>
+          lowerCaseTag.includes(token.lowerCaseValue)
+        );
+      })
+      .sort();
+  }
+
   return new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.URL,
     source,

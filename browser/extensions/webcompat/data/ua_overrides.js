@@ -4,7 +4,12 @@
 
 "use strict";
 
-/* globals getMatchPatternsForGoogleURL, module */
+/* globals module, require */
+
+// This is a hack for the tests.
+if (typeof getMatchPatternsForGoogleURL === "undefined") {
+  var getMatchPatternsForGoogleURL = require("../lib/google");
+}
 
 /**
  * For detailed information on our policies, and a documention on this format
@@ -49,7 +54,7 @@ const AVAILABLE_UA_OVERRIDES = [
       blocks: [...getMatchPatternsForGoogleURL("www.google", "serviceworker")],
       permanentPref: "enable_enhanced_search",
       telemetryKey: "enhancedSearch",
-      experiment: "enhanced-search",
+      experiment: ["enhanced-search", "enhanced-search-control"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -549,15 +554,18 @@ const AVAILABLE_UA_OVERRIDES = [
 const UAHelpers = {
   getDeviceAppropriateChromeUA() {
     if (!UAHelpers._deviceAppropriateChromeUA) {
-      const RunningFirefoxVersion = (navigator.userAgent.match(
-        /Firefox\/([0-9.]+)/
-      ) || ["", "58.0"])[1];
+      const userAgent =
+        typeof navigator !== "undefined" ? navigator.userAgent : "";
+      const RunningFirefoxVersion = (userAgent.match(/Firefox\/([0-9.]+)/) || [
+        "",
+        "58.0",
+      ])[1];
       const RunningAndroidVersion =
-        navigator.userAgent.match(/Android\/[0-9.]+/) || "Android 6.0";
+        userAgent.match(/Android\/[0-9.]+/) || "Android 6.0";
       const ChromeVersionToMimic = "76.0.3809.111";
       const ChromePhoneUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 5 Build/MRA58N) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Mobile Safari/537.36`;
       const ChromeTabletUA = `Mozilla/5.0 (Linux; ${RunningAndroidVersion}; Nexus 7 Build/JSS15Q) FxQuantum/${RunningFirefoxVersion} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${ChromeVersionToMimic} Safari/537.36`;
-      const IsPhone = navigator.userAgent.includes("Mobile");
+      const IsPhone = userAgent.includes("Mobile");
       UAHelpers._deviceAppropriateChromeUA = IsPhone
         ? ChromePhoneUA
         : ChromeTabletUA;

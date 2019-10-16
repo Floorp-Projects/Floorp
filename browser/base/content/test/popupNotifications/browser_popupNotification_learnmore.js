@@ -50,7 +50,7 @@ var tests = [
       let link = notification.querySelector(
         ".popup-notification-learnmore-link"
       );
-      is(link.textContent, "Learn more…", "correct label");
+      is(link.textContent, "Learn more", "correct label");
       is(link.href, "https://mozilla.org", "correct href");
       isnot(
         window.getComputedStyle(link).getPropertyValue("display"),

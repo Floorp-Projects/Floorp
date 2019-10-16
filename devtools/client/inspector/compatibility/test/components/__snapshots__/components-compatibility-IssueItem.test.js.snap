@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IssueItem component renders an issue of CSS property 1`] = `
+<li
+  data-qa-property="test-property"
+  key="test-property:CSS_PROPERTY"
+>
+  <div
+    data-qa-key="type"
+    data-qa-value="CSS_PROPERTY"
+    key="type"
+  >
+    type:CSS_PROPERTY
+  </div>
+  <div
+    data-qa-key="property"
+    data-qa-value="test-property"
+    key="property"
+  >
+    property:test-property
+  </div>
+  <div
+    data-qa-key="url"
+    data-qa-value="test-url"
+    key="url"
+  >
+    url:test-url
+  </div>
+  <div
+    data-qa-key="deprecated"
+    data-qa-value="false"
+    key="deprecated"
+  >
+    deprecated:false
+  </div>
+  <div
+    data-qa-key="experimental"
+    data-qa-value="false"
+    key="experimental"
+  >
+    experimental:false
+  </div>
+  <div
+    data-qa-key="unsupportedBrowsers"
+    data-qa-value=""
+    key="unsupportedBrowsers"
+  >
+    unsupportedBrowsers:
+  </div>
+</li>
+`;

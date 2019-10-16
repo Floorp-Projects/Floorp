@@ -1864,6 +1864,14 @@ pub extern "C" fn wr_api_capture(
     dh.api.save_capture(path, bits);
 }
 
+#[no_mangle]
+pub extern "C" fn wr_api_set_transaction_logging(
+    dh: &mut DocumentHandle,
+    aValue: bool
+) {
+    dh.api.send_debug_cmd(DebugCommand::SetTransactionLogging(aValue));
+}
+
 #[cfg(target_os = "windows")]
 fn read_font_descriptor(
     bytes: &mut WrVecU8,

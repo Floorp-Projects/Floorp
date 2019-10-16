@@ -243,9 +243,6 @@ const ignorableWhitelist = new Set([
 
   // Bug 1351669 - obsolete test file
   "resource://gre/res/test.properties",
-
-  // Bug 1532703
-  "resource://app/localization/en-US/browser/aboutConfig.ftl",
 ]);
 for (let entry of ignorableWhitelist) {
   whitelist.add(entry);
@@ -267,11 +264,6 @@ if (!isDevtools) {
   ]) {
     whitelist.add("resource://services-sync/engines/" + module);
   }
-}
-
-if (!AppConstants.NIGHTLY_BUILD && !isDevtools) {
-  // Bug 1532703 - only used in HTML-based about:config
-  whitelist.add("chrome://browser/skin/toggle.svg");
 }
 
 if (AppConstants.MOZ_CODE_COVERAGE) {

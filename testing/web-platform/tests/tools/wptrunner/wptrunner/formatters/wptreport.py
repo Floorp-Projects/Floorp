@@ -70,7 +70,7 @@ class WptreportFormatter(BaseFormatter):
             result = {"test": test_name}
             result.update(self.raw_results[test_name])
             self.results["results"].append(result)
-        return json.dumps(self.results)
+        return json.dumps(self.results) + "\n"
 
     def find_or_create_test(self, data):
         test_name = data["test"]

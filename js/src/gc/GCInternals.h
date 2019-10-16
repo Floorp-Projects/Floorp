@@ -50,21 +50,21 @@ class MOZ_RAII AutoHeapSession {
   ~AutoHeapSession();
 
  protected:
-  AutoHeapSession(JSRuntime* rt, JS::HeapState state);
+  AutoHeapSession(GCRuntime* gc, JS::HeapState state);
 
  private:
   AutoHeapSession(const AutoHeapSession&) = delete;
   void operator=(const AutoHeapSession&) = delete;
 
-  JSRuntime* runtime;
+  GCRuntime* gc;
   JS::HeapState prevState;
   AutoGeckoProfilerEntry profilingStackFrame;
 };
 
 class MOZ_RAII AutoGCSession : public AutoHeapSession {
  public:
-  explicit AutoGCSession(JSRuntime* rt, JS::HeapState state)
-      : AutoHeapSession(rt, state) {}
+  explicit AutoGCSession(GCRuntime* gc, JS::HeapState state)
+      : AutoHeapSession(gc, state) {}
 
   AutoCheckCanAccessAtomsDuringGC& checkAtomsAccess() {
     return maybeCheckAtomsAccess.ref();
@@ -79,7 +79,8 @@ class MOZ_RAII AutoTraceSession : public AutoLockAllAtoms,
                                   public AutoHeapSession {
  public:
   explicit AutoTraceSession(JSRuntime* rt)
-      : AutoLockAllAtoms(rt), AutoHeapSession(rt, JS::HeapState::Tracing) {}
+      : AutoLockAllAtoms(rt),
+        AutoHeapSession(&rt->gc, JS::HeapState::Tracing) {}
 };
 
 struct MOZ_RAII AutoFinishGC {
@@ -184,9 +185,11 @@ struct SweepingTracer final : public JS::CallbackTracer {
   bool onScriptEdge(JSScript** scriptp) override;
   bool onLazyScriptEdge(LazyScript** lazyp) override;
   bool onBaseShapeEdge(BaseShape** basep) override;
+  bool onJitCodeEdge(jit::JitCode** jitp) override;
   bool onScopeEdge(Scope** scopep) override;
   bool onRegExpSharedEdge(RegExpShared** sharedp) override;
   bool onBigIntEdge(BigInt** bip) override;
+  bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
   bool onChild(const JS::GCCellPtr& thing) override {
     MOZ_CRASH("unexpected edge.");
     return true;
@@ -248,18 +251,6 @@ struct MOZ_RAII AutoAssertNoNurseryAlloc {
 #else
   AutoAssertNoNurseryAlloc() {}
 #endif
-};
-
-// Note that this class does not suppress buffer allocation/reallocation in the
-// nursery, only Cells themselves.
-class MOZ_RAII AutoSuppressNurseryCellAlloc {
-  JSContext* cx_;
-
- public:
-  explicit AutoSuppressNurseryCellAlloc(JSContext* cx) : cx_(cx) {
-    cx_->nurserySuppressions_++;
-  }
-  ~AutoSuppressNurseryCellAlloc() { cx_->nurserySuppressions_--; }
 };
 
 /*

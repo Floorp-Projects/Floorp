@@ -343,7 +343,7 @@ static void ThrowErrorWithType(JSContext* cx, JSExnType type,
       if (!str) {
         return;
       }
-      errorArgs[i - 1] = StringToNewUTF8CharsZ(cx, *str);
+      errorArgs[i - 1] = QuoteString(cx, str);
     } else {
       errorArgs[i - 1] =
           DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
@@ -2421,15 +2421,14 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_availableMeasurementUnits", intl_availableMeasurementUnits, 0,
           0),
 #  endif
+    JS_FN("intl_BestAvailableLocale", intl_BestAvailableLocale, 3, 0),
     JS_FN("intl_canonicalizeTimeZone", intl_canonicalizeTimeZone, 1, 0),
     JS_FN("intl_Collator", intl_Collator, 2, 0),
-    JS_FN("intl_Collator_availableLocales", intl_Collator_availableLocales, 0,
-          0),
     JS_FN("intl_CompareStrings", intl_CompareStrings, 3, 0),
     JS_FN("intl_DateTimeFormat", intl_DateTimeFormat, 2, 0),
-    JS_FN("intl_DateTimeFormat_availableLocales",
-          intl_DateTimeFormat_availableLocales, 0, 0),
     JS_FN("intl_defaultCalendar", intl_defaultCalendar, 1, 0),
+    JS_FN("intl_supportedLocaleOrFallback", intl_supportedLocaleOrFallback, 1,
+          0),
     JS_FN("intl_defaultTimeZone", intl_defaultTimeZone, 0, 0),
     JS_FN("intl_defaultTimeZoneOffset", intl_defaultTimeZoneOffset, 0, 0),
     JS_FN("intl_isDefaultTimeZone", intl_isDefaultTimeZone, 1, 0),
@@ -2441,17 +2440,11 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_isUpperCaseFirst", intl_isUpperCaseFirst, 1, 0),
     JS_FN("intl_IsValidTimeZoneName", intl_IsValidTimeZoneName, 1, 0),
     JS_FN("intl_NumberFormat", intl_NumberFormat, 2, 0),
-    JS_FN("intl_NumberFormat_availableLocales",
-          intl_NumberFormat_availableLocales, 0, 0),
     JS_FN("intl_numberingSystem", intl_numberingSystem, 1, 0),
     JS_FN("intl_patternForSkeleton", intl_patternForSkeleton, 2, 0),
     JS_FN("intl_patternForStyle", intl_patternForStyle, 3, 0),
-    JS_FN("intl_PluralRules_availableLocales",
-          intl_PluralRules_availableLocales, 0, 0),
     JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 1, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2, 0),
-    JS_FN("intl_RelativeTimeFormat_availableLocales",
-          intl_RelativeTimeFormat_availableLocales, 0, 0),
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4, 0),
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2, 0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2, 0),
@@ -2875,7 +2868,7 @@ static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
   return true;
 }
 
-static JSString* CloneString(JSContext* cx, JSFlatString* selfHostedString) {
+static JSString* CloneString(JSContext* cx, JSLinearString* selfHostedString) {
   size_t len = selfHostedString->length();
   {
     JS::AutoCheckCannotGC nogc;
@@ -2999,10 +2992,10 @@ static JSObject* CloneObject(JSContext* cx,
         NumberObject::create(cx, selfHostedObject->as<NumberObject>().unbox());
   } else if (selfHostedObject->is<StringObject>()) {
     JSString* selfHostedString = selfHostedObject->as<StringObject>().unbox();
-    if (!selfHostedString->isFlat()) {
+    if (!selfHostedString->isLinear()) {
       MOZ_CRASH();
     }
-    RootedString str(cx, CloneString(cx, &selfHostedString->asFlat()));
+    RootedString str(cx, CloneString(cx, &selfHostedString->asLinear()));
     if (!str) {
       return nullptr;
     }
@@ -3040,10 +3033,10 @@ static bool CloneValue(JSContext* cx, HandleValue selfHostedValue,
     // Nothing to do here: these are represented inline in the value.
     vp.set(selfHostedValue);
   } else if (selfHostedValue.isString()) {
-    if (!selfHostedValue.toString()->isFlat()) {
+    if (!selfHostedValue.toString()->isLinear()) {
       MOZ_CRASH();
     }
-    JSFlatString* selfHostedString = &selfHostedValue.toString()->asFlat();
+    JSLinearString* selfHostedString = &selfHostedValue.toString()->asLinear();
     JSString* clone = CloneString(cx, selfHostedString);
     if (!clone) {
       return false;

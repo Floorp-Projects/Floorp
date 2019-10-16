@@ -11,6 +11,7 @@
 #endif
 #include "MediaDecoderOwner.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/AbstractThread.h"
 
 using namespace mozilla::layers;
 

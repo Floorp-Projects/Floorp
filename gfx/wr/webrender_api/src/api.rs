@@ -775,6 +775,8 @@ pub enum DebugCommand {
     /// Causes the low priority scene builder to pause for a given amount of milliseconds
     /// each time it processes a transaction.
     SimulateLongLowPrioritySceneBuild(u32),
+    // Logs transactions to a file for debugging purposes
+    SetTransactionLogging(bool),
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -1140,7 +1142,6 @@ bitflags! {
         const DISABLE_TEXT_PRIMS = 1 << 22;
         const DISABLE_GRADIENT_PRIMS = 1 << 23;
         const OBSCURE_IMAGES = 1 << 24;
-        const LOG_TRANSACTIONS = 1 << 25;
     }
 }
 

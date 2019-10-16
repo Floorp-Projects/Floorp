@@ -156,6 +156,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       // experimental aria
       testAttrs("experimental", {"blah": "true"}, true);
 
+      // HTML5 aside element xml-roles
+      testAttrs("aside0", {"xml-roles": "note"}, true);
+      testAttrs("aside1", {"xml-roles": "group"}, true);
+      testAttrs("aside2", {"xml-roles": "complementary"}, true);
+
       SimpleTest.finish();
     }
 
@@ -269,5 +274,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
 
   <!-- experimental aria -->
   <div id="experimental" aria-blah="true">Fake beer</div>
+
+  <!-- HTML5 aside elements -->
+  <aside id="aside0" role="note">aside 0</aside>
+  <aside id="aside1" role="group">aside 1</aside>
+  <aside id="aside2">aside 2</aside>
 </body>
 </html>

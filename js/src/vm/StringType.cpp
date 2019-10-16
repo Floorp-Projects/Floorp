@@ -28,7 +28,6 @@
 #include "jsfriendapi.h"
 
 #include "frontend/BytecodeCompiler.h"
-#include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"
@@ -1249,31 +1248,22 @@ bool js::StringEqualsAscii(JSLinearString* str, const char* asciiBytes,
 
 template <typename CharT>
 /* static */
-bool JSFlatString::isIndexSlow(const CharT* s, size_t length,
-                               uint32_t* indexp) {
-  CharT ch = *s;
+bool JSLinearString::isIndexSlow(const CharT* s, size_t length,
+                                 uint32_t* indexp) {
+  MOZ_ASSERT(length > 0);
+  MOZ_ASSERT(length <= UINT32_CHAR_BUFFER_LENGTH);
+  MOZ_ASSERT(IsAsciiDigit(*s),
+             "caller's fast path must have checked first char");
 
-  if (!IsAsciiDigit(ch)) {
-    return false;
-  }
-
-  if (length > UINT32_CHAR_BUFFER_LENGTH) {
-    return false;
-  }
-
-  /*
-   * Make sure to account for the '\0' at the end of characters, dereferenced
-   * in the loop below.
-   */
-  RangedPtr<const CharT> cp(s, length + 1);
-  const RangedPtr<const CharT> end(s + length, s, length + 1);
+  RangedPtr<const CharT> cp(s, length);
+  const RangedPtr<const CharT> end(s + length, s, length);
 
   uint32_t index = AsciiDigitToNumber(*cp++);
   uint32_t oldIndex = 0;
   uint32_t c = 0;
 
   if (index != 0) {
-    while (IsAsciiDigit(*cp)) {
+    while (cp < end && IsAsciiDigit(*cp)) {
       oldIndex = index;
       c = AsciiDigitToNumber(*cp);
       index = 10 * index + c;
@@ -1299,11 +1289,11 @@ bool JSFlatString::isIndexSlow(const CharT* s, size_t length,
   return false;
 }
 
-template bool JSFlatString::isIndexSlow(const Latin1Char* s, size_t length,
-                                        uint32_t* indexp);
+template bool JSLinearString::isIndexSlow(const Latin1Char* s, size_t length,
+                                          uint32_t* indexp);
 
-template bool JSFlatString::isIndexSlow(const char16_t* s, size_t length,
-                                        uint32_t* indexp);
+template bool JSLinearString::isIndexSlow(const char16_t* s, size_t length,
+                                          uint32_t* indexp);
 
 /*
  * Set up some tools to make it easier to generate large tables. After constant
@@ -1357,18 +1347,17 @@ bool StaticStrings::init(JSContext* cx) {
   using Latin1Range = mozilla::Range<const Latin1Char>;
 
   for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
-    Latin1Char buffer[] = {Latin1Char(i), '\0'};
-    JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 1));
+    Latin1Char ch = Latin1Char(i);
+    JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(&ch, 1));
     if (!s) {
       return false;
     }
-    HashNumber hash = mozilla::HashString(buffer, 1);
+    HashNumber hash = mozilla::HashString(&ch, 1);
     unitStaticTable[i] = s->morphAtomizedStringIntoPermanentAtom(hash);
   }
 
   for (uint32_t i = 0; i < NUM_SMALL_CHARS * NUM_SMALL_CHARS; i++) {
-    Latin1Char buffer[] = {FROM_SMALL_CHAR(i >> 6), FROM_SMALL_CHAR(i & 0x3F),
-                           '\0'};
+    Latin1Char buffer[] = {FROM_SMALL_CHAR(i >> 6), FROM_SMALL_CHAR(i & 0x3F)};
     JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 2));
     if (!s) {
       return false;
@@ -1387,7 +1376,7 @@ bool StaticStrings::init(JSContext* cx) {
     } else {
       Latin1Char buffer[] = {Latin1Char('0' + (i / 100)),
                              Latin1Char('0' + ((i / 10) % 10)),
-                             Latin1Char('0' + (i % 10)), '\0'};
+                             Latin1Char('0' + (i % 10))};
       JSFlatString* s = NewInlineString<NoGC>(cx, Latin1Range(buffer, 3));
       if (!s) {
         return false;

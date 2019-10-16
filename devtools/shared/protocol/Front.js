@@ -76,7 +76,7 @@ class Front extends Pool {
     this._beforeListeners = null;
   }
 
-  async manage(front) {
+  async manage(front, form, ctx) {
     if (!front.actorID) {
       throw new Error(
         "Can't manage front without an actor ID.\n" +
@@ -89,6 +89,15 @@ class Front extends Pool {
 
     if (typeof front.initialize == "function") {
       await front.initialize();
+    }
+
+    // Ensure calling form() *before* notifying about this front being just created.
+    // We exprect the front to be fully initialized, especially via its form attributes.
+    // But do that *after* calling manage() so that the front is already registered
+    // in Pools and can be fetched by its ID, in case a child actor, created in form()
+    // tries to get a reference to its parent via the actor ID.
+    if (form) {
+      front.form(form, ctx);
     }
 
     // Call listeners registered via `onFront` method

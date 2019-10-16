@@ -28,7 +28,7 @@ function resolveCollatorInternals(lazyCollatorData) {
     var relevantExtensionKeys = Collator.relevantExtensionKeys;
 
     // Step 17.
-    var r = ResolveLocale(callFunction(Collator.availableLocales, Collator),
+    var r = ResolveLocale("Collator",
                           lazyCollatorData.requestedLocales,
                           lazyCollatorData.opt,
                           relevantExtensionKeys,
@@ -196,8 +196,7 @@ function Intl_Collator_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
     // Step 1.
-    var availableLocales = callFunction(collatorInternalProperties.availableLocales,
-                                        collatorInternalProperties);
+    var availableLocales = "Collator";
 
     // Step 2.
     var requestedLocales = CanonicalizeLocaleList(locales);
@@ -214,17 +213,6 @@ function Intl_Collator_supportedLocalesOf(locales /*, options*/) {
 var collatorInternalProperties = {
     sortLocaleData: collatorSortLocaleData,
     searchLocaleData: collatorSearchLocaleData,
-    _availableLocales: null,
-    availableLocales: function() // eslint-disable-line object-shorthand
-    {
-        var locales = this._availableLocales;
-        if (locales)
-            return locales;
-
-        locales = intl_Collator_availableLocales();
-        addSpecialMissingLanguageTags(locales);
-        return (this._availableLocales = locales);
-    },
     relevantExtensionKeys: ["co", "kf", "kn"],
 };
 
@@ -236,10 +224,8 @@ function collatorActualLocale(locale) {
 
     // If |locale| is the default locale (e.g. da-DK), but only supported
     // through a fallback (da), we need to get the actual locale before we
-    // can call intl_isUpperCaseFirst. Also see BestAvailableLocaleHelper.
-    var availableLocales = callFunction(collatorInternalProperties.availableLocales,
-                                        collatorInternalProperties);
-    return BestAvailableLocaleIgnoringDefault(availableLocales, locale);
+    // can call intl_isUpperCaseFirst. Also see intl_BestAvailableLocale.
+    return BestAvailableLocaleIgnoringDefault("Collator", locale);
 }
 
 /**

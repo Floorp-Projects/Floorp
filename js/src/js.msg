@@ -123,7 +123,7 @@ MSG_DEF(JSMSG_ASSIGN_TO_CALL,          0, JSEXN_REFERENCEERR, "cannot assign to 
 MSG_DEF(JSMSG_BAD_INSTANCEOF_RHS,      1, JSEXN_TYPEERR, "invalid 'instanceof' operand {0}")
 MSG_DEF(JSMSG_BAD_PROTOTYPE,           1, JSEXN_TYPEERR, "'prototype' property of {0} is not an object")
 MSG_DEF(JSMSG_IN_NOT_OBJECT,           1, JSEXN_TYPEERR, "right-hand side of 'in' should be an object, got {0}")
-MSG_DEF(JSMSG_IN_STRING,               2, JSEXN_TYPEERR, "cannot use 'in' operator to search for '{0}' in '{1}'")
+MSG_DEF(JSMSG_IN_STRING,               2, JSEXN_TYPEERR, "cannot use 'in' operator to search for {0} in {1}")
 MSG_DEF(JSMSG_TOO_MANY_CON_SPREADARGS, 0, JSEXN_RANGEERR, "too many constructor arguments")
 MSG_DEF(JSMSG_TOO_MANY_FUN_SPREADARGS, 0, JSEXN_RANGEERR, "too many function arguments")
 MSG_DEF(JSMSG_UNINITIALIZED_LEXICAL,   1, JSEXN_REFERENCEERR, "can't access lexical declaration `{0}' before initialization")
@@ -630,7 +630,6 @@ MSG_DEF(JSMSG_AMBIGUOUS_IMPORT,          0, JSEXN_SYNTAXERR, "ambiguous import")
 MSG_DEF(JSMSG_MISSING_NAMESPACE_EXPORT,  0, JSEXN_SYNTAXERR, "export not found for namespace")
 MSG_DEF(JSMSG_MISSING_EXPORT,            1, JSEXN_SYNTAXERR, "local binding for export '{0}' not found")
 MSG_DEF(JSMSG_BAD_MODULE_STATUS,         0, JSEXN_INTERNALERR, "module record has unexpected status")
-MSG_DEF(JSMSG_NO_DYNAMIC_IMPORT,         0, JSEXN_SYNTAXERR, "dynamic module import is not implemented")
 MSG_DEF(JSMSG_DYNAMIC_IMPORT_FAILED,     0, JSEXN_TYPEERR, "error loading dynamically imported module")
 MSG_DEF(JSMSG_BAD_MODULE_SPECIFIER,      1, JSEXN_TYPEERR, "error resolving module specifier '{0}'")
 
@@ -683,6 +682,8 @@ MSG_DEF(JSMSG_READABLESTREAM_METHOD_NOT_IMPLEMENTED,     1, JSEXN_TYPEERR, "Read
 
 // WritableStream
 MSG_DEF(JSMSG_READABLESTREAM_UNDERLYINGSINK_TYPE_WRONG,  0, JSEXN_RANGEERR,"'underlyingSink.type' must be undefined.")
+MSG_DEF(JSMSG_WRITABLESTREAMWRITER_NOT_OWNED,            1, JSEXN_TYPEERR, "the WritableStream writer method '{0}' may only be called on a writer owned by a stream")
+MSG_DEF(JSMSG_WRITABLESTREAM_CLOSED_OR_ERRORED,          0, JSEXN_TYPEERR, "writable stream is already closed or errored")
 MSG_DEF(JSMSG_READABLESTREAM_NYI,                        0, JSEXN_ERR,     "full WritableStream support is not yet implemented")
 
 // Other Stream-related

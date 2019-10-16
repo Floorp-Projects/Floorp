@@ -38,7 +38,7 @@ const { SerializableSet, Svc, Utils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 function ensureDirectory(path) {
@@ -1310,52 +1310,54 @@ SyncEngine.prototype = {
 
     // `getBatched` includes the list of IDs as a query parameter, so we need to fetch
     // records in chunks to avoid exceeding URI length limits.
-    for (let [, ids] of PlacesSyncUtils.chunkArray(
-      idsToBackfill,
-      this.guidFetchBatchSize
-    )) {
-      backfilledItems.ids = ids;
+    if (this.guidFetchBatchSize) {
+      for (let ids of PlacesUtils.chunkArray(
+        idsToBackfill,
+        this.guidFetchBatchSize
+      )) {
+        backfilledItems.ids = ids;
 
-      let { response, records } = await backfilledItems.getBatched(
-        this.downloadBatchSize
-      );
-      if (!response.success) {
-        response.failureCode = ENGINE_DOWNLOAD_FAIL;
-        throw response;
-      }
-
-      let backfilledRecordsToApply = [];
-      let failedInBackfill = [];
-
-      await Async.yieldingForEach(records, async record => {
-        let { shouldApply, error } = await this._maybeReconcile(record);
-        if (error) {
-          failedInBackfill.push(record.id);
-          count.failed++;
-          return;
+        let { response, records } = await backfilledItems.getBatched(
+          this.downloadBatchSize
+        );
+        if (!response.success) {
+          response.failureCode = ENGINE_DOWNLOAD_FAIL;
+          throw response;
         }
-        if (!shouldApply) {
-          count.reconciled++;
-          return;
+
+        let backfilledRecordsToApply = [];
+        let failedInBackfill = [];
+
+        await Async.yieldingForEach(records, async record => {
+          let { shouldApply, error } = await this._maybeReconcile(record);
+          if (error) {
+            failedInBackfill.push(record.id);
+            count.failed++;
+            return;
+          }
+          if (!shouldApply) {
+            count.reconciled++;
+            return;
+          }
+          backfilledRecordsToApply.push(record);
+        });
+
+        let failedToApply = await this._applyRecords(backfilledRecordsToApply);
+        failedInBackfill.push(...failedToApply);
+
+        count.failed += failedToApply.length;
+        count.applied += backfilledRecordsToApply.length;
+
+        this.toFetch = Utils.setDeleteAll(this.toFetch, ids);
+        this.previousFailed = Utils.setAddAll(
+          this.previousFailed,
+          failedInBackfill
+        );
+
+        if (lastSync < this.lastModified) {
+          lastSync = this.lastModified;
+          await this.setLastSync(lastSync);
         }
-        backfilledRecordsToApply.push(record);
-      });
-
-      let failedToApply = await this._applyRecords(backfilledRecordsToApply);
-      failedInBackfill.push(...failedToApply);
-
-      count.failed += failedToApply.length;
-      count.applied += backfilledRecordsToApply.length;
-
-      this.toFetch = Utils.setDeleteAll(this.toFetch, ids);
-      this.previousFailed = Utils.setAddAll(
-        this.previousFailed,
-        failedInBackfill
-      );
-
-      if (lastSync < this.lastModified) {
-        lastSync = this.lastModified;
-        await this.setLastSync(lastSync);
       }
     }
 

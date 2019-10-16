@@ -132,12 +132,8 @@ var gIdentityHandler = {
   },
 
   get _hasInsecureLoginForms() {
-    // checks if the page has been flagged for an insecure login. Also checks
-    // if the pref to degrade the UI is set to true
-    return (
-      LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser) &&
-      Services.prefs.getBoolPref("security.insecure_password.ui.enabled")
-    );
+    // This function will be deleted in bug 1567827.
+    return false;
   },
 
   // smart getters

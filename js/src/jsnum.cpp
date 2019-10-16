@@ -710,9 +710,9 @@ ToCStringBuf::ToCStringBuf() : dbuf(nullptr) {
 ToCStringBuf::~ToCStringBuf() { js_free(dbuf); }
 
 MOZ_ALWAYS_INLINE
-static JSFlatString* LookupDtoaCache(JSContext* cx, double d) {
+static JSLinearString* LookupDtoaCache(JSContext* cx, double d) {
   if (Realm* realm = cx->realm()) {
-    if (JSFlatString* str = realm->dtoaCache.lookup(10, d)) {
+    if (JSLinearString* str = realm->dtoaCache.lookup(10, d)) {
       return str;
     }
   }
@@ -721,14 +721,14 @@ static JSFlatString* LookupDtoaCache(JSContext* cx, double d) {
 }
 
 MOZ_ALWAYS_INLINE
-static void CacheNumber(JSContext* cx, double d, JSFlatString* str) {
+static void CacheNumber(JSContext* cx, double d, JSLinearString* str) {
   if (Realm* realm = cx->realm()) {
     realm->dtoaCache.cache(10, d, str);
   }
 }
 
 MOZ_ALWAYS_INLINE
-static JSFlatString* LookupInt32ToString(JSContext* cx, int32_t si) {
+static JSLinearString* LookupInt32ToString(JSContext* cx, int32_t si) {
   if (si >= 0 && StaticStrings::hasInt(si)) {
     return cx->staticStrings().getInt(si);
   }
@@ -754,8 +754,8 @@ MOZ_ALWAYS_INLINE static T* BackfillInt32InBuffer(int32_t si, T* buffer,
 }
 
 template <AllowGC allowGC>
-JSFlatString* js::Int32ToString(JSContext* cx, int32_t si) {
-  if (JSFlatString* str = LookupInt32ToString(cx, si)) {
+JSLinearString* js::Int32ToString(JSContext* cx, int32_t si) {
+  if (JSLinearString* str = LookupInt32ToString(cx, si)) {
     return str;
   }
 
@@ -777,13 +777,13 @@ JSFlatString* js::Int32ToString(JSContext* cx, int32_t si) {
   return str;
 }
 
-template JSFlatString* js::Int32ToString<CanGC>(JSContext* cx, int32_t si);
+template JSLinearString* js::Int32ToString<CanGC>(JSContext* cx, int32_t si);
 
-template JSFlatString* js::Int32ToString<NoGC>(JSContext* cx, int32_t si);
+template JSLinearString* js::Int32ToString<NoGC>(JSContext* cx, int32_t si);
 
-JSFlatString* js::Int32ToStringHelperPure(JSContext* cx, int32_t si) {
+JSLinearString* js::Int32ToStringHelperPure(JSContext* cx, int32_t si) {
   AutoUnsafeCallWithABI unsafe;
-  JSFlatString* res = Int32ToString<NoGC>(cx, si);
+  JSLinearString* res = Int32ToString<NoGC>(cx, si);
   if (!res) {
     cx->recoverFromOutOfMemory();
   }
@@ -791,7 +791,7 @@ JSFlatString* js::Int32ToStringHelperPure(JSContext* cx, int32_t si) {
 }
 
 JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
-  if (JSFlatString* str = LookupInt32ToString(cx, si)) {
+  if (JSLinearString* str = LookupInt32ToString(cx, si)) {
     return js::AtomizeString(cx, str);
   }
 
@@ -1525,7 +1525,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
       return cx->staticStrings().getUnit(c);
     }
 
-    if (JSFlatString* str = realm->dtoaCache.lookup(base, d)) {
+    if (JSLinearString* str = realm->dtoaCache.lookup(base, d)) {
       return str;
     }
 
@@ -1534,7 +1534,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
                numStr < cbuf.sbuf + cbuf.sbufSize);
     MOZ_ASSERT(numStrLen == strlen(numStr));
   } else {
-    if (JSFlatString* str = realm->dtoaCache.lookup(base, d)) {
+    if (JSLinearString* str = realm->dtoaCache.lookup(base, d)) {
       return str;
     }
 
@@ -1550,7 +1550,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
     numStrLen = strlen(numStr);
   }
 
-  JSFlatString* s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
+  JSLinearString* s = NewStringCopyN<allowGC>(cx, numStr, numStrLen);
   if (!s) {
     return nullptr;
   }
@@ -1587,7 +1587,7 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
     return Int32ToAtom(cx, si);
   }
 
-  if (JSFlatString* str = LookupDtoaCache(cx, d)) {
+  if (JSLinearString* str = LookupDtoaCache(cx, d)) {
     return AtomizeString(cx, str);
   }
 
@@ -1611,13 +1611,13 @@ JSAtom* js::NumberToAtom(JSContext* cx, double d) {
   return atom;
 }
 
-JSFlatString* js::IndexToString(JSContext* cx, uint32_t index) {
+JSLinearString* js::IndexToString(JSContext* cx, uint32_t index) {
   if (StaticStrings::hasUint(index)) {
     return cx->staticStrings().getUint(index);
   }
 
   Realm* realm = cx->realm();
-  if (JSFlatString* str = realm->dtoaCache.lookup(10, index)) {
+  if (JSLinearString* str = realm->dtoaCache.lookup(10, index)) {
     return str;
   }
 

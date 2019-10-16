@@ -621,9 +621,9 @@ class WasmTokenStream {
   void skipSpaces();
 
  public:
-  explicit WasmTokenStream(const char16_t* text)
+  explicit WasmTokenStream(const char16_t* text, size_t textLen)
       : cur_(text),
-        end_(text + js_strlen(text)),
+        end_(text + textLen),
         lineStart_(text),
         line_(1),
         lookaheadIndex_(0),
@@ -2303,9 +2303,9 @@ struct WasmParseContext {
   uint32_t nextSym;
   bool requiresDataCount;
 
-  WasmParseContext(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo,
-                   UniqueChars* error)
-      : ts(text),
+  WasmParseContext(const char16_t* text, size_t textLen, uintptr_t stackLimit,
+                   LifoAlloc& lifo, UniqueChars* error)
+      : ts(text, textLen),
         lifo(lifo),
         error(error),
         dtoaState(NewDtoaState()),
@@ -5271,10 +5271,10 @@ static AstModule* ParseBinaryModule(WasmParseContext& c, AstModule* module) {
   return module;
 }
 
-static AstModule* ParseModule(const char16_t* text, uintptr_t stackLimit,
-                              LifoAlloc& lifo, UniqueChars* error,
-                              bool* binary) {
-  WasmParseContext c(text, stackLimit, lifo, error);
+static AstModule* ParseModule(const char16_t* text, size_t textLen,
+                              uintptr_t stackLimit, LifoAlloc& lifo,
+                              UniqueChars* error, bool* binary) {
+  WasmParseContext c(text, textLen, stackLimit, lifo, error);
 
   *binary = false;
 
@@ -6268,12 +6268,23 @@ static bool EncodeExprList(Encoder& e, const AstExprVector& v) {
   return true;
 }
 
+static bool EncodeBlockType(Encoder& e, AstExprType& t) {
+  ExprType type = t.type();
+  static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
+  MOZ_ASSERT(size_t(type.code()) < size_t(TypeCode::Limit));
+  if (type.isRef()) {
+    return e.writeFixedU8(uint8_t(ExprType::Ref)) &&
+           e.writeVarU32(type.refTypeIndex());
+  }
+  return e.writeFixedU8(uint8_t(type.code()));
+}
+
 static bool EncodeBlock(Encoder& e, AstBlock& b) {
   if (!e.writeOp(b.op())) {
     return false;
   }
 
-  if (!e.writeBlockType(b.type().type())) {
+  if (!EncodeBlockType(e, b.type())) {
     return false;
   }
 
@@ -6458,7 +6469,7 @@ static bool EncodeIf(Encoder& e, AstIf& i) {
     return false;
   }
 
-  if (!e.writeBlockType(i.type().type())) {
+  if (!EncodeBlockType(e, i.type())) {
     return false;
   }
 
@@ -7630,13 +7641,14 @@ static bool EncodeBinaryModule(const AstModule& module, Bytes* bytes) {
 
 /*****************************************************************************/
 
-bool wasm::TextToBinary(const char16_t* text, uintptr_t stackLimit,
-                        Bytes* bytes, Uint32Vector* offsets,
-                        UniqueChars* error) {
+bool wasm::TextToBinary(const char16_t* text, size_t textLen,
+                        uintptr_t stackLimit, Bytes* bytes,
+                        Uint32Vector* offsets, UniqueChars* error) {
   LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
 
   bool binary = false;
-  AstModule* module = ParseModule(text, stackLimit, lifo, error, &binary);
+  AstModule* module =
+      ParseModule(text, textLen, stackLimit, lifo, error, &binary);
   if (!module) {
     return false;
   }

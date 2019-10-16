@@ -17,7 +17,6 @@ load 386914-1.html
 skip-if(!xbl) asserts(1) load chrome://reftest/content/crashtests/dom/xul/crashtests/386947-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/425821-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/428951-1.xul
-load 429085-1.xhtml
 load 431906-1.html
 load 461917-1.xhtml
 skip-if(!xbl) load chrome://reftest/content/crashtests/dom/xul/crashtests/468211-1.xul

@@ -574,26 +574,28 @@ bool JitRuntime::MarkJitcodeGlobalTableIteratively(GCMarker* marker) {
 }
 
 /* static */
-void JitRuntime::SweepJitcodeGlobalTable(JSRuntime* rt) {
+void JitRuntime::TraceWeakJitcodeGlobalTable(JSRuntime* rt, JSTracer* trc) {
   if (rt->hasJitRuntime() && rt->jitRuntime()->hasJitcodeGlobalTable()) {
-    rt->jitRuntime()->getJitcodeGlobalTable()->sweep(rt);
+    rt->jitRuntime()->getJitcodeGlobalTable()->traceWeak(rt, trc);
   }
 }
 
-void JitRealm::sweep(JS::Realm* realm) {
+void JitRealm::traceWeak(JSTracer* trc, JS::Realm* realm) {
   // Any outstanding compilations should have been cancelled by the GC.
   MOZ_ASSERT(!HasOffThreadIonCompile(realm));
 
-  stubCodes_->sweep();
+  stubCodes_->traceWeak(trc);
 
   for (WeakHeapPtrJitCode& stub : stubs_) {
-    if (stub && IsAboutToBeFinalized(&stub)) {
-      stub.set(nullptr);
+    if (stub) {
+      TraceWeakEdge(trc, &stub, "JitRealm::stubs_");
     }
   }
 }
 
-void JitZone::sweep() { baselineCacheIRStubCodes_.sweep(); }
+void JitZone::traceWeak(JSTracer* trc) {
+  baselineCacheIRStubCodes_.traceWeak(trc);
+}
 
 size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);

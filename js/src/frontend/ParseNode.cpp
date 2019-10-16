@@ -405,19 +405,7 @@ bool BigIntLiteral::isZero() {
   return data_.as<BigIntCreationData>().isZero();
 }
 
-// Allocate an actual GC'd BigInt
-bool BigIntLiteral::publish(JSContext* cx, ParserSharedBase* parser) {
-  BigInt* bi = data_.as<BigIntCreationData>().createBigInt(cx);
-  if (!bi) {
-    return false;
-  }
-  BigIntBox* bigIntBox = parser->newBigIntBox(bi);
-  if (!bigIntBox) {
-    return false;
-  }
-  data_ = mozilla::AsVariant(bigIntBox);
-  return true;
-}
+BigInt* BigIntLiteral::value() { return box()->value(); }
 
 FunctionBox* ObjectBox::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());

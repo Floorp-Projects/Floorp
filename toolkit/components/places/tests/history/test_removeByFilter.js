@@ -404,6 +404,40 @@ add_task(async function test_error_cases() {
   );
 });
 
+add_task(async function test_chunking() {
+  await PlacesUtils.history.clear();
+  await PlacesUtils.bookmarks.eraseEverything();
+
+  info("Insert many visited pages");
+  let pages = [];
+  for (let i = 1; i <= 1500; i++) {
+    let visits = [
+      {
+        date: new Date(Date.now() - (86400 + i) * 1000),
+        transition: PlacesUtils.history.TRANSITIONS.TYPED,
+      },
+    ];
+    pages.push(
+      {
+        url: `http://example.com/${i}`,
+        title: `Page ${i}`,
+        visits,
+      },
+      {
+        url: `http://subdomain.example.com/${i}`,
+        title: `Subdomain ${i}`,
+        visits,
+      }
+    );
+  }
+  await PlacesUtils.history.insertMany(pages);
+
+  info("Remove all visited pages");
+  await PlacesUtils.history.removeByFilter({
+    host: ".example.com",
+  });
+});
+
 // Helper functions
 
 function getObserverPromise(bookmarkedUri) {

@@ -7,6 +7,8 @@
 #ifndef util_Unicode_h
 #define util_Unicode_h
 
+#include "mozilla/Casting.h"  // mozilla::AssertedCast
+
 #include "jspubtd.h"
 
 #include "util/UnicodeNonBMP.h"
@@ -241,6 +243,7 @@ inline bool IsSpace(char ch) {
   return IsSpace(static_cast<JS::Latin1Char>(ch));
 }
 
+// IsSpace(char32_t) must additionally exclude everything non-BMP.
 inline bool IsSpace(char32_t ch) {
   if (ch < 128) {
     return js_isspace[ch];
@@ -250,11 +253,13 @@ inline bool IsSpace(char32_t ch) {
     return true;
   }
 
+  // An assertion in make_unicode.py:make_unicode_file guarantees that there are
+  // no Space_Separator (Zs) code points outside the BMP.
   if (ch >= NonBMPMin) {
     return false;
   }
 
-  return CharInfo(ch).isSpace();
+  return CharInfo(mozilla::AssertedCast<char16_t>(ch)).isSpace();
 }
 
 /*

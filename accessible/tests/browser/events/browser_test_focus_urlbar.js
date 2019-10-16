@@ -24,8 +24,18 @@ function isEventForAutocompleteItem(event) {
   return event.accessible.role == ROLE_COMBOBOX_OPTION;
 }
 
-function isEventForOneOffButton(event) {
+function isEventForButton(event) {
   return event.accessible.role == ROLE_PUSHBUTTON;
+}
+
+function isEventForOneOffEngine(event) {
+  let parent = event.accessible.parent;
+  return (
+    event.accessible.role == ROLE_PUSHBUTTON &&
+    parent &&
+    parent.role == ROLE_GROUPING &&
+    parent.name
+  );
 }
 
 function isEventForMenuPopup(event) {
@@ -147,7 +157,7 @@ async function runTests() {
   testStates(event.accessible, STATE_FOCUSED);
 
   info("Ensuring autocomplete focus on arrow up for search settings button");
-  focused = waitForEvent(EVENT_FOCUS, isEventForOneOffButton);
+  focused = waitForEvent(EVENT_FOCUS, isEventForButton);
   EventUtils.synthesizeKey("KEY_ArrowUp");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
@@ -179,7 +189,7 @@ async function runTests() {
   testStates(event.accessible, STATE_FOCUSED);
 
   info("Ensuring one-off search button focus on arrow down");
-  focused = waitForEvent(EVENT_FOCUS, isEventForOneOffButton);
+  focused = waitForEvent(EVENT_FOCUS, isEventForOneOffEngine);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);

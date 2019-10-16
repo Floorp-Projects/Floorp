@@ -434,7 +434,6 @@ bool nsWaylandDisplay::IsDMABufEnabled() {
   // WaylandDisplayGet() sets mIsDMABufPrefState
   nsWaylandDisplay* display = WaylandDisplayGet();
   if (!display) {
-    NS_WARNING("Failed to get nsWaylandDisplay, called too early?");
     return false;
   }
 

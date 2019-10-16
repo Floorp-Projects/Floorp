@@ -564,8 +564,8 @@ static void StreamJITFrameOptimizations(
 
     if (JSAtom* name = js::GetPropertyNameFromPC(script, pc)) {
       char buf[512];
-      JS_PutEscapedFlatString(buf, ArrayLength(buf), js::AtomToFlatString(name),
-                              0);
+      JS_PutEscapedLinearString(buf, ArrayLength(buf),
+                                js::AtomToLinearString(name), 0);
       aUniqueStrings.WriteProperty(aWriter, "propertyName", buf);
     }
 
