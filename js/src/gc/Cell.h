@@ -48,6 +48,10 @@ struct Chunk;
 class StoreBuffer;
 class TenuredCell;
 
+#ifdef DEBUG
+extern bool CurrentThreadIsGCMarking();
+#endif
+
 // [SMDOC] GC Cell
 //
 // A GC cell is the base class for all GC things. All types allocated on the GC
@@ -351,7 +355,7 @@ JS::TraceKind TenuredCell::getTraceKind() const {
 
 JS::Zone* TenuredCell::zone() const {
   JS::Zone* zone = arena()->zone;
-  MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
+  MOZ_ASSERT(CurrentThreadIsGCMarking() || CurrentThreadCanAccessZone(zone));
   return zone;
 }
 
