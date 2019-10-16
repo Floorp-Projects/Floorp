@@ -1,31 +1,28 @@
-// document.open() bails out early if there is an active parser with non-zero
-// script nesting level or if a load was aborted while there was an active
-// parser. window.stop() aborts the current parser, so once it has been called
-// while a parser is active, document.open() will no longer do anything to that
-// document,
+// document.open() bails out early if there is an **active parser** with
+// non-zero script nesting level. window.stop() aborts the current parser and
+// makes it no longer active, and should allow document.open() to work.
+// For more details, see https://bugzilla.mozilla.org/show_bug.cgi?id=1475000.
 
 window.handlers = {};
 
 async_test(t => {
   const frame = document.body.appendChild(document.createElement("iframe"));
-  t.add_cleanup(() => frame.remove());
   frame.src = "resources/aborted-parser-frame.html";
   window.handlers.afterOpen = t.step_func_done(() => {
     const openCalled = frame.contentDocument.childNodes.length === 0;
-    assert_false(openCalled, "child document should not be empty");
-    assert_equals(frame.contentDocument.querySelector("p").textContent,
-		  "Text", "Should still have our paragraph");
+    frame.remove();
+    assert_true(openCalled, "child document should be empty");
   });
 }, "document.open() after parser is aborted");
 
+// Note: This test should pass even if window.close() is not there, as
+// document.open() is not executed synchronously in an inline script.
 async_test(t => {
   const frame = document.body.appendChild(document.createElement("iframe"));
-  t.add_cleanup(() => frame.remove());
   frame.src = "resources/aborted-parser-async-frame.html";
   window.handlers.afterOpenAsync = t.step_func_done(() => {
     const openCalled = frame.contentDocument.childNodes.length === 0;
-    assert_false(openCalled, "child document should not be empty");
-    assert_equals(frame.contentDocument.querySelector("p").textContent,
-		  "Text", "Should still have our paragraph");
+    frame.remove();
+    assert_true(openCalled, "child document should be empty");
   });
 }, "async document.open() after parser is aborted");
