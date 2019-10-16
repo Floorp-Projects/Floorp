@@ -1605,6 +1605,67 @@ NSC_DecryptUpdate(CK_SESSION_HANDLE hSession,
     return CKR_OK;
 }
 
+/* Fromssl3con.c: Constant-time helper macro that copies the MSB of x to all
+ * other bits. */
+#define DUPLICATE_MSB_TO_ALL(x) ((unsigned int)((int)(x) >> (sizeof(int) * 8 - 1)))
+/* From ssl3con.c: SECStatusToMask returns, in constant time, a mask value of
+ * all ones if rv == SECSuccess.  Otherwise it returns zero. */
+static unsigned int
+SECStatusToMask(SECStatus rv)
+{
+    unsigned int good;
+    /* rv ^ SECSuccess is zero iff rv == SECSuccess. Subtracting one results
+     * in the MSB being set to one iff it was zero before. */
+    good = rv ^ SECSuccess;
+    good--;
+    return DUPLICATE_MSB_TO_ALL(good);
+}
+/* Constant-time helper macro that selects l or r depending on all-1 or all-0
+ * mask m */
+#define CT_SEL(m, l, r) (((m) & (l)) | (~(m) & (r)))
+/* Constant-time helper macro that returns all-1s if x is not 0; and all-0s
+ * otherwise. */
+#define CT_NOT_ZERO(x) (DUPLICATE_MSB_TO_ALL(((x) | (0 - x))))
+
+/* sftk_CheckCBCPadding checks that the padding validity and return the pad length. */
+static CK_RV
+sftk_CheckCBCPadding(CK_BYTE_PTR pLastPart,
+                     unsigned int blockSize, unsigned int *outPadSize)
+{
+    PORT_Assert(outPadSize);
+
+    unsigned int padSize = (unsigned int)pLastPart[blockSize - 1];
+
+    /* If padSize <= blockSize, set goodPad to all-1s and all-0s otherwise.*/
+    unsigned int goodPad = DUPLICATE_MSB_TO_ALL(~(blockSize - padSize));
+    /* padSize should not be 0 */
+    goodPad &= CT_NOT_ZERO(padSize);
+
+    unsigned int i;
+    for (i = 0; i < blockSize; i++) {
+        /* If i < padSize, set loopMask to all-1s and all-0s otherwise.*/
+        unsigned int loopMask = DUPLICATE_MSB_TO_ALL(~(padSize - 1 - i));
+        /* Get the padding value (should be padSize) from buffer */
+        unsigned int padVal = pLastPart[blockSize - 1 - i];
+        /* Update goodPad only if i < padSize */
+        goodPad &= CT_SEL(loopMask, ~(padVal ^ padSize), goodPad);
+    }
+
+    /* If any of the final padding bytes had the wrong value, one or more
+     * of the lower eight bits of |goodPad| will be cleared. We AND the
+     * bottom 8 bits together and duplicate the result to all the bits. */
+    goodPad &= goodPad >> 4;
+    goodPad &= goodPad >> 2;
+    goodPad &= goodPad >> 1;
+    goodPad <<= sizeof(goodPad) * 8 - 1;
+    goodPad = DUPLICATE_MSB_TO_ALL(goodPad);
+
+    /* Set outPadSize to padSize or 0 */
+    *outPadSize = CT_SEL(goodPad, padSize, 0);
+    /* Return OK if the pad is valid */
+    return CT_SEL(goodPad, CKR_OK, CKR_ENCRYPTED_DATA_INVALID);
+}
+
 /* NSC_DecryptFinal finishes a multiple-part decryption operation. */
 CK_RV
 NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
@@ -1643,24 +1704,10 @@ NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
             if (rv != SECSuccess) {
                 crv = sftk_MapDecryptError(PORT_GetError());
             } else {
-                unsigned int padSize =
-                    (unsigned int)pLastPart[context->blockSize - 1];
-                if ((padSize > context->blockSize) || (padSize == 0)) {
-                    crv = CKR_ENCRYPTED_DATA_INVALID;
-                } else {
-                    unsigned int i;
-                    unsigned int badPadding = 0; /* used as a boolean */
-                    for (i = 0; i < padSize; i++) {
-                        badPadding |=
-                            (unsigned int)pLastPart[context->blockSize - 1 - i] ^
-                            padSize;
-                    }
-                    if (badPadding) {
-                        crv = CKR_ENCRYPTED_DATA_INVALID;
-                    } else {
-                        *pulLastPartLen = outlen - padSize;
-                    }
-                }
+                unsigned int padSize = 0;
+                crv = sftk_CheckCBCPadding(pLastPart, context->blockSize, &padSize);
+                /* Update pulLastPartLen, in constant time, if crv is success */
+                *pulLastPartLen = CT_SEL(SECStatusToMask(crv), outlen - padSize, *pulLastPartLen);
             }
         }
     }
@@ -1722,21 +1769,9 @@ NSC_Decrypt(CK_SESSION_HANDLE hSession,
     /* XXX need to do MUCH better error mapping than this. */
     crv = (rv == SECSuccess) ? CKR_OK : sftk_MapDecryptError(PORT_GetError());
     if (rv == SECSuccess && context->doPad) {
-        unsigned int padding = pData[outlen - 1];
-        if (padding > context->blockSize || !padding) {
-            crv = CKR_ENCRYPTED_DATA_INVALID;
-        } else {
-            unsigned int i;
-            unsigned int badPadding = 0; /* used as a boolean */
-            for (i = 0; i < padding; i++) {
-                badPadding |= (unsigned int)pData[outlen - 1 - i] ^ padding;
-            }
-            if (badPadding) {
-                crv = CKR_ENCRYPTED_DATA_INVALID;
-            } else {
-                outlen -= padding;
-            }
-        }
+        unsigned int padSize = 0;
+        crv = sftk_CheckCBCPadding(pData, context->blockSize, &padSize);
+        outlen -= padSize;
     }
     sftk_TerminateOp(session, SFTK_DECRYPT, context);
 done:
