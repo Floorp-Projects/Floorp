@@ -267,7 +267,7 @@ add_task(async function test_onProviderResultsRequested() {
     // UnifiedComplete provider.
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH_LOCAL,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       title: "test",
       heuristic: true,
       payload: {
@@ -283,7 +283,7 @@ add_task(async function test_onProviderResultsRequested() {
     // default muxer sorts search suggestion results before other types.
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       title: "Test search-search result",
       heuristic: false,
       payload: {
@@ -486,35 +486,35 @@ add_task(async function test_onProviderResultsRequested_searchEngines() {
   let expectedResults = [
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engine: "Test engine",
       title: "engine specified",
       heuristic: false,
     },
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engine: "Test engine",
       title: "keyword specified",
       heuristic: false,
     },
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engine: "Test engine",
       title: "url specified",
       heuristic: false,
     },
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engine: "Test engine",
       title: "engine, keyword, and url specified",
       heuristic: false,
     },
     {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
-      source: UrlbarUtils.RESULT_SOURCE.SEARCH_NETWORK,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       engine: "Test engine",
       title: "keyword and url specified",
       heuristic: false,

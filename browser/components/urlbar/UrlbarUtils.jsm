@@ -104,11 +104,10 @@ var UrlbarUtils = {
   RESULT_SOURCE: {
     BOOKMARKS: 1,
     HISTORY: 2,
-    SEARCH_LOCAL: 3,
-    SEARCH_NETWORK: 4,
-    TABS: 5,
-    OTHER_LOCAL: 6,
-    OTHER_NETWORK: 7,
+    SEARCH: 3,
+    TABS: 4,
+    OTHER_LOCAL: 5,
+    OTHER_NETWORK: 6,
   },
 
   // This defines icon locations that are commonly used in the UI.
