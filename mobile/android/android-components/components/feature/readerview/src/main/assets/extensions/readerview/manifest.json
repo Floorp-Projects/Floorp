@@ -5,7 +5,7 @@
   "content_scripts": [
     {
       "matches": ["*://*/*"],
-      "js": ["readability/readability-0.2.0.js", "readability/readability-readerable-0.2.0.js", "moment/moment-2.24.0.js", "readerview.js"],
+      "js": ["readability/readability-0.2.0.js", "readability/readability-readerable-0.2.0.js", "readerview.js"],
       "css": ["readerview.css"],
       "run_at": "document_idle"
     }
