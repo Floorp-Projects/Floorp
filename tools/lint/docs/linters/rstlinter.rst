@@ -23,3 +23,10 @@ directive.
 
 
 .. _rstcheck: https://github.com/myint/rstcheck
+
+
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/rst.yml>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/rst/__init__.py>`_
