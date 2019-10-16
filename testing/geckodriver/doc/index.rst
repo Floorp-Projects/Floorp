@@ -19,8 +19,6 @@ to the program.  Releases_ are made available on GitHub.
 .. _Releases: https://github.com/mozilla/geckodriver/releases
 
 
-For users
-=========
 .. toctree::
    :maxdepth: 1
 
