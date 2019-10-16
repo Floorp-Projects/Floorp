@@ -2,3 +2,32 @@
 
   'function CERTCertList* PK11_GetCertsMatchingPrivateKey(SECKEYPrivateKey*)'    {PK11_GetCertsMatchingPrivateKey@@NSS_3.47}
 
+3 functions with some indirect sub-type change:
+
+  [C]'function SECStatus CERT_AddCertToListHead(CERTCertList*, CERTCertificate*)' at certdb.c:2631:1 has some indirect sub-type changes:
+    parameter 2 of type 'CERTCertificate*' has sub-type changes:
+      in pointed to type 'typedef CERTCertificate' at certt.h:39:1:
+        underlying type 'struct CERTCertificateStr' at certt.h:189:1 changed:
+          type size changed from 6016 to 6080 (in bits)
+          1 data member insertion:
+            'CERTCertDistrust* CERTCertificateStr::distrust', at offset 6016 (in bits) at certt.h:296:1
+          no data member changes (2 filtered);
+
+  [C]'function SECStatus CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle*, CERTCertificate*, PRTime, const SECItem*, void*)' at ocsp.c:5102:1 has some indirect sub-type changes:
+    parameter 2 of type 'CERTCertificate*' has sub-type changes:
+      in pointed to type 'typedef CERTCertificate' at certt.h:39:1:
+        underlying type 'struct CERTCertificateStr' at certt.h:189:1 changed:
+          type size changed from 6016 to 6080 (in bits)
+          1 data member insertion:
+            'CERTCertDistrust* CERTCertificateStr::distrust', at offset 6016 (in bits) at certt.h:296:1
+          no data member change (1 filtered);
+
+  [C]'function CERTCertificateList* CERT_CertChainFromCert(CERTCertificate*, SECCertUsage, PRBool)' at certhigh.c:1030:1 has some indirect sub-type changes:
+    parameter 1 of type 'CERTCertificate*' has sub-type changes:
+      in pointed to type 'typedef CERTCertificate' at certt.h:39:1:
+        underlying type 'struct CERTCertificateStr' at certt.h:189:1 changed:
+          type size changed from 6016 to 6080 (in bits)
+          1 data member insertion:
+            'CERTCertDistrust* CERTCertificateStr::distrust', at offset 6016 (in bits) at certt.h:296:1
+          no data member changes (2 filtered);
+

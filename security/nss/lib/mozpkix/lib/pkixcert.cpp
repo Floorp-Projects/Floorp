@@ -105,29 +105,24 @@ BackCert::Init()
     return rv;
   }
 
-  static const uint8_t CSC = der::CONTEXT_SPECIFIC | der::CONSTRUCTED;
-
   // According to RFC 5280, all fields below this line are forbidden for
   // certificate versions less than v3.  However, for compatibility reasons,
   // we parse v1/v2 certificates in the same way as v3 certificates.  So if
   // these fields appear in a v1 certificate, they will be used.
 
   // Ignore issuerUniqueID if present.
-  if (tbsCertificate.Peek(CSC | 1)) {
-    rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 1);
-    if (rv != Success) {
-      return rv;
-    }
+  rv = der::SkipOptionalImplicitPrimitiveTag(tbsCertificate, 1);
+  if (rv != Success) {
+    return rv;
   }
 
   // Ignore subjectUniqueID if present.
-  if (tbsCertificate.Peek(CSC | 2)) {
-    rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 2);
-    if (rv != Success) {
-      return rv;
-    }
+  rv = der::SkipOptionalImplicitPrimitiveTag(tbsCertificate, 2);
+  if (rv != Success) {
+    return rv;
   }
 
+  static const uint8_t CSC = der::CONTEXT_SPECIFIC | der::CONSTRUCTED;
   rv = der::OptionalExtensions(
          tbsCertificate, CSC | 3,
          [this](Reader& extnID, const Input& extnValue, bool critical,

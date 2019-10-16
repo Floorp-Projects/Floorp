@@ -1224,3 +1224,53 @@ TEST_F(pkixder_universal_types_tests, OID)
 
   ASSERT_EQ(Success, OID(reader, expectedOID));
 }
+
+TEST_F(pkixder_universal_types_tests, SkipOptionalImplicitPrimitiveTag)
+{
+  const uint8_t DER_IMPLICIT_BIT_STRING_WITH_CLASS_NUMBER_1[] = {
+    0x81,
+    0x04,
+      0x00,
+      0x0A,
+      0x0B,
+      0x0C,
+  };
+  Input input(DER_IMPLICIT_BIT_STRING_WITH_CLASS_NUMBER_1);
+  Reader reader(input);
+
+  ASSERT_EQ(Success, SkipOptionalImplicitPrimitiveTag(reader, 1));
+  ASSERT_TRUE(reader.AtEnd());
+}
+
+TEST_F(pkixder_universal_types_tests, SkipOptionalImplicitPrimitiveTagMismatch)
+{
+  const uint8_t DER_IMPLICIT_BIT_STRING_WITH_CLASS_NUMBER_1[] = {
+    0x81,
+    0x04,
+      0x00,
+      0x0A,
+      0x0B,
+      0x0C,
+  };
+  Input input(DER_IMPLICIT_BIT_STRING_WITH_CLASS_NUMBER_1);
+  Reader reader(input);
+
+  ASSERT_EQ(Success, SkipOptionalImplicitPrimitiveTag(reader, 2));
+  ASSERT_FALSE(reader.AtEnd());
+}
+
+TEST_F(pkixder_universal_types_tests, NoSkipOptionalImplicitConstructedTag)
+{
+  const uint8_t DER_IMPLICIT_SEQUENCE_WITH_CLASS_NUMBER_1[] = {
+    0xA1,
+    0x03,
+      0x05,
+      0x01,
+      0x00,
+  };
+  Input input(DER_IMPLICIT_SEQUENCE_WITH_CLASS_NUMBER_1);
+  Reader reader(input);
+
+  ASSERT_EQ(Success, SkipOptionalImplicitPrimitiveTag(reader, 1));
+  ASSERT_FALSE(reader.AtEnd());
+}
