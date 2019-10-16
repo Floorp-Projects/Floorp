@@ -1422,7 +1422,7 @@ function prettyPrint({
   sourceText
 }) {
   const prettified = (0, _prettyFast.default)(sourceText, {
-    url: url,
+    url,
     indent: " ".repeat(indent)
   });
   return {

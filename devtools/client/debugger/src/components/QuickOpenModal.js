@@ -82,6 +82,9 @@ type GotoLocationType = {
 const updateResultsThrottle = 100;
 const maxResults = 100;
 
+const SIZE_BIG = { size: "big" };
+const SIZE_DEFAULT = {};
+
 function filter(values, query) {
   const preparedQuery = fuzzyAldrin.prepareQuery(query);
 
@@ -133,7 +136,8 @@ export class QuickOpenModal extends Component<Props, State> {
   };
 
   dropGoto = (query: string) => {
-    return query.split(":")[0];
+    const index = query.indexOf(":");
+    return index !== -1 ? query.slice(0, index) : query;
   };
 
   formatSources = memoizeLast((displayedSources, tabs) => {
@@ -247,7 +251,7 @@ export class QuickOpenModal extends Component<Props, State> {
 
   onSelectResultItem = (item: QuickOpenResult) => {
     const { selectedSource, highlightLineRange } = this.props;
-    if (!this.isSymbolSearch() || selectedSource == null) {
+    if (selectedSource == null || !this.isSymbolSearch()) {
       return;
     }
 
@@ -277,8 +281,9 @@ export class QuickOpenModal extends Component<Props, State> {
 
   gotoLocation = (location: ?GotoLocationType) => {
     const { cx, selectSpecificLocation, selectedSource } = this.props;
-    const selectedSourceId = selectedSource ? selectedSource.id : "";
+
     if (location != null) {
+      const selectedSourceId = selectedSource ? selectedSource.id : "";
       const sourceId = location.sourceId ? location.sourceId : selectedSourceId;
       selectSpecificLocation(cx, {
         sourceId,
@@ -297,7 +302,7 @@ export class QuickOpenModal extends Component<Props, State> {
     } = this.props;
     setQuickOpenQuery(e.target.value);
     const noSource = !selectedSource || !selectedContentLoaded;
-    if ((this.isSymbolSearch() && noSource) || this.isGotoQuery()) {
+    if ((noSource && this.isSymbolSearch()) || this.isGotoQuery()) {
       return;
     }
 
@@ -307,13 +312,14 @@ export class QuickOpenModal extends Component<Props, State> {
   onKeyDown = (e: SyntheticKeyboardEvent<HTMLInputElement>) => {
     const { enabled, query } = this.props;
     const { results, selectedIndex } = this.state;
+    const isGoToQuery = this.isGotoQuery();
 
-    if (!this.isGotoQuery() && (!enabled || !results)) {
+    if ((!enabled || !results) && !isGoToQuery) {
       return;
     }
 
     if (e.key === "Enter") {
-      if (this.isGotoQuery()) {
+      if (isGoToQuery) {
         const location = parseLineColumn(query);
         return this.gotoLocation(location);
       }
@@ -393,7 +399,7 @@ export class QuickOpenModal extends Component<Props, State> {
     if (this.isGotoQuery()) {
       return !/^:\d*$/.test(query);
     }
-    return !this.getResultCount() && !!query;
+    return !!query && !this.getResultCount();
   }
 
   getSummaryMessage() {
@@ -434,7 +440,7 @@ export class QuickOpenModal extends Component<Props, State> {
           selectedItemId={
             expanded && items[selectedIndex] ? items[selectedIndex].id : ""
           }
-          {...(this.isSourceSearch() ? { size: "big" } : {})}
+          {...(this.isSourceSearch() ? SIZE_BIG : SIZE_DEFAULT)}
         />
         {results && (
           <ResultList
@@ -444,7 +450,7 @@ export class QuickOpenModal extends Component<Props, State> {
             selectItem={this.selectResultItem}
             ref="resultList"
             expanded={expanded}
-            {...(this.isSourceSearch() ? { size: "big" } : {})}
+            {...(this.isSourceSearch() ? SIZE_BIG : SIZE_DEFAULT)}
           />
         )}
       </Modal>

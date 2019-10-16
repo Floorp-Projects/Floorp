@@ -9,7 +9,7 @@
  * @module actions/sources
  */
 
-import { flatten, uniqBy } from "lodash";
+import { flatten } from "lodash";
 
 import {
   stringToSourceActorId,
@@ -152,10 +152,16 @@ function loadSourceMap(cx: Context, sourceActor: SourceActor) {
 // select it.
 function checkSelectedSource(cx: Context, sourceId: string) {
   return async ({ dispatch, getState }: ThunkArgs) => {
-    const source = getSource(getState(), sourceId);
-    const pendingLocation = getPendingSelectedLocation(getState());
+    const state = getState();
+    const pendingLocation = getPendingSelectedLocation(state);
 
-    if (!pendingLocation || !pendingLocation.url || !source || !source.url) {
+    if (!pendingLocation || !pendingLocation.url) {
+      return;
+    }
+
+    const source = getSource(state, sourceId);
+
+    if (!source || !source.url) {
       return;
     }
 
@@ -252,23 +258,32 @@ export function newOriginalSource(sourceInfo: OriginalSourceData) {
 }
 export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
   return async ({ dispatch, getState }: ThunkArgs) => {
-    sourceInfo = sourceInfo.filter(({ id }) => !getSource(getState(), id));
-    sourceInfo = uniqBy(sourceInfo, ({ id }) => id);
+    const state = getState();
+    const seen: Set<string> = new Set();
+    const sources: Array<Source> = [];
 
-    const sources: Array<Source> = sourceInfo.map(({ id, url }) => ({
-      id,
-      url,
-      relativeUrl: url,
-      isPrettyPrinted: false,
-      isWasm: false,
-      isBlackBoxed: false,
-      introductionUrl: null,
-      introductionType: undefined,
-      isExtension: false,
-      extensionName: null,
-    }));
+    for (const { id, url } of sourceInfo) {
+      if (seen.has(id) || getSource(state, id)) {
+        continue;
+      }
 
-    const cx = getContext(getState());
+      seen.add(id);
+
+      sources.push({
+        id,
+        url,
+        relativeUrl: url,
+        isPrettyPrinted: false,
+        isWasm: false,
+        isBlackBoxed: false,
+        introductionUrl: null,
+        introductionType: undefined,
+        isExtension: false,
+        extensionName: null,
+      });
+    }
+
+    const cx = getContext(state);
     dispatch(addSources(cx, sources));
 
     await dispatch(checkNewSources(cx, sources));
