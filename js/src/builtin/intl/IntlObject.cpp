@@ -833,9 +833,7 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
   if (!CreateNumberFormat(cx, intl)) {
     return false;
   }
-  RootedObject pluralRulesProto(cx,
-                                CreatePluralRulesPrototype(cx, intl, global));
-  if (!pluralRulesProto) {
+  if (!CreatePluralRules(cx, intl)) {
     return false;
   }
   RootedObject relativeTimeFmtProto(
@@ -860,7 +858,6 @@ bool GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global) {
   // |String.prototype| we have |JSProto_*| that enables
   // |getPrototype(JSProto_*)|, but that has global-object-property-related
   // baggage we don't need or want, so we use one-off reserved slots.
-  global->setReservedSlot(PLURAL_RULES_PROTO, ObjectValue(*pluralRulesProto));
   global->setReservedSlot(RELATIVE_TIME_FORMAT_PROTO,
                           ObjectValue(*relativeTimeFmtProto));
 

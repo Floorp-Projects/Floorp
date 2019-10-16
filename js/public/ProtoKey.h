@@ -133,7 +133,8 @@
   REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))                 \
   REAL_IF_INTL(DateTimeFormat, InitViaClassSpec, OCLASP(DateTimeFormat))     \
   REAL_IF_INTL(Locale, InitViaClassSpec, OCLASP(Locale))                     \
-  REAL_IF_INTL(NumberFormat, InitViaClassSpec, OCLASP(NumberFormat))
+  REAL_IF_INTL(NumberFormat, InitViaClassSpec, OCLASP(NumberFormat))         \
+  REAL_IF_INTL(PluralRules, InitViaClassSpec, OCLASP(PluralRules))
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \
