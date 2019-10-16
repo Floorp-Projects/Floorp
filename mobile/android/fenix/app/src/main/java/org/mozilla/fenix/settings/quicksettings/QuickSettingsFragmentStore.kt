@@ -10,6 +10,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.Action
+import mozilla.components.lib.state.Reducer
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.FeatureFlags
@@ -19,6 +20,18 @@ import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.utils.Settings
 
+/**
+ * [QuickSettingsSheetDialogFragment]'s unique [Store].
+ * Encompasses it's own:
+ *  - [State] for all Views displayed in this Fragment.
+ *  - [Action]s mapping a user / system interaction to an intention to modify the above State.
+ *  - [Reducer]s for modifying the above State based on the above Actions.
+ *
+ *  The [createStore] helper method can be used for creating one such [State] based on all current
+ *  conditions of the app and web page visited.
+ *
+ * @param initialState [QuickSettingsFragmentState] that will be shown initially to the user.
+ */
 class QuickSettingsFragmentStore(
     initialState: QuickSettingsFragmentState
 ) : Store<QuickSettingsFragmentState, QuickSettingsFragmentAction>(
@@ -26,18 +39,37 @@ class QuickSettingsFragmentStore(
     ::quickSettingsFragmentReducer
 ) {
     companion object {
+        /**
+         * String, Drawable & Drawable Tint color used to display that the current website connection is secured.
+         */
         private val getSecuredWebsiteUiValues = Triple(
             R.string.quick_settings_sheet_secure_connection,
             R.drawable.mozac_ic_lock,
             R.color.photonGreen50
         )
 
+        /**
+         * String, Drawable & Drawable Tint color used to display that the current website connection is
+         * **not** secured.
+         */
         private val getInsecureWebsiteUiValues = Triple(
             R.string.quick_settings_sheet_insecure_connection,
             R.drawable.mozac_ic_globe,
             R.color.photonRed50
         )
 
+        /**
+         * Construct an initial [QuickSettingsFragmentState] for all Views displayed by the
+         * [QuickSettingsSheetDialogFragment].
+         *
+         * @param context [Context] used for access to various Android resources.
+         * @param websiteUrl [String] the URL of the current web page.
+         * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
+         * @param isTrackingProtectionOn [Boolean] whether the "Standard" (as in not "Strict")
+         * tracking protection is enabled for the current website or not.
+         * @param permissions [SitePermissions]? list of website permissions and their status.
+         * @param settings [Settings] application settings.
+         */
         @Suppress("LongParameterList")
         fun createStore(
             context: Context,
@@ -54,6 +86,17 @@ class QuickSettingsFragmentStore(
             )
         )
 
+        /**
+         * Construct an initial [TrackingProtectionState] to be rendered by [TrackingProtectionView]
+         * based on the current state of the app / website.
+         *
+         * Users can modify the returned [TrackingProtectionState] after it is initially displayed.
+         *
+         * @param websiteUrl [String] the URL of the current web page.
+         * @param isTrackingProtectionOn [Boolean] whether the "Standard" (as in not "Strict")
+         * tracking protection is enabled for the current website or not.
+         * @param settings [Settings] application settings.
+         */
         private fun createTrackingProtectionState(
             websiteUrl: String,
             isTrackingProtectionOn: Boolean,
@@ -65,6 +108,15 @@ class QuickSettingsFragmentStore(
             isTrackingProtectionEnabledPerWebsite = isTrackingProtectionOn
         )
 
+        /**
+         * Construct an initial [WebsiteInfoState] to be rendered by [WebsiteInfoView]
+         * based on the current website's status and connection.
+         *
+         * While being displayed users have no way of modifying it.
+         *
+         * @param websiteUrl [String] the URL of the current web page.
+         * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
+         */
         private fun createWebsiteInfoState(
             websiteUrl: String,
             isSecured: Boolean
@@ -76,6 +128,16 @@ class QuickSettingsFragmentStore(
             return WebsiteInfoState(websiteUrl, stringRes, iconRes, colorRes)
         }
 
+        /**
+         * Construct an initial [WebsitePermissionsState] to be rendered by [WebsitePermissionsView]
+         * containing the permissions requested by the current website.
+         *
+         * Users can modify the returned [WebsitePermissionsState] after it is initially displayed.
+         *
+         * @param context [Context] used for various Android interactions.
+         * @param permissions [SitePermissions]? list of website permissions and their status.
+         * @param settings [Settings] application settings.
+         */
         private fun createWebsitePermissionState(
             context: Context,
             permissions: SitePermissions?,
@@ -93,6 +155,9 @@ class QuickSettingsFragmentStore(
             )
         }
 
+        /**
+         * [PhoneFeature] to a [WebsitePermission] mapper.
+         */
         private fun PhoneFeature.toWebsitePermission(
             context: Context,
             permissions: SitePermissions?,
@@ -117,6 +182,9 @@ class QuickSettingsFragmentStore(
             }
         }
 
+        /**
+         * Helper method for getting the [WebsitePermission] properties based on a specific [PhoneFeature].
+         */
         private fun PhoneFeature.getPermissionStatus(
             context: Context,
             permissions: SitePermissions?,
@@ -128,6 +196,9 @@ class QuickSettingsFragmentStore(
             isBlockedByAndroid = !isAndroidPermissionGranted(context)
         )
 
+        /**
+         * Helper class acting as a temporary container of [WebsitePermission] properties.
+         */
         private data class PermissionStatus(
             val status: String,
             val isVisible: Boolean,
@@ -141,12 +212,27 @@ class QuickSettingsFragmentStore(
 // States
 // -------------------------------------------------------------------------------------------------
 
+/**
+ * [State] containing all data displayed to the user by this Fragment.
+ *
+ * Partitioned further to contain mutiple states for each standalone View this Fragment holds.
+ */
 data class QuickSettingsFragmentState(
     val trackingProtectionState: TrackingProtectionState,
     val webInfoState: WebsiteInfoState,
     val websitePermissionsState: WebsitePermissionsState
 ) : State
 
+/**
+ * [State] to be rendered by [TrackingProtectionView] indicating the app is blocking certain tracking
+ * functionality or not.
+ *
+ * @param isVisible [Boolean] whether this contains data that needs to be displayed to the user.
+ * @param websiteUrl [String] the URL of the current web page.
+ * @param isTrackingProtectionEnabledPerApp [Boolean] whether tracking protection is on/off globally.
+ * @param isTrackingProtectionEnabledPerWebsite [Boolean] whether the "Standard" (as in not "Strict")
+ * tracking protection is enabled for the current website or not.
+ */
 data class TrackingProtectionState(
     val isVisible: Boolean,
     val websiteUrl: String,
@@ -154,6 +240,14 @@ data class TrackingProtectionState(
     val isTrackingProtectionEnabledPerWebsite: Boolean
 ) : State
 
+/**
+ * [State] to be rendered by [WebsiteInfoView] indicating whether the connection is secure or not.
+ *
+ * @param websiteUrl [String] the URL of the current web page.
+ * @param securityInfoRes [StringRes] for the connection description.
+ * @param iconRes [DrawableRes] image indicating the connection status.
+ * @param iconTintRes [ColorRes] icon color.
+ */
 data class WebsiteInfoState(
     val websiteUrl: String,
     @StringRes val securityInfoRes: Int,
@@ -161,6 +255,18 @@ data class WebsiteInfoState(
     @ColorRes val iconTintRes: Int
 ) : State
 
+/**
+ * /**
+ * [State] to be rendered by [WebsitePermissionsView] displaying all explicitly allowed or blocked
+ * website permissions.
+ *
+ * @param isVisible [Boolean] whether this contains data that needs to be displayed to the user.
+ * @param camera [WebsitePermission] containing all information about the *camera* permission.
+ * @param microphone [WebsitePermission] containing all information about the *microphone* permission.
+ * @param notification [notification] containing all information about the *notification* permission.
+ * @param location [WebsitePermission] containing all information about the *location* permission.
+*/
+ */
 data class WebsitePermissionsState(
     val isVisible: Boolean,
     val camera: WebsitePermission,
@@ -169,12 +275,37 @@ data class WebsitePermissionsState(
     val location: WebsitePermission
 ) : State
 
+/**
+ * Wrapper over a website permission encompassing all it's needed state to be rendered on the screen.
+ *
+ * Contains a limited number of implementations because there is a known, finite number of permissions
+ * we need to display to the user.
+ */
 sealed class WebsitePermission {
+    /**
+     * The *allowed* / *blocked* permission status to be shown to the user.
+     */
     abstract val status: String
+
+    /**
+     * Whether this permission should be shown to the user.
+     */
     abstract val isVisible: Boolean
+
+    /**
+     * Visual indication about whether this permission is *enabled* / *disabled*
+     */
     abstract val isEnabled: Boolean
+
+    /**
+     * Whether the corresponding *dangerous* Android permission is granted for the app by the user or not.
+     */
     abstract val isBlockedByAndroid: Boolean
 
+    /**
+     * Helper method mimicking the default generated *copy()* method for a data class.
+     * Allows us using a familiar API in the reducer.
+     */
     abstract fun copy(
         status: String = this.status,
         isVisible: Boolean = this.isVisible,
@@ -182,6 +313,9 @@ sealed class WebsitePermission {
         isBlockedByAndroid: Boolean = this.isBlockedByAndroid
     ): WebsitePermission
 
+    /**
+     * Contains all information about the *camera* permission.
+     */
     data class Camera(
         override val status: String,
         override val isVisible: Boolean,
@@ -203,6 +337,9 @@ sealed class WebsitePermission {
         )
     }
 
+    /**
+     * Contains all information about the *microphone* permission.
+     */
     data class Microphone(
         override val status: String,
         override val isVisible: Boolean,
@@ -224,6 +361,9 @@ sealed class WebsitePermission {
         )
     }
 
+    /**
+     * Contains all information about the *notification* permission.
+     */
     data class Notification(
         override val status: String,
         override val isVisible: Boolean,
@@ -245,6 +385,9 @@ sealed class WebsitePermission {
         )
     }
 
+    /**
+     * Contains all information about the *location* permission.
+     */
     data class Location(
         override val status: String,
         override val isVisible: Boolean,
@@ -271,15 +414,39 @@ sealed class WebsitePermission {
 // Actions
 // -------------------------------------------------------------------------------------------------
 
+/**
+ * Parent [Action] for all the [QuickSettingsFragmentState] changes.
+ */
 sealed class QuickSettingsFragmentAction : Action
 
+/**
+ * All possible [TrackingProtectionState] changes as result of user / system interactions.
+ */
 sealed class TrackingProtectionAction : QuickSettingsFragmentAction() {
+    /**
+     * Change resulting from toggling the tracking protection status for the current website.
+     */
     class TrackingProtectionToggled(val trackingEnabled: Boolean) : TrackingProtectionAction()
 }
 
+/**
+ * All possible [WebsiteInfoState] changes as result of user / system interactions.
+ */
 sealed class WebsiteInfoAction : QuickSettingsFragmentAction()
 
+/**
+ * All possible [WebsitePermissionsState] changes as result of user / system interactions.
+ */
 sealed class WebsitePermissionAction : QuickSettingsFragmentAction() {
+    /**
+     * Change resulting from toggling a specific [WebsitePermission] for the current website.
+     *
+     * @param updatedFeature [PhoneFeature] backing a certain [WebsitePermission].
+     * Allows to easily identify which permission changed
+     * **Must be the name of one of the properties of [WebsitePermissionsState]**.
+     * @param updatedStatus [String] the new [WebsitePermission#status] which will be shown to the user.
+     * @param updatedEnabledStatus [Boolean] the new [WebsitePermission#enabled] which will be shown to the user.
+     */
     class TogglePermission(
         val websitePermission: WebsitePermission,
         val updatedStatus: String,
@@ -291,6 +458,9 @@ sealed class WebsitePermissionAction : QuickSettingsFragmentAction() {
 // Reducers
 // -------------------------------------------------------------------------------------------------
 
+/**
+ * Parent [Reducer] for all [QuickSettingsFragmentState]s of all Views shown in this Fragment.
+ */
 fun quickSettingsFragmentReducer(
     state: QuickSettingsFragmentState,
     action: QuickSettingsFragmentAction
@@ -318,6 +488,9 @@ fun quickSettingsFragmentReducer(
 }
 
 object TrackingProtectionStateReducer {
+    /**
+     * Handles creating a new [TrackingProtectionState] based on the specific [TrackingProtectionAction]
+     */
     fun reduce(
         state: TrackingProtectionState,
         action: TrackingProtectionAction
@@ -330,8 +503,11 @@ object TrackingProtectionStateReducer {
     }
 }
 
-@Suppress("UNUSED_PARAMETER")
+@Suppress("UNUSED_PARAMETER") // the action paramater is unused
 object WebsiteInfoStateReducer {
+    /**
+     * Handles creating a new [WebsiteInfoState] based on the specific [WebsiteInfoAction]
+     */
     fun reduce(
         state: WebsiteInfoState,
         action: WebsiteInfoAction
@@ -344,6 +520,9 @@ object WebsiteInfoStateReducer {
 }
 
 object WebsitePermissionsStateReducer {
+    /**
+     * Handles creating a new [WebsitePermissionsState] based on the specific [WebsitePermissionAction]
+     */
     fun reduce(
         state: WebsitePermissionsState,
         action: WebsitePermissionAction

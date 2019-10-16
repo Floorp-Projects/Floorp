@@ -36,6 +36,12 @@ import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.utils.Settings
 import com.google.android.material.R as MaterialR
 
+/**
+ * Dialog that presents the user with information about
+ * - the current website and whether the connection is secured or not.
+ * - website tracking protection.
+ * - website permission.
+ */
 class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private lateinit var quickSettingsStore: QuickSettingsFragmentStore
     private lateinit var quickSettingsController: QuickSettingsController

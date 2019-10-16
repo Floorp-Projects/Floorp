@@ -25,16 +25,79 @@ import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
 import org.mozilla.fenix.utils.Settings
 
+/**
+ * [QuickSettingsSheetDialogFragment] controller.
+ *
+ * Delegated by View Interactors, handles container business logic and operates changes on it,
+ * complex Android interactions or communication with other features.
+ */
 interface QuickSettingsController {
+    /**
+     * Handles turning on/off tracking protection.
+     *
+     * @param websiteUrl [String] the website URL for which to toggle tracking protection.
+     */
     fun handleTrackingProtectionToggled(websiteUrl: String, trackingEnabled: Boolean)
+
+    /**
+     * Handles showing the tracking protection settings.
+     */
     fun handleTrackingProtectionSettingsSelected()
+
+    /**
+     * Handles reporting a webcompat issue for the indicated website.
+     *
+     * @param websiteUrl [String] the URL of the web page for which to report a site issue.
+     */
     fun handleReportTrackingProblem(websiteUrl: String)
+
+    /**
+     * Handles the case of the [TrackingProtectionView] needed to be displayed to the user.
+     */
     fun handleTrackingProtectionShown()
+
+    /**
+     * Handles the case of the [WebsitePermissionsView] needed to be displayed to the user.
+     */
     fun handlePermissionsShown()
+
+    /**
+     * Handles toggling a [WebsitePermission].
+     *
+     * @param permission [WebsitePermission] needing to be toggled.
+     */
     fun handlePermissionToggled(permission: WebsitePermission)
+
+    /**
+     * Handles a certain set of Android permissions being explicitly granted by the user.
+     *
+     * feature [PhoneFeature] which the user granted Android permission(s) for.
+     */
     fun handleAndroidPermissionGranted(feature: PhoneFeature)
 }
 
+/**
+ * Default behavior of [QuickSettingsController]. Other implementations are possible.
+ *
+ * @param context [Context] used for various Android interactions.
+ * @param quickSettingsStore [QuickSettingsFragmentStore] holding the [State] for all Views displayed
+ * in this Controller's Fragment.
+ * @param coroutineScope [CoroutineScope] used for structed concurrency.
+ * @param navController NavController] used for navigation.
+ * @param session [Session]? current browser state.
+ * @param sitePermissions [SitePermissions]? list of website permissions and their status.
+ * @param settings [Settings] application settings.
+ * @param permissionStorage [PermissionStorage] app state for website permissions exception.
+ * @param trackingExceptions [ExceptionDomains] allows setting whether to allow trackers or not.
+ * @param reload [ReloadUrlUseCase] callback allowing for reloading the current web page.
+ * @param addNewTab [AddNewTabUseCase] callback allowing for loading a URL in a new tab.
+ * @param requestRuntimePermissions [OnNeedToRequestPermissions] callback allowing for requesting
+ * specific Android runtime permissions.
+ * @param reportSiteIssue callback allowing to report an issue with the current web page.
+ * @param displayTrackingProtection callback for when the [TrackingProtectionView] needs to be displayed.
+ * @param displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
+ * @param dismiss callback allowing to request this entire Fragment to be dismissed.
+ */
 @Suppress("TooManyFunctions")
 class DefaultQuickSettingsController(
     private val context: Context,
@@ -127,10 +190,23 @@ class DefaultQuickSettingsController(
         )
     }
 
+    /**
+     * Request a certain set of runtime Android permissions.
+     *
+     * User's approval should be received in the [handleAndroidPermissionGranted] method but this is not enforced.
+     *
+     * @param requestedPermissions [Array]<[String]> runtime permissions needed to be requested.
+     */
     private fun handleAndroidPermissionRequest(requestedPermissions: Array<String>) {
         requestRuntimePermissions(requestedPermissions)
     }
 
+    /**
+     * Updates the list of [SitePermissions] for this current website and reloads it to allow / block
+     * new functionality in the web page.
+     *
+     * @param updatedPermissions [SitePermissions] updated website permissions.
+     */
     private fun handlePermissionsChange(updatedPermissions: SitePermissions) {
         coroutineScope.launch(Dispatchers.IO) {
             permissionStorage.updateSitePermissions(updatedPermissions)
@@ -138,6 +214,11 @@ class DefaultQuickSettingsController(
         }
     }
 
+    /**
+     * Each [WebsitePermission] is mapped after a [PhoneFeature].
+     *
+     * Get this [WebsitePermission]'s [PhoneFeature].
+     */
     private fun WebsitePermission.getBackingFeature(): PhoneFeature = when (this) {
         is WebsitePermission.Camera -> PhoneFeature.CAMERA
         is WebsitePermission.Microphone -> PhoneFeature.MICROPHONE
@@ -145,6 +226,12 @@ class DefaultQuickSettingsController(
         is WebsitePermission.Location -> PhoneFeature.LOCATION
     }
 
+    /**
+     * Get the specific [WebsitePermission] implementation which this [PhoneFeature] is tied to.
+     *
+     * **The result only informs about the type of [WebsitePermission].
+     * The resulting object's properties are just stubs and not dependable.**
+     */
     private fun PhoneFeature.getCorrespondingPermission(): WebsitePermission {
         val defaultStatus = ""
         val defaultEnabled = false

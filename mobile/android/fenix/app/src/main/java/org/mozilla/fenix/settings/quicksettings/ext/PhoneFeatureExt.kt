@@ -9,17 +9,35 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.utils.Settings
 
+/**
+ * Common [PhoneFeature] extensions used for **quicksettings**.
+ *
+ * Whether the website permission associated with this [PhoneFeature] should be shown to the user.
+ */
 fun PhoneFeature.shouldBeVisible(
     sitePermissions: SitePermissions?,
     settings: Settings
 ) = getStatus(sitePermissions, settings) != SitePermissions.Status.NO_DECISION
 
+/**
+ * Common [PhoneFeature] extensions used for **quicksettings**.
+ *
+ * Whether the website permission associated with this [PhoneFeature] should allow user interaction.
+ */
 fun PhoneFeature.shouldBeEnabled(
     context: Context,
     sitePermissions: SitePermissions?,
     settings: Settings
 ) = isAndroidPermissionGranted(context) && isUserPermissionGranted(sitePermissions, settings)
 
+/**
+ * Common [PhoneFeature] extensions used for **quicksettings**.
+ *
+ * Whether the website permission associated with this [PhoneFeature] was specifically allowed by the user.
+ *
+ * To check whether the needed Android permission is also allowed [PhoneFeature#isAndroidPermissionGranted()]
+ * can be used.
+ */
 fun PhoneFeature.isUserPermissionGranted(
     sitePermissions: SitePermissions?,
     settings: Settings

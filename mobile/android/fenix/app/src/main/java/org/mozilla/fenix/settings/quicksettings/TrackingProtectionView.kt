@@ -14,13 +14,38 @@ import kotlinx.android.synthetic.main.quicksettings_tracking_protection.*
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
+/**
+ *  Contract declaring all possible user interactions with [TrackingProtectionView]
+ */
 interface TrackingProtectionInteractor {
+    /**
+     * Indicates the user wants to report a problem with the current website.
+     */
     fun onReportProblemSelected(websiteUrl: String)
+
+    /**
+     * Indicates the user want to toggle the tracking protection on / off.
+     */
     fun onProtectionToggled(websiteUrl: String, trackingEnabled: Boolean)
+
+    /**
+     * Indicates the user want to see all tracking protection settings.
+     */
     fun onProtectionSettingsSelected()
+
+    /**
+     * Indicates the tracking protection status for the current website is shown to the user.
+     */
     fun onTrackingProtectionShown()
 }
 
+/**
+ * MVI View that knows to display a "normal" (as in not "enhanced") tracking protection panel
+ * containing the tracking protection status and also allowing on / off toggling.
+ *
+ * @param containerView [ViewGroup] in which this View will inflate itself.
+ * @param interactor [TrackingProtectionInteractor] which will have delegated to all user interactions.
+ */
 class TrackingProtectionView(
     override val containerView: ViewGroup,
     val interactor: TrackingProtectionInteractor
@@ -38,6 +63,11 @@ class TrackingProtectionView(
         )
     }
 
+    /**
+     * Allows changing what this View displays.
+     *
+     * @param state [TrackingProtectionState] to be rendered.
+     */
     fun update(state: TrackingProtectionState) {
         if (state.isVisible) {
             interactor.onTrackingProtectionShown()

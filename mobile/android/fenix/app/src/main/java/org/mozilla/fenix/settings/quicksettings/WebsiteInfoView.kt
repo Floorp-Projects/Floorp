@@ -18,12 +18,24 @@ import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 
+/**
+ * MVI View that knows to display a whether the current website uses a secure connection or not.
+ *
+ * Currently it does not support any user interaction.
+ *
+ * @param containerView [ViewGroup] in which this View will inflate itself.
+ */
 class WebsiteInfoView(
     override val containerView: ViewGroup
 ) : LayoutContainer {
     val view: View = LayoutInflater.from(containerView.context)
         .inflate(R.layout.quicksettings_website_info, containerView, true)
 
+    /**
+     * Allows changing what this View displays.
+     *
+     * @param state [WebsiteInfoState] to be rendered.
+     */
     fun update(state: WebsiteInfoState) {
         bindUrl(state.websiteUrl)
         bindSecurityInfo(state.securityInfoRes, state.iconRes, state.iconTintRes)

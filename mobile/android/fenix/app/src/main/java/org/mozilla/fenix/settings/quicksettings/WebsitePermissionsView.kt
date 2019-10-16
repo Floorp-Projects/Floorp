@@ -12,11 +12,34 @@ import androidx.core.view.isVisible
 import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.R
 
+/**
+ *  Contract declaring all possible user interactions with [WebsitePermissionsView]
+ */
 interface WebsitePermissionInteractor {
+    /**
+     * Indicates there are website permissions allowed / blocked for the current website.
+     * which, status which is shown to the user.
+     */
     fun onPermissionsShown()
+
+    /**
+     * Indicates the user changed the status of a certain website permission.
+     *
+     * @param permissionState current [WebsitePermission] that the user wants toggled.
+     */
     fun onPermissionToggled(permissionState: WebsitePermission)
 }
 
+/**
+ * MVI View that knows to display a list of specific website permissions (hardcoded):
+ * - location
+ * - notification
+ * - microphone
+ * - camera
+ *
+ * @param containerView [ViewGroup] in which this View will inflate itself.
+ * @param interactor [WebsitePermissionInteractor] which will have delegated to all user interactions.
+ */
 class WebsitePermissionsView(
     override val containerView: ViewGroup,
     val interactor: WebsitePermissionInteractor
@@ -26,6 +49,11 @@ class WebsitePermissionsView(
     val view: View = LayoutInflater.from(context)
         .inflate(R.layout.quicksettings_permissions, containerView, true)
 
+    /**
+     * Allows changing what this View displays.
+     *
+     * @param state [WebsitePermissionsState] to be rendered.
+     */
     fun update(state: WebsitePermissionsState) {
         if (state.isVisible) {
             interactor.onPermissionsShown()
@@ -43,6 +71,13 @@ class WebsitePermissionsView(
                 Pair(view.findViewById(R.id.notificationLabel), view.findViewById(R.id.notificationStatus)))
     }
 
+    /**
+     * Helper method that can map a specific website permission to a dedicated permission row
+     * which will display permission's [icon, label, status] and register user inputs.
+     *
+     * @param permissionState [WebsitePermission] specific permission that can be shown to the user.
+     * @param permissionViews Views that will render [WebsitePermission]'s state.
+     */
     private fun bindPermission(permissionState: WebsitePermission, permissionViews: Pair<TextView, TextView>) {
         val (label, status) = permissionViews
 

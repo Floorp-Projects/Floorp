@@ -4,6 +4,15 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
+/**
+ * [QuickSettingsSheetDialogFragment] interactor.
+ *
+ * Implements callbacks for each of [QuickSettingsSheetDialogFragment]'s Views declared possible user interactions,
+ * delegates all such user events to the [QuickSettingsController].
+ *
+ * @param controller [QuickSettingsController] which will be delegated for all users interactions,
+ * it expected to contain all business logic for how to act in response.
+ */
 class QuickSettingsInteractor(
     private val controller: QuickSettingsController
 ) : WebsitePermissionInteractor, TrackingProtectionInteractor {
