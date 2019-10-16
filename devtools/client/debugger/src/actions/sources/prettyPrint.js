@@ -16,16 +16,19 @@ import {
   isGenerated,
   isJavaScript,
 } from "../../utils/source";
+import { isFulfilled } from "../../utils/async-value";
 import { loadSourceText } from "./loadSourceText";
 import { mapFrames } from "../pause";
 import { selectSpecificLocation } from "../sources";
 
 import {
   getSource,
+  getSourceContent,
   getSourceFromId,
   getSourceByURL,
   getSelectedLocation,
   getThreadContext,
+  getSourceActorsForSource,
 } from "../../selectors";
 
 import type { Action, ThunkArgs } from "../types";
@@ -80,7 +83,14 @@ export function createPrettySource(cx: Context, sourceId: string) {
     };
 
     dispatch(({ type: "ADD_SOURCE", cx, source: prettySource }: Action));
-    await dispatch(selectSource(cx, prettySource.id));
+
+    const actors = getSourceActorsForSource(getState(), sourceId);
+    const content = getSourceContent(getState(), sourceId);
+    if (!content || !isFulfilled(content)) {
+      throw new Error("Cannot pretty-print a file that has not loaded");
+    }
+    await prettyPrintSource(sourceMaps, source, content.value, actors);
+    await dispatch(loadSourceText({ cx, source: prettySource }));
 
     return prettySource;
   };
@@ -92,6 +102,7 @@ function selectPrettyLocation(cx: Context, prettySource: Source) {
 
     if (location && location.line >= 1) {
       location = await sourceMaps.getOriginalLocation(location);
+
       return dispatch(
         selectSpecificLocation(cx, { ...location, sourceId: prettySource.id })
       );
@@ -125,7 +136,6 @@ export function togglePrettyPrint(cx: Context, sourceId: string) {
     }
 
     await dispatch(loadSourceText({ cx, source }));
-
     assert(
       isGenerated(source),
       "Pretty-printing only allowed on generated sources"
@@ -139,6 +149,7 @@ export function togglePrettyPrint(cx: Context, sourceId: string) {
     }
 
     const newPrettySource = await dispatch(createPrettySource(cx, sourceId));
+
     await dispatch(selectPrettyLocation(cx, newPrettySource));
 
     const threadcx = getThreadContext(getState());

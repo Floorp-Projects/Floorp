@@ -23,7 +23,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_LIB + ":17530",
+        filename: TEST_LIB + ":17530:42",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -32,7 +32,7 @@ const TEST_DATA = [
       },
       {
         type: "onClick",
-        filename: TEST_LIB_BABEL + ":10",
+        filename: TEST_LIB_BABEL + ":10:41",
         attributes: [
           "Bubbling",
           "React"
@@ -49,7 +49,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_LIB + ":17530",
+        filename: TEST_LIB + ":17530:42",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -58,7 +58,7 @@ const TEST_DATA = [
       },
       {
         type: "onClick",
-        filename: TEST_EXTERNAL_LISTENERS + ":4",
+        filename: TEST_EXTERNAL_LISTENERS + ":4:25",
         attributes: [
           "Bubbling",
           "React"
@@ -75,7 +75,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_LIB + ":17530",
+        filename: TEST_LIB + ":17530:42",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -84,7 +84,7 @@ const TEST_DATA = [
       },
       {
         type: "onClick",
-        filename: TEST_EXTERNAL_LISTENERS + ":4",
+        filename: TEST_EXTERNAL_LISTENERS + ":4:25",
         attributes: [
           "Bubbling",
           "React"
@@ -96,7 +96,7 @@ const TEST_DATA = [
       },
       {
         type: "onMouseUp",
-        filename: TEST_LIB_BABEL + ":10",
+        filename: TEST_LIB_BABEL + ":10:41",
         attributes: [
           "Bubbling",
           "React"
@@ -113,7 +113,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "onClickCapture",
-        filename: TEST_EXTERNAL_LISTENERS + ":8",
+        filename: TEST_EXTERNAL_LISTENERS + ":8:34",
         attributes: [
           "Capturing",
           "React"
