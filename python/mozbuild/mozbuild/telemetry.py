@@ -239,7 +239,9 @@ def get_build_attrs(attrs):
         res['clobber'] = clobber
     usage = attrs.get('usage')
     if usage:
-        res['cpu_percent'] = int(round(usage['cpu_percent']))
+        cpu_percent = usage.get('cpu_percent')
+        if cpu_percent:
+            res['cpu_percent'] = int(round(cpu_percent))
     return res
 
 
