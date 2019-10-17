@@ -54,7 +54,7 @@ let testCachedMessages = async function (state) {
       checkConsoleAPICalls(consoleCalls, expectedCachedConsoleCalls);
       resolve();
     };
-    state.client.getCachedMessages(["ConsoleAPI"]).then(onCachedConsoleAPI);
+    state.webConsoleFront.getCachedMessages(["ConsoleAPI"]).then(onCachedConsoleAPI);
   })
 };
 
@@ -64,14 +64,14 @@ let testConsoleAPI = async function (state) {
     let onConsoleAPICall = (packet) => {
       info("received message level: " + packet.message.level);
       checkConsoleAPICalls([packet.message], expectedConsoleAPICalls);
-      state.client.off("consoleAPICall", onConsoleAPICall);
+      state.webConsoleFront.off("consoleAPICall", onConsoleAPICall);
       resolve();
     }
 
     info("testConsoleAPI: adding listener for consoleAPICall");
-    state.client.on("consoleAPICall", onConsoleAPICall);
+    state.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
 
-    state.client.evaluateJS("console.log('Log was requested from worker')",
+    state.webConsoleFront.evaluateJS("console.log('Log was requested from worker')",
       () => { });
   });
 };

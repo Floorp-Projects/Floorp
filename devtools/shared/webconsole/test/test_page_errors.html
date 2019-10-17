@@ -153,7 +153,7 @@ function startTest() {
 
 function onAttach(state, response) {
   onPageError = onPageError.bind(null, state);
-  state.client.on("pageError", onPageError);
+  state.webConsoleFront.on("pageError", onPageError);
   doPageErrors();
 }
 
@@ -170,7 +170,7 @@ function onPageError(state, packet) {
     return;
   }
 
-  state.client.off("pageError", onPageError);
+  state.webConsoleFront.off("pageError", onPageError);
 
   Object.values(expectedPageErrors).forEach(function(message, index) {
     info("checking received page error #" + index);

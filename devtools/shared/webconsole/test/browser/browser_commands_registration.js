@@ -9,7 +9,7 @@ add_task(async function() {
   const tab = await addTab("data:text/html,<div id=quack></div>");
   const target = await getTargetForTab(tab);
 
-  const consoleClient = target.activeConsole;
+  const webConsoleFront = target.activeConsole;
 
   // Fetch WebConsoleCommands so that it is available for next Content Tasks
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
@@ -24,19 +24,19 @@ add_task(async function() {
     this.WebConsoleCommands = WebConsoleCommands;
   });
 
-  await registerNewCommand(consoleClient);
-  await wrapCommand(consoleClient);
-  await unregisterCommand(consoleClient);
-  await registerAccessor(consoleClient);
-  await unregisterAfterOverridingTwice(consoleClient);
+  await registerNewCommand(webConsoleFront);
+  await wrapCommand(webConsoleFront);
+  await unregisterCommand(webConsoleFront);
+  await registerAccessor(webConsoleFront);
+  await unregisterAfterOverridingTwice(webConsoleFront);
 });
 
-async function evaluateJSAndCheckResult(consoleClient, input, expected) {
-  const response = await consoleClient.evaluateJS(input);
+async function evaluateJSAndCheckResult(webConsoleFront, input, expected) {
+  const response = await webConsoleFront.evaluateJS(input);
   checkObject(response, expected);
 }
 
-async function registerNewCommand(consoleClient) {
+async function registerNewCommand(webConsoleFront) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     this.WebConsoleCommands.register("setFoo", (owner, value) => {
       owner.window.foo = value;
@@ -50,8 +50,8 @@ async function registerNewCommand(consoleClient) {
   });
 
   const command = "setFoo('bar')";
-  await evaluateJSAndCheckResult(consoleClient, command, {
-    from: consoleClient.actor,
+  await evaluateJSAndCheckResult(webConsoleFront, command, {
+    from: webConsoleFront.actor,
     input: command,
     result: "ok",
   });
@@ -61,7 +61,7 @@ async function registerNewCommand(consoleClient) {
   });
 }
 
-async function wrapCommand(consoleClient) {
+async function wrapCommand(webConsoleFront) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     const origKeys = this.WebConsoleCommands.getCommand("keys");
 
@@ -83,13 +83,13 @@ async function wrapCommand(consoleClient) {
     this.origKeys = origKeys;
   });
 
-  await evaluateJSAndCheckResult(consoleClient, "keys('>o_/')", {
-    from: consoleClient.actor,
+  await evaluateJSAndCheckResult(webConsoleFront, "keys('>o_/')", {
+    from: webConsoleFront.actor,
     result: "bang!",
   });
 
-  await evaluateJSAndCheckResult(consoleClient, "keys({foo: 'bar'})", {
-    from: consoleClient.actor,
+  await evaluateJSAndCheckResult(webConsoleFront, "keys({foo: 'bar'})", {
+    from: webConsoleFront.actor,
     result: {
       class: "Array",
       preview: {
@@ -109,13 +109,13 @@ async function wrapCommand(consoleClient) {
   });
 }
 
-async function unregisterCommand(consoleClient) {
+async function unregisterCommand(webConsoleFront) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     this.WebConsoleCommands.unregister("setFoo");
   });
 
-  await evaluateJSAndCheckResult(consoleClient, "setFoo", {
-    from: consoleClient.actor,
+  await evaluateJSAndCheckResult(webConsoleFront, "setFoo", {
+    from: webConsoleFront.actor,
     input: "setFoo",
     result: {
       type: "undefined",
@@ -124,7 +124,7 @@ async function unregisterCommand(consoleClient) {
   });
 }
 
-async function registerAccessor(consoleClient) {
+async function registerAccessor(webConsoleFront) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     this.WebConsoleCommands.register("$foo", {
       get(owner) {
@@ -135,8 +135,8 @@ async function registerAccessor(consoleClient) {
   });
 
   const command = "$foo.textContent = '>o_/'";
-  await evaluateJSAndCheckResult(consoleClient, command, {
-    from: consoleClient.actor,
+  await evaluateJSAndCheckResult(webConsoleFront, command, {
+    from: webConsoleFront.actor,
     input: command,
     result: ">o_/",
   });
@@ -155,13 +155,13 @@ async function registerAccessor(consoleClient) {
   });
 }
 
-async function unregisterAfterOverridingTwice(consoleClient) {
+async function unregisterAfterOverridingTwice(webConsoleFront) {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     this.WebConsoleCommands.register("keys", (owner, obj) => "command 1");
   });
 
   info("checking the value of the first override");
-  await evaluateJSAndCheckResult(consoleClient, "keys('foo');", {
+  await evaluateJSAndCheckResult(webConsoleFront, "keys('foo');", {
     result: "command 1",
   });
 
@@ -176,10 +176,10 @@ async function unregisterAfterOverridingTwice(consoleClient) {
   });
 
   info("checking the values after the second override");
-  await evaluateJSAndCheckResult(consoleClient, "keys({});", {
+  await evaluateJSAndCheckResult(webConsoleFront, "keys({});", {
     result: "command 1",
   });
-  await evaluateJSAndCheckResult(consoleClient, "keys('quack');", {
+  await evaluateJSAndCheckResult(webConsoleFront, "keys('quack');", {
     result: "bang!",
   });
 
@@ -191,7 +191,7 @@ async function unregisterAfterOverridingTwice(consoleClient) {
     "checking the value after unregistration (should restore " +
       "the original command)"
   );
-  await evaluateJSAndCheckResult(consoleClient, "keys({});", {
+  await evaluateJSAndCheckResult(webConsoleFront, "keys({});", {
     result: {
       class: "Array",
       preview: { items: [] },
