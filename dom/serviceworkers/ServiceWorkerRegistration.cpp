@@ -240,7 +240,25 @@ already_AddRefed<Promise> ServiceWorkerRegistration::Update(ErrorResult& aRv) {
   mInner->Update(
       [outer, self](const ServiceWorkerRegistrationDescriptor& aDesc) {
         nsIGlobalObject* global = self->GetParentObject();
-        MOZ_DIAGNOSTIC_ASSERT(global);
+        // It's possible this binding was detached from the global.  In cases
+        // where we use IPC with Promise callbacks, we use
+        // DOMMozPromiseRequestHolder in order to auto-disconnect the promise
+        // that would hold these callbacks.  However in bug 1466681 we changed
+        // this call to use (synchronous) callbacks because the use of
+        // MozPromise introduced an additional runnable scheduling which made
+        // it very difficult to maintain ordering required by the standard.
+        //
+        // If we were to delete this actor at the time of DETH detaching, we
+        // would not need to do this check because the IPC callback of the
+        // RemoteServiceWorkerRegistrationImpl lambdas would never occur.
+        // However, its actors currently depend on asking the parent to delete
+        // the actor for us.  Given relaxations in the IPC lifecyle, we could
+        // potentially issue a direct termination, but that requires additional
+        // evaluation.
+        if (!global) {
+          outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+          return;
+        }
         RefPtr<ServiceWorkerRegistration> ref =
             global->GetOrCreateServiceWorkerRegistration(aDesc);
         if (!ref) {
