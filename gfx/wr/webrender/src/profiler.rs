@@ -55,6 +55,7 @@ const GRAPH_FRAME_HEIGHT: f32 = 16.0;
 const PROFILE_PADDING: f32 = 8.0;
 
 const ONE_SECOND_NS: u64 = 1000000000;
+const AVERAGE_OVER_NS: u64 = ONE_SECOND_NS / 2;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ProfileStyle {
@@ -222,6 +223,114 @@ impl ProfileCounter for IntProfileCounter {
 
     fn is_expected(&self) -> bool {
         self.expect.as_ref().map(|range| range.contains(&self.value)).unwrap_or(true)
+    }
+}
+
+/// A profile counter recording average and maximum integer values over time slices
+/// of half a second.
+#[derive(Clone)]
+pub struct AverageIntProfileCounter {
+    description: &'static str,
+    /// Start of the current time slice.
+    start_ns: u64,
+    /// Sum of the values recorded during the current time slice.
+    sum: u64,
+    /// Number of samples in the current time slice.
+    num_samples: u64,
+    /// The max value in in-progress time slice.
+    next_max: u64,
+    /// The max value of the previous time slice (displayed).
+    max: u64,
+    /// The average value of the previous time slice (displayed). 
+    avg: u64,
+    /// Intermediate accumulator for `add` and `inc`.
+    accum: u64,
+    /// Expected average range of values, if any.
+    expect_avg: Option<Range<u64>>,
+    /// Expected maximum range of values, if any.
+    expect_max: Option<Range<u64>>,
+}
+
+impl AverageIntProfileCounter {
+    pub fn new(
+        description: &'static str,
+        expect_avg: Option<Range<u64>>,
+        expect_max: Option<Range<u64>>,
+    ) -> Self {
+        AverageIntProfileCounter {
+            description,
+            start_ns: precise_time_ns(),
+            sum: 0,
+            num_samples: 0,
+            next_max: 0,
+            max: 0,
+            avg: 0,
+            accum: 0,
+            expect_avg,
+            expect_max,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        if self.accum > 0 {
+            self.set_u64(self.accum);
+            self.accum = 0;
+        }
+    }
+
+    pub fn set(&mut self, val: usize) {
+        self.set_u64(val as u64);
+    }
+
+    pub fn set_u64(&mut self, val: u64) {
+        let now = precise_time_ns();
+        if (now - self.start_ns) > AVERAGE_OVER_NS && self.num_samples > 0 {
+            self.avg = self.sum / self.num_samples;
+            self.max = self.next_max;
+            self.start_ns = now;
+            self.sum = 0;
+            self.num_samples = 0;
+            self.next_max = 0;
+        }
+        self.next_max = self.next_max.max(val);
+        self.sum += val;
+        self.num_samples += 1;
+        self.accum = 0;
+    }
+
+    pub fn add(&mut self, val: usize) {
+        self.accum += val as u64;
+    }
+
+    pub fn inc(&mut self) {
+        self.accum += 1;
+    }
+
+    /// Returns either the most up to date value if the counter is updated
+    /// with add add inc, or the average over the previous time slice.
+    pub fn get(&self) -> usize {
+        let result = if self.accum != 0 {
+            self.accum
+        } else {
+            self.avg
+        };
+
+        result as usize
+    }
+}
+
+impl ProfileCounter for AverageIntProfileCounter {
+    fn description(&self) -> &'static str {
+        self.description
+    }
+
+    fn value(&self) -> String {
+        format!("{:.2} (max {:.2})", self.avg, self.max)
+    }
+
+    fn is_expected(&self) -> bool {
+        self.expect_avg.as_ref().map(|range| range.contains(&self.avg)).unwrap_or(true)
+            && self.expect_max.as_ref().map(|range| range.contains(&self.max)).unwrap_or(true)
     }
 }
 
