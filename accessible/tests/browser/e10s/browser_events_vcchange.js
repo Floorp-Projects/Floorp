@@ -8,11 +8,15 @@ addAccessibleTask(
   `
   <p id="p1">abc</p>
   <input id="input1" value="input" />`,
-  async function(browser, accDoc) {
-    await loadContentScripts(browser, "Common.jsm");
-    let onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
-    await SpecialPowers.spawn(browser, [], () => {
-      const { CommonUtils } = content;
+  async function(browser) {
+    let onVCChanged = waitForEvent(
+      EVENT_VIRTUALCURSOR_CHANGED,
+      matchContentDoc
+    );
+    await invokeContentTask(browser, [], () => {
+      const { CommonUtils } = ChromeUtils.import(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
+      );
       let vc = CommonUtils.getAccessible(
         content.document,
         Ci.nsIAccessibleDocument
@@ -25,7 +29,6 @@ addAccessibleTask(
         content.document
       );
     });
-
     let vccEvent = (await onVCChanged).QueryInterface(
       nsIAccessibleVirtualCursorChangeEvent
     );
@@ -34,9 +37,12 @@ addAccessibleTask(
     is(vccEvent.newEndOffset, -1, "New end offset is correct");
     ok(!vccEvent.isFromUserInput, "not user initiated");
 
-    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
-    await SpecialPowers.spawn(browser, [], () => {
-      let vc = content.CommonUtils.getAccessible(
+    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, matchContentDoc);
+    await invokeContentTask(browser, [], () => {
+      const { CommonUtils } = ChromeUtils.import(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
+      );
+      let vc = CommonUtils.getAccessible(
         content.document,
         Ci.nsIAccessibleDocument
       ).virtualCursor;
@@ -50,9 +56,11 @@ addAccessibleTask(
     is(vccEvent.newEndOffset, 1, "New end offset is correct");
     ok(vccEvent.isFromUserInput, "user initiated");
 
-    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
-    await SpecialPowers.spawn(browser, [], () => {
-      const { CommonUtils } = content;
+    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, matchContentDoc);
+    await invokeContentTask(browser, [], () => {
+      const { CommonUtils } = ChromeUtils.import(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
+      );
       let vc = CommonUtils.getAccessible(
         content.document,
         Ci.nsIAccessibleDocument
@@ -74,5 +82,6 @@ addAccessibleTask(
     is(vccEvent.newStartOffset, -1, "New start offset is correct");
     is(vccEvent.newEndOffset, -1, "New end offset is correct");
     ok(!vccEvent.isFromUserInput, "not user initiated");
-  }
+  },
+  { iframe: true }
 );
