@@ -2085,8 +2085,13 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     rawDoc.dontWarnAboutMutationEventsAndAllowSlowDOMMutations = origFlag;
   },
 
-  _breakOnMutation: function(bpType) {
-    this.targetActor.threadActor.pauseForMutationBreakpoint(bpType);
+  _breakOnMutation: function(mutationType, targetNode, ancestorNode, action) {
+    this.targetActor.threadActor.pauseForMutationBreakpoint(
+      mutationType,
+      targetNode,
+      ancestorNode,
+      action
+    );
   },
 
   _mutationBreakpointsForDoc(rawDoc, createIfNeeded = false) {
@@ -2116,7 +2121,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   onNodeInserted: function(evt) {
-    this.onSubtreeModified(evt);
+    this.onSubtreeModified(evt, "add");
   },
 
   onNodeRemoved: function(evt) {
@@ -2126,25 +2131,25 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._clearMutationBreakpointsFromSubtree(evt.target);
 
     if (hasNodeRemovalEvent) {
-      this._breakOnMutation("nodeRemoved");
+      this._breakOnMutation("nodeRemoved", evt.target);
     } else {
-      this.onSubtreeModified(evt);
+      this.onSubtreeModified(evt, "remove");
     }
   },
 
   onAttributeModified: function(evt) {
     const mutationBpInfo = this._breakpointInfoForNode(evt.target);
     if (mutationBpInfo && mutationBpInfo.attribute) {
-      this._breakOnMutation("attributeModified");
+      this._breakOnMutation("attributeModified", evt.target);
     }
   },
 
-  onSubtreeModified: function(evt) {
+  onSubtreeModified: function(evt, action) {
     let node = evt.target;
     while ((node = node.parentNode) !== null) {
       const mutationBpInfo = this._breakpointInfoForNode(node);
       if (mutationBpInfo && mutationBpInfo.subtree) {
-        this._breakOnMutation("subtreeModified");
+        this._breakOnMutation("subtreeModified", evt.target, node, action);
         break;
       }
     }
