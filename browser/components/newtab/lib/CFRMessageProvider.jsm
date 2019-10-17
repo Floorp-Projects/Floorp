@@ -129,9 +129,7 @@ const CFR_MESSAGES = [
       layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
-      notification_text: {
-        string_id: "cfr-doorhanger-extension-notification2",
-      },
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
       heading_text: { string_id: "cfr-doorhanger-extension-heading" },
       info_icon: {
         label: { string_id: "cfr-doorhanger-extension-sumo-link" },
@@ -200,9 +198,7 @@ const CFR_MESSAGES = [
       layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
-      notification_text: {
-        string_id: "cfr-doorhanger-extension-notification2",
-      },
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
       heading_text: { string_id: "cfr-doorhanger-extension-heading" },
       info_icon: {
         label: { string_id: "cfr-doorhanger-extension-sumo-link" },
@@ -272,9 +268,7 @@ const CFR_MESSAGES = [
       layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
-      notification_text: {
-        string_id: "cfr-doorhanger-extension-notification2",
-      },
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
       heading_text: { string_id: "cfr-doorhanger-extension-heading" },
       info_icon: {
         label: { string_id: "cfr-doorhanger-extension-sumo-link" },
@@ -345,9 +339,7 @@ const CFR_MESSAGES = [
       layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
-      notification_text: {
-        string_id: "cfr-doorhanger-extension-notification2",
-      },
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
       heading_text: { string_id: "cfr-doorhanger-extension-heading" },
       info_icon: {
         label: { string_id: "cfr-doorhanger-extension-sumo-link" },
@@ -421,9 +413,7 @@ const CFR_MESSAGES = [
       layout: "addon_recommendation",
       category: "cfrAddons",
       bucket_id: "CFR_M1",
-      notification_text: {
-        string_id: "cfr-doorhanger-extension-notification2",
-      },
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
       heading_text: { string_id: "cfr-doorhanger-extension-heading" },
       info_icon: {
         label: { string_id: "cfr-doorhanger-extension-sumo-link" },
@@ -493,7 +483,7 @@ const CFR_MESSAGES = [
       layout: "message_and_animation",
       category: "cfrFeatures",
       bucket_id: "CFR_PIN_TAB",
-      notification_text: { string_id: "cfr-doorhanger-feature-notification" },
+      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
       heading_text: { string_id: "cfr-doorhanger-pintab-heading" },
       info_icon: {
         label: { string_id: "cfr-doorhanger-extension-sumo-link" },
@@ -607,7 +597,7 @@ const CFR_MESSAGES = [
         sumo_path: "extensionrecommendations",
       },
       notification_text: {
-        string_id: "cfr-doorhanger-feature-notification",
+        string_id: "cfr-doorhanger-extension-notification",
       },
       category: "cfrFeatures",
     },
