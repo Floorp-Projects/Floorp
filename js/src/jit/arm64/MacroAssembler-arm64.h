@@ -1843,7 +1843,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     Label join;
     testInt32(Equal, ValueOperand(src));
     B(&isInt32, Equal);
-    // is double, move teh bits as is
+    // is double, move the bits as is
     Fmov(dest, ARMRegister(src, 64));
     B(&join);
     bind(&isInt32);
