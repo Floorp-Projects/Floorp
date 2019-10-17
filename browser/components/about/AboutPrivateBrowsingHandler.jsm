@@ -15,7 +15,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 const SHOWN_PREF = "browser.search.separatePrivateDefault.ui.banner.shown";
-const MAX_SEARCH_BANNER_SHOW_COUNT = 5;
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "MAX_SEARCH_BANNER_SHOW_COUNT",
+  "browser.search.separatePrivateDefault.ui.banner.max",
+  0
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
