@@ -1253,9 +1253,6 @@ pref("network.protocol-handler.external.le", false);   // file
 // to override this value.
 pref("network.protocol-handler.expose-all", true);
 
-// Warning for about:networking page
-pref("network.warnOnAboutNetworking", false);
-
 // Example: make IMAP an exposed protocol
 // pref("network.protocol-handler.expose.imap", true);
 
