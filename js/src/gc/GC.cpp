@@ -4698,7 +4698,8 @@ void GCRuntime::getNextSweepGroup() {
   }
 
   if (abortSweepAfterCurrentGroup) {
-    sweepMarkTask.join();
+    joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
+
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
       MOZ_ASSERT(!zone->gcNextGraphComponent);
       zone->setNeedsIncrementalBarrier(false);
@@ -4981,7 +4982,7 @@ static inline void MaybeCheckWeakMapMarking(GCRuntime* gc) {
 
 IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
     JSFreeOp* fop, SliceBudget& budget) {
-  sweepMarkTask.join();
+  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
 
   if (sweepMarkTaskStarted && (sweepMarkResult == NotFinished)) {
     return NotFinished;
@@ -5031,7 +5032,7 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
 
 IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
                                                     SliceBudget& budget) {
-  sweepMarkTask.join();
+  joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
 
   if (sweepMarkTaskStarted && (sweepMarkResult == NotFinished)) {
     return NotFinished;
@@ -5198,6 +5199,11 @@ void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
     task.joinWithLockHeld(locked);
   }
   stats().recordParallelPhase(phase, task.duration());
+}
+
+void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase) {
+  AutoLockHelperThreadState lock;
+  joinTask(task, phase, lock);
 }
 
 void GCRuntime::sweepDebuggerOnMainThread(JSFreeOp* fop) {
@@ -6246,7 +6252,7 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   IncrementalProgress progress = sweepActions->run(args);
 
   if (sweepMarkTaskStarted) {
-    sweepMarkTask.join();
+    joinTask(sweepMarkTask, gcstats::PhaseKind::SWEEP_MARK);
     sweepMarkTaskStarted = false;
     if (sweepMarkResult == NotFinished) {
       progress = NotFinished;
