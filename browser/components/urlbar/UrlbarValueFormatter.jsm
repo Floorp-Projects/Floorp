@@ -38,10 +38,6 @@ class UrlbarValueFormatter {
     this.window.addEventListener("resize", this);
   }
 
-  uninit() {
-    this.window.removeEventListener("resize", this);
-  }
-
   get inputField() {
     return this.urlbarInput.inputField;
   }

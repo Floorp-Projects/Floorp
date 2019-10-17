@@ -40,8 +40,6 @@ var CustomizationHandler = {
     UpdateUrlbarSearchSplitterState();
 
     PlacesToolbarHelper.customizeStart();
-
-    gURLBarHandler.customizeStart();
   },
 
   _afterCustomization() {
@@ -65,7 +63,6 @@ var CustomizationHandler = {
     gBrowser.selectedBrowser.focus();
 
     // Update the urlbar
-    gURLBarHandler.customizeEnd();
     URLBarSetURI();
     UpdateUrlbarSearchSplitterState();
   },
