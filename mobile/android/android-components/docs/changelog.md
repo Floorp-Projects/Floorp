@@ -15,6 +15,12 @@ permalink: /changelog/
 * **browser-menu**
    * Adds the ability to create a BrowserMenuCategory, a menu item that defines a category for other menu items
 
+* **concept-engine**
+   * Adds the setting `forceUserScalableContent`.
+
+* **engine-gecko-nightly**
+   * Implements the setting `forceUserScalableContent`.
+
 # 17.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v16.0.0...v17.0.0)

@@ -78,7 +78,9 @@ class SettingsTest {
             { settings.fontInflationEnabled },
             { settings.fontInflationEnabled = false },
             { settings.fontSizeFactor },
-            { settings.fontSizeFactor = 1.0F }
+            { settings.fontSizeFactor = 1.0F },
+            { settings.forceUserScalableContent },
+            { settings.forceUserScalableContent = true }
         )
     }
 
@@ -118,6 +120,7 @@ class SettingsTest {
         assertFalse(settings.suspendMediaWhenInactive)
         assertNull(settings.fontInflationEnabled)
         assertNull(settings.fontSizeFactor)
+        assertFalse(settings.forceUserScalableContent)
 
         val interceptor: RequestInterceptor = mock()
         val historyTrackingDelegate: HistoryTrackingDelegate = mock()
@@ -150,7 +153,8 @@ class SettingsTest {
             allowAutoplayMedia = false,
             suspendMediaWhenInactive = true,
             fontInflationEnabled = false,
-            fontSizeFactor = 2.0F)
+            fontSizeFactor = 2.0F,
+            forceUserScalableContent = true)
 
         assertFalse(defaultSettings.domStorageEnabled)
         assertFalse(defaultSettings.javascriptEnabled)
@@ -180,5 +184,6 @@ class SettingsTest {
         assertTrue(defaultSettings.suspendMediaWhenInactive)
         assertFalse(defaultSettings.fontInflationEnabled!!)
         assertEquals(2.0F, defaultSettings.fontSizeFactor)
+        assertTrue(defaultSettings.forceUserScalableContent)
     }
 }

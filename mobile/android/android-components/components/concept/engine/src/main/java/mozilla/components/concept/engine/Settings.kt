@@ -169,6 +169,11 @@ abstract class Settings {
      * Setting to control the font size factor. All font sizes will be multiplied by this factor.
      */
     open var fontSizeFactor: Float? by UnsupportedSetting()
+
+    /**
+     * Setting to force the ability to scale the content
+     */
+    open var forceUserScalableContent: Boolean by UnsupportedSetting()
 }
 
 /**
@@ -202,7 +207,8 @@ data class DefaultSettings(
     override var allowAutoplayMedia: Boolean = true,
     override var suspendMediaWhenInactive: Boolean = false,
     override var fontInflationEnabled: Boolean? = null,
-    override var fontSizeFactor: Float? = null
+    override var fontSizeFactor: Float? = null,
+    override var forceUserScalableContent: Boolean = false
 ) : Settings()
 
 class UnsupportedSetting<T> {
