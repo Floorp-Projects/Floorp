@@ -242,6 +242,12 @@ class BaselineFrame {
     flags_ |= RUNNING_IN_INTERPRETER;
     setInterpreterFields(pc);
   }
+  void switchFromJitToInterpreterAtPrologue(JSContext* cx) {
+    MOZ_ASSERT(!cx->isProfilerSamplingEnabled());
+    MOZ_ASSERT(!runningInInterpreter());
+    flags_ |= RUNNING_IN_INTERPRETER;
+    setInterpreterFieldsForPrologue(script());
+  }
 
   // Like switchFromJitToInterpreter, but set the interpreterICEntry_ field to
   // nullptr. Initializing this field requires a binary search on the
@@ -275,7 +281,9 @@ class BaselineFrame {
     setInterpreterFields(script(), pc);
   }
 
-  void setInterpreterFieldsForPrologueBailout(JSScript* script);
+  // Initialize interpreter fields for resuming in the prologue (before the
+  // argument type check ICs).
+  void setInterpreterFieldsForPrologue(JSScript* script);
 
   bool hasReturnValue() const { return flags_ & HAS_RVAL; }
   MutableHandleValue returnValue() {

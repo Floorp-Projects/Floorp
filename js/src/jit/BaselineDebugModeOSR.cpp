@@ -321,7 +321,11 @@ static void PatchBaselineFramesForDebugMode(
             // Resume in the Baseline Interpreter because these callVMs are not
             // present in the new BaselineScript if we recompiled without debug
             // instrumentation.
-            frame.baselineFrame()->switchFromJitToInterpreter(cx, pc);
+            if (kind == RetAddrEntry::Kind::DebugPrologue) {
+              frame.baselineFrame()->switchFromJitToInterpreterAtPrologue(cx);
+            } else {
+              frame.baselineFrame()->switchFromJitToInterpreter(cx, pc);
+            }
             switch (kind) {
               case RetAddrEntry::Kind::DebugTrap:
                 // DebugTrap handling is different from the ones below because
