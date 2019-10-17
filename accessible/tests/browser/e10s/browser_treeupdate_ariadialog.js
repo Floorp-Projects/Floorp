@@ -19,7 +19,7 @@ addAccessibleTask("doc_treeupdate_ariadialog.html", async function(
 
   // Make dialog visible and update its inner content.
   let onShow = waitForEvent(EVENT_SHOW, "dialog");
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.document.getElementById("dialog").style.display = "block";
   });
   await onShow;

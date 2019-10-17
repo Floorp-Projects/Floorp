@@ -9,10 +9,9 @@
 /* global getContentDPR */
 
 async function getContentBoundsForDOMElm(browser, id) {
-  return ContentTask.spawn(browser, id, contentId => {
-    this.ok = ok;
-    return content.Layout.getBoundsForDOMElm(contentId, content.document);
-  });
+  return SpecialPowers.spawn(browser, [id], contentId =>
+    content.Layout.getBoundsForDOMElm(contentId, content.document)
+  );
 }
 
 async function testContentBounds(browser, acc) {
@@ -50,7 +49,7 @@ async function runTests(browser, accDoc) {
   await testContentBounds(browser, p2);
   await testContentBounds(browser, area);
 
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.Layout.zoomDocument(content.document, 2.0);
   });
 

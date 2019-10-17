@@ -41,7 +41,7 @@ async function changeText(browser, id, value, events) {
     })
   );
   // Change text in the subtree.
-  await ContentTask.spawn(browser, [id, value], ([contentId, contentValue]) => {
+  await SpecialPowers.spawn(browser, [id, value], (contentId, contentValue) => {
     content.document.getElementById(
       contentId
     ).firstChild.textContent = contentValue;
@@ -64,10 +64,10 @@ async function changeText(browser, id, value, events) {
 async function removeTextFromInput(browser, id, value, start, end) {
   let onTextRemoved = waitForEvent(EVENT_TEXT_REMOVED, id);
   // Select text and delete it.
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
     [id, start, end],
-    ([contentId, contentStart, contentEnd]) => {
+    (contentId, contentStart, contentEnd) => {
       let el = content.document.getElementById(contentId);
       el.focus();
       el.setSelectionRange(contentStart, contentEnd);
