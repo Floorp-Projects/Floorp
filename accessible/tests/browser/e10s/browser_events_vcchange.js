@@ -8,27 +8,14 @@ addAccessibleTask(
   `
   <p id="p1">abc</p>
   <input id="input1" value="input" />`,
-  async function(browser) {
-    let onVCChanged = waitForEvent(
-      EVENT_VIRTUALCURSOR_CHANGED,
-      matchContentDoc
-    );
-    await invokeContentTask(browser, [], () => {
-      const { CommonUtils } = ChromeUtils.import(
-        "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
-      );
-      let vc = CommonUtils.getAccessible(
-        content.document,
-        Ci.nsIAccessibleDocument
-      ).virtualCursor;
-      vc.position = CommonUtils.getAccessible(
-        "p1",
-        null,
-        null,
-        null,
-        content.document
-      );
+  async function(browser, accDoc) {
+    let onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
+    await ContentTask.spawn(browser, null, () => {
+      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument)
+        .virtualCursor;
+      vc.position = getAccessible("p1");
     });
+
     let vccEvent = (await onVCChanged).QueryInterface(
       nsIAccessibleVirtualCursorChangeEvent
     );
@@ -37,15 +24,10 @@ addAccessibleTask(
     is(vccEvent.newEndOffset, -1, "New end offset is correct");
     ok(!vccEvent.isFromUserInput, "not user initiated");
 
-    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, matchContentDoc);
-    await invokeContentTask(browser, [], () => {
-      const { CommonUtils } = ChromeUtils.import(
-        "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
-      );
-      let vc = CommonUtils.getAccessible(
-        content.document,
-        Ci.nsIAccessibleDocument
-      ).virtualCursor;
+    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
+    await ContentTask.spawn(browser, null, () => {
+      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument)
+        .virtualCursor;
       vc.moveNextByText(Ci.nsIAccessiblePivot.CHAR_BOUNDARY);
     });
     vccEvent = (await onVCChanged).QueryInterface(
@@ -56,22 +38,11 @@ addAccessibleTask(
     is(vccEvent.newEndOffset, 1, "New end offset is correct");
     ok(vccEvent.isFromUserInput, "user initiated");
 
-    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, matchContentDoc);
-    await invokeContentTask(browser, [], () => {
-      const { CommonUtils } = ChromeUtils.import(
-        "chrome://mochitests/content/browser/accessible/tests/browser/Common.jsm"
-      );
-      let vc = CommonUtils.getAccessible(
-        content.document,
-        Ci.nsIAccessibleDocument
-      ).virtualCursor;
-      vc.position = CommonUtils.getAccessible(
-        "input1",
-        null,
-        null,
-        null,
-        content.document
-      );
+    onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
+    await ContentTask.spawn(browser, null, () => {
+      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument)
+        .virtualCursor;
+      vc.position = getAccessible("input1");
     });
     vccEvent = (await onVCChanged).QueryInterface(
       nsIAccessibleVirtualCursorChangeEvent
@@ -82,6 +53,5 @@ addAccessibleTask(
     is(vccEvent.newStartOffset, -1, "New start offset is correct");
     is(vccEvent.newEndOffset, -1, "New end offset is correct");
     ok(!vccEvent.isFromUserInput, "not user initiated");
-  },
-  { iframe: true }
+  }
 );

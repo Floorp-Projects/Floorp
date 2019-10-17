@@ -149,6 +149,5 @@ addAccessibleTask(
     await runStateTests(browser, accDoc, "checkbox", attributeTests);
     await runStateTests(browser, accDoc, "file", ariaTests);
     await runStateTests(browser, accDoc, "text", extraStateTests);
-  },
-  { iframe: true }
+  }
 );

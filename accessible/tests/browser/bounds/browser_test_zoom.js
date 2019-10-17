@@ -9,9 +9,10 @@
 /* global getContentDPR */
 
 async function getContentBoundsForDOMElm(browser, id) {
-  return SpecialPowers.spawn(browser, [id], contentId =>
-    content.Layout.getBoundsForDOMElm(contentId, content.document)
-  );
+  return ContentTask.spawn(browser, id, contentId => {
+    this.ok = ok;
+    return getBoundsForDOMElm(contentId);
+  });
 }
 
 async function testContentBounds(browser, acc) {
@@ -32,7 +33,7 @@ async function testContentBounds(browser, acc) {
 }
 
 async function runTests(browser, accDoc) {
-  await loadContentScripts(browser, "Layout.jsm");
+  loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
 
   let p1 = findAccessibleChildByID(accDoc, "p1");
   let p2 = findAccessibleChildByID(accDoc, "p2");
@@ -49,8 +50,8 @@ async function runTests(browser, accDoc) {
   await testContentBounds(browser, p2);
   await testContentBounds(browser, area);
 
-  await SpecialPowers.spawn(browser, [], () => {
-    content.Layout.zoomDocument(content.document, 2.0);
+  await ContentTask.spawn(browser, {}, () => {
+    zoomDocument(content.document, 2.0);
   });
 
   await testContentBounds(browser, p1);
