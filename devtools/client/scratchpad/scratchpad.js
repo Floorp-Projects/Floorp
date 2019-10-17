@@ -121,8 +121,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "EnvironmentFront",
-  "devtools/shared/fronts/environment"
+  "EnvironmentClient",
+  "devtools/shared/client/environment-client"
 );
 loader.lazyRequireGetter(
   this,
@@ -2337,8 +2337,8 @@ ScratchpadSidebar.prototype = {
           });
 
           VariablesViewController.attach(this.variablesView, {
-            getEnvironmentFront: grip => {
-              return new EnvironmentFront(
+            getEnvironmentClient: grip => {
+              return new EnvironmentClient(
                 this._scratchpad.debuggerClient,
                 grip
               );
@@ -2350,13 +2350,8 @@ ScratchpadSidebar.prototype = {
               return this._scratchpad.webConsoleClient.longString(actor);
             },
             releaseActor: actor => {
-              const objFront = this._scratchpad.debuggerClient.getFrontByID(
-                actor
-              );
               // Ignore release failure, since the object actor may have been already GC.
-              if (objFront) {
-                objFront.release().catch(() => {});
-              }
+              this._scratchpad.debuggerClient.release(actor).catch(() => {});
             },
           });
         }

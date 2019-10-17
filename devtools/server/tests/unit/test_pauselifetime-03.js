@@ -46,12 +46,11 @@ function test_pause_frame() {
     // Make a bogus request to the grip actor.  Should get
     // unrecognized-packet-type (and not no-such-actor).
     try {
-      const objFront = gClient.getFrontByID(objActor);
-      await objFront.request({ to: objActor, type: "bogusRequest" });
+      await gClient.request({ to: objActor, type: "bogusRequest" });
       ok(false, "bogusRequest should throw");
     } catch (e) {
       ok(true, "bogusRequest thrown");
-      Assert.ok(!!e.match(/unrecognizedPacketType/));
+      Assert.equal(e.error, "unrecognizedPacketType");
     }
     Assert.ok(objClient.valid);
 
@@ -59,12 +58,11 @@ function test_pause_frame() {
       // Now that we've resumed, should get no-such-actor for the
       // same request.
       try {
-        const objFront = gClient.getFrontByID(objActor);
-        await objFront.request({ to: objActor, type: "bogusRequest" });
+        await gClient.request({ to: objActor, type: "bogusRequest" });
         ok(false, "bogusRequest should throw");
       } catch (e) {
         ok(true, "bogusRequest thrown");
-        Assert.ok(!!e.match(/noSuchActor/));
+        Assert.equal(e.error, "noSuchActor");
       }
       Assert.ok(!objClient.valid);
       finishClient(gClient);

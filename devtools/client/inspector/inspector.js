@@ -158,14 +158,7 @@ function Inspector(toolbox) {
       if (!actor) {
         return;
       }
-      const objFront = toolbox.target.client.getFrontByID(actor);
-      if (objFront) {
-        objFront.release();
-        return;
-      }
-
-      // In case there's no object front, use the client's release method.
-      toolbox.target.client.release(actor).catch(() => {});
+      toolbox.target.client.release(actor);
     },
   });
 

@@ -362,12 +362,6 @@ class WebConsoleConnectionProxy {
    */
   releaseActor(actor) {
     if (this.client) {
-      const objFront = this.client.getFrontByID(actor);
-      if (objFront) {
-        objFront.release().catch(() => {});
-        return;
-      }
-      // In case there's no object front, use the client's release method.
       this.client.release(actor).catch(() => {});
     }
   }

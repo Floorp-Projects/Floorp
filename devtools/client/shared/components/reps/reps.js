@@ -3957,51 +3957,40 @@ const {
 function loadItemProperties(item, client, loadedProperties) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
-
   const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
   const promises = [];
   let objectClient;
-  
-  if (value && client && client.getFrontByID) {
-    objectClient = client.getFrontByID(value.actor);
-  }
 
-  const getObjectClient = function() {
-    if (!objectClient) {
-      objectClient = client.createObjectClient(value);
-    }
-
-    return objectClient;
-  }
+  const getObjectClient = () => objectClient || client.createObjectClient(value);
 
   if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
     promises.push(enumIndexedProperties(getObjectClient(), start, end));
   }
-  
+
   if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
     promises.push(enumNonIndexedProperties(getObjectClient(), start, end));
   }
-  
+
   if (shouldLoadItemEntries(item, loadedProperties)) {
     promises.push(enumEntries(getObjectClient(), start, end));
   }
-  
+
   if (shouldLoadItemPrototype(item, loadedProperties)) {
     promises.push(getPrototype(getObjectClient()));
   }
-  
+
   if (shouldLoadItemSymbols(item, loadedProperties)) {
     promises.push(enumSymbols(getObjectClient(), start, end));
   }
-  
+
   if (shouldLoadItemFullText(item, loadedProperties)) {
     promises.push(getFullText(client.createLongStringClient(value), item));
   }
-  
+
   if (shouldLoadItemProxySlots(item, loadedProperties)) {
     promises.push(getProxySlots(getObjectClient()));
   }
-  
+
   return Promise.all(promises).then(mergeResponses);
 }
 
@@ -4101,7 +4090,9 @@ const {
 
 async function enumIndexedProperties(objectClient, start, end) {
   try {
-    const iterator = await objectClient.enumProperties({
+    const {
+      iterator
+    } = await objectClient.enumProperties({
       ignoreNonIndexedProperties: true
     });
     const response = await iteratorSlice(iterator, start, end);
@@ -4114,7 +4105,9 @@ async function enumIndexedProperties(objectClient, start, end) {
 
 async function enumNonIndexedProperties(objectClient, start, end) {
   try {
-    const iterator = await objectClient.enumProperties({
+    const {
+      iterator
+    } = await objectClient.enumProperties({
       ignoreIndexedProperties: true
     });
     const response = await iteratorSlice(iterator, start, end);
@@ -4127,7 +4120,9 @@ async function enumNonIndexedProperties(objectClient, start, end) {
 
 async function enumEntries(objectClient, start, end) {
   try {
-    const iterator = await objectClient.enumEntries();
+    const {
+      iterator
+    } = await objectClient.enumEntries();
     const response = await iteratorSlice(iterator, start, end);
     return response;
   } catch (e) {
@@ -4138,7 +4133,9 @@ async function enumEntries(objectClient, start, end) {
 
 async function enumSymbols(objectClient, start, end) {
   try {
-    const iterator = await objectClient.enumSymbols();
+    const {
+      iterator
+    } = await objectClient.enumSymbols();
     const response = await iteratorSlice(iterator, start, end);
     return response;
   } catch (e) {

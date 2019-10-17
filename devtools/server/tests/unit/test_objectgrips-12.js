@@ -163,16 +163,18 @@ function test_display_string() {
   gThreadFront.once("paused", function(packet) {
     const args = packet.frame.arguments;
 
-    (async function loop() {
+    (function loop() {
       const objClient = gThreadFront.pauseGrip(args.pop());
-      const response = await objClient.getDisplayString();
-      Assert.equal(response.displayString, testCases.pop().output);
-      if (args.length) {
-        loop();
-      } else {
-        await gThreadFront.resume();
-        finishClient(gClient);
-      }
+      objClient.getDisplayString(function({ displayString }) {
+        Assert.equal(displayString, testCases.pop().output);
+        if (args.length) {
+          loop();
+        } else {
+          gThreadFront.resume().then(function() {
+            finishClient(gClient);
+          });
+        }
+      });
     })();
   });
 
