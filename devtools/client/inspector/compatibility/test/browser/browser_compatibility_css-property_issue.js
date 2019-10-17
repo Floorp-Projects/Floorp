@@ -43,19 +43,6 @@ add_task(async function() {
 
   const { panel } = await openCompatibilityView();
 
-  info("Check the content of the issue item");
-  for (const testData of TEST_DATA) {
-    await waitUntil(() =>
-      panel.querySelector(`[data-qa-property=${testData.property}]`)
-    );
-    const issueEl = panel.querySelector(
-      `[data-qa-property=${testData.property}]`
-    );
-    ok(issueEl, `The element for ${testData.property} is displayed`);
-    for (const [key, value] of Object.entries(testData)) {
-      const fieldEl = issueEl.querySelector(`[data-qa-key=${key}]`);
-      ok(fieldEl, `The element for ${key} is displayed`);
-      is(fieldEl.dataset.qaValue, `${value}`, "The value is correct");
-    }
-  }
+  info("Check the content of the issue list");
+  await assertIssueList(panel, TEST_DATA);
 });
