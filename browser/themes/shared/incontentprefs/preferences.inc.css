@@ -547,6 +547,8 @@ button > hbox > label {
   background: none !important;
   min-width: 0;
   min-height: auto;
+  padding-inline: 0;
+  margin-inline: 0 8px;
 }
 
 .dialogFrame {
