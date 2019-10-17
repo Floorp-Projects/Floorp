@@ -706,6 +706,7 @@ function initializeIntlObject(obj, type, lazyData) {
     assert(IsObject(obj), "Non-object passed to initializeIntlObject");
     assert((type === "Collator" && GuardToCollator(obj) !== null) ||
            (type === "DateTimeFormat" && GuardToDateTimeFormat(obj) !== null) ||
+           (type === "ListFormat" && GuardToListFormat(obj) !== null) ||
            (type === "NumberFormat" && GuardToNumberFormat(obj) !== null) ||
            (type === "PluralRules" && GuardToPluralRules(obj) !== null) ||
            (type === "RelativeTimeFormat" && GuardToRelativeTimeFormat(obj) !== null),
@@ -772,8 +773,11 @@ function maybeInternalProperties(internals) {
  */
 function getIntlObjectInternals(obj) {
     assert(IsObject(obj), "getIntlObjectInternals called with non-Object");
-    assert(GuardToCollator(obj) !== null || GuardToDateTimeFormat(obj) !== null ||
-           GuardToNumberFormat(obj) !== null || GuardToPluralRules(obj) !== null ||
+    assert(GuardToCollator(obj) !== null ||
+           GuardToDateTimeFormat(obj) !== null ||
+           GuardToListFormat(obj) !== null ||
+           GuardToNumberFormat(obj) !== null ||
+           GuardToPluralRules(obj) !== null ||
            GuardToRelativeTimeFormat(obj) !== null,
            "getIntlObjectInternals called with non-Intl object");
 
@@ -783,6 +787,7 @@ function getIntlObjectInternals(obj) {
     assert(hasOwn("type", internals), "missing type");
     assert((internals.type === "Collator" && GuardToCollator(obj) !== null) ||
            (internals.type === "DateTimeFormat" && GuardToDateTimeFormat(obj) !== null) ||
+           (internals.type === "ListFormat" && GuardToListFormat(obj) !== null) ||
            (internals.type === "NumberFormat" && GuardToNumberFormat(obj) !== null) ||
            (internals.type === "PluralRules" && GuardToPluralRules(obj) !== null) ||
            (internals.type === "RelativeTimeFormat" && GuardToRelativeTimeFormat(obj) !== null),
@@ -811,10 +816,14 @@ function getInternals(obj) {
         internalProps = resolveCollatorInternals(internals.lazyData);
     else if (type === "DateTimeFormat")
         internalProps = resolveDateTimeFormatInternals(internals.lazyData);
+    else if (type === "ListFormat")
+        internalProps = resolveListFormatInternals(internals.lazyData);
     else if (type === "NumberFormat")
         internalProps = resolveNumberFormatInternals(internals.lazyData);
-    else
+    else if (type === "PluralRules")
         internalProps = resolvePluralRulesInternals(internals.lazyData);
+    else
+        internalProps = resolveRelativeTimeFormatInternals(internals.lazyData);
     setInternalProperties(internals, internalProps);
     return internalProps;
 }

@@ -775,6 +775,12 @@ JS_FRIEND_API JSObject* js::NewProxyObject(JSContext* cx,
                                            const ProxyOptions& options) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
+
+  // This can be called from the compartment wrap hooks while in a realm with a
+  // gray global. Trigger the read barrier on the global to ensure this is
+  // unmarked.
+  cx->realm()->maybeGlobal();
+
   if (proto_ != TaggedProto::LazyProto) {
     cx->check(proto_);  // |priv| might be cross-compartment.
   }

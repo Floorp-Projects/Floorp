@@ -150,13 +150,13 @@ class DesktopUnittestOutputParser(OutputParser):
                     self.known_fail_count = int(summary_match_list[-1])
                 self.log(message, log_level)
                 return  # skip harness check and base parse_single_line
-        harness_match = self.harness_error_re.match(line)
+        harness_match = self.harness_error_re.search(line)
         if harness_match:
             self.warning(' %s' % line)
             self.worst_log_level = self.worst_level(WARNING, self.worst_log_level)
             self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
                                                 levels=TBPL_WORST_LEVEL_TUPLE)
-            full_harness_match = self.full_harness_error_re.match(line)
+            full_harness_match = self.full_harness_error_re.search(line)
             if full_harness_match:
                 r = full_harness_match.group(1)
                 if r == "application crashed":

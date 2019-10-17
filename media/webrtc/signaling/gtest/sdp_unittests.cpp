@@ -3292,9 +3292,10 @@ TEST_P(NewSdpTest, CheckSimulcast) {
   ASSERT_EQ(2U, simulcast.recvVersions.size());
   ASSERT_EQ(0U, simulcast.sendVersions.size());
   ASSERT_EQ(1U, simulcast.recvVersions[0].choices.size());
-  ASSERT_EQ("bar", simulcast.recvVersions[0].choices[0].rid);
+  ASSERT_EQ("bar", simulcast.recvVersions[0].choices[0]);
   ASSERT_EQ(1U, simulcast.recvVersions[1].choices.size());
-  ASSERT_EQ("bar123", simulcast.recvVersions[1].choices[0].rid);
+  ASSERT_EQ("bar123", simulcast.recvVersions[1].choices[0]);
+  ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid, simulcast.recvVersions.type);
 }
 
 TEST_P(NewSdpTest, CheckSctpmap) {
@@ -4830,19 +4831,19 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionSerialize)
   std::ostringstream os;
 
   SdpSimulcastAttribute::Version version;
-  version.choices.push_back(SdpSimulcastAttribute::Encoding("8", false));
+  version.choices.push_back("8");
   version.Serialize(os);
   ASSERT_EQ("8", os.str());
   os.str("");
 
-  version.choices.push_back(SdpSimulcastAttribute::Encoding("9", true));
+  version.choices.push_back("9");
   version.Serialize(os);
-  ASSERT_EQ("8,~9", os.str());
+  ASSERT_EQ("8,9", os.str());
   os.str("");
 
-  version.choices.push_back(SdpSimulcastAttribute::Encoding("0", false));
+  version.choices.push_back("0");
   version.Serialize(os);
-  ASSERT_EQ("8,~9,0", os.str());
+  ASSERT_EQ("8,9,0", os.str());
   os.str("");
 }
 
@@ -4862,17 +4863,14 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionValidParse)
   {
     SdpSimulcastAttribute::Version version(ParseSimulcastVersion("1"));
     ASSERT_EQ(1U, version.choices.size());
-    ASSERT_EQ("1", version.choices[0].rid);
-    ASSERT_FALSE(version.choices[0].paused);
+    ASSERT_EQ("1", version.choices[0]);
   }
 
   {
-    SdpSimulcastAttribute::Version version(ParseSimulcastVersion("1,~2"));
+    SdpSimulcastAttribute::Version version(ParseSimulcastVersion("1,2"));
     ASSERT_EQ(2U, version.choices.size());
-    ASSERT_EQ("1", version.choices[0].rid);
-    ASSERT_EQ("2", version.choices[1].rid);
-    ASSERT_FALSE(version.choices[0].paused);
-    ASSERT_TRUE(version.choices[1].paused);
+    ASSERT_EQ("1", version.choices[0]);
+    ASSERT_EQ("2", version.choices[1]);
   }
 }
 
@@ -4893,28 +4891,32 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionsSerialize)
   std::ostringstream os;
 
   SdpSimulcastAttribute::Versions versions;
+  versions.type = SdpSimulcastAttribute::Versions::kPt;
   versions.push_back(SdpSimulcastAttribute::Version());
-  versions.back().choices.push_back(
-      SdpSimulcastAttribute::Encoding("8", false));
+  versions.back().choices.push_back("8");
   versions.Serialize(os);
-  ASSERT_EQ("8", os.str());
+  ASSERT_EQ("pt=8", os.str());
+  os.str("");
+
+  versions.type = SdpSimulcastAttribute::Versions::kRid;
+  versions.Serialize(os);
+  ASSERT_EQ("rid=8", os.str());
   os.str("");
 
   versions.push_back(SdpSimulcastAttribute::Version());
   versions.Serialize(os);
-  ASSERT_EQ("8", os.str());
+  ASSERT_EQ("rid=8", os.str());
   os.str("");
 
-  versions.back().choices.push_back(SdpSimulcastAttribute::Encoding("9", true));
+  versions.back().choices.push_back("9");
   versions.Serialize(os);
-  ASSERT_EQ("8;~9", os.str());
+  ASSERT_EQ("rid=8;9", os.str());
   os.str("");
 
   versions.push_back(SdpSimulcastAttribute::Version());
-  versions.back().choices.push_back(
-      SdpSimulcastAttribute::Encoding("0", false));
+  versions.back().choices.push_back("0");
   versions.Serialize(os);
-  ASSERT_EQ("8;~9;0", os.str());
+  ASSERT_EQ("rid=8;9;0", os.str());
   os.str("");
 }
 
@@ -4932,34 +4934,66 @@ static SdpSimulcastAttribute::Versions ParseSimulcastVersions(
 TEST(NewSdpTestNoFixture, CheckSimulcastVersionsValidParse)
 {
   {
+    SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("pt=8"));
+    ASSERT_EQ(1U, versions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt, versions.type);
+    ASSERT_EQ(1U, versions[0].choices.size());
+    ASSERT_EQ("8", versions[0].choices[0]);
+  }
+
+  {
+    SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("rid=8"));
+    ASSERT_EQ(1U, versions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid, versions.type);
+    ASSERT_EQ(1U, versions[0].choices.size());
+    ASSERT_EQ("8", versions[0].choices[0]);
+  }
+
+  {
     SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("8"));
     ASSERT_EQ(1U, versions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid, versions.type);
     ASSERT_EQ(1U, versions[0].choices.size());
-    ASSERT_EQ("8", versions[0].choices[0].rid);
-    ASSERT_FALSE(versions[0].choices[0].paused);
+    ASSERT_EQ("8", versions[0].choices[0]);
   }
 
   {
-    SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("~8,9"));
+    SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("pt=8,9"));
     ASSERT_EQ(1U, versions.size());
     ASSERT_EQ(2U, versions[0].choices.size());
-    ASSERT_EQ("8", versions[0].choices[0].rid);
-    ASSERT_EQ("9", versions[0].choices[1].rid);
-    ASSERT_TRUE(versions[0].choices[0].paused);
-    ASSERT_FALSE(versions[0].choices[1].paused);
+    ASSERT_EQ("8", versions[0].choices[0]);
+    ASSERT_EQ("9", versions[0].choices[1]);
   }
 
   {
-    SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("8,9;~10"));
+    SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("8,9"));
+    ASSERT_EQ(1U, versions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid, versions.type);
+    ASSERT_EQ(2U, versions[0].choices.size());
+    ASSERT_EQ("8", versions[0].choices[0]);
+    ASSERT_EQ("9", versions[0].choices[1]);
+  }
+
+  {
+    SdpSimulcastAttribute::Versions versions(
+        ParseSimulcastVersions("pt=8,9;10"));
     ASSERT_EQ(2U, versions.size());
     ASSERT_EQ(2U, versions[0].choices.size());
-    ASSERT_EQ("8", versions[0].choices[0].rid);
-    ASSERT_EQ("9", versions[0].choices[1].rid);
-    ASSERT_FALSE(versions[0].choices[0].paused);
-    ASSERT_FALSE(versions[0].choices[1].paused);
+    ASSERT_EQ("8", versions[0].choices[0]);
+    ASSERT_EQ("9", versions[0].choices[1]);
     ASSERT_EQ(1U, versions[1].choices.size());
-    ASSERT_EQ("10", versions[1].choices[0].rid);
-    ASSERT_TRUE(versions[1].choices[0].paused);
+    ASSERT_EQ("10", versions[1].choices[0]);
+  }
+
+  {
+    SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("8,9;10"));
+    ASSERT_EQ(2U, versions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid, versions.type);
+    ASSERT_EQ(2U, versions[0].choices.size());
+    ASSERT_EQ("8", versions[0].choices[0]);
+    ASSERT_EQ("9", versions[0].choices[1]);
+    ASSERT_EQ(1U, versions[1].choices.size());
+    ASSERT_EQ("10", versions[1].choices[0]);
   }
 }
 
@@ -4967,8 +5001,14 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionsInvalidParse)
 {
   ParseInvalid<SdpSimulcastAttribute::Versions>("", 0);
   ParseInvalid<SdpSimulcastAttribute::Versions>(";", 0);
-  ParseInvalid<SdpSimulcastAttribute::Versions>("8;", 2);
-  ParseInvalid<SdpSimulcastAttribute::Versions>("8;;", 2);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("foo=", 4);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("foo=8", 4);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("pt=9999", 7);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("pt=-1", 5);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("pt=x", 4);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("pt=8;", 5);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("pt=8;x", 6);
+  ParseInvalid<SdpSimulcastAttribute::Versions>("pt=8;;", 5);
 }
 
 TEST(NewSdpTestNoFixture, CheckSimulcastSerialize)
@@ -4976,18 +5016,18 @@ TEST(NewSdpTestNoFixture, CheckSimulcastSerialize)
   std::ostringstream os;
 
   SdpSimulcastAttribute simulcast;
+  simulcast.recvVersions.type = SdpSimulcastAttribute::Versions::kRid;
   simulcast.recvVersions.push_back(SdpSimulcastAttribute::Version());
-  simulcast.recvVersions.back().choices.push_back(
-      SdpSimulcastAttribute::Encoding("8", false));
+  simulcast.recvVersions.back().choices.push_back("8");
   simulcast.Serialize(os);
-  ASSERT_EQ("a=simulcast:recv 8" CRLF, os.str());
+  ASSERT_EQ("a=simulcast: recv rid=8" CRLF, os.str());
   os.str("");
 
+  simulcast.sendVersions.type = SdpSimulcastAttribute::Versions::kRid;
   simulcast.sendVersions.push_back(SdpSimulcastAttribute::Version());
-  simulcast.sendVersions.back().choices.push_back(
-      SdpSimulcastAttribute::Encoding("9", true));
+  simulcast.sendVersions.back().choices.push_back("9");
   simulcast.Serialize(os);
-  ASSERT_EQ("a=simulcast:send ~9 recv 8" CRLF, os.str());
+  ASSERT_EQ("a=simulcast: send rid=9 recv rid=8" CRLF, os.str());
 }
 
 static SdpSimulcastAttribute ParseSimulcast(const std::string& input) {
@@ -5004,54 +5044,90 @@ TEST(NewSdpTestNoFixture, CheckSimulcastValidParse)
   {
     SdpSimulcastAttribute simulcast(ParseSimulcast("send 8"));
     ASSERT_EQ(1U, simulcast.sendVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid,
+              simulcast.sendVersions.type);
     ASSERT_EQ(1U, simulcast.sendVersions[0].choices.size());
-    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0].rid);
-    ASSERT_FALSE(simulcast.sendVersions[0].choices[0].paused);
+    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0]);
     ASSERT_EQ(0U, simulcast.recvVersions.size());
   }
 
   {
-    SdpSimulcastAttribute simulcast(ParseSimulcast(" SEND 8"));
+    SdpSimulcastAttribute simulcast(ParseSimulcast(" send pt=8"));
     ASSERT_EQ(1U, simulcast.sendVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
+              simulcast.sendVersions.type);
     ASSERT_EQ(1U, simulcast.sendVersions[0].choices.size());
-    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0].rid);
-    ASSERT_FALSE(simulcast.sendVersions[0].choices[0].paused);
+    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0]);
     ASSERT_EQ(0U, simulcast.recvVersions.size());
   }
 
   {
-    SdpSimulcastAttribute simulcast(ParseSimulcast("recv 8"));
+    SdpSimulcastAttribute simulcast(ParseSimulcast(" SEND pt=8"));
+    ASSERT_EQ(1U, simulcast.sendVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
+              simulcast.sendVersions.type);
+    ASSERT_EQ(1U, simulcast.sendVersions[0].choices.size());
+    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0]);
+    ASSERT_EQ(0U, simulcast.recvVersions.size());
+  }
+
+  {
+    SdpSimulcastAttribute simulcast(ParseSimulcast(" recv pt=8"));
     ASSERT_EQ(1U, simulcast.recvVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
+              simulcast.recvVersions.type);
     ASSERT_EQ(1U, simulcast.recvVersions[0].choices.size());
-    ASSERT_EQ("8", simulcast.recvVersions[0].choices[0].rid);
-    ASSERT_FALSE(simulcast.recvVersions[0].choices[0].paused);
+    ASSERT_EQ("8", simulcast.recvVersions[0].choices[0]);
     ASSERT_EQ(0U, simulcast.sendVersions.size());
   }
 
   {
     SdpSimulcastAttribute simulcast(
-        ParseSimulcast("send 8,9;~101;97,~98 recv 101,120;97"));
+        ParseSimulcast("send 8,9;101;97,98 recv 101,120;97"));
     ASSERT_EQ(3U, simulcast.sendVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid,
+              simulcast.sendVersions.type);
     ASSERT_EQ(2U, simulcast.sendVersions[0].choices.size());
-    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0].rid);
-    ASSERT_EQ("9", simulcast.sendVersions[0].choices[1].rid);
-    ASSERT_FALSE(simulcast.sendVersions[0].choices[0].paused);
-    ASSERT_FALSE(simulcast.sendVersions[0].choices[1].paused);
+    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0]);
+    ASSERT_EQ("9", simulcast.sendVersions[0].choices[1]);
     ASSERT_EQ(1U, simulcast.sendVersions[1].choices.size());
-    ASSERT_EQ("101", simulcast.sendVersions[1].choices[0].rid);
-    ASSERT_TRUE(simulcast.sendVersions[1].choices[0].paused);
+    ASSERT_EQ("101", simulcast.sendVersions[1].choices[0]);
     ASSERT_EQ(2U, simulcast.sendVersions[2].choices.size());
-    ASSERT_EQ("97", simulcast.sendVersions[2].choices[0].rid);
-    ASSERT_EQ("98", simulcast.sendVersions[2].choices[1].rid);
-    ASSERT_FALSE(simulcast.sendVersions[2].choices[0].paused);
-    ASSERT_TRUE(simulcast.sendVersions[2].choices[1].paused);
+    ASSERT_EQ("97", simulcast.sendVersions[2].choices[0]);
+    ASSERT_EQ("98", simulcast.sendVersions[2].choices[1]);
 
     ASSERT_EQ(2U, simulcast.recvVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kRid,
+              simulcast.recvVersions.type);
     ASSERT_EQ(2U, simulcast.recvVersions[0].choices.size());
-    ASSERT_EQ("101", simulcast.recvVersions[0].choices[0].rid);
-    ASSERT_EQ("120", simulcast.recvVersions[0].choices[1].rid);
+    ASSERT_EQ("101", simulcast.recvVersions[0].choices[0]);
+    ASSERT_EQ("120", simulcast.recvVersions[0].choices[1]);
     ASSERT_EQ(1U, simulcast.recvVersions[1].choices.size());
-    ASSERT_EQ("97", simulcast.recvVersions[1].choices[0].rid);
+    ASSERT_EQ("97", simulcast.recvVersions[1].choices[0]);
+  }
+  {
+    SdpSimulcastAttribute simulcast(
+        ParseSimulcast(" send pt=8,9;101;97,98 recv pt=101,120;97"));
+    ASSERT_EQ(3U, simulcast.sendVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
+              simulcast.sendVersions.type);
+    ASSERT_EQ(2U, simulcast.sendVersions[0].choices.size());
+    ASSERT_EQ("8", simulcast.sendVersions[0].choices[0]);
+    ASSERT_EQ("9", simulcast.sendVersions[0].choices[1]);
+    ASSERT_EQ(1U, simulcast.sendVersions[1].choices.size());
+    ASSERT_EQ("101", simulcast.sendVersions[1].choices[0]);
+    ASSERT_EQ(2U, simulcast.sendVersions[2].choices.size());
+    ASSERT_EQ("97", simulcast.sendVersions[2].choices[0]);
+    ASSERT_EQ("98", simulcast.sendVersions[2].choices[1]);
+
+    ASSERT_EQ(2U, simulcast.recvVersions.size());
+    ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
+              simulcast.recvVersions.type);
+    ASSERT_EQ(2U, simulcast.recvVersions[0].choices.size());
+    ASSERT_EQ("101", simulcast.recvVersions[0].choices[0]);
+    ASSERT_EQ("120", simulcast.recvVersions[0].choices[1]);
+    ASSERT_EQ(1U, simulcast.recvVersions[1].choices.size());
+    ASSERT_EQ("97", simulcast.recvVersions[1].choices[0]);
   }
 }
 
@@ -5060,8 +5136,8 @@ TEST(NewSdpTestNoFixture, CheckSimulcastInvalidParse)
   ParseInvalid<SdpSimulcastAttribute>("", 0);
   ParseInvalid<SdpSimulcastAttribute>(" ", 1);
   ParseInvalid<SdpSimulcastAttribute>("vcer ", 4);
-  ParseInvalid<SdpSimulcastAttribute>(" send 8 send ", 12);
-  ParseInvalid<SdpSimulcastAttribute>(" recv 8 recv ", 12);
+  ParseInvalid<SdpSimulcastAttribute>(" send pt=8 send ", 15);
+  ParseInvalid<SdpSimulcastAttribute>(" recv pt=8 recv ", 15);
 }
 
 static SdpRidAttributeList::Rid ParseRid(const std::string& input) {

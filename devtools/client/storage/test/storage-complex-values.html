@@ -10,8 +10,8 @@ Bug 970517 - Storage inspector front end - tests
 <body>
 <script type="application/javascript">
 "use strict";
-let partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
-let cookieExpiresTime = 2000000000000;
+const partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
+const cookieExpiresTime = 2000000000000;
 // Setting up some cookies to eat.
 document.cookie = "c1=" + JSON.stringify([
   "foo", "Bar", {
@@ -38,24 +38,24 @@ sessionStorage.setItem("ss3", "this#is~an#object~foo#bar");
 sessionStorage.setItem("ss4", "#array##with#empty#items");
 // long string that is almost an object and might trigger exponential
 // regexp backtracking
-let s = "a".repeat(1000);
+const s = "a".repeat(1000);
 sessionStorage.setItem("ss5", `${s}=${s}=${s}=${s}&${s}=${s}&${s}`);
 console.log("added cookies and stuff from main page");
 
-let idbGenerator = async function () {
+const idbGenerator = async function () {
   let request = indexedDB.open("idb1", 1);
   request.onerror = function() {
     throw new Error("error opening db connection");
   };
-  let db = await new Promise(done => {
+  const db = await new Promise(done => {
     request.onupgradeneeded = event => {
-      let db = event.target.result;
-      let store1 = db.createObjectStore("obj1", { keyPath: "id" });
+      const _db = event.target.result;
+      const store1 = _db.createObjectStore("obj1", { keyPath: "id" });
       store1.createIndex("name", "name", { unique: false });
       store1.createIndex("email", "email", { unique: true });
-      db.createObjectStore("obj2", { keyPath: "id2" });
+      _db.createObjectStore("obj2", { keyPath: "id2" });
       store1.transaction.oncomplete = () => {
-        done(db);
+        done(_db);
       };
     };
   });
@@ -65,9 +65,9 @@ let idbGenerator = async function () {
     request.onsuccess = done;
   });
 
-  let transaction = db.transaction(["obj1", "obj2"], "readwrite");
-  let store1 = transaction.objectStore("obj1");
-  let store2 = transaction.objectStore("obj2");
+  const transaction = db.transaction(["obj1", "obj2"], "readwrite");
+  const store1 = transaction.objectStore("obj1");
+  const store2 = transaction.objectStore("obj2");
 
   store1.add({id: 1, name: "foo", email: "foo@bar.com"});
   store1.add({id: 2, name: "foo2", email: "foo2@bar.com"});
@@ -81,13 +81,13 @@ let idbGenerator = async function () {
   db.close();
 
   request = indexedDB.open("idb2", 1);
-  let db2 = await new Promise(done => {
+  const db2 = await new Promise(done => {
     request.onupgradeneeded = event => {
-      let db2 = event.target.result;
-      let store3 = db2.createObjectStore("obj3", { keyPath: "id3" });
+      const _db2 = event.target.result;
+      const store3 = _db2.createObjectStore("obj3", { keyPath: "id3" });
       store3.createIndex("name2", "name2", { unique: true });
       store3.transaction.oncomplete = () => {
-        done(db2);
+        done(_db2);
       };
     };
   });

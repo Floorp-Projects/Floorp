@@ -246,7 +246,7 @@ raptor-tp6m-1-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-1
+            - --test=raptor-tp6m-1-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -259,7 +259,7 @@ raptor-tp6m-2-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-2
+            - --test=raptor-tp6m-2-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -271,7 +271,7 @@ raptor-tp6m-3-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-3
+            - --test=raptor-tp6m-3-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -283,7 +283,7 @@ raptor-tp6m-4-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-4
+            - --test=raptor-tp6m-4-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -295,7 +295,7 @@ raptor-tp6m-5-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-5
+            - --test=raptor-tp6m-5-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -307,7 +307,7 @@ raptor-tp6m-6-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-6
+            - --test=raptor-tp6m-6-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -319,7 +319,7 @@ raptor-tp6m-7-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-7
+            - --test=raptor-tp6m-7-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -331,7 +331,7 @@ raptor-tp6m-8-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-8
+            - --test=raptor-tp6m-8-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -343,7 +343,7 @@ raptor-tp6m-9-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-9
+            - --test=raptor-tp6m-9-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -355,7 +355,7 @@ raptor-tp6m-10-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-10
+            - --test=raptor-tp6m-10-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -367,7 +367,7 @@ raptor-tp6m-11-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-11
+            - --test=raptor-tp6m-11-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -379,7 +379,7 @@ raptor-tp6m-12-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-12
+            - --test=raptor-tp6m-12-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -391,7 +391,7 @@ raptor-tp6m-13-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-13
+            - --test=raptor-tp6m-13-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -403,7 +403,7 @@ raptor-tp6m-14-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-14
+            - --test=raptor-tp6m-14-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -415,7 +415,7 @@ raptor-tp6m-15-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-15
+            - --test=raptor-tp6m-15-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -427,7 +427,7 @@ raptor-tp6m-16-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-16
+            - --test=raptor-tp6m-16-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -439,7 +439,7 @@ raptor-tp6m-17-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-17
+            - --test=raptor-tp6m-17-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -451,7 +451,7 @@ raptor-tp6m-18-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-18
+            - --test=raptor-tp6m-18-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -463,7 +463,7 @@ raptor-tp6m-19-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-19
+            - --test=raptor-tp6m-19-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -475,7 +475,7 @@ raptor-tp6m-20-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-20
+            - --test=raptor-tp6m-20-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -487,7 +487,7 @@ raptor-tp6m-21-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-21
+            - --test=raptor-tp6m-21-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -499,7 +499,7 @@ raptor-tp6m-22-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-22
+            - --test=raptor-tp6m-22-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -511,7 +511,7 @@ raptor-tp6m-23-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-23
+            - --test=raptor-tp6m-23-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivityy
@@ -523,7 +523,7 @@ raptor-tp6m-24-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-24
+            - --test=raptor-tp6m-24-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -535,7 +535,7 @@ raptor-tp6m-25-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-25
+            - --test=raptor-tp6m-25-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -547,7 +547,7 @@ raptor-tp6m-26-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-26
+            - --test=raptor-tp6m-26-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -559,7 +559,7 @@ raptor-tp6m-27-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-27
+            - --test=raptor-tp6m-27-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity
@@ -571,7 +571,7 @@ raptor-tp6m-28-refbrow-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-28
+            - --test=raptor-tp6m-28-cold
             - --app=refbrow
             - --binary-path=org.mozilla.reference.browser.raptor
             - --activity=org.mozilla.reference.browser.BrowserTestActivity

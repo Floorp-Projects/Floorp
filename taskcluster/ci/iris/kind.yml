@@ -31,6 +31,26 @@ job-defaults:
                 osx.*: build-macosx64-shippable/opt
                 windows10-64.*: build-win64-shippable/opt
     description: Run the iris test suite's {} tests
+    notify:
+        email:
+            by-project:
+                try:
+                    subject: 'Iris Firefox {chunk} has completed a test run for a patch on (try)'
+                    message: A team member has submitted a patch to try and the results are in.
+                    link:
+                        text: Treeherder Job
+                        href: '{th_root}jobs?repo={project}&revision={head_rev}{tiers}{filterstring}'
+                    on-reasons: [any]
+                    emails: [iris@mozilla.com]
+                mozilla-central:
+                    subject: 'Iris Firefox {chunk} tests failed (mozilla-central)'
+                    message: This calls for an action from the QA Automation team. Use the link to view it on Treeherder.
+                    link:
+                        text: Treeherder Job
+                        href: '{th_root}jobs?repo={project}&revision={head_rev}{tiers}{filterstring}'
+                    on-reasons: [failed]
+                    emails: [iris@mozilla.com]
+                default: []
     fetches:
         build:
             by-platform:

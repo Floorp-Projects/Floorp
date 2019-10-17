@@ -936,6 +936,7 @@ class EventCollector {
       let dom0 = false;
       let functionSource = handler.toString();
       let line = 0;
+      let column = null;
       let native = false;
       let url = "";
       let sourceActor = "";
@@ -975,8 +976,8 @@ class EventCollector {
         } else {
           dom0 = false;
         }
-
         line = script.startLine;
+        column = script.startColumn;
         url = script.url;
         const actor = this.targetActor.sources.getOrCreateSourceActor(
           script.source
@@ -1030,7 +1031,11 @@ class EventCollector {
       if (native) {
         origin = "[native code]";
       } else {
-        origin = url + (dom0 || line === 0 ? "" : ":" + line);
+        origin =
+          url +
+          (dom0 || line === 0
+            ? ""
+            : ":" + line + (column === null ? "" : ":" + column));
       }
 
       const eventObj = {

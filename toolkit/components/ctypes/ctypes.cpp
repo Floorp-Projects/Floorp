@@ -20,7 +20,7 @@ namespace ctypes {
 static char* UnicodeToNative(JSContext* cx, const char16_t* source,
                              size_t slen) {
   nsAutoCString native;
-  nsDependentString unicode(reinterpret_cast<const char16_t*>(source), slen);
+  nsDependentSubstring unicode(source, slen);
   nsresult rv = NS_CopyUnicodeToNative(unicode, native);
   if (NS_FAILED(rv)) {
     JS_ReportErrorASCII(cx, "could not convert string to native charset");

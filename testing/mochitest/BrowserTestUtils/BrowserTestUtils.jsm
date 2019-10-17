@@ -1180,16 +1180,14 @@ var BrowserTestUtils = {
    * @param {function} listener
    *        Function to call in parent process when event fires.
    *        Not passed any arguments.
-   * @param {bool} useCapture [optional]
-   *        Whether to use a capturing listener.
+   * @param {object} listenerOptions [optional]
+   *        Options to pass to the event listener.
    * @param {function} checkFn [optional]
    *        Called with the Event object as argument, should return true if the
    *        event is the expected one, or false if it should be ignored and
    *        listening should continue. If not specified, the first event with
    *        the specified name resolves the returned promise. This is called
    *        within the content process and can have no closure environment.
-   * @param {bool} wantsUntrusted [optional]
-   *        Whether to accept untrusted events
    * @param {bool} autoremove [optional]
    *        Whether the listener should be removed when |browser| is removed
    *        from the DOM. Note that, if this flag is true, it won't be possible
@@ -1202,9 +1200,8 @@ var BrowserTestUtils = {
     browser,
     eventName,
     listener,
-    useCapture = false,
+    listenerOptions = {},
     checkFn,
-    wantsUntrusted = false,
     autoremove = true
   ) {
     let id = gListenerId++;
@@ -1217,13 +1214,7 @@ var BrowserTestUtils = {
     // |browser|.
 
     /* eslint-disable no-eval */
-    function frameScript(
-      id,
-      eventName,
-      useCapture,
-      checkFnSource,
-      wantsUntrusted
-    ) {
+    function frameScript(id, eventName, listenerOptions, checkFnSource) {
       let checkFn;
       if (checkFnSource) {
         checkFn = eval(`(() => (${unescape(checkFnSource)}))()`);
@@ -1238,17 +1229,17 @@ var BrowserTestUtils = {
       function removeListener(msg) {
         if (msg.data == id) {
           removeMessageListener("ContentEventListener:Remove", removeListener);
-          removeEventListener(eventName, listener, useCapture, wantsUntrusted);
+          removeEventListener(eventName, listener, listenerOptions);
         }
       }
       addMessageListener("ContentEventListener:Remove", removeListener);
-      addEventListener(eventName, listener, useCapture, wantsUntrusted);
+      addEventListener(eventName, listener, listenerOptions);
     }
     /* eslint-enable no-eval */
 
     let frameScriptSource = `data:,(${frameScript.toString()})(${id}, "${eventName}", ${uneval(
-      useCapture
-    )}, "${checkFnSource}", ${wantsUntrusted})`;
+      listenerOptions
+    )}, "${checkFnSource}")`;
 
     let mm = Services.mm;
 

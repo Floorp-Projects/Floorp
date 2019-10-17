@@ -182,6 +182,12 @@
   value: false
   mirror: always
 
+# Whether the changes in https://github.com/whatwg/html/issues/5002 are in effect.
+- name: accessibility.heading-element-level-changes.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #ifdef ANDROID
   #---------------------------------------------------------------------------
   # Prefs starting with "android."
@@ -4762,7 +4768,7 @@
 # Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 - name: layout.css.grid-template-subgrid-value.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
@@ -5360,6 +5366,12 @@
 
 # Whether to disable deprecated numalign/denomalign/align attributes
 - name: mathml.deprecated_alignment_attributes.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Whether to disable subscriptshift and superscriptshift attributes.
+- name: mathml.script_shift_attributes.disabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
   mirror: always

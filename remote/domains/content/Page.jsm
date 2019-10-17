@@ -58,6 +58,15 @@ class Page extends ContentProcessDomain {
     }
   }
 
+  _viewportRect() {
+    return new DOMRect(
+      this.content.pageXOffset,
+      this.content.pageYOffset,
+      this.content.innerWidth,
+      this.content.innerHeight
+    );
+  }
+
   async navigate({ url, referrer, transitionType, frameId } = {}) {
     if (frameId && frameId != this.content.windowUtils.outerWindowID) {
       throw new UnsupportedError("frameId not supported");

@@ -354,6 +354,15 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
 
   {
     AutoRealm ar(cx, script);
+
+    // All frames running a debuggee script must themselves be marked as
+    // debuggee frames. Bumping a script's generator observer count makes it a
+    // debuggee, so we need to mark all frames on the stack running it as
+    // debuggees as well, not just this one. This call takes care of all that.
+    if (!Debugger::ensureExecutionObservabilityOfScript(cx, script)) {
+      return false;
+    }
+
     if (!DebugScript::incrementGeneratorObserverCount(cx, script)) {
       return false;
     }

@@ -177,7 +177,7 @@ raptor-tp6m-1-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-1
+            - --test=raptor-tp6m-1-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -191,7 +191,7 @@ raptor-tp6m-2-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-2
+            - --test=raptor-tp6m-2-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -205,7 +205,7 @@ raptor-tp6m-3-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-3
+            - --test=raptor-tp6m-3-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -219,7 +219,7 @@ raptor-tp6m-4-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-4
+            - --test=raptor-tp6m-4-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -233,7 +233,7 @@ raptor-tp6m-5-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-5
+            - --test=raptor-tp6m-5-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -247,7 +247,7 @@ raptor-tp6m-6-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-6
+            - --test=raptor-tp6m-6-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -261,7 +261,7 @@ raptor-tp6m-7-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-7
+            - --test=raptor-tp6m-7-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -275,7 +275,7 @@ raptor-tp6m-8-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-8
+            - --test=raptor-tp6m-8-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -289,7 +289,7 @@ raptor-tp6m-9-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-9
+            - --test=raptor-tp6m-9-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -303,7 +303,7 @@ raptor-tp6m-10-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-10
+            - --test=raptor-tp6m-10-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -317,7 +317,7 @@ raptor-tp6m-11-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-11
+            - --test=raptor-tp6m-11-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -331,7 +331,7 @@ raptor-tp6m-12-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-12
+            - --test=raptor-tp6m-12-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -345,7 +345,7 @@ raptor-tp6m-13-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-13
+            - --test=raptor-tp6m-13-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -359,7 +359,7 @@ raptor-tp6m-14-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-14
+            - --test=raptor-tp6m-14-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -373,7 +373,7 @@ raptor-tp6m-15-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-15
+            - --test=raptor-tp6m-15-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -387,7 +387,7 @@ raptor-tp6m-16-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-16
+            - --test=raptor-tp6m-16-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -401,7 +401,7 @@ raptor-tp6m-17-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-17
+            - --test=raptor-tp6m-17-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -415,7 +415,7 @@ raptor-tp6m-18-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-18
+            - --test=raptor-tp6m-18-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -429,7 +429,7 @@ raptor-tp6m-19-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-19
+            - --test=raptor-tp6m-19-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -443,7 +443,7 @@ raptor-tp6m-20-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-20
+            - --test=raptor-tp6m-20-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -457,7 +457,7 @@ raptor-tp6m-21-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-21
+            - --test=raptor-tp6m-21-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -471,7 +471,7 @@ raptor-tp6m-22-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-22
+            - --test=raptor-tp6m-22-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -485,7 +485,7 @@ raptor-tp6m-23-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-23
+            - --test=raptor-tp6m-23-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -499,7 +499,7 @@ raptor-tp6m-24-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-24
+            - --test=raptor-tp6m-24-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -513,7 +513,7 @@ raptor-tp6m-25-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-25
+            - --test=raptor-tp6m-25-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -527,7 +527,7 @@ raptor-tp6m-26-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-26
+            - --test=raptor-tp6m-26-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -541,7 +541,7 @@ raptor-tp6m-27-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-27
+            - --test=raptor-tp6m-27-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
@@ -555,7 +555,7 @@ raptor-tp6m-28-fenix-cold:
     tier: 2
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-28
+            - --test=raptor-tp6m-28-cold
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity

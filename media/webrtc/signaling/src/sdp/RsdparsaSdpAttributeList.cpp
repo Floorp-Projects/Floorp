@@ -892,6 +892,7 @@ SdpSimulcastAttribute::Versions LoadSimulcastVersions(
                              rustVersionArray.get());
 
   SdpSimulcastAttribute::Versions versions;
+  versions.type = SdpSimulcastAttribute::Versions::kRid;
 
   for (size_t i = 0; i < rustVersionCount; i++) {
     const RustSdpAttributeSimulcastVersion& rustVersion = rustVersionArray[i];
@@ -908,8 +909,7 @@ SdpSimulcastAttribute::Versions LoadSimulcastVersions(
       const RustSdpAttributeSimulcastId& rustId = rustIdArray[j];
       std::string id = convertStringView(rustId.id);
       // TODO: Bug 1225877. Added support for 'paused'-state
-      version.choices.push_back(
-          SdpSimulcastAttribute::Encoding(id, rustId.paused));
+      version.choices.push_back(id);
     }
 
     versions.push_back(version);

@@ -19,9 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=522601
 <div id="subdoc">
   <iframe id="frame1" src="file_bug522601.html">frame text</iframe>
 </div>
-<div id="test-shadow">
-  <h2 id="h2">light child</h2>
-</div>
 <pre id="test">
 <script type="application/javascript">
 <![CDATA[
@@ -248,36 +245,6 @@ addLoadEvent(function() {
            "step back to anonymous div");
   testFunc(walkerAnon, "previousNode", $("display"), "step back to root (anon)");
   testFunc(walkerAnon, "previousNode", null, "step back past root (anon)");
-
-  //XXXsmaug update this test for Shadow DOM v1! bug 1421539
-  /*if (Element.prototype.createShadowRoot) {
-    var shadowdiv = document.querySelector('#test-shadow');
-    var shadowRoot = shadowdiv.createShadowRoot();
-    var h = document.createElement("header");
-    var c = document.createElement("content");
-    c.setAttribute("select", "h2");
-    h.appendChild(c);
-    shadowRoot.appendChild(h);
-
-    var walkerShadow =
-        SpecialPowers.Cc["@mozilla.org/inspector/deep-tree-walker;1"]
-                     .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
-    walkerShadow.showAnonymousContent = true;
-    walkerShadow.init($("test-shadow"), NodeFilter.SHOW_ALL);
-    var c1 = walkerShadow.nextNode();
-    var c2 = walkerShadow.nextNode();
-    var c3 = walkerShadow.nextNode();
-
-    walkerShadow.currentNode = c1;
-    is(SpecialPowers.unwrap(walkerShadow.currentNode), h,
-       "Unexpected shadow element 1");
-    walkerShadow.currentNode = c2;
-    is(SpecialPowers.unwrap(walkerShadow.currentNode), $("h2"),
-       "Unexpected shadow element 2");
-    walkerShadow.currentNode = c3;
-    is(SpecialPowers.unwrap(walkerShadow.currentNode), $("h2").firstChild,
-       "Unexpected shadow element 3");
-  }*/
 
   SimpleTest.finish();
 });

@@ -1111,6 +1111,7 @@ webrtc.sdp:
     bug_numbers:
       - 1432955
       - 1529787
+      - 1588571
     description: >
       The number of differences between the C based sipcc SDP parser and
       the new rust based rsdparsa SDP parser keyed by predefined
@@ -1119,7 +1120,7 @@ webrtc.sdp:
       between the rsdparsa parsing result and the original sdp.
       This should help to improve the new rsdparsa to replace
       the sipcc parser.
-    expires: "73"
+    expires: "77"
     kind: uint
     keyed: true
     notification_emails:
@@ -2444,46 +2445,6 @@ telemetry:
     record_in_processes:
       - 'main'
       - 'content'
-
-  ecosystem_old_send_time:
-    bug_numbers:
-      - 1545365
-    description: >
-      The timestamp im milliseconds of the last time we tried to send an Ecosystem ping
-    expires: "73"
-    kind: string
-    notification_emails:
-      - jrediger@mozilla.com
-    release_channel_collection: opt-in
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-      - 'thunderbird'
-    record_in_processes:
-      - 'main'
-    record_into_store:
-      - 'pre-account'
-
-  ecosystem_new_send_time:
-    bug_numbers:
-      - 1545365
-    description: >
-      The timestamp im milliseconds of the last time we tried to send an Ecosystem ping
-    expires: "73"
-    kind: string
-    notification_emails:
-      - jrediger@mozilla.com
-    release_channel_collection: opt-in
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-      - 'thunderbird'
-    record_in_processes:
-      - 'main'
-    record_into_store:
-      - 'pre-account'
 
 telemetry.discarded:
   accumulations:

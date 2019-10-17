@@ -1200,9 +1200,9 @@ TEST_F(JsepTrackTest, SimulcastOfferer) {
   ASSERT_EQ(10000U,
             mSendOff.GetNegotiatedDetails()->GetEncoding(1).mConstraints.maxBr);
   ASSERT_NE(std::string::npos,
-            mOffer->ToString().find("a=simulcast:send foo;bar"));
+            mOffer->ToString().find("a=simulcast: send rid=foo;bar"));
   ASSERT_NE(std::string::npos,
-            mAnswer->ToString().find("a=simulcast:recv foo;bar"));
+            mAnswer->ToString().find("a=simulcast: recv rid=foo;bar"));
   ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:foo send"));
   ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:bar send"));
   ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:foo recv"));
@@ -1229,9 +1229,9 @@ TEST_F(JsepTrackTest, SimulcastAnswerer) {
   ASSERT_EQ(10000U,
             mSendAns.GetNegotiatedDetails()->GetEncoding(1).mConstraints.maxBr);
   ASSERT_NE(std::string::npos,
-            mOffer->ToString().find("a=simulcast:recv foo;bar"));
+            mOffer->ToString().find("a=simulcast: recv rid=foo;bar"));
   ASSERT_NE(std::string::npos,
-            mAnswer->ToString().find("a=simulcast:send foo;bar"));
+            mAnswer->ToString().find("a=simulcast: send rid=foo;bar"));
   ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:foo recv"));
   ASSERT_NE(std::string::npos, mOffer->ToString().find("a=rid:bar recv"));
   ASSERT_NE(std::string::npos, mAnswer->ToString().find("a=rid:foo send"));

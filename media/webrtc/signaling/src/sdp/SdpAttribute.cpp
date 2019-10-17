@@ -1076,31 +1076,47 @@ void SdpSetupAttribute::Serialize(std::ostream& os) const {
 
 void SdpSimulcastAttribute::Version::Serialize(std::ostream& os) const {
   SkipFirstDelimiter comma(",");
-  for (const Encoding& choice : choices) {
-    os << comma;
-    if (choice.paused) {
-      os << '~';
-    }
-    os << choice.rid;
+  for (const std::string& choice : choices) {
+    os << comma << choice;
   }
 }
 
 bool SdpSimulcastAttribute::Version::Parse(std::istream& is,
                                            std::string* error) {
   do {
-    bool paused = SkipChar(is, '~', error);
     std::string value = ParseToken(is, ",; ", error);
     if (value.empty()) {
-      *error = "Missing rid";
       return false;
     }
-    choices.push_back(Encoding(value, paused));
+    choices.push_back(value);
   } while (SkipChar(is, ',', error));
 
   return true;
 }
 
+bool SdpSimulcastAttribute::Version::GetChoicesAsFormats(
+    std::vector<uint16_t>* formats) const {
+  for (const std::string& choice : choices) {
+    uint16_t format;
+    if (!SdpHelper::GetPtAsInt(choice, &format) || (format > 127)) {
+      return false;
+    }
+    formats->push_back(format);
+  }
+
+  return true;
+}
+
 void SdpSimulcastAttribute::Versions::Serialize(std::ostream& os) const {
+  switch (type) {
+    case kRid:
+      os << "rid=";
+      break;
+    case kPt:
+      os << "pt=";
+      break;
+  }
+
   SkipFirstDelimiter semic(";");
   for (const Version& version : *this) {
     if (!version.IsSet()) {
@@ -1113,11 +1129,39 @@ void SdpSimulcastAttribute::Versions::Serialize(std::ostream& os) const {
 
 bool SdpSimulcastAttribute::Versions::Parse(std::istream& is,
                                             std::string* error) {
+  int startPos = is.tellg();
+  std::string rawType = ParseKey(is, error);
+  if (rawType.empty()) {
+    // New simulcast format does not have pt= or rid=, it is always rid
+    rawType = "rid";
+    is.clear();
+    is.seekg(startPos);
+  }
+
+  if (rawType == "pt") {
+    type = kPt;
+  } else if (rawType == "rid") {
+    type = kRid;
+  } else {
+    *error = "Unknown simulcast identification type ";
+    error->append(rawType);
+    return false;
+  }
+
   do {
     Version version;
     if (!version.Parse(is, error)) {
       return false;
     }
+
+    if (type == kPt) {
+      std::vector<uint16_t> formats;
+      if (!version.GetChoicesAsFormats(&formats)) {
+        *error = "Invalid payload type";
+        return false;
+      }
+    }
+
     push_back(version);
   } while (SkipChar(is, ';', error));
 
@@ -1130,15 +1174,12 @@ void SdpSimulcastAttribute::Serialize(std::ostream& os) const {
   os << "a=" << mType << ":";
 
   if (sendVersions.IsSet()) {
-    os << "send ";
+    os << " send ";
     sendVersions.Serialize(os);
   }
 
   if (recvVersions.IsSet()) {
-    if (sendVersions.IsSet()) {
-      os << " ";
-    }
-    os << "recv ";
+    os << " recv ";
     recvVersions.Serialize(os);
   }
 

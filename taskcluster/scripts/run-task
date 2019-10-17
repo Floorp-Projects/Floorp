@@ -103,7 +103,10 @@ def print_line(prefix, m):
     now = datetime.datetime.utcnow().isoformat().encode('utf-8')
     # slice microseconds to 3 decimals.
     now = now[:-3] if now[-7:-6] == b'.' else now
-    sys.stdout.buffer.write(b'[%s %sZ] %s' % (prefix, now, m))
+    bytes = b'[%s %sZ] %s' % (prefix, now, m)
+    written = 0
+    while written < len(bytes):
+        written += (sys.stdout.buffer.write(bytes[written:]) or 0)
     sys.stdout.buffer.flush()
 
 

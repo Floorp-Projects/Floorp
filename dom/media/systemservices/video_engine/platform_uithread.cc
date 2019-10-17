@@ -90,12 +90,12 @@ void PlatformUIThread::Stop() {
 
 void PlatformUIThread::Run() {
   RTC_CHECK(InternalInit());  // always evaluates
-  do {
-    // The interface contract of Start/Stop is that for a successful call to
-    // Start, there should be at least one call to the run function.  So we
-    // call the function before checking |stop_|.
-    run_function_deprecated_(obj_);
+  // The interface contract of Start/Stop is that for a successful call to
+  // Start, there should be at least one call to the run function.  So we
+  // call the function before checking |stop_|.
+  run_function_deprecated_(obj_);
 
+  do {
     // Alertable sleep to permit RaiseFlag to run and update |stop_|.
     if (MsgWaitForMultipleObjectsEx(0, nullptr, INFINITE, QS_ALLINPUT,
                                     MWMO_ALERTABLE | MWMO_INPUTAVAILABLE) ==

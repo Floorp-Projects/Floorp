@@ -35,8 +35,6 @@ static bool Declare(JSContext* cx, unsigned argc, Value* vp);
 ** JSObject implementation
 *******************************************************************************/
 
-typedef Rooted<JSFlatString*> RootedFlatString;
-
 static const JSClassOps sLibraryClassOps = {
     nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, Library::Finalize};
 

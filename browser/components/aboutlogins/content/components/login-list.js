@@ -377,6 +377,13 @@ export default class LoginList extends HTMLElement {
     // Add the list item and update any other related state that may pertain
     // to the list item such as breach alerts.
     this.render();
+
+    if (
+      this.classList.contains("no-logins") &&
+      !this.classList.contains("create-login-selected")
+    ) {
+      this._selectFirstVisibleLogin();
+    }
   }
 
   /**
