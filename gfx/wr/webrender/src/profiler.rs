@@ -15,6 +15,39 @@ use std::ops::Range;
 use std::time::Duration;
 use time::precise_time_ns;
 
+pub mod expected {
+    use std::ops::Range;
+    pub const AVG_FRAME_TIME: Range<f64> =          1.0..8.0;
+    pub const MAX_FRAME_TIME: Range<f64> =          1.0..14.0;
+    pub const AVG_BACKEND_CPU_TIME: Range<f64> =    0.0..3.0;
+    pub const MAX_BACKEND_CPU_TIME: Range<f64> =    0.0..6.0;
+    pub const AVG_RENDERER_CPU_TIME: Range<f64> =   0.0..5.0;
+    pub const MAX_RENDERER_CPU_TIME: Range<f64> =   0.0..10.0;
+    pub const AVG_IPC_TIME: Range<f64> =            0.0..2.0;
+    pub const MAX_IPC_TIME: Range<f64> =            0.0..4.0;
+    pub const AVG_GPU_TIME: Range<f64> =            0.0..8.0;
+    pub const MAX_GPU_TIME: Range<f64> =            0.0..15.0;
+    pub const DRAW_CALLS: Range<usize> =            1..100;
+    pub const VERTICES: Range<usize> =              10..25_000;
+    pub const TOTAL_PRIMITIVES: Range<usize> =      1..5000;
+    pub const VISIBLE_PRIMITIVES: Range<usize> =    1..5000;
+    pub const USED_TARGETS: Range<usize> =          1..4;
+    pub const COLOR_TARGETS: Range<usize> =         1..4;
+    pub const ALPHA_TARGETS: Range<usize> =         0..2;
+    pub const CREATED_TARGETS: Range<usize> =       0..3;
+    pub const CHANGED_TARGETS: Range<usize> =       0..3;
+    pub const TEXTURE_DATA_UPLOADED: Range<usize> = 0..10;
+    pub const GPU_CACHE_ROWS_TOTAL: Range<usize> =  1..50;
+    pub const GPU_CACHE_ROWS_UPDATED: Range<usize> = 0..25;
+    pub const GPU_CACHE_BLOCKS_TOTAL: Range<usize> = 1..1000;
+    pub const GPU_CACHE_BLOCKS_UPDATED: Range<usize> = 0..1000;
+    pub const GPU_CACHE_BLOCKS_SAVED: Range<usize> = 0..1000;
+    pub const DISPLAY_LIST_BUILD_TIME: Range<f64> = 0.0..3.0;
+    pub const DISPLAY_LIST_CONSUME_TIME: Range<f64> = 0.0..2.0;
+    pub const DISPLAY_LIST_SEND_TIME: Range<f64> =  0.0..1.0;
+    pub const DISPLAY_LIST_TOTAL_TIME: Range<f64> = 0.0..4.0;
+}
+
 const GRAPH_WIDTH: f32 = 1024.0;
 const GRAPH_HEIGHT: f32 = 320.0;
 const GRAPH_PADDING: f32 = 8.0;
@@ -457,11 +490,26 @@ pub struct FrameProfileCounters {
 impl FrameProfileCounters {
     pub fn new() -> Self {
         FrameProfileCounters {
-            total_primitives: IntProfileCounter::new("Total Primitives", None),
-            visible_primitives: IntProfileCounter::new("Visible Primitives", None),
-            targets_used: IntProfileCounter::new("Used targets", None),
-            targets_changed: IntProfileCounter::new("Changed targets", None),
-            targets_created: IntProfileCounter::new("Created targets", None),
+            total_primitives: IntProfileCounter::new(
+                "Total Primitives",
+                Some(expected::TOTAL_PRIMITIVES),
+            ),
+            visible_primitives: IntProfileCounter::new(
+                "Visible Primitives",
+                Some(expected::VISIBLE_PRIMITIVES),
+            ),
+            targets_used: IntProfileCounter::new(
+                "Used targets",
+                Some(expected::USED_TARGETS),
+            ),
+            targets_changed: IntProfileCounter::new(
+                "Changed targets",
+                Some(expected::CHANGED_TARGETS),
+            ),
+            targets_created: IntProfileCounter::new(
+                "Created targets",
+                Some(expected::CREATED_TARGETS),
+            ),
         }
     }
     pub fn reset_targets(&mut self) {
@@ -506,11 +554,26 @@ pub struct GpuCacheProfileCounters {
 impl GpuCacheProfileCounters {
     pub fn new() -> Self {
         GpuCacheProfileCounters {
-            allocated_rows: IntProfileCounter::new("GPU cache rows: total", None),
-            updated_rows: IntProfileCounter::new("GPU cache rows: updated", None),
-            allocated_blocks: IntProfileCounter::new("GPU cache blocks: total", None),
-            updated_blocks: IntProfileCounter::new("GPU cache blocks: updated", None),
-            saved_blocks: IntProfileCounter::new("GPU cache blocks: saved", None),
+            allocated_rows: IntProfileCounter::new(
+                "GPU cache rows: total",
+                Some(expected::GPU_CACHE_ROWS_TOTAL),
+            ),
+            updated_rows: IntProfileCounter::new(
+                "GPU cache rows: updated",
+                Some(expected::GPU_CACHE_ROWS_UPDATED),
+            ),
+            allocated_blocks: IntProfileCounter::new(
+                "GPU cache blocks: total",
+                Some(expected::GPU_CACHE_BLOCKS_TOTAL),
+            ),
+            updated_blocks: IntProfileCounter::new(
+                "GPU cache blocks: updated",
+                Some(expected::GPU_CACHE_BLOCKS_UPDATED),
+            ),
+            saved_blocks: IntProfileCounter::new(
+                "GPU cache blocks: saved",
+                Some(expected::GPU_CACHE_BLOCKS_SAVED),
+            ),
         }
     }
 }
@@ -597,7 +660,10 @@ impl IpcProfileCounters {
 impl BackendProfileCounters {
     pub fn new() -> Self {
         BackendProfileCounters {
-            total_time: TimeProfileCounter::new("Backend CPU Time", false, None),
+            total_time: TimeProfileCounter::new(
+                "Backend CPU Time", false,
+                Some(expected::MAX_BACKEND_CPU_TIME),
+            ),
             resources: ResourceProfileCounters {
                 font_templates: ResourceProfileCounter::new("Font Templates"),
                 image_templates: ResourceProfileCounter::new("Image Templates"),
@@ -605,10 +671,22 @@ impl BackendProfileCounters {
                 gpu_cache: GpuCacheProfileCounters::new(),
             },
             ipc: IpcProfileCounters {
-                build_time: TimeProfileCounter::new("Display List Build Time", false, None),
-                consume_time: TimeProfileCounter::new("Display List Consume Time", false, None),
-                send_time: TimeProfileCounter::new("Display List Send Time", false, None),
-                total_time: TimeProfileCounter::new("Total Display List Time", false, None),
+                build_time: TimeProfileCounter::new(
+                    "Display List Build Time", false,
+                    Some(expected::DISPLAY_LIST_BUILD_TIME)
+                ),
+                consume_time: TimeProfileCounter::new(
+                    "Display List Consume Time", false,
+                    Some(expected::DISPLAY_LIST_CONSUME_TIME),
+                ),
+                send_time: TimeProfileCounter::new(
+                    "Display List Send Time", false,
+                    Some(expected::DISPLAY_LIST_SEND_TIME),
+                ),
+                total_time: TimeProfileCounter::new(
+                    "Total Display List Time", false,
+                    Some(expected::DISPLAY_LIST_TOTAL_TIME),
+                ),
                 display_lists: ResourceProfileCounter::new("Display Lists Sent"),
             },
             //TODO: generate this by a macro
@@ -662,13 +740,32 @@ impl RendererProfileCounters {
     pub fn new() -> Self {
         RendererProfileCounters {
             frame_counter: IntProfileCounter::new("Frame", None),
-            frame_time: AverageTimeProfileCounter::new("FPS", true, ONE_SECOND_NS / 2, None, None),
-            draw_calls: IntProfileCounter::new("Draw Calls", None),
-            vertices: IntProfileCounter::new("Vertices", None),
+            frame_time: AverageTimeProfileCounter::new(
+                "FPS", true, ONE_SECOND_NS / 2,
+                Some(expected::AVG_FRAME_TIME),
+                Some(expected::MAX_FRAME_TIME),
+            ),
+            draw_calls: IntProfileCounter::new(
+                "Draw Calls",
+                Some(expected::DRAW_CALLS),
+            ),
+            vertices: IntProfileCounter::new(
+                "Vertices",
+                Some(expected::VERTICES),
+            ),
             vao_count_and_size: ResourceProfileCounter::new("VAO"),
-            color_targets: IntProfileCounter::new("Color Targets", None),
-            alpha_targets: IntProfileCounter::new("Alpha Targets", None),
-            texture_data_uploaded: IntProfileCounter::new("Texture data, kb", None),
+            color_targets: IntProfileCounter::new(
+                "Color Targets",
+                Some(expected::COLOR_TARGETS),
+            ),
+            alpha_targets: IntProfileCounter::new(
+                "Alpha Targets",
+                Some(expected::ALPHA_TARGETS),
+            ),
+            texture_data_uploaded: IntProfileCounter::new(
+                "Texture data, kb",
+                Some(expected::TEXTURE_DATA_UPLOADED),
+            ),
         }
     }
 
@@ -1010,10 +1107,26 @@ impl Profiler {
             ipc_graph: ProfileGraph::new(600, to_ms_scale, "IPC:", "ms"),
             blob_raster_graph: ProfileGraph::new(600, 1.0, "Rasterized blob pixels:", "px"),
             gpu_frames: GpuFrameCollection::new(),
-            backend_time: AverageTimeProfileCounter::new("Backend:", false, ONE_SECOND_NS / 2, None, None),
-            renderer_time: AverageTimeProfileCounter::new("Renderer:", false, ONE_SECOND_NS / 2, None, None),
-            ipc_time: AverageTimeProfileCounter::new("IPC:", false, ONE_SECOND_NS / 2, None, None),
-            gpu_time: AverageTimeProfileCounter::new("GPU:", false, ONE_SECOND_NS / 2, None, None),
+            backend_time: AverageTimeProfileCounter::new(
+                "Backend:", false, ONE_SECOND_NS / 2,
+                Some(expected::AVG_BACKEND_CPU_TIME),
+                Some(expected::MAX_BACKEND_CPU_TIME),
+            ),
+            renderer_time: AverageTimeProfileCounter::new(
+                "Renderer:", false, ONE_SECOND_NS / 2,
+                Some(expected::AVG_RENDERER_CPU_TIME),
+                Some(expected::MAX_RENDERER_CPU_TIME),
+            ),
+            ipc_time: AverageTimeProfileCounter::new(
+                "IPC:", false, ONE_SECOND_NS / 2,
+                Some(expected::AVG_IPC_TIME),
+                Some(expected::MAX_IPC_TIME),
+            ),
+            gpu_time: AverageTimeProfileCounter::new(
+                "GPU:", false, ONE_SECOND_NS / 2,
+                Some(expected::AVG_GPU_TIME),
+                Some(expected::MAX_GPU_TIME),
+            ),
             cooldowns: Vec::new(),
         }
     }
