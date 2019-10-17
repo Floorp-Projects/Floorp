@@ -246,11 +246,11 @@ async function test_unsafe_grips(
           response = await objClient.enumProperties({
             ignoreIndexedProperties: true,
           });
-          slice = await response.slice(0, response.count);
+          slice = await response.iterator.slice(0, response.iterator.count);
           check_properties(slice.ownProperties, data, isUnsafe);
 
           response = await objClient.enumProperties({});
-          slice = await response.slice(0, response.count);
+          slice = await response.iterator.slice(0, response.iterator.count);
           check_properties(slice.ownProperties, data, isUnsafe);
 
           response = await objClient.getOwnPropertyNames();
@@ -260,7 +260,7 @@ async function test_unsafe_grips(
           check_property(response.descriptor, data, isUnsafe);
 
           response = await objClient.enumSymbols();
-          slice = await response.slice(0, response.count);
+          slice = await response.iterator.slice(0, response.iterator.count);
           check_symbol_names(slice.ownSymbols, data, isUnsafe);
 
           response = await objClient.getProperty(Symbol.for("x"));

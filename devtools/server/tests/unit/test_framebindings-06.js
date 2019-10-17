@@ -32,7 +32,7 @@ function run_test() {
 }
 
 function test_banana_environment() {
-  gThreadFront.once("paused", async function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const env = packet.frame.environment;
     equal(env.type, "function");
     equal(env.function.name, "banana3");
@@ -49,8 +49,9 @@ function test_banana_environment() {
     equal(parent.type, "function");
     equal(parent.function.name, "banana");
 
-    await gThreadFront.resume();
-    finishClient(gClient);
+    gThreadFront.resume().then(function() {
+      finishClient(gClient);
+    });
   });
 
   gDebuggee.eval(

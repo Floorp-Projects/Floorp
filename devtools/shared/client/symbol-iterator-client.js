@@ -5,13 +5,12 @@
 "use strict";
 
 const {
-  FrontClassWithSpec,
-  registerFront,
-} = require("devtools/shared/protocol");
-const { symbolIteratorSpec } = require("devtools/shared/specs/symbol-iterator");
+  arg,
+  DebuggerClient,
+} = require("devtools/shared/client/debugger-client");
 
 /**
- * A SymbolIteratorFront provides a way to access to symbols
+ * A SymbolIteratorClient provides a way to access to symbols
  * of an object efficiently, slice by slice.
  *
  * @param client DebuggerClient
@@ -20,22 +19,23 @@ const { symbolIteratorSpec } = require("devtools/shared/specs/symbol-iterator");
  *        A SymbolIteratorActor grip returned by the protocol via
  *        BrowsingContextTargetActor.enumSymbols request.
  */
-class SymbolIteratorFront extends FrontClassWithSpec(symbolIteratorSpec) {
-  constructor(client, targetFront, parentFront) {
-    super(client, targetFront, parentFront);
-    this._client = client;
-  }
+function SymbolIteratorClient(client, grip) {
+  this._grip = grip;
+  this._client = client;
+  this.request = this._client.request;
+}
 
+SymbolIteratorClient.prototype = {
   get actor() {
     return this._grip.actor;
-  }
+  },
 
   /**
    * Get the total number of symbols available in the iterator.
    */
   get count() {
     return this._grip.count;
-  }
+  },
 
   /**
    * Get a set of following symbols.
@@ -47,15 +47,27 @@ class SymbolIteratorFront extends FrontClassWithSpec(symbolIteratorSpec) {
    * @param callback Function
    *        The function called when we receive the symbols.
    */
-  slice(start, count) {
-    const argumentObject = { start, count };
-    return super.slice(argumentObject);
-  }
+  slice: DebuggerClient.requester(
+    {
+      type: "slice",
+      start: arg(0),
+      count: arg(1),
+    },
+    {}
+  ),
 
-  form(form) {
-    this._grip = form;
-  }
-}
+  /**
+   * Get all the symbols.
+   *
+   * @param callback Function
+   *        The function called when we receive the symbols.
+   */
+  all: DebuggerClient.requester(
+    {
+      type: "all",
+    },
+    {}
+  ),
+};
 
-exports.SymbolIteratorFront = SymbolIteratorFront;
-registerFront(SymbolIteratorFront);
+module.exports = SymbolIteratorClient;

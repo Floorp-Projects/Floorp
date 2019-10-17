@@ -286,7 +286,13 @@ async function test_object_grip(
   });
 }
 
-async function check_enum_properties(iterator, expected = []) {
+async function check_enum_properties(response, expected = []) {
+  ok(
+    response && Object.getOwnPropertyNames(response).includes("iterator"),
+    "The response object has an iterator property"
+  );
+
+  const { iterator } = response;
   equal(
     iterator.count,
     expected.length,

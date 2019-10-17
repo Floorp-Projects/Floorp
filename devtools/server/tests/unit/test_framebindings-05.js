@@ -36,31 +36,34 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadFront.once("paused", async function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 
     const objClient = gThreadFront.pauseGrip(env.object);
-    let response = await objClient.getPrototypeAndProperties();
-    Assert.equal(response.ownProperties.PI.value, Math.PI);
-    Assert.equal(response.ownProperties.cos.value.type, "object");
-    Assert.equal(response.ownProperties.cos.value.class, "Function");
-    Assert.ok(!!response.ownProperties.cos.value.actor);
+    objClient.getPrototypeAndProperties(function(response) {
+      Assert.equal(response.ownProperties.PI.value, Math.PI);
+      Assert.equal(response.ownProperties.cos.value.type, "object");
+      Assert.equal(response.ownProperties.cos.value.class, "Function");
+      Assert.ok(!!response.ownProperties.cos.value.actor);
 
-    // Skip the global lexical scope.
-    const parentEnv = env.parent.parent;
-    Assert.notEqual(parentEnv, undefined);
+      // Skip the global lexical scope.
+      const parentEnv = env.parent.parent;
+      Assert.notEqual(parentEnv, undefined);
 
-    const parentClient = gThreadFront.pauseGrip(parentEnv.object);
-    response = await parentClient.getPrototypeAndProperties();
-    Assert.equal(response.ownProperties.a.value, Math.PI * 100);
-    Assert.equal(response.ownProperties.r.value, 10);
-    Assert.equal(response.ownProperties.Object.value.type, "object");
-    Assert.equal(response.ownProperties.Object.value.class, "Function");
-    Assert.ok(!!response.ownProperties.Object.value.actor);
+      const parentClient = gThreadFront.pauseGrip(parentEnv.object);
+      parentClient.getPrototypeAndProperties(function(response) {
+        Assert.equal(response.ownProperties.a.value, Math.PI * 100);
+        Assert.equal(response.ownProperties.r.value, 10);
+        Assert.equal(response.ownProperties.Object.value.type, "object");
+        Assert.equal(response.ownProperties.Object.value.class, "Function");
+        Assert.ok(!!response.ownProperties.Object.value.actor);
 
-    await gThreadFront.resume();
-    finishClient(gClient);
+        gThreadFront.resume().then(function() {
+          finishClient(gClient);
+        });
+      });
+    });
   });
 
   gDebuggee.eval(
