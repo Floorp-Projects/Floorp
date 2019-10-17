@@ -37,7 +37,7 @@ export const continueToHereItem = (
 ) => ({
   accesskey: L10N.getStr("editor.continueToHere.accesskey"),
   disabled: !isPaused,
-  click: () => editorActions.continueToHere(cx, location.line, location.column),
+  click: () => editorActions.continueToHere(cx, location),
   id: "node-menu-continue-to-here",
   label: L10N.getStr("editor.continueToHere.label"),
 });
