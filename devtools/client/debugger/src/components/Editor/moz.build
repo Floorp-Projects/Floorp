@@ -34,7 +34,6 @@ DevToolsModules(
     'ConditionalPanel.css',
     'Editor.css',
     'Footer.css',
-    'Highlight.css',
     'InlinePreview.css',
     'Preview.css',
     'SearchBar.css',

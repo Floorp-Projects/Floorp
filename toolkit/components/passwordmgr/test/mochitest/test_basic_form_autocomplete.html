@@ -135,6 +135,13 @@ function spinEventLoop() {
   return Promise.resolve();
 }
 
+async function promiseACPopupClosed() {
+  return SimpleTest.promiseWaitForCondition(async () => {
+    let popupState = await getPopupState();
+    return !popupState.open;
+  }, "Wait for AC popup to be closed");
+}
+
 add_task(async function setup() {
   listenForUnexpectedPopupShown();
 });
@@ -165,9 +172,9 @@ add_task(async function test_form1_menuitems() {
                            "zzzuser4"];
   checkAutoCompleteResults(results, expectedMenuItems, "example.com", "Check all menuitems are displayed correctly.");
 
-  checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
-  synthesizeKey("KEY_Enter");
-  await spinEventLoop(); // let focus happen
+  checkLoginForm(uname, "", pword, ""); // value shouldn't update just by opening
+  synthesizeKey("KEY_Escape");
+  await promiseACPopupClosed();
   checkLoginForm(uname, "", pword, "");
 });
 
@@ -186,6 +193,7 @@ add_task(async function test_form1_first_entry() {
   checkLoginForm(uname, "", pword, ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "tempuser1", pword, "temppass1");
 });
 
@@ -200,6 +208,7 @@ add_task(async function test_form1_second_entry() {
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser2", pword, "testpass2");
 });
 
@@ -215,6 +224,7 @@ add_task(async function test_form1_third_entry() {
   synthesizeKey("KEY_ArrowDown"); // third
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser3", pword, "testpass3");
 });
 
@@ -231,6 +241,7 @@ add_task(async function test_form1_fourth_entry() {
   synthesizeKey("KEY_ArrowDown"); // fourth
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
 });
 
@@ -251,6 +262,7 @@ add_task(async function test_form1_wraparound_first_entry() {
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "tempuser1", pword, "temppass1");
 });
 
@@ -265,6 +277,7 @@ add_task(async function test_form1_wraparound_up_last_entry() {
   synthesizeKey("KEY_ArrowUp"); // last (fourth)
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
 });
 
@@ -281,6 +294,7 @@ add_task(async function test_form1_wraparound_down_up_up() {
   synthesizeKey("KEY_ArrowUp"); // select last entry
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
 });
 
@@ -302,6 +316,7 @@ add_task(async function test_form1_wraparound_up_last() {
   synthesizeKey("KEY_ArrowUp"); // last entry
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
 });
 
@@ -314,7 +329,7 @@ add_task(async function test_form1_fill_username_without_autofill_right() {
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowRight");
-  await spinEventLoop();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "tempuser1", pword, ""); // empty password
 });
 
@@ -327,6 +342,7 @@ add_task(async function test_form1_fill_username_without_autofill_left() {
   // Set first entry w/o triggering autocomplete
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowLeft");
+  await promiseACPopupClosed();
   checkLoginForm(uname, "tempuser1", pword, ""); // empty password
 });
 
@@ -342,6 +358,7 @@ add_task(async function test_form1_pageup_first() {
   synthesizeKey("KEY_PageUp"); // first
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "tempuser1", pword, "temppass1");
 });
 
@@ -358,6 +375,7 @@ add_task(async function test_form1_pagedown_last() {
   synthesizeKey("KEY_ArrowUp"); // last
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
 });
 
@@ -402,6 +420,7 @@ add_task(async function test_form1_delete() {
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser2", pword, "testpass2");
 });
 
@@ -415,6 +434,7 @@ add_task(async function test_form1_first_after_deletion() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser2", pword, "testpass2");
 });
 
@@ -433,6 +453,7 @@ add_task(async function test_form1_delete_second() {
   is(numLogins, 3, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "zzzuser4", pword, "zzzpass4");
 });
 
@@ -446,6 +467,7 @@ add_task(async function test_form1_first_after_deletion2() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser2", pword, "testpass2");
 });
 
@@ -466,6 +488,7 @@ add_task(async function test_form1_delete_last() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser2", pword, "testpass2");
 });
 
@@ -479,6 +502,7 @@ add_task(async function test_form1_first_after_3_deletions() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser2", pword, "testpass2");
 });
 
@@ -501,6 +525,10 @@ add_task(async function test_form1_check_only_entry_remaining() {
   setupScript.sendAsyncMessage("removeLogin", "login0");
   setupScript.sendAsyncMessage("addLogin", "login5");
   await storageChanged;
+
+  // ensure the popup is closed for the next test
+  synthesizeKey("KEY_Escape");
+  await promiseACPopupClosed();
 });
 
 /* Tests for single-user forms for ignoring autocomplete=off */
@@ -527,6 +555,7 @@ add_task(async function test_form2() {
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
 });
 
@@ -551,6 +580,7 @@ add_task(async function test_form3() {
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
 });
 
@@ -575,6 +605,7 @@ add_task(async function test_form4() {
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
 });
 
@@ -599,6 +630,7 @@ add_task(async function test_form5() {
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "singleuser5", pword, "singlepass5");
 });
 
@@ -688,6 +720,7 @@ add_task(async function test_form7_2() {
   // the password field should have any values filled in.
   await SimpleTest.promiseWaitForCondition(() => uname.value == "form7user1",
                                            "Wait for username to get filled");
+  await promiseACPopupClosed();
   checkLoginForm(uname, "form7user1", pword, "");
   is($_(7, "uname2").value, "", "Verifying empty uname2");
   restoreForm(); // clear field, so reloading test doesn't fail
@@ -782,6 +815,7 @@ add_task(async function test_form9_filtering() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "form9userAAB", pword, "form9pass");
 });
 
@@ -835,6 +869,7 @@ add_task(async function test_form11_formless() {
   let processedPromise = promiseFormsProcessed();
   synthesizeKey("KEY_Enter");
   await processedPromise;
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser11", pword, "testpass11");
 });
 
@@ -862,6 +897,7 @@ add_task(async function test_form11_open_on_trusted_focus() {
   const processedPromise = promiseFormsProcessed();
   synthesizeKey("KEY_Enter");
   await processedPromise;
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser11", pword, "testpass11");
   let storageChanged = promiseStorageChanged(["removeLogin"]);
   setupScript.sendAsyncMessage("removeLogin", "login11");
@@ -905,6 +941,7 @@ add_task(async function test_form12_recipes() {
   checkLoginForm(uname, "", pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
+  await promiseACPopupClosed();
   checkLoginForm(uname, "testuser10", pword, "testpass10");
 
   // Now test recipes with blur on the username field.
@@ -952,6 +989,10 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   synthesizeKey("KEY_Delete");
   await shownPromise;
   checkLoginForm(uname, "", pword, "");
+
+  // ensure the popup is closed for the next test
+  synthesizeKey("KEY_Escape");
+  await promiseACPopupClosed();
 });
 </script>
 </pre>

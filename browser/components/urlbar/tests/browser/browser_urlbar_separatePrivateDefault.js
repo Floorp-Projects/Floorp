@@ -45,9 +45,17 @@ add_task(async function setup() {
   );
   await Services.search.moveEngine(engine2, 0);
 
+  // Add an engine with an alias.
+  let aliasEngine = await Services.search.addEngineWithDetails("MozSearch", {
+    alias: "alias",
+    method: "GET",
+    template: "http://example.com/?q={searchTerms}",
+  });
+
   registerCleanupFunction(async () => {
     await Services.search.setDefault(oldDefaultEngine);
     await Services.search.setDefaultPrivate(oldDefaultPrivateEngine);
+    await Services.search.removeEngine(aliasEngine);
     await PlacesUtils.history.clear();
   });
 });
@@ -330,4 +338,23 @@ add_task(async function test_oneoff_selected_with_private_engine_keyboard() {
     );
     await BrowserTestUtils.closeWindow(win);
   });
+});
+
+add_task(async function test_alias() {
+  info(
+    "Test that 'Search in a Private Window' doesn's appear if an alias is typed"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "alias",
+  });
+  await AssertNoPrivateResult(window);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "alias something",
+  });
+  await AssertNoPrivateResult(window);
 });

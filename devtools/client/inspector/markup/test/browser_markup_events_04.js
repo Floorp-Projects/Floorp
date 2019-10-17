@@ -17,7 +17,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":56",
+        filename: TEST_URL + ":56:67",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function(foo2, bar2) {\n" +
@@ -26,7 +26,7 @@ const TEST_DATA = [ // eslint-disable-line
       },
       {
         type: "click",
-        filename: TEST_URL + ":52",
+        filename: TEST_URL + ":52:51",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function(foo, bar) {\n" +
@@ -46,7 +46,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":1",
+        filename: TEST_URL + ":1:0",
         attributes: ["Bubbling", "DOM2"],
         handler: "function anonymous() {\n" + "\n" + "}",
       },
@@ -57,7 +57,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":1",
+        filename: TEST_URL + ":1:0",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function anonymous(a, b, c) {\n" +
@@ -71,7 +71,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":24",
+        filename: TEST_URL + ":24:57",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function multi() {\n" + '  alert("multipleAssignment");\n' + "}",
@@ -105,7 +105,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":77",
+        filename: TEST_URL + ":77:29",
         attributes: ["Bubbling", "DOM2"],
         handler:
           "function(event) {\n" +

@@ -130,6 +130,10 @@ SOURCES += [
     'ProcessHangMonitor.cpp',
 ]
 
+PREPROCESSED_IPDL_SOURCES += [
+    'PContent.ipdl',
+]
+
 IPDL_SOURCES += [
     'DOMTypes.ipdlh',
     'MemoryReportTypes.ipdlh',
@@ -137,7 +141,6 @@ IPDL_SOURCES += [
     'PBrowserBridge.ipdl',
     'PBrowserOrId.ipdlh',
     'PColorPicker.ipdl',
-    'PContent.ipdl',
     'PContentPermission.ipdlh',
     'PContentPermissionRequest.ipdl',
     'PCycleCollectWithLogs.ipdl',

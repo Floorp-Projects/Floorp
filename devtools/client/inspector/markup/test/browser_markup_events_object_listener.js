@@ -18,7 +18,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":17",
+        filename: TEST_URL + ":17:23",
         attributes: ["Bubbling", "DOM2"],
         handler: `() => {\n` + `  console.log("handleEvent");\n` + `}`,
       },
@@ -29,7 +29,7 @@ const TEST_DATA = [ // eslint-disable-line
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":24",
+        filename: TEST_URL + ":24:23",
         attributes: ["Bubbling", "DOM2"],
         handler: `() => {\n` + `  console.log("handleEvent");\n` + `}`,
       },
