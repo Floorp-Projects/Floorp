@@ -69,11 +69,11 @@ async function testGetFulfillmentStack(tab, target) {
   const objectClient = new ObjectClient(target.client, form);
   ok(objectClient, "Got Object Client");
 
-  const response = await objectClient.getPromiseFulfillmentStack();
-  ok(response.fulfillmentStack.length, "Got promise allocation stack.");
+  const fulfillmentStack = await objectClient.getPromiseFulfillmentStack();
+  ok(fulfillmentStack.length, "Got promise allocation stack.");
 
   for (let i = 0; i < TEST_DATA.length; i++) {
-    const stack = response.fulfillmentStack[i];
+    const stack = fulfillmentStack[i];
     const data = TEST_DATA[i];
     is(stack.source.url, TAB_URL, "Got correct source URL.");
     is(

@@ -83,12 +83,12 @@ async function testGetAllocationStack(client, target, makePromises) {
   const objectClient = new ObjectClient(client, form);
   ok(objectClient, "Got Object Client");
 
-  const response = await objectClient.getPromiseAllocationStack();
-  ok(response.allocationStack.length, "Got promise allocation stack.");
+  const allocationStack = await objectClient.getPromiseAllocationStack();
+  ok(allocationStack.length, "Got promise allocation stack.");
 
   for (let i = 0; i < STACK_DATA.length; i++) {
     const data = STACK_DATA[i];
-    const stack = response.allocationStack[i];
+    const stack = allocationStack[i];
 
     ok(stack.source.url.startsWith("chrome:"), "Got a chrome source URL");
     ok(stack.source.url.endsWith(SOURCE_URL), "Got correct source URL.");
