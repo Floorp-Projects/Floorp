@@ -23,7 +23,7 @@ addAccessibleTask(
 
     let onReorder = waitForEvent(EVENT_REORDER, "body");
     // Add an event listener to parent.
-    await ContentTask.spawn(browser, {}, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       content.window.dummyListener = () => {};
       content.document
         .getElementById("parent")

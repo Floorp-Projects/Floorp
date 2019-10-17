@@ -7,7 +7,13 @@
 add_task(async function() {
   // Create a11y service inside of the function scope. Its reference should be
   // released once the anonimous function is called.
-  let a11yInitThenShutdown = initPromise().then(shutdownPromise);
+  const [a11yInitObserver, a11yInit] = initAccService();
+  await a11yInitObserver;
+  const a11yInitThenShutdown = a11yInit.then(async () => {
+    const [a11yShutdownObserver, a11yShutdown] = shutdownAccService();
+    await a11yShutdownObserver;
+    return a11yShutdown;
+  });
 
   (function() {
     let accService = Cc["@mozilla.org/accessibilityService;1"].getService(

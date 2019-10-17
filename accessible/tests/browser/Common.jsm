@@ -42,6 +42,94 @@ const CommonUtils = {
   },
 
   /**
+   * Adds an observer for an 'a11y-consumers-changed' event.
+   */
+  addAccConsumersChangedObserver() {
+    const deferred = {};
+    this._accConsumersChanged = new Promise(resolve => {
+      deferred.resolve = resolve;
+    });
+    const observe = (subject, topic, data) => {
+      Services.obs.removeObserver(observe, "a11y-consumers-changed");
+      deferred.resolve(JSON.parse(data));
+    };
+    Services.obs.addObserver(observe, "a11y-consumers-changed");
+  },
+
+  /**
+   * Returns a promise that resolves when 'a11y-consumers-changed' event is
+   * fired.
+   *
+   * @return {Promise}
+   *         event promise evaluating to event's data
+   */
+  observeAccConsumersChanged() {
+    return this._accConsumersChanged;
+  },
+
+  /**
+   * Adds an observer for an 'a11y-init-or-shutdown' event with a value of "1"
+   * which indicates that an accessibility service is initialized in the current
+   * process.
+   */
+  addAccServiceInitializedObserver() {
+    const deferred = {};
+    this._accServiceInitialized = new Promise((resolve, reject) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    });
+    const observe = (subject, topic, data) => {
+      if (data === "1") {
+        Services.obs.removeObserver(observe, "a11y-init-or-shutdown");
+        deferred.resolve();
+      } else {
+        deferred.reject("Accessibility service is shutdown unexpectedly.");
+      }
+    };
+    Services.obs.addObserver(observe, "a11y-init-or-shutdown");
+  },
+
+  /**
+   * Returns a promise that resolves when an accessibility service is
+   * initialized in the current process. Otherwise (if the service is shutdown)
+   * the promise is rejected.
+   */
+  observeAccServiceInitialized() {
+    return this._accServiceInitialized;
+  },
+
+  /**
+   * Adds an observer for an 'a11y-init-or-shutdown' event with a value of "0"
+   * which indicates that an accessibility service is shutdown in the current
+   * process.
+   */
+  addAccServiceShutdownObserver() {
+    const deferred = {};
+    this._accServiceShutdown = new Promise((resolve, reject) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    });
+    const observe = (subject, topic, data) => {
+      if (data === "0") {
+        Services.obs.removeObserver(observe, "a11y-init-or-shutdown");
+        deferred.resolve();
+      } else {
+        deferred.reject("Accessibility service is initialized unexpectedly.");
+      }
+    };
+    Services.obs.addObserver(observe, "a11y-init-or-shutdown");
+  },
+
+  /**
+   * Returns a promise that resolves when an accessibility service is shutdown
+   * in the current process. Otherwise (if the service is initialized) the
+   * promise is rejected.
+   */
+  observeAccServiceShutdown() {
+    return this._accServiceShutdown;
+  },
+
+  /**
    * Extract DOMNode id from an accessible. If the accessible is in the remote
    * process, DOMNode is not present in parent process. However, if specified by
    * the author, DOMNode id will be attached to an accessible object.

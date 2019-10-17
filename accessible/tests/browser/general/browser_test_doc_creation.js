@@ -36,11 +36,11 @@ add_task(async function testDocumentCreation() {
 
   info("Verifying that each tab content document is in accessible cache.");
   for (const browser of [...gBrowser.browsers]) {
-    await ContentTask.spawn(browser, null, async () => {
+    await SpecialPowers.spawn(browser, [], async () => {
       let accServiceContent = Cc[
         "@mozilla.org/accessibilityService;1"
       ].getService(Ci.nsIAccessibilityService);
-      ok(
+      Assert.ok(
         !!accServiceContent.getAccessibleFromCache(content.document),
         "Document accessible is in cache."
       );

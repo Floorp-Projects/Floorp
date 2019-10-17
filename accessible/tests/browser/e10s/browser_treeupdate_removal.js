@@ -18,11 +18,11 @@ addAccessibleTask("doc_treeupdate_removal.xhtml", async function(
 
   // Move the_table element into hidden subtree.
   let onReorder = waitForEvent(EVENT_REORDER, "body");
-  await ContentTask.spawn(browser, {}, () =>
+  await SpecialPowers.spawn(browser, [], () => {
     content.document
       .getElementById("the_displaynone")
-      .appendChild(content.document.getElementById("the_table"))
-  );
+      .appendChild(content.document.getElementById("the_table"));
+  });
   await onReorder;
 
   ok(
@@ -35,11 +35,11 @@ addAccessibleTask("doc_treeupdate_removal.xhtml", async function(
   );
 
   // Remove the_row element (since it did not have accessible, no event needed).
-  await ContentTask.spawn(browser, {}, () =>
+  await SpecialPowers.spawn(browser, [], () => {
     content.document.body.removeChild(
       content.document.getElementById("the_row")
-    )
-  );
+    );
+  });
 
   // make sure no accessibles have stuck around.
   ok(

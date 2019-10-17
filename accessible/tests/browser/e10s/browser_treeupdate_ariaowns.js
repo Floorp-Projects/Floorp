@@ -86,7 +86,7 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Append element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, id, contentId => {
+  await SpecialPowers.spawn(browser, [id], contentId => {
     let div = content.document.createElement("div");
     div.setAttribute("id", "t1_child3");
     div.setAttribute("role", "radio");
@@ -109,9 +109,9 @@ async function testContainer1(browser, accDoc) {
 
   /* ================ Remove element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, {}, () =>
-    content.document.getElementById("t1_span").remove()
-  );
+  await SpecialPowers.spawn(browser, [], () => {
+    content.document.getElementById("t1_span").remove();
+  });
   await onReorder;
 
   // subdiv should go away
@@ -167,11 +167,11 @@ async function removeContainer(browser, accDoc) {
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, {}, () =>
+  await SpecialPowers.spawn(browser, [], () => {
     content.document
       .getElementById("t2_container2")
-      .removeChild(content.document.getElementById("t2_container3"))
-  );
+      .removeChild(content.document.getElementById("t2_container3"));
+  });
   await onReorder;
 
   tree = {
@@ -189,7 +189,7 @@ async function stealAndRecacheChildren(browser, accDoc) {
   /* ================ Attempt to steal from other ARIA owns ================= */
   let onReorder = waitForEvent(EVENT_REORDER, id2);
   await invokeSetAttribute(browser, id2, "aria-owns", "t3_child");
-  await ContentTask.spawn(browser, id2, id => {
+  await SpecialPowers.spawn(browser, [id2], id => {
     let div = content.document.createElement("div");
     div.setAttribute("role", "radio");
     content.document.getElementById(id).appendChild(div);
@@ -267,7 +267,7 @@ async function removeNotARIAOwnedEl(browser, accDoc) {
   testAccessibleTree(acc, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, id, contentId => {
+  await SpecialPowers.spawn(browser, [id], contentId => {
     content.document
       .getElementById(contentId)
       .removeChild(content.document.getElementById("t6_span"));

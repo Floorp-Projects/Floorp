@@ -50,13 +50,13 @@ async function runTests(browser, accDoc) {
   await testTextNode("p2");
   await testEmptyInputNode("i1");
 
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.Layout.zoomDocument(content.document, 2.0);
   });
 
   await testTextNode("p1");
 
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.Layout.zoomDocument(content.document, 1.0);
   });
 }

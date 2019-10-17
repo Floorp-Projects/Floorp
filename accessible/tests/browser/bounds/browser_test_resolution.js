@@ -18,7 +18,7 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
       ? getRangeExtents(acc, 0, -1, COORDTYPE_SCREEN_RELATIVE)
       : getBounds(acc);
 
-  await ContentTask.spawn(browser, scale, _scale => {
+  await SpecialPowers.spawn(browser, [scale], _scale => {
     content.Layout.setResolution(content.document, _scale);
   });
 
@@ -33,7 +33,7 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
   isWithin(scaledX - docX, (x - docX) * scale, 2, "Wrong scaled x of " + name);
   isWithin(scaledY - docY, (y - docY) * scale, 2, "Wrong scaled y of " + name);
 
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.Layout.setResolution(content.document, 1.0);
   });
 }

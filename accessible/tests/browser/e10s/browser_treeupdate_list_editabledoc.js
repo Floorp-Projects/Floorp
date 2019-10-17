@@ -17,7 +17,7 @@ addAccessibleTask('<ol id="list"></ol>', async function(browser, accDoc) {
 
   await invokeSetAttribute(browser, "body", "contentEditable", "true");
   let onReorder = waitForEvent(EVENT_REORDER, "list");
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let li = content.document.createElement("li");
     li.textContent = "item";
     content.document.getElementById("list").appendChild(li);
