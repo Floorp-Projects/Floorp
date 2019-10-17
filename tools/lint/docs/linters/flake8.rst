@@ -42,9 +42,24 @@ be re-defined.
 
 For an overview of the supported configuration, see `flake8's documentation`_.
 
+Autofix
+-------
+
+The flake8 linter provides a ``--fix`` option. It is based on `autopep8`_.
+Please note that autopep8 does NOT fix all issues reported by flake8.
+
+
+Sources
+-------
+
+* `Configuration <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`_
+* `Source <https://searchfox.org/mozilla-central/source/tools/lint/python/flake8.py>`_
+
+
 .. _Flake8: https://flake8.readthedocs.io/en/latest/
 .. _pep8: http://pep8.readthedocs.io/en/latest/
 .. _pyflakes: https://github.com/pyflakes/pyflakes
 .. _mccabe: https://github.com/pycqa/mccabe
 .. _bug 1277851: https://bugzilla.mozilla.org/show_bug.cgi?id=1277851
 .. _flake8's documentation: https://flake8.readthedocs.io/en/latest/config.html
+.. _autopep8: https://github.com/hhatto/autopep8

@@ -14,9 +14,20 @@ struct TriviallyCopyable {
   int i;
 };
 
+class A {
+public:
+  A() {}
+  A(const A &rhs) {}
+  A(A &&rhs) {}
+};
+
 void f(TriviallyCopyable) {}
 
 void g() {
   TriviallyCopyable obj;
   f(std::move(obj));
+}
+
+A f5(const A x5) {
+  return std::move(x5);
 }

@@ -96,46 +96,14 @@
   background-repeat: repeat-x;
 }
 
+/* Search highlight style
+ * cm-searching is used in Style Editor, and cm-highlight in Debugger */
+.cm-searching,
 .cm-highlight {
-  position: relative;
-}
-
-.cm-highlight:before {
-  position: absolute;
-  border-top-style: solid;
-  border-bottom-style: solid;
-  border-top-color: var(--theme-text-color-inactive);
-  border-bottom-color: var(--theme-text-color-inactive);
-  border-top-width: 1px;
-  border-bottom-width: 1px;
-  top: -1px;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  content: "";
-  margin-bottom: -1px;
-}
-
-.cm-highlight-full:before {
-  border: 1px solid var(--theme-text-color-inactive);
-}
-
-.cm-highlight-start:before {
-  border-left-width: 1px;
-  border-left-style: solid;
-  border-left-color: var(--theme-text-color-inactive);
-  margin: 0 0 -1px -1px;
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-}
-
-.cm-highlight-end:before {
-  border-right-width: 1px;
-  border-right-style: solid;
-  border-right-color: var(--theme-text-color-inactive);
-  margin: 0 -1px -1px 0;
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
+  border-bottom: 1px solid var(--theme-contrast-border);
+  /* Use the translucent yellow background, because we want the text selection
+     background (CodeMirror-selected) to show through this. */
+  background-color: var(--theme-contrast-background-alpha);
 }
 
 /* CodeMirror dialogs styling */

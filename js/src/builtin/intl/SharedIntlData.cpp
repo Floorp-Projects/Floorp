@@ -474,6 +474,7 @@ bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
       *supported = collatorSupportedLocales.has(lookup);
       return true;
     case SupportedLocaleKind::DateTimeFormat:
+    case SupportedLocaleKind::ListFormat:
     case SupportedLocaleKind::NumberFormat:
     case SupportedLocaleKind::PluralRules:
     case SupportedLocaleKind::RelativeTimeFormat:

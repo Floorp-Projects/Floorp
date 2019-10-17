@@ -1941,18 +1941,20 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
     return false;
   }
 
-  JSProtoKey protoKey = JSProto_Null;
+  JSProtoKey protoKey;
   if (isAsync) {
     if (isGenerator) {
       if (!CompileStandaloneAsyncGenerator(cx, &fun, options, srcBuf,
                                            parameterListEnd)) {
         return false;
       }
+      protoKey = JSProto_AsyncGeneratorFunction;
     } else {
       if (!CompileStandaloneAsyncFunction(cx, &fun, options, srcBuf,
                                           parameterListEnd)) {
         return false;
       }
+      protoKey = JSProto_AsyncFunction;
     }
   } else {
     if (isGenerator) {
@@ -1960,6 +1962,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
                                       parameterListEnd)) {
         return false;
       }
+      protoKey = JSProto_GeneratorFunction;
     } else {
       if (!CompileStandaloneFunction(cx, &fun, options, srcBuf,
                                      parameterListEnd)) {

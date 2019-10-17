@@ -10,7 +10,7 @@
 
 // Create an iframe with a javascript: source URL. Such iframes are
 // considered untrusted by the CacheStorage.
-let frameEl = document.createElement("iframe");
+const frameEl = document.createElement("iframe");
 document.body.appendChild(frameEl);
 
 window.frameContent = 'Hello World';

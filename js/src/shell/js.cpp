@@ -1276,6 +1276,10 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  if (!js::AddListFormatConstructor(cx, intl)) {
+    return false;
+  }
+
   args.rval().setUndefined();
   return true;
 }
@@ -7262,11 +7266,10 @@ done:
   }
 }
 
-static bool EnsureLatin1CharsLinearString(
-    JSContext* cx, HandleValue value,
-    JS::MutableHandle<JSLinearString*> result) {
+static bool EnsureLatin1CharsLinearString(JSContext* cx, HandleValue value,
+                                          UniqueChars* result) {
   if (!value.isString()) {
-    result.set(nullptr);
+    result->reset(nullptr);
     return true;
   }
   RootedString str(cx, value.toString());
@@ -7275,9 +7278,10 @@ static bool EnsureLatin1CharsLinearString(
                         "only latin1 chars and linear strings are expected");
     return false;
   }
-  result.set(&str->asLinear());
-  MOZ_ASSERT(result->hasLatin1Chars());
-  return true;
+
+  // Use JS_EncodeStringToLatin1 to null-terminate.
+  *result = JS_EncodeStringToLatin1(cx, str);
+  return !!*result;
 }
 
 static bool ConsumeBufferSource(JSContext* cx, JS::HandleObject obj,
@@ -7287,8 +7291,8 @@ static bool ConsumeBufferSource(JSContext* cx, JS::HandleObject obj,
     if (!JS_GetProperty(cx, obj, "url", &url)) {
       return false;
     }
-    RootedLinearString urlStr(cx);
-    if (!EnsureLatin1CharsLinearString(cx, url, &urlStr)) {
+    UniqueChars urlChars;
+    if (!EnsureLatin1CharsLinearString(cx, url, &urlChars)) {
       return false;
     }
 
@@ -7296,17 +7300,12 @@ static bool ConsumeBufferSource(JSContext* cx, JS::HandleObject obj,
     if (!JS_GetProperty(cx, obj, "sourceMappingURL", &mapUrl)) {
       return false;
     }
-    RootedLinearString mapUrlStr(cx);
-    if (!EnsureLatin1CharsLinearString(cx, mapUrl, &mapUrlStr)) {
+    UniqueChars mapUrlChars;
+    if (!EnsureLatin1CharsLinearString(cx, mapUrl, &mapUrlChars)) {
       return false;
     }
 
-    JS::AutoCheckCannotGC nogc;
-    consumer->noteResponseURLs(
-        urlStr ? reinterpret_cast<const char*>(urlStr->latin1Chars(nogc))
-               : nullptr,
-        mapUrlStr ? reinterpret_cast<const char*>(mapUrlStr->latin1Chars(nogc))
-                  : nullptr);
+    consumer->noteResponseURLs(urlChars.get(), mapUrlChars.get());
   }
 
   UniquePtr<BufferStreamJob> job;
@@ -9256,26 +9255,15 @@ bool DefineConsole(JSContext* cx, HandleObject global) {
 #undef EXTERNAL_FUNCTION_COUNT
 
 static bool PrintHelpString(JSContext* cx, HandleValue v) {
-  JSString* str = v.toString();
+  RootedString str(cx, v.toString());
   MOZ_ASSERT(gOutFile->isOpen());
 
-  JSLinearString* linear = str->ensureLinear(cx);
-  if (!linear) {
+  UniqueChars bytes = JS_EncodeStringToUTF8(cx, str);
+  if (!bytes) {
     return false;
   }
 
-  JS::AutoCheckCannotGC nogc;
-  if (linear->hasLatin1Chars()) {
-    for (const Latin1Char* p = linear->latin1Chars(nogc); *p; p++) {
-      fprintf(gOutFile->fp, "%c", char(*p));
-    }
-  } else {
-    for (const char16_t* p = linear->twoByteChars(nogc); *p; p++) {
-      fprintf(gOutFile->fp, "%c", char(*p));
-    }
-  }
-  fprintf(gOutFile->fp, "\n");
-
+  fprintf(gOutFile->fp, "%s\n", bytes.get());
   return true;
 }
 

@@ -454,10 +454,6 @@ nsPluginNativeWindowWin::nsPluginNativeWindowWin() : nsPluginNativeWindow() {
 
   mParentWnd = nullptr;
   mParentProc = 0;
-
-  if (!sWM_FLASHBOUNCEMSG) {
-    sWM_FLASHBOUNCEMSG = ::RegisterWindowMessage(NS_PLUGIN_CUSTOM_MSG_ID);
-  }
 }
 
 WNDPROC nsPluginNativeWindowWin::GetPrevWindowProc() { return mPrevWinProc; }
@@ -543,6 +539,10 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(
   if (!XRE_IsParentProcess()) {
     nsPluginNativeWindow::CallSetWindow(aPluginInstance);
     return NS_OK;
+  }
+
+  if (!sWM_FLASHBOUNCEMSG) {
+    sWM_FLASHBOUNCEMSG = ::RegisterWindowMessage(NS_PLUGIN_CUSTOM_MSG_ID);
   }
 
   if (window) {

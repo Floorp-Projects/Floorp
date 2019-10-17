@@ -1794,7 +1794,8 @@ JS::Result<Ok> GenericHuffmanTable::initStart(JSContext* cx,
   // `largestBitLength`.
   // ...hopefully, only one lookup.
   if (largestBitLength <= SingleLookupHuffmanTable::MAX_BIT_LENGTH) {
-    implementation_ = {mozilla::VariantType<SingleLookupHuffmanTable>{}, cx};
+    implementation_ = {mozilla::VariantType<SingleLookupHuffmanTable>{}, cx,
+                       SingleLookupHuffmanTable::Use::ToplevelTable};
     return implementation_.template as<SingleLookupHuffmanTable>().initStart(
         cx, numberOfSymbols, largestBitLength);
   }
@@ -2009,10 +2010,17 @@ JS::Result<Ok> SingleLookupHuffmanTable::initComplete() {
     MOZ_ASSERT(largestBitLength_ == 0);
     return Ok();
   }
+
 #ifdef DEBUG
   bool foundMaxBitLength = false;
   for (size_t i = 0; i < saturated_.length(); ++i) {
     const uint8_t index = saturated_[i];
+    if (use_ != Use::ToplevelTable) {
+      // The table may not be full.
+      if (index >= values_.length()) {
+        continue;
+      }
+    }
     MOZ_ASSERT(values_[index].key().bitLength_ <= largestBitLength_);
     if (values_[index].key().bitLength_ == largestBitLength_) {
       foundMaxBitLength = true;
@@ -2020,6 +2028,7 @@ JS::Result<Ok> SingleLookupHuffmanTable::initComplete() {
   }
   MOZ_ASSERT(foundMaxBitLength);
 #endif  // DEBUG
+
   return Ok();
 }
 
@@ -2071,6 +2080,12 @@ HuffmanLookupResult SingleLookupHuffmanTable::lookup(HuffmanLookup key) const {
   // Invariants: `saturated_.length() == 1 << largestBitLength_`
   // and `bits <= 1 << largestBitLength_`.
   const size_t index = saturated_[bits];
+  if (index >= values_.length()) {
+    // This is useful only when the `SingleLookupHuffmanTable`
+    // is used as a cache inside a `MultiLookupHuffmanTable`.
+    MOZ_ASSERT(use_ == Use::ShortKeys);
+    return HuffmanLookupResult::notFound();
+  }
 
   // Invariants: `saturated_[i] < values_.length()`.
   const auto& entry = values_[index];
@@ -2118,12 +2133,12 @@ JS::Result<Ok> MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initStart(
   static_assert(PrefixBitLength < MAX_CODE_BIT_LENGTH,
                 "Invalid PrefixBitLength");
   MOZ_ASSERT(values_.empty());  // Make sure that we're initializing.
-  MOZ_ASSERT(subTables_.empty());
+  MOZ_ASSERT(suffixTables_.empty());
   largestBitLength_ = largestBitLength;
   if (MOZ_UNLIKELY(!values_.initCapacity(numberOfSymbols))) {
     return cx->alreadyReportedError();
   }
-  if (MOZ_UNLIKELY(!subTables_.initCapacity(1 << PrefixBitLength))) {
+  if (MOZ_UNLIKELY(!suffixTables_.initCapacity(1 << PrefixBitLength))) {
     return cx->alreadyReportedError();
   }
   return Ok();
@@ -2151,11 +2166,24 @@ MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initComplete() {
     Bucket() : largestBitLength_(0), numberOfSymbols_(0){};
     uint8_t largestBitLength_;
     uint32_t numberOfSymbols_;
+    void addSymbol(uint8_t bitLength) {
+      ++numberOfSymbols_;
+      if (bitLength > largestBitLength_) {
+        largestBitLength_ = bitLength;
+      }
+    }
   };
   Vector<Bucket> buckets{cx_};
   BINJS_TRY(buckets.resize(1 << PrefixBitLength));
+  Bucket shortKeysBucket;
 
   for (const auto& entry : values_) {
+    if (entry.key().bitLength_ <= SingleLookupHuffmanTable::MAX_BIT_LENGTH) {
+      // If the key is short, we put it in `shortKeys_` instead of
+      // `suffixTables`.
+      shortKeysBucket.addSymbol(entry.key().bitLength_);
+      continue;
+    }
     const HuffmanLookup lookup(entry.key().bits_, entry.key().bitLength_);
     const auto split = lookup.split(PrefixBitLength);
     MOZ_ASSERT_IF(split.suffix_.bitLength_ != 32,
@@ -2167,34 +2195,46 @@ MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initComplete() {
     // (e.g. G, H in the documentation).
     for (const auto index : lookup.suffixes(PrefixBitLength)) {
       Bucket& bucket = buckets[index];
-      if (split.suffix_.bitLength_ >= bucket.largestBitLength_) {
-        bucket.largestBitLength_ = split.suffix_.bitLength_;
-      }
-      bucket.numberOfSymbols_++;
+      bucket.addSymbol(split.suffix_.bitLength_);
     }
   }
 
   // We may now create the subtables.
   for (auto& bucket : buckets) {
     Subtable sub(cx_);
-    MOZ_TRY(sub.initStart(cx_,
-                          /* numberOfSymbols = */ bucket.numberOfSymbols_,
-                          /* largestBitLength = */ bucket.largestBitLength_));
-    BINJS_TRY(subTables_.append(std::move(sub)));
+    if (bucket.numberOfSymbols_ != 0) {
+      // Often, a subtable will end up empty because all the prefixes end up
+      // in `shortKeys_`. In such a case, we want to avoid initializing the
+      // table.
+      MOZ_TRY(sub.initStart(cx_,
+                            /* numberOfSymbols = */ bucket.numberOfSymbols_,
+                            /* maxBitLength = */ bucket.largestBitLength_));
+    }
+    BINJS_TRY(suffixTables_.append(std::move(sub)));
   }
 
-  // Now that the subtables are created, let's dispatch the values
+  // Also, create the shortKeys_ fast lookup.
+  MOZ_TRY(shortKeys_.initStart(cx_, shortKeysBucket.numberOfSymbols_,
+                               shortKeysBucket.largestBitLength_));
+
+  // Now that all the subtables are created, let's dispatch the values
   // among these tables.
   for (size_t i = 0; i < values_.length(); ++i) {
     const auto& entry = values_[i];
+    if (entry.key().bitLength_ <= SingleLookupHuffmanTable::MAX_BIT_LENGTH) {
+      // The key fits in `shortKeys_`, let's use this table.
+      MOZ_TRY(shortKeys_.addSymbol(entry.key().bits_, entry.key().bitLength_,
+                                   BinASTSymbol::fromSubtableIndex(i)));
+      continue;
+    }
 
-    // Find the relevant subtables.
+    // Otherwise, use one of the suffix tables.
     const HuffmanLookup lookup(entry.key().bits_, entry.key().bitLength_);
     const auto split = lookup.split(PrefixBitLength);
     MOZ_ASSERT_IF(split.suffix_.bitLength_ != 32,
                   split.suffix_.bits_ >> split.suffix_.bitLength_ == 0);
     for (const auto index : lookup.suffixes(PrefixBitLength)) {
-      auto& sub = subTables_[index];
+      auto& sub = suffixTables_[index];
 
       // We may now add a reference to `entry` into the sybtable.
       MOZ_TRY(sub.addSymbol(split.suffix_.bits_, split.suffix_.bitLength_,
@@ -2202,8 +2242,14 @@ MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initComplete() {
     }
   }
 
-  // Finally, complete initialization of subtables.
-  for (auto& sub : subTables_) {
+  // Finally, complete initialization of shortKeys_ and subtables.
+  MOZ_TRY(shortKeys_.initComplete());
+  for (size_t i = 0; i < buckets.length(); ++i) {
+    if (buckets[i].numberOfSymbols_ == 0) {
+      // Again, we don't want to initialize empty subtables.
+      continue;
+    }
+    auto& sub = suffixTables_[i];
     MOZ_TRY(sub.initComplete());
   }
 
@@ -2213,11 +2259,22 @@ MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initComplete() {
 template <typename Subtable, uint8_t PrefixBitLength>
 HuffmanLookupResult MultiLookupHuffmanTable<Subtable, PrefixBitLength>::lookup(
     HuffmanLookup key) const {
+  {
+    // Let's first look in shortkeys.
+    auto subResult = shortKeys_.lookup(key);
+    if (subResult.isFound()) {
+      // We have found a result in the shortKeys_ fastpath.
+      const auto& result = values_[subResult.value().toSubtableIndex()];
+
+      return HuffmanLookupResult::found(result.key().bitLength_,
+                                        &result.value());
+    }
+  }
   const auto split = key.split(PrefixBitLength);
-  if (split.prefix_.bits_ >= subTables_.length()) {
+  if (split.prefix_.bits_ >= suffixTables_.length()) {
     return HuffmanLookupResult::notFound();
   }
-  const Subtable& subtable = subTables_[split.prefix_.bits_];
+  const Subtable& subtable = suffixTables_[split.prefix_.bits_];
 
   auto subResult = subtable.lookup(split.suffix_);
   if (!subResult.isFound()) {

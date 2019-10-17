@@ -114,6 +114,17 @@ inline Result ExpectTagAndSkipValue(Reader& input, uint8_t tag) {
   return ExpectTagAndGetValue(input, tag, ignoredValue);
 }
 
+// This skips IMPLICIT OPTIONAL tags that are "primitive" (not constructed),
+// given the number in the class of the tag (i.e. the number in the brackets in
+// `issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL`).
+inline Result SkipOptionalImplicitPrimitiveTag(Reader& input,
+                                               uint8_t numberInClass) {
+  if (input.Peek(CONTEXT_SPECIFIC | numberInClass)) {
+    return ExpectTagAndSkipValue(input, CONTEXT_SPECIFIC | numberInClass);
+  }
+  return Success;
+}
+
 // Like ExpectTagAndGetValue, except the output Input will contain the
 // encoded tag and length along with the value.
 inline Result ExpectTagAndGetTLV(Reader& input, uint8_t tag,

@@ -1107,3 +1107,74 @@ description#identity-popup-content-verifier,
 .protections-popup-description > description {
   margin: 10px 24px;
 }
+
+#protections-popup:not([milestone]) #protections-popup-milestones {
+  display: none;
+}
+
+#protections-popup-milestones {
+  margin: 0 calc(var(--horizontal-padding) * 0.5) var(--vertical-section-padding);
+  /* Override .protections-popup-section */
+  border-top: none;
+  background-color: var(--arrowpanel-dimmed);
+}
+
+#protections-popup-milestones-content {
+  padding: var(--vertical-section-padding) calc(var(--horizontal-padding) * 0.5);
+  margin: 0;
+}
+
+#protections-popup-milestones-content:hover {
+  background-color: var(--arrowpanel-dimmed);
+}
+
+#protections-popup-milestones-content:hover:active {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+#protections-popup-milestones-text {
+  font-size: 1.23em;
+  margin: 0;
+}
+
+#protections-popup-milestones-illustration {
+  list-style-image: url(chrome://browser/skin/controlcenter/etp-milestone.svg);
+  -moz-context-properties: fill, stroke;
+  margin-inline-start: var(--horizontal-padding);
+  margin-inline-end: 4px;
+}
+
+#protections-popup[milestone] #protections-popup-milestones-illustration {
+  fill: #45278d;
+  stroke: #321c64;
+}
+
+#protections-popup[milestone="5000"] #protections-popup-milestones-illustration {
+  fill: #5a29cb;
+  stroke: #45278d;
+}
+
+#protections-popup[milestone="10000"] #protections-popup-milestones-illustration {
+  fill: #7641e5;
+  stroke: #5a29cb;
+}
+
+#protections-popup[milestone="25000"] #protections-popup-milestones-illustration {
+  fill: #e31587;
+  stroke: #c60084;
+}
+
+#protections-popup[milestone="50000"] #protections-popup-milestones-illustration {
+  fill: #ff298a;
+  stroke: #e31587;
+}
+
+#protections-popup[milestone="100000"] #protections-popup-milestones-illustration {
+  fill: #ffa436;
+  stroke: #e27f2e;
+}
+
+#protections-popup[milestone="500000"] #protections-popup-milestones-illustration {
+  fill: #ffd567;
+  stroke: #ffbd4f;
+}

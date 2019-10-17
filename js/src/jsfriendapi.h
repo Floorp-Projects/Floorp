@@ -2607,8 +2607,11 @@ extern bool AddMozDateTimeFormatConstructor(JSContext* cx,
                                             JS::Handle<JSObject*> intl);
 
 // Create and add the Intl.Locale constructor function to the provided object.
-// This function throws if called more than once per realm/global object.
 extern bool AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
+
+// Create and add the Intl.ListFormat constructor function to the provided
+// object.
+extern bool AddListFormatConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
 #endif  // ENABLE_INTL_API
 
 class MOZ_STACK_CLASS JS_FRIEND_API AutoAssertNoContentJS {

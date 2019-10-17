@@ -63,12 +63,6 @@ devtools/client/performance/components/test/test_jit_optimizations_01.html
 devtools/client/shared/test/*.html
 devtools/client/shared/components/test/mochitest/*.html
 !devtools/client/shared/components/test/mochitest/test_stack-trace.html
-devtools/client/storage/test/*.html
-!devtools/client/storage/test/storage-cookies.html
-!devtools/client/storage/test/storage-overflow.html
-!devtools/client/storage/test/storage-search.html
-!devtools/client/storage/test/storage-unsecured-iframe.html
-!devtools/client/storage/test/storage-unsecured-iframe-usercontextid.html
 devtools/server/tests/browser/storage-*.html
 !devtools/server/tests/browser/storage-unsecured-iframe.html
 devtools/server/tests/browser/stylesheets-nested-iframes.html

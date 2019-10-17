@@ -38,7 +38,7 @@ add_task(async function() {
 
   info("Check if Request-Cookies and Response-Cookies are sorted");
   const expectedLabelValues = [
-    "Response cookies",
+    "Response Cookies",
     "bob",
     "httpOnly",
     "value",
@@ -48,7 +48,7 @@ add_task(async function() {
     "tom",
     "httpOnly",
     "value",
-    "Request cookies",
+    "Request Cookies",
     "bob",
     "foo",
     "tom",

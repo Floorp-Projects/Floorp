@@ -17,6 +17,10 @@ include protocol PVsyncBridge;
 include protocol PUiCompositorController;
 include protocol PRemoteDecoderManager;
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+include protocol PSandboxTesting;
+#endif
+
 using base::ProcessId from "base/process.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::Telemetry::HistogramAccumulation from "mozilla/TelemetryComms.h";
@@ -98,6 +102,10 @@ parent:
   // Functions supporting PerfStats data collection.
   async UpdatePerfStatsCollectionMask(uint64_t aMask);
   async CollectPerfStatsJSON() returns (nsCString aStats);
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
+#endif
 
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after

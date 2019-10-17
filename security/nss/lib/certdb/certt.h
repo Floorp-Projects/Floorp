@@ -35,6 +35,7 @@ typedef struct CERTCertListStr CERTCertList;
 typedef struct CERTCertListNodeStr CERTCertListNode;
 typedef struct CERTCertNicknamesStr CERTCertNicknames;
 typedef struct CERTCertTrustStr CERTCertTrust;
+typedef struct CERTCertDistrustStr CERTCertDistrust;
 typedef struct CERTCertificateStr CERTCertificate;
 typedef struct CERTCertificateListStr CERTCertificateList;
 typedef struct CERTCertificateRequestStr CERTCertificateRequest;
@@ -138,6 +139,18 @@ struct CERTCertTrustStr {
     unsigned int sslFlags;
     unsigned int emailFlags;
     unsigned int objectSigningFlags;
+};
+
+/*
+ * Distrust dates for specific certificate usages.
+ * These dates are hardcoded in nssckbi/builtins. They are DER encoded to be
+ * compatible with the format of certdata.txt, other date fields in certs and
+ * existing functions to read these dates. Clients should check the distrust
+ * date in certificates to avoid trusting a CA for service they have ceased to
+ * support */
+struct CERTCertDistrustStr {
+    SECItem serverDistrustAfter;
+    SECItem emailDistrustAfter;
 };
 
 /*
@@ -279,6 +292,8 @@ struct CERTCertificateStr {
     PK11SlotInfo *slot;        /*if this cert came of a token, which is it*/
     CK_OBJECT_HANDLE pkcs11ID; /*and which object on that token is it */
     PRBool ownSlot;            /*true if the cert owns the slot reference */
+    /* These fields are used in nssckbi/builtins CAs. */
+    CERTCertDistrust *distrust;
 };
 #define SEC_CERTIFICATE_VERSION_1 0 /* default created */
 #define SEC_CERTIFICATE_VERSION_2 1 /* v2 */

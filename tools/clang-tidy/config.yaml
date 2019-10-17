@@ -185,6 +185,11 @@ clang_checkers:
     reliability: high
   - name: performance-move-const-arg
     reliability: high
+    config:
+      - key: CheckTriviallyCopyableMove
+        # As per Bug 1558359 - disable detection of trivially copyable types
+        # that do not have a move constructor.
+        value: 0
   - name: performance-move-constructor-init
     reliability: high
   - name: performance-noexcept-move-constructor

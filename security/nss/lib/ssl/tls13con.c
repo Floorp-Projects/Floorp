@@ -914,7 +914,7 @@ SECStatus
 tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     if (ss->sec.isServer && ss->ssl3.hs.zeroRttIgnore != ssl_0rtt_ignore_none) {
-        SSL_TRC(3, ("%d: TLS13[%d]: %s successfully decrypted handshake after"
+        SSL_TRC(3, ("%d: TLS13[%d]: successfully decrypted handshake after "
                     "failed 0-RTT",
                     SSL_GETPID(), ss->fd));
         ss->ssl3.hs.zeroRttIgnore = ssl_0rtt_ignore_none;

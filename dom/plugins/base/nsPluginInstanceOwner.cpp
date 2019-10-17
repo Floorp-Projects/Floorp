@@ -274,6 +274,9 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mGotCompositionData = false;
   mSentStartComposition = false;
   mPluginDidNotHandleIMEComposition = false;
+  // 3 is the Windows default for these values.
+  mWheelScrollLines = 3;
+  mWheelScrollChars = 3;
 #endif
 }
 
@@ -2083,13 +2086,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
                 delta = -WHEEL_DELTA * wheelEvent->mLineOrPageDeltaY;
                 break;
               case WheelEvent_Binding::DOM_DELTA_LINE: {
-                UINT linesPerWheelDelta = 0;
-                if (NS_WARN_IF(!::SystemParametersInfo(
-                        SPI_GETWHEELSCROLLLINES, 0, &linesPerWheelDelta, 0))) {
-                  // Use system default scroll amount, 3, when
-                  // SPI_GETWHEELSCROLLLINES isn't available.
-                  linesPerWheelDelta = 3;
-                }
+                UINT linesPerWheelDelta = mWheelScrollLines;
                 if (!linesPerWheelDelta) {
                   break;
                 }
@@ -2112,14 +2109,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
                 break;
               case WheelEvent_Binding::DOM_DELTA_LINE: {
                 pluginEvent.event = WM_MOUSEHWHEEL;
-                UINT charsPerWheelDelta = 0;
-                // FYI: SPI_GETWHEELSCROLLCHARS is available on Vista or later.
-                if (::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
-                                           &charsPerWheelDelta, 0)) {
-                  // Use system default scroll amount, 3, when
-                  // SPI_GETWHEELSCROLLCHARS isn't available.
-                  charsPerWheelDelta = 3;
-                }
+                UINT charsPerWheelDelta = mWheelScrollChars;
                 if (!charsPerWheelDelta) {
                   break;
                 }
@@ -2159,14 +2149,11 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
           break;
       }
       if (pluginEvent.event && initWParamWithCurrentState) {
+        // We created one of the messages caught above but didn't fill in
+        // wParam. Mark it with an invalid wParam value so that HandleEvent can
+        // figure it out.
         pPluginEvent = &pluginEvent;
-        pluginEvent.wParam = (::GetKeyState(VK_CONTROL) ? MK_CONTROL : 0) |
-                             (::GetKeyState(VK_SHIFT) ? MK_SHIFT : 0) |
-                             (::GetKeyState(VK_LBUTTON) ? MK_LBUTTON : 0) |
-                             (::GetKeyState(VK_MBUTTON) ? MK_MBUTTON : 0) |
-                             (::GetKeyState(VK_RBUTTON) ? MK_RBUTTON : 0) |
-                             (::GetKeyState(VK_XBUTTON1) ? MK_XBUTTON1 : 0) |
-                             (::GetKeyState(VK_XBUTTON2) ? MK_XBUTTON2 : 0);
+        pluginEvent.wParam = NPAPI_INVALID_WPARAM;
       }
     }
     if (pPluginEvent) {
@@ -2216,6 +2203,23 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(
     NS_WARNING(
         "nsPluginFrame ProcessEvent: trying to send null event to plugin.");
     return rv;
+  }
+
+  // We don't need to tell the plugin about changes to the scroll wheel
+  // settings but we do need to remember them for future mouse move
+  // calculations.  We put the scroll wheel setting in the lParam field.
+  if (pPluginEvent && pPluginEvent->event == WM_SETTINGCHANGE) {
+    switch (pPluginEvent->wParam) {
+      case SPI_SETWHEELSCROLLLINES:
+        mWheelScrollLines = static_cast<uint32_t>(pPluginEvent->lParam);
+        break;
+      case SPI_SETWHEELSCROLLCHARS:
+        mWheelScrollChars = static_cast<uint32_t>(pPluginEvent->lParam);
+        break;
+      default:
+        break;
+    }
+    return nsEventStatus_eConsumeNoDefault;
   }
 
   if (pPluginEvent) {

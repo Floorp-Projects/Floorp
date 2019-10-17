@@ -7,6 +7,7 @@
   <script type="application/javascript">
     "use strict";
 
+    /* exported createIndexedDBs */
     function createIndexedDBs() {
       createIndexedDB("idb1", "temporary");
       createIndexedDB("idb1", "default");
@@ -17,10 +18,10 @@
     }
 
     function createIndexedDB(name, storage) {
-      let open = indexedDB.open(name, {storage: storage});
+      const open = indexedDB.open(name, {storage: storage});
 
       open.onsuccess = function () {
-        let db = open.result;
+        const db = open.result;
         db.close();
       };
     }

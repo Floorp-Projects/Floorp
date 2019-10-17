@@ -80,7 +80,6 @@ import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
 
 import "./Editor.css";
 import "./Breakpoints.css";
-import "./Highlight.css";
 import "./InlinePreview.css";
 
 import type SourceEditor from "../../utils/editor/source-editor";

@@ -19,11 +19,10 @@ using UDateFormat = void*;
 
 namespace js {
 
-class GlobalObject;
-
 class DateTimeFormatObject : public NativeObject {
  public:
   static const JSClass class_;
+  static const JSClass& protoClass_;
 
   static constexpr uint32_t INTERNALS_SLOT = 0;
   static constexpr uint32_t UDATE_FORMAT_SLOT = 1;
@@ -47,14 +46,10 @@ class DateTimeFormatObject : public NativeObject {
 
  private:
   static const JSClassOps classOps_;
+  static const ClassSpec classSpec_;
 
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
-
-extern JSObject* CreateDateTimeFormatPrototype(
-    JSContext* cx, JS::Handle<JSObject*> Intl, JS::Handle<GlobalObject*> global,
-    JS::MutableHandle<JSObject*> constructor,
-    intl::DateTimeFormatOptions dtfOptions);
 
 /**
  * Returns a new instance of the standard built-in DateTimeFormat constructor.

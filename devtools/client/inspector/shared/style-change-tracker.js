@@ -30,10 +30,6 @@ class InspectorStyleChangeTracker {
   }
 
   async init() {
-    if (!this.inspector) {
-      return;
-    }
-
     try {
       // TODO: Bug 1588868 - Get all the inspector fronts whenever targets changes or
       // are added or removed.

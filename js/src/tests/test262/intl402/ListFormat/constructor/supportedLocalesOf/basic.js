@@ -1,4 +1,3 @@
-// |reftest| skip -- Intl.ListFormat is not supported
 // Copyright 2018 Google Inc., Igalia S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

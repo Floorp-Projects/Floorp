@@ -825,6 +825,36 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
             cc->trust = trust;
             CERT_UnlockCertTrust(cc);
         }
+        /* Read the distrust fields from a nssckbi/builtins certificate and
+         * fill the fields in CERTCertificate structure when any valid date
+         * is found. */
+        if (PK11_IsReadOnly(cc->slot) && PK11_HasRootCerts(cc->slot)) {
+            /* The values are hard-coded and readonly. Read just once. */
+            if (cc->distrust == NULL) {
+                CERTCertDistrust distrustModel;
+                SECItem model = { siUTCTime, NULL, 0 };
+                distrustModel.serverDistrustAfter = model;
+                distrustModel.emailDistrustAfter = model;
+                SECStatus rServer = PK11_ReadAttribute(
+                    cc->slot, cc->pkcs11ID, CKA_NSS_SERVER_DISTRUST_AFTER,
+                    cc->arena, &distrustModel.serverDistrustAfter);
+                SECStatus rEmail = PK11_ReadAttribute(
+                    cc->slot, cc->pkcs11ID, CKA_NSS_EMAIL_DISTRUST_AFTER,
+                    cc->arena, &distrustModel.emailDistrustAfter);
+                /* Only allocate the Distrust structure if a valid date is found.
+                 * The result length of a encoded valid timestamp is exactly 13 */
+                const unsigned int kDistrustFieldSize = 13;
+                if ((rServer == SECSuccess && rEmail == SECSuccess) &&
+                    (distrustModel.serverDistrustAfter.len == kDistrustFieldSize ||
+                     distrustModel.emailDistrustAfter.len == kDistrustFieldSize)) {
+                    CERTCertDistrust *tmpPtr = PORT_ArenaAlloc(
+                        cc->arena, sizeof(CERTCertDistrust));
+                    PORT_Memcpy(tmpPtr, &distrustModel,
+                                sizeof(CERTCertDistrust));
+                    cc->distrust = tmpPtr;
+                }
+            }
+        }
     }
     if (instance) {
         nssCryptokiObject_Destroy(instance);

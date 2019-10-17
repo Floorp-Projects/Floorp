@@ -1693,6 +1693,7 @@ Inspector.prototype = {
     this._markupFrame.contentWindow.focus();
     this._markupBox.style.visibility = "visible";
     this.markup = new MarkupView(this, this._markupFrame, this._toolbox.win);
+    this.markup.init();
     this.emit("markuploaded");
   },
 

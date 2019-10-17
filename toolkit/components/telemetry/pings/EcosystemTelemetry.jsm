@@ -227,26 +227,10 @@ var EcosystemTelemetry = {
     this._log.trace(`_submitPing, ping type: ${pingType}, reason: ${reason}`);
 
     let now = Policy.monotonicNow();
-    let new_send_time = now;
-    let old_send_time = this._lastSendTime;
 
     // Duration in seconds
     let duration = Math.round((now - this._lastSendTime) / 1000);
     this._lastSendTime = now;
-
-    // FIXME(bug 1545365): This is a hack to track the values we see,
-    // in order to determine where negative durations are coming from.
-    // Note: These scalars must be set _before_ getting the rest of the payload.
-    // Note: We don't support signed integer scalars, so we convert these to strings
-    //       in order to also capture the negative values.
-    Services.telemetry.scalarSet(
-      "telemetry.ecosystem_old_send_time",
-      old_send_time.toString()
-    );
-    Services.telemetry.scalarSet(
-      "telemetry.ecosystem_new_send_time",
-      new_send_time.toString()
-    );
 
     let payload = this._payload(reason, duration);
 

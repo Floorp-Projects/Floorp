@@ -234,14 +234,24 @@ bool SipccSdpMediaSection::ValidateSimulcastVersions(
   }
 
   for (const SdpSimulcastAttribute::Version& version : versions) {
-    for (const SdpSimulcastAttribute::Encoding& encoding : version.choices) {
-      const SdpRidAttributeList::Rid* ridAttr = FindRid(encoding.rid);
-      if (!ridAttr || (ridAttr->direction != direction)) {
-        std::ostringstream os;
-        os << "No rid attribute for \'" << encoding.rid << "\'";
-        errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
-                                  os.str());
-        return false;
+    for (const std::string& id : version.choices) {
+      if (versions.type == SdpSimulcastAttribute::Versions::kRid) {
+        const SdpRidAttributeList::Rid* ridAttr = FindRid(id);
+        if (!ridAttr || (ridAttr->direction != direction)) {
+          std::ostringstream os;
+          os << "No rid attribute for \'" << id << "\'";
+          errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                                    os.str());
+          return false;
+        }
+      } else if (versions.type == SdpSimulcastAttribute::Versions::kPt) {
+        if (std::find(mFormats.begin(), mFormats.end(), id) == mFormats.end()) {
+          std::ostringstream os;
+          os << "No pt for \'" << id << "\'";
+          errorHolder.AddParseError(sdp_get_media_line_number(sdp, level),
+                                    os.str());
+          return false;
+        }
       }
     }
   }

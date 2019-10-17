@@ -19,6 +19,10 @@ for example - use `all_tests.py` instead.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
+import logging
+import os
+
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import match_run_on_projects
 from taskgraph.util.keyed_by import evaluate_keyed_by
@@ -45,8 +49,7 @@ from voluptuous import (
     Exclusive,
 )
 
-import copy
-import logging
+here = os.path.abspath(os.path.dirname(__file__))
 
 # default worker types keyed by instance-size
 LINUX_WORKER_TYPES = {
@@ -571,9 +574,6 @@ def set_defaults(config, tests):
         yield test
 
 
-transforms.add_validate(test_description_schema)
-
-
 @transforms.add
 def resolve_keys(config, tests):
     for test in tests:
@@ -585,6 +585,23 @@ def resolve_keys(config, tests):
             }
         )
         yield test
+
+
+@transforms.add
+def setup_raptor(config, tests):
+    """Add options that are specific to raptor jobs (identified by suite=raptor)"""
+    from taskgraph.transforms.raptor import transforms as raptor_transforms
+
+    for test in tests:
+        if test['suite'] != 'raptor':
+            yield test
+            continue
+
+        for t in raptor_transforms(config, [test]):
+            yield t
+
+
+transforms.add_validate(test_description_schema)
 
 
 @transforms.add
@@ -637,59 +654,6 @@ def setup_talos(config, tests):
         if test['build-platform'].startswith('win32'):
             extra_options.append('--add-option')
             extra_options.append('--setpref,gfx.direct2d.disabled=true')
-
-        yield test
-
-
-@transforms.add
-def setup_raptor(config, tests):
-    """Add options that are specific to raptor jobs (identified by suite=raptor)"""
-    for test in tests:
-        if test['suite'] != 'raptor':
-            yield test
-            continue
-
-        extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
-
-        if test['require-signed-extensions']:
-            extra_options.append('--is-release-build')
-
-        # add urlparams based on platform, test names and projects
-        testurlparams_by_platform_and_project = {
-            "android-hw-g5": [
-                {
-                    "branches": [],  # For all branches
-                    "testnames": ["youtube-playback"],
-                    "urlparams": [
-                        # param used for excluding youtube-playback tests from executing
-                        # it excludes the tests with videos >1080p
-                        "exclude=1,2,9,10,17,18,21,22,26,28,30,32,39,40,47,"
-                        "48,55,56,63,64,71,72,79,80,83,84,89,90,95,96",
-                    ]
-                },
-            ]
-        }
-
-        for platform, testurlparams_by_project_definitions \
-                in testurlparams_by_platform_and_project.items():
-
-            if test['test-platform'].startswith(platform):
-                # For every platform it may have several definitions
-                for testurlparams_by_project in testurlparams_by_project_definitions:
-                    # The test should contain at least one defined testname
-                    if any(
-                        testname in test['test-name']
-                        for testname in testurlparams_by_project['testnames']
-                    ):
-                        branches = testurlparams_by_project['branches']
-                        if (
-                            branches == [] or
-                            config.params.get('project') in branches or
-                            config.params.is_try() and 'try' in branches
-                        ):
-                            params_query = '&'.join(testurlparams_by_project['urlparams'])
-                            add_extra_params_option = "--test-url-params={}".format(params_query)
-                            extra_options.append(add_extra_params_option)
 
         yield test
 
@@ -1127,7 +1091,7 @@ def handle_run_on_projects(config, tests):
 @transforms.add
 def split_variants(config, tests):
     for test in tests:
-        variants = test.pop('variants') or []
+        variants = test.pop('variants', [])
 
         yield copy.deepcopy(test)
 
@@ -1164,9 +1128,10 @@ def enable_fission_on_central(config, tests):
             yield test
             continue
 
-        # Mochitest only (with exceptions)
+        # Mochitest/wpt only (with exceptions)
         exceptions = ('gpu', 'remote', 'screenshots')
-        if (test['attributes']['unittest_category'] != 'mochitest' or
+        if (test['attributes']['unittest_category'] not in
+                ('mochitest', 'web-platform-tests') or
                 any(s in test['attributes']['unittest_suite'] for s in exceptions)):
             yield test
             continue
@@ -1182,10 +1147,15 @@ def enable_fission_on_central(config, tests):
             test['run-on-projects'].append('mozilla-central')
 
         # Promote select fission tests to tier 1 and ensure they run on trunk
-        if platform == 'linux64' and btype == 'debug' and (test['webrender'] or
-           'mochitest-browser-chrome' in test['attributes']['unittest_suite']):
+        if (test['attributes']['unittest_category'] == "mochitest" and
+            platform == 'linux64' and btype == 'debug' and (test['webrender'] or
+           'mochitest-browser-chrome' in test['attributes']['unittest_suite'])):
             test['tier'] = 1
             test['run-on-projects'] = ['ash', 'try', 'trunk']
+        elif test['attributes']['unittest_category'] == "web-platform-tests":
+            test['tier'] = 3
+            if platform == 'linux64' and btype == 'debug' and test['webrender']:
+                test['run-on-projects'] = ['ash', 'try', 'trunk']
         yield test
 
 

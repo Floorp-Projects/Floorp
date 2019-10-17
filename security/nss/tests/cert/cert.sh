@@ -50,7 +50,7 @@ cert_init()
 
   LIBDIR="${DIST}/${OBJDIR}/lib"
 
-  ROOTCERTSFILE=`ls -1 ${LIBDIR}/*nssckbi* | head -1`
+  ROOTCERTSFILE=`ls -1 ${LIBDIR}/*nssckbi.* | head -1`
   if [ ! "${ROOTCERTSFILE}" ] ; then
       html_failed "Looking for root certs module." 
       cert_log "ERROR: Root certs module not found."

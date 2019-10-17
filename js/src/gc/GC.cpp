@@ -7776,6 +7776,7 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
 
   GlobalObject* global = target->maybeGlobal();
   MOZ_ASSERT(global);
+  AssertTargetIsNotGray(global);
 
   for (auto group = source->zone()->cellIterUnsafe<ObjectGroup>();
        !group.done(); group.next()) {

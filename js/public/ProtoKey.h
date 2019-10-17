@@ -101,6 +101,14 @@
   REAL(Symbol, InitSymbolClass, OCLASP(Symbol))                              \
   REAL(SharedArrayBuffer, InitViaClassSpec, OCLASP(SharedArrayBuffer))       \
   REAL_IF_INTL(Intl, InitIntlClass, CLASP(Intl))                             \
+  REAL_IF_INTL(Collator, InitViaClassSpec, OCLASP(Collator))                 \
+  REAL_IF_INTL(DateTimeFormat, InitViaClassSpec, OCLASP(DateTimeFormat))     \
+  REAL_IF_INTL(Locale, InitViaClassSpec, OCLASP(Locale))                     \
+  REAL_IF_INTL(ListFormat, InitViaClassSpec, OCLASP(ListFormat))             \
+  REAL_IF_INTL(NumberFormat, InitViaClassSpec, OCLASP(NumberFormat))         \
+  REAL_IF_INTL(PluralRules, InitViaClassSpec, OCLASP(PluralRules))           \
+  REAL_IF_INTL(RelativeTimeFormat, InitViaClassSpec,                         \
+               OCLASP(RelativeTimeFormat))                                   \
   REAL_IF_BDATA(TypedObject, InitTypedObjectModuleObject,                    \
                 OCLASP(TypedObjectModule))                                   \
   REAL(Reflect, InitReflect, nullptr)                                        \
@@ -110,6 +118,9 @@
   REAL(Atomics, InitAtomicsClass, OCLASP(Atomics))                           \
   REAL(SavedFrame, InitViaClassSpec, &js::SavedFrame::class_)                \
   REAL(Promise, InitViaClassSpec, OCLASP(Promise))                           \
+  REAL(AsyncFunction, InitAsyncFunction, nullptr)                            \
+  REAL(GeneratorFunction, InitGeneratorFunction, nullptr)                    \
+  REAL(AsyncGeneratorFunction, InitAsyncGeneratorFunction, nullptr)          \
   REAL(ReadableStream, InitViaClassSpec, &js::ReadableStream::class_)        \
   REAL(ReadableStreamDefaultReader, InitViaClassSpec,                        \
        &js::ReadableStreamDefaultReader::class_)                             \

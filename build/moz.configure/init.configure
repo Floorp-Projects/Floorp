@@ -619,16 +619,17 @@ option('--target', nargs=1,
 @imports(_from='__builtin__', _import='ValueError')
 def split_triplet(triplet):
     # The standard triplet is defined as
-    #   CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM
+    #   CPU_TYPE-VENDOR-OPERATING_SYSTEM
     # There is also a quartet form:
-    #   CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM
+    #   CPU_TYPE-VENDOR-KERNEL-OPERATING_SYSTEM
     # But we can consider the "KERNEL-OPERATING_SYSTEM" as one.
-    # Additionally, some may omit "unknown" when the manufacturer
+    # Additionally, some may omit "unknown" when the vendor
     # is not specified and emit
     #   CPU_TYPE-OPERATING_SYSTEM
+    vendor = 'unknown'
     parts = triplet.split('-', 2)
     if len(parts) == 3:
-        cpu, _, os = parts
+        cpu, vendor, os = parts
     elif len(parts) == 2:
         cpu, os = parts
     else:
@@ -744,6 +745,7 @@ def split_triplet(triplet):
         raw_cpu=cpu,
         raw_os=os,
         toolchain=toolchain,
+        vendor=vendor,
     )
 
 

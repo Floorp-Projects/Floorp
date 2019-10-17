@@ -18,7 +18,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: `${FRAMESCRIPT_URL}:1`,
+        filename: `${FRAMESCRIPT_URL}:1:109`,
         attributes: ["Bubbling", "DOM2"],
         handler: `() => { /* Do nothing */ }`,
       },

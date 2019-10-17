@@ -582,7 +582,7 @@ typedef JSObject* (*ClassObjectCreationOp)(JSContext* cx, JSProtoKey key);
 typedef bool (*FinishClassInitOp)(JSContext* cx, JS::HandleObject ctor,
                                   JS::HandleObject proto);
 
-const size_t JSCLASS_CACHED_PROTO_WIDTH = 6;
+const size_t JSCLASS_CACHED_PROTO_WIDTH = 7;
 
 struct MOZ_STATIC_CLASS ClassSpec {
   ClassObjectCreationOp createConstructor;
@@ -642,9 +642,6 @@ struct MOZ_STATIC_CLASS ClassExtension {
   JSObjectMovedOp objectMovedOp;
 };
 
-#define JS_NULL_CLASS_SPEC nullptr
-#define JS_NULL_CLASS_EXT nullptr
-
 struct MOZ_STATIC_CLASS ObjectOps {
   LookupPropertyOp lookupProperty;
   DefinePropertyOp defineProperty;
@@ -657,9 +654,12 @@ struct MOZ_STATIC_CLASS ObjectOps {
   JSFunToStringOp funToString;
 };
 
-#define JS_NULL_OBJECT_OPS nullptr
-
 }  // namespace js
+
+static constexpr const js::ClassSpec* JS_NULL_CLASS_SPEC = nullptr;
+static constexpr const js::ClassExtension* JS_NULL_CLASS_EXT = nullptr;
+
+static constexpr const js::ObjectOps* JS_NULL_OBJECT_OPS = nullptr;
 
 // Classes, objects, and properties.
 
@@ -703,36 +703,32 @@ static const uint32_t JSCLASS_RESERVED_SLOTS_WIDTH = 8;
 static const uint32_t JSCLASS_RESERVED_SLOTS_MASK =
     JS_BITMASK(JSCLASS_RESERVED_SLOTS_WIDTH);
 
-#define JSCLASS_HAS_RESERVED_SLOTS(n) \
-  (((n)&JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT)
-#define JSCLASS_RESERVED_SLOTS(clasp)                 \
-  (((clasp)->flags >> JSCLASS_RESERVED_SLOTS_SHIFT) & \
-   JSCLASS_RESERVED_SLOTS_MASK)
+static constexpr uint32_t JSCLASS_HAS_RESERVED_SLOTS(uint32_t n) {
+  return (n & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT;
+}
 
-#define JSCLASS_HIGH_FLAGS_SHIFT \
-  (JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH)
+static constexpr uint32_t JSCLASS_HIGH_FLAGS_SHIFT =
+    JSCLASS_RESERVED_SLOTS_SHIFT + JSCLASS_RESERVED_SLOTS_WIDTH;
 
 static const uint32_t JSCLASS_INTERNAL_FLAG1 =
     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 0);
 static const uint32_t JSCLASS_IS_GLOBAL = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 1);
 static const uint32_t JSCLASS_INTERNAL_FLAG2 =
     1 << (JSCLASS_HIGH_FLAGS_SHIFT + 2);
-static const uint32_t JSCLASS_INTERNAL_FLAG3 =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 3);
-static const uint32_t JSCLASS_IS_PROXY = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
+static const uint32_t JSCLASS_IS_PROXY = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 3);
 static const uint32_t JSCLASS_SKIP_NURSERY_FINALIZE =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 5);
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 4);
 
 // Reserved for embeddings.
-static const uint32_t JSCLASS_USERBIT2 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 6);
-static const uint32_t JSCLASS_USERBIT3 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 7);
+static const uint32_t JSCLASS_USERBIT2 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 5);
+static const uint32_t JSCLASS_USERBIT3 = 1 << (JSCLASS_HIGH_FLAGS_SHIFT + 6);
 
 static const uint32_t JSCLASS_BACKGROUND_FINALIZE =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 8);
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 7);
 static const uint32_t JSCLASS_FOREGROUND_FINALIZE =
-    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 9);
+    1 << (JSCLASS_HIGH_FLAGS_SHIFT + 8);
 
-// Bits 26 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
+// Bits 25 through 31 are reserved for the CACHED_PROTO_KEY mechanism, see
 // below.
 
 // ECMA-262 requires that most constructors used internally create objects
@@ -750,27 +746,27 @@ static const uint32_t JSCLASS_FOREGROUND_FINALIZE =
 // application.
 static const uint32_t JSCLASS_GLOBAL_APPLICATION_SLOTS = 5;
 static const uint32_t JSCLASS_GLOBAL_SLOT_COUNT =
-    JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProto_LIMIT * 2 + 40;
+    JSCLASS_GLOBAL_APPLICATION_SLOTS + JSProto_LIMIT * 2 + 26;
 
-#define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n) \
-  (JSCLASS_IS_GLOBAL |                     \
-   JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
-#define JSCLASS_GLOBAL_FLAGS JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0)
-#define JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(clasp) \
-  (((clasp)->flags & JSCLASS_IS_GLOBAL) &&       \
-   JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT)
+static constexpr uint32_t JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(uint32_t n) {
+  return JSCLASS_IS_GLOBAL |
+         JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + n);
+}
+
+static constexpr uint32_t JSCLASS_GLOBAL_FLAGS =
+    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0);
 
 // Fast access to the original value of each standard class's prototype.
-static const uint32_t JSCLASS_CACHED_PROTO_SHIFT =
-    JSCLASS_HIGH_FLAGS_SHIFT + 10;
+static const uint32_t JSCLASS_CACHED_PROTO_SHIFT = JSCLASS_HIGH_FLAGS_SHIFT + 9;
 static const uint32_t JSCLASS_CACHED_PROTO_MASK =
     JS_BITMASK(js::JSCLASS_CACHED_PROTO_WIDTH);
 
-#define JSCLASS_HAS_CACHED_PROTO(key) \
-  (uint32_t(key) << JSCLASS_CACHED_PROTO_SHIFT)
-#define JSCLASS_CACHED_PROTO_KEY(clasp)                          \
-  ((JSProtoKey)(((clasp)->flags >> JSCLASS_CACHED_PROTO_SHIFT) & \
-                JSCLASS_CACHED_PROTO_MASK))
+static_assert(JSProto_LIMIT <= (JSCLASS_CACHED_PROTO_MASK + 1),
+              "JSProtoKey must not exceed the maximum cacheable proto-mask");
+
+static constexpr uint32_t JSCLASS_HAS_CACHED_PROTO(JSProtoKey key) {
+  return uint32_t(key) << JSCLASS_CACHED_PROTO_SHIFT;
+}
 
 struct MOZ_STATIC_CLASS JSClassOps {
   /* Function pointer members (may be null). */
@@ -787,7 +783,7 @@ struct MOZ_STATIC_CLASS JSClassOps {
   JSTraceOp trace;
 };
 
-#define JS_NULL_CLASS_OPS nullptr
+static constexpr const JSClassOps* JS_NULL_CLASS_OPS = nullptr;
 
 struct JSClass {
   const char* name;
@@ -938,6 +934,21 @@ struct JSClass {
     return oOps ? oOps->funToString : nullptr;
   }
 };
+
+static constexpr uint32_t JSCLASS_RESERVED_SLOTS(const JSClass* clasp) {
+  return (clasp->flags >> JSCLASS_RESERVED_SLOTS_SHIFT) &
+         JSCLASS_RESERVED_SLOTS_MASK;
+}
+
+static constexpr bool JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(const JSClass* clasp) {
+  return (clasp->flags & JSCLASS_IS_GLOBAL) &&
+         JSCLASS_RESERVED_SLOTS(clasp) >= JSCLASS_GLOBAL_SLOT_COUNT;
+}
+
+static constexpr JSProtoKey JSCLASS_CACHED_PROTO_KEY(const JSClass* clasp) {
+  return JSProtoKey((clasp->flags >> JSCLASS_CACHED_PROTO_SHIFT) &
+                    JSCLASS_CACHED_PROTO_MASK);
+}
 
 namespace js {
 
