@@ -253,9 +253,15 @@ nsresult nsMathMLmfracFrame::PlaceInternal(DrawTarget* aDrawTarget,
                         defaultRuleThickness, fontSizeInflation);
 
   // bevelled attribute
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::bevelled_,
-                                 value);
-  mIsBevelled = value.EqualsLiteral("true");
+  mIsBevelled = false;
+  if (!StaticPrefs::mathml_mfrac_bevelled_attribute_disabled()) {
+    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::bevelled_,
+                                       value)) {
+      mContent->OwnerDoc()->WarnOnceAbout(
+          dom::Document::eMathML_DeprecatedBevelledAttribute);
+      mIsBevelled = value.EqualsLiteral("true");
+    }
+  }
 
   bool displayStyle = StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK;
 
