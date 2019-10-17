@@ -10,7 +10,7 @@
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
-            CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, snippetToURL,
+            CURRENT_CONTENT_DIR, loadScripts, loadContentScripts, snippetToURL,
             Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation */
 
 /**
@@ -30,7 +30,7 @@ const MOCHITESTS_DIR =
 const CURRENT_CONTENT_DIR =
   "http://example.com/browser/accessible/tests/browser/";
 
-const LOADED_FRAMESCRIPTS = new Map();
+const LOADED_CONTENT_SCRIPTS = new Map();
 
 /**
  * Used to dump debug information.
@@ -175,38 +175,35 @@ function loadScripts(...scripts) {
 }
 
 /**
- * Load a list of frame scripts into test's content.
- * @param {Object} browser   browser element that content belongs to
- * @param {Array}  scripts   a list of scripts to load into content
+ * Load a list of scripts into target's content.
+ * @param {Object} target
+ *        target for loading scripts into
+ * @param {Array}  scripts
+ *        a list of scripts to load into content
  */
-function loadFrameScripts(browser, ...scripts) {
-  let mm = browser.messageManager;
+async function loadContentScripts(target, ...scripts) {
   for (let script of scripts) {
-    let frameScript;
+    let contentScript;
     if (typeof script === "string") {
-      if (script.includes(".js")) {
-        // If script string includes a .js extention, assume it is a script
-        // path.
-        frameScript = `${CURRENT_DIR}${script}`;
-      } else {
-        // Otherwise it is a serealized script.
-        frameScript = `data:,${script}`;
-      }
+      // If script string includes a .jsm extention, assume it is a module path.
+      contentScript = `${CURRENT_DIR}${script}`;
     } else {
       // Script is a object that has { dir, name } format.
-      frameScript = `${script.dir}${script.name}`;
+      contentScript = `${script.dir}${script.name}`;
     }
 
-    let loadedScriptSet = LOADED_FRAMESCRIPTS.get(frameScript);
+    let loadedScriptSet = LOADED_CONTENT_SCRIPTS.get(contentScript);
     if (!loadedScriptSet) {
       loadedScriptSet = new WeakSet();
-      LOADED_FRAMESCRIPTS.set(frameScript, loadedScriptSet);
-    } else if (loadedScriptSet.has(browser)) {
+      LOADED_CONTENT_SCRIPTS.set(contentScript, loadedScriptSet);
+    } else if (loadedScriptSet.has(target)) {
       continue;
     }
 
-    mm.loadFrameScript(frameScript, false, true);
-    loadedScriptSet.add(browser);
+    await SpecialPowers.spawn(target, [contentScript], async _contentScript => {
+      ChromeUtils.import(_contentScript, content.window);
+    });
+    loadedScriptSet.add(target);
   }
 }
 
@@ -281,12 +278,7 @@ function addAccessibleTask(doc, task) {
         });
 
         await SimpleTest.promiseFocus(browser);
-
-        loadFrameScripts(
-          browser,
-          "let { document, window, navigator } = content;",
-          { name: "common.js", dir: MOCHITESTS_DIR }
-        );
+        await loadContentScripts(browser, "Common.jsm");
 
         Logger.log(
           `e10s enabled: ${Services.appinfo.browserTabsRemoteAutostart}`
