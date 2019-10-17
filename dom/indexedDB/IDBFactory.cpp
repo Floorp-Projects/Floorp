@@ -371,19 +371,11 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
 
   // About URIs shouldn't be able to access IndexedDB unless they have the
   // nsIAboutModule::ENABLE_INDEXED_DB flag set on them.
-  nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_SUCCEEDS(principal->GetURI(getter_AddRefs(uri)));
-  MOZ_ASSERT(uri);
 
   if (principal->SchemeIs("about")) {
-    nsCOMPtr<nsIAboutModule> module;
-    if (NS_SUCCEEDED(NS_GetAboutModule(uri, getter_AddRefs(module)))) {
-      uint32_t flags;
-      if (NS_SUCCEEDED(module->GetURIFlags(uri, &flags))) {
-        if (!(flags & nsIAboutModule::ENABLE_INDEXED_DB)) {
-          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-        }
-      } else {
+    uint32_t flags;
+    if (NS_SUCCEEDED(principal->GetAboutModuleFlags(&flags))) {
+      if (!(flags & nsIAboutModule::ENABLE_INDEXED_DB)) {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
     } else {
