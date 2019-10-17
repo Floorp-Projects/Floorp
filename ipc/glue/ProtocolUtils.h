@@ -627,11 +627,6 @@ inline bool LoggingEnabledFor(const char* aTopLevelProtocol) {
 #endif
 }
 
-enum class MessageDirection {
-  eSending,
-  eReceiving,
-};
-
 MOZ_NEVER_INLINE void LogMessageForProtocol(const char* aTopLevelProtocol,
                                             base::ProcessId aOtherPid,
                                             const char* aContextDescription,
