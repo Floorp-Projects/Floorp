@@ -18,11 +18,9 @@ job-defaults:
     shipping-phase: ship
     worker-type:
         by-project:
-            mozilla-(beta|release|esr.*): scriptworker-prov-v1/treescript-v1
-            maple: scriptworker-prov-v1/treescript-v1
-            birch: scriptworker-prov-v1/treescript-v1
-            jamun: scriptworker-prov-v1/treescript-v1
-            default: scriptworker-prov-v1/treescript-dev
+            mozilla-(beta|release|esr.*): scriptworker-k8s/gecko-3-tree
+            maple: scriptworker-k8s/gecko-3-tree
+            default: scriptworker-k8s/gecko-1-tree
     worker:
         implementation: treescript
         dontbuild: true
@@ -35,7 +33,7 @@ job-defaults:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
-                jamun:
+                maple:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
@@ -43,8 +41,6 @@ job-defaults:
             by-project:
                 mozilla-(beta|release|esr.*): true
                 maple: true
-                birch: true
-                jamun: true
                 default: false
 
 jobs:
