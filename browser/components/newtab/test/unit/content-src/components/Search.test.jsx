@@ -3,10 +3,7 @@ import { mount, shallow } from "enzyme";
 import React from "react";
 import { _Search as Search } from "content-src/components/Search/Search";
 
-const DEFAULT_PROPS = {
-  dispatch() {},
-  permanentPrivateBrowsing: false,
-};
+const DEFAULT_PROPS = { dispatch() {} };
 
 describe("<Search>", () => {
   let globals;
@@ -53,22 +50,6 @@ describe("<Search>", () => {
     mount(<Search {...DEFAULT_PROPS} />);
     assert.property(window, "gContentSearchController");
     assert.ok(window.gContentSearchController);
-  });
-  it("should call the ContentSearchUIController constructor", () => {
-    sandbox.stub(global, "ContentSearchUIController").returns({});
-    // current about:home tests need gContentSearchController to exist as a global
-    // so let's test it here too to ensure we don't break this behaviour
-    mount(<Search {...DEFAULT_PROPS} />);
-    assert.calledOnce(global.ContentSearchUIController);
-    assert.ok(!global.ContentSearchUIController.firstCall.args[4]);
-  });
-  it("should call the ContentSearchUIController constructor with PBM setting", () => {
-    sandbox.stub(global, "ContentSearchUIController").returns({});
-    // current about:home tests need gContentSearchController to exist as a global
-    // so let's test it here too to ensure we don't break this behaviour
-    mount(<Search {...DEFAULT_PROPS} permanentPrivateBrowsing={true} />);
-    assert.calledOnce(global.ContentSearchUIController);
-    assert.ok(global.ContentSearchUIController.firstCall.args[4]);
   });
   it("should pass along search when clicking the search button", () => {
     const wrapper = mount(<Search {...DEFAULT_PROPS} />);
