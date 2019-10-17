@@ -11,6 +11,7 @@ use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
 use std::collections::vec_deque::VecDeque;
 use std::{f32, mem};
 use std::ffi::CStr;
+use std::ops::Range;
 use std::time::Duration;
 use time::precise_time_ns;
 
@@ -21,6 +22,13 @@ const GRAPH_FRAME_HEIGHT: f32 = 16.0;
 const PROFILE_PADDING: f32 = 8.0;
 
 const ONE_SECOND_NS: u64 = 1000000000;
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum ProfileStyle {
+    Full,
+    Compact,
+    Smart,
+}
 
 /// Defines the interface for hooking up an external profiler to WR.
 pub trait ProfilerHooks : Send + Sync {
@@ -127,19 +135,22 @@ impl NamedTag for GpuProfileTag {
 trait ProfileCounter {
     fn description(&self) -> &'static str;
     fn value(&self) -> String;
+    fn is_expected(&self) -> bool;
 }
 
 #[derive(Clone)]
 pub struct IntProfileCounter {
     description: &'static str,
     value: usize,
+    expect: Option<Range<usize>>,
 }
 
 impl IntProfileCounter {
-    fn new(description: &'static str) -> Self {
+    fn new(description: &'static str, expect: Option<Range<usize>>) -> Self {
         IntProfileCounter {
             description,
             value: 0,
+            expect,
         }
     }
 
@@ -175,6 +186,10 @@ impl ProfileCounter for IntProfileCounter {
     fn value(&self) -> String {
         format!("{}", self.value)
     }
+
+    fn is_expected(&self) -> bool {
+        self.expect.as_ref().map(|range| range.contains(&self.value)).unwrap_or(true)
+    }
 }
 
 pub struct PercentageProfileCounter {
@@ -190,6 +205,8 @@ impl ProfileCounter for PercentageProfileCounter {
     fn value(&self) -> String {
         format!("{:.2}%", self.value * 100.0)
     }
+
+    fn is_expected(&self) -> bool { true }
 }
 
 #[derive(Clone)]
@@ -235,6 +252,8 @@ impl ProfileCounter for ResourceProfileCounter {
         let size = self.size as f32 / (1024.0 * 1024.0);
         format!("{} ({:.2} MB)", self.value, size)
     }
+
+    fn is_expected(&self) -> bool { true }
 }
 
 #[derive(Clone)]
@@ -242,6 +261,7 @@ pub struct TimeProfileCounter {
     description: &'static str,
     nanoseconds: u64,
     invert: bool,
+    expect_ms: Option<Range<f64>>,
 }
 
 pub struct Timer<'a> {
@@ -257,11 +277,12 @@ impl<'a> Drop for Timer<'a> {
 }
 
 impl TimeProfileCounter {
-    pub fn new(description: &'static str, invert: bool) -> Self {
+    pub fn new(description: &'static str, invert: bool, expect_ms: Option<Range<f64>>) -> Self {
         TimeProfileCounter {
             description,
             nanoseconds: 0,
             invert,
+            expect_ms,
         }
     }
 
@@ -314,6 +335,12 @@ impl ProfileCounter for TimeProfileCounter {
             format!("{:.2} ms", self.nanoseconds as f64 / 1000000.0)
         }
     }
+
+    fn is_expected(&self) -> bool {
+        self.expect_ms.as_ref()
+            .map(|range| range.contains(&(self.nanoseconds as f64 / 1000000.0)))
+            .unwrap_or(true)
+    }
 }
 
 #[derive(Clone)]
@@ -329,10 +356,18 @@ pub struct AverageTimeProfileCounter {
     // When the timings are noisy, this is more representative of the perceived performance.
     max_nanoseconds: u64,
     invert: bool,
+    expect_avg: Option<Range<f64>>,
+    expect_max: Option<Range<f64>>,
 }
 
 impl AverageTimeProfileCounter {
-    pub fn new(description: &'static str, invert: bool, average_over_ns: u64) -> Self {
+    pub fn new(
+        description: &'static str,
+        invert: bool,
+        average_over_ns: u64,
+        expect_avg: Option<Range<f64>>,
+        expect_max: Option<Range<f64>>,
+    ) -> Self {
         AverageTimeProfileCounter {
             description,
             average_over_ns,
@@ -343,6 +378,8 @@ impl AverageTimeProfileCounter {
             avg_nanoseconds: 0,
             max_nanoseconds: 0,
             invert,
+            expect_avg,
+            expect_max,
         }
     }
 
@@ -382,6 +419,10 @@ impl AverageTimeProfileCounter {
         self.set(t1 - t0);
         val
     }
+
+    pub fn avg_ms(&self) -> f64 { self.avg_nanoseconds as f64 / 1000000.0 }
+
+    pub fn max_ms(&self) -> f64 { self.max_nanoseconds as f64 / 1000000.0 }
 }
 
 impl ProfileCounter for AverageTimeProfileCounter {
@@ -393,12 +434,13 @@ impl ProfileCounter for AverageTimeProfileCounter {
         if self.invert {
             format!("{:.2} fps", 1000000000.0 / self.avg_nanoseconds as f64)
         } else {
-            format!(
-                "{:.2} ms (max {:.2} ms)",
-                self.avg_nanoseconds as f64 / 1000000.0,
-                self.max_nanoseconds as f64 / 1000000.0
-            )
+            format!("{:.2} ms (max {:.2} ms)", self.avg_ms(), self.max_ms())
         }
+    }
+
+    fn is_expected(&self) -> bool {
+        self.expect_avg.as_ref().map(|range| range.contains(&self.avg_ms())).unwrap_or(true)
+            && self.expect_max.as_ref().map(|range| range.contains(&self.max_ms())).unwrap_or(true)
     }
 }
 
@@ -415,11 +457,11 @@ pub struct FrameProfileCounters {
 impl FrameProfileCounters {
     pub fn new() -> Self {
         FrameProfileCounters {
-            total_primitives: IntProfileCounter::new("Total Primitives"),
-            visible_primitives: IntProfileCounter::new("Visible Primitives"),
-            targets_used: IntProfileCounter::new("Used targets"),
-            targets_changed: IntProfileCounter::new("Changed targets"),
-            targets_created: IntProfileCounter::new("Created targets"),
+            total_primitives: IntProfileCounter::new("Total Primitives", None),
+            visible_primitives: IntProfileCounter::new("Visible Primitives", None),
+            targets_used: IntProfileCounter::new("Used targets", None),
+            targets_changed: IntProfileCounter::new("Changed targets", None),
+            targets_created: IntProfileCounter::new("Created targets", None),
         }
     }
     pub fn reset_targets(&mut self) {
@@ -464,11 +506,11 @@ pub struct GpuCacheProfileCounters {
 impl GpuCacheProfileCounters {
     pub fn new() -> Self {
         GpuCacheProfileCounters {
-            allocated_rows: IntProfileCounter::new("GPU cache rows: total"),
-            updated_rows: IntProfileCounter::new("GPU cache rows: updated"),
-            allocated_blocks: IntProfileCounter::new("GPU cache blocks: total"),
-            updated_blocks: IntProfileCounter::new("GPU cache blocks: updated"),
-            saved_blocks: IntProfileCounter::new("GPU cache blocks: saved"),
+            allocated_rows: IntProfileCounter::new("GPU cache rows: total", None),
+            updated_rows: IntProfileCounter::new("GPU cache rows: updated", None),
+            allocated_blocks: IntProfileCounter::new("GPU cache blocks: total", None),
+            updated_blocks: IntProfileCounter::new("GPU cache blocks: updated", None),
+            saved_blocks: IntProfileCounter::new("GPU cache blocks: saved", None),
         }
     }
 }
@@ -519,8 +561,9 @@ macro_rules! declare_intern_profile_counters {
                             &self.$name,
                         )+
                     ],
+                    None,
                     debug_renderer,
-                    true,
+                    false,
                     draw_state,
                 );
             }
@@ -554,7 +597,7 @@ impl IpcProfileCounters {
 impl BackendProfileCounters {
     pub fn new() -> Self {
         BackendProfileCounters {
-            total_time: TimeProfileCounter::new("Backend CPU Time", false),
+            total_time: TimeProfileCounter::new("Backend CPU Time", false, None),
             resources: ResourceProfileCounters {
                 font_templates: ResourceProfileCounter::new("Font Templates"),
                 image_templates: ResourceProfileCounter::new("Image Templates"),
@@ -562,10 +605,10 @@ impl BackendProfileCounters {
                 gpu_cache: GpuCacheProfileCounters::new(),
             },
             ipc: IpcProfileCounters {
-                build_time: TimeProfileCounter::new("Display List Build Time", false),
-                consume_time: TimeProfileCounter::new("Display List Consume Time", false),
-                send_time: TimeProfileCounter::new("Display List Send Time", false),
-                total_time: TimeProfileCounter::new("Total Display List Time", false),
+                build_time: TimeProfileCounter::new("Display List Build Time", false, None),
+                consume_time: TimeProfileCounter::new("Display List Consume Time", false, None),
+                send_time: TimeProfileCounter::new("Display List Send Time", false, None),
+                total_time: TimeProfileCounter::new("Total Display List Time", false, None),
                 display_lists: ResourceProfileCounter::new("Display Lists Sent"),
             },
             //TODO: generate this by a macro
@@ -618,14 +661,14 @@ pub struct RendererProfileTimers {
 impl RendererProfileCounters {
     pub fn new() -> Self {
         RendererProfileCounters {
-            frame_counter: IntProfileCounter::new("Frame"),
-            frame_time: AverageTimeProfileCounter::new("FPS", true, ONE_SECOND_NS / 2),
-            draw_calls: IntProfileCounter::new("Draw Calls"),
-            vertices: IntProfileCounter::new("Vertices"),
+            frame_counter: IntProfileCounter::new("Frame", None),
+            frame_time: AverageTimeProfileCounter::new("FPS", true, ONE_SECOND_NS / 2, None, None),
+            draw_calls: IntProfileCounter::new("Draw Calls", None),
+            vertices: IntProfileCounter::new("Vertices", None),
             vao_count_and_size: ResourceProfileCounter::new("VAO"),
-            color_targets: IntProfileCounter::new("Color Targets"),
-            alpha_targets: IntProfileCounter::new("Alpha Targets"),
-            texture_data_uploaded: IntProfileCounter::new("Texture data, kb"),
+            color_targets: IntProfileCounter::new("Color Targets", None),
+            alpha_targets: IntProfileCounter::new("Alpha Targets", None),
+            texture_data_uploaded: IntProfileCounter::new("Texture data, kb", None),
         }
     }
 
@@ -641,9 +684,9 @@ impl RendererProfileCounters {
 impl RendererProfileTimers {
     pub fn new() -> Self {
         RendererProfileTimers {
-            cpu_time: TimeProfileCounter::new("Renderer CPU Time", false),
+            cpu_time: TimeProfileCounter::new("Renderer CPU Time", false, None),
             gpu_samples: Vec::new(),
-            gpu_graph: TimeProfileCounter::new("GPU Time", false),
+            gpu_graph: TimeProfileCounter::new("GPU Time", false, None),
         }
     }
 }
@@ -807,6 +850,8 @@ impl ProfileCounter for ProfileGraph {
     fn value(&self) -> String {
         format!("{:.2}ms", self.stats().mean_value)
     }
+
+    fn is_expected(&self) -> bool { true }
 }
 
 struct GpuFrame {
@@ -946,6 +991,7 @@ pub struct Profiler {
     gpu_time: AverageTimeProfileCounter,
     ipc_time: AverageTimeProfileCounter,
     gpu_frames: GpuFrameCollection,
+    cooldowns: Vec<i32>,
 }
 
 impl Profiler {
@@ -964,15 +1010,19 @@ impl Profiler {
             ipc_graph: ProfileGraph::new(600, to_ms_scale, "IPC:", "ms"),
             blob_raster_graph: ProfileGraph::new(600, 1.0, "Rasterized blob pixels:", "px"),
             gpu_frames: GpuFrameCollection::new(),
-            backend_time: AverageTimeProfileCounter::new("Backend:", false, ONE_SECOND_NS / 2),
-            renderer_time: AverageTimeProfileCounter::new("Renderer:", false, ONE_SECOND_NS / 2),
-            ipc_time: AverageTimeProfileCounter::new("IPC:", false, ONE_SECOND_NS / 2),
-            gpu_time: AverageTimeProfileCounter::new("GPU:", false, ONE_SECOND_NS / 2),
+            backend_time: AverageTimeProfileCounter::new("Backend:", false, ONE_SECOND_NS / 2, None, None),
+            renderer_time: AverageTimeProfileCounter::new("Renderer:", false, ONE_SECOND_NS / 2, None, None),
+            ipc_time: AverageTimeProfileCounter::new("IPC:", false, ONE_SECOND_NS / 2, None, None),
+            gpu_time: AverageTimeProfileCounter::new("GPU:", false, ONE_SECOND_NS / 2, None, None),
+            cooldowns: Vec::new(),
         }
     }
 
+    // If we have an array of "cooldown" counters, then only display profiles that
+    // are out of the ordinary and keep displaying them until the cooldown is over.
     fn draw_counters<T: ProfileCounter + ?Sized>(
         counters: &[&T],
+        mut cooldowns: Option<&mut [i32]>,
         debug_renderer: &mut DebugRenderer,
         left: bool,
         draw_state: &mut DrawState,
@@ -992,7 +1042,15 @@ impl Profiler {
             ColorU::new(255, 255, 0, 255),
         ];
 
-        for counter in counters {
+        for (idx, counter) in counters.iter().enumerate() {
+            if let Some(cooldowns) = cooldowns.as_mut() {
+                if !counter.is_expected() {
+                    cooldowns[idx] = 40;
+                }
+                if cooldowns[idx] == 0 {
+                    continue;
+                }
+            }
             let rect = debug_renderer.add_text(
                 current_x,
                 current_y,
@@ -1010,7 +1068,14 @@ impl Profiler {
         current_x = label_rect.origin.x + label_rect.size.width + 60.0;
         current_y = if left { draw_state.y_left } else { draw_state.y_right };
 
-        for counter in counters {
+        for (idx, counter) in counters.iter().enumerate() {
+            if let Some(cooldowns) = cooldowns.as_mut() {
+                if cooldowns[idx] > 0 {
+                    cooldowns[idx] -= 1;
+                } else {
+                    continue;
+                }
+            }
             let rect = debug_renderer.add_text(
                 current_x,
                 current_y,
@@ -1094,10 +1159,12 @@ impl Profiler {
         let requested_blocks = IntProfileCounter {
             description: "",
             value: counters.updated_blocks.value + counters.saved_blocks.value,
+            expect: None,
         };
         let total_blocks = IntProfileCounter {
             description: "",
             value: counters.allocated_rows.value * MAX_VERTEX_TEXTURE_WIDTH,
+            expect: None,
         };
 
         let rect0 = self.draw_bar(
@@ -1192,6 +1259,7 @@ impl Profiler {
                 &self.renderer_time,
                 &self.gpu_time,
             ],
+            None,
             debug_renderer,
             true,
             &mut self.draw_state,
@@ -1216,6 +1284,7 @@ impl Profiler {
                 &renderer_profile.alpha_targets,
                 &renderer_profile.texture_data_uploaded,
             ],
+            None,
             debug_renderer,
             true,
             &mut self.draw_state
@@ -1231,6 +1300,7 @@ impl Profiler {
                 &backend_profile.resources.font_templates,
                 &backend_profile.resources.image_templates,
             ],
+            None,
             debug_renderer,
             true,
             &mut self.draw_state
@@ -1245,6 +1315,7 @@ impl Profiler {
                 &backend_profile.resources.texture_cache.pages_color8_nearest,
                 &backend_profile.ipc.display_lists,
             ],
+            None,
             debug_renderer,
             true,
             &mut self.draw_state
@@ -1257,6 +1328,7 @@ impl Profiler {
                 &backend_profile.ipc.consume_time,
                 &backend_profile.ipc.total_time,
             ],
+            None,
             debug_renderer,
             true,
             &mut self.draw_state
@@ -1268,6 +1340,7 @@ impl Profiler {
 
         Profiler::draw_counters(
             &[&renderer_profile.draw_calls, &renderer_profile.vertices],
+            None,
             debug_renderer,
             true,
             &mut self.draw_state
@@ -1279,6 +1352,7 @@ impl Profiler {
                 &renderer_timers.cpu_time,
                 &renderer_timers.gpu_graph,
             ],
+            None,
             debug_renderer,
             false,
             &mut self.draw_state
@@ -1311,6 +1385,7 @@ impl Profiler {
             }).collect();
             Profiler::draw_counters(
                 &samplers,
+                None,
                 debug_renderer,
                 false,
                 &mut self.draw_state,
@@ -1345,6 +1420,62 @@ impl Profiler {
         self.draw_state.y_right += rect.size.height + PROFILE_PADDING;
     }
 
+    fn draw_smart_profile(
+        &mut self,
+        backend_profile: &BackendProfileCounters,
+        renderer_profile: &RendererProfileCounters,
+        debug_renderer: &mut DebugRenderer,
+    ) {
+        while self.cooldowns.len() < 12 {
+            self.cooldowns.push(0);
+        }
+
+        // Always show the fps counter.
+        Profiler::draw_counters(
+            &[
+                &renderer_profile.frame_time,
+            ],
+            None,
+            debug_renderer,
+            true,
+            &mut self.draw_state,
+        );
+
+        let mut start = 0;
+        let counters: &[&[&dyn ProfileCounter]] = &[
+            &[
+                &self.backend_time,
+                &self.renderer_time,
+                &self.gpu_time,
+            ],
+            &[
+                &renderer_profile.color_targets,
+                &renderer_profile.alpha_targets,
+                &renderer_profile.draw_calls,
+                &renderer_profile.vertices,
+            ],
+            &[
+                &backend_profile.resources.gpu_cache.allocated_rows,
+                &backend_profile.resources.gpu_cache.updated_rows,
+                &backend_profile.resources.gpu_cache.allocated_blocks,
+                &backend_profile.resources.gpu_cache.updated_blocks,
+                &backend_profile.resources.gpu_cache.saved_blocks,
+            ],
+        ];
+
+        for group in counters {
+            let end = start + group.len();
+            Profiler::draw_counters(
+                &group[..],
+                Some(&mut self.cooldowns[start..end]),
+                debug_renderer,
+                true,
+                &mut self.draw_state,
+            );
+            start = end;
+        }
+    }
+
     pub fn draw_profile(
         &mut self,
         frame_profiles: &[FrameProfileCounters],
@@ -1354,7 +1485,7 @@ impl Profiler {
         gpu_samplers: &[GpuSampler<GpuProfileTag>],
         screen_fraction: f32,
         debug_renderer: &mut DebugRenderer,
-        compact: bool,
+        style: ProfileStyle,
     ) {
         self.draw_state.x_left = 20.0;
         self.draw_state.y_left = 40.0;
@@ -1383,21 +1514,31 @@ impl Profiler {
         self.gpu_time.set(gpu_graph);
         self.gpu_frames.push(gpu_graph, gpu_graphrs);
 
-        if compact {
-            self.draw_compact_profile(
-                renderer_profile,
-                debug_renderer,
-            );
-        } else {
-            self.draw_full_profile(
-                frame_profiles,
-                backend_profile,
-                renderer_profile,
-                renderer_timers,
-                gpu_samplers,
-                screen_fraction,
-                debug_renderer,
-            );
+        match style {
+            ProfileStyle::Full => {
+                self.draw_full_profile(
+                    frame_profiles,
+                    backend_profile,
+                    renderer_profile,
+                    renderer_timers,
+                    gpu_samplers,
+                    screen_fraction,
+                    debug_renderer,
+                );
+            }
+            ProfileStyle::Compact => {
+                self.draw_compact_profile(
+                    renderer_profile,
+                    debug_renderer,
+                );
+            }
+            ProfileStyle::Smart => {
+                self.draw_smart_profile(
+                    backend_profile,
+                    renderer_profile,
+                    debug_renderer,
+                );                
+            }
         }
     }
 }

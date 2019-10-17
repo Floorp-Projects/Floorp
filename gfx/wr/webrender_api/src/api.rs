@@ -1142,6 +1142,8 @@ bitflags! {
         const DISABLE_TEXT_PRIMS = 1 << 22;
         const DISABLE_GRADIENT_PRIMS = 1 << 23;
         const OBSCURE_IMAGES = 1 << 24;
+        /// The profiler only displays information that is out of the ordinary.
+        const SMART_PROFILER        = 1 << 26;
     }
 }
 
