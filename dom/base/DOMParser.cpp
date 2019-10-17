@@ -53,10 +53,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DOMParser, mOwner)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMParser)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMParser)
 
-static const char* StringFromSupportedType(SupportedType aType) {
-  return SupportedTypeValues::strings[static_cast<int>(aType)].value;
-}
-
 already_AddRefed<Document> DOMParser::ParseFromString(const nsAString& aStr,
                                                       SupportedType aType,
                                                       ErrorResult& aRv) {
@@ -183,11 +179,12 @@ already_AddRefed<Document> DOMParser::ParseFromStream(nsIInputStream* aStream,
 
   // Create a fake channel
   nsCOMPtr<nsIChannel> parserChannel;
-  NS_NewInputStreamChannel(getter_AddRefs(parserChannel), mDocumentURI,
-                           nullptr,  // aStream
-                           mPrincipal, nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
-                           nsIContentPolicy::TYPE_OTHER,
-                           nsDependentCString(StringFromSupportedType(aType)));
+  NS_NewInputStreamChannel(
+      getter_AddRefs(parserChannel), mDocumentURI,
+      nullptr,  // aStream
+      mPrincipal, nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+      nsIContentPolicy::TYPE_OTHER,
+      nsDependentCSubstring(SupportedTypeValues::GetString(aType)));
   if (NS_WARN_IF(!parserChannel)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;

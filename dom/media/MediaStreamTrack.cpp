@@ -326,9 +326,8 @@ void MediaStreamTrack::GetSettings(dom::MediaTrackSettings& aResult,
     return;
   }
   if (aResult.mFacingMode.WasPassed()) {
-    aResult.mFacingMode.Value().Assign(NS_ConvertASCIItoUTF16(
-        VideoFacingModeEnumValues::strings[uint8_t(VideoFacingModeEnum::User)]
-            .value));
+    aResult.mFacingMode.Value().AssignASCII(
+        VideoFacingModeEnumValues::GetString(VideoFacingModeEnum::User));
   }
 }
 

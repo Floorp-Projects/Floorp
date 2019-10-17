@@ -849,8 +849,8 @@ MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                 : MediaDeviceKind::Audioinput),
       mScary(mSource->GetScary()),
       mIsFake(mSource->IsFake()),
-      mType(NS_ConvertUTF8toUTF16(
-          dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
+      mType(
+          NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
       mName(aName),
       mID(aID),
       mGroupID(aGroupID),
@@ -868,8 +868,8 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
                 : MediaDeviceKind::Audiooutput),
       mScary(false),
       mIsFake(false),
-      mType(NS_ConvertUTF8toUTF16(
-          dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
+      mType(
+          NS_ConvertASCIItoUTF16(dom::MediaDeviceKindValues::GetString(mKind))),
       mName(mSinkInfo->Name()),
       mID(aID),
       mGroupID(aGroupID),
@@ -1023,8 +1023,8 @@ void MediaDevice::GetSettings(MediaTrackSettings& aOutSettings) const {
 // Threadsafe since mSource is const.
 NS_IMETHODIMP
 MediaDevice::GetMediaSource(nsAString& aMediaSource) {
-  aMediaSource.Assign(NS_ConvertUTF8toUTF16(
-      dom::MediaSourceEnumValues::strings[uint32_t(GetMediaSource())].value));
+  aMediaSource.AssignASCII(
+      dom::MediaSourceEnumValues::GetString(GetMediaSource()));
   return NS_OK;
 }
 
@@ -2438,8 +2438,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
   if (c.mVideo.IsMediaTrackConstraints()) {
     auto& vc = c.mVideo.GetAsMediaTrackConstraints();
     if (!vc.mMediaSource.WasPassed()) {
-      vc.mMediaSource.Construct().AssignASCII(EnumToASCII(
-          dom::MediaSourceEnumValues::strings, MediaSourceEnum::Camera));
+      vc.mMediaSource.Construct().AssignASCII(
+          dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Camera));
     }
     videoType = StringToEnum(dom::MediaSourceEnumValues::strings,
                              vc.mMediaSource.Value(), MediaSourceEnum::Other);
@@ -2509,7 +2509,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
           videoType == MediaSourceEnum::Browser) {
         videoType = MediaSourceEnum::Window;
         vc.mMediaSource.Value().AssignASCII(
-            EnumToASCII(dom::MediaSourceEnumValues::strings, videoType));
+            dom::MediaSourceEnumValues::GetString(videoType));
       }
       // only allow privileged content to set the window id
       if (vc.mBrowserWindow.WasPassed()) {
@@ -2532,8 +2532,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
   if (c.mAudio.IsMediaTrackConstraints()) {
     auto& ac = c.mAudio.GetAsMediaTrackConstraints();
     if (!ac.mMediaSource.WasPassed()) {
-      ac.mMediaSource.Construct(NS_ConvertASCIItoUTF16(EnumToASCII(
-          dom::MediaSourceEnumValues::strings, MediaSourceEnum::Microphone)));
+      ac.mMediaSource.Construct(NS_ConvertASCIItoUTF16(
+          dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Microphone)));
     }
     audioType = StringToEnum(dom::MediaSourceEnumValues::strings,
                              ac.mMediaSource.Value(), MediaSourceEnum::Other);
@@ -2940,8 +2940,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetDisplayMedia(
   // If this is a non-priviliged call, GetUserMedia() will change it to "window"
   // for us.
   vc.mMediaSource.Reset();
-  vc.mMediaSource.Construct().AssignASCII(EnumToASCII(
-      dom::MediaSourceEnumValues::strings, MediaSourceEnum::Screen));
+  vc.mMediaSource.Construct().AssignASCII(
+      dom::MediaSourceEnumValues::GetString(MediaSourceEnum::Screen));
 
   return MediaManager::GetUserMedia(aWindow, c, aCallerType);
 }

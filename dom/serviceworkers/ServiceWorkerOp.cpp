@@ -1365,9 +1365,8 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
 
   if (response->Type() == ResponseType::Opaque &&
       requestMode != RequestMode::No_cors) {
-    uint32_t mode = static_cast<uint32_t>(requestMode);
-    NS_ConvertASCIItoUTF16 modeString(RequestModeValues::strings[mode].value,
-                                      RequestModeValues::strings[mode].length);
+    NS_ConvertASCIItoUTF16 modeString(
+        RequestModeValues::GetString(requestMode));
 
     nsAutoString requestURL;
     GetRequestURL(requestURL);
