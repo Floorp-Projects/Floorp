@@ -43,6 +43,11 @@ using namespace mozilla;
 static LazyLogModule gNotifyAddrLog("nsNotifyAddr");
 #define LOG(args) MOZ_LOG(gNotifyAddrLog, mozilla::LogLevel::Debug, args)
 
+// See bug 1584165. Sometimes the ARP table is empty or doesn't have
+// the entry of gateway after the network change, so we'd like to delay
+// the calaulation of network id.
+static const uint32_t kNetworkIdDelayAfterChange = 3000;
+
 // If non-successful, extract the error code and return it.  This
 // error code dance is inspired by
 // http://developer.apple.com/technotes/tn/tn1145.html
@@ -345,8 +350,20 @@ static bool ipv6NetworkId(SHA1Sum* sha1) {
   return true;
 }
 
-void nsNetworkLinkService::calculateNetworkId(void) {
+void nsNetworkLinkService::calculateNetworkIdWithDelay(uint32_t aDelay) {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (aDelay) {
+    if (mNetworkIdTimer) {
+      LOG(("Restart the network id timer."));
+      mNetworkIdTimer->Cancel();
+    } else {
+      LOG(("Create the network id timer."));
+      mNetworkIdTimer = NS_NewTimer();
+    }
+    mNetworkIdTimer->InitWithCallback(this, aDelay, nsITimer::TYPE_ONE_SHOT);
+    return;
+  }
 
   nsCOMPtr<nsIEventTarget> target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   if (!target) {
@@ -359,9 +376,19 @@ void nsNetworkLinkService::calculateNetworkId(void) {
                        NS_DISPATCH_NORMAL));
 }
 
+NS_IMETHODIMP
+nsNetworkLinkService::Notify(nsITimer* aTimer) {
+  MOZ_ASSERT(aTimer == mNetworkIdTimer);
+
+  mNetworkIdTimer = nullptr;
+  calculateNetworkIdWithDelay(0);
+  return NS_OK;
+}
+
 void nsNetworkLinkService::calculateNetworkIdInternal(void) {
   MOZ_ASSERT(!NS_IsMainThread(), "Should not be called on the main thread");
   SHA1Sum sha1;
+  bool idChanged = false;
   bool found4 = ipv4NetworkId(&sha1);
   bool found6 = ipv6NetworkId(&sha1);
 
@@ -388,6 +415,7 @@ void nsNetworkLinkService::calculateNetworkIdInternal(void) {
         Telemetry::Accumulate(Telemetry::NETWORK_ID2, 4);  // Both!
       }
       mNetworkId = output;
+      idChanged = true;
     } else {
       // same id
       LOG(("Same network id"));
@@ -397,9 +425,23 @@ void nsNetworkLinkService::calculateNetworkIdInternal(void) {
     // no id
     LOG(("No network id"));
     MutexAutoLock lock(mMutex);
-    mNetworkId.Truncate();
-    Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
+    if (!mNetworkId.IsEmpty()) {
+      mNetworkId.Truncate();
+      idChanged = true;
+      Telemetry::Accumulate(Telemetry::NETWORK_ID2, 0);
+    }
   }
+
+  // Don't report network change if this is the first time we calculate the id.
+  static bool initialIDCalculation = true;
+  if (idChanged && !initialIDCalculation) {
+    RefPtr<nsNetworkLinkService> self = this;
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "nsNetworkLinkService::calculateNetworkIdInternal",
+        [self]() { self->SendEvent(true); }));
+  }
+
+  initialIDCalculation = false;
 }
 
 NS_IMETHODIMP
@@ -414,9 +456,9 @@ nsNetworkLinkService::Observe(nsISupports* subject, const char* topic, const cha
 /* static */
 void nsNetworkLinkService::IPConfigChanged(SCDynamicStoreRef aStoreREf, CFArrayRef aChangedKeys,
                                            void* aInfo) {
+  LOG(("nsNetworkLinkService::IPConfigChanged"));
   nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(aInfo);
-  service->SendEvent(true);
-  service->calculateNetworkId();
+  service->calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
 }
 
 nsresult nsNetworkLinkService::Init(void) {
@@ -521,6 +563,8 @@ nsresult nsNetworkLinkService::Init(void) {
 
   UpdateReachability();
 
+  calculateNetworkIdWithDelay(0);
+
   return NS_OK;
 }
 
@@ -544,6 +588,11 @@ nsresult nsNetworkLinkService::Shutdown() {
   ::CFRelease(mRunLoopSource);
   mRunLoopSource = nullptr;
 
+  if (mNetworkIdTimer) {
+    mNetworkIdTimer->Cancel();
+    mNetworkIdTimer = nullptr;
+  }
+
   return NS_OK;
 }
 
@@ -566,6 +615,8 @@ void nsNetworkLinkService::UpdateReachability() {
 }
 
 void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
   if (!observerService) {
     return;
@@ -597,9 +648,10 @@ void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
 /* static */
 void nsNetworkLinkService::ReachabilityChanged(SCNetworkReachabilityRef target,
                                                SCNetworkConnectionFlags flags, void* info) {
+  LOG(("nsNetworkLinkService::ReachabilityChanged"));
   nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(info);
 
   service->UpdateReachability();
   service->SendEvent(false);
-  service->calculateNetworkId();
+  service->calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
 }
