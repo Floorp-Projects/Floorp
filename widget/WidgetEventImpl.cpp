@@ -20,6 +20,10 @@
 #include "nsIContent.h"
 #include "nsPrintfCString.h"
 
+#if defined(XP_WIN)
+#include "npapi.h"
+#endif
+
 namespace mozilla {
 
 /******************************************************************************
@@ -397,6 +401,15 @@ bool WidgetEvent::CanBeSentToRemoteProcess() const {
     case eDragExit:
     case eDrop:
       return true;
+#if defined(XP_WIN)
+    case ePluginInputEvent:
+      {
+        auto evt = static_cast<const NPEvent*>(AsPluginEvent()->mPluginEvent);
+        return evt && evt->event == WM_SETTINGCHANGE &&
+            (evt->wParam == SPI_SETWHEELSCROLLLINES ||
+             evt->wParam == SPI_SETWHEELSCROLLCHARS);
+      }
+#endif
     default:
       return false;
   }

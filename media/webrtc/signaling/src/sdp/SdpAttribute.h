@@ -1535,25 +1535,21 @@ class SdpSimulcastAttribute : public SdpAttribute {
   void Serialize(std::ostream& os) const override;
   bool Parse(std::istream& is, std::string* error);
 
-  class Encoding {
-   public:
-    Encoding(const std::string& aRid, bool aPaused)
-        : rid(aRid), paused(aPaused) {}
-    std::string rid;
-    bool paused = false;
-  };
-
   class Version {
    public:
     void Serialize(std::ostream& os) const;
     bool IsSet() const { return !choices.empty(); }
     bool Parse(std::istream& is, std::string* error);
+    bool GetChoicesAsFormats(std::vector<uint16_t>* formats) const;
 
-    std::vector<Encoding> choices;
+    std::vector<std::string> choices;
   };
 
   class Versions : public std::vector<Version> {
    public:
+    enum Type { kPt, kRid };
+
+    Versions() : type(kRid) {}
     void Serialize(std::ostream& os) const;
     bool IsSet() const {
       if (empty()) {
@@ -1570,6 +1566,7 @@ class SdpSimulcastAttribute : public SdpAttribute {
     }
 
     bool Parse(std::istream& is, std::string* error);
+    Type type;
   };
 
   Versions sendVersions;

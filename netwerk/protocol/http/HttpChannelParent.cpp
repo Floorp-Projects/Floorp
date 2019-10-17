@@ -938,7 +938,9 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
 
   // If the redirect is vetoed, reason is set on the source (current) channel's
   // load info, so we must carry iver the change.
-  if (aSourceRequestBlockingReason) {
+  // The channel may have already been cleaned up, so there is nothing we can
+  // do.
+  if (MOZ_UNLIKELY(aSourceRequestBlockingReason) && mChannel) {
     nsCOMPtr<nsILoadInfo> sourceLoadInfo = mChannel->LoadInfo();
     if (sourceLoadInfo) {
       sourceLoadInfo->SetRequestBlockingReason(aSourceRequestBlockingReason);

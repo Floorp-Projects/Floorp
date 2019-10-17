@@ -9,11 +9,16 @@ const { EventEmitter } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
+const { ChannelEventSinkFactory } = ChromeUtils.import(
+  "chrome://remote/content/domains/parent/network/ChannelEventSink.jsm"
+);
 
-const Cm = Components.manager;
 const CC = Components.Constructor;
 
 const BinaryInputStream = CC(
@@ -31,59 +36,24 @@ const StorageStream = CC(
   "nsIStorageStream",
   "init"
 );
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "gActivityDistributor",
+  "@mozilla.org/network/http-activity-distributor;1",
+  "nsIHttpActivityDistributor"
+);
 
 // Cap response storage with 100Mb per tracked tab.
 const MAX_RESPONSE_STORAGE_SIZE = 100 * 1024 * 1024;
-
-/**
- * This is a nsIChannelEventSink implementation that monitors channel redirects.
- * This has been forked from:
- * https://searchfox.org/mozilla-central/source/devtools/server/actors/network-monitor/channel-event-sink.js
- * The rest of this module is also more or less forking:
- * https://searchfox.org/mozilla-central/source/devtools/server/actors/network-monitor/network-observer.js
- * TODO(try to re-unify /remote/ with /devtools code)
- */
-const SINK_CLASS_DESCRIPTION = "Remote agent NetworkMonitor Channel Event Sink";
-const SINK_CLASS_ID = Components.ID("{c2b4c83e-607a-405a-beab-0ef5dbfb7617}");
-const SINK_CONTRACT_ID = "@mozilla.org/network/monitor/channeleventsink;1";
-const SINK_CATEGORY_NAME = "net-channel-event-sinks";
 
 class NetworkObserver {
   constructor() {
     EventEmitter.decorate(this);
     this._browserSessionCount = new Map();
-    this._activityDistributor = Cc[
-      "@mozilla.org/network/http-activity-distributor;1"
-    ].getService(Ci.nsIHttpActivityDistributor);
-    this._activityDistributor.addObserver(this);
+    gActivityDistributor.addObserver(this);
+    ChannelEventSinkFactory.getService().registerCollector(this);
 
     this._redirectMap = new Map();
-    this._channelSink = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIChannelEventSink]),
-      asyncOnChannelRedirect: (oldChannel, newChannel, flags, callback) => {
-        this._onRedirect(oldChannel, newChannel);
-        callback.onRedirectVerifyCallback(Cr.NS_OK);
-      },
-    };
-    this._channelSinkFactory = {
-      QueryInterface: ChromeUtils.generateQI([Ci.nsIFactory]),
-      createInstance: (aOuter, aIID) => this._channelSink.QueryInterface(aIID),
-    };
-    // Register self as ChannelEventSink to track redirects.
-    const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.registerFactory(
-      SINK_CLASS_ID,
-      SINK_CLASS_DESCRIPTION,
-      SINK_CONTRACT_ID,
-      this._channelSinkFactory
-    );
-    Services.catMan.addCategoryEntry(
-      SINK_CATEGORY_NAME,
-      SINK_CONTRACT_ID,
-      SINK_CONTRACT_ID,
-      false,
-      true
-    );
 
     // Request interception state.
     this._browserSuspendedChannels = new Map();
@@ -106,6 +76,25 @@ class NetworkObserver {
       "http-on-examine-cached-response"
     );
     Services.obs.addObserver(
+      this._onCachedResponse,
+      "http-on-examine-merged-response"
+    );
+  }
+
+  dispose() {
+    gActivityDistributor.removeObserver(this);
+    ChannelEventSinkFactory.getService().unregisterCollector(this);
+
+    Services.obs.removeObserver(this._onRequest, "http-on-modify-request");
+    Services.obs.removeObserver(
+      this._onExamineResponse,
+      "http-on-examine-response"
+    );
+    Services.obs.removeObserver(
+      this._onCachedResponse,
+      "http-on-examine-cached-response"
+    );
+    Services.obs.removeObserver(
       this._onCachedResponse,
       "http-on-examine-merged-response"
     );
@@ -189,10 +178,15 @@ class NetworkObserver {
     });
   }
 
-  _onRedirect(oldChannel, newChannel) {
-    if (!(oldChannel instanceof Ci.nsIHttpChannel)) {
+  _onChannelRedirect(oldChannel, newChannel) {
+    // We can be called with any nsIChannel, but are interested only in HTTP channels
+    try {
+      oldChannel.QueryInterface(Ci.nsIHttpChannel);
+      newChannel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (ex) {
       return;
     }
+
     const httpChannel = oldChannel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
     if (
@@ -217,9 +211,12 @@ class NetworkObserver {
     ) {
       return;
     }
-    if (!(channel instanceof Ci.nsIHttpChannel)) {
+    try {
+      channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (ex) {
       return;
     }
+
     const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     const loadContext = getLoadContext(httpChannel);
     if (
@@ -240,7 +237,9 @@ class NetworkObserver {
   }
 
   _onRequest(channel, topic) {
-    if (!(channel instanceof Ci.nsIHttpChannel)) {
+    try {
+      channel.QueryInterface(Ci.nsIHttpChannel);
+    } catch (ex) {
       return;
     }
     const httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
@@ -360,30 +359,6 @@ class NetworkObserver {
       this._browserSessionCount.delete(browser);
       this._browserResponseStorages.delete(browser);
     }
-  }
-
-  dispose() {
-    this._activityDistributor.removeObserver(this);
-    const registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.unregisterFactory(SINK_CLASS_ID, this._channelSinkFactory);
-    Services.catMan.deleteCategoryEntry(
-      SINK_CATEGORY_NAME,
-      SINK_CONTRACT_ID,
-      false
-    );
-    Services.obs.removeObserver(this._onRequest, "http-on-modify-request");
-    Services.obs.removeObserver(
-      this._onExamineResponse,
-      "http-on-examine-response"
-    );
-    Services.obs.removeObserver(
-      this._onCachedResponse,
-      "http-on-examine-cached-response"
-    );
-    Services.obs.removeObserver(
-      this._onCachedResponse,
-      "http-on-examine-merged-response"
-    );
   }
 }
 

@@ -2257,6 +2257,7 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
       TimeStamp now = TimeStamp::Now();
       cbp->NotifyPipelineRendered(mPipelineId, mWrEpoch, VsyncId(), now, now,
                                   now);
+      return;
     }
   }
 

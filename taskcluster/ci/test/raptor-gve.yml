@@ -351,7 +351,7 @@ raptor-tp6m-1-geckoview-cold:
             default: 1
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-1
+            - --test=raptor-tp6m-1-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -375,7 +375,7 @@ raptor-tp6m-2-geckoview-cold:
             default: 1
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-2
+            - --test=raptor-tp6m-2-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -399,7 +399,7 @@ raptor-tp6m-3-geckoview-cold:
             default: 1
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-3
+            - --test=raptor-tp6m-3-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -423,7 +423,7 @@ raptor-tp6m-4-geckoview-cold:
             default: 1
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-4
+            - --test=raptor-tp6m-4-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -447,7 +447,7 @@ raptor-tp6m-5-geckoview-cold:
             default: 1
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-5
+            - --test=raptor-tp6m-5-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -471,7 +471,7 @@ raptor-tp6m-6-geckoview-cold:
             default: 1
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-6
+            - --test=raptor-tp6m-6-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -490,7 +490,7 @@ raptor-tp6m-7-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-7
+            - --test=raptor-tp6m-7-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -509,7 +509,7 @@ raptor-tp6m-8-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-8
+            - --test=raptor-tp6m-8-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -528,7 +528,7 @@ raptor-tp6m-9-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-9
+            - --test=raptor-tp6m-9-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -547,7 +547,7 @@ raptor-tp6m-10-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-10
+            - --test=raptor-tp6m-10-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -566,7 +566,7 @@ raptor-tp6m-11-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-11
+            - --test=raptor-tp6m-11-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -585,7 +585,7 @@ raptor-tp6m-12-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-12
+            - --test=raptor-tp6m-12-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -604,7 +604,7 @@ raptor-tp6m-13-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-13
+            - --test=raptor-tp6m-13-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -623,7 +623,7 @@ raptor-tp6m-14-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-14
+            - --test=raptor-tp6m-14-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -642,7 +642,7 @@ raptor-tp6m-15-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-15
+            - --test=raptor-tp6m-15-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -661,7 +661,7 @@ raptor-tp6m-16-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-16
+            - --test=raptor-tp6m-16-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -680,7 +680,7 @@ raptor-tp6m-17-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-17
+            - --test=raptor-tp6m-17-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -699,7 +699,7 @@ raptor-tp6m-18-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-18
+            - --test=raptor-tp6m-18-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -718,7 +718,7 @@ raptor-tp6m-19-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-19
+            - --test=raptor-tp6m-19-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -737,7 +737,7 @@ raptor-tp6m-20-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-20
+            - --test=raptor-tp6m-20-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -756,7 +756,7 @@ raptor-tp6m-21-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-21
+            - --test=raptor-tp6m-21-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -775,7 +775,7 @@ raptor-tp6m-22-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-22
+            - --test=raptor-tp6m-22-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -794,7 +794,7 @@ raptor-tp6m-23-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-23
+            - --test=raptor-tp6m-23-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -813,7 +813,7 @@ raptor-tp6m-24-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-24
+            - --test=raptor-tp6m-24-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -832,7 +832,7 @@ raptor-tp6m-25-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-25
+            - --test=raptor-tp6m-25-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -851,7 +851,7 @@ raptor-tp6m-26-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-26
+            - --test=raptor-tp6m-26-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -870,7 +870,7 @@ raptor-tp6m-27-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-27
+            - --test=raptor-tp6m-27-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
@@ -889,7 +889,7 @@ raptor-tp6m-28-geckoview-cold:
     e10s: true
     mozharness:
         extra-options:
-            - --test=raptor-tp6m-cold-28
+            - --test=raptor-tp6m-28-cold
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity

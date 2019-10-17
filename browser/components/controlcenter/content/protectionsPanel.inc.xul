@@ -155,6 +155,18 @@
           </hbox>
         </stack>
       </vbox>
+
+      <hbox id="protections-popup-milestones" class="protections-popup-section">
+        <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
+        <toolbarbutton id="protections-popup-milestones-content"
+                       flex="1"
+                       wrap="true"
+                       oncommand="gProtectionsHandler.openProtections(true);">
+          <description id="protections-popup-milestones-text" flex="1"
+                       role="heading" aria-level="2"/>
+          <image id="protections-popup-milestones-illustration"/>
+        </toolbarbutton>
+      </hbox>
     </panelview>
 
     <!-- Site Not Working? SubView -->

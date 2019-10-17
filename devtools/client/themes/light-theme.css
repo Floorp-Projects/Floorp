@@ -195,7 +195,7 @@ body {
 }
 
 .cm-s-mozilla .CodeMirror-selected { /* selected text (unfocused) */
-  background: rgb(176, 176, 176);
+  background: rgb(210, 210, 210);
 }
 
 .cm-s-mozilla .CodeMirror-activeline-background { /* selected color with alpha */

@@ -288,14 +288,6 @@ static void AssertHeapIsIdleOrIterating() {
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 }
 
-static void AssertHeapIsIdleOrStringIsFlat(JSString* str) {
-  /*
-   * We allow some functions to be called during a GC as long as the argument
-   * is a flat string, since that will not cause allocation.
-   */
-  MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy(), str->isFlat());
-}
-
 JS_PUBLIC_API bool JS_ValueToObject(JSContext* cx, HandleValue value,
                                     MutableHandleObject objp) {
   AssertHeapIsIdle();
@@ -919,7 +911,9 @@ JS_PUBLIC_API bool JS_ResolveStandardClass(JSContext* cx, HandleObject obj,
   // If this class is anonymous, then it doesn't exist as a global
   // property, so we won't resolve anything.
   JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
-  if (key != JSProto_Null) {
+  if (key != JSProto_Null && key != JSProto_AsyncFunction &&
+      key != JSProto_GeneratorFunction &&
+      key != JSProto_AsyncGeneratorFunction) {
     const JSClass* clasp = ProtoKeyToClass(key);
     if (!clasp || clasp->specShouldDefineConstructor()) {
       if (!GlobalObject::ensureConstructor(cx, global, key)) {
@@ -992,6 +986,12 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
     }
 
     if (GlobalObject::skipDeselectedConstructor(cx, key)) {
+      continue;
+    }
+
+    // Async(Function|Generator) and Generator don't yet use ClassSpec.
+    if (key == JSProto_AsyncFunction || key == JSProto_GeneratorFunction ||
+        key == JSProto_AsyncGeneratorFunction) {
       continue;
     }
 
@@ -4320,7 +4320,7 @@ JS_PUBLIC_API const JS::Latin1Char* JS_GetLatin1StringCharsAndLength(
     JSContext* cx, const JS::AutoRequireNoGC& nogc, JSString* str,
     size_t* plength) {
   MOZ_ASSERT(plength);
-  AssertHeapIsIdleOrStringIsFlat(str);
+  AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(str);
   JSLinearString* linear = str->ensureLinear(cx);
@@ -4335,7 +4335,7 @@ JS_PUBLIC_API const char16_t* JS_GetTwoByteStringCharsAndLength(
     JSContext* cx, const JS::AutoRequireNoGC& nogc, JSString* str,
     size_t* plength) {
   MOZ_ASSERT(plength);
-  AssertHeapIsIdleOrStringIsFlat(str);
+  AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(str);
   JSLinearString* linear = str->ensureLinear(cx);
@@ -4352,7 +4352,7 @@ JS_PUBLIC_API const char16_t* JS_GetTwoByteExternalStringChars(JSString* str) {
 
 JS_PUBLIC_API bool JS_GetStringCharAt(JSContext* cx, JSString* str,
                                       size_t index, char16_t* res) {
-  AssertHeapIsIdleOrStringIsFlat(str);
+  AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(str);
 
@@ -4373,7 +4373,7 @@ JS_PUBLIC_API char16_t JS_GetLinearStringCharAt(JSLinearString* str,
 JS_PUBLIC_API bool JS_CopyStringChars(JSContext* cx,
                                       mozilla::Range<char16_t> dest,
                                       JSString* str) {
-  AssertHeapIsIdleOrStringIsFlat(str);
+  AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(str);
 

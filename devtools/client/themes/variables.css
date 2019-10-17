@@ -202,7 +202,8 @@
   --theme-warning-color: var(--yellow-80);
 
   /* Flashing colors used to highlight updates */
-  --theme-contrast-background: #fff697;
+  --theme-contrast-background: #fff699; /* = Yellow 50-a40 on white */
+  --theme-contrast-background-alpha: rgba(255, 233, 0, 0.4); /* Yellow 50-a40 */
   --theme-contrast-color: black;
   --theme-contrast-border: var(--yellow-60);
 }
@@ -242,7 +243,7 @@
 
   /* Selection */
   --theme-selection-background: #204e8a;
-  --theme-selection-background-hover: #303844;
+  --theme-selection-background-hover: #353b48;
   --theme-selection-focus-background: var(--grey-60);
   --theme-selection-focus-color: var(--grey-30);
   --theme-selection-color: #ffffff;
@@ -318,7 +319,8 @@
   --theme-warning-color: hsl(43, 94%, 81%);
 
   /* Flashing colors used to highlight updates */
-  --theme-contrast-background: #605913; /* slightly desaturated Yellow 80 */
+  --theme-contrast-background: #4f4b1f; /* = Yellow 50-a20 on body background */
+  --theme-contrast-background-alpha: rgba(255, 233, 0, 0.15); /* Yellow 50-a15 */
   --theme-contrast-color: white;
   --theme-contrast-border: var(--yellow-65);
 }

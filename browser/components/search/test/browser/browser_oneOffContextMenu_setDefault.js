@@ -282,12 +282,13 @@ async function openPopupAndGetEngineButton(
   if (isSearch) {
     // Open the popup.
     win.gURLBar.blur();
-    let promise = promiseEvent(popup, "popupshown");
+    let shownPromise = promiseEvent(popup, "popupshown");
+    let builtPromise = promiseEvent(oneOffInstance, "rebuild");
     let searchbar = win.document.getElementById("searchbar");
     let searchIcon = searchbar.querySelector(".searchbar-search-button");
     // Use the search icon to avoid hitting the network.
     EventUtils.synthesizeMouseAtCenter(searchIcon, {}, win);
-    await promise;
+    await Promise.all([shownPromise, builtPromise]);
   } else {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,

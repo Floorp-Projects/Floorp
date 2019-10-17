@@ -11,4 +11,6 @@ extern "C" const char* __ubsan_default_options() {
   return "print_stacktrace=1";
 }
 
+extern "C" const char* __ubsan_default_suppressions() { return ""; }
+
 #endif

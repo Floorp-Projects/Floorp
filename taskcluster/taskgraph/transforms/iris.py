@@ -61,3 +61,53 @@ def make_iris_tasks(config, jobs):
                 del clone["worker"]["env"]["PATH"]
 
             yield clone
+
+
+@transforms.add
+def fill_email_data(config, tasks):
+    format_kwargs = {
+        "head_rev": config.params["head_rev"],
+        "project": config.params["project"],
+        "th_root": "https://treeherder.mozilla.org/#/",
+        "tiers": "&tier=1%2C2%2C3",
+    }
+
+    for task in tasks:
+        format_kwargs["task_name"] = task["name"]
+        format_kwargs["filterstring"] = "&searchStr=iris%20{}".format(task["name"])
+        format_kwargs["chunk"] = task["worker"]["env"]["CURRENT_TEST_DIR"]
+
+        resolve_keyed_by(task, 'notify.email', item_name=task["name"], **{
+            'project': config.params["project"],
+        })
+
+        email = task["notify"].get("email")
+        if email:
+            email["link"]["href"] = email["link"]["href"].format(**format_kwargs)
+            email["subject"] = email["subject"].format(**format_kwargs)
+
+        yield task
+
+
+@transforms.add
+def add_notify_email(config, tasks):
+    for task in tasks:
+        notify = task.pop('notify', {})
+        email_config = notify.get('email')
+        if email_config:
+            extra = task.setdefault('extra', {})
+            notify = extra.setdefault('notify', {})
+            notify['email'] = {
+                'subject': email_config['subject'],
+                'content': email_config['message'],
+                'link': email_config.get('link', None),
+            }
+
+            routes = task.setdefault('routes', [])
+            routes.extend([
+                'notify.email.{}.on-{}'.format(address, reason)
+                for address in email_config['emails']
+                for reason in email_config['on-reasons']
+            ])
+
+        yield task

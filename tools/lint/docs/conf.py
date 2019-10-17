@@ -35,13 +35,13 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'mozlint'
-copyright = u'2015, Andrew Halberstadt'
-author = u'Andrew Halberstadt'
+copyright = u'2015-Today, Mozilla'
+author = u'Andrew Halberstadt and others'
 
 # The short X.Y version.
-version = '0.1.0'
+version = '0.2.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.1.0'
+release = '0.2.0'
 
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.

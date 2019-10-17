@@ -24,7 +24,7 @@ function nShotsListener(aBrowser, aType, aCallback, aCount) {
         executeSoon(aCallback);
       }
     },
-    true
+    { capture: true }
   );
 }
 

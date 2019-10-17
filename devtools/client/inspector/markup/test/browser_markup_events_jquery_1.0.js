@@ -18,7 +18,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":1117",
+        filename: URL_ROOT + TEST_LIB + ":1117:16",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -44,7 +44,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: TEST_URL + ":27",
+        filename: TEST_URL + ":27:38",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -106,7 +106,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB + ":894",
+        filename: URL_ROOT + TEST_LIB + ":894:18",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -142,7 +142,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":34",
+        filename: TEST_URL + ":34:41",
         attributes: [
           "jQuery"
         ],
@@ -153,7 +153,7 @@ const TEST_DATA = [
       },
       {
         type: "click",
-        filename: TEST_URL + ":35",
+        filename: TEST_URL + ":35:41",
         attributes: [
           "jQuery"
         ],
@@ -164,7 +164,7 @@ const TEST_DATA = [
       },
       {
         type: "click",
-        filename: URL_ROOT + TEST_LIB + ":894",
+        filename: URL_ROOT + TEST_LIB + ":894:18",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -195,7 +195,7 @@ const TEST_DATA = [
       },
       {
         type: "keydown",
-        filename: TEST_URL + ":36",
+        filename: TEST_URL + ":36:42",
         attributes: [
           "jQuery"
         ],
@@ -206,7 +206,7 @@ const TEST_DATA = [
       },
       {
         type: "keydown",
-        filename: URL_ROOT + TEST_LIB + ":894",
+        filename: URL_ROOT + TEST_LIB + ":894:18",
         attributes: [
           "Bubbling",
           "DOM2"

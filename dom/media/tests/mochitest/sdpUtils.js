@@ -246,11 +246,12 @@ var sdputils = {
       return answer_sdp;
     }
     ok(
-      offer_sdp.includes("a=simulcast:send "),
+      offer_sdp.includes("a=simulcast: send rid"),
       "Offer contains simulcast attribute"
     );
-    var o_simul = offer_sdp.match(/simulcast:send (.*)([\n$])*/i);
-    var new_answer_sdp = answer_sdp + "a=simulcast:recv " + o_simul[1] + "\r\n";
+    var o_simul = offer_sdp.match(/simulcast: send rid=(.*)([\n$])*/i);
+    var new_answer_sdp =
+      answer_sdp + "a=simulcast: recv rid=" + o_simul[1] + "\r\n";
     ok(offer_sdp.includes("a=rid:"), "Offer contains RID attribute");
     var o_rids = offer_sdp.match(/a=rid:(.*)/gi);
     o_rids.forEach(o_rid => {

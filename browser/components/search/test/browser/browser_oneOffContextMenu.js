@@ -30,10 +30,11 @@ add_task(async function init() {
 
 add_task(async function telemetry() {
   // Open the popup.
-  let promise = promiseEvent(searchPopup, "popupshown");
+  let shownPromise = promiseEvent(searchPopup, "popupshown");
+  let builtPromise = promiseEvent(oneOffInstance, "rebuild");
   info("Opening search panel");
   EventUtils.synthesizeMouseAtCenter(searchIcon, {});
-  await promise;
+  await Promise.all([shownPromise, builtPromise]);
 
   // Get the one-off button for the test engine.
   let oneOffButton;
@@ -50,7 +51,7 @@ add_task(async function telemetry() {
   );
 
   // Open the context menu on the one-off.
-  promise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  let promise = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
   EventUtils.synthesizeMouseAtCenter(oneOffButton, {
     type: "contextmenu",
     button: 2,

@@ -5655,6 +5655,8 @@ class Tokenizer(object):
         "namespace": "NAMESPACE",
         "ReadableStream": "READABLESTREAM",
         "constructor": "CONSTRUCTOR",
+        "symbol": "SYMBOL",
+        "async": "ASYNC",
         }
 
     tokens.extend(keywords.values())
@@ -6741,37 +6743,54 @@ class Parser(Tokenizer):
     def p_ArgumentName(self, p):
         """
             ArgumentName : IDENTIFIER
-                         | ATTRIBUTE
-                         | CALLBACK
-                         | CONST
-                         | CONSTRUCTOR
-                         | DELETER
-                         | DICTIONARY
-                         | ENUM
-                         | EXCEPTION
-                         | GETTER
-                         | INHERIT
-                         | INTERFACE
-                         | ITERABLE
-                         | LEGACYCALLER
-                         | MAPLIKE
-                         | PARTIAL
-                         | REQUIRED
-                         | SERIALIZER
-                         | SETLIKE
-                         | SETTER
-                         | STATIC
-                         | STRINGIFIER
-                         | TYPEDEF
-                         | UNRESTRICTED
-                         | NAMESPACE
+                         | ArgumentNameKeyword
+        """
+        p[0] = p[1]
+
+    def p_ArgumentNameKeyword(self, p):
+        """
+            ArgumentNameKeyword : ASYNC
+                                | ATTRIBUTE
+                                | CALLBACK
+                                | CONST
+                                | CONSTRUCTOR
+                                | DELETER
+                                | DICTIONARY
+                                | ENUM
+                                | EXCEPTION
+                                | GETTER
+                                | INCLUDES
+                                | INHERIT
+                                | INTERFACE
+                                | ITERABLE
+                                | LEGACYCALLER
+                                | MAPLIKE
+                                | MIXIN
+                                | NAMESPACE
+                                | PARTIAL
+                                | READONLY
+                                | REQUIRED
+                                | SERIALIZER
+                                | SETLIKE
+                                | SETTER
+                                | STATIC
+                                | STRINGIFIER
+                                | TYPEDEF
+                                | UNRESTRICTED
         """
         p[0] = p[1]
 
     def p_AttributeName(self, p):
         """
             AttributeName : IDENTIFIER
-                          | REQUIRED
+                          | AttributeNameKeyword
+        """
+        p[0] = p[1]
+
+    def p_AttributeNameKeyword(self, p):
+        """
+            AttributeNameKeyword : ASYNC
+                                 | REQUIRED
         """
         p[0] = p[1]
 
@@ -6863,36 +6882,27 @@ class Parser(Tokenizer):
                   | BYTESTRING
                   | USVSTRING
                   | JSSTRING
+                  | PROMISE
                   | ANY
-                  | ATTRIBUTE
                   | BOOLEAN
                   | BYTE
-                  | LEGACYCALLER
-                  | CONST
-                  | CONSTRUCTOR
-                  | DELETER
                   | DOUBLE
-                  | EXCEPTION
                   | FALSE
                   | FLOAT
-                  | GETTER
-                  | INHERIT
-                  | INTERFACE
                   | LONG
                   | NULL
                   | OBJECT
                   | OCTET
+                  | OR
                   | OPTIONAL
-                  | SEQUENCE
                   | RECORD
-                  | SETTER
+                  | SEQUENCE
                   | SHORT
-                  | STATIC
-                  | STRINGIFIER
+                  | SYMBOL
                   | TRUE
-                  | TYPEDEF
                   | UNSIGNED
                   | VOID
+                  | ArgumentNameKeyword
         """
         pass
 

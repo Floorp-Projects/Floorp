@@ -1590,6 +1590,30 @@ def gen_invoke_rustc(version, rustup_wrapper=False):
                 ]
                 rust_targets.remove('wasm32-unknown-wasi')
                 rust_targets.remove('x86_64-unknown-bitrig')
+            # Additional targets from 1.37
+            if Version(version) >= '1.37.0':
+                rust_targets += [
+                    'x86_64-pc-solaris',
+                ]
+            # Additional targets from 1.38
+            if Version(version) >= '1.38.0':
+                rust_targets += [
+                    'aarch64-unknown-redox',
+                    'aarch64-wrs-vxworks',
+                    'armv7-unknown-linux-gnueabi',
+                    'armv7-unknown-linux-musleabi',
+                    'armv7-wrs-vxworks',
+                    'hexagon-unknown-linux-musl',
+                    'i586-wrs-vxworks',
+                    'i686-uwp-windows-gnu',
+                    'i686-wrs-vxworks',
+                    'powerpc-wrs-vxworks',
+                    'powerpc-wrs-vxworks-spe',
+                    'powerpc64-wrs-vxworks',
+                    'riscv32i-unknown-none-elf',
+                    'x86_64-uwp-windows-gnu',
+                    'x86_64-wrs-vxworks',
+                ]
             return 0, '\n'.join(sorted(rust_targets)), ''
         if (len(args) == 6 and args[:2] == ('--crate-type', 'staticlib') and
             args[2].startswith('--target=') and args[3] == '-o'):
@@ -1601,7 +1625,7 @@ def gen_invoke_rustc(version, rustup_wrapper=False):
 
 
 class RustTest(BaseConfigureTest):
-    def get_rust_target(self, target, compiler_type='gcc', version='1.36.0',
+    def get_rust_target(self, target, compiler_type='gcc', version='1.38.0',
                         arm_target=None):
         environ = {
             'PATH': os.pathsep.join(
@@ -1643,7 +1667,6 @@ class RustTest(BaseConfigureTest):
             'i686-unknown-openbsd',
             'x86_64-unknown-openbsd',
             'aarch64-unknown-linux-gnu',
-            'armv7-unknown-linux-gnueabihf',
             'sparc64-unknown-linux-gnu',
             'i686-unknown-linux-gnu',
             'i686-apple-darwin',
@@ -1668,6 +1691,7 @@ class RustTest(BaseConfigureTest):
             ('armv7-unknown-linux-androideabi', 'armv7-linux-androideabi'),
             ('i386-unknown-linux-android', 'i686-linux-android'),
             ('i686-unknown-linux-android', 'i686-linux-android'),
+            ('i686-pc-linux-gnu', 'i686-unknown-linux-gnu'),
             ('x86_64-unknown-linux-android', 'x86_64-linux-android'),
             ('x86_64-pc-linux-gnu', 'x86_64-unknown-linux-gnu'),
             ('sparcv9-sun-solaris2', 'sparcv9-sun-solaris'),
@@ -1683,6 +1707,8 @@ class RustTest(BaseConfigureTest):
             ('x86_64-pc-mingw32', 'gcc', 'x86_64-pc-windows-gnu'),
             ('i686-pc-mingw32', 'clang', 'i686-pc-windows-gnu'),
             ('x86_64-pc-mingw32', 'clang', 'x86_64-pc-windows-gnu'),
+            ('i686-w64-mingw32', 'clang', 'i686-pc-windows-gnu'),
+            ('x86_64-w64-mingw32', 'clang', 'x86_64-pc-windows-gnu'),
         ):
             self.assertEqual(self.get_rust_target(autoconf, building_with_gcc), rust)
 

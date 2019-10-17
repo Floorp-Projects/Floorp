@@ -833,6 +833,7 @@ void Navigator::RegisterContentHandler(const nsAString& aMIMEType,
 
 // This list should be kept up-to-date with the spec:
 // https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers
+// If you change this list, please also update the copy in E10SUtils.jsm.
 static const char* const kSafeSchemes[] = {
     "bitcoin", "geo",  "im",   "irc",         "ircs", "magnet", "mailto",
     "mms",     "news", "nntp", "openpgp4fpr", "sip",  "sms",    "smsto",

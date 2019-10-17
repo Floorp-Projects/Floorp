@@ -18,7 +18,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "DOMContentLoaded",
-        filename: URL_ROOT + TEST_LIB + ":32",
+        filename: URL_ROOT + TEST_LIB + ":32:355",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -31,7 +31,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: TEST_URL + ":27",
+        filename: TEST_URL + ":27:38",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -93,7 +93,7 @@ const TEST_DATA = [
       },
       {
         type: "load",
-        filename: URL_ROOT + TEST_LIB + ":26",
+        filename: URL_ROOT + TEST_LIB + ":26:107",
         attributes: [
           "Bubbling",
           "DOM2"
@@ -118,7 +118,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "click",
-        filename: TEST_URL + ":34",
+        filename: TEST_URL + ":34:41",
         attributes: [
           "jQuery"
         ],
@@ -129,7 +129,7 @@ const TEST_DATA = [
       },
       {
         type: "click",
-        filename: TEST_URL + ":35",
+        filename: TEST_URL + ":35:41",
         attributes: [
           "jQuery"
         ],
@@ -140,7 +140,7 @@ const TEST_DATA = [
       },
       {
         type: "keydown",
-        filename: TEST_URL + ":36",
+        filename: TEST_URL + ":36:42",
         attributes: [
           "jQuery"
         ],
@@ -156,7 +156,7 @@ const TEST_DATA = [
     expected: [
       {
         type: "dblclick",
-        filename: TEST_URL + ":28",
+        filename: TEST_URL + ":28:47",
         attributes: [
           "jQuery",
           "Live"
@@ -168,7 +168,7 @@ const TEST_DATA = [
       },
       {
         type: "dblclick",
-        filename: URL_ROOT + TEST_LIB + ":17",
+        filename: URL_ROOT + TEST_LIB + ":17:183",
         attributes: [
           "jQuery",
           "Live"
@@ -180,7 +180,7 @@ const TEST_DATA = [
       },
       {
         type: "dragstart",
-        filename: TEST_URL + ":29",
+        filename: TEST_URL + ":29:48",
         attributes: [
           "jQuery",
           "Live"
@@ -192,7 +192,7 @@ const TEST_DATA = [
       },
       {
         type: "dragstart",
-        filename: URL_ROOT + TEST_LIB + ":17",
+        filename: URL_ROOT + TEST_LIB + ":17:183",
         attributes: [
           "jQuery",
           "Live"

@@ -1,0 +1,11 @@
+1 function with some indirect sub-type change:
+
+  [C]'function CERTCertificate* CERT_ConvertAndDecodeCertificate(char*)' at certread.c:219:1 has some indirect sub-type changes:
+    return type changed:
+      in pointed to type 'typedef CERTCertificate' at certt.h:39:1:
+        underlying type 'struct CERTCertificateStr' at certt.h:189:1 changed:
+          type size changed from 6016 to 6080 (in bits)
+          1 data member insertion:
+            'CERTCertDistrust* CERTCertificateStr::distrust', at offset 6016 (in bits) at certt.h:296:1
+
+

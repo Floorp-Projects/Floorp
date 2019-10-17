@@ -262,6 +262,12 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
                 elif narrowed:
                     candidates = narrowed
 
+                vendor_aliases = {'pc': 'w64'}
+                narrowed = [c for c in candidates
+                            if vendor_aliases.get(c.target.vendor) == host_or_target.vendor]
+                if len(narrowed) == 1:
+                    return narrowed[0].rust_target
+
             # - For arm targets, correlate with arm_target
             #   we could be more thorough with the supported rust targets, but they
             #   don't support OSes that are supported to build Gecko anyways.
@@ -322,6 +328,14 @@ def rust_triple_alias(host_or_target, host_or_target_c_compiler):
                 c for c in candidates
                 if c.target.raw_os == host_or_target.raw_os and
                    c.target.raw_cpu == host_or_target.raw_cpu
+            ]
+            if len(narrowed) == 1:
+                return narrowed[0].rust_target
+
+            # Finally, see if the vendor can be used to disambiguate.
+            narrowed = [
+                c for c in candidates
+                if c.target.vendor == host_or_target.vendor
             ]
             if len(narrowed) == 1:
                 return narrowed[0].rust_target

@@ -146,10 +146,10 @@ add_task(async function() {
 
     const headersTable = tabpanel.querySelector(".treeTable tbody");
     const responseScope = headersTable.querySelectorAll(
-      "tr[id^='/Response headers']"
+      "tr[id^='/Response Headers']"
     );
     const requestScope = headersTable.querySelectorAll(
-      "tr[id^='/Request headers']"
+      "tr[id^='/Request Headers']"
     );
 
     ok(
@@ -264,12 +264,12 @@ add_task(async function() {
     );
     // 2 Cookies in response - 1 httpOnly and 1 value for each cookie - total 6
     is(
-      cookieTable.querySelectorAll("tr[id^='/Response cookies/'").length,
+      cookieTable.querySelectorAll("tr[id^='/Response Cookies/'").length,
       6,
       "There should be 6 rows displayed in response cookies table"
     );
     is(
-      cookieTable.querySelectorAll("tr[id^='/Request cookies/'").length,
+      cookieTable.querySelectorAll("tr[id^='/Request Cookies/'").length,
       2,
       "There should be 2 cookie values displayed in request cookies table."
     );

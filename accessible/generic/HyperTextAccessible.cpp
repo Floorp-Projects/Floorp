@@ -39,6 +39,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
+#include "mozilla/dom/HTMLHeadingElement.h"
 #include "mozilla/dom/Selection.h"
 #include "gfxSkipChars.h"
 #include <algorithm>
@@ -907,13 +908,9 @@ HyperTextAccessible::DefaultTextAttributes() {
 }
 
 int32_t HyperTextAccessible::GetLevelInternal() {
-  if (mContent->IsHTMLElement(nsGkAtoms::h1)) return 1;
-  if (mContent->IsHTMLElement(nsGkAtoms::h2)) return 2;
-  if (mContent->IsHTMLElement(nsGkAtoms::h3)) return 3;
-  if (mContent->IsHTMLElement(nsGkAtoms::h4)) return 4;
-  if (mContent->IsHTMLElement(nsGkAtoms::h5)) return 5;
-  if (mContent->IsHTMLElement(nsGkAtoms::h6)) return 6;
-
+  if (auto* heading = dom::HTMLHeadingElement::FromNode(mContent)) {
+    return heading->AccessibilityLevel();
+  }
   return AccessibleWrap::GetLevelInternal();
 }
 

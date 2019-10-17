@@ -17,15 +17,17 @@ class HTMLHeadingElement final : public nsGenericHTMLElement {
  public:
   explicit HTMLHeadingElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-      : nsGenericHTMLElement(std::move(aNodeInfo)) {}
+      : nsGenericHTMLElement(std::move(aNodeInfo)) {
+    MOZ_ASSERT(IsHTMLHeadingElement());
+  }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   void SetAlign(const nsAString& aAlign, ErrorResult& aError) {
     return SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
@@ -34,11 +36,35 @@ class HTMLHeadingElement final : public nsGenericHTMLElement {
     return GetHTMLAttr(nsGkAtoms::align, aAlign);
   }
 
+  int32_t AccessibilityLevel() const;
+
+  int32_t BaseAccessibilityLevel() const {
+    nsAtom* name = NodeInfo()->NameAtom();
+    if (name == nsGkAtoms::h1) {
+      return 1;
+    }
+    if (name == nsGkAtoms::h2) {
+      return 2;
+    }
+    if (name == nsGkAtoms::h3) {
+      return 3;
+    }
+    if (name == nsGkAtoms::h4) {
+      return 4;
+    }
+    if (name == nsGkAtoms::h5) {
+      return 5;
+    }
+    MOZ_ASSERT(name == nsGkAtoms::h6);
+    return 6;
+  }
+
+  NS_IMPL_FROMNODE_HELPER(HTMLHeadingElement, IsHTMLHeadingElement())
+
  protected:
   virtual ~HTMLHeadingElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
  private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

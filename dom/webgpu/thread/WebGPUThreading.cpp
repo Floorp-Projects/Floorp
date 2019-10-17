@@ -12,12 +12,9 @@ namespace webgpu {
 
 static StaticRefPtr<WebGPUThreading> sWebGPUThread;
 
-WebGPUThreading::WebGPUThreading(base::Thread* aThread)
-: mThread(aThread) {}
+WebGPUThreading::WebGPUThreading(base::Thread* aThread) : mThread(aThread) {}
 
-WebGPUThreading::~WebGPUThreading() {
-  delete mThread;
-}
+WebGPUThreading::~WebGPUThreading() { delete mThread; }
 
 // static
 void WebGPUThreading::Start() {
@@ -35,8 +32,8 @@ void WebGPUThreading::Start() {
   sWebGPUThread = new WebGPUThreading(thread);
   const auto fnInit = []() {};
 
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-    "WebGPUThreading fnInit", fnInit);
+  RefPtr<Runnable> runnable =
+      NS_NewRunnableFunction("WebGPUThreading fnInit", fnInit);
   sWebGPUThread->GetLoop()->PostTask(runnable.forget());
 }
 
@@ -45,11 +42,10 @@ void WebGPUThreading::ShutDown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sWebGPUThread);
 
-  const auto fnExit = []() {
-  };
+  const auto fnExit = []() {};
 
-  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
-    "WebGPUThreading fnExit", fnExit);
+  RefPtr<Runnable> runnable =
+      NS_NewRunnableFunction("WebGPUThreading fnExit", fnExit);
   sWebGPUThread->GetLoop()->PostTask(runnable.forget());
 
   sWebGPUThread = nullptr;
@@ -57,6 +53,7 @@ void WebGPUThreading::ShutDown() {
 
 // static
 MessageLoop* WebGPUThreading::GetLoop() {
+  MOZ_ASSERT(NS_IsMainThread());
   return sWebGPUThread ? sWebGPUThread->mThread->message_loop() : nullptr;
 }
 

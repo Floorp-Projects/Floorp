@@ -573,47 +573,23 @@
       // ////////////////////////////////////////////////////////////////////////
       // HTML:h1, HTML:h2, HTML:h3, HTML:h4, HTML:h5, HTML:h6
 
-      obj = {
-        role: ROLE_HEADING,
-        attributes: { "level": "1" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-      };
-      testElm("h1", obj);
+      function headingWithLevel(i) {
+        return {
+          role: ROLE_HEADING,
+          attributes: { "level": i.toString() },
+          interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
+        };
+      }
 
-      obj = {
-        role: ROLE_HEADING,
-        attributes: { "level": "2" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-      };
-      testElm("h2", obj);
-
-      obj = {
-        role: ROLE_HEADING,
-        attributes: { "level": "3" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-      };
-      testElm("h3", obj);
-
-      obj = {
-        role: ROLE_HEADING,
-        attributes: { "level": "4" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-      };
-      testElm("h4", obj);
-
-      obj = {
-        role: ROLE_HEADING,
-        attributes: { "level": "5" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-      };
-      testElm("h5", obj);
-
-      obj = {
-        role: ROLE_HEADING,
-        attributes: { "level": "6" },
-        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ],
-      };
-      testElm("h6", obj);
+      const headingChangesEnabled = SpecialPowers.getBoolPref("accessibility.heading-element-level-changes.enabled");
+      for (let level = 1; level <= 6; ++level) {
+        testElm("h" + level, headingWithLevel(level));
+        let expectedLevelWithAncestors = headingChangesEnabled ? level + 1 : level;
+        for (const ancestor of ["section", "article", "aside", "nav"]) {
+          testElm("h" + level + "_in_" + ancestor, headingWithLevel(level == 1 ? expectedLevelWithAncestors : level));
+          testElm("h" + level + "_in_" + ancestor + "_in_hgroup", headingWithLevel(expectedLevelWithAncestors));
+        }
+      }
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:header
@@ -1604,18 +1580,74 @@
   <header id="header">A logo</header>
   <article>
     <header id="header_in_article">Not logo</header>
+    <h1 id="h1_in_article">heading1</h1>
+    <h2 id="h2_in_article">heading2</h2>
+    <h3 id="h3_in_article">heading3</h3>
+    <h4 id="h4_in_article">heading4</h4>
+    <h5 id="h5_in_article">heading5</h5>
+    <h6 id="h6_in_article">heading6</h6>
+    <hgroup>
+      <h1 id="h1_in_article_in_hgroup">heading1</h1>
+      <h2 id="h2_in_article_in_hgroup">heading2</h2>
+      <h3 id="h3_in_article_in_hgroup">heading3</h3>
+      <h4 id="h4_in_article_in_hgroup">heading4</h4>
+      <h5 id="h5_in_article_in_hgroup">heading5</h5>
+      <h6 id="h6_in_article_in_hgroup">heading6</h6>
+    </hgroup>
   </article>
   <aside>
     <header id="header_in_aside">Not logo</header>
+    <h1 id="h1_in_aside">heading1</h1>
+    <h2 id="h2_in_aside">heading2</h2>
+    <h3 id="h3_in_aside">heading3</h3>
+    <h4 id="h4_in_aside">heading4</h4>
+    <h5 id="h5_in_aside">heading5</h5>
+    <h6 id="h6_in_aside">heading6</h6>
+    <hgroup>
+      <h1 id="h1_in_aside_in_hgroup">heading1</h1>
+      <h2 id="h2_in_aside_in_hgroup">heading2</h2>
+      <h3 id="h3_in_aside_in_hgroup">heading3</h3>
+      <h4 id="h4_in_aside_in_hgroup">heading4</h4>
+      <h5 id="h5_in_aside_in_hgroup">heading5</h5>
+      <h6 id="h6_in_aside_in_hgroup">heading6</h6>
+    </hgroup>
   </aside>
   <main>
     <header id="header_in_main">Not logo</header>
   </main>
   <nav>
     <header id="header_in_nav">Not logo</header>
+    <h1 id="h1_in_nav">heading1</h1>
+    <h2 id="h2_in_nav">heading2</h2>
+    <h3 id="h3_in_nav">heading3</h3>
+    <h4 id="h4_in_nav">heading4</h4>
+    <h5 id="h5_in_nav">heading5</h5>
+    <h6 id="h6_in_nav">heading6</h6>
+    <hgroup>
+      <h1 id="h1_in_nav_in_hgroup">heading1</h1>
+      <h2 id="h2_in_nav_in_hgroup">heading2</h2>
+      <h3 id="h3_in_nav_in_hgroup">heading3</h3>
+      <h4 id="h4_in_nav_in_hgroup">heading4</h4>
+      <h5 id="h5_in_nav_in_hgroup">heading5</h5>
+      <h6 id="h6_in_nav_in_hgroup">heading6</h6>
+    </hgroup>
   </nav>
   <section>
     <header id="header_in_section">Not logo</header>
+    <h1 id="h1_in_section">heading1</h1>
+    <h2 id="h2_in_section">heading2</h2>
+    <h3 id="h3_in_section">heading3</h3>
+    <h4 id="h4_in_section">heading4</h4>
+    <h5 id="h5_in_section">heading5</h5>
+    <h6 id="h6_in_section">heading6</h6>
+    <hgroup>
+      <h1 id="h1_in_section_in_hgroup">heading1</h1>
+      <h2 id="h2_in_section_in_hgroup">heading2</h2>
+      <h3 id="h3_in_section_in_hgroup">heading3</h3>
+      <h4 id="h4_in_section_in_hgroup">heading4</h4>
+      <h5 id="h5_in_section_in_hgroup">heading5</h5>
+      <h6 id="h6_in_section_in_hgroup">heading6</h6>
+    </hgroup>
   </section>
   <blockquote>
     <header id="header_in_blockquote">Not logo</header>

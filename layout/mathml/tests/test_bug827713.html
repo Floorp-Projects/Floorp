@@ -34,24 +34,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=706406
   </math></p>
 <pre id="test">
 <script type="application/javascript">
-
     /** Test for the scriptshift aspect of bug 827713 **/
     SimpleTest.waitForExplicitFinish();
 
-    subBaseRect = $("subbase").getBoundingClientRect();
-    subSubRect = $("subsub").getBoundingClientRect();
-    is(subBaseRect.bottom, subSubRect.top, "Bad subscript shift for msub");
+    if (SpecialPowers.getBoolPref('mathml.script_shift_attributes.disabled')) {
+      ok(true, "Script shifts disabled");
+    } else {
+      subBaseRect = $("subbase").getBoundingClientRect();
+      subSubRect = $("subsub").getBoundingClientRect();
+      is(subBaseRect.bottom, subSubRect.top, "Bad subscript shift for msub");
 
-    supBaseRect = $("supbase").getBoundingClientRect();
-    supSupRect = $("supsup").getBoundingClientRect();
-    is(supBaseRect.top, supSupRect.bottom, "Bad superscript shift for msup");
+      supBaseRect = $("supbase").getBoundingClientRect();
+      supSupRect = $("supsup").getBoundingClientRect();
+      is(supBaseRect.top, supSupRect.bottom, "Bad superscript shift for msup");
 
-    ssBaseRect = $("ssbase").getBoundingClientRect();
-    ssSubRect = $("sssub").getBoundingClientRect();
-    ssSupRect = $("sssup").getBoundingClientRect();
-    is(ssBaseRect.bottom, ssSubRect.top, "Bad subscript shift for msubusp");
-    is(ssBaseRect.top, ssSupRect.bottom, "Bad superscript shift for msubusp");
-
+      ssBaseRect = $("ssbase").getBoundingClientRect();
+      ssSubRect = $("sssub").getBoundingClientRect();
+      ssSupRect = $("sssup").getBoundingClientRect();
+      is(ssBaseRect.bottom, ssSubRect.top, "Bad subscript shift for msubusp");
+      is(ssBaseRect.top, ssSupRect.bottom, "Bad superscript shift for msubusp");
+    }
 
     SimpleTest.finish();
 

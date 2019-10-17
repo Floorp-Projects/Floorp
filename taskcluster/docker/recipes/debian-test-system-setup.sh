@@ -104,9 +104,9 @@ dpkg-reconfigure locales
 . /setup/common.sh
 . /setup/install-mercurial.sh
 
-# first upgrade debian:buster built-in pip, then install older pip
-pip install --upgrade pip
-pip install pip==9.0.3
+# pip 19.3 is causing errors building the docker image, pin to 19.2.3 for now.
+# See https://github.com/pypa/pip/issues/7206
+pip install --upgrade pip==19.2.3
 hash -r
 pip install virtualenv==15.2.0
 

@@ -13,10 +13,6 @@ add_task(async function setup() {
 
 add_task(async function test_no_logins_class() {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
-    function isElementHidden(element) {
-      return content.getComputedStyle(element).display === "none";
-    }
-
     let loginList = content.document.querySelector("login-list");
 
     ok(
@@ -36,20 +32,20 @@ add_task(async function test_no_logins_class() {
     let loginListList = loginList.shadowRoot.querySelector("ol");
 
     ok(
-      !isElementHidden(loginIntro),
+      !ContentTaskUtils.is_hidden(loginIntro),
       "login-intro should be shown in no logins view"
     );
     ok(
-      !isElementHidden(loginListIntro),
+      !ContentTaskUtils.is_hidden(loginListIntro),
       "login-list intro should be shown in no logins view"
     );
 
     ok(
-      isElementHidden(loginItem),
+      ContentTaskUtils.is_hidden(loginItem),
       "login-item should be hidden in no logins view"
     );
     ok(
-      isElementHidden(loginListList),
+      ContentTaskUtils.is_hidden(loginListList),
       "login-list logins list should be hidden in no logins view"
     );
     is(
@@ -71,3 +67,82 @@ add_task(async function test_no_logins_class() {
     );
   });
 });
+
+add_task(
+  async function login_selected_when_login_added_and_in_no_logins_view() {
+    await ContentTask.spawn(gBrowser.selectedBrowser, null, async () => {
+      let loginList = content.document.querySelector("login-list");
+      let loginItem = content.document.querySelector("login-item");
+      let loginIntro = content.document.querySelector("login-intro");
+      ok(
+        loginList.classList.contains("empty-search"),
+        "login-list should be showing no logins view from a search with no results"
+      );
+      ok(
+        loginList.classList.contains("no-logins"),
+        "login-list should be showing no logins view since there are no saved logins"
+      );
+      ok(
+        !loginList.classList.contains("create-login-selected"),
+        "login-list should not be in create-login-selected mode"
+      );
+      ok(
+        loginItem.classList.contains("no-logins"),
+        "login-item should be marked as having no-logins"
+      );
+      ok(ContentTaskUtils.is_hidden(loginItem), "login-item should be hidden");
+      ok(
+        !ContentTaskUtils.is_hidden(loginIntro),
+        "login-intro should be visible"
+      );
+    });
+
+    TEST_LOGIN1 = await addLogin(TEST_LOGIN1);
+
+    await ContentTask.spawn(
+      gBrowser.selectedBrowser,
+      TEST_LOGIN1.guid,
+      async testLogin1Guid => {
+        let loginList = content.document.querySelector("login-list");
+        let loginItem = content.document.querySelector("login-item");
+        let loginIntro = content.document.querySelector("login-intro");
+        ok(
+          !loginList.classList.contains("empty-search"),
+          "login-list should not be showing no logins view since one login exists"
+        );
+        ok(
+          !loginList.classList.contains("no-logins"),
+          "login-list should not be showing no logins view since one login exists"
+        );
+        ok(
+          !loginList.classList.contains("create-login-selected"),
+          "login-list should not be in create-login-selected mode"
+        );
+        is(
+          loginList.shadowRoot.querySelector(
+            ".login-list-item.selected[data-guid]"
+          ).dataset.guid,
+          testLogin1Guid,
+          "the login that was just added should be selected"
+        );
+        ok(
+          !loginItem.classList.contains("no-logins"),
+          "login-item should not be marked as having no-logins"
+        );
+        is(
+          Cu.waiveXrays(loginItem)._login.guid,
+          testLogin1Guid,
+          "the login-item should have the newly added login selected"
+        );
+        ok(
+          !ContentTaskUtils.is_hidden(loginItem),
+          "login-item should be visible"
+        );
+        ok(
+          ContentTaskUtils.is_hidden(loginIntro),
+          "login-intro should be hidden"
+        );
+      }
+    );
+  }
+);

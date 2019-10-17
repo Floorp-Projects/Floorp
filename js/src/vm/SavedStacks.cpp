@@ -536,8 +536,8 @@ SavedFrame* SavedFrame::create(JSContext* cx) {
   // accidentally cause O(n^2) behavior.
   SavedStacks::AutoReentrancyGuard guard(cx->realm()->savedStacks());
 
-  RootedNativeObject proto(
-      cx, GlobalObject::getOrCreateSavedFramePrototype(cx, global));
+  RootedObject proto(cx,
+                     GlobalObject::getOrCreateSavedFramePrototype(cx, global));
   if (!proto) {
     return nullptr;
   }

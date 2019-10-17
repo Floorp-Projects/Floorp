@@ -132,6 +132,9 @@
 #  elif defined(__OpenBSD__)
 #    include <unistd.h>
 #  endif
+#  if defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+#    include "mozilla/SandboxTestingChild.h"
+#  endif
 #endif
 
 #include "mozilla/Unused.h"
@@ -4056,6 +4059,17 @@ mozilla::ipc::IPCResult ContentChild::RecvScriptError(
 
   return IPC_OK();
 }
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+mozilla::ipc::IPCResult ContentChild::RecvInitSandboxTesting(
+    Endpoint<PSandboxTestingChild>&& aEndpoint) {
+  if (!SandboxTestingChild::Initialize(std::move(aEndpoint))) {
+    return IPC_FAIL(
+        this, "InitSandboxTesting failed to initialise the child process.");
+  }
+  return IPC_OK();
+}
+#endif
 
 }  // namespace dom
 

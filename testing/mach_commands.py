@@ -1286,17 +1286,24 @@ class TestInfoCommand(MachCommandBase):
             by_component['manifests'] = {}
             manifest_paths = list(manifest_paths)
             manifest_paths.sort()
+            relpaths = []
             for manifest_path in manifest_paths:
                 relpath = mozpath.relpath(manifest_path, self.topsrcdir)
-                print("  {}".format(relpath))
                 if mozpath.commonprefix((manifest_path, self.topsrcdir)) != self.topsrcdir:
                     continue
-                reader = self.mozbuild_reader(config_mode='empty')
+                relpaths.append(relpath)
+            reader = self.mozbuild_reader(config_mode='empty')
+            files_info = reader.files_info(relpaths)
+            for manifest_path in manifest_paths:
+                relpath = mozpath.relpath(manifest_path, self.topsrcdir)
+                if mozpath.commonprefix((manifest_path, self.topsrcdir)) != self.topsrcdir:
+                    continue
+                print("  {}".format(relpath))
                 manifest_info = None
-                for info_path, info in reader.files_info([manifest_path]).items():
-                    bug_component = info.get('BUG_COMPONENT')
+                if relpath in files_info:
+                    bug_component = files_info[relpath].get('BUG_COMPONENT')
                     key = "{}::{}".format(bug_component.product, bug_component.component)
-                    if (info_path == relpath) and ((not components) or (key in components)):
+                    if (not components) or (key in components):
                         manifest_info = {
                             'manifest': relpath,
                             'tests': 0,
@@ -1307,7 +1314,6 @@ class TestInfoCommand(MachCommandBase):
                             by_component['manifests'][rkey].append(manifest_info)
                         else:
                             by_component['manifests'][rkey] = [manifest_info]
-                        break
                 if manifest_info:
                     for t in tests:
                         if t['manifest'] == manifest_path:
@@ -1325,16 +1331,21 @@ class TestInfoCommand(MachCommandBase):
             failed_count = 0
             skipped_count = 0
             component_set = set()
+            relpaths = []
             for t in tests:
-                reader = self.mozbuild_reader(config_mode='empty')
+                relpath = t.get('srcdir_relpath')
+                relpaths.append(relpath)
+            reader = self.mozbuild_reader(config_mode='empty')
+            files_info = reader.files_info(relpaths)
+            for t in tests:
                 if not matches_filters(t):
                     continue
                 test_count += 1
                 relpath = t.get('srcdir_relpath')
-                for info_path, info in reader.files_info([relpath]).items():
-                    bug_component = info.get('BUG_COMPONENT')
+                if relpath in files_info:
+                    bug_component = files_info[relpath].get('BUG_COMPONENT')
                     key = "{}::{}".format(bug_component.product, bug_component.component)
-                    if (info_path == relpath) and ((not components) or (key in components)):
+                    if (not components) or (key in components):
                         component_set.add(key)
                         test_info = {'test': relpath}
                         for test_key in ['skip-if', 'fail-if']:
@@ -1351,7 +1362,6 @@ class TestInfoCommand(MachCommandBase):
                                 by_component['tests'][rkey].append(test_info)
                             else:
                                 by_component['tests'][rkey] = [test_info]
-                        break
             if show_tests:
                 for key in by_component['tests']:
                     by_component['tests'][key].sort(key=lambda k: k['test'])

@@ -568,6 +568,13 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   margin-bottom: 20px;
 }
 
+.monitor-info-wrapper {
+  display: grid;
+  grid: 1fr / 1fr 1fr 1fr;
+  grid-column-start: 1;
+  grid-column-end: 7;
+}
+
 .monitor-scanned-wrapper {
   margin-top: 24px;
   font-size: 0.85em;
@@ -592,26 +599,23 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   border-radius: 4px;
   color: #FFFFFF;
   text-align: center;
-  padding: 25px 10px;
+  padding: 19px 10px;
   margin-inline-end: 15px;
 }
 
 .email {
   background: linear-gradient(162.33deg, #AB71FF 0%, #9059FF 100%);
-  grid-column-start: 1;
-  grid-column-end: 3;
+  grid-column: 1;
 }
 
 .breaches {
   background: linear-gradient(162.33deg, #9059FF 0%, #7542E5 100%);
-  grid-column-start: 3;
-  grid-column-end: 5;
+  grid-column: 2;
 }
 
 .passwords {
   background: linear-gradient(162.33deg, #7542E5 0%, #592ACB 100%);
-  grid-column-start: 5;
-  grid-column-end: 7;
+  grid-column: 3;
 }
 
 .monitor-view-full-report {
