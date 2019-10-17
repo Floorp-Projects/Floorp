@@ -39,23 +39,21 @@ function run_test() {
 }
 
 function test_object_grip() {
-  gThreadFront.once("paused", function(packet) {
+  gThreadFront.once("paused", async function(packet) {
     const args = packet.frame.arguments;
 
     const objClient = gThreadFront.pauseGrip(args[0]);
-    objClient.getOwnPropertyNames(function(response) {
-      const opn = response.ownPropertyNames;
-      Assert.equal(opn.length, 4);
-      opn.sort();
-      Assert.equal(opn[0], "columnNumber");
-      Assert.equal(opn[1], "fileName");
-      Assert.equal(opn[2], "lineNumber");
-      Assert.equal(opn[3], "message");
+    const response = await objClient.getOwnPropertyNames();
+    const opn = response.ownPropertyNames;
+    Assert.equal(opn.length, 4);
+    opn.sort();
+    Assert.equal(opn[0], "columnNumber");
+    Assert.equal(opn[1], "fileName");
+    Assert.equal(opn[2], "lineNumber");
+    Assert.equal(opn[3], "message");
 
-      gThreadFront.resume().then(function() {
-        finishClient(gClient);
-      });
-    });
+    await gThreadFront.resume();
+    finishClient(gClient);
   });
 
   gDebuggee.eval("stopMe(new TypeError('error message text'))");
