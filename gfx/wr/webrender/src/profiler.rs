@@ -39,9 +39,9 @@ pub mod expected {
     pub const TEXTURE_DATA_UPLOADED: Range<u64> =   0..10;
     pub const GPU_CACHE_ROWS_TOTAL: Range<u64> =    1..50;
     pub const GPU_CACHE_ROWS_UPDATED: Range<u64> =  0..25;
-    pub const GPU_CACHE_BLOCKS_TOTAL: Range<u64> =  1..1000;
+    pub const GPU_CACHE_BLOCKS_TOTAL: Range<u64> =  1..65_000;
     pub const GPU_CACHE_BLOCKS_UPDATED: Range<u64> = 0..1000;
-    pub const GPU_CACHE_BLOCKS_SAVED: Range<u64> =  0..1000;
+    pub const GPU_CACHE_BLOCKS_SAVED: Range<u64> =  0..50_000;
     pub const DISPLAY_LIST_BUILD_TIME: Range<f64> = 0.0..3.0;
     pub const DISPLAY_LIST_CONSUME_TIME: Range<f64> = 0.0..2.0;
     pub const DISPLAY_LIST_SEND_TIME: Range<f64> =  0.0..1.0;
