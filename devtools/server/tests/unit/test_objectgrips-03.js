@@ -12,33 +12,35 @@ registerCleanupFunction(() => {
 add_task(
   threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      threadFront.once("paused", function(packet) {
         const args = packet.frame.arguments;
 
         Assert.equal(args[0].class, "Object");
 
         const objClient = threadFront.pauseGrip(args[0]);
-        let response = await objClient.getProperty("x");
-        Assert.equal(response.descriptor.configurable, true);
-        Assert.equal(response.descriptor.enumerable, true);
-        Assert.equal(response.descriptor.writable, true);
-        Assert.equal(response.descriptor.value, 10);
+        objClient.getProperty("x", function(response) {
+          Assert.equal(response.descriptor.configurable, true);
+          Assert.equal(response.descriptor.enumerable, true);
+          Assert.equal(response.descriptor.writable, true);
+          Assert.equal(response.descriptor.value, 10);
 
-        response = await objClient.getProperty("y");
-        Assert.equal(response.descriptor.configurable, true);
-        Assert.equal(response.descriptor.enumerable, true);
-        Assert.equal(response.descriptor.writable, true);
-        Assert.equal(response.descriptor.value, "kaiju");
+          objClient.getProperty("y", function(response) {
+            Assert.equal(response.descriptor.configurable, true);
+            Assert.equal(response.descriptor.enumerable, true);
+            Assert.equal(response.descriptor.writable, true);
+            Assert.equal(response.descriptor.value, "kaiju");
 
-        response = await objClient.getProperty("a");
-        Assert.equal(response.descriptor.configurable, true);
-        Assert.equal(response.descriptor.enumerable, true);
-        Assert.equal(response.descriptor.get.type, "object");
-        Assert.equal(response.descriptor.get.class, "Function");
-        Assert.equal(response.descriptor.set.type, "undefined");
+            objClient.getProperty("a", function(response) {
+              Assert.equal(response.descriptor.configurable, true);
+              Assert.equal(response.descriptor.enumerable, true);
+              Assert.equal(response.descriptor.get.type, "object");
+              Assert.equal(response.descriptor.get.class, "Function");
+              Assert.equal(response.descriptor.set.type, "undefined");
 
-        await threadFront.resume();
-        resolve();
+              threadFront.resume().then(resolve);
+            });
+          });
+        });
       });
 
       debuggee.eval(

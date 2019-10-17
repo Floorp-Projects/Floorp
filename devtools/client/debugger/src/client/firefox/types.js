@@ -263,7 +263,6 @@ export type DebuggerClient = {
   attachConsole: (actor: String, listeners: Array<*>) => Promise<*>,
   createObjectClient: (grip: Grip) => ObjectClient,
   release: (actor: String) => {},
-  getFrontByID: (actor: String) => { release: () => Promise<*> },
 };
 
 type ProcessDescriptor = Object;

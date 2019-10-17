@@ -53,7 +53,14 @@ add_task(
     `);
     });
 
-    async function check_enum_properties(iterator) {
+    async function check_enum_properties(response) {
+      info("Check enumProperties response");
+      ok(
+        response && Object.getOwnPropertyNames(response).includes("iterator"),
+        "The response object has an iterator property"
+      );
+
+      const { iterator } = response;
       equal(iterator.count, 10, "iterator.count has the expected value");
 
       info("Check iterator.slice response for all properties");
@@ -106,7 +113,14 @@ add_task(
       equal(ownProperties[names[1]].value, `property_3_value`);
     }
 
-    async function check_enum_symbols(iterator) {
+    async function check_enum_symbols(response) {
+      info("Check enumProperties response");
+      ok(
+        response && Object.getOwnPropertyNames(response).includes("iterator"),
+        "The response object has an iterator property"
+      );
+
+      const { iterator } = response;
       equal(iterator.count, 13, "iterator.count has the expected value");
 
       info("Check iterator.slice response for all symbols");

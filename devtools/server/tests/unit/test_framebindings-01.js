@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadFront.once("paused", async function(packet) {
+  gThreadFront.once("paused", function(packet) {
     const bindings = packet.frame.environment.bindings;
     const args = bindings.arguments;
     const vars = bindings.variables;
@@ -57,20 +57,22 @@ function test_pause_frame() {
     Assert.ok(!!vars.c.value.actor);
 
     const objClient = gThreadFront.pauseGrip(vars.c.value);
-    const response = await objClient.getPrototypeAndProperties();
-    Assert.equal(response.ownProperties.a.configurable, true);
-    Assert.equal(response.ownProperties.a.enumerable, true);
-    Assert.equal(response.ownProperties.a.writable, true);
-    Assert.equal(response.ownProperties.a.value, "a");
+    objClient.getPrototypeAndProperties(function(response) {
+      Assert.equal(response.ownProperties.a.configurable, true);
+      Assert.equal(response.ownProperties.a.enumerable, true);
+      Assert.equal(response.ownProperties.a.writable, true);
+      Assert.equal(response.ownProperties.a.value, "a");
 
-    Assert.equal(response.ownProperties.b.configurable, true);
-    Assert.equal(response.ownProperties.b.enumerable, true);
-    Assert.equal(response.ownProperties.b.writable, true);
-    Assert.equal(response.ownProperties.b.value.type, "undefined");
-    Assert.equal(false, "class" in response.ownProperties.b.value);
+      Assert.equal(response.ownProperties.b.configurable, true);
+      Assert.equal(response.ownProperties.b.enumerable, true);
+      Assert.equal(response.ownProperties.b.writable, true);
+      Assert.equal(response.ownProperties.b.value.type, "undefined");
+      Assert.equal(false, "class" in response.ownProperties.b.value);
 
-    await gThreadFront.resume();
-    finishClient(gClient);
+      gThreadFront.resume().then(function() {
+        finishClient(gClient);
+      });
+    });
   });
 
   /* eslint-disable */

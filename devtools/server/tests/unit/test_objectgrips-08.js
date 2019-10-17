@@ -11,24 +11,24 @@ registerCleanupFunction(() => {
 add_task(
   threadFrontTest(async ({ threadFront, debuggee }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", async function(packet) {
+      threadFront.once("paused", function(packet) {
         const args = packet.frame.arguments;
 
         Assert.equal(args[0].class, "Object");
 
         const objClient = threadFront.pauseGrip(args[0]);
-        const response = await objClient.getPrototypeAndProperties();
-        const { a, b, c, d, e, f, g } = response.ownProperties;
-        testPropertyType(a, "Infinity");
-        testPropertyType(b, "-Infinity");
-        testPropertyType(c, "NaN");
-        testPropertyType(d, "-0");
-        testPropertyType(e, "BigInt");
-        testPropertyType(f, "BigInt");
-        testPropertyType(g, "BigInt");
+        objClient.getPrototypeAndProperties(function(response) {
+          const { a, b, c, d, e, f, g } = response.ownProperties;
+          testPropertyType(a, "Infinity");
+          testPropertyType(b, "-Infinity");
+          testPropertyType(c, "NaN");
+          testPropertyType(d, "-0");
+          testPropertyType(e, "BigInt");
+          testPropertyType(f, "BigInt");
+          testPropertyType(g, "BigInt");
 
-        await threadFront.resume();
-        resolve();
+          threadFront.resume().then(resolve);
+        });
       });
 
       debuggee.eval(

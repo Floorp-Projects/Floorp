@@ -77,10 +77,11 @@ const Types = (exports.__TypesForTests = [
     spec: "devtools/shared/specs/emulation",
     front: "devtools/shared/fronts/emulation",
   },
+  /* environment has old fashion client and no front */
   {
     types: ["environment"],
     spec: "devtools/shared/specs/environment",
-    front: "devtools/shared/fronts/environment",
+    front: null,
   },
   /* frame has old fashion client and no front */
   {
@@ -173,7 +174,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["propertyIterator"],
     spec: "devtools/shared/specs/property-iterator",
-    front: "devtools/shared/fronts/property-iterator",
+    front: null,
   },
   {
     types: ["reflow"],
@@ -231,7 +232,7 @@ const Types = (exports.__TypesForTests = [
   {
     types: ["symbolIterator"],
     spec: "devtools/shared/specs/symbol-iterator",
-    front: "devtools/shared/fronts/symbol-iterator",
+    front: null,
   },
   {
     types: ["browsingContextTarget"],

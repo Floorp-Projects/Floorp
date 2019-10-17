@@ -53,7 +53,7 @@ function onConsoleCall(aState, aPacket)
   onProperties = onProperties.bind(null, aState);
 
   let client = new ObjectClient(aState.dbgClient, args[1]);
-  client.getPrototypeAndProperties().then(onProperties);
+  client.getPrototypeAndProperties(onProperties);
 }
 
 function onProperties(aState, aResponse)
