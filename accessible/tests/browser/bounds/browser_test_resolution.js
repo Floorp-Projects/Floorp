@@ -19,7 +19,7 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
       : getBounds(acc);
 
   await ContentTask.spawn(browser, scale, _scale => {
-    setResolution(content.document, _scale);
+    content.Layout.setResolution(content.document, _scale);
   });
 
   let [scaledX, scaledY, scaledWidth, scaledHeight] =
@@ -34,12 +34,12 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
   isWithin(scaledY - docY, (y - docY) * scale, 2, "Wrong scaled y of " + name);
 
   await ContentTask.spawn(browser, {}, () => {
-    setResolution(content.document, 1.0);
+    content.Layout.setResolution(content.document, 1.0);
   });
 }
 
 async function runTests(browser, accDoc) {
-  loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
+  await loadContentScripts(browser, "Layout.jsm");
 
   await testScaledBounds(browser, accDoc, 2.0, "p1");
   await testScaledBounds(browser, accDoc, 0.5, "p2");
