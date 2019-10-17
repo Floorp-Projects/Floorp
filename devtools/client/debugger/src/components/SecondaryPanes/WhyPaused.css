@@ -45,6 +45,10 @@
   font-weight: 100;
 }
 
+.why-paused .mutationNode {
+  font-weight: normal;
+}
+
 .why-paused .message.warning {
   color: var(--theme-graphs-full-red);
   font-family: var(--monospace-font-family);
