@@ -12,9 +12,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-h1,-h2,-h3,-h4,-h5,-and-h6-elements
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLHeadingElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis

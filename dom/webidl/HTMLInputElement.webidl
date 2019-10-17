@@ -22,9 +22,10 @@ enum SelectionMode {
 
 interface XULControllers;
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLInputElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, Pure, SetterThrows]
            attribute DOMString accept;
   [CEReactions, Pure, SetterThrows]
