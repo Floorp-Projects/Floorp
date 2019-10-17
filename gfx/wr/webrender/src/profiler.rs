@@ -188,27 +188,9 @@ impl IntProfileCounter {
         }
     }
 
-    fn reset(&mut self) {
-        self.value = 0;
-    }
-
     #[inline(always)]
     pub fn inc(&mut self) {
         self.value += 1;
-    }
-
-    #[inline(always)]
-    pub fn add(&mut self, amount: usize) {
-        self.value += amount;
-    }
-
-    #[inline(always)]
-    pub fn set(&mut self, amount: usize) {
-        self.value = amount;
-    }
-
-    pub fn get(&self) -> usize {
-        self.value
     }
 }
 
