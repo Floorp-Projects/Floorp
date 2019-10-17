@@ -47,7 +47,7 @@ addAccessibleTask(
 
     let onReorder = waitForEvent(EVENT_REORDER, id1);
     // Create and add an element with CSS generated content to container1
-    await ContentTask.spawn(browser, id1, id => {
+    await SpecialPowers.spawn(browser, [id1], id => {
       let node = content.document.createElement("div");
       node.textContent = "text";
       node.setAttribute("class", "gentext");
