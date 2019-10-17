@@ -2400,6 +2400,11 @@ void nsGlobalWindowInner::UpdateTopInnerWindow() {
 bool nsGlobalWindowInner::CanShareMemory(const nsID& aAgentClusterId) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (StaticPrefs::
+          dom_postMessage_sharedArrayBuffer_bypassCOOP_COEP_insecure_enabled()) {
+    return true;
+  }
+
   if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
     return false;
   }
