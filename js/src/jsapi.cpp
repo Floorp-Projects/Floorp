@@ -4391,7 +4391,6 @@ extern JS_PUBLIC_API JS::UniqueTwoByteChars JS_CopyStringCharsZ(JSContext* cx,
                                                                 JSString* str) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  cx->check(str);
 
   JSLinearString* linear = str->ensureLinear(cx);
   if (!linear) {
