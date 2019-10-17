@@ -2359,7 +2359,8 @@ function getChildren(options) {
 
 function getPathExpression(item) {
   if (item && item.parent) {
-    return `${getPathExpression(item.parent)}.${item.name}`;
+    let parent = nodeIsBucket(item.parent) ? item.parent.parent : item.parent;
+    return `${getPathExpression(parent)}.${item.name}`;
   }
 
   return item.name;
@@ -7907,7 +7908,8 @@ const {
 
 const {
   getPathExpression,
-  getValue
+  getValue,
+  nodeIsBucket
 } = __webpack_require__(114);
 
 const {
@@ -7996,7 +7998,11 @@ function addWatchpoint(item, watchpoint) {
       parent,
       name
     } = item;
-    const object = getValue(parent);
+    let object = getValue(parent);
+
+    if (nodeIsBucket(parent)) {
+      object = getValue(parent.parent);
+    }
 
     if (!object) {
       return;
@@ -8028,9 +8034,18 @@ function removeWatchpoint(item) {
     dispatch,
     client
   }) {
-    const object = getValue(item.parent);
-    const property = item.name;
-    const path = item.parent.path;
+    const {
+      parent,
+      name
+    } = item;
+    let object = getValue(parent);
+
+    if (nodeIsBucket(parent)) {
+      object = getValue(parent.parent);
+    }
+
+    const property = name;
+    const path = parent.path;
     const actor = object.actor;
     await client.removeWatchpoint(object, property);
     dispatch({
