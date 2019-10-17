@@ -88,6 +88,7 @@ class GeckoEngineTest {
         whenever(runtimeSettings.automaticFontSizeAdjustment).thenReturn(true)
         whenever(runtimeSettings.fontInflationEnabled).thenReturn(true)
         whenever(runtimeSettings.fontSizeFactor).thenReturn(1.0F)
+        whenever(runtimeSettings.forceUserScalableEnabled).thenReturn(false)
         whenever(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         whenever(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
         whenever(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
@@ -117,6 +118,10 @@ class GeckoEngineTest {
         verify(runtimeSettings, never()).fontSizeFactor = anyFloat()
         engine.settings.fontSizeFactor = 2.0F
         verify(runtimeSettings).fontSizeFactor = 2.0F
+
+        assertFalse(engine.settings.forceUserScalableContent)
+        engine.settings.forceUserScalableContent = true
+        verify(runtimeSettings).forceUserScalableEnabled = true
 
         assertFalse(engine.settings.remoteDebuggingEnabled)
         engine.settings.remoteDebuggingEnabled = true
@@ -328,7 +333,8 @@ class GeckoEngineTest {
                 userAgentString = "test-ua",
                 preferredColorScheme = PreferredColorScheme.Light,
                 allowAutoplayMedia = false,
-                suspendMediaWhenInactive = true
+                suspendMediaWhenInactive = true,
+                forceUserScalableContent = false
             ), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
@@ -338,6 +344,7 @@ class GeckoEngineTest {
         verify(runtimeSettings).fontSizeFactor = 2.0F
         verify(runtimeSettings).remoteDebuggingEnabled = true
         verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
+        verify(runtimeSettings).forceUserScalableEnabled = false
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         val artificialCategory =
