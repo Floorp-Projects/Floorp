@@ -920,18 +920,9 @@ nsSHEntry::SetLastTouched(uint32_t aLastTouched) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetSHistory(nsISHistory** aSHistory) {
+nsSHEntry::GetShistory(nsISHistory** aSHistory) {
   nsCOMPtr<nsISHistory> shistory(do_QueryReferent(mShared->mSHistory));
   shistory.forget(aSHistory);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSHEntry::SetSHistory(nsISHistory* aSHistory) {
-  nsWeakPtr shistory = do_GetWeakReference(aSHistory);
-  // mSHistory can not be changed once it's set
-  MOZ_ASSERT(!mShared->mSHistory || (mShared->mSHistory == shistory));
-  mShared->mSHistory = shistory;
   return NS_OK;
 }
 
@@ -1047,8 +1038,8 @@ void nsSHEntry::EvictContentViewer() {
   }
 }
 
-nsLegacySHEntry::nsLegacySHEntry(uint64_t aID)
-    : nsSHEntry(new nsSHEntryShared(aID)) {}
+nsLegacySHEntry::nsLegacySHEntry(nsSHistory* aHistory, uint64_t aID)
+    : nsSHEntry(new nsSHEntryShared(aHistory, aID)) {}
 
 NS_IMETHODIMP
 nsLegacySHEntry::SetContentViewer(nsIContentViewer* aViewer) {
@@ -1205,8 +1196,8 @@ bool nsLegacySHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
 
 NS_IMETHODIMP
 nsLegacySHEntry::AbandonBFCacheEntry() {
-  mShared = nsSHEntryShared::Duplicate(
-      GetState(), mozilla::dom::SHEntryChildShared::CreateSharedID());
+  mShared =
+      GetState()->Duplicate(mozilla::dom::SHEntryChildShared::CreateSharedID());
   return NS_OK;
 }
 

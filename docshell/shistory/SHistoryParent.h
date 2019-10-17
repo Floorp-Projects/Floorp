@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_SHistoryParent_h
 #define mozilla_dom_SHistoryParent_h
 
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/PSHistoryParent.h"
 #include "mozilla/RefPtr.h"
 #include "nsSHistory.h"
@@ -14,7 +15,6 @@
 namespace mozilla {
 namespace dom {
 
-class CanonicalBrowsingContext;
 class SHistoryParent;
 
 /**
@@ -29,8 +29,9 @@ class LegacySHistory final : public nsSHistory {
   void EvictOutOfRangeWindowContentViewers(int32_t aIndex) override;
 
  public:
-  LegacySHistory(mozilla::dom::CanonicalBrowsingContext* aRootBC,
-                 const nsID& aDocShellID);
+  LegacySHistory(CanonicalBrowsingContext* aRootBC, const nsID& aDocShellID);
+
+  NS_IMETHOD CreateEntry(nsISHEntry** aEntry) override;
 };
 
 /**
@@ -44,6 +45,10 @@ class SHistoryParent final : public PSHistoryParent {
  public:
   explicit SHistoryParent(CanonicalBrowsingContext* aContext);
   virtual ~SHistoryParent();
+
+  static SHEntryParent* CreateEntry(PContentParent* aContentParent,
+                                    PSHistoryParent* aSHistoryParent,
+                                    const PSHEntryOrSharedID& aEntryOrSharedID);
 
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -84,7 +89,6 @@ class SHistoryParent final : public PSHistoryParent {
                                              bool aReplace);
   bool RecvNotifyListenersContentViewerEvicted(uint32_t aNumEvicted);
 
-  RefPtr<CanonicalBrowsingContext> mContext;
   RefPtr<LegacySHistory> mHistory;
 };
 
