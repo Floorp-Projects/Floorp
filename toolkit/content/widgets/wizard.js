@@ -99,13 +99,15 @@
         return;
       }
 
+      document.documentElement.setAttribute("role", "dialog");
+
       this.pageCount = this.wizardPages.length;
 
       this._initPages();
       this.advance(); // start off on the first page
 
       window.addEventListener("close", event => {
-        if (document.documentElement.cancel()) {
+        if (this.cancel()) {
           event.preventDefault();
         }
       });
@@ -114,12 +116,12 @@
       // onload completes, see bug 103197.
       window.addEventListener("load", () =>
         window.setTimeout(() => {
-          document.documentElement._hasLoaded = true;
+          this._hasLoaded = true;
           if (!document.commandDispatcher.focusedElement) {
             document.commandDispatcher.advanceFocusIntoSubtree(this);
           }
           try {
-            let button = document.documentElement._wizardButtons.defaultButton;
+            let button = this._wizardButtons.defaultButton;
             if (button) {
               window.notifyDefaultButtonLoaded(button);
             }
@@ -461,6 +463,8 @@
 
   class MozWizardButtons extends MozXULElement {
     connectedCallback() {
+      this._wizard = this.getRootNode().host;
+
       this.textContent = "";
       this.appendChild(MozXULElement.parseXULToFragment(this._markup, kDTDs));
 
@@ -469,12 +473,12 @@
       this.initializeAttributeInheritance();
 
       const listeners = [
-        ["back", () => document.documentElement.rewind()],
-        ["next", () => document.documentElement.advance()],
-        ["finish", () => document.documentElement.advance()],
-        ["cancel", () => document.documentElement.cancel()],
-        ["extra1", () => document.documentElement.extra1()],
-        ["extra2", () => document.documentElement.extra2()],
+        ["back", () => this._wizard.rewind()],
+        ["next", () => this._wizard.advance()],
+        ["finish", () => this._wizard.advance()],
+        ["cancel", () => this._wizard.cancel()],
+        ["extra1", () => this._wizard.extra1()],
+        ["extra2", () => this._wizard.extra2()],
       ];
       for (let [name, listener] of listeners) {
         let btn = this.getButton(name);

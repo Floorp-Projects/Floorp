@@ -7,7 +7,7 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://browser/locale/migration/migration.dtd" >
 
-<wizard id="migrationWizard"
+<window id="migrationWizard"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         windowtype="Browser:MigrationWizard"
         title="&migrationWizard.title;"
@@ -16,6 +16,7 @@
         style="width: 40em;"
         buttons="accept,cancel"
         branded="true">
+<wizard>
 
   <script src="chrome://global/content/customElements.js"/>
   <script src="chrome://browser/content/migration/migration.js"/>
@@ -86,3 +87,4 @@
   </wizardpage>
 
 </wizard>
+</window>
