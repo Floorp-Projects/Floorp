@@ -78,6 +78,7 @@ static StaticRefPtr<VRManager> sVRManagerSingleton;
 /* static */
 VRManager* VRManager::Get() {
   MOZ_ASSERT(sVRManagerSingleton != nullptr);
+  MOZ_ASSERT(XRE_IsParentProcess() || XRE_IsGPUProcess());
 
   return sVRManagerSingleton;
 }
