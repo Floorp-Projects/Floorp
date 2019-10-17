@@ -69,6 +69,7 @@ import type {
   SourceWithContent,
   ThreadId,
   MappedLocation,
+  BreakpointPosition,
   BreakpointPositions,
 } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
@@ -968,13 +969,21 @@ export function hasBreakpointPositions(
   return !!getBreakpointPositionsForSource(state, sourceId);
 }
 
+export function getBreakpointPositionsForLine(
+  state: OuterState,
+  sourceId: string,
+  line: number
+): ?Array<BreakpointPosition> {
+  const positions = getBreakpointPositionsForSource(state, sourceId);
+  return positions && positions[line];
+}
+
 export function hasBreakpointPositionsForLine(
   state: OuterState,
   sourceId: string,
   line: number
 ): boolean {
-  const positions = getBreakpointPositionsForSource(state, sourceId);
-  return !!(positions && positions[line]);
+  return !!getBreakpointPositionsForLine(state, sourceId, line);
 }
 
 export function getBreakpointPositionsForLocation(

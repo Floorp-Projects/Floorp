@@ -334,7 +334,7 @@ function assertPausedLocation(dbg) {
   ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 }
 
-function assertDebugLine(dbg, line) {
+function assertDebugLine(dbg, line, column) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
   const source = dbg.selectors.getSelectedSourceWithContent() || {};
@@ -378,6 +378,11 @@ function assertDebugLine(dbg, line) {
           span.marker.className &&
           span.marker.className.includes("debug-expression")
       ).length > 0;
+
+    if (column) {
+      const frame = dbg.selectors.getVisibleSelectedFrame();
+      is(frame.location.column, column, `Paused at column ${column}`);
+    }
 
     ok(classMatch, "expression is highlighted as paused");
   }
@@ -490,6 +495,10 @@ async function waitForPaused(dbg, url) {
 
   await waitForLoadedScopes(dbg);
   await waitForSelectedSource(dbg, url);
+}
+
+function waitForInlinePreviews(dbg) {
+  return waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews())
 }
 
 function waitForCondition(dbg, condition) {
@@ -1269,6 +1278,9 @@ const selectors = {
     removeOthers: "#node-menu-delete-other",
     removeCondition: "#node-menu-remove-condition",
   },
+  editorContextMenu: {
+    continueToHere: "#node-menu-continue-to-here",
+  },
   columnBreakpoints: ".column-breakpoint",
   scopes: ".scopes-list",
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
@@ -1540,7 +1552,7 @@ function getCoordsFromPosition(cm, { line, ch }) {
   return cm.charCoords({ line: ~~line, ch: ~~ch });
 }
 
-async function getTokenFromPosition(dbg, {line, ch}) {
+async function getTokenFromPosition(dbg, { line, ch }) {
   info(`Get token at ${line}, ${ch}`);
   const cm = getCM(dbg);
   cm.scrollIntoView({ line: line - 1, ch }, 0);
@@ -1558,10 +1570,7 @@ async function getTokenFromPosition(dbg, {line, ch}) {
   // https://github.com/firefox-devtools/debugger/pull/7934
   const lineHeightOffset = 3;
 
-  return dbg.win.document.elementFromPoint(
-    left,
-    top + lineHeightOffset
-  );
+  return dbg.win.document.elementFromPoint(left, top + lineHeightOffset);
 }
 
 async function waitForScrolling(codeMirror) {
@@ -1609,16 +1618,29 @@ async function clickAtPos(dbg, pos) {
   }
 
   const { top, left } = tokenEl.getBoundingClientRect();
-  info(`Clicking on token ${tokenEl.innerText} in line ${tokenEl.parentNode.innerText}`);
+  info(
+    `Clicking on token ${tokenEl.innerText} in line ${
+      tokenEl.parentNode.innerText
+    }`
+  );
   tokenEl.dispatchEvent(
     new MouseEvent("click", {
       bubbles: true,
       cancelable: true,
       view: dbg.win,
       clientX: left,
-      clientY: top
+      clientY: top,
     })
   );
+}
+
+async function rightClickAtPos(dbg, pos) {
+  const el = await getTokenFromPosition(dbg, pos);
+  if (!el) {
+    return false;
+  }
+
+  EventUtils.synthesizeMouseAtCenter(el, { type: "contextmenu" }, dbg.win);
 }
 
 async function hoverAtPos(dbg, pos) {
