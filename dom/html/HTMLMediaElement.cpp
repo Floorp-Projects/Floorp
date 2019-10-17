@@ -2293,15 +2293,18 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(dom::MediaTrack* aTrack) {
   }
 
   if (mSrcStream) {
-    MOZ_ASSERT(mMediaStreamRenderer);
     if (AudioTrack* t = aTrack->AsAudioTrack()) {
-      mMediaStreamRenderer->AddTrack(t->GetAudioStreamTrack());
+      if (mMediaStreamRenderer) {
+        mMediaStreamRenderer->AddTrack(t->GetAudioStreamTrack());
+      }
     } else if (VideoTrack* t = aTrack->AsVideoTrack()) {
       MOZ_ASSERT(!mSelectedVideoStreamTrack);
 
       mSelectedVideoStreamTrack = t->GetVideoStreamTrack();
       mSelectedVideoStreamTrack->AddPrincipalChangeObserver(this);
-      mMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+      if (mMediaStreamRenderer) {
+        mMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+      }
       nsContentUtils::CombineResourcePrincipals(
           &mSrcStreamVideoPrincipal, mSelectedVideoStreamTrack->GetPrincipal());
       if (VideoFrameContainer* container = GetVideoFrameContainer()) {
@@ -2353,8 +2356,10 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(dom::MediaTrack* aTrack) {
              (!aTrack->AsVideoTrack() || !aTrack->AsVideoTrack()->Selected()));
 
   if (AudioTrack* t = aTrack->AsAudioTrack()) {
-    if (mMediaStreamRenderer) {
-      mMediaStreamRenderer->RemoveTrack(t->GetAudioStreamTrack());
+    if (mSrcStream) {
+      if (mMediaStreamRenderer) {
+        mMediaStreamRenderer->RemoveTrack(t->GetAudioStreamTrack());
+      }
     }
     // If we don't have any live tracks, we don't need to mute MediaElement.
     MOZ_DIAGNOSTIC_ASSERT(AudioTracks(), "Element can't have been unlinked");
@@ -2372,14 +2377,16 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(dom::MediaTrack* aTrack) {
       }
     }
   } else if (aTrack->AsVideoTrack()) {
-    if (mMediaStreamRenderer) {
+    if (mSrcStream) {
       MOZ_DIAGNOSTIC_ASSERT(mSelectedVideoStreamTrack ==
                             aTrack->AsVideoTrack()->GetVideoStreamTrack());
       if (mFirstFrameListener) {
         mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
         mFirstFrameListener = nullptr;
       }
-      mMediaStreamRenderer->RemoveTrack(mSelectedVideoStreamTrack);
+      if (mMediaStreamRenderer) {
+        mMediaStreamRenderer->RemoveTrack(mSelectedVideoStreamTrack);
+      }
       mSelectedVideoStreamTrack->RemovePrincipalChangeObserver(this);
       mSelectedVideoStreamTrack = nullptr;
     }
@@ -4814,7 +4821,10 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
   if (shouldPlay) {
     mSrcStreamPlaybackEnded = false;
 
-    mMediaStreamRenderer->Start();
+    if (mMediaStreamRenderer) {
+      mMediaStreamRenderer->Start();
+    }
+
     if (mSink.second()) {
       NS_WARNING(
           "setSinkId() when playing a MediaStream is not supported yet and "
@@ -4830,7 +4840,9 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
     // it as audible when it's playing.
     SetAudibleState(true);
   } else {
-    mMediaStreamRenderer->Stop();
+    if (mMediaStreamRenderer) {
+      mMediaStreamRenderer->Stop();
+    }
     VideoFrameContainer* container = GetVideoFrameContainer();
     if (mSelectedVideoStreamTrack && container) {
       HTMLVideoElement* self = static_cast<HTMLVideoElement*>(this);
