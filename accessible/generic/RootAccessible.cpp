@@ -83,11 +83,11 @@ ENameValueFlag RootAccessible::Name(nsString& aName) const {
 }
 
 role RootAccessible::NativeRole() const {
-  // If it's a <dialog> or <wizard>, use roles::DIALOG instead
+  // If it's a <dialog>, use roles::DIALOG instead
   dom::Element* rootElm = mDocumentNode->GetRootElement();
-  if (rootElm &&
-      rootElm->IsAnyOfXULElements(nsGkAtoms::dialog, nsGkAtoms::wizard))
+  if (rootElm && rootElm->IsXULElement(nsGkAtoms::dialog)) {
     return roles::DIALOG;
+  }
 
   return DocAccessibleWrap::NativeRole();
 }

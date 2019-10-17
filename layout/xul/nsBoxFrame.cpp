@@ -950,8 +950,7 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 
   // Ignore 'width', 'height', 'screenX', 'screenY' and 'sizemode' on a
   // <window>.
-  if (mContent->IsAnyOfXULElements(nsGkAtoms::window, nsGkAtoms::dialog,
-                                   nsGkAtoms::wizard) &&
+  if (mContent->IsAnyOfXULElements(nsGkAtoms::window, nsGkAtoms::dialog) &&
       (nsGkAtoms::width == aAttribute || nsGkAtoms::height == aAttribute ||
        nsGkAtoms::screenX == aAttribute || nsGkAtoms::screenY == aAttribute ||
        nsGkAtoms::sizemode == aAttribute)) {
