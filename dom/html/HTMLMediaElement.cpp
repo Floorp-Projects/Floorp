@@ -4867,11 +4867,6 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
 
   mSrcStream = aStream;
 
-  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  if (!window) {
-    return;
-  }
-
   mMediaStreamRenderer = MakeAndAddRef<MediaStreamRenderer>(
       mAbstractMainThread, GetVideoFrameContainer(), this);
   mWatchManager.Watch(mMediaStreamRenderer->CurrentGraphTime(),
