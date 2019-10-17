@@ -967,11 +967,15 @@
   value: false
   mirror: always
 
+# The percentage of the screen that needs to be scrolled before toolbar
+# manipulation is allowed.
 - name: browser.ui.scroll-toolbar-threshold
   type: RelaxedAtomicInt32
   value: 10
   mirror: always
 
+# When true, zooming will be enabled on all sites, even ones that declare
+# user-scalable=no.
 - name: browser.ui.zoom.force-user-scalable
   type: RelaxedAtomicBool
   value: false
@@ -3123,6 +3127,7 @@
   value: true
   mirror: once
 
+# Allow 24-bit colour when the hardware supports it.
 - name: gfx.android.rgb16.force
   type: bool
   value: false
@@ -3465,6 +3470,7 @@
   value: false
   mirror: once
 
+# Use SurfaceTextures as preferred backend for TextureClient/Host.
 - name: gfx.use-surfacetexture-textures
   type: bool
   value: false
