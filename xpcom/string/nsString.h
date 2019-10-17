@@ -77,6 +77,10 @@ class NS_ConvertASCIItoUTF16 : public nsAutoString {
     AppendASCIItoUTF16(aCString, *this);
   }
 
+  explicit NS_ConvertASCIItoUTF16(mozilla::Span<const char> aCString) {
+    AppendASCIItoUTF16(aCString, *this);
+  }
+
  private:
   // NOT TO BE IMPLEMENTED
   NS_ConvertASCIItoUTF16(char16_t) = delete;

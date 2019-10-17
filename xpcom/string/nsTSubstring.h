@@ -968,6 +968,18 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
     return Append(aSpan.Elements(), len, aFallible);
   }
 
+  void NS_FASTCALL AssignASCII(mozilla::Span<const char> aData) {
+    AssignASCII(aData.Elements(), aData.Length());
+  }
+  MOZ_MUST_USE bool NS_FASTCALL AssignASCII(mozilla::Span<const char> aData,
+                                            const fallible_t& aFallible) {
+    return AssignASCII(aData.Elements(), aData.Length(), aFallible);
+  }
+
+  void AppendASCII(mozilla::Span<const char> aData) {
+    AppendASCII(aData.Elements(), aData.Length());
+  }
+
   template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
   operator mozilla::Span<uint8_t>() {
     return mozilla::MakeSpan(reinterpret_cast<uint8_t*>(BeginWriting()),
