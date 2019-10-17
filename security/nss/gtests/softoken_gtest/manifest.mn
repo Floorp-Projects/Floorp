@@ -6,13 +6,22 @@ CORE_DEPTH = ../..
 DEPTH      = ../..
 MODULE = nss
 
+DEFINES += -DDLL_SUFFIX=\"$(DLL_SUFFIX)\" -DDLL_PREFIX=\"$(DLL_PREFIX)\"
+
+include $(CORE_DEPTH)/coreconf/arch.mk
+ifneq ($(OS_ARCH),WINNT)
+DB_TESTS = \
+	softoken_nssckbi_testlib_gtest.cc
+endif
+
 CPPSRCS = \
 	softoken_gtest.cc \
+	$(DB_TESTS) \
 	$(NULL)
 
 INCLUDES += \
 	-I$(CORE_DEPTH)/gtests/google_test/gtest/include \
-  -I$(CORE_DEPTH)/gtests/common \
+	-I$(CORE_DEPTH)/gtests/common \
 	-I$(CORE_DEPTH)/cpputil \
 	$(NULL)
 
