@@ -363,7 +363,7 @@ var ContentSearch = {
     return true;
   },
 
-  async currentStateObj() {
+  async currentStateObj(window) {
     let state = {
       engines: [],
       currentEngine: await this._currentEngineObj(false),
@@ -383,6 +383,13 @@ var ContentSearch = {
         identifier: engine.identifier,
       });
     }
+
+    if (window) {
+      state.isPrivateWindow = PrivateBrowsingUtils.isContentWindowPrivate(
+        window
+      );
+    }
+
     return state;
   },
 
@@ -441,7 +448,7 @@ var ContentSearch = {
   },
 
   _onMessageGetState(msg, data) {
-    return this.currentStateObj().then(state => {
+    return this.currentStateObj(msg.target.ownerGlobal).then(state => {
       this._reply(msg, "State", state);
     });
   },
