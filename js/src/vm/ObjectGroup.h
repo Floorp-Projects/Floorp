@@ -90,14 +90,13 @@ class ObjectGroup : public gc::TenuredCell {
 
  private:
   /* Class shared by objects in this group. */
-  const JSClass* clasp_;  // set by constructor
+  const JSClass* const clasp_;  // set by constructor
 
   /* Prototype shared by objects in this group. */
   GCPtr<TaggedProto> proto_;  // set by constructor
 
   /* Realm shared by objects in this group. */
-  JS::Realm* realm_;
-  ;  // set by constructor
+  JS::Realm* realm_;  // set by constructor
 
   /* Flags for this group. */
   ObjectGroupFlags flags_;  // set by constructor

@@ -195,7 +195,7 @@ class SharedIntlData {
   // unum_[count,get]Available() return the same results as their
   // uloc_[count,get]Available() counterparts.
   //
-  // UPluralRules and URelativeDateTimeFormatter:
+  // UListFormatter, UPluralRules, and URelativeDateTimeFormatter:
   // We're going to use ULocale availableLocales as per ICU recommendation:
   // https://unicode-org.atlassian.net/browse/ICU-12756
   LocaleSet supportedLocales;
@@ -224,6 +224,7 @@ class SharedIntlData {
   enum class SupportedLocaleKind {
     Collator,
     DateTimeFormat,
+    ListFormat,
     NumberFormat,
     PluralRules,
     RelativeTimeFormat

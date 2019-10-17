@@ -10,6 +10,24 @@ All notable changes to this program is documented in this file.
 Note that with this release the minimum recommended Firefox version
 has changed to Firefox ≥60.
 
+### Known problems
+
+- _macOS 10.15 (Catalina):_
+
+  Due to the recent requirement from Apple that all programs must
+  be notarized, geckodriver will not work on Catalina if you manually
+  download it through another notarized program, such as Firefox.
+
+  Whilst we are working on a repackaging fix for this problem, you
+  can find more details on how to work around this issue in the
+  [macOS notarization] section of the documentation.
+
+- _Windows:_
+
+  You must still have the [Microsoft Visual Studio redistributable
+  runtime] installed on your system for the binary to run.  This
+  is a known bug which we weren't able fix for this release.
+
 ### Added
 
 - Support for Firefox on Android
@@ -1261,6 +1279,7 @@ and greater.
 [Firefox Reality]: https://play.google.com/store/apps/details?id=org.mozilla.vrbrowser
 [Capabilities]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html
 [enable remote debugging on the Android device]: https://developers.google.com/web/tools/chrome-devtools/remote-debugging
+[macOS notarization]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Notarization.html
 
 [`CloseWindowResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CloseWindowResponse.html
 [`CookieResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CookieResponse.html

@@ -218,6 +218,7 @@
             'gtests/softoken_gtest/softoken_gtest.gyp:softoken_gtest',
             'gtests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',
             'gtests/util_gtest/util_gtest.gyp:util_gtest',
+            'lib/ckfw/builtins/testlib/builtins-testlib.gyp:nssckbi-testlib',
           ],
           'conditions': [
             [ 'OS=="linux"', {
