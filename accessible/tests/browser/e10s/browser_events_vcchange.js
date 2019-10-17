@@ -9,11 +9,21 @@ addAccessibleTask(
   <p id="p1">abc</p>
   <input id="input1" value="input" />`,
   async function(browser, accDoc) {
+    await loadContentScripts(browser, "Common.jsm");
     let onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
     await ContentTask.spawn(browser, null, () => {
-      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument)
-        .virtualCursor;
-      vc.position = getAccessible("p1");
+      const { CommonUtils } = content;
+      let vc = CommonUtils.getAccessible(
+        content.document,
+        Ci.nsIAccessibleDocument
+      ).virtualCursor;
+      vc.position = CommonUtils.getAccessible(
+        "p1",
+        null,
+        null,
+        null,
+        content.document
+      );
     });
 
     let vccEvent = (await onVCChanged).QueryInterface(
@@ -26,8 +36,10 @@ addAccessibleTask(
 
     onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
     await ContentTask.spawn(browser, null, () => {
-      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument)
-        .virtualCursor;
+      let vc = content.CommonUtils.getAccessible(
+        content.document,
+        Ci.nsIAccessibleDocument
+      ).virtualCursor;
       vc.moveNextByText(Ci.nsIAccessiblePivot.CHAR_BOUNDARY);
     });
     vccEvent = (await onVCChanged).QueryInterface(
@@ -40,9 +52,18 @@ addAccessibleTask(
 
     onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
     await ContentTask.spawn(browser, null, () => {
-      let vc = getAccessible(content.document, Ci.nsIAccessibleDocument)
-        .virtualCursor;
-      vc.position = getAccessible("input1");
+      const { CommonUtils } = content;
+      let vc = CommonUtils.getAccessible(
+        content.document,
+        Ci.nsIAccessibleDocument
+      ).virtualCursor;
+      vc.position = CommonUtils.getAccessible(
+        "input1",
+        null,
+        null,
+        null,
+        content.document
+      );
     });
     vccEvent = (await onVCChanged).QueryInterface(
       nsIAccessibleVirtualCursorChangeEvent
