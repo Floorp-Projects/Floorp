@@ -8,6 +8,8 @@ const { E10SUtils } = ChromeUtils.import(
 let PREF_NAME = "browser.tabs.remote.useHTTPResponseProcessSelection";
 const PRINT_POSTDATA = httpURL("print_postdata.sjs");
 const FILE_DUMMY = fileURL("dummy_page.html");
+const DATA_URL = "data:text/html,Hello%2C World!";
+const DATA_STRING = "Hello, World!";
 
 async function performLoad(browser, opts, action) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
@@ -35,6 +37,8 @@ const EXTENSION_DATA = {
     "redirect.html": "<html>webext redirect</html>",
   },
 
+  extUrl: "",
+
   async background() {
     browser.test.log("background script running");
     browser.webRequest.onAuthRequired.addListener(
@@ -58,18 +62,25 @@ const EXTENSION_DATA = {
         let isRedirect =
           details.originUrl == browser.extension.getURL("redirect.html") &&
           details.url.endsWith("print_postdata.sjs");
-        return isRedirect ? { redirectUrl: details.url + "?redirected" } : {};
+        let url = this.extUrl ? this.extUrl : details.url + "?redirected";
+        return isRedirect ? { redirectUrl: url } : {};
       },
       { urls: ["*://*/*"] },
       ["blocking"]
     );
+    browser.test.onMessage.addListener(async ({ method, url }) => {
+      if (method == "setRedirectUrl") {
+        this.extUrl = url;
+      }
+      browser.test.sendMessage("done");
+    });
   },
 };
 
 async function withExtensionDummy(callback) {
   let extension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
   await extension.startup();
-  let rv = await callback(`moz-extension://${extension.uuid}/`);
+  let rv = await callback(`moz-extension://${extension.uuid}/`, extension);
   await extension.unload();
   return rv;
 }
@@ -101,7 +112,10 @@ async function postFrom(start, target) {
         browser,
         {
           url(url) {
-            let enable = url.startsWith(PRINT_POSTDATA) || url == target;
+            let enable =
+              url.startsWith(PRINT_POSTDATA) ||
+              url == target ||
+              url == DATA_URL;
             if (!enable) {
               info(`url ${url} is invalid to perform load`);
             }
@@ -201,17 +215,6 @@ async function testLoadAndRedirect(
     }
   );
 }
-
-// TODO: Currently no test framework for ftp://.
-add_task(async function test_protocol() {
-  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
-
-  // TODO: Processes should be switched due to navigation of different origins.
-  await testLoadAndRedirect("data:,foo", false, true);
-
-  // Redirecting to file::// is not allowed.
-  await testLoadAndRedirect(FILE_DUMMY, true, false);
-});
 
 add_task(async function test_disabled() {
   await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, false]] });
@@ -313,5 +316,35 @@ add_task(async function test_enabled() {
     ok(E10SUtils.isWebRemoteType(respExt307.remoteType), "process switch");
     is(respExt307.location, PRINT_POSTDATA, "correct location");
     is(respExt307.body, "initialRemoteType=extension", "correct POST body");
+  });
+});
+
+async function sendMessage(ext, method, url) {
+  ext.sendMessage({ method, url });
+  await ext.awaitMessage("done");
+}
+
+// TODO: Currently no test framework for ftp://.
+add_task(async function test_protocol() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+
+  // TODO: Processes should be switched due to navigation of different origins.
+  await testLoadAndRedirect("data:,foo", false, true);
+
+  // Redirecting to file:// is not allowed.
+  await testLoadAndRedirect(FILE_DUMMY, true, false);
+
+  await withExtensionDummy(async (extOrigin, extension) => {
+    await sendMessage(extension, "setRedirectUrl", DATA_URL);
+
+    let respExtRedirect = await postFrom(
+      extOrigin + "redirect.html",
+      PRINT_POSTDATA
+    );
+
+    // TODO: Processes should be switched due to navigation of different origins.
+    is(respExtRedirect.remoteType, "extension", "process switch");
+    is(respExtRedirect.location, DATA_URL, "correct location");
+    is(respExtRedirect.body, DATA_STRING, "correct POST body");
   });
 });
