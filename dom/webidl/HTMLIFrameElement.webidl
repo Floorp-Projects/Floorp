@@ -13,9 +13,10 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLIFrameElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows, Pure]
            attribute DOMString src;
   [CEReactions, SetterThrows, Pure]

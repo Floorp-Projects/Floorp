@@ -12,9 +12,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLDirectoryElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [CEReactions, SetterThrows, Pure]
            attribute boolean compact;
 };

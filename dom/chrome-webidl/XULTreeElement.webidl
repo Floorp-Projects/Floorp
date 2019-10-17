@@ -13,10 +13,12 @@ dictionary TreeCellInfo {
     DOMString childElt = "";
 };
 
-[HTMLConstructor, Func="IsChromeOrXBL",
+[Func="IsChromeOrXBL",
  Exposed=Window]
 interface XULTreeElement : XULElement
 {
+  [HTMLConstructor] constructor();
+
   /**
    * Obtain the columns.
    */

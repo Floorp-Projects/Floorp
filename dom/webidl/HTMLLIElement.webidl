@@ -13,9 +13,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-li-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLLIElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [CEReactions, SetterThrows, Pure]
            attribute long value;
 };

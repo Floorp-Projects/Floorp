@@ -11,9 +11,10 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLSourceElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
            attribute DOMString src;
            [CEReactions, SetterThrows]

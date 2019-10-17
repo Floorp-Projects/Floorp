@@ -11,9 +11,10 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLFrameSetElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterThrows]
   attribute DOMString cols;
   [CEReactions, SetterThrows]

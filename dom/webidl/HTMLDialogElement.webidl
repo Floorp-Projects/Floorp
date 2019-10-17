@@ -11,9 +11,11 @@
  * and create derivative works of this document.
  */
 
-[Pref="dom.dialog_element.enabled", HTMLConstructor,
+[Pref="dom.dialog_element.enabled",
  Exposed=Window]
 interface HTMLDialogElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterThrows]
   attribute boolean open;
   attribute DOMString returnValue;

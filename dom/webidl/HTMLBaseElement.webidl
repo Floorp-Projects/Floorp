@@ -12,9 +12,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-base-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLBaseElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [CEReactions, SetterThrows, Pure]
            attribute DOMString href;
            [CEReactions, SetterThrows, Pure]
