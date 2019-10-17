@@ -5,11 +5,16 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - fenix_taskgraph.transforms.test:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
 job-defaults:
-    description: Test Reference Browser
+    description: Test Fenix
+    include-pull-request-number: false
+    run:
+        using: gradlew
+        use-caches: false
     treeherder:
         kind: test
         tier: 2
@@ -17,9 +22,6 @@ job-defaults:
     worker:
         docker-image: {in-tree: base}
         max-run-time: 7200
-    run:
-        using: gradlew
-        use-caches: false
 
 jobs:
     debug:
@@ -43,9 +45,7 @@ jobs:
         attributes:
             build-type: debug
             code-review: true
-        treeherder:
-            symbol: ui
-            platform: 'ui-test/opt'
+        include-pull-request-number: true
         run-on-tasks-for: [github-pull-request, github-push]
         run:
             # TODO Generate APKs in a build task instead
@@ -57,6 +57,9 @@ jobs:
                   key: firebaseToken
                   path: .firebase_token.json
                   json: true
+        treeherder:
+            symbol: ui
+            platform: 'ui-test/opt'
         worker:
             docker-image: {in-tree: ui-tests}
             env:

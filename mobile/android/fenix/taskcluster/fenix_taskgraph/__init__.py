@@ -9,7 +9,7 @@ import re
 
 from importlib import import_module
 from six import text_type
-from voluptuous import Required
+from voluptuous import All, Any, Range, Required
 
 from taskgraph.parameters import extend_parameters_schema
 
@@ -25,6 +25,7 @@ def register(graph_config):
     _import_modules(["job", "worker_types", "routes", "target_tasks"])
     extend_parameters_schema({
         Required("head_tag"): text_type,
+        Required("pull_request_number"): Any(All(int, Range(min=1)), None),
         Required("release_type"): text_type,
         Required("release_version"): text_type,
     })
@@ -40,6 +41,9 @@ def get_decision_parameters(graph_config, parameters):
     parameters["head_tag"] = head_tag
     parameters["release_type"] = _resolve_release_type(head_tag)
     parameters["release_version"] = head_tag[1:] if head_tag else ""
+
+    pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
+    parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
 
     if parameters["tasks_for"] == "github-release":
         for param_name in ("release_type", "release_version"):
