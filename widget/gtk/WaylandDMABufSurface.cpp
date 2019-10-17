@@ -28,17 +28,7 @@
 #include "mozilla/layers/LayersSurfaces.h"
 
 /*
-TODO
-
-Lock/Unlock:
-An important detail is that you *must* use DMA_BUF_IOCTL_SYNC to
-bracket your actual CPU read/write sequences to the dmabuf. That ioctl
-will ensure the appropriate caches are flushed correctly (you might not
-notice anything wrong on x86, but on other hardware forgetting to do
-that can randomly result in bad data), and I think it also waits for
-implicit fences (e.g. if you had GPU write to the dmabuf earlier, to
-ensure the operation finished).
-
+TODO:
 DRM device selection:
 https://lists.freedesktop.org/archives/wayland-devel/2018-November/039660.html
 */
