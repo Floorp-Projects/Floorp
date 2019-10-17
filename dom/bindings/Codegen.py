@@ -10094,10 +10094,26 @@ class CGEnum(CGThing):
     def __init__(self, enum):
         CGThing.__init__(self)
         self.enum = enum
+        entryDecl = fill(
+            """
+            extern const EnumEntry ${entry_array}[${entry_count}];
+
+            static_assert(static_cast<size_t>(${name}::EndGuard_) == ${entry_count} - 1,
+                          "Mismatch between enum strings and enum values");
+
+            inline Span<const char> GetString(${name} stringId) {
+              MOZ_ASSERT(static_cast<${type}>(stringId) < static_cast<${type}>(${name}::EndGuard_));
+              const EnumEntry& entry = ${entry_array}[static_cast<${type}>(stringId)];
+              return MakeSpan(entry.value, entry.length);
+            }
+            """,
+            entry_array=ENUM_ENTRY_VARIABLE_NAME,
+            entry_count=self.nEnumStrings(),
+            name=self.enum.identifier.name,
+            type=self.underlyingType())
         strings = CGNamespace(
             self.stringsNamespace(),
-            CGGeneric(declare=("extern const EnumEntry %s[%d];\n" %
-                               (ENUM_ENTRY_VARIABLE_NAME, self.nEnumStrings())),
+            CGGeneric(declare=entryDecl,
                       define=fill(
                           """
                           extern const EnumEntry ${name}[${count}] = {
@@ -10138,9 +10154,7 @@ class CGEnum(CGThing):
             name=self.enum.identifier.name,
             ty=self.underlyingType(),
             enums=",\n".join(map(getEnumValueName, self.enum.values())) + ",\n")
-        strings = CGNamespace(self.stringsNamespace(),
-                              CGGeneric(declare="extern const EnumEntry %s[%d];\n"
-                                        % (ENUM_ENTRY_VARIABLE_NAME, self.nEnumStrings())))
+
         return decl + "\n" + self.cgThings.declare()
 
     def define(self):
@@ -14915,6 +14929,8 @@ class CGBindingRoot(CGThing):
         # Do codegen for all the enums
         enums = config.getEnums(webIDLFile)
         cgthings.extend(CGEnum(e) for e in enums)
+
+        bindingDeclareHeaders["mozilla/Span.h"] = enums
 
         hasCode = (descriptors or callbackDescriptors or dictionaries or
                    callbacks)
