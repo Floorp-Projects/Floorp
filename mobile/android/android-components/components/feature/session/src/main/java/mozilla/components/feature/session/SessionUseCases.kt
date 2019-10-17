@@ -63,7 +63,7 @@ class SessionUseCases(
             flags: LoadUrlFlags = LoadUrlFlags.none()
         ) {
             val loadSession = session ?: onNoSession.invoke(url)
-            sessionManager.getOrCreateEngineSession(loadSession).loadUrl(url, flags)
+            sessionManager.getOrCreateEngineSession(loadSession).loadUrl(url, flags = flags)
         }
     }
 

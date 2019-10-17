@@ -43,7 +43,7 @@ class SessionUseCasesTest {
         verify(selectedEngineSession).loadUrl("http://mozilla.org")
 
         useCases.loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
-        verify(selectedEngineSession).loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(selectedEngineSession).loadUrl("http://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
 
         useCases.loadUrl("http://getpocket.com", selectedSession)
         verify(selectedEngineSession).loadUrl("http://getpocket.com")
@@ -51,7 +51,7 @@ class SessionUseCasesTest {
         useCases.loadUrl.invoke("http://www.getpocket.com", selectedSession,
                 LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY))
         verify(selectedEngineSession).loadUrl("http://www.getpocket.com",
-                LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY))
+                flags = LoadUrlFlags.select(LoadUrlFlags.BYPASS_PROXY))
     }
 
     @Test

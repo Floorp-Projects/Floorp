@@ -70,7 +70,7 @@ class TabIntentProcessorTest {
 
         whenever(intent.dataString).thenReturn("http://mozilla.org")
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
 
         val session = sessionManager.all[0]
         assertNotNull(session)
@@ -91,7 +91,7 @@ class TabIntentProcessorTest {
         whenever(intent.dataString).thenReturn("http://mozilla.org")
 
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
     }
 
     @Test
@@ -110,7 +110,7 @@ class TabIntentProcessorTest {
         whenever(intent.dataString).thenReturn("http://mozilla.org")
 
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
     }
 
     @Test
@@ -132,7 +132,7 @@ class TabIntentProcessorTest {
 
         whenever(intent.dataString).thenReturn("http://mozilla.org")
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
 
         val session = sessionManager.all[0]
         assertNotNull(session)
@@ -153,7 +153,7 @@ class TabIntentProcessorTest {
         whenever(intent.dataString).thenReturn("http://mozilla.org")
 
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
     }
 
     @Test
@@ -172,7 +172,7 @@ class TabIntentProcessorTest {
         whenever(intent.dataString).thenReturn("http://mozilla.org")
 
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
     }
 
     @Test
@@ -186,23 +186,23 @@ class TabIntentProcessorTest {
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("http://mozilla.org")
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.org", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.org", flags = LoadUrlFlags.external())
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://getpocket.com")
         handler.process(intent)
-        verify(engineSession).loadUrl("http://getpocket.com", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://getpocket.com", flags = LoadUrlFlags.external())
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://mozilla.com and http://getpocket.com")
         handler.process(intent)
-        verify(engineSession).loadUrl("http://mozilla.com", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://mozilla.com", flags = LoadUrlFlags.external())
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: http://tweets.mozilla.com")
         handler.process(intent)
-        verify(engineSession).loadUrl("http://tweets.mozilla.com", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://tweets.mozilla.com", flags = LoadUrlFlags.external())
 
         whenever(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: HTTP://tweets.mozilla.com")
         handler.process(intent)
-        verify(engineSession).loadUrl("http://tweets.mozilla.com", LoadUrlFlags.external())
+        verify(engineSession).loadUrl("http://tweets.mozilla.com", flags = LoadUrlFlags.external())
     }
 
     @Test

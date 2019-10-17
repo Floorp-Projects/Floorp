@@ -84,7 +84,8 @@ class TabsUseCases(
             sessionManager.add(session, selected = selectTab, parent = parent)
 
             if (startLoading) {
-                sessionManager.getOrCreateEngineSession(session).loadUrl(url, flags)
+                val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
+                sessionManager.getOrCreateEngineSession(session).loadUrl(url, parentEngineSession, flags)
             }
 
             return session
@@ -126,7 +127,8 @@ class TabsUseCases(
             sessionManager.add(session, selected = selectTab, parent = parent)
 
             if (startLoading) {
-                sessionManager.getOrCreateEngineSession(session).loadUrl(url, flags)
+                val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
+                sessionManager.getOrCreateEngineSession(session).loadUrl(url, parentEngineSession, flags)
             }
 
             return session

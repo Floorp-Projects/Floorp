@@ -329,14 +329,18 @@ class GeckoEngineSessionTest {
 
     @Test
     fun loadUrl() {
-        val engineSession = GeckoEngineSession(mock(),
-                geckoSessionProvider = geckoSessionProvider)
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        val parentEngineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
 
         engineSession.loadUrl("http://mozilla.org")
         verify(geckoSession).loadUri("http://mozilla.org", GeckoSession.LOAD_FLAGS_NONE)
 
-        engineSession.loadUrl("http://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        engineSession.loadUrl("http://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
         verify(geckoSession).loadUri("http://www.mozilla.org", GeckoSession.LOAD_FLAGS_EXTERNAL)
+
+        engineSession.loadUrl("http://www.mozilla.org", parent = parentEngineSession)
+        // parent / referring session not supported yet in release
+        verify(geckoSession).loadUri("http://www.mozilla.org", GeckoSession.LOAD_FLAGS_NONE)
     }
 
     @Test

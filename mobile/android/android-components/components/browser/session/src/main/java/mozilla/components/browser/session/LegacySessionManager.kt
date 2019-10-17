@@ -290,7 +290,10 @@ class LegacySessionManager(
     }
 
     fun link(session: Session, engineSession: EngineSession) {
-        engineSessionLinker.link(session, engineSession)
+        val parent = values.find { it.id == session.parentId }?.let {
+            this.getEngineSession(it)
+        }
+        engineSessionLinker.link(session, engineSession, parent)
     }
 
     private fun unlink(session: Session) {

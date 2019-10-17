@@ -37,14 +37,17 @@ class SessionManager(
      * actions when an engine session is linked and unlinked.
      */
     class EngineSessionLinker(private val store: BrowserStore?) {
-        fun link(session: Session, engineSession: EngineSession) {
+        /**
+         * Links the provided [Session] and [EngineSession].
+         */
+        fun link(session: Session, engineSession: EngineSession, parentEngineSession: EngineSession?) {
             unlink(session)
 
             session.engineSessionHolder.apply {
                 this.engineSession = engineSession
                 this.engineObserver = EngineObserver(session, store).also { observer ->
                     engineSession.register(observer)
-                    engineSession.loadUrl(session.url)
+                    engineSession.loadUrl(session.url, parentEngineSession)
                 }
             }
 
