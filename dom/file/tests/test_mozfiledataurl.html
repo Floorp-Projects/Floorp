@@ -58,6 +58,7 @@ function start() {
 };
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.expectAssertions(0, 3);
 
 function* runTest([imgFile, audioFile, docFile, xhrFile]) {
   inner = document.getElementById('inner');
