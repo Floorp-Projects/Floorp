@@ -78,7 +78,7 @@ class NetworkActionBar extends Component {
           TabPanel(
             {
               id: PANELS.BLOCKING,
-              title: L10N.getStr("netmonitor.actionbar.requestBlocking"),
+              title: L10N.getStr("netmonitor.actionbar.requestBlocking2"),
               className: "network-action-bar-blocked",
             },
             RequestBlockingPanel()

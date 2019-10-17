@@ -60,7 +60,7 @@ const TOOLBAR_TOGGLE_RECORDING = L10N.getStr(
   "netmonitor.toolbar.toggleRecording"
 );
 const TOOLBAR_SEARCH = L10N.getStr("netmonitor.toolbar.search");
-const TOOLBAR_BLOCKING = L10N.getStr("netmonitor.actionbar.requestBlocking");
+const TOOLBAR_BLOCKING = L10N.getStr("netmonitor.toolbar.requestBlocking");
 const TOOLBAR_HAR_BUTTON = L10N.getStr("netmonitor.label.har");
 const LEARN_MORE_TITLE = L10N.getStr(
   "netmonitor.toolbar.filterFreetext.learnMore"
