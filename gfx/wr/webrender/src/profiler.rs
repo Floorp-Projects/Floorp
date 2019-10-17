@@ -27,21 +27,21 @@ pub mod expected {
     pub const MAX_IPC_TIME: Range<f64> =            0.0..4.0;
     pub const AVG_GPU_TIME: Range<f64> =            0.0..8.0;
     pub const MAX_GPU_TIME: Range<f64> =            0.0..15.0;
-    pub const DRAW_CALLS: Range<usize> =            1..100;
-    pub const VERTICES: Range<usize> =              10..25_000;
-    pub const TOTAL_PRIMITIVES: Range<usize> =      1..5000;
-    pub const VISIBLE_PRIMITIVES: Range<usize> =    1..5000;
-    pub const USED_TARGETS: Range<usize> =          1..4;
-    pub const COLOR_TARGETS: Range<usize> =         1..4;
-    pub const ALPHA_TARGETS: Range<usize> =         0..2;
-    pub const CREATED_TARGETS: Range<usize> =       0..3;
-    pub const CHANGED_TARGETS: Range<usize> =       0..3;
-    pub const TEXTURE_DATA_UPLOADED: Range<usize> = 0..10;
-    pub const GPU_CACHE_ROWS_TOTAL: Range<usize> =  1..50;
-    pub const GPU_CACHE_ROWS_UPDATED: Range<usize> = 0..25;
-    pub const GPU_CACHE_BLOCKS_TOTAL: Range<usize> = 1..1000;
-    pub const GPU_CACHE_BLOCKS_UPDATED: Range<usize> = 0..1000;
-    pub const GPU_CACHE_BLOCKS_SAVED: Range<usize> = 0..1000;
+    pub const DRAW_CALLS: Range<u64> =              1..100;
+    pub const VERTICES: Range<u64> =                10..25_000;
+    pub const TOTAL_PRIMITIVES: Range<u64> =        1..5000;
+    pub const VISIBLE_PRIMITIVES: Range<u64> =      1..5000;
+    pub const USED_TARGETS: Range<u64> =            1..4;
+    pub const COLOR_TARGETS: Range<u64> =           1..4;
+    pub const ALPHA_TARGETS: Range<u64> =           0..2;
+    pub const CREATED_TARGETS: Range<u64> =         0..3;
+    pub const CHANGED_TARGETS: Range<u64> =         0..3;
+    pub const TEXTURE_DATA_UPLOADED: Range<u64> =   0..10;
+    pub const GPU_CACHE_ROWS_TOTAL: Range<u64> =    1..50;
+    pub const GPU_CACHE_ROWS_UPDATED: Range<u64> =  0..25;
+    pub const GPU_CACHE_BLOCKS_TOTAL: Range<u64> =  1..1000;
+    pub const GPU_CACHE_BLOCKS_UPDATED: Range<u64> = 0..1000;
+    pub const GPU_CACHE_BLOCKS_SAVED: Range<u64> =  0..1000;
     pub const DISPLAY_LIST_BUILD_TIME: Range<f64> = 0.0..3.0;
     pub const DISPLAY_LIST_CONSUME_TIME: Range<f64> = 0.0..2.0;
     pub const DISPLAY_LIST_SEND_TIME: Range<f64> =  0.0..1.0;
@@ -176,11 +176,11 @@ trait ProfileCounter {
 pub struct IntProfileCounter {
     description: &'static str,
     value: usize,
-    expect: Option<Range<usize>>,
+    expect: Option<Range<u64>>,
 }
 
 impl IntProfileCounter {
-    fn new(description: &'static str, expect: Option<Range<usize>>) -> Self {
+    fn new(description: &'static str, expect: Option<Range<u64>>) -> Self {
         IntProfileCounter {
             description,
             value: 0,
@@ -222,7 +222,7 @@ impl ProfileCounter for IntProfileCounter {
     }
 
     fn is_expected(&self) -> bool {
-        self.expect.as_ref().map(|range| range.contains(&self.value)).unwrap_or(true)
+        self.expect.as_ref().map(|range| range.contains(&(self.value as u64))).unwrap_or(true)
     }
 }
 
@@ -557,38 +557,39 @@ impl ProfileCounter for AverageTimeProfileCounter {
 
 #[derive(Clone)]
 pub struct FrameProfileCounters {
-    pub total_primitives: IntProfileCounter,
-    pub visible_primitives: IntProfileCounter,
-    pub targets_used: IntProfileCounter,
-    pub targets_changed: IntProfileCounter,
-    pub targets_created: IntProfileCounter,
+    pub total_primitives: AverageIntProfileCounter,
+    pub visible_primitives: AverageIntProfileCounter,
+    pub targets_used: AverageIntProfileCounter,
+    pub targets_changed: AverageIntProfileCounter,
+    pub targets_created: AverageIntProfileCounter,
 }
 
 impl FrameProfileCounters {
     pub fn new() -> Self {
         FrameProfileCounters {
-            total_primitives: IntProfileCounter::new(
+            total_primitives: AverageIntProfileCounter::new(
                 "Total Primitives",
-                Some(expected::TOTAL_PRIMITIVES),
+                None, Some(expected::TOTAL_PRIMITIVES),
             ),
-            visible_primitives: IntProfileCounter::new(
+            visible_primitives: AverageIntProfileCounter::new(
                 "Visible Primitives",
-                Some(expected::VISIBLE_PRIMITIVES),
+                None, Some(expected::VISIBLE_PRIMITIVES),
             ),
-            targets_used: IntProfileCounter::new(
+            targets_used: AverageIntProfileCounter::new(
                 "Used targets",
-                Some(expected::USED_TARGETS),
+                None, Some(expected::USED_TARGETS),
             ),
-            targets_changed: IntProfileCounter::new(
+            targets_changed: AverageIntProfileCounter::new(
                 "Changed targets",
-                Some(expected::CHANGED_TARGETS),
+                None, Some(expected::CHANGED_TARGETS),
             ),
-            targets_created: IntProfileCounter::new(
+            targets_created: AverageIntProfileCounter::new(
                 "Created targets",
-                Some(expected::CREATED_TARGETS),
+                None, Some(expected::CREATED_TARGETS),
             ),
         }
     }
+
     pub fn reset_targets(&mut self) {
         self.targets_used.reset();
         self.targets_changed.reset();
@@ -621,35 +622,35 @@ impl TextureCacheProfileCounters {
 
 #[derive(Clone)]
 pub struct GpuCacheProfileCounters {
-    pub allocated_rows: IntProfileCounter,
-    pub allocated_blocks: IntProfileCounter,
-    pub updated_rows: IntProfileCounter,
-    pub updated_blocks: IntProfileCounter,
-    pub saved_blocks: IntProfileCounter,
+    pub allocated_rows: AverageIntProfileCounter,
+    pub allocated_blocks: AverageIntProfileCounter,
+    pub updated_rows: AverageIntProfileCounter,
+    pub updated_blocks: AverageIntProfileCounter,
+    pub saved_blocks: AverageIntProfileCounter,
 }
 
 impl GpuCacheProfileCounters {
     pub fn new() -> Self {
         GpuCacheProfileCounters {
-            allocated_rows: IntProfileCounter::new(
+            allocated_rows: AverageIntProfileCounter::new(
                 "GPU cache rows: total",
-                Some(expected::GPU_CACHE_ROWS_TOTAL),
+                None, Some(expected::GPU_CACHE_ROWS_TOTAL),
             ),
-            updated_rows: IntProfileCounter::new(
+            updated_rows: AverageIntProfileCounter::new(
                 "GPU cache rows: updated",
-                Some(expected::GPU_CACHE_ROWS_UPDATED),
+                None, Some(expected::GPU_CACHE_ROWS_UPDATED),
             ),
-            allocated_blocks: IntProfileCounter::new(
+            allocated_blocks: AverageIntProfileCounter::new(
                 "GPU cache blocks: total",
-                Some(expected::GPU_CACHE_BLOCKS_TOTAL),
+                None, Some(expected::GPU_CACHE_BLOCKS_TOTAL),
             ),
-            updated_blocks: IntProfileCounter::new(
+            updated_blocks: AverageIntProfileCounter::new(
                 "GPU cache blocks: updated",
-                Some(expected::GPU_CACHE_BLOCKS_UPDATED),
+                None, Some(expected::GPU_CACHE_BLOCKS_UPDATED),
             ),
-            saved_blocks: IntProfileCounter::new(
+            saved_blocks: AverageIntProfileCounter::new(
                 "GPU cache blocks: saved",
-                Some(expected::GPU_CACHE_BLOCKS_SAVED),
+                None, Some(expected::GPU_CACHE_BLOCKS_SAVED),
             ),
         }
     }
@@ -799,12 +800,12 @@ impl BackendProfileCounters {
 pub struct RendererProfileCounters {
     pub frame_counter: IntProfileCounter,
     pub frame_time: AverageTimeProfileCounter,
-    pub draw_calls: IntProfileCounter,
-    pub vertices: IntProfileCounter,
+    pub draw_calls: AverageIntProfileCounter,
+    pub vertices: AverageIntProfileCounter,
     pub vao_count_and_size: ResourceProfileCounter,
-    pub color_targets: IntProfileCounter,
-    pub alpha_targets: IntProfileCounter,
-    pub texture_data_uploaded: IntProfileCounter,
+    pub color_targets: AverageIntProfileCounter,
+    pub alpha_targets: AverageIntProfileCounter,
+    pub texture_data_uploaded: AverageIntProfileCounter,
 }
 
 pub struct RendererProfileTimers {
@@ -822,26 +823,26 @@ impl RendererProfileCounters {
                 Some(expected::AVG_FRAME_TIME),
                 Some(expected::MAX_FRAME_TIME),
             ),
-            draw_calls: IntProfileCounter::new(
+            draw_calls: AverageIntProfileCounter::new(
                 "Draw Calls",
-                Some(expected::DRAW_CALLS),
+                None, Some(expected::DRAW_CALLS),
             ),
-            vertices: IntProfileCounter::new(
+            vertices: AverageIntProfileCounter::new(
                 "Vertices",
-                Some(expected::VERTICES),
+                None, Some(expected::VERTICES),
             ),
             vao_count_and_size: ResourceProfileCounter::new("VAO"),
-            color_targets: IntProfileCounter::new(
+            color_targets: AverageIntProfileCounter::new(
                 "Color Targets",
-                Some(expected::COLOR_TARGETS),
+                None, Some(expected::COLOR_TARGETS),
             ),
-            alpha_targets: IntProfileCounter::new(
+            alpha_targets: AverageIntProfileCounter::new(
                 "Alpha Targets",
-                Some(expected::ALPHA_TARGETS),
+                None, Some(expected::ALPHA_TARGETS),
             ),
-            texture_data_uploaded: IntProfileCounter::new(
+            texture_data_uploaded: AverageIntProfileCounter::new(
                 "Texture data, kb",
-                Some(expected::TEXTURE_DATA_UPLOADED),
+                None, Some(expected::TEXTURE_DATA_UPLOADED),
             ),
         }
     }
@@ -1300,7 +1301,7 @@ impl Profiler {
         &mut self,
         label: &str,
         label_color: ColorU,
-        counters: &[(ColorU, &IntProfileCounter)],
+        counters: &[(ColorU, &AverageIntProfileCounter)],
         debug_renderer: &mut DebugRenderer,
     ) -> default::Rect<f32> {
         let mut rect = debug_renderer.add_text(
@@ -1314,12 +1315,12 @@ impl Profiler {
         let x_base = rect.origin.x + rect.size.width + 10.0;
         let height = debug_renderer.line_height();
         let width = (self.draw_state.x_right - 30.0 - x_base).max(0.0);
-        let total_value = counters.last().unwrap().1.value;
+        let total_value = counters.last().unwrap().1.get();
         let scale = width / total_value as f32;
         let mut x_current = x_base;
 
         for &(color, counter) in counters {
-            let x_stop = x_base + counter.value as f32 * scale;
+            let x_stop = x_base + counter.get() as f32 * scale;
             debug_renderer.add_quad(
                 x_current,
                 rect.origin.y,
@@ -1346,19 +1347,14 @@ impl Profiler {
         let color_free = ColorU::new(0, 0, 0xFF, 0xFF);
         let color_saved = ColorU::new(0, 0xFF, 0, 0xFF);
 
-        let requested_blocks = IntProfileCounter {
-            description: "",
-            value: counters.updated_blocks.value + counters.saved_blocks.value,
-            expect: None,
-        };
-        let total_blocks = IntProfileCounter {
-            description: "",
-            value: counters.allocated_rows.value * MAX_VERTEX_TEXTURE_WIDTH,
-            expect: None,
-        };
+        let mut requested_blocks = AverageIntProfileCounter::new("", None, None);
+        requested_blocks.set(counters.updated_blocks.get() + counters.saved_blocks.get());
+
+        let mut total_blocks = AverageIntProfileCounter::new("", None, None);
+        total_blocks.set(counters.allocated_rows.get() * MAX_VERTEX_TEXTURE_WIDTH);
 
         let rect0 = self.draw_bar(
-            &format!("GPU cache rows ({}):", counters.allocated_rows.value),
+            &format!("GPU cache rows ({}):", counters.allocated_rows.get()),
             ColorU::new(0xFF, 0xFF, 0xFF, 0xFF),
             &[
                 (color_updated, &counters.updated_rows),
@@ -1398,7 +1394,7 @@ impl Profiler {
         debug_renderer: &mut DebugRenderer,
     ) {
         let rect0 = self.draw_bar(
-            &format!("primitives ({}):", counters.total_primitives.value),
+            &format!("primitives ({}):", counters.total_primitives.get()),
             ColorU::new(0xFF, 0xFF, 0xFF, 0xFF),
             &[
                 (ColorU::new(0, 0, 0xFF, 0xFF), &counters.visible_primitives),
@@ -1408,7 +1404,7 @@ impl Profiler {
         );
 
         let rect1 = self.draw_bar(
-            &format!("GPU targets ({}):", &counters.targets_used.value),
+            &format!("GPU targets ({}):", &counters.targets_used.get()),
             ColorU::new(0xFF, 0xFF, 0, 0xFF),
             &[
                 (ColorU::new(0, 0, 0xFF, 0xFF), &counters.targets_created),
