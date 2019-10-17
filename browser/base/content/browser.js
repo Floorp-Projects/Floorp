@@ -311,59 +311,12 @@ XPCOMUtils.defineLazyGetter(this, "gNavToolbox", () => {
   return document.getElementById("navigator-toolbox");
 });
 
-XPCOMUtils.defineLazyGetter(this, "gURLBar", () => gURLBarHandler.urlbar);
-
-/**
- * Tracks the urlbar object, allowing to reinitiate it when necessary, e.g. on
- * customization.
- */
-var gURLBarHandler = {
-  /**
-   * The urlbar binding or object.
-   */
-  get urlbar() {
-    if (!this._urlbar) {
-      let textbox = document.getElementById("urlbar");
-      this._urlbar = new UrlbarInput({
-        textbox,
-        eventTelemetryCategory: "urlbar",
-      });
-      if (this._lastValue) {
-        this._urlbar.value = this._lastValue;
-        delete this._lastValue;
-      }
-    }
-    return this._urlbar;
-  },
-
-  /**
-   * Invoked by CustomizationHandler when a customization starts.
-   */
-  customizeStart() {
-    if (this._urlbar) {
-      this._urlbar.removeCopyCutController();
-    }
-  },
-
-  /**
-   * Invoked by CustomizationHandler when a customization ends.
-   */
-  customizeEnd() {
-    this._reset();
-  },
-
-  /**
-   *  Used to reset the gURLBar value.
-   */
-  _reset() {
-    if (this._urlbar) {
-      this._lastValue = this._urlbar.value;
-      this._urlbar.uninit();
-      delete this._urlbar;
-      gURLBar = this.urlbar;
-    }
-  },
-};
+XPCOMUtils.defineLazyGetter(this, "gURLBar", () => {
+  return new UrlbarInput({
+    textbox: document.getElementById("urlbar"),
+    eventTelemetryCategory: "urlbar",
+  });
+});
 
 XPCOMUtils.defineLazyGetter(this, "ReferrerInfo", () =>
   Components.Constructor(
