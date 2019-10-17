@@ -16,6 +16,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "resource://gre/modules/Log.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
@@ -106,24 +107,29 @@ class ProviderPrivateSearch extends UrlbarProvider {
       separatePrivateDefault && engine != (await Services.search.getDefault());
     logger.info(`isPrivateEngine: ${isPrivateEngine}`);
 
-    addCallback(
-      this,
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.SEARCH,
-        UrlbarUtils.RESULT_SOURCE.SEARCH,
-        ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-          engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-          query: [
-            queryContext.searchString.trim(),
-            UrlbarUtils.HIGHLIGHT.TYPED,
-          ],
-          icon: [engine.iconURI ? engine.iconURI.spec : null],
-          inPrivateWindow: true,
-          isPrivateEngine,
-          suggestedIndex: 1,
-        })
-      )
+    // This is a delay added before returning results, to avoid flicker.
+    // Our result must appear only when all results are searches, but if search
+    // results arrive first, then the muxer would insert our result and then
+    // immediately remove it when non-search results arrive.
+    await new SkippableTimer({
+      name: "ProviderPrivateSearch",
+      time: 100,
+      logger,
+    }).promise;
+
+    let result = new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.SEARCH,
+      UrlbarUtils.RESULT_SOURCE.SEARCH,
+      ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
+        query: [queryContext.searchString.trim(), UrlbarUtils.HIGHLIGHT.TYPED],
+        icon: [engine.iconURI ? engine.iconURI.spec : null],
+        inPrivateWindow: true,
+        isPrivateEngine,
+      })
     );
+    result.suggestedIndex = 1;
+    addCallback(this, result);
     this.queries.delete(queryContext);
   }
 
