@@ -487,67 +487,36 @@ impl ProfileCounter for TimeProfileCounter {
 
 #[derive(Clone)]
 pub struct AverageTimeProfileCounter {
-    description: &'static str,
-    average_over_ns: u64,
-    start_ns: u64,
-    sum_ns: u64,
-    max_ns: u64,
-    num_samples: u64,
-    avg_nanoseconds: u64,
-    // Maximum time over the averaging window.
-    // When the timings are noisy, this is more representative of the perceived performance.
-    max_nanoseconds: u64,
+    counter: AverageIntProfileCounter,
     invert: bool,
-    expect_avg: Option<Range<f64>>,
-    expect_max: Option<Range<f64>>,
 }
 
 impl AverageTimeProfileCounter {
     pub fn new(
         description: &'static str,
         invert: bool,
-        average_over_ns: u64,
         expect_avg: Option<Range<f64>>,
         expect_max: Option<Range<f64>>,
     ) -> Self {
-        AverageTimeProfileCounter {
-            description,
-            average_over_ns,
-            start_ns: precise_time_ns(),
-            sum_ns: 0,
-            max_ns: 0,
-            num_samples: 0,
-            avg_nanoseconds: 0,
-            max_nanoseconds: 0,
-            invert,
-            expect_avg,
-            expect_max,
-        }
-    }
+        let expect_avg_ns = expect_avg.map(
+            |range| (range.start * 1000000.0) as u64 .. (range.end * 1000000.0) as u64
+        );
+        let expect_max_ns = expect_max.map(
+            |range| (range.start * 1000000.0) as u64 .. (range.end * 1000000.0) as u64
+        );
 
-    #[allow(dead_code)]
-    fn reset(&mut self) {
-        self.start_ns = precise_time_ns();
-        self.avg_nanoseconds = 0;
-        self.max_nanoseconds = 0;
-        self.sum_ns = 0;
-        self.num_samples = 0;
-        self.max_ns = 0;
+        AverageTimeProfileCounter {
+            counter: AverageIntProfileCounter::new(
+                description,
+                expect_avg_ns,
+                expect_max_ns,
+            ),
+            invert,
+        }
     }
 
     pub fn set(&mut self, ns: u64) {
-        let now = precise_time_ns();
-        if (now - self.start_ns) > self.average_over_ns && self.num_samples > 0 {
-            self.avg_nanoseconds = self.sum_ns / self.num_samples;
-            self.max_nanoseconds = self.max_ns;
-            self.start_ns = now;
-            self.sum_ns = 0;
-            self.num_samples = 0;
-            self.max_ns = 0;
-        }
-        self.max_ns = self.max_ns.max(ns);
-        self.sum_ns += ns;
-        self.num_samples += 1;
+        self.counter.set_u64(ns);
     }
 
     #[allow(dead_code)]
@@ -558,31 +527,30 @@ impl AverageTimeProfileCounter {
         let t0 = precise_time_ns();
         let val = callback();
         let t1 = precise_time_ns();
-        self.set(t1 - t0);
+        self.counter.set_u64(t1 - t0);
         val
     }
 
-    pub fn avg_ms(&self) -> f64 { self.avg_nanoseconds as f64 / 1000000.0 }
+    pub fn avg_ms(&self) -> f64 { self.counter.avg as f64 / 1000000.0 }
 
-    pub fn max_ms(&self) -> f64 { self.max_nanoseconds as f64 / 1000000.0 }
+    pub fn max_ms(&self) -> f64 { self.counter.max as f64 / 1000000.0 }
 }
 
 impl ProfileCounter for AverageTimeProfileCounter {
     fn description(&self) -> &'static str {
-        self.description
+        self.counter.description
     }
 
     fn value(&self) -> String {
         if self.invert {
-            format!("{:.2} fps", 1000000000.0 / self.avg_nanoseconds as f64)
+            format!("{:.2} fps", 1000000000.0 / self.counter.avg as f64)
         } else {
             format!("{:.2} ms (max {:.2} ms)", self.avg_ms(), self.max_ms())
         }
     }
 
     fn is_expected(&self) -> bool {
-        self.expect_avg.as_ref().map(|range| range.contains(&self.avg_ms())).unwrap_or(true)
-            && self.expect_max.as_ref().map(|range| range.contains(&self.max_ms())).unwrap_or(true)
+        self.counter.is_expected()
     }
 }
 
@@ -850,7 +818,7 @@ impl RendererProfileCounters {
         RendererProfileCounters {
             frame_counter: IntProfileCounter::new("Frame", None),
             frame_time: AverageTimeProfileCounter::new(
-                "FPS", true, ONE_SECOND_NS / 2,
+                "FPS", true,
                 Some(expected::AVG_FRAME_TIME),
                 Some(expected::MAX_FRAME_TIME),
             ),
@@ -1217,22 +1185,22 @@ impl Profiler {
             blob_raster_graph: ProfileGraph::new(600, 1.0, "Rasterized blob pixels:", "px"),
             gpu_frames: GpuFrameCollection::new(),
             backend_time: AverageTimeProfileCounter::new(
-                "Backend:", false, ONE_SECOND_NS / 2,
+                "Backend:", false,
                 Some(expected::AVG_BACKEND_CPU_TIME),
                 Some(expected::MAX_BACKEND_CPU_TIME),
             ),
             renderer_time: AverageTimeProfileCounter::new(
-                "Renderer:", false, ONE_SECOND_NS / 2,
+                "Renderer:", false,
                 Some(expected::AVG_RENDERER_CPU_TIME),
                 Some(expected::MAX_RENDERER_CPU_TIME),
             ),
             ipc_time: AverageTimeProfileCounter::new(
-                "IPC:", false, ONE_SECOND_NS / 2,
+                "IPC:", false,
                 Some(expected::AVG_IPC_TIME),
                 Some(expected::MAX_IPC_TIME),
             ),
             gpu_time: AverageTimeProfileCounter::new(
-                "GPU:", false, ONE_SECOND_NS / 2,
+                "GPU:", false,
                 Some(expected::AVG_GPU_TIME),
                 Some(expected::MAX_GPU_TIME),
             ),
