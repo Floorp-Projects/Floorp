@@ -17,6 +17,7 @@
 #include "nsIURIWithSpecialOrigin.h"
 #include "nsScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
+#include "nsAboutProtocolUtils.h"
 #include "ThirdPartyUtil.h"
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/NullPrincipal.h"
@@ -444,6 +445,26 @@ BasePrincipal::SchemeIs(const char* aScheme, bool* aResult) {
   }
   *aResult = prinURI->SchemeIs(aScheme);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetAboutModuleFlags(uint32_t* flags) {
+  *flags = 0;
+  nsCOMPtr<nsIURI> prinURI;
+  nsresult rv = GetURI(getter_AddRefs(prinURI));
+  if (NS_FAILED(rv) || !prinURI) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (!prinURI->SchemeIs("about")) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIAboutModule> aboutModule;
+  rv = NS_GetAboutModule(prinURI, getter_AddRefs(aboutModule));
+  if (NS_FAILED(rv) || !aboutModule) {
+    return rv;
+  }
+  return aboutModule->GetURIFlags(prinURI, flags);
 }
 
 NS_IMETHODIMP
