@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=503926"
      target="_blank">Mozilla Bug 503926</a>
 
-  <iframe id="ifr" type="content" onload="loaded()" src="bug503926.xul#iframe"/>
+  <iframe id="ifr" type="content" onload="loaded()" src="bug503926.xhtml#iframe"/>
   <iframe id="ifrContent" type="content" onload="loaded()" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"/>
   </body>
 
@@ -47,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503926
     ok(!contentWin.passed, "untrusted QI should not be called");
 
     // Try with a dialog.
-    docShell.rootTreeItem.domWindow.openDialog("bug503926.xul", "chromeDialog", "modal", window);
+    docShell.rootTreeItem.domWindow.openDialog("bug503926.xhtml", "chromeDialog", "modal", window);
     SimpleTest.finish();
   }
 
