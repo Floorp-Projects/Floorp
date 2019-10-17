@@ -3310,10 +3310,10 @@ static inline void CheckIsMarkedThing(T* thingp) {
     return;
   }
 
-  // Allow the current thread access if it is sweeping, but try to check the
-  // zone. Some threads have access to all zones when sweeping.
+  // Allow the current thread access if it is sweeping or in sweep-marking, but
+  // try to check the zone. Some threads have access to all zones when sweeping.
   JSContext* cx = TlsContext.get();
-  if (cx->gcSweeping) {
+  if (cx->gcSweeping || cx->gcMarking) {
     Zone* zone = thing->zoneFromAnyThread();
     MOZ_ASSERT_IF(cx->gcSweepingZone,
                   cx->gcSweepingZone == zone || zone->isAtomsZone());
