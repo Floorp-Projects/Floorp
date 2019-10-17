@@ -87,7 +87,7 @@ if __name__ == "__main__":
 	print "Task:", TASK_ID
 
 	queue = taskcluster.Queue({
-		'baseUrl': 'http://taskcluster/queue/v1'
+		'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']
 	})
 
 	for chunk in chunks(SCREENSHOT_LOCALES, LOCALES_PER_TASK):

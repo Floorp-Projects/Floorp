@@ -12,7 +12,7 @@ import os
 import taskcluster
 
 # Get JSON data from taskcluster secrets service
-secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
+secrets = taskcluster.Secrets({'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']})
 data = secrets.get('project/focus/tokens')
 
 token_file_path = os.path.join(os.path.dirname(__file__), '../../.adjust_token')
