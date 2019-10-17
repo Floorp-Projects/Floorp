@@ -3042,8 +3042,6 @@ main {
 .ds-dismiss-ds-text-promo {
   width: 744px;
   margin: auto; }
-  .ds-dismiss-ds-text-promo .ds-dismiss-button {
-    margin: 16px; }
 
 .ds-text-promo {
   display: flex;
