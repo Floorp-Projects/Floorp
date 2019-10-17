@@ -2183,6 +2183,41 @@ nsresult ServiceWorkerManager::GetClientRegistration(
   return NS_OK;
 }
 
+void ServiceWorkerManager::UpdateControlledClient(
+    const ClientInfo& aOldClientInfo, const ClientInfo& aNewClientInfo,
+    const ServiceWorkerDescriptor& aServiceWorker) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!ServiceWorkerParentInterceptEnabled()) {
+    return;
+  }
+  if (aOldClientInfo.Id() == aNewClientInfo.Id()) {
+    return;
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  if (NS_WARN_IF(NS_FAILED(GetClientRegistration(
+          aOldClientInfo, getter_AddRefs(registration))))) {
+    return;
+  }
+  MOZ_ASSERT(registration);
+  MOZ_ASSERT(registration->GetActive());
+
+  RefPtr<ServiceWorkerManager> self = this;
+
+  RefPtr<GenericPromise> p =
+      StartControllingClient(aNewClientInfo, registration);
+  p->Then(
+      SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+      // Controlling the new ClientInfo, stop controlling the old one.
+      [self, aOldClientInfo](bool aResult) {
+        self->StopControllingClient(aOldClientInfo);
+      },
+      // Controlling the new ClientInfo fail, do nothing.
+      // Probably need to call LoadInfo::ClearController
+      [](nsresult aRv) {});
+}
+
 void ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
                                       const nsACString& aScope) {
   MOZ_ASSERT(NS_IsMainThread());
