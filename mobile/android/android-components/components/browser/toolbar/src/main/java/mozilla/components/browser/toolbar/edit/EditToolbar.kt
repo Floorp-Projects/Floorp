@@ -9,6 +9,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
@@ -27,6 +28,7 @@ import mozilla.components.browser.toolbar.internal.ActionContainer
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.android.view.showKeyboard
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import java.util.concurrent.Executors
 
@@ -187,10 +189,10 @@ class EditToolbar internal constructor(
     }
 
     /**
-     * Focuses the url input field.
+     * Focuses the url input field and shows the virtual keyboard if needed.
      */
     fun focus() {
-        views.url.requestFocus()
+        views.url.showKeyboard(flags = InputMethodManager.SHOW_FORCED)
     }
 
     internal fun stopEditing() {
