@@ -11,6 +11,12 @@ arrowscrollbox[notoverflowing=true]::part(scrollbutton-down) {
   visibility: collapse;
 }
 
+/* Add some space at the top because there are no headers in menupopups of
+ the bookmarks menu. */
+arrowscrollbox.in-bookmarks-menu::part(scrollbox) {
+  padding-top: 4px;
+}
+
 /*
  * Scroll arrows
  */
