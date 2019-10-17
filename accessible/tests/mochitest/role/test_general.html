@@ -78,6 +78,10 @@
       testRole("listbox1", ROLE_COMBOBOX_LIST);
       testRole("listbox2", ROLE_COMBOBOX_LIST);
 
+      // Test role of menu and li items in menu
+      testRole("menu", ROLE_LIST);
+      testRole("menuItem", ROLE_LISTITEM);
+
       SimpleTest.finish();
     }
 
@@ -189,5 +193,9 @@
   </div>
   <div id="combobox2" role="combobox" aria-owns="listbox2"></div>
   <div id="listbox2" role="listbox"></div>
+
+  <menu id="menu">
+    <li id="menuItem">menu item!</li>
+  </menu>
 </body>
 </html>
