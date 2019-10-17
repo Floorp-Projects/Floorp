@@ -2363,9 +2363,6 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       if (tableIndex >= env->tables.length()) {
         return d.fail("table index out of range for element segment");
       }
-      if (env->tables[tableIndex].kind != TableKind::FuncRef) {
-        return d.fail("only tables of 'funcref' may have element segments");
-      }
       seg->tableIndex = tableIndex;
 
       InitExpr offset;
@@ -2383,11 +2380,14 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     ElemSegmentPayload payload = flags->payload();
+    ValType elemType;
 
     // `ActiveWithTableIndex`, `Declared`, and `Passive` element segments encode
     // the type or definition kind of the payload. `Active` element segments are
     // restricted to MVP behavior, which assumes only function indices.
-    if (kind != ElemSegmentKind::Active) {
+    if (kind == ElemSegmentKind::Active) {
+      elemType = ValType::FuncRef;
+    } else {
       uint8_t form;
       if (!d.readFixedU8(&form)) {
         return d.fail("expected type or extern kind");
@@ -2395,10 +2395,23 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
 
       switch (payload) {
         case ElemSegmentPayload::ElemExpression: {
-          if (form != uint8_t(TypeCode::FuncRef)) {
-            return d.fail(
-                "segments with element expressions can only contain function "
-                "references");
+          switch (form) {
+            case uint8_t(TypeCode::FuncRef):
+              // Below we must in principle check every element expression to
+              // ensure that it is a subtype of FuncRef.  However, the only
+              // reference expressions allowed are ref.null and ref.func, and
+              // they both pass that test, and so no additional check is needed
+              // at this time.
+              elemType = ValType::FuncRef;
+              break;
+            case uint8_t(TypeCode::AnyRef):
+              // Ditto, for AnyRef, just even more trivial.
+              elemType = ValType::AnyRef;
+              break;
+            default:
+              return d.fail(
+                  "segments with element expressions can only contain "
+                  "references");
           }
           break;
         }
@@ -2408,9 +2421,39 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
                 "segments with extern indices can only contain function "
                 "references");
           }
+          elemType = ValType::FuncRef;
         }
       }
     }
+
+    // Check constraints on the element type.
+    switch (kind) {
+      case ElemSegmentKind::Declared: {
+        if (!(elemType.isReference() &&
+              env->isRefSubtypeOf(elemType, ValType::FuncRef))) {
+          return d.fail(
+              "declared segment's element type must be subtype of funcref");
+        }
+        break;
+      }
+      case ElemSegmentKind::Active:
+      case ElemSegmentKind::ActiveWithTableIndex: {
+        ValType tblElemType = ToElemValType(env->tables[seg->tableIndex].kind);
+        if (!(elemType == tblElemType ||
+              (elemType.isReference() && tblElemType.isReference() &&
+               env->isRefSubtypeOf(elemType, tblElemType)))) {
+          return d.fail(
+              "segment's element type must be subtype of table's element type");
+        }
+        break;
+      }
+      case ElemSegmentKind::Passive: {
+        // By construction, above.
+        MOZ_ASSERT(elemType.isReference());
+        break;
+      }
+    }
+    seg->elementType = elemType;
 
     uint32_t numElems;
     if (!d.readVarU32(&numElems)) {
