@@ -156,8 +156,8 @@ void MediaEngineRemoteVideoSource::SetName(nsString aName) {
   }
 
   mFacingMode = facingMode.map([](const auto& aFM) {
-    return NS_ConvertUTF8toUTF16(
-        dom::VideoFacingModeEnumValues::strings[uint32_t(aFM)].value);
+    return NS_ConvertASCIItoUTF16(
+        dom::VideoFacingModeEnumValues::GetString(aFM));
   });
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "MediaEngineRemoteVideoSource::SetName (facingMode updater)",

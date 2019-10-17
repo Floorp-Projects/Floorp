@@ -635,12 +635,9 @@ void MediaKeys::GetSessionsInfo(nsString& sessionsInfo) {
       nsString keyID = keyStatusMap->GetKeyIDAsHexString(i);
       sessionsInfo.AppendLiteral("(kid=");
       sessionsInfo.Append(keyID);
-      using IntegerType = typename std::underlying_type<MediaKeyStatus>::type;
-      auto idx = static_cast<IntegerType>(keyStatusMap->GetValueAtIndex(i));
-      const char* keyStatus = MediaKeyStatusValues::strings[idx].value;
       sessionsInfo.AppendLiteral(" status=");
-      sessionsInfo.Append(
-          NS_ConvertUTF8toUTF16((nsDependentCString(keyStatus))));
+      sessionsInfo.AppendASCII(
+          MediaKeyStatusValues::GetString(keyStatusMap->GetValueAtIndex(i)));
       sessionsInfo.AppendLiteral(")");
     }
     sessionsInfo.AppendLiteral(")");
