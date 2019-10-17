@@ -63,7 +63,9 @@ addAccessibleTask(
   `
   <button id="button">button</button>
   <iframe id="editabledoc"
-          src="${snippetToURL("", { id: "body2", contentEditable: "true" })}">
+          src="${snippetToURL("", {
+            contentDocBodyAttrs: { id: "body2", contentEditable: "true" },
+          })}">
   </iframe>
   <div id="alertdialog" style="display: none" tabindex="-1" role="alertdialog" aria-labelledby="title2" aria-describedby="desc2">
     <div id="title2">Blah blah</div>
