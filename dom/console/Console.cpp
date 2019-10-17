@@ -713,8 +713,6 @@ class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable,
 
   // This must be released on the worker thread.
   RefPtr<Console> mConsole;
-
-  ConsoleStructuredCloneData mClonedData;
 };
 
 // This runnable appends a CallData object into the Console queue running on
