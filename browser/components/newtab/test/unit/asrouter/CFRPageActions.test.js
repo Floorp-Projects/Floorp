@@ -12,6 +12,7 @@ describe("CFRPageActions", () => {
   let globals;
   let containerElem;
   let elements;
+  let announceStub;
 
   const elementIDs = [
     "urlbar",
@@ -41,6 +42,8 @@ describe("CFRPageActions", () => {
     sandbox = sinon.createSandbox();
     clock = sandbox.useFakeTimers();
 
+    announceStub = sandbox.stub();
+    const A11yUtils = { announce: announceStub };
     fakeRecommendation = { ...FAKE_RECOMMENDATION };
     fakeHost = "mozilla.org";
     fakeBrowser = {
@@ -64,6 +67,7 @@ describe("CFRPageActions", () => {
       },
       PrivateBrowsingUtils: { isWindowPrivate: sandbox.stub().returns(false) },
       gBrowser: { selectedBrowser: fakeBrowser },
+      A11yUtils,
     });
     document.createXULElement = document.createElement;
 
@@ -94,22 +98,19 @@ describe("CFRPageActions", () => {
 
   describe("PageAction", () => {
     let pageAction;
-    let getStringsStub;
 
     beforeEach(() => {
       pageAction = new PageAction(window, dispatchStub);
-      getStringsStub = sandbox.stub(pageAction, "getStrings").resolves("");
     });
 
     describe("#showAddressBarNotifier", () => {
       it("should un-hideAddressBarNotifier the element and set the right label value", async () => {
-        const FAKE_NOTIFICATION_TEXT = "FAKE_NOTIFICATION_TEXT";
-        getStringsStub
-          .withArgs(fakeRecommendation.content.notification_text)
-          .resolves(FAKE_NOTIFICATION_TEXT);
         await pageAction.showAddressBarNotifier(fakeRecommendation);
         assert.isFalse(pageAction.container.hidden);
-        assert.equal(pageAction.label.value, FAKE_NOTIFICATION_TEXT);
+        assert.equal(
+          pageAction.label.value,
+          fakeRecommendation.content.notification_text
+        );
       });
       it("should wait for the document layout to flush", async () => {
         sandbox.spy(pageAction.label, "getClientRects");
@@ -356,7 +357,6 @@ describe("CFRPageActions", () => {
       ];
 
       beforeEach(() => {
-        getStringsStub.restore();
         formatMessagesStub = sandbox
           .stub()
           .withArgs({ id: "hello_world" })
@@ -433,6 +433,7 @@ describe("CFRPageActions", () => {
     describe("#_showPopupOnClick", () => {
       let translateElementsStub;
       let setAttributesStub;
+      let getStringsStub;
       beforeEach(async () => {
         CFRPageActions.PageActionMap.set(fakeBrowser.ownerGlobal, pageAction);
         await CFRPageActions.addRecommendation(
@@ -441,6 +442,7 @@ describe("CFRPageActions", () => {
           fakeRecommendation,
           dispatchStub
         );
+        getStringsStub = sandbox.stub(pageAction, "getStrings").resolves("");
         getStringsStub
           .callsFake(async a => a) // eslint-disable-line max-nested-callbacks
           .withArgs({ string_id: "primary_button_id" })
