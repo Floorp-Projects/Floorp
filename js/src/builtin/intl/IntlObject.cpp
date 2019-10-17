@@ -620,6 +620,8 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
       kind = SupportedLocaleKind::Collator;
     } else if (StringEqualsLiteral(typeStr, "DateTimeFormat")) {
       kind = SupportedLocaleKind::DateTimeFormat;
+    } else if (StringEqualsLiteral(typeStr, "ListFormat")) {
+      kind = SupportedLocaleKind::ListFormat;
     } else if (StringEqualsLiteral(typeStr, "NumberFormat")) {
       kind = SupportedLocaleKind::NumberFormat;
     } else if (StringEqualsLiteral(typeStr, "PluralRules")) {
@@ -754,12 +756,12 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
   // That implies we must ignore any candidate which isn't supported by all Intl
   // service constructors.
   //
-  // Note: We don't test the supported locales of either Intl.PluralRules or
-  // Intl.RelativeTimeFormat, because ICU doesn't provide the necessary API to
-  // return actual set of supported locales for these constructors. Instead it
-  // returns the complete set of available locales for ULocale, which is a
-  // superset of the locales supported by Collator, NumberFormat, and
-  // DateTimeFormat.
+  // Note: We don't test the supported locales of either Intl.ListFormat,
+  // Intl.PluralRules, Intl.RelativeTimeFormat, because ICU doesn't provide the
+  // necessary API to return actual set of supported locales for these
+  // constructors. Instead it returns the complete set of available locales for
+  // ULocale, which is a superset of the locales supported by Collator,
+  // NumberFormat, and DateTimeFormat.
   bool isSupported = true;
   for (auto kind :
        {SupportedLocaleKind::Collator, SupportedLocaleKind::DateTimeFormat,

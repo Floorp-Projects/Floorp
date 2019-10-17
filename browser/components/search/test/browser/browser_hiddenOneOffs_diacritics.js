@@ -51,19 +51,20 @@ add_task(async function test_hidden() {
 add_task(async function test_shown() {
   Preferences.set("browser.search.hiddenOneOffs", "");
 
-  let promise = promiseEvent(searchPopup, "popupshown");
+  let oneOffsContainer = searchPopup.searchOneOffsContainer;
+  let shownPromise = promiseEvent(searchPopup, "popupshown");
+  let builtPromise = promiseEvent(oneOffsContainer, "rebuild");
   info("Opening search panel");
-  SimpleTest.executeSoon(() => {
-    EventUtils.synthesizeMouseAtCenter(searchIcon, {});
-  });
-  await promise;
+
+  EventUtils.synthesizeMouseAtCenter(searchIcon, {});
+  await Promise.all([shownPromise, builtPromise]);
 
   ok(
     getOneOffs().some(x => x.getAttribute("tooltiptext") == diacritic_engine),
     "Search engines with diacritics are shown when removed from hiddenOneOffs preference."
   );
 
-  promise = promiseEvent(searchPopup, "popuphidden");
+  let promise = promiseEvent(searchPopup, "popuphidden");
   searchPopup.hidePopup();
   await promise;
 });

@@ -130,6 +130,16 @@ a {
   border-bottom-width: 0;
 }
 
+.can-rewind .webconsole-output .message:last-of-type {
+  border-bottom: 1px solid var(--purple-50);
+}
+
+.can-rewind .webconsole-output .paused ~ .message:last-of-type,
+.can-rewind .webconsole-output .paused:last-of-type {
+  border-bottom-width: 0;
+}
+
+
 /*
  * By default, prevent any element in message to overflow.
  * We exclude network messages as it may cause issues in the network detail panel.
@@ -164,7 +174,8 @@ a {
 }
 
 .message.paused.paused-before {
-  border-top-color: var(--purple-50);
+  border-top: 1px solid var(--purple-50);
+  margin-top: 0px;
 }
 
 .message.paused:not(.paused-before) {
@@ -176,6 +187,11 @@ a {
 .message.paused ~ .message:not(.command):not(.result) .message-body-wrapper,
 .message.paused.paused-before .message-body-wrapper {
   opacity: 0.5;
+}
+
+.message.paused.paused-before .message-body-wrapper,
+.message.paused.paused-before > .icon {
+  margin-top: calc(var(--console-output-vertical-padding) - 1px);
 }
 
 .message.startGroup,

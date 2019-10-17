@@ -216,11 +216,9 @@ class JsepTrack {
 
   struct JsConstraints {
     std::string rid;
-    bool paused = false;
     EncodingConstraints constraints;
     bool operator==(const JsConstraints& other) const {
-      return rid == other.rid && paused == other.paused &&
-             constraints == other.constraints;
+      return rid == other.rid && constraints == other.constraints;
     }
   };
 
@@ -245,9 +243,8 @@ class JsepTrack {
       std::vector<uint16_t>* pts);
   void AddToMsection(const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
                      SdpMediaSection* msection);
-  void GetRids(
-      const SdpMediaSection& msection, sdp::Direction direction,
-      std::vector<std::pair<SdpRidAttributeList::Rid, bool>>* rids) const;
+  void GetRids(const SdpMediaSection& msection, sdp::Direction direction,
+               std::vector<SdpRidAttributeList::Rid>* rids) const;
   void CreateEncodings(
       const SdpMediaSection& remote,
       const std::vector<UniquePtr<JsepCodecDescription>>& negotiatedCodecs,
@@ -259,9 +256,8 @@ class JsepTrack {
   JsConstraints* FindConstraints(
       const std::string& rid,
       std::vector<JsConstraints>& constraintsList) const;
-  void NegotiateRids(
-      const std::vector<std::pair<SdpRidAttributeList::Rid, bool>>& rids,
-      std::vector<JsConstraints>* constraints) const;
+  void NegotiateRids(const std::vector<SdpRidAttributeList::Rid>& rids,
+                     std::vector<JsConstraints>* constraints) const;
   void UpdateSsrcs(SsrcGenerator& ssrcGenerator, size_t encodings);
 
   mozilla::SdpMediaSection::MediaType mType;

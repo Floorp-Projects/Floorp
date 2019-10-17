@@ -315,9 +315,6 @@ function MarkupView(inspector, frame, controllerWindow) {
   this._elt.addEventListener("mouseout", this._onMouseOut);
   this._frame.addEventListener("focus", this._onFocus);
   this.inspector.selection.on("new-node-front", this._onNewSelection);
-  this.walker.on("display-change", this._onWalkerNodeStatesChanged);
-  this.walker.on("scrollable-change", this._onWalkerNodeStatesChanged);
-  this.walker.on("mutations", this._mutationObserver);
   this.win.addEventListener("copy", this._onCopy);
   this.win.addEventListener("mouseup", this._onMouseUp);
   this.inspector.toolbox.nodePicker.on(
@@ -399,6 +396,22 @@ MarkupView.prototype = {
     }
 
     return this._undo;
+  },
+
+  init: async function() {
+    try {
+      this.inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+    } catch (e) {
+      // This call might fail if called asynchrously after the toolbox is finished
+      // closing.
+      return;
+    }
+
+    for (const { walker } of this.inspectorFronts) {
+      walker.on("display-change", this._onWalkerNodeStatesChanged);
+      walker.on("scrollable-change", this._onWalkerNodeStatesChanged);
+      walker.on("mutations", this._mutationObserver);
+    }
   },
 
   /**
@@ -2297,11 +2310,14 @@ MarkupView.prototype = {
       "picker-node-hovered",
       this._onToolboxPickerHover
     );
-    this.walker.off("display-change", this._onWalkerNodeStatesChanged);
-    this.walker.off("scrollable-change", this._onWalkerNodeStatesChanged);
-    this.walker.off("mutations", this._mutationObserver);
     this.win.removeEventListener("copy", this._onCopy);
     this.win.removeEventListener("mouseup", this._onMouseUp);
+
+    for (const { walker } of this.inspectorFronts) {
+      walker.off("display-change", this._onWalkerNodeStatesChanged);
+      walker.off("scrollable-change", this._onWalkerNodeStatesChanged);
+      walker.off("mutations", this._mutationObserver);
+    }
 
     this._prefObserver.off(
       ATTR_COLLAPSE_ENABLED_PREF,
@@ -2324,6 +2340,7 @@ MarkupView.prototype = {
     this.controllerWindow = null;
     this.doc = null;
     this.highlighters = null;
+    this.inspectorFronts = null;
     this.win = null;
 
     this._lastDropTarget = null;

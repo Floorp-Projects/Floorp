@@ -372,21 +372,26 @@ function denyRequestNoPermission(aBrowser, aRequest) {
 }
 
 //
-// Check if we have permission to access the camera and or microphone at the
-// OS level. Triggers a request to access the device if access is needed and
-// the permission state has not yet been determined.
+// Check if we have permission to access the camera or screen-sharing and/or
+// microphone at the OS level. Triggers a request to access the device if access
+// is needed and the permission state has not yet been determined.
 //
-async function checkOSPermission(camNeeded, micNeeded) {
+async function checkOSPermission(camNeeded, micNeeded, scrNeeded) {
   // Don't trigger OS permission requests for fake devices. Fake devices don't
   // require OS permission and the dialogs are problematic in automated testing
   // (where fake devices are used) because they require user interaction.
-  if (Services.prefs.getBoolPref("media.navigator.streams.fake", false)) {
+  if (
+    !scrNeeded &&
+    Services.prefs.getBoolPref("media.navigator.streams.fake", false)
+  ) {
     return true;
   }
 
   let camStatus = {},
     micStatus = {};
-  OSPermissions.getMediaCapturePermissionState(camStatus, micStatus);
+  if (camNeeded || micNeeded) {
+    OSPermissions.getMediaCapturePermissionState(camStatus, micStatus);
+  }
   if (camNeeded) {
     let camPermission = camStatus.value;
     let camAccessible = await checkAndGetOSPermission(
@@ -404,6 +409,14 @@ async function checkOSPermission(camNeeded, micNeeded) {
       OSPermissions.requestAudioCapturePermission
     );
     if (!micAccessible) {
+      return false;
+    }
+  }
+  let scrStatus = {};
+  if (scrNeeded) {
+    OSPermissions.getScreenCapturePermissionState(scrStatus);
+    if (scrStatus.value == OSPermissions.PERMISSION_STATE_DENIED) {
+      OSPermissions.maybeRequestScreenCapturePermission();
       return false;
     }
   }
@@ -561,9 +574,11 @@ function checkRequestAllowed(aRequest, aPrincipal, aBrowser) {
     let browser = aBrowser;
     browser.getDevicePermissionOrigins("webrtc").add(aPrincipal.origin);
 
-    let camNeeded = !!videoDevices.length;
+    // If sharingScreen, we're requesting screen-sharing, otherwise camera
+    let camNeeded = !!videoDevices.length && !sharingScreen;
+    let scrNeeded = !!videoDevices.length && sharingScreen;
     let micNeeded = !!audioDevices.length;
-    checkOSPermission(camNeeded, micNeeded).then(havePermission => {
+    checkOSPermission(camNeeded, micNeeded, scrNeeded).then(havePermission => {
       if (havePermission) {
         let mm = browser.messageManager;
         mm.sendAsyncMessage("webrtc:Allow", {
@@ -938,6 +953,23 @@ function prompt(aBrowser, aRequest) {
             warning.textContent = pre;
             warning.appendChild(learnMore);
             warning.appendChild(chromeWin.document.createTextNode(post));
+
+            // On Catalina, we don't want to blow our chance to show the
+            // OS-level helper prompt to enable screen recording if the user
+            // intends to reject anyway. OTOH showing it when they click Allow
+            // is too late. A happy middle is to show it when the user makes a
+            // choice in the picker. This already happens implicitly if the
+            // user chooses "Entire desktop", as a side-effect of our preview,
+            // we just need to also do it if they choose "Firefox". These are
+            // the lone two options when permission is absent on Catalina.
+            // Ironically, these are the two sources marked "scary" from a
+            // web-sharing perspective, which is why this code resides here.
+            // A restart doesn't appear to be necessary in spite of OS wording.
+            let scrStatus = {};
+            OSPermissions.getScreenCapturePermissionState(scrStatus);
+            if (scrStatus.value == OSPermissions.PERMISSION_STATE_DENIED) {
+              OSPermissions.maybeRequestScreenCapturePermission();
+            }
           }
 
           let perms = Services.perms;
@@ -1116,9 +1148,14 @@ function prompt(aBrowser, aRequest) {
           aBrowser.getDevicePermissionOrigins("webrtc").add(principal.origin);
         }
 
-        let camNeeded = !!videoDevices.length;
+        let camNeeded = !!videoDevices.length && !sharingScreen;
+        let scrNeeded = !!videoDevices.length && sharingScreen;
         let micNeeded = !!audioDevices.length;
-        let havePermission = await checkOSPermission(camNeeded, micNeeded);
+        let havePermission = await checkOSPermission(
+          camNeeded,
+          micNeeded,
+          scrNeeded
+        );
         if (!havePermission) {
           denyRequestNoPermission(notification.browser, aRequest);
           return;

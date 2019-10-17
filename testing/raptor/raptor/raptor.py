@@ -875,6 +875,9 @@ class RaptorDesktop(Raptor):
                 # now additional browser cycles we want to create a new one each time
                 self.build_browser_profile()
 
+                # Update runner profile
+                self.runner.profile = self.profile
+
                 self.run_test_setup(test)
 
             # now start the browser/app under test
