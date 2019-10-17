@@ -194,17 +194,21 @@ class ReaderView {
     // Construct a localized and "humanized" reading time in minutes.
     // If we have both a fast and slow reading time we'll show both e.g.
     // "2 - 4 minutes", otherwise we'll just show "4 minutes".
-    var parts = new Intl.RelativeTimeFormat(lang).formatToParts(readingTimeMinsSlow, 'minute');
-
-    if (parts.length == 3) {
-      // No need to use part[0] which represents the literal "in".
-      var readingTime = parts[1].value; // reading time in minutes
-      var minutesLiteral = parts[2].value; // localized singular or plural literal of 'minute'
-      var readingTimeString = `${readingTime} ${minutesLiteral}`;
-      if (readingTimeMinsSlow != readingTimeMinsFast) {
-        readingTimeString = `${readingTimeMinsFast} - ${readingTimeString}`;
+    try {
+      var parts = new Intl.RelativeTimeFormat(lang).formatToParts(readingTimeMinsSlow, 'minute');
+      if (parts.length == 3) {
+        // No need to use part[0] which represents the literal "in".
+        var readingTime = parts[1].value; // reading time in minutes
+        var minutesLiteral = parts[2].value; // localized singular or plural literal of 'minute'
+        var readingTimeString = `${readingTime} ${minutesLiteral}`;
+        if (readingTimeMinsSlow != readingTimeMinsFast) {
+          readingTimeString = `${readingTimeMinsFast} - ${readingTimeString}`;
+        }
+        return readingTimeString;
       }
-      return readingTimeString;
+    }
+    catch(error) {
+      console.error(`Failed to format reading time: ${error}`);
     }
 
     return "";
