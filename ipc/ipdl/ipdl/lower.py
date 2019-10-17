@@ -4742,14 +4742,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
              + [Whitespace.NL,
                 StmtDecl(Decl(Type.BOOL, sendok.name)),
                 StmtBlock([
-                    StmtExpr(ExprCall(ExprVar('AUTO_PROFILER_TRACING'),
-                                      [ExprLiteral.String("IPC"),
-                                       ExprLiteral.String(self.protocol.name + "::" +
-                                                          md.prettyMsgName()),
-                                       ExprVar('OTHER')])),
-                    StmtExpr(ExprAssn(sendok, ExprCall(send,
-                                                       args=[msgexpr,
-                                                             ExprAddrOf(replyexpr)]))),
+                    StmtExpr(ExprAssn(sendok, ExprCall(
+                        send, args=[msgexpr, ExprAddrOf(replyexpr)]
+                    ))),
                 ])
                 ])
         )
