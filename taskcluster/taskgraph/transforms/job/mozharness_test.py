@@ -276,6 +276,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         raise Exception('reboot: {} not supported on generic-worker'.format(test['reboot']))
 
     worker['max-run-time'] = test['max-run-time']
+    worker['retry-exit-status'] = test['retry-exit-status']
     worker['artifacts'] = artifacts
 
     env = worker.setdefault('env', {})
