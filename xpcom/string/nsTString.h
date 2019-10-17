@@ -71,6 +71,9 @@ class nsTString : public nsTSubstring<T> {
     this->Assign(aData, aLength);
   }
 
+  explicit nsTString(mozilla::Span<const char_type> aData)
+      : nsTString(aData.Elements(), aData.Length()) {}
+
 #if defined(MOZ_USE_CHAR16_WRAPPER)
   template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
   explicit nsTString(char16ptr_t aStr, size_type aLength = size_type(-1))
