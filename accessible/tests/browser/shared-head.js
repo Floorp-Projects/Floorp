@@ -98,10 +98,10 @@ function invokeSetAttribute(browser, id, attr, value) {
   } else {
     Logger.log(`Removing ${attr} attribute from node with id: ${id}`);
   }
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     browser,
     [id, attr, value],
-    ([contentId, contentAttr, contentValue]) => {
+    (contentId, contentAttr, contentValue) => {
       let elm = content.document.getElementById(contentId);
       if (contentValue) {
         elm.setAttribute(contentAttr, contentValue);
@@ -128,10 +128,10 @@ function invokeSetStyle(browser, id, style, value) {
   } else {
     Logger.log(`Removing ${style} style from node with id: ${id}`);
   }
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     browser,
     [id, style, value],
-    ([contentId, contentStyle, contentValue]) => {
+    (contentId, contentStyle, contentValue) => {
       let elm = content.document.getElementById(contentId);
       if (contentValue) {
         elm.style[contentStyle] = contentValue;
@@ -151,7 +151,7 @@ function invokeSetStyle(browser, id, style, value) {
  */
 function invokeFocus(browser, id) {
   Logger.log(`Setting focus on a node with id: ${id}`);
-  return ContentTask.spawn(browser, id, contentId => {
+  return SpecialPowers.spawn(browser, [id], contentId => {
     let elm = content.document.getElementById(contentId);
     if (elm.editor) {
       elm.selectionStart = elm.selectionEnd = elm.value.length;
@@ -388,7 +388,7 @@ function forceGC() {
  * do this advancing the layout refresh to flush the relocations/insertions
  * queue.
  */
-async function contentSpawnMutation(browser, waitFor, func, args = null) {
+async function contentSpawnMutation(browser, waitFor, func, args = []) {
   let onReorders = waitForEvents({ expected: waitFor.expected || [] });
   let unexpectedListener = new UnexpectedEvents(waitFor.unexpected || []);
 
@@ -401,20 +401,20 @@ async function contentSpawnMutation(browser, waitFor, func, args = null) {
 
   // This stops the refreh driver from doing its regular ticks, and leaves
   // us in control.
-  await ContentTask.spawn(browser, null, tick);
+  await SpecialPowers.spawn(browser, [], tick);
 
   // Perform the tree mutation.
-  await ContentTask.spawn(browser, args, func);
+  await SpecialPowers.spawn(browser, args, func);
 
   // Do one tick to flush our queue (insertions, relocations, etc.)
-  await ContentTask.spawn(browser, null, tick);
+  await SpecialPowers.spawn(browser, [], tick);
 
   let events = await onReorders;
 
   unexpectedListener.stop();
 
   // Go back to normal refresh driver ticks.
-  await ContentTask.spawn(browser, null, function() {
+  await SpecialPowers.spawn(browser, [], function() {
     content.windowUtils.restoreNormalRefresh();
   });
 

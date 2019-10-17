@@ -11,7 +11,7 @@ addAccessibleTask(
   async function(browser, accDoc) {
     await loadContentScripts(browser, "Common.jsm");
     let onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
-    await ContentTask.spawn(browser, null, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       const { CommonUtils } = content;
       let vc = CommonUtils.getAccessible(
         content.document,
@@ -35,7 +35,7 @@ addAccessibleTask(
     ok(!vccEvent.isFromUserInput, "not user initiated");
 
     onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
-    await ContentTask.spawn(browser, null, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       let vc = content.CommonUtils.getAccessible(
         content.document,
         Ci.nsIAccessibleDocument
@@ -51,7 +51,7 @@ addAccessibleTask(
     ok(vccEvent.isFromUserInput, "user initiated");
 
     onVCChanged = waitForEvent(EVENT_VIRTUALCURSOR_CHANGED, accDoc);
-    await ContentTask.spawn(browser, null, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       const { CommonUtils } = content;
       let vc = CommonUtils.getAccessible(
         content.document,
