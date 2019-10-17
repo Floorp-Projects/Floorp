@@ -91,5 +91,6 @@ addAccessibleTask(
     for (let spec of attrRelationsSpec) {
       await testRelated(browser, accDoc, ...spec);
     }
-  }
+  },
+  { iframe: true }
 );
