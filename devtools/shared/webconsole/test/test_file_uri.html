@@ -59,13 +59,13 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   gState = aState;
-  gState.client.on("fileActivity", onFileActivity);
+  gState.webConsoleFront.on("fileActivity", onFileActivity);
   doFileActivity();
 }
 
 function onFileActivity(aPacket)
 {
-  gState.client.off("fileActivity", onFileActivity);
+  gState.webConsoleFront.off("fileActivity", onFileActivity);
 
   info("aPacket.uri: " + aPacket.uri);
   ok(/\bbug798764\b.*\.html$/.test(aPacket.uri), "file URI match");

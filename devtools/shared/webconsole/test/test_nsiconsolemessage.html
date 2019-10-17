@@ -26,7 +26,7 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   onLogMessage = onLogMessage.bind(null, aState);
-  aState.client.on("logMessage", onLogMessage);
+  aState.webConsoleFront.on("logMessage", onLogMessage);
 
   expectedMessages = [{
     message: "hello world! bug859756",
@@ -60,7 +60,7 @@ function onLogMessage(aState, aPacket)
     return;
   }
 
-  aState.client.off("logMessage", onLogMessage);
+  aState.webConsoleFront.off("logMessage", onLogMessage);
 
   checkObject(receivedMessages, expectedMessages);
 

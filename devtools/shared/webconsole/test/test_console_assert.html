@@ -17,13 +17,13 @@ window.onload = async function () {
     state = await new Promise(resolve =>
       attachConsole(["ConsoleAPI"], resolve)
     );
-    const {client} = state;
+    const {webConsoleFront} = state;
 
-    await testFalseAssert(client);
-    await testFalsyAssert(client);
-    await testUndefinedAssert(client);
-    await testNullAssert(client);
-    await testTrueAssert(client);
+    await testFalseAssert(webConsoleFront);
+    await testFalsyAssert(webConsoleFront);
+    await testUndefinedAssert(webConsoleFront);
+    await testNullAssert(webConsoleFront);
+    await testTrueAssert(webConsoleFront);
 
   } catch (e) {
     ok(false, `Error thrown: ${e.message}`);

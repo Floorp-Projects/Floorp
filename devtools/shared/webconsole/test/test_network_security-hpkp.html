@@ -95,7 +95,7 @@ function onNetworkEventUpdate(state, packet) {
   }
 
   if (packet.updateType === "securityInfo") {
-    state.client.getSecurityInfo(packet.from, onSecurityInfo);
+    state.webConsoleFront.getSecurityInfo(packet.from, onSecurityInfo);
   }
 }
 

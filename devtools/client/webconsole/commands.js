@@ -16,7 +16,7 @@ class ConsoleCommands {
   }
 
   evaluateJSAsync(expression, options) {
-    return this.proxy.webConsoleClient.evaluateJSAsync(expression, options);
+    return this.proxy.webConsoleFront.evaluateJSAsync(expression, options);
   }
 
   createObjectClient(object) {
