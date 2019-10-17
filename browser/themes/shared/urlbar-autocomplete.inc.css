@@ -131,10 +131,8 @@
   border-radius: 2px;
   fill: currentColor;
   fill-opacity: .6;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding-block: 6px;
   padding-inline-start: calc(@urlbarViewItemPaddingStart@);
-  padding-inline-end: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewMarginInline@);
 }
 
 .urlbarView:not(.megabar) .urlbarView-row {
@@ -143,8 +141,7 @@
 }
 
 :root[uidensity=touch] .urlbarView-row {
-  padding-top: 11px;
-  padding-bottom: 11px;
+  padding-block: 11px;
 }
 
 .urlbarView-row-inner {
