@@ -15,7 +15,7 @@ async function removeTextData(browser, accessible, id, role) {
   testAccessibleTree(accessible, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, id, contentId => {
+  await SpecialPowers.spawn(browser, [id], contentId => {
     content.document.getElementById(contentId).firstChild.textContent = "";
   });
   await onReorder;
