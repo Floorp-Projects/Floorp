@@ -1129,7 +1129,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     if (isPrologueBailout) {
       JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
       MOZ_ASSERT(pc == script->code());
-      blFrame->setInterpreterFieldsForPrologueBailout(script);
+      blFrame->setInterpreterFieldsForPrologue(script);
       resumeAddr = baselineInterp.bailoutPrologueEntryAddr();
     } else if (excInfo && excInfo->propagatingIonExceptionForDebugMode()) {
       // When propagating an exception for debug mode, set the
