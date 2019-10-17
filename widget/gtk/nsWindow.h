@@ -398,6 +398,9 @@ class nsWindow final : public nsBaseWidget {
   static bool HideTitlebarByDefault();
   static bool GetTopLevelWindowActiveState(nsIFrame* aFrame);
   static bool TitlebarCanUseShapeMask();
+#ifdef MOZ_WAYLAND
+  virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) override;
+#endif
 
  protected:
   virtual ~nsWindow();
@@ -630,6 +633,7 @@ class nsWindow final : public nsBaseWidget {
   void HideWaylandTooltips();
   void HideWaylandPopupAndAllChildren();
   void CleanupWaylandPopups();
+  GtkWindow* GetCurrentTopmostWindow();
 
   /**
    * |mIMContext| takes all IME related stuff.
