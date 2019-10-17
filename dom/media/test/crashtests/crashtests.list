@@ -132,3 +132,4 @@ load 1547899.html
 load 1569645.html
 load 1575271.html
 load 1577184.html
+pref(media.autoplay.default,0) load 1587248.html
