@@ -68,7 +68,7 @@ async function testGetDependentPromises(client, front, makePromises) {
   // Get the dependent promises for promise p and assert that the list of
   // dependent promises is correct
   await new Promise(resolve => {
-    objectClient.getDependentPromises(response => {
+    objectClient.getDependentPromises().then(response => {
       const dependentNames = response.promises.map(
         p => p.preview.ownProperties.name.value
       );

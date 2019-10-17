@@ -15,7 +15,7 @@ add_task(
       threadFront.once("paused", async function(packet) {
         const [grip] = packet.frame.arguments;
         const objClient = threadFront.pauseGrip(grip);
-        const { iterator } = await objClient.enumSymbols();
+        const iterator = await objClient.enumSymbols();
         const { ownSymbols } = await iterator.slice(0, iterator.count);
 
         strictEqual(ownSymbols.length, 1, "There is 1 symbol property.");

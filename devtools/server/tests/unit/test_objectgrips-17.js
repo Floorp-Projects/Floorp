@@ -201,7 +201,7 @@ function check_proxy_slots(debuggee, testOptions, grip, proxySlots) {
   if (grip.class !== "Proxy") {
     strictEqual(
       proxySlots,
-      undefined,
+      null,
       "Slots can only be retrived for Proxy grips."
     );
   } else if (global === debuggee) {

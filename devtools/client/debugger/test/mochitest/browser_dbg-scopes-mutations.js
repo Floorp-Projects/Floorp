@@ -26,6 +26,7 @@ add_task(async function() {
   invokeInTab("mutate");
   await onPaused;
   await waitForSelectedSource(dbg, "script-mutate");
+  await waitForDispatch(dbg, "ADD_INLINE_PREVIEW");
 
   is(
     getScopeNodeLabel(dbg, 2),
@@ -74,6 +75,7 @@ add_task(async function() {
 
   await resume(dbg);
   await waitForPaused(dbg);
+  await waitForDispatch(dbg, "ADD_INLINE_PREVIEW");
 
   is(
     getScopeNodeLabel(dbg, 2),

@@ -42,7 +42,7 @@ function onEvaluate(aState, aResponse)
 
   onInspect = onInspect.bind(null, aState);
   let client = new ObjectClient(aState.dbgClient, aResponse.result);
-  client.getPrototypeAndProperties(onInspect);
+  client.getPrototypeAndProperties().then(onInspect);
 }
 
 function onInspect(aState, aResponse)

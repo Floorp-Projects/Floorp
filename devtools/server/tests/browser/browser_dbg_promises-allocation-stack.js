@@ -53,9 +53,9 @@ async function testGetAllocationStack(tab, target) {
   ok(objectClient, "Got Object Client");
 
   const response = await objectClient.getPromiseAllocationStack();
-  ok(response.allocationStack.length, "Got promise allocation stack.");
+  ok(response.length, "Got promise allocation stack.");
 
-  for (const stack of response.allocationStack) {
+  for (const stack of response) {
     is(stack.source.url, TAB_URL, "Got correct source URL.");
     is(
       stack.functionDisplayName,
