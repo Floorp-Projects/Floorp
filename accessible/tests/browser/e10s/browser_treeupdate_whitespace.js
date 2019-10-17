@@ -27,7 +27,7 @@ addAccessibleTask("doc_treeupdate_whitespace.html", async function(
 
   let onReorder = waitForEvent(EVENT_REORDER, "container1");
   // Remove img1 from container1
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let doc = content.document;
     doc.getElementById("container1").removeChild(doc.getElementById("img1"));
   });
@@ -45,7 +45,7 @@ addAccessibleTask("doc_treeupdate_whitespace.html", async function(
 
   onReorder = waitForEvent(EVENT_REORDER, "container2-parent");
   // Append an img with valid src to container2
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let doc = content.document;
     let img = doc.createElement("img");
     img.setAttribute(

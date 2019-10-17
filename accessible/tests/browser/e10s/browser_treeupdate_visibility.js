@@ -49,7 +49,7 @@ async function test3(browser, accessible) {
   testAccessibleTree(accessible, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, "t3_container");
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let doc = content.document;
     doc.getElementById("t3_container").style.color = "red";
     doc.getElementById("t3_parent").style.visibility = "hidden";
@@ -84,7 +84,7 @@ async function test4(browser, accessible) {
   testAccessibleTree(accessible, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, "t4_parent");
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let doc = content.document;
     doc.getElementById("t4_container").style.color = "red";
     doc.getElementById("t4_child").style.visibility = "visible";

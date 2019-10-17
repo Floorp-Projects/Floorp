@@ -21,23 +21,33 @@ add_task(async function() {
       </html>`,
     },
     async function(browser) {
-      await loadContentScripts(browser, "Common.jsm");
       info("Creating a service in content");
+      await loadContentScripts(browser, "Common.jsm");
       // Create a11y service in the content process.
-      let a11yInit = initPromise(browser);
-      await ContentTask.spawn(browser, {}, () => {
+      const [a11yInitObserver, a11yInit] = initAccService(browser);
+      await a11yInitObserver;
+      await SpecialPowers.spawn(browser, [], () => {
         content.CommonUtils.accService;
       });
       await a11yInit;
+      ok(
+        true,
+        "Accessibility service is started in content process correctly."
+      );
 
       info("Removing a service in content");
       // Remove a11y service reference from the content process.
-      let a11yShutdown = shutdownPromise(browser);
+      const [a11yShutdownObserver, a11yShutdown] = shutdownAccService(browser);
+      await a11yShutdownObserver;
       // Force garbage collection that should trigger shutdown.
-      await ContentTask.spawn(browser, {}, () => {
+      await SpecialPowers.spawn(browser, [], () => {
         content.CommonUtils.clearAccService();
       });
       await a11yShutdown;
+      ok(
+        true,
+        "Accessibility service is shutdown in content process correctly."
+      );
 
       // Unsetting e10s related preferences.
       await unsetE10sPrefs();

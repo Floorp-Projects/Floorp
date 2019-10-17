@@ -8,7 +8,7 @@
 loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 
 async function waitForContentPaint(browser) {
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     return new Promise(function(r) {
       content.requestAnimationFrame(() => content.setTimeout(r));
     });
@@ -37,7 +37,7 @@ async function runTests(browser, accDoc) {
   await waitForContentPaint(browser);
   testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);
 
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.Layout.zoomDocument(content.document, 2.0);
   });
 

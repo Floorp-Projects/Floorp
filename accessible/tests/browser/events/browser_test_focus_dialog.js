@@ -13,7 +13,7 @@ loadScripts(
 
 async function runTests(browser, accDoc) {
   let onFocus = waitForEvent(EVENT_FOCUS, "button");
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.document.getElementById("button").focus();
   });
   let button = (await onFocus).accessible;
@@ -33,7 +33,7 @@ async function runTests(browser, accDoc) {
   testStates((await onFocus).accessible, STATE_FOCUSED);
 
   onFocus = waitForEvent(EVENT_FOCUS, "body2");
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.document
       .getElementById("editabledoc")
       .contentWindow.document.body.focus();
@@ -47,7 +47,7 @@ async function runTests(browser, accDoc) {
 
   let onShow = waitForEvent(EVENT_SHOW, "alertdialog");
   onFocus = waitForEvent(EVENT_FOCUS, "alertdialog");
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     let alertDialog = content.document.getElementById("alertdialog");
     alertDialog.style.display = "block";
     alertDialog.focus();

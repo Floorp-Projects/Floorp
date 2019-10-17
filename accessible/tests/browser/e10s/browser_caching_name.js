@@ -412,7 +412,7 @@ async function testAttrRule(browser, target, rule, expected) {
       {
         expected: [[waitFor, waitFor === EVENT_REORDER ? parent : id]],
       },
-      ([contentId, contentAttr]) =>
+      (contentId, contentAttr) =>
         content.document.getElementById(contentId).removeAttribute(contentAttr),
       [id, attr]
     );
@@ -447,7 +447,7 @@ async function testElmRule(browser, target, rule, expected) {
       expected: [[EVENT_REORDER, isSibling ? parent : id]],
     },
     contentElm => content.document.querySelector(`${contentElm}`).remove(),
-    elm
+    [elm]
   );
 
   // Update accessible just in case it is now defunct.
@@ -481,7 +481,7 @@ async function testSubtreeRule(browser, target, rule, expected) {
         elm.firstChild.remove();
       }
     },
-    id
+    [id]
   );
 
   // Update accessible just in case it is now defunct.

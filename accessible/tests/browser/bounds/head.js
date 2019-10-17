@@ -26,9 +26,9 @@ loadScripts(
  * Get content window DPR that can be different from parent window DPR.
  */
 async function getContentDPR(browser) {
-  return ContentTask.spawn(
+  return SpecialPowers.spawn(
     browser,
-    null,
+    [],
     () => content.window.devicePixelRatio
   );
 }
