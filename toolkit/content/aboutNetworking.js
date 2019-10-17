@@ -88,6 +88,21 @@ function displaySockets(data) {
 }
 
 function displayDns(data) {
+  let suffixContent = document.getElementById("dns_suffix_content");
+  let suffixParent = suffixContent.parentNode;
+  let suffixes = [];
+  try {
+    suffixes = gNetLinkSvc.dnsSuffixList; // May throw
+  } catch (e) {}
+  let suffix_tbody = document.createElement("tbody");
+  suffix_tbody.id = "dns_suffix_content";
+  for (let suffix of suffixes) {
+    let row = document.createElement("tr");
+    row.appendChild(col(suffix));
+    suffix_tbody.appendChild(row);
+  }
+  suffixParent.replaceChild(suffix_tbody, suffixContent);
+
   let cont = document.getElementById("dns_content");
   let parent = cont.parentNode;
   let new_cont = document.createElement("tbody");
