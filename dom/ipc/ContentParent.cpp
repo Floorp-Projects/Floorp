@@ -5702,16 +5702,8 @@ bool ContentParent::DeallocPSessionStorageObserverParent(
 }
 
 PSHEntryParent* ContentParent::AllocPSHEntryParent(
-    const PSHEntryOrSharedID& aEntryOrSharedID) {
-  RefPtr<LegacySHEntry> entry;
-  if (aEntryOrSharedID.type() == PSHEntryOrSharedID::Tuint64_t) {
-    entry = new LegacySHEntry(this, aEntryOrSharedID.get_uint64_t());
-  } else {
-    entry = new LegacySHEntry(*(
-        static_cast<const SHEntryParent*>(aEntryOrSharedID.get_PSHEntryParent())
-            ->mEntry));
-  }
-  return entry->CreateActor();
+    PSHistoryParent* aSHistory, const PSHEntryOrSharedID& aEntryOrSharedID) {
+  return SHistoryParent::CreateEntry(this, aSHistory, aEntryOrSharedID);
 }
 
 void ContentParent::DeallocPSHEntryParent(PSHEntryParent* aEntry) {

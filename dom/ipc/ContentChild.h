@@ -624,7 +624,8 @@ class ContentChild final : public PContentChild,
   bool DeallocPSessionStorageObserverChild(
       PSessionStorageObserverChild* aActor);
 
-  PSHEntryChild* AllocPSHEntryChild(const PSHEntryOrSharedID& aEntryOrSharedID);
+  PSHEntryChild* AllocPSHEntryChild(PSHistoryChild* aSHistory,
+                                    const PSHEntryOrSharedID& aEntryOrSharedID);
   void DeallocPSHEntryChild(PSHEntryChild*);
 
   PSHistoryChild* AllocPSHistoryChild(BrowsingContext* aContext);
@@ -691,7 +692,8 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvDestroySHEntrySharedState(const uint64_t& aID);
 
-  mozilla::ipc::IPCResult RecvEvictContentViewers(nsTArray<uint64_t>&& aToEvictSharedStateIDs);
+  mozilla::ipc::IPCResult RecvEvictContentViewers(
+      nsTArray<uint64_t>&& aToEvictSharedStateIDs);
 
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
