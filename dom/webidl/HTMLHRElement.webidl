@@ -12,9 +12,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-hr-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLHRElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis

@@ -11,9 +11,11 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor, NamedConstructor=Option(optional DOMString text = "", optional DOMString value, optional boolean defaultSelected = false, optional boolean selected = false),
+[NamedConstructor=Option(optional DOMString text = "", optional DOMString value, optional boolean defaultSelected = false, optional boolean selected = false),
  Exposed=Window]
 interface HTMLOptionElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterThrows]
   attribute boolean disabled;
   readonly attribute HTMLFormElement? form;

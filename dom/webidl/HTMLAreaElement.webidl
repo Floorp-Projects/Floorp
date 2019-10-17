@@ -13,9 +13,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-area-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLAreaElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [CEReactions, SetterThrows]
            attribute DOMString alt;
            [CEReactions, SetterThrows]
