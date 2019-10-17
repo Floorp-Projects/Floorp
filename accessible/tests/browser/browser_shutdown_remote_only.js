@@ -21,25 +21,22 @@ add_task(async function() {
       </html>`,
     },
     async function(browser) {
+      await loadContentScripts(browser, "Common.jsm");
       info("Creating a service in content");
       // Create a11y service in the content process.
       let a11yInit = initPromise(browser);
-      loadFrameScripts(
-        browser,
-        `let accService = Components.classes[
-      '@mozilla.org/accessibilityService;1'].getService(
-        Components.interfaces.nsIAccessibilityService);`
-      );
+      await ContentTask.spawn(browser, {}, () => {
+        content.CommonUtils.accService;
+      });
       await a11yInit;
 
       info("Removing a service in content");
       // Remove a11y service reference from the content process.
       let a11yShutdown = shutdownPromise(browser);
       // Force garbage collection that should trigger shutdown.
-      loadFrameScripts(
-        browser,
-        `accService = null; Components.utils.forceGC();`
-      );
+      await ContentTask.spawn(browser, {}, () => {
+        content.CommonUtils.clearAccService();
+      });
       await a11yShutdown;
 
       // Unsetting e10s related preferences.
