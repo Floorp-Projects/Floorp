@@ -3479,7 +3479,7 @@ bool ContentChild::DeallocPSessionStorageObserverChild(
 }
 
 PSHEntryChild* ContentChild::AllocPSHEntryChild(
-    const PSHEntryOrSharedID& aEntryOrSharedID) {
+    PSHistoryChild* aSHistory, const PSHEntryOrSharedID& aEntryOrSharedID) {
   // We take a strong reference for the IPC layer. The Release implementation
   // for SHEntryChild will ask the IPC layer to release it (through
   // DeallocPSHEntryChild) if that is the only remaining reference.

@@ -928,7 +928,7 @@ parent:
     async PSHistory(BrowsingContext aContext);
 
     // Clone from entry or use shared id.
-    sync PSHEntry(PSHEntryOrSharedID entryOrSharedID);
+    sync PSHEntry(PSHistory shistory, PSHEntryOrSharedID entryOrSharedID);
 
     async PBenchmarkStorage();
 

@@ -194,10 +194,10 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
 }
 
 nsSHistory::nsSHistory(BrowsingContext* aRootBC, const nsID& aRootDocShellID)
-    : mIsRemote(false),
+    : mRootBC(aRootBC),
+      mIsRemote(false),
       mIndex(-1),
       mRequestedIndex(-1),
-      mRootBC(aRootBC),
       mRootDocShellID(aRootDocShellID) {
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);
@@ -553,16 +553,14 @@ nsresult nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist,
                               int32_t* aEntriesPurged) {
   NS_ENSURE_ARG(aSHEntry);
 
-  nsCOMPtr<nsISHistory> shistoryOfEntry = aSHEntry->GetSHistory();
-  if (shistoryOfEntry && shistoryOfEntry != this) {
+  nsCOMPtr<nsISHistory> shistoryOfEntry = aSHEntry->GetShistory();
+  if (shistoryOfEntry != this) {
     NS_WARNING(
         "The entry has been associated to another nsISHistory instance. "
         "Try nsISHEntry.clone() and nsISHEntry.abandonBFCacheEntry() "
         "first if you're copying an entry from another nsISHistory.");
     return NS_ERROR_FAILURE;
   }
-
-  aSHEntry->SetSHistory(this);
 
   // If we have a root docshell, update the docshell id of the root shentry to
   // match the id of that docshell
@@ -770,16 +768,14 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsISHistory> shistoryOfEntry = aReplaceEntry->GetSHistory();
-  if (shistoryOfEntry && shistoryOfEntry != this) {
+  nsCOMPtr<nsISHistory> shistoryOfEntry = aReplaceEntry->GetShistory();
+  if (shistoryOfEntry != this) {
     NS_WARNING(
         "The entry has been associated to another nsISHistory instance. "
         "Try nsISHEntry.clone() and nsISHEntry.abandonBFCacheEntry() "
         "first if you're copying an entry from another nsISHistory.");
     return NS_ERROR_FAILURE;
   }
-
-  aReplaceEntry->SetSHistory(this);
 
   NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
 
@@ -1576,5 +1572,13 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
 
   aLoadResult.mLoadState = loadState.forget();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHistory::CreateEntry(nsISHEntry** aEntry) {
+  nsCOMPtr<nsISHEntry> entry =
+      new nsLegacySHEntry(this, SHEntryChildShared::CreateSharedID());
+  entry.forget(aEntry);
   return NS_OK;
 }

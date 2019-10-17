@@ -59,7 +59,11 @@ void SHEntryChildShared::EvictContentViewers(
   for (auto iter = aToEvictSharedStateIDs.begin();
        iter != aToEvictSharedStateIDs.end(); ++iter) {
     RefPtr<SHEntryChildShared> shared = sSHEntryChildSharedTable->Get(*iter);
-    MOZ_ASSERT(shared, "shared entry can't be null");
+    if (!shared) {
+      // This can happen if we've created an entry in the parent, and have never
+      // sent it over IPC to the child.
+      continue;
+    }
     nsCOMPtr<nsIContentViewer> viewer = shared->mContentViewer;
     if (viewer) {
       numEvictedSoFar++;
@@ -589,7 +593,7 @@ NS_IMETHODIMP
 SHEntryChild::Clone(nsISHEntry** aResult) {
   NS_IF_ADDREF(*aResult = static_cast<SHEntryChild*>(
                    ContentChild::GetSingleton()->SendPSHEntryConstructor(
-                       this)));
+                       mShared->mSHistory, this)));
   return NS_OK;
 }
 
@@ -955,16 +959,8 @@ SHEntryChild::SetLastTouched(uint32_t aLastTouched) {
 }
 
 NS_IMETHODIMP
-SHEntryChild::GetSHistory(nsISHistory** aSHistory) {
+SHEntryChild::GetShistory(nsISHistory** aSHistory) {
   *aSHistory = do_AddRef(mShared->mSHistory).take();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SHEntryChild::SetSHistory(nsISHistory* aSHistory) {
-  // mSHistory can not be changed once it's set
-  MOZ_ASSERT(!mShared->mSHistory || (mShared->mSHistory == aSHistory));
-  mShared->mSHistory = static_cast<SHistoryChild*>(aSHistory);
   return NS_OK;
 }
 
