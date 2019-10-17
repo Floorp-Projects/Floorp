@@ -57,10 +57,6 @@ namespace dom {
 
 using namespace mozilla::media;
 
-/* static */ StaticRefPtr<nsIAsyncShutdownBlocker>
-    gMediaRecorderShutdownBlocker;
-static nsTHashtable<nsRefPtrHashKey<MediaRecorder::Session>> gSessions;
-
 /**
  * MediaRecorderReporter measures memory being used by the Media Recorder.
  *
@@ -1020,48 +1016,28 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     mEncoderThread =
         MakeAndAddRef<TaskQueue>(pool.forget(), "MediaRecorderReadThread");
 
-    if (!gMediaRecorderShutdownBlocker) {
-      // Add a shutdown blocker so mEncoderThread can be shutdown async.
-      class Blocker : public ShutdownBlocker {
-       public:
-        Blocker()
-            : ShutdownBlocker(
-                  NS_LITERAL_STRING("MediaRecorder::Session: shutdown")) {}
+    MOZ_DIAGNOSTIC_ASSERT(!mShutdownBlocker);
+    // Add a shutdown blocker so mEncoderThread can be shutdown async.
+    class Blocker : public ShutdownBlocker {
+      const RefPtr<Session> mSession;
 
-        NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient*) override {
-          // Distribute the global async shutdown blocker in a ticket. If there
-          // are zero graphs then shutdown is unblocked when we go out of scope.
-          RefPtr<ShutdownTicket> ticket =
-              MakeAndAddRef<ShutdownTicket>(gMediaRecorderShutdownBlocker);
-          gMediaRecorderShutdownBlocker = nullptr;
+     public:
+      Blocker(RefPtr<Session> aSession, const nsString& aName)
+          : ShutdownBlocker(aName), mSession(std::move(aSession)) {}
 
-          nsTArray<RefPtr<ShutdownPromise>> promises(gSessions.Count());
-          for (auto iter = gSessions.Iter(); !iter.Done(); iter.Next()) {
-            promises.AppendElement(iter.Get()->GetKey()->Shutdown());
-          }
-          gSessions.Clear();
-          ShutdownPromise::All(GetCurrentThreadSerialEventTarget(), promises)
-              ->Then(
-                  GetCurrentThreadSerialEventTarget(), __func__,
-                  [ticket]() mutable {
-                    MOZ_ASSERT(gSessions.Count() == 0);
-                    // Unblock shutdown
-                    ticket = nullptr;
-                  },
-                  []() { MOZ_CRASH("Not reached"); });
-          return NS_OK;
-        }
-      };
+      NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient*) override {
+        Unused << mSession->Shutdown();
+        return NS_OK;
+      }
+    };
 
-      gMediaRecorderShutdownBlocker = MakeAndAddRef<Blocker>();
-      RefPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-      nsresult rv = barrier->AddBlocker(
-          gMediaRecorderShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
-          NS_LITERAL_STRING("MediaRecorder::Session: shutdown"));
-      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-    }
-
-    gSessions.PutEntry(this);
+    nsString name;
+    name.AppendPrintf("MediaRecorder::Session %p shutdown", this);
+    mShutdownBlocker = MakeAndAddRef<Blocker>(this, name);
+    nsresult rv = GetShutdownBarrier()->AddBlocker(
+        mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
+        NS_LITERAL_STRING("MediaRecorder::Session: shutdown"));
+    MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
     mEncoder = MediaEncoder::CreateEncoder(
         mEncoderThread, mMimeType, mAudioBitsPerSecond, mVideoBitsPerSecond,
@@ -1074,10 +1050,9 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     mEncoderListener = MakeAndAddRef<EncoderListener>(mEncoderThread, this);
-    nsresult rv =
-        mEncoderThread->Dispatch(NewRunnableMethod<RefPtr<EncoderListener>>(
-            "mozilla::MediaEncoder::RegisterListener", mEncoder,
-            &MediaEncoder::RegisterListener, mEncoderListener));
+    rv = mEncoderThread->Dispatch(NewRunnableMethod<RefPtr<EncoderListener>>(
+        "mozilla::MediaEncoder::RegisterListener", mEncoder,
+        &MediaEncoder::RegisterListener, mEncoderListener));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
     Unused << rv;
 
@@ -1183,14 +1158,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
                  return Shutdown();
                })
         ->Then(mMainThread, __func__, [this, self = RefPtr<Session>(this)] {
-          gSessions.RemoveEntry(this);
-          if (gSessions.Count() == 0 && gMediaRecorderShutdownBlocker) {
-            // All sessions finished before shutdown, no need to keep the
-            // blocker.
-            RefPtr<nsIAsyncShutdownClient> barrier = GetShutdownBarrier();
-            barrier->RemoveBlocker(gMediaRecorderShutdownBlocker);
-            gMediaRecorderShutdownBlocker = nullptr;
-          }
+          GetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
+          mShutdownBlocker = nullptr;
         });
   }
 
@@ -1382,6 +1351,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // ending a recording with an error. An NS_OK error is invalid.
   // Main thread only.
   Result<RunningState, nsresult> mRunningState;
+  // Shutdown blocker unique for this Session. Main thread only.
+  RefPtr<ShutdownBlocker> mShutdownBlocker;
 };
 
 MediaRecorder::~MediaRecorder() {
