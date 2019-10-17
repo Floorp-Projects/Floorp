@@ -16,7 +16,7 @@ async function waitForContentPaint(browser) {
 }
 
 async function runTests(browser, accDoc) {
-  loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
+  await loadContentScripts(browser, "Layout.jsm");
 
   let paragraph = findAccessibleChildByID(accDoc, "paragraph", [
     nsIAccessibleText,
@@ -38,7 +38,7 @@ async function runTests(browser, accDoc) {
   testTextPos(paragraph, offset, [x, docY], COORDTYPE_SCREEN_RELATIVE);
 
   await ContentTask.spawn(browser, {}, () => {
-    zoomDocument(content.document, 2.0);
+    content.Layout.zoomDocument(content.document, 2.0);
   });
 
   paragraph = findAccessibleChildByID(accDoc, "paragraph2", [
