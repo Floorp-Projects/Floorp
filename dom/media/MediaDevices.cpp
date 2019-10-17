@@ -165,6 +165,7 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
           },
           [this, self, p](const RefPtr<MediaMgrError>& error) {
             nsPIDOMWindowInner* window = GetWindowIfCurrent();
+            MOZ_DIAGNOSTIC_ASSERT(!window, "Should only fail after navigation");
             if (!window) {
               return;  // Leave Promise pending after navigation by design.
             }
