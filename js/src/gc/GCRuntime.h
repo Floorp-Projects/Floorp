@@ -536,6 +536,7 @@ class GCRuntime {
                  AutoLockHelperThreadState& locked);
   void joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
                 AutoLockHelperThreadState& locked);
+  void joinTask(GCParallelTask& task, gcstats::PhaseKind phase);
 
   void mergeRealms(JS::Realm* source, JS::Realm* target);
 
