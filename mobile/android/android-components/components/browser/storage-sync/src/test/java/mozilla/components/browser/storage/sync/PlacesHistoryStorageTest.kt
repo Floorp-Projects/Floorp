@@ -26,6 +26,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class PlacesHistoryStorageTest {
@@ -508,6 +509,14 @@ class PlacesHistoryStorageTest {
                 return 0L
             }
 
+            override fun importVisitsFromFennec(dbPath: String) {
+                fail()
+            }
+
+            override fun importBookmarksFromFennec(dbPath: String) {
+                fail()
+            }
+
             override fun close() {
                 fail()
             }
@@ -545,6 +554,14 @@ class PlacesHistoryStorageTest {
                 return 0L
             }
 
+            override fun importVisitsFromFennec(dbPath: String) {
+                fail()
+            }
+
+            override fun importBookmarksFromFennec(dbPath: String) {
+                fail()
+            }
+
             override fun close() {
                 fail()
             }
@@ -580,6 +597,14 @@ class PlacesHistoryStorageTest {
             override fun getHandle(): Long {
                 fail()
                 return 0L
+            }
+
+            override fun importVisitsFromFennec(dbPath: String) {
+                fail()
+            }
+
+            override fun importBookmarksFromFennec(dbPath: String) {
+                fail()
             }
 
             override fun close() {
@@ -623,6 +648,14 @@ class PlacesHistoryStorageTest {
                 return 0L
             }
 
+            override fun importVisitsFromFennec(dbPath: String) {
+                fail()
+            }
+
+            override fun importBookmarksFromFennec(dbPath: String) {
+                fail()
+            }
+
             override fun close() {
                 fail()
             }
@@ -631,4 +664,94 @@ class PlacesHistoryStorageTest {
         storage.sync(SyncAuthInfo("kid", "token", 123L, "key", "serverUrl"))
         fail()
     }
+
+    @Test
+    fun `history import v0 empty`() {
+        // Doesn't have a schema or a set user_version pragma.
+        val path = getTestPath("databases/empty-v0.db").absolutePath
+        try {
+            history.importFromFennec(path)
+            fail("Expected v0 database to be unsupported")
+        } catch (e: PlacesException) {
+            // This is a little brittle, but the places library doesn't have a proper error type for this.
+            assertEquals("Database version 0 is not supported", e.message)
+        }
+    }
+
+    @Test
+    fun `history import v38 populated`() {
+        // Fennec v38 schema populated with data.
+        val path = getTestPath("databases/populated-v38.db").absolutePath
+        try {
+            history.importFromFennec(path)
+            fail("Expected v38 database to be unsupported")
+        } catch (e: PlacesException) {
+            // This is a little brittle, but the places library doesn't have a proper error type for this.
+            assertEquals("Database version 38 is not supported", e.message)
+        }
+    }
+
+    @Test
+    fun `history import v39 populated`() = runBlocking {
+        val path = getTestPath("databases/populated-v39.db").absolutePath
+        var visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(0, visits.size)
+        history.importFromFennec(path)
+
+        visits = history.getDetailedVisits(0, Long.MAX_VALUE)
+        assertEquals(6, visits.size)
+
+        assertEquals(listOf(false, true, true, true, true, true, true), history.reader.getVisited(listOf(
+            "files:///",
+            "https://news.ycombinator.com/",
+            "https://news.ycombinator.com/item?id=21224209",
+            "https://mobile.twitter.com/random_walker/status/1182635589604171776",
+            "https://www.mozilla.org/en-US/",
+            "https://www.mozilla.org/en-US/firefox/accounts/",
+            "https://mobile.reuters.com/"
+        )))
+
+        with(visits[0]) {
+            assertEquals("Hacker News", this.title)
+            assertEquals("https://news.ycombinator.com/", this.url)
+            assertEquals(1570822280639, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[1]) {
+            assertEquals("Why Enterprise Software Sucks | Hacker News", this.title)
+            assertEquals("https://news.ycombinator.com/item?id=21224209", this.url)
+            assertEquals(1570822283117, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[2]) {
+            assertEquals("Arvind Narayanan on Twitter: \"My university just announced that it’s dumping Blackboard, and there was much rejoicing. Why is Blackboard universally reviled? There’s a standard story of why \"enterprise software\" sucks. If you’ll bear with me, I think this is best appreciated by talking about… baby clothes!\" / Twitter", this.title)
+            assertEquals("https://mobile.twitter.com/random_walker/status/1182635589604171776", this.url)
+            assertEquals(1570822287349, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[3]) {
+            assertEquals("Internet for people, not profit — Mozilla", this.title)
+            assertEquals("https://www.mozilla.org/en-US/", this.url)
+            assertEquals(1570830201733, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[4]) {
+            assertEquals("There is a way to protect your privacy. Join Firefox.", this.title)
+            assertEquals("https://www.mozilla.org/en-US/firefox/accounts/", this.url)
+            assertEquals(1570830207742, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+        with(visits[5]) {
+            assertEquals("", this.title)
+            assertEquals("https://mobile.reuters.com/", this.url)
+            assertEquals(1570830217562, this.visitTime)
+            assertEquals(VisitType.LINK, this.visitType)
+        }
+    }
+}
+
+fun getTestPath(path: String): File {
+    return PlacesHistoryStorage::class.java.classLoader!!
+        .getResource(path).file
+        .let { File(it) }
 }

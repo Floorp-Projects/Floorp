@@ -21,7 +21,7 @@ class FennecProfileTest {
     @Test
     fun `default fennec profile`() {
         val profile = FennecProfile.findDefault(
-            testContext, getTestPath(), "fennec_default.txt")
+            testContext, getTestPath("profiles"), "fennec_default.txt")
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -33,7 +33,7 @@ class FennecProfileTest {
     @Test
     fun `mozillazine default profile`() {
         val profile = FennecProfile.findDefault(
-            testContext, getTestPath(), "mozillazine_default.txt")
+            testContext, getTestPath("profiles"), "mozillazine_default.txt")
 
         assertNotNull(profile!!)
         assertFalse(profile.default)
@@ -44,7 +44,7 @@ class FennecProfileTest {
     @Test
     fun `mozillazine multiple profiles`() {
         val profile = FennecProfile.findDefault(
-            testContext, getTestPath(), "mozillazine_multiple.txt")
+            testContext, getTestPath("profiles"), "mozillazine_multiple.txt")
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -55,7 +55,7 @@ class FennecProfileTest {
     @Test
     fun `desktop profiles`() {
         val profile = FennecProfile.findDefault(
-            testContext, getTestPath(), "desktop.txt")
+            testContext, getTestPath("profiles"), "desktop.txt")
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -65,14 +65,14 @@ class FennecProfileTest {
 
     @Test
     fun `profiles-ini not existing in path`() {
-        val profile = FennecProfile.findDefault(testContext, getTestPath())
+        val profile = FennecProfile.findDefault(testContext, getTestPath("profiles"))
         assertNull(profile)
     }
 
     @Test
     fun `with comments`() {
         val profile = FennecProfile.findDefault(
-            testContext, getTestPath(), "with_comments.txt")
+            testContext, getTestPath("profiles"), "with_comments.txt")
 
         assertNotNull(profile!!)
         assertTrue(profile.default)
@@ -83,7 +83,7 @@ class FennecProfileTest {
     @Test
     fun `weird broken`() {
         val profile = FennecProfile.findDefault(
-            testContext, getTestPath(), "broken.txt")
+            testContext, getTestPath("profiles"), "broken.txt")
 
         assertNotNull(profile!!)
         assertEquals("Fennec", profile.name)
@@ -94,7 +94,7 @@ class FennecProfileTest {
     @Test
     fun `multiple profiles without default`() {
         val profile = FennecProfile.findDefault(
-            testContext, getTestPath(), "no_default.txt")
+            testContext, getTestPath("profiles"), "no_default.txt")
 
         assertNotNull(profile!!)
         assertEquals("default", profile.name)
@@ -103,8 +103,8 @@ class FennecProfileTest {
     }
 }
 
-private fun getTestPath(): File {
+fun getTestPath(dir: String): File {
     return FennecProfileTest::class.java.classLoader!!
-        .getResource("profiles").file
+        .getResource(dir).file
         .let { File(it) }
 }

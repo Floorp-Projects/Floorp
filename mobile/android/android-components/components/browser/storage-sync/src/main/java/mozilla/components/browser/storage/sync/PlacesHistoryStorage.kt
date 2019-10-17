@@ -7,6 +7,7 @@ package mozilla.components.browser.storage.sync
 import android.content.Context
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesApi
+import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
@@ -189,6 +190,16 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
                 places.syncHistory(authInfo)
             }
         }
+    }
+
+    /**
+     * Import history and visits data from Fennec's browser.db file.
+     *
+     * @param dbPath Absolute path to Fennec's browser.db file.
+     */
+    @Throws(PlacesException::class)
+    fun importFromFennec(dbPath: String) {
+        places.importVisitsFromFennec(dbPath)
     }
 
     /**

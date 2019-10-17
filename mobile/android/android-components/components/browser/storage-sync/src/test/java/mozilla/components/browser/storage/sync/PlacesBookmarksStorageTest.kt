@@ -22,7 +22,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-
 @RunWith(AndroidJUnit4::class)
 class PlacesBookmarksStorageTest {
     private lateinit var bookmarks: PlacesBookmarksStorage
@@ -88,7 +87,7 @@ class PlacesBookmarksStorageTest {
 
         val insertedItem = bookmarks.addItem(BookmarkRoot.Mobile.id, url, "Mozilla", 5)
 
-        with (bookmarks.getBookmarksWithUrl(url)) {
+        with(bookmarks.getBookmarksWithUrl(url)) {
             assertEquals(1, this.size)
             with(this[0]) {
                 assertEquals(insertedItem, this.guid)
@@ -105,7 +104,7 @@ class PlacesBookmarksStorageTest {
         bookmarks.updateNode(insertedItem, BookmarkInfo(
             parentGuid = folderGuid, title = null, position = -3, url = null
         ))
-        with (bookmarks.getBookmarksWithUrl(url)) {
+        with(bookmarks.getBookmarksWithUrl(url)) {
             assertEquals(1, this.size)
             with(this[0]) {
                 assertEquals(insertedItem, this.guid)
@@ -118,23 +117,23 @@ class PlacesBookmarksStorageTest {
         }
 
         val separatorGuid = bookmarks.addSeparator(folderGuid, 1)
-        with (bookmarks.getTree(folderGuid)!!) {
+        with(bookmarks.getTree(folderGuid)!!) {
             assertEquals(2, this.children!!.size)
             assertEquals(BookmarkNodeType.SEPARATOR, this.children!![1].type)
         }
 
         assertTrue(bookmarks.deleteNode(separatorGuid))
-        with (bookmarks.getTree(folderGuid)!!) {
+        with(bookmarks.getTree(folderGuid)!!) {
             assertEquals(1, this.children!!.size)
             assertEquals(BookmarkNodeType.ITEM, this.children!![0].type)
         }
 
-        with (bookmarks.searchBookmarks("mozilla")) {
+        with(bookmarks.searchBookmarks("mozilla")) {
             assertEquals(1, this.size)
             assertEquals("http://www.mozilla.org/", this[0].url)
         }
 
-        with (bookmarks.getBookmark(folderGuid)!!) {
+        with(bookmarks.getBookmark(folderGuid)!!) {
             assertEquals(folderGuid, this.guid)
             assertEquals("Test Folder", this.title)
             assertEquals(BookmarkRoot.Mobile.id, this.parentGuid)
@@ -151,8 +150,95 @@ class PlacesBookmarksStorageTest {
             } catch (e: PlacesException) {}
         }
 
-        with (bookmarks.searchBookmarks("mozilla")) {
+        with(bookmarks.searchBookmarks("mozilla")) {
             assertTrue(this.isEmpty())
+        }
+    }
+
+    @Test
+    fun `bookmarks import v0 empty`() {
+        // Doesn't have a schema or a set user_version pragma.
+        val path = getTestPath("databases/empty-v0.db").absolutePath
+        try {
+            bookmarks.importFromFennec(path)
+            fail("Expected v0 database to be unsupported")
+        } catch (e: PlacesException) {
+            // This is a little brittle, but the places library doesn't have a proper error type for this.
+            assertEquals("Database version 0 is not supported", e.message)
+        }
+    }
+
+    @Test
+    fun `bookmarks import v38 populated`() {
+        // Fennec v38 schema populated with data.
+        val path = getTestPath("databases/populated-v38.db").absolutePath
+        try {
+            bookmarks.importFromFennec(path)
+            fail("Expected v38 database to be unsupported")
+        } catch (e: PlacesException) {
+            // This is a little brittle, but the places library doesn't have a proper error type for this.
+            assertEquals("Database version 38 is not supported", e.message)
+        }
+    }
+
+    @Test
+    fun `bookmarks import v39 populated`() = runBlocking {
+        val path = getTestPath("databases/populated-v39.db").absolutePath
+
+        // Need to import history first before we import bookmarks.
+        PlacesHistoryStorage(testContext).importFromFennec(path)
+        bookmarks.importFromFennec(path)
+
+        with(bookmarks.getTree(BookmarkRoot.Root.id)!!) {
+            assertEquals(4, this.children!!.size)
+            val children = this.children!!.map { it.guid }
+            assertTrue(BookmarkRoot.Mobile.id in children)
+            assertTrue(BookmarkRoot.Unfiled.id in children)
+            assertTrue(BookmarkRoot.Toolbar.id in children)
+            assertTrue(BookmarkRoot.Menu.id in children)
+
+            // Note that we dropped the special "pinned" folder during a migration.
+            // See https://github.com/mozilla/application-services/issues/1989
+        }
+
+        with(bookmarks.getTree(BookmarkRoot.Mobile.id)!!) {
+            assertEquals(6, this.children!!.size)
+            with(this.children!![0]) {
+                assertEquals("Business & Financial News, Breaking US & International News | Reuters", this.title)
+                assertEquals("https://mobile.reuters.com/", this.url)
+                assertEquals("2hazimCy0hhS", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![1]) {
+                assertEquals("There is a way to protect your privacy. Join Firefox.", this.title)
+                assertEquals("https://www.mozilla.org/en-US/firefox/accounts/", this.url)
+                assertEquals("mUcVvqUfJs6r", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![2]) {
+                assertEquals("Internet for people, not profit — Mozilla", this.title)
+                assertEquals("https://www.mozilla.org/en-US/", this.url)
+                assertEquals("tL-ucG5eaoG-", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![3]) {
+                assertEquals("Firefox: About your browser", this.title)
+                assertEquals("about:firefox", this.url)
+                assertEquals("kR_18w0gDLHq", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![4]) {
+                assertEquals("Firefox: Customize with add-ons", this.title)
+                assertEquals("https://addons.mozilla.org/android?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("bTuLpp58gwqw", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![5]) {
+                assertEquals("Firefox: Support", this.title)
+                assertEquals("https://support.mozilla.org/products/mobile?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("nbfDW0QSBEKu", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
         }
     }
 }

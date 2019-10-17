@@ -22,14 +22,14 @@ object FennecSessionMigration {
 
     /**
      * Ties to migrate the "open tabs" from the given [profilePath] and on success returns a
-     * [SessionManager.Snapshot] (wrapped in [MigrationResult.Success]).
+     * [SessionManager.Snapshot] (wrapped in [Result.Success]).
      */
     fun migrate(
         profilePath: File
-    ): MigrationResult<SessionManager.Snapshot> {
+    ): Result<SessionManager.Snapshot> {
         val sessionFiles = findSessionFiles(profilePath)
         if (sessionFiles.isEmpty()) {
-            return MigrationResult.Failure(FileNotFoundException("No session store found"))
+            return Result.Failure(FileNotFoundException("No session store found"))
         }
 
         val failures = mutableListOf<Exception>()
@@ -46,7 +46,7 @@ object FennecSessionMigration {
             }
         }
 
-        return MigrationResult.Failure(failures)
+        return Result.Failure(failures)
     }
 
     private fun findSessionFiles(profilePath: File): List<File> {
@@ -66,13 +66,13 @@ object FennecSessionMigration {
     }
 
     @Throws(IOException::class, JSONException::class)
-    private fun parseJSON(json: String): MigrationResult<SessionManager.Snapshot> {
+    private fun parseJSON(json: String): Result.Success<SessionManager.Snapshot> {
         var selection = -1
         val sessions = mutableListOf<Session>()
 
         val windows = JSONObject(json).getJSONArray("windows")
         if (windows.length() == 0) {
-            return MigrationResult.Success(SessionManager.Snapshot.empty())
+            return Result.Success(SessionManager.Snapshot.empty())
         }
 
         val window = windows.getJSONObject(0)
@@ -105,7 +105,7 @@ object FennecSessionMigration {
             }
         }
 
-        return MigrationResult.Success(SessionManager.Snapshot(
+        return Result.Success(SessionManager.Snapshot(
             sessions.map { SessionManager.Snapshot.Item(it) },
             selection
         ))

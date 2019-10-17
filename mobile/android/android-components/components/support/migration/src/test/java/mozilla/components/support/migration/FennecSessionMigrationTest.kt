@@ -16,11 +16,11 @@ import java.io.FileNotFoundException
 class FennecSessionMigrationTest {
     @Test
     fun `Migrate multiple open tabs`() {
-        val profilePath = File(getTestPath(), "test-case1")
+        val profilePath = File(getTestPath("sessions"), "test-case1")
         val result = FennecSessionMigration.migrate(profilePath)
 
-        assertTrue(result is MigrationResult.Success)
-        val snapshot = (result as MigrationResult.Success).value
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
 
         assertEquals(6, snapshot.sessions.size)
         assertEquals(5, snapshot.selectedSessionIndex)
@@ -76,25 +76,25 @@ class FennecSessionMigrationTest {
 
     @Test
     fun `profile not existing`() {
-        val profilePath = File(getTestPath(), "not-existing")
+        val profilePath = File(getTestPath("sessions"), "not-existing")
         val result = FennecSessionMigration.migrate(profilePath)
 
-        assertTrue(result is MigrationResult.Failure)
+        assertTrue(result is Result.Failure)
 
-        val throwables = (result as MigrationResult.Failure).throwables
+        val throwables = (result as Result.Failure).throwables
         assertEquals(1, throwables.size)
         assertTrue(throwables[0] is FileNotFoundException)
     }
 
     @Test
     fun `broken JSON with fallback`() {
-        val profilePath = File(getTestPath(), "broken-json")
+        val profilePath = File(getTestPath("sessions"), "broken-json")
         val result = FennecSessionMigration.migrate(profilePath)
 
-        assertTrue(result is MigrationResult.Success)
+        assertTrue(result is Result.Success)
 
-        assertTrue(result is MigrationResult.Success)
-        val snapshot = (result as MigrationResult.Success).value
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
         assertEquals(1, snapshot.sessions.size)
         assertEquals(0, snapshot.selectedSessionIndex)
 
@@ -109,24 +109,24 @@ class FennecSessionMigrationTest {
 
     @Test
     fun `no windows in session store`() {
-        val profilePath = File(getTestPath(), "no-windows")
+        val profilePath = File(getTestPath("sessions"), "no-windows")
         val result = FennecSessionMigration.migrate(profilePath)
 
-        assertTrue(result is MigrationResult.Success)
-        val snapshot = (result as MigrationResult.Success).value
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
         assertTrue(snapshot.sessions.isEmpty())
         assertEquals(-1, snapshot.selectedSessionIndex)
     }
 
     @Test
     fun `with empty tab entries and unneeded backup`() {
-        val profilePath = File(getTestPath(), "test-case2")
+        val profilePath = File(getTestPath("sessions"), "test-case2")
         val result = FennecSessionMigration.migrate(profilePath)
 
-        assertTrue(result is MigrationResult.Success)
+        assertTrue(result is Result.Success)
 
-        assertTrue(result is MigrationResult.Success)
-        val snapshot = (result as MigrationResult.Success).value
+        assertTrue(result is Result.Success)
+        val snapshot = (result as Result.Success).value
         assertEquals(2, snapshot.sessions.size)
         assertEquals(1, snapshot.selectedSessionIndex)
 
@@ -146,10 +146,4 @@ class FennecSessionMigrationTest {
                 it.session.title)
         }
     }
-}
-
-private fun getTestPath(): File {
-    return FennecProfileTest::class.java.classLoader!!
-        .getResource("sessions").file
-        .let { File(it) }
 }
