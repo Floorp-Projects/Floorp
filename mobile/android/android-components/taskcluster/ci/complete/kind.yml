@@ -12,15 +12,30 @@ kind-dependencies:
 transforms:
     - taskgraph.transforms.code_review:transforms
     - ac_taskgraph.transforms.chunk:transforms
+    - ac_taskgraph.transforms.complete:transforms
+    - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
+
+job-defaults:
+    attributes:
+        code-review: true
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 600
+    requires: all-resolved
+    run:
+        command:
+            task-reference:
+                /builds/worker/checkouts/src/taskcluster/scripts/are_dependencies_completed.py {dependencies}
+        use-caches: false
+        using: run-task
 
 jobs:
     pr:
         description: PR Summary Task
         run-on-tasks-for: [github-pull-request]
-        worker-type: succeed
 
     push:
         description: Push Summary Task
         run-on-tasks-for: [github-push]
-        worker-type: succeed
