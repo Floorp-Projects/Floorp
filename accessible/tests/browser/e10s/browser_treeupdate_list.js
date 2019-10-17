@@ -47,6 +47,5 @@ addAccessibleTask(
       findAccessibleChildByID(event.accessible, "li"),
       accTree
     );
-  },
-  { iframe: true }
+  }
 );

@@ -41,7 +41,7 @@ async function changeText(browser, id, value, events) {
     })
   );
   // Change text in the subtree.
-  await invokeContentTask(browser, [id, value], (contentId, contentValue) => {
+  await ContentTask.spawn(browser, [id, value], ([contentId, contentValue]) => {
     content.document.getElementById(
       contentId
     ).firstChild.textContent = contentValue;
@@ -64,22 +64,16 @@ async function changeText(browser, id, value, events) {
 async function removeTextFromInput(browser, id, value, start, end) {
   let onTextRemoved = waitForEvent(EVENT_TEXT_REMOVED, id);
   // Select text and delete it.
-  await invokeContentTask(
+  await ContentTask.spawn(
     browser,
     [id, start, end],
-    (contentId, contentStart, contentEnd) => {
+    ([contentId, contentStart, contentEnd]) => {
       let el = content.document.getElementById(contentId);
       el.focus();
       el.setSelectionRange(contentStart, contentEnd);
     }
   );
-  await invokeContentTask(browser, [], () => {
-    const { ContentTaskUtils } = ChromeUtils.import(
-      "resource://testing-common/ContentTaskUtils.jsm"
-    );
-    const EventUtils = ContentTaskUtils.getEventUtils(content);
-    EventUtils.sendChar("VK_DELETE", content);
-  });
+  await BrowserTestUtils.sendChar("VK_DELETE", browser);
 
   let event = await onTextRemoved;
   checkTextChangeEvent(event, id, value, start, end, false, true);
@@ -109,6 +103,5 @@ addAccessibleTask(
 
     // Test isFromUserInput property.
     await removeTextFromInput(browser, "input", "n", 1, 2);
-  },
-  { iframe: true }
+  }
 );

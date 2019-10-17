@@ -21,9 +21,9 @@ addAccessibleTask(
       "Check that child is not accessible."
     );
 
-    let onReorder = waitForEvent(EVENT_REORDER, matchContentDoc);
+    let onReorder = waitForEvent(EVENT_REORDER, "body");
     // Add an event listener to parent.
-    await invokeContentTask(browser, [], () => {
+    await ContentTask.spawn(browser, {}, () => {
       content.window.dummyListener = () => {};
       content.document
         .getElementById("parent")
@@ -33,6 +33,5 @@ addAccessibleTask(
 
     let tree = { TEXT: [] };
     testAccessibleTree(findAccessibleChildByID(accDoc, "parent"), tree);
-  },
-  { iframe: true }
+  }
 );

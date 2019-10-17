@@ -23,6 +23,5 @@ addAccessibleTask(
     await onShow;
 
     testAccessibleTree(dialog, { DIALOG: [] });
-  },
-  { iframe: true }
+  }
 );

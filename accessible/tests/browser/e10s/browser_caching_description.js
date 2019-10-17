@@ -43,7 +43,7 @@ const tests = [
         value: "aria description",
       },
     ],
-    waitFor: [[EVENT_REORDER, matchContentDoc]],
+    waitFor: [[EVENT_REORDER, "body"]],
     expected: "",
   },
   {
@@ -72,7 +72,7 @@ const tests = [
         value: "title",
       },
     ],
-    waitFor: [[EVENT_REORDER, matchContentDoc]],
+    waitFor: [[EVENT_REORDER, "body"]],
     expected: "another description",
   },
   {
@@ -108,7 +108,7 @@ const tests = [
         value: "aria description",
       },
     ],
-    waitFor: [[EVENT_REORDER, matchContentDoc]],
+    waitFor: [[EVENT_REORDER, "body"]],
     expected: "another description",
   },
   {
@@ -209,6 +209,5 @@ addAccessibleTask(
       }
       testDescr(imgAcc, expected);
     }
-  },
-  { iframe: true }
+  }
 );
