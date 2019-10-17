@@ -1307,20 +1307,24 @@ class AstElemSegment : public AstNode {
   AstElemSegmentKind kind_;
   AstRef targetTable_;
   AstExpr* offsetIfActive_;
+  ValType elemType_;
   AstElemVector elems_;
 
  public:
   AstElemSegment(AstElemSegmentKind kind, AstRef targetTable,
-                 AstExpr* offsetIfActive, AstElemVector&& elems)
+                 AstExpr* offsetIfActive, ValType elemType,
+                 AstElemVector&& elems)
       : kind_(kind),
         targetTable_(targetTable),
         offsetIfActive_(offsetIfActive),
+        elemType_(elemType),
         elems_(std::move(elems)) {}
 
   AstElemSegmentKind kind() const { return kind_; }
   AstRef targetTable() const { return targetTable_; }
   AstRef& targetTableRef() { return targetTable_; }
   AstExpr* offsetIfActive() const { return offsetIfActive_; }
+  ValType elemType() const { return elemType_; }
   AstElemVector& elems() { return elems_; }
   const AstElemVector& elems() const { return elems_; }
 };

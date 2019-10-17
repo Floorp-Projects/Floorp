@@ -1203,6 +1203,7 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
 
   Kind kind;
   uint32_t tableIndex;
+  ValType elementType;
   Maybe<InitExpr> offsetIfActive;
   Uint32Vector elemFuncIndices;  // Element may be NullFuncIndex
 
@@ -1211,6 +1212,8 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
   InitExpr offset() const { return *offsetIfActive; }
 
   size_t length() const { return elemFuncIndices.length(); }
+
+  ValType elemType() const { return elementType; }
 
   WASM_DECLARE_SERIALIZABLE(ElemSegment)
 };

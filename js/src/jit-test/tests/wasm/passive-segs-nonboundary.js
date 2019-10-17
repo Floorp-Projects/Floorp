@@ -334,7 +334,7 @@ function checkPassiveElemSegment(mangle, err) {
 }
 
 checkPassiveElemSegment("");
-checkPassiveElemSegment("type", /segments with element expressions can only contain function references/);
+checkPassiveElemSegment("type", /segments with element expressions can only contain references/);
 checkPassiveElemSegment("ref.func", /failed to read initializer operation/);
 checkPassiveElemSegment("end", /failed to read end of initializer expression/);
 

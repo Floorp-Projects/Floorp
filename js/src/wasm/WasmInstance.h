@@ -162,8 +162,9 @@ class Instance {
   // Called to apply a single ElemSegment at a given offset, assuming
   // that all bounds validation has already been performed.
 
-  void initElems(uint32_t tableIndex, const ElemSegment& seg,
-                 uint32_t dstOffset, uint32_t srcOffset, uint32_t len);
+  MOZ_MUST_USE bool initElems(uint32_t tableIndex, const ElemSegment& seg,
+                              uint32_t dstOffset, uint32_t srcOffset,
+                              uint32_t len);
 
   // Debugger support:
 

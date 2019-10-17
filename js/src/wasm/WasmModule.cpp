@@ -592,7 +592,9 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         }
       }
       if (count) {
-        instance.initElems(seg->tableIndex, *seg, offset, 0, count);
+        if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
+          return false;  // OOM
+        }
       }
       if (fail) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
