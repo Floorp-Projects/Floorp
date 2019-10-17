@@ -554,13 +554,10 @@ var Scratchpad = {
     }
 
     const evalOptions = { url: this.uniqueName };
-    const { debuggerClient, webConsoleClient } = await connection;
+    const { debuggerClient, webConsoleFront } = await connection;
     this.debuggerClient = debuggerClient;
-    this.webConsoleClient = webConsoleClient;
-    const response = await webConsoleClient.evaluateJSAsync(
-      string,
-      evalOptions
-    );
+    this.webConsoleFront = webConsoleFront;
+    const response = await webConsoleFront.evaluateJSAsync(string, evalOptions);
 
     if (response.error) {
       throw new Error(response.error);
@@ -851,8 +848,7 @@ var Scratchpad = {
    */
   async _writePrimitiveAsComment(value) {
     if (value.type == "longString") {
-      const client = this.webConsoleClient;
-      const response = await client
+      const response = await this.webConsoleFront
         .longString(value)
         .substring(0, value.length);
       if (response.error) {
@@ -1906,7 +1902,7 @@ var Scratchpad = {
     }
 
     scratchpadTargets = null;
-    this.webConsoleClient = null;
+    this.webConsoleFront = null;
     this.debuggerClient = null;
     this.initialized = false;
   },
@@ -2158,7 +2154,7 @@ function ScratchpadTab(aTab) {
 var scratchpadTargets = new WeakMap();
 
 /**
- * Returns the object containing the DebuggerClient and WebConsoleClient for a
+ * Returns the object containing the DebuggerClient and WebConsoleFront for a
  * given tab or window.
  *
  * @param object aSubject
@@ -2204,7 +2200,7 @@ ScratchpadTab.prototype = {
         const target = await this._attach(subject);
         clearTimeout(connectTimer);
         resolve({
-          webConsoleClient: target.activeConsole,
+          webConsoleFront: target.activeConsole,
           debuggerClient: target.client,
         });
       } catch (error) {
@@ -2347,7 +2343,7 @@ ScratchpadSidebar.prototype = {
               return new ObjectClient(this._scratchpad.debuggerClient, grip);
             },
             getLongStringClient: actor => {
-              return this._scratchpad.webConsoleClient.longString(actor);
+              return this._scratchpad.webConsoleFront.longString(actor);
             },
             releaseActor: actor => {
               // Ignore release failure, since the object actor may have been already GC.

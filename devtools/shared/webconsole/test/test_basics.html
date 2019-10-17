@@ -46,7 +46,7 @@ function onStartPageErrorAndConsoleAPI(aState, aResponse)
   ok(!aResponse.nativeConsoleAPI, "!nativeConsoleAPI");
 
   top.console = top.console_;
-  aState.client.stopListeners(["ConsoleAPI", "foo"])
+  aState.webConsoleFront.stopListeners(["ConsoleAPI", "foo"])
     .then(onStopConsoleAPI.bind(null, aState));
 }
 

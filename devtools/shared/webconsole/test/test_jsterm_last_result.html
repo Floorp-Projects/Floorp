@@ -18,7 +18,7 @@ SimpleTest.waitForExplicitFinish();
 let gState;
 
 function evaluateJS(input) {
-  return gState.client.evaluateJSAsync(input);
+  return gState.webConsoleFront.evaluateJSAsync(input);
 }
 
 function startTest()

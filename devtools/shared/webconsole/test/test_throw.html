@@ -27,7 +27,7 @@ function onAttach(aState, aResponse)
   let falsyValues = ["-0", "null", "undefined", "Infinity", "-Infinity", "NaN"];
   falsyValues.forEach(function(value) {
     tests.push(async function() {
-      const aResponse = await aState.client.evaluateJS("throw " + value + ";")
+      const aResponse = await aState.webConsoleFront.evaluateJS("throw " + value + ";")
       let type = aResponse.exception.type;
       is(type, value, "exception.type for throw " + value);
       nextTest();
@@ -37,7 +37,7 @@ function onAttach(aState, aResponse)
   let identityTestValues = [false, 0];
   identityTestValues.forEach(function(value) {
     tests.push(async function() {
-      const aResponse = await aState.client.evaluateJS("throw " + value + ";")
+      const aResponse = await aState.webConsoleFront.evaluateJS("throw " + value + ";")
       let exception = aResponse.exception;
       is(exception, value, "response.exception for throw " + value);
       nextTest();
@@ -49,7 +49,7 @@ function onAttach(aState, aResponse)
                         DebuggerServer.LONG_STRING_INITIAL_LENGTH
                       );
   tests.push(async function() {
-    const aResponse = await aState.client.evaluateJS("throw '" + longString + "';")
+    const aResponse = await aState.webConsoleFront.evaluateJS("throw '" + longString + "';")
     is(aResponse.exception.initial, shortedString,
       "exception.initial for throw longString"
     );
@@ -66,7 +66,7 @@ function onAttach(aState, aResponse)
   ];
   symbolTestValues.forEach(function([expr, message]) {
     tests.push(async function() {
-      const aResponse = await aState.client.evaluateJS("throw " + expr + ";");
+      const aResponse = await aState.webConsoleFront.evaluateJS("throw " + expr + ";");
       is(aResponse.exceptionMessage, message,
          "response.exception for throw " + expr);
       nextTest();

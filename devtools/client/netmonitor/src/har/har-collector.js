@@ -16,7 +16,7 @@ const trace = {
  * HTTP requests executed by the page (including inner iframes).
  */
 function HarCollector(options) {
-  this.webConsoleClient = options.webConsoleClient;
+  this.webConsoleFront = options.webConsoleFront;
   this.debuggerClient = options.debuggerClient;
 
   this.onNetworkEvent = this.onNetworkEvent.bind(this);
@@ -158,7 +158,7 @@ HarCollector.prototype = {
 
   onNetworkEvent: function(packet) {
     // Skip events from different console actors.
-    if (packet.from != this.webConsoleClient.actor) {
+    if (packet.from != this.webConsoleFront.actor) {
       return;
     }
 
@@ -287,7 +287,7 @@ HarCollector.prototype = {
 
   getData: function(actor, method, callback) {
     return new Promise(resolve => {
-      if (!this.webConsoleClient[method]) {
+      if (!this.webConsoleFront[method]) {
         console.error("HarCollector.getData: ERROR Unknown method!");
         resolve();
       }
@@ -299,7 +299,7 @@ HarCollector.prototype = {
         file
       );
 
-      this.webConsoleClient[method](actor, response => {
+      this.webConsoleFront[method](actor, response => {
         trace.log(
           "HarCollector.getData; RESPONSE " + method + ", " + file.url,
           response
@@ -442,7 +442,7 @@ HarCollector.prototype = {
    *         are available, or rejected if something goes wrong.
    */
   getString: function(stringGrip) {
-    const promise = this.webConsoleClient.getString(stringGrip);
+    const promise = this.webConsoleFront.getString(stringGrip);
     this.requests.push(promise);
     return promise;
   },
