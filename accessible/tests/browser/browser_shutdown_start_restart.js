@@ -7,9 +7,7 @@
 add_task(async function() {
   info("Creating a service");
   // Create a11y service.
-  let [a11yInitObserver, a11yInit] = initAccService();
-  await a11yInitObserver;
-
+  let a11yInit = initPromise();
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService
   );
@@ -18,9 +16,7 @@ add_task(async function() {
 
   info("Removing a service");
   // Remove the only reference to an a11y service.
-  let [a11yShutdownObserver, a11yShutdown] = shutdownAccService();
-  await a11yShutdownObserver;
-
+  let a11yShutdown = shutdownPromise();
   accService = null;
   ok(!accService, "Service is removed");
   // Force garbage collection that should trigger shutdown.
@@ -29,9 +25,7 @@ add_task(async function() {
 
   info("Recreating a service");
   // Re-create a11y service.
-  [a11yInitObserver, a11yInit] = initAccService();
-  await a11yInitObserver;
-
+  a11yInit = initPromise();
   accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService
   );
@@ -40,9 +34,7 @@ add_task(async function() {
 
   info("Removing a service again");
   // Remove the only reference to an a11y service again.
-  [a11yShutdownObserver, a11yShutdown] = shutdownAccService();
-  await a11yShutdownObserver;
-
+  a11yShutdown = shutdownPromise();
   accService = null;
   ok(!accService, "Service is removed again");
   // Force garbage collection that should trigger shutdown.

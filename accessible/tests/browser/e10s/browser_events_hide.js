@@ -39,6 +39,5 @@ addAccessibleTask(
       "previous",
       "Correct target previous sibling."
     );
-  },
-  { iframe: true }
+  }
 );

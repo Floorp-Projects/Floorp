@@ -6,9 +6,7 @@
 
 add_task(async function() {
   // Create a11y service.
-  const [a11yInitObserver, a11yInit] = initAccService();
-  await a11yInitObserver;
-
+  let a11yInit = initPromise();
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService
   );
@@ -33,10 +31,8 @@ add_task(async function() {
   // This promise will resolve only if canShutdown flag is set to true. If
   // 'a11y-init-or-shutdown' event with '0' flag comes before it can be shut
   // down, the promise will reject.
-  const [a11yShutdownObserver, a11yShutdownPromise] = shutdownAccService();
-  await a11yShutdownObserver;
-  const a11yShutdown = new Promise((resolve, reject) =>
-    a11yShutdownPromise.then(flag =>
+  let a11yShutdown = new Promise((resolve, reject) =>
+    shutdownPromise().then(flag =>
       canShutdown
         ? resolve()
         : reject("Accessible service was shut down incorrectly")
