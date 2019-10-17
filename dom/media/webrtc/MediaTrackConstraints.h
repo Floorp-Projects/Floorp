@@ -21,11 +21,6 @@ class MediaDevice;
 class MediaEngineSource;
 
 template <class EnumValuesStrings, class Enum>
-static const char* EnumToASCII(const EnumValuesStrings& aStrings, Enum aValue) {
-  return aStrings[uint32_t(aValue)].value;
-}
-
-template <class EnumValuesStrings, class Enum>
 static Enum StringToEnum(const EnumValuesStrings& aStrings,
                          const nsAString& aValue, Enum aDefaultValue) {
   for (size_t i = 0; aStrings[i].value; i++) {

@@ -164,7 +164,8 @@ void MediaKeySystemAccessManager::RequestCallback(
       "MediaKeySystemAccess::GetKeySystemStatus(%s) "
       "result=%s msg='%s'",
       NS_ConvertUTF16toUTF8(aKeySystem).get(),
-      MediaKeySystemStatusValues::strings[(size_t)status].value, message.get());
+      nsCString(MediaKeySystemStatusValues::GetString(status)).get(),
+      message.get());
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
   if (status == MediaKeySystemStatus::Cdm_not_installed &&

@@ -1177,9 +1177,7 @@ static nsCString ToCString(const nsString& aString) {
 
 static nsCString ToCString(const MediaKeysRequirement aValue) {
   nsCString str("'");
-  str.Append(nsDependentCString(
-      MediaKeysRequirementValues::strings[static_cast<uint32_t>(aValue)]
-          .value));
+  str.AppendASCII(MediaKeysRequirementValues::GetString(aValue));
   str.AppendLiteral("'");
   return str;
 }

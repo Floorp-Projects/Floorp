@@ -1027,10 +1027,8 @@ bool EventRunnable::PreDispatch(WorkerPrivate* /* unused */) {
   RefPtr<XMLHttpRequestMainThread>& xhr = mProxy->mXHR;
   MOZ_ASSERT(xhr);
 
-  const EnumEntry& entry =
-      XMLHttpRequestResponseTypeValues::strings[static_cast<uint32_t>(
-          xhr->ResponseType())];
-  mResponseType.AssignASCII(entry.value, entry.length);
+  mResponseType.AssignASCII(
+      XMLHttpRequestResponseTypeValues::GetString(xhr->ResponseType()));
 
   ErrorResult rv;
   xhr->GetResponseText(mResponseText, rv);
