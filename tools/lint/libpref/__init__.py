@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function
 import os
+import re
 import sys
 import yaml
 from mozlint import result
@@ -23,6 +24,7 @@ IGNORE_PREFS = {
     'apz.fling_curve_function_y2',      # This pref is a part of a series.
     'dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled',  # NOQA: E501; Uses the 'locked' attribute.
 }
+PATTERN = re.compile(r'\s*pref\(\s*\"(?P<pref>.+)\"\s*,\s*(?P<val>.+)\)\s*;.*')
 
 
 def get_names(pref_list_filename):
@@ -50,30 +52,33 @@ def get_names(pref_list_filename):
 # The checking process uses simple pattern matching rather than parsing, since
 # the entries in all.js are regular enough to do this.
 def check_against(path, pref_names):
-    with open(path) as source:
-        found_dupes = set()
-        errors = []
-        for lineno, line in enumerate(source, start=1):
-            if 'pref(' in line:
-                errors.extend(check_name_for_pref(line.strip(), pref_names,
-                                                  found_dupes, lineno, path))
-        return errors
-
-
-def check_name_for_pref(pref, pref_names, found_dupes, lineno, path):
-    groups = pref.split('"')
     errors = []
-    if len(groups) > 1 and '//' not in groups[0]:
-        if groups[1] in pref_names and groups[1] not in found_dupes:
-            found_dupes.add(groups[1])
+    prefs = read_prefs(path)
+    for pref in prefs:
+        if pref['name'] in pref_names:
             errors.append({
                 'path': path,
-                'message': pref,
-                'lineno': lineno,
+                'message': pref['raw'],
+                'lineno': pref['line'],
                 'hint': 'Remove the duplicate pref or add it to IGNORE_PREFS.',
                 'level': 'error',
             })
     return errors
+
+
+def read_prefs(path):
+    prefs = []
+    with open(path) as source:
+        for lineno, line in enumerate(source, start=1):
+            match = PATTERN.match(line)
+            if match:
+                prefs.append({
+                    'name': match.group('pref'),
+                    'value': match.group('val'),
+                    'line': lineno,
+                    'raw': line
+                })
+    return prefs
 
 
 def checkdupes(paths, config, **kwargs):
