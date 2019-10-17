@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=484459
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     SimpleTest.waitForExplicitFinish();
-    var url = "chrome://mochitests/content/chrome/js/xpconnect/tests/chrome/test_bug484459.xul";
+    var url = "chrome://mochitests/content/chrome/js/xpconnect/tests/chrome/test_bug484459.xhtml";
     function go() {
       var w = $('ifr').contentWindow.wrappedJSObject;
       var sandbox = new Cu.Sandbox(w);
