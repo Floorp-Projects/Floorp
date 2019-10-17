@@ -27,5 +27,6 @@ addAccessibleTask(
     // Remove @hidden attribute
     await setHidden(browser);
     testAccessibleTree(container, { SECTION: [{ ENTRY: [] }] });
-  }
+  },
+  { iframe: true }
 );
