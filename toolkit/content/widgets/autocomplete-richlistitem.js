@@ -10,11 +10,6 @@
   const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
   );
-  ChromeUtils.defineModuleGetter(
-    this,
-    "LoginHelper",
-    "resource://gre/modules/LoginHelper.jsm"
-  );
 
   MozElements.MozAutocompleteRichlistitem = class MozAutocompleteRichlistitem extends MozElements.MozRichlistitem {
     constructor() {
@@ -998,9 +993,14 @@
           return;
         }
 
+        const { LoginHelper } = ChromeUtils.import(
+          "resource://gre/modules/LoginHelper.jsm"
+        );
+
         // ac-label gets populated from getCommentAt despite the attribute name.
         // The "comment" is used to populate additional visible text.
         let formHostname = this.getAttribute("ac-label");
+
         LoginHelper.openPasswordManager(this.ownerGlobal, {
           filterString: formHostname,
           entryPoint: "autocomplete",
