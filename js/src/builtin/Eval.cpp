@@ -60,10 +60,7 @@ static bool IsEvalCacheCandidate(JSScript* script) {
 
 /* static */
 HashNumber EvalCacheHashPolicy::hash(const EvalCacheLookup& l) {
-  AutoCheckCannotGC nogc;
-  uint32_t hash = l.str->hasLatin1Chars()
-                      ? HashString(l.str->latin1Chars(nogc), l.str->length())
-                      : HashString(l.str->twoByteChars(nogc), l.str->length());
+  HashNumber hash = HashStringChars(l.str);
   return AddToHash(hash, l.callerScript.get(), l.pc);
 }
 
