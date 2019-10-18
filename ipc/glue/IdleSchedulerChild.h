@@ -14,7 +14,7 @@
 class nsIIdlePeriod;
 
 namespace mozilla {
-class PrioritizedEventQueue;
+class IdlePeriodState;
 
 namespace ipc {
 
@@ -28,9 +28,9 @@ class IdleSchedulerChild final : public PIdleSchedulerChild {
 
   IPCResult RecvIdleTime(uint64_t aId, TimeDuration aBudget);
 
-  void Init(PrioritizedEventQueue* aEventQueue);
+  void Init(IdlePeriodState* aIdlePeriodState);
 
-  void Disconnect() { mEventQueue = nullptr; }
+  void Disconnect() { mIdlePeriodState = nullptr; }
 
   // See similar methods on PrioritizedEventQueue.
   void SetActive();
@@ -47,7 +47,7 @@ class IdleSchedulerChild final : public PIdleSchedulerChild {
   // See IdleScheduleParent::sActiveChildCounter
   base::SharedMemory mActiveCounter;
 
-  PrioritizedEventQueue* mEventQueue = nullptr;
+  IdlePeriodState* mIdlePeriodState = nullptr;
 
   uint32_t mChildId = 0;
 };
