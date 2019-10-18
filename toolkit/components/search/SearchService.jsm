@@ -34,13 +34,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gSeparatePrivateDefault",
-  SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "gGeoSpecificDefaultsEnabled",
   SearchUtils.BROWSER_SEARCH_PREF + "geoSpecificDefaults",
   false
@@ -723,6 +716,14 @@ SearchService.prototype = {
   async _init(skipRegionCheck) {
     SearchUtils.log("_init start");
 
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_separatePrivateDefault",
+      SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+      false,
+      this._onSeparateDefaultPrefChanged.bind(this)
+    );
+
     try {
       // See if we have a cache file so we don't have to parse a bunch of XML.
       let cache = await this._readCacheFile();
@@ -969,7 +970,7 @@ SearchService.prototype = {
    *   browsing engine will be returned.
    */
   get originalPrivateDefaultEngine() {
-    return this._originalDefaultEngine(gSeparatePrivateDefault);
+    return this._originalDefaultEngine(this._separatePrivateDefault);
   },
 
   resetToOriginalDefaultEngine() {
@@ -1283,9 +1284,17 @@ SearchService.prototype = {
         this._currentEngine,
         SearchUtils.MODIFIED_TYPE.DEFAULT
       );
+      // If we've not got a separate private active, notify update of the
+      // private so that the UI updates correctly.
+      if (!this._separatePrivateDefault) {
+        SearchUtils.notifyAction(
+          this._currentEngine,
+          SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
+        );
+      }
     }
     if (
-      gSeparatePrivateDefault &&
+      this._separatePrivateDefault &&
       prevPrivateEngine &&
       this.defaultPrivateEngine !== prevPrivateEngine
     ) {
@@ -2622,7 +2631,7 @@ SearchService.prototype = {
     // tests. Really, removeEngine should always commit to updating any
     // changed defaults.
     if (
-      gSeparatePrivateDefault &&
+      this._separatePrivateDefault &&
       engineToRemove == this.defaultPrivateEngine
     ) {
       this._currentPrivateEngine = null;
@@ -2894,6 +2903,14 @@ SearchService.prototype = {
       this[currentEngine],
       SearchUtils.MODIFIED_TYPE[privateMode ? "DEFAULT_PRIVATE" : "DEFAULT"]
     );
+    // If we've not got a separate private active, notify update of the
+    // private so that the UI updates correctly.
+    if (!privateMode && !this._separatePrivateDefault) {
+      SearchUtils.notifyAction(
+        this[currentEngine],
+        SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
+      );
+    }
   },
 
   get defaultEngine() {
@@ -2905,11 +2922,11 @@ SearchService.prototype = {
   },
 
   get defaultPrivateEngine() {
-    return this._getEngineDefault(gSeparatePrivateDefault);
+    return this._getEngineDefault(this._separatePrivateDefault);
   },
 
   set defaultPrivateEngine(newEngine) {
-    this._setEngineDefault(gSeparatePrivateDefault, newEngine);
+    this._setEngineDefault(this._separatePrivateDefault, newEngine);
   },
 
   async getDefault() {
@@ -2930,6 +2947,19 @@ SearchService.prototype = {
   async setDefaultPrivate(engine) {
     await this.init(true);
     return (this.defaultPrivateEngine = engine);
+  },
+
+  _onSeparateDefaultPrefChanged() {
+    // We should notify if the normal default, and the currently saved private
+    // default are different. Otherwise, save the energy.
+    if (this.defaultEngine != this._getEngineDefault(true)) {
+      SearchUtils.notifyAction(
+        // Always notify with the new private engine, the function checks
+        // the preference value for us.
+        this.defaultPrivateEngine,
+        SearchUtils.MODIFIED_TYPE.DEFAULT_PRIVATE
+      );
+    }
   },
 
   async _getEngineInfo(engine) {
@@ -3059,7 +3089,7 @@ SearchService.prototype = {
       defaultSearchEngineData,
     };
 
-    if (gSeparatePrivateDefault) {
+    if (this._separatePrivateDefault) {
       let [
         privateShortName,
         defaultPrivateSearchEngineData,
