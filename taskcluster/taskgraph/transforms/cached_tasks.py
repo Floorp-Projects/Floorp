@@ -31,10 +31,7 @@ def order_tasks(config, tasks):
             task for task in task.get('dependencies', {}).values()
             if task.startswith(kind_prefix)
         }
-        if parents and not emitted.issuperset(parents):
-            if not task_labels.issuperset(parents):
-                raise Exception('Missing parent tasks for {}: {}'.format(
-                    task['label'], set(parents) - task_labels))
+        if parents and not emitted.issuperset(parents & task_labels):
             pending.append(task)
             continue
         emitted.add(task['label'])
