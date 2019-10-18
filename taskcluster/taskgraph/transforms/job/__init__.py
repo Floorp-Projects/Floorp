@@ -174,16 +174,16 @@ def use_fetches(config, jobs):
     artifact_names = {}
     aliases = {}
 
-    if config.kind == 'toolchain':
+    if config.kind in ('toolchain', 'fetch'):
         jobs = list(jobs)
         for job in jobs:
             run = job.get('run', {})
-            label = 'toolchain-{}'.format(job['name'])
+            label = job['label']
             get_attribute(
                 artifact_names, label, run, 'toolchain-artifact')
-            value = run.get('toolchain-alias')
+            value = run.get('{}-alias'.format(config.kind))
             if value:
-                aliases['toolchain-{}'.format(value)] = label
+                aliases['{}-{}'.format(config.kind, value)] = label
 
     for task in config.kind_dependencies_tasks:
         if task.kind in ('fetch', 'toolchain'):
