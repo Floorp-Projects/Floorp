@@ -62,13 +62,14 @@ async function testGetAllocationStack(client, target, makePromises) {
   await front.listPromises();
 
   // Get the grip for promise p
+  const isPromiseP = promise =>
+    promise.preview.ownProperties.name &&
+    promise.preview.ownProperties.name.value === "p";
+
   const onNewPromise = new Promise(resolve => {
     front.on("new-promises", promises => {
       for (const p of promises) {
-        if (
-          p.preview.ownProperties.name &&
-          p.preview.ownProperties.name.value === "p"
-        ) {
+        if (isPromiseP(p)) {
           resolve(p);
         }
       }
@@ -101,5 +102,6 @@ async function testGetAllocationStack(client, target, makePromises) {
     is(typeof stack.column, "number", "Expect stack column to be a number.");
   }
 
-  await front.detach();
+  info("Await for the promise to settle and detach the front");
+  await front.destroy();
 }

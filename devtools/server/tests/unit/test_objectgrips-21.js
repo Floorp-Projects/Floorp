@@ -94,7 +94,7 @@ const systemPrincipalTests = [
     var trapDidRun = false;
     var obj = new Proxy(function(){}, new Proxy({}, {get: (_, trap) => {
       trapDidRun = true;
-      throw new Error("proxy trap '" + trap + "' was called.");
+      throw new Error("proxy trap '" + trap + "' was called.(function)");
     }}));
   `,
     afterTest: "trapDidRun === false",
