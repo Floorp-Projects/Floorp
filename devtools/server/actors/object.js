@@ -34,6 +34,16 @@ loader.lazyRequireGetter(
   "devtools/server/actors/object/stringifiers"
 );
 
+// ContentDOMReference requires ChromeUtils, which isn't available in worker context.
+if (!isWorker) {
+  loader.lazyRequireGetter(
+    this,
+    "ContentDOMReference",
+    "resource://gre/modules/ContentDOMReference.jsm",
+    true
+  );
+}
+
 const {
   getArrayLength,
   getPromiseState,
@@ -248,6 +258,17 @@ const proto = {
     const raw = this.getRawObject();
     this._populateGripPreview(g, raw);
     this.hooks.decrementGripDepth();
+
+    if (raw && Node.isInstance(raw) && ContentDOMReference) {
+      // ContentDOMReference.get takes a DOM element and returns an object with
+      // its browsing context id, as well as a unique identifier. We are putting it in
+      // the grip here in order to be able to retrieve the node later, potentially from a
+      // different DebuggerServer running in the same process.
+      // If ContentDOMReference.get throws, we simply don't add the property to the grip.
+      try {
+        g.contentDomReference = ContentDOMReference.get(raw);
+      } catch (e) {}
+    }
 
     return g;
   },
