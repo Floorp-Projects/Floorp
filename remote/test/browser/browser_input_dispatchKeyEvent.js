@@ -165,9 +165,7 @@ add_task(async function testSelectDelete() {
   info("Send Ctrl/Alt + Backspace (deleteWordBackward)");
   const { primary, primaryKey } = keyForPlatform();
   await dispatchKeyEvent(Input, primaryKey, "rawKeyDown", primary);
-  if (Services.appinfo.OS === "WINNT") {
-    await checkBackspace(Input, "word 2 ", primary);
-  }
+  await checkBackspace(Input, "word 2 ", primary);
   await dispatchKeyEvent(Input, primaryKey, "keyUp");
 
   await resetInput("word 2 ");
@@ -180,10 +178,8 @@ add_task(async function testSelectDelete() {
     info("Send Meta + Backspace (deleteSoftLineBackward)");
     await dispatchKeyEvent(Input, "Meta", "rawKeyDown", meta);
     await sendRawKey(Input, "Backspace", meta);
-    const { value, caret } = await getInputContent();
     await dispatchKeyEvent(Input, "Meta", "keyUp");
-    todo_is(value, "d4", "Meta + Backspace should delete line backward");
-    todo_is(caret, 0, "Check position after Meta + Backspace");
+    await checkInputContent("d4", 0);
   }
 
   await teardown(client);
