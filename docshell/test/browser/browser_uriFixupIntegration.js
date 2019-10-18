@@ -14,7 +14,10 @@ const kPrivateSearchEngineURL = "http://example.com/?private={searchTerms}";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.separatePrivateDefault", true]],
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["browser.search.separatePrivateDefault", true],
+    ],
   });
 
   let oldCurrentEngine = await Services.search.getDefault();

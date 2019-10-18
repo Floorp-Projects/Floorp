@@ -662,6 +662,16 @@ SearchService.prototype = {
    */
   _metaData: {},
 
+  // This reflects the combined values of the prefs for enabling the separate
+  // private default UI, and for the user choosing a separate private engine.
+  // If either one is disabled, then we don't enable the separate private default.
+  get _separatePrivateDefault() {
+    return (
+      this._separatePrivateDefaultPrefValue &&
+      this._separatePrivateDefaultEnabledPrefValue
+    );
+  },
+
   /**
    * Resets the locally stored data to the original empty values in preparation
    * for a reinit or a reset.
@@ -718,8 +728,16 @@ SearchService.prototype = {
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "_separatePrivateDefault",
+      "_separatePrivateDefaultPrefValue",
       SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+      false,
+      this._onSeparateDefaultPrefChanged.bind(this)
+    );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_separatePrivateDefaultEnabledPrefValue",
+      SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
       false,
       this._onSeparateDefaultPrefChanged.bind(this)
     );
