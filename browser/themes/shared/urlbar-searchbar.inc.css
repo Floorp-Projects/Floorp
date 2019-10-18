@@ -6,7 +6,7 @@
 
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
-%define urlbarBreakoutHorizontalExtend 30px
+%define urlbarMarginInline 5px
 
 :root {
   --toolbar-field-focus-border-color: Highlight;
@@ -28,7 +28,7 @@
 #urlbar-container,
 #search-container {
   padding-block: 3px;
-  margin-inline: 5px;
+  margin-inline: @urlbarMarginInline@;
 }
 
 #urlbar,
@@ -183,8 +183,8 @@
 
 #urlbar[breakout][breakout-extend] {
   top: 0;
-  left: -@urlbarBreakoutHorizontalExtend@;
-  width: calc(100% + 2 * @urlbarBreakoutHorizontalExtend@);
+  left: -@urlbarMarginInline@;
+  width: calc(100% + 2 * @urlbarMarginInline@);
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-background {
@@ -194,12 +194,12 @@
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
   height: var(--urlbar-toolbar-height);
   padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
-  padding-inline: @urlbarBreakoutHorizontalExtend@;
+  padding-inline: @urlbarMarginInline@;
 }
 
 @keyframes urlbar-grow {
   0% {
-    transform: scale(.9);
+    transform: scaleX(.98) scaleY(.9);
   }
   100% {
     transform: scale(1.0);
