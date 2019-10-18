@@ -212,12 +212,7 @@ class DisplayToolbar internal constructor(
     set(value) {
         field = value
 
-        if (value.emptyIcon != null) {
-            views.emptyIndicator.setImageDrawable(value.emptyIcon)
-            views.emptyIndicator.visibility = View.VISIBLE
-        } else {
-            views.emptyIndicator.visibility = View.GONE
-        }
+        views.emptyIndicator.setImageDrawable(value.emptyIcon)
 
         views.trackingProtectionIndicator.setIcons(
             value.trackingProtectionNothingBlocked,
