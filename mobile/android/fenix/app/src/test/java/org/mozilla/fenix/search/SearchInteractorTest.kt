@@ -190,6 +190,16 @@ class SearchInteractorTest {
     }
 
     @Test
+    fun onSearchShortcutsButtonClicked() {
+        val searchController: SearchController = mockk(relaxed = true)
+        val interactor = SearchInteractor(searchController)
+
+        interactor.onSearchShortcutsButtonClicked()
+
+        verify { searchController.handleSearchShortcutsButtonClicked() }
+    }
+
+    @Test
     fun onClickSearchEngineSettings() {
         val navController: NavController = mockk()
         val store: SearchFragmentStore = mockk()

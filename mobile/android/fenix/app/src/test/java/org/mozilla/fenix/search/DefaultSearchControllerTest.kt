@@ -205,6 +205,24 @@ class DefaultSearchControllerTest {
     }
 
     @Test
+    fun handleSearchShortcutsButtonClicked_alreadyOpen() {
+        every { store.state.showSearchShortcuts } returns true
+
+        controller.handleSearchShortcutsButtonClicked()
+
+        verify { store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(false)) }
+    }
+
+    @Test
+    fun handleSearchShortcutsButtonClicked_notYetOpen() {
+        every { store.state.showSearchShortcuts } returns false
+
+        controller.handleSearchShortcutsButtonClicked()
+
+        verify { store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(true)) }
+    }
+
+    @Test
     fun handleExistingSessionSelected() {
         val session: Session = mockk(relaxed = true)
         val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(null)
