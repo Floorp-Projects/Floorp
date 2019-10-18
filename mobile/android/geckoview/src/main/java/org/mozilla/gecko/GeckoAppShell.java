@@ -2058,17 +2058,4 @@ public class GeckoAppShell {
         locales[0] = getLanguageTag(locale);
         return locales;
     }
-
-    private static Boolean sIsFennec;
-
-    public static boolean isFennec() {
-        if (sIsFennec == null) {
-            try {
-                sIsFennec = Class.forName("org.mozilla.gecko.GeckoApp") != null;
-            } catch (ClassNotFoundException e) {
-                sIsFennec = false;
-            }
-        }
-        return sIsFennec;
-    }
 }

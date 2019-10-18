@@ -23,7 +23,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -615,21 +614,13 @@ public class GeckoSession implements Parcelable {
 
                     final GeckoResult<String> result = delegate.onLoadError(GeckoSession.this, uri, err);
                     if (result == null) {
-                        if (GeckoAppShell.isFennec()) {
-                            callback.sendSuccess(null);
-                        } else {
-                            callback.sendError("abort");
-                        }
+                        callback.sendError("abort");
                         return;
                     }
 
                     result.accept(url -> {
                         if (url == null) {
-                            if (GeckoAppShell.isFennec()) {
-                                callback.sendSuccess(null);
-                            } else {
-                                callback.sendError("abort");
-                            }
+                            callback.sendError("abort");
                         } else {
                             callback.sendSuccess(url);
                         }
