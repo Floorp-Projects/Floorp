@@ -647,8 +647,7 @@ void AutoEntryScript::DocshellEntryMonitor::Entry(
 
   if (!filename.IsEmpty() || !functionName.IsEmpty()) {
     docShellForJSRunToCompletion->NotifyJSRunToCompletionStart(
-        mReason, functionName.get(), filename.get(), lineNumber, aAsyncStack,
-        aAsyncCause);
+        mReason, functionName, filename, lineNumber, aAsyncStack, aAsyncCause);
   }
 }
 
