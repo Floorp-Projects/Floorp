@@ -7,7 +7,7 @@
 #include "mozilla/ipc/IdleSchedulerChild.h"
 #include "mozilla/ipc/IdleSchedulerParent.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/IdlePeriodState.h"
+#include "mozilla/PrioritizedEventQueue.h"
 #include "BackgroundChild.h"
 
 namespace mozilla {
@@ -19,11 +19,11 @@ IdleSchedulerChild::~IdleSchedulerChild() {
   if (sMainThreadIdleScheduler == this) {
     sMainThreadIdleScheduler = nullptr;
   }
-  MOZ_ASSERT(!mIdlePeriodState);
+  MOZ_ASSERT(!mEventQueue);
 }
 
-void IdleSchedulerChild::Init(IdlePeriodState* aIdlePeriodState) {
-  mIdlePeriodState = aIdlePeriodState;
+void IdleSchedulerChild::Init(PrioritizedEventQueue* aEventQueue) {
+  mEventQueue = aEventQueue;
 
   RefPtr<IdleSchedulerChild> scheduler = this;
   auto resolve =
@@ -32,7 +32,7 @@ void IdleSchedulerChild::Init(IdlePeriodState* aIdlePeriodState) {
           mActiveCounter.SetHandle(*Get<0>(aResult), false);
           mActiveCounter.Map(sizeof(int32_t));
           mChildId = Get<1>(aResult);
-          if (mChildId && mIdlePeriodState && mIdlePeriodState->IsActive()) {
+          if (mChildId && mEventQueue && mEventQueue->IsActive()) {
             SetActive();
           }
         }
@@ -43,8 +43,8 @@ void IdleSchedulerChild::Init(IdlePeriodState* aIdlePeriodState) {
 }
 
 IPCResult IdleSchedulerChild::RecvIdleTime(uint64_t aId, TimeDuration aBudget) {
-  if (mIdlePeriodState) {
-    mIdlePeriodState->SetIdleToken(aId, aBudget);
+  if (mEventQueue) {
+    mEventQueue->SetIdleToken(aId, aBudget);
   }
   return IPC_OK();
 }
