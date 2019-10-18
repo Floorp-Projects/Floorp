@@ -18,6 +18,10 @@ add_task(async function setup() {
 
   Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + "region", "US");
   Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    true
+  );
+  Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     true
   );
@@ -238,5 +242,41 @@ add_task(async function test_defaultPrivateEngine_turned_off() {
     Services.search.defaultEngine,
     engine2,
     "Should also keep the normal default if attempted to be set to a hidden engine"
+  );
+});
+
+add_task(async function test_defaultPrivateEngine_ui_turned_off() {
+  engine1.hidden = false;
+  engine2.hidden = false;
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
+    true
+  );
+
+  Services.search.defaultEngine = engine2;
+  Services.search.defaultPrivateEngine = engine1;
+
+  let promise = promiseDefaultNotification("private");
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    false
+  );
+  Assert.equal(
+    await promise,
+    engine2,
+    "Should have notified for resetting of the private pref."
+  );
+
+  promise = promiseDefaultNotification("normal");
+  Services.search.defaultPrivateEngine = engine1;
+  Assert.equal(
+    await promise,
+    engine1,
+    "Should have notified setting the first engine correctly."
+  );
+  Assert.equal(
+    Services.search.defaultPrivateEngine,
+    engine1,
+    "Should be set to the first engine correctly"
   );
 });
