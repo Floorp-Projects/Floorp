@@ -365,17 +365,25 @@ async function doSearch(searchTerm, cmdLine) {
   // be handled synchronously. Then load the search URI when the
   // SearchService has loaded.
   let win = openBrowserWindow(cmdLine, gSystemPrincipal, "about:blank");
-  var engine = await Services.search.getDefault();
-  var countId = (engine.identifier || "other-" + engine.name) + ".system";
-  var count = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
-  count.add(countId);
-
-  var submission = engine.getSubmission(searchTerm, null, "system");
-
-  win.gBrowser.selectedBrowser.loadURI(submission.uri.spec, {
-    triggeringPrincipal: gSystemPrincipal,
-    postData: submission.postData,
+  await new Promise(resolve => {
+    Services.obs.addObserver(function observe(subject) {
+      if (subject == win) {
+        Services.obs.removeObserver(
+          observe,
+          "browser-delayed-startup-finished"
+        );
+        resolve();
+      }
+    }, "browser-delayed-startup-finished");
   });
+
+  win.BrowserSearch.loadSearchFromCommandLine(
+    searchTerm,
+    PrivateBrowsingUtils.isInTemporaryAutoStartMode ||
+      PrivateBrowsingUtils.isWindowPrivate(win),
+    gSystemPrincipal,
+    win.gBrowser.selectedBrowser.csp
+  ).catch(Cu.reportError);
 }
 
 function nsBrowserContentHandler() {
