@@ -2186,8 +2186,7 @@ static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
   // list.
   if (!aParentFrame ||
       !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
-      aParentFrame->IsGeneratedContentFrame() ||
-      !aChildContent->IsText()) {
+      aParentFrame->IsGeneratedContentFrame() || !aChildContent->IsText()) {
     return true;
   }
 
@@ -2315,13 +2314,12 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     return nullptr;
   }
 
-  if (aDocElement->IsHTMLElement() &&
-      mDocElementContainingBlock->IsCanvasFrame()) {
+  if (mDocElementContainingBlock->IsCanvasFrame()) {
     // This implements "The Principal Writing Mode".
     // https://drafts.csswg.org/css-writing-modes-3/#principal-flow
     //
-    // If there's a <body> element, its writing-mode, direction, and
-    // text-orientation override the root element's used value.
+    // If there's a <body> element in an HTML document, its writing-mode,
+    // direction, and text-orientation override the root element's used value.
     //
     // We need to copy <body>'s WritingMode to mDocElementContainingBlock before
     // construct mRootElementFrame so that anonymous internal frames such as
@@ -2331,12 +2329,13 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
                "We need to copy <body>'s principal writing-mode before "
                "constructing mRootElementFrame.");
 
+    const WritingMode docElementWM(computedStyle);
     Element* body = mDocument->GetBodyElement();
     if (body) {
       RefPtr<ComputedStyle> bodyStyle = ResolveComputedStyle(body);
-      WritingMode bodyWM(bodyStyle);
+      const WritingMode bodyWM(bodyStyle);
 
-      if (bodyWM != mDocElementContainingBlock->GetWritingMode()) {
+      if (bodyWM != docElementWM) {
         nsContentUtils::ReportToConsole(
             nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"),
             mDocument, nsContentUtils::eLAYOUT_PROPERTIES,
@@ -2347,7 +2346,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
           bodyWM);
     } else {
       mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
-          mDocElementContainingBlock->GetWritingMode());
+          docElementWM);
     }
   }
 
@@ -5567,8 +5566,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
     CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                               *aComputedStyle, PseudoStyleType::after,
-                               aItems);
+                               *aComputedStyle, PseudoStyleType::after, aItems);
     return;
   }
 
