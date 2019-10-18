@@ -44,7 +44,10 @@ function Notification(context, notificationsMap, id, options) {
       undefined,
       undefined,
       undefined,
-      context.principal, // ensures that Close button is shown on macOS.
+      // Principal is not set because doing so reveals buttons to control
+      // notification preferences, which are currently not implemented for
+      // notifications triggered via this extension API (bug 1589693).
+      undefined,
       context.incognito
     );
   } catch (e) {
