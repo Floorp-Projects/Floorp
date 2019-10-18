@@ -178,56 +178,6 @@ class ObjectClient extends FrontClassWithSpec(objectSpec) {
   }
 
   /**
-   * Request the promises directly depending on the current promise.
-   */
-  getDependentPromises() {
-    if (this._grip.class !== "Promise") {
-      console.error("getDependentPromises is only valid for promise grips.");
-      return null;
-    }
-    return super.dependentPromises();
-  }
-
-  /**
-   * Request the stack to the promise's allocation point.
-   */
-  getPromiseAllocationStack() {
-    if (this._grip.class !== "Promise") {
-      console.error(
-        "getPromiseAllocationStack is only valid for promise grips."
-      );
-      return null;
-    }
-    return super.allocationStack();
-  }
-
-  /**
-   * Request the stack to the promise's fulfillment point.
-   */
-  getPromiseFulfillmentStack() {
-    if (this._grip.class !== "Promise") {
-      console.error(
-        "getPromiseFulfillmentStack is only valid for promise grips."
-      );
-      return null;
-    }
-    return super.fulfillmentStack();
-  }
-
-  /**
-   * Request the stack to the promise's rejection point.
-   */
-  getPromiseRejectionStack() {
-    if (this._grip.class !== "Promise") {
-      console.error(
-        "getPromiseRejectionStack is only valid for promise grips."
-      );
-      return null;
-    }
-    return super.rejectionStack();
-  }
-
-  /**
    * Request the target and handler internal slots of a proxy.
    */
   getProxySlots() {
