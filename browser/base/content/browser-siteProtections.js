@@ -606,44 +606,55 @@ var ThirdPartyCookies = {
     this.updateCategoryItem();
   },
 
-  get categoryLabel() {
-    delete this.categoryLabel;
-    return (this.categoryLabel = document.getElementById(
-      "protections-popup-cookies-category-label"
+  get disabledCategoryLabel() {
+    delete this.disabledCategoryLabel;
+    return (this.disabledCategoryLabel = document.getElementById(
+      "protections-popup-cookies-category-label-disabled"
+    ));
+  },
+
+  get enabledCategoryLabel() {
+    delete this.enabledCategoryLabel;
+    return (this.enabledCategoryLabel = document.getElementById(
+      "protections-popup-cookies-category-label-enabled"
     ));
   },
 
   updateCategoryItem() {
     this.categoryItem.classList.toggle("blocked", this.enabled);
 
-    let label;
-
     if (!this.enabled) {
-      label = "contentBlocking.cookies.blockingTrackers3.label";
-    } else {
-      switch (this.behaviorPref) {
-        case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
-          label = "contentBlocking.cookies.blocking3rdParty2.label";
-          break;
-        case Ci.nsICookieService.BEHAVIOR_REJECT:
-          label = "contentBlocking.cookies.blockingAll2.label";
-          break;
-        case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
-          label = "contentBlocking.cookies.blockingUnvisited2.label";
-          break;
-        case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
-          label = "contentBlocking.cookies.blockingTrackers3.label";
-          break;
-        default:
-          Cu.reportError(
-            `Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`
-          );
-          break;
-      }
+      this.disabledCategoryLabel.hidden = false;
+      this.enabledCategoryLabel.hidden = true;
+      return;
     }
-    this.categoryLabel.textContent = label
+
+    let label;
+    switch (this.behaviorPref) {
+      case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
+        label = "contentBlocking.cookies.blocking3rdParty2.label";
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT:
+        label = "contentBlocking.cookies.blockingAll2.label";
+        break;
+      case Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN:
+        label = "contentBlocking.cookies.blockingUnvisited2.label";
+        break;
+      case Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER:
+        label = "contentBlocking.cookies.blockingTrackers3.label";
+        break;
+      default:
+        Cu.reportError(
+          `Error: Unknown cookieBehavior pref observed: ${this.behaviorPref}`
+        );
+        break;
+    }
+    this.enabledCategoryLabel.textContent = label
       ? gNavigatorBundle.getString(label)
       : "";
+
+    this.disabledCategoryLabel.hidden = true;
+    this.enabledCategoryLabel.hidden = false;
   },
 
   get enabled() {
