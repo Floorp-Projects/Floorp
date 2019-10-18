@@ -149,6 +149,18 @@ def set_implementation(config, jobs):
         yield job
 
 
+@transforms.add
+def set_label(config, jobs):
+    for job in jobs:
+        if 'label' not in job:
+            if 'name' not in job:
+                raise Exception("job has neither a name nor a label")
+            job['label'] = '{}-{}'.format(config.kind, job['name'])
+        if job.get('name'):
+            del job['name']
+        yield job
+
+
 def get_attribute(dict, key, attributes, attribute_name):
     '''Get `attribute_name` from the given `attributes` dict, and if there
     is a corresponding value, set `key` in `dict` to that value.'''
@@ -262,13 +274,6 @@ def make_task_description(config, jobs):
     import_sibling_modules(exceptions=('common.py',))
 
     for job in jobs:
-        if 'label' not in job:
-            if 'name' not in job:
-                raise Exception("job has neither a name nor a label")
-            job['label'] = '{}-{}'.format(config.kind, job['name'])
-        if job.get('name'):
-            del job['name']
-
         # always-optimized tasks never execute, so have no workdir
         if job['run']['using'] != 'always-optimized':
             job['run'].setdefault('workdir', '/builds/worker')
