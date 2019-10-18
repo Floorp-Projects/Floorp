@@ -29,8 +29,6 @@ USE_LIBS += [
     'jsoncpp',
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
-
 FINAL_LIBRARY = 'xul-gtest'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
