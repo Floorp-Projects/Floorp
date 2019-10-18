@@ -1104,12 +1104,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       win->SetInitialPrincipalToSubject(cspToInheritForAboutBlank);
 
       if (aIsPopupSpam) {
-        MOZ_ASSERT(!win->IsPopupSpamWindow(),
+        MOZ_ASSERT(!newBC->GetIsPopupSpam(),
                    "Who marked it as popup spam already???");
-        if (!win->IsPopupSpamWindow()) {  // Make sure we don't mess up
-                                          // our counter even if the above
-                                          // assert fails.
-          win->SetIsPopupSpamWindow(true);
+        // Make sure we don't mess up our counter even if the above assert
+        // fails.
+        if (!newBC->GetIsPopupSpam()) {
+          newBC->SetIsPopupSpam(true);
         }
       }
     }

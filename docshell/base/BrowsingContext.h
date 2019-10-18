@@ -543,6 +543,10 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   bool MaySetEmbedderInnerWindowId(const uint64_t& aValue,
                                    ContentParent* aSource);
 
+  bool MaySetIsPopupSpam(const bool& aValue, ContentParent* aSource);
+
+  void DidSetIsPopupSpam();
+
   // Type of BrowsingContent
   const Type mType;
 

@@ -26,6 +26,8 @@ MOZ_BC_FIELD(EmbedderInnerWindowId, uint64_t)
 
 MOZ_BC_FIELD(HadOriginalOpener, bool)
 
+MOZ_BC_FIELD(IsPopupSpam, bool)
+
 // This field controls whether the browsing context is currently considered to
 // be activated by a gesture.
 MOZ_BC_FIELD(UserActivationState, UserActivation::State)
