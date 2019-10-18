@@ -304,11 +304,6 @@ task-priority:
 
 workers:
     aliases:
-        b-android:
-            provisioner: aws-provisioner-v1
-            implementation: docker-worker
-            os: linux
-            worker-type: 'gecko-{level}-{alias}'
         b-linux.*:
             provisioner: aws-provisioner-v1
             implementation: docker-worker
