@@ -1840,6 +1840,10 @@ class UrlbarInput {
     this.valueIsTyped = true;
     this._untrimmedValue = value;
     this.window.gBrowser.userTypedValue = value;
+    // Unset userSelectionBehavior because the user is modifying the search
+    // string, thus there's no valid selection. This is also used by the view
+    // to set "aria-activedescendant", thus it should never get stale.
+    this.controller.userSelectionBehavior = "none";
 
     let compositionState = this._compositionState;
     let compositionClosedPopup = this._compositionClosedPopup;
