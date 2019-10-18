@@ -1502,11 +1502,6 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
 
   nscoord oldAlignmentOffset = mAlignmentOffset;
 
-  static bool inWayland = false;
-#ifdef MOZ_WAYLAND
-  inWayland = !GDK_IS_X11_DISPLAY(gdk_display_get_default());
-#endif
-
   // If a panel is being moved or has flip="none", don't constrain or flip it,
   // in order to avoid visual noise when moving windows between screens.
   // However, if a panel is already constrained or flipped (mIsOffset), then we
@@ -1532,9 +1527,16 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     if (mRect.width > screenRect.width) mRect.width = screenRect.width;
     if (mRect.height > screenRect.height) mRect.height = screenRect.height;
 
-    // We can't get the subsequent change of the popup position under
-    // waylande where gdk_window_move_to_rect is used to place them
-    // because we don't know the absolute position of the window on the screen.
+      // We can't get the subsequent change of the popup position under
+      // waylande where gdk_window_move_to_rect is used to place them
+      // because we don't know the absolute position of the window on the
+      // screen.
+#ifdef MOZ_WAYLAND
+    static bool inWayland = gdk_display_get_default() &&
+                            !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+#else
+    static bool inWayland = false;
+#endif
     if (!inWayland) {
       // at this point the anchor (anchorRect) is within the available screen
       // area (screenRect) and the popup is known to be no larger than the
