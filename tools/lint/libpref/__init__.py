@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 import os
 import re
 import sys
@@ -28,7 +28,7 @@ PATTERN = re.compile(r'\s*pref\(\s*\"(?P<pref>.+)\"\s*,\s*(?P<val>.+)\)\s*;.*')
 
 
 def get_names(pref_list_filename):
-    pref_names = set()
+    pref_names = {}
     # We want to transform patterns like 'foo: @VAR@' into valid yaml. This
     # pattern does not happen in 'name', so it's fine to ignore these.
     # We also want to evaluate all branches of #ifdefs for pref names, so we
@@ -43,29 +43,37 @@ def get_names(pref_list_filename):
 
     for pref in pref_list:
         if pref['name'] not in IGNORE_PREFS:
-            pref_names.add(pref['name'])
+            pref_names[pref['name']] = pref['value']
+
     return pref_names
 
 
 # Check the names of prefs against each other, and if the pref is a duplicate
 # that has not previously been noted, add that name to the list of errors.
-# The checking process uses simple pattern matching rather than parsing, since
-# the entries in all.js are regular enough to do this.
 def check_against(path, pref_names):
     errors = []
     prefs = read_prefs(path)
     for pref in prefs:
         if pref['name'] in pref_names:
-            errors.append({
-                'path': path,
-                'message': pref['raw'],
-                'lineno': pref['line'],
-                'hint': 'Remove the duplicate pref or add it to IGNORE_PREFS.',
-                'level': 'error',
-            })
+            errors.extend(check_value_for_pref(pref, pref_names[pref['name']], path))
     return errors
 
 
+def check_value_for_pref(some_pref, some_value, path):
+    errors = []
+    if some_pref['value'] == some_value:
+        errors.append({
+            'path': path,
+            'message': some_pref['raw'],
+            'lineno': some_pref['line'],
+            'hint': 'Remove the duplicate pref or add it to IGNORE_PREFS.',
+            'level': 'error',
+        })
+    return errors
+
+
+# The entries in the *.js pref files are regular enough to use simple pattern
+# matching to load in prefs.
 def read_prefs(path):
     prefs = []
     with open(path) as source:
@@ -74,11 +82,20 @@ def read_prefs(path):
             if match:
                 prefs.append({
                     'name': match.group('pref'),
-                    'value': match.group('val'),
+                    'value': evaluate_pref(match.group('val')),
                     'line': lineno,
                     'raw': line
                 })
     return prefs
+
+
+def evaluate_pref(value):
+    bools = {'true': True, 'false': False}
+    if value in bools:
+        return bools[value]
+    elif value.isdigit():
+        return int(value)
+    return value
 
 
 def checkdupes(paths, config, **kwargs):
