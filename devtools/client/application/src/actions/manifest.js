@@ -4,9 +4,7 @@
 
 "use strict";
 
-const { l10n } = require("../modules/l10n");
-
-const { services, ManifestDevToolsError } = require("../modules/services");
+const { services } = require("../modules/services");
 const {
   FETCH_MANIFEST_FAILURE,
   FETCH_MANIFEST_START,
@@ -17,19 +15,11 @@ const {
 function fetchManifest() {
   return async (dispatch, getState) => {
     dispatch({ type: FETCH_MANIFEST_START });
-    try {
-      const manifest = await services.fetchManifest();
+    const { manifest, errorMessage } = await services.fetchManifest();
+
+    if (!errorMessage) {
       dispatch({ type: FETCH_MANIFEST_SUCCESS, manifest });
-    } catch (error) {
-      let errorMessage = error.message;
-
-      // since Firefox DevTools errors may not make sense for the user, swap
-      // their message for a generic one.
-      if (error instanceof ManifestDevToolsError) {
-        console.error(error);
-        errorMessage = l10n.getString("manifest-loaded-devtools-error");
-      }
-
+    } else {
       dispatch({ type: FETCH_MANIFEST_FAILURE, error: errorMessage });
     }
   };
