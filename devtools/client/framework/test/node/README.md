@@ -8,7 +8,7 @@ DevTools React components can be tested using [jest](https://jestjs.io/). Jest a
 
 We use yarn for dependency management. To run the tests locally:
 ```
-  cd devtools/client/shared/framework/test/jest
+  cd devtools/client/shared/framework/test/node
   yarn && yarn test
 ```
 
