@@ -10,11 +10,13 @@ let nsLoginInfo = Components.Constructor(
 const PREF_INSECURE_FIELD_WARNING_ENABLED =
   "security.insecure_field_warning.contextual.enabled";
 
+const PREF_SCHEME_UPGRADES = "signon.schemeUpgrades";
+
 let matchingLogins = [];
 matchingLogins.push(
   new nsLoginInfo(
-    "http://mochi.test:8888",
-    "http://autocomplete:8888",
+    "https://mochi.test:8888",
+    "https://autocomplete:8888",
     null,
     "",
     "emptypass1",
@@ -25,8 +27,8 @@ matchingLogins.push(
 
 matchingLogins.push(
   new nsLoginInfo(
-    "http://mochi.test:8888",
-    "http://autocomplete:8888",
+    "https://mochi.test:8888",
+    "https://autocomplete:8888",
     null,
     "tempuser1",
     "temppass1",
@@ -37,8 +39,8 @@ matchingLogins.push(
 
 matchingLogins.push(
   new nsLoginInfo(
-    "http://mochi.test:8888",
-    "http://autocomplete:8888",
+    "https://mochi.test:8888",
+    "https://autocomplete:8888",
     null,
     "testuser2",
     "testpass2",
@@ -49,8 +51,8 @@ matchingLogins.push(
 // subdomain:
 matchingLogins.push(
   new nsLoginInfo(
-    "http://sub.mochi.test:8888",
-    "http://autocomplete:8888",
+    "https://sub.mochi.test:8888",
+    "https://autocomplete:8888",
     null,
     "testuser3",
     "testpass3",
@@ -59,6 +61,7 @@ matchingLogins.push(
   )
 );
 
+// to test signon.schemeUpgrades
 matchingLogins.push(
   new nsLoginInfo(
     "http://mochi.test:8888",
@@ -74,7 +77,7 @@ matchingLogins.push(
 // HTTP auth
 matchingLogins.push(
   new nsLoginInfo(
-    "http://mochi.test:8888",
+    "https://mochi.test:8888",
     null,
     "My HTTP auth realm",
     "httpuser",
@@ -95,6 +98,7 @@ add_task(async function test_all_patterns() {
   });
   let time = dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
   const LABEL_NO_USERNAME = "No username (" + time + ")";
+  const EXACT_ORIGIN_MATCH_COMMENT = "From this website";
 
   let expectedResults = [
     {
@@ -107,25 +111,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -185,25 +189,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -235,25 +239,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -292,25 +296,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -342,25 +346,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -392,25 +396,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -442,25 +446,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -492,25 +496,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -542,25 +546,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -599,25 +603,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -649,25 +653,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -706,25 +710,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -756,25 +760,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -835,25 +839,25 @@ add_task(async function test_all_patterns() {
           value: "",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "tempuser1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testuser2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzuser4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httpuser",
@@ -885,25 +889,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -935,25 +939,25 @@ add_task(async function test_all_patterns() {
           value: "emptypass1",
           label: LABEL_NO_USERNAME,
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "temppass1",
           label: "tempuser1",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "testpass2",
           label: "testuser2",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "zzzpass4",
           label: "zzzuser4",
           style: "loginWithOrigin",
-          comment: { comment: "mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "httppass",
@@ -1029,7 +1033,7 @@ add_task(async function test_all_patterns() {
     },
     {
       description: "secure username field on sub.mochi.test",
-      formHostPort: "sub.mochi.test:8888",
+      formOrigin: "https://sub.mochi.test:8888",
       insecureFieldWarningEnabled: true,
       isSecure: true,
       isPasswordField: false,
@@ -1039,7 +1043,7 @@ add_task(async function test_all_patterns() {
           value: "testuser3",
           label: "testuser3",
           style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "",
@@ -1081,7 +1085,7 @@ add_task(async function test_all_patterns() {
     },
     {
       description: "secure password field on sub.mochi.test",
-      formHostPort: "sub.mochi.test:8888",
+      formOrigin: "https://sub.mochi.test:8888",
       insecureFieldWarningEnabled: true,
       isSecure: true,
       isPasswordField: true,
@@ -1091,7 +1095,7 @@ add_task(async function test_all_patterns() {
           value: "testpass3",
           label: "testuser3",
           style: "loginWithOrigin",
-          comment: { comment: "sub.mochi.test:8888" },
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
         },
         {
           value: "emptypass1",
@@ -1131,22 +1135,79 @@ add_task(async function test_all_patterns() {
         },
       ],
     },
+    {
+      description: "schemeUpgrades: false",
+      formOrigin: "https://mochi.test:8888",
+      schemeUpgrades: false,
+      isSecure: true,
+      isPasswordField: false,
+      matchingLogins,
+      items: [
+        {
+          value: "",
+          label: LABEL_NO_USERNAME,
+          style: "loginWithOrigin",
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
+        },
+        {
+          value: "tempuser1",
+          label: "tempuser1",
+          style: "loginWithOrigin",
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
+        },
+        {
+          value: "testuser2",
+          label: "testuser2",
+          style: "loginWithOrigin",
+          comment: { comment: EXACT_ORIGIN_MATCH_COMMENT },
+        },
+        {
+          value: "zzzuser4",
+          label: "zzzuser4",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888" },
+        },
+        {
+          value: "httpuser",
+          label: "httpuser",
+          style: "loginWithOrigin",
+          comment: { comment: "mochi.test:8888 (My HTTP auth realm)" },
+        },
+        {
+          value: "testuser3",
+          label: "testuser3",
+          style: "loginWithOrigin",
+          comment: { comment: "sub.mochi.test:8888" },
+        },
+        {
+          value: "",
+          label: "View Saved Logins",
+          style: "loginsFooter",
+          comment: "mochi.test",
+        },
+      ],
+    },
   ];
 
   LoginHelper.createLogger("LoginAutoCompleteResult");
   Services.prefs.setBoolPref("signon.showAutoCompleteFooter", true);
   Services.prefs.setBoolPref("signon.showAutoCompleteOrigins", true);
 
-  expectedResults.forEach(pattern => {
+  expectedResults.forEach((pattern, testIndex) => {
+    info(`expectedResults[${testIndex}]`);
     info(JSON.stringify(pattern, null, 2));
     Services.prefs.setBoolPref(
       PREF_INSECURE_FIELD_WARNING_ENABLED,
       pattern.insecureFieldWarningEnabled
     );
+    Services.prefs.setBoolPref(
+      PREF_SCHEME_UPGRADES,
+      "schemeUpgrades" in pattern ? pattern.schemeUpgrades : true
+    );
     let actual = new LoginAutoCompleteResult(
       pattern.searchString || "",
       pattern.matchingLogins,
-      pattern.formHostPort || "mochi.test:8888",
+      pattern.formOrigin || "https://mochi.test:8888",
       {
         hostname: "mochi.test",
         generatedPassword: pattern.generatedPassword,
@@ -1154,21 +1215,37 @@ add_task(async function test_all_patterns() {
         isPasswordField: pattern.isPasswordField,
       }
     );
-    equal(actual.matchCount, pattern.items.length, "Check matching row count");
+    equal(
+      actual.matchCount,
+      pattern.items.length,
+      `${testIndex}: Check matching row count`
+    );
     pattern.items.forEach((item, index) => {
-      equal(actual.getValueAt(index), item.value, `Value ${index}`);
-      equal(actual.getLabelAt(index), item.label, `Label ${index}`);
-      equal(actual.getStyleAt(index), item.style, `Style ${index}`);
+      equal(
+        actual.getValueAt(index),
+        item.value,
+        `${testIndex}: Value ${index}`
+      );
+      equal(
+        actual.getLabelAt(index),
+        item.label,
+        `${testIndex}: Label ${index}`
+      );
+      equal(
+        actual.getStyleAt(index),
+        item.style,
+        `${testIndex}: Style ${index}`
+      );
       let actualComment = actual.getCommentAt(index);
       if (typeof item.comment == "object") {
         let parsedComment = JSON.parse(actualComment);
         equal(
           parsedComment.comment,
           item.comment.comment,
-          `Comment.comment ${index}`
+          `${testIndex}: Comment.comment ${index}`
         );
       } else {
-        equal(actualComment, item.comment, `Comment ${index}`);
+        equal(actualComment, item.comment, `${testIndex}: Comment ${index}`);
       }
     });
 
