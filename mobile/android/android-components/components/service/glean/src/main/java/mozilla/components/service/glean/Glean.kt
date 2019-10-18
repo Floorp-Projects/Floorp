@@ -631,6 +631,26 @@ open class GleanInternalAPI internal constructor () {
         Glean.setUploadEnabled(true)
         Glean.initialize(context, config)
     }
+
+    /**
+     * TEST ONLY FUNCTION.
+     * Sets the server endpoint to a local address for ingesting test pings.
+     *
+     * The endpoint will be set as "http://localhost:<port>".
+     *
+     * @param port the local address to send pings to
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun testSetLocalEndpoint(port: Int) {
+        Glean.enableTestingMode()
+
+        // We can't set the configuration unless we're initialized.
+        assert(isInitialized())
+
+        val endpointUrl = "http://localhost:$port"
+
+        Glean.configuration = configuration.copy(serverEndpoint = endpointUrl)
+    }
 }
 
 @SuppressLint("StaticFieldLeak")

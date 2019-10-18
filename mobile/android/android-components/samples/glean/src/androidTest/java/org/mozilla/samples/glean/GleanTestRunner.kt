@@ -38,14 +38,14 @@ internal fun getPingServer(): MockWebServer {
 }
 
 /**
- * Returns the address the local ping server is listening to.
+ * Returns the port the local ping server is listening to.
  *
- * @return a `String` containing the server address.
+ * @return an `Int` containing the server port.
  */
 @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-internal fun getPingServerAddress(): String {
+internal fun getPingServerPort(): Int {
     val testRunner: GleanTestRunner = InstrumentationRegistry.getInstrumentation() as GleanTestRunner
-    return testRunner.pingServerAddress!!
+    return testRunner.pingServerPort!!
 }
 
 /**
@@ -57,7 +57,7 @@ class GleanTestRunner : AndroidJUnitRunner() {
     // Add a lazy ping server to the app runner. This is only initialized once
     // since the `Application` object is re-used.
     internal val pingServer: MockWebServer by lazy { createMockWebServer() }
-    internal var pingServerAddress: String? = null
+    internal var pingServerPort: Int? = null
 
     init {
         // We need to start the server off the main thread, otherwise
@@ -65,7 +65,7 @@ class GleanTestRunner : AndroidJUnitRunner() {
         // a thread and joining seems fine.
         val thread = Thread {
             pingServer.start()
-            pingServerAddress = "http://${pingServer.hostName}:${pingServer.port}"
+            pingServerPort = pingServer.port
         }
         thread.start()
         thread.join()
