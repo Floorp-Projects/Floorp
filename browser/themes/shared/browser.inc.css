@@ -252,10 +252,6 @@ menupopup::part(drop-indicator) {
   width: 343px;
 }
 
-#contextual-feature-recommendation-notification:not([hidden]) {
-  display: block;
-}
-
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] {
   background: radial-gradient(circle farthest-side at top right, var(--short-notification-gradient), var(--short-notification-background));
   width: unset;
