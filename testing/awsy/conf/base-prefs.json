@@ -11,6 +11,5 @@
     "startup.homepage_override_url": "",
     "startup.homepage_welcome_url": "",
     "browser.startup.homepage": "about:blank",
-    "browser.newtabpage.enabled": false,
-    "fission.autostart": true
+    "browser.newtabpage.enabled": false
 }
