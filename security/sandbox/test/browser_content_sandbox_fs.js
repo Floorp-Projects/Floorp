@@ -423,6 +423,21 @@ async function testFileAccess() {
     }
   }
 
+  // Test /proc/self/fd, because that can be used to unfreeze
+  // frozen shared memory.
+  if (isLinux()) {
+    let selfFdDir = GetDir("/proc/self/fd");
+
+    tests.push({
+      desc: "/proc/self/fd",
+      ok: false,
+      browser: webBrowser,
+      file: selfFdDir,
+      minLevel: isContentFileIOSandboxed(),
+      func: readDir,
+    });
+  }
+
   if (isMac()) {
     // Test if we can read from $TMPDIR because we expect it
     // to be within /private/var. Reading from it should be
