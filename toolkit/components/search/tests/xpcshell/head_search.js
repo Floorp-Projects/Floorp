@@ -136,6 +136,15 @@ async function forceExpiration() {
   await promiseSaveGlobalMetadata(metadata);
 }
 
+function promiseDefaultNotification(type = "normal") {
+  return SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE[
+      type == "private" ? "DEFAULT_PRIVATE" : "DEFAULT"
+    ],
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+}
+
 /**
  * Clean the profile of any cache file left from a previous run.
  *
