@@ -6,7 +6,11 @@ import requests
 import sys
 import mock
 
-from BaseHTTPServer import HTTPServer
+try:
+    from http.server import HTTPServer  # py3
+except ImportError:
+    from BaseHTTPServer import HTTPServer  # py2
+
 from mozlog.structuredlog import set_default_logger, StructuredLogger
 from raptor.control_server import RaptorControlServer
 
@@ -106,6 +110,68 @@ def test_server_android_app_backgrounding():
         # Make sure the control server stops after these requests
         control.stop()
         assert not control._server_thread.is_alive()
+
+
+def test_server_wait_states(raptor):
+    import datetime
+
+    def post_state():
+        requests.post("http://127.0.0.1:%s/" % raptor.control_server.port,
+                      json={"type": "webext_status",
+                            "data": "test status"})
+
+    wait_time = 5
+    message_state = 'webext_status/test status'
+    rhc = raptor.control_server.server.RequestHandlerClass
+
+    # Test initial state
+    assert rhc.wait_after_messages == {}
+    assert rhc.waiting_in_state is None
+    assert rhc.wait_timeout == 60
+    assert raptor.control_server_wait_get() == 'None'
+
+    # Test setting a state
+    assert raptor.control_server_wait_set(message_state) == ''
+    assert message_state in rhc.wait_after_messages
+    assert rhc.wait_after_messages[message_state]
+
+    # Test clearing a non-existent state
+    assert raptor.control_server_wait_clear('nothing') == ''
+    assert message_state in rhc.wait_after_messages
+
+    # Test clearing a state
+    assert raptor.control_server_wait_clear(message_state) == ''
+    assert message_state not in rhc.wait_after_messages
+
+    # Test clearing all states
+    assert raptor.control_server_wait_set(message_state) == ''
+    assert message_state in rhc.wait_after_messages
+    assert raptor.control_server_wait_clear('all') == ''
+    assert rhc.wait_after_messages == {}
+
+    # Test wait timeout
+    # Block on post request
+    assert raptor.control_server_wait_set(message_state) == ''
+    assert rhc.wait_after_messages[message_state]
+    assert raptor.control_server_wait_timeout(wait_time) == ''
+    assert rhc.wait_timeout == wait_time
+    start = datetime.datetime.now()
+    post_state()
+    assert datetime.datetime.now() - start < datetime.timedelta(seconds=wait_time + 2)
+    assert raptor.control_server_wait_get() == 'None'
+    assert message_state not in rhc.wait_after_messages
+
+    raptor.clean_up()
+    assert not raptor.control_server._server_thread.is_alive()
+
+
+def test_clean_up_stop_server(raptor):
+    assert raptor.control_server._server_thread.is_alive()
+    assert raptor.control_server.port is not None
+    assert raptor.control_server.server is not None
+
+    raptor.clean_up()
+    assert not raptor.control_server._server_thread.is_alive()
 
 
 if __name__ == '__main__':
