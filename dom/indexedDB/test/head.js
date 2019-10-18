@@ -79,40 +79,23 @@ function dismissNotification(popup) {
 }
 
 function waitForMessage(aMessage, browser) {
-  return new Promise((resolve, reject) => {
-    /* eslint-disable no-undef */
-    // When contentScript runs, "this" is a ContentFrameMessageManager (so that's where
-    // addEventListener will add the listener), but the non-bubbling "message" event is
-    // sent to the Window involved, so we need a capturing listener.
-    function contentScript() {
-      addEventListener(
-        "message",
-        function(event) {
-          sendAsyncMessage("testLocal:message", { message: event.data });
-        },
-        { once: true, capture: true },
-        true
-      );
+  function checkFn(event) {
+    is(event.data.message, arguments.Message, "received " + arguments.aMessage);
+    if (event.data.message == arguments.aMessage) {
+      return true;
     }
-    /* eslint-enable no-undef */
-
-    let script = "data:,(" + contentScript.toString() + ")();";
-
-    let mm = browser.selectedBrowser.messageManager;
-
-    mm.addMessageListener("testLocal:message", function listener(msg) {
-      mm.removeMessageListener("testLocal:message", listener);
-      mm.removeDelayedFrameScript(script);
-      is(msg.data.message, aMessage, "received " + aMessage);
-      if (msg.data.message == aMessage) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-
-    mm.loadFrameScript(script, true);
-  });
+    throw new Error(
+      `Unexpected result: ${event.data.message}, expected ${arguments.aMessage}`
+    );
+  }
+  checkFn.aMessage = aMessage;
+  return BrowserTestUtils.waitForContentEvent(
+    browser.selectedBrowser,
+    "message",
+    /* capture */ true,
+    checkFn,
+    /* wantsUntrusted */ true
+  );
 }
 
 function dispatchEvent(eventName) {
