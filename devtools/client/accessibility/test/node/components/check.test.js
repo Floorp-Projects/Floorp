@@ -24,7 +24,7 @@ const {
 
 const {
   testCheck,
-} = require("devtools/client/accessibility/test/jest/helpers");
+} = require("devtools/client/accessibility/test/node/helpers");
 
 describe("Check component:", () => {
   const props = {

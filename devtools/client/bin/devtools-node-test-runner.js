@@ -30,7 +30,7 @@ const SUITES = {
     type: TEST_TYPES.JEST,
   },
   accessibility: {
-    path: "../accessibility/test/jest",
+    path: "../accessibility/test/node",
     type: TEST_TYPES.JEST,
   },
   application: {
