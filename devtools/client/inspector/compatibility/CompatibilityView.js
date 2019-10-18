@@ -27,6 +27,11 @@ class CompatibilityView {
   destroy() {
     this.inspector.selection.off("new-node-front", this._onNewNode);
     this.inspector.sidebar.off("compatibilityview-selected", this._onNewNode);
+
+    if (this._ruleView) {
+      this._ruleView.off("ruleview-changed", this._onNewNode);
+    }
+
     this.inspector = null;
   }
 
@@ -44,6 +49,18 @@ class CompatibilityView {
 
     this.inspector.selection.on("new-node-front", this._onNewNode);
     this.inspector.sidebar.on("compatibilityview-selected", this._onNewNode);
+
+    if (this._ruleView) {
+      this._ruleView.on("ruleview-changed", this._onNewNode);
+    } else {
+      this.inspector.on(
+        "ruleview-added",
+        () => {
+          this._ruleView.on("ruleview-changed", this._onNewNode);
+        },
+        { once: true }
+      );
+    }
   }
 
   _isVisible() {
@@ -61,6 +78,13 @@ class CompatibilityView {
 
     this.inspector.store.dispatch(
       updateSelectedNode(this.inspector.selection.nodeFront)
+    );
+  }
+
+  get _ruleView() {
+    return (
+      this.inspector.hasPanel("ruleview") &&
+      this.inspector.getPanel("ruleview").view
     );
   }
 }
