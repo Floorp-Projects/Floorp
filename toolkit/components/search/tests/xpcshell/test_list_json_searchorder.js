@@ -8,11 +8,6 @@
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
 
-  Services.prefs.setBoolPref(
-    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
-    true
-  );
-
   useTestEngineConfig();
 });
 
