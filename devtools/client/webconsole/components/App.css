@@ -255,9 +255,9 @@ body {
      *   - A separator
      *   - The close button
      *
-     * +------------------------------------------+
-     * | ▶︎ Run                          ˄ ˅ 🔍 | ✖️ |
-     * +------------------------------------------+
+     * +-------------------------------------------+
+     * | ▶︎ Run                          ˄ ˅ 🔍 | ✕ |
+     * +-------------------------------------------+
      *
      */
   grid-template-columns: auto 1fr auto auto auto auto auto;
@@ -265,16 +265,24 @@ body {
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton {
-  background-image: url("chrome://devtools/skin/images/webconsole/run.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-  padding-inline-start: 22px;
-  background-repeat: no-repeat;
-  background-position: 4px center;
-  padding-inline-end: 8px;
+  padding-inline: 4px 8px;
   height: 20px;
   margin-inline-start: 5px;
-  background-size: 16px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton::before {
+  content: url("chrome://devtools/skin/images/webconsole/run.svg");
+  height: 16px;
+  width: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-end: 2px;
+}
+
+[dir="rtl"] .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton::before {
+  rotate: 180deg;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
