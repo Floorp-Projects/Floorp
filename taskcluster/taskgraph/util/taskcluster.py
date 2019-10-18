@@ -146,6 +146,8 @@ def get_artifact_prefix(task):
         prefix = task.get('attributes', {}).get("artifact_prefix")
     elif isinstance(task, Task):
         prefix = task.attributes.get("artifact_prefix")
+    else:
+        raise Exception("Can't find artifact-prefix of non-task: {}".format(task))
     return prefix or "public/build"
 
 
