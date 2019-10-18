@@ -48,7 +48,6 @@ DevToolsModules(
     'performance.js',
     'preference.js',
     'process.js',
-    'promises.js',
     'reflow.js',
     'root.js',
     'screenshot.js',
