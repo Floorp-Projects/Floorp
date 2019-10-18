@@ -110,7 +110,10 @@ function speakersSum(sourceBuffer, destBuffer)
     var length = destBuffer.length;
 
     if ((numberOfDestinationChannels == 2 && numberOfSourceChannels == 1) ||
-        (numberOfDestinationChannels == 4 && numberOfSourceChannels == 1)) {
+        (numberOfDestinationChannels == 4 && numberOfSourceChannels == 1) ||
+        // mono -> 3/5 not defined in spec, upmix to left and right.
+        (numberOfDestinationChannels == 3 && numberOfSourceChannels == 1) ||
+        (numberOfDestinationChannels == 5 && numberOfSourceChannels == 1)) {
         // Handle mono -> stereo/Quad case (summing mono channel into both left and right).
         var source = sourceBuffer.getChannelData(0);
         var destL = destBuffer.getChannelData(0);
@@ -120,8 +123,8 @@ function speakersSum(sourceBuffer, destBuffer)
             destL[i] += source[i];
             destR[i] += source[i];
         }
-        } else if ((numberOfDestinationChannels == 4 && numberOfSourceChannels == 2) ||
-                   (numberOfDestinationChannels == 6 && numberOfSourceChannels == 2)) {
+    } else if ((numberOfDestinationChannels == 4 && numberOfSourceChannels == 2) ||
+               (numberOfDestinationChannels == 6 && numberOfSourceChannels == 2)) {
         // Handle stereo -> Quad/5.1 case (summing left and right channels into the output's left and right).
         var sourceL = sourceBuffer.getChannelData(0);
         var sourceR = sourceBuffer.getChannelData(1);
