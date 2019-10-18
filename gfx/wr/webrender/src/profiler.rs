@@ -48,6 +48,13 @@ pub mod expected {
     pub const DISPLAY_LIST_CONSUME_TIME: Range<f64> = 0.0..2.0;
     pub const DISPLAY_LIST_SEND_TIME: Range<f64> =  0.0..1.0;
     pub const DISPLAY_LIST_TOTAL_TIME: Range<f64> = 0.0..4.0;
+    pub const NUM_FONT_TEMPLATES: Range<usize> =    0..50;
+    pub const FONT_TEMPLATES_MB: Range<f32> =       0.0..40.0;
+    pub const NUM_IMAGE_TEMPLATES: Range<usize> =   0..20;
+    pub const IMAGE_TEMPLATES_MB: Range<f32> =      0.0..10.0;
+    pub const DISPLAY_LIST_MB: Range<f32> =         0.0..0.2;
+    pub const NUM_RASTERIZED_BLOBS: Range<usize> =  0..25; // in tiles
+    pub const RASTERIZED_BLOBS_MB: Range<f32> =     0.0..4.0;
 }
 
 const GRAPH_WIDTH: f32 = 1024.0;
@@ -615,7 +622,11 @@ impl TextureCacheProfileCounters {
             pages_color8_linear: ResourceProfileCounter::new("Texture RGBA8 cached pages (L)", None, None),
             pages_color8_nearest: ResourceProfileCounter::new("Texture RGBA8 cached pages (N)", None, None),
             pages_picture: ResourceProfileCounter::new("Picture cached pages", None, None),
-            rasterized_blob_pixels: ResourceProfileCounter::new("Rasterized Blob Pixels", None, None),
+            rasterized_blob_pixels: ResourceProfileCounter::new(
+                "Rasterized Blob Pixels",
+                Some(expected::NUM_RASTERIZED_BLOBS),
+                Some(expected::RASTERIZED_BLOBS_MB),
+            ),
         }
     }
 }
@@ -743,8 +754,16 @@ impl BackendProfileCounters {
                 Some(expected::MAX_BACKEND_CPU_TIME),
             ),
             resources: ResourceProfileCounters {
-                font_templates: ResourceProfileCounter::new("Font Templates", None, None),
-                image_templates: ResourceProfileCounter::new("Image Templates", None, None),
+                font_templates: ResourceProfileCounter::new(
+                    "Font Templates",
+                    Some(expected::NUM_FONT_TEMPLATES),
+                    Some(expected::FONT_TEMPLATES_MB),
+                ),
+                image_templates: ResourceProfileCounter::new(
+                    "Image Templates",
+                    Some(expected::NUM_IMAGE_TEMPLATES),
+                    Some(expected::IMAGE_TEMPLATES_MB),
+                ),
                 texture_cache: TextureCacheProfileCounters::new(),
                 gpu_cache: GpuCacheProfileCounters::new(),
             },
@@ -765,7 +784,10 @@ impl BackendProfileCounters {
                     "Total Display List Time", false,
                     Some(expected::DISPLAY_LIST_TOTAL_TIME),
                 ),
-                display_lists: ResourceProfileCounter::new("Display Lists Sent", None, None),
+                display_lists: ResourceProfileCounter::new(
+                    "Display Lists Sent",
+                    None, Some(expected::DISPLAY_LIST_MB),
+                ),
             },
             //TODO: generate this by a macro
             intern: InternProfileCounters {
@@ -1627,7 +1649,7 @@ impl Profiler {
         renderer_profile: &RendererProfileCounters,
         debug_renderer: &mut DebugRenderer,
     ) {
-        while self.cooldowns.len() < 12 {
+        while self.cooldowns.len() < 18 {
             self.cooldowns.push(0);
         }
 
@@ -1663,6 +1685,12 @@ impl Profiler {
                 &backend_profile.resources.gpu_cache.allocated_blocks,
                 &backend_profile.resources.gpu_cache.updated_blocks,
                 &backend_profile.resources.gpu_cache.saved_blocks,
+            ],
+            &[
+                &backend_profile.resources.image_templates,
+                &backend_profile.resources.font_templates,
+                &backend_profile.resources.texture_cache.rasterized_blob_pixels,
+                &backend_profile.ipc.display_lists,
             ],
         ];
 
