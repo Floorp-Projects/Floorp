@@ -549,13 +549,20 @@ Inspector.prototype = {
     this.searchboxShortcuts.on(key, event => {
       // Prevent overriding same shortcut from the computed/rule views
       if (
-        event.target.closest("#sidebar-panel-ruleview") ||
-        event.target.closest("#sidebar-panel-computedview")
+        event.originalTarget.closest("#sidebar-panel-ruleview") ||
+        event.originalTarget.closest("#sidebar-panel-computedview")
       ) {
         return;
       }
-      event.preventDefault();
-      this.searchBox.focus();
+
+      const win = event.originalTarget.ownerGlobal;
+      // Check if the event is coming from an inspector window to avoid catching
+      // events from other panels. Note, we are testing both win and win.parent
+      // because the inspector uses iframes.
+      if (win === this.panelWin || win.parent === this.panelWin) {
+        event.preventDefault();
+        this.searchBox.focus();
+      }
     });
   },
 
