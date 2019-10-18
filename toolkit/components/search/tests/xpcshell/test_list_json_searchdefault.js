@@ -9,6 +9,11 @@
 add_task(async function test_searchDefaultEngineUS() {
   useTestEngineConfig();
 
+  Services.prefs.setBoolPref(
+    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+    true
+  );
+
   Services.prefs.setCharPref(SearchUtils.BROWSER_SEARCH_PREF + "region", "US");
 
   await AddonTestUtils.promiseStartupManager();
