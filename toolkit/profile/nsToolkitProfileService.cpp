@@ -471,23 +471,55 @@ bool nsToolkitProfileService::IsProfileForCurrentInstall(
     return false;
   }
 
-  nsCString greDirPath;
-  rv = compatData.GetString("Compatibility", "LastPlatformDir", greDirPath);
+  nsCString lastGreDirStr;
+  rv = compatData.GetString("Compatibility", "LastPlatformDir", lastGreDirStr);
   // If this string is missing then this profile is from an ancient version.
   // We'll opt to use it in this case.
   if (NS_FAILED(rv)) {
     return true;
   }
 
-  nsCOMPtr<nsIFile> greDir;
-  rv = NS_NewNativeLocalFile(EmptyCString(), false, getter_AddRefs(greDir));
+  nsCOMPtr<nsIFile> lastGreDir;
+  rv = NS_NewNativeLocalFile(EmptyCString(), false, getter_AddRefs(lastGreDir));
   NS_ENSURE_SUCCESS(rv, false);
 
-  rv = greDir->SetPersistentDescriptor(greDirPath);
+  rv = lastGreDir->SetPersistentDescriptor(lastGreDirStr);
   NS_ENSURE_SUCCESS(rv, false);
+
+#ifdef XP_WIN
+#  if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
+  // Convert a 64-bit install path to what would have been the 32-bit install
+  // path to allow users to migrate their profiles from one to the other.
+  mozilla::PathString lastGreDirPath, currentGreDirPath;
+  lastGreDirPath = lastGreDir->NativePath();
+  currentGreDirPath = currentGreDir->NativePath();
+  PWSTR pathX86 = nullptr;
+  HRESULT hres =
+      SHGetKnownFolderPath(FOLDERID_ProgramFilesX86, 0, nullptr, &pathX86);
+  if (SUCCEEDED(hres)) {
+    nsDependentString strPathX86(pathX86);
+    if (!StringBeginsWith(currentGreDirPath, strPathX86,
+                          nsCaseInsensitiveStringComparator())) {
+      PWSTR path = nullptr;
+      hres = SHGetKnownFolderPath(FOLDERID_ProgramFiles, 0, nullptr, &path);
+      if (SUCCEEDED(hres)) {
+        if (StringBeginsWith(currentGreDirPath, nsDependentString(path),
+                             nsCaseInsensitiveStringComparator())) {
+          currentGreDirPath.Replace(0, wcslen(path), strPathX86);
+        }
+      }
+      CoTaskMemFree(path);
+    }
+  }
+  CoTaskMemFree(pathX86);
+
+  return lastGreDirPath.Equals(currentGreDirPath,
+                               nsCaseInsensitiveStringComparator());
+#  endif
+#endif
 
   bool equal;
-  rv = greDir->Equals(currentGreDir, &equal);
+  rv = lastGreDir->Equals(currentGreDir, &equal);
   NS_ENSURE_SUCCESS(rv, false);
 
   return equal;
