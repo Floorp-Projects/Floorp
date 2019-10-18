@@ -205,6 +205,7 @@ const proto = {
       g.class = "CPOW";
       return g;
     }
+
     const unwrapped = DevToolsUtils.unwrap(this.obj);
     if (unwrapped === undefined) {
       // Objects belonging to an invisible-to-debugger compartment might be proxies,
@@ -212,6 +213,7 @@ const proto = {
       g.class = "InvisibleToDebugger: " + this.obj.class;
       return g;
     }
+
     if (unwrapped && unwrapped.isProxy) {
       // Proxy objects can run traps when accessed, so just create a preview with
       // the target and the handler.
@@ -222,45 +224,63 @@ const proto = {
       return g;
     }
 
-    // If the debuggee does not subsume the object's compartment, most properties won't
-    // be accessible. Cross-orgin Window and Location objects might expose some, though.
-    // Change the displayed class, but when creating the preview use the original one.
-    if (unwrapped === null) {
-      g.class = "Restricted";
-    } else {
-      g.class = this.obj.class;
-    }
+    const ownPropertyLength = this._getOwnPropertyLength();
+
+    Object.assign(g, {
+      // If the debuggee does not subsume the object's compartment, most properties won't
+      // be accessible. Cross-orgin Window and Location objects might expose some, though.
+      // Change the displayed class, but when creating the preview use the original one.
+      class: unwrapped === null ? "Restricted" : this.obj.class,
+      ownPropertyLength: Number.isFinite(ownPropertyLength)
+        ? ownPropertyLength
+        : undefined,
+      extensible: this.obj.isExtensible(),
+      frozen: this.obj.isFrozen(),
+      sealed: this.obj.isSealed(),
+    });
 
     this.hooks.incrementGripDepth();
-
-    g.extensible = this.obj.isExtensible();
-    g.frozen = this.obj.isFrozen();
-    g.sealed = this.obj.isSealed();
 
     if (g.class == "Promise") {
       g.promiseState = this._createPromiseState();
     }
 
+    const raw = this.getRawObject();
+    this._populateGripPreview(g, raw);
+    this.hooks.decrementGripDepth();
+
+    return g;
+  },
+
+  _getOwnPropertyLength: function() {
     // FF40+: Allow to know how many properties an object has to lazily display them
     // when there is a bunch.
-    if (isTypedArray(g)) {
+    if (isTypedArray(this.obj)) {
       // Bug 1348761: getOwnPropertyNames is unnecessary slow on TypedArrays
-      g.ownPropertyLength = getArrayLength(this.obj);
-    } else if (isStorage(g)) {
-      g.ownPropertyLength = getStorageLength(this.obj);
-    } else if (isReplaying) {
-      // When replaying we can get the number of properties directly, to avoid
-      // needing to enumerate all of them.
-      g.ownPropertyLength = this.obj.getOwnPropertyNamesCount();
-    } else {
-      try {
-        g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
-      } catch (err) {
-        // The above can throw when the debuggee does not subsume the object's
-        // compartment, or for some WrappedNatives like Cu.Sandbox.
-      }
+      return getArrayLength(this.obj);
     }
 
+    if (isStorage(this.obj)) {
+      return getStorageLength(this.obj);
+    }
+
+    if (isReplaying) {
+      // When replaying we can get the number of properties directly, to avoid
+      // needing to enumerate all of them.
+      return this.obj.getOwnPropertyNamesCount();
+    }
+
+    try {
+      return this.obj.getOwnPropertyNames().length;
+    } catch (err) {
+      // The above can throw when the debuggee does not subsume the object's
+      // compartment, or for some WrappedNatives like Cu.Sandbox.
+    }
+
+    return null;
+  },
+
+  getRawObject: function() {
     let raw = this.obj.unsafeDereference();
 
     // If Cu is not defined, we are running on a worker thread, where xrays
@@ -274,19 +294,25 @@ const proto = {
       raw = null;
     }
 
-    for (const fn of previewers[this.obj.class] || previewers.Object) {
+    return raw;
+  },
+
+  /**
+   * Populate the `preview` property on `grip` given its type.
+   */
+  _populateGripPreview: function(grip, raw) {
+    for (const previewer of previewers[this.obj.class] || previewers.Object) {
       try {
-        if (fn(this, g, raw)) {
-          break;
+        const previewerResult = previewer(this, grip, raw);
+        if (previewerResult) {
+          return;
         }
       } catch (e) {
-        const msg = "ObjectActor.prototype.grip previewer function";
+        const msg =
+          "ObjectActor.prototype._populateGripPreview previewer function";
         DevToolsUtils.reportException(msg, e);
       }
     }
-
-    this.hooks.decrementGripDepth();
-    return g;
   },
 
   /**
