@@ -177,9 +177,9 @@ static const UpMixMatrix gUpMixMatrices[CUSTOM_CHANNEL_LAYOUTS *
                                         (CUSTOM_CHANNEL_LAYOUTS - 1) / 2] = {
     // Upmixes from mono
     {{0, 0}},
-    {{0, IGNORE, IGNORE}},
+    {{0, 0, IGNORE}},
     {{0, 0, IGNORE, IGNORE}},
-    {{0, IGNORE, IGNORE, IGNORE, IGNORE}},
+    {{0, 0, IGNORE, IGNORE, IGNORE}},
     {{IGNORE, IGNORE, 0, IGNORE, IGNORE, IGNORE}},
     // Upmixes from stereo
     {{0, 1, IGNORE}},
