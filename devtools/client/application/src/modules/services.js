@@ -4,14 +4,6 @@
 
 "use strict";
 
-class ManifestDevToolsError extends Error {
-  constructor(...params) {
-    super(...params);
-
-    this.name = "ManifestDevToolsError";
-  }
-}
-
 class Services {
   init(toolbox) {
     this._toolbox = toolbox;
@@ -23,25 +15,12 @@ class Services {
   }
 
   async fetchManifest() {
-    let response;
+    this._assertInit();
 
-    try {
-      this._assertInit();
-      const manifestFront = await this._toolbox.target.getFront("manifest");
-      response = await manifestFront.fetchCanonicalManifest();
-    } catch (error) {
-      throw new ManifestDevToolsError(
-        error.message,
-        error.fileName,
-        error.lineNumber
-      );
-    }
+    const manifestFront = await this._toolbox.target.getFront("manifest");
+    const response = await manifestFront.fetchCanonicalManifest();
 
-    if (response.errorMessage) {
-      throw new Error(response.errorMessage);
-    }
-
-    return response.manifest;
+    return response;
   }
 
   _assertInit() {
@@ -51,8 +30,5 @@ class Services {
   }
 }
 
-module.exports = {
-  ManifestDevToolsError,
-  // exports a singleton, which will be used across all application panel modules
-  services: new Services(),
-};
+// exports a singleton, which will be used across all application panel modules
+exports.services = new Services();
