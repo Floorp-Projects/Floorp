@@ -344,8 +344,8 @@ static void* ReserveProcessExecutableMemory(size_t bytes) {
   // mmap will pick a different address.
   void* randomAddr = ComputeRandomAllocationAddress();
   void* p = MozTaggedAnonymousMmap(randomAddr, bytes, PROT_NONE,
-                                   MAP_PRIVATE | MAP_ANON, -1, 0,
-                                   "js-executable-memory");
+                                   MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1,
+                                   0, "js-executable-memory");
   if (p == MAP_FAILED) {
     return nullptr;
   }
