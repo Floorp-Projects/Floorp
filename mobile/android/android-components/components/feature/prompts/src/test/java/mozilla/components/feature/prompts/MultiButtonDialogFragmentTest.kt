@@ -10,20 +10,30 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
+import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
 class MultiButtonDialogFragmentTest {
+
+    @Mock private lateinit var mockFeature: Prompter
+
+    @Before
+    fun setup() {
+        initMocks(this)
+    }
 
     @Test
     fun `Build dialog`() {
@@ -96,8 +106,6 @@ class MultiButtonDialogFragmentTest {
     @Test
     fun `Clicking on a positive button notifies the feature`() {
 
-        val mockFeature: PromptFeature = mock()
-
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
@@ -123,8 +131,6 @@ class MultiButtonDialogFragmentTest {
 
     @Test
     fun `Clicking on a negative button notifies the feature`() {
-
-        val mockFeature: PromptFeature = mock()
 
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
@@ -152,8 +158,6 @@ class MultiButtonDialogFragmentTest {
     @Test
     fun `Clicking on a neutral button notifies the feature`() {
 
-        val mockFeature: PromptFeature = mock()
-
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",
@@ -179,8 +183,6 @@ class MultiButtonDialogFragmentTest {
 
     @Test
     fun `After checking no more dialogs checkbox onConfirm must be called with NoMoreDialogs equals true`() {
-
-        val mockFeature: PromptFeature = mock()
 
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
@@ -211,9 +213,6 @@ class MultiButtonDialogFragmentTest {
 
     @Test
     fun `Touching outside of the dialog must notify the feature onCancel`() {
-
-        val mockFeature: PromptFeature = mock()
-
         val fragment = spy(
             MultiButtonDialogFragment.newInstance(
                 "sessionId",

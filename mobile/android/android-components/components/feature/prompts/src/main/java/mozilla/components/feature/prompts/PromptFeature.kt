@@ -71,14 +71,14 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 class PromptFeature internal constructor(
     private val container: PromptContainer,
     private val store: BrowserStore,
     private var customTabId: String? = null,
     private val fragmentManager: FragmentManager,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
-) : LifecycleAwareFeature, PermissionsFeature {
+) : LifecycleAwareFeature, PermissionsFeature, Prompter {
     private var scope: CoroutineScope? = null
     private var activePromptRequest: PromptRequest? = null
 
@@ -212,7 +212,7 @@ class PromptFeature internal constructor(
      *
      * @param sessionId this is the id of the session which requested the prompt.
      */
-    internal fun onCancel(sessionId: String) {
+    override fun onCancel(sessionId: String) {
         store.consumePromptFrom(sessionId) {
             when (it) {
                 is PromptRequest.Dismissible -> it.onDismiss()
@@ -229,7 +229,7 @@ class PromptFeature internal constructor(
      * @param value an optional value provided by the dialog as a result of confirming the action.
      */
     @Suppress("UNCHECKED_CAST", "ComplexMethod")
-    internal fun onConfirm(sessionId: String, value: Any? = null) {
+    override fun onConfirm(sessionId: String, value: Any?) {
         store.consumePromptFrom(sessionId) {
             when (it) {
                 is TimeSelection -> it.onConfirm(value as Date)
@@ -278,7 +278,7 @@ class PromptFeature internal constructor(
      *
      * @param sessionId that requested to show the dialog.
      */
-    internal fun onClear(sessionId: String) {
+    override fun onClear(sessionId: String) {
         store.consumePromptFrom(sessionId) {
             when (it) {
                 is TimeSelection -> it.onClear()

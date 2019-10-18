@@ -27,23 +27,35 @@ import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CH
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.newInstance
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
 class ChoiceDialogFragmentTest {
+
+    @Mock private lateinit var mockFeature: Prompter
+    private val item = Choice(id = "", label = "item1")
+    private val subItem = Choice(id = "", label = "sub-item1")
+    private val separator = Choice(id = "", label = "item1", isASeparator = true)
+
+    @Before
+    fun setup() {
+        initMocks(this)
+    }
 
     @Test
     fun `Build single choice dialog`() {
@@ -94,7 +106,7 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Will show a single choice item`() {
 
-        val choices = arrayOf(Choice(id = "", label = "item1"))
+        val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
 
@@ -112,7 +124,7 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Will show a menu choice item`() {
 
-        val choices = arrayOf(Choice(id = "", label = "item1"))
+        val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
 
@@ -130,7 +142,7 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Will show a menu choice separator item`() {
 
-        val choices = arrayOf(Choice(id = "", label = "item1", isASeparator = true))
+        val choices = arrayOf(separator)
 
         val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
 
@@ -147,7 +159,7 @@ class ChoiceDialogFragmentTest {
     @Test(expected = Exception::class)
     fun `Will throw an exception to try to create a invalid choice type item`() {
 
-        val choices = arrayOf(Choice(id = "", label = "item1", isASeparator = true))
+        val choices = arrayOf(separator)
 
         val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
 
@@ -161,11 +173,11 @@ class ChoiceDialogFragmentTest {
     fun `Will adapter will return correct view type `() {
 
         val choices = arrayOf(
-                Choice(id = "", label = "item1"),
-                Choice(id = "", label = "item1", children = arrayOf()),
-                Choice(id = "", label = "menu", children = arrayOf()),
-                Choice(id = "", label = "separator", children = arrayOf(), isASeparator = true),
-                Choice(id = "", label = "multiple choice")
+            item,
+            Choice(id = "", label = "item1", children = arrayOf()),
+            Choice(id = "", label = "menu", children = arrayOf()),
+            Choice(id = "", label = "separator", children = arrayOf(), isASeparator = true),
+            Choice(id = "", label = "multiple choice")
         )
 
         var fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
@@ -262,9 +274,7 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Clicking on single choice item notifies the feature`() {
 
-        val mockFeature: PromptFeature = mock()
-
-        val choices = arrayOf(Choice(id = "", label = "item1"))
+        val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", SINGLE_CHOICE_DIALOG_TYPE))
 
@@ -292,9 +302,7 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Clicking on menu choice item notifies the feature`() {
 
-        val mockFeature: PromptFeature = mock()
-
-        val choices = arrayOf(Choice(id = "", label = "item1"))
+        val choices = arrayOf(item)
 
         val fragment = spy(newInstance(choices, "sessionId", MENU_CHOICE_DIALOG_TYPE))
 
@@ -322,9 +330,8 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Clicking on multiple choice item notifies the feature`() {
 
-        val mockFeature: PromptFeature = mock()
         val choices =
-                arrayOf(Choice(id = "", label = "item1", children = arrayOf(Choice(id = "", label = "sub-item1"))))
+                arrayOf(Choice(id = "", label = "item1", children = arrayOf(subItem)))
         val fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature
@@ -358,9 +365,8 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `Clicking on selected multiple choice item will notify feature`() {
 
-        val mockFeature: PromptFeature = mock()
         val choices =
-                arrayOf(Choice(id = "", label = "item1", selected = true))
+                arrayOf(item.copy(selected = true))
         val fragment = spy(newInstance(choices, "sessionId", MULTIPLE_CHOICE_DIALOG_TYPE))
 
         fragment.feature = mockFeature
@@ -392,7 +398,6 @@ class ChoiceDialogFragmentTest {
     @Test
     fun `single choice item with multiple sub-menu groups`() {
 
-        val mockFeature: PromptFeature = mock()
         val choices = arrayOf(
             Choice(
                 id = "group1",

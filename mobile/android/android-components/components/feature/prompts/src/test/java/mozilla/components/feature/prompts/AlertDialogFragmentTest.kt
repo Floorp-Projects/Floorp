@@ -9,24 +9,33 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.ext.appCompatContext
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
+import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
 class AlertDialogFragmentTest {
 
+    @Mock private lateinit var mockFeature: Prompter
+
+    @Before
+    fun setup() {
+        initMocks(this)
+    }
+
     @Test
     fun `build dialog`() {
-
         val fragment = spy(
             AlertDialogFragment.newInstance("sessionId", "title", "message", true)
         )
@@ -53,7 +62,6 @@ class AlertDialogFragmentTest {
 
     @Test
     fun `Alert with hasShownManyDialogs equals false should not have a checkbox`() {
-
         val fragment = spy(
             AlertDialogFragment.newInstance("sessionId", "title", "message", false)
         )
@@ -93,9 +101,6 @@ class AlertDialogFragmentTest {
 
     @Test
     fun `After checking no more dialogs checkbox feature onNoMoreDialogsChecked must be called`() {
-
-        val mockFeature: PromptFeature = mock()
-
         val fragment = spy(
             AlertDialogFragment.newInstance("sessionId", "title", "message", true)
         )
@@ -119,9 +124,6 @@ class AlertDialogFragmentTest {
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
-
-        val mockFeature: PromptFeature = mock()
-
         val fragment = spy(
             AlertDialogFragment.newInstance("sessionId", "title", "message", true)
         )

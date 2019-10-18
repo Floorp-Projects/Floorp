@@ -9,21 +9,26 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.ext.appCompatContext
-import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
 class ConfirmDialogFragmentTest {
 
-    @Test
-    fun `build dialog`() {
+    @Mock private lateinit var mockFeature: Prompter
+    private lateinit var fragment: ConfirmDialogFragment
 
-        val fragment = spy(
+    @Before
+    fun setup() {
+        initMocks(this)
+        fragment = spy(
             ConfirmDialogFragment.newInstance(
                 "sessionId",
                 "title",
@@ -32,6 +37,10 @@ class ConfirmDialogFragmentTest {
                 "negativeLabel"
             )
         )
+    }
+
+    @Test
+    fun `build dialog`() {
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
 
@@ -57,18 +66,6 @@ class ConfirmDialogFragmentTest {
     @Test
     fun `clicking on positive button notifies the feature`() {
 
-        val mockFeature: PromptFeature = mock()
-
-        val fragment = spy(
-            ConfirmDialogFragment.newInstance(
-                "sessionId",
-                "title",
-                "message",
-                "positiveLabel",
-                "negativeLabel"
-            )
-        )
-
         fragment.feature = mockFeature
 
         doReturn(appCompatContext).`when`(fragment).requireContext()
@@ -79,23 +76,11 @@ class ConfirmDialogFragmentTest {
         val positiveButton = (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE)
         positiveButton.performClick()
 
-        verify(mockFeature).onConfirm("sessionId")
+        verify(mockFeature).onConfirm("sessionId", null)
     }
 
     @Test
     fun `clicking on negative button notifies the feature`() {
-
-        val mockFeature: PromptFeature = mock()
-
-        val fragment = spy(
-            ConfirmDialogFragment.newInstance(
-                "sessionId",
-                "title",
-                "message",
-                "positiveLabel",
-                "negativeLabel"
-            )
-        )
 
         fragment.feature = mockFeature
 
