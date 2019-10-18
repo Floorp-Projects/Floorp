@@ -61,12 +61,7 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
         MarkerTracingType::START);
   }
 
-  JS::CloneDataPolicy cloneDataPolicy;
-  // The target of a worker postMessage cannot change while the message is
-  // in-flight, so SAB status was checked at sending-time, and does not need to
-  // be checked when deserializing.
-  cloneDataPolicy.allowSharedMemory();
-  Read(parent, aCx, &messageData, cloneDataPolicy, rv);
+  Read(parent, aCx, &messageData, rv);
 
   if (isTimelineRecording) {
     end = MakeUnique<WorkerTimelineMarker>(
