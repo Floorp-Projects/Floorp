@@ -12,8 +12,8 @@ import mozilla.components.support.ktx.android.content.appVersionName
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_CUSTOM_TAB
 import org.mozilla.fenix.ext.getColorFromAttr
+import org.mozilla.fenix.settings.account.AuthIntentReceiverActivity
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.Locale
@@ -68,11 +68,11 @@ object SupportUtils {
         .build()
         .intent
         .setData(url.toUri())
-        .setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)
+        .setClassName(context, IntentReceiverActivity::class.java.name)
         .setPackage(context.packageName)
 
     fun createAuthCustomTabIntent(context: Context, url: String): Intent =
-        createCustomTabIntent(context, url).putExtra(EXTRA_AUTH_CUSTOM_TAB, true)
+        createCustomTabIntent(context, url).setClassName(context, AuthIntentReceiverActivity::class.java.name)
 
     private fun getEncodedTopicUTF8(topic: String): String {
         try {

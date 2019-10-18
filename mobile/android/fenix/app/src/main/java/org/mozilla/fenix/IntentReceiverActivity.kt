@@ -13,12 +13,10 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.support.utils.Browsers
-import org.mozilla.fenix.customtabs.AuthCustomTabActivity
-import org.mozilla.fenix.customtabs.AuthCustomTabActivity.Companion.EXTRA_AUTH_CUSTOM_TAB
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
 
 /**
  * Processes incoming intents and sends them to the corresponding activity.
@@ -60,8 +58,9 @@ class IntentReceiverActivity : Activity() {
             components.intentProcessors.intentProcessor
         }
 
-        val intentProcessors =
-            components.intentProcessors.externalAppIntentProcessors + tabIntentProcessor
+        val intentProcessors = components.intentProcessors.externalAppIntentProcessors +
+                tabIntentProcessor +
+                NewTabShortcutIntentProcessor()
 
         intentProcessors.any { it.process(intent) }
         setIntentActivity(intent, tabIntentProcessor)
@@ -77,13 +76,7 @@ class IntentReceiverActivity : Activity() {
     private fun setIntentActivity(intent: Intent, tabIntentProcessor: TabIntentProcessor) {
         val openToBrowser = when {
             components.intentProcessors.externalAppIntentProcessors.any { it.matches(intent) } -> {
-                // TODO this needs to change: https://github.com/mozilla-mobile/fenix/issues/5225
-                val activityClass = if (intent.hasExtra(EXTRA_AUTH_CUSTOM_TAB)) {
-                    AuthCustomTabActivity::class
-                } else {
-                    ExternalAppBrowserActivity::class
-                }
-                intent.setClassName(applicationContext, activityClass.java.name)
+                intent.setClassName(applicationContext, ExternalAppBrowserActivity::class.java.name)
                 true
             }
             tabIntentProcessor.matches(intent) -> {
@@ -93,24 +86,6 @@ class IntentReceiverActivity : Activity() {
                 // session then we do not want to re-process the Intent and potentially re-open a website
                 // from a session that the user already "erased".
                 intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
-            }
-            intent.action == ACTION_OPEN_TAB || intent.action == ACTION_OPEN_PRIVATE_TAB -> {
-                intent.setClassName(applicationContext, HomeActivity::class.java.name)
-                val startPrivateMode = (intent.action == ACTION_OPEN_PRIVATE_TAB)
-                if (startPrivateMode) {
-                    intent.putExtra(
-                        HomeActivity.OPEN_TO_SEARCH,
-                        StartSearchIntentProcessor.STATIC_SHORTCUT_NEW_PRIVATE_TAB
-                    )
-                } else {
-                    intent.putExtra(
-                        HomeActivity.OPEN_TO_SEARCH,
-                        StartSearchIntentProcessor.STATIC_SHORTCUT_NEW_TAB
-                    )
-                }
-                intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, startPrivateMode)
-                intent.flags = intent.flags or Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                false
             }
             else -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
@@ -124,8 +99,5 @@ class IntentReceiverActivity : Activity() {
     companion object {
         // This constant must match the metadata from the private activity-alias
         const val LAUNCH_PRIVATE_LINK = "org.mozilla.fenix.LAUNCH_PRIVATE_LINK"
-
-        const val ACTION_OPEN_TAB = "org.mozilla.fenix.OPEN_TAB"
-        const val ACTION_OPEN_PRIVATE_TAB = "org.mozilla.fenix.OPEN_PRIVATE_TAB"
     }
 }

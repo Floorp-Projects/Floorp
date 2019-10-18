@@ -75,14 +75,6 @@
             android:taskAffinity=""
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
 
-        <activity
-            android:name=".customtabs.AuthCustomTabActivity"
-            android:autoRemoveFromRecents="false"
-            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
-            android:exported="false"
-            android:taskAffinity=""
-            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
-
         <activity android:name=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -184,6 +176,17 @@
             android:name=".browser.BrowserPerformanceTestActivity"
             android:enabled="${isRaptorEnabled}"
             android:exported="${isRaptorEnabled}" />
+
+        <activity
+            android:name=".settings.account.AuthCustomTabActivity"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
+
+        <activity android:name=".settings.account.AuthIntentReceiverActivity"
+            android:exported="false" />
 
         <activity android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
