@@ -5699,8 +5699,10 @@ PopupBlocker::PopupControlState nsGlobalWindowOuter::RevisePopupAbuseLevel(
   if (abuse == PopupBlocker::openAbused || abuse == PopupBlocker::openBlocked ||
       abuse == PopupBlocker::openControlled) {
     int32_t popupMax = StaticPrefs::dom_popup_maximum();
-    if (popupMax >= 0 && gOpenPopupSpamCount >= popupMax)
+    if (popupMax >= 0 &&
+        PopupBlocker::GetOpenPopupSpamCount() >= (uint32_t)popupMax) {
       abuse = PopupBlocker::openOverridden;
+    }
   }
 
   // If this popup is allowed, let's block any other for this event, forcing
