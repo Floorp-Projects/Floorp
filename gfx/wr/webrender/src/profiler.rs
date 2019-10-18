@@ -339,15 +339,25 @@ impl ProfileCounter for PercentageProfileCounter {
 pub struct ResourceProfileCounter {
     description: &'static str,
     value: usize,
+    // in bytes.
     size: usize,
+    expected_count: Option<Range<usize>>,
+    // in MB
+    expected_size: Option<Range<f32>>,
 }
 
 impl ResourceProfileCounter {
-    fn new(description: &'static str) -> Self {
+    fn new(
+        description: &'static str,
+        expected_count: Option<Range<usize>>,
+        expected_size: Option<Range<f32>>
+    ) -> Self {
         ResourceProfileCounter {
             description,
             value: 0,
             size: 0,
+            expected_count,
+            expected_size,
         }
     }
 
@@ -367,6 +377,10 @@ impl ResourceProfileCounter {
         self.value = count;
         self.size = size;
     }
+
+    pub fn size_mb(&self) -> f32 {
+        self.size as f32 / (1024.0 * 1024.0)
+    }
 }
 
 impl ProfileCounter for ResourceProfileCounter {
@@ -375,11 +389,13 @@ impl ProfileCounter for ResourceProfileCounter {
     }
 
     fn value(&self) -> String {
-        let size = self.size as f32 / (1024.0 * 1024.0);
-        format!("{} ({:.2} MB)", self.value, size)
+        format!("{} ({:.2} MB)", self.value, self.size_mb())
     }
 
-    fn is_expected(&self) -> bool { true }
+    fn is_expected(&self) -> bool {
+        self.expected_count.as_ref().map(|range| range.contains(&self.value)).unwrap_or(true)
+            && self.expected_size.as_ref().map(|range| range.contains(&self.size_mb())).unwrap_or(true)
+    }
 }
 
 #[derive(Clone)]
@@ -594,12 +610,12 @@ pub struct TextureCacheProfileCounters {
 impl TextureCacheProfileCounters {
     pub fn new() -> Self {
         TextureCacheProfileCounters {
-            pages_alpha8_linear: ResourceProfileCounter::new("Texture A8 cached pages"),
-            pages_alpha16_linear: ResourceProfileCounter::new("Texture A16 cached pages"),
-            pages_color8_linear: ResourceProfileCounter::new("Texture RGBA8 cached pages (L)"),
-            pages_color8_nearest: ResourceProfileCounter::new("Texture RGBA8 cached pages (N)"),
-            pages_picture: ResourceProfileCounter::new("Picture cached pages"),
-            rasterized_blob_pixels: ResourceProfileCounter::new("Rasterized Blob Pixels"),
+            pages_alpha8_linear: ResourceProfileCounter::new("Texture A8 cached pages", None, None),
+            pages_alpha16_linear: ResourceProfileCounter::new("Texture A16 cached pages", None, None),
+            pages_color8_linear: ResourceProfileCounter::new("Texture RGBA8 cached pages (L)", None, None),
+            pages_color8_nearest: ResourceProfileCounter::new("Texture RGBA8 cached pages (N)", None, None),
+            pages_picture: ResourceProfileCounter::new("Picture cached pages", None, None),
+            rasterized_blob_pixels: ResourceProfileCounter::new("Rasterized Blob Pixels", None, None),
         }
     }
 }
@@ -727,8 +743,8 @@ impl BackendProfileCounters {
                 Some(expected::MAX_BACKEND_CPU_TIME),
             ),
             resources: ResourceProfileCounters {
-                font_templates: ResourceProfileCounter::new("Font Templates"),
-                image_templates: ResourceProfileCounter::new("Image Templates"),
+                font_templates: ResourceProfileCounter::new("Font Templates", None, None),
+                image_templates: ResourceProfileCounter::new("Image Templates", None, None),
                 texture_cache: TextureCacheProfileCounters::new(),
                 gpu_cache: GpuCacheProfileCounters::new(),
             },
@@ -749,23 +765,23 @@ impl BackendProfileCounters {
                     "Total Display List Time", false,
                     Some(expected::DISPLAY_LIST_TOTAL_TIME),
                 ),
-                display_lists: ResourceProfileCounter::new("Display Lists Sent"),
+                display_lists: ResourceProfileCounter::new("Display Lists Sent", None, None),
             },
             //TODO: generate this by a macro
             intern: InternProfileCounters {
-                prim: ResourceProfileCounter::new("Interned primitives"),
-                image: ResourceProfileCounter::new("Interned images"),
-                image_border: ResourceProfileCounter::new("Interned image borders"),
-                line_decoration: ResourceProfileCounter::new("Interned line decorations"),
-                linear_grad: ResourceProfileCounter::new("Interned linear gradients"),
-                normal_border: ResourceProfileCounter::new("Interned normal borders"),
-                picture: ResourceProfileCounter::new("Interned pictures"),
-                radial_grad: ResourceProfileCounter::new("Interned radial gradients"),
-                text_run: ResourceProfileCounter::new("Interned text runs"),
-                yuv_image: ResourceProfileCounter::new("Interned YUV images"),
-                clip: ResourceProfileCounter::new("Interned clips"),
-                filter_data: ResourceProfileCounter::new("Interned filter data"),
-                backdrop: ResourceProfileCounter::new("Interned backdrops"),
+                prim: ResourceProfileCounter::new("Interned primitives", None, None),
+                image: ResourceProfileCounter::new("Interned images", None, None),
+                image_border: ResourceProfileCounter::new("Interned image borders", None, None),
+                line_decoration: ResourceProfileCounter::new("Interned line decorations", None, None),
+                linear_grad: ResourceProfileCounter::new("Interned linear gradients", None, None),
+                normal_border: ResourceProfileCounter::new("Interned normal borders", None, None),
+                picture: ResourceProfileCounter::new("Interned pictures", None, None),
+                radial_grad: ResourceProfileCounter::new("Interned radial gradients", None, None),
+                text_run: ResourceProfileCounter::new("Interned text runs", None, None),
+                yuv_image: ResourceProfileCounter::new("Interned YUV images", None, None),
+                clip: ResourceProfileCounter::new("Interned clips", None, None),
+                filter_data: ResourceProfileCounter::new("Interned filter data", None, None),
+                backdrop: ResourceProfileCounter::new("Interned backdrops", None, None),
             },
         }
     }
@@ -817,7 +833,7 @@ impl RendererProfileCounters {
                 "Vertices",
                 None, Some(expected::VERTICES),
             ),
-            vao_count_and_size: ResourceProfileCounter::new("VAO"),
+            vao_count_and_size: ResourceProfileCounter::new("VAO", None, None),
             color_targets: AverageIntProfileCounter::new(
                 "Color Targets",
                 None, Some(expected::COLOR_TARGETS),
