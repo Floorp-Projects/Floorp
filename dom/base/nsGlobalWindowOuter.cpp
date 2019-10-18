@@ -5698,7 +5698,7 @@ PopupBlocker::PopupControlState nsGlobalWindowOuter::RevisePopupAbuseLevel(
   // limit the number of simultaneously open popups
   if (abuse == PopupBlocker::openAbused || abuse == PopupBlocker::openBlocked ||
       abuse == PopupBlocker::openControlled) {
-    int32_t popupMax = Preferences::GetInt("dom.popup_maximum", -1);
+    int32_t popupMax = StaticPrefs::dom_popup_maximum();
     if (popupMax >= 0 && gOpenPopupSpamCount >= popupMax)
       abuse = PopupBlocker::openOverridden;
   }

@@ -1313,6 +1313,13 @@
   value: true
   mirror: always
 
+# The maximum number of popup that is allowed to be opened. Set to -1 for no
+# limit.
+- name: dom.popup_maximum
+  type: int32_t
+  value: 20
+  mirror: always
+
 # Whether window.location.reload() and window.history.go(0) should be blocked
 # if called directly from a window resize event handler.
 #
