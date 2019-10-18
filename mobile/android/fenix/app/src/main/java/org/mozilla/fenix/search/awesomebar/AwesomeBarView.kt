@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
@@ -64,6 +65,11 @@ interface AwesomeBarInteractor {
      * Called whenever an existing session is selected from the sessionSuggestionProvider
      */
     fun onExistingSessionSelected(session: Session)
+
+    /**
+     * Called whenever the Shortcuts button is clicked
+     */
+    fun onSearchShortcutsButtonClicked()
 }
 
 /**
@@ -164,10 +170,16 @@ class AwesomeBarView(
                     interactor::onClickSearchEngineSettings
                 )
         }
+
+        searchShortcutsButton.setOnClickListener {
+            interactor.onSearchShortcutsButtonClicked()
+        }
     }
 
     @SuppressWarnings("ComplexMethod")
     fun update(state: SearchFragmentState) {
+        updateSearchShortcutsIcon(state)
+
         // Do not make suggestions based on user's current URL
         if (state.query == state.session?.url) {
             return
@@ -178,16 +190,28 @@ class AwesomeBarView(
         view.onInputChanged(state.query)
     }
 
+    private fun updateSearchShortcutsIcon(searchState: SearchFragmentState) {
+        with(container.context) {
+            val showShortcuts = searchState.showSearchShortcuts
+            searchShortcutsButton?.isChecked = showShortcuts
+
+            val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
+
+            searchShortcutsButton.compoundDrawables[0]?.setTint(getColorFromAttr(color))
+        }
+    }
+
     @Suppress("ComplexMethod")
     private fun updateSuggestionProvidersVisibility(state: SearchFragmentState) {
         val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
         val providersToRemove = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
         if (state.showSearchShortcuts) {
-            providersToAdd.add(shortcutsEnginePickerProvider)
-        } else {
-            providersToRemove.add(shortcutsEnginePickerProvider)
+            handleDisplayShortcutsProviders()
+            return
         }
+
+        providersToRemove.add(shortcutsEnginePickerProvider)
 
         if (state.showHistorySuggestions) {
             providersToAdd.add(historyStorageProvider)
@@ -211,12 +235,14 @@ class AwesomeBarView(
                 }
             )
         } else {
-            providersToRemove.add(when (state.searchEngineSource) {
-                is SearchEngineSource.Default -> defaultSearchSuggestionProvider
-                is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
-                    state.searchEngineSource.searchEngine
-                )
-            })
+            providersToRemove.add(
+                when (state.searchEngineSource) {
+                    is SearchEngineSource.Default -> defaultSearchSuggestionProvider
+                    is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
+                        state.searchEngineSource.searchEngine
+                    )
+                }
+            )
         }
 
         if ((container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == false) {
@@ -238,6 +264,13 @@ class AwesomeBarView(
                 view.removeProviders(provider)
             }
         }
+    }
+
+    private fun handleDisplayShortcutsProviders() {
+        view.removeAllProviders()
+        providersInUse.clear()
+        providersInUse.add(shortcutsEnginePickerProvider)
+        view.addProviders(shortcutsEnginePickerProvider)
     }
 
     private fun createSuggestionProviderForEngine(engine: SearchEngine): SearchSuggestionProvider {
