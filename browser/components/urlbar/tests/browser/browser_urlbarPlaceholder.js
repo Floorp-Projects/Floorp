@@ -37,7 +37,10 @@ add_task(async function setup() {
   BrowserTestUtils.removeTab(urlTab);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.separatePrivateDefault", false]],
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["browser.search.separatePrivateDefault", false],
+    ],
   });
 
   registerCleanupFunction(async () => {
