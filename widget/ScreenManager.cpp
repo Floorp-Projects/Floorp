@@ -110,7 +110,8 @@ NS_IMETHODIMP
 ScreenManager::ScreenForRect(int32_t aX, int32_t aY, int32_t aWidth,
                              int32_t aHeight, nsIScreen** aOutScreen) {
 #ifdef MOZ_WAYLAND
-  static bool inWayland = !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  static bool inWayland = gdk_display_get_default() &&
+                          !GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
   if (inWayland) {
     *aOutScreen = nullptr;
