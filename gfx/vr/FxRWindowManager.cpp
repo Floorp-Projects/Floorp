@@ -8,6 +8,8 @@
 #include "nsPIDOMWindow.h"
 #include "mozilla/ClearOnShutdown.h"
 
+#include "nsWindow.h"
+
 static mozilla::StaticAutoPtr<FxRWindowManager> sFxrWinMgrInstance;
 
 FxRWindowManager* FxRWindowManager::GetInstance() {
@@ -33,4 +35,16 @@ void FxRWindowManager::AddWindow(nsPIDOMWindowOuter* aWindow) {
 // Returns true if the window at the provided ID was created for Firefox Reality
 bool FxRWindowManager::IsFxRWindow(uint64_t aOuterWindowID) {
   return (mWindow != nullptr) && (mWindow->WindowID() == aOuterWindowID);
+}
+
+// Returns true if the window was created for Firefox Reality
+bool FxRWindowManager::IsFxRWindow(const nsWindow* aWindow) const {
+  return (mWindow != nullptr) &&
+         (aWindow ==
+          mozilla::widget::WidgetUtils::DOMWindowToWidget(mWindow).take());
+}
+
+uint64_t FxRWindowManager::GetWindowID() const {
+  MOZ_ASSERT(mWindow);
+  return mWindow->WindowID();
 }
