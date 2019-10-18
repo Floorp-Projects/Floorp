@@ -295,8 +295,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 )
                 requireComponents.analytics.metrics.track(Event.AddBookmark)
 
-                view?.let {
-                    FenixSnackbar.make(it.rootView, Snackbar.LENGTH_LONG)
+                view?.let { view ->
+                    FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
                         .setAnchorView(browserToolbarView.view)
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                             nav(
