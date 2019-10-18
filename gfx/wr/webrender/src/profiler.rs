@@ -17,8 +17,6 @@ use time::precise_time_ns;
 
 pub mod expected {
     use std::ops::Range;
-    pub const AVG_FRAME_TIME: Range<f64> =          1.0..8.0;
-    pub const MAX_FRAME_TIME: Range<f64> =          1.0..14.0;
     pub const AVG_BACKEND_CPU_TIME: Range<f64> =    0.0..3.0;
     pub const MAX_BACKEND_CPU_TIME: Range<f64> =    0.0..6.0;
     pub const AVG_RENDERER_CPU_TIME: Range<f64> =   0.0..5.0;
@@ -843,9 +841,7 @@ impl RendererProfileCounters {
         RendererProfileCounters {
             frame_counter: IntProfileCounter::new("Frame", None),
             frame_time: AverageTimeProfileCounter::new(
-                "FPS", true,
-                Some(expected::AVG_FRAME_TIME),
-                Some(expected::MAX_FRAME_TIME),
+                "FPS", true, None, None,
             ),
             draw_calls: AverageIntProfileCounter::new(
                 "Draw Calls",
