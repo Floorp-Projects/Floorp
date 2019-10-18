@@ -13,6 +13,7 @@
 #include "jsfriendapi.h"
 
 #include "debugger/DebugAPI.h"
+#include "debugger/Debugger.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
 #include "jit/JitOptions.h"
@@ -53,6 +54,7 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
       objects_(zone_),
       varNames_(zone_),
       randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
+      debuggers_(zone_),
       wasm(runtime_) {
   MOZ_ASSERT_IF(creationOptions_.mergeable(),
                 creationOptions_.invisibleToDebugger());
