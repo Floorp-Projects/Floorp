@@ -15,6 +15,7 @@ toolkit.jar:
   skin/classic/global/aboutCache.css                       (../../shared/aboutCache.css)
   skin/classic/global/aboutCacheEntry.css                  (../../shared/aboutCacheEntry.css)
   skin/classic/global/aboutMemory.css                      (../../shared/aboutMemory.css)
+  skin/classic/global/aboutNetworking.css                  (../../shared/aboutNetworking.css)
 * skin/classic/global/aboutReader.css                      (../../shared/aboutReader.css)
   skin/classic/global/aboutRights.css                      (../../shared/aboutRights.css)
   skin/classic/global/aboutLicense.css                     (../../shared/aboutLicense.css)
