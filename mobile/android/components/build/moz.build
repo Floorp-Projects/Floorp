@@ -20,12 +20,10 @@ SOURCES += [
 ]
 
 if CONFIG['MOZ_ANDROID_HISTORY']:
-    SOURCES += [
-        'nsAndroidHistory.cpp',
-    ]
     LOCAL_INCLUDES += [
         '/docshell/base',
         '/dom/base',
     ]
+
 
 FINAL_LIBRARY = 'xul'
