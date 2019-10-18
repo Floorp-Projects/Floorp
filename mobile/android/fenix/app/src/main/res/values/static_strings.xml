@@ -24,4 +24,10 @@
 
     <!--suppress CheckTagEmptyBody This is a default value for places where we don't want a string set-->
     <string name="empty_string" translatable="false"></string>
+
+
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom" translatable="false">Zoom on all websites</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary" translatable="false">Enable to allow pinch and zoom, even on websites that prevent this gesture.</string>
 </resources>
