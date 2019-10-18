@@ -1263,8 +1263,12 @@ impl Profiler {
         let line_height = debug_renderer.line_height();
 
         let colors = [
+            // Regular values,
             ColorU::new(255, 255, 255, 255),
             ColorU::new(255, 255, 0, 255),
+            // Unexpected values,
+            ColorU::new(255, 80, 0, 255),
+            ColorU::new(255, 0, 0, 255),
         ];
 
         for (idx, counter) in counters.iter().enumerate() {
@@ -1283,7 +1287,7 @@ impl Profiler {
                 colors[color_index],
                 None,
             );
-            color_index = (color_index + 1) % colors.len();
+            color_index = (color_index + 1) % 2;
 
             label_rect = label_rect.union(&rect);
             current_y += line_height;
@@ -1294,6 +1298,7 @@ impl Profiler {
         current_y = if left { draw_state.y_left } else { draw_state.y_right };
 
         for (idx, counter) in counters.iter().enumerate() {
+            let expected_offset = if counter.is_expected() || cooldowns.is_some() { 0 } else { 2 };
             if let Some(cooldowns) = cooldowns.as_mut() {
                 if cooldowns[idx] > 0 {
                     cooldowns[idx] -= 1;
@@ -1305,10 +1310,10 @@ impl Profiler {
                 current_x,
                 current_y,
                 &counter.value(),
-                colors[color_index],
+                colors[color_index + expected_offset],
                 None,
             );
-            color_index = (color_index + 1) % colors.len();
+            color_index = (color_index + 1) % 2;
 
             value_rect = value_rect.union(&rect);
             current_y += line_height;
