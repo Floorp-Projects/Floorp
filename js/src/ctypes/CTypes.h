@@ -325,35 +325,14 @@ static_assert(sizeof(UnbarrieredFieldInfo) == sizeof(FieldInfo),
               "unbarriered mType");
 
 // Hash policy for FieldInfos.
-struct FieldHashPolicy : DefaultHasher<JSLinearString*> {
-  typedef JSLinearString* Key;
-  typedef Key Lookup;
+struct FieldHashPolicy {
+  using Key = JSLinearString*;
+  using Lookup = Key;
 
-  template <typename CharT>
-  static uint32_t hash(const CharT* s, size_t n) {
-    uint32_t hash = 0;
-    for (; n > 0; s++, n--) {
-      hash = hash * 33 + *s;
-    }
-    return hash;
-  }
-
-  static uint32_t hash(const Lookup& l) {
-    JS::AutoCheckCannotGC nogc;
-    return l->hasLatin1Chars() ? hash(l->latin1Chars(nogc), l->length())
-                               : hash(l->twoByteChars(nogc), l->length());
-  }
+  static HashNumber hash(const Lookup& l) { return js::HashStringChars(l); }
 
   static bool match(const Key& k, const Lookup& l) {
-    if (k == l) {
-      return true;
-    }
-
-    if (k->length() != l->length()) {
-      return false;
-    }
-
-    return EqualChars(k, l);
+    return js::EqualStrings(k, l);
   }
 };
 
