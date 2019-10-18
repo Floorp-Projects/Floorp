@@ -165,7 +165,6 @@ export type TabPayload = {
   performanceActor: ActorId,
   performanceEntriesActor: ActorId,
   profilerActor: ActorId,
-  promisesActor: ActorId,
   reflowActor: ActorId,
   storageActor: ActorId,
   styleEditorActor: ActorId,
