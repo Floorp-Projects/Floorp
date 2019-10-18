@@ -95,17 +95,19 @@ add_task(async function test_context_menu() {
   searchItem.click();
 
   info("Validate the search metrics.");
+
+  // Telemetry is not updated synchronously here, we must wait for it.
+  await TestUtils.waitForCondition(() => {
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
+    return Object.keys(scalars[SCALAR_CONTEXT_MENU] || {}).length == 1;
+  }, "This search must increment one entry in the scalar.");
+
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
   TelemetryTestUtils.assertKeyedScalar(
     scalars,
     SCALAR_CONTEXT_MENU,
     "search",
     1
-  );
-  Assert.equal(
-    Object.keys(scalars[SCALAR_CONTEXT_MENU]).length,
-    1,
-    "This search must only increment one entry in the scalar."
   );
 
   // Make sure SEARCH_COUNTS contains identical values.

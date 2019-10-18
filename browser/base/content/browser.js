@@ -4796,7 +4796,7 @@ const BrowserSearch = {
    * @return engine The search engine used to perform a search, or null if no
    *                search was performed.
    */
-  _loadSearch(
+  async _loadSearch(
     searchText,
     where,
     usePrivate,
@@ -4810,8 +4810,9 @@ const BrowserSearch = {
       );
     }
 
-    let engine =
-      Services.search[usePrivate ? "defaultPrivateEngine" : "defaultEngine"];
+    let engine = usePrivate
+      ? await Services.search.getDefaultPrivate()
+      : await Services.search.getDefault();
 
     let submission = engine.getSubmission(searchText, null, purpose); // HTML response
 
@@ -4844,8 +4845,8 @@ const BrowserSearch = {
    * This should only be called from the context menu. See
    * BrowserSearch.loadSearch for the preferred API.
    */
-  loadSearchFromContext(terms, usePrivate, triggeringPrincipal, csp) {
-    let engine = BrowserSearch._loadSearch(
+  async loadSearchFromContext(terms, usePrivate, triggeringPrincipal, csp) {
+    let engine = await BrowserSearch._loadSearch(
       terms,
       usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window)
         ? "window"
@@ -4857,6 +4858,23 @@ const BrowserSearch = {
     );
     if (engine) {
       BrowserSearch.recordSearchInTelemetry(engine, "contextmenu");
+    }
+  },
+
+  /**
+   * Perform a search initiated from the command line.
+   */
+  async loadSearchFromCommandLine(terms, usePrivate, triggeringPrincipal, csp) {
+    let engine = await BrowserSearch._loadSearch(
+      terms,
+      "current",
+      usePrivate,
+      "system",
+      triggeringPrincipal,
+      csp
+    );
+    if (engine) {
+      BrowserSearch.recordSearchInTelemetry(engine, "system");
     }
   },
 
