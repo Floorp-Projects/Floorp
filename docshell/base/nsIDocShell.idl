@@ -961,8 +961,8 @@ interface nsIDocShell : nsIDocShellTreeItem
    * is collecting information.
    */
   [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStart(in string aReason,
-                                                                  in wstring functionName,
-                                                                  in wstring fileName,
+                                                                  in AString functionName,
+                                                                  in AString fileName,
                                                                   in unsigned long lineNumber,
                                                                   in jsval asyncStack,
                                                                   in string asyncCause);
