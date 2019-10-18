@@ -11,11 +11,11 @@ const crossHelloDoc = CROSS_URI + "hello.html";
 
 const sw = BASE_URI + "fetch.js";
 
-const isParentInterceptEnabled = Cc["@mozilla.org/serviceworkers/manager;1"]
+const gIsParentInterceptEnabled = Cc["@mozilla.org/serviceworkers/manager;1"]
   .getService(Ci.nsIServiceWorkerManager)
   .isParentInterceptEnabled();
 
-async function checkObserver(aInput) {
+async function checkObserver({ aInput, isParentInterceptEnabled }) {
   let interceptedChannel = null;
 
   // We always get two channels which receive the "http-on-stop-request"
@@ -168,10 +168,14 @@ async function fetchAndCheckObservers(
 ) {
   let promise = null;
 
-  if (isParentInterceptEnabled) {
-    promise = checkObserver(aTestCase);
+  let checkArgs = {
+    aInput: aTestCase,
+    isParentInterceptEnabled: gIsParentInterceptEnabled,
+  };
+  if (gIsParentInterceptEnabled) {
+    promise = checkObserver(checkArgs);
   } else {
-    promise = ContentTask.spawn(aObserverBrowser, aTestCase, checkObserver);
+    promise = ContentTask.spawn(aObserverBrowser, checkArgs, checkObserver);
   }
 
   await ContentTask.spawn(aFetchBrowser, aTestCase.url, contentFetch);
