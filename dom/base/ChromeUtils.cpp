@@ -672,12 +672,11 @@ void ChromeUtils::ClearRecentJSDevError(GlobalObject&) {
     return WebIDLProcType::_webidl
 
 static WebIDLProcType ProcTypeToWebIDL(mozilla::ProcType aType) {
-  // |strings| contains an extra non-enum value, so subtract one.
   // Max is the value of the last enum, not the length, so add one.
-  static_assert(ArrayLength(WebIDLProcTypeValues::strings) - 1 ==
-                    static_cast<size_t>(ProcType::Max) + 1,
-                "In order for this static cast to be okay, "
-                "WebIDLProcType must match ProcType exactly");
+  static_assert(
+      WebIDLProcTypeValues::Count == static_cast<size_t>(ProcType::Max) + 1,
+      "In order for this static cast to be okay, "
+      "WebIDLProcType must match ProcType exactly");
 
   switch (aType) {
     PROCTYPE_TO_WEBIDL_CASE(Web, Web);
