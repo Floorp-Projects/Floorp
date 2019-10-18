@@ -119,10 +119,6 @@ add_task(async function setup() {
 
   Services.prefs.setBoolPref("keyword.enabled", true);
   Services.prefs.setBoolPref("browser.search.separatePrivateDefault", true);
-  Services.prefs.setBoolPref(
-    "browser.search.separatePrivateDefault.ui.enabled",
-    true
-  );
 
   Services.io
     .getProtocolHandler("resource")
@@ -164,9 +160,6 @@ add_task(async function setup() {
     await Services.search.removeEngine(newPrivateEngine);
     Services.prefs.clearUserPref("keyword.enabled");
     Services.prefs.clearUserPref("browser.search.separatePrivateDefault");
-    Services.prefs.clearUserPref(
-      "browser.search.separatePrivateDefault.ui.enabled"
-    );
   });
 });
 

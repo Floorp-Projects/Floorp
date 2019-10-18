@@ -56,10 +56,6 @@ add_task(async function setup() {
   useHttpServer();
 
   Services.prefs.setBoolPref(
-    SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
-    true
-  );
-  Services.prefs.setBoolPref(
     SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
     true
   );
