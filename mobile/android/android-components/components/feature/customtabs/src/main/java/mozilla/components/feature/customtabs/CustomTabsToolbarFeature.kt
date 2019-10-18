@@ -212,8 +212,25 @@ class CustomTabsToolbarFeature(
     }
 
     private val sessionObserver = object : Session.Observer {
+        private var receivedTitle = false
+
+        override fun onUrlChanged(session: Session, url: String) {
+            // If we showed a title once in a custom tab then we are going to continue displaying
+            // a title (to avoid the layout bouncing around). However if no title is available then
+            // we just use the URL.
+            if (receivedTitle && session.title.isEmpty()) {
+                toolbar.title = url
+            }
+        }
+
         override fun onTitleChanged(session: Session, title: String) {
-            toolbar.title = title
+            if (title.isNotEmpty()) {
+                toolbar.title = title
+                receivedTitle = true
+            } else if (receivedTitle) {
+                // See comment in OnUrlChanged().
+                toolbar.title = session.url
+            }
         }
     }
 

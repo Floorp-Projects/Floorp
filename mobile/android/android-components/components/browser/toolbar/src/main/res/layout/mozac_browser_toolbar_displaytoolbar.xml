@@ -79,7 +79,6 @@
             android:layout_height="40dp"
             android:layout_marginTop="8dp"
             android:scaleType="center"
-
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_separator"
             android:src="@drawable/mozac_ic_site_security" />

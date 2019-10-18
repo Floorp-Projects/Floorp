@@ -581,6 +581,45 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(title, toolbar.title)
     }
 
+    @Test
+    fun `Will use URL as title if title was shown once and is now empty`() {
+        val sessionManager = SessionManager(mock())
+        val toolbar = BrowserToolbar(testContext)
+        val session = Session("https://mozilla.org").also {
+            it.customTabConfig = mock()
+            sessionManager.add(it)
+        }
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, session.id) {})
+
+        feature.start()
+
+        assertEquals("", toolbar.title)
+
+        session.url = "https://www.mozilla.org/en-US/firefox/"
+
+        assertEquals("", toolbar.title)
+
+        session.title = "Firefox - Protect your life online with privacy-first products"
+
+        assertEquals("Firefox - Protect your life online with privacy-first products", toolbar.title)
+
+        session.url = "https://github.com/mozilla-mobile/android-components"
+
+        assertEquals("Firefox - Protect your life online with privacy-first products", toolbar.title)
+
+        session.title = ""
+
+        assertEquals("https://github.com/mozilla-mobile/android-components", toolbar.title)
+
+        session.title = "A collection of Android libraries to build browsers or browser-like applications."
+
+        assertEquals("A collection of Android libraries to build browsers or browser-like applications.", session.title)
+
+        session.title = ""
+
+        assertEquals("https://github.com/mozilla-mobile/android-components", toolbar.title)
+    }
+
     private fun extractActionView(
         browserToolbar: BrowserToolbar,
         contentDescription: String
