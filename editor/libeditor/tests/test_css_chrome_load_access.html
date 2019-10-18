@@ -41,7 +41,7 @@ function runTest() {
   // please note that addOverrideStyleSheet() is triggered by the system,
   // so the load should also *always* succeed.
   try {
-    styleSheets.addOverrideStyleSheet("chrome://mozapps/skin/aboutNetworking.css");
+    styleSheets.addOverrideStyleSheet("chrome://mozapps/skin/aboutServiceWorkers.css");
     ok(true, "should be allowed to access chrome://*.css even if *not* contentaccessible");
   } catch (ex) {
     ok(false, "should be allowed to access chrome://*.css even if *not* contentaccessible");
