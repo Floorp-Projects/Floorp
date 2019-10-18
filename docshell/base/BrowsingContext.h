@@ -95,7 +95,9 @@ class BrowsingContextBase {
 // Trees of BrowsingContexts should only ever contain nodes of the
 // same BrowsingContext::Type. This is enforced by asserts in the
 // BrowsingContext::Create* methods.
-class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
+class BrowsingContext : public nsISupports,
+                        public nsWrapperCache,
+                        public BrowsingContextBase {
  public:
   enum class Type { Chrome, Content };
 
@@ -319,8 +321,9 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   Nullable<WindowProxyHolder> GetWindow();
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(BrowsingContext)
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(BrowsingContext)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(BrowsingContext)
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BrowsingContext)
 
   const Children& GetChildren() { return mChildren; }
 
