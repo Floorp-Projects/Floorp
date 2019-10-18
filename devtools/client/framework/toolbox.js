@@ -3425,16 +3425,24 @@ Toolbox.prototype = {
    */
   getHighlighter(fromGrip = false) {
     let pendingHighlight;
+    let currentHighlighterFront;
+
     return {
-      highlight: async (nodeFront, options) => {
+      highlight: async (object, options) => {
         pendingHighlight = (async () => {
+          let nodeFront = object;
+
           if (fromGrip) {
-            // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
-            const walkerFront = (await this.target.getFront("inspector"))
-              .walker;
-            nodeFront = await walkerFront.gripToNodeFront(nodeFront);
+            const inspectorFront = await this.target.getFront("inspector");
+            nodeFront = await inspectorFront.getNodeFrontFromNodeGrip(object);
           }
 
+          if (!nodeFront) {
+            return null;
+          }
+
+          // We cache the highlighter front so we can unhighlight easily.
+          currentHighlighterFront = nodeFront.highlighterFront;
           return nodeFront.highlighterFront.highlight(nodeFront, options);
         })();
         return pendingHighlight;
@@ -3445,10 +3453,13 @@ Toolbox.prototype = {
           pendingHighlight = null;
         }
 
-        const inspectorFront = this.target.getCachedFront("inspector");
-        return inspectorFront
-          ? inspectorFront.highlighter.unhighlight(forceHide)
-          : null;
+        if (!currentHighlighterFront) {
+          return null;
+        }
+
+        const unHighlight = currentHighlighterFront.unhighlight(forceHide);
+        currentHighlighterFront = null;
+        return unHighlight;
       },
     };
   },
