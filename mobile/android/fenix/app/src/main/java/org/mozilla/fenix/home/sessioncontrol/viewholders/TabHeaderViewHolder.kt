@@ -7,6 +7,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 import android.content.Context
 import android.view.View
 import android.widget.PopupWindow
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
@@ -81,8 +82,8 @@ class TabHeaderViewHolder(
         val headerTextResourceId =
             if (isPrivate) R.string.tabs_header_private_title else R.string.tab_header_label
         view.header_text.text = view.context.getString(headerTextResourceId)
-        view.share_tabs_button.isVisible = isPrivate && hasTabs
-        view.close_tabs_button.isVisible = isPrivate && hasTabs
+        view.share_tabs_button.isInvisible = !isPrivate || !hasTabs
+        view.close_tabs_button.isInvisible = !isPrivate || !hasTabs
         view.tabs_overflow_button.isVisible = !isPrivate && hasTabs
     }
 
