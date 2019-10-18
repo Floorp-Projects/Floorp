@@ -373,11 +373,11 @@ class FontInspector {
       return [];
     }
 
-    let allFonts = await this.pageStyle
-      .getAllUsedFontFaces(options)
-      .catch(console.error);
-    if (!allFonts) {
-      allFonts = [];
+    const inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+
+    let allFonts = [];
+    for (const { pageStyle } of inspectorFronts) {
+      allFonts = allFonts.concat(await pageStyle.getAllUsedFontFaces(options));
     }
 
     return allFonts;
