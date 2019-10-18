@@ -403,19 +403,6 @@ test_description_schema = Schema({
             'test-platform',
             bool),
 
-        # The chunking argument format to use
-        Required('chunking-args'): Any(
-            # Use the usual --this-chunk/--total-chunk arguments
-            'this-chunk',
-            # Use --test-suite=<suite>-<chunk-suffix>; see chunk-suffix, below
-            'test-suite-suffix',
-        ),
-
-        # the string to append to the `--test-suite` arugment when
-        # chunking-args = test-suite-suffix; "<CHUNK>" in this string will
-        # be replaced with the chunk number.
-        Optional('chunk-suffix'): basestring,
-
         Required('requires-signed-builds'): optionally_keyed_by(
             'test-platform',
             bool),
@@ -570,7 +557,6 @@ def set_defaults(config, tests):
         test['mozharness'].setdefault('tooltool-downloads', 'public')
         test['mozharness'].setdefault('set-moz-node-path', False)
         test['mozharness'].setdefault('chunked', False)
-        test['mozharness'].setdefault('chunking-args', 'this-chunk')
         yield test
 
 
