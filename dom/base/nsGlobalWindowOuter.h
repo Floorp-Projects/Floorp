@@ -455,7 +455,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
    */
   nsresult SetArguments(nsIArray* aArguments);
 
-  void MaybeForgiveSpamCount();
   bool IsClosedOrClosing() {
     return (mIsClosed || mInClose || mHavePendingClose || mCleanedUp);
   }
@@ -750,13 +749,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   // Get the parent, returns null if this is a toplevel window
   nsPIDOMWindowOuter* GetInProcessParentInternal();
-
- public:
-  // popup tracking
-  bool IsPopupSpamWindow();
-
-  // Outer windows only.
-  void SetIsPopupSpamWindow(bool aIsPopupSpam);
 
  protected:
   // Window Control Functions
@@ -1209,8 +1201,6 @@ inline bool nsGlobalWindowOuter::IsTopLevelWindow() {
   nsPIDOMWindowOuter* parentWindow = GetInProcessScriptableTop();
   return parentWindow == this;
 }
-
-inline bool nsGlobalWindowOuter::IsPopupSpamWindow() { return mIsPopupSpam; }
 
 inline bool nsGlobalWindowOuter::IsFrame() {
   return GetInProcessParentInternal() != nullptr;
