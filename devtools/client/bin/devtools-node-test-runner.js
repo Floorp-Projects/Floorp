@@ -38,7 +38,7 @@ const SUITES = {
     type: TEST_TYPES.JEST,
   },
   compatibility: {
-    path: "../inspector/compatibility/test/components",
+    path: "../inspector/compatibility/test/node",
     type: TEST_TYPES.JEST,
   },
   framework: {
