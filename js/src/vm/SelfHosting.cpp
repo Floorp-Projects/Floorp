@@ -1778,19 +1778,7 @@ static bool intrinsic_IsRuntimeDefaultLocale(JSContext* cx, unsigned argc,
     return false;
   }
 
-  bool equals;
-  if (str->length() == strlen(locale)) {
-    JS::AutoCheckCannotGC nogc;
-    const Latin1Char* latin1Locale =
-        reinterpret_cast<const Latin1Char*>(locale);
-    equals =
-        str->hasLatin1Chars()
-            ? EqualChars(str->latin1Chars(nogc), latin1Locale, str->length())
-            : EqualChars(str->twoByteChars(nogc), latin1Locale, str->length());
-  } else {
-    equals = false;
-  }
-
+  bool equals = StringEqualsAscii(str, locale);
   args.rval().setBoolean(equals);
   return true;
 }
