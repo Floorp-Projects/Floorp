@@ -245,8 +245,9 @@
 
 .urlbarView-row[type=tip] {
   border-bottom: 1px solid var(--panel-separator-color);
-  padding-block: 24px;
   margin-bottom: 4px;
+  padding-block: 24px;
+  padding-inline-end: @urlbarViewPaddingInline@;
 }
 
 .urlbarView-row[type=tip]:not(:first-child) {
