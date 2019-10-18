@@ -4403,7 +4403,7 @@ const BrowserSearch = {
     // Asynchronously initialize the search service if necessary, to get the
     // current engine for working out the placeholder.
     this._updateURLBarPlaceholderFromDefaultEngine(
-      this._usePrivateSettings,
+      PrivateBrowsingUtils.isWindowPrivate(window),
       // Delay the update for this until so that we don't change it while
       // the user is looking at it / isn't expecting it.
       true
@@ -4439,29 +4439,22 @@ const BrowserSearch = {
         this._removeMaybeOfferedEngine(engineName);
         break;
       case "engine-default":
-        if (this._searchInitComplete && !this._usePrivateSettings) {
+        if (
+          this._searchInitComplete &&
+          !PrivateBrowsingUtils.isWindowPrivate(window)
+        ) {
           this._updateURLBarPlaceholder(engineName, false);
         }
         break;
       case "engine-default-private":
-        if (this._searchInitComplete && this._usePrivateSettings) {
+        if (
+          this._searchInitComplete &&
+          PrivateBrowsingUtils.isWindowPrivate(window)
+        ) {
           this._updateURLBarPlaceholder(engineName, true);
         }
         break;
     }
-  },
-
-  /**
-   * @returns True if we are using a separate default private engine, and
-   *          we are in a private window.
-   */
-  get _usePrivateSettings() {
-    return (
-      Services.prefs.getBoolPref(
-        "browser.search.separatePrivateDefault",
-        true
-      ) && PrivateBrowsingUtils.isWindowPrivate(window)
-    );
   },
 
   _addMaybeOfferedEngine(engineName) {
@@ -4521,7 +4514,7 @@ const BrowserSearch = {
   initPlaceHolder() {
     const prefName =
       "browser.urlbar.placeholderName" +
-      (this._usePrivateSettings ? ".private" : "");
+      (PrivateBrowsingUtils.isWindowPrivate(window) ? ".private" : "");
     let engineName = Services.prefs.getStringPref(prefName, "");
     if (engineName) {
       // We can do this directly, since we know we're at DOMContentLoaded.
