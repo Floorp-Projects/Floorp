@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -151,16 +152,32 @@ class SessionManagerTest {
         val manager = SessionManager(mock())
         val session1 = Session("https://www.mozilla.org")
         val session2 = Session("https://www.firefox.com")
+        val session3 = Session("https://getpocket.com")
+        val session4 = Session("https://github.com/mozilla-mobile/android-components")
 
         manager.add(session1)
-        manager.add(session2)
+        manager.add(session2, selected = true)
+        manager.add(session3)
+        manager.add(session4)
 
         val observer: SessionManager.Observer = mock()
         manager.register(observer)
 
-        manager.remove(session1)
+        manager.remove(session3)
+        verify(observer).onSessionRemoved(session3)
+        verify(observer, never()).onSessionSelected(any())
 
+        manager.remove(session1)
         verify(observer).onSessionRemoved(session1)
+        verify(observer, never()).onSessionSelected(any())
+
+        assertEquals(session2, manager.selectedSession)
+        manager.remove(session2)
+        verify(observer).onSessionRemoved(session2)
+        // Only removing the selected session should cause
+        // a new one to be selected.
+        verify(observer).onSessionSelected(session4)
+
         verifyNoMoreInteractions(observer)
     }
 
@@ -718,14 +735,16 @@ class SessionManagerTest {
         val child = Session("https://www.mozilla.org/en-US/internet-health/")
 
         val manager = SessionManager(mock())
+        val observer: SessionManager.Observer = mock()
         manager.add(parent)
         manager.add(session1)
         manager.add(session2)
         manager.add(child, parent = parent)
 
         manager.select(child)
+        manager.register(observer)
         manager.remove(child, selectParentIfExists = true)
-
+        verify(observer).onSessionSelected(parent)
         assertEquals(parent, manager.selectedSession)
         assertEquals("https://www.mozilla.org", manager.selectedSessionOrThrow.url)
     }
@@ -740,6 +759,8 @@ class SessionManagerTest {
         val child2 = Session("https://www.mozilla.org/en-US/technology/")
 
         val manager = SessionManager(mock())
+        val observer: SessionManager.Observer = mock()
+        manager.register(observer)
         manager.add(parent)
         manager.add(session1)
         manager.add(session2)
@@ -748,7 +769,7 @@ class SessionManagerTest {
 
         manager.select(child1)
         manager.remove(child1, selectParentIfExists = false)
-
+        verify(observer).onSessionSelected(session1)
         assertEquals(session1, manager.selectedSession)
         assertEquals("https://www.firefox.com", manager.selectedSessionOrThrow.url)
     }
@@ -760,13 +781,15 @@ class SessionManagerTest {
         val session3 = Session("https://www.mozilla.org/en-US/internet-health/")
 
         val manager = SessionManager(mock())
+        val observer: SessionManager.Observer = mock()
+        manager.register(observer)
         manager.add(session1)
         manager.add(session2)
         manager.add(session3)
 
         manager.select(session3)
         manager.remove(session3, selectParentIfExists = true)
-
+        verify(observer).onSessionSelected(session2)
         assertEquals(session2, manager.selectedSession)
         assertEquals("https://getpocket.com", manager.selectedSessionOrThrow.url)
     }
