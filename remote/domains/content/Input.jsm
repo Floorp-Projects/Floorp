@@ -59,4 +59,14 @@ class Input extends ContentProcessDomain {
     await eventPromise;
     this._eventPromises.delete(eventId);
   }
+
+  /**
+   * Not a CDP method.
+   *
+   * Expose docShell.doCommand to parent domain.
+   * Used in temporary workaround for emulating certain native key bindings
+   */
+  doDocShellCommand(command) {
+    this.docShell.doCommand(command);
+  }
 }
