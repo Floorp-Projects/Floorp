@@ -2333,7 +2333,18 @@ var AddonManagerInternal = {
       } else if (
         aInstallingPrincipal.isNullPrincipal ||
         !aBrowser.contentPrincipal ||
-        !aInstallingPrincipal.subsumes(aBrowser.contentPrincipal) ||
+        // When we attempt to handle an XPI load immediately after a
+        // process switch, the DocShell it's being loaded into will have
+        // a null principal, since it won't have been initialized yet.
+        // Allowing installs in this case is relatively safe, since
+        // there isn't much to gain by spoofing an install request from
+        // a null principal in any case. This exception can be removed
+        // once content handlers are triggered by DocumentChannel in the
+        // parent process.
+        !(
+          aBrowser.contentPrincipal.isNullPrincipal ||
+          aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)
+        ) ||
         !this.isInstallAllowedByPolicy(
           aInstallingPrincipal,
           aInstall,
