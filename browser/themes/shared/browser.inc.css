@@ -413,18 +413,13 @@ menupopup::part(drop-indicator) {
 }
 
 #cfr-notification-feature-steps li {
-  padding-inline-start: 9px;
+  margin-inline-start: 10px;
   position: relative;
+  display: list-item;
 }
 
 #cfr-notification-feature-steps li:not(:last-child) {
   margin-bottom: 5px;
-}
-
-#cfr-notification-feature-steps li:before {
-  content: "\2022";
-  position: absolute;
-  inset-inline-start: 0;
 }
 
 #contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] #cfr-notification-footer-text {
