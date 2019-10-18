@@ -1715,7 +1715,9 @@ already_AddRefed<Promise> HTMLMediaElement::MozRequestDebugInfo(
             [promise, ptr = std::move(result)]() {
               promise->MaybeResolve(ptr.get());
             },
-            []() { UNREACHABLE(); });
+            []() {
+              MOZ_ASSERT_UNREACHABLE("Unexpected RequestDebugInfo() rejection");
+            });
   } else {
     promise->MaybeResolve(result.get());
   }
