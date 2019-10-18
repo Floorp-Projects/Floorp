@@ -32,10 +32,6 @@ add_task(async function test_onUpdated() {
         {status: "complete"},
       ];
 
-      if (SpecialPowers.Services.androidBridge.isFennec) {
-        // Fennec does not fire initial loading event - Firefox and GeckoView does
-        expectedSequence.shift();
-      }
       let collectedSequence = [];
 
       let tabId;
