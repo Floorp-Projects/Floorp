@@ -71,9 +71,6 @@
   END_CATEGORY                                                                \
   BEGIN_CATEGORY(DOM, "DOM", "blue")                                          \
     SUBCATEGORY(DOM, DOM, "Other")                                            \
-  END_CATEGORY                                                                \
-  BEGIN_CATEGORY(IPC, "IPC", "lightgreen")                                    \
-    SUBCATEGORY(IPC, IPC, "Other")                                            \
   END_CATEGORY
 
 namespace JS {

@@ -16,8 +16,6 @@ EXPORTS += [
     'MediaSink.h'
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
-
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):

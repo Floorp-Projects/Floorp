@@ -187,11 +187,6 @@ const featureCheckboxes = [
     title: "Track Preference Reads",
   },
   {
-    name: "IPC Messages",
-    value: "ipcmessages",
-    title: "Track IPC messages.",
-  },
-  {
     name: "JS Allocations",
     value: "jsallocations",
     title: "Track JavaScript allocations (Experimental.)",
