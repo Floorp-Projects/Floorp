@@ -12,6 +12,9 @@
 #include "mozilla/Sprintf.h"
 
 #include "nsIIOService.h"
+#include "nsISerializable.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
@@ -29,6 +32,10 @@ using namespace mozilla::ipc;
 #else
 #  define SANE_FILE_NAME_LEN 1024
 #endif
+
+static NS_DEFINE_CID(kThisIconURIImplementationCID,
+                     NS_THIS_ICONURI_IMPLEMENTATION_CID);
+static NS_DEFINE_CID(kIconURICID, NS_ICONURI_CID);
 
 // helper function for parsing out attributes like size, and contentType
 // from the icon url.
@@ -51,11 +58,14 @@ nsMozIconURI::~nsMozIconURI() {}
 NS_IMPL_ADDREF(nsMozIconURI)
 NS_IMPL_RELEASE(nsMozIconURI)
 
-NS_INTERFACE_MAP_BEGIN(nsMozIconURI)
-  NS_INTERFACE_MAP_ENTRY(nsIMozIconURI)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURI)
-  NS_INTERFACE_MAP_ENTRY(nsIURI)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsINestedURI, mIconURL)
+NS_INTERFACE_TABLE_HEAD(nsMozIconURI)
+  NS_INTERFACE_TABLE(nsMozIconURI, nsIMozIconURI, nsIURI, nsISerializable,
+                     nsIClassInfo)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  if (aIID.Equals(kThisIconURIImplementationCID))
+    foundInterface = static_cast<nsIURI*>(this);
+  else if (aIID.Equals(NS_GET_IID(nsINestedURI)) && mIconURL)
+    foundInterface = static_cast<nsINestedURI*>(this);
 NS_INTERFACE_MAP_END
 
 #define MOZICON_SCHEME "moz-icon:"
@@ -132,7 +142,8 @@ nsMozIconURI::GetHasRef(bool* result) {
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsMozIconURI::Mutator, nsIURISetters, nsIURIMutator)
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(nsMozIconURI::Mutator, nsIURISetters,
+                                nsIURIMutator, nsISerializable)
 
 NS_IMETHODIMP
 nsMozIconURI::Mutate(nsIURIMutator** aMutator) {
@@ -616,4 +627,75 @@ nsMozIconURI::GetInnerURI(nsIURI** aURI) {
 NS_IMETHODIMP
 nsMozIconURI::GetInnermostURI(nsIURI** aURI) {
   return NS_ImplGetInnermostURI(this, aURI);
+}
+
+NS_IMETHODIMP
+nsMozIconURI::Read(nsIObjectInputStream* aStream) {
+  MOZ_ASSERT_UNREACHABLE("Use nsIURIMutator.read() instead");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsMozIconURI::ReadPrivate(nsIObjectInputStream* aStream) {
+  nsAutoCString spec;
+  nsresult rv = aStream->ReadCString(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return SetSpecInternal(spec);
+}
+
+NS_IMETHODIMP
+nsMozIconURI::Write(nsIObjectOutputStream* aStream) {
+  nsAutoCString spec;
+  nsresult rv = GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return aStream->WriteStringZ(spec.get());
+}
+
+//----------------------------------------------------------------------------
+// nsSimpleURI::nsIClassInfo
+//----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsMozIconURI::GetInterfaces(nsTArray<nsIID>& array) {
+  array.Clear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetScriptableHelper(nsIXPCScriptable** _retval) {
+  *_retval = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetContractID(nsACString& aContractID) {
+  // Make sure to modify any subclasses as needed if this ever
+  // changes.
+  aContractID.SetIsVoid(true);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetClassDescription(nsACString& aClassDescription) {
+  aClassDescription.SetIsVoid(true);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetClassID(nsCID** aClassID) {
+  // Make sure to modify any subclasses as needed if this ever
+  // changes to not call the virtual GetClassIDNoAlloc.
+  *aClassID = (nsCID*)moz_xmalloc(sizeof(nsCID));
+  return GetClassIDNoAlloc(*aClassID);
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetFlags(uint32_t* aFlags) {
+  *aFlags = nsIClassInfo::MAIN_THREAD_ONLY;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMozIconURI::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc) {
+  *aClassIDNoAlloc = kIconURICID;
+  return NS_OK;
 }

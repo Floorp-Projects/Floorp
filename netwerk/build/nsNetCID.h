@@ -59,6 +59,14 @@
     }                                                \
   }
 
+// component implementing nsIURI, nsISerializable, and nsIClassInfo.
+#define NS_ICONURI_CID                               \
+  { /* 1460df3b-774c-4205-8349-838e507c3ef9 */       \
+    0x1460df3b, 0x774c, 0x4205, {                    \
+      0x83, 0x49, 0x83, 0x8e, 0x50, 0x7c, 0x3e, 0xf9 \
+    }                                                \
+  }
+
 #define NS_SIMPLEURIMUTATOR_CONTRACTID \
   "@mozilla.org/network/simple-uri-mutator;1"
 #define NS_SIMPLEURIMUTATOR_CID                      \
