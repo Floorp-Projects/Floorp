@@ -319,8 +319,6 @@ extern mozilla::LazyLogModule gMediaControlLog;
 static LazyLogModule gDOMLeakPRLogOuter("DOMLeakOuter");
 extern LazyLogModule gPageCacheLog;
 
-static int32_t gOpenPopupSpamCount = 0;
-
 nsGlobalWindowOuter::OuterWindowByIdTable*
     nsGlobalWindowOuter::sOuterWindowsById = nullptr;
 
@@ -1272,23 +1270,6 @@ void nsGlobalWindowOuter::ShutDown() {
 
   delete sOuterWindowsById;
   sOuterWindowsById = nullptr;
-}
-
-void nsGlobalWindowOuter::MaybeForgiveSpamCount() {
-  if (IsPopupSpamWindow()) {
-    SetIsPopupSpamWindow(false);
-  }
-}
-
-void nsGlobalWindowOuter::SetIsPopupSpamWindow(bool aIsPopupSpam) {
-  mIsPopupSpam = aIsPopupSpam;
-  if (aIsPopupSpam) {
-    ++gOpenPopupSpamCount;
-  } else {
-    --gOpenPopupSpamCount;
-    NS_ASSERTION(gOpenPopupSpamCount >= 0,
-                 "Unbalanced decrement of gOpenPopupSpamCount");
-  }
 }
 
 void nsGlobalWindowOuter::DropOuterWindowDocs() {
@@ -2530,7 +2511,6 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
   mDocShell = nullptr;
   mBrowsingContext->ClearDocShell();
 
-  MaybeForgiveSpamCount();
   CleanUp();
 }
 
@@ -6150,7 +6130,6 @@ class nsCloseEvent : public Runnable {
   static nsresult PostCloseEvent(nsGlobalWindowOuter* aWindow, bool aIndirect) {
     nsCOMPtr<nsIRunnable> ev = new nsCloseEvent(aWindow, aIndirect);
     nsresult rv = aWindow->Dispatch(TaskCategory::Other, ev.forget());
-    if (NS_SUCCEEDED(rv)) aWindow->MaybeForgiveSpamCount();
     return rv;
   }
 
