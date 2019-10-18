@@ -118,7 +118,11 @@ BreakpointActor.prototype = {
           }
         );
       }
-      return;
+
+      // Treat `displayName` breakpoints as standard breakpoints
+      if (options.logValue != "displayName") {
+        return;
+      }
     }
 
     // In all other cases, this is used as a script breakpoint handler.
@@ -220,7 +224,8 @@ BreakpointActor.prototype = {
       }
     }
 
-    if (logValue) {
+    // Replay logpoints are handled in _newOffsetsOrOptions
+    if (logValue && !this.threadActor.dbg.replaying) {
       return logEvent({
         threadActor: this.threadActor,
         frame,
