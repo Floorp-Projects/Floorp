@@ -345,6 +345,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                  bool aIsFullscreen) final;
   void FullscreenWillChange(bool aIsFullscreen) final;
   void FinishFullscreenChange(bool aIsFullscreen) final;
+  void ForceFullScreenInWidget() final;
   bool SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
                            nsIWidget* aWidget, nsIScreen* aScreen);
   bool Fullscreen() const;
@@ -1066,6 +1067,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
  protected:
   bool mFullscreen : 1;
   bool mFullscreenMode : 1;
+  bool mForceFullScreenInWidget : 1;
   bool mIsClosed : 1;
   bool mInClose : 1;
   // mHavePendingClose means we've got a termination function set to

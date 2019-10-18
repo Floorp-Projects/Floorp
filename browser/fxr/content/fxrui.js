@@ -27,11 +27,21 @@ let { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
-
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+// Note: FxR UI uses a fork of browser-fullScreenAndPointerLock.js which removes
+// the dependencies on browser.js.
+// Bug 1587946 - Rationalize the fork of browser-fullScreenAndPointerLock.js
+XPCOMUtils.defineLazyScriptGetter(
+  this,
+  "FullScreen",
+  "chrome://fxr/content/fxr-fullScreen.js"
+);
 XPCOMUtils.defineLazyGetter(this, "gSystemPrincipal", () =>
   Services.scriptSecurityManager.getSystemPrincipal()
 );
@@ -62,13 +72,13 @@ function setupBrowser() {
     browser.setAttribute("type", "content");
     browser.setAttribute("remote", "true");
     browser.classList.add("browser_instance");
+    document.getElementById("eBrowserContainer").appendChild(browser);
 
     browser.loadUrlWithSystemPrincipal = function(url) {
       this.loadURI(url, { triggeringPrincipal: gSystemPrincipal });
     };
 
-    document.getElementById("eBrowserContainer").appendChild(browser);
-
+    urlInput.value = homeURL;
     browser.loadUrlWithSystemPrincipal(homeURL);
 
     browser.addProgressListener(
@@ -112,6 +122,8 @@ function setupBrowser() {
         Ci.nsIWebProgress.NOTIFY_SECURITY |
         Ci.nsIWebProgress.NOTIFY_STATE_REQUEST
     );
+
+    FullScreen.init();
   }
 }
 

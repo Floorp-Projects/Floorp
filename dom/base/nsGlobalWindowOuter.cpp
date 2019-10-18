@@ -1095,6 +1095,7 @@ nsGlobalWindowOuter::nsGlobalWindowOuter(uint64_t aWindowID)
     : nsPIDOMWindowOuter(aWindowID),
       mFullscreen(false),
       mFullscreenMode(false),
+      mForceFullScreenInWidget(false),
       mIsClosed(false),
       mInClose(false),
       mHavePendingClose(false),
@@ -4440,11 +4441,14 @@ nsresult nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
   // gone full screen, the state trap above works.
   mFullscreen = aFullscreen;
 
-  // Sometimes we don't want the top-level widget to actually go fullscreen,
-  // for example in the B2G desktop client, we don't want the emulated screen
-  // dimensions to appear to increase when entering fullscreen mode; we just
-  // want the content to fill the entire client area of the emulator window.
-  if (!Preferences::GetBool("full-screen-api.ignore-widgets", false)) {
+  // Sometimes we don't want the top-level widget to actually go fullscreen:
+  // - in the B2G desktop client, we don't want the emulated screen dimensions
+  //   to appear to increase when entering fullscreen mode; we just want the
+  //   content to fill the entire client area of the emulator window.
+  // - in FxR Desktop, we don't want fullscreen to take over the monitor, but
+  //   instead we want fullscreen to fill the FxR window in the the headset.
+  if (!Preferences::GetBool("full-screen-api.ignore-widgets", false) &&
+      !mForceFullScreenInWidget) {
     if (MakeWidgetFullscreen(this, aReason, aFullscreen)) {
       // The rest of code for switching fullscreen is in nsGlobalWindowOuter::
       // FinishFullscreenChange() which will be called after sizemodechange
@@ -4455,6 +4459,14 @@ nsresult nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
 
   FinishFullscreenChange(aFullscreen);
   return NS_OK;
+}
+
+// Support a per-window, dynamic equivalent of enabling
+// full-screen-api.ignore-widgets
+void nsGlobalWindowOuter::ForceFullScreenInWidget() {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+
+  mForceFullScreenInWidget = true;
 }
 
 bool nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason,
