@@ -482,6 +482,9 @@ html #webconsole-notificationbox {
   line-height: var(--console-output-line-height);
   /* aim for a 32px left space (a descendent has 4px padding) */
   padding-inline-start: calc(var(--console-inline-start-gutter) - 4px);
+  /* Create a new stacking context */
+  position: relative;
+  z-index: 0; /* Keep below column resizers */
   /* input icon */
   background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
   background-position-x: calc(10px + var(--console-icon-horizontal-offset));
