@@ -2,7 +2,6 @@ from __future__ import absolute_import, unicode_literals
 from six import reraise
 
 import os
-import requests
 import sys
 import threading
 import time
@@ -65,68 +64,6 @@ def test_build_profile(options, raptor_class, app_name, get_prefs):
         for firefox_pref in firefox_prefs:
             assert firefox_pref in prefs
         assert raptor_pref in prefs
-
-
-def test_start_and_stop_server(raptor):
-    assert raptor.control_server._server_thread.is_alive()
-    assert raptor.control_server.port is not None
-    assert raptor.control_server.server is not None
-
-    raptor.clean_up()
-    assert not raptor.control_server._server_thread.is_alive()
-
-
-def test_server_wait_states(raptor):
-    import datetime
-
-    def post_state():
-        requests.post("http://127.0.0.1:%s/" % raptor.control_server.port,
-                      json={"type": "webext_status",
-                            "data": "test status"})
-
-    wait_time = 5
-    message_state = 'webext_status/test status'
-    rhc = raptor.control_server.server.RequestHandlerClass
-
-    # Test initial state
-    assert rhc.wait_after_messages == {}
-    assert rhc.waiting_in_state is None
-    assert rhc.wait_timeout == 60
-    assert raptor.control_server_wait_get() == 'None'
-
-    # Test setting a state
-    assert raptor.control_server_wait_set(message_state) == ''
-    assert message_state in rhc.wait_after_messages
-    assert rhc.wait_after_messages[message_state]
-
-    # Test clearing a non-existent state
-    assert raptor.control_server_wait_clear('nothing') == ''
-    assert message_state in rhc.wait_after_messages
-
-    # Test clearing a state
-    assert raptor.control_server_wait_clear(message_state) == ''
-    assert message_state not in rhc.wait_after_messages
-
-    # Test clearing all states
-    assert raptor.control_server_wait_set(message_state) == ''
-    assert message_state in rhc.wait_after_messages
-    assert raptor.control_server_wait_clear('all') == ''
-    assert rhc.wait_after_messages == {}
-
-    # Test wait timeout
-    # Block on post request
-    assert raptor.control_server_wait_set(message_state) == ''
-    assert rhc.wait_after_messages[message_state]
-    assert raptor.control_server_wait_timeout(wait_time) == ''
-    assert rhc.wait_timeout == wait_time
-    start = datetime.datetime.now()
-    post_state()
-    assert datetime.datetime.now() - start < datetime.timedelta(seconds=wait_time + 2)
-    assert raptor.control_server_wait_get() == 'None'
-    assert message_state not in rhc.wait_after_messages
-
-    raptor.clean_up()
-    assert not raptor.control_server._server_thread.is_alive()
 
 
 @pytest.mark.parametrize('app', [
