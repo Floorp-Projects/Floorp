@@ -411,6 +411,13 @@ class DisplayToolbar internal constructor(
         } else {
             View.GONE
         }
+
+        // In Fenix (which is using a beta release of ConstraintLayout) we are seeing issues after
+        // early visibility changes. Children of the ConstraintLayout are not visible and have a
+        // size of 0x0 (even though they have a fixed size in the layout XML). Explicitly requesting
+        // to layout the ConstraintLayout fixes that issue. This may be a bug in the beta of
+        // ConstraintLayout and in the future we may be able to just remove this call.
+        rootView.requestLayout()
     }
 
     /**
