@@ -48,6 +48,7 @@ const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa";
 const std::string TlsAgent::kServerEcdhEcdsa = "ecdh_ecdsa";
 const std::string TlsAgent::kServerDsa = "dsa";
 const std::string TlsAgent::kDelegatorEcdsa256 = "delegator_ecdsa256";
+const std::string TlsAgent::kDelegatorRsae2048 = "delegator_rsae2048";
 
 static const uint8_t kCannedTls13ServerHello[] = {
     0x03, 0x03, 0x9c, 0xbc, 0x14, 0x9b, 0x0e, 0x2e, 0xfa, 0x0d, 0xf3,

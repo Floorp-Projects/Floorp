@@ -1737,6 +1737,8 @@ SECStatus ssl3_SetupCipherSuite(sslSocket *ss, PRBool initHashes);
 SECStatus ssl_InsertRecordHeader(const sslSocket *ss, ssl3CipherSpec *cwSpec,
                                  SSLContentType contentType, sslBuffer *wrBuf,
                                  PRBool *needsLength);
+PRBool ssl_SignatureSchemeValid(SSLSignatureScheme scheme, SECOidTag spkiOid,
+                                PRBool isTls13);
 
 /* Pull in DTLS functions */
 #include "dtlscon.h"

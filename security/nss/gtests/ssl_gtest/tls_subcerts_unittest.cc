@@ -16,7 +16,8 @@
 
 namespace nss_test {
 
-const std::string kDelegatorId = TlsAgent::kDelegatorEcdsa256;
+const std::string kEcdsaDelegatorId = TlsAgent::kDelegatorEcdsa256;
+const std::string kRsaeDelegatorId = TlsAgent::kDelegatorRsae2048;
 const std::string kDCId = TlsAgent::kServerEcdsa256;
 const SSLSignatureScheme kDCScheme = ssl_sig_ecdsa_secp256r1_sha256;
 const PRUint32 kDCValidFor = 60 * 60 * 24 * 7 /* 1 week (seconds */;
@@ -37,27 +38,27 @@ TEST_P(TlsConnectTls13, DCNotConfigured) {
   EXPECT_TRUE(TlsAgent::LoadKeyPairFromCert(kDCId, &pub, &priv));
 
   StackSECItem dc;
-  TlsAgent::DelegateCredential(kDelegatorId, pub, kDCScheme, kDCValidFor, now(),
-                               &dc);
+  TlsAgent::DelegateCredential(kEcdsaDelegatorId, pub, kDCScheme, kDCValidFor,
+                               now(), &dc);
 
   // Attempt to install the certificate and DC with a missing DC private key.
   EnsureTlsSetup();
   SSLExtraServerCertData extra_data_missing_dc_priv_key = {
       ssl_auth_null, nullptr, nullptr, nullptr, &dc, nullptr};
-  EXPECT_FALSE(server_->ConfigServerCert(kDelegatorId, true,
+  EXPECT_FALSE(server_->ConfigServerCert(kEcdsaDelegatorId, true,
                                          &extra_data_missing_dc_priv_key));
 
   // Attempt to install the certificate and with only the DC private key.
   EnsureTlsSetup();
   SSLExtraServerCertData extra_data_missing_dc = {
       ssl_auth_null, nullptr, nullptr, nullptr, nullptr, priv.get()};
-  EXPECT_FALSE(
-      server_->ConfigServerCert(kDelegatorId, true, &extra_data_missing_dc));
+  EXPECT_FALSE(server_->ConfigServerCert(kEcdsaDelegatorId, true,
+                                         &extra_data_missing_dc));
 }
 
 // Connected with ECDSA-P256.
 TEST_P(TlsConnectTls13, DCConnectEcdsaP256) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
   server_->AddDelegatedCredential(TlsAgent::kServerEcdsa256,
                                   ssl_sig_ecdsa_secp256r1_sha256, kDCValidFor,
@@ -74,7 +75,7 @@ TEST_P(TlsConnectTls13, DCConnectEcdsaP256) {
 
 // Connected with ECDSA-P521.
 TEST_P(TlsConnectTls13, DCConnectEcdsaP521) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
   server_->AddDelegatedCredential(TlsAgent::kServerEcdsa521,
                                   ssl_sig_ecdsa_secp521r1_sha512, kDCValidFor,
@@ -90,9 +91,9 @@ TEST_P(TlsConnectTls13, DCConnectEcdsaP521) {
   EXPECT_EQ(ssl_sig_ecdsa_secp521r1_sha512, client_->info().signatureScheme);
 }
 
-// Connected with RSA-PSS, using an RSAE SPKI.
+// Connected with RSA-PSS, using an RSAE DC SPKI.
 TEST_P(TlsConnectTls13, DCConnectRsaPssRsae) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
   server_->AddDelegatedCredential(
       TlsAgent::kServerRsaPss, ssl_sig_rsa_pss_rsae_sha256, kDCValidFor, now());
@@ -106,9 +107,31 @@ TEST_P(TlsConnectTls13, DCConnectRsaPssRsae) {
   EXPECT_EQ(ssl_sig_rsa_pss_rsae_sha256, client_->info().signatureScheme);
 }
 
+// Connected with RSA-PSS, using a RSAE Delegator SPKI.
+TEST_P(TlsConnectTls13, DCConnectRsaeDelegator) {
+  Reset(kRsaeDelegatorId);
+
+  static const SSLSignatureScheme kSchemes[] = {ssl_sig_rsa_pss_rsae_sha256,
+                                                ssl_sig_rsa_pss_pss_sha256};
+  client_->SetSignatureSchemes(kSchemes, PR_ARRAY_SIZE(kSchemes));
+  server_->SetSignatureSchemes(kSchemes, PR_ARRAY_SIZE(kSchemes));
+
+  client_->EnableDelegatedCredentials();
+  server_->AddDelegatedCredential(
+      TlsAgent::kServerRsaPss, ssl_sig_rsa_pss_pss_sha256, kDCValidFor, now());
+
+  auto cfilter = MakeTlsFilter<TlsExtensionCapture>(
+      client_, ssl_delegated_credentials_xtn);
+  Connect();
+
+  EXPECT_TRUE(cfilter->captured());
+  CheckPeerDelegCred(client_, true, 1024);
+  EXPECT_EQ(ssl_sig_rsa_pss_pss_sha256, client_->info().signatureScheme);
+}
+
 // Connected with RSA-PSS, using a PSS SPKI.
 TEST_P(TlsConnectTls13, DCConnectRsaPssPss) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
 
   // Need to enable PSS-PSS, which is not on by default.
   static const SSLSignatureScheme kSchemes[] = {ssl_sig_ecdsa_secp256r1_sha256,
@@ -172,7 +195,7 @@ static void GenerateWeakRsaKey(ScopedSECKEYPrivateKey& priv,
 
 // Fail to connect with a weak RSA key.
 TEST_P(TlsConnectTls13, DCWeakKey) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   EnsureTlsSetup();
 
   ScopedSECKEYPrivateKey dc_priv;
@@ -182,14 +205,14 @@ TEST_P(TlsConnectTls13, DCWeakKey) {
 
   // Construct a DC.
   StackSECItem dc;
-  TlsAgent::DelegateCredential(kDelegatorId, dc_pub,
+  TlsAgent::DelegateCredential(kEcdsaDelegatorId, dc_pub,
                                ssl_sig_rsa_pss_rsae_sha256, kDCValidFor, now(),
                                &dc);
 
   // Configure the DC on the server.
   SSLExtraServerCertData extra_data = {ssl_auth_null, nullptr, nullptr,
                                        nullptr,       &dc,     dc_priv.get()};
-  EXPECT_TRUE(server_->ConfigServerCert(kDelegatorId, true, &extra_data));
+  EXPECT_TRUE(server_->ConfigServerCert(kEcdsaDelegatorId, true, &extra_data));
 
   client_->EnableDelegatedCredentials();
 
@@ -215,7 +238,7 @@ class ReplaceDCSigScheme : public TlsHandshakeFilter {
 
 // Aborted because of incorrect DC signature algorithm indication.
 TEST_P(TlsConnectTls13, DCAbortBadExpectedCertVerifyAlg) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
   server_->AddDelegatedCredential(TlsAgent::kServerEcdsa256,
                                   ssl_sig_ecdsa_secp256r1_sha256, kDCValidFor,
@@ -229,7 +252,7 @@ TEST_P(TlsConnectTls13, DCAbortBadExpectedCertVerifyAlg) {
 
 // Aborted because of invalid DC signature.
 TEST_P(TlsConnectTls13, DCAbortBadSignature) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   EnsureTlsSetup();
   client_->EnableDelegatedCredentials();
 
@@ -238,8 +261,8 @@ TEST_P(TlsConnectTls13, DCAbortBadSignature) {
   EXPECT_TRUE(TlsAgent::LoadKeyPairFromCert(kDCId, &pub, &priv));
 
   StackSECItem dc;
-  TlsAgent::DelegateCredential(kDelegatorId, pub, kDCScheme, kDCValidFor, now(),
-                               &dc);
+  TlsAgent::DelegateCredential(kEcdsaDelegatorId, pub, kDCScheme, kDCValidFor,
+                               now(), &dc);
   ASSERT_TRUE(dc.data != nullptr);
 
   // Flip the first bit of the DC so that the signature is invalid.
@@ -247,7 +270,7 @@ TEST_P(TlsConnectTls13, DCAbortBadSignature) {
 
   SSLExtraServerCertData extra_data = {ssl_auth_null, nullptr, nullptr,
                                        nullptr,       &dc,     priv.get()};
-  EXPECT_TRUE(server_->ConfigServerCert(kDelegatorId, true, &extra_data));
+  EXPECT_TRUE(server_->ConfigServerCert(kEcdsaDelegatorId, true, &extra_data));
 
   ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
   client_->CheckErrorCode(SSL_ERROR_DC_BAD_SIGNATURE);
@@ -256,7 +279,7 @@ TEST_P(TlsConnectTls13, DCAbortBadSignature) {
 
 // Aborted because of expired DC.
 TEST_P(TlsConnectTls13, DCAbortExpired) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   server_->AddDelegatedCredential(kDCId, kDCScheme, kDCValidFor, now());
   client_->EnableDelegatedCredentials();
   // When the client checks the time, it will be at least one second after the
@@ -278,7 +301,7 @@ TEST_P(TlsConnectTls13, DCAbortBadKeyUsage) {
 
 // Connected without DC because of no client indication.
 TEST_P(TlsConnectTls13, DCConnectNoClientSupport) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   server_->AddDelegatedCredential(kDCId, kDCScheme, kDCValidFor, now());
 
   auto cfilter = MakeTlsFilter<TlsExtensionCapture>(
@@ -291,7 +314,7 @@ TEST_P(TlsConnectTls13, DCConnectNoClientSupport) {
 
 // Connected without DC because of no server DC.
 TEST_P(TlsConnectTls13, DCConnectNoServerSupport) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
 
   auto cfilter = MakeTlsFilter<TlsExtensionCapture>(
@@ -304,7 +327,7 @@ TEST_P(TlsConnectTls13, DCConnectNoServerSupport) {
 
 // Connected without DC because client doesn't support TLS 1.3.
 TEST_P(TlsConnectTls13, DCConnectClientNoTls13) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
   server_->AddDelegatedCredential(kDCId, kDCScheme, kDCValidFor, now());
 
@@ -324,7 +347,7 @@ TEST_P(TlsConnectTls13, DCConnectClientNoTls13) {
 
 // Connected without DC because server doesn't support TLS 1.3.
 TEST_P(TlsConnectTls13, DCConnectServerNoTls13) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
   server_->AddDelegatedCredential(kDCId, kDCScheme, kDCValidFor, now());
 
@@ -345,7 +368,7 @@ TEST_P(TlsConnectTls13, DCConnectServerNoTls13) {
 
 // Connected without DC because client doesn't support the signature scheme.
 TEST_P(TlsConnectTls13, DCConnectExpectedCertVerifyAlgNotSupported) {
-  Reset(kDelegatorId);
+  Reset(kEcdsaDelegatorId);
   client_->EnableDelegatedCredentials();
   static const SSLSignatureScheme kClientSchemes[] = {
       ssl_sig_ecdsa_secp256r1_sha256,
@@ -371,7 +394,7 @@ TEST_F(DCDelegation, DCDelegations) {
   PRTime now = PR_Now();
   ScopedCERTCertificate cert;
   ScopedSECKEYPrivateKey priv;
-  ASSERT_TRUE(TlsAgent::LoadCertificate(kDelegatorId, &cert, &priv));
+  ASSERT_TRUE(TlsAgent::LoadCertificate(kEcdsaDelegatorId, &cert, &priv));
 
   ScopedSECKEYPublicKey pub_rsa;
   ScopedSECKEYPrivateKey priv_rsa;
