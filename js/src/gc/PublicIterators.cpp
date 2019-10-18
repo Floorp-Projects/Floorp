@@ -38,8 +38,8 @@ static void IterateRealmsArenasCellsUnbarriered(
       Arena* arena = aiter.get();
       (*arenaCallback)(cx->runtime(), data, arena, traceKind, thingSize);
       for (ArenaCellIter iter(arena); !iter.done(); iter.next()) {
-        (*cellCallback)(cx->runtime(), data, iter.getCell(), traceKind,
-                        thingSize);
+        (*cellCallback)(cx->runtime(), data,
+                        JS::GCCellPtr(iter.getCell(), traceKind), thingSize);
       }
     }
   }
