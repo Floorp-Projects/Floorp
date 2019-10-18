@@ -27,8 +27,8 @@ namespace net {
 
 // Target spec and optional proxy type to use, set by the respective
 // initialization function so we can cover all combinations.
-nsAutoCString spec;
-nsAutoCString proxyType;
+static nsAutoCString httpSpec;
+static nsAutoCString proxyType;
 
 static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
   Preferences::SetBool("network.dns.native-is-localhost", true);
@@ -36,15 +36,15 @@ static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
   Preferences::SetInt("network.http.speculative-parallel-limit", 0);
   Preferences::SetInt("network.http.spdy.default-concurrent", 1);
 
-  if (spec.IsEmpty()) {
-    spec = "http://127.0.0.1/";
+  if (httpSpec.IsEmpty()) {
+    httpSpec = "http://127.0.0.1/";
   }
 
   return 0;
 }
 
 static int FuzzingInitNetworkHttp2(int* argc, char*** argv) {
-  spec = "https://127.0.0.1/";
+  httpSpec = "https://127.0.0.1/";
   return FuzzingInitNetworkHttp(argc, argv);
 }
 
@@ -90,7 +90,7 @@ static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
     nsCOMPtr<nsIURI> url;
     nsresult rv;
 
-    if (NS_NewURI(getter_AddRefs(url), spec) != NS_OK) {
+    if (NS_NewURI(getter_AddRefs(url), httpSpec) != NS_OK) {
       MOZ_CRASH("Call to NS_NewURI failed.");
     }
 
