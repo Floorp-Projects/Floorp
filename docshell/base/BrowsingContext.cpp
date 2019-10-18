@@ -752,7 +752,19 @@ bool BrowsingContext::ConsumeTransientUserGestureActivation() {
   return true;
 }
 
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BrowsingContext)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(BrowsingContext)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(BrowsingContext)
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(BrowsingContext)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
   if (sBrowsingContexts) {
@@ -781,11 +793,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
     CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(BrowsingContext)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(BrowsingContext, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(BrowsingContext, Release)
 
 class RemoteLocationProxy
     : public RemoteObjectProxy<BrowsingContext::LocationProxy,
