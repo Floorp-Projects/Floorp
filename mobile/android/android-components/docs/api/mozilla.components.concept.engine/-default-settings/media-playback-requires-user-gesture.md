@@ -2,7 +2,7 @@
 
 # mediaPlaybackRequiresUserGesture
 
-`var mediaPlaybackRequiresUserGesture: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L183)
+`var mediaPlaybackRequiresUserGesture: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L188)
 
 Overrides [Settings.mediaPlaybackRequiresUserGesture](../-settings/media-playback-requires-user-gesture.md)
 
