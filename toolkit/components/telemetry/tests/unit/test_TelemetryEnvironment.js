@@ -1894,6 +1894,10 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
   );
 
   // Start off with separate default engine for private browsing turned off.
+  Preferences.set(
+    "browser.search.separatePrivateDefault.ui.enabled",
+    privateOn
+  );
   Preferences.set("browser.search.separatePrivateDefault", privateOn);
 
   let data = await TelemetryEnvironment.testCleanRestart().onInitialized();

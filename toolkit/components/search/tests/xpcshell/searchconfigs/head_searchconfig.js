@@ -108,6 +108,10 @@ class SearchConfigTest {
     // Enable separatePrivateDefault testing. We test with this on, as we have
     // separate tests for ensuring the normal = private when this is off.
     Services.prefs.setBoolPref(
+      SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault.ui.enabled",
+      true
+    );
+    Services.prefs.setBoolPref(
       SearchUtils.BROWSER_SEARCH_PREF + "separatePrivateDefault",
       true
     );
