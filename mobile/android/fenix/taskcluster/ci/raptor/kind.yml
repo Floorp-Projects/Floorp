@@ -78,140 +78,140 @@ job-defaults:
             - '--download-symbols=ondemand'
 
 jobs:
-    tp6m-cold-1:
-        test-name: raptor-tp6m-cold-1
+    tp6m-1-cold:
+        test-name: raptor-tp6m-1-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-1)'
+            symbol: 'Rap(tp6m-1-c)'
 
-    tp6m-cold-2:
-        test-name: raptor-tp6m-cold-2
+    tp6m-2-cold:
+        test-name: raptor-tp6m-2-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-2)'
+            symbol: 'Rap(tp6m-2-c)'
 
-    tp6m-cold-3:
-        test-name: raptor-tp6m-cold-3
+    tp6m-3-cold:
+        test-name: raptor-tp6m-3-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-3)'
+            symbol: 'Rap(tp6m-3-c)'
 
-    tp6m-cold-4:
-        test-name: raptor-tp6m-cold-4
+    tp6m-4-cold:
+        test-name: raptor-tp6m-4-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-4)'
+            symbol: 'Rap(tp6m-4-c)'
 
-    tp6m-cold-5:
-        test-name: raptor-tp6m-cold-5
+    tp6m-5-cold:
+        test-name: raptor-tp6m-5-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-5)'
+            symbol: 'Rap(tp6m-5-c)'
 
-    tp6m-cold-6:
-        test-name: raptor-tp6m-cold-6
+    tp6m-6-cold:
+        test-name: raptor-tp6m-6-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-6)'
+            symbol: 'Rap(tp6m-6-c)'
 
-    tp6m-cold-7:
-        test-name: raptor-tp6m-cold-7
+    tp6m-7-cold:
+        test-name: raptor-tp6m-7-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-7)'
+            symbol: 'Rap(tp6m-7-c)'
 
-    tp6m-cold-8:
-        test-name: raptor-tp6m-cold-8
+    tp6m-8-cold:
+        test-name: raptor-tp6m-8-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-8)'
+            symbol: 'Rap(tp6m-8-c)'
 
-    tp6m-cold-9:
-        test-name: raptor-tp6m-cold-9
+    tp6m-9-cold:
+        test-name: raptor-tp6m-9-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-9)'
+            symbol: 'Rap(tp6m-9-c)'
 
-    tp6m-cold-10:
-        test-name: raptor-tp6m-cold-10
+    tp6m-10-cold:
+        test-name: raptor-tp6m-10-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-10)'
+            symbol: 'Rap(tp6m-10-c)'
 
-    tp6m-cold-11:
-        test-name: raptor-tp6m-cold-11
+    tp6m-11-cold:
+        test-name: raptor-tp6m-11-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-11)'
+            symbol: 'Rap(tp6m-11-c)'
 
-    tp6m-cold-12:
-        test-name: raptor-tp6m-cold-12
+    tp6m-12-cold:
+        test-name: raptor-tp6m-12-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-12)'
+            symbol: 'Rap(tp6m-12-c)'
 
-    tp6m-cold-13:
-        test-name: raptor-tp6m-cold-13
+    tp6m-13-cold:
+        test-name: raptor-tp6m-13-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-13)'
+            symbol: 'Rap(tp6m-13-c)'
 
-    tp6m-cold-14:
-        test-name: raptor-tp6m-cold-14
+    tp6m-14-cold:
+        test-name: raptor-tp6m-14-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-14)'
+            symbol: 'Rap(tp6m-14-c)'
 
-    tp6m-cold-15:
-        test-name: raptor-tp6m-cold-15
+    tp6m-15-cold:
+        test-name: raptor-tp6m-15-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-15)'
+            symbol: 'Rap(tp6m-15-c)'
 
-    tp6m-cold-16:
-        test-name: raptor-tp6m-cold-16
+    tp6m-16-cold:
+        test-name: raptor-tp6m-16-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-16)'
+            symbol: 'Rap(tp6m-16-c)'
 
-    tp6m-cold-17:
-        test-name: raptor-tp6m-cold-17
+    tp6m-17-cold:
+        test-name: raptor-tp6m-17-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-17)'
+            symbol: 'Rap(tp6m-17-c)'
 
-    tp6m-cold-18:
-        test-name: raptor-tp6m-cold-18
+    tp6m-18-cold:
+        test-name: raptor-tp6m-18-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-18)'
+            symbol: 'Rap(tp6m-18-c)'
 
-    tp6m-cold-19:
-        test-name: raptor-tp6m-cold-19
+    tp6m-19-cold:
+        test-name: raptor-tp6m-19-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-19)'
+            symbol: 'Rap(tp6m-19-c)'
 
-    tp6m-cold-20:
-        test-name: raptor-tp6m-cold-20
+    tp6m-20-cold:
+        test-name: raptor-tp6m-20-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-20)'
+            symbol: 'Rap(tp6m-20-c)'
 
-    tp6m-cold-21:
-        test-name: raptor-tp6m-cold-21
+    tp6m-21-cold:
+        test-name: raptor-tp6m-21-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-21)'
+            symbol: 'Rap(tp6m-21-c)'
 
-    tp6m-cold-22:
-        test-name: raptor-tp6m-cold-22
+    tp6m-22-cold:
+        test-name: raptor-tp6m-22-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-22)'
+            symbol: 'Rap(tp6m-22-c)'
 
-    tp6m-cold-23:
-        test-name: raptor-tp6m-cold-23
+    tp6m-23-cold:
+        test-name: raptor-tp6m-23-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-23)'
+            symbol: 'Rap(tp6m-23-c)'
 
-    tp6m-cold-24:
-        test-name: raptor-tp6m-cold-24
+    tp6m-24-cold:
+        test-name: raptor-tp6m-24-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-24)'
+            symbol: 'Rap(tp6m-24-c)'
 
-    tp6m-cold-25:
-        test-name: raptor-tp6m-cold-25
+    tp6m-25-cold:
+        test-name: raptor-tp6m-25-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-25)'
+            symbol: 'Rap(tp6m-25-c)'
 
-    tp6m-cold-26:
-        test-name: raptor-tp6m-cold-26
+    tp6m-26-cold:
+        test-name: raptor-tp6m-26-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-26)'
+            symbol: 'Rap(tp6m-26-c)'
 
-    tp6m-cold-27:
-        test-name: raptor-tp6m-cold-27
+    tp6m-27-cold:
+        test-name: raptor-tp6m-27-cold
         treeherder:
-            symbol: 'Rap(tp6m-c-27)'
+            symbol: 'Rap(tp6m-27-c)'
 
     youtube-playback:
         test-name: raptor-youtube-playback
