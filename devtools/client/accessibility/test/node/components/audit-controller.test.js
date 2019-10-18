@@ -13,7 +13,7 @@ const AuditController = createFactory(
 );
 const {
   mockAccessible,
-} = require("devtools/client/accessibility/test/jest/helpers");
+} = require("devtools/client/accessibility/test/node/helpers");
 
 describe("AuditController component:", () => {
   it("dead accessible actor", () => {

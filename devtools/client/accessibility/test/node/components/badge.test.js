@@ -11,7 +11,7 @@ const Provider = createFactory(
 );
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/jest/helpers");
+} = require("devtools/client/accessibility/test/node/helpers");
 
 const BadgeClass = require("devtools/client/accessibility/components/Badge");
 const Badge = createFactory(BadgeClass);
