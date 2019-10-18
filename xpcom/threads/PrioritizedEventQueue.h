@@ -198,7 +198,7 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   RefPtr<ipc::IdleSchedulerChild> mIdleScheduler;
   bool mIdleSchedulerInitialized = false;
 
-  // mActive tells whether the event queue is running non-idle tasks.
+  // mActive tells whether the event queue is running tasks.
   bool mActive = true;
 };
 
