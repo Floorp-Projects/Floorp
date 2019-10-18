@@ -10,6 +10,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 
 namespace js {
 
@@ -337,13 +338,6 @@ class DebugAPI {
   static inline void notifyParticipatesInGC(GlobalObject* global,
                                             uint64_t majorGCNumber);
 
-  // Allocate an object which holds a GlobalObject::DebuggerVector.
-  static JSObject* newGlobalDebuggersHolder(JSContext* cx);
-
-  // Get the GlobalObject::DebuggerVector for an object allocated by
-  // newGlobalDebuggersObject.
-  static GlobalObject::DebuggerVector* getGlobalDebuggers(JSObject* holder);
-
   /*
    * Get any instrumentation ID which has been associated with a script using
    * the specified debugger object.
@@ -359,11 +353,11 @@ class DebugAPI {
   static void slowPathOnNewScript(JSContext* cx, HandleScript script);
   static void slowPathOnNewGlobalObject(JSContext* cx,
                                         Handle<GlobalObject*> global);
-  static void slowPathNotifyParticipatesInGC(
-      uint64_t majorGCNumber, GlobalObject::DebuggerVector& dbgs);
+  static void slowPathNotifyParticipatesInGC(uint64_t majorGCNumber,
+                                             JS::Realm::DebuggerVector& dbgs);
   static MOZ_MUST_USE bool slowPathOnLogAllocationSite(
       JSContext* cx, HandleObject obj, HandleSavedFrame frame,
-      mozilla::TimeStamp when, GlobalObject::DebuggerVector& dbgs);
+      mozilla::TimeStamp when, JS::Realm::DebuggerVector& dbgs);
   static MOZ_MUST_USE bool slowPathOnLeaveFrame(JSContext* cx,
                                                 AbstractFramePtr frame,
                                                 jsbytecode* pc, bool ok);
