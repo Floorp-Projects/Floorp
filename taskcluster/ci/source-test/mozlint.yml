@@ -125,8 +125,19 @@ lintpref:
         mach: lint -l lintpref -f treeherder -f json:/builds/worker/mozlint.json
     when:
         files-changed:
-            - modules/libpref/init/all.js
-            - modules/libpref/init/StaticPrefList.yaml
+            - 'modules/libpref/init/all.js'
+            - 'modules/libpref/init/StaticPrefList.yaml'
+            - 'browser/app/profile/firefox.js'
+            - 'mobile/android/app/mobile.js'
+            - 'devtools/client/preferences/debugger.js'
+            - 'mobile/android/app/geckoview-prefs.js'
+            - 'browser/branding/official/pref/firefox-branding.js'
+            - 'browser/branding/nightly/pref/firefox-branding.js'
+            - 'browser/branding/unofficial/pref/firefox-branding.js'
+            - 'browser/branding/aurora/pref/firefox-branding.js'
+            - 'browser/app/profile/channel-prefs.js'
+            - 'mobile/android/installer/mobile-l10n.js'
+            - 'mobile/android/locales/en-US/mobile-l10n.js'
 
 mingw-cap:
     description: lint for MinGW Capitalization issues
