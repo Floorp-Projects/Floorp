@@ -62,6 +62,10 @@ def _get(graph_config, alias, level):
         raise KeyError("No matches for worker-type alias " + alias)
     worker_config = matches[0].copy()
 
+    worker_config['provisioner'] = evaluate_keyed_by(
+        worker_config['provisioner'],
+        "worker-type alias {} field provisioner".format(alias),
+        {"level": level}).format(level=level, alias=alias)
     worker_config['worker-type'] = evaluate_keyed_by(
         worker_config['worker-type'],
         "worker-type alias {} field worker-type".format(alias),
