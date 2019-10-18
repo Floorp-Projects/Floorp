@@ -42,7 +42,7 @@ const SUITES = {
     type: TEST_TYPES.JEST,
   },
   framework: {
-    path: "../framework/test/jest",
+    path: "../framework/test/node",
     type: TEST_TYPES.JEST,
   },
   netmonitor: {
