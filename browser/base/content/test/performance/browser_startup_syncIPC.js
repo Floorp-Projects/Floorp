@@ -283,14 +283,13 @@ add_task(async function() {
       let markerData = m[dataCol];
       if (
         !markerData ||
-        markerData.type != "IPC" ||
-        !markerData.sync ||
-        markerData.direction != "sending"
+        markerData.category != "IPC" ||
+        markerData.interval != "start"
       ) {
         continue;
       }
 
-      markersForCurrentPhase.push(markerData.messageType);
+      markersForCurrentPhase.push(markerName);
     }
   }
 

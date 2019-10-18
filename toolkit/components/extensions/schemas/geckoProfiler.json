@@ -39,8 +39,7 @@
           "jsallocations",
           "nostacksampling",
           "nativeallocations",
-          "preferencereads",
-          "ipcmessages"
+          "preferencereads"
         ]
       },
       {
