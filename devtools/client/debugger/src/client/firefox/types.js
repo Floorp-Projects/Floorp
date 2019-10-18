@@ -230,9 +230,9 @@ export type Target = {
   isContentProcess: boolean,
   isWorkerTarget: boolean,
   traits: Object,
-  chrome: Boolean,
+  chrome: boolean,
   url: string,
-  isAddon: Boolean,
+  isAddon: boolean,
 };
 
 /**
