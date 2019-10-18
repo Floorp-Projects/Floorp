@@ -1113,7 +1113,6 @@ class JSTerm extends Component {
       {
         className: "jsterm-input-container devtools-input devtools-monospace",
         key: "jsterm-container",
-        style: { direction: "ltr" },
         "aria-live": "off",
         onContextMenu: this.onContextMenu,
         ref: node => {
