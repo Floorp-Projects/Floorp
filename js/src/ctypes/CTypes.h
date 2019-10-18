@@ -250,15 +250,7 @@ void PrependString(JSContext* cx, StringBuilder<char16_t, N>& v,
   memmove(v.begin() + alen, v.begin(), vlen * sizeof(char16_t));
 
   // Copy data to insert.
-  JS::AutoCheckCannotGC nogc;
-  if (linear->hasLatin1Chars()) {
-    const Latin1Char* chars = linear->latin1Chars(nogc);
-    for (size_t i = 0; i < alen; i++) {
-      v[i] = chars[i];
-    }
-  } else {
-    memcpy(v.begin(), linear->twoByteChars(nogc), alen * sizeof(char16_t));
-  }
+  CopyChars(v.begin(), *linear);
 }
 
 MOZ_MUST_USE bool ReportErrorIfUnpairedSurrogatePresent(JSContext* cx,
