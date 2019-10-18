@@ -602,7 +602,6 @@ pref("privacy.history.custom",              false);
 // 5 - Last 5 minutes
 // 6 - Last 24 hours
 pref("privacy.sanitize.timeSpan", 1);
-pref("privacy.sanitize.sanitizeOnShutdown", false);
 
 pref("privacy.sanitize.migrateFx3Prefs",    false);
 
@@ -610,12 +609,6 @@ pref("privacy.panicButton.enabled",         true);
 
 // Time until temporary permissions expire, in ms
 pref("privacy.temporary_permission_expire_time_ms",  3600000);
-
-// If Accept-Language should be spoofed by en-US
-// 0 - will prompt
-// 1 - don't spoof
-// 2 - spoof
-pref("privacy.spoof_english", 0);
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
