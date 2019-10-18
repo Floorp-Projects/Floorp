@@ -34,6 +34,8 @@ pub mod expected {
     pub const USED_TARGETS: Range<u64> =            1..4;
     pub const COLOR_TARGETS: Range<u64> =           1..4;
     pub const ALPHA_TARGETS: Range<u64> =           0..2;
+    pub const RENDERED_PICTURE_CACHE_TILES: Range<u64> = 0..5;
+    pub const TOTAL_PICTURE_CACHE_TILES: Range<u64> = 0..15;
     pub const CREATED_TARGETS: Range<u64> =         0..3;
     pub const CHANGED_TARGETS: Range<u64> =         0..3;
     pub const TEXTURE_DATA_UPLOADED: Range<u64> =   0..10;
@@ -788,6 +790,8 @@ pub struct RendererProfileCounters {
     pub color_targets: AverageIntProfileCounter,
     pub alpha_targets: AverageIntProfileCounter,
     pub texture_data_uploaded: AverageIntProfileCounter,
+    pub rendered_picture_cache_tiles: AverageIntProfileCounter,
+    pub total_picture_cache_tiles: AverageIntProfileCounter,
 }
 
 pub struct RendererProfileTimers {
@@ -826,6 +830,14 @@ impl RendererProfileCounters {
                 "Texture data, kb",
                 None, Some(expected::TEXTURE_DATA_UPLOADED),
             ),
+            rendered_picture_cache_tiles: AverageIntProfileCounter::new(
+                "Rendered tiles",
+                None, Some(expected::RENDERED_PICTURE_CACHE_TILES),
+            ),
+            total_picture_cache_tiles: AverageIntProfileCounter::new(
+                "Total tiles",
+                None, Some(expected::TOTAL_PICTURE_CACHE_TILES),
+            ),
         }
     }
 
@@ -835,6 +847,8 @@ impl RendererProfileCounters {
         self.color_targets.reset();
         self.alpha_targets.reset();
         self.texture_data_uploaded.reset();
+        self.rendered_picture_cache_tiles.reset();
+        self.total_picture_cache_tiles.reset();
     }
 }
 
@@ -1421,6 +1435,7 @@ impl Profiler {
                 &renderer_profile.alpha_targets,
                 &renderer_profile.draw_calls,
                 &renderer_profile.vertices,
+                &renderer_profile.rendered_picture_cache_tiles,
                 &renderer_profile.texture_data_uploaded,
                 &self.ipc_time,
                 &self.backend_time,
@@ -1450,6 +1465,8 @@ impl Profiler {
                 &renderer_profile.frame_counter,
                 &renderer_profile.color_targets,
                 &renderer_profile.alpha_targets,
+                &renderer_profile.rendered_picture_cache_tiles,
+                &renderer_profile.total_picture_cache_tiles,
                 &renderer_profile.texture_data_uploaded,
             ],
             None,
@@ -1621,6 +1638,8 @@ impl Profiler {
                 &renderer_profile.alpha_targets,
                 &renderer_profile.draw_calls,
                 &renderer_profile.vertices,
+                &renderer_profile.rendered_picture_cache_tiles,
+                &renderer_profile.total_picture_cache_tiles,
             ],
             &[
                 &backend_profile.resources.gpu_cache.allocated_rows,

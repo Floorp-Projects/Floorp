@@ -3640,6 +3640,7 @@ impl Renderer {
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
+        self.profile_counters.rendered_picture_cache_tiles.inc();
         self.profile_counters.color_targets.inc();
         let _gm = self.gpu_profile.start_marker("picture cache target");
         let framebuffer_kind = FramebufferKind::Other;
@@ -4064,6 +4065,12 @@ impl Renderer {
             &projection,
             &mut self.renderer_errors
         );
+
+        // We are only interested in tiles backed with actual cached pixels so we don't
+        // count clear tiles here.
+        let num_tiles = composite_state.opaque_tiles.len()
+            + composite_state.alpha_tiles.len();
+        self.profile_counters.total_picture_cache_tiles.set(num_tiles);
 
         // Draw opaque tiles first, front-to-back to get maxmum
         // z-reject efficiency.
