@@ -8,6 +8,7 @@ html, body {
   height: 100%;
 }
 
+
 body {
   display: flex;
   flex-direction: column;
@@ -111,6 +112,13 @@ body {
 .browser_instance {
   width: 100%;
   height: 100%;
+}
+
+/* Hide the navbar when in fullscreen so that <browser> can
+ * fill the entire viewport
+ */
+:root[inFullScreen] .navbar_container {
+  display:none;
 }
 
 .browser_settings {
