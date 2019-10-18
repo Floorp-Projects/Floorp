@@ -18,7 +18,7 @@ const {
   MANIFEST_UNKNOWN_TYPE_MEMBERS,
   MANIFEST_NO_ISSUES,
   MANIFEST_WITH_ISSUES,
-} = require("../fixtures/data/constants");
+} = require("devtools/client/application/test/jest/fixtures/data/constants");
 
 /*
  * Test for Manifest component
