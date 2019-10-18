@@ -116,6 +116,7 @@ async function setup() {
  */
 async function setupForURL(url) {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
   await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
   const CDP = await getCDP();
@@ -156,4 +157,16 @@ function getContentProperty(prop) {
     prop,
     _prop => content[_prop]
   );
+}
+
+/**
+ * Close tabs, client, remote agent.
+ */
+async function teardown(client) {
+  await client.close();
+  ok(true, "The client is closed");
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeCurrentTab();
+  }
+  await RemoteAgent.close();
 }
