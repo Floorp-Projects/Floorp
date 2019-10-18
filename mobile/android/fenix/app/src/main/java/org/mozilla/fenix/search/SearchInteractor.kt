@@ -41,6 +41,10 @@ class SearchInteractor(
         searchController.handleSearchShortcutEngineSelected(searchEngine)
     }
 
+    override fun onSearchShortcutsButtonClicked() {
+        searchController.handleSearchShortcutsButtonClicked()
+    }
+
     override fun onClickSearchEngineSettings() {
         searchController.handleClickSearchEngineSettings()
     }

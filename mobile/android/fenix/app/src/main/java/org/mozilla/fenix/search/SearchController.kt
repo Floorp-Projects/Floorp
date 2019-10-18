@@ -32,6 +32,7 @@ interface SearchController {
     fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine)
     fun handleClickSearchEngineSettings()
     fun handleExistingSessionSelected(session: Session)
+    fun handleSearchShortcutsButtonClicked()
 }
 
 class DefaultSearchController(
@@ -96,6 +97,11 @@ class DefaultSearchController(
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
         store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine))
         context.metrics.track(Event.SearchShortcutSelected(searchEngine.name))
+    }
+
+    override fun handleSearchShortcutsButtonClicked() {
+        val isOpen = store.state.showSearchShortcuts
+        store.dispatch(SearchFragmentAction.ShowSearchShortcutEnginePicker(!isOpen))
     }
 
     override fun handleClickSearchEngineSettings() {
