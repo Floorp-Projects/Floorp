@@ -7,14 +7,6 @@
  * Unit tests for the shared/Message component.
  */
 
-/**
- * ============================================================
- * PLEASE NOTE:
- * This test is failing due to https://bugzilla.mozilla.org/show_bug.cgi?id=1546370
- * The fix described in 1546370 is depending on try supporting a Node version >=10
- * ============================================================
- */
-
 const { shallow } = require("enzyme");
 const React = require("react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
