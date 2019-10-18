@@ -1,6 +1,6 @@
 # The `js` Crate: Rust Bindings to SpiderMonkey
 
-[User Documentation](http://doc.servo.org/js/)
+[User Documentation](http://doc.servo.org/mozjs/)
 
 ## Building
 
