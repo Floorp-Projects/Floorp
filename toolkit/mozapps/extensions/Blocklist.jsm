@@ -754,9 +754,8 @@ this.PluginBlocklistRS = {
       return null;
     }
     if (!entry.matchFilename && !entry.matchName && !entry.matchDescription) {
-      Cu.reportError(
-        new Error("Nothing to filter plugin item " + entry.blockID + " on")
-      );
+      let blockID = entry.blockID || entry.id;
+      Cu.reportError(new Error(`Nothing to filter plugin item ${blockID}`));
       return null;
     }
     return entry;
@@ -966,11 +965,8 @@ this.PluginBlocklistRS = {
       return null;
     }
     let blockEntry = r.entry;
-    if (!blockEntry.blockID) {
-      return null;
-    }
-
-    return blockEntry.infoURL || Utils._createBlocklistURL(blockEntry.blockID);
+    let blockID = blockEntry.blockID || blockEntry.id;
+    return blockEntry.infoURL || Utils._createBlocklistURL(blockID);
   },
 
   async getState(plugin, appVersion, toolkitVersion) {
@@ -1192,9 +1188,8 @@ this.ExtensionBlocklistRS = {
     }
     // Need something to filter on - at least a guid or name (either could be a regex):
     if (!entry.guid && !entry.name) {
-      Cu.reportError(
-        new Error("Nothing to filter add-on item " + entry.blockID + " on")
-      );
+      let blockID = entry.blockID || entry.id;
+      Cu.reportError(new Error(`Nothing to filter add-on item ${blockID} on`));
       return null;
     }
     return entry;
@@ -1362,12 +1357,13 @@ this.ExtensionBlocklistRS = {
             toolkitVersion
           )
         ) {
+          let blockID = entry.blockID || entry.id;
           return {
             state:
               versionRange.severity >= gBlocklistLevel
                 ? Ci.nsIBlocklistService.STATE_BLOCKED
                 : Ci.nsIBlocklistService.STATE_SOFTBLOCKED,
-            url: entry.blockID && Utils._createBlocklistURL(entry.blockID),
+            url: Utils._createBlocklistURL(blockID),
             prefs: entry.prefs || [],
           };
         }
