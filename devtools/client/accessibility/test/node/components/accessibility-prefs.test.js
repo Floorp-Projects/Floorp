@@ -18,7 +18,7 @@ const AccessibilityPrefs = createFactory(ConnectedAccessibilityPrefsClass);
 const {
   checkMenuItem,
   setupStore,
-} = require("devtools/client/accessibility/test/jest/helpers");
+} = require("devtools/client/accessibility/test/node/helpers");
 
 const { PREFS } = require("devtools/client/accessibility/constants");
 

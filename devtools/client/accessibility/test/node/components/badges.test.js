@@ -12,7 +12,7 @@ const Provider = createFactory(
 );
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/jest/helpers");
+} = require("devtools/client/accessibility/test/node/helpers");
 
 const Badge = require("devtools/client/accessibility/components/Badge");
 const Badges = createFactory(

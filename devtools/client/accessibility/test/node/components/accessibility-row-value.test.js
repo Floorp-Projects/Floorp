@@ -13,7 +13,7 @@ const Provider = createFactory(
 const {
   mockAccessible,
   setupStore,
-} = require("devtools/client/accessibility/test/jest/helpers");
+} = require("devtools/client/accessibility/test/node/helpers");
 
 const Badges = require("devtools/client/accessibility/components/Badges");
 const {

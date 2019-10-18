@@ -16,7 +16,7 @@ const AuditFilterClass = ConnectedAuditFilterClass.WrappedComponent;
 const AuditFilter = createFactory(ConnectedAuditFilterClass);
 const {
   setupStore,
-} = require("devtools/client/accessibility/test/jest/helpers");
+} = require("devtools/client/accessibility/test/node/helpers");
 const { FILTERS } = require("devtools/client/accessibility/constants");
 
 const {
