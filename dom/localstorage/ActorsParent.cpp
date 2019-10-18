@@ -6693,6 +6693,14 @@ void LSRequestBase::SendResults() {
 
     if (NS_SUCCEEDED(ResultCode())) {
       GetResponse(response);
+
+      MOZ_ASSERT(response.type() != LSRequestResponse::T__None);
+
+      if (response.type() == LSRequestResponse::Tnsresult) {
+        MOZ_ASSERT(NS_FAILED(response.get_nsresult()));
+
+        SetFailureCode(response.get_nsresult());
+      }
     } else {
       response = ResultCode();
     }
@@ -7393,7 +7401,9 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
   if (removedUsageFile) {
     if (!quotaObject) {
       quotaObject = GetQuotaObject();
-      MOZ_ASSERT(quotaObject);
+      if (!quotaObject) {
+        return NS_ERROR_FAILURE;
+      }
     }
 
     MOZ_ALWAYS_TRUE(quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
@@ -7426,7 +7436,9 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
 
     if (!quotaObject) {
       quotaObject = GetQuotaObject();
-      MOZ_ASSERT(quotaObject);
+      if (!quotaObject) {
+        return NS_ERROR_FAILURE;
+      }
     }
 
     if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
@@ -7694,7 +7706,11 @@ already_AddRefed<QuotaObject> PrepareDatastoreOp::GetQuotaObject() {
   RefPtr<QuotaObject> quotaObject = quotaManager->GetQuotaObject(
       PERSISTENCE_TYPE_DEFAULT, mGroup, mOrigin,
       mozilla::dom::quota::Client::LS, mDatabaseFilePath, mUsage);
-  MOZ_ASSERT(quotaObject);
+
+  if (!quotaObject) {
+    LS_WARNING("Failed to get quota object for group (%s) and origin (%s)!",
+               mGroup.get(), mOrigin.get());
+  }
 
   return quotaObject.forget();
 }
@@ -7848,7 +7864,10 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
       }
 
       quotaObject = GetQuotaObject();
-      MOZ_ASSERT(quotaObject);
+      if (!quotaObject) {
+        aResponse = NS_ERROR_FAILURE;
+        return;
+      }
     }
 
     mDatastore = new Datastore(mGroup, mOrigin, mPrivateBrowsingId, mUsage,
