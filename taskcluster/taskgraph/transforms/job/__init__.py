@@ -18,6 +18,7 @@ import json
 import mozpack.path as mozpath
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.transforms.cached_tasks import order_tasks
 from taskgraph.util.schema import (
     validate_schema,
     Schema,
@@ -195,8 +196,11 @@ def use_fetches(config, jobs):
             if value:
                 aliases['{}-{}'.format(task.kind, value)] = task.label
 
-    for job in jobs:
-        fetches = job.pop('fetches', None)
+    artifact_prefixes = {}
+    for job in order_tasks(config, jobs):
+        artifact_prefixes[job["label"]] = get_artifact_prefix(job)
+
+        fetches = job.pop("fetches", None)
         if not fetches:
             yield job
             continue
@@ -216,14 +220,6 @@ def use_fetches(config, jobs):
                             kind=config.kind, name=name, fetch=fetch_name))
 
                     path = artifact_names[label]
-                    if not path.startswith('public/'):
-                        # Use taskcluster-proxy and request appropriate scope.  For example, add
-                        # 'scopes: [queue:get-artifact:path/to/*]' for 'path/to/artifact.tar.xz'.
-                        worker['taskcluster-proxy'] = True
-                        dirname = mozpath.dirname(path)
-                        scope = 'queue:get-artifact:{}/*'.format(dirname)
-                        if scope not in job.setdefault('scopes', []):
-                            job['scopes'].append(scope)
 
                     dependencies[label] = label
                     job_fetches.append({
@@ -238,6 +234,29 @@ def use_fetches(config, jobs):
                 if kind not in dependencies:
                     raise Exception("{name} can't fetch {kind} artifacts because "
                                     "it has no {kind} dependencies!".format(name=name, kind=kind))
+                dep_label = dependencies[kind]
+                if dep_label in artifact_prefixes:
+                    prefix = artifact_prefixes[dep_label]
+                else:
+                    dep_tasks = [
+                        task
+                        for task in config.kind_dependencies_tasks
+                        if task.label == dep_label
+                    ]
+                    if len(dep_tasks) != 1:
+                        raise Exception(
+                            "{name} can't fetch {kind} artifacts because "
+                            "there are {tasks} with label {label} in kind dependencies!".format(
+                                name=name,
+                                kind=kind,
+                                label=dependencies[kind],
+                                tasks="no tasks"
+                                if len(dep_dep_tasks) == 0
+                                else "multiple tasks",
+                            )
+                        )
+
+                    prefix = get_artifact_prefix(dep_tasks[0])
 
                 for artifact in artifacts:
                     if isinstance(artifact, basestring):
@@ -258,6 +277,20 @@ def use_fetches(config, jobs):
                     if dest is not None:
                         fetch['dest'] = dest
                     job_fetches.append(fetch)
+
+        job_artifact_prefixes = {
+            mozpath.dirname(fetch["artifact"])
+            for fetch in job_fetches
+            if not fetch["artifact"].startswith("public/")
+        }
+        if job_artifact_prefixes:
+            # Use taskcluster-proxy and request appropriate scope.  For example, add
+            # 'scopes: [queue:get-artifact:path/to/*]' for 'path/to/artifact.tar.xz'.
+            worker["taskcluster-proxy"] = True
+            for prefix in sorted(job_artifact_prefixes):
+                scope = "queue:get-artifact:{}/*".format(prefix)
+                if scope not in job.setdefault("scopes", []):
+                    job["scopes"].append(scope)
 
         env = worker.setdefault('env', {})
         env['MOZ_FETCHES'] = {'task-reference': json.dumps(job_fetches, sort_keys=True)}
