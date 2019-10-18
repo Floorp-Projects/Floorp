@@ -386,12 +386,10 @@ class SCInput {
 struct JSStructuredCloneReader {
  public:
   explicit JSStructuredCloneReader(SCInput& in, JS::StructuredCloneScope scope,
-                                   JS::CloneDataPolicy cloneDataPolicy,
                                    const JSStructuredCloneCallbacks* cb,
                                    void* cbClosure)
       : in(in),
         allowedScope(scope),
-        cloneDataPolicy(cloneDataPolicy),
         objs(in.context()),
         allObjs(in.context()),
         callbacks(cb),
@@ -431,8 +429,6 @@ struct JSStructuredCloneReader {
   // DifferentProcess is the narrowest (it cannot contain pointers and must
   // be valid cross-process.)
   JS::StructuredCloneScope allowedScope;
-
-  const JS::CloneDataPolicy cloneDataPolicy;
 
   // Stack of objects with properties remaining to be read.
   RootedValueVector objs;
@@ -641,11 +637,10 @@ bool WriteStructuredClone(JSContext* cx, HandleValue v,
 
 bool ReadStructuredClone(JSContext* cx, JSStructuredCloneData& data,
                          JS::StructuredCloneScope scope, MutableHandleValue vp,
-                         JS::CloneDataPolicy cloneDataPolicy,
                          const JSStructuredCloneCallbacks* cb,
                          void* cbClosure) {
   SCInput in(cx, data);
-  JSStructuredCloneReader r(in, scope, cloneDataPolicy, cb, cbClosure);
+  JSStructuredCloneReader r(in, scope, cb, cbClosure);
   return r.read(vp);
 }
 
@@ -2216,12 +2211,6 @@ bool JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes,
 }
 
 bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
-  if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_NOT_CLONABLE, "SharedArrayBuffer");
-    return false;
-  }
-
   uint32_t byteLength;
   if (!in.readBytes(&byteLength, sizeof(byteLength))) {
     return in.reportTruncated();
@@ -2268,19 +2257,14 @@ bool JSStructuredCloneReader::readSharedArrayBuffer(MutableHandleValue vp) {
 
 bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
                                                    MutableHandleValue vp) {
-  JSContext* cx = context();
   if (nbytes != 0) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
                               JSMSG_SC_BAD_SERIALIZED_DATA,
                               "invalid shared wasm memory tag");
     return false;
   }
 
-  if (!cloneDataPolicy.isSharedArrayBufferAllowed()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_SC_NOT_CLONABLE, "WebAssembly.Memory");
-    return false;
-  }
+  JSContext* cx = context();
 
   // Read the SharedArrayBuffer object.
   RootedValue payload(cx);
@@ -3024,7 +3008,6 @@ using namespace js;
 JS_PUBLIC_API bool JS_ReadStructuredClone(
     JSContext* cx, JSStructuredCloneData& buf, uint32_t version,
     JS::StructuredCloneScope scope, MutableHandleValue vp,
-    JS::CloneDataPolicy cloneDataPolicy,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
@@ -3035,8 +3018,7 @@ JS_PUBLIC_API bool JS_ReadStructuredClone(
     return false;
   }
   const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
-  return ReadStructuredClone(cx, buf, scope, vp, cloneDataPolicy, callbacks,
-                             closure);
+  return ReadStructuredClone(cx, buf, scope, vp, callbacks, closure);
 }
 
 JS_PUBLIC_API bool JS_WriteStructuredClone(
@@ -3100,7 +3082,7 @@ JS_PUBLIC_API bool JS_StructuredClone(
     }
   }
 
-  return buf.read(cx, vp, JS::CloneDataPolicy(), callbacks, closure);
+  return buf.read(cx, vp, callbacks, closure);
 }
 
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(
@@ -3157,11 +3139,11 @@ void JSAutoStructuredCloneBuffer::steal(
 }
 
 bool JSAutoStructuredCloneBuffer::read(
-    JSContext* cx, MutableHandleValue vp, JS::CloneDataPolicy cloneDataPolicy,
+    JSContext* cx, MutableHandleValue vp,
     const JSStructuredCloneCallbacks* optionalCallbacks, void* closure) {
   MOZ_ASSERT(cx);
   return !!JS_ReadStructuredClone(cx, data_, version_, scope_, vp,
-                                  cloneDataPolicy, optionalCallbacks, closure);
+                                  optionalCallbacks, closure);
 }
 
 bool JSAutoStructuredCloneBuffer::write(

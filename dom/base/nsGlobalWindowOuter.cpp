@@ -5852,8 +5852,7 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
     JSContext* aCx, const nsAString& aTargetOrigin, BrowsingContext** aSource,
     nsAString& aOrigin, nsIURI** aTargetOriginURI,
     nsIPrincipal** aCallerPrincipal, nsGlobalWindowInner** aCallerInnerWindow,
-    nsIURI** aCallerDocumentURI, Maybe<nsID>* aCallerAgentClusterId,
-    ErrorResult& aError) {
+    nsIURI** aCallerDocumentURI, ErrorResult& aError) {
   //
   // Window.postMessage is an intentional subversion of the same-origin policy.
   // As such, this code must be particularly careful in the information it
@@ -5937,12 +5936,6 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
                              ->GetBrowsingContext());
   } else {
     *aSource = nullptr;
-  }
-
-  if (aCallerAgentClusterId && callerInnerWin &&
-      callerInnerWin->GetDocGroup()) {
-    *aCallerAgentClusterId =
-        Some(callerInnerWin->GetDocGroup()->AgentClusterId());
   }
 
   callerInnerWin.forget(aCallerInnerWindow);
@@ -6052,12 +6045,11 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
   nsCOMPtr<nsIPrincipal> callerPrincipal;
   RefPtr<nsGlobalWindowInner> callerInnerWindow;
   nsCOMPtr<nsIURI> callerDocumentURI;
-  Maybe<nsID> callerAgentClusterId = Nothing();
-  if (!GatherPostMessageData(
-          aCx, aTargetOrigin, getter_AddRefs(sourceBc), origin,
-          getter_AddRefs(targetOriginURI), getter_AddRefs(callerPrincipal),
-          getter_AddRefs(callerInnerWindow), getter_AddRefs(callerDocumentURI),
-          &callerAgentClusterId, aError)) {
+  if (!GatherPostMessageData(aCx, aTargetOrigin, getter_AddRefs(sourceBc),
+                             origin, getter_AddRefs(targetOriginURI),
+                             getter_AddRefs(callerPrincipal),
+                             getter_AddRefs(callerInnerWindow),
+                             getter_AddRefs(callerDocumentURI), aError)) {
     return;
   }
 
@@ -6072,8 +6064,7 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
   // event creation and dispatch.
   RefPtr<PostMessageEvent> event = new PostMessageEvent(
       sourceBc, origin, this, providedPrincipal,
-      callerInnerWindow ? callerInnerWindow->WindowID() : 0, callerDocumentURI,
-      callerAgentClusterId);
+      callerInnerWindow ? callerInnerWindow->WindowID() : 0, callerDocumentURI);
 
   JS::CloneDataPolicy clonePolicy;
   if (GetDocGroup() && callerInnerWindow &&

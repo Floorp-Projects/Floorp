@@ -54,10 +54,9 @@ static int testStructuredCloneReaderFuzz(const uint8_t* buf, size_t size) {
     return 0;
   }
 
-  JS::CloneDataPolicy policy;
   RootedValue deserialized(gCx);
   if (!JS_ReadStructuredClone(gCx, *clonebuf, JS_STRUCTURED_CLONE_VERSION,
-                              scope, &deserialized, policy, nullptr, nullptr)) {
+                              scope, &deserialized, nullptr, nullptr)) {
     return 0;
   }
 
@@ -71,6 +70,7 @@ static int testStructuredCloneReaderFuzz(const uint8_t* buf, size_t size) {
      Tests show that this also doesn't cause a serious performance penalty.
   */
   mozilla::Maybe<JSAutoStructuredCloneBuffer> clonebufOut;
+  JS::CloneDataPolicy policy;
 
   clonebufOut.emplace(scope, nullptr, nullptr);
   if (!clonebufOut->write(gCx, deserialized, UndefinedHandleValue, policy)) {

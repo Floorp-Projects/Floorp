@@ -8,7 +8,6 @@
 
 #include "MessageEvent.h"
 #include "mozilla/dom/BlobBinding.h"
-#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
@@ -32,18 +31,19 @@
 namespace mozilla {
 namespace dom {
 
-PostMessageEvent::PostMessageEvent(
-    BrowsingContext* aSource, const nsAString& aCallerOrigin,
-    nsGlobalWindowOuter* aTargetWindow, nsIPrincipal* aProvidedPrincipal,
-    const Maybe<uint64_t>& aCallerWindowID, nsIURI* aCallerDocumentURI,
-    bool aIsFromPrivateWindow, const Maybe<nsID>& aCallerAgentClusterId)
+PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
+                                   const nsAString& aCallerOrigin,
+                                   nsGlobalWindowOuter* aTargetWindow,
+                                   nsIPrincipal* aProvidedPrincipal,
+                                   const Maybe<uint64_t>& aCallerWindowID,
+                                   nsIURI* aCallerDocumentURI,
+                                   bool aIsFromPrivateWindow)
     : Runnable("dom::PostMessageEvent"),
       mSource(aSource),
       mCallerOrigin(aCallerOrigin),
       mTargetWindow(aTargetWindow),
       mProvidedPrincipal(aProvidedPrincipal),
       mCallerWindowID(aCallerWindowID),
-      mCallerAgentClusterId(aCallerAgentClusterId),
       mCallerDocumentURI(aCallerDocumentURI),
       mIsFromPrivateWindow(aIsFromPrivateWindow) {}
 
@@ -162,17 +162,10 @@ PostMessageEvent::Run() {
   nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
       do_QueryObject(targetWindow);
 
-  JS::CloneDataPolicy cloneDataPolicy;
-  MOZ_DIAGNOSTIC_ASSERT(targetWindow);
-  if (mCallerAgentClusterId.isSome() &&
-      targetWindow->CanShareMemory(mCallerAgentClusterId.ref())) {
-    cloneDataPolicy.allowSharedMemory();
-  }
-
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
-    mHolder.ref<StructuredCloneHolder>().Read(
-        ToSupports(targetWindow), cx, &messageData, cloneDataPolicy, rv);
+    mHolder.ref<StructuredCloneHolder>().Read(ToSupports(targetWindow), cx,
+                                              &messageData, rv);
     holder = &mHolder.ref<StructuredCloneHolder>();
   } else {
     MOZ_ASSERT(mHolder.constructed<ipc::StructuredCloneData>());

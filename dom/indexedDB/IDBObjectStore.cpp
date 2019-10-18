@@ -1063,7 +1063,7 @@ bool IDBObjectStore::DeserializeValue(JSContext* aCx,
   if (!JS_ReadStructuredClone(
           aCx, aCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
           JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
-          JS::CloneDataPolicy(), &callbacks, &aCloneReadInfo)) {
+          &callbacks, &aCloneReadInfo)) {
     return false;
   }
 
@@ -1222,7 +1222,7 @@ class DeserializeIndexValueHelper final : public Runnable {
     if (!JS_ReadStructuredClone(
             aCx, mCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
             JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
-            JS::CloneDataPolicy(), &callbacks, &mCloneReadInfo)) {
+            &callbacks, &mCloneReadInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
 
@@ -1328,7 +1328,7 @@ class DeserializeUpgradeValueHelper final : public Runnable {
     if (!JS_ReadStructuredClone(
             aCx, mCloneReadInfo.mData, JS_STRUCTURED_CLONE_VERSION,
             JS::StructuredCloneScope::DifferentProcessForIndexedDB, aValue,
-            JS::CloneDataPolicy(), &callbacks, &mCloneReadInfo)) {
+            &callbacks, &mCloneReadInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
 
