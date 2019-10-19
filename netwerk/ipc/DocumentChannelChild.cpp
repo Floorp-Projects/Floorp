@@ -567,5 +567,37 @@ DocumentChannelChild::Resume() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocumentChannelChild::IsTrackingResource(bool* aIsTrackingResource) {
+  // TODO
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
+  // TODO
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::GetClassificationFlags(uint32_t* aClassificationFlags) {
+  // TODO
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::GetFirstPartyClassificationFlags(
+    uint32_t* aClassificationFlags) {
+  // TODO
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::GetThirdPartyClassificationFlags(
+    uint32_t* aClassificationFlags) {
+  // TODO
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla

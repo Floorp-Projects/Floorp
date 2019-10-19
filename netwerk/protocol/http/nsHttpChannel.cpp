@@ -1335,7 +1335,7 @@ HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
     uint32_t flags = isThirdParty ? mThirdPartyClassificationFlags
                                   : mFirstPartyClassificationFlags;
 
-    using CF = nsIHttpChannel::ClassificationFlags;
+    using CF = nsIClassifiedChannel::ClassificationFlags;
     using TC = HttpTrafficAnalyzer::TrackingClassification;
 
     if (flags & CF::CLASSIFIED_TRACKING_CONTENT) {
