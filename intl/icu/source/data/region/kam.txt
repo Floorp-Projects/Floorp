@@ -127,7 +127,6 @@ kam{
         MD{"Moldova"}
         MG{"Bukini"}
         MH{"Visiwa vya Marshal"}
-        MK{"Masedonia"}
         ML{"Mali"}
         MM{"Myama"}
         MN{"Mongolia"}
@@ -227,5 +226,5 @@ kam{
         ZM{"Nzambia"}
         ZW{"Nzimbambwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

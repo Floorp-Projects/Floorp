@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ky{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -247,6 +247,11 @@ ky{
                 other{"{0} күн"}
                 per{"күнүнө {0}"}
             }
+            decade{
+                dnam{"декадалар"}
+                one{"{0} он жылдык"}
+                other{"{0} он жылдык"}
+            }
             hour{
                 dnam{"саат"}
                 one{"{0} саат"}
@@ -361,6 +366,11 @@ ky{
                 dnam{"килловат-саат"}
                 one{"{0} килловат-саат"}
                 other{"{0} килловат-саат"}
+            }
+            therm-us{
+                dnam{"терм АКШ"}
+                one{"{0} терм АКШ"}
+                other{"{0} терм АКШ"}
             }
         }
         force{
@@ -1339,6 +1349,11 @@ ky{
                 other{"{0} күн"}
                 per{"күн/{0}"}
             }
+            decade{
+                dnam{"он жылдык"}
+                one{"{0} он жылдык"}
+                other{"{0} он жылдык"}
+            }
             hour{
                 dnam{"саат"}
                 one{"{0} ст"}
@@ -1453,6 +1468,11 @@ ky{
                 dnam{"кВ-саат"}
                 one{"{0} кВ-саат"}
                 other{"{0} кВ-саат"}
+            }
+            therm-us{
+                dnam{"Терм АКШ"}
+                one{"{0} терм АКШ"}
+                other{"{0} терм АКШ"}
             }
         }
         force{

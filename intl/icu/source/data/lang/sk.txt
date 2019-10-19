@@ -4,22 +4,22 @@ sk{
     Keys{
         calendar{"kalendár"}
         cf{"formát meny"}
-        colAlternate{"Ignorovať radenie symbolov"}
-        colBackwards{"Obrátené radenie akcentov"}
-        colCaseFirst{"Radenie veľkých a malých písmen"}
-        colCaseLevel{"Rozlišovanie veľkých a malých písmen pri radení"}
-        colNormalization{"Normalizované radenie"}
-        colNumeric{"Číselné radenie"}
-        colStrength{"Sila radenia"}
+        colAlternate{"ignorovať radenie symbolov"}
+        colBackwards{"obrátené radenie diakritiky"}
+        colCaseFirst{"radenie veľkých a malých písmen"}
+        colCaseLevel{"rozlišovanie veľkých a malých písmen pri radení"}
+        colNormalization{"normálne radenie"}
+        colNumeric{"číselné radenie"}
+        colStrength{"sila radenia"}
         collation{"zoradenie"}
         currency{"mena"}
         hc{"hodinový cyklus (12 vs 24)"}
         lb{"štýl koncov riadka"}
         ms{"merná sústava"}
         numbers{"čísla"}
-        timezone{"Časové pásmo"}
-        va{"Variant miestneho nastavenia"}
-        x{"Súkromné použitie"}
+        timezone{"časové pásmo"}
+        va{"variant miestneho nastavenia"}
+        x{"súkromné použitie"}
     }
     Languages{
         aa{"afarčina"}
@@ -92,6 +92,7 @@ sk{
         car{"karibčina"}
         cay{"kajugčina"}
         cch{"atsam"}
+        ccp{"čakma"}
         ce{"čečenčina"}
         ceb{"cebuánčina"}
         cgg{"kiga"}
@@ -541,7 +542,7 @@ sk{
         zap{"zapotéčtina"}
         zbl{"systém Bliss"}
         zen{"zenaga"}
-        zgh{"tuaregčina (štandardná marocká)"}
+        zgh{"tuaregčina (marocká štandardná)"}
         zh{"čínština"}
         zh_Hans{"čínština (zjednodušená)"}
         zh_Hant{"čínština (tradičná)"}
@@ -549,6 +550,14 @@ sk{
         zun{"zuniština"}
         zxx{"bez jazykového obsahu"}
         zza{"zaza"}
+    }
+    Languages%long{
+        zh_Hans{"čínština (mandarínska zjednodušená)"}
+        zh_Hant{"čínština (mandarínska tradičná)"}
+    }
+    Languages%menu{
+        yue{"čínština (kantonská)"}
+        zh{"čínština (mandarínska)"}
     }
     Languages%short{
         az{"azerbajdžančina"}
@@ -761,7 +770,7 @@ sk{
     Variants{
         SCOTLAND{"škótska štandardná angličtina"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – všetko"}
         category-list{"{0}: {1}"}

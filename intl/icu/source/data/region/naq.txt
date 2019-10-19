@@ -127,7 +127,6 @@ naq{
         MD{"Moldova"}
         MG{"Madagascari"}
         MH{"Marshall Islands"}
-        MK{"Macedoniab"}
         ML{"Malib"}
         MM{"Myanmar"}
         MN{"Mongolia"}
@@ -227,5 +226,5 @@ naq{
         ZM{"Zambiab"}
         ZW{"Zimbabweb"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

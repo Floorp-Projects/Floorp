@@ -109,6 +109,7 @@ de{
         car{"Karibisch"}
         cay{"Cayuga"}
         cch{"Atsam"}
+        ccp{"Chakma"}
         ce{"Tschetschenisch"}
         ceb{"Cebuano"}
         cgg{"Rukiga"}
@@ -628,16 +629,20 @@ de{
         zxx{"Keine Sprachinhalte"}
         zza{"Zaza"}
     }
+    Languages%long{
+        zh_Hans{"Mandarin (Vereinfacht)"}
+    }
+    Languages%menu{
+        yue{"Chinesisch (Kantonesisch)"}
+        zh{"Chinesisch (Mandarin)"}
+    }
     Languages%short{
         az{"Aserbaidschanisch"}
-        en_GB{"Englisch (GB)"}
-        en_US{"Englisch (USA)"}
     }
     Scripts{
         Afak{"Afaka"}
         Aghb{"Kaukasisch-Albanisch"}
         Arab{"Arabisch"}
-        Armi{"Armi"}
         Armn{"Armenisch"}
         Avst{"Avestisch"}
         Bali{"Balinesisch"}
@@ -676,7 +681,6 @@ de{
         Grek{"Griechisch"}
         Gujr{"Gujarati"}
         Guru{"Gurmukhi"}
-        Hanb{"Hanb"}
         Hang{"Hangul"}
         Hani{"Chinesisch"}
         Hano{"Hanunoo"}
@@ -1006,7 +1010,7 @@ de{
         VALENCIA{"Valencianisch"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — Alle"}
         category-list{"{0}: {1}"}

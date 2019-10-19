@@ -11,14 +11,6 @@ es_MX{
             "BTN",
             "ngultrum butanés",
         }
-        CNH{
-            "CNH",
-            "CNH",
-        }
-        ERN{
-            "ERN",
-            "nakfa",
-        }
         KGS{
             "KGS",
             "som kirguís",
@@ -47,10 +39,6 @@ es_MX{
             "$",
             "peso mexicano",
         }
-        MYR{
-            "MYR",
-            "ringit",
-        }
         STN{
             "STN",
             "dobra santotomense",
@@ -58,18 +46,6 @@ es_MX{
         THB{
             "THB",
             "baht tailandés",
-        }
-        UZS{
-            "UZS",
-            "sum",
-        }
-        VEF{
-            "VEF",
-            "bolívar venezolano (2008–2018)",
-        }
-        VES{
-            "VES",
-            "bolívar venezolano",
         }
         VND{
             "VND",
@@ -97,16 +73,9 @@ es_MX{
             one{"taka bangladesí"}
             other{"takas bangladesíes"}
         }
-        BGN{
-            other{"levas búlgaras"}
-        }
         BTN{
             one{"ngultrum butanés"}
             other{"gultrums bultaneses"}
-        }
-        CNH{
-            one{"CNH"}
-            other{"CNH"}
         }
         KGS{
             one{"som kirguís"}
@@ -128,13 +97,6 @@ es_MX{
             one{"rupia de Maldivas"}
             other{"rupias de Maldivas"}
         }
-        MWK{
-            one{"kwacha malauí"}
-        }
-        MYR{
-            one{"ringit"}
-            other{"ringits"}
-        }
         STN{
             one{"dobra santotomense"}
             other{"dobras santotomenses"}
@@ -144,15 +106,8 @@ es_MX{
             other{"bahts tailandeses"}
         }
         TMT{
+            one{"manat turcomano"}
             other{"manats turcomanos"}
-        }
-        UZS{
-            one{"sum"}
-            other{"sums"}
-        }
-        VEF{
-            one{"bolívar venezolano (2008–2018)"}
-            other{"bolívares venezolanos (2008–2018)"}
         }
         VES{
             one{"bolívar venezolano"}
@@ -164,11 +119,12 @@ es_MX{
         }
         XXX{
             one{"(moneda desconocida)"}
+            other{"(moneda desconocida)"}
         }
         ZMW{
             one{"kwacha zambiano"}
             other{"kwachas zambianos"}
         }
     }
-    Version{"2.1.47.96"}
+    Version{"36"}
 }

@@ -84,6 +84,7 @@ hi{
         cad{"कैड्डो"}
         car{"कैरिब"}
         cch{"अत्सम"}
+        ccp{"चकमा"}
         ce{"चेचन"}
         ceb{"सिबुआनो"}
         cgg{"शिगा"}
@@ -538,6 +539,14 @@ hi{
         zxx{"कोई भाषा सामग्री नहीं"}
         zza{"ज़ाज़ा"}
     }
+    Languages%long{
+        zh_Hans{"सरलीकृत मैंडेरिन चीनी"}
+        zh_Hant{"पारंपरिक मैंडेरिन चीनी"}
+    }
+    Languages%menu{
+        yue{"चीनी, कैंटोनीज़"}
+        zh{"चीनी, मैंडेरिन"}
+    }
     Languages%short{
         az{"अज़ेरी"}
         en_GB{"यू॰के॰ अंग्रेज़ी"}
@@ -840,7 +849,7 @@ hi{
         POSIX{"कम्प्यूटर"}
         REVISED{"संशोधित वर्तनी"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — सभी"}
         category-list{"{0}: {1}"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 is{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -247,6 +247,11 @@ is{
                 other{"{0} dagar"}
                 per{"{0} á dag"}
             }
+            decade{
+                dnam{"áratugir"}
+                one{"{0} áratugur"}
+                other{"{0} áratugir"}
+            }
             hour{
                 dnam{"klukkustundir"}
                 one{"{0} klukkustund"}
@@ -362,6 +367,11 @@ is{
                 one{"{0} kílóvattstund"}
                 other{"{0} kílóvattstundir"}
             }
+            therm-us{
+                dnam{"bandarískar varmaeiningar"}
+                one{"{0} bandarísk varmaeining"}
+                other{"{0} bandarískar varmaeiningar"}
+            }
         }
         force{
             newton{
@@ -395,6 +405,38 @@ is{
                 dnam{"megahertz"}
                 one{"{0} megahertz"}
                 other{"{0} megahertz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"punktar á sentimetra"}
+                one{"{0} punktur á sentimetra"}
+                other{"{0} punktar á sentimetra"}
+            }
+            dot-per-inch{
+                dnam{"punktar á tommu"}
+                one{"{0} punktur á tommu"}
+                other{"{0} punktar á tommu"}
+            }
+            megapixel{
+                dnam{"megapixlar"}
+                one{"{0} megapixill"}
+                other{"{0} megapixlar"}
+            }
+            pixel{
+                dnam{"pixlar"}
+                one{"{0} pixill"}
+                other{"{0} pixlar"}
+            }
+            pixel-per-centimeter{
+                dnam{"pixlar á sentimetra"}
+                one{"{0} pixill á sentimetra"}
+                other{"{0} pixlar á sentimetra"}
+            }
+            pixel-per-inch{
+                dnam{"pixlar á tommu"}
+                one{"{0} pixill á tommu"}
+                other{"{0} pixlar á tommu"}
             }
         }
         length{
@@ -516,7 +558,6 @@ is{
                 other{"{0} lúx"}
             }
             solar-luminosity{
-                dnam{"ljósafl sólar"}
                 one{"{0} ljósafl sólar"}
                 other{"{0} ljósafl sólar"}
             }
@@ -592,7 +633,7 @@ is{
                 other{"{0} stones"}
             }
             ton{
-                dnam{"bandarískt tonn"}
+                dnam{"bandarísk tonn"}
                 one{"{0} bandarískt tonn"}
                 other{"{0} bandarísk tonn"}
             }
@@ -635,15 +676,20 @@ is{
                 one{"{0} loftþyngd"}
                 other{"{0} loftþyngdir"}
             }
+            bar{
+                dnam{"bör"}
+                one{"{0} bar"}
+                other{"{0} bör"}
+            }
             hectopascal{
                 dnam{"hektópasköl"}
                 one{"{0} hektópaskal"}
                 other{"{0} hektópasköl"}
             }
             inch-hg{
-                dnam{"tommur af kvikvasilfri"}
+                dnam{"tommur af kvikasilfri"}
                 one{"{0} tomma af kvikasilfri"}
-                other{"{0} tommur af kvikvasilfri"}
+                other{"{0} tommur af kvikasilfri"}
             }
             kilopascal{
                 dnam{"kílópasköl"}
@@ -664,6 +710,11 @@ is{
                 dnam{"millimetrar af kvikasilfri"}
                 one{"{0} millimetrar af kvikasilfri"}
                 other{"{0} millimetrar af kvikasilfri"}
+            }
+            pascal{
+                dnam{"pasköl"}
+                one{"{0} paskal"}
+                other{"{0} pasköl"}
             }
             pound-per-square-inch{
                 dnam{"pund á fertommu"}
@@ -879,6 +930,14 @@ is{
             }
         }
         angle{
+            arc-minute{
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            arc-second{
+                one{"{0}″"}
+                other{"{0}″"}
+            }
             degree{
                 one{"{0}°"}
                 other{"{0}°"}
@@ -886,16 +945,22 @@ is{
         }
         area{
             acre{
+                dnam{"ekra"}
                 one{"{0} ek."}
                 other{"{0} ek."}
             }
             hectare{
+                dnam{"hektari"}
                 one{"{0} ha"}
                 other{"{0} ha"}
             }
+            square-centimeter{
+                per{"{0}/cm²"}
+            }
             square-foot{
-                one{"{0} ferfet"}
-                other{"{0} ferfet"}
+                dnam{"ft²"}
+                one{"{0}ft²"}
+                other{"{0}ft²"}
             }
             square-kilometer{
                 one{"{0} km²"}
@@ -904,6 +969,7 @@ is{
             square-meter{
                 one{"{0} m²"}
                 other{"{0} m²"}
+                per{"{0}/m²"}
             }
             square-mile{
                 one{"{0}mí²"}
@@ -914,6 +980,21 @@ is{
             per{"{0}/{1}"}
         }
         concentr{
+            milligram-per-deciliter{
+                dnam{"mg/dL"}
+                one{"{0}mg/dL"}
+                other{"{0}mg/dL"}
+            }
+            millimole-per-liter{
+                dnam{"mmol/L"}
+                one{"{0}mmol/L"}
+                other{"{0}mmol/L"}
+            }
+            part-per-million{
+                dnam{"ppm"}
+                one{"{0}ppm"}
+                other{"{0}ppm"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1167,10 +1248,6 @@ is{
             }
         }
         power{
-            horsepower{
-                one{"{0} ek"}
-                other{"{0} ek"}
-            }
             kilowatt{
                 one{"{0} kW"}
                 other{"{0} kW"}
@@ -1181,6 +1258,10 @@ is{
             }
         }
         pressure{
+            bar{
+                one{"{0} bar"}
+                other{"{0} bör"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -1252,9 +1333,15 @@ is{
             }
         }
         volume{
+            cubic-centimeter{
+                per{"{0}/cm³"}
+            }
             cubic-kilometer{
                 one{"{0} km³"}
                 other{"{0} km³"}
+            }
+            cubic-meter{
+                per{"{0}/m³"}
             }
             cubic-mile{
                 one{"{0}mi³"}
@@ -1405,8 +1492,6 @@ is{
             }
             permyriad{
                 dnam{"permyriad"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -1507,6 +1592,11 @@ is{
                 other{"{0} dagar"}
                 per{"{0}/d."}
             }
+            decade{
+                dnam{"árat."}
+                one{"{0} árat."}
+                other{"{0} árat."}
+            }
             hour{
                 dnam{"klukkustundir"}
                 one{"{0} klst."}
@@ -1584,8 +1674,6 @@ is{
         energy{
             british-thermal-unit{
                 dnam{"BTU"}
-                one{"{0} Btu"}
-                other{"{0} Btu"}
             }
             calorie{
                 dnam{"cal"}
@@ -1594,8 +1682,6 @@ is{
             }
             electronvolt{
                 dnam{"rafeindarvolt"}
-                one{"{0} eV"}
-                other{"{0} eV"}
             }
             foodcalorie{
                 dnam{"kal"}
@@ -1622,17 +1708,18 @@ is{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"bandarísk varmaeining"}
+                one{"{0} bna varmaeining"}
+                other{"{0} bna varmaeiningar"}
+            }
         }
         force{
             newton{
                 dnam{"njúton"}
-                one{"{0} N"}
-                other{"{0} N"}
             }
             pound-force{
                 dnam{"kraftur punds"}
-                one{"{0} lbf"}
-                other{"{0} lbf"}
             }
         }
         frequency{
@@ -1655,6 +1742,38 @@ is{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
+            megapixel{
+                dnam{"megapixlar"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                dnam{"pixlar"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -1789,13 +1908,9 @@ is{
             }
             dalton{
                 dnam{"dalton"}
-                one{"{0} Da"}
-                other{"{0} Da"}
             }
             earth-mass{
                 dnam{"jarðmassar"}
-                one{"{0} M⊕"}
-                other{"{0} M⊕"}
             }
             gram{
                 dnam{"grömm"}
@@ -1895,6 +2010,10 @@ is{
                 one{"{0} atm"}
                 other{"{0} atm"}
             }
+            bar{
+                one{"{0} bar"}
+                other{"{0} bör"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -1905,16 +2024,6 @@ is{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
             }
-            kilopascal{
-                dnam{"kPa"}
-                one{"{0} kPa"}
-                other{"{0} kPa"}
-            }
-            megapascal{
-                dnam{"MPa"}
-                one{"{0} MPa"}
-                other{"{0} MPa"}
-            }
             millibar{
                 dnam{"mbar"}
                 one{"{0} mbar"}
@@ -1924,6 +2033,11 @@ is{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -1973,18 +2087,6 @@ is{
                 dnam{"K"}
                 one{"{0} K"}
                 other{"{0} K"}
-            }
-        }
-        torque{
-            newton-meter{
-                dnam{"N⋅m"}
-                one{"{0} N⋅m"}
-                other{"{0} N⋅m"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                one{"{0} lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
             }
         }
         volume{

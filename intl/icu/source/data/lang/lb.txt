@@ -385,6 +385,7 @@ lb{
         nb{"Norwegesch Bokmål"}
         nd{"Nord-Ndebele-Sprooch"}
         nds{"Nidderdäitsch"}
+        nds_NL{"nds_NL"}
         ne{"Nepalesesch"}
         new{"Newari"}
         ng{"Ndonga"}
@@ -618,7 +619,6 @@ lb{
     }
     Languages%short{
         en_GB{"Englesch (UK)"}
-        en_US{"Englesch (US)"}
     }
     Scripts{
         Arab{"Arabesch"}
@@ -875,7 +875,7 @@ lb{
         VALENCIA{"Valencianesch"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     codePatterns{
         language{"Sprooch: {0}"}
         script{"Schrëft: {0}"}

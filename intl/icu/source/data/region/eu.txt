@@ -287,6 +287,7 @@ eu{
         VU{"Vanuatu"}
         WF{"Wallis eta Futuna"}
         WS{"Samoa"}
+        XA{"Sasiazentuak"}
         XK{"Kosovo"}
         YE{"Yemen"}
         YT{"Mayotte"}
@@ -310,5 +311,5 @@ eu{
         FK{"Falklandak (Malvinak)"}
         TL{"TL"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

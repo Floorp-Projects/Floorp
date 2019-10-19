@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 chr{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -247,6 +247,11 @@ chr{
                 other{"{0} ᎯᎸᏍᎩ ᏧᏒᎯᏓ"}
                 per{"{0} ᎢᎦ ᎢᏳᏓᎵ"}
             }
+            decade{
+                dnam{"ᏍᎪᎯ ᏧᏕᏘᏴᏓ"}
+                one{"{0} ᏍᎪᎯ ᏧᏕᏘᏴᏓ"}
+                other{"{0} ᏍᎪᎯ ᏧᏕᏘᏴᏓ"}
+            }
             hour{
                 dnam{"ᎢᏳᏟᎶᏓ"}
                 one{"{0} ᏑᏟᎶᏓ"}
@@ -362,6 +367,11 @@ chr{
                 one{"ᎠᎦᏴᎵ ᎠᏟᎶᏓ"}
                 other{"{0} ᎠᎦᏴᎵ-ᎢᏧᏟᎶᏓ"}
             }
+            therm-us{
+                dnam{"US ᎤᏗᏞᎬᎢ"}
+                one{"{0} US ᎤᏗᏞᎬᎢ"}
+                other{"{0} US ᎤᏗᏞᎬᎢ"}
+            }
         }
         force{
             newton{
@@ -395,6 +405,41 @@ chr{
                 dnam{"ᎺᎦᎭᏥ"}
                 one{"{0} ᎺᎦᎭᏥ"}
                 other{"{0} ᎺᎦᎭᏥ"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"ᏧᏓᏓᎸ ᎤᏍᏗ ᎠᏟᎶᏗ ᎢᏳᏓᎵ"}
+                one{"{0} ᎤᏓᏓᎸ ᎤᏍᏗ ᎠᏟᎶᏗ ᎢᏳᏓᎵ"}
+                other{"{0} ᏧᏓᏓᎸ ᎤᏍᏗ ᎠᏟᎶᏗ ᎢᏳᏓᎵ"}
+            }
+            dot-per-inch{
+                dnam{"ᏧᏓᏓᎸ ᎢᏏᎳᏗᏍᏗ ᎢᏳᏓᎵ"}
+                one{"{0} ᎤᏓᏓᎸ ᎢᏏᎳᏗᏍᏗ ᎢᏳᏓᎵ"}
+                other{"{0} ᏧᏓᏓᎸ ᎢᏏᎳᏗᏍᏗ ᎢᏳᏓᎵ"}
+            }
+            em{
+                dnam{"ᎪᏪᎸ em"}
+            }
+            megapixel{
+                dnam{"ᏧᏔᎾ ᏗᏇᎦᏎᎵ"}
+                one{"{0} ᎤᏔᎾ ᏇᎦᏎᎵ"}
+                other{"{0} ᏧᏔᎾ ᏗᏇᎦᏎᎵ"}
+            }
+            pixel{
+                dnam{"ᏗᏇᎦᏎᎵ"}
+                one{"{0} ᏇᎦᏎᎵ"}
+                other{"{0} ᏗᏇᎦᏎᎵ"}
+            }
+            pixel-per-centimeter{
+                dnam{"ᏗᏇᎦᏎᎵ ᎤᏍᏗ ᎠᏟᎶᏗ ᎢᏳᏓᎵ"}
+                one{"{0} ᏇᎦᏎᎵ ᎤᏍᏗ ᎠᏟᎶᏗ ᎢᏳᏓᎵ"}
+                other{"{0} ᏗᏇᎦᏎᎵ ᎤᏍᏗ ᎠᏟᎶᏗ ᎢᏳᏓᎵ"}
+            }
+            pixel-per-inch{
+                dnam{"ᏗᏇᎦᏎᎵ ᎢᏏᎳᏗᏍᏗ ᎢᏳᏓᎵ"}
+                one{"{0} ᏇᎦᏎᎵ ᎢᏏᎳᏗᏍᏗ ᎢᏳᏓᎵ"}
+                other{"{0} ᏗᏇᎦᏎᎵ ᎢᏏᎳᏗᏍᏗ ᎢᏳᏓᎵ"}
             }
         }
         length{
@@ -620,6 +665,11 @@ chr{
                 one{"{0} ᎦᏃᎴᏍᎬ"}
                 other{"{0} ᏗᎦᏃᎴᏍᎬ"}
             }
+            bar{
+                dnam{"ᏕᎦᎾᎸᎢ"}
+                one{"{0} ᎦᎾᎸᎢ"}
+                other{"{0} ᏕᎦᎾᎸᎢ"}
+            }
             hectopascal{
                 dnam{"ᎮᏔ ᏗᏆᏌᎵ"}
                 one{"{0} ᎮᏔ ᏆᏌᎵ"}
@@ -642,13 +692,18 @@ chr{
             }
             millibar{
                 dnam{"ᎢᏯᎦᏴᎵ ᏕᎦᎾᎸᎢ"}
-                one{"{0} ᎢᎦᎦᏴᎵ"}
+                one{"{0} ᎢᎦᎦᏴᎵ ᎦᎾᎸᎢ"}
                 other{"{0} ᎢᏯᎦᏴᎵ ᏕᎦᎾᎸᎢ"}
             }
             millimeter-of-mercury{
                 dnam{"ᏌᏉ ᎢᏯᎦᎨᎵᏁᎢ ᏗᏟᎶᏗ ᎾᎿ ᎹᎫᎢ"}
                 one{"{0} ᏌᏉ ᎢᏯᎦᎨᎵᏁᎢ ᎠᏟᎶᏗ ᎾᎿ ᎹᎫᎢ"}
                 other{"{0} ᏌᏉ ᎢᏯᎦᎨᎵᏁᎢ ᏗᏟᎶᏗ ᎾᎿ ᎹᎫᎢ"}
+            }
+            pascal{
+                dnam{"ᏗᏆᏌᎵ"}
+                one{"{0} ᏆᏌᎵ"}
+                other{"{0} ᏗᏆᏌᎵ"}
             }
             pound-per-square-inch{
                 dnam{"ᎢᏧᏓᎨᏓ ᏅᎩ ᏧᏅᏏᎩ ᎢᏏᏔᏗᏍᏗ ᎢᏳᏓᎵ"}
@@ -1217,6 +1272,11 @@ chr{
                 other{"{0} ᏧᏒᎯᏓ"}
                 per{"{0}/Ꭲ"}
             }
+            decade{
+                dnam{"ᏍᎪᎯ"}
+                one{"{0} ᏍᎪᎯ"}
+                other{"{0} ᏍᎪᎯ"}
+            }
             hour{
                 dnam{"ᎢᏳᏟᎶᏓ"}
                 one{"{0} ᏑᏟ"}
@@ -1332,6 +1392,11 @@ chr{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"US ᎤᏗᏞᎬᎢ"}
+                one{"{0} US ᎤᏗᏞᎬ"}
+                other{"{0} US ᎤᏗᏞᎬ"}
+            }
         }
         force{
             newton{
@@ -1365,6 +1430,14 @@ chr{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"ᏧᏔᎾ ᏗᏇᎦᏎᎵ"}
+            }
+            pixel{
+                dnam{"ᏗᏇᎦᏎᎵ"}
             }
         }
         length{

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 my{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -205,6 +205,10 @@ my{
                 other{"{0} ရက်"}
                 per{"တစ်ရက်လျှင် {0}"}
             }
+            decade{
+                dnam{"ဆယ်စုနှစ်"}
+                other{"{0} ဆယ်စုနှစ်"}
+            }
             hour{
                 dnam{"နာရီ"}
                 other{"{0} နာရီ"}
@@ -298,6 +302,10 @@ my{
             kilowatt-hour{
                 dnam{"ကီလိုဝပ်-နာရီ"}
                 other{"{0} ကီလိုဝပ်-နာရီ"}
+            }
+            therm-us{
+                dnam{"ယူအက်စ် သာမယ်လ်"}
+                other{"{0} ယူအက်စ် သာမယ်လ်"}
             }
         }
         force{
@@ -509,6 +517,10 @@ my{
             atmosphere{
                 dnam{"ကမ္ဘာ့လေထု"}
                 other{"{0} ကမ္ဘာ့လေထု"}
+            }
+            bar{
+                dnam{"bars"}
+                other{"{0} bars"}
             }
             hectopascal{
                 dnam{"ဟက်တိုပါစကယ်"}
@@ -1096,6 +1108,10 @@ my{
                 other{"{0} ရက်"}
                 per{"{0}/ ရက်"}
             }
+            decade{
+                dnam{"ဆယ်စု"}
+                other{"{0} ဆယ်စု"}
+            }
             hour{
                 dnam{"နာရီ"}
                 other{"{0} နာရီ"}
@@ -1190,11 +1206,14 @@ my{
                 dnam{"ကီလိုဝပ်-နာရီ"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"ယူအက်စ် သာမယ်လ်"}
+                other{"{0} ယူအက်စပ် သာမယ်လ်"}
+            }
         }
         force{
             newton{
                 dnam{"နယူတန်"}
-                other{"{0} N"}
             }
             pound-force{
                 dnam{"lbf"}
@@ -1309,7 +1328,6 @@ my{
             }
             solar-luminosity{
                 dnam{"ဆိုလာ လူမီနိုစီးတီးစ်"}
-                other{"{0} L☉"}
             }
         }
         mass{
@@ -1400,6 +1418,9 @@ my{
             atmosphere{
                 dnam{"atm"}
                 other{"{0} atm"}
+            }
+            bar{
+                other{"{0} bars"}
             }
             hectopascal{
                 dnam{"hPa"}

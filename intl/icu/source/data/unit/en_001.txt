@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_001{
-    Version{"2.1.47.69"}
+    Version{"36"}
     units{
         acceleration{
             meter-per-second-squared{
@@ -46,6 +46,16 @@ en_001{
                 one{"{0} millimole per litre"}
                 other{"{0} millimoles per litre"}
             }
+            percent{
+                dnam{"per cent"}
+                one{"{0} per cent"}
+                other{"{0} per cent"}
+            }
+            permille{
+                dnam{"per mille"}
+                one{"{0} per mille"}
+                other{"{0} per mille"}
+            }
         }
         consumption{
             liter-per-100kilometers{
@@ -67,6 +77,18 @@ en_001{
                 dnam{"miles per gallon"}
                 one{"{0} mile per gallon"}
                 other{"{0} miles per gallon"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dots per centimetre"}
+                one{"{0} dot per centimetre"}
+                other{"{0} dots per centimetre"}
+            }
+            pixel-per-centimeter{
+                dnam{"pixels per centimetre"}
+                one{"{0} pixel per centimetre"}
+                other{"{0} pixels per centimetre"}
             }
         }
         length{
@@ -116,7 +138,7 @@ en_001{
         }
         mass{
             metric-ton{
-                dnam{"tonne"}
+                dnam{"tonnes"}
                 one{"{0} tonne"}
                 other{"{0} tonnes"}
             }
@@ -152,6 +174,13 @@ en_001{
                 other{"{0} kelvin"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"newton metres"}
+                one{"{0} newton metre"}
+                other{"{0} newton metres"}
+            }
+        }
         volume{
             centiliter{
                 dnam{"centilitres"}
@@ -179,6 +208,11 @@ en_001{
                 dnam{"decilitres"}
                 one{"{0} decilitre"}
                 other{"{0} decilitres"}
+            }
+            fluid-ounce{
+                dnam{"US fluid ounces"}
+                one{"{0} US fluid ounce"}
+                other{"{0} US fluid ounces"}
             }
             gallon{
                 dnam{"US gallons"}
@@ -354,6 +388,12 @@ en_001{
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
             }
+            percent{
+                dnam{"per cent"}
+            }
+            permille{
+                dnam{"per mille"}
+            }
         }
         consumption{
             liter-per-100kilometers{
@@ -381,7 +421,6 @@ en_001{
             hour{
                 one{"{0} hr"}
                 other{"{0} hrs"}
-                per{"{0}ph"}
             }
             minute{
                 one{"{0} min"}
@@ -390,7 +429,6 @@ en_001{
             second{
                 one{"{0} sec"}
                 other{"{0} secs"}
-                per{"{0}ps"}
             }
         }
         length{
@@ -408,12 +446,7 @@ en_001{
         }
         pressure{
             inch-hg{
-                dnam{"in Hg"}
-            }
-            millimeter-of-mercury{
-                dnam{"mm Hg"}
-                one{"{0} mm Hg"}
-                other{"{0} mm Hg"}
+                dnam{"inHG"}
             }
         }
         speed{
@@ -431,6 +464,11 @@ en_001{
                 dnam{"dl"}
                 one{"{0} dl"}
                 other{"{0} dl"}
+            }
+            fluid-ounce{
+                dnam{"US fl oz"}
+                one{"{0} US fl oz"}
+                other{"{0} US fl oz"}
             }
             gallon{
                 dnam{"US gal"}

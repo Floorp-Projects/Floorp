@@ -13,8 +13,5 @@ sr_Latn_XK{
         UM{"Manja udaljena ostrva SAD"}
         VC{"Sveti Vinsent i Grenadini"}
     }
-    Countries%variant{
-        MK{"BJR Makedonija"}
-    }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

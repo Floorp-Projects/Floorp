@@ -2,6 +2,29 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yo{
     Countries{
+        003{"Àríwá Amẹ́ríkà"}
+        005{"Gúúṣù Amẹ́ríkà"}
+        011{"Ìwọ̀ oorùn Afíríkà"}
+        013{"Ààrin Gbùgbùn Àmẹ́ríkà"}
+        014{"Ìlà Oorùn Áfíríkà"}
+        017{"Ààrín gbùngbùn Afíríkà"}
+        018{"Apágúúsù Áfíríkà"}
+        021{"Apáàríwá Amẹ́ríkà"}
+        029{"Káríbíànù"}
+        030{"Ìlà Òòrùn Eṣíà"}
+        034{"Gúúṣù Eṣíà"}
+        035{"Gúúṣù ìlà òòrùn Éṣíà"}
+        039{"Gúúṣù Yúróòpù"}
+        053{"Ọṣirélaṣíà"}
+        054{"Mẹlanéṣíà"}
+        057{"Agbègbè Maikironéṣíà"}
+        061{"Polineṣíà"}
+        143{"Ààrin Gbùngbùn Éṣíà"}
+        145{"Ìwọ̀ Òòrùn Eṣíà"}
+        151{"Ìlà Òrùn Yúrópù"}
+        154{"Northern Europe"}
+        155{"Ìwọ̀ Òòrùn Yúrópù"}
+        419{"Látín Amẹ́ríkà"}
         AD{"Orílẹ́ède Ààndórà"}
         AE{"Orílẹ́ède Ẹmirate ti Awọn Arabu"}
         AF{"Orílẹ́ède Àfùgànístánì"}
@@ -59,9 +82,11 @@ yo{
         EC{"Orílẹ́ède Ekuádò"}
         EE{"Orílẹ́ède Esitonia"}
         EG{"Orílẹ́ède Égípítì"}
+        EH{"Ìwọ̀òòrùn Sàhárà"}
         ER{"Orílẹ́ède Eritira"}
         ES{"Orílẹ́ède Sipani"}
         ET{"Orílẹ́ède Etopia"}
+        EU{"Ìṣọ̀kan Yúròpù"}
         FI{"Orílẹ́ède Filandi"}
         FJ{"Orílẹ́ède Fiji"}
         FK{"Orílẹ́ède Etikun Fakalandi"}
@@ -127,7 +152,7 @@ yo{
         MD{"Orílẹ́ède Modofia"}
         MG{"Orílẹ́ède Madasika"}
         MH{"Orílẹ́ède Etikun Máṣali"}
-        MK{"Orílẹ́ède Masidonia"}
+        MK{"Àríwá Macedonia"}
         ML{"Orílẹ́ède Mali"}
         MM{"Orílẹ́ède Manamari"}
         MN{"Orílẹ́ède Mogolia"}
@@ -165,8 +190,8 @@ yo{
         PM{"Orílẹ́ède Pẹẹri ati mikuloni"}
         PN{"Orílẹ́ède Pikarini"}
         PR{"Orílẹ́ède Pọto Riko"}
-        PS{"Orílẹ́ède Iwọorun Pakisitian ati Gaṣa"}
-        PT{"Orílẹ́ède Pọtugi"}
+        PS{"Agbègbè Palẹsítíànù"}
+        PT{"Orílẹ́ède Pọ́túgà"}
         PW{"Orílẹ́ède Paalu"}
         PY{"Orílẹ́ède Paraguye"}
         QA{"Orílẹ́ède Kota"}
@@ -188,12 +213,14 @@ yo{
         SN{"Orílẹ́ède Sẹnẹga"}
         SO{"Orílẹ́ède Somalia"}
         SR{"Orílẹ́ède Surinami"}
+        SS{"Gúúsù Sudan"}
         ST{"Orílẹ́ède Sao tomi ati piriiṣipi"}
         SV{"Orílẹ́ède Ẹẹsáfádò"}
         SY{"Orílẹ́ède Siria"}
         SZ{"Orílẹ́ède Saṣiland"}
         TC{"Orílẹ́ède Tọọki ati Etikun Kakọsi"}
         TD{"Orílẹ́ède ṣààdì"}
+        TF{"Agbègbè Gúúsù Faranṣé"}
         TG{"Orílẹ́ède Togo"}
         TH{"Orílẹ́ède Tailandi"}
         TJ{"Orílẹ́ède Takisitani"}
@@ -206,9 +233,10 @@ yo{
         TT{"Orílẹ́ède Tirinida ati Tobaga"}
         TV{"Orílẹ́ède Tufalu"}
         TW{"Orílẹ́ède Taiwani"}
-        TZ{"Orílẹ́ède Tanṣania"}
+        TZ{"Orílẹ́ède Tàǹsáníà"}
         UA{"Orílẹ́ède Ukarini"}
         UG{"Orílẹ́ède Uganda"}
+        UN{"Ìṣọ̀kan àgbáyé"}
         US{"Orílẹ̀-èdè Amẹrikà"}
         UY{"Orílẹ́ède Nruguayi"}
         UZ{"Orílẹ́ède Nṣibẹkisitani"}
@@ -221,12 +249,21 @@ yo{
         VU{"Orílẹ́ède Faniatu"}
         WF{"Orílẹ́ède Wali ati futuna"}
         WS{"Orílẹ́ède Samọ"}
+        XK{"Kòsófò"}
         YE{"Orílẹ́ède yemeni"}
         YT{"Orílẹ́ède Mayote"}
-        ZA{"Orílẹ́ède Ariwa Afirika"}
+        ZA{"Gúúṣù Áfíríkà"}
         ZM{"Orílẹ́ède ṣamibia"}
         ZW{"Orílẹ́ède ṣimibabe"}
         ZZ{"Àgbègbè àìmọ̀"}
     }
-    Version{"2.1.48.17"}
+    Countries%short{
+        MO{"Màkáò"}
+        PS{"Palẹsitín"}
+    }
+    Countries%variant{
+        SZ{"Síwásìlandì"}
+        TL{"Ìlà Òòrùn Tímọ̀"}
+    }
+    Version{"36"}
 }

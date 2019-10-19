@@ -558,6 +558,14 @@ zh{
         zxx{"无语言内容"}
         zza{"扎扎语"}
     }
+    Languages%long{
+        zh_Hans{"现代标准汉语"}
+        zh_Hant{"台湾国语"}
+    }
+    Languages%menu{
+        yue{"广东话"}
+        zh{"普通话"}
+    }
     Languages%short{
         az{"阿塞语"}
         en_GB{"英式英语"}
@@ -690,7 +698,6 @@ zh{
         Phnx{"腓尼基文"}
         Plrd{"波拉德音标文字"}
         Prti{"帕提亚文碑铭体"}
-        Qaag{"Qaag"}
         Rjng{"拉让文"}
         Rohg{"哈乃斐罗兴亚文"}
         Roro{"朗格朗格文"}
@@ -1022,7 +1029,7 @@ zh{
         VALLADER{"瑞士瓦勒德方言"}
         WADEGILE{"WG 威氏拼音法"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — 全部"}
         category-list{"{0}: {1}"}

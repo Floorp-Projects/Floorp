@@ -14,7 +14,7 @@ tr{
         collation{"Sıralama Düzeni"}
         currency{"Para Birimi"}
         hc{"Saat Sistemi (12 - 24)"}
-        lb{"Line Break Style"}
+        lb{"Satır Sonu Stili"}
         ms{"Ölçü Sistemi"}
         numbers{"Rakamlar"}
         timezone{"Saat Dilimi"}
@@ -63,7 +63,7 @@ tr{
         avk{"Kotava"}
         awa{"Awadhi"}
         ay{"Aymara"}
-        az{"Azerice"}
+        az{"Azerbaycan dili"}
         az_Arab{"Güney Azerice"}
         ba{"Başkırtça"}
         bal{"Beluçça"}
@@ -113,7 +113,7 @@ tr{
         ccp{"Chakma"}
         ce{"Çeçence"}
         ceb{"Sebuano dili"}
-        cgg{"Kigaca"}
+        cgg{"Kiga"}
         ch{"Çamorro dili"}
         chb{"Çibça dili"}
         chg{"Çağatayca"}
@@ -250,7 +250,7 @@ tr{
         hup{"Hupaca"}
         hy{"Ermenice"}
         hz{"Herero dili"}
-        ia{"Interlingua"}
+        ia{"İnterlingua"}
         iba{"Iban"}
         ibb{"İbibio dili"}
         id{"Endonezce"}
@@ -273,7 +273,7 @@ tr{
         jpr{"Yahudi Farsçası"}
         jrb{"Yahudi Arapçası"}
         jut{"Yutland Dili"}
-        jv{"Cava Dili"}
+        jv{"Cava dili"}
         ka{"Gürcüce"}
         kaa{"Karakalpakça"}
         kab{"Kabiliyece"}
@@ -316,7 +316,7 @@ tr{
         krl{"Karelyaca"}
         kru{"Kurukh dili"}
         ks{"Keşmir dili"}
-        ksb{"Shambala"}
+        ksb{"Şambala"}
         ksf{"Bafia"}
         ksh{"Köln lehçesi"}
         ku{"Kürtçe"}
@@ -512,7 +512,7 @@ tr{
         sga{"Eski İrlandaca"}
         sgs{"Samogitçe"}
         sh{"Sırp-Hırvat Dili"}
-        shi{"Taşelhit"}
+        shi{"Taşelit"}
         shn{"Shan dili"}
         shu{"Çad Arapçası"}
         si{"Sinhali dili"}
@@ -526,7 +526,7 @@ tr{
         smj{"Lule Laponcası"}
         smn{"İnari Laponcası"}
         sms{"Skolt Laponcası"}
-        sn{"Shona"}
+        sn{"Şona dili"}
         snk{"Soninke"}
         so{"Somalice"}
         sog{"Sogdiana Dili"}
@@ -538,7 +538,7 @@ tr{
         ssy{"Saho"}
         st{"Güney Sotho dili"}
         stq{"Saterland Frizcesi"}
-        su{"Sunda Dili"}
+        su{"Sunda dili"}
         suk{"Sukuma dili"}
         sus{"Susu"}
         sux{"Sümerce"}
@@ -641,6 +641,14 @@ tr{
         zxx{"Dilbilim içeriği yok"}
         zza{"Zazaca"}
     }
+    Languages%long{
+        zh_Hans{"Basitleştirilmiş Çince (Mandarin)"}
+        zh_Hant{"Geleneksel Çince (Mandarin)"}
+    }
+    Languages%menu{
+        yue{"Çince, Kantonca"}
+        zh{"Çince, Mandarin"}
+    }
     Languages%short{
         az{"Azerice"}
         en_GB{"Birleşik Krallık İngilizcesi"}
@@ -667,6 +675,7 @@ tr{
         Cakm{"Chakma"}
         Cans{"UCAS"}
         Cari{"Karya"}
+        Cham{"Cham"}
         Cher{"Çeroki"}
         Cirt{"Cirth"}
         Copt{"Kıpti"}
@@ -689,7 +698,7 @@ tr{
         Grek{"Yunan"}
         Gujr{"Gücerat"}
         Guru{"Gurmukhi"}
-        Hanb{"Hanb"}
+        Hanb{"Han - Bopomofo"}
         Hang{"Hangıl"}
         Hani{"Han"}
         Hano{"Hanunoo"}
@@ -699,7 +708,7 @@ tr{
         Hira{"Hiragana"}
         Hluw{"Anadolu Hiyeroglifleri"}
         Hmng{"Pahavh Hmong"}
-        Hrkt{"Katakana veya Hiragana"}
+        Hrkt{"Japon hece alfabeleri"}
         Hung{"Eski Macar"}
         Inds{"Indus"}
         Ital{"Eski İtalyan"}
@@ -731,11 +740,13 @@ tr{
         Lydi{"Lidya"}
         Mahj{"Mahajani"}
         Mand{"Manden"}
+        Mani{"Mani"}
         Maya{"Maya Hiyeroglifleri"}
         Mend{"Mende"}
         Merc{"Meroitik El Yazısı"}
         Mero{"Meroitik"}
         Mlym{"Malayalam"}
+        Modi{"Modi"}
         Mong{"Moğol"}
         Moon{"Moon"}
         Mroo{"Mro"}
@@ -908,13 +919,13 @@ tr{
             h24{"24 Saat Sistemi (1–24)"}
         }
         lb{
-            loose{"Loose Line Break Style"}
-            normal{"Normal Line Break Style"}
-            strict{"Strict Line Break Style"}
+            loose{"Serbest Satır Sonu Stili"}
+            normal{"Normal Satır Sonu Stili"}
+            strict{"Katı Satır Sonu Stili"}
         }
         m0{
-            bgn{"BGN"}
-            ungegn{"UNGEGN"}
+            bgn{"US BGN Transliterasyon"}
+            ungegn{"UN GEGN Transliterasyon"}
         }
         ms{
             metric{"Metrik Sistem"}
@@ -943,7 +954,7 @@ tr{
             greklow{"Küçük Harf Yunan Rakamları"}
             gujr{"Gücerat Rakamları"}
             guru{"Gurmukhi Rakamları"}
-            hanidec{"Çin Rakamları"}
+            hanidec{"Çin Ondalık Rakamları"}
             hans{"Basitleştirilmiş Çin Rakamları"}
             hansfin{"Finansal Basitleştirilmiş Çin Rakamları"}
             hant{"Geleneksel Çin Rakamları"}
@@ -1036,7 +1047,7 @@ tr{
         VALENCIA{"Valensiyaca"}
         WADEGILE{"Wade-Giles (Latin Alfabesinde Yazımı)"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — tümü"}
         category-list{"{0}: {1}"}

@@ -19,13 +19,19 @@ gu{
         "[અ {અ\u0A82} {અઃ} આ ઇ ઈ ઉ ઊ ઋ ઍ એ ઐ ઑ ઓ ઔ ક {ક\u0ACDષ} ખ ગ ઘ ઙ ચ છ જ {જ"
         "\u0ACDઞ} ઝ ઞ ટ ઠ ડ ઢ ણ ત {ત\u0ACDર} થ દ ધ ન પ ફ બ ભ મ ય ર લ વ શ ષ સ હ ળ]"
     }
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0૦ 1૧ 2૨ 3૩ 4૪ 5૫ 6૬ 7૭ 8૮ 9૯]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0૦ 1૧ 2૨ 3૩ 4૪ 5૫ 6૬ 7૭ 8૮ 9૯]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
+        arab{
+            symbols{
+                decimal{"٫"}
+            }
+        }
+        default{"latn"}
         gujr{
             patterns{
                 currencyFormat{"¤#,##0.00"}
@@ -34,17 +40,24 @@ gu{
                 scientificFormat{"#E0"}
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -209,11 +222,16 @@ gu{
                 }
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -234,8 +252,21 @@ gu{
         minimumGroupingDigits{"1"}
         native{"gujr"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     calendar{
+        buddhist{
+            eras{
+                abbreviated{
+                    "BE",
+                }
+                narrow{
+                    "BE",
+                }
+                wide{
+                    "BE",
+                }
+            }
+        }
         coptic{
             eras{
                 abbreviated{
@@ -268,6 +299,21 @@ gu{
                         "મેસ્રા",
                         "નાસીઈ",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
                     wide{
                         "ટૉટ",
                         "બાબા",
@@ -299,6 +345,21 @@ gu{
                         "ઈપેપ",
                         "મેસ્રા",
                         "નાસીઈ",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "ટૉટ",
@@ -350,6 +411,21 @@ gu{
                         "નેહાસ્સે",
                         "પેગુમેન",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                    }
                     wide{
                         "મેસ્કેરેમ",
                         "ટેકેમ્ટ",
@@ -381,6 +457,21 @@ gu{
                         "હેમલે",
                         "નેહાસ્સે",
                         "પેગુમેન",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "મેસ્કેરેમ",
@@ -462,21 +553,6 @@ gu{
                 yyyyQQQQ{"QQQQ G y"}
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
                 GyMEd{
                     G{"GGGGG y-dd-MM, E – GGGGG y-dd-MM, E"}
                     M{"GGGGG y-dd-MM, E – y-dd-MM, E"}
@@ -484,9 +560,7 @@ gu{
                     y{"GGGGG y-dd-MM, E – y-dd-MM, E"}
                 }
                 GyMMM{
-                    G{"G y MMM – G y MMM"}
                     M{"G y MMM – MMM"}
-                    y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
                     G{"G y d MMM, E – G y d MMM, E"}
@@ -505,6 +579,13 @@ gu{
                     M{"GGGGG y-dd-MM – y-dd-MM"}
                     d{"GGGGG y-dd-MM – y-dd-MM"}
                     y{"GGGGG y-dd-MM – y-dd-MM"}
+                }
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
                 }
                 Hmv{
                     H{"HH:mm–HH:mm v"}
@@ -539,7 +620,18 @@ gu{
                     d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
+                h{
+                    a{"h a – h a"}
+                    h{"h–h a"}
+                }
+                hm{
+                    a{"h:mm a – h:mm a"}
+                    h{"h:mm–h:mm a"}
+                    m{"h:mm–h:mm a"}
+                }
                 hmv{
+                    a{"h:mm a – h:mm a v"}
+                    h{"h:mm–h:mm a v"}
                     m{"h:mm–h:mm a v"}
                 }
                 hv{
@@ -640,8 +732,8 @@ gu{
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
-                    one{"MMMM ના W અઠવાડિયા"}
-                    other{"MMMM ના W અઠવાડિયા"}
+                    one{"MMMMના W અઠવાડિયા"}
+                    other{"MMMMના W અઠવાડિયા"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
@@ -826,33 +918,16 @@ gu{
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
                 }
                 GyMEd{
                     G{"GGGGG y-dd-MM, E – GGGGG y-dd-MM, E"}
                     M{"GGGGG y-dd-MM, E – y-dd-MM, E"}
                     d{"GGGGG y-dd-MM, E – y-dd-MM, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
                     G{"G y d MMM, E – G y d MMM, E"}
@@ -1100,6 +1175,17 @@ gu{
             }
         }
         hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "AM",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1117,6 +1203,22 @@ gu{
                         "આવ",
                         "ઈલુલ",
                         "અદાર II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                     wide{
                         "તીશ્રી",
@@ -1151,6 +1253,22 @@ gu{
                         "આવ",
                         "ઈલુલ",
                         "અદાર II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                     wide{
                         "તીશ્રી",
@@ -1207,6 +1325,20 @@ gu{
                         "મહા",
                         "ફાલ્ગુન",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "ચૈત્ર",
                         "વૈશાખ",
@@ -1236,6 +1368,20 @@ gu{
                         "પોષ",
                         "મહા",
                         "ફાલ્ગુન",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "ચૈત્ર",
@@ -1255,6 +1401,17 @@ gu{
             }
         }
         islamic{
+            eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "AH",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1270,6 +1427,20 @@ gu{
                         "શાવ.",
                         "ધુʻલ-ક્યુ.",
                         "ધુʻલ-એચ.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "મુહર્રમ",
@@ -1300,6 +1471,20 @@ gu{
                         "શાવ.",
                         "ધુʻલ-ક્યુ.",
                         "ધુʻલ-એચ.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "મુહર્રમ",
@@ -1319,6 +1504,17 @@ gu{
             }
         }
         persian{
+            eras{
+                abbreviated{
+                    "AP",
+                }
+                narrow{
+                    "AP",
+                }
+                wide{
+                    "AP",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1334,6 +1530,20 @@ gu{
                         "ડેય",
                         "બાહમેન",
                         "એસ્ફાન્ડ",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "ફાર્વાર્દિન",
@@ -1364,6 +1574,20 @@ gu{
                         "ડેય",
                         "બાહમેન",
                         "એસ્ફાન્ડ",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "ફાર્વાર્દિન",
@@ -2317,6 +2541,9 @@ gu{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-short{
+            end{"{0} અથવા {1}"}
+        }
         standard{
             2{"{0} અને {1}"}
             end{"{0} અને {1}"}
@@ -2324,10 +2551,8 @@ gu{
             start{"{0}, {1}"}
         }
         standard-narrow{
-            2{"{0} અને {1}"}
-            end{"{0} અને {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
         }
         standard-short{
             2{"{0} અને {1}"}
@@ -2384,6 +2609,10 @@ gu{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

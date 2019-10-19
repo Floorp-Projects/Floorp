@@ -17,7 +17,7 @@ CFG=Debug
 !ENDIF
 
 #Here we test if a valid configuration is given
-!IF "$(CFG)" != "Release" && "$(CFG)" != "release" && "$(CFG)" != "Debug" && "$(CFG)" != "debug" && "$(CFG)" != "x86\Release" && "$(CFG)" != "x86\Debug" && "$(CFG)" != "x64\Release" && "$(CFG)" != "x64\Debug"
+!IF "$(CFG)" != "Release" && "$(CFG)" != "release" && "$(CFG)" != "Debug" && "$(CFG)" != "debug" && "$(CFG)" != "x86\Release" && "$(CFG)" != "x86\Debug" && "$(CFG)" != "x64\Release" && "$(CFG)" != "x64\Debug" && "$(CFG)" != "ARM\Release" && "$(CFG)" != "ARM\Debug" && "$(CFG)" != "ARM64\Release" && "$(CFG)" != "ARM64\Debug"
 !MESSAGE Invalid configuration "$(CFG)" specified.
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
@@ -51,7 +51,9 @@ PKGMODE=static
 ICD=$(ICUDATA)^\
 DATA_PATH=$(ICUP)\data^\
 
-!IF "$(CFG)" == "x64\Release" || "$(CFG)" == "x64\Debug"
+# Use the x64 tools for building ARM and ARM64.
+# Note: This is similar to the TOOLS CFG PATH in source\data\makedata.mak
+!IF "$(CFG)" == "x64\Release" || "$(CFG)" == "x64\Debug" || "$(CFG)" == "ARM\Release" || "$(CFG)" == "ARM\Debug" || "$(CFG)" == "ARM64\Release"  || "$(CFG)" == "ARM64\Debug"
 ICUTOOLS=$(ICUP)\bin64
 PATH = $(ICUP)\bin64;$(PATH)
 !ELSE
@@ -59,14 +61,29 @@ ICUTOOLS=$(ICUP)\bin
 PATH = $(ICUP)\bin;$(PATH)
 !ENDIF
 
+# If building ARM/ARM, then we need to pass the arch as an argument.
+EXTRA_PKGDATA_ARGUMENTS=
+!IF "$(CFG)" == "ARM\Release" || "$(CFG)" == "ARM\Debug"
+EXTRA_PKGDATA_ARGUMENTS=-a ARM
+!ENDIF
+!IF "$(CFG)" == "ARM64\Release" || "$(CFG)" == "ARM64\Debug"
+EXTRA_PKGDATA_ARGUMENTS=-a ARM64
+!ENDIF
+
 # Make sure the necessary tools exist before continuing. (This is to prevent cryptic errors from NMAKE).
 !IF !EXISTS($(ICUTOOLS)\pkgdata.exe)
 !MESSAGE Unable to find "$(ICUTOOLS)\pkgdata.exe"
 !ERROR The tool 'pkgdata.exe' does not exist! (Have you built all of ICU yet?).
+!IF "$(CFG)" == "ARM\Release" || "$(CFG)" == "ARM\Debug" || "$(CFG)" == "ARM64\Release" || "$(CFG)" == "ARM64\Debug"
+!ERROR Note that the ARM and ARM64 builds require building x64 first.
+!ENDIF
 !ENDIF
 !IF !EXISTS($(ICUTOOLS)\genrb.exe)
 !MESSAGE Unable to find "$(ICUTOOLS)\genrb.exe"
 !ERROR The tool 'genrb.exe' does not exist! (Have you built all of ICU yet?).
+!IF "$(CFG)" == "ARM\Release" || "$(CFG)" == "ARM\Debug" || "$(CFG)" == "ARM64\Release" || "$(CFG)" == "ARM64\Debug"
+!ERROR Note that the ARM and ARM64 builds require building x64 first.
+!ENDIF
 !ENDIF
 
 # Suffixes for data files
@@ -98,7 +115,7 @@ ALL : $(OUTPUT)
 # invoke pkgdata - static
 "$(DLL_OUTPUT)\$(RESNAME).lib" : $(RB_FILES) $(RESFILES)
     @echo Building $(RESNAME).lib
-    @"$(ICUTOOLS)\pkgdata" -f -v -m static -c -p $(RESNAME) -d "$(DLL_OUTPUT)" -s "$(RESDIR)" <<pkgdatain.txt
+    @"$(ICUTOOLS)\pkgdata" -f -v -m static -c -p $(RESNAME) -d "$(DLL_OUTPUT)" $(EXTRA_PKGDATA_ARGUMENTS) -s "$(RESDIR)" <<pkgdatain.txt
 $(RES_FILES:.res =.res
 )
 <<KEEP
@@ -107,7 +124,7 @@ $(RES_FILES:.res =.res
 CLEAN :
     -@erase "$(RB_FILES)"
     -@erase "$(CFG)\*uconvmsg*.*"
-    -@"$(ICUTOOLS)\pkgdata" -f --clean -v -m static -c -p $(RESNAME) -d "$(DLL_OUTPUT)" -s "$(RESDIR)" pkgdatain.txt
+    -@"$(ICUTOOLS)\pkgdata" -f --clean -v -m static -c -p $(RESNAME) -d "$(DLL_OUTPUT)" $(EXTRA_PKGDATA_ARGUMENTS) -s "$(RESDIR)" pkgdatain.txt
 
 # Inference rule for creating resource bundles
 {$(RESDIR)}.txt{$(RESDIR)}.res:

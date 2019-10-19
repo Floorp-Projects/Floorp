@@ -429,6 +429,14 @@ fil{
         zxx{"Walang nilalaman na ukol sa wika"}
         zza{"Zaza"}
     }
+    Languages%long{
+        zh_Hans{"Pinasimpleng Mandarin Chinese"}
+        zh_Hant{"Tradisyonal na Mandarin Chinese"}
+    }
+    Languages%menu{
+        yue{"Chinese, Cantonese"}
+        zh{"Chinese, Mandarin"}
+    }
     Languages%short{
         az{"Azeri"}
         en_GB{"Ingles sa UK"}
@@ -665,7 +673,7 @@ fil{
         PINYIN{"Pinyin Romanization"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — lahat"}
         category-list{"{0}: {1}"}
@@ -678,7 +686,7 @@ fil{
         scripts{"mga script — {0}"}
         strokes{
             one{"{0} stroke"}
-            other{"{0} strokes"}
+            other{"{0} (na) stroke"}
         }
     }
     codePatterns{

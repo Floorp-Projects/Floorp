@@ -313,7 +313,6 @@ uz_Cyrl{
     }
     Languages%short{
         az{"озар"}
-        en_US{"инглизча (АҚШ)"}
     }
     Scripts{
         Arab{"Араб"}
@@ -407,7 +406,7 @@ uz_Cyrl{
             tibt{"Тибет рақамлари"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     codePatterns{
         language{"Тил: {0}"}
         script{"{0}"}

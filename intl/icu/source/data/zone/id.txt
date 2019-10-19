@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 id{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -810,6 +810,9 @@ id{
         "Asia:Qatar"{
             ec{"Qatar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
+        }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
         }
@@ -955,7 +958,7 @@ id{
             ls{"Waktu Universal Terkoordinasi"}
         }
         "Etc:Unknown"{
-            ec{"Tidak Dikenal"}
+            ec{"Kota Tidak Dikenal"}
         }
         "Europe:Amsterdam"{
             ec{"Amsterdam"}
@@ -1084,6 +1087,9 @@ id{
         }
         "Europe:Sarajevo"{
             ec{"Sarajevo"}
+        }
+        "Europe:Saratov"{
+            ec{"Saratov"}
         }
         "Europe:Simferopol"{
             ec{"Simferopol"}

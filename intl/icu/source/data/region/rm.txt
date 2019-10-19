@@ -173,7 +173,6 @@ rm{
         MF{"Saint Martin"}
         MG{"Madagascar"}
         MH{"Inslas da Marshall"}
-        MK{"Macedonia"}
         ML{"Mali"}
         MM{"Myanmar"}
         MN{"Mongolia"}
@@ -280,5 +279,5 @@ rm{
         ZW{"Simbabwe"}
         ZZ{"Regiun betg encouschenta u nunvalaivla"}
     }
-    Version{"2.1.48.4"}
+    Version{"36"}
 }

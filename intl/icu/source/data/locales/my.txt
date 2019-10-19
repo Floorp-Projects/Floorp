@@ -19,7 +19,7 @@ my{
         "\u103E \u1039 \u103A \u1037 း]"
     }
     ExemplarCharactersIndex{"[က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ အ]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0၀ 1၁ 2၂ 3၃ 4၄ 5၅ 6၆ 7၇ 8၈ 9၉]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0၀ 1၁ 2၂ 3၃ 4၄ 5၅ 6၆ 7၇ 8၈ 9၉]"}
     ExemplarCharactersPunctuation{"[၊ ။ ‘ ’ “ ”]"}
     MoreInformation{"?"}
     NumberElements{
@@ -34,6 +34,7 @@ my{
             patterns{
                 accountingFormat{"¤ #,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -156,12 +157,16 @@ my{
                 }
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"ဂဏန်းမဟုတ်သော"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -198,7 +203,7 @@ my{
         }
         native{"mymr"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1675,13 +1680,10 @@ my{
             middle{"{0} {1}"}
             start{"{0} {1}"}
         }
-        standard{
-            2{"{0}နှင့် {1}"}
-            end{"{0}နှင့် {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
+        or-short{
+            start{"{0} ၊ {1}"}
         }
-        standard-narrow{
+        standard{
             2{"{0}နှင့် {1}"}
             end{"{0}နှင့် {1}"}
             middle{"{0} {1}"}
@@ -1742,6 +1744,10 @@ my{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

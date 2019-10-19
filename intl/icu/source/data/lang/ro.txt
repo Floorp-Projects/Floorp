@@ -2,23 +2,24 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ro{
     Keys{
+        calendar{"calendar"}
         cf{"Format monedă"}
-        colAlternate{"Ordonare cu simbolurile ignorate"}
-        colBackwards{"Ordonare inversă după accent"}
-        colCaseFirst{"Ordonare după majuscule/minuscule"}
-        colCaseLevel{"Ordonare care ține seama de majuscule/minuscule"}
-        colNormalization{"Ordonare normalizată"}
-        colNumeric{"Ordonare numerică"}
-        colStrength{"Puterea ordonării"}
+        colAlternate{"sortare cu ignorarea simbolurilo"}
+        colBackwards{"sortare inversă după accent"}
+        colCaseFirst{"sortare după majuscule/minuscule"}
+        colCaseLevel{"sortare care ține seama de majuscule/minuscule"}
+        colNormalization{"sortare normalizată"}
+        colNumeric{"sortare numerică"}
+        colStrength{"puterea sortării"}
         collation{"ordine de sortare"}
         currency{"monedă"}
         hc{"ciclu orar (12 sau 24)"}
         lb{"stil de întrerupere a liniei"}
         ms{"sistem de unități de măsură"}
         numbers{"numere"}
-        timezone{"Fusul orar"}
-        va{"Varianta locală"}
-        x{"Utilizare privată"}
+        timezone{"fus orar"}
+        va{"variantă locală"}
+        x{"utilizare privată"}
     }
     Languages{
         aa{"afar"}
@@ -544,6 +545,14 @@ ro{
         zxx{"fară conținut lingvistic"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"chineză mandarină simplificată"}
+        zh_Hant{"chineză mandarină tradițională"}
+    }
+    Languages%menu{
+        yue{"chineză, cantoneză"}
+        zh{"chineză, mandarină"}
+    }
     Languages%short{
         az{"azeră"}
         en_US{"engleză (S.U.A)"}
@@ -781,7 +790,7 @@ ro{
         SCOTLAND{"engleză standard scoțiană"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – toate"}
         category-list{"{0}: {1}"}
@@ -802,5 +811,10 @@ ro{
         language{"Limbă: {0}"}
         script{"Scriere: {0}"}
         territory{"Regiune: {0}"}
+    }
+    localeDisplayPattern{
+        keyTypePattern{"{0}: {1}"}
+        pattern{"{0} ({1})"}
+        separator{"{0}, {1}"}
     }
 }

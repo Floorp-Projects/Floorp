@@ -1810,7 +1810,7 @@ et{
         }
         NIO{
             one{"Nicaragua kordoba"}
-            other{"Nicaragua kordobad"}
+            other{"Nicaragua kordobat"}
         }
         NLG{
             one{"Hollandi kulden"}
@@ -2181,5 +2181,5 @@ et{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

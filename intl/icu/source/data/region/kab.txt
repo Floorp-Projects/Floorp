@@ -127,7 +127,6 @@ kab{
         MD{"Muldabi"}
         MG{"Madaɣecqer"}
         MH{"Tigzirin n Marcal"}
-        MK{"Masidwan"}
         ML{"Mali"}
         MM{"Myanmar"}
         MN{"Mungulya"}
@@ -227,5 +226,5 @@ kab{
         ZM{"Zambya"}
         ZW{"Zimbabwi"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

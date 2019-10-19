@@ -179,7 +179,6 @@ wae{
         MF{"St. Martin"}
         MG{"Madagaskar"}
         MH{"Maršalinslä"}
-        MK{"Mazedonie"}
         ML{"Mali"}
         MM{"Burma"}
         MN{"Mongolei"}
@@ -296,8 +295,7 @@ wae{
         CG{"Kongo (Rebublik)"}
         CI{"Côte d’Ivoire"}
         FK{"Falklandinslä (Malwine)"}
-        MK{"Mazedonie (EJR)"}
         TL{"Wešttimor"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

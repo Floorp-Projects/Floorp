@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ml{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"അബിദ്‌ജാൻ‌"}
@@ -583,7 +583,7 @@ ml{
             ec{"തിയുവാന"}
         }
         "America:Toronto"{
-            ec{"ടൊറണ്ടോ"}
+            ec{"ടൊറന്റോ"}
         }
         "America:Tortola"{
             ec{"ടോർ‌ട്ടോള"}

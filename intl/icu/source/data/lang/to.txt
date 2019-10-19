@@ -98,6 +98,7 @@ to{
         car{"lea fakakalipa"}
         cay{"lea fakakaiuka"}
         cch{"lea fakaʻatisami"}
+        ccp{"lea fakasākima"}
         ce{"lea fakasese"}
         ceb{"lea fakasepuano"}
         cgg{"lea fakakika"}
@@ -627,6 +628,14 @@ to{
         zxx{"ʻikai ha lea"}
         zza{"lea fakasāsā"}
     }
+    Languages%long{
+        zh_Hans{"lea fakasiaina-mānitali-fakafaingofua"}
+        zh_Hant{"lea fakasiaina-mānitali-tukufakaholo"}
+    }
+    Languages%menu{
+        yue{"lea fakakuangitongi (Siaina)"}
+        zh{"lea fakasiaina-mānitali"}
+    }
     Languages%short{
         az{"lea fakaʻasapaisani"}
         en_GB{"lea fakapilitānia"}
@@ -887,7 +896,21 @@ to{
             tibt{"fika fakatipeti"}
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
+    characterLabelPattern{
+        all{"{0} — kotoa"}
+        category-list{"{0}: {1}"}
+        compatibility{"{0} — hoa"}
+        enclosed{"{0} — kāpui"}
+        extended{"{0} — toloi"}
+        historic{"{0} — tupuʻa"}
+        miscellaneous{"{0} — kehekehe"}
+        other{"{0} — kehe"}
+        scripts{"ngaahi tohinima — {0}"}
+        strokes{
+            other{"kohi ʻe {0}"}
+        }
+    }
     codePatterns{
         language{"Lea: {0}"}
         script{"Tohinima: {0}"}

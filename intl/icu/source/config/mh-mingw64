@@ -103,13 +103,29 @@ LIBICU = $(STATIC_PREFIX_WHEN_USED)$(ICUPREFIX)
 #SH## with usually. Many applications will want to add ${ICULIBS_I18N} as well. 
 #SH#ICULIBS="${ICULIBS_BASE} ${ICULIBS_I18N} ${ICULIBS_COMMON} ${ICULIBS_DATA} "
 
-# The #M# is used to delete lines for icu-config
-# Current full path directory.
-#CURR_FULL_DIR=$(shell pwd -W)#M# for MSYS
-CURR_FULL_DIR?=$(subst \,/,$(shell cmd /c cd))#M# for Cygwin shell
-# Current full path directory for use in source code in a -D compiler option.
-#CURR_SRCCODE_FULL_DIR=$(subst /,\\\\,$(shell pwd -W))#M# for MSYS
-CURR_SRCCODE_FULL_DIR=$(subst \,/,$(shell cmd /c cd))#M# for Cygwin shell
+# Note: The #M# is used to delete lines for icu-config
+MSYS_VERSION ?= $(if $(findstring Msys, $(shell uname -o)),$(word 1, $(subst ., ,$(shell uname -r))),0)#M#
+$(info Detected MSYS version: $(MSYS_VERSION))
+
+ifeq ($(MSYS_VERSION),$(filter $(MSYS_VERSION),0 1))
+	# Older versions of MSYS don't have cygpath by default. #M#
+	
+	# Current full path directory. #M#
+	#CURR_FULL_DIR=$(shell pwd -W)#M# for MSYS
+	CURR_FULL_DIR?=$(subst \,/,$(shell cmd /c cd))#M# for Cygwin shell 
+
+	# Current full path directory for use in source code in a -D compiler option. #M#
+	#CURR_SRCCODE_FULL_DIR=$(subst /,\\\\,$(shell pwd -W))#M# for MSYS
+	CURR_SRCCODE_FULL_DIR=$(subst \,/,$(shell cmd /c cd))#M# for Cygwin shell
+else
+	# MSYS2 and up have cygpath by default #M#
+
+	# Current full path directory. #M#
+	CURR_FULL_DIR?=$(shell cygpath . -a -m)#M#
+
+	# Current full path directory for use in source code in a -D compiler option. #M#
+	CURR_SRCCODE_FULL_DIR=$(shell cygpath . -a -m)#M#
+endif
 
 ## Compilation rules
 %.$(STATIC_O): $(srcdir)/%.c

@@ -13,7 +13,7 @@ es_VE{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -34,8 +34,8 @@ es_VE{
                 "d MMM y",
                 "d/M/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -73,9 +73,7 @@ es_VE{
                         pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
                     }
                     wide{
                         am{"a. m."}

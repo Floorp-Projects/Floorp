@@ -4,11 +4,8 @@ sv_FI{
     Keys{
         timezone{"tidszon"}
     }
-    Languages{
-        ky{"kirgiziska"}
-    }
     Scripts%variant{
         Arab{"persisk-arabiska"}
     }
-    Version{"2.1.47.71"}
+    Version{"36"}
 }

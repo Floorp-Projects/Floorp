@@ -183,7 +183,7 @@ af{
         MF{"Sint Martin"}
         MG{"Madagaskar"}
         MH{"Marshalleilande"}
-        MK{"Macedonië"}
+        MK{"Noord-Macedonië"}
         ML{"Mali"}
         MM{"Mianmar (Birma)"}
         MN{"Mongolië"}
@@ -253,7 +253,7 @@ af{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Sirië"}
-        SZ{"Swaziland"}
+        SZ{"Eswatini"}
         TA{"Tristan da Cunha"}
         TC{"Turks- en Caicoseilande"}
         TD{"Tsjad"}
@@ -287,6 +287,8 @@ af{
         VU{"Vanuatu"}
         WF{"Wallis en Futuna"}
         WS{"Samoa"}
+        XA{"Pseudoaksente"}
+        XB{"Pseudotweerigting"}
         XK{"Kosovo"}
         YE{"Jemen"}
         YT{"Mayotte"}
@@ -306,9 +308,11 @@ af{
     Countries%variant{
         CD{"Kongo (DRK)"}
         CG{"Kongo (Republiek die)"}
+        CI{"Cote d’Ivoire"}
         CZ{"Tsjeggiese Republiek"}
         FK{"Falklandeilande (Malvinas)"}
-        MK{"Macedonië (VJRM)"}
+        SZ{"Eswatini"}
+        TL{"Oos-Timor"}
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
 }

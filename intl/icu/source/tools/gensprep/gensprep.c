@@ -278,6 +278,8 @@ static void U_CALLCONV
 normalizationCorrectionsLineFn(void *context,
                     char *fields[][2], int32_t fieldCount,
                     UErrorCode *pErrorCode) {
+    (void)context; // suppress compiler warnings about unused variable
+    (void)fieldCount; // suppress compiler warnings about unused variable
     uint32_t mapping[40];
     char *end, *s;
     uint32_t code;
@@ -341,6 +343,7 @@ static void U_CALLCONV
 strprepProfileLineFn(void *context,
               char *fields[][2], int32_t fieldCount,
               UErrorCode *pErrorCode) {
+    (void)fieldCount; // suppress compiler warnings about unused variable  
     uint32_t mapping[40];
     char *end, *map;
     uint32_t code;

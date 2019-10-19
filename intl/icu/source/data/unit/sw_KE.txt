@@ -1,0 +1,135 @@
+﻿// © 2016 and later: Unicode, Inc. and others.
+// License & terms of use: http://www.unicode.org/copyright.html#License
+sw_KE{
+    Version{"36"}
+    units{
+        duration{
+            decade{
+                dnam{"mwongo"}
+            }
+            microsecond{
+                dnam{"maikrosekunde"}
+                one{"maikroseunde {0}"}
+                other{"maikrosekunde {0}"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"nukta kwa kila sentimita"}
+                one{"nukta {0} kwa kila sentimita"}
+                other{"nukta {0} kwa kila sentimita"}
+            }
+            dot-per-inch{
+                dnam{"nukta kwa kila inchi"}
+                one{"nuka {0} kwa kila inchi"}
+                other{"nukta {0} kwa kila inchi"}
+            }
+            em{
+                dnam{"ukubwa wa nafasi ya fonti"}
+            }
+            pixel-per-inch{
+                one{"pikseli {0} kwa kila sekunde"}
+                other{"pikseli {0} kwa kila sekunde"}
+            }
+        }
+        length{
+            light-year{
+                one{"miaka {0} ya mwanga"}
+                other{"miaka {0} ya mwanga"}
+            }
+            micrometer{
+                dnam{"maikromita"}
+                one{"maikromita {0}"}
+                other{"maikromita {0}"}
+            }
+            mile-scandinavian{
+                one{"maili {0} ya skandinavia"}
+                other{"maili {0} za skandinavia"}
+            }
+            solar-radius{
+                dnam{"nusu vipenyo vya jua"}
+                one{"nusu kipenyo {0} cha jua"}
+                other{"nusu vipenyo {0} vya jua"}
+            }
+        }
+        pressure{
+            bar{
+                dnam{"baa"}
+                one{"baa {0}"}
+                other{"baa {0}"}
+            }
+            pascal{
+                one{"Pa {0}"}
+                other{"Pa {0}"}
+            }
+        }
+    }
+    unitsNarrow{
+        length{
+            millimeter{
+                one{"mm{0}"}
+                other{"mm{0}"}
+            }
+        }
+    }
+    unitsShort{
+        area{
+            square-centimeter{
+                dnam{"cm²"}
+            }
+        }
+        consumption{
+            mile-per-gallon-imperial{
+                dnam{"maili/gal Imp"}
+            }
+        }
+        duration{
+            decade{
+                dnam{"mwongo"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"megapikseli"}
+            }
+            pixel{
+                one{"pikseli {0}"}
+                other{"pikseli {0}"}
+            }
+        }
+        length{
+            astronomical-unit{
+                dnam{"kipimo cha astronomia"}
+            }
+            micrometer{
+                dnam{"maikromita"}
+                one{"maikromita {0}"}
+                other{"maikromita {0}"}
+            }
+            mile-scandinavian{
+                one{"smi {0}"}
+                other{"smi {0}"}
+            }
+            parsec{
+                one{"{0} pc"}
+                other{"kila sekunde {0}"}
+            }
+            solar-radius{
+                dnam{"nusu vipenyo vya jua"}
+                one{"R☉ {0}"}
+                other{"R☉ {0}"}
+            }
+        }
+        pressure{
+            bar{
+                dnam{"baa"}
+                one{"baa {0}"}
+                other{"baa {0}"}
+            }
+            inch-hg{
+                one{"inHg {0}"}
+                other{"inHg {0}"}
+            }
+        }
+    }
+}

@@ -3,6 +3,12 @@
 tg{
     AuxExemplarCharacters{"[ц щ ы ь]"}
     ExemplarCharacters{"[а б в г ғ д е ё ж з и ӣ й к қ л м н о п р с т у ӯ ф х ҳ ч ҷ ш ъ э ю я]"}
+    ExemplarCharactersIndex{"[А Б В Г Ғ Д Е Ё Ж З И Ӣ Й К Қ Л М Н О П Р С Т У Ӯ Ф Х Ҳ Ч Ҷ Ш Ъ Э Ю Я]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersPunctuation{
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
+    }
     NumberElements{
         default{"latn"}
         latn{
@@ -16,6 +22,124 @@ tg{
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0 ҳазор"}
+                    }
+                    10000{
+                        other{"00 ҳазор"}
+                    }
+                    100000{
+                        other{"000 ҳазор"}
+                    }
+                    1000000{
+                        other{"0 миллион"}
+                    }
+                    10000000{
+                        other{"00 миллион"}
+                    }
+                    100000000{
+                        other{"000 миллион"}
+                    }
+                    1000000000{
+                        other{"0 миллиард"}
+                    }
+                    10000000000{
+                        other{"00 миллиард"}
+                    }
+                    100000000000{
+                        other{"000 миллиард"}
+                    }
+                    1000000000000{
+                        other{"0 триллион"}
+                    }
+                    10000000000000{
+                        other{"00 триллион"}
+                    }
+                    100000000000000{
+                        other{"000 триллион"}
+                    }
+                }
+            }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        other{"0 ҳзр'.' ¤"}
+                    }
+                    10000{
+                        other{"00 ҳзр'.' ¤"}
+                    }
+                    100000{
+                        other{"000 ҳзр'.' ¤"}
+                    }
+                    1000000{
+                        other{"0 млн'.' ¤"}
+                    }
+                    10000000{
+                        other{"00 млн'.' ¤"}
+                    }
+                    100000000{
+                        other{"000 млн'.' ¤"}
+                    }
+                    1000000000{
+                        other{"0 млрд'.' ¤"}
+                    }
+                    10000000000{
+                        other{"00 млрд'.' ¤"}
+                    }
+                    100000000000{
+                        other{"000 млрд'.' ¤"}
+                    }
+                    1000000000000{
+                        other{"0 трлн'.' ¤"}
+                    }
+                    10000000000000{
+                        other{"00 трлн'.' ¤"}
+                    }
+                    100000000000000{
+                        other{"000 трлн'.' ¤"}
+                    }
+                }
+                decimalFormat{
+                    1000{
+                        other{"0 ҳзр'.'"}
+                    }
+                    10000{
+                        other{"00 ҳзр'.'"}
+                    }
+                    100000{
+                        other{"000 ҳзр'.'"}
+                    }
+                    1000000{
+                        other{"0 млн'.'"}
+                    }
+                    10000000{
+                        other{"00 млн'.'"}
+                    }
+                    100000000{
+                        other{"000 млн'.'"}
+                    }
+                    1000000000{
+                        other{"0 млрд'.'"}
+                    }
+                    10000000000{
+                        other{"00 млрд'.'"}
+                    }
+                    100000000000{
+                        other{"000 млрд'.'"}
+                    }
+                    1000000000000{
+                        other{"0 трлн'.'"}
+                    }
+                    10000000000000{
+                        other{"00 трлн'.'"}
+                    }
+                    100000000000000{
+                        other{"000 трлн'.'"}
+                    }
+                }
             }
             symbols{
                 decimal{","}
@@ -33,7 +157,7 @@ tg{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -80,12 +204,16 @@ tg{
             }
             intervalFormats{
                 fallback{"{0} – {1}"}
+                yMMMM{
+                    M{"MMMM – MMMM'и' y G"}
+                    y{"MMMM'и' y – MMMM'и' y G"}
+                }
             }
         }
         gregorian{
             AmPmMarkers{
-                "пе. чо.",
-                "па. чо.",
+                "AM",
+                "PM",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -106,10 +234,17 @@ tg{
                 Timezone{"{0} {1}"}
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
                 E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d, E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM, y G"}
@@ -130,6 +265,11 @@ tg{
                 MMMd{"d MMM"}
                 Md{"dd-MM"}
                 d{"d"}
+                h{"h a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                hmsv{"h:mm:ss a v"}
+                hmv{"h:mm a v"}
                 ms{"mm:ss"}
                 y{"y"}
                 yM{"MM-y"}
@@ -243,6 +383,10 @@ tg{
             }
             intervalFormats{
                 fallback{"{0} – {1}"}
+                yMMMM{
+                    M{"MMMM – MMMM'и' y"}
+                    y{"MMMM'и' y – MMMM'и' y"}
+                }
             }
             monthNames{
                 format{
@@ -377,12 +521,117 @@ tg{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"»"}
-        alternateQuotationStart{"«"}
-        quotationEnd{"»"}
-        quotationStart{"«"}
+        islamic{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM'и' y G",
+                "d MMMM'и' y G",
+                "d MMM y G",
+                "dd/MM/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            availableFormats{
+                MMMMd{"d MMMM"}
+                yyyyMMMM{"MMMM'и' y G"}
+            }
+            eras{
+                abbreviated{
+                    "САНА",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Муҳ.",
+                        "Саф.",
+                        "Раб. I",
+                        "Раб. II",
+                        "Ҷум. I",
+                        "Ҷум. II",
+                        "Раҷ.",
+                        "Ша.",
+                        "Рам.",
+                        "Шав.",
+                        "Дхул-Қ.",
+                        "Дхул-Ҳ.",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Муҳ.",
+                        "Саф.",
+                        "Раб. I",
+                        "Раб. II",
+                        "Ҷум. I",
+                        "Ҷум. II",
+                        "Раҷ.",
+                        "Ша.",
+                        "Рам.",
+                        "Шав.",
+                        "Дхул-Қ.",
+                        "Дхул-Ҳ.",
+                    }
+                }
+            }
+        }
+        persian{
+            DateTimePatterns{
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
+                "EEEE, d MMMM'и' y G",
+                "d MMMM'и' y G",
+                "dd MMM y G",
+                "dd/MM/yy GGGGG",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            monthNames{
+                format{
+                    wide{
+                        "фарвардин",
+                        "урдибиҳишт",
+                        "хурдод",
+                        "тир",
+                        "мурдод",
+                        "шаҳривар",
+                        "меҳр",
+                        "обон",
+                        "озар",
+                        "дей",
+                        "баҳман",
+                        "исфанд",
+                    }
+                }
+                stand-alone{
+                    wide{
+                        "фарвардин",
+                        "урдибиҳишт",
+                        "хурдод",
+                        "тир",
+                        "мурдод",
+                        "шаҳривар",
+                        "меҳр",
+                        "обон",
+                        "озар",
+                        "дей",
+                        "баҳман",
+                        "исфанд",
+                    }
+                }
+            }
+        }
     }
     fields{
         day{
@@ -400,7 +649,7 @@ tg{
             dn{"рӯз"}
         }
         dayperiod{
-            dn{"пе. чо./па. чо."}
+            dn{"AM/PM"}
         }
         era{
             dn{"мабдаи таърих"}

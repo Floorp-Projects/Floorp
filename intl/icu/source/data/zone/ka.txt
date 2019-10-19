@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ka{
-    Version{"2.1.48.17"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"აბიჯანი"}
@@ -166,7 +166,7 @@ ka{
             ec{"ენქორაჯი"}
         }
         "America:Anguilla"{
-            ec{"ანგილა"}
+            ec{"ანგილია"}
         }
         "America:Antigua"{
             ec{"ანტიგუა"}

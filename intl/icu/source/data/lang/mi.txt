@@ -29,6 +29,9 @@ mi{
         zh_Hans{"Hainamana Māmā"}
         zh_Hant{"Hainamana Tukuiho"}
     }
+    Languages%menu{
+        zh{"Hainamana Manarini"}
+    }
     Languages%short{
         en_GB{"Ingarihi UK"}
         en_US{"Ingarihi US"}
@@ -57,11 +60,11 @@ mi{
             latn{"Ngā Mati Pākehā"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     codePatterns{
-        language{"{0}"}
-        script{"{0}"}
-        territory{"{0}"}
+        language{"Reo: {0}"}
+        script{"Momotuhi: {0}"}
+        territory{"Rohe: {0}"}
     }
     localeDisplayPattern{
         keyTypePattern{"{0}: {1}"}

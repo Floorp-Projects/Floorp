@@ -219,7 +219,7 @@ hr{
         PH{"Filipini"}
         PK{"Pakistan"}
         PL{"Poljska"}
-        PM{"Sveti Petar i Mikelon"}
+        PM{"Saint-Pierre-et-Miquelon"}
         PN{"Otoci Pitcairn"}
         PR{"Portoriko"}
         PS{"Palestinsko područje"}
@@ -253,7 +253,7 @@ hr{
         SV{"Salvador"}
         SX{"Sint Maarten"}
         SY{"Sirija"}
-        SZ{"Svazi"}
+        SZ{"Esvatini"}
         TA{"Tristan da Cunha"}
         TC{"Otoci Turks i Caicos"}
         TD{"Čad"}
@@ -306,12 +306,13 @@ hr{
         US{"SAD"}
     }
     Countries%variant{
-        CD{"Kongo (DRK)"}
+        CD{"Kongo (DR)"}
         CG{"Kongo (RK)"}
         CI{"Bjelokosna Obala"}
         CZ{"Češka Republika"}
         FK{"Falklandski otoci (Malvini)"}
+        SZ{"Svazi"}
         TL{"Istočni Timor"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

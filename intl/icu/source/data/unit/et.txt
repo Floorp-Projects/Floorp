@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 et{
-    Version{"2.1.48.42"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -106,6 +106,7 @@ et{
         }
         compound{
             per{"{0} {1} kohta"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -247,6 +248,11 @@ et{
                 other{"{0} ööpäeva"}
                 per{"{0} ööpäevas"}
             }
+            decade{
+                dnam{"dekaadid"}
+                one{"{0} dekaad"}
+                other{"{0} dekaadi"}
+            }
             hour{
                 dnam{"tunnid"}
                 one{"{0} tund"}
@@ -362,6 +368,11 @@ et{
                 one{"{0} kilovatt-tund"}
                 other{"{0} kilovatt-tundi"}
             }
+            therm-us{
+                dnam{"USA termid"}
+                one{"{0} USA term"}
+                other{"{0} USA termi"}
+            }
         }
         force{
             newton{
@@ -395,6 +406,43 @@ et{
                 dnam{"megahertsid"}
                 one{"{0} megaherts"}
                 other{"{0} megahertsi"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"punkte sentimeetri kohta"}
+                one{"{0} punkt sentimeetri kohta"}
+                other{"{0} punkti sentimeetri kohta"}
+            }
+            dot-per-inch{
+                dnam{"punkte tolli kohta"}
+                one{"{0} punkt tolli kohta"}
+                other{"{0} punkti tolli kohta"}
+            }
+            em{
+                dnam{"tüpograafiline emm"}
+                one{"{0} emm"}
+                other{"{0} emmi"}
+            }
+            megapixel{
+                dnam{"megapikslid"}
+                one{"{0} megapiksel"}
+                other{"{0} megapikslit"}
+            }
+            pixel{
+                dnam{"pikslid"}
+                one{"{0} piksel"}
+                other{"{0} pikslit"}
+            }
+            pixel-per-centimeter{
+                dnam{"piksleid sentimeetri kohta"}
+                one{"{0} piksel sentimeetri kohta"}
+                other{"{0} pikslit sentimeetri kohta"}
+            }
+            pixel-per-inch{
+                dnam{"piksleid tolli kohta"}
+                one{"{0} piksel tolli kohta"}
+                other{"{0} pikslit tolli kohta"}
             }
         }
         length{
@@ -517,8 +565,6 @@ et{
             }
             solar-luminosity{
                 dnam{"Päikese heledus"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
             }
         }
         mass{
@@ -635,6 +681,11 @@ et{
                 one{"{0} atmosfäär"}
                 other{"{0} atmosfääri"}
             }
+            bar{
+                dnam{"baarid"}
+                one{"{0} baar"}
+                other{"{0} baari"}
+            }
             hectopascal{
                 dnam{"hektopaskalid"}
                 one{"{0} hektopaskal"}
@@ -664,6 +715,11 @@ et{
                 dnam{"millimeetrid elavhõbedasammast"}
                 one{"{0} millimeeter elavhõbedasammast"}
                 other{"{0} millimeetrit elavhõbedasammast"}
+            }
+            pascal{
+                dnam{"paskalid"}
+                one{"{0} paskal"}
+                other{"{0} paskalit"}
             }
             pound-per-square-inch{
                 dnam{"naelad ruuttolli kohta"}
@@ -893,11 +949,28 @@ et{
                 one{"{0} aaker"}
                 other{"{0} aakrit"}
             }
+            hectare{
+                one{"{0} ha"}
+                other{"{0} ha"}
+            }
+            square-kilometer{
+                one{"{0} km²"}
+                other{"{0} km²"}
+            }
+            square-meter{
+                one{"{0} m²"}
+                other{"{0} m²"}
+            }
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
+            karat{
+                one{"{0} ct"}
+                other{"{0} ct"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1238,6 +1311,7 @@ et{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -1298,7 +1372,7 @@ et{
                 other{"{0} mpg"}
             }
             mile-per-gallon-imperial{
-                dnam{"miil/gal imp."}
+                dnam{"miil / gal imp."}
                 one{"{0} mpg imp."}
                 other{"{0} mpg imp."}
             }
@@ -1378,6 +1452,11 @@ et{
                 one{"{0} päev"}
                 other{"{0} päeva"}
                 per{"{0}/ööp"}
+            }
+            decade{
+                dnam{"dek"}
+                one{"{0} dek"}
+                other{"{0} dek"}
             }
             hour{
                 dnam{"t"}
@@ -1494,6 +1573,11 @@ et{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"USA term"}
+                one{"{0} USA term"}
+                other{"{0} USA termi"}
+            }
         }
         force{
             newton{
@@ -1527,6 +1611,40 @@ et{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
+            em{
+                dnam{"emm"}
+                one{"{0} emm"}
+                other{"{0} emmi"}
+            }
+            megapixel{
+                dnam{"megapikslid"}
+            }
+            pixel{
+                dnam{"pikslid"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -1762,6 +1880,11 @@ et{
                 dnam{"atm"}
                 one{"{0} atm"}
                 other{"{0} atm"}
+            }
+            bar{
+                dnam{"baar"}
+                one{"{0} baar"}
+                other{"{0} baari"}
             }
             hectopascal{
                 dnam{"hPa"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ur_IN{
-    Version{"2.1.47.71"}
+    Version{"36"}
     zoneStrings{
         "Africa:Accra"{
             ec{"اکرا"}
@@ -207,6 +207,5 @@ ur_IN{
         }
         gmtFormat{"GMT{0}"}
         regionFormatDaylight{"{0} دن کا وقت"}
-        regionFormatStandard{"{0} معیاری وقت"}
     }
 }

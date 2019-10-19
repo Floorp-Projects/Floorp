@@ -272,10 +272,6 @@ hsb{
         zu{"zulušćina"}
         zxx{"žadyn rěčny wobsah"}
     }
-    Languages%short{
-        en_GB{"jendźelšćina (UK)"}
-        en_US{"jendźelšćina (USA)"}
-    }
     Scripts{
         Arab{"arabsce"}
         Armn{"armensce"}
@@ -378,7 +374,7 @@ hsb{
             tibt{"tibetske cyfry"}
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
     codePatterns{
         language{"rěč: {0}"}
         script{"pismo: {0}"}

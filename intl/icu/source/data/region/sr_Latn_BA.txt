@@ -16,8 +16,5 @@ sr_Latn_BA{
         VG{"Britanska Djevičanska Ostrva"}
         VI{"Američka Djevičanska Ostrva"}
     }
-    Countries%variant{
-        MK{"BJR Makedonija"}
-    }
-    Version{"2.1.48.77"}
+    Version{"36"}
 }

@@ -107,7 +107,7 @@ et{
         car{"kariibi"}
         cay{"kajuka"}
         cch{"aitšami"}
-        ccp{"Chakma"}
+        ccp{"tšaakma"}
         ce{"tšetšeeni"}
         ceb{"sebu"}
         cgg{"tšiga"}
@@ -251,7 +251,7 @@ et{
         id{"indoneesia"}
         ie{"interlingue"}
         ig{"ibo"}
-        ii{"Sichuani jii"}
+        ii{"nuosu"}
         ik{"injupiaki"}
         ilo{"iloko"}
         inh{"inguši"}
@@ -340,7 +340,7 @@ et{
         lrc{"põhjaluri"}
         lt{"leedu"}
         ltg{"latgali"}
-        lu{"luba"}
+        lu{"Katanga luba"}
         lua{"lulua"}
         lui{"luisenjo"}
         lun{"lunda"}
@@ -423,7 +423,7 @@ et{
         nwc{"vananevari"}
         ny{"njandža"}
         nym{"njamvesi"}
-        nyn{"nkole"}
+        nyn{"njankole"}
         nyo{"njoro"}
         nzi{"nzima"}
         oc{"oksitaani"}
@@ -599,7 +599,7 @@ et{
         vro{"võru"}
         vun{"vundžo"}
         wa{"vallooni"}
-        wae{"walseri"}
+        wae{"valsi"}
         wal{"volaita"}
         war{"varai"}
         was{"vašo"}
@@ -631,6 +631,14 @@ et{
         zun{"sunji"}
         zxx{"mittekeeleline"}
         zza{"zaza"}
+    }
+    Languages%long{
+        zh_Hans{"lihtsustatud mandariinihiina"}
+        zh_Hant{"traditsiooniline mandariinihiina"}
+    }
+    Languages%menu{
+        yue{"kantoni hiina"}
+        zh{"mandariinihiina"}
     }
     Languages%short{
         az{"aseri"}
@@ -1039,7 +1047,7 @@ et{
         VALENCIA{"valentsia"}
         WADEGILE{"Wade’i-Gilesi latinisatsioon"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – kõik"}
         category-list{"{0}: {1}"}

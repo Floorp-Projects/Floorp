@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant_HK{
-    Version{"2.1.47.86"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比贊"}
@@ -530,9 +530,6 @@ zh_Hant_HK{
             lg{"北美太平洋時間"}
             ls{"北美太平洋標準時間"}
         }
-        "meta:Aqtau"{
-            lg{"阿克陶時間"}
-        }
         "meta:Azerbaijan"{
             ld{"亞塞拜疆夏令時間"}
             lg{"亞塞拜疆時間"}
@@ -565,9 +562,6 @@ zh_Hant_HK{
         }
         "meta:Guyana"{
             ls{"圭亞那時間"}
-        }
-        "meta:Hawaii_Aleutian"{
-            lg{"夏威夷-阿留申時間"}
         }
         "meta:India"{
             ls{"印度時間"}

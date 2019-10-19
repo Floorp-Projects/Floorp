@@ -79,7 +79,7 @@ sq{
             "Boliviani i Bolivisë",
         }
         BRL{
-            "R$",
+            "BRL",
             "Reali brazilian",
         }
         BSD{
@@ -650,6 +650,104 @@ sq{
             "ZMW",
             "Kuaça e Zambikut",
         }
+    }
+    Currencies%narrow{
+        AOA{"AOA"}
+        ARS{"ARS"}
+        AUD{"AUD"}
+        BAM{"BAM"}
+        BBD{"BBD"}
+        BDT{"BDT"}
+        BMD{"BMD"}
+        BND{"BND"}
+        BOB{"BOB"}
+        BRL{"BRL"}
+        BSD{"BSD"}
+        BWP{"BWP"}
+        BYN{"BYN"}
+        BZD{"BZD"}
+        CAD{"CAD"}
+        CLP{"CLP"}
+        CNY{"CNY"}
+        COP{"COP"}
+        CRC{"CRC"}
+        CUC{"CUC"}
+        CUP{"CUP"}
+        CZK{"CZK"}
+        DKK{"DKK"}
+        DOP{"DOP"}
+        EGP{"EGP"}
+        EUR{"EUR"}
+        FJD{"FJD"}
+        FKP{"FKP"}
+        GBP{"GBP"}
+        GEL{"GEL"}
+        GIP{"GIP"}
+        GNF{"GNF"}
+        GTQ{"GTQ"}
+        GYD{"GYD"}
+        HKD{"HKS"}
+        HNL{"HNL"}
+        HRK{"HRK"}
+        HUF{"HUF"}
+        IDR{"IDR"}
+        ILS{"ILS"}
+        INR{"INR"}
+        ISK{"ISK"}
+        JMD{"JMD"}
+        JPY{"JPY"}
+        KHR{"KHR"}
+        KMF{"KMF"}
+        KPW{"KPW"}
+        KRW{"KRW"}
+        KYD{"KYD"}
+        KZT{"KZT"}
+        LAK{"LAK"}
+        LBP{"LBP"}
+        LKR{"LKR"}
+        LRD{"LRD"}
+        MGA{"MGA"}
+        MMK{"MMK"}
+        MNT{"MNT"}
+        MUR{"MUR"}
+        MXN{"MXN"}
+        MYR{"MYR"}
+        NAD{"NAD"}
+        NGN{"NGN"}
+        NIO{"NIO"}
+        NOK{"NOK"}
+        NPR{"NPR"}
+        NZD{"NZD"}
+        PHP{"PHP"}
+        PKR{"PKR"}
+        PLN{"PLN"}
+        PYG{"PYG"}
+        RON{"RON"}
+        RUB{"RUB"}
+        RWF{"RWF"}
+        SBD{"SBD"}
+        SEK{"SEK"}
+        SGD{"SGD"}
+        SHP{"SHP"}
+        SRD{"SRD"}
+        SSP{"SSP"}
+        STN{"STN"}
+        SYP{"SYP"}
+        THB{"THB"}
+        TOP{"TOP"}
+        TRY{"TRY"}
+        TTD{"TTD"}
+        TWD{"TWD"}
+        UAH{"UAH"}
+        USD{"USD"}
+        UYU{"UYU"}
+        VND{"VND"}
+        XCD{"XCD"}
+        ZAR{"ZAR"}
+        ZMW{"ZMW"}
+    }
+    Currencies%variant{
+        TRY{"TRY"}
     }
     CurrencyPlurals{
         AED{
@@ -1305,5 +1403,5 @@ sq{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

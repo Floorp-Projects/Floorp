@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиџан"}
@@ -274,7 +274,7 @@ sr{
             ec{"Куиаба"}
         }
         "America:Curacao"{
-            ec{"Кирасо"}
+            ec{"Курасао"}
         }
         "America:Danmarkshavn"{
             ec{"Данмарксхаген"}
@@ -811,7 +811,7 @@ sr{
             ec{"Катар"}
         }
         "Asia:Qostanay"{
-            ec{"Qostanay"}
+            ec{"Костанај"}
         }
         "Asia:Qyzylorda"{
             ec{"Кизилорда"}

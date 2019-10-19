@@ -58,6 +58,7 @@ uz{
         bug{"bugi"}
         byn{"blin"}
         ca{"katalan"}
+        ccp{"chakma"}
         ce{"chechen"}
         ceb{"sebuan"}
         cgg{"chiga"}
@@ -414,6 +415,14 @@ uz{
         zxx{"til tarkibi yo‘q"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"xitoy (soddalashtirilgan mandarin)"}
+        zh_Hant{"xitoy (an’anaviy mandarin)"}
+    }
+    Languages%menu{
+        yue{"xitoy, kanton"}
+        zh{"xitoy, mandarin"}
+    }
     Languages%short{
         az{"ozar"}
         en_GB{"ingliz (Buyuk Britaniya)"}
@@ -546,7 +555,7 @@ uz{
             tibt{"tibet raqamlari"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — hammasi"}
         category-list{"{0}: {1}"}

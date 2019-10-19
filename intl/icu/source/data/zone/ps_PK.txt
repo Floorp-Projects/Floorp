@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ps_PK{
-    Version{"2.1.49.34"}
+    Version{"36"}
     zoneStrings{
         "Africa:Harare"{
             ec{"هرارے"}

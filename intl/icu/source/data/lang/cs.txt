@@ -7,7 +7,7 @@ cs{
         colAlternate{"Ignorovat řazení symbolů"}
         colBackwards{"Obrácené řazení akcentů"}
         colCaseFirst{"Řazení velkých a malých písmen"}
-        colCaseLevel{"Rozlišovaní velkých a malých písmen při řazení"}
+        colCaseLevel{"Rozlišování velkých a malých písmen při řazení"}
         colNormalization{"Normalizované řazení"}
         colNumeric{"Číselné řazení"}
         colStrength{"Míra řazení"}
@@ -631,10 +631,17 @@ cs{
         zxx{"žádný jazykový obsah"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"standardní čínština (zjednodušená)"}
+        zh_Hant{"standardní čínština (tradiční)"}
+    }
+    Languages%menu{
+        yue{"jüe"}
+        zh{"standardní čínština"}
+    }
     Languages%short{
         az{"ázerbájdžánština"}
         en_GB{"angličtina (VB)"}
-        en_US{"angličtina (USA)"}
     }
     Scripts{
         Afak{"afaka"}
@@ -962,7 +969,7 @@ cs{
         SCOTLAND{"angličtina (Skotsko)"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.48.44"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – vše"}
         category-list{"{0}: {1}"}

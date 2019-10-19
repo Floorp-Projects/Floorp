@@ -5,12 +5,10 @@ es_AR{
     Countries{
         BA{"Bosnia y Herzegovina"}
         TA{"Tristán de Acuña"}
-        TL{"Timor-Leste"}
         UM{"Islas menores alejadas de EE. UU."}
-        VI{"Islas Vírgenes de EE. UU."}
     }
     Countries%short{
         GB{"RU"}
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
 }

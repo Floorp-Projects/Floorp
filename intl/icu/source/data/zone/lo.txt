@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lo{
-    Version{"2.1.48.17"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ອາບິດແຈນ"}
@@ -397,7 +397,7 @@ lo{
             ec{"ລີມາ"}
         }
         "America:Los_Angeles"{
-            ec{"ລອສ ແອນເຈລີສ"}
+            ec{"ລອສແອນເຈລີສ"}
         }
         "America:Louisville"{
             ec{"ຫລຸຍວິວ"}
@@ -568,7 +568,7 @@ lo{
             ec{"ເຊນ ວິນເຊນ"}
         }
         "America:Swift_Current"{
-            ec{"ສະວິວ ເຄີເຣນ"}
+            ec{"ສະວິຟ ເຄີເຣນ"}
         }
         "America:Tegucigalpa"{
             ec{"ເຕກູຊີການປາ"}
@@ -688,7 +688,7 @@ lo{
             ec{"ບຣູໄນ"}
         }
         "Asia:Calcutta"{
-            ec{"ໂຄກາຕາ"}
+            ec{"ໂກລກາຕາ"}
         }
         "Asia:Chita"{
             ec{"ຊີຕ່າ"}
@@ -809,6 +809,9 @@ lo{
         }
         "Asia:Qatar"{
             ec{"ກາຕາຣ໌"}
+        }
+        "Asia:Qostanay"{
+            ec{"ຄອສຕາເນ"}
         }
         "Asia:Qyzylorda"{
             ec{"ໄຄຊີລໍດາ"}
@@ -1161,7 +1164,7 @@ lo{
             ec{"ມາເຮ"}
         }
         "Indian:Maldives"{
-            ec{"ມັລດີບ"}
+            ec{"ມັລດີຟ"}
         }
         "Indian:Mauritius"{
             ec{"ເມົາຣິທຽສ"}
@@ -1312,9 +1315,9 @@ lo{
             ls{"ເວ​ລາ​ມາດ​ຕະ​ຖານ​ອາ​ຟຣິ​ກາ​ຕາ​ເວັນ​ຕົກ"}
         }
         "meta:Alaska"{
-            ld{"ເວລາກາງເວັນອະແລສກາ"}
-            lg{"ເວລາອະແລສກາ"}
-            ls{"ເວລາມາດຕະຖານອະແລສກາ"}
+            ld{"ເວລາກາງເວັນອະລັສກາ"}
+            lg{"ເວລາອະລັສກາ"}
+            ls{"ເວລາມາດຕະຖານອະລັສກາ"}
         }
         "meta:Almaty"{
             ld{"ເວລາລະດູຮ້ອນອໍມາຕີ"}
@@ -1677,7 +1680,7 @@ lo{
             ls{"ເວ​ລາ​ມາ​ເລ​ເຊຍ"}
         }
         "meta:Maldives"{
-            ls{"ເວລາມັນດີຟ"}
+            ls{"ເວລາມັລດີຟ"}
         }
         "meta:Marquesas"{
             ls{"ເວລາມາເຄີຊັສ"}

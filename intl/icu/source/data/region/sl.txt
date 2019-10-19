@@ -253,7 +253,7 @@ sl{
         SV{"Salvador"}
         SX{"Sint Maarten"}
         SY{"Sirija"}
-        SZ{"Svazi"}
+        SZ{"Esvatini"}
         TA{"Tristan da Cunha"}
         TC{"Otoki Turks in Caicos"}
         TD{"Čad"}
@@ -311,7 +311,8 @@ sl{
         CI{"Côte d’Ivoire"}
         CZ{"Češka republika"}
         FK{"Falklandski otoki (Malvini)"}
+        SZ{"Svazi"}
         TL{"Vzhodni Timor"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

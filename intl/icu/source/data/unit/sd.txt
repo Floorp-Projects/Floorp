@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sd{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -106,6 +106,7 @@ sd{
         }
         compound{
             per{"في {1} تي {0}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -247,6 +248,11 @@ sd{
                 other{"{0} ڏينهن"}
                 per{"{0} في ڏينهن"}
             }
+            decade{
+                dnam{"ڏهاڪا"}
+                one{"{0} ڏهاڪو"}
+                other{"{0} ڏهاڪا"}
+            }
             hour{
                 dnam{"ڪلاڪ"}
                 one{"{0} ڪلاڪ"}
@@ -362,6 +368,11 @@ sd{
                 one{"{0} ڪلو واٽ في ڪلڪ"}
                 other{"{0} ڪلو واٽ في ڪلڪ"}
             }
+            therm-us{
+                dnam{"US ٿرمس"}
+                one{"{0} US ٿرم"}
+                other{"{0} US ٿرمس"}
+            }
         }
         force{
             newton{
@@ -395,6 +406,43 @@ sd{
                 dnam{"ميگا هرٽز"}
                 one{"{0} ميگا هرٽز"}
                 other{"{0} ميگا هرٽز"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"في سينٽي ميٽر ڊاٽس"}
+                one{"{0} في سينٽي ميٽر ڊاٽ"}
+                other{"{0} في سينٽي ميٽر ڊاٽس"}
+            }
+            dot-per-inch{
+                dnam{"ڊاٽس في انچ"}
+                one{"{0} ڊاٽ في انچ"}
+                other{"{0} ڊاٽس في انچ"}
+            }
+            em{
+                dnam{"ٽائپوگرافڪ em"}
+                one{"{0} em"}
+                other{"{0} ems"}
+            }
+            megapixel{
+                dnam{"ميگا پگزلس"}
+                one{"{0} ميگا پگزل"}
+                other{"{0} ميگا پگزلس"}
+            }
+            pixel{
+                dnam{"پگزلس"}
+                one{"{0} پگزل"}
+                other{"{0} پگزلس"}
+            }
+            pixel-per-centimeter{
+                dnam{"پگزلس في سينٽي ميٽر"}
+                one{"{0} پگزل في سينٽي ميٽر"}
+                other{"{0} پگزلس في سينٽي ميٽر"}
+            }
+            pixel-per-inch{
+                dnam{"پگزلس في انچ"}
+                one{"{0} پگزل في انچ"}
+                other{"{0} پگزلس في انچ"}
             }
         }
         length{
@@ -620,6 +668,11 @@ sd{
                 one{"{0} ايٽماس فيئر"}
                 other{"{0} ايٽماس فيئر"}
             }
+            bar{
+                dnam{"بارس"}
+                one{"{0} بار"}
+                other{"{0} بارس"}
+            }
             hectopascal{
                 dnam{"هيڪٽوپاسڪلز"}
                 one{"{0} هيڪٽوپاسڪلز"}
@@ -649,6 +702,11 @@ sd{
                 dnam{"مرڪري جو ملي ميٽر"}
                 one{"مرڪري جو {0} ملي ميٽر"}
                 other{"مرڪري جو {0} ملي ميٽر"}
+            }
+            pascal{
+                dnam{"پاسڪلز"}
+                one{"{0} پاسڪل"}
+                other{"{0} پاسڪلز"}
             }
             pound-per-square-inch{
                 dnam{"پائونڊز في اسڪوائر انچ"}
@@ -853,6 +911,7 @@ sd{
     unitsNarrow{
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             percent{
@@ -1084,6 +1143,7 @@ sd{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -1225,6 +1285,11 @@ sd{
                 other{"{0} ڏينهن"}
                 per{"{0} في ڏينهن"}
             }
+            decade{
+                dnam{"ڏهاڪا"}
+                one{"{0} ڏهاڪو"}
+                other{"{0} ڏهاڪا"}
+            }
             hour{
                 dnam{"ڪلاڪ"}
                 one{"{0} ڪلاڪ"}
@@ -1340,6 +1405,11 @@ sd{
                 one{"{0} ڪلو واٽ في ڪلڪ"}
                 other{"{0} ڪلو واٽ في ڪلڪ"}
             }
+            therm-us{
+                dnam{"US ٿرم"}
+                one{"{0} US ٿرم"}
+                other{"{0} US ٿرمس"}
+            }
         }
         force{
             newton{
@@ -1373,6 +1443,14 @@ sd{
                 dnam{"ميگا هرٽز"}
                 one{"{0} ميگا هرٽز"}
                 other{"{0} ميگا هرٽز"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"megapixels"}
+            }
+            pixel{
+                dnam{"پگزل"}
             }
         }
         length{
@@ -1597,6 +1675,11 @@ sd{
                 dnam{"ايٽماس فيئر"}
                 one{"{0} ايٽماس فيئر"}
                 other{"{0} ايٽماس فيئر"}
+            }
+            bar{
+                dnam{"بار"}
+                one{"{0} بار"}
+                other{"{0} بارس"}
             }
             hectopascal{
                 dnam{"هيڪٽوپاسڪلز"}

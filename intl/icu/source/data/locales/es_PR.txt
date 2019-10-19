@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_PR{
     %%Parent{"es_419"}
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -47,8 +47,8 @@ es_PR{
                 "MM/dd/y",
                 "MM/dd/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -62,10 +62,6 @@ es_PR{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
                         am{"a. m."}
                         pm{"p. m."}
                     }

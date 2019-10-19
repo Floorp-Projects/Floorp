@@ -115,12 +115,6 @@ static const int32_t       UNKNOWN_ZONE_ID_LENGTH = 11;
 static icu::TimeZone* DEFAULT_ZONE = NULL;
 static icu::UInitOnce gDefaultZoneInitOnce = U_INITONCE_INITIALIZER;
 
-// Prevents DEFAULT_ZONE from being deleted while another thread is cloning it.
-static icu::UMutex* defaultZoneMutex() {
-    static icu::UMutex gDefaultZoneMutex = U_MUTEX_INITIALIZER;
-    return &gDefaultZoneMutex;
-}
-
 alignas(icu::SimpleTimeZone)
 static char gRawGMT[sizeof(icu::SimpleTimeZone)];
 
@@ -533,6 +527,8 @@ TimeZone::detectHostTimeZone()
 
 // -------------------------------------
 
+static UMutex gDefaultZoneMutex;
+
 /**
  * Initialize DEFAULT_ZONE from the system default time zone.  
  * Upon return, DEFAULT_ZONE will not be NULL, unless operator new()
@@ -542,6 +538,7 @@ static void U_CALLCONV initDefault()
 {
     ucln_i18n_registerCleanup(UCLN_I18N_TIMEZONE, timeZone_cleanup);
 
+    Mutex lock(&gDefaultZoneMutex);
     // If setDefault() has already been called we can skip getting the
     // default zone information from the system.
     if (DEFAULT_ZONE != NULL) {
@@ -563,9 +560,6 @@ static void U_CALLCONV initDefault()
 
     TimeZone *default_zone = TimeZone::detectHostTimeZone();
 
-    // The only way for DEFAULT_ZONE to be non-null at this point is if the user
-    // made a thread-unsafe call to setDefault() or adoptDefault() in another
-    // thread while this thread was doing something that required getting the default.
     U_ASSERT(DEFAULT_ZONE == NULL);
 
     DEFAULT_ZONE = default_zone;
@@ -577,16 +571,10 @@ TimeZone* U_EXPORT2
 TimeZone::createDefault()
 {
     umtx_initOnce(gDefaultZoneInitOnce, initDefault);
-
-    icu::Mutex mutex_lock(defaultZoneMutex());
-    return (DEFAULT_ZONE != NULL) ? DEFAULT_ZONE->clone() : NULL;
-}
-
-void
-TimeZone::recreateDefault()
-{
-    TimeZone *default_zone = TimeZone::detectHostTimeZone();
-    adoptDefault(default_zone);
+    {
+        Mutex lock(&gDefaultZoneMutex);
+        return (DEFAULT_ZONE != NULL) ? DEFAULT_ZONE->clone() : NULL;
+    }
 }
 
 // -------------------------------------
@@ -596,10 +584,12 @@ TimeZone::adoptDefault(TimeZone* zone)
 {
     if (zone != NULL)
     {
-        icu::Mutex mutex_lock(defaultZoneMutex());
-        TimeZone *old = DEFAULT_ZONE;
-        DEFAULT_ZONE = zone;
-        delete old;
+        {
+            Mutex lock(&gDefaultZoneMutex);
+            TimeZone *old = DEFAULT_ZONE;
+            DEFAULT_ZONE = zone;
+            delete old;
+        }
         ucln_i18n_registerCleanup(UCLN_I18N_TIMEZONE, timeZone_cleanup);
     }
 }

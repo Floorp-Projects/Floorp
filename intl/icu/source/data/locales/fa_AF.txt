@@ -18,7 +18,7 @@ fa_AF{
             }
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     calendar{
         gregorian{
             appendItems{
@@ -51,6 +51,7 @@ fa_AF{
                         afternoon2{"بعدازچاشت"}
                         morning1{"بامداد"}
                         morning2{"صبح"}
+                        night1{"شب"}
                         night2{"نیمه‌شب"}
                     }
                     wide{
@@ -58,6 +59,7 @@ fa_AF{
                         afternoon2{"بعدازچاشت"}
                         morning1{"بامداد"}
                         morning2{"صبح"}
+                        night1{"شب"}
                         night2{"نیمه‌شب"}
                     }
                 }
@@ -67,10 +69,13 @@ fa_AF{
                         afternoon2{"بعدازچاشت"}
                         morning1{"بامداد"}
                         morning2{"صبح"}
+                        night1{"شب"}
                         night2{"نیمه‌شب"}
                     }
                     narrow{
                         afternoon1{"بعد از چاشت"}
+                        morning1{"ب"}
+                        night1{"ش"}
                     }
                     wide{
                         afternoon1{"ظهر"}

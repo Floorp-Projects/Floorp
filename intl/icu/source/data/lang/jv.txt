@@ -35,6 +35,7 @@ jv{
         brx{"Bodo"}
         bs{"bs"}
         ca{"Katala"}
+        ccp{"Chakma"}
         ce{"Chechen"}
         ceb{"Cebuano"}
         cgg{"Chiga"}
@@ -238,10 +239,17 @@ jv{
         zu{"Zulu"}
         zxx{"Konten tanpa linguistik"}
     }
+    Languages%long{
+        zh_Hans{"Tyonghwa Mandarin (Ringkes)"}
+        zh_Hant{"Tyonghwa Mandarin (Tradisional)"}
+    }
+    Languages%menu{
+        yue{"Tyonghwa, Kanton"}
+        zh{"Tyonghwa, Mandarin"}
+    }
     Languages%short{
         az{"Azeri"}
         en_GB{"Inggris (Britania)"}
-        en_US{"Inggris (AS)"}
     }
     Scripts{
         Arab{"Arab"}
@@ -278,6 +286,7 @@ jv{
         Sinh{"Sinhala"}
         Taml{"Tamil"}
         Thaa{"Thaana"}
+        Thai{"Thailand"}
         Tibt{"Tibetan"}
         Zmth{"Notasi Matematika"}
         Zsye{"Emoji"}
@@ -344,8 +353,8 @@ jv{
             gujr{"Digit Gujarat"}
             guru{"Digit Gurmukhi"}
             hanidec{"Angka Desimal Mandarin"}
-            hans{"Angka Mandarin Prasaja"}
-            hansfin{"Angka Finansial Mandarin Prasaja"}
+            hans{"Angka Mandarin Ringkes"}
+            hansfin{"Angka Finansial Mandarin Ringkes"}
             hant{"Angka Mandarin Tradisional"}
             hantfin{"Angka Finansial Mandarin Tradisional"}
             hebr{"Angka Ibrani"}
@@ -367,10 +376,9 @@ jv{
             tibt{"Digit Tibet"}
         }
     }
-    Version{"2.1.48.44"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — kabeh"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — kompatibilitas"}
         enclosed{"{0} — ketutup"}
         extended{"{0} — didawakake"}

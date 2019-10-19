@@ -4,5 +4,5 @@ bn_IN{
     Languages{
         ksh{"কোলোনিয়ান"}
     }
-    Version{"2.1.47.69"}
+    Version{"36"}
 }

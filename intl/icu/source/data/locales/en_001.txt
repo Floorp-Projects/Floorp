@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_001{
-    Version{"2.1.47.69"}
+    Version{"36"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -109,7 +109,7 @@ en_001{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 M{"LL"}
-                MEd{"E, d/M"}
+                MEd{"E, dd/MM"}
                 MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
@@ -121,6 +121,36 @@ en_001{
                 yyyyMd{"dd/MM/y GGGGG"}
             }
             intervalFormats{
+                Gy{
+                    y{"y–y G"}
+                }
+                GyMEd{
+                    G{"E, dd/MM/y GGGGG – E, dd/MM/y GGGGG"}
+                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                }
+                GyMMMEd{
+                    G{"E, d MMM y G – E, d MMM y G"}
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    d{"d–d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"dd/MM/y GGGGG – dd/MM/y GGGGG"}
+                    M{"dd/MM/y – dd/MM/y GGGGG"}
+                    d{"dd/MM/y – dd/MM/y GGGGG"}
+                    y{"dd/MM/y – dd/MM/y GGGGG"}
+                }
+                M{
+                    M{"M–M"}
+                }
                 MEd{
                     M{"E dd/MM – E dd/MM"}
                     d{"E dd/MM – E dd/MM"}
@@ -131,11 +161,17 @@ en_001{
                 }
                 MMMd{
                     M{"d MMM – d MMM"}
-                    d{"d – d MMM"}
+                    d{"d–d MMM"}
                 }
                 Md{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                y{
+                    y{"y–y G"}
                 }
                 yM{
                     M{"MM/y – MM/y GGGGG"}
@@ -153,7 +189,7 @@ en_001{
                 }
                 yMMMd{
                     M{"d MMM – d MMM y G"}
-                    d{"d – d MMM y G"}
+                    d{"d–d MMM y G"}
                     y{"d MMM y – d MMM y G"}
                 }
                 yMd{
@@ -206,17 +242,6 @@ en_001{
                 yMd{"dd/MM/y"}
             }
             dayPeriod{
-                format{
-                    abbreviated{
-                        noon{"noon"}
-                    }
-                    narrow{
-                        noon{"n"}
-                    }
-                    wide{
-                        noon{"noon"}
-                    }
-                }
                 stand-alone{
                     abbreviated{
                         am{"am"}
@@ -232,6 +257,47 @@ en_001{
                 }
             }
             intervalFormats{
+                GyMEd{
+                    G{"E, dd/MM/y GGGGG – E, dd/MM/y GGGGG"}
+                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                }
+                GyMMMEd{
+                    G{"E, d MMM y G – E, d MMM y G"}
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    d{"d – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"dd/MM/y GGGGG – dd/MM/y GGGGG"}
+                    M{"dd/MM/y – dd/MM/y GGGGG"}
+                    d{"dd/MM/y – dd/MM/y GGGGG"}
+                    y{"dd/MM/y – dd/MM/y GGGGG"}
+                }
+                H{
+                    H{"HH–HH"}
+                }
+                Hm{
+                    H{"HH:mm–HH:mm"}
+                    m{"HH:mm–HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm–HH:mm v"}
+                    m{"HH:mm–HH:mm v"}
+                }
+                Hv{
+                    H{"HH–HH v"}
+                }
+                M{
+                    M{"M–M"}
+                }
                 MEd{
                     M{"E dd/MM – E dd/MM"}
                     d{"E dd/MM – E dd/MM"}
@@ -242,11 +308,23 @@ en_001{
                 }
                 MMMd{
                     M{"d MMM – d MMM"}
-                    d{"d – d MMM"}
+                    d{"d–d MMM"}
                 }
                 Md{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
+                }
+                d{
+                    d{"d–d"}
+                }
+                h{
+                    h{"h–h a"}
+                }
+                hv{
+                    h{"h–h a v"}
+                }
+                y{
+                    y{"y–y"}
                 }
                 yM{
                     M{"MM/y – MM/y"}
@@ -264,7 +342,7 @@ en_001{
                 }
                 yMMMd{
                     M{"d MMM – d MMM y"}
-                    d{"d – d MMM y"}
+                    d{"d–d MMM y"}
                     y{"d MMM y – d MMM y"}
                 }
                 yMd{
@@ -274,6 +352,15 @@ en_001{
                 }
             }
         }
+        islamic{
+            availableFormats{
+                MEd{"E dd/MM"}
+                MMMEd{"E d MMM"}
+            }
+        }
+    }
+    characterLabel{
+        math_symbols{"maths symbol"}
     }
     fields{
         dayOfYear-narrow{
@@ -378,6 +465,11 @@ en_001{
         }
         month-narrow{
             dn{"mo"}
+            relative{
+                "-1"{"last mo"}
+                "0"{"this mo"}
+                "1"{"next mo"}
+            }
             relativeTime{
                 future{
                     one{"in {0} mo"}
@@ -391,6 +483,11 @@ en_001{
         }
         month-short{
             dn{"mo"}
+            relative{
+                "-1"{"last mo"}
+                "0"{"this mo"}
+                "1"{"next mo"}
+            }
             relativeTime{
                 future{
                     one{"in {0} mo"}
@@ -540,6 +637,11 @@ en_001{
         }
         week-narrow{
             dn{"wk"}
+            relative{
+                "-1"{"last wk"}
+                "0"{"this wk"}
+                "1"{"next wk"}
+            }
             relativeTime{
                 future{
                     one{"in {0} wk"}
@@ -553,6 +655,11 @@ en_001{
         }
         week-short{
             dn{"wk"}
+            relative{
+                "-1"{"last wk"}
+                "0"{"this wk"}
+                "1"{"next wk"}
+            }
             relativeTime{
                 future{
                     one{"in {0} wk"}
@@ -583,6 +690,11 @@ en_001{
             dn{"wkday of mo"}
         }
         year-narrow{
+            relative{
+                "-1"{"last yr"}
+                "0"{"this yr"}
+                "1"{"next yr"}
+            }
             relativeTime{
                 future{
                     one{"in {0} yr"}
@@ -596,6 +708,11 @@ en_001{
         }
         year-short{
             dn{"yr"}
+            relative{
+                "-1"{"last yr"}
+                "0"{"this yr"}
+                "1"{"next yr"}
+            }
             relativeTime{
                 future{
                     one{"in {0} yr"}
@@ -606,6 +723,24 @@ en_001{
                     other{"{0} yr ago"}
                 }
             }
+        }
+    }
+    listPattern{
+        or{
+            end{"{0} or {1}"}
+        }
+        or-narrow{
+            end{"{0} or {1}"}
+        }
+        or-short{
+            end{"{0} or {1}"}
+        }
+        standard{
+            end{"{0} and {1}"}
+        }
+        standard-short{
+            2{"{0} and {1}"}
+            end{"{0} and {1}"}
         }
     }
 }

@@ -5,6 +5,7 @@ ig{
         ak{"Akan"}
         am{"Amariikị"}
         ar{"Arabiikị"}
+        ar_001{"Ụdị Arabiikị nke oge a"}
         be{"Belaruusu"}
         bg{"Bọlụgarịa"}
         bn{"Bengali"}
@@ -16,7 +17,6 @@ ig{
         en{"Asụsụ Bekee"}
         en_AU{"Bekee ndị Australia"}
         en_CA{"Bekee ndị Canada"}
-        en_GB{"Bekee ndị Britain"}
         en_US{"Bekee ndị America"}
         es{"Asụsụ Spanish"}
         es_419{"Asụsụ Spanish ndị Latin America"}
@@ -72,6 +72,8 @@ ig{
         Cyrl{"Mkpụrụ Okwu Cyrillic"}
         Hans{"Nke dị mfe"}
         Hant{"Izugbe"}
+        Jpan{"Japanese"}
+        Kore{"Korea"}
         Latn{"Latin"}
         Zxxx{"Edeghị ede"}
         Zzzz{"Mkpụrụ okwu amaghị"}
@@ -83,6 +85,7 @@ ig{
     Types{
         calendar{
             gregorian{"Kalenda Gregory"}
+            iso8601{"Kalenda ISO-8601"}
         }
         collation{
             standard{"Usoro Nhazi"}
@@ -91,15 +94,10 @@ ig{
             latn{"Ọnụ Ọgụgụ Mpaghara Ọdịda Anyanwụ"}
         }
     }
-    Version{"2.1.48.45"}
+    Version{"36"}
     codePatterns{
         language{"Asụsụ: {0}"}
         script{"Mkpụrụ Okwu: {0}"}
         territory{"Mpaghara: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 be{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абіджан"}
@@ -25,7 +25,7 @@ be{
             ec{"Бангі"}
         }
         "Africa:Banjul"{
-            ec{"Банжул"}
+            ec{"Банджул"}
         }
         "Africa:Bissau"{
             ec{"Бісау"}
@@ -46,7 +46,7 @@ be{
             ec{"Касабланка"}
         }
         "Africa:Ceuta"{
-            ec{"Сеўта"}
+            ec{"Сеута"}
         }
         "Africa:Conakry"{
             ec{"Конакры"}
@@ -403,7 +403,7 @@ be{
             ec{"Луісвіл"}
         }
         "America:Lower_Princes"{
-            ec{"Лоўэр Прынсіз Квортэр"}
+            ec{"Лоўэр Прынсіз Квотэр"}
         }
         "America:Maceio"{
             ec{"Масеё"}
@@ -445,7 +445,7 @@ be{
             ec{"Мікелон"}
         }
         "America:Moncton"{
-            ec{"Манктан"}
+            ec{"Монктан"}
         }
         "America:Monterrey"{
             ec{"Мантэрэй"}
@@ -487,7 +487,7 @@ be{
             ec{"Панама"}
         }
         "America:Pangnirtung"{
-            ec{"Пангніртунг"}
+            ec{"Пангніртанг"}
         }
         "America:Paramaribo"{
             ec{"Парамарыба"}
@@ -508,7 +508,7 @@ be{
             ec{"Пуэрта-Рыка"}
         }
         "America:Punta_Arenas"{
-            ec{"Пунта Арэнас"}
+            ec{"Пунта-Арэнас"}
         }
         "America:Rainy_River"{
             ec{"Рэйні-Рывер"}
@@ -544,7 +544,7 @@ be{
             ec{"Сан-Паўлу"}
         }
         "America:Scoresbysund"{
-            ec{"Ітакортаарміут"}
+            ec{"Ітакартаарміт"}
         }
         "America:Sitka"{
             ec{"Сітка"}
@@ -574,7 +574,7 @@ be{
             ec{"Тэгусігальпа"}
         }
         "America:Thule"{
-            ec{"Каанаак"}
+            ec{"Туле"}
         }
         "America:Thunder_Bay"{
             ec{"Тандэр-Бэй"}
@@ -601,7 +601,7 @@ be{
             ec{"Якутат"}
         }
         "America:Yellowknife"{
-            ec{"Йелаўнайф"}
+            ec{"Елаўнайф"}
         }
         "Antarctica:Casey"{
             ec{"Кэйсі"}
@@ -658,7 +658,7 @@ be{
             ec{"Актабэ"}
         }
         "Asia:Ashgabat"{
-            ec{"Ашгабад"}
+            ec{"Ашгабат"}
         }
         "Asia:Atyrau"{
             ec{"Атырау"}
@@ -810,8 +810,11 @@ be{
         "Asia:Qatar"{
             ec{"Катар"}
         }
+        "Asia:Qostanay"{
+            ec{"Кустанай"}
+        }
         "Asia:Qyzylorda"{
-            ec{"Кзыларда"}
+            ec{"Кзыл-Арда"}
         }
         "Asia:Rangoon"{
             ec{"Рангун"}
@@ -868,7 +871,7 @@ be{
             ec{"Урумчы"}
         }
         "Asia:Ust-Nera"{
-            ec{"Вусць-Нера"}
+            ec{"Усць-Нера"}
         }
         "Asia:Vientiane"{
             ec{"В’енцьян"}
@@ -907,13 +910,13 @@ be{
             ec{"Рэйк’явік"}
         }
         "Atlantic:South_Georgia"{
-            ec{"Паўднёвая Джорджыя"}
+            ec{"Паўднёвая Георгія"}
         }
         "Atlantic:St_Helena"{
             ec{"Востраў Святой Алены"}
         }
         "Atlantic:Stanley"{
-            ec{"Стэнлі"}
+            ec{"Порт-Стэнлі"}
         }
         "Australia:Adelaide"{
             ec{"Адэлаіда"}
@@ -1047,7 +1050,7 @@ be{
             ec{"Мальта"}
         }
         "Europe:Mariehamn"{
-            ec{"Марыехамн"}
+            ec{"Марыянхаміна"}
         }
         "Europe:Minsk"{
             ec{"Мінск"}
@@ -1152,7 +1155,7 @@ be{
             ec{"Какосавыя астравы"}
         }
         "Indian:Comoro"{
-            ec{"Камор"}
+            ec{"Каморскія астравы"}
         }
         "Indian:Kerguelen"{
             ec{"Кергелен"}
@@ -1185,7 +1188,7 @@ be{
             ec{"Чатэм"}
         }
         "Pacific:Easter"{
-            ec{"Пасхі востраў"}
+            ec{"Вялікадня востраў"}
         }
         "Pacific:Efate"{
             ec{"Эфатэ"}
@@ -1260,7 +1263,7 @@ be{
             ec{"Піткэрн"}
         }
         "Pacific:Ponape"{
-            ec{"Понпеі"}
+            ec{"Панпеі"}
         }
         "Pacific:Port_Moresby"{
             ec{"Порт-Морсбі"}
@@ -1281,7 +1284,7 @@ be{
             ec{"Тангатапу"}
         }
         "Pacific:Truk"{
-            ec{"Чуук"}
+            ec{"Трук"}
         }
         "Pacific:Wake"{
             ec{"Уэйк"}
@@ -1474,9 +1477,9 @@ be{
             ls{"Час Усходняга Тымора"}
         }
         "meta:Easter"{
-            ld{"Летні час вострава Пасхі"}
-            lg{"Час вострава Пасхі"}
-            ls{"Стандартны час вострава Пасхі"}
+            ld{"Летні час вострава Вялікадня"}
+            lg{"Час вострава Вялікадня"}
+            ls{"Стандартны час вострава Вялікадня"}
         }
         "meta:Ecuador"{
             ls{"Эквадорскі час"}
@@ -1710,9 +1713,9 @@ be{
             ls{"Час вострава Норфалк"}
         }
         "meta:Noronha"{
-            ld{"Летні час Фернанду-ды-Наронья"}
-            lg{"Час Фернанду-ды-Наронья"}
-            ls{"Стандартны час Фернанду-ды-Наронья"}
+            ld{"Летні час Фернанду-дзі-Наронья"}
+            lg{"Час Фернанду-дзі-Наронья"}
+            ls{"Стандартны час Фернанду-дзі-Наронья"}
         }
         "meta:Novosibirsk"{
             ld{"Новасібірскі летні час"}
@@ -1762,7 +1765,7 @@ be{
             ls{"Час вострава Піткэрн"}
         }
         "meta:Ponape"{
-            ls{"Час вострава Понпеі"}
+            ls{"Час вострава Панпеі"}
         }
         "meta:Pyongyang"{
             ls{"Пхеньянскі час"}
@@ -1771,7 +1774,7 @@ be{
             ls{"Час Рэюньёна"}
         }
         "meta:Rothera"{
-            ls{"Час станцыі Ратэра"}
+            ls{"Час станцыі Ротэра"}
         }
         "meta:Sakhalin"{
             ld{"Сахалінскі летні час"}
@@ -1793,7 +1796,7 @@ be{
             ls{"Час Саламонавых астравоў"}
         }
         "meta:South_Georgia"{
-            ls{"Час Паўднёвай Джорджыі"}
+            ls{"Час Паўднёвай Георгіі"}
         }
         "meta:Suriname"{
             ls{"Час Сурынама"}
@@ -1821,7 +1824,7 @@ be{
             ls{"Стандартны час Тонга"}
         }
         "meta:Truk"{
-            ls{"Час Чуук"}
+            ls{"Час Трука"}
         }
         "meta:Turkmenistan"{
             ld{"Летні час Туркменістана"}
@@ -1881,7 +1884,7 @@ be{
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
-        hourFormat{"+HH.mm;-HH.mm"}
+        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Час: {0}"}
         regionFormatDaylight{"Летні час: {0}"}
         regionFormatStandard{"Стандартны час: {0}"}

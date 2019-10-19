@@ -10,7 +10,6 @@ es_419{
         034{"Asia del Sur"}
         035{"Asia sudoriental"}
         039{"Europa del Sur"}
-        057{"región de Micronesia"}
         145{"Asia del Oeste"}
         151{"Europa del Este"}
         154{"Europa del Norte"}
@@ -23,11 +22,8 @@ es_419{
         GG{"Guernesey"}
         IC{"Islas Canarias"}
         QO{"Islas Ultramarinas"}
-        SZ{"Suazilandia"}
         TA{"Tristán da Cunha"}
-        TL{"Timor Oriental"}
         UM{"Islas Ultramarinas de EE.UU."}
-        VI{"Islas Vírgenes de los Estados Unidos"}
     }
     Countries%short{
         GB{"R. U."}
@@ -35,5 +31,5 @@ es_419{
     Countries%variant{
         CD{"Congo (República Democrática del Congo)"}
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
 }

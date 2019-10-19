@@ -166,7 +166,7 @@ se{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.48.4"}
+    Version{"36"}
     calendar{
         gregorian{
             AmPmMarkers{

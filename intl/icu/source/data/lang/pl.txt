@@ -6,16 +6,16 @@ pl{
         cf{"format waluty"}
         colAlternate{"Sortowanie ignorujące symbole"}
         colBackwards{"Odwrotne sortowanie ze znakami akcentowanymi"}
-        colCaseFirst{"Porządek wielkie/małe litery"}
+        colCaseFirst{"Kolejność wielkie/małe litery"}
         colCaseLevel{"Sortowanie uwzględniające wielkość liter"}
         colNormalization{"Sortowanie znormalizowane"}
         colNumeric{"Sortowanie numeryczne"}
         colStrength{"Siła sortowania"}
-        collation{"porządek sortowania"}
+        collation{"kolejność sortowania"}
         currency{"waluta"}
         hc{"cykl (12- lub 24-godzinny)"}
         lb{"styl podziału wiersza"}
-        ms{"układ miar"}
+        ms{"system miar"}
         numbers{"cyfry"}
         timezone{"Strefa czasowa"}
         va{"Wariant regionalny"}
@@ -640,10 +640,15 @@ pl{
         zxx{"brak treści o charakterze językowym"}
         zza{"zazaki"}
     }
+    Languages%long{
+        zh_Hans{"standardowy chiński uproszczony"}
+        zh_Hant{"standardowy chiński tradycyjny"}
+    }
+    Languages%menu{
+        zh{"chiński, mandaryński"}
+    }
     Languages%short{
         az{"azerski"}
-        en_GB{"angielski (Wlk. Bryt.)"}
-        en_US{"angielski (USA)"}
     }
     Languages%variant{
         ps{"pasztuński"}
@@ -684,11 +689,11 @@ pl{
         Glag{"głagolica"}
         Goth{"gotyckie"}
         Grek{"greckie"}
-        Gujr{"gudźarackie"}
+        Gujr{"gudżarati"}
         Guru{"gurmukhi"}
-        Hanb{"hanb"}
-        Hang{"hangyl"}
-        Hani{"han"}
+        Hanb{"chińskie z bopomofo"}
+        Hang{"hangul"}
+        Hani{"chińskie"}
         Hano{"hanunoo"}
         Hans{"uproszczone"}
         Hant{"tradycyjne"}
@@ -767,7 +772,7 @@ pl{
         Teng{"tengwar"}
         Tfng{"tifinagh (berberski)"}
         Tglg{"tagalog"}
-        Thaa{"thaana"}
+        Thaa{"taana"}
         Thai{"tajskie"}
         Tibt{"tybetańskie"}
         Ugar{"ugaryckie"}
@@ -778,15 +783,15 @@ pl{
         Yiii{"yi"}
         Zinh{"dziedziczone"}
         Zmth{"notacja matematyczna"}
-        Zsye{"Emoji"}
+        Zsye{"emoji"}
         Zsym{"symbole"}
         Zxxx{"język bez systemu pisma"}
         Zyyy{"wspólne"}
-        Zzzz{"nieznany skrypt"}
+        Zzzz{"nieznane pismo"}
     }
     Scripts%stand-alone{
-        Hans{"uproszczone han"}
-        Hant{"tradycyjne han"}
+        Hans{"chińskie uproszczone"}
+        Hant{"chińskie tradycyjne"}
     }
     Scripts%variant{
         Arab{"perso-arabskie"}
@@ -796,13 +801,13 @@ pl{
             buddhist{"kalendarz buddyjski"}
             chinese{"kalendarz chiński"}
             coptic{"Kalendarz koptyjski"}
-            dangi{"kalendarz dangi"}
+            dangi{"kalendarz koreański"}
             ethiopic{"kalendarz etiopski"}
             ethiopic-amete-alem{"Kalendarz etiopski Amete Alem"}
             gregorian{"kalendarz gregoriański"}
             hebrew{"kalendarz hebrajski"}
             indian{"narodowy kalendarz hinduski"}
-            islamic{"kalendarz islamski (metoda wzrokowa)"}
+            islamic{"kalendarz muzułmański"}
             islamic-civil{"kalendarz islamski (metoda obliczeniowa)"}
             islamic-rgsa{"kalendarz islamski (Arabia Saudyjska, metoda wzrokowa)"}
             islamic-tbla{"kalendarz islamski (metoda obliczeniowa, epoka astronomiczna)"}
@@ -852,16 +857,16 @@ pl{
             big5han{"chiński tradycyjny porządek sortowania - Big5"}
             compat{"poprzedni porządek sortowania, dla zgodności"}
             dictionary{"sortowanie słownikowe"}
-            ducet{"domyślne sortowanie Unicode"}
+            ducet{"domyślna kolejność sortowania Unicode"}
             eor{"europejskie reguły określania kolejności"}
             gb2312han{"chiński uproszczony porządek sortowania - GB2312"}
             phonebook{"porządek sortowania książki telefonicznej"}
             phonetic{"sortowanie fonetyczne"}
             pinyin{"porządek sortowania pinyin"}
             reformed{"sortowanie zreformowane"}
-            search{"wyszukiwanie ogólnego użytku"}
+            search{"wyszukiwanie ogólnego zastosowania"}
             searchjl{"Wyszukiwanie według początkowej spółgłoski hangul"}
-            standard{"sortowanie standardowe"}
+            standard{"standardowa kolejność sortowania"}
             stroke{"porządek akcentów"}
             traditional{"tradycyjny porządek sortowania"}
             unihan{"sortowanie wg kluczy i ich liczby kresek"}
@@ -883,8 +888,8 @@ pl{
             strict{"ścisły styl podziału wiersza"}
         }
         m0{
-            bgn{"BGN"}
-            ungegn{"UNGEGN"}
+            bgn{"transliteracja BGN"}
+            ungegn{"transliteracja UNGEGN"}
         }
         ms{
             metric{"system metryczny"}
@@ -967,7 +972,7 @@ pl{
         VALENCIA{"walencki"}
         WADEGILE{"latynizacja Wade’a i Gilesa"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — wszystko"}
         category-list{"{0}: {1}"}

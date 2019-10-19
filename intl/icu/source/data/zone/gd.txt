@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 gd{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -809,6 +809,9 @@ gd{
         }
         "Asia:Qatar"{
             ec{"Catar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Qostanaı"}
         }
         "Asia:Qyzylorda"{
             ec{"Qızılorda"}

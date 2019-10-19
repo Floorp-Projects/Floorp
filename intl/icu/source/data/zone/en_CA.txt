@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_CA{
     %%Parent{"en_001"}
-    Version{"2.1.47.86"}
+    Version{"36"}
     zoneStrings{
         "Asia:Rangoon"{
             ec{"Rangoon"}
@@ -52,6 +52,7 @@ en_CA{
             sg{"NT"}
             ss{"NST"}
         }
+        gmtZeroFormat{"GMT"}
         regionFormatDaylight{"{0} Daylight Saving Time"}
     }
 }

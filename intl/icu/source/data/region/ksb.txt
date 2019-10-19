@@ -126,7 +126,6 @@ ksb{
         MD{"Moldova"}
         MG{"Bukini"}
         MH{"Visiwa vya Mashal"}
-        MK{"Masedonia"}
         ML{"Mali"}
         MM{"Myama"}
         MN{"Mongolia"}
@@ -226,5 +225,5 @@ ksb{
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

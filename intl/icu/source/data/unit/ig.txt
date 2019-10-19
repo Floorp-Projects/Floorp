@@ -1,10 +1,27 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ig{
-    Version{"2.1.48.45"}
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
+    Version{"36"}
+    units{
+        duration{
+            century{
+                dnam{"Ọtụtụ nari afọ"}
+            }
+            day{
+                dnam{"Ọtụtụ Ubochi"}
+            }
+            decade{
+                dnam{"Ọtụtụ afọ iri"}
+            }
+            month{
+                dnam{"Ọtụtụ Ọnwa"}
+            }
+            week{
+                dnam{"Ọtụtụ Izu"}
+            }
+            year{
+                dnam{"Ọtụtụ Afọ"}
+            }
+        }
     }
 }

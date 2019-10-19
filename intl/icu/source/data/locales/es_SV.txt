@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_SV{
     %%Parent{"es_419"}
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -19,10 +19,6 @@ es_SV{
                         am{"a. m."}
                         pm{"p. m."}
                     }
-                    narrow{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
                     wide{
                         am{"a. m."}
                         pm{"p. m."}
@@ -34,11 +30,7 @@ es_SV{
     fields{
         day{
             relative{
-                "-1"{"ayer"}
                 "-2"{"antier"}
-                "0"{"hoy"}
-                "1"{"mañana"}
-                "2"{"pasado mañana"}
             }
         }
         dayperiod{

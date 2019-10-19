@@ -24,14 +24,23 @@ ko{
         " 頸 顆 顧 飢 餃 館 饉 饋 饑 駒 駕 駱 騎 騏 騫 驅 驕 驚 驥 骨 高 鬼 魁 鮫 鯤 鯨 鱇 鳩 鵑 鵠 鷄 鷗 鸞 麒 麴 黔 鼓 龕"
         " 龜]"
     }
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
+    }
     ExemplarCharacters{"[가-힣]"}
     ExemplarCharactersIndex{"[ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅅ ㅇ ㅈ ㅊ ㅋ ㅌ ㅍ ㅎ]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[‾ _ ＿ \\- － ‐ — ― 〜 ・ , ， 、 ; ； \\: ： ! ！ ¡ ? ？ ¿ . ． ‥ … 。 · ＇ ‘ ’ \u0022 "
-        "＂ “ ” ( （ ) ） \\[ ［ \\] ］ \\{ ｛ \\} ｝ 〈 〉 《 》 「 」 『 』 【 】 〔 〕 § ¶ @ ＠ * ＊ / "
-        "／ \\\\ ＼ \\& ＆ # ＃ % ％ ‰ † ‡ ′ ″ 〃 ※]"
+        "[‾ _ ＿ \\- － ‐ ‑ — ― 〜 ・ , ， 、 ; ； \\: ： ! ！ ¡ ? ？ ¿ . ． ‥ … 。 · ＇ ‘ ’ "
+        "\u0022 ＂ “ ” ( （ ) ） \\[ ［ \\] ］ \\{ ｛ \\} ｝ 〈 〉 《 》 「 」 『 』 【 】 〔 〕 § ¶ @ ＠"
+        " * ＊ / ／ \\\\ ＼ \\& ＆ # ＃ % ％ ‰ † ‡ ′ ″ 〃 ※]"
     }
+    MoreInformation{"?"}
     NumberElements{
         arab{
             symbols{
@@ -39,6 +48,7 @@ ko{
                 plusSign{"‏+"}
             }
         }
+        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -49,6 +59,7 @@ ko{
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -171,12 +182,16 @@ ko{
                 }
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -190,8 +205,9 @@ ko{
             }
         }
         minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         buddhist{
             availableFormats{
@@ -1630,6 +1646,12 @@ ko{
         }
         hebrew{
             eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
                 wide{
                     "유대력",
                 }
@@ -1711,6 +1733,12 @@ ko{
                 yyyyMMMM{"G y년 MMMM"}
             }
             eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
                 wide{
                     "히즈라력",
                 }
@@ -2183,6 +2211,12 @@ ko{
         weather{"날씨"}
         western_asian_scripts{"동서양 문자"}
         whitespace{"공백"}
+    }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
     }
     fields{
         day{
@@ -2871,14 +2905,10 @@ ko{
         or{
             2{"{0} 또는 {1}"}
             end{"{0} 또는 {1}"}
-        }
-        standard{
-            2{"{0} 및 {1}"}
-            end{"{0} 및 {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
-        standard-narrow{
+        standard{
             2{"{0} 및 {1}"}
             end{"{0} 및 {1}"}
             middle{"{0}, {1}"}
@@ -2939,6 +2969,10 @@ ko{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

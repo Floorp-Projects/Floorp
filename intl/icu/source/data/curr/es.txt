@@ -640,7 +640,7 @@ es{
         }
         MWK{
             "MWK",
-            "kwacha malauí",
+            "kuacha malauí",
         }
         MXN{
             "MXN",
@@ -1104,7 +1104,7 @@ es{
         }
         ZMW{
             "ZMW",
-            "kwacha zambiano",
+            "kuacha zambiano",
         }
         ZRN{
             "ZRN",
@@ -1154,6 +1154,7 @@ es{
         FKP{"£"}
         GBP{"£"}
         GEL{"₾"}
+        GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
         GYD{"$"}
@@ -1168,6 +1169,7 @@ es{
         JMD{"$"}
         JPY{"¥"}
         KHR{"៛"}
+        KMF{"CF"}
         KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
@@ -1807,8 +1809,8 @@ es{
             other{"rufiyas"}
         }
         MWK{
-            one{"kwacha malauí"}
-            other{"kwachas malauís"}
+            one{"kuacha malauí"}
+            other{"kuachas malauís"}
         }
         MXN{
             one{"peso mexicano"}
@@ -2219,13 +2221,13 @@ es{
             other{"kwachas zambianos (1968–2012)"}
         }
         ZMW{
-            one{"kwacha zambiano"}
-            other{"kwachas zambianos"}
+            one{"kuacha zambiano"}
+            other{"kuachas zambianos"}
         }
     }
     CurrencyUnitPatterns{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

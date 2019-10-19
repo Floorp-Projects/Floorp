@@ -10,7 +10,7 @@ en_BE{
             }
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{

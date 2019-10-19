@@ -2,9 +2,21 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ig{
     Currencies{
+        BMD{
+            "BMD",
+            "Dollar Bermuda",
+        }
         BRL{
             "R$",
             "Real Brazil",
+        }
+        BZD{
+            "BZD",
+            "Dollar Belize",
+        }
+        CAD{
+            "CA$",
+            "Dollar Canada",
         }
         CNY{
             "CN¥",
@@ -38,6 +50,14 @@ ig{
             "RUB",
             "Ruble Russia",
         }
+        SRD{
+            "SRD",
+            "Dollar Surinamese",
+        }
+        TTD{
+            "TTD",
+            "Dollar Trinidad & Tobago",
+        }
         USD{
             "$",
             "Dollar US",
@@ -47,19 +67,18 @@ ig{
             "Ego Amaghị",
         }
     }
-    Currencies%narrow{
-        BRL{"R$"}
-        CNY{"¥"}
-        EUR{"€"}
-        GBP{"£"}
-        INR{"₹"}
-        JPY{"¥"}
-        RUB{"₽"}
-        USD{"$"}
-    }
     CurrencyPlurals{
+        BMD{
+            other{"Dollars Bermuda"}
+        }
         BRL{
             other{"Real Brazil"}
+        }
+        BZD{
+            other{"Dollars Belize"}
+        }
+        CAD{
+            other{"Dollars Canada"}
         }
         CNY{
             other{"Yuan China"}
@@ -79,15 +98,18 @@ ig{
         RUB{
             other{"Ruble Russia"}
         }
+        SRD{
+            other{"Dollar Surinamese"}
+        }
+        TTD{
+            other{"Dollars Trinidad & Tobago"}
+        }
         USD{
-            other{"dollar US"}
+            other{"Dollars US"}
         }
         XXX{
             other{"(ego amaghị)"}
         }
     }
-    CurrencyUnitPatterns{
-        other{"{0} {1}"}
-    }
-    Version{"2.1.48.45"}
+    Version{"36"}
 }

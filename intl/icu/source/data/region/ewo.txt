@@ -127,7 +127,6 @@ ewo{
         MD{"Molədaví"}
         MG{"Madagasəkárə"}
         MH{"Minlán Mí Maresál"}
-        MK{"Masedónia"}
         ML{"Malí"}
         MM{"Mianəmár"}
         MN{"Mɔngɔ́lia"}
@@ -227,5 +226,5 @@ ewo{
         ZM{"Zambí"}
         ZW{"Zimbabwé"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

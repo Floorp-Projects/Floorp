@@ -405,7 +405,6 @@ ce{
     Languages%short{
         az{"азербайджанийн"}
         en_GB{"ингалсан (Британи)"}
-        en_US{"ингалсан (АЦШ)"}
     }
     Scripts{
         Arab{"Ӏаьрбийн"}
@@ -465,7 +464,7 @@ ce{
             persian{"гӀажарийн"}
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
     codePatterns{
         language{"Мотт: {0}"}
         script{"Скрипт: {0}"}

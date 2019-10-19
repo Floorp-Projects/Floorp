@@ -5,7 +5,7 @@ cy{
         calendar{"Calendr"}
         cf{"Fformat Arian"}
         collation{"Trefn"}
-        currency{"Arian Breiniol"}
+        currency{"Math o Arian"}
         hc{"Cylched Awr (12 vs 24)"}
         lb{"Arddull Toriad Llinell"}
         ms{"System Fesur"}
@@ -443,7 +443,7 @@ cy{
         sm{"Samöeg"}
         sma{"Sami Deheuol"}
         smj{"Sami Lwle"}
-        smn{"Sami Inari"}
+        smn{"Inari Sami"}
         sms{"Sami Scolt"}
         sn{"Shona"}
         snk{"Soninceg"}
@@ -480,7 +480,7 @@ cy{
         ti{"Tigrinya"}
         tig{"Tigreg"}
         tiv{"Tifeg"}
-        tk{"Twrcmeneg"}
+        tk{"Tyrcmeneg"}
         tkl{"Tocelaweg"}
         tkr{"Tsakhureg"}
         tl{"Tagalog"}
@@ -502,7 +502,7 @@ cy{
         twq{"Tasawaq"}
         ty{"Tahitïeg"}
         tyv{"Twfwnieg"}
-        tzm{"Tamaseit Canolbarth Moroco"}
+        tzm{"Tamazight Canol yr Atlas"}
         udm{"Fotiaceg"}
         ug{"Uighur"}
         uga{"Wgariteg"}
@@ -539,18 +539,24 @@ cy{
         zbl{"Blisssymbols"}
         zea{"Zêlandeg"}
         zgh{"Tamaseit Safonol"}
-        zh{"Tsieineeg"}
-        zh_Hans{"Tsieineeg Symledig"}
-        zh_Hant{"Tsieineeg Traddodiadol"}
+        zh{"Tsieinëeg"}
+        zh_Hans{"Tsieinëeg Symledig"}
+        zh_Hant{"Tsieinëeg Traddodiadol"}
         zu{"Swlw"}
         zun{"Swni"}
         zxx{"Dim cynnwys ieithyddol"}
         zza{"Sasäeg"}
     }
+    Languages%long{
+        zh_Hans{"Tsieinëeg Mandarin Symledig"}
+        zh_Hant{"Tsieinëeg Mandarin Traddodiadol"}
+    }
+    Languages%menu{
+        yue{"Tsieinëeg, Cantoneg"}
+        zh{"Tsieinëeg, Mandarin"}
+    }
     Languages%short{
         az{"Aseri"}
-        en_GB{"Saesneg (DU)"}
-        en_US{"Saesneg (UDA)"}
     }
     Scripts{
         Arab{"Arabaidd"}
@@ -584,7 +590,6 @@ cy{
         Mlym{"Malayalamaidd"}
         Mong{"Mongolaidd"}
         Mymr{"Myanmaraidd"}
-        Ogam{"Ogam"}
         Orya{"Orïaidd"}
         Sinh{"Sinhanaidd"}
         Taml{"Tamilaidd"}
@@ -702,23 +707,13 @@ cy{
         ALUKU{"tafodiaith Aluku"}
         AREVELA{"Armeneg Dwyreiniol"}
         AREVMDA{"Armeneg Gorllewinol"}
-        BAUDDHA{"BAUDDHA"}
-        BISCAYAN{"BISCAYAN"}
         BOHORIC{"Gwyddor Bohorič"}
         DAJNKO{"gwyddor Dajnko"}
         EMODENG{"Saesneg Modern Cynnar"}
         FONIPA{"Seineg IPA"}
         FONUPA{"Seineg UPA"}
-        FONXSAMP{"FONXSAMP"}
-        HOGNORSK{"HOGNORSK"}
-        ITIHASA{"ITIHASA"}
-        JAUER{"JAUER"}
-        JYUTPING{"JYUTPING"}
         KKCOR{"yr Orgraff Gyffredin"}
-        KOCIEWIE{"KOCIEWIE"}
         KSCOR{"yr Orgraff Safonol"}
-        LAUKIKA{"LAUKIKA"}
-        LUNA1918{"LUNA1918"}
         METELKO{"gwyddor Metelko"}
         NDYUKA{"tafodiaith Ndyuka"}
         NEDIS{"tafodiaith Natisone"}
@@ -727,13 +722,8 @@ cy{
         PAMAKA{"tafodiaith Pamaka"}
         POSIX{"Cyfrifiadur"}
         SCOTLAND{"Saesneg Safonol yr Alban"}
-        SURMIRAN{"SURMIRAN"}
-        SURSILV{"SURSILV"}
-        SUTSILV{"SUTSILV"}
-        VAIDIKA{"VAIDIKA"}
-        VALLADER{"VALLADER"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — y cwbl"}
         category-list{"{0}: {1}"}

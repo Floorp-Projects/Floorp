@@ -46,7 +46,7 @@ es_GT{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -130,18 +130,14 @@ es_GT{
                 "d/MM/y",
                 "d/MM/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
                         am{"a. m."}
                         pm{"p. m."}
                     }
@@ -204,15 +200,6 @@ es_GT{
         }
     }
     fields{
-        day{
-            relative{
-                "-1"{"ayer"}
-                "-2"{"anteayer"}
-                "0"{"hoy"}
-                "1"{"mañana"}
-                "2"{"pasado mañana"}
-            }
-        }
         dayperiod{
             dn{"a. m./p. m."}
         }

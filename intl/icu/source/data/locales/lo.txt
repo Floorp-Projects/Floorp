@@ -19,10 +19,10 @@ lo{
         "[ກ ຂ ຄ ງ ຈ ສ ຊ ຍ ດ ຕ ຖ ທ ນ ບ ປ ຜ ຝ ພ ຟ ມ ຢ ຣ ລ ວ ຫ {ຫງ} {ຫຍ} {ຫນ} {ຫມ} {ຫລ} "
         "{ຫວ} ອ ຮ]"
     }
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
@@ -263,7 +263,7 @@ lo{
         }
         native{"laoo"}
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -732,19 +732,6 @@ lo{
                 yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
                 GyM{
                     G{"GGGGG M/y – GGGGG M/y"}
                     M{"GGGGG M/y – M/y"}
@@ -859,10 +846,6 @@ lo{
             AmPmMarkersAbbr{
                 "ກ່ອນທ່ຽງ",
                 "ຫຼັງທ່ຽງ",
-            }
-            AmPmMarkersNarrow{
-                "ກທ",
-                "ຫຼທ",
             }
             DateTimePatterns{
                 "H ໂມງ m ນາທີ ss ວິນາທີ zzzz",
@@ -1025,10 +1008,10 @@ lo{
                     narrow{
                         afternoon1{"ຕອນທ່ຽງ"}
                         evening1{"ຕອນແລງ"}
-                        midnight{"ທຄ"}
+                        midnight{"ທ່ຽງຄືນ"}
                         morning1{"ຕອນເຊົ້າ"}
                         night1{"ກາງຄືນ"}
-                        noon{"ທ"}
+                        noon{"ຕອນທ່ຽງ"}
                     }
                     wide{
                         afternoon1{"ຕອນບ່າຍ"}
@@ -1052,13 +1035,10 @@ lo{
                     }
                     narrow{
                         afternoon1{"ສ"}
-                        am{"ກທ"}
-                        evening1{"ລ"}
-                        midnight{"ທຄ"}
-                        morning1{"ຊ"}
-                        night1{"ກຄ"}
+                        evening1{"ແລງ"}
+                        morning1{"​ເຊົ້າ"}
+                        night1{"​ກາງ​ຄືນ"}
                         noon{"ຕອນທ່ຽງ"}
-                        pm{"ຫຼທ"}
                     }
                     wide{
                         afternoon1{"ສວຍ"}
@@ -1091,15 +1071,6 @@ lo{
                 }
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"G y – G y"}
                     y{"G y–y"}
@@ -2028,7 +1999,7 @@ lo{
         african_scripts{"ແບບຂຽນອາຟຣິກັນ"}
         american_scripts{"ແບບຂຽນອາເມຣິກັນ"}
         animal{"ສັດ"}
-        animals_nature{"ສັດ ແລະ ທຳມະຊາດ"}
+        animals_nature{"ສັດ ຫຼື ທຳມະຊາດ"}
         arrows{"ລູກສອນ"}
         body{"ຮ່າງກາຍ"}
         box_drawing{"ການແຕ້ມກ່ອງ"}
@@ -2081,7 +2052,7 @@ lo{
         nature{"ທຳມະຊາດ"}
         nonspacing{"ບໍ່ມີຍະຫວ່າງ"}
         numbers{"ຕົວເລກ"}
-        objects{"ອອບເຈັກ"}
+        objects{"ວັດຖຸ"}
         other{"ອື່ນໆ"}
         paired{"ຈັບຄູ່ແລ້ວ"}
         person{"ຄົນ"}
@@ -2100,7 +2071,7 @@ lo{
         spacing{"ຊ່ອງຫວ່າງ"}
         sport{"ກິລາ"}
         symbols{"ສັນຍາລັກ"}
-        technical_symbols{"ສັນຍາລັກທາງເທັກນິກ"}
+        technical_symbols{"ສັນຍາລັກທາງເຕັກນິກ"}
         tone_marks{"ັວັນນະຍຸດ"}
         travel{"ທ່ອງທ່ຽວ"}
         travel_places{"ທ່ອງທ່ຽວ ແລະ ສະຖານທີ່ຕ່າງໆ"}
@@ -2215,11 +2186,6 @@ lo{
             }
         }
         fri-narrow{
-            relative{
-                "-1"{"ສຸ. ແລ້ວ"}
-                "0"{"ສຸ. ນີ້"}
-                "1"{"ສຸ. ໜ້າ"}
-            }
             relativeTime{
                 future{
                     other{"ໃນອີກ {0} ວັນສຸກ"}
@@ -2287,7 +2253,7 @@ lo{
             }
             relativeTime{
                 future{
-                    other{"{0} ໃນອີກ 0 ນາທີ"}
+                    other{"ໃນອີກ {0} ນາທີ"}
                 }
                 past{
                     other{"{0} ນາທີກ່ອນ"}
@@ -2332,11 +2298,6 @@ lo{
             }
         }
         mon-narrow{
-            relative{
-                "-1"{"ຈ. ແລ້ວ"}
-                "0"{"ຈ. ນີ້"}
-                "1"{"ຈ. ໜ້າ"}
-            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນຈັນ"}
@@ -2421,9 +2382,6 @@ lo{
                 future{
                     other{"ໃນ {0} ຕມ."}
                 }
-                past{
-                    other{"{0} ຕມ. ກ່ອນ"}
-                }
             }
         }
         quarter-short{
@@ -2453,11 +2411,6 @@ lo{
             }
         }
         sat-narrow{
-            relative{
-                "-1"{"ສ. ແລ້ວ"}
-                "0"{"ສ. ນີ້"}
-                "1"{"ສ. ໜ້າ"}
-            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນເສົາ"}
@@ -2534,11 +2487,6 @@ lo{
             }
         }
         sun-narrow{
-            relative{
-                "-1"{"ອາ. ແລ້ວ"}
-                "0"{"ອາ. ນີ້"}
-                "1"{"ອາ. ໜ້າ"}
-            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນອາທິດ"}
@@ -2579,11 +2527,6 @@ lo{
             }
         }
         thu-narrow{
-            relative{
-                "-1"{"ພຫ. ແລ້ວ"}
-                "0"{"ພຫ. ນີ້"}
-                "1"{"ພຫ. ໜ້າ"}
-            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນພະຫັດ"}
@@ -2669,11 +2612,6 @@ lo{
             }
         }
         wed-narrow{
-            relative{
-                "-1"{"ພຸ. ແລ້ວ"}
-                "0"{"ພຸ. ນີ້"}
-                "1"{"ພຸ. ໜ້າ"}
-            }
             relativeTime{
                 future{
                     other{"ໃນ {0} ວັນພຸດ"}
@@ -2824,7 +2762,6 @@ lo{
         standard{
             2{"{0} ແລະ {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         standard-short{
@@ -2853,8 +2790,8 @@ lo{
         }
     }
     measurementSystemNames{
-        UK{"ອັງກິດ"}
-        US{"ອາເມຣິກາ"}
+        UK{"ສະຫະລາດຊະອານາຈັກອັງກິດ"}
+        US{"ສະຫະລັດອາເມລິກາ"}
         metric{"ເມທຣິກ"}
     }
 }

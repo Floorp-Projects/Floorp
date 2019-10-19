@@ -4,8 +4,8 @@ gl{
     Countries{
         001{"Mundo"}
         002{"África"}
-        003{"Norteamérica"}
-        005{"Suramérica"}
+        003{"América do Norte"}
+        005{"América do Sur"}
         009{"Oceanía"}
         011{"África Occidental"}
         013{"América Central"}
@@ -14,7 +14,7 @@ gl{
         017{"África Central"}
         018{"África Meridional"}
         019{"América"}
-        021{"América do Norte"}
+        021{"América Setentrional"}
         029{"Caribe"}
         030{"Asia Oriental"}
         034{"Asia Meridional"}
@@ -22,7 +22,7 @@ gl{
         039{"Europa Meridional"}
         053{"Australasia"}
         054{"Melanesia"}
-        057{"Rexión da Micronesia"}
+        057{"Rexión de Micronesia"}
         061{"Polinesia"}
         142{"Asia"}
         143{"Asia Central"}
@@ -77,7 +77,7 @@ gl{
         CF{"República Centroafricana"}
         CG{"República do Congo"}
         CH{"Suíza"}
-        CI{"Costa do Marfil"}
+        CI{"Côte d’Ivoire"}
         CK{"Illas Cook"}
         CL{"Chile"}
         CM{"Camerún"}
@@ -164,7 +164,7 @@ gl{
         KR{"Corea do Sur"}
         KW{"Kuwait"}
         KY{"Illas Caimán"}
-        KZ{"Casaquistán"}
+        KZ{"Kazakistán"}
         LA{"Laos"}
         LB{"O Líbano"}
         LC{"Santa Lucía"}
@@ -253,7 +253,7 @@ gl{
         SV{"O Salvador"}
         SX{"Sint Maarten"}
         SY{"Siria"}
-        SZ{"Suazilandia"}
+        SZ{"Eswatini"}
         TA{"Tristán da Cunha"}
         TC{"Illas Turks e Caicos"}
         TD{"Chad"}
@@ -277,7 +277,7 @@ gl{
         UN{"Nacións Unidas"}
         US{"Os Estados Unidos"}
         UY{"O Uruguai"}
-        UZ{"Uzbequistán"}
+        UZ{"Uzbekistán"}
         VA{"Cidade do Vaticano"}
         VC{"San Vicente e As Granadinas"}
         VE{"Venezuela"}
@@ -287,6 +287,8 @@ gl{
         VU{"Vanuatu"}
         WF{"Wallis e Futuna"}
         WS{"Samoa"}
+        XA{"Pseudoacentos"}
+        XB{"Pseudobidireccional"}
         XK{"Kosovo"}
         YE{"O Iemen"}
         YT{"Mayotte"}
@@ -306,11 +308,11 @@ gl{
     Countries%variant{
         CD{"Congo (RDC)"}
         CG{"Congo (RC)"}
-        CI{"CI"}
+        CI{"Costa do Marfil"}
         CZ{"República Checa"}
         FK{"Illas Malvinas (Falkland)"}
         SZ{"Suacilandia"}
         TL{"TL"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

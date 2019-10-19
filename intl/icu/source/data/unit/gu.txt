@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 gu{
-    Version{"2.1.48.42"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -106,6 +106,7 @@ gu{
         }
         compound{
             per{"{0} પ્રતિ {1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -247,6 +248,11 @@ gu{
                 other{"{0} દિવસ"}
                 per{"{0} પ્રતિ દિવસ"}
             }
+            decade{
+                dnam{"દાયકા"}
+                one{"{0} દાયકો"}
+                other{"{0} દાયકા"}
+            }
             hour{
                 dnam{"કલાક"}
                 one{"{0} કલાક"}
@@ -362,6 +368,11 @@ gu{
                 one{"{0} કિલોવૉટ કલાક"}
                 other{"{0} કિલોવૉટ-કલાક"}
             }
+            therm-us{
+                dnam{"યુએસ થર્મ"}
+                one{"{0} યુએસ થર્મ"}
+                other{"{0} યુએસ થર્મ"}
+            }
         }
         force{
             newton{
@@ -395,6 +406,36 @@ gu{
                 dnam{"મેગાહર્ટ્ઝ"}
                 one{"{0} મેગાહર્ટ્ઝ"}
                 other{"{0} મેગાહર્ટ્ઝ"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"ડૉટ્સ પ્રતિ સેન્ટિમીટર"}
+                one{"{0} ડૉટ પ્રતિ સેન્ટિમીટર"}
+                other{"{0} ડૉટ્સ પ્રતિ સેન્ટિમીટર"}
+            }
+            dot-per-inch{
+                dnam{"ડૉટ્સ પ્રતિ ઇંચ"}
+                one{"{0} ડૉટ પ્રતિ ઇંચ"}
+                other{"{0} ડૉટ્સ પ્રતિ ઇંચ"}
+            }
+            em{
+                dnam{"ટાઇપોગ્રાફિક એમ"}
+            }
+            pixel{
+                dnam{"પિક્સેલ"}
+                one{"{0} પિક્સેલ"}
+                other{"{0} પિક્સેલ"}
+            }
+            pixel-per-centimeter{
+                dnam{"પિક્સેલ પ્રતિ સેન્ટિમીટર"}
+                one{"{0} પિક્સેલ પ્રતિ સેન્ટિમીટર"}
+                other{"{0} પિક્સેલ પ્રતિ સેન્ટિમીટર"}
+            }
+            pixel-per-inch{
+                dnam{"પિક્સેલ પ્રતિ ઇંચ"}
+                one{"{0} પિક્સેલ પ્રતિ ઇંચ"}
+                other{"{0} પિક્સેલ પ્રતિ ઇંચ"}
             }
         }
         length{
@@ -625,6 +666,11 @@ gu{
                 one{"{0} વાતાવરણ"}
                 other{"{0} વાતાવરણ"}
             }
+            bar{
+                dnam{"બાર"}
+                one{"{0} બાર"}
+                other{"{0} બાર"}
+            }
             hectopascal{
                 dnam{"હેક્ટૉપાસ્કલ"}
                 one{"{0} હેક્ટૉપાસ્કલ"}
@@ -654,6 +700,11 @@ gu{
                 dnam{"પારાનું મિલિમીટર"}
                 one{"{0} પારાનું મિલિમીટર"}
                 other{"{0} પારાનું મિલિમીટર"}
+            }
+            pascal{
+                dnam{"પાસ્કલ"}
+                one{"{0} પાસ્કલ"}
+                other{"{0} પાસ્કલ"}
             }
             pound-per-square-inch{
                 dnam{"પાઉન્ડ પ્રતિ વર્ગ ઇંચ"}
@@ -878,6 +929,13 @@ gu{
         compound{
             per{"{0}/{1}"}
         }
+        concentr{
+            percent{
+                dnam{"%"}
+                one{"{0}%"}
+                other{"{0}%"}
+            }
+        }
         consumption{
             liter-per-100kilometers{
                 dnam{"લિ/100 કિમી"}
@@ -984,6 +1042,7 @@ gu{
                 other{"{0} માઇલ"}
             }
             mile-scandinavian{
+                dnam{"smi"}
                 one{"{0}smi"}
                 other{"{0}smi"}
             }
@@ -1033,7 +1092,25 @@ gu{
                 other{"{0}સ્ટોન"}
             }
         }
+        power{
+            horsepower{
+                one{"{0} hp"}
+                other{"{0} hp"}
+            }
+            kilowatt{
+                one{"{0} kW"}
+                other{"{0} kW"}
+            }
+            watt{
+                one{"{0} W"}
+                other{"{0} W"}
+            }
+        }
         pressure{
+            hectopascal{
+                one{"{0} hPa"}
+                other{"{0} hPa"}
+            }
             inch-hg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
@@ -1061,6 +1138,10 @@ gu{
                 dnam{"°C"}
                 one{"{0}°C"}
                 other{"{0}°C"}
+            }
+            fahrenheit{
+                one{"{0}°F"}
+                other{"{0}°F"}
             }
         }
         volume{
@@ -1199,9 +1280,13 @@ gu{
             }
             percent{
                 dnam{"ટકા"}
+                one{"{0}%"}
+                other{"{0}%"}
             }
             permille{
                 dnam{"પ્રતિમાઈલ"}
+                one{"{0}‰"}
+                other{"{0}‰"}
             }
             permyriad{
                 dnam{"પરમિરિયડ"}
@@ -1306,6 +1391,11 @@ gu{
                 one{"{0} દિવસ"}
                 other{"{0} દિવસ"}
                 per{"{0}/ દિવસ"}
+            }
+            decade{
+                dnam{"દાયકા"}
+                one{"{0} દા"}
+                other{"{0} દા"}
             }
             hour{
                 dnam{"કલાક"}
@@ -1422,6 +1512,11 @@ gu{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"યુએસ થર્મ"}
+                one{"{0} યુએસ થર્મ"}
+                other{"{0} યુએસ થર્મ"}
+            }
         }
         force{
             newton{
@@ -1455,6 +1550,11 @@ gu{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            pixel{
+                dnam{"પિક્સેલ"}
             }
         }
         length{
@@ -1674,12 +1774,22 @@ gu{
                 other{"{0} mW"}
             }
             watt{
-                dnam{"watt"}
+                dnam{"વૉટ"}
                 one{"{0} W"}
                 other{"{0} W"}
             }
         }
         pressure{
+            atmosphere{
+                dnam{"atm"}
+                one{"{0} atm"}
+                other{"{0} atm"}
+            }
+            bar{
+                dnam{"બાર"}
+                one{"{0} બાર"}
+                other{"{0} બાર"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -1709,6 +1819,11 @@ gu{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"psi"}

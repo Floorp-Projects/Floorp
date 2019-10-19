@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 et{
-    AuxExemplarCharacters{"[á à â å ā æ ç é è ê ë ē í ì î ï ī ñ ó ò ŏ ô ø ō œ ú ù û ū]"}
+    AuxExemplarCharacters{"[á à â å ã ā æ ç é è ê ë ē í ì î ï ī ñ ó ò ŏ ô ø ō œ ú ù û ū]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -11,9 +11,9 @@ et{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s š z ž t u v w õ ä ö ü x y]"}
-    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S Š Z Ž T U V Õ Ä Ö Ü X Y]"}
+    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S Š Z Ž T U V W Õ Ä Ö Ü X Y]"}
     ExemplarCharactersNumbers{"[  , % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . “ „ ( ) \\[ \\] \\{ \\} @]"}
+    ExemplarCharactersPunctuation{"[\\- ‑ – , ; \\: ! ? . “ „ ( ) \\[ \\] \\{ \\} @]"}
     MoreInformation{"?"}
     NumberElements{
         default{"latn"}
@@ -27,6 +27,7 @@ et{
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -121,16 +122,16 @@ et{
                         other{"000 mld ¤"}
                     }
                     1000000000000{
-                        one{"0 trl ¤"}
-                        other{"0 trl ¤"}
+                        one{"0 trln ¤"}
+                        other{"0 trln ¤"}
                     }
                     10000000000000{
-                        one{"00 trl ¤"}
-                        other{"00 trl ¤"}
+                        one{"00 trln ¤"}
+                        other{"00 trln ¤"}
                     }
                     100000000000000{
-                        one{"000 trl ¤"}
-                        other{"000 trl ¤"}
+                        one{"000 trln ¤"}
+                        other{"000 trln ¤"}
                     }
                 }
                 decimalFormat{
@@ -193,7 +194,9 @@ et{
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -208,7 +211,7 @@ et{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     calendar{
         buddhist{
             eras{
@@ -339,30 +342,6 @@ et{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
                 GyMMM{
                     G{"MMM y G – MMM y G"}
                     M{"MMM–MMM y G"}
@@ -379,12 +358,6 @@ et{
                     M{"d. MMM y G – d. MMM"}
                     d{"d.–d. MMM y G"}
                     y{"d. MMM y G – d. MMM y"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH–HH"}
@@ -437,6 +410,9 @@ et{
                     a{"h:mm a – h:mm a v"}
                     h{"h:mm–h:mm a v"}
                     m{"h:mm–h:mm a v"}
+                }
+                hv{
+                    h{"h–h a v"}
                 }
                 y{
                     y{"y–y G"}
@@ -727,29 +703,9 @@ et{
                 }
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"y G – y G"}
                     y{"y–y G"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
                 }
                 GyMMM{
                     G{"MMM y G – MMM y G"}
@@ -767,12 +723,6 @@ et{
                     M{"d. MMM – d. MMM y G"}
                     d{"d.–d. MMM y G"}
                     y{"d. MMM y – d. MMM y G"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH–HH"}
@@ -1376,6 +1326,11 @@ et{
         }
         month-narrow{
             dn{"k"}
+            relative{
+                "-1"{"eelm. k"}
+                "0"{"see k"}
+                "1"{"järgm. k"}
+            }
             relativeTime{
                 future{
                     one{"{0} k pärast"}
@@ -1389,6 +1344,11 @@ et{
         }
         month-short{
             dn{"k"}
+            relative{
+                "-1"{"eelm. kuu"}
+                "0"{"see kuu"}
+                "1"{"järgm. kuu"}
+            }
             relativeTime{
                 future{
                     one{"{0} kuu pärast"}
@@ -1772,6 +1732,11 @@ et{
         }
         week-narrow{
             dn{"näd"}
+            relative{
+                "-1"{"eelm. n"}
+                "0"{"see n"}
+                "1"{"järgm. n"}
+            }
             relativePeriod{"{0} nädal"}
             relativeTime{
                 future{
@@ -1786,6 +1751,11 @@ et{
         }
         week-short{
             dn{"näd"}
+            relative{
+                "-1"{"eelm. näd"}
+                "0"{"see näd"}
+                "1"{"järgm. näd"}
+            }
             relativePeriod{"{0} näd"}
             relativeTime{
                 future{
@@ -1845,6 +1815,11 @@ et{
         }
         year-narrow{
             dn{"a"}
+            relative{
+                "-1"{"eelm. a"}
+                "0"{"see a"}
+                "1"{"järgm. a"}
+            }
             relativeTime{
                 future{
                     one{"{0} a pärast"}
@@ -1858,6 +1833,11 @@ et{
         }
         year-short{
             dn{"a"}
+            relative{
+                "-1"{"eelmine a"}
+                "0"{"käesolev a"}
+                "1"{"järgmine a"}
+            }
             relativeTime{
                 future{
                     one{"{0} a pärast"}
@@ -1895,8 +1875,6 @@ et{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} ja {1}"}

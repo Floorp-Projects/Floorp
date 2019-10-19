@@ -5,12 +5,12 @@ pt{
         calendar{"Calendário"}
         cf{"Formato de moeda"}
         colAlternate{"Ignorar classificação de símbolos"}
-        colBackwards{"Classificação reversa de acentos"}
+        colBackwards{"Classificação de acentos invertida"}
         colCaseFirst{"Ordem de maiúsculas/minúsculas"}
-        colCaseLevel{"Ordem com diferenciação de maiúsculas e minúsculas"}
+        colCaseLevel{"Classificação com distinção entre maiúsculas e minúsculas"}
         colNormalization{"Classificação normalizada"}
         colNumeric{"Classificação numérica"}
-        colStrength{"Intensidade da classificação"}
+        colStrength{"Prioridade da classificação"}
         collation{"Ordenação"}
         currency{"Moeda"}
         hc{"Ciclo de horário (12 vs. 24)"}
@@ -93,7 +93,7 @@ pt{
         car{"caribe"}
         cay{"cayuga"}
         cch{"atsam"}
-        ccp{"Chakma"}
+        ccp{"chakma"}
         ce{"checheno"}
         ceb{"cebuano"}
         cgg{"chiga"}
@@ -545,9 +545,16 @@ pt{
         zxx{"sem conteúdo linguístico"}
         zza{"zazaki"}
     }
+    Languages%long{
+        zh_Hans{"chinês mandarim (simplificado)"}
+        zh_Hant{"chinês mandarim (tradicional)"}
+    }
+    Languages%menu{
+        yue{"cantonês (tradicional)"}
+        zh{"chinês, mandarim"}
+    }
     Languages%short{
-        az{"azeri"}
-        en_US{"inglês (EUA)"}
+        az{"azerbaijano"}
     }
     Languages%variant{
         ps{"pushto"}
@@ -639,7 +646,7 @@ pt{
         Ogam{"ogâmico"}
         Olck{"ol chiki"}
         Orkh{"orkhon"}
-        Orya{"oriya"}
+        Orya{"oriá"}
         Osma{"osmania"}
         Perm{"pérmico antigo"}
         Phag{"phags-pa"}
@@ -771,8 +778,8 @@ pt{
             unihan{"Ordem por Radical-Traços"}
         }
         d0{
-            fwidth{"Extensão total"}
-            hwidth{"Extensão total"}
+            fwidth{"Largura inteira"}
+            hwidth{"Meia largura"}
             npinyin{"Numérico"}
         }
         hc{
@@ -797,7 +804,7 @@ pt{
         }
         numbers{
             arab{"Algarismos indo-arábicos"}
-            arabext{"Algarismos indo-arábicos por extenso"}
+            arabext{"Algarismos indo-arábicos estendidos"}
             armn{"Algarismos armênios"}
             armnlow{"Algarismos armênios minúsculos"}
             beng{"Algarismos bengali"}
@@ -881,7 +888,7 @@ pt{
         VALENCIA{"valenciano"}
         WADEGILE{"romanização Wade-Giles"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — todos"}
         category-list{"{0}: {1}"}

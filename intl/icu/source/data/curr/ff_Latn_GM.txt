@@ -7,5 +7,5 @@ ff_Latn_GM{
             "Dalasi Gammbi",
         }
     }
-    Version{"2.1.49.34"}
+    Version{"36"}
 }

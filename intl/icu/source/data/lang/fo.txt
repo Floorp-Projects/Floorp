@@ -59,6 +59,7 @@ fo{
         bug{"buginesiskt"}
         byn{"blin"}
         ca{"katalani"}
+        ccp{"khakma"}
         ce{"tjetjenskt"}
         ceb{"cebuano"}
         cgg{"chiga"}
@@ -411,10 +412,16 @@ fo{
         zxx{"einki málsligt innihald"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"mandarin kinesiskt (einkult)"}
+        zh_Hant{"mandarin kinesiskt (vanligt)"}
+    }
+    Languages%menu{
+        yue{"kinesiskt, kantonesiskt"}
+        zh{"kinesiskt, mandarin"}
+    }
     Languages%short{
         az{"azeri"}
-        en_GB{"enskt (UK)"}
-        en_US{"enskt (USA)"}
     }
     Scripts{
         Arab{"arabisk"}
@@ -550,7 +557,7 @@ fo{
         POLYTON{"polytonísk"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.48.9"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — Alt"}
         category-list{"{0}: {1}"}

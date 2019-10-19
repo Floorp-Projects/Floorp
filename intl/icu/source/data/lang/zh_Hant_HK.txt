@@ -31,7 +31,6 @@ zh_Hant_HK{
         gil{"吉爾伯特文"}
         gl{"加里西亞文"}
         gsw{"瑞士德文"}
-        hi{"印度文"}
         hmn{"苗語"}
         hr{"克羅地亞文"}
         it{"意大利文"}
@@ -129,7 +128,7 @@ zh_Hant_HK{
         SCOTLAND{"蘇格蘭標準英語"}
         SOTAV{"SOTAV"}
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     characterLabelPattern{
         enclosed{"{0} — 包含"}
         historic{"{0} — 舊式"}

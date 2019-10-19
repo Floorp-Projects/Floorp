@@ -253,7 +253,7 @@ tk{
         SV{"Salwador"}
         SX{"Sint-Marten"}
         SY{"Siriýa"}
-        SZ{"Swazilend"}
+        SZ{"Eswatini"}
         TA{"Tristan-da-Kunýa"}
         TC{"Terks we Kaýkos adalary"}
         TD{"Çad"}
@@ -300,7 +300,7 @@ tk{
     Countries%short{
         GB{"Birleşen Patyşalyk"}
         HK{"Gonkong"}
-        MO{"Makau"}
+        MO{"Makao"}
         PS{"Palestina"}
         US{"ABŞ"}
     }
@@ -310,7 +310,8 @@ tk{
         CI{"Şirmaýy kenar"}
         CZ{"Çeh Respublikasy"}
         FK{"Folklend (Malwina) adalary"}
+        SZ{"Swazilend"}
         TL{"Gündogar Timor"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

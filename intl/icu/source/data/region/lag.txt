@@ -127,7 +127,6 @@ lag{
         MD{"Molidóova"}
         MG{"Bukíini"}
         MH{"Visíiwa vya Marisháali"}
-        MK{"Masedónia"}
         ML{"Máali"}
         MM{"Miáama"}
         MN{"Mongólia"}
@@ -227,5 +226,5 @@ lag{
         ZM{"Sámbia"}
         ZW{"Simbáabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

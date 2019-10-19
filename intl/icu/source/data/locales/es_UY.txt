@@ -14,7 +14,7 @@ es_UY{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -28,10 +28,6 @@ es_UY{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
                         am{"a. m."}
                         pm{"p. m."}
                     }

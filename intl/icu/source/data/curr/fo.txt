@@ -781,7 +781,7 @@ fo{
         }
         AOA{
             one{"Angola kwanza"}
-            other{"Angola kwanza"}
+            other{"Angola kwanzar"}
         }
         ARS{
             one{"Argentina peso"}
@@ -849,7 +849,7 @@ fo{
         }
         BWP{
             one{"Botsvana pula"}
-            other{"Botsvana pula"}
+            other{"Botsvana pular"}
         }
         BYN{
             one{"Hvítarussland ruble"}
@@ -933,7 +933,7 @@ fo{
         }
         ERN{
             one{"Eritrea nakfa"}
-            other{"Eritrea nakfa"}
+            other{"Eritrea nakfar"}
         }
         ETB{
             one{"Etiopia birr"}
@@ -1129,7 +1129,7 @@ fo{
         }
         MRU{
             one{"Móritania ouguiya"}
-            other{"Móritania ouguiya"}
+            other{"Móritania ouguiyar"}
         }
         MUR{
             one{"Móritius rupi"}
@@ -1281,7 +1281,7 @@ fo{
         }
         STN{
             one{"Sao Tome & Prinsipi dobra"}
-            other{"Sao Tome & Prinsipi dobra"}
+            other{"Sao Tome & Prinsipi dobrar"}
         }
         SYP{
             one{"Sýria pund"}
@@ -1420,5 +1420,5 @@ fo{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.9"}
+    Version{"36"}
 }

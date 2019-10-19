@@ -32,7 +32,7 @@ sr_Latn{
         151{"Istočna Evropa"}
         154{"Severna Evropa"}
         155{"Zapadna Evropa"}
-        202{"Afrika južno od Sahare"}
+        202{"Podsaharska Afrika"}
         419{"Latinska Amerika"}
         AC{"Ostrvo Asension"}
         AD{"Andora"}
@@ -107,7 +107,7 @@ sr_Latn{
         ER{"Eritreja"}
         ES{"Španija"}
         ET{"Etiopija"}
-        EU{"Evropska Unija"}
+        EU{"Evropska unija"}
         EZ{"Evrozona"}
         FI{"Finska"}
         FJ{"Fidži"}
@@ -288,8 +288,6 @@ sr_Latn{
         VU{"Vanuatu"}
         WF{"Valis i Futuna"}
         WS{"Samoa"}
-        XA{"XA"}
-        XB{"XB"}
         XK{"Kosovo"}
         YE{"Jemen"}
         YT{"Majot"}
@@ -312,7 +310,8 @@ sr_Latn{
         CI{"Obala Slonovače"}
         CZ{"Češka Republika"}
         FK{"Foklandska (Malvinska) ostrva"}
+        SZ{"Svazilend"}
         TL{"Istočni Timor"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

@@ -311,5 +311,5 @@ nb{
             "1: er =%spellout-ordinal-plural=;",
         }
     }
-    Version{"2.1.27.22"}
+    Version{"36"}
 }

@@ -2,7 +2,16 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_IN{
     %%Parent{"en_001"}
-    Version{"2.1.49.14"}
+    Version{"36"}
+    units{
+        temperature{
+            generic{
+                dnam{"°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+        }
+    }
     unitsNarrow{
         speed{
             kilometer-per-hour{
@@ -16,6 +25,18 @@ en_IN{
             kilometer-per-hour{
                 one{"{0} kph"}
                 other{"{0} kph"}
+            }
+        }
+        temperature{
+            generic{
+                dnam{"°"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+        }
+        volume{
+            cubic-centimeter{
+                per{"{0}/cm³"}
             }
         }
     }

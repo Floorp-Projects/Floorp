@@ -127,7 +127,6 @@ mer{
         MD{"Moldova"}
         MG{"Madagasika"}
         MH{"Aĩrandi cia Marshal"}
-        MK{"Macedonia"}
         ML{"Mali"}
         MM{"Myanima"}
         MN{"Mongolia"}
@@ -227,5 +226,5 @@ mer{
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abiyán"}
@@ -895,7 +895,7 @@ es{
             ec{"Bermudas"}
         }
         "Atlantic:Canary"{
-            ec{"Islas Canarias"}
+            ec{"Canarias"}
         }
         "Atlantic:Cape_Verde"{
             ec{"Cabo Verde"}
@@ -1545,7 +1545,7 @@ es{
             ls{"hora de la Guayana Francesa"}
         }
         "meta:French_Southern"{
-            ls{"hora de las Tierras Australes y Antárticas Francesas"}
+            ls{"hora de Antártida y Territorios Australes Franceses"}
         }
         "meta:GMT"{
             ls{"hora del meridiano de Greenwich"}
@@ -1729,7 +1729,7 @@ es{
             ls{"hora estándar de Moscú"}
         }
         "meta:Myanmar"{
-            ls{"hora de Myanmar (Birmania)"}
+            ls{"hora de Myanmar"}
         }
         "meta:Nauru"{
             ls{"hora de Nauru"}

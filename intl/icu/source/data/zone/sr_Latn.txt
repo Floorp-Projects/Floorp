@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Latn{
     %%Parent{"root"}
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -275,7 +275,7 @@ sr_Latn{
             ec{"Kuiaba"}
         }
         "America:Curacao"{
-            ec{"Kiraso"}
+            ec{"Kurasao"}
         }
         "America:Danmarkshavn"{
             ec{"Danmarkshagen"}
@@ -812,7 +812,7 @@ sr_Latn{
             ec{"Katar"}
         }
         "Asia:Qostanay"{
-            ec{"Qostanay"}
+            ec{"Kostanaj"}
         }
         "Asia:Qyzylorda"{
             ec{"Kizilorda"}

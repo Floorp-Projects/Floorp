@@ -145,7 +145,7 @@ da{
         IL{"Israel"}
         IM{"Isle of Man"}
         IN{"Indien"}
-        IO{"Det britiske territorium i Det Indiske Ocean"}
+        IO{"Det Britiske Territorium i Det Indiske Ocean"}
         IQ{"Irak"}
         IR{"Iran"}
         IS{"Island"}
@@ -257,7 +257,7 @@ da{
         TA{"Tristan da Cunha"}
         TC{"Turks- og Caicosøerne"}
         TD{"Tchad"}
-        TF{"De Franske Besiddelser i Det Sydlige Indiske Ocean"}
+        TF{"De Franske Besiddelser i Det Sydlige Indiske Ocean og Antarktis"}
         TG{"Togo"}
         TH{"Thailand"}
         TJ{"Tadsjikistan"}
@@ -287,6 +287,8 @@ da{
         VU{"Vanuatu"}
         WF{"Wallis og Futuna"}
         WS{"Samoa"}
+        XA{"pseudo-accenter"}
+        XB{"pseudo-bidi"}
         XK{"Kosovo"}
         YE{"Yemen"}
         YT{"Mayotte"}
@@ -306,10 +308,11 @@ da{
     Countries%variant{
         CD{"Den Demokratiske Republik Congo (DRC)"}
         CG{"Republikken Congo"}
+        CI{"Elfenbenskysten"}
         CZ{"Den Tjekkiske Republik"}
         FK{"Falklandsøerne (Islas Malvinas)"}
         SZ{"Swaziland"}
         TL{"Østtimor"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

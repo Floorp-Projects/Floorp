@@ -2,38 +2,27 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_GB{
     %%Parent{"en_001"}
-    Version{"2.1.47.86"}
+    Version{"36"}
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
     units{
-        concentr{
-            percent{
-                dnam{"per cent"}
-                one{"{0} per cent"}
-                other{"{0} per cent"}
-            }
-            permille{
-                dnam{"per mille"}
-                one{"{0} per mille"}
-                other{"{0} per mille"}
+        volume{
+            fluid-ounce-imperial{
+                dnam{"fluid ounces"}
+                one{"{0} fluid ounce"}
+                other{"{0} fluid ounces"}
             }
         }
     }
     unitsShort{
-        concentr{
-            percent{
-                dnam{"per cent"}
-            }
-            permille{
-                dnam{"per mille"}
-            }
-        }
-        mass{
-            stone{
-                other{"{0} st"}
-            }
-        }
         volume{
-            megaliter{
-                other{"{0} Ml"}
+            fluid-ounce-imperial{
+                dnam{"fl oz"}
+                one{"{0} fl oz"}
+                other{"{0} fl oz"}
             }
         }
     }

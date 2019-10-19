@@ -183,7 +183,6 @@ fo{
         MF{"St-Martin"}
         MG{"Madagaskar"}
         MH{"Marshalloyggjar"}
-        MK{"Makedónia"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongolia"}
@@ -253,7 +252,7 @@ fo{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Sýria"}
-        SZ{"Svasiland"}
+        SZ{"Esvatini"}
         TA{"Tristan da Cunha"}
         TC{"Turks- og Caicosoyggjar"}
         TD{"Kjad"}
@@ -287,6 +286,8 @@ fo{
         VU{"Vanuatu"}
         WF{"Wallis- og Futunaoyggjar"}
         WS{"Samoa"}
+        XA{"óekta tónalag"}
+        XB{"óektaður BIDI tekstur"}
         XK{"Kosovo"}
         YE{"Jemen"}
         YT{"Mayotte"}
@@ -303,8 +304,13 @@ fo{
         US{"USA"}
     }
     Countries%variant{
+        CD{"Kongo, Dem. Lýðveldið"}
+        CG{"Kongo"}
+        CI{"Fílabeinsstrondin"}
+        CZ{"Kekkia"}
         FK{"Falklandsoyggjar (Islas Malvinas)"}
-        MK{"Makedónia (FJM)"}
+        SZ{"Svasiland"}
+        TL{"Eysturtimor"}
     }
-    Version{"2.1.48.9"}
+    Version{"36"}
 }

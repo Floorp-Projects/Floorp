@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kk{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиджан"}
@@ -397,7 +397,7 @@ kk{
             ec{"Лима"}
         }
         "America:Los_Angeles"{
-            ec{"Лос-Анжелес"}
+            ec{"Лос-Анджелес"}
         }
         "America:Louisville"{
             ec{"Луисвилл"}
@@ -544,7 +544,7 @@ kk{
             ec{"Сан-Паулу"}
         }
         "America:Scoresbysund"{
-            ec{"Скорсбиссун"}
+            ec{"Иттоккортоормиит"}
         }
         "America:Sitka"{
             ec{"Ситка"}
@@ -810,6 +810,9 @@ kk{
         "Asia:Qatar"{
             ec{"Катар"}
         }
+        "Asia:Qostanay"{
+            ec{"Қостанай"}
+        }
         "Asia:Qyzylorda"{
             ec{"Қызылорда"}
         }
@@ -862,7 +865,7 @@ kk{
             ec{"Томск"}
         }
         "Asia:Ulaanbaatar"{
-            ec{"Улан-Батор"}
+            ec{"Ұланбатыр"}
         }
         "Asia:Urumqi"{
             ec{"Үрімші"}
@@ -1007,7 +1010,7 @@ kk{
             ec{"Гернси"}
         }
         "Europe:Helsinki"{
-            ec{"Хелсинки"}
+            ec{"Хельсинки"}
         }
         "Europe:Isle_of_Man"{
             ec{"Мэн аралы"}

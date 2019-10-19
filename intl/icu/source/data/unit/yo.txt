@@ -1,10 +1,132 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yo{
-    Version{"2.1.48.17"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
         ms{"m:ss"}
+    }
+    units{
+        duration{
+            century{
+                dnam{"ọ̀rúndún"}
+                other{"ọ̀rúndún {0}"}
+            }
+            day{
+                dnam{"ọjọ́"}
+                other{"ọj {0}"}
+                per{"{0}/ọj"}
+            }
+            decade{
+                dnam{"ẹ̀wádùn"}
+                other{"ẹ̀wádùn {0}"}
+            }
+            hour{
+                dnam{"wkt"}
+                other{"{0} wkt"}
+                per{"{0}/wkt"}
+            }
+            minute{
+                dnam{"ìṣ"}
+                other{"{0} ìṣ"}
+                per{"{0}/ìṣ"}
+            }
+            month{
+                dnam{"oṣù"}
+                other{"{0} oṣù"}
+                per{"{0}/oṣù"}
+            }
+            second{
+                dnam{"ìṣ àáy"}
+                other{"{0}ìṣ àáy"}
+                per{"{0}/ìṣ àáy"}
+            }
+            week{
+                dnam{"ọṣ"}
+                other{"{0} ọṣ"}
+                per{"{0}/ọṣ"}
+            }
+            year{
+                dnam{"ọ̀dún"}
+                other{"{0} ọd"}
+                per{"{0} ọd"}
+            }
+        }
+    }
+    unitsNarrow{
+        duration{
+            day{
+                dnam{"ọjọ́"}
+                other{"ọj {0}"}
+            }
+            hour{
+                dnam{"wkt"}
+                other{"{0} wkt"}
+            }
+            minute{
+                dnam{"ìṣ"}
+                other{"{0}/ìṣ"}
+            }
+            month{
+                dnam{"oṣù"}
+                other{"{0} oṣù"}
+            }
+            second{
+                dnam{"ìṣ àáy"}
+                other{"{0} ìṣ àáy"}
+            }
+            week{
+                dnam{"ọṣẹ́"}
+                other{"{0} ọṣ"}
+            }
+            year{
+                dnam{"ọd"}
+                other{"{0} ọd"}
+            }
+        }
+    }
+    unitsShort{
+        duration{
+            day{
+                dnam{"ọjọ́"}
+                other{"{0} ọj"}
+                per{"{0}/ọj"}
+            }
+            decade{
+                dnam{"ẹ̀wádùn"}
+                other{"ẹ̀wádún {0}"}
+            }
+            hour{
+                dnam{"wkt"}
+                other{"{0} wkt"}
+                per{"{0}/wkt"}
+            }
+            minute{
+                dnam{"ìṣ"}
+                other{"{0} ìṣ"}
+                per{"{0}/ìṣ"}
+            }
+            month{
+                dnam{"oṣù"}
+                other{"{0} oṣù"}
+                per{"{0}/oṣù"}
+            }
+            second{
+                dnam{"ìṣ àáy"}
+                other{"{0} ìṣ àáy"}
+                per{"{0} ìṣ àáy"}
+            }
+            week{
+                dnam{"ọṣ"}
+                other{"{0} ọṣ"}
+                per{"{0}/ọṣẹ̀"}
+            }
+            year{
+                dnam{"ọd"}
+                other{"{0} ọd"}
+                per{"{0}/ọd"}
+            }
+        }
     }
 }

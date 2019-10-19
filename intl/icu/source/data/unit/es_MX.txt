@@ -2,34 +2,18 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
-    Version{"2.1.47.96"}
+    Version{"36"}
     units{
-        angle{
-            arc-minute{
-                dnam{"arcominutos"}
-                one{"{0} minuto"}
-                other{"{0} minutos"}
-            }
-            arc-second{
-                dnam{"arcosegundos"}
-                one{"{0} segundo"}
-                other{"{0} segundos"}
-            }
-            revolution{
-                dnam{"revoluciones"}
-            }
-        }
         concentr{
             milligram-per-deciliter{
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}
             }
-        }
-        consumption{
-            mile-per-gallon-imperial{
-                dnam{"mpg Imp."}
-                one{"{0} mpg Imp."}
-                other{"{0} mpg Imp."}
+            millimole-per-liter{
+                dnam{"mmol/L"}
+            }
+            part-per-million{
+                dnam{"ppm"}
             }
         }
         electric{
@@ -38,37 +22,12 @@ es_MX{
                 one{"{0} ohmio"}
                 other{"{0} ohmios"}
             }
-            volt{
-                dnam{"voltios"}
-                one{"{0} voltio"}
-                other{"{0} voltios"}
-            }
         }
         energy{
             kilowatt-hour{
+                dnam{"kilowatts-hora"}
                 one{"kilowatt-hora"}
                 other{"{0} kilowatts-hora"}
-            }
-        }
-        frequency{
-            gigahertz{
-                one{"{0} gigahercio"}
-                other{"{0} gigahercios"}
-            }
-            hertz{
-                dnam{"hercios"}
-                one{"{0} hercio"}
-                other{"{0} hercios"}
-            }
-            kilohertz{
-                dnam{"kilohercios"}
-                one{"{0} kilohercio"}
-                other{"{0} kilohercios"}
-            }
-            megahertz{
-                dnam{"megahercios"}
-                one{"{0} megahercio"}
-                other{"{0} megahercios"}
             }
         }
         length{
@@ -90,50 +49,16 @@ es_MX{
                 one{"{0} pársec"}
                 other{"{0} pársecs"}
             }
-            point{
-                dnam{"pt"}
-                one{"{0} pt"}
-                other{"{0} pt"}
-            }
         }
         light{
             lux{
                 dnam{"lux"}
             }
         }
-        mass{
-            microgram{
-                other{"{0} microgramos"}
-            }
-        }
         power{
-            gigawatt{
-                dnam{"gigavatios"}
-                one{"{0} gigavatio"}
-                other{"{0} gigavatios"}
-            }
             horsepower{
                 one{"{0} caballo de fuerza"}
-            }
-            kilowatt{
-                dnam{"kilovatios"}
-                one{"{0} kilovatio"}
-                other{"{0} kilovatios"}
-            }
-            megawatt{
-                dnam{"megavatios"}
-                one{"{0} megavatio"}
-                other{"{0} megavatios"}
-            }
-            milliwatt{
-                dnam{"milivatios"}
-                one{"{0} milivatio"}
-                other{"{0} milivatios"}
-            }
-            watt{
-                dnam{"vatios"}
-                one{"{0} vatio"}
-                other{"{0} vatios"}
+                other{"{0} caballos de fuerza"}
             }
         }
         temperature{
@@ -157,12 +82,6 @@ es_MX{
                 dnam{"onzas líquidas"}
                 one{"{0} onza líquida"}
                 other{"{0} onzas líquidas"}
-            }
-            gallon-imperial{
-                dnam{"Imp. gal"}
-                one{"{0} gal Imp."}
-                other{"{0} gal Imp."}
-                per{"{0}/gal Imp."}
             }
         }
     }
@@ -203,14 +122,8 @@ es_MX{
             }
         }
         angle{
-            arc-minute{
-                one{"{0} min"}
-                other{"{0} min"}
-            }
             arc-second{
                 dnam{"arcseg"}
-                one{"{0} s"}
-                other{"{0} s"}
             }
             degree{
                 dnam{"º"}
@@ -231,21 +144,8 @@ es_MX{
         }
         consumption{
             mile-per-gallon-imperial{
-                dnam{"mpg Imp."}
-                one{"{0} mpg Imp."}
-                other{"{0} mpg Imp."}
-            }
-        }
-        digital{
-            bit{
-                dnam{"bit"}
-                one{"{0} bit"}
-                other{"{0} bit"}
-            }
-            byte{
-                dnam{"byte"}
-                one{"{0} byte"}
-                other{"{0} byte"}
+                one{"{0} mi/gal imp."}
+                other{"{0} mi/gal imp."}
             }
         }
         duration{
@@ -327,11 +227,6 @@ es_MX{
                 dnam{"km/hora"}
             }
         }
-        temperature{
-            celsius{
-                one{"{0} °C"}
-            }
-        }
         torque{
             newton-meter{
                 dnam{"N⋅m"}
@@ -344,11 +239,6 @@ es_MX{
                 dnam{"tza."}
                 one{"{0} tza."}
                 other{"{0} tzas."}
-            }
-            gallon-imperial{
-                dnam{"Imp. gal"}
-                one{"{0} gal Imp."}
-                other{"{0} gal Imp."}
             }
             pint{
                 dnam{"pt"}

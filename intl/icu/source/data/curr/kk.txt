@@ -668,6 +668,7 @@ kk{
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
+        CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
         CUC{"$"}
@@ -680,7 +681,6 @@ kk{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
-        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -700,6 +700,7 @@ kk{
         KPW{"₩"}
         KRW{"₩"}
         KYD{"$"}
+        KZT{"₸"}
         LAK{"₭"}
         LBP{"L£"}
         LKR{"Rs"}
@@ -720,7 +721,6 @@ kk{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
-        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -1403,5 +1403,5 @@ kk{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

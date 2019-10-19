@@ -50,5 +50,5 @@ ms{
             "2: ke=%spellout-cardinal=;",
         }
     }
-    Version{"2.1.49.24"}
+    Version{"36"}
 }

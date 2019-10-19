@@ -42,7 +42,7 @@ wo{
         CC{"Duni Koko (Kilin)"}
         CF{"Repiblik Sàntar Afrik"}
         CH{"Siwis"}
-        CI{"Kodiwaar (Côte d’Ivoire)"}
+        CI{"Kodiwaar"}
         CK{"Duni Kuuk"}
         CL{"Sili"}
         CM{"Kamerun"}
@@ -254,5 +254,5 @@ wo{
         CD{"Kongo (R K D)"}
         CG{"Réewum Kongo"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

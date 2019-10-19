@@ -2,22 +2,28 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_419{
     Keys{
-        colAlternate{"orden ignorando símbolos"}
-        colBackwards{"orden de acentos con inversión"}
-        colCaseFirst{"orden de mayúsculas/minúsculas"}
-        colCaseLevel{"orden con distinción entre mayúsculas y minúsculas"}
-        lb{"salto de línea"}
-        ms{"sm"}
+        colNormalization{"orden normalizado"}
     }
     Languages{
         ace{"achenés"}
         ady{"adigeo"}
         alt{"altái del sur"}
+        ar_001{"árabe estándar moderno"}
         arp{"arapajó"}
         ars{"árabe de Néyed"}
         bla{"siksiká"}
-        ccp{"chakma"}
+        de_AT{"alemán austríaco"}
+        de_CH{"alto alemán suizo"}
+        en_AU{"inglés australiano"}
+        en_CA{"inglés canadiense"}
+        en_GB{"inglés británico"}
+        en_US{"inglés estadounidense"}
+        es_419{"español latinoamericano"}
+        es_ES{"español de España"}
+        es_MX{"español de México"}
         eu{"vasco"}
+        fr_CA{"francés canadiense"}
+        fr_CH{"francés suizo"}
         goh{"alemán de la alta edad antigua"}
         grc{"griego clásico"}
         gu{"gujarati"}
@@ -25,11 +31,15 @@ es_419{
         kbd{"cabardiano"}
         krc{"karachái-bálkaro"}
         lo{"laosiano"}
-        luo{"luo"}
+        nl_BE{"flamenco"}
         nr{"ndebele del sur"}
         nso{"sesotho del norte"}
+        pa{"panyabí"}
         prg{"prusiano antiguo"}
+        pt_BR{"portugués de Brasil"}
+        pt_PT{"portugués de Portugal"}
         rm{"retorrománico"}
+        ro_MD{"moldavo"}
         shu{"árabe (Chad)"}
         sma{"sami del sur"}
         st{"sesotho del sur"}
@@ -38,15 +48,16 @@ es_419{
         syr{"siríaco"}
         tet{"tetun"}
         tyv{"tuvano"}
-        tzm{"tamazight del Marruecos Central"}
-        vai{"vai"}
         wal{"walamo"}
         wuu{"wu"}
         xal{"calmuco"}
+        zh_Hans{"chino simplificado"}
+        zh_Hant{"chino tradicional"}
         zun{"zuni"}
     }
-    Languages%short{
-        en_GB{"inglés (R.U.)"}
+    Languages%long{
+        zh_Hans{"chino mandarín simplificado"}
+        zh_Hant{"chino mandarín tradicional"}
     }
     Languages%variant{
         ps{"pashtún"}
@@ -85,22 +96,13 @@ es_419{
             eor{"reglas de orden europeas"}
             phonebook{"orden de agenda telefónica"}
         }
-        lb{
-            loose{"salto de línea flexible"}
-            strict{"salto de línea estricto"}
-        }
-        ms{
-            metric{"Sistema Métrico de Unidades"}
-            uksystem{"sistema inglés"}
-            ussystem{"Sistema Anglosajón de Unidades"}
-        }
         numbers{
             tirh{"dígitos en tirh"}
             traditional{"números traducionales"}
             wara{"dígitos en Warang Citi"}
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     characterLabelPattern{
         enclosed{"{0} — Adjunto"}
         extended{"{0} — Extendido"}

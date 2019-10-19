@@ -521,7 +521,7 @@ hu{
         uz{"üzbég"}
         vai{"vai"}
         ve{"venda"}
-        vi{"vietnami"}
+        vi{"vietnámi"}
         vo{"volapük"}
         vot{"votják"}
         vun{"vunjo"}
@@ -556,10 +556,16 @@ hu{
         zxx{"nincs nyelvészeti tartalom"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"kínai (egyszerűsített)"}
+        zh_Hant{"kínai (hagyományos)"}
+    }
+    Languages%menu{
+        yue{"kantoni kínai"}
+        zh{"mandarin"}
+    }
     Languages%short{
         az{"azeri"}
-        en_GB{"angol (UK)"}
-        en_US{"angol (USA)"}
     }
     Scripts{
         Arab{"Arab"}
@@ -662,7 +668,10 @@ hu{
         Saur{"Szaurastra"}
         Sgnw{"Jelírás"}
         Shaw{"Shaw ábécé"}
+        Sidd{"Sziddham"}
         Sinh{"Szingaléz"}
+        Sogd{"Szogd"}
+        Sogo{"Ószogd"}
         Sund{"Szundanéz"}
         Sylo{"Sylheti nagári"}
         Syrc{"Szíriai"}
@@ -762,6 +771,7 @@ hu{
             compat{"Előző rendezési sorrend a kompatibilitás érdekében"}
             dictionary{"Szótári rendezési sorrend"}
             ducet{"Alapértelmezett Unicode rendezési sorrend"}
+            emoji{"Emodzsi rendezési sorrend"}
             eor{"Európai rendezési szabályok"}
             gb2312han{"Egyszerűsített kínai sorrend - GB2312"}
             phonebook{"Telefonkönyv sorrend"}
@@ -901,7 +911,7 @@ hu{
         VALLADER{"Vallader"}
         WADEGILE{"Wade-Giles átírás"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – összes"}
         category-list{"{0}: {1}"}

@@ -140,6 +140,7 @@ en{
         chp{"Chipewyan"}
         chr{"Cherokee"}
         chy{"Cheyenne"}
+        cic{"Chickasaw"}
         ckb{"Central Kurdish"}
         co{"Corsican"}
         cop{"Coptic"}
@@ -408,7 +409,7 @@ en{
         mt{"Maltese"}
         mua{"Mundang"}
         mul{"Multiple languages"}
-        mus{"Creek"}
+        mus{"Muscogee"}
         mwl{"Mirandese"}
         mwr{"Marwari"}
         mwv{"Mentawai"}
@@ -661,6 +662,12 @@ en{
     }
     Languages%long{
         zh{"Mandarin Chinese"}
+        zh_Hans{"Simplified Mandarin Chinese"}
+        zh_Hant{"Traditional Mandarin Chinese"}
+    }
+    Languages%menu{
+        yue{"Chinese, Cantonese"}
+        zh{"Chinese, Mandarin"}
     }
     Languages%short{
         az{"Azeri"}
@@ -807,6 +814,7 @@ en{
         Phnx{"Phoenician"}
         Plrd{"Pollard Phonetic"}
         Prti{"Inscriptional Parthian"}
+        Qaag{"Zawgyi"}
         Rjng{"Rejang"}
         Rohg{"Hanifi Rohingya"}
         Roro{"Rongorongo"}
@@ -1257,7 +1265,7 @@ en{
         VALENCIA{"Valencian"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"2.1.48.65"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — all"}
         category-list{"{0}: {1}"}

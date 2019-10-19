@@ -16,6 +16,7 @@
 *   created by: George Rhoten
 */
 
+#include "unicode/utypes.h"
 #include "mutex.h"
 #include "ucln.h"
 #include "ucln_io.h"

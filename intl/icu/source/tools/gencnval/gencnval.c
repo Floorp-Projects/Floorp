@@ -582,6 +582,7 @@ addTaggedAlias(uint16_t tag, const char *alias, uint16_t converter) {
 
 static void
 addOfficialTaggedStandards(char *line, int32_t lineLen) {
+    (void) lineLen; // suppress compiler warnings about unused variable
     char *atag;
     char *endTagExp;
     char *tag;

@@ -127,7 +127,6 @@ lu{
         MD{"Molidavi"}
         MG{"Madagasikari"}
         MH{"Lutanda lua Marishale"}
-        MK{"Masedwane"}
         ML{"Mali"}
         MM{"Myamare"}
         MN{"Mongoli"}
@@ -227,5 +226,5 @@ lu{
         ZM{"Zambi"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

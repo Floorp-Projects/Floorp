@@ -4,22 +4,22 @@ fr{
     Keys{
         calendar{"calendrier"}
         cf{"format de devise"}
-        colAlternate{"Tri ne tenant pas compte des symboles"}
-        colBackwards{"Tri inversé des caractères accentués"}
-        colCaseFirst{"Classement basé sur les majuscules et les minuscules"}
-        colCaseLevel{"Tri sensible à la casse"}
-        colNormalization{"Tri normalisé"}
-        colNumeric{"Tri numérique"}
-        colStrength{"Priorité du tri"}
+        colAlternate{"tri ne tenant pas compte des symboles"}
+        colBackwards{"tri inversé des caractères accentués"}
+        colCaseFirst{"classement basé sur les majuscules et les minuscules"}
+        colCaseLevel{"tri sensible à la casse"}
+        colNormalization{"tri normalisé"}
+        colNumeric{"tri numérique"}
+        colStrength{"priorité du tri"}
         collation{"ordre de tri"}
         currency{"devise"}
         hc{"système horaire (12 ou 24 heures)"}
         lb{"style de saut de ligne"}
         ms{"système de mesure"}
         numbers{"nombres"}
-        timezone{"Fuseau horaire"}
-        va{"Variante locale"}
-        x{"Usage privé"}
+        timezone{"fuseau horaire"}
+        va{"variante locale"}
+        x{"usage privé"}
     }
     Languages{
         aa{"afar"}
@@ -640,10 +640,16 @@ fr{
         zxx{"sans contenu linguistique"}
         zza{"zazaki"}
     }
+    Languages%long{
+        zh_Hans{"mandarin simplifié"}
+        zh_Hant{"mandarin traditionnel"}
+    }
+    Languages%menu{
+        yue{"chinois cantonais"}
+        zh{"chinois mandarin"}
+    }
     Languages%short{
         az{"azéri"}
-        en_GB{"anglais (R.-U.)"}
-        en_US{"anglais (É.-U.)"}
     }
     Languages%variant{
         ps{"pashto"}
@@ -977,7 +983,7 @@ fr{
         VALENCIA{"valencien"}
         WADEGILE{"Wade-Giles"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — tout"}
         category-list{"{0} : {1}"}

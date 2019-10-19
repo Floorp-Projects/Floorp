@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 it{
-    Version{"2.1.48.42"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -247,6 +247,11 @@ it{
                 other{"{0} giorni"}
                 per{"{0} al giorno"}
             }
+            decade{
+                dnam{"decadi"}
+                one{"{0} decade"}
+                other{"{0} decadi"}
+            }
             hour{
                 dnam{"ore"}
                 one{"{0} ora"}
@@ -362,6 +367,11 @@ it{
                 one{"{0} chilowattora"}
                 other{"{0} chilowattora"}
             }
+            therm-us{
+                dnam{"therm US"}
+                one{"{0} therm US"}
+                other{"{0} therm US"}
+            }
         }
         force{
             newton{
@@ -395,6 +405,18 @@ it{
                 dnam{"megahertz"}
                 one{"{0} megahertz"}
                 other{"{0} megahertz"}
+            }
+        }
+        graphics{
+            pixel{
+                dnam{"pixel"}
+                one{"{0} pixel"}
+                other{"{0} pixel"}
+            }
+            pixel-per-centimeter{
+                dnam{"pixel per centimetro"}
+                one{"{0} pixel per centimetro"}
+                other{"{0} pixel per centimetro"}
             }
         }
         length{
@@ -719,9 +741,9 @@ it{
                 other{"{0} acre-feet"}
             }
             barrel{
-                dnam{"barrel"}
-                one{"{0} barrel"}
-                other{"{0} barrel"}
+                dnam{"barile"}
+                one{"{0} barile"}
+                other{"{0} barili"}
             }
             bushel{
                 dnam{"staia"}
@@ -989,7 +1011,6 @@ it{
                 other{"{0}al"}
             }
             meter{
-                dnam{"metro"}
                 one{"{0}m"}
                 other{"{0}m"}
             }
@@ -1213,11 +1234,6 @@ it{
                 one{"{0} mmol/l"}
                 other{"{0} mmol/l"}
             }
-            mole{
-                dnam{"mol"}
-                one{"{0} mol"}
-                other{"{0} mol"}
-            }
             part-per-million{
                 dnam{"ppm"}
                 one{"{0} ppm"}
@@ -1232,11 +1248,6 @@ it{
                 dnam{"‰"}
                 one{"{0}‰"}
                 other{"{0}‰"}
-            }
-            permyriad{
-                dnam{"‱"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -1337,6 +1348,11 @@ it{
                 other{"{0} giorni"}
                 per{"{0}/giorno"}
             }
+            decade{
+                dnam{"dec."}
+                one{"{0} dec."}
+                other{"{0} dec."}
+            }
             hour{
                 dnam{"h"}
                 one{"{0} h"}
@@ -1422,11 +1438,6 @@ it{
                 one{"{0} cal"}
                 other{"{0} cal"}
             }
-            electronvolt{
-                dnam{"eV"}
-                one{"{0} eV"}
-                other{"{0} eV"}
-            }
             foodcalorie{
                 dnam{"Cal"}
                 one{"{0} Cal"}
@@ -1452,17 +1463,10 @@ it{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
-        }
-        force{
-            newton{
-                dnam{"N"}
-                one{"{0} N"}
-                other{"{0} N"}
-            }
-            pound-force{
-                dnam{"lbf"}
-                one{"{0} lbf"}
-                other{"{0} lbf"}
+            therm-us{
+                dnam{"therm US"}
+                one{"{0} therm US"}
+                other{"{0} therm US"}
             }
         }
         frequency{
@@ -1578,11 +1582,6 @@ it{
                 one{"{0} pt"}
                 other{"{0} pt"}
             }
-            solar-radius{
-                dnam{"R☉"}
-                one{"{0} R☉"}
-                other{"{0} R☉"}
-            }
             yard{
                 dnam{"iarde"}
                 one{"{0} yd"}
@@ -1595,11 +1594,6 @@ it{
                 one{"{0} lx"}
                 other{"{0} lx"}
             }
-            solar-luminosity{
-                dnam{"L☉"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
-            }
         }
         mass{
             carat{
@@ -1611,11 +1605,6 @@ it{
                 dnam{"Da"}
                 one{"{0} Da"}
                 other{"{0} Da"}
-            }
-            earth-mass{
-                dnam{"M⊕"}
-                one{"{0} M⊕"}
-                other{"{0} M⊕"}
             }
             gram{
                 dnam{"grammi"}
@@ -1660,11 +1649,6 @@ it{
                 one{"{0} lb"}
                 other{"{0} lb"}
                 per{"{0}/lb"}
-            }
-            solar-mass{
-                dnam{"M☉"}
-                one{"{0} M☉"}
-                other{"{0} M☉"}
             }
             ton{
                 dnam{"tn"}
@@ -1719,16 +1703,6 @@ it{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
-            }
-            kilopascal{
-                dnam{"kPa"}
-                one{"{0} kPa"}
-                other{"{0} kPa"}
-            }
-            megapascal{
-                dnam{"MPa"}
-                one{"{0} MPa"}
-                other{"{0} MPa"}
             }
             millibar{
                 dnam{"mbar"}
@@ -1809,9 +1783,9 @@ it{
                 other{"{0} ac ft"}
             }
             barrel{
-                dnam{"barrel"}
-                one{"{0} barrel"}
-                other{"{0} barrel"}
+                dnam{"barile"}
+                one{"{0} bbl"}
+                other{"{0} bbl"}
             }
             bushel{
                 dnam{"staia"}

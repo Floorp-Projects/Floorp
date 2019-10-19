@@ -70,10 +70,6 @@ yo_BJ{
             "ETB",
             "Biri ti Orílɛ́ède Eutopia",
         }
-        EUR{
-            "€",
-            "owó Yúrò",
-        }
         GBP{
             "£",
             "Pɔ́n-ùn ti Orilɛ̀-èdè Gɛ̀ɛ́sì",
@@ -182,10 +178,6 @@ yo_BJ{
             "SHP",
             "Pɔɔun ti Orílɛ́ède ̣Elena",
         }
-        SLL{
-            "SLL",
-            "Lioni",
-        }
         SOS{
             "SOS",
             "Sile ti Orílɛ́ède Somali",
@@ -197,10 +189,6 @@ yo_BJ{
         STN{
             "STN",
             "Dobira ti Orílɛ́ède Sao tome Ati Pirisipe",
-        }
-        SZL{
-            "SZL",
-            "Lilangeni",
         }
         TND{
             "TND",
@@ -247,22 +235,12 @@ yo_BJ{
             "Dɔla ti Orílɛ́ède Siibabuwe",
         }
     }
-    Currencies%narrow{
-        BRL{"R$"}
-        CNY{"¥"}
-        EUR{"€"}
-        GBP{"£"}
-        INR{"₹"}
-        JPY{"¥"}
-        RUB{"₽"}
-        USD{"$"}
-    }
     CurrencyPlurals{
         BRL{
             other{"Awon owó ti Orílɛ̀-èdè Brazil"}
         }
-        EUR{
-            other{"Awon owó Yúrò"}
+        EGP{
+            other{"pɔ́nùn"}
         }
         RUB{
             other{"Owó ruble ti ilɛ̀ Rɔ́shíà"}
@@ -274,8 +252,5 @@ yo_BJ{
             other{"owóníná àìmɔ̀"}
         }
     }
-    CurrencyUnitPatterns{
-        other{"{0} {1}"}
-    }
-    Version{"2.1.48.77"}
+    Version{"36"}
 }

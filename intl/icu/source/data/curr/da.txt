@@ -404,7 +404,7 @@ da{
         }
         HKD{
             "HK$",
-            "Hongkong dollar",
+            "hongkongsk dollar",
         }
         HNL{
             "HNL",
@@ -919,7 +919,7 @@ da{
             "ugandisk shilling",
         }
         USD{
-            "$",
+            "US$",
             "amerikansk dollar",
         }
         USN{
@@ -1171,6 +1171,7 @@ da{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1436,11 +1437,11 @@ da{
             other{"Tjekkoslovakiske hard koruna"}
         }
         CUC{
-            one{"cubanske konvertible pesos"}
+            one{"cubansk konvertibel peso"}
             other{"cubanske konvertible pesos"}
         }
         CUP{
-            one{"cubanske pesos"}
+            one{"cubansk peso"}
             other{"cubanske pesos"}
         }
         CVE{
@@ -1453,7 +1454,7 @@ da{
         }
         CZK{
             one{"tjekkisk koruna"}
-            other{"tjekkiske koruna"}
+            other{"tjekkiske korunaer"}
         }
         DDM{
             one{"Østtysk mark"}
@@ -1592,8 +1593,8 @@ da{
             other{"guyanske dollar"}
         }
         HKD{
-            one{"Hongkong dollar"}
-            other{"Hongkong dollar"}
+            one{"hongkongsk dollar"}
+            other{"hongkongske dollar"}
         }
         HNL{
             one{"honduransk lempira"}
@@ -1613,7 +1614,7 @@ da{
         }
         HUF{
             one{"ungarsk forint"}
-            other{"ungarske forint"}
+            other{"ungarske forinter"}
         }
         IDR{
             one{"indonesisk rupiah"}
@@ -1693,7 +1694,7 @@ da{
         }
         KYD{
             one{"caymansk dollar"}
-            other{"caymansk dollar"}
+            other{"caymanske dollar"}
         }
         KZT{
             one{"kasakhisk tenge"}
@@ -1761,7 +1762,7 @@ da{
         }
         MDL{
             one{"moldovisk leu"}
-            other{"moldoviske leu"}
+            other{"moldoviske lei"}
         }
         MGA{
             one{"madagaskisk ariary"}
@@ -2248,5 +2249,5 @@ da{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

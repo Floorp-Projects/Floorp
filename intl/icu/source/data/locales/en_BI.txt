@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_BI{
-    Version{"2.1.48.22"}
+    Version{"36"}
     calendar{
         gregorian{
             DateTimePatterns{

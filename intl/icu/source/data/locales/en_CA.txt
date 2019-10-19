@@ -9,7 +9,7 @@ en_CA{
             }
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -225,6 +225,7 @@ en_CA{
                         midnight{"mid"}
                         morning1{"mor"}
                         night1{"night"}
+                        noon{"n"}
                     }
                 }
                 stand-alone{
@@ -238,6 +239,7 @@ en_CA{
                         evening1{"eve"}
                         midnight{"mid"}
                         morning1{"mor"}
+                        night1{"night"}
                         pm{"pm"}
                     }
                     wide{
@@ -342,6 +344,7 @@ en_CA{
         leftwards_rightwards_arrows{"leftward rightward arrow"}
         letterlike_symbols{"letter-like symbol"}
         limited_use{"limited use"}
+        math_symbols{"math symbol"}
         nonspacing{"non-spacing"}
         rightwards_arrows{"rightward arrow"}
         upwards_arrows{"upward arrows"}
@@ -504,9 +507,11 @@ en_CA{
         sat-narrow{
             relativeTime{
                 future{
+                    one{"in {0} Sa"}
                     other{"in {0} Sa’s"}
                 }
                 past{
+                    one{"{0} Sa ago"}
                     other{"{0} Sa’s ago"}
                 }
             }
@@ -552,9 +557,11 @@ en_CA{
         sun-narrow{
             relativeTime{
                 future{
+                    one{"in {0} Su"}
                     other{"in {0} Su’s"}
                 }
                 past{
+                    one{"{0} Su ago"}
                     other{"{0} Su’s ago"}
                 }
             }
@@ -574,9 +581,11 @@ en_CA{
         thu-narrow{
             relativeTime{
                 future{
+                    one{"in {0} Th"}
                     other{"in {0} Th’s"}
                 }
                 past{
+                    one{"{0} Th ago"}
                     other{"{0} Th’s ago"}
                 }
             }
@@ -596,9 +605,11 @@ en_CA{
         tue-narrow{
             relativeTime{
                 future{
+                    one{"in {0} Tu"}
                     other{"in {0} Tu’s"}
                 }
                 past{
+                    one{"{0} Tu ago"}
                     other{"{0} Tu’s ago"}
                 }
             }
@@ -705,7 +716,6 @@ en_CA{
             end{"{0}, and {1}"}
         }
         standard-short{
-            2{"{0} and {1}"}
             end{"{0}, and {1}"}
         }
     }

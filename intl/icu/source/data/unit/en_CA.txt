@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_CA{
     %%Parent{"en_001"}
-    Version{"2.1.47.86"}
+    Version{"36"}
     units{
         concentr{
             karat{
@@ -14,6 +14,7 @@ en_CA{
         energy{
             kilowatt-hour{
                 one{"{0} kilowatt-hour"}
+                other{"{0} kilowatt-hours"}
             }
         }
         torque{
@@ -250,6 +251,11 @@ en_CA{
             }
             day{
                 per{"{0}/day"}
+            }
+            decade{
+                dnam{"dec."}
+                one{"{0} dec."}
+                other{"{0} dec."}
             }
             hour{
                 dnam{"hrs."}

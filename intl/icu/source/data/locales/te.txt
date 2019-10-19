@@ -19,17 +19,20 @@ te{
         "[అ ఆ ఇ ఈ ఉ ఊ ఋ ౠ ఎ ఏ ఐ ఒ ఓ ఔ క ఖ గ ఘ ఙ చ ఛ జ ఝ ఞ ట ఠ డ ఢ ణ త థ ద ధ న ప ఫ బ భ"
         " మ య ర ఱ ల వ శ ష స హ ళ]"
     }
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0౦ 1౧ 2౨ 3౩ 4౪ 5౫ 6౬ 7౭ 8౮ 9౯]"}
-    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0౦ 1౧ 2౨ 3౩ 4౪ 5౫ 6౬ 7౭ 8౮ 9౯]"}
+    ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"¤#,##,##0.00;(¤#,##,##0.00)"}
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##,##0.00"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
@@ -190,11 +193,16 @@ te{
                 }
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
+                list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -213,23 +221,55 @@ te{
         telu{
             patterns{
                 currencyFormat{"¤#,##,##0.00"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
         }
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
     calendar{
+        buddhist{
+            eras{
+                abbreviated{
+                    "BE",
+                }
+                narrow{
+                    "BE",
+                }
+                wide{
+                    "BE",
+                }
+            }
+        }
         coptic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -246,6 +286,21 @@ te{
                         "ఇపెప్",
                         "మెస్రా",
                         "నైసే",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "టౌట్",
@@ -278,6 +333,21 @@ te{
                         "ఇపెప్",
                         "మెస్రా",
                         "నైసే",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "టౌట్",
@@ -298,6 +368,20 @@ te{
             }
         }
         ethiopic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -314,6 +398,21 @@ te{
                         "హమ్లె",
                         "నెహస్సె",
                         "పగుమెన్",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "మెస్క్‌రమ్",
@@ -346,6 +445,21 @@ te{
                         "హమ్లె",
                         "నెహస్సె",
                         "పగుమెన్",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "మెస్క్‌రమ్",
@@ -435,44 +549,6 @@ te{
                     B{"B h:mm – B h:mm"}
                     h{"B h:mm – h:mm"}
                     m{"B h:mm – h:mm"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
-                GyMMMEd{
-                    G{"G y MMM d, E – G y MMM d, E"}
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
-                }
-                GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH–HH"}
@@ -816,10 +892,6 @@ te{
                     h{"B h:mm – h:mm"}
                     m{"B h:mm – h:mm"}
                 }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
                 GyM{
                     G{"GGGGG M/y – GGGGG M/y"}
                     M{"GGGGG M/y – M/y"}
@@ -1082,6 +1154,17 @@ te{
             }
         }
         hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "AM",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1099,6 +1182,22 @@ te{
                         "అవ",
                         "ఇలుల్",
                         "అదర్ II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                     wide{
                         "టిశ్రీ",
@@ -1133,6 +1232,22 @@ te{
                         "అవ",
                         "ఇలుల్",
                         "అదర్ II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                     wide{
                         "టిశ్రీ",
@@ -1181,6 +1296,20 @@ te{
                         "మాఘం",
                         "ఫల్గుణం",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "చైత్రం",
                         "వైశాఖం",
@@ -1211,6 +1340,20 @@ te{
                         "మాఘం",
                         "ఫల్గుణం",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "చైత్రం",
                         "వైశాఖం",
@@ -1229,6 +1372,17 @@ te{
             }
         }
         islamic{
+            eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "AH",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1244,6 +1398,20 @@ te{
                         "షవ్వా.",
                         "ధుల్-కి.",
                         "ధుల్-హి.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "Muharram",
@@ -1275,6 +1443,20 @@ te{
                         "ధుల్-కి.",
                         "ధుల్-హి.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "ముహర్రం",
                         "సఫర్",
@@ -1293,6 +1475,17 @@ te{
             }
         }
         persian{
+            eras{
+                abbreviated{
+                    "AP",
+                }
+                narrow{
+                    "AP",
+                }
+                wide{
+                    "AP",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1308,6 +1501,20 @@ te{
                         "డే",
                         "బాహ్‌మాన్",
                         "ఎస్‌ఫాండ్",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "ఫావర్డిన్",
@@ -1338,6 +1545,20 @@ te{
                         "డే",
                         "బాహ్‌మాన్",
                         "ఎస్‌ఫాండ్",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "ఫావర్డిన్",
@@ -1446,7 +1667,7 @@ te{
         smiley{"స్మైలీ"}
         smileys_people{"స్మైలీ లేదా వ్యక్తి"}
         south_asian_scripts{"దక్షిణ ఆసియా స్క్రిప్ట్"}
-        southeast_asian_scripts{"నైరుతి ఆసియా స్క్రిప్ట్"}
+        southeast_asian_scripts{"ఆగ్నేయ ఆసియా స్క్రిప్ట్"}
         spacing{"అంతరం"}
         sport{"క్రీడ"}
         symbols{"చిహ్నం"}
@@ -1665,7 +1886,6 @@ te{
             }
         }
         minute-narrow{
-            dn{"ని"}
             relativeTime{
                 future{
                     one{"{0} నిమి.లో"}
@@ -2162,7 +2382,7 @@ te{
                 "0"{"ఈ వారం"}
                 "1"{"తదుపరి వారం"}
             }
-            relativePeriod{"{0}లో వారం"}
+            relativePeriod{"{0} వారం"}
             relativeTime{
                 future{
                     one{"{0} వారంలో"}
@@ -2181,7 +2401,6 @@ te{
                 "0"{"ఈ వారం"}
                 "1"{"తదుపరి వారం"}
             }
-            relativePeriod{"{0}లో వారం"}
             relativeTime{
                 future{
                     one{"{0} వారంలో"}
@@ -2240,6 +2459,11 @@ te{
         }
         year-narrow{
             dn{"సం."}
+            relative{
+                "-1"{"గత సం."}
+                "0"{"ఈ సం."}
+                "1"{"తదుపరి సం."}
+            }
             relativeTime{
                 future{
                     one{"{0} సం.లో"}
@@ -2253,6 +2477,11 @@ te{
         }
         year-short{
             dn{"సం."}
+            relative{
+                "-1"{"గత సంవ."}
+                "0"{"ఈ సంవ."}
+                "1"{"తదుపరి సంవ."}
+            }
             relativeTime{
                 future{
                     one{"{0} సం.లో"}
@@ -2281,6 +2510,9 @@ te{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        or-short{
+            middle{"{0}, {1}"}
+        }
         standard{
             2{"{0} మరియు {1}"}
             end{"{0} మరియు {1}"}
@@ -2290,8 +2522,6 @@ te{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} మరియు {1}"}
@@ -2324,12 +2554,6 @@ te{
         metric{"దశాంశం"}
     }
     parse{
-        date{
-            lenient{
-                "[\\--/]",
-                "[\\:∶]",
-            }
-        }
         general{
             lenient{
                 "[.․。︒﹒．｡]",
@@ -2348,6 +2572,10 @@ te{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

@@ -378,7 +378,7 @@ dsb{
             tibt{"tibetske cyfry"}
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
     codePatterns{
         language{"Rěc: {0}"}
         script{"Pismo: {0}"}

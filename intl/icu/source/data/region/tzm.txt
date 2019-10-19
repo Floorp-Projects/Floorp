@@ -127,7 +127,6 @@ tzm{
         MD{"Mulḍavya"}
         MG{"Madaɣacqar"}
         MH{"Tigzirin n Marcal"}
-        MK{"Maqdunya"}
         ML{"Mali"}
         MM{"Myanmar"}
         MN{"Manɣulya"}
@@ -227,5 +226,5 @@ tzm{
         ZM{"Zambya"}
         ZW{"Zimbabwi"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

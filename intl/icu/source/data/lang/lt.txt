@@ -639,10 +639,16 @@ lt{
         zxx{"nėra kalbinio turinio"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"supaprastintoji mandarinų kinų"}
+        zh_Hant{"tradicinė mandarinų kinų"}
+    }
+    Languages%menu{
+        yue{"kinų kalbos Kantono tarmė"}
+        zh{"kinų, mandarinų"}
+    }
     Languages%short{
         az{"azeri"}
-        en_GB{"anglų (JK)"}
-        en_US{"anglų (JAV)"}
     }
     Scripts{
         Afak{"Afaka"}
@@ -736,6 +742,7 @@ lt{
         Merc{"Merojitų rankraštinis"}
         Mero{"meroitik"}
         Mlym{"malajalių"}
+        Modi{"Modi"}
         Mong{"mongolų"}
         Moon{"mūn"}
         Mroo{"Mro"}
@@ -1023,7 +1030,7 @@ lt{
         VALENCIA{"Valenciečiai"}
         WADEGILE{"Wade-Giles Romanization"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – visi"}
         category-list{"{0}: {1}"}

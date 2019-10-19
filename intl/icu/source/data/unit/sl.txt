@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sl{
-    Version{"2.1.48.42"}
+    Version{"36"}
     durationUnits{
         hm{"h.mm"}
         hms{"h.mm.ss"}
@@ -131,7 +131,7 @@ sl{
                 two{"{0} kvadratni milji"}
             }
             square-yard{
-                dnam{"kvadratni yard"}
+                dnam{"kvadratni jard"}
                 few{"{0} kvadratni jardi"}
                 one{"{0} kvadratni jard"}
                 other{"{0} kvadratnih jardov"}
@@ -201,7 +201,6 @@ sl{
         }
         consumption{
             liter-per-100kilometers{
-                dnam{"L/100km"}
                 few{"{0} litri na 100 kilometrov"}
                 one{"{0} liter na 100 kilometrov"}
                 other{"{0} litrov na 100 kilometrov"}
@@ -787,8 +786,8 @@ sl{
                 two{"{0} masi sonca"}
             }
             ton{
-                dnam{"tone"}
-                few{"{0} tone"}
+                dnam{"ameriške tone"}
+                few{"{0} ameriške tone"}
                 one{"{0} ameriška tona"}
                 other{"{0} ameriških ton"}
                 two{"{0} ameriški toni"}
@@ -846,6 +845,12 @@ sl{
                 other{"{0} atmosfer"}
                 two{"{0} atmosferi"}
             }
+            bar{
+                few{"{0} bari"}
+                one{"{0} bar"}
+                other{"{0} barov"}
+                two{"{0} bara"}
+            }
             hectopascal{
                 dnam{"hektopaskali"}
                 few{"{0} hektopaskali"}
@@ -887,6 +892,13 @@ sl{
                 one{"{0} milimeter živega srebra"}
                 other{"{0} milimetrov živega srebra"}
                 two{"{0} milimetra živega srebra"}
+            }
+            pascal{
+                dnam{"paskali"}
+                few{"{0} paskali"}
+                one{"{0} paskal"}
+                other{"{0} paskalov"}
+                two{"{0} paskala"}
             }
             pound-per-square-inch{
                 dnam{"funti na kvadratni palec"}
@@ -1607,6 +1619,7 @@ sl{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -1617,18 +1630,18 @@ sl{
                 two{"{0} kt"}
             }
             milligram-per-deciliter{
-                dnam{"mg/dL"}
-                few{"{0} mg/dL"}
-                one{"{0} mg/dL"}
-                other{"{0} mg/dL"}
-                two{"{0} mg/dL"}
+                dnam{"mg/dl"}
+                few{"{0} mg/dl"}
+                one{"{0} mg/dl"}
+                other{"{0} mg/dl"}
+                two{"{0} mg/dl"}
             }
             millimole-per-liter{
-                dnam{"mmol/L"}
-                few{"{0} mmol/L"}
-                one{"{0} mmol/L"}
-                other{"{0} mmol/L"}
-                two{"{0} mmol/L"}
+                dnam{"mmol/l"}
+                few{"{0} mmol/l"}
+                one{"{0} mmol/l"}
+                other{"{0} mmol/l"}
+                two{"{0} mmol/l"}
             }
             mole{
                 dnam{"mol"}
@@ -1675,11 +1688,11 @@ sl{
                 two{"{0} l/100 km"}
             }
             liter-per-kilometer{
-                dnam{"L/km"}
-                few{"{0} L/km"}
-                one{"{0} L/km"}
-                other{"{0} L/km"}
-                two{"{0} L/km"}
+                dnam{"l/km"}
+                few{"{0} l/km"}
+                one{"{0} l/km"}
+                other{"{0} l/km"}
+                two{"{0} l/km"}
             }
             mile-per-gallon{
                 dnam{"mpg"}
@@ -1797,6 +1810,13 @@ sl{
                 other{"{0} d"}
                 per{"{0} na dan"}
                 two{"{0} d"}
+            }
+            decade{
+                dnam{"dec"}
+                few{"{0} dec"}
+                one{"{0} dec"}
+                other{"{0} dec"}
+                two{"{0} dec"}
             }
             hour{
                 dnam{"ur"}
@@ -1955,6 +1975,13 @@ sl{
                 other{"{0} kWh"}
                 two{"{0} kWh"}
             }
+            therm-us{
+                dnam{"US therm"}
+                few{"{0} US therm"}
+                one{"{0} US therm"}
+                other{"{0} US therm"}
+                two{"{0} US therm"}
+            }
         }
         force{
             newton{
@@ -2000,6 +2027,57 @@ sl{
                 one{"{0} MHz"}
                 other{"{0} MHz"}
                 two{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                few{"{0} dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+                two{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                few{"{0} dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+                two{"{0} dpi"}
+            }
+            em{
+                dnam{"em"}
+                few{"{0} em"}
+                one{"{0} em"}
+                other{"{0} em"}
+                two{"{0} em"}
+            }
+            megapixel{
+                dnam{"MP"}
+                few{"{0} MP"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+                two{"{0} MP"}
+            }
+            pixel{
+                dnam{"px"}
+                few{"{0} px"}
+                one{"{0} px"}
+                other{"{0} px"}
+                two{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                few{"{0} ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+                two{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                few{"{0} ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
+                two{"{0} ppi"}
             }
         }
         length{
@@ -2313,6 +2391,13 @@ sl{
                 other{"{0} atm"}
                 two{"{0} atm"}
             }
+            bar{
+                dnam{"bar"}
+                few{"{0} bar"}
+                one{"{0} bar"}
+                other{"{0} bar"}
+                two{"{0} bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 few{"{0} hPa"}
@@ -2354,6 +2439,13 @@ sl{
                 one{"{0} mmHG"}
                 other{"{0} mmHG"}
                 two{"{0} mmHG"}
+            }
+            pascal{
+                dnam{"Pa"}
+                few{"{0} Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
+                two{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -2455,11 +2547,11 @@ sl{
                 two{"{0} bbl"}
             }
             centiliter{
-                dnam{"cL"}
-                few{"{0} cL"}
-                one{"{0} cL"}
-                other{"{0} cL"}
-                two{"{0} cL"}
+                dnam{"cl"}
+                few{"{0} cl"}
+                one{"{0} cl"}
+                other{"{0} cl"}
+                two{"{0} cl"}
             }
             cubic-centimeter{
                 dnam{"cm³"}
@@ -2527,11 +2619,11 @@ sl{
                 two{"{0} m. skod."}
             }
             deciliter{
-                dnam{"dL"}
-                few{"{0} dL"}
-                one{"{0} dL"}
-                other{"{0} dL"}
-                two{"{0} dL"}
+                dnam{"dl"}
+                few{"{0} dl"}
+                one{"{0} dl"}
+                other{"{0} dl"}
+                two{"{0} dl"}
             }
             fluid-ounce{
                 dnam{"fl oz"}
@@ -2564,11 +2656,11 @@ sl{
                 two{"{0} imp. gal"}
             }
             hectoliter{
-                dnam{"hL"}
-                few{"{0} hL"}
-                one{"{0} hL"}
-                other{"{0} hL"}
-                two{"{0} hL"}
+                dnam{"hl"}
+                few{"{0} hl"}
+                one{"{0} hl"}
+                other{"{0} hl"}
+                two{"{0} hl"}
             }
             liter{
                 dnam{"l"}

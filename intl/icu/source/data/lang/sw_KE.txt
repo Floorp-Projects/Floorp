@@ -1,7 +1,12 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sw_KE{
+    Keys{
+        hc{"Kipindi cha saa (12 dhidi ya 24)"}
+        va{"Tofauti ya Lugha"}
+    }
     Languages{
+        ar_001{"Kiarabu sanifu"}
         arq{"Kiarabu cha Aljeria"}
         as{"Kiasamisi"}
         chr{"Kicheroki"}
@@ -32,6 +37,7 @@ sw_KE{
         nqo{"Kiin’ko"}
         or{"Kiodia"}
         pcm{"Kipijini cha Nigeria"}
+        ro_MD{"Kimoldova cha Romania"}
         ses{"Kikoyraborosenni"}
         shu{"Kiarabu cha Chadi"}
         srn{"Kisranantongo"}
@@ -44,5 +50,37 @@ sw_KE{
         ug{"Kiuiguri"}
         zgh{"Kitamazighati Sanifu cha Moroko"}
     }
-    Version{"2.1.47.71"}
+    Languages%long{
+        zh_Hans{"Kichina cha Kimandarini Rahisi"}
+        zh_Hant{"Kichina cha Kimandarini cha Jadi"}
+    }
+    Languages%menu{
+        zh{"Kichina, Kimandarini"}
+    }
+    Scripts{
+        Brai{"Breli"}
+        Ethi{"Kihabeshi"}
+        Hebr{"Kihibrania"}
+        Hira{"Kihiragana"}
+        Jamo{"Kijamo"}
+        Mymr{"Kimyama"}
+        Orya{"Kiodia"}
+        Taml{"Kitamili"}
+    }
+    Types{
+        calendar{
+            dangi{"Kalenda ya Kidangi"}
+            ethiopic{"Kalenda ya Kihabeshi"}
+            hebrew{"Kalenda ya kihibrania"}
+        }
+        numbers{
+            ethi{"Nambari za Kihabeshi"}
+            geor{"Nambari za Kijiojia"}
+            hebr{"Nambari za Kihibrania"}
+            mlym{"Nambari za Kimalayalam"}
+            mymr{"Nambari za Kimyama"}
+            tamldec{"Nambari za Kitamili"}
+        }
+    }
+    Version{"36"}
 }

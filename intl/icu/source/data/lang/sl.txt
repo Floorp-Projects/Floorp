@@ -19,7 +19,7 @@ sl{
         numbers{"številke"}
         timezone{"Časovni pas"}
         va{"Različica območnih nastavitev"}
-        x{"Private-Use"}
+        x{"Zasebna-uporaba"}
     }
     Languages{
         aa{"afarščina"}
@@ -531,10 +531,12 @@ sl{
         zxx{"brez jezikoslovne vsebine"}
         zza{"zazajščina"}
     }
+    Languages%menu{
+        yue{"kitajščina (kantonščina)"}
+        zh{"kitajščina (mandarinščina)"}
+    }
     Languages%short{
         az{"azerščina"}
-        en_GB{"angleščina (ZK)"}
-        en_US{"angleščina (ZDA)"}
     }
     Scripts{
         Arab{"arabski"}
@@ -880,7 +882,7 @@ sl{
         VALENCIA{"valencijski pravopis"}
         WADEGILE{"romanizacija Wade-Giles"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – vse"}
         category-list{"{0}: {1}"}

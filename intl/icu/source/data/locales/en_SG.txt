@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_SG{
     %%Parent{"en_001"}
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -122,20 +122,6 @@ en_SG{
                     one{"{0} qtr ago"}
                     other{"{0} qtrs ago"}
                 }
-            }
-        }
-        week-short{
-            relative{
-                "-1"{"last wk"}
-                "0"{"this wk"}
-                "1"{"next wk"}
-            }
-        }
-        year-short{
-            relative{
-                "-1"{"last yr"}
-                "0"{"this yr"}
-                "1"{"next yr"}
             }
         }
     }

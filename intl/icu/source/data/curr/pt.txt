@@ -264,7 +264,7 @@ pt{
         }
         CNH{
             "CNH",
-            "Renminbi chinês (offshore)",
+            "Yuan chinês (offshore)",
         }
         CNX{
             "CNX",
@@ -272,7 +272,7 @@ pt{
         }
         CNY{
             "CN¥",
-            "Renminbi chinês",
+            "Yuan chinês",
         }
         COP{
             "COP",
@@ -1234,11 +1234,13 @@ pt{
         GNF{"FG"}
         GTQ{"Q"}
         GYD{"$"}
+        HKD{"$"}
         HNL{"L"}
         HRK{"kn"}
         HUF{"Ft"}
         IDR{"Rp"}
         ILS{"₪"}
+        INR{"₹"}
         ISK{"kr"}
         JMD{"$"}
         JPY{"¥"}
@@ -2499,5 +2501,5 @@ pt{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

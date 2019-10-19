@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 da{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -810,6 +810,9 @@ da{
         "Asia:Qatar"{
             ec{"Qatar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
+        }
         "Asia:Qyzylorda"{
             ec{"Kyzylorda"}
         }
@@ -1146,7 +1149,7 @@ da{
             ec{"Chagos"}
         }
         "Indian:Christmas"{
-            ec{"Juleøerne"}
+            ec{"Juleøen"}
         }
         "Indian:Cocos"{
             ec{"Cocos"}

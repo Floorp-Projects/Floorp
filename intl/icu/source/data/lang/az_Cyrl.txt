@@ -394,12 +394,11 @@ az_Cyrl{
     }
     Languages%short{
         en_GB{"инҝилис (Б.К.)"}
-        en_US{"инҝилис (АБШ)"}
     }
     Scripts{
         Cyrl{"Кирил"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
     codePatterns{
         language{"Дил: {0}"}
         script{"Скрипт: {0}"}

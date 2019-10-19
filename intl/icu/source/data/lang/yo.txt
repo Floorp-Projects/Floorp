@@ -5,7 +5,7 @@ yo{
         af{"Èdè Afrikani"}
         ak{"Èdè Akani"}
         am{"Èdè Amariki"}
-        ar{"Èdè Arabiki"}
+        ar{"Èdè Árábìkì"}
         as{"Ti Assam"}
         az{"Èdè Azerbaijani"}
         be{"Èdè Belarusi"}
@@ -17,8 +17,8 @@ yo{
         cs{"Èdè seeki"}
         cy{"Èdè Welshi"}
         da{"Èdè Ilẹ̀ Denmark"}
-        de{"Èdè Ilẹ̀ Jámánì"}
-        de_AT{"Èdè Ilẹ̀ Jámánì orílẹ̀-èdè Ọ́síríà )"}
+        de{"Èdè Jámánì"}
+        de_AT{"Èdè Jámánì (Ọ́síríà )"}
         de_CH{"Èdè Ilẹ̀ Jámánì (Orílẹ́ède swítsàlandì)"}
         el{"Èdè Giriki"}
         en{"Èdè Gẹ̀ẹ́sì"}
@@ -27,18 +27,22 @@ yo{
         en_GB{"Èdè òyìnbó Gẹ̀ẹ́sì"}
         eo{"Èdè Esperanto"}
         es{"Èdè Sípáníìṣì"}
-        es_419{"Èdè Sípáníìṣì (orílẹ̀-èdè Látìn-Amẹ́ríkà)"}
+        es_419{
+            "Èdè Sípáníìṣì (orílẹ̀-èdè Látìn-Amẹ́ríkà) ( Èdè Sípáníìshì (Látìn-Amẹ́rí"
+            "kà)"
+        }
         es_ES{"Èdè Sípáníìṣì (orílẹ̀-èdè Yúróòpù)"}
         es_MX{"Èdè Sípáníìṣì (orílẹ̀-èdè Mẹ́síkò)"}
         et{"Èdè Estonia"}
         eu{"Èdè Baski"}
         fa{"Èdè Pasia"}
+        ff{"Èdè Fúlàní"}
         fi{"Èdè Finisi"}
         fil{"Èdè Filipino"}
         fo{"Èdè Faroesi"}
         fr{"Èdè Faransé"}
         fr_CA{"Èdè Faransé (orílẹ̀-èdè Kánádà)"}
-        fr_CH{"Èdè Faransé (orílẹ̀-èdè swítsàlandì)"}
+        fr_CH{"Èdè Faranṣé (Súwísàlaǹdì)"}
         fy{"Èdè Frisia"}
         ga{"Èdè Ireland"}
         gd{"Èdè Gaelik ti Ilu Scotland"}
@@ -47,22 +51,22 @@ yo{
         gu{"Èdè Gujarati"}
         ha{"Èdè Hausa"}
         he{"Èdè Heberu"}
-        hi{"Èdè Hindi"}
+        hi{"Èdè Híńdì"}
         hr{"Èdè Kroatia"}
         hu{"Èdè Hungaria"}
         hy{"Èdè Ile Armenia"}
         ia{"Èdè pipo"}
-        id{"Èdè Indonasia"}
+        id{"Èdè Indonéṣíà"}
         ie{"Iru Èdè"}
-        ig{"Èdè Ibo"}
+        ig{"Èdè Yíbò"}
         is{"Èdè Icelandic"}
-        it{"Èdè ilẹ̀ Ítálì"}
-        ja{"Èdè ilẹ̀ Japan"}
+        it{"Èdè Ítálì"}
+        ja{"Èdè Jàpáànù"}
         jv{"Èdè Javanasi"}
         ka{"Èdè Georgia"}
         km{"Èdè kameri"}
         kn{"Èdè Kannada"}
-        ko{"Èdè Koria"}
+        ko{"Èdè Kòríà"}
         la{"Èdè Latini"}
         lt{"Èdè Lithuania"}
         lv{"Èdè Latvianu"}
@@ -72,16 +76,16 @@ yo{
         mt{"Èdè Malta"}
         my{"Èdè Bumiisi"}
         ne{"Èdè Nepali"}
-        nl{"Èdè Duki"}
+        nl{"Èdè Dọ́ọ̀ṣì"}
         no{"Èdè Norway"}
         oc{"Èdè Occitani"}
         pa{"Èdè Punjabi"}
-        pl{"Èdè Ilẹ̀ Polandi"}
+        pl{"Èdè Póláǹdì"}
         pt{"Èdè Pọtogí"}
         pt_BR{"Èdè Pọtogí (Orilẹ̀-èdè Bràsíl)"}
         pt_PT{"Èdè Pọtogí (orílẹ̀-èdè Yúróòpù)"}
         ro{"Èdè Romania"}
-        ru{"Èdè Rọsià"}
+        ru{"Èdè Rọ́ṣíà"}
         rw{"Èdè Ruwanda"}
         sa{"Èdè awon ara Indo"}
         sd{"Èdè Sindhi"}
@@ -114,18 +118,19 @@ yo{
         zh{"Èdè Mandarin tí wọ́n ń sọ lórílẹ̀-èdè Ṣáínà"}
         zu{"Èdè Ṣulu"}
     }
-    Languages%short{
-        en_GB{"Èdè Gẹ̀ẹ́sì (GB)"}
-        en_US{"Èdè Gẹ̀ẹ́sì (US)"}
+    Languages%menu{
+        zh{"Ṣáídà, Mandrínì"}
     }
     Scripts{
         Arab{"èdè Lárúbáwá"}
         Cyrl{"èdè ilẹ̀ Rọ́ṣíà"}
         Hans{"tí wọ́n mú rọrùn."}
         Hant{"Hans àtọwọ́dọ́wọ́"}
+        Jpan{"èdè jàpáànù"}
+        Kore{"Kóríà"}
         Latn{"Èdè Látìn"}
         Zxxx{"Aikọsilẹ"}
-        Zzzz{"ọ̀nà ìgbàkọ̀wé àìmọ̀"}
+        Zzzz{"Ìṣọwọ́kọ̀wé àìmọ̀"}
     }
     Scripts%stand-alone{
         Hans{"Hans tí wọ́n mú rọrùn."}
@@ -134,6 +139,7 @@ yo{
     Types{
         calendar{
             gregorian{"Kàlẹ́ńdà Gregory"}
+            iso8601{"Kàlẹ́ńdà ISO-8601"}
         }
         collation{
             standard{"Ìlànà Onírúurú Ètò"}
@@ -142,10 +148,10 @@ yo{
             latn{"Díjíítì Ìwọ̀ Oòrùn"}
         }
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
     codePatterns{
         language{"Èdè: {0}"}
-        script{"ọ̀nà ìgbàkọ̀wé: {0}"}
+        script{"Ìṣọwọ́kọ̀wé: {0}"}
         territory{"Àgbègbè: {0}"}
     }
     localeDisplayPattern{

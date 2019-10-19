@@ -2,89 +2,90 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pluralRanges:table(nofallback){
     locales{
-        af{"set05"}
-        ak{"set02"}
+        af{"set04"}
+        ak{"set07"}
         am{"set01"}
+        an{"set04"}
         ar{"set18"}
         as{"set01"}
-        az{"set04"}
+        az{"set03"}
         be{"set15"}
-        bg{"set05"}
+        bg{"set04"}
         bn{"set01"}
         bs{"set11"}
-        ca{"set05"}
+        ca{"set04"}
         cs{"set14"}
         cy{"set17"}
-        da{"set06"}
-        de{"set04"}
-        el{"set04"}
-        en{"set05"}
-        es{"set05"}
-        et{"set05"}
-        eu{"set05"}
-        fa{"set02"}
-        fi{"set05"}
-        fil{"set06"}
+        da{"set05"}
+        de{"set03"}
+        el{"set03"}
+        en{"set04"}
+        es{"set04"}
+        et{"set04"}
+        eu{"set04"}
+        fa{"set07"}
+        fi{"set04"}
+        fil{"set05"}
         fr{"set01"}
         ga{"set16"}
-        gl{"set04"}
-        gsw{"set04"}
+        gl{"set03"}
+        gsw{"set03"}
         gu{"set01"}
         he{"set13"}
         hi{"set01"}
         hr{"set11"}
-        hu{"set04"}
+        hu{"set03"}
         hy{"set01"}
-        ia{"set05"}
+        ia{"set04"}
         id{"set00"}
-        io{"set05"}
-        is{"set06"}
-        it{"set04"}
+        io{"set04"}
+        is{"set05"}
+        it{"set03"}
         ja{"set00"}
-        ka{"set03"}
-        kk{"set04"}
+        ka{"set02"}
+        kk{"set03"}
         km{"set00"}
         kn{"set01"}
         ko{"set00"}
-        ky{"set04"}
+        ky{"set03"}
         lo{"set00"}
         lt{"set15"}
         lv{"set09"}
         mk{"set08"}
-        ml{"set04"}
-        mn{"set04"}
+        ml{"set03"}
+        mn{"set03"}
         mr{"set01"}
         ms{"set00"}
         my{"set00"}
-        nb{"set05"}
-        ne{"set04"}
-        nl{"set04"}
-        or{"set02"}
-        pa{"set06"}
+        nb{"set04"}
+        ne{"set03"}
+        nl{"set03"}
+        or{"set07"}
+        pa{"set05"}
         pl{"set14"}
         ps{"set01"}
         pt{"set01"}
         ro{"set10"}
         ru{"set15"}
-        sc{"set04"}
-        scn{"set04"}
-        sd{"set02"}
-        si{"set07"}
+        sc{"set03"}
+        scn{"set03"}
+        sd{"set07"}
+        si{"set06"}
         sk{"set14"}
         sl{"set12"}
-        sq{"set04"}
+        sq{"set03"}
         sr{"set11"}
-        sv{"set05"}
-        sw{"set04"}
-        ta{"set04"}
-        te{"set04"}
+        sv{"set04"}
+        sw{"set03"}
+        ta{"set03"}
+        te{"set03"}
         th{"set00"}
-        tk{"set04"}
-        tr{"set04"}
-        ug{"set04"}
+        tk{"set03"}
+        tr{"set03"}
+        ug{"set03"}
         uk{"set15"}
-        ur{"set05"}
-        uz{"set04"}
+        ur{"set04"}
+        uz{"set03"}
         vi{"set00"}
         yue{"set00"}
         zh{"set00"}
@@ -118,18 +119,13 @@ pluralRanges:table(nofallback){
         set02{
             {
                 "one",
+                "other",
                 "one",
-                "other",
-            }
-            {
-                "one",
-                "other",
-                "other",
             }
             {
                 "other",
                 "one",
-                "one",
+                "other",
             }
             {
                 "other",
@@ -141,12 +137,12 @@ pluralRanges:table(nofallback){
             {
                 "one",
                 "other",
-                "one",
+                "other",
             }
             {
                 "other",
                 "one",
-                "other",
+                "one",
             }
             {
                 "other",
@@ -163,7 +159,7 @@ pluralRanges:table(nofallback){
             {
                 "other",
                 "one",
-                "one",
+                "other",
             }
             {
                 "other",
@@ -174,13 +170,18 @@ pluralRanges:table(nofallback){
         set05{
             {
                 "one",
+                "one",
+                "one",
+            }
+            {
+                "one",
                 "other",
                 "other",
             }
             {
                 "other",
                 "one",
-                "other",
+                "one",
             }
             {
                 "other",
@@ -202,7 +203,7 @@ pluralRanges:table(nofallback){
             {
                 "other",
                 "one",
-                "one",
+                "other",
             }
             {
                 "other",
@@ -214,17 +215,17 @@ pluralRanges:table(nofallback){
             {
                 "one",
                 "one",
-                "one",
-            }
-            {
-                "one",
-                "other",
                 "other",
             }
             {
-                "other",
                 "one",
                 "other",
+                "other",
+            }
+            {
+                "other",
+                "one",
+                "one",
             }
             {
                 "other",

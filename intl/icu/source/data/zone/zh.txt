@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比让"}
@@ -790,7 +790,7 @@ zh{
             ec{"新库兹涅茨克"}
         }
         "Asia:Novosibirsk"{
-            ec{"诺沃西比尔斯克"}
+            ec{"新西伯利亚"}
         }
         "Asia:Omsk"{
             ec{"鄂木斯克"}
@@ -956,7 +956,6 @@ zh{
         }
         "Etc:UTC"{
             ls{"协调世界时"}
-            ss{"UTC"}
         }
         "Etc:Unknown"{
             ec{"未知城市"}
@@ -992,7 +991,7 @@ zh{
             ec{"布达佩斯"}
         }
         "Europe:Busingen"{
-            ec{"布辛根"}
+            ec{"比辛根"}
         }
         "Europe:Chisinau"{
             ec{"基希讷乌"}
@@ -1014,7 +1013,7 @@ zh{
             ec{"赫尔辛基"}
         }
         "Europe:Isle_of_Man"{
-            ec{"曼岛"}
+            ec{"马恩岛"}
         }
         "Europe:Istanbul"{
             ec{"伊斯坦布尔"}

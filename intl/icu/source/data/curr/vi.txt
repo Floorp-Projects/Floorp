@@ -18,10 +18,6 @@ vi{
             "AFN",
             "Afghani Afghanistan",
         }
-        ALK{
-            "ALK",
-            "ALK",
-        }
         ALL{
             "ALL",
             "Lek Albania",
@@ -266,10 +262,6 @@ vi{
             "CNH",
             "Nhân dân tệ (hải ngoại)",
         }
-        CNX{
-            "CNX",
-            "CNX",
-        }
         CNY{
             "CN¥",
             "Nhân dân tệ",
@@ -404,7 +396,7 @@ vi{
         }
         GEL{
             "GEL",
-            "Lari Gruzia",
+            "Lari Georgia",
         }
         GHC{
             "GHC",
@@ -490,10 +482,6 @@ vi{
             "ILP",
             "Pao Ixraen",
         }
-        ILR{
-            "ILR",
-            "ILR",
-        }
         ILS{
             "₪",
             "Sheqel Israel mới",
@@ -504,15 +492,11 @@ vi{
         }
         IQD{
             "IQD",
-            "Dinar I-rắc",
+            "Dinar Iraq",
         }
         IRR{
             "IRR",
             "Rial Iran",
-        }
-        ISJ{
-            "ISJ",
-            "ISJ",
         }
         ISK{
             "ISK",
@@ -702,10 +686,6 @@ vi{
             "MUR",
             "Rupee Mauritius",
         }
-        MVP{
-            "MVP",
-            "MVP",
-        }
         MVR{
             "MVR",
             "Rufiyaa Maldives",
@@ -796,7 +776,7 @@ vi{
         }
         PGK{
             "PGK",
-            "Kina Papua New Guinean",
+            "Kina Papua New Guinea",
         }
         PHP{
             "PHP",
@@ -996,7 +976,7 @@ vi{
         }
         UAH{
             "UAH",
-            "Hryvnia Ucraina",
+            "Hryvnia Ukraina",
         }
         UAK{
             "UAK",
@@ -1033,10 +1013,6 @@ vi{
         UYU{
             "UYU",
             "Peso Uruguay",
-        }
-        UYW{
-            "UYW",
-            "UYW",
         }
         UZS{
             "UZS",
@@ -1138,17 +1114,9 @@ vi{
             "XRE",
             "Quỹ RINET",
         }
-        XSU{
-            "XSU",
-            "XSU",
-        }
         XTS{
             "XTS",
             "Mã Tiền tệ Kiểm tra",
-        }
-        XUA{
-            "XUA",
-            "XUA",
         }
         XXX{
             "XXX",
@@ -1227,16 +1195,12 @@ vi{
         CUC{"$"}
         CUP{"$"}
         DOP{"$"}
-        ESP{"₧"}
         GTQ{"Q"}
         HNL{"L"}
         JMD{"$"}
         KYD{"$"}
-        LTL{"Lt"}
-        LVL{"Ls"}
         MXN{"$"}
         NIO{"C$"}
-        RUR{"р."}
         TTD{"$"}
         TWD{"NT$"}
         USD{"$"}
@@ -1394,7 +1358,7 @@ vi{
             other{"Bảng Anh"}
         }
         GEL{
-            other{"Lari Gruzia"}
+            other{"Lari Georgia"}
         }
         GHS{
             other{"Cedi Ghana"}
@@ -1439,7 +1403,7 @@ vi{
             other{"Rupee Ấn Độ"}
         }
         IQD{
-            other{"Dinar I-rắc"}
+            other{"Dinar Iraq"}
         }
         IRR{
             other{"Rial Iran"}
@@ -1577,7 +1541,7 @@ vi{
             other{"Sol Peru"}
         }
         PGK{
-            other{"Kina Papua New Guinean"}
+            other{"Kina Papua New Guinea"}
         }
         PHP{
             other{"Peso Philipin"}
@@ -1739,5 +1703,5 @@ vi{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

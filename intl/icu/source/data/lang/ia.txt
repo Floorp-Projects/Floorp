@@ -404,8 +404,6 @@ ia{
     }
     Languages%short{
         az{"azeri"}
-        en_GB{"anglese (GB)"}
-        en_US{"anglese (SUA)"}
     }
     Scripts{
         Arab{"arabe"}
@@ -534,7 +532,7 @@ ia{
             tibt{"cifras tibetan"}
         }
     }
-    Version{"2.1.48.36"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — toto"}
         category-list{"{0}: {1}"}

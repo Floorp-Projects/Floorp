@@ -202,5 +202,5 @@ hr{
             "0: =%%spellout-ordinal-base=a;",
         }
     }
-    Version{"2.1.27.22"}
+    Version{"36"}
 }

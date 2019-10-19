@@ -89,6 +89,28 @@
 "abc(?!def)"              b    "<r><0>abc</0></r>xyz"
 
 #
+# Nested Lookahead / Behind
+#
+"one(?=(?:(?!<out>).)*</out>)"  "<out><0>one</0> stuff</out>"
+"one(?=(?:(?!<out>).)*</out>)"  "<out>one  <out></out>"
+
+# More nesting lookaround: pattern matches "qq" when not preceded by 'a' and followed by 'z'
+"(?<!a(?!...z))qq"               "<0>qq</0>c"
+"(?<!a(?!...z))qq"               "f<0>qq</0>c"
+"(?<!a(?!...z))qq"               "aqqz"
+
+# More nested lookaround: match any two chars preceded and followed by an upper case letter.
+# With gratuitious nesting of look-arounds and capture from the look-arounds.
+
+"(?=(?<=(\p{Lu})(?=..(\p{Lu})))).."     "<1>A</1><0>jk</0><2>B</2>"
+"(?=(?<=(\p{Lu})(?=..(\p{Lu})))).."     "ajkB"
+"(?=(?<=(\p{Lu})(?=..(\p{Lu})))).."     "Ajkb"
+
+# Nested lookaround cases from bug ICU-20564
+"(?<=(?<=((?=)){0}+))"         "<0></0>abc"
+"(?<=c(?<=c((?=c)){1}+))"      "c<0><1></1></0>cc"
+
+#
 #  Anchoring Bounds
 #
 "^def$"                        "abc<r><0>def</0></r>ghi"           # anchoring (default) bounds
@@ -1439,12 +1461,30 @@
 "[^\u0000-\U0010ffff]"             "a"
 "[^[^\u0000-\U0010ffff]]"          "<0>a</0>"
 
+"This is a string with (?:one |two |three )endings"   "<0>This is a string with two endings</0>"
+
+# Bug ICU-20544. Similar to 20385, above. Assertion failure with a negative look-behind assertion containing
+#                a set with no contents. Look-behind pattern includes more than just the empty set.
+
+"(?<![ⰿ&&m]c)"                     "<0></0>abc"   # note: first 'ⰿ' is \u2c3f, hence empty set.
+"(?<![^\u0000-\U0010ffff]c)"       "<0></0>abc"
+"(?<=[^[^]]†)"                 "abc"          # Problem also exists w positive look-behind
+
+# Bug ICU-20391. Crash in computation of minimum match length with nested look-around patterns.
+#
+"(?<=(?<=((?=)){0}+)"         E    "aaa"
+"(?<=(?<=((?=)){0}+))"             "<0></0>"
+"(?<=c(?<=b((?=a)){1}+))"          "aaa"
+"abc(?=de(?=f))...g"               "<0>abcdefg</0>"
+"abc(?=de(?=f))...g"               "abcdxfg"
+
+# Bug ICU-20618 Assertion failure with nested look-around expressions.
+#
+"(?<=(?<=b?(?=a)))"               "hello, world."
+
 
 #  Random debugging, Temporary
 #
-
-
-
 
 #
 #  Regexps from http://www.regexlib.com

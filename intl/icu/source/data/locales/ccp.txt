@@ -13,8 +13,8 @@ ccp{
         "𑄜 𑄝 𑄞 𑄟 𑄠 𑄡 𑄢 𑄣 𑄤 𑄥 𑄦]"
     }
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? 𑅃 . … 𑅁 𑅂 𑅀 ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / "
-        "\\& # † ‡ ′ ″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? 𑅃 . … 𑅁 𑅂 𑅀 ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * "
+        "/ \\& # † ‡ ′ ″]"
     }
     NumberElements{
         cakm{
@@ -83,7 +83,7 @@ ccp{
         minimumGroupingDigits{"1"}
         native{"cakm"}
     }
-    Version{"2.1.48.88"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{

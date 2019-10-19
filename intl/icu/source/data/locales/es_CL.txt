@@ -13,7 +13,7 @@ es_CL{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -102,8 +102,8 @@ es_CL{
                 "dd-MM-y",
                 "dd-MM-yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -131,10 +131,6 @@ es_CL{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
                         am{"a. m."}
                         pm{"p. m."}
                     }

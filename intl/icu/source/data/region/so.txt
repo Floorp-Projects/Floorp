@@ -82,7 +82,6 @@ so{
         CL{"Jili"}
         CM{"Kaameruun"}
         CN{"Shiinaha"}
-        CO{"Kolombiya"}
         CP{"Jasiiradda Kilibarton"}
         CR{"Kosta Riika"}
         CU{"Kuuba"}
@@ -132,7 +131,6 @@ so{
         GT{"Guwaatamaala"}
         GU{"Guaam"}
         GW{"Gini-Bisaaw"}
-        GY{"Guyana"}
         HK{"Hong Kong"}
         HM{"Jasiiradda Haad & MakDonald"}
         HN{"Honduras"}
@@ -287,8 +285,6 @@ so{
         VU{"Fanuaatu"}
         WF{"Walis & Futuna"}
         WS{"Samoowa"}
-        XA{"XA"}
-        XB{"XB"}
         XK{"Koosofo"}
         YE{"Yaman"}
         YT{"Mayotte"}
@@ -302,7 +298,6 @@ so{
         HK{"Hong Kong"}
         MO{"Makaaw"}
         PS{"Falastiin"}
-        US{"US"}
     }
     Countries%variant{
         CD{"Jamhuuriyadda Dimuqaadiga Kongo"}
@@ -313,5 +308,5 @@ so{
         SZ{"Iswaasilaan"}
         TL{"Timoor Bari"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

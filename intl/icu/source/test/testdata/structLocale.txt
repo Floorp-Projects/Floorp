@@ -5806,6 +5806,7 @@ structLocale:table(nofallback){
         mn{""}
         mnc{""}
         mni{""}
+        mo{""}
         moh{""}
         mos{""}
         mr{""}
@@ -6057,6 +6058,10 @@ structLocale:table(nofallback){
         zza{""}
     }
     Languages%long{
+        zh{""}
+    }
+    Languages%menu{
+        yue{""}
         zh{""}
     }
     Languages%secondary{

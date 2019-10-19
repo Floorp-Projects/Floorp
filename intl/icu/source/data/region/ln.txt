@@ -132,7 +132,6 @@ ln{
         ME{"Monténégro"}
         MG{"Madagasikari"}
         MH{"Bisanga bya Marishalɛ"}
-        MK{"Masedwanɛ"}
         ML{"Malí"}
         MM{"Birmanie"}
         MN{"Mongolí"}
@@ -237,5 +236,5 @@ ln{
     Countries%variant{
         CZ{"Repibiki Tsekɛ"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

@@ -3,11 +3,15 @@
 ceb{
     AuxExemplarCharacters{"[c f j q v x z]"}
     ExemplarCharacters{"[a b d e g h i k l m n o p r s t u w y]"}
-    ExemplarCharactersIndex{"[a b d e g h i k l m n {ng} o p r s t u w y]"}
-    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] @ * / \\& # ′ ″]"}
+    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] @ * / \\& # ′ ″]"}
     NumberElements{
         latn{
+            miscPatterns{
+                atLeast{"{0}+"}
+            }
             patterns{
+                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,#0%"}
@@ -21,8 +25,17 @@ ceb{
                 plusSign{"+"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Adto sa ika-{0} nga tuo."}
+            }
+            plural{
+                one{"{0} ka adlaw"}
+                other{"{0} ka mga adlaw"}
+            }
+        }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -40,14 +53,136 @@ ceb{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            availableFormats{
+                Ed{"d E"}
+                Ehm{"E h:mm a"}
+                Ehms{"E h:mm:ss a"}
+                Gy{"y G"}
+                GyMMM{"MMM y G"}
+                GyMMMEd{"E, MMM d, y G"}
+                GyMMMd{"MMM d, y G"}
+                MEd{"E, M/d"}
+                MMMEd{"E, MMM d"}
+                Md{"M/d"}
+                d{"d"}
+                y{"y G"}
+                yyyy{"y G"}
+                yyyyM{"M/y GGGGG"}
+                yyyyMEd{"E, M/d/y GGGGG"}
+                yyyyMMM{"MMM y G"}
+                yyyyMMMEd{"E, MMM d, y G"}
+                yyyyMMMM{"MMMM y G"}
+                yyyyMMMd{"MMM d, y G"}
+                yyyyMd{"M/d/y GGGGG"}
+                yyyyQQQ{"QQQ y G"}
+                yyyyQQQQ{"QQQQ y G"}
+            }
             intervalFormats{
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, M/d/y GGGGG – E, M/d/y GGGGG"}
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, MMM d, y G – E, MMM d, y G"}
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                GyMMMd{
+                    G{"MMM d, y G – MMM d, y G"}
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                GyMd{
+                    G{"M/d/y GGGGG – M/d/y GGGGG"}
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
+                }
+                M{
+                    M{"M – M"}
+                }
+                MEd{
+                    M{"E, M/d – E, M/d"}
+                    d{"E, M/d – E, M/d"}
+                }
+                MMM{
+                    M{"MMM – MMM"}
+                }
+                MMMEd{
+                    M{"E, MMM d – E, MMM d"}
+                    d{"E, MMM d – E, MMM d"}
+                }
+                MMMd{
+                    d{"MMM d – d"}
+                }
+                Md{
+                    M{"M/d – M/d"}
+                    d{"M/d – M/d"}
+                }
                 fallback{"{0} – {1}"}
+                y{
+                    y{"y – y G"}
+                }
+                yM{
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                yMEd{
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
+                yMMM{
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                yMMMEd{
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y G"}
+                    y{"MMMM y – MMMM y G"}
+                }
+                yMMMd{
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                yMd{
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
+                }
             }
         }
         gregorian{
             AmPmMarkers{
                 "AM",
                 "PM",
+            }
+            AmPmMarkersNarrow{
+                "a",
+                "p",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -89,6 +224,10 @@ ceb{
                 MEd{"E, M/d"}
                 MMM{"LLL"}
                 MMMEd{"E, MMM d"}
+                MMMMW{
+                    one{"'semana' W 'sa' MMMM"}
+                    other{"'semana' W 'sa' MMMM"}
+                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M/d"}
@@ -109,6 +248,10 @@ ceb{
                 yMd{"M/d/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'semana' w 'sa' Y"}
+                    other{"'semana' w 'sa' Y"}
+                }
             }
             dayNames{
                 format{
@@ -129,6 +272,15 @@ ceb{
                         "H",
                         "B",
                         "S",
+                    }
+                    short{
+                        "Dom",
+                        "Lun",
+                        "Mar",
+                        "Miy",
+                        "Huw",
+                        "Biy",
+                        "Sab",
                     }
                     wide{
                         "Domingo",
@@ -161,9 +313,125 @@ ceb{
                     "WKP",
                     "CE",
                 }
+                wide%variant{
+                    "Sa Wala Pa ang Common Era",
+                    "Common Era",
+                }
             }
             intervalFormats{
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, M/d/y GGGGG – E, M/d/y GGGGG"}
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, MMM d, y G – E, MMM d, y G"}
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                GyMMMd{
+                    G{"MMM d, y G – MMM d, y G"}
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                GyMd{
+                    G{"M/d/y GGGGG – M/d/y GGGGG"}
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
+                }
+                H{
+                    H{"HH – HH"}
+                }
+                Hm{
+                    H{"HH:mm – HH:mm"}
+                    m{"HH:mm – HH:mm"}
+                }
+                Hmv{
+                    H{"HH:mm – HH:mm v"}
+                    m{"HH:mm – HH:mm v"}
+                }
+                Hv{
+                    H{"HH – HH v"}
+                }
+                M{
+                    M{"M – M"}
+                }
+                MEd{
+                    M{"E, M/d – E, M/d"}
+                    d{"E, M/d – E, M/d"}
+                }
+                MMM{
+                    M{"MMM – MMM"}
+                }
+                MMMEd{
+                    M{"E, MMM d – E, MMM d"}
+                    d{"E, MMM d – E, MMM d"}
+                }
+                Md{
+                    M{"M/d – M/d"}
+                    d{"M/d – M/d"}
+                }
                 fallback{"{0} – {1}"}
+                hm{
+                    m{"h:mm – h:mm a"}
+                }
+                hmv{
+                    h{"h:mm – h:mm a v"}
+                    m{"h:mm – h:mm a v"}
+                }
+                hv{
+                    h{"h – h a v"}
+                }
+                yM{
+                    M{"M/y – M/y"}
+                    y{"M/y – M/y"}
+                }
+                yMEd{
+                    M{"E, M/d/y – E, M/d/y"}
+                    d{"E, M/d/y – E, M/d/y"}
+                    y{"E, M/d/y – E, M/d/y"}
+                }
+                yMMM{
+                    M{"MMM – MMM y"}
+                    y{"MMM y – MMM y"}
+                }
+                yMMMEd{
+                    M{"E, MMM d – E, MMM d, y"}
+                    d{"E, MMM d – E, MMM d, y"}
+                    y{"E, MMM d, y – E, MMM d, y"}
+                }
+                yMMMM{
+                    M{"MMMM – MMMM y"}
+                    y{"MMMM y – MMMM y"}
+                }
+                yMMMd{
+                    M{"MMM d – MMM d, y"}
+                    d{"MMM d – d, y"}
+                    y{"MMM d, y – MMM d, y"}
+                }
+                yMd{
+                    M{"M/d/y – M/d/y"}
+                    d{"M/d/y – M/d/y"}
+                    y{"M/d/y – M/d/y"}
+                }
             }
             monthNames{
                 format{
@@ -199,7 +467,7 @@ ceb{
                         "Enero",
                         "Pebrero",
                         "Marso",
-                        "April",
+                        "Abril",
                         "Mayo",
                         "Hunyo",
                         "Hulyo",
@@ -243,7 +511,7 @@ ceb{
                         "Enero",
                         "Pebrero",
                         "Marso",
-                        "April",
+                        "Abril",
                         "Mayo",
                         "Hunyo",
                         "Hulyo",
@@ -264,10 +532,10 @@ ceb{
                         "Q4",
                     }
                     wide{
-                        "Una sa matag-tulo ka bulan",
-                        "Ikaduha sa matag-tulo ka bulan",
-                        "Ikatulo sa matag-tulo ka bulan",
-                        "Ikaupat sa matag-tulo ka bulan",
+                        "unang quarter",
+                        "ika-2 nga quarter",
+                        "ika-3 nga quarter",
+                        "ika-4 nga quarter",
                     }
                 }
                 stand-alone{
@@ -276,6 +544,12 @@ ceb{
                         "Q2",
                         "Q3",
                         "Q4",
+                    }
+                    wide{
+                        "unang quarter",
+                        "ika-2 nga quarter",
+                        "ika-3 nga quarter",
+                        "ika-4 nga quarter",
                     }
                 }
             }
@@ -289,54 +563,149 @@ ceb{
     }
     fields{
         day{
-            dn{"Adlaw"}
+            dn{"adlaw"}
             relative{
-                "-1"{"Kagahapon"}
-                "0"{"Karon nga Adlaw"}
-                "1"{"Ugma"}
+                "-1"{"gahapon"}
+                "0"{"karong adlawa"}
+                "1"{"ugma"}
             }
         }
         day-narrow{
-            dn{"Adlaw"}
+            dn{"adlaw"}
+            relative{
+                "-1"{"gahapon"}
+                "0"{"karong adlawa"}
+                "1"{"ugma"}
+            }
         }
         day-short{
-            dn{"Adlaw"}
+            dn{"adlaw"}
+            relative{
+                "-1"{"gahapon"}
+                "0"{"karong adlawa"}
+                "1"{"ugma"}
+            }
         }
         dayperiod{
             dn{"AM/PM"}
         }
         era{
-            dn{"Panahon"}
+            dn{"era"}
         }
         hour{
-            dn{"Oras"}
+            dn{"oras"}
+        }
+        hour-narrow{
+            dn{"oras"}
+        }
+        hour-short{
+            dn{"oras"}
         }
         minute{
-            dn{"Minuto"}
+            dn{"minuto"}
+        }
+        minute-narrow{
+            dn{"minuto"}
+        }
+        minute-short{
+            dn{"minuto"}
         }
         month{
-            dn{"Bulan"}
+            dn{"buwan"}
+            relative{
+                "-1"{"miaging buwan"}
+                "0"{"karong buwana"}
+                "1"{"sunod nga buwan"}
+            }
+        }
+        month-narrow{
+            dn{"buwan"}
+            relative{
+                "-1"{"miaging buwan"}
+                "0"{"karong buwana"}
+                "1"{"sunod nga buwan"}
+            }
         }
         month-short{
-            dn{"Bulan"}
+            dn{"buwan"}
+            relative{
+                "-1"{"miaging buwan"}
+                "0"{"karong buwana"}
+                "1"{"sunod nga buwan"}
+            }
         }
         quarter{
-            dn{"Ikaupat"}
+            dn{"quarter"}
+        }
+        quarter-narrow{
+            dn{"qtr."}
+        }
+        quarter-short{
+            dn{"qtr."}
         }
         second{
-            dn{"Segundo"}
+            dn{"segundo"}
+        }
+        second-narrow{
+            dn{"segundo"}
+        }
+        second-short{
+            dn{"segundo"}
         }
         week{
-            dn{"Semana"}
+            dn{"semana"}
+            relative{
+                "-1"{"miaging semana"}
+                "0"{"karong semanaha"}
+                "1"{"sunod nga semana"}
+            }
+            relativePeriod{"ang semana sa {0}"}
+        }
+        week-narrow{
+            dn{"semana"}
+            relative{
+                "-1"{"miaging semana"}
+                "0"{"karong semanaha"}
+                "1"{"sunod nga semana"}
+            }
+            relativePeriod{"ang semana sa {0}"}
+        }
+        week-short{
+            dn{"semana"}
+            relative{
+                "-1"{"miaging semana"}
+                "0"{"karong semanaha"}
+                "1"{"sunod nga semana"}
+            }
+            relativePeriod{"ang semana sa {0}"}
         }
         weekday{
-            dn{"Adlaw sa Semana"}
+            dn{"adlaw sa semana"}
         }
         year{
             dn{"tuig"}
+            relative{
+                "-1"{"miaging tuig"}
+                "0"{"karong tuiga"}
+                "1"{"sunod nga tuig"}
+            }
+        }
+        year-narrow{
+            relative{
+                "-1"{"miaging tuig"}
+                "0"{"karong tuiga"}
+                "1"{"sunod nga tuig"}
+            }
+        }
+        year-short{
+            relative{
+                "-1"{"miaging tuig"}
+                "0"{"karong tuiga"}
+                "1"{"sunod nga tuig"}
+            }
         }
         zone{
-            dn{"Sona sa Panahon"}
+            dn{"time zone"}
         }
     }
     layout{
@@ -344,11 +713,45 @@ ceb{
         lines{"top-to-bottom"}
     }
     listPattern{
+        or{
+            2{"{0} o {1}"}
+            end{"{0}, o {1}"}
+        }
+        or-narrow{
+            2{"{0} o {1}"}
+            end{"{0}, o {1}"}
+        }
+        or-short{
+            2{"{0} o {1}"}
+            end{"{0}, o {1}"}
+        }
         standard{
             2{"{0} at {1}"}
             end{"{0}, at {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+        }
+        standard-short{
+            2{"{0} ug {1}"}
+            end{"{0}, ug {1}"}
+        }
+        unit{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
+        }
+        unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
         }
     }
     measurementSystemNames{

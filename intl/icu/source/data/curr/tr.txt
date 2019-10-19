@@ -204,7 +204,7 @@ tr{
         }
         BTN{
             "BTN",
-            "Bhutan Ngultrumu",
+            "Butan Ngultrumu",
         }
         BUK{
             "BUK",
@@ -312,7 +312,7 @@ tr{
         }
         CZK{
             "CZK",
-            "Çek Cumhuriyeti Korunası",
+            "Çek Korunası",
         }
         DDM{
             "DDM",
@@ -480,7 +480,7 @@ tr{
         }
         IDR{
             "IDR",
-            "Endonezya Rupiahı",
+            "Endonezya Rupisi",
         }
         IEP{
             "IEP",
@@ -924,7 +924,7 @@ tr{
         }
         STN{
             "STN",
-            "São Tomé ve Príncipe Dobrası",
+            "Sao Tome ve Principe Dobrası",
         }
         SUR{
             "SUR",
@@ -1073,7 +1073,7 @@ tr{
         }
         XAF{
             "FCFA",
-            "CFA Frangı BEAC",
+            "Orta Afrika CFA Frangı",
         }
         XAG{
             "XAG",
@@ -1121,7 +1121,7 @@ tr{
         }
         XOF{
             "CFA",
-            "CFA Frangı BCEAO",
+            "Batı Afrika CFA Frangı",
         }
         XPD{
             "XPD",
@@ -1242,6 +1242,7 @@ tr{
         DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
+        ESP{"₧"}
         EUR{"€"}
         FJD{"$"}
         FKP{"£"}
@@ -1289,6 +1290,7 @@ tr{
         PYG{"₲"}
         RON{"L"}
         RUB{"₽"}
+        RUR{"р."}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -1296,6 +1298,7 @@ tr{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1505,8 +1508,8 @@ tr{
             other{"Bahama doları"}
         }
         BTN{
-            one{"Bhutan ngultrumu"}
-            other{"Bhutan ngultrumu"}
+            one{"Butan ngultrumu"}
+            other{"Butan ngultrumu"}
         }
         BUK{
             one{"Burma Kyatı"}
@@ -1613,8 +1616,8 @@ tr{
             other{"Güney Kıbrıs Lirası"}
         }
         CZK{
-            one{"Çek Cumhuriyeti korunası"}
-            other{"Çek Cumhuriyeti korunası"}
+            one{"Çek korunası"}
+            other{"Çek korunası"}
         }
         DDM{
             one{"Doğu Alman Markı"}
@@ -1761,8 +1764,8 @@ tr{
             other{"Macar forinti"}
         }
         IDR{
-            one{"Endonezya rupiahı"}
-            other{"Endonezya rupiahı"}
+            one{"Endonezya rupisi"}
+            other{"Endonezya rupisi"}
         }
         IEP{
             one{"İrlanda Lirası"}
@@ -2169,8 +2172,8 @@ tr{
             other{"São Tomé ve Príncipe dobrası (1977–2017)"}
         }
         STN{
-            one{"São Tomé ve Príncipe dobrası"}
-            other{"São Tomé ve Príncipe dobrası"}
+            one{"Sao Tome ve Principe dobrası"}
+            other{"Sao Tome ve Principe dobrası"}
         }
         SUR{
             one{"Sovyet Rublesi"}
@@ -2309,8 +2312,8 @@ tr{
             other{"Samoa talası"}
         }
         XAF{
-            one{"CFA frangı BEAC"}
-            other{"CFA frangı BEAC"}
+            one{"Orta Afrika CFA frangı"}
+            other{"Orta Afrika CFA frangı"}
         }
         XAG{
             one{"Gümüş"}
@@ -2329,8 +2332,8 @@ tr{
             other{"Avrupa Para Birimi"}
         }
         XOF{
-            one{"CFA frangı BCEAO"}
-            other{"CFA frangı BCEAO"}
+            one{"Batı Afrika CFA frangı"}
+            other{"Batı Afrika CFA frangı"}
         }
         XPF{
             one{"CFP frangı"}
@@ -2397,5 +2400,5 @@ tr{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

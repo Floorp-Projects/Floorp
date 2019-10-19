@@ -1237,6 +1237,7 @@ ja{
         DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
+        ESP{"₧"}
         EUR{"€"}
         FJD{"$"}
         FKP{"£"}
@@ -1259,6 +1260,7 @@ ja{
         KHR{"៛"}
         KMF{"CF"}
         KPW{"₩"}
+        KRW{"₩"}
         KYD{"$"}
         KZT{"₸"}
         LAK{"₭"}
@@ -1296,6 +1298,7 @@ ja{
         TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
+        TWD{"$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
@@ -2220,5 +2223,5 @@ ja{
     CurrencyUnitPatterns{
         other{"{0}{1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

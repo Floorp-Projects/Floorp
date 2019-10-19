@@ -287,8 +287,8 @@ it{
         VU{"Vanuatu"}
         WF{"Wallis e Futuna"}
         WS{"Samoa"}
-        XA{"pseudo-accenti"}
-        XB{"pseudo-bidi"}
+        XA{"Pseudo-accenti"}
+        XB{"Pseudo-bidi"}
         XK{"Kosovo"}
         YE{"Yemen"}
         YT{"Mayotte"}
@@ -312,6 +312,7 @@ it{
         CZ{"Repubblica Ceca"}
         FK{"Isole Falkland (Isole Malvine)"}
         SZ{"Regno di eSwatini"}
+        TL{"Timor Est"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

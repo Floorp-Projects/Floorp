@@ -86,6 +86,7 @@ is{
         car{"karíbamál"}
         cay{"kajúga"}
         cch{"atsam"}
+        ccp{"tsjakma"}
         ce{"tsjetsjenska"}
         ceb{"kebúanó"}
         cgg{"kíga"}
@@ -366,7 +367,7 @@ is{
         nus{"núer"}
         nv{"navahó"}
         nwc{"klassísk nevaríska"}
-        ny{"njanja; sísjeva; sjeva"}
+        ny{"nýanja"}
         nym{"njamvesí"}
         nyn{"nyankole"}
         nyo{"njóró"}
@@ -543,10 +544,17 @@ is{
         zxx{"ekkert tungumálaefni"}
         zza{"zázáíska"}
     }
+    Languages%long{
+        zh_Hans{"mandarín (einfölduð)"}
+        zh_Hant{"mandarín (hefðbundin)"}
+    }
+    Languages%menu{
+        yue{"kínverska, kantónska"}
+        zh{"kínverska, mandarín"}
+    }
     Languages%short{
         az{"aserska"}
         en_GB{"enska (bresk)"}
-        en_US{"enska (BNA)"}
     }
     Scripts{
         Arab{"arabískt"}
@@ -751,7 +759,7 @@ is{
             vaii{"Vai-tölustafir"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — allt"}
         category-list{"{0}: {1}"}

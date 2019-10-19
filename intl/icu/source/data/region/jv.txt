@@ -56,6 +56,7 @@ jv{
         BH{"Bahrain"}
         BI{"Burundi"}
         BJ{"Bénin"}
+        BL{"Saint Barthélémi"}
         BM{"Bermuda"}
         BN{"Brunéi"}
         BO{"Bolivia"}
@@ -107,6 +108,7 @@ jv{
         FI{"Finlan"}
         FJ{"Fiji"}
         FK{"Kapuloan Falkland"}
+        FM{"Féderasi Mikronésia"}
         FO{"Kapuloan Faro"}
         FR{"Prancis"}
         GA{"Gabon"}
@@ -121,6 +123,8 @@ jv{
         GM{"Gambia"}
         GN{"Guinea"}
         GP{"Guadélup"}
+        GQ{"Guinéa Katulistiwa"}
+        GR{"Grikenlan"}
         GS{"Georgia Kidul lan Kapuloan Sandwich Kidul"}
         GT{"Guatémala"}
         GU{"Guam"}
@@ -151,6 +155,7 @@ jv{
         KH{"Kamboja"}
         KI{"Kiribati"}
         KM{"Komoro"}
+        KN{"Saint Kits lan Nèvis"}
         KR{"Koréa Kidul"}
         KW{"Kuwait"}
         KY{"Kapuloan Kéman"}
@@ -207,6 +212,7 @@ jv{
         PH{"Pilipina"}
         PK{"Pakistan"}
         PL{"Polen"}
+        PM{"Saint Pièr lan Mikuélon"}
         PN{"Kapuloan Pitcairn"}
         PR{"Puèrto Riko"}
         PS{"Tlatah Palèstina"}
@@ -217,6 +223,7 @@ jv{
         QO{"Oseania Paling Njaba"}
         RE{"Réunion"}
         RO{"Ruméni"}
+        RS{"Sèrbi"}
         RU{"Rusia"}
         RW{"Rwanda"}
         SA{"Arab Saudi"}
@@ -225,6 +232,7 @@ jv{
         SD{"Sudan"}
         SE{"Swèdhen"}
         SG{"Singapura"}
+        SH{"Saint Héléna"}
         SI{"Slovénia"}
         SJ{"Svalbard lan Jan Mayen"}
         SK{"Slowak"}
@@ -264,6 +272,7 @@ jv{
         UY{"Uruguay"}
         UZ{"Usbèkistan"}
         VA{"Kutha Vatikan"}
+        VC{"Saint Vinsen lan Grénadin"}
         VE{"Vénésuéla"}
         VG{"Kapuloan Virgin Britania"}
         VI{"Kapuloan Virgin Amérika"}
@@ -271,6 +280,8 @@ jv{
         VU{"Vanuatu"}
         WF{"Wallis lan Futuna"}
         WS{"Samoa"}
+        XA{"Logat Semu"}
+        XB{"Rong Arah Semu"}
         XK{"Kosovo"}
         YE{"Yaman"}
         YT{"Mayotte"}
@@ -282,6 +293,7 @@ jv{
     Countries%short{
         GB{"KM"}
         HK{"Hong Kong"}
+        MO{"Macau"}
         PS{"Palèstina"}
         US{"AS"}
     }
@@ -290,7 +302,8 @@ jv{
         CG{"Républik Kongo"}
         CZ{"Républik Céko"}
         FK{"Kapuloan Falkland (Islas Malvinas)"}
+        SZ{"(Swasiland)"}
         TL{"Timor Wétan"}
     }
-    Version{"2.1.48.44"}
+    Version{"36"}
 }

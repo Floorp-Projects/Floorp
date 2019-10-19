@@ -127,7 +127,6 @@ xog{
         MD{"Molodova"}
         MG{"Madagasika"}
         MH{"Bizinga bya Mariso"}
-        MK{"Masedoniya"}
         ML{"Mali"}
         MM{"Myanima"}
         MN{"Mongoliya"}
@@ -226,5 +225,5 @@ xog{
         ZM{"Zambya"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

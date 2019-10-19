@@ -127,7 +127,6 @@ kde{
         MD{"Moldova"}
         MG{"Bukini"}
         MH{"Chisiwa cha Malushal"}
-        MK{"Masedonia"}
         ML{"Mali"}
         MM{"Myama"}
         MN{"Mongolia"}
@@ -227,5 +226,5 @@ kde{
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

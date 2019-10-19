@@ -4,41 +4,86 @@ to{
     Currencies{
         AUD{
             "AUD$",
-            "Australian Dollar",
+            "Tola fakaʻaositelēlia",
         }
         BRL{
             "R$",
             "BRL",
         }
+        FJD{
+            "FJD",
+            "Tola fakafisi",
+        }
         NZD{
             "NZD$",
-            "NZD",
+            "Tola fakanuʻusila",
+        }
+        PGK{
+            "PGK",
+            "Kina fakapapuaniukini",
+        }
+        SBD{
+            "SBD",
+            "Tola fakaʻotusolomone",
         }
         TOP{
             "T$",
             "Paʻanga fakatonga",
         }
+        VUV{
+            "VUV",
+            "Vatu fakavanuatu",
+        }
         WST{
             "WST",
             "Tala fakahaʻamoa",
+        }
+        XPF{
+            "CFPF",
+            "Falaniki fakapasifika",
         }
         XXX{
             "¤",
             "Pa’anga Ta’e’ilo",
         }
     }
+    Currencies%narrow{
+        AUD{"AU$"}
+        FJD{"F$"}
+        NZD{"NZ$"}
+        SBD{"S$"}
+        TOP{"T$"}
+    }
     Currencies%variant{
         GEL{"₾"}
     }
     CurrencyPlurals{
         AUD{
-            other{"Australian Dollar"}
+            other{"Tola fakaʻaositelēlia"}
+        }
+        FJD{
+            other{"Tola fakafisi"}
+        }
+        NZD{
+            other{"Tola fakanuʻusila"}
+        }
+        PGK{
+            other{"Kina fakapapuaniukini"}
+        }
+        SBD{
+            other{"Tola fakaʻotusolomone"}
         }
         TOP{
             other{"Paʻanga fakatonga"}
         }
+        VUV{
+            other{"Vatu fakavanuatu"}
+        }
         WST{
             other{"Tala fakahaʻamoa"}
+        }
+        XPF{
+            other{"Falaniki fakapasifika"}
         }
         XXX{
             other{"Pa’anga Ta’e’ilo"}
@@ -47,5 +92,5 @@ to{
     CurrencyUnitPatterns{
         other{"{1} {0}"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

@@ -266,8 +266,12 @@ zh{
             "CNH",
             "人民币（离岸）",
         }
+        CNX{
+            "CNX",
+            "中国人民银行元",
+        }
         CNY{
-            "￥",
+            "¥",
             "人民币",
         }
         COP{
@@ -1267,8 +1271,6 @@ zh{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
-        LTL{"Lt"}
-        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -1285,6 +1287,7 @@ zh{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
         RUB{"₽"}
         RUR{"р."}
         RWF{"RF"}
@@ -1294,6 +1297,7 @@ zh{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1505,6 +1509,9 @@ zh{
         }
         CNH{
             other{"人民币（离岸）"}
+        }
+        CNX{
+            other{"中国人民银行元"}
         }
         CNY{
             other{"人民币"}
@@ -2167,5 +2174,5 @@ zh{
     CurrencyUnitPatterns{
         other{"{0}{1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

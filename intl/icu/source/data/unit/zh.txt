@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -89,6 +89,7 @@ zh{
         }
         compound{
             per{"每{1}{0}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -111,9 +112,13 @@ zh{
                 dnam{"ppm"}
                 other{"百万分之{0}"}
             }
-            permyriad{
-                dnam{"‱"}
-                other{"{0}‱"}
+            percent{
+                dnam{"%"}
+                other{"{0}%"}
+            }
+            permille{
+                dnam{"‰"}
+                other{"{0}‰"}
             }
         }
         consumption{
@@ -196,6 +201,10 @@ zh{
                 dnam{"天"}
                 other{"{0}天"}
                 per{"每天{0}"}
+            }
+            decade{
+                dnam{"年代"}
+                other{"{0}年代"}
             }
             hour{
                 dnam{"小时"}
@@ -291,6 +300,10 @@ zh{
                 dnam{"千瓦时"}
                 other{"{0}千瓦时"}
             }
+            therm-us{
+                dnam{"美制克卡"}
+                other{"{0}美制克卡"}
+            }
         }
         force{
             newton{
@@ -318,6 +331,36 @@ zh{
             megahertz{
                 dnam{"兆赫"}
                 other{"{0}兆赫"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"点每厘米"}
+                other{"{0}点每厘米"}
+            }
+            dot-per-inch{
+                dnam{"点每英寸"}
+                other{"{0}点每英寸"}
+            }
+            em{
+                dnam{"版式"}
+                other{"{0}版式"}
+            }
+            megapixel{
+                dnam{"百万像素"}
+                other{"{0}百万像素"}
+            }
+            pixel{
+                dnam{"像素"}
+                other{"{0}像素"}
+            }
+            pixel-per-centimeter{
+                dnam{"像素每厘米"}
+                other{"{0}像素每厘米"}
+            }
+            pixel-per-inch{
+                dnam{"像素每英寸"}
+                other{"{0}像素每英寸"}
             }
         }
         length{
@@ -514,6 +557,10 @@ zh{
                 dnam{"标准大气压"}
                 other{"{0}个标准大气压"}
             }
+            bar{
+                dnam{"巴"}
+                other{"{0}巴"}
+            }
             hectopascal{
                 dnam{"百帕斯卡"}
                 other{"{0}百帕斯卡"}
@@ -537,6 +584,10 @@ zh{
             millimeter-of-mercury{
                 dnam{"毫米汞柱"}
                 other{"{0}毫米汞柱"}
+            }
+            pascal{
+                dnam{"帕斯卡"}
+                other{"{0}帕斯卡"}
             }
             pound-per-square-inch{
                 dnam{"磅/平方英寸"}
@@ -732,10 +783,6 @@ zh{
                 dnam{"英亩"}
                 other{"{0}ac"}
             }
-            dunam{
-                dnam{"杜纳亩"}
-                other{"{0}杜纳亩"}
-            }
             hectare{
                 dnam{"公顷"}
                 other{"{0}ha"}
@@ -776,15 +823,12 @@ zh{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
-            mole{
-                dnam{"摩尔"}
-                other{"{0}摩尔"}
-            }
-            permyriad{
-                dnam{"‱"}
-                other{"{0}‱"}
+            percent{
+                dnam{"%"}
+                other{"{0}%"}
             }
         }
         consumption{
@@ -809,6 +853,10 @@ zh{
                 dnam{"天"}
                 other{"{0}天"}
                 per{"{0}/天"}
+            }
+            decade{
+                dnam{"年代"}
+                other{"{0}年代"}
             }
             hour{
                 dnam{"小时"}
@@ -854,14 +902,6 @@ zh{
             }
         }
         energy{
-            british-thermal-unit{
-                dnam{"英热单位"}
-                other{"{0}英热单位"}
-            }
-            electronvolt{
-                dnam{"电子伏"}
-                other{"{0}电子伏"}
-            }
             foodcalorie{
                 dnam{"卡"}
                 other{"{0}卡"}
@@ -874,15 +914,9 @@ zh{
                 dnam{"千焦"}
                 other{"{0}千焦"}
             }
-        }
-        force{
-            newton{
-                dnam{"牛"}
-                other{"{0}牛"}
-            }
-            pound-force{
-                dnam{"磅力"}
-                other{"{0}磅力"}
+            therm-us{
+                dnam{"美制克卡"}
+                other{"{0}美制克卡"}
             }
         }
         length{
@@ -941,6 +975,7 @@ zh{
             }
             mile-scandinavian{
                 dnam{"斯堪的纳维亚英里"}
+                other{"{0}smi"}
             }
             millimeter{
                 dnam{"毫米"}
@@ -962,30 +997,12 @@ zh{
                 dnam{"皮米"}
                 other{"{0}pm"}
             }
-            solar-radius{
-                dnam{"太阳半径"}
-                other{"{0}太阳半径"}
-            }
             yard{
                 dnam{"码"}
                 other{"{0}yd"}
             }
         }
-        light{
-            solar-luminosity{
-                dnam{"太阳光度"}
-                other{"{0}太阳光度"}
-            }
-        }
         mass{
-            dalton{
-                dnam{"道尔顿"}
-                other{"{0}道尔顿"}
-            }
-            earth-mass{
-                dnam{"地球质量"}
-                other{"{0}地球质量"}
-            }
             gram{
                 dnam{"克"}
                 other{"{0}克"}
@@ -999,10 +1016,6 @@ zh{
             }
             pound{
                 other{"{0}磅"}
-            }
-            solar-mass{
-                dnam{"太阳质量"}
-                other{"{0}太阳质量"}
             }
             stone{
                 dnam{"英石"}
@@ -1026,14 +1039,6 @@ zh{
             }
             inch-hg{
                 other{"{0}\u0022 Hg"}
-            }
-            kilopascal{
-                dnam{"千帕"}
-                other{"{0}千帕"}
-            }
-            megapascal{
-                dnam{"兆帕"}
-                other{"{0}兆帕"}
             }
             millibar{
                 other{"{0}mb"}
@@ -1066,24 +1071,10 @@ zh{
                 other{"{0}°F"}
             }
         }
-        torque{
-            newton-meter{
-                dnam{"牛米"}
-                other{"{0}牛米"}
-            }
-            pound-foot{
-                dnam{"磅英尺"}
-                other{"{0}磅英尺"}
-            }
-        }
         volume{
             acre-foot{
                 dnam{"英亩英尺"}
                 other{"{0}英亩英尺"}
-            }
-            barrel{
-                dnam{"桶"}
-                other{"{0}桶"}
             }
             bushel{
                 dnam{"蒲式耳"}
@@ -1138,9 +1129,6 @@ zh{
             fluid-ounce{
                 dnam{"液盎司"}
                 other{"{0}液盎司"}
-            }
-            fluid-ounce-imperial{
-                dnam{"英制液盎司"}
             }
             gallon{
                 dnam{"加仑"}
@@ -1273,6 +1261,7 @@ zh{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -1295,9 +1284,13 @@ zh{
                 dnam{"ppm"}
                 other{"{0}ppm"}
             }
-            permyriad{
-                dnam{"‱"}
-                other{"{0}‱"}
+            percent{
+                dnam{"%"}
+                other{"{0}%"}
+            }
+            permille{
+                dnam{"‰"}
+                other{"{0}‰"}
             }
         }
         consumption{
@@ -1358,6 +1351,10 @@ zh{
                 dnam{"兆字节"}
                 other{"{0}兆字节"}
             }
+            petabyte{
+                dnam{"PB"}
+                other{"{0} PB"}
+            }
             terabit{
                 dnam{"太比特"}
                 other{"{0}太比特"}
@@ -1376,6 +1373,10 @@ zh{
                 dnam{"天"}
                 other{"{0}天"}
                 per{"{0}/天"}
+            }
+            decade{
+                dnam{"年代"}
+                other{"{0}年代"}
             }
             hour{
                 dnam{"小时"}
@@ -1470,6 +1471,10 @@ zh{
             kilowatt-hour{
                 dnam{"千瓦时"}
                 other{"{0}千瓦时"}
+            }
+            therm-us{
+                dnam{"美制克卡"}
+                other{"{0}美制克卡"}
             }
         }
         force{
@@ -1694,6 +1699,10 @@ zh{
                 dnam{"大气压"}
                 other{"{0}个大气压"}
             }
+            bar{
+                dnam{"巴"}
+                other{"{0}巴"}
+            }
             hectopascal{
                 dnam{"百帕"}
                 other{"{0}百帕"}
@@ -1717,6 +1726,10 @@ zh{
             millimeter-of-mercury{
                 dnam{"毫米汞柱"}
                 other{"{0}毫米汞柱"}
+            }
+            pascal{
+                dnam{"帕"}
+                other{"{0}帕"}
             }
             pound-per-square-inch{
                 dnam{"磅/平方英寸"}

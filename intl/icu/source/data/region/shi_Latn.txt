@@ -128,7 +128,6 @@ shi_Latn{
         MD{"muldufya"}
         MG{"madaɣacqar"}
         MH{"tigzirin n marcal"}
-        MK{"masidunya"}
         ML{"mali"}
         MM{"myanmar"}
         MN{"mnɣulya"}
@@ -228,5 +227,5 @@ shi_Latn{
         ZM{"zambya"}
         ZW{"zimbabwi"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

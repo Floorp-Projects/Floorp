@@ -1,38 +1,17 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 so{
-    AuxExemplarCharacters{"[]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
     ExemplarCharactersIndex{"[B C D F G H J K L M N Q R S T W X Y]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
-            miscPatterns{
-                approximately{"~{0}"}
-                atLeast{"≥{0}"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
-            }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -138,30 +117,6 @@ so{
                     }
                 }
                 decimalFormat{
-                    1000{
-                        one{"0K"}
-                        other{"0K"}
-                    }
-                    10000{
-                        one{"00K"}
-                        other{"00K"}
-                    }
-                    100000{
-                        one{"000K"}
-                        other{"000K"}
-                    }
-                    1000000{
-                        one{"0M"}
-                        other{"0M"}
-                    }
-                    10000000{
-                        one{"00M"}
-                        other{"00M"}
-                    }
-                    100000000{
-                        one{"000M"}
-                        other{"000M"}
-                    }
                     1000000000{
                         one{"0B"}
                         other{"0B"}
@@ -174,31 +129,10 @@ so{
                         one{"000B"}
                         other{"000B"}
                     }
-                    1000000000000{
-                        one{"0T"}
-                        other{"0T"}
-                    }
-                    10000000000000{
-                        one{"00T"}
-                        other{"00T"}
-                    }
-                    100000000000000{
-                        one{"000T"}
-                        other{"000T"}
-                    }
                 }
             }
             symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
                 nan{"MaL"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
         minimalPairs{
@@ -210,10 +144,8 @@ so{
                 other{"{0} maalmood"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -232,37 +164,15 @@ so{
                 "{1} {0}",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
-                MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
@@ -283,15 +193,6 @@ so{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"y G – y G"}
                     y{"y – y G"}
@@ -352,10 +253,6 @@ so{
                     M{"M/d – M/d"}
                     d{"M/d – M/d"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 y{
                     y{"y – y G"}
                 }
@@ -421,50 +318,20 @@ so{
                 "{1} {0}",
                 "{1} {0}",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
                 MMMMW{
                     one{"'toddobaadka' W 'ee' MMMM"}
                     other{"'toddobaadka' W 'ee' MMMM"}
                 }
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
-                hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -484,7 +351,7 @@ so{
                     abbreviated{
                         "Axd",
                         "Isn",
-                        "Slsa",
+                        "Tldo",
                         "Arbc",
                         "Khms",
                         "Jmc",
@@ -493,7 +360,7 @@ so{
                     narrow{
                         "A",
                         "I",
-                        "S",
+                        "T",
                         "A",
                         "Kh",
                         "J",
@@ -502,7 +369,7 @@ so{
                     short{
                         "Axd",
                         "Isn",
-                        "Slsa",
+                        "Tldo",
                         "Arbc",
                         "Khms",
                         "Jmc",
@@ -511,10 +378,10 @@ so{
                     wide{
                         "Axad",
                         "Isniin",
-                        "Salaasa",
-                        "Arbaca",
+                        "Talaado",
+                        "Arbaco",
                         "Khamiis",
-                        "Jimce",
+                        "Jimco",
                         "Sabti",
                     }
                 }
@@ -522,7 +389,7 @@ so{
                     abbreviated{
                         "Axd",
                         "Isn",
-                        "Slsa",
+                        "Tldo",
                         "Arbc",
                         "Khms",
                         "Jmc",
@@ -531,7 +398,7 @@ so{
                     narrow{
                         "A",
                         "I",
-                        "S",
+                        "T",
                         "A",
                         "Kh",
                         "J",
@@ -540,7 +407,7 @@ so{
                     short{
                         "Axd",
                         "Isn",
-                        "Slsa",
+                        "Tldo",
                         "Arbc",
                         "Khms",
                         "Jmc",
@@ -549,10 +416,10 @@ so{
                     wide{
                         "Axad",
                         "Isniin",
-                        "Salaasa",
-                        "Arbaca",
+                        "Talaado",
+                        "Arbaco",
                         "Khamiis",
-                        "Jimce",
+                        "Jimco",
                         "Sabti",
                     }
                 }
@@ -560,10 +427,6 @@ so{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"GH"}
-                        pm{"GD"}
-                    }
-                    narrow{
                         am{"GH"}
                         pm{"GD"}
                     }
@@ -592,15 +455,6 @@ so{
                 }
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"y G – y G"}
                     y{"y – y G"}
@@ -639,20 +493,6 @@ so{
                     d{"M/d/y – M/d/y GGGGG"}
                     y{"M/d/y – M/d/y GGGGG"}
                 }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -675,31 +515,7 @@ so{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} - {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
-                }
                 yM{
                     M{"MM/y – MM/y"}
                     y{"MM/y – MM/y"}
@@ -831,12 +647,6 @@ so{
                         "R3",
                         "R4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "Rubaca 1aad",
                         "Rubaca 2aad",
@@ -851,17 +661,80 @@ so{
                         "R3",
                         "R4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "Rubaca 1aad",
                         "Rubaca 2aad",
                         "Rubaca 3aad",
                         "Rubaca 4aad",
+                    }
+                }
+            }
+        }
+        islamic{
+            eras{
+                abbreviated{
+                    "HD",
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Mux.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dhuʻl-Q.",
+                        "Dhuʻl-H.",
+                    }
+                    wide{
+                        "Muxarram",
+                        "Safar",
+                        "Rabic al-awwal",
+                        "Rabic al-thani",
+                        "Jumada al-awwal",
+                        "jumada al-thani",
+                        "Rajab",
+                        "Shacban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dul al-qacda",
+                        "Dul xijjah",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Mux.",
+                        "Saf.",
+                        "Rab. I",
+                        "Rab. II",
+                        "Jum. I",
+                        "Jum. II",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shaw.",
+                        "Dul-Q.",
+                        "Dul-X.",
+                    }
+                    wide{
+                        "Muxarram",
+                        "Safar",
+                        "Rabic al-awwal",
+                        "Rabic al-thani",
+                        "Jumada al-awwal",
+                        "jumada al-thani",
+                        "Rajab",
+                        "Shacban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dul al-qacdah",
+                        "Dul xijjah",
                     }
                 }
             }
@@ -955,12 +828,6 @@ so{
         western_asian_scripts{"qoraalka galbeedka Asian"}
         whitespace{"meesha cad banaan"}
     }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
-    }
     fields{
         day{
             dn{"maalin"}
@@ -982,29 +849,9 @@ so{
         }
         day-narrow{
             dn{"mln"}
-            relative{
-                "-1"{"Shalay"}
-                "0"{"Maanta"}
-                "1"{"Berri"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} mln"}
-                    other{"{0} mlmd"}
-                }
-                past{
-                    one{"{0} mln khr"}
-                    other{"{0} mlmd khr"}
-                }
-            }
         }
         day-short{
             dn{"mln"}
-            relative{
-                "-1"{"Shalay"}
-                "0"{"Maanta"}
-                "1"{"Berri"}
-            }
             relativeTime{
                 future{
                     one{"{0} mln"}
@@ -1018,9 +865,6 @@ so{
         }
         dayOfYear{
             dn{"maalinta sannadka"}
-        }
-        dayOfYear-narrow{
-            dn{"mlnta sndka"}
         }
         dayOfYear-short{
             dn{"mlnta sndka"}
@@ -1060,23 +904,6 @@ so{
                 }
             }
         }
-        fri-narrow{
-            relative{
-                "-1"{"Jmchi hre"}
-                "0"{"Jmchn"}
-                "1"{"Jmcha dbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} Jmc"}
-                    other{"{0} Jmc"}
-                }
-                past{
-                    one{"{0} Jmc khr"}
-                    other{"{0} jmc khr"}
-                }
-            }
-        }
         fri-short{
             relative{
                 "-1"{"Jmchi hre"}
@@ -1112,16 +939,6 @@ so{
         }
         hour-narrow{
             dn{"scd"}
-            relativeTime{
-                future{
-                    one{"{0} scd"}
-                    other{"{0} scd"}
-                }
-                past{
-                    one{"{0} scd khr"}
-                    other{"{0} scd khr"}
-                }
-            }
         }
         hour-short{
             dn{"scd"}
@@ -1152,19 +969,6 @@ so{
                 }
             }
         }
-        minute-narrow{
-            dn{"dqqd"}
-            relativeTime{
-                future{
-                    one{"{0} dqqd"}
-                    other{"{0} dqqd"}
-                }
-                past{
-                    one{"{0} dqqd khr"}
-                    other{"{0} dqqd khr"}
-                }
-            }
-        }
         minute-short{
             dn{"dqqd"}
             relativeTime{
@@ -1174,7 +978,7 @@ so{
                 }
                 past{
                     one{"{0} dqqd khr"}
-                    other{"{0} dqqd khr"}
+                    other{"{0} daqiiqadood kahor"}
                 }
             }
         }
@@ -1200,16 +1004,6 @@ so{
                 "-1"{"Isnti hre"}
                 "0"{"Isntn"}
                 "1"{"Isnta dbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} Isn"}
-                    other{"{0} Isn"}
-                }
-                past{
-                    one{"{0} Isn khr"}
-                    other{"{0} Isn khr"}
-                }
             }
         }
         mon-short{
@@ -1248,30 +1042,9 @@ so{
             }
         }
         month-narrow{
-            dn{"Bil-gaaban"}
-            relative{
-                "-1"{"Bishii hore"}
-                "0"{"Bishan"}
-                "1"{"Bisha danbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} bil"}
-                    other{"{0} bil"}
-                }
-                past{
-                    one{"{0} bil khr"}
-                    other{"{0} bil khr"}
-                }
-            }
+            dn{"bil"}
         }
         month-short{
-            dn{"Bil-gaaban"}
-            relative{
-                "-1"{"Bishii hore"}
-                "0"{"Bishan"}
-                "1"{"Bisha danbe"}
-            }
             relativeTime{
                 future{
                     one{"{0} bil"}
@@ -1303,16 +1076,6 @@ so{
         }
         quarter-narrow{
             dn{"rbc"}
-            relativeTime{
-                future{
-                    one{"{0} rbc"}
-                    other{"{0} rbc"}
-                }
-                past{
-                    one{"{0} rbc khr"}
-                    other{"{0} rbc khr"}
-                }
-            }
         }
         quarter-short{
             dn{"rbc"}
@@ -1341,23 +1104,6 @@ so{
                 past{
                     one{"{0} Sabti kahor"}
                     other{"{0} Sabtiyood kahor"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"Sbtdi hre"}
-                "0"{"Sbtdn"}
-                "1"{"Sbtda dbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} Sbti"}
-                    other{"{0} Sbti"}
-                }
-                past{
-                    one{"{0} Sbti khr"}
-                    other{"{0} Sbti khr"}
                 }
             }
         }
@@ -1394,19 +1140,6 @@ so{
                 }
             }
         }
-        second-narrow{
-            dn{"ilbrqsi"}
-            relativeTime{
-                future{
-                    one{"{0} ilbrqsi"}
-                    other{"{0} ilbrqsi"}
-                }
-                past{
-                    one{"{0} ilbrqsi khr"}
-                    other{"{0} ilbrqsi khr"}
-                }
-            }
-        }
         second-short{
             dn{"ilbrqsi"}
             relativeTime{
@@ -1439,36 +1172,9 @@ so{
         }
         sun-narrow{
             relative{
-                "-1"{"Axdi hre"}
-                "0"{"Axdn"}
-                "1"{"Axda dbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} Axd"}
-                    other{"{0} Axd"}
-                }
-                past{
-                    one{"{0} Axd khr"}
-                    other{"{0} axd khr"}
-                }
-            }
-        }
-        sun-short{
-            relative{
-                "-1"{"Axdi hre"}
-                "0"{"Axdn"}
-                "1"{"Axda dbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} Axd"}
-                    other{"{0} Axd"}
-                }
-                past{
-                    one{"{0} Axd khr"}
-                    other{"{0} axd khr"}
-                }
+                "-1"{"axadii hore"}
+                "0"{"axadan"}
+                "1"{"axada xigta"}
             }
         }
         thu{
@@ -1485,23 +1191,6 @@ so{
                 past{
                     one{"{0} Khamiis kahor"}
                     other{"{0} Khamiisood kahor"}
-                }
-            }
-        }
-        thu-narrow{
-            relative{
-                "-1"{"Khmsti hre"}
-                "0"{"Khmstn"}
-                "1"{"Khmsta dbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} khms"}
-                    other{"{0} khms"}
-                }
-                past{
-                    one{"{0} khms khr"}
-                    other{"{0} khms khr"}
                 }
             }
         }
@@ -1524,52 +1213,52 @@ so{
         }
         tue{
             relative{
-                "-1"{"Salaasadii hore"}
-                "0"{"Salaasadan"}
-                "1"{"Salaasada danbe"}
+                "-1"{"Talaadadii hore"}
+                "0"{"Talaadadan"}
+                "1"{"Talaadada xigta"}
             }
             relativeTime{
                 future{
-                    one{"{0} Salaasa"}
-                    other{"{0} Salaasood"}
+                    one{"{0} Talaado"}
+                    other{"{0} Talaadood"}
                 }
                 past{
-                    one{"{0} Salaasa kahor"}
-                    other{"{0} Salaasood kahor"}
+                    one{"{0} Talaado kahor"}
+                    other{"{0} Talaadood kahor"}
                 }
             }
         }
         tue-narrow{
             relative{
-                "-1"{"Slsdi hre"}
-                "0"{"Slsdn"}
-                "1"{"Slsda dbe"}
+                "-1"{"Tlddi hre"}
+                "0"{"Tlddn"}
+                "1"{"Tldda xgta"}
             }
             relativeTime{
                 future{
-                    one{"{0} Slsa"}
-                    other{"{0} Slsa"}
+                    one{"{0} Tldo"}
+                    other{"{0} Tldo"}
                 }
                 past{
-                    one{"{0} Slsa khr"}
-                    other{"{0} Slsa khr"}
+                    one{"{0} Tldo khr"}
+                    other{"{0} Tldod khr"}
                 }
             }
         }
         tue-short{
             relative{
-                "-1"{"Slsdi hre"}
-                "0"{"Slsdn"}
-                "1"{"Slsda dbe"}
+                "-1"{"Tlddi hre"}
+                "0"{"Tlddn"}
+                "1"{"Tldda xgta"}
             }
             relativeTime{
                 future{
-                    one{"{0} Slsa"}
-                    other{"{0} Slsa"}
+                    one{"{0} Tldo"}
+                    other{"{0} Tldo"}
                 }
                 past{
-                    one{"{0} Slsa khr"}
-                    other{"{0} Slsa khr"}
+                    one{"{0} Tldo khr"}
+                    other{"{0} Tldod khr"}
                 }
             }
         }
@@ -1587,23 +1276,6 @@ so{
                 past{
                     one{"{0} Arbaca kahor"}
                     other{"{0} Arbacood kahor"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"Arbcdi hre"}
-                "0"{"Arbcdn"}
-                "1"{"Arbcda dbe"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} Arbc"}
-                    other{"{0} Arbc"}
-                }
-                past{
-                    one{"{0} Arbc khr"}
-                    other{"{0} Arbc khr"}
                 }
             }
         }
@@ -1647,28 +1319,13 @@ so{
             dn{"tdbd"}
             relative{
                 "-1"{"Toddobaadkii hore"}
-                "0"{"Usbuucan"}
+                "0"{"Toddobaadkan"}
                 "1"{"Toddobaadka danbe"}
             }
             relativePeriod{"Tdbdka {0}"}
-            relativeTime{
-                future{
-                    one{"{0} tdbd"}
-                    other{"{0} tdbd"}
-                }
-                past{
-                    one{"{0} tdbd khr"}
-                    other{"{0} tdbd khr"}
-                }
-            }
         }
         week-short{
             dn{"tdbd"}
-            relative{
-                "-1"{"Toddobaadkii hore"}
-                "0"{"Usbuucan"}
-                "1"{"Toddobaadka danbe"}
-            }
             relativePeriod{"Tdbdka {0}"}
             relativeTime{
                 future{
@@ -1683,12 +1340,6 @@ so{
         }
         weekOfMonth{
             dn{"Toddobaadka Bisha"}
-        }
-        weekOfMonth-narrow{
-            dn{"tdbdka bsha"}
-        }
-        weekOfMonth-short{
-            dn{"tdbdka bsha"}
         }
         weekday{
             dn{"maalinta toddobaadka"}
@@ -1733,24 +1384,9 @@ so{
                 "0"{"Sannadkan"}
                 "1"{"Sannadka xiga"}
             }
-            relativeTime{
-                future{
-                    one{"{0} snd"}
-                    other{"{0} snd"}
-                }
-                past{
-                    one{"{0} snd khr"}
-                    other{"{0} Snd khr"}
-                }
-            }
         }
         year-short{
             dn{"snd"}
-            relative{
-                "-1"{"Sannadkii hore"}
-                "0"{"Sannadkan"}
-                "1"{"Sannadka danbe"}
-            }
             relativeTime{
                 future{
                     one{"{0} snd"}
@@ -1776,26 +1412,10 @@ so{
         or{
             2{"{0} ama {1}"}
             end{"{0} ama {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} ama {1}"}
-            end{"{0} ama {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} ama {1}"}
-            end{"{0} ama {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} iyo {1}"}
             end{"{0} iyo {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-narrow{
             2{"{0}, {1}"}
@@ -1807,30 +1427,17 @@ so{
             2{"{0} & {1}"}
             end{"{0} & {1}"}
             middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0} iyo {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
-        UK{"UK"}
-        US{"US"}
         metric{"Metrik"}
     }
     parse{
@@ -1858,10 +1465,6 @@ so{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

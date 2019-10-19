@@ -1,10 +1,8 @@
 # Copyright (C) 2018 and later: Unicode, Inc. and others.
 # License & terms of use: http://www.unicode.org/copyright.html
 
-from distutils.sysconfig import parse_makefile
-
-from buildtool import *
-from buildtool.request_types import *
+from icutools.databuilder import *
+from icutools.databuilder.request_types import *
 
 
 def generate(config, glob, common_vars):
@@ -28,24 +26,24 @@ def generate(config, glob, common_vars):
 
 
 def generate_rb(config, glob, common_vars):
-    mk_vars = parse_makefile("{GLOB_DIR}/tstfiles.mk".format(**common_vars))
-    basenames = [v[:-4] for v in mk_vars["TEST_RES_SOURCE"].split()]
-    basenames += [
+    basenames = [
+        "calendar",
         "casing",
+        "conversion",
+        "format",
+        "icuio",
+        "idna_rules",
         "mc",
         "root",
-        "sh",
         "sh_YU",
-        "te",
-        "te_IN",
+        "sh",
+        "structLocale",
         "te_IN_REVISED",
-        "testtypes",
+        "te_IN",
+        "te",
         "testaliases",
         "testempty",
-        "structLocale",
-        "idna_rules",
-        "conversion",
-        "icuio",
+        "testtypes",
         # "metaZones",
         # "timezoneTypes",
         # "windowsZones",

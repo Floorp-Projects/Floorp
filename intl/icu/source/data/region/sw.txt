@@ -31,7 +31,7 @@ sw{
         151{"Ulaya ya Mashariki"}
         154{"Ulaya ya Kaskazini"}
         155{"Ulaya ya Magharibi"}
-        202{"Afrika Kusine mwa Jangwa la Sahara"}
+        202{"Afrika Kusini mwa Jangwa la Sahara"}
         419{"Amerika ya Kilatini"}
         AC{"Kisiwa cha Ascension"}
         AD{"Andorra"}
@@ -183,11 +183,11 @@ sw{
         MF{"St. Martin"}
         MG{"Madagaska"}
         MH{"Visiwa vya Marshall"}
-        MK{"Macedonia"}
+        MK{"Masedonia ya Kaskazini"}
         ML{"Mali"}
         MM{"Myanmar (Burma)"}
         MN{"Mongolia"}
-        MO{"Macau SAR China"}
+        MO{"Makau SAR China"}
         MP{"Visiwa vya Mariana vya Kaskazini"}
         MQ{"Martinique"}
         MR{"Moritania"}
@@ -287,6 +287,8 @@ sw{
         VU{"Vanuatu"}
         WF{"Wallis na Futuna"}
         WS{"Samoa"}
+        XA{"Lafudhi Bandia"}
+        XB{"Lafudhi Bidi"}
         XK{"Kosovo"}
         YE{"Yemeni"}
         YT{"Mayotte"}
@@ -298,7 +300,7 @@ sw{
     Countries%short{
         GB{"Ufalme wa Muungano"}
         HK{"Hong Kong"}
-        MO{"Macau"}
+        MO{"Makau"}
         PS{"Palestina"}
         UN{"Umoja wa Mataifa"}
         US{"US"}
@@ -309,9 +311,8 @@ sw{
         CI{"Ivory Coast"}
         CZ{"Jamhuri ya Cheki"}
         FK{"Visiwa vya Falkland (Islas Malvinas)"}
-        MK{"Macedonia (FYROM)"}
-        SZ{"SZ"}
+        SZ{"Uswazi"}
         TL{"Timor ya Mashariki"}
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
 }

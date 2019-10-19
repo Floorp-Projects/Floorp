@@ -397,11 +397,7 @@ smn{
         zxx{"ij kielâlâš siskáldâs"}
         zza{"zazakielâ"}
     }
-    Languages%short{
-        en_GB{"eŋgâlâskielâ (OK)"}
-        en_US{"eŋgâlâskielâ (USA)"}
-    }
-    Version{"2.1.47.82"}
+    Version{"36"}
     codePatterns{
         language{"kielâ: {0}"}
         script{"čäällimvuáhádâh: {0}"}

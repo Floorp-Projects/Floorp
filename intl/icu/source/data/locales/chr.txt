@@ -16,13 +16,14 @@ chr{
         " ꮼ ꮽ ꮾ ꮿ ᏸ ᏹ ᏺ ᏻ ᏼ]"
     }
     ExemplarCharactersIndex{"[Ꭰ Ꭶ Ꭽ Ꮃ Ꮉ Ꮎ Ꮖ Ꮜ Ꮣ Ꮬ Ꮳ Ꮹ Ꮿ]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -203,6 +204,7 @@ chr{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -214,8 +216,10 @@ chr{
                 other{"{0} ᏏᎢᎦ"}
             }
         }
+        minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1258,6 +1262,11 @@ chr{
         }
         month-narrow{
             dn{"ᎧᎸ."}
+            relative{
+                "-1"{"ᎧᎸ. ᏥᎨᏒ"}
+                "0"{"ᎯᎠ ᎧᎸ."}
+                "1"{"ᏔᎵᏁ ᎧᎸ."}
+            }
             relativeTime{
                 future{
                     one{"ᎾᎿ {0} ᎧᎸ."}
@@ -1271,6 +1280,11 @@ chr{
         }
         month-short{
             dn{"ᎧᎸ."}
+            relative{
+                "-1"{"ᎧᎸ. ᏥᎨᏒ"}
+                "0"{"ᎯᎠ ᎧᎸ."}
+                "1"{"ᎯᎠ ᎧᎸ."}
+            }
             relativeTime{
                 future{
                     one{"ᎾᎿ {0} ᎧᎸ."}
@@ -1644,6 +1658,11 @@ chr{
         }
         week-narrow{
             dn{"ᏒᎾ."}
+            relative{
+                "-1"{"ᏥᏛᎵᏱᎵᏒᎢ."}
+                "0"{"ᎯᎠ ᎠᎵᎵᏌ."}
+                "1"{"ᏐᏆᎴᏅᎲ."}
+            }
             relativePeriod{"Ꮎ ᏒᎾᏙᏓᏆᏍᏗ ᎾᏍᎩ {0}"}
             relativeTime{
                 future{
@@ -1658,6 +1677,11 @@ chr{
         }
         week-short{
             dn{"ᏒᎾ."}
+            relative{
+                "-1"{"ᏥᏛᎵᏱᎵᏒᎢ."}
+                "0"{"ᎯᎠ ᎠᎵᎵᏌ."}
+                "1"{"ᏐᏆᎴᏅᎲ."}
+            }
             relativePeriod{"Ꮎ ᏒᎾᏙᏓᏆᏍᏗ ᎾᏍᎩ {0}"}
             relativeTime{
                 future{
@@ -1717,6 +1741,11 @@ chr{
         }
         year-narrow{
             dn{"ᎤᏕ."}
+            relative{
+                "-1"{"ᎡᏘ. ᏥᎨᏒ"}
+                "0"{"ᎯᎠ ᏧᏕᏘᏴᏒᏘ."}
+                "1"{"ᎡᏘᏴᎢ."}
+            }
             relativeTime{
                 future{
                     one{"ᎾᎿ {0} ᎤᏕ."}
@@ -1730,6 +1759,11 @@ chr{
         }
         year-short{
             dn{"ᎤᏕ."}
+            relative{
+                "-1"{"ᎡᏘ. ᏥᎨᏒ"}
+                "0"{"ᎯᎠ ᏧᏕᏘᏴᏒᏘ."}
+                "1"{"ᎡᏘᏴᎢ."}
+            }
             relativeTime{
                 future{
                     one{"ᎾᎿ {0} ᎤᏕ."}
@@ -1766,15 +1800,10 @@ chr{
         }
         standard-narrow{
             2{"{0}, {1}"}
-            end{"{0}, & {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} & {1}"}
             end{"{0}, & {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0}, {1}"}
@@ -1825,6 +1854,10 @@ chr{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

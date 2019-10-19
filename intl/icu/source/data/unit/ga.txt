@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ga{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -259,11 +259,11 @@ ga{
             }
         }
         coordinate{
-            dnam{"treo chairdinéil"}
-            east{"{0}O"}
-            north{"{0}T"}
-            south{"{0}D"}
-            west{"{0}I"}
+            dnam{"príomhaird"}
+            east{"{0} oirthear"}
+            north{"{0} thuaidh"}
+            south{"{0} theas"}
+            west{"{0} iarthar"}
         }
         digital{
             bit{
@@ -372,6 +372,14 @@ ga{
                 other{"{0} lá"}
                 per{"{0} sa lá"}
                 two{"{0} lá"}
+            }
+            decade{
+                dnam{"deicheanna blianta"}
+                few{"{0} dec"}
+                many{"{0} dec"}
+                one{"{0} deich mbliana"}
+                other{"{0} deich mbliana"}
+                two{"{0} dec"}
             }
             hour{
                 dnam{"uaireanta"}
@@ -551,6 +559,14 @@ ga{
                 other{"{0} cileavatuair"}
                 two{"{0} chileavatuair"}
             }
+            therm-us{
+                dnam{"teirmeacha US"}
+                few{"{0} theirm US"}
+                many{"{0} dteirm US"}
+                one{"{0} teirm US"}
+                other{"{0} teirm US"}
+                two{"{0} theirm US"}
+            }
         }
         force{
             newton{
@@ -602,6 +618,59 @@ ga{
                 one{"{0} mheigiheirts"}
                 other{"{0} meigiheirts"}
                 two{"{0} mheigiheirts"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"poncanna sa cheintiméadar"}
+                few{"{0} dpcm"}
+                many{"{0} dpcm"}
+                one{"{0} ponc sa cheintiméadar"}
+                other{"{0} poncanna sa cheintiméadar"}
+                two{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"poncanna san orlach"}
+                few{"{0} dpi"}
+                many{"{0} dpi"}
+                one{"{0} ponc san orlach"}
+                other{"{0} poncanna san orlach"}
+                two{"{0} dpi"}
+            }
+            em{
+                dnam{"eim chlógrafach"}
+            }
+            megapixel{
+                dnam{"meigiphicteilíní"}
+                few{"{0} MP"}
+                many{"{0} MP"}
+                one{"{0} meigiphicteilín"}
+                other{"{0} meigiphicteilín"}
+                two{"{0} MP"}
+            }
+            pixel{
+                dnam{"picteilíní"}
+                few{"{0} px"}
+                many{"{0} px"}
+                one{"{0} picteilín"}
+                other{"{0} picteilín"}
+                two{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"picteilíní sa cheintiméadar"}
+                few{"{0} ppcm"}
+                many{"{0} ppcm"}
+                one{"{0} picteilín sa cheintiméadar"}
+                other{"{0} picteilíní sa cheintiméadar"}
+                two{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"picteilíní san orlach"}
+                few{"{0} ppi"}
+                many{"{0} ppi"}
+                one{"{0} picteilín san orlach"}
+                other{"{0} picteilín san orlach"}
+                two{"{0} ppi"}
             }
         }
         length{
@@ -808,19 +877,19 @@ ga{
             }
             dalton{
                 dnam{"daltúin"}
-                few{"{0} Da"}
-                many{"{0} Da"}
+                few{"{0} dhaltún"}
+                many{"{0} ndaltún"}
                 one{"{0} daltún"}
                 other{"{0} daltún"}
-                two{"{0} Da"}
+                two{"{0} dhaltún"}
             }
             earth-mass{
                 dnam{"maiseanna an Domhain"}
-                few{"{0} M⊕"}
-                many{"{0} M⊕"}
+                few{"{0} mhais an Domhain"}
+                many{"{0} mais an Domhain"}
                 one{"mais an Domhain"}
-                other{"{0} M⊕"}
-                two{"{0} M⊕"}
+                other{"{0} mais an Domhain"}
+                two{"{0} mhais an Domhain"}
             }
             gram{
                 dnam{"graim"}
@@ -892,11 +961,11 @@ ga{
             }
             solar-mass{
                 dnam{"maiseanna gréine"}
-                few{"{0} M☉"}
-                many{"{0} M☉"}
+                few{"{0} mhais ghréine"}
+                many{"{0} mais ghréine"}
                 one{"{0} mais ghréine"}
-                other{"{0} maiseanna gréine"}
-                two{"{0} M☉"}
+                other{"{0} mais ghréine"}
+                two{"{0} mhais ghréine"}
             }
             stone{
                 dnam{"clocha"}
@@ -973,6 +1042,14 @@ ga{
                 one{"{0} atmaisféar"}
                 other{"{0} atmaisféar"}
                 two{"{0} atm"}
+            }
+            bar{
+                dnam{"barraí"}
+                few{"{0} bharra"}
+                many{"{0} mbarra"}
+                one{"{0} bharra"}
+                other{"{0} barra"}
+                two{"{0} bharra"}
             }
             hectopascal{
                 dnam{"heicteapascail"}
@@ -3047,6 +3124,14 @@ ga{
                 other{"{0} kWh"}
                 two{"{0} kWh"}
             }
+            therm-us{
+                dnam{"teirmeacha US"}
+                few{"{0} theirm US"}
+                many{"{0} dteirm US"}
+                one{"{0} teirm US"}
+                other{"{0} teirm US"}
+                two{"{0} theirm US"}
+            }
         }
         force{
             newton{
@@ -3098,6 +3183,14 @@ ga{
                 one{"{0} MHz"}
                 other{"{0} MHz"}
                 two{"{0} MHz"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"meigiphicteilíní"}
+            }
+            pixel{
+                dnam{"picteilíní"}
             }
         }
         length{
@@ -3469,6 +3562,14 @@ ga{
                 one{"{0} atm"}
                 other{"{0} atm"}
                 two{"{0} atm"}
+            }
+            bar{
+                dnam{"barra"}
+                few{"{0} bharra"}
+                many{"{0} mbarra"}
+                one{"{0} bharra"}
+                other{"{0} barra"}
+                two{"{0} bharra"}
             }
             hectopascal{
                 dnam{"hPa"}

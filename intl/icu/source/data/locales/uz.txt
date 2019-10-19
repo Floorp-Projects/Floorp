@@ -12,21 +12,24 @@ uz{
     }
     ExemplarCharacters{"[a b d e f g h i j k l m n o p q r s t u v x y z {oʻ} {gʻ} {sh} {ch} ʼ]"}
     ExemplarCharactersIndex{"[A B D E F G H I J K L M N O P Q R S T U V X Y Z {Oʻ} {Gʻ} {Sh} {Ch}]"}
-    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” „ « » ( ) \\[ \\] \\{ \\} § @ * "
-        "/ \\& # ′ ″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” „ « » ( ) \\[ \\] \\{ \\} § @ "
+        "* / \\& # ′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
         arabext{
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
+                decimal{"٫"}
                 exponential{"×۱۰^"}
+                group{"٬"}
                 infinity{"∞"}
                 minusSign{"-"}
                 nan{"son emas"}
@@ -48,6 +51,7 @@ uz{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -210,9 +214,11 @@ uz{
                 exponential{"E"}
                 group{" "}
                 infinity{"∞"}
+                minusSign{"-"}
                 nan{"son emas"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -229,7 +235,7 @@ uz{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -918,20 +924,90 @@ uz{
             }
         }
         islamic{
+            availableFormats{
+                yyyyMMM{"MMM, y (G)"}
+                yyyyMMMM{"MMMM, y G"}
+                yyyyMMMd{"d-MMM, y G"}
+                yyyyQQQ{"QQQ, y (G)"}
+                yyyyQQQQ{"QQQQ, y (G)"}
+            }
+            eras{
+                abbreviated{
+                    "Hijriy yil",
+                }
+            }
             monthNames{
                 format{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rob. avv.",
+                        "Rob. ox.",
+                        "Jum. avv.",
+                        "Jum. ox.",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shav.",
+                        "Zul-q.",
+                        "Zul-h.",
+                    }
                     wide{
                         "Muharram",
                         "Safar",
-                        "Robiʼ ul-avval",
-                        "Robiʼ ul-oxir",
+                        "Robi’ ul-avval",
+                        "Robi’ ul-oxir",
                         "Jumad ul-avval",
                         "Jumad ul-oxir",
                         "Rajab",
-                        "Shaʼbon",
+                        "Sha’bon",
                         "Ramazon",
                         "Shavvol",
-                        "Zul-qaʼda",
+                        "Zul-qa’da",
+                        "Zul-hijja",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Muh.",
+                        "Saf.",
+                        "Rob. avv.",
+                        "Rob. ox.",
+                        "Jum. avv.",
+                        "Jum. ox.",
+                        "Raj.",
+                        "Sha.",
+                        "Ram.",
+                        "Shav.",
+                        "Zul-q.",
+                        "Zul-h.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Robi’ ul-avval",
+                        "Robi’ ul-oxir",
+                        "Jumad ul-avval",
+                        "Jumad ul-oxir",
+                        "Rajab",
+                        "Sha’bon",
+                        "Ramazon",
+                        "Shavvol",
+                        "Zul-qa’da",
                         "Zul-hijja",
                     }
                 }
@@ -1310,6 +1386,11 @@ uz{
         }
         month-narrow{
             dn{"oy"}
+            relative{
+                "-1"{"o‘tgan oy"}
+                "0"{"bu oy"}
+                "1"{"keyingi oy"}
+            }
             relativeTime{
                 future{
                     one{"{0} oydan keyin"}
@@ -1323,6 +1404,11 @@ uz{
         }
         month-short{
             dn{"oy"}
+            relative{
+                "-1"{"o‘tgan oy"}
+                "0"{"bu oy"}
+                "1"{"keyingi oy"}
+            }
             relativeTime{
                 future{
                     one{"{0} oydan keyin"}
@@ -1696,6 +1782,11 @@ uz{
         }
         week-narrow{
             dn{"hafta"}
+            relative{
+                "-1"{"o‘tgan hafta"}
+                "0"{"bu hafta"}
+                "1"{"keyingi hafta"}
+            }
             relativePeriod{"{0}-hafta"}
             relativeTime{
                 future{
@@ -1710,6 +1801,11 @@ uz{
         }
         week-short{
             dn{"hafta"}
+            relative{
+                "-1"{"o‘tgan hafta"}
+                "0"{"bu hafta"}
+                "1"{"keyingi hafta"}
+            }
             relativePeriod{"{0}-hafta"}
             relativeTime{
                 future{
@@ -1770,7 +1866,7 @@ uz{
         year-narrow{
             dn{"yil"}
             relative{
-                "-1"{"oʻtgan yil"}
+                "-1"{"o‘tgan yil"}
                 "0"{"bu yil"}
                 "1"{"keyingi yil"}
             }
@@ -1788,7 +1884,7 @@ uz{
         year-short{
             dn{"yil"}
             relative{
-                "-1"{"oʻtgan yil"}
+                "-1"{"o‘ʻtgan yil"}
                 "0"{"bu yil"}
                 "1"{"keyingi yil"}
             }

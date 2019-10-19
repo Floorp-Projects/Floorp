@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kea{
-    Version{"2.1.48.9"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -14,8 +14,8 @@ kea{
                 other{"{0} forsa G"}
             }
             meter-per-second-squared{
-                dnam{"métru pur sigundu kuadradu"}
-                other{"{0} métru pur sigundu kuadradu"}
+                dnam{"metru pur sigundu kuadradu"}
+                other{"{0} metru pur sigundu kuadradu"}
             }
         }
         angle{
@@ -83,6 +83,10 @@ kea{
                 other{"{0} jarda kuadradu"}
             }
         }
+        compound{
+            per{"{0} pur {1}"}
+            times{"{0}-{1}"}
+        }
         concentr{
             karat{
                 dnam{"kilati"}
@@ -99,6 +103,18 @@ kea{
             part-per-million{
                 dnam{"parti pur milhãu"}
                 other{"{0} parti pur milhãu"}
+            }
+            percent{
+                dnam{"pursentu"}
+                other{"{0} pursentu"}
+            }
+            permille{
+                dnam{"pur mil"}
+                other{"{0} pur mil"}
+            }
+            permyriad{
+                dnam{"pontu bazi"}
+                other{"{0} pontu bazi"}
             }
         }
         consumption{
@@ -118,6 +134,13 @@ kea{
                 dnam{"milha pur galãu imperial"}
                 other{"{0} milha pur galãu imperial"}
             }
+        }
+        coordinate{
+            dnam{"direson kardial"}
+            east{"{0} esti"}
+            north{"{0} norti"}
+            south{"{0} sul"}
+            west{"{0} oesti"}
         }
         digital{
             bit{
@@ -152,6 +175,10 @@ kea{
                 dnam{"megabyte"}
                 other{"{0} megabyte"}
             }
+            petabyte{
+                dnam{"petabyte"}
+                other{"{0} petabyte"}
+            }
             terabit{
                 dnam{"terabit"}
                 other{"{0} terabit"}
@@ -170,6 +197,10 @@ kea{
                 dnam{"dia"}
                 other{"{0} dia"}
                 per{"{0} pur dia"}
+            }
+            decade{
+                dnam{"dékada"}
+                other{"{0} dékada"}
             }
             hour{
                 dnam{"ora"}
@@ -212,6 +243,117 @@ kea{
                 dnam{"anu"}
                 other{"{0} anu"}
                 per{"{0} pur anu"}
+            }
+        }
+        electric{
+            ampere{
+                dnam{"amper"}
+                other{"{0} amper"}
+            }
+            milliampere{
+                dnam{"miliamper"}
+                other{"{0} miliamper"}
+            }
+            ohm{
+                other{"{0} ohm"}
+            }
+            volt{
+                other{"{0} volt"}
+            }
+        }
+        energy{
+            british-thermal-unit{
+                dnam{"unidadi térmiku britániku"}
+                other{"{0} unidadi térmiku britániku"}
+            }
+            calorie{
+                dnam{"kaloria"}
+                other{"{0} kaloria"}
+            }
+            electronvolt{
+                dnam{"eleton-volt"}
+                other{"{0} eletron-volt"}
+            }
+            foodcalorie{
+                dnam{"Kaloria"}
+                other{"{0} Kaloria"}
+            }
+            joule{
+                other{"{0} joule"}
+            }
+            kilocalorie{
+                dnam{"kilokaloria"}
+                other{"{0} kilokaloria"}
+            }
+            kilojoule{
+                dnam{"kilojoule"}
+                other{"{0} kilojoule"}
+            }
+            kilowatt-hour{
+                dnam{"kilowatt-ora"}
+                other{"{0} kilowatt-ora"}
+            }
+            therm-us{
+                dnam{"unidadi térmiku merkanu"}
+                other{"{0} unidadi térmiku merkanu"}
+            }
+        }
+        force{
+            newton{
+                dnam{"newton"}
+                other{"{0} newton"}
+            }
+            pound-force{
+                dnam{"libra di forsa"}
+                other{"{0} libra di forsa"}
+            }
+        }
+        frequency{
+            gigahertz{
+                dnam{"jigaertz"}
+                other{"{0} jigaertz"}
+            }
+            hertz{
+                dnam{"ertz"}
+                other{"{0} ertz"}
+            }
+            kilohertz{
+                dnam{"kiloertz"}
+                other{"{0} kiloertz"}
+            }
+            megahertz{
+                dnam{"megaertz"}
+                other{"{0} megaertz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"pontu pur sentímeru"}
+                other{"{0} pontu pur sentímetru"}
+            }
+            dot-per-inch{
+                dnam{"pontu pur pulegada"}
+                other{"{0} pontu pur pulegada"}
+            }
+            em{
+                dnam{"emi tipográfiku"}
+                other{"{0} emi tipográfiku"}
+            }
+            megapixel{
+                dnam{"megapiksel"}
+                other{"{0} megapiksel"}
+            }
+            pixel{
+                dnam{"piksel"}
+                other{"{0} piksel"}
+            }
+            pixel-per-centimeter{
+                dnam{"piksel pur sentímetru"}
+                other{"{0} piksel pur sentímetru"}
+            }
+            pixel-per-inch{
+                dnam{"piksel pur pulegada"}
+                other{"{0} piksel pur pulegada"}
             }
         }
         length{
@@ -284,6 +426,14 @@ kea{
                 dnam{"pikómetru"}
                 other{"{0} pikómetru"}
             }
+            point{
+                dnam{"pontu"}
+                other{"{0} pontu"}
+            }
+            solar-radius{
+                dnam{"raiu solar"}
+                other{"{0} raiu solar"}
+            }
             yard{
                 dnam{"jarda"}
                 other{"{0} jarda"}
@@ -294,10 +444,135 @@ kea{
                 dnam{"lux"}
                 other{"{0} lux"}
             }
+            solar-luminosity{
+                dnam{"luminozidadi solar"}
+                other{"{0} luminozidadi solar"}
+            }
+        }
+        mass{
+            carat{
+                dnam{"kilati"}
+                other{"{0} kilati"}
+            }
+            dalton{
+                dnam{"dalton"}
+                other{"{0} dalton"}
+            }
+            earth-mass{
+                dnam{"masa di Tera"}
+                other{"{0} masa di Tera"}
+            }
+            gram{
+                dnam{"grama"}
+                other{"{0} grama"}
+                per{"{0} pur grama"}
+            }
+            kilogram{
+                dnam{"kilograma"}
+                other{"{0} kilograma"}
+                per{"{0} pur kilograma"}
+            }
+            metric-ton{
+                dnam{"tonelada métriku"}
+                other{"{0} tonelada métriku"}
+            }
+            microgram{
+                dnam{"mikrograma"}
+                other{"{0} mikrograma"}
+            }
+            milligram{
+                dnam{"miligrama"}
+                other{"{0} miligrama"}
+            }
+            ounce{
+                dnam{"ónsa"}
+                other{"{0} ónsa"}
+                per{"{0} pur ónsa"}
+            }
+            ounce-troy{
+                dnam{"ónsa troy"}
+                other{"{0} ónsa troy"}
+            }
+            pound{
+                dnam{"libra"}
+                other{"{0} libra"}
+                per{"{0} pur libra"}
+            }
+            solar-mass{
+                dnam{"masa di Sol"}
+                other{"{0} masa di Sol"}
+            }
+            ton{
+                dnam{"tonelada"}
+                other{"{0} tonelada"}
+            }
         }
         power{
+            gigawatt{
+                dnam{"jigawatt"}
+                other{"{0} jigawatt"}
+            }
+            horsepower{
+                dnam{"kabalu-vapor"}
+                other{"{0} kabalu-vapor"}
+            }
+            kilowatt{
+                dnam{"kilowatt"}
+                other{"{0} kilowatt"}
+            }
+            megawatt{
+                dnam{"megawatt"}
+                other{"{0} megawatt"}
+            }
+            milliwatt{
+                dnam{"miliwatt"}
+                other{"{0} miliwatt"}
+            }
             watt{
                 dnam{"watt"}
+                other{"{0} watt"}
+            }
+        }
+        pressure{
+            atmosphere{
+                dnam{"atmosfera"}
+                other{"{0} atmosfera"}
+            }
+            bar{
+                dnam{"bar"}
+                other{"{0} bar"}
+            }
+            hectopascal{
+                dnam{"ektopaskal"}
+                other{"{0} ektopaskal"}
+            }
+            inch-hg{
+                dnam{"pulegada di merkúriu"}
+                other{"{0} pulegada di merkúriu"}
+            }
+            kilopascal{
+                dnam{"kilopaskal"}
+                other{"{0} kilopaskal"}
+            }
+            megapascal{
+                dnam{"megapaskal"}
+                other{"{0} megapaskal"}
+            }
+            millibar{
+                dnam{"milibar"}
+                other{"{0} milibar"}
+            }
+            millimeter-of-mercury{
+                dnam{"milímetru di merkúriu"}
+                other{"{0} milímetru di merkúriu"}
+            }
+            pascal{
+                dnam{"paskal"}
+                other{"{0} paskal"}
+            }
+            pound-per-square-inch{
+                dnam{"libra pur pulegada kuadradu"}
+                other{"{0} libra pur pulegada kuadradu"}
             }
         }
         speed{
@@ -305,19 +580,51 @@ kea{
                 dnam{"kilómetru pur ora"}
                 other{"{0} kilómetru pur ora"}
             }
+            knot{
+                dnam{"nó"}
+                other{"{0} nó"}
+            }
             meter-per-second{
-                dnam{"métru pur sigundu"}
-                other{"{0} métru pur sigundu"}
+                dnam{"metru pur sigundu"}
+                other{"{0} metru pur sigundu"}
             }
             mile-per-hour{
                 dnam{"milha pur ora"}
                 other{"{0} milha pur ora"}
             }
         }
+        temperature{
+            celsius{
+                dnam{"grau Celsius"}
+                other{"{0} grau Celsius"}
+            }
+            fahrenheit{
+                dnam{"grau Fahrenheit"}
+                other{"{0} grau Fahrenheit"}
+            }
+            kelvin{
+                dnam{"kelvin"}
+                other{"{0} kelvin"}
+            }
+        }
+        torque{
+            newton-meter{
+                dnam{"newton-metru"}
+                other{"{0} newton-metru"}
+            }
+            pound-foot{
+                dnam{"pe-libra"}
+                other{"{0} pe-libra"}
+            }
+        }
         volume{
             acre-foot{
                 dnam{"ákri-pé"}
                 other{"{0} ákri-pé"}
+            }
+            barrel{
+                dnam{"baril"}
+                other{"{0} baril"}
             }
             centiliter{
                 dnam{"sentilitru"}
@@ -326,6 +633,7 @@ kea{
             cubic-centimeter{
                 dnam{"sentímetru kúbiku"}
                 other{"{0} sentímetru kúbiku"}
+                per{"{0} pur sentímetru kúbiku"}
             }
             cubic-foot{
                 dnam{"pé kúbiku"}
@@ -340,8 +648,9 @@ kea{
                 other{"{0} kilómetru kúbiku"}
             }
             cubic-meter{
-                dnam{"métru kúbiku"}
-                other{"{0} métru kúbiku"}
+                dnam{"metru kúbiku"}
+                other{"{0} metru kúbiku"}
+                per{"{0} pur metru kúbiku"}
             }
             cubic-mile{
                 dnam{"milha kúbiku"}
@@ -355,6 +664,10 @@ kea{
                 dnam{"xávina"}
                 other{"{0} xávina"}
             }
+            cup-metric{
+                dnam{"xávina métriku"}
+                other{"{0} xávina métriku"}
+            }
             deciliter{
                 dnam{"desilitru"}
                 other{"{0} desilitru"}
@@ -363,9 +676,19 @@ kea{
                 dnam{"ónsa fluídu"}
                 other{"{0} ónsa fluídu"}
             }
+            fluid-ounce-imperial{
+                dnam{"ónsa fluídu imperial"}
+                other{"{0} ónsa fluídu imperial"}
+            }
             gallon{
                 dnam{"galãu"}
                 other{"{0} galãu"}
+                per{"{0} pur galãu"}
+            }
+            gallon-imperial{
+                dnam{"galãu imperial"}
+                other{"{0} galãu imperial"}
+                per{"{0} pur galãu imperial"}
             }
             hectoliter{
                 dnam{"ektolitru"}
@@ -374,6 +697,7 @@ kea{
             liter{
                 dnam{"litru"}
                 other{"{0} litru"}
+                per{"{0} pur litru"}
             }
             megaliter{
                 dnam{"megalitru"}
@@ -386,6 +710,10 @@ kea{
             pint{
                 dnam{"pint"}
                 other{"{0} pint"}
+            }
+            pint-metric{
+                dnam{"pint métriku"}
+                other{"{0} pint métriku"}
             }
             quart{
                 dnam{"kuart"}
@@ -407,6 +735,9 @@ kea{
                 dnam{"l/100km"}
                 other{"{0} l/100km"}
             }
+        }
+        coordinate{
+            dnam{"direson"}
         }
         duration{
             day{
@@ -462,11 +793,10 @@ kea{
         }
         mass{
             gram{
-                other{"{0} g"}
+                dnam{"g"}
             }
             kilogram{
-                dnam{"kg"}
-                other{"{0} kg"}
+                other{"{0}kg"}
             }
         }
         speed{
@@ -486,11 +816,6 @@ kea{
         acceleration{
             g-force{
                 dnam{"G"}
-                other{"{0} G"}
-            }
-            meter-per-second-squared{
-                dnam{"m/s²"}
-                other{"{0} m/s²"}
             }
         }
         angle{
@@ -594,6 +919,13 @@ kea{
                 other{"{0} mpg imp."}
             }
         }
+        coordinate{
+            dnam{"direson"}
+            east{"{0} E"}
+            north{"{0} N"}
+            south{"{0} S"}
+            west{"{0} W"}
+        }
         digital{
             bit{
                 dnam{"b"}
@@ -645,6 +977,10 @@ kea{
                 dnam{"dia"}
                 other{"{0} dia"}
                 per{"{0}/dia"}
+            }
+            decade{
+                dnam{"dék."}
+                other{"{0} dék."}
             }
             hour{
                 dnam{"ora"}
@@ -716,6 +1052,9 @@ kea{
                 dnam{"Cal"}
                 other{"{0} Cal"}
             }
+            joule{
+                dnam{"J"}
+            }
             kilocalorie{
                 dnam{"kcal"}
                 other{"{0} kcal"}
@@ -727,6 +1066,10 @@ kea{
             kilowatt-hour{
                 dnam{"kWh"}
                 other{"{0} kWh"}
+            }
+            therm-us{
+                dnam{"thm SU"}
+                other{"{0} thm SU"}
             }
         }
         frequency{
@@ -817,6 +1160,13 @@ kea{
                 dnam{"pm"}
                 other{"{0} pm"}
             }
+            point{
+                dnam{"pontu"}
+                other{"{0} pt"}
+            }
+            solar-radius{
+                dnam{"raiu solar"}
+            }
             yard{
                 dnam{"yd"}
                 other{"{0} yd"}
@@ -830,44 +1180,25 @@ kea{
         }
         mass{
             carat{
-                other{"{0} CD"}
+                dnam{"kt"}
+                other{"{0} kt"}
             }
             gram{
-                other{"{0} g"}
-            }
-            metric-ton{
-                dnam{"t"}
-                other{"{0} t"}
-            }
-            microgram{
-                dnam{"µg"}
-                other{"{0} µg"}
-            }
-            milligram{
-                dnam{"mg"}
-                other{"{0} mg"}
-            }
-            ounce{
-                dnam{"oz"}
-                other{"{0} oz"}
-            }
-            ounce-troy{
-                dnam{"oz t"}
-                other{"{0} oz t"}
-            }
-            pound{
-                dnam{"lb"}
-                other{"{0} lb"}
+                dnam{"g"}
             }
             ton{
-                dnam{"tn"}
-                other{"{0} tn"}
+                dnam{"ton"}
+                other{"{0} ton"}
             }
         }
         power{
             gigawatt{
                 dnam{"GW"}
                 other{"{0} GW"}
+            }
+            horsepower{
+                dnam{"cv"}
+                other{"{0} cv"}
             }
             kilowatt{
                 dnam{"kW"}
@@ -886,46 +1217,12 @@ kea{
                 other{"{0} W"}
             }
         }
-        pressure{
-            hectopascal{
-                dnam{"hPa"}
-                other{"{0} hPa"}
-            }
-            inch-hg{
-                dnam{"inHg"}
-                other{"{0} inHg"}
-            }
-            millibar{
-                dnam{"mbar"}
-                other{"{0} mbar"}
-            }
-            millimeter-of-mercury{
-                dnam{"mm Hg"}
-                other{"{0} mm Hg"}
-            }
-            pound-per-square-inch{
-                dnam{"psi"}
-                other{"{0} psi"}
-            }
-        }
-        speed{
-            kilometer-per-hour{
-                dnam{"km/h"}
-                other{"{0} km/h"}
-            }
-            meter-per-second{
-                dnam{"m/s"}
-                other{"{0} m/s"}
-            }
-            mile-per-hour{
-                dnam{"mi/h"}
-                other{"{0} mi/h"}
-            }
-        }
         temperature{
-            kelvin{
-                dnam{"K"}
-                other{"{0} K"}
+            celsius{
+                other{"{0} °C"}
+            }
+            fahrenheit{
+                other{"{0} °F"}
             }
         }
         volume{
@@ -937,37 +1234,13 @@ kea{
                 dnam{"cl"}
                 other{"{0} cl"}
             }
-            cubic-centimeter{
-                dnam{"cm³"}
-                other{"{0} cm³"}
-            }
-            cubic-foot{
-                dnam{"ft³"}
-                other{"{0} ft³"}
-            }
-            cubic-inch{
-                dnam{"in³"}
-                other{"{0} in³"}
-            }
-            cubic-kilometer{
-                dnam{"km³"}
-                other{"{0} km³"}
-            }
-            cubic-meter{
-                dnam{"m³"}
-                other{"{0} m³"}
-            }
-            cubic-mile{
-                dnam{"mi³"}
-                other{"{0} mi³"}
-            }
-            cubic-yard{
-                dnam{"yd³"}
-                other{"{0} yd³"}
-            }
             cup{
-                dnam{"xáv."}
-                other{"{0} xáv."}
+                dnam{"xáv"}
+                other{"{0} xáv"}
+            }
+            cup-metric{
+                dnam{"xávm"}
+                other{"{0} xávm"}
             }
             deciliter{
                 dnam{"dl"}
@@ -977,9 +1250,19 @@ kea{
                 dnam{"fl oz"}
                 other{"{0} fl oz"}
             }
+            fluid-ounce-imperial{
+                dnam{"fl oz imp."}
+                other{"{0} fl oz imp."}
+            }
             gallon{
                 dnam{"gal"}
                 other{"{0} gal"}
+                per{"{0}/gal"}
+            }
+            gallon-imperial{
+                dnam{"gal imp."}
+                other{"{0} gal imp."}
+                per{"{0}/gal imp."}
             }
             hectoliter{
                 dnam{"hl"}
@@ -987,7 +1270,6 @@ kea{
             }
             liter{
                 dnam{"l"}
-                other{"{0} l"}
             }
             megaliter{
                 dnam{"Ml"}
@@ -1001,17 +1283,21 @@ kea{
                 dnam{"pt"}
                 other{"{0} pt"}
             }
+            pint-metric{
+                dnam{"ptm"}
+                other{"{0} ptm"}
+            }
             quart{
                 dnam{"qt"}
                 other{"{0} qt"}
             }
             tablespoon{
-                dnam{"k.sp."}
-                other{"{0} k.sp."}
+                dnam{"ks"}
+                other{"{0} ks"}
             }
             teaspoon{
-                dnam{"k.xá"}
-                other{"{0} k.xá"}
+                dnam{"kx"}
+                other{"{0} kx"}
             }
         }
     }

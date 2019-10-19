@@ -23,7 +23,6 @@ fa_AF{
         CO{"کولمبیا"}
         CR{"کاستریکا"}
         CU{"کیوبا"}
-        CZ{"چک"}
         DK{"دنمارک"}
         EA{"سئوتا و ملیلا"}
         EE{"استونیا"}
@@ -96,8 +95,5 @@ fa_AF{
     Countries%short{
         HK{"هانگ کانگ"}
     }
-    Countries%variant{
-        CZ{"جمهوری چک"}
-    }
-    Version{"2.1.47.86"}
+    Version{"36"}
 }

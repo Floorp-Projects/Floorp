@@ -248,21 +248,20 @@ yo{
         }
     }
     Currencies%narrow{
-        BRL{"R$"}
-        CNY{"¥"}
-        EUR{"€"}
-        GBP{"£"}
-        INR{"₹"}
-        JPY{"¥"}
-        RUB{"₽"}
-        USD{"$"}
+        KRW{"₩"}
     }
     CurrencyPlurals{
         BRL{
             other{"Awon owó ti Orílẹ̀-èdè Brazil"}
         }
+        EGP{
+            other{"pọ́nùn"}
+        }
         EUR{
             other{"Awon owó Yúrò"}
+        }
+        NGN{
+            other{"Náírà Nàìjíríà"}
         }
         RUB{
             other{"Owó ruble ti ilẹ̀ Rọ́ṣíà"}
@@ -277,5 +276,5 @@ yo{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
 }

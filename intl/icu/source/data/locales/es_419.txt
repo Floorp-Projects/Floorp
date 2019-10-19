@@ -6,7 +6,6 @@ es_419{
             patterns{
                 accountingFormat{"¤#,##0.00"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
             }
             patternsLong{
                 decimalFormat{
@@ -88,29 +87,15 @@ es_419{
                         one{"000 k"}
                         other{"000 k"}
                     }
-                    1000000000{
-                        one{"0k M"}
-                        other{"0k M"}
-                    }
-                    10000000000{
-                        one{"00k M"}
-                        other{"00k M"}
-                    }
-                    100000000000{
-                        one{"000k M"}
-                        other{"000k M"}
-                    }
                 }
             }
             symbols{
                 decimal{"."}
                 group{","}
-                minusSign{"-"}
-                plusSign{"+"}
             }
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     calendar{
         coptic{
             monthNames{
@@ -276,8 +261,8 @@ es_419{
                 "d MMM y",
                 "d/M/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -320,23 +305,13 @@ es_419{
                 }
             }
             dayPeriod{
-                format{
-                    wide{
-                        noon{"del mediodía"}
-                    }
-                }
                 stand-alone{
                     abbreviated{
                         am{"a.m."}
                         pm{"p.m."}
                     }
-                    narrow{
-                        am{"a.m."}
-                        pm{"p.m."}
-                    }
                     wide{
                         am{"a.m."}
-                        morning1{"madrugada"}
                         pm{"p.m."}
                     }
                 }
@@ -369,6 +344,7 @@ es_419{
                     G{"dd/MM/y GGGGG – dd/MM/y GGGGG"}
                     M{"dd/MM/y – dd/MM/y GGGGG"}
                     d{"dd/MM/y – dd/MM/y GGGGG"}
+                    y{"dd/MM/y – dd/MM/y GGGGG"}
                 }
                 MEd{
                     M{"E, d/M–E, d/M"}
@@ -707,7 +683,6 @@ es_419{
         currency_symbols{"símbolos de monedas"}
         dash_connector{"Guión/conector"}
         digits{"dígitos"}
-        dingbats{"Símbolos y viñetas"}
         downwards_upwards_arrows{"Flechas hacia arriba y hacia abajo"}
         european_scripts{"Símbolos de escritura de Europa"}
         female{"femenino"}
@@ -724,7 +699,6 @@ es_419{
         hanzi_traditional{"Hanzi (tradicional)"}
         heart{"corazón"}
         historic_scripts{"Símbolos de escritura históricos"}
-        ideographic_desc_characters{"Caracteres descriptivos ideográficos"}
         japanese_kana{"Kana japonés"}
         keycap{"tecla mayus"}
         leftwards_rightwards_arrows{"Flechas hacia la derecha y hacia la izquierda"}
@@ -765,14 +739,6 @@ es_419{
         quotationStart{"“"}
     }
     fields{
-        day{
-            relative{
-                "-1"{"ayer"}
-                "0"{"hoy"}
-                "1"{"mañana"}
-                "2"{"pasado mañana"}
-            }
-        }
         dayOfYear-narrow{
             dn{"día del año"}
         }
@@ -788,14 +754,6 @@ es_419{
         dayperiod-short{
             dn{"a.m./p.m."}
         }
-        fri{
-            relativeTime{
-                future{
-                    one{"dentro de {0} viernes"}
-                    other{"en {0} viernes"}
-                }
-            }
-        }
         fri-narrow{
             relativeTime{
                 past{
@@ -806,61 +764,14 @@ es_419{
         }
         fri-short{
             relativeTime{
-                future{
-                    one{"dentro de {0} vie."}
-                    other{"en {0} vie."}
-                }
                 past{
                     one{"hace {0} viernes"}
                     other{"hace {0} viernes"}
                 }
             }
         }
-        mon{
-            relativeTime{
-                future{
-                    one{"en {0} lunes"}
-                    other{"en {0} lunes"}
-                }
-            }
-        }
-        mon-narrow{
-            relativeTime{
-                future{
-                    one{"en {0} lunes"}
-                    other{"en {0} lunes"}
-                }
-                past{
-                    one{"hace {0} lunes"}
-                    other{"hace {0} lunes"}
-                }
-            }
-        }
-        mon-short{
-            relativeTime{
-                future{
-                    one{"en {0} lun."}
-                    other{"dentro de {0} lun."}
-                }
-                past{
-                    one{"hace {0} lunes"}
-                    other{"hace {0} lunes"}
-                }
-            }
-        }
-        sat{
-            relativeTime{
-                future{
-                    one{"en {0} sábado"}
-                    other{"en {0} sábados"}
-                }
-            }
-        }
         sat-narrow{
             relativeTime{
-                future{
-                    one{"en {0} SA"}
-                }
                 past{
                     one{"hace {0} sábados"}
                     other{"hace {0} sábados"}
@@ -875,34 +786,6 @@ es_419{
                 }
             }
         }
-        sun-narrow{
-            relativeTime{
-                future{
-                    one{"dentro de {0} DO"}
-                    other{"en {0} DO"}
-                }
-                past{
-                    one{"hace {0} domingo"}
-                    other{"hace {0} domingos"}
-                }
-            }
-        }
-        thu{
-            relativeTime{
-                future{
-                    one{"en {0} jueves"}
-                    other{"dentro de {0} jueves"}
-                }
-            }
-        }
-        thu-narrow{
-            relativeTime{
-                future{
-                    one{"dentro de {0} JU"}
-                    other{"en {0} JU"}
-                }
-            }
-        }
         tue{
             relativeTime{
                 future{
@@ -911,53 +794,20 @@ es_419{
                 }
             }
         }
-        wed{
-            relativeTime{
-                future{
-                    one{"en {0} miércoles"}
-                    other{"dentro de {0} miércoles"}
-                }
-            }
-        }
-        wed-narrow{
-            relativeTime{
-                future{
-                    one{"en {0} MI"}
-                    other{"en {0} MI"}
-                }
-                past{
-                    one{"hace {0} miércoles"}
-                    other{"hace {0} miércoles"}
-                }
-            }
-        }
-        wed-short{
-            relativeTime{
-                future{
-                    one{"en {0} mié."}
-                    other{"en {0} mié."}
-                }
-                past{
-                    one{"hace {0} miércoles"}
-                    other{"hace {0} miércoles"}
-                }
-            }
-        }
-        week{
-            relative{
-                "-1"{"la semana pasada"}
-                "0"{"esta semana"}
-            }
-        }
         week-narrow{
-            relativePeriod{"la semana del {0}"}
-            relativeTime{
-                past{
-                    one{"hace {0} sem."}
-                }
+            relative{
+                "-1"{"sem. pas."}
+                "0"{"esta sem."}
+                "1"{"próx. sem."}
             }
+            relativePeriod{"la semana del {0}"}
         }
         week-short{
+            relative{
+                "-1"{"sem. pas."}
+                "0"{"esta sem."}
+                "1"{"próx. sem."}
+            }
             relativePeriod{"la semana del {0}"}
         }
         weekOfMonth-narrow{
@@ -975,14 +825,5 @@ es_419{
         weekdayOfMonth-short{
             dn{"día hábil del mes"}
         }
-        year{
-            relative{
-                "-1"{"el año pasado"}
-                "0"{"este año"}
-            }
-        }
-    }
-    measurementSystemNames{
-        US{"anglosajón"}
     }
 }

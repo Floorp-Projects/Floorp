@@ -76,7 +76,6 @@ mgh{
         LY{"Ulibya"}
         ME{"Umantegro"}
         MG{"Ubukini"}
-        MK{"Umasedonia"}
         MW{"Umalawi"}
         MZ{"Umozambiki"}
         NE{"Unijeri"}
@@ -140,5 +139,5 @@ mgh{
         ZM{"Uzambia"}
         ZW{"Uzimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

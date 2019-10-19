@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ms{
-    Version{"2.1.49.2"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -810,6 +810,9 @@ ms{
         "Asia:Qatar"{
             ec{"Qatar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
+        }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
         }
@@ -1327,7 +1330,7 @@ ms{
             ls{"Waktu Piawai Timur"}
         }
         "meta:America_Mountain"{
-            ld{"Waktu Hari Siang Pergunungan"}
+            ld{"Waktu Siang Pergunungan"}
             lg{"Waktu Pergunungan"}
             ls{"Waktu Piawai Pergunungan"}
         }
@@ -1345,6 +1348,11 @@ ms{
             ld{"Waktu Siang Apia"}
             lg{"Waktu Apia"}
             ls{"Waktu Piawai Apia"}
+        }
+        "meta:Aqtau"{
+            ld{"Waktu Musim Panas Aqtau"}
+            lg{"Waktu Aqtau"}
+            ls{"Waktu Standard Aqtau"}
         }
         "meta:Arabian"{
             ld{"Waktu Siang Arab"}
@@ -1522,6 +1530,7 @@ ms{
         }
         "meta:GMT"{
             ls{"Waktu Min Greenwich"}
+            ss{"GMT"}
         }
         "meta:Galapagos"{
             ls{"Waktu Galapagos"}

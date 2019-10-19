@@ -48,5 +48,5 @@ sw{
             "3: wa =%spellout-cardinal=;",
         }
     }
-    Version{"2.1.38.68"}
+    Version{"36"}
 }

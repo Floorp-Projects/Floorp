@@ -12,13 +12,14 @@ gl{
     }
     ExemplarCharacters{"[a á b c d e é f g h i í j k l m n ñ o ó p q r s t u ú ü v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N Ñ O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -29,6 +30,7 @@ gl{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
@@ -192,10 +194,13 @@ gl{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -208,8 +213,9 @@ gl{
             }
         }
         minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -217,7 +223,7 @@ gl{
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "cccc, d 'de' MMMM 'de' Y G",
+                "EEEE, d 'de' MMMM 'de' Y G",
                 "d 'de' MMMM 'de' y G",
                 "d 'de' MMM 'de' y G",
                 "dd/MM/y GGGGG",
@@ -241,8 +247,8 @@ gl{
                 Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM 'de' y G"}
-                GyMMMEd{"ccc, d 'de' MMM 'de' y G"}
-                GyMMMd{"d /MM/y G"}
+                GyMMMEd{"E, d 'de' MMM 'de' y G"}
+                GyMMMd{"d 'de' MMM 'de' y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -273,12 +279,12 @@ gl{
                 yQQQQ{"QQQQ 'de' y"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
-                yyyyMEd{"ccc, M/d/y GGGGG"}
+                yyyyMEd{"E, d/M/y GGGGG"}
                 yyyyMMM{"MMM 'de' y G"}
-                yyyyMMMEd{"ccc, d 'de' MMMM 'de' y G"}
+                yyyyMMMEd{"E, d 'de' MMM 'de' y G"}
                 yyyyMMMM{"MMMM 'de' y G"}
-                yyyyMMMd{"d 'de' MMMM 'de' y G"}
-                yyyyMd{"M/d/y GGGGG"}
+                yyyyMMMd{"d 'de' MMM 'de' y G"}
+                yyyyMd{"d/M/y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ 'de' y G"}
             }
@@ -294,6 +300,7 @@ gl{
                 }
                 Gy{
                     G{"y G – y G"}
+                    y{"y–y G"}
                 }
                 GyM{
                     G{"MM/y GGGGG – MM/y GGGGG"}
@@ -351,15 +358,15 @@ gl{
                     d{"E, d/M – E, d/M"}
                 }
                 MMM{
-                    M{"MMMM–MMMM"}
+                    M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d 'de' MMMM – E, d 'de' MMMM"}
-                    d{"E, d MMM – E, d MMM"}
+                    M{"E, d 'de' MMM – E, d 'de' MMM"}
+                    d{"E, d 'de' MMM – E, d 'de' MMM"}
                 }
                 MMMd{
-                    M{"d 'de' MMMM – d 'de' MMMM"}
-                    d{"d–d 'de' MMMM"}
+                    M{"d 'de' MMM – d 'de' MMM"}
+                    d{"d–d 'de' MMM"}
                 }
                 Md{
                     M{"d/M – d/M"}
@@ -388,7 +395,7 @@ gl{
                     h{"h–h a v"}
                 }
                 y{
-                    y{"y–y"}
+                    y{"y–y G"}
                 }
                 yM{
                     M{"M/y – M/y GGGGG"}
@@ -400,12 +407,12 @@ gl{
                     y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
                 }
                 yMMM{
-                    M{"MMMM–MMMM 'de' y G"}
+                    M{"MMM–MMM 'de' y G"}
                     y{"MMM 'de' y – MMM 'de' y G"}
                 }
                 yMMMEd{
                     M{"E, d 'de' MMM – E, d 'de' MMM 'de' y G"}
-                    d{"E, d MMM – E, d MMM y G"}
+                    d{"E, d 'de' MMM – E, d 'de' MMM 'de' y G"}
                     y{"E, d 'de' MMM 'de' y – E, d 'de' MMM 'de' y G"}
                 }
                 yMMMM{
@@ -413,7 +420,7 @@ gl{
                     y{"MMMM 'de' y – MMMM 'de' y G"}
                 }
                 yMMMd{
-                    M{"d MMM – d MMM y G"}
+                    M{"d 'de' MMM – d 'de' MMM 'de' y G"}
                     d{"d–d 'de' MMM 'de' y G"}
                     y{"d 'de' MMM 'de' y – d 'de' MMM 'de' y G"}
                 }
@@ -470,7 +477,7 @@ gl{
                 Gy{"y G"}
                 GyMMM{"MMM 'de' y G"}
                 GyMMMEd{"E, d 'de' MMM 'de' y G"}
-                GyMMMd{"d 'de' MMMM 'de' y G"}
+                GyMMMd{"d 'de' MMM 'de' y G"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -501,9 +508,9 @@ gl{
                 yMEd{"E, d/M/y"}
                 yMM{"MM/y"}
                 yMMM{"MMM 'de' y"}
-                yMMMEd{"EEE, d/MM/y"}
+                yMMMEd{"E, d 'de' MMM 'de' y"}
                 yMMMM{"MMMM 'de' y"}
-                yMMMd{"d/MM/y"}
+                yMMMd{"d 'de' MMM 'de' y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ 'de' y"}
@@ -741,11 +748,11 @@ gl{
                     M{"MMM–MMM"}
                 }
                 MMMEd{
-                    M{"E, d MMM – E, d MMM"}
+                    M{"E, d 'de' MMM – E, d 'de' MMM"}
                     d{"E, d 'de' MMM – E, d 'de' MMM"}
                 }
                 MMMd{
-                    M{"d MMM – d MMM"}
+                    M{"d 'de' MMM – d 'de' MMM"}
                     d{"d–d 'de' MMM"}
                 }
                 Md{
@@ -800,9 +807,9 @@ gl{
                     y{"MMMM 'de' y – MMMM 'de' y"}
                 }
                 yMMMd{
-                    M{"d MMM – d MMM 'de' y"}
+                    M{"d 'de' MMM – d 'de' MMM 'de' y"}
                     d{"d–d 'de' MMMM 'de' y"}
-                    y{"d MMM y – d MMM y"}
+                    y{"d 'de' MMM 'de' y – d 'de' MMM 'de' y"}
                 }
                 yMd{
                     M{"d/M/y – d/M/y"}
@@ -1318,6 +1325,11 @@ gl{
         }
         month-narrow{
             dn{"mes"}
+            relative{
+                "-1"{"o mes pas."}
+                "0"{"este mes"}
+                "1"{"o próx. mes"}
+            }
             relativeTime{
                 future{
                     one{"en {0} mes"}
@@ -1331,11 +1343,6 @@ gl{
         }
         month-short{
             dn{"mes"}
-            relative{
-                "-1"{"m. pasado"}
-                "0"{"este m."}
-                "1"{"m. seguinte"}
-            }
             relativeTime{
                 future{
                     one{"en {0} mes"}
@@ -1719,6 +1726,11 @@ gl{
         }
         week-narrow{
             dn{"sem."}
+            relative{
+                "-1"{"a sem. pas."}
+                "0"{"esta sem."}
+                "1"{"a próx. sem."}
+            }
             relativePeriod{"a semana do {0}"}
             relativeTime{
                 future{
@@ -1734,9 +1746,9 @@ gl{
         week-short{
             dn{"sem."}
             relative{
-                "-1"{"sem. pasada"}
+                "-1"{"a sem. pasada"}
                 "0"{"esta sem."}
-                "1"{"sem. seguinte"}
+                "1"{"a próxima sem."}
             }
             relativePeriod{"a semana do {0}"}
             relativeTime{
@@ -1798,9 +1810,9 @@ gl{
         year-narrow{
             dn{"ano"}
             relative{
-                "-1"{"ano pasado"}
+                "-1"{"o ano pas."}
                 "0"{"este ano"}
-                "1"{"seguinte ano"}
+                "1"{"o próx. ano"}
             }
             relativeTime{
                 future{
@@ -1816,9 +1828,9 @@ gl{
         year-short{
             dn{"ano"}
             relative{
-                "-1"{"ano pasado"}
+                "-1"{"o ano pasado"}
                 "0"{"este ano"}
-                "1"{"seguinte ano"}
+                "1"{"o próximo ano"}
             }
             relativeTime{
                 future{
@@ -1851,6 +1863,10 @@ gl{
         standard{
             2{"{0} e {1}"}
             end{"{0} e {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
@@ -1909,6 +1925,10 @@ gl{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

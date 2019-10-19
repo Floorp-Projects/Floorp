@@ -183,7 +183,7 @@ br{
         MF{"Saint Martin"}
         MG{"Madagaskar"}
         MH{"Inizi Marshall"}
-        MK{"Makedonia"}
+        MK{"Makedonia an Norzh"}
         ML{"Mali"}
         MM{"Myanmar (Birmania)"}
         MN{"Mongolia"}
@@ -253,7 +253,7 @@ br{
         SV{"Salvador"}
         SX{"Sint Maarten"}
         SY{"Siria"}
-        SZ{"Swaziland"}
+        SZ{"Eswatini"}
         TA{"Tristan da Cunha"}
         TC{"Inizi Turks ha Caicos"}
         TD{"Tchad"}
@@ -287,6 +287,8 @@ br{
         VU{"Vanuatu"}
         WF{"Wallis ha Futuna"}
         WS{"Samoa"}
+        XA{"pouez-mouezh gaou"}
+        XB{"BiDi gaou"}
         XK{"Kosovo"}
         YE{"Yemen"}
         YT{"Mayotte"}
@@ -308,8 +310,8 @@ br{
         CI{"Aod Olifant"}
         CZ{"Republik Tchek"}
         FK{"Inizi Falkland (Inizi Maloù)"}
-        MK{"Makedonia (RYKM)"}
+        SZ{"Swaziland"}
         TL{"Timor ar Reter"}
     }
-    Version{"2.1.48.86"}
+    Version{"36"}
 }

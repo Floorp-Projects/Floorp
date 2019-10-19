@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fo{
-    Version{"2.1.48.9"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -123,6 +123,21 @@ fo{
                 one{"{0} partur fyri hvørja millión"}
                 other{"{0} partar fyri hvørja millión"}
             }
+            percent{
+                dnam{"prosent"}
+                one{"{0} prosent"}
+                other{"{0} prosent"}
+            }
+            permille{
+                dnam{"promillur"}
+                one{"{0} promilla"}
+                other{"{0} promillur"}
+            }
+            permyriad{
+                dnam{"promyriad"}
+                one{"{0} promyriad"}
+                other{"{0} promyriad"}
+            }
         }
         consumption{
             liter-per-100kilometers{
@@ -147,6 +162,7 @@ fo{
             }
         }
         coordinate{
+            dnam{"ætt"}
             east{"{0} eystur"}
             north{"{0} norður"}
             south{"{0} suður"}
@@ -193,6 +209,11 @@ fo{
                 one{"{0} megabýt"}
                 other{"{0} megabýt"}
             }
+            petabyte{
+                dnam{"petabýt"}
+                one{"{0} petabýt"}
+                other{"{0} petabýt"}
+            }
             terabit{
                 dnam{"terabit"}
                 one{"{0} terabit"}
@@ -215,6 +236,11 @@ fo{
                 one{"{0} dagur"}
                 other{"{0} dagar"}
                 per{"{0} um dagin"}
+            }
+            decade{
+                dnam{"áratíggju"}
+                one{"{0} áratíggju"}
+                other{"{0} áratíggju"}
             }
             hour{
                 dnam{"tímar"}
@@ -291,10 +317,20 @@ fo{
             }
         }
         energy{
+            british-thermal-unit{
+                dnam{"bretskar hitaeindir"}
+                one{"{0} bretsk hitaeind"}
+                other{"{0} bretskar hitaeindir"}
+            }
             calorie{
                 dnam{"kaloriur"}
                 one{"{0} kaloria"}
                 other{"{0} kaloriur"}
+            }
+            electronvolt{
+                dnam{"elektronvolt"}
+                one{"{0} elektronvolt"}
+                other{"{0} elektronvolt"}
             }
             foodcalorie{
                 dnam{"kostkaloriur"}
@@ -321,6 +357,23 @@ fo{
                 one{"{0} kilowatttími"}
                 other{"{0} kilowatttímar"}
             }
+            therm-us{
+                dnam{"hitaeindir"}
+                one{"{0} hitaeind"}
+                other{"{0} hitaeindir"}
+            }
+        }
+        force{
+            newton{
+                dnam{"newton"}
+                one{"{0} newton"}
+                other{"{0} newton"}
+            }
+            pound-force{
+                dnam{"pund av kraft"}
+                one{"{0} pund av kraft"}
+                other{"{0} pund av kraft"}
+            }
         }
         frequency{
             gigahertz{
@@ -342,6 +395,41 @@ fo{
                 dnam{"megahertz"}
                 one{"{0} megahertz"}
                 other{"{0} megahertz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"punkt fyri hvønn sentimetur"}
+                one{"{0} punkt fyri hvønn sentimetur"}
+                other{"{0} punkt fyri hvønn sentimetur"}
+            }
+            dot-per-inch{
+                dnam{"punkt fyri hvønn tumma"}
+                one{"{0} punkt fyri hvønn tumma"}
+                other{"{0} punkt fyri hvønn tumma"}
+            }
+            em{
+                dnam{"prent em"}
+            }
+            megapixel{
+                dnam{"megaskíggjadeplar"}
+                one{"{0} megaskíggjadepil"}
+                other{"{0} megaskíggjadeplar"}
+            }
+            pixel{
+                dnam{"skíggjadeplar"}
+                one{"{0} skíggjadeplar"}
+                other{"{0} skíggjadeplar"}
+            }
+            pixel-per-centimeter{
+                dnam{"skíggjadeplar fyri hvønn sentimetur"}
+                one{"{0} skíggjadeplar fyri hvønn sentimetur"}
+                other{"{0} skíggjadeplar fyri hvønn sentimetur"}
+            }
+            pixel-per-inch{
+                dnam{"skíggjadeplar fyri hvønn tunna"}
+                one{"{0} skíggjadepil fyri hvønn tunna"}
+                other{"{0} skíggjadeplar fyri hvønn tunna"}
             }
         }
         length{
@@ -435,6 +523,11 @@ fo{
                 one{"{0} punkt"}
                 other{"{0} punkt"}
             }
+            solar-radius{
+                dnam{"sólarradii"}
+                one{"{0} sólarradius"}
+                other{"{0} sólarradii"}
+            }
             yard{
                 dnam{"yards"}
                 one{"{0} yard"}
@@ -447,12 +540,27 @@ fo{
                 one{"{0} luks"}
                 other{"{0} luks"}
             }
+            solar-luminosity{
+                dnam{"sólarljósmegi"}
+                one{"{0} sólarljósmegi"}
+                other{"{0} sólarljósmegi"}
+            }
         }
         mass{
             carat{
                 dnam{"karat"}
                 one{"{0} karat"}
                 other{"{0} karat"}
+            }
+            dalton{
+                dnam{"dalton"}
+                one{"{0} dalton"}
+                other{"{0} dalton"}
+            }
+            earth-mass{
+                dnam{"jarðmassi"}
+                one{"{0} jarðmassi"}
+                other{"{0} jarðmassar"}
             }
             gram{
                 dnam{"gramm"}
@@ -498,6 +606,11 @@ fo{
                 other{"{0} pund"}
                 per{"{0} fyri hvørt pund"}
             }
+            solar-mass{
+                dnam{"sólarmassi"}
+                one{"{0} sólarmassi"}
+                other{"{0} sólarmassar"}
+            }
             ton{
                 dnam{"stutt tons"}
                 one{"{0} stutt tons"}
@@ -537,6 +650,11 @@ fo{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"lufttrýst"}
+                one{"{0} lufttrýst"}
+                other{"{0} lufttrýst"}
+            }
             hectopascal{
                 dnam{"hektopascal"}
                 one{"{0} hektopascal"}
@@ -547,6 +665,16 @@ fo{
                 one{"{0} tummi av kviksilvur"}
                 other{"{0} tummar av kviksilvur"}
             }
+            kilopascal{
+                dnam{"kilopascal"}
+                one{"{0} kilopascal"}
+                other{"{0} kilopascal"}
+            }
+            megapascal{
+                dnam{"megapascal"}
+                one{"{0} megapascal"}
+                other{"{0} megapascal"}
+            }
             millibar{
                 dnam{"millibar"}
                 one{"{0} millibar"}
@@ -556,6 +684,11 @@ fo{
                 dnam{"millimetrar av kviksilvur"}
                 one{"{0} millimetur av kviksilvur"}
                 other{"{0} millimetrar av kviksilvur"}
+            }
+            pascal{
+                dnam{"pascal"}
+                one{"{0} Pascal"}
+                other{"{0} Pascal"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -607,11 +740,28 @@ fo{
                 other{"{0} Kelvin"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"newtonmetur"}
+                one{"{0} newtonmetur"}
+                other{"{0} newtonmetrar"}
+            }
+            pound-foot{
+                dnam{"pund føtur"}
+                one{"{0} pund fótur"}
+                other{"{0} pund føtur"}
+            }
+        }
         volume{
             acre-foot{
                 dnam{"ekraføtur"}
                 one{"{0} ekrafótur"}
                 other{"{0} ekraføtur"}
+            }
+            barrel{
+                dnam{"tunnur"}
+                one{"{0} tunna"}
+                other{"{0} tunnur"}
             }
             centiliter{
                 dnam{"sentilitrar"}
@@ -674,6 +824,11 @@ fo{
                 dnam{"flótandi unsur"}
                 one{"{0} flótandi unsa"}
                 other{"{0} flótandi unsur"}
+            }
+            fluid-ounce-imperial{
+                dnam{"bretskar flótandi unsur"}
+                one{"{0} bretsk flótandi unsa"}
+                other{"{0} bretskar flótandi unsur"}
             }
             gallon{
                 dnam{"gallons"}
@@ -773,6 +928,12 @@ fo{
         compound{
             per{"{0}/{1}"}
         }
+        concentr{
+            percent{
+                one{"{0} %"}
+                other{"{0} %"}
+            }
+        }
         consumption{
             liter-per-100kilometers{
                 dnam{"l/100km"}
@@ -781,6 +942,7 @@ fo{
             }
         }
         coordinate{
+            dnam{"ætt"}
             east{"{0}E"}
             north{"{0}N"}
             south{"{0}S"}
@@ -1036,6 +1198,21 @@ fo{
                 one{"{0} partur/mill."}
                 other{"{0} partar/mill."}
             }
+            percent{
+                dnam{"prosent"}
+                one{"{0} %"}
+                other{"{0} %"}
+            }
+            permille{
+                dnam{"promillur"}
+                one{"{0} ‰"}
+                other{"{0} ‰"}
+            }
+            permyriad{
+                dnam{"promyriad"}
+                one{"{0} ‱"}
+                other{"{0} ‱"}
+            }
         }
         consumption{
             liter-per-100kilometers{
@@ -1060,6 +1237,7 @@ fo{
             }
         }
         coordinate{
+            dnam{"ætt"}
             east{"{0} E"}
             north{"{0} N"}
             south{"{0} S"}
@@ -1129,6 +1307,11 @@ fo{
                 other{"{0} d."}
                 per{"{0}/d."}
             }
+            decade{
+                dnam{"áratí."}
+                one{"{0} áratí."}
+                other{"{0} áratí."}
+            }
             hour{
                 dnam{"tímar"}
                 one{"{0} t."}
@@ -1152,9 +1335,9 @@ fo{
                 per{"{0}/min."}
             }
             month{
-                dnam{"mán."}
-                one{"{0} mán."}
-                other{"{0} mán."}
+                dnam{"mnð."}
+                one{"{0} mnð."}
+                other{"{0} mnð."}
                 per{"{0}/m."}
             }
             nanosecond{
@@ -1204,10 +1387,16 @@ fo{
             }
         }
         energy{
+            british-thermal-unit{
+                dnam{"bretskar hitaeindir"}
+            }
             calorie{
                 dnam{"kal."}
                 one{"{0} kal."}
                 other{"{0} kal."}
+            }
+            electronvolt{
+                dnam{"elektronvolt"}
             }
             foodcalorie{
                 dnam{"kostkaloriur"}
@@ -1234,6 +1423,16 @@ fo{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"hitaeindir"}
+                one{"{0} thm"}
+                other{"{0} thm"}
+            }
+        }
+        force{
+            newton{
+                dnam{"newton"}
+            }
         }
         frequency{
             gigahertz{
@@ -1255,6 +1454,14 @@ fo{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"megaskíggjadeplar"}
+            }
+            pixel{
+                dnam{"skíggjadeplar"}
             }
         }
         length{
@@ -1348,6 +1555,9 @@ fo{
                 one{"{0} pkt"}
                 other{"{0} pkt"}
             }
+            solar-radius{
+                dnam{"sólarradii"}
+            }
             yard{
                 dnam{"yd"}
                 one{"{0} yd"}
@@ -1360,12 +1570,21 @@ fo{
                 one{"{0} lx"}
                 other{"{0} lx"}
             }
+            solar-luminosity{
+                dnam{"sólarljósmegi"}
+            }
         }
         mass{
             carat{
                 dnam{"karat"}
                 one{"{0} CD"}
                 other{"{0} CD"}
+            }
+            dalton{
+                dnam{"dalton"}
+            }
+            earth-mass{
+                dnam{"jarðmassi"}
             }
             gram{
                 dnam{"gramm"}
@@ -1411,6 +1630,9 @@ fo{
                 other{"{0} pund"}
                 per{"{0}/pund"}
             }
+            solar-mass{
+                dnam{"sólarmassi"}
+            }
             ton{
                 dnam{"stutt t"}
                 one{"{0} stutt t"}
@@ -1450,6 +1672,11 @@ fo{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"lufttrýst"}
+                one{"{0} lufttrýst"}
+                other{"{0} lufttrýst"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -1469,6 +1696,9 @@ fo{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
+            }
+            pascal{
+                dnam{"pascal"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -1525,6 +1755,11 @@ fo{
                 dnam{"ekraføtur"}
                 one{"{0} ekrafótur"}
                 other{"{0} ekraføtur"}
+            }
+            barrel{
+                dnam{"tunna"}
+                one{"{0} tunna"}
+                other{"{0} tunnur"}
             }
             centiliter{
                 dnam{"cl"}
@@ -1587,6 +1822,11 @@ fo{
                 dnam{"flótandi unsur"}
                 one{"{0} flótandi unsa"}
                 other{"{0} flótandi unsur"}
+            }
+            fluid-ounce-imperial{
+                dnam{"bretskar flótandi unsur"}
+                one{"{0} bretsk flótandi unsa"}
+                other{"{0} bretskar flót. unsur"}
             }
             gallon{
                 dnam{"gallons"}

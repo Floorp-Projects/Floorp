@@ -18,5 +18,5 @@ es_GT{
         wo{"wolof"}
         zgh{"tamazight marroquí estándar"}
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
 }

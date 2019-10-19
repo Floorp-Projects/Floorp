@@ -570,10 +570,13 @@ id{
         zxx{"Tidak ada konten linguistik"}
         zza{"Zaza"}
     }
+    Languages%menu{
+        yue{"Tionghoa, Kanton"}
+        zh{"Tionghoa, Mandarin"}
+    }
     Languages%short{
         az{"Azeri"}
         en_GB{"Inggris (U.K.)"}
-        en_US{"Inggris (A.S.)"}
     }
     Languages%variant{
         ps{"Pushto"}
@@ -582,6 +585,7 @@ id{
     Scripts{
         Afak{"Afaka"}
         Aghb{"Albania Kaukasia"}
+        Arab{"Arab"}
         Armi{"Aram Imperial"}
         Armn{"Armenia"}
         Avst{"Avesta"}
@@ -633,6 +637,7 @@ id{
         Hung{"Hungaria Kuno"}
         Inds{"Indus"}
         Ital{"Italia Lama"}
+        Jamo{"Jamo"}
         Java{"Jawa"}
         Jpan{"Jepang"}
         Jurc{"Jurchen"}
@@ -721,6 +726,7 @@ id{
         Tfng{"Tifinagh"}
         Tglg{"Tagalog"}
         Thaa{"Thaana"}
+        Thai{"Thai"}
         Tibt{"Tibet"}
         Tirh{"Tirhuta"}
         Ugar{"Ugaritik"}
@@ -764,7 +770,7 @@ id{
             iso8601{"Kalender ISO-8601"}
             japanese{"Kalender Jepang"}
             persian{"Kalender Persia"}
-            roc{"Kalendar Minguo"}
+            roc{"Kalender Min-guo"}
         }
         cf{
             account{"Format Mata Uang Akuntansi"}
@@ -819,6 +825,7 @@ id{
             stroke{"Urutan Sortir Guratan"}
             traditional{"Urutan Sortir Tradisional"}
             unihan{"Urutan Sortir Guratan Radikal"}
+            zhuyin{"Aturan Pengurutan Zhuyin"}
         }
         d0{
             fwidth{"Lebar penuh"}
@@ -837,8 +844,8 @@ id{
             strict{"Gaya Pemisah Baris Rapat"}
         }
         m0{
-            bgn{"BGN"}
-            ungegn{"UNGEGN"}
+            bgn{"Transliterasi BGN AS"}
+            ungegn{"Transliterasi GEGN PBB"}
         }
         ms{
             metric{"Sistem Metrik"}
@@ -945,7 +952,7 @@ id{
         VALENCIA{"Valencia"}
         WADEGILE{"Wade-Giles Latin"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — Semua"}
         category-list{"{0}: {1}"}
@@ -964,5 +971,10 @@ id{
         language{"Bahasa: {0}"}
         script{"Skrip: {0}"}
         territory{"Wilayah: {0}"}
+    }
+    localeDisplayPattern{
+        keyTypePattern{"{0}: {1}"}
+        pattern{"{0} ({1})"}
+        separator{"{0}, {1}"}
     }
 }

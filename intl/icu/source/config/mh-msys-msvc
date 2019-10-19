@@ -122,13 +122,13 @@ LIBCTESTFW=	$(top_builddir)/tools/ctestfw/$(LIBICU)$(CTESTFW_STUBNAME)$(ICULIBSU
 LIBICUTOOLUTIL=	$(LIBDIR)/$(LIBICU)$(TOOLUTIL_STUBNAME)$(ICULIBSUFFIX).lib
 
 ## These are the library specific LDFLAGS
-LDFLAGSICUDT+=	-base:"0x4ad00000" -NOENTRY# The NOENTRY option is required for creating a resource-only DLL.
-LDFLAGSICUUC=	-base:"0x4a800000"# in-uc = 1MB
-LDFLAGSICUI18N=	-base:"0x4a900000"# io-in = 2MB
-LDFLAGSICUIO=	-base:"0x4ab00000"# le-io = 1MB
-LDFLAGSICULX=	-base:"0x4ac80000"
+LDFLAGSICUDT+=	-NOENTRY# The NOENTRY option is required for creating a resource-only DLL.
+LDFLAGSICUUC=# Unused for now.
+LDFLAGSICUI18N=# Unused for now.
+LDFLAGSICUIO=# Unused for now.
+LDFLAGSICULX=# Unused for now.
 LDFLAGSCTESTFW=# Unused for now.
-LDFLAGSICUTOOLUTIL=	-base:"0x4ac00000"# Same as layout. Layout and tools probably won't mix.
+LDFLAGSICUTOOLUTIL=# Unused for now.
 
 ## Compilation rules
 %.$(STATIC_O): $(srcdir)/%.c

@@ -285,7 +285,7 @@ sr_Latn{
         }
         DJF{
             "DJF",
-            "Džibutanski franak",
+            "Džibutski franak",
         }
         DKK{
             "DKK",
@@ -629,7 +629,7 @@ sr_Latn{
         }
         MRU{
             "MRU",
-            "Mauritanijska ogija",
+            "Mauritanska ogija",
         }
         MTL{
             "MTL",
@@ -825,7 +825,7 @@ sr_Latn{
         }
         SHP{
             "SHP",
-            "Sv. jelenska funta",
+            "Svete Jelene funta",
         }
         SIT{
             "SIT",
@@ -1216,6 +1216,7 @@ sr_Latn{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1587,9 +1588,9 @@ sr_Latn{
             other{"nemačkih maraka"}
         }
         DJF{
-            few{"džibutanska franka"}
-            one{"džibutanski franak"}
-            other{"džibutanskih franaka"}
+            few{"džibutska franka"}
+            one{"džibutski franak"}
+            other{"džibutskih franaka"}
         }
         DKK{
             few{"danske krune"}
@@ -1989,7 +1990,7 @@ sr_Latn{
         MKD{
             few{"makedonska denara"}
             one{"makedonski denar"}
-            other{"makedonskih dinara"}
+            other{"makedonskih denara"}
         }
         MLF{
             few{"malijska franka"}
@@ -2017,9 +2018,9 @@ sr_Latn{
             other{"mauritanijskih ogija (1973–2017)"}
         }
         MRU{
-            few{"mauritanijske ogije"}
-            one{"mauritanijska ogija"}
-            other{"mauritanijskih ogija"}
+            few{"mauritanske ogije"}
+            one{"mauritanska ogija"}
+            other{"mauritanskih ogija"}
         }
         MTL{
             few{"malteške lire"}
@@ -2262,9 +2263,9 @@ sr_Latn{
             other{"singapurskih dolara"}
         }
         SHP{
-            few{"sv. jelenske funte"}
-            one{"sv. jelenska funta"}
-            other{"sv. jelenskih funti"}
+            few{"Svete Jelene funte"}
+            one{"Svete Jelene funta"}
+            other{"Svete Jelene funti"}
         }
         SIT{
             few{"slovenačka tolara"}
@@ -2657,5 +2658,5 @@ sr_Latn{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

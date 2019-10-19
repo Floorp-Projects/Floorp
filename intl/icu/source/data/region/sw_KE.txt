@@ -2,6 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sw_KE{
     Countries{
+        202{"Kusini mwa Jangwa la Sahara"}
         AF{"Afghanistani"}
         AI{"Anguila"}
         AQ{"Antaktika"}
@@ -12,6 +13,7 @@ sw_KE{
         CC{"Visiwa vya Kokos (Keeling)"}
         CD{"Kongo - Kinshasa"}
         CI{"Ivorikosti"}
+        CV{"Kepuvede"}
         CY{"Saiprasi"}
         DK{"Denmaki"}
         EA{"Keuta na Melilla"}
@@ -36,7 +38,6 @@ sw_KE{
         MC{"Monako"}
         MK{"Masedonia"}
         MM{"Myama (Burma)"}
-        MO{"Makau SAR China"}
         MQ{"Martiniki"}
         MS{"Montserati"}
         MV{"Maldivi"}
@@ -66,13 +67,9 @@ sw_KE{
         VG{"Visiwa vya Virgin vya Uingereza"}
         VI{"Visiwa vya Virgin vya Marekani"}
         VN{"Vietnamu"}
+        XA{"Kiinitoni cha kigeni"}
+        XB{"Pseudo-Bidi"}
         YT{"Mayote"}
     }
-    Countries%short{
-        MO{"Makau"}
-    }
-    Countries%variant{
-        MK{"Masedonia (FYROM)"}
-    }
-    Version{"2.1.47.71"}
+    Version{"36"}
 }

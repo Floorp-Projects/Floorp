@@ -179,7 +179,6 @@ se{
         MF{"Frankriikka Saint Martin"}
         MG{"Madagaskar"}
         MH{"Marshallsullot"}
-        MK{"Makedonia"}
         ML{"Mali"}
         MM{"Burma"}
         MN{"Mongolia"}
@@ -294,5 +293,5 @@ se{
         PS{"Palestina"}
         US{"USA"}
     }
-    Version{"2.1.48.4"}
+    Version{"36"}
 }
