@@ -70,3 +70,6 @@ hg addremove "${icu_dir}/source" "${icu_dir}/GIT-INFO" ${topsrcdir}/config/exter
 
 # Check local tzdata version.
 `dirname $0`/update-tzdata.sh -c
+
+# CLDR updates may lead to new language tag mappings, so we need to call make_intl_data.py, too.
+echo "INFO: Please run 'js/src/builtin/intl/make_intl_data.py langtags' to update additional language tag files for SpiderMonkey."
