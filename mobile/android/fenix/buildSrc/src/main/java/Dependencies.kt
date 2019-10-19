@@ -42,7 +42,7 @@ object Versions {
     // that we depend on directly for the fenix-megazord (and for it's
     // forUnitTest variant), and it's important that it be kept in
     // sync with the version used by android-components above.
-    const val mozilla_appservices = "0.41.0"
+    const val mozilla_appservices = "0.42.0"
 
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
@@ -153,6 +153,7 @@ object Deps {
     const val mozilla_support_rustlog = "org.mozilla.components:support-rustlog:${Versions.mozilla_android_components}"
     const val mozilla_support_utils = "org.mozilla.components:support-utils:${Versions.mozilla_android_components}"
     const val mozilla_support_test = "org.mozilla.components:support-test:${Versions.mozilla_android_components}"
+    const val mozilla_support_migration = "org.mozilla.components:support-migration:${Versions.mozilla_android_components}"
 
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"

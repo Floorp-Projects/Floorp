@@ -393,6 +393,9 @@ dependencies {
     implementation Deps.mozilla_support_rustlog
     implementation Deps.mozilla_support_utils
 
+    // We only care about support-migration in builds that will be overwriting Fennec.
+    fennecProductionImplementation Deps.mozilla_support_migration
+
     implementation Deps.mozilla_ui_colors
     implementation Deps.mozilla_ui_icons
     implementation Deps.mozilla_ui_publicsuffixlist
