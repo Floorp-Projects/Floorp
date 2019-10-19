@@ -509,7 +509,7 @@ class _ToolbarPanelHub {
         const messageEl = this._createHeroElement(win, doc, message);
         container.appendChild(messageEl);
         infoButton.addEventListener("click", toggleMessage);
-        this.sendUserEventTelemetry(win, "IMPRESSION", message.id);
+        this.sendUserEventTelemetry(win, "IMPRESSION", message);
       }
     }
     // Message is collapsed by default. If it was never shown before we want
