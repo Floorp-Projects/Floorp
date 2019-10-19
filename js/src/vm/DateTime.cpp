@@ -29,13 +29,9 @@
 #if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
 #  include "unicode/basictz.h"
 #  include "unicode/locid.h"
-#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
-
-#if ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || defined(ICU_TZ_HAS_RECREATE_DEFAULT))
 #  include "unicode/timezone.h"
 #  include "unicode/unistr.h"
-#endif /* ENABLE_INTL_API && (!MOZ_SYSTEM_ICU || \
-          defined(ICU_TZ_HAS_RECREATE_DEFAULT)) */
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
 #include "util/Text.h"
 #include "vm/MutexIDs.h"
@@ -587,7 +583,7 @@ static bool IsOlsonCompatibleWindowsTimeZoneId(const char* tz) {
   }
   return false;
 }
-#elif ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
+#elif ENABLE_INTL_API && !MOZ_SYSTEM_ICU
 static inline const char* TZContainsAbsolutePath(const char* tzVar) {
   // A TZ environment variable may be an absolute path. The path
   // format of TZ may begin with a colon. (ICU handles relative paths.)
@@ -724,16 +720,14 @@ static icu::UnicodeString ReadTimeZoneLink(const char* tz) {
 
   return icu::UnicodeString(timeZone, timeZoneLen, US_INV);
 }
-#endif /* ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT) */
+#endif /* ENABLE_INTL_API && !MOZ_SYSTEM_ICU */
 
 void js::ResyncICUDefaultTimeZone() {
   js::DateTimeInfo::resyncICUDefaultTimeZone();
 }
 
 void js::DateTimeInfo::internalResyncICUDefaultTimeZone() {
-#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-  bool recreate = true;
-
+#if ENABLE_INTL_API && !MOZ_SYSTEM_ICU
   if (const char* tz = std::getenv("TZ")) {
     icu::UnicodeString tzid;
 
@@ -765,13 +759,13 @@ void js::DateTimeInfo::internalResyncICUDefaultTimeZone() {
       if (*newTimeZone != icu::TimeZone::getUnknown()) {
         // adoptDefault() takes ownership of the time zone.
         icu::TimeZone::adoptDefault(newTimeZone.release());
-        recreate = false;
+        return;
       }
     }
   }
 
-  if (recreate) {
-    icu::TimeZone::recreateDefault();
+  if (icu::TimeZone* defaultZone = icu::TimeZone::detectHostTimeZone()) {
+    icu::TimeZone::adoptDefault(defaultZone);
   }
 #endif
 }

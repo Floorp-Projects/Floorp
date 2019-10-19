@@ -52,7 +52,6 @@ find ${icu_dir}/source/samples -name '*Makefile.in' -prune -or -type f -print | 
 for patch in \
  bug-915735 \
  suppress-warnings.diff \
- bug-1172609-timezone-recreateDefault.diff \
  bug-1198952-workaround-make-3.82-bug.diff \
  bug-1433303-minimize-subtags.diff \
 ; do
