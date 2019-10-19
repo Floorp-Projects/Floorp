@@ -11,7 +11,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 import os
 import shutil
-import six
 import socket
 import subprocess
 import sys
@@ -235,10 +234,10 @@ class MachRaptor(MachCommandBase):
                 adbhost = ADBHost(verbose=True)
                 device_serial = "{}:5555".format(device.get_ip_address())
                 device.command_output(["tcpip", "5555"])
-                six.input("Please disconnect your device from USB then press Enter/return...")
+                raw_input("Please disconnect your device from USB then press Enter/return...")
                 adbhost.command_output(["connect", device_serial])
                 while len(adbhost.devices()) > 1:
-                    six.input("You must disconnect your device from USB before continuing.")
+                    raw_input("You must disconnect your device from USB before continuing.")
                 # must reset the environment DEVICE_SERIAL which was set during
                 # verify_android_device to match our new tcpip value.
                 os.environ["DEVICE_SERIAL"] = device_serial
@@ -249,7 +248,7 @@ class MachRaptor(MachCommandBase):
         finally:
             try:
                 if is_android and kwargs['power_test']:
-                    six.input("Connect device via USB and press Enter/return...")
+                    raw_input("Connect device via USB and press Enter/return...")
                     device = ADBAndroid(device=device_serial, verbose=True)
                     device.command_output(["usb"])
                     adbhost.command_output(["disconnect", device_serial])
