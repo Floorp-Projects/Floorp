@@ -65,11 +65,17 @@
   padding: 0;
 }
 
-#urlbar:not(.megabar):hover:not([open]),
-#urlbar.megabar:hover:not([breakout-extend]) > #urlbar-background,
-#searchbar:hover {
+#urlbar:not(.megabar):not([focused="true"]):hover,
+#urlbar.megabar:not([focused="true"]):hover > #urlbar-background,
+#searchbar:not(:focus-within):hover {
   border-color: @fieldHoverBorderColor@;
   box-shadow: 0 1px 6px rgba(0,0,0,.1);
+}
+
+#urlbar:not(.megabar)[focused="true"],
+#urlbar.megabar[focused="true"] > #urlbar-background,
+#searchbar:focus-within {
+  border-color: var(--toolbar-field-focus-border-color);
 }
 
 #urlbar:-moz-lwtheme,
@@ -99,12 +105,6 @@
 #urlbar.megabar:-moz-lwtheme:hover > #urlbar-background,
 #navigator-toolbox #searchbar:-moz-lwtheme:hover {
   background-color: var(--lwt-toolbar-field-background-color, white);
-}
-
-#urlbar:not(.megabar)[focused="true"],
-#urlbar.megabar[focused="true"] > #urlbar-background,
-#searchbar:focus-within {
-  border-color: var(--toolbar-field-focus-border-color);
 }
 
 #urlbar[focused="true"]:-moz-lwtheme,
