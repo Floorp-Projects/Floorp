@@ -373,6 +373,8 @@
     <string name="current_session_save">Tallenna</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
     <string name="current_session_share">Jaa</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Nykyisen istunnon kuva</string>
     <!-- Button to save the current set of tabs into a collection -->
     <string name="save_to_collection">Tallenna kokoelmaan</string>
     <!-- Text for the menu button to delete a collection -->
