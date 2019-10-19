@@ -3,7 +3,7 @@
 const { Schemas } = ChromeUtils.import("resource://gre/modules/Schemas.jsm");
 
 /**
- * If this test fails, likely nsIHttpChannel has added or changed a
+ * If this test fails, likely nsIClassifiedChannel has added or changed a
  * CLASSIFIED_* flag.  Those changes must be in sync with
  * ChannelWrapper.webidl/cpp and the web_request.json schema file.
  */
@@ -20,7 +20,7 @@ add_task(async function test_webrequest_url_classification_enum() {
 
   let prefix = /^(?:CLASSIFIED_)/;
   let entries = 0;
-  for (let c of Object.keys(Ci.nsIHttpChannel).filter(name =>
+  for (let c of Object.keys(Ci.nsIClassifiedChannel).filter(name =>
     prefix.test(name)
   )) {
     let entry = c.replace(prefix, "").toLowerCase();

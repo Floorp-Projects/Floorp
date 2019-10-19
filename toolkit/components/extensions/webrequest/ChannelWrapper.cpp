@@ -24,6 +24,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/BrowserHost.h"
 #include "nsIContentPolicy.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIInterfaceRequestor.h"
@@ -48,7 +49,7 @@ namespace extensions {
 #define CHANNELWRAPPER_PROP_KEY \
   NS_LITERAL_STRING("ChannelWrapper::CachedInstance")
 
-using CF = nsIHttpChannel::ClassificationFlags;
+using CF = nsIClassifiedChannel::ClassificationFlags;
 using MUC = MozUrlClassificationFlags;
 
 struct ClassificationStruct {
@@ -906,14 +907,20 @@ void FillClassification(
 void ChannelWrapper::GetUrlClassification(
     dom::Nullable<dom::MozUrlClassification>& aRetVal, ErrorResult& aRv) const {
   MozUrlClassification classification;
-  if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
+  nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel();
+  nsCOMPtr<nsIClassifiedChannel> classified = do_QueryInterface(chan);
+  MOZ_DIAGNOSTIC_ASSERT(
+      classified,
+      "Must be an object inheriting from both nsIHttpChannel and "
+      "nsIClassifiedChannel");
+  if (classified) {
     uint32_t classificationFlags;
-    chan->GetFirstPartyClassificationFlags(&classificationFlags);
+    classified->GetFirstPartyClassificationFlags(&classificationFlags);
     FillClassification(classification.mFirstParty, classificationFlags, aRv);
     if (aRv.Failed()) {
       return;
     }
-    chan->GetThirdPartyClassificationFlags(&classificationFlags);
+    classified->GetThirdPartyClassificationFlags(&classificationFlags);
     FillClassification(classification.mThirdParty, classificationFlags, aRv);
   }
   aRetVal.SetValue(std::move(classification));

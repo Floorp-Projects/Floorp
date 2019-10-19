@@ -36,7 +36,7 @@ function listener(tracking, priority, throttleable, nextTest) {
 listener.prototype = {
   onStartRequest(request) {
     Assert.equal(
-      request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource(),
+      request.QueryInterface(Ci.nsIClassifiedChannel).isTrackingResource(),
       this._tracking,
       "tracking flag"
     );

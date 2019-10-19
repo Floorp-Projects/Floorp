@@ -43,6 +43,7 @@
 #include "nsIPrincipal.h"
 #include "nsJSPrincipals.h"
 #include "nsContentPolicyUtils.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIClassOfService.h"
@@ -3592,7 +3593,10 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
       aRequest->mSourceMapURL = NS_ConvertUTF8toUTF16(sourceMapURL);
     }
 
-    if (httpChannel->IsThirdPartyTrackingResource()) {
+    nsCOMPtr<nsIClassifiedChannel> classifiedChannel = do_QueryInterface(req);
+    MOZ_ASSERT(classifiedChannel);
+    if (classifiedChannel &&
+        classifiedChannel->IsThirdPartyTrackingResource()) {
       aRequest->SetIsTracking();
     }
   }
