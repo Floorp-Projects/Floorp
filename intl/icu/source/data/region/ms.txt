@@ -287,8 +287,6 @@ ms{
         VU{"Vanuatu"}
         WF{"Wallis dan Futuna"}
         WS{"Samoa"}
-        XA{"XA"}
-        XB{"XB"}
         XK{"Kosovo"}
         YE{"Yaman"}
         YT{"Mayotte"}
@@ -311,7 +309,8 @@ ms{
         CI{"Ivory Coast"}
         CZ{"Republik Czech"}
         FK{"Kepulauan Falkland (Islas Malvinas)"}
+        SZ{"Swaziland"}
         TL{"Timor Timur"}
     }
-    Version{"2.1.49.2"}
+    Version{"36"}
 }

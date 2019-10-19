@@ -127,7 +127,6 @@ bez{
         MD{"Humoldova"}
         MG{"Hubukini"}
         MH{"Ifisima fya Marshal"}
-        MK{"Humasedonia"}
         ML{"Humali"}
         MM{"Humyama"}
         MN{"Humongolia"}
@@ -227,5 +226,5 @@ bez{
         ZM{"Huzambia"}
         ZW{"Huzimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

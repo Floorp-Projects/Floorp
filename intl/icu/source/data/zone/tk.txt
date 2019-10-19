@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tk{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abijan"}
@@ -14,9 +14,6 @@ tk{
         }
         "Africa:Algiers"{
             ec{"Alžir"}
-        }
-        "Africa:Asmera"{
-            ec{"Asmera"}
         }
         "Africa:Bamako"{
             ec{"Bamako"}
@@ -312,9 +309,6 @@ tk{
         "America:Glace_Bay"{
             ec{"Gleýs-Beý"}
         }
-        "America:Godthab"{
-            ec{"Nuk"}
-        }
         "America:Goose_Bay"{
             ec{"Gus-Beý"}
         }
@@ -523,7 +517,7 @@ tk{
             ec{"Rejaýna"}
         }
         "America:Resolute"{
-            ec{"Rozulýut"}
+            ec{"Rezolýut"}
         }
         "America:Rio_Branco"{
             ec{"Riu-Branku"}
@@ -553,7 +547,7 @@ tk{
             ec{"Sen-Bartelemi"}
         }
         "America:St_Johns"{
-            ec{"Sent-Džons"}
+            ec{"Sent-Jons"}
         }
         "America:St_Kitts"{
             ec{"Sent-Kits"}
@@ -593,9 +587,6 @@ tk{
         }
         "America:Whitehorse"{
             ec{"Waýthors"}
-        }
-        "America:Winnipeg"{
-            ec{"Winipeg"}
         }
         "America:Yakutat"{
             ec{"Ýakutat"}
@@ -787,7 +778,7 @@ tk{
             ec{"Nikosiýa"}
         }
         "Asia:Novokuznetsk"{
-            ec{"Nowokuznetsk"}
+            ec{"Nowokuznesk"}
         }
         "Asia:Novosibirsk"{
             ec{"Nowosibirsk"}
@@ -810,11 +801,14 @@ tk{
         "Asia:Qatar"{
             ec{"Katar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanaý"}
+        }
         "Asia:Qyzylorda"{
             ec{"Gyzylorda"}
         }
         "Asia:Rangoon"{
-            ec{"Rangun"}
+            ec{"Ýangon"}
         }
         "Asia:Riyadh"{
             ec{"Er-Riýad"}
@@ -1185,7 +1179,7 @@ tk{
             ec{"Çatem"}
         }
         "Pacific:Easter"{
-            ec{"Pashi adasy"}
+            ec{"Pasha adasy"}
         }
         "Pacific:Efate"{
             ec{"Efate"}
@@ -1530,7 +1524,7 @@ tk{
             ls{"Gruziýa standart wagty"}
         }
         "meta:Gilbert_Islands"{
-            ls{"Gilberta adalary wagty"}
+            ls{"Gilbert adalary wagty"}
         }
         "meta:Greenland_Eastern"{
             ld{"Gündogar Grenlandiýa tomusky wagty"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sk{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -956,6 +956,7 @@ sk{
         }
         "Etc:UTC"{
             ls{"koordinovaný svetový čas"}
+            ss{"UTC"}
         }
         "Etc:Unknown"{
             ec{"neznáme mesto"}

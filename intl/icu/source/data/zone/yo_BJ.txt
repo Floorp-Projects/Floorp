@@ -1,11 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yo_BJ{
-    Version{"2.1.48.77"}
+    Version{"36"}
     zoneStrings{
-        "Africa:Lagos"{
-            ec{"Lagos"}
-        }
         "Etc:UTC"{
             ls{"Àpapɔ̀ Àkókò Àgbáyé"}
         }
@@ -52,15 +49,6 @@ yo_BJ{
             lg{"Àkókò Ìwɔ Oòrùn Europe"}
             ls{"Àkókò àsikò Ìwɔ Oòrùn Europe"}
         }
-        "meta:GMT"{
-            ls{"Greenwich Mean Time"}
-        }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"WAT{0}"}
-        gmtZeroFormat{"WAT"}
-        hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0} Ìgbà"}
         regionFormatDaylight{"{0} Àkókò ojúmɔmɔ"}
-        regionFormatStandard{"{0} Ìlànà Àkókò"}
     }
 }

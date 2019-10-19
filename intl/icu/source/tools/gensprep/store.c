@@ -464,7 +464,8 @@ storeMapping(uint32_t codepoint, uint32_t* mapping,int32_t length,
 
 
 extern void
-storeRange(uint32_t start, uint32_t end, UStringPrepType type,UErrorCode* status){
+storeRange(uint32_t start, uint32_t end, UStringPrepType type, UErrorCode* status){
+    (void)status; // suppress compiler warnings about unused variable
     uint16_t trieWord = 0;
 
     if((int)(_SPREP_TYPE_THRESHOLD + type) > 0xFFFF){

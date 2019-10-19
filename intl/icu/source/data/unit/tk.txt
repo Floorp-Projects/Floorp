@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tk{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"hh:mm:ss"}
@@ -54,7 +54,6 @@ tk{
                 other{"{0} akr"}
             }
             dunam{
-                dnam{"dunam"}
                 one{"{0} dunam"}
                 other{"{0} dunam"}
             }
@@ -106,6 +105,7 @@ tk{
         }
         compound{
             per{"{1} başyna {0}"}
+            times{"{0}.{1}"}
         }
         concentr{
             karat{
@@ -247,6 +247,11 @@ tk{
                 other{"{0} gün"}
                 per{"{0}/gün"}
             }
+            decade{
+                dnam{"onýyllyklar"}
+                one{"{0} onýyllyk"}
+                other{"{0} onýyllyk"}
+            }
             hour{
                 dnam{"sagat"}
                 one{"{0} sagat"}
@@ -362,6 +367,11 @@ tk{
                 one{"{0} kilowat-sagat"}
                 other{"{0} kilowat-sagat"}
             }
+            therm-us{
+                dnam{"ABŞ termleri"}
+                one{"{0} ABŞ termi"}
+                other{"{0} ABŞ termi"}
+            }
         }
         force{
             newton{
@@ -395,6 +405,39 @@ tk{
                 dnam{"megagers"}
                 one{"{0} megagers"}
                 other{"{0} megagers"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                one{"{0} santimetr başyna nokat"}
+                other{"{0} santimetr başyna nokat"}
+            }
+            dot-per-inch{
+                one{"{0} dýuým başyna nokat"}
+                other{"{0} dýuým başyna nokat"}
+            }
+            em{
+                dnam{"tipografik em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                dnam{"megapikseller"}
+                one{"{0} megapiksel"}
+                other{"{0} megapiksel"}
+            }
+            pixel{
+                dnam{"pikseller"}
+                one{"{0} piksel"}
+                other{"{0} piksel"}
+            }
+            pixel-per-centimeter{
+                one{"{0} santimetr başyna piksel"}
+                other{"{0} santimetr başyna piksel"}
+            }
+            pixel-per-inch{
+                one{"{0} dýuým başyna piksel"}
+                other{"{0} dýuým başyna piksel"}
             }
         }
         length{
@@ -620,6 +663,11 @@ tk{
                 one{"{0} atmosfera"}
                 other{"{0} atmosfera"}
             }
+            bar{
+                dnam{"barlar"}
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
             hectopascal{
                 dnam{"gektopaskal"}
                 one{"{0} gektopaskal"}
@@ -649,6 +697,11 @@ tk{
                 dnam{"millimetr simap sütüni"}
                 one{"{0} millimetr simap sütüni"}
                 other{"{0} millimetr simap sütüni"}
+            }
+            pascal{
+                dnam{"paskallar"}
+                one{"{0} paskal"}
+                other{"{0} paskal"}
             }
             pound-per-square-inch{
                 dnam{"funt/inedördül dýuým"}
@@ -853,6 +906,7 @@ tk{
     unitsNarrow{
         compound{
             per{"{0}/{1}"}
+            times{"{0}.{1}"}
         }
         concentr{
             percent{
@@ -1072,6 +1126,7 @@ tk{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}.{1}"}
         }
         concentr{
             karat{
@@ -1213,6 +1268,11 @@ tk{
                 other{"{0} gün"}
                 per{"{0}/gün"}
             }
+            decade{
+                dnam{"oný"}
+                one{"{0} oný"}
+                other{"{0} oný"}
+            }
             hour{
                 dnam{"sag"}
                 one{"{0} sag"}
@@ -1328,6 +1388,11 @@ tk{
                 one{"{0} kWt. sag"}
                 other{"{0} kWt. sag"}
             }
+            therm-us{
+                dnam{"ABŞ termi"}
+                one{"{0} ABŞ termi"}
+                other{"{0} ABŞ termi"}
+            }
         }
         force{
             newton{
@@ -1361,6 +1426,36 @@ tk{
                 dnam{"MGs"}
                 one{"{0} MGs"}
                 other{"{0} MGs"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"smbn"}
+                one{"{0} smbn"}
+                other{"{0} smbn"}
+            }
+            dot-per-inch{
+                dnam{"dbn"}
+                one{"{0} dbn"}
+                other{"{0} dbn"}
+            }
+            megapixel{
+                dnam{"megapiksel"}
+            }
+            pixel{
+                dnam{"pikseller"}
+                one{"{0} pks"}
+                other{"{0} pks"}
+            }
+            pixel-per-centimeter{
+                dnam{"sbp"}
+                one{"{0} sbp"}
+                other{"{0} sbp"}
+            }
+            pixel-per-inch{
+                dnam{"dbp"}
+                one{"{0} dbp"}
+                other{"{0} dbp"}
             }
         }
         length{

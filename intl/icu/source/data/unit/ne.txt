@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ne{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -247,6 +247,11 @@ ne{
                 other{"{0} दिन"}
                 per{"{0} प्रति दिन"}
             }
+            decade{
+                dnam{"दशाब्दी"}
+                one{"{0} दशाब्दी"}
+                other{"{0} दशाब्दी"}
+            }
             hour{
                 dnam{"घण्टा"}
                 one{"{0} घण्टा"}
@@ -362,6 +367,11 @@ ne{
                 one{"{0}किलोवाट-घण्टा"}
                 other{"{0}किलोवाट-घण्टा"}
             }
+            therm-us{
+                dnam{"युएस थर्म"}
+                one{"{0} युएस थर्म"}
+                other{"{0} युएस थर्म"}
+            }
         }
         force{
             newton{
@@ -395,6 +405,41 @@ ne{
                 dnam{"मेगाहर्ज"}
                 one{"{0} मेगाहर्ज"}
                 other{"{0} मेगाहर्ज"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"डट प्रति सेन्टिमिटर"}
+                one{"{0} डट प्रति सेन्टिमिटर"}
+                other{"{0} डट प्रति सेन्टिमिटर"}
+            }
+            dot-per-inch{
+                dnam{"डट प्रति इन्च"}
+                one{"{0} डट प्रति इन्च"}
+                other{"{0} डट प्रति इन्च"}
+            }
+            em{
+                dnam{"टाइपोग्रापिक एम"}
+            }
+            megapixel{
+                dnam{"मेगापिक्सेल"}
+                one{"{0} मेगापिक्सेल"}
+                other{"{0} मेगापिक्सेल"}
+            }
+            pixel{
+                dnam{"पिक्सेल"}
+                one{"{0} पिक्सेल"}
+                other{"{0} पिक्सेल"}
+            }
+            pixel-per-centimeter{
+                dnam{"पिक्सेल प्रति सेन्टिमिटर"}
+                one{"{0} पिक्सेल प्रति सेन्टिमिटर"}
+                other{"{0} पिक्सेल प्रति सेन्टिमिटर"}
+            }
+            pixel-per-inch{
+                dnam{"पिक्सेल प्रति इन्च"}
+                one{"{0} पिक्सेल प्रति इन्च"}
+                other{"{0} पिक्सेल प्रति इन्च"}
             }
         }
         length{
@@ -620,6 +665,11 @@ ne{
                 one{"{0} वायुमण्डल"}
                 other{"{0} वायुमण्डलहरू"}
             }
+            bar{
+                dnam{"धर्का"}
+                one{"{0} धर्का"}
+                other{"{0} धर्का"}
+            }
             hectopascal{
                 dnam{"हेक्टो पास्कल"}
                 one{"{0} हेक्टो पास्कल"}
@@ -649,6 +699,11 @@ ne{
                 dnam{"मिलिमिटर पारो"}
                 one{"{0} मिलिमिटर पारो"}
                 other{"{0} मिलिमिटर पारो"}
+            }
+            pascal{
+                dnam{"पास्कल"}
+                one{"{0} पास्कल"}
+                other{"{0} पास्कल"}
             }
             pound-per-square-inch{
                 dnam{"पाउन्ड प्रति वर्ग इन्च"}
@@ -1200,6 +1255,7 @@ ne{
         }
         compound{
             per{"{0}प्रति {1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -1239,8 +1295,6 @@ ne{
             }
             permyriad{
                 dnam{"पर्माइराइड"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -1340,6 +1394,11 @@ ne{
                 one{"{0} दिन"}
                 other{"{0} दिन"}
                 per{"{0}/दिन"}
+            }
+            decade{
+                dnam{"दशाब्दी"}
+                one{"{0} दशाब्दी"}
+                other{"{0} दशाब्दी"}
             }
             hour{
                 dnam{"घण्टा"}
@@ -1456,6 +1515,11 @@ ne{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"युएस थर्म"}
+                one{"{0} युएस थर्म"}
+                other{"{0} युएस थर्म"}
+            }
         }
         force{
             newton{
@@ -1489,6 +1553,43 @@ ne{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
+            em{
+                dnam{"em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                dnam{"मेगापिक्सेल"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                dnam{"पिक्सेल"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -1584,8 +1685,6 @@ ne{
             }
             solar-radius{
                 dnam{"सौर्य रेडिआई"}
-                one{"{0} R☉"}
-                other{"{0} R☉"}
             }
             yard{
                 dnam{"गज"}
@@ -1601,8 +1700,6 @@ ne{
             }
             solar-luminosity{
                 dnam{"सौर्य प्रकाश"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
             }
         }
         mass{
@@ -1667,8 +1764,6 @@ ne{
             }
             solar-mass{
                 dnam{"सौर्य घन"}
-                one{"{0} M☉"}
-                other{"{0} M☉"}
             }
             ton{
                 dnam{"टन"}
@@ -1714,6 +1809,11 @@ ne{
                 one{"{0} वायु"}
                 other{"{0} वायु"}
             }
+            bar{
+                dnam{"धर्का"}
+                one{"{0} धर्का"}
+                other{"{0} धर्का"}
+            }
             hectopascal{
                 dnam{"हेक्टो पास्कल"}
                 one{"{0}hPa"}
@@ -1743,6 +1843,11 @@ ne{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -1799,11 +1904,6 @@ ne{
                 dnam{"न्युटन मिटर"}
                 one{"{0} न्युटन मिटर"}
                 other{"{0} न्युटन मिटर"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                one{"{0} lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
             }
         }
         volume{
@@ -1878,11 +1978,6 @@ ne{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
-            }
-            fluid-ounce-imperial{
-                dnam{"Imp. fl oz"}
-                one{"{0} fl oz Imp."}
-                other{"{0} fl oz Imp."}
             }
             gallon{
                 dnam{"ग्यालोन"}

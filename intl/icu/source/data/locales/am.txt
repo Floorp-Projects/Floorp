@@ -23,7 +23,7 @@ am{
         "[ሀ ለ ሐ መ ሠ ረ ሰ ሸ ቀ ቈ በ ቨ ተ ቸ ኀ ኈ ነ ኘ አ ከ ኰ ኸ ወ ዐ ዘ ዠ የ ደ ጀ ገ ጐ ጠ ጨ ጰ ጸ ፀ ፈ ፐ"
         "]"
     }
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[‐ – , ፡ ፣ ፤ ፥ ፦ ! ? . ። ‹ › « » ( ) \\[ \\]]"}
     MoreInformation{"?"}
     NumberElements{
@@ -37,6 +37,7 @@ am{
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -195,13 +196,18 @@ am{
                 }
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -216,7 +222,7 @@ am{
         minimumGroupingDigits{"1"}
         traditional{"ethi"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -718,15 +724,6 @@ am{
                 yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 H{
                     H{"HH–HH"}
                 }
@@ -899,6 +896,10 @@ am{
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"'week' w 'of' Y"}
+                    other{"'week' w 'of' Y"}
+                }
             }
             dayNames{
                 format{
@@ -1043,6 +1044,10 @@ am{
                     "ዓ/ዓ",
                     "ዓ/ም",
                 }
+                abbreviated%variant{
+                    "BCE",
+                    "CE",
+                }
                 narrow{
                     "ዓ/ዓ",
                     "ዓ/ም",
@@ -1057,15 +1062,6 @@ am{
                 }
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"G y – G y"}
                     y{"G y–y"}
@@ -2273,7 +2269,6 @@ am{
             start{"{0}፣ {1}"}
         }
         standard-narrow{
-            middle{"{0}፣ {1}"}
             start{"{0}, {1}"}
         }
         standard-short{

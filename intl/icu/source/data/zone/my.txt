@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 my{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"အာဘီဂျန်"}
@@ -244,7 +244,7 @@ my{
             ec{"ကာရာကာစ်"}
         }
         "America:Catamarca"{
-            ec{"ကာတာမာရကွာ"}
+            ec{"ကာတာမာရကာ"}
         }
         "America:Cayenne"{
             ec{"ကေညင်န်"}
@@ -809,6 +809,9 @@ my{
         }
         "Asia:Qatar"{
             ec{"ကာတာ"}
+        }
+        "Asia:Qostanay"{
+            ec{"ကော့စ်တနေ"}
         }
         "Asia:Qyzylorda"{
             ec{"ကီဇလော်ဒါ"}

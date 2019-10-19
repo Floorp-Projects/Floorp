@@ -621,10 +621,16 @@ nl{
         zxx{"geen linguïstische inhoud"}
         zza{"Zaza"}
     }
+    Languages%long{
+        zh_Hans{"Mandarijn (vereenvoudigd)"}
+        zh_Hant{"Mandarijn (traditioneel)"}
+    }
+    Languages%menu{
+        yue{"Kantonees"}
+        zh{"Mandarijn"}
+    }
     Languages%short{
         az{"Azeri"}
-        en_GB{"Engels (VK)"}
-        en_US{"Engels (VS)"}
     }
     Languages%variant{
         ps{"Pashto"}
@@ -633,6 +639,7 @@ nl{
         Adlm{"Adlam"}
         Afak{"Defaka"}
         Aghb{"Kaukasisch Albanees"}
+        Ahom{"Ahom"}
         Arab{"Arabisch"}
         Armi{"Keizerlijk Aramees"}
         Armn{"Armeens"}
@@ -652,6 +659,7 @@ nl{
         Cakm{"Chakma"}
         Cans{"Verenigde Canadese Aboriginal-symbolen"}
         Cari{"Carisch"}
+        Cham{"Cham"}
         Cher{"Cherokee"}
         Cirt{"Cirth"}
         Copt{"Koptisch"}
@@ -731,6 +739,7 @@ nl{
         Merc{"Meroitisch cursief"}
         Mero{"Meroïtisch"}
         Mlym{"Malayalam"}
+        Modi{"Modi"}
         Mong{"Mongools"}
         Moon{"Moon"}
         Mroo{"Mro"}
@@ -760,6 +769,7 @@ nl{
         Phnx{"Foenicisch"}
         Plrd{"Pollard-fonetisch"}
         Prti{"Inscriptioneel Parthisch"}
+        Qaag{"Qaag"}
         Rjng{"Rejang"}
         Rohg{"Hanifi Rohingya"}
         Roro{"Rongorongo"}
@@ -1114,7 +1124,7 @@ nl{
         WADEGILE{"Wade-Giles-romanisering"}
         XSISTEMO{"X-sistemo"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — alle"}
         category-list{"{0}: {1}"}

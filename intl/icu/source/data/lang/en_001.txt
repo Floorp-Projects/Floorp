@@ -5,6 +5,10 @@ en_001{
         colCaseLevel{"Case-Sensitive Sorting"}
         colNormalization{"Normalised Sorting"}
     }
+    Languages{
+        mus{"Creek"}
+        nds_NL{"West Low German"}
+    }
     Types{
         colNormalization{
             no{"Sort Without Normalisation"}
@@ -17,7 +21,7 @@ en_001{
             h24{"24-Hour System (1–24)"}
         }
     }
-    Version{"2.1.47.69"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – all"}
         compatibility{"{0} – compatibility"}

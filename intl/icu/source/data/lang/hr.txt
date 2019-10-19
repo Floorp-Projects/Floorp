@@ -4,13 +4,13 @@ hr{
     Keys{
         calendar{"kalendar"}
         cf{"Format valute"}
-        colAlternate{"Zanemarivanje poredavanja simbola"}
-        colBackwards{"Obrnuto poredavanje po naglasku"}
-        colCaseFirst{"Poredavanje po velikim/malim slovima"}
-        colCaseLevel{"Poredavanje u skladu s veličinom slova"}
-        colNormalization{"Normalizirano poredavanje"}
-        colNumeric{"Numeričko poredavanje"}
-        colStrength{"Jačina poredavanja"}
+        colAlternate{"Zanemarivanje razvrstavanja simbola"}
+        colBackwards{"Obrnuto razvrstavanje po naglasku"}
+        colCaseFirst{"Razvrstavanje po velikim/malim slovima"}
+        colCaseLevel{"Razvrstavanje prema veličini slova"}
+        colNormalization{"Normalizirano razvrstavanje"}
+        colNumeric{"Brojčano razvrstavanje"}
+        colStrength{"Jačina razvrstavanja"}
         collation{"Redoslijed razvrstavanja"}
         currency{"valuta"}
         hc{"format vremena (12 ili 24)"}
@@ -557,10 +557,16 @@ hr{
         zxx{"bez jezičnog sadržaja"}
         zza{"zazaki"}
     }
+    Languages%long{
+        zh_Hans{"mandarinski kineski (pojednostavljeni)"}
+        zh_Hant{"mandarinski kineski (tradicionalni)"}
+    }
+    Languages%menu{
+        yue{"kineski, kantonski"}
+        zh{"kineski, mandarinski"}
+    }
     Languages%short{
         az{"azerski"}
-        en_GB{"engleski (UK)"}
-        en_US{"engleski (SAD)"}
     }
     Languages%variant{
         ps{"puštu"}
@@ -917,7 +923,7 @@ hr{
         VALENCIA{"valencijski"}
         WADEGILE{"Wade-Giles romanizacija"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} – sve"}
         category-list{"{0}: {1}"}
@@ -938,5 +944,10 @@ hr{
         language{"Jezik: {0}"}
         script{"Pismo: {0}"}
         territory{"Regija: {0}"}
+    }
+    localeDisplayPattern{
+        keyTypePattern{"{0}: {1}"}
+        pattern{"{0} ({1})"}
+        separator{"{0}, {1}"}
     }
 }

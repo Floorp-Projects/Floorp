@@ -91,7 +91,7 @@ zh_Hant_HK{
             }
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     calendar{
         buddhist{
             availableFormats{
@@ -310,7 +310,6 @@ zh_Hant_HK{
                 "{1} {0}",
             }
             availableFormats{
-                Ed{"d日E"}
                 GyMMMEd{"Gy年M月d日E"}
                 MEd{"d/M（E）"}
                 MMMEd{"M月d日E"}
@@ -336,6 +335,7 @@ zh_Hant_HK{
                         evening1{"晚上"}
                         midnight{"午夜"}
                         morning1{"早上"}
+                        morning2{"上午"}
                         night1{"凌晨"}
                     }
                     narrow{
@@ -344,6 +344,7 @@ zh_Hant_HK{
                         evening1{"晚上"}
                         midnight{"午夜"}
                         morning1{"早上"}
+                        morning2{"上午"}
                         night1{"凌晨"}
                     }
                     wide{
@@ -352,6 +353,7 @@ zh_Hant_HK{
                         evening1{"晚上"}
                         midnight{"午夜"}
                         morning1{"早上"}
+                        morning2{"上午"}
                         night1{"凌晨"}
                     }
                 }
@@ -361,6 +363,7 @@ zh_Hant_HK{
                         afternoon2{"下午"}
                         evening1{"晚上"}
                         morning1{"早上"}
+                        morning2{"上午"}
                         night1{"凌晨"}
                     }
                     narrow{
@@ -368,6 +371,7 @@ zh_Hant_HK{
                         afternoon2{"下午"}
                         evening1{"晚上"}
                         morning1{"早上"}
+                        morning2{"上午"}
                         night1{"凌晨"}
                     }
                     wide{
@@ -375,6 +379,7 @@ zh_Hant_HK{
                         afternoon2{"下午"}
                         evening1{"晚上"}
                         morning1{"早上"}
+                        morning2{"上午"}
                         night1{"凌晨"}
                     }
                 }

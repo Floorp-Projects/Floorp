@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 chr{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ᎠᏈᏣᏂ"}
@@ -806,6 +806,9 @@ chr{
         }
         "Asia:Qatar"{
             ec{"ᎧᏔᎵ"}
+        }
+        "Asia:Qostanay"{
+            ec{"ᎧᏍᏔᏁ"}
         }
         "Asia:Qyzylorda"{
             ec{"ᎩᏏᎶᎳᏓ"}

@@ -8,7 +8,16 @@ es_MX{
             patternsLong{
                 decimalFormat{
                     1000000000000{
+                        one{"0 billón"}
                         other{"0 billones"}
+                    }
+                    10000000000000{
+                        one{"00 billones"}
+                        other{"00 billones"}
+                    }
+                    100000000000000{
+                        one{"000 billones"}
+                        other{"000 billones"}
                     }
                 }
             }
@@ -76,23 +85,11 @@ es_MX{
                         one{"000 k"}
                         other{"000 k"}
                     }
-                    1000000000{
-                        one{"0000 M"}
-                        other{"0000 M"}
-                    }
-                    10000000000{
-                        one{"00 mil M"}
-                        other{"00 mil M"}
-                    }
-                    100000000000{
-                        one{"000 mil M"}
-                        other{"000 mil M"}
-                    }
                 }
             }
         }
     }
-    Version{"2.1.47.96"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -115,7 +112,6 @@ es_MX{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 MMMEd{"E d MMM"}
-                MMMMd{"d 'de' MMMM"}
                 MMMd{"d MMM"}
                 h{"hh a"}
                 hm{"hh:mm a"}
@@ -167,8 +163,8 @@ es_MX{
                 "d MMM y",
                 "dd/MM/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -216,10 +212,6 @@ es_MX{
                 }
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
                         am{"a. m."}
                         pm{"p. m."}
                     }
@@ -322,32 +314,14 @@ es_MX{
             }
             quarters{
                 format{
-                    abbreviated{
-                        "1er. trim.",
-                        "2º. trim.",
-                        "3er. trim.",
-                        "4º trim.",
-                    }
-                    narrow{
-                        "1T",
-                        "2T",
-                        "3T",
-                        "4T",
-                    }
                     wide{
                         "1.er trimestre",
-                        "2º. trimestre",
+                        "2.º trimestre",
                         "3.er trimestre",
-                        "4o. trimestre",
+                        "4.º trimestre",
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "1er. trim.",
-                        "2º. trim.",
-                        "3er. trim.",
-                        "4º trim.",
-                    }
                     narrow{
                         "1T",
                         "2T",
@@ -356,9 +330,9 @@ es_MX{
                     }
                     wide{
                         "1.er trimestre",
-                        "2º. trimestre",
+                        "2.º trimestre",
                         "3.er trimestre",
-                        "4º trimestre",
+                        "4.º trimestre",
                     }
                 }
             }
@@ -387,20 +361,11 @@ es_MX{
         whitespace{"Espacio duro"}
     }
     fields{
-        day{
-            relative{
-                "-1"{"ayer"}
-                "-2"{"anteayer"}
-                "0"{"hoy"}
-                "1"{"mañana"}
-                "2"{"pasado mañana"}
-            }
-        }
         day-narrow{
             relativeTime{
                 future{
                     one{"+{0} día"}
-                    other{"+{0} días"}
+                    other{"en {0} días"}
                 }
             }
         }
@@ -433,11 +398,6 @@ es_MX{
                 "0"{"este viernes"}
                 "1"{"el viernes próximo"}
             }
-            relativeTime{
-                future{
-                    other{"dentro de {0} viernes"}
-                }
-            }
         }
         fri-narrow{
             relativeTime{
@@ -454,9 +414,6 @@ es_MX{
                 "1"{"el próximo vier."}
             }
             relativeTime{
-                future{
-                    other{"dentro de {0} vie."}
-                }
                 past{
                     one{"hace {0} vie."}
                     other{"hace {0} vie."}
@@ -474,12 +431,8 @@ es_MX{
         minute-narrow{
             relativeTime{
                 future{
-                    one{"+{0} min"}
-                    other{"+{0} min"}
-                }
-                past{
-                    one{"-{0} min"}
-                    other{"-{0} min"}
+                    one{"en {0} min"}
+                    other{"en {0} min"}
                 }
             }
         }
@@ -496,38 +449,6 @@ es_MX{
                 "-1"{"el lunes pasado"}
                 "0"{"este lunes"}
                 "1"{"el lunes próximo"}
-            }
-            relativeTime{
-                future{
-                    one{"dentro de {0} lunes"}
-                    other{"dentro de {0} lunes"}
-                }
-                past{
-                    one{"hace {0} lunes"}
-                }
-            }
-        }
-        mon-narrow{
-            relativeTime{
-                future{
-                    one{"dentro de {0} LU"}
-                    other{"dentro de {0} LU"}
-                }
-                past{
-                    one{"hace {0} LU"}
-                    other{"hace {0} LU"}
-                }
-            }
-        }
-        mon-short{
-            relativeTime{
-                future{
-                    one{"dentro de {0} lun."}
-                }
-                past{
-                    one{"hace {0} lun."}
-                    other{"hace {0} lun."}
-                }
             }
         }
         month{
@@ -566,7 +487,7 @@ es_MX{
         quarter{
             relativeTime{
                 future{
-                    one{"dentro de {0} trimetre"}
+                    one{"en {0} trimestre"}
                     other{"dentro de {0} trimetres"}
                 }
             }
@@ -574,8 +495,8 @@ es_MX{
         quarter-narrow{
             relativeTime{
                 future{
-                    one{"+{0} T"}
-                    other{"+{0} T"}
+                    one{"en {0} trim."}
+                    other{"en {0} trim."}
                 }
                 past{
                     one{"-{0} T"}
@@ -597,18 +518,9 @@ es_MX{
                 "0"{"este sábado"}
                 "1"{"el sábado próximo"}
             }
-            relativeTime{
-                future{
-                    one{"dentro de {0} sábado"}
-                    other{"dentro de {0} sábados"}
-                }
-            }
         }
         sat-narrow{
             relativeTime{
-                future{
-                    one{"dentro de {0} SA"}
-                }
                 past{
                     one{"hace {0} SA"}
                     other{"hace {0} SA"}
@@ -644,34 +556,11 @@ es_MX{
                 }
             }
         }
-        sun-narrow{
-            relativeTime{
-                future{
-                    other{"dentro de {0} DO"}
-                }
-                past{
-                    one{"hace {0} DO"}
-                    other{"hace {0} DO"}
-                }
-            }
-        }
         thu{
             relative{
                 "-1"{"el jueves pasado"}
                 "0"{"este jueves"}
                 "1"{"el jueves próximo"}
-            }
-            relativeTime{
-                future{
-                    one{"dentro de {0} jueves"}
-                }
-            }
-        }
-        thu-narrow{
-            relativeTime{
-                future{
-                    other{"dentro de {0} JU"}
-                }
             }
         }
         tue{
@@ -682,6 +571,7 @@ es_MX{
             }
             relativeTime{
                 future{
+                    one{"dentro de {0} martes"}
                     other{"dentro de {0} martes"}
                 }
             }
@@ -692,39 +582,12 @@ es_MX{
                 "0"{"este miércoles"}
                 "1"{"el miércoles próximo"}
             }
-            relativeTime{
-                future{
-                    one{"dentro de {0} miércoles"}
-                }
-            }
-        }
-        wed-narrow{
-            relativeTime{
-                future{
-                    one{"dentro de {0} MI"}
-                    other{"dentro de {0} MI"}
-                }
-                past{
-                    one{"hace {0} MI"}
-                    other{"hace {0} MI"}
-                }
-            }
         }
         wed-short{
             relative{
                 "-1"{"el miér. pasado"}
                 "0"{"este miér."}
                 "1"{"el próximo miér."}
-            }
-            relativeTime{
-                future{
-                    one{"dentro de {0} mié."}
-                    other{"dentro de {0} mié."}
-                }
-                past{
-                    one{"hace {0} mié."}
-                    other{"hace {0} mié."}
-                }
             }
         }
         week{
@@ -778,6 +641,5 @@ es_MX{
     }
     measurementSystemNames{
         UK{"imperial"}
-        US{"estadounidense"}
     }
 }

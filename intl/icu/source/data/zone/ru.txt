@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ru{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Абиджан"}
@@ -403,7 +403,7 @@ ru{
             ec{"Луисвилл"}
         }
         "America:Lower_Princes"{
-            ec{"Лоуэр-Принсес-Куортер"}
+            ec{"Лоуэр-Принс-Куотер"}
         }
         "America:Maceio"{
             ec{"Масейо"}
@@ -487,7 +487,7 @@ ru{
             ec{"Панама"}
         }
         "America:Pangnirtung"{
-            ec{"Пангниртунг"}
+            ec{"Пангниртанг"}
         }
         "America:Paramaribo"{
             ec{"Парамарибо"}

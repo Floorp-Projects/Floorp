@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kn{
-    Version{"2.1.48.17"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ಅಬಿದ್‌ಜನ್"}
@@ -838,7 +838,7 @@ kn{
             ec{"ಶಾಂಘೈ"}
         }
         "Asia:Singapore"{
-            ec{"ಸಿಂಗಾಪೂರ್"}
+            ec{"ಸಿಂಗಪುರ್"}
         }
         "Asia:Srednekolymsk"{
             ec{"ಸ್ರೇದ್ನೇಕೋಲೀಮಸ್ಕ"}
@@ -1806,7 +1806,7 @@ kn{
             ls{"ಸೀಷೆಲ್ಸ್ ಸಮಯ"}
         }
         "meta:Singapore"{
-            ls{"ಸಿಂಗಾಪುರ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
+            ls{"ಸಿಂಗಪುರ್ ಪ್ರಮಾಣಿತ ಸಮಯ"}
         }
         "meta:Solomon"{
             ls{"ಸಾಲಮನ್ ದ್ವೀಪಗಳ ಸಮಯ"}

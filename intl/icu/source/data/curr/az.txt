@@ -172,7 +172,7 @@ az{
         }
         BSD{
             "BSD",
-            "Bahama Dolları",
+            "Baham Dolları",
         }
         BTN{
             "BTN",
@@ -348,7 +348,7 @@ az{
         }
         GBP{
             "£",
-            "Britaniya Funt",
+            "Britaniya Funtu",
         }
         GEK{
             "GEK",
@@ -368,7 +368,7 @@ az{
         }
         GIP{
             "GIP",
-            "Gibraltar Funtu",
+            "Cəbəli-Tariq Funtu",
         }
         GMD{
             "GMD",
@@ -492,7 +492,7 @@ az{
         }
         KGS{
             "KGS",
-            "Kırğızıstan Somu",
+            "Qırğızıstan Somu",
         }
         KHR{
             "KHR",
@@ -1080,13 +1080,104 @@ az{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
+        ARS{"$"}
+        AUD{"$"}
+        BAM{"KM"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BOB{"Bs"}
+        BRL{"R$"}
+        BSD{"$"}
+        BWP{"P"}
+        BYN{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUC{"$"}
+        CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
+        DOP{"$"}
+        EGP{"E£"}
+        EUR{"€"}
+        FJD{"$"}
+        FKP{"£"}
+        GBP{"£"}
+        GEL{"₾"}
+        GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
+        GYD{"$"}
+        HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
+        ILS{"₪"}
+        INR{"₹"}
+        ISK{"kr"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
+        LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
+        MNT{"₮"}
+        MUR{"Rs"}
+        MXN{"$"}
+        MYR{"RM"}
+        NAD{"$"}
+        NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
+        NZD{"$"}
+        PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
+        PYG{"₲"}
         RON{"ley"}
+        RUB{"₽"}
+        RWF{"RF"}
+        SBD{"$"}
+        SEK{"kr"}
+        SGD{"$"}
+        SHP{"£"}
+        SRD{"$"}
+        SSP{"£"}
         STN{"Db"}
         SYP{"S£"}
+        THB{"฿"}
+        TOP{"T$"}
+        TRY{"₺"}
+        TTD{"$"}
         TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VEF{"Bs"}
+        VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1122,8 +1213,8 @@ az{
             other{"Niderland Antilya gilderi"}
         }
         AOA{
-            one{"Anqola kvanzasi"}
-            other{"Anqola kvanzasi"}
+            one{"Anqola kvanzası"}
+            other{"Anqola kvanzası"}
         }
         AOK{
             one{"Anqola kvanzasi (1977–1990)"}
@@ -1258,8 +1349,8 @@ az{
             other{"Braziliya kruzeyrosu"}
         }
         BSD{
-            one{"Bahama dolları"}
-            other{"Bahama dolları"}
+            one{"Baham dolları"}
+            other{"Baham dolları"}
         }
         BTN{
             one{"Butan nqultrumu"}
@@ -1434,8 +1525,8 @@ az{
             other{"Fransız markası"}
         }
         GBP{
-            one{"Britaniya funt"}
-            other{"Britaniya funt"}
+            one{"Britaniya funtu"}
+            other{"Britaniya funtu"}
         }
         GEK{
             one{"Gürcüstan kupon lariti"}
@@ -1454,8 +1545,8 @@ az{
             other{"Qana sedisi"}
         }
         GIP{
-            one{"Gibraltar funtu"}
-            other{"Gibraltar funtu"}
+            one{"Cəbəli-Tariq funtu"}
+            other{"Cəbəli-Tariq funtu"}
         }
         GMD{
             one{"Qambiya dalasisi"}
@@ -1578,8 +1669,8 @@ az{
             other{"Keniya şillinqi"}
         }
         KGS{
-            one{"Kırğızıstan somu"}
-            other{"Kırğızıstan somu"}
+            one{"Qırğızıstan somu"}
+            other{"Qırğızıstan somu"}
         }
         KHR{
             one{"Kamboca rieli"}
@@ -2170,5 +2261,5 @@ az{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

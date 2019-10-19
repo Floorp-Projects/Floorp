@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 cs{
-    Version{"2.1.48.44"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -956,6 +956,7 @@ cs{
         }
         "Etc:UTC"{
             ls{"Koordinovaný světový čas"}
+            ss{"UTC"}
         }
         "Etc:Unknown"{
             ec{"neznámé město"}
@@ -1778,7 +1779,7 @@ cs{
             ls{"Niuejský čas"}
         }
         "meta:Norfolk"{
-            ls{"Norfolský čas"}
+            ls{"Norfolkský čas"}
         }
         "meta:Noronha"{
             ld{"Letní čas souostroví Fernando de Noronha"}
@@ -1833,7 +1834,7 @@ cs{
             ls{"Pierre-miquelonský standardní čas"}
         }
         "meta:Pitcairn"{
-            ls{"Čas Pitcairnova ostrova"}
+            ls{"Čas Pitcairnových ostrovů"}
         }
         "meta:Ponape"{
             ls{"Ponapský čas"}

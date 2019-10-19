@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 th{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -183,7 +183,7 @@ th{
                 other{"{0} เมกะไบต์"}
             }
             petabyte{
-                dnam{"เพตาไบต์"}
+                dnam{"เพตะไบต์"}
                 other{"{0} เพตะไบต์"}
             }
             terabit{
@@ -204,6 +204,10 @@ th{
                 dnam{"วัน"}
                 other{"{0} วัน"}
                 per{"{0} ต่อวัน"}
+            }
+            decade{
+                dnam{"ทศวรรษ"}
+                other{"{0} ทศวรรษ"}
             }
             hour{
                 dnam{"ชั่วโมง"}
@@ -299,6 +303,10 @@ th{
                 dnam{"กิโลวัตต์-ชั่วโมง"}
                 other{"{0} กิโลวัตต์-ชั่วโมง"}
             }
+            therm-us{
+                dnam{"เธิร์มสหรัฐฯ"}
+                other{"{0} เธิร์มสหรัฐฯ"}
+            }
         }
         force{
             newton{
@@ -326,6 +334,32 @@ th{
             megahertz{
                 dnam{"เมกะเฮิรตซ์"}
                 other{"{0} เมกะเฮิรตซ์"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"จุดต่อเซนติเมตร"}
+                other{"{0} จุดต่อเซนติเมตร"}
+            }
+            dot-per-inch{
+                dnam{"จุดต่อนิ้ว"}
+                other{"{0} จุดต่อนิ้ว"}
+            }
+            megapixel{
+                dnam{"เมกะพิกเซล"}
+                other{"{0} เมกะพิกเซล"}
+            }
+            pixel{
+                dnam{"พิกเซล"}
+                other{"{0} พิกเซล"}
+            }
+            pixel-per-centimeter{
+                dnam{"พิกเซลต่อเซนติเมตร"}
+                other{"{0} พิกเซลต่อเซนติเมตร"}
+            }
+            pixel-per-inch{
+                dnam{"พิกเซลต่อนิ้ว"}
+                other{"{0} พิกเซลต่อนิ้ว"}
             }
         }
         length{
@@ -510,6 +544,10 @@ th{
                 dnam{"บรรยากาศ"}
                 other{"{0} บรรยากาศ"}
             }
+            bar{
+                dnam{"บาร์"}
+                other{"{0} บาร์"}
+            }
             hectopascal{
                 dnam{"เฮกโตปาสกาล"}
                 other{"{0} เฮกโตปาสกาล"}
@@ -533,6 +571,10 @@ th{
             millimeter-of-mercury{
                 dnam{"มิลลิเมตรปรอท"}
                 other{"{0} มิลลิเมตรปรอท"}
+            }
+            pascal{
+                dnam{"ปาสกาล"}
+                other{"{0} ปาสกาล"}
             }
             pound-per-square-inch{
                 dnam{"ปอนด์ต่อตารางนิ้ว"}
@@ -709,6 +751,9 @@ th{
             }
             arc-second{
                 other{"{0}วิ"}
+            }
+            degree{
+                other{"{0}°"}
             }
         }
         area{
@@ -887,6 +932,9 @@ th{
                 dnam{"°C"}
                 other{"{0}°C"}
             }
+            fahrenheit{
+                other{"{0}°F"}
+            }
         }
         volume{
             cubic-kilometer{
@@ -999,15 +1047,20 @@ th{
             }
             mole{
                 dnam{"โมล"}
-                other{"{0} mol"}
+                other{"{0} โมล"}
             }
             part-per-million{
                 dnam{"ส่วน/ล้าน"}
                 other{"{0} สตล."}
             }
+            percent{
+                dnam{"เปอร์เซ็นต์"}
+            }
+            permille{
+                dnam{"เปอร์มิลล์"}
+            }
             permyriad{
                 dnam{"เปอร์มีเรียด"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -1090,6 +1143,10 @@ th{
                 other{"{0} วัน"}
                 per{"{0}/วัน"}
             }
+            decade{
+                dnam{"ทศวรรษ"}
+                other{"{0} ทศวรรษ"}
+            }
             hour{
                 dnam{"ชั่วโมง"}
                 other{"{0} ชม."}
@@ -1162,7 +1219,6 @@ th{
             }
             electronvolt{
                 dnam{"อิเล็กตรอนโวลต์"}
-                other{"{0} eV"}
             }
             foodcalorie{
                 dnam{"แคลอรี"}
@@ -1184,15 +1240,17 @@ th{
                 dnam{"กว.-ชม."}
                 other{"{0} กว.-ชม."}
             }
+            therm-us{
+                dnam{"เธิร์ม"}
+                other{"{0} เธิร์ม"}
+            }
         }
         force{
             newton{
                 dnam{"นิวตัน"}
-                other{"{0} N"}
             }
             pound-force{
                 dnam{"แรงปอนด์"}
-                other{"{0} lbf"}
             }
         }
         frequency{
@@ -1289,7 +1347,6 @@ th{
             }
             solar-radius{
                 dnam{"รัศมีวงกลมของดวงอาทิตย์"}
-                other{"{0} R☉"}
             }
             yard{
                 dnam{"หลา"}
@@ -1303,7 +1360,6 @@ th{
             }
             solar-luminosity{
                 dnam{"ความสว่างดวงอาทิตย์"}
-                other{"{0} L☉"}
             }
         }
         mass{
@@ -1313,11 +1369,9 @@ th{
             }
             dalton{
                 dnam{"ดัลตัน"}
-                other{"{0} Da"}
             }
             earth-mass{
                 dnam{"มวลของโลก"}
-                other{"{0} M⊕"}
             }
             gram{
                 dnam{"กรัม"}
@@ -1357,7 +1411,6 @@ th{
             }
             solar-mass{
                 dnam{"มวลดวงอาทิตย์"}
-                other{"{0} M☉"}
             }
             ton{
                 dnam{"ตัน"}
@@ -1393,6 +1446,11 @@ th{
         pressure{
             atmosphere{
                 dnam{"บรรยากาศ"}
+                other{"{0} บรรยากาศ"}
+            }
+            bar{
+                dnam{"บาร์"}
+                other{"{0} บาร์"}
             }
             hectopascal{
                 dnam{"เฮกโตปาสกาล"}
@@ -1401,14 +1459,6 @@ th{
             inch-hg{
                 dnam{"นิ้วปรอท"}
                 other{"{0} นิ้วปรอท"}
-            }
-            kilopascal{
-                dnam{"kPa"}
-                other{"{0} kPa"}
-            }
-            megapascal{
-                dnam{"MPa"}
-                other{"{0} MPa"}
             }
             millibar{
                 dnam{"มิลลิบาร์"}
@@ -1459,16 +1509,6 @@ th{
                 other{"{0} K"}
             }
         }
-        torque{
-            newton-meter{
-                dnam{"N⋅m"}
-                other{"{0} N⋅m"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
-            }
-        }
         volume{
             acre-foot{
                 dnam{"เอเคอร์-ฟุต"}
@@ -1476,7 +1516,6 @@ th{
             }
             barrel{
                 dnam{"บาร์เรล"}
-                other{"{0} bbl"}
             }
             centiliter{
                 dnam{"ซล."}
@@ -1527,10 +1566,6 @@ th{
             fluid-ounce{
                 dnam{"ฟลูอิดออนซ์"}
                 other{"{0} ฟลูอิดออนซ์"}
-            }
-            fluid-ounce-imperial{
-                dnam{"Imp. fl oz"}
-                other{"{0} fl oz Imp."}
             }
             gallon{
                 dnam{"แกลลอน"}

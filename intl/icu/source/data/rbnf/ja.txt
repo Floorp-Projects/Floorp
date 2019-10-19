@@ -78,5 +78,5 @@ ja{
             "0: \u7B2C=%spellout-numbering=;",
         }
     }
-    Version{"2.1.48.72"}
+    Version{"36"}
 }

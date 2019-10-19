@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ka{
-    Version{"2.1.48.17"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -123,11 +123,6 @@ ka{
                 one{"{0} მილიმოლი ლიტრზე"}
                 other{"{0} მილიმოლი ლიტრზე"}
             }
-            mole{
-                dnam{"mol"}
-                one{"{0} mol"}
-                other{"{0} mol"}
-            }
             part-per-million{
                 dnam{"ნაწილი მილიონზე"}
                 one{"{0} ნაწილი მილიონზე"}
@@ -142,11 +137,6 @@ ka{
                 dnam{"პრომილე"}
                 one{"{0} პრომილე"}
                 other{"{0} პრომილე"}
-            }
-            permyriad{
-                dnam{"‱"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -246,6 +236,11 @@ ka{
                 one{"{0} დღე"}
                 other{"{0} დღე"}
                 per{"{0} დღეში"}
+            }
+            decade{
+                dnam{"დეკადა"}
+                one{"{0} დეკადა"}
+                other{"{0} დეკადა"}
             }
             hour{
                 dnam{"საათი"}
@@ -362,17 +357,10 @@ ka{
                 one{"{0} კილოვატ-საათი"}
                 other{"{0} კილოვატ-საათი"}
             }
-        }
-        force{
-            newton{
-                dnam{"N"}
-                one{"{0} N"}
-                other{"{0} N"}
-            }
-            pound-force{
-                dnam{"lbf"}
-                one{"{0} lbf"}
-                other{"{0} lbf"}
+            therm-us{
+                dnam{"აშშ თერმი"}
+                one{"{0} აშშ თერმი"}
+                other{"{0} აშშ თერმი"}
             }
         }
         frequency{
@@ -395,6 +383,43 @@ ka{
                 dnam{"მეგაჰერცი"}
                 one{"{0} მეგაჰერცი"}
                 other{"{0} მეგაჰერცი"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"წერტილი სანტიმეტრზე"}
+                one{"{0} წერტილი სანტიმეტრზე"}
+                other{"{0} წერტილი სანტიმეტრზე"}
+            }
+            dot-per-inch{
+                dnam{"წერტილი დუიმზე"}
+                one{"{0} წერტილი დუიმზე"}
+                other{"{0} წერტილი დუიმზე"}
+            }
+            em{
+                dnam{"ტიპოგრაფიული ემი"}
+                one{"{0} ემი"}
+                other{"{0} ემი"}
+            }
+            megapixel{
+                dnam{"მეგაპიქსელი"}
+                one{"{0} მეგაპიქსელი"}
+                other{"{0} მეგაპიქსელი"}
+            }
+            pixel{
+                dnam{"პიქსელი"}
+                one{"{0} პიქსელი"}
+                other{"{0} პიქსელი"}
+            }
+            pixel-per-centimeter{
+                dnam{"პიქსელი სანტიმეტრზე"}
+                one{"{0} პიქსელი სანტიმეტრზე"}
+                other{"{0} პიქსელი სანტიმეტრზე"}
+            }
+            pixel-per-inch{
+                dnam{"პიქსელი დუიმზე"}
+                one{"{0} პიქსელი დუიმზე"}
+                other{"{0} პიქსელი დუიმზე"}
             }
         }
         length{
@@ -488,11 +513,6 @@ ka{
                 one{"{0} პუნქტი"}
                 other{"{0} პუნქტი"}
             }
-            solar-radius{
-                dnam{"R☉"}
-                one{"{0} R☉"}
-                other{"{0} R☉"}
-            }
             yard{
                 dnam{"იარდი"}
                 one{"{0} იარდი"}
@@ -504,11 +524,6 @@ ka{
                 dnam{"ლუქსი"}
                 one{"{0} ლუქსი"}
                 other{"{0} ლუქსი"}
-            }
-            solar-luminosity{
-                dnam{"L☉"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
             }
         }
         mass{
@@ -620,6 +635,11 @@ ka{
                 one{"{0} ატმოსფერო"}
                 other{"{0} ატმოსფერო"}
             }
+            bar{
+                dnam{"ბარი"}
+                one{"{0} ბარი"}
+                other{"{0} ბარი"}
+            }
             hectopascal{
                 dnam{"ჰექტოპასკალი"}
                 one{"{0} ჰექტოპასკალი"}
@@ -649,6 +669,11 @@ ka{
                 dnam{"მილიმეტრი ვერცხლისწყლის სვეტისა"}
                 one{"{0} მილიმეტრი ვერცხლისწყლის სვეტისა"}
                 other{"{0} მილიმეტრი ვერცხლისწყლის სვეტისა"}
+            }
+            pascal{
+                dnam{"პასკალი"}
+                one{"{0} პასკალი"}
+                other{"{0} პასკალი"}
             }
             pound-per-square-inch{
                 dnam{"ფუნტი კვადრატულ დუიმზე"}
@@ -698,18 +723,6 @@ ka{
                 dnam{"კელვინის გრადუსი"}
                 one{"{0} კელვინი"}
                 other{"{0} კელვინის გრადუსი"}
-            }
-        }
-        torque{
-            newton-meter{
-                dnam{"N⋅m"}
-                one{"{0} N⋅m"}
-                other{"{0} N⋅m"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                one{"{0} lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
             }
         }
         volume{
@@ -1215,11 +1228,6 @@ ka{
                 one{"{0} მმოლ/ლ"}
                 other{"{0} მმოლ/ლ"}
             }
-            mole{
-                dnam{"mol"}
-                one{"{0} mol"}
-                other{"{0} mol"}
-            }
             part-per-million{
                 dnam{"ნაწილი/მილიონზე"}
                 one{"{0} ppm"}
@@ -1234,11 +1242,6 @@ ka{
                 dnam{"‰"}
                 one{"{0}‰"}
                 other{"{0}‰"}
-            }
-            permyriad{
-                dnam{"‱"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -1338,6 +1341,11 @@ ka{
                 one{"{0} დღე"}
                 other{"{0} დღე"}
                 per{"{0}/დღე"}
+            }
+            decade{
+                dnam{"დეკადა"}
+                one{"{0} დეკადა"}
+                other{"{0} დეკადა"}
             }
             hour{
                 dnam{"სთ"}
@@ -1454,17 +1462,10 @@ ka{
                 one{"{0} კვტსთ"}
                 other{"{0} კვტსთ"}
             }
-        }
-        force{
-            newton{
-                dnam{"N"}
-                one{"{0} N"}
-                other{"{0} N"}
-            }
-            pound-force{
-                dnam{"lbf"}
-                one{"{0} lbf"}
-                other{"{0} lbf"}
+            therm-us{
+                dnam{"აშშ თერმი"}
+                one{"{0} აშშ თერმი"}
+                other{"{0} აშშ თერმი"}
             }
         }
         frequency{
@@ -1487,6 +1488,43 @@ ka{
                 dnam{"მჰც"}
                 one{"{0} მჰც"}
                 other{"{0} მჰც"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"წერტ/სმ-ზე"}
+                one{"{0} წერტ/სმ-ზე"}
+                other{"{0} წერტ/სმ-ზე"}
+            }
+            dot-per-inch{
+                dnam{"წერტ/დუიმზე"}
+                one{"{0} წერტ/დუიმზე"}
+                other{"{0} წერტ/დუიმზე"}
+            }
+            em{
+                dnam{"ემი"}
+                one{"{0} ემი"}
+                other{"{0} ემი"}
+            }
+            megapixel{
+                dnam{"მპქს"}
+                one{"{0} მპქს"}
+                other{"{0} მპქს"}
+            }
+            pixel{
+                dnam{"პქს"}
+                one{"{0} პქს"}
+                other{"{0} პქს"}
+            }
+            pixel-per-centimeter{
+                dnam{"პქს/სმ-ზე"}
+                one{"{0} პქს/სმ-ზე"}
+                other{"{0} პქს/სმ-ზე"}
+            }
+            pixel-per-inch{
+                dnam{"პიქს/დუიმზე"}
+                one{"{0} პიქს/დუიმზე"}
+                other{"{0} პიქს/დუიმზე"}
             }
         }
         length{
@@ -1580,11 +1618,6 @@ ka{
                 one{"{0} პნქტ."}
                 other{"{0} პქნტ."}
             }
-            solar-radius{
-                dnam{"R☉"}
-                one{"{0} R☉"}
-                other{"{0} R☉"}
-            }
             yard{
                 dnam{"იარდი"}
                 one{"{0} იარდი"}
@@ -1597,11 +1630,6 @@ ka{
                 one{"{0} ლუქსი"}
                 other{"{0} ლუქსი"}
             }
-            solar-luminosity{
-                dnam{"L☉"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
-            }
         }
         mass{
             carat{
@@ -1613,11 +1641,6 @@ ka{
                 dnam{"დალტონი"}
                 one{"{0} დალტ."}
                 other{"{0} დალტ."}
-            }
-            earth-mass{
-                dnam{"M⊕"}
-                one{"{0} M⊕"}
-                other{"{0} M⊕"}
             }
             gram{
                 dnam{"გრამი"}
@@ -1663,11 +1686,6 @@ ka{
                 other{"{0} ფნტ"}
                 per{"{0}/ფნტ"}
             }
-            solar-mass{
-                dnam{"M☉"}
-                one{"{0} M☉"}
-                other{"{0} M☉"}
-            }
             ton{
                 dnam{"ტონა"}
                 one{"{0} ტ"}
@@ -1712,6 +1730,11 @@ ka{
                 one{"{0} ატმ."}
                 other{"{0} ატმ."}
             }
+            bar{
+                dnam{"ბარი"}
+                one{"{0} ბარი"}
+                other{"{0} ბარი"}
+            }
             hectopascal{
                 dnam{"ჰპა"}
                 one{"{0} ჰპა"}
@@ -1741,6 +1764,11 @@ ka{
                 dnam{"მმ ვწყ. სვ."}
                 one{"{0} მმ ვწყ. სვ."}
                 other{"{0} მმ ვწყ. სვ."}
+            }
+            pascal{
+                dnam{"პა"}
+                one{"{0} პა"}
+                other{"{0} პა"}
             }
             pound-per-square-inch{
                 dnam{"ფნტ. კვ. დმ."}
@@ -1790,18 +1818,6 @@ ka{
                 dnam{"K"}
                 one{"{0} K"}
                 other{"{0} K"}
-            }
-        }
-        torque{
-            newton-meter{
-                dnam{"N⋅m"}
-                one{"{0} N⋅m"}
-                other{"{0} N⋅m"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                one{"{0} lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
             }
         }
         volume{

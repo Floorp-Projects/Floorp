@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hant{
     %%Parent{"root"}
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -120,10 +120,6 @@ zh_Hant{
                 dnam{"千分比"}
                 other{"{0}‰"}
             }
-            permyriad{
-                dnam{"‱"}
-                other{"{0}‱"}
-            }
         }
         consumption{
             liter-per-100kilometers{
@@ -205,6 +201,10 @@ zh_Hant{
                 dnam{"天"}
                 other{"{0} 天"}
                 per{"每天 {0}"}
+            }
+            decade{
+                dnam{"10 年"}
+                other{"{0}0 年"}
             }
             hour{
                 dnam{"小時"}
@@ -300,6 +300,10 @@ zh_Hant{
                 dnam{"千瓦小時"}
                 other{"{0} 千瓦小時"}
             }
+            therm-us{
+                dnam{"美制撒姆"}
+                other{"{0} 美制撒姆"}
+            }
         }
         force{
             newton{
@@ -327,6 +331,16 @@ zh_Hant{
             megahertz{
                 dnam{"兆赫"}
                 other{"{0} 兆赫"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"百萬像素"}
+                other{"{0} 百萬像素"}
+            }
+            pixel{
+                dnam{"像素"}
+                other{"{0} 像素"}
             }
         }
         length{
@@ -523,6 +537,10 @@ zh_Hant{
                 dnam{"氣壓"}
                 other{"{0} 大氣壓"}
             }
+            bar{
+                dnam{"巴"}
+                other{"{0} 巴"}
+            }
             hectopascal{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
@@ -532,8 +550,8 @@ zh_Hant{
                 other{"{0} 英寸汞柱"}
             }
             kilopascal{
-                dnam{"帕斯卡"}
-                other{"{0} 帕斯卡"}
+                dnam{"千帕"}
+                other{"{0} 千帕"}
             }
             megapascal{
                 dnam{"兆帕"}
@@ -546,6 +564,10 @@ zh_Hant{
             millimeter-of-mercury{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
+            }
+            pascal{
+                dnam{"帕斯卡"}
+                other{"{0} 帕斯卡"}
             }
             pound-per-square-inch{
                 dnam{"每平方英寸磅力"}
@@ -837,33 +859,43 @@ zh_Hant{
         }
         digital{
             bit{
+                dnam{"bit"}
                 other{"{0}bit"}
             }
             byte{
+                dnam{"byte"}
                 other{"{0}byte"}
             }
             gigabit{
+                dnam{"Gb"}
                 other{"{0}Gb"}
             }
             gigabyte{
+                dnam{"GB"}
                 other{"{0}GB"}
             }
             kilobit{
+                dnam{"kb"}
                 other{"{0}kb"}
             }
             kilobyte{
+                dnam{"kB"}
                 other{"{0}kB"}
             }
             megabit{
+                dnam{"Mb"}
                 other{"{0}Mb"}
             }
             megabyte{
+                dnam{"MB"}
                 other{"{0}MB"}
             }
             terabit{
+                dnam{"Tb"}
                 other{"{0}Tb"}
             }
             terabyte{
+                dnam{"TB"}
                 other{"{0}TB"}
             }
         }
@@ -1194,8 +1226,14 @@ zh_Hant{
             }
             fahrenheit{
                 dnam{"華氏"}
+                other{"{0}°F"}
+            }
+            generic{
+                dnam{"°"}
+                other{"{0}°"}
             }
             kelvin{
+                dnam{"K"}
                 other{"{0}°K"}
             }
         }
@@ -1225,7 +1263,6 @@ zh_Hant{
                 other{"{0}in³"}
             }
             cubic-kilometer{
-                dnam{"立方公里"}
                 other{"{0}km³"}
             }
             cubic-meter{
@@ -1503,6 +1540,10 @@ zh_Hant{
                 other{"{0} 天"}
                 per{"{0}/天"}
             }
+            decade{
+                dnam{"10 年"}
+                other{"{0}0 年"}
+            }
             hour{
                 dnam{"小時"}
                 other{"{0} 小時"}
@@ -1597,6 +1638,10 @@ zh_Hant{
                 dnam{"千瓦小時"}
                 other{"{0} 千瓦小時"}
             }
+            therm-us{
+                dnam{"美制撒姆"}
+                other{"{0} 美制撒姆"}
+            }
         }
         force{
             newton{
@@ -1641,6 +1686,7 @@ zh_Hant{
                 other{"{0} 公寸"}
             }
             fathom{
+                dnam{"fm"}
                 other{"{0} 英尋"}
             }
             foot{
@@ -1706,10 +1752,6 @@ zh_Hant{
             point{
                 dnam{"點"}
                 other{"{0} 點"}
-            }
-            solar-radius{
-                dnam{"R☉"}
-                other{"{0} R☉"}
             }
             yard{
                 dnam{"碼"}
@@ -1780,6 +1822,7 @@ zh_Hant{
                 other{"{0} M☉"}
             }
             stone{
+                dnam{"st"}
                 other{"{0} 英石"}
             }
             ton{
@@ -1818,6 +1861,10 @@ zh_Hant{
                 dnam{"atm"}
                 other{"{0} atm"}
             }
+            bar{
+                dnam{"巴"}
+                other{"{0} 巴"}
+            }
             hectopascal{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
@@ -1841,6 +1888,10 @@ zh_Hant{
             millimeter-of-mercury{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
+            }
+            pascal{
+                dnam{"Pa"}
+                other{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"磅力/平方英寸"}
@@ -1903,6 +1954,7 @@ zh_Hant{
                 other{"{0} 桶"}
             }
             bushel{
+                dnam{"bu"}
                 other{"{0} 蒲式耳"}
             }
             centiliter{

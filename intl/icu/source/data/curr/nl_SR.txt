@@ -7,5 +7,5 @@ nl_SR{
             "Surinaamse dollar",
         }
     }
-    Version{"2.1.47.71"}
+    Version{"36"}
 }

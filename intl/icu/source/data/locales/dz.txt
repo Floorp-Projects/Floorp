@@ -17,10 +17,10 @@ dz{
         "\u0FB1 \u0FB2 \u0FB3 \u0FB5 \u0FB6 \u0FB7]"
     }
     ExemplarCharactersIndex{"[ཀ ཁ ག ང ཅ ཆ ཇ ཉ ཏ ཐ ད ན པ ཕ བ མ ཙ ཚ ཛ ཝ ཞ ཟ འ ཡ ར ལ ཤ ས ཧ ཨ]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0༠ 1༡ 2༢ 3༣ 4༤ 5༥ 6༦ 7༧ 8༨ 9༩]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0༠ 1༡ 2༢ 3༣ 4༤ 5༥ 6༦ 7༧ 8༨ 9༩]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] ༼ ༽ § @ * / \\& # † "
-        "‡ ༄ ༅ ༆ ༈ ༉ ༊ ࿐ ࿑ ༒ ࿒ ࿓ ࿔ ༶ ྾ ྿ ༌ ། ༎ ༏ ༐ ༑ ༔ ༴]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] ༼ ༽ § @ * / \\& # "
+        "† ‡ ༄ ༅ ༆ ༈ ༉ ༊ ࿐ ࿑ ༒ ࿒ ࿓ ࿔ ༶ ྾ ྿ ༌ ། ༎ ༏ ༐ ༑ ༔ ༴]"
     }
     MoreInformation{"?"}
     NumberElements{
@@ -106,7 +106,7 @@ dz{
             }
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{

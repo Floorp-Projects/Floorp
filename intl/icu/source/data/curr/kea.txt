@@ -113,7 +113,7 @@ kea{
         }
         EGP{
             "EGP",
-            "Libra ejipsiu",
+            "Libra ejípsiu",
         }
         ERN{
             "ERN",
@@ -121,7 +121,7 @@ kea{
         }
         ETB{
             "ETB",
-            "Bir etiopi",
+            "Bir etiópiku",
         }
         EUR{
             "€",
@@ -133,7 +133,7 @@ kea{
         }
         GBP{
             "£",
-            "Libra britaniku",
+            "Libra britániku",
         }
         GEL{
             "GEL",
@@ -257,7 +257,7 @@ kea{
         }
         LYD{
             "LYD",
-            "Dinar libiu",
+            "Dinar líbiu",
         }
         MAD{
             "MAD",
@@ -421,7 +421,7 @@ kea{
         }
         STN{
             "STN",
-            "Dobra di Sãu Tume i Prínsipi",
+            "Dobra di San Tume i Prínsipi",
         }
         SYP{
             "SYP",
@@ -604,19 +604,19 @@ kea{
             other{"Dinar arjelinu"}
         }
         EGP{
-            other{"Libra ejipsiu"}
+            other{"Libra ejípsiu"}
         }
         ERN{
             other{"Nafka di Eritreia"}
         }
         ETB{
-            other{"Bir etiopi"}
+            other{"Bir etiópiku"}
         }
         EUR{
             other{"Euro"}
         }
         GBP{
-            other{"Libra britaniku"}
+            other{"Libra britániku"}
         }
         GMD{
             other{"Dalasi"}
@@ -646,7 +646,7 @@ kea{
             other{"Dola liberianu"}
         }
         LYD{
-            other{"Dinar libiu"}
+            other{"Dinar líbiu"}
         }
         MAD{
             other{"Diren marokinu"}
@@ -712,7 +712,7 @@ kea{
             other{"Dobra di Sãu Tume i Prinsipi (1977–2017)"}
         }
         STN{
-            other{"Dobra di Sãu Tume i Prinsipi"}
+            other{"Dobra di San Tume i Prinsipi"}
         }
         SZL{
             other{"Lilanjeni"}
@@ -757,5 +757,5 @@ kea{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.48.9"}
+    Version{"36"}
 }

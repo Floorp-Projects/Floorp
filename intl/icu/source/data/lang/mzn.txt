@@ -265,7 +265,7 @@ mzn{
         Hans{"ساده‌بَیی هان"}
         Hant{"استاندارد ِسنتی هانت"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
     codePatterns{
         language{"زوون: {0}"}
         script{"اسکریپت: {0}"}

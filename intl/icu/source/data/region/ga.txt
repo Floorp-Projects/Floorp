@@ -253,7 +253,7 @@ ga{
         SV{"an tSalvadóir"}
         SX{"Sint Maarten"}
         SY{"an tSiria"}
-        SZ{"an tSuasalainn"}
+        SZ{"eSuaitíní"}
         TA{"Tristan da Cunha"}
         TC{"Oileáin na dTurcach agus Caicos"}
         TD{"Sead"}
@@ -274,7 +274,7 @@ ga{
         UA{"an Úcráin"}
         UG{"Uganda"}
         UM{"Oileáin Imeallacha S.A.M."}
-        UN{"na Náisiúin Aontaiteh"}
+        UN{"na Náisiúin Aontaithe"}
         US{"Stáit Aontaithe Mheiriceá"}
         UY{"Uragua"}
         UZ{"an Úisbéiceastáin"}
@@ -287,8 +287,8 @@ ga{
         VU{"Vanuatú"}
         WF{"Vailís agus Futúna"}
         WS{"Samó"}
-        XA{"XA"}
-        XB{"XB"}
+        XA{"Bréagdhiaicriticí"}
+        XB{"Bréag-Bidi"}
         XK{"an Chosaiv"}
         YE{"Éimin"}
         YT{"Mayotte"}
@@ -311,8 +311,8 @@ ga{
         CI{"Côte d’Ivoire"}
         CZ{"Poblacht na Seice"}
         FK{"Oileáin Fháclainne (Islas Malvinas)"}
-        SZ{"Ríocht na Suasalainne"}
+        SZ{"an tSuasalainn"}
         TL{"TL"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

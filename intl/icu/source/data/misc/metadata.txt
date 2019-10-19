@@ -67,6 +67,10 @@ metadata:table(nofallback){
                 reason{"deprecated"}
                 replacement{"jbo"}
             }
+            asd{
+                reason{"deprecated"}
+                replacement{"snz"}
+            }
             asm{
                 reason{"overlong"}
                 replacement{"as"}
@@ -302,6 +306,10 @@ metadata:table(nofallback){
             diq{
                 reason{"macrolanguage"}
                 replacement{"zza"}
+            }
+            dit{
+                reason{"deprecated"}
+                replacement{"dif"}
             }
             div{
                 reason{"overlong"}
@@ -847,6 +855,10 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"lt"}
             }
+            llo{
+                reason{"deprecated"}
+                replacement{"ngt"}
+            }
             lmm{
                 reason{"deprecated"}
                 replacement{"rmx"}
@@ -967,6 +979,10 @@ metadata:table(nofallback){
                 reason{"overlong"}
                 replacement{"my"}
             }
+            myd{
+                reason{"deprecated"}
+                replacement{"aog"}
+            }
             myt{
                 reason{"deprecated"}
                 replacement{"mry"}
@@ -1010,6 +1026,10 @@ metadata:table(nofallback){
             nno{
                 reason{"overlong"}
                 replacement{"nn"}
+            }
+            nns{
+                reason{"deprecated"}
+                replacement{"nbr"}
             }
             nnx{
                 reason{"deprecated"}
@@ -2110,6 +2130,10 @@ metadata:table(nofallback){
             nlsx{
                 reason{"overlong"}
                 replacement{"SX"}
+            }
+            no23{
+                reason{"deprecated"}
+                replacement{"no50"}
             }
             nzn{
                 reason{"deprecated"}
@@ -4843,6 +4867,7 @@ metadata:table(nofallback){
         "agq_CM",
         "ak_GH",
         "am_ET",
+        "an_ES",
         "ar_001",
         "arn_CL",
         "as_IN",
@@ -4878,6 +4903,7 @@ metadata:table(nofallback){
         "ceb_PH",
         "cgg_UG",
         "chr_US",
+        "cic_US",
         "ckb_IQ",
         "co_FR",
         "cs_CZ",
@@ -5003,6 +5029,7 @@ metadata:table(nofallback){
         "ms_MY",
         "mt_MT",
         "mua_CM",
+        "mus_US",
         "my_MM",
         "myv_RU",
         "mzn_IR",
@@ -5025,6 +5052,7 @@ metadata:table(nofallback){
         "om_ET",
         "or_IN",
         "os_GE",
+        "osa_US",
         "pa_Arab_PK",
         "pa_Guru",
         "pa_Guru_IN",
@@ -5073,9 +5101,12 @@ metadata:table(nofallback){
         "ss_ZA",
         "ssy_ER",
         "st_ZA",
+        "su_Latn",
+        "su_Latn_ID",
         "sv_SE",
         "sw_TZ",
         "syr_IQ",
+        "szl_PL",
         "ta_IN",
         "te_IN",
         "teo_UG",

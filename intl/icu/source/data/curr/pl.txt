@@ -8,7 +8,7 @@ pl{
         }
         AED{
             "AED",
-            "dirham arabski",
+            "dirham ZEA",
         }
         AFA{
             "AFA",
@@ -16,7 +16,7 @@ pl{
         }
         AFN{
             "AFN",
-            "afgani",
+            "afgani afgańskie",
         }
         ALL{
             "ALL",
@@ -32,7 +32,7 @@ pl{
         }
         AOA{
             "AOA",
-            "kwanza angolańska",
+            "kwanza angolska",
         }
         AOK{
             "AOK",
@@ -140,7 +140,7 @@ pl{
         }
         BOB{
             "BOB",
-            "boliviano",
+            "boliviano boliwijskie",
         }
         BOP{
             "BOP",
@@ -360,7 +360,7 @@ pl{
         }
         GHS{
             "GHS",
-            "cedi ghański",
+            "cedi ghańskie",
         }
         GIP{
             "GIP",
@@ -420,7 +420,7 @@ pl{
         }
         HTG{
             "HTG",
-            "gourde haitańskie",
+            "gourde haitański",
         }
         HUF{
             "HUF",
@@ -600,7 +600,7 @@ pl{
         }
         MRU{
             "MRU",
-            "ouguiya mauretańska",
+            "ugija mauretańska",
         }
         MTL{
             "MTL",
@@ -700,7 +700,7 @@ pl{
         }
         PGK{
             "PGK",
-            "kina Papua Nowa Gwinea",
+            "kina papuańska",
         }
         PHP{
             "PHP",
@@ -792,7 +792,7 @@ pl{
         }
         SHP{
             "SHP",
-            "funt Wyspy Świętej Heleny",
+            "funt Świętej Heleny",
         }
         SIT{
             "SIT",
@@ -1086,10 +1086,10 @@ pl{
             other{"peseta andorska"}
         }
         AED{
-            few{"dirhamy arabskie"}
-            many{"dirhamów arabskich"}
-            one{"dirham arabski"}
-            other{"dirhama arabskiego"}
+            few{"dirhamy ZEA"}
+            many{"dirhamów ZEA"}
+            one{"dirham ZEA"}
+            other{"dirhama ZEA"}
         }
         AFA{
             few{"afgani (1927–2002)"}
@@ -1098,10 +1098,10 @@ pl{
             other{"afgani (1927–2002)"}
         }
         AFN{
-            few{"afgani"}
-            many{"afgani"}
-            one{"afgani"}
-            other{"afgani"}
+            few{"afgani afgańskie"}
+            many{"afgani afgańskich"}
+            one{"afgani afgańskie"}
+            other{"afgani afgańskiego"}
         }
         ALL{
             few{"leki albańskie"}
@@ -1122,10 +1122,10 @@ pl{
             other{"guldena antylskiego"}
         }
         AOA{
-            few{"kwanzy angolańskie"}
-            many{"kwanz angolańskich"}
-            one{"kwanza angolańska"}
-            other{"kwanzy angolańskiej"}
+            few{"kwanzy angolskie"}
+            many{"kwanz angolskich"}
+            one{"kwanza angolska"}
+            other{"kwanzy angolskiej"}
         }
         AOK{
             few{"kwanzy angolańskie (1977–1990)"}
@@ -1248,10 +1248,10 @@ pl{
             other{"dolara brunejskiego"}
         }
         BOB{
-            few{"boliviano"}
-            many{"boliviano"}
-            one{"boliviano"}
-            other{"boliviano"}
+            few{"boliviano boliwijskie"}
+            many{"boliviano boliwijskich"}
+            one{"boliviano boliwijskie"}
+            other{"boliviano boliwijskiego"}
         }
         BRL{
             few{"reale brazylijskie"}
@@ -1428,8 +1428,8 @@ pl{
             other{"peseta hiszpańska (konto wymienne)"}
         }
         ETB{
-            few{"birra etiopskie"}
-            many{"birra etiopskich"}
+            few{"birry etiopskie"}
+            many{"birrów etiopskich"}
             one{"birr etiopski"}
             other{"birra etiopskiego"}
         }
@@ -1472,7 +1472,7 @@ pl{
         GHS{
             few{"cedi ghańskie"}
             many{"cedi ghańskich"}
-            one{"cedi ghański"}
+            one{"cedi ghańskie"}
             other{"cedi ghańskiego"}
         }
         GIP{
@@ -1526,7 +1526,7 @@ pl{
         HTG{
             few{"gourde haitańskie"}
             many{"gourde haitańskich"}
-            one{"gourde haitańskie"}
+            one{"gourde haitański"}
             other{"gourde haitańskiego"}
         }
         HUF{
@@ -1740,10 +1740,10 @@ pl{
             other{"ouguiya mauretańskiej (1973–2017)"}
         }
         MRU{
-            few{"ouguiya mauretańskie"}
-            many{"ouguiya mauretańskich"}
-            one{"ouguiya mauretańska"}
-            other{"ouguiya mauretańskiej"}
+            few{"ugija mauretańskie"}
+            many{"ugija mauretańskich"}
+            one{"ugija mauretańska"}
+            other{"ugija mauretańskiej"}
         }
         MUR{
             few{"rupie maurytyjskie"}
@@ -1968,10 +1968,10 @@ pl{
             other{"dolara singapurskiego"}
         }
         SHP{
-            few{"funty Wyspy Świętej Heleny"}
-            many{"funtów Wyspy Świętej Heleny"}
-            one{"funt Wyspy Świętej Heleny"}
-            other{"funta Wyspy Świętej Heleny"}
+            few{"funty Świętej Heleny"}
+            many{"funtów Świętej Heleny"}
+            one{"funt Świętej Heleny"}
+            other{"funta Świętej Heleny"}
         }
         SIT{
             few{"tolary słoweńskie"}
@@ -2202,10 +2202,10 @@ pl{
             other{"franka CFP"}
         }
         XXX{
-            few{"nieznanej waluty"}
-            many{"nieznanej waluty"}
-            one{"nieznana waluta"}
-            other{"nieznanej waluty"}
+            few{"(nieznana waluta)"}
+            many{"(nieznana waluta)"}
+            one{"(nieznana waluta)"}
+            other{"(nieznana waluta)"}
         }
         YER{
             few{"riale jemeńskie"}
@@ -2226,10 +2226,10 @@ pl{
             other{"kwacha zambijskiej (1968–2012)"}
         }
         ZMW{
-            few{"kwacha zambijskie"}
-            many{"kwacha zambijskich"}
+            few{"kwachy zambijskie"}
+            many{"kwach zambijskich"}
             one{"kwacha zambijska"}
-            other{"kwacha zambijskiej"}
+            other{"kwachy zambijskiej"}
         }
     }
     CurrencyUnitPatterns{
@@ -2238,5 +2238,5 @@ pl{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

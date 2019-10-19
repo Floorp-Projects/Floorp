@@ -27,9 +27,9 @@ UChar testChars[] = {
 
 int32_t testLength = UPRV_LENGTHOF(testChars);
 
-void main()
+int main()
 {
-    ScriptRun scriptRun(testChars, 0, testLength);
+    icu::ScriptRun scriptRun(testChars, 0, testLength);
 
     while (scriptRun.next()) {
         int32_t     start = scriptRun.getScriptStart();
@@ -38,4 +38,5 @@ void main()
 
         printf("Script '%s' from %d to %d.\n", uscript_getName(code), start, end);
     }
+    return 0;
 }

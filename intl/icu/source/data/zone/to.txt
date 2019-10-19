@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 to{
-    Version{"2.1.47.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -303,6 +303,9 @@ to{
         "America:El_Salvador"{
             ec{"El Salvador"}
         }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
+        }
         "America:Fortaleza"{
             ec{"Fortaleza"}
         }
@@ -504,6 +507,9 @@ to{
         "America:Puerto_Rico"{
             ec{"Puerto Rico"}
         }
+        "America:Punta_Arenas"{
+            ec{"Punta Arenas"}
+        }
         "America:Rainy_River"{
             ec{"Rainy River"}
         }
@@ -654,6 +660,9 @@ to{
         "Asia:Ashgabat"{
             ec{"Ashgabat"}
         }
+        "Asia:Atyrau"{
+            ec{"Atyrau"}
+        }
         "Asia:Baghdad"{
             ec{"Baghdad"}
         }
@@ -666,6 +675,9 @@ to{
         "Asia:Bangkok"{
             ec{"Bangkok"}
         }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
         "Asia:Beirut"{
             ec{"Beirut"}
         }
@@ -677,6 +689,9 @@ to{
         }
         "Asia:Calcutta"{
             ec{"Kolkata"}
+        }
+        "Asia:Chita"{
+            ec{"Chita"}
         }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
@@ -698,6 +713,9 @@ to{
         }
         "Asia:Dushanbe"{
             ec{"Dushanbe"}
+        }
+        "Asia:Famagusta"{
+            ec{"Famagusta"}
         }
         "Asia:Gaza"{
             ec{"Gaza"}
@@ -819,6 +837,9 @@ to{
         "Asia:Singapore"{
             ec{"Singapore"}
         }
+        "Asia:Srednekolymsk"{
+            ec{"Srednekolymsk"}
+        }
         "Asia:Taipei"{
             ec{"Taipei"}
         }
@@ -836,6 +857,9 @@ to{
         }
         "Asia:Tokyo"{
             ec{"Tokyo"}
+        }
+        "Asia:Tomsk"{
+            ec{"Tomsk"}
         }
         "Asia:Ulaanbaatar"{
             ec{"Ulaanbaatar"}
@@ -927,6 +951,9 @@ to{
         "Australia:Sydney"{
             ec{"Senē"}
         }
+        "Etc:UTC"{
+            ls{"taimi fakaemāmani"}
+        }
         "Etc:Unknown"{
             ec{"Feituʻu taʻeʻiloa"}
         }
@@ -935,6 +962,9 @@ to{
         }
         "Europe:Andorra"{
             ec{"Andorra"}
+        }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
         }
         "Europe:Athens"{
             ec{"ʻAtenisi"}
@@ -994,6 +1024,9 @@ to{
         "Europe:Kiev"{
             ec{"Kiev"}
         }
+        "Europe:Kirov"{
+            ec{"Kirov"}
+        }
         "Europe:Lisbon"{
             ec{"Lisbon"}
         }
@@ -1052,6 +1085,9 @@ to{
         "Europe:Sarajevo"{
             ec{"Sarajevo"}
         }
+        "Europe:Saratov"{
+            ec{"Saratov"}
+        }
         "Europe:Simferopol"{
             ec{"Simferopol"}
         }
@@ -1069,6 +1105,9 @@ to{
         }
         "Europe:Tirane"{
             ec{"Tirane"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
         }
         "Europe:Uzhgorod"{
             ec{"Uzhhorod"}
@@ -1139,6 +1178,9 @@ to{
         "Pacific:Auckland"{
             ec{"ʻAokalani"}
         }
+        "Pacific:Bougainville"{
+            ec{"Pukanivila"}
+        }
         "Pacific:Chatham"{
             ec{"Chatham"}
         }
@@ -1149,7 +1191,7 @@ to{
             ec{"Efate"}
         }
         "Pacific:Enderbury"{
-            ec{"Enderbury"}
+            ec{"ʻEnitipulī"}
         }
         "Pacific:Fakaofo"{
             ec{"Fakaofo"}
@@ -1164,10 +1206,10 @@ to{
             ec{"Galapagos"}
         }
         "Pacific:Gambier"{
-            ec{"Gambier"}
+            ec{"Kamipiē"}
         }
         "Pacific:Guadalcanal"{
-            ec{"Guadalcanal"}
+            ec{"Kuatākanali"}
         }
         "Pacific:Guam"{
             ec{"Kuami"}
@@ -1176,25 +1218,25 @@ to{
             ec{"Honolulu"}
         }
         "Pacific:Johnston"{
-            ec{"Johnston"}
+            ec{"Sionesitoni"}
         }
         "Pacific:Kiritimati"{
-            ec{"Kiritimati"}
+            ec{"Kilisimasi"}
         }
         "Pacific:Kosrae"{
             ec{"Kosilae"}
         }
         "Pacific:Kwajalein"{
-            ec{"Kwajalein"}
+            ec{"Kuasaleni"}
         }
         "Pacific:Majuro"{
-            ec{"Majuro"}
+            ec{"Masulo"}
         }
         "Pacific:Marquesas"{
-            ec{"Marquesas"}
+            ec{"Malikuesa"}
         }
         "Pacific:Midway"{
-            ec{"Midway"}
+            ec{"Mitiuai"}
         }
         "Pacific:Nauru"{
             ec{"Naulu"}
@@ -1215,19 +1257,19 @@ to{
             ec{"Palau"}
         }
         "Pacific:Pitcairn"{
-            ec{"Pitcairn"}
+            ec{"Pitikeni"}
         }
         "Pacific:Ponape"{
             ec{"Ponapē"}
         }
         "Pacific:Port_Moresby"{
-            ec{"Port Moresby"}
+            ec{"Taulanga Molesipi"}
         }
         "Pacific:Rarotonga"{
             ec{"Lalotonga"}
         }
         "Pacific:Saipan"{
-            ec{"Saipan"}
+            ec{"Saʻipani"}
         }
         "Pacific:Tahiti"{
             ec{"Tahisi"}
@@ -1242,7 +1284,7 @@ to{
             ec{"Tūke"}
         }
         "Pacific:Wake"{
-            ec{"Wake"}
+            ec{"Ueke"}
         }
         "Pacific:Wallis"{
             ec{"ʻUvea"}
@@ -1768,6 +1810,9 @@ to{
         }
         "meta:Ponape"{
             ls{"houa fakapōnapē"}
+        }
+        "meta:Pyongyang"{
+            ls{"houa fakapiongiangi"}
         }
         "meta:Qyzylorda"{
             ld{"houa fakakisilōta taimi liliu"}

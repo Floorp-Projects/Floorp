@@ -12,9 +12,9 @@ ca{
     }
     ExemplarCharacters{"[· a à b c ç d e é è f g h i í ï j k l m n o ó ò p q r s t u ú ü v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ¡ ? ¿ . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / "
+        "[\\- ‐ ‑ – — , ; \\: ! ¡ ? ¿ . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / "
         "\\\\ \\& # † ‡ ′ ″]"
     }
     MoreInformation{"?"}
@@ -30,6 +30,7 @@ ca{
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -193,9 +194,11 @@ ca{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -215,7 +218,7 @@ ca{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -417,7 +420,7 @@ ca{
                 }
                 GyMEd{
                     G{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
-                    M{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
+                    M{"E, d/M/y – E, d/M/y GGGGG"}
                     d{"E, d/M/y – E, d/M/y GGGGG"}
                     y{"E, d/M/y – E, d/M/y GGGGG"}
                 }
@@ -803,18 +806,9 @@ ca{
                 }
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"y G – y G"}
-                    y{"y – y G"}
+                    y{"y–y G"}
                 }
                 GyM{
                     G{"M/y GGGGG – M/y GGGGG"}
@@ -841,7 +835,7 @@ ca{
                 GyMMMd{
                     G{"d MMM, y G – d MMM, y G"}
                     M{"d MMM – d MMM, y G"}
-                    d{"d – d LLL, y G"}
+                    d{"d–d LLL, y G"}
                     y{"d MMM, y – d MMM, y G"}
                 }
                 GyMd{
@@ -1518,9 +1512,9 @@ ca{
         month-narrow{
             dn{"mes"}
             relative{
-                "-1"{"mes passat"}
+                "-1"{"el mes passat"}
                 "0"{"aquest mes"}
-                "1"{"mes vinent"}
+                "1"{"el mes que ve"}
             }
             relativeTime{
                 future{
@@ -1930,9 +1924,9 @@ ca{
         week-narrow{
             dn{"setm."}
             relative{
-                "-1"{"setm. passada"}
+                "-1"{"la setm. passada"}
                 "0"{"aquesta setm."}
-                "1"{"setm. vinent"}
+                "1"{"la setm. que ve"}
             }
             relativePeriod{"la setmana de: {0}"}
             relativeTime{

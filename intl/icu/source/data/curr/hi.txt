@@ -128,7 +128,7 @@ hi{
         }
         CNH{
             "CNH",
-            "चीनी यूआन",
+            "चीनी युआन (ऑफ़शोर)",
         }
         CNY{
             "CN¥",
@@ -680,7 +680,7 @@ hi{
         }
         UZS{
             "UZS",
-            "उज़्बेकिस्तान सोम",
+            "उज़्बेकिस्तानी सोम",
         }
         VEB{
             "VEB",
@@ -744,11 +744,104 @@ hi{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
+        ARS{"$"}
+        AUD{"$"}
+        BAM{"KM"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BOB{"Bs"}
+        BRL{"R$"}
+        BSD{"$"}
+        BWP{"P"}
+        BYN{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUC{"$"}
+        CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
+        DOP{"$"}
+        EGP{"E£"}
+        EUR{"€"}
+        FJD{"$"}
+        FKP{"£"}
+        GBP{"£"}
+        GEL{"₾"}
+        GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
+        GYD{"$"}
+        HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
+        ILS{"₪"}
+        INR{"₹"}
+        ISK{"kr"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
+        LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
+        MNT{"₮"}
+        MUR{"Rs"}
+        MXN{"$"}
+        MYR{"RM"}
+        NAD{"$"}
+        NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
+        NZD{"$"}
+        PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
+        PYG{"₲"}
         RON{"लेई"}
+        RUB{"₽"}
+        RWF{"RF"}
+        SBD{"$"}
+        SEK{"kr"}
+        SGD{"$"}
+        SHP{"£"}
+        SRD{"$"}
+        SSP{"£"}
+        STN{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
+        TRY{"₺"}
+        TTD{"$"}
         TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VEF{"Bs"}
+        VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"ლ"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -872,8 +965,8 @@ hi{
             other{"चिली पेसो"}
         }
         CNH{
-            one{"चीनी यूआन"}
-            other{"चीनी यूआन"}
+            one{"चीनी युआन (ऑफ़शोर)"}
+            other{"चीनी युआन (ऑफ़शोर)"}
         }
         CNY{
             one{"चीनी युआन"}
@@ -1005,7 +1098,7 @@ hi{
         }
         INR{
             one{"भारतीय रुपया"}
-            other{"भारतीय रूपए"}
+            other{"भारतीय रुपए"}
         }
         IQD{
             one{"इराकी दिनार"}
@@ -1344,8 +1437,8 @@ hi{
             other{"उरुग्वियन पेसो"}
         }
         UZS{
-            one{"उज़्बेकिस्तान सोम"}
-            other{"उज़्बेकिस्तान सोम"}
+            one{"उज़्बेकिस्तानी सोम"}
+            other{"उज़्बेकिस्तानी सोम"}
         }
         VEF{
             one{"वेनेज़ुएला बोलिवर (2008–2018)"}
@@ -1404,5 +1497,5 @@ hi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

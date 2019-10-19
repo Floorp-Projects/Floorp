@@ -12,5 +12,5 @@ de_CH{
         TL{"Osttimor"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
 }

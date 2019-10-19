@@ -2,21 +2,13 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ga{
     AuxExemplarCharacters{"[å ḃ ċ ḋ ḟ ġ j k ṁ ṗ q ṡ ṫ v w x y z]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{"[a á b c d e é f g h i í l m n o ó p r s t u ú]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
-    MoreInformation{"?"}
     NumberElements{
         default{"latn"}
         latn{
@@ -296,6 +288,7 @@ ga{
             }
             symbols{
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
                 nan{"NaN"}
                 perMille{"‰"}
@@ -320,7 +313,7 @@ ga{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -541,44 +534,6 @@ ga{
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
-                GyMMMEd{
-                    G{"G y MMM d, E – G y MMM d, E"}
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
-                }
-                GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
-                }
                 H{
                     H{"HH – HH"}
                 }
@@ -682,10 +637,6 @@ ga{
             AmPmMarkersAbbr{
                 "r.n.",
                 "i.n.",
-            }
-            AmPmMarkersNarrow{
-                "a",
-                "p",
             }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -845,17 +796,13 @@ ga{
             }
             dayPeriod{
                 stand-alone{
-                    abbreviated{
-                        am{"a.m."}
-                        pm{"p.m."}
-                    }
                     narrow{
-                        am{"a"}
-                        pm{"p"}
+                        am{"r.n."}
+                        pm{"i.n."}
                     }
                     wide{
-                        am{"a.m."}
-                        pm{"p.m."}
+                        am{"r.n."}
+                        pm{"i.n."}
                     }
                 }
             }
@@ -894,9 +841,6 @@ ga{
                     B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
-                }
-                Gy{
-                    G{"G y – G y"}
                 }
                 H{
                     H{"HH – HH"}
@@ -1213,12 +1157,6 @@ ga{
         weather{"aimsir"}
         western_asian_scripts{"Scripteanna na hÁise Thiar"}
         whitespace{"Spás Bán"}
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -2389,26 +2327,6 @@ ga{
             lenient{
                 "[\\--/]",
                 "[\\:∶]",
-            }
-        }
-        general{
-            lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤]",
-                "[¥￥]",
-                "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
-            }
-        }
-        number{
-            lenient{
-                "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
-                "[+⁺₊➕﬩﹢＋]",
             }
         }
     }

@@ -54,6 +54,10 @@ ga{
             "ARA",
             "Austral Airgintíneach",
         }
+        ARL{
+            "ARL",
+            "ARL",
+        }
         ARM{
             "ARM",
             "Peso na hAirgintíne (1881–1970)",
@@ -93,6 +97,10 @@ ga{
         BAM{
             "BAM",
             "Marg Inmhalartaithe na Boisnia-Heirseagaivéine",
+        }
+        BAN{
+            "BAN",
+            "BAN",
         }
         BBD{
             "BBD",
@@ -145,6 +153,10 @@ ga{
         BOB{
             "BOB",
             "Boliviano",
+        }
+        BOL{
+            "BOL",
+            "BOL",
         }
         BOP{
             "BOP",
@@ -250,6 +262,10 @@ ga{
             "COP",
             "Peso na Colóime",
         }
+        COU{
+            "COU",
+            "COU",
+        }
         CRC{
             "CRC",
             "Colón Chósta Ríce",
@@ -325,6 +341,14 @@ ga{
         ERN{
             "ERN",
             "Nakfa na hEiritré",
+        }
+        ESA{
+            "ESA",
+            "ESA",
+        }
+        ESB{
+            "ESB",
+            "ESB",
         }
         ESP{
             "ESP",
@@ -506,6 +530,14 @@ ga{
             "KPW",
             "Won na Cóiré Thuaidh",
         }
+        KRH{
+            "KRH",
+            "KRH",
+        }
+        KRO{
+            "KRO",
+            "KRO",
+        }
         KRW{
             "₩",
             "Won na Cóiré Theas",
@@ -593,6 +625,10 @@ ga{
         MKD{
             "MKD",
             "Denar na Macadóine",
+        }
+        MKN{
+            "MKN",
+            "MKN",
         }
         MLF{
             "MLF",
@@ -1050,6 +1086,14 @@ ga{
             "XPT",
             "Platanam",
         }
+        XRE{
+            "XRE",
+            "XRE",
+        }
+        XSU{
+            "XSU",
+            "XSU",
+        }
         XXX{
             "XXX",
             "Airgeadra Anaithnid",
@@ -1073,6 +1117,10 @@ ga{
         YUN{
             "YUN",
             "YUN",
+        }
+        YUR{
+            "YUR",
+            "YUR",
         }
         ZAL{
             "ZAL",
@@ -1158,6 +1206,8 @@ ga{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
+        LTL{"Lt"}
+        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -3137,5 +3187,5 @@ ga{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

@@ -253,7 +253,7 @@ de{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Syrien"}
-        SZ{"Swasiland"}
+        SZ{"Eswatini"}
         TA{"Tristan da Cunha"}
         TC{"Turks- und Caicosinseln"}
         TD{"Tschad"}
@@ -287,6 +287,8 @@ de{
         VU{"Vanuatu"}
         WF{"Wallis und Futuna"}
         WS{"Samoa"}
+        XA{"Pseudo-Akzente"}
+        XB{"Pseudo-Bidi"}
         XK{"Kosovo"}
         YE{"Jemen"}
         YT{"Mayotte"}
@@ -309,8 +311,8 @@ de{
         CI{"Elfenbeinküste"}
         CZ{"Tschechische Republik"}
         FK{"Falklandinseln (Malwinen)"}
-        SZ{"Eswatini"}
+        SZ{"Swasiland"}
         TL{"Osttimor"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

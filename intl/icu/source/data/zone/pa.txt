@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pa{
-    Version{"2.1.48.20"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"ਅਬੀਦਜਾਨ"}
@@ -811,7 +811,7 @@ pa{
             ec{"ਕਤਰ"}
         }
         "Asia:Qostanay"{
-            ec{"ਕੋਸਟਨੇਏ"}
+            ec{"ਕੋਸਤਾਨਾਏ"}
         }
         "Asia:Qyzylorda"{
             ec{"ਕਿਜ਼ੀਲੋਰਡਾ"}

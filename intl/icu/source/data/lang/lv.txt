@@ -4,22 +4,22 @@ lv{
     Keys{
         calendar{"Kalendārs"}
         cf{"valūtas formāts"}
-        colAlternate{"Kārtošana, ignorējot simbolus"}
-        colBackwards{"Diakritisko zīmju kārtošana apgrieztā secībā"}
-        colCaseFirst{"Lielo/mazo burtu kārtošana"}
-        colCaseLevel{"Reģistrjutīgo rakstzīmju kārtošana"}
-        colNormalization{"Normalizētā kārtošana"}
-        colNumeric{"Kārtošana skaitliskā secībā"}
-        colStrength{"Kārtošanas pakāpe"}
+        colAlternate{"kārtošana, ignorējot simbolus"}
+        colBackwards{"akcentēto burtu kārtošana apgrieztā secībā"}
+        colCaseFirst{"kārtošana pēc lielajiem/mazajiem burtiem"}
+        colCaseLevel{"reģistrjutīga kārtošana"}
+        colNormalization{"normalizēta kārtošana"}
+        colNumeric{"kārtošana skaitliskā secībā"}
+        colStrength{"kārtošanas pakāpe"}
         collation{"kārtošanas secība"}
-        currency{"Valūta"}
+        currency{"valūta"}
         hc{"Stundu formāts (12 vai 24)"}
         lb{"Rindiņas pārtraukuma stils"}
         ms{"mērvienību sistēma"}
         numbers{"Cipari"}
-        timezone{"Laika josla"}
-        va{"Lokalizācijas variants"}
-        x{"Personīgai lietošanai"}
+        timezone{"laika josla"}
+        va{"lokalizācijas variants"}
+        x{"personīgai lietošanai"}
     }
     Languages{
         aa{"afāru"}
@@ -314,7 +314,7 @@ lv{
         mg{"malagasu"}
         mga{"vidusīru"}
         mgh{"makua"}
-        mgo{"mgo"}
+        mgo{"metu"}
         mh{"māršaliešu"}
         mi{"maoru"}
         mic{"mikmaku"}
@@ -540,10 +540,17 @@ lv{
         zxx{"bez lingvistiska satura"}
         zza{"zazaki"}
     }
+    Languages%long{
+        zh_Hans{"ķīniešu vienkāršotā (mandarīnu)"}
+        zh_Hant{"ķīniešu tradicionālā (mandarīnu)"}
+    }
+    Languages%menu{
+        yue{"ķīniešu (kantoniešu)"}
+        zh{"ķīniešu (mandarīnu)"}
+    }
     Languages%short{
         az{"azerbaidžāņu"}
         en_GB{"angļu (Lielbritānija)"}
-        en_US{"angļu (ASV)"}
     }
     Scripts{
         Arab{"arābu"}
@@ -558,7 +565,7 @@ lv{
         Copt{"koptu"}
         Cyrl{"kirilica"}
         Cyrs{"senslāvu"}
-        Deva{"devānagāri"}
+        Deva{"dēvanāgari"}
         Egyd{"demotiskais raksts"}
         Egyh{"hierātiskais raksts"}
         Egyp{"ēģiptiešu hieroglifi"}
@@ -799,7 +806,7 @@ lv{
         VALENCIA{"valensiešu"}
         WADEGILE{"Veida-Džailza romanizācija"}
     }
-    Version{"2.1.48.43"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — visas"}
         category-list{"{0}: {1}"}

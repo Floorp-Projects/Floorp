@@ -6,11 +6,10 @@ es_CL{
         BA{"Bosnia y Herzegovina"}
         EH{"Sahara Occidental"}
         TA{"Tristán de Acuña"}
-        TL{"Timor-Leste"}
         UM{"Islas menores alejadas de EE. UU."}
     }
     Countries%short{
         GB{"RU"}
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
 }

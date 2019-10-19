@@ -223,5 +223,5 @@ rn{
             "Idolari ryo muri Zimbabwe",
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

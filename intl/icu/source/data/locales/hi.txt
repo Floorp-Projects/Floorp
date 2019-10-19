@@ -2,6 +2,14 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hi{
     AuxExemplarCharacters{"[\u200C\u200D]"}
+    Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
+        medial{"{0}…{1}"}
+        word-final{"{0} …"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
+    }
     ExemplarCharacters{
         "[\u093C ॐ \u0902 \u0901 ः अ आ इ ई उ ऊ ऋ ऌ ऍ ए ऐ ऑ ओ औ क ख ग घ ङ च छ ज झ ञ ट "
         "ठ ड ढ ण त थ द ध न प फ ब भ म य र ल ळ व श ष स ह ऽ ा ि ी \u0941 \u0942 \u0943 "
@@ -11,9 +19,11 @@ hi{
         "[अ आ इ ई उ ऊ ऋ ए ऐ ओ औ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र"
         " ल व श ष स ह]"
     }
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0० 1१ 2२ 3३ 4४ 5५ 6६ 7७ 8८ 9९]"}
-    ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ‘ ’ “ ” ( ) \\[ \\] \\{ \\} ॰]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0० 1१ 2२ 3३ 4४ 5५ 6६ 7७ 8८ 9९]"}
+    ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . ‘ ’ “ ” ( ) \\[ \\] \\{ \\} ॰]"}
+    MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         deva{
             patterns{
                 currencyFormat{"¤#,##,##0.00"}
@@ -22,7 +32,11 @@ hi{
                 scientificFormat{"[#E0]"}
             }
             symbols{
+                decimal{"."}
+                group{","}
+                minusSign{"-"}
                 percentSign{"%"}
+                plusSign{"+"}
             }
         }
         latn{
@@ -194,21 +208,25 @@ hi{
                 }
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
         }
         minimalPairs{
             ordinal{
-                few{"{0}था दाहिना मोड़ लें."}
+                few{"तीसरा दाहिना मोड़ लें."}
                 many{"{0}ठा दाहिना मोड़ लें."}
-                one{"{0}ला दाहिना मोड़ लें."}
+                one{"पहला दाहिना मोड़ लें."}
                 other{"{0}वां दाहिना मोड़ लें."}
                 two{"{0}रा दाहिना मोड़ लें."}
             }
@@ -220,7 +238,7 @@ hi{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         ethiopic{
             monthNames{
@@ -313,44 +331,6 @@ hi{
                     B{"B h:mm – B h:mm"}
                     h{"B h:mm–h:mm"}
                     m{"B h:mm–h:mm"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
-                GyMMMEd{
-                    G{"G y MMM d, E – G y MMM d, E"}
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
-                }
-                GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH–HH"}
@@ -695,44 +675,6 @@ hi{
                     B{"B h:mm – B h:mm"}
                     h{"B h:mm–h:mm"}
                     m{"B h:mm–h:mm"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
-                GyMMMEd{
-                    G{"G y MMM d, E – G y MMM d, E"}
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
-                }
-                GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"HH–HH"}
@@ -1430,6 +1372,12 @@ hi{
         western_asian_scripts{"पश्चिमी एशियाई लिपि"}
         whitespace{"श्वेतरिक्ति"}
     }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
     fields{
         day{
             dn{"दिन"}
@@ -1453,6 +1401,11 @@ hi{
         }
         day-narrow{
             dn{"दिन"}
+            relative{
+                "-1"{"बीता कल"}
+                "0"{"आज"}
+                "1"{"आने वाला कल"}
+            }
             relativeTime{
                 future{
                     one{"{0} दिन में"}
@@ -1466,6 +1419,11 @@ hi{
         }
         day-short{
             dn{"दिन"}
+            relative{
+                "-1"{"बीता कल"}
+                "0"{"आज"}
+                "1"{"आने वाला कल"}
+            }
             relativeTime{
                 future{
                     one{"{0} दिन में"}
@@ -2179,6 +2137,11 @@ hi{
         }
         year-narrow{
             dn{"वर्ष"}
+            relative{
+                "-1"{"पिछले साल"}
+                "0"{"इस साल"}
+                "1"{"अगले साल"}
+            }
             relativeTime{
                 future{
                     one{"{0} वर्ष में"}
@@ -2223,18 +2186,32 @@ hi{
         standard{
             2{"{0} और {1}"}
             end{"{0}, और {1}"}
-        }
-        standard-narrow{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} और {1}"}
             end{"{0} और {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         unit{
             2{"{0} और {1}"}
             end{"{0}, और {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-short{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2267,6 +2244,10 @@ hi{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

@@ -127,7 +127,6 @@ twq{
         MD{"Moldovi"}
         MG{"Madagascar"}
         MH{"Maršal gungey"}
-        MK{"Maacedooni"}
         ML{"Maali"}
         MM{"Maynamar"}
         MN{"Mongooli"}
@@ -227,5 +226,5 @@ twq{
         ZM{"Zambi"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

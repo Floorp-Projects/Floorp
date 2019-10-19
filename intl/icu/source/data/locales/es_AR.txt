@@ -14,7 +14,7 @@ es_AR{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         generic{
             availableFormats{
@@ -81,9 +81,7 @@ es_AR{
                         pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
                     }
                     wide{
                         am{"a. m."}

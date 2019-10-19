@@ -370,6 +370,7 @@
 		<include locales="fy"/>
 		<include locales="fy_NL"/>
 		<include locales="ga"/>
+		<include locales="ga_GB"/>
 		<include locales="ga_IE"/>
 		<include locales="gd"/>
 		<include locales="gd_GB"/>

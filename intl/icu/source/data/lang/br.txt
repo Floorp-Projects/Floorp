@@ -83,6 +83,7 @@ br{
         cad{"caddo"}
         car{"karibeg"}
         cch{"atsam"}
+        ccp{"chakmaeg"}
         ce{"tchetcheneg"}
         ceb{"cebuano"}
         cgg{"chigaeg"}
@@ -553,6 +554,14 @@ br{
         zxx{"diyezh"}
         zza{"zazakeg"}
     }
+    Languages%long{
+        zh_Hans{"sinaeg mandarinek eeunaet"}
+        zh_Hant{"sinaeg mandarinek hengounel"}
+    }
+    Languages%menu{
+        yue{"sinaeg, kantoneg"}
+        zh{"sinaeg, mandarineg"}
+    }
     Languages%short{
         az{"azeri"}
         en_GB{"saozneg RU"}
@@ -566,14 +575,21 @@ br{
         Avst{"avestek"}
         Bali{"balinek"}
         Bamu{"bamounek"}
+        Batk{"batak"}
         Beng{"bengali"}
         Bopo{"bopomofo"}
         Brai{"Braille"}
         Bugi{"bougiek"}
+        Cakm{"chakmaek"}
+        Cans{"silabennaoueg engenidik unvan Kanada"}
+        Cham{"cham"}
+        Cher{"cherokee"}
         Copt{"koptek"}
+        Cprt{"silabennaoueg kipriek"}
         Cyrl{"kirillek"}
         Cyrs{"kirillek henslavonek"}
         Deva{"devanagari"}
+        Dupl{"berrskriverezh Duployé"}
         Egyp{"hieroglifoù egiptek"}
         Ethi{"etiopek"}
         Geor{"jorjianek"}
@@ -584,7 +600,7 @@ br{
         Guru{"gurmukhi"}
         Hanb{"han gant bopomofo"}
         Hang{"hangeul"}
-        Hani{"han"}
+        Hani{"sinalunioù (han)"}
         Hans{"eeunaet"}
         Hant{"hengounel"}
         Hebr{"hebraek"}
@@ -613,6 +629,7 @@ br{
         Narb{"henarabek an Norzh"}
         Ogam{"ogam"}
         Orya{"oriya"}
+        Phnx{"fenikianek"}
         Runr{"runek"}
         Samr{"samaritek"}
         Sarb{"henarabek ar Su"}
@@ -632,6 +649,7 @@ br{
         Vaii{"vai"}
         Xpeo{"persek kozh"}
         Xsux{"gennheñvel"}
+        Zinh{"hêrezh"}
         Zmth{"notadur jedoniel"}
         Zsye{"fromlunioù"}
         Zsym{"arouezioù"}
@@ -640,8 +658,8 @@ br{
         Zzzz{"skritur dianav"}
     }
     Scripts%stand-alone{
-        Hans{"han eeunaet"}
-        Hant{"han hengounel"}
+        Hans{"sinalunioù (han) eeunaet"}
+        Hant{"sinalunioù (han) hengounel"}
     }
     Types{
         calendar{
@@ -752,10 +770,12 @@ br{
             thai{"sifroù thai"}
             tibt{"sifroù tibetan"}
             vaii{"sifroù vai"}
+            wara{"sifroù warang"}
+            wcho{"sifroù wantcho"}
         }
     }
     Variants{
-        1606NICT{"krenncʼhalleg"}
+        1606NICT{"krenncʼhalleg diwezhañ"}
         1694ACAD{"galleg rakvodern"}
         1901{"reizhskrivadur alamanek hengounel"}
         1959ACAD{"belaruseg akademek"}
@@ -766,9 +786,11 @@ br{
         ALALC97{"romanekadur ALA-LC 1997"}
         ALUKU{"rannyezh aloukou"}
         AO1990{"emglev 1990 war ar reizhskrivadur portugalek"}
+        ARANES{"araneg"}
         AREVELA{"armenianeg ar Reter"}
         AREVMDA{"armenianeg ar Cʼhornôg"}
         ASANTE{"achanti"}
+        AUVERN{"arverneg"}
         BAKU1926{"lizherenneg latin turkek unvan"}
         BALANKA{"rannyezh aniiek Balanka"}
         BARLA{"rannyezhoù Barlavento kreoleg ar Cʼhab-Glas"}
@@ -778,27 +800,36 @@ br{
         BISKE{"rannyezh San Giorgio/Bila"}
         BOHORIC{"lizherenneg Bohorič"}
         BOONT{"boontling"}
+        CISAUP{"kizalpeg"}
         COLB1945{"emglev 1945 war reizhskrivadur portugaleg Brazil"}
         CORNU{"saozneg Kerne-Veur"}
+        CREISS{"rannyezhoù Creissent"}
         DAJNKO{"lizherenneg Dajnko"}
         EKAVSK{"serbeg gant distagadur ekavian"}
         EMODENG{"saozneg rakvodern"}
         FONIPA{"lizherenneg fonetek etrebroadel"}
-        FONNAPA{"FONNAPA"}
+        FONKIRSH{"lizherenneg fonetek Kirshenbaum"}
+        FONNAPA{"lizherenneg fonetek Norzh Amerika"}
         FONUPA{"lizherenneg fonetek ouralek"}
         FONXSAMP{"treuzskrivadur X-SAMPA"}
+        GASCON{"gwaskoneg"}
+        GRCLASS{"skritur okitanek klasel"}
+        GRITAL{"skritur okitanek Italia"}
+        GRMISTR{"skritur okitanek mistralek"}
         HEPBURN{"romanekadur Hepburn"}
         HOGNORSK{"uhelnorvegeg"}
         HSISTEMO{"esperanteg sistem H"}
         IJEKAVSK{"serbeg gant distagadur ijekavian"}
         ITIHASA{"sanskriteg itihâsa"}
-        IVANCHOV{"reizhskrivadur Ivanchov"}
+        IVANCHOV{"reizhskrivadur bulgarek Ivanchov"}
         JAUER{"rannyezh romañchek Jauer"}
         JYUTPING{"romanekadur kantonek Jyutping"}
         KKCOR{"kerneveureg kumun"}
-        KOCIEWIE{"Kociewie"}
+        KOCIEWIE{"rannyezh polonek Kociewie"}
         KSCOR{"kerneveureg standart"}
         LAUKIKA{"sanskriteg klasel"}
+        LEMOSIN{"rannyezh Limousin"}
+        LENGADOC{"lengadokeg"}
         LIPAW{"rannyezh resianek Lipovaz"}
         LUNA1918{"reizhskrivadur rusianek goude 1917"}
         METELKO{"lizherenneg Metelko"}
@@ -806,18 +837,20 @@ br{
         NDYUKA{"rannyezh Ndyuka"}
         NEDIS{"rannyezh Natisone"}
         NEWFOUND{"saozneg an Douar-Nevez"}
+        NICARD{"nisardeg"}
         NJIVA{"rannyezh Gniva/Njiva"}
         NULIK{"volapük modern"}
         OSOJS{"rannyezh Oseacco/Osojane"}
         OXENDICT{"skritur Oxford English Dictionary"}
-        PAHAWH2{"PAHAWH2"}
-        PAHAWH3{"PAHAWH3"}
-        PAHAWH4{"PAHAWH4"}
+        PAHAWH2{"reizhskrivadur pahawh hmong lankad 2"}
+        PAHAWH3{"reizhskrivadur pahawh hmong lankad 3"}
+        PAHAWH4{"reizhskrivadur pahawh hmong doare diwezhañ"}
         PAMAKA{"rannyezh Pamaka"}
         PETR1708{"reizhskrivadur rusianek 1708 Pêr I"}
         PINYIN{"romanekadur pinyin"}
         POLYTON{"gresianeg liestonel"}
-        POSIX{"POSIX"}
+        POSIX{"stlenneg"}
+        PROVENC{"provañseg"}
         PUTER{"rannyezh romañchek Puter"}
         REVISED{"reizhskrivadur reizhet"}
         RIGIK{"volapük klasel"}
@@ -826,10 +859,10 @@ br{
         SAAHO{"saho"}
         SCOTLAND{"saozneg standart Skos"}
         SCOUSE{"saozneg Liverpool (scouse)"}
-        SIMPLE{"SIMPLE"}
+        SIMPLE{"eeunaet"}
         SOLBA{"rannyezh Stolvizza/Solbica"}
         SOTAV{"rannyezhoù Sotavento kreoleg ar Cʼhab-Glas"}
-        SPANGLIS{"SPANGLIS"}
+        SPANGLIS{"spanglish"}
         SURMIRAN{"rannyezh romañchek surmiran"}
         SURSILV{"rannyezh romañchek sursilvan"}
         SUTSILV{"rannyezh romañchek sutsilvan"}
@@ -841,14 +874,23 @@ br{
         VAIDIKA{"sanskriteg vedek"}
         VALENCIA{"valensianeg"}
         VALLADER{"rannyezh romañchek Vallader"}
+        VIVARAUP{"vivaroalpeg"}
         WADEGILE{"romanekadur Wade-Giles"}
         XSISTEMO{"esperanteg sistem X"}
     }
-    Version{"2.1.48.86"}
+    Version{"36"}
+    characterLabelPattern{
+        enclosed{"{0} — kelcʼhiet"}
+        extended{"{0} — astennet"}
+        historic{"{0} — istorel"}
+        miscellaneous{"{0} — liesseurt"}
+        other{"{0} — all"}
+        scripts{"skriturioù — {0}"}
+    }
     codePatterns{
-        language{"{0}"}
-        script{"{0}"}
-        territory{"{0}"}
+        language{"yezh : {0}"}
+        script{"skritur : {0}"}
+        territory{"rannved : {0}"}
     }
     localeDisplayPattern{
         keyTypePattern{"{0} : {1}"}

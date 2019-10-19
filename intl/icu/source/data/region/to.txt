@@ -31,6 +31,7 @@ to{
         151{"ʻEulope fakahahake"}
         154{"ʻEulope fakatokelau"}
         155{"ʻEulope fakahihifo"}
+        202{"ʻAfilika fakasahala-tonga"}
         419{"ʻAmelika fakalatina"}
         AC{"Motu ʻAsenisini"}
         AD{"ʻAnitola"}
@@ -182,7 +183,7 @@ to{
         MF{"Sā Mātini (fakafalanisē)"}
         MG{"Matakasika"}
         MH{"ʻOtumotu Māsolo"}
-        MK{"Masetōnia"}
+        MK{"Masetōnia fakatokelau"}
         ML{"Māli"}
         MM{"Mianimā (Pema)"}
         MN{"Mongokōlia"}
@@ -252,7 +253,7 @@ to{
         SV{"ʻEle Salavatoa"}
         SX{"Sā Mātini (fakahōlani)"}
         SY{"Sīlia"}
-        SZ{"Suasilani"}
+        SZ{"ʻEsuatini"}
         TA{"Tulisitani ta Kunuha"}
         TC{"ʻOtumotu Tuki mo Kaikosi"}
         TD{"Sāti"}
@@ -261,7 +262,7 @@ to{
         TH{"Tailani"}
         TJ{"Tasikitani"}
         TK{"Tokelau"}
-        TL{"Timoa hahake"}
+        TL{"Timoa fakahahake"}
         TM{"Tūkimenisitani"}
         TN{"Tunīsia"}
         TO{"Tonga"}
@@ -286,6 +287,8 @@ to{
         VU{"Vanuatu"}
         WF{"ʻUvea mo Futuna"}
         WS{"Haʻamoa"}
+        XA{"fasiʻalea loi"}
+        XB{"fua-ua loi"}
         XK{"Kōsovo"}
         YE{"Iemeni"}
         YT{"Maiote"}
@@ -304,8 +307,11 @@ to{
     Countries%variant{
         CD{"Kongo (LTK)"}
         CG{"Kongo (Lepupelika)"}
+        CI{"Matafonua ʻAivolī"}
         CZ{"Lepupelika Seki"}
-        MK{"Masetōnia (FYROM)"}
+        FK{"ʻOtumotu Malivina"}
+        SZ{"Suasilani"}
+        TL{"Timoa fakahahake"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

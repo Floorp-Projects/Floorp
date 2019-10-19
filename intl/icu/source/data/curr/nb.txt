@@ -638,6 +638,10 @@ nb{
             "MAF",
             "marokkanske franc",
         }
+        MCF{
+            "MCF",
+            "MCF",
+        }
         MDC{
             "MDC",
             "moldovske cupon",
@@ -1262,6 +1266,8 @@ nb{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
+        LTL{"Lt"}
+        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -1935,6 +1941,10 @@ nb{
             one{"marokkansk franc"}
             other{"marokkanske franc"}
         }
+        MCF{
+            one{"MCF"}
+            other{"MCF"}
+        }
         MDC{
             one{"moldovsk cupon"}
             other{"moldovske cupon"}
@@ -2504,5 +2514,5 @@ nb{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

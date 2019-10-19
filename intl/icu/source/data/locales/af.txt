@@ -12,13 +12,14 @@ af{
     }
     ExemplarCharacters{"[a á â b c d e é è ê ë f g h i î ï j k l m n o ô ö p q r s t u û v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -29,6 +30,7 @@ af{
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -192,9 +194,11 @@ af{
                 group{" "}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -209,8 +213,9 @@ af{
             }
         }
         minimumGroupingDigits{"1"}
+        native{"latn"}
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -221,10 +226,10 @@ af{
                 "EEEE dd MMMM y G",
                 "dd MMMM y G",
                 "dd MMM y G",
-                "GGGGG y-MM-dd",
+                "y-MM-dd GGGGG",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'om' {0}",
+                "{1} 'om' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -276,11 +281,6 @@ af{
                 Bh{
                     B{"h B – h B"}
                     h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
                 }
                 Gy{
                     G{"y G – y G"}
@@ -338,15 +338,15 @@ af{
                     M{"M – M"}
                 }
                 MEd{
-                    M{"E, d/M – E, d/M"}
-                    d{"E, d/M – E, d/M"}
+                    M{"E d/M – E d/M"}
+                    d{"E d/M – E d/M"}
                 }
                 MMM{
                     M{"MMM – MMM"}
                 }
                 MMMEd{
-                    M{"E, d MMM – E, d MMM"}
-                    d{"E, d MMM – E, d MMM"}
+                    M{"E d MMM – E d MMM"}
+                    d{"E d MMM – E d MMM"}
                 }
                 MMMd{
                     M{"d MMM – d MMM"}
@@ -386,18 +386,18 @@ af{
                     y{"M/y – M/y GGGGG"}
                 }
                 yMEd{
-                    M{"E, d/M/y – E, d/M/y GGGGG"}
-                    d{"E, d/M/y – E, d/M/y GGGGG"}
-                    y{"E, d/M/y – E, d/M/y GGGGG"}
+                    M{"E d/M/y – E d/M/y GGGGG"}
+                    d{"E d/M/y – E d/M/y GGGGG"}
+                    y{"E d/M/y – E d/M/y GGGGG"}
                 }
                 yMMM{
                     M{"MMM–MMM y G"}
                     y{"MMM y – MMM y G"}
                 }
                 yMMMEd{
-                    M{"E, d MMM – E, d MMM, y G"}
-                    d{"E, d MMM – E, d MMM, y G"}
-                    y{"E, d MMM y – E, d MMM y G"}
+                    M{"E d MMM – E d MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
+                    y{"E d MMM y – E d MMM y G"}
                 }
                 yMMMM{
                     M{"MMMM–MMMM y G"}
@@ -405,8 +405,8 @@ af{
                 }
                 yMMMd{
                     M{"d MMM – d MMM y G"}
-                    d{"d–d MMM, y G"}
-                    y{"d MMM, y – d MMM, y G"}
+                    d{"d–d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
                 }
                 yMd{
                     M{"d/M/y – d/M/y GGGGG"}
@@ -448,11 +448,11 @@ af{
             }
             availableFormats{
                 Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
+                Bhm{"hh:mm B"}
+                Bhms{"hh:mm:ss B"}
                 E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
+                EBhm{"E hh:mm B"}
+                EBhms{"E hh:mm:ss B"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"E d"}
@@ -932,92 +932,92 @@ af{
         }
     }
     characterLabel{
-        activities{"Aktiwiteite"}
-        african_scripts{"Afrika-skrifte"}
-        american_scripts{"Amerikaanse skrifte"}
+        activities{"aktiwiteit"}
+        african_scripts{"Afrika-skrif"}
+        american_scripts{"Amerikaanse skrif"}
         animal{"dier"}
-        animals_nature{"Diere en natuur"}
-        arrows{"Pyltjies"}
+        animals_nature{"diere of natuur"}
+        arrows{"pyltjie"}
         body{"liggaam"}
-        box_drawing{"Bokstekening"}
+        box_drawing{"bokstekening"}
         braille{"Braille"}
         building{"gebou"}
-        bullets_stars{"Kolpunte/Sterretjies"}
-        consonantal_jamo{"Konsonantale Jamo"}
-        currency_symbols{"Geldeenheidsimbole"}
-        dash_connector{"Koppelteken/Koppelaar"}
-        digits{"Syfers"}
-        dingbats{"Dingbats"}
-        divination_symbols{"Aanwys-simbole"}
-        downwards_arrows{"Af-pyltjies"}
-        downwards_upwards_arrows{"Af-op-pyltjies"}
-        east_asian_scripts{"Oos-Asiese skrifte"}
-        emoji{"Emoji"}
-        european_scripts{"Europese skrifte"}
+        bullets_stars{"kolpunt/sterretjie"}
+        consonantal_jamo{"konsonantale jamo"}
+        currency_symbols{"geldeenheidsimbool"}
+        dash_connector{"koppelteken/koppelaar"}
+        digits{"syfer"}
+        dingbats{"dingbat"}
+        divination_symbols{"towersimbool"}
+        downwards_arrows{"af-pyltjie"}
+        downwards_upwards_arrows{"af-op-pyltjie"}
+        east_asian_scripts{"Oos-Asiese skrif"}
+        emoji{"emoji"}
+        european_scripts{"Europese skrif"}
         female{"vroulik"}
         flag{"vlag"}
-        flags{"Vlae"}
-        food_drink{"Kos en drinkgoed"}
-        format{"Formaat"}
-        format_whitespace{"Formaat en witspasie"}
-        full_width_form_variant{"Vollewydte vormvariante"}
-        geometric_shapes{"Geometriese vorms"}
-        half_width_form_variant{"Halfwydte vormvariante"}
-        han_characters{"Han-karakters"}
-        han_radicals{"Han-radikale"}
-        hanja{"Hanja"}
+        flags{"vlae"}
+        food_drink{"kos en drinkgoed"}
+        format{"formatering"}
+        format_whitespace{"formatering en witspasie"}
+        full_width_form_variant{"volwye variant"}
+        geometric_shapes{"geometriese vorm"}
+        half_width_form_variant{"Halfwye variant"}
+        han_characters{"Han-karakter"}
+        han_radicals{"Han-radikaal"}
+        hanja{"hanja"}
         hanzi_simplified{"Hanzi (vereenvoudig)"}
         hanzi_traditional{"Hanzi (tradisioneel)"}
         heart{"hartjie"}
-        historic_scripts{"Historiese skrifte"}
-        ideographic_desc_characters{"Ideografies-beskrywende karakters"}
-        japanese_kana{"Japannese Kana"}
-        kanbun{"Kanbun"}
-        kanji{"Kanji"}
-        keycap{"sleutelbordtoets"}
-        leftwards_arrows{"Links-pyltjies"}
-        leftwards_rightwards_arrows{"Links-Regs-pyltjies"}
-        letterlike_symbols{"Letterige simbole"}
-        limited_use{"Beperkte gebruik"}
+        historic_scripts{"historiese skrif"}
+        ideographic_desc_characters{"ideografiese beskrywende karakter"}
+        japanese_kana{"Japannese kana"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
+        keycap{"knoppiesimbool"}
+        leftwards_arrows{"links-pyltjie"}
+        leftwards_rightwards_arrows{"links-regs-pyltjies"}
+        letterlike_symbols{"letteragtige simbool"}
+        limited_use{"beperkte gebruik"}
         male{"manlik"}
-        math_symbols{"Wiskunde simbole"}
-        middle_eastern_scripts{"Midde-Oosterse skrifte"}
-        miscellaneous{"Allerlei"}
-        modern_scripts{"Moderne skrifte"}
-        modifier{"Bepaler"}
-        musical_symbols{"Musikale simbole"}
+        math_symbols{"wiskundesimbole"}
+        middle_eastern_scripts{"Midde-Oosterse skrif"}
+        miscellaneous{"allerlei"}
+        modern_scripts{"moderne skrif"}
+        modifier{"bepaler"}
+        musical_symbols{"musieksimbool"}
         nature{"natuur"}
-        nonspacing{"Niespasiëring"}
-        numbers{"Nommers"}
-        objects{"Voorwerpe"}
-        other{"Ander"}
+        nonspacing{"niespasiërend"}
+        numbers{"nommers"}
+        objects{"voorwerp"}
+        other{"ander"}
         paired{"Saamgevoeg"}
         person{"persoon"}
-        phonetic_alphabet{"Fonetiese alfabet"}
-        pictographs{"Piktogram"}
+        phonetic_alphabet{"fonetiese alfabet"}
+        pictographs{"piktogram"}
         place{"plek"}
         plant{"plant"}
-        punctuation{"Leestekens"}
-        rightwards_arrows{"Regs-pyltjies"}
-        sign_standard_symbols{"Teken/Standaard simbool"}
-        small_form_variant{"Kleinvormvariante"}
+        punctuation{"leestekens"}
+        rightwards_arrows{"regs-pyltjie"}
+        sign_standard_symbols{"teken of simbool"}
+        small_form_variant{"klein variante"}
         smiley{"gesiggie"}
-        smileys_people{"Emosiekone en mense"}
-        south_asian_scripts{"Suid-Asiese skrifte"}
-        southeast_asian_scripts{"Suidoos-Asiese skrifte"}
-        spacing{"Spasiëring"}
+        smileys_people{"emosiekoon of mens"}
+        south_asian_scripts{"Suid-Asiese skrif"}
+        southeast_asian_scripts{"Suidoos-Asiese skrif"}
+        spacing{"spasiëring"}
         sport{"sport"}
-        symbols{"Simbole"}
-        technical_symbols{"Tegniese simbole"}
-        tone_marks{"Intonasie-klemtekens"}
+        symbols{"simbool"}
+        technical_symbols{"tegniese simbool"}
+        tone_marks{"toonteken"}
         travel{"reis"}
-        travel_places{"Reis en plekke"}
-        upwards_arrows{"Op-pyltjies"}
-        variant_forms{"Variantvorms"}
-        vocalic_jamo{"Vokaliese Jamo"}
+        travel_places{"reis of plek"}
+        upwards_arrows{"op-pyltjies"}
+        variant_forms{"variant"}
+        vocalic_jamo{"vokaliese jamo"}
         weather{"weer"}
-        western_asian_scripts{"Wes-Asiese skrifte"}
-        whitespace{"Witspasie"}
+        western_asian_scripts{"Wes-Asiese skrif"}
+        whitespace{"witspasie"}
     }
     delimiters{
         alternateQuotationEnd{"’"}
@@ -1133,24 +1133,20 @@ af{
         fri-narrow{
             relative{
                 "-1"{"verlede Vr."}
-                "0"{"dié Vr."}
-                "1"{"vlg. Vr."}
+                "0"{"hierdie Vr."}
+                "1"{"volgende Vr."}
             }
             relativeTime{
                 future{
                     one{"oor {0} Vr."}
                     other{"oor {0} Vr."}
                 }
-                past{
-                    one{"{0} Vrydae gelede"}
-                    other{"{0} Vrydae gelede"}
-                }
             }
         }
         fri-short{
             relative{
                 "-1"{"verlede Vr."}
-                "0"{"dié Vr."}
+                "0"{"hierdie Vr."}
                 "1"{"vlg. Vr."}
             }
             relativeTime{
@@ -1276,10 +1272,6 @@ af{
                     one{"oor {0} Ma."}
                     other{"oor {0} Ma."}
                 }
-                past{
-                    one{"{0} Maandae gelede"}
-                    other{"{0} Maandae gelede"}
-                }
             }
         }
         mon-short{
@@ -1319,6 +1311,11 @@ af{
         }
         month-narrow{
             dn{"md."}
+            relative{
+                "-1"{"verlede md."}
+                "0"{"hierdie md."}
+                "1"{"volgende md."}
+            }
             relativeTime{
                 future{
                     one{"oor {0} md."}
@@ -1332,6 +1329,11 @@ af{
         }
         month-short{
             dn{"md."}
+            relative{
+                "-1"{"verlede md."}
+                "0"{"hierdie md."}
+                "1"{"volgende md."}
+            }
             relativeTime{
                 future{
                     one{"oor {0} md."}
@@ -1407,17 +1409,13 @@ af{
         sat-narrow{
             relative{
                 "-1"{"verlede Sa."}
-                "0"{"dié Sa."}
-                "1"{"vlg. Sa."}
+                "0"{"hierdie Sa."}
+                "1"{"volgende Sa."}
             }
             relativeTime{
                 future{
                     one{"oor {0} Sa."}
                     other{"oor {0} Sa."}
-                }
-                past{
-                    one{"{0} Saterdae gelede"}
-                    other{"{0} Saterdae gelede"}
                 }
             }
         }
@@ -1425,7 +1423,7 @@ af{
             relative{
                 "-1"{"verlede Sa."}
                 "0"{"dié Sa."}
-                "1"{"vlg. Sa."}
+                "1"{"volgende Sa."}
             }
             relativeTime{
                 future{
@@ -1498,19 +1496,10 @@ af{
             }
         }
         sun-narrow{
-            relative{
-                "-1"{"verlede Son."}
-                "0"{"dié So."}
-                "1"{"vlg. So."}
-            }
             relativeTime{
                 future{
                     one{"oor {0} So."}
                     other{"oor {0} So."}
-                }
-                past{
-                    one{"{0} Sondae gelede"}
-                    other{"{0} Sondae gelede"}
                 }
             }
         }
@@ -1559,10 +1548,6 @@ af{
                     one{"oor {0} Do."}
                     other{"oor {0} Do."}
                 }
-                past{
-                    one{"{0} Donderdae gelede"}
-                    other{"{0} Donderdae gelede"}
-                }
             }
         }
         thu-short{
@@ -1609,10 +1594,6 @@ af{
                 future{
                     one{"oor {0} Di."}
                     other{"oor {0} Di."}
-                }
-                past{
-                    one{"{0} Dinsdae gelede"}
-                    other{"{0} Dinsdae gelede"}
                 }
             }
         }
@@ -1661,10 +1642,6 @@ af{
                     one{"oor {0} Wo."}
                     other{"oor {0} Wo."}
                 }
-                past{
-                    one{"{0} Woensdae gelede"}
-                    other{"{0} Woensdae gelede"}
-                }
             }
         }
         wed-short{
@@ -1705,6 +1682,11 @@ af{
         }
         week-narrow{
             dn{"wk."}
+            relative{
+                "-1"{"verlede w."}
+                "0"{"hierdie w."}
+                "1"{"volgende w."}
+            }
             relativePeriod{"die week van {0}"}
             relativeTime{
                 future{
@@ -1719,6 +1701,11 @@ af{
         }
         week-short{
             dn{"wk."}
+            relative{
+                "-1"{"verlede w."}
+                "0"{"hierdie w."}
+                "1"{"volgende w."}
+            }
             relativePeriod{"die week van {0}"}
             relativeTime{
                 future{
@@ -1778,6 +1765,11 @@ af{
         }
         year-narrow{
             dn{"j."}
+            relative{
+                "-1"{"verlede j."}
+                "0"{"hierdie j."}
+                "1"{"volgende j."}
+            }
             relativeTime{
                 future{
                     one{"oor {0} j."}
@@ -1791,6 +1783,11 @@ af{
         }
         year-short{
             dn{"j."}
+            relative{
+                "-1"{"verlede j."}
+                "0"{"hierdie j."}
+                "1"{"volgende j."}
+            }
             relativeTime{
                 future{
                     one{"oor {0} j."}

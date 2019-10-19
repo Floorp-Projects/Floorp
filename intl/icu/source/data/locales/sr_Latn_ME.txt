@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Latn_ME{
-    Version{"2.1.47.82"}
+    Version{"36"}
     calendar{
         generic{
             intervalFormats{
@@ -34,15 +34,6 @@ sr_Latn_ME{
             }
             dayNames{
                 format{
-                    abbreviated{
-                        "ned.",
-                        "pon.",
-                        "ut.",
-                        "sr.",
-                        "čet.",
-                        "pet.",
-                        "sub.",
-                    }
                     wide{
                         "nedjelja",
                         "ponedeljak",
@@ -54,15 +45,6 @@ sr_Latn_ME{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "ned.",
-                        "pon.",
-                        "ut.",
-                        "sr.",
-                        "čet.",
-                        "pet.",
-                        "sub.",
-                    }
                     wide{
                         "nedjelja",
                         "ponedeljak",
@@ -117,34 +99,34 @@ sr_Latn_ME{
             monthNames{
                 format{
                     abbreviated{
-                        "jan.",
-                        "feb.",
+                        "jan",
+                        "feb",
                         "mart",
-                        "apr.",
+                        "apr",
                         "maj",
                         "jun",
                         "jul",
-                        "avg.",
-                        "sept.",
-                        "okt.",
-                        "nov.",
-                        "dec.",
+                        "avg",
+                        "sept",
+                        "okt",
+                        "nov",
+                        "dec",
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        "jan.",
-                        "feb.",
+                        "jan",
+                        "feb",
                         "mart",
-                        "apr.",
+                        "apr",
                         "maj",
                         "jun",
                         "jul",
-                        "avg.",
-                        "sept.",
-                        "okt.",
-                        "nov.",
-                        "dec.",
+                        "avg",
+                        "sept",
+                        "okt",
+                        "nov",
+                        "dec",
                     }
                 }
             }

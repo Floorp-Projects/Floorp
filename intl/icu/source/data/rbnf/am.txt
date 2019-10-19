@@ -47,5 +47,5 @@ am{
             "0: =%spellout-numbering=\u129B;",
         }
     }
-    Version{"2.1.27.22"}
+    Version{"36"}
 }

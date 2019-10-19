@@ -627,6 +627,14 @@ yue_Hans{
         zxx{"无语言内容"}
         zza{"扎扎文"}
     }
+    Languages%long{
+        zh_Hans{"简体中文 (普通话)"}
+        zh_Hant{"繁体中文 (普通话)"}
+    }
+    Languages%menu{
+        yue{"中文 (粤语)"}
+        zh{"中文 (普通话)"}
+    }
     Languages%short{
         az{"亚塞拜然文"}
     }
@@ -1026,7 +1034,7 @@ yue_Hans{
         VALLADER{"瑞士瓦勒德方言"}
         WADEGILE{"威妥玛式拼音"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — 全部"}
         category-list{"{0}: {1}"}

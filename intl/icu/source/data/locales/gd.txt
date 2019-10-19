@@ -15,10 +15,10 @@ gd{
     }
     ExemplarCharacters{"[a à b c d e è f g h i ì l m n o ò p r s t u ù]"}
     ExemplarCharactersIndex{"[A B C D E F G H I L M N O P R S T U]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ¡ ? . … · ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} § ¶ @ * "
-        "/ \\& ⁊ # % † ‡ ‧ ° © ® ™]"
+        "[\\- ‐ ‑ – — , ; \\: ! ¡ ? . … · ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} § ¶ @ "
+        "* / \\& ⁊ # % † ‡ ‧ ° © ® ™]"
     }
     MoreInformation{"?"}
     NumberElements{
@@ -35,6 +35,7 @@ gd{
                 percentSign{"٪"}
                 plusSign{"؜+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         arabext{
@@ -50,6 +51,7 @@ gd{
                 percentSign{"٪"}
                 plusSign{"‎+‎"}
                 superscriptingExponent{"×"}
+                timeSeparator{"٫"}
             }
         }
         bali{
@@ -65,6 +67,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         beng{
@@ -80,6 +83,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         brah{
@@ -95,6 +99,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         cakm{
@@ -110,6 +115,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         cham{
@@ -125,8 +131,10 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        default{"latn"}
         deva{
             symbols{
                 decimal{"."}
@@ -140,6 +148,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         fullwide{
@@ -318,6 +327,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         gong{
@@ -333,6 +343,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         gonm{
@@ -348,6 +359,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         gujr{
@@ -363,6 +375,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         guru{
@@ -378,6 +391,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         hanidec{
@@ -393,6 +407,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         java{
@@ -408,6 +423,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         kali{
@@ -423,6 +439,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         khmr{
@@ -438,6 +455,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         knda{
@@ -453,6 +471,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         lana{
@@ -468,6 +487,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         lanatham{
@@ -483,6 +503,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         laoo{
@@ -498,11 +519,14 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         latn{
             miscPatterns{
+                approximately{"~{0}"}
                 atLeast{"{0}+"}
+                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -750,6 +774,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         lepc{
@@ -765,6 +790,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         limb{
@@ -780,16 +806,18 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         minimalPairs{
             plural{
-                few{"{0} dealbhan, {0} mionaidean"}
-                one{"{0} dealbh, {0} mhionaid"}
-                other{"{0} dealbh, {0} mionaid"}
-                two{"{0} dhealbh, {0} mhionaid"}
+                few{"{0} brògan"}
+                one{"{0} bhròg"}
+                other{"{0} bròg"}
+                two{"{0}  bhròig"}
             }
         }
+        minimumGroupingDigits{"1"}
         mlym{
             symbols{
                 decimal{"."}
@@ -803,6 +831,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         mong{
@@ -818,6 +847,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         mtei{
@@ -833,6 +863,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         mymr{
@@ -848,6 +879,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         mymrshan{
@@ -863,8 +895,10 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
+        native{"latn"}
         nkoo{
             symbols{
                 decimal{"."}
@@ -878,6 +912,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         olck{
@@ -893,6 +928,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         orya{
@@ -908,6 +944,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         osma{
@@ -923,6 +960,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         rohg{
@@ -938,6 +976,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         saur{
@@ -953,6 +992,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         shrd{
@@ -968,6 +1008,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         sora{
@@ -983,6 +1024,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         sund{
@@ -998,6 +1040,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         takr{
@@ -1013,6 +1056,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         talu{
@@ -1028,6 +1072,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         tamldec{
@@ -1043,6 +1088,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         telu{
@@ -1058,6 +1104,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         thai{
@@ -1073,6 +1120,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         tibt{
@@ -1088,6 +1136,7 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         vaii{
@@ -1103,10 +1152,11 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -3957,6 +4007,8 @@ gd{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} ⁊ {1}"}
@@ -4013,6 +4065,10 @@ gd{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

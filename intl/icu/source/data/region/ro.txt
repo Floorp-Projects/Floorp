@@ -249,7 +249,7 @@ ro{
         SO{"Somalia"}
         SR{"Suriname"}
         SS{"Sudanul de Sud"}
-        ST{"Sao Tome și Principe"}
+        ST{"São Tomé și Príncipe"}
         SV{"El Salvador"}
         SX{"Sint-Maarten"}
         SY{"Siria"}
@@ -314,5 +314,5 @@ ro{
         SZ{"Swaziland"}
         TL{"Timorul de Est"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

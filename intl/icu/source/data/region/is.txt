@@ -180,7 +180,7 @@ is{
         MC{"Mónakó"}
         MD{"Moldóva"}
         ME{"Svartfjallaland"}
-        MF{"St. Martin"}
+        MF{"Saint-Martin"}
         MG{"Madagaskar"}
         MH{"Marshalleyjar"}
         MK{"Norður-Makedónía"}
@@ -287,6 +287,8 @@ is{
         VU{"Vanúatú"}
         WF{"Wallis- og Fútúnaeyjar"}
         WS{"Samóa"}
+        XA{"gervihreimur"}
+        XB{"gervistaður"}
         XK{"Kósóvó"}
         YE{"Jemen"}
         YT{"Mayotte"}
@@ -306,8 +308,11 @@ is{
     Countries%variant{
         CD{"Kongó (Lýðstjórnarlýðveldið)"}
         CG{"Kongó (Lýðveldið)"}
+        CI{"Fílabeinsströndin"}
+        CZ{"Tékkland"}
         FK{"Falklandseyjar (Malvinas)"}
+        SZ{"Svasíland"}
         TL{"Austur-Tímor"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

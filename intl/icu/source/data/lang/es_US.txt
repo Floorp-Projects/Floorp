@@ -20,14 +20,17 @@ es_US{
         grc{"griego antiguo"}
         gu{"gurayatí"}
         hak{"hak"}
+        hil{"hiligainón"}
         hsn{"xiang (China)"}
         ht{"criollo haitiano"}
+        inh{"ingusetio"}
         kbd{"kabardiano"}
         krc{"karachay-balkar"}
         lo{"lao"}
         lus{"lushai"}
         mga{"irlandés medieval"}
         nan{"nan"}
+        nl_BE{"flamenco"}
         nr{"ndebele meridional"}
         nso{"sotho septentrional"}
         pcm{"pcm"}
@@ -42,27 +45,26 @@ es_US{
         tet{"tetún"}
         tn{"setchwana"}
         tyv{"tuviniano"}
-        tzm{"tamazight del Atlas Central"}
         wo{"wolof"}
         wuu{"wuu"}
         xal{"kalmyk"}
-    }
-    Languages%short{
-        en_GB{"inglés (RU)"}
+        zh_Hans{"chino simplificado"}
+        zh_Hant{"chino tradicional"}
     }
     Scripts{
         Hanb{"hanb"}
         Mlym{"malayálam"}
+        Telu{"telegu"}
     }
     Types{
+        calendar{
+            roc{"calendario minguo"}
+        }
         collation{
             ducet{"orden de clasificación de Unicode predeterminado"}
         }
         lb{
             normal{"salto de línea normal"}
-        }
-        ms{
-            uksystem{"sistema imperial"}
         }
         numbers{
             gujr{"dígitos en gujarati"}
@@ -70,7 +72,7 @@ es_US{
             laoo{"números en lao"}
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     characterLabelPattern{
         historic{"{0} — Históricos"}
         miscellaneous{"{0} — Varios"}

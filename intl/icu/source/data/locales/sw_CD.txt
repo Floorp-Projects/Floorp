@@ -11,7 +11,7 @@ sw_CD{
             }
         }
     }
-    Version{"2.1.47.71"}
+    Version{"36"}
     calendar{
         generic{
             availableFormats{

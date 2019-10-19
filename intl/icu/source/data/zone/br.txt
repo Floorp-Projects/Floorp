@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 br{
-    Version{"2.1.48.86"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -369,6 +369,9 @@ br{
         "Asia:Calcutta"{
             ec{"Calcutta"}
         }
+        "Asia:Chita"{
+            ec{"Tchita"}
+        }
         "Asia:Colombo"{
             ec{"Kolamba"}
         }
@@ -398,6 +401,9 @@ br{
         }
         "Asia:Kabul"{
             ec{"Kaboul"}
+        }
+        "Asia:Kamchatka"{
+            ec{"Kamtchatka"}
         }
         "Asia:Karachi"{
             ec{"Karachi"}
@@ -539,6 +545,9 @@ br{
         }
         "Australia:Sydney"{
             ec{"Sydney"}
+        }
+        "Etc:UTC"{
+            ls{"amzer hollvedel kenurzhiet"}
         }
         "Etc:Unknown"{
             ec{"kêr dianav"}
@@ -826,6 +835,11 @@ br{
             lg{"eur an Amazon"}
             ls{"eur cʼhoañv an Amazon"}
         }
+        "meta:America_Central"{
+            ld{"eur hañv ar Cʼhreiz"}
+            lg{"eur ar Cʼhreiz"}
+            ls{"eur cʼhoañv ar Cʼhreiz"}
+        }
         "meta:America_Eastern"{
             ld{"eur hañv ar Reter"}
             lg{"eur ar Reter"}
@@ -835,6 +849,11 @@ br{
             ld{"eur hañv ar Menezioù"}
             lg{"eur ar Menezioù"}
             ls{"eur cʼhoañv ar Menezioù"}
+        }
+        "meta:America_Pacific"{
+            ld{"eur hañv an Habask"}
+            lg{"eur an Habask"}
+            ls{"eur cʼhoañv an Habask"}
         }
         "meta:Anadyr"{
             ld{"eur hañv Anadyrʼ"}
@@ -865,6 +884,11 @@ br{
             ld{"eur hañv Armenia"}
             lg{"eur Armenia"}
             ls{"eur cʼhoañv Armenia"}
+        }
+        "meta:Atlantic"{
+            ld{"eur hañv an Atlantel"}
+            lg{"eur an Atlantel"}
+            ls{"eur cʼhoañv an Atlantel"}
         }
         "meta:Australia_Central"{
             ld{"eur hañv Kreizaostralia"}
@@ -920,6 +944,9 @@ br{
             lg{"eur ar Cʼhab-Glas"}
             ls{"eur cʼhoañv ar Cʼhab-Glas"}
         }
+        "meta:Chamorro"{
+            ls{"eur Chamorro"}
+        }
         "meta:Chatham"{
             ld{"eur hañv Chatham"}
             lg{"eur Chatham"}
@@ -934,6 +961,11 @@ br{
             ld{"eur hañv Sina"}
             lg{"eur Sina"}
             ls{"eur cʼhoañv Sina"}
+        }
+        "meta:Choibalsan"{
+            ld{"eur hañv Choibalsan"}
+            lg{"eur Choibalsan"}
+            ls{"eur cʼhoañv Choibalsan"}
         }
         "meta:Christmas"{
             ls{"eur Enez Christmas"}
@@ -955,6 +987,12 @@ br{
             ld{"eur hañv Kuba"}
             lg{"eur Kuba"}
             ls{"eur cʼhoañv Kuba"}
+        }
+        "meta:Davis"{
+            ls{"eur Davis"}
+        }
+        "meta:DumontDUrville"{
+            ls{"eur Dumont-d’Urville"}
         }
         "meta:East_Timor"{
             ls{"eur Timor ar Reter"}
@@ -1005,12 +1043,15 @@ br{
             ls{"eur Inizi Galápagos"}
         }
         "meta:Gambier"{
-            ls{"eur Gambier"}
+            ls{"eur Inizi Gambier"}
         }
         "meta:Georgia"{
             ld{"eur hañv Jorjia"}
             lg{"eur Jorjia"}
             ls{"eur cʼhoañv Jorjia"}
+        }
+        "meta:Gilbert_Islands"{
+            ls{"eur Inizi Gilbert"}
         }
         "meta:Greenland_Eastern"{
             ld{"eur hañv Greunland ar Reter"}
@@ -1036,11 +1077,22 @@ br{
             lg{"eur Hong Kong"}
             ls{"eur cʼhoañv Hong Kong"}
         }
+        "meta:Hovd"{
+            ld{"eur hañv Hovd"}
+            lg{"eur Hovd"}
+            ls{"eur cʼhoañv Hovd"}
+        }
         "meta:India"{
             ls{"eur cʼhoañv India"}
         }
+        "meta:Indian_Ocean"{
+            ls{"eur Meurvor Indez"}
+        }
         "meta:Indochina"{
             ls{"eur Indez-Sina"}
+        }
+        "meta:Indonesia_Central"{
+            ls{"eur Kreiz Indonezia"}
         }
         "meta:Indonesia_Eastern"{
             ls{"eur Indonezia ar Reter"}
@@ -1079,11 +1131,22 @@ br{
             lg{"eur Korea"}
             ls{"eur cʼhoañv Korea"}
         }
+        "meta:Kosrae"{
+            ls{"eur Kosrae"}
+        }
+        "meta:Krasnoyarsk"{
+            ld{"eur hañv Krasnoyarsk"}
+            lg{"eur Krasnoyarsk"}
+            ls{"eur cʼhoañv Krasnoyarsk"}
+        }
         "meta:Kyrgystan"{
             ls{"eur Kyrgyzstan"}
         }
         "meta:Lanka"{
             ls{"eur Sri Lanka"}
+        }
+        "meta:Line_Islands"{
+            ls{"eur Line Islands"}
         }
         "meta:Macau"{
             ld{"eur hañv Macau"}
@@ -1092,6 +1155,11 @@ br{
         }
         "meta:Macquarie"{
             ls{"eur Enez Macquarie"}
+        }
+        "meta:Magadan"{
+            ld{"eur hañv Magadan"}
+            lg{"eur Magadan"}
+            ls{"eur cʼhoañv Magadan"}
         }
         "meta:Malaysia"{
             ls{"eur Malaysia"}
@@ -1109,6 +1177,9 @@ br{
             ld{"eur hañv Moris"}
             lg{"eur Moris"}
             ls{"eur cʼhoañv Moris"}
+        }
+        "meta:Mawson"{
+            ls{"eur Mawson"}
         }
         "meta:Mexico_Northwest"{
             ld{"eur hañv Gwalarn Mecʼhiko"}
@@ -1155,10 +1226,20 @@ br{
         "meta:Norfolk"{
             ls{"eur Enez Norfolk"}
         }
+        "meta:Noronha"{
+            ld{"eur hañv Fernando de Noronha"}
+            lg{"eur Fernando de Noronha"}
+            ls{"eur cʼhoañv Fernando de Noronha"}
+        }
         "meta:Novosibirsk"{
             ld{"eur hañv Novosibirsk"}
             lg{"eur Novosibirsk"}
             ls{"eur cʼhoañv Novosibirsk"}
+        }
+        "meta:Omsk"{
+            ld{"eur hañv Omsk"}
+            lg{"eur Omsk"}
+            ls{"eur cʼhoañv Omsk"}
         }
         "meta:Pakistan"{
             ld{"eur hañv Pakistan"}
@@ -1167,6 +1248,9 @@ br{
         }
         "meta:Palau"{
             ls{"eur Palau"}
+        }
+        "meta:Papua_New_Guinea"{
+            ls{"eur Papoua-Ginea-Nevez"}
         }
         "meta:Paraguay"{
             ld{"eur hañv Paraguay"}
@@ -1183,6 +1267,9 @@ br{
             lg{"eur ar Filipinez"}
             ls{"eur cʼhoañv ar Filipinez"}
         }
+        "meta:Phoenix_Islands"{
+            ls{"eur Inizi Phoenix"}
+        }
         "meta:Pierre_Miquelon"{
             ld{"eur hañv Sant-Pêr-ha-Mikelon"}
             lg{"eur Sant-Pêr-ha-Mikelon"}
@@ -1191,8 +1278,14 @@ br{
         "meta:Pitcairn"{
             ls{"eur Pitcairn"}
         }
+        "meta:Pyongyang"{
+            ls{"eur Pʼyongyang"}
+        }
         "meta:Reunion"{
             ls{"eur ar Reünion"}
+        }
+        "meta:Rothera"{
+            ls{"eur Rothera"}
         }
         "meta:Sakhalin"{
             ld{"eur hañv Sakhalin"}
@@ -1219,6 +1312,9 @@ br{
         "meta:Suriname"{
             ls{"eur Surinam"}
         }
+        "meta:Syowa"{
+            ls{"eur Syowa"}
+        }
         "meta:Tahiti"{
             ls{"eur Tahiti"}
         }
@@ -1237,6 +1333,9 @@ br{
             ld{"eur hañv Tonga"}
             lg{"eur Tonga"}
             ls{"eur cʼhoañv Tonga"}
+        }
+        "meta:Truk"{
+            ls{"eur Chuuk"}
         }
         "meta:Turkmenistan"{
             ld{"eur hañv Turkmenistan"}
@@ -1273,6 +1372,12 @@ br{
             ld{"eur hañv Volgograd"}
             lg{"eur Volgograd"}
             ls{"eur cʼhoañv Volgograd"}
+        }
+        "meta:Vostok"{
+            ls{"eur Vostok"}
+        }
+        "meta:Wake"{
+            ls{"eur Wake Island"}
         }
         "meta:Wallis"{
             ls{"eur Wallis ha Futuna"}

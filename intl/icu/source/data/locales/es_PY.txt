@@ -13,7 +13,7 @@ es_PY{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -55,9 +55,7 @@ es_PY{
                         pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
                     }
                     wide{
                         am{"a. m."}
@@ -133,15 +131,6 @@ es_PY{
         }
     }
     fields{
-        day{
-            relative{
-                "-1"{"ayer"}
-                "-2"{"anteayer"}
-                "0"{"hoy"}
-                "1"{"mañana"}
-                "2"{"pasado mañana"}
-            }
-        }
         mon-narrow{
             relative{
                 "-1"{"el lun. pasado"}

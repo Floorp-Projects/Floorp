@@ -1008,7 +1008,7 @@ bs{
         }
         VES{
             "VES",
-            "venecuelanski bolivar",
+            "Venecuelanski bolivar",
         }
         VND{
             "₫",
@@ -2516,7 +2516,7 @@ bs{
         }
         VES{
             few{"venecuelanska bolivara"}
-            one{"venecuelanskih bolivara"}
+            one{"venecuelanski bolivar"}
             other{"venecuelanskih bolivara"}
         }
         VND{
@@ -2710,5 +2710,5 @@ bs{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

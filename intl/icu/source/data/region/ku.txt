@@ -263,8 +263,7 @@ ku{
         CG{"Kongo (Komar)"}
         CZ{"Komara Çekî"}
         FK{"Giravên Falkland"}
-        MK{"MK"}
         TL{"Tîmora Rojhilat"}
     }
-    Version{"2.1.47.83"}
+    Version{"36"}
 }

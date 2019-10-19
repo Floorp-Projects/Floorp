@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 cy{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -14,9 +14,6 @@ cy{
         }
         "Africa:Algiers"{
             ec{"Alger"}
-        }
-        "Africa:Asmera"{
-            ec{"Asmera"}
         }
         "Africa:Bamako"{
             ec{"Bamako"}
@@ -810,6 +807,9 @@ cy{
         "Asia:Qatar"{
             ec{"Qatar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
+        }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
         }
@@ -893,9 +893,6 @@ cy{
         }
         "Atlantic:Canary"{
             ec{"Yr Ynysoedd Dedwydd"}
-        }
-        "Atlantic:Cape_Verde"{
-            ec{"Cabo Verde"}
         }
         "Atlantic:Faeroe"{
             ec{"Ffaro"}
@@ -1132,9 +1129,6 @@ cy{
         }
         "Europe:Zagreb"{
             ec{"Zagreb"}
-        }
-        "Europe:Zaporozhye"{
-            ec{"Zaporizhzhya"}
         }
         "Europe:Zurich"{
             ec{"Zurich"}
@@ -1615,7 +1609,7 @@ cy{
             ls{"Amser Dwyrain Kazakhstan"}
         }
         "meta:Kazakhstan_Western"{
-            ls{"Amser Gorllewin Casachstan"}
+            ls{"Amser Gorllewin Kazakhstan"}
         }
         "meta:Korea"{
             ld{"Amser Haf Corea"}
@@ -1852,9 +1846,9 @@ cy{
             ls{"Amser Safonol Uruguay"}
         }
         "meta:Uzbekistan"{
-            ld{"Amser Haf Wsbecistan"}
-            lg{"Amser Wsbecistan"}
-            ls{"Amser Safonol Wsbecistan"}
+            ld{"Amser Haf Uzbekistan"}
+            lg{"Amser Uzbekistan"}
+            ls{"Amser Safonol Uzbekistan"}
         }
         "meta:Vanuatu"{
             ld{"Amser Haf Vanuatu"}

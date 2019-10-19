@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lv{
-    Version{"2.1.48.43"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -10,16 +10,16 @@ lv{
     units{
         acceleration{
             g-force{
-                dnam{"Brīvās krišanas paātrinājums:"}
-                one{"Brīvās krišanas paātrinājums: {0}"}
-                other{"Brīvās krišanas paātrinājums: {0}"}
-                zero{"Brīvās krišanas paātrinājums: {0}"}
+                dnam{"smagumspēks"}
+                one{"{0} smagumspēks"}
+                other{"{0} smagumspēks"}
+                zero{"{0} smagumspēku"}
             }
             meter-per-second-squared{
-                dnam{"metri sekundē kvadrātā"}
-                one{"{0} metrs sekundē kvadrātā"}
-                other{"{0} metri sekundē kvadrātā"}
-                zero{"{0} metru sekundē kvadrāta"}
+                dnam{"metri kvadrātsekundē"}
+                one{"{0} metrs kvadrātsekundē"}
+                other{"{0} metri kvadrātsekundē"}
+                zero{"{0} metru kvadrātsekundē"}
             }
         }
         angle{
@@ -62,10 +62,9 @@ lv{
                 zero{"{0} akru"}
             }
             dunam{
-                dnam{"dunams"}
                 one{"{0} dunams"}
                 other{"{0} dunami"}
-                zero{"{0} dunams"}
+                zero{"{0} dunamu"}
             }
             hectare{
                 dnam{"hektāri"}
@@ -132,10 +131,10 @@ lv{
                 zero{"{0} karātu"}
             }
             milligram-per-deciliter{
-                dnam{"miligrami uz dekalitru"}
-                one{"{0} miligrams uz dekalitru"}
-                other{"{0} miligrami uz dekalitru"}
-                zero{"{0} miligramu uz dekalitru"}
+                dnam{"miligrami uz decilitru"}
+                one{"{0} miligrams uz decilitru"}
+                other{"{0} miligrami uz decilitru"}
+                zero{"{0} miligramu uz decilitru"}
             }
             millimole-per-liter{
                 dnam{"milimoli uz litru"}
@@ -147,7 +146,7 @@ lv{
                 dnam{"moli"}
                 one{"{0} mols"}
                 other{"{0} moli"}
-                zero{"{0} mol"}
+                zero{"{0} molu"}
             }
             part-per-million{
                 dnam{"miljonās daļas"}
@@ -158,19 +157,19 @@ lv{
             percent{
                 dnam{"procents"}
                 one{"{0} procents"}
-                other{"{0} procents"}
-                zero{"{0} procents"}
+                other{"{0} procenti"}
+                zero{"{0} procentu"}
             }
             permille{
                 dnam{"promile"}
                 one{"{0} promile"}
-                other{"{0} promile"}
-                zero{"{0} promile"}
+                other{"{0} promiles"}
+                zero{"{0} promiļu"}
             }
             permyriad{
                 dnam{"promiriāde"}
-                one{"{0}‱"}
-                other{"{0}‱"}
+                one{"{0} promiriāde"}
+                other{"{0} promiriādes"}
                 zero{"{0}‱"}
             }
         }
@@ -188,16 +187,16 @@ lv{
                 zero{"{0} litru uz kilometru"}
             }
             mile-per-gallon{
-                dnam{"jūdzes ar galonu"}
-                one{"{0} jūdze ar galonu"}
-                other{"{0} jūdzes ar galonu"}
-                zero{"{0} jūdžu ar galonu"}
+                dnam{"jūdzes uz galonu"}
+                one{"{0} jūdze uz galonu"}
+                other{"{0} jūdzes uz galonu"}
+                zero{"{0} jūdžu uz galonu"}
             }
             mile-per-gallon-imperial{
-                dnam{"jūdzes ar imp. galonu"}
-                one{"{0} jūdze ar imp. galonu"}
-                other{"{0} jūdzes ar imp. galonu"}
-                zero{"{0} jūdžu ar imp. galonu"}
+                dnam{"jūdzes uz britu galonu"}
+                one{"{0} jūdze uz britu galonu"}
+                other{"{0} jūdzes uz britu galonu"}
+                zero{"{0} jūdžu uz britu galonu"}
             }
         }
         coordinate{
@@ -258,9 +257,9 @@ lv{
             }
             petabyte{
                 dnam{"petabaiti"}
-                one{"{0} petabaitu"}
+                one{"{0} petabaits"}
                 other{"{0} petabaiti"}
-                zero{"{0} PB"}
+                zero{"{0} petabaitu"}
             }
             terabit{
                 dnam{"terabiti"}
@@ -288,6 +287,12 @@ lv{
                 other{"{0} dienas"}
                 per{"{0} dienā"}
                 zero{"{0} dienu"}
+            }
+            decade{
+                dnam{"dekādes"}
+                one{"{0} dekāde"}
+                other{"{0} dekādes"}
+                zero{"{0} dekāžu"}
             }
             hour{
                 dnam{"stundas"}
@@ -378,10 +383,10 @@ lv{
         }
         energy{
             british-thermal-unit{
-                dnam{"britu termālās vienības"}
-                one{"{0} britu termālā vienība"}
-                other{"{0} britu termālās vienības"}
-                zero{"{0} Btu"}
+                dnam{"britu termiskās mērvienības"}
+                one{"{0} britu termiskā mērvienība"}
+                other{"{0} britu termiskās mērvienības"}
+                zero{"{0} britu termisko mērvienību"}
             }
             calorie{
                 dnam{"kalorijas"}
@@ -393,7 +398,7 @@ lv{
                 dnam{"elektronvolti"}
                 one{"{0} elektronvolts"}
                 other{"{0} elektronvolti"}
-                zero{"{0} eV"}
+                zero{"{0} elektronvoltu"}
             }
             foodcalorie{
                 dnam{"kalorijas"}
@@ -425,6 +430,12 @@ lv{
                 other{"{0} kilovatstundas"}
                 zero{"{0} kilovatstundu"}
             }
+            therm-us{
+                dnam{"ASV termiskās vienības"}
+                one{"{0} ASV termiskā vienība"}
+                other{"{0} ASV termiskās vienības"}
+                zero{"{0} ASV termisko vienību"}
+            }
         }
         force{
             newton{
@@ -437,7 +448,7 @@ lv{
                 dnam{"jaudas māciņas"}
                 one{"{0} jaudas mārciņa"}
                 other{"{0} jaudas mārciņas"}
-                zero{"{0} lbf"}
+                zero{"{0} jaudas mārciņu"}
             }
         }
         frequency{
@@ -464,6 +475,44 @@ lv{
                 one{"{0} megahercs"}
                 other{"{0} megaherci"}
                 zero{"{0} megahercu"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"punkti centimetrā"}
+                one{"{0} punkts centimetrā"}
+                other{"{0} punkti centimetrā"}
+                zero{"{0} dpc"}
+            }
+            dot-per-inch{
+                dnam{"punkti collā"}
+                one{"{0} punkts collā"}
+                other{"{0} punkti collā"}
+                zero{"{0} dpi"}
+            }
+            megapixel{
+                dnam{"megapikseļi"}
+                one{"{0} megapikselis"}
+                other{"{0} megapikseļi"}
+                zero{"{0} MP"}
+            }
+            pixel{
+                dnam{"pikseļi"}
+                one{"{0} pikselis"}
+                other{"{0} pikseļi"}
+                zero{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"pikseļi centimetrā"}
+                one{"{0} pikselis centimetrā"}
+                other{"{0} pikseļi centimetrā"}
+                zero{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"pikseļi collā"}
+                one{"{0} pikselis collā"}
+                other{"{0} pikseļi collā"}
+                zero{"{0} ppi"}
             }
         }
         length{
@@ -609,7 +658,7 @@ lv{
             solar-luminosity{
                 dnam{"Saules starjauda"}
                 one{"{0} Saules starjauda"}
-                other{"{0} Saules starjauda"}
+                other{"{0} Saules starjaudas"}
                 zero{"{0} L☉"}
             }
         }
@@ -636,14 +685,14 @@ lv{
                 dnam{"grami"}
                 one{"{0} grams"}
                 other{"{0} grami"}
-                per{"{0}/g"}
+                per{"{0} uz gramu"}
                 zero{"{0} gramu"}
             }
             kilogram{
                 dnam{"kilogrami"}
                 one{"{0} kilograms"}
                 other{"{0} kilogrami"}
-                per{"{0}/kg"}
+                per{"{0} uz kilogramu"}
                 zero{"{0} kilogramu"}
             }
             metric-ton{
@@ -668,7 +717,7 @@ lv{
                 dnam{"unces"}
                 one{"{0} unce"}
                 other{"{0} unces"}
-                per{"{0}/unce"}
+                per{"{0} uz unci"}
                 zero{"{0} unču"}
             }
             ounce-troy{
@@ -681,7 +730,7 @@ lv{
                 dnam{"mārciņas"}
                 one{"{0} mārciņa"}
                 other{"{0} mārciņas"}
-                per{"{0}/mārc."}
+                per{"{0} uz mārciņu"}
                 zero{"{0} mārciņu"}
             }
             solar-mass{
@@ -746,7 +795,13 @@ lv{
                 dnam{"atmosfēras"}
                 one{"{0} atmosfēra"}
                 other{"{0} atmosfēras"}
-                zero{"{0} atm"}
+                zero{"{0} atmosfēras"}
+            }
+            bar{
+                dnam{"bāri"}
+                one{"{0} bārs"}
+                other{"{0} bāri"}
+                zero{"{0} bāru"}
             }
             hectopascal{
                 dnam{"hektopaskāli"}
@@ -755,10 +810,10 @@ lv{
                 zero{"{0} hektopaskālu"}
             }
             inch-hg{
-                dnam{"dzīvsudraba staba collas"}
-                one{"{0} dzīvsudraba staba colla"}
-                other{"{0} dzīvsudraba staba collas"}
-                zero{"{0} dzīvsudraba staba collu"}
+                dnam{"dzīvsudraba stabiņa collas"}
+                one{"{0} dzīvsudraba stabiņa colla"}
+                other{"{0} dzīvsudraba stabiņa collas"}
+                zero{"{0} dzīvsudraba stabiņa collu"}
             }
             kilopascal{
                 dnam{"kilopaskāli"}
@@ -779,10 +834,16 @@ lv{
                 zero{"{0} milibāru"}
             }
             millimeter-of-mercury{
-                dnam{"dzīvsudraba staba milimetri"}
-                one{"{0} dzīvsudraba staba milimetrs"}
-                other{"{0} dzīvsudraba staba milimetri"}
-                zero{"{0} dzīvsudraba staba milimetru"}
+                dnam{"dzīvsudraba stabiņa milimetri"}
+                one{"{0} dzīvsudraba stabiņa milimetrs"}
+                other{"{0} dzīvsudraba stabiņa milimetri"}
+                zero{"{0} dzīvsudraba stabiņa milimetru"}
+            }
+            pascal{
+                dnam{"paskāli"}
+                one{"{0} paskāls"}
+                other{"{0} paskāli"}
+                zero{"{0} paskālu"}
             }
             pound-per-square-inch{
                 dnam{"mārciņas uz kvadrātcollu"}
@@ -848,13 +909,13 @@ lv{
                 dnam{"ņūtonmetri"}
                 one{"{0} ņūtonmetrs"}
                 other{"{0} ņūtonmetri"}
-                zero{"{0} N⋅m"}
+                zero{"{0} ņūtonmetru"}
             }
             pound-foot{
-                dnam{"mārciņu pēdas"}
-                one{"{0} mārciņu pēda"}
-                other{"{0} mārciņu pēdas"}
-                zero{"{0} mārciņu pēdas"}
+                dnam{"mārciņpēda"}
+                one{"{0} mārciņpēda"}
+                other{"{0} mārciņpēdas"}
+                zero{"{0} mārciņpēdu"}
             }
         }
         volume{
@@ -948,21 +1009,21 @@ lv{
                 dnam{"britu šķidruma unces"}
                 one{"{0} britu šķidruma unce"}
                 other{"{0} britu šķidruma unces"}
-                zero{"{0} britu šķidruma unces"}
+                zero{"{0} britu šķidruma unču"}
             }
             gallon{
                 dnam{"galoni"}
                 one{"{0} galons"}
                 other{"{0} galoni"}
-                per{"{0}/gal."}
+                per{"{0} uz galonu"}
                 zero{"{0} galonu"}
             }
             gallon-imperial{
-                dnam{"imperiālie galoni"}
-                one{"{0} imperiālais galons"}
-                other{"{0} imperiālie galoni"}
-                per{"{0} uz imperiālo galonu"}
-                zero{"{0} imperiālo galonu"}
+                dnam{"britu galoni"}
+                one{"{0} britu galons"}
+                other{"{0} britu galoni"}
+                per{"{0} uz britu galonu"}
+                zero{"{0} britu galonu"}
             }
             hectoliter{
                 dnam{"hektolitri"}
@@ -987,7 +1048,7 @@ lv{
                 dnam{"mililitri"}
                 one{"{0} mililitrs"}
                 other{"{0} mililitri"}
-                zero{"{0} milimitru"}
+                zero{"{0} mililitru"}
             }
             pint{
                 dnam{"pintes"}
@@ -1085,6 +1146,9 @@ lv{
         concentr{
             percent{
                 dnam{"procents"}
+                one{"{0}%"}
+                other{"{0}%"}
+                zero{"{0}%"}
             }
         }
         consumption{
@@ -1111,29 +1175,23 @@ lv{
             }
             day{
                 dnam{"d."}
-                one{"{0}d"}
-                other{"{0}d"}
                 per{"{0}/d."}
-                zero{"{0}d"}
             }
             hour{
                 dnam{"h"}
-                one{"{0}h"}
-                other{"{0}h"}
-                zero{"{0}h"}
+                one{"{0} h"}
+                other{"{0} h"}
+                zero{"{0} h"}
             }
             millisecond{
                 dnam{"ms"}
-                one{"{0}ms"}
-                other{"{0}ms"}
-                zero{"{0}ms"}
             }
             minute{
                 dnam{"min"}
-                one{"{0}min"}
-                other{"{0}min"}
+                one{"{0} min"}
+                other{"{0} min"}
                 per{"{0}/min."}
-                zero{"{0}min"}
+                zero{"{0} min"}
             }
             month{
                 dnam{"mēn."}
@@ -1144,9 +1202,9 @@ lv{
             }
             second{
                 dnam{"s"}
-                one{"{0}s"}
-                other{"{0}s"}
-                zero{"{0}s"}
+                one{"{0} s"}
+                other{"{0} s"}
+                zero{"{0} s"}
             }
             week{
                 dnam{"n."}
@@ -1173,8 +1231,8 @@ lv{
             centimeter{
                 dnam{"cm"}
                 one{"{0}cm"}
-                other{"{0}cm"}
-                zero{"{0}cm"}
+                other{"{0} cm"}
+                zero{"{0} cm"}
             }
             fathom{
                 dnam{"fatomi"}
@@ -1204,9 +1262,6 @@ lv{
             }
             kilometer{
                 dnam{"km"}
-                one{"{0}km"}
-                other{"{0}km"}
-                zero{"{0}km"}
             }
             light-year{
                 dnam{"g.g."}
@@ -1216,9 +1271,6 @@ lv{
             }
             meter{
                 dnam{"m"}
-                one{"{0}m"}
-                other{"{0}m"}
-                zero{"{0}m"}
             }
             mile{
                 dnam{"jūdzes"}
@@ -1235,8 +1287,8 @@ lv{
             millimeter{
                 dnam{"mm"}
                 one{"{0}mm"}
-                other{"{0}mm"}
-                zero{"{0}mm"}
+                other{"{0} mm"}
+                zero{"{0} mm"}
             }
             nautical-mile{
                 dnam{"j.j."}
@@ -1276,16 +1328,10 @@ lv{
                 zero{"{0} ct"}
             }
             gram{
-                dnam{"g"}
-                one{"{0}g"}
-                other{"{0}g"}
-                zero{"{0}g"}
+                dnam{"grams"}
             }
             kilogram{
                 dnam{"kg"}
-                one{"{0}kg"}
-                other{"{0}kg"}
-                zero{"{0}kg"}
             }
             ounce{
                 dnam{"unces"}
@@ -1357,8 +1403,8 @@ lv{
         speed{
             kilometer-per-hour{
                 dnam{"km/h"}
-                one{"{0}km/h"}
-                other{"{0}km/h"}
+                one{"{0} km/h"}
+                other{"{0} km/h"}
                 zero{"{0}km/h"}
             }
             knot{
@@ -1405,8 +1451,8 @@ lv{
             }
             liter{
                 dnam{"l"}
-                one{"{0}l"}
-                other{"{0}l"}
+                one{"{0} l"}
+                other{"{0} l"}
                 zero{"{0}l"}
             }
         }
@@ -1414,13 +1460,13 @@ lv{
     unitsShort{
         acceleration{
             g-force{
-                dnam{"Brīvās krišanas paātrinājums:"}
+                dnam{"smagumspēks"}
                 one{"{0} G"}
                 other{"{0} G"}
                 zero{"{0} G"}
             }
             meter-per-second-squared{
-                dnam{"m/s²"}
+                dnam{"metri kvadrātsekundē"}
                 one{"{0} m/s²"}
                 other{"{0} m/s²"}
                 zero{"{0} m/s²"}
@@ -1428,13 +1474,13 @@ lv{
         }
         angle{
             arc-minute{
-                dnam{"′"}
+                dnam{"leņķa minūtes"}
                 one{"{0}′"}
                 other{"{0}′"}
                 zero{"{0}′"}
             }
             arc-second{
-                dnam{"″"}
+                dnam{"leņķa sekundes"}
                 one{"{0}″"}
                 other{"{0}″"}
                 zero{"{0}″"}
@@ -1446,7 +1492,7 @@ lv{
                 zero{"{0}°"}
             }
             radian{
-                dnam{"rad"}
+                dnam{"radiāni"}
                 one{"{0} rad"}
                 other{"{0} rad"}
                 zero{"{0} rad"}
@@ -1460,7 +1506,7 @@ lv{
         }
         area{
             acre{
-                dnam{"ac"}
+                dnam{"akri"}
                 one{"{0} ac"}
                 other{"{0} ac"}
                 zero{"{0} ac"}
@@ -1469,7 +1515,7 @@ lv{
                 dnam{"dunami"}
                 one{"{0} dunams"}
                 other{"{0} dunami"}
-                zero{"{0} dunami"}
+                zero{"{0} dunamu"}
             }
             hectare{
                 dnam{"ha"}
@@ -1494,7 +1540,6 @@ lv{
                 dnam{"in²"}
                 one{"{0} in²"}
                 other{"{0} in²"}
-                per{"{0} uz collu²"}
                 zero{"{0} in²"}
             }
             square-kilometer{
@@ -1536,10 +1581,10 @@ lv{
                 zero{"{0} kt"}
             }
             milligram-per-deciliter{
-                dnam{"mg/dL"}
-                one{"{0} mg/dL"}
-                other{"{0} mg/dL"}
-                zero{"{0} mg/dL"}
+                dnam{"mg/dl"}
+                one{"{0} mg/dl"}
+                other{"{0} mg/dl"}
+                zero{"{0} mg/dl"}
             }
             millimole-per-liter{
                 dnam{"mmol/L"}
@@ -1554,16 +1599,22 @@ lv{
                 zero{"{0} mol"}
             }
             part-per-million{
-                dnam{"ppm"}
+                dnam{"miljonās daļas"}
                 one{"{0} ppm"}
                 other{"{0} ppm"}
                 zero{"{0} ppm"}
             }
             percent{
                 dnam{"procents"}
+                one{"{0}%"}
+                other{"{0}%"}
+                zero{"{0}%"}
             }
             permille{
                 dnam{"promile"}
+                one{"{0}‰"}
+                other{"{0}‰"}
+                zero{"{0}‰"}
             }
             permyriad{
                 dnam{"promiriāde"}
@@ -1586,7 +1637,7 @@ lv{
                 zero{"{0} l/km"}
             }
             mile-per-gallon{
-                dnam{"mpg"}
+                dnam{"jūdzes uz galonu"}
                 one{"{0} mpg"}
                 other{"{0} mpg"}
                 zero{"{0} mpg"}
@@ -1654,6 +1705,12 @@ lv{
                 other{"{0} MB"}
                 zero{"{0} MB"}
             }
+            petabyte{
+                dnam{"PB"}
+                one{"{0} PB"}
+                other{"{0} PB"}
+                zero{"{0} PB"}
+            }
             terabit{
                 dnam{"Tb"}
                 one{"{0} Tb"}
@@ -1681,11 +1738,16 @@ lv{
                 per{"{0}/d."}
                 zero{"{0} d."}
             }
+            decade{
+                dnam{"dek"}
+                one{"{0} dek"}
+                other{"{0} dek"}
+                zero{"{0} dek"}
+            }
             hour{
                 dnam{"st."}
                 one{"{0} st."}
                 other{"{0} st."}
-                per{"{0}/st."}
                 zero{"{0} st."}
             }
             microsecond{
@@ -1703,7 +1765,7 @@ lv{
             minute{
                 dnam{"min."}
                 one{"{0} min."}
-                other{"{0} min."}
+                other{"{0} min"}
                 per{"{0}/min."}
                 zero{"{0} min."}
             }
@@ -1756,13 +1818,13 @@ lv{
                 zero{"{0} mA"}
             }
             ohm{
-                dnam{"Ω"}
+                dnam{"omi"}
                 one{"{0} Ω"}
                 other{"{0} Ω"}
                 zero{"{0} Ω"}
             }
             volt{
-                dnam{"V"}
+                dnam{"volti"}
                 one{"{0} V"}
                 other{"{0} V"}
                 zero{"{0} V"}
@@ -1770,7 +1832,6 @@ lv{
         }
         energy{
             british-thermal-unit{
-                dnam{"BTU"}
                 one{"{0} Btu"}
                 other{"{0} Btu"}
                 zero{"{0} Btu"}
@@ -1794,7 +1855,7 @@ lv{
                 zero{"{0} cal"}
             }
             joule{
-                dnam{"J"}
+                dnam{"džouli"}
                 one{"{0} J"}
                 other{"{0} J"}
                 zero{"{0} J"}
@@ -1858,6 +1919,20 @@ lv{
                 zero{"{0} MHz"}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpc"}
+                one{"{0} dpc"}
+                other{"{0} dpc"}
+                zero{"{0} dpc"}
+            }
+            megapixel{
+                dnam{"megapikseļi"}
+            }
+            pixel{
+                dnam{"pikseļi"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"a.v."}
@@ -1886,10 +1961,9 @@ lv{
             }
             foot{
                 dnam{"pēdas"}
-                one{"{0} pēda"}
-                other{"{0} pēdas"}
-                per{"{0}/pēda"}
-                zero{"{0} pēdas"}
+                one{"{0} ft"}
+                other{"{0} ft"}
+                zero{"{0} ft"}
             }
             furlong{
                 dnam{"furlongi"}
@@ -1898,14 +1972,9 @@ lv{
                 zero{"{0} furlongu"}
             }
             inch{
-                dnam{"colla"}
-                one{"{0} colla"}
-                other{"{0} collas"}
-                per{"{0}/colla"}
-                zero{"{0} collas"}
+                dnam{"collas"}
             }
             kilometer{
-                dnam{"kilometri"}
                 one{"{0} km"}
                 other{"{0} km"}
                 per{"{0}/km"}
@@ -1955,16 +2024,15 @@ lv{
                 zero{"{0} nm"}
             }
             nautical-mile{
-                dnam{"jūras jūdzes"}
-                one{"{0} jūras jūdze"}
-                other{"{0} jūras jūdzes"}
-                zero{"{0} jūras jūdzes"}
+                one{"{0} nmi"}
+                other{"{0} nmi"}
+                zero{"{0} nmi"}
             }
             parsec{
                 dnam{"parseki"}
-                one{"{0} parseks"}
-                other{"{0} parseki"}
-                zero{"{0} parseki"}
+                one{"{0} pc"}
+                other{"{0} pc"}
+                zero{"{0} pc"}
             }
             picometer{
                 dnam{"pm"}
@@ -1973,13 +2041,13 @@ lv{
                 zero{"{0} pm"}
             }
             point{
-                dnam{"pk."}
+                dnam{"punkti"}
                 one{"{0} pk."}
                 other{"{0} pk."}
                 zero{"{0} pk."}
             }
             solar-radius{
-                dnam{"Saules rādiuss"}
+                dnam{"Saules rādiusi"}
                 one{"{0} R☉"}
                 other{"{0} R☉"}
                 zero{"{0} R☉"}
@@ -1993,7 +2061,7 @@ lv{
         }
         light{
             lux{
-                dnam{"lx"}
+                dnam{"lukss"}
                 one{"{0} lx"}
                 other{"{0} lx"}
                 zero{"{0} lx"}
@@ -2025,7 +2093,7 @@ lv{
                 zero{"{0} M⊕"}
             }
             gram{
-                dnam{"g"}
+                dnam{"grami"}
                 one{"{0} g"}
                 other{"{0} g"}
                 per{"{0}/g"}
@@ -2070,11 +2138,10 @@ lv{
                 zero{"{0} Trojas unces"}
             }
             pound{
-                dnam{"mārc."}
-                one{"{0} mārc."}
-                other{"{0} mārc."}
-                per{"{0}/mārc."}
-                zero{"{0} mārc."}
+                dnam{"mārciņas"}
+                one{"{0} lb"}
+                other{"{0} lb"}
+                zero{"{0} lb"}
             }
             solar-mass{
                 dnam{"Saules masas"}
@@ -2127,13 +2194,19 @@ lv{
                 zero{"{0} mW"}
             }
             watt{
-                dnam{"W"}
+                dnam{"vati"}
                 one{"{0} W"}
                 other{"{0} W"}
                 zero{"{0} W"}
             }
         }
         pressure{
+            atmosphere{
+                dnam{"atm"}
+                one{"{0} atm"}
+                other{"{0} atm"}
+                zero{"{0} atm"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -2186,9 +2259,6 @@ lv{
             }
             knot{
                 dnam{"mezgls"}
-                one{"{0} mezgls"}
-                other{"{0} mezgli"}
-                zero{"{0} mezgli"}
             }
             meter-per-second{
                 dnam{"m/s"}
@@ -2237,7 +2307,7 @@ lv{
                 zero{"{0} N⋅m"}
             }
             pound-foot{
-                dnam{"mārc. pēda"}
+                dnam{"mārciņpēda"}
                 one{"{0} mārc. pēda"}
                 other{"{0} mārc. pēdas"}
                 zero{"{0} mārc. pēdas"}
@@ -2307,7 +2377,7 @@ lv{
                 zero{"{0} yd³"}
             }
             cup{
-                dnam{"gl."}
+                dnam{"glāzes"}
                 one{"{0} gl."}
                 other{"{0} gl."}
                 zero{"{0} gl."}
@@ -2334,7 +2404,7 @@ lv{
                 dnam{"britu šķidr. unces"}
                 one{"{0} britu šķidr. unce"}
                 other{"{0} britu šķidr. unces"}
-                zero{"{0} britu šķidr. unces"}
+                zero{"{0} britu šķidr. unču"}
             }
             gallon{
                 dnam{"gal"}
@@ -2344,11 +2414,11 @@ lv{
                 zero{"{0} gal"}
             }
             gallon-imperial{
-                dnam{"imp. gal."}
-                one{"{0} imp. gal."}
-                other{"{0} imp. gal."}
-                per{"{0}/imp. gal."}
-                zero{"{0} imp. gal."}
+                dnam{"britu galons"}
+                one{"{0} britu galons"}
+                other{"{0} britu galoni"}
+                per{"{0}/britu galonu"}
+                zero{"{0} britu galonu"}
             }
             hectoliter{
                 dnam{"hl"}
@@ -2376,7 +2446,7 @@ lv{
                 zero{"{0} ml"}
             }
             pint{
-                dnam{"pt"}
+                dnam{"pintes"}
                 one{"{0} pt"}
                 other{"{0} pt"}
                 zero{"{0} pt"}

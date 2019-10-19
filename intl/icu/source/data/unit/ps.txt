@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ps{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -13,6 +13,11 @@ ps{
                 dnam{"د جاذبې قوه"}
                 one{"{0} د جاذبې قوه"}
                 other{"{0} د جاذبې قوه"}
+            }
+            meter-per-second-squared{
+                dnam{"ميترز في مربع سيکنډ"}
+                one{"{0} ميتر في مربع سيکنډ"}
+                other{"{0} ميتر في مربع سيکنډ"}
             }
         }
         angle{
@@ -81,6 +86,12 @@ ps{
                 other{"{0} مربع کيلو متره"}
                 per{"{0} في مربع کيلو متر"}
             }
+            square-meter{
+                dnam{"مربع متره"}
+                one{"{0} مربع متر"}
+                other{"{0} مربع متره"}
+                per{"{0} في مربع متر"}
+            }
             square-mile{
                 dnam{"مربع ميل"}
                 one{"{0} مربع ميل"}
@@ -118,7 +129,7 @@ ps{
                 other{"{0} مولز"}
             }
             part-per-million{
-                dnam{"پاړتس في مليون"}
+                dnam{"پارټتس في مليون"}
                 one{"{0} پارټ في مليون"}
                 other{"{0} پارټس في مليون"}
             }
@@ -225,16 +236,29 @@ ps{
             }
         }
         duration{
+            century{
+                dnam{"پېړۍ"}
+                one{"{0} پېړۍ"}
+                other{"{0} پيړۍ"}
+            }
             day{
                 dnam{"ورځې"}
                 one{"{0} ورځ"}
                 other{"{0} ورځې"}
                 per{"{0} په هره ورځ کې"}
             }
+            decade{
+                dnam{"لسيزې"}
+                one{"{0} لسيزه"}
+                other{"{0} لسيزې"}
+            }
             microsecond{
                 dnam{"مايکرو ثانيه"}
                 one{"{0} μs"}
                 other{"{0} μs"}
+            }
+            minute{
+                dnam{"دقيقې"}
             }
             month{
                 dnam{"مياشتې"}
@@ -243,9 +267,12 @@ ps{
                 per{"{0}/m"}
             }
             nanosecond{
-                dnam{"نينو ثانيه"}
+                dnam{"نينو ثانيې"}
                 one{"{0} ns"}
                 other{"{0} ns"}
+            }
+            second{
+                dnam{"ثانيې"}
             }
             week{
                 dnam{"اونۍ"}
@@ -358,6 +385,11 @@ ps{
                 other{"{0} ميګا هرټز"}
             }
         }
+        graphics{
+            megapixel{
+                dnam{"ميګا فکسلسز"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"فلکي احدې"}
@@ -439,6 +471,11 @@ ps{
                 one{"{0} پيکو متر"}
                 other{"{0} پيکو متره"}
             }
+            point{
+                dnam{"نمرې"}
+                one{"{0} نمره"}
+                other{"{0} نمرې"}
+            }
             solar-radius{
                 dnam{"لمريزې وړانګې"}
                 one{"{0} لمريزه وړانګه"}
@@ -451,6 +488,9 @@ ps{
             }
         }
         light{
+            lux{
+                dnam{"لکس"}
+            }
             solar-luminosity{
                 dnam{"لمريز ځلښتونه"}
                 one{"{0} لمريز ځلښت"}
@@ -507,9 +547,9 @@ ps{
                 per{"{0} في اونس"}
             }
             ounce-troy{
-                dnam{"ټروي اونسز"}
-                one{"{0} ټروي اونس"}
-                other{"{0} ټروي اونسز"}
+                dnam{"ټراي اونسز"}
+                one{"{0} ټرای اونس"}
+                other{"{0} ټرای اونسز"}
             }
             pound{
                 dnam{"پاونډز"}
@@ -562,14 +602,14 @@ ps{
         }
         pressure{
             atmosphere{
-                dnam{"اتموسفيرز"}
-                one{"{0} اتموسفير"}
-                other{"{0} اتموسفيرز"}
+                dnam{"اټموسپیرز"}
+                one{"{0} اتموسپير"}
+                other{"{0} اتموسپيرز"}
             }
             hectopascal{
-                dnam{"هيکټو پاسکلز"}
-                one{"{0} هيکټو پاسکل"}
-                other{"{0} هيکټو پاسکلز"}
+                dnam{"هيکټو پاسکیلز"}
+                one{"{0} هيکټو پاسکیل"}
+                other{"{0} هيکټو پاسکیلز"}
             }
             inch-hg{
                 dnam{"د پارې انچې"}
@@ -577,14 +617,14 @@ ps{
                 other{"{0} د پارې انچې"}
             }
             kilopascal{
-                dnam{"کيلو پاسکلز"}
-                one{"{0} کيلو پاسکل"}
-                other{"{0} کيلو پاسکلز"}
+                dnam{"کيلو پاسکیلز"}
+                one{"{0} کيلو پاسکیل"}
+                other{"{0} کيلو پاسکیلز"}
             }
             megapascal{
-                dnam{"ميګا پاسکلز"}
-                one{"{0} ميګا پاسکل"}
-                other{"{0} ميګا پاسکلز"}
+                dnam{"ميګا پاسکلیلز"}
+                one{"{0} ميګا پاسکیل"}
+                other{"{0} ميګا پاسکیلز"}
             }
             millibar{
                 dnam{"ملي بارز"}
@@ -596,10 +636,13 @@ ps{
                 one{"{0} د پارې ملي متر"}
                 other{"{0} د پارې ملي مترز"}
             }
+            pascal{
+                dnam{"پاسکیلز"}
+            }
             pound-per-square-inch{
-                dnam{"پاونډ في مربع انچ"}
+                dnam{"پاونډز في مربع انچ"}
                 one{"{0} پاونډ في مربع انچ"}
-                other{"{0} پاونډ في مربع انچ"}
+                other{"{0} پاونډز في مربع انچ"}
             }
         }
         speed{
@@ -812,7 +855,7 @@ ps{
             minute{
                 dnam{"min"}
                 one{"{0} min"}
-                other{"{0} min"}
+                other{"{0}m"}
             }
             month{
                 dnam{"مياشت"}
@@ -885,7 +928,6 @@ ps{
         }
         volume{
             liter{
-                dnam{"liter"}
                 one{"{0}L"}
                 other{"{0}L"}
             }
@@ -910,7 +952,7 @@ ps{
                 other{"{0}′"}
             }
             arc-second{
-                dnam{"آرکیسی"}
+                dnam{"آرکسیکس"}
                 one{"{0}″"}
                 other{"{0}″"}
             }
@@ -1028,8 +1070,6 @@ ps{
             }
             permyriad{
                 dnam{"زرمه"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -1130,6 +1170,11 @@ ps{
                 other{"{0} ورځې"}
                 per{"{0}/d"}
             }
+            decade{
+                dnam{"لسيزه"}
+                one{"{0} لسيزه"}
+                other{"{0} لسيزه"}
+            }
             hour{
                 dnam{"ساعتونه"}
                 one{"{0} h"}
@@ -1164,7 +1209,7 @@ ps{
                 other{"{0} ns"}
             }
             second{
-                dnam{"sec"}
+                dnam{"ثانيې"}
                 one{"{0} s"}
                 other{"{0} s"}
                 per{"{0}/s"}
@@ -1217,8 +1262,6 @@ ps{
             }
             electronvolt{
                 dnam{"اليکټران وولټ"}
-                one{"{0} eV"}
-                other{"{0} eV"}
             }
             foodcalorie{
                 dnam{"Cal"}
@@ -1249,13 +1292,9 @@ ps{
         force{
             newton{
                 dnam{"نيوټن"}
-                one{"{0} N"}
-                other{"{0} N"}
             }
             pound-force{
                 dnam{"پاونډ قوه"}
-                one{"{0} lbf"}
-                other{"{0} lbf"}
             }
         }
         frequency{
@@ -1373,8 +1412,6 @@ ps{
             }
             solar-radius{
                 dnam{"لمريزې وړانګې"}
-                one{"{0} R☉"}
-                other{"{0} R☉"}
             }
             yard{
                 dnam{"ګزه"}
@@ -1390,8 +1427,6 @@ ps{
             }
             solar-luminosity{
                 dnam{"لمريز ځلښتونه"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
             }
         }
         mass{
@@ -1402,13 +1437,9 @@ ps{
             }
             dalton{
                 dnam{"ډالټنز"}
-                one{"{0} Da"}
-                other{"{0} Da"}
             }
             earth-mass{
                 dnam{"د زمکې حجمونه"}
-                one{"{0} M⊕"}
-                other{"{0} M⊕"}
             }
             gram{
                 dnam{"ګرامز"}
@@ -1456,8 +1487,6 @@ ps{
             }
             solar-mass{
                 dnam{"لمريز حجم"}
-                one{"{0} M☉"}
-                other{"{0} M☉"}
             }
             ton{
                 dnam{"ټنز"}
@@ -1512,16 +1541,6 @@ ps{
                 dnam{"inHg"}
                 one{"{0} inHg"}
                 other{"{0} inHg"}
-            }
-            kilopascal{
-                dnam{"kPa"}
-                one{"{0} kPa"}
-                other{"{0} kPa"}
-            }
-            megapascal{
-                dnam{"MPa"}
-                one{"{0} MPa"}
-                other{"{0} MPa"}
             }
             millibar{
                 dnam{"mbar"}
@@ -1583,18 +1602,6 @@ ps{
                 other{"{0} K"}
             }
         }
-        torque{
-            newton-meter{
-                dnam{"N⋅m"}
-                one{"{0} N⋅m"}
-                other{"{0} N⋅m"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                one{"{0} lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
-            }
-        }
         volume{
             acre-foot{
                 dnam{"acre ft"}
@@ -1603,8 +1610,6 @@ ps{
             }
             barrel{
                 dnam{"بېرل"}
-                one{"{0} bbl"}
-                other{"{0} bbl"}
             }
             centiliter{
                 dnam{"cL"}
@@ -1670,8 +1675,6 @@ ps{
             }
             fluid-ounce-imperial{
                 dnam{"امپيريل مايع اونس"}
-                one{"{0} fl oz Imp."}
-                other{"{0} fl oz Imp."}
             }
             gallon{
                 dnam{"gal"}

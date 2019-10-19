@@ -1,10 +1,113 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yo_BJ{
-    Version{"2.1.48.77"}
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
+    Version{"36"}
+    units{
+        duration{
+            century{
+                dnam{"ɔ̀rúndún"}
+                other{"ɔ̀rúndún {0}"}
+            }
+            day{
+                dnam{"ɔjɔ́"}
+                other{"ɔj {0}"}
+                per{"{0}/ɔj"}
+            }
+            decade{
+                dnam{"ɛ̀wádùn"}
+                other{"ɛ̀wádùn {0}"}
+            }
+            minute{
+                dnam{"ìsh"}
+                other{"{0} ìsh"}
+                per{"{0}/ìsh"}
+            }
+            month{
+                dnam{"oshù"}
+                other{"{0} oshù"}
+                per{"{0}/oshù"}
+            }
+            second{
+                dnam{"ìsh àáy"}
+                other{"{0}ìsh àáy"}
+                per{"{0}/ìsh àáy"}
+            }
+            week{
+                dnam{"ɔsh"}
+                other{"{0} ɔsh"}
+                per{"{0}/ɔsh"}
+            }
+            year{
+                dnam{"ɔ̀dún"}
+                other{"{0} ɔd"}
+                per{"{0} ɔd"}
+            }
+        }
+    }
+    unitsNarrow{
+        duration{
+            day{
+                dnam{"ɔjɔ́"}
+                other{"ɔj {0}"}
+            }
+            minute{
+                dnam{"ìsh"}
+                other{"{0}/ìsh"}
+            }
+            month{
+                dnam{"oshù"}
+                other{"{0} oshù"}
+            }
+            second{
+                dnam{"ìsh àáy"}
+                other{"{0} ìsh àáy"}
+            }
+            week{
+                dnam{"ɔshɛ́"}
+                other{"{0} ɔsh"}
+            }
+            year{
+                dnam{"ɔd"}
+                other{"{0} ɔd"}
+            }
+        }
+    }
+    unitsShort{
+        duration{
+            day{
+                dnam{"ɔjɔ́"}
+                other{"{0} ɔj"}
+                per{"{0}/ɔj"}
+            }
+            decade{
+                dnam{"ɛ̀wádùn"}
+                other{"ɛ̀wádún {0}"}
+            }
+            minute{
+                dnam{"ìsh"}
+                other{"{0} ìsh"}
+                per{"{0}/ìsh"}
+            }
+            month{
+                dnam{"oshù"}
+                other{"{0} oshù"}
+                per{"{0}/oshù"}
+            }
+            second{
+                dnam{"ìsh àáy"}
+                other{"{0} ìsh àáy"}
+                per{"{0} ìsh àáy"}
+            }
+            week{
+                dnam{"ɔsh"}
+                other{"{0} ɔsh"}
+                per{"{0}/ɔshɛ̀"}
+            }
+            year{
+                dnam{"ɔd"}
+                other{"{0} ɔd"}
+                per{"{0}/ɔd"}
+            }
+        }
     }
 }

@@ -558,6 +558,10 @@ is{
             "NGN",
             "nígerísk næra",
         }
+        NIC{
+            "NIC",
+            "Níkarögsk kordóva (1988–1991)",
+        }
         NIO{
             "NIO",
             "níkaraögsk kordóva",
@@ -1104,8 +1108,8 @@ is{
             other{"kostarísk kólon"}
         }
         CUC{
-            one{"kúbverskur skiptanlegur pesói"}
-            other{"kúbverskir skiptanlegir pesóar"}
+            one{"kúbverskur skiptanlegur pesi"}
+            other{"kúbverskir skiptanlegir pesar"}
         }
         CUP{
             one{"kúbverskur pesi"}
@@ -1383,6 +1387,10 @@ is{
             one{"nígerísk næra"}
             other{"nígerískar nærur"}
         }
+        NIC{
+            one{"Níkarögsk kordóva (1988–1991)"}
+            other{"Níkaragskar kordóvur (1988–1991)"}
+        }
         NIO{
             one{"níkarögsk kordóva"}
             other{"níkaragskar kordóvur"}
@@ -1636,5 +1644,5 @@ is{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

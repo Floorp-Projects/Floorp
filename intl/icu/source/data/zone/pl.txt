@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pl{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidżan"}
@@ -1697,9 +1697,9 @@ pl{
             ls{"Ułan Bator (czas standardowy)"}
         }
         "meta:Moscow"{
-            ld{"Moskwa (letni)"}
+            ld{"Moskwa (czas letni)"}
             lg{"Moskwa"}
-            ls{"Moskwa (standardowy)"}
+            ls{"Moskwa (czas standardowy)"}
         }
         "meta:Myanmar"{
             ls{"Mjanma"}
