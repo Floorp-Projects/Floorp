@@ -8,6 +8,7 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "nsIClassifiedChannel.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 
@@ -135,13 +136,13 @@ UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {
           {NS_LITERAL_CSTRING("content-fingerprinting-track-"),
-           nsIHttpChannel::ClassificationFlags::
+           nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_FINGERPRINTING_CONTENT},
       };
 
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
       aList, sClassificationData,
-      nsIHttpChannel::ClassificationFlags::CLASSIFIED_FINGERPRINTING);
+      nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_FINGERPRINTING);
 
   UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
 
