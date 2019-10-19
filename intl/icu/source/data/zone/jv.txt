@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 jv{
-    Version{"2.1.48.44"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -807,6 +807,9 @@ jv{
         "Asia:Qatar"{
             ec{"Qatar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanai"}
+        }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
         }
@@ -907,7 +910,7 @@ jv{
             ec{"Georgia Kidul"}
         }
         "Atlantic:St_Helena"{
-            ec{"Saint Helena"}
+            ec{"Santa Helena"}
         }
         "Atlantic:Stanley"{
             ec{"Stanley"}
@@ -949,7 +952,7 @@ jv{
             ec{"Sydney"}
         }
         "Etc:UTC"{
-            ls{"Wektu Kordinat Universal"}
+            ls{"Wektu Universal Kakoordhinasi"}
         }
         "Etc:Unknown"{
             ec{"Kuto Ora Dikenali"}
@@ -1415,7 +1418,7 @@ jv{
             ls{"Wektu Standar Tanjung Verde"}
         }
         "meta:Chamorro"{
-            ls{"Wektu Standar Chamorro"}
+            ls{"Wektu Chamorro"}
         }
         "meta:Chatham"{
             ld{"Wektu Ketigo Chatham"}
@@ -1781,7 +1784,7 @@ jv{
             ls{"Wektu Seichelles"}
         }
         "meta:Singapore"{
-            ls{"Wektu Standar Singapura"}
+            ls{"Wektu Singapura"}
         }
         "meta:Solomon"{
             ls{"Wektu Kepuloan Solomon"}

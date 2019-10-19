@@ -15,7 +15,7 @@ en_DK{
             }
         }
     }
-    Version{"2.1.47.69"}
+    Version{"36"}
     calendar{
         generic{
             availableFormats{

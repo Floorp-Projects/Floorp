@@ -6,9 +6,9 @@
 
  See http://bugs.icu-project.org/trac/ticket/10750#comment:5 - this file is needed to emit break iterator rules properly.
 -->
-<!DOCTYPE ldml SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldml.dtd"
+<!DOCTYPE ldml SYSTEM "../../dtd/cldr-35.1/common/dtd/ldml.dtd"
 [
-   <!ENTITY % icu SYSTEM "http://www.unicode.org/repos/cldr/trunk/common/dtd/ldmlICU.dtd">
+   <!ENTITY % icu SYSTEM "../../dtd/cldr-35.1/common/dtd/ldmlICU.dtd">
    %icu;
 ]
 >

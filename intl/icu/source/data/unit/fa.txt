@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fa{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -55,8 +55,6 @@ fa{
             }
             dunam{
                 dnam{"دونوم"}
-                one{"{0} دونوم"}
-                other{"{0} دونوم"}
             }
             hectare{
                 dnam{"هکتار"}
@@ -84,7 +82,7 @@ fa{
                 dnam{"کیلومتر مربع"}
                 one{"{0} کیلومتر مربع"}
                 other{"{0} کیلومتر مربع"}
-                per{"کیلومتر مربع در {0}"}
+                per{"{0} در کیلومتر مربع"}
             }
             square-meter{
                 dnam{"متر مربع"}
@@ -247,6 +245,11 @@ fa{
                 other{"{0} روز"}
                 per{"{0} در روز"}
             }
+            decade{
+                dnam{"دهه"}
+                one{"{0} دهه"}
+                other{"{0} دهه"}
+            }
             hour{
                 dnam{"ساعت"}
                 one{"{0} ساعت"}
@@ -334,7 +337,7 @@ fa{
             }
             electronvolt{
                 dnam{"الکترون ولت"}
-                one{"{0} الکترون ولت"}
+                one{"{0} الکترون‌ولت"}
                 other{"{0} الکترون‌ولت"}
             }
             foodcalorie{
@@ -361,6 +364,11 @@ fa{
                 dnam{"کیلووات‌ساعت"}
                 one{"{0} کیلووات‌ساعت"}
                 other{"{0} کیلووات‌ساعت"}
+            }
+            therm-us{
+                dnam{"ترم آمریکایی"}
+                one{"{0} ترم آمریکایی"}
+                other{"{0} ترم آمریکایی"}
             }
         }
         force{
@@ -397,6 +405,38 @@ fa{
                 other{"{0} مگاهرتز"}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                dnam{"نقطه در سانتی‌متر"}
+                one{"{0} نقطه در سانتی‌متر"}
+                other{"{0} نقطه در سانتی‌متر"}
+            }
+            dot-per-inch{
+                dnam{"نقطه در اینچ"}
+                one{"{0} نقطه در اینچ"}
+                other{"{0} نقطه در اینچ"}
+            }
+            megapixel{
+                dnam{"مگاپیکسل"}
+                one{"{0} مگاپیکسل"}
+                other{"{0} مگاپیکسل"}
+            }
+            pixel{
+                dnam{"پیکسل"}
+                one{"{0} پیکسل"}
+                other{"{0} پیکسل"}
+            }
+            pixel-per-centimeter{
+                dnam{"پیکسل در سانتی‌متر"}
+                one{"{0} پیکسل در سانتی‌متر"}
+                other{"{0} پیکسل در سانتی‌متر"}
+            }
+            pixel-per-inch{
+                dnam{"پیکسل در اینچ"}
+                one{"{0} پیکسل در اینچ"}
+                other{"{0} پیکسل در اینچ"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"واحد نجومی"}
@@ -407,7 +447,7 @@ fa{
                 dnam{"سانتی‌متر"}
                 one{"{0} سانتی‌متر"}
                 other{"{0} سانتی‌متر"}
-                per{"{0}/سانتی‌متر"}
+                per{"{0} در سانتی‌متر"}
             }
             decimeter{
                 dnam{"دسی‌متر"}
@@ -424,13 +464,13 @@ fa{
                 dnam{"اینچ"}
                 one{"{0} اینچ"}
                 other{"{0} اینچ"}
-                per{"{0}/اینچ"}
+                per{"{0} در اینچ"}
             }
             kilometer{
                 dnam{"کیلومتر"}
                 one{"{0} کیلومتر"}
                 other{"{0} کیلومتر"}
-                per{"{0}/کیلومتر"}
+                per{"{0} در کیلومتر"}
             }
             light-year{
                 dnam{"سال نوری"}
@@ -441,7 +481,7 @@ fa{
                 dnam{"متر"}
                 one{"{0} متر"}
                 other{"{0} متر"}
-                per{"{0}/متر"}
+                per{"{0} در متر"}
             }
             micrometer{
                 dnam{"میکرومتر"}
@@ -484,9 +524,9 @@ fa{
                 other{"{0} پیکومتر"}
             }
             point{
-                dnam{"امتیاز"}
-                one{"{0} امتیاز"}
-                other{"{0} امتیاز"}
+                dnam{"پونت"}
+                one{"{0} پونت"}
+                other{"{0} پونت"}
             }
             solar-radius{
                 dnam{"شعاع خورشید"}
@@ -620,6 +660,11 @@ fa{
                 one{"{0} اتمسفر"}
                 other{"{0} اتمسفر"}
             }
+            bar{
+                dnam{"بار"}
+                one{"{0} بار"}
+                other{"{0} بار"}
+            }
             hectopascal{
                 dnam{"هکتوپاسکال"}
                 one{"{0} هکتوپاسکال"}
@@ -649,6 +694,11 @@ fa{
                 dnam{"میلی‌متر جیوه"}
                 one{"{0} میلی‌متر جیوه"}
                 other{"{0} میلی‌متر جیوه"}
+            }
+            pascal{
+                dnam{"پاسکال"}
+                one{"{0} پاسکال"}
+                other{"{0} پاسکال"}
             }
             pound-per-square-inch{
                 dnam{"پوند در اینچ مربع"}
@@ -688,6 +738,10 @@ fa{
                 dnam{"درجهٔ فارنهایت"}
                 one{"{0} درجهٔ فارنهایت"}
                 other{"{0} درجهٔ فارنهایت"}
+            }
+            generic{
+                one{"{0}°"}
+                other{"{0}°"}
             }
             kelvin{
                 dnam{"درجهٔ کلوین"}
@@ -904,6 +958,9 @@ fa{
                 one{"{0} یارد مربع"}
                 other{"{0} یارد مربع"}
             }
+        }
+        compound{
+            per{"{0}/{1}"}
         }
         concentr{
             percent{
@@ -1202,9 +1259,18 @@ fa{
         temperature{
             celsius{
                 dnam{"‎°C"}
+                one{"{0}°C"}
+                other{"{0}°C"}
             }
             fahrenheit{
                 dnam{"‎°F"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+            generic{
+                dnam{"°"}
+                one{"{0}°"}
+                other{"{0}°"}
             }
             kelvin{
                 one{"{0}K"}
@@ -1304,6 +1370,7 @@ fa{
                 dnam{"کیلومتر مربع"}
                 one{"{0}‎ km²"}
                 other{"{0}‎ km²"}
+                per{"{0}/km²"}
             }
             square-meter{
                 dnam{"متر مربع"}
@@ -1315,12 +1382,17 @@ fa{
                 dnam{"مایل مربع"}
                 one{"{0} مایل مربع"}
                 other{"{0} مایل مربع"}
+                per{"{0}/mi²"}
             }
             square-yard{
                 dnam{"یارد مربع"}
                 one{"{0} یارد مربع"}
                 other{"{0} یارد مربع"}
             }
+        }
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -1330,9 +1402,13 @@ fa{
             }
             milligram-per-deciliter{
                 dnam{"میلی‌گرم در دسی‌لیتر"}
+                one{"{0} mg/dL"}
+                other{"{0} mg/dL"}
             }
             millimole-per-liter{
                 dnam{"میلی‌مول/لیتر"}
+                one{"{0} mmol/L"}
+                other{"{0} mmol/L"}
             }
             mole{
                 dnam{"مول"}
@@ -1341,6 +1417,8 @@ fa{
             }
             part-per-million{
                 dnam{"بخش/میلیون"}
+                one{"{0} ppm"}
+                other{"{0} ppm"}
             }
             percent{
                 dnam{"درصد"}
@@ -1349,6 +1427,8 @@ fa{
             }
             permille{
                 dnam{"هزارم"}
+                one{"{0}‰"}
+                other{"{0}‰"}
             }
             permyriad{
                 dnam{"ده‌هزارم"}
@@ -1374,6 +1454,8 @@ fa{
             }
             mile-per-gallon-imperial{
                 dnam{"مایل/امپریال گالن"}
+                one{"{0} mpg Imp."}
+                other{"{0} mpg Imp."}
             }
         }
         coordinate{
@@ -1451,6 +1533,11 @@ fa{
                 one{"{0} روز"}
                 other{"{0} روز"}
                 per{"{0}/روز"}
+            }
+            decade{
+                dnam{"دهه"}
+                one{"{0} دهه"}
+                other{"{0} دهه"}
             }
             hour{
                 dnam{"ساعت"}
@@ -1564,8 +1651,13 @@ fa{
             }
             kilowatt-hour{
                 dnam{"ک.وات‌ساعت"}
-                one{"{0} ک.وات‌ساعت"}
-                other{"{0} ک.وات‌ساعت"}
+                one{"{0} ک.و.ساعت"}
+                other{"{0} ک.و.ساعت"}
+            }
+            therm-us{
+                dnam{"ترم آمریکایی"}
+                one{"{0} ترم آمریکایی"}
+                other{"{0} ترم آمریکایی"}
             }
         }
         force{
@@ -1602,6 +1694,11 @@ fa{
                 other{"{0} مگاهرتز"}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"واحد نجومی"}
@@ -1635,7 +1732,7 @@ fa{
                 dnam{"کیلومتر"}
                 one{"{0} کیلومتر"}
                 other{"{0} کیلومتر"}
-                per{"{0}/کیلومتر"}
+                per{"{0} در کیلومتر"}
             }
             light-year{
                 dnam{"سال نوری"}
@@ -1646,7 +1743,7 @@ fa{
                 dnam{"متر"}
                 one{"{0} متر"}
                 other{"{0} متر"}
-                per{"{0}/متر"}
+                per{"{0} در متر"}
             }
             micrometer{
                 dnam{"میکرومتر"}
@@ -1689,7 +1786,7 @@ fa{
                 other{"{0} پیکومتر"}
             }
             point{
-                dnam{"امتیاز"}
+                dnam{"پونت"}
                 one{"{0} امتیاز"}
                 other{"{0} امتیاز"}
             }
@@ -1822,6 +1919,13 @@ fa{
         pressure{
             atmosphere{
                 dnam{"اتمسفر"}
+                one{"{0} atm"}
+                other{"{0} atm"}
+            }
+            bar{
+                dnam{"بار"}
+                one{"{0} بار"}
+                other{"{0} بار"}
             }
             hectopascal{
                 dnam{"هکتوپاسکال"}
@@ -1884,9 +1988,17 @@ fa{
         temperature{
             celsius{
                 dnam{"درجهٔ سلسیوس"}
+                one{"{0}°C"}
+                other{"{0}°C"}
             }
             fahrenheit{
                 dnam{"درجهٔ فارنهایت"}
+                one{"{0}°F"}
+                other{"{0}°F"}
+            }
+            generic{
+                one{"{0}°"}
+                other{"{0}°"}
             }
             kelvin{
                 dnam{"درجهٔ کلوین"}

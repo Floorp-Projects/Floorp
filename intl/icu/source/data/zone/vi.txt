@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 vi{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -811,7 +811,7 @@ vi{
             ec{"Qatar"}
         }
         "Asia:Qostanay"{
-            ec{"Qostanay"}
+            ec{"Kostanay"}
         }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
@@ -956,7 +956,6 @@ vi{
         }
         "Etc:UTC"{
             ls{"Giờ Phối hợp Quốc tế"}
-            ss{"UTC"}
         }
         "Etc:Unknown"{
             ec{"Thành phố Không xác định"}
@@ -1578,9 +1577,9 @@ vi{
             ls{"Giờ Gambier"}
         }
         "meta:Georgia"{
-            ld{"Giờ Mùa Hè Gruzia"}
-            lg{"Giờ Gruzia"}
-            ls{"Giờ Chuẩn Gruzia"}
+            ld{"Giờ Mùa Hè Georgia"}
+            lg{"Giờ Georgia"}
+            ls{"Giờ Chuẩn Georgia"}
         }
         "meta:Gilbert_Islands"{
             ls{"Giờ Quần Đảo Gilbert"}

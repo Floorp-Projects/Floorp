@@ -1,31 +1,31 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_419{
-    Version{"2.1.47.86"}
+    Version{"36"}
     zoneStrings{
-        "Africa:Accra"{
-            ec{"Accra"}
-        }
         "America:Fort_Nelson"{
             ec{"Fuerte Nelson"}
         }
         "America:Nassau"{
             ec{"Nasáu"}
         }
-        "America:Sao_Paulo"{
-            ec{"San Pablo"}
+        "America:Santiago"{
+            ec{"Santiago"}
         }
         "America:St_Thomas"{
             ec{"Santo Tomás"}
         }
-        "Asia:Dushanbe"{
-            ec{"Duchanbé"}
+        "Atlantic:Canary"{
+            ec{"Islas Canarias"}
         }
         "Etc:UTC"{
             ls{"Hora Universal Coordinada"}
         }
         "Europe:Busingen"{
             ec{"Büsingen"}
+        }
+        "Europe:Dublin"{
+            ld{"hora estándar de Irlanda"}
         }
         "Pacific:Wake"{
             ec{"Isla Wake"}
@@ -77,6 +77,9 @@ es_419{
             lg{"hora de las Islas Malvinas"}
             ls{"hora estándar de las Islas Malvinas"}
         }
+        "meta:French_Southern"{
+            ls{"hora de las Tierras Australes y Antárticas Francesas"}
+        }
         "meta:GMT"{
             ss{"∅∅∅"}
         }
@@ -91,6 +94,9 @@ es_419{
         }
         "meta:Marshall_Islands"{
             ls{"hora de Islas Marshall"}
+        }
+        "meta:Myanmar"{
+            ls{"hora de Myanmar (Birmania)"}
         }
         "meta:Norfolk"{
             ls{"hora de la Isla Norfolk"}

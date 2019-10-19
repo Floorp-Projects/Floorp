@@ -201,5 +201,5 @@ lb{
             "1: ' =%spellout-ordinal-neuter=;",
         }
     }
-    Version{"2.1.38.68"}
+    Version{"36"}
 }

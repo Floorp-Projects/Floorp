@@ -4,7 +4,7 @@
  * ICU <specials> source: <path>/common/main/root.xml
  */
 root{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -94,6 +94,7 @@ root{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -211,6 +212,10 @@ root{
                 per{"{0}/d"}
             }
             day-person:alias{"/LOCALE/unitsShort/duration/day"}
+            decade{
+                dnam{"dec"}
+                other{"{0} dec"}
+            }
             hour{
                 dnam{"hr"}
                 other{"{0} h"}
@@ -308,6 +313,10 @@ root{
                 dnam{"kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"US therm"}
+                other{"{0} US therm"}
+            }
         }
         force{
             newton{
@@ -335,6 +344,36 @@ root{
             megahertz{
                 dnam{"MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                other{"{0} dpi"}
+            }
+            em{
+                dnam{"em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                dnam{"MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                dnam{"px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -531,6 +570,10 @@ root{
                 dnam{"atm"}
                 other{"{0} atm"}
             }
+            bar{
+                dnam{"bar"}
+                other{"{0} bar"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 other{"{0} hPa"}
@@ -554,6 +597,10 @@ root{
             millimeter-of-mercury{
                 dnam{"mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                other{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"psi"}

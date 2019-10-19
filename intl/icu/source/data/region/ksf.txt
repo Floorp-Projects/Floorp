@@ -127,7 +127,6 @@ ksf{
         MD{"mɔldaví"}
         MG{"madagaska"}
         MH{"zǝ i marcál"}
-        MK{"másǝdwán"}
         ML{"mali"}
         MM{"myanmár"}
         MN{"mɔŋolí"}
@@ -227,5 +226,5 @@ ksf{
         ZM{"zambí"}
         ZW{"zimbabwɛ́"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

@@ -7,5 +7,5 @@ ckb{
             "IQD",
         }
     }
-    Version{"2.1.47.72"}
+    Version{"36"}
 }

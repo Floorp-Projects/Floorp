@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 el{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Αμπιτζάν"}
@@ -55,7 +55,7 @@ el{
             ec{"Ντακάρ"}
         }
         "Africa:Dar_es_Salaam"{
-            ec{"Νταρ Ες Σαλάμ"}
+            ec{"Νταρ ες Σαλάμ"}
         }
         "Africa:Djibouti"{
             ec{"Τζιμπουτί"}
@@ -520,7 +520,7 @@ el{
             ec{"Ρεσίφε"}
         }
         "America:Regina"{
-            ec{"Ρετζίνα"}
+            ec{"Ρετζάινα"}
         }
         "America:Resolute"{
             ec{"Ρέζολουτ"}
@@ -598,7 +598,7 @@ el{
             ec{"Γουίνιπεγκ"}
         }
         "America:Yakutat"{
-            ec{"Γιακούτατ"}
+            ec{"Γιάκουτατ"}
         }
         "America:Yellowknife"{
             ec{"Γέλοουναϊφ"}
@@ -661,7 +661,7 @@ el{
             ec{"Ασχαμπάτ"}
         }
         "Asia:Atyrau"{
-            ec{"Aτιράου"}
+            ec{"Ατιράου"}
         }
         "Asia:Baghdad"{
             ec{"Βαγδάτη"}
@@ -1784,7 +1784,7 @@ el{
             ls{"Χειμερινή ώρα Φιλιππινών"}
         }
         "meta:Phoenix_Islands"{
-            ls{"Ώρα Νήσων Φoίνιξ"}
+            ls{"Ώρα Νήσων Φοίνιξ"}
         }
         "meta:Pierre_Miquelon"{
             ld{"Θερινή ώρα Σεν Πιερ και Μικελόν"}

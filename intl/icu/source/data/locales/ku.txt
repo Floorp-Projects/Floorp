@@ -13,12 +13,11 @@ ku{
     ExemplarCharacters{"[a b c ç d e ê f g h i î j k l m n o p q r s ş t u û v w x y z]"}
     ExemplarCharactersIndex{"[A B C Ç D E Ê F G H I Î J K L M N O P Q R S Ş T U Û V W X Y Z]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"⩾{0}"}
@@ -50,10 +49,8 @@ ku{
                 other{"{0} roj"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
-    Version{"2.1.47.83"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -77,6 +74,14 @@ ku{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "BN",
+                "PN",
+            }
+            AmPmMarkersAbbr{
+                "BN",
+                "PN",
+            }
             dayNames{
                 format{
                     abbreviated{
@@ -160,7 +165,15 @@ ku{
                     "BZ",
                     "PZ",
                 }
+                abbreviated%variant{
+                    "BZ",
+                    "PZ",
+                }
                 wide{
+                    "berî zayînê",
+                    "piştî zayînê",
+                }
+                wide%variant{
                     "berî zayînê",
                     "piştî zayînê",
                 }
@@ -286,6 +299,12 @@ ku{
                         "3",
                         "4",
                     }
+                    wide{
+                        "Çarêka 1em",
+                        "Çarêka 2em",
+                        "Çarêka 3em",
+                        "Çarêka 4em",
+                    }
                 }
                 stand-alone{
                     abbreviated{
@@ -299,6 +318,12 @@ ku{
                         "2",
                         "3",
                         "4",
+                    }
+                    wide{
+                        "Çarêka 1em",
+                        "Çarêka 2em",
+                        "Çarêka 3em",
+                        "Çarêka 4em",
                     }
                 }
             }
@@ -329,6 +354,24 @@ ku{
         day-short{
             dn{"r."}
         }
+        dayOfYear{
+            dn{"roja salê"}
+        }
+        dayOfYear-narrow{
+            dn{"roja salê"}
+        }
+        dayOfYear-short{
+            dn{"roja salê"}
+        }
+        dayperiod{
+            dn{"BN/PN"}
+        }
+        dayperiod-narrow{
+            dn{"BN/PN"}
+        }
+        dayperiod-short{
+            dn{"BN/PN"}
+        }
         era{
             dn{"serdem"}
         }
@@ -352,12 +395,27 @@ ku{
         }
         month{
             dn{"meh"}
+            relative{
+                "-1"{"meha borî"}
+                "0"{"vê mehê"}
+                "1"{"meha were"}
+            }
         }
         month-narrow{
             dn{"m."}
+            relative{
+                "-1"{"meha br."}
+                "0"{"vê mehê"}
+                "1"{"meha bê"}
+            }
         }
         month-short{
             dn{"m."}
+            relative{
+                "-1"{"meha br."}
+                "0"{"vê mehê"}
+                "1"{"meha bê"}
+            }
         }
         quarter{
             dn{"çarêk"}
@@ -379,12 +437,51 @@ ku{
         }
         week{
             dn{"hefte"}
+            relative{
+                "-1"{"hefteya borî"}
+                "0"{"vê hefteyê"}
+                "1"{"hefteya were"}
+            }
+            relativePeriod{"hefteya {0}"}
         }
         week-narrow{
             dn{"hf."}
+            relative{
+                "-1"{"hft. borî"}
+                "0"{"vê hft."}
+                "1"{"hft. bê"}
+            }
+            relativePeriod{"hft. {0}"}
         }
         week-short{
             dn{"hf."}
+            relative{
+                "-1"{"hft. borî"}
+                "0"{"vê hft."}
+                "1"{"hft. bê"}
+            }
+            relativePeriod{"hft. {0}"}
+        }
+        weekOfMonth{
+            dn{"hefteya mehê"}
+        }
+        weekday{
+            dn{"roja hefteyê"}
+        }
+        weekday-narrow{
+            dn{"roja hefteyê"}
+        }
+        weekday-short{
+            dn{"roja hefteyê"}
+        }
+        weekdayOfMonth{
+            dn{"roja mehê"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"roja mehê"}
+        }
+        weekdayOfMonth-short{
+            dn{"roja mehê"}
         }
         year{
             dn{"sal"}
@@ -393,12 +490,61 @@ ku{
                 "0"{"îsal"}
                 "1"{"sala piştî"}
             }
+            relativeTime{
+                future{
+                    one{"di salekê de"}
+                    other{"di {0} salan de"}
+                }
+                past{
+                    one{"berî {0} salê"}
+                    other{"berî {0} salan"}
+                }
+            }
         }
         year-narrow{
             dn{"sl"}
+            relative{
+                "-1"{"par"}
+                "0"{"îsal"}
+                "1"{"sala bê"}
+            }
+            relativeTime{
+                future{
+                    one{"piştî salekê"}
+                    other{"piştî {0} salan"}
+                }
+                past{
+                    one{"berî salekê"}
+                    other{"berî {0} salan"}
+                }
+            }
         }
         year-short{
             dn{"sal"}
+            relative{
+                "-1"{"par"}
+                "0"{"îsal"}
+                "1"{"sala bê"}
+            }
+            relativeTime{
+                future{
+                    one{"piştî salekê"}
+                    other{"piştî {0} salan"}
+                }
+                past{
+                    one{"berî salekê"}
+                    other{"berî {0} salan"}
+                }
+            }
+        }
+        zone{
+            dn{"qada demê"}
+        }
+        zone-narrow{
+            dn{"qad"}
+        }
+        zone-short{
+            dn{"qad"}
         }
     }
     listPattern{
@@ -464,10 +610,6 @@ ku{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

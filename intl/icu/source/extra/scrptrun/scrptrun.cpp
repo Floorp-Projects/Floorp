@@ -19,6 +19,8 @@
 #include "cmemory.h"
 #include "scrptrun.h"
 
+U_NAMESPACE_BEGIN
+
 const char ScriptRun::fgClassID=0;
 
 UChar32 ScriptRun::pairedChars[] = {
@@ -201,3 +203,4 @@ UBool ScriptRun::next()
     return true;
 }
 
+U_NAMESPACE_END

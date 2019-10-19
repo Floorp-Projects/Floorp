@@ -346,7 +346,6 @@ az{
         no{"norveç"}
         nog{"noqay"}
         non{"qədim nors"}
-        nqo{"nqo"}
         nr{"cənubi ndebele"}
         nso{"şimal soto"}
         nus{"nuer"}
@@ -527,10 +526,16 @@ az{
         zxx{"dil məzmunu yoxdur"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"sadələşmiş mandarin çincəsi"}
+        zh_Hant{"ənənəvi mandarin çincəsi"}
+    }
+    Languages%menu{
+        yue{"Çin, kanton"}
+        zh{"Çin, mandarin"}
+    }
     Languages%short{
         az{"azəri"}
-        en_GB{"ingilis (BK)"}
-        en_US{"ingilis (ABŞ)"}
     }
     Scripts{
         Arab{"ərəb"}
@@ -746,7 +751,7 @@ az{
             tibt{"Tibet Rəqəmləri"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — Bütün"}
         category-list{"{0}: {1}"}

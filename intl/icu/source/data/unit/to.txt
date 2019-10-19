@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 to{
-    Version{"2.1.47.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -45,6 +45,10 @@ to{
                 dnam{"ʻeka"}
                 other{"ʻeka ʻe {0}"}
             }
+            dunam{
+                dnam{"tunami"}
+                other{"tunami ʻe {0}"}
+            }
             hectare{
                 dnam{"hekitale"}
                 other{"hekitale ʻe {0}"}
@@ -52,6 +56,7 @@ to{
             square-centimeter{
                 dnam{"senitimita sikuea"}
                 other{"senitimita sikuea ʻe {0}"}
+                per{"{0} he senitimita sikuea"}
             }
             square-foot{
                 dnam{"fute sikuea"}
@@ -60,6 +65,7 @@ to{
             square-inch{
                 dnam{"ʻinisi sikuea"}
                 other{"ʻinisi sikuea ʻe {0}"}
+                per{"{0} he ʻinisi sikuea"}
             }
             square-kilometer{
                 dnam{"kilomita sikuea"}
@@ -69,6 +75,7 @@ to{
             square-meter{
                 dnam{"mita sikuea ʻe"}
                 other{"mita sikuea ʻe {0}"}
+                per{"{0} he mita sikuea"}
             }
             square-mile{
                 dnam{"maile sikuea"}
@@ -96,9 +103,25 @@ to{
                 dnam{"milimole he lita"}
                 other{"milimole ʻe {0} he lita"}
             }
+            mole{
+                dnam{"molo"}
+                other{"molo ʻe {0}"}
+            }
             part-per-million{
                 dnam{"konga he miliona"}
                 other{"konga ʻe {0} he miliona"}
+            }
+            percent{
+                dnam{"peseti"}
+                other{"peseti ʻe {0}"}
+            }
+            permille{
+                dnam{"pemili"}
+                other{"pemili ʻe {0}"}
+            }
+            permyriad{
+                dnam{"pemano"}
+                other{"pemano ʻe {0}"}
             }
         }
         consumption{
@@ -120,6 +143,7 @@ to{
             }
         }
         coordinate{
+            dnam{"fua tefitoʻi"}
             east{"hahake ʻe {0}"}
             north{"tokelau ʻe {0}"}
             south{"tonga ʻe {0}"}
@@ -158,6 +182,10 @@ to{
                 dnam{"mekapaiti"}
                 other{"mekapaiti ʻe {0}"}
             }
+            petabyte{
+                dnam{"petapaiti"}
+                other{"petapaiti ʻe {0}"}
+            }
             terabit{
                 dnam{"telapiti"}
                 other{"telapiti ʻe {0}"}
@@ -168,9 +196,18 @@ to{
             }
         }
         duration{
+            century{
+                dnam{"teautaʻu"}
+                other{"teautaʻu ʻe {0}"}
+            }
             day{
                 dnam{"ʻaho"}
                 other{"ʻaho ʻe {0}"}
+                per{"{0} he ʻaho"}
+            }
+            decade{
+                dnam{"honofuluʻitaʻu"}
+                other{"honofuluʻitaʻu ʻe {0}"}
             }
             hour{
                 dnam{"houa"}
@@ -188,10 +225,12 @@ to{
             minute{
                 dnam{"miniti"}
                 other{"miniti ʻe {0}"}
+                per{"{0} he miniti"}
             }
             month{
                 dnam{"māhina"}
                 other{"māhina ʻe {0}"}
+                per{"{0} he māhina"}
             }
             nanosecond{
                 dnam{"nanosekoni"}
@@ -205,10 +244,12 @@ to{
             week{
                 dnam{"uike"}
                 other{"uike ʻe {0}"}
+                per{"{0} he uike"}
             }
             year{
                 dnam{"taʻu"}
                 other{"taʻu ʻe {0}"}
+                per{"{0} he taʻu"}
             }
         }
         electric{
@@ -230,9 +271,17 @@ to{
             }
         }
         energy{
+            british-thermal-unit{
+                dnam{"ʻiuniti māfana fakapilitānia"}
+                other{"ʻiuniti māfana fakapilitānia ʻe {0}"}
+            }
             calorie{
                 dnam{"kaloli"}
                 other{"kaloli ʻe {0}"}
+            }
+            electronvolt{
+                dnam{"volotāʻelekitō"}
+                other{"volotāʻelekitō ʻe {0}"}
             }
             foodcalorie{
                 dnam{"kaloli-kai"}
@@ -254,6 +303,20 @@ to{
                 dnam{"kilouate-houa"}
                 other{"kilouate-houa ʻe {0}"}
             }
+            therm-us{
+                dnam{"ʻiuniti māfana fakaʻamelika"}
+                other{"ʻiuniti māfana fakaʻamelika ʻe {0}"}
+            }
+        }
+        force{
+            newton{
+                dnam{"Niutoni"}
+                other{"Niutoni ʻe {0}"}
+            }
+            pound-force{
+                dnam{"pāunimālohi"}
+                other{"pāunimālohi ʻe {0}"}
+            }
         }
         frequency{
             gigahertz{
@@ -273,6 +336,36 @@ to{
                 other{"megahēti ʻe {0}"}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                dnam{"toti he senitimita"}
+                other{"toti ʻe {0} he senitimita"}
+            }
+            dot-per-inch{
+                dnam{"toti he ʻinisi"}
+                other{"toti ʻe {0} he ʻinisi"}
+            }
+            em{
+                dnam{"ʻemi fakataipe"}
+                other{"ʻemi fakataipe ʻe {0}"}
+            }
+            megapixel{
+                dnam{"Mekameʻatā"}
+                other{"Mekameʻatā ʻe {0}"}
+            }
+            pixel{
+                dnam{"meʻatā"}
+                other{"meʻatā ʻe {0}"}
+            }
+            pixel-per-centimeter{
+                dnam{"meʻatā he senitimita"}
+                other{"meʻatā ʻe {0} he senitimita"}
+            }
+            pixel-per-inch{
+                dnam{"meʻatā he ʻinisi"}
+                other{"meʻatā ʻe {0} he ʻinisi"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"ʻiuniti fakaʻasitalōnoma"}
@@ -281,6 +374,7 @@ to{
             centimeter{
                 dnam{"senitimita"}
                 other{"senitimita ʻe {0}"}
+                per{"{0} he senitimita"}
             }
             decimeter{
                 dnam{"tesimita"}
@@ -293,6 +387,7 @@ to{
             foot{
                 dnam{"fute"}
                 other{"fute ʻe {0}"}
+                per{"{0} he fute"}
             }
             furlong{
                 dnam{"fālongo"}
@@ -301,10 +396,12 @@ to{
             inch{
                 dnam{"ʻinisi"}
                 other{"ʻinisi ʻe {0}"}
+                per{"{0} he ʻinisi"}
             }
             kilometer{
                 dnam{"kilomita"}
                 other{"kilomita ʻe {0}"}
+                per{"{0} he kilomita"}
             }
             light-year{
                 dnam{"taʻumaama"}
@@ -313,6 +410,7 @@ to{
             meter{
                 dnam{"mita"}
                 other{"mita ʻe {0}"}
+                per{"{0} he mita"}
             }
             micrometer{
                 dnam{"maikolomita"}
@@ -321,6 +419,10 @@ to{
             mile{
                 dnam{"maile"}
                 other{"maile ʻe {0}"}
+            }
+            mile-scandinavian{
+                dnam{"maile fakasikanitinavia"}
+                other{"maile fakasikanitinavia ʻe {0}"}
             }
             millimeter{
                 dnam{"milimita"}
@@ -342,6 +444,14 @@ to{
                 dnam{"pikomita"}
                 other{"pikomita ʻe {0}"}
             }
+            point{
+                dnam{"poini"}
+                other{"poini ʻe {0}"}
+            }
+            solar-radius{
+                dnam{"lētiasi fakalaʻā"}
+                other{"lētiasi fakalaʻā ʻe {0}"}
+            }
             yard{
                 dnam{"iate"}
                 other{"iate ʻe {0}"}
@@ -352,19 +462,33 @@ to{
                 dnam{"lukisi"}
                 other{"lukisi ʻe {0}"}
             }
+            solar-luminosity{
+                dnam{"huhulu fakalaʻā"}
+                other{"huhulu fakalaʻā ʻe {0}"}
+            }
         }
         mass{
             carat{
                 dnam{"kalati"}
                 other{"kalati ʻe {0}"}
             }
+            dalton{
+                dnam{"talatoni"}
+                other{"talatoni ʻe {0}"}
+            }
+            earth-mass{
+                dnam{"mamafa ʻo māmani"}
+                other{"mamafa ʻo māmani ʻe {0}"}
+            }
             gram{
                 dnam{"kalami"}
                 other{"kalami ʻe {0}"}
+                per{"{0} he kalami"}
             }
             kilogram{
                 dnam{"kilokalami"}
                 other{"kilokalami ʻe {0}"}
+                per{"{0} he kilokalami"}
             }
             metric-ton{
                 dnam{"toni"}
@@ -381,6 +505,7 @@ to{
             ounce{
                 dnam{"ʻaunise"}
                 other{"ʻaunisi ʻe {0}"}
+                per{"{0} he ʻaunise"}
             }
             ounce-troy{
                 dnam{"ʻaunisi koula"}
@@ -389,6 +514,11 @@ to{
             pound{
                 dnam{"pāuni"}
                 other{"pāuni ʻe {0}"}
+                per{"{0} he pāuni"}
+            }
+            solar-mass{
+                dnam{"mamafa ʻo e laʻā"}
+                other{"mamafa ʻo e laʻā ʻe {0}"}
             }
             stone{
                 dnam{"sitoni"}
@@ -426,6 +556,14 @@ to{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"ʻatimosifia"}
+                other{"ʻatimosifia ʻe {0}"}
+            }
+            bar{
+                dnam{"pā"}
+                other{"pā ʻe {0}"}
+            }
             hectopascal{
                 dnam{"hēkitopasikale"}
                 other{"hēkitopasikale ʻe {0}"}
@@ -434,6 +572,14 @@ to{
                 dnam{"ʻinisi meakuli"}
                 other{"ʻinisi meakuli ʻe {0}"}
             }
+            kilopascal{
+                dnam{"kilopasikale"}
+                other{"kilopasikale ʻe {0}"}
+            }
+            megapascal{
+                dnam{"mekapasikale"}
+                other{"mekapasikale ʻe {0}"}
+            }
             millibar{
                 dnam{"milipā"}
                 other{"milipā ʻe {0}"}
@@ -441,6 +587,10 @@ to{
             millimeter-of-mercury{
                 dnam{"milimita meakuli"}
                 other{"milimita meakuli ʻe {0}"}
+            }
+            pascal{
+                dnam{"pasikale"}
+                other{"pasikale ʻe {0}"}
             }
             pound-per-square-inch{
                 dnam{"pāuni he ʻinisi sikuea"}
@@ -451,6 +601,10 @@ to{
             kilometer-per-hour{
                 dnam{"kilomita he houa"}
                 other{"kilomita he houa ʻe {0}"}
+            }
+            knot{
+                dnam{"fakapona"}
+                other{"fakapona ʻe {0}"}
             }
             meter-per-second{
                 dnam{"mita he sekoni"}
@@ -479,10 +633,24 @@ to{
                 other{"kelevini ʻe {0}"}
             }
         }
+        torque{
+            newton-meter{
+                dnam{"Niutonimita"}
+                other{"Niutonimita ʻe {0}"}
+            }
+            pound-foot{
+                dnam{"pāunifute"}
+                other{"pāunifute ʻe {0}"}
+            }
+        }
         volume{
             acre-foot{
                 dnam{"ʻeka-fute"}
                 other{"ʻeka-fute ʻe {0}"}
+            }
+            barrel{
+                dnam{"paelo"}
+                other{"paelo ʻe {0}"}
             }
             bushel{
                 dnam{"pūseli"}
@@ -495,6 +663,7 @@ to{
             cubic-centimeter{
                 dnam{"senitimita kiupiki"}
                 other{"senitimita kiupiki ʻe {0}"}
+                per{"{0} he senitimita kiupiki"}
             }
             cubic-foot{
                 dnam{"fute kiupiki"}
@@ -511,6 +680,7 @@ to{
             cubic-meter{
                 dnam{"mita kiupiki"}
                 other{"mita kiupiki ʻe {0}"}
+                per{"{0} he mita kiupiki"}
             }
             cubic-mile{
                 dnam{"maile kiupiki"}
@@ -524,6 +694,10 @@ to{
                 dnam{"ipu"}
                 other{"ipu ʻe {0}"}
             }
+            cup-metric{
+                dnam{"ipu fakamita"}
+                other{"ipu fakamita ʻe {0}"}
+            }
             deciliter{
                 dnam{"tesilita"}
                 other{"tesilita ʻe {0}"}
@@ -532,9 +706,14 @@ to{
                 dnam{"ʻaunise tafe"}
                 other{"ʻaunise tafe ʻe {0}"}
             }
+            fluid-ounce-imperial{
+                dnam{"ʻaunise fakaʻemipaea"}
+                other{"ʻaunise fakaʻemipaea ʻe {0}"}
+            }
             gallon{
                 dnam{"kālani"}
                 other{"kālani ʻe {0}"}
+                per{"{0} he kālani"}
             }
             gallon-imperial{
                 dnam{"kālani fakaʻemipaea"}
@@ -548,6 +727,7 @@ to{
             liter{
                 dnam{"lita"}
                 other{"lita ʻe {0}"}
+                per{"{0} he lita"}
             }
             megaliter{
                 dnam{"mekalita"}
@@ -560,6 +740,10 @@ to{
             pint{
                 dnam{"painite"}
                 other{"painite ʻe {0}"}
+            }
+            pint-metric{
+                dnam{"painite fakamita"}
+                other{"painite fakamita ʻe {0}"}
             }
             quart{
                 dnam{"kuata"}
@@ -654,6 +838,10 @@ to{
                 dnam{"kt"}
                 other{"{0} kt"}
             }
+            percent{
+                dnam{"%"}
+                other{"{0}%"}
+            }
         }
         consumption{
             liter-per-100kilometers{
@@ -673,6 +861,7 @@ to{
             }
         }
         coordinate{
+            dnam{"fua"}
             east{"{0} ha"}
             north{"{0} tk"}
             south{"{0} to"}
@@ -940,8 +1129,8 @@ to{
                 other{"{0} ʻau-k"}
             }
             pound{
-                dnam{"pā"}
-                other{"{0} pā"}
+                dnam{"pāu"}
+                other{"{0} pāu"}
             }
             stone{
                 dnam{"st"}
@@ -1157,6 +1346,10 @@ to{
                 dnam{"ʻek"}
                 other{"ʻek ʻe {0}"}
             }
+            dunam{
+                dnam{"tunami"}
+                other{"tunami ʻe {0}"}
+            }
             hectare{
                 dnam{"ha"}
                 other{"ha ʻe {0}"}
@@ -1164,6 +1357,7 @@ to{
             square-centimeter{
                 dnam{"sm²"}
                 other{"sm² ʻe {0}"}
+                per{"{0}/sm²"}
             }
             square-foot{
                 dnam{"ft²"}
@@ -1172,6 +1366,7 @@ to{
             square-inch{
                 dnam{"in²"}
                 other{"in² ʻe {0}"}
+                per{"{0}/in²"}
             }
             square-kilometer{
                 dnam{"km²"}
@@ -1181,10 +1376,12 @@ to{
             square-meter{
                 dnam{"m²"}
                 other{"m² ʻe {0}"}
+                per{"{0}/m²"}
             }
             square-mile{
                 dnam{"mi²"}
                 other{"mi² ʻe {0}"}
+                per{"{0}/mi²"}
             }
             square-yard{
                 dnam{"it²"}
@@ -1207,9 +1404,24 @@ to{
                 dnam{"mmol/l"}
                 other{"mmol ʻe {0}/l"}
             }
+            mole{
+                dnam{"mol"}
+                other{"mol ʻe {0}"}
+            }
             part-per-million{
                 dnam{"khm"}
                 other{"khm ʻe {0}"}
+            }
+            percent{
+                dnam{"%"}
+                other{"% ʻe {0}"}
+            }
+            permille{
+                dnam{"‰"}
+                other{"‰ ʻe {0}"}
+            }
+            permyriad{
+                other{"‱ ʻe {0}"}
             }
         }
         consumption{
@@ -1231,6 +1443,7 @@ to{
             }
         }
         coordinate{
+            dnam{"fua"}
             east{"ha ʻe {0}"}
             north{"tk ʻe {0}"}
             south{"to ʻe {0}"}
@@ -1270,6 +1483,7 @@ to{
                 other{"MB ʻe {0}"}
             }
             petabyte{
+                dnam{"PB"}
                 other{"PB ʻe {0}"}
             }
             terabit{
@@ -1282,9 +1496,18 @@ to{
             }
         }
         duration{
+            century{
+                dnam{"tt"}
+                other{"tt ʻe {0}"}
+            }
             day{
                 dnam{"ʻa"}
                 other{"ʻa ʻe {0}"}
+                per{"{0} /ʻa"}
+            }
+            decade{
+                dnam{"ht"}
+                other{"ht ʻe {0}"}
             }
             hour{
                 dnam{"h"}
@@ -1302,10 +1525,12 @@ to{
             minute{
                 dnam{"m"}
                 other{"m ʻe {0}"}
+                per{"{0} /m"}
             }
             month{
                 dnam{"mā"}
                 other{"mā ʻe {0}"}
+                per{"{0} /mā"}
             }
             nanosecond{
                 dnam{"ns"}
@@ -1319,10 +1544,12 @@ to{
             week{
                 dnam{"u"}
                 other{"u ʻe {0}"}
+                per{"{0} /u"}
             }
             year{
                 dnam{"taʻu"}
                 other{"taʻu ʻe {0}"}
+                per{"{0} /t"}
             }
         }
         electric{
@@ -1344,9 +1571,16 @@ to{
             }
         }
         energy{
+            british-thermal-unit{
+                dnam{"imfP"}
+                other{"imfP ʻe {0}"}
+            }
             calorie{
                 dnam{"kal"}
                 other{"kal ʻe {0}"}
+            }
+            electronvolt{
+                other{"eV ʻe {0}"}
             }
             foodcalorie{
                 dnam{"kal-k"}
@@ -1368,6 +1602,19 @@ to{
                 dnam{"kWh"}
                 other{"kWh ʻe {0}"}
             }
+            therm-us{
+                dnam{"imfA"}
+                other{"imfA ʻe {0}"}
+            }
+        }
+        force{
+            newton{
+                other{"N ʻe {0}"}
+            }
+            pound-force{
+                dnam{"pāmā"}
+                other{"pāmā ʻe {0}"}
+            }
         }
         frequency{
             gigahertz{
@@ -1387,6 +1634,36 @@ to{
                 other{"MHz ʻe {0}"}
             }
         }
+        graphics{
+            dot-per-centimeter{
+                dnam{"toti/sm"}
+                other{"toti ʻe {0}/sm"}
+            }
+            dot-per-inch{
+                dnam{"toti/in"}
+                other{"toti ʻe {0}/in"}
+            }
+            em{
+                dnam{"ʻemi"}
+                other{"ʻemi ʻe {0}"}
+            }
+            megapixel{
+                dnam{"Mmeʻatā"}
+                other{"Mmeʻatā ʻe {0}"}
+            }
+            pixel{
+                dnam{"meʻatā"}
+                other{"meʻatā ʻe {0}"}
+            }
+            pixel-per-centimeter{
+                dnam{"meʻatā/sm"}
+                other{"meʻatā ʻe {0}/sm"}
+            }
+            pixel-per-inch{
+                dnam{"meʻatā/in"}
+                other{"meʻatā ʻe {0}/in"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"ʻiʻa"}
@@ -1395,6 +1672,7 @@ to{
             centimeter{
                 dnam{"sm"}
                 other{"sm ʻe {0}"}
+                per{"{0} /sm"}
             }
             decimeter{
                 dnam{"tm"}
@@ -1407,6 +1685,7 @@ to{
             foot{
                 dnam{"ft"}
                 other{"ft ʻe {0}"}
+                per{"{0}/ft"}
             }
             furlong{
                 dnam{"fāl"}
@@ -1415,10 +1694,12 @@ to{
             inch{
                 dnam{"in"}
                 other{"in ʻe {0}"}
+                per{"{0}/in"}
             }
             kilometer{
                 dnam{"km"}
                 other{"km ʻe {0}"}
+                per{"{0}/km"}
             }
             light-year{
                 dnam{"tma"}
@@ -1427,6 +1708,7 @@ to{
             meter{
                 dnam{"m"}
                 other{"m ʻe {0}"}
+                per{"{0}/m"}
             }
             micrometer{
                 dnam{"µm"}
@@ -1435,6 +1717,10 @@ to{
             mile{
                 dnam{"mi"}
                 other{"mi ʻe {0}"}
+            }
+            mile-scandinavian{
+                dnam{"msi"}
+                other{"msi ʻe {0}"}
             }
             millimeter{
                 dnam{"mm"}
@@ -1456,6 +1742,14 @@ to{
                 dnam{"pm"}
                 other{"pm ʻe {0}"}
             }
+            point{
+                dnam{"pn"}
+                other{"pn ʻe {0}"}
+            }
+            solar-radius{
+                dnam{"L☉"}
+                other{"L☉ ʻe {0}"}
+            }
             yard{
                 dnam{"it"}
                 other{"it ʻe {0}"}
@@ -1466,19 +1760,33 @@ to{
                 dnam{"lx"}
                 other{"lx ʻe {0}"}
             }
+            solar-luminosity{
+                dnam{"H☉"}
+                other{"H☉ ʻe {0}"}
+            }
         }
         mass{
             carat{
                 dnam{"kt"}
                 other{"kt ʻe {0}"}
             }
+            dalton{
+                dnam{"tlt"}
+                other{"tlt ʻe {0}"}
+            }
+            earth-mass{
+                dnam{"mamafa ⊕"}
+                other{"mamafa ⊕ ʻe {0}"}
+            }
             gram{
                 dnam{"k"}
                 other{"k ʻe {0}"}
+                per{"{0}/k"}
             }
             kilogram{
                 dnam{"kk"}
                 other{"kk ʻe {0}"}
+                per{"{0}/kk"}
             }
             metric-ton{
                 dnam{"to"}
@@ -1495,14 +1803,20 @@ to{
             ounce{
                 dnam{"ʻau"}
                 other{"ʻau ʻe {0}"}
+                per{"{0}/ʻau"}
             }
             ounce-troy{
                 dnam{"ʻau-k"}
                 other{"ʻau-k ʻe {0}"}
             }
             pound{
-                dnam{"pā"}
-                other{"pā ʻe {0}"}
+                dnam{"pāu"}
+                other{"pāu ʻe {0}"}
+                per{"{0}/pāu"}
+            }
+            solar-mass{
+                dnam{"mamafa ☉"}
+                other{"mamafa ☉ ʻe {0}"}
             }
             stone{
                 dnam{"st"}
@@ -1540,6 +1854,14 @@ to{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"ʻati"}
+                other{"ʻati ʻe {0}"}
+            }
+            bar{
+                dnam{"pā"}
+                other{"pā ʻe {0}"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 other{"hPa ʻe {0}"}
@@ -1548,6 +1870,12 @@ to{
                 dnam{"in-Hg"}
                 other{"in-Hg ʻe {0}"}
             }
+            kilopascal{
+                other{"kPa ʻe {0}"}
+            }
+            megapascal{
+                other{"MPa ʻe {0}"}
+            }
             millibar{
                 dnam{"mpā"}
                 other{"mpā ʻe {0}"}
@@ -1555,6 +1883,9 @@ to{
             millimeter-of-mercury{
                 dnam{"mm-Hg"}
                 other{"mm-Hg ʻe {0}"}
+            }
+            pascal{
+                other{"Pā ʻe {0}"}
             }
             pound-per-square-inch{
                 dnam{"pā/in²"}
@@ -1565,6 +1896,10 @@ to{
             kilometer-per-hour{
                 dnam{"km/h"}
                 other{"km/h ʻe {0}"}
+            }
+            knot{
+                dnam{"fp"}
+                other{"fp ʻe {0}"}
             }
             meter-per-second{
                 dnam{"m/s"}
@@ -1585,6 +1920,7 @@ to{
                 other{"°F ʻe {0}"}
             }
             generic{
+                dnam{"°"}
                 other{"° ʻe {0}"}
             }
             kelvin{
@@ -1592,10 +1928,23 @@ to{
                 other{"K ʻe {0}"}
             }
         }
+        torque{
+            newton-meter{
+                other{"N⋅m ʻe {0}"}
+            }
+            pound-foot{
+                dnam{"pā⋅ft"}
+                other{"pā⋅ft ʻe {0}"}
+            }
+        }
         volume{
             acre-foot{
                 dnam{"ʻe-ft"}
                 other{"ʻe-ft ʻe {0}"}
+            }
+            barrel{
+                dnam{"paelo"}
+                other{"paelo ʻe {0}"}
             }
             bushel{
                 dnam{"pū"}
@@ -1608,6 +1957,7 @@ to{
             cubic-centimeter{
                 dnam{"sm³"}
                 other{"sm³ ʻe {0}"}
+                per{"{0}/sm³"}
             }
             cubic-foot{
                 dnam{"ft³"}
@@ -1624,6 +1974,7 @@ to{
             cubic-meter{
                 dnam{"m³"}
                 other{"m³ ʻe {0}"}
+                per{"{0}/m³"}
             }
             cubic-mile{
                 dnam{"mi³"}
@@ -1637,6 +1988,10 @@ to{
                 dnam{"ip"}
                 other{"ip ʻe {0}"}
             }
+            cup-metric{
+                dnam{"ipm"}
+                other{"ipm ʻe {0}"}
+            }
             deciliter{
                 dnam{"tl"}
                 other{"tl ʻe {0}"}
@@ -1645,9 +2000,14 @@ to{
                 dnam{"ʻau-tf"}
                 other{"ʻau-tf ʻe {0}"}
             }
+            fluid-ounce-imperial{
+                dnam{"ʻau-ʻem"}
+                other{"ʻau-ʻem ʻe {0}"}
+            }
             gallon{
                 dnam{"kā"}
                 other{"kā ʻe {0}"}
+                per{"{0}/kā"}
             }
             gallon-imperial{
                 dnam{"kāʻem"}
@@ -1674,6 +2034,10 @@ to{
             pint{
                 dnam{"pt"}
                 other{"pt ʻe {0}"}
+            }
+            pint-metric{
+                dnam{"ptm"}
+                other{"ptm ʻe {0}"}
             }
             quart{
                 dnam{"ku"}

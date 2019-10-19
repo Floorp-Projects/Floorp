@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en{
-    Version{"2.1.48.65"}
+    Version{"36"}
     units{
         acceleration{
             g-force{
@@ -242,6 +242,11 @@ en{
                 other{"{0} days"}
                 per{"{0} per day"}
             }
+            decade{
+                dnam{"decades"}
+                one{"{0} decade"}
+                other{"{0} decades"}
+            }
             hour{
                 dnam{"hours"}
                 one{"{0} hour"}
@@ -357,6 +362,11 @@ en{
                 one{"{0} kilowatt hour"}
                 other{"{0} kilowatt-hours"}
             }
+            therm-us{
+                dnam{"US therms"}
+                one{"{0} US therm"}
+                other{"{0} US therms"}
+            }
         }
         force{
             newton{
@@ -390,6 +400,43 @@ en{
                 dnam{"megahertz"}
                 one{"{0} megahertz"}
                 other{"{0} megahertz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dots per centimeter"}
+                one{"{0} dot per centimeter"}
+                other{"{0} dots per centimeter"}
+            }
+            dot-per-inch{
+                dnam{"dots per inch"}
+                one{"{0} dot per inch"}
+                other{"{0} dots per inch"}
+            }
+            em{
+                dnam{"typographic em"}
+                one{"{0} em"}
+                other{"{0} ems"}
+            }
+            megapixel{
+                dnam{"megapixels"}
+                one{"{0} megapixel"}
+                other{"{0} megapixels"}
+            }
+            pixel{
+                dnam{"pixels"}
+                one{"{0} pixel"}
+                other{"{0} pixels"}
+            }
+            pixel-per-centimeter{
+                dnam{"pixels per centimeter"}
+                one{"{0} pixel per centimeter"}
+                other{"{0} pixels per centimeter"}
+            }
+            pixel-per-inch{
+                dnam{"pixels per inch"}
+                one{"{0} pixel per inch"}
+                other{"{0} pixels per inch"}
             }
         }
         length{
@@ -630,6 +677,11 @@ en{
                 one{"{0} atmosphere"}
                 other{"{0} atmospheres"}
             }
+            bar{
+                dnam{"bars"}
+                one{"{0} bar"}
+                other{"{0} bars"}
+            }
             hectopascal{
                 dnam{"hectopascals"}
                 one{"{0} hectopascal"}
@@ -659,6 +711,11 @@ en{
                 dnam{"millimeters of mercury"}
                 one{"{0} millimeter of mercury"}
                 other{"{0} millimeters of mercury"}
+            }
+            pascal{
+                dnam{"pascals"}
+                one{"{0} pascal"}
+                other{"{0} pascals"}
             }
             pound-per-square-inch{
                 dnam{"pounds per square inch"}
@@ -1076,6 +1133,11 @@ en{
                 one{"{0}d"}
                 other{"{0}d"}
             }
+            decade{
+                dnam{"dec"}
+                one{"{0}dec"}
+                other{"{0}dec"}
+            }
             hour{
                 dnam{"hour"}
                 one{"{0}h"}
@@ -1185,6 +1247,11 @@ en{
                 one{"{0}kWh"}
                 other{"{0}kWh"}
             }
+            therm-us{
+                dnam{"US therm"}
+                one{"{0}US therm"}
+                other{"{0}US therms"}
+            }
         }
         force{
             newton{
@@ -1218,6 +1285,43 @@ en{
                 dnam{"MHz"}
                 one{"{0}MHz"}
                 other{"{0}MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0}dpcm"}
+                other{"{0}dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0}dpi"}
+                other{"{0}dpi"}
+            }
+            em{
+                dnam{"em"}
+                one{"{0}em"}
+                other{"{0}em"}
+            }
+            megapixel{
+                dnam{"MP"}
+                one{"{0}MP"}
+                other{"{0}MP"}
+            }
+            pixel{
+                dnam{"px"}
+                one{"{0}px"}
+                other{"{0}px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0}ppcm"}
+                other{"{0}ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0}ppi"}
+                other{"{0}ppi"}
             }
         }
         length{
@@ -1449,6 +1553,11 @@ en{
                 one{"{0}atm"}
                 other{"{0}atm"}
             }
+            bar{
+                dnam{"bar"}
+                one{"{0}bar"}
+                other{"{0}bars"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0}hPa"}
@@ -1478,6 +1587,11 @@ en{
                 dnam{"mmHg"}
                 one{"{0}mmHg"}
                 other{"{0}mmHg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                one{"{0}Pa"}
+                other{"{0}Pa"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -1919,6 +2033,11 @@ en{
                 other{"{0} days"}
                 per{"{0}/d"}
             }
+            decade{
+                dnam{"dec"}
+                one{"{0} dec"}
+                other{"{0} dec"}
+            }
             hour{
                 dnam{"hours"}
                 one{"{0} hr"}
@@ -2034,6 +2153,11 @@ en{
                 one{"{0} kWh"}
                 other{"{0} kWh"}
             }
+            therm-us{
+                dnam{"US therm"}
+                one{"{0} US therm"}
+                other{"{0} US therms"}
+            }
         }
         force{
             newton{
@@ -2067,6 +2191,43 @@ en{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+            }
+            em{
+                dnam{"em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                dnam{"megapixels"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                dnam{"pixels"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"ppcm"}
+                one{"{0} ppcm"}
+                other{"{0} ppcm"}
+            }
+            pixel-per-inch{
+                dnam{"ppi"}
+                one{"{0} ppi"}
+                other{"{0} ppi"}
             }
         }
         length{
@@ -2307,6 +2468,11 @@ en{
                 one{"{0} atm"}
                 other{"{0} atm"}
             }
+            bar{
+                dnam{"bar"}
+                one{"{0} bar"}
+                other{"{0} bars"}
+            }
             hectopascal{
                 dnam{"hPa"}
                 one{"{0} hPa"}
@@ -2336,6 +2502,11 @@ en{
                 dnam{"mmHg"}
                 one{"{0} mmHg"}
                 other{"{0} mmHg"}
+            }
+            pascal{
+                dnam{"Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"psi"}

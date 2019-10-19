@@ -1,6 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hy{
+    AuxExemplarCharacters{"[և]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -10,13 +11,18 @@ hy{
         word-medial{"{0} … {1}"}
     }
     ExemplarCharacters{
-        "[ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ ր ց ւ փ ք և օ"
-        " ֆ]"
+        "[ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ ր ց ւ փ ք օ ֆ"
+        "]"
     }
-    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersIndex{
+        "[Ա Բ Գ Դ Ե Զ Է Ը Թ Ժ Ի Լ Խ Ծ Կ Հ Ձ Ղ Ճ Մ Յ Ն Շ Ո Չ Պ Ջ Ռ Ս Վ Տ Ր Ց Ւ Փ Ք Օ Ֆ"
+        "]"
+    }
+    ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[֊ , ՝ \\: ՜ ՞ . « » ՚ ՛ ՟]"}
-    MoreInformation{"?"}
+    MoreInformation{"(՞)"}
     NumberElements{
+        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -27,6 +33,7 @@ hy{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -190,9 +197,11 @@ hy{
                 group{" "}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"ՈչԹ"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -208,9 +217,10 @@ hy{
             }
         }
         minimumGroupingDigits{"1"}
+        native{"latn"}
         traditional{"armn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -280,44 +290,6 @@ hy{
                     B{"B h:mm – B h:mm"}
                     h{"B h:mm – h:mm"}
                     m{"B h:mm – h:mm"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
-                GyMMMEd{
-                    G{"G y MMM d, E – G y MMM d, E"}
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
-                }
-                GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 H{
                     H{"H–H"}
@@ -471,8 +443,8 @@ hy{
                 MMM{"LLL"}
                 MMMEd{"d MMM, E"}
                 MMMMW{
-                    one{"MMMM W շաբ"}
-                    other{"MMMM W շաբ"}
+                    one{"MMMM W-ին շաբաթ"}
+                    other{"MMMM W-րդ շաբաթ"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
@@ -495,8 +467,8 @@ hy{
                 yQQQ{"y թ. QQQ"}
                 yQQQQ{"y թ. QQQQ"}
                 yw{
-                    one{"Y w շաբ"}
-                    other{"Y w շաբ"}
+                    one{"Y թ․ w-ին շաբաթ"}
+                    other{"Y թ․ w-րդ շաբաթ"}
                 }
             }
             dayNames{
@@ -596,11 +568,11 @@ hy{
                         noon{"կօ․"}
                     }
                     wide{
-                        afternoon1{"ցերեկը"}
+                        afternoon1{"ցերեկվա"}
                         evening1{"երեկոյան"}
                         midnight{"կեսգիշերին"}
                         morning1{"առավոտյան"}
-                        night1{"գիշերը"}
+                        night1{"գիշերվա"}
                         noon{"կեսօրին"}
                     }
                 }
@@ -674,10 +646,10 @@ hy{
                     y{"GGGGG MM.y – MM.y"}
                 }
                 GyMEd{
-                    G{"GGGGG ccc, dd.MM.y – GGGGG ccc, dd.MM.y"}
-                    M{"GGGGG ccc, dd.MM.y – ccc, dd.MM.y"}
-                    d{"GGGGG ccc, dd.MM.y – ccc, dd.MM.y"}
-                    y{"GGGGG ccc, dd.MM.y – ccc, dd.MM.y"}
+                    G{"GGGGG dd.MM.y ccc – GGGGG dd.MM.y ccc"}
+                    M{"GGGGG dd.MM.y ccc – dd.MM.y ccc"}
+                    d{"GGGGG dd.MM.y, ccc – dd.MM.y, ccc"}
+                    y{"GGGGG dd.MM.y ccc – dd.MM.y ccc"}
                 }
                 GyMMM{
                     G{"G y MMM – G y MMM"}
@@ -685,16 +657,16 @@ hy{
                     y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
-                    G{"G E, d MMM – G E, d MMM, y թ."}
-                    M{"G E, d MMM y թ. – E, d MMM"}
-                    d{"G E, d MMM – E, d MMM, y թ."}
-                    y{"G E, d MMM y թ. – E, d MMM y թ."}
+                    G{"G y թ. MMM d E – G MMM d E"}
+                    M{"G y թ. MMM d E – MMM d E"}
+                    d{"G y թ. MMM d E – MMM d E"}
+                    y{"G y թ. MMM d E – y թ. MMM d E"}
                 }
                 GyMMMd{
-                    G{"G dd MMM, y թ․ – G dd MMM, y թ."}
-                    M{"G dd MMM – dd MMM, y թ."}
-                    d{"G dd–dd MMM, y թ."}
-                    y{"G dd MMM, y թ․ – G dd MMM, y թ."}
+                    G{"G y թ․ MMM dd – G y թ. MMM dd"}
+                    M{"G y թ. MMM dd – MMM dd"}
+                    d{"G y թ. MMM dd–dd"}
+                    y{"G y թ․ MMM dd – G y թ. MMM dd"}
                 }
                 GyMd{
                     G{"GGGGG dd.MM.y – GGGGG dd.MM.y"}
@@ -931,84 +903,84 @@ hy{
         }
     }
     characterLabel{
-        activities{"Զբաղմունքներ"}
-        african_scripts{"Աֆրիկյան գրեր"}
-        american_scripts{"Ամերիկյան գրեր"}
+        activities{"զբաղմունք"}
+        african_scripts{"աֆրիկյան գիր"}
+        american_scripts{"ամերիկյան գիր"}
         animal{"կենդանի"}
-        animals_nature{"Կենդանիներ և բնություն"}
-        arrows{"Սլաքներ"}
+        animals_nature{"կենդանիներ կամ բնություն"}
+        arrows{"սլաք"}
         body{"մարմին"}
         box_drawing{"Կեղծ գրաֆիկա"}
-        braille{"Բրեյլի գիր"}
+        braille{"բրայլ"}
         building{"շենք"}
-        bullets_stars{"Պարբերակներ/աստղանիշեր"}
+        bullets_stars{"պարբերակ կամ աստղանիշ"}
         consonantal_jamo{"Ջամո բաղաձայններ"}
-        currency_symbols{"Արժույթների նշաններ"}
-        dash_connector{"Միության/անջատման գծիկ"}
-        digits{"Թվանշաններ"}
-        dingbats{"Նշագիր"}
-        divination_symbols{"Գուշակության նշաններ"}
-        downwards_arrows{"Վար ուղղված սլաքներ"}
-        downwards_upwards_arrows{"Վար և վեր ուղղված սլաքներ"}
+        currency_symbols{"արժույթի նշան"}
+        dash_connector{"անջատման կամ միության գծիկ"}
+        digits{"թվանշան"}
+        dingbats{"նշագիր"}
+        divination_symbols{"գուշակության նշան"}
+        downwards_arrows{"վար ուղղված սլաք"}
+        downwards_upwards_arrows{"վար և վեր ուղղված սլաք"}
         east_asian_scripts{"Արևելաասիական գրեր"}
         emoji{"Էմոձի"}
         european_scripts{"Եվրոպական գրեր"}
         female{"կին"}
         flag{"դրոշ"}
-        flags{"Դրոշակներ"}
-        food_drink{"Ուտելիք և ըմպելիք"}
-        format{"Ձևաչափում"}
-        format_whitespace{"Ձևաչափում և բացատներ"}
+        flags{"դրոշներ"}
+        food_drink{"ուտելիք և ըմպելիք"}
+        format{"ձևաչափ"}
+        format_whitespace{"ձևաչափ և բացատ"}
         full_width_form_variant{"Ձևի ամբողջ լայնքով տարբերակներ"}
-        geometric_shapes{"Երկրաչափական պատկերներ"}
-        half_width_form_variant{"Ձևի կես լայնքով տարբերակներ"}
-        han_characters{"Չինական նշաններ"}
+        geometric_shapes{"երկրաչափական պատկեր"}
+        half_width_form_variant{"կիսալայն տարբերակ"}
+        han_characters{"խան գրանշան"}
         han_radicals{"Հիերոգլիֆային բանալիներ"}
         hanja{"Հանջա"}
         hanzi_simplified{"Չինարենի պարզեցված հիերոգլիֆներ"}
         hanzi_traditional{"Չինարենի ավանդական հիերոգլիֆներ"}
         heart{"սիրտ"}
-        historic_scripts{"Պատմական գրեր"}
+        historic_scripts{"պատմական գիր"}
         ideographic_desc_characters{"Հիերոգլիֆների նկարագրման նշաններ"}
-        japanese_kana{"Կանա"}
+        japanese_kana{"ճապոնական կանա"}
         kanbun{"Կամբուն"}
         kanji{"Կանձի"}
         keycap{"ստեղն"}
         leftwards_arrows{"Ձախ ուղղված սլաքներ"}
         leftwards_rightwards_arrows{"Ձախ և աջ ուղղված սլաքներ"}
-        letterlike_symbols{"Տառային նշաններ"}
+        letterlike_symbols{"տառակերպ նշան"}
         limited_use{"Սահմանափակ գործածում"}
         male{"տղամարդ"}
         math_symbols{"Մաթեմատիկական նշաններ"}
         middle_eastern_scripts{"Միջինարևելյան գրեր"}
-        miscellaneous{"Խառը"}
-        modern_scripts{"ժամանակակից գրեր"}
-        modifier{"Փոխակերպիչ"}
-        musical_symbols{"Երաժշտական գրեր"}
+        miscellaneous{"խառը"}
+        modern_scripts{"ժամանակակից գիր"}
+        modifier{"փոփոխիչ"}
+        musical_symbols{"երաժշտական նշան"}
         nature{"բնություն"}
         nonspacing{"Առանց բացատի"}
-        numbers{"Թվեր"}
-        objects{"Առարկաներ"}
-        other{"Այլ"}
+        numbers{"թվեր"}
+        objects{"առարկա"}
+        other{"այլ"}
         paired{"Զույգ նշաններ"}
         person{"անձ"}
-        phonetic_alphabet{"Հնչյունային այբուբեն"}
-        pictographs{"Պատկերագրեր"}
+        phonetic_alphabet{"հնչյունային այբուբեն"}
+        pictographs{"պատկերագիր"}
         place{"վայր"}
         plant{"բույս"}
-        punctuation{"Կետադրական նշաններ"}
+        punctuation{"կետադրություն"}
         rightwards_arrows{"Աջ ուղղված սլաքներ"}
-        sign_standard_symbols{"Ստանդարտ նշաններ"}
-        small_form_variant{"Ձևի փոքր տարբերակներ"}
+        sign_standard_symbols{"նիշ կամ նշան"}
+        small_form_variant{"փոքր տարբերակներ"}
         smiley{"զմայլիկ"}
-        smileys_people{"Զմայլիկներ և մարդիկ"}
-        south_asian_scripts{"Հարավասիական գրեր"}
+        smileys_people{"զմայլիկ կամ անձ"}
+        south_asian_scripts{"հարավասիական գիր"}
         southeast_asian_scripts{"Հարավարևելյան Ասիայի գրեր"}
         spacing{"Բացատներ"}
         sport{"սպորտ"}
         symbols{"Նշաններ"}
-        technical_symbols{"Տեխնիկական նշաններ"}
-        tone_marks{"Տոնի նշաններ"}
+        technical_symbols{"տեխնիկական նշան"}
+        tone_marks{"ձայներանգի նշան"}
         travel{"ճամփորդություն"}
         travel_places{"Ճամփորդություն և վայրեր"}
         upwards_arrows{"Վեր ուղղված սլաքներ"}
@@ -1016,7 +988,7 @@ hy{
         vocalic_jamo{"Ջամո ձայնավորներ"}
         weather{"եղանակ"}
         western_asian_scripts{"Արևմտաասիական գրեր"}
-        whitespace{"Բացատներ"}
+        whitespace{"բացատ"}
     }
     delimiters{
         alternateQuotationEnd{"»"}
@@ -1029,7 +1001,7 @@ hy{
             dn{"օր"}
             relative{
                 "-1"{"երեկ"}
-                "-2"{"երեկ չէ առաջի օրը"}
+                "-2"{"նախանցյալ օրը"}
                 "0"{"այսօր"}
                 "1"{"վաղը"}
                 "2"{"վաղը չէ մյուս օրը"}
@@ -1319,7 +1291,7 @@ hy{
         month-narrow{
             dn{"ամս"}
             relative{
-                "-1"{"անցյալ ամիս"}
+                "-1"{"նախորդ ամիս"}
                 "0"{"այս ամիս"}
                 "1"{"հաջորդ ամիս"}
             }
@@ -1337,7 +1309,7 @@ hy{
         month-short{
             dn{"ամս"}
             relative{
-                "-1"{"անցյալ ամիս"}
+                "-1"{"նախորդ ամիս"}
                 "0"{"այս ամիս"}
                 "1"{"հաջորդ ամիս"}
             }
@@ -1835,10 +1807,8 @@ hy{
             start{"{0}, {1}"}
         }
         standard-narrow{
-            2{"{0} և {1}"}
-            end{"{0} և {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
         }
         standard-short{
             2{"{0} և {1}"}

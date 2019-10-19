@@ -133,7 +133,7 @@ az{
         GU{"Quam"}
         GW{"Qvineya-Bisau"}
         GY{"Qayana"}
-        HK{"Honq Konq Xüsusi İnzibati Ərazi Çin"}
+        HK{"Honq Konq Xüsusi İnzibati Rayonu Çin"}
         HM{"Herd və Makdonald adaları"}
         HN{"Honduras"}
         HR{"Xorvatiya"}
@@ -187,7 +187,7 @@ az{
         ML{"Mali"}
         MM{"Myanma"}
         MN{"Monqolustan"}
-        MO{"Makao Xüsusi İnzibati Ərazi Çin"}
+        MO{"Makao XİR Çin"}
         MP{"Şimali Marian adaları"}
         MQ{"Martinik"}
         MR{"Mavritaniya"}
@@ -312,7 +312,7 @@ az{
         CZ{"Çex Respublikası"}
         FK{"Folklend adaları (Malvin adaları)"}
         SZ{"Svazilend"}
-        TL{"Doğu Timor"}
+        TL{"Şərqi Timor"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

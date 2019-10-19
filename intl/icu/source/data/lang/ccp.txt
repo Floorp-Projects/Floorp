@@ -833,7 +833,7 @@ ccp{
             vaii{"𑄞𑄭 𑄚𑄘"}
         }
     }
-    Version{"2.1.48.88"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — 𑄗𑄪𑄟𑄴"}
         category-list{"{0}: {1}"}

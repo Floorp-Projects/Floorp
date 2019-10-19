@@ -236,7 +236,7 @@ int  main(int argc, char **argv) {
         fprintf(stderr, "gencfu: uspoof_openFromSource error \"%s\"  at file %s, line %d, column %d\n",
                 u_errorName(status), confFileName, (int)parseError.line, (int)parseError.offset);
         exit(status);
-    };
+    }
 
 
     //

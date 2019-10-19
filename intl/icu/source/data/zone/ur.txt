@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ur{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"عابدجان"}
@@ -508,7 +508,7 @@ ur{
             ec{"پیورٹو ریکو"}
         }
         "America:Punta_Arenas"{
-            ec{"پنٹا یریناس"}
+            ec{"پنٹا اریناس"}
         }
         "America:Rainy_River"{
             ec{"رینی ریور"}
@@ -1025,7 +1025,7 @@ ur{
             ec{"کالينينغراد"}
         }
         "Europe:Kiev"{
-            ec{"کیوو"}
+            ec{"کیو"}
         }
         "Europe:Kirov"{
             ec{"کیروف"}
@@ -1113,7 +1113,7 @@ ur{
             ec{"الیانوسک"}
         }
         "Europe:Uzhgorod"{
-            ec{"ازگوروڈ"}
+            ec{"ازہوراڈ"}
         }
         "Europe:Vaduz"{
             ec{"ویڈوز"}
@@ -1317,7 +1317,7 @@ ur{
         "meta:Amazon"{
             ld{"امیزون کا موسم گرما کا وقت"}
             lg{"امیزون ٹائم"}
-            ls{"ایمیزون سٹینڈرڈ ٹائم"}
+            ls{"ایمیزون کا معیاری وقت"}
         }
         "meta:America_Central"{
             ld{"سنٹرل ڈے لائٹ ٹائم"}
@@ -1355,9 +1355,9 @@ ur{
             ls{"عرب کا معیاری وقت"}
         }
         "meta:Argentina"{
-            ld{"ارجنٹینا سمر ٹائم"}
-            lg{"ارجنٹینا ٹائم"}
-            ls{"ارجنٹینا سٹینڈرڈ ٹائم"}
+            ld{"ارجنٹینا کا موسم گرما کا وقت"}
+            lg{"ارجنٹینا کا وقت"}
+            ls{"ارجنٹینا کا معیاری وقت"}
         }
         "meta:Argentina_Western"{
             ld{"مغربی ارجنٹینا کا موسم گرما کا وقت"}
@@ -1443,7 +1443,7 @@ ur{
         }
         "meta:China"{
             ld{"چینی ڈے لائٹ ٹائم"}
-            lg{"چین ٹائم"}
+            lg{"چین کا وقت"}
             ls{"چین سٹینڈرڈ ٹائم"}
         }
         "meta:Choibalsan"{
@@ -1902,6 +1902,6 @@ ur{
         hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} وقت"}
         regionFormatDaylight{"{0} ڈے لائٹ ٹائم"}
-        regionFormatStandard{"{0} اسٹینڈرڈ ٹائم"}
+        regionFormatStandard{"{0} معیاری وقت"}
     }
 }

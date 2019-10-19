@@ -2,17 +2,30 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_US{
     %%Parent{"es_419"}
-    Version{"2.1.47.86"}
+    Version{"36"}
     units{
         angle{
-            revolution{
-                dnam{"revoluciones"}
+            arc-minute{
+                dnam{"arcominutos"}
+                one{"{0} minuto"}
+                other{"{0} minutos"}
+            }
+            arc-second{
+                dnam{"arcosegundos"}
+                one{"{0} segundo"}
+                other{"{0} segundos"}
             }
         }
         concentr{
             milligram-per-deciliter{
                 one{"{0} mg/dL"}
                 other{"{0} mg/dL"}
+            }
+            millimole-per-liter{
+                dnam{"mmol/L"}
+            }
+            part-per-million{
+                dnam{"ppm"}
             }
         }
         consumption{
@@ -28,11 +41,6 @@ es_US{
                 one{"{0} ohmio"}
                 other{"{0} ohmios"}
             }
-            volt{
-                dnam{"voltios"}
-                one{"{0} voltio"}
-                other{"{0} voltios"}
-            }
         }
         energy{
             kilowatt-hour{
@@ -41,30 +49,14 @@ es_US{
                 other{"{0} kilovatios hora"}
             }
         }
-        frequency{
-            gigahertz{
-                one{"{0} gigahercio"}
-                other{"{0} gigahercios"}
-            }
-            hertz{
-                dnam{"hercios"}
-                one{"{0} hercio"}
-                other{"{0} hercios"}
-            }
-            kilohertz{
-                dnam{"kilohercios"}
-                one{"{0} kilohercio"}
-                other{"{0} kilohercios"}
-            }
-            megahertz{
-                dnam{"megahercios"}
-                one{"{0} megahercio"}
-                other{"{0} megahercios"}
-            }
-        }
         length{
             mile-scandinavian{
                 dnam{"millas escandinavas"}
+            }
+            nautical-mile{
+                dnam{"millas naúticas"}
+                one{"{0} milla naútica"}
+                other{"{0} millas naúticas"}
             }
             point{
                 dnam{"pt"}
@@ -72,51 +64,34 @@ es_US{
                 other{"{0} pt"}
             }
         }
-        mass{
-            microgram{
-                other{"{0} microgramos"}
+        light{
+            lux{
+                dnam{"lux"}
             }
         }
         power{
-            gigawatt{
-                dnam{"gigavatios"}
-                one{"{0} gigavatio"}
-                other{"{0} gigavatios"}
-            }
             horsepower{
                 one{"{0} caballo de vapor"}
                 other{"{0} caballos de vapor"}
-            }
-            kilowatt{
-                dnam{"kilovatios"}
-                one{"{0} kilovatio"}
-                other{"{0} kilovatios"}
-            }
-            megawatt{
-                dnam{"megavatios"}
-                one{"{0} megavatio"}
-                other{"{0} megavatios"}
-            }
-            milliwatt{
-                dnam{"milivatios"}
-                one{"{0} milivatio"}
-                other{"{0} milivatios"}
-            }
-            watt{
-                dnam{"vatios"}
-                one{"{0} vatio"}
-                other{"{0} vatios"}
             }
         }
         temperature{
             kelvin{
                 dnam{"kelvin"}
+                one{"kelvin"}
                 other{"{0} kelvin"}
             }
         }
         volume{
             acre-foot{
                 dnam{"acres-pies"}
+                one{"{0} acre-pie"}
+                other{"{0} acre-pies"}
+            }
+            fluid-ounce{
+                dnam{"onzas líquidas"}
+                one{"{0} onza líquida"}
+                other{"{0} onzas líquidas"}
             }
             gallon-imperial{
                 dnam{"Imp. gal"}
@@ -127,6 +102,28 @@ es_US{
         }
     }
     unitsNarrow{
+        duration{
+            day{
+                dnam{"días"}
+                one{"{0}d"}
+                other{"{0}d"}
+            }
+            month{
+                dnam{"m"}
+                one{"{0}m"}
+                other{"{0}m"}
+            }
+            week{
+                dnam{"sem"}
+                one{"{0}sem"}
+                other{"{0}sem"}
+            }
+            year{
+                dnam{"a"}
+                one{"{0}a"}
+                other{"{0}a"}
+            }
+        }
         temperature{
             fahrenheit{
                 one{"{0}°"}
@@ -143,8 +140,25 @@ es_US{
             }
         }
         angle{
+            arc-minute{
+                one{"{0} min"}
+                other{"{0} min"}
+            }
+            arc-second{
+                dnam{"arcseg"}
+                one{"{0} s"}
+                other{"{0} s"}
+            }
             degree{
                 dnam{"grad."}
+            }
+        }
+        concentr{
+            percent{
+                dnam{"%"}
+            }
+            permille{
+                dnam{"‰"}
             }
         }
         consumption{
@@ -154,11 +168,33 @@ es_US{
                 other{"{0} mpg Imp."}
             }
         }
+        digital{
+            bit{
+                dnam{"bit"}
+            }
+            byte{
+                dnam{"byte"}
+            }
+        }
         duration{
             day{
+                dnam{"días"}
+                one{"{0} día"}
+                other{"{0} días"}
                 per{"{0}/d"}
             }
+            month{
+                one{"{0} m"}
+                other{"{0} m"}
+            }
+            week{
+                one{"{0} sem"}
+                other{"{0} sem"}
+            }
             year{
+                dnam{"a"}
+                one{"{0} a"}
+                other{"{0} a"}
                 per{"{0}/a"}
             }
         }
@@ -169,12 +205,21 @@ es_US{
                 other{"{0} au"}
             }
             light-year{
+                one{"{0} a. l."}
                 other{"{0} a. l."}
+            }
+            nautical-mile{
+                dnam{"M"}
+                one{"{0} M"}
+                other{"{0} M"}
             }
             point{
                 dnam{"pt"}
                 one{"{0} pt"}
                 other{"{0} pt"}
+            }
+            yard{
+                dnam{"yd"}
             }
         }
         mass{
@@ -196,12 +241,12 @@ es_US{
                 other{"{0} CV"}
             }
         }
-        temperature{
-            celsius{
-                one{"{0} °C"}
-            }
-        }
         volume{
+            cup{
+                dnam{"tza."}
+                one{"{0} tza."}
+                other{"{0} tzas."}
+            }
             gallon-imperial{
                 dnam{"Imp. gal"}
                 one{"{0} gal Imp."}

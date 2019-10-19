@@ -12,7 +12,6 @@ ia{
     ExemplarCharacters{"[a b c {ch} d e f g h i j k l m n o p {ph} q r s t u v w x y z]"}
     MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"⩾{0}"}
@@ -193,9 +192,8 @@ ia{
             }
         }
         minimumGroupingDigits{"2"}
-        native{"latn"}
     }
-    Version{"2.1.48.36"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{

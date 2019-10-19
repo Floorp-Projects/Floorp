@@ -4,5 +4,5 @@ kw{
     Languages{
         kw{"kernewek"}
     }
-    Version{"2.1.48.56"}
+    Version{"36"}
 }

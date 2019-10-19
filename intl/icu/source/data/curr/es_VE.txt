@@ -5,7 +5,7 @@ es_VE{
     Currencies{
         VEF{
             "Bs.",
-            "bolívar venezolano",
+            "bolívar venezolano (2008–2018)",
         }
         VES{
             "Bs.S",
@@ -22,5 +22,5 @@ es_VE{
             other{"bolívares soberanos"}
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
 }

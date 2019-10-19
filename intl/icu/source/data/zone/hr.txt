@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hr{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -168,6 +168,9 @@ hr{
         "America:Anguilla"{
             ec{"Angvila"}
         }
+        "America:Antigua"{
+            ec{"Antigua"}
+        }
         "America:Araguaina"{
             ec{"Araguaina"}
         }
@@ -247,7 +250,7 @@ hr{
             ec{"Cayenne"}
         }
         "America:Cayman"{
-            ec{"Kajman"}
+            ec{"Cayman"}
         }
         "America:Chicago"{
             ec{"Chicago"}
@@ -655,7 +658,7 @@ hr{
             ec{"Aktobe"}
         }
         "Asia:Ashgabat"{
-            ec{"Ashgabat"}
+            ec{"Ašgabat"}
         }
         "Asia:Atyrau"{
             ec{"Atyrau"}
@@ -688,7 +691,7 @@ hr{
             ec{"Kolkata"}
         }
         "Asia:Chita"{
-            ec{"Chita"}
+            ec{"Čita"}
         }
         "Asia:Choibalsan"{
             ec{"Choibalsan"}
@@ -880,13 +883,16 @@ hr{
             ec{"Jakutsk"}
         }
         "Asia:Yekaterinburg"{
-            ec{"Ekaterinburg"}
+            ec{"Jekaterinburg"}
         }
         "Asia:Yerevan"{
             ec{"Erevan"}
         }
         "Atlantic:Azores"{
             ec{"Azorski otoci"}
+        }
+        "Atlantic:Bermuda"{
+            ec{"Bermuda"}
         }
         "Atlantic:Canary"{
             ec{"Kanari"}
@@ -961,7 +967,7 @@ hr{
             ec{"Andora"}
         }
         "Europe:Astrakhan"{
-            ec{"Astrakhan"}
+            ec{"Astrahan"}
         }
         "Europe:Athens"{
             ec{"Atena"}
@@ -1086,7 +1092,7 @@ hr{
             ec{"Saratov"}
         }
         "Europe:Simferopol"{
-            ec{"Simferopol"}
+            ec{"Simferopolj"}
         }
         "Europe:Skopje"{
             ec{"Skoplje"}
@@ -1544,10 +1550,10 @@ hr{
             ls{"standardno vrijeme Fidžija"}
         }
         "meta:French_Guiana"{
-            ls{"vrijeme Francuske Gvajane"}
+            ls{"vrijeme Francuske Gijane"}
         }
         "meta:French_Southern"{
-            ls{"južnofrancusko i antarktičko vrijeme"}
+            ls{"vrijeme Francuskih južnih i antarktičkih teritorija"}
         }
         "meta:GMT"{
             ls{"univerzalno vrijeme"}
@@ -1670,7 +1676,7 @@ hr{
             ls{"lankansko vrijeme"}
         }
         "meta:Line_Islands"{
-            ls{"vrijeme Otoka Line"}
+            ls{"vrijeme Ekvatorskih otoka"}
         }
         "meta:Lord_Howe"{
             ld{"ljetno vrijeme otoka Lord Howe"}
@@ -1938,9 +1944,9 @@ hr{
             ls{"jakutsko standardno vrijeme"}
         }
         "meta:Yekaterinburg"{
-            ld{"ekaterinburško ljetno vrijeme"}
-            lg{"ekaterinburško vrijeme"}
-            ls{"ekaterinburško standardno vrijeme"}
+            ld{"jekaterinburško ljetno vrijeme"}
+            lg{"jekaterinburško vrijeme"}
+            ls{"jekaterinburško standardno vrijeme"}
         }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}

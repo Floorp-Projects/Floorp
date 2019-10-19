@@ -4,12 +4,22 @@ bs{
     Keys{
         calendar{"Kalendar"}
         cf{"Format valute"}
+        colAlternate{"Zanemarivanje poredavanja simbola"}
+        colBackwards{"Obrnuto poredavanje po naglasku"}
+        colCaseFirst{"Poredavanje po velikim/malim slovima"}
+        colCaseLevel{"Poredavanje u skladu s veličinom slova"}
+        colNormalization{"Normalizirano poredavanje"}
+        colNumeric{"Numeričko poredavanje"}
+        colStrength{"Jačina poredavanja"}
         collation{"Sortiranje"}
         currency{"Valuta"}
         hc{"Format vremena (12 ili 24)"}
         lb{"Stil prijeloma reda"}
         ms{"Mjerni sistem"}
         numbers{"Brojevi"}
+        timezone{"Vremenska zona"}
+        va{"Varijanta zemlje/jezika"}
+        x{"Privatna upotreba"}
     }
     Languages{
         aa{"afarski"}
@@ -81,6 +91,7 @@ bs{
         car{"karipski"}
         cay{"kajuga"}
         cch{"atsam"}
+        ccp{"čakma"}
         ce{"čečenski"}
         ceb{"cebuano"}
         cgg{"čiga"}
@@ -92,7 +103,7 @@ bs{
         chn{"činukski žargon"}
         cho{"čoktav"}
         chp{"čipvijanski"}
-        chr{"čiroki"}
+        chr{"čeroki"}
         chy{"čejenski"}
         ckb{"centralnokurdski"}
         co{"korzikanski"}
@@ -110,7 +121,6 @@ bs{
         dar{"dargva"}
         dav{"taita"}
         de{"njemački"}
-        de_CH{"gornjonjemački (Švicarska)"}
         del{"delaver"}
         den{"slave"}
         dgr{"dogrib"}
@@ -358,7 +368,7 @@ bs{
         oc{"oksitanski"}
         oj{"ojibva"}
         om{"oromo"}
-        or{"orijski"}
+        or{"odija"}
         os{"osetski"}
         osa{"osage"}
         ota{"osmanski turski"}
@@ -525,10 +535,16 @@ bs{
         zxx{"bez lingvističkog sadržaja"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"kineski (pojednostavljeni standardni)"}
+        zh_Hant{"kineski (tradicionalni standardni)"}
+    }
+    Languages%menu{
+        yue{"jue"}
+        zh{"kineski (standardni)"}
+    }
     Languages%short{
         az{"azerski"}
-        en_GB{"engleski (UK)"}
-        en_US{"engleski (SAD)"}
     }
     Languages%variant{
         ps{"pušto"}
@@ -796,7 +812,7 @@ bs{
         TARASK{"Taraskijevica ortografija"}
         VALENCIA{"Valencijski"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — sve"}
         category-list{"{0}: {1}"}

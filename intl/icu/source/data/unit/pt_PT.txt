@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt_PT{
-    Version{"2.1.49.82"}
+    Version{"36"}
     units{
         acceleration{
             g-force{
@@ -49,8 +49,6 @@ pt_PT{
         }
         coordinate{
             east{"{0} este"}
-            north{"{0} norte"}
-            south{"{0} sul"}
             west{"{0} Oeste"}
         }
         digital{
@@ -64,10 +62,6 @@ pt_PT{
             }
         }
         duration{
-            century{
-                one{"{0} século"}
-                other{"{0} séculos"}
-            }
             hour{
                 per{"{0}/h"}
             }
@@ -85,6 +79,28 @@ pt_PT{
                 dnam{"quilocalorias"}
                 one{"{0} quilocaloria"}
                 other{"{0} quilocalorias"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"megapíxeis"}
+                one{"{0} megapíxel"}
+                other{"{0} megapíxeis"}
+            }
+            pixel{
+                dnam{"píxel"}
+                one{"{0} píxel"}
+                other{"{0} píxeis"}
+            }
+            pixel-per-centimeter{
+                dnam{"píxeis por centímetro"}
+                one{"{0} píxel por centímetro"}
+                other{"{0} píxeis por centímetro"}
+            }
+            pixel-per-inch{
+                dnam{"píxeis por polegada"}
+                one{"{0} píxel por polegada"}
+                other{"{0} píxeis por polegada"}
             }
         }
         length{
@@ -118,6 +134,12 @@ pt_PT{
                 other{"{0} picómetros"}
             }
         }
+        mass{
+            earth-mass{
+                one{"{0} massa da Terra"}
+                other{"{0} massas da Terra"}
+            }
+        }
         pressure{
             pound-per-square-inch{
                 dnam{"psi"}
@@ -131,9 +153,13 @@ pt_PT{
                 one{"{0} quilómetro por hora"}
                 other{"{0} quilómetros por hora"}
             }
+            knot{
+                dnam{"nó"}
+            }
         }
         temperature{
             generic{
+                one{"{0}°"}
                 other{"{0}°"}
             }
         }
@@ -202,11 +228,11 @@ pt_PT{
                 other{"{0} h"}
             }
             millisecond{
-                dnam{"ms"}
                 one{"{0} ms"}
                 other{"{0} ms"}
             }
             minute{
+                dnam{"min"}
                 one{"{0} min"}
                 other{"{0} min"}
             }
@@ -231,6 +257,7 @@ pt_PT{
                 other{"{0} km"}
             }
             meter{
+                dnam{"metro"}
                 one{"{0} m"}
                 other{"{0} m"}
             }
@@ -300,7 +327,6 @@ pt_PT{
         }
         temperature{
             celsius{
-                dnam{"°C"}
                 one{"{0}°C"}
                 other{"{0}°C"}
             }
@@ -425,9 +451,6 @@ pt_PT{
         }
         coordinate{
             east{"{0} E"}
-            north{"{0} N"}
-            south{"{0} S"}
-            west{"{0} O"}
         }
         digital{
             bit{
@@ -577,6 +600,19 @@ pt_PT{
                 other{"{0} MHz"}
             }
         }
+        graphics{
+            dot-per-inch{
+                dnam{"ppp"}
+                one{"{0} ppp"}
+                other{"{0} ppp"}
+            }
+            megapixel{
+                dnam{"megapíxeis"}
+            }
+            pixel{
+                dnam{"píxeis"}
+            }
+        }
         length{
             centimeter{
                 dnam{"cm"}
@@ -597,6 +633,7 @@ pt_PT{
                 other{"{0} km"}
             }
             meter{
+                dnam{"metros"}
                 one{"{0} m"}
                 other{"{0} m"}
             }
@@ -611,6 +648,7 @@ pt_PT{
             }
             mile-scandinavian{
                 dnam{"smi"}
+                one{"{0} smi"}
                 other{"{0} smi"}
             }
             millimeter{
@@ -650,9 +688,8 @@ pt_PT{
             }
         }
         mass{
-            carat{
-                one{"{0} ct"}
-                other{"{0} ct"}
+            earth-mass{
+                dnam{"massas da Terra"}
             }
             gram{
                 one{"{0} g"}
@@ -662,11 +699,6 @@ pt_PT{
                 dnam{"kg"}
                 one{"{0} kg"}
                 other{"{0} kg"}
-            }
-            metric-ton{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
             }
             microgram{
                 dnam{"µg"}
@@ -862,6 +894,11 @@ pt_PT{
                 dnam{"cs"}
                 one{"{0} cs"}
                 other{"{0} cs"}
+            }
+            teaspoon{
+                dnam{"cc"}
+                one{"{0} cc"}
+                other{"{0} cc"}
             }
         }
     }

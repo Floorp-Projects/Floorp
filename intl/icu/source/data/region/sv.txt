@@ -77,7 +77,7 @@ sv{
         CF{"Centralafrikanska republiken"}
         CG{"Kongo-Brazzaville"}
         CH{"Schweiz"}
-        CI{"Elfenbenskusten"}
+        CI{"Côte d’Ivoire"}
         CK{"Cooköarna"}
         CL{"Chile"}
         CM{"Kamerun"}
@@ -309,7 +309,10 @@ sv{
         CD{"Demokratiska republiken Kongo"}
         CG{"Republiken Kongo"}
         CI{"Côte d’Ivoire"}
+        CZ{"Tjeckien"}
+        FK{"Falklandsöarna"}
+        SZ{"Eswatini"}
         TL{"Timor-Leste"}
     }
-    Version{"2.1.48.90"}
+    Version{"36"}
 }

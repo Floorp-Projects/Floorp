@@ -11,7 +11,6 @@ es_US{
         034{"Asia meridional"}
         035{"Sudeste asiático"}
         039{"Europa meridional"}
-        057{"Región de Micronesia"}
         145{"Asia occidental"}
         151{"Europa oriental"}
         154{"Europa septentrional"}
@@ -22,9 +21,9 @@ es_US{
         EZ{"zona euro"}
         GG{"Guernsey"}
         QO{"Territorios alejados de Oceanía"}
-        TL{"Timor-Leste"}
+        TA{"Tristán de Acuña"}
         UM{"Islas menores alejadas de EE. UU."}
-        VI{"Islas Vírgenes de EE. UU."}
+        UN{"UN"}
     }
     Countries%short{
         GB{"RU"}
@@ -33,5 +32,5 @@ es_US{
         CI{"CI"}
         TL{"TL"}
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
 }

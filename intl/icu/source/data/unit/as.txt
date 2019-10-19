@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 as{
-    Version{"2.1.48.17"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -247,6 +247,11 @@ as{
                 other{"{0} দিন"}
                 per{"{0} প্ৰতি দিন"}
             }
+            decade{
+                dnam{"দশক"}
+                one{"{0} দশক"}
+                other{"{0} দশক"}
+            }
             hour{
                 dnam{"ঘণ্টা"}
                 one{"{0} ঘণ্টা"}
@@ -361,6 +366,11 @@ as{
                 dnam{"কিলোৱাট-ঘণ্টা"}
                 one{"{0} কিলোৱাট ঘণ্টা"}
                 other{"{0} কিলোৱাট ঘণ্টা"}
+            }
+            therm-us{
+                dnam{"ইউ এচ থাৰ্ণ"}
+                one{"{0} ইউ এচ থাৰ্ণ"}
+                other{"{0} ইউ এচ থাৰ্ণ"}
             }
         }
         force{
@@ -1213,6 +1223,11 @@ as{
                 other{"{0} দিন"}
                 per{"{0}/দিন"}
             }
+            decade{
+                dnam{"দশ."}
+                one{"{0} দশ."}
+                other{"{0} দশ."}
+            }
             hour{
                 dnam{"ঘণ্টা"}
                 one{"{0} ঘণ্টা"}
@@ -1327,6 +1342,11 @@ as{
                 dnam{"কিঃ ৱাঃ-ঘঃ"}
                 one{"{0} কিঃ ৱাঃ-ঘঃ"}
                 other{"{0} কিঃ ৱাঃ-ঘঃ"}
+            }
+            therm-us{
+                dnam{"ইউ এচ থাৰ্ণ"}
+                one{"{0} ইউ এচ থাৰ্ণ"}
+                other{"{0} ইউ এচ থাৰ্ণ"}
             }
         }
         force{

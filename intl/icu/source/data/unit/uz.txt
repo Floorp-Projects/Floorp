@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 uz{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -52,11 +52,6 @@ uz{
                 dnam{"akr"}
                 one{"{0} akr"}
                 other{"{0} akr"}
-            }
-            dunam{
-                dnam{"dunam"}
-                one{"{0} dunam"}
-                other{"{0} dunam"}
             }
             hectare{
                 dnam{"gektar"}
@@ -122,11 +117,6 @@ uz{
                 dnam{"millimol/litr"}
                 one{"{0} millimol/litr"}
                 other{"{0} millimol/litr"}
-            }
-            mole{
-                dnam{"mol"}
-                one{"{0} mol"}
-                other{"{0} mol"}
             }
             part-per-million{
                 dnam{"millionning ulushi"}
@@ -247,6 +237,11 @@ uz{
                 other{"{0} kun"}
                 per{"{0}/kun"}
             }
+            decade{
+                dnam{"dekada"}
+                one{"{0} dekada"}
+                other{"{0} dekada"}
+            }
             hour{
                 dnam{"soat"}
                 one{"{0} soat"}
@@ -362,6 +357,11 @@ uz{
                 one{"{0} kilovatt-soat"}
                 other{"{0} kilovatt-soat"}
             }
+            therm-us{
+                dnam{"AQSH termi"}
+                one{"{0} AQSH termi"}
+                other{"{0} AQSH termi"}
+            }
         }
         force{
             newton{
@@ -395,6 +395,41 @@ uz{
                 dnam{"megagers"}
                 one{"{0} megagers"}
                 other{"{0} megagers"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"nuqta/santimetr"}
+                one{"{0} nuqta/santimetr"}
+                other{"{0} nuqta/santimetr"}
+            }
+            dot-per-inch{
+                dnam{"nuqta/duym"}
+                one{"{0} nuqta/duym"}
+                other{"{0} nuqta/duym"}
+            }
+            em{
+                dnam{"tipografik em"}
+            }
+            megapixel{
+                dnam{"megapiksel"}
+                one{"{0} megapiksel"}
+                other{"{0} megapiksel"}
+            }
+            pixel{
+                dnam{"piksel"}
+                one{"{0} piksel"}
+                other{"{0} piksel"}
+            }
+            pixel-per-centimeter{
+                dnam{"piksel/santimetr"}
+                one{"{0} piksel/santimetr"}
+                other{"{0} piksel/santimetr"}
+            }
+            pixel-per-inch{
+                dnam{"piksel/duym"}
+                one{"{0} piksel/duym"}
+                other{"{0} piksel/duym"}
             }
         }
         length{
@@ -649,6 +684,11 @@ uz{
                 dnam{"mm simob ustuni"}
                 one{"{0} mm simob ustuni"}
                 other{"{0} mm simob ustuni"}
+            }
+            pascal{
+                dnam{"paskal"}
+                one{"{0} paskal"}
+                other{"{0} paskal"}
             }
             pound-per-square-inch{
                 dnam{"funt/kvadrat duym"}
@@ -1198,6 +1238,7 @@ uz{
         }
         compound{
             per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
         }
         concentr{
             karat{
@@ -1339,6 +1380,11 @@ uz{
                 other{"{0} kun"}
                 per{"{0}/kun"}
             }
+            decade{
+                dnam{"dekada"}
+                one{"{0} dekada"}
+                other{"{0} dekada"}
+            }
             hour{
                 dnam{"soat"}
                 one{"{0} soat"}
@@ -1454,6 +1500,11 @@ uz{
                 one{"{0} kVt-soat"}
                 other{"{0} kVt-soat"}
             }
+            therm-us{
+                dnam{"AQSH termi"}
+                one{"{0} AQSH termi"}
+                other{"{0} AQSH termi"}
+            }
         }
         force{
             newton{
@@ -1487,6 +1538,43 @@ uz{
                 dnam{"MGs"}
                 one{"{0} MGs"}
                 other{"{0} MGs"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"nuqta/sm"}
+                one{"{0} nuqta/sm"}
+                other{"{0} nuqta/sm"}
+            }
+            dot-per-inch{
+                dnam{"nuqta/duym"}
+                one{"{0} nuqta/duym"}
+                other{"{0} nuqta/duym"}
+            }
+            em{
+                dnam{"em"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                dnam{"megapiksel"}
+                one{"{0} MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                dnam{"piksel"}
+                one{"{0} px"}
+                other{"{0} px"}
+            }
+            pixel-per-centimeter{
+                dnam{"px/sm"}
+                one{"{0} px/sm"}
+                other{"{0} px/sm"}
+            }
+            pixel-per-inch{
+                dnam{"piksel/duym"}
+                one{"{0} piksel/duym"}
+                other{"{0} piksel/duym"}
             }
         }
         length{
@@ -1712,6 +1800,11 @@ uz{
                 one{"{0} atm"}
                 other{"{0} atm"}
             }
+            bar{
+                dnam{"bar"}
+                one{"{0} bar"}
+                other{"{0} bar"}
+            }
             hectopascal{
                 dnam{"gPa"}
                 one{"{0} gPa"}
@@ -1741,6 +1834,11 @@ uz{
                 dnam{"mm sim.ust"}
                 one{"{0} mm sim.ust"}
                 other{"{0} mm sim.ust"}
+            }
+            pascal{
+                dnam{"Pa"}
+                one{"{0} Pa"}
+                other{"{0} Pa"}
             }
             pound-per-square-inch{
                 dnam{"funt/kv.dy"}

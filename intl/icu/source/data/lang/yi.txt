@@ -155,7 +155,6 @@ yi{
         zu{"זולו"}
     }
     Languages%short{
-        en_GB{"ענגליש (GB)"}
         en_US{"ענגליש (US)"}
     }
     Scripts{
@@ -171,7 +170,7 @@ yi{
             gregorian{"גרעגארישער קאַלענדאַר"}
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
     codePatterns{
         language{"שפראַך: {0}"}
         script{"שריפֿט: {0}"}

@@ -9,7 +9,7 @@ es_DO{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -47,8 +47,8 @@ es_DO{
                 "d MMM y",
                 "d/M/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
@@ -84,9 +84,7 @@ es_DO{
                         pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
                     }
                     wide{
                         am{"a. m."}

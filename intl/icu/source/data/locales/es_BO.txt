@@ -10,7 +10,7 @@ es_BO{
             }
         }
     }
-    Version{"2.1.47.70"}
+    Version{"36"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -31,18 +31,14 @@ es_BO{
                 "d MMM 'de' y",
                 "d/M/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
                         am{"a. m."}
                         pm{"p. m."}
                     }

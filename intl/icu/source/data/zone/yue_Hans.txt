@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yue_Hans{
     %%Parent{"root"}
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比让"}
@@ -810,6 +810,9 @@ yue_Hans{
         }
         "Asia:Qatar"{
             ec{"卡达"}
+        }
+        "Asia:Qostanay"{
+            ec{"科斯塔奈"}
         }
         "Asia:Qyzylorda"{
             ec{"克孜勒奥尔达"}

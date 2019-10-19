@@ -1,37 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 zh_Hans_HK{
-    NumberElements{
-        latn{
-            patternsLong{
-                decimalFormat{
-                    1000000000000{
-                        other{"0万亿"}
-                    }
-                    10000000000000{
-                        other{"00万亿"}
-                    }
-                    100000000000000{
-                        other{"000万亿"}
-                    }
-                }
-            }
-            patternsShort{
-                decimalFormat{
-                    1000000000000{
-                        other{"0万亿"}
-                    }
-                    10000000000000{
-                        other{"00万亿"}
-                    }
-                    100000000000000{
-                        other{"000万亿"}
-                    }
-                }
-            }
-        }
-    }
-    Version{"2.1.47.71"}
+    Version{"36"}
     calendar{
         buddhist{
             DateTimePatterns{

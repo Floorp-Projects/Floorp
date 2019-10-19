@@ -30,6 +30,10 @@ en_001{
             "RUR",
             "Russian Rouble (1991–1998)",
         }
+        SHP{
+            "SHP",
+            "St Helena Pound",
+        }
         TJR{
             "TJR",
             "Tajikistani Rouble",
@@ -64,10 +68,14 @@ en_001{
             one{"Russian rouble (1991–1998)"}
             other{"Russian roubles (1991–1998)"}
         }
+        SHP{
+            one{"St Helena pound"}
+            other{"St Helena pounds"}
+        }
         TJR{
             one{"Tajikistani rouble"}
             other{"Tajikistani roubles"}
         }
     }
-    Version{"2.1.47.69"}
+    Version{"36"}
 }

@@ -5,7 +5,7 @@
  */
 root{
     UCARules:process(uca_rules){"../unidata/UCARules.txt"}
-    Version{"2.1.47.76"}
+    Version{"36"}
     collations{
         default{"standard"}
         emoji{
@@ -382,7 +382,7 @@ root{
                 "& 👨 << 🧔 <<👱‍♂ <<👱🏻‍♂ <<👱🏼‍♂ <<👱🏽‍♂ <<👱🏾‍♂ <<👱🏿‍♂"
                 "& 👩 << 👱‍♀ << 👱🏻‍♀ << 👱🏼‍♀ << 👱🏽‍♀ << 👱🏾‍♀ << 👱🏿‍♀"
             }
-            Version{"35.1"}
+            Version{"36"}
         }
         eor{
             Sequence{
@@ -922,7 +922,7 @@ root{
                 "&ք"
                 "<և"
             }
-            Version{"35.1"}
+            Version{"36"}
         }
         private-unihan{
             Sequence{
@@ -1165,7 +1165,7 @@ root{
                 "&龟=\uFDD0龟"
                 "&龠=\uFDD0龠"
             }
-            Version{"35.1"}
+            Version{"36"}
         }
         search{
             Sequence{
@@ -1284,11 +1284,11 @@ root{
                 "&ᅳᅵ"
                 "=ᅴ"
             }
-            Version{"35.1"}
+            Version{"36"}
         }
         standard{
             Sequence{""}
-            Version{"35.1"}
+            Version{"36"}
         }
     }
     depends:process(dependency){"ucadata.icu"}

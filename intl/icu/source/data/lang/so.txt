@@ -250,13 +250,11 @@ so{
     Languages%short{
         az{"Aseeri"}
         en_GB{"Ingiriiska Boqortooyada Midooday"}
-        en_US{"Ingiriisi (US)"}
     }
     Scripts{
         Arab{"Carabi"}
         Armn{"Armeeniyaan"}
         Beng{"Baangla"}
-        Bopo{"Bopo"}
         Brai{"Qoraalka Indhoolaha"}
         Cyrl{"Siriylik"}
         Deva{"Dhefangaari"}
@@ -264,10 +262,7 @@ so{
         Geor{"Jiyoorjoyaan"}
         Grek{"Giriik"}
         Gujr{"Gujaraati"}
-        Guru{"Guru"}
-        Hanb{"Hanb"}
         Hang{"Hanguul"}
-        Hani{"Hani"}
         Hans{"La fududeeyay"}
         Hant{"Hore"}
         Hebr{"Cibraani"}
@@ -279,7 +274,6 @@ so{
         Khmr{"Khamer"}
         Knda{"Kanada"}
         Kore{"Kuuriyaan"}
-        Laoo{"Laoo"}
         Latn{"Laatiin"}
         Mlym{"Maalayalam"}
         Mong{"Mongooliyaan"}
@@ -379,10 +373,9 @@ so{
             tibt{"Godka Tirada Tibetan"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} dhamaan"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — waafaqsanaanta"}
         enclosed{"{0}— xiran"}
         extended{"{0}— dheereyey"}
@@ -399,10 +392,5 @@ so{
         language{"Luuqad : {0}"}
         script{"Qoraal: {0}"}
         territory{"Gobol : {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

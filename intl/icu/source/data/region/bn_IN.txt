@@ -7,5 +7,5 @@ bn_IN{
     Countries%variant{
         CD{"কঙ্গো (DRC)"}
     }
-    Version{"2.1.47.69"}
+    Version{"36"}
 }

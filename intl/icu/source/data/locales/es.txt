@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es{
-    AuxExemplarCharacters{"[ª à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ī º ò ŏ ô ö ø ō œ ù ŭ û ū ÿ]"}
+    AuxExemplarCharacters{"[ª à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ï ī º ò ŏ ô ö ø ō œ ù ŭ û ū ý ÿ]"}
     Ellipsis{
         final{"{0}…"}
         initial{"… {0}"}
@@ -10,11 +10,11 @@ es{
         word-initial{"… {0}"}
         word-medial{"{0}… {1}"}
     }
-    ExemplarCharacters{"[a á b c d e é f g h i í ï j k l m n ñ o ó p q r s t u ú ü v w x y ý z]"}
+    ExemplarCharacters{"[a á b c d e é f g h i í j k l m n ñ o ó p q r s t u ú ü v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N Ñ O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ¡ ? ¿ . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / "
+        "[\\- ‐ ‑ – — , ; \\: ! ¡ ? ¿ . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / "
         "\\\\ \\& # † ‡ ′ ″]"
     }
     MoreInformation{"?"}
@@ -30,6 +30,7 @@ es{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
@@ -193,9 +194,11 @@ es{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -212,8 +215,21 @@ es{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
+        buddhist{
+            eras{
+                abbreviated{
+                    "BE",
+                }
+                narrow{
+                    "BE",
+                }
+                wide{
+                    "BE",
+                }
+            }
+        }
         chinese{
             DateTimePatterns{
                 "H:mm:ss (zzzz)",
@@ -264,6 +280,20 @@ es{
             }
         }
         coptic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -280,6 +310,21 @@ es{
                         "epep",
                         "mesra",
                         "nasie",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "tout",
@@ -312,6 +357,21 @@ es{
                         "epep",
                         "mesra",
                         "nasie",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "tout",
@@ -332,6 +392,20 @@ es{
             }
         }
         ethiopic{
+            eras{
+                abbreviated{
+                    "ERA0",
+                    "ERA1",
+                }
+                narrow{
+                    "ERA0",
+                    "ERA1",
+                }
+                wide{
+                    "ERA0",
+                    "ERA1",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -348,6 +422,21 @@ es{
                         "hamle",
                         "nehasse",
                         "pagumen",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "meskerem",
@@ -380,6 +469,21 @@ es{
                         "hamle",
                         "nehasse",
                         "pagumen",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
                     }
                     wide{
                         "meskerem",
@@ -465,15 +569,6 @@ es{
                 yyyyQQQQ{"QQQQ 'de' y G"}
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"y G – y G"}
                     y{"y – y G"}
@@ -551,6 +646,7 @@ es{
                 fallback{"{0}–{1}"}
                 h{
                     a{"h a – h a"}
+                    h{"h–h a"}
                 }
                 hm{
                     a{"h:mm a – h:mm a"}
@@ -564,6 +660,7 @@ es{
                 }
                 hv{
                     a{"h a – h a v"}
+                    h{"h–h a v"}
                 }
                 y{
                     y{"y–y G"}
@@ -849,15 +946,6 @@ es{
                 }
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"y G – y G"}
                     y{"y–y G"}
@@ -1142,6 +1230,17 @@ es{
             }
         }
         hebrew{
+            eras{
+                abbreviated{
+                    "AM",
+                }
+                narrow{
+                    "AM",
+                }
+                wide{
+                    "AM",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1159,6 +1258,22 @@ es{
                         "av",
                         "elul",
                         "adar II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                     wide{
                         "tishri",
@@ -1193,6 +1308,22 @@ es{
                         "av",
                         "elul",
                         "adar II",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "7",
                     }
                     wide{
                         "tishri",
@@ -1241,6 +1372,20 @@ es{
                         "magha",
                         "phalguna",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "chaitra",
                         "vaisakha",
@@ -1271,6 +1416,20 @@ es{
                         "magha",
                         "phalguna",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
                     wide{
                         "chaitra",
                         "vaisakha",
@@ -1289,6 +1448,17 @@ es{
             }
         }
         islamic{
+            eras{
+                abbreviated{
+                    "AH",
+                }
+                narrow{
+                    "AH",
+                }
+                wide{
+                    "AH",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1304,6 +1474,20 @@ es{
                         "shaw.",
                         "dhuʻl-q.",
                         "dhuʻl-h.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "muharram",
@@ -1334,6 +1518,20 @@ es{
                         "shaw.",
                         "dhuʻl-q.",
                         "dhuʻl-h.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "muharram",
@@ -1370,6 +1568,17 @@ es{
             }
         }
         persian{
+            eras{
+                abbreviated{
+                    "AP",
+                }
+                narrow{
+                    "AP",
+                }
+                wide{
+                    "AP",
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -1385,6 +1594,20 @@ es{
                         "dey",
                         "bahman",
                         "esfand",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "farvardin",
@@ -1415,6 +1638,20 @@ es{
                         "dey",
                         "bahman",
                         "esfand",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
                     }
                     wide{
                         "farvardin",
@@ -2260,6 +2497,11 @@ es{
         }
         week-narrow{
             dn{"sem."}
+            relative{
+                "-1"{"sem. ant."}
+                "0"{"esta sem."}
+                "1"{"próx. sem."}
+            }
             relativePeriod{"la sem. del {0}"}
             relativeTime{
                 future{
@@ -2274,6 +2516,11 @@ es{
         }
         week-short{
             dn{"sem."}
+            relative{
+                "-1"{"sem. ant."}
+                "0"{"esta sem."}
+                "1"{"próx. sem."}
+            }
             relativePeriod{"la sem. del {0}"}
             relativeTime{
                 future{
@@ -2390,12 +2637,6 @@ es{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
-        standard-narrow{
-            2{"{0} y {1}"}
-            end{"{0} y {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
         standard-short{
             2{"{0} y {1}"}
             end{"{0} y {1}"}
@@ -2451,6 +2692,10 @@ es{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

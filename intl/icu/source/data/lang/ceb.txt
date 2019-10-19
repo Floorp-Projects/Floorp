@@ -2,7 +2,10 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ceb{
     Languages{
-        ceb{"Cebuano"}
+        ar{"Arabic"}
+        ar_001{"Modern Standard Arabic"}
+        bn{"Bangla"}
+        ceb{"Binisaya"}
         de{"Aleman"}
         de_AT{"Aleman (Austriano)"}
         de_CH{"Aleman (Swiss Hataas nga Aleman)"}
@@ -18,16 +21,31 @@ ceb{
         fr{"Pransesa"}
         fr_CA{"Pranses (Kanada)"}
         fr_CH{"Pransesa (Swiss)"}
+        hi{"Hindi"}
+        id{"Indonesian"}
         it{"Italiano"}
         ja{"Nipponggo"}
+        ko{"Korean"}
+        nl{"Dutch"}
+        nl_BE{"Flemish"}
+        pl{"Polish"}
         pt{"Portuguese"}
         pt_BR{"Portuguese (Brazilyano)"}
         pt_PT{"Portuguese (Uropanhon)"}
         ru{"Ruso"}
+        th{"Thai"}
+        tr{"Turkish"}
         und{"Wala Mailhing Pinulongan"}
         zh{"Intsik"}
         zh_Hans{"Pinasimpleng Intsik"}
         zh_Hant{"Tradisyonal Intsik"}
+    }
+    Languages%long{
+        zh_Hans{"Simplified Mandarin Chinese"}
+        zh_Hant{"Traditional Mandarin Chinese"}
+    }
+    Languages%menu{
+        zh{"Chinese, Mandarin"}
     }
     Languages%short{
         en_GB{"Ingles (Britaniko)"}
@@ -38,6 +56,8 @@ ceb{
         Cyrl{"Sirilisko"}
         Hans{"Pinasimple"}
         Hant{"Tradisyonal"}
+        Jpan{"Japanese"}
+        Kore{"Korean"}
         Latn{"Latin"}
         Zxxx{"Dili-sinulat"}
         Zzzz{"Wala Mailihing Alpabeto"}
@@ -49,6 +69,7 @@ ceb{
     Types{
         calendar{
             gregorian{"Gregorian nga Kalendaryo"}
+            iso8601{"Kalendaryo sa ISO-8601"}
         }
         collation{
             standard{"Standard nga Paagi sa Pagpihig"}
@@ -57,7 +78,7 @@ ceb{
             latn{"Kasadpanhong mga Digit"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     codePatterns{
         language{"Pinulongan: {0}"}
         script{"Alpabeto {0}"}

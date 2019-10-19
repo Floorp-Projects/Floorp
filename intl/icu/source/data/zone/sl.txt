@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sl{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidžan"}
@@ -688,7 +688,7 @@ sl{
             ec{"Brunej"}
         }
         "Asia:Calcutta"{
-            ec{"Kolkata"}
+            ec{"Kalkuta"}
         }
         "Asia:Chita"{
             ec{"Čita"}
@@ -697,7 +697,7 @@ sl{
             ec{"Čojbalsan"}
         }
         "Asia:Colombo"{
-            ec{"Colombo"}
+            ec{"Kolombo"}
         }
         "Asia:Damascus"{
             ec{"Damask"}
@@ -809,6 +809,9 @@ sl{
         }
         "Asia:Qatar"{
             ec{"Katar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kostanaj"}
         }
         "Asia:Qyzylorda"{
             ec{"Kizlorda"}

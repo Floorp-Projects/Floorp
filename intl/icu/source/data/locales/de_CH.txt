@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 de_CH{
     ExemplarCharacters{"[a ä b c d e f g h i j k l m n o ö p q r s t u ü v w x y z]"}
-    ExemplarCharactersNumbers{"[\\- . ’ % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ . ’ % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
             patterns{
@@ -15,7 +15,7 @@ de_CH{
             }
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     calendar{
         gregorian{
             dayNames{
@@ -39,12 +39,6 @@ de_CH{
         }
         era-narrow{
             dn{"Epoche"}
-        }
-        quarter{
-            relative{
-                "-1"{"letztes Quartal"}
-                "0"{"dieses Quartal"}
-            }
         }
         weekOfMonth{
             dn{"Woche im Monat"}

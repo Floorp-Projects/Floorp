@@ -35,9 +35,6 @@
     <None Include="translit\trnsfiles.mk">
       <Filter>Make Files</Filter>
     </None>
-    <None Include="..\test\testdata\tstfiles.mk">
-      <Filter>Make Files</Filter>
-    </None>
     <None Include="mappings\ucmcore.mk">
       <Filter>Make Files</Filter>
     </None>

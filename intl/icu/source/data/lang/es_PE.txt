@@ -18,5 +18,5 @@ es_PE{
         wo{"wolof"}
         zgh{"tamazight marroquí estándar"}
     }
-    Version{"2.1.47.83"}
+    Version{"36"}
 }

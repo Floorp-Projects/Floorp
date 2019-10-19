@@ -7,5 +7,5 @@ ff_Latn_NG{
             "Nayraa Nijeriyaa",
         }
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

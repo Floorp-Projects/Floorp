@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yue{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"阿比讓"}
@@ -809,6 +809,9 @@ yue{
         }
         "Asia:Qatar"{
             ec{"卡達"}
+        }
+        "Asia:Qostanay"{
+            ec{"科斯塔奈"}
         }
         "Asia:Qyzylorda"{
             ec{"克孜勒奧爾達"}

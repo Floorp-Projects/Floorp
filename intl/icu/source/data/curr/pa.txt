@@ -16,7 +16,7 @@ pa{
         }
         AMD{
             "AMD",
-            "ਅਰਮੀਨੀਆਈ ਦਰਮ",
+            "ਅਰਮੀਨੀਆਈ ਦਰਾਮ",
         }
         ANG{
             "ANG",
@@ -332,7 +332,7 @@ pa{
         }
         ISK{
             "ISK",
-            "ਆਈਸਲੈਂਡਿਕ ਕਰੌਨ",
+            "ਆਈਸਲੈਂਡੀ ਕਰੋਨਾ",
         }
         JMD{
             "JMD",
@@ -408,7 +408,7 @@ pa{
         }
         LYD{
             "LYD",
-            "ਲੀਬੀਅਨ ਦਿਨਾਰ",
+            "ਲੀਬੀਆਈ ਦਿਨਾਰ",
         }
         MAD{
             "MAD",
@@ -764,40 +764,105 @@ pa{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
+        AUD{"$"}
+        BAM{"KM"}
         BBD{"$"}
+        BDT{"৳"}
         BMD{"$"}
+        BND{"$"}
         BOB{"Bs"}
         BRL{"R$"}
         BSD{"$"}
+        BWP{"P"}
+        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
+        CNY{"¥"}
         COP{"$"}
         CRC{"₡"}
         CUC{"$"}
         CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
         DOP{"$"}
+        EGP{"E£"}
+        EUR{"€"}
+        FJD{"$"}
         FKP{"£"}
+        GBP{"£"}
+        GEL{"₾"}
+        GIP{"£"}
+        GNF{"FG"}
         GTQ{"Q"}
         GYD{"$"}
+        HKD{"$"}
         HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
+        ILS{"₪"}
+        INR{"₹"}
+        ISK{"kr"}
         JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
+        KRW{"₩"}
         KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
+        LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
+        MNT{"₮"}
+        MUR{"Rs"}
         MXN{"$"}
+        MYR{"RM"}
+        NAD{"$"}
+        NGN{"₦"}
         NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
+        NZD{"$"}
+        PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
+        RUB{"₽"}
         RUR{"р."}
+        RWF{"RF"}
+        SBD{"$"}
+        SEK{"kr"}
+        SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
+        SSP{"£"}
+        STN{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
+        TRY{"₺"}
         TTD{"$"}
         TWD{"NT$"}
+        UAH{"₴"}
         USD{"$"}
         UYU{"$"}
         VEF{"Bs"}
+        VND{"₫"}
         XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -813,8 +878,8 @@ pa{
             other{"ਅਲਬਾਨੀਆਈ ਲੇਕ"}
         }
         AMD{
-            one{"ਅਰਮੀਨੀਆਈ ਦਰਮ"}
-            other{"ਅਰਮੀਨੀਆਈ ਦਰਮ"}
+            one{"ਅਰਮੀਨੀਆਈ ਦਰਾਮ"}
+            other{"ਅਰਮੀਨੀਆਈ ਦਰਾਮ"}
         }
         ANG{
             one{"ਨੀਦਰਲੈਂਡਸ ਐਂਟੀਲੀਅਨ ਗਿਲਡਰ"}
@@ -1130,7 +1195,7 @@ pa{
         }
         ISK{
             one{"ਆਈਸਲੈਂਡਿਕ ਕਰੌਨ"}
-            other{"ਆਈਸਲੈਂਡਿਕ ਕਰੌਨ"}
+            other{"ਆਈਸਲੈਂਡੀ ਕਰੋਨਾ"}
         }
         JMD{
             one{"ਜਮਾਇਕਨ ਡਾਲਰ"}
@@ -1205,8 +1270,8 @@ pa{
             other{"ਲਾਟਵਿਆਈ ਲਾਟਸ"}
         }
         LYD{
-            one{"ਲੀਬੀਅਨ ਦਿਨਾਰ"}
-            other{"ਲੀਬੀਅਨ ਦਿਨਾਰ"}
+            one{"ਲੀਬੀਆਈ ਦਿਨਾਰ"}
+            other{"ਲੀਬੀਆਈ ਦਿਨਾਰ"}
         }
         MAD{
             one{"ਮੋਰੱਕਨ ਦਿਰਹਾਮ"}
@@ -1549,5 +1614,5 @@ pa{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.20"}
+    Version{"36"}
 }

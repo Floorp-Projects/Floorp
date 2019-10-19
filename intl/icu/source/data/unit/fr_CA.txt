@@ -1,13 +1,11 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr_CA{
-    Version{"2.1.47.86"}
+    Version{"36"}
     units{
         acceleration{
             g-force{
                 dnam{"force G"}
-                one{"{0} fois la gravitation terrestre"}
-                other{"{0} fois la gravitation terrestre"}
             }
             meter-per-second-squared{
                 one{"{0} mètre par seconde carrée"}
@@ -78,9 +76,6 @@ fr_CA{
                 dnam{"parties par million"}
                 one{"{0} partie par million"}
                 other{"{0} parties par million"}
-            }
-            percent{
-                other{"{0} pour cent"}
             }
             permille{
                 one{"{0} pour mille"}
@@ -237,6 +232,11 @@ fr_CA{
                 one{"{0} kilowattheure"}
                 other{"{0} kilowattheures"}
             }
+            therm-us{
+                dnam{"therms américains"}
+                one{"{0} therm américain"}
+                other{"{0} therms américains"}
+            }
         }
         frequency{
             gigahertz{
@@ -271,6 +271,7 @@ fr_CA{
             }
             foot{
                 one{"{0} pied"}
+                other{"{0} pieds"}
             }
             inch{
                 one{"{0} pouce"}
@@ -364,6 +365,7 @@ fr_CA{
                 other{"{0} livres"}
             }
             stone{
+                one{"{0} stone"}
                 other{"{0} stone"}
             }
             ton{
@@ -754,8 +756,6 @@ fr_CA{
             }
             mile-per-gallon-imperial{
                 dnam{"mi/gal Imp"}
-                one{"{0} mi/gal Imp"}
-                other{"{0} mi/gal Imp"}
             }
         }
         digital{
@@ -806,7 +806,7 @@ fr_CA{
         }
         duration{
             century{
-                dnam{"si"}
+                dnam{"s."}
             }
             day{
                 one{"{0} j"}
@@ -1105,9 +1105,6 @@ fr_CA{
             fahrenheit{
                 one{"{0} °F"}
                 other{"{0} °F"}
-            }
-            generic{
-                one{"{0}°"}
             }
             kelvin{
                 one{"{0} K"}

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 he{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"אביג׳אן"}
@@ -628,7 +628,7 @@ he{
             ec{"רות׳רה"}
         }
         "Antarctica:Syowa"{
-            ec{"סיוואה"}
+            ec{"סייווה"}
         }
         "Antarctica:Troll"{
             ec{"טרול"}
@@ -865,7 +865,7 @@ he{
             ec{"טומסק"}
         }
         "Asia:Ulaanbaatar"{
-            ec{"אולאאנבטאר"}
+            ec{"אולאן באטור"}
         }
         "Asia:Urumqi"{
             ec{"אורומקי"}
@@ -874,7 +874,7 @@ he{
             ec{"אוסט-נרה"}
         }
         "Asia:Vientiane"{
-            ec{"האנוי"}
+            ec{"ויינטיאן"}
         }
         "Asia:Vladivostok"{
             ec{"ולדיווסטוק"}
@@ -1410,9 +1410,9 @@ he{
             ls{"שעון מערב אוסטרליה (חורף)"}
         }
         "meta:Azerbaijan"{
-            ld{"שעון אזרבייג׳אן (קיץ)"}
-            lg{"שעון אזרבייג׳אן"}
-            ls{"שעון אזרבייג׳אן (חורף)"}
+            ld{"שעון אזרבייג׳ן (קיץ)"}
+            lg{"שעון אזרבייג׳ן"}
+            ls{"שעון אזרבייג׳ן (חורף)"}
         }
         "meta:Azores"{
             ld{"שעון האיים האזוריים (קיץ)"}
@@ -1706,9 +1706,9 @@ he{
             ls{"שעון מערב מקסיקו (חורף)"}
         }
         "meta:Mongolia"{
-            ld{"שעון אולן בטור (קיץ)"}
-            lg{"שעון אולן בטור"}
-            ls{"שעון אולן בטור (חורף)"}
+            ld{"שעון אולאן באטור (קיץ)"}
+            lg{"שעון אולאן באטור"}
+            ls{"שעון אולאן באטור (חורף)"}
         }
         "meta:Moscow"{
             ld{"שעון מוסקבה (קיץ)"}

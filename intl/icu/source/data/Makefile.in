@@ -136,7 +136,7 @@ cleanpackage:
 	$(RMV) $(LIBDIR)/*$(LIB_ICUDATA_NAME)*.$(SO)* $(LIBDIR)/$(LIB_STATIC_ICUDATA_NAME).$(A)
 
 check-local:
-	PYTHONPATH=$(srcdir) @PYTHON@ -m buildtool.test
+	PYTHONPATH=$(top_srcdir)/python @PYTHON@ -m icutools.databuilder.test
 
 # Find out if we have a source archive.
 # If we have that, then use that instead of building everything from scratch.
@@ -266,7 +266,7 @@ ifeq ($(TZDATA),)
 TZDATA = $(firstword $(wildcard $(top_builddir)/tools/tzcode/tzdata*.tar.gz) $(wildcard $(top_srcdir)/tools/tzcode/tzdata*.tar.gz))
 endif
 
-# TODO(ICU-20466): Make the TZDATA override part of Python buildtool
+# TODO(ICU-20466): Make the TZDATA override part of Python icutools.databuilder
 ifneq ($(TZDATA),)
 
 TZCODE_DIR=$(top_builddir)/tools/tzcode

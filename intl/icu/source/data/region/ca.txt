@@ -52,7 +52,7 @@ ca{
         AZ{"Azerbaidjan"}
         BA{"Bòsnia i Hercegovina"}
         BB{"Barbados"}
-        BD{"Bangla Desh"}
+        BD{"Bangladesh"}
         BE{"Bèlgica"}
         BF{"Burkina Faso"}
         BG{"Bulgària"}
@@ -77,7 +77,7 @@ ca{
         CF{"República Centreafricana"}
         CG{"Congo - Brazzaville"}
         CH{"Suïssa"}
-        CI{"Costa d’Ivori"}
+        CI{"Côte d’Ivoire"}
         CK{"Illes Cook"}
         CL{"Xile"}
         CM{"Camerun"}
@@ -122,7 +122,7 @@ ca{
         GG{"Guernsey"}
         GH{"Ghana"}
         GI{"Gibraltar"}
-        GL{"Grenlàndia"}
+        GL{"Groenlàndia"}
         GM{"Gàmbia"}
         GN{"Guinea"}
         GP{"Guadeloupe"}
@@ -222,7 +222,7 @@ ca{
         PM{"Saint-Pierre-et-Miquelon"}
         PN{"Illes Pitcairn"}
         PR{"Puerto Rico"}
-        PS{"territoris palestins"}
+        PS{"Territoris palestins"}
         PT{"Portugal"}
         PW{"Palau"}
         PY{"Paraguai"}
@@ -254,7 +254,7 @@ ca{
         SX{"Sint Maarten"}
         SY{"Síria"}
         SZ{"eSwatini"}
-        TA{"Tristão da Cunha"}
+        TA{"Tristan da Cunha"}
         TC{"Illes Turks i Caicos"}
         TD{"Txad"}
         TF{"Territoris Australs Francesos"}
@@ -287,15 +287,15 @@ ca{
         VU{"Vanuatu"}
         WF{"Wallis i Futuna"}
         WS{"Samoa"}
-        XA{"Pseudo-Accents"}
-        XB{"Pseudo-Bidi"}
+        XA{"pseudoaccents"}
+        XB{"pseudobidi"}
         XK{"Kosovo"}
         YE{"Iemen"}
         YT{"Mayotte"}
         ZA{"República de Sud-àfrica"}
         ZM{"Zàmbia"}
         ZW{"Zimbàbue"}
-        ZZ{"Regió desconeguda"}
+        ZZ{"regió desconeguda"}
     }
     Countries%short{
         GB{"RU"}
@@ -306,11 +306,13 @@ ca{
         US{"EUA"}
     }
     Countries%variant{
-        CD{"Congo (República Democràtica del Congo)"}
+        CD{"Congo (RDC)"}
         CG{"Congo (República del Congo)"}
+        CI{"Costa d’Ivori"}
         CZ{"República Txeca"}
         FK{"Illes Malvines (Illes Falkland)"}
         SZ{"Swazilàndia"}
+        TL{"Timor Oriental"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

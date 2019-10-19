@@ -11,10 +11,10 @@ pt{
         " z]"
     }
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
-        "″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
+        "′ ″]"
     }
     NumberElements{
         latn{
@@ -27,6 +27,7 @@ pt{
             patterns{
                 accountingFormat{"¤ #,##0.00"}
                 currencyFormat{"¤ #,##0.00"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -190,9 +191,11 @@ pt{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -208,7 +211,7 @@ pt{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     calendar{
         buddhist{
             eras{
@@ -393,52 +396,8 @@ pt{
                 yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
-                GyM{
-                    G{"GGGGG y-MM – GGGGG y-MM"}
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                GyMEd{
-                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
-                GyMMMEd{
-                    G{"G y MMM d, E – G y MMM d, E"}
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
-                }
-                GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
-                }
-                GyMd{
-                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                    h{"h:mm – h:mm B"}
                 }
                 H{
                     H{"HH'h' - HH'h'"}
@@ -628,13 +587,13 @@ pt{
             dayNames{
                 format{
                     abbreviated{
-                        "dom",
-                        "seg",
-                        "ter",
-                        "qua",
-                        "qui",
-                        "sex",
-                        "sáb",
+                        "dom.",
+                        "seg.",
+                        "ter.",
+                        "qua.",
+                        "qui.",
+                        "sex.",
+                        "sáb.",
                     }
                     narrow{
                         "D",
@@ -644,15 +603,6 @@ pt{
                         "Q",
                         "S",
                         "S",
-                    }
-                    short{
-                        "dom",
-                        "seg",
-                        "ter",
-                        "qua",
-                        "qui",
-                        "sex",
-                        "sáb",
                     }
                     wide{
                         "domingo",
@@ -665,15 +615,6 @@ pt{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "dom",
-                        "seg",
-                        "ter",
-                        "qua",
-                        "qui",
-                        "sex",
-                        "sáb",
-                    }
                     narrow{
                         "D",
                         "S",
@@ -682,15 +623,6 @@ pt{
                         "Q",
                         "S",
                         "S",
-                    }
-                    short{
-                        "dom",
-                        "seg",
-                        "ter",
-                        "qua",
-                        "qui",
-                        "sex",
-                        "sáb",
                     }
                     wide{
                         "domingo",
@@ -926,18 +858,18 @@ pt{
             monthNames{
                 format{
                     abbreviated{
-                        "jan",
-                        "fev",
-                        "mar",
-                        "abr",
-                        "mai",
-                        "jun",
-                        "jul",
-                        "ago",
-                        "set",
-                        "out",
-                        "nov",
-                        "dez",
+                        "jan.",
+                        "fev.",
+                        "mar.",
+                        "abr.",
+                        "mai.",
+                        "jun.",
+                        "jul.",
+                        "ago.",
+                        "set.",
+                        "out.",
+                        "nov.",
+                        "dez.",
                     }
                     narrow{
                         "J",
@@ -969,20 +901,6 @@ pt{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "jan",
-                        "fev",
-                        "mar",
-                        "abr",
-                        "mai",
-                        "jun",
-                        "jul",
-                        "ago",
-                        "set",
-                        "out",
-                        "nov",
-                        "dez",
-                    }
                     narrow{
                         "J",
                         "F",
@@ -1430,7 +1348,7 @@ pt{
                 }
                 past{
                     one{"há {0} segunda-feira"}
-                    other{"{0} segundas-feiras atrás"}
+                    other{"há {0} segundas-feiras"}
                 }
             }
         }
@@ -1572,7 +1490,7 @@ pt{
                 }
                 past{
                     one{"há {0} trim."}
-                    other{"{0} trim. atrás"}
+                    other{"há {0} trim."}
                 }
             }
         }
@@ -1834,7 +1752,7 @@ pt{
                     other{"em {0} quartas-feiras"}
                 }
                 past{
-                    one{"há {0} quartas-feiras"}
+                    one{"há {0} quarta-feira"}
                     other{"há {0} quartas-feiras"}
                 }
             }
@@ -1989,7 +1907,7 @@ pt{
                 }
                 past{
                     one{"há {0} ano"}
-                    other{"{0} anos atrás"}
+                    other{"há {0} anos"}
                 }
             }
         }
@@ -2033,8 +1951,6 @@ pt{
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} e {1}"}
@@ -2047,8 +1963,10 @@ pt{
             end{"{0} e {1}"}
         }
         unit-narrow{
-            2{"{0} e {1}"}
-            end{"{0} e {1}"}
+            2{"{0} {1}"}
+            end{"{0} {1}"}
+            middle{"{0} {1}"}
+            start{"{0} {1}"}
         }
         unit-short{
             2{"{0} e {1}"}
@@ -2056,8 +1974,8 @@ pt{
         }
     }
     measurementSystemNames{
-        UK{"inglês"}
-        US{"americano"}
+        UK{"Reino Unido"}
+        US{"Estados Unidos"}
         metric{"métrico"}
     }
     parse{

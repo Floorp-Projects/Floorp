@@ -312,5 +312,5 @@ he{
             "11: =%spellout-numbering=;",
         }
     }
-    Version{"2.1.38.34"}
+    Version{"36"}
 }

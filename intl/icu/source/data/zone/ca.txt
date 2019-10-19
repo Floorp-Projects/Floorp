@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ca{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -64,7 +64,7 @@ ca{
             ec{"Douala"}
         }
         "Africa:El_Aaiun"{
-            ec{"Al-aaiun"}
+            ec{"Al-Aaiun"}
         }
         "Africa:Freetown"{
             ec{"Freetown"}
@@ -850,7 +850,7 @@ ca{
             ec{"Taixkent"}
         }
         "Asia:Tbilisi"{
-            ec{"Tbilisi"}
+            ec{"Tbilissi"}
         }
         "Asia:Tehran"{
             ec{"Teheran"}
@@ -883,7 +883,7 @@ ca{
             ec{"Jakutsk"}
         }
         "Asia:Yekaterinburg"{
-            ec{"Jekaterinburg"}
+            ec{"Iekaterinburg"}
         }
         "Asia:Yerevan"{
             ec{"Erevan"}
@@ -1551,14 +1551,14 @@ ca{
             ls{"Hora de les illes Gilbert"}
         }
         "meta:Greenland_Eastern"{
-            ld{"Hora d’estiu de l’Est de Grenlàndia"}
-            lg{"Hora de l’Est de Grenlàndia"}
-            ls{"Hora estàndard de l’Est de Grenlàndia"}
+            ld{"Hora d’estiu de l’Est de Groenlàndia"}
+            lg{"Hora de l’Est de Groenlàndia"}
+            ls{"Hora estàndard de l’Est de Groenlàndia"}
         }
         "meta:Greenland_Western"{
-            ld{"Hora d’estiu de l’Oest de Grenlàndia"}
-            lg{"Hora de l’Oest de Grenlàndia"}
-            ls{"Hora estàndard de l’Oest de Grenlàndia"}
+            ld{"Hora d’estiu de l’Oest de Groenlàndia"}
+            lg{"Hora de l’Oest de Groenlàndia"}
+            ls{"Hora estàndard de l’Oest de Groenlàndia"}
         }
         "meta:Gulf"{
             ls{"Hora del Golf"}
@@ -1743,9 +1743,9 @@ ca{
             ls{"Hora estàndard de Fernando de Noronha"}
         }
         "meta:Novosibirsk"{
-            ld{"Hora d’estiu de Novosibirsk"}
-            lg{"Hora de Novosibirsk"}
-            ls{"Hora estàndard de Novosibirsk"}
+            ld{"Hora d’estiu de Novossibirsk"}
+            lg{"Hora de Novossibirsk"}
+            ls{"Hora estàndard de Novossibirsk"}
         }
         "meta:Omsk"{
             ld{"Hora d’estiu d’Omsk"}

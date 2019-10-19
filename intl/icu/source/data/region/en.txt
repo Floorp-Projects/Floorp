@@ -316,5 +316,5 @@ en{
         SZ{"Swaziland"}
         TL{"East Timor"}
     }
-    Version{"2.1.48.65"}
+    Version{"36"}
 }

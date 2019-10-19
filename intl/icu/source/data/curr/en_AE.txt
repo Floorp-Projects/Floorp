@@ -7,5 +7,5 @@ en_AE{
             "United Arab Emirates Dirham",
         }
     }
-    Version{"2.1.48.67"}
+    Version{"36"}
 }

@@ -891,18 +891,22 @@ log_data_err(const char* pattern, ...)
 static int traceFnNestingDepth = 0;
 U_CDECL_BEGIN
 static void U_CALLCONV TraceEntry(const void *context, int32_t fnNumber) {
+    (void)context; // suppress compiler warnings about unused variable
     char buf[500];
-    utrace_format(buf, sizeof(buf), traceFnNestingDepth*3, "%s() enter.\n", utrace_functionName(fnNumber));    buf[sizeof(buf)-1]=0;  
+    utrace_format(buf, sizeof(buf), traceFnNestingDepth*3, "%s() enter.\n", utrace_functionName(fnNumber));
+    buf[sizeof(buf)-1]=0;  
     fputs(buf, stdout);
     traceFnNestingDepth++;
 }   
  
-static void U_CALLCONV TraceExit(const void *context, int32_t fnNumber, const char *fmt, va_list args) {    char buf[500];
-    
+static void U_CALLCONV TraceExit(const void *context, int32_t fnNumber, const char *fmt, va_list args) {
+    (void)context; // suppress compiler warnings about unused variable
+    char buf[500];
     if (traceFnNestingDepth>0) {
         traceFnNestingDepth--; 
     }
-    utrace_format(buf, sizeof(buf), traceFnNestingDepth*3, "%s() ", utrace_functionName(fnNumber));    buf[sizeof(buf)-1]=0;
+    utrace_format(buf, sizeof(buf), traceFnNestingDepth*3, "%s() ", utrace_functionName(fnNumber));
+    buf[sizeof(buf)-1]=0;
     fputs(buf, stdout);
     utrace_vformat(buf, sizeof(buf), traceFnNestingDepth*3, fmt, args);
     buf[sizeof(buf)-1]=0;
@@ -912,6 +916,10 @@ static void U_CALLCONV TraceExit(const void *context, int32_t fnNumber, const ch
 
 static void U_CALLCONV TraceData(const void *context, int32_t fnNumber,
                           int32_t level, const char *fmt, va_list args) {
+    // suppress compiler warnings about unused variables
+    (void)context;  
+    (void)fnNumber;
+    (void)level;
     char buf[500];
     utrace_vformat(buf, sizeof(buf), traceFnNestingDepth*3, fmt, args);
     buf[sizeof(buf)-1]=0;
@@ -920,6 +928,7 @@ static void U_CALLCONV TraceData(const void *context, int32_t fnNumber,
 }
 
 static void *U_CALLCONV ctest_libMalloc(const void *context, size_t size) {
+    (void)context; // suppress compiler warnings about unused variable
     /*if (VERBOSITY) {
         printf("Allocated %ld\n", (long)size);
     }*/
@@ -929,6 +938,7 @@ static void *U_CALLCONV ctest_libMalloc(const void *context, size_t size) {
     return malloc(size);
 }
 static void *U_CALLCONV ctest_libRealloc(const void *context, void *mem, size_t size) {
+    (void)context; // suppress compiler warnings about unused variable
     /*if (VERBOSITY) {
         printf("Reallocated %ld\n", (long)size);
     }*/
@@ -939,6 +949,7 @@ static void *U_CALLCONV ctest_libRealloc(const void *context, void *mem, size_t 
     return realloc(mem, size);
 }
 static void U_CALLCONV ctest_libFree(const void *context, void *mem) {
+    (void)context; // suppress compiler warnings about unused variable
     free(mem);
 }
 

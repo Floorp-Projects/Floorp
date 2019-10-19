@@ -61,7 +61,7 @@ es_PE{
             }
         }
     }
-    Version{"2.1.47.83"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -99,18 +99,14 @@ es_PE{
                 "d MMM y",
                 "d/MM/yy",
                 "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} 'a' 'las' {0}",
+                "{1} 'a' 'las' {0}",
                 "{1} {0}",
                 "{1} {0}",
             }
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
                         am{"a. m."}
                         pm{"p. m."}
                     }

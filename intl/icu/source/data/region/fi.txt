@@ -309,7 +309,8 @@ fi{
         CI{"Côte d’Ivoire"}
         CZ{"Tšekin tasavalta"}
         FK{"Falklandinsaaret (Malvinassaaret)"}
+        SZ{"Eswatini"}
         TL{"Timor-Leste"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

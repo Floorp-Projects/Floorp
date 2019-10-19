@@ -274,7 +274,7 @@ et{
         UA{"Ukraina"}
         UG{"Uganda"}
         UM{"Ühendriikide hajasaared"}
-        UN{"Ühendatud Rahvaste Organisatsioon"}
+        UN{"Ühinenud Rahvaste Organisatsioon"}
         US{"Ameerika Ühendriigid"}
         UY{"Uruguay"}
         UZ{"Usbekistan"}
@@ -295,7 +295,7 @@ et{
         ZA{"Lõuna-Aafrika Vabariik"}
         ZM{"Sambia"}
         ZW{"Zimbabwe"}
-        ZZ{"Tundmatu piirkond"}
+        ZZ{"tundmatu piirkond"}
     }
     Countries%short{
         GB{"ÜK"}
@@ -314,5 +314,5 @@ et{
         SZ{"eSwatini"}
         TL{"Timor-Leste"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 af{
-    Version{"2.1.48.17"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -810,6 +810,9 @@ af{
         "Asia:Qatar"{
             ec{"Katar"}
         }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
+        }
         "Asia:Qyzylorda"{
             ec{"Qyzylorda"}
         }
@@ -1461,7 +1464,7 @@ af{
             ls{"Kokoseilande-tyd"}
         }
         "meta:Colombia"{
-            ld{"Colombië-somertyd"}
+            ld{"Colombia-somertyd"}
             lg{"Colombië-tyd"}
             ls{"Colombië-standaardtyd"}
         }

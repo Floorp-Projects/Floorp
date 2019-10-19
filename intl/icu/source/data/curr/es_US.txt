@@ -3,17 +3,25 @@
 es_US{
     %%Parent{"es_419"}
     Currencies{
-        AMD{
-            "AMD",
-            "dram",
+        BDT{
+            "BDT",
+            "taka bangladesí",
+        }
+        BTN{
+            "BTN",
+            "ngultrum butanés",
         }
         JPY{
             "¥",
             "yen",
         }
-        MYR{
-            "MYR",
-            "ringit",
+        KGS{
+            "KGS",
+            "som kirguís",
+        }
+        LAK{
+            "LAK",
+            "kip laosiano",
         }
         STN{
             "STN",
@@ -31,16 +39,21 @@ es_US{
             "UZS",
             "sum",
         }
+        VND{
+            "VND",
+            "dong vietnamita",
+        }
         XAF{
             "XAF",
             "franco CFA de África central",
         }
-        XOF{
-            "XOF",
-            "franco CFA de África Occidental",
+        ZMW{
+            "ZMW",
+            "kwacha zambiano",
         }
     }
     Currencies%narrow{
+        BYN{"p."}
         FKP{"£"}
         RON{"lei"}
         SSP{"£"}
@@ -48,15 +61,25 @@ es_US{
         VEF{"Bs"}
     }
     CurrencyPlurals{
-        MWK{
-            one{"kwacha malauí"}
+        AMD{
+            one{"dram armenio"}
+            other{"drams armenios"}
         }
-        MYR{
-            one{"ringit"}
-            other{"ringits"}
+        BDT{
+            one{"taka bangladesí"}
+            other{"takas bangladesíes"}
         }
-        RON{
-            one{"leu rumano"}
+        BTN{
+            one{"ngultrum butanés"}
+            other{"gultrums bultaneses"}
+        }
+        KHR{
+            one{"riel camboyano"}
+            other{"rieles camboyanos"}
+        }
+        LAK{
+            one{"kip laosiano"}
+            other{"kips laosianos"}
         }
         STN{
             one{"dobra santotomense"}
@@ -70,14 +93,22 @@ es_US{
             one{"sum"}
             other{"sums"}
         }
+        VES{
+            one{"bolívar venezolano"}
+            other{"bolivares venezolanos"}
+        }
+        VND{
+            one{"dong vietnamita"}
+            other{"dongs vietnamitas"}
+        }
         XAF{
             one{"franco CFA de África central"}
             other{"francos CFA de África central"}
         }
-        XOF{
-            one{"franco CFA de África Occidental"}
-            other{"francos CFA de África Occidental"}
+        ZMW{
+            one{"kwacha zambiano"}
+            other{"kwachas zambianos"}
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
 }

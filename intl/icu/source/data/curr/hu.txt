@@ -188,7 +188,7 @@ hu{
         }
         BYN{
             "BYN",
-            "fehérorosz rubel",
+            "belarusz rubel",
         }
         BYR{
             "BYR",
@@ -868,7 +868,7 @@ hu{
         }
         SZL{
             "SZL",
-            "szváziföldi lilangeni",
+            "szvázi lilangeni",
         }
         THB{
             "THB",
@@ -980,7 +980,11 @@ hu{
         }
         VND{
             "VND",
-            "vietnami dong",
+            "vietnámi dong",
+        }
+        VNN{
+            "VNN",
+            "vietnámi dong (1978–1985)",
         }
         VUV{
             "VUV",
@@ -1124,31 +1128,104 @@ hu{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
         ARS{"$"}
+        AUD{"$"}
+        BAM{"KM"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BOB{"Bs"}
         BRL{"R$"}
+        BSD{"$"}
+        BWP{"P"}
+        BYN{"р."}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
         CNY{"¥"}
         COP{"$"}
+        CRC{"₡"}
+        CUC{"$"}
+        CUP{"$"}
+        CZK{"Kč"}
         DKK{"kr"}
+        DOP{"$"}
+        EGP{"E£"}
         EUR{"€"}
+        FJD{"$"}
+        FKP{"£"}
         GBP{"£"}
+        GEL{"₾"}
+        GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
         GYD{"$"}
         HKD{"$"}
+        HNL{"L"}
         HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
+        ILS{"₪"}
+        INR{"₹"}
         ISK{"kr"}
+        JMD{"$"}
         JPY{"¥"}
+        KHR{"៛"}
+        KMF{"CF"}
         KPW{"₩"}
         KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
+        LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
         MNT{"₮"}
+        MUR{"Rs"}
+        MXN{"$"}
+        MYR{"RM"}
+        NAD{"$"}
+        NGN{"₦"}
+        NIO{"C$"}
         NOK{"kr"}
+        NPR{"Rs"}
+        NZD{"$"}
+        PHP{"₱"}
+        PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
+        RON{"lei"}
+        RUB{"₽"}
+        RWF{"RF"}
+        SBD{"$"}
         SEK{"kr"}
+        SGD{"$"}
+        SHP{"£"}
         SRD{"$"}
+        SSP{"£"}
+        STN{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
+        TRY{"₺"}
+        TTD{"$"}
         TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
         UYU{"$"}
+        VEF{"Bs"}
+        VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
+        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1323,13 +1400,17 @@ hu{
             one{"bhutáni ngultrum"}
             other{"bhutáni ngultrum"}
         }
+        BUK{
+            one{"burmai kjap"}
+            other{"burmai kjap"}
+        }
         BWP{
             one{"botswanai pula"}
             other{"botswanai pula"}
         }
         BYN{
-            one{"fehérorosz rubel"}
-            other{"fehérorosz rubel"}
+            one{"belarusz rubel"}
+            other{"belarusz rubel"}
         }
         BYR{
             one{"fehérorosz rubel (2000–2016)"}
@@ -1796,8 +1877,8 @@ hu{
             other{"szíriai font"}
         }
         SZL{
-            one{"szváziföldi lilangeni"}
-            other{"szváziföldi lilangeni"}
+            one{"szvázi lilangeni"}
+            other{"szvázi lilangeni"}
         }
         THB{
             one{"thai baht"}
@@ -1822,6 +1903,10 @@ hu{
         TOP{
             one{"tongai paanga"}
             other{"tongai paanga"}
+        }
+        TPE{
+            one{"timori escudo"}
+            other{"timori escudo"}
         }
         TRL{
             one{"török líra (1922–2005)"}
@@ -1888,8 +1973,12 @@ hu{
             other{"venezuelai bolivar"}
         }
         VND{
-            one{"vietnami dong"}
-            other{"vietnami dong"}
+            one{"vietnámi dong"}
+            other{"vietnámi dong"}
+        }
+        VNN{
+            one{"vietnámi dong (1978–1985)"}
+            other{"vietnámi dong (1978–1985)"}
         }
         VUV{
             one{"vanuatui vatu"}
@@ -1972,5 +2061,5 @@ hu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

@@ -15,10 +15,10 @@ lb{
     }
     ExemplarCharacters{"[a ä b c d e é ë f g h i j k l m n o p q r s t u v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * / "
-        "\\& #]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * "
+        "/ \\& #]"
     }
     MoreInformation{"?"}
     NumberElements{
@@ -156,7 +156,7 @@ lb{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     calendar{
         buddhist{
             eras{
@@ -250,6 +250,7 @@ lb{
                 MEd{"E, d.M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
+                MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
                 d{"d"}
@@ -259,6 +260,7 @@ lb{
                 yyyyMEd{"E, d.M.y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d. MMM y G"}
+                yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d. MMM y G"}
                 yyyyMd{"d.M.y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
@@ -377,6 +379,7 @@ lb{
                 MEd{"E, d.M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
+                MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
                 d{"d"}
@@ -389,6 +392,7 @@ lb{
                 yMEd{"E, d.M.y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d. MMM y"}
+                yMMMM{"MMMM y"}
                 yMMMd{"d. MMM y"}
                 yMd{"d.M.y"}
                 yQQQ{"QQQ y"}

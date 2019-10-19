@@ -511,8 +511,6 @@ mt{
     }
     Languages%short{
         az{"Ażeri"}
-        en_GB{"Ingliż (UK)"}
-        en_US{"Ingliż (US)"}
     }
     Scripts{
         Arab{"Għarbi"}
@@ -559,7 +557,7 @@ mt{
     Variants{
         REVISED{"Ortografija Irriveda"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     codePatterns{
         language{"Lingwa: {0}"}
         script{"Skript: {0}"}

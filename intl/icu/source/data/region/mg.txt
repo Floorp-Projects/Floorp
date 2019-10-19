@@ -127,7 +127,6 @@ mg{
         MD{"Môldavia"}
         MG{"Madagasikara"}
         MH{"Nosy Marshall"}
-        MK{"Makedonia"}
         ML{"Mali"}
         MM{"Myanmar"}
         MN{"Môngôlia"}
@@ -227,5 +226,5 @@ mg{
         ZM{"Zambia"}
         ZW{"Zimbaboe"}
     }
-    Version{"2.1.48.4"}
+    Version{"36"}
 }

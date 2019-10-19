@@ -124,7 +124,6 @@ bas{
         MD{"Moldavìà"}
         MG{"Màdàgàskâr"}
         MH{"Bìòn bi Marcàl"}
-        MK{"Màsèdonìà"}
         ML{"Màli"}
         MM{"Myànmâr"}
         MN{"Mòŋgolìà"}
@@ -224,5 +223,5 @@ bas{
         ZM{"Zàmbià"}
         ZW{"Zìmbàbwê"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

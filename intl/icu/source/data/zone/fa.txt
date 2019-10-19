@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fa{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"آبیجان"}
@@ -154,7 +154,7 @@ fa{
             ec{"طرابلس"}
         }
         "Africa:Tunis"{
-            ec{"شهر تونس"}
+            ec{"تونس"}
         }
         "Africa:Windhoek"{
             ec{"ویندهوک"}
@@ -1736,7 +1736,7 @@ fa{
             ls{"وقت نیوئه"}
         }
         "meta:Norfolk"{
-            ls{"وقت جزایر نورفولک"}
+            ls{"وقت جزیرهٔ نورفولک"}
         }
         "meta:Noronha"{
             ld{"وقت تابستانی فرناندو دی نورونیا"}
@@ -1805,7 +1805,7 @@ fa{
             ls{"وقت عادی قیزیل‌اوردا"}
         }
         "meta:Reunion"{
-            ls{"وقت ریونیون"}
+            ls{"وقت رئونیون"}
         }
         "meta:Rothera"{
             ls{"وقت روترا"}

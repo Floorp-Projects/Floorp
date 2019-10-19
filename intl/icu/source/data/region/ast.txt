@@ -182,7 +182,6 @@ ast{
         MF{"Saint Martin"}
         MG{"Madagascar"}
         MH{"Islles Marshall"}
-        MK{"Macedonia"}
         ML{"Malí"}
         MM{"Myanmar (Birmania)"}
         MN{"Mongolia"}
@@ -307,8 +306,7 @@ ast{
         CI{"Costa del Marfil"}
         CZ{"República Checa"}
         FK{"Islles Malvines (Falkland Islands)"}
-        MK{"Macedonia (ARYDM)"}
         TL{"Timor Este"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

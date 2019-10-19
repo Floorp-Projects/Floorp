@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 am{
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -123,11 +123,6 @@ am{
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
             }
-            mole{
-                dnam{"mol"}
-                one{"{0} mol"}
-                other{"{0} mol"}
-            }
             part-per-million{
                 dnam{"ppm"}
                 one{"{0} ppm"}
@@ -142,11 +137,6 @@ am{
                 dnam{"በማይል"}
                 one{"{0} በማይል"}
                 other{"{0}‰"}
-            }
-            permyriad{
-                dnam{"‱"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -247,6 +237,11 @@ am{
                 other{"{0} ቀናት"}
                 per{"{0}/ቀ"}
             }
+            decade{
+                dnam{"አስር አመታት"}
+                one{"{0} አስር አመታት"}
+                other{"{0} አስር አመታት"}
+            }
             hour{
                 dnam{"ሰዓቶች"}
                 one{"{0} ሰዓት"}
@@ -322,11 +317,6 @@ am{
             }
         }
         energy{
-            british-thermal-unit{
-                dnam{"Btu"}
-                one{"{0} Btu"}
-                other{"{0} Btu"}
-            }
             calorie{
                 dnam{"cal"}
                 one{"{0} cal"}
@@ -369,11 +359,6 @@ am{
                 one{"{0} ኒ"}
                 other{"{0} ኒ"}
             }
-            pound-force{
-                dnam{"lbf"}
-                one{"{0} lbf"}
-                other{"{0} lbf"}
-            }
         }
         frequency{
             gigahertz{
@@ -395,6 +380,38 @@ am{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"ነበሴሜ"}
+                one{"{0} ነበሴሜ"}
+                other{"{0} ነበሴሜ"}
+            }
+            dot-per-inch{
+                dnam{"ነበኢ"}
+                one{"{0} ነበኢ"}
+                other{"{0} ነበኢ"}
+            }
+            megapixel{
+                dnam{"ሜጋ ፒክስል"}
+                one{"{0} ሜጋ ፒክስል"}
+                other{"{0} ሜጋ ፒክስል"}
+            }
+            pixel{
+                dnam{"ፒክስል"}
+                one{"{0} ፒክስል"}
+                other{"{0} ፒክስል"}
+            }
+            pixel-per-centimeter{
+                dnam{"ፒበሴሜ"}
+                one{"{0} ፒበሴሜ"}
+                other{"{0} ፒበሴሜ"}
+            }
+            pixel-per-inch{
+                dnam{"ፒበኢ"}
+                one{"{0} ፒበኢ"}
+                other{"{0} ፒበኢ"}
             }
         }
         length{
@@ -488,11 +505,6 @@ am{
                 one{"{0} ነጥብ"}
                 other{"{0} ነጥብ"}
             }
-            solar-radius{
-                dnam{"R☉"}
-                one{"{0} R☉"}
-                other{"{0} R☉"}
-            }
             yard{
                 dnam{"ያርድ"}
                 one{"{0} ያርድ"}
@@ -505,27 +517,12 @@ am{
                 one{"{0} lx"}
                 other{"{0} lx"}
             }
-            solar-luminosity{
-                dnam{"L☉"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
-            }
         }
         mass{
             carat{
                 dnam{"CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
-            }
-            dalton{
-                dnam{"Da"}
-                one{"{0} Da"}
-                other{"{0} Da"}
-            }
-            earth-mass{
-                dnam{"M⊕"}
-                one{"{0} M⊕"}
-                other{"{0} M⊕"}
             }
             gram{
                 dnam{"ግራም"}
@@ -571,11 +568,6 @@ am{
                 other{"{0} ፓውንድ"}
                 per{"{0}/ፓውንድ"}
             }
-            solar-mass{
-                dnam{"M☉"}
-                one{"{0} M☉"}
-                other{"{0} M☉"}
-            }
             ton{
                 dnam{"ቶን"}
                 one{"{0} ቶን"}
@@ -620,6 +612,11 @@ am{
                 one{"{0} ከባቢ አየር"}
                 other{"{0} ከባቢ አየር"}
             }
+            bar{
+                dnam{"አሞሌ"}
+                one{"{0} አሞሌ"}
+                other{"{0} አሞሌዎች"}
+            }
             hectopascal{
                 dnam{"ሄክቶፓስካል"}
                 one{"{0} ሄክቶፓስካል"}
@@ -649,6 +646,11 @@ am{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                dnam{"ፓስካል"}
+                one{"{0} ፓስካል"}
+                other{"{0} ፓስካል"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -705,11 +707,6 @@ am{
                 dnam{"ኒ.ሜ"}
                 one{"{0} ኒ.ሜ"}
                 other{"{0} ኒ.ሜ"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                one{"{0} lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
             }
         }
         volume{
@@ -784,11 +781,6 @@ am{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
-            }
-            fluid-ounce-imperial{
-                dnam{"Imp. fl oz"}
-                one{"{0} fl oz Imp."}
-                other{"{0} fl oz Imp."}
             }
             gallon{
                 dnam{"gal"}
@@ -1220,11 +1212,6 @@ am{
                 one{"{0} mmol/L"}
                 other{"{0} mmol/L"}
             }
-            mole{
-                dnam{"mol"}
-                one{"{0} mol"}
-                other{"{0} mol"}
-            }
             part-per-million{
                 dnam{"ppm"}
                 one{"{0} ppm"}
@@ -1239,11 +1226,6 @@ am{
                 dnam{"በማይል"}
                 one{"{0}‰"}
                 other{"{0}‰"}
-            }
-            permyriad{
-                dnam{"‱"}
-                one{"{0}‱"}
-                other{"{0}‱"}
             }
         }
         consumption{
@@ -1344,6 +1326,11 @@ am{
                 other{"{0} ቀናት"}
                 per{"{0}/ቀ"}
             }
+            decade{
+                dnam{"አስር አመታት"}
+                one{"{0} አስር አመታት"}
+                other{"{0} አስር አመታት"}
+            }
             hour{
                 dnam{"ሰዓቶች"}
                 one{"{0} ሰዓ"}
@@ -1419,11 +1406,6 @@ am{
             }
         }
         energy{
-            british-thermal-unit{
-                dnam{"Btu"}
-                one{"{0} Btu"}
-                other{"{0} Btu"}
-            }
             calorie{
                 dnam{"cal"}
                 one{"{0} cal"}
@@ -1466,11 +1448,6 @@ am{
                 one{"{0} ኒ"}
                 other{"{0} ኒ"}
             }
-            pound-force{
-                dnam{"lbf"}
-                one{"{0} lbf"}
-                other{"{0} lbf"}
-            }
         }
         frequency{
             gigahertz{
@@ -1492,6 +1469,38 @@ am{
                 dnam{"MHz"}
                 one{"{0} MHz"}
                 other{"{0} MHz"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"ነበሴሜ"}
+                one{"{0} ነበሴሜ"}
+                other{"{0} ነበሴሜ"}
+            }
+            dot-per-inch{
+                dnam{"ነበኢ"}
+                one{"{0} ነበኢ"}
+                other{"{0} ነበኢ"}
+            }
+            megapixel{
+                dnam{"ሜጋ ፒክስል"}
+                one{"{0} ሜጋ ፒክስል"}
+                other{"{0} ሜጋ ፒክስል"}
+            }
+            pixel{
+                dnam{"ፒክስል"}
+                one{"{0} ፒክስል"}
+                other{"{0} ፒክስል"}
+            }
+            pixel-per-centimeter{
+                dnam{"ፒበሴሜ"}
+                one{"{0} ፒበሴሜ"}
+                other{"{0} ፒበሴሜ"}
+            }
+            pixel-per-inch{
+                dnam{"ፒበኢ"}
+                one{"{0} ፒበኢ"}
+                other{"{0} ፒበኢ"}
             }
         }
         length{
@@ -1585,11 +1594,6 @@ am{
                 one{"{0} ነጥብ"}
                 other{"{0} ነጥብ"}
             }
-            solar-radius{
-                dnam{"R☉"}
-                one{"{0} R☉"}
-                other{"{0} R☉"}
-            }
             yard{
                 dnam{"ያርድ"}
                 one{"{0} ያርድ"}
@@ -1602,27 +1606,12 @@ am{
                 one{"{0} lx"}
                 other{"{0} lx"}
             }
-            solar-luminosity{
-                dnam{"L☉"}
-                one{"{0} L☉"}
-                other{"{0} L☉"}
-            }
         }
         mass{
             carat{
                 dnam{"CD"}
                 one{"{0} CD"}
                 other{"{0} CD"}
-            }
-            dalton{
-                dnam{"Da"}
-                one{"{0} Da"}
-                other{"{0} Da"}
-            }
-            earth-mass{
-                dnam{"M⊕"}
-                one{"{0} M⊕"}
-                other{"{0} M⊕"}
             }
             gram{
                 dnam{"ግራም"}
@@ -1668,11 +1657,6 @@ am{
                 other{"{0} ፓውንድ"}
                 per{"{0}/ፓውንድ"}
             }
-            solar-mass{
-                dnam{"M☉"}
-                one{"{0} M☉"}
-                other{"{0} M☉"}
-            }
             ton{
                 dnam{"ቶን"}
                 one{"{0} ቶን"}
@@ -1717,6 +1701,11 @@ am{
                 one{"{0} ከባቢ አየር"}
                 other{"{0} ከባቢ አየር"}
             }
+            bar{
+                dnam{"አሞሌ"}
+                one{"{0} አሞሌ"}
+                other{"{0} አሞሌዎች"}
+            }
             hectopascal{
                 dnam{"ሄክቶፓስካል"}
                 one{"{0} ሄክቶፓስካል"}
@@ -1746,6 +1735,11 @@ am{
                 dnam{"mm Hg"}
                 one{"{0} mm Hg"}
                 other{"{0} mm Hg"}
+            }
+            pascal{
+                dnam{"ፓስካል"}
+                one{"{0} ፓስካል"}
+                other{"{0} ፓስካል"}
             }
             pound-per-square-inch{
                 dnam{"psi"}
@@ -1802,11 +1796,6 @@ am{
                 dnam{"ኒ.ሜ"}
                 one{"{0} ኒ.ሜ"}
                 other{"{0} ኒ.ሜ"}
-            }
-            pound-foot{
-                dnam{"lbf⋅ft"}
-                one{"{0} lbf⋅ft"}
-                other{"{0} lbf⋅ft"}
             }
         }
         volume{
@@ -1881,11 +1870,6 @@ am{
                 dnam{"fl oz"}
                 one{"{0} fl oz"}
                 other{"{0} fl oz"}
-            }
-            fluid-ounce-imperial{
-                dnam{"Imp. fl oz"}
-                one{"{0} fl oz Imp."}
-                other{"{0} fl oz Imp."}
             }
             gallon{
                 dnam{"gal"}

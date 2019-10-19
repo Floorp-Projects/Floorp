@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 lkt{
-    Version{"2.1.19.14"}
+    Version{"36"}
     collations{
         standard{
             Sequence{
@@ -11,7 +11,7 @@ lkt{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"35.1"}
+            Version{"36"}
         }
     }
 }

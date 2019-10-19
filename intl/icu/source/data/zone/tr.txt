@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tr{
-    Version{"2.1.48.42"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -550,7 +550,7 @@ tr{
             ec{"Sitka"}
         }
         "America:St_Barthelemy"{
-            ec{"Saint Barthélemy"}
+            ec{"Saint Barthelemy"}
         }
         "America:St_Johns"{
             ec{"St. John’s"}
@@ -809,6 +809,9 @@ tr{
         }
         "Asia:Qatar"{
             ec{"Katar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kostanay"}
         }
         "Asia:Qyzylorda"{
             ec{"Kızılorda"}

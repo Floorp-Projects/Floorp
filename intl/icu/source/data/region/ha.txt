@@ -2,6 +2,33 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ha{
     Countries{
+        001{"Duniya"}
+        002{"Afirka"}
+        003{"North America"}
+        005{"South America"}
+        009{"Oceania"}
+        011{"Afirka ta Yamma"}
+        013{"Central America"}
+        014{"Afirka ta Gabas"}
+        015{"Arewacin Africa"}
+        017{"Afirka ta Tsakiya"}
+        018{"Kudancin Afirka"}
+        019{"nahiyoyin Amurka"}
+        021{"Arewacin Amurka"}
+        029{"Caribbean"}
+        030{"Gabashin Asiya"}
+        034{"kudancin Asiya"}
+        035{"Kudu Maso Gabashin Asiya"}
+        039{"Kudancin Turai"}
+        142{"Asiya"}
+        143{"Asiya ta Tsakiya"}
+        145{"Yammacin Asiya"}
+        150{"Turai"}
+        151{"Gabashin Turai"}
+        154{"Arewacin Turai"}
+        155{"Yammacin Turai"}
+        202{"Sub-Saharan Africa"}
+        419{"Latin America"}
         AD{"Andora"}
         AE{"Haɗaɗɗiyar Daular Larabawa"}
         AF{"Afaganistan"}
@@ -10,6 +37,7 @@ ha{
         AL{"Albaniya"}
         AM{"Armeniya"}
         AO{"Angola"}
+        AQ{"Antatika"}
         AR{"Arjantiniya"}
         AS{"Samowa Ta Amurka"}
         AT{"Ostiriya"}
@@ -25,9 +53,11 @@ ha{
         BH{"Baharan"}
         BI{"Burundi"}
         BJ{"Binin"}
+        BL{"St. Barthélemy"}
         BM{"Barmuda"}
         BN{"Burune"}
         BO{"Bolibiya"}
+        BQ{"Caribbean Netherlands"}
         BR{"Birazil"}
         BS{"Bahamas"}
         BT{"Butan"}
@@ -35,6 +65,7 @@ ha{
         BY{"Belarus"}
         BZ{"Beliz"}
         CA{"Kanada"}
+        CC{"Tsibirai Cocos (Keeling)"}
         CD{"Jamhuriyar Dimokuraɗiyyar Kongo"}
         CF{"Jamhuriyar Afirka Ta Tsakiya"}
         CG{"Kongo"}
@@ -43,11 +74,13 @@ ha{
         CK{"Tsibiran Kuku"}
         CL{"Cayile"}
         CM{"Kamaru"}
-        CN{"Caina, Sin"}
+        CN{"Sin"}
         CO{"Kolambiya"}
         CR{"Kwasta Rika"}
         CU{"Kyuba"}
         CV{"Tsibiran Kap Barde"}
+        CW{"Kasar Curaçao"}
+        CX{"Tsibirin Kirsmati"}
         CY{"Sifurus"}
         CZ{"Jamhuriyar Cak"}
         DE{"Jamus"}
@@ -62,6 +95,8 @@ ha{
         ER{"Eritireya"}
         ES{"Sipen"}
         ET{"Habasha"}
+        EU{"Tarayyar Turai"}
+        EZ{"Sashin Turai"}
         FI{"Finlan"}
         FJ{"Fiji"}
         FK{"Tsibiran Falkilan"}
@@ -106,8 +141,8 @@ ha{
         KI{"Kiribati"}
         KM{"Kwamoras"}
         KN{"San Kiti Da Nebis"}
-        KP{"Koreya Ta Arewa"}
-        KR{"Koreya Ta Kudu"}
+        KP{"Koriya Ta Arewa"}
+        KR{"Koriya Ta Kudu"}
         KW{"Kwiyat"}
         KY{"Tsibiran Kaiman"}
         KZ{"Kazakistan"}
@@ -125,9 +160,11 @@ ha{
         MA{"Maroko"}
         MC{"Monako"}
         MD{"Maldoba"}
+        ME{"Mantanegara"}
+        MF{"St. Martin"}
         MG{"Madagaskar"}
         MH{"Tsibiran Marshal"}
-        MK{"Masedoniya"}
+        MK{"Macedonia ta Arewa"}
         ML{"Mali"}
         MM{"Burma, Miyamar"}
         MN{"Mangoliya"}
@@ -156,7 +193,7 @@ ha{
         NZ{"Nuzilan"}
         OM{"Oman"}
         PA{"Panama"}
-        PE{"Peru"}
+        PE{"Feru"}
         PF{"Folinesiya Ta Faransa"}
         PG{"Papuwa Nugini"}
         PH{"Filipin"}
@@ -168,15 +205,16 @@ ha{
         PS{"Palasɗinu"}
         PT{"Portugal"}
         PW{"Palau"}
-        PY{"Paragai"}
-        QA{"Kwatar"}
+        PY{"Faragwai"}
+        QA{"Katar"}
         RE{"Rawuniyan"}
         RO{"Romaniya"}
+        RS{"Sabiya"}
         RU{"Rasha"}
         RW{"Ruwanda"}
-        SA{"Ƙasar Makka"}
+        SA{"Saudiyya"}
         SB{"Tsibiran Salaman"}
-        SC{"Saishal"}
+        SC{"Seychelles"}
         SD{"Sudan"}
         SE{"Suwedan"}
         SG{"Singapur"}
@@ -185,15 +223,19 @@ ha{
         SK{"Sulobakiya"}
         SL{"Salewo"}
         SM{"San Marino"}
-        SN{"Sinigal"}
+        SN{"Sanigal"}
         SO{"Somaliya"}
         SR{"Suriname"}
+        SS{"Sudan ta kudu"}
         ST{"Sawo Tome Da Paransip"}
         SV{"El Salbador"}
+        SX{"Sint Maarten"}
         SY{"Sham, Siriya"}
-        SZ{"Suwazilan"}
+        SZ{"Eswatini"}
+        TA{"Tritan da Kunha"}
         TC{"Turkis Da Tsibiran Kaikwas"}
         TD{"Cadi"}
+        TF{"Yankin Faransi ta Kudu"}
         TG{"Togo"}
         TH{"Tailan"}
         TJ{"Tajikistan"}
@@ -201,7 +243,7 @@ ha{
         TL{"Timor Ta Gabas"}
         TM{"Turkumenistan"}
         TN{"Tunisiya"}
-        TO{"Tanga"}
+        TO{"Tonga"}
         TR{"Turkiyya"}
         TT{"Tirinidad Da Tobago"}
         TV{"Tubalu"}
@@ -209,8 +251,9 @@ ha{
         TZ{"Tanzaniya"}
         UA{"Yukaran"}
         UG{"Yuganda"}
-        US{"Amirka"}
-        UY{"Yurugai"}
+        UN{"Majalisar Dinkin Duniya"}
+        US{"Amurka"}
+        UY{"Yurigwai"}
         UZ{"Uzubekistan"}
         VA{"Batikan"}
         VC{"San Binsan Da Girnadin"}
@@ -220,7 +263,7 @@ ha{
         VN{"Biyetinam"}
         VU{"Banuwatu"}
         WF{"Walis Da Futuna"}
-        WS{"Samowa"}
+        WS{"Samoa"}
         YE{"Yamal"}
         YT{"Mayoti"}
         ZA{"Afirka Ta Kudu"}
@@ -228,5 +271,13 @@ ha{
         ZW{"Zimbabuwe"}
         ZZ{"Yanki da ba a sani ba"}
     }
-    Version{"2.1.48.45"}
+    Countries%short{
+        PS{"Palasɗinu"}
+    }
+    Countries%variant{
+        CD{"Kongo (DRC)"}
+        CG{"Jamhuriyar Kongo"}
+        CI{"Aibari Kwas"}
+    }
+    Version{"36"}
 }

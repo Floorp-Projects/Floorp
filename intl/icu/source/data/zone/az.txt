@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 az{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abican"}
@@ -253,7 +253,7 @@ az{
             ec{"Kayman"}
         }
         "America:Chicago"{
-            ec{"Cikaqo"}
+            ec{"Çikaqo"}
         }
         "America:Chihuahua"{
             ec{"Çihuahua"}
@@ -529,7 +529,7 @@ az{
             ec{"Rio Branko"}
         }
         "America:Santa_Isabel"{
-            ec{"Santa Isabel"}
+            ec{"Santa İzabel"}
         }
         "America:Santarem"{
             ec{"Santarem"}
@@ -595,7 +595,7 @@ az{
             ec{"Uaythors"}
         }
         "America:Winnipeg"{
-            ec{"Vinipeq"}
+            ec{"Vinnipeq"}
         }
         "America:Yakutat"{
             ec{"Yakutat"}
@@ -685,10 +685,10 @@ az{
             ec{"Bişkek"}
         }
         "Asia:Brunei"{
-            ec{"Brunei"}
+            ec{"Bruney"}
         }
         "Asia:Calcutta"{
-            ec{"Kolkata"}
+            ec{"Kəlkətə"}
         }
         "Asia:Chita"{
             ec{"Çita"}
@@ -784,7 +784,7 @@ az{
             ec{"Muskat"}
         }
         "Asia:Nicosia"{
-            ec{"Nikosia"}
+            ec{"Nikosiya"}
         }
         "Asia:Novokuznetsk"{
             ec{"Novokuznetsk"}
@@ -841,7 +841,7 @@ az{
             ec{"Srednekolımsk"}
         }
         "Asia:Taipei"{
-            ec{"Taipei"}
+            ec{"Taybey"}
         }
         "Asia:Tashkent"{
             ec{"Daşkənd"}
@@ -946,7 +946,7 @@ az{
             ec{"Melburn"}
         }
         "Australia:Perth"{
-            ec{"Perth"}
+            ec{"Pert"}
         }
         "Australia:Sydney"{
             ec{"Sidney"}
@@ -1001,7 +1001,7 @@ az{
             ld{"İrlandiya Yay Vaxtı"}
         }
         "Europe:Gibraltar"{
-            ec{"Gibraltar"}
+            ec{"Cəbəli-Tariq"}
         }
         "Europe:Guernsey"{
             ec{"Gernzey"}
@@ -1095,7 +1095,7 @@ az{
             ec{"Skopye"}
         }
         "Europe:Sofia"{
-            ec{"Sofia"}
+            ec{"Sofiya"}
         }
         "Europe:Stockholm"{
             ec{"Stokholm"}
@@ -1122,7 +1122,7 @@ az{
             ec{"Vyana"}
         }
         "Europe:Vilnius"{
-            ec{"Vilnyus"}
+            ec{"Vilnüs"}
         }
         "Europe:Volgograd"{
             ec{"Volqoqrad"}
@@ -1176,7 +1176,7 @@ az{
             ec{"Apia"}
         }
         "Pacific:Auckland"{
-            ec{"Aukland"}
+            ec{"Oklənd"}
         }
         "Pacific:Bougainville"{
             ec{"Buqanvil"}
@@ -1269,7 +1269,7 @@ az{
             ec{"Rarotonqa"}
         }
         "Pacific:Saipan"{
-            ec{"Saipan"}
+            ec{"Saypan"}
         }
         "Pacific:Tahiti"{
             ec{"Tahiti"}
@@ -1768,7 +1768,7 @@ az{
             ls{"Pxenyan Vaxtı"}
         }
         "meta:Reunion"{
-            ls{"Reunion Vaxtı"}
+            ls{"Reyunyon"}
         }
         "meta:Rothera"{
             ls{"Rotera Vaxtı"}

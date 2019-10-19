@@ -634,10 +634,16 @@ it{
         zxx{"nessun contenuto linguistico"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"cinese mandarino semplificato"}
+        zh_Hant{"cinese mandarino tradizionale"}
+    }
+    Languages%menu{
+        zh{"cinese (mandarino)"}
+    }
     Languages%short{
         az{"azero"}
         en_GB{"inglese (GB)"}
-        en_US{"inglese (USA)"}
     }
     Scripts{
         Afak{"afaka"}
@@ -1020,7 +1026,7 @@ it{
         VALENCIA{"valenziano"}
         WADEGILE{"romanizzazione Wade-Giles"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — Tutto"}
         category-list{"{0}: {1}"}

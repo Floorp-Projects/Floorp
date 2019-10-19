@@ -127,7 +127,6 @@ yav{
         MD{"moltafí"}
         MG{"matakaskáal"}
         MH{"ílmalasáal"}
-        MK{"masetuán"}
         ML{"malí"}
         MM{"miaŋmáal"}
         MN{"mongolí"}
@@ -226,5 +225,5 @@ yav{
         ZM{"saambíi"}
         ZW{"simbapuwé"}
     }
-    Version{"2.1.47.82"}
+    Version{"36"}
 }

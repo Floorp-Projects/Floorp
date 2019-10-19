@@ -12,14 +12,14 @@ zu{
         colNumeric{"Ukuhlelwa Ngezinombolo"}
         colStrength{"Amandla Okuhlelwa"}
         collation{"Uhlelo lokuhlunga"}
-        currency{"Ikharensi"}
+        currency{"Imali"}
         hc{"Umjikelezo wehora (12 vs 24"}
         lb{"I-Line Break Style"}
         ms{"Isistimu yokulinganisa"}
         numbers{"Izinombolo"}
-        timezone{"Izoni yesikhathi:"}
+        timezone{"Isikhathi Sendawo"}
         va{"Okokwehlukanisa Kwasendaweni"}
-        x{"i-Private-Use"}
+        x{"Yokusetshenziswa Ngasese"}
     }
     Languages{
         aa{"isi-Afar"}
@@ -431,6 +431,10 @@ zu{
         zxx{"akukho okuqukethwe kolimi"}
         zza{"isi-Zaza"}
     }
+    Languages%menu{
+        yue{"isi-Chinese, Cantonese"}
+        zh{"isi-Chinese, Mandarin"}
+    }
     Languages%short{
         az{"isi-Azeria"}
         en_GB{"i-UK English"}
@@ -495,20 +499,20 @@ zu{
     Types{
         calendar{
             buddhist{"ikhalenda lesi-Buddhist"}
-            chinese{"ikhalenda lesi-Chinese"}
+            chinese{"Ikhalenda lesi-Chinese"}
             coptic{"i-Coptic Calender"}
-            dangi{"ikhalenda lesi-Dangi"}
-            ethiopic{"ikhalenda lesi-Ethiopic"}
+            dangi{"Ikhalenda lesi-Dangi"}
+            ethiopic{"Ikhalenda lesi-Ethiopic"}
             ethiopic-amete-alem{"i-Ethiopic Amete Alem Calender"}
             gregorian{"ikhalenda lesi-Gregorian"}
-            hebrew{"ikhalenda lesi-Hebrew"}
+            hebrew{"Ikhalenda lesi-Hebrew"}
             indian{"i-Indian National Calender"}
-            islamic{"ikhalenda lesi-Islamic"}
+            islamic{"Ikhalenda lesi-Islamic"}
             islamic-civil{"i-Islamic-Civil Calendar"}
-            iso8601{"ikhalenda le-ISO-8601"}
-            japanese{"ikhalenda lesi-Japanese"}
-            persian{"ikhalenda lesi-Persian"}
-            roc{"ikhalenda lesi-Minguo"}
+            iso8601{"Ikhalenda le-ISO-8601"}
+            japanese{"Ikhalenda lesi-Japanese"}
+            persian{"Ikhalenda lesi-Persian"}
+            roc{"Ikhalenda lesi-Minguo"}
         }
         cf{
             account{"Ifomethi yemali ye-Accounting"}
@@ -630,7 +634,7 @@ zu{
             vaii{"Izinhlazu Zezinombolo ze-Vai"}
         }
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — All"}
         category-list{"{0}: {1}"}

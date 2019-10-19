@@ -1137,6 +1137,7 @@ sl{
         DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
+        EUR{"€"}
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
@@ -1190,6 +1191,7 @@ sl{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
+        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2195,5 +2197,5 @@ sl{
         other{"{0} {1}"}
         two{"{0} {1}"}
     }
-    Version{"2.1.48.42"}
+    Version{"36"}
 }

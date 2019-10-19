@@ -1,11 +1,9 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr_CA{
+    AuxExemplarCharacters{"[á å ä ã ā ē í ì ī ñ ó ò ö ø ú ǔ]"}
     NumberElements{
         latn{
-            patterns{
-                decimalFormat{"#,##0.###"}
-            }
             patternsLong{
                 decimalFormat{
                     1000{
@@ -13,21 +11,12 @@ fr_CA{
                         other{"0 mille"}
                     }
                     10000{
+                        one{"00 mille"}
                         other{"00 mille"}
                     }
                     100000{
+                        one{"000 mille"}
                         other{"000 mille"}
-                    }
-                    1000000{
-                        one{"0 million"}
-                        other{"0 millions"}
-                    }
-                    10000000{
-                        one{"00 million"}
-                        other{"00 millions"}
-                    }
-                    100000000{
-                        other{"000 millions"}
                     }
                 }
             }
@@ -83,26 +72,6 @@ fr_CA{
                     }
                 }
                 decimalFormat{
-                    1000{
-                        one{"0 k"}
-                        other{"0 k"}
-                    }
-                    10000{
-                        other{"00 k"}
-                    }
-                    100000{
-                        other{"000 k"}
-                    }
-                    1000000{
-                        one{"0 M"}
-                        other{"0 M"}
-                    }
-                    10000000{
-                        other{"00 M"}
-                    }
-                    100000000{
-                        other{"000 M"}
-                    }
                     1000000000{
                         one{"0 G"}
                         other{"0 G"}
@@ -131,12 +100,10 @@ fr_CA{
             }
             symbols{
                 group{" "}
-                minusSign{"-"}
-                plusSign{"+"}
             }
         }
     }
-    Version{"2.1.47.86"}
+    Version{"36"}
     calendar{
         coptic{
             monthNames{
@@ -380,7 +347,7 @@ fr_CA{
                 "EEEE d MMMM y",
                 "d MMMM y",
                 "d MMM y",
-                "yy-MM-dd",
+                "y-MM-dd",
                 "{1} {0}",
                 "{1} 'à' {0}",
                 "{1} 'à' {0}",
@@ -452,6 +419,9 @@ fr_CA{
                     }
                     narrow{
                         afternoon1{"après-midi"}
+                        evening1{"soir"}
+                        midnight{"minuit"}
+                        morning1{"mat."}
                         night1{"mat."}
                         noon{"midi"}
                     }
@@ -460,13 +430,16 @@ fr_CA{
                     abbreviated{
                         afternoon1{"après-midi"}
                         am{"a.m."}
+                        evening1{"soir"}
                         morning1{"mat."}
+                        night1{"nuit"}
                         pm{"p.m."}
                     }
                     narrow{
                         afternoon1{"après-midi"}
                         am{"a.m."}
                         evening1{"soir"}
+                        morning1{"mat."}
                         night1{"mat."}
                         pm{"p.m."}
                     }
@@ -715,12 +688,6 @@ fr_CA{
         }
         indian{
             eras{
-                abbreviated{
-                    "Saka",
-                }
-                narrow{
-                    "Saka",
-                }
                 wide{
                     "Saka",
                 }
@@ -881,22 +848,6 @@ fr_CA{
         alternateQuotationStart{"”"}
     }
     fields{
-        day{
-            relative{
-                "-1"{"hier"}
-                "-2"{"avant-hier"}
-                "0"{"aujourd’hui"}
-                "1"{"demain"}
-                "2"{"après-demain"}
-            }
-        }
-        day-short{
-            relativeTime{
-                future{
-                    other{"dans {0} j"}
-                }
-            }
-        }
         dayOfYear{
             dn{"jour de l’année"}
         }
@@ -937,12 +888,14 @@ fr_CA{
         quarter-narrow{
             relative{
                 "-1"{"trim. dernier"}
+                "0"{"ce trim."}
                 "1"{"trim.prochain"}
             }
         }
         quarter-short{
             relative{
                 "-1"{"trim. dernier"}
+                "0"{"ce trim."}
                 "1"{"trim. prochain"}
             }
         }
@@ -1039,18 +992,6 @@ fr_CA{
         }
         weekdayOfMonth-short{
             dn{"j du mois"}
-        }
-        year{
-            relativeTime{
-                future{
-                    one{"Dans {0} an"}
-                    other{"Dans {0} ans"}
-                }
-                past{
-                    one{"Il y a {0} an"}
-                    other{"Il y a {0} ans"}
-                }
-            }
         }
         year-short{
             dn{"a"}

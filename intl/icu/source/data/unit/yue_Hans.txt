@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 yue_Hans{
     %%Parent{"root"}
-    Version{"2.1.49.82"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -206,6 +206,10 @@ yue_Hans{
                 other{"{0} 天"}
                 per{"每日 {0}"}
             }
+            decade{
+                dnam{"十年"}
+                other{"{0} 个十年"}
+            }
             hour{
                 dnam{"小时"}
                 other{"{0} 小时"}
@@ -300,6 +304,10 @@ yue_Hans{
                 dnam{"千瓦小时"}
                 other{"{0} 千瓦小时"}
             }
+            therm-us{
+                dnam{"美制热量单位"}
+                other{"{0} 美制热量单位"}
+            }
         }
         force{
             newton{
@@ -327,6 +335,36 @@ yue_Hans{
             megahertz{
                 dnam{"兆赫"}
                 other{"{0} 兆赫"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"每厘米点数"}
+                other{"{0} 点/厘米"}
+            }
+            dot-per-inch{
+                dnam{"每吋点数"}
+                other{"{0} 点/吋"}
+            }
+            em{
+                dnam{"字体 em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                dnam{"百万像素"}
+                other{"{0} 百万像素"}
+            }
+            pixel{
+                dnam{"像素"}
+                other{"{0} 像素"}
+            }
+            pixel-per-centimeter{
+                dnam{"每厘米像素"}
+                other{"{0} 像素/厘米"}
+            }
+            pixel-per-inch{
+                dnam{"每吋像素"}
+                other{"{0} 像素/吋"}
             }
         }
         length{
@@ -523,6 +561,10 @@ yue_Hans{
                 dnam{"atm"}
                 other{"{0} atm"}
             }
+            bar{
+                dnam{"巴"}
+                other{"{0} 巴"}
+            }
             hectopascal{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
@@ -546,6 +588,10 @@ yue_Hans{
             millimeter-of-mercury{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
+            }
+            pascal{
+                dnam{"帕斯卡"}
+                other{"{0} 帕斯卡"}
             }
             pound-per-square-inch{
                 dnam{"每平方英寸磅力"}
@@ -1353,6 +1399,10 @@ yue_Hans{
                 other{"{0} 天"}
                 per{"每日{0}"}
             }
+            decade{
+                dnam{"十年"}
+                other{"{0} 个十年"}
+            }
             hour{
                 dnam{"小时"}
                 other{"{0} 小时"}
@@ -1447,6 +1497,10 @@ yue_Hans{
                 dnam{"千瓦小时"}
                 other{"{0} 千瓦小时"}
             }
+            therm-us{
+                dnam{"美制热量单位"}
+                other{"{0} 美制热量单位"}
+            }
         }
         force{
             newton{
@@ -1474,6 +1528,36 @@ yue_Hans{
             megahertz{
                 dnam{"兆赫"}
                 other{"{0} 兆赫"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"每厘米点数"}
+                other{"{0} 点/厘米"}
+            }
+            dot-per-inch{
+                dnam{"每吋点数"}
+                other{"{0} 点/吋"}
+            }
+            em{
+                dnam{"em"}
+                other{"{0} em"}
+            }
+            megapixel{
+                dnam{"百万像素"}
+                other{"{0} 百万像素"}
+            }
+            pixel{
+                dnam{"像素"}
+                other{"{0} 像素"}
+            }
+            pixel-per-centimeter{
+                dnam{"每厘米像素"}
+                other{"{0} 像素/厘米"}
+            }
+            pixel-per-inch{
+                dnam{"每吋像素"}
+                other{"{0} 像素/吋"}
             }
         }
         length{
@@ -1670,6 +1754,10 @@ yue_Hans{
                 dnam{"atm"}
                 other{"{0} atm"}
             }
+            bar{
+                dnam{"巴"}
+                other{"{0} 巴"}
+            }
             hectopascal{
                 dnam{"百帕"}
                 other{"{0} 百帕"}
@@ -1693,6 +1781,10 @@ yue_Hans{
             millimeter-of-mercury{
                 dnam{"毫米汞柱"}
                 other{"{0} 毫米汞柱"}
+            }
+            pascal{
+                dnam{"帕斯卡"}
+                other{"{0} 帕斯卡"}
             }
             pound-per-square-inch{
                 dnam{"磅力/平方英寸"}

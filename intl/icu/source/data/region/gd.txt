@@ -253,7 +253,7 @@ gd{
         SV{"An Salbhador"}
         SX{"Sint Maarten"}
         SY{"Siridhea"}
-        SZ{"Dùthaich nan Suasaidh"}
+        SZ{"eSwatini"}
         TA{"Tristan da Cunha"}
         TC{"Na h-Eileanan Turcach is Caiceo"}
         TD{"An t-Seàd"}
@@ -287,6 +287,8 @@ gd{
         VU{"Vanuatu"}
         WF{"Uallas agus Futuna"}
         WS{"Samotha"}
+        XA{"Sràcan fuadain"}
+        XB{"Dà-chomhaireach fuadain"}
         XK{"A’ Chosobho"}
         YE{"An Eaman"}
         YT{"Mayotte"}
@@ -308,7 +310,8 @@ gd{
         CI{"An Costa Ìbhri"}
         CZ{"Poblachd na Seice"}
         FK{"Na h-Eileanan Fàclannach (Islas Malvinas)"}
+        SZ{"Dùthaich nan Suasaidh"}
         TL{"Tìomor an Ear"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }

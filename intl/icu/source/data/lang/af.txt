@@ -4,13 +4,13 @@ af{
     Keys{
         calendar{"Kalender"}
         cf{"Geldeenheidformaat"}
-        colAlternate{"Ignoreer simboolsortering"}
-        colBackwards{"Omgekeerde aksentsortering"}
-        colCaseFirst{"Hoofletters/kleinletters-sortering"}
-        colCaseLevel{"Kassensitiewe sortering"}
-        colNormalization{"Genormaliseerde sortering"}
-        colNumeric{"Numeriese sortering"}
-        colStrength{"Sorteringssterkte"}
+        colAlternate{"Ignoreer simboolrangskikking"}
+        colBackwards{"Omgekeerde aksentrangskikking"}
+        colCaseFirst{"Hoofletter-/kleinletter-rangskikking"}
+        colCaseLevel{"Kassensitiewe rangskikking"}
+        colNormalization{"Genormaliseerde rangskikking"}
+        colNumeric{"Numeriese rangskikking"}
+        colStrength{"Rangskiksterkte"}
         collation{"Rangskikvolgorde"}
         currency{"Geldeenheid"}
         hc{"Uursiklus (12 vs 24)"}
@@ -70,6 +70,7 @@ af{
         bug{"Buginees"}
         byn{"Blin"}
         ca{"Katalaans"}
+        ccp{"Tsjaakma"}
         ce{"Tsjetsjeens"}
         ceb{"Cebuano"}
         cgg{"Kiga"}
@@ -92,7 +93,6 @@ af{
         dar{"Dakota"}
         dav{"Taita"}
         de{"Duits"}
-        de_CH{"Switserse hoog-Duits"}
         dgr{"Dogrib"}
         dje{"Zarma"}
         dsb{"Benedesorbies"}
@@ -273,7 +273,7 @@ af{
         naq{"Nama"}
         nb{"Boeknoors"}
         nd{"Noord-Ndebele"}
-        nds{"Lae Duits"}
+        nds{"Nederduits"}
         nds_NL{"Nedersaksies"}
         ne{"Nepalees"}
         new{"Newari"}
@@ -393,7 +393,7 @@ af{
         ug{"Uighur"}
         uk{"Oekraïens"}
         umb{"Umbundu"}
-        und{"Onbekende of ongeldige taal"}
+        und{"Onbekende taal"}
         ur{"Oerdoe"}
         uz{"Oezbeeks"}
         vai{"Vai"}
@@ -417,18 +417,22 @@ af{
         yo{"Yoruba"}
         yue{"Kantonees"}
         zgh{"Standaard Marokkaanse Tamazight"}
-        zh{"Sjinees"}
-        zh_Hans{"Chinees (Vereenvoudig)"}
-        zh_Hant{"Chinees (Tradisioneel)"}
+        zh{"Chinees"}
         zu{"Zoeloe"}
         zun{"Zuni"}
         zxx{"Geen taalinhoud nie"}
         zza{"Zaza"}
     }
+    Languages%long{
+        zh_Hans{"Mandarynse Chinees (Vereenvoudigd)"}
+        zh_Hant{"Mandarynse Chinees (Tradisioneel)"}
+    }
+    Languages%menu{
+        yue{"Kantonese Chinees"}
+        zh{"Mandarynse Chinees"}
+    }
     Languages%short{
         az{"Azeri"}
-        en_GB{"Engels (VK)"}
-        en_US{"Engels (VSA)"}
     }
     Languages%variant{
         ps{"Pushto"}
@@ -446,7 +450,7 @@ af{
         Grek{"Grieks"}
         Gujr{"Gudjarati"}
         Guru{"Gurmukhi"}
-        Hanb{"Hanb"}
+        Hanb{"Han met Bopomofo"}
         Hang{"Hangul"}
         Hani{"Han"}
         Hans{"Vereenvoudig"}
@@ -476,7 +480,7 @@ af{
         Zsye{"Emoji"}
         Zsym{"Simbole"}
         Zxxx{"Ongeskrewe"}
-        Zyyy{"Algemeen"}
+        Zyyy{"Gemeenskaplik"}
         Zzzz{"Onbekende skryfstelsel"}
     }
     Scripts%stand-alone{
@@ -624,19 +628,19 @@ af{
             vaii{"Vai-syfers"}
         }
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
     characterLabelPattern{
-        all{"{0} – Alle"}
+        all{"{0} – alle"}
         category-list{"{0}: {1}"}
-        compatibility{"{0} – Versoenbaarheid"}
-        enclosed{"{0} – Ingesluit"}
-        extended{"{0} – Uitgebreid"}
-        historic{"{0} – Histories"}
-        miscellaneous{"{0} – Allerlei"}
-        other{"{0} – Ander"}
-        scripts{"Skrifte – {0}"}
+        compatibility{"{0} – versoenbaarheid"}
+        enclosed{"{0} ingeslote"}
+        extended{"{0} – uitgebreid"}
+        historic{"{0} – histories"}
+        miscellaneous{"{0} – allerlei"}
+        other{"{0} – ander"}
+        scripts{"skrifte – {0}"}
         strokes{
-            one{"{0} hale"}
+            one{"{0} haal"}
             other{"{0} hale"}
         }
     }

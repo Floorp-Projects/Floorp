@@ -187,7 +187,7 @@ lv{
         ML{"Mali"}
         MM{"Mjanma (Birma)"}
         MN{"Mongolija"}
-        MO{"Ķīnas īpašās pārvaldes apgabals Makao"}
+        MO{"ĶTR īpašais administratīvais reģions Makao"}
         MP{"Ziemeļu Marianas salas"}
         MQ{"Martinika"}
         MR{"Mauritānija"}
@@ -253,7 +253,7 @@ lv{
         SV{"Salvadora"}
         SX{"Sintmārtena"}
         SY{"Sīrija"}
-        SZ{"Svazilenda"}
+        SZ{"Svatini"}
         TA{"Tristana da Kuņas salas"}
         TC{"Tērksas un Kaikosas salas"}
         TD{"Čada"}
@@ -288,7 +288,7 @@ lv{
         WF{"Volisa un Futunas salas"}
         WS{"Samoa"}
         XA{"pseidoakcenti"}
-        XB{"pseido-Bidi"}
+        XB{"pseidodivvirzienu"}
         XK{"Kosova"}
         YE{"Jemena"}
         YT{"Majota"}
@@ -311,6 +311,8 @@ lv{
         CI{"Ziloņkaula krasts"}
         CZ{"Čehijas Republika"}
         FK{"Folklenda (Malvinu) salas"}
+        SZ{"Svazilenda"}
+        TL{"Austrumtimora"}
     }
-    Version{"2.1.48.43"}
+    Version{"36"}
 }

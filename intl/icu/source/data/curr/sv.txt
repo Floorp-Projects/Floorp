@@ -264,7 +264,7 @@ sv{
         }
         CNH{
             "CNH",
-            "CNH",
+            "kinesisk yuan (offshore)",
         }
         CNX{
             "CNX",
@@ -972,7 +972,7 @@ sv{
         }
         TPE{
             "TPE",
-            "timoriansk escudo",
+            "östtimoresisk escudo",
         }
         TRL{
             "TRL",
@@ -1140,7 +1140,7 @@ sv{
         }
         XTS{
             "XTS",
-            "test-valutakod",
+            "testvalutaenhet",
         }
         XUA{
             "XUA",
@@ -1251,6 +1251,7 @@ sv{
         HNL{"L"}
         HRK{"kn"}
         HUF{"Ft"}
+        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
         ISK{"kr"}
@@ -1433,7 +1434,7 @@ sv{
         }
         BGL{
             one{"bulgarisk hård lev (1962–1999)"}
-            other{"bulgariska hård lev (1962–1999)"}
+            other{"bulgariska hårda lev (1962–1999)"}
         }
         BGM{
             one{"bulgarisk lev (1952–1962)"}
@@ -1572,7 +1573,7 @@ sv{
             other{"chilenska pesos"}
         }
         CNH{
-            one{"CNH"}
+            one{"kinesisk yuan (offshore)"}
             other{"CNH"}
         }
         CNX{
@@ -2281,7 +2282,7 @@ sv{
         }
         TPE{
             one{"östtimoresisk escudo"}
-            other{"timorianska escudos"}
+            other{"östtimoresiska escudos"}
         }
         TRL{
             one{"turkisk lire (1922–2005)"}
@@ -2388,15 +2389,15 @@ sv{
             other{"gulduns"}
         }
         XBA{
-            one{"europeisk gammal kompositenhet"}
+            one{"europeisk kompositenhet"}
             other{"europeiska kompositenheter"}
         }
         XBB{
-            one{"europeisk gammal monetär enhet"}
+            one{"europeisk monetär enhet"}
             other{"europeiska monetära enheter"}
         }
         XBC{
-            one{"europeisk gammal kontoenhet"}
+            one{"europeisk kontoenhet (XBC)"}
             other{"europeiska kontoenheter (XBC)"}
         }
         XBD{
@@ -2448,8 +2449,8 @@ sv{
             other{"latinamerikanska sucre"}
         }
         XTS{
-            one{"(valutakod för teständamål)"}
-            other{"test-valutakod"}
+            one{"testvalutaenhet"}
+            other{"testvalutaenheter"}
         }
         XUA{
             one{"afrikansk kontoenhet"}
@@ -2524,5 +2525,5 @@ sv{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.48.90"}
+    Version{"36"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pl{
-    Version{"2.1.48.42"}
+    Version{"36"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -227,13 +227,17 @@ pl{
         }
         coordinate{
             dnam{"kierunek świata"}
+            east{"{0} długości geograficznej wschodniej"}
+            north{"{0} szerokości geograficznej północnej"}
+            south{"{0} szerokości geograficznej południowej"}
+            west{"{0} długości geograficznej zachodniej"}
         }
         digital{
             bit{
                 dnam{"bity"}
                 few{"{0} bity"}
                 many{"{0} bitów"}
-                one{"{0} b"}
+                one{"{0} bit"}
                 other{"{0} bitu"}
             }
             byte{
@@ -285,6 +289,13 @@ pl{
                 one{"{0} megabajt"}
                 other{"{0} megabajta"}
             }
+            petabyte{
+                dnam{"petabajty"}
+                few{"{0} petabajty"}
+                many{"{0} petabajtów"}
+                one{"{0} petabajt"}
+                other{"{0} petabajta"}
+            }
             terabit{
                 dnam{"terabity"}
                 few{"{0} terabity"}
@@ -315,6 +326,13 @@ pl{
                 one{"{0} dzień"}
                 other{"{0} dnia"}
                 per{"{0} na dzień"}
+            }
+            decade{
+                dnam{"dekady"}
+                few{"{0} dekady"}
+                many{"{0} dekad"}
+                one{"{0} dekada"}
+                other{"{0} dekady"}
             }
             hour{
                 dnam{"godziny"}
@@ -473,6 +491,13 @@ pl{
                 one{"{0} kilowatogodzina"}
                 other{"{0} kilowatogodziny"}
             }
+            therm-us{
+                dnam{"thermy amerykańskie"}
+                few{"{0} thermy amerykańskie"}
+                many{"{0} thermów amerykańskich"}
+                one{"{0} therm amerykański"}
+                other{"{0} therma amerykańskiego"}
+            }
         }
         force{
             newton{
@@ -518,6 +543,29 @@ pl{
                 many{"{0} megaherców"}
                 one{"{0} megaherc"}
                 other{"{0} megaherca"}
+            }
+        }
+        graphics{
+            em{
+                dnam{"firety"}
+                few{"{0} firety"}
+                many{"{0} firetów"}
+                one{"{0} firet"}
+                other{"{0} firetu"}
+            }
+            megapixel{
+                dnam{"megapiksele"}
+                few{"{0} megapiksele"}
+                many{"{0} megapikseli"}
+                one{"{0} megapiksel"}
+                other{"{0} megapiksela"}
+            }
+            pixel{
+                dnam{"piksele"}
+                few{"{0} piksele"}
+                many{"{0} pikseli"}
+                one{"{0} piksel"}
+                other{"{0} piksela"}
             }
         }
         length{
@@ -643,7 +691,7 @@ pl{
                 few{"{0} punkty"}
                 many{"{0} punktów"}
                 one{"{0} punkt"}
-                other{"{0} pkt."}
+                other{"{0} punktu"}
             }
             solar-radius{
                 dnam{"promienie Słońca"}
@@ -669,7 +717,7 @@ pl{
                 other{"{0} luksu"}
             }
             solar-luminosity{
-                dnam{"jasność Słońca"}
+                dnam{"jasności Słońca"}
                 few{"{0} jasności Słońca"}
                 many{"{0} jasności Słońca"}
                 one{"{0} jasność Słońca"}
@@ -692,7 +740,7 @@ pl{
                 other{"{0} daltona"}
             }
             earth-mass{
-                dnam{"masa Ziemi"}
+                dnam{"masy Ziemi"}
                 few{"{0} masy Ziemi"}
                 many{"{0} mas Ziemi"}
                 one{"{0} masa Ziemi"}
@@ -759,7 +807,7 @@ pl{
                 per{"{0} na funt"}
             }
             solar-mass{
-                dnam{"masa Słońca"}
+                dnam{"masy Słońca"}
                 few{"{0} masy Słońca"}
                 many{"{0} mas Słońca"}
                 one{"{0} masa Słońca"}
@@ -818,6 +866,20 @@ pl{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"atmosfery"}
+                few{"{0} atmosfery"}
+                many{"{0} atmosfer"}
+                one{"{0} atmosfera"}
+                other{"{0} atmosfery"}
+            }
+            bar{
+                dnam{"bary"}
+                few{"{0} bary"}
+                many{"{0} barów"}
+                one{"{0} bar"}
+                other{"{0} bara"}
+            }
             hectopascal{
                 dnam{"hektopaskale"}
                 few{"{0} hektopaskale"}
@@ -859,6 +921,13 @@ pl{
                 many{"{0} milimetrów słupa rtęci"}
                 one{"{0} milimetr słupa rtęci"}
                 other{"{0} milimetra słupa rtęci"}
+            }
+            pascal{
+                dnam{"paskale"}
+                few{"{0} paskale"}
+                many{"{0} paskali"}
+                one{"{0} paskal"}
+                other{"{0} paskala"}
             }
             pound-per-square-inch{
                 dnam{"funty na cal kwadratowy"}
@@ -946,11 +1015,11 @@ pl{
         }
         volume{
             acre-foot{
-                dnam{"akro-stopy"}
-                few{"{0} akro-stopy"}
-                many{"{0} akro-stóp"}
-                one{"{0} akro-stopa"}
-                other{"{0} akro-stopy"}
+                dnam{"akrostopy"}
+                few{"{0} akrostopy"}
+                many{"{0} akrostóp"}
+                one{"{0} akrostopa"}
+                other{"{0} akrostopy"}
             }
             barrel{
                 dnam{"baryłki"}
@@ -1157,6 +1226,11 @@ pl{
                 other{"{0}″"}
             }
         }
+        concentr{
+            percent{
+                dnam{"%"}
+            }
+        }
         consumption{
             liter-per-100kilometers{
                 dnam{"l/100 km"}
@@ -1179,34 +1253,41 @@ pl{
                 per{"{0}/d."}
             }
             hour{
-                dnam{"godzina"}
+                dnam{"g."}
                 few{"{0} g."}
                 many{"{0} g."}
                 one{"{0} g."}
                 other{"{0} g."}
             }
+            millisecond{
+                dnam{"ms"}
+            }
             minute{
-                dnam{"minuty"}
+                dnam{"min"}
             }
             month{
-                dnam{"miesiąc"}
+                dnam{"m-c"}
                 few{"{0} m-ce"}
                 many{"{0} m-cy"}
                 one{"{0} m-c"}
                 other{"{0} m-ca"}
             }
             second{
-                dnam{"sekundy"}
+                dnam{"s"}
+                few{"{0} s"}
+                many{"{0} s"}
+                one{"{0} s"}
+                other{"{0} s"}
             }
             week{
-                dnam{"tydzień"}
+                dnam{"tydz."}
                 few{"{0} tyg."}
                 many{"{0} tyg."}
                 one{"{0} tydz."}
                 other{"{0} tyg."}
             }
             year{
-                dnam{"rok"}
+                dnam{"r."}
                 few{"{0} l."}
                 many{"{0} l."}
                 one{"{0} r."}
@@ -1214,6 +1295,9 @@ pl{
             }
         }
         length{
+            centimeter{
+                dnam{"cm"}
+            }
             foot{
                 dnam{"stopy"}
             }
@@ -1226,7 +1310,7 @@ pl{
                 per{"{0}/cal"}
             }
             meter{
-                dnam{"metr"}
+                dnam{"m"}
             }
             mile{
                 dnam{"mile"}
@@ -1247,15 +1331,16 @@ pl{
         }
         temperature{
             celsius{
-                few{"{0}°"}
-                many{"{0}°"}
-                one{"{0}°"}
-                other{"{0}°"}
+                dnam{"°C"}
+                few{"{0}°C"}
+                many{"{0}°C"}
+                one{"{0}°C"}
+                other{"{0}°C"}
             }
         }
         volume{
             liter{
-                dnam{"litr"}
+                dnam{"l"}
             }
         }
     }
@@ -1286,6 +1371,10 @@ pl{
         area{
             acre{
                 dnam{"akry"}
+                few{"{0} akry"}
+                many{"{0} akrów"}
+                one{"{0} akr"}
+                other{"{0} akra"}
             }
             dunam{
                 dnam{"dunamy"}
@@ -1296,6 +1385,36 @@ pl{
             }
             hectare{
                 dnam{"ha"}
+            }
+            square-foot{
+                dnam{"stopy kw."}
+                few{"{0} stopy kw."}
+                many{"{0} stóp kw."}
+                one{"{0} stopa kw."}
+                other{"{0} stopy kw."}
+            }
+            square-inch{
+                dnam{"cale kw."}
+                few{"{0} cale kw."}
+                many{"{0} cali kw."}
+                one{"{0} cal kw."}
+                other{"{0} cala kw."}
+                per{"{0}/cal kw."}
+            }
+            square-mile{
+                dnam{"mile kw."}
+                few{"{0} mile kw."}
+                many{"{0} mil kw."}
+                one{"{0} mila kw."}
+                other{"{0} mili kw."}
+                per{"{0}/mila kw."}
+            }
+            square-yard{
+                dnam{"jardy kw."}
+                few{"{0} jardy kw."}
+                many{"{0} jardów kw."}
+                one{"{0} jard kw."}
+                other{"{0} jarda kw."}
             }
         }
         concentr{
@@ -1310,7 +1429,7 @@ pl{
                 other{"{0} mg/dl"}
             }
             millimole-per-liter{
-                dnam{"milimole/litr"}
+                dnam{"mmol/l"}
                 few{"{0} mmol/l"}
                 many{"{0} mmol/l"}
                 one{"{0} mmol/l"}
@@ -1326,14 +1445,7 @@ pl{
             part-per-million{
                 dnam{"części/milion"}
             }
-            percent{
-                dnam{"procent"}
-            }
-            permille{
-                dnam{"promil"}
-            }
             permyriad{
-                dnam{"punkt bazowy"}
                 few{"{0}‱"}
                 many{"{0}‱"}
                 one{"{0}‱"}
@@ -1375,14 +1487,14 @@ pl{
         }
         digital{
             bit{
-                dnam{"bity"}
+                dnam{"b"}
                 few{"{0} b"}
                 many{"{0} b"}
                 one{"{0} b"}
                 other{"{0} b"}
             }
             byte{
-                dnam{"bajty"}
+                dnam{"B"}
                 few{"{0} B"}
                 many{"{0} B"}
                 one{"{0} B"}
@@ -1405,18 +1517,20 @@ pl{
                 other{"{0} dnia"}
                 per{"{0}/dzień"}
             }
+            decade{
+                dnam{"dek"}
+                few{"{0} dek"}
+                many{"{0} dek"}
+                one{"{0} dek"}
+                other{"{0} dek"}
+            }
             hour{
-                dnam{"godziny"}
+                dnam{"godz."}
                 few{"{0} godz."}
                 many{"{0} godz."}
                 one{"{0} godz."}
                 other{"{0} godz."}
-            }
-            millisecond{
-                dnam{"milisekundy"}
-            }
-            minute{
-                dnam{"minuty"}
+                per{"{0}/godz."}
             }
             month{
                 dnam{"miesiące"}
@@ -1427,14 +1541,14 @@ pl{
                 per{"{0}/mies."}
             }
             second{
-                dnam{"sekundy"}
+                dnam{"sek."}
                 few{"{0} sek."}
                 many{"{0} sek."}
                 one{"{0} sek."}
                 other{"{0} sek."}
             }
             week{
-                dnam{"tygodnie"}
+                dnam{"tyg."}
                 few{"{0} tyg."}
                 many{"{0} tyg."}
                 one{"{0} tydz."}
@@ -1452,13 +1566,13 @@ pl{
         }
         electric{
             ampere{
-                dnam{"ampery"}
+                dnam{"A"}
             }
             ohm{
-                dnam{"omy"}
+                dnam{"Ω"}
             }
             volt{
-                dnam{"wolty"}
+                dnam{"V"}
             }
         }
         energy{
@@ -1486,10 +1600,16 @@ pl{
             joule{
                 dnam{"J"}
             }
+            therm-us{
+                dnam{"thermy amer."}
+                few{"{0} thermy amer."}
+                many{"{0} thermów amer."}
+                one{"{0} therm amer."}
+                other{"{0} therma amer."}
+            }
         }
         force{
             newton{
-                dnam{"niuton"}
                 few{"{0} N"}
                 many{"{0} N"}
                 one{"{0} N"}
@@ -1503,6 +1623,15 @@ pl{
                 other{"{0} lbf"}
             }
         }
+        graphics{
+            em{
+                dnam{"firet"}
+                few{"{0} firety"}
+                many{"{0} firetów"}
+                one{"{0} firet"}
+                other{"{0} firetu"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"j.a."}
@@ -1511,11 +1640,13 @@ pl{
                 one{"{0} j.a."}
                 other{"{0} j.a."}
             }
-            centimeter{
-                dnam{"centymetry"}
-            }
             foot{
                 dnam{"stopy"}
+                few{"{0} stopy"}
+                many{"{0} stóp"}
+                one{"{0} stopa"}
+                other{"{0} stopy"}
+                per{"{0}/stopa"}
             }
             inch{
                 dnam{"cale"}
@@ -1525,11 +1656,8 @@ pl{
                 other{"{0} cala"}
                 per{"{0}/cal"}
             }
-            light-year{
-                dnam{"lata świetlne"}
-            }
             meter{
-                dnam{"metry"}
+                dnam{"m"}
             }
             mile{
                 dnam{"mile"}
@@ -1546,23 +1674,28 @@ pl{
                 other{"{0} Mm"}
             }
             point{
-                dnam{"punkty"}
+                dnam{"pkt."}
                 few{"{0} pkt."}
                 many{"{0} pkt."}
                 one{"{0} pkt."}
                 other{"{0} pkt."}
             }
             solar-radius{
-                dnam{"promienie Słońca"}
                 few{"{0} R☉"}
                 many{"{0} R☉"}
                 one{"{0} R☉"}
                 other{"{0} R☉"}
             }
+            yard{
+                dnam{"jardy"}
+                few{"{0} jardy"}
+                many{"{0} jardów"}
+                one{"{0} jard"}
+                other{"{0} jarda"}
+            }
         }
         light{
             solar-luminosity{
-                dnam{"jasność Słońca"}
                 few{"{0} L☉"}
                 many{"{0} L☉"}
                 one{"{0} L☉"}
@@ -1585,7 +1718,6 @@ pl{
                 other{"{0} Da"}
             }
             earth-mass{
-                dnam{"masa Ziemi"}
                 few{"{0} M⊕"}
                 many{"{0} M⊕"}
                 one{"{0} M⊕"}
@@ -1596,13 +1728,24 @@ pl{
             }
             pound{
                 dnam{"funty"}
+                few{"{0} funty"}
+                many{"{0} funtów"}
+                one{"{0} funt"}
+                other{"{0} funta"}
+                per{"{0}/funt"}
             }
             solar-mass{
-                dnam{"masa Słońca"}
                 few{"{0} M☉"}
                 many{"{0} M☉"}
                 one{"{0} M☉"}
                 other{"{0} M☉"}
+            }
+            ton{
+                dnam{"krótkie tony"}
+                few{"{0} krótkie tony"}
+                many{"{0} krótkich ton"}
+                one{"{0} krótka tona"}
+                other{"{0} krótkiej tony"}
             }
         }
         power{
@@ -1641,6 +1784,22 @@ pl{
                 one{"{0} w."}
                 other{"{0} w."}
             }
+            mile-per-hour{
+                dnam{"mile/h"}
+                few{"{0} mile/h"}
+                many{"{0} mil/h"}
+                one{"{0} mila/h"}
+                other{"{0} mili/h"}
+            }
+        }
+        temperature{
+            celsius{
+                dnam{"st. C"}
+                few{"{0} st. C"}
+                many{"{0} st. C"}
+                one{"{0} st. C"}
+                other{"{0} st. C"}
+            }
         }
         torque{
             newton-meter{
@@ -1659,6 +1818,13 @@ pl{
             }
         }
         volume{
+            acre-foot{
+                dnam{"akrostopy"}
+                few{"{0} akrostopy"}
+                many{"{0} akrostóp"}
+                one{"{0} akrostopa"}
+                other{"{0} akrostopy"}
+            }
             barrel{
                 dnam{"baryłki"}
                 few{"{0} bbl"}
@@ -1673,8 +1839,47 @@ pl{
                 one{"{0} cl"}
                 other{"{0} cl"}
             }
+            cubic-foot{
+                dnam{"stopy sześc."}
+                few{"{0} stopy sześc."}
+                many{"{0} stóp sześc."}
+                one{"{0} stopa sześc."}
+                other{"{0} stopy sześc."}
+            }
+            cubic-inch{
+                dnam{"cale sześc."}
+                few{"{0} cale sześc."}
+                many{"{0} cali sześc."}
+                one{"{0} cal sześc."}
+                other{"{0} cala sześc."}
+            }
+            cubic-mile{
+                dnam{"mile sześc."}
+                few{"{0} mile sześc."}
+                many{"{0} mil sześc."}
+                one{"{0} mila sześc."}
+                other{"{0} mili sześc."}
+            }
+            cubic-yard{
+                dnam{"jardy sześc."}
+                few{"{0} jardy sześc."}
+                many{"{0} jardów sześc."}
+                one{"{0} jard sześc."}
+                other{"{0} jarda sześc."}
+            }
             cup{
                 dnam{"ćwierćkwarty"}
+                few{"{0} ćwierćkwarty"}
+                many{"{0} ćwierćkwart"}
+                one{"{0} ćwierćkwarta"}
+                other{"{0} ćwierćkwarty"}
+            }
+            cup-metric{
+                dnam{"ćwierćkwarty metr."}
+                few{"{0} ćwierćkwarty metr."}
+                many{"{0} ćwierćkwart metr."}
+                one{"{0} ćwierćkwarta metr."}
+                other{"{0} ćwierćkwarty metr."}
             }
             deciliter{
                 dnam{"dl"}
@@ -1739,6 +1944,24 @@ pl{
             }
             pint{
                 dnam{"półkwarty"}
+                few{"{0} półkwarty"}
+                many{"{0} półkwart"}
+                one{"{0} półkwarta"}
+                other{"{0} półkwarty"}
+            }
+            pint-metric{
+                dnam{"półkwarty metr."}
+                few{"{0} półkwarty metr."}
+                many{"{0} półkwart metr."}
+                one{"{0} półkwarta metr."}
+                other{"{0} półkwarty metr."}
+            }
+            quart{
+                dnam{"kwarty"}
+                few{"{0} kwarty"}
+                many{"{0} kwart"}
+                one{"{0} kwarta"}
+                other{"{0} kwarty"}
             }
             tablespoon{
                 dnam{"ł. stoł."}

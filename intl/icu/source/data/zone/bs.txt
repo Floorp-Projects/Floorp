@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 bs{
-    Version{"2.1.49.82"}
+    Version{"36"}
     zoneStrings{
         "Africa:Abidjan"{
             ec{"Abidjan"}
@@ -661,7 +661,7 @@ bs{
             ec{"Ašhabad"}
         }
         "Asia:Atyrau"{
-            ec{"Atyrau"}
+            ec{"Atiraj"}
         }
         "Asia:Baghdad"{
             ec{"Bagdad"}
@@ -809,6 +809,9 @@ bs{
         }
         "Asia:Qatar"{
             ec{"Katar"}
+        }
+        "Asia:Qostanay"{
+            ec{"Kostanaj"}
         }
         "Asia:Qyzylorda"{
             ec{"Kizilorda"}

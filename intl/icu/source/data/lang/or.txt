@@ -518,6 +518,14 @@ or{
         zxx{"କୌଣସି ଲିଙ୍ଗୁଇଷ୍ଟ ସାମଗ୍ରୀ ନାହିଁ"}
         zza{"ଜାଜା"}
     }
+    Languages%long{
+        zh_Hans{"ସରଳୀକୃତ ମାଣ୍ଡାରିନ୍ ଚାଇନିଜ୍"}
+        zh_Hant{"ପାରମ୍ପରିକ ମାଣ୍ଡାରିନ୍ ଚାଇନିଜ୍"}
+    }
+    Languages%menu{
+        yue{"ଚାଇନିଜ୍‌, କାନଟୋନେସେ"}
+        zh{"ଚାଇନିଜ୍, ମାଣ୍ଡାରିନ୍"}
+    }
     Languages%short{
         az{"ଆଜେରି"}
         en_GB{"ଯୁକ୍ତରାଜ୍ୟ ଇଂରାଜୀ"}
@@ -739,7 +747,7 @@ or{
             tibt{"ତିବତୀ ଅଙ୍କଗୁଡ଼ିକ"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — ସମସ୍ତ"}
         category-list{"{0}: {1}"}

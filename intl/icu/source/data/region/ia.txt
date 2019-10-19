@@ -242,7 +242,6 @@ ia{
     }
     Countries%variant{
         CZ{"Republica Chec"}
-        MK{"Macedonia (ARYM)"}
     }
-    Version{"2.1.48.36"}
+    Version{"36"}
 }

@@ -292,7 +292,7 @@ chr{
         ps{"ᏆᏍᏙ"}
         pt{"ᏉᏧᎩᏍ"}
         pt_BR{"ᏆᏏᎵᎢ ᏉᏧᎩᏍ"}
-        pt_PT{"ᏉᏥᎦᎳ ᏉᏧᎩᏍ"}
+        pt_PT{"ᏳᎳᏈ ᏉᏧᎩᏍ"}
         qu{"ᎨᏧᏩ"}
         quc{"ᎩᏤ"}
         rap{"ᎳᏆᏄᏫ"}
@@ -406,6 +406,14 @@ chr{
         zun{"ᏑᏂ"}
         zxx{"Ꮭ ᎦᏬᏂᎯᏍᏗ ᎦᎸᏛᎢ ᏱᎩ"}
         zza{"ᏌᏌ"}
+    }
+    Languages%long{
+        zh_Hans{"ᎠᎯᏗᎨ ᎹᏓᏈᏂ ᏓᎶᏂᎨ"}
+        zh_Hant{"ᎤᏦᏍᏗ ᎹᏓᏈᏂ ᏓᎶᏂᎨ"}
+    }
+    Languages%menu{
+        yue{"ᏓᎶᏂᎨ, ᎨᎾᏙᏂᏏ"}
+        zh{"ᏓᎶᏂᎨ, ᎹᏓᏈᏂ"}
     }
     Languages%short{
         az{"ᎠᏎᎵ"}
@@ -540,14 +548,13 @@ chr{
             tibt{"ᏘᏇᏔᏂ ᏗᏎᏍᏗ"}
         }
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
     characterLabelPattern{
         all{"{0} — ᏂᎦᏓ"}
         category-list{"{0}: {1}"}
         compatibility{"{0} — ᎤᏠᏯᏉᏗᏙᎵᎩ"}
         enclosed{"{0} — ᎠᏠᏯᏍᏔᏅ"}
         extended{"{0} — ᎦᏅᎯᏓ"}
-        historic{"{0} — ᎤᎵᏍᎨᏗ ᏂᏧᎵᏍᏔᏅᏍᏔᏅ"}
         miscellaneous{"{0} — ᏧᏓᎴᏅᏛ"}
         other{"{0} — ᏐᎢ"}
         scripts{"ᏗᎧᏁᎢᏍᏗ — {0}"}

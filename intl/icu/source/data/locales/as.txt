@@ -15,10 +15,14 @@ as{
         " ঢ {ঢ\u09BC} ণ ত থ দ ধ ন প ফ ব ভ ম য {য\u09BC} ৰ ল ৱ শ ষ স হ {ক\u09CDষ} া ি "
         "ী \u09C1 \u09C2 \u09C3 ে ৈ ো ৌ \u09CD]"
     }
-    ExemplarCharactersNumbers{"[\\- , . % ‰ + 0০ 1১ 2২ 3৩ 4৪ 5৫ 6৬ 7৭ 8৮ 9৯]"}
+    ExemplarCharactersIndex{
+        "[\u09BC অ আ ই ঈ উ ঊ ঋ এ ঐ ও ঔ ং ঃ ক খ গ ঘ ঙ চ ছ জ ঝ ঞ ট ঠ ড ঢ ণ ৎ ত থ দ ধ ন "
+        "প ফ ব ভ ম য ৰ ল ৱ শ ষ স হ \u09CD]"
+    }
+    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0০ 1১ 2২ 3৩ 4৪ 5৫ 6৬ 7৭ 8৮ 9৯]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ – — , ; \\: ! ? . … । ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
+        "[\\- ‐ ‑ – — , ; \\: ! ? . … । ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † "
+        "‡ ′ ″]"
     }
     MoreInformation{"?"}
     NumberElements{
@@ -30,11 +34,15 @@ as{
                 scientificFormat{"#E0"}
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
             }
         }
@@ -42,7 +50,7 @@ as{
         latn{
             miscPatterns{
                 approximately{"~{0}"}
-                atLeast{"≥{0}"}
+                atLeast{"{0}+"}
                 atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
@@ -208,11 +216,15 @@ as{
                 }
             }
             symbols{
+                decimal{"."}
                 exponential{"E"}
+                group{","}
                 infinity{"∞"}
+                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
+                plusSign{"+"}
                 superscriptingExponent{"×"}
             }
         }
@@ -225,10 +237,9 @@ as{
                 other{"{0} দিন"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"beng"}
     }
-    Version{"2.1.48.17"}
+    Version{"36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -298,10 +309,6 @@ as{
                     B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
-                }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
                 }
                 GyM{
                     G{"GGGGG M/y – GGGGG M/y"}
@@ -1247,6 +1254,11 @@ as{
         }
         month-narrow{
             dn{"মাহ"}
+            relative{
+                "-1"{"যোৱা মা."}
+                "0"{"এই মা."}
+                "1"{"অহা মাহ"}
+            }
             relativeTime{
                 future{
                     one{"{0} মাহত"}
@@ -1719,6 +1731,11 @@ as{
         }
         year-short{
             dn{"বছৰ"}
+            relative{
+                "-1"{"যোৱা বছৰ"}
+                "0"{"এই বছৰ"}
+                "1"{"অহা বছৰ"}
+            }
             relativeTime{
                 future{
                     one{"{0} বছৰত"}
@@ -1807,6 +1824,10 @@ as{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }

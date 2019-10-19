@@ -127,7 +127,6 @@ sn{
         MD{"Moldova"}
         MG{"Madagascar"}
         MH{"Zvitsuwa zveMarshall"}
-        MK{"Macedonia"}
         ML{"Mali"}
         MM{"Myanmar"}
         MN{"Mongolia"}
@@ -226,5 +225,5 @@ sn{
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
     }
-    Version{"2.1.48.4"}
+    Version{"36"}
 }

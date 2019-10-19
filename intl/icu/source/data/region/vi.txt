@@ -20,9 +20,9 @@ vi{
         034{"Nam Á"}
         035{"Đông Nam Á"}
         039{"Nam Âu"}
-        053{"Úc và New Zealand"}
+        053{"Australasia"}
         054{"Melanesia"}
-        057{"Vùng Micronesian"}
+        057{"Vùng Micronesia"}
         061{"Polynesia"}
         142{"Châu Á"}
         143{"Trung Á"}
@@ -117,7 +117,7 @@ vi{
         GA{"Gabon"}
         GB{"Vương quốc Anh"}
         GD{"Grenada"}
-        GE{"Gruzia"}
+        GE{"Georgia"}
         GF{"Guiana thuộc Pháp"}
         GG{"Guernsey"}
         GH{"Ghana"}
@@ -287,8 +287,8 @@ vi{
         VU{"Vanuatu"}
         WF{"Wallis và Futuna"}
         WS{"Samoa"}
-        XA{"XA"}
-        XB{"XB"}
+        XA{"Pseudo-Accents"}
+        XB{"Pseudo-Bidi"}
         XK{"Kosovo"}
         YE{"Yemen"}
         YT{"Mayotte"}
@@ -311,7 +311,8 @@ vi{
         CI{"Bờ Biển Ngà"}
         CZ{"Cộng hòa Séc"}
         FK{"Quần đảo Falkland (Islas Malvinas)"}
+        SZ{"Eswatini"}
         TL{"Đông Timor"}
     }
-    Version{"2.1.49.82"}
+    Version{"36"}
 }
