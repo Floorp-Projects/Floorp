@@ -131,6 +131,11 @@ class SessionManager(
     ) {
         // Add store to Session so that it can dispatch actions whenever it changes.
         session.store = store
+        if (parent != null) {
+            require(all.contains(parent)) { "The parent does not exist" }
+            session.parentId = parent.id
+        }
+
         if (session.isCustomTabSession()) {
             store?.syncDispatch(
                 CustomTabListAction.AddCustomTabAction(
