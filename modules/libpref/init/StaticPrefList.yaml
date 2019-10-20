@@ -4909,13 +4909,6 @@
   value: true
   mirror: always
 
-# Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
-- name: layout.css.prefixes.device-pixel-ratio-webkit
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Is support for -moz-prefixed font feature properties enabled?
 - name: layout.css.prefixes.font-features
   type: bool
