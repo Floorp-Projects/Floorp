@@ -387,6 +387,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
 
+  static bool OfflineCacheAllowedForContext(JSContext* /* unused */,
+                                            JSObject* aObj);
+
   static bool IsRequestIdleCallbackEnabled(JSContext* aCx,
                                            JSObject* /* unused */);
 
