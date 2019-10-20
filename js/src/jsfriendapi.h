@@ -799,6 +799,15 @@ MOZ_ALWAYS_INLINE const char16_t* GetTwoByteLinearStringChars(
   return s->nonInlineCharsTwoByte;
 }
 
+MOZ_ALWAYS_INLINE char16_t GetLinearStringCharAt(JSLinearString* linear,
+                                                 size_t index) {
+  MOZ_ASSERT(index < GetLinearStringLength(linear));
+  JS::AutoCheckCannotGC nogc;
+  return LinearStringHasLatin1Chars(linear)
+             ? GetLatin1LinearStringChars(nogc, linear)[index]
+             : GetTwoByteLinearStringChars(nogc, linear)[index];
+}
+
 MOZ_ALWAYS_INLINE JSLinearString* AtomToLinearString(JSAtom* atom) {
   return reinterpret_cast<JSLinearString*>(atom);
 }

@@ -265,7 +265,7 @@ static bool Middleman_HadRepaint(JSContext* aCx, unsigned aArgc, Value* aVp) {
       return false;
     }
 
-    nsDependentCString dataCString((const char*)dataChars, dataLength);
+    nsDependentCSubstring dataCString((const char*)dataChars, dataLength);
     nsresult rv = Base64Decode(dataCString, dataBinary);
     decodeFailed = NS_FAILED(rv);
   }
