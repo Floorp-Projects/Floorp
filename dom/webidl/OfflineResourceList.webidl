@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-[SecureContext, Pref="browser.cache.offline.enable",
+[Pref="browser.cache.offline.enable", Func="nsGlobalWindowInner::OfflineCacheAllowedForContext",
 Exposed=Window]
 interface OfflineResourceList : EventTarget {
   /**
