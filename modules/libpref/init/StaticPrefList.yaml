@@ -4816,6 +4816,13 @@
   value: false
   mirror: always
 
+# Expose the media query -moz-touch-enabled to web content.
+- name: layout.css.moz-touch-enabled.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Pref to control whether the ::marker property restrictions defined in [1]
 # apply.
 #
@@ -4901,13 +4908,6 @@
   type: bool
   value: true
   mirror: always
-
-# Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
-- name: layout.css.prefixes.device-pixel-ratio-webkit
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
 
 # Is support for -moz-prefixed font feature properties enabled?
 - name: layout.css.prefixes.font-features
