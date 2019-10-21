@@ -260,63 +260,6 @@ enum class Nullable {
   NonNull,
 };
 
-// An implementation of Huffman Tables as a vector, with `O(entries)`
-// lookup. Performance-wise, this implementation only makes sense for
-// very short tables.
-template <int N = HUFFMAN_TABLE_DEFAULT_INLINE_BUFFER_LENGTH>
-class NaiveHuffmanTable {
- public:
-  explicit NaiveHuffmanTable(JSContext* cx) : values_(cx) {}
-  NaiveHuffmanTable(NaiveHuffmanTable&& other) noexcept
-      : values_(std::move(other.values_)) {}
-
-  // Initialize a Huffman table containing a single value.
-  JS::Result<Ok> initWithSingleValue(JSContext* cx, const BinASTSymbol& value);
-
-  // Initialize a Huffman table containing `numberOfSymbols`.
-  // Symbols must be added with `addSymbol`.
-  // If you initialize with `initStart`, you MUST call `initComplete()`
-  // at the end of initialization.
-  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
-                           uint8_t maxBitLength);
-
-  JS::Result<Ok> initComplete();
-
-  // Add a symbol to a value.
-  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bitLength,
-                           const BinASTSymbol& value);
-
-  NaiveHuffmanTable() = delete;
-  NaiveHuffmanTable(NaiveHuffmanTable&) = delete;
-
-  // Lookup a value in the table.
-  //
-  // The return of this method contains:
-  //
-  // - the resulting value (`nullptr` if the value is not in the table);
-  // - the number of bits in the entry associated to this value.
-  //
-  // Note that entries inside a single table are typically associated to
-  // distinct bit lengths. The caller is responsible for checking
-  // the result of this method and advancing the bitstream by
-  // `result.key().bitLength_` bits.
-  HuffmanLookupResult lookup(HuffmanLookup key) const;
-
-  // The number of values in the table.
-  size_t length() const { return values_.length(); }
-  const HuffmanEntry* begin() const { return values_.begin(); }
-  const HuffmanEntry* end() const { return values_.end(); }
-
- private:
-  // The entries in this Huffman table.
-  // Entries are always ranked by increasing bit_length, and within
-  // a bitlength by increasing value of `bits`. This representation
-  // is good for small tables, but in the future, we may adopt a
-  // representation more optimized for larger tables.
-  Vector<HuffmanEntry, N> values_;
-  friend class HuffmanPreludeReader;
-};
-
 // An implementation of Huffman Tables for single-entry table.
 class SingleEntryHuffmanTable {
  public:
@@ -961,28 +904,29 @@ struct HuffmanTableIndexedSymbolsSum : GenericHuffmanTable {
       : GenericHuffmanTable(cx) {}
 };
 
-struct HuffmanTableIndexedSymbolsBool : NaiveHuffmanTable<2> {
+struct HuffmanTableIndexedSymbolsBool : GenericHuffmanTable {
   explicit HuffmanTableIndexedSymbolsBool(JSContext* cx)
-      : NaiveHuffmanTable(cx) {}
+      : GenericHuffmanTable(cx) {}
 };
 
 // A Huffman table that may only ever contain two values:
 // `BinASTKind::_Null` and another `BinASTKind`.
-struct HuffmanTableIndexedSymbolsMaybeInterface : NaiveHuffmanTable<2> {
+struct HuffmanTableIndexedSymbolsMaybeInterface : GenericHuffmanTable {
   explicit HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx)
-      : NaiveHuffmanTable(cx) {}
+      : GenericHuffmanTable(cx) {}
 
   // `true` if this table only contains values for `null`.
   bool isAlwaysNull() const {
-    MOZ_ASSERT(length() > 0);
+    MOZ_ASSERT(length() == 1 || length() == 2);
 
     // By definition, we have either 1 or 2 values.
     // By definition, if we have 2 values, one of them is not null.
-    if (length() != 1) {
+    if (length() == 2) {
       return false;
     }
+
     // Otherwise, check the single value.
-    return begin()->value().toKind() == BinASTKind::_Null;
+    return begin()->toKind() == BinASTKind::_Null;
   }
 };
 
