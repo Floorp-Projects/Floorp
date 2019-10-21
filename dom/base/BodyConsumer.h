@@ -70,7 +70,8 @@ class BodyConsumer final : public nsIObserver,
 
   void BeginConsumeBodyMainThread(ThreadSafeWorkerRef* aWorkerRef);
 
-  void OnBlobResult(Blob* aBlob, ThreadSafeWorkerRef* aWorkerRef = nullptr);
+  void OnBlobResult(BlobImpl* aBlobImpl,
+                    ThreadSafeWorkerRef* aWorkerRef = nullptr);
 
   void ContinueConsumeBody(nsresult aStatus, uint32_t aLength, uint8_t* aResult,
                            bool aShuttingDown = false);

@@ -75,14 +75,6 @@ Blob* Blob::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
 }
 
 /* static */
-already_AddRefed<Blob> Blob::CreateEmptyBlob(nsIGlobalObject* aGlobal,
-                                             const nsAString& aContentType) {
-  RefPtr<Blob> blob = Blob::Create(aGlobal, new EmptyBlobImpl(aContentType));
-  MOZ_ASSERT(!blob->mImpl->IsFile());
-  return blob.forget();
-}
-
-/* static */
 already_AddRefed<Blob> Blob::CreateStringBlob(nsIGlobalObject* aGlobal,
                                               const nsACString& aData,
                                               const nsAString& aContentType) {

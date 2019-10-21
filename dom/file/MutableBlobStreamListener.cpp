@@ -14,10 +14,9 @@ namespace dom {
 
 MutableBlobStreamListener::MutableBlobStreamListener(
     MutableBlobStorage::MutableBlobStorageType aStorageType,
-    nsISupports* aParent, const nsACString& aContentType,
-    MutableBlobStorageCallback* aCallback, nsIEventTarget* aEventTarget)
+    const nsACString& aContentType, MutableBlobStorageCallback* aCallback,
+    nsIEventTarget* aEventTarget)
     : mCallback(aCallback),
-      mParent(aParent),
       mStorageType(aStorageType),
       mContentType(aContentType),
       mEventTarget(aEventTarget) {
@@ -64,7 +63,7 @@ MutableBlobStreamListener::OnStopRequest(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  storage->GetBlobWhenReady(mParent, mContentType, mCallback);
+  storage->GetBlobImplWhenReady(mContentType, mCallback);
   return NS_OK;
 }
 
