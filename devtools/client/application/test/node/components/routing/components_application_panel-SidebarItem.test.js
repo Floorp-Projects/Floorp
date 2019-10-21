@@ -7,9 +7,7 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
-const {
-  setupStore,
-} = require("devtools/client/application/test/components/helpers/helpers");
+const { setupStore } = require("devtools/client/application/test/node/helpers");
 
 const { PAGE_TYPES } = require("devtools/client/application/src/constants");
 
