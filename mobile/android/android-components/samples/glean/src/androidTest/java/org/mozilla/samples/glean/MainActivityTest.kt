@@ -4,14 +4,11 @@
 
 package org.mozilla.samples.glean
 
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.ActivityTestRule
-import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.mozilla.samples.glean.GleanMetrics.Test as GleanTestMetrics
@@ -25,26 +22,22 @@ class MainActivityTest {
     @get:Rule
     val activityRule: ActivityTestRule<MainActivity> = ActivityTestRule(MainActivity::class.java)
 
-    @get:Rule
-    val gleanRule = GleanTestRule(
-        ApplicationProvider.getApplicationContext(),
-        Configuration(serverEndpoint = getPingServerAddress())
-    )
-
     @Test
     fun checkGleanClickData() {
+        // We don't reset the storage in this test as the GleanTestRule does not
+        // work nicely in instrumented test. Just check the current value, increment
+        // by one and make it the expected value.
+        val expectedValue = if (GleanTestMetrics.counter.testHasValue()) {
+            GleanTestMetrics.counter.testGetValue() + 1
+        } else {
+            1
+        }
+
         // Simulate a click on the button.
         onView(withId(R.id.buttonGenerateData)).perform(click())
 
         // Use the Glean testing API to check if the expected data was recorded.
         assertTrue(GleanTestMetrics.counter.testHasValue())
-        assertEquals(1, GleanTestMetrics.counter.testGetValue())
-    }
-
-    @Test
-    fun checkGleanClickDataAgain() {
-        // Repeat the same test as above: this will fail if the GleanTestRule fails to
-        // clear the Glean SDK state.
-        checkGleanClickData()
+        assertEquals(expectedValue, GleanTestMetrics.counter.testGetValue())
     }
 }
