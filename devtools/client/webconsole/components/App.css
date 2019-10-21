@@ -355,6 +355,8 @@ body {
 .jsterm-editor .jsterm-input-container > .CodeMirror {
   flex: 1;
   padding-inline-start: 0;
+  font-size: var(--theme-code-font-size);
+  line-height: var(--theme-code-line-height);
   background-image: none;
 }
 

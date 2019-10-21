@@ -243,11 +243,6 @@ div.CodeMirror span.eval-text {
   background-color: var(--theme-sidebar-background);
 }
 
-.cm-s-markup-view pre {
-  line-height: 1.4em;
-  min-height: 1.4em;
-}
-
 .CodeMirror-Tern-fname {
   color: #f7f7f7;
 }

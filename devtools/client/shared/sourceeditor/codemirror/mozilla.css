@@ -139,6 +139,7 @@
 .CodeMirror-foldgutter-open,
 .CodeMirror-foldgutter-folded {
   height: 14px;
+  margin-top: 1px;
   background-image: url("chrome://devtools/skin/images/arrow.svg");
   background-position: center;
   background-repeat: no-repeat;
@@ -253,4 +254,12 @@
 /* Override the background-color: white applied to filler elements in codemirror.css */
 .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
   -moz-appearance: scrollcorner;
+}
+
+/* Markup view and Event tooltip styles */
+
+.CodeMirror.cm-s-markup-view pre {
+  font-size: var(--theme-code-font-size);
+  line-height: var(--theme-code-line-height);
+  min-height: 15px;
 }
