@@ -967,3 +967,53 @@ void NativeAllocationMarkerPayload::StreamPayload(
                     aUniqueStacks);
   aWriter.IntProperty("size", mSize);
 }
+
+BlocksRingBuffer::Length IPCMarkerPayload::TagAndSerializationBytes() const {
+  return CommonPropsTagAndSerializationBytes() +
+         BlocksRingBuffer::SumBytes(mOtherPid, mMessageSeqno, mMessageType,
+                                    mSide, mDirection, mSync);
+}
+
+void IPCMarkerPayload::SerializeTagAndPayload(
+    BlocksRingBuffer::EntryWriter& aEntryWriter) const {
+  static const DeserializerTag tag = TagForDeserializer(Deserialize);
+  SerializeTagAndCommonProps(tag, aEntryWriter);
+  aEntryWriter.WriteObject(mOtherPid);
+  aEntryWriter.WriteObject(mMessageSeqno);
+  aEntryWriter.WriteObject(mMessageType);
+  aEntryWriter.WriteObject(mSide);
+  aEntryWriter.WriteObject(mDirection);
+  aEntryWriter.WriteObject(mSync);
+}
+
+// static
+UniquePtr<ProfilerMarkerPayload> IPCMarkerPayload::Deserialize(
+    BlocksRingBuffer::EntryReader& aEntryReader) {
+  ProfilerMarkerPayload::CommonProps props =
+      DeserializeCommonProps(aEntryReader);
+  auto otherPid = aEntryReader.ReadObject<int32_t>();
+  auto messageSeqno = aEntryReader.ReadObject<int32_t>();
+  auto messageType = aEntryReader.ReadObject<IPC::Message::msgid_t>();
+  auto mSide = aEntryReader.ReadObject<ipc::Side>();
+  auto mDirection = aEntryReader.ReadObject<ipc::MessageDirection>();
+  auto mSync = aEntryReader.ReadObject<bool>();
+  return UniquePtr<ProfilerMarkerPayload>(
+      new IPCMarkerPayload(std::move(props), otherPid, messageSeqno,
+                           messageType, mSide, mDirection, mSync));
+}
+
+void IPCMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
+                                     const TimeStamp& aProcessStartTime,
+                                     UniqueStacks& aUniqueStacks) const {
+  using namespace mozilla::ipc;
+  StreamCommonProps("IPC", aWriter, aProcessStartTime, aUniqueStacks);
+  aWriter.IntProperty("otherPid", mOtherPid);
+  aWriter.IntProperty("messageSeqno", mMessageSeqno);
+  aWriter.StringProperty("messageType",
+                         IPC::StringFromIPCMessageType(mMessageType));
+  aWriter.StringProperty("side", mSide == ParentSide ? "parent" : "child");
+  aWriter.StringProperty("direction", mDirection == MessageDirection::eSending
+                                          ? "sending"
+                                          : "receiving");
+  aWriter.BoolProperty("sync", mSync);
+}
