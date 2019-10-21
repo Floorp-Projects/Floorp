@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1571235848152">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1571605630002">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3516,6 +3516,10 @@
     <emItem blockID="96b2e7d5-d4e4-425e-b275-086dc7ccd6ad" id="/^((firefox@browser-security\.de)|(firefox@smarttube\.io)|({0fde9597-0508-47ff-ad8a-793fa059c4e7})|(info@browser-privacy\.com)|({d3b98a68-fd64-4763-8b66-e15e47ef000a})|({36ea170d-2586-45fb-9f48-5f6b6fd59da7})|(youtubemp3converter@yttools\.io)|(simplysearch@dirtylittlehelpers\.com)|(extreme@smarttube\.io)|(selfdestructingcookies@dirtylittlehelpers\.com)|({27a1b6d8-c6c9-4ddd-bf20-3afa0ccf5040})|({2e9cae8b-ee3f-4762-a39e-b53d31dffd37})|(adblock@smarttube\.io)|({a659bdfa-dbbe-4e58-baf8-70a6975e47d0})|({f9455ec1-203a-4fe8-95b6-f6c54a9e56af})|({8c85526d-1be9-4b96-9462-aa48a811f4cf})|(mail@quick-buttons\.de)|(youtubeadblocker@yttools\.io)|(extension@browser-safety\.org)|(contact@web-security\.com)|(videodownloader@dirtylittlehelpers\.com)|(googlenotrack@dirtylittlehelpers\.com)|(develop@quick-amz\.com))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="2.0.9" severity="3"/>
+    </emItem>
+    <emItem blockID="9e8f80d6-a818-4004-9a20-deec55f3fb96" id="/^((\{a059a924-e43a-495d-9620-ad8c111d62d9\})|(\{79f4bfc6-b1da-4dc4-85cc-ecbcc5dd152e\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
   </emItems>
   <pluginItems>
