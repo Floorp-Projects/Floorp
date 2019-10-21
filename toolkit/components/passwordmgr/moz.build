@@ -37,7 +37,7 @@ EXTRA_JS_MODULES += [
     'LoginHelper.jsm',
     'LoginInfo.jsm',
     'LoginManager.jsm',
-    'LoginManagerContent.jsm',
+    'LoginManagerChild.jsm',
     'LoginManagerParent.jsm',
     'LoginManagerPrompter.jsm',
     'LoginRecipes.jsm',

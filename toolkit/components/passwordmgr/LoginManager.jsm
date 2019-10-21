@@ -24,8 +24,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "LoginManagerContent",
-  "resource://gre/modules/LoginManagerContent.jsm"
+  "LoginManagerChild",
+  "resource://gre/modules/LoginManagerChild.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,

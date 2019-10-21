@@ -240,7 +240,7 @@ class LoginManagerParent {
 
   /**
    * Trigger a login form fill and send relevant data (e.g. logins and recipes)
-   * to the child process (LoginManagerContent).
+   * to the child process (LoginManagerChild).
    */
   async fillForm({ browser, loginFormOrigin, login, inputElementIdentifier }) {
     let recipes = [];
@@ -268,7 +268,7 @@ class LoginManagerParent {
   }
 
   /**
-   * Send relevant data (e.g. logins and recipes) to the child process (LoginManagerContent).
+   * Send relevant data (e.g. logins and recipes) to the child process (LoginManagerChild).
    */
   async sendLoginDataToChild(
     formOrigin,
@@ -401,7 +401,7 @@ class LoginManagerParent {
               timeDiff / 1000
             )} seconds ago.`
         );
-        // Send an empty array to make LoginManagerContent clear the
+        // Send an empty array to make LoginManagerChild clear the
         // outstanding request it has temporarily saved.
         target.messageManager.sendAsyncMessage(
           "PasswordManager:loginsAutoCompleted",

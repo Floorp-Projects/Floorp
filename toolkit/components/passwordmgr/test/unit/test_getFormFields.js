@@ -1,5 +1,5 @@
 /**
- * Test for LoginManagerContent._getFormFields.
+ * Test for LoginManagerChild._getFormFields.
  */
 
 "use strict";
@@ -10,10 +10,10 @@ const { LoginFormFactory } = ChromeUtils.import(
   "resource://gre/modules/LoginFormFactory.jsm"
 );
 const LMCBackstagePass = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerContent.jsm",
+  "resource://gre/modules/LoginManagerChild.jsm",
   null
 );
-const { LoginManagerContent } = LMCBackstagePass;
+const { LoginManagerChild } = LMCBackstagePass;
 const TESTCASES = [
   {
     description: "1 password field outside of a <form>",
@@ -161,7 +161,7 @@ for (let tc of TESTCASES) {
         await testcase.beforeGetFunction(document, formLike);
       }
 
-      let actual = new LoginManagerContent()._getFormFields(
+      let actual = new LoginManagerChild()._getFormFields(
         formLike,
         testcase.skipEmptyFields,
         new Set()
