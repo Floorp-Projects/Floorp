@@ -12,6 +12,7 @@ import os
 import posixpath
 import shutil
 import signal
+import six
 import sys
 import tempfile
 import time
@@ -495,7 +496,7 @@ class Browsertime(Perftest):
             ffmpeg_dir = os.path.dirname(os.path.abspath(self.browsertime_ffmpeg))
             old_path = env.setdefault('PATH', '')
             new_path = os.pathsep.join([ffmpeg_dir, old_path])
-            if isinstance(new_path, unicode):
+            if isinstance(new_path, six.text_type):
                 # Python 2 doesn't like unicode in the environment.
                 new_path = new_path.encode('utf-8', 'strict')
             env['PATH'] = new_path
@@ -723,27 +724,27 @@ class Raptor(Perftest):
     def control_server_wait_set(self, state):
         response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
                                  json={"type": "wait-set", "data": state})
-        return response.content
+        return response.text
 
     def control_server_wait_timeout(self, timeout):
         response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
                                  json={"type": "wait-timeout", "data": timeout})
-        return response.content
+        return response.text
 
     def control_server_wait_get(self):
         response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
                                  json={"type": "wait-get", "data": ""})
-        return response.content
+        return response.text
 
     def control_server_wait_continue(self):
         response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
                                  json={"type": "wait-continue", "data": ""})
-        return response.content
+        return response.text
 
     def control_server_wait_clear(self, state):
         response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
                                  json={"type": "wait-clear", "data": state})
-        return response.content
+        return response.text
 
 
 class RaptorDesktop(Raptor):
@@ -1510,7 +1511,7 @@ def main(args=sys.argv[1:]):
         for _page in pages_that_timed_out:
             message = [("TEST-UNEXPECTED-FAIL", "test '%s'" % _page['test_name']),
                        ("timed out loading test page", _page['url'])]
-            if raptor_test.get("type") == 'pageload':
+            if _page.get('pending_metrics') is not None:
                 message.append(("pending metrics", _page['pending_metrics']))
 
             LOG.critical(" ".join("%s: %s" % (subject, msg) for subject, msg in message))

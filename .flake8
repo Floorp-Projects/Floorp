@@ -122,7 +122,6 @@ per-file-ignores =
     python/mozversioncontrol/**: F821
     taskcluster/**: F821
     testing/mozharness/**: F821
-    testing/raptor/**: F821
     testing/talos/**: F821
     toolkit/components/telemetry/**: F821
     tools/tryselect/**: F821

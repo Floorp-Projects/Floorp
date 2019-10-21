@@ -5,8 +5,8 @@ from __future__ import absolute_import
 
 import json
 import os
-from urlparse import parse_qs, urlsplit, urlunsplit
-from urllib import urlencode, unquote
+
+from six.moves.urllib.parse import parse_qs, urlsplit, urlunsplit, urlencode, unquote
 
 from logger.logger import RaptorLogger
 from manifestparser import TestManifest

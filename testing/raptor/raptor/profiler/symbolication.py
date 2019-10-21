@@ -3,14 +3,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
-import cStringIO
 import hashlib
 import os
 import platform
 import subprocess
-import urllib2
 import zipfile
+
 from distutils import spawn
+from six.moves import cStringIO
+from six.moves.urllib.request import urlopen
 
 from .symFileManager import SymFileManager
 from .symLogging import LogMessage
@@ -144,8 +145,8 @@ class ProfileSymbolicator:
         LogMessage("Retrieving symbol zip from {symbol_zip_url}...".format(
             symbol_zip_url=symbol_zip_url))
         try:
-            io = urllib2.urlopen(symbol_zip_url, None, 30)
-            with zipfile.ZipFile(cStringIO.StringIO(io.read())) as zf:
+            io = urlopen(symbol_zip_url, None, 30)
+            with zipfile.ZipFile(cStringIO(io.read())) as zf:
                 self.integrate_symbol_zip(zf)
             self._create_file_if_not_exists(self._marker_file(symbol_zip_url))
         except IOError:
