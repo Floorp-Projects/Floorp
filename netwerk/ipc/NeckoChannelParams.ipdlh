@@ -365,6 +365,7 @@ struct DocumentChannelCreationArgs {
   uint32_t cacheKey;
   bool isActive;
   bool isTopLevelDoc;
+  bool hasNonEmptySandboxingFlags;
 };
 
 

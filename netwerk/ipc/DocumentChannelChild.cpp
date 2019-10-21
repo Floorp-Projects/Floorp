@@ -51,13 +51,15 @@ NS_IMPL_RELEASE_INHERITED(DocumentChannelChild, nsBaseChannel)
 DocumentChannelChild::DocumentChannelChild(
     nsDocShellLoadState* aLoadState, net::LoadInfo* aLoadInfo,
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
-    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc)
+    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
+    bool aHasNonEmptySandboxingFlags)
     : mLoadState(aLoadState),
       mInitiatorType(aInitiatorType ? Some(*aInitiatorType) : Nothing()),
       mLoadType(aLoadType),
       mCacheKey(aCacheKey),
       mIsActive(aIsActive),
-      mIsTopLevelDoc(aIsTopLevelDoc) {
+      mIsTopLevelDoc(aIsTopLevelDoc),
+      mHasNonEmptySandboxingFlags(aHasNonEmptySandboxingFlags) {
   mEventQueue = new ChannelEventQueue(static_cast<nsIChannel*>(this));
   SetURI(aLoadState->URI());
   SetLoadInfo(aLoadInfo);
@@ -147,6 +149,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.cacheKey() = mCacheKey;
   args.isActive() = mIsActive;
   args.isTopLevelDoc() = mIsTopLevelDoc;
+  args.hasNonEmptySandboxingFlags() = mHasNonEmptySandboxingFlags;
   args.channelId() = *mChannelId;
 
   nsCOMPtr<nsILoadContext> loadContext;

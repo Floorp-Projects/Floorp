@@ -9734,13 +9734,13 @@ static bool HasHttpScheme(nsIURI* aURI) {
     nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
-    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc, nsresult& aRv,
-    nsIChannel** aChannel) {
+    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
+    bool aHasNonEmptySandboxingFlags, nsresult& aRv, nsIChannel** aChannel) {
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       HasHttpScheme(aLoadState->URI())) {
     RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
         aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
-        aIsActive, aIsTopLevelDoc);
+        aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags);
     child->SetNotificationCallbacks(aCallbacks);
     child.forget(aChannel);
     aRv = NS_OK;
@@ -9902,7 +9902,8 @@ static bool HasHttpScheme(nsIURI* aURI) {
 
 /* static */ nsresult nsDocShell::ConfigureChannel(
     nsIChannel* aChannel, nsDocShellLoadState* aLoadState,
-    const nsString* aInitiatorType, uint32_t aLoadType, uint32_t aCacheKey) {
+    const nsString* aInitiatorType, uint32_t aLoadType, uint32_t aCacheKey,
+    bool aHasNonEmptySandboxingFlags) {
   nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
   if (props) {
     nsCOMPtr<nsIURI> referrer;
@@ -10075,6 +10076,14 @@ static bool HasHttpScheme(nsIURI* aURI) {
       return NS_ERROR_CSP_NAVIGATE_TO_VIOLATION;
     }
   }
+
+  if (aHasNonEmptySandboxingFlags) {
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
+    if (httpChannel) {
+      httpChannel->SetHasNonEmptySandboxingFlag(true);
+    }
+  }
+
   return rv;
 }
 
@@ -10375,9 +10384,10 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   bool isActive =
       mIsActive || (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
-  if (!CreateChannelForLoadState(
-          aLoadState, loadInfo, this, this, initiatorType, loadFlags, mLoadType,
-          cacheKey, isActive, isTopLevelDoc, rv, getter_AddRefs(channel))) {
+  if (!CreateChannelForLoadState(aLoadState, loadInfo, this, this,
+                                 initiatorType, loadFlags, mLoadType, cacheKey,
+                                 isActive, isTopLevelDoc, mSandboxFlags, rv,
+                                 getter_AddRefs(channel))) {
     return rv;
   }
 
@@ -10387,8 +10397,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     NS_ADDREF(*aRequest = channel);
   }
 
-  rv =
-      ConfigureChannel(channel, aLoadState, initiatorType, mLoadType, cacheKey);
+  rv = ConfigureChannel(channel, aLoadState, initiatorType, mLoadType, cacheKey,
+                        mSandboxFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   const nsACString& typeHint = aLoadState->TypeHint();
@@ -10518,13 +10528,6 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
 
   if (SandboxFlagsImplyCookies(mSandboxFlags)) {
     loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
-  }
-
-  if (mSandboxFlags) {
-    nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
-    if (httpChannel) {
-      httpChannel->SetHasNonEmptySandboxingFlag(true);
-    }
   }
 
   // Load attributes depend on load type...
