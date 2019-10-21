@@ -11,7 +11,6 @@ const TEST_URI =
   "data:text/html;charset=utf-8,Web Console test for bug 1519314";
 
 add_task(async function() {
-  await pushPref("devtools.webconsole.features.editor", true);
   await pushPref("devtools.webconsole.input.editor", true);
   await performEditorEnabledTests();
 });
