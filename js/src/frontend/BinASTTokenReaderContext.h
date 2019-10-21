@@ -354,6 +354,80 @@ class SingleEntryHuffmanTable {
   friend class HuffmanPreludeReader;
 };
 
+// An implementation of Huffman Tables for two-entry table.
+class TwoEntriesHuffmanTable {
+ public:
+  TwoEntriesHuffmanTable() : length_(0) {}
+  TwoEntriesHuffmanTable(TwoEntriesHuffmanTable&& other) noexcept = default;
+
+  // Initialize a Huffman table containing `numberOfSymbols`.
+  // Symbols must be added with `addSymbol`.
+  // If you initialize with `initStart`, you MUST call `initComplete()`
+  // at the end of initialization.
+  JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
+                           uint8_t maxBitLength);
+
+  JS::Result<Ok> initComplete();
+
+  // Add a symbol to a value.
+  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bitLength,
+                           const BinASTSymbol& value);
+
+  TwoEntriesHuffmanTable(TwoEntriesHuffmanTable&) = delete;
+
+  // Lookup a value in the table.
+  //
+  // The return of this method contains:
+  //
+  // - the resulting value (`nullptr` if the value is not in the table);
+  // - the number of bits in the entry associated to this value.
+  //
+  // Note that entries inside a single table are typically associated to
+  // distinct bit lengths. The caller is responsible for checking
+  // the result of this method and advancing the bitstream by
+  // `result.key().bitLength_` bits.
+  HuffmanLookupResult lookup(HuffmanLookup key) const;
+
+  struct Iterator {
+    explicit Iterator(const BinASTSymbol* position);
+    void operator++();
+    const BinASTSymbol* operator*() const;
+    const BinASTSymbol* operator->() const;
+    bool operator==(const Iterator& other) const;
+    bool operator!=(const Iterator& other) const;
+
+   private:
+    const BinASTSymbol* position_;
+  };
+  Iterator begin() const { return Iterator(std::begin(values_)); }
+  Iterator end() const {
+    MOZ_ASSERT(length_ == 2);
+    return Iterator(std::end(values_));
+  }
+
+  // The number of values in the table.
+  size_t length() const {
+    MOZ_ASSERT(length_ == 2);
+    return 2;
+  }
+
+ private:
+  // A buffer for the values added to this table.
+  //
+  // Only the interval 0..length_ is considered
+  // initialized memory.
+  BinASTSymbol values_[2] = {BinASTSymbol::fromBool(false),
+                             BinASTSymbol::fromBool(false)};
+
+  // The number of elements added to the table.
+  // Invariants:
+  // - during initialization, 0 <= length_ <= 2;
+  // - after initialization, length_ == 2;
+  uint8_t length_;
+
+  friend class HuffmanPreludeReader;
+};
+
 // An implementation of Huffman Tables as a vector designed to allow
 // constant-time lookups at the expense of high space complexity.
 //
@@ -816,6 +890,7 @@ struct GenericHuffmanTable {
 
   struct Iterator {
     explicit Iterator(typename SingleEntryHuffmanTable::Iterator&&);
+    explicit Iterator(typename TwoEntriesHuffmanTable::Iterator&&);
     explicit Iterator(typename SingleLookupHuffmanTable::Iterator&&);
     explicit Iterator(typename TwoLookupsHuffmanTable::Iterator&&);
     explicit Iterator(typename ThreeLookupsHuffmanTable::Iterator&&);
@@ -829,6 +904,7 @@ struct GenericHuffmanTable {
 
    private:
     mozilla::Variant<typename SingleEntryHuffmanTable::Iterator,
+                     typename TwoEntriesHuffmanTable::Iterator,
                      typename SingleLookupHuffmanTable::Iterator,
                      typename TwoLookupsHuffmanTable::Iterator,
                      typename ThreeLookupsHuffmanTable::Iterator>
@@ -853,9 +929,9 @@ struct GenericHuffmanTable {
   HuffmanLookupResult lookup(HuffmanLookup key) const;
 
  private:
-  mozilla::Variant<SingleEntryHuffmanTable, SingleLookupHuffmanTable,
-                   TwoLookupsHuffmanTable, ThreeLookupsHuffmanTable,
-                   HuffmanTableUnreachable>
+  mozilla::Variant<SingleEntryHuffmanTable, TwoEntriesHuffmanTable,
+                   SingleLookupHuffmanTable, TwoLookupsHuffmanTable,
+                   ThreeLookupsHuffmanTable, HuffmanTableUnreachable>
       implementation_;
 };
 
