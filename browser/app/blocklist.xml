@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1570713923845">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1571605630002">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2324,10 +2324,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="96b2e7d5-d4e4-425e-b275-086dc7ccd6ad" id="/^((firefox@browser-security\.de)|(firefox@smarttube\.io)|({0fde9597-0508-47ff-ad8a-793fa059c4e7})|(info@browser-privacy\.com)|({d3b98a68-fd64-4763-8b66-e15e47ef000a})|({36ea170d-2586-45fb-9f48-5f6b6fd59da7})|(youtubemp3converter@yttools\.io)|(simplysearch@dirtylittlehelpers\.com)|(extreme@smarttube\.io)|(selfdestructingcookies@dirtylittlehelpers\.com)|({27a1b6d8-c6c9-4ddd-bf20-3afa0ccf5040})|({2e9cae8b-ee3f-4762-a39e-b53d31dffd37})|(adblock@smarttube\.io)|({a659bdfa-dbbe-4e58-baf8-70a6975e47d0})|({f9455ec1-203a-4fe8-95b6-f6c54a9e56af})|({8c85526d-1be9-4b96-9462-aa48a811f4cf})|(mail@quick-buttons\.de)|(youtubeadblocker@yttools\.io)|(extension@browser-safety\.org)|(contact@web-security\.com)|(videodownloader@dirtylittlehelpers\.com)|(googlenotrack@dirtylittlehelpers\.com)|(develop@quick-amz\.com))$/">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="01c22882-868b-43e1-bb23-29d5dc7bc11b" id="/(({a4d84dae-7906-4064-911b-3ad2b1ec178b})|({d7e388c5-1cd0-4aa6-8888-9172f90951fb})|({a67f4004-855f-4e6f-8ef0-2ac735614967})|({25230eb3-db35-4613-8c03-e9a3912b7004})|({37384122-9046-4ff9-a31f-963767d9fe33})|({f1479b0b-0762-4ba2-97fc-010ea9dd4e73})|({53804e15-69e5-4b24-8883-c8f68bd98cf6})|({0f2aec80-aade-46b8-838c-54eeb595aa96})|({b65d6378-6840-4da6-b30e-dee113f680aa})|({e8fc3f33-14b7-41aa-88a1-d0d7b5641a50})|({c49ee246-d3d2-4e88-bfdb-4a3b4de9f974}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3445,14 +3441,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="dd1261a3-6944-4f51-8118-b0a8f2055d69" id="{381f21b1-95bf-4042-bc5c-3a40b2a03f10}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
-    <emItem blockID="70655a4b-064d-44ab-8d0e-3bec419343ee" id="addon@shoppingguru.info">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="4c3153a8-7551-48f3-a4fa-8ad6cb28faa8" id="{f39b7905-00d5-4391-9a4b-751ca08dd6b2}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3485,10 +3473,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="19f599bd-2226-49e2-90fd-685fd106fc3d" id="sparalarm@chip.de">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="bd51d01b-20bf-4682-a588-c03e988eb746" id="/^((web@MapsNewTab)|(ext@WhatsMySpeed)|(ext@MyEmailCenter)|(ext@TemplateHelper)|(ext@FreeLiveRadio)|(ext@FreeFormsNow)|(web@ConverterNewTab)|(web@EmailAccountNewTab)|(spweb@EmailNewTab)|(web@PackagesNewTab)|(web@ManualsNewTab)|(web@ClassifiedsNewTab)|(web@FormsNewTab)|(web@AncestryNewTab)|(web@RecipesNewTab)|(web@TVNewTab)|(web@WeatherNewTab)|(web@translationsNewTab)|(web@SportsNewTab)|(web@CouponsNewTab)|(web@FlightsNewTab)|(test@InstaFormsFinder)|(web@NewsNewTab)|(web@SpeedTestNewTab)|(web@TransitNewTab)|(web@BibleNewTab)|(web@RadioNewTab)|(web@TemplateNewTab)|(web@PhotoEditorNewTab)|(web@AudioConverterNewTab)|(web@GamesNewTab)|(web@VideoConverterNewTab)|(test@TheWeatherChecker)|(web@InterestsNewTab)|(test@SearchHub)|(web@CalendarNewTab)|(web@TaxesNewTab)|(web@BankNewTab)|(web@CrimeReportNewTab)|(web@CryptoNewTab)|(web@eBooksNewTab)|(web@FinanceNewTab)|(web@FitnessNewTab)|(web@JobsNewTab)|(web@MoviesNewTab)|(web@NotepadNewTab)|(web@OfficeNewTab)|(web@PCTextingNewTab)|(web@PhotoNewTab)|(web@ScrapbookNewTab)|(web@UtilityNewTab)|(test@FlightTrackerUpdate)|(test@FreeForms)|(test@UniversalConverter)|(test@MyEmailCenter)|(test@TemplateHelper)|(test@FreeLiveRadio)|(test@FreeFormsNow)|(ext@FormsHub)|(webext@WhatsMySpeed)|(webext@WatchTelevision)|(webext@EmailExpressTab)|(webext@MyConverterTab)|(webext@TemplateCreatorTab)|(webext@LocalForecastTab)|(webext@EZDirectionsandMapsTab)|(webext@MapsNDirectionsTab)|(webext@MyEmailCenter)|(webext@TemplateHelper)|(webext@FreeLiveRadio)|(webext@FreeFormsNow)|(webext@InstaFormsFinder)|(webext@TheWeatherChecker)|(webext@FlightTrackerUpdate)|(webext@FreeForms)|(webext@UniversalConverter)|(webext@FormsHub)|(webext@SearchHub)|(ds@DirectSearchPro)|(webext@AppDiscoveryTools)|(webext@LiveRadioProTab)|(webext@TheWeatherPilotTab)|(webext@ExpressPackageFinderTab)|(webext@LoginAssistantTab)|(webext@SelectSearch)|(addon@SelectSearch)|(webext@ExpressSpeedChecker)|(webext@BreakingNewsPlus)|(webext@WorldEventsToday)|(addon@WorldEventsToday)|(webext@OnlineTVAccess)|(webext@FindingFormsPro)|(webext@EasyClassifieds)|(webext@SpeedCheckerPlus)|(webext@GetFreeCoupons)|(addon@MyEmailChecker)|(app@FlightTrackerUpdate)|(app@WatchTelevision)|(app@WhatsMySpeed)|(app@MyEmailCenter)|(app@TemplateCreatorTab)|(app@FreeLiveRadio)|(app@FreeFormsNow)|(app@InstaFormsFinder)|(app@SearchHub)|(app@TheWeatherChecker)|(app@FormsHub)|(webtab@Maps)|(app@FreeForms)|(app@UniversalConverter)|(app@EmailExpressTab)|(app@MyConverterTab)|(app@TemplateHelper)|(app@LocalForecastTab)|(app@EZDirectionsandMapsTab)|(app@MapsNDirectionsTab)|(app@AppDiscoveryTools)|(app@LiveRadioProTab)|(app@TheWeatherPilotTab)|(app@ExpressPackageFinderTab)|(app@WorldEventsToday)|(app@OnlineTVAccess)|(app@SpeedCheckerPlus)|(app@EasyClassifieds)|(app@GetFreeCoupons)|(app@FindingFormsPro)|(app@TemplatesHereTab)|(webtab@Packages)|(webtab@Forms)|(webtab@Email)|(webtab@Radio)|(app@MyEmailChecker)|(webtab@TV)|(webtab@Classifieds)|(webtab@Ancestry)|(webtab@Weather)|(webtab@Manuals)|(webtab@SpeedTest)|(app@MyDailyCalendar)|(webtab@Transit)|(webtab@Converter)|(webtab@Coupons)|(webtab@Recipes)|(webtab@News)|(webtab@Sports)|(webtab@translations)|(webtab@Template)|(webtab@AudioConverter)|(webtab@Flights)|(webtab@Photo)|(webtab@Bible)|(webtab@PhotoEditor)|(app@MyVideoConverter)|(webtab@Games)|(app@MyLoginHelper)|(app@QuickEmailAccess)|(app@MyRecipeFinder)|(app@MyFlightFinder)|(webtab@Fitness)|(webtab@VideoConverter)|(webtab@Taxes)|(webtab@Bank)|(webtab@Calendar)|(webtab@CrimeReport)|(webtab@Crypto)|(webtab@eBooks)|(webtab@Finance)|(webtab@Interests)|(webtab@Jobs)|(webtab@Notepad)|(webtab@Movies)|(webtab@Office)|(webtab@PCTexting)|(webtab@Scrapbook)|(webtab@Utility))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -3506,6 +3490,34 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="986aac02-beba-40b2-b463-d8447a778a2e" id="/^((\{2B0EC7FF-F330-4e0c-8B33-EFFEC8D39E70\})|(\{f70c89b0-bbf3-41a9-bc1f-0912dcf53f33\})|(@Classifieds)|(@Converter)|(@Coupons)|(@Directions)|(@DownloadManager)|(@Email)|(@Fitness)|(@Flights)|(@FormsApp)|(@Games)|(@Maps)|(@News)|(@Package)|(@Photo)|(@Radio)|(@Recipes)|(@search-encrypt)|(@search-incognito)|(@searchencrypt-b)|(@searchencryptblocker)|(@Speedtest)|(@Sports)|(@Transit)|(@TV)|(@Weather)|(aweapps@Email)|(classified@jetpack)|(email@searchleasier\.com)|(foo-bar@example\.com)|(games@jetpack)|(JS@Converter)|(login@easier)|(maps-webext@jetpack)|(Maps@SSA)|(web-ext@games\.com)|(web@ShoppingNewTab)|(web@SocialNewTab)|(web@WebDesignNewTab)|(webapp@LoginAssistantTab)|(webex@Converter)|(webex@Email)|(webtab@Shopping)|(webtab@Social)|(webtab@WebDesign))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="57c094fd-9a37-4ede-9bb0-a1c2d66415f0" id="{c4d46c5f-9832-4057-8a1d-635949ed6a55}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="be5d02cb-0a36-4c20-b184-509b86d243c5" id="/^((\{65a93e3b-e350-440d-bf8f-68e18e38d27d\})|(\{9db1fb44-b661-4719-9d90-67af3e6a314c\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="19f599bd-2226-49e2-90fd-685fd106fc3d" id="sparalarm@chip.de">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="14.39.1" severity="3"/>
+    </emItem>
+    <emItem blockID="70655a4b-064d-44ab-8d0e-3bec419343ee" id="addon@shoppingguru.info">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="2104.1111.1110.4221" severity="3"/>
+    </emItem>
+    <emItem blockID="dd1261a3-6944-4f51-8118-b0a8f2055d69" id="{381f21b1-95bf-4042-bc5c-3a40b2a03f10}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.0" severity="3"/>
+    </emItem>
+    <emItem blockID="96b2e7d5-d4e4-425e-b275-086dc7ccd6ad" id="/^((firefox@browser-security\.de)|(firefox@smarttube\.io)|({0fde9597-0508-47ff-ad8a-793fa059c4e7})|(info@browser-privacy\.com)|({d3b98a68-fd64-4763-8b66-e15e47ef000a})|({36ea170d-2586-45fb-9f48-5f6b6fd59da7})|(youtubemp3converter@yttools\.io)|(simplysearch@dirtylittlehelpers\.com)|(extreme@smarttube\.io)|(selfdestructingcookies@dirtylittlehelpers\.com)|({27a1b6d8-c6c9-4ddd-bf20-3afa0ccf5040})|({2e9cae8b-ee3f-4762-a39e-b53d31dffd37})|(adblock@smarttube\.io)|({a659bdfa-dbbe-4e58-baf8-70a6975e47d0})|({f9455ec1-203a-4fe8-95b6-f6c54a9e56af})|({8c85526d-1be9-4b96-9462-aa48a811f4cf})|(mail@quick-buttons\.de)|(youtubeadblocker@yttools\.io)|(extension@browser-safety\.org)|(contact@web-security\.com)|(videodownloader@dirtylittlehelpers\.com)|(googlenotrack@dirtylittlehelpers\.com)|(develop@quick-amz\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="2.0.9" severity="3"/>
+    </emItem>
+    <emItem blockID="9e8f80d6-a818-4004-9a20-deec55f3fb96" id="/^((\{a059a924-e43a-495d-9620-ad8c111d62d9\})|(\{79f4bfc6-b1da-4dc4-85cc-ecbcc5dd152e\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
