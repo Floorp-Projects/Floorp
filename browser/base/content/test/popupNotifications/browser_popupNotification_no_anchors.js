@@ -11,8 +11,12 @@ function test() {
   setup();
 }
 
+const FALLBACK_ANCHOR = gURLBar.megabar
+  ? "urlbar-search-icon"
+  : "identity-icon";
+
 var tests = [
-  // Test that popupnotifications are anchored to the identity icon on
+  // Test that popupnotifications are anchored to the fallback anchor on
   // about:blank, where anchor icons are hidden.
   {
     id: "Test#1",
@@ -34,8 +38,8 @@ var tests = [
       );
       is(
         popup.anchorNode.id,
-        "identity-icon",
-        "notification anchored to identity icon"
+        FALLBACK_ANCHOR,
+        "notification anchored to fallback anchor"
       );
       dismissNotification(popup);
     },
@@ -45,7 +49,7 @@ var tests = [
       gBrowser.selectedTab = this.oldSelectedTab;
     },
   },
-  // Test that popupnotifications are anchored to the identity icon after
+  // Test that popupnotifications are anchored to the fallback anchor after
   // navigation to about:blank.
   {
     id: "Test#2",
@@ -75,8 +79,8 @@ var tests = [
       );
       is(
         popup.anchorNode.id,
-        "identity-icon",
-        "notification anchored to identity icon"
+        FALLBACK_ANCHOR,
+        "notification anchored to fallback anchor"
       );
       dismissNotification(popup);
     },
@@ -136,7 +140,7 @@ var tests = [
     },
   },
   // Test that popupnotifications are hidden while editing the URL in the
-  // location bar, anchored to the identity icon when the focus is moved away
+  // location bar, anchored to the fallback anchor when the focus is moved away
   // from the location bar, and restored when the URL is reverted.
   {
     id: "Test#4",
@@ -166,7 +170,7 @@ var tests = [
         );
 
         // Moving focus to the next control should show the notifications again,
-        // anchored to the identity icon. We clear the URL bar before moving the
+        // anchored to the fallback anchor. We clear the URL bar before moving the
         // focus so that the awesomebar popup doesn't get in the way.
         shown = waitForNotificationPanel();
         EventUtils.synthesizeKey("KEY_Backspace");
@@ -175,8 +179,8 @@ var tests = [
 
         is(
           PopupNotifications.panel.anchorNode.id,
-          "identity-icon",
-          "notification anchored to identity icon"
+          FALLBACK_ANCHOR,
+          "notification anchored to fallback anchor"
         );
 
         // Moving focus to the location bar should hide the notification again.
