@@ -18,7 +18,6 @@ from mozbuild.base import MozbuildObject
 from mozfile import NamedTemporaryFile
 
 from moztest.resolve import (
-    TestMetadata,
     TestResolver,
     TEST_SUITES,
 )
@@ -199,27 +198,42 @@ TASK_LABELS = [
 
 
 class Base(unittest.TestCase):
+    FAKE_TOPSRCDIR = '/firefox'
+
     def setUp(self):
         self._temp_files = []
+        self._temp_dirs = []
 
     def tearDown(self):
         for f in self._temp_files:
             del f
 
+        for d in self._temp_dirs:
+            shutil.rmtree(d)
+
         self._temp_files = []
+        self._temp_dirs = []
+
+    def _get_resolver(self):
+        topobjdir = tempfile.mkdtemp()
+        self._temp_dirs.append(topobjdir)
+
+        with open(os.path.join(topobjdir, 'all-tests.pkl'), 'wb') as fh:
+            pickle.dump(ALL_TESTS, fh)
+        with open(os.path.join(topobjdir, 'test-defaults.pkl'), 'wb') as fh:
+            pickle.dump(TEST_DEFAULTS, fh)
+
+        o = MozbuildObject(self.FAKE_TOPSRCDIR, None, None, topobjdir=topobjdir)
+
+        # Monkey patch the test resolver to avoid tests failing to find make
+        # due to our fake topscrdir.
+        TestResolver._run_make = lambda *a, **b: None
+
+        return o._spawn(TestResolver)
 
     def _get_test_metadata(self):
-        all_tests = NamedTemporaryFile(mode='wb')
-        pickle.dump(ALL_TESTS, all_tests)
-        all_tests.flush()
-        self._temp_files.append(all_tests)
-
-        test_defaults = NamedTemporaryFile(mode='wb')
-        pickle.dump(TEST_DEFAULTS, test_defaults)
-        test_defaults.flush()
-        self._temp_files.append(test_defaults)
-
-        rv = TestMetadata(all_tests.name, "/firefox/", test_defaults=test_defaults.name)
+        resolver = self._get_resolver()
+        rv = resolver._tests
         # Avoid loading wpt or puppeteer manifests.
         rv._wpt_loaded = True
         rv._puppeteer_loaded = True
@@ -229,14 +243,10 @@ class Base(unittest.TestCase):
 class TestTestMetadata(Base):
     def test_load(self):
         t = self._get_test_metadata()
-        self.assertEqual(len(t._tests_by_path), 8)
+        self.assertEqual(len(t.tests_by_path), 8)
 
-        def tests_with_flavor(flavor):
-            for path in sorted(t._tests_by_flavor.get(flavor, [])):
-                yield t._tests_by_path[path]
-
-        self.assertEqual(len(list(tests_with_flavor('xpcshell'))), 3)
-        self.assertEqual(len(list(tests_with_flavor('mochitest-plain'))), 0)
+        self.assertEqual(len(t.tests_by_flavor['xpcshell']), 3)
+        self.assertEqual(len(t.tests_by_flavor['mochitest-plain']), 0)
 
     def test_resolve_all(self):
         t = self._get_test_metadata()
@@ -279,35 +289,6 @@ class TestTestMetadata(Base):
 
 
 class TestTestResolver(Base):
-    FAKE_TOPSRCDIR = '/firefox'
-
-    def setUp(self):
-        Base.setUp(self)
-
-        self._temp_dirs = []
-
-    def tearDown(self):
-        Base.tearDown(self)
-
-        for d in self._temp_dirs:
-            shutil.rmtree(d)
-
-    def _get_resolver(self):
-        topobjdir = tempfile.mkdtemp()
-        self._temp_dirs.append(topobjdir)
-
-        with open(os.path.join(topobjdir, 'all-tests.pkl'), 'wb') as fh:
-            pickle.dump(ALL_TESTS, fh)
-        with open(os.path.join(topobjdir, 'test-defaults.pkl'), 'wb') as fh:
-            pickle.dump(TEST_DEFAULTS, fh)
-
-        o = MozbuildObject(self.FAKE_TOPSRCDIR, None, None, topobjdir=topobjdir)
-
-        # Monkey patch the test resolver to avoid tests failing to find make
-        # due to our fake topscrdir.
-        TestResolver._run_make = lambda *a, **b: None
-
-        return o._spawn(TestResolver)
 
     def test_cwd_children_only(self):
         """If cwd is defined, only resolve tests under the specified cwd."""
