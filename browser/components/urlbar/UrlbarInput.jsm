@@ -35,6 +35,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
+const SEARCH_ICON_ID = "urlbar-search-icon";
+
 let getBoundsWithoutFlushing = element =>
   element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
 let px = number => number.toFixed(2) + "px";
@@ -860,6 +862,7 @@ class UrlbarInput {
     // If the value is a restricted token, append a space.
     if (Object.values(UrlbarTokenizer.RESTRICT).includes(value)) {
       this.inputField.value = value + " ";
+      this._revertOnBlurValue = this.value;
     } else {
       this.inputField.value = value;
     }
@@ -1700,6 +1703,11 @@ class UrlbarInput {
       this.view.close();
     }
 
+    if (this._revertOnBlurValue == this.value) {
+      this.handleRevert();
+    }
+    this._revertOnBlurValue = null;
+
     // We may have hidden popup notifications, show them again if necessary.
     if (this.getAttribute("pageproxystate") != "valid") {
       this.window.UpdatePopupNotificationsVisibility();
@@ -1711,7 +1719,8 @@ class UrlbarInput {
   _on_click(event) {
     if (
       event.target == this.inputField ||
-      event.target == this._inputContainer
+      event.target == this._inputContainer ||
+      event.target.id == SEARCH_ICON_ID
     ) {
       this.startLayoutExtend();
       this._maybeSelectAll();
@@ -1765,7 +1774,8 @@ class UrlbarInput {
 
         if (
           event.target != this.inputField &&
-          event.target != this._inputContainer
+          event.target != this._inputContainer &&
+          event.target.id != SEARCH_ICON_ID
         ) {
           break;
         }
@@ -1773,7 +1783,7 @@ class UrlbarInput {
         this._focusedViaMousedown = !this.focused;
         this._preventClickSelectsAll = this.focused;
 
-        if (event.target == this._inputContainer) {
+        if (event.target != this.inputField) {
           this.focus();
         }
 
@@ -1785,6 +1795,9 @@ class UrlbarInput {
         if (event.detail == 2 && UrlbarPrefs.get("doubleClickSelectsAll")) {
           this.editor.selectAll();
           event.preventDefault();
+        } else if (event.target.id == SEARCH_ICON_ID) {
+          this._preventClickSelectsAll = true;
+          this.search(UrlbarTokenizer.RESTRICT.SEARCH);
         } else if (this.openViewOnFocusForCurrentTab && !this.view.isOpen) {
           this.startQuery({
             allowAutofill: false,

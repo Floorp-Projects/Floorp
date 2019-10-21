@@ -1212,10 +1212,15 @@ PopupNotifications.prototype = {
     if (isNullOrHidden(anchorElement)) {
       anchorElement = this.window.document.getElementById("identity-icon");
 
-      // If the identity icon is not available in this window, or maybe the
-      // entire location bar is hidden for any reason, use the tab as the
-      // anchor. We only ever show notifications for the current browser, so we
-      // can just use the current tab.
+      if (isNullOrHidden(anchorElement)) {
+        anchorElement = this.window.document.getElementById(
+          "urlbar-search-icon"
+        );
+      }
+
+      // If the identity and search icons are not available in this window, use
+      // the tab as the anchor. We only ever show notifications for the current
+      // browser, so we can just use the current tab.
       if (isNullOrHidden(anchorElement)) {
         anchorElement = this.tabbrowser.selectedTab;
 

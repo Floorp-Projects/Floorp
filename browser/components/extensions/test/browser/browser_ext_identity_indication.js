@@ -3,14 +3,19 @@
 "use strict";
 
 function confirmDefaults() {
-  let identityIconURL = getComputedStyle(
-    document.getElementById("identity-icon")
-  ).listStyleImage;
-  is(
-    identityIconURL,
-    'url("chrome://browser/skin/search-glass.svg")',
-    "Identity icon should be the search icon"
-  );
+  if (gURLBar.megabar) {
+    is(
+      getComputedStyle(document.getElementById("identity-box")).display,
+      "none",
+      "Identity box should be hidden"
+    );
+  } else {
+    is(
+      getComputedStyle(document.getElementById("identity-icon")).listStyleImage,
+      'url("chrome://browser/skin/search-glass.svg")',
+      "Identity icon should be the search icon"
+    );
+  }
 
   let label = document.getElementById("identity-icon-label");
   ok(
@@ -20,18 +25,16 @@ function confirmDefaults() {
 }
 
 function confirmExtensionPage() {
-  let identityIcon = getComputedStyle(document.getElementById("identity-icon"))
-    .listStyleImage;
+  let identityIconEl = document.getElementById("identity-icon");
+
   is(
-    identityIcon,
+    getComputedStyle(identityIconEl).listStyleImage,
     'url("chrome://mozapps/skin/extensions/extensionGeneric-16.svg")',
     "Identity icon should be the default extension icon"
   );
 
-  let identityIconEl = document.getElementById("identity-icon");
-  let tooltip = identityIconEl.tooltipText;
   is(
-    tooltip,
+    identityIconEl.tooltipText,
     "Loaded by extension: Test Extension",
     "The correct tooltip should be used"
   );

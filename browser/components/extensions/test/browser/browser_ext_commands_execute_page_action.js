@@ -67,6 +67,11 @@ add_task(async function test_execute_page_action_without_popup() {
 });
 
 add_task(async function test_execute_page_action_with_popup() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    window.gBrowser,
+    "http://example.com/"
+  );
+
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       commands: {
@@ -144,6 +149,7 @@ add_task(async function test_execute_page_action_with_popup() {
   await extension.startup();
   await extension.awaitFinish("page-action-with-popup");
   await extension.unload();
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_execute_page_action_with_matching() {
