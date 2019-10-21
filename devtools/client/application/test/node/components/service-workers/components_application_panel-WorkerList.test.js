@@ -11,7 +11,7 @@ const { createFactory } = require("react");
 const {
   SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
   MULTIPLE_WORKER_LIST,
-} = require("devtools/client/application/test/components/fixtures/data/constants");
+} = require("devtools/client/application/test/node/fixtures/data/constants");
 
 const WorkerList = createFactory(
   require("devtools/client/application/src/components/service-workers/WorkerList")
