@@ -22,7 +22,7 @@ namespace mozilla {
 class FakeSpeechRecognitionService : public nsISpeechRecognitionService,
                                      public nsIObserver {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISPEECHRECOGNITIONSERVICE
   NS_DECL_NSIOBSERVER
 

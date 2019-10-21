@@ -19,7 +19,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
-
+#include "mozilla/AbstractThread.h"
+#include "VideoUtils.h"
 #include "AudioSegment.h"
 #include "MediaEnginePrefs.h"
 #include "endpointer.h"
@@ -46,17 +47,17 @@ namespace mozilla {
 namespace dom {
 
 #define PREFERENCE_DEFAULT_RECOGNITION_SERVICE "media.webspeech.service.default"
-#define DEFAULT_RECOGNITION_SERVICE_PREFIX "pocketsphinx-"
-#define DEFAULT_RECOGNITION_SERVICE "pocketsphinx-en-US"
+#define DEFAULT_RECOGNITION_SERVICE "online"
 
 #define PREFERENCE_ENDPOINTER_SILENCE_LENGTH "media.webspeech.silence_length"
 #define PREFERENCE_ENDPOINTER_LONG_SILENCE_LENGTH \
   "media.webspeech.long_silence_length"
 #define PREFERENCE_ENDPOINTER_LONG_SPEECH_LENGTH \
   "media.webspeech.long_speech_length"
+#define PREFERENCE_SPEECH_DETECTION_TIMEOUT_MS \
+  "media.webspeech.recognition.timeout"
 
 static const uint32_t kSAMPLE_RATE = 16000;
-static const uint32_t kSPEECH_DETECTION_TIMEOUT_MS = 10000;
 
 // number of frames corresponding to 300ms of audio to send to endpointer while
 // it's in environment estimation mode
@@ -70,19 +71,39 @@ LogModule* GetSpeechRecognitionLog() {
 #define SR_LOG(...) \
   MOZ_LOG(GetSpeechRecognitionLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService(
-    const nsAString& aLang) {
+namespace {
+class SpeechRecognitionShutdownBlocker : public media::ShutdownBlocker {
+ public:
+  SpeechRecognitionShutdownBlocker(SpeechRecognition* aRecognition,
+                                   const nsString& aName)
+      : media::ShutdownBlocker(aName), mRecognition(aRecognition) {}
+
+  NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient*) override {
+    MOZ_ASSERT(NS_IsMainThread());
+    // AbortSilently will eventually clear the blocker.
+    mRecognition->Abort();
+    return NS_OK;
+  }
+
+ private:
+  const RefPtr<SpeechRecognition> mRecognition;
+};
+
+enum class ServiceCreationError {
+  ServiceNotFound,
+};
+
+Result<nsCOMPtr<nsISpeechRecognitionService>, ServiceCreationError>
+CreateSpeechRecognitionService(nsPIDOMWindowInner* aWindow,
+                               SpeechRecognition* aRecognition,
+                               const nsAString& aLang) {
   nsAutoCString speechRecognitionServiceCID;
 
   nsAutoCString prefValue;
   Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE, prefValue);
   nsAutoCString speechRecognitionService;
 
-  if (!aLang.IsEmpty()) {
-    speechRecognitionService =
-        NS_LITERAL_CSTRING(DEFAULT_RECOGNITION_SERVICE_PREFIX) +
-        NS_ConvertUTF16toUTF8(aLang);
-  } else if (!prefValue.IsEmpty()) {
+  if (!prefValue.IsEmpty()) {
     speechRecognitionService = prefValue;
   } else {
     speechRecognitionService = DEFAULT_RECOGNITION_SERVICE;
@@ -99,27 +120,15 @@ already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService(
 
   nsresult rv;
   nsCOMPtr<nsISpeechRecognitionService> recognitionService;
-  recognitionService = do_GetService(speechRecognitionServiceCID.get(), &rv);
-  return recognitionService.forget();
-}
-
-class SpeechRecognitionShutdownBlocker : public media::ShutdownBlocker {
- public:
-  explicit SpeechRecognitionShutdownBlocker(SpeechRecognition* aRecognition)
-      : media::ShutdownBlocker(NS_LITERAL_STRING("SpeechRecognition shutdown")),
-        mRecognition(aRecognition) {}
-
-  NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient*) override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // AbortSilently will eventually clear the blocker.
-    mRecognition->Abort();
-    return NS_OK;
+  recognitionService =
+      do_CreateInstance(speechRecognitionServiceCID.get(), &rv);
+  if (!recognitionService) {
+    return Err(ServiceCreationError::ServiceNotFound);
   }
 
- private:
-  const RefPtr<SpeechRecognition> mRecognition;
-};
+  return recognitionService;
+}
+}  // namespace
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SpeechRecognition, DOMEventTargetHelper,
                                    mStream, mTrack, mRecognitionService,
@@ -137,7 +146,8 @@ SpeechRecognition::SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow)
       mEndpointer(kSAMPLE_RATE),
       mAudioSamplesPerChunk(mEndpointer.FrameSize()),
       mSpeechDetectionTimer(NS_NewTimer()),
-      mSpeechGrammarList(new SpeechGrammarList(GetParentObject())),
+      mSpeechGrammarList(new SpeechGrammarList(GetOwner())),
+      mContinuous(false),
       mInterimResults(false),
       mMaxAlternatives(1) {
   SR_LOG("created SpeechRecognition");
@@ -154,6 +164,10 @@ SpeechRecognition::SpeechRecognition(nsPIDOMWindowInner* aOwnerWindow)
       Preferences::GetInt(PREFERENCE_ENDPOINTER_LONG_SILENCE_LENGTH, 2500000));
   mEndpointer.set_long_speech_length(
       Preferences::GetInt(PREFERENCE_ENDPOINTER_SILENCE_LENGTH, 3 * 1000000));
+
+  mSpeechDetectionTimeoutMs =
+      Preferences::GetInt(PREFERENCE_SPEECH_DETECTION_TIMEOUT_MS, 10000);
+
   Reset();
 }
 
@@ -211,8 +225,6 @@ already_AddRefed<SpeechRecognition> SpeechRecognition::Constructor(
   return object.forget();
 }
 
-nsISupports* SpeechRecognition::GetParentObject() const { return GetOwner(); }
-
 void SpeechRecognition::ProcessEvent(SpeechEvent* aEvent) {
   SR_LOG("Processing %s, current state is %s", GetName(aEvent),
          GetName(mCurrentState));
@@ -245,8 +257,8 @@ void SpeechRecognition::Transition(SpeechEvent* aEvent) {
         case EVENT_RECOGNITIONSERVICE_ERROR:
           AbortError(aEvent);
           break;
-        case EVENT_COUNT:
-          MOZ_CRASH("Invalid event EVENT_COUNT");
+        default:
+          MOZ_CRASH("Invalid event");
       }
       break;
     case STATE_STARTING:
@@ -262,7 +274,7 @@ void SpeechRecognition::Transition(SpeechEvent* aEvent) {
           AbortSilently(aEvent);
           break;
         case EVENT_STOP:
-          Reset();
+          ResetAndEnd();
           break;
         case EVENT_RECOGNITIONSERVICE_INTERMEDIATE_RESULT:
         case EVENT_RECOGNITIONSERVICE_FINAL_RESULT:
@@ -271,8 +283,8 @@ void SpeechRecognition::Transition(SpeechEvent* aEvent) {
         case EVENT_START:
           SR_LOG("STATE_STARTING: Unhandled event %s", GetName(aEvent));
           MOZ_CRASH();
-        case EVENT_COUNT:
-          MOZ_CRASH("Invalid event EVENT_COUNT");
+        default:
+          MOZ_CRASH("Invalid event");
       }
       break;
     case STATE_ESTIMATING:
@@ -297,8 +309,8 @@ void SpeechRecognition::Transition(SpeechEvent* aEvent) {
         case EVENT_START:
           SR_LOG("STATE_ESTIMATING: Unhandled event %d", aEvent->mType);
           MOZ_CRASH();
-        case EVENT_COUNT:
-          MOZ_CRASH("Invalid event EVENT_COUNT");
+        default:
+          MOZ_CRASH("Invalid event");
       }
       break;
     case STATE_WAITING_FOR_SPEECH:
@@ -323,8 +335,8 @@ void SpeechRecognition::Transition(SpeechEvent* aEvent) {
         case EVENT_START:
           SR_LOG("STATE_STARTING: Unhandled event %s", GetName(aEvent));
           MOZ_CRASH();
-        case EVENT_COUNT:
-          MOZ_CRASH("Invalid event EVENT_COUNT");
+        default:
+          MOZ_CRASH("Invalid event");
       }
       break;
     case STATE_RECOGNIZING:
@@ -349,8 +361,8 @@ void SpeechRecognition::Transition(SpeechEvent* aEvent) {
         case EVENT_START:
           SR_LOG("STATE_RECOGNIZING: Unhandled aEvent %s", GetName(aEvent));
           MOZ_CRASH();
-        case EVENT_COUNT:
-          MOZ_CRASH("Invalid event EVENT_COUNT");
+        default:
+          MOZ_CRASH("Invalid event");
       }
       break;
     case STATE_WAITING_FOR_RESULT:
@@ -376,12 +388,30 @@ void SpeechRecognition::Transition(SpeechEvent* aEvent) {
           SR_LOG("STATE_WAITING_FOR_RESULT: Unhandled aEvent %s",
                  GetName(aEvent));
           MOZ_CRASH();
-        case EVENT_COUNT:
-          MOZ_CRASH("Invalid event EVENT_COUNT");
+        default:
+          MOZ_CRASH("Invalid event");
       }
       break;
-    case STATE_COUNT:
-      MOZ_CRASH("Invalid state STATE_COUNT");
+    case STATE_ABORTING:
+      switch (aEvent->mType) {
+        case EVENT_STOP:
+        case EVENT_ABORT:
+        case EVENT_AUDIO_DATA:
+        case EVENT_AUDIO_ERROR:
+        case EVENT_RECOGNITIONSERVICE_INTERMEDIATE_RESULT:
+        case EVENT_RECOGNITIONSERVICE_FINAL_RESULT:
+        case EVENT_RECOGNITIONSERVICE_ERROR:
+          DoNothing(aEvent);
+          break;
+        case EVENT_START:
+          SR_LOG("STATE_ABORTING: Unhandled aEvent %s", GetName(aEvent));
+          MOZ_CRASH();
+        default:
+          MOZ_CRASH("Invalid event");
+      }
+      break;
+    default:
+      MOZ_CRASH("Invalid state");
   }
 }
 
@@ -400,7 +430,17 @@ uint32_t SpeechRecognition::ProcessAudioSegment(AudioSegment* aSegment,
     iterator.Next();
   }
 
-  mRecognitionService->ProcessAudioSegment(aSegment, aTrackRate);
+  // we need to call the nsISpeechRecognitionService::ProcessAudioSegment
+  // in a separate thread so that any eventual encoding or pre-processing
+  // of the audio does not block the main thread
+  nsresult rv = mEncodeTaskQueue->Dispatch(
+      NewRunnableMethod<StoreCopyPassByPtr<AudioSegment>, TrackRate>(
+          "nsISpeechRecognitionService::ProcessAudioSegment",
+          mRecognitionService,
+          &nsISpeechRecognitionService::ProcessAudioSegment,
+          std::move(*aSegment), aTrackRate));
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
   return samples;
 }
 
@@ -421,7 +461,19 @@ uint32_t SpeechRecognition::ProcessAudioSegment(AudioSegment* aSegment,
 
 void SpeechRecognition::Reset() {
   SetState(STATE_IDLE);
+
+  // This breaks potential ref-cycles.
   mRecognitionService = nullptr;
+
+  ++mStreamGeneration;
+  if (mStream) {
+    mStream->UnregisterTrackListener(this);
+    mStream = nullptr;
+  }
+  mTrack = nullptr;
+  mTrackIsOwned = false;
+  mStopRecordingPromise = nullptr;
+  mEncodeTaskQueue = nullptr;
   mEstimationSamples = 0;
   mBufferedSamples = 0;
   mSpeechDetectionTimer->Cancel();
@@ -454,7 +506,12 @@ void SpeechRecognition::StopRecordingAndRecognize(SpeechEvent* aEvent) {
   SetState(STATE_WAITING_FOR_RESULT);
 
   MOZ_ASSERT(mRecognitionService, "Service deleted before recording done");
-  mRecognitionService->SoundEnd();
+
+  // This will run SoundEnd on the service just before StopRecording begins
+  // shutting the encode thread down.
+  mSpeechListener->mRemovedPromise->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [service = mRecognitionService] { service->SoundEnd(); });
 
   StopRecording();
 }
@@ -518,14 +575,23 @@ void SpeechRecognition::DoNothing(SpeechEvent* aEvent) {}
 
 void SpeechRecognition::AbortSilently(SpeechEvent* aEvent) {
   if (mRecognitionService) {
-    mRecognitionService->Abort();
+    if (mTrack) {
+      // This will run Abort on the service just before StopRecording begins
+      // shutting the encode thread down.
+      mSpeechListener->mRemovedPromise->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [service = mRecognitionService] { service->Abort(); });
+    } else {
+      // Recording hasn't started yet. We can just call Abort().
+      mRecognitionService->Abort();
+    }
   }
 
-  if (mTrack) {
-    StopRecording();
-  }
+  StopRecording()->Then(
+      GetCurrentThreadSerialEventTarget(), __func__,
+      [self = RefPtr<SpeechRecognition>(this), this] { ResetAndEnd(); });
 
-  ResetAndEnd();
+  SetState(STATE_ABORTING);
 }
 
 void SpeechRecognition::AbortError(SpeechEvent* aEvent) {
@@ -544,54 +610,83 @@ void SpeechRecognition::NotifyError(SpeechEvent* aEvent) {
  **************************************/
 NS_IMETHODIMP
 SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
-  // hold a reference so that the underlying track
-  // doesn't get Destroy()'ed
+  // hold a reference so that the underlying track doesn't get collected.
   mTrack = aTrack;
+  MOZ_ASSERT(!mTrack->Ended());
 
-  if (NS_WARN_IF(mTrack->Ended())) {
-    return NS_ERROR_UNEXPECTED;
-  }
   mSpeechListener = new SpeechTrackListener(this);
   mTrack->AddListener(mSpeechListener);
 
-  mShutdownBlocker = MakeAndAddRef<SpeechRecognitionShutdownBlocker>(this);
+  nsString blockerName;
+  blockerName.AppendPrintf("SpeechRecognition %p shutdown", this);
+  mShutdownBlocker =
+      MakeAndAddRef<SpeechRecognitionShutdownBlocker>(this, blockerName);
   RefPtr<nsIAsyncShutdownClient> shutdown = media::GetShutdownBarrier();
   shutdown->AddBlocker(mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
                        NS_LITERAL_STRING("SpeechRecognition shutdown"));
 
   mEndpointer.StartSession();
 
-  return mSpeechDetectionTimer->Init(this, kSPEECH_DETECTION_TIMEOUT_MS,
+  return mSpeechDetectionTimer->Init(this, mSpeechDetectionTimeoutMs,
                                      nsITimer::TYPE_ONE_SHOT);
 }
 
-NS_IMETHODIMP
-SpeechRecognition::StopRecording() {
-  if (mShutdownBlocker) {
-    // Block shutdown until the speech track listener has been removed from the
-    // MTG, as it holds a reference to us, and we reference the world, which we
-    // don't want to leak.
-    mSpeechListener->mRemovedPromise->Then(
-        GetCurrentThreadSerialEventTarget(), __func__,
-        [blocker = std::move(mShutdownBlocker)] {
-          RefPtr<nsIAsyncShutdownClient> shutdown = media::GetShutdownBarrier();
-          nsresult rv = shutdown->RemoveBlocker(blocker);
-          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-          Unused << rv;
-        });
+RefPtr<GenericNonExclusivePromise> SpeechRecognition::StopRecording() {
+  if (!mTrack) {
+    // Recording wasn't started, or has already been stopped.
+    if (mStream) {
+      // Ensure we don't start recording because a track became available
+      // before we get reset.
+      mStream->UnregisterTrackListener(this);
+    }
+    return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
   }
-  MOZ_ASSERT(!mShutdownBlocker);
 
-  mStream->UnregisterTrackListener(this);
+  if (mStopRecordingPromise) {
+    return mStopRecordingPromise;
+  }
+
   mTrack->RemoveListener(mSpeechListener);
-  mStream = nullptr;
-  mSpeechListener = nullptr;
-  mTrack = nullptr;
+  if (mTrackIsOwned) {
+    mTrack->Stop();
+  }
 
   mEndpointer.EndSession();
   DispatchTrustedEvent(NS_LITERAL_STRING("audioend"));
 
-  return NS_OK;
+  // Block shutdown until the speech track listener has been removed from the
+  // MSG, as it holds a reference to us, and we reference the world, which we
+  // don't want to leak.
+  mStopRecordingPromise =
+      mSpeechListener->mRemovedPromise
+          ->Then(
+              GetCurrentThreadSerialEventTarget(), __func__,
+              [self = RefPtr<SpeechRecognition>(this), this] {
+                SR_LOG("Shutting down encoding thread");
+                return mEncodeTaskQueue->BeginShutdown();
+              },
+              [] {
+                MOZ_CRASH("Unexpected rejection");
+                return ShutdownPromise::CreateAndResolve(false, __func__);
+              })
+          ->Then(
+              GetCurrentThreadSerialEventTarget(), __func__,
+              [self = RefPtr<SpeechRecognition>(this), this] {
+                RefPtr<nsIAsyncShutdownClient> shutdown =
+                    media::GetShutdownBarrier();
+                shutdown->RemoveBlocker(mShutdownBlocker);
+                mShutdownBlocker = nullptr;
+
+                MOZ_DIAGNOSTIC_ASSERT(mCurrentState != STATE_IDLE);
+                return GenericNonExclusivePromise::CreateAndResolve(true,
+                                                                    __func__);
+              },
+              [] {
+                MOZ_CRASH("Unexpected rejection");
+                return GenericNonExclusivePromise::CreateAndResolve(false,
+                                                                    __func__);
+              });
+  return mStopRecordingPromise;
 }
 
 NS_IMETHODIMP
@@ -648,12 +743,11 @@ void SpeechRecognition::GetLang(nsString& aRetVal) const { aRetVal = mLang; }
 void SpeechRecognition::SetLang(const nsAString& aArg) { mLang = aArg; }
 
 bool SpeechRecognition::GetContinuous(ErrorResult& aRv) const {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return false;
+  return mContinuous;
 }
 
 void SpeechRecognition::SetContinuous(bool aArg, ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  mContinuous = aArg;
 }
 
 bool SpeechRecognition::InterimResults() const { return mInterimResults; }
@@ -690,6 +784,10 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
     return;
   }
 
+  mEncodeTaskQueue = MakeAndAddRef<TaskQueue>(
+      GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+      "WebSpeechEncoderThread");
+
   nsresult rv;
   rv = mRecognitionService->Initialize(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -701,6 +799,7 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
 
   if (aStream.WasPassed()) {
     mStream = &aStream.Value();
+    mTrackIsOwned = false;
     mStream->RegisterTrackListener(this);
     nsTArray<RefPtr<AudioStreamTrack>> tracks;
     mStream->GetAudioTracks(tracks);
@@ -711,24 +810,40 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
       }
     }
   } else {
+    mTrackIsOwned = true;
     AutoNoJSAPI nojsapi;
     RefPtr<SpeechRecognition> self(this);
     MediaManager::Get()
         ->GetUserMedia(GetOwner(), constraints, aCallerType)
         ->Then(
             GetCurrentThreadSerialEventTarget(), __func__,
-            [this, self](RefPtr<DOMMediaStream>&& aStream) {
+            [this, self,
+             generation = mStreamGeneration](RefPtr<DOMMediaStream>&& aStream) {
+              nsTArray<RefPtr<AudioStreamTrack>> tracks;
+              aStream->GetAudioTracks(tracks);
+              if (mAborted || mCurrentState != STATE_STARTING ||
+                  mStreamGeneration != generation) {
+                // We were probably aborted. Exit early.
+                for (const RefPtr<AudioStreamTrack>& track : tracks) {
+                  track->Stop();
+                }
+                return;
+              }
               mStream = std::move(aStream);
               mStream->RegisterTrackListener(this);
-              nsTArray<RefPtr<AudioStreamTrack>> tracks;
-              mStream->GetAudioTracks(tracks);
               for (const RefPtr<AudioStreamTrack>& track : tracks) {
                 if (!track->Ended()) {
                   NotifyTrackAdded(track);
                 }
               }
             },
-            [this, self](RefPtr<MediaMgrError>&& error) {
+            [this, self,
+             generation = mStreamGeneration](RefPtr<MediaMgrError>&& error) {
+              if (mAborted || mCurrentState != STATE_STARTING ||
+                  mStreamGeneration != generation) {
+                // We were probably aborted. Exit early.
+                return;
+              }
               SpeechRecognitionErrorCode errorCode;
 
               if (error->mName == MediaMgrError::Name::NotAllowedError) {
@@ -746,44 +861,47 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
 }
 
 bool SpeechRecognition::SetRecognitionService(ErrorResult& aRv) {
+  if (!GetOwner()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
+  }
+
   // See:
   // https://dvcs.w3.org/hg/speech-api/raw-file/tip/webspeechapi.html#dfn-lang
+  nsAutoString lang;
   if (!mLang.IsEmpty()) {
-    mRecognitionService = GetSpeechRecognitionService(mLang);
-
-    if (!mRecognitionService) {
+    lang = mLang;
+  } else {
+    nsCOMPtr<Document> document = GetOwner()->GetExtantDoc();
+    if (!document) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+      return false;
+    }
+    nsCOMPtr<Element> element = document->GetRootElement();
+    if (!element) {
       aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return false;
     }
 
-    return true;
+    nsAutoString lang;
+    element->GetLang(lang);
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-  if (!window) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return false;
-  }
-  nsCOMPtr<Document> document = window->GetExtantDoc();
-  if (!document) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return false;
-  }
-  nsCOMPtr<Element> element = document->GetRootElement();
-  if (!element) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return false;
-  }
+  auto result = CreateSpeechRecognitionService(GetOwner(), this, lang);
 
-  nsAutoString lang;
-  element->GetLang(lang);
-  mRecognitionService = GetSpeechRecognitionService(lang);
-
-  if (!mRecognitionService) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (result.isErr()) {
+    switch (result.unwrapErr()) {
+      case ServiceCreationError::ServiceNotFound:
+        aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+        break;
+      default:
+        MOZ_CRASH("Unknown error");
+    }
     return false;
   }
 
+  mRecognitionService = result.unwrap();
+  MOZ_DIAGNOSTIC_ASSERT(mRecognitionService);
   return true;
 }
 
@@ -794,11 +912,6 @@ bool SpeechRecognition::ValidateAndSetGrammarList(ErrorResult& aRv) {
   }
 
   uint32_t grammarListLength = mSpeechGrammarList->Length();
-  if (0 == grammarListLength) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return false;
-  }
-
   for (uint32_t count = 0; count < grammarListLength; ++count) {
     RefPtr<SpeechGrammar> speechGrammar = mSpeechGrammarList->Item(count, aRv);
     if (aRv.Failed()) {
@@ -825,6 +938,7 @@ void SpeechRecognition::Abort() {
   }
 
   mAborted = true;
+
   RefPtr<SpeechEvent> event = new SpeechEvent(this, EVENT_ABORT);
   NS_DispatchToMainThread(event);
 }
@@ -874,14 +988,13 @@ void SpeechRecognition::DispatchError(EventType aErrorType,
 uint32_t SpeechRecognition::FillSamplesBuffer(const int16_t* aSamples,
                                               uint32_t aSampleCount) {
   MOZ_ASSERT(mBufferedSamples < mAudioSamplesPerChunk);
-  MOZ_ASSERT(mAudioSamplesBuffer.get());
+  MOZ_ASSERT(mAudioSamplesBuffer);
 
   int16_t* samplesBuffer = static_cast<int16_t*>(mAudioSamplesBuffer->Data());
   size_t samplesToCopy =
       std::min(aSampleCount, mAudioSamplesPerChunk - mBufferedSamples);
 
-  memcpy(samplesBuffer + mBufferedSamples, aSamples,
-         samplesToCopy * sizeof(int16_t));
+  PodCopy(samplesBuffer + mBufferedSamples, aSamples, samplesToCopy);
 
   mBufferedSamples += samplesToCopy;
   return samplesToCopy;
@@ -903,8 +1016,8 @@ uint32_t SpeechRecognition::SplitSamplesBuffer(
     RefPtr<SharedBuffer> chunk =
         SharedBuffer::Create(mAudioSamplesPerChunk * sizeof(int16_t));
 
-    memcpy(chunk->Data(), aSamplesBuffer + chunkStart,
-           mAudioSamplesPerChunk * sizeof(int16_t));
+    PodCopy(static_cast<short*>(chunk->Data()), aSamplesBuffer + chunkStart,
+            mAudioSamplesPerChunk);
 
     aResult.AppendElement(chunk.forget());
     chunkStart += mAudioSamplesPerChunk;
@@ -987,6 +1100,7 @@ const char* SpeechRecognition::GetName(FSMState aId) {
       "STATE_IDLE",        "STATE_STARTING",
       "STATE_ESTIMATING",  "STATE_WAITING_FOR_SPEECH",
       "STATE_RECOGNIZING", "STATE_WAITING_FOR_RESULT",
+      "STATE_ABORTING",
   };
 
   MOZ_ASSERT(aId < STATE_COUNT);
@@ -1007,6 +1121,11 @@ const char* SpeechRecognition::GetName(SpeechEvent* aEvent) {
   MOZ_ASSERT(aEvent->mType < EVENT_COUNT);
   MOZ_ASSERT(ArrayLength(names) == EVENT_COUNT);
   return names[aEvent->mType];
+}
+
+TaskQueue* SpeechRecognition::GetTaskQueueForEncoding() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  return mEncodeTaskQueue;
 }
 
 SpeechEvent::SpeechEvent(SpeechRecognition* aRecognition,

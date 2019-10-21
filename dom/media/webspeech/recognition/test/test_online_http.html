@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1248897
+The intent of this file is to test a successfull speech recognition request and
+that audio is being properly encoded
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1248897 -- Online speech service</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1248897">Mozilla Bug 1248897</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  async function validateRawAudio(buffer) {
+    const ac = new AudioContext();
+    const decodedData = await ac.decodeAudioData(buffer);
+    const source = ac.createBufferSource();
+    source.buffer = decodedData;
+    source.loop = true;
+    const analyser = ac.createAnalyser();
+    analyser.smoothingTimeConstant = 0.2;
+    analyser.fftSize = 1024;
+    source.connect(analyser);
+    const binIndexForFrequency = frequency =>
+      1 + Math.round(frequency * analyser.fftSize / ac.sampleRate);
+    source.start();
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    const start = performance.now();
+    while (true) {
+      if (performance.now() - start > 10000) {
+        return false;
+        break;
+      }
+      analyser.getByteFrequencyData(data);
+      if (data[binIndexForFrequency(200)] < 50 &&
+          data[binIndexForFrequency(440)] > 180 &&
+          data[binIndexForFrequency(1000)] < 50) {
+        return true;
+        break;
+      }
+      await new Promise(r => requestAnimationFrame(r));
+    }
+  }
+
+  async function verifyEncodedAudio(requestUrl) {
+    try {
+      const response = await fetch(requestUrl);
+      const buffer = await response.arrayBuffer();
+      ok(await validateRawAudio(buffer), "Audio encoding is valid");
+    } catch(e) {
+      ok(false, e);
+    } finally {
+      SimpleTest.finish();
+    }
+  }
+
+  performTest({
+    eventsToRequest: {},
+    expectedEvents: {
+      "start": null,
+      "audiostart": null,
+      "audioend": null,
+      "end": null,
+      "result": () => verifyEncodedAudio("http_requesthandler.sjs?save"),
+      "speechstart": null,
+      "speechend": null
+    },
+    audioSampleFile: "sinoid+hello.ogg",
+    prefs: [["media.webspeech.recognition.enable", true],
+            ["media.webspeech.recognition.force_enable", true],
+            ["media.webspeech.service.endpoint",
+              "http://mochi.test:8888/tests/dom/media/webspeech/recognition/test/http_requesthandler.sjs"],
+            ["media.webspeech.recognition.timeout", 100000]]
+  });
+</script>
+</pre>
+</body>
+</html>

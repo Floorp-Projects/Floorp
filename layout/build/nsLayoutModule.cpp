@@ -47,6 +47,7 @@
 
 #ifdef MOZ_WEBSPEECH
 #  include "mozilla/dom/nsSynthVoiceRegistry.h"
+#  include "mozilla/dom/OnlineSpeechRecognitionService.h"
 #endif
 
 #include "mozilla/dom/PushNotifier.h"
