@@ -170,3 +170,10 @@ def with_imports(value):
         return hasattr(os.path, 'getatime')
 
 set_config('HAS_GETATIME2', with_imports)
+
+# This option should be attributed to this file in the --help output even though
+# included.configure is the actual file that defines the option.
+indirectly_define_option('--indirect-option', help='Indirectly defined option')
+@depends('--indirect-option')
+def indirect_option(option):
+    return option
