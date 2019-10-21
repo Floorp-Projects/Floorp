@@ -19,7 +19,6 @@ from functools import wraps
 from mozbuild.configure.options import (
     CommandLineHelper,
     ConflictingOptionError,
-    HELP_OPTIONS_CATEGORY,
     InvalidOptionError,
     Option,
     OptionValue,
@@ -344,9 +343,6 @@ class ConfigureSandbox(dict):
         assert isinstance(config, dict)
         self._config = config
 
-        # Tracks how many templates "deep" we are in the stack.
-        self._template_depth = 0
-
         logging.addLevelName(TRACE, 'TRACE')
         if logger is None:
             logger = moz_logger = logging.getLogger('moz.configure')
@@ -392,8 +388,8 @@ class ConfigureSandbox(dict):
         self.log_impl = ReadOnlyNamespace(**log_namespace)
 
         self._help = None
-        self._help_option = self.option_impl(
-            '--help', help='print this message', category=HELP_OPTIONS_CATEGORY)
+        self._help_option = self.option_impl('--help',
+                                             help='print this message')
         self._seen.add(self._help_option)
 
         self._always = DependsFunction(self, lambda: True, [])
@@ -680,12 +676,6 @@ class ConfigureSandbox(dict):
         args = [self._resolve(arg) for arg in args]
         kwargs = {k: self._resolve(v) for k, v in six.iteritems(kwargs)
                   if k != 'when'}
-        # The Option constructor needs to look up the stack to infer a category
-        # for the Option, since the category is based on the filename where the
-        # Option is defined. However, if the Option is defined in a template, we
-        # want the category to reference the caller of the template rather than
-        # the caller of the option() function.
-        kwargs['define_depth'] = self._template_depth * 3
         option = Option(*args, **kwargs)
         if when:
             self._conditions[option] = when
@@ -808,9 +798,7 @@ class ConfigureSandbox(dict):
                 args = [maybe_prepare_function(arg) for arg in args]
                 kwargs = {k: maybe_prepare_function(v)
                           for k, v in kwargs.items()}
-                self._template_depth += 1
                 ret = template(*args, **kwargs)
-                self._template_depth -= 1
                 if isfunction(ret):
                     # We can't expect the sandboxed code to think about all the
                     # details of implementing decorators, so do some of the

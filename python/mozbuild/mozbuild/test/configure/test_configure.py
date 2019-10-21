@@ -42,7 +42,7 @@ class TestConfigure(unittest.TestCase):
         sandbox.run(mozpath.join(test_data_path, configure))
 
         if '--help' in options:
-            return out.getvalue().decode('utf-8'), config
+            return out.getvalue(), config
         self.assertEquals('', out.getvalue())
         return config
 
@@ -77,30 +77,24 @@ class TestConfigure(unittest.TestCase):
             'Usage: configure [options]\n'
             '\n'
             'Options: [defaults in brackets after descriptions]\n'
-            '  Help options:\n'
-            '    --help                    print this message\n'
-            '\n'
-            '  Options from python/mozbuild/mozbuild/test/configure/data/included.configure:\n'
-            '    --enable-imports-in-template\n                              Imports in template\n'
-            '\n'
-            '  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:\n'
-            '    --enable-include          Include\n'
-            '    --enable-simple           Enable simple\n'
-            '    --enable-values           Enable values\n'
-            '    --enable-with-env         Enable with env\n'
-            '    --indirect-option         Indirectly defined option\n'
-            '    --option                  Option\n'
-            '    --returned-choices        Choices\n'
-            '    --with-imports            Imports\n'
-            '    --with-returned-default   Returned default [not-simple]\n'
-            '    --with-stuff              Build with stuff\n'
-            '    --without-thing           Build without thing\n'
-            '\n'
+            '  --help                    print this message\n'
+            '  --enable-simple           Enable simple\n'
+            '  --enable-with-env         Enable with env\n'
+            '  --enable-values           Enable values\n'
+            '  --without-thing           Build without thing\n'
+            '  --with-stuff              Build with stuff\n'
+            '  --option                  Option\n'
+            '  --with-returned-default   Returned default [not-simple]\n'
+            '  --returned-choices        Choices\n'
+            '  --enable-imports-in-template\n'
+            '                            Imports in template\n'
+            '  --enable-include          Include\n'
+            '  --with-imports            Imports\n'
             '\n'
             'Environment variables:\n'
-            '  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:\n'
-            '    CC                        C Compiler\n'
-            '\n', help)
+            '  CC                        C Compiler\n',
+            help
+        )
 
     def test_unknown(self):
         with self.assertRaises(InvalidOptionError):
@@ -1013,12 +1007,8 @@ class TestConfigure(unittest.TestCase):
                 Usage: configure [options]
 
                 Options: [defaults in brackets after descriptions]
-                  Help options:
-                    --help                    print this message
-
-                  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:
-                    --with-foo                foo
-
+                  --help                    print this message
+                  --with-foo                foo
 
                 Environment variables:
             '''))
@@ -1028,13 +1018,9 @@ class TestConfigure(unittest.TestCase):
                 Usage: configure [options]
 
                 Options: [defaults in brackets after descriptions]
-                  Help options:
-                    --help                    print this message
-
-                  Options from python/mozbuild/mozbuild/test/configure/data/moz.configure:
-                    --with-foo                foo
-                    --with-qux                qux
-
+                  --help                    print this message
+                  --with-foo                foo
+                  --with-qux                qux
 
                 Environment variables:
             '''))
