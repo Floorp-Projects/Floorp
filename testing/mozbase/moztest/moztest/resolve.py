@@ -601,20 +601,17 @@ class TestMetadata(MozbuildObject):
 class TestResolver(MozbuildObject):
     """Helper to resolve tests from the current environment to test files."""
 
+    test_rewrites = {
+        'a11y': '_tests/testing/mochitest/a11y',
+        'browser-chrome': '_tests/testing/mochitest/browser',
+        'chrome': '_tests/testing/mochitest/chrome',
+        'mochitest': '_tests/testing/mochitest/tests',
+        'xpcshell': '_tests/xpcshell',
+    }
+
     def __init__(self, *args, **kwargs):
         MozbuildObject.__init__(self, *args, **kwargs)
         self._tests = self._spawn(TestMetadata)
-        self._test_rewrites = {
-            'a11y': os.path.join(self.topobjdir, '_tests', 'testing',
-                                 'mochitest', 'a11y'),
-            'browser-chrome': os.path.join(self.topobjdir, '_tests', 'testing',
-                                           'mochitest', 'browser'),
-            'chrome': os.path.join(self.topobjdir, '_tests', 'testing',
-                                   'mochitest', 'chrome'),
-            'mochitest': os.path.join(self.topobjdir, '_tests', 'testing',
-                                      'mochitest', 'tests'),
-            'xpcshell': os.path.join(self.topobjdir, '_tests', 'xpcshell'),
-        }
         self.verbose = False
 
     def resolve_tests(self, cwd=None, **kwargs):
@@ -652,9 +649,10 @@ class TestResolver(MozbuildObject):
             result = self._tests.resolve_tests(**kwargs)
 
         for test in result:
-            rewrite_base = self._test_rewrites.get(test['flavor'], None)
+            rewrite_base = self.test_rewrites.get(test['flavor'], None)
 
             if rewrite_base:
+                rewrite_base = os.path.join(self.topobjdir, os.path.normpath(rewrite_base))
                 yield rewrite_test_base(test, rewrite_base,
                                         honor_install_to_subdir=True)
             else:
