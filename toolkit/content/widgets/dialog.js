@@ -18,6 +18,8 @@
     constructor() {
       super();
 
+      this.attachShadow({ mode: "open" });
+
       this.addEventListener(
         "keypress",
         event => {
@@ -52,23 +54,8 @@
           true
         );
       } else {
-        this.addEventListener(
-          "focus",
-          event => {
-            let btn = this.getButton(this.defaultButton);
-            if (btn) {
-              btn.setAttribute(
-                "default",
-                event.originalTarget == btn ||
-                  !(
-                    event.originalTarget.localName == "button" ||
-                    event.originalTarget.localName == "toolbarbutton"
-                  )
-              );
-            }
-          },
-          true
-        );
+        this.addEventListener("focus", this, true);
+        this.shadowRoot.addEventListener("focus", this, true);
       }
 
       // listen for when window is closed via native close buttons
@@ -80,8 +67,6 @@
 
       // for things that we need to initialize after onload fires
       window.addEventListener("load", event => this.postLoadInit(event));
-
-      this.attachShadow({ mode: "open" });
     }
 
     static get observedAttributes() {
@@ -556,6 +541,20 @@
       var btn = this.getButton(this.defaultButton);
       if (btn) {
         this._doButtonCommand(this.defaultButton);
+      }
+    }
+
+    on_focus(event) {
+      let btn = this.getButton(this.defaultButton);
+      if (btn) {
+        btn.setAttribute(
+          "default",
+          event.originalTarget == btn ||
+            !(
+              event.originalTarget.localName == "button" ||
+              event.originalTarget.localName == "toolbarbutton"
+            )
+        );
       }
     }
   }
