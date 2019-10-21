@@ -87,7 +87,6 @@ py2commands="
     test-info
     tps-build
     try
-    uuid
     valgrind-test
     vendor
     visualmetrics
