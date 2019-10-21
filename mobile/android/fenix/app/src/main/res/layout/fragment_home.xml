@@ -92,16 +92,16 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:layout_marginStart="12dp"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="start|center_vertical"
                     android:clickable="false"
                     android:focusable="false"
                     android:importantForAccessibility="no" />
 
                 <TextView
                     android:id="@+id/toolbar"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="start|center_vertical"
                     android:layout_marginStart="44dp"
                     android:clickable="false"
                     android:focusable="false"
