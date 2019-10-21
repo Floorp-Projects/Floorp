@@ -65,8 +65,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
     getWin('frame2').touchInterfaces();
     getWin('frame4').touchComponents();
     getWin('frame4').touchInterfaces();
-    // This should warn twice.
-    getWin('frame5').touchViaXBL();
 
     // Warnings are dispatched async, so stick ourselves at the end of the event
     // queue.
@@ -75,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
 
   function done() {
     gConsoleService.unregisterListener(gListener);
-    is(gWarnings, 5, "Got the right number of warnings");
+    is(gWarnings, 3, "Got the right number of warnings");
     SimpleTest.finish();
   }
 
@@ -86,6 +84,5 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795275
   <iframe id="frame2"/>
   <iframe id="frame3"/>
   <iframe id="frame4"/>
-  <iframe id="frame5"/>
 
 </window>

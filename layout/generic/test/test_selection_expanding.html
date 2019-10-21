@@ -5,7 +5,16 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-
+<script>
+    customElements.define("custom-element", class extends HTMLElement {
+      constructor() {
+        super();
+        const template = document.getElementById("template");
+        const shadowRoot = this.attachShadow({mode: "open"})
+          .appendChild(template.content.cloneNode(true));
+      }
+    });
+</script>
 <style type="text/css">
   .testingDiv {
     font-size: 16px;
@@ -32,13 +41,16 @@
     margin: 0;
     padding: 0;
   }
-  #xbl {
-    -moz-binding: url(selection_expanding_xbl.xml#binding);
-  }
 </style>
 
 </head>
 <body>
+<template id="template">
+  <div>
+    <p>xxxxxxx xxxxxxx xxxxxxx</p>
+    <slot></slot>
+  </div>
+</template>
 <div id="div1" class="testingDiv">
   aaaaaaa
   <iframe id="iframe" srcdoc="<style type='text/css'>*{margin: 0; padding: 0; font-size: 16px;}</style><div>ffffff ffffff ffffff ffffff</div>"></iframe>
@@ -57,9 +69,9 @@
     dddddd dddddd dddddd
   </div>
 </div>
-<div id="xbl">
-  <p id="xbl_child">yyyyyyy yyyyyyy yyyyyyy</p>
-</div>
+<custom-element id="custom">
+  <p id="custom_child">yyyyyyy yyyyyyy yyyyyyy</p>
+</custom-element>
 <div id="fixedDiv2" class="testingDiv">
   eeeeee eeeeee eeeeee
 </div>
@@ -69,8 +81,7 @@
 var div1 = document.getElementById("div1");
 var div2 = document.getElementById("div2");
 var div3 = document.getElementById("div3");
-var xbl = document.getElementById("xbl");
-var xbl_child = document.getElementById("xbl_child");
+var custom_child = document.getElementById("custom_child");
 var fixedDiv1 = document.getElementById("fixedDiv1");
 var fixedDiv2 = document.getElementById("fixedDiv2");
 var iframe = document.getElementById("iframe");
@@ -116,7 +127,7 @@ function test()
                  aDiv2ShouldBeSelected,
                  aDiv3ShouldBeSelected,
                  aFixedDiv1ShouldBeSelected,
-                 aXBLChildShouldBeSelected,
+                 aCustomChildShouldBeSelected,
                  aFixedDiv2ShouldBeSelected,
                  aIFrameShouldBeSelected,
                  aInputShouldBeSelected,
@@ -148,15 +159,15 @@ function test()
     checkCharacter(sel, "a", aDiv1ShouldBeSelected, "div1");
     checkCharacter(sel, "b", aDiv2ShouldBeSelected, "div2");
     checkCharacter(sel, "c", aDiv3ShouldBeSelected, "div3");
-    checkCharacter(sel, "y", aXBLChildShouldBeSelected, "xbl_child");
+    checkCharacter(sel, "y", aCustomChildShouldBeSelected, "custom_child");
     checkCharacter(sel, "d", aFixedDiv1ShouldBeSelected, "fixedDiv1");
     checkCharacter(sel, "e", aFixedDiv2ShouldBeSelected, "fixedDiv2");
 
-    // iframe/input/xbl-bound contents must not be included on the parent
+    // iframe/input/custom-element contents must not be included on the parent
     // selection.
     checkCharacter(sel, "f", false, "iframe (checking on parent)");
     checkCharacter(sel, "i", false, "input (checking on parent)");
-    checkCharacter(sel, "x", false, "XBL bound contents (checking on parent)");
+    checkCharacter(sel, "x", false, "Custom element contents (checking on parent)");
 
     var selInIFrame = iframe.contentWindow.getSelection().toString();
     checkCharacter(selInIFrame, "f", aIFrameShouldBeSelected, "iframe");
@@ -222,11 +233,11 @@ function test()
           kTrue, kFalse, kFalse, kFalse, kFalse, kFalse,
           "div1-fixedDiv1, all boxes are overflow: " + kOverflows[i] + ";");
 
-    // to xbl_child
-    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    // to custom_child
+    synthesizeMouse(custom_child, 30, 5, { type: "mousemove" });
     check(kTrue, kTrue, kTrue,
           kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
-          "div1-xbl_child, all boxes are overflow: " + kOverflows[i] + ";");
+          "div1-custom_child, all boxes are overflow: " + kOverflows[i] + ";");
 
     // to fixedDiv2 (sibling of div*)
     synthesizeMouse(fixedDiv2, 30, 5, { type: "mousemove" });
@@ -240,11 +251,11 @@ function test()
     // selection starting at fixedDiv1
     synthesizeMouse(fixedDiv1, 30, 5, { type: "mousedown" });
 
-    // to xbl_child
-    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    // to custom_child
+    synthesizeMouse(custom_child, 30, 5, { type: "mousemove" });
     check(kFalse, kFalse, kFalse,
           kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
-          "fixedDiv1-xbl_child, all boxes are overflow: " + kOverflows[i] + ";");
+          "fixedDiv1-custom_child, all boxes are overflow: " + kOverflows[i] + ";");
 
     // to fixedDiv2
     synthesizeMouse(fixedDiv2, 30, 5, { type: "mousemove" });
@@ -258,11 +269,11 @@ function test()
     // selection starting at fixedDiv2
     synthesizeMouse(fixedDiv2, 30, 5, { type: "mousedown" });
 
-    // to xbl_child
-    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    // to custom_child
+    synthesizeMouse(custom_child, 30, 5, { type: "mousemove" });
     check(kFalse, kFalse, kFalse,
           kFalse, kTrue, kTrue, kFalse, kFalse, kFalse,
-          "fixedDiv2-xbl_child, all boxes are overflow: " + kOverflows[i] + ";");
+          "fixedDiv2-custom_child, all boxes are overflow: " + kOverflows[i] + ";");
 
     // to fixedDiv1
     synthesizeMouse(fixedDiv1, 30, 5, { type: "mousemove" });
@@ -293,11 +304,11 @@ function test()
           "div2-fixedDiv1, div3 is overflow: " + kOverflows[i] +
           ";, but div2 is overflow: visible;");
 
-    // to xbl_child
-    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    // to custom_child
+    synthesizeMouse(custom_child, 30, 5, { type: "mousemove" });
     check(kFalse, kTrue, kTrue,
           kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
-          "div2-xbl_child, div3 is overflow: " + kOverflows[i] +
+          "div2-custom_child, div3 is overflow: " + kOverflows[i] +
           ";, but div2 is overflow: visible;");
 
     // to fixedDiv2 (sibling of div*)
@@ -327,11 +338,11 @@ function test()
           "div3-fixedDiv1, div3 is overflow: " + kOverflows[i] +
           ";, but div2 is overflow: visible;");
 
-    // to xbl_child
-    synthesizeMouse(xbl_child, 30, 5, { type: "mousemove" });
+    // to custom_child
+    synthesizeMouse(custom_child, 30, 5, { type: "mousemove" });
     check(kFalse, kFalse, kTrue,
           kTrue, kTrue, kFalse, kFalse, kFalse, kFalse,
-          "div3-xbl_child, div3 is overflow: " + kOverflows[i] +
+          "div3-custom_child, div3 is overflow: " + kOverflows[i] +
           ";, but div2 is overflow: visible;");
 
     // to fixedDiv2 (sibling of div*)

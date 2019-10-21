@@ -5,15 +5,24 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=683852
 -->
 <window title="Mozilla Bug 683852"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gaktekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <xbl:bindings xmlns:xbl="http://www.mozilla.org/xbl"
-                xmlns:xul="http://www.mozilla.org/keymaster/gaktekeeper/there.is.only.xul">
-    <xbl:binding id="test">
-      <xbl:content><xul:box anonid="xbl-anon">Anonymous</xul:box></xbl:content>
-    </xbl:binding>
-  </xbl:bindings>
-  <box id="xbl-host" style="-moz-binding: url(#test)"/>
+  <script>
+    <![CDATA[
+      customElements.define("custom-element", class extends XULElement {
+        constructor() {
+          super();
+          const template = document.getElementById("template");
+          const shadowRoot = this.attachShadow({mode: "open"})
+            .appendChild(template.content.cloneNode(true));
+        }
+      });
+    ]]>
+  </script>
+  <html:template id="template"><xul:box anonid="anon">Anonymous</xul:box></html:template>
+  <custom-element id="custom-element"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -32,10 +41,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=683852
   function startTest() {
     is(document.contains(document), true, "Document should contain itself!");
 
-    let box = document.getElementById("xbl-host");
+    let box = document.getElementById("custom-element");
     is(document.contains(box), true, "Document should contain element in it!");
     is(box.contains(box), true, "Element should contain itself.")
-    let anon = document.getAnonymousElementByAttribute(box, "anonid", "xbl-anon");
+    let anon = box.shadowRoot.querySelector("[anonid=anon]");
     is(document.contains(anon), false, "Document should not contain anonymous element in it!");
     is(box.contains(anon), false, "Element should not contain anonymous element in it!");
     is(anon.contains(anon), true, "Anonymous element should contain itself.")

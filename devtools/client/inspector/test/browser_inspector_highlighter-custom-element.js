@@ -5,20 +5,20 @@
 
 // Test that the picker works correctly with XBL anonymous nodes
 
-const TEST_URL = URL_ROOT + "doc_inspector_highlighter_xbl.xul";
+const TEST_URL = URL_ROOT + "doc_inspector_highlighter_custom_element.xhtml";
 
 add_task(async function() {
   const { inspector, toolbox, testActor } = await openInspectorForURL(TEST_URL);
 
   await startPicker(toolbox);
 
-  info("Selecting the host element");
-  await moveMouseOver("#xbl-host");
+  info("Selecting the custom element");
+  await moveMouseOver("#custom-element");
   await doKeyPick({ key: "VK_RETURN", options: {} });
   is(
     inspector.selection.nodeFront.className,
-    "xbl-anon",
-    "The .xbl-anon inside the box was selected"
+    "custom-element-anon",
+    "The .custom-element-anon inside the div was selected"
   );
 
   function doKeyPick(msg) {
