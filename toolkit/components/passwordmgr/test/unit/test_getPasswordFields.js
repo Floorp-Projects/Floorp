@@ -197,7 +197,7 @@ for (let tc of TESTCASES) {
       let formLikeIndex = -1;
       for (let formLikeFromInput of mapRootElementToFormLike.values()) {
         formLikeIndex++;
-        let pwFields = LoginManagerContent._getPasswordFields(
+        let pwFields = new LoginManagerContent()._getPasswordFields(
           formLikeFromInput,
           {
             fieldOverrideRecipe: testcase.fieldOverrideRecipe,
@@ -287,7 +287,7 @@ for (let tc of EMOJI_TESTCASES) {
       let input = document.querySelector("input[type='password']");
       Assert.ok(input, "Found the password field");
       let formLike = LoginFormFactory.createFromField(input);
-      let pwFields = LoginManagerContent._getPasswordFields(formLike, {
+      let pwFields = new LoginManagerContent()._getPasswordFields(formLike, {
         minPasswordLength: testcase.minPasswordLength,
       });
       info("Got password fields: " + pwFields.length);

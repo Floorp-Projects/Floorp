@@ -161,7 +161,7 @@ for (let tc of TESTCASES) {
         await testcase.beforeGetFunction(document, formLike);
       }
 
-      let actual = LoginManagerContent._getFormFields(
+      let actual = new LoginManagerContent()._getFormFields(
         formLike,
         testcase.skipEmptyFields,
         new Set()
