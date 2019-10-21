@@ -8,11 +8,40 @@
   height: 100%;
 }
 
+/* Override the devtools-checkbox style to improve hit area and alignment */
+.request-blocking-panel .devtools-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 2px 4px;
+  /* checkbox can be 13px, 14px or 16px depending on the platform */
+  line-height: 16px;
+  user-select: none;
+  cursor: default;
+}
+
+.request-blocking-panel .devtools-checkbox-label > input {
+  flex: none;
+  margin: 0;
+}
+
+.request-blocking-panel .request-blocking-label {
+  flex: 1 1 auto;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* The "Enable Blocking Requests" bar */
 .network-monitor .request-blocking-enable-bar {
   background: var(--theme-tab-toolbar-background);
-  padding: 2px 10px;
+  height: calc(var(--theme-toolbar-height) + 1px);
+  padding-block: 2px;
+  padding-inline: 16px 4px;
   display: flex;
+  align-items: center;
   overflow: hidden;
   white-space: nowrap;
   border-bottom: 1px solid var(--theme-splitter-color);
@@ -27,94 +56,87 @@
   flex-grow: 1;
 }
 
-.network-monitor .request-blocking-enable-form label {
-  display: inline-block;
-}
-
-.network-monitor .request-blocking-enable-bar .request-blocking-label {
-  user-select: none;
-}
-
 .network-monitor .request-blocking-enable-bar button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
-}
-
-.network-monitor .request-blocking-label {
-  cursor: default;
 }
 
 .request-blocking-contents {
   position: absolute;
   bottom: 0;
-  top: 26px;
+  top: calc(var(--theme-toolbar-height) + 1px);
   left: 0;
   right: 0;
   overflow-y: auto;
 }
 
-
 /* Blocked request list */
 .network-monitor .request-blocking-list {
   margin: 0;
-  padding: 0;
-  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 4px 0;
   width: 100%;
 }
 
 .network-monitor .request-blocking-list li {
-  padding: 2px 10px;
   display: flex;
-  overflow: hidden;
-  white-space: nowrap;
+  align-items: center;
+  min-height: 20px;
+  padding-inline: 16px 8px;
 }
 
 .network-monitor .request-blocking-list li.request-blocking-edit-item {
-  padding: 1px 0;
+  padding: 0;
+  /* Text input is 24px but we want it to occupy the same space as our 20px rows */
+  margin-block: -2px;
 }
 
-.network-monitor .request-blocking-list label {
-  width: calc(100% - 26px);
-  overflow: hidden;
-  text-overflow: ellipsis;
+.request-blocking-list .devtools-checkbox-label {
+  flex: 1 1 auto;
+  /* Can't seem to make the flex-shrink reduce the element's width when the
+     content is a long URL, even if the URL container has text-overflow: ellipsis.
+     DevTools shows that "the item was clamped to its minimum size" and the shrink
+     part is thus ignored. So we're reserving 20px for the delete button. */
+  max-width: calc(100% - 20px);
   font-family: var(--monospace-font-family);
 }
 
-.network-monitor .request-blocking-enable-form label,
-.network-monitor .request-blocking-list label {
-  margin-top: 2px;
+.request-blocking-remove-button {
+  /* Visually hide but stay focusable in keyboard navigation */
+  opacity: 0;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 2px;
+  border: none;
+  outline: none;
+  background-color: transparent;
 }
 
-.network-monitor .request-blocking-list button {
-  visibility: hidden;
+.request-blocking-remove-button::-moz-focus-inner {
+  border: none;
+}
+
+.request-blocking-list li:hover .request-blocking-remove-button,
+.request-blocking-list li:focus-within .request-blocking-remove-button {
+  opacity: 1;
+}
+
+.request-blocking-remove-button::before {
+  content: "";
+  display: block;
   width: 16px;
   height: 16px;
   border-radius: 2px;
-  padding: 1px;
-  margin-top: 3px;
+  background: url("chrome://devtools/skin/images/close.svg") no-repeat center;
+  background-size: 12px;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-color);
 }
 
-.network-monitor .request-blocking-list .devtools-button:empty::before {
-  width: 12px;
-  height: 12px;
-  margin: 0;
-  background-image: url("chrome://devtools/skin/images/close.svg");
-  background-size: 12px 12px;
-  background-position: 0 -1px;
-}
-
-.network-monitor .request-blocking-list .devtools-button:empty:hover,
-.network-monitor .request-blocking-list .devtools-button:empty:focus {
-  background-color: var(--theme-selection-background) !important;
-}
-
-.network-monitor .request-blocking-list button:hover::before,
-.network-monitor .request-blocking-list button:focus::before {
-  fill: #fff;
-}
-
-.network-monitor .request-blocking-list li:hover button,
-.network-monitor .request-blocking-list li:focus-within button {
-  visibility: visible;
+.request-blocking-remove-button:hover::before,
+.request-blocking-remove-button:focus::before {
+  fill: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
 }
 
 /* Addition form */
@@ -122,11 +144,20 @@
   width: 100%;
 }
 
+.request-blocking-add-form {
+  border-top: 1px solid var(--theme-splitter-color);
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.request-blocking-add-form:first-child {
+  border-top: none;
+}
+
 .request-blocking-add-form input,
 .request-blocking-edit-item input {
   width: calc(100% - 1px);
-  padding-top: 4px;
-  padding-bottom: 4px;
-  background-image: none;
-  padding-inline-start: 29px;
+  height: 24px;
+  padding-block: 4px;
+  padding-inline: 20px 8px;
+  background: none;
 }
