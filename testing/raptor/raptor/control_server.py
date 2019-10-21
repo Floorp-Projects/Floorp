@@ -8,14 +8,19 @@
 # communicates with the raptor browser webextension
 from __future__ import absolute_import
 
-import BaseHTTPServer
 import datetime
 import json
 import os
 import shutil
+import six
 import socket
 import threading
 import time
+
+try:
+    from http import server  # py3
+except ImportError:
+    import BaseHTTPServer as server  # py2
 
 from logger.logger import RaptorLogger
 
@@ -27,7 +32,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 def MakeCustomHandlerClass(
     results_handler, shutdown_browser, handle_gecko_profile, background_app, foreground_app
 ):
-    class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
+    class MyHandler(server.BaseHTTPRequestHandler, object):
         """
         Control server expects messages of the form
         {'type': 'messagetype', 'data':...}
@@ -144,9 +149,16 @@ def MakeCustomHandlerClass(
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            content_len = int(self.headers.getheader("content-length"))
+
+            if six.PY2:
+                content_len = int(self.headers.getheader("content-length"))
+            elif six.PY3:
+                content_len = int(self.headers.get("content-length"))
+
             post_body = self.rfile.read(content_len)
             # could have received a status update or test results
+            if isinstance(post_body, six.binary_type):
+                post_body = post_body.decode('utf-8')
             data = json.loads(post_body)
 
             if data["type"] == "webext_status":
@@ -218,7 +230,12 @@ def MakeCustomHandlerClass(
                 LOG.info("received " + data["type"] + ": " + str(data["data"]))
                 MyHandler.wait_timeout = data["data"]
             elif data["type"] == "wait-get":
-                self.wfile.write(MyHandler.waiting_in_state)
+                state = MyHandler.waiting_in_state
+                if state is None:
+                    state = 'None'
+                if isinstance(state, six.text_type):
+                    state = state.encode('utf-8')
+                self.wfile.write(state)
             elif data["type"] == "wait-continue":
                 LOG.info("received " + data["type"] + ": " + str(data["data"]))
                 if MyHandler.waiting_in_state:
@@ -256,7 +273,7 @@ def MakeCustomHandlerClass(
     return MyHandler
 
 
-class ThreadedHTTPServer(BaseHTTPServer.HTTPServer):
+class ThreadedHTTPServer(server.HTTPServer):
     # See
     # https://stackoverflow.com/questions/19537132/threaded-basehttpserver-one-thread-per-request#30312766
     def process_request(self, request, client_address):
