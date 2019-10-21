@@ -152,9 +152,9 @@ class GeckoViewAutofill {
       }
     }
 
-    const [usernameField] = LoginManagerContent.getUserNameAndPasswordFields(
-      passwordField || aFormLike.elements[0]
-    );
+    const [usernameField] = LoginManagerContent.forWindow(
+      window
+    ).getUserNameAndPasswordFields(passwordField || aFormLike.elements[0]);
 
     const rootInfo = getInfo(aFormLike.rootElement, null, undefined, null);
     rootInfo.root = rootInfo.id;

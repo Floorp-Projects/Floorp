@@ -5,13 +5,15 @@
 "use strict";
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-const { LoginManagerParent: LMP } = ChromeUtils.import(
+const { LoginManagerParent } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerParent.jsm"
 );
 
 add_task(async function test_doAutocompleteSearch_generated_noLogins() {
   Services.prefs.setBoolPref("signon.generation.available", true); // TODO: test both with false
   Services.prefs.setBoolPref("signon.generation.enabled", true);
+
+  let LMP = new LoginManagerParent();
 
   ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
 
@@ -50,7 +52,7 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
   };
 
   sinon
-    .stub(LMP._browsingContextGlobal, "get")
+    .stub(LoginManagerParent._browsingContextGlobal, "get")
     .withArgs(123)
     .callsFake(() => {
       return {

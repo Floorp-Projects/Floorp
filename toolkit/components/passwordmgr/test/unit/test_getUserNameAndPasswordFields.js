@@ -111,7 +111,9 @@ for (let tc of TESTCASES) {
       let formOrigin = LoginHelper.getLoginOrigin(document.documentURI);
       LoginRecipesContent.cacheRecipes(formOrigin, win, new Set());
 
-      let actual = LoginManagerContent.getUserNameAndPasswordFields(input);
+      let actual = new LoginManagerContent().getUserNameAndPasswordFields(
+        input
+      );
 
       Assert.strictEqual(
         testcase.returnedFieldIDs.length,

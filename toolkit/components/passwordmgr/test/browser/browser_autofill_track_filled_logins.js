@@ -75,12 +75,17 @@ add_task(async function test() {
         let formLike = LoginFormFactory.createFromField(password);
         info("Calling _fillForm with FormLike");
         addedLogin = LoginHelper.vanillaObjectToLogin(addedLogin);
-        LoginManagerContent._fillForm(formLike, [addedLogin], null, {
-          autofillForm: true,
-          clobberUsername: true,
-          clobberPassword: true,
-          userTriggered: true,
-        });
+        LoginManagerContent.forWindow(content)._fillForm(
+          formLike,
+          [addedLogin],
+          null,
+          {
+            autofillForm: true,
+            clobberUsername: true,
+            clobberPassword: true,
+            userTriggered: true,
+          }
+        );
 
         if (aUsernameRequested) {
           let username = content.document.querySelector("#form-basic-username");

@@ -156,7 +156,7 @@ add_task(async function test() {
 
     info("Calling _onFormSubmit with FormLike");
     let processedPromise = getSubmitMessage();
-    LoginManagerContent._onFormSubmit(formLike);
+    LoginManagerContent.forWindow(frameDoc.defaultView)._onFormSubmit(formLike);
 
     let submittedResult = await processedPromise;
 
