@@ -15,7 +15,6 @@ import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
 from mozbuild.util import OrderedDefaultDict
 from mozbuild.frontend.reader import BuildReader, EmptyConfig
-from mozversioncontrol import get_repository_object
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -567,14 +566,7 @@ class TestResolver(MozbuildObject):
                                       'mochitest', 'tests'),
             'xpcshell': os.path.join(self.topobjdir, '_tests', 'xpcshell'),
         }
-        self._vcs = None
         self.verbose = False
-
-    @property
-    def vcs(self):
-        if not self._vcs:
-            self._vcs = get_repository_object(self.topsrcdir)
-        return self._vcs
 
     def resolve_tests(self, cwd=None, **kwargs):
         """Resolve tests in the context of the current environment.
@@ -621,7 +613,7 @@ class TestResolver(MozbuildObject):
 
     def get_outgoing_metadata(self):
         paths, tags, flavors = set(), set(), set()
-        changed_files = self.vcs.get_outgoing_files('AM')
+        changed_files = self.repository.get_outgoing_files('AM')
         if changed_files:
             config = EmptyConfig(self.topsrcdir)
             reader = BuildReader(config)
