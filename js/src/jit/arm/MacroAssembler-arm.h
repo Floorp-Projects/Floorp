@@ -1127,6 +1127,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
     load32(LowWord(address), dest.low);
     load32(HighWord(address), dest.high);
   }
+  void load64(const BaseIndex& address, Register64 dest) {
+    load32(LowWord(address), dest.low);
+    load32(HighWord(address), dest.high);
+  }
 
   void loadPtr(const Address& address, Register dest);
   void loadPtr(const BaseIndex& src, Register dest);
