@@ -7,8 +7,9 @@
 #include "jit/BytecodeAnalysis.h"
 
 #include "jit/JitSpewer.h"
-
+#include "vm/BytecodeIterator.h"
 #include "vm/BytecodeLocation.h"
+#include "vm/BytecodeUtil.h"
 
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
@@ -40,38 +41,44 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
     return false;
   }
 
-  jsbytecode* end = script_->codeEnd();
-
   // Clear all BytecodeInfo.
   mozilla::PodZero(infos_.begin(), infos_.length());
   infos_[0].init(/*stackDepth=*/0);
 
   Vector<CatchFinallyRange, 0, JitAllocPolicy> catchFinallyRanges(alloc);
 
-  jsbytecode* nextpc;
-  for (jsbytecode* pc = script_->code(); pc < end; pc = nextpc) {
-    JSOp op = JSOp(*pc);
-    nextpc = pc + GetBytecodeLength(pc);
-    unsigned offset = script_->pcToOffset(pc);
+  // Beginning bytecode location for loop
+  BytecodeLocation it(script_, script_->code());
+  BytecodeLocation next = it.next();
+
+  // End of bytecode location iteration range
+  BytecodeLocation end = script_->endLocation();
+
+  for (; it < end; it = next) {
+    JSOp op = it.getOp();
+    next = it.next();
+    uint32_t offset = it.bytecodeToOffset(script_);
 
     JitSpew(JitSpew_BaselineOp, "Analyzing op @ %d (end=%d): %s",
-            int(script_->pcToOffset(pc)), int(script_->length()), CodeName[op]);
+            int(it.bytecodeToOffset(script_)), int(script_->length()),
+            CodeName[op]);
 
     // If this bytecode info has not yet been initialized, it's not reachable.
     if (!infos_[offset].initialized) {
       continue;
     }
 
-    unsigned stackDepth = infos_[offset].stackDepth;
+    uint32_t stackDepth = infos_[offset].stackDepth;
+
 #ifdef DEBUG
-    for (jsbytecode* chkpc = pc + 1; chkpc < (pc + GetBytecodeLength(pc));
-         chkpc++) {
-      MOZ_ASSERT(!infos_[script_->pcToOffset(chkpc)].initialized);
+    size_t endOffset = offset + it.length();
+    for (size_t checkOffset = offset + 1; checkOffset < endOffset;
+         checkOffset++) {
+      MOZ_ASSERT(!infos_[checkOffset].initialized);
     }
 #endif
-
-    unsigned nuses = GetUseCount(pc);
-    unsigned ndefs = GetDefCount(pc);
+    uint32_t nuses = it.useCount();
+    uint32_t ndefs = it.defCount();
 
     MOZ_ASSERT(stackDepth >= nuses);
     stackDepth -= nuses;
@@ -82,12 +89,9 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
     switch (op) {
       case JSOP_TABLESWITCH: {
-        unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
-        jsbytecode* pc2 = pc + JUMP_OFFSET_LEN;
-        int32_t low = GET_JUMP_OFFSET(pc2);
-        pc2 += JUMP_OFFSET_LEN;
-        int32_t high = GET_JUMP_OFFSET(pc2);
-        pc2 += JUMP_OFFSET_LEN;
+        uint32_t defaultOffset = it.getTableSwitchDefaultOffset(script_);
+        int32_t low = it.getTableSwitchLow();
+        int32_t high = it.getTableSwitchHigh();
 
         infos_[defaultOffset].init(stackDepth);
         infos_[defaultOffset].jumpTarget = true;
@@ -95,7 +99,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
         uint32_t ncases = high - low + 1;
 
         for (uint32_t i = 0; i < ncases; i++) {
-          unsigned targetOffset = script_->tableSwitchCaseOffset(pc, i);
+          uint32_t targetOffset = it.tableSwitchCaseOffset(script_, i);
           if (targetOffset != defaultOffset) {
             infos_[targetOffset].init(stackDepth);
             infos_[targetOffset].jumpTarget = true;
@@ -107,7 +111,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
       case JSOP_TRY: {
         for (const JSTryNote& tn : script_->trynotes()) {
           if (tn.start == offset + 1) {
-            unsigned catchOffset = tn.start + tn.length;
+            uint32_t catchOffset = tn.start + tn.length;
 
             if (tn.kind != JSTRY_FOR_IN) {
               infos_[catchOffset].init(stackDepth);
@@ -118,19 +122,22 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
 
         // Get the pc of the last instruction in the try block. It's a JSOP_GOTO
         // to jump over the catch/finally blocks.
-        jssrcnote* sn = GetSrcNote(gsn, script_, pc);
+        jssrcnote* sn = GetSrcNote(gsn, script_, it.toRawBytecode());
         MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);
 
-        jsbytecode* endOfTry =
-            pc + GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset);
-        MOZ_ASSERT(JSOp(*endOfTry) == JSOP_GOTO);
+        BytecodeLocation endOfTryLoc(
+            script_,
+            it.toRawBytecode() +
+                GetSrcNoteOffset(sn, SrcNote::Try::EndOfTryJumpOffset));
+        MOZ_ASSERT(endOfTryLoc.is(JSOP_GOTO));
 
-        jsbytecode* afterTry = endOfTry + GET_JUMP_OFFSET(endOfTry);
-        MOZ_ASSERT(afterTry > endOfTry);
+        BytecodeLocation afterTryLoc(
+            script_, endOfTryLoc.toRawBytecode() + endOfTryLoc.jumpOffset());
+        MOZ_ASSERT(afterTryLoc > endOfTryLoc);
 
         // Ensure the code following the try-block is always marked as
         // reachable, to simplify Ion's ControlFlowGenerator.
-        uint32_t afterTryOffset = script_->pcToOffset(afterTry);
+        uint32_t afterTryOffset = afterTryLoc.bytecodeToOffset(script_);
         infos_[afterTryOffset].init(stackDepth);
         infos_[afterTryOffset].jumpTarget = true;
 
@@ -140,8 +147,8 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
           catchFinallyRanges.popBack();
         }
 
-        CatchFinallyRange range(script_->pcToOffset(endOfTry),
-                                script_->pcToOffset(afterTry));
+        CatchFinallyRange range(endOfTryLoc.bytecodeToOffset(script_),
+                                afterTryLoc.bytecodeToOffset(script_));
         if (!catchFinallyRanges.append(range)) {
           return false;
         }
@@ -160,15 +167,15 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
         break;
     }
 
-    bool jump = IsJumpOpcode(op);
+    bool jump = it.isJump();
     if (jump) {
       // Case instructions do not push the lvalue back when branching.
-      unsigned newStackDepth = stackDepth;
-      if (op == JSOP_CASE) {
+      uint32_t newStackDepth = stackDepth;
+      if (it.is(JSOP_CASE)) {
         newStackDepth--;
       }
 
-      unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
+      uint32_t targetOffset = it.getJumpTargetOffset(script_);
 
       // If this is a a backedge to an un-analyzed segment, analyze from there.
       bool jumpBack =
@@ -178,15 +185,14 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
       infos_[targetOffset].jumpTarget = true;
 
       if (jumpBack) {
-        nextpc = script_->offsetToPC(targetOffset);
+        next = script_->offsetToLocation(targetOffset);
       }
     }
-
     // Handle any fallthrough from this opcode.
-    if (BytecodeFallsThrough(op)) {
-      jsbytecode* fallthrough = pc + GetBytecodeLength(pc);
-      MOZ_ASSERT(fallthrough < end);
-      unsigned fallthroughOffset = script_->pcToOffset(fallthrough);
+    if (it.fallsThrough()) {
+      BytecodeLocation fallthroughLoc = it.next();
+      MOZ_ASSERT(fallthroughLoc < end);
+      uint32_t fallthroughOffset = fallthroughLoc.bytecodeToOffset(script_);
 
       infos_[fallthroughOffset].init(stackDepth);
 
@@ -196,7 +202,6 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
       }
     }
   }
-
   // Flag (reachable) resume offset instructions.
   for (uint32_t offset : script_->resumeOffsets()) {
     BytecodeInfo& info = infos_[offset];
@@ -218,8 +223,10 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
     result.usesEnvironmentChain = true;
   }
 
-  for (const BytecodeLocation& loc : js::AllBytecodesIterable(script)) {
-    switch (loc.getOp()) {
+  jsbytecode const* pcEnd = script->codeEnd();
+  for (jsbytecode* pc = script->code(); pc < pcEnd; pc = GetNextPc(pc)) {
+    JSOp op = JSOp(*pc);
+    switch (op) {
       case JSOP_SETARG:
         result.modifiesArguments = true;
         break;
