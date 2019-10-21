@@ -12,6 +12,7 @@ import mozilla.appservices.places.BookmarkSeparator
 import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.BookmarkUpdateInfo
 import mozilla.appservices.places.PlacesApi
+import mozilla.appservices.places.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -183,6 +184,17 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
                 places.syncBookmarks(authInfo)
             }
         }
+    }
+
+    /**
+     * Import bookmarks data from Fennec's browser.db file.
+     * Before running this, first run [PlacesHistoryStorage.importFromFennec] to import history and visits data.
+     *
+     * @param dbPath Absolute path to Fennec's browser.db file.
+     */
+    @Throws(PlacesException::class)
+    fun importFromFennec(dbPath: String) {
+        places.importBookmarksFromFennec(dbPath)
     }
 
     /**

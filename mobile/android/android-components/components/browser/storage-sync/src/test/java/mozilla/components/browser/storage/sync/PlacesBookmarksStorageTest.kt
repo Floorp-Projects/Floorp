@@ -7,264 +7,238 @@ package mozilla.components.browser.storage.sync
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.appservices.places.BookmarkUpdateInfo
-import mozilla.appservices.places.PlacesReaderConnection
-import mozilla.appservices.places.PlacesWriterConnection
+import mozilla.appservices.places.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class PlacesBookmarksStorageTest {
-    private var conn: Connection? = null
-    private var reader: PlacesReaderConnection? = null
-    private var writer: PlacesWriterConnection? = null
-
-    private var storage: PlacesBookmarksStorage? = null
-
-    private val newItem = BookmarkNode(BookmarkNodeType.ITEM, "123", "456", null,
-            "Mozilla", "http://www.mozilla.org", null)
-    private val newFolder = BookmarkNode(BookmarkNodeType.FOLDER, "789", "321", null,
-            "Cool Sites", null, listOf())
-    private val newSeparator = BookmarkNode(BookmarkNodeType.SEPARATOR, "654", "987",
-            null, null, null, null)
-
-    internal class TestablePlacesBookmarksStorage(override val places: Connection) : PlacesBookmarksStorage(testContext)
+    private lateinit var bookmarks: PlacesBookmarksStorage
 
     @Before
-    fun setup() {
-        conn = mock()
-        reader = mock()
-        writer = mock()
-        `when`(conn!!.reader()).thenReturn(reader)
-        `when`(conn!!.writer()).thenReturn(writer)
-        storage = TestablePlacesBookmarksStorage(conn!!)
+    fun setup() = runBlocking {
+        bookmarks = PlacesBookmarksStorage(testContext)
+        // There's a database on disk which needs to be cleaned up between tests.
+        bookmarks.writer.deleteEverything()
+    }
+
+    @After
+    fun cleanup() = runBlocking {
+        bookmarks.cleanup()
     }
 
     @Test
-    fun `get bookmarks tree by root, recursive or not`() {
-        val reader = reader!!
-        val storage = storage!!
+    fun `get bookmarks tree by root, recursive or not`() = runBlocking {
+        val tree = bookmarks.getTree(BookmarkRoot.Root.id)!!
+        assertEquals(BookmarkRoot.Root.id, tree.guid)
+        assertNotNull(tree.children)
+        assertEquals(4, tree.children!!.size)
 
-        runBlocking {
-            storage.getTree(BookmarkRoot.Root.id)
-        }
-        verify(reader, times(1)).getBookmarksTree(BookmarkRoot.Root.id, false)
+        var children = tree.children!!.map { it.guid }
+        assertTrue(BookmarkRoot.Mobile.id in children)
+        assertTrue(BookmarkRoot.Unfiled.id in children)
+        assertTrue(BookmarkRoot.Toolbar.id in children)
+        assertTrue(BookmarkRoot.Menu.id in children)
 
-        runBlocking {
-            storage.getTree(BookmarkRoot.Root.id, true)
+        // Non-recursive means children of children aren't fetched.
+        for (child in tree.children!!) {
+            assertNull(child.children)
+            assertEquals(BookmarkRoot.Root.id, child.parentGuid)
+            assertEquals(BookmarkNodeType.FOLDER, child.type)
         }
-        verify(reader, times(1)).getBookmarksTree(BookmarkRoot.Root.id, true)
+
+        val deepTree = bookmarks.getTree(BookmarkRoot.Root.id, true)!!
+        assertEquals(BookmarkRoot.Root.id, deepTree.guid)
+        assertNotNull(deepTree.children)
+        assertEquals(4, deepTree.children!!.size)
+
+        children = deepTree.children!!.map { it.guid }
+        assertTrue(BookmarkRoot.Mobile.id in children)
+        assertTrue(BookmarkRoot.Unfiled.id in children)
+        assertTrue(BookmarkRoot.Toolbar.id in children)
+        assertTrue(BookmarkRoot.Menu.id in children)
+
+        // Recursive means children of children are fetched.
+        for (child in deepTree.children!!) {
+            // For an empty tree, we expect to see empty lists.
+            assertEquals(emptyList<BookmarkNode>(), child.children)
+            assertEquals(BookmarkRoot.Root.id, child.parentGuid)
+            assertEquals(BookmarkNodeType.FOLDER, child.type)
+        }
     }
 
     @Test
-    fun `get bookmarks by URL`() {
-        val reader = reader!!
-        val storage = storage!!
-
+    fun `bookmarks APIs smoke testing - basic operations`() = runBlocking {
         val url = "http://www.mozilla.org"
 
-        runBlocking {
-            storage.getBookmarksWithUrl(url)
+        assertEquals(emptyList<BookmarkNode>(), bookmarks.getBookmarksWithUrl(url))
+        assertEquals(emptyList<BookmarkNode>(), bookmarks.searchBookmarks("mozilla"))
+
+        val insertedItem = bookmarks.addItem(BookmarkRoot.Mobile.id, url, "Mozilla", 5)
+
+        with(bookmarks.getBookmarksWithUrl(url)) {
+            assertEquals(1, this.size)
+            with(this[0]) {
+                assertEquals(insertedItem, this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+                assertEquals("Mozilla", this.title)
+                assertEquals(BookmarkRoot.Mobile.id, this.parentGuid)
+                // Clamped to actual range. 'Mobile' was empty, so we get 0 back.
+                assertEquals(0, this.position)
+                assertEquals("http://www.mozilla.org/", this.url)
+            }
         }
-        verify(reader, times(1)).getBookmarksWithURL(url)
+
+        val folderGuid = bookmarks.addFolder(BookmarkRoot.Mobile.id, "Test Folder", null)
+        bookmarks.updateNode(insertedItem, BookmarkInfo(
+            parentGuid = folderGuid, title = null, position = -3, url = null
+        ))
+        with(bookmarks.getBookmarksWithUrl(url)) {
+            assertEquals(1, this.size)
+            with(this[0]) {
+                assertEquals(insertedItem, this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+                assertEquals("Mozilla", this.title)
+                assertEquals(folderGuid, this.parentGuid)
+                assertEquals(0, this.position)
+                assertEquals("http://www.mozilla.org/", this.url)
+            }
+        }
+
+        val separatorGuid = bookmarks.addSeparator(folderGuid, 1)
+        with(bookmarks.getTree(folderGuid)!!) {
+            assertEquals(2, this.children!!.size)
+            assertEquals(BookmarkNodeType.SEPARATOR, this.children!![1].type)
+        }
+
+        assertTrue(bookmarks.deleteNode(separatorGuid))
+        with(bookmarks.getTree(folderGuid)!!) {
+            assertEquals(1, this.children!!.size)
+            assertEquals(BookmarkNodeType.ITEM, this.children!![0].type)
+        }
+
+        with(bookmarks.searchBookmarks("mozilla")) {
+            assertEquals(1, this.size)
+            assertEquals("http://www.mozilla.org/", this[0].url)
+        }
+
+        with(bookmarks.getBookmark(folderGuid)!!) {
+            assertEquals(folderGuid, this.guid)
+            assertEquals("Test Folder", this.title)
+            assertEquals(BookmarkRoot.Mobile.id, this.parentGuid)
+        }
+
+        assertTrue(bookmarks.deleteNode(folderGuid))
+
+        for (root in listOf(
+            BookmarkRoot.Mobile, BookmarkRoot.Root, BookmarkRoot.Menu, BookmarkRoot.Toolbar, BookmarkRoot.Unfiled)
+        ) {
+            try {
+                bookmarks.deleteNode(root.id)
+                fail("Expected root deletion for ${root.id} to fail")
+            } catch (e: PlacesException) {}
+        }
+
+        with(bookmarks.searchBookmarks("mozilla")) {
+            assertTrue(this.isEmpty())
+        }
     }
 
     @Test
-    fun `get bookmark by guid`() {
-        val reader = reader!!
-        val storage = storage!!
-
-        val guid = "123"
-
-        runBlocking {
-            storage.getBookmark(guid)
+    fun `bookmarks import v0 empty`() {
+        // Doesn't have a schema or a set user_version pragma.
+        val path = getTestPath("databases/empty-v0.db").absolutePath
+        try {
+            bookmarks.importFromFennec(path)
+            fail("Expected v0 database to be unsupported")
+        } catch (e: PlacesException) {
+            // This is a little brittle, but the places library doesn't have a proper error type for this.
+            assertEquals("Database version 0 is not supported", e.message)
         }
-        verify(reader, times(1)).getBookmark(guid)
     }
 
     @Test
-    fun `search bookmarks by keyword`() {
-        val reader = reader!!
-        val storage = storage!!
-
-        runBlocking {
-            storage.searchBookmarks("mozilla")
+    fun `bookmarks import v38 populated`() {
+        // Fennec v38 schema populated with data.
+        val path = getTestPath("databases/populated-v38.db").absolutePath
+        try {
+            bookmarks.importFromFennec(path)
+            fail("Expected v38 database to be unsupported")
+        } catch (e: PlacesException) {
+            // This is a little brittle, but the places library doesn't have a proper error type for this.
+            assertEquals("Database version 38 is not supported", e.message)
         }
-        verify(reader, times(1)).searchBookmarks("mozilla", 10)
-
-        runBlocking {
-            storage.searchBookmarks("mozilla", 30)
-        }
-        verify(reader, times(1)).searchBookmarks("mozilla", 30)
     }
 
     @Test
-    fun `add a bookmark item`() {
-        val writer = writer!!
-        val storage = storage!!
+    fun `bookmarks import v39 populated`() = runBlocking {
+        val path = getTestPath("databases/populated-v39.db").absolutePath
 
-        runBlocking {
-            storage.addItem(BookmarkRoot.Mobile.id, newItem.url!!, newItem.title!!, null)
-        }
-        verify(writer, times(1)).createBookmarkItem(
-                BookmarkRoot.Mobile.id, "http://www.mozilla.org", "Mozilla", null)
+        // Need to import history first before we import bookmarks.
+        PlacesHistoryStorage(testContext).importFromFennec(path)
+        bookmarks.importFromFennec(path)
 
-        runBlocking {
-            storage.addItem(BookmarkRoot.Mobile.id, newItem.url!!, newItem.title!!, 3)
+        with(bookmarks.getTree(BookmarkRoot.Root.id)!!) {
+            assertEquals(4, this.children!!.size)
+            val children = this.children!!.map { it.guid }
+            assertTrue(BookmarkRoot.Mobile.id in children)
+            assertTrue(BookmarkRoot.Unfiled.id in children)
+            assertTrue(BookmarkRoot.Toolbar.id in children)
+            assertTrue(BookmarkRoot.Menu.id in children)
+
+            // Note that we dropped the special "pinned" folder during a migration.
+            // See https://github.com/mozilla/application-services/issues/1989
         }
-        verify(writer, times(1)).createBookmarkItem(
-                BookmarkRoot.Mobile.id, "http://www.mozilla.org", "Mozilla", 3)
+
+        with(bookmarks.getTree(BookmarkRoot.Mobile.id)!!) {
+            assertEquals(6, this.children!!.size)
+            with(this.children!![0]) {
+                assertEquals("Business & Financial News, Breaking US & International News | Reuters", this.title)
+                assertEquals("https://mobile.reuters.com/", this.url)
+                assertEquals("2hazimCy0hhS", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![1]) {
+                assertEquals("There is a way to protect your privacy. Join Firefox.", this.title)
+                assertEquals("https://www.mozilla.org/en-US/firefox/accounts/", this.url)
+                assertEquals("mUcVvqUfJs6r", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![2]) {
+                assertEquals("Internet for people, not profit — Mozilla", this.title)
+                assertEquals("https://www.mozilla.org/en-US/", this.url)
+                assertEquals("tL-ucG5eaoG-", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![3]) {
+                assertEquals("Firefox: About your browser", this.title)
+                assertEquals("about:firefox", this.url)
+                assertEquals("kR_18w0gDLHq", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![4]) {
+                assertEquals("Firefox: Customize with add-ons", this.title)
+                assertEquals("https://addons.mozilla.org/android?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("bTuLpp58gwqw", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+            with(this.children!![5]) {
+                assertEquals("Firefox: Support", this.title)
+                assertEquals("https://support.mozilla.org/products/mobile?utm_source=inproduct&utm_medium=default-bookmarks&utm_campaign=mobileandroid", this.url)
+                assertEquals("nbfDW0QSBEKu", this.guid)
+                assertEquals(BookmarkNodeType.ITEM, this.type)
+            }
+        }
     }
-
-    @Test
-    fun `add a bookmark folder`() {
-        val writer = writer!!
-        val storage = storage!!
-
-        runBlocking {
-            storage.addFolder(BookmarkRoot.Mobile.id, newFolder.title!!, null)
-        }
-        verify(writer, times(1)).createFolder(
-                BookmarkRoot.Mobile.id, "Cool Sites", null)
-
-        runBlocking {
-            storage.addFolder(BookmarkRoot.Mobile.id, newFolder.title!!, 4)
-        }
-        verify(writer, times(1)).createFolder(
-                BookmarkRoot.Mobile.id, "Cool Sites", 4)
-    }
-
-    @Test
-    fun `add a bookmark separator`() {
-        val writer = writer!!
-        val storage = storage!!
-
-        runBlocking {
-            storage.addSeparator(BookmarkRoot.Mobile.id, null)
-        }
-        verify(writer, times(1)).createSeparator(
-                BookmarkRoot.Mobile.id, null)
-
-        runBlocking {
-            storage.addSeparator(BookmarkRoot.Mobile.id, 4)
-        }
-        verify(writer, times(1)).createSeparator(
-                BookmarkRoot.Mobile.id, 4)
-    }
-
-    @Test
-    fun `move a bookmark item`() {
-        val writer = writer!!
-        val storage = storage!!
-        val info = BookmarkInfo(newItem.parentGuid, newItem.position, newItem.title, newItem.url)
-
-        runBlocking {
-            storage.updateNode(BookmarkRoot.Mobile.id, info)
-        }
-        verify(writer, times(1)).updateBookmark(
-                BookmarkRoot.Mobile.id, info.asBookmarkUpdateInfo())
-
-        runBlocking {
-            storage.updateNode(BookmarkRoot.Mobile.id, info.copy(position = 4))
-        }
-        verify(writer, times(1)).updateBookmark(
-                BookmarkRoot.Mobile.id, info.copy(position = 4).asBookmarkUpdateInfo())
-    }
-
-    @Test
-    fun `move a bookmark folder and its contents`() {
-        val writer = writer!!
-        val storage = storage!!
-        val info = BookmarkInfo(newFolder.parentGuid, newFolder.position, newFolder.title, newFolder.url)
-
-        runBlocking {
-            storage.updateNode(BookmarkRoot.Mobile.id, info)
-        }
-        verify(writer, times(1)).updateBookmark(
-                BookmarkRoot.Mobile.id, info.asBookmarkUpdateInfo()
-        )
-        runBlocking {
-            storage.updateNode(BookmarkRoot.Mobile.id, info.copy(position = 5))
-        }
-        verify(writer, times(1)).updateBookmark(
-                BookmarkRoot.Mobile.id, info.copy(position = 5).asBookmarkUpdateInfo()
-        )
-    }
-
-    @Test
-    fun `move a bookmark separator`() {
-        val writer = writer!!
-        val storage = storage!!
-        val info = BookmarkInfo(newSeparator.parentGuid, newSeparator.position, newSeparator.title, newSeparator.url)
-
-        runBlocking {
-            storage.updateNode(BookmarkRoot.Mobile.id, info)
-        }
-        verify(writer, times(1)).updateBookmark(
-                BookmarkRoot.Mobile.id, info.asBookmarkUpdateInfo()
-        )
-        runBlocking {
-            storage.updateNode(BookmarkRoot.Mobile.id, info.copy(position = 6))
-        }
-        verify(writer, times(1)).updateBookmark(BookmarkRoot.Mobile.id, info.copy(position = 6).asBookmarkUpdateInfo())
-    }
-
-    @Test
-    fun `update a bookmark item`() {
-        val writer = writer!!
-        val storage = storage!!
-
-        val info = BookmarkInfo("121", 1, "Firefox", "https://www.mozilla.org/en-US/firefox/")
-
-        runBlocking {
-            storage.updateNode(newItem.guid, info)
-        }
-        verify(writer, times(1)).updateBookmark("123", info.asBookmarkUpdateInfo())
-    }
-
-    @Test
-    fun `update a bookmark folder`() {
-        val writer = writer!!
-        val storage = storage!!
-
-        val info = BookmarkInfo("131", 2, "Firefox", null)
-
-        runBlocking {
-            storage.updateNode(newFolder.guid, info)
-        }
-        verify(writer, times(1)).updateBookmark(newFolder.guid, info.asBookmarkUpdateInfo())
-    }
-
-    @Test
-    fun `delete a bookmark item`() {
-        val writer = writer!!
-        val storage = storage!!
-
-        runBlocking {
-            storage.deleteNode(newItem.guid)
-        }
-        verify(writer, times(1)).deleteBookmarkNode(newItem.guid)
-    }
-
-    @Test
-    fun `delete a bookmark separator`() {
-        val writer = writer!!
-        val storage = storage!!
-
-        runBlocking {
-            storage.deleteNode(newSeparator.guid)
-        }
-        verify(writer, times(1)).deleteBookmarkNode(newSeparator.guid)
-    }
-
-    private fun BookmarkInfo.asBookmarkUpdateInfo(): BookmarkUpdateInfo = BookmarkUpdateInfo(this.parentGuid, this.position, this.title, this.url)
 }

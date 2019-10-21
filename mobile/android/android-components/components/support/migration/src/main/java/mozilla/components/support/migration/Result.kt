@@ -7,15 +7,15 @@ package mozilla.components.support.migration
 /**
  * Class representing the result of a successful or failed migration action.
  */
-sealed class MigrationResult<T> {
+sealed class Result<T> {
     /**
-     * Successful migration.
+     * Successful migration that produced data of type [T].
      *
      * @property value The result of the successful migration.
      */
     class Success<T>(
         val value: T
-    ) : MigrationResult<T>()
+    ) : Result<T>()
 
     /**
      * Failed migration.
@@ -24,7 +24,7 @@ sealed class MigrationResult<T> {
      */
     class Failure<T>(
         val throwables: List<Throwable>
-    ) : MigrationResult<T>() {
+    ) : Result<T>() {
         constructor(throwable: Throwable) : this(listOf(throwable))
     }
 }

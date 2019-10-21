@@ -39,6 +39,9 @@ internal interface Connection : Closeable {
     // strange split that doesn't quite map all that well to our internal storage model.
     fun syncHistory(syncInfo: SyncAuthInfo)
     fun syncBookmarks(syncInfo: SyncAuthInfo)
+
+    fun importVisitsFromFennec(dbPath: String)
+    fun importBookmarksFromFennec(dbPath: String)
 }
 
 /**
@@ -89,6 +92,16 @@ internal object RustPlacesConnection : Connection {
         check(api != null) { "must call init first" }
         val ping = api!!.syncBookmarks(syncInfo.into())
         SyncTelemetry.processBookmarksPing(ping)
+    }
+
+    override fun importVisitsFromFennec(dbPath: String) {
+        check(api != null) { "must call init first" }
+        api!!.importVisitsFromFennec(dbPath)
+    }
+
+    override fun importBookmarksFromFennec(dbPath: String) {
+        check(api != null) { "must call init first" }
+        api!!.importBookmarksFromFennec(dbPath)
     }
 
     override fun close() = synchronized(this) {
