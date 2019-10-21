@@ -42,9 +42,12 @@ static void generate_scaling(const int bitdepth,
                              const uint8_t points[][2], const int num,
                              uint8_t scaling[SCALING_SIZE])
 {
+#if BITDEPTH == 8
+    const int shift_x = 0;
+#else
     const int shift_x = bitdepth - 8;
+#endif
     const int scaling_size = 1 << bitdepth;
-    const int pad = 1 << shift_x;
 
     // Fill up the preceding entries with the initial value
     for (int i = 0; i < points[0][0] << shift_x; i++)
@@ -69,9 +72,8 @@ static void generate_scaling(const int bitdepth,
     for (int i = points[num - 1][0] << shift_x; i < scaling_size; i++)
         scaling[i] = points[num - 1][1];
 
-    if (pad <= 1) return;
-
-    const int rnd = pad >> 1;
+#if BITDEPTH != 8
+    const int pad = 1 << shift_x, rnd = pad >> 1;
     for (int i = 0; i < num - 1; i++) {
         const int bx = points[i][0] << shift_x;
         const int ex = points[i+1][0] << shift_x;
@@ -83,6 +85,7 @@ static void generate_scaling(const int bitdepth,
             }
         }
     }
+#endif
 }
 
 #ifndef UNIT_TEST

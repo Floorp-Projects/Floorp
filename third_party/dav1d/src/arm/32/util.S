@@ -32,6 +32,20 @@
 #include "config.h"
 #include "src/arm/asm.S"
 
+.macro movrel_local rd, val, offset=0
+#if defined(PIC)
+        ldr             \rd,  1f
+        b               2f
+1:
+        .word           \val + \offset - (2f + 8 - 4 * CONFIG_THUMB)
+2:
+        add             \rd,  \rd,  pc
+#else
+        movw            \rd, #:lower16:\val+\offset
+        movt            \rd, #:upper16:\val+\offset
+#endif
+.endm
+
 .macro movrel rd, val, offset=0
 #if defined(PIC) && defined(__APPLE__)
         ldr             \rd,  1f
@@ -50,17 +64,24 @@
         .indirect_symbol \val
         .word       0
         .text
-#elif defined(PIC)
-        ldr             \rd,  1f
-        b               2f
-1:
-        .word           \val + \offset - (2f + 8 - 4 * CONFIG_THUMB)
-2:
-        add             \rd,  \rd,  pc
 #else
-        movw            \rd, #:lower16:\val+\offset
-        movt            \rd, #:upper16:\val+\offset
+        movrel_local    \rd, \val, \offset
 #endif
+.endm
+
+.macro transpose_8x8b q0, q1, q2, q3, r0, r1, r2, r3, r4, r5, r6, r7
+        vtrn.32         \q0,  \q2
+        vtrn.32         \q1,  \q3
+
+        vtrn.16         \r0,  \r2
+        vtrn.16         \r1,  \r3
+        vtrn.16         \r4,  \r6
+        vtrn.16         \r5,  \r7
+
+        vtrn.8          \r0,  \r1
+        vtrn.8          \r2,  \r3
+        vtrn.8          \r4,  \r5
+        vtrn.8          \r6,  \r7
 .endm
 
 #endif /* DAV1D_SRC_ARM_32_UTIL_S */

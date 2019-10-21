@@ -29,6 +29,8 @@
 #include "src/ipred.h"
 #include "src/levels.h"
 
+#include <stdio.h>
+
 static const char *const intra_pred_mode_names[N_IMPL_INTRA_PRED_MODES] = {
     [DC_PRED]       = "dc",
     [DC_128_PRED]   = "dc_128",
@@ -83,11 +85,16 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                 {
                     const ptrdiff_t stride = w * sizeof(pixel);
 
-                    int a = 0;
-                    if (mode >= Z1_PRED && mode <= Z3_PRED) /* angle */
+                    int a = 0, maxw = 0, maxh = 0;
+                    if (mode >= Z1_PRED && mode <= Z3_PRED) { /* angle */
                         a = (90 * (mode - Z1_PRED) + z_angles[rnd() % 27]) |
                             (rnd() & 0x600);
-                    else if (mode == FILTER_PRED) /* filter_idx */
+                        if (mode == Z2_PRED) {
+                            maxw = rnd(), maxh = rnd();
+                            maxw = 1 + (maxw & (maxw & 4096 ? 4095 : w - 1));
+                            maxh = 1 + (maxh & (maxh & 4096 ? 4095 : h - 1));
+                        }
+                    } else if (mode == FILTER_PRED) /* filter_idx */
                         a = (rnd() % 5) | (rnd() & ~511);
 
 #if BITDEPTH == 16
@@ -99,13 +106,23 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                     for (int i = -h * 2; i <= w * 2; i++)
                         topleft[i] = rnd() & bitdepth_max;
 
-                    const int maxw = 1 + (rnd() % 128), maxh = 1 + (rnd() % 128);
                     call_ref(c_dst, stride, topleft, w, h, a, maxw, maxh
                              HIGHBD_TAIL_SUFFIX);
                     call_new(a_dst, stride, topleft, w, h, a, maxw, maxh
                              HIGHBD_TAIL_SUFFIX);
-                    checkasm_check_pixel(c_dst, stride, a_dst, stride,
-                                         w, h, "dst");
+                    if (checkasm_check_pixel(c_dst, stride, a_dst, stride,
+                                             w, h, "dst"))
+                    {
+                        if (mode == Z1_PRED || mode == Z3_PRED)
+                            fprintf(stderr, "angle = %d (0x%03x)\n",
+                                    a & 0x1ff, a & 0x600);
+                        else if (mode == Z2_PRED)
+                            fprintf(stderr, "angle = %d (0x%03x), "
+                                    "max_width = %d, max_height = %d\n",
+                                    a & 0x1ff, a & 0x600, maxw, maxh);
+                        else if (mode == FILTER_PRED)
+                            fprintf(stderr, "filter_idx = %d\n", a & 0x1ff);
+                    }
 
                     bench_new(a_dst, stride, topleft, w, h, a, 128, 128
                               HIGHBD_TAIL_SUFFIX);

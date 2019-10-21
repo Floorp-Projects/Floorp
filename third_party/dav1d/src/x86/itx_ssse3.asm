@@ -202,7 +202,7 @@ SECTION .text
     ret
 %endmacro
 
-; flags: 1 = swap, 2: coef_regs
+; flags: 1 = swap, 2: coef_regs, 4: no_pack
 %macro ITX_MUL2X_PACK 5-6 0 ; dst/src, tmp[1], rnd, coef[1-2], flags
 %if %6 & 2
     pmaddwd              m%2, m%4, m%1
@@ -218,24 +218,17 @@ SECTION .text
     paddd                m%1, m%3
     psrad                m%2, 12
     psrad                m%1, 12
+%if %6 & 4 == 0
     packssdw             m%1, m%2
+%endif
 %endmacro
 
 %macro IDCT4_1D_PACKED 0-1   ;pw_2896x8
-    punpckhwd            m2, m0, m1            ;unpacked in1 in3
-    psubw                m3, m0, m1
-    paddw                m0, m1
-    punpcklqdq           m0, m3                ;high: in0-in2 ;low: in0+in2
-
     mova                 m3, [o(pd_2048)]
+    punpckhwd            m2, m0, m1            ;unpacked in1 in3
+    punpcklwd            m0, m1                ;unpacked in0 in2
     ITX_MUL2X_PACK        2, 1, 3, 1567, 3784
-
-%if %0 == 1
-    pmulhrsw             m0, m%1
-%else
-    pmulhrsw             m0, [o(pw_2896x8)]    ;high: t1 ;low: t0
-%endif
-
+    ITX_MUL2X_PACK        0, 1, 3, 2896, 2896
     psubsw               m1, m0, m2            ;high: out2 ;low: out3
     paddsw               m0, m2                ;high: out1 ;low: out0
 %endmacro
@@ -499,79 +492,81 @@ cglobal inv_txfm_add_wht_wht_4x4, 3, 3, 4, dst, stride, coeff
 
 %macro IDCT8_1D_PACKED 0
     mova                 m6, [o(pd_2048)]
-    punpckhwd            m5, m0, m3                 ;unpacked in1 in7
-    punpckhwd            m4, m2, m1                 ;unpacked in5 in3
+    punpckhwd            m4, m0, m3                 ;unpacked in1 in7
+    punpcklwd            m0, m2                     ;unpacked in0 in4
+    punpckhwd            m2, m1                     ;unpacked in5 in3
     punpcklwd            m1, m3                     ;unpacked in2 in6
-    psubw                m3, m0, m2
-    paddw                m0, m2
-    punpcklqdq           m0, m3                     ;low: in0+in4 high: in0-in4
-    ITX_MUL2X_PACK        5, 2, 6,  799, 4017, 1    ;low: t4a high: t7a
-    ITX_MUL2X_PACK        4, 2, 6, 3406, 2276, 1    ;low: t5a high: t6a
-    ITX_MUL2X_PACK        1, 2, 6, 1567, 3784       ;low: t3  high: t2
-    mova                 m6, [o(pw_2896x8)]
-    psubsw               m2, m5, m4                 ;low: t5a high: t6a
-    paddsw               m5, m4                     ;low: t4  high: t7
-    punpckhqdq           m4, m2, m2                 ;low: t6a high: t6a
-    psubw                m3, m4, m2                 ;low: t6a - t5a
-    paddw                m4, m2                     ;low: t6a + t5a
-    punpcklqdq           m4, m3                     ;low: t6a + t5a high: t6a - t5a
-    pmulhrsw             m0, m6                     ;low: t0   high: t1
-    pmulhrsw             m4, m6                     ;low: t6   high: t5
-    shufps               m2, m5, m4, q1032          ;low: t7   high: t6
-    shufps               m5, m4, q3210              ;low: t4   high: t5
-    psubsw               m4, m0, m1                 ;low: tmp3 high: tmp2
+    ITX_MUL2X_PACK        4, 3, 6,  799, 4017       ;low: t7a high: t4a
+    ITX_MUL2X_PACK        2, 3, 6, 3406, 2276       ;low: t6a high: t5a
+    ITX_MUL2X_PACK        1, 3, 6, 1567, 3784       ;low: t3  high: t2
+    psubsw               m3, m4, m2                 ;low: t6a high: t5a
+    paddsw               m4, m2                     ;low: t7  high: t4
+    pshufb               m3, [o(deint_shuf1)]
+    ITX_MUL2X_PACK        0, 2, 6, 2896, 2896       ;low: t0  high: t1
+    ITX_MUL2X_PACK        3, 2, 6, 2896, 2896       ;low: t6  high: t5
+    psubsw               m2, m0, m1                 ;low: tmp3 high: tmp2
     paddsw               m0, m1                     ;low: tmp0 high: tmp1
-    psubsw               m3, m0, m2                 ;low: out7 high: out6
-    paddsw               m0, m2                     ;low: out0 high: out1
-    psubsw               m2, m4, m5                 ;low: out4 high: out5
-    paddsw               m1, m4, m5                 ;low: out3 high: out2
+    punpcklqdq           m1, m4, m3                 ;low: t7   high: t6
+    punpckhqdq           m4, m3                     ;low: t4   high: t5
+    psubsw               m3, m0, m1                 ;low: out7 high: out6
+    paddsw               m0, m1                     ;low: out0 high: out1
+    paddsw               m1, m2, m4                 ;low: out3 high: out2
+    psubsw               m2, m4                     ;low: out4 high: out5
 %endmacro
 
 ;dst1 = (src1 * coef1 - src2 * coef2 + rnd) >> 12
 ;dst2 = (src1 * coef2 + src2 * coef1 + rnd) >> 12
-%macro ITX_MULSUB_2W 7 ; dst/src[1-2], tmp[1-2], rnd, coef[1-2]
-    punpckhwd           m%3, m%1, m%2
+%macro ITX_MULSUB_2W 7-8 0 ; dst/src[1-2], tmp[1-2], rnd, coef[1-2], dst2_in_tmp1
+    punpckhwd           m%4, m%1, m%2
     punpcklwd           m%1, m%2
 %if %7 < 8
     pmaddwd             m%2, m%7, m%1
-    pmaddwd             m%4, m%7, m%3
+    pmaddwd             m%3, m%7, m%4
 %else
     mova                m%2, [o(pw_%7_%6)]
-    pmaddwd             m%4, m%3, m%2
+%if %8
+    pmaddwd             m%3, m%1, m%2
+    pmaddwd             m%2, m%4
+%else
+    pmaddwd             m%3, m%4, m%2
     pmaddwd             m%2, m%1
 %endif
-    paddd               m%4, m%5
-    paddd               m%2, m%5
-    psrad               m%4, 12
-    psrad               m%2, 12
-    packssdw            m%2, m%4                 ;dst2
-%if %7 < 8
-    pmaddwd             m%3, m%6
-    pmaddwd             m%1, m%6
-%else
-    mova                m%4, [o(pw_%6_m%7)]
-    pmaddwd             m%3, m%4
-    pmaddwd             m%1, m%4
 %endif
     paddd               m%3, m%5
-    paddd               m%1, m%5
+    paddd               m%2, m%5
     psrad               m%3, 12
+    psrad               m%2, 12
+%if %8
+    packssdw            m%3, m%2
+%else
+    packssdw            m%2, m%3                 ;dst2
+%endif
+%if %7 < 8
+    pmaddwd             m%4, m%6
+    pmaddwd             m%1, m%6
+%elif %8
+    mova                m%2, [o(pw_%6_m%7)]
+    pmaddwd             m%4, m%2
+    pmaddwd             m%1, m%2
+%else
+    mova                m%3, [o(pw_%6_m%7)]
+    pmaddwd             m%4, m%3
+    pmaddwd             m%1, m%3
+%endif
+    paddd               m%4, m%5
+    paddd               m%1, m%5
+    psrad               m%4, 12
     psrad               m%1, 12
-    packssdw            m%1, m%3                 ;dst1
+    packssdw            m%1, m%4                 ;dst1
 %endmacro
 
 %macro IDCT4_1D 7 ; src[1-4], tmp[1-2], pd_2048
-    ITX_MULSUB_2W        %2, %4, %5, %6, %7, 1567, 3784   ;t2, t3
-    mova                m%6, [o(pw_2896x8)]
-    paddw               m%5, m%1, m%3
-    psubw               m%1, m%3
-    pmulhrsw            m%1, m%6                          ;t1
-    pmulhrsw            m%5, m%6                          ;t0
-    psubsw              m%3, m%1, m%2                     ;out2
-    paddsw              m%2, m%1                          ;out1
-    paddsw              m%1, m%5, m%4                     ;out0
-    psubsw              m%5, m%4                          ;out3
-    mova                m%4, m%5
+    ITX_MULSUB_2W        %2, %4, %5, %6, %7, 1567, 3784, 1 ;t2, t3
+    ITX_MULSUB_2W        %1, %3, %4, %6, %7, 2896, 2896, 1 ;t1, t0
+    psubsw              m%3, m%1, m%2                      ;out2
+    paddsw              m%2, m%1                           ;out1
+    paddsw              m%1, m%5, m%4                      ;out0
+    psubsw              m%4, m%5                           ;out3
 %endmacro
 
 %macro WRITE_4X8 4 ;row[1-4]
@@ -1286,17 +1281,13 @@ cglobal iidentity_8x4_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 %endmacro
 
 %macro IDCT8_1D_ODDHALF 7 ; src[1-4], tmp[1-2], pd_2048
-    ITX_MULSUB_2W        %1, %4, %5, %6, %7,  799, 4017   ;t4a, t7a
-    ITX_MULSUB_2W        %3, %2, %5, %6, %7, 3406, 2276   ;t5a, t6a
-    psubsw               m%5, m%1, m%3                    ;t5a
-    paddsw               m%1, m%3                         ;t4
-    psubsw               m%6, m%4, m%2                    ;t6a
-    paddsw               m%4, m%2                         ;t7
-    mova                 m%3, [o(pw_2896x8)]
-    psubw                m%2, m%6, m%5                    ;t6a - t5a
-    paddw                m%6, m%5                         ;t6a + t5a
-    pmulhrsw             m%2, m%3                         ;t5
-    pmulhrsw             m%3, m%6                         ;t6
+    ITX_MULSUB_2W         %1, %4, %5, %6, %7,  799, 4017    ;t4a, t7a
+    ITX_MULSUB_2W         %3, %2, %5, %6, %7, 3406, 2276, 1 ;t5a, t6a
+    psubsw               m%2, m%4, m%5                      ;t6a
+    paddsw               m%4, m%5                           ;t7
+    psubsw               m%5, m%1, m%3                      ;t5a
+    paddsw               m%1, m%3                           ;t4
+    ITX_MULSUB_2W         %2, %5, %3, %6, %7, 2896, 2896, 1 ;t5, t6
 %endmacro
 
 INV_TXFM_8X8_FN dct, dct,      0
@@ -2063,37 +2054,34 @@ cglobal iidentity_4x16_internal, 0, 0, 0, dst, stride, coeff, eob, tx2
 %macro IDCT16_1D_PACKED_ODDHALF 7  ;src[1-4], tmp[1-3]
     punpckhwd            m%5, m%4, m%1                ;packed in13 in3
     punpcklwd            m%1, m%4                     ;packed in1  in15
-    punpcklwd            m%6, m%3, m%2                ;packed in9  in7
+    punpcklwd            m%4, m%3, m%2                ;packed in9  in7
     punpckhwd            m%2, m%3                     ;packed in5  in11
-
     mova                 m%7, [o(pd_2048)]
-    ITX_MUL2X_PACK        %1, %4, %7,  401, 4076, 1    ;low: t8a   high: t15a
-    ITX_MUL2X_PACK        %6, %4, %7, 3166, 2598, 1    ;low: t9a   high: t14a
-    ITX_MUL2X_PACK        %2, %4, %7, 1931, 3612, 1    ;low: t10a  high: t13a
-    ITX_MUL2X_PACK        %5, %4, %7, 3920, 1189, 1    ;low: t11a  high: t12a
-    psubsw               m%4, m%1, m%6                 ;low: t9    high: t14
-    paddsw               m%1, m%6                      ;low: t8    high: t15
+    ITX_MUL2X_PACK        %1, %6, %7,  401, 4076, 1    ;low: t8a   high: t15a
+    ITX_MUL2X_PACK        %4, %6, %7, 3166, 2598, 1    ;low: t9a   high: t14a
+    ITX_MUL2X_PACK        %2, %6, %7, 1931, 3612, 1    ;low: t10a  high: t13a
+    ITX_MUL2X_PACK        %5, %6, %7, 3920, 1189, 1    ;low: t11a  high: t12a
+    psubsw               m%6, m%1, m%4                 ;low: t9    high: t14
+    paddsw               m%1, m%4                      ;low: t8    high: t15
     psubsw               m%3, m%5, m%2                 ;low: t10   high: t13
-    paddsw               m%2, m%5                      ;low: t11   high: t12
-    punpcklqdq           m%5, m%4, m%3                 ;low: t9    high: t10
-    punpckhqdq           m%4, m%3                      ;low: t14   high: t13
-    punpcklwd            m%6, m%4, m%5                 ;packed t14 t9
-    punpckhwd            m%5, m%4                      ;packed t10 t13
+    paddsw               m%5, m%2                      ;low: t11   high: t12
+    mova                 m%2, [o(deint_shuf2)]
+    pshufb               m%6, m%2
+    pshufb               m%3, [o(deint_shuf1)]
     pxor                 m%4, m%4
-    psubw                m%4, m%5                      ;packed -t10 -t13
+    psubw                m%4, m%3                      ;packed -t10 -t13
     ITX_MUL2X_PACK        %6, %3, %7, 1567, 3784, 1    ;low: t9a   high: t14a
     ITX_MUL2X_PACK        %4, %3, %7, 3784, 1567       ;low: t10a  high: t13a
-    psubsw               m%3, m%1, m%2                 ;low: t11a  high: t12a
-    paddsw               m%1, m%2                      ;low: t8a   high: t15a
+    psubsw               m%3, m%1, m%5                 ;low: t11a  high: t12a
+    paddsw               m%1, m%5                      ;low: t8a   high: t15a
     psubsw               m%5, m%6, m%4                 ;low: t10   high: t13
     paddsw               m%6, m%4                      ;low: t9    high: t14
-    mova                 m%7, [o(pw_2896x8)]
-    punpckhqdq           m%4, m%3, m%5                 ;low: t12a  high: t13
-    punpcklqdq           m%3, m%5                      ;low: t11a  high: t10
-    psubw                m%2, m%4, m%3
-    paddw                m%3, m%4
-    pmulhrsw             m%2, m%7                      ;low: t11   high: t10a
-    pmulhrsw             m%3, m%7                      ;low: t12   high: t13a
+    pshufb               m%3, m%2
+    pshufb               m%5, m%2
+    ITX_MUL2X_PACK        %3, %2, %7, 2896, 2896, 4    ;t12,  t11
+    ITX_MUL2X_PACK        %5, %4, %7, 2896, 2896, 4    ;t13a, t10a
+    packssdw             m%2, m%4                      ;low: t11   high: t10a
+    packssdw             m%3, m%5                      ;low: t12   high: t13a
     punpckhqdq           m%4, m%1, m%6                 ;low: t15a  high: t14
     punpcklqdq           m%1, m%6                      ;low: t8a   high: t9
 %endmacro
@@ -2918,19 +2906,14 @@ ALIGN function_align
     mova                   m0, [rsp+gprsize*2+16*1]
     mova                   m2, [rsp+gprsize*2+16*2]
     mova [rsp+gprsize*2+16*1], m4
-    psubsw                 m4, m0, m3                   ;t13
+    psubsw                 m5, m0, m3                   ;t13
     paddsw                 m0, m3                       ;t14
-    psubsw                 m3, m2, m1                   ;t12a
+    mova                   m3, [o(pd_2048)]
+    psubsw                 m4, m2, m1                   ;t12a
     paddsw                 m1, m2                       ;t15a
-    mova                   m5, [o(pw_2896x8)]
-    psubw                  m2, m4, m7                   ;t13-t10
-    paddw                  m7, m4                       ;t13+t10
-    psubw                  m4, m3, m6                   ;t12a-t11a
-    paddw                  m6, m3                       ;t12a+t11a
-    pmulhrsw               m7, m5                       ;t13a
-    pmulhrsw               m4, m5                       ;t11
-    pmulhrsw               m6, m5                       ;t12
-    pmulhrsw               m5, m2                       ;t10a
+    mova [rsp+gprsize*2+16*2], m1
+    ITX_MULSUB_2W           5, 7, 1, 2, 3, 2896, 2896   ;t10a, t13a
+    ITX_MULSUB_2W           4, 6, 1, 2, 3, 2896, 2896   ;t11,  t12
     mova                   m3, [rsp+gprsize*2+16*8]
     psubsw                 m2, m3, m5                   ;out10
     paddsw                 m3, m5                       ;out5
@@ -2950,6 +2933,7 @@ ALIGN function_align
     mova [rsp+gprsize*2+16*5], m6
     psubsw                 m6, m7, m0                   ;out14
     paddsw                 m7, m0                       ;out1
+    mova                   m1, [rsp+gprsize*2+16*2]
     mova                   m0, [rsp+gprsize*2+16*3]
     mova [rsp+gprsize*2+16*4], m7
     psubsw                 m7, m0, m1                   ;out15
@@ -4211,35 +4195,30 @@ ALIGN function_align
     psubsw                  m5, m3, m2                    ;t28a
     paddsw                  m3, m2                        ;t31a
     ITX_MULSUB_2W            5, 4, 1, 2, 7, 1567, 3784    ;t19, t28
-
     mova                    m2, [rsp+gprsize*2+16*15]     ;tmp12
     psubsw                  m1, m5, m6                    ;t20a
     paddsw                  m5, m6                        ;t19a
     psubsw                  m6, m2, m5                    ;out19
     paddsw                  m2, m5                        ;out12
+    mova                    m5, [rsp+gprsize*2+16*30]     ;t27
     mova [rsp+gprsize*2+16*22], m6                        ;out19
     mova [rsp+gprsize*2+16*15], m2                        ;out12
-    mova                    m5, [rsp+gprsize*2+16*30]     ;t27
     psubsw                  m6, m4, m5                    ;t27a
     paddsw                  m4, m5                        ;t28a
+    ITX_MULSUB_2W            6, 1, 2, 5, 7, 2896, 2896    ;t20, t27
     mova                    m2, [rsp+gprsize*2+16*6 ]     ;tmp3
-    mova                    m7, [o(pw_2896x8)]
-    psubw                   m5, m6, m1                    ;t27a - t20a
-    paddw                   m6, m1                        ;t27a + t20a
-    psubsw                  m1, m2, m4                    ;out28
+    psubsw                  m5, m2, m4                    ;out28
     paddsw                  m2, m4                        ;out3
-    pmulhrsw                m5, m7                        ;t20
-    pmulhrsw                m6, m7                        ;t27
     mova                    m4, [rsp+gprsize*2+16*14]     ;tmp11
-    mova [rsp+gprsize*2+16*31], m1                        ;out28
+    mova [rsp+gprsize*2+16*31], m5                        ;out28
     mova [rsp+gprsize*2+16*6 ], m2                        ;out3
-    psubsw                  m1, m4, m5                    ;out20
-    paddsw                  m4, m5                        ;out11
+    psubsw                  m5, m4, m6                    ;out20
+    paddsw                  m4, m6                        ;out11
     mova                    m2, [rsp+gprsize*2+16*7 ]     ;tmp4
-    mova [rsp+gprsize*2+16*23], m1                        ;out20
+    mova [rsp+gprsize*2+16*23], m5                        ;out20
     mova [rsp+gprsize*2+16*14], m4                        ;out11
-    psubsw                  m5, m2, m6                    ;out27
-    paddsw                  m2, m6                        ;out4
+    psubsw                  m5, m2, m1                    ;out27
+    paddsw                  m2, m1                        ;out4
     mova                    m1, [rsp+gprsize*2+16*26]     ;t23a
     mova                    m4, [rsp+gprsize*2+16*27]     ;t24a
     mova [rsp+gprsize*2+16*30], m5                        ;out27
@@ -4248,27 +4227,24 @@ ALIGN function_align
     paddsw                  m0, m1                        ;t16
     psubsw                  m2, m3, m4                    ;t24
     paddsw                  m3, m4                        ;t31
+    ITX_MULSUB_2W            2, 5, 4, 6, 7, 2896, 2896    ;t23a, t24a
     mova                    m6, [rsp+gprsize*2+16*18]     ;tmp15
-    psubw                   m1, m2, m5                    ;t24  - t23
-    paddw                   m2, m5                        ;t24  + t23
     psubsw                  m4, m6, m0                    ;out16
     paddsw                  m6, m0                        ;out15
-    pmulhrsw                m1, m7                        ;t23a
-    pmulhrsw                m2, m7                        ;t24a
     mova                    m0, [rsp+gprsize*2+16*3 ]     ;tmp0
-    mova                    m5, [rsp+gprsize*2+16*11]     ;tmp8
+    mova                    m1, [rsp+gprsize*2+16*11]     ;tmp8
     mova [rsp+gprsize*2+16*18], m6                        ;out15
     mova [rsp+gprsize*2+16*19], m4                        ;out16
     psubsw                  m6, m0, m3                    ;out31
     paddsw                  m0, m3                        ;out0
-    psubsw                  m4, m5, m1                    ;out23
-    paddsw                  m5, m1                        ;out8
+    psubsw                  m4, m1, m2                    ;out23
+    paddsw                  m1, m2                        ;out8
     mova                    m3, [rsp+gprsize*2+16*10]     ;tmp7
     mova [rsp+gprsize*2+16*34], m6                        ;out31
-    mova [rsp+gprsize*2+16*11], m5                        ;out8
+    mova [rsp+gprsize*2+16*11], m1                        ;out8
     mova [rsp+gprsize*2+16*26], m4                        ;out23
-    paddsw                  m6, m3, m2                    ;out7
-    psubsw                  m3, m2                        ;out24
+    paddsw                  m6, m3, m5                    ;out7
+    psubsw                  m3, m5                        ;out24
     mova                    m1, [rsp+gprsize*2+16*20]     ;t17
     mova                    m5, [rsp+gprsize*2+16*25]     ;t22
     mova                    m2, [rsp+gprsize*2+16*17]     ;tmp14
@@ -4283,23 +4259,20 @@ ALIGN function_align
     mova [rsp+gprsize*2+16*20], m3                        ;out17
     psubsw                  m2, m1, m5                    ;t25a
     paddsw                  m1, m5                        ;t30a
-    psubw                   m3, m2, m4                    ;t25a - t22a
-    paddw                   m2, m4                        ;t25a + t22a
+    ITX_MULSUB_2W            2, 4, 3, 5, 7, 2896, 2896    ;t22, t25
     mova                    m5, [rsp+gprsize*2+16*4 ]     ;tmp1
-    pmulhrsw                m3, m7                        ;t22
-    pmulhrsw                m2, m7                        ;t25
-    psubsw                  m4, m5, m1                    ;out30
+    psubsw                  m3, m5, m1                    ;out30
     paddsw                  m5, m1                        ;out1
     mova                    m1, [rsp+gprsize*2+16*12]     ;tmp9
-    mova [rsp+gprsize*2+16*33], m4                        ;out30
+    mova [rsp+gprsize*2+16*33], m3                        ;out30
     mova [rsp+gprsize*2+16*4 ], m5                        ;out1
-    psubsw                  m4, m1, m3                    ;out22
-    paddsw                  m1, m3                        ;out9
+    psubsw                  m3, m1, m2                    ;out22
+    paddsw                  m1, m2                        ;out9
     mova                    m5, [rsp+gprsize*2+16*9 ]     ;tmp6
-    mova [rsp+gprsize*2+16*25], m4                        ;out22
+    mova [rsp+gprsize*2+16*25], m3                        ;out22
     mova [rsp+gprsize*2+16*12], m1                        ;out9
-    psubsw                  m3, m5, m2                    ;out25
-    paddsw                  m5, m2                        ;out6
+    psubsw                  m3, m5, m4                    ;out25
+    paddsw                  m5, m4                        ;out6
     mova                    m4, [rsp+gprsize*2+16*21]     ;t18a
     mova                    m1, [rsp+gprsize*2+16*24]     ;t21a
     mova                    m2, [rsp+gprsize*2+16*16]     ;tmp13
@@ -4315,17 +4288,14 @@ ALIGN function_align
     mova [rsp+gprsize*2+16*16], m2                        ;out13
     psubsw                  m5, m3, m1                    ;t26
     paddsw                  m3, m1                        ;t29
+    ITX_MULSUB_2W            5, 4, 1, 2, 7, 2896, 2896    ;t21a, t26a
     mova                    m2, [rsp+gprsize*2+16*5 ]     ;tmp2
-    psubw                   m1, m5, m4                    ;t26 - t21
-    paddw                   m4, m5                        ;t26 + t21
-    psubsw                  m5, m2, m3                    ;out29
+    psubsw                  m1, m2, m3                    ;out29
     paddsw                  m2, m3                        ;out2
-    pmulhrsw                m1, m7                        ;t21a
-    pmulhrsw                m4, m7                        ;t26a
     mova                    m3, [rsp+gprsize*2+16*13]     ;tmp10
-    mova [rsp+gprsize*2+16*32], m5                        ;out29
-    psubsw                  m7, m3, m1                    ;out21
-    paddsw                  m3, m1                        ;out10
+    mova [rsp+gprsize*2+16*32], m1                        ;out29
+    psubsw                  m7, m3, m5                    ;out21
+    paddsw                  m3, m5                        ;out10
     mova                    m5, [rsp+gprsize*2+16*8 ]     ;tmp5
     mova [rsp+gprsize*2+16*24], m7                        ;out21
     mova [rsp+gprsize*2+16*13], m3                        ;out10
@@ -6010,268 +5980,242 @@ ALIGN function_align
     psubw                   m5, m6, m3
     ITX_MULSUB_2W            5, 4, 2, 3, 7, 1567, 3784    ;t43, t52
 
-    mova                    m7, [o(pw_2896x8)]
     mova                    m2, [rsp+gprsize*2+16*38]     ;t35a
     mova                    m3, [rsp+gprsize*2+16*31]     ;tmp[28]
     psubsw                  m6, m2, m0                    ;t44
     paddsw                  m2, m0                        ;t35
     psubsw                  m0, m3, m2                    ;out35
     paddsw                  m2, m3                        ;out28
+    mova                    m3, [rsp+gprsize*2+16*63]     ;t60a
     mova [rsp+gprsize*2+16*38], m0                        ;out35
     mova [rsp+gprsize*2+16*31], m2                        ;out28
-    mova                    m3, [rsp+gprsize*2+16*63]     ;t60a
-    mova                    m2, [rsp+gprsize*2+16*6 ]     ;tmp[3]
     psubsw                  m0, m3, m1                    ;t51
     paddsw                  m3, m1                        ;t60
-    psubw                   m1, m0, m6                    ;t44a
-    paddw                   m0, m6                        ;t51a
-    psubsw                  m6, m2, m3                    ;out60
+    ITX_MULSUB_2W            0, 6, 1, 2, 7, 2896, 2896    ;t44a, t51a
+    mova                    m2, [rsp+gprsize*2+16*6 ]     ;tmp[3]
+    psubsw                  m1, m2, m3                    ;out60
     paddsw                  m2, m3                        ;out3
-    pmulhrsw                m1, m7                        ;t44a
-    pmulhrsw                m0, m7                        ;t51a
     mova                    m3, [rsp+gprsize*2+16*22]     ;tmp[19]
-    mova [rsp+gprsize*2+16*63], m6                        ;out60
+    mova [rsp+gprsize*2+16*63], m1                        ;out60
     mova [rsp+gprsize*2+16*6 ], m2                        ;out3
-    psubsw                  m6, m3, m1                    ;out44
-    paddsw                  m3, m1                        ;out19
+    psubsw                  m1, m3, m0                    ;out44
+    paddsw                  m3, m0                        ;out19
     mova                    m2, [rsp+gprsize*2+16*15]     ;tmp[12]
-    mova [rsp+gprsize*2+16*47], m6                        ;out44
-    mova [rsp+gprsize*2+16*22], m3                        ;out19
-    psubsw                  m1, m2, m0                    ;out51
-    paddsw                  m2, m0                        ;out12
-    mova [rsp+gprsize*2+16*54], m1                        ;out51
-    mova [rsp+gprsize*2+16*15], m2                        ;out12
 
     mova                    m0, [rsp+gprsize*2+16*39]     ;t36
+    mova [rsp+gprsize*2+16*47], m1                        ;out44
+    mova [rsp+gprsize*2+16*22], m3                        ;out19
     mova                    m1, [rsp+gprsize*2+16*62]     ;t59
+    psubsw                  m3, m2, m6                    ;out51
+    paddsw                  m2, m6                        ;out12
+    mova [rsp+gprsize*2+16*54], m3                        ;out51
+    mova [rsp+gprsize*2+16*15], m2                        ;out12
     psubsw                  m2, m0, m5                    ;t43a
     paddsw                  m0, m5                        ;t36a
+    mova                    m5, [rsp+gprsize*2+16*30]     ;tmp[27]
     psubsw                  m3, m1, m4                    ;t52a
     paddsw                  m1, m4                        ;t59a
-    psubw                   m5, m3, m2                    ;t43
-    paddw                   m3, m2                        ;t52
-    mova                    m2, [rsp+gprsize*2+16*30]     ;tmp[27]
+    ITX_MULSUB_2W            3, 2, 4, 6, 7, 2896, 2896    ;t43, t52
     mova                    m4, [rsp+gprsize*2+16*7 ]     ;tmp[4 ]
-    pmulhrsw                m5, m7                        ;t43
-    pmulhrsw                m3, m7                        ;t52
-    psubsw                  m6, m2, m0                    ;out36
-    paddsw                  m2, m0                        ;out27
+    psubsw                  m6, m5, m0                    ;out36
+    paddsw                  m5, m0                        ;out27
     psubsw                  m0, m4, m1                    ;out59
     paddsw                  m4, m1                        ;out4
     mova [rsp+gprsize*2+16*39], m6                        ;out36
-    mova [rsp+gprsize*2+16*30], m2                        ;out27
+    mova [rsp+gprsize*2+16*30], m5                        ;out27
     mova [rsp+gprsize*2+16*62], m0                        ;out59
     mova [rsp+gprsize*2+16*7 ], m4                        ;out4
     mova                    m0, [rsp+gprsize*2+16*23]     ;tmp[20]
-    mova                    m2, [rsp+gprsize*2+16*14]     ;tmp[11]
-    psubsw                  m4, m0, m5                    ;out43
-    paddsw                  m0, m5                        ;out20
-    psubsw                  m6, m2, m3                    ;out52
-    paddsw                  m2, m3                        ;out11
+    mova                    m5, [rsp+gprsize*2+16*14]     ;tmp[11]
+    psubsw                  m4, m0, m3                    ;out43
+    paddsw                  m0, m3                        ;out20
+    psubsw                  m6, m5, m2                    ;out52
+    paddsw                  m5, m2                        ;out11
     mova [rsp+gprsize*2+16*46], m4                        ;out43
     mova [rsp+gprsize*2+16*23], m0                        ;out20
     mova [rsp+gprsize*2+16*55], m6                        ;out52
-    mova [rsp+gprsize*2+16*14], m2                        ;out11
+    mova [rsp+gprsize*2+16*14], m5                        ;out11
 
     mova                    m0, [rsp+gprsize*2+16*40]     ;t37a
-    mova                    m2, [rsp+gprsize*2+16*45]     ;t42a
+    mova                    m5, [rsp+gprsize*2+16*45]     ;t42a
     mova                    m3, [rsp+gprsize*2+16*56]     ;t53a
     mova                    m1, [rsp+gprsize*2+16*61]     ;t58a
-    psubsw                  m4, m0, m2                    ;t42
-    paddsw                  m0, m2                        ;t37
+    mova                    m2, [rsp+gprsize*2+16*29]     ;tmp[26]
+    psubsw                  m4, m0, m5                    ;t42
+    paddsw                  m0, m5                        ;t37
     psubsw                  m5, m1, m3                    ;t53
     paddsw                  m1, m3                        ;t58
-    psubw                   m6, m5, m4                    ;t42a
-    paddw                   m5, m4                        ;t53a
-    mova                    m2, [rsp+gprsize*2+16*29]     ;tmp[26]
+    ITX_MULSUB_2W            5, 4, 3, 6, 7, 2896, 2896    ;t43, t52
     mova                    m3, [rsp+gprsize*2+16*8 ]     ;tmp[5 ]
-    pmulhrsw                m6, m7                        ;t42a
-    pmulhrsw                m5, m7                        ;t53a
-    psubsw                  m4, m2, m0                    ;out37
+    psubsw                  m6, m2, m0                    ;out37
     paddsw                  m2, m0                        ;out26
     psubsw                  m0, m3, m1                    ;out58
     paddsw                  m3, m1                        ;out5
-    mova [rsp+gprsize*2+16*40], m4                        ;out37
+    mova [rsp+gprsize*2+16*40], m6                        ;out37
     mova [rsp+gprsize*2+16*29], m2                        ;out26
     mova [rsp+gprsize*2+16*61], m0                        ;out58
     mova [rsp+gprsize*2+16*8 ], m3                        ;out5
     mova                    m0, [rsp+gprsize*2+16*24]     ;tmp[21]
     mova                    m1, [rsp+gprsize*2+16*13]     ;tmp[10]
-    psubsw                  m2, m0, m6                    ;out42
-    paddsw                  m0, m6                        ;out21
-    psubsw                  m3, m1, m5                    ;out53
-    paddsw                  m1, m5                        ;out10
+    psubsw                  m2, m0, m5                    ;out42
+    paddsw                  m0, m5                        ;out21
+    psubsw                  m3, m1, m4                    ;out53
+    paddsw                  m1, m4                        ;out10
     mova [rsp+gprsize*2+16*45], m2                        ;out42
     mova [rsp+gprsize*2+16*24], m0                        ;out21
     mova [rsp+gprsize*2+16*56], m3                        ;out53
     mova [rsp+gprsize*2+16*13], m1                        ;out10
 
     mova                    m0, [rsp+gprsize*2+16*41]     ;t38
-    mova                    m2, [rsp+gprsize*2+16*44]     ;t41
+    mova                    m5, [rsp+gprsize*2+16*44]     ;t41
     mova                    m3, [rsp+gprsize*2+16*57]     ;t54
     mova                    m1, [rsp+gprsize*2+16*60]     ;t57
-    psubsw                  m4, m0, m2                    ;t41a
-    paddsw                  m0, m2                        ;t38a
+    mova                    m2, [rsp+gprsize*2+16*28]     ;tmp[25]
+    psubsw                  m4, m0, m5                    ;t41a
+    paddsw                  m0, m5                        ;t38a
     psubsw                  m5, m1, m3                    ;t54a
     paddsw                  m1, m3                        ;t57a
-    psubw                   m6, m5, m4                    ;t41
-    paddw                   m5, m4                        ;t54
-    mova                    m2, [rsp+gprsize*2+16*28]     ;tmp[25]
+    ITX_MULSUB_2W            5, 4, 3, 6, 7, 2896, 2896    ;t41a, t54a
     mova                    m3, [rsp+gprsize*2+16*9 ]     ;tmp[6 ]
-    pmulhrsw                m6, m7                        ;t41a
-    pmulhrsw                m5, m7                        ;t54a
-    psubsw                  m4, m2, m0                    ;out38
+    psubsw                  m6, m2, m0                    ;out38
     paddsw                  m2, m0                        ;out25
     psubsw                  m0, m3, m1                    ;out57
     paddsw                  m3, m1                        ;out6
-    mova [rsp+gprsize*2+16*41], m4                        ;out38
+    mova [rsp+gprsize*2+16*41], m6                        ;out38
     mova [rsp+gprsize*2+16*28], m2                        ;out25
     mova [rsp+gprsize*2+16*60], m0                        ;out57
     mova [rsp+gprsize*2+16*9 ], m3                        ;out6
     mova                    m0, [rsp+gprsize*2+16*25]     ;tmp[22]
     mova                    m1, [rsp+gprsize*2+16*12]     ;tmp[9 ]
-    psubsw                  m2, m0, m6                    ;out41
-    paddsw                  m0, m6                        ;out22
-    psubsw                  m3, m1, m5                    ;out54
-    paddsw                  m1, m5                        ;out9
+    psubsw                  m2, m0, m5                    ;out41
+    paddsw                  m0, m5                        ;out22
+    psubsw                  m3, m1, m4                    ;out54
+    paddsw                  m1, m4                        ;out9
     mova [rsp+gprsize*2+16*44], m2                        ;out41
     mova [rsp+gprsize*2+16*25], m0                        ;out22
     mova [rsp+gprsize*2+16*57], m3                        ;out54
     mova [rsp+gprsize*2+16*12], m1                        ;out9
 
     mova                    m0, [rsp+gprsize*2+16*42]     ;t39a
-    mova                    m2, [rsp+gprsize*2+16*43]     ;t40a
+    mova                    m5, [rsp+gprsize*2+16*43]     ;t40a
     mova                    m3, [rsp+gprsize*2+16*58]     ;t55a
     mova                    m1, [rsp+gprsize*2+16*59]     ;t56a
-    psubsw                  m4, m0, m2                    ;t40
-    paddsw                  m0, m2                        ;t39
+    mova                    m2, [rsp+gprsize*2+16*27]     ;tmp[24]
+    psubsw                  m4, m0, m5                    ;t40
+    paddsw                  m0, m5                        ;t39
     psubsw                  m5, m1, m3                    ;t55
     paddsw                  m1, m3                        ;t56
-    psubw                   m6, m5, m4                    ;t40a
-    paddw                   m5, m4                        ;t55a
-    mova                    m2, [rsp+gprsize*2+16*27]     ;tmp[24]
+    ITX_MULSUB_2W            5, 4, 3, 6, 7, 2896, 2896    ;t40a, t55a
     mova                    m3, [rsp+gprsize*2+16*10]     ;tmp[7 ]
-    pmulhrsw                m6, m7                        ;t40a
-    pmulhrsw                m5, m7                        ;t55a
-    psubsw                  m4, m2, m0                    ;out39
+    psubsw                  m6, m2, m0                    ;out39
     paddsw                  m2, m0                        ;out24
     psubsw                  m0, m3, m1                    ;out56
     paddsw                  m3, m1                        ;out7
-    mova [rsp+gprsize*2+16*42], m4                        ;out39
+    mova [rsp+gprsize*2+16*42], m6                        ;out39
     mova [rsp+gprsize*2+16*27], m2                        ;out24
     mova [rsp+gprsize*2+16*59], m0                        ;out56
     mova [rsp+gprsize*2+16*10], m3                        ;out7
     mova                    m0, [rsp+gprsize*2+16*26]     ;tmp[23]
     mova                    m1, [rsp+gprsize*2+16*11]     ;tmp[8 ]
-    psubsw                  m2, m0, m6                    ;out40
-    paddsw                  m0, m6                        ;out23
-    psubsw                  m3, m1, m5                    ;out55
-    paddsw                  m1, m5                        ;out8
+    psubsw                  m2, m0, m5                    ;out40
+    paddsw                  m0, m5                        ;out23
+    psubsw                  m3, m1, m4                    ;out55
+    paddsw                  m1, m4                        ;out8
     mova [rsp+gprsize*2+16*43], m2                        ;out40
     mova [rsp+gprsize*2+16*26], m0                        ;out23
     mova [rsp+gprsize*2+16*58], m3                        ;out55
     mova [rsp+gprsize*2+16*11], m1                        ;out8
 
     mova                    m0, [rsp+gprsize*2+16*37]     ;t34
-    mova                    m2, [rsp+gprsize*2+16*48]     ;t45
+    mova                    m5, [rsp+gprsize*2+16*48]     ;t45
     mova                    m3, [rsp+gprsize*2+16*53]     ;t50
     mova                    m1, [rsp+gprsize*2+16*64]     ;t61
-    psubsw                  m4, m0, m2                    ;t45a
-    paddsw                  m0, m2                        ;t34a
+    mova                    m2, [rsp+gprsize*2+16*32]     ;tmp[29]
+    psubsw                  m4, m0, m5                    ;t45a
+    paddsw                  m0, m5                        ;t34a
     psubsw                  m5, m1, m3                    ;t50a
     paddsw                  m1, m3                        ;t61a
-    psubw                   m6, m5, m4                    ;t45
-    paddw                   m5, m4                        ;t50
-    mova                    m2, [rsp+gprsize*2+16*32]     ;tmp[29]
+    ITX_MULSUB_2W            5, 4, 3, 6, 7, 2896, 2896    ;t45, t50
     mova                    m3, [rsp+gprsize*2+16*5 ]     ;tmp[2 ]
-    pmulhrsw                m6, m7                        ;t45
-    pmulhrsw                m5, m7                        ;t50
-    psubsw                  m4, m2, m0                    ;out34
+    psubsw                  m6, m2, m0                    ;out34
     paddsw                  m2, m0                        ;out29
     psubsw                  m0, m3, m1                    ;out61
     paddsw                  m3, m1                        ;out2
-    mova [rsp+gprsize*2+16*37], m4                        ;out34
+    mova [rsp+gprsize*2+16*37], m6                        ;out34
     mova [rsp+gprsize*2+16*32], m2                        ;out29
     mova [rsp+gprsize*2+16*64], m0                        ;out61
     mova [rsp+gprsize*2+16*5 ], m3                        ;out2
     mova                    m0, [rsp+gprsize*2+16*21]     ;tmp[18]
     mova                    m1, [rsp+gprsize*2+16*16]     ;tmp[13]
-    psubsw                  m2, m0, m6                    ;out45
-    paddsw                  m0, m6                        ;out18
-    psubsw                  m3, m1, m5                    ;out50
-    paddsw                  m1, m5                        ;out13
+    psubsw                  m2, m0, m5                    ;out45
+    paddsw                  m0, m5                        ;out18
+    psubsw                  m3, m1, m4                    ;out50
+    paddsw                  m1, m4                        ;out13
     mova [rsp+gprsize*2+16*48], m2                        ;out45
     mova [rsp+gprsize*2+16*21], m0                        ;out18
     mova [rsp+gprsize*2+16*53], m3                        ;out50
     mova [rsp+gprsize*2+16*16], m1                        ;out13
 
     mova                    m0, [rsp+gprsize*2+16*36]     ;t33a
-    mova                    m2, [rsp+gprsize*2+16*49]     ;t46a
+    mova                    m5, [rsp+gprsize*2+16*49]     ;t46a
     mova                    m3, [rsp+gprsize*2+16*52]     ;t49a
     mova                    m1, [rsp+gprsize*2+16*65]     ;t62a
-    psubsw                  m4, m0, m2                    ;t46
-    paddsw                  m0, m2                        ;t33
+    mova                    m2, [rsp+gprsize*2+16*33]     ;tmp[30]
+    psubsw                  m4, m0, m5                    ;t46
+    paddsw                  m0, m5                        ;t33
     psubsw                  m5, m1, m3                    ;t49
     paddsw                  m1, m3                        ;t62
-    psubw                   m6, m5, m4                    ;t46a
-    paddw                   m5, m4                        ;t49a
-    mova                    m2, [rsp+gprsize*2+16*33]     ;tmp[30]
+    ITX_MULSUB_2W            5, 4, 3, 6, 7, 2896, 2896    ;t45, t50
     mova                    m3, [rsp+gprsize*2+16*4 ]     ;tmp[1 ]
-    pmulhrsw                m6, m7                        ;t46a
-    pmulhrsw                m5, m7                        ;t49a
-    psubsw                  m4, m2, m0                    ;out33
+    psubsw                  m6, m2, m0                    ;out33
     paddsw                  m2, m0                        ;out30
     psubsw                  m0, m3, m1                    ;out62
     paddsw                  m3, m1                        ;out1
-    mova [rsp+gprsize*2+16*36], m4                        ;out33
+    mova [rsp+gprsize*2+16*36], m6                        ;out33
     mova [rsp+gprsize*2+16*33], m2                        ;out30
     mova [rsp+gprsize*2+16*65], m0                        ;out62
     mova [rsp+gprsize*2+16*4 ], m3                        ;out1
     mova                    m0, [rsp+gprsize*2+16*20]     ;tmp[17]
     mova                    m1, [rsp+gprsize*2+16*17]     ;tmp[14]
-    psubsw                  m2, m0, m6                    ;out46
-    paddsw                  m0, m6                        ;out17
-    psubsw                  m3, m1, m5                    ;out49
-    paddsw                  m1, m5                        ;out14
+    psubsw                  m2, m0, m5                    ;out46
+    paddsw                  m0, m5                        ;out17
+    psubsw                  m3, m1, m4                    ;out49
+    paddsw                  m1, m4                        ;out14
     mova [rsp+gprsize*2+16*49], m2                        ;out46
     mova [rsp+gprsize*2+16*20], m0                        ;out17
     mova [rsp+gprsize*2+16*52], m3                        ;out49
     mova [rsp+gprsize*2+16*17], m1                        ;out14
 
     mova                    m0, [rsp+gprsize*2+16*35]     ;t32
-    mova                    m2, [rsp+gprsize*2+16*50]     ;t47
+    mova                    m5, [rsp+gprsize*2+16*50]     ;t47
     mova                    m3, [rsp+gprsize*2+16*51]     ;t48
     mova                    m1, [rsp+gprsize*2+16*66]     ;t63
-    psubsw                  m4, m0, m2                    ;t47a
-    paddsw                  m0, m2                        ;t32a
+    mova                    m2, [rsp+gprsize*2+16*34]     ;tmp[31]
+    psubsw                  m4, m0, m5                    ;t47a
+    paddsw                  m0, m5                        ;t32a
     psubsw                  m5, m1, m3                    ;t48a
     paddsw                  m1, m3                        ;t63a
-    psubw                   m6, m5, m4                    ;t47
-    paddw                   m5, m4                        ;t48
-    mova                    m2, [rsp+gprsize*2+16*34]     ;tmp[31]
+    ITX_MULSUB_2W            5, 4, 3, 6, 7, 2896, 2896    ;t47, t48
     mova                    m3, [rsp+gprsize*2+16*3 ]     ;tmp[0 ]
-    pmulhrsw                m6, m7                        ;t47
-    pmulhrsw                m5, m7                        ;t48
-    psubsw                  m4, m2, m0                    ;out32
+    psubsw                  m6, m2, m0                    ;out32
     paddsw                  m2, m0                        ;out31
     psubsw                  m0, m3, m1                    ;out63
     paddsw                  m3, m1                        ;out0
-    mova [rsp+gprsize*2+16*35], m4                        ;out32
+    mova [rsp+gprsize*2+16*35], m6                        ;out32
     mova [rsp+gprsize*2+16*34], m2                        ;out31
     mova [rsp+gprsize*2+16*66], m0                        ;out63
     mova [rsp+gprsize*2+16*3 ], m3                        ;out0
     mova                    m0, [rsp+gprsize*2+16*19]     ;tmp[16]
     mova                    m1, [rsp+gprsize*2+16*18]     ;tmp[15]
-    psubsw                  m2, m0, m6                    ;out47
-    paddsw                  m0, m6                        ;out16
-    psubsw                  m3, m1, m5                    ;out48
-    paddsw                  m1, m5                        ;out15
+    psubsw                  m2, m0, m5                    ;out47
+    paddsw                  m0, m5                        ;out16
+    psubsw                  m3, m1, m4                    ;out48
+    paddsw                  m1, m4                        ;out15
     mova [rsp+gprsize*2+16*50], m2                        ;out47
     mova [rsp+gprsize*2+16*19], m0                        ;out16
     mova [rsp+gprsize*2+16*51], m3                        ;out48
     mova [rsp+gprsize*2+16*18], m1                        ;out15
     ret
-
 
 
 cglobal inv_txfm_add_dct_dct_64x16, 4, 6, 8, 16*132, dst, stride, coeff, eob, tx2
