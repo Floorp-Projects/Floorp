@@ -8,7 +8,6 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>Test editor";
 
 add_task(async function() {
-  await pushPref("devtools.webconsole.features.editor", true);
   await pushPref("devtools.webconsole.input.editor", false);
 
   const tab = await addTab(TEST_URI);

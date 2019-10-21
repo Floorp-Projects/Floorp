@@ -2260,13 +2260,6 @@ pref("devtools.webconsole.timestampMessages", false);
   pref("devtools.webconsole.sidebarToggle", false);
 #endif
 
-// Enable editor mode in the console in Nightly and DevEdition builds.
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
-  pref("devtools.webconsole.features.editor", true);
-#else
-  pref("devtools.webconsole.features.editor", false);
-#endif
-
 // Saved editor mode state in the console.
 pref("devtools.webconsole.input.editor", false);
 pref("devtools.browserconsole.input.editor", false);
