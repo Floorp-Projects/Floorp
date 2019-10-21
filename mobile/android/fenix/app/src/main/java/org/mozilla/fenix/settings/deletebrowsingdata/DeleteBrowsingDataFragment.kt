@@ -51,11 +51,22 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
             })
         }
 
+        getCheckboxes().forEach {
+            it.onCheckListener = { _ -> updateDeleteButton() }
+        }
+
         getCheckboxes().forEach { it.isChecked = true }
 
         view.delete_data?.setOnClickListener {
             askToDelete()
         }
+    }
+
+    private fun updateDeleteButton() {
+        val enabled = getCheckboxes().any { it.isChecked }
+
+        view?.delete_data?.isEnabled = enabled
+        view?.delete_data?.alpha = if (enabled) ENABLED_ALPHA else DISABLED_ALPHA
     }
 
     override fun onResume() {
