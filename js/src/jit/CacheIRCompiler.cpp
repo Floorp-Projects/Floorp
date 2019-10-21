@@ -3630,16 +3630,28 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
   return true;
 }
 
-void CacheIRCompiler::emitLoadTypedObjectResultShared(
-    const Address& fieldAddr, Register scratch, uint32_t typeDescr,
-    const AutoOutputRegister& output) {
+bool CacheIRCompiler::emitLoadTypedObjectResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
   MOZ_ASSERT(output.hasValue());
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  TypedThingLayout layout = reader.typedThingLayout();
+  uint32_t typeDescr = reader.typeDescrKey();
+  StubFieldOffset offset(reader.stubOffset(), StubField::Type::RawWord);
+
+  // Get the object's data pointer.
+  LoadTypedThingData(masm, layout, obj, scratch1);
+
+  // Get the address being written to.
+  Address fieldAddr = emitAddressFromStubField(offset, scratch1);
 
   if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
     Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
     masm.loadFromTypedArray(type, fieldAddr, output.valueReg(),
-                            /* allowDouble = */ true, scratch, nullptr);
+                            /* allowDouble = */ true, scratch2, nullptr);
   } else {
     ReferenceType type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
     switch (type) {
@@ -3652,25 +3664,26 @@ void CacheIRCompiler::emitLoadTypedObjectResultShared(
         // more complicated.
       case ReferenceType::TYPE_OBJECT: {
         Label notNull, done;
-        masm.loadPtr(fieldAddr, scratch);
-        masm.branchTestPtr(Assembler::NonZero, scratch, scratch, &notNull);
+        masm.loadPtr(fieldAddr, scratch2);
+        masm.branchTestPtr(Assembler::NonZero, scratch2, scratch2, &notNull);
         masm.moveValue(NullValue(), output.valueReg());
         masm.jump(&done);
         masm.bind(&notNull);
-        masm.tagValue(JSVAL_TYPE_OBJECT, scratch, output.valueReg());
+        masm.tagValue(JSVAL_TYPE_OBJECT, scratch2, output.valueReg());
         masm.bind(&done);
         break;
       }
 
       case ReferenceType::TYPE_STRING:
-        masm.loadPtr(fieldAddr, scratch);
-        masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
+        masm.loadPtr(fieldAddr, scratch2);
+        masm.tagValue(JSVAL_TYPE_STRING, scratch2, output.valueReg());
         break;
 
       default:
         MOZ_CRASH("Invalid ReferenceTypeDescr");
     }
   }
+  return true;
 }
 
 bool CacheIRCompiler::emitLoadObjectResult() {
