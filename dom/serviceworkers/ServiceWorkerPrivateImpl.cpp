@@ -65,8 +65,8 @@ ServiceWorkerPrivateImpl::RAIIActorPtrHolder::~RAIIActorPtrHolder() {
   mActor->MaybeSendDelete();
 }
 
-RemoteWorkerControllerChild* ServiceWorkerPrivateImpl::RAIIActorPtrHolder::
-operator->() const {
+RemoteWorkerControllerChild*
+    ServiceWorkerPrivateImpl::RAIIActorPtrHolder::operator->() const {
   AssertIsOnMainThread();
 
   return get();

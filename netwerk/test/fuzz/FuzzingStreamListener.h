@@ -23,9 +23,7 @@ class FuzzingStreamListener final : public nsIStreamListener {
     SpinEventLoopUntil([&]() { return mChannelDone; });
   }
 
-  bool isDone() {
-    return mChannelDone;
-  }
+  bool isDone() { return mChannelDone; }
 
  private:
   ~FuzzingStreamListener() = default;

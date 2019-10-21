@@ -71,12 +71,12 @@ class GfxInfo : public GfxInfoBase {
   void DescribeFeatures(JSContext* cx, JS::Handle<JSObject*> aOut) override;
 
  private:
-   struct DisplayInfo {
-     uint32_t mScreenWidth;
-     uint32_t mScreenHeight;
-     uint32_t mRefreshRate;
-     bool mIsPseudoDisplay;
-   };
+  struct DisplayInfo {
+    uint32_t mScreenWidth;
+    uint32_t mScreenHeight;
+    uint32_t mRefreshRate;
+    bool mIsPseudoDisplay;
+  };
 
  private:
   void AddCrashReportAnnotations();

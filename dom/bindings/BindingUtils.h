@@ -1528,8 +1528,8 @@ static inline JSObject* WrapNativeISupports(JSContext* cx, T* p,
     JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
     JS::Rooted<JS::Value> v(cx);
     retval = XPCOMObjectToJsval(cx, scope, helper, nullptr, false, &v)
-      ? v.toObjectOrNull()
-      : nullptr;
+                 ? v.toObjectOrNull()
+                 : nullptr;
   }
   return retval;
 }

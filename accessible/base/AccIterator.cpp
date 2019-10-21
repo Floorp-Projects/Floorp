@@ -69,13 +69,11 @@ AccIterator::IteratorState::IteratorState(const Accessible* aParent,
 RelatedAccIterator::RelatedAccIterator(DocAccessible* aDocument,
                                        nsIContent* aDependentContent,
                                        nsAtom* aRelAttr)
-    : mDocument(aDocument),
-      mRelAttr(aRelAttr),
-      mProviders(nullptr),
-      mIndex(0) {
+    : mDocument(aDocument), mRelAttr(aRelAttr), mProviders(nullptr), mIndex(0) {
   nsAutoString id;
   if (aDependentContent->IsElement() &&
-      aDependentContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id)) {
+      aDependentContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id,
+                                              id)) {
     mProviders = mDocument->GetRelProviders(aDependentContent->AsElement(), id);
   }
 }

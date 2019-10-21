@@ -356,21 +356,19 @@ void glxtest() {
 
   int screenCount = ScreenCount(dpy);
   int defaultScreen = DefaultScreen(dpy);
-  if (screenCount != 0)
-  {
+  if (screenCount != 0) {
     length += snprintf(buf + length, bufsize - length, "SCREEN_INFO\n");
     if (length >= bufsize)
-        fatal_error("Screen Info strings length too large for buffer size");
-    for (int idx = 0; idx < screenCount; idx++)
-    {
+      fatal_error("Screen Info strings length too large for buffer size");
+    for (int idx = 0; idx < screenCount; idx++) {
       Screen* scrn = ScreenOfDisplay(dpy, idx);
       int current_height = scrn->height;
-      int current_width  = scrn->width;
+      int current_width = scrn->width;
 
-      length += snprintf(buf + length, bufsize - length, "%dx%d%s%s",
-                         current_width, current_height,
-                         idx == defaultScreen ? " default" : "",
-                         idx == screenCount -1 ? ";\n" : ";");
+      length +=
+          snprintf(buf + length, bufsize - length, "%dx%d%s%s", current_width,
+                   current_height, idx == defaultScreen ? " default" : "",
+                   idx == screenCount - 1 ? ";\n" : ";");
       if (length >= bufsize)
         fatal_error("Screen Info strings length too large for buffer size");
     }

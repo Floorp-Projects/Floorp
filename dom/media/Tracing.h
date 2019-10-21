@@ -55,9 +55,10 @@ void StartAudioCallbackTracing();
                       1, AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
 #  define TRACE_AUDIO_CALLBACK_COMMENT(aFmt, ...)                             \
     AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(), \
-                     0, AutoTracer::EventType::DURATION, aFmt, ## __VA_ARGS__);
+                     0, AutoTracer::EventType::DURATION, aFmt, ##__VA_ARGS__);
 #  define TRACE()                                                \
-      AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(),\
+    AutoTracer trace(                                            \
+        gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(), \
         std::hash<std::thread::id>{}(std::this_thread::get_id()));
 #  define TRACE_COMMENT(aFmt, ...)                                             \
     AutoTracer trace(gAudioCallbackTraceLogger, FUNCTION_SIGNATURE, getpid(),  \

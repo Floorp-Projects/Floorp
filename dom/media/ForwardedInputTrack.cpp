@@ -86,8 +86,9 @@ void ForwardedInputTrack::SetInput(MediaInputPort* aPort) {
 }
 
 void ForwardedInputTrack::ProcessInputImpl(MediaTrack* aSource,
-                                           MediaSegment* aSegment, GraphTime aFrom,
-                                           GraphTime aTo, uint32_t aFlags) {
+                                           MediaSegment* aSegment,
+                                           GraphTime aFrom, GraphTime aTo,
+                                           uint32_t aFlags) {
   GraphTime next;
   for (GraphTime t = aFrom; t < aTo; t = next) {
     MediaInputPort::InputInterval interval =

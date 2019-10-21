@@ -298,12 +298,12 @@ void AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType,
   }
 }
 
-gfx::Rect AndroidBridge::getScreenSize()
-{
+gfx::Rect AndroidBridge::getScreenSize() {
   ALOG_BRIDGE("AndroidBridge::getScreenSize");
 
   java::sdk::Rect::LocalRef screenrect = GeckoAppShell::GetScreenSize();
-  gfx::Rect screensize(screenrect->Left(), screenrect->Top(), screenrect->Width(), screenrect->Height());
+  gfx::Rect screensize(screenrect->Left(), screenrect->Top(),
+                       screenrect->Width(), screenrect->Height());
 
   return screensize;
 }

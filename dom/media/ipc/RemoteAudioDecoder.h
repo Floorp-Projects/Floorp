@@ -35,6 +35,7 @@ class RemoteAudioDecoderParent final : public RemoteDecoderParent {
  protected:
   MediaResult ProcessDecodedData(const MediaDataDecoder::DecodedData& aData,
                                  DecodedOutputIPDL& aDecodedData) override;
+
  private:
   // Can only be accessed from the manager thread
   // Note: we can't keep a reference to the original AudioInfo here

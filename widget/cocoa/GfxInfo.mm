@@ -225,14 +225,11 @@ GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) { return NS_ERROR_FAIL
 /* readonly attribute Array<DOMString> displayInfo; */
 NS_IMETHODIMP
 GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
-for (NSScreen* screen in [NSScreen screens]) {
+  for (NSScreen* screen in [NSScreen screens]) {
     NSRect rect = [screen frame];
     nsString desc;
-    desc.AppendPrintf(
-      "%dx%d scale:%f",
-      (int32_t)rect.size.width, (int32_t)rect.size.height,
-      nsCocoaUtils::GetBackingScaleFactor(screen)
-    );
+    desc.AppendPrintf("%dx%d scale:%f", (int32_t)rect.size.width, (int32_t)rect.size.height,
+                      nsCocoaUtils::GetBackingScaleFactor(screen));
     aDisplayInfo.AppendElement(desc);
   }
 

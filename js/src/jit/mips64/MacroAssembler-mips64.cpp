@@ -343,11 +343,11 @@ void MacroAssemblerMIPS64::ma_dctz(Register rd, Register rs) {
   ma_dnegu(SecondScratchReg, rd);
   ma_daddu(SecondScratchReg, Imm32(0x3f));
 #ifdef MIPS64
-    as_selnez(SecondScratchReg, SecondScratchReg, ScratchRegister);
-    as_seleqz(rd, rd, ScratchRegister);
-    as_or(rd, rd, SecondScratchReg);
+  as_selnez(SecondScratchReg, SecondScratchReg, ScratchRegister);
+  as_seleqz(rd, rd, ScratchRegister);
+  as_or(rd, rd, SecondScratchReg);
 #else
-    as_movn(rd, SecondScratchReg, ScratchRegister);
+  as_movn(rd, SecondScratchReg, ScratchRegister);
 #endif
 }
 

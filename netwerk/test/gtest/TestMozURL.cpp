@@ -354,7 +354,8 @@ TEST(TestMozURL, UrlTestData)
   Json::Value root;
   Json::CharReaderBuilder builder;
   std::unique_ptr<Json::CharReader> const reader(builder.newCharReader());
-  ASSERT_TRUE(reader->parse(data.BeginReading(), data.EndReading(), &root, nullptr));
+  ASSERT_TRUE(
+      reader->parse(data.BeginReading(), data.EndReading(), &root, nullptr));
   ASSERT_TRUE(root.isArray());
 
   for (uint32_t index = 0; index < root.size(); index++) {

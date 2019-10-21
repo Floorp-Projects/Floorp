@@ -353,8 +353,7 @@ void Swizzle_NEON(const uint8_t* aSrc, int32_t aSrcGap, uint8_t* aDst,
   aDstGap += 4 * remainder;
 
   for (int32_t height = aSize.height; height > 0; height--) {
-    SwizzleChunk_NEON<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow,
-                                             remainder);
+    SwizzleChunk_NEON<aSwapRB, aOpaqueAlpha>(aSrc, aDst, alignedRow, remainder);
     aSrc += aSrcGap;
     aDst += aDstGap;
   }

@@ -31,10 +31,10 @@ class mozJSSubScriptLoader : public mozIJSSubScriptLoader {
  private:
   virtual ~mozJSSubScriptLoader();
 
-  bool ReadScript(JS::MutableHandle<JSScript*> script,
-                  nsIURI* uri, JSContext* cx, JS::HandleObject targetObj,
-                  const char* uriStr, nsIIOService* serv,
-                  bool wantReturnValue, bool useCompilationScope);
+  bool ReadScript(JS::MutableHandle<JSScript*> script, nsIURI* uri,
+                  JSContext* cx, JS::HandleObject targetObj, const char* uriStr,
+                  nsIIOService* serv, bool wantReturnValue,
+                  bool useCompilationScope);
 
   nsresult ReadScriptAsync(nsIURI* uri, JS::HandleObject targetObj,
                            JS::HandleObject loadScope, nsIIOService* serv,

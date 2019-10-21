@@ -90,9 +90,9 @@ static inline NSMutableArray* ConvertToNSArray(nsTArray<ProxyAccessible*>& aArra
   if ((self = [super init])) {
     mGeckoAccessible = aGeckoAccessible;
     if (aGeckoAccessible & IS_PROXY)
-      mRole = [self getProxyAccessible] -> Role();
+      mRole = [self getProxyAccessible]->Role();
     else
-      mRole = [self getGeckoAccessible] -> Role();
+      mRole = [self getGeckoAccessible]->Role();
   }
 
   return self;

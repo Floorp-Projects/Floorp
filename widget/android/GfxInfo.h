@@ -78,9 +78,10 @@ class GfxInfo : public GfxInfoBase {
   virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() override;
 
  private:
-   struct ScreenInfo {
-     gfx::Rect mScreenDimensions;
-   };
+  struct ScreenInfo {
+    gfx::Rect mScreenDimensions;
+  };
+
  private:
   void AddCrashReportAnnotations();
   int32_t WebRtcHwVp8EncodeSupported();

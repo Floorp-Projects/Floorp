@@ -154,16 +154,18 @@ void SwizzleRow_SSE2(const uint8_t*, uint8_t*, int32_t);
 template <bool aSwapRB>
 void UnpackRowRGB24_SSSE3(const uint8_t*, uint8_t*, int32_t);
 
-#define UNPACK_ROW_RGB_SSSE3(aDstFormat)             \
-  FORMAT_CASE_ROW(SurfaceFormat::R8G8B8, aDstFormat, \
-                  UnpackRowRGB24_SSSE3<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
+#  define UNPACK_ROW_RGB_SSSE3(aDstFormat) \
+    FORMAT_CASE_ROW(                       \
+        SurfaceFormat::R8G8B8, aDstFormat, \
+        UnpackRowRGB24_SSSE3<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
 
 template <bool aSwapRB>
 void UnpackRowRGB24_AVX2(const uint8_t*, uint8_t*, int32_t);
 
-#define UNPACK_ROW_RGB_AVX2(aDstFormat)              \
-  FORMAT_CASE_ROW(SurfaceFormat::R8G8B8, aDstFormat, \
-                  UnpackRowRGB24_AVX2<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
+#  define UNPACK_ROW_RGB_AVX2(aDstFormat)  \
+    FORMAT_CASE_ROW(                       \
+        SurfaceFormat::R8G8B8, aDstFormat, \
+        UnpackRowRGB24_AVX2<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
 
 #endif
 
@@ -891,9 +893,10 @@ void UnpackRowRGB24(const uint8_t* aSrc, uint8_t* aDst, int32_t aLength) {
 template void UnpackRowRGB24<false>(const uint8_t*, uint8_t*, int32_t);
 template void UnpackRowRGB24<true>(const uint8_t*, uint8_t*, int32_t);
 
-#define UNPACK_ROW_RGB(aDstFormat)                   \
-  FORMAT_CASE_ROW(SurfaceFormat::R8G8B8, aDstFormat, \
-                  UnpackRowRGB24<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
+#define UNPACK_ROW_RGB(aDstFormat)       \
+  FORMAT_CASE_ROW(                       \
+      SurfaceFormat::R8G8B8, aDstFormat, \
+      UnpackRowRGB24<ShouldSwapRB(SurfaceFormat::R8G8B8, aDstFormat)>)
 
 bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
                  SurfaceFormat aSrcFormat, uint8_t* aDst, int32_t aDstStride,
