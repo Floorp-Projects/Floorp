@@ -17,6 +17,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/BlobEvent.h"
+#include "mozilla/dom/EmptyBlobImpl.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaRecorderErrorEvent.h"
 #include "mozilla/dom/MutableBlobStorage.h"
@@ -841,8 +842,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   }
 
   static const bool IsExclusive = false;
-  using BlobPromise =
-      MozPromise<nsMainThreadPtrHandle<Blob>, nsresult, IsExclusive>;
+  using BlobPromise = MozPromise<RefPtr<BlobImpl>, nsresult, IsExclusive>;
   class BlobStorer : public MutableBlobStorageCallback {
     MozPromiseHolder<BlobPromise> mHolder;
 
@@ -853,17 +853,15 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BlobStorer, override)
 
-    void BlobStoreCompleted(MutableBlobStorage*, Blob* aBlob,
+    void BlobStoreCompleted(MutableBlobStorage*, BlobImpl* aBlobImpl,
                             nsresult aRv) override {
       MOZ_ASSERT(NS_IsMainThread());
       if (NS_FAILED(aRv)) {
         mHolder.Reject(aRv, __func__);
-      } else {
-        mHolder.Resolve(nsMainThreadPtrHandle<Blob>(
-                            MakeAndAddRef<nsMainThreadPtrHolder<Blob>>(
-                                "BlobStorer::ResolveBlob", aBlob)),
-                        __func__);
+        return;
       }
+
+      mHolder.Resolve(aBlobImpl, __func__);
     }
 
     RefPtr<BlobPromise> Promise() { return mHolder.Ensure(__func__); }
@@ -873,8 +871,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   RefPtr<BlobPromise> GatherBlobImpl() {
     RefPtr<BlobStorer> storer = MakeAndAddRef<BlobStorer>();
     MaybeCreateMutableBlobStorage();
-    mMutableBlobStorage->GetBlobWhenReady(
-        mRecorder->GetOwnerGlobal(), NS_ConvertUTF16toUTF8(mMimeType), storer);
+    mMutableBlobStorage->GetBlobImplWhenReady(NS_ConvertUTF16toUTF8(mMimeType),
+                                              storer);
     mMutableBlobStorage = nullptr;
 
     storer->Promise()->Then(
@@ -1111,52 +1109,52 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     GatherBlob()
-        ->Then(mMainThread, __func__,
-               [this, self = RefPtr<Session>(this), rv, needsStartEvent](
-                   const BlobPromise::ResolveOrRejectValue& aResult) {
-                 if (mRecorder->mSessions.LastElement() == this) {
-                   // Set state to inactive, but only if the recorder is not
-                   // controlled by another session already.
-                   mRecorder->Inactivate();
-                 }
+        ->Then(
+            mMainThread, __func__,
+            [this, self = RefPtr<Session>(this), rv, needsStartEvent](
+                const BlobPromise::ResolveOrRejectValue& aResult) {
+              if (mRecorder->mSessions.LastElement() == this) {
+                // Set state to inactive, but only if the recorder is not
+                // controlled by another session already.
+                mRecorder->Inactivate();
+              }
 
-                 if (needsStartEvent) {
-                   mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
-                 }
+              if (needsStartEvent) {
+                mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
+              }
 
-                 // If there was an error, Fire the appropriate one
-                 if (NS_FAILED(rv)) {
-                   mRecorder->NotifyError(rv);
-                 }
+              // If there was an error, Fire the appropriate one
+              if (NS_FAILED(rv)) {
+                mRecorder->NotifyError(rv);
+              }
 
-                 // Fire a blob event named dataavailable
-                 RefPtr<Blob> blob;
-                 if (rv == NS_ERROR_DOM_SECURITY_ERR || aResult.IsReject()) {
-                   // In case of SecurityError, the blob data must be discarded.
-                   // We create a new empty one and throw the blob with its data
-                   // away.
-                   // In case we failed to gather blob data, we create an empty
-                   // memory blob instead.
-                   blob = Blob::CreateEmptyBlob(mRecorder->GetParentObject(),
-                                                mMimeType);
-                 } else {
-                   blob = aResult.ResolveValue();
-                 }
-                 if (NS_FAILED(mRecorder->CreateAndDispatchBlobEvent(blob))) {
-                   // Failed to dispatch blob event. That's unexpected. It's
-                   // probably all right to fire an error event if we haven't
-                   // already.
-                   if (NS_SUCCEEDED(rv)) {
-                     mRecorder->NotifyError(NS_ERROR_FAILURE);
-                   }
-                 }
+              // Fire a blob event named dataavailable
+              RefPtr<BlobImpl> blobImpl;
+              if (rv == NS_ERROR_DOM_SECURITY_ERR || aResult.IsReject()) {
+                // In case of SecurityError, the blob data must be discarded.
+                // We create a new empty one and throw the blob with its data
+                // away.
+                // In case we failed to gather blob data, we create an empty
+                // memory blob instead.
+                blobImpl = new EmptyBlobImpl(mMimeType);
+              } else {
+                blobImpl = aResult.ResolveValue();
+              }
+              if (NS_FAILED(mRecorder->CreateAndDispatchBlobEvent(blobImpl))) {
+                // Failed to dispatch blob event. That's unexpected. It's
+                // probably all right to fire an error event if we haven't
+                // already.
+                if (NS_SUCCEEDED(rv)) {
+                  mRecorder->NotifyError(NS_ERROR_FAILURE);
+                }
+              }
 
-                 // Fire an event named stop
-                 mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
+              // Fire an event named stop
+              mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("stop"));
 
-                 // And finally, Shutdown and destroy the Session
-                 return Shutdown();
-               })
+              // And finally, Shutdown and destroy the Session
+              return Shutdown();
+            })
         ->Then(mMainThread, __func__, [this, self = RefPtr<Session>(this)] {
           GetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
           mShutdownBlocker = nullptr;
@@ -1902,13 +1900,18 @@ bool MediaRecorder::IsTypeSupported(const nsAString& aMIMEType) {
   return IsTypeSupportedImpl(aMIMEType) == TypeSupport::Supported;
 }
 
-nsresult MediaRecorder::CreateAndDispatchBlobEvent(Blob* aBlob) {
+nsresult MediaRecorder::CreateAndDispatchBlobEvent(BlobImpl* aBlobImpl) {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
+
+  RefPtr<Blob> blob = Blob::Create(GetOwnerGlobal(), aBlobImpl);
+  if (NS_WARN_IF(!blob)) {
+    return NS_ERROR_FAILURE;
+  }
 
   BlobEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mData = aBlob;
+  init.mData = blob;
 
   RefPtr<BlobEvent> event =
       BlobEvent::Constructor(this, NS_LITERAL_STRING("dataavailable"), init);
