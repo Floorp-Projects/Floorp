@@ -51,3 +51,7 @@ def check(value):
         return platform()
 
 set_config('PLATFORM', check)
+
+@template
+def indirectly_define_option(*args, **kwargs):
+    option(*args, **kwargs)
