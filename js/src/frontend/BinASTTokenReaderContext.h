@@ -452,7 +452,7 @@ class SingleLookupHuffmanTable {
   static const uint8_t MAX_BIT_LENGTH = sizeof(InternalIndex) * 8;
 
   explicit SingleLookupHuffmanTable(
-      JSContext* cx, Use use = Use::LeafOfMultiLookupHuffmanTable)
+      Use use = Use::LeafOfMultiLookupHuffmanTable)
       : largestBitLength_(-1)
 #ifdef DEBUG
         ,
@@ -476,7 +476,6 @@ class SingleLookupHuffmanTable {
   JS::Result<Ok> addSymbol(size_t index, uint32_t bits, uint8_t bitLength,
                            const BinASTSymbol& value);
 
-  SingleLookupHuffmanTable() = delete;
   SingleLookupHuffmanTable(SingleLookupHuffmanTable&) = delete;
 
   // Lookup a value in the table.
@@ -679,9 +678,8 @@ class MultiLookupHuffmanTable {
   static const uint8_t MAX_BIT_LENGTH =
       PrefixBitLength + Subtable::MAX_BIT_LENGTH;
 
-  explicit MultiLookupHuffmanTable(JSContext* cx)
-      : cx_(cx),
-        shortKeys_(cx, SingleLookupHuffmanTable::Use::ShortKeys),
+  MultiLookupHuffmanTable()
+      : shortKeys_(SingleLookupHuffmanTable::Use::ShortKeys),
         largestBitLength_(-1) {}
   MultiLookupHuffmanTable(MultiLookupHuffmanTable&& other) = default;
 
@@ -699,7 +697,6 @@ class MultiLookupHuffmanTable {
   JS::Result<Ok> addSymbol(size_t index, uint32_t bits, uint8_t bitLength,
                            const BinASTSymbol& value);
 
-  MultiLookupHuffmanTable() = delete;
   MultiLookupHuffmanTable(MultiLookupHuffmanTable&) = delete;
 
   // Lookup a value in the table.
@@ -740,8 +737,6 @@ class MultiLookupHuffmanTable {
   using InternalIndex = uint8_t;
 
  private:
-  JSContext* cx_;
-
   // Fast lookup for values whose keys fit within 8 bits.
   // Such values are not added to `suffixTables`.
   SingleLookupHuffmanTable shortKeys_;
@@ -794,8 +789,7 @@ struct HuffmanTableUnreachable {};
 //
 //
 struct GenericHuffmanTable {
-  explicit GenericHuffmanTable(JSContext* cx);
-  explicit GenericHuffmanTable() = delete;
+  GenericHuffmanTable();
 
   // Initialize a Huffman table containing a single value.
   JS::Result<Ok> initWithSingleValue(JSContext* cx, const BinASTSymbol& value);
@@ -876,30 +870,25 @@ struct HuffmanTableInitializing {};
 // These classes are all parts of variant `HuffmanTableValue`.
 
 struct HuffmanTableExplicitSymbolsF64 : GenericHuffmanTable {
-  explicit HuffmanTableExplicitSymbolsF64(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableExplicitSymbolsF64() : GenericHuffmanTable() {}
 };
 
 struct HuffmanTableExplicitSymbolsU32 : GenericHuffmanTable {
-  explicit HuffmanTableExplicitSymbolsU32(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableExplicitSymbolsU32() : GenericHuffmanTable() {}
 };
 
 struct HuffmanTableIndexedSymbolsSum : GenericHuffmanTable {
-  explicit HuffmanTableIndexedSymbolsSum(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableIndexedSymbolsSum() : GenericHuffmanTable() {}
 };
 
 struct HuffmanTableIndexedSymbolsBool : GenericHuffmanTable {
-  explicit HuffmanTableIndexedSymbolsBool(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableIndexedSymbolsBool() : GenericHuffmanTable() {}
 };
 
 // A Huffman table that may only ever contain two values:
 // `BinASTKind::_Null` and another `BinASTKind`.
 struct HuffmanTableIndexedSymbolsMaybeInterface : GenericHuffmanTable {
-  explicit HuffmanTableIndexedSymbolsMaybeInterface(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableIndexedSymbolsMaybeInterface() : GenericHuffmanTable() {}
 
   // `true` if this table only contains values for `null`.
   bool isAlwaysNull() const {
@@ -917,18 +906,15 @@ struct HuffmanTableIndexedSymbolsMaybeInterface : GenericHuffmanTable {
 };
 
 struct HuffmanTableIndexedSymbolsStringEnum : GenericHuffmanTable {
-  explicit HuffmanTableIndexedSymbolsStringEnum(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableIndexedSymbolsStringEnum() : GenericHuffmanTable() {}
 };
 
 struct HuffmanTableIndexedSymbolsLiteralString : GenericHuffmanTable {
-  explicit HuffmanTableIndexedSymbolsLiteralString(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableIndexedSymbolsLiteralString() : GenericHuffmanTable() {}
 };
 
 struct HuffmanTableIndexedSymbolsOptionalLiteralString : GenericHuffmanTable {
-  explicit HuffmanTableIndexedSymbolsOptionalLiteralString(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableIndexedSymbolsOptionalLiteralString() : GenericHuffmanTable() {}
 };
 
 // A single Huffman table, used for values.
@@ -942,8 +928,7 @@ using HuffmanTableValue = mozilla::Variant<
     HuffmanTableIndexedSymbolsOptionalLiteralString>;
 
 struct HuffmanTableExplicitSymbolsListLength : GenericHuffmanTable {
-  explicit HuffmanTableExplicitSymbolsListLength(JSContext* cx)
-      : GenericHuffmanTable(cx) {}
+  HuffmanTableExplicitSymbolsListLength() : GenericHuffmanTable() {}
 };
 
 // A single Huffman table, specialized for list lengths.
@@ -959,7 +944,7 @@ using HuffmanTableListLength =
 // to predict list lengths.
 class HuffmanDictionary {
  public:
-  explicit HuffmanDictionary(JSContext* cx);
+  HuffmanDictionary();
 
   HuffmanTableValue& tableForField(NormalizedInterfaceAndField index);
   HuffmanTableListLength& tableForListLength(BinASTList list);
