@@ -28,17 +28,27 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations.initMocks
 import org.robolectric.annotation.Config
 import java.util.Calendar
 import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class TimePickerDialogFragmentTest {
+
+    @Mock private lateinit var mockFeature: Prompter
+
+    @Before
+    fun setup() {
+        initMocks(this)
+    }
 
     @Test
     fun `build dialog`() {
@@ -65,7 +75,6 @@ class TimePickerDialogFragmentTest {
 
     @Test
     fun `Clicking on positive, neutral and negative button notifies the feature`() {
-        val mockFeature: PromptFeature = mock()
         val initialDate = "2019-11-29".toDate("yyyy-MM-dd")
         val fragment = spy(
                 TimePickerDialogFragment.newInstance("sessionId", initialDate, null, null)
@@ -88,7 +97,6 @@ class TimePickerDialogFragmentTest {
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
-        val mockFeature: PromptFeature = mock()
         val fragment = spy(
                 TimePickerDialogFragment.newInstance("sessionId", Date(), null, null)
         )

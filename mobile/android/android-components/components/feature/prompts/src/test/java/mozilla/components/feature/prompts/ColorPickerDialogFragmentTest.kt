@@ -14,14 +14,24 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.MockitoAnnotations.initMocks
 
 @RunWith(AndroidJUnit4::class)
 class ColorPickerDialogFragmentTest {
+
+    @Mock private lateinit var mockFeature: Prompter
+
+    @Before
+    fun setup() {
+        initMocks(this)
+    }
 
     @Test
     fun `build dialog`() {
@@ -42,8 +52,6 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `clicking on positive button notifies the feature`() {
-
-        val mockFeature: PromptFeature = mock()
 
         val fragment = spy(
             ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
@@ -67,8 +75,6 @@ class ColorPickerDialogFragmentTest {
     @Test
     fun `clicking on negative button notifies the feature`() {
 
-        val mockFeature: PromptFeature = mock()
-
         val fragment = spy(
             ColorPickerDialogFragment.newInstance("sessionId", "#e66465")
         )
@@ -88,8 +94,6 @@ class ColorPickerDialogFragmentTest {
 
     @Test
     fun `touching outside of the dialog must notify the feature onCancel`() {
-
-        val mockFeature: PromptFeature = mock()
 
         val fragment = spy(
             ColorPickerDialogFragment.newInstance("sessionId", "#e66465")

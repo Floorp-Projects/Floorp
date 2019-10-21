@@ -587,7 +587,7 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
 
-        feature.onConfirm(tabId)
+        feature.onConfirm(tabId, null)
         processActions()
         assertNull(tab()?.content?.promptRequest)
         assertTrue(onConfirmWasCalled)

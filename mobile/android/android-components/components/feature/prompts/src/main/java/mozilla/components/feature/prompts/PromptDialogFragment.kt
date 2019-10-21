@@ -15,7 +15,7 @@ internal const val KEY_MESSAGE = "KEY_MESSAGE"
  */
 internal abstract class PromptDialogFragment : DialogFragment() {
 
-    var feature: PromptFeature? = null
+    var feature: Prompter? = null
 
     internal val sessionId: String by lazy { requireNotNull(arguments).getString(KEY_SESSION_ID)!! }
 
@@ -24,4 +24,32 @@ internal abstract class PromptDialogFragment : DialogFragment() {
     internal val message: String by lazy { safeArguments.getString(KEY_MESSAGE)!! }
 
     val safeArguments get() = requireNotNull(arguments)
+}
+
+internal interface Prompter {
+
+    /**
+     * Invoked when a dialog is dismissed. This consumes the [PromptFeature]
+     * value from the session indicated by [sessionId].
+     *
+     * @param sessionId this is the id of the session which requested the prompt.
+     */
+    fun onCancel(sessionId: String)
+
+    /**
+     * Invoked when the user confirms the action on the dialog. This consumes
+     * the [PromptFeature] value from the session indicated by [sessionId].
+     *
+     * @param sessionId that requested to show the dialog.
+     * @param value an optional value provided by the dialog as a result of confirming the action.
+     */
+    fun onConfirm(sessionId: String, value: Any?)
+
+    /**
+     * Invoked when the user is requesting to clear the selected value from the dialog.
+     * This consumes the [PromptFeature] value from the session indicated by [sessionId].
+     *
+     * @param sessionId that requested to show the dialog.
+     */
+    fun onClear(sessionId: String)
 }

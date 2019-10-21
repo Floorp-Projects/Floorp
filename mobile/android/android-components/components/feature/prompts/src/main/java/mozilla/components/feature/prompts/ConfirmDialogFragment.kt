@@ -37,7 +37,7 @@ internal class ConfirmDialogFragment : PromptDialogFragment() {
     }
 
     private fun onPositiveClickAction() {
-        feature?.onConfirm(sessionId)
+        feature?.onConfirm(sessionId, null)
     }
 
     companion object {
