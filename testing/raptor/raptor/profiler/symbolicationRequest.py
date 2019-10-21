@@ -5,7 +5,8 @@ from __future__ import absolute_import
 
 import json
 import re
-import urllib2
+
+from six.moves.urllib.request import Request, urlopen
 
 from .symLogging import LogTrace, LogError
 
@@ -203,9 +204,10 @@ class SymbolicationRequest:
                 }
                 requestJson = json.dumps(requestObj)
                 headers = {"Content-Type": "application/json"}
-                requestHandle = urllib2.Request(url, requestJson, headers)
+                requestHandle = Request(url, requestJson, headers)
                 try:
-                    response = urllib2.urlopen(requestHandle)
+                    response = urlopen(requestHandle)
+
                 except Exception as e:
                     if requestVersion == 4:
                         # Try again with version 3
