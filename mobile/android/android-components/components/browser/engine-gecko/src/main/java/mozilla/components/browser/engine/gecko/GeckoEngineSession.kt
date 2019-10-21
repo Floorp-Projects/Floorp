@@ -93,8 +93,9 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.loadUrl]
      */
-    override fun loadUrl(url: String, flags: LoadUrlFlags) {
+    override fun loadUrl(url: String, parent: EngineSession?, flags: LoadUrlFlags) {
         requestFromWebContent = false
+        // parent / referring session not supported yet in release
         geckoSession.loadUri(url, flags.value)
     }
 

@@ -96,9 +96,9 @@ class GeckoEngineSession(
     /**
      * See [EngineSession.loadUrl]
      */
-    override fun loadUrl(url: String, flags: LoadUrlFlags) {
+    override fun loadUrl(url: String, parent: EngineSession?, flags: LoadUrlFlags) {
         requestFromWebContent = false
-        geckoSession.loadUri(url, flags.value)
+        geckoSession.loadUri(url, (parent as? GeckoEngineSession)?.geckoSession, flags.value)
     }
 
     /**

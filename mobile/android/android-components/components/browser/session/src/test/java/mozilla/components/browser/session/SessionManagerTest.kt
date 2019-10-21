@@ -601,11 +601,38 @@ class SessionManagerTest {
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
         assertEquals(actualEngineSession, sessionManager.getEngineSession(session))
         assertEquals(actualEngineSession, sessionManager.getOrCreateEngineSession(session))
+        assertEquals(actualEngineSession, session.engineSessionHolder.engineSession)
 
         val privateSession = Session("https://www.mozilla.org", true, Session.Source.NONE)
         sessionManager.add(privateSession)
         assertNull(sessionManager.getEngineSession(privateSession))
         assertEquals(privateEngineSession, sessionManager.getOrCreateEngineSession(privateSession))
+        assertEquals(privateEngineSession, privateSession.engineSessionHolder.engineSession)
+    }
+
+    @Test
+    fun `session manager considers parent when creating and linking engine session`() {
+        val engine: Engine = mock()
+
+        val parent = Session(id = "parent", initialUrl = "")
+        val parentEngineSession: EngineSession = mock()
+        val session = Session("https://www.mozilla.org")
+        session.parentId = parent.id
+        val engineSession: EngineSession = mock()
+
+        val sessionManager = SessionManager(engine)
+        sessionManager.add(parent)
+        sessionManager.add(session)
+
+        doReturn(parentEngineSession, engineSession).`when`(engine).createSession(false)
+
+        assertEquals(parentEngineSession, sessionManager.getOrCreateEngineSession(parent))
+        assertEquals(parentEngineSession, parent.engineSessionHolder.engineSession)
+
+        assertEquals(engineSession, sessionManager.getOrCreateEngineSession(session))
+        assertEquals(engineSession, session.engineSessionHolder.engineSession)
+
+        verify(engineSession).loadUrl(session.url, parentEngineSession, EngineSession.LoadUrlFlags.none())
     }
 
     @Test

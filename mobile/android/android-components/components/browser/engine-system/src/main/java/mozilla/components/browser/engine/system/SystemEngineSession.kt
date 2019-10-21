@@ -68,7 +68,7 @@ class SystemEngineSession(
      * See [EngineSession.loadUrl]. Note that [LoadUrlFlags] are ignored in this engine
      * implementation.
      */
-    override fun loadUrl(url: String, flags: LoadUrlFlags) {
+    override fun loadUrl(url: String, parent: EngineSession?, flags: LoadUrlFlags) {
         if (!url.isEmpty()) {
             currentUrl = url
             webView.loadUrl(url, additionalHeaders)

@@ -109,7 +109,23 @@ class TabsUseCasesTest {
         val useCases = TabsUseCases(sessionManager)
 
         useCases.addTab.invoke("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
-        verify(engineSession).loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(engineSession).loadUrl("https://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+    }
+
+    @Test
+    fun `AddNewTabUseCase forwards parent session to engine`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any())
+
+        val parentSession = Session(id = "parent", initialUrl = "")
+        sessionManager.add(parentSession)
+        val parentEngineSession: EngineSession = mock()
+        doReturn(parentEngineSession).`when`(sessionManager).getEngineSession(parentSession)
+
+        val useCases = TabsUseCases(sessionManager)
+        useCases.addTab.invoke("https://www.mozilla.org", parentId = "parent", startLoading = true)
+        verify(engineSession).loadUrl("https://www.mozilla.org", parentEngineSession, LoadUrlFlags.none())
     }
 
     @Test
@@ -134,7 +150,23 @@ class TabsUseCasesTest {
         val useCases = TabsUseCases(sessionManager)
 
         useCases.addPrivateTab.invoke("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
-        verify(engineSession).loadUrl("https://www.mozilla.org", LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+        verify(engineSession).loadUrl("https://www.mozilla.org", flags = LoadUrlFlags.select(LoadUrlFlags.EXTERNAL))
+    }
+
+    @Test
+    fun `AddNewPrivateTabUseCase forwards parent session to engine`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+        doReturn(engineSession).`when`(sessionManager).getOrCreateEngineSession(any())
+
+        val parentSession = Session(id = "parent", initialUrl = "")
+        sessionManager.add(parentSession)
+        val parentEngineSession: EngineSession = mock()
+        doReturn(parentEngineSession).`when`(sessionManager).getEngineSession(parentSession)
+
+        val useCases = TabsUseCases(sessionManager)
+        useCases.addPrivateTab.invoke("https://www.mozilla.org", parentId = "parent", startLoading = true)
+        verify(engineSession).loadUrl("https://www.mozilla.org", parentEngineSession, LoadUrlFlags.none())
     }
 
     @Test
