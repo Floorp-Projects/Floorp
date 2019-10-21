@@ -32,7 +32,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
                        class LoadInfo* aLoadInfo,
                        const nsString* aInitiatorType, nsLoadFlags aLoadFlags,
                        uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive,
-                       bool aIsTopLevelDoc);
+                       bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags);
 
   NS_DECL_ISUPPORTS_INHERITED;
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
@@ -120,6 +120,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   const uint32_t mCacheKey;
   const bool mIsActive;
   const bool mIsTopLevelDoc;
+  const bool mHasNonEmptySandboxingFlags;
 
   bool mCanceled = false;
   uint32_t mSuspendCount = 0;

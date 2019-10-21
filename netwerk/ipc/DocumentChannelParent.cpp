@@ -69,15 +69,15 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   bool result = nsDocShell::CreateChannelForLoadState(
       loadState, loadInfo, mListener, nullptr,
       aArgs.initiatorType().ptrOr(nullptr), aArgs.loadFlags(), aArgs.loadType(),
-      aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(), rv,
-      getter_AddRefs(mChannel));
+      aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
+      aArgs.hasNonEmptySandboxingFlags(), rv, getter_AddRefs(mChannel));
   if (!result) {
     return SendFailedAsyncOpen(rv);
   }
 
-  nsDocShell::ConfigureChannel(mChannel, loadState,
-                               aArgs.initiatorType().ptrOr(nullptr),
-                               aArgs.loadType(), aArgs.cacheKey());
+  nsDocShell::ConfigureChannel(
+      mChannel, loadState, aArgs.initiatorType().ptrOr(nullptr),
+      aArgs.loadType(), aArgs.cacheKey(), aArgs.hasNonEmptySandboxingFlags());
 
   // Computation of the top window uses the docshell tree, so only
   // works in the source process. We compute it manually and override
