@@ -28,9 +28,7 @@ XULComboboxAccessible::XULComboboxAccessible(nsIContent* aContent,
   mGenericTypes |= eCombobox;
 }
 
-role XULComboboxAccessible::NativeRole() const {
-  return roles::COMBOBOX;
-}
+role XULComboboxAccessible::NativeRole() const { return roles::COMBOBOX; }
 
 uint64_t XULComboboxAccessible::NativeState() const {
   // As a nsComboboxAccessible we can have the following states:

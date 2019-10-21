@@ -105,6 +105,7 @@ class IonCacheIRCompiler;
   _(LoadStringCharResult)                 \
   _(LoadArgumentsObjectArgResult)         \
   _(LoadInstanceOfObjectResult)           \
+  _(LoadTypedObjectResult)                \
   _(LoadDenseElementResult)               \
   _(LoadDenseElementHoleResult)           \
   _(LoadDenseElementExistsResult)         \
@@ -861,10 +862,6 @@ class MOZ_RAII CacheIRCompiler {
     return JitOptions.spectreObjectMitigationsMisc &&
            !allocator.isDeadAfterInstruction(objId);
   }
-
-  void emitLoadTypedObjectResultShared(const Address& fieldAddr,
-                                       Register scratch, uint32_t typeDescr,
-                                       const AutoOutputRegister& output);
 
   void emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceType type,
                                          const Address& dest, Register scratch);

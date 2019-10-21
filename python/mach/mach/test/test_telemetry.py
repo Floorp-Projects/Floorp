@@ -5,13 +5,14 @@ from __future__ import absolute_import, print_function
 
 import json
 import os
+import platform
 import subprocess
 import sys
 
 import buildconfig
 import mozunit
 import pytest
-from six import text_type
+from six import text_type, PY3
 
 from mozboot.bootstrap import update_or_create_build_telemetry_config
 
@@ -30,10 +31,13 @@ def run_mach(tmpdir):
     """
     # Use tmpdir as the mozbuild state path, and enable telemetry in
     # a machrc there.
-    update_or_create_build_telemetry_config(text_type(tmpdir.join('machrc')))
+    if PY3:
+        update_or_create_build_telemetry_config(str(tmpdir.join('machrc')))
+    else:
+        update_or_create_build_telemetry_config(text_type(tmpdir.join('machrc')))
     env = dict(os.environ)
-    env[b'MOZBUILD_STATE_PATH'] = str(tmpdir)
-    env[b'MACH_TELEMETRY_NO_SUBMIT'] = b'1'
+    env['MOZBUILD_STATE_PATH'] = str(tmpdir)
+    env['MACH_TELEMETRY_NO_SUBMIT'] = '1'
     # Let whatever mach command we invoke from tests believe it's the main command.
     del env['MACH_MAIN_PID']
     mach = os.path.join(buildconfig.topsrcdir, 'mach')
@@ -47,7 +51,11 @@ def run_mach(tmpdir):
         # Load any telemetry data that was written
         path = tmpdir.join('telemetry', 'outgoing')
         try:
-            return [json.load(f.open('rb')) for f in path.listdir()]
+            if PY3:
+                read_mode = 'r'
+            else:
+                read_mode = 'rb'
+            return [json.load(f.open(read_mode)) for f in path.listdir()]
         except EnvironmentError:
             print(TELEMETRY_LOAD_ERROR % out, file=sys.stderr)
             for p in path.parts(reverse=True):
@@ -63,11 +71,18 @@ def test_simple(run_mach, tmpdir):
     d = data[0]
     assert d['command'] == 'python'
     assert d['argv'] == ['-c', 'pass']
-    client_id_data = json.load(tmpdir.join('telemetry_client_id.json').open('rb'))
+    if PY3:
+        read_mode = 'r'
+    else:
+        read_mode = 'rb'
+    client_id_data = json.load(tmpdir.join(
+        'telemetry_client_id.json').open(read_mode))
     assert 'client_id' in client_id_data
     assert client_id_data['client_id'] == d['client_id']
 
 
+@pytest.mark.xfail(platform.system() == "Windows" and PY3,
+                   reason='Windows and Python3 mozpath filtering issues')
 def test_path_filtering(run_mach, tmpdir):
     srcdir_path = os.path.join(buildconfig.topsrcdir, 'a')
     srcdir_path_2 = os.path.join(buildconfig.topsrcdir, 'a/b/c')
@@ -93,6 +108,8 @@ def test_path_filtering(run_mach, tmpdir):
     assert d['argv'] == expected
 
 
+@pytest.mark.xfail(platform.system() == "Windows" and PY3,
+                   reason='Windows and Python3 mozpath filtering issues')
 def test_path_filtering_in_objdir(run_mach, tmpdir):
     srcdir_path = os.path.join(buildconfig.topsrcdir, 'a')
     srcdir_path_2 = os.path.join(buildconfig.topsrcdir, 'a/b/c')

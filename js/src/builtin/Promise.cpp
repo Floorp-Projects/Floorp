@@ -2281,11 +2281,7 @@ static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
 
-enum class IterationMode {
-  All,
-  AllSettled,
-  Race
-};
+enum class IterationMode { All, AllSettled, Race };
 
 // ES2020 draft rev dc1e21c454bd316810be1c0e7af0131a2d7f38e9
 //

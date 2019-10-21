@@ -14,6 +14,7 @@
 #include "jit/JitFrames.h"
 #include "proxy/Proxy.h"
 #include "vm/BigIntType.h"
+#include "vm/GlobalObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
@@ -30,7 +31,16 @@ class ContextChecks {
   JS::Zone* zone() const { return cx->zone(); }
 
  public:
-  explicit ContextChecks(JSContext* cx) : cx(cx) {}
+  explicit ContextChecks(JSContext* cx) : cx(cx) {
+#ifdef DEBUG
+    if (realm()) {
+      GlobalObject* global = realm()->unsafeUnbarrieredMaybeGlobal();
+      if (global) {
+        checkObject(global);
+      }
+    }
+#endif
+  }
 
   /*
    * Set a breakpoint here (break js::ContextChecks::fail) to debug
@@ -69,10 +79,14 @@ class ContextChecks {
 
   void check(JSObject* obj, int argIndex) {
     if (obj) {
-      JS::AssertObjectIsNotGray(obj);
-      MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
+      checkObject(obj);
       check(obj->compartment(), argIndex);
     }
+  }
+
+  void checkObject(JSObject* obj) {
+    JS::AssertObjectIsNotGray(obj);
+    MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
   }
 
   template <typename T>

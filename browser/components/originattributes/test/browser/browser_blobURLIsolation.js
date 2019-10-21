@@ -9,7 +9,7 @@ const SCRIPT_WORKER_BLOBIFY = "worker_blobify.js";
 const SCRIPT_WORKER_DEBLOBIFY = "worker_deblobify.js";
 
 function page_blobify(browser, input) {
-  return ContentTask.spawn(browser, input, function(contentInput) {
+  return SpecialPowers.spawn(browser, [input], function(contentInput) {
     return {
       blobURL: content.URL.createObjectURL(new content.Blob([contentInput])),
     };
@@ -17,7 +17,9 @@ function page_blobify(browser, input) {
 }
 
 function page_deblobify(browser, blobURL) {
-  return ContentTask.spawn(browser, blobURL, async function(contentBlobURL) {
+  return SpecialPowers.spawn(browser, [blobURL], async function(
+    contentBlobURL
+  ) {
     if ("error" in contentBlobURL) {
       return contentBlobURL;
     }
@@ -58,7 +60,9 @@ function page_deblobify(browser, blobURL) {
 }
 
 function workerIO(browser, scriptFile, message) {
-  return ContentTask.spawn(browser, { scriptFile, message }, function(args) {
+  return SpecialPowers.spawn(browser, [{ scriptFile, message }], function(
+    args
+  ) {
     let worker = new content.Worker(args.scriptFile);
     let promise = new content.Promise(function(resolve) {
       let listenFunction = function(event) {

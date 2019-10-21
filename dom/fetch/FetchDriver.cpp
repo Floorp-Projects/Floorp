@@ -261,7 +261,7 @@ AlternativeDataStreamListener::OnDataAvailable(nsIRequest* aRequest,
                                                uint32_t aCount) {
   if (mStatus == AlternativeDataStreamListener::LOADING) {
     MOZ_ASSERT(mPipeAlternativeOutputStream);
-    uint32_t read;
+    uint32_t read = 0;
     return aInputStream->ReadSegments(
         NS_CopySegmentToStream, mPipeAlternativeOutputStream, aCount, &read);
   }

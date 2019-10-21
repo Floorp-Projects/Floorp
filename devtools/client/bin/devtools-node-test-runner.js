@@ -34,7 +34,7 @@ const SUITES = {
     type: TEST_TYPES.JEST,
   },
   application: {
-    path: "../application/test/components",
+    path: "../application/test/node",
     type: TEST_TYPES.JEST,
   },
   compatibility: {

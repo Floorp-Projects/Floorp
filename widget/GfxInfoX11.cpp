@@ -296,14 +296,13 @@ void GfxInfo::GetData() {
   if (!screenInfo.IsEmpty()) {
     PRInt32 start = 0;
     PRInt32 loc = screenInfo.Find(";", PR_FALSE, start);
-    while (loc != kNotFound)
-    {
+    while (loc != kNotFound) {
       nsCString line(screenInfo.get() + start, loc - start);
       nsString value;
       CopyASCIItoUTF16(line, value);
 
       mScreenInfo.AppendElement(value);
-      start = loc+1;
+      start = loc + 1;
       loc = screenInfo.Find(";", PR_FALSE, start);
     }
   }
@@ -605,7 +604,7 @@ GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) {
 NS_IMETHODIMP
 GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
   GetData();
-  if (!mScreenInfo.IsEmpty()){
+  if (!mScreenInfo.IsEmpty()) {
     aDisplayInfo = mScreenInfo;
 
     return NS_OK;

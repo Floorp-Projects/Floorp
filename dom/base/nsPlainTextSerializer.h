@@ -106,6 +106,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   //         element.
   bool IsElementPreformatted() const;
   bool IsInOL() const;
+  bool IsInOlOrUl() const;
   bool IsCurrentNodeConverted() const;
   bool MustSuppressLeaf() const;
 
@@ -365,8 +366,7 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
   uint32_t mIgnoreAboveIndex;
 
   // The stack for ordered lists
-  int32_t* mOLStack;
-  uint32_t mOLStackIndex;
+  AutoTArray<int32_t, 100> mOLStack;
 
   uint32_t mULCount;
 

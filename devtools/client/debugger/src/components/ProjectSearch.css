@@ -89,12 +89,13 @@
   grid-column: 1/3;
   display: flex;
   align-items: center;
-  font-weight: bold;
-  cursor: default;
+  width: 100%;
   min-height: 24px;
   padding: 2px 4px;
+  font-weight: bold;
   font-size: 12px;
-  line-height: calc(16 / 12);
+  line-height: 16px;
+  cursor: default;
 }
 
 .project-text-search .file-result .img {
@@ -107,8 +108,11 @@
 
 .project-text-search .file-path {
   flex: 0 1 auto;
-  white-space: normal;
   padding-inline-end: 4px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-text-search .file-path:empty {

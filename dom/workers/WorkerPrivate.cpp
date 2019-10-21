@@ -4970,6 +4970,11 @@ const nsAString& WorkerPrivate::Id() {
 bool WorkerPrivate::CanShareMemory(const nsID& aAgentClusterId) {
   AssertIsOnWorkerThread();
 
+  if (StaticPrefs::
+          dom_postMessage_sharedArrayBuffer_bypassCOOP_COEP_insecure_enabled()) {
+    return true;
+  }
+
   if (!StaticPrefs::dom_postMessage_sharedArrayBuffer_withCOOP_COEP()) {
     return false;
   }

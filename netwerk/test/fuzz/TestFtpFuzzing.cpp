@@ -22,11 +22,23 @@
 namespace mozilla {
 namespace net {
 
+static nsAutoCString ftpSpec;
+
 static int FuzzingInitNetworkFtp(int* argc, char*** argv) {
   Preferences::SetBool("network.dns.native-is-localhost", true);
   Preferences::SetBool("fuzzing.necko.enabled", true);
   Preferences::SetBool("network.connectivity-service.enabled", false);
+
+  if (ftpSpec.IsEmpty()) {
+    ftpSpec = "ftp://127.0.0.1/";
+  }
+
   return 0;
+}
+
+static int FuzzingInitNetworkFtpDownload(int* argc, char*** argv) {
+  ftpSpec = "ftp://127.0.0.1/test.txt";
+  return FuzzingInitNetworkFtp(argc, argv);
 }
 
 static int FuzzingRunNetworkFtp(const uint8_t* data, size_t size) {
@@ -35,7 +47,7 @@ static int FuzzingRunNetworkFtp(const uint8_t* data, size_t size) {
     // If we have more than 1024 bytes, we use the excess for
     // an optional data connection.
     addNetworkFuzzingBuffer(data, 1024, true);
-    addNetworkFuzzingBuffer(data+1024, size-1024, true, true);
+    addNetworkFuzzingBuffer(data + 1024, size - 1024, true, true);
   } else {
     addNetworkFuzzingBuffer(data, size, true);
   }
@@ -47,8 +59,7 @@ static int FuzzingRunNetworkFtp(const uint8_t* data, size_t size) {
     nsAutoCString spec;
     nsresult rv;
 
-    spec = "ftp://127.0.0.1/";
-    if (NS_NewURI(getter_AddRefs(url), spec) != NS_OK) {
+    if (NS_NewURI(getter_AddRefs(url), ftpSpec) != NS_OK) {
       MOZ_CRASH("Call to NS_NewURI failed.");
     }
 
@@ -123,5 +134,7 @@ static int FuzzingRunNetworkFtp(const uint8_t* data, size_t size) {
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkFtp, FuzzingRunNetworkFtp,
                           NetworkFtp);
 
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkFtpDownload, FuzzingRunNetworkFtp,
+                          NetworkFtpDownload);
 }  // namespace net
 }  // namespace mozilla

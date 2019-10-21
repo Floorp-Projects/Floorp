@@ -6,13 +6,13 @@ const { createNode } = require("../../utils/node");
 const { waitForDispatch, mountObjectInspector } = require("../test-utils");
 
 const gripWindowStubs = require("../../../reps/stubs/window");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 const windowNode = createNode({
   name: "window",
   contents: { value: gripWindowStubs.get("Window") },
 });
 
-const client = { createObjectClient: grip => ObjectClient(grip) };
+const client = { createObjectFront: grip => ObjectFront(grip) };
 
 function generateDefaults(overrides) {
   return {

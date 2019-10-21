@@ -476,8 +476,13 @@ bool gfxFT2FontBase::ShouldRoundXOffset(cairo_t* aCairo) const {
   // positioning (no rounding) if rendering a scalable outline font with
   // anti-aliasing. Monochrome rendering or some bitmap fonts can become too
   // distorted with subpixel positioning, so force rounding in those cases.
+  // Also be careful not to use subpixel positioning if the user requests full
+  // hinting via Fontconfig, which we detect by checking that neither hinting
+  // was disabled nor light hinting was requested.
   return aCairo != nullptr || !mFTFace || !FT_IS_SCALABLE(mFTFace->GetFace()) ||
-         (mFTLoadFlags & FT_LOAD_MONOCHROME);
+         (mFTLoadFlags & FT_LOAD_MONOCHROME) ||
+         !((mFTLoadFlags & FT_LOAD_NO_HINTING) ||
+           FT_LOAD_TARGET_MODE(mFTLoadFlags) == FT_RENDER_MODE_LIGHT);
 }
 
 FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) {

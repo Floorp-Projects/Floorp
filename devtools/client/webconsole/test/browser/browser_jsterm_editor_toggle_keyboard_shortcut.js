@@ -11,8 +11,6 @@ const TEST_URI =
 const EDITOR_PREF = "devtools.webconsole.input.editor";
 
 add_task(async function() {
-  await pushPref("devtools.webconsole.features.editor", true);
-
   // Start with the editor turned off
   await pushPref(EDITOR_PREF, false);
   let hud = await openNewTabAndConsole(TEST_URI);
