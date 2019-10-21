@@ -11,7 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AppConstants: "resource://gre/modules/AppConstants.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   LoginBreaches: "resource:///modules/LoginBreaches.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
@@ -423,9 +422,6 @@ var AboutLoginsParent = {
             passwordRevealVisible: Services.policies.isAllowed(
               "passwordReveal"
             ),
-            importVisible:
-              Services.policies.isAllowed("profileImport") &&
-              AppConstants.platform != "linux",
           });
 
           await this._sendAllLoginRelatedObjects(logins, messageManager);
