@@ -164,7 +164,9 @@ mozilla::ipc::IPCResult nsFilePickerProxy::Recv__delete__(
       }
 
       RefPtr<File> file = File::Create(inner->AsGlobal(), blobImpl);
-      MOZ_ASSERT(file);
+      if (NS_WARN_IF(!file)) {
+        return IPC_OK();
+      }
 
       OwningFileOrDirectory* element = mFilesOrDirectories.AppendElement();
       element->SetAsFile() = file;

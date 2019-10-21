@@ -295,8 +295,14 @@ already_AddRefed<File> DataTransferItem::GetAsFile(
       if (nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports)) {
         MOZ_ASSERT(blobImpl->IsFile());
         mCachedFile = File::Create(global, blobImpl);
+        if (NS_WARN_IF(!mCachedFile)) {
+          return nullptr;
+        }
       } else if (nsCOMPtr<nsIFile> ifile = do_QueryInterface(supports)) {
         mCachedFile = File::CreateFromFile(global, ifile);
+        if (NS_WARN_IF(!mCachedFile)) {
+          return nullptr;
+        }
       } else {
         MOZ_ASSERT(false, "One of the above code paths should be taken");
         return nullptr;

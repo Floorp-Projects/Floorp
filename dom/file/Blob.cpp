@@ -71,6 +71,11 @@ void Blob::MakeValidBlobType(nsAString& aType) {
 Blob* Blob::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
   MOZ_ASSERT(aImpl);
 
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   return aImpl->IsFile() ? new File(aGlobal, aImpl) : new Blob(aGlobal, aImpl);
 }
 
@@ -78,6 +83,11 @@ Blob* Blob::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
 already_AddRefed<Blob> Blob::CreateStringBlob(nsIGlobalObject* aGlobal,
                                               const nsACString& aData,
                                               const nsAString& aContentType) {
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   RefPtr<BlobImpl> blobImpl = StringBlobImpl::Create(aData, aContentType);
   RefPtr<Blob> blob = Blob::Create(aGlobal, blobImpl);
   MOZ_ASSERT(!blob->mImpl->IsFile());
@@ -89,6 +99,11 @@ already_AddRefed<Blob> Blob::CreateMemoryBlob(nsIGlobalObject* aGlobal,
                                               void* aMemoryBuffer,
                                               uint64_t aLength,
                                               const nsAString& aContentType) {
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   RefPtr<Blob> blob = Blob::Create(
       aGlobal, new MemoryBlobImpl(aMemoryBuffer, aLength, aContentType));
   MOZ_ASSERT(!blob->mImpl->IsFile());
@@ -98,6 +113,7 @@ already_AddRefed<Blob> Blob::CreateMemoryBlob(nsIGlobalObject* aGlobal,
 Blob::Blob(nsIGlobalObject* aGlobal, BlobImpl* aImpl)
     : mImpl(aImpl), mGlobal(aGlobal) {
   MOZ_ASSERT(mImpl);
+  MOZ_ASSERT(mGlobal);
 }
 
 Blob::~Blob() = default;

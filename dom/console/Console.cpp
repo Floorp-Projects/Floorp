@@ -291,8 +291,9 @@ class ConsoleRunnable : public StructuredCloneHolderBase {
 
       JS::Rooted<JS::Value> val(aCx);
       {
-        RefPtr<Blob> blob = Blob::Create(mClonedData.mGlobal,
-                                         mClonedData.mBlobs.ElementAt(aIndex));
+        nsCOMPtr<nsIGlobalObject> global = mClonedData.mGlobal;
+        RefPtr<Blob> blob =
+            Blob::Create(global, mClonedData.mBlobs.ElementAt(aIndex));
         if (!ToJSValue(aCx, blob, &val)) {
           return nullptr;
         }
