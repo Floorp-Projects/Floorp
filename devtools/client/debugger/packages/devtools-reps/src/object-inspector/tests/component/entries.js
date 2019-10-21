@@ -13,21 +13,19 @@ const {
 } = require("../test-utils");
 const gripMapRepStubs = require("../../../reps/stubs/grip-map");
 const mapStubs = require("../../stubs/map");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 
 function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
-    createObjectClient: grip => ObjectClient(grip),
+    createObjectFront: grip => ObjectFront(grip),
     ...overrides,
   };
 }
 
 function getEnumEntriesMock() {
   return jest.fn(() => ({
-    iterator: {
-      slice: () => mapStubs.get("11-entries"),
-    },
+    slice: () => mapStubs.get("11-entries"),
   }));
 }
 
@@ -35,7 +33,7 @@ function mount(props, { initialState }) {
   const enumEntries = getEnumEntriesMock();
 
   const client = {
-    createObjectClient: grip => ObjectClient(grip, { enumEntries }),
+    createObjectFront: grip => ObjectFront(grip, { enumEntries }),
   };
   const obj = mountObjectInspector({
     client,
@@ -86,7 +84,7 @@ describe("ObjectInspector - entries", () => {
     expect(enumEntries.mock.calls).toHaveLength(0);
   });
 
-  it("calls ObjectClient.enumEntries when expected", async () => {
+  it("calls ObjectFront.enumEntries when expected", async () => {
     const stub = gripMapRepStubs.get("testMoreThanMaxEntries");
 
     const { wrapper, store, enumEntries } = mount(

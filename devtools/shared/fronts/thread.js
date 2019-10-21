@@ -11,11 +11,7 @@ const {
 } = require("devtools/shared/protocol");
 const { threadSpec } = require("devtools/shared/specs/thread");
 
-loader.lazyRequireGetter(
-  this,
-  "ObjectClient",
-  "devtools/shared/client/object-client"
-);
+loader.lazyRequireGetter(this, "ObjectFront", "devtools/shared/fronts/object");
 loader.lazyRequireGetter(
   this,
   "SourceFront",
@@ -263,7 +259,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   }
 
   /**
-   * Return a ObjectClient object for the given object grip.
+   * Return a ObjectFront object for the given object grip.
    *
    * @param grip object
    *        A pause-lifetime object grip returned by the protocol.
@@ -273,18 +269,18 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
       return this._pauseGrips[grip.actor];
     }
 
-    const client = new ObjectClient(this.client, grip);
-    this._pauseGrips[grip.actor] = client;
-    return client;
+    const objectFront = new ObjectFront(this.client, grip);
+    this._pauseGrips[grip.actor] = objectFront;
+    return objectFront;
   }
 
   /**
-   * Clear and invalidate all the grip clients from the given cache.
+   * Clear and invalidate all the grip fronts from the given cache.
    *
    * @param gripCacheName
    *        The property name of the grip cache we want to clear.
    */
-  _clearObjectClients(gripCacheName) {
+  _clearObjectFronts(gripCacheName) {
     for (const id in this[gripCacheName]) {
       this[gripCacheName][id].valid = false;
     }
@@ -296,7 +292,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
    * clients.
    */
   _clearPauseGrips() {
-    this._clearObjectClients("_pauseGrips");
+    this._clearObjectFronts("_pauseGrips");
   }
 
   /**
@@ -304,7 +300,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
    * clients.
    */
   _clearThreadGrips() {
-    this._clearObjectClients("_threadGrips");
+    this._clearObjectFronts("_threadGrips");
   }
 
   _beforePaused(packet) {

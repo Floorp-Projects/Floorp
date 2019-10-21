@@ -7,6 +7,7 @@
 #ifndef vm_BigIntType_h
 #define vm_BigIntType_h
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Range.h"
 #include "mozilla/Span.h"
 
@@ -373,6 +374,31 @@ class BigInt final
   BigInt() = delete;
   BigInt(const BigInt& other) = delete;
   void operator=(const BigInt& other) = delete;
+
+ private:
+  // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler to
+  // call the methods below.
+  friend class js::jit::MacroAssembler;
+
+  // Make offset accessors accessible to the MacroAssembler.
+  using Base::offsetOfFlags;
+  using Base::offsetOfLength;
+
+  static size_t offsetOfInlineDigits() {
+    return offsetof(BigInt, inlineDigits_);
+  }
+
+  static size_t offsetOfHeapDigits() { return offsetof(BigInt, heapDigits_); }
+
+  static constexpr size_t inlineDigitsLength() { return InlineDigitsLength; }
+
+  static constexpr size_t nonInlineDigitsLengthMask() {
+    static_assert(mozilla::IsPowerOfTwo(InlineDigitsLength),
+                  "inline digits length is a power of two");
+    return ~(InlineDigitsLength - 1) & ~InlineDigitsLength;
+  }
+
+  static constexpr size_t signBitMask() { return SignBit; }
 };
 
 static_assert(

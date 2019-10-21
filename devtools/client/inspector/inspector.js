@@ -66,11 +66,7 @@ loader.lazyRequireGetter(
   "saveScreenshot",
   "devtools/shared/screenshot/save"
 );
-loader.lazyRequireGetter(
-  this,
-  "ObjectClient",
-  "devtools/shared/client/object-client"
-);
+loader.lazyRequireGetter(this, "ObjectFront", "devtools/shared/fronts/object");
 
 loader.lazyImporter(
   this,
@@ -151,8 +147,8 @@ function Inspector(toolbox) {
   this.panelWin.inspector = this;
   this.telemetry = toolbox.telemetry;
   this.store = Store({
-    createObjectClient: object => {
-      return new ObjectClient(toolbox.target.client, object);
+    createObjectFront: object => {
+      return new ObjectFront(toolbox.target.client, object);
     },
     releaseActor: actor => {
       if (!actor) {

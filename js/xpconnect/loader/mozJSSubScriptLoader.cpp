@@ -242,10 +242,12 @@ static bool EvalScript(JSContext* cx, HandleObject targetObj,
   return true;
 }
 
-bool mozJSSubScriptLoader::ReadScript(
-    JS::MutableHandle<JSScript*> script,
-    nsIURI* uri, JSContext* cx, HandleObject targetObj, const char* uriStr,
-    nsIIOService* serv, bool wantReturnValue, bool useCompilationScope) {
+bool mozJSSubScriptLoader::ReadScript(JS::MutableHandle<JSScript*> script,
+                                      nsIURI* uri, JSContext* cx,
+                                      HandleObject targetObj,
+                                      const char* uriStr, nsIIOService* serv,
+                                      bool wantReturnValue,
+                                      bool useCompilationScope) {
   // We create a channel and call SetContentType, to avoid expensive MIME type
   // lookups (bug 632490).
   nsCOMPtr<nsIChannel> chan;
@@ -302,8 +304,8 @@ bool mozJSSubScriptLoader::ReadScript(
     ar.emplace(cx, xpc::CompilationScope());
   }
 
-  JSScript* ret = PrepareScript(uri, cx, JS_IsGlobalObject(targetObj), uriStr, buf.get(),
-                                len, wantReturnValue);
+  JSScript* ret = PrepareScript(uri, cx, JS_IsGlobalObject(targetObj), uriStr,
+                                buf.get(), len, wantReturnValue);
   if (!ret) {
     return false;
   }
@@ -472,8 +474,9 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
     // |back there.
     cache = nullptr;
   } else {
-    if (!ReadScript(&script, uri, cx, targetObj, static_cast<const char*>(uriStr.get()),
-                    serv, options.wantReturnValue, useCompilationScope)) {
+    if (!ReadScript(&script, uri, cx, targetObj,
+                    static_cast<const char*>(uriStr.get()), serv,
+                    options.wantReturnValue, useCompilationScope)) {
       return NS_OK;
     }
   }

@@ -298,6 +298,14 @@ class WebRenderBridgeParent final
    */
   void WriteCollectedFrames();
 
+#if defined(MOZ_WIDGET_ANDROID)
+  /**
+   * Request a screengrab for android
+   */
+  void RequestScreenPixels(UiCompositorControllerParent* aController);
+  void MaybeCaptureScreenPixels();
+#endif
+
  private:
   class ScheduleSharedSurfaceRelease;
 
@@ -548,6 +556,9 @@ class WebRenderBridgeParent final
   wr::NonDefaultRenderRootArray<ScreenRect> mRenderRootRects;
 
   Maybe<wr::RenderRoot> mRenderRoot;
+#if defined(MOZ_WIDGET_ANDROID)
+  UiCompositorControllerParent* mScreenPixelsTarget;
+#endif
   bool mPaused;
   bool mDestroyed;
   bool mReceivedDisplayList;

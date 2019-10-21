@@ -61,7 +61,7 @@ class Task(object):
             'label': self.label,
             'attributes': self.attributes,
             'dependencies': self.dependencies,
-            'soft_dependencies': self.soft_dependencies,
+            'soft_dependencies': sorted(self.soft_dependencies),
             'optimization': self.optimization,
             'task': self.task,
         }

@@ -25,7 +25,7 @@ import { getThreadContext } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
 
-import { createObjectClient } from "../../../client/firefox";
+import { createObjectFront } from "../../../client/firefox";
 
 import "./Popup.css";
 
@@ -140,7 +140,7 @@ export class Popup extends Component<Props> {
           disableWrap={true}
           focusable={false}
           openLink={openLink}
-          createObjectClient={grip => createObjectClient(grip)}
+          createObjectFront={grip => createObjectFront(grip)}
           onDOMNodeClick={grip => openElementInInspector(grip)}
           onInspectIconClick={grip => openElementInInspector(grip)}
           onDOMNodeMouseOver={grip => highlightDomElement(grip)}

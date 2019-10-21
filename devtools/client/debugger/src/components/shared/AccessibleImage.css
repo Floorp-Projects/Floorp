@@ -82,7 +82,6 @@ html[dir="rtl"] .img.arrow {
 
 .img.window {
   mask-image: url(resource://devtools/client/debugger/images/window.svg);
-  mask-size: 12px 12px;
 }
 
 .img.file {
@@ -169,6 +168,10 @@ html[dir="rtl"] .img.more-tabs {
 
 .img.shortcuts {
   mask-image: url(resource://devtools/client/debugger/images/help.svg);
+}
+
+.img.spin {
+  animation: spin 0.5s linear infinite;
 }
 
 .img.stepIn {

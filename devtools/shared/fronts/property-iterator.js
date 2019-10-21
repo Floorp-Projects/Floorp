@@ -17,7 +17,7 @@ const {
  * values of an object efficiently, slice by slice.
  * Note that the properties can be sorted in the backend,
  * this is controled while creating the PropertyIteratorFront
- * from ObjectClient.enumProperties.
+ * from ObjectFront.enumProperties.
  */
 class PropertyIteratorFront extends FrontClassWithSpec(propertyIteratorSpec) {
   constructor(client, targetFront, parentFront) {

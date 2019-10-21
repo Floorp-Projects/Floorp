@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test that ObjectClient.prototype.getDefinitionSite and the "definitionSite"
+// Test that ObjectFront.prototype.getDefinitionSite and the "definitionSite"
 // request work properly.
 
 var gDebuggee;

@@ -2976,8 +2976,8 @@ int NS_main(int argc, NS_tchar** argv) {
                  NS_T("%s\\update.log"), gPatchDirPath);
   }
 #else
-  NS_tsnprintf(logFilePath, sizeof(logFilePath) / sizeof(logFilePath[0]),
-               NS_T("%s/update.log"), gPatchDirPath);
+    NS_tsnprintf(logFilePath, sizeof(logFilePath) / sizeof(logFilePath[0]),
+                 NS_T("%s/update.log"), gPatchDirPath);
 #endif
   LogInit(logFilePath);
 

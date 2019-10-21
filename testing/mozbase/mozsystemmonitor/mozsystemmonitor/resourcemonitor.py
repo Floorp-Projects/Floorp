@@ -485,7 +485,7 @@ class SystemResourceMonitor(object):
         samples = len(cpu[0])
 
         if not samples:
-            return None
+            return 0
 
         if per_cpu:
             return [sum(x) / samples for x in cpu]

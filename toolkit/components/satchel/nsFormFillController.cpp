@@ -67,8 +67,8 @@ static nsIFormAutoComplete* GetFormAutoComplete() {
 }
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mLoginManagerAC,
-                         mLoginReputationService, mFocusedPopup,
-                         mPopups, mLastListener, mLastFormAutoComplete)
+                         mLoginReputationService, mFocusedPopup, mPopups,
+                         mLastListener, mLastFormAutoComplete)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
@@ -211,8 +211,9 @@ void nsFormFillController::MaybeRemoveMutationObserver(nsINode* aNode) {
 NS_IMETHODIMP
 nsFormFillController::AttachToDocument(Document* aDocument,
                                        nsIAutoCompletePopup* aPopup) {
-  MOZ_LOG(sLogger, LogLevel::Debug,
-          ("AttachToDocument for document %p with popup %p", aDocument, aPopup));
+  MOZ_LOG(
+      sLogger, LogLevel::Debug,
+      ("AttachToDocument for document %p with popup %p", aDocument, aPopup));
   NS_ENSURE_TRUE(aDocument && aPopup, NS_ERROR_ILLEGAL_VALUE);
 
   mPopups.Put(aDocument, aPopup);

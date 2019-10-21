@@ -14,12 +14,10 @@ const {
   SINGLE_WORKER_DIFFERENT_DOMAIN_LIST,
   MULTIPLE_WORKER_LIST,
   MULTIPLE_WORKER_MIXED_DOMAINS_LIST,
-} = require("devtools/client/application/test/components/fixtures/data/constants");
+} = require("devtools/client/application/test/node/fixtures/data/constants");
 
 // Import setupStore with imported & combined reducers
-const {
-  setupStore,
-} = require("devtools/client/application/test/components/helpers/helpers");
+const { setupStore } = require("devtools/client/application/test/node/helpers");
 
 // Import component
 const WorkersPage = createFactory(

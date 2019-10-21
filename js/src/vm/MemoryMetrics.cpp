@@ -42,27 +42,18 @@ namespace js {
 
 JS_FRIEND_API size_t MemoryReportingSundriesThreshold() { return 8 * 1024; }
 
-template <typename CharT>
-static uint32_t HashStringChars(JSString* s) {
-  uint32_t hash = 0;
-  if (s->isLinear()) {
-    JS::AutoCheckCannotGC nogc;
-    const CharT* chars = s->asLinear().chars<CharT>(nogc);
-    hash = mozilla::HashString(chars, s->length());
-  } else {
-    // Use rope's non-copying hash function.
-    if (!s->asRope().hash(&hash)) {
-      MOZ_CRASH("oom");
-    }
-  }
-
-  return hash;
-}
-
 /* static */
 HashNumber InefficientNonFlatteningStringHashPolicy::hash(const Lookup& l) {
-  return l->hasLatin1Chars() ? HashStringChars<Latin1Char>(l)
-                             : HashStringChars<char16_t>(l);
+  if (l->isLinear()) {
+    return HashStringChars(&l->asLinear());
+  }
+
+  // Use rope's non-copying hash function.
+  uint32_t hash = 0;
+  if (!l->asRope().hash(&hash)) {
+    MOZ_CRASH("oom");
+  }
+  return hash;
 }
 
 template <typename Char1, typename Char2>

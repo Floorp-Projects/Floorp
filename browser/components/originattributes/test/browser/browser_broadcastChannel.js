@@ -8,7 +8,7 @@ const TEST_PATH =
 const TEST_PAGE = TEST_PATH + "file_broadcastChannel.html";
 
 async function doTest(aBrowser) {
-  let response = await ContentTask.spawn(aBrowser, null, async function() {
+  let response = await SpecialPowers.spawn(aBrowser, [], async function() {
     let displayItem = content.document.getElementById("display");
 
     // If there is nothing in the 'display', we will try to send a message to
@@ -33,7 +33,7 @@ async function doTest(aBrowser) {
         bc.postMessage(data);
       });
 
-      is(receivedData, data, "The value should be the same.");
+      Assert.equal(receivedData, data, "The value should be the same.");
 
       return receivedData;
     }

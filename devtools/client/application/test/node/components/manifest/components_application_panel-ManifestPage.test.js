@@ -7,12 +7,10 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
-const {
-  setupStore,
-} = require("devtools/client/application/test/components/helpers/helpers");
+const { setupStore } = require("devtools/client/application/test/node/helpers");
 const {
   MANIFEST_SIMPLE,
-} = require("devtools/client/application/test/components/fixtures/data/constants");
+} = require("devtools/client/application/test/node/fixtures/data/constants");
 
 const ManifestPage = createFactory(
   require("devtools/client/application/src/components/manifest/ManifestPage")

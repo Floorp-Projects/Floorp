@@ -8,9 +8,7 @@ const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 
 // Import setupStore with imported & combined reducers
-const {
-  setupStore,
-} = require("devtools/client/application/test/components/helpers/helpers");
+const { setupStore } = require("devtools/client/application/test/node/helpers");
 
 const PageSwitcher = createFactory(
   require("devtools/client/application/src/components/routing/PageSwitcher")

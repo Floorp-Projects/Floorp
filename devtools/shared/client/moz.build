@@ -11,5 +11,4 @@ DevToolsModules(
     'deprecated-thread-client.js',
     'event-source.js',
     'long-string-client.js',
-    'object-client.js',
 )

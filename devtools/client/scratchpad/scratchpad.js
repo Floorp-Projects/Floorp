@@ -124,11 +124,7 @@ loader.lazyRequireGetter(
   "EnvironmentFront",
   "devtools/shared/fronts/environment"
 );
-loader.lazyRequireGetter(
-  this,
-  "ObjectClient",
-  "devtools/shared/client/object-client"
-);
+loader.lazyRequireGetter(this, "ObjectFront", "devtools/shared/fronts/object");
 loader.lazyRequireGetter(
   this,
   "BrowserConsoleManager",
@@ -658,8 +654,8 @@ var Scratchpad = {
       await this._writePrimitiveAsComment(result);
       return [string, error, result];
     }
-    const objectClient = new ObjectClient(this.debuggerClient, result);
-    const response = await objectClient.getDisplayString();
+    const objectFront = new ObjectFront(this.debuggerClient, result);
+    const response = await objectFront.getDisplayString();
     if (response.error) {
       reportError("display", response);
       throw new Error(response.error);
@@ -929,10 +925,10 @@ var Scratchpad = {
         }
       } else {
         // If there is no preview information, we need to ask the server for more.
-        const objectClient = new ObjectClient(this.debuggerClient, exception);
+        const objectFront = new ObjectFront(this.debuggerClient, exception);
         let response;
         try {
-          response = await objectClient.getPrototypeAndProperties();
+          response = await objectFront.getPrototypeAndProperties();
         } catch (ex) {
           reject(ex);
         }
@@ -960,7 +956,7 @@ var Scratchpad = {
         } else {
           let response;
           try {
-            response = await objectClient.getDisplayString();
+            response = await objectFront.getDisplayString();
           } catch (ex) {
             reject(ex);
           }
@@ -2339,8 +2335,8 @@ ScratchpadSidebar.prototype = {
                 grip
               );
             },
-            getObjectClient: grip => {
-              return new ObjectClient(this._scratchpad.debuggerClient, grip);
+            getObjectFront: grip => {
+              return new ObjectFront(this._scratchpad.debuggerClient, grip);
             },
             getLongStringClient: actor => {
               return this._scratchpad.webConsoleFront.longString(actor);

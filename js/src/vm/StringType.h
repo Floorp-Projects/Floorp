@@ -1682,6 +1682,14 @@ extern bool HasSubstringAt(JSLinearString* text, JSLinearString* pat,
 JSString* SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt,
                           int32_t lengthInt);
 
+inline js::HashNumber HashStringChars(JSLinearString* str) {
+  JS::AutoCheckCannotGC nogc;
+  size_t len = str->length();
+  return str->hasLatin1Chars()
+             ? mozilla::HashString(str->latin1Chars(nogc), len)
+             : mozilla::HashString(str->twoByteChars(nogc), len);
+}
+
 /*** Conversions ************************************************************/
 
 /*

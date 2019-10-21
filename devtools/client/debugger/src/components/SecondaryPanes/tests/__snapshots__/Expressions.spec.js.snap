@@ -15,7 +15,7 @@ exports[`Expressions should always have unique keys 1`] = `
     >
       <Component
         autoExpandDepth={0}
-        createObjectClient={[Function]}
+        createObjectFront={[Function]}
         disableWrap={true}
         onDOMNodeClick={[Function]}
         onDOMNodeMouseOut={[Function]}
@@ -57,7 +57,7 @@ exports[`Expressions should always have unique keys 1`] = `
     >
       <Component
         autoExpandDepth={0}
-        createObjectClient={[Function]}
+        createObjectFront={[Function]}
         disableWrap={true}
         onDOMNodeClick={[Function]}
         onDOMNodeMouseOut={[Function]}
@@ -106,7 +106,7 @@ exports[`Expressions should render 1`] = `
     >
       <Component
         autoExpandDepth={0}
-        createObjectClient={[Function]}
+        createObjectFront={[Function]}
         disableWrap={true}
         onDOMNodeClick={[Function]}
         onDOMNodeMouseOut={[Function]}
@@ -148,7 +148,7 @@ exports[`Expressions should render 1`] = `
     >
       <Component
         autoExpandDepth={0}
-        createObjectClient={[Function]}
+        createObjectFront={[Function]}
         disableWrap={true}
         onDOMNodeClick={[Function]}
         onDOMNodeMouseOut={[Function]}

@@ -1,19 +1,30 @@
-commit 4e8b3b553c58d6afa78cc212a80c830812431132
-Author: thomaslmiller <41446875+thomaslmiller@users.noreply.github.com>
-Date:   Thu Aug 2 01:32:25 2018 -0700
+commit 4a51e730d3604c01637a9ff9e00b051e5f4e9b93
+Author: Florian Loitsch <florian@loitsch.com>
+Date:   Mon Sep 2 18:06:17 2019 +0200
 
-    Add support for Windows on ARM and ARM64 (#76)
+    Add support for e2k architecture. (#118)
 
+diff --git a/Changelog b/Changelog
+index 12b8a51..f774727 100644
+--- a/Changelog
++++ b/Changelog
+@@ -1,3 +1,6 @@
++2019-09-02:
++  Add support for e2k architectur. Thanks to Michael Shigorin.
++
+ 2019-08-01:
+   Add min exponent width option in double-to-string conversion.
+ 
 diff --git a/double-conversion/utils.h b/double-conversion/utils.h
-index 28bb694..98a2a11 100644
+index a66289e..1a71df0 100644
 --- a/double-conversion/utils.h
 +++ b/double-conversion/utils.h
-@@ -68,7 +68,7 @@ inline void abort_noreturn() { abort(); }
- // disabled.)
- // On Linux,x86 89255e-22 != Div_double(89255.0/1e22)
- #if defined(_M_X64) || defined(__x86_64__) || \
--    defined(__ARMEL__) || defined(__avr32__) || \
-+    defined(__ARMEL__) || defined(__avr32__) || defined(_M_ARM) || defined(_M_ARM64) || \
-     defined(__hppa__) || defined(__ia64__) || \
-     defined(__mips__) || \
-     defined(__powerpc__) || defined(__ppc__) || defined(__ppc64__) || \
+@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
+     defined(__SH4__) || defined(__alpha__) || \
+     defined(_MIPS_ARCH_MIPS32R2) || defined(__ARMEB__) ||\
+     defined(__AARCH64EL__) || defined(__aarch64__) || defined(__AARCH64EB__) || \
+-    defined(__riscv) || \
++    defined(__riscv) || defined(__e2k__) || \
+     defined(__or1k__) || defined(__arc__) || \
+     defined(__EMSCRIPTEN__)
+ #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1

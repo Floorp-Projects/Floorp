@@ -12,8 +12,8 @@ const TEST_DOMAIN = "http://example.net/";
 
 const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
-function setCookies(aBrowser) {
-  ContentTask.spawn(aBrowser, null, function() {
+async function setCookies(aBrowser) {
+  await SpecialPowers.spawn(aBrowser, [], function() {
     content.document.cookie = "key=value";
   });
 }
@@ -38,9 +38,9 @@ function cacheDataForContext(loadContextInfo) {
   });
 }
 
-function checkCookiesSanitized(aBrowser) {
-  ContentTask.spawn(aBrowser, null, function() {
-    is(
+async function checkCookiesSanitized(aBrowser) {
+  await SpecialPowers.spawn(aBrowser, [], function() {
+    Assert.equal(
       content.document.cookie,
       "",
       "Cookies of all origin attributes should be cleared."

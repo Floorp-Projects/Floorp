@@ -29,6 +29,7 @@ DevToolsModules(
     'manifest.js',
     'memory.js',
     'node.js',
+    'object.js',
     'perf.js',
     'performance-recording.js',
     'performance.js',

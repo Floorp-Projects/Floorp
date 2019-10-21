@@ -11,8 +11,6 @@ const TEST_URI = `data:text/html,<meta charset=utf8>Test execute_js telemetry ev
 const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 add_task(async function() {
-  await pushPref("devtools.webconsole.features.editor", true);
-
   // Let's reset the counts.
   Services.telemetry.clearEvents();
 

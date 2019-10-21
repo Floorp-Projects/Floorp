@@ -12,10 +12,10 @@ const re = new RegExp(key + "=([0-9.]+)");
 
 // Define the testing function
 function doTest(aBrowser) {
-  return ContentTask.spawn(aBrowser, [key, re], function([
+  return SpecialPowers.spawn(aBrowser, [key, re], function(
     contentKey,
-    contentRe,
-  ]) {
+    contentRe
+  ) {
     let result = contentRe.exec(content.document.cookie);
     if (result) {
       return result[1];

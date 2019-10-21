@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 const { mountObjectInspector } = require("../test-utils");
 
 function generateDefaults(overrides) {
@@ -20,7 +20,7 @@ function generateDefaults(overrides) {
 }
 
 function mount(props) {
-  const client = { createObjectClient: grip => ObjectClient(grip) };
+  const client = { createObjectFront: grip => ObjectFront(grip) };
 
   return mountObjectInspector({
     client,

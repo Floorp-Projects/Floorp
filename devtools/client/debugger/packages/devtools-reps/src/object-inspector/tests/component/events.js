@@ -6,7 +6,7 @@
 const { mountObjectInspector } = require("../test-utils");
 
 const gripRepStubs = require("../../../reps/stubs/grip");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 
 function generateDefaults(overrides) {
   return {
@@ -16,7 +16,7 @@ function generateDefaults(overrides) {
 }
 
 function mount(props) {
-  const client = { createObjectClient: grip => ObjectClient(grip) };
+  const client = { createObjectFront: grip => ObjectFront(grip) };
 
   return mountObjectInspector({
     client,

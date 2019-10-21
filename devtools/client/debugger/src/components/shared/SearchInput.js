@@ -198,7 +198,7 @@ class SearchInput extends Component<Props, State> {
   renderSpinner() {
     const { isLoading } = this.props;
     if (isLoading) {
-      return <AccessibleImage className="loader" />;
+      return <AccessibleImage className="loader spin" />;
     }
   }
 

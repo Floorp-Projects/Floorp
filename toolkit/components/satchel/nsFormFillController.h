@@ -116,7 +116,9 @@ class nsFormFillController final : public nsIFormFillController,
   nsINode* mListNode;
   nsCOMPtr<nsIAutoCompletePopup> mFocusedPopup;
 
-  nsInterfaceHashtable<nsRefPtrHashKey<mozilla::dom::Document>, nsIAutoCompletePopup> mPopups;
+  nsInterfaceHashtable<nsRefPtrHashKey<mozilla::dom::Document>,
+                       nsIAutoCompletePopup>
+      mPopups;
 
   // The observer passed to StartSearch. It will be notified when the search is
   // complete or the data from a datalist changes.

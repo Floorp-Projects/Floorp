@@ -5,7 +5,7 @@
 /* global jest */
 
 const { mountObjectInspector } = require("../test-utils");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 const LongStringClient = require("../__mocks__/long-string-client");
 
 const repsPath = "../../../reps";
@@ -15,7 +15,7 @@ function mount(props) {
   const substring = jest.fn(() => Promise.resolve({ fullText: "" }));
 
   const client = {
-    createObjectClient: grip => ObjectClient(grip),
+    createObjectFront: grip => ObjectFront(grip),
     createLongStringClient: jest.fn(grip =>
       LongStringClient(grip, { substring })
     ),

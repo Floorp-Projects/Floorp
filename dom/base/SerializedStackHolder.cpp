@@ -81,7 +81,8 @@ JSObject* SerializedStackHolder::ReadStack(JSContext* aCx) {
       set.emplace(mWorkerRef->Private()->GetPrincipal());
     }
 
-    mHolder.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue, IgnoreErrors());
+    mHolder.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue,
+                 IgnoreErrors());
   }
 
   return stackValue.isObject() ? &stackValue.toObject() : nullptr;

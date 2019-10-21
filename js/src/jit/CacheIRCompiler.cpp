@@ -281,6 +281,8 @@ Register CacheRegisterAllocator::useRegister(MacroAssembler& masm,
         masm.movePtr(ImmGCPtr(v.toString()), reg);
       } else if (v.isSymbol()) {
         masm.movePtr(ImmGCPtr(v.toSymbol()), reg);
+      } else if (v.isBigInt()) {
+        masm.movePtr(ImmGCPtr(v.toBigInt()), reg);
       } else {
         MOZ_CRASH("Unexpected Value");
       }
@@ -3404,6 +3406,7 @@ bool CacheIRCompiler::emitStoreTypedElement() {
   Register index = allocator.useRegister(masm, reader.int32OperandId());
 
   Maybe<Register> valInt32;
+  Maybe<Register> valBigInt;
   switch (type) {
     case Scalar::Int8:
     case Scalar::Uint8:
@@ -3425,6 +3428,9 @@ bool CacheIRCompiler::emitStoreTypedElement() {
 
     case Scalar::BigInt64:
     case Scalar::BigUint64:
+      valBigInt.emplace(allocator.useRegister(masm, reader.bigIntOperandId()));
+      break;
+
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
       MOZ_CRASH("Unsupported TypedArray type");
@@ -3433,7 +3439,13 @@ bool CacheIRCompiler::emitStoreTypedElement() {
   bool handleOOB = reader.readBool();
 
   AutoScratchRegister scratch1(allocator, masm);
-  AutoSpectreBoundsScratchRegister spectreScratch(allocator, masm);
+  Maybe<AutoScratchRegister> scratch2;
+  Maybe<AutoSpectreBoundsScratchRegister> spectreScratch;
+  if (Scalar::isBigIntType(type)) {
+    scratch2.emplace(allocator, masm);
+  } else {
+    spectreScratch.emplace(allocator, masm);
+  }
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
@@ -3442,8 +3454,9 @@ bool CacheIRCompiler::emitStoreTypedElement() {
 
   // Bounds check.
   Label done;
+  Register spectreTemp = scratch2 ? scratch2->get() : spectreScratch->get();
   LoadTypedThingLength(masm, layout, obj, scratch1);
-  masm.spectreBoundsCheck32(index, scratch1, spectreScratch,
+  masm.spectreBoundsCheck32(index, scratch1, spectreTemp,
                             handleOOB ? &done : failure->label());
 
   // Load the elements vector.
@@ -3451,7 +3464,22 @@ bool CacheIRCompiler::emitStoreTypedElement() {
 
   BaseIndex dest(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(type)));
 
-  if (type == Scalar::Float32) {
+  if (Scalar::isBigIntType(type)) {
+#ifdef JS_PUNBOX64
+    Register64 temp(scratch2->get());
+#else
+    // We don't have more registers available on x86, so spill |obj|.
+    masm.push(obj);
+    Register64 temp(scratch2->get(), obj);
+#endif
+
+    masm.loadBigInt64(*valBigInt, temp);
+    masm.storeToTypedBigIntArray(type, temp, dest);
+
+#ifndef JS_PUNBOX64
+    masm.pop(obj);
+#endif
+  } else if (type == Scalar::Float32) {
     ScratchFloat32Scope fpscratch(masm);
     masm.convertDoubleToFloat32(FloatReg0, fpscratch);
     masm.storeToTypedFloatArray(type, fpscratch, dest);
@@ -3465,6 +3493,28 @@ bool CacheIRCompiler::emitStoreTypedElement() {
   return true;
 }
 
+static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
+                               Register temp, const LiveRegisterSet& liveSet,
+                               Label* fail) {
+  Label fallback, done;
+  masm.newGCBigInt(result, temp, &fallback);
+  masm.jump(&done);
+  {
+    masm.bind(&fallback);
+    masm.PushRegsInMask(liveSet);
+
+    masm.setupUnalignedABICall(temp);
+    masm.loadJSContext(temp);
+    masm.passABIArg(temp);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::AllocateBigIntNoGC));
+    masm.storeCallPointerResult(result);
+
+    masm.PopRegsInMask(liveSet);
+    masm.branchPtr(Assembler::Equal, result, ImmWord(0), fail);
+  }
+  masm.bind(&done);
+}
+
 bool CacheIRCompiler::emitLoadTypedElementResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
@@ -3474,7 +3524,16 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
   Scalar::Type type = reader.scalarType();
 
   AutoScratchRegister scratch1(allocator, masm);
+#ifdef JS_PUNBOX64
+  AutoScratchRegister scratch2(allocator, masm);
+#else
+  // There are too few registers available on x86, so we may need to reuse the
+  // output's scratch register.
   AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
+#endif
+
+  // BigInt values are always boxed.
+  MOZ_ASSERT_IF(Scalar::isBigIntType(type), output.hasValue());
 
   if (!output.hasValue()) {
     if (type == Scalar::Float32 || type == Scalar::Float64) {
@@ -3502,14 +3561,49 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
   LoadTypedThingLength(masm, layout, obj, scratch1);
   masm.spectreBoundsCheck32(index, scratch1, scratch2, failure->label());
 
+  // Allocate BigInt if needed. The code after this should be infallible.
+  Maybe<Register> bigInt;
+  if (Scalar::isBigIntType(type)) {
+    bigInt.emplace(output.valueReg().scratchReg());
+
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(),
+                         liveVolatileFloatRegs());
+    save.takeUnchecked(scratch1);
+    save.takeUnchecked(scratch2);
+    save.takeUnchecked(output);
+
+    EmitAllocateBigInt(masm, *bigInt, scratch1, save, failure->label());
+  }
+
   // Load the elements vector.
   LoadTypedThingData(masm, layout, obj, scratch1);
 
   // Load the value.
   BaseIndex source(scratch1, index, ScaleFromElemWidth(Scalar::byteSize(type)));
+
   if (output.hasValue()) {
-    masm.loadFromTypedArray(type, source, output.valueReg(),
-                            *allowDoubleResult_, scratch1, failure->label());
+    if (Scalar::isBigIntType(type)) {
+#ifdef JS_PUNBOX64
+      Register64 temp(scratch2);
+#else
+      // We don't have more registers available on x86, so spill |obj| and
+      // additionally use the output's type register.
+      MOZ_ASSERT(output.valueReg().scratchReg() != output.valueReg().typeReg());
+      masm.push(obj);
+      Register64 temp(output.valueReg().typeReg(), obj);
+#endif
+
+      masm.loadFromTypedBigIntArray(type, source, *bigInt, temp);
+
+#ifndef JS_PUNBOX64
+      masm.pop(obj);
+#endif
+
+      masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
+    } else {
+      masm.loadFromTypedArray(type, source, output.valueReg(),
+                              *allowDoubleResult_, scratch1, failure->label());
+    }
   } else {
     bool needGpr = (type == Scalar::Int8 || type == Scalar::Uint8 ||
                     type == Scalar::Int16 || type == Scalar::Uint16 ||
@@ -3535,6 +3629,7 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
   Scalar::Type type = reader.scalarType();
 
   Maybe<Register> valInt32;
+  Maybe<Register> valBigInt;
   switch (type) {
     case Scalar::Int8:
     case Scalar::Uint8:
@@ -3556,18 +3651,40 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
 
     case Scalar::BigInt64:
     case Scalar::BigUint64:
+      valBigInt.emplace(allocator.useRegister(masm, reader.bigIntOperandId()));
+      break;
+
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
       MOZ_CRASH("Unsupported TypedArray type");
   }
 
   AutoScratchRegister scratch(allocator, masm);
+  Maybe<AutoScratchRegister> bigIntScratch;
+  if (Scalar::isBigIntType(type)) {
+    bigIntScratch.emplace(allocator, masm);
+  }
 
   // Compute the address being written to.
   LoadTypedThingData(masm, layout, obj, scratch);
   Address dest = emitAddressFromStubField(offset, scratch);
 
-  if (type == Scalar::Float32) {
+  if (Scalar::isBigIntType(type)) {
+#ifdef JS_PUNBOX64
+    Register64 temp(bigIntScratch->get());
+#else
+    // We don't have more registers available on x86, so spill |obj|.
+    masm.push(obj);
+    Register64 temp(bigIntScratch->get(), obj);
+#endif
+
+    masm.loadBigInt64(*valBigInt, temp);
+    masm.storeToTypedBigIntArray(type, temp, dest);
+
+#ifndef JS_PUNBOX64
+    masm.pop(obj);
+#endif
+  } else if (type == Scalar::Float32) {
     ScratchFloat32Scope fpscratch(masm);
     masm.convertDoubleToFloat32(FloatReg0, fpscratch);
     masm.storeToTypedFloatArray(type, fpscratch, dest);
@@ -3579,16 +3696,69 @@ bool CacheIRCompiler::emitStoreTypedObjectScalarProperty() {
   return true;
 }
 
-void CacheIRCompiler::emitLoadTypedObjectResultShared(
-    const Address& fieldAddr, Register scratch, uint32_t typeDescr,
-    const AutoOutputRegister& output) {
+bool CacheIRCompiler::emitLoadTypedObjectResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
   MOZ_ASSERT(output.hasValue());
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  TypedThingLayout layout = reader.typedThingLayout();
+  uint32_t typeDescr = reader.typeDescrKey();
+  StubFieldOffset offset(reader.stubOffset(), StubField::Type::RawWord);
+
+  // Allocate BigInt if needed. The code after this should be infallible.
+  Maybe<Register> bigInt;
+  if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
+    Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
+    if (Scalar::isBigIntType(type)) {
+      FailurePath* failure;
+      if (!addFailurePath(&failure)) {
+        return false;
+      }
+
+      bigInt.emplace(output.valueReg().scratchReg());
+
+      LiveRegisterSet save(GeneralRegisterSet::Volatile(),
+                           liveVolatileFloatRegs());
+      save.takeUnchecked(scratch1);
+      save.takeUnchecked(scratch2);
+      save.takeUnchecked(output);
+
+      EmitAllocateBigInt(masm, *bigInt, scratch1, save, failure->label());
+    }
+  }
+
+  // Get the object's data pointer.
+  LoadTypedThingData(masm, layout, obj, scratch1);
+
+  // Get the address being written to.
+  Address fieldAddr = emitAddressFromStubField(offset, scratch1);
 
   if (SimpleTypeDescrKeyIsScalar(typeDescr)) {
     Scalar::Type type = ScalarTypeFromSimpleTypeDescrKey(typeDescr);
-    masm.loadFromTypedArray(type, fieldAddr, output.valueReg(),
-                            /* allowDouble = */ true, scratch, nullptr);
+
+    if (Scalar::isBigIntType(type)) {
+#ifdef JS_PUNBOX64
+      Register64 temp(scratch2);
+#else
+      // We don't have more registers available on x86, so spill |obj|.
+      masm.push(obj);
+      Register64 temp(scratch2, obj);
+#endif
+
+      masm.loadFromTypedBigIntArray(type, fieldAddr, *bigInt, temp);
+
+#ifndef JS_PUNBOX64
+      masm.pop(obj);
+#endif
+
+      masm.tagValue(JSVAL_TYPE_BIGINT, *bigInt, output.valueReg());
+    } else {
+      masm.loadFromTypedArray(type, fieldAddr, output.valueReg(),
+                              /* allowDouble = */ true, scratch2, nullptr);
+    }
   } else {
     ReferenceType type = ReferenceTypeFromSimpleTypeDescrKey(typeDescr);
     switch (type) {
@@ -3601,25 +3771,26 @@ void CacheIRCompiler::emitLoadTypedObjectResultShared(
         // more complicated.
       case ReferenceType::TYPE_OBJECT: {
         Label notNull, done;
-        masm.loadPtr(fieldAddr, scratch);
-        masm.branchTestPtr(Assembler::NonZero, scratch, scratch, &notNull);
+        masm.loadPtr(fieldAddr, scratch2);
+        masm.branchTestPtr(Assembler::NonZero, scratch2, scratch2, &notNull);
         masm.moveValue(NullValue(), output.valueReg());
         masm.jump(&done);
         masm.bind(&notNull);
-        masm.tagValue(JSVAL_TYPE_OBJECT, scratch, output.valueReg());
+        masm.tagValue(JSVAL_TYPE_OBJECT, scratch2, output.valueReg());
         masm.bind(&done);
         break;
       }
 
       case ReferenceType::TYPE_STRING:
-        masm.loadPtr(fieldAddr, scratch);
-        masm.tagValue(JSVAL_TYPE_STRING, scratch, output.valueReg());
+        masm.loadPtr(fieldAddr, scratch2);
+        masm.tagValue(JSVAL_TYPE_STRING, scratch2, output.valueReg());
         break;
 
       default:
         MOZ_CRASH("Invalid ReferenceTypeDescr");
     }
   }
+  return true;
 }
 
 bool CacheIRCompiler::emitLoadObjectResult() {

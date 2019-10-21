@@ -7,7 +7,7 @@ const { mountObjectInspector } = require("../test-utils");
 
 const repsPath = "../../../reps";
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 const stub = gripRepStubs.get("testMoreThanMaxProps");
 const { waitForDispatch } = require("../test-utils");
 
@@ -38,7 +38,7 @@ function mount(props, { initialState } = {}) {
   const enumProperties = getEnumPropertiesMock();
 
   const client = {
-    createObjectClient: grip => ObjectClient(grip, { enumProperties }),
+    createObjectFront: grip => ObjectFront(grip, { enumProperties }),
     releaseActor: jest.fn(),
   };
 

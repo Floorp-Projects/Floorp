@@ -5,7 +5,7 @@
 /* global jest */
 
 const { mountObjectInspector } = require("../test-utils");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 
 const {
   createNode,
@@ -19,8 +19,8 @@ const gripArrayRepStubs = require(`${repsPath}/stubs/grip-array`);
 
 function mount(props, overrides = {}) {
   const client = {
-    createObjectClient:
-      overrides.createObjectClient || jest.fn(grip => ObjectClient(grip)),
+    createObjectFront:
+      overrides.createObjectFront || jest.fn(grip => ObjectFront(grip)),
   };
 
   return mountObjectInspector({
@@ -29,7 +29,7 @@ function mount(props, overrides = {}) {
   });
 }
 
-describe("createObjectClient", () => {
+describe("createObjectFront", () => {
   it("is called with the expected object for regular node", () => {
     const stub = gripRepStubs.get("testMoreThanMaxProps");
     const { client } = mount({
@@ -44,7 +44,7 @@ describe("createObjectClient", () => {
       ],
     });
 
-    expect(client.createObjectClient.mock.calls[0][0]).toBe(stub);
+    expect(client.createObjectFront.mock.calls[0][0]).toBe(stub);
   });
 
   it("is called with the expected object for entries node", () => {
@@ -60,7 +60,7 @@ describe("createObjectClient", () => {
       roots: [entriesNode],
     });
 
-    expect(client.createObjectClient.mock.calls[0][0]).toBe(grip);
+    expect(client.createObjectFront.mock.calls[0][0]).toBe(grip);
   });
 
   it("is called with the expected object for bucket node", () => {
@@ -72,7 +72,7 @@ describe("createObjectClient", () => {
       autoExpandDepth: 1,
       roots: [bucket],
     });
-    expect(client.createObjectClient.mock.calls[0][0]).toBe(grip);
+    expect(client.createObjectFront.mock.calls[0][0]).toBe(grip);
   });
 
   it("is called with the expected object for sub-bucket node", () => {
@@ -86,10 +86,10 @@ describe("createObjectClient", () => {
       roots: [subBucket],
     });
 
-    expect(client.createObjectClient.mock.calls[0][0]).toBe(grip);
+    expect(client.createObjectFront.mock.calls[0][0]).toBe(grip);
   });
 
-  it("doesn't fail when ObjectClient doesn't have expected methods", () => {
+  it("doesn't fail when ObjectFront doesn't have expected methods", () => {
     const stub = gripRepStubs.get("testMoreThanMaxProps");
     const root = createNode({ name: "root", contents: { value: stub } });
 
@@ -97,13 +97,13 @@ describe("createObjectClient", () => {
     const originalConsoleError = console.error;
     console.error = () => {};
 
-    const createObjectClient = x => ({});
+    const createObjectFront = x => ({});
     mount(
       {
         autoExpandDepth: 1,
         roots: [root],
       },
-      { createObjectClient }
+      { createObjectFront }
     );
 
     // rollback console.error.

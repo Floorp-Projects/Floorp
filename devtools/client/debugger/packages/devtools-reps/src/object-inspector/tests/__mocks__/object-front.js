@@ -2,29 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function ObjectClient(grip, overrides) {
+function ObjectFront(grip, overrides) {
   return {
     grip,
     enumEntries: function() {
-      return Promise.resolve({
-        iterator: this.getIterator({
+      return Promise.resolve(
+        this.getIterator({
           ownProperties: {},
-        }),
-      });
+        })
+      );
     },
     enumProperties: function(options) {
-      return Promise.resolve({
-        iterator: this.getIterator({
+      return Promise.resolve(
+        this.getIterator({
           ownProperties: {},
-        }),
-      });
+        })
+      );
     },
     enumSymbols: function() {
-      return Promise.resolve({
-        iterator: this.getIterator({
+      return Promise.resolve(
+        this.getIterator({
           ownSymbols: [],
-        }),
-      });
+        })
+      );
     },
     getPrototype: function() {
       return Promise.resolve({
@@ -43,4 +43,4 @@ function ObjectClient(grip, overrides) {
   };
 }
 
-module.exports = ObjectClient;
+module.exports = ObjectFront;

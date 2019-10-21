@@ -49,33 +49,9 @@ fail() {
 # start pulseaudio
 maybe_start_pulse() {
     if $NEED_PULSEAUDIO; then
-        # call pulseaudio with varying parameters
+        # call pulseaudio for Ubuntu only
         if [ $DISTRIBUTION == "Ubuntu" ]; then
             pulseaudio --fail --daemonize --start
-        elif [ $DISTRIBUTION == "Debian" ]; then
-            # temporarily turn errexit off
-            # nicely kill existing daemons/processes if exist
-            set +e
-            pulseaudio --kill
-
-            # Debian needs additional stabilization and debugging
-            ps ax | grep 'pulseaudio'
-            ps -ef | grep 'pulseaudio' | grep -v grep | awk '{print $2}' | xargs -r kill -9
-            ps ax | grep 'pulseaudio'
-
-            # check and start pulseaudio with debugging
-            pulseaudio --check; echo $?
-            pulseaudio --fail --daemonize --start -vvvv --exit-idle-time=-1 --log-level=4 --log-time=1
-            set -e
-        else
-            :
-        fi
-
-        pulseaudio --check
-        if [ $? -eq 0 ]; then
-            echo "Pulseaudio successfully initialized"
-        else
-            echo "Pulseaudio failed to initialize, trying again"
         fi
     fi
 }
@@ -172,6 +148,7 @@ if $NEED_WINDOW_MANAGER; then
     gsettings set org.gnome.desktop.screensaver idle-activation-enabled false
     gsettings set org.gnome.desktop.screensaver lock-enabled false
     gsettings set org.gnome.desktop.screensaver lock-delay 3600
+
     # Disable the screen saver
     xset s off s reset
 
@@ -192,12 +169,6 @@ if $NEED_COMPIZ; then
 fi
 
 maybe_start_pulse
-
-if $NEED_PULSEAUDIO; then
-    # Load null-sink using pactl, and if it was successful.
-    pactl load-module module-null-sink
-    pactl list modules short
-fi
 
 # For telemetry purposes, the build process wants information about the
 # source it is running

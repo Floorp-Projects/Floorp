@@ -1,17 +1,17 @@
-diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt/double-conversion/double-conversion/double-conversion.h
---- a/mfbt/double-conversion/double-conversion/double-conversion.h
-+++ b/mfbt/double-conversion/double-conversion/double-conversion.h
+diff --git a/mfbt/double-conversion/double-conversion/double-to-string.h b/mfbt/double-conversion/double-conversion/double-to-string.h
+--- a/mfbt/double-conversion/double-conversion/double-to-string.h
++++ b/mfbt/double-conversion/double-conversion/double-to-string.h
 @@ -23,16 +23,17 @@
  // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
- #ifndef DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_
- #define DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_
+ #ifndef DOUBLE_CONVERSION_DOUBLE_TO_STRING_H_
+ #define DOUBLE_CONVERSION_DOUBLE_TO_STRING_H_
  
 +#include "mozilla/Types.h"
- #include <double-conversion/utils.h>
+ #include "utils.h"
  
  namespace double_conversion {
  
@@ -19,11 +19,11 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt
   public:
    // When calling ToFixed with a double > 10^kMaxFixedDigitsBeforePoint
    // or a requested_digits parameter > kMaxFixedDigitsAfterPoint then the
-@@ -124,17 +125,17 @@ class DoubleToStringConverter {
-             max_trailing_padding_zeroes_in_precision_mode) {
+@@ -132,17 +133,17 @@ class DoubleToStringConverter {
+         min_exponent_width_(min_exponent_width) {
      // When 'trailing zero after the point' is set, then 'trailing point'
      // must be set too.
-     ASSERT(((flags & EMIT_TRAILING_DECIMAL_POINT) != 0) ||
+     DOUBLE_CONVERSION_ASSERT(((flags & EMIT_TRAILING_DECIMAL_POINT) != 0) ||
          !((flags & EMIT_TRAILING_ZERO_AFTER_POINT) != 0));
    }
  
@@ -38,7 +38,7 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt
    // Example with decimal_in_shortest_low = -6,
    //              decimal_in_shortest_high = 21,
    //              EMIT_POSITIVE_EXPONENT_SIGN activated, and
-@@ -192,17 +193,17 @@ class DoubleToStringConverter {
+@@ -200,17 +201,17 @@ class DoubleToStringConverter {
    // except for the following cases:
    //   - the input value is special and no infinity_symbol or nan_symbol has
    //     been provided to the constructor,
@@ -57,7 +57,7 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt
    // If requested_digits equals -1, then the shortest exponential representation
    // is computed.
    //
-@@ -224,17 +225,17 @@ class DoubleToStringConverter {
+@@ -232,17 +233,17 @@ class DoubleToStringConverter {
    // except for the following cases:
    //   - the input value is special and no infinity_symbol or nan_symbol has
    //     been provided to the constructor,
@@ -76,7 +76,7 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt
    // max_{leading|trailing}_padding_zeroes_in_precision_mode (given to the
    // constructor).
    // The last computed digit is rounded.
-@@ -262,17 +263,17 @@ class DoubleToStringConverter {
+@@ -270,17 +271,17 @@ class DoubleToStringConverter {
    // except for the following cases:
    //   - the input value is special and no infinity_symbol or nan_symbol has
    //     been provided to the constructor,
@@ -95,7 +95,7 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt
      // For example the output of 0.299999999999999988897 is (the less accurate
      // but correct) 0.3.
      SHORTEST,
-@@ -287,17 +288,17 @@ class DoubleToStringConverter {
+@@ -295,17 +296,17 @@ class DoubleToStringConverter {
    };
  
    // The maximal number of digits that are needed to emit a double in base 10.
@@ -114,7 +114,7 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt
    // -Infinity.
    //
    // The result should be interpreted as buffer * 10^(point-length).
-@@ -332,44 +333,44 @@ class DoubleToStringConverter {
+@@ -340,44 +341,44 @@ class DoubleToStringConverter {
    // DoubleToAscii expects the given buffer to be big enough to hold all
    // digits and a terminating null-character. In SHORTEST-mode it expects a
    // buffer of at least kBase10MaximalLength + 1. In all other modes the

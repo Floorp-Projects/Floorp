@@ -1,7 +1,7 @@
-diff --git a/mfbt/double-conversion/double-conversion/double-conversion.cc b/mfbt/double-conversion/double-conversion/double-conversion.cc
---- a/mfbt/double-conversion/double-conversion/double-conversion.cc
-+++ b/mfbt/double-conversion/double-conversion/double-conversion.cc
-@@ -279,17 +279,19 @@ bool DoubleToStringConverter::ToExponent
+diff --git a/mfbt/double-conversion/double-conversion/double-to-string.cc b/mfbt/double-conversion/double-conversion/double-to-string.cc
+--- a/mfbt/double-conversion/double-conversion/double-to-string.cc
++++ b/mfbt/double-conversion/double-conversion/double-to-string.cc
+@@ -290,17 +290,19 @@ bool DoubleToStringConverter::ToExponent
                                    exponent,
                                    result_builder);
    return true;
@@ -21,7 +21,7 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.cc b/mfb
      return false;
    }
  
-@@ -321,16 +323,17 @@ bool DoubleToStringConverter::ToPrecisio
+@@ -332,16 +334,17 @@ bool DoubleToStringConverter::ToPrecisio
         max_trailing_padding_zeroes_in_precision_mode_)) {
      // Fill buffer to contain 'precision' digits.
      // Usually the buffer is already at the correct length, but 'DoubleToAscii'
@@ -37,12 +37,12 @@ diff --git a/mfbt/double-conversion/double-conversion/double-conversion.cc b/mfb
                                      result_builder);
    } else {
      CreateDecimalRepresentation(decimal_rep, decimal_rep_length, decimal_point,
-                                 Max(0, precision - decimal_point),
+                                 (std::max)(0, precision - decimal_point),
                                  result_builder);
-diff --git a/mfbt/double-conversion/double-conversion/double-conversion.h b/mfbt/double-conversion/double-conversion/double-conversion.h
---- a/mfbt/double-conversion/double-conversion/double-conversion.h
-+++ b/mfbt/double-conversion/double-conversion/double-conversion.h
-@@ -265,16 +265,17 @@ class DoubleToStringConverter {
+diff --git a/mfbt/double-conversion/double-conversion/double-to-string.h b/mfbt/double-conversion/double-conversion/double-to-string.h
+--- a/mfbt/double-conversion/double-conversion/double-to-string.h
++++ b/mfbt/double-conversion/double-conversion/double-to-string.h
+@@ -273,16 +273,17 @@ class DoubleToStringConverter {
    //     been provided to the constructor,
    //   - precision < kMinPericisionDigits
    //   - precision > kMaxPrecisionDigits

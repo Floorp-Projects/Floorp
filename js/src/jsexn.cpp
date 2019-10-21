@@ -764,8 +764,7 @@ static JSString* ErrorReportToString(JSContext* cx, JSErrorReport* reportp) {
   return ConcatStrings<CanGC>(cx, str, message);
 }
 
-ErrorReport::ErrorReport(JSContext* cx)
-    : reportp(nullptr), exnObject(cx) {}
+ErrorReport::ErrorReport(JSContext* cx) : reportp(nullptr), exnObject(cx) {}
 
 ErrorReport::~ErrorReport() = default;
 
