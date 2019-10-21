@@ -20,16 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
 });
 
-// NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.
-addMessageListener("PasswordManager:fillForm", function(message) {
-  // intercept if ContextMenu.jsm had sent a plain object for remote targets
-  LoginManagerChild.receiveMessage(message, content);
-});
-addMessageListener("PasswordManager:fillGeneratedPassword", function(message) {
-  // forward message to LMC
-  LoginManagerChild.receiveMessage(message, content);
-});
-
 function shouldIgnoreLoginManagerEvent(event) {
   let nodePrincipal = event.target.nodePrincipal;
   // If we have a system or null principal then prevent any more password manager code from running and
@@ -45,13 +35,15 @@ addEventListener("DOMFormBeforeSubmit", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  this.LoginManagerChild.forWindow(content).onDOMFormBeforeSubmit(event);
+  let window = event.target.ownerGlobal;
+  LoginManagerChild.forWindow(window).onDOMFormBeforeSubmit(event);
 });
 addEventListener("DOMFormHasPassword", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  this.LoginManagerChild.forWindow(content).onDOMFormHasPassword(event);
+  let window = event.target.ownerGlobal;
+  LoginManagerChild.forWindow(window).onDOMFormHasPassword(event);
   let formLike = LoginFormFactory.createFromForm(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
@@ -59,10 +51,8 @@ addEventListener("DOMInputPasswordAdded", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  this.LoginManagerChild.forWindow(content).onDOMInputPasswordAdded(
-    event,
-    content
-  );
+  let window = event.target.ownerGlobal;
+  LoginManagerChild.forWindow(window).onDOMInputPasswordAdded(event, content);
   let formLike = LoginFormFactory.createFromField(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });

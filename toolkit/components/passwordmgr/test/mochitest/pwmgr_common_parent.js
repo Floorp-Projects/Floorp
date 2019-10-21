@@ -218,14 +218,12 @@ addMessageListener("setMasterPassword", ({ enable }) => {
   }
 });
 
-function onFormSubmit(message) {
-  sendAsyncMessage("formSubmissionProcessed", message.data, message.objects);
-}
+LoginManagerParent.setListenerForTests((msg, data) => {
+  if (msg == "FormSubmit") {
+    sendAsyncMessage("formSubmissionProcessed", data, {});
+  }
+});
 
-Services.mm.addMessageListener("PasswordManager:onFormSubmit", onFormSubmit);
 addMessageListener("cleanup", () => {
-  Services.mm.removeMessageListener(
-    "PasswordManager:onFormSubmit",
-    onFormSubmit
-  );
+  LoginManagerParent.setListenerForTests(null);
 });

@@ -572,13 +572,7 @@ add_task(async function test_normal_autofilled_7() {
     },
     async function(browser) {
       // Add the observer before loading the form page
-      let formFilled = ContentTask.spawn(browser, null, async function() {
-        const { TestUtils } = ChromeUtils.import(
-          "resource://testing-common/TestUtils.jsm"
-        );
-        await TestUtils.topicObserved("passwordmgr-processed-form");
-        await Promise.resolve();
-      });
+      let formFilled = listenForTestNotification("FormProcessed");
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       await BrowserTestUtils.loadURI(browser, form1Url);
       await formFilled;
@@ -600,6 +594,8 @@ add_task(async function test_private_not_autofilled_8() {
   // Sanity check the HTTP login exists.
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
+  let formFilled = listenForTestNotification("FormProcessed");
+
   await focusWindow(privateWin);
   await BrowserTestUtils.withNewTab(
     {
@@ -607,6 +603,7 @@ add_task(async function test_private_not_autofilled_8() {
       url: form1Url,
     },
     async function(browser) {
+      await formFilled;
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",
@@ -667,6 +664,8 @@ add_task(async function test_normal_autofilled_10() {
   // Sanity check the HTTP login exists.
   is(Services.logins.getAllLogins().length, 1, "Should have the HTTP login");
 
+  let formFilled = listenForTestNotification("FormProcessed");
+
   await focusWindow(normalWin);
   await BrowserTestUtils.withNewTab(
     {
@@ -674,6 +673,7 @@ add_task(async function test_normal_autofilled_10() {
       url: form1Url,
     },
     async function(browser) {
+      await formFilled;
       let fieldValues = await submitFormAndGetResults(
         browser,
         "formsubmit.sjs",

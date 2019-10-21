@@ -24,11 +24,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "LoginManagerChild",
-  "resource://gre/modules/LoginManagerChild.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "InsecurePasswordUtils",
   "resource://gre/modules/InsecurePasswordUtils.jsm"
 );

@@ -532,7 +532,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AboutLoginsParent: "resource:///modules/AboutLoginsParent.jsm",
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
-  LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
   PluginManager: "resource:///actors/PluginParent.jsm",
   PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
@@ -596,8 +595,6 @@ const listeners = {
     "update-error": ["UpdateListener"],
     "gmp-plugin-crash": ["PluginManager"],
     "plugin-crashed": ["PluginManager"],
-    "passwordmgr-storage-changed": ["LoginManagerParent"],
-    "passwordmgr-autosaved-login-merged": ["LoginManagerParent"],
   },
 
   ppmm: {
@@ -643,15 +640,6 @@ const listeners = {
     "PictureInPicture:OpenToggleContextMenu": ["PictureInPicture"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
-    "PasswordManager:findLogins": ["LoginManagerParent"],
-    "PasswordManager:findRecipes": ["LoginManagerParent"],
-    "PasswordManager:onFormSubmit": ["LoginManagerParent"],
-    "PasswordManager:onGeneratedPasswordFilledOrEdited": ["LoginManagerParent"],
-    "PasswordManager:autoCompleteLogins": ["LoginManagerParent"],
-    "PasswordManager:removeLogin": ["LoginManagerParent"],
-    "PasswordManager:OpenPreferences": ["LoginManagerParent"],
-    // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
     "webrtc:CancelRequest": ["webrtcUI"],

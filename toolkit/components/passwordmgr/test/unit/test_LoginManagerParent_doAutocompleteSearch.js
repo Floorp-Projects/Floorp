@@ -14,6 +14,7 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
   Services.prefs.setBoolPref("signon.generation.enabled", true);
 
   let LMP = new LoginManagerParent();
+  LMP.useBrowsingContext(123);
 
   ok(LMP.doAutocompleteSearch, "doAutocompleteSearch exists");
 
@@ -26,7 +27,6 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
       fieldName: "new-password",
       canAutomaticallyPersist: false,
     },
-    browsingContextId: 123,
     formOrigin: "https://example.com",
     actionOrigin: "https://mozilla.org",
     searchString: "",
@@ -34,21 +34,6 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
     requestId: "foo",
     isSecure: true,
     isPasswordField: true,
-  };
-
-  let sendMessageStub = sinon.stub();
-  let fakeBrowser = {
-    messageManager: {
-      sendAsyncMessage: sendMessageStub,
-    },
-    ownerGlobal: {
-      docShell: {
-        // eslint-disable-next-line mozilla/use-chromeutils-generateqi
-        QueryInterface() {
-          return { usePrivateBrowsing: false };
-        },
-      },
-    },
   };
 
   sinon
@@ -64,72 +49,48 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
       };
     });
 
-  LMP.doAutocompleteSearch(arg1, fakeBrowser);
-  ok(sendMessageStub.calledOnce, "sendAsyncMessage was called");
-  let msg1 = sendMessageStub.firstCall.args[1];
-  equal(msg1.requestId, arg1.requestId, "requestId matches");
-  equal(msg1.logins.length, 0, "no logins");
-  ok(msg1.generatedPassword, "has a generated password");
-  equal(
-    msg1.generatedPassword.length,
-    LoginTestUtils.generation.LENGTH,
-    "generated password length"
-  );
-  sendMessageStub.resetHistory();
+  let result1 = LMP.doAutocompleteSearch(arg1);
+  equal(result1.logins.length, 0, "no logins");
+  ok(result1.generatedPassword, "has a generated password");
+  equal(result1.generatedPassword.length, 15, "generated password length");
 
   info("repeat the search and ensure the same password was used");
-  LMP.doAutocompleteSearch(arg1, fakeBrowser);
-  ok(sendMessageStub.calledOnce, "sendAsyncMessage was called");
-  let msg2 = sendMessageStub.firstCall.args[1];
-  equal(msg2.requestId, arg1.requestId, "requestId matches");
-  equal(msg2.logins.length, 0, "no logins");
+  let result2 = LMP.doAutocompleteSearch(arg1);
+  equal(result2.logins.length, 0, "no logins");
   equal(
-    msg2.generatedPassword,
-    msg1.generatedPassword,
+    result2.generatedPassword,
+    result1.generatedPassword,
     "same generated password"
   );
-  sendMessageStub.resetHistory();
 
   info("Check cases where a password shouldn't be generated");
 
-  LMP.doAutocompleteSearch(
-    { ...arg1, ...{ isPasswordField: false } },
-    fakeBrowser
-  );
-  ok(sendMessageStub.calledOnce, "sendAsyncMessage was called");
-  let msg = sendMessageStub.firstCall.args[1];
-  equal(msg.requestId, arg1.requestId, "requestId matches");
+  let result3 = LMP.doAutocompleteSearch({
+    ...arg1,
+    ...{ isPasswordField: false },
+  });
   equal(
-    msg.generatedPassword,
+    result3.generatedPassword,
     null,
     "no generated password when not a pw. field"
   );
-  sendMessageStub.resetHistory();
 
   let arg1_2 = { ...arg1 };
   arg1_2.autocompleteInfo.fieldName = "";
-  LMP.doAutocompleteSearch(arg1_2, fakeBrowser);
-  ok(sendMessageStub.calledOnce, "sendAsyncMessage was called");
-  msg = sendMessageStub.firstCall.args[1];
-  equal(msg.requestId, arg1.requestId, "requestId matches");
+  let result4 = LMP.doAutocompleteSearch(arg1_2);
   equal(
-    msg.generatedPassword,
+    result4.generatedPassword,
     null,
     "no generated password when not autocomplete=new-password"
   );
-  sendMessageStub.resetHistory();
 
-  LMP.doAutocompleteSearch(
-    { ...arg1, ...{ browsingContextId: 999 } },
-    fakeBrowser
-  );
-  ok(sendMessageStub.calledOnce, "sendAsyncMessage was called");
-  msg = sendMessageStub.firstCall.args[1];
-  equal(msg.requestId, arg1.requestId, "requestId matches");
+  let result5 = LMP.doAutocompleteSearch({
+    ...arg1,
+    ...{ browsingContextId: 999 },
+  });
   equal(
-    msg.generatedPassword,
+    result5.generatedPassword,
     null,
     "no generated password with a missing browsingContextId"
   );
-  sendMessageStub.resetHistory();
 });

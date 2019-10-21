@@ -10,9 +10,6 @@
 </head>
 <body>
 <script type="application/javascript">
-const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerChild.jsm");
-const { LoginManagerChild } = LMCBackstagePass;
-
 let readyPromise = registerRunTests();
 
 function add2logins() {
@@ -59,12 +56,13 @@ async function loadFormIntoIframe(origin, html) {
   });
   loginFrame.src = origin + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
   await loadedPromise;
-  let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
-  // eslint-disable-next-line no-unsanitized/property
-  frameDoc.documentElement.innerHTML = html;
+  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [html], function(contentHtml) {
+    // eslint-disable-next-line no-unsanitized/property
+    this.content.document.documentElement.innerHTML = contentHtml;
+  });
+
   // Wait for the form to be processed before trying to submit.
   await promiseFormsProcessed();
-  return frameDoc;
 }
 
 add_task(async function setup() {
@@ -146,16 +144,21 @@ function getSubmitMessage() {
 add_task(async function test_new_logins() {
   for (let tc of TESTCASES) {
     info("Starting testcase: " + JSON.stringify(tc));
-    let frameDoc = await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
+    await loadFormIntoIframe(DEFAULT_ORIGIN, `<form id="form1" onsubmit="return false;">
       <input  type="text"       name="uname" value="${tc.username}">
       <input  type="password"   name="pword" value="thepassword">
       <button type="submit" id="submitBtn">Submit</button>
     </form>`);
-    is(frameDoc.querySelector("[name='uname']").value, tc.username, "Checking for filled username");
+    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [tc], function(testcase) {
+      let doc = this.content.document;
+      Assert.equal(doc.querySelector("[name='uname']").value, testcase.username, "Checking for filled username");
+    });
 
     // Check data sent via PasswordManager:onFormSubmit
     let processedPromise = getSubmitMessage();
-    frameDoc.getElementById("submitBtn").click();
+    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+      this.content.document.getElementById("submitBtn").click();
+    });
 
     let submittedResult = await processedPromise;
     info("Got submittedResult: " + JSON.stringify(submittedResult));
@@ -182,21 +185,26 @@ add_task(async function test_no_autofill_munged_username_matching_password() {
   let timesUsed = bulletLogin.timesUsed;
   let guid = bulletLogin.guid;
 
-  let frameDoc = await loadFormIntoIframe(ORG_ORIGIN, `<form id="form1" onsubmit="return false;">
+  await loadFormIntoIframe(ORG_ORIGIN, `<form id="form1" onsubmit="return false;">
     <input  type="text"       name="uname" value="">
     <input  type="password"   name="pword" value="">
     <button type="submit" id="submitBtn">Submit</button>
   </form>`);
-  is(frameDoc.querySelector("[name='uname']").value, "", "Check username didn't get autofilled");
-  frameDoc.querySelector("[name='uname']").setUserInput("real••••user");
-  frameDoc.querySelector("[name='pword']").setUserInput("pass1");
+  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+    let doc = this.content.document;
+    Assert.equal(doc.querySelector("[name='uname']").value, "", "Check username didn't get autofilled");
+    doc.querySelector("[name='uname']").setUserInput("real••••user");
+    doc.querySelector("[name='pword']").setUserInput("pass1");
+  });
 
   // we shouldn't get the save password doorhanger...
   let popupShownPromise = promiseNoUnexpectedPopupShown();
 
   // Check data sent via PasswordManager:onFormSubmit
   let processedPromise = getSubmitMessage();
-  frameDoc.getElementById("submitBtn").click();
+  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+    this.content.document.getElementById("submitBtn").click();
+  });
 
   let submittedResult = await processedPromise;
   info("Got submittedResult: " + JSON.stringify(submittedResult));
@@ -227,20 +235,25 @@ add_task(async function test_autofill_munged_username_matching_password() {
   let timesUsed = bulletLogin.timesUsed;
   let guid = bulletLogin.guid;
 
-  let frameDoc = await loadFormIntoIframe(ORG_ORIGIN, `<form id="form1" onsubmit="return false;">
+  await loadFormIntoIframe(ORG_ORIGIN, `<form id="form1" onsubmit="return false;">
     <input  type="text"       name="uname" value="">
     <input  type="password"   name="pword" value="">
     <button type="submit" id="submitBtn">Submit</button>
   </form>`);
-  is(frameDoc.querySelector("[name='uname']").value, "real••••user", "Check username did get autofilled");
-  frameDoc.querySelector("[name='pword']").setUserInput("pass1");
+  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+    let doc = this.content.document;
+    Assert.equal(doc.querySelector("[name='uname']").value, "real••••user", "Check username did get autofilled");
+    doc.querySelector("[name='pword']").setUserInput("pass1");
+  });
 
   // we shouldn't get the save/update password doorhanger as it didn't change
   let popupShownPromise =  promiseNoUnexpectedPopupShown();
 
   // Check data sent via PasswordManager:onFormSubmit
   let processedPromise = getSubmitMessage();
-  frameDoc.getElementById("submitBtn").click();
+  await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+    this.content.document.getElementById("submitBtn").click();
+  });
 
   let submittedResult = await processedPromise;
   info("Got submittedResult: " + JSON.stringify(submittedResult));
