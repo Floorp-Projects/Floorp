@@ -1603,6 +1603,10 @@ GenericHuffmanTable::Iterator::Iterator(
     : implementation_(std::move(iterator)) {}
 
 GenericHuffmanTable::Iterator::Iterator(
+    typename TwoEntriesHuffmanTable::Iterator&& iterator)
+    : implementation_(std::move(iterator)) {}
+
+GenericHuffmanTable::Iterator::Iterator(
     typename SingleLookupHuffmanTable::Iterator&& iterator)
     : implementation_(std::move(iterator)) {}
 
@@ -1617,6 +1621,9 @@ GenericHuffmanTable::Iterator::Iterator(
 void GenericHuffmanTable::Iterator::operator++() {
   implementation_.match(
       [](typename SingleEntryHuffmanTable::Iterator& iterator) {
+        iterator.operator++();
+      },
+      [](typename TwoEntriesHuffmanTable::Iterator& iterator) {
         iterator.operator++();
       },
       [](typename SingleLookupHuffmanTable::Iterator& iterator) {
@@ -1637,6 +1644,11 @@ bool GenericHuffmanTable::Iterator::operator==(
         return iterator ==
                other.implementation_
                    .template as<typename SingleEntryHuffmanTable::Iterator>();
+      },
+      [other](const typename TwoEntriesHuffmanTable::Iterator& iterator) {
+        return iterator ==
+               other.implementation_
+                   .template as<typename TwoEntriesHuffmanTable::Iterator>();
       },
       [other](const typename SingleLookupHuffmanTable::Iterator& iterator) {
         return iterator ==
@@ -1663,6 +1675,11 @@ bool GenericHuffmanTable::Iterator::operator!=(
                other.implementation_
                    .template as<typename SingleEntryHuffmanTable::Iterator>();
       },
+      [other](const typename TwoEntriesHuffmanTable::Iterator& iterator) {
+        return iterator !=
+               other.implementation_
+                   .template as<typename TwoEntriesHuffmanTable::Iterator>();
+      },
       [other](const typename SingleLookupHuffmanTable::Iterator& iterator) {
         return iterator !=
                other.implementation_
@@ -1685,6 +1702,9 @@ const BinASTSymbol* GenericHuffmanTable::Iterator::operator*() const {
       [](const typename SingleEntryHuffmanTable::Iterator& iterator) {
         return iterator.operator*();
       },
+      [](const typename TwoEntriesHuffmanTable::Iterator& iterator) {
+        return iterator.operator*();
+      },
       [](const typename SingleLookupHuffmanTable::Iterator& iterator) {
         return iterator.operator*();
       },
@@ -1699,6 +1719,9 @@ const BinASTSymbol* GenericHuffmanTable::Iterator::operator*() const {
 const BinASTSymbol* GenericHuffmanTable::Iterator::operator->() const {
   return implementation_.match(
       [](const typename SingleEntryHuffmanTable::Iterator& iterator) {
+        return iterator.operator->();
+      },
+      [](const typename TwoEntriesHuffmanTable::Iterator& iterator) {
         return iterator.operator->();
       },
       [](const typename SingleLookupHuffmanTable::Iterator& iterator) {
@@ -1720,6 +1743,9 @@ JS::Result<Ok> GenericHuffmanTable::initComplete() {
       [](SingleEntryHuffmanTable& implementation) -> JS::Result<Ok> {
         MOZ_CRASH("SingleEntryHuffmanTable shouldn't have multiple entries!");
       },
+      [](TwoEntriesHuffmanTable& implementation) -> JS::Result<Ok> {
+        return implementation.initComplete();
+      },
       [](SingleLookupHuffmanTable& implementation) -> JS::Result<Ok> {
         return implementation.initComplete();
       },
@@ -1737,6 +1763,10 @@ JS::Result<Ok> GenericHuffmanTable::initComplete() {
 typename GenericHuffmanTable::Iterator GenericHuffmanTable::begin() const {
   return implementation_.match(
       [](const SingleEntryHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
+        return Iterator(implementation.begin());
+      },
+      [](const TwoEntriesHuffmanTable& implementation)
           -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.begin());
       },
@@ -1760,6 +1790,10 @@ typename GenericHuffmanTable::Iterator GenericHuffmanTable::begin() const {
 typename GenericHuffmanTable::Iterator GenericHuffmanTable::end() const {
   return implementation_.match(
       [](const SingleEntryHuffmanTable& implementation)
+          -> GenericHuffmanTable::Iterator {
+        return Iterator(implementation.end());
+      },
+      [](const TwoEntriesHuffmanTable& implementation)
           -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.end());
       },
@@ -1804,6 +1838,12 @@ JS::Result<Ok> GenericHuffmanTable::initStart(JSContext* cx,
   MOZ_ASSERT(numberOfSymbols != 1,
              "Should have used `initWithSingleValue` instead");
 
+  if (numberOfSymbols == 2) {
+    implementation_ = {mozilla::VariantType<TwoEntriesHuffmanTable>{}};
+    return implementation_.template as<TwoEntriesHuffmanTable>().initStart(
+        cx, numberOfSymbols, largestBitLength);
+  }
+
   // Find the (hopefully) fastest implementation of HuffmanTable for
   // `largestBitLength`.
   // ...hopefully, only one lookup.
@@ -1836,6 +1876,12 @@ JS::Result<Ok> GenericHuffmanTable::addSymbol(uint32_t bits, uint8_t bitLength,
         return Ok();
       },
       [bits, bitLength,
+       value](TwoEntriesHuffmanTable&
+                  implementation) mutable /* discard implicit const */
+      -> JS::Result<Ok> {
+        return implementation.addSymbol(bits, bitLength, value);
+      },
+      [bits, bitLength,
        value](SingleLookupHuffmanTable&
                   implementation) mutable /* discard implicit const */
       -> JS::Result<Ok> {
@@ -1862,6 +1908,8 @@ JS::Result<Ok> GenericHuffmanTable::addSymbol(uint32_t bits, uint8_t bitLength,
 HuffmanLookupResult GenericHuffmanTable::lookup(HuffmanLookup key) const {
   return implementation_.match(
       [key](const SingleEntryHuffmanTable& implementation)
+          -> HuffmanLookupResult { return implementation.lookup(key); },
+      [key](const TwoEntriesHuffmanTable& implementation)
           -> HuffmanLookupResult { return implementation.lookup(key); },
       [key](const SingleLookupHuffmanTable& implementation)
           -> HuffmanLookupResult { return implementation.lookup(key); },
@@ -1963,6 +2011,68 @@ bool SingleEntryHuffmanTable::Iterator::operator!=(
 
 HuffmanLookupResult SingleEntryHuffmanTable::lookup(HuffmanLookup key) const {
   return HuffmanLookupResult::found(0, &value_);
+}
+
+TwoEntriesHuffmanTable::Iterator::Iterator(const BinASTSymbol* position)
+    : position_(position) {}
+
+void TwoEntriesHuffmanTable::Iterator::operator++() { position_++; }
+
+const BinASTSymbol* TwoEntriesHuffmanTable::Iterator::operator*() const {
+  return position_;
+}
+
+const BinASTSymbol* TwoEntriesHuffmanTable::Iterator::operator->() const {
+  return position_;
+}
+
+bool TwoEntriesHuffmanTable::Iterator::operator==(const Iterator& other) const {
+  return position_ == other.position_;
+}
+
+bool TwoEntriesHuffmanTable::Iterator::operator!=(const Iterator& other) const {
+  return position_ != other.position_;
+}
+
+JS::Result<Ok> TwoEntriesHuffmanTable::initStart(JSContext* cx,
+                                                 size_t numberOfSymbols,
+                                                 uint8_t largestBitLength) {
+  // Make sure that we're initializing.
+  MOZ_ASSERT(length_ == 0);
+  MOZ_ASSERT(numberOfSymbols == 2);
+  MOZ_ASSERT(largestBitLength == 1);
+  return Ok();
+}
+
+JS::Result<Ok> TwoEntriesHuffmanTable::initComplete() {
+  MOZ_ASSERT(length_ == 2);
+  return Ok();
+}
+
+JS::Result<Ok> TwoEntriesHuffmanTable::addSymbol(uint32_t bits,
+                                                 uint8_t bitLength,
+                                                 const BinASTSymbol& value,
+                                                 reporter) {
+  MOZ_ASSERT(length_ < 2);
+  // Symbols must be ranked by increasing bits length
+  MOZ_ASSERT_IF(length_ == 0, bits == 0);
+  MOZ_ASSERT_IF(length_ == 1, bits == 1);
+
+  // FIXME: Throw soft error instead of assert.
+  MOZ_ASSERT(bitLength == 1);
+
+  values_[length_] = value;
+
+  ++length_;
+  return Ok();
+}
+
+HuffmanLookupResult TwoEntriesHuffmanTable::lookup(HuffmanLookup key) const {
+  MOZ_ASSERT(length_ == 2);
+  // By invariant, bit lengths are 1.
+  const auto index = key.leadingBits(1);
+  MOZ_ASSERT(index < length_);
+  return HuffmanLookupResult::found(1, &values_[index]);
 }
 
 SingleLookupHuffmanTable::Iterator::Iterator(const HuffmanEntry* position)
