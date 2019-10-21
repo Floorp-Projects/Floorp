@@ -5,7 +5,7 @@ const { mountObjectInspector } = require("../test-utils");
 
 const repsPath = "../../../reps";
 const { MODE } = require(`${repsPath}/constants`);
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
 const gripPropertiesStubs = require("../../stubs/grip");
 const {
@@ -43,7 +43,7 @@ function generateDefaults(overrides) {
         },
       },
     ],
-    createObjectClient: grip => ObjectClient(grip),
+    createObjectFront: grip => ObjectFront(grip),
     mode: MODE.LONG,
     ...overrides,
   };
@@ -52,8 +52,8 @@ const LongStringClientMock = require("../__mocks__/long-string-client");
 
 function mount(props, { initialState } = {}) {
   const client = {
-    createObjectClient: grip =>
-      ObjectClient(grip, {
+    createObjectFront: grip =>
+      ObjectFront(grip, {
         getPrototype: () => Promise.resolve(protoStub),
         getProxySlots: () =>
           Promise.resolve(gripRepStubs.get("testProxySlots")),

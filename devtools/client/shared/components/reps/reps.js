@@ -2359,7 +2359,7 @@ function getChildren(options) {
 
 function getPathExpression(item) {
   if (item && item.parent) {
-    let parent = nodeIsBucket(item.parent) ? item.parent.parent : item.parent;
+    const parent = nodeIsBucket(item.parent) ? item.parent.parent : item.parent;
     return `${getPathExpression(parent)}.${item.name}`;
   }
 
@@ -3957,51 +3957,50 @@ const {
 function loadItemProperties(item, client, loadedProperties) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
-
   const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
   const promises = [];
-  let objectClient;
-  
+  let objectFront;
+
   if (value && client && client.getFrontByID) {
-    objectClient = client.getFrontByID(value.actor);
+    objectFront = client.getFrontByID(value.actor);
   }
 
-  const getObjectClient = function() {
-    if (!objectClient) {
-      objectClient = client.createObjectClient(value);
+  const getObjectFront = function () {
+    if (!objectFront) {
+      objectFront = client.createObjectFront(value);
     }
 
-    return objectClient;
-  }
+    return objectFront;
+  };
 
   if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
-    promises.push(enumIndexedProperties(getObjectClient(), start, end));
+    promises.push(enumIndexedProperties(getObjectFront(), start, end));
   }
-  
+
   if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
-    promises.push(enumNonIndexedProperties(getObjectClient(), start, end));
+    promises.push(enumNonIndexedProperties(getObjectFront(), start, end));
   }
-  
+
   if (shouldLoadItemEntries(item, loadedProperties)) {
-    promises.push(enumEntries(getObjectClient(), start, end));
+    promises.push(enumEntries(getObjectFront(), start, end));
   }
-  
+
   if (shouldLoadItemPrototype(item, loadedProperties)) {
-    promises.push(getPrototype(getObjectClient()));
+    promises.push(getPrototype(getObjectFront()));
   }
-  
+
   if (shouldLoadItemSymbols(item, loadedProperties)) {
-    promises.push(enumSymbols(getObjectClient(), start, end));
+    promises.push(enumSymbols(getObjectFront(), start, end));
   }
-  
+
   if (shouldLoadItemFullText(item, loadedProperties)) {
     promises.push(getFullText(client.createLongStringClient(value), item));
   }
-  
+
   if (shouldLoadItemProxySlots(item, loadedProperties)) {
-    promises.push(getProxySlots(getObjectClient()));
+    promises.push(getProxySlots(getObjectFront()));
   }
-  
+
   return Promise.all(promises).then(mergeResponses);
 }
 
@@ -4099,9 +4098,9 @@ const {
   nodeHasFullText
 } = __webpack_require__(114);
 
-async function enumIndexedProperties(objectClient, start, end) {
+async function enumIndexedProperties(objectFront, start, end) {
   try {
-    const iterator = await objectClient.enumProperties({
+    const iterator = await objectFront.enumProperties({
       ignoreNonIndexedProperties: true
     });
     const response = await iteratorSlice(iterator, start, end);
@@ -4112,9 +4111,9 @@ async function enumIndexedProperties(objectClient, start, end) {
   }
 }
 
-async function enumNonIndexedProperties(objectClient, start, end) {
+async function enumNonIndexedProperties(objectFront, start, end) {
   try {
-    const iterator = await objectClient.enumProperties({
+    const iterator = await objectFront.enumProperties({
       ignoreIndexedProperties: true
     });
     const response = await iteratorSlice(iterator, start, end);
@@ -4125,9 +4124,9 @@ async function enumNonIndexedProperties(objectClient, start, end) {
   }
 }
 
-async function enumEntries(objectClient, start, end) {
+async function enumEntries(objectFront, start, end) {
   try {
-    const iterator = await objectClient.enumEntries();
+    const iterator = await objectFront.enumEntries();
     const response = await iteratorSlice(iterator, start, end);
     return response;
   } catch (e) {
@@ -4136,9 +4135,9 @@ async function enumEntries(objectClient, start, end) {
   }
 }
 
-async function enumSymbols(objectClient, start, end) {
+async function enumSymbols(objectFront, start, end) {
   try {
-    const iterator = await objectClient.enumSymbols();
+    const iterator = await objectFront.enumSymbols();
     const response = await iteratorSlice(iterator, start, end);
     return response;
   } catch (e) {
@@ -4147,13 +4146,13 @@ async function enumSymbols(objectClient, start, end) {
   }
 }
 
-async function getPrototype(objectClient) {
-  if (typeof objectClient.getPrototype !== "function") {
-    console.error("objectClient.getPrototype is not a function");
+async function getPrototype(objectFront) {
+  if (typeof objectFront.getPrototype !== "function") {
+    console.error("objectFront.getPrototype is not a function");
     return Promise.resolve({});
   }
 
-  return objectClient.getPrototype();
+  return objectFront.getPrototype();
 }
 
 async function getFullText(longStringClient, item) {
@@ -4185,8 +4184,8 @@ async function getFullText(longStringClient, item) {
   });
 }
 
-async function getProxySlots(objectClient) {
-  return objectClient.getProxySlots();
+async function getProxySlots(objectFront) {
+  return objectFront.getProxySlots();
 }
 
 function iteratorSlice(iterator, start, end) {
@@ -7950,7 +7949,7 @@ function nodeCollapse(node) {
 }
 /*
  * This action checks if we need to fetch properties, entries, prototype and
- * symbols for a given node. If we do, it will call the appropriate ObjectClient
+ * symbols for a given node. If we do, it will call the appropriate ObjectFront
  * functions.
  */
 
@@ -8129,8 +8128,8 @@ function invokeGetter(node, targetGrip, receiverId, getterName) {
     getState
   }) => {
     try {
-      const objectClient = client.createObjectClient(targetGrip);
-      const result = await objectClient.getPropertyValue(getterName, receiverId);
+      const objectFront = client.createObjectFront(targetGrip);
+      const result = await objectFront.getPropertyValue(getterName, receiverId);
       dispatch({
         type: "GETTER_INVOKED",
         data: {

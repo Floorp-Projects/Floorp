@@ -32,7 +32,7 @@ import type {
   DebuggerClient,
   Grip,
   ThreadFront,
-  ObjectClient,
+  ObjectFront,
   SourcesPacket,
 } from "./types";
 
@@ -64,8 +64,8 @@ function setupCommands(dependencies: Dependencies) {
   breakpoints = {};
 }
 
-function createObjectClient(grip: Grip) {
-  return debuggerClient.createObjectClient(grip);
+function createObjectFront(grip: Grip) {
+  return debuggerClient.createObjectFront(grip);
 }
 
 async function loadObjectProperties(root: Node) {
@@ -193,15 +193,15 @@ function addWatchpoint(
   watchpointType: string
 ) {
   if (currentTarget.traits.watchpoints) {
-    const objectClient = createObjectClient(object);
-    return objectClient.addWatchpoint(property, label, watchpointType);
+    const objectFront = createObjectFront(object);
+    return objectFront.addWatchpoint(property, label, watchpointType);
   }
 }
 
 function removeWatchpoint(object: Grip, property: string) {
   if (currentTarget.traits.watchpoints) {
-    const objectClient = createObjectClient(object);
-    return objectClient.removeWatchpoint(property);
+    const objectFront = createObjectFront(object);
+    return objectFront.removeWatchpoint(property);
   }
 }
 
@@ -401,7 +401,7 @@ async function getEventListenerBreakpointTypes(): Promise<EventListenerCategoryL
   return categories || [];
 }
 
-function pauseGrip(thread: string, func: Function): ObjectClient {
+function pauseGrip(thread: string, func: Function): ObjectFront {
   return lookupThreadFront(thread).pauseGrip(func);
 }
 
@@ -548,7 +548,7 @@ function getFrontByID(actorID: String) {
 const clientCommands = {
   autocomplete,
   blackBox,
-  createObjectClient,
+  createObjectFront,
   loadObjectProperties,
   releaseActor,
   interrupt,

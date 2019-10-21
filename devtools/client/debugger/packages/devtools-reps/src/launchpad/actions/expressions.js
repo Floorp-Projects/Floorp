@@ -47,9 +47,9 @@ function hideResultPacket(key) {
   };
 }
 
-function createObjectClient(grip) {
+function createObjectFront(grip) {
   return function({ dispatch, client }) {
-    return client.getObjectClient(grip);
+    return client.getObjectFront(grip);
   };
 }
 
@@ -70,7 +70,7 @@ module.exports = {
   evaluateInput,
   showResultPacket,
   hideResultPacket,
-  createObjectClient,
+  createObjectFront,
   createLongStringClient,
   releaseActor,
 };

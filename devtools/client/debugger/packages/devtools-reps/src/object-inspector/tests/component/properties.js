@@ -6,14 +6,14 @@
 
 const { mountObjectInspector } = require("../test-utils");
 const gripRepStubs = require("../../../reps/stubs/grip");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 
 const { formatObjectInspector } = require("../test-utils");
 
 function generateDefaults(overrides) {
   return {
     autoExpandDepth: 0,
-    createObjectClient: grip => ObjectClient(grip),
+    createObjectFront: grip => ObjectFront(grip),
     ...overrides,
   };
 }
@@ -30,7 +30,7 @@ function mount(props, { initialState } = {}) {
   const enumProperties = getEnumPropertiesMock();
 
   const client = {
-    createObjectClient: grip => ObjectClient(grip, { enumProperties }),
+    createObjectFront: grip => ObjectFront(grip, { enumProperties }),
   };
 
   const obj = mountObjectInspector({
@@ -83,7 +83,7 @@ describe("ObjectInspector - properties", () => {
           },
         },
       ],
-      createObjectClient: grip => ObjectClient(grip, { enumProperties }),
+      createObjectFront: grip => ObjectFront(grip, { enumProperties }),
     });
 
     const node = wrapper.find(".node");

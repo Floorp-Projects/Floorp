@@ -19,7 +19,7 @@ import {
   getThreadContext,
 } from "../../selectors";
 import { getValue } from "../../utils/expressions";
-import { createObjectClient } from "../../client/firefox";
+import { createObjectFront } from "../../client/firefox";
 
 import { CloseButton } from "../shared/Button";
 import { debounce } from "lodash";
@@ -274,7 +274,7 @@ class Expressions extends Component<Props, State> {
             autoExpandDepth={0}
             disableWrap={true}
             openLink={openLink}
-            createObjectClient={grip => createObjectClient(grip)}
+            createObjectFront={grip => createObjectFront(grip)}
             onDOMNodeClick={grip => openElementInInspector(grip)}
             onInspectIconClick={grip => openElementInInspector(grip)}
             onDOMNodeMouseOver={grip => highlightDomElement(grip)}

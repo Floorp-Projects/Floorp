@@ -27,7 +27,7 @@ function onConnect(connection) {
         connection.tabConnection.tabTarget.activeConsole.evaluateJSAsync(input),
     },
 
-    createObjectClient: function(grip) {
+    createObjectFront: function(grip) {
       return connection.tabConnection.threadFront.pauseGrip(grip);
     },
     createLongStringClient: function(grip) {

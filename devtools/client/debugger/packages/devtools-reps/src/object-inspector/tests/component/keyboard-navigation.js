@@ -7,7 +7,7 @@ const repsPath = "../../../reps";
 const { MODE } = require(`${repsPath}/constants`);
 
 const { formatObjectInspector, waitForDispatch } = require("../test-utils");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
 
 function generateDefaults(overrides) {
@@ -19,7 +19,7 @@ function generateDefaults(overrides) {
 }
 
 function mount(props) {
-  const client = { createObjectClient: grip => ObjectClient(grip) };
+  const client = { createObjectFront: grip => ObjectFront(grip) };
 
   return mountObjectInspector({
     client,

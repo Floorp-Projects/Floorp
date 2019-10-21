@@ -31,14 +31,14 @@ const {
 
 import type {
   CreateLongStringClient,
-  CreateObjectClient,
+  CreateObjectFront,
   GripProperties,
   LoadedProperties,
   Node,
 } from "../types";
 
 type Client = {
-  createObjectClient: CreateObjectClient,
+  createObjectFront: CreateObjectFront,
   createLongStringClient: CreateLongStringClient,
 };
 
@@ -55,28 +55,38 @@ function loadItemProperties(
     : [];
 
   const promises = [];
-  let objectClient;
-  const getObjectClient = () =>
-    objectClient || client.createObjectClient(value);
+  let objectFront;
+
+  if (value && client && client.getFrontByID) {
+    objectFront = client.getFrontByID(value.actor);
+  }
+
+  const getObjectFront = function() {
+    if (!objectFront) {
+      objectFront = client.createObjectFront(value);
+    }
+
+    return objectFront;
+  };
 
   if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
-    promises.push(enumIndexedProperties(getObjectClient(), start, end));
+    promises.push(enumIndexedProperties(getObjectFront(), start, end));
   }
 
   if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
-    promises.push(enumNonIndexedProperties(getObjectClient(), start, end));
+    promises.push(enumNonIndexedProperties(getObjectFront(), start, end));
   }
 
   if (shouldLoadItemEntries(item, loadedProperties)) {
-    promises.push(enumEntries(getObjectClient(), start, end));
+    promises.push(enumEntries(getObjectFront(), start, end));
   }
 
   if (shouldLoadItemPrototype(item, loadedProperties)) {
-    promises.push(getPrototype(getObjectClient()));
+    promises.push(getPrototype(getObjectFront()));
   }
 
   if (shouldLoadItemSymbols(item, loadedProperties)) {
-    promises.push(enumSymbols(getObjectClient(), start, end));
+    promises.push(enumSymbols(getObjectFront(), start, end));
   }
 
   if (shouldLoadItemFullText(item, loadedProperties)) {
@@ -84,7 +94,7 @@ function loadItemProperties(
   }
 
   if (shouldLoadItemProxySlots(item, loadedProperties)) {
-    promises.push(getProxySlots(getObjectClient()));
+    promises.push(getProxySlots(getObjectFront()));
   }
 
   return Promise.all(promises).then(mergeResponses);
