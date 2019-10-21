@@ -84,6 +84,12 @@ const gTestcases = [
     afterStyle:  "text-shadow:  30px  40px yellow",
   },
 
+  // * switching overflow between things that shouldn't create scrollframes.
+  {
+    beforeStyle: "overflow: visible",
+    afterStyle: "overflow: -moz-hidden-unscrollable",
+  },
+
   // Things that *should* cause reflow:
   // ----------------------------------
   // (e.g. to make sure our counts are actually measuring something)
@@ -192,6 +198,47 @@ const gTestcases = [
     expectReflow: true,
   },
 
+  // * but only reflow if we don't need to construct / unconstruct a new frame.
+  {
+    beforeStyle: "overflow: scroll",
+    afterStyle:  "overflow: auto",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: scroll",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+
+  // * FIXME(emilio, bug 1590247): Changes to or from hidden
+  // reconstruct, as we optimize out the scrollbars completely in the overflow:
+  // hidden case, but we could do better.
+  {
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: auto",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: auto",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: hidden",
+    afterStyle:  "overflow: scroll",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+  {
+    beforeStyle: "overflow: scroll",
+    afterStyle:  "overflow: hidden",
+    expectConstruction: true,
+    expectReflow: true,
+  },
   // * Changing 'display' should cause frame construction and reflow.
   {
     beforeStyle: "display: inline",
