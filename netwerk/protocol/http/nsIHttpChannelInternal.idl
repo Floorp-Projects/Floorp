@@ -394,7 +394,7 @@ interface nsIHttpChannelInternal : nsISupports
      * Get the Cross-Origin-Opener-Policy of the top-level document channel.
      */
     [noscript]
-    nsILoadInfo_CrossOriginOpenerPolicy computeCrossOriginOpenerPolicy(
+    nsILoadInfo_CrossOriginOpenerPolicy getCrossOriginOpenerPolicy(
         in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
 
     [notxpcom, nostdcall] attribute boolean hasNonEmptySandboxingFlag;

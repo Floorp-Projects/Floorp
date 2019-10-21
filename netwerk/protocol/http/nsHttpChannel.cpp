@@ -7289,23 +7289,6 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::GetCrossOriginOpenerPolicy(
-    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
-  MOZ_ASSERT(aPolicy);
-  if (!aPolicy) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  // If this method is called before OnStartRequest (ie. before we call
-  // ComputeCrossOriginOpenerPolicy) or if we were unable to compute the
-  // policy we'll throw an error.
-  if (!mComputedCrossOriginOpenerPolicy.isSome()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  *aPolicy = mComputedCrossOriginOpenerPolicy.value();
-  return NS_OK;
-}
-
 nsresult nsHttpChannel::StartCrossProcessRedirect() {
   nsresult rv;
 
@@ -7396,8 +7379,7 @@ nsresult nsHttpChannel::ComputeCrossOriginOpenerPolicyMismatch() {
   nsILoadInfo::CrossOriginOpenerPolicy documentPolicy = ctx->GetOpenerPolicy();
   nsILoadInfo::CrossOriginOpenerPolicy resultPolicy =
       nsILoadInfo::OPENER_POLICY_NULL;
-  Unused << ComputeCrossOriginOpenerPolicy(documentPolicy, &resultPolicy);
-  mComputedCrossOriginOpenerPolicy.emplace(resultPolicy);
+  Unused << GetCrossOriginOpenerPolicy(documentPolicy, &resultPolicy);
 
   // If bc's popup sandboxing flag set is not empty and potentialCOOP is
   // non-null, then navigate bc to a network error and abort these steps.
