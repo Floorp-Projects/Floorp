@@ -17,6 +17,7 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
+#include "ds/FixedLengthVector.h"  // FixedLengthVector
 #include "frontend/BinASTRuntimeSupport.h"  // CharSlice, BinASTVariant, BinASTKind, BinASTField, BinASTSourceMetadata
 #include "frontend/BinASTToken.h"
 #include "frontend/BinASTTokenReaderBase.h"  // BinASTTokenReaderBase, SkippableSubTree
@@ -300,7 +301,7 @@ class SingleEntryHuffmanTable {
 // An implementation of Huffman Tables for two-entry table.
 class TwoEntriesHuffmanTable {
  public:
-  TwoEntriesHuffmanTable() : length_(0) {}
+  TwoEntriesHuffmanTable() {}
   TwoEntriesHuffmanTable(TwoEntriesHuffmanTable&& other) noexcept = default;
 
   // Initialize a Huffman table containing `numberOfSymbols`.
@@ -310,10 +311,11 @@ class TwoEntriesHuffmanTable {
   JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
                            uint8_t maxBitLength);
 
-  JS::Result<Ok> initComplete();
+  JS::Result<Ok> initComplete(JSContext* cx);
 
   // Add a symbol to a value.
-  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bitLength,
+  // The symbol is the `index`-th item in this table.
+  JS::Result<Ok> addSymbol(size_t index, uint32_t bits, uint8_t bitLength,
                            const BinASTSymbol& value);
 
   TwoEntriesHuffmanTable(TwoEntriesHuffmanTable&) = delete;
@@ -343,30 +345,15 @@ class TwoEntriesHuffmanTable {
     const BinASTSymbol* position_;
   };
   Iterator begin() const { return Iterator(std::begin(values_)); }
-  Iterator end() const {
-    MOZ_ASSERT(length_ == 2);
-    return Iterator(std::end(values_));
-  }
+  Iterator end() const { return Iterator(std::end(values_)); }
 
   // The number of values in the table.
-  size_t length() const {
-    MOZ_ASSERT(length_ == 2);
-    return 2;
-  }
+  size_t length() const { return 2; }
 
  private:
   // A buffer for the values added to this table.
-  //
-  // Only the interval 0..length_ is considered
-  // initialized memory.
   BinASTSymbol values_[2] = {BinASTSymbol::fromBool(false),
                              BinASTSymbol::fromBool(false)};
-
-  // The number of elements added to the table.
-  // Invariants:
-  // - during initialization, 0 <= length_ <= 2;
-  // - after initialization, length_ == 2;
-  uint8_t length_;
 
   friend class HuffmanPreludeReader;
 };
@@ -466,9 +453,7 @@ class SingleLookupHuffmanTable {
 
   explicit SingleLookupHuffmanTable(
       JSContext* cx, Use use = Use::LeafOfMultiLookupHuffmanTable)
-      : values_(cx),
-        saturated_(cx),
-        largestBitLength_(-1)
+      : largestBitLength_(-1)
 #ifdef DEBUG
         ,
         use_(use)
@@ -484,10 +469,11 @@ class SingleLookupHuffmanTable {
   JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
                            uint8_t maxBitLength);
 
-  JS::Result<Ok> initComplete();
+  JS::Result<Ok> initComplete(JSContext* cx);
 
   // Add a `(bit, bitLength) => value` mapping.
-  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bitLength,
+  // The symbol is the `index`-th item in this table.
+  JS::Result<Ok> addSymbol(size_t index, uint32_t bits, uint8_t bitLength,
                            const BinASTSymbol& value);
 
   SingleLookupHuffmanTable() = delete;
@@ -530,14 +516,14 @@ class SingleLookupHuffmanTable {
   // Invariant (once `init*` has been called):
   // - Length is the number of values inserted in the table.
   // - for all i, `values_[i].bitLength_ <= largestBitLength_`.
-  Vector<HuffmanEntry> values_;
+  FixedLengthVector<HuffmanEntry> values_;
 
   // The entries in this Huffman table, prepared for lookup.
   //
   // Invariant (once `init*` has been called):
   // - Length is `1 << largestBitLength_`.
   // - for all i, `saturated_[i] < values_.length()`
-  Vector<InternalIndex> saturated_;
+  FixedLengthVector<InternalIndex> saturated_;
 
   // The maximal bitlength of a value in this table.
   //
@@ -696,8 +682,6 @@ class MultiLookupHuffmanTable {
   explicit MultiLookupHuffmanTable(JSContext* cx)
       : cx_(cx),
         shortKeys_(cx, SingleLookupHuffmanTable::Use::ShortKeys),
-        values_(cx),
-        suffixTables_(cx),
         largestBitLength_(-1) {}
   MultiLookupHuffmanTable(MultiLookupHuffmanTable&& other) = default;
 
@@ -708,10 +692,11 @@ class MultiLookupHuffmanTable {
   JS::Result<Ok> initStart(JSContext* cx, size_t numberOfSymbols,
                            uint8_t largestBitLength);
 
-  JS::Result<Ok> initComplete();
+  JS::Result<Ok> initComplete(JSContext* cx);
 
   // Add a `(bit, bitLength) => value` mapping.
-  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bitLength,
+  // The symbol is the `index`-th item in this table.
+  JS::Result<Ok> addSymbol(size_t index, uint32_t bits, uint8_t bitLength,
                            const BinASTSymbol& value);
 
   MultiLookupHuffmanTable() = delete;
@@ -769,7 +754,7 @@ class MultiLookupHuffmanTable {
   //
   // FIXME: In a ThreeLookupsHuffmanTable, we currently store each value
   // three times. We could at least get down to twice.
-  Vector<HuffmanEntry> values_;
+  FixedLengthVector<HuffmanEntry> values_;
 
   // A mapping from 0..2^prefixBitLen such that index `i`
   // maps to a subtable that holds all values associated
@@ -778,7 +763,7 @@ class MultiLookupHuffmanTable {
   // Note that, to allow the use of smaller tables, keys
   // inside the subtables have been stripped
   // from the prefix `HuffmanKey(i, prefixBitLen)`.
-  Vector<Subtable> suffixTables_;
+  FixedLengthVector<Subtable> suffixTables_;
 
   // The maximal bitlength of a value in this table.
   //
@@ -823,10 +808,11 @@ struct GenericHuffmanTable {
                            uint8_t maxBitLength);
 
   // Add a `(bit, bitLength) => value` mapping.
-  JS::Result<Ok> addSymbol(uint32_t bits, uint8_t bitLength,
+  // The symbol is the `index`-th item in this table.
+  JS::Result<Ok> addSymbol(size_t index, uint32_t bits, uint8_t bitLength,
                            const BinASTSymbol& value);
 
-  JS::Result<Ok> initComplete();
+  JS::Result<Ok> initComplete(JSContext* cx);
 
   // The number of values in the table.
   size_t length() const;
