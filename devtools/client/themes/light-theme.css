@@ -234,11 +234,6 @@ div.CodeMirror span.eval-text {
   background-color: var(--theme-sidebar-background);
 }
 
-.cm-s-markup-view pre {
-  line-height: 1.4em;
-  min-height: 1.4em;
-}
-
 .CodeMirror-hints,
 .CodeMirror-Tern-tooltip {
   box-shadow: 0 0 4px rgba(128, 128, 128, .5);

@@ -15,6 +15,7 @@
   /* Text sizes */
   --theme-body-font-size: 11px;
   --theme-code-font-size: 11px;
+  --theme-code-line-height: calc(15 / 11);
 
   /* Toolbar size (excluding borders) */
   --theme-toolbar-height: 24px;
