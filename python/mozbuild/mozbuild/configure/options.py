@@ -4,10 +4,33 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+from collections import OrderedDict
+import inspect
 import os
 import six
 import sys
-from collections import OrderedDict
+
+
+HELP_OPTIONS_CATEGORY = 'Help options'
+# List of whitelisted option categories. If you want to add a new category,
+# simply add it to this list; however, exercise discretion as
+# "./configure --help" becomes less useful if there are an excessive number of
+# categories.
+_ALL_CATEGORIES = (
+    HELP_OPTIONS_CATEGORY,
+)
+
+
+def _infer_option_category(define_depth):
+    stack_frame = inspect.stack()[3 + define_depth]
+    try:
+        path = os.path.relpath(stack_frame[0].f_code.co_filename)
+    except ValueError:
+        # If this call fails, it means the relative path couldn't be determined
+        # (e.g. because this file is on a different drive than the cwd on a
+        # Windows machine). That's fine, just use the absolute filename.
+        path = stack_frame[0].f_code.co_filename
+    return 'Options from ' + path
 
 
 def istupleofstrings(obj):
@@ -158,14 +181,24 @@ class Option(object):
     - `help` is the option description for use in the --help output.
     - `possible_origins` is a tuple of strings that are origins accepted for
       this option. Example origins are 'mozconfig', 'implied', and 'environment'.
+    - `category` is a human-readable string used only for categorizing command-
+      line options when displaying the output of `configure --help`. If not
+      supplied, the script will attempt to infer an appropriate category based
+      on the name of the file where the option was defined. If supplied it must
+      be in the _ALL_CATEGORIES list above.
+    - `define_depth` should generally only be used by templates that are used
+      to instantiate an option indirectly. Set this to a positive integer to
+      force the script to look into a deeper stack frame when inferring the
+      `category`.
     '''
     __slots__ = (
         'id', 'prefix', 'name', 'env', 'nargs', 'default', 'choices', 'help',
-        'possible_origins',
+        'possible_origins', 'category', 'define_depth',
     )
 
     def __init__(self, name=None, env=None, nargs=None, default=None,
-                 possible_origins=None, choices=None, help=None):
+                 possible_origins=None, choices=None, category=None, help=None,
+                 define_depth=0):
         if not name and not env:
             raise InvalidOptionError(
                 'At least an option name or an environment variable name must '
@@ -198,6 +231,14 @@ class Option(object):
         if choices and not istupleofstrings(choices):
             raise InvalidOptionError(
                 'choices must be a tuple of strings')
+        if category and not isinstance(category, six.string_types):
+            raise InvalidOptionError('Category must be a string')
+        if category and category not in _ALL_CATEGORIES:
+            raise InvalidOptionError(
+                'Category must either be inferred or in the _ALL_CATEGORIES '
+                'list in options.py: %s' % ', '.join(_ALL_CATEGORIES))
+        if not isinstance(define_depth, int):
+            raise InvalidOptionError('DefineDepth must be an integer')
         if not help:
             raise InvalidOptionError('A help string must be provided')
         if possible_origins and not istupleofstrings(possible_origins):
@@ -267,6 +308,7 @@ class Option(object):
                 raise InvalidOptionError('Not enough `choices` for `nargs`')
         self.choices = choices
         self.help = help
+        self.category = category or _infer_option_category(define_depth)
 
     @staticmethod
     def split_option(option):
