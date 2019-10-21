@@ -1,5 +1,5 @@
 /**
- * Test for LoginManagerContent.getUserNameAndPasswordFields
+ * Test for LoginManagerChild.getUserNameAndPasswordFields
  */
 
 "use strict";
@@ -7,10 +7,10 @@
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const LMCBackstagePass = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerContent.jsm",
+  "resource://gre/modules/LoginManagerChild.jsm",
   null
 );
-const { LoginManagerContent } = LMCBackstagePass;
+const { LoginManagerChild } = LMCBackstagePass;
 const TESTCASES = [
   {
     description: "1 password field outside of a <form>",
@@ -111,9 +111,7 @@ for (let tc of TESTCASES) {
       let formOrigin = LoginHelper.getLoginOrigin(document.documentURI);
       LoginRecipesContent.cacheRecipes(formOrigin, win, new Set());
 
-      let actual = new LoginManagerContent().getUserNameAndPasswordFields(
-        input
-      );
+      let actual = new LoginManagerChild().getUserNameAndPasswordFields(input);
 
       Assert.strictEqual(
         testcase.returnedFieldIDs.length,

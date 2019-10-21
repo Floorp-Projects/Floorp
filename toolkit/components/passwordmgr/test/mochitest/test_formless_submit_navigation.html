@@ -9,8 +9,8 @@
 </head>
 <body>
 <script type="application/javascript">
-const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerContent.jsm");
-const { LoginManagerContent } = LMCBackstagePass;
+const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerChild.jsm");
+const { LoginManagerChild } = LMCBackstagePass;
 
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {

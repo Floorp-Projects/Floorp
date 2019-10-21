@@ -64,8 +64,8 @@ add_task(async function test() {
         const { LoginFormFactory } = ChromeUtils.import(
           "resource://gre/modules/LoginFormFactory.jsm"
         );
-        const { LoginManagerContent } = ChromeUtils.import(
-          "resource://gre/modules/LoginManagerContent.jsm"
+        const { LoginManagerChild } = ChromeUtils.import(
+          "resource://gre/modules/LoginManagerChild.jsm"
         );
         const { LoginHelper } = ChromeUtils.import(
           "resource://gre/modules/LoginHelper.jsm"
@@ -75,7 +75,7 @@ add_task(async function test() {
         let formLike = LoginFormFactory.createFromField(password);
         info("Calling _fillForm with FormLike");
         addedLogin = LoginHelper.vanillaObjectToLogin(addedLogin);
-        LoginManagerContent.forWindow(content)._fillForm(
+        LoginManagerChild.forWindow(content)._fillForm(
           formLike,
           [addedLogin],
           null,

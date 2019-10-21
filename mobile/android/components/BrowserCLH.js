@@ -87,8 +87,8 @@ BrowserCLH.prototype = {
             // BrowserGlue.jsm
           ],
         });
-        GeckoViewUtils.addLazyGetter(this, "LoginManagerContent", {
-          module: "resource://gre/modules/LoginManagerContent.jsm",
+        GeckoViewUtils.addLazyGetter(this, "LoginManagerChild", {
+          module: "resource://gre/modules/LoginManagerChild.jsm",
         });
 
         GeckoViewUtils.addLazyGetter(this, "ActionBarHandler", {
@@ -228,7 +228,7 @@ BrowserCLH.prototype = {
       if (shouldIgnoreLoginManagerEvent(event)) {
         return;
       }
-      this.LoginManagerContent.forWindow(aWindow).onDOMFormBeforeSubmit(event);
+      this.LoginManagerChild.forWindow(aWindow).onDOMFormBeforeSubmit(event);
     });
     aWindow.addEventListener(
       "DOMFormHasPassword",
@@ -236,7 +236,7 @@ BrowserCLH.prototype = {
         if (shouldIgnoreLoginManagerEvent(event)) {
           return;
         }
-        this.LoginManagerContent.forWindow(aWindow).onDOMFormHasPassword(event);
+        this.LoginManagerChild.forWindow(aWindow).onDOMFormHasPassword(event);
       },
       options
     );
@@ -247,7 +247,7 @@ BrowserCLH.prototype = {
         if (shouldIgnoreLoginManagerEvent(event)) {
           return;
         }
-        this.LoginManagerContent.forWindow(aWindow).onDOMInputPasswordAdded(
+        this.LoginManagerChild.forWindow(aWindow).onDOMInputPasswordAdded(
           event,
           event.target.ownerGlobal.top
         );
@@ -260,7 +260,7 @@ BrowserCLH.prototype = {
       event => {
         // XXXbz what about non-HTML documents??
         if (ChromeUtils.getClassName(event.target) == "HTMLDocument") {
-          this.LoginManagerContent.forWindow(aWindow).onPageShow(event);
+          this.LoginManagerChild.forWindow(aWindow).onPageShow(event);
         }
       },
       options
