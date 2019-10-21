@@ -63,7 +63,7 @@ static const uint32_t kInputIconSize = 16;
 
     self.delegate = self;
     self.mappedLayoutItems = [NSMutableDictionary dictionary];
-    self.customizationAllowedItemIdentifiers = nil;
+    self.customizationAllowedItemIdentifiers = @[];
 
     if (!aInputs) {
       // This customization identifier is how users' custom layouts are saved by macOS.
@@ -126,7 +126,6 @@ static const uint32_t kInputIconSize = 16;
       continue;
     }
     if ([item isKindOfClass:[NSPopoverTouchBarItem class]]) {
-      [(NSPopoverTouchBarItem*)item setCollapsedRepresentation:nil];
       [(NSPopoverTouchBarItem*)item setCollapsedRepresentationImage:nil];
       [(nsTouchBar*)[(NSPopoverTouchBarItem*)item popoverTouchBar] release];
     } else if ([[item view] isKindOfClass:[NSScrollView class]]) {
@@ -356,8 +355,6 @@ static const uint32_t kInputIconSize = 16;
     icon->SetupIcon([aInput imageURI]);
   } else if ([aInput title]) {
     aPopoverItem.collapsedRepresentationLabel = [aInput title];
-  } else {
-    aPopoverItem.collapsedRepresentation = nil;
   }
 
   // Special handling to show/hide the search popover if the Urlbar is focused.

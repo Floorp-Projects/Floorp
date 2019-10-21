@@ -536,6 +536,7 @@ void DeserializeStructuredCloneFiles(
 
           RefPtr<Blob> blob =
               Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
+          MOZ_ASSERT(blob);
 
           StructuredCloneFile* const file = aFiles.AppendElement();
           MOZ_ASSERT(file);
@@ -602,6 +603,7 @@ void DeserializeStructuredCloneFiles(
 
             RefPtr<Blob> blob =
                 Blob::Create(aDatabase->GetOwnerGlobal(), blobImpl);
+            MOZ_ASSERT(blob);
 
             StructuredCloneFile* const file = aFiles.AppendElement();
             MOZ_ASSERT(file);

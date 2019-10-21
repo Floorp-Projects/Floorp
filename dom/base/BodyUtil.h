@@ -36,7 +36,7 @@ class BodyUtil final {
    * Creates an in-memory blob from an array. The blob takes ownership of
    * |aInput|, which must be allocated by |malloc|.
    */
-  static already_AddRefed<Blob> ConsumeBlob(nsISupports* aParent,
+  static already_AddRefed<Blob> ConsumeBlob(nsIGlobalObject* aParent,
                                             const nsString& aMimeType,
                                             uint32_t aInputLength,
                                             uint8_t* aInput, ErrorResult& aRv);

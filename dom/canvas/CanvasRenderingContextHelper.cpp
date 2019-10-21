@@ -32,19 +32,19 @@ void CanvasRenderingContextHelper::ToBlob(
 
     // This is called on main thread.
     MOZ_CAN_RUN_SCRIPT
-    nsresult ReceiveBlob(already_AddRefed<Blob> aBlob) override {
-      RefPtr<Blob> blob = aBlob;
+    nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
+      RefPtr<BlobImpl> blobImpl = aBlobImpl;
 
-      RefPtr<Blob> newBlob;
+      RefPtr<Blob> blob;
 
-      if (blob) {
-        newBlob = Blob::Create(mGlobal, blob->Impl());
+      if (blobImpl) {
+        blob = Blob::Create(mGlobal, blobImpl);
       }
 
       RefPtr<BlobCallback> callback(mBlobCallback.forget());
       ErrorResult rv;
 
-      callback->Call(newBlob, rv);
+      callback->Call(blob, rv);
 
       mGlobal = nullptr;
       MOZ_ASSERT(!mBlobCallback);
