@@ -16,18 +16,18 @@ var { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
   LoginFormFactory: "resource://gre/modules/LoginFormFactory.jsm",
-  LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
+  LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
 });
 
 // NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.
 addMessageListener("PasswordManager:fillForm", function(message) {
   // intercept if ContextMenu.jsm had sent a plain object for remote targets
-  LoginManagerContent.receiveMessage(message, content);
+  LoginManagerChild.receiveMessage(message, content);
 });
 addMessageListener("PasswordManager:fillGeneratedPassword", function(message) {
   // forward message to LMC
-  LoginManagerContent.receiveMessage(message, content);
+  LoginManagerChild.receiveMessage(message, content);
 });
 
 function shouldIgnoreLoginManagerEvent(event) {
@@ -45,13 +45,13 @@ addEventListener("DOMFormBeforeSubmit", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  this.LoginManagerContent.forWindow(content).onDOMFormBeforeSubmit(event);
+  this.LoginManagerChild.forWindow(content).onDOMFormBeforeSubmit(event);
 });
 addEventListener("DOMFormHasPassword", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  this.LoginManagerContent.forWindow(content).onDOMFormHasPassword(event);
+  this.LoginManagerChild.forWindow(content).onDOMFormHasPassword(event);
   let formLike = LoginFormFactory.createFromForm(event.originalTarget);
   InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
@@ -59,7 +59,7 @@ addEventListener("DOMInputPasswordAdded", function(event) {
   if (shouldIgnoreLoginManagerEvent(event)) {
     return;
   }
-  this.LoginManagerContent.forWindow(content).onDOMInputPasswordAdded(
+  this.LoginManagerChild.forWindow(content).onDOMInputPasswordAdded(
     event,
     content
   );

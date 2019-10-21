@@ -11,7 +11,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["LoginManagerContent"];
+const EXPORTED_SYMBOLS = ["LoginManagerChild"];
 
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
@@ -80,7 +80,7 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
-  let logger = LoginHelper.createLogger("LoginManagerContent");
+  let logger = LoginHelper.createLogger("LoginManagerChild");
   return logger.log.bind(logger);
 });
 
@@ -88,7 +88,7 @@ Services.cpmm.addMessageListener("clearRecipeCache", () => {
   LoginRecipesContent._clearRecipeCache();
 });
 
-let gLoginManagerContentSingleton = null;
+let gLoginManagerChildSingleton = null;
 
 let _messages = [
   "PasswordManager:loginsFound",
@@ -120,7 +120,7 @@ const observer = {
       aWebProgress.DOMWindow.document
     );
 
-    LoginManagerContent.forWindow(aWebProgress.DOMWindow)._onNavigation(
+    LoginManagerChild.forWindow(aWebProgress.DOMWindow)._onNavigation(
       aWebProgress.DOMWindow.document
     );
   },
@@ -132,7 +132,7 @@ const observer = {
     ) {
       // Re-fill a document restored from bfcache since password field values
       // aren't persisted there.
-      LoginManagerContent.forWindow(aWebProgress.DOMWindow)._onDocumentRestored(
+      LoginManagerChild.forWindow(aWebProgress.DOMWindow)._onDocumentRestored(
         aWebProgress.DOMWindow.document
       );
       return;
@@ -167,7 +167,7 @@ const observer = {
     }
 
     log("onStateChange handled:", channel);
-    LoginManagerContent.forWindow(aWebProgress.DOMWindow)._onNavigation(
+    LoginManagerChild.forWindow(aWebProgress.DOMWindow)._onNavigation(
       aWebProgress.DOMWindow.document
     );
   },
@@ -190,17 +190,17 @@ const observer = {
         }
 
         let window = focusedInput.ownerGlobal;
-        let loginManagerContent = LoginManagerContent.forWindow(window);
+        let loginManagerChild = LoginManagerChild.forWindow(window);
 
         let style = input.controller.getStyleAt(selectedIndex);
         if (style == "login" || style == "loginWithOrigin") {
           let details = JSON.parse(
             input.controller.getCommentAt(selectedIndex)
           );
-          loginManagerContent.onFieldAutoComplete(focusedInput, details.guid);
+          loginManagerChild.onFieldAutoComplete(focusedInput, details.guid);
         } else if (style == "generatedPassword") {
-          loginManagerContent._highlightFilledField(focusedInput);
-          loginManagerContent._generatedPasswordFilledOrEdited(focusedInput);
+          loginManagerChild._highlightFilledField(focusedInput);
+          loginManagerChild._generatedPasswordFilledOrEdited(focusedInput);
         }
         break;
       }
@@ -223,7 +223,7 @@ const observer = {
       // Used to mask fields with filled generated passwords when blurred.
       case "blur": {
         let unmask = false;
-        LoginManagerContent.forWindow(window)._togglePasswordFieldMasking(
+        LoginManagerChild.forWindow(window)._togglePasswordFieldMasking(
           aEvent.target,
           unmask
         );
@@ -232,7 +232,7 @@ const observer = {
 
       // Used to watch for changes to fields filled with generated passwords.
       case "change": {
-        LoginManagerContent.forWindow(window)._generatedPasswordFilledOrEdited(
+        LoginManagerChild.forWindow(window)._generatedPasswordFilledOrEdited(
           aEvent.target
         );
         break;
@@ -240,7 +240,7 @@ const observer = {
 
       // Used to watch for changes to fields filled with generated passwords.
       case "input": {
-        LoginManagerContent.forWindow(
+        LoginManagerChild.forWindow(
           window
         )._maybeStopTreatingAsGeneratedPasswordField(aEvent);
         break;
@@ -251,7 +251,7 @@ const observer = {
           aEvent.keyCode == aEvent.DOM_VK_TAB ||
           aEvent.keyCode == aEvent.DOM_VK_RETURN
         ) {
-          LoginManagerContent.forWindow(window).onUsernameAutocompleted(
+          LoginManagerChild.forWindow(window).onUsernameAutocompleted(
             aEvent.target
           );
         }
@@ -262,7 +262,7 @@ const observer = {
         if (aEvent.target.type == "password") {
           // Used to unmask fields with filled generated passwords when focused.
           let unmask = true;
-          LoginManagerContent.forWindow(window)._togglePasswordFieldMasking(
+          LoginManagerChild.forWindow(window)._togglePasswordFieldMasking(
             aEvent.target,
             unmask
           );
@@ -270,7 +270,7 @@ const observer = {
         }
 
         // Only used for username fields.
-        LoginManagerContent.forWindow(window)._onUsernameFocus(aEvent);
+        LoginManagerChild.forWindow(window)._onUsernameFocus(aEvent);
         break;
       }
 
@@ -364,7 +364,7 @@ let gAutoCompleteListener = {
   },
 };
 
-this.LoginManagerContent = class LoginManagerContent {
+this.LoginManagerChild = class LoginManagerChild {
   constructor() {
     /**
      * WeakMap of the root element of a LoginForm to the DeferredTask to fill its fields.
@@ -403,11 +403,10 @@ this.LoginManagerContent = class LoginManagerContent {
 
   static forWindow(window) {
     // For now, this is a singleton.
-    if (!gLoginManagerContentSingleton) {
-      gLoginManagerContentSingleton = new LoginManagerContent();
+    if (!gLoginManagerChildSingleton) {
+      gLoginManagerChildSingleton = new LoginManagerChild();
     }
-
-    return gLoginManagerContentSingleton;
+    return gLoginManagerChildSingleton;
   }
 
   _getRandomId() {

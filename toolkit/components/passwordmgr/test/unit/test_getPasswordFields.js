@@ -1,5 +1,5 @@
 /**
- * Test for LoginManagerContent._getPasswordFields using LoginFormFactory.
+ * Test for LoginManagerChild._getPasswordFields using LoginFormFactory.
  */
 
 /* globals todo_check_eq */
@@ -9,10 +9,10 @@ const { LoginFormFactory } = ChromeUtils.import(
   "resource://gre/modules/LoginFormFactory.jsm"
 );
 const LMCBackstagePass = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerContent.jsm",
+  "resource://gre/modules/LoginManagerChild.jsm",
   null
 );
-const { LoginManagerContent } = LMCBackstagePass;
+const { LoginManagerChild } = LMCBackstagePass;
 const TESTCASES = [
   {
     description: "Empty document",
@@ -197,7 +197,7 @@ for (let tc of TESTCASES) {
       let formLikeIndex = -1;
       for (let formLikeFromInput of mapRootElementToFormLike.values()) {
         formLikeIndex++;
-        let pwFields = new LoginManagerContent()._getPasswordFields(
+        let pwFields = new LoginManagerChild()._getPasswordFields(
           formLikeFromInput,
           {
             fieldOverrideRecipe: testcase.fieldOverrideRecipe,
@@ -287,7 +287,7 @@ for (let tc of EMOJI_TESTCASES) {
       let input = document.querySelector("input[type='password']");
       Assert.ok(input, "Found the password field");
       let formLike = LoginFormFactory.createFromField(input);
-      let pwFields = new LoginManagerContent()._getPasswordFields(formLike, {
+      let pwFields = new LoginManagerChild()._getPasswordFields(formLike, {
         minPasswordLength: testcase.minPasswordLength,
       });
       info("Got password fields: " + pwFields.length);

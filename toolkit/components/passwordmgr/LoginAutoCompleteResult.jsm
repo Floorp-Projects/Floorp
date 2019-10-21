@@ -37,8 +37,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "LoginManagerContent",
-  "resource://gre/modules/LoginManagerContent.jsm"
+  "LoginManagerChild",
+  "resource://gre/modules/LoginManagerChild.jsm"
 );
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -426,7 +426,7 @@ LoginAutoComplete.prototype = {
     // want the same treatment:
     // * The web console warnings will be confusing (as they're primarily about http:) and not very
     //   useful if the developer intentionally sandboxed the document.
-    // * The site identity insecure field warning would require LoginManagerContent being loaded and
+    // * The site identity insecure field warning would require LoginManagerChild being loaded and
     //   listening to some of the DOM events we're ignoring in null principal documents. For memory
     //   reasons it's better to not load LMC at all for these sandboxed frames. Also, if the top-
     //   document is sandboxing a document, it probably doesn't want that sandboxed document to be
@@ -505,7 +505,7 @@ LoginAutoComplete.prototype = {
       previousResult = null;
     }
 
-    let loginManager = LoginManagerContent.forWindow(aElement.ownerGlobal);
+    let loginManager = LoginManagerChild.forWindow(aElement.ownerGlobal);
     let acLookupPromise = (this._autoCompleteLookupPromise = loginManager._autoCompleteSearchAsync(
       aSearchString,
       previousResult,

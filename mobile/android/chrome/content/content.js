@@ -25,8 +25,8 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "LoginManagerContent",
-  "resource://gre/modules/LoginManagerContent.jsm"
+  "LoginManagerChild",
+  "resource://gre/modules/LoginManagerChild.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "gPipNSSBundle", function() {
@@ -640,7 +640,7 @@ var AboutReaderListener = {
 AboutReaderListener.init();
 
 addMessageListener("PasswordManager:fillForm", function(message) {
-  LoginManagerContent.receiveMessage(message, content);
+  LoginManagerChild.receiveMessage(message, content);
 });
 
 Services.obs.notifyObservers(this, "tab-content-frameloader-created");

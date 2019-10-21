@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   findAllCssSelectors: "resource://gre/modules/css-selector.js",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.jsm",
-  LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
+  LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   InlineSpellCheckerContent:
@@ -561,7 +561,7 @@ class ContextMenuChild extends JSWindowActorChild {
     } = doc;
     docLocation = docLocation && docLocation.spec;
     let frameOuterWindowID = WebNavigationFrames.getFrameId(doc.defaultView);
-    let loginFillInfo = LoginManagerContent.forWindow(
+    let loginFillInfo = LoginManagerChild.forWindow(
       doc.defaultView
     ).getFieldContext(aEvent.composedTarget);
 

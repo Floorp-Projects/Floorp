@@ -16,7 +16,7 @@ const { GeckoViewUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
-  LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
+  LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("Autofill"); // eslint-disable-line no-unused-vars
@@ -140,7 +140,7 @@ class GeckoViewAutofill {
       return info;
     };
 
-    // Get password field to get better form data via LoginManagerContent.
+    // Get password field to get better form data via LoginManagerChild.
     let passwordField;
     for (const field of aFormLike.elements) {
       if (
@@ -152,7 +152,7 @@ class GeckoViewAutofill {
       }
     }
 
-    const [usernameField] = LoginManagerContent.forWindow(
+    const [usernameField] = LoginManagerChild.forWindow(
       window
     ).getUserNameAndPasswordFields(passwordField || aFormLike.elements[0]);
 
