@@ -1,22 +1,24 @@
 function handleRequest(request, response)
 {
-  response.setStatusLine(request.httpVersion, 200, "OK");
+  Components.utils.importGlobalProperties(["URLSearchParams"]);
+  let query = new URLSearchParams(request.queryString);
 
-  let qs = request.queryString.replace(/\./g, '');
+  response.setStatusLine(request.httpVersion, 200, "OK");
 
   let isDownloadPage = false;
   let isDownloadFile = false;
-  if (qs.length > 0) {
-    qs.split("&").forEach(param => {
-      if (param === "downloadPage") {
-        isDownloadPage = true;
-      } else if (param === "downloadFile") {
-        isDownloadFile = true;
-      } else if (param.length > 0) {
-        response.setHeader("Cross-Origin-Opener-Policy", unescape(param), false);
-      }
-    });
-  }
+
+  query.forEach((value, name) => {
+    if (name === "downloadPage") {
+      isDownloadPage = true;
+    } else if (name === "downloadFile") {
+      isDownloadFile = true;
+    } else if (name ==  "coop") {
+      response.setHeader("Cross-Origin-Opener-Policy", unescape(value), false);
+    } else if (name == "coep") {
+      response.setHeader("Cross-Origin-Embedder-Policy", unescape(value), false);
+    }
+  });
 
   let downloadHTML = "";
   if (isDownloadPage) {
