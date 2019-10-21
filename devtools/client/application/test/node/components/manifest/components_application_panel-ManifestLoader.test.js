@@ -10,11 +10,11 @@ const { createFactory } = require("react");
 const {
   flushPromises,
   setupStore,
-} = require("devtools/client/application/test/components/helpers/helpers");
+} = require("devtools/client/application/test/node/helpers");
 // Import fixtures
 const {
   MANIFEST_NO_ISSUES,
-} = require("devtools/client/application/test/components/fixtures/data/constants");
+} = require("devtools/client/application/test/node/fixtures/data/constants");
 
 // Import app modules
 const {
