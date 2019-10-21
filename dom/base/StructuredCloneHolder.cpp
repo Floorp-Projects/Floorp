@@ -452,6 +452,10 @@ JSObject* ReadBlob(JSContext* aCx, uint32_t aIndex,
     MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
     RefPtr<Blob> blob = Blob::Create(aHolder->GlobalDuringRead(), blobImpl);
+    if (NS_WARN_IF(!blob)) {
+      return nullptr;
+    }
+
     if (!ToJSValue(aCx, blob, &val)) {
       return nullptr;
     }
@@ -588,6 +592,10 @@ JSObject* ReadFileList(JSContext* aCx, JSStructuredCloneReader* aReader,
       MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
       RefPtr<File> file = File::Create(aHolder->GlobalDuringRead(), blobImpl);
+      if (NS_WARN_IF(!file)) {
+        return nullptr;
+      }
+
       if (!fileList->Append(file)) {
         return nullptr;
       }
@@ -666,7 +674,9 @@ JSObject* ReadFormData(JSContext* aCx, JSStructuredCloneReader* aReader,
         MOZ_ALWAYS_SUCCEEDS(blobImpl->SetMutable(false));
 
         RefPtr<Blob> blob = Blob::Create(aHolder->GlobalDuringRead(), blobImpl);
-        MOZ_ASSERT(blob);
+        if (NS_WARN_IF(!blob)) {
+          return nullptr;
+        }
 
         ErrorResult rv;
         formData->Append(name, *blob, thirdArg, rv);
