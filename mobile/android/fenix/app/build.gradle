@@ -227,28 +227,6 @@ android.applicationVariants.all { variant ->
             output.versionNameOverride = versionName
             output.versionCodeOverride = versionCodeOverride
         }
-
-        // If this is a release build, validate that "versionName" is set
-        tasks.withType(AppPreBuildTask) { prebuildTask ->
-            // You can't add a closure to a variant, so we need to look for an early variant-specific type
-            // of task (AppPreBuildTask is the first) and filter to make sure we're looking at the task for
-            // this variant that we're currently configuring
-            if (prebuildTask.variantName != variant.name) {
-                return
-            }
-
-            // Append to the task so the first thing it does is run our validation
-            prebuildTask.doFirst {
-                if (!project.hasProperty('versionName')) {
-                    throw new RuntimeException("Release builds require the 'versionName' property to be set.\n" +
-                            "If you're using an IDE, set your build variant to be a \"debug\" type.\n" +
-                            "If you're using the command-line, either build a debug variant instead ('./gradlew assembleDebug')\n" +
-                            "\tor continue building the release build and set the \"versionName\" property ('./gradlew -PversionName=<...> assembleNightly').")
-                    // TODO when Android Studio 3.5.0 is prevalent, we can set the "debug" build type as the default
-                    // https://issuetracker.google.com/issues/36988145#comment59
-                }
-            }
-        }
     }
 
 // -------------------------------------------------------------------------------------------------

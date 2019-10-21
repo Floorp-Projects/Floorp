@@ -29,9 +29,10 @@ object Config {
 
     @JvmStatic
     fun releaseVersionName(project: Project): String {
-        // This function is called in the configuration phase, before gradle knows which variants we'll use.
-        // So, validation that "versionName" has been set happens elsewhere (at time of writing, we staple
-        // validation to tasks of type "AppPreBuildTask"
+        // Note: release builds must have the `versionName` set. However, the gradle ecosystem makes this hard to
+        // ergonomically validate (sometimes IDEs default to a release variant and mysteriously fail due to the
+        // validation, sometimes devs just need a release build and specifying project properties is annoying in IDEs),
+        // so instead we'll allow the `versionName` to silently default to an empty string.
         return if (project.hasProperty("versionName")) project.property("versionName") as String else ""
     }
 
