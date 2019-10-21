@@ -164,16 +164,7 @@ class RulesView {
     // us to use `actorHasMethod`. Please see `getActorDescription` for more information.
     this.emulationFront = await target.getFront("emulation");
 
-    // Show the toggle button if:
-    // - Print simulation is supported for the current target.
-    // - Not debugging content document.
-    if (
-      (await target.actorHasMethod(
-        "emulation",
-        "getIsPrintSimulationEnabled"
-      )) &&
-      !target.chrome
-    ) {
+    if (!target.chrome) {
       this.store.dispatch(updatePrintSimulationHidden(false));
     } else {
       this.store.dispatch(updatePrintSimulationHidden(true));
