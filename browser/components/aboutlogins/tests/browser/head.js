@@ -107,6 +107,11 @@ add_task(async function setup() {
       // Ignore error messages for no profile found in old XULStore.jsm
       return;
     }
+    if (msg.errorMessage.includes("Error reading typed URL history")) {
+      // The Migrator when opened can log this exception if there is no Edge
+      // history on the machine.
+      return;
+    }
     if (msg.errorMessage.includes(EXPECTED_ERROR_MESSAGE)) {
       return;
     }
