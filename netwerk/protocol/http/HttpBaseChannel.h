@@ -313,7 +313,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD CancelByURLClassifier(nsresult aErrorCode) override;
   virtual void SetIPv4Disabled(void) override;
   virtual void SetIPv6Disabled(void) override;
-  NS_IMETHOD ComputeCrossOriginOpenerPolicy(
+  NS_IMETHOD GetCrossOriginOpenerPolicy(
       nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
       nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) override;
   virtual bool GetHasNonEmptySandboxingFlag() override {
@@ -589,6 +589,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult GetResponseEmbedderPolicy(
       nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy);
+
+  nsresult GetCrossOriginOpenerPolicyWithInitiator(
+      nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
+      nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy);
 
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;

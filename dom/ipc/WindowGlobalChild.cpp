@@ -80,7 +80,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   if (httpChan &&
       loadInfo->GetExternalContentPolicyType() ==
           nsIContentPolicy::TYPE_DOCUMENT &&
-      NS_SUCCEEDED(httpChan->ComputeCrossOriginOpenerPolicy(
+      NS_SUCCEEDED(httpChan->GetCrossOriginOpenerPolicy(
           nsILoadInfo::OPENER_POLICY_NULL, &policy))) {
     bc->SetOpenerPolicy(policy);
   }
