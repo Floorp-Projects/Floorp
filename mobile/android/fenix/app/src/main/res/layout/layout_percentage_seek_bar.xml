@@ -9,9 +9,9 @@
     android:layout_height="wrap_content"
     android:baselineAligned="false"
     android:paddingStart="@dimen/radio_button_preference_horizontal"
-    android:paddingTop="@dimen/radio_button_preference_vertical"
+    android:paddingTop="@dimen/preference_seek_bar_padding"
     android:paddingEnd="@dimen/radio_button_preference_horizontal"
-    android:paddingBottom="@dimen/radio_button_preference_vertical">
+    android:paddingBottom="@dimen/preference_seek_bar_padding">
 
     <TextView
         android:id="@android:id/title"
