@@ -4058,11 +4058,8 @@ Checker.prototype = {
       if (sslStatus && sslStatus.succeededCertChain) {
         let rootCert = null;
         // The root cert is the last cert in the chain.
-        if (sslStatus.succeededCertChain.length) {
-          rootCert =
-            sslStatus.succeededCertChain[
-              sslStatus.succeededCertChain.length - 1
-            ];
+        // eslint-disable-next-line no-empty
+        for (rootCert of sslStatus.succeededCertChain.getEnumerator()) {
         }
         if (rootCert) {
           Services.prefs.setStringPref(

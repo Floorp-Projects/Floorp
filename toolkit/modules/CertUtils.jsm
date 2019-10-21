@@ -169,9 +169,8 @@ function checkCert(aChannel, aAllowNonBuiltInCerts, aCerts) {
   }
 
   let issuerCert = null;
-  if (secInfo.succeededCertChain.length) {
-    issuerCert =
-      secInfo.succeededCertChain[secInfo.succeededCertChain.length - 1];
+  // eslint-disable-next-line no-empty
+  for (issuerCert of secInfo.succeededCertChain.getEnumerator()) {
   }
 
   const certNotBuiltInErr = "Certificate issuer is not built-in.";

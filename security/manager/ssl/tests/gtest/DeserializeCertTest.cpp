@@ -45,18 +45,32 @@ void deserializeAndVerify(const nsCString& serializedSecInfo,
   ASSERT_EQ(NS_OK, rv);
   ASSERT_TRUE(cert);
 
-  nsTArray<RefPtr<nsIX509Cert>> failedCertArray;
-  rv = securityInfo->GetFailedCertChain(failedCertArray);
+  nsCOMPtr<nsIX509CertList> failedChain;
+  rv = securityInfo->GetFailedCertChain(getter_AddRefs(failedChain));
   ASSERT_EQ(NS_OK, rv);
 
   if (hasFailedCertChain) {
-    ASSERT_FALSE(failedCertArray.IsEmpty());
-    for (const auto& cert : failedCertArray) {
+    ASSERT_TRUE(failedChain);
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = failedChain->GetEnumerator(getter_AddRefs(enumerator));
+    ASSERT_EQ(NS_OK, rv);
+    bool hasMore;
+    rv = enumerator->HasMoreElements(&hasMore);
+    ASSERT_EQ(NS_OK, rv);
+    size_t actualFailedCertChainLength = 0;
+    while (hasMore) {
+      nsCOMPtr<nsISupports> supports;
+      rv = enumerator->GetNext(getter_AddRefs(supports));
+      ASSERT_EQ(NS_OK, rv);
+      nsCOMPtr<nsIX509Cert> cert(do_QueryInterface(supports));
+      actualFailedCertChainLength++;
       ASSERT_TRUE(cert);
+      rv = enumerator->HasMoreElements(&hasMore);
+      ASSERT_EQ(NS_OK, rv);
     }
-    ASSERT_EQ(failedCertChainLength, failedCertArray.Length());
+    ASSERT_EQ(failedCertChainLength, actualFailedCertChainLength);
   } else {
-    ASSERT_TRUE(failedCertArray.IsEmpty());
+    ASSERT_FALSE(failedChain);
   }
 }
 

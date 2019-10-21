@@ -111,9 +111,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
      connection is eligible for joining in nsNSSSocketInfo::JoinConnection() */
   bool mHaveCertErrorBits;
 
-  static nsresult ConvertCertArrayToCertList(
-      const nsTArray<RefPtr<nsIX509Cert>>& aCertArray,
-      nsIX509CertList** aCertList);
  private:
   // True if SetCanceled has been called (or if this was deserialized with a
   // non-zero mErrorCode, which can only be the case if SetCanceled was called
@@ -125,6 +122,10 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
  protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain;
+
+  static nsresult ConvertCertArrayToCertList(
+      const nsTArray<RefPtr<nsIX509Cert>>& aCertArray,
+      nsIX509CertList** aCertList);
 
  private:
   uint32_t mSecurityState;
