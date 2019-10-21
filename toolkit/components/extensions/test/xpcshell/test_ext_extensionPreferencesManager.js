@@ -635,3 +635,49 @@ add_task(async function test_preference_manager_set_when_disabled() {
 
   await promiseShutdownManager();
 });
+
+add_task(async function test_preference_default_upgraded() {
+  await promiseStartupManager();
+
+  let id = "@upgrade-pref";
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    manifest: {
+      applications: { gecko: { id } },
+    },
+  });
+
+  await extension.startup();
+
+  // We set the default value for a pref here so it will be
+  // picked up by EPM.
+  let defaultPrefs = Services.prefs.getDefaultBranch(null);
+  defaultPrefs.setStringPref("bar", "initial default");
+
+  await ExtensionSettingsStore.initialize();
+  ExtensionPreferencesManager.addSetting("some-pref", {
+    prefNames: ["bar"],
+    setCallback(value) {
+      return { [this.prefNames[0]]: value };
+    },
+  });
+
+  await ExtensionPreferencesManager.setSetting(id, "some-pref", "new value");
+  let item = ExtensionSettingsStore.getSetting("prefs", "some-pref");
+  equal(item.value, "new value", "The value is set");
+
+  defaultPrefs.setStringPref("bar", "new default");
+
+  item = ExtensionSettingsStore.getSetting("prefs", "some-pref");
+  equal(item.value, "new value", "The value is still set");
+
+  let prefsChanged = await ExtensionPreferencesManager.removeSetting(
+    id,
+    "some-pref"
+  );
+  ok(prefsChanged, "pref changed on removal of setting.");
+  equal(Preferences.get("bar"), "new default", "default value is correct");
+
+  await extension.unload();
+  await promiseShutdownManager();
+});
