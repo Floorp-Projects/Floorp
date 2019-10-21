@@ -406,6 +406,20 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
       ~(nsChangeHint_ClearDescendantIntrinsics |                         \
         nsChangeHint_NeedDirtyReflow))
 
+// For a change in whether a scrollframe displays or not scrollbars.
+//
+// When requesting this reflow, we send the exact same change hints that "width"
+// and "height" would send (since conceptually, adding/removing scrollbars is
+// like changing the available space).
+//
+// FIXME(emilio): Seems we could be a bit more efficient here, as adding or
+// removing scrollbars doesn't change the size of the element itself, so maybe
+// ClearAncestorIntrinsics or ReflowChangesSizeOrPosition are not needed... I
+// think this ideally should be just nsChangehint_NeedReflow.
+#define nsChangeHint_ReflowHintsForScrollbarChange      \
+  nsChangeHint(nsChangeHint_ReflowHintsForBSizeChange | \
+               nsChangeHint_ReflowHintsForISizeChange)
+
 // * For changes to the float area of an already-floated element, we need all
 // reflow hints, but not the ones that apply to descendants.
 // Our descendants aren't impacted when our float area only changes
