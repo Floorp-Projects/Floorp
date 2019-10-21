@@ -584,6 +584,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void load64(const Address& address, Register64 dest) {
     movq(Operand(address), dest.reg);
   }
+  void load64(const BaseIndex& address, Register64 dest) {
+    movq(Operand(address), dest.reg);
+  }
   template <typename T>
   void storePtr(ImmWord imm, T address) {
     if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {

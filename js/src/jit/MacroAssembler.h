@@ -2549,6 +2549,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
    */
   void loadBigInt64(Register bigInt, Register64 dest);
 
+  /**
+   * Initialize a BigInt from |dest|. Clobbers |val|!
+   */
+  void initializeBigInt64(Scalar::Type type, Register bigInt, Register64 val);
+
   void loadJSContext(Register dest);
 
   void switchToRealm(Register realm);
@@ -2866,6 +2871,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                    bool attemptNursery);
   void newGCFatInlineString(Register result, Register temp, Label* fail,
                             bool attemptNursery);
+
+  void newGCBigInt(Register result, Register temp, Label* fail);
 
   // Compares two strings for equality based on the JSOP.
   // This checks for identical pointers, atoms and length and fails for

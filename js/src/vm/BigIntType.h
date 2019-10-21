@@ -390,6 +390,8 @@ class BigInt final
 
   static size_t offsetOfHeapDigits() { return offsetof(BigInt, heapDigits_); }
 
+  static constexpr size_t inlineDigitsLength() { return InlineDigitsLength; }
+
   static constexpr size_t nonInlineDigitsLengthMask() {
     static_assert(mozilla::IsPowerOfTwo(InlineDigitsLength),
                   "inline digits length is a power of two");
