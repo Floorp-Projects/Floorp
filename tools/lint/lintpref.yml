@@ -14,4 +14,4 @@ lintpref:
     type: external
     payload: libpref:checkdupes
     support-files:
-        - 'tools/lint/libpref/**'
+        - 'modules/libpref/init/StaticPrefList.yaml'
