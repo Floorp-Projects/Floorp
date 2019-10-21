@@ -88,12 +88,12 @@ class HomeScreenRobot {
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        fun openThreeDotMenu(interact: ThreeDotMenuRobot.() -> Unit): ThreeDotMenuRobot.Transition {
+        fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle()
             threeDotButton().perform(click())
 
-            ThreeDotMenuRobot().interact()
-            return ThreeDotMenuRobot.Transition()
+            ThreeDotMenuMainRobot().interact()
+            return ThreeDotMenuMainRobot.Transition()
         }
 
         fun openSearch(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
@@ -117,12 +117,12 @@ class HomeScreenRobot {
                 .perform(click())
         }
 
-        fun openTabsListThreeDotMenu(interact: ThreeDotMenuRobot.() -> Unit): ThreeDotMenuRobot.Transition {
+        fun openTabsListThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle()
             tabsListThreeDotButton().perform(click())
 
-            ThreeDotMenuRobot().interact()
-            return ThreeDotMenuRobot.Transition()
+            ThreeDotMenuMainRobot().interact()
+            return ThreeDotMenuMainRobot.Transition()
         }
     }
 }
