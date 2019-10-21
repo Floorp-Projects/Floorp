@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.settings.sitepermissions
 
+import android.content.DialogInterface
 import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
@@ -14,9 +16,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.noButton
-import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -89,14 +88,16 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
         val button: Preference = requireNotNull(findPreference(keyPreference))
 
         button.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            requireContext().alert(
-                R.string.confirm_clear_permissions_site,
-                R.string.clear_permissions
-            ) {
-                yesButton {
+            AlertDialog.Builder(requireContext()).apply {
+                setMessage(R.string.confirm_clear_permissions_site)
+                setTitle(R.string.clear_permissions)
+                setPositiveButton(android.R.string.yes) { dialog: DialogInterface, _ ->
                     clearSitePermissions()
+                    dialog.dismiss()
                 }
-                noButton { }
+                setNegativeButton(android.R.string.no) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
             }.show()
 
             true

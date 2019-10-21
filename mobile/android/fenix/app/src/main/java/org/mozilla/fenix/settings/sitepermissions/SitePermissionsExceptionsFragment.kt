@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.sitepermissions
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -27,9 +29,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.noButton
-import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
@@ -94,14 +93,16 @@ class SitePermissionsExceptionsFragment :
     private fun bindClearButton(rootView: View) {
         clearButton = rootView.findViewById(R.id.delete_all_site_permissions_button)
         clearButton.setOnClickListener {
-            requireContext().alert(
-                R.string.confirm_clear_permissions_on_all_sites,
-                R.string.clear_permissions
-            ) {
-                yesButton {
+            AlertDialog.Builder(requireContext()).apply {
+                setMessage(R.string.confirm_clear_permissions_on_all_sites)
+                setTitle(R.string.clear_permissions)
+                setPositiveButton(android.R.string.yes) { dialog: DialogInterface, _ ->
                     deleteAllSitePermissions()
+                    dialog.dismiss()
                 }
-                noButton { }
+                setNegativeButton(android.R.string.no) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
             }.show()
         }
     }

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.settings.sitepermissions
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RadioButton
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -21,9 +23,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.noButton
-import org.jetbrains.anko.yesButton
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
@@ -107,17 +106,18 @@ class SitePermissionsManageExceptionsPhoneFeatureFragment : Fragment() {
         val button = rootView.findViewById<Button>(R.id.reset_permission)
         button.setText(R.string.clear_permission)
         button.setOnClickListener {
-
-            requireContext().alert(
-                R.string.confirm_clear_permission_site,
-                R.string.clear_permission
-            ) {
-                yesButton {
+            AlertDialog.Builder(requireContext()).apply {
+                setMessage(R.string.confirm_clear_permission_site)
+                setTitle(R.string.clear_permission)
+                setPositiveButton(android.R.string.yes) { dialog: DialogInterface, _ ->
                     val defaultStatus = phoneFeature.getStatus(settings = settings)
                     updatedSitePermissions(defaultStatus)
                     resetRadioButtonsStatus(defaultStatus)
+                    dialog.dismiss()
                 }
-                noButton { }
+                setNegativeButton(android.R.string.no) { dialog: DialogInterface, _ ->
+                    dialog.cancel()
+                }
             }.show()
         }
     }
