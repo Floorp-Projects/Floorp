@@ -13,11 +13,10 @@ from collections import defaultdict
 import manifestparser
 import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
-from mozbuild.util import OrderedDefaultDict
 from mozbuild.frontend.reader import BuildReader, EmptyConfig
+from mozbuild.util import OrderedDefaultDict
 
 here = os.path.abspath(os.path.dirname(__file__))
-
 
 MOCHITEST_CHUNK_BY_DIR = 4
 MOCHITEST_TOTAL_CHUNKS = 5
@@ -333,6 +332,7 @@ class TestMetadata(object):
         self._tests_by_flavor = defaultdict(set)
         self._test_dirs = set()
         self._objdir = os.path.abspath(os.path.join(all_tests, os.pardir))
+        self._puppeteer_loaded = False
         self._wpt_loaded = False
         self._srcdir = srcdir
 
@@ -461,6 +461,9 @@ class TestMetadata(object):
         return mozpath.match(path, "remote/test/puppeteer/test/**")
 
     def add_puppeteer_manifest_data(self):
+        if self._puppeteer_loaded:
+            return
+
         test_path = os.path.join(self._srcdir, "remote", "test", "puppeteer", "test")
         for root, dirs, paths in os.walk(test_path):
             for filename in fnmatch.filter(paths, "*.spec.js"):
@@ -478,6 +481,8 @@ class TestMetadata(object):
                     "dir_relpath": os.path.dirname(path),
                     "srcdir_relpath": path,
                     })
+
+        self._puppeteer_loaded = True
 
     def is_wpt_path(self, path):
         if path is None:
