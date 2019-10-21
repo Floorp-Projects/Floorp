@@ -9,6 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "vm/BytecodeUtil.h"
+#include "vm/StringType.h"
 
 namespace js {
 
