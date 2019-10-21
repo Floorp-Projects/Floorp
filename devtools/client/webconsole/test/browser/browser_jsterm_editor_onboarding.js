@@ -8,13 +8,11 @@
 "use strict";
 
 const TEST_URI = "data:text/html;charset=utf-8,Test onboarding UI";
-const EDITOR_FEATURE_PREF = "devtools.webconsole.features.editor";
 const EDITOR_UI_PREF = "devtools.webconsole.input.editor";
 const EDITOR_ONBOARDING_PREF = "devtools.webconsole.input.editorOnboarding";
 
 add_task(async function() {
   // Enable editor mode and force the onboarding pref to true so it's displayed.
-  await pushPref(EDITOR_FEATURE_PREF, true);
   await pushPref(EDITOR_UI_PREF, true);
   await pushPref(EDITOR_ONBOARDING_PREF, true);
 
@@ -43,7 +41,6 @@ add_task(async function() {
     "The onboarding UI isn't displayed after a toolbox restart after being dismissed"
   );
 
-  Services.prefs.clearUserPref(EDITOR_FEATURE_PREF);
   Services.prefs.clearUserPref(EDITOR_UI_PREF);
   Services.prefs.clearUserPref(EDITOR_ONBOARDING_PREF);
 });
