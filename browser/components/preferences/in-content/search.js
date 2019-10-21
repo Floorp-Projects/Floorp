@@ -427,13 +427,19 @@ var gSearchPane = {
           break;
         }
         case "engine-default-private": {
-          // If the user is going through the drop down using up/down keys, the
-          // dropdown may still be open (eg. on Windows) when engine-default is
-          // fired, so rebuilding the list unconditionally would get in the way.
-          const selectedEngine = document.getElementById("defaultPrivateEngine")
-            .selectedItem.engine;
-          if (selectedEngine.name != aEngine.name) {
-            gSearchPane.buildDefaultEngineDropDowns();
+          if (
+            this._separatePrivateDefaultEnabledPref.value &&
+            this._separatePrivateDefaultPref.value
+          ) {
+            // If the user is going through the drop down using up/down keys, the
+            // dropdown may still be open (eg. on Windows) when engine-default is
+            // fired, so rebuilding the list unconditionally would get in the way.
+            const selectedEngine = document.getElementById(
+              "defaultPrivateEngine"
+            ).selectedItem.engine;
+            if (selectedEngine.name != aEngine.name) {
+              gSearchPane.buildDefaultEngineDropDowns();
+            }
           }
           break;
         }
