@@ -91,7 +91,6 @@ class App extends Component {
       filterBarDisplayMode: PropTypes.oneOf([
         ...Object.values(FILTERBAR_DISPLAY_MODES),
       ]).isRequired,
-      editorFeatureEnabled: PropTypes.bool.isRequired,
     };
   }
 
@@ -113,7 +112,7 @@ class App extends Component {
   }
 
   onKeyDown(event) {
-    const { dispatch, webConsoleUI, editorFeatureEnabled } = this.props;
+    const { dispatch, webConsoleUI } = this.props;
 
     if (
       (!isMacOS && event.key === "F9") ||
@@ -126,7 +125,6 @@ class App extends Component {
     }
 
     if (
-      editorFeatureEnabled &&
       event.key.toLowerCase() === "b" &&
       ((isMacOS && event.metaKey) || (!isMacOS && event.ctrlKey))
     ) {
@@ -266,14 +264,13 @@ class App extends Component {
   renderEditorToolbar() {
     const {
       editorMode,
-      editorFeatureEnabled,
       dispatch,
       reverseSearchInputVisible,
       serviceContainer,
       webConsoleUI,
     } = this.props;
 
-    return editorFeatureEnabled && editorMode
+    return editorMode
       ? EditorToolbar({
           key: "editor-toolbar",
           editorMode,
@@ -302,7 +299,6 @@ class App extends Component {
       autocomplete,
       editorMode,
       editorWidth,
-      editorFeatureEnabled,
     } = this.props;
 
     return JSTerm({
@@ -311,9 +307,8 @@ class App extends Component {
       serviceContainer,
       onPaste: this.onPaste,
       autocomplete,
-      editorMode: editorMode && editorFeatureEnabled,
+      editorMode,
       editorWidth,
-      editorFeatureEnabled,
     });
   }
 
@@ -338,13 +333,13 @@ class App extends Component {
   }
 
   renderNotificationBox() {
-    const { notifications, editorMode, editorFeatureEnabled } = this.props;
+    const { notifications, editorMode } = this.props;
 
     return NotificationBox({
       id: "webconsole-notificationbox",
       key: "notification-box",
-      displayBorderTop: !(editorMode && editorFeatureEnabled),
-      displayBorderBottom: editorMode && editorFeatureEnabled,
+      displayBorderTop: !editorMode,
+      displayBorderBottom: editorMode,
       wrapping: true,
       notifications,
     });
@@ -361,10 +356,10 @@ class App extends Component {
   }
 
   renderRootElement(children) {
-    const { editorMode, editorFeatureEnabled, serviceContainer } = this.props;
+    const { editorMode, serviceContainer } = this.props;
 
     const classNames = ["webconsole-app"];
-    if (editorMode && editorFeatureEnabled) {
+    if (editorMode) {
       classNames.push("jsterm-editor");
     }
     if (serviceContainer.canRewind()) {
@@ -385,12 +380,7 @@ class App extends Component {
   }
 
   render() {
-    const {
-      webConsoleUI,
-      editorMode,
-      editorFeatureEnabled,
-      dispatch,
-    } = this.props;
+    const { webConsoleUI, editorMode, dispatch } = this.props;
 
     const filterBar = this.renderFilterBar();
     const editorToolbar = this.renderEditorToolbar();
@@ -412,7 +402,7 @@ class App extends Component {
       ),
       GridElementWidthResizer({
         key: "editor-resizer",
-        enabled: editorFeatureEnabled && editorMode,
+        enabled: editorMode,
         position: "end",
         className: "editor-resizer",
         getControlledElementNode: () => webConsoleUI.jsterm.node,

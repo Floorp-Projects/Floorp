@@ -15,7 +15,6 @@ const PrefState = overrides =>
         sidebarToggle: false,
         groupWarnings: false,
         historyCount: 50,
-        editor: false,
       },
       overrides
     )
