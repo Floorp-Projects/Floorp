@@ -389,5 +389,6 @@ bool nsJSPrincipals::write(JSContext* aCx, JSStructuredCloneWriter* aWriter) {
 }
 
 bool nsJSPrincipals::isSystemOrAddonPrincipal() {
-  return this->IsSystemPrincipal() || this->GetIsAddonOrExpandedAddonPrincipal();
+  return this->IsSystemPrincipal() ||
+         this->GetIsAddonOrExpandedAddonPrincipal();
 }

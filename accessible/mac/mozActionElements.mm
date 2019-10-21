@@ -284,13 +284,13 @@ enum CheckboxValue {
 - (NSArray*)children {
   if (![self getGeckoAccessible]) return nil;
 
-  nsDeckFrame* deckFrame = do_QueryFrame([self getGeckoAccessible] -> GetFrame());
+  nsDeckFrame* deckFrame = do_QueryFrame([self getGeckoAccessible]->GetFrame());
   nsIFrame* selectedFrame = deckFrame ? deckFrame->GetSelectedBox() : nullptr;
 
   Accessible* selectedAcc = nullptr;
   if (selectedFrame) {
     nsINode* node = selectedFrame->GetContent();
-    selectedAcc = [self getGeckoAccessible] -> Document() -> GetAccessible(node);
+    selectedAcc = [self getGeckoAccessible]->Document() -> GetAccessible(node);
   }
 
   if (selectedAcc) {

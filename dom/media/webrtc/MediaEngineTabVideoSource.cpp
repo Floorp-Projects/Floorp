@@ -243,8 +243,7 @@ nsresult MediaEngineTabVideoSource::Start() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == kAllocated);
 
-  NS_DispatchToMainThread(
-      new StartRunnable(this, mTrack, mPrincipalHandle));
+  NS_DispatchToMainThread(new StartRunnable(this, mTrack, mPrincipalHandle));
   mState = kStarted;
 
   return NS_OK;

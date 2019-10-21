@@ -87,7 +87,7 @@ void* nsMappedAttributes::operator new(size_t aSize,
   // if we have zero attributes. The zero attribute case only happens
   // for <body>'s mapped attributes
   if (aAttrCount != 0) {
-    size -= sizeof(void * [1]);
+    size -= sizeof(void* [1]);
   }
 
   if (sCachedMappedAttributeAllocations) {
