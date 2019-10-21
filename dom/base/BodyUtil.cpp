@@ -398,7 +398,7 @@ void BodyUtil::ConsumeArrayBuffer(JSContext* aCx,
 }
 
 // static
-already_AddRefed<Blob> BodyUtil::ConsumeBlob(nsISupports* aParent,
+already_AddRefed<Blob> BodyUtil::ConsumeBlob(nsIGlobalObject* aParent,
                                              const nsString& aMimeType,
                                              uint32_t aInputLength,
                                              uint8_t* aInput,

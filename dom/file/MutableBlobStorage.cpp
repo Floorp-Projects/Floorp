@@ -215,7 +215,9 @@ class CreateBlobRunnable final : public Runnable,
     nsCOMPtr<nsISupports> parent(std::move(mParent));
     RefPtr<MutableBlobStorageCallback> callback(std::move(mCallback));
 
-    RefPtr<Blob> blob = Blob::Create(parent, aBlobImpl);
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(parent);
+
+    RefPtr<Blob> blob = Blob::Create(global, aBlobImpl);
     callback->BlobStoreCompleted(mBlobStorage, blob, NS_OK);
   }
 
@@ -391,7 +393,9 @@ void MutableBlobStorage::GetBlobWhenReady(
     blobImpl = new EmptyBlobImpl(NS_ConvertUTF8toUTF16(aContentType));
   }
 
-  RefPtr<Blob> blob = Blob::Create(aParent, blobImpl);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
+
+  RefPtr<Blob> blob = Blob::Create(global, blobImpl);
   RefPtr<BlobCreationDoneRunnable> runnable =
       new BlobCreationDoneRunnable(this, aCallback, blob, NS_OK);
 
