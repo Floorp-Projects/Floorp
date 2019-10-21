@@ -216,25 +216,33 @@
           checkPromptState(promptState, expectedPromptState);
         }
 
-        let iframe1Doc = await iframe1DocPromise;
-        let iframe2aDoc = await iframe2aDocPromise;
-        let iframe2bDoc = await iframe2bDocPromise;
+        await iframe1DocPromise;
+        await iframe2aDocPromise;
+        await iframe2bDocPromise;
 
-        let authok1 = iframe1Doc.getElementById("ok").textContent;
-        let proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+        await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+          let doc = this.content.document;
+          let authok1 = doc.getElementById("ok").textContent;
+          let proxyok1 = doc.getElementById("proxy").textContent;
+          Assert.equal(authok1, "PASS", "WWW Authorization OK, frame1");
+          Assert.equal(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+        });
 
-        let authok2a = iframe2aDoc.getElementById("ok").textContent;
-        let proxyok2a = iframe2aDoc.getElementById("proxy").textContent;
+        await SpecialPowers.spawn(getIframeBrowsingContext(window, 1), [], function() {
+          let doc = this.content.document;
+          let authok2a = doc.getElementById("ok").textContent;
+          let proxyok2a = doc.getElementById("proxy").textContent;
+          Assert.equal(authok2a, "PASS", "WWW Authorization OK, frame2a");
+          Assert.equal(proxyok2a, "PASS", "Proxy Authorization OK, frame2a");
+        });
 
-        let authok2b = iframe2bDoc.getElementById("ok").textContent;
-        let proxyok2b = iframe2bDoc.getElementById("proxy").textContent;
-
-        is(authok1, "PASS", "WWW Authorization OK, frame1");
-        is(authok2a, "PASS", "WWW Authorization OK, frame2a");
-        is(authok2b, "PASS", "WWW Authorization OK, frame2b");
-        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
-        is(proxyok2a, "PASS", "Proxy Authorization OK, frame2a");
-        is(proxyok2b, "PASS", "Proxy Authorization OK, frame2b");
+        await SpecialPowers.spawn(getIframeBrowsingContext(window, 2), [], function() {
+          let doc = this.content.document;
+          let authok2b = doc.getElementById("ok").textContent;
+          let proxyok2b = doc.getElementById("proxy").textContent;
+          Assert.equal(authok2b, "PASS", "WWW Authorization OK, frame2b");
+          Assert.equal(proxyok2b, "PASS", "Proxy Authorization OK, frame2b");
+        });
       });
 
       add_task(async function test_threeSubframesWithSameProxyAndHTTPAuth() {
@@ -275,21 +283,26 @@
         });
         await handlePrompt(state, action);
 
-        let iframe1Doc = await iframe1DocPromise;
+        await iframe1DocPromise;
 
-        function checkIframe(frame) {
-          let doc = SpecialPowers.wrap(frame).contentDocument;
-
+        function checkIframe(frameid) {
+          let doc = this.content.document;
           let authok = doc.getElementById("ok").textContent;
           let proxyok = doc.getElementById("proxy").textContent;
 
-          is(authok, "PASS", "WWW Authorization OK, " + frame.id);
-          is(proxyok, "PASS", "Proxy Authorization OK, " + frame.id);
+          Assert.equal(authok, "PASS", "WWW Authorization OK, " + frameid);
+          Assert.equal(proxyok, "PASS", "Proxy Authorization OK, " + frameid);
         }
 
-        checkIframe(iframe1Doc.getElementById("iframe1"));
-        checkIframe(iframe1Doc.getElementById("iframe2"));
-        checkIframe(iframe1Doc.getElementById("iframe3"));
+        let parentIFrameBC = SpecialPowers.wrap(window).getWindowGlobalChild().
+                                           browsingContext.getChildren()[0];
+
+        let childIFrame = SpecialPowers.unwrap(parentIFrameBC.getChildren()[0]);
+        await SpecialPowers.spawn(childIFrame, ["iframe1"], checkIframe);
+        childIFrame = SpecialPowers.unwrap(parentIFrameBC.getChildren()[1]);
+        await SpecialPowers.spawn(childIFrame, ["iframe2"], checkIframe);
+        childIFrame = SpecialPowers.unwrap(parentIFrameBC.getChildren()[2]);
+        await SpecialPowers.spawn(childIFrame, ["iframe3"], checkIframe);
       });
 
       add_task(async function test_oneFrameWithUnauthenticatedProxy() {
@@ -372,13 +385,16 @@
         };
         await handlePrompt(state, action);
 
-        let iframe1Doc = await iframe1DocPromise;
+        await iframe1DocPromise;
 
-        let authok1 = iframe1Doc.getElementById("ok").textContent;
-        let proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+        await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+          let doc = this.content.document;
+          let authok1 = doc.getElementById("ok").textContent;
+          let proxyok1 = doc.getElementById("proxy").textContent;
 
-        is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
-        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+          Assert.equal(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+          Assert.equal(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+        });
       });
 
       add_task(async function test_hugePayloadCancelled() {
@@ -464,16 +480,19 @@
         };
         await handlePrompt(state, action);
 
-        let iframe1Doc = await iframe1DocPromise;
+        await iframe1DocPromise;
 
-        let authok1 = iframe1Doc.getElementById("ok").textContent;
-        let proxyok1 = iframe1Doc.getElementById("proxy").textContent;
-        let footnote = iframe1Doc.getElementById("footnote").textContent;
+        await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+          let doc = this.content.document;
+          let authok1 = doc.getElementById("ok").textContent;
+          let proxyok1 = doc.getElementById("proxy").textContent;
+          let footnote = doc.getElementById("footnote").textContent;
 
-        is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
-        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
-        is(footnote, "This is a footnote after the huge content fill",
-           "Footnote present and loaded completely");
+          Assert.equal(authok1, "FAIL", "WWW Authorization FAILED, frame1");
+          Assert.equal(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+          Assert.equal(footnote, "This is a footnote after the huge content fill",
+             "Footnote present and loaded completely");
+        });
       });
 
       add_task(async function test_hugeProxySuccessWWWSuccess() {
@@ -504,15 +523,19 @@
         };
         await handlePrompt(state, action);
 
-        let iframe1Doc = await iframe1DocPromise;
-        let authok1 = iframe1Doc.getElementById("ok").textContent;
-        let proxyok1 = iframe1Doc.getElementById("proxy").textContent;
-        let footnote = iframe1Doc.getElementById("footnote").textContent;
+        await iframe1DocPromise;
 
-        is(authok1, "PASS", "WWW Authorization OK, frame1");
-        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
-        is(footnote, "This is a footnote after the huge content fill",
-           "Footnote present and loaded completely");
+        await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+          let doc = this.content.document;
+          let authok1 = doc.getElementById("ok").textContent;
+          let proxyok1 = doc.getElementById("proxy").textContent;
+          let footnote = doc.getElementById("footnote").textContent;
+
+          Assert.equal(authok1, "PASS", "WWW Authorization OK, frame1");
+          Assert.equal(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+          Assert.equal(footnote, "This is a footnote after the huge content fill",
+             "Footnote present and loaded completely");
+        });
       });
 
       add_task(async function test_cancelSome() {
@@ -575,15 +598,19 @@
         };
         await handlePrompt(state, action);
 
-        let iframe1Doc = await iframe1DocPromise;
-        let authok1 = iframe1Doc.getElementById("ok").textContent;
-        let proxyok1 = iframe1Doc.getElementById("proxy").textContent;
-        let footnote = iframe1Doc.getElementById("footnote").textContent;
+        await iframe1DocPromise;
+        await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [], function() {
+          let doc = this.content.document;
+          let authok1 = doc.getElementById("ok").textContent;
+          let proxyok1 = doc.getElementById("proxy").textContent;
+          let footnote = doc.getElementById("footnote").textContent;
 
-        is(authok1, "PASS", "WWW Authorization OK, frame1");
-        is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
-        is(footnote, "This is a footnote after the huge content fill",
-           "Footnote present and loaded completely");
+          Assert.equal(authok1, "PASS", "WWW Authorization OK, frame1");
+          Assert.equal(proxyok1, "PASS", "Proxy Authorization OK, frame1");
+          Assert.equal(footnote, "This is a footnote after the huge content fill",
+             "Footnote present and loaded completely");
+        });
+
       });
     </script>
 </head>

@@ -108,6 +108,11 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
   checkArrayValues(actualValues.slice(0, -1), expectedValues, msg);
 }
 
+function getIframeBrowsingContext(window, iframeNumber = 0) {
+  let bc = SpecialPowers.wrap(window).getWindowGlobalChild().browsingContext;
+  return SpecialPowers.unwrap(bc.getChildren()[iframeNumber]);
+}
+
 /**
  * Check for expected username/password in form.
  * @see `checkForm` below for a similar function.
@@ -128,6 +133,44 @@ function checkLoginForm(
     passwordField.value,
     expectedPassword,
     "Checking " + formID + " password is: " + expectedPassword
+  );
+}
+
+function checkLoginFormInChildFrame(
+  iframeBC,
+  usernameFieldId,
+  expectedUsername,
+  passwordFieldId,
+  expectedPassword
+) {
+  return SpecialPowers.spawn(
+    iframeBC,
+    [usernameFieldId, expectedUsername, passwordFieldId, expectedPassword],
+    (
+      usernameFieldIdF,
+      expectedUsernameF,
+      passwordFieldIdF,
+      expectedPasswordF
+    ) => {
+      let usernameField = this.content.document.getElementById(
+        usernameFieldIdF
+      );
+      let passwordField = this.content.document.getElementById(
+        passwordFieldIdF
+      );
+
+      let formID = usernameField.parentNode.id;
+      Assert.equal(
+        usernameField.value,
+        expectedUsernameF,
+        "Checking " + formID + " username is: " + expectedUsernameF
+      );
+      Assert.equal(
+        passwordField.value,
+        expectedPasswordF,
+        "Checking " + formID + " password is: " + expectedPasswordF
+      );
+    }
   );
 }
 
@@ -228,12 +271,12 @@ function registerRunTests() {
       form.appendChild(password);
 
       var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
-        var formLikeRoot = subject;
-        if (formLikeRoot.id !== "observerforcer") {
+        if (data !== "observerforcer") {
           return;
         }
+
         SpecialPowers.removeObserver(observer, "passwordmgr-processed-form");
-        formLikeRoot.remove();
+        form.remove();
         SimpleTest.executeSoon(() => {
           var runTestEvent = new Event("runTests");
           window.dispatchEvent(runTestEvent);

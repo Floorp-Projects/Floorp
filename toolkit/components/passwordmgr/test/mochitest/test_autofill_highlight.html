@@ -9,6 +9,8 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <script>
+let formFilledPromise = promiseFormsProcessed();
+
 runInParent(function initLogins() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -32,16 +34,13 @@ runInParent(function initLogins() {
 
 <pre id="test">
 <script>
-let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
-
 add_task(async function test_field_highlight_on_autofill() {
+  await formFilledPromise;
+
   let username = document.getElementById("uname");
   let password = document.getElementById("pword");
-
-  await ContentTaskUtils.waitForCondition(() => {
-    return document.defaultView.getComputedStyle(username).getPropertyValue("filter") !== "none";
-  }, "Highlight was successfully applied to the username field on page load autofill");
-
+  isnot(document.defaultView.getComputedStyle(username).getPropertyValue("filter"), "none",
+        "Highlight was successfully applied to the username field on page load autofill");
   isnot(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
         "Highlight was successfully applied to the password field on page load autofill");
 

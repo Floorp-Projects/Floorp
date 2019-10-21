@@ -146,12 +146,12 @@ class LoginAutocompleteItem extends AutocompleteItem {
     isPasswordField,
     dateAndTimeFormatter,
     duplicateUsernames,
-    messageManager,
+    actor,
     isOriginMatched
   ) {
     super(SHOULD_SHOW_ORIGIN ? "loginWithOrigin" : "login");
     this._login = login.QueryInterface(Ci.nsILoginMetaInfo);
-    this._messageManager = messageManager;
+    this._actor = actor;
 
     XPCOMUtils.defineLazyGetter(this, "label", () => {
       let username = login.username;
@@ -184,9 +184,9 @@ class LoginAutocompleteItem extends AutocompleteItem {
   }
 
   removeFromStorage() {
-    if (this._messageManager) {
+    if (this._actor) {
       let vanilla = LoginHelper.loginToVanillaObject(this._login);
-      this._messageManager.sendAsyncMessage("PasswordManager:removeLogin", {
+      this._actor.sendAsyncMessage("PasswordManager:removeLogin", {
         login: vanilla,
       });
     } else {
@@ -223,7 +223,7 @@ function LoginAutoCompleteResult(
   aSearchString,
   matchingLogins,
   formOrigin,
-  { generatedPassword, isSecure, messageManager, isPasswordField, hostname }
+  { generatedPassword, isSecure, actor, isPasswordField, hostname }
 ) {
   let hidingFooterOnPWFieldAutoOpened = false;
   function isFooterEnabled() {
@@ -280,7 +280,7 @@ function LoginAutoCompleteResult(
       isPasswordField,
       dateAndTimeFormatter,
       duplicateUsernames,
-      messageManager,
+      actor,
       LoginHelper.isOriginMatching(login.origin, formOrigin, {
         schemeUpgrades: LoginHelper.schemeUpgrades,
       })
@@ -438,9 +438,11 @@ LoginAutoComplete.prototype = {
     let isPasswordField = aElement.type == "password";
     let hostname = aElement.ownerDocument.documentURIObject.host;
 
+    let loginManagerActor = LoginManagerChild.forWindow(aElement.ownerGlobal);
+
     let completeSearch = (
       autoCompleteLookupPromise,
-      { generatedPassword, logins, messageManager }
+      { generatedPassword, logins }
     ) => {
       // If the search was canceled before we got our
       // results, don't bother reporting them.
@@ -457,7 +459,7 @@ LoginAutoComplete.prototype = {
         formOrigin,
         {
           generatedPassword,
-          messageManager,
+          actor: loginManagerActor,
           isSecure,
           isPasswordField,
           hostname,
@@ -505,8 +507,7 @@ LoginAutoComplete.prototype = {
       previousResult = null;
     }
 
-    let loginManager = LoginManagerChild.forWindow(aElement.ownerGlobal);
-    let acLookupPromise = (this._autoCompleteLookupPromise = loginManager._autoCompleteSearchAsync(
+    let acLookupPromise = (this._autoCompleteLookupPromise = loginManagerActor._autoCompleteSearchAsync(
       aSearchString,
       previousResult,
       aElement

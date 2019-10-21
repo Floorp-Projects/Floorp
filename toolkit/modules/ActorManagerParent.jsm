@@ -275,6 +275,33 @@ let ACTORS = {
     allFrames: true,
   },
 
+  LoginManager: {
+    parent: {
+      moduleURI: "resource://gre/modules/LoginManagerParent.jsm",
+      messages: [
+        "PasswordManager:findLogins",
+        "PasswordManager:onFormSubmit",
+        "PasswordManager:onGeneratedPasswordFilledOrEdited",
+        "PasswordManager:insecureLoginFormPresent",
+        "PasswordManager:autoCompleteLogins",
+        "PasswordManager:removeLogin",
+        "PasswordManager:OpenPreferences",
+        "PasswordManager:formProcessed",
+      ],
+    },
+    child: {
+      moduleURI: "resource://gre/modules/LoginManagerChild.jsm",
+      messages: [
+        "PasswordManager:fillForm",
+        "PasswordManager:fillGeneratedPassword",
+        "FormAutoComplete:PopupOpened",
+        "FormAutoComplete:PopupClosed",
+      ],
+    },
+
+    allFrames: true,
+  },
+
   Select: {
     parent: {
       moduleURI: "resource://gre/actors/SelectParent.jsm",

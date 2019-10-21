@@ -47,7 +47,7 @@ runInParent(function addLogins() {
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
+let iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
 add_task(async function setup() {
@@ -58,8 +58,11 @@ add_task(async function setup() {
     }, {once: true});
   });
 
-  iframeDoc = iframe.contentDocument;
-  hostname = iframeDoc.documentURIObject.host;
+  await promiseFormsProcessed();
+
+  hostname = SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    return this.content.document.documentURIObject.host;
+  });
 
   SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popupshown to occur");
 });
@@ -70,7 +73,9 @@ add_task(async function test_initial_focus() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  is(iframeDoc.getElementById("form-basic-password").value, "pass", "Check first password filled");
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    Assert.equal(this.content.document.getElementById("form-basic-password").value, "pass", "Check first password filled");
+  });
   let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is now closed");
 });
@@ -78,33 +83,47 @@ add_task(async function test_initial_focus() {
 // This depends on the filling from the previous test.
 add_task(async function test_not_reopened_if_filled() {
   listenForUnexpectedPopupShown();
-  let usernameField = iframeDoc.getElementById("form-basic-username");
-  usernameField.focus();
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-username").focus();
+  });
   info("Waiting to see if a popupshown occurs");
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   // cleanup
   gPopupShownExpected = true;
-  iframeDoc.getElementById("form-basic-submit").focus();
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-submit").focus();
+  });
 });
 
 add_task(async function test_reopened_after_edit_not_matching_saved() {
-  let usernameField = iframeDoc.getElementById("form-basic-username");
-  usernameField.value = "nam";
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-username").value = "nam";
+  });
   let shownPromise = promiseACShown();
-  usernameField.focus();
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-username").focus();
+  });
   await shownPromise;
-  iframeDoc.getElementById("form-basic-submit").focus();
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-submit").focus();
+  });
 });
 
 add_task(async function test_not_reopened_after_selecting() {
-  let formFillController = SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].
-                           getService(SpecialPowers.Ci.nsIFormFillController);
-  let usernameField = iframeDoc.getElementById("form-basic-username");
-  usernameField.value = "";
-  iframeDoc.getElementById("form-basic-password").value = "";
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    this.content.document.getElementById("form-basic-username").value = "";
+    this.content.document.getElementById("form-basic-password").value = "";
+  });
   listenForUnexpectedPopupShown();
-  formFillController.markAsLoginManagerField(usernameField);
+
+  await SpecialPowers.spawn(getIframeBrowsingContext(window), [], function() {
+    let formFillController = SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].
+                             getService(SpecialPowers.Ci.nsIFormFillController);
+    let usernameField = this.content.document.getElementById("form-basic-username");
+    formFillController.markAsLoginManagerField(usernameField);
+  });
+
   info("Waiting to see if a popupshown occurs");
   await new Promise(resolve => setTimeout(resolve, 1000));
 

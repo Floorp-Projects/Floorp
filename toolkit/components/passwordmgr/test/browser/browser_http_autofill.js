@@ -23,14 +23,18 @@ add_task(async function setup() {
 
 add_task(async function test_http_autofill() {
   for (let scheme of ["http", "https"]) {
+    let formFilled = listenForTestNotification("FormProcessed");
+
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       `${scheme}${TEST_URL_PATH}form_basic.html`
     );
 
-    let [username, password] = await ContentTask.spawn(
+    await formFilled;
+
+    let [username, password] = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      null,
+      [],
       async function() {
         let doc = content.document;
         let contentUsername = doc.getElementById("form-basic-username").value;
@@ -56,24 +60,25 @@ add_task(async function test_http_autofill() {
 
 add_task(async function test_iframe_in_http_autofill() {
   for (let scheme of ["http", "https"]) {
+    // Wait for parent and child iframe to be processed.
+    let formFilled = listenForTestNotification("FormProcessed", 2);
+
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       `${scheme}${TEST_URL_PATH}form_basic_iframe.html`
     );
 
-    let [username, password] = await ContentTask.spawn(
-      gBrowser.selectedBrowser,
-      null,
+    await formFilled;
+
+    let [username, password] = await SpecialPowers.spawn(
+      gBrowser.selectedBrowser.browsingContext.getChildren()[0],
+      [],
       async function() {
-        let doc = content.document;
-        let iframe = doc.getElementById("test-iframe");
-        let contentUsername = iframe.contentWindow.document.getElementById(
-          "form-basic-username"
-        ).value;
-        let contentPassword = iframe.contentWindow.document.getElementById(
-          "form-basic-password"
-        ).value;
-        return [contentUsername, contentPassword];
+        let doc = this.content.document;
+        return [
+          doc.getElementById("form-basic-username").value,
+          doc.getElementById("form-basic-password").value,
+        ];
       }
     );
 
@@ -94,19 +99,24 @@ add_task(async function test_iframe_in_http_autofill() {
 
 add_task(async function test_http_action_autofill() {
   for (let type of ["insecure", "secure"]) {
+    let formFilled = listenForTestNotification("FormProcessed");
+
     let tab = await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
       `https${TEST_URL_PATH}form_cross_origin_${type}_action.html`
     );
 
-    let [username, password] = await ContentTask.spawn(
+    await formFilled;
+
+    let [username, password] = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      null,
+      [],
       async function() {
-        let doc = content.document;
-        let contentUsername = doc.getElementById("form-basic-username").value;
-        let contentPassword = doc.getElementById("form-basic-password").value;
-        return [contentUsername, contentPassword];
+        let doc = this.content.document;
+        return [
+          doc.getElementById("form-basic-username").value,
+          doc.getElementById("form-basic-password").value,
+        ];
       }
     );
 

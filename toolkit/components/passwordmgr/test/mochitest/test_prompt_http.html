@@ -98,8 +98,8 @@ add_task(async function test_iframe() {
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
   await promptDone;
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
-                      iframe.contentDocument);
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                            iframe);
 
   state = {
     msg: "http://mochi.test:8888 is requesting your username and password. The site says: “mochitest2”",
@@ -127,8 +127,8 @@ add_task(async function test_iframe() {
   iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
   await promptDone;
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
-                      iframe.contentDocument);
+  await checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
+                            iframe);
 
   // Now make a load that requests the realm from test 1000. It was
   // already provided there, so auth will *not* be prompted for -- the
@@ -136,8 +136,8 @@ add_task(async function test_iframe() {
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
-                      iframe.contentDocument);
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                            iframe);
 
   // Same realm we've already authenticated to, but with a different
   // expected password (to trigger an auth prompt, and change-password
@@ -167,8 +167,8 @@ add_task(async function test_iframe() {
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
   await promptDone;
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
-                      iframe.contentDocument);
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
+                            iframe);
   await promptShownPromise;
 
   // Same as last test, but for a realm we haven't already authenticated
@@ -199,8 +199,8 @@ add_task(async function test_iframe() {
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
   await promptDone;
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
-                      iframe.contentDocument);
+  await checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
+                            iframe);
   await promptShownPromise;
 
   // Housekeeping: Delete login4 to test the save prompt in the next test.
@@ -247,8 +247,8 @@ add_task(async function test_iframe() {
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
   await promptDone;
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
-                      iframe.contentDocument);
+  await checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
+                            iframe);
   await promptShownPromise;
 });
 
@@ -281,8 +281,8 @@ add_task(async function test_schemeUpgrade() {
                "?user=httpUser&pass=httpPass&realm=schemeUpgrade";
   await promptDone;
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "httpUser", pass: "httpPass"},
-                      SpecialPowers.wrap(iframe).contentDocument);
+  await checkEchoedAuthInfo({user: "httpUser", pass: "httpPass"},
+                            iframe);
 });
 
 add_task(async function test_schemeDowngrade() {
@@ -345,8 +345,8 @@ add_task(async function test_schemeUpgrade_dedupe() {
                "?user=dedupeUser&pass=httpsPass&realm=schemeUpgradeDedupe";
   await promptDone;
   await iframeLoaded;
-  checkEchoedAuthInfo({user: "dedupeUser", pass: "httpsPass"},
-                      SpecialPowers.wrap(iframe).contentDocument);
+  await checkEchoedAuthInfo({user: "dedupeUser", pass: "httpsPass"},
+                            iframe);
 });
 </script>
 </pre>

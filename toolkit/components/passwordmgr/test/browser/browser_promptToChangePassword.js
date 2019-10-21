@@ -38,7 +38,9 @@ async function showChangePasswordDoorhanger(
   formLogin,
   { notificationType = "password-change", autoSavedLoginGuid = "" } = {}
 ) {
-  let prompter = LoginManagerParent._getPrompter(browser, null);
+  let windowGlobal = browser.browsingContext.currentWindowGlobal;
+  let loginManagerActor = windowGlobal.getActor("LoginManager");
+  let prompter = loginManagerActor._getPrompter(browser, null);
   ok(!PopupNotifications.isPanelOpen, "Check the doorhanger isnt already open");
 
   let promiseShown = BrowserTestUtils.waitForEvent(

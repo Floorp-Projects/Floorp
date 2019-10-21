@@ -88,14 +88,10 @@ Services.cpmm.addMessageListener("clearRecipeCache", () => {
   LoginRecipesContent._clearRecipeCache();
 });
 
-let gLoginManagerChildSingleton = null;
-
-let _messages = [
-  "PasswordManager:loginsFound",
-  "PasswordManager:loginsAutoCompleted",
-];
-
 let gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
+
+// Input element on which enter keydown event was fired.
+let gKeyDownEnterForInput = null;
 
 const observer = {
   QueryInterface: ChromeUtils.generateQI([
@@ -318,10 +314,7 @@ let gAutoCompleteListener = {
       }
 
       case "FormAutoComplete:PopupClosed": {
-        this.onPopupClosed(
-          data.selectedRowStyle,
-          target.docShell.messageManager
-        );
+        this.onPopupClosed(data.selectedRowStyle, target);
         let { chromeEventHandler } = target.docShell;
         chromeEventHandler.removeEventListener("keydown", this, true);
         break;
@@ -345,7 +338,7 @@ let gAutoCompleteListener = {
     this.keyDownEnterForInput = focusedElement;
   },
 
-  onPopupClosed(selectedRowStyle, mm) {
+  onPopupClosed(selectedRowStyle, window) {
     let focusedElement = gFormFillService.focusedInput;
     let eventTarget = this.keyDownEnterForInput;
     if (
@@ -356,16 +349,20 @@ let gAutoCompleteListener = {
       this.keyDownEnterForInput = null;
       return;
     }
+
+    let loginManager = window.getWindowGlobalChild().getActor("LoginManager");
     let hostname = eventTarget.ownerDocument.documentURIObject.host;
-    mm.sendAsyncMessage("PasswordManager:OpenPreferences", {
+    loginManager.sendAsyncMessage("PasswordManager:OpenPreferences", {
       hostname,
       entryPoint: "autocomplete",
     });
   },
 };
 
-this.LoginManagerChild = class LoginManagerChild {
+this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   constructor() {
+    super();
+
     /**
      * WeakMap of the root element of a LoginForm to the DeferredTask to fill its fields.
      *
@@ -393,70 +390,15 @@ this.LoginManagerChild = class LoginManagerChild {
      * frames, to the current state used by the Login Manager.
      */
     this._loginFormStateByDocument = new WeakMap();
-
-    // Map from form login requests to information about that request.
-    this._requests = new Map();
-
-    // Number of outstanding requests to each manager.
-    this._managers = new Map();
   }
 
   static forWindow(window) {
-    // For now, this is a singleton.
-    if (!gLoginManagerChildSingleton) {
-      gLoginManagerChildSingleton = new LoginManagerChild();
-    }
-    return gLoginManagerChildSingleton;
-  }
-
-  _getRandomId() {
-    return Cc["@mozilla.org/uuid-generator;1"]
-      .getService(Ci.nsIUUIDGenerator)
-      .generateUUID()
-      .toString();
-  }
-
-  _takeRequest(msg) {
-    let data = msg.data;
-    let request = this._requests.get(data.requestId);
-
-    this._requests.delete(data.requestId);
-
-    let count = this._managers.get(msg.target);
-    if (--count === 0) {
-      this._managers.delete(msg.target);
-
-      for (let message of _messages) {
-        msg.target.removeMessageListener(message, this);
-      }
-    } else {
-      this._managers.set(msg.target, count);
+    let windowGlobal = window.getWindowGlobalChild();
+    if (windowGlobal) {
+      return windowGlobal.getActor("LoginManager");
     }
 
-    return request;
-  }
-
-  _sendRequest(messageManager, requestData, name, messageData) {
-    let count;
-    if (!(count = this._managers.get(messageManager))) {
-      this._managers.set(messageManager, 1);
-
-      for (let message of _messages) {
-        messageManager.addMessageListener(message, this);
-      }
-    } else {
-      this._managers.set(messageManager, ++count);
-    }
-
-    let requestId = this._getRandomId();
-    messageData.requestId = requestId;
-
-    messageManager.sendAsyncMessage(name, messageData);
-
-    let deferred = PromiseUtils.defer();
-    requestData.promise = deferred;
-    this._requests.set(requestId, requestData);
-    return deferred.promise;
+    return null;
   }
 
   _compareAndUpdatePreviouslySentValues(
@@ -500,37 +442,14 @@ this.LoginManagerChild = class LoginManagerChild {
   }
 
   receiveMessage(msg) {
-    if (msg.name == "PasswordManager:fillForm") {
-      this.fillForm({
-        topDocument: msg.target.content.document,
-        loginFormOrigin: msg.data.loginFormOrigin,
-        loginsFound: LoginHelper.vanillaObjectsToLogins(msg.data.logins),
-        recipes: msg.data.recipes,
-        inputElementIdentifier: msg.data.inputElementIdentifier,
-      });
-      return;
-    }
-
     switch (msg.name) {
-      case "PasswordManager:loginsFound": {
-        let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
-        let request = this._takeRequest(msg);
-        request.promise.resolve({
-          form: request.form,
-          loginsFound,
+      case "PasswordManager:fillForm": {
+        this.fillForm({
+          loginFormOrigin: msg.data.loginFormOrigin,
+          loginsFound: LoginHelper.vanillaObjectsToLogins(msg.data.logins),
           recipes: msg.data.recipes,
-        });
-        break;
-      }
-
-      case "PasswordManager:loginsAutoCompleted": {
-        let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
-        let messageManager = msg.target;
-        let request = this._takeRequest(msg);
-        request.promise.resolve({
-          generatedPassword: msg.data.generatedPassword,
-          logins: loginsFound,
-          messageManager,
+          inputElementIdentifier: msg.data.inputElementIdentifier,
+          originMatches: msg.data.originMatches,
         });
         break;
       }
@@ -548,11 +467,11 @@ this.LoginManagerChild = class LoginManagerChild {
           msg.data.password
         );
         this.fillForm({
-          topDocument: msg.target.content.document,
           loginFormOrigin: msg.data.origin,
           loginsFound: [generatedLogin],
           recipes: msg.data.recipes,
           inputElementIdentifier: msg.data.inputElementIdentifier,
+          originMatches: msg.data.originMatches,
         });
         let inputElement = ContentDOMReference.resolve(
           msg.data.inputElementIdentifier
@@ -564,7 +483,22 @@ this.LoginManagerChild = class LoginManagerChild {
         }
         break;
       }
+
+      case "PasswordManager:formIsPending": {
+        return this._visibleTasksByDocument.has(this.document);
+      }
+
+      case "PasswordManager:formProcessed": {
+        this.notifyObserversOfFormProcessed(msg.data.formid);
+        break;
+      }
     }
+
+    return undefined;
+  }
+
+  notifyObserversOfFormProcessed(formid) {
+    Services.obs.notifyObservers(this, "passwordmgr-processed-form", formid);
   }
 
   /**
@@ -577,40 +511,35 @@ this.LoginManagerChild = class LoginManagerChild {
    */
   _getLoginDataFromParent(form, options) {
     let doc = form.ownerDocument;
-    let win = doc.defaultView;
 
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     if (!formOrigin) {
-      return Promise.reject(
-        "_getLoginDataFromParent: A form origin is required"
-      );
+      throw new Error("_getLoginDataFromParent: A form origin is required");
     }
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
 
-    let messageManager = win.docShell.messageManager;
-
-    // XXX Weak??
-    let requestData = { form };
     let messageData = { formOrigin, actionOrigin, options };
 
-    return this._sendRequest(
-      messageManager,
-      requestData,
+    let resultPromise = this.sendQuery(
       "PasswordManager:findLogins",
       messageData
     );
+    return resultPromise.then(result => {
+      return {
+        form,
+        loginsFound: LoginHelper.vanillaObjectsToLogins(result.logins),
+        recipes: result.recipes,
+      };
+    });
   }
 
   _autoCompleteSearchAsync(aSearchString, aPreviousResult, aElement) {
     let doc = aElement.ownerDocument;
     let form = LoginFormFactory.createFromField(aElement);
-    let win = doc.defaultView;
 
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     let actionOrigin = LoginHelper.getFormActionOrigin(form);
     let autocompleteInfo = aElement.getAutocompleteInfo();
-
-    let messageManager = win.docShell.messageManager;
 
     let previousResult = aPreviousResult
       ? {
@@ -619,10 +548,8 @@ this.LoginManagerChild = class LoginManagerChild {
         }
       : null;
 
-    let requestData = {};
     let messageData = {
       autocompleteInfo,
-      browsingContextId: win.docShell.browsingContext.id,
       formOrigin,
       actionOrigin,
       searchString: aSearchString,
@@ -635,12 +562,17 @@ this.LoginManagerChild = class LoginManagerChild {
       gAutoCompleteListener.init();
     }
 
-    return this._sendRequest(
-      messageManager,
-      requestData,
+    let resultPromise = this.sendQuery(
       "PasswordManager:autoCompleteLogins",
       messageData
     );
+
+    return resultPromise.then(result => {
+      return {
+        generatedPassword: result.generatedPassword,
+        logins: LoginHelper.vanillaObjectsToLogins(result.logins),
+      };
+    });
   }
 
   setupProgressListener(window) {
@@ -858,10 +790,6 @@ this.LoginManagerChild = class LoginManagerChild {
    * @param {LoginForm} form to fetch the logins for then try autofill.
    */
   _fetchLoginsFromParentAndFillForm(form) {
-    let window = form.ownerDocument.defaultView;
-    let messageManager = window.docShell.messageManager;
-    messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
-
     if (!LoginHelper.enabled) {
       return;
     }
@@ -900,10 +828,6 @@ this.LoginManagerChild = class LoginManagerChild {
    *
    * @param An object with the following properties:
    *        {
-   *          topDocument:
-   *            DOM document currently associated to the the top-level window
-   *            for which the fill is requested. This may be different from the
-   *            document that originally caused the login UI to be displayed.
    *          loginFormOrigin:
    *            String with the origin for which the login UI was displayed.
    *            This must match the origin of the form used for the fill.
@@ -916,14 +840,16 @@ this.LoginManagerChild = class LoginManagerChild {
    *            Fill recipes transmitted together with the original message.
    *          inputElementIdentifier:
    *            An identifier generated for the input element via ContentDOMReference.
+   *          originMatches:
+   *            True if the origin of the form matches the page URI.
    *        }
    */
   fillForm({
-    topDocument,
     loginFormOrigin,
     loginsFound,
     recipes,
     inputElementIdentifier,
+    originMatches,
   }) {
     if (!inputElementIdentifier) {
       log("fillForm: No input element specified");
@@ -938,9 +864,7 @@ this.LoginManagerChild = class LoginManagerChild {
       return;
     }
 
-    if (
-      LoginHelper.getLoginOrigin(topDocument.documentURI) != loginFormOrigin
-    ) {
+    if (!originMatches) {
       if (
         !inputElement ||
         LoginHelper.getLoginOrigin(inputElement.ownerDocument.documentURI) !=
@@ -1061,7 +985,11 @@ this.LoginManagerChild = class LoginManagerChild {
     let acForm = LoginFormFactory.createFromField(acInputField);
     let doc = acForm.ownerDocument;
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
-    let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
+    let recipes = LoginRecipesContent.getRecipes(
+      this,
+      formOrigin,
+      doc.defaultView
+    );
 
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
@@ -1467,9 +1395,8 @@ this.LoginManagerChild = class LoginManagerChild {
     }
 
     let formActionOrigin = LoginHelper.getFormActionOrigin(form);
-    let messageManager = win.docShell.messageManager;
 
-    let recipes = LoginRecipesContent.getRecipes(origin, win);
+    let recipes = LoginRecipesContent.getRecipes(this, origin, win);
 
     // Get the appropriate fields from the form.
     let [
@@ -1559,7 +1486,7 @@ this.LoginManagerChild = class LoginManagerChild {
     let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(
       form.rootElement
     );
-    messageManager.sendAsyncMessage("PasswordManager:onFormSubmit", {
+    this.sendAsyncMessage("PasswordManager:onFormSubmit", {
       origin,
       formActionOrigin,
       autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
@@ -1639,7 +1566,7 @@ this.LoginManagerChild = class LoginManagerChild {
     let origin = LoginHelper.getLoginOrigin(
       passwordField.ownerDocument.documentURI
     );
-    let recipes = LoginRecipesContent.getRecipes(origin, win);
+    let recipes = LoginRecipesContent.getRecipes(this, origin, win);
     let [usernameField] = this._getFormFields(loginForm, false, recipes);
     let username = (usernameField && usernameField.value) || "";
     // Avoid prompting twice for the same value,
@@ -1662,17 +1589,12 @@ this.LoginManagerChild = class LoginManagerChild {
     if (win.opener) {
       openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
     }
-    let messageManager = win.docShell.messageManager;
-    messageManager.sendAsyncMessage(
-      "PasswordManager:onGeneratedPasswordFilledOrEdited",
-      {
-        browsingContextId: win.docShell.browsingContext.id,
-        formActionOrigin,
-        openerTopWindowID,
-        password: passwordField.value,
-        username,
-      }
-    );
+    this.sendAsyncMessage("PasswordManager:onGeneratedPasswordFilledOrEdited", {
+      formActionOrigin,
+      openerTopWindowID,
+      password: passwordField.value,
+      username: (usernameField && usernameField.value) || "",
+    });
   }
 
   _togglePasswordFieldMasking(passwordField, unmask) {
@@ -2107,10 +2029,6 @@ this.LoginManagerChild = class LoginManagerChild {
 
       log("_fillForm succeeded");
       autofillResult = AUTOFILL_RESULT.FILLED;
-
-      let win = doc.defaultView;
-      let messageManager = win.docShell.messageManager;
-      messageManager.sendAsyncMessage("LoginStats:LoginFillSuccessful");
     } catch (ex) {
       Cu.reportError(ex);
       throw ex;
@@ -2146,10 +2064,9 @@ this.LoginManagerChild = class LoginManagerChild {
         usernameField.addEventListener("mousedown", observer);
       }
 
-      Services.obs.notifyObservers(
-        form.rootElement,
-        "passwordmgr-processed-form"
-      );
+      this.sendAsyncMessage("PasswordManager:formProcessed", {
+        formid: form.rootElement.id,
+      });
     }
   }
 
@@ -2231,7 +2148,11 @@ this.LoginManagerChild = class LoginManagerChild {
 
     let doc = aField.ownerDocument;
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
-    let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
+    let recipes = LoginRecipesContent.getRecipes(
+      this,
+      formOrigin,
+      doc.defaultView
+    );
 
     return this._getFormFields(form, false, recipes);
   }

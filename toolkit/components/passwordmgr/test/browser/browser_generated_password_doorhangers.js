@@ -130,6 +130,8 @@ async function verifyConfirmationHint(hintElem) {
 }
 
 async function openFormInNewTab(url, formValues, taskFn) {
+  let formFilled = listenForTestNotification("FormProcessed");
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -137,6 +139,8 @@ async function openFormInNewTab(url, formValues, taskFn) {
     },
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
+      await formFilled;
+
       await ContentTask.spawn(
         browser,
         formValues,
