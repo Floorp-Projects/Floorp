@@ -46,9 +46,6 @@ class SyncIntegrationTest {
         }.openHistory { }
         historyAfterSyncIsShown()
     }
-    /* These tests will be running in the future
-    // once the test above runs successfully and
-    // the environment is stable
 
     // Bookmark item Desktop -> Fenix
     @Test
@@ -61,6 +58,10 @@ class SyncIntegrationTest {
         }.openBookmarks { }
         bookmarkAfterSyncIsShown()
     }
+
+    /* These tests will be running in the future
+    // once the test above runs successfully and
+    // the environment is stable
 
     // History item Fenix -> Desktop
     @Test
@@ -99,7 +100,7 @@ class SyncIntegrationTest {
         continueButton.clickAndWait(Until.newWindow(), TestAssetHelper.waitingTime)
     }
 
-    fun typePassowrd() {
+    fun typePassword() {
         val passwordInput = mDevice.findObject(UiSelector()
                 .instance(0)
                 .className(EditText::class.java))
@@ -109,7 +110,7 @@ class SyncIntegrationTest {
     }
 
     fun tapOnSignIn() {
-        mDevice.wait(Until.findObjects(By.text("Sign in")), TestAssetHelper.waitingTime)
+        mDevice.wait(Until.findObjects(By.text("Sign in")), TestAssetHelper.waitingTimeShort)
         // Let's tap on enter, sometimes depending on the device the sign in button is
         // hidden by the keyboard
         mDevice.pressEnter()
@@ -126,8 +127,8 @@ class SyncIntegrationTest {
     }
 
     fun bookmarkAfterSyncIsShown() {
-        val bookmarkyEntry = mDevice.findObject(By.text("Example Domain"))
-        bookmarkyEntry.isEnabled()
+        val bookmarkEntry = mDevice.findObject(By.text("Example Domain"))
+        bookmarkEntry.isEnabled()
     }
 
     fun seeBookmark() {
@@ -137,14 +138,8 @@ class SyncIntegrationTest {
     }
 
     fun tapReturnToPreviousApp() {
-        mDevice.wait(Until.findObjects(By.text("Connected")), TestAssetHelper.waitingTime)
-
-        val settingsLabel = mDevice.wait(Until.findObject(By.text("Settings")), TestAssetHelper.waitingTime)
-        settingsLabel.isClickable()
-
-        mDevice.wait(Until.findObjects(By.desc("Navigate up")), TestAssetHelper.waitingTime)
-        val backButton = mDevice.findObject(By.desc("Navigate up"))
-        backButton.click()
+        sleep(TestAssetHelper.waitingTime)
+        mDevice.pressBack()
     }
 
     fun signInFxSync() {
@@ -157,8 +152,8 @@ class SyncIntegrationTest {
 
         typeEmail()
         tapOnContinueButton()
-        typePassowrd()
-        sleep(TestAssetHelper.waitingTime)
+        typePassword()
+        sleep(TestAssetHelper.waitingTimeShort)
         tapOnSignIn()
     }
 }
