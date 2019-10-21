@@ -32,12 +32,15 @@ add_task(async function test_initialize() {
 });
 
 add_task(async function test_context_menu_username() {
+  let formFilled = listenForTestNotification("FormProcessed");
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
     },
     async function(browser) {
+      await formFilled;
       await openContextMenu(browser, "#form-basic-username");
 
       let contextMenu = document.getElementById("contentAreaContextMenu");
@@ -48,12 +51,15 @@ add_task(async function test_context_menu_username() {
 });
 
 add_task(async function test_context_menu_password() {
+  let formFilled = listenForTestNotification("FormProcessed");
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: TEST_ORIGIN + BASIC_FORM_PAGE_PATH,
     },
     async function(browser) {
+      await formFilled;
       await openContextMenu(browser, "#form-basic-password");
 
       let contextMenu = document.getElementById("contentAreaContextMenu");

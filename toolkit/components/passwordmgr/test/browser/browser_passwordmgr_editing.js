@@ -46,7 +46,11 @@ function synthesizeDblClickOnCell(aTree, column, row) {
   );
 }
 
-async function togglePasswords() {
+async function togglePasswords(promptWillShow) {
+  let confirmPromptDone = promptWillShow
+    ? BrowserTestUtils.waitForEvent(pwmgrdlg, "endmodalstate")
+    : Promise.resolve();
+
   pwmgrdlg.document.querySelector("#togglePasswords").doCommand();
   await ContentTaskUtils.waitForCondition(
     () => !signonsTree.columns.getNamedColumn("passwordCol").hidden,
@@ -54,6 +58,7 @@ async function togglePasswords() {
   );
   await new Promise(resolve => waitForFocus(resolve, pwmgrdlg));
   pwmgrdlg.document.documentElement.clientWidth; // flush to ensure UI up-to-date
+  await confirmPromptDone;
 }
 
 async function editUsernamePromises(site, oldUsername, newUsername) {
@@ -166,9 +171,9 @@ add_task(async function test_edit_multiple_logins() {
   ) {
     addLogin(site, oldUsername, oldPassword);
     await editUsernamePromises(site, oldUsername, newUsername);
-    await togglePasswords();
+    await togglePasswords(true);
     await editPasswordPromises(site, oldPassword, newPassword);
-    await togglePasswords();
+    await togglePasswords(false);
   }
 
   await testLoginChange(

@@ -28,7 +28,7 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
+let iframe = document.getElementsByTagName("iframe")[0];
 
 async function prepareLoginsAndProcessForm(url, logins = []) {
   await LoginManager.removeAllLogins();
@@ -55,10 +55,9 @@ add_task(async function test_simpleNoDupesNoAction() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "name2", pword, "pass2");
+  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0),
+                                   "form-basic-username", "name2",
+                                   "form-basic-password", "pass2");
 });
 
 add_task(async function test_simpleNoDupesUpgradeOriginAndAction() {
@@ -67,10 +66,8 @@ add_task(async function test_simpleNoDupesUpgradeOriginAndAction() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "name2", pword, "pass2");
+  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name2",
+                                           "form-basic-password", "pass2");
 });
 
 add_task(async function test_simpleNoDupesUpgradeOriginOnly() {
@@ -79,10 +76,8 @@ add_task(async function test_simpleNoDupesUpgradeOriginOnly() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "name2", pword, "pass2");
+  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name2",
+                                           "form-basic-password", "pass2");
 });
 
 add_task(async function test_simpleNoDupesUpgradeActionOnly() {
@@ -91,10 +86,8 @@ add_task(async function test_simpleNoDupesUpgradeActionOnly() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "name2", pword, "pass2");
+  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name2",
+                                           "form-basic-password", "pass2");
 });
 
 add_task(async function test_dedupe() {
@@ -109,10 +102,8 @@ add_task(async function test_dedupe() {
                     "name1", "passHTTPStoHTTP", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkLoginForm(uname, "name1", pword, "passHTTPStoHTTPS");
+  await checkLoginFormInChildFrame(getIframeBrowsingContext(window, 0), "form-basic-username", "name1",
+                                           "form-basic-password", "passHTTPStoHTTPS");
 });
 
 </script>

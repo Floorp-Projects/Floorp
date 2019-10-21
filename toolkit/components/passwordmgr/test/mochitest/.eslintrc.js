@@ -12,7 +12,7 @@ module.exports = {
     "assert": true,
     "addMessageListener": true,
     "sendAsyncMessage": true,
-
+    "Assert": true,
   },
   "rules": {
     "no-var": "off",

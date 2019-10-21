@@ -145,8 +145,8 @@ add_task(async function runTestAuth() {
   iframe_prompt.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
   await promptDone;
   await iframe3Loaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
-                      iframe_prompt.contentDocument);
+  await checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                            iframe_prompt);
 
   // Cross-origin subresourse test.
 
@@ -182,8 +182,8 @@ add_task(async function runTestAuth() {
   iframe_prompt.src = "http://example.com/tests/toolkit/components/prompts/test/authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest";
   await promptDone;
   await iframe3Loaded;
-  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
-                      SpecialPowers.wrap(iframe_prompt.contentWindow).document);
+  await checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
+                            iframe_prompt);
 });
 
 function dispatchMouseEvent(target, type) {

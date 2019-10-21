@@ -45,12 +45,15 @@ async function checkFormsWithLogin(formUrls, login, expectedUsername, expectedPa
 
     await prepareAndProcessForm(url);
     info("form was processed");
-    let iframeDoc = iframe.contentDocument;
-    let uname = iframeDoc.getElementById("form-basic-username");
-    let pword = iframeDoc.getElementById("form-basic-password");
-    info("checking form, uname: " + uname.value);
-    is(uname.value, expectedUsername, `username ${expectedUsername ? "filled" : "not filled"} on ${url}`);
-    is(pword.value, expectedPassword, `password ${expectedPassword ? "filled" : "not filled"} on ${url}`);
+
+    await SpecialPowers.spawn(getIframeBrowsingContext(window, 0), [url, expectedUsername, expectedPassword],
+                              function(urlContent, expectedUsernameContent, expectedPasswordContent) {
+      let doc = this.content.document;
+      let uname = doc.getElementById("form-basic-username");
+      let pword = doc.getElementById("form-basic-password");
+      Assert.equal(uname.value, expectedUsernameContent, `username ${expectedUsernameContent ? "filled" : "not filled"} on ${urlContent}`);
+      Assert.equal(pword.value, expectedPasswordContent, `password ${expectedPasswordContent ? "filled" : "not filled"} on ${urlContent}`);
+    });
   }
 }
 

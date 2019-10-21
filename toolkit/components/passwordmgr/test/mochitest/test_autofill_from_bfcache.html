@@ -11,15 +11,6 @@
 <body>
 <script>
 runChecksAfterCommonInit();
-
-runInParent(function initLogins() {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-  let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-  login1.init("https://example.com", "", null, "autofilled", "pass1", "", "");
-  Services.logins.addLogin(login1);
-});
-
 </script>
 <p id="display"></p>
 
@@ -30,6 +21,20 @@ runInParent(function initLogins() {
 <pre id="test">
 <script class="testbody" type="text/javascript">
 let win;
+
+add_task(async function setup() {
+  let loginAddedPromise = promiseStorageChanged(["addLogin"]);
+
+  runInParent(function initLogins() {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+    login1.init("https://example.com", "", null, "autofilled", "pass1", "", "");
+    Services.logins.addLogin(login1);
+  });
+
+  await loginAddedPromise;
+});
 
 add_task(async function test_crossOriginBfcacheRestore() {
   let processedPromise = promiseFormsProcessed();

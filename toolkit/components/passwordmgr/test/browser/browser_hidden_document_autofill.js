@@ -11,39 +11,6 @@ async function getDocumentVisibilityState(browser) {
   return visibility;
 }
 
-async function addContentObserver(browser, topic) {
-  // add an observer.
-  await ContentTask.spawn(browser, [topic], function(contentTopic) {
-    this.gObserver = {
-      wasObserved: false,
-      observe: () => {
-        content.wasObserved = true;
-      },
-    };
-    Services.obs.addObserver(this.gObserver, contentTopic);
-  });
-}
-
-async function getContentObserverResult(browser, topic) {
-  let result = await ContentTask.spawn(browser, [topic], async function(
-    contentTopic
-  ) {
-    const { TestUtils } = ChromeUtils.import(
-      "resource://testing-common/TestUtils.jsm"
-    );
-    try {
-      await TestUtils.waitForCondition(() => {
-        return content.wasObserved;
-      }, `Wait for "passwordmgr-processed-form"`);
-    } catch (ex) {
-      content.wasObserved = false;
-    }
-    Services.obs.removeObserver(this.gObserver, "passwordmgr-processed-form");
-    return content.wasObserved;
-  });
-  return result;
-}
-
 // Waits for the master password prompt and cancels it.
 function observeMasterPasswordDialog(window, result) {
   let closedPromise;
@@ -94,16 +61,9 @@ add_task(async function test_processed_form_fired() {
   let tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
   is(tab1Visibility, "visible", "The first tab should be foreground");
 
-  await addContentObserver(tab1.linkedBrowser, "passwordmgr-processed-form");
+  let formProcessedPromise = listenForTestNotification("FormProcessed");
   await BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
-  let result = await getContentObserverResult(
-    tab1.linkedBrowser,
-    "passwordmgr-processed-form"
-  );
-  ok(
-    result,
-    "Observer should be notified when form is loaded into a visible document"
-  );
+  await formProcessedPromise;
   gBrowser.removeTab(tab1);
 });
 
@@ -124,26 +84,33 @@ testUrls.forEach(testUrl => {
     tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
     is(tab1Visibility, "hidden", "The first tab should be backgrounded");
 
-    // we shouldn't even try to autofill while hidden, so look for the passwordmgr-processed-form
-    // to be observed rather than any result of filling the form
-    await addContentObserver(tab1.linkedBrowser, "passwordmgr-processed-form");
+    // we shouldn't even try to autofill while hidden, so wait for the document to be in the
+    // non-visible pending queue instead.
+    let formFilled = false;
+    listenForTestNotification("FormProcessed").then(() => {
+      formFilled = true;
+    });
     await BrowserTestUtils.loadURI(tab1.linkedBrowser, testUrl);
-    result = await getContentObserverResult(
-      tab1.linkedBrowser,
-      "passwordmgr-processed-form"
-    );
+
+    await TestUtils.waitForCondition(() => {
+      let windowGlobal = tab1.linkedBrowser.browsingContext.currentWindowGlobal;
+      if (!windowGlobal || windowGlobal.documentURI.spec == "about:blank") {
+        return false;
+      }
+
+      let actor = windowGlobal.getActor("LoginManager");
+      return actor.sendQuery("PasswordManager:formIsPending");
+    });
+
     ok(
-      !result,
+      !formFilled,
       "Observer should not be notified when form is loaded into a hidden document"
     );
 
     // Add the observer before switching tab
-    await addContentObserver(tab1.linkedBrowser, "passwordmgr-processed-form");
+    let formProcessedPromise = listenForTestNotification("FormProcessed");
     await BrowserTestUtils.switchTab(gBrowser, tab1);
-    result = await getContentObserverResult(
-      tab1.linkedBrowser,
-      "passwordmgr-processed-form"
-    );
+    result = await formProcessedPromise;
     tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
     is(tab1Visibility, "visible", "The first tab should be foreground");
     ok(
@@ -219,14 +186,11 @@ add_task(async function test_immediate_autofill_with_masterpassword() {
 
   // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
   // to be observed
-  await addContentObserver(tab1.linkedBrowser, "passwordmgr-processed-form");
+  let formProcessedPromise = listenForTestNotification("FormProcessed");
   await BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
-  let wasProcessed = getContentObserverResult(
-    tab1.linkedBrowser,
-    "passwordmgr-processed-form"
-  );
-  await Promise.all([dialogObserved, wasProcessed]);
+  await Promise.all([formProcessedPromise, dialogObserved]);
 
+  let wasProcessed = await formProcessedPromise;
   ok(
     wasProcessed,
     "Observer should be notified when form is loaded into a hidden document"

@@ -147,15 +147,13 @@ function checkEditTelemetryRecorded(expectedCount, msg) {
 }
 
 function startTestConditions(contextId) {
+  LMP.useBrowsingContext(contextId);
+
   ok(
     LMP._onGeneratedPasswordFilledOrEdited,
     "LMP._onGeneratedPasswordFilledOrEdited exists"
   );
-  equal(
-    LMP.getGeneratedPassword(contextId),
-    null,
-    "Null with no BrowsingContext"
-  );
+  equal(LMP.getGeneratedPassword(), null, "Null with no BrowsingContext");
   equal(
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
     0,
@@ -528,7 +526,7 @@ add_task(
 
 add_task(
   async function test_onGeneratedPasswordFilledOrEdited_withSavedEmptyUsername() {
-    startTestConditions();
+    startTestConditions(99);
     let login0Props = Object.assign({}, loginTemplate, {
       username: "",
       password: "qweqweq",
@@ -714,7 +712,7 @@ add_task(
 
 add_task(
   async function test_onGeneratedPasswordFilledOrEdited_withEmptyUsernameDifferentFormActionOrigin() {
-    startTestConditions();
+    startTestConditions(99);
     let login0Props = Object.assign({}, loginTemplate, {
       username: "",
       password: "qweqweq",
@@ -772,7 +770,7 @@ add_task(
 
 add_task(
   async function test_onGeneratedPasswordFilledOrEdited_withSavedUsername() {
-    startTestConditions();
+    startTestConditions(99);
     let login0Props = Object.assign({}, loginTemplate, {
       username: "previoususer",
       password: "qweqweq",

@@ -20,14 +20,20 @@
 // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
 isTabModal = false;
 
-runInParent(() => {
-  const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+add_task(async function setup() {
+  let loginAddedPromise = promiseStorageChanged(["addLogin"]);
 
-  let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-              createInstance(Ci.nsILoginInfo);
-  login.init("http://mochi.test:8888", null, "mochitest",
-             "mochiuser1", "mochipass1", "", "");
-  Services.logins.addLogin(login);
+  runInParent(() => {
+    const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                createInstance(Ci.nsILoginInfo);
+    login.init("http://mochi.test:8888", null, "mochitest",
+               "mochiuser1", "mochipass1", "", "");
+    Services.logins.addLogin(login);
+  });
+
+  await loginAddedPromise;
 });
 
 add_task(async function test_sandbox_xhr() {
