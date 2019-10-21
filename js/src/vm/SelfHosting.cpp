@@ -60,6 +60,8 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/BigIntType.h"
+#include "vm/BytecodeIterator.h"
+#include "vm/BytecodeLocation.h"
 #include "vm/Compression.h"
 #include "vm/DateObject.h"
 #include "vm/GeneratorObject.h"
@@ -78,6 +80,8 @@
 
 #include "gc/PrivateIterators-inl.h"
 #include "vm/BooleanObject-inl.h"
+#include "vm/BytecodeIterator-inl.h"
+#include "vm/BytecodeLocation-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSFunction-inl.h"
@@ -2646,14 +2650,12 @@ static bool VerifyGlobalNames(JSContext* cx, Handle<GlobalObject*> shg) {
   for (auto iter = cx->zone()->cellIter<JSScript>();
        !iter.done() && !nameMissing; iter.next()) {
     JSScript* script = iter;
-    jsbytecode* end = script->codeEnd();
-    jsbytecode* nextpc;
-    for (jsbytecode* pc = script->code(); pc < end; pc = nextpc) {
-      JSOp op = JSOp(*pc);
-      nextpc = pc + GetBytecodeLength(pc);
+
+    for (BytecodeLocation loc : AllBytecodesIterable(script)) {
+      JSOp op = loc.getOp();
 
       if (op == JSOP_GETINTRINSIC) {
-        PropertyName* name = script->getName(pc);
+        PropertyName* name = loc.getPropertyName(script);
         id = NameToId(name);
 
         if (!shg->lookupPure(id)) {
