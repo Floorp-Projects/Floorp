@@ -229,8 +229,12 @@ class TestTestMetadata(Base):
         t = self._get_test_metadata()
         self.assertEqual(len(t._tests_by_path), 8)
 
-        self.assertEqual(len(list(t.tests_with_flavor('xpcshell'))), 3)
-        self.assertEqual(len(list(t.tests_with_flavor('mochitest-plain'))), 0)
+        def tests_with_flavor(flavor):
+            for path in sorted(t._tests_by_flavor.get(flavor, [])):
+                yield t._tests_by_path[path]
+
+        self.assertEqual(len(list(tests_with_flavor('xpcshell'))), 3)
+        self.assertEqual(len(list(tests_with_flavor('mochitest-plain'))), 0)
 
     def test_resolve_all(self):
         t = self._get_test_metadata()

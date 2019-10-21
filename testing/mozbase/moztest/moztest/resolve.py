@@ -366,14 +366,6 @@ class TestMetadata(object):
                 flavor = metadata.get('flavor')
                 self._tests_by_flavor[flavor].add(path)
 
-    def tests_with_flavor(self, flavor):
-        """Obtain all tests having the specified flavor.
-
-        This is a generator of dicts describing each test.
-        """
-        for path in sorted(self._tests_by_flavor.get(flavor, [])):
-            yield self._tests_by_path[path]
-
     def resolve_tests(self, paths=None, flavor=None, subsuite=None, under_path=None,
                       tags=None):
         """Resolve tests from an identifier.
