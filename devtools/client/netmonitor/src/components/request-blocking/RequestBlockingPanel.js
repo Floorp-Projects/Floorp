@@ -120,8 +120,9 @@ class RequestBlockingPanel extends Component {
         )
       ),
       button({
-        className: "devtools-button",
+        className: "request-blocking-remove-button",
         title: REMOVE_URL_TOOLTIP,
+        "aria-label": REMOVE_URL_TOOLTIP,
         onClick: () => removeBlockedUrl(url),
       })
     );

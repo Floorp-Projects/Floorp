@@ -70,23 +70,23 @@
   margin-inline-start: 10px;
 }
 
-.devtools-checkbox {
+.devtools-toolbar .devtools-checkbox {
   position: relative;
   vertical-align: middle;
   bottom: 1px;
 }
 
-.devtools-checkbox-label {
+.devtools-toolbar .devtools-checkbox-label {
   margin-inline-start: 2px;
   margin-inline-end: 2px;
   white-space: nowrap;
 }
 
-.devtools-checkbox-label.devtools-persistlog-checkbox {
+.devtools-toolbar .devtools-checkbox-label.devtools-persistlog-checkbox {
   margin-inline-start: 4px;
 }
 
-.devtools-checkbox-label.devtools-cache-checkbox {
+.devtools-toolbar .devtools-checkbox-label.devtools-cache-checkbox {
   margin-inline-end: 7px;
 }
 
