@@ -16,6 +16,7 @@
 #include "pk11func.h"
 #include "mozpkix/pkix.h"
 #include "mozpkix/pkixtypes.h"
+#include "nsIX509Cert.h"
 
 using mozilla::OriginAttributes;
 using mozilla::TimeDuration;
@@ -38,7 +39,8 @@ mozilla::pkix::Result DoOCSPRequest(
 
 nsCString getKeaGroupName(uint32_t aKeaGroup);
 nsCString getSignatureName(uint32_t aSignatureScheme);
-nsresult IsCertificateDistrustImminent(nsIX509CertList* aCertList,
-                                       /* out */ bool& isDistrusted);
+nsresult IsCertificateDistrustImminent(
+    const nsTArray<RefPtr<nsIX509Cert>>& aCertArray,
+    /* out */ bool& isDistrusted);
 
 #endif  // nsNSSCallbacks_h
