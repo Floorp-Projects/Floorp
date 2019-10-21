@@ -143,7 +143,7 @@ class TabViewHolder(
     internal fun updateSelected(selected: Boolean) {
         selected_border.visibility = if (selected) View.VISIBLE else View.GONE
     }
-    private fun updateCloseButtonDescription(title: String) {
+    internal fun updateCloseButtonDescription(title: String) {
         close_tab_button.contentDescription =
             close_tab_button.context.getString(R.string.close_tab_title, title)
     }

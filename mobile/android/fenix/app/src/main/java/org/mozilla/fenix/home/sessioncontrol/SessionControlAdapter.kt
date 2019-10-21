@@ -220,7 +220,9 @@ class SessionControlAdapter(
             holder.play_pause_button.visibility = View.GONE
 
             if (it.shouldUpdateHostname) { holder.updateHostname(it.tab.hostname) }
-            if (it.shouldUpdateTitle) { holder.updateTitle(it.tab.title) }
+            if (it.shouldUpdateTitle) {
+                holder.updateTitle(it.tab.title)
+                holder.updateCloseButtonDescription(it.tab.title) }
             if (it.shouldUpdateFavicon) {
                 holder.updateFavIcon(it.tab.url, it.tab.icon)
             }
