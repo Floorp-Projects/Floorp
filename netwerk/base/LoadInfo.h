@@ -39,9 +39,10 @@ class LoadInfo;
 
 namespace ipc {
 // we have to forward declare that function so we can use it as a friend.
-nsresult LoadInfoArgsToLoadInfo(const Maybe<net::LoadInfoArgs>& aLoadInfoArgs,
-                                nsINode* aLoadingContext,
-                                net::LoadInfo** outLoadInfo);
+nsresult LoadInfoArgsToLoadInfo(
+    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
+    nsINode* aLoadingContext, nsINode* aCspToInheritLoadingContext,
+    net::LoadInfo** outLoadInfo);
 }  // namespace ipc
 
 namespace net {
@@ -166,7 +167,8 @@ class LoadInfo final : public nsILoadInfo {
 
   friend nsresult mozilla::ipc::LoadInfoArgsToLoadInfo(
       const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
-      nsINode* aLoadingContext, net::LoadInfo** outLoadInfo);
+      nsINode* aLoadingContext, nsINode* aCspToInheritLoadingContext,
+      net::LoadInfo** outLoadInfo);
 
   ~LoadInfo() = default;
 
