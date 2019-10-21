@@ -1117,6 +1117,8 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
+void* AllocateBigIntNoGC(JSContext* cx);
+
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
