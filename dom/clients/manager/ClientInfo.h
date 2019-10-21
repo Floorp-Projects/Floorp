@@ -46,6 +46,7 @@ class ClientInfo final {
   ~ClientInfo();
 
   bool operator==(const ClientInfo& aRight) const;
+  bool operator!=(const ClientInfo& aRight) const;
 
   // Get the unique identifier chosen at the time of the global's creation.
   const nsID& Id() const;
