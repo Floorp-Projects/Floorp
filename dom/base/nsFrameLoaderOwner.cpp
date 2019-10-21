@@ -90,42 +90,34 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
   doc->BlockOnload();
   auto cleanup = MakeScopeExit([&]() { doc->UnblockOnload(false); });
 
-  {
-    // Introduce a script blocker to ensure no JS is executed during the
-    // nsFrameLoader teardown & recreation process. Unload listeners will be run
-    // for the previous document, and the load will be started for the new one,
-    // at the end of this block.
-    nsAutoScriptBlocker sb;
-
-    // If we already have a Frameloader, destroy it, possibly preserving its
-    // browsing context.
-    if (mFrameLoader) {
-      if (aPreserveContext) {
-        bc = mFrameLoader->GetBrowsingContext();
-        mFrameLoader->SkipBrowsingContextDetach();
-      }
-
-      // Preserve the networkCreated status, as nsDocShells created after a
-      // process swap may shouldn't change their dynamically-created status.
-      networkCreated = mFrameLoader->IsNetworkCreated();
-      mFrameLoader->Destroy();
-      mFrameLoader = nullptr;
+  // If we already have a Frameloader, destroy it, possibly preserving its
+  // browsing context.
+  if (mFrameLoader) {
+    if (aPreserveContext) {
+      bc = mFrameLoader->GetBrowsingContext();
+      mFrameLoader->SkipBrowsingContextDetach();
     }
 
-    mFrameLoader =
-        nsFrameLoader::Recreate(owner, bc, aRemoteType, networkCreated);
-    if (NS_WARN_IF(!mFrameLoader)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
+    // Preserve the networkCreated status, as nsDocShells created after a
+    // process swap may shouldn't change their dynamically-created status.
+    networkCreated = mFrameLoader->IsNetworkCreated();
+    mFrameLoader->Destroy();
+    mFrameLoader = nullptr;
+  }
 
-    // Invoke the frame loader initialization callback to perform setup on our
-    // new nsFrameLoader. This may cause our ErrorResult to become errored, so
-    // double-check after calling.
-    aFrameLoaderInit();
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
-    }
+  mFrameLoader =
+      nsFrameLoader::Recreate(owner, bc, aRemoteType, networkCreated);
+  if (NS_WARN_IF(!mFrameLoader)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Invoke the frame loader initialization callback to perform setup on our new
+  // nsFrameLoader. This may cause our ErrorResult to become errored, so
+  // double-check after calling.
+  aFrameLoaderInit();
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
   }
 
   // Now that we've got a new FrameLoader, we need to reset our
@@ -190,8 +182,9 @@ void nsFrameLoaderOwner::ChangeRemoteness(
                          aOptions.mRemoteType, frameLoaderInit, rv);
 }
 
-void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
-                                                    mozilla::ErrorResult& rv) {
+void nsFrameLoaderOwner::ChangeRemotenessWithBridge(
+    mozilla::ipc::ManagedEndpoint<mozilla::dom::PBrowserBridgeChild> aEndpoint,
+    uint64_t aTabId, mozilla::ErrorResult& rv) {
   MOZ_ASSERT(XRE_IsContentProcess());
   if (NS_WARN_IF(!mFrameLoader)) {
     rv.Throw(NS_ERROR_UNEXPECTED);
@@ -199,9 +192,24 @@ void nsFrameLoaderOwner::ChangeRemotenessWithBridge(BrowserBridgeChild* aBridge,
   }
 
   std::function<void()> frameLoaderInit = [&] {
-    RefPtr<BrowserBridgeHost> host = aBridge->FinishInit(mFrameLoader);
-    mFrameLoader->mBrowsingContext->SetEmbedderElement(
-        mFrameLoader->GetOwnerContent());
+    RefPtr<BrowsingContext> browsingContext = mFrameLoader->mBrowsingContext;
+    RefPtr<BrowserBridgeChild> bridge =
+        new BrowserBridgeChild(mFrameLoader, browsingContext, TabId(aTabId));
+    Document* ownerDoc = mFrameLoader->GetOwnerDoc();
+    if (NS_WARN_IF(!ownerDoc)) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
+
+    RefPtr<BrowserChild> browser =
+        BrowserChild::GetFrom(ownerDoc->GetDocShell());
+    if (!browser->BindPBrowserBridgeEndpoint(std::move(aEndpoint), bridge)) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
+
+    RefPtr<BrowserBridgeHost> host = bridge->FinishInit();
+    browsingContext->SetEmbedderElement(mFrameLoader->GetOwnerContent());
     mFrameLoader->mRemoteBrowser = host;
   };
 

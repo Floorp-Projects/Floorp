@@ -281,11 +281,11 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameLocal(
 
   RefPtr<Element> embedderElt = aFrameContext->GetEmbedderElement();
   if (NS_WARN_IF(!embedderElt)) {
-    return IPC_OK();
+    return IPC_FAIL(this, "No embedder element in this process");
   }
 
   if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != WindowGlobal())) {
-    return IPC_OK();
+    return IPC_FAIL(this, "Wrong actor");
   }
 
   RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(embedderElt);
@@ -311,38 +311,20 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
   // Immediately resolve the promise, acknowledging the request.
   aResolve(true);
 
-  // Immediately construct the BrowserBridgeChild so we can destroy it cleanly
-  // if the process switch fails.
-  RefPtr<BrowserBridgeChild> bridge =
-      new BrowserBridgeChild(aFrameContext, aTabId);
-  RefPtr<BrowserChild> manager = GetBrowserChild();
-  if (NS_WARN_IF(
-          !manager->BindPBrowserBridgeEndpoint(std::move(aEndpoint), bridge))) {
-    return IPC_OK();
-  }
-
   RefPtr<Element> embedderElt = aFrameContext->GetEmbedderElement();
   if (NS_WARN_IF(!embedderElt)) {
-    BrowserBridgeChild::Send__delete__(bridge);
-    return IPC_OK();
+    return IPC_FAIL(this, "No embedder element in this process");
   }
 
   if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != WindowGlobal())) {
-    BrowserBridgeChild::Send__delete__(bridge);
-    return IPC_OK();
+    return IPC_FAIL(this, "Wrong actor");
   }
 
   RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(embedderElt);
   MOZ_DIAGNOSTIC_ASSERT(flo, "Embedder must be a nsFrameLoaderOwner");
 
   // Trgger a process switch into the specified process.
-  IgnoredErrorResult rv;
-  flo->ChangeRemotenessWithBridge(bridge, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    BrowserBridgeChild::Send__delete__(bridge);
-    return IPC_OK();
-  }
-
+  flo->ChangeRemotenessWithBridge(std::move(aEndpoint), aTabId, IgnoreErrors());
   return IPC_OK();
 }
 
