@@ -512,7 +512,7 @@ nsresult PresentationConnection::DoReceiveMessage(const nsACString& aData,
   if (aIsBinary) {
     if (mBinaryType == PresentationConnectionBinaryType::Blob) {
       RefPtr<Blob> blob =
-          Blob::CreateStringBlob(GetOwner(), aData, EmptyString());
+          Blob::CreateStringBlob(GetOwnerGlobal(), aData, EmptyString());
       MOZ_ASSERT(blob);
 
       if (!ToJSValue(cx, blob, &jsData)) {

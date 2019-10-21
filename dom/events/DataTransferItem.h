@@ -105,6 +105,8 @@ class DataTransferItem final : public nsISupports, public nsWrapperCache {
   ~DataTransferItem() {}
   already_AddRefed<File> CreateFileFromInputStream(nsIInputStream* aStream);
 
+  already_AddRefed<nsIGlobalObject> GetGlobalFromDataTransfer();
+
   // The index in the 2d mIndexedItems array
   uint32_t mIndex;
 

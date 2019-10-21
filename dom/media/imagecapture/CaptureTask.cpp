@@ -48,7 +48,7 @@ nsresult CaptureTask::TaskComplete(already_AddRefed<dom::Blob> aBlob,
   // We have to set the parent because the blob has been generated with a valid
   // one.
   if (blob) {
-    blob = dom::Blob::Create(mImageCapture->GetParentObject(), blob->Impl());
+    blob = dom::Blob::Create(mImageCapture->GetOwnerGlobal(), blob->Impl());
   }
 
   if (mPrincipalChanged) {

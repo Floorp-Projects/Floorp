@@ -874,7 +874,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     RefPtr<BlobStorer> storer = MakeAndAddRef<BlobStorer>();
     MaybeCreateMutableBlobStorage();
     mMutableBlobStorage->GetBlobWhenReady(
-        mRecorder->GetOwner(), NS_ConvertUTF16toUTF8(mMimeType), storer);
+        mRecorder->GetOwnerGlobal(), NS_ConvertUTF16toUTF8(mMimeType), storer);
     mMutableBlobStorage = nullptr;
 
     storer->Promise()->Then(
