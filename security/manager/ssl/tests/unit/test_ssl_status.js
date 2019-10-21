@@ -24,12 +24,13 @@ function run_test() {
     null,
     function withSecurityInfo(aSecInfo) {
       equal(
-        aSecInfo.failedCertChain,
-        null,
-        "failedCertChain for a successful connection should be null"
+        aSecInfo.failedCertChain.length,
+        0,
+        "failedCertChain for a successful connection should be empty"
       );
       ok(
-        aSecInfo.succeededCertChain.equals(
+        areCertArraysEqual(
+          aSecInfo.succeededCertChain,
           build_cert_chain(["default-ee", "test-ca"])
         ),
         "succeededCertChain for a successful connection should be as expected"
@@ -45,12 +46,13 @@ function run_test() {
     null,
     function withSecurityInfo(aSecInfo) {
       equal(
-        aSecInfo.succeededCertChain,
-        null,
+        aSecInfo.succeededCertChain.length,
+        0,
         "succeededCertChain for a failed connection should be null"
       );
       ok(
-        aSecInfo.failedCertChain.equals(
+        areCertArraysEqual(
+          aSecInfo.failedCertChain,
           build_cert_chain(["expired-ee", "test-ca"])
         ),
         "failedCertChain for a failed connection should be as expected"

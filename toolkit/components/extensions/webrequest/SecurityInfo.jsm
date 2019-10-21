@@ -205,7 +205,7 @@ const SecurityInfo = {
 
   getCertificateChain(certChain, options = {}) {
     let certificates = [];
-    for (let cert of certChain.getEnumerator()) {
+    for (let cert of certChain) {
       certificates.push(this.parseCertificateInfo(cert, options));
     }
     return certificates;

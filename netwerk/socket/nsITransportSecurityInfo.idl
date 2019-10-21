@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 interface nsIX509Cert;
-interface nsIX509CertList;
 
 %{ C++
 namespace IPC {
@@ -34,12 +33,12 @@ interface nsITransportSecurityInfo : nsISupports {
     /**
      * If certificate verification failed, this will be the peer certificate
      * chain provided in the handshake, so it can be used for error reporting.
-     * If verification succeeded, this will be null.
+     * If verification succeeded, this will be empty.
      */
-    readonly attribute nsIX509CertList failedCertChain;
+    readonly attribute Array<nsIX509Cert> failedCertChain;
 
     readonly attribute nsIX509Cert serverCert;
-    readonly attribute nsIX509CertList succeededCertChain;
+    readonly attribute Array<nsIX509Cert> succeededCertChain;
 
     [must_use]
     readonly attribute ACString cipherName;

@@ -76,37 +76,4 @@ bool ParamTraits<nsIX509Cert*>::Read(const Message* aMsg, PickleIterator* aIter,
   return true;
 }
 
-void ParamTraits<nsIX509CertList*>::Write(Message* aMsg,
-                                          nsIX509CertList* aParam) {
-  bool nonNull = !!aParam;
-  WriteParam(aMsg, nonNull);
-  if (!nonNull) {
-    return;
-  }
-
-  aParam->SerializeToIPC(aMsg);
-}
-
-bool ParamTraits<nsIX509CertList*>::Read(const Message* aMsg,
-                                         PickleIterator* aIter,
-                                         RefPtr<nsIX509CertList>* aResult) {
-  bool nonNull = false;
-  if (!ReadParam(aMsg, aIter, &nonNull)) {
-    return false;
-  }
-
-  if (!nonNull) {
-    *aResult = nullptr;
-    return true;
-  }
-
-  RefPtr<nsIX509CertList> certList = new nsNSSCertList();
-  if (!certList->DeserializeFromIPC(aMsg, aIter)) {
-    return false;
-  }
-
-  *aResult = certList.forget();
-  return true;
-}
-
 }  // namespace IPC
