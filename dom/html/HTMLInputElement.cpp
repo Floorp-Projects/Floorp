@@ -2076,7 +2076,7 @@ void HTMLInputElement::MozSetDirectory(const nsAString& aDirectoryPath,
     return;
   }
 
-  RefPtr<Directory> directory = Directory::Create(window, file);
+  RefPtr<Directory> directory = Directory::Create(window->AsGlobal(), file);
   MOZ_ASSERT(directory);
 
   nsTArray<OwningFileOrDirectory> array;
@@ -6112,7 +6112,7 @@ static nsTArray<OwningFileOrDirectory> RestoreFileContentData(
         continue;
       }
 
-      RefPtr<File> file = File::Create(aWindow, it.get_BlobImpl());
+      RefPtr<File> file = File::Create(aWindow->AsGlobal(), it.get_BlobImpl());
       MOZ_ASSERT(file);
 
       OwningFileOrDirectory* element = res.AppendElement();
@@ -6126,7 +6126,8 @@ static nsTArray<OwningFileOrDirectory> RestoreFileContentData(
         continue;
       }
 
-      RefPtr<Directory> directory = Directory::Create(aWindow, file);
+      RefPtr<Directory> directory =
+          Directory::Create(aWindow->AsGlobal(), file);
       MOZ_ASSERT(directory);
 
       OwningFileOrDirectory* element = res.AppendElement();
