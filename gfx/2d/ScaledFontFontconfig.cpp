@@ -39,7 +39,9 @@ ScaledFontFontconfig::ScaledFontFontconfig(
 
 bool ScaledFontFontconfig::UseSubpixelPosition() const {
   return mInstanceData.mAntialias != AntialiasMode::NONE &&
-         FT_IS_SCALABLE(mFace->GetFace());
+         FT_IS_SCALABLE(mFace->GetFace()) &&
+         (mInstanceData.mHinting == FontHinting::NONE ||
+          mInstanceData.mHinting == FontHinting::LIGHT);
 }
 
 #ifdef USE_SKIA
