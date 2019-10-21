@@ -2699,18 +2699,43 @@ var SessionStoreInternal = {
     let resultPrincipal = Services.scriptSecurityManager.getChannelResultPrincipal(
       channel
     );
+
+    const isCOOPSwitch =
+      E10SUtils.useCrossOriginOpenerPolicy() &&
+      switchRequestor.hasCrossOriginOpenerPolicyMismatch();
+
+    let preferredRemoteType = currentRemoteType;
+    if (
+      switchRequestor.crossOriginOpenerPolicy ==
+      Ci.nsILoadInfo.OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP
+    ) {
+      // We want documents with a SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP
+      // COOP policy to be loaded in a separate process for which we can enable
+      // high resolution timers.
+      preferredRemoteType =
+        E10SUtils.WEB_REMOTE_COOP_COEP_TYPE_PREFIX + resultPrincipal.siteOrigin;
+    } else if (isCOOPSwitch) {
+      // If it is a coop switch, but doesn't have this flag, we want to switch
+      // to a default remoteType
+      preferredRemoteType = E10SUtils.DEFAULT_REMOTE_TYPE;
+    }
+    debug(
+      `[process-switch]: currentRemoteType (${currentRemoteType}) preferredRemoteType: ${preferredRemoteType}`
+    );
+
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(
       resultPrincipal,
       true,
       useRemoteSubframes,
-      currentRemoteType,
+      preferredRemoteType,
       currentPrincipal
     );
-    if (
-      currentRemoteType == remoteType &&
-      (!E10SUtils.useCrossOriginOpenerPolicy() ||
-        !switchRequestor.hasCrossOriginOpenerPolicyMismatch())
-    ) {
+
+    debug(
+      `[process-switch]: ${currentRemoteType}, ${remoteType}, ${isCOOPSwitch}`
+    );
+
+    if (currentRemoteType == remoteType && !isCOOPSwitch) {
       debug(`[process-switch]: type (${remoteType}) is compatible - ignoring`);
       return;
     }
@@ -2722,10 +2747,6 @@ var SessionStoreInternal = {
       debug(`[process-switch]: non-remote source/target - ignoring`);
       return;
     }
-
-    const isCOOPSwitch =
-      E10SUtils.useCrossOriginOpenerPolicy() &&
-      switchRequestor.hasCrossOriginOpenerPolicyMismatch();
 
     // ------------------------------------------------------------------------
     // DANGER ZONE: Perform a process switch into the new process. This is
