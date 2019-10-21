@@ -349,7 +349,10 @@ class StaticAnalysis(MachCommandBase):
         # We need this in both cases, per patch analysis or full tree build
         cmd = [self.cov_run_desktop, '--setup']
         if self.run_cov_command(cmd, self.cov_path):
-            return 1
+            # Avoiding a bug in Coverity where snapshot is not identified
+            # as beeing built with the current analysis binary.
+            if not full_build:
+                return 1
 
         # Run cov-configure for clang, javascript and python
         langs = ["clang", "javascript", "python"]
