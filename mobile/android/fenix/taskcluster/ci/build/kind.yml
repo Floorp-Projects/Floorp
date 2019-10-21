@@ -76,7 +76,6 @@ jobs:
 
     beta:
         attributes:
-            build-type: production
             release-type: beta
         include-release-version: true
         include-shippable-secrets: true

@@ -14,6 +14,7 @@ kind-dependencies:
 
 only-for-build-types:
     - nightly
+    - beta
     - production
 
 job-template:
@@ -24,6 +25,7 @@ job-template:
         channel:
             by-build-type:
                 nightly: nightly
+                beta: beta
                 production: production
         dep:
             by-level:
