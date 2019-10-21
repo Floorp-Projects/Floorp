@@ -3,10 +3,13 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/simple_text"
     style="@style/Mozac.Browser.Menu.Item.Text"
     android:layout_width="match_parent"
     android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
     android:gravity="center_vertical"
+    android:textAlignment="viewStart"
     android:paddingEnd="16dp"
-    android:paddingStart="16dp" />
+    android:paddingStart="16dp"
+    tools:ignore="RtlCompat" />
